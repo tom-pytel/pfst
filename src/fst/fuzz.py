@@ -1172,7 +1172,7 @@ class PutOne(Fuzzy):
                 if self.debug:
                     debuglines = [str(f)] + f.lines
 
-                if random() < 0.5 and not _PUT_ONE_HANDLERS.get((parent.a.__class__, field), [True])[0]:
+                if random() < 0.5 and not ReputOne._PUT_ONE_HANDLERS.get((parent.a.__class__, field), [True])[0]:
                     try:
                         parent.put(None, idx, False, field, raw=False)
 

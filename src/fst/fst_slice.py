@@ -1354,8 +1354,18 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
     if one:
         if fst_.is_parenthesized_tuple() is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
             fst_._delimit_node()
-        elif isinstance(fst_.a, Set) and (empty := self.get_option('set_del', options)):  # putting an invalid empty Set as one, make it valid according to options
-            fst_._maybe_fix_set(empty)
+
+        elif isinstance(a := fst_.a, Set):
+            if (empty := self.get_option('set_del', options)):  # putting an invalid empty Set as one, make it valid according to options
+                fst_._maybe_fix_set(empty)
+
+        elif isinstance(a, NamedExpr):  # this needs to be parenthesized if being put to unparenthesized tuple
+            if not fst_.pars().n and self.is_parenthesized_tuple() is False:
+                fst_._parenthesize_grouping()
+
+        elif isinstance(a, (Yield, YieldFrom)):  # these need to be parenthesized definitely
+            if not fst_.pars().n:
+                fst_._parenthesize_grouping()
 
         ls  = fst_._lines
         ast = List(elts=[fst_.a], ctx=Load(),
@@ -1507,7 +1517,7 @@ def _validate_put_seq(self: fst.FST, fst_: fst.FST, non_slice: str, *, check_tar
     if non_slice and isinstance(ast_, Tuple) and any(isinstance(e, Slice) for e in ast_.elts):
         raise ValueError(f'cannot put Slice into a {non_slice}')
 
-    if check_target and not isinstance(ctx := ast.ctx, Load) and not is_valid_target(ast_):
+    if check_target and not isinstance(ctx := ast.ctx, Load) and not is_valid_target(ast_.elts[:]):
         raise ValueError(f'invalid slice for {ast.__class__.__name__} {ctx.__class__.__name__} target')
 
 

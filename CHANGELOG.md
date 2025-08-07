@@ -4,7 +4,8 @@
 
 - statementish cut marks tree as modified
 - undelimited sequence operations joining alphanumerics
-- `ImportFrom` with dot following directly after 'from'
+- disallow merge of `1.` float literal directly to left of alphanumeric
+- put to `ImportFrom.module` with dot following directly after 'from'
 
 ### Added
 

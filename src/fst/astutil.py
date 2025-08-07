@@ -418,11 +418,12 @@ def is_valid_MatchMapping_key(ast: AST) -> bool:
     return is_valid_MatchValue_value(ast, (str, bytes, int, float, complex, bool, NoneType))
 
 
-def is_valid_target(ast: AST) -> bool:
+def is_valid_target(ast: AST | list[AST]) -> bool:
     """Check if `ast` is a valid target for `Assign`, `Delete` or `For` operations. Must be `Name`, `Attribute`,
-    `Subscript`, `Starred` and / or possibly nested `Tuple` and `List`."""
+    `Subscript`, `Starred` and / or possibly nested `Tuple` and `List`. If `ast` is a list of `AST`s then it is
+    consumed."""
 
-    stack = [ast]
+    stack = ast if isinstance(ast, list) else [ast]
 
     while stack:
         if isinstance(a := stack.pop(), (Tuple, List)):

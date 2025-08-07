@@ -65,3 +65,16 @@ class cls:
     def blahblahblah(self, a):
         return a
 <BLANKLINE>
+
+
+>>> f = FST('{a: b}')
+>>> f.keys[0]
+<Name 0,1..0,2>
+
+>>> f.keys[0] = 'x := y'
+>>> f.src
+'{(x := y): b}'
+
+>>> f.keys[0] = None
+>>> f.src
+'{**b}'
