@@ -312,7 +312,7 @@ class TestFSTSlice(unittest.TestCase):
     b
 ]           '''.strip())
 
-    def test_cut_special(self):  # TODO: redo in a better way
+    def test_cut_stmtish_special(self):
         a = parse('''
 # prepre
 
@@ -617,7 +617,7 @@ match a:
 
         self.assertEqual(a.f.src, '''match a:\n''')
 
-    def test_cut_and_del_special(self):  # TODO: redo in a better way
+    def test_cut_and_del_stmtish_special(self):  # TODO: legacy, do better when possible
         fst = parse('''
 match a:
     case 1:  # CASE
@@ -724,8 +724,8 @@ if indented:
 
         fst2 = fst.copy()
 
-        fst.a.body[1].cases[0].f.cut()
-        fst.a.body[1].f.put_slice('pass', check_node_type=False)
+        # fst.a.body[1].cases[0].f.cut()
+        # fst.a.body[1].f.put_slice('pass', check_node_type=False)
 
         points = [
             (fst.a.body[0].cases[0].f, 'body'),
@@ -768,10 +768,16 @@ if indented:
 
         lines.extend(fst.lines)
 
+        # print('...')
+        # print('\n'.join(repr(l) for l in lines))
+        # print('...')
+
         self.assertEqual(lines, [
             'i = 1',
             '...',
-            'pass',
+            'case 2:',
+            '    pass  # this is removed',
+            '',
             '...',
             'j; k',
             '...',
@@ -889,22 +895,22 @@ if indented:
             '',
             'if indented:',
             '    try:  # TRY',
-            ''
+            '',
         ])
 
         fst = fst2
 
-        fst.a.body[1].cases[0].f.cut()
-        fst.a.body[1].f.put_slice('pass', check_node_type=False)
+        # fst.a.body[1].cases[0].f.cut()
+        # fst.a.body[1].f.put_slice('pass', check_node_type=False)
 
         points = [
             (fst.a.body[0].cases[0].f, 'body'),
-            (fst.a.body[1].f, 'cases'),
+            # (fst.a.body[1].f, 'cases'),
             (fst.a.body[2].f, 'body'),
             (fst.a.body[2].f, 'orelse'),
 
             (fst.a.body[3].f, 'body'),
-            (fst.a.body[3].f, 'handlers'),
+            # (fst.a.body[3].f, 'handlers'),
             (fst.a.body[3].f, 'orelse'),
             (fst.a.body[3].f, 'finalbody'),
 
@@ -923,23 +929,31 @@ if indented:
             (fst.a.body[12].body[0].f, 'orelse'),
 
             (fst.a.body[13].body[0].f, 'body'),
-            (fst.a.body[13].body[0].f, 'handlers'),
+            # (fst.a.body[13].body[0].f, 'handlers'),
             (fst.a.body[13].body[0].f, 'orelse'),
             (fst.a.body[13].body[0].f, 'finalbody'),
         ]
 
         for point, field in points:
-            point.put_slice(None, field=field, check_node_type=False)
+            point.put_slice(None, field=field)#, check_node_type=False)
+
+        # print('...')
+        # print('\n'.join(repr(l) for l in fst.lines))
+        # print('...')
 
         self.assertEqual(fst.lines, [
             'match a:',
             '    case 1:  # CASE',
             '',
             'match b:  # MATCH',
+            '    case 2:',
+            '        pass  # this is removed',
             '',
             'if 1:  # IF',
             '',
             'try:  # TRY',
+            'except:  # EXCEPT',
+            '    if 1: break',
             '',
             'for a in b:  # FOR',
             '',
@@ -964,7 +978,9 @@ if indented:
             '',
             'if indented:',
             '    try:  # TRY',
-            ''
+            '    except:  # EXCEPT',
+            '        aa or bb or cc',
+            '',
         ])
 
         fst = parse('''
@@ -1098,17 +1114,17 @@ if indented:
 
         fst2 = fst.copy()
 
-        fst.a.body[1].cases[0].f.cut()
-        fst.a.body[1].f.put_slice('pass', check_node_type=False)
+        # fst.a.body[1].cases[0].f.cut()
+        # fst.a.body[1].f.put_slice('pass', check_node_type=False)
 
         points = [
             (fst.a.body[0].cases[0].f, 'body'),
-            (fst.a.body[1].f, 'cases'),
+            # (fst.a.body[1].f, 'cases'),
             (fst.a.body[2].f, 'body'),
             (fst.a.body[2].f, 'orelse'),
 
             (fst.a.body[3].f, 'body'),
-            (fst.a.body[3].f, 'handlers'),
+            # (fst.a.body[3].f, 'handlers'),
             (fst.a.body[3].f, 'orelse'),
             (fst.a.body[3].f, 'finalbody'),
 
@@ -1127,7 +1143,7 @@ if indented:
             (fst.a.body[12].body[0].f, 'orelse'),
 
             (fst.a.body[13].body[0].f, 'body'),
-            (fst.a.body[13].body[0].f, 'handlers'),
+            # (fst.a.body[13].body[0].f, 'handlers'),
             (fst.a.body[13].body[0].f, 'orelse'),
             (fst.a.body[13].body[0].f, 'finalbody'),
         ]
@@ -1142,11 +1158,13 @@ if indented:
 
         lines.extend(fst.lines)
 
+        # print('...')
+        # print('\n'.join(repr(l) for l in lines))
+        # print('...')
+
         self.assertEqual(lines, [
             '# CASE',
             'i = 1',
-            '...',
-            'pass',
             '...',
             '# IF',
             'j; k',
@@ -1159,10 +1177,6 @@ if indented:
             '# pre',
             'n  # post',
             '',
-            '...',
-            'except:  \\',
-            '  # EXCEPT',
-            '    if 1: break',
             '...',
             '# delelse',
             'if 2: continue',
@@ -1245,10 +1259,6 @@ if indented:
             'except Exception as exc:',
             '    raise exc from exc',
             '...',
-            'except:  \\',
-            '# EXCEPT',
-            '    aa or bb or cc',
-            '...',
             '# delelse',
             "f'{i:2} plus 1'",
             '...',
@@ -1258,11 +1268,17 @@ if indented:
             'match a:',
             '    case 1:',
             '',
-            'match b:',
+            'match b:  \\',
+            '  # MATCH',
+            '    case 2:',
+            '        pass  # this is removed',
             '',
             'if 1:',
             '',
             'try:',
+            'except:  \\',
+            '  # EXCEPT',
+            '    if 1: break',
             '',
             'for a in b:',
             '',
@@ -1287,22 +1303,25 @@ if indented:
             '',
             'if indented:',
             '    try:',
-            ''
+            '    except:  \\',
+            '  # EXCEPT',
+            '        aa or bb or cc',
+            '',
         ])
 
         fst = fst2
 
-        fst.a.body[1].cases[0].f.cut()
-        fst.a.body[1].f.put_slice('pass', check_node_type=False)
+        # fst.a.body[1].cases[0].f.cut()
+        # fst.a.body[1].f.put_slice('pass', check_node_type=False)
 
         points = [
             (fst.a.body[0].cases[0].f, 'body'),
-            (fst.a.body[1].f, 'cases'),
+            # (fst.a.body[1].f, 'cases'),
             (fst.a.body[2].f, 'body'),
             (fst.a.body[2].f, 'orelse'),
 
             (fst.a.body[3].f, 'body'),
-            (fst.a.body[3].f, 'handlers'),
+            # (fst.a.body[3].f, 'handlers'),
             (fst.a.body[3].f, 'orelse'),
             (fst.a.body[3].f, 'finalbody'),
 
@@ -1321,7 +1340,7 @@ if indented:
             (fst.a.body[12].body[0].f, 'orelse'),
 
             (fst.a.body[13].body[0].f, 'body'),
-            (fst.a.body[13].body[0].f, 'handlers'),
+            # (fst.a.body[13].body[0].f, 'handlers'),
             (fst.a.body[13].body[0].f, 'orelse'),
             (fst.a.body[13].body[0].f, 'finalbody'),
         ]
@@ -1329,15 +1348,25 @@ if indented:
         for point, field in points:
             point.put_slice(None, field=field)
 
+        # print('...')
+        # print('\n'.join(repr(l) for l in fst.lines))
+        # print('...')
+
         self.assertEqual(fst.lines, [
             'match a:',
             '    case 1:',
             '',
-            'match b:',
+            'match b:  \\',
+            '  # MATCH',
+            '    case 2:',
+            '        pass  # this is removed',
             '',
             'if 1:',
             '',
             'try:',
+            'except:  \\',
+            '  # EXCEPT',
+            '    if 1: break',
             '',
             'for a in b:',
             '',
@@ -1362,10 +1391,13 @@ if indented:
             '',
             'if indented:',
             '    try:',
-            ''
+            '    except:  \\',
+            '  # EXCEPT',
+            '        aa or bb or cc',
+            '',
         ])
 
-    def test_cut_block_everything(self):  # TODO: redo in a better way
+    def test_cut_block_everything(self):
         for src in ('''
 if mo:
     if 1:

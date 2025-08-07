@@ -524,8 +524,8 @@ match a:
     case 1: pass
         '''.strip())
         a.body[0].cases[0].f.cut()
-        a.body[0].f.put_slice('i', check_node_type=False)
-        self.assertEqual(a.f.src, 'match a:\n    i\n')
+        a.body[0].f.put_slice('case 2: return')
+        self.assertEqual(a.f.src, 'match a:\n    case 2: return\n')
 
 
         a = parse('''
@@ -604,8 +604,8 @@ if 1:
         case 1: pass
         '''.strip())
         a.body[0].body[0].cases[0].f.cut()
-        a.body[0].body[0].f.put_slice('i', check_node_type=False)
-        self.assertEqual(a.f.src, 'if 2:\n    match a:\n        i\n')
+        a.body[0].body[0].f.put_slice('case 3: return')
+        self.assertEqual(a.f.src, 'if 2:\n    match a:\n        case 3: return\n')
 
 
         a = parse('''if 2:
@@ -1034,7 +1034,7 @@ finally: pass
         a.body[0].body[0].f.put_slice('i', field='body')
         self.assertEqual(a.f.src, 'if 2:\n    try:\n        i\n    except: pass\n')
 
-    def test_insert_into_empty_block_shuffle(self):
+    def test_insert_into_empty_block_shuffle(self):  # TODO: legacy, do better when possible
         fst = parse('''
 match a:
     case 1:
@@ -1127,16 +1127,16 @@ if indented:
         j = (i := k)
 '''.lstrip()).f
 
-        fst.a.body[1].cases[0].f.cut()
-        fst.a.body[1].f.put_slice('pass', check_node_type=False)
+        # fst.a.body[1].cases[0].f.cut()
+        # fst.a.body[1].f.put_slice('pass', check_node_type=False)
 
         points = [
             (fst.a.body[0].cases[0].f, 'body'),
-            (fst.a.body[1].f, 'cases'),
+            # (fst.a.body[1].f, 'cases'),
             (fst.a.body[2].f, 'body'),
             (fst.a.body[2].f, 'orelse'),
             (fst.a.body[3].f, 'body'),
-            (fst.a.body[3].f, 'handlers'),
+            # (fst.a.body[3].f, 'handlers'),
             (fst.a.body[3].f, 'orelse'),
             (fst.a.body[3].f, 'finalbody'),
             (fst.a.body[4].f, 'body'),
@@ -1151,7 +1151,7 @@ if indented:
             (fst.a.body[10].f, 'body'),
             (fst.a.body[11].f, 'body'),
             (fst.a.body[12].body[0].f, 'body'),
-            (fst.a.body[12].body[0].f, 'handlers'),
+            # (fst.a.body[12].body[0].f, 'handlers'),
             (fst.a.body[12].body[0].f, 'orelse'),
             (fst.a.body[12].body[0].f, 'finalbody'),
         ]
@@ -1176,97 +1176,102 @@ if indented:
         while ps:
             f, field = ps.pop()
 
-            f.put_slice(bs.pop(), 0, 0, field=field, check_node_type=False)
+            f.put_slice(bs.pop(), 0, 0, field=field)#, check_node_type=False)
+
+        # print('...')
+        # print(fst.src)
+        # print('...')
 
         self.assertEqual(fst.src, '''
 match a:
     case 1:
-        try: a ; #  post-try
-        except: b ; c  # post-except
-        else: return 5
-        finally: yield 6
+        if 2: continue
+        elif 3: o
+        else: p
 
 match b:
-    if 2: continue
-    elif 3: o
-    else: p
+    case 2:
+        pass  # this is removed
 
 if 1:
-    r = [i for i in range(100)]  # post-list-comprehension
-else:
-    try: raise
-    except Exception as exc:
-        raise exc from exc
-
-try:
-    assert s, t
-j; k
-else:
-    l
-    m
-finally:
-    ("Multi"
-    "line"
-    "string")
-
-for a in b:
     # pre
     n  # post
 else:
-    pass
+    try: a ; #  post-try
+    except: b ; c  # post-except
+    else: return 5
+    finally: yield 6
+
+try:
+    l
+    m
+except:
+    if 1: break
+else:
+    assert s, t
+finally:
+    # pre-classdeco
+    @classdeco
+    class cls:
+        @methdeco
+        def meth(self):
+            mvar = 5  # post-meth
+
+for a in b:
+    lambda x: x**2
+else:
+    """Multi
+    line
+    string."""
 
 async for a in b:
-    global c
+    ("Multi"
+    "line"
+    "string")
 else:
-    i = 1
+    j; k
 
 while a in b:
-    except:
-        aa or bb or cc
+    i = 1
 else:
-    del x, y, z
+    global c
 
 with a as b:
-    j = (i := k)
+    del x, y, z
 
 async with a as b:
+    f'{i:2} plus 1'
+
+def func():
+    j = (i := k)
+
+@asyncdeco
+async def func():
+    r = [i for i in range(100)]  # post-list-comprehension
+
+class cls:
     def docfunc(a, /, b=2, *c, d=3, **e):
         """Doc
         string."""
 
         return -1
 
-def func():
-    except:
-        if 1: break
-
-@asyncdeco
-async def func():
-    match z:
-        case 1: zz
-        case 2:
-            zzz
-
-class cls:
-    f'{i:2} plus 1'
-
 if indented:
     try:
-        # pre-classdeco
-        @classdeco
-        class cls:
-            @methdeco
-            def meth(self):
-                mvar = 5  # post-meth
-    @deco
-    def inner() -> list[int]:
-        q = 4  # post-inner-q
+        match z:
+            case 1: zz
+            case 2:
+                zzz
+    except:
+        aa or bb or cc
     else:
-        """Multi
-        line
-        string."""
+        @deco
+        def inner() -> list[int]:
+            q = 4  # post-inner-q
     finally:
-        lambda x: x**2
+        try: raise
+        except Exception as exc:
+            raise exc from exc
 '''.lstrip())
 
         for _ in range(25):  # now just fuzz it a bit, just in case
@@ -1288,9 +1293,9 @@ if indented:
             while ps:
                 f, field = ps.pop()
 
-                f.put_slice(bs.pop(), 0, 0, field=field, check_node_type=False)
+                f.put_slice(bs.pop(), 0, 0, field=field)#, check_node_type=False)
 
-    def test_insert_comment_into_empty_field(self):
+    def test_insert_comment_into_empty_field(self):  # TODO: legacy, do better when possible
         fst = parse('''
 match a:
     case 1:  # CASE
@@ -1346,16 +1351,16 @@ if indented:
         pass
 '''.lstrip()).f
 
-        fst.a.body[1].cases[0].f.cut()
-        fst.a.body[1].f.put_slice('pass', check_node_type=False)
+        # fst.a.body[1].cases[0].f.cut()
+        # fst.a.body[1].f.put_slice('pass', check_node_type=False)
 
         points = [
             (fst.a.body[0].cases[0].f, 'body'),
-            (fst.a.body[1].f, 'cases'),
+            # (fst.a.body[1].f, 'cases'),
             (fst.a.body[2].f, 'body'),
 
             (fst.a.body[3].f, 'body'),
-            (fst.a.body[3].f, 'handlers'),
+            # (fst.a.body[3].f, 'handlers'),
 
             (fst.a.body[4].f, 'body'),
             (fst.a.body[5].f, 'body'),
@@ -1368,66 +1373,73 @@ if indented:
             (fst.a.body[12].body[0].f, 'body'),
 
             (fst.a.body[13].body[0].f, 'body'),
-            (fst.a.body[13].body[0].f, 'handlers'),
+            # (fst.a.body[13].body[0].f, 'handlers'),
         ]
 
         for point, field in points:
             point.get_slice(field=field, cut=True)
 
         for i, (point, field) in enumerate(reversed(points)):
-            point.put_slice(f'# {i}', 0, 0, field, check_node_type=False)
+            point.put_slice(f'# {i}', 0, 0, field)#, check_node_type=False)
+
+        # print('...')
+        # print('\n'.join(repr(l) for l in fst.lines))
+        # print('...')
 
         self.assertEqual(fst.lines, [
             'match a:',
             '    case 1:  # CASE',
-            '        # 15',
+            '        # 12',
             '',
             'match b:  # MATCH',
-            '    # 14',
+            '    case 2:',
+            '        pass',
             '',
             'if 1:  # IF',
-            '    # 13',
+            '    # 11',
             '',
             'try:  # TRY',
-            '    # 12',
-            '# 11',
+            '    # 10',
+            'except:  # EXCEPT',
+            '    pass',
             '',
             'for a in b:  # FOR',
-            '    # 10',
-            '',
-            'async for a in b:  # ASYNC FOR',
             '    # 9',
             '',
-            'while a in b:  # WHILE',
+            'async for a in b:  # ASYNC FOR',
             '    # 8',
             '',
-            'with a as b:  # WITH',
+            'while a in b:  # WHILE',
             '    # 7',
             '',
-            'async with a as b:  # ASYNC WITH',
+            'with a as b:  # WITH',
             '    # 6',
+            '',
+            'async with a as b:  # ASYNC WITH',
+            '    # 5',
             '',
             'def func(a = """ \\\\ not linecont',
             '         # comment',
             '         """, **e):',
-            '    # 5',
+            '    # 4',
             '',
             '@asyncdeco',
             'async def func():  # ASYNC FUNC',
-            '    # 4',
+            '    # 3',
             '',
             'class cls:  # CLASS',
-            '    # 3',
+            '    # 2',
             '',
             'if clause:',
             '    while something:  # WHILE',
-            '        # 2',
+            '        # 1',
             '',
             'if indented:',
             '    try:  # TRY',
-            '        # 1',
-            '    # 0',
-            ''
+            '        # 0',
+            '    except:  # EXCEPT',
+            '        pass',
+            '',
         ])
 
     def test_insert_stmt_special(self):
@@ -1447,15 +1459,15 @@ finally:
         '''.strip())
         a.body[1].body[0].f.cut()
         a.body[1].handlers[0].f.cut()
-        a.body[1].f.put_slice('# pre\nn  # post', 0, 0, 'handlers', check_node_type=False)
-        a.body[1].f.put_slice('i', 0, 0, 'handlers', check_node_type=False)
+        a.body[1].f.put_slice('# pre\nexcept Exception as exc: n  # post', 0, 0, 'handlers')
+        a.body[1].f.put_slice('except ValueError as v: m', 0, 0, 'handlers')
         self.assertEqual(a.f.src, '''
 pass
 
 try:
-i
+except ValueError as v: m
 # pre
-n  # post
+except Exception as exc: n  # post
 else:
     @deco
     def inner() -> list[int]:

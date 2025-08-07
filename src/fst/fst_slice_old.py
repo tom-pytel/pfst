@@ -93,17 +93,30 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
         put_fst = None
 
     else:
-        put_fst  = self._code_as_stmtishs(code, self.root.parse_params, is_trystar=isinstance(ast, TryStar))
+        # put_fst  = self._code_as_stmtishs(code, self.root.parse_params, is_trystar=isinstance(ast, TryStar))
+        # put_ast  = put_fst.a
+        # put_body = put_ast.body
+
+        # if one and len(put_body) != 1:
+        #     raise ValueError('expecting a single statement')
+
+        # node_type = ExceptHandler if field == 'handlers' else match_case if field == 'cases' else stmt
+
+        # if any(not isinstance(bad_node := n, node_type) for n in put_body) and options.get('check_node_type', True):  # TODO: `check_node_type` is for some previously written tests, but really should fix those tests instead
+        #     raise ValueError(f"cannot put {bad_node.__class__.__qualname__} node to '{field}' field")
+
+        if field == 'handlers':
+            put_fst = self._code_as_ExceptHandlers(code, self.root.parse_params, is_trystar=isinstance(ast, TryStar))
+        elif field == 'cases':
+            put_fst = self._code_as_match_cases(code, self.root.parse_params)
+        else:  # 'body', 'orelse', 'finalbody'
+            put_fst = self._code_as_stmts(code, self.root.parse_params)
+
         put_ast  = put_fst.a
         put_body = put_ast.body
 
         if one and len(put_body) != 1:
             raise ValueError('expecting a single statement')
-
-        node_type = ExceptHandler if field == 'handlers' else match_case if field == 'cases' else stmt
-
-        if any(not isinstance(bad_node := n, node_type) for n in put_body) and options.get('check_node_type', True):  # TODO: `check_node_type` is for some previously written tests, but really should fix those tests instead
-            raise ValueError(f"cannot put {bad_node.__class__.__qualname__} node to '{field}' field")
 
     start, stop = _fixup_slice_indices(len(body), start, stop)
     slice_len   = stop - start
