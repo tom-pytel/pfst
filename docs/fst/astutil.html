@@ -71,6 +71,9 @@
                     <a class="function" href="#is_valid_MatchMapping_key">is_valid_MatchMapping_key</a>
             </li>
             <li>
+                    <a class="function" href="#is_valid_target">is_valid_target</a>
+            </li>
+            <li>
                     <a class="function" href="#reduce_ast">reduce_ast</a>
             </li>
             <li>
@@ -342,6 +345,23 @@ mapped to the beginning of the character.</p>
 
 
                 </section>
+                <section id="is_valid_target">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">is_valid_target</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">ast</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">]</span></span><span class="return-annotation">) -> <span class="nb">bool</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#is_valid_target"></a>
+    
+            <div class="docstring"><p>Check if <code>ast</code> is a valid target for <code>Assign</code>, <code>Delete</code> or <code>For</code> operations. Must be <code>Name</code>, <code>Attribute</code>,
+<code>Subscript</code>, <code>Starred</code> and / or possibly nested <code>Tuple</code> and <code>List</code>. If <code>ast</code> is a list of <code>AST</code>s then it is
+consumed.</p>
+</div>
+
+
+                </section>
                 <section id="reduce_ast">
                     <div class="attr function">
             
@@ -572,7 +592,7 @@ structure equality in the process. By "attributes" we mean everything specified 
                     <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">copy_ast</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">ast</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="kc">None</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+        <span class="name">copy_ast</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">ast</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="kc">None</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
 
         
     </div>

@@ -84,7 +84,7 @@ be used if a specific value for that option is not passed to the function.</p>
 <span class="o">...</span>     <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{a: b}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;**c&#39;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="o">...</span> <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
 <span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
-<span class="n">cannot</span> <span class="n">put</span> <span class="n">a</span> <span class="n">single</span> <span class="n">item</span> <span class="n">to</span> <span class="n">a</span> <span class="n">Dict</span> <span class="nb">slice</span>
+<span class="n">cannot</span> <span class="n">put</span> <span class="k">as</span> <span class="s1">&#39;one&#39;</span> <span class="n">item</span> <span class="n">to</span> <span class="n">a</span> <span class="n">Dict</span> <span class="nb">slice</span>
 </code></pre>
 </div>
 
@@ -135,10 +135,10 @@ be used if a specific value for that option is not passed to the function.</p>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">empty_set</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">set_put</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="p">{</span><span class="n">a</span><span class="p">,</span> <span class="o">*</span><span class="p">(),</span> <span class="n">b</span><span class="p">}</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">empty_set</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">set_put</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="p">{</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">}</span>
 </code></pre>
 </div>
@@ -203,8 +203,13 @@ default state will fail.</p>
  <span class="s1">&#39;trivia&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;elif_&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;docstr&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
- <span class="s1">&#39;empty_set&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;pars_walrus&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+ <span class="s1">&#39;set_get&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;set_put&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;set_del&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;matchor_get&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;matchor_put&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;matchor_del&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;pep8space&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;precomms&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;postcomms&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>

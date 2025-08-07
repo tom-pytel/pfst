@@ -52,7 +52,7 @@
                     <h1 class="modulename">
 fst    </h1>
 
-                        <div class="docstring"><p>Version 0.2.0.dev20250708172348</p>
+                        <div class="docstring"><p>Version 0.2.0</p>
 
 <h1 id="overview">Overview</h1>
 
@@ -101,10 +101,8 @@ running any specific verison of Python).</p>
 handlers or match cases, by wrapping them in corresponding code then pulling out and adjusting the locations of the
 parsed <code>AST</code>s. <code><a href="fst/docs/d01_parse.html">fst.docs.d01_parse</a></code>.</p>
 
-<p><code><a href="">fst</a></code> does basic validation but will not prevent you from burning yourself if you really want to. For example, it won't
-let you add a <code>Slice</code> to a <code>Tuple</code> which is not directly in a <code>Subscript.slice</code> field or at the root level of a tree,
-but you can take a <code>Tuple</code> with a <code>Slice</code> in it already and put it somewhere else where it doesn't belong (there is a
-function to make sure you didn't do something silly like this <code><a href="fst/fst.html#FST.verify">fst.fst.FST.verify()</a></code>).</p>
+<p><code><a href="">fst</a></code> validates for parsability, not compilability. This means that for <code><a href="">fst</a></code>, <code>*a, *b = c</code> and <code>def f(a, a): pass</code> are
+both valid even though they are uncompilable.</p>
 
 <p>Format preserving native operations exist in two flavors (see the documentation on how to use either):</p>
 
@@ -123,11 +121,9 @@ anything about <code><a href="">fst</a></code> to maybe gain the ability to pres
 <h1 id="notes">Notes</h1>
 
 <ul>
-<li><p><code>JoinedStr</code> and <code>TemplateStr</code> internal accesses are not quite finished yet. You can get and put <code>FormattedValue.value</code>
+<li><code>JoinedStr</code> and <code>TemplateStr</code> internal accesses are not quite finished yet. You can get and put <code>FormattedValue.value</code>
 a <code>Interpolation.value</code> on python &gt;= 3.12 fine, but the other fields may or may not work putting in raw mode as
-prescribed operations are not done yet.</p></li>
-<li><p><code><a href="">fst</a></code> is eventually intended to run with the global option <code>raw</code> set to <code>'auto'</code> but is currently set to <code>False</code>. See
-<code><a href="fst/docs/d06_raw.html">fst.docs.d06_raw</a></code> for more details.</p></li>
+prescribed operations are not done yet.</li>
 </ul>
 </div>
 

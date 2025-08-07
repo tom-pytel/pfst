@@ -106,10 +106,12 @@ can.</p>
 <span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
 <span class="k">if</span> <span class="n">i</span><span class="p">:</span>  <span class="c1"># 1</span>
   <span class="n">j</span> <span class="o">=</span> <span class="p">[</span><span class="n">pure_ast</span><span class="p">,</span> <span class="c1"># 2</span>
-       <span class="n">g</span><span class="p">(),</span> <span class="s1">&#39;pure_ast&#39;</span><span class="p">]</span>
+       <span class="n">g</span><span class="p">(),</span> <span class="s1">&#39;pure_ast&#39;</span>
+      <span class="p">]</span>
   <span class="n">k</span> <span class="o">=</span> <span class="mi">3</span>
   <span class="n">j</span> <span class="o">=</span> <span class="p">[</span><span class="n">pure_ast</span><span class="p">,</span> <span class="c1"># 2</span>
-       <span class="n">g</span><span class="p">(),</span> <span class="s1">&#39;pure_ast&#39;</span><span class="p">]</span>
+       <span class="n">g</span><span class="p">(),</span> <span class="s1">&#39;pure_ast&#39;</span>
+      <span class="p">]</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># the same AST used in two places is deduplicated</span>
 <span class="kc">False</span>
@@ -132,10 +134,12 @@ original tree that was marked, for now.</p>
 <span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
 <span class="k">if</span> <span class="n">i</span><span class="p">:</span>  <span class="c1"># 1</span>
   <span class="n">j</span> <span class="o">=</span> <span class="p">[</span><span class="n">pure_ast</span><span class="p">,</span> <span class="c1"># 2</span>
-       <span class="n">g</span><span class="p">(),</span> <span class="s1">&#39;pure_ast&#39;</span><span class="p">]</span>
+       <span class="n">g</span><span class="p">(),</span> <span class="s1">&#39;pure_ast&#39;</span>
+      <span class="p">]</span>
   <span class="n">k</span> <span class="o">=</span> <span class="mi">3</span>
   <span class="n">j</span> <span class="o">=</span> <span class="p">[</span><span class="n">pure_ast</span><span class="p">,</span> <span class="c1"># 2</span>
-       <span class="n">g</span><span class="p">(),</span> <span class="s1">&#39;pure_ast&#39;</span><span class="p">]</span>
+       <span class="n">g</span><span class="p">(),</span> <span class="s1">&#39;pure_ast&#39;</span>
+      <span class="p">]</span>
   <span class="n">l</span><span class="o">=</span><span class="s2">&quot;formatting&quot;</span>  <span class="c1"># stays</span>
   <span class="n">m</span> <span class="o">=</span> <span class="s1">&#39;formatting&#39;</span>
 </code></pre>

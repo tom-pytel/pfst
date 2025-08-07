@@ -140,12 +140,6 @@
                                 <a class="variable" href="#FST.is_anon_scope">is_anon_scope</a>
                         </li>
                         <li>
-                                <a class="variable" href="#FST.has_Slice">has_Slice</a>
-                        </li>
-                        <li>
-                                <a class="variable" href="#FST.is_augop">is_augop</a>
-                        </li>
-                        <li>
                                 <a class="function" href="#FST.new">new</a>
                         </li>
                         <li>
@@ -216,9 +210,6 @@
                         </li>
                         <li>
                                 <a class="function" href="#FST.unpar">unpar</a>
-                        </li>
-                        <li>
-                                <a class="function" href="#FST.trivia">trivia</a>
                         </li>
                         <li>
                                 <a class="function" href="#FST.next">next</a>
@@ -293,6 +284,9 @@
                                 <a class="function" href="#FST.get_indent">get_indent</a>
                         </li>
                         <li>
+                                <a class="function" href="#FST.get_matchseq_delimiters">get_matchseq_delimiters</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#FST.is_parsable">is_parsable</a>
                         </li>
                         <li>
@@ -302,7 +296,7 @@
                                 <a class="function" href="#FST.is_atom">is_atom</a>
                         </li>
                         <li>
-                                <a class="function" href="#FST.is_enclosed">is_enclosed</a>
+                                <a class="function" href="#FST.is_enclosed_or_line">is_enclosed_or_line</a>
                         </li>
                         <li>
                                 <a class="function" href="#FST.is_enclosed_in_parents">is_enclosed_in_parents</a>
@@ -311,13 +305,10 @@
                                 <a class="function" href="#FST.is_parenthesized_tuple">is_parenthesized_tuple</a>
                         </li>
                         <li>
-                                <a class="function" href="#FST.is_enclosed_matchseq">is_enclosed_matchseq</a>
-                        </li>
-                        <li>
                                 <a class="function" href="#FST.is_empty_set_call">is_empty_set_call</a>
                         </li>
                         <li>
-                                <a class="function" href="#FST.is_empty_set_seq">is_empty_set_seq</a>
+                                <a class="function" href="#FST.is_empty_set_star">is_empty_set_star</a>
                         </li>
                         <li>
                                 <a class="function" href="#FST.is_elif">is_elif</a>
@@ -333,6 +324,15 @@
                         </li>
                         <li>
                                 <a class="function" href="#FST.is_solo_matchcls_pat">is_solo_matchcls_pat</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#FST.is_augop">is_augop</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#FST.has_Slice">has_Slice</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#FST.has_Starred">has_Starred</a>
                         </li>
                 </ul>
 
@@ -757,6 +757,9 @@ a location even though the <code>AST</code> exists.</p>
             <div class="docstring"><p>Bounding location of node, including any preceding decorators. Not all nodes have locations but any node
 which has a <code><a href="#FST.loc">loc</a></code> will have a <code><a href="#FST.bloc">bloc</a></code>. Will be same as <code><a href="#FST.loc">loc</a></code> for all nodes except those that have decorators, in
 which case it will start at the first decorator.</p>
+
+<p><strong>Note:</strong> This may be changed in the future to include trailing comments belonging to last elements of block
+statements.</p>
 </div>
 
 
@@ -1013,67 +1016,6 @@ which case it will start at the first decorator.</p>
 
 
                             </div>
-                            <div id="FST.has_Slice" class="classattr">
-                                <div class="attr variable">
-            <span class="name">has_Slice</span><span class="annotation">: bool</span>
-
-        
-    </div>
-    <a class="headerlink" href="#FST.has_Slice"></a>
-    
-            <div class="docstring"><p>Whether self is a <code>Slice</code> or a <code>Tuple</code> which directly contains any <code>Slice</code>.</p>
-
-<p><strong>Examples:</strong></p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a:b:c&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">has_Slice</span>
-<span class="kc">True</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;1, d:e&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">has_Slice</span>  <span class="c1"># Tuple contains at least one Slice</span>
-<span class="kc">True</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="c1"># b is in the .slice field but is not a Slice or Slice Tuple</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a[b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">slice</span><span class="o">.</span><span class="n">has_Slice</span>
-<span class="kc">False</span>
-</code></pre>
-</div>
-</div>
-
-
-                            </div>
-                            <div id="FST.is_augop" class="classattr">
-                                <div class="attr variable">
-            <span class="name">is_augop</span><span class="annotation">: bool | None</span>
-
-        
-    </div>
-    <a class="headerlink" href="#FST.is_augop"></a>
-    
-            <div class="docstring"><p>Whether <code>self</code> is an augmented <code>operator</code> or not, or not an <code>operator</code> at all.</p>
-
-<p><strong>Returns:</strong></p>
-
-<ul>
-<li><code>True</code> if is augmented <code>operator</code>, <code>False</code> if non-augmented <code>operator</code> and <code>None</code> if is not <code>operator</code> at all.</li>
-</ul>
-
-<p><strong>Examples:</strong></p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_augop</span>
-<span class="kc">False</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;+=&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_augop</span>
-<span class="kc">True</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">repr</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;~&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_augop</span><span class="p">)</span>
-<span class="s1">&#39;None&#39;</span>
-</code></pre>
-</div>
-</div>
-
-
-                            </div>
                             <div id="FST.new" class="classattr">
                                 <div class="attr function">
                     <div class="decorator decorator-staticmethod">@staticmethod</div>
@@ -1317,8 +1259,13 @@ used.</p>
  <span class="s1">&#39;trivia&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;elif_&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;docstr&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
- <span class="s1">&#39;empty_set&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;pars_walrus&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+ <span class="s1">&#39;set_get&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;set_put&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;set_del&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;matchor_get&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;matchor_put&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;matchor_del&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;pep8space&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;precomms&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;postcomms&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
@@ -1447,9 +1394,10 @@ when the context manager exits.</p>
 <p><strong>Options:</strong></p>
 
 <ul>
-<li><code><a href="#FST.pars">pars</a></code>: How parentheses are handled, can be <code>False</code>, <code>True</code> or <code>'auto'</code>. This is for individual puts, for
-slices parentheses are always unchanged. Raw puts generally do not have parentheses added or removed
-automatically, except removed from the destination node if putting to a node instead of a pure location.
+<li><code><a href="#FST.pars">pars</a></code>: How parentheses are handled, can be <code>False</code>, <code>True</code> or <code>'auto'</code>. This is for individual element
+operations, slice operations ignore this as parentheses usually cannot be removed or may need to be added to
+keep the slices usable. Raw puts generally do not have parentheses added or removed automatically, except
+maybe removed according to this from the destination node if putting to a node instead of a pure location.
 <ul>
 <li><code>False</code>: Parentheses are not MODIFIED, doesn't mean remove all parentheses. Not copied with nodes or
 removed on put from source or destination.</li>
@@ -1464,7 +1412,7 @@ on put if not needed (removed from destination first if needed and present on bo
 <li><code>True</code>: Only do raw source operations.</li>
 <li><code>'auto'</code>: Only do raw source operations if the normal operation fails in a way that raw might not.</li>
 </ul></li>
-<li><code><a href="#FST.trivia">trivia</a></code>: What comments and empty lines to copy / delete when doing operations on elements which may have
+<li><code>trivia</code>: What comments and empty lines to copy / delete when doing operations on elements which may have
 leading or trailing lines of stuff.
 <ul>
 <li><code>False</code>: Don't copy / delete any trivia.</li>
@@ -1489,9 +1437,9 @@ empty line. If not interrupted by other code, will always return up to this line
 </ul></li>
 <li><code>elif_</code>: How to handle lone <code>If</code> statements as the only statements in an <code>If</code> statement <code>orelse</code> field.
 <ul>
+<li><code>False</code>: Always put as a standalone <code>If</code> statement.</li>
 <li><code>True</code>: If putting a single <code>If</code> statement to an <code>orelse</code> field of a parent <code>If</code> statement then
 put it as an <code>elif</code>.</li>
-<li><code>False</code>: Always put as a standalone <code>If</code> statement.</li>
 </ul></li>
 <li><code>docstr</code>: Which docstrings are indentable / dedentable.
 <ul>
@@ -1499,18 +1447,55 @@ put it as an <code>elif</code>.</li>
 <li><code>True</code>: All <code>Expr</code> multiline strings (as they serve no coding purpose).</li>
 <li><code>'strict'</code>: Only multiline strings in expected docstring positions (functions and classes).</li>
 </ul></li>
-<li><code>empty_set</code>: Empty set source during a slice put (considered to have no elements).
-<ul>
-<li><code>False</code>: Nothing is considered an empty set and an empty set slice put is only possible using a non-set
-type of empty sequence (tuple or list).</li>
-<li><code>True</code>: <code>set()</code> call and <code>{*()}</code>, <code>{*[]}</code> and <code>{*{}}</code> starred sequences are considered empty.</li>
-<li><code>'seq'</code>: Only starred sequences <code>{*()}</code>, <code>{*[]}</code> and <code>{*{}}</code> are considered empty.</li>
-<li><code>'call'</code>: Only <code>set()</code> call is considered empty.</li>
-</ul></li>
 <li><code>pars_walrus</code>: Whether to parenthesize copied <code>NamedExpr</code> nodes or not (only if <code><a href="#FST.pars">pars</a></code> is also not <code>False</code>).
 <ul>
 <li><code>False</code>: Do not parenthesize cut / copied <code>NamedExpr</code> walrus expressions.</li>
 <li><code>True</code>: Parenthesize cut / copied <code>NamedExpr</code> walrus expressions.</li>
+</ul></li>
+<li><code>set_get</code>: Empty set to return when getting an empty slice from a set.
+<ul>
+<li><code>False</code>: Return an invalid <code>Set</code> with zero elements and curlies as delimiters (would parse to a <code>Dict</code>).</li>
+<li><code>True</code>: Same as <code>'star'</code>.</li>
+<li><code>'star'</code>: Starred sequence <code>{*()}</code>.</li>
+<li><code>'call'</code>: <code>set()</code> call.</li>
+<li><code>'tuple'</code>: Empty tuple <code>()</code>.</li>
+</ul></li>
+<li><code>set_put</code>: What to consider an empty set that is being put (not the target of the put). This applies to puts
+to any types which take a sequence as a source and not just puts to a <code>Set</code>, so puts to <code>Tuple</code> and <code>List</code>
+as well.
+<ul>
+<li><code>False</code>: Nothing is considered an empty set, <code>set()</code> is not considered a sequence and a <code>{*()}</code> set is put
+verbatim.</li>
+<li><code>True</code>: Same a <code>'both'</code>.</li>
+<li><code>'star'</code>: Only starred sequences <code>{*()}</code>, <code>{*[]}</code> and <code>{*{}}</code> are considered empty.</li>
+<li><code>'call'</code>: Only <code>set()</code> call is considered empty.</li>
+<li><code>'both'</code>: <code>set()</code> call and <code>{*()}</code>, <code>{*[]}</code> and <code>{*{}}</code> starred sequences are considered empty.</li>
+</ul></li>
+<li><code>set_del</code>: What to leave for an empty set if a <code>Set</code> gets everything cut or deleted from it. This is also what
+gets put if you put an invalid empty set with <code>one=True</code>.
+<ul>
+<li><code>False</code>: Leave an invalid <code>Set</code> with zero elements and curlies as delimiters (would parse to a <code>Dict</code>).</li>
+<li><code>True</code>: Same as <code>'star'</code>.</li>
+<li><code>'star'</code>: Starred sequence <code>{*()}</code>.</li>
+<li><code>'call'</code>: <code>set()</code> call.</li>
+</ul></li>
+<li><code>matchor_get</code>: How to handle zero or length 1 slice gets from a <code>MatchOr</code>. Zero-length <code>MatchOr</code>s, or any
+zero-length source spans really can be problematic, try not to hang on to them for too long.
+<ul>
+<li><code>False</code>: Return invalid one and zero-length <code>MatchOr</code>.</li>
+<li><code>True</code>: Error on zero-length get, return single pattern element (not <code>MatchOr</code>) for length 1.</li>
+<li><code>'strict'</code>: Only allow get length 2+ <code>MatchOr</code>, error otherwise.</li>
+</ul></li>
+<li><code>matchor_put</code>: How to handle slice puts to <code>MatchOr</code>
+<ul>
+<li><code>False</code>: Accept one or zero-length <code>MatchOr</code>, do not accept single element pattern as length 1.</li>
+<li><code>True</code>: Accept one or zero-length <code>MatchOr</code> as well as single element pattern as length 1.</li>
+</ul></li>
+<li><code>matchor_del</code>: How to handle zero or length 1 <code>MatchOr</code> objects when a cut or del reduces them to this length.
+<ul>
+<li><code>False</code>: Leave one or zero-length <code>MatchOr</code>.</li>
+<li><code>True</code>: Error on zero-length, convert to single element if length 1.</li>
+<li><code>'strict'</code>: Only allow length 2+ <code>MatchOr</code>, error otherwise.</li>
 </ul></li>
 <li><code>pep8space</code>: Preceding and trailing empty lines for function and class definitions.
 <ul>
@@ -1518,13 +1503,13 @@ type of empty sequence (tuple or list).</li>
 <li><code>True</code>: Two empty lines at module scope and one empty line in other scopes.</li>
 <li><code>1</code>: One empty line in all scopes.</li>
 </ul></li>
-<li><code>precomms</code>: Preceding comments.  - DEPRECATED, STILL USED FOR STMTS, WILL BE REPLACED WITH <code><a href="#FST.trivia">trivia</a></code>!
+<li><code>precomms</code>: Preceding comments.  - DEPRECATED, STILL USED FOR STMTS, WILL BE REPLACED WITH <code>trivia</code>!
 <ul>
 <li><code>False</code>: No preceding comments.</li>
 <li><code>True</code>: Single contiguous comment block immediately preceding position.</li>
 <li><code>'all'</code>: Comment blocks (possibly separated by empty lines) preceding position.</li>
 </ul></li>
-<li><code>postcomms</code>: Trailing comments.  - DEPRECATED, STILL USED FOR STMTS, WILL BE REPLACED WITH <code><a href="#FST.trivia">trivia</a></code>!
+<li><code>postcomms</code>: Trailing comments.  - DEPRECATED, STILL USED FOR STMTS, WILL BE REPLACED WITH <code>trivia</code>!
 <ul>
 <li><code>False</code>: No trailing comments.</li>
 <li><code>True</code>: Only comment trailing on line of position, nothing past that on its own lines.</li>
@@ -1532,14 +1517,14 @@ type of empty sequence (tuple or list).</li>
 <li><code>'all'</code>: Comment blocks (possibly separated by empty lines) following position.</li>
 </ul></li>
 <li><code>prespace</code>: Preceding empty lines (max of this and <code>pep8space</code> used).  - DEPRECATED, STILL USED FOR STMTS,
-WILL BE REPLACED WITH <code><a href="#FST.trivia">trivia</a></code>!
+WILL BE REPLACED WITH <code>trivia</code>!
 <ul>
 <li><code>False</code>: No empty lines.</li>
 <li><code>True</code>: All empty lines.</li>
 <li><code>int</code>: A maximum number of empty lines.</li>
 </ul></li>
 <li><code>postspace</code>: Same as <code>prespace</code> except for trailing empty lines.  - DEPRECATED, STILL USED FOR STMTS, WILL BE
-REPLACED WITH <code><a href="#FST.trivia">trivia</a></code>!</li>
+REPLACED WITH <code>trivia</code>!</li>
 </ul>
 
 <p><strong>Note:</strong> <code><a href="#FST.pars">pars</a></code> behavior:</p>
@@ -1552,7 +1537,7 @@ Remove unneeded pars from source on put:                     no        no       
 Add pars needed for parse / precedence to source on put:     no       yes       yes
 </code></pre>
 
-<p><strong>Note:</strong> <code><a href="#FST.trivia">trivia</a></code> text suffix behavior:</p>
+<p><strong>Note:</strong> <code>trivia</code> text suffix behavior:</p>
 
 <ul>
 <li><code>'+[#]'</code> Copy and delete an extra number of lines after any comments specified by the <code>#</code>. If no number is
@@ -2748,93 +2733,6 @@ belong to this node or not (meant for internal use).</li>
 <span class="o">&gt;&gt;&gt;</span> <span class="c1"># unless told not to</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(((i for i in j)))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">shared</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;call((i for i in j))&#39;</span>
-</code></pre>
-</div>
-</div>
-
-
-                            </div>
-                            <div id="FST.trivia" class="classattr">
-                                <div class="attr function">
-            
-        <span class="def">def</span>
-        <span class="name">trivia</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">trivia</span><span class="p">:</span> <span class="s1">&#39;bool | str | tuple[bool | str | int | None, bool | str | int | None] | None&#39;</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">as_put</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></span><span class="return-annotation">) -> <span class="n">fst</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">fstlocns</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
-
-        
-    </div>
-    <a class="headerlink" href="#FST.trivia"></a>
-    
-            <div class="docstring"><p>Return location of the trivia (comments and empty lines) surrounding this node. What is checked is controlled
-by the <code><a href="#FST.trivia">trivia</a></code> parameter and / or the global default <code><a href="#FST.trivia">trivia</a></code> option. Currently only applies to statementish
-nodes (<code>stmt</code>, <code>ExceptHandler</code> and <code>match_case</code>).</p>
-
-<p><strong>TODO:</strong> Trivia for non-statementish nodes.</p>
-
-<p><strong>Parameters:</strong></p>
-
-<ul>
-<li><code><a href="#FST.trivia">trivia</a></code>: The specification for what trivia to return, see <code><a href="#FST.options">options()</a></code> for meaning of values:
-<ul>
-<li><code>None</code>: Global default is used.</li>
-<li><code>bool | str</code>: This is used for leading trivia and global default is used for trailing.</li>
-<li><code>tuple</code>: Can specify leading and / or trailing trivia. A value of <code>None</code> for either selects the global
-default for that trivia.</li>
-</ul></li>
-<li><code>as_put</code>: Whether querying as a get or a put operation. Only affects how the <code>'-'</code> suffix is processed, used
-if <code>True</code> and ignored if <code>False</code>.</li>
-</ul>
-
-<p><strong>Returns:</strong></p>
-
-<ul>
-<li><code>fstlocns</code>: The full location from the start of the leading trivia to the end of the trailing. If trivia
-present then will start on column 0. If no trivia found then may just be the start and / or end location of
-the node itself. Has two attributes <code>starts_line: bool</code> and <code>ends_line: bool</code> which specify whether the node
-starts a new line and whether it ends one (line continuation end counts as ending the line). Also
-<code>indent: str | None</code> gives the indentation for the node line if the node starts a new line (this is not
-necessarily the statement block indentation), if the node does not start a line then this is <code>None</code>.</li>
-<li><code>None</code>: If node is not a <code>stmt</code>, <code>ExceptHandler</code> or <code>match_case</code>.</li>
-</ul>
-
-<p><strong>Examples:</strong></p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... if 1:</span>
-<span class="s1">...   a</span>
-<span class="s1">...</span>
-<span class="s1">...   # 1</span>
-<span class="s1">...   </span><span class="se">\</span>
-<span class="s1">...</span>
-<span class="s1">...   # 2</span>
-<span class="s1">...   # 3</span>
-<span class="s1">...   b  # 4</span>
-<span class="s1">...   # 5</span>
-<span class="s1">...   # 6</span>
-<span class="s1">...</span>
-<span class="s1">...   </span><span class="se">\</span>
-<span class="s1">...   # 7</span>
-<span class="s1">...</span>
-<span class="s1">...   c</span>
-<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">trivia</span><span class="p">())</span>
-<span class="n">fstlocns</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">starts_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ends_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="s1">&#39;  &#39;</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">trivia</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">))</span>
-<span class="n">fstlocns</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">starts_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ends_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="s1">&#39;  &#39;</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">trivia</span><span class="p">(</span><span class="s1">&#39;all+1&#39;</span><span class="p">))</span>
-<span class="n">fstlocns</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">starts_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ends_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="s1">&#39;  &#39;</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">trivia</span><span class="p">((</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;block&#39;</span><span class="p">)))</span>
-<span class="n">fstlocns</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">starts_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ends_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="s1">&#39;  &#39;</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">trivia</span><span class="p">((</span><span class="kc">None</span><span class="p">,</span> <span class="mi">13</span><span class="p">)))</span>
-<span class="n">fstlocns</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">starts_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ends_line</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="s1">&#39;  &#39;</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a; b; c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">trivia</span><span class="p">())</span>
-<span class="n">fstlocns</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">starts_line</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ends_line</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre>
 </div>
 </div>
@@ -4062,7 +3960,7 @@ parent.</li>
     <a class="headerlink" href="#FST.get_indent"></a>
     
             <div class="docstring"><p>Determine proper indentation of node at <code>stmt</code> (or other similar) level at or above <code>self</code>. Even if it is a
-continuation or on same line as block statement. If indentation is impossible to determine because is solo
+continuation or on same line as block header. If indentation is impossible to determine because is solo
 statement on same line as parent block then the current tree default indentation is added to the parent block
 indentation and returned.</p>
 
@@ -4104,6 +4002,47 @@ indentation and returned.</p>
 
 
                             </div>
+                            <div id="FST.get_matchseq_delimiters" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">get_matchseq_delimiters</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="n">Optional</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;[]&#39;</span><span class="p">,</span> <span class="s1">&#39;()&#39;</span><span class="p">]]</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#FST.get_matchseq_delimiters"></a>
+    
+            <div class="docstring"><p>Whether <code>self</code> is a delimited <code>MatchSequence</code> or not (parenthesized or bracketed), or not a <code>MatchSequence</code>
+at all.</p>
+
+<p><strong>Returns:</strong></p>
+
+<ul>
+<li><code>None</code>: If is not <code>MatchSequence</code> at all.</li>
+<li><code>''</code>: If is undelimited <code>MatchSequence</code>.</li>
+<li><code>'()'</code> or <code>'[]'</code>: Is delimited with these delimiters.</li>
+</ul>
+
+<p><strong>Examples:</strong></p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;match a:</span><span class="se">\n</span><span class="s1">  case 1, 2: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">get_matchseq_delimiters</span><span class="p">()</span>
+<span class="s1">&#39;&#39;</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;match a:</span><span class="se">\n</span><span class="s1">  case [1, 2]: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">get_matchseq_delimiters</span><span class="p">()</span>
+<span class="s1">&#39;[]&#39;</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;match a:</span><span class="se">\n</span><span class="s1">  case (1, 2): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">get_matchseq_delimiters</span><span class="p">()</span>
+<span class="s1">&#39;()&#39;</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;match a:</span><span class="se">\n</span><span class="s1">  case 1: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">get_matchseq_delimiters</span><span class="p">())</span>
+<span class="kc">None</span>
+</code></pre>
+</div>
+</div>
+
+
+                            </div>
                             <div id="FST.is_parsable" class="classattr">
                                 <div class="attr function">
             
@@ -4116,7 +4055,8 @@ indentation and returned.</p>
     
             <div class="docstring"><p>Whether the source for this node is parsable by <code><a href="#FST">FST</a></code> or not (if properly dedented for top level). This is
 different from <code>astutil.is_parsable</code> because that one indicates what is parsable by the python <code>ast</code> module,
-while <code><a href="#FST">FST</a></code> can parse more things.</p>
+while <code><a href="#FST">FST</a></code> can parse more things. For example, an unparenthesized <code>NamedExpr</code> is considered parsable even
+though it would not parse directly using <code>ast.parse()</code>.</p>
 
 <p><strong>Returns:</strong></p>
 
@@ -4182,7 +4122,7 @@ while <code><a href="#FST">FST</a></code> can parse more things.</p>
     </div>
     <a class="headerlink" href="#FST.is_parenthesizable"></a>
     
-            <div class="docstring"><p>Whether <code>self</code> is parenthesizable with grouping parentheses or now. Essentially all <code>expr</code>s and <code>pattern</code>s
+            <div class="docstring"><p>Whether <code>self</code> is parenthesizable with grouping parentheses or not. Essentially all <code>expr</code>s and <code>pattern</code>s
 except for <code>Slice</code>.</p>
 
 <p><strong>Returns:</strong></p>
@@ -4244,7 +4184,7 @@ rules when reparsed.</p>
 
 <p>Being atomic precedence-wise does not guarantee parsability as an otherwise atomic node could be spread across
 multiple lines without line continuations or grouping parentheses, in this case <code>'unenclosable'</code> is returned (if
-these nodes are not excluded altogether with <code>always_enclosed=True</code>). Also see <code><a href="#FST.is_enclosed">is_enclosed()</a></code>.</p>
+these nodes are not excluded altogether with <code>always_enclosed=True</code>). Also see <code><a href="#FST.is_enclosed_or_line">is_enclosed_or_line()</a></code>.</p>
 
 <p>If this function returns <code>'pars'</code> then <code>self</code> is enclosed due to the grouping parentheses.</p>
 
@@ -4302,19 +4242,21 @@ parentheses present, in which case <code>'pars'</code> is returned.</li>
 
 
                             </div>
-                            <div id="FST.is_enclosed" class="classattr">
+                            <div id="FST.is_enclosed_or_line" class="classattr">
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">is_enclosed</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">*</span>, </span><span class="param"><span class="n">pars</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;pars&#39;</span><span class="p">]]</span>:</span></span>
+        <span class="name">is_enclosed_or_line</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">*</span>, </span><span class="param"><span class="n">pars</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;pars&#39;</span><span class="p">]]</span>:</span></span>
 
         
     </div>
-    <a class="headerlink" href="#FST.is_enclosed"></a>
+    <a class="headerlink" href="#FST.is_enclosed_or_line"></a>
     
-            <div class="docstring"><p>Whether <code>self</code> lives on a single line or is otherwise enclosed in some kind of delimiters <code>()</code>, <code>[]</code>, <code>{}</code> or
-entirely terminated with line continuations so that it can be parsed without error due to being spread across
-multiple lines. This does not mean it can't have other errors, such as a <code>Slice</code> outside of <code>Subscript.slice</code>.</p>
+            <div class="docstring"><p>Whether <code>self</code> lives on a single line or logical line (entirely terminated with line continuations) or is
+otherwise enclosed in some kind of delimiters <code>()</code>, <code>[]</code>, <code>{}</code> so that it can be parsed without error due to
+being spread across multiple lines. If logical line then internal enclosed elements spread over multiple lines
+without line continuations are fine. This does not mean it can't have other errors, such as a <code>Slice</code> outside of
+<code>Subscript.slice</code>.</p>
 
 <p>Node types where this doesn't normally apply like <code>stmt</code>, <code>ExceptHandler</code>, <code>boolop</code>, <code>expr_context</code>, etc...
 return <code>True</code>. Node types that are not enclosed but which are never used without being enclosed by a parent like
@@ -4343,38 +4285,38 @@ multiline-safe. Grouping parentheses are different from tuple parentheses which 
 <p><strong>Examples:</strong></p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_enclosed</span><span class="p">()</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_enclosed_or_line</span><span class="p">()</span>
 <span class="kc">True</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a + </span><span class="se">\\\n</span><span class="s1"> b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_enclosed</span><span class="p">()</span>  <span class="c1"># because of the line continuation</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a + </span><span class="se">\\\n</span><span class="s1"> b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_enclosed_or_line</span><span class="p">()</span>  <span class="c1"># because of the line continuation</span>
 <span class="kc">True</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a + </span><span class="se">\n</span><span class="s1"> b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_enclosed</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a + </span><span class="se">\n</span><span class="s1"> b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_enclosed_or_line</span><span class="p">()</span>
 <span class="s1">&#39;pars&#39;</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a + </span><span class="se">\n</span><span class="s1"> b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_enclosed</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a + </span><span class="se">\n</span><span class="s1"> b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_enclosed_or_line</span><span class="p">()</span>
 <span class="kc">False</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a + </span><span class="se">\n</span><span class="s1"> b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_enclosed</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a + </span><span class="se">\n</span><span class="s1"> b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_enclosed_or_line</span><span class="p">()</span>
 <span class="kc">False</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a + </span><span class="se">\n</span><span class="s1"> b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_enclosed_in_parents</span><span class="p">()</span>
 <span class="kc">True</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;def f(a, b): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">is_enclosed</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;def f(a, b): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">is_enclosed_or_line</span><span class="p">()</span>
 <span class="kc">True</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="c1"># because the parentheses belong to the FunctionDef</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;def f(a,</span><span class="se">\n</span><span class="s1"> b): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">is_enclosed</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;def f(a,</span><span class="se">\n</span><span class="s1"> b): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">is_enclosed_or_line</span><span class="p">()</span>
 <span class="kc">False</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;def f(a,</span><span class="se">\n</span><span class="s1"> b): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">is_enclosed_in_parents</span><span class="p">()</span>
 <span class="kc">True</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a is not b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_enclosed</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a is not b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_enclosed_or_line</span><span class="p">()</span>
 <span class="kc">True</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a is </span><span class="se">\n</span><span class="s1"> not b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_enclosed</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a is </span><span class="se">\n</span><span class="s1"> not b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_enclosed_or_line</span><span class="p">()</span>
 <span class="kc">False</span>
 </code></pre>
 </div>
@@ -4392,11 +4334,11 @@ multiline-safe. Grouping parentheses are different from tuple parentheses which 
     </div>
     <a class="headerlink" href="#FST.is_enclosed_in_parents"></a>
     
-            <div class="docstring"><p>Whether <code>self</code> is enclosed by some parent up the tree. This is different from <code><a href="#FST.is_enclosed">is_enclosed()</a></code> as it does not
-check for line continuations or anyting like that, just enclosing delimiters like from <code>Call</code> or <code>FunctionDef</code>
-arguments parentheses, <code>List</code> brackets, <code>FormattedValue</code>, parent grouping parentheses, etc... Statements do not
-generally enclose except for a few parts of things like <code>FunctionDef.args</code> or <code>type_params</code>, <code>ClassDef.bases</code>,
-etc...</p>
+            <div class="docstring"><p>Whether <code>self</code> is enclosed by some parent up the tree. This is different from <code><a href="#FST.is_enclosed_or_line">is_enclosed_or_line()</a></code> as it
+does not check for line continuations or anyting like that, just enclosing delimiters like from <code>Call</code> or
+<code>FunctionDef</code> arguments parentheses, <code>List</code> brackets, <code>FormattedValue</code>, parent grouping parentheses, etc...
+Statements do not generally enclose except for a few parts of things like <code>FunctionDef.args</code> or <code>type_params</code>,
+<code>ClassDef.bases</code>, etc...</p>
 
 <p><strong>Parameters:</strong></p>
 
@@ -4405,9 +4347,9 @@ etc...</p>
 is not <code>None</code> then <code>self</code> is considered the first parent with an imaginary child being checked at <code>field</code>.</li>
 </ul>
 
-<p><strong>WARNING!</strong> This will not pick up parentheses which belong to <code>self</code> and the rules for this can be confusing. E.g.
-in <code>with (x): pass</code> the parentheses belong to the variable <code>x</code> while <code>with (x as y): pass</code> they belong to the
-<code>with</code> because <code>alias</code>es cannot be parenthesized.</p>
+<p><strong>WARNING!</strong> This will not pick up parentheses which belong to <code>self</code> and the rules for this can be confusing.
+E.g. in <code>with (x): pass</code> the parentheses belong to the variable <code>x</code> while <code>with (x as y): pass</code> they belong to
+the <code>with</code> because <code>alias</code>es cannot be parenthesized.</p>
 
 <p>Will pick up parentheses which belong to <code>self</code> if <code>field</code> is passed because in that case <code>self</code> is considered
 the first parent and we are really considering the node which would live at <code>field</code>, whether it exists or not.</p>
@@ -4488,46 +4430,6 @@ the first parent and we are really considering the node which would live at <cod
 
 
                             </div>
-                            <div id="FST.is_enclosed_matchseq" class="classattr">
-                                <div class="attr function">
-            
-        <span class="def">def</span>
-        <span class="name">is_enclosed_matchseq</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
-
-        
-    </div>
-    <a class="headerlink" href="#FST.is_enclosed_matchseq"></a>
-    
-            <div class="docstring"><p>Whether <code>self</code> is an enclosed <code>MatchSequence</code> or not, or not a <code>MatchSequence</code> at all (can be pars <code>()</code> or
-brackets <code>[]</code>).</p>
-
-<p><strong>Returns:</strong></p>
-
-<ul>
-<li><code>True</code> if is enclosed <code>MatchSequence</code>, <code>False</code> if is unparenthesized <code>MatchSequence</code>, <code>None</code> if is not
-<code>MatchSequence</code> at all.</li>
-</ul>
-
-<p><strong>Examples:</strong></p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;match a:</span><span class="se">\n</span><span class="s1">  case 1, 2: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">is_enclosed_matchseq</span><span class="p">()</span>
-<span class="kc">False</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;match a:</span><span class="se">\n</span><span class="s1">  case [1, 2]: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">is_enclosed_matchseq</span><span class="p">()</span>
-<span class="kc">True</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;match a:</span><span class="se">\n</span><span class="s1">  case (1, 2): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">is_enclosed_matchseq</span><span class="p">()</span>
-<span class="kc">True</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;match a:</span><span class="se">\n</span><span class="s1">  case 1: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">is_enclosed_matchseq</span><span class="p">())</span>
-<span class="kc">None</span>
-</code></pre>
-</div>
-</div>
-
-
-                            </div>
                             <div id="FST.is_empty_set_call" class="classattr">
                                 <div class="attr function">
             
@@ -4560,15 +4462,15 @@ brackets <code>[]</code>).</p>
 
 
                             </div>
-                            <div id="FST.is_empty_set_seq" class="classattr">
+                            <div id="FST.is_empty_set_star" class="classattr">
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">is_empty_set_seq</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="nb">bool</span>:</span></span>
+        <span class="name">is_empty_set_star</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="nb">bool</span>:</span></span>
 
         
     </div>
-    <a class="headerlink" href="#FST.is_empty_set_seq"></a>
+    <a class="headerlink" href="#FST.is_empty_set_star"></a>
     
             <div class="docstring"><p>Whether <code>self</code> is an empty <code>Set</code> from an empty <code>Starred</code> <code>Constant</code> sequence, recognized are <code>{*()}</code>, <code>{*[]}</code>
 and <code>{*{}}</code>.</p>
@@ -4576,13 +4478,13 @@ and <code>{*{}}</code>.</p>
 <p><strong>Examples:</strong></p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{1}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_empty_set_seq</span><span class="p">()</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{1}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_empty_set_star</span><span class="p">()</span>
 <span class="kc">False</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_empty_set_seq</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_empty_set_star</span><span class="p">()</span>
 <span class="kc">True</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;set()&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_empty_set_seq</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;set()&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_empty_set_star</span><span class="p">()</span>
 <span class="kc">False</span>
 </code></pre>
 </div>
@@ -4749,6 +4651,97 @@ qualifies as <code>True</code> for this check if the <code>MatchValue</code> doe
 <span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;match a:</span><span class="se">\n</span><span class="s1">  case cls(a, b): pass&#39;</span><span class="p">)</span>
 <span class="o">...</span>  <span class="o">.</span><span class="n">cases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">patterns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_solo_matchcls_pat</span><span class="p">())</span>
 <span class="kc">False</span>
+</code></pre>
+</div>
+</div>
+
+
+                            </div>
+                            <div id="FST.is_augop" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">is_augop</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#FST.is_augop"></a>
+    
+            <div class="docstring"><p>Whether <code>self</code> is an augmented <code>operator</code> or not, or not an <code>operator</code> at all.</p>
+
+<p><strong>Returns:</strong></p>
+
+<ul>
+<li><code>True</code> if is augmented <code>operator</code>, <code>False</code> if non-augmented <code>operator</code> and <code>None</code> if is not <code>operator</code> at all.</li>
+</ul>
+
+<p><strong>Examples:</strong></p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_augop</span><span class="p">()</span>
+<span class="kc">False</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;+=&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_augop</span><span class="p">()</span>
+<span class="kc">True</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">repr</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;~&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_augop</span><span class="p">())</span>
+<span class="s1">&#39;None&#39;</span>
+</code></pre>
+</div>
+</div>
+
+
+                            </div>
+                            <div id="FST.has_Slice" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">has_Slice</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="nb">bool</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#FST.has_Slice"></a>
+    
+            <div class="docstring"><p>Whether self is a <code>Slice</code> or a <code>Tuple</code> which directly contains any <code>Slice</code>.</p>
+
+<p><strong>Examples:</strong></p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a:b:c&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">has_Slice</span><span class="p">()</span>
+<span class="kc">True</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;1, d:e&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">has_Slice</span><span class="p">()</span>  <span class="c1"># Tuple contains at least one Slice</span>
+<span class="kc">True</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="c1"># b is in the .slice field but is not a Slice or Slice Tuple</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a[b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">slice</span><span class="o">.</span><span class="n">has_Slice</span><span class="p">()</span>
+<span class="kc">False</span>
+</code></pre>
+</div>
+</div>
+
+
+                            </div>
+                            <div id="FST.has_Starred" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">has_Starred</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="nb">bool</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#FST.has_Starred"></a>
+    
+            <div class="docstring"><p>Whether self is a <code>Starred</code> or a <code>Tuple</code>, <code>List</code> or <code>Set</code> which directly contains any <code>Starred</code>.</p>
+
+<p><strong>Examples:</strong></p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;*a&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">has_Starred</span><span class="p">()</span>
+<span class="kc">True</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;1, *a&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">has_Starred</span><span class="p">()</span>  <span class="c1"># Tuple contains at least one Starred</span>
+<span class="kc">True</span>
 </code></pre>
 </div>
 </div>
