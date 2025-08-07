@@ -45,6 +45,7 @@ dev = [
   "wheel",
   "twine",
   "pdoc==15.0.1",
+  "ruff==0.12.7",
 ]
 
 [tool.setuptools.packages.find]
@@ -53,3 +54,23 @@ exclude = ["examples"]
 
 [tool.setuptools.dynamic]
 version = { file = "VERSION" }
+
+[tool.ruff]
+line-length = 120
+exclude = ["src/fst/docs"]
+
+[tool.ruff.format]
+quote-style = "preserve"
+skip-magic-trailing-comma = true  # <-- Prevents Ruff from auto-wrapping arguments
+
+[tool.ruff.lint]
+task-tags = [""]
+ignore = [
+  "F401",  # `ast` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+  "F403",  # `from ast import *` used; unable to detect undefined names
+  "F405",  # `AST` may be undefined, or defined from star imports
+  "E701",  # Multiple statements on one line (colon)
+  "E702",  # Multiple statements on one line (semicolon)
+  "E731",  # Do not assign a `lambda` expression, use a `def`
+  "E741",  # Ambiguous variable name: `l`
+]

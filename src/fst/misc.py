@@ -5,7 +5,7 @@ import sys
 from ast import *
 from functools import wraps
 from math import log10
-from typing import Any, Callable, ForwardRef, Literal, NamedTuple, TypeAlias, Union
+from typing import Any, Callable, ForwardRef, Literal, NamedTuple, Union
 
 import fst
 

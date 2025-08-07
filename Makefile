@@ -20,6 +20,11 @@ test:  ## Run basic unit tests
 	python -m unittest discover --verbose tests
 
 
+.PHONY: lint
+lint:  ## Lint stuff
+	ruff check --output-format=concise
+
+
 .PHONY: regen-tests
 regen-tests:  ## Regenerate test data
 	python tests/test_fst.py --regen-all

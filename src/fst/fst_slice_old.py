@@ -67,7 +67,7 @@ def _get_slice_stmtish(self: fst.FST, start: int | Literal['end'] | None, stop: 
     elif len(asts) == 1:
         get_ast = asts[0]
     else:
-        raise ValueError(f'cannot specify `one=True` if getting multiple statements')
+        raise ValueError('cannot specify `one=True` if getting multiple statements')
 
     fst_ = self._make_fst_and_dedent(indent, get_ast, copy_loc, '', '', put_loc, put_lines,
                                      docstr=options.get('docstr'))

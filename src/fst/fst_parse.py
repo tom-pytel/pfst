@@ -30,14 +30,14 @@ _re_case      = re.compile(r'case\b\s*(?:[*\\\w({[\'"-]|\.\d)')
 
 def _ast_parse1(src: str, parse_params: dict = {}):
     if len(body := ast_parse(src, **parse_params).body) != 1:
-        raise SyntaxError(f'expecting single element')
+        raise SyntaxError('expecting single element')
 
     return body[0]
 
 
 def _ast_parse1_case(src: str, parse_params: dict = {}):
     if len(body := ast_parse(src, **parse_params).body) != 1 or len(cases := body[0].cases) != 1:
-        raise SyntaxError(f'expecting single element')
+        raise SyntaxError('expecting single element')
 
     return cases[0]
 

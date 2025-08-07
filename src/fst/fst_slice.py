@@ -1939,7 +1939,7 @@ def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | N
     raw = fst.FST.get_option('raw', options)
 
     if options.get('to') is not None:
-        raise ValueError(f"cannot put slice with 'to'")
+        raise ValueError("cannot put slice with 'to'")
 
     if raw is not True:
         try:
@@ -2047,7 +2047,7 @@ def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: 
         start, stop = _fixup_slice_indices(len_, start, stop)
 
         if start == stop:
-            raise ValueError(f"invalid slice for raw operation")
+            raise ValueError("invalid slice for raw operation")
 
         return start, stop
 

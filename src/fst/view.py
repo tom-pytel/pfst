@@ -6,6 +6,9 @@ from typing import Any, Literal
 
 from .astutil import *
 from .misc import Code, _fixup_one_index, _fixup_slice_indices
+from .fst import FST
+
+__all__ = ['fstview']
 
 
 class fstview:
@@ -519,9 +522,3 @@ class fstview:
         self.stop += len(asts) - len_before
 
         return self
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-__all__ = ['fstview']
-
-from .fst import FST  # this imports a fake FST which is replaced in globals() when fst.py finishes loading

@@ -103,8 +103,8 @@ def regen_get_slice_stmt():
         newlines.extend(sdump)
         newlines.append('"""),\n')
 
-    start = lines.index(f'GET_SLICE_STMTISH_DATA = [')
-    stop  = lines.index(f']  # END OF GET_SLICE_STMTISH_DATA')
+    start = lines.index('GET_SLICE_STMTISH_DATA = [')
+    stop  = lines.index(']  # END OF GET_SLICE_STMTISH_DATA')
 
     lines[start + 1 : stop] = newlines
 
@@ -1769,38 +1769,6 @@ def func():
 
                 raise
 
-    def test_put_slice_special(self):
-        if PYGE14:  # make sure parent Interpolation.str gets modified
-            f = FST('t"{(1, 2)}"', 'exec').body[0].value.copy()
-            f.values[0].value.put_slice("()")
-            self.assertEqual('()', f.values[0].value.src)
-            self.assertEqual('()', f.values[0].str)
-
-            f = FST('t"{(1, 2)}"', 'exec').body[0].value.copy()
-            f.values[0].value.put("()", None, None, one=False)
-            self.assertEqual('()', f.values[0].value.src)
-            self.assertEqual('()', f.values[0].str)
-
-        f = FST('a, b = c')
-        f.targets[0].put_slice('{z}', 1, 2)
-        self.assertEqual('a, z = c', f.src)
-        f.verify()
-
-        f = FST('a, b = c, d')
-        f.value.put_slice('(e := ((b + 1), 2))', 1, 2, one=True)
-        self.assertEqual('a, b = c, (e := ((b + 1), 2))', f.src)
-        f.verify()
-
-        f = FST('a, b = c, d')
-        f.value.put_slice('e := f', 1, 2, one=True)
-        self.assertEqual('a, b = c, (e := f)', f.src)
-        f.verify()
-
-        f = FST('a, b')
-        f.put_slice('end := self.Label(),', 1, 2, raw=False)
-        self.assertEqual('(a, end := self.Label())', f.src)
-        f.verify()
-
     def test_slice_set_empty(self):
         self.assertEqual('[]', FST('[1, 2]').put_slice('set()', raw=False, set_put=True).src)
         self.assertEqual('[]', FST('[1, 2]').put_slice('{*()}', raw=False, set_put=True).src)
@@ -1990,6 +1958,37 @@ def func():
         self.assertEqual('(\n            TI(string="case"),\n)', g.src)
 
     def test_put_slice_special(self):
+        if PYGE14:  # make sure parent Interpolation.str gets modified
+            f = FST('t"{(1, 2)}"', 'exec').body[0].value.copy()
+            f.values[0].value.put_slice("()")
+            self.assertEqual('()', f.values[0].value.src)
+            self.assertEqual('()', f.values[0].str)
+
+            f = FST('t"{(1, 2)}"', 'exec').body[0].value.copy()
+            f.values[0].value.put("()", None, None, one=False)
+            self.assertEqual('()', f.values[0].value.src)
+            self.assertEqual('()', f.values[0].str)
+
+        f = FST('a, b = c')
+        f.targets[0].put_slice('{z}', 1, 2)
+        self.assertEqual('a, z = c', f.src)
+        f.verify()
+
+        f = FST('a, b = c, d')
+        f.value.put_slice('(e := ((b + 1), 2))', 1, 2, one=True)
+        self.assertEqual('a, b = c, (e := ((b + 1), 2))', f.src)
+        f.verify()
+
+        f = FST('a, b = c, d')
+        f.value.put_slice('e := f', 1, 2, one=True)
+        self.assertEqual('a, b = c, (e := f)', f.src)
+        f.verify()
+
+        f = FST('a, b')
+        f.put_slice('end := self.Label(),', 1, 2, raw=False)
+        self.assertEqual('(a, end := self.Label())', f.src)
+        f.verify()
+
         # patterns
 
         f = FST('case a | b: pass')

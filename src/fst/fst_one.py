@@ -8,7 +8,7 @@ from __future__ import annotations
 from ast import *
 from io import BytesIO
 from itertools import takewhile
-from tokenize import tokenize as tokenize_tokenize, ENDMARKER, STRING
+from tokenize import tokenize as tokenize_tokenize, STRING
 from types import FunctionType, NoneType
 from typing import Callable, NamedTuple, Union
 
@@ -16,7 +16,7 @@ from . import fst
 
 from .astutil import *
 from .astutil import (
-    re_alnum, re_two_alnum, re_identifier, re_identifier_dotted, re_identifier_alias,
+    re_alnum, re_alnumdot, re_alnumdot_alnum, re_identifier, re_identifier_dotted, re_identifier_alias,
     TypeAlias, TryStar, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation,
 )
 
@@ -725,7 +725,7 @@ def _put_one_op(self: fst.FST, code: _PutOneCode, idx: int | None, field: str,
         if re_alnum.match(lines[end_ln], end_col):  # insert space at end of operator?
             self._put_src([' '], end_ln, end_col, end_ln, end_col, False)
 
-        if col and re_alnum.match(lines[ln], col - 1):  # insert space at start of operator? don't need to offset head because operator doesn't have `col_offset`
+        if col and re_alnumdot.match(lines[ln], col - 1):  # insert space at start of operator? don't need to offset head because operator doesn't have `col_offset`
             self._put_src([' '], ln, col, ln, col, False)
 
     return childf
@@ -854,7 +854,7 @@ def _put_one_Constant_kind(self: fst.FST, code: _PutOneCode, idx: int | None, fi
     value = _code_as_constant(code, self.root.parse_params)
 
     if not isinstance(self.value, str):
-        raise ValueError(f'cannot set kind of non-str Constant')
+        raise ValueError('cannot set kind of non-str Constant')
 
     ln, col, _, _ = self.loc
     lines         = self.root._lines
@@ -1023,8 +1023,9 @@ def _make_exprish_fst(self: fst.FST, code: _PutOneCode, idx: int | None, field: 
     lines     = self.root._lines
     put_lines = put_fst._lines
 
-    merge_alnum_start = bool(col and re_two_alnum.match(lines[ln][col - 1] + (prefix or put_lines[0][:1])))  # would the start location result in a merged alphanumeric? we do this here because we need to know if to offset put_fst by one more space
-    merge_alnum_end   = bool(end_col < len(l := lines[end_ln]) and re_two_alnum.match((suffix or put_lines[-1])[-1:] + l[end_col]))  # would end location result in merged alphanumeric?
+    merge_alnum_start = bool(col and re_alnumdot_alnum.match(lines[ln][col - 1] + (prefix or put_lines[0][:1])))  # would the start location result in a merged alphanumeric? we do this here because we need to know if to offset put_fst by one more space
+    merge_alnum_end   = bool(end_col < len(l := lines[end_ln]) and
+                             re_alnumdot_alnum.match((suffix or put_lines[-1])[-1:] + l[end_col]))  # would end location result in merged alphanumeric?
 
     if prefix:
         put_fst._put_src([prefix], 0, 0, 0, 0, True)
@@ -1540,7 +1541,7 @@ def _put_one_MatchAs_pattern(self: fst.FST, code: _PutOneCode, idx: int | None, 
         code = static.code_as(code, self.root.parse_params)
 
         if isinstance(code.a, MatchStar):
-            raise NodeError(f'cannot put a MatchStar to MatchAs.pattern')
+            raise NodeError('cannot put a MatchStar to MatchAs.pattern')
 
         if code.get_matchseq_delimiters() == '':
             code._delimit_node(delims='[]')
@@ -1815,13 +1816,13 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
                 if isinstance(to.a, arguments):
                     to_loc = to._loc_arguments_empty()
                 else:
-                    raise ValueError(f"'to' node must have a location")
+                    raise ValueError("'to' node must have a location")
 
             if not pars and to.is_solo_call_arg_genexp() and (non_shared_loc := to.pars(False)) > to_loc:
                 to_loc = non_shared_loc
 
         if to_loc[:2] < loc[:2]:
-            raise ValueError(f"'to' node must follow self")
+            raise ValueError("'to' node must follow self")
 
         self_path = root.child_path(self)  # technically should be root.child_path(childf)[:-1] but child may be identifier so get path directly to self which is parent and doesn't need the [:-1]
         to_path   = root.child_path(to)[:-1]

@@ -15,9 +15,10 @@ from types import NoneType
 from typing import Any, Generator, Iterable, Literal, NamedTuple
 
 from .astutil import *
-from .astutil import re_alnum, TypeAlias, TemplateStr, Interpolation
+from .astutil import re_alnumdot_alnum, TypeAlias, TemplateStr, Interpolation
 from .misc import PYLT11, PYLT12, PYLT14, astfield
-from .fst import FST, NodeError, fstview
+from .view import fstview
+from .fst import FST, NodeError
 
 PROGRAM = 'python -m fst.fuzz'
 
@@ -203,7 +204,7 @@ def minify_src(source_code):
         if start > prev_end:
             if start[0] > prev_end[0]:
                 result.append(' ' * start[1])
-            elif re_alnum.match(tok_str) and re_alnum.match(prev_str[-1:]):
+            elif re_alnumdot_alnum.match(tok_str[:1] + prev_str[-1:]):
                 result.append(' ')
 
         result.append(tok_str)
@@ -732,6 +733,7 @@ class Fuzzy:
                 print('-'*80)
                 print('File was:', fnm)
                 print('Random seed was:', self.rnd_seed)
+                print('Command line was:', ' '.join(sys.argv))
 
                 raise
 
@@ -919,12 +921,12 @@ class ReputSrc(Fuzzy):
             print()
 
 
-from fst.fst_one import (
-    _PUT_ONE_HANDLERS, _put_one_exprish_optional, _put_one_identifier_optional,
-    _put_one_Dict_keys, _put_one_withitem_optional_vars,
-    _put_one_ExceptHandler_name, _put_one_keyword_arg, _put_one_NOT_IMPLEMENTED_YET,)
-
 class ReputOne(Fuzzy):
+    from fst.fst_one import (
+        _PUT_ONE_HANDLERS, _put_one_exprish_optional, _put_one_identifier_optional,
+        _put_one_Dict_keys, _put_one_withitem_optional_vars,
+        _put_one_ExceptHandler_name, _put_one_keyword_arg, _put_one_NOT_IMPLEMENTED_YET,)
+
     name = 'reput_one'
 
     DELETE     = True  #False  #
@@ -941,10 +943,10 @@ class ReputOne(Fuzzy):
 
             sig = (f.parent.a.__class__, f.pfield.name)
 
-            if sig not in _PUT_ONE_HANDLERS or sig in ((Constant, 'value'), (MatchSingleton, 'value')):
+            if sig not in ReputOne._PUT_ONE_HANDLERS or sig in ((Constant, 'value'), (MatchSingleton, 'value')):
                 continue
 
-            if (handler := _PUT_ONE_HANDLERS.get(sig, [None])[1]) is _put_one_NOT_IMPLEMENTED_YET:
+            if (handler := ReputOne._PUT_ONE_HANDLERS.get(sig, [None])[1]) is ReputOne._put_one_NOT_IMPLEMENTED_YET:
                 continue
 
             try:
@@ -967,8 +969,10 @@ class ReputOne(Fuzzy):
                     changed = False
 
                     if (child := getattr(f.a, subfield, False)) is not False:
-                        delete  = self.DELETE and _PUT_ONE_HANDLERS.get((f.a.__class__, subfield), [None])[1] in (
-                            _put_one_identifier_optional, _put_one_ExceptHandler_name, _put_one_keyword_arg)
+                        delete  = self.DELETE and ReputOne._PUT_ONE_HANDLERS.get(
+                            (f.a.__class__, subfield), [None])[1] in (ReputOne._put_one_identifier_optional,
+                                                                      ReputOne._put_one_ExceptHandler_name,
+                                                                      ReputOne._put_one_keyword_arg)
                         changed = True
                         subs    = list(enumerate(child)) if isinstance(child, list) else [(None, child)]
 
@@ -993,8 +997,8 @@ class ReputOne(Fuzzy):
 
                 # NODES
 
-                delete = self.DELETE and handler in (_put_one_exprish_optional, _put_one_Dict_keys,
-                                                        _put_one_withitem_optional_vars)
+                delete = self.DELETE and handler in (ReputOne._put_one_exprish_optional, ReputOne._put_one_Dict_keys,
+                                                     ReputOne._put_one_withitem_optional_vars)
                 if self.debug:
                     print(f'\n... ... {g=}, {idx=}, {field=}, {g.parent=}, {delete=}, {g.src=}')
                     f.parent.dump(True); print(f.parent.src); print()
@@ -1075,7 +1079,7 @@ class ReputOne(Fuzzy):
                          cb_primitive=(lambda p1, p2, n, i: n in ('kind', 'type_comment') or (p1.__class__ is p2.__class__ and p1 == p2)),
                          raise_=True)
 
-        except Exception as exc:
+        except Exception:
             if self.debug:
                 try:
                     fst.dump()
@@ -1321,7 +1325,7 @@ class ReconcileRnd(Fuzzy):
                     #     print('\n...', repl.parent.src)  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
 
                     if repl and can_replace(f, repl):
-                        f.pfield.set(ast, a := copy_ast(repl.a))
+                        f.pfield.set(ast, copy_ast(repl.a))
 
                         # if self.debug:
                         #     self.walk_ast(a, next_level, parents)

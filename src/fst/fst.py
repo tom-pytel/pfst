@@ -23,11 +23,10 @@ from .misc import (
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Self, Code, Mode,
     _next_pars, _prev_pars,
-    _leading_trivia, _trailing_trivia,
     _swizzle_getput_params, _fixup_field_body, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
 )
 
-from .view import fstview
+from . import view
 from .structure import _AST_FIELDS_NEXT, _AST_FIELDS_PREV, _with_loc
 from .reconcile import _Reconcile
 
@@ -1451,7 +1450,7 @@ class FST:
         if parent := self.parent:
             return parent._put_one(None, (pf := self.pfield).idx, pf.name, **options)
 
-        raise ValueError(f'cannot delete root node')
+        raise ValueError('cannot delete root node')
 
     def get(self, idx: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
             field: builtins.str | None = None, *, cut: bool = False, **options) -> FST | None | builtins.str | constant:
@@ -1537,7 +1536,7 @@ class FST:
                 return self._get_slice(None, None, field_, cut, **options)
 
             if idx == 'end':
-                raise IndexError(f"cannot get() non-slice from index 'end'")
+                raise IndexError("cannot get() non-slice from index 'end'")
 
         elif stop is not False or idx is not None:
             raise IndexError(f'{ast.__class__.__name__}{f".{field_}" if field_ else ""} does not take an index')
@@ -1641,13 +1640,13 @@ class FST:
                 return self._put_slice(code, None, None, field_, one, **options)
 
             if idx == 'end':
-                raise IndexError(f"cannot put() non-slice to index 'end'")
+                raise IndexError("cannot put() non-slice to index 'end'")
 
         elif stop is not False or idx is not None:
             raise IndexError(f'{ast.__class__.__name__}{f".{field_}" if field_ else ""} does not take an index')
 
         if not one:
-            raise ValueError(f"cannot use 'one=False' in non-slice put()")
+            raise ValueError("cannot use 'one=False' in non-slice put()")
 
         self._put_one(code, idx, field_, **options)
 
@@ -4971,10 +4970,10 @@ def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> prope
 
     elif cardinality == 2:
         @property
-        def accessor(self) -> fstview:
+        def accessor(self) -> view.fstview:
             """@private"""
 
-            return fstview(self, field, 0, len(getattr(self.a, field)))
+            return view.fstview(self, field, 0, len(getattr(self.a, field)))
 
         @accessor.setter
         def accessor(self, code: Code | builtins.str | None):
@@ -4984,11 +4983,11 @@ def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> prope
 
     else:  # cardinality == 3  # can be single element or list depending on the AST type
         @property
-        def accessor(self) -> fstview | FST | None | constant:
+        def accessor(self) -> view.fstview | FST | None | constant:
             """@private"""
 
             if isinstance(child := getattr(self.a, field), list):
-                return fstview(self, field, 0, len(child))
+                return view.fstview(self, field, 0, len(child))
             elif isinstance(child, AST):
                 return getattr(child, 'f', None)
 

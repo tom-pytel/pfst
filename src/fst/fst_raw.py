@@ -59,7 +59,7 @@ def _reparse_raw_base(self: fst.FST, new_lines: list[str], ln: int, col: int, en
         copy = copy_root.child_from_path(path)
 
         if not copy:
-            raise RuntimeError(f'could not find node after raw reparse')
+            raise RuntimeError('could not find node after raw reparse')
 
         root._put_src(new_lines, ln, col, end_ln, end_col, True, self if set_ast else None)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy, can exclude self if setting ast because it overrides self locations
 
