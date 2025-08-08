@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse, fix_missing_locations as ast_fix_missing_locations
-from typing import Any, Callable
+from typing import Callable, Literal
 from unicodedata import normalize
 
 from . import fst
@@ -20,12 +20,118 @@ from .astutil import (
 )
 
 from .misc import (
-    PYGE11, Code, Mode, NodeError, _next_src, _shortstr
+    PYGE11, Code, NodeError, _next_src, _shortstr
 )
 
 _re_first_src = re.compile(r'^[^\S\n]*(?:[^\s\\#]|(?<!^)\\)', re.MULTILINE)  # or first \ not on start of line
 _re_except    = re.compile(r'except\b')
 _re_case      = re.compile(r'case\b\s*(?:[*\\\w({[\'"-]|\.\d)')
+
+Mode = Literal[
+    'all',
+    'most',
+    'min',
+    'exec',
+    'eval',
+    'single',
+    'stmtishs',
+    'stmtish',
+    'stmts',
+    'stmt',
+    'ExceptHandlers',
+    'ExceptHandler',
+    'match_cases',
+    'match_case',
+    'expr',
+    'expr_callarg',
+    'expr_slice',
+    'expr_sliceelt',
+    'Tuple',
+    'boolop',
+    'operator',
+    'binop',
+    'augop',
+    'unaryop',
+    'cmpop',
+    'comprehension',
+    'arguments',
+    'arguments_lambda',
+    'arg',
+    'keyword',
+    'alias',
+    'alias_dotted',
+    'alias_star',
+    'withitem',
+    'pattern',
+    'type_param',
+] | type[AST]
+
+"""Parse modes:
+- `'all'`: Check all possible parse modes (from most likely to least). There is syntax overlap so certain types will
+    never be returned, for example `TypeVar` is always shadowed by `AnnAssign`. Since this attempts many parses before
+    failing it is slower to do so than other modes, though the most likely success is just as fast. Will never return an
+    `Expression` or `Interactive`.
+- `'most'`: This is mostly meant for use as the first step when parsing `'all'`. Attempt parse `stmtishs`. If only one
+    element then return the element itself instead of the `Module`. If that element is an `Expr` then return the
+    expression instead of the statement. If nothing present then return empty `Module`. Doesn't attempt any of the other
+    parse modes to keep things quick, though will parse anything that can be parsed natively by `ast.parse()` (plus
+    `ExpressionHandler` and `match_case`). If you want exhaustive attempts that will parse any `AST` source node the
+    mode for that is `'all'`. Will never return an `Expression` or `Interactive`.
+- `'min'`: Attempt parse minumum valid parsable code. If only one statement then return the statement itself instead of
+    the `Module`. If that statement is an `Expr` then return the expression instead of the statement. If nothing present
+    then return empty `Module`. Doesn't attempt any of the other parse modes which would not normally be parsable by
+    python, just anything that can be parsed natively by `ast.parse()`.
+- `'exec'`: Parse to a `Module`. Mostly same as passing `Module` type except that `Module` also parses anything that
+    `FST` puts into `Module`s, like slices of normally non-parsable stuff.
+- `'eval'`: Parse to an `Expression`. Same as passing `Expression` type.
+- `'single'`: Parse to an `Interactive`. Same as passing `Interactive` type.
+- `'stmtishs'`: Parse as zero or more of either `stmt`, `ExceptHandler` or `match_case` returned in a `Module`.
+- `'stmtish'`: Parse as a single `stmt`, `ExceptHandler` or `match_case` returned as itself.
+- `'stmts'`: Parse zero or more `stmt`s returned in a `Module`. Same as passing `'exec'`, but not `Module` as that can
+    parse `FST` slices.
+- `'stmt'`: Parse a single `stmt` returned as itself. Same as passing `stmt` type.
+- `'ExceptHandlers'`: Parse zero or more `ExceptHandler`s returned in a `Module`.
+- `'ExceptHandler'`: Parse as a single `ExceptHandler` returned as itself. Same as passing `ExceptHandler` type.
+- `'match_cases'`: Parse zero or more `match_case`s returned in a `Module`.
+- `'match_case'`: Parse a single `match_case` returned as itself. Same as passing `match_case` type.
+- `'expr'`: "expression", parse a single `expr` returned as itself. This is differentiated from the following three
+    modes by the handling of slices and starred expressions. In this mode `a:b` and `*not v` are syntax errors. Same as
+    passing `expr` type.
+- `'expr_callarg'`: "call argument expression", same as `'expr'` except that in this mode `a:b` is a syntax error and
+    `*not v` parses to a starred expression `*(not v)`.
+- `'expr_slice'`: "slice expression", same as `'expr'` except that in this mode `a:b` parses to a `Slice` and `*not v`
+    parses to a single element tuple containing a starred expression `(*(not v),)`.
+- `'expr_sliceelt'`: "slice tuple element expression", same as `'expr'` except that in this mode `a:b` parses to a
+    `Slice` and `*not v` parses to a starred expression `*(not v)`.
+- `'boolop'`: Parse to a `boolop` operator.
+- `'operator'`: Parse to an `operator` operator, either normal binary `'*'` or augmented `'*='`.
+- `'binop'`: Parse to an `operator` only binary `'*'`, `'+'`, `'>>'`, etc...
+- `'augop'`: Parse to an `operator` only augmented `'*='`, `'+='`, `'>>='`, etc...
+- `'unaryop'`: Parse to a `unaryop` operator.
+- `'cmpop'`: Parse to a `cmpop` compare operator.
+- `'comprehension'`: Parse a single `comprehension` returned as itself. Same as passing `comprehension` type.
+- `'arguments'`: Parse as `arguments` for a `FunctionDef` or `AsyncFunctionDef` returned as itself. In this mode
+    type annotations are allowed for the arguments. Same as passing `arguments` type.
+- `'arguments_lambda'`: Parse as `arguments` for a `Lambda` returned as itself. In this mode type annotations
+    are not allowed for the arguments.
+- `'arg'`: Parse as a single `arg` returned as itself. Same as passing `arg` type.
+- `'keyword'`: Parse as a single `keyword` returned as itself. Same as passing `keyword` type.
+- `'alias'`: Parse as a single `alias` returned as itself. Either starred or dotted versions are accepted. Same
+    as passing `alias` type.
+- `'alias_dotted'`: Parse as a single `alias` returned as itself, with starred version being a syntax error.
+- `'alias_star'`: Parse as a single `alias` returned as itself, with dotted version being a syntax error.
+- `'withitem'`: Parse as a single `withitem` returned as itself. Same as passing `withitem` type.
+- `'pattern'`: Parse as a a single `pattern` returned as itself. Same as passing `pattern` type.
+- `'type_param'`: Parse as a single `type_param` returned as itself, either `TypeVar`, `ParamSpec` or
+    `TypeVarTuple`. Same as passing `type_param` type.
+- `type[AST]`: If an `AST` type is passed then will attempt to parse to this type. This can be used to narrow
+    the scope of desired return, for example `Constant` will parse as an expression but fail if the expression
+    is not a `Constant`. These overlap with the string specifiers to an extent but not all of them. For example
+    `AST` type `ast.expr` is the same as passing `'expr'`. Not all string specified modes are can be matched, for
+    example `'arguments_lambda'`. Likewise `'exec'` and `'stmts'` specify the same parse mode, but not the same as
+    `Module` since that is used as a general purpose slice container. `Tuple` parse also allows parsing `Slice`s in the
+    `Tuple`.
+"""
 
 
 def _ast_parse1(src: str, parse_params: dict = {}):
@@ -55,11 +161,11 @@ def _fixing_unparse(ast: AST) -> str:
     return ast_unparse(ast)
 
 
-def _validate_indent(src: str, ret: Any = None) -> Any:
-    if (m := _re_first_src.search(src)) and len(m.group(0)) > 1:
-        raise IndentationError('unexpected indent')
+# def _validate_indent(src: str, ret: Any = None) -> Any:
+#     if (m := _re_first_src.search(src)) and len(m.group(0)) > 1:
+#         raise IndentationError('unexpected indent')
 
-    return ret
+#     return ret
 
 
 def _offset_linenos(ast: AST, delta: int) -> AST:
@@ -179,7 +285,12 @@ def _unparse(ast: AST) -> str:
     if src := OPCLS2STR.get(ast.__class__):  # operators don't unparse to anything in ast
         return src
 
-    return _fixing_unparse(ast)
+    src = _fixing_unparse(ast)
+
+    if isinstance(ast, Tuple) and any(isinstance(e, Slice) for e in ast.elts):  # tuples with Slices cannot have parentheses
+        src = src[1:-1]
+
+    return src
 
 
 @staticmethod
@@ -451,7 +562,7 @@ def _parse_expr(src: str, parse_params: dict = {}) -> AST:
         assert isinstance(ast, Starred) and len(elts) == 1
 
     else:
-        if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
+        if isinstance(ast, GeneratorExp) and ast.lineno == 1 and ast.col_offset == 0:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
             raise SyntaxError('expecting expression, got unparenthesized GeneratorExp')
 
         if isinstance(ast, Tuple) and ast.lineno == 1:  # tuple with newlines included grouping pars which are not in source, fix
@@ -460,53 +571,7 @@ def _parse_expr(src: str, parse_params: dict = {}) -> AST:
 
             _fix_unparenthesized_tuple_parsed_parenthesized(src, ast)  # we have to do some work to find a possible comma
 
-    return _offset_linenos(_validate_indent(src, ast), -1)
-
-
-@staticmethod
-def _parse_expr_slice(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.Slice` or anything else that can go into `Subscript.slice` (`expr`), e.g. "start:stop:step" or
-    "name" or even "a:b, c:d:e, g". Using this, naked `Starred` expressions parse to single element `Tuple` with the
-    `Starred` as the only element."""
-
-    try:
-        ast = _ast_parse1(f'a[\n{src}]', parse_params).value.slice
-
-    except SyntaxError:  # maybe 'yield', also could be unparenthesized 'tuple' containing 'Starred' on py 3.10
-        ast = _ast_parse1(f'a[(\n{src})]', parse_params).value.slice
-
-        if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
-            raise SyntaxError('expecting slice expression, got unparenthesized GeneratorExp')
-
-        if isinstance(ast, Tuple):  # only py 3.10
-            if ast.elts:
-                raise SyntaxError('cannot have unparenthesized tuple containing Starred in slice')
-
-            raise SyntaxError('expecting slice expression')
-
-    return _offset_linenos(_validate_indent(src, ast), -1)
-
-
-@staticmethod
-def _parse_expr_sliceelt(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.expr` or `ast.Slice`. This exists because otherwise a naked `Starred` expression parses to an
-    implicit single element `Tuple` and the caller of this function does not want that behavior. Using this, naked
-    `Starred` expressions parse to just the `Starred` and not a `Tuple` like in `_parse_expr_slice()`.
-    """
-
-    try:
-        ast = _parse_expr_slice(src, parse_params)
-    except IndentationError:
-        raise
-    except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11
-        return _parse_expr(src, parse_params)
-
-    if (isinstance(ast, Tuple) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for this one stupid case
-        e0.end_col_offset == ast.end_col_offset and e0.end_lineno == ast.end_lineno
-    ):
-        return e0
-
-    return ast
+    return _offset_linenos(ast, -1) # _offset_linenos(_validate_indent(src, ast), -1)
 
 
 @staticmethod
@@ -530,7 +595,80 @@ def _parse_expr_callarg(src: str, parse_params: dict = {}) -> AST:
     if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
         raise SyntaxError('expecting call argument expression, got unparenthesized GeneratorExp')
 
-    return _offset_linenos(_validate_indent(src, ast), -1)
+    return _offset_linenos(ast, -1) # _offset_linenos(_validate_indent(src, ast), -1)
+
+
+@staticmethod
+def _parse_expr_slice(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an `ast.Slice` or anything else that can go into `Subscript.slice` (`expr`), e.g. "start:stop:step" or
+    "name" or even "a:b, c:d:e, g". Using this, naked `Starred` expressions parse to single element `Tuple` with the
+    `Starred` as the only element."""
+
+    try:
+        ast = _ast_parse1(f'a[\n{src}]', parse_params).value.slice
+
+    except SyntaxError:  # maybe 'yield', also could be unparenthesized 'tuple' containing 'Starred' on py 3.10
+        ast = _ast_parse1(f'a[(\n{src})]', parse_params).value.slice
+
+        if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
+            raise SyntaxError('expecting slice expression, got unparenthesized GeneratorExp')
+
+        if isinstance(ast, Tuple):  # only py 3.10
+            if ast.elts:
+                raise SyntaxError('cannot have unparenthesized tuple containing Starred in slice')
+
+            raise SyntaxError('expecting slice expression')
+
+    return _offset_linenos(ast, -1) # _offset_linenos(_validate_indent(src, ast), -1)
+
+
+@staticmethod
+def _parse_expr_sliceelt(src: str, parse_params: dict = {}) -> AST:
+    """Parse to an element of a slice `Tuple`, an `ast.expr` or `ast.Slice`. This exists because otherwise a naked
+    `Starred` expression parses to an implicit single element `Tuple` and the caller of this function does not want that
+    behavior. Using this, naked `Starred` expressions parse to just the `Starred` and not a `Tuple` like in
+    `_parse_expr_slice()`. Does not allow a `Tuple` with `Slice` in it as it is expected that this expression is already
+    in a slice `Tuple` and that is not allowed in python.
+
+    TODO: This can currently return `*not a, *a or b` as valid which are not valid normal tuples (nested as sliceelt).
+    """
+
+    try:
+        ast = _parse_expr_slice(src, parse_params)
+    except IndentationError:
+        raise
+    except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11
+        return _parse_expr(src, parse_params)
+
+    if isinstance(ast, Tuple) and any(isinstance(e, Slice) for e in ast.elts):
+        raise SyntaxError('Slice not allowed in nested slice tuple')
+
+    if (isinstance(ast, Tuple) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for '*starred' acting as '*starred,'
+        e0.end_col_offset == ast.end_col_offset and e0.end_lineno == ast.end_lineno
+    ):
+        return e0
+
+    return ast
+
+
+@staticmethod
+def _parse_Tuple(src: str, parse_params: dict = {}) -> AST:
+    """Parse to a `Tuple` which may or may not contain `Slice`s and otherwise invalid syntax in normal `Tuple`s like
+    `*not a`."""
+
+    try:
+        ast = _parse_expr_slice(src, parse_params)
+    except IndentationError:
+        raise
+    except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11
+        return _parse_expr(src, parse_params)
+
+    if (isinstance(ast, Tuple) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for '*starred' acting as '*starred,'
+        e0.end_col_offset == ast.end_col_offset and e0.end_lineno == ast.end_lineno
+    ):
+        raise NodeError('expecting tuple, got lone starred')
+
+    return ast
 
 
 @staticmethod
@@ -542,7 +680,7 @@ def _parse_boolop(src: str, parse_params: dict = {}) -> AST:
     if not isinstance(ast, BoolOp):
         raise NodeError(f'expecting boolop, got {_shortstr(src)!r}')
 
-    return _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
+    return ast.op.__class__()  # _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
 
 
 @staticmethod
@@ -567,7 +705,7 @@ def _parse_binop(src: str, parse_params: dict = {}) -> AST:
     if not isinstance(ast, BinOp):
         raise NodeError(f'expecting operator, got {_shortstr(src)!r}')
 
-    return _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
+    return ast.op.__class__()  # _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
 
 
 @staticmethod
@@ -579,7 +717,7 @@ def _parse_augop(src: str, parse_params: dict = {}) -> AST:
     if not isinstance(ast, AugAssign):
         raise NodeError(f'expecting augmented operator, got {_shortstr(src)!r}')
 
-    return _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
+    return ast.op.__class__()  # _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
 
 
 @staticmethod
@@ -591,7 +729,7 @@ def _parse_unaryop(src: str, parse_params: dict = {}) -> AST:
     if not isinstance(ast, UnaryOp):
         raise NodeError(f'expecting unaryop, got {_shortstr(src)!r}')
 
-    return _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
+    return ast.op.__class__()  # _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
 
 
 @staticmethod
@@ -606,7 +744,7 @@ def _parse_cmpop(src: str, parse_params: dict = {}) -> AST:
     if len(ops := ast.ops) != 1:
         raise NodeError('expecting single cmpop')
 
-    return _validate_indent(src, ops[0].__class__())  # parse() returns the same identical object for all instances of the same operator
+    return ops[0].__class__()  # _validate_indent(src, ops[0].__class__())  # parse() returns the same identical object for all instances of the same operator
 
 
 @staticmethod
@@ -621,7 +759,7 @@ def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
     if len(gens := ast.generators) != 1:
         raise NodeError('expecting single comprehension')
 
-    return _offset_linenos(_validate_indent(src, gens[0]), -1)
+    return _offset_linenos(gens[0], -1)  # _offset_linenos(_validate_indent(src, gens[0]), -1)
 
 
 @staticmethod
@@ -630,7 +768,7 @@ def _parse_arguments(src: str, parse_params: dict = {}) -> AST:
 
     ast = _ast_parse1(f'def f(\n{src}): pass', parse_params).args
 
-    return _offset_linenos(_validate_indent(src, ast), -1)
+    return _offset_linenos(ast, -1) # _offset_linenos(_validate_indent(src, ast), -1)
 
 
 @staticmethod
@@ -639,7 +777,7 @@ def _parse_arguments_lambda(src: str, parse_params: dict = {}) -> AST:
 
     ast = _ast_parse1(f'(lambda \n{src}: None)', parse_params).value.args
 
-    return _offset_linenos(_validate_indent(src, ast), -1)
+    return _offset_linenos(ast, -1) # _offset_linenos(_validate_indent(src, ast), -1)
 
 
 @staticmethod
@@ -670,7 +808,7 @@ def _parse_arg(src: str, parse_params: dict = {}) -> AST:
     if ast is None:
         raise NodeError('expecting single argument without default')
 
-    return _offset_linenos(_validate_indent(src, ast), -1)
+    return _offset_linenos(ast, -1) # _offset_linenos(_validate_indent(src, ast), -1)
 
 
 @staticmethod
@@ -682,7 +820,7 @@ def _parse_keyword(src: str, parse_params: dict = {}) -> AST:
     if len(keywords) != 1:
         raise NodeError('expecting single keyword')
 
-    return _offset_linenos(_validate_indent(src, keywords[0]), -1)
+    return _offset_linenos(keywords[0], -1)  # _offset_linenos(_validate_indent(src, keywords[0]), -1)
 
 
 @staticmethod
@@ -710,7 +848,7 @@ def _parse_alias_dotted(src: str, parse_params: dict = {}) -> AST:
     if len(names) != 1:
         raise NodeError('expecting single name')
 
-    return _offset_linenos(_validate_indent(src, names[0]), -1)
+    return _offset_linenos(names[0], -1)  # _offset_linenos(_validate_indent(src, names[0]), -1)
 
 
 @staticmethod
@@ -722,7 +860,7 @@ def _parse_alias_star(src: str, parse_params: dict = {}) -> AST:
     if len(names) != 1:
         raise NodeError('expecting single name')
 
-    return _offset_linenos(_validate_indent(src, names[0]), -1)
+    return _offset_linenos(names[0], -1)  # _offset_linenos(_validate_indent(src, names[0]), -1)
 
 
 @staticmethod
@@ -753,7 +891,7 @@ def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
 
         _fix_unparenthesized_tuple_parsed_parenthesized(src, ast)
 
-    return _offset_linenos(_validate_indent(src, items[0]), -1)
+    return _offset_linenos(items[0], -1)  # _offset_linenos(_validate_indent(src, items[0]), -1)
 
 
 @staticmethod
@@ -787,7 +925,7 @@ def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
                 ast.end_lineno     = (p_1 := patterns[-1]).end_lineno
                 ast.end_col_offset = p_1.end_col_offset
 
-    return _offset_linenos(_validate_indent(src, ast), -2)
+    return _offset_linenos(ast, -2)  # _offset_linenos(_validate_indent(src, ast), -2)
 
 
 @staticmethod
@@ -799,7 +937,7 @@ def _parse_type_param(src: str, parse_params: dict = {}) -> AST:
     if len(type_params) != 1:
         raise NodeError('expecting single type_param')
 
-    return _offset_linenos(_validate_indent(src, type_params[0]), -1)
+    return _offset_linenos(type_params[0], -1)  # _offset_linenos(_validate_indent(src, type_params[0]), -1)
 
 
 # ......................................................................................................................
@@ -1092,6 +1230,13 @@ def _code_as_expr(code: Code, parse_params: dict = {}, *, parse: Callable[[Code,
 
 
 @staticmethod
+def _code_as_expr_callarg(code: Code, parse_params: dict = {}) -> fst.FST:
+    """Convert `code` to an `expr` in the context of a `Call.args` which has special parse rules for `Starred`."""
+
+    return _code_as_expr(code, parse_params, parse=_parse_expr_callarg)
+
+
+@staticmethod
 def _code_as_expr_slice(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a Slice `FST` if possible (or anthing else that can serve in `Subscript.slice`, like any old
     generic `expr`)."""
@@ -1115,10 +1260,10 @@ def _code_as_expr_sliceelt(code: Code, parse_params: dict = {}) -> fst.FST:
 
 
 @staticmethod
-def _code_as_expr_callarg(code: Code, parse_params: dict = {}) -> fst.FST:
-    """Convert `code` to an `expr` in the context of a `Call.args` which has special parse rules for `Starred`."""
+def _code_as_Tuple(code: Code, parse_params: dict = {}) -> fst.FST:
+    """Convert `code` to a `Tuple` which may or may not contain `Slice`s."""
 
-    return _code_as_expr(code, parse_params, parse=_parse_expr_callarg)
+    return _code_as_expr(code, parse_params, parse=_parse_Tuple)
 
 
 @staticmethod
@@ -1373,7 +1518,7 @@ _PARSE_ALL_FUNCS = [
     _parse_unaryop,
 ]
 
-_PARSE_MODE_FUNCS = {
+_PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type but that will parse ALL of those types without error, not all parsed in desired but all desired in parsed
     'all':               _parse_all,
     'most':              _parse_most,
     'min':               _parse_min,
@@ -1389,9 +1534,10 @@ _PARSE_MODE_FUNCS = {
     'match_cases':       _parse_match_cases,
     'match_case':        _parse_match_case,
     'expr':              _parse_expr,
-    'expr_slice':        _parse_expr_slice,
-    'expr_sliceelt':     _parse_expr_sliceelt,
-    'expr_callarg':      _parse_expr_callarg,
+    'expr_callarg':      _parse_expr_callarg,   # `*a or b`, `*not c`
+    'expr_slice':        _parse_expr_slice,     # `a:b:c`, `*not c`, `a:b:c, x:y:z`, `*st` -> `*st,` (py 3.11+)
+    'expr_sliceelt':     _parse_expr_sliceelt,  # `a:b:c`, `*not c`, `*st`
+    'Tuple':             _parse_Tuple,          # `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st``
     'boolop':            _parse_boolop,
     'operator':          _parse_operator,
     'binop':             _parse_binop,
@@ -1417,9 +1563,9 @@ _PARSE_MODE_FUNCS = {
     ExceptHandler:       _parse_ExceptHandler,
     match_case:          _parse_match_case,
     expr:                _parse_expr,
-    Starred:             _parse_expr_callarg,   # because could have form '*a or b' and we want to parse any form of Starred here
-    Tuple:               _parse_expr_sliceelt,  # because could have slice in it and ditto on any form here
-    Slice:               _parse_expr_slice,     # because otherwise would be _parse_expr which doesn't do slice by default
+    Starred:             _parse_expr_callarg,  # because could have form '*a or b' and we want to parse any form of Starred here
+    Slice:               _parse_expr_slice,    # because otherwise would be _parse_expr which doesn't do slice by default, parses '*a' to '*a,' on py 3.11+
+    Tuple:               _parse_Tuple,         # because could have slice in it and again we are parsing all forms
     boolop:              _parse_boolop,
     operator:            _parse_operator,
     unaryop:             _parse_unaryop,

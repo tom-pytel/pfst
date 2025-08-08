@@ -21,14 +21,16 @@ from .misc import (
     NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE,
     NodeError, astfield, fstloc, fstlocns, nspace,
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
-    Self, Code, Mode,
-    _next_pars, _prev_pars,
+    Self, Code,
+    _next_find, _next_pars, _prev_pars,
     _swizzle_getput_params, _fixup_field_body, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
 )
 
 from . import view
 from .structure import _AST_FIELDS_NEXT, _AST_FIELDS_PREV, _with_loc
 from .reconcile import _Reconcile
+
+from .fst_parse import Mode
 
 __all__ = [
     'parse', 'unparse', 'dump', 'FST',
@@ -1219,7 +1221,8 @@ class FST:
         parse_params = self.parse_params
 
         try:
-            astp = FST._parse(self.src, mode or ast.__class__, parse_params=parse_params)
+            # astp = FST._parse(self.src, mode or ast.__class__, parse_params=parse_params)
+            astp = FST._parse(self.src, mode or self.get_mode(), parse_params=parse_params)
 
         except (SyntaxError, NodeError):
             if raise_:
@@ -3977,6 +3980,60 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
     # Low level
 
+    def get_mode(self, raise_: bool = True) -> str | type[AST] | None:
+        r"""Determine the parse mode for this node. This is the fst extended parse mode as per `Mode`, not the
+        `ast.parse()` mode. Returns a mode which is guaranteed to reparse this assumed-valid element to an exact copy of
+        itself.
+
+        **Parameters:**
+        - `raise_`: Whether to raise an exception on failure or return `None`.
+
+        **Returns:**
+        - `str`: One of the special text specifiers. Will be returned for most slices and special cases like an `*a`
+            which is actually a `Tuple` (which it only is inside a slice).
+        - `type[AST]`: Will be returned for nodes which can be reparsed correctly using only the `AST` type.
+        - `None`: If invalid or cannot be determined.
+
+        **Examples:**
+        ```py
+        ```
+        """
+
+        ast = self.a
+
+        try:
+            if isinstance(ast, Module):  # ExceptHandlers and match_cases
+                stmts = excepts = cases = 0
+
+                for a in ast.body:
+                    if isinstance(a, ExceptHandler):
+                        excepts += 1
+                    elif isinstance(a, match_case):
+                        cases += 1
+                    else:
+                        stmts += 1
+
+                if bool(excepts) + bool(cases) + bool(stmts) > 1:
+                    raise NodeError('invalid Module')
+
+                return 'ExceptHandlers' if excepts else 'match_cases' if cases else Module
+
+            if isinstance(ast, Tuple):
+                if len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred):
+                    _, _, ln, col         = e0.f.loc
+                    _, _, end_ln, end_col = self.loc
+
+                    if not _next_find(self.root.lines, ln, col, end_ln, end_col, ','):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
+                        return 'expr_slice'
+
+            return ast.__class__  # otherwise regular parse by AST type is valid
+
+        except NodeError:
+            if raise_:
+                raise
+
+        return None
+
     def get_indent(self) -> builtins.str:
         r"""Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
         continuation or on same line as block header. If indentation is impossible to determine because is solo
@@ -4878,9 +4935,10 @@ class FST:
         _parse_match_cases,
         _parse_match_case,
         _parse_expr,
+        _parse_expr_callarg,
         _parse_expr_slice,
         _parse_expr_sliceelt,
-        _parse_expr_callarg,
+        _parse_Tuple,
         _parse_boolop,
         _parse_operator,
         _parse_binop,
@@ -4904,9 +4962,10 @@ class FST:
         _code_as_ExceptHandlers,
         _code_as_match_cases,
         _code_as_expr,
+        _code_as_expr_callarg,
         _code_as_expr_slice,
         _code_as_expr_sliceelt,
-        _code_as_expr_callarg,
+        _code_as_Tuple,
         _code_as_boolop,
         _code_as_binop,
         _code_as_augop,

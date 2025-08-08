@@ -212,15 +212,6 @@ PARSE_TESTS = [
     ('expr',              FST._parse_expr,              SyntaxError,    'a:b'),
     ('expr',              FST._parse_expr,              SyntaxError,    'a:b:c'),
 
-    ('expr_slice',        FST._parse_expr_slice,        Name,           'j'),
-    ('expr_slice',        FST._parse_expr_slice,        Slice,          'a:b'),
-    ('expr_slice',        FST._parse_expr_slice,        Tuple,          'j, k'),
-
-    ('expr_sliceelt',     FST._parse_expr_sliceelt,     Name,           'j'),
-    ('expr_sliceelt',     FST._parse_expr_sliceelt,     Slice,          'a:b'),
-    ('expr_sliceelt',     FST._parse_expr_sliceelt,     Starred,        '*s'),
-    ('expr_sliceelt',     FST._parse_expr_sliceelt,     Tuple,          'j, k'),
-
     ('expr_callarg',      FST._parse_expr_callarg,      Name,           'j'),
     ('expr_callarg',      FST._parse_expr_callarg,      Starred,        '*s'),
     ('expr_callarg',      FST._parse_expr_callarg,      Starred,        '*not a'),
@@ -228,6 +219,16 @@ PARSE_TESTS = [
     ('expr_callarg',      FST._parse_expr_callarg,      NodeError,      'i=1'),
     ('expr_callarg',      FST._parse_expr_callarg,      SyntaxError,    'a:b'),
     ('expr_callarg',      FST._parse_expr_callarg,      SyntaxError,    'a:b:c'),
+
+    ('expr_slice',        FST._parse_expr_slice,        Name,           'j'),
+    ('expr_slice',        FST._parse_expr_slice,        Slice,          'a:b'),
+    ('expr_slice',        FST._parse_expr_slice,        Tuple,          'j, k'),
+    ('expr_slice',        FST._parse_expr_slice,        Tuple,          'a:b:c, x:y:z'),
+
+    ('expr_sliceelt',     FST._parse_expr_sliceelt,     Name,           'j'),
+    ('expr_sliceelt',     FST._parse_expr_sliceelt,     Slice,          'a:b'),
+    ('expr_sliceelt',     FST._parse_expr_sliceelt,     Tuple,          'j, k'),
+    ('expr_sliceelt',     FST._parse_expr_sliceelt,     SyntaxError,    'a:b:c, x:y:z'),
 
     ('boolop',            FST._parse_boolop,            And,            'and'),
     ('boolop',            FST._parse_boolop,            NodeError,      '*'),
@@ -376,6 +377,63 @@ PARSE_TESTS = [
     ('pattern',           FST._parse_pattern,           MatchAs,        '\nas_var\n'),
     ('pattern',           FST._parse_pattern,           MatchAs,        '\n1\nas\nas_var\n'),
     ('pattern',           FST._parse_pattern,           MatchOr,        '\n1\n|\n2\n'),
+
+    ('expr',              FST._parse_expr,              BoolOp,         '\n a\n or\n b\n '),
+    ('expr',              FST._parse_expr,              NamedExpr,      '\n a\n :=\n b\n '),
+    ('expr',              FST._parse_expr,              BinOp,          '\n a\n |\n b\n '),
+    ('expr',              FST._parse_expr,              BinOp,          '\n a\n **\n b\n '),
+    ('expr',              FST._parse_expr,              UnaryOp,        '\n not\n a\n '),
+    ('expr',              FST._parse_expr,              UnaryOp,        '\n ~\n a\n '),
+    ('expr',              FST._parse_expr,              Lambda,         '\n lambda\n :\n None\n '),
+    ('expr',              FST._parse_expr,              IfExp,          '\n a\n if\n b\n else\n c\n '),
+    ('expr',              FST._parse_expr,              Dict,           '\n {\n a\n :\n b\n }\n '),
+    ('expr',              FST._parse_expr,              Set,            '\n {\n a\n ,\n b\n }\n '),
+    ('expr',              FST._parse_expr,              ListComp,       '\n [\n a\n for\n a\n in\n b\n ]\n '),
+    ('expr',              FST._parse_expr,              SetComp,        '\n {\n a\n for\n a\n in\n b\n }\n '),
+    ('expr',              FST._parse_expr,              DictComp,       '\n {\n a\n :\n c\n for\n a\n ,\n c\n in\n b\n }\n '),
+    ('expr',              FST._parse_expr,              GeneratorExp,   '\n (\n a\n for\n a\n in\n b\n )\n '),
+    ('expr',              FST._parse_expr,              Await,          '\n await\n a\n '),
+    ('expr',              FST._parse_expr,              Yield,          '\n yield\n '),
+    ('expr',              FST._parse_expr,              Yield,          '\n yield\n a\n '),
+    ('expr',              FST._parse_expr,              YieldFrom,      '\n yield\n from\n a\n '),
+    ('expr',              FST._parse_expr,              Compare,        '\n a\n <\n b\n '),
+    ('expr',              FST._parse_expr,              Call,           '\n f\n (\n a\n )\n '),
+    ('expr',              FST._parse_expr,              JoinedStr,      "\n f'{a}'\n "),
+    ('expr',              FST._parse_expr,              JoinedStr,      '\n f"{a}"\n '),
+    ('expr',              FST._parse_expr,              JoinedStr,      "\n f'''\n {\n a\n }\n '''\n "),
+    ('expr',              FST._parse_expr,              JoinedStr,      '\n f"""\n {\n a\n }\n """\n '),
+    ('expr',              FST._parse_expr,              Constant,       '\n ...\n '),
+    ('expr',              FST._parse_expr,              Constant,       '\n None\n '),
+    ('expr',              FST._parse_expr,              Constant,       '\n True\n '),
+    ('expr',              FST._parse_expr,              Constant,       '\n False\n '),
+    ('expr',              FST._parse_expr,              Constant,       '\n 1\n '),
+    ('expr',              FST._parse_expr,              Constant,       '\n 1.0\n '),
+    ('expr',              FST._parse_expr,              Constant,       '\n 1j\n '),
+    ('expr',              FST._parse_expr,              Constant,       "\n 'a'\n "),
+    ('expr',              FST._parse_expr,              Constant,       '\n "a"\n '),
+    ('expr',              FST._parse_expr,              Constant,       "\n '''\n a\n '''\n "),
+    ('expr',              FST._parse_expr,              Constant,       '\n """\n a\n """\n '),
+    ('expr',              FST._parse_expr,              Constant,       "\n b'a'\n "),
+    ('expr',              FST._parse_expr,              Constant,       '\n b"a"\n '),
+    ('expr',              FST._parse_expr,              Constant,       "\n b'''\n a\n '''\n "),
+    ('expr',              FST._parse_expr,              Constant,       '\n b"""\n a\n """\n '),
+    ('expr',              FST._parse_expr,              Attribute,      '\n a\n .\n b\n '),
+    ('expr',              FST._parse_expr,              Subscript,      '\n a\n [\n b\n ]\n '),
+    ('expr',              FST._parse_expr,              Starred,        '\n *\n a\n '),
+    ('expr',              FST._parse_expr,              List,           '\n [\n a\n ,\n b\n ]\n '),
+    ('expr',              FST._parse_expr,              Tuple,          '\n (\n a\n ,\n b\n )\n '),
+    ('expr',              FST._parse_expr,              Tuple,          '\n a\n ,\n '),
+    ('expr',              FST._parse_expr,              Tuple,          '\n a\n ,\n b\n '),
+
+    ('pattern',           FST._parse_pattern,           MatchValue,     '\n 42\n '),
+    ('pattern',           FST._parse_pattern,           MatchSingleton, '\n None\n '),
+    ('pattern',           FST._parse_pattern,           MatchSequence,  '\n [\n a\n ,\n *\n b\n ]\n '),
+    ('pattern',           FST._parse_pattern,           MatchSequence,  '\n \n a\n ,\n *\n b\n \n '),
+    ('pattern',           FST._parse_pattern,           MatchMapping,   '\n {\n "key"\n :\n _\n }\n '),
+    ('pattern',           FST._parse_pattern,           MatchClass,     '\n SomeClass\n (\n attr\n =\n val\n )\n '),
+    ('pattern',           FST._parse_pattern,           MatchAs,        '\n as_var\n '),
+    ('pattern',           FST._parse_pattern,           MatchAs,        '\n 1\n as\n as_var\n '),
+    ('pattern',           FST._parse_pattern,           MatchOr,        '\n 1\n |\n 2\n '),
 
     (mod,                 FST._parse_Module,            Module,         'j'),
     (Module,              FST._parse_Module,            Module,         'j'),
@@ -644,28 +702,29 @@ class TestFST(unittest.TestCase):
 
                 # reparse
 
-                test = 'reparse'
-                unp  = ((s := ast_unparse(ast)) and s.lstrip()) or src  # 'lstrip' because comprehension has leading space, 'or src' because unparse of operators gives nothing
-                ast2 = FST._parse(unp, mode)
+                if src != '*=':  # augassign is ambiguous and syntactically impossible
+                    test = 'reparse'
+                    unp  = ((s := FST._unparse(ast)) and s.lstrip()) or src  # 'lstrip' because comprehension has leading space, 'or src' because unparse of operators gives nothing
+                    ast2 = FST._parse(unp, mode)
 
-                compare_asts(ast, ast2, raise_=True)
+                    compare_asts(ast, ast2, raise_=True)
 
                 # trailing newline
 
-                if src != '*=':  # we know augassign fails due this case being syntactically impossible
+                if src != '*=':  # augassign is ambiguous and syntactically impossible
                     test = 'newline'
                     srcn = src + '\n'
                     ast  = FST._parse(srcn, mode)
 
-                # IndentationError
+                # # IndentationError
 
-                test = 'indent'
+                # test = 'indent'
 
-                if not src.startswith('\n') and src.strip():  # won't get IndentationError on stuff that starts with newlines or empty arguments
-                    src = ' ' + src
+                # if not src.startswith('\n') and src.strip():  # won't get IndentationError on stuff that starts with newlines or empty arguments
+                #     src = ' ' + src
 
-                    self.assertRaises(IndentationError, FST._parse, src, mode)
-                    self.assertRaises(IndentationError, func, src)
+                #     self.assertRaises(IndentationError, FST._parse, src, mode)
+                #     self.assertRaises(IndentationError, func, src)
 
             except Exception:
                 print()
@@ -983,6 +1042,7 @@ class TestFST(unittest.TestCase):
                 fst = FST(src, mode)
 
                 fst.verify(mode)
+                fst.verify()
 
                 if isinstance(a := fst.a, Expression):
                     a = a.body

@@ -2,9 +2,17 @@
 
 ### Fixed
 
+- unparse tuple with slices removes tuple parentheses
+
 ### Added
 
+- get_mode() gets parse mode for any FST, including invalid AST slices
+- verify() invalid AST slices works
+
 ### Updated
+
+- parse expressionish elements don't have to start at beginning of line
+- lots of code cleanups
 
 
 ## 0.2.0 - alpha - 2025-08-07

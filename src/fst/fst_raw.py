@@ -15,8 +15,10 @@ from .astutil import TryStar
 from .misc import (
     NodeError, astfield,
     STMTISH_FIELDS,
-    Code, Mode,
+    Code,
 )
+
+from .fst_parse import Mode
 
 _PATH_BODY          = [astfield('body', 0)]
 _PATH_BODY2         = [astfield('body', 0), astfield('body', 0)]

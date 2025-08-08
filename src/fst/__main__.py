@@ -1,7 +1,7 @@
 from typing import get_args
 
 from .fst import parse
-from .misc import Mode
+from .fst_parse import Mode
 
 
 def main():
@@ -27,7 +27,7 @@ def main():
                         help="add information about type comments")
     parser.add_argument('-i', '--indent', type=int, default=2,
                         help='indentation of nodes (number of spaces)')
-    parser.add_argument('--no-verify', default=True, action='store_false',
+    parser.add_argument('--no-verify', default=False, action='store_true',
                         help="don't verify parsed AST")
 
     args = parser.parse_args()
@@ -46,7 +46,8 @@ def main():
 
     # if args.no_verify and args.mode in ('exec', 'eval', 'single', 'stmt', 'expr'):
     #     ast.f.verify(raise_=True)
-    ast.f.verify(raise_=True)
+    if not args.no_verify:# and args.mode in ('exec', 'eval', 'single', 'stmt', 'expr'):
+        ast.f.verify(raise_=True)
 
     src = 'all' if args.all else 'stmt' if args.stmt else None
 
