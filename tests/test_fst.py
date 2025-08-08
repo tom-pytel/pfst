@@ -549,6 +549,26 @@ PARSE_TESTS = [
     (MatchOr,             FST._parse_pattern,           MatchOr,        '1 | 2 | 3'),
     (MatchAs,             FST._parse_pattern,           MatchAs,        '_'),
     (MatchStar,           FST._parse_pattern,           MatchStar,      '*a'),
+
+    ('expr',              FST._parse_expr,              Tuple,          ' *a,  # tail'),
+    ('expr_callarg',      FST._parse_expr_callarg,      Starred,        ' *not a  # tail'),
+    ('expr_slice',        FST._parse_expr_slice,        Slice,          ' a:b:c  # tail'),
+    ('expr_slice',        FST._parse_expr_slice,        Yield,          ' yield  # tail'),
+    ('boolop',            FST._parse_boolop,            And,            ' and  # tail'),
+    ('binop',             FST._parse_binop,             RShift,         ' >>  # tail'),
+    ('augop',             FST._parse_augop,             SyntaxError,    ' >>=  # tail'),  # this can never be as a statement can never be enclosed and a line continuation cannot follow a comment
+    ('unaryop',           FST._parse_unaryop,           Invert,         ' ~  # tail'),
+    ('cmpop',             FST._parse_cmpop,             GtE,            ' >=  # tail'),
+    ('comprehension',     FST._parse_comprehension,     comprehension,  ' for i in j  # tail'),
+    ('arguments',         FST._parse_arguments,         arguments,      ' a: list[str], /, b: int = 1, *c, d=100, **e  # tail'),
+    ('arguments_lambda',  FST._parse_arguments_lambda,  arguments,      ' a, /, b, *c, d=100, **e  # tail'),
+    ('arg',               FST._parse_arg,               arg,            ' a: b  # tail'),
+    ('keyword',           FST._parse_keyword,           keyword,        ' a=1  # tail'),
+    ('alias_dotted',      FST._parse_alias_dotted,      alias,          ' a.b  # tail'),
+    ('alias_star',        FST._parse_alias_star,        alias,          ' *  # tail'),
+    ('withitem',          FST._parse_withitem,          withitem,       ' a as b,  # tail'),
+    ('pattern',           FST._parse_pattern,           MatchOr,        ' 1 | 2 | 3  # tail'),
+    ('pattern',           FST._parse_pattern,           MatchStar,      ' *a  # tail'),
 ]
 
 if PYGE11:
@@ -560,6 +580,8 @@ if PYGE11:
         ('expr_sliceelt',     FST._parse_expr_sliceelt,     Starred,        '*not a'),
 
         (ExceptHandler,       FST._parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
+
+        ('arg',               FST._parse_arg,               arg,            ' a: *b  # tail'),
     ])
 
 if PYGE12:
@@ -574,6 +596,8 @@ if PYGE12:
         (ParamSpec,           FST._parse_type_param,        ParamSpec,      '**a'),
         (type_param,          FST._parse_type_param,        TypeVarTuple,   '*a'),
         (TypeVarTuple,        FST._parse_type_param,        TypeVarTuple,   '*a'),
+
+        ('type_param',        FST._parse_type_param,        TypeVar,        ' a: int  # tail'),
     ])
 
 if PYGE13:
@@ -739,6 +763,10 @@ class TestFST(unittest.TestCase):
 
         self.assertRaises(SyntaxError, FST._parse_withitem, 'i for i in j')
         self.assertRaises(SyntaxError, FST._parse_withitem, '')
+
+    # def test__parse_trailing_comment_without_newline(self):
+    #     a = FST._parse_expr(' *a, # line')
+    #     self.assertEqual()
 
     def test___new__(self):
         f = FST(None, 'exec')

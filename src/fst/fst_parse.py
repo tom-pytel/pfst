@@ -1,5 +1,10 @@
 """Extended AST parse and convert `Code` to `FST`.
 
+The parse functions in this module are oriented towards parsing all valid elements which they name which may include
+parsing things which are not those elements, common sense is applied liberally though. And just because an element is
+parsed successfully doesn't mean it may not need parentheses if used in the way intended. Or that it needs a trailing
+newline due to comment ending without an explicit trailing newline.
+
 This module contains functions which are imported as methods in the `FST` class.
 """
 
@@ -185,7 +190,7 @@ def _fix_unparenthesized_tuple_parsed_parenthesized(src: str, ast: AST):
     end_ln         = (e_1 := elts[-1]).end_lineno - 2  # -2 because of extra line introduced in parse
     end_col        = len(lines[end_ln].encode()[:e_1.end_col_offset].decode())  # bistr(lines[end_ln]).b2c(e_1.end_col_offset)
 
-    if (not (code := _next_src(lines, end_ln, end_col, ast.end_lineno - 2, 0x7fffffffffffffff)) or  # if nothing following then last element is ast end
+    if (not (code := _next_src(lines, end_ln, end_col, ast.end_lineno - 3, 0x7fffffffffffffff)) or  # if nothing following then last element is ast end, -3 because end also had \n tacked on
         not code.src.startswith(',')  # if no comma then last element is ast end
     ):
         ast.end_lineno     = e_1.end_lineno
@@ -553,10 +558,10 @@ def _parse_expr(src: str, parse_params: dict = {}) -> AST:
             return ast.value
 
     try:
-        ast = _ast_parse1(f'(\n{src})', parse_params).value  # has newlines
+        ast = _ast_parse1(f'(\n{src}\n)', parse_params).value  # has newlines
 
     except SyntaxError:
-        elts = _ast_parse1(f'(\n{src},)', parse_params).value.elts  # Starred expression with newlines
+        elts = _ast_parse1(f'(\n{src}\n,)', parse_params).value.elts  # Starred expression with newlines
         ast  = elts[0]
 
         assert isinstance(ast, Starred) and len(elts) == 1
@@ -585,7 +590,7 @@ def _parse_expr_callarg(src: str, parse_params: dict = {}) -> AST:
     except (NodeError, SyntaxError):  # stuff like '*[] or []'
         pass
 
-    args = _ast_parse1(f'f(\n{src})', parse_params).value.args
+    args = _ast_parse1(f'f(\n{src}\n)', parse_params).value.args
 
     if len(args) != 1:
         raise NodeError('expecting single call argument expression')
@@ -605,15 +610,15 @@ def _parse_expr_slice(src: str, parse_params: dict = {}) -> AST:
     `Starred` as the only element."""
 
     try:
-        ast = _ast_parse1(f'a[\n{src}]', parse_params).value.slice
+        ast = _ast_parse1(f'a[\n{src}\n]', parse_params).value.slice
 
     except SyntaxError:  # maybe 'yield', also could be unparenthesized 'tuple' containing 'Starred' on py 3.10
-        ast = _ast_parse1(f'a[(\n{src})]', parse_params).value.slice
+        ast = _ast_parse1(f'a[(\n{src}\n)]', parse_params).value.slice
 
         if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
             raise SyntaxError('expecting slice expression, got unparenthesized GeneratorExp')
 
-        if isinstance(ast, Tuple):  # only py 3.10
+        if isinstance(ast, Tuple):  # only py 3.10 because otherwise the parse above would have gotten it
             if ast.elts:
                 raise SyntaxError('cannot have unparenthesized tuple containing Starred in slice')
 
@@ -675,7 +680,7 @@ def _parse_Tuple(src: str, parse_params: dict = {}) -> AST:
 def _parse_boolop(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.boolop`."""
 
-    ast = _ast_parse1(f'(a\n{src} b)', parse_params).value
+    ast = _ast_parse1(f'(a\n{src}\nb)', parse_params).value
 
     if not isinstance(ast, BoolOp):
         raise NodeError(f'expecting boolop, got {_shortstr(src)!r}')
@@ -700,7 +705,7 @@ def _parse_operator(src: str, parse_params: dict = {}) -> AST:
 def _parse_binop(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.operator` in the context of a `BinOp`."""
 
-    ast = _ast_parse1(f'(a\n{src} b)', parse_params).value
+    ast = _ast_parse1(f'(a\n{src}\nb)', parse_params).value
 
     if not isinstance(ast, BinOp):
         raise NodeError(f'expecting operator, got {_shortstr(src)!r}')
@@ -724,7 +729,7 @@ def _parse_augop(src: str, parse_params: dict = {}) -> AST:
 def _parse_unaryop(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.unaryop`."""
 
-    ast = _ast_parse1(f'(\n{src} b)', parse_params).value
+    ast = _ast_parse1(f'(\n{src}\nb)', parse_params).value
 
     if not isinstance(ast, UnaryOp):
         raise NodeError(f'expecting unaryop, got {_shortstr(src)!r}')
@@ -736,7 +741,7 @@ def _parse_unaryop(src: str, parse_params: dict = {}) -> AST:
 def _parse_cmpop(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.cmpop`."""
 
-    ast = _ast_parse1(f'(a\n{src} b)', parse_params).value
+    ast = _ast_parse1(f'(a\n{src}\nb)', parse_params).value
 
     if not isinstance(ast, Compare):
         raise NodeError(f'expecting cmpop, got {_shortstr(src)!r}')
@@ -751,7 +756,7 @@ def _parse_cmpop(src: str, parse_params: dict = {}) -> AST:
 def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.comprehension`, e.g. "async for i in something() if i"."""
 
-    ast = _ast_parse1(f'[_ \n{src}]', parse_params).value
+    ast = _ast_parse1(f'[_ \n{src}\n]', parse_params).value
 
     if not isinstance(ast, ListComp):
         raise NodeError('expecting comprehension')
@@ -766,7 +771,7 @@ def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
 def _parse_arguments(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.arguments`, e.g. "a: list[str], /, b: int = 1, *c, d=100, **e"."""
 
-    ast = _ast_parse1(f'def f(\n{src}): pass', parse_params).args
+    ast = _ast_parse1(f'def f(\n{src}\n): pass', parse_params).args
 
     return _offset_linenos(ast, -1) # _offset_linenos(_validate_indent(src, ast), -1)
 
@@ -775,7 +780,7 @@ def _parse_arguments(src: str, parse_params: dict = {}) -> AST:
 def _parse_arguments_lambda(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.arguments` for a `Lambda`, e.g. "a, /, b, *c, d=100, **e"."""
 
-    ast = _ast_parse1(f'(lambda \n{src}: None)', parse_params).value.args
+    ast = _ast_parse1(f'(lambda \n{src}\n: None)', parse_params).value.args
 
     return _offset_linenos(ast, -1) # _offset_linenos(_validate_indent(src, ast), -1)
 
@@ -785,12 +790,12 @@ def _parse_arg(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.arg`, e.g. "var: list[int]"."""
 
     try:
-        args = _ast_parse1(f'def f(\n{src}): pass', parse_params).args
+        args = _ast_parse1(f'def f(\n{src}\n): pass', parse_params).args
     except IndentationError:
         raise
 
     except SyntaxError:  # may be '*vararg: *starred'
-        args = _ast_parse1(f'def f(*\n{src}): pass', parse_params).args
+        args = _ast_parse1(f'def f(*\n{src}\n): pass', parse_params).args
 
         if args.posonlyargs or args.args or args.kwonlyargs or args.defaults or args.kw_defaults or args.kwarg:
             ast = None
@@ -815,7 +820,7 @@ def _parse_arg(src: str, parse_params: dict = {}) -> AST:
 def _parse_keyword(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.keyword`, e.g. "var=val"."""
 
-    keywords = _ast_parse1(f'f(\n{src})', parse_params).value.keywords
+    keywords = _ast_parse1(f'f(\n{src}\n)', parse_params).value.keywords
 
     if len(keywords) != 1:
         raise NodeError('expecting single keyword')
@@ -867,7 +872,7 @@ def _parse_alias_star(src: str, parse_params: dict = {}) -> AST:
 def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.withitem`, e.g. "something() as var"."""
 
-    items = _ast_parse1(f'with (\n{src}): pass', parse_params).items
+    items = _ast_parse1(f'with (\n{src}\n): pass', parse_params).items
 
     if len(items) == 1:
         ast = items[0].context_expr
@@ -880,7 +885,7 @@ def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
 
     else:  # unparenthesized Tuple
         if all(not i.optional_vars for i in items):
-            items = _ast_parse1(f'with ((\n{src})): pass', parse_params).items
+            items = _ast_parse1(f'with ((\n{src}\n)): pass', parse_params).items
 
         if len(items) != 1:
             raise NodeError('expecting single withitem')
@@ -905,10 +910,10 @@ def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
 
     except SyntaxError:  # first in case needs to be enclosed
         try:
-            ast = _ast_parse1_case(f'match _:\n case (\\\n{src}): pass', parse_params).pattern
+            ast = _ast_parse1_case(f'match _:\n case (\\\n{src}\n): pass', parse_params).pattern
 
         except SyntaxError:  # now just the case of a lone MatchStar
-            patterns = _ast_parse1_case(f'match _:\n case [\\\n{src}]: pass', parse_params).pattern.patterns
+            patterns = _ast_parse1_case(f'match _:\n case [\\\n{src}\n]: pass', parse_params).pattern.patterns
 
             if len(patterns) != 1:
                 raise NodeError('expecting single pattern')
@@ -932,7 +937,7 @@ def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
 def _parse_type_param(src: str, parse_params: dict = {}) -> AST:
     """Parse to an `ast.type_param`, e.g. "t: Base = Subclass"."""
 
-    type_params = _ast_parse1(f'type t[\n{src}] = None', parse_params).type_params
+    type_params = _ast_parse1(f'type t[\n{src}\n] = None', parse_params).type_params
 
     if len(type_params) != 1:
         raise NodeError('expecting single type_param')
@@ -953,9 +958,6 @@ def _code_as_all(code: Code, parse_params: dict = {}) -> fst.FST:  # TODO: allow
         return code
 
     if isinstance(code, AST):
-        # if (mode := code.__class__) is Module:  # override _parse_Module because that wouldn't handle slices stmtishs
-        #     mode = 'stmtishs'
-
         mode  = code.__class__
         code  = _unparse(code)
         lines = code.split('\n')

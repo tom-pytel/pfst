@@ -2,12 +2,13 @@
 
 ### Fixed
 
+- parse functions handle trailing comments without newlines correctly
 - unparse tuple with slices removes tuple parentheses
 
 ### Added
 
-- get_mode() gets parse mode for any FST, including invalid AST slices
 - verify() invalid AST slices works
+- get_mode() gets parse mode for any FST, including invalid AST slices
 
 ### Updated
 
