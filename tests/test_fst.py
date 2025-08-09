@@ -81,12 +81,12 @@ PRECEDENCE_SRC_EXPRS = [
 ]
 
 PARSE_TESTS = [
-    ('all',               FST._parse_stmtishs,          Module,         'i: int = 1\nj'),
-    ('all',               FST._parse_stmtishs,          Module,         'except Exception: pass\nexcept: pass'),
-    ('all',               FST._parse_stmtishs,          Module,         'case None: pass\ncase 1: pass'),
-    ('all',               FST._parse_stmtish,           AnnAssign,      'i: int = 1'),
-    ('all',               FST._parse_stmtish,           ExceptHandler,  'except: pass'),
-    ('all',               FST._parse_stmtish,           match_case,     'case None: pass'),
+    ('all',               FST._parse_stmts,             Module,         'i: int = 1\nj'),
+    ('all',               FST._parse_ExceptHandlers,    Module,         'except Exception: pass\nexcept: pass'),
+    ('all',               FST._parse_match_cases,       Module,         'case None: pass\ncase 1: pass'),
+    ('all',               FST._parse_stmt,              AnnAssign,      'i: int = 1'),
+    ('all',               FST._parse_ExceptHandler,     ExceptHandler,  'except: pass'),
+    ('all',               FST._parse_match_case,        match_case,     'case None: pass'),
     ('all',               FST._parse_stmts,             Module,         'i: int = 1\nj'),
     ('all',               FST._parse_stmt,              AnnAssign,      'i: int = 1'),
     ('all',               FST._parse_ExceptHandlers,    Module,         'except Exception: pass\nexcept: pass'),
@@ -110,77 +110,38 @@ PARSE_TESTS = [
     ('all',               FST._parse_all,               And,            'and'),
     ('all',               FST._parse_all,               Invert,         '~'),
 
-    ('most',              FST._parse_stmtishs,          Module,         'i: int = 1\nj'),
-    ('most',              FST._parse_stmtishs,          Module,         'except Exception: pass\nexcept: pass'),
-    ('most',              FST._parse_stmtishs,          Module,         'case None: pass\ncase 1: pass'),
-    ('most',              FST._parse_stmtish,           AnnAssign,      'i: int = 1'),
-    ('most',              FST._parse_stmtish,           ExceptHandler,  'except: pass'),
-    ('most',              FST._parse_stmtish,           match_case,     'case None: pass'),
-    ('most',              FST._parse_stmts,             Module,         'i: int = 1\nj'),
-    ('most',              FST._parse_stmt,              AnnAssign,      'i: int = 1'),
-    ('most',              FST._parse_ExceptHandlers,    Module,         'except Exception: pass\nexcept: pass'),
-    ('most',              FST._parse_ExceptHandler,     ExceptHandler,  'except: pass'),
-    ('most',              FST._parse_match_cases,       Module,         'case None: pass\ncase 1: pass'),
-    ('most',              FST._parse_match_case,        match_case,     'case None: pass'),
-    ('most',              FST._parse_expr,              Name,           'j'),
-    ('most',              FST._parse_expr,              Starred,        '*s'),
-    ('most',              FST._parse_all,               SyntaxError,    '*not a'),
-    ('most',              FST._parse_stmt,              AnnAssign,      'a:b'),
-    ('most',              FST._parse_all,               SyntaxError,    'a:b:c'),
-    ('most',              FST._parse_all,               SyntaxError,    '1 as a'),
-    ('most',              FST._parse_all,               SyntaxError,    'a: list[str], /, b: int = 1, *c, d=100, **e'),
-    ('most',              FST._parse_all,               SyntaxError,    'a, /, b, *c, d=100, **e'),
-    ('most',              FST._parse_all,               SyntaxError,    '*not a'),
-    ('most',              FST._parse_all,               SyntaxError,    'for i in range(5) if i'),
-    ('most',              FST._parse_all,               SyntaxError,    'f(**a) as b'),
-    ('most',              FST._parse_all,               SyntaxError,    '*'),
-    ('most',              FST._parse_all,               SyntaxError,    '*='),
-    ('most',              FST._parse_all,               SyntaxError,    '>'),
-    ('most',              FST._parse_all,               SyntaxError,    'and'),
-    ('most',              FST._parse_all,               SyntaxError,    '~'),
-
-    ('min',               FST._parse_stmtishs,          Module,         'i: int = 1\nj'),
-    ('min',               FST._parse_stmtishs,          SyntaxError,    'except Exception: pass\nexcept: pass'),
-    ('min',               FST._parse_stmtishs,          SyntaxError,    'case None: pass\ncase 1: pass'),
-    ('min',               FST._parse_stmtish,           AnnAssign,      'i: int = 1'),
-    ('min',               FST._parse_stmtish,           SyntaxError,    'except: pass'),
-    ('min',               FST._parse_stmtish,           SyntaxError,    'case None: pass'),
-    ('min',               FST._parse_stmts,             Module,         'i: int = 1\nj'),
-    ('min',               FST._parse_stmt,              AnnAssign,      'i: int = 1'),
-    ('min',               FST._parse_ExceptHandlers,    SyntaxError,    'except Exception: pass\nexcept: pass'),
-    ('min',               FST._parse_ExceptHandler,     SyntaxError,    'except: pass'),
-    ('min',               FST._parse_match_cases,       SyntaxError,    'case None: pass\ncase 1: pass'),
-    ('min',               FST._parse_match_case,        SyntaxError,    'case None: pass'),
-    ('min',               FST._parse_expr,              Name,           'j'),
-    ('min',               FST._parse_expr,              Starred,        '*s'),
-    ('min',               FST._parse_all,               SyntaxError,    '*not a'),
-    ('min',               FST._parse_stmt,              AnnAssign,      'a:b'),
-    ('min',               FST._parse_all,               SyntaxError,    'a:b:c'),
-    ('min',               FST._parse_all,               SyntaxError,    '1 as a'),
-    ('min',               FST._parse_all,               SyntaxError,    'a: list[str], /, b: int = 1, *c, d=100, **e'),
-    ('min',               FST._parse_all,               SyntaxError,    'a, /, b, *c, d=100, **e'),
-    ('min',               FST._parse_all,               SyntaxError,    '*not a'),
-    ('min',               FST._parse_all,               SyntaxError,    'for i in range(5) if i'),
-    ('min',               FST._parse_all,               SyntaxError,    'f(**a) as b'),
-    ('min',               FST._parse_all,               SyntaxError,    '*'),
-    ('min',               FST._parse_all,               SyntaxError,    '*='),
-    ('min',               FST._parse_all,               SyntaxError,    '>'),
-    ('min',               FST._parse_all,               SyntaxError,    'and'),
-    ('min',               FST._parse_all,               SyntaxError,    '~'),
+    ('strict',            FST._parse_stmts,             Module,         'i: int = 1\nj'),
+    ('strict',            FST._parse_ExceptHandlers,    SyntaxError,    'except Exception: pass\nexcept: pass'),
+    ('strict',            FST._parse_match_cases,       SyntaxError,    'case None: pass\ncase 1: pass'),
+    ('strict',            FST._parse_stmt,              AnnAssign,      'i: int = 1'),
+    ('strict',            FST._parse_ExceptHandler,     SyntaxError,    'except: pass'),
+    ('strict',            FST._parse_match_case,        SyntaxError,    'case None: pass'),
+    ('strict',            FST._parse_stmts,             Module,         'i: int = 1\nj'),
+    ('strict',            FST._parse_stmt,              AnnAssign,      'i: int = 1'),
+    ('strict',            FST._parse_ExceptHandlers,    SyntaxError,    'except Exception: pass\nexcept: pass'),
+    ('strict',            FST._parse_ExceptHandler,     SyntaxError,    'except: pass'),
+    ('strict',            FST._parse_match_cases,       SyntaxError,    'case None: pass\ncase 1: pass'),
+    ('strict',            FST._parse_match_case,        SyntaxError,    'case None: pass'),
+    ('strict',            FST._parse_expr,              Name,           'j'),
+    ('strict',            FST._parse_expr,              Starred,        '*s'),
+    ('strict',            FST._parse_all,               SyntaxError,    '*not a'),
+    ('strict',            FST._parse_stmt,              AnnAssign,      'a:b'),
+    ('strict',            FST._parse_all,               SyntaxError,    'a:b:c'),
+    ('strict',            FST._parse_all,               SyntaxError,    '1 as a'),
+    ('strict',            FST._parse_all,               SyntaxError,    'a: list[str], /, b: int = 1, *c, d=100, **e'),
+    ('strict',            FST._parse_all,               SyntaxError,    'a, /, b, *c, d=100, **e'),
+    ('strict',            FST._parse_all,               SyntaxError,    '*not a'),
+    ('strict',            FST._parse_all,               SyntaxError,    'for i in range(5) if i'),
+    ('strict',            FST._parse_all,               SyntaxError,    'f(**a) as b'),
+    ('strict',            FST._parse_all,               SyntaxError,    '*'),
+    ('strict',            FST._parse_all,               SyntaxError,    '*='),
+    ('strict',            FST._parse_all,               SyntaxError,    '>'),
+    ('strict',            FST._parse_all,               SyntaxError,    'and'),
+    ('strict',            FST._parse_all,               SyntaxError,    '~'),
 
     ('exec',              FST._parse_Module,            Module,         'i: int = 1'),
     ('eval',              FST._parse_Expression,        Expression,     'None'),
     ('single',            FST._parse_Interactive,       Interactive,    'i: int = 1'),
-
-    ('stmtishs',          FST._parse_stmtishs,          Module,         'i: int = 1\nj'),
-    ('stmtishs',          FST._parse_stmtishs,          Module,         'except Exception: pass\nexcept: pass'),
-    ('stmtishs',          FST._parse_stmtishs,          Module,         'case None: pass\ncase 1: pass'),
-    ('stmtish',           FST._parse_stmtish,           AnnAssign,      'i: int = 1'),
-    ('stmtish',           FST._parse_stmtish,           ExceptHandler,  'except: pass'),
-    ('stmtish',           FST._parse_stmtish,           match_case,     'case None: pass'),
-    ('stmtish',           FST._parse_stmtishs,          NodeError,      'except Exception: pass\nexcept: pass'),
-    ('stmtish',           FST._parse_stmtishs,          NodeError,      'case None: pass\ncase 1: pass'),
-    ('stmtish',           FST._parse_stmtish,           NodeError,      'i: int = 1\nj'),
 
     ('stmts',             FST._parse_stmts,             Module,         'i: int = 1\nj'),
     ('stmts',             FST._parse_stmts,             SyntaxError,    'except Exception: pass\nexcept: pass'),
@@ -781,10 +742,6 @@ class TestFST(unittest.TestCase):
 
         self.assertRaises(SyntaxError, FST._parse_withitem, 'i for i in j')
         self.assertRaises(SyntaxError, FST._parse_withitem, '')
-
-    # def test__parse_trailing_comment_without_newline(self):
-    #     a = FST._parse_expr(' *a, # line')
-    #     self.assertEqual()
 
     def test___new__(self):
         f = FST(None, 'exec')
@@ -2640,7 +2597,7 @@ match a:
         self.assertEqual('*', FST._code_as_identifier_alias(f.a))
         self.assertEqual('*', FST._code_as_identifier_alias(f.src))
 
-    def test_code_as_stmtishs(self):
+    def test_code_as_stmts(self):
         f = FST(r'''
 if 1:
     pass
@@ -2648,44 +2605,45 @@ if 1:
 call(a)
 '''.strip(), 'exec')
 
-        h = f._code_as_stmtishs(f.copy())
+        h = f._code_as_stmts(f.copy())
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = f._code_as_stmtishs(f.src)
+        h = f._code_as_stmts(f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = f._code_as_stmtishs(f.a)
+        h = f._code_as_stmts(f.a)
         self.assertTrue(compare_asts(h.a, f.a, locs=False, raise_=True))
 
         f0 = f.body[0].copy()
-        h = f._code_as_stmtishs(f0.a)
+        h = f._code_as_stmts(f0.a)
         self.assertEqual(ast_unparse(f0.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, f0.a, locs=False, raise_=True))
 
         f1 = f.body[1].copy()
-        h = f._code_as_stmtishs(f1.a)
+        h = f._code_as_stmts(f1.a)
         self.assertEqual(ast_unparse(f1.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, f1.a, locs=False, raise_=True))
 
         g = FST('from a import b', 'exec').body[0].names[0]
-        self.assertRaises(ValueError, f._code_as_stmtishs, f.body[0].test)
-        self.assertRaises(NodeError, f._code_as_stmtishs, g.copy())
-        self.assertRaises(NodeError, f._code_as_stmtishs, g.a)
+        self.assertRaises(ValueError, f._code_as_stmts, f.body[0].test)
+        self.assertRaises(NodeError, f._code_as_stmts, g.copy())
+        self.assertRaises(NodeError, f._code_as_stmts, g.a)
 
         f = FST('f(a)', 'exec')
-        h = f._code_as_stmtishs(f.body[0].value.copy())
+        h = f._code_as_stmts(f.body[0].value.copy())
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = f._code_as_stmtishs(f.src)
+        h = f._code_as_stmts(f.src)
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = f._code_as_stmtishs(f.a)
+        h = f._code_as_stmts(f.a)
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
+    def test_code_as_ExceptHandlers(self):
         f = FST(r'''
 try: pass
 except (ValueError, RuntimeError) as exc:
@@ -2709,25 +2667,26 @@ except Exception:
 
         g = f.body[0].get_slice(field='handlers')
 
-        h = f._code_as_stmtishs(g.copy())
+        h = f._code_as_ExceptHandlers(g.copy())
         self.assertEqual(h.src, g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
-        h = f._code_as_stmtishs(g.src)
+        h = f._code_as_ExceptHandlers(g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
         g0 = g.body[0].copy()
-        h = f._code_as_stmtishs(g0.a)
+        h = f._code_as_ExceptHandlers(g0.a)
         self.assertEqual(ast_unparse(g0.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
 
         g1 = g.body[1].copy()
-        h = f._code_as_stmtishs(g1.a)
+        h = f._code_as_ExceptHandlers(g1.a)
         self.assertEqual(ast_unparse(g1.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
 
-        self.assertRaises(ValueError, f._code_as_stmtishs, f.body[0].handlers[0])
+        self.assertRaises(ValueError, f._code_as_ExceptHandlers, f.body[0].handlers[0])
 
+    def test_code_as_match_cases(self):
         f = FST(r'''
 match a:
     case 1:
@@ -2751,30 +2710,30 @@ match a:
 
         g = f.body[0].get_slice(field='cases')
 
-        h = f._code_as_stmtishs(g.copy())
+        h = f._code_as_match_cases(g.copy())
         self.assertEqual(h.src, g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
-        h = f._code_as_stmtishs(g.src)
+        h = f._code_as_match_cases(g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
         g0 = g.body[0].copy()
-        h = f._code_as_stmtishs(g0.a)
+        h = f._code_as_match_cases(g0.a)
         self.assertEqual(ast_unparse(g0.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
 
         g1 = g.body[1].copy()
-        h = f._code_as_stmtishs(g1.a)
+        h = f._code_as_match_cases(g1.a)
         self.assertEqual(ast_unparse(g1.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
 
-        self.assertRaises(ValueError, f._code_as_stmtishs, f.body[0].cases[0])
+        self.assertRaises(ValueError, f._code_as_match_cases, f.body[0].cases[0])
 
         # special 'case' non-keyword
 
-        self.assertIsInstance(FST._code_as_stmtishs('case 1: pass').body[0].a, match_case)
-        self.assertIsInstance(FST._code_as_stmtishs('case = 1').body[0].a, Assign)
-        self.assertIsInstance(FST._code_as_stmtishs('case.b = 1').body[0].a, Assign)
+        self.assertIsInstance(FST._code_as_match_cases('case 1: pass').body[0].a, match_case)
+        self.assertRaises(SyntaxError, FST._code_as_match_cases, 'case = 1')
+        self.assertRaises(SyntaxError, FST._code_as_match_cases, 'case.b = 1')
 
     def test_code_as_sanitize(self):
         CODE_ASES = [
@@ -2832,9 +2791,7 @@ match a:
             ast = None
 
             try:
-                if func in (FST._parse_stmtishs, FST._parse_stmtish,
-                            FST._parse_ExceptHandlers, FST._parse_ExceptHandler,
-                            FST._parse_match_cases, FST._parse_match_case):
+                if func in (FST._parse_ExceptHandlers, FST._parse_match_cases):
                     continue
 
                 ast  = FST._parse(src, mode)

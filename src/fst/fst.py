@@ -659,13 +659,13 @@ class FST:
         >>> FST.fromsrc('var', mode='expr').dump()
         Name 'var' Load - ROOT 0,0..0,3
 
-        >>> FST.fromsrc('except Exception: pass', 'stmtish').dump()
+        >>> FST.fromsrc('except Exception: pass', 'ExceptHandler').dump()
         ExceptHandler - ROOT 0,0..0,22
           .type Name 'Exception' Load - 0,7..0,16
           .body[1]
           0] Pass - 0,18..0,22
 
-        >>> FST.fromsrc('case f(a=1): pass', 'stmtish').dump()
+        >>> FST.fromsrc('case f(a=1): pass', 'match_case').dump()
         match_case - ROOT 0,0..0,17
           .pattern MatchClass - 0,5..0,11
             .cls Name 'f' Load - 0,5..0,6
@@ -4931,13 +4931,10 @@ class FST:
         _unparse,
         _parse,
         _parse_all,
-        _parse_most,
-        _parse_min,
+        _parse_strict,
         _parse_Module,
         _parse_Expression,
         _parse_Interactive,
-        _parse_stmtishs,
-        _parse_stmtish,
         _parse_stmts,
         _parse_stmt,
         _parse_ExceptHandlers,
@@ -4968,7 +4965,6 @@ class FST:
         _parse_pattern,
         _parse_type_param,
         _code_as_all,
-        _code_as_stmtishs,
         _code_as_stmts,
         _code_as_ExceptHandlers,
         _code_as_match_cases,

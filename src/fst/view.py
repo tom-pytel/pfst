@@ -315,7 +315,8 @@ class fstview:
         ```
         """
 
-        f         = self.fst.get_slice(start := self.start, self.stop, self.field, cut=True, **options)
+        f = self.fst.get_slice(start := self.start, self.stop, self.field, cut=True, **options)
+
         self.stop = start
 
         return f
@@ -406,7 +407,7 @@ class fstview:
 
         len_before = len(asts := getattr(self.fst.a, self.field))
         idx        = (self.stop if idx == 'end' else
-                      stop      if idx > (l := (stop := self.stop) - (start := self.start)) else
+                      stop if idx > (l := (stop := self.stop) - (start := self.start)) else
                       start + (idx if idx >= 0 else max(0, idx + l)))
 
         self.fst = self.fst.put_slice(code, idx, idx, self.field, one=one, **options)

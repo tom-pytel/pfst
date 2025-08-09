@@ -248,7 +248,7 @@ Module - ROOT 0,0..0,5
 Except that `fromsrc()` defaults to `mode='exec'` instead of minimal node.
 
 ```py
->>> FST.fromsrc('i = 1', 'min').dump()
+>>> FST.fromsrc('i = 1', 'strict').dump()
 Assign - ROOT 0,0..0,5
   .targets[1]
   0] Name 'i' Store - 0,0..0,1

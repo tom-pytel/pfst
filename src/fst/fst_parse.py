@@ -31,13 +31,10 @@ from .misc import (
 
 Mode = Literal[
     'all',
-    'most',
-    'min',
+    'strict',
     'exec',
     'eval',
     'single',
-    'stmtishs',
-    'stmtish',
     'stmts',
     'stmt',
     'ExceptHandlers',
@@ -74,22 +71,14 @@ Mode = Literal[
     never be returned, for example `TypeVar` is always shadowed by `AnnAssign`. Since this attempts many parses before
     failing it is slower to do so than other modes, though the most likely success is just as fast. Will never return an
     `Expression` or `Interactive`.
-- `'most'`: This is mostly meant for use as the first step when parsing `'all'`. Attempt parse `stmtishs`. If only one
-    element then return the element itself instead of the `Module`. If that element is an `Expr` then return the
-    expression instead of the statement. If nothing present then return empty `Module`. Doesn't attempt any of the other
-    parse modes to keep things quick, though will parse anything that can be parsed natively by `ast.parse()` (plus
-    `ExpressionHandler` and `match_case`). If you want exhaustive attempts that will parse any `AST` source node the
-    mode for that is `'all'`. Will never return an `Expression` or `Interactive`.
-- `'min'`: Attempt parse minumum valid parsable code. If only one statement then return the statement itself instead of
-    the `Module`. If that statement is an `Expr` then return the expression instead of the statement. If nothing present
-    then return empty `Module`. Doesn't attempt any of the other parse modes which would not normally be parsable by
-    python, just anything that can be parsed natively by `ast.parse()`.
+- `'strict'`: Attempt parse minumum valid parsable code. If only one statement then return the statement itself instead
+    of the `Module`. If that statement is an `Expr` then return the expression instead of the statement. If nothing
+    present then return empty `Module`. Doesn't attempt any of the other parse modes which would not normally be
+    parsable by python, just anything that can be parsed natively by `ast.parse()`.
 - `'exec'`: Parse to a `Module`. Mostly same as passing `Module` type except that `Module` also parses anything that
     `FST` puts into `Module`s, like slices of normally non-parsable stuff.
 - `'eval'`: Parse to an `Expression`. Same as passing `Expression` type.
 - `'single'`: Parse to an `Interactive`. Same as passing `Interactive` type.
-- `'stmtishs'`: Parse as zero or more of either `stmt`, `ExceptHandler` or `match_case` returned in a `Module`.
-- `'stmtish'`: Parse as a single `stmt`, `ExceptHandler` or `match_case` returned as itself.
 - `'stmts'`: Parse zero or more `stmt`s returned in a `Module`. Same as passing `'exec'`, but not `Module` as that can
     parse `FST` slices.
 - `'stmt'`: Parse a single `stmt` returned as itself. Same as passing `stmt` type.
@@ -355,9 +344,9 @@ def _parse(src: str, mode: Mode = 'all', parse_params: dict = {}) -> AST:
     **Parameters**:
     - `src`: The source to parse.
     - `mode`: Either one of the standard `ast.parse()` modes `exec`, `eval` or `single` to parse to that type of module
-        or one of our specific strings like `'stmtishs'` or an actual `AST` type to parse to. If the mode is provided
-        and cannot parse to the specified target then an error is raised and no other parse types are tried. See
-        `fst.misc.Mode`.
+        or one of our specific strings like `'ExceptHandlers'` or an actual `AST` type to parse to. If the mode is
+        provided and cannot parse to the specified target then an error is raised and no other parse types are tried.
+        See `fst.misc.Mode`.
     - `parse_params`: Dictionary of optional parse parameters to pass to `ast.parse()`, can contain `filename`,
         `type_comments` and `feature_version`.
     """
@@ -490,15 +479,9 @@ def _parse_all(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_most(src: str, parse_params: dict = {}) -> AST:
-    """Attempt to parse `stmtishs` and then reduce to a single statement or expressing if possible."""
-
-    return reduce_ast(_parse_stmtishs(src, parse_params), True)
-
-
-@staticmethod
-def _parse_min(src: str, parse_params: dict = {}) -> AST:
-    """Attempt to parse valid parsable statements and then reduce to a single statement or expressing if possible."""
+def _parse_strict(src: str, parse_params: dict = {}) -> AST:
+    """Attempt to parse valid parsable statements and then reduce to a single statement or expressing if possible. Only
+    parses what `ast.parse()` can, no funny stuff."""
 
     return reduce_ast(ast_parse(src, **parse_params), True)
 
@@ -525,40 +508,6 @@ def _parse_Interactive(src: str, parse_params: dict = {}) -> AST:
         src = src + '\n'
 
     return ast_parse(src, mode='single', **parse_params)
-
-
-@staticmethod
-def _parse_stmtishs(src: str, parse_params: dict = {}) -> AST:
-    """Parse zero or more `stmt`s, 'ExceptHander's or 'match_case's and return them in a `Module` `body`."""
-
-    if firstsrc := _re_first_src_or_lcont.search(src):
-        if len(firstsrc.group(0)) - 1:
-            raise IndentationError('unexpected indent')
-
-        if _re_except.match(src, start := firstsrc.start()):
-            return _parse_ExceptHandlers(src, parse_params)
-
-        if _re_case.match(src, start):
-            try:
-                return _parse_match_cases(src, parse_params)
-            except IndentationError:
-                raise
-            except SyntaxError:  # 'case' is not a protected keyword, the regex checks most cases but not all possible so fall back to parse stmts
-                pass
-
-    return _parse_stmts(src, parse_params)
-
-
-@staticmethod
-def _parse_stmtish(src: str, parse_params: dict = {}) -> AST:
-    """Parse exactly one `stmt`, `ExceptHandler` or `match_case` and return as itself."""
-
-    mod = _parse_stmtishs(src, parse_params)
-
-    if len(body := mod.body) != 1:
-        raise NodeError('expecting single stmt, ExceptHandler or match_case')
-
-    return body[0]
 
 
 @staticmethod
@@ -1127,84 +1076,6 @@ def _code_as_all(code: Code, parse_params: dict = {}) -> fst.FST:  # TODO: allow
 
 
 @staticmethod
-def _code_as_stmtishs(code: Code, parse_params: dict = {}, *, is_trystar: bool = False) -> fst.FST:
-    """Convert `code` to zero or more `stmtish`s and return in the `body` of a `Module` `FST` if possible. If source
-    is passed then will check for presence of `except` or `case` at start to determine if are `ExceptHandler`s or
-    `match_case`s or `stmt`s."""
-
-    if is_fst := isinstance(code, fst.FST):
-        if not code.is_root:
-            raise ValueError('expecting root node')
-
-        ast = code.a
-
-    elif isinstance(code, AST):
-        ast = code
-
-    else:
-        if isinstance(code, list):
-            code = '\n'.join(code)
-
-        if firstsrc := _re_first_src_or_lcont.search(code):
-            if len(firstsrc.group(0)) - 1:
-                raise IndentationError('unexpected indent')
-
-            if _re_except.match(code, start := firstsrc.start()):
-                return _code_as_ExceptHandlers(code, parse_params)
-
-            if _re_case.match(code, start):
-                try:
-                    return _code_as_match_cases(code, parse_params)
-                except IndentationError:
-                    raise
-                except SyntaxError:  # 'case' is not a protected keyword, the regex checks most cases but not all possible so fall back to parse stmts
-                    pass
-
-        return _code_as_stmts(code, parse_params)
-
-    if isinstance(ast, (stmt, expr, Expression)):
-        return _code_as_stmts(code, parse_params)
-    if isinstance(ast, ExceptHandler):
-        return _code_as_ExceptHandlers(code, parse_params, is_trystar=is_trystar)
-    if isinstance(ast, match_case):
-        return _code_as_match_cases(code, parse_params)
-
-    if not (is_mod := isinstance(ast, Module)) and not isinstance(ast, Interactive):
-        raise NodeError(f'expecting zero or more stmts, ExceptHandlers or match_cases, got '
-                        f'{ast.__class__.__name__}')
-
-    if body := ast.body:
-        if isinstance(b0 := body[0], stmt):
-            code_type = stmt
-        elif isinstance(b0, ExceptHandler):
-            code_type = ExceptHandler
-        elif isinstance(b0, match_case):
-            code_type = match_case
-        else:
-            code_type = None
-
-        if not code_type or not all(isinstance(a, code_type) for a in body):
-            raise NodeError(f'expecting zero or more stmts, ExceptHandlers or match_cases, got '
-                            f'[{_shortstr(", ".join(a.__class__.__name__ for a in body))}]')
-
-    if is_fst:
-        if is_mod:
-            return code
-
-        return fst.FST(Module(body=body, type_ignores=[]), code._lines, from_=code, lcopy=False)
-
-    if not body:
-        return fst.FST(Module(body=[], type_ignores=[]), [bistr('')], parse_params=parse_params, lcopy=False)
-
-    if code_type is stmt:
-        return _code_as_stmts(code, parse_params)
-    if code_type is ExceptHandler:
-        return _code_as_ExceptHandlers(code, parse_params, is_trystar=is_trystar)
-
-    return _code_as_match_cases(code, parse_params)
-
-
-@staticmethod
 def _code_as_stmts(code: Code, parse_params: dict = {}) -> fst.FST:
     """Convert `code` to zero or more `stmt`s and return in the `body` of a `Module` `FST` if possible."""
 
@@ -1659,13 +1530,10 @@ __all_private__ = [n for n in globals() if n not in _GLOBALS]  # used by make_do
 
 _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type but that will parse ALL of those types without error, not all parsed in desired but all desired in parsed
     'all':               _parse_all,
-    'most':              _parse_most,
-    'min':               _parse_min,
+    'strict':            _parse_strict,
     'exec':              _parse_Module,
     'eval':              _parse_Expression,
     'single':            _parse_Interactive,
-    'stmtishs':          _parse_stmtishs,
-    'stmtish':           _parse_stmtish,
     'stmts':             _parse_stmts,
     'stmt':              _parse_stmt,
     'ExceptHandlers':    _parse_ExceptHandlers,
