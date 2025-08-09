@@ -13,13 +13,14 @@ from __future__ import annotations
 import re
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse, fix_missing_locations as ast_fix_missing_locations
-from typing import Callable, Literal
+from typing import Callable, Literal, get_args
 from unicodedata import normalize
 
 from . import fst
 
 from .astutil import *
 from .astutil import (
+    pat_alnum,
     OPSTR2CLS_UNARY, OPSTR2CLS_BIN, OPSTR2CLS_CMP, OPSTR2CLS_BOOL, OPSTR2CLS_AUG, OPCLS2STR_AUG, OPCLS2STR,
     TryStar, type_param,
 )
@@ -27,10 +28,6 @@ from .astutil import (
 from .misc import (
     PYGE11, Code, NodeError, _next_src, _shortstr
 )
-
-_re_first_src = re.compile(r'^[^\S\n]*(?:[^\s\\#]|(?<!^)\\)', re.MULTILINE)  # or first \ not on start of line
-_re_except    = re.compile(r'except\b')
-_re_case      = re.compile(r'case\b\s*(?:[*\\\w({[\'"-]|\.\d)')
 
 Mode = Literal[
     'all',
@@ -51,6 +48,7 @@ Mode = Literal[
     'expr_callarg',
     'expr_slice',
     'expr_sliceelt',
+    'expr_all',
     'Tuple',
     'boolop',
     'operator',
@@ -107,7 +105,9 @@ Mode = Literal[
 - `'expr_slice'`: "slice expression", same as `'expr'` except that in this mode `a:b` parses to a `Slice` and `*not v`
     parses to a single element tuple containing a starred expression `(*(not v),)`.
 - `'expr_sliceelt'`: "slice tuple element expression", same as `'expr'` except that in this mode `a:b` parses to a
-    `Slice` and `*not v` parses to a starred expression `*(not v)`.
+    `Slice` and `*not v` parses to a starred expression `*(not v)`. `Tuples` are parsed but cannot contain `Slice`s.
+- `'expr_all'`: Parse to any kind of expression including `Slice`, `*not a` or `Tuple` of any of those combined.
+- `'Tuple'`: Parse to a `Tuple` which may contain anything that a tuple can contain like multiple `Slice`s.
 - `'boolop'`: Parse to a `boolop` operator.
 - `'operator'`: Parse to an `operator` operator, either normal binary `'*'` or augmented `'*='`.
 - `'binop'`: Parse to an `operator` only binary `'*'`, `'+'`, `'>>'`, etc...
@@ -138,6 +138,37 @@ Mode = Literal[
     `Tuple`.
 """
 
+_re_first_src_or_lcont = re.compile(r'^[^\S\n]*(?:[^\s\\#]|(?<!^)\\)', re.MULTILINE)  # or first \ not on start of line
+_re_except             = re.compile(r'except\b')
+_re_case               = re.compile(r'case\b\s*(?:[*\\\w({[\'"-]|\.\d)')
+
+_re_first_src          = re.compile(r'^([^\S\n]*)([^\s\\#]+)', re.MULTILINE)  # search for first non-comment non-linecont source code
+_re_parse_all_category = re.compile(r'''
+    (?P<stmt>                          (?: assert | break | class | continue | def | del | from | global | import | nonlocal | pass | raise | return | try | while | with ) \b ) |
+    (?P<await_lambda_yield>            (?: await | lambda | yield ) \b ) |
+    (?P<True_False_None>               (?: True | False | None ) \b ) |
+    (?P<async_or_for>                  (?: async | for ) \b ) |
+    (?P<if>                            (?: if ) \b ) |
+    (?P<except>                        (?: except ) \b ) |
+    (?P<case>                          (?: case ) \b ) |
+    (?P<not>                           (?: not ) \b ) |
+    (?P<boolop>                        (?: and | or ) \b ) |
+    (?P<cmpop_w>                       (?: is | in ) \b ) |
+    (?P<syntax_error>                  (?: elif | else | finally | as ) \b ) |
+    (?P<match_type_identifier>         (?: match | type | [^\d\W][''' + pat_alnum + r''']* ) \b ) |
+    (?P<stmt_or_expr_or_pat_or_witem>  (?: [(\[{"'.\d] ) ) |
+    (?P<augop>                         (?: \+= | -= | @= | \*= | /= | %= | <<= | >>= | \|= | \^= | &= | //= | \*\*= ) ) |
+    (?P<minus>                         (?: - ) ) |
+    (?P<starstar>                      (?: \*\* ) ) |
+    (?P<star>                          (?: \* ) ) |
+    (?P<at>                            (?: @ ) ) |
+    (?P<operator>                      (?: // | / | % | << | >> | \| | \^ | & ) ) |
+    (?P<plus>                          (?: \+ ) ) |
+    (?P<colon>                         (?: : ) ) |
+    (?P<cmpop_o>                       (?: == | != | <= | < | >= | > ) ) |
+    (?P<tilde>                         (?: ~ ) )
+''', re.MULTILINE | re.VERBOSE)
+
 
 def _ast_parse1(src: str, parse_params: dict = {}):
     if len(body := ast_parse(src, **parse_params).body) != 1:
@@ -167,7 +198,7 @@ def _fixing_unparse(ast: AST) -> str:
 
 
 # def _validate_indent(src: str, ret: Any = None) -> Any:
-#     if (m := _re_first_src.search(src)) and len(m.group(0)) > 1:
+#     if (m := _re_first_src_or_lcont.search(src)) and len(m.group(0)) > 1:
 #         raise IndentationError('unexpected indent')
 
 #     return ret
@@ -200,6 +231,22 @@ def _fix_unparenthesized_tuple_parsed_parenthesized(src: str, ast: AST):
         end_ln, end_col, _ = code
         ast.end_lineno     = end_ln + 2
         ast.end_col_offset = len(lines[end_ln][:end_col + 1].encode())
+
+
+def _parse_all_multiple(src: str, parse_params: dict, stmt: bool, rest: list[Callable]) -> AST:
+    if stmt:
+        try:
+            return reduce_ast(_parse_stmts(src, parse_params), True)
+        except (SyntaxError, NodeError):  # except IndentationError: raise  # before if checking that
+            pass
+
+    for parse in rest:
+        try:
+            return parse(src, parse_params)
+        except (SyntaxError, NodeError):  # except IndentationError: raise  # before if checking that
+            pass
+
+    raise NodeError('could not parse')
 
 
 def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, parse: Callable[[fst.FST, Code], fst.FST],
@@ -242,9 +289,7 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, parse: Call
 
     try:
         return fst.FST(parse(code, parse_params), lines, parse_params=parse_params)  # fall back to actually trying to parse the thing
-    except IndentationError:
-        raise
-    except (SyntaxError, NodeError):
+    except (SyntaxError, NodeError):  # except IndentationError: raise  # before if checking that
         raise NodeError(f'expecting {ast_type.__name__}, got {_shortstr(code)!r}') from None
 
 
@@ -337,17 +382,111 @@ def _parse(src: str, mode: Mode = 'all', parse_params: dict = {}) -> AST:
 
 @staticmethod
 def _parse_all(src: str, parse_params: dict = {}) -> AST:
-    """Attempt all parse modes in order from most common / probable to least."""
+    """All parse modes. Get a hint from starting source and attempt parse according to that from most probable to least
+    of what it could be."""
 
-    for parse in _PARSE_ALL_FUNCS:
+    if not (first := _re_first_src.search(src)):
+        return ast_parse(src, **parse_params)  # should return empty Module with src trivia
+
+    if not (cat := _re_parse_all_category.match(first.group(2))):
+        ast_parse(src, **parse_params)  # should raise SyntaxError
+
+        raise RuntimeError('should not get here')
+
+    groupdict = cat.groupdict()
+
+    if groupdict['stmt_or_expr_or_pat_or_witem']:
+        return _parse_all_multiple(src, parse_params, not first.group(1),
+                                   (_parse_expr_all, _parse_pattern, _parse_withitem))  # _parse_expr_all because could be Slice
+
+    if groupdict['match_type_identifier']:
+        return _parse_all_multiple(src, parse_params, not first.group(1),
+                                   (_parse_expr_all, _parse_pattern, _parse_arguments, _parse_arguments_lambda,
+                                    _parse_withitem, _parse_arg, _parse_type_param))
+
+    if groupdict['stmt']:
+        return reduce_ast(_parse_stmts(src, parse_params), True)
+
+    if groupdict['True_False_None']:
+        return _parse_all_multiple(src, parse_params, not first.group(1),
+                                   (_parse_expr_all, _parse_pattern, _parse_withitem))
+
+    if groupdict['async_or_for']:
+        return _parse_all_multiple(src, parse_params, not first.group(1), (_parse_comprehension,))
+
+    if groupdict['await_lambda_yield']:
+        return _parse_all_multiple(src, parse_params, not first.group(1), (_parse_expr_all,))
+
+    if groupdict['if']:
+        return reduce_ast(_parse_stmts(src, parse_params), True)
+
+    if groupdict['except']:
+        return reduce_ast(_parse_ExceptHandlers(src, parse_params), True)
+
+    if groupdict['case']:
         try:
-            return parse(src, parse_params)
-        except IndentationError:
-            raise
-        except (SyntaxError, NodeError):
+            return reduce_ast(_parse_match_cases(src, parse_params), True)
+        except (SyntaxError, NodeError):  # except IndentationError: raise  # before if checking that
             pass
 
-    raise NodeError('failed to parse in any mode')
+        return _parse_all_multiple(src, parse_params, not first.group(1),
+                                   (_parse_expr_all, _parse_pattern, _parse_arguments, _parse_arguments_lambda,
+                                    _parse_withitem, _parse_arg, _parse_type_param))
+
+    if groupdict['at']:
+        return reduce_ast(_parse_stmts(src, parse_params), True)
+
+    if groupdict['star']:
+        ast = _parse_all_multiple(src, parse_params, not first.group(1),
+                                  (_parse_expr_callarg, _parse_operator))  # could have _parse_type_param but
+
+        if isinstance(ast, Assign) and len(targets := ast.targets) == 1 and isinstance(targets[0], Starred):  # '*T = ...' validly parses to Assign statement but is invalid compile, but valid type_param so reparse as that
+            return _parse_type_param(src, parse_params)
+
+        return ast
+
+    if groupdict['minus']:
+        return _parse_all_multiple(src, parse_params, not first.group(1),
+                                   (_parse_expr_all, _parse_pattern, _parse_withitem, _parse_binop))
+
+    if groupdict['not']:
+        return _parse_all_multiple(src, parse_params, not first.group(1),
+                                   (_parse_expr_all, _parse_withitem, _parse_unaryop, _parse_cmpop))
+
+    if groupdict['tilde']:
+        return _parse_all_multiple(src, parse_params, not first.group(1),
+                                   (_parse_expr_all, _parse_withitem, _parse_unaryop))
+
+    if groupdict['colon']:
+        return _parse_all_multiple(src, parse_params, False, (_parse_expr_all,))
+
+    if groupdict['starstar']:
+        return _parse_all_multiple(src, parse_params, False, (_parse_type_param, _parse_operator))
+
+    if groupdict['plus']:
+        return _parse_all_multiple(src, parse_params, not first.group(1),
+                                   (_parse_expr_all, _parse_withitem, _parse_binop))
+
+    if groupdict['cmpop_w']:
+        return _parse_cmpop(src, parse_params)
+
+    if groupdict['cmpop_o']:
+        return _parse_cmpop(src, parse_params)
+
+    if groupdict['boolop']:
+        return _parse_boolop(src, parse_params)
+
+    if groupdict['augop']:
+        return _parse_augop(src, parse_params)
+
+    if groupdict['operator']:
+        return _parse_operator(src, parse_params)
+
+    # groupdict['syntax_error'] or something else unrecognized
+
+    ast_parse(src, **parse_params)  # should raise SyntaxError
+
+    raise RuntimeError('should not get here')
 
 
 @staticmethod
@@ -392,7 +531,7 @@ def _parse_Interactive(src: str, parse_params: dict = {}) -> AST:
 def _parse_stmtishs(src: str, parse_params: dict = {}) -> AST:
     """Parse zero or more `stmt`s, 'ExceptHander's or 'match_case's and return them in a `Module` `body`."""
 
-    if firstsrc := _re_first_src.search(src):
+    if firstsrc := _re_first_src_or_lcont.search(src):
         if len(firstsrc.group(0)) - 1:
             raise IndentationError('unexpected indent')
 
@@ -546,8 +685,8 @@ def _parse_match_case(src: str, parse_params: dict = {}) -> AST:
 
 @staticmethod
 def _parse_expr(src: str, parse_params: dict = {}) -> AST:
-    """Parse to an `ast.expr`, but only things which are normally valid in an `expr` location, no `Slices` or `Starred`
-    expressions only valid as a `Call` arg."""
+    """Parse to a "standard" `ast.expr`, only things which are normally valid in an `expr` location, no `Slices` or
+    `Starred` expressions which are only valid as a `Call` arg (`*not a`)."""
 
     try:
         body = ast_parse(src, **parse_params).body
@@ -558,10 +697,10 @@ def _parse_expr(src: str, parse_params: dict = {}) -> AST:
             return ast.value
 
     try:
-        ast = _ast_parse1(f'(\n{src}\n)', parse_params).value  # has newlines
+        ast = _ast_parse1(f'(\n{src}\n)', parse_params).value  # has newlines or indentation
 
     except SyntaxError:
-        elts = _ast_parse1(f'(\n{src}\n,)', parse_params).value.elts  # Starred expression with newlines
+        elts = _ast_parse1(f'(\n{src}\n,)', parse_params).value.elts  # Starred expression with newlines or indentation
         ast  = elts[0]
 
         assert isinstance(ast, Starred) and len(elts) == 1
@@ -585,14 +724,13 @@ def _parse_expr_callarg(src: str, parse_params: dict = {}) -> AST:
 
     try:
         return _parse_expr(src, parse_params)
-    except IndentationError:
-        raise
-    except (NodeError, SyntaxError):  # stuff like '*[] or []'
+    except (NodeError, SyntaxError):  # stuff like '*[] or []'  # except IndentationError: raise  # before if checking that
         pass
 
-    args = _ast_parse1(f'f(\n{src}\n)', parse_params).value.args
+    value = _ast_parse1(f'f(\n{src}\n)', parse_params).value
+    args  = value.args
 
-    if len(args) != 1:
+    if len(args) != 1 or value.keywords:
         raise NodeError('expecting single call argument expression')
 
     ast = args[0]
@@ -640,9 +778,7 @@ def _parse_expr_sliceelt(src: str, parse_params: dict = {}) -> AST:
 
     try:
         ast = _parse_expr_slice(src, parse_params)
-    except IndentationError:
-        raise
-    except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11
+    except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11  # except IndentationError: raise  # before if checking that
         return _parse_expr(src, parse_params)
 
     if isinstance(ast, Tuple) and any(isinstance(e, Slice) for e in ast.elts):
@@ -657,21 +793,44 @@ def _parse_expr_sliceelt(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_Tuple(src: str, parse_params: dict = {}) -> AST:
-    """Parse to a `Tuple` which may or may not contain `Slice`s and otherwise invalid syntax in normal `Tuple`s like
-    `*not a`."""
+def _parse_expr_all(src: str, parse_params: dict = {}) -> AST:
+    """Parse to any kind of expression including `Slice`, `*not a` or `Tuple` of any of those combined. Lone `*a`
+    `Starred` is returned as a `Starred` and not `Tuple` as would be in a slice."""
 
     try:
         ast = _parse_expr_slice(src, parse_params)
-    except IndentationError:
-        raise
-    except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11
-        return _parse_expr(src, parse_params)
+    except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11  # except IndentationError: raise  # before if checking that
+        ast = _parse_expr_callarg(src, parse_params)  # expr_callarg instead of expr because py 3.10 won't pick up `*not a` in a slice above
 
-    if (isinstance(ast, Tuple) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for '*starred' acting as '*starred,'
+    else:
+        if (isinstance(ast, Tuple) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for '*starred' acting as '*starred,'
+            e0.end_col_offset == ast.end_col_offset and e0.end_lineno == ast.end_lineno
+        ):
+            return e0
+
+    return ast
+
+
+@staticmethod
+def _parse_Tuple(src: str, parse_params: dict = {}) -> AST:
+    """Parse to a `Tuple` which may or may not contain `Slice`s and otherwise invalid syntax in normal `Tuple`s like
+    `*not a` (if not parenthesized)."""
+
+    try:
+        ast        = _parse_expr_slice(src, parse_params)
+        from_slice = True
+
+    except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11  # except IndentationError: raise  # before if checking that
+        ast        = _parse_expr(src, parse_params)
+        from_slice = False
+
+    if not isinstance(ast, Tuple):
+        raise NodeError(f'expecting Tuple, got {ast.__class__.__name__}')
+
+    if (from_slice and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for '*starred' acting as '*starred,'
         e0.end_col_offset == ast.end_col_offset and e0.end_lineno == ast.end_lineno
     ):
-        raise NodeError('expecting tuple, got lone starred')
+        raise NodeError('expecting Tuple, got Starred')
 
     return ast
 
@@ -791,10 +950,8 @@ def _parse_arg(src: str, parse_params: dict = {}) -> AST:
 
     try:
         args = _ast_parse1(f'def f(\n{src}\n): pass', parse_params).args
-    except IndentationError:
-        raise
 
-    except SyntaxError:  # may be '*vararg: *starred'
+    except SyntaxError:  # may be '*vararg: *starred'  # except IndentationError: raise  # before if checking that
         args = _ast_parse1(f'def f(*\n{src}\n): pass', parse_params).args
 
         if args.posonlyargs or args.args or args.kwonlyargs or args.defaults or args.kw_defaults or args.kwarg:
@@ -835,9 +992,7 @@ def _parse_alias(src: str, parse_params: dict = {}) -> AST:
     if '*' in src:
         try:
             return _parse_alias_star(src, parse_params)
-        except IndentationError:
-            raise
-        except SyntaxError:
+        except SyntaxError:  # except IndentationError: raise  # before if checking that
             pass
 
     return _parse_alias_dotted(src, parse_params)
@@ -905,10 +1060,8 @@ def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
 
     try:
         ast = _ast_parse1_case(f'match _:\n case \\\n{src}: pass', parse_params).pattern
-    except IndentationError:
-        raise
 
-    except SyntaxError:  # first in case needs to be enclosed
+    except SyntaxError:  # first in case needs to be enclosed  # except IndentationError: raise  # before if checking that
         try:
             ast = _ast_parse1_case(f'match _:\n case (\\\n{src}\n): pass', parse_params).pattern
 
@@ -992,7 +1145,7 @@ def _code_as_stmtishs(code: Code, parse_params: dict = {}, *, is_trystar: bool =
         if isinstance(code, list):
             code = '\n'.join(code)
 
-        if firstsrc := _re_first_src.search(code):
+        if firstsrc := _re_first_src_or_lcont.search(code):
             if len(firstsrc.group(0)) - 1:
                 raise IndentationError('unexpected indent')
 
@@ -1199,9 +1352,11 @@ def _code_as_expr(code: Code, parse_params: dict = {}, *, parse: Callable[[Code,
             raise ValueError('expecting root node')
 
         if not isinstance(ast := reduce_ast(codea := code.a, NodeError), expr):
-            raise NodeError('expecting ' +
-                ("slice " if parse is _parse_expr_sliceelt else "call arg " if parse is _parse_expr_callarg else "") +
-                f'expression, got {ast.__class__.__name__}')
+            raise NodeError(('expecting slice expression' if parse is _parse_expr_sliceelt else
+                             'expecting call arg expression' if parse is _parse_expr_callarg else
+                             'expecting Tuple' if parse is _parse_Tuple else
+                             'expecting expression') +
+                            f', got {ast.__class__.__name__}')
 
         if ast is codea:
             return code._sanitize() if sanitize else code
@@ -1214,9 +1369,11 @@ def _code_as_expr(code: Code, parse_params: dict = {}, *, parse: Callable[[Code,
 
     if isinstance(code, AST):
         if not isinstance(code, expr):
-            raise NodeError('expecting ' +
-                ("slice " if parse is _parse_expr_sliceelt else "call arg " if parse is _parse_expr_callarg else "") +
-                f'expression, got {code.__class__.__name__}')
+            raise NodeError(('expecting slice expression' if parse is _parse_expr_sliceelt else
+                             'expecting call arg expression' if parse is _parse_expr_callarg else
+                             'expecting Tuple' if parse is _parse_Tuple else
+                             'expecting expression') +
+                            f', got {code.__class__.__name__}')
 
         code  = _fixing_unparse(code)
         lines = code.split('\n')
@@ -1259,13 +1416,6 @@ def _code_as_expr_sliceelt(code: Code, parse_params: dict = {}) -> fst.FST:
     expressions in a `Subscript` `slice` field."""
 
     return _code_as_expr(code, parse_params, parse=_parse_expr_sliceelt)
-
-
-@staticmethod
-def _code_as_Tuple(code: Code, parse_params: dict = {}) -> fst.FST:
-    """Convert `code` to a `Tuple` which may or may not contain `Slice`s."""
-
-    return _code_as_expr(code, parse_params, parse=_parse_Tuple)
 
 
 @staticmethod
@@ -1314,12 +1464,16 @@ def _code_as_comprehension(code: Code, parse_params: dict = {}, *, sanitize: boo
 def _code_as_arguments(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a arguments `FST` if possible."""
 
+    # TODO: upcast FST and AST arg to arguments?
+
     return _code_as(code, arguments, parse_params, _parse_arguments, sanitize=sanitize)
 
 
 @staticmethod
 def _code_as_arguments_lambda(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a lambda arguments `FST` if possible (no annotations allowed)."""
+
+    # TODO: upcast FST and AST arg to arguments?
 
     return _code_as(code, arguments, parse_params, _parse_arguments_lambda, sanitize=sanitize)
 
@@ -1503,23 +1657,6 @@ def _code_as_constant(code: constant, parse_params: dict = {}) -> constant:
 # ----------------------------------------------------------------------------------------------------------------------
 __all_private__ = [n for n in globals() if n not in _GLOBALS]  # used by make_docs.py
 
-_PARSE_ALL_FUNCS = [
-    _parse_most,
-    _parse_expr,     # explicitly this because _parse_most won't catch unparenthesized expressions with newlines
-    _parse_pattern,
-    _parse_arguments,
-    _parse_arguments_lambda,
-    _parse_expr_sliceelt,
-    _parse_expr_callarg,
-    _parse_comprehension,
-    _parse_withitem,
-    _parse_arg,      # because of 'vararg: *starred'
-    _parse_operator,
-    _parse_cmpop,
-    _parse_boolop,
-    _parse_unaryop,
-]
-
 _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type but that will parse ALL of those types without error, not all parsed in desired but all desired in parsed
     'all':               _parse_all,
     'most':              _parse_most,
@@ -1539,7 +1676,8 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'expr_callarg':      _parse_expr_callarg,   # `*a or b`, `*not c`
     'expr_slice':        _parse_expr_slice,     # `a:b:c`, `*not c`, `a:b:c, x:y:z`, `*st` -> `*st,` (py 3.11+)
     'expr_sliceelt':     _parse_expr_sliceelt,  # `a:b:c`, `*not c`, `*st`
-    'Tuple':             _parse_Tuple,          # `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st``
+    'expr_all':          _parse_expr_all,       # `a:b:c`, `*not c`, `*st`, `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`, `*not c`
+    'Tuple':             _parse_Tuple,          # `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`
     'boolop':            _parse_boolop,
     'operator':          _parse_operator,
     'binop':             _parse_binop,
@@ -1584,3 +1722,6 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     Store:               lambda src, parse_params = {}: Store(),
     Del:                 lambda src, parse_params = {}: Del(),
 }
+
+assert not set(get_args(get_args(Mode)[0])).symmetric_difference(k for k in _PARSE_MODE_FUNCS if isinstance(k, str)), \
+    'Mode string modes do not match _PARSE_MODE_FUNCS table'

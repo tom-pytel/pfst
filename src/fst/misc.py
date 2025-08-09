@@ -63,7 +63,6 @@ re_contline_str_end_dq   = re.compile(r'(?:\\.|[^\\"])*?  "', re.VERBOSE)
 re_multiline_str_start   = re.compile(r'(?:b|r|rb|br|u|)  (\'\'\'|""")', re.VERBOSE | re.IGNORECASE)
 re_multiline_str_end_sq  = re.compile(r'(?:\\.|[^\\])*?  \'\'\'', re.VERBOSE)
 re_multiline_str_end_dq  = re.compile(r'(?:\\.|[^\\])*?  """', re.VERBOSE)
-re_any_str_or_fstr_start = re.compile(r'(?:b|r|rb|br|u|f|t|)  (\'\'\'|\'|"""|")', re.VERBOSE | re.IGNORECASE)
 
 re_empty_line_or_cont           = re.compile(r'[ \t]*(\\)?$')            # empty line or line continuation
 re_empty_line_cont_or_comment   = re.compile(r'[ \t]*(\\|#.*)?$')        # empty line or line continuation or a pure comment line
@@ -992,6 +991,10 @@ def _multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln:
     """Return the line numbers of a potentially multiline string `Constant`. The location passed MUST be from the
     `Constant` `AST` node or calculated to be the same, otherwise this function will fail."""
 
+
+    # TODO: use tokenize?
+
+
     def walk_multiline(start_ln, end_ln, m, re_str_end):
         nonlocal lns, lines
 
@@ -1041,7 +1044,7 @@ def _multiline_fstr_continuation_lns(lines: list[str], ln: int, col: int, end_ln
     """Lets try to find indentable lines by incrementally attempting to parse parts of multiline f-string (or t-)."""
 
 
-    # TODO: p3.12+ has locations for these which should allow no use of parse
+    # TODO: p3.12+ has locations for these which should allow no use of parse, use tokenize?
 
 
     lns = []

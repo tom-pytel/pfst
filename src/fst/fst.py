@@ -1222,7 +1222,7 @@ class FST:
 
         try:
             # astp = FST._parse(self.src, mode or ast.__class__, parse_params=parse_params)
-            astp = FST._parse(self.src, mode or self.get_mode(), parse_params=parse_params)
+            astp = FST._parse(self.src, mode or self.get_parse_mode(), parse_params=parse_params)
 
         except (SyntaxError, NodeError):
             if raise_:
@@ -3980,10 +3980,12 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
     # Low level
 
-    def get_mode(self, raise_: bool = True) -> str | type[AST] | None:
-        r"""Determine the parse mode for this node. This is the fst extended parse mode as per `Mode`, not the
-        `ast.parse()` mode. Returns a mode which is guaranteed to reparse this assumed-valid element to an exact copy of
-        itself.
+    def get_parse_mode(self, raise_: bool = True) -> str | type[AST] | None:
+        r"""Determine the parse mode for this node. This is the extended parse mode as per `Mode`, not the `ast.parse()`
+        mode. Returns a mode which is guaranteed to reparse this assumed-valid element to an exact copy of itself. This
+        mode is not guaranteed to be the same as was used to create the `FST`, just guaranteed to be able to recreate
+        it. Mostly it just returns the `AST` type, but in cases where that won't parse to this `FST` it will return
+        a string mode.
 
         **Parameters:**
         - `raise_`: Whether to raise an exception on failure or return `None`.
@@ -3996,6 +3998,14 @@ class FST:
 
         **Examples:**
         ```py
+        >>> FST('a | b').get_parse_mode()
+        <class 'ast.BinOp'>
+
+        >>> FST('a | b', 'pattern').get_parse_mode()
+        <class 'ast.MatchOr'>
+
+        >>> FST('except ValueError: pass\nexcept: pass', 'ExceptHandlers').get_parse_mode()
+        'ExceptHandlers'
         ```
         """
 
@@ -4938,6 +4948,7 @@ class FST:
         _parse_expr_callarg,
         _parse_expr_slice,
         _parse_expr_sliceelt,
+        _parse_expr_all,
         _parse_Tuple,
         _parse_boolop,
         _parse_operator,
@@ -4965,7 +4976,6 @@ class FST:
         _code_as_expr_callarg,
         _code_as_expr_slice,
         _code_as_expr_sliceelt,
-        _code_as_Tuple,
         _code_as_boolop,
         _code_as_binop,
         _code_as_augop,

@@ -133,6 +133,8 @@ class bistr(str):
 
 constant = EllipsisType | int | float | complex | str | bytes | bool | None
 
+pat_alnum                  = r'\w\uFE00-\uFE0F\U000E0100-\U000E01EF'
+
 re_alnum                   = re.compile(r'[\w\uFE00-\uFE0F\U000E0100-\U000E01EF]')
 re_alnumdot                = re.compile(r'[\w\uFE00-\uFE0F\U000E0100-\U000E01EF.]')
 re_alnumdot_alnum          = re.compile(r'[\w\uFE00-\uFE0F\U000E0100-\U000E01EF.][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]')

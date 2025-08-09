@@ -230,6 +230,16 @@ PARSE_TESTS = [
     ('expr_sliceelt',     FST._parse_expr_sliceelt,     Tuple,          'j, k'),
     ('expr_sliceelt',     FST._parse_expr_sliceelt,     SyntaxError,    'a:b:c, x:y:z'),
 
+    ('expr_all',          FST._parse_expr_all,          Name,           'j'),
+    ('expr_all',          FST._parse_expr_all,          Starred,        '*s'),
+    ('expr_all',          FST._parse_expr_all,          Starred,        '*\ns'),
+    ('expr_all',          FST._parse_expr_all,          Tuple,          '*\ns,'),
+    ('expr_all',          FST._parse_expr_all,          Tuple,          '1\n,\n2\n,'),
+    ('expr_all',          FST._parse_expr_all,          Slice,          'a:b'),
+    ('expr_all',          FST._parse_expr_all,          Slice,          'a:b:c'),
+    ('expr_all',          FST._parse_expr_all,          Tuple,          'j, k'),
+    ('expr_all',          FST._parse_expr_all,          Tuple,          'a:b:c, x:y:z'),
+
     ('boolop',            FST._parse_boolop,            And,            'and'),
     ('boolop',            FST._parse_boolop,            NodeError,      '*'),
     ('operator',          FST._parse_operator,          Mult,           '*'),
@@ -577,7 +587,10 @@ if PYGE11:
 
         ('expr_slice',        FST._parse_expr_slice,        Tuple,          '*s'),
         ('expr_slice',        FST._parse_expr_slice,        Tuple,          '*not a'),
+
         ('expr_sliceelt',     FST._parse_expr_sliceelt,     Starred,        '*not a'),
+
+        ('expr_all',          FST._parse_expr_all,          Starred,        '*not a'),
 
         (ExceptHandler,       FST._parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
 
@@ -586,6 +599,8 @@ if PYGE11:
 
 if PYGE12:
     PARSE_TESTS.extend([
+        ('all',               FST._parse_type_param,        ParamSpec,      '**a'),
+
         ('type_param',        FST._parse_type_param,        TypeVar,        'a: int'),
         ('type_param',        FST._parse_type_param,        ParamSpec,      '**a'),
         ('type_param',        FST._parse_type_param,        TypeVarTuple,   '*a'),
@@ -602,6 +617,9 @@ if PYGE12:
 
 if PYGE13:
     PARSE_TESTS.extend([
+        ('all',               FST._parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
+        ('all',               FST._parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
+
         ('type_param',        FST._parse_type_param,        TypeVar,        'a: int = int'),
         ('type_param',        FST._parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
         ('type_param',        FST._parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
@@ -726,7 +744,7 @@ class TestFST(unittest.TestCase):
 
                 # reparse
 
-                if src != '*=':  # augassign is ambiguous and syntactically impossible
+                if src != '*=':  # augassign is ambiguous for unparse
                     test = 'reparse'
                     unp  = ((s := FST._unparse(ast)) and s.lstrip()) or src  # 'lstrip' because comprehension has leading space, 'or src' because unparse of operators gives nothing
                     ast2 = FST._parse(unp, mode)
@@ -735,7 +753,7 @@ class TestFST(unittest.TestCase):
 
                 # trailing newline
 
-                if src != '*=':  # augassign is ambiguous and syntactically impossible
+                if src != '*=':  # newline following augassign is syntactically impossible
                     test = 'newline'
                     srcn = src + '\n'
                     ast  = FST._parse(srcn, mode)
