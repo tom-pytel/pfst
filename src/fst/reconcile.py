@@ -4,7 +4,7 @@ possible."""
 from __future__ import annotations
 
 from ast import *
-from typing import Any, Literal
+from typing import Any, Literal, Mapping
 
 from . import fst
 
@@ -16,12 +16,12 @@ class _Reconcile:
     """The strategy is to make a copy of the original tree (mark) and then mutate it node by node according to the
     changes detected between the working tree and the marked reference tree."""
 
-    options: dict     ; """The options to use for the put operations."""
-    work:    fst.FST  ; """The `FST` tree that was operated on and will have `AST` replacements."""
-    mark:    fst.FST  ; """The marked `FST` tree to use as reference."""
-    out:     fst.FST  ; """The output `FST` tree to build up and return."""
+    options: Mapping[str, Any]  ; """The options to use for the put operations."""
+    work:    fst.FST            ; """The `FST` tree that was operated on and will have `AST` replacements."""
+    mark:    fst.FST            ; """The marked `FST` tree to use as reference."""
+    out:     fst.FST            ; """The output `FST` tree to build up and return."""
 
-    def __init__(self, work: fst.FST, mark: fst.FST, options: dict[str, Any] = {}):
+    def __init__(self, work: fst.FST, mark: fst.FST, options: Mapping[str, Any] = {}):
         if 'raw' in options:
             raise ValueError("cannot use reconcile with 'raw' option")
 
@@ -49,7 +49,7 @@ class _Reconcile:
 
         nodef     = getattr(node, 'f', False)  # this determines if it came from an in-tree FST or a pure AST
         outa      = outf.a
-        outa_keys = getattr(outa, 'keys')
+        outa_keys = outa.keys
         work_root = self.work
         start     = 0
 

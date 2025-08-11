@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse, fix_missing_locations as ast_fix_missing_locations
-from typing import Callable, Literal, get_args
+from typing import Any, Callable, Mapping, get_args
 from unicodedata import normalize
 
 from . import fst
@@ -63,14 +63,14 @@ _re_parse_all_category = re.compile(r'''
 ''', re.MULTILINE | re.VERBOSE)
 
 
-def _ast_parse1(src: str, parse_params: dict = {}) -> AST:
+def _ast_parse1(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if len(body := ast_parse(src, **parse_params).body) != 1:
         raise SyntaxError('expecting single element')
 
     return body[0]
 
 
-def _ast_parse1_case(src: str, parse_params: dict = {}) -> AST:
+def _ast_parse1_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if len(body := ast_parse(src, **parse_params).body) != 1 or len(cases := body[0].cases) != 1:
         raise SyntaxError('expecting single element')
 
@@ -126,7 +126,7 @@ def _fix_unparenthesized_tuple_parsed_parenthesized(src: str, ast: AST) -> None:
         ast.end_col_offset = len(lines[end_ln][:end_col + 1].encode())
 
 
-def _parse_all_multiple(src: str, parse_params: dict, stmt: bool, rest: list[Callable]) -> AST:
+def _parse_all_multiple(src: str, parse_params: Mapping[str, Any], stmt: bool, rest: list[Callable]) -> AST:
     if stmt:
         try:
             return reduce_ast(_parse_stmts(src, parse_params), True)
@@ -142,7 +142,8 @@ def _parse_all_multiple(src: str, parse_params: dict, stmt: bool, rest: list[Cal
     raise ParseError('could not parse')
 
 
-def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, parse: Callable[[fst.FST, Code], fst.FST],
+def _code_as_op(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any],
+                parse: Callable[[fst.FST, Code], fst.FST],
                 opstr2cls: dict[str, type[AST]], opcls2str: dict[type[AST], str] = OPCLS2STR) -> fst.FST:
     """Convert `code` to an operation `FST` if possible."""
 
@@ -186,7 +187,8 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, parse: Call
         raise ParseError(f'expecting {ast_type.__name__}, got {_shortstr(code)!r}') from None
 
 
-def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callable[[fst.FST, Code], fst.FST], *,
+def _code_as(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any],
+             parse: Callable[[fst.FST, Code], fst.FST], *,
              strip_tup_pars: bool = False, sanitize: bool = True) -> fst.FST:
     if isinstance(code, fst.FST):
         if not code.is_root:
@@ -237,7 +239,7 @@ def _unparse(ast: AST) -> str:
 
 
 @staticmethod
-def _parse(src: str, mode: Mode = 'all', parse_params: dict = {}) -> AST:
+def _parse(src: str, mode: Mode = 'all', parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse any source to an AST, including things which normal `ast.parse()` doesn't handle, like individual
     `comprehension`s. Can be given a target type to parse or else will try to various parse methods until it finds one
     that succeeds (if any).
@@ -274,7 +276,7 @@ def _parse(src: str, mode: Mode = 'all', parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_all(src: str, parse_params: dict = {}) -> AST:
+def _parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """All parse modes. Get a hint from starting source and attempt parse according to that from most probable to least
     of what it could be."""
 
@@ -383,7 +385,7 @@ def _parse_all(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_strict(src: str, parse_params: dict = {}) -> AST:
+def _parse_strict(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Attempt to parse valid parsable statements and then reduce to a single statement or expressing if possible. Only
     parses what `ast.parse()` can, no funny stuff."""
 
@@ -391,21 +393,21 @@ def _parse_strict(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_Module(src: str, parse_params: dict = {}) -> AST:
+def _parse_Module(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse `Module`, ast.parse(mode='exec')'."""
 
     return ast_parse(src, mode='exec', **parse_params)
 
 
 @staticmethod
-def _parse_Expression(src: str, parse_params: dict = {}) -> AST:
+def _parse_Expression(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse `Expression`, `ast.parse(mode='eval')."""
 
     return ast_parse(src, mode='eval', **parse_params)
 
 
 @staticmethod
-def _parse_Interactive(src: str, parse_params: dict = {}) -> AST:
+def _parse_Interactive(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse `Interactive`."""
 
     if not src.endswith('\n'):  # because otherwise error maybe
@@ -415,14 +417,14 @@ def _parse_Interactive(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_stmts(src: str, parse_params: dict = {}) -> AST:  # same as _parse_Module() but I want the IDE context coloring
+def _parse_stmts(src: str, parse_params: Mapping[str, Any] = {}) -> AST:  # same as _parse_Module() but I want the IDE context coloring
     """Parse one or more `stmt`s and return them in a `Module` `body` (just `ast.parse()` basically)."""
 
     return ast_parse(src, **parse_params)
 
 
 @staticmethod
-def _parse_stmt(src: str, parse_params: dict = {}) -> AST:
+def _parse_stmt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse exactly one `stmt` and return as itself."""
 
     mod = _parse_stmts(src, parse_params)
@@ -434,7 +436,7 @@ def _parse_stmt(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_ExceptHandlers(src: str, parse_params: dict = {}) -> AST:
+def _parse_ExceptHandlers(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse zero or more `ExceptHandler`s and return them in a `Module` `body`."""
 
     try:
@@ -470,7 +472,7 @@ def _parse_ExceptHandlers(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_ExceptHandler(src: str, parse_params: dict = {}) -> AST:
+def _parse_ExceptHandler(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse exactly one `ExceptHandler` and return as itself."""
 
     mod = _parse_ExceptHandlers(src, parse_params)
@@ -482,7 +484,7 @@ def _parse_ExceptHandler(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_match_cases(src: str, parse_params: dict = {}) -> AST:
+def _parse_match_cases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse zero or more `match_case`s and return them in a `Module` `body`."""
 
     lines = [bistr('match x:'), bistr(' case None: pass')] + [bistr(' ' + l) for l in src.split('\n')]
@@ -525,7 +527,7 @@ def _parse_match_cases(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_match_case(src: str, parse_params: dict = {}) -> AST:
+def _parse_match_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse exactly one `match_case` and return as itself."""
 
     mod = _parse_match_cases(src, parse_params)
@@ -537,7 +539,7 @@ def _parse_match_case(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_expr(src: str, parse_params: dict = {}) -> AST:
+def _parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a "standard" `ast.expr`, only things which are normally valid in an `expr` location, no `Slices` or
     `Starred` expressions which are only valid as a `Call` arg (`*not a`)."""
 
@@ -572,7 +574,7 @@ def _parse_expr(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_expr_callarg(src: str, parse_params: dict = {}) -> AST:
+def _parse_expr_callarg(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `expr` or in the context of a `Call.args` which treats `Starred` differently."""
 
     try:
@@ -595,7 +597,7 @@ def _parse_expr_callarg(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_expr_slice(src: str, parse_params: dict = {}) -> AST:
+def _parse_expr_slice(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.Slice` or anything else that can go into `Subscript.slice` (`expr`), e.g. "start:stop:step" or
     "name" or even "a:b, c:d:e, g". Using this, naked `Starred` expressions parse to single element `Tuple` with the
     `Starred` as the only element."""
@@ -619,7 +621,7 @@ def _parse_expr_slice(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_expr_sliceelt(src: str, parse_params: dict = {}) -> AST:
+def _parse_expr_sliceelt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an element of a slice `Tuple`, an `ast.expr` or `ast.Slice`. This exists because otherwise a naked
     `Starred` expression parses to an implicit single element `Tuple` and the caller of this function does not want that
     behavior. Using this, naked `Starred` expressions parse to just the `Starred` and not a `Tuple` like in
@@ -646,7 +648,7 @@ def _parse_expr_sliceelt(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_expr_all(src: str, parse_params: dict = {}) -> AST:
+def _parse_expr_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to any kind of expression including `Slice`, `*not a` or `Tuple` of any of those combined. Lone `*a`
     `Starred` is returned as a `Starred` and not `Tuple` as would be in a slice."""
 
@@ -665,7 +667,7 @@ def _parse_expr_all(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_Tuple(src: str, parse_params: dict = {}) -> AST:
+def _parse_Tuple(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a `Tuple` which may or may not contain `Slice`s and otherwise invalid syntax in normal `Tuple`s like
     `*not a` (if not parenthesized)."""
 
@@ -689,7 +691,7 @@ def _parse_Tuple(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_boolop(src: str, parse_params: dict = {}) -> AST:
+def _parse_boolop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.boolop`."""
 
     ast = _ast_parse1(f'(a\n{src}\nb)', parse_params).value
@@ -701,7 +703,7 @@ def _parse_boolop(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_operator(src: str, parse_params: dict = {}) -> AST:
+def _parse_operator(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.boolop`."""
 
     if '=' in src:
@@ -714,7 +716,7 @@ def _parse_operator(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_binop(src: str, parse_params: dict = {}) -> AST:
+def _parse_binop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.operator` in the context of a `BinOp`."""
 
     ast = _ast_parse1(f'(a\n{src}\nb)', parse_params).value
@@ -726,7 +728,7 @@ def _parse_binop(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_augop(src: str, parse_params: dict = {}) -> AST:
+def _parse_augop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an augmented `ast.operator` in the context of a `AugAssign`."""
 
     ast = _ast_parse1(f'a \\\n{src} b', parse_params)
@@ -738,7 +740,7 @@ def _parse_augop(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_unaryop(src: str, parse_params: dict = {}) -> AST:
+def _parse_unaryop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.unaryop`."""
 
     ast = _ast_parse1(f'(\n{src}\nb)', parse_params).value
@@ -750,7 +752,7 @@ def _parse_unaryop(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_cmpop(src: str, parse_params: dict = {}) -> AST:
+def _parse_cmpop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.cmpop`."""
 
     ast = _ast_parse1(f'(a\n{src}\nb)', parse_params).value
@@ -765,7 +767,7 @@ def _parse_cmpop(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
+def _parse_comprehension(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.comprehension`, e.g. "async for i in something() if i"."""
 
     ast = _ast_parse1(f'[_ \n{src}\n]', parse_params).value
@@ -780,7 +782,7 @@ def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_arguments(src: str, parse_params: dict = {}) -> AST:
+def _parse_arguments(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.arguments`, e.g. "a: list[str], /, b: int = 1, *c, d=100, **e"."""
 
     ast = _ast_parse1(f'def f(\n{src}\n): pass', parse_params).args
@@ -789,7 +791,7 @@ def _parse_arguments(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_arguments_lambda(src: str, parse_params: dict = {}) -> AST:
+def _parse_arguments_lambda(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.arguments` for a `Lambda`, e.g. "a, /, b, *c, d=100, **e"."""
 
     ast = _ast_parse1(f'(lambda \n{src}\n: None)', parse_params).value.args
@@ -798,7 +800,7 @@ def _parse_arguments_lambda(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_arg(src: str, parse_params: dict = {}) -> AST:
+def _parse_arg(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.arg`, e.g. "var: list[int]"."""
 
     try:
@@ -827,7 +829,7 @@ def _parse_arg(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_keyword(src: str, parse_params: dict = {}) -> AST:
+def _parse_keyword(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.keyword`, e.g. "var=val"."""
 
     keywords = _ast_parse1(f'f(\n{src}\n)', parse_params).value.keywords
@@ -839,7 +841,7 @@ def _parse_keyword(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_alias(src: str, parse_params: dict = {}) -> AST:
+def _parse_alias(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.alias`, allowing star or dotted notation, e.g. "name as alias"."""
 
     if '*' in src:
@@ -852,7 +854,7 @@ def _parse_alias(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_alias_dotted(src: str, parse_params: dict = {}) -> AST:
+def _parse_alias_dotted(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.alias`, allowing dotted notation (not all aliases are created equal),,
     e.g. "name as alias"."""
 
@@ -865,7 +867,7 @@ def _parse_alias_dotted(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_alias_star(src: str, parse_params: dict = {}) -> AST:
+def _parse_alias_star(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.alias`, allowing star,."""
 
     names = _ast_parse1(f'from . import \\\n{src}', parse_params).names
@@ -877,7 +879,7 @@ def _parse_alias_star(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
+def _parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.withitem`, e.g. "something() as var"."""
 
     items = _ast_parse1(f'with (\n{src}\n): pass', parse_params).items
@@ -908,7 +910,7 @@ def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
+def _parse_pattern(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.pattern`, e.g. "{a.b: i, **rest}"."""
 
     try:
@@ -940,7 +942,7 @@ def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
 
 
 @staticmethod
-def _parse_type_param(src: str, parse_params: dict = {}) -> AST:
+def _parse_type_param(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.type_param`, e.g. "t: Base = Subclass"."""
 
     type_params = _ast_parse1(f'type t[\n{src}\n] = None', parse_params).type_params
@@ -954,7 +956,7 @@ def _parse_type_param(src: str, parse_params: dict = {}) -> AST:
 # ......................................................................................................................
 
 @staticmethod
-def _code_as_all(code: Code, parse_params: dict = {}) -> fst.FST:  # TODO: allow 'is_trystar'?
+def _code_as_all(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:  # TODO: allow 'is_trystar'?
     """Convert `code` to any parsable `FST` if possible. If `FST` passed then it is returned as itself."""
 
     if isinstance(code, fst.FST):
@@ -980,7 +982,7 @@ def _code_as_all(code: Code, parse_params: dict = {}) -> fst.FST:  # TODO: allow
 
 
 @staticmethod
-def _code_as_stmts(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_stmts(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
     """Convert `code` to zero or more `stmt`s and return in the `body` of a `Module` `FST` if possible."""
 
     if isinstance(code, fst.FST):
@@ -1031,7 +1033,7 @@ def _code_as_stmts(code: Code, parse_params: dict = {}) -> fst.FST:
 
 
 @staticmethod
-def _code_as_ExceptHandlers(code: Code, parse_params: dict = {}, *, is_trystar: bool = False) -> fst.FST:
+def _code_as_ExceptHandlers(code: Code, parse_params: Mapping[str, Any] = {}, *, is_trystar: bool = False) -> fst.FST:
     """Convert `code` to zero or more `ExceptHandler`s and return in the `body` of a `Module` `FST` if possible.
 
     **Parameters:**
@@ -1081,7 +1083,7 @@ def _code_as_ExceptHandlers(code: Code, parse_params: dict = {}, *, is_trystar: 
 
 
 @staticmethod
-def _code_as_match_cases(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_match_cases(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
     """Convert `code` to zero or more `match_case`s and return in the `body` of a `Module` `FST` if possible."""
 
     if isinstance(code, fst.FST):
@@ -1118,7 +1120,7 @@ def _code_as_match_cases(code: Code, parse_params: dict = {}) -> fst.FST:
 
 
 @staticmethod
-def _code_as_expr(code: Code, parse_params: dict = {}, *, parse: Callable[[Code, dict], fst.FST] = _parse_expr,
+def _code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *, parse: Callable[[Code, dict], fst.FST] = _parse_expr,
                   sanitize: bool = True) -> fst.FST:
     """Convert `code` to an `expr` or optionally `Slice` `FST` if possible."""
 
@@ -1164,14 +1166,14 @@ def _code_as_expr(code: Code, parse_params: dict = {}, *, parse: Callable[[Code,
 
 
 @staticmethod
-def _code_as_expr_callarg(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_expr_callarg(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
     """Convert `code` to an `expr` in the context of a `Call.args` which has special parse rules for `Starred`."""
 
     return _code_as_expr(code, parse_params, parse=_parse_expr_callarg)
 
 
 @staticmethod
-def _code_as_expr_slice(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
+def _code_as_expr_slice(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a Slice `FST` if possible (or anthing else that can serve in `Subscript.slice`, like any old
     generic `expr`)."""
 
@@ -1186,7 +1188,7 @@ def _code_as_expr_slice(code: Code, parse_params: dict = {}, *, sanitize: bool =
 
 
 @staticmethod
-def _code_as_expr_sliceelt(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_expr_sliceelt(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
     """Convert `code` to an `expr` or `Slice` `FST` if possible. This exists because of the behavior of naked `Starred`
     expressions in a `Subscript` `slice` field."""
 
@@ -1194,49 +1196,49 @@ def _code_as_expr_sliceelt(code: Code, parse_params: dict = {}) -> fst.FST:
 
 
 @staticmethod
-def _code_as_boolop(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_boolop(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
     """Convert `code` to a `boolop` `FST` if possible."""
 
     return _code_as_op(code, boolop, parse_params, _parse_boolop, OPSTR2CLS_BOOL)
 
 
 @staticmethod
-def _code_as_binop(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_binop(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
     """Convert `code` to a `operator` `FST` if possible."""
 
     return _code_as_op(code, operator, parse_params, _parse_binop, OPSTR2CLS_BIN)
 
 
 @staticmethod
-def _code_as_augop(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_augop(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
     """Convert `code` to an augmented `operator` `FST` if possible, e.g. "+="."""
 
     return _code_as_op(code, operator, parse_params, _parse_augop, OPSTR2CLS_AUG, OPCLS2STR_AUG)
 
 
 @staticmethod
-def _code_as_unaryop(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_unaryop(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
     """Convert `code` to a `unaryop` `FST` if possible."""
 
     return _code_as_op(code, unaryop, parse_params, _parse_unaryop, OPSTR2CLS_UNARY)
 
 
 @staticmethod
-def _code_as_cmpop(code: Code, parse_params: dict = {}) -> fst.FST:
+def _code_as_cmpop(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
     """Convert `code` to a `cmpop` `FST` if possible."""
 
     return _code_as_op(code, cmpop, parse_params, _parse_cmpop, OPSTR2CLS_CMP)
 
 
 @staticmethod
-def _code_as_comprehension(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
+def _code_as_comprehension(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a comprehension `FST` if possible."""
 
     return _code_as(code, comprehension, parse_params, _parse_comprehension, sanitize=sanitize)
 
 
 @staticmethod
-def _code_as_arguments(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
+def _code_as_arguments(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a arguments `FST` if possible."""
 
     # TODO: upcast FST and AST arg to arguments?
@@ -1245,7 +1247,7 @@ def _code_as_arguments(code: Code, parse_params: dict = {}, *, sanitize: bool = 
 
 
 @staticmethod
-def _code_as_arguments_lambda(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
+def _code_as_arguments_lambda(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a lambda arguments `FST` if possible (no annotations allowed)."""
 
     # TODO: upcast FST and AST arg to arguments?
@@ -1254,28 +1256,28 @@ def _code_as_arguments_lambda(code: Code, parse_params: dict = {}, *, sanitize: 
 
 
 @staticmethod
-def _code_as_arg(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
+def _code_as_arg(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to an arg `FST` if possible."""
 
     return _code_as(code, arg, parse_params, _parse_arg, sanitize=sanitize)
 
 
 @staticmethod
-def _code_as_keyword(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
+def _code_as_keyword(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a keyword `FST` if possible."""
 
     return _code_as(code, keyword, parse_params, _parse_keyword, sanitize=sanitize)
 
 
 @staticmethod
-def _code_as_alias(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
+def _code_as_alias(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a alias `FST` if possible, star or dotted."""
 
     return _code_as(code, alias, parse_params, _parse_alias, sanitize=sanitize)
 
 
 @staticmethod
-def _code_as_alias_dotted(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
+def _code_as_alias_dotted(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a alias `FST` if possible, dotted as in `alias` for `Import.names`."""
 
     ret = _code_as(code, alias, parse_params, _parse_alias_dotted, sanitize=sanitize)
@@ -1287,7 +1289,7 @@ def _code_as_alias_dotted(code: Code, parse_params: dict = {}, *, sanitize: bool
 
 
 @staticmethod
-def _code_as_alias_star(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
+def _code_as_alias_star(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a alias `FST` if possible, possibly star as in `alias` for `FromImport.names`."""
 
     ret = _code_as(code, alias, parse_params, _parse_alias_star, sanitize=sanitize)
@@ -1299,28 +1301,28 @@ def _code_as_alias_star(code: Code, parse_params: dict = {}, *, sanitize: bool =
 
 
 @staticmethod
-def _code_as_withitem(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
+def _code_as_withitem(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a withitem `FST` if possible."""
 
     return _code_as(code, withitem, parse_params, _parse_withitem, sanitize=sanitize)
 
 
 @staticmethod
-def _code_as_pattern(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
+def _code_as_pattern(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a pattern `FST` if possible."""
 
     return _code_as(code, pattern, parse_params, _parse_pattern, sanitize=sanitize)
 
 
 @staticmethod
-def _code_as_type_param(code: Code, parse_params: dict = {}, *, sanitize: bool = True) -> fst.FST:
+def _code_as_type_param(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a type_param `FST` if possible."""
 
     return _code_as(code, type_param, parse_params, _parse_type_param, sanitize=sanitize)
 
 
 @staticmethod
-def _code_as_identifier(code: Code, parse_params: dict = {}) -> str:
+def _code_as_identifier(code: Code, parse_params: Mapping[str, Any] = {}) -> str:
     """Convert `code` to valid identifier string if possible."""
 
     if isinstance(code, fst.FST):
@@ -1341,7 +1343,7 @@ def _code_as_identifier(code: Code, parse_params: dict = {}) -> str:
 
 
 @staticmethod
-def _code_as_identifier_dotted(code: Code, parse_params: dict = {}) -> str:
+def _code_as_identifier_dotted(code: Code, parse_params: Mapping[str, Any] = {}) -> str:
     """Convert `code` to valid dotted identifier string if possible (for Import module)."""
 
     if isinstance(code, fst.FST):
@@ -1362,7 +1364,7 @@ def _code_as_identifier_dotted(code: Code, parse_params: dict = {}) -> str:
 
 
 @staticmethod
-def _code_as_identifier_star(code: Code, parse_params: dict = {}) -> str:
+def _code_as_identifier_star(code: Code, parse_params: Mapping[str, Any] = {}) -> str:
     """Convert `code` to valid identifier string or star '*' if possible (for ImportFrom names)."""
 
     if isinstance(code, fst.FST):
@@ -1383,7 +1385,7 @@ def _code_as_identifier_star(code: Code, parse_params: dict = {}) -> str:
 
 
 @staticmethod
-def _code_as_identifier_alias(code: Code, parse_params: dict = {}) -> str:
+def _code_as_identifier_alias(code: Code, parse_params: Mapping[str, Any] = {}) -> str:
     """Convert `code` to valid dotted identifier string or star '*' if possible (for any alias)."""
 
     if isinstance(code, fst.FST):
@@ -1404,7 +1406,7 @@ def _code_as_identifier_alias(code: Code, parse_params: dict = {}) -> str:
 
 
 @staticmethod
-def _code_as_constant(code: constant, parse_params: dict = {}) -> constant:
+def _code_as_constant(code: constant, parse_params: Mapping[str, Any] = {}) -> constant:
     """Convert `code` to valid constant if possible. If `code` is a `str` then it is treated as the constant value and
     not as the python representation of the constant. The only `FST` or `AST` accepted is a `Constant`, whose `value` is
     returned."""

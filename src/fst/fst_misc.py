@@ -228,7 +228,7 @@ def _out_lines(fst_: fst.FST, linefunc: Callable, ln: int, col: int, end_ln: int
     else:
         lines[0]  = ' ' * col + l
 
-    for i, l in zip(range(ln, end_ln + 1), lines):
+    for i, l in zip(range(ln, end_ln + 1), lines, strict=True):
         linefunc(f'{i:<{width}}: {l}{eol}')
 
 
@@ -2383,7 +2383,7 @@ def _dedent_lns(self: fst.FST, indent: str | None = None, lns: set[int] | None =
 
         newlines.append(l)
 
-    for ln, l in zip(lns_seq, newlines):
+    for ln, l in zip(lns_seq, newlines, strict=True):
         lines[ln] = l
 
     if dcol_offsets:

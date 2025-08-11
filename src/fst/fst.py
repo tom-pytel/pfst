@@ -8,7 +8,7 @@ from ast import *
 from ast import dump as ast_dump, unparse as ast_unparse, mod as ast_mod
 from contextlib import contextmanager
 from io import TextIOBase
-from typing import Any, Callable, Generator, Iterator, Literal, TextIO, Union
+from typing import Any, Callable, Generator, Iterator, Literal, Mapping, TextIO, Union
 
 from .astutil import *
 from .astutil import (
@@ -191,8 +191,8 @@ class FST:
     _cache:       dict
 
     # ROOT ONLY
-    parse_params: dict[builtins.str, Any]  ; """The parameters to use for any `ast.parse()` that needs to be done (filename, type_comments, feature_version), root node only."""
-    indent:       builtins.str             ; """The default single level of block indentation string for this tree when not available from context, root node only."""
+    parse_params: Mapping[builtins.str, Any]  ; """The parameters to use for any `ast.parse()` that needs to be done (filename, type_comments, feature_version), root node only."""
+    indent:       builtins.str                ; """The default single level of block indentation string for this tree when not available from context, root node only."""
     _lines:       list[bistr]
     _serial:      int
 
@@ -767,8 +767,8 @@ class FST:
 
             try:
                 compare_asts(ast, org, type_comments=type_comments, ctx=ctx, raise_=True)
-            except WalkFail:
-                raise ValueError('could not reparse ast identically')
+            except WalkFail as exc:
+                raise ValueError('could not reparse ast identically') from exc
 
         return FST(ast, lines, parse_params=parse_params, indent='    ')
 
@@ -815,7 +815,7 @@ class FST:
         return _OPTIONS.copy()
 
     @staticmethod
-    def get_option(option: builtins.str, options: dict[builtins.str, Any] = {}) -> object:
+    def get_option(option: builtins.str, options: Mapping[builtins.str, Any] = {}) -> object:
         """Get a single option from `options` dict or global default if option not in dict or is `None` there. For a
         list of options used see `options()`.
 

@@ -1875,7 +1875,7 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
 
         self_path = root.child_path(self)  # technically should be root.child_path(childf)[:-1] but child may be identifier so get path directly to self which is parent and doesn't need the [:-1]
         to_path   = root.child_path(to)[:-1]
-        path      = list(p for p, _ in takewhile(lambda st: st[0] == st[1], zip(self_path, to_path)))
+        path      = list(p for p, _ in takewhile(lambda st: st[0] == st[1], zip(self_path, to_path, strict=False)))
         parent    = root.child_from_path(path)
 
     # do it

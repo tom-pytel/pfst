@@ -55,8 +55,8 @@ where = ["src"]
 version = { file = "VERSION" }
 
 [tool.ruff]
-line-length = 120
-exclude = ["tests", "src/fst/fuzz.py"]
+line-length = 12000  # would be 120 but ruff includes comments in that
+exclude = ["tests", "src/fst/fuzz.py", "make_docs.py"]
 
 [tool.ruff.format]
 quote-style = "preserve"
@@ -67,6 +67,7 @@ task-tags = [""]
 select = [
     "ANN",     # Annotation-related style rules
     "PYI",     # pyi-specific (stub file) rules, many check type syntax
+    "E", "F", "B"
 ]
 ignore = [
   "F401",    # `ast` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
@@ -78,4 +79,5 @@ ignore = [
   "E741",    # Ambiguous variable name: `l`
   "ANN003",  # Missing type annotation for `**options`
   "ANN204",  # Missing return type annotation for special method `__init__`
+  # "B006",    # Do not use mutable data structures for argument defaults
 ]

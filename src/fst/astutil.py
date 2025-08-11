@@ -584,7 +584,7 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
         if len(fields1) != len(fields2):
             raise WalkFail(f"number of fields differ in {a1.__class__.__qualname__}")
 
-        for (name1, child1), (name2, child2) in zip(fields1, fields2):
+        for (name1, child1), (name2, child2) in zip(fields1, fields2, strict=True):
             if name1 != name2:
                 raise WalkFail(f"field names differ in {a1.__class__.__qualname__}, '{name1}' vs. '{name2}'")
 
@@ -610,7 +610,7 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
                                    f"{len(child1)} vs. {len(child2)}, locs {locs}")
 
                 else:
-                    for i, (c1, c2) in enumerate(zip(child1, child2)):
+                    for i, (c1, c2) in enumerate(zip(child1, child2, strict=True)):
                         if (is_ast1 := isinstance(c1, AST)) and c1 in skip1:
                             continue
 
@@ -874,12 +874,12 @@ def _syntax_ordered_children_arguments(ast: AST) -> list[AST]:
     elif (ldefaults := len(defaults)) <= (largs := len(args := ast.args)):
         children.extend(ast.posonlyargs)
         children.extend(args[:-ldefaults])
-        children.extend(from_iterable(zip(args[-ldefaults:], defaults)))
+        children.extend(from_iterable(zip(args[-ldefaults:], defaults, strict=True)))
 
     else:
         children.extend((posonlyargs := ast.posonlyargs)[:-(lposonly_defaults := ldefaults - largs)])
-        children.extend(from_iterable(zip(posonlyargs[-lposonly_defaults:], defaults[:lposonly_defaults])))
-        children.extend(from_iterable(zip(args, defaults[lposonly_defaults:])))
+        children.extend(from_iterable(zip(posonlyargs[-lposonly_defaults:], defaults[:lposonly_defaults], strict=True)))
+        children.extend(from_iterable(zip(args, defaults[lposonly_defaults:], strict=True)))
 
     if (vararg := ast.vararg):
         children.append(vararg)
@@ -887,7 +887,7 @@ def _syntax_ordered_children_arguments(ast: AST) -> list[AST]:
     if not (kw_defaults := ast.kw_defaults):
         children.extend(ast.kwonlyargs)
     else:
-        children.extend(from_iterable(zip(ast.kwonlyargs, kw_defaults)))
+        children.extend(from_iterable(zip(ast.kwonlyargs, kw_defaults, strict=True)))
 
     if (kwarg := ast.kwarg):
         children.append(kwarg)
@@ -968,12 +968,12 @@ _SYNTAX_ORDERED_CHILDREN = {
 
     # special cases
 
-    Dict:         lambda ast: list(from_iterable(zip(ast.keys, ast.values))),
-    Compare:      lambda ast: [ast.left] + (list(from_iterable(zip(ops, ast.comparators)))
+    Dict:         lambda ast: list(from_iterable(zip(ast.keys, ast.values, strict=True))),
+    Compare:      lambda ast: [ast.left] + (list(from_iterable(zip(ops, ast.comparators, strict=True)))
                                             if len(ops := ast.ops) > 1 else [ops[0], ast.comparators[0]]),
     Call:         _syntax_ordered_children_Call,
     arguments:    _syntax_ordered_children_arguments,
-    MatchMapping: lambda ast: list(from_iterable(zip(ast.keys, ast.patterns))),
+    MatchMapping: lambda ast: list(from_iterable(zip(ast.keys, ast.patterns, strict=True))),
 }
 
 def syntax_ordered_children(ast: AST) -> list:
@@ -1306,7 +1306,7 @@ def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[A
             parent_precedence = _Precedence.TEST if flags.get('star_call_arg') else _Precedence.EXPR
 
         else:
-            assert False, "type of 'op' should be passed"
+            raise ValueError("type of 'op' should be passed")
 
     return child_precedence < parent_precedence
 
