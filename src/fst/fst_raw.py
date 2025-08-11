@@ -178,6 +178,7 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+# FST class private methods
 
 def _reparse_raw(self: fst.FST, code: Code | None, ln: int, col: int, end_ln: int, end_col: int,
                  exact: bool | None = None) -> fst.FST | None:
@@ -227,7 +228,3 @@ def _reparse_raw(self: fst.FST, code: Code | None, ln: int, col: int, end_ln: in
 
     return (root.find_in_loc(ln, col, end_ln, end_col) or  # `root` instead of `self` because some changes may propagate farther up the tree, like 'elif' -> 'else'
             (root.find_loc(ln, col, end_ln, end_col, exact) if exact is not None else None))
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-__all_private__ = ['_reparse_raw']  # used by make_docs.py

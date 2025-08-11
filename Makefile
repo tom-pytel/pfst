@@ -37,11 +37,6 @@ docs:  ## Compile documentation
 	python make_docs.py
 
 
-.PHONY: dev-docs
-dev-docs:  ## Compile all documentation, including private functions, for dev
-	python make_docs.py --private
-
-
 .PHONY: clean
 clean:  ## Delete all generated files and directories
 	rm -rf build/ dist/ src/pfst.egg-info/

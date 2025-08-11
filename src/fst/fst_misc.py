@@ -38,37 +38,6 @@ _re_delim_open_alnums  = re.compile(r'\w[([]\w')
 _re_delim_close_alnums = re.compile(r'\w[)\]]\w')
 
 
-def _make_tree_fst(ast: AST, parent: fst.FST, pfield: astfield) -> fst.FST:
-    """Make `FST` node from `AST`, recreating possibly non-unique AST nodes."""
-
-    if not getattr(ast, 'f', None):  # if `.f` exists then this has already been done
-        if isinstance(ast, (expr_context, unaryop, operator, boolop, cmpop)):  # ast.parse() reuses simple objects, we need all objects to be unique
-            pfield.set(parent.a, ast := ast.__class__())
-
-    return fst.FST(ast, parent, pfield)
-
-
-def _out_lines(fst_: fst.FST, linefunc: Callable, ln: int, col: int, end_ln: int, end_col: int, eol: str = ''):
-    width = int(log10(len(fst_.root._lines) - 1 or 1)) + 1
-    lines = fst_.get_src(ln, col, end_ln, end_col, True)
-
-    if (l := lines[-1][:end_col]).endswith(' '):
-        l += '<'
-
-    lines[-1] = l
-
-    if (l := lines[0]).startswith(' ') and col:
-        lines[0]  = f'{" " * (col - 1)}>{l}'
-    else:
-        lines[0]  = ' ' * col + l
-
-    for i, l in zip(range(ln, end_ln + 1), lines):
-        linefunc(f'{i:<{width}}: {l}{eol}')
-
-
-_GLOBALS = globals() | {'_GLOBALS': None}
-# ----------------------------------------------------------------------------------------------------------------------
-
 @pyver(ge=12)
 class _Modifying:
     """Modification context manager. Updates some parent stuff after a successful modification."""
@@ -228,6 +197,37 @@ class _Modifying:
     def done(self, fst_: fst.FST | None | Literal[False] = False):
         self.root._serial += 1
 
+
+def _make_tree_fst(ast: AST, parent: fst.FST, pfield: astfield) -> fst.FST:
+    """Make `FST` node from `AST`, recreating possibly non-unique AST nodes."""
+
+    if not getattr(ast, 'f', None):  # if `.f` exists then this has already been done
+        if isinstance(ast, (expr_context, unaryop, operator, boolop, cmpop)):  # ast.parse() reuses simple objects, we need all objects to be unique
+            pfield.set(parent.a, ast := ast.__class__())
+
+    return fst.FST(ast, parent, pfield)
+
+
+def _out_lines(fst_: fst.FST, linefunc: Callable, ln: int, col: int, end_ln: int, end_col: int, eol: str = ''):
+    width = int(log10(len(fst_.root._lines) - 1 or 1)) + 1
+    lines = fst_.get_src(ln, col, end_ln, end_col, True)
+
+    if (l := lines[-1][:end_col]).endswith(' '):
+        l += '<'
+
+    lines[-1] = l
+
+    if (l := lines[0]).startswith(' ') and col:
+        lines[0]  = f'{" " * (col - 1)}>{l}'
+    else:
+        lines[0]  = ' ' * col + l
+
+    for i, l in zip(range(ln, end_ln + 1), lines):
+        linefunc(f'{i:<{width}}: {l}{eol}')
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# FST class private methods
 
 @staticmethod
 def _new_empty_module(*, from_: fst.FST | None = None) -> fst.FST:
@@ -2460,7 +2460,3 @@ def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool 
             trail_comments = trail_comments[:i] or 'none'
 
     return lead_comments, lead_space, lead_neg, trail_comments, trail_space, trail_neg
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-__all_private__ = [n for n in globals() if n not in _GLOBALS]  # used by make_docs.py

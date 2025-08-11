@@ -964,7 +964,6 @@ _GET_SLICE_HANDLERS = {
     (TemplateStr, 'values'):              _get_slice_NOT_IMPLEMENTED_YET,  # expr*
 }
 
-
 # ----------------------------------------------------------------------------------------------------------------------
 # put
 
@@ -2047,7 +2046,6 @@ _PUT_SLICE_HANDLERS = {
     (TemplateStr, 'values'):              _put_slice_NOT_IMPLEMENTED_YET,  # expr*
 }
 
-
 # ----------------------------------------------------------------------------------------------------------------------
 # put raw
 
@@ -2260,11 +2258,3 @@ _SLICE_COMAPTIBILITY = {
     # (JoinedStr, 'values'):                'expr*',
     # (TemplateStr, 'values'):              'expr*',
 }
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-__all_private__ = [
-    '_locs_slice_seq', '_get_slice_seq', '_put_slice_seq',
-    '_get_slice', '_put_slice',
-    '_is_slice_compatible',
-]  # used by make_docs.py

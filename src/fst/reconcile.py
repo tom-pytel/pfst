@@ -350,6 +350,3 @@ class _Reconcile:
             self.recurse_children(node, outa)
         except (NodeError, SyntaxError, ValueError, NotImplementedError):  # something failed below, so replace whole AST
             self.put_node(node, out_parent, pfield)
-
-
-__all_private__ = ['_Reconcile']

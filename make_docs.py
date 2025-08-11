@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 
-import importlib
 from pathlib import Path
 
 from pdoc import doc
 from pdoc import extract
 from pdoc import render
-
-PRIVATE = ['misc', 'fst_misc', 'fst_parse', 'fst_one', 'fst_slice', 'fst_slice_old', 'fst_raw', 'srcedit_old',
-           'structure', 'reconcile',
-           ]
 
 
 def pdoc(*modules: Path | str, output_directory: Path | None = None) -> str | None:
@@ -44,74 +39,21 @@ def pdoc(*modules: Path | str, output_directory: Path | None = None) -> str | No
 
 if __name__ == "__main__":
     import argparse
-    # from collections import abc
     from types import FunctionType
-    # from typing import ForwardRef, Union, Generator, get_args, get_origin
     import fst
     from fst import FST
 
     parser = argparse.ArgumentParser(prog='python make_docs.py')
 
-    parser.add_argument('--private', default=False, action='store_true', help='expose private stuff')
-    # parser.add_argument('modules', type=str, default=[], metavar='module', nargs='*', help='modules to process')
+    # parser.add_argument('--private', default=False, action='store_true', help='expose private stuff')
 
     args = parser.parse_args()
-    # modules = args.modules
 
     with open('VERSION') as f:
         version = f.read().strip()
 
     fst.__doc__ = fst.__doc__.replace('{{VERSION}}', version)
-
-    if not args.private:
-        all_funcs = set(v for k, v in FST.__dict__.items() if isinstance(v, FunctionType))
-
-    else:
-        all_funcs = set()
-
-        for mod in (f'fst.{mod}' for mod in PRIVATE):  # add contents of __all_private__ to __all__
-            mod = importlib.import_module(mod)
-
-            if all_private := getattr(mod, '__all_private__', None):
-                mod.__all__ = getattr(mod, '__all__', []) + all_private
-
-            all_funcs.update(f for f in mod.__dict__.values() if isinstance(f, FunctionType))
-
-        for n, f in FST.__dict__.items():  # make all FST methods public
-            if n.startswith('_') and isinstance(f, FunctionType):
-                if f in all_funcs:
-                    f.__doc__ = (f.__doc__ or '') + '@public'
-                else:
-                    all_funcs.add(f)
-
-    # frFST  = ForwardRef('FST')
-    # allFST = {'FST', frFST}
-    # allT   = {Union, Generator, abc.Generator}
-
-    # def fixTyping(t):
-    #     if t in allFST:
-    #         return FST
-
-    #     if (o := get_origin(t)) not in allT:
-    #         return t
-
-    #     args    = list(get_args(t))
-    #     changed = False
-
-    #     for i, a in enumerate(args):
-    #         if (b := fixTyping(a)) is not a:
-    #             args[i] = b
-    #             changed = True
-
-    #     return o[tuple(args)] if changed else t
-
-    # for f in all_funcs:  # change all 'FST' __annotations__ to point to actual FST class
-    #     if anns := getattr(f, '__annotations__'):
-    #         for a, v in anns.items():
-    #             if v in allFST:
-    #                 anns[a] = FST
-    #             elif (w := fixTyping(v)) is not v:
-    #                 anns[a] = w
+    all_funcs   = set(v for k, v in FST.__dict__.items() if isinstance(v, FunctionType))
 
     render.configure(
         docformat='markdown',
@@ -129,8 +71,5 @@ if __name__ == "__main__":
     )
 
     fst.__all__ = ['docs', 'fst', 'view', 'misc', 'astutil']
-
-    if args.private:
-        fst.__all__.extend(PRIVATE)
 
     pdoc('fst', output_directory=Path('docs'))

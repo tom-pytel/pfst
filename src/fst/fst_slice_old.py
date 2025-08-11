@@ -1,4 +1,4 @@
-"""Old slice FST methods, need to update.
+"""Old slice FST methods, need to redo.
 
 This module contains functions which are imported as methods in the `FST` class.
 """
@@ -23,8 +23,8 @@ from .misc import (
 from .srcedit_old import _src_edit
 
 
-_GLOBALS = globals() | {'_GLOBALS': None}
 # ----------------------------------------------------------------------------------------------------------------------
+# FST class private methods
 
 def _get_slice_stmtish(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                        one: bool = False, **options) -> fst.FST:
@@ -317,7 +317,3 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
             self._set_block_end_from_last_child(block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
         elif put_body:
             self._set_end_pos((last_child := self.last_child()).end_lineno, last_child.end_col_offset)
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-__all_private__ = [n for n in globals() if n not in _GLOBALS]  # used by make_docs.py

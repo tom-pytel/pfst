@@ -59,7 +59,6 @@ _OPTIONS = {
     'postspace':     False,  # True | False | int
 }
 
-
 # ----------------------------------------------------------------------------------------------------------------------
 
 def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, **kwargs) -> AST:
@@ -3979,7 +3978,7 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
     # Low level
 
-    def get_parse_mode(self, raise_: bool = True) -> str | type[AST] | None:
+    def get_parse_mode(self, raise_: bool = True) -> builtins.str | type[AST] | None:
         r"""Determine the parse mode for this node. This is the extended parse mode as per `Mode`, not the `ast.parse()`
         mode. Returns a mode which is guaranteed to reparse this assumed-valid element to an exact copy of itself. This
         mode is not guaranteed to be the same as was used to create the `FST`, just guaranteed to be able to recreate

@@ -1691,6 +1691,55 @@ def _put_one_MatchAs_name(self: fst.FST, code: _PutOneCode, idx: int | None, fie
 
 # ......................................................................................................................
 
+def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, **options) -> fst.FST | None:  # -> Self or reparsed Self or could disappear due to raw
+    """Put new, replace or delete a node (or limited non-node) to a field of `self`.
+
+    **Parameters:**
+    - `code`: The code to put in the form of an `FST`, an `AST`, a string of source or a list of lines of source. If
+        is `None` then will attempt to remove optional field or delete node from a mutable body list of nodes using
+        slice operations.
+    - `idx`: The index in the body list of the field to put, or `None` if is a standalone node.
+    - `field`: The `AST` field to modify.
+    - `options`: See `FST.options()`.
+    """
+
+    if code is self.root:  # don't allow own root to be put to self
+        raise ValueError('circular put detected')
+
+    ast   = self.a
+    child = getattr(self.a, field) if field else None
+    raw   = fst.FST.get_option('raw', options)
+    to    = options.get('to')
+
+    sliceable, handler, static = _PUT_ONE_HANDLERS.get((ast.__class__, field), (False, None, None))
+
+    if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementishs and combined mapping fields
+        idx      = _fixup_one_index(len(child if field else ast.keys), idx)  # field will be '' only for Dict and MatchMapping which both have keys, Compare is not considered sliceable for single element deletions
+        new_self = self._put_slice(code, idx, idx + 1, field, True, **options)
+
+        return None if code is None or not field else getattr(new_self.a, field)[idx].f  # guaranteed to be there if code is not None because was just replacement
+
+    if raw is not True:
+        try:
+            if to:
+                raise NodeError(f"cannot put with 'to' to {self.a.__class__.__name__}"
+                                f"{f'.{field}' if field else ''} without 'raw'", rawable=True)
+
+            if not handler:
+                raise NodeError(f"cannot {'delete' if code is None else 'replace'} {ast.__class__.__name__}"
+                                f"{f'.{field}' if field else ' combined fields'}", rawable=True)
+
+            with self._modifying(field):
+                return handler(self, code, idx, field, child, static, **options)
+
+        except (NodeError, SyntaxError, NotImplementedError) as exc:
+            if not raw or (isinstance(exc, NodeError) and not exc.rawable):
+                raise
+
+    with self._modifying(field, True):
+        return _put_one_raw(self, code, idx, field, child, static, **options)
+
+
 def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST | list[AST],
                  static: onestatic | None, **options) -> fst.FST | None:
 
@@ -1834,55 +1883,6 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
     # do it
 
     return parent._reparse_raw(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col)
-
-
-def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, **options) -> fst.FST | None:  # -> Self or reparsed Self or could disappear due to raw
-    """Put new, replace or delete a node (or limited non-node) to a field of `self`.
-
-    **Parameters:**
-    - `code`: The code to put in the form of an `FST`, an `AST`, a string of source or a list of lines of source. If
-        is `None` then will attempt to remove optional field or delete node from a mutable body list of nodes using
-        slice operations.
-    - `idx`: The index in the body list of the field to put, or `None` if is a standalone node.
-    - `field`: The `AST` field to modify.
-    - `options`: See `FST.options()`.
-    """
-
-    if code is self.root:  # don't allow own root to be put to self
-        raise ValueError('circular put detected')
-
-    ast   = self.a
-    child = getattr(self.a, field) if field else None
-    raw   = fst.FST.get_option('raw', options)
-    to    = options.get('to')
-
-    sliceable, handler, static = _PUT_ONE_HANDLERS.get((ast.__class__, field), (False, None, None))
-
-    if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementishs and combined mapping fields
-        idx      = _fixup_one_index(len(child if field else ast.keys), idx)  # field will be '' only for Dict and MatchMapping which both have keys, Compare is not considered sliceable for single element deletions
-        new_self = self._put_slice(code, idx, idx + 1, field, True, **options)
-
-        return None if code is None or not field else getattr(new_self.a, field)[idx].f  # guaranteed to be there if code is not None because was just replacement
-
-    if raw is not True:
-        try:
-            if to:
-                raise NodeError(f"cannot put with 'to' to {self.a.__class__.__name__}"
-                                f"{f'.{field}' if field else ''} without 'raw'", rawable=True)
-
-            if not handler:
-                raise NodeError(f"cannot {'delete' if code is None else 'replace'} {ast.__class__.__name__}"
-                                f"{f'.{field}' if field else ' combined fields'}", rawable=True)
-
-            with self._modifying(field):
-                return handler(self, code, idx, field, child, static, **options)
-
-        except (NodeError, SyntaxError, NotImplementedError) as exc:
-            if not raw or (isinstance(exc, NodeError) and not exc.rawable):
-                raise
-
-    with self._modifying(field, True):
-        return _put_one_raw(self, code, idx, field, child, static, **options)
 
 
 # ......................................................................................................................
@@ -2451,6 +2451,8 @@ def _one_info_conversion(self: fst.FST, static: onestatic, idx: int | None, fiel
     return oneinfo('', fstloc(ln, col, end_ln, end_col))
 
 
+# ......................................................................................................................
+
 _PUT_ONE_HANDLERS = {
     (Module, 'body'):                     (True,  None, None),  # stmt*  - all stmtishs have sliceable True and handler None to force always use slice operation (because of evil semicolons handled there)
     (Interactive, 'body'):                (True,  None, None),  # stmt*
@@ -2659,6 +2661,3 @@ _PUT_ONE_HANDLERS = {
     # (AsyncWith, 'type_comment'):          (),  # string?
     # (arg, 'type_comment'):                (),  # string?
 }
-
-# ----------------------------------------------------------------------------------------------------------------------
-__all_private__ = ['_get_one', '_put_one']  # used by make_docs.py
