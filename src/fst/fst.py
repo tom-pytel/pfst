@@ -1221,10 +1221,9 @@ class FST:
         parse_params = self.parse_params
 
         try:
-            # astp = FST._parse(self.src, mode or ast.__class__, parse_params=parse_params)
             astp = FST._parse(self.src, mode or self.get_parse_mode(), parse_params=parse_params)
 
-        except (SyntaxError, NodeError):
+        except SyntaxError:
             if raise_:
                 raise
 
@@ -1428,7 +1427,7 @@ class FST:
         if code is None:
             raise ValueError('cannot delete root node')
         if options.get('to'):
-            raise ValueError("cannot replace root node using a 'to' parameter")
+            raise ValueError("cannot replace root node using a 'to' option")
 
         code        = self._code_as_all(code, self.parse_params)
         self._lines = code._lines

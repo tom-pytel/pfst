@@ -1807,7 +1807,7 @@ def func():
         self.assertEqual('[]', FST('[1, 2]').put_slice('{*[]}', raw=False, set_put=True).src)
         self.assertEqual('[]', FST('[1, 2]').put_slice('{*{}}', raw=False, set_put=True).src)
 
-        self.assertRaises(ValueError, FST('[1, 2]').put_slice, 'set()', raw=False, set_put='star')
+        self.assertRaises(NodeError, FST('[1, 2]').put_slice, 'set()', raw=False, set_put='star')
         self.assertEqual('[]', FST('[1, 2]').put_slice('{*()}', raw=False, set_put='star').src)
         self.assertEqual('[]', FST('[1, 2]').put_slice('{*[]}', raw=False, set_put='star').src)
         self.assertEqual('[]', FST('[1, 2]').put_slice('{*{}}', raw=False, set_put='star').src)
@@ -1817,7 +1817,7 @@ def func():
         self.assertEqual('[*[]]', FST('[1, 2]').put_slice('{*[]}', raw=False, set_put='call').src)
         self.assertEqual('[*{}]', FST('[1, 2]').put_slice('{*{}}', raw=False, set_put='call').src)
 
-        self.assertRaises(ValueError, FST('[1, 2]').put_slice, 'set()', raw=False, set_put=False)
+        self.assertRaises(NodeError, FST('[1, 2]').put_slice, 'set()', raw=False, set_put=False)
         self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, set_put=False).src)
         self.assertEqual('[*[]]', FST('[1, 2]').put_slice('{*[]}', raw=False, set_put=False).src)
         self.assertEqual('[*{}]', FST('[1, 2]').put_slice('{*{}}', raw=False, set_put=False).src)

@@ -117,8 +117,15 @@ _GLOBALS = globals() | {'_GLOBALS': None}
 Code = Union['fst.fst.FST', AST, list[str], str]  ; """Code types accepted for put to `FST`."""
 
 
-class NodeError(ValueError):
+class NodeError(Exception):
     """General FST node error. Used and caught when a raw reparse is possible to fall back to the reparse if allowed."""
+
+    rawable: bool  ; """Whether the operation that caused this error can be retried in raw mode."""
+
+    def __init__(self, *args, rawable: bool = False):
+        super().__init__(*args)
+
+        self.rawable = rawable
 
 
 class astfield(NamedTuple):
@@ -945,7 +952,8 @@ def _fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True
         raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
 
     if only_list and not isinstance(body, list):
-        raise ValueError(f"cannot perform slice oparations on {ast.__class__.__name__}{f'.{field}' if field else ''}")
+        raise ValueError(f"cannot perform slice operations non-list field "
+                         f"{ast.__class__.__name__}{f'.{field}' if field else ''}")
 
     return field, body
 

@@ -26,7 +26,7 @@ from .astutil import (
 )
 
 from .misc import (
-    PYGE11, Code, NodeError, _next_src, _shortstr
+    PYGE11, Code, _next_src, _shortstr
 )
 
 Mode = Literal[
@@ -127,10 +127,12 @@ Mode = Literal[
     `Tuple`.
 """
 
-_re_first_src_or_lcont = re.compile(r'^[^\S\n]*(?:[^\s\\#]|(?<!^)\\)', re.MULTILINE)  # or first \ not on start of line
-_re_except             = re.compile(r'except\b')
-_re_case               = re.compile(r'case\b\s*(?:[*\\\w({[\'"-]|\.\d)')
 
+class ParseError(SyntaxError):
+    """Not technically a syntax error but mostly not the code we were expecting."""
+
+
+_re_except             = re.compile(r'except\b')
 _re_first_src          = re.compile(r'^([^\S\n]*)([^\s\\#]+)', re.MULTILINE)  # search for first non-comment non-linecont source code
 _re_parse_all_category = re.compile(r'''
     (?P<stmt>                          (?: assert | break | class | continue | def | del | from | global | import | nonlocal | pass | raise | return | try | while | with ) \b ) |
@@ -226,16 +228,16 @@ def _parse_all_multiple(src: str, parse_params: dict, stmt: bool, rest: list[Cal
     if stmt:
         try:
             return reduce_ast(_parse_stmts(src, parse_params), True)
-        except (SyntaxError, NodeError):  # except IndentationError: raise  # before if checking that
+        except SyntaxError:  # except IndentationError: raise  # before if checking that
             pass
 
     for parse in rest:
         try:
             return parse(src, parse_params)
-        except (SyntaxError, NodeError):  # except IndentationError: raise  # before if checking that
+        except SyntaxError:  # except IndentationError: raise  # before if checking that
             pass
 
-    raise NodeError('could not parse')
+    raise ParseError('could not parse')
 
 
 def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, parse: Callable[[fst.FST, Code], fst.FST],
@@ -249,7 +251,7 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, parse: Call
         codea = code.a
 
         if not isinstance(codea, ast_type):
-            raise NodeError(f'expecting {ast_type.__name__}, got {codea.__class__.__name__}')
+            raise ParseError(f'expecting {ast_type.__name__}, got {codea.__class__.__name__}')
 
         code = code._sanitize()
 
@@ -258,13 +260,13 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, parse: Call
                 if _parse_cmpop(src).__class__ is codea:  # parses to same thing so just return the canonical str for the op, otherwise it gets complicated
                     return fst.FST(codea, [bistr(expected)], from_=code, lcopy=False)
 
-            raise NodeError(f'expecting {expected!r}, got {_shortstr(src)!r}')
+            raise ParseError(f'expecting {expected!r}, got {_shortstr(src)!r}')
 
         return code
 
     if isinstance(code, AST):
         if not isinstance(code, ast_type):
-            raise NodeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
+            raise ParseError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
 
         return fst.FST(code, [opcls2str[code.__class__]], parse_params=parse_params)
 
@@ -278,8 +280,8 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: dict, parse: Call
 
     try:
         return fst.FST(parse(code, parse_params), lines, parse_params=parse_params)  # fall back to actually trying to parse the thing
-    except (SyntaxError, NodeError):  # except IndentationError: raise  # before if checking that
-        raise NodeError(f'expecting {ast_type.__name__}, got {_shortstr(code)!r}') from None
+    except SyntaxError:  # except IndentationError: raise  # before if checking that
+        raise ParseError(f'expecting {ast_type.__name__}, got {_shortstr(code)!r}') from None
 
 
 def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callable[[fst.FST, Code], fst.FST], *,
@@ -289,13 +291,13 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: dict, parse: Callabl
             raise ValueError('expecting root node')
 
         if not isinstance(code.a, ast_type):
-            raise NodeError(f'expecting {ast_type.__name__}, got {code.a.__class__.__name__}')
+            raise ParseError(f'expecting {ast_type.__name__}, got {code.a.__class__.__name__}')
 
         return code._sanitize() if sanitize else code
 
     if isinstance(code, AST):
         if not isinstance(code, ast_type):
-            raise NodeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
+            raise ParseError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
 
         code  = (_fixing_unparse(code)[1:-1] if strip_tup_pars and isinstance(code, Tuple) and code.elts else
                  _unparse(code))
@@ -364,9 +366,9 @@ def _parse(src: str, mode: Mode = 'all', parse_params: dict = {}) -> AST:
             if isinstance(ast := parse(src, parse_params), mode):
                 return ast
 
-            raise ValueError(f'could not parse to {mode.__name__}, got {ast.__class__.__name__}')
+            raise ParseError(f'could not parse to {mode.__name__}, got {ast.__class__.__name__}')
 
-    raise ValueError(f'cannot parse to {mode.__name__}')
+    raise ParseError(f'could not parse to {mode.__name__}')
 
 
 @staticmethod
@@ -415,7 +417,7 @@ def _parse_all(src: str, parse_params: dict = {}) -> AST:
     if groupdict['case']:
         try:
             return reduce_ast(_parse_match_cases(src, parse_params), True)
-        except (SyntaxError, NodeError):  # except IndentationError: raise  # before if checking that
+        except SyntaxError:  # except IndentationError: raise  # before if checking that
             pass
 
         return _parse_all_multiple(src, parse_params, not first.group(1),
@@ -524,7 +526,7 @@ def _parse_stmt(src: str, parse_params: dict = {}) -> AST:
     mod = _parse_stmts(src, parse_params)
 
     if len(body := mod.body) != 1:
-        raise NodeError('expecting single stmt')
+        raise ParseError('expecting single stmt')
 
     return body[0]
 
@@ -553,14 +555,14 @@ def _parse_ExceptHandlers(src: str, parse_params: dict = {}) -> AST:
 
         else:
             if len(ast.body) == 1:
-                raise NodeError("not expecting 'finally' block") from None
+                raise ParseError("not expecting 'finally' block") from None
             else:
-                raise NodeError('expecting only exception handlers`') from None
+                raise ParseError('expecting only exception handlers`') from None
 
         raise
 
     if ast.orelse:
-        raise NodeError("not expecting 'else' block")
+        raise ParseError("not expecting 'else' block")
 
     return Module(body=_offset_linenos(ast, -1).handlers, type_ignores=[])
 
@@ -572,7 +574,7 @@ def _parse_ExceptHandler(src: str, parse_params: dict = {}) -> AST:
     mod = _parse_ExceptHandlers(src, parse_params)
 
     if len(body := mod.body) != 1:
-        raise NodeError('expecting single ExceptHandler')
+        raise ParseError('expecting single ExceptHandler')
 
     return body[0]
 
@@ -627,7 +629,7 @@ def _parse_match_case(src: str, parse_params: dict = {}) -> AST:
     mod = _parse_match_cases(src, parse_params)
 
     if len(body := mod.body) != 1:
-        raise NodeError('expecting single match_case')
+        raise ParseError('expecting single match_case')
 
     return body[0]
 
@@ -673,19 +675,19 @@ def _parse_expr_callarg(src: str, parse_params: dict = {}) -> AST:
 
     try:
         return _parse_expr(src, parse_params)
-    except (NodeError, SyntaxError):  # stuff like '*[] or []'  # except IndentationError: raise  # before if checking that
+    except SyntaxError:  # stuff like '*[] or []'  # except IndentationError: raise  # before if checking that
         pass
 
     value = _ast_parse1(f'f(\n{src}\n)', parse_params).value
     args  = value.args
 
     if len(args) != 1 or value.keywords:
-        raise NodeError('expecting single call argument expression')
+        raise ParseError('expecting single call argument expression')
 
     ast = args[0]
 
     if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
-        raise SyntaxError('expecting call argument expression, got unparenthesized GeneratorExp')
+        raise ParseError('expecting call argument expression, got unparenthesized GeneratorExp')
 
     return _offset_linenos(ast, -1) # _offset_linenos(_validate_indent(src, ast), -1)
 
@@ -774,12 +776,12 @@ def _parse_Tuple(src: str, parse_params: dict = {}) -> AST:
         from_slice = False
 
     if not isinstance(ast, Tuple):
-        raise NodeError(f'expecting Tuple, got {ast.__class__.__name__}')
+        raise ParseError(f'expecting Tuple, got {ast.__class__.__name__}')
 
     if (from_slice and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for '*starred' acting as '*starred,'
         e0.end_col_offset == ast.end_col_offset and e0.end_lineno == ast.end_lineno
     ):
-        raise NodeError('expecting Tuple, got Starred')
+        raise ParseError('expecting Tuple, got Starred')
 
     return ast
 
@@ -791,7 +793,7 @@ def _parse_boolop(src: str, parse_params: dict = {}) -> AST:
     ast = _ast_parse1(f'(a\n{src}\nb)', parse_params).value
 
     if not isinstance(ast, BoolOp):
-        raise NodeError(f'expecting boolop, got {_shortstr(src)!r}')
+        raise ParseError(f'expecting boolop, got {_shortstr(src)!r}')
 
     return ast.op.__class__()  # _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
 
@@ -803,7 +805,7 @@ def _parse_operator(src: str, parse_params: dict = {}) -> AST:
     if '=' in src:
         try:
             return _parse_augop(src, parse_params)
-        except NodeError:  # maybe the '=' was in a comment, yes I know, a comment in an operator, people do strange things
+        except ParseError:  # maybe the '=' was in a comment, yes I know, a comment in an operator, people do strange things
             pass
 
     return _parse_binop(src, parse_params)
@@ -816,7 +818,7 @@ def _parse_binop(src: str, parse_params: dict = {}) -> AST:
     ast = _ast_parse1(f'(a\n{src}\nb)', parse_params).value
 
     if not isinstance(ast, BinOp):
-        raise NodeError(f'expecting operator, got {_shortstr(src)!r}')
+        raise ParseError(f'expecting operator, got {_shortstr(src)!r}')
 
     return ast.op.__class__()  # _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
 
@@ -828,7 +830,7 @@ def _parse_augop(src: str, parse_params: dict = {}) -> AST:
     ast = _ast_parse1(f'a \\\n{src} b', parse_params)
 
     if not isinstance(ast, AugAssign):
-        raise NodeError(f'expecting augmented operator, got {_shortstr(src)!r}')
+        raise ParseError(f'expecting augmented operator, got {_shortstr(src)!r}')
 
     return ast.op.__class__()  # _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
 
@@ -840,7 +842,7 @@ def _parse_unaryop(src: str, parse_params: dict = {}) -> AST:
     ast = _ast_parse1(f'(\n{src}\nb)', parse_params).value
 
     if not isinstance(ast, UnaryOp):
-        raise NodeError(f'expecting unaryop, got {_shortstr(src)!r}')
+        raise ParseError(f'expecting unaryop, got {_shortstr(src)!r}')
 
     return ast.op.__class__()  # _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
 
@@ -852,10 +854,10 @@ def _parse_cmpop(src: str, parse_params: dict = {}) -> AST:
     ast = _ast_parse1(f'(a\n{src}\nb)', parse_params).value
 
     if not isinstance(ast, Compare):
-        raise NodeError(f'expecting cmpop, got {_shortstr(src)!r}')
+        raise ParseError(f'expecting cmpop, got {_shortstr(src)!r}')
 
     if len(ops := ast.ops) != 1:
-        raise NodeError('expecting single cmpop')
+        raise ParseError('expecting single cmpop')
 
     return ops[0].__class__()  # _validate_indent(src, ops[0].__class__())  # parse() returns the same identical object for all instances of the same operator
 
@@ -867,10 +869,10 @@ def _parse_comprehension(src: str, parse_params: dict = {}) -> AST:
     ast = _ast_parse1(f'[_ \n{src}\n]', parse_params).value
 
     if not isinstance(ast, ListComp):
-        raise NodeError('expecting comprehension')
+        raise ParseError('expecting comprehension')
 
     if len(gens := ast.generators) != 1:
-        raise NodeError('expecting single comprehension')
+        raise ParseError('expecting single comprehension')
 
     return _offset_linenos(gens[0], -1)  # _offset_linenos(_validate_indent(src, gens[0]), -1)
 
@@ -917,7 +919,7 @@ def _parse_arg(src: str, parse_params: dict = {}) -> AST:
             ast = args[0]
 
     if ast is None:
-        raise NodeError('expecting single argument without default')
+        raise ParseError('expecting single argument without default')
 
     return _offset_linenos(ast, -1) # _offset_linenos(_validate_indent(src, ast), -1)
 
@@ -929,7 +931,7 @@ def _parse_keyword(src: str, parse_params: dict = {}) -> AST:
     keywords = _ast_parse1(f'f(\n{src}\n)', parse_params).value.keywords
 
     if len(keywords) != 1:
-        raise NodeError('expecting single keyword')
+        raise ParseError('expecting single keyword')
 
     return _offset_linenos(keywords[0], -1)  # _offset_linenos(_validate_indent(src, keywords[0]), -1)
 
@@ -955,7 +957,7 @@ def _parse_alias_dotted(src: str, parse_params: dict = {}) -> AST:
     names = _ast_parse1(f'import \\\n{src}', parse_params).names
 
     if len(names) != 1:
-        raise NodeError('expecting single name')
+        raise ParseError('expecting single name')
 
     return _offset_linenos(names[0], -1)  # _offset_linenos(_validate_indent(src, names[0]), -1)
 
@@ -967,7 +969,7 @@ def _parse_alias_star(src: str, parse_params: dict = {}) -> AST:
     names = _ast_parse1(f'from . import \\\n{src}', parse_params).names
 
     if len(names) != 1:
-        raise NodeError('expecting single name')
+        raise ParseError('expecting single name')
 
     return _offset_linenos(names[0], -1)  # _offset_linenos(_validate_indent(src, names[0]), -1)
 
@@ -992,7 +994,7 @@ def _parse_withitem(src: str, parse_params: dict = {}) -> AST:
             items = _ast_parse1(f'with ((\n{src}\n)): pass', parse_params).items
 
         if len(items) != 1:
-            raise NodeError('expecting single withitem')
+            raise ParseError('expecting single withitem')
 
         ast = items[0].context_expr
 
@@ -1018,7 +1020,7 @@ def _parse_pattern(src: str, parse_params: dict = {}) -> AST:
             patterns = _ast_parse1_case(f'match _:\n case [\\\n{src}\n]: pass', parse_params).pattern.patterns
 
             if len(patterns) != 1:
-                raise NodeError('expecting single pattern')
+                raise ParseError('expecting single pattern')
 
             ast = patterns[0]
 
@@ -1042,7 +1044,7 @@ def _parse_type_param(src: str, parse_params: dict = {}) -> AST:
     type_params = _ast_parse1(f'type t[\n{src}\n] = None', parse_params).type_params
 
     if len(type_params) != 1:
-        raise NodeError('expecting single type_param')
+        raise ParseError('expecting single type_param')
 
     return _offset_linenos(type_params[0], -1)  # _offset_linenos(_validate_indent(src, type_params[0]), -1)
 
@@ -1101,7 +1103,7 @@ def _code_as_stmts(code: Code, parse_params: dict = {}) -> fst.FST:
             if all(isinstance(a, stmt) for a in codea.body):
                 return code
 
-            raise NodeError(f'expecting zero or more stmts, got '
+            raise ParseError(f'expecting zero or more stmts, got '
                             f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
 
         if isinstance(codea, Interactive):
@@ -1109,11 +1111,11 @@ def _code_as_stmts(code: Code, parse_params: dict = {}) -> fst.FST:
 
             return fst.FST(Module(body=code.body, type_ignores=[]), code._lines, from_=code, lcopy=False)
 
-        raise NodeError(f'expecting zero or more stmts, got {codea.__class__.__name__}')
+        raise ParseError(f'expecting zero or more stmts, got {codea.__class__.__name__}')
 
     if isinstance(code, AST):
         if not isinstance(code, (stmt, expr, Module, Interactive, Expression)):  # all these can be coerced into stmts
-            raise NodeError(f'expecting zero or more stmts, got {code.__class__.__name__}')
+            raise ParseError(f'expecting zero or more stmts, got {code.__class__.__name__}')
 
         code  = _fixing_unparse(code)
         lines = code.split('\n')
@@ -1147,10 +1149,10 @@ def _code_as_ExceptHandlers(code: Code, parse_params: dict = {}, *, is_trystar: 
             if all(isinstance(a, ExceptHandler) for a in codea.body):
                 return code
 
-            raise NodeError(f'expecting zero or more ExceptHandlers, got '
-                            f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
+            raise ParseError(f'expecting zero or more ExceptHandlers, got '
+                             f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
 
-        raise NodeError(f'expecting zero or more ExceptHandlers, got {codea.__class__.__name__}')
+        raise ParseError(f'expecting zero or more ExceptHandlers, got {codea.__class__.__name__}')
 
     if isinstance(code, AST):
         if isinstance(code, Module):  # may be slice of ExceptHandlers
@@ -1158,7 +1160,7 @@ def _code_as_ExceptHandlers(code: Code, parse_params: dict = {}, *, is_trystar: 
 
         else:
             if not isinstance(code, ExceptHandler):
-                raise NodeError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}')
+                raise ParseError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}')
 
             if is_trystar:
                 code = unparse(TryStar(body=[Pass()], handlers=[code], orelse=[], finalbody=[]))
@@ -1193,14 +1195,14 @@ def _code_as_match_cases(code: Code, parse_params: dict = {}) -> fst.FST:
             if all(isinstance(a, match_case) for a in codea.body):
                 return code
 
-            raise NodeError(f'expecting zero or more match_cases, got '
-                            f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
+            raise ParseError(f'expecting zero or more match_cases, got '
+                             f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
 
-        raise NodeError(f'expecting zero or more match_cases, got {codea.__class__.__name__}')
+        raise ParseError(f'expecting zero or more match_cases, got {codea.__class__.__name__}')
 
     if isinstance(code, AST):
         if not isinstance(code, (match_case, Module)):
-            raise NodeError(f'expecting zero or more match_cases, got {code.__class__.__name__}')
+            raise ParseError(f'expecting zero or more match_cases, got {code.__class__.__name__}')
 
         code  = _fixing_unparse(code)
         lines = code.split('\n')
@@ -1222,12 +1224,12 @@ def _code_as_expr(code: Code, parse_params: dict = {}, *, parse: Callable[[Code,
         if not code.is_root:
             raise ValueError('expecting root node')
 
-        if not isinstance(ast := reduce_ast(codea := code.a, NodeError), expr):
-            raise NodeError(('expecting slice expression' if parse is _parse_expr_sliceelt else
-                             'expecting call arg expression' if parse is _parse_expr_callarg else
-                             'expecting Tuple' if parse is _parse_Tuple else
-                             'expecting expression') +
-                            f', got {ast.__class__.__name__}')
+        if not isinstance(ast := reduce_ast(codea := code.a, ParseError), expr):
+            raise ParseError(('expecting slice expression' if parse is _parse_expr_sliceelt else
+                              'expecting call arg expression' if parse is _parse_expr_callarg else
+                              'expecting Tuple' if parse is _parse_Tuple else
+                              'expecting expression') +
+                             f', got {ast.__class__.__name__}')
 
         if ast is codea:
             return code._sanitize() if sanitize else code
@@ -1240,11 +1242,11 @@ def _code_as_expr(code: Code, parse_params: dict = {}, *, parse: Callable[[Code,
 
     if isinstance(code, AST):
         if not isinstance(code, expr):
-            raise NodeError(('expecting slice expression' if parse is _parse_expr_sliceelt else
-                             'expecting call arg expression' if parse is _parse_expr_callarg else
-                             'expecting Tuple' if parse is _parse_Tuple else
-                             'expecting expression') +
-                            f', got {code.__class__.__name__}')
+            raise ParseError(('expecting slice expression' if parse is _parse_expr_sliceelt else
+                              'expecting call arg expression' if parse is _parse_expr_callarg else
+                              'expecting Tuple' if parse is _parse_Tuple else
+                              'expecting expression') +
+                             f', got {code.__class__.__name__}')
 
         code  = _fixing_unparse(code)
         lines = code.split('\n')
@@ -1276,7 +1278,7 @@ def _code_as_expr_slice(code: Code, parse_params: dict = {}, *, sanitize: bool =
     ret = _code_as(code, expr, parse_params, _parse_expr_slice, strip_tup_pars=strip_tup_pars, sanitize=sanitize)
 
     if isinstance(code, AST) and not isinstance(ret.a, code.__class__):  # because could reparse Starred into a single element Tuple with Starred
-        raise NodeError(f'cannot reparse {code.__class__.__name__} in slice as {code.__class__.__name__}')
+        raise ParseError(f'cannot reparse {code.__class__.__name__} in slice as {code.__class__.__name__}')
 
     return ret
 
@@ -1377,7 +1379,7 @@ def _code_as_alias_dotted(code: Code, parse_params: dict = {}, *, sanitize: bool
     ret = _code_as(code, alias, parse_params, _parse_alias_dotted, sanitize=sanitize)
 
     if '*' in ret.a.name:
-        raise NodeError("'*' not allowed in this alias")
+        raise ParseError("'*' not allowed in this alias")
 
     return ret
 
@@ -1389,7 +1391,7 @@ def _code_as_alias_star(code: Code, parse_params: dict = {}, *, sanitize: bool =
     ret = _code_as(code, alias, parse_params, _parse_alias_star, sanitize=sanitize)
 
     if '.' in ret.a.name:
-        raise NodeError("'.' not allowed in this alias")
+        raise ParseError("'.' not allowed in this alias")
 
     return ret
 
@@ -1431,7 +1433,7 @@ def _code_as_identifier(code: Code, parse_params: dict = {}) -> str:
         code = '\n'.join(code)
 
     if not is_valid_identifier(code):
-        raise NodeError(f'expecting identifier, got {_shortstr(code)!r}')
+        raise ParseError(f'expecting identifier, got {_shortstr(code)!r}')
 
     return normalize('NFKC', code)
 
@@ -1452,7 +1454,7 @@ def _code_as_identifier_dotted(code: Code, parse_params: dict = {}) -> str:
         code = '\n'.join(code)
 
     if not is_valid_identifier_dotted(code):
-        raise NodeError(f'expecting dotted identifier, got {_shortstr(code)!r}')
+        raise ParseError(f'expecting dotted identifier, got {_shortstr(code)!r}')
 
     return normalize('NFKC', code)
 
@@ -1473,7 +1475,7 @@ def _code_as_identifier_star(code: Code, parse_params: dict = {}) -> str:
         code = '\n'.join(code)
 
     if not is_valid_identifier_star(code):
-        raise NodeError(f"expecting identifier or '*', got {_shortstr(code)!r}")
+        raise ParseError(f"expecting identifier or '*', got {_shortstr(code)!r}")
 
     return normalize('NFKC', code)
 
@@ -1494,7 +1496,7 @@ def _code_as_identifier_alias(code: Code, parse_params: dict = {}) -> str:
         code = '\n'.join(code)
 
     if not is_valid_identifier_alias(code):
-        raise NodeError(f"expecting dotted identifier or '*', got {_shortstr(code)!r}")
+        raise ParseError(f"expecting dotted identifier or '*', got {_shortstr(code)!r}")
 
     return normalize('NFKC', code)
 
@@ -1513,14 +1515,14 @@ def _code_as_constant(code: constant, parse_params: dict = {}) -> constant:
 
     if isinstance(code, AST):
         if not isinstance(code, Constant):
-            raise NodeError('expecting constant')
+            raise ParseError('expecting constant')
 
         code = code.value
 
     elif isinstance(code, list):
         code = '\n'.join(code)
     elif not isinstance(code, constant):
-        raise NodeError('expecting constant')
+        raise ParseError('expecting constant')
 
     return code
 

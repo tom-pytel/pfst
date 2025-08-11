@@ -1384,7 +1384,7 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
 
     if not isinstance(ast_, (Tuple, List, Set)):
         raise NodeError(f"slice being assigned to a {self.a.__class__.__name__} "
-                        f"must be a Tuple, List or Set, not a {ast_.__class__.__name__}")
+                        f"must be a Tuple, List or Set, not a {ast_.__class__.__name__}", rawable=True)
 
     if not ast_.elts:  # put empty sequence is same as delete
         return None
@@ -1409,8 +1409,8 @@ def _code_to_slice_seq2(self: fst.FST, code: Code | None, one: bool, options: di
     ast_ = fst_.a
 
     if ast_.__class__ is not self.a.__class__:
-        raise ValueError(f"slice being assigned to a {self.a.__class__.__name__} must be a {self.a.__class__.__name__}"
-                         f", not a {ast_.__class__.__name__}")
+        raise NodeError(f"slice being assigned to a {self.a.__class__.__name__} must be a {self.a.__class__.__name__}"
+                        f", not a {ast_.__class__.__name__}", rawable=True)
 
     if not ast_.keys:  # put empty sequence is same as delete
         return None
@@ -1441,7 +1441,7 @@ def _code_to_slice_MatchSequence(self: fst.FST, code: Code | None, one: bool, op
 
     if not isinstance(ast_, MatchSequence):
         raise NodeError(f"slice being assigned to a {self.a.__class__.__name__} "
-                        f"must be a MatchSequence, not a {ast_.__class__.__name__}")
+                        f"must be a MatchSequence, not a {ast_.__class__.__name__}", rawable=True)
 
     if not ast_.patterns:  # put empty sequence is same as delete
         return None
@@ -1461,7 +1461,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
     try:
         fst_ = _code_as_pattern(code, self.root.parse_params, sanitize=False)
 
-    except (NodeError, SyntaxError):
+    except SyntaxError:
         if (not (isinstance(code, list) or (isinstance(code, str) and (code := code.split('\n')))) or
             not _next_src(code, 0, 0, len(code) - 1, len(code[-1]))
         ):  # nothing other than maybe comments or line continuations present, empty pattern, not an error but delete
@@ -1491,7 +1491,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
     else:
         if not one and not self.get_option('matchor_put', options):
             raise NodeError(f"slice being assigned to a MatchOr "
-                            f"must be a MatchOr with matchor_put=False, not a {ast_.__class__.__name__}")
+                            f"must be a MatchOr with matchor_put=False, not a {ast_.__class__.__name__}", rawable=True)
 
         if isinstance(ast_, MatchAs):
             if ast_.pattern is not None and not fst_.pars().n:
@@ -1944,25 +1944,26 @@ def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | N
     """Put an a slice of child nodes to `self`."""
 
     if code is self.root:  # don't allow own root to be put to self
-        raise NodeError('circular put detected')
+        raise ValueError('circular put detected')
 
     raw = fst.FST.get_option('raw', options)
 
     if options.get('to') is not None:
-        raise ValueError("cannot put slice with 'to'")
+        raise ValueError("cannot put slice with 'to' option")
 
     if raw is not True:
         try:
             if not (handler := _PUT_SLICE_HANDLERS.get((self.a.__class__, field))):  # allow raw to handle some non-contiguous list fields
-                raise NodeError(f"cannot put slice to {self.a.__class__.__name__}{f'.{field}' if field else ''}")
+                raise NodeError(f"cannot put slice to {self.a.__class__.__name__}{f'.{field}' if field else ''}",
+                                rawable=True)
 
             with self._modifying(field):
                 handler(self, code, start, stop, field, one, **options)
 
             return self
 
-        except (NodeError, SyntaxError, NotImplementedError):
-            if not raw:
+        except (NodeError, SyntaxError, NotImplementedError) as exc:
+            if not raw or (isinstance(exc, NodeError) and not exc.rawable):
                 raise
 
     with self._modifying(field, True):

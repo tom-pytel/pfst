@@ -12,6 +12,7 @@
 
 ### Updated
 
+- added ParseError and cleaned up exception usage
 - optimized _parse_all() which recognizes and parses any type of node source
 - parse expressionish elements don't have to start at beginning of line
 - lots of code cleanups

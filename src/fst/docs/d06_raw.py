@@ -155,7 +155,7 @@ could get confusing with those operations also specifying an explicit end locati
 ...     f.put_slice('4, 5', 0, 1, raw=True, to=f.elts[2])
 ... except Exception as exc:
 ...     print(exc)
-cannot put slice with 'to'
+cannot put slice with 'to' option
 ```
 
 ## Parentheses

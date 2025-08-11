@@ -565,42 +565,42 @@ def _validate_put_ast(self: fst.FST, put_ast: AST, idx: int | None, field: str, 
         if isinstance(restrict, list):  # list means these types not allowed
             if isinstance(put_ast, tuple(restrict)):
                 raise NodeError(f'{self.a.__class__.__name__}.{field}{" " if idx is None else f"[{idx}] "}'
-                                f'cannot be {put_ast.__class__.__name__}')
+                                f'cannot be {put_ast.__class__.__name__}', rawable=True)
 
         elif isinstance(restrict, FunctionType):
             if not restrict(put_ast):  # not "restrict" meaning is inverted here, really means "not allow"
                 raise NodeError(f'invalid value for {self.a.__class__.__name__}.{field}'
                                 f'{("" if idx is None else f"[{idx}]")}'
-                                f', got {put_ast.__class__.__name__}')
+                                f', got {put_ast.__class__.__name__}', rawable=True)
 
         elif not isinstance(put_ast, restrict):  # single AST type or tuple means only these allowed
             raise NodeError((f'expecting a {restrict.__name__} for {self.a.__class__.__name__}.{field}'
                               if isinstance(restrict, type) else
                               f'expecting one of ({", ".join(c.__name__ for c in restrict)}) for '
                               f'{self.a.__class__.__name__}.{field}{"" if idx is None else f"[{idx}]"}') +
-                             f', got {put_ast.__class__.__name__}')
+                             f', got {put_ast.__class__.__name__}', rawable=True)
 
 
 def _validate_pattern_attr(self: fst.FST) -> Name:
     while True:
         if self.pars().n:
-            raise NodeError(f'cannot put parenthesized {self.a.__class__.__name__} to pattern expression')
+            raise NodeError(f'cannot put parenthesized {self.a.__class__.__name__} to pattern expression', rawable=True)
 
         if isinstance(a := self.a, Name):
             return a
 
         if not isinstance(a, Attribute):
-            raise NodeError(f'cannot put {self.a.__class__.__name__} to pattern expression')
+            raise NodeError(f'cannot put {self.a.__class__.__name__} to pattern expression', rawable=True)
 
         self = a.value.f
 
 
 def _is_valid_MatchClass_cls(ast: AST) -> bool:
     if (f := ast.f).end_ln != f.ln:
-        raise NodeError(f'cannot put multiline {ast.__class__.__name__} to MatchClass pattern expression')
+        raise NodeError(f'cannot put multiline {ast.__class__.__name__} to MatchClass pattern expression', rawable=True)
 
     if _validate_pattern_attr(ast.f).id == '_':
-        raise NodeError("cannot start MatchClass.cls with wildcard specifier '_'")
+        raise NodeError("cannot start MatchClass.cls with wildcard specifier '_'", rawable=True)
 
     return True
 
@@ -610,10 +610,10 @@ def _is_valid_MatchValue_value(ast: AST) -> bool:
         return False
 
     # if (f := ast.f).end_ln != f.ln:
-    #     raise NodeError(f'cannot put multiline {ast.__class__.__name__} to pattern expression')
+    #     raise NodeError(f'cannot put multiline {ast.__class__.__name__} to pattern expression', rawable=True)
 
     if any((bad := f).pars().n for f in ast.f.walk(True)):
-        raise NodeError(f'cannot put parenthesized {bad.a.__class__.__name__} to pattern expression')
+        raise NodeError(f'cannot put parenthesized {bad.a.__class__.__name__} to pattern expression', rawable=True)
 
     return True
 
@@ -623,10 +623,10 @@ def _is_valid_MatchMapping_key(ast: AST) -> bool:
         return False
 
     # if (f := ast.f).end_ln != f.ln:
-    #     raise NodeError(f'cannot put multiline {ast.__class__.__name__} to pattern expression')
+    #     raise NodeError(f'cannot put multiline {ast.__class__.__name__} to pattern expression', rawable=True)
 
     if any((bad := f).pars().n for f in ast.f.walk(True)):
-        raise NodeError(f'cannot put parenthesized {bad.a.__class__.__name__} to pattern expression')
+        raise NodeError(f'cannot put parenthesized {bad.a.__class__.__name__} to pattern expression', rawable=True)
 
     return True
 
@@ -662,10 +662,10 @@ def _put_one_constant(self: fst.FST, code: _PutOneCode, idx: int | None, field: 
 
     if not isinstance(value, restrict):
         raise NodeError((f'expecting a {"constant" if restrict is constant else restrict.__name__} '
-                         f'for {self.a.__class__.__name__}.{field}'                         if not isinstance(restrict, tuple) else
+                         f'for {self.a.__class__.__name__}.{field}' if not isinstance(restrict, tuple) else
                          f'expecting one of ({", ".join(c.__name__ for c in restrict)}) for '
                          f'{self.a.__class__.__name__}') +
-                        f', got {value.__class__.__name__}')
+                        f', got {value.__class__.__name__}', rawable=True)
 
     self._put_src(repr(value), *self.loc, True)
 
@@ -691,10 +691,10 @@ def _put_one_op(self: fst.FST, code: _PutOneCode, idx: int | None, field: str,
     if self.parent_pattern():  # if we are in a pattern then replacements are restricted
         if isinstance(child, USub):  # indicates we are in UnaryOp
             if not isinstance(codea, USub):
-                raise NodeError("cannot put anything other than '-' to a pattern UnaryOp.op")
+                raise NodeError("cannot put anything other than '-' to a pattern UnaryOp.op", rawable=True)
 
         elif not isinstance(codea, (Add, Sub)):  # otherwise MUST be BinOp
-            raise NodeError("cannot put anything other than '+' or '-' to a pattern BinOp.op")
+            raise NodeError("cannot put anything other than '+' or '-' to a pattern BinOp.op", rawable=True)
 
     is_alnum = isinstance(codea, (Not, Is, IsNot, In, NotIn))  # alphanumneric operators may need spaces added
 
@@ -1146,8 +1146,8 @@ def _put_one_FunctionDef_arguments(self: fst.FST, code: _PutOneCode, idx: int | 
                                      **options)
 
 
-def _put_one_ClassDef_bases(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
-                            **options) -> fst.FST:
+def _put_one_ClassDef_bases(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
+                            static: onestatic, **options) -> fst.FST:
     """Can't replace Starred base with non-Starred base after keywords."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1156,7 +1156,8 @@ def _put_one_ClassDef_bases(self: fst.FST, code: _PutOneCode, idx: int | None, f
     if (isinstance(child, Starred) and not isinstance(code.a, Starred) and (keywords := self.a.keywords) and
         child.f.loc > keywords[0].f.loc
     ):
-        raise ValueError(f'cannot replace Starred ClassDef.bases[{idx}] with non-Starred base in this state (after keywords)')
+        raise ValueError(f'cannot replace Starred ClassDef.bases[{idx}] '
+                         'with non-Starred base in this state (after keywords)')
 
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
@@ -1194,7 +1195,7 @@ def _put_one_ImportFrom_names(self: fst.FST, code: _PutOneCode, idx: int | None,
 
     if is_star := ('*' in code.a.name):
         if len(self.a.names) != 1:
-            raise NodeError('cannot put star alias to ImportFrom.names containing multiple aliases')
+            raise NodeError('cannot put star alias to ImportFrom.names containing multiple aliases', rawable=True)
 
     ret = _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
@@ -1223,7 +1224,7 @@ def _put_one_BinOp_left_right(self: fst.FST, code: _PutOneCode, idx: int | None,
     if self.parent_pattern():
         if field == 'right':
             if not isinstance(codea := code.a, Constant) or not isinstance(codea.value, complex):
-                raise NodeError('can only put imaginary Constant to a pattern BinOp.right')
+                raise NodeError('can only put imaginary Constant to a pattern BinOp.right', rawable=True)
 
         else:  # field == 'left'
             if isinstance(codea := code.a, UnaryOp):
@@ -1231,7 +1232,7 @@ def _put_one_BinOp_left_right(self: fst.FST, code: _PutOneCode, idx: int | None,
                     codea = codea.operand
 
             if not isinstance(codea, Constant) or not isinstance(codea.value, (int, float)):
-                raise NodeError('can only put real Constant to a pattern BinOp.left')
+                raise NodeError('can only put real Constant to a pattern BinOp.left', rawable=True)
 
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
@@ -1245,10 +1246,10 @@ def _put_one_UnaryOp_operand(self: fst.FST, code: _PutOneCode, idx: int | None, 
 
     if self.parent_pattern():
         if not isinstance(codea := code.a, Constant):
-            raise NodeError('can only put Constant to a pattern UnaryOp.operand')
+            raise NodeError('can only put Constant to a pattern UnaryOp.operand', rawable=True)
 
         if not isinstance(codea.value, (int, float) if isinstance(self.parent.a, BinOp) else (int, float, complex)):
-            raise NodeError('invalid Constant for pattern UnaryOp.operand')
+            raise NodeError('invalid Constant for pattern UnaryOp.operand', rawable=True)
 
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
@@ -1332,7 +1333,8 @@ def _put_one_Attribute_value(self: fst.FST, code: _PutOneCode, idx: int | None, 
 
         if isinstance(parenta, pattern):
             if code.end_ln != code.ln and not above.is_enclosed_in_parents():
-                raise NodeError(f'cannot put multiline {above.a.__class__.__name__} to uneclosed pattern expression')
+                raise NodeError(f'cannot put multiline {above.a.__class__.__name__} to uneclosed pattern expression',
+                                rawable=True)
 
             _validate_pattern_attr(code)
 
@@ -1383,7 +1385,7 @@ def _put_one_Subscript_slice(self: fst.FST, code: _PutOneCode, idx: int | None, 
     code  = static.code_as(code, self.root.parse_params)
 
     if code.is_parenthesized_tuple() is False and any(isinstance(a, Starred) for a in code.a.elts):
-        raise NodeError('cannot have unparenthesized tuple containing Starred in slice')
+        raise NodeError('cannot have unparenthesized tuple containing Starred in slice', rawable=True)
 
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
@@ -1428,7 +1430,7 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
             r = (elts := ast.elts)[idx]
 
             if any(isinstance(e, Slice) for e in elts if e is not r):
-                raise NodeError('cannot put Starred to a slice Tuple containing Slices')
+                raise NodeError('cannot put Starred to a slice Tuple containing Slices', rawable=True)
 
         ret = _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
@@ -1473,7 +1475,7 @@ def _put_one_arg(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
     code  = static.code_as(code, self.root.parse_params)
 
     if isinstance(code.a.annotation, Starred):
-        raise NodeError(f'cannot put arg with Starred annotation to {self.a.__class__.__name__}.{field}')
+        raise NodeError(f'cannot put arg with Starred annotation to {self.a.__class__.__name__}.{field}', rawable=True)
 
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
@@ -1541,7 +1543,7 @@ def _put_one_MatchAs_pattern(self: fst.FST, code: _PutOneCode, idx: int | None, 
         code = static.code_as(code, self.root.parse_params)
 
         if isinstance(code.a, MatchStar):
-            raise NodeError('cannot put a MatchStar to MatchAs.pattern')
+            raise NodeError('cannot put a MatchStar to MatchAs.pattern', rawable=True)
 
         if code.get_matchseq_delimiters() == '':
             code._delimit_node(delims='[]')
@@ -1558,7 +1560,7 @@ def _put_one_pattern(self: fst.FST, code: _PutOneCode, idx: int | None, field: s
 
     if isinstance(code.a, MatchStar):
         if not isinstance(self.a, MatchSequence):
-            raise NodeError(f'cannot put a MatchStar to {self.a.__class__.__name__}.{field}')
+            raise NodeError(f'cannot put a MatchStar to {self.a.__class__.__name__}.{field}', rawable=True)
 
     elif code.get_matchseq_delimiters() == '':
         code._delimit_node(delims='[]')
@@ -1847,7 +1849,7 @@ def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, **op
     """
 
     if code is self.root:  # don't allow own root to be put to self
-        raise NodeError('circular put detected')
+        raise ValueError('circular put detected')
 
     ast   = self.a
     child = getattr(self.a, field) if field else None
@@ -1866,17 +1868,17 @@ def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, **op
         try:
             if to:
                 raise NodeError(f"cannot put with 'to' to {self.a.__class__.__name__}"
-                                f"{f'.{field}' if field else ''} without 'raw'")
+                                f"{f'.{field}' if field else ''} without 'raw'", rawable=True)
 
             if not handler:
                 raise NodeError(f"cannot {'delete' if code is None else 'replace'} {ast.__class__.__name__}"
-                                f"{f'.{field}' if field else ' combined fields'}")
+                                f"{f'.{field}' if field else ' combined fields'}", rawable=True)
 
             with self._modifying(field):
                 return handler(self, code, idx, field, child, static, **options)
 
-        except (NodeError, SyntaxError, NotImplementedError):
-            if not raw:
+        except (NodeError, SyntaxError, NotImplementedError) as exc:
+            if not raw or (isinstance(exc, NodeError) and not exc.rawable):
                 raise
 
     with self._modifying(field, True):

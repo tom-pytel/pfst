@@ -147,21 +147,21 @@ PARSE_TESTS = [
     ('stmts',             FST._parse_stmts,             SyntaxError,    'except Exception: pass\nexcept: pass'),
     ('stmt',              FST._parse_stmt,              AnnAssign,      'i: int = 1'),
     ('stmt',              FST._parse_stmt,              Expr,           'j'),
-    ('stmt',              FST._parse_stmt,              NodeError,      'i: int = 1\nj'),
+    ('stmt',              FST._parse_stmt,              ParseError,     'i: int = 1\nj'),
     ('stmt',              FST._parse_stmt,              SyntaxError,    'except: pass'),
 
     ('ExceptHandlers',    FST._parse_ExceptHandlers,    Module,         'except Exception: pass\nexcept: pass'),
-    ('ExceptHandlers',    FST._parse_ExceptHandlers,    NodeError,      'except Exception: pass\nexcept: pass\nelse: pass'),
-    ('ExceptHandlers',    FST._parse_ExceptHandlers,    NodeError,      'except Exception: pass\nexcept: pass\nfinally: pass'),
+    ('ExceptHandlers',    FST._parse_ExceptHandlers,    ParseError,     'except Exception: pass\nexcept: pass\nelse: pass'),
+    ('ExceptHandlers',    FST._parse_ExceptHandlers,    ParseError,     'except Exception: pass\nexcept: pass\nfinally: pass'),
     ('ExceptHandlers',    FST._parse_ExceptHandlers,    SyntaxError,    'i: int = 1\nj'),
     ('ExceptHandler',     FST._parse_ExceptHandler,     ExceptHandler,  'except: pass'),
-    ('ExceptHandler',     FST._parse_ExceptHandler,     NodeError,      'except Exception: pass\nexcept: pass'),
+    ('ExceptHandler',     FST._parse_ExceptHandler,     ParseError,     'except Exception: pass\nexcept: pass'),
     ('ExceptHandler',     FST._parse_ExceptHandler,     SyntaxError,    'i: int = 1'),
 
     ('match_cases',       FST._parse_match_cases,       Module,         'case None: pass\ncase 1: pass'),
     ('match_cases',       FST._parse_match_cases,       SyntaxError,    'i: int = 1'),
     ('match_case',        FST._parse_match_case,        match_case,     'case None: pass'),
-    ('match_case',        FST._parse_match_case,        NodeError,      'case None: pass\ncase 1: pass'),
+    ('match_case',        FST._parse_match_case,        ParseError,     'case None: pass\ncase 1: pass'),
     ('match_case',        FST._parse_match_case,        SyntaxError,    'i: int = 1'),
 
     ('expr',              FST._parse_expr,              Name,           'j'),
@@ -177,7 +177,7 @@ PARSE_TESTS = [
     ('expr_callarg',      FST._parse_expr_callarg,      Starred,        '*s'),
     ('expr_callarg',      FST._parse_expr_callarg,      Starred,        '*not a'),
     ('expr_callarg',      FST._parse_expr_callarg,      Tuple,          'j, k'),
-    ('expr_callarg',      FST._parse_expr_callarg,      NodeError,      'i=1'),
+    ('expr_callarg',      FST._parse_expr_callarg,      ParseError,     'i=1'),
     ('expr_callarg',      FST._parse_expr_callarg,      SyntaxError,    'a:b'),
     ('expr_callarg',      FST._parse_expr_callarg,      SyntaxError,    'a:b:c'),
 
@@ -202,24 +202,24 @@ PARSE_TESTS = [
     ('expr_all',          FST._parse_expr_all,          Tuple,          'a:b:c, x:y:z'),
 
     ('boolop',            FST._parse_boolop,            And,            'and'),
-    ('boolop',            FST._parse_boolop,            NodeError,      '*'),
+    ('boolop',            FST._parse_boolop,            ParseError,     '*'),
     ('operator',          FST._parse_operator,          Mult,           '*'),
     ('operator',          FST._parse_operator,          Mult,           '*='),
-    ('operator',          FST._parse_operator,          NodeError,      'and'),
+    ('operator',          FST._parse_operator,          ParseError,     'and'),
     ('binop',             FST._parse_binop,             Mult,           '*'),
     ('binop',             FST._parse_binop,             SyntaxError,    '*='),
-    ('augop',             FST._parse_augop,             NodeError,      '*'),
+    ('augop',             FST._parse_augop,             ParseError,     '*'),
     ('augop',             FST._parse_augop,             Mult,           '*='),
     ('unaryop',           FST._parse_unaryop,           UAdd,           '+'),
     ('unaryop',           FST._parse_unaryop,           SyntaxError,    'and'),
     ('cmpop',             FST._parse_cmpop,             GtE,            '>='),
     ('cmpop',             FST._parse_cmpop,             IsNot,          'is\nnot'),
-    ('cmpop',             FST._parse_cmpop,             NodeError,      '>= a >='),
-    ('cmpop',             FST._parse_cmpop,             NodeError,      'and'),
+    ('cmpop',             FST._parse_cmpop,             ParseError,     '>= a >='),
+    ('cmpop',             FST._parse_cmpop,             ParseError,     'and'),
 
     ('comprehension',     FST._parse_comprehension,     comprehension,  'for u in v'),
     ('comprehension',     FST._parse_comprehension,     comprehension,  'for u in v if w'),
-    ('comprehension',     FST._parse_comprehension,     NodeError,      'for u in v for s in t'),
+    ('comprehension',     FST._parse_comprehension,     ParseError,     'for u in v for s in t'),
 
     ('arguments',         FST._parse_arguments,         arguments,      ''),
     ('arguments',         FST._parse_arguments,         arguments,      'a: list[str], /, b: int = 1, *c, d=100, **e'),
@@ -230,23 +230,23 @@ PARSE_TESTS = [
     ('arguments_lambda',  FST._parse_arguments_lambda,  SyntaxError,    'a: list[str], /, b: int = 1, *c, d=100, **e'),
 
     ('arg',               FST._parse_arg,               arg,            'a: b'),
-    ('arg',               FST._parse_arg,               NodeError,      'a: b = c'),
-    ('arg',               FST._parse_arg,               NodeError,      'a, b'),
-    ('arg',               FST._parse_arg,               NodeError,      'a, /'),
-    ('arg',               FST._parse_arg,               NodeError,      '*, a'),
-    ('arg',               FST._parse_arg,               NodeError,      '*a'),
-    ('arg',               FST._parse_arg,               NodeError,      '**a'),
+    ('arg',               FST._parse_arg,               ParseError,     'a: b = c'),
+    ('arg',               FST._parse_arg,               ParseError,     'a, b'),
+    ('arg',               FST._parse_arg,               ParseError,     'a, /'),
+    ('arg',               FST._parse_arg,               ParseError,     '*, a'),
+    ('arg',               FST._parse_arg,               ParseError,     '*a'),
+    ('arg',               FST._parse_arg,               ParseError,     '**a'),
 
     ('keyword',           FST._parse_keyword,           keyword,        'a=1'),
     ('keyword',           FST._parse_keyword,           keyword,        '**a'),
-    ('keyword',           FST._parse_keyword,           NodeError,      '1'),
-    ('keyword',           FST._parse_keyword,           NodeError,      'a'),
-    ('keyword',           FST._parse_keyword,           NodeError,      'a=1, b=2'),
+    ('keyword',           FST._parse_keyword,           ParseError,     '1'),
+    ('keyword',           FST._parse_keyword,           ParseError,     'a'),
+    ('keyword',           FST._parse_keyword,           ParseError,     'a=1, b=2'),
 
     ('alias',             FST._parse_alias,             alias,          'a'),
     ('alias',             FST._parse_alias,             alias,          'a.b'),
     ('alias',             FST._parse_alias,             alias,          '*'),
-    ('alias',             FST._parse_alias,             NodeError,      'a, b'),
+    ('alias',             FST._parse_alias,             ParseError,     'a, b'),
     ('alias',             FST._parse_alias,             alias,          'a as c'),
     ('alias',             FST._parse_alias,             alias,          'a.b as c'),
     ('alias',             FST._parse_alias,             SyntaxError,    '* as c'),
@@ -254,7 +254,7 @@ PARSE_TESTS = [
     ('alias_dotted',      FST._parse_alias_dotted,      alias,          'a'),
     ('alias_dotted',      FST._parse_alias_dotted,      alias,          'a.b'),
     ('alias_dotted',      FST._parse_alias_dotted,      SyntaxError,    '*'),
-    ('alias_dotted',      FST._parse_alias_dotted,      NodeError,      'a, b'),
+    ('alias_dotted',      FST._parse_alias_dotted,      ParseError,     'a, b'),
     ('alias_dotted',      FST._parse_alias_dotted,      alias,          'a as c'),
     ('alias_dotted',      FST._parse_alias_dotted,      alias,          'a.b as c'),
     ('alias_dotted',      FST._parse_alias_dotted,      SyntaxError,    '* as c'),
@@ -262,7 +262,7 @@ PARSE_TESTS = [
     ('alias_star',        FST._parse_alias_star,        alias,          'a'),
     ('alias_star',        FST._parse_alias_star,        SyntaxError,    'a.b'),
     ('alias_star',        FST._parse_alias_star,        alias,          '*'),
-    ('alias_star',        FST._parse_alias_star,        NodeError,      'a, b'),
+    ('alias_star',        FST._parse_alias_star,        ParseError,     'a, b'),
     ('alias_star',        FST._parse_alias_star,        alias,          'a as c'),
     ('alias_star',        FST._parse_alias_star,        SyntaxError,    'a.b as c'),
     ('alias_star',        FST._parse_alias_star,        SyntaxError,    '* as c'),
@@ -271,8 +271,8 @@ PARSE_TESTS = [
     ('withitem',          FST._parse_withitem,          withitem,       'a, b'),
     ('withitem',          FST._parse_withitem,          withitem,       '(a, b)'),
     ('withitem',          FST._parse_withitem,          withitem,       'a as b'),
-    ('withitem',          FST._parse_withitem,          NodeError,      'a, b as c'),
-    ('withitem',          FST._parse_withitem,          NodeError,      'a as b, x as y'),
+    ('withitem',          FST._parse_withitem,          ParseError,     'a, b as c'),
+    ('withitem',          FST._parse_withitem,          ParseError,     'a as b, x as y'),
     ('withitem',          FST._parse_withitem,          withitem,       '(a)'),
     ('withitem',          FST._parse_withitem,          SyntaxError,    '(a as b)'),
     ('withitem',          FST._parse_withitem,          SyntaxError,    '(a as b, x as y)'),
@@ -413,17 +413,17 @@ PARSE_TESTS = [
 
     (stmt,                FST._parse_stmt,              AnnAssign,      'i: int = 1'),
     (stmt,                FST._parse_stmt,              Expr,           'j'),
-    (stmt,                FST._parse_stmt,              NodeError,      'i: int = 1\nj'),
+    (stmt,                FST._parse_stmt,              ParseError,     'i: int = 1\nj'),
     (stmt,                FST._parse_stmt,              SyntaxError,    'except: pass'),
     (AnnAssign,           FST._parse_stmt,              AnnAssign,      'i: int = 1'),
     (Expr,                FST._parse_stmt,              Expr,           'j'),
 
     (ExceptHandler,       FST._parse_ExceptHandler,     ExceptHandler,  'except: pass'),
-    (ExceptHandler,       FST._parse_ExceptHandler,     NodeError,      'except Exception: pass\nexcept: pass'),
+    (ExceptHandler,       FST._parse_ExceptHandler,     ParseError,     'except Exception: pass\nexcept: pass'),
     (ExceptHandler,       FST._parse_ExceptHandler,     SyntaxError,    'i: int = 1'),
 
     (match_case,          FST._parse_match_case,        match_case,     'case None: pass'),
-    (match_case,          FST._parse_match_case,        NodeError,      'case None: pass\ncase 1: pass'),
+    (match_case,          FST._parse_match_case,        ParseError,     'case None: pass\ncase 1: pass'),
     (match_case,          FST._parse_match_case,        SyntaxError,    'i: int = 1'),
 
     (expr,                FST._parse_expr,              Name,           'j'),
@@ -442,43 +442,43 @@ PARSE_TESTS = [
     (Slice,               FST._parse_expr_slice,        Slice,          'a:b'),
 
     (boolop,              FST._parse_boolop,            And,            'and'),
-    (boolop,              FST._parse_boolop,            NodeError,      '*'),
+    (boolop,              FST._parse_boolop,            ParseError,     '*'),
     (operator,            FST._parse_operator,          Mult,           '*'),
     (operator,            FST._parse_operator,          Mult,           '*='),
-    (operator,            FST._parse_operator,          NodeError,      'and'),
+    (operator,            FST._parse_operator,          ParseError,     'and'),
     (unaryop,             FST._parse_unaryop,           UAdd,           '+'),
     (unaryop,             FST._parse_unaryop,           SyntaxError,    'and'),
     (cmpop,               FST._parse_cmpop,             GtE,            '>='),
     (cmpop,               FST._parse_cmpop,             IsNot,          'is\nnot'),
-    (cmpop,               FST._parse_cmpop,             NodeError,      '>= a >='),
-    (cmpop,               FST._parse_cmpop,             NodeError,      'and'),
+    (cmpop,               FST._parse_cmpop,             ParseError,     '>= a >='),
+    (cmpop,               FST._parse_cmpop,             ParseError,     'and'),
 
     (comprehension,       FST._parse_comprehension,     comprehension,  'for u in v'),
     (comprehension,       FST._parse_comprehension,     comprehension,  'for u in v if w'),
-    (comprehension,       FST._parse_comprehension,     NodeError,      '()'),
+    (comprehension,       FST._parse_comprehension,     ParseError,     '()'),
 
     (arguments,           FST._parse_arguments,         arguments,      ''),
     (arguments,           FST._parse_arguments,         arguments,      'a: list[str], /, b: int = 1, *c, d=100, **e'),
     (arguments,           FST._parse_arguments_lambda,  arguments,      'a, /, b, *c, d=100, **e'),
 
     (arg,                 FST._parse_arg,               arg,            'a: b'),
-    (arg,                 FST._parse_arg,               NodeError,      'a: b = c'),
-    (arg,                 FST._parse_arg,               NodeError,      'a, b'),
-    (arg,                 FST._parse_arg,               NodeError,      'a, /'),
-    (arg,                 FST._parse_arg,               NodeError,      '*, a'),
-    (arg,                 FST._parse_arg,               NodeError,      '*a'),
-    (arg,                 FST._parse_arg,               NodeError,      '**a'),
+    (arg,                 FST._parse_arg,               ParseError,     'a: b = c'),
+    (arg,                 FST._parse_arg,               ParseError,     'a, b'),
+    (arg,                 FST._parse_arg,               ParseError,     'a, /'),
+    (arg,                 FST._parse_arg,               ParseError,     '*, a'),
+    (arg,                 FST._parse_arg,               ParseError,     '*a'),
+    (arg,                 FST._parse_arg,               ParseError,     '**a'),
 
     (keyword,             FST._parse_keyword,           keyword,        'a=1'),
     (keyword,             FST._parse_keyword,           keyword,        '**a'),
-    (keyword,             FST._parse_keyword,           NodeError,      '1'),
-    (keyword,             FST._parse_keyword,           NodeError,      'a'),
-    (keyword,             FST._parse_keyword,           NodeError,      'a=1, b=2'),
+    (keyword,             FST._parse_keyword,           ParseError,     '1'),
+    (keyword,             FST._parse_keyword,           ParseError,     'a'),
+    (keyword,             FST._parse_keyword,           ParseError,     'a=1, b=2'),
 
     (alias,               FST._parse_alias,             alias,          'a'),
     (alias,               FST._parse_alias,             alias,          'a.b'),
     (alias,               FST._parse_alias,             alias,          '*'),
-    (alias,               FST._parse_alias,             NodeError,      'a, b'),
+    (alias,               FST._parse_alias,             ParseError,     'a, b'),
     (alias,               FST._parse_alias,             alias,          'a as c'),
     (alias,               FST._parse_alias,             alias,          'a.b as c'),
     (alias,               FST._parse_alias,             SyntaxError,    '* as c'),
@@ -487,7 +487,7 @@ PARSE_TESTS = [
     (withitem,            FST._parse_withitem,          withitem,       'a, b'),
     (withitem,            FST._parse_withitem,          withitem,       '(a, b)'),
     (withitem,            FST._parse_withitem,          withitem,       'a as b'),
-    (withitem,            FST._parse_withitem,          NodeError,      'a as b, x as y'),
+    (withitem,            FST._parse_withitem,          ParseError,     'a as b, x as y'),
     (withitem,            FST._parse_withitem,          withitem,       '(a)'),
     (withitem,            FST._parse_withitem,          SyntaxError,    '(a as b)'),
     (withitem,            FST._parse_withitem,          SyntaxError,    '(a as b, x as y)'),
@@ -687,7 +687,7 @@ class TestFST(unittest.TestCase):
                 try:
                     ast = FST._parse(src, mode)
 
-                except (SyntaxError, NodeError) as exc:
+                except SyntaxError as exc:
                     if res is not exc.__class__:
                         raise
 
@@ -2341,8 +2341,8 @@ call(a)
 
         g = FST('from a import b', 'exec').body[0].names[0]
         self.assertRaises(ValueError, f._code_as_stmts, f.body[0].test)
-        self.assertRaises(NodeError, f._code_as_stmts, g.copy())
-        self.assertRaises(NodeError, f._code_as_stmts, g.a)
+        self.assertRaises(ParseError, f._code_as_stmts, g.copy())
+        self.assertRaises(ParseError, f._code_as_stmts, g.a)
         self.assertRaises(SyntaxError, f._code_as_stmts, 'except Exception: pass')
 
         f = FST('f(a)', 'exec')
@@ -2395,8 +2395,8 @@ call(a)
         self.assertTrue(compare_asts(h.a, g.a, locs=False, raise_=True))
 
         self.assertRaises(ValueError, f._code_as_expr, FST('i = 1', 'exec').body[0])
-        self.assertRaises(NodeError, f._code_as_expr, FST('i = 1', 'exec').body[0].copy())
-        self.assertRaises(NodeError, f._code_as_expr, f.body[0].a)
+        self.assertRaises(ParseError, f._code_as_expr, FST('i = 1', 'exec').body[0].copy())
+        self.assertRaises(ParseError, f._code_as_expr, f.body[0].a)
         self.assertRaises(SyntaxError, f._code_as_expr, 'pass')
 
         # ExceptHandlers
@@ -2627,8 +2627,8 @@ call(a)
 
         g = FST('from a import b', 'exec').body[0].names[0]
         self.assertRaises(ValueError, f._code_as_stmts, f.body[0].test)
-        self.assertRaises(NodeError, f._code_as_stmts, g.copy())
-        self.assertRaises(NodeError, f._code_as_stmts, g.a)
+        self.assertRaises(ParseError, f._code_as_stmts, g.copy())
+        self.assertRaises(ParseError, f._code_as_stmts, g.a)
 
         f = FST('f(a)', 'exec')
         h = f._code_as_stmts(f.body[0].value.copy())
@@ -4943,7 +4943,7 @@ if 1:
 
                         getattr(f, field)[0] = put
 
-            except ValueError as exc:
+            except (NodeError, ValueError) as exc:
                 if not str(exc).startswith('cannot put slice to'):
                     raise
 

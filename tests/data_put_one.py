@@ -2802,19 +2802,19 @@ Module - ROOT 0,0..0,29
     .returns Name 'new' Load - 0,20..0,23
 """),
 
-(r"""a += b""", 'body[0]', None, 'op', {}, r"""new""", r"""**NodeError("expecting operator, got 'new'")**""", r"""
+(r"""a += b""", 'body[0]', None, 'op', {}, r"""new""", r"""**ParseError("expecting operator, got 'new'")**""", r"""
 """),
 
-(r"""a and b""", 'body[0].value', None, 'op', {}, r"""new""", r"""**NodeError("expecting boolop, got 'new'")**""", r"""
+(r"""a and b""", 'body[0].value', None, 'op', {}, r"""new""", r"""**ParseError("expecting boolop, got 'new'")**""", r"""
 """),
 
-(r"""a + b""", 'body[0].value', None, 'op', {}, r"""new""", r"""**NodeError("expecting operator, got 'new'")**""", r"""
+(r"""a + b""", 'body[0].value', None, 'op', {}, r"""new""", r"""**ParseError("expecting operator, got 'new'")**""", r"""
 """),
 
-(r"""-a""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**NodeError("expecting unaryop, got 'new'")**""", r"""
+(r"""-a""", 'body[0].value', None, 'op', {'raw': False}, r"""new""", r"""**ParseError("expecting unaryop, got 'new'")**""", r"""
 """),
 
-(r"""a < b""", 'body[0].value', 0, 'ops', {}, r"""new""", r"""**NodeError("expecting cmpop, got 'new'")**""", r"""
+(r"""a < b""", 'body[0].value', 0, 'ops', {}, r"""new""", r"""**ParseError("expecting cmpop, got 'new'")**""", r"""
 """),
 
 (r"""def f(*, a=b): pass""", 'body[0].args', 0, 'kw_defaults', {}, r"""new""", r"""def f(*, a=new): pass""", r"""
@@ -5620,7 +5620,7 @@ Module - ROOT 0,0..1,22
 """),
 
 (r"""match a:
- case cls(a=b): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {}, r"""1""", r"""**NodeError("expecting identifier, got '1'")**""", r"""
+ case cls(a=b): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {}, r"""1""", r"""**ParseError("expecting identifier, got '1'")**""", r"""
 """),
 
 (r"""match a:
@@ -9000,7 +9000,7 @@ Module - ROOT 0,0..0,6
       1] Name 'b' Load - 0,5..0,6
 """),
 
-(r"""a and b""", 'body[0].value', None, 'op', {}, r"""+""", r"""**NodeError("expecting boolop, got '+'")**""", r"""
+(r"""a and b""", 'body[0].value', None, 'op', {}, r"""+""", r"""**ParseError("expecting boolop, got '+'")**""", r"""
 """),
 
 (r"""a and b and c""", 'body[0].value', None, 'op', {'raw': False}, r"""or""", r"""a or b or c""", r"""
