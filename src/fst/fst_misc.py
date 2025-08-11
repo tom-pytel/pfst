@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 from ast import *
 from math import log10
-from types import EllipsisType
+from types import EllipsisType, TracebackType
 from typing import Callable, Literal
 
 from . import fst
@@ -47,7 +47,7 @@ class _Modifying:
     field: astfield
     data:  list
 
-    def __init__(self, fst_: fst.FST, field: str | Literal[False] = False, raw: bool = False):
+    def __init__(self, fst_: fst.FST, field: str | Literal[False] = False, raw: bool = False) -> None:
         """Call before modifying `FST` node (even just source) to mark possible data for updates after modification.
         This function just collects information when it enters so is safe to call without ever explicitly exiting.
         Though it should be called on a successful modification because it increments the modification cound
@@ -111,17 +111,20 @@ class _Modifying:
                 field = pfield.name
                 fst_  = parent
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self.enter()
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None,
+                 exc_tb: TracebackType | None) -> bool:
         if exc_type is None:
             self.done()
 
-    def enter(self):
+        return False
+
+    def enter(self) -> Self:
         return self
 
-    def done(self, fst_: fst.FST | None | Literal[False] = False):
+    def done(self, fst_: fst.FST | None | Literal[False] = False) -> None:
         """Call after modifying `FST` node to apply any needed changes to parents.
 
         **Parameters:**
@@ -184,17 +187,20 @@ class _Modifying:
                 if not (fst_ := fst_.parent):
                     break
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self.enter()
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None,
+                 exc_tb: TracebackType | None) -> bool:
         if exc_type is None:
             self.done()
 
-    def enter(self):
+        return False
+
+    def enter(self) -> Self:
         return self
 
-    def done(self, fst_: fst.FST | None | Literal[False] = False):
+    def done(self, fst_: fst.FST | None | Literal[False] = False) -> None:
         self.root._serial += 1
 
 
@@ -208,7 +214,7 @@ def _make_tree_fst(ast: AST, parent: fst.FST, pfield: astfield) -> fst.FST:
     return fst.FST(ast, parent, pfield)
 
 
-def _out_lines(fst_: fst.FST, linefunc: Callable, ln: int, col: int, end_ln: int, end_col: int, eol: str = ''):
+def _out_lines(fst_: fst.FST, linefunc: Callable, ln: int, col: int, end_ln: int, end_col: int, eol: str = '') -> None:
     width = int(log10(len(fst_.root._lines) - 1 or 1)) + 1
     lines = fst_.get_src(ln, col, end_ln, end_col, True)
 
@@ -322,7 +328,7 @@ def _repr_tail(self: fst.FST) -> str:
     return f'{tail} {loc[0]},{loc[1]}..{loc[2]},{loc[3]}' if loc else tail
 
 
-def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = ''):
+def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
     ast  = self.a
     tail = self._repr_tail()
     sind = ' ' * st.indent
@@ -414,7 +420,7 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = ''):
             st.linefunc(f'{sind}{sind}{cind}{child!r}{st.eol}')
 
 
-def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None):
+def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None) -> None:
     """Create tree of `FST` nodes, one for each AST node from root. Call only on root or with pre-made stack of nodes
     to walk."""
 
@@ -430,7 +436,7 @@ def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None):
                              for idx, a in enumerate(child) if isinstance(a, AST))
 
 
-def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None):
+def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None) -> None:
     """Destroy a tree of `FST` child nodes by breaking links between AST and `FST` nodes. This mainly helps make sure
     destroyed `FST` nodes can't be reused in a way that might corrupt valid remaining trees."""
 
@@ -444,7 +450,7 @@ def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None):
             stack.extend(iter_child_nodes(a))
 
 
-def _unmake_fst_parents(self: fst.FST, self_: bool = False):
+def _unmake_fst_parents(self: fst.FST, self_: bool = False) -> None:
     """Walk up parent list unmaking each parent along the way. This does not unmake the entire parent tree, just the
     parents directly above this node (and including `self` if `self_` is `True). Meant for when you know the parents are
     just a direct succession like Expr -> Module."""
@@ -505,7 +511,7 @@ def _set_ast(self: fst.FST, ast: AST, valid_fst: bool = False, unmake: bool = Tr
     return old_ast
 
 
-def _set_ctx(self: fst.FST, ctx: type[expr_context]):
+def _set_ctx(self: fst.FST, ctx: type[expr_context]) -> None:
     """Set `ctx` field for `self` and applicable children. Differs from `astutil.set_ctx()` by creating `FST` nodes
     directly. When the `astutil` one is used it is followed by something which creates the `FST` nodes for the new
     `ctx` fields."""
@@ -1040,7 +1046,7 @@ def _is_delimited_seq(self: fst.FST, field: str = 'elts', delims: str | tuple[st
     return nparens > 0  # don't want to fiddle with checking if f0 is a parenthesized tuple
 
 
-def _set_end_pos(self: fst.FST, end_lineno: int, end_col_offset: int, self_: bool = True):  # because of trailing non-AST junk in last statements
+def _set_end_pos(self: fst.FST, end_lineno: int, end_col_offset: int, self_: bool = True) -> None:  # because of trailing non-AST junk in last statements
     """Walk up parent chain (starting at `self`) setting `.end_lineno` and `.end_col_offset` to `end_lineno` and
     `end_col_offset` if self is last child of parent. Initial `self` is corrected always. Used for correcting
     parents after an `offset()` which removed or modified last child statements of block parents."""
@@ -1062,7 +1068,8 @@ def _set_end_pos(self: fst.FST, end_lineno: int, end_col_offset: int, self_: boo
         self = parent
 
 
-def _set_block_end_from_last_child(self: fst.FST, bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int):
+def _set_block_end_from_last_child(self: fst.FST, bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
+                                   ) -> None:
     """Fix end location of a block statement after its last child (position-wise, not last existing child) has been
     cut or deleted. Will set end position of `self` and any parents who `self` is the last child of to the new last
     child if it is past the block-open colon, otherwise set end at just past the block-open colon.
@@ -1097,7 +1104,7 @@ def _set_block_end_from_last_child(self: fst.FST, bound_ln: int, bound_col: int,
     self._set_end_pos(end_lineno, end_col_offset)
 
 
-def _update_loc_up_parents(self: fst.FST, lineno: int, col_offset: int, end_lineno: int, end_col_offset: int):
+def _update_loc_up_parents(self: fst.FST, lineno: int, col_offset: int, end_lineno: int, end_col_offset: int) -> None:
     """Change own location adn walk up parent chain changing any start or end locations which coincide with our own old
     location to the new one."""
 
@@ -1248,7 +1255,7 @@ def _maybe_ins_separator(self: fst.FST, ln: int, col: int, space: bool,
     return srcwpos(ln, col, sep)
 
 
-def _maybe_add_singleton_tuple_comma(self: fst.FST, is_par: bool | None = None):
+def _maybe_add_singleton_tuple_comma(self: fst.FST, is_par: bool | None = None) -> None:
     """Maybe add comma to tuple if is singleton and comma not already there, parenthesization not checked or taken
     into account. `self.a` must be a `Tuple`."""
 
@@ -1381,7 +1388,7 @@ def _maybe_fix_matchseq(self: fst.FST, delims: Literal['', '[]', '()'] | None = 
     return delims
 
 
-def _maybe_fix_matchor(self: fst.FST, fix1: bool = False):
+def _maybe_fix_matchor(self: fst.FST, fix1: bool = False) -> None:
     """Maybe fix a `MatchOr` object that may have the wrong location. Will do nothing to a zero-length `MatchOr` and
     will convert a length 1 `MatchOr` to just its single element if `fix1=True`.
 
@@ -1437,7 +1444,7 @@ def _maybe_fix_matchor(self: fst.FST, fix1: bool = False):
             self._put_src([' '], ln, col, ln, col, False)
 
 
-def _maybe_fix_set(self: fst.FST, empty: bool | Literal['star', 'call'] = True):
+def _maybe_fix_set(self: fst.FST, empty: bool | Literal['star', 'call'] = True) -> None:
     # assert isinstance(self.a, Set)
 
     if empty and not (a := self.a).elts:
@@ -1452,7 +1459,7 @@ def _maybe_fix_set(self: fst.FST, empty: bool | Literal['star', 'call'] = True):
         self._set_ast(ast)
 
 
-def _maybe_fix_elif(self: fst.FST):
+def _maybe_fix_elif(self: fst.FST) -> None:
     # assert isinstance(self.a, If)
 
     ln, col, _, _ = self.loc
@@ -1462,7 +1469,7 @@ def _maybe_fix_elif(self: fst.FST):
         self._put_src(None, ln, col, ln, col + 2, False)
 
 
-def _maybe_fix_with_items(self: fst.FST):
+def _maybe_fix_with_items(self: fst.FST) -> None:
     """If `Tuple` only element in `items` then add appropriate parentheses."""
 
     # assert isinstance(self.a, (With, AsyncWith))
@@ -1478,7 +1485,7 @@ def _maybe_fix_with_items(self: fst.FST):
             cef._parenthesize_grouping()  # these will wind up belonging to outer With
 
 
-def _maybe_fix_copy(self: fst.FST, pars: bool = True, pars_walrus: bool = False):
+def _maybe_fix_copy(self: fst.FST, pars: bool = True, pars_walrus: bool = False) -> None:
     """Maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the source is not after
     the operation). If cannot fix or ast is not parsable by itself then ast will be unchanged. Is meant to be a quick
     fix after a cut or copy operation, not full check, for that use `verify()`.
@@ -1555,7 +1562,7 @@ def _sanitize(self: fst.FST) -> Self:
     return self
 
 
-def _parenthesize_grouping(self: fst.FST, whole: bool = True, *, star_child: bool = True):
+def _parenthesize_grouping(self: fst.FST, whole: bool = True, *, star_child: bool = True) -> None:
     """Parenthesize anything with non-node grouping parentheses. Just adds text parens around node adjusting parent
     locations but not the node itself.
 
@@ -1634,7 +1641,7 @@ def _unparenthesize_grouping(self: fst.FST, shared: bool | None = True, *, star_
     return True
 
 
-def _delimit_node(self: fst.FST, whole: bool = True, delims: str = '()'):
+def _delimit_node(self: fst.FST, whole: bool = True, delims: str = '()') -> None:
     """Delimit (parenthesize or bracket) a node (`Tuple` or `MatchSequence`, but could be others) with appropriate
     delimiters which are passed in and extend the range of the node to include those delimiters.
 
@@ -1701,7 +1708,7 @@ def _undelimit_node(self: fst.FST, field: str = 'elts') -> bool:
     return True
 
 
-def _normalize_block(self: fst.FST, field: str = 'body', *, indent: str | None = None):
+def _normalize_block(self: fst.FST, field: str = 'body', *, indent: str | None = None) -> None:
     """Move statements on the same logical line as a block open to their own line, e.g:
     ```
     if a: call()
@@ -1735,7 +1742,7 @@ def _normalize_block(self: fst.FST, field: str = 'body', *, indent: str | None =
     self._put_src(['', indent], ln, col + 1, b0_ln, b0_col, False)
 
 
-def _elif_to_else_if(self: fst.FST):
+def _elif_to_else_if(self: fst.FST) -> None:
     """Convert an 'elif something:\\n  ...' to 'else:\\n  if something:\\n    ...'. Make sure to only call on an
     actual `elif`, meaning the lone `If` statement in the parent's `orelse` block which is an actual `elif` and not
     an `if`."""
@@ -1753,7 +1760,7 @@ def _elif_to_else_if(self: fst.FST):
     self._put_src([indent + 'else:', indent + self.root.indent], ln, 0, ln, col, False)
 
 
-def _reparse_docstrings(self: fst.FST, docstr: bool | Literal['strict'] | None = None):
+def _reparse_docstrings(self: fst.FST, docstr: bool | Literal['strict'] | None = None) -> None:
     """Reparse docstrings in `self` and all descendants.
 
     **Parameters:**
@@ -1920,7 +1927,7 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
     return None
 
 
-def _get_indentable_lns(self, skip: int = 0, *, docstr: bool | Literal['strict'] | None = None) -> set[int]:
+def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal['strict'] | None = None) -> set[int]:
     r"""Get set of indentable lines within this node.
 
     **Parameters:**
@@ -2035,7 +2042,7 @@ def _touchall(self: fst.FST, parents: bool = False, self_: bool = True, children
     return self
 
 
-def _put_src(self, src: str | list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
+def _put_src(self: fst.FST, src: str | list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
              tail: bool | None = ..., head: bool | None = True, exclude: fst.FST | None = None, *,
              offset_excluded: bool = True) -> tuple[int, int, int, int] | None:
     """Put or delete new source to currently stored source, optionally offsetting all nodes for the change. Must
@@ -2240,7 +2247,7 @@ def _offset(self: fst.FST, ln: int, col: int, dln: int, dcol_offset: int,
     return self
 
 
-def _offset_lns(self: fst.FST, lns: set[int] | dict[int, int], dcol_offset: int | None = None):
+def _offset_lns(self: fst.FST, lns: set[int] | dict[int, int], dcol_offset: int | None = None) -> None:
     """Offset ast column byte offsets in `lns` by `dcol_offset` if present, otherwise `lns` must be a dict with an
     individual `dcol_offset` per line. Only modifies `AST`, not lines. Does not modify parent locations but
     `touch()`es parents."""
@@ -2349,7 +2356,7 @@ def _dedent_lns(self: fst.FST, indent: str | None = None, lns: set[int] | None =
     dcol_offsets = None
     newlines     = []
 
-    def dedent(l, lindent):
+    def dedent(l: str, lindent: int) -> None:
         if dcol_offsets is not None:
             dcol_offsets[ln] = -lindent
 

@@ -260,7 +260,8 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
     tr_text_pos, tr_space_pos, _      = _trailing_trivia(lines, bound_end_ln, bound_end_col,  # END of text / space
                                                          last_end_ln, last_end_col, tr_comms, tr_space)
 
-    def calc_locs(ld_ln: int, ld_col: int, tr_ln: int, tr_col: int):
+    def calc_locs(ld_ln: int, ld_col: int, tr_ln: int, tr_col: int,
+                  ) -> tuple[fstloc, fstloc, str | None, tuple[int, int] | None]:
         if indent is None:  # does not start line, no preceding trivia
             del_col = re_line_trailing_space.match(lines[first_ln], 0 if first_ln > bound_ln else bound_col,
                                                    first_col).start(1)
@@ -516,7 +517,7 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
     return fst_
 
 
-def _poss_end(self: fst.FST, field: str, len_suffix: int):
+def _poss_end(self: fst.FST, field: str, len_suffix: int) -> tuple[int, int, int, int]:
     """Get position of end of self minus length of delimiter suffix and position of last element past pars, assumed to
     exist."""
 
@@ -531,7 +532,7 @@ def _poss_end(self: fst.FST, field: str, len_suffix: int):
     return last_end_ln, last_end_col, end_ln, end_col
 
 
-def _locs_and_bound_get(self, start: int, stop: int, body: list[AST], body2: list[AST], off: int,
+def _locs_and_bound_get(self: fst.FST, start: int, stop: int, body: list[AST], body2: list[AST], off: int,
                         ) -> tuple[fstloc, fstloc, int, int, int, int]:
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
@@ -974,7 +975,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
                    ins_ln: int | None = None,
                    field: str = 'elts', field2: str | None = None, sep: str = ',',
                    self_tail_sep: bool | Literal[0, 1] | None = None,
-                   ):
+                   ) -> None:
     r"""Indent a sequence source and put it to a location in existing sequence `self`. If `fst_` is `None` then will
     just delete in the same way that a cut operation would. Trailing separators will be added / removed as needed and
     according to if they are in normal positions. If delete from `self` leaves an empty unparenthesized tuple then
@@ -1317,7 +1318,7 @@ def _get_element_indent(self: fst.FST, body: list[AST], body2: list[AST], start:
     return None
 
 
-def _trim_delimiters(self: fst.FST):
+def _trim_delimiters(self: fst.FST) -> None:
     lines                     = self._lines
     ast                       = self.a
     ln, col, end_ln, end_col  = self.loc
@@ -1334,7 +1335,7 @@ def _trim_delimiters(self: fst.FST):
     del lines[end_ln + 1:], lines[:ln]
 
 
-def _set_loc_whole(self: fst.FST):
+def _set_loc_whole(self: fst.FST) -> None:
     ast                = self.a
     ast.lineno         = 1
     ast.col_offset     = 0
@@ -1506,7 +1507,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
     return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
 
-def _validate_put_seq(self: fst.FST, fst_: fst.FST, non_slice: str, *, check_target: bool = False):
+def _validate_put_seq(self: fst.FST, fst_: fst.FST, non_slice: str, *, check_target: bool = False) -> None:
     if not fst_:
         return
 
@@ -1524,12 +1525,12 @@ def _validate_put_seq(self: fst.FST, fst_: fst.FST, non_slice: str, *, check_tar
 
 def _put_slice_NOT_IMPLEMENTED_YET(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
                                    stop: int | None, field: str, one: bool = False, **options,
-                                   ):
+                                   ) -> None:
     raise NotImplementedError("not implemented yet, try with option raw='auto'")
 
 
 def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                    field: str, one: bool = False, **options):
+                    field: str, one: bool = False, **options) -> None:
     fst_        = _code_to_slice_seq2(self, code, one, options, _code_as_expr)
     body        = (ast := self.a).keys
     body2       = ast.values
@@ -1592,7 +1593,7 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
 
 
 def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                          field: str, one: bool = False, **options):
+                          field: str, one: bool = False, **options) -> None:
     fst_        = _code_to_slice_seq(self, code, one, options)
     body        = (ast := self.a).elts
     start, stop = _fixup_slice_indices(len(body), start, stop)
@@ -1667,7 +1668,7 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
 
 
 def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                         field: str, one: bool = False, **options):
+                         field: str, one: bool = False, **options) -> None:
     fst_        = _code_to_slice_seq(self, code, one, options)
     body        = (ast := self.a).elts
     start, stop = _fixup_slice_indices(len(body), start, stop)
@@ -1718,7 +1719,7 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
 
 
 def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                        field: str, one: bool = False, **options):
+                        field: str, one: bool = False, **options) -> None:
     fst_        = _code_to_slice_seq(self, code, one, options)
     body        = self.a.elts
     start, stop = _fixup_slice_indices(len(body), start, stop)
@@ -1768,7 +1769,7 @@ def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['
 
 
 def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
-                                      stop: int | None, field: str, one: bool = False, **options):
+                                      stop: int | None, field: str, one: bool = False, **options) -> None:
     # NOTE: we allow multiple MatchStars to be put to the same MatchSequence
     fst_        = _code_to_slice_MatchSequence(self, code, one, options)
     body        = self.a.patterns
@@ -1818,7 +1819,7 @@ def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: i
 
 
 def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                            field: str, one: bool = False, **options):
+                            field: str, one: bool = False, **options) -> None:
     fst_        = _code_to_slice_seq2(self, code, one, options, _code_as_pattern)
     len_body    = len(body := (ast := self.a).keys)
     body2       = ast.patterns
@@ -1884,7 +1885,7 @@ def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Liter
 
 
 def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                                field: str, one: bool = False, **options):
+                                field: str, one: bool = False, **options) -> None:
     fst_        = _code_to_slice_MatchOr(self, code, one, options)
     len_body    = len(body := self.a.patterns)
     start, stop = _fixup_slice_indices(len_body, start, stop)
@@ -2052,7 +2053,7 @@ _PUT_SLICE_HANDLERS = {
 def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str) -> fstloc:
     """Get location of a raw slice. Sepcial cases for decorators, comprehension ifs and other weird nodes."""
 
-    def fixup_slice_index_for_raw(len_, start, stop):
+    def fixup_slice_index_for_raw(len_: int, start: int, stop: int) -> tuple[int, int]:
         start, stop = _fixup_slice_indices(len_, start, stop)
 
         if start == stop:

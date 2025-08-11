@@ -85,7 +85,7 @@ def _get_slice_stmtish(self: fst.FST, start: int | Literal['end'] | None, stop: 
 
 
 def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                       field: str, one: bool, **options):
+                       field: str, one: bool, **options) -> None:
     ast  = self.a
     body = getattr(ast, field)
 

@@ -167,7 +167,7 @@ class SrcEdit:
 
         # get copy and delete locations according to possible combinations of preceding and trailing comments, semicolons and line continuation backslashes
 
-        def fix_post_semi_with_tail(end_ln, end_col, starts_line):
+        def fix_post_semi_with_tail(end_ln: int, end_col: int, starts_line: bool) -> tuple[fstloc, list[str]] | None:
             if code := _next_src(lines, end_ln, end_col, end_ln,
                                  bound_end_col if end_ln == bound_end_ln else 0x7ffffffffffffff, True, True):  # comment or backslash
                 put_lines = None
@@ -189,7 +189,7 @@ class SrcEdit:
 
             return None
 
-        def fix_post_semi(post_semi):
+        def fix_post_semi(post_semi: tuple[int, int]) -> tuple[fstloc, list[str] | None]:
             end_ln, end_col  = post_semi
             end_col         += 1
 
@@ -384,7 +384,7 @@ class SrcEdit:
 
     def _format_space(self, tgt_fst: fst.FST, put_fst: fst.FST,
                       block_loc: fstloc, put_loc: fstloc, fpre: fst.FST | None, fpost: fst.FST | None,
-                      del_lines: list[str] | None, is_ins: bool, **options):
+                      del_lines: list[str] | None, is_ins: bool, **options) -> None:
         """Add preceding and trailing newlines as needed. We always insert statements (or blocks of them) as their own
         lines but may also add newlines according to PEP8."""
 

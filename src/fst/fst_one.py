@@ -539,8 +539,8 @@ class oneinfo(NamedTuple):
     delstr:      str           = ''    # or '**'
 
 
-def _validate_put(self: fst.FST, code: Code | None, idx: int | None, field: str, child: list[AST] | AST | constant | None,
-                  *, can_del: bool = False) -> AST | constant | None:
+def _validate_put(self: fst.FST, code: Code | None, idx: int | None, field: str,
+                  child: list[AST] | AST | constant | None, *, can_del: bool = False) -> AST | constant | None:
     """Check that `idx` was passed (or not) as needed and that not deleting if not possible."""
 
     if isinstance(child, list):
@@ -560,7 +560,7 @@ def _validate_put(self: fst.FST, code: Code | None, idx: int | None, field: str,
     return child
 
 
-def _validate_put_ast(self: fst.FST, put_ast: AST, idx: int | None, field: str, static: onestatic):
+def _validate_put_ast(self: fst.FST, put_ast: AST, idx: int | None, field: str, static: onestatic) -> None:
     if restrict := static.restrict:
         if isinstance(restrict, list):  # list means these types not allowed
             if isinstance(put_ast, tuple(restrict)):
@@ -679,8 +679,7 @@ def _put_one_constant(self: fst.FST, code: _PutOneCode, idx: int | None, field: 
 
 
 def _put_one_op(self: fst.FST, code: _PutOneCode, idx: int | None, field: str,
-                child: type[boolop] | type[operator] | type[unaryop] | type[cmpop],
-                static: None, **options) -> fst.FST:
+                child: type[boolop | operator | unaryop | cmpop], static: None, **options) -> fst.FST:
     """Put a single operator, with or without '=' for AugAssign, lots of rules to check."""
 
     child  = _validate_put(self, code, idx, field, child)
@@ -732,8 +731,7 @@ def _put_one_op(self: fst.FST, code: _PutOneCode, idx: int | None, field: str,
 
 
 def _put_one_ctx(self: fst.FST, code: _PutOneCode, idx: int | None, field: str,
-                 child: type[boolop] | type[operator] | type[unaryop] | type[cmpop],
-                 static: None, **options) -> fst.FST:
+                 child: type[boolop | operator | unaryop | cmpop], static: None, **options) -> fst.FST:
     """This only exists to absorb the put and validate that it is the only value it can be."""
 
     child = _validate_put(self, code, idx, field, child)
@@ -749,8 +747,8 @@ def _put_one_ctx(self: fst.FST, code: _PutOneCode, idx: int | None, field: str,
     return child.f
 
 
-def _put_one_AnnAssign_simple(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: int, static: onestatic,
-                              **options) -> fst.FST:
+def _put_one_AnnAssign_simple(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: int,
+                              static: onestatic, **options) -> fst.FST:
     """Parenthesize or unparenthesize `AnnAssign.value` according to this, overkill, definitely overkill."""
 
     ast   = self.a
@@ -846,8 +844,8 @@ def _put_one_BoolOp_op(self: fst.FST, code: _PutOneCode, idx: int | None, field:
     return childf
 
 
-def _put_one_Constant_kind(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: type[boolop], static: None,
-                           **options) -> fst.FST:
+def _put_one_Constant_kind(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: type[boolop],
+                           static: None, **options) -> fst.FST:
     """Set a Constant string kind to 'u' or None, this is truly unnecessary."""
 
     child = _validate_put(self, code, idx, field, child, can_del=True)
@@ -1162,8 +1160,8 @@ def _put_one_ClassDef_bases(self: fst.FST, code: _PutOneCode, idx: int | None, f
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
-def _put_one_ClassDef_keywords(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
-                               **options) -> fst.FST:
+def _put_one_ClassDef_keywords(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
+                               static: onestatic, **options) -> fst.FST:
     """Don't allow put of `**keyword` before `*arg`."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1175,8 +1173,8 @@ def _put_one_ClassDef_keywords(self: fst.FST, code: _PutOneCode, idx: int | None
     return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
 
 
-def _put_one_AnnAssign_target(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: int, static: onestatic,
-                              **options) -> fst.FST:
+def _put_one_AnnAssign_target(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: int,
+                              static: onestatic, **options) -> fst.FST:
     """Update simple according to what was put."""
 
     ret = _put_one_exprish_required(self, code, idx, field, child, static, **options)
@@ -1467,8 +1465,8 @@ def _put_one_Dict_keys(self: fst.FST, code: _PutOneCode, idx: int | None, field:
     return ret
 
 
-def _put_one_arg(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic, **options,
-                 ) -> fst.FST:
+def _put_one_arg(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
+                 **options) -> fst.FST:
     """Don't allow arg with Starred annotation into non-vararg args."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1653,8 +1651,8 @@ def _put_one_keyword_arg(self: fst.FST, code: _PutOneCode, idx: int | None, fiel
     return _put_one_identifier_optional(self, code, idx, field, child, static, **options)
 
 
-def _put_one_MatchStar_name(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: str, static: onestatic,
-                            **options) -> str:
+def _put_one_MatchStar_name(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: str,
+                            static: onestatic, **options) -> str:
     """Slightly annoying MatchStar.name. '_' really means delete."""
 
     if code is None:

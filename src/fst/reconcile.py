@@ -30,13 +30,13 @@ class _Reconcile:
         self.mark    = mark
         self.out     = mark.copy()
 
-    def put_node(self, code: fst.FST | AST, out_parent: fst.FST | None = None, pfield: astfield | None = None):
+    def put_node(self, code: fst.FST | AST, out_parent: fst.FST | None = None, pfield: astfield | None = None) -> None:
         if out_parent:
             out_parent.put(code, pfield.idx, False, pfield.name, raw=False, **self.options)
         else:  # because can replace AST at root node which has out_parent=None
             self.out.replace(code, raw=False, **self.options)
 
-    def recurse_slice_dict(self, node: AST, outf: fst.FST | None):
+    def recurse_slice_dict(self, node: AST, outf: fst.FST | None) -> None:
         """Recurse into a combined slice of a Dict's keys and values using slice operations to copy over formatting
         where possible (if not already there). Can be recursing an in-tree FST parent or a pure AST parent."""
 
@@ -145,7 +145,7 @@ class _Reconcile:
         if start < len(outa_keys):  # delete tail in output, doesn't happen if coming from AST
             outf.put_slice(None, start, None, None, raw=False, **self.options)
 
-    def recurse_slice(self, node: AST, outf: fst.FST | None, field: str, body: list[AST]):
+    def recurse_slice(self, node: AST, outf: fst.FST | None, field: str, body: list[AST]) -> None:
         """Recurse into a slice of children using slice operations to copy over formatting where possible (if not
         already there). Can be recursing an in-tree FST parent or a pure AST parent."""
 
@@ -220,7 +220,7 @@ class _Reconcile:
         if start < len(outa_body):  # delete tail in output, doesn't happen if coming from AST
             outf.put_slice(None, start, None, field, raw=False, **self.options)
 
-    def recurse_children(self, node: AST, outa: AST):
+    def recurse_children(self, node: AST, outa: AST) -> None:
         """Recurse into children of a node."""
 
         if not isinstance(outa, AST):  # could be None or a Constant.value
@@ -288,7 +288,7 @@ class _Reconcile:
                     self.recurse_node(c, astfield(field, i), outf, nodef)
 
     def recurse_node(self, node: AST, pfield: astfield | None = None,
-                     out_parent: fst.FST | None = None, node_parent: fst.FST | None | Literal[False] = None):
+                     out_parent: fst.FST | None = None, node_parent: fst.FST | None | Literal[False] = None) -> None:
         """Recurse from either an in-tree known `FST` node or from a pure `AST` put somewhere above. The two situations
         are slightly different in the following ways:
 

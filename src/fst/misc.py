@@ -10,7 +10,7 @@ from typing import Any, Callable, ForwardRef, Literal, NamedTuple, Union
 import fst
 
 from .astutil import *
-from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation
+from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, constant
 
 try:
     from typing import Self
@@ -216,7 +216,7 @@ class NodeError(Exception):
 
     rawable: bool  ; """Whether the operation that caused this error can be retried in raw mode."""
 
-    def __init__(self, *args, rawable: bool = False):
+    def __init__(self, *args: object, rawable: bool = False):
         super().__init__(*args)
 
         self.rawable = rawable
@@ -231,12 +231,12 @@ class astfield(NamedTuple):
     def __repr__(self) -> str:
         return f'astfield({self.name!r})' if (idx := self.idx) is None else f'astfield({self.name!r}, {idx})'
 
-    def get(self, parent: AST) -> Any:
+    def get(self, parent: AST) -> AST | constant:
         """Get child node at this field in the given `parent`."""
 
         return getattr(parent, self.name) if self.idx is None else getattr(parent, self.name)[self.idx]
 
-    def get_no_raise(self, parent: AST, default: Any = False) -> Any:
+    def get_no_raise(self, parent: AST, default: AST | constant = False) -> AST | constant:
         """Get child node at this field in the given `parent`. Return `default` if not found instead of raising
         `AttributError` or `IndexError`, `False` works well because not normally found locations where `AST` nodes can
          reside in `AST` trees."""
@@ -246,7 +246,7 @@ class astfield(NamedTuple):
             default if (body := getattr(parent, self.name, False)) is False or idx >= len(body) else
             body[idx])
 
-    def set(self, parent: AST, child: AST):
+    def set(self, parent: AST, child: AST) -> None:
         """Set `child` node at this field in the given `parent`."""
 
         if self.idx is None:
@@ -391,7 +391,7 @@ def pyver(func: Callable | None = None, *, ge: int | None = None, lt: int | None
 
         if ret is None:
             @wraps(func)
-            def ret(*args, **kwargs):
+            def ret(*args: object, **kwargs) -> None:
                 raise RuntimeError(f'missing version of {key} for this python version 3.{_pyver}')
 
         return ret
@@ -490,7 +490,7 @@ def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     if state is None:
         state = []
 
-    def last_match(l, c, ec, p):
+    def last_match(l: str, c: int, ec: int, p: re.Pattern) -> re.Match | None:
         if state:
             return state.pop()
 
@@ -1055,14 +1055,14 @@ def _fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True
     return field, body
 
 
-def _fixup_one_index(len_, idx) -> int:
+def _fixup_one_index(len_: int, idx: int) -> int:
     if not (0 <= ((idx := idx + len_) if idx < 0 else idx) < len_):
         raise IndexError('index out of range')
 
     return idx
 
 
-def _fixup_slice_indices(len_, start, stop) -> tuple[int, int]:
+def _fixup_slice_indices(len_: int, start: int, stop: int) -> tuple[int, int]:
     if start is None:
         start = 0
 
@@ -1100,7 +1100,7 @@ def _multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln:
     # TODO: use tokenize?
 
 
-    def walk_multiline(start_ln, end_ln, m, re_str_end):
+    def walk_multiline(start_ln: int, end_ln: int, m: re.Match, re_str_end: re.Pattern) -> tuple[int, re.Match]:
         nonlocal lns, lines
 
         col = m.end()

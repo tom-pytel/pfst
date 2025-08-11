@@ -4,7 +4,7 @@ from .fst import parse
 from .fst_parse import Mode
 
 
-def main():
+def main() -> None:
     import sys
     import argparse
 

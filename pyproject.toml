@@ -50,14 +50,13 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
-exclude = ["examples"]
 
 [tool.setuptools.dynamic]
 version = { file = "VERSION" }
 
 [tool.ruff]
 line-length = 120
-exclude = ["src/fst/docs"]
+exclude = ["tests", "src/fst/fuzz.py"]
 
 [tool.ruff.format]
 quote-style = "preserve"
@@ -65,12 +64,18 @@ skip-magic-trailing-comma = true  # <-- Prevents Ruff from auto-wrapping argumen
 
 [tool.ruff.lint]
 task-tags = [""]
+select = [
+    "ANN",     # Annotation-related style rules
+    "PYI",     # pyi-specific (stub file) rules, many check type syntax
+]
 ignore = [
-  "F401",  # `ast` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
-  "F403",  # `from ast import *` used; unable to detect undefined names
-  "F405",  # `AST` may be undefined, or defined from star imports
-  "E701",  # Multiple statements on one line (colon)
-  "E702",  # Multiple statements on one line (semicolon)
-  "E731",  # Do not assign a `lambda` expression, use a `def`
-  "E741",  # Ambiguous variable name: `l`
+  "F401",    # `ast` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+  "F403",    # `from ast import *` used; unable to detect undefined names
+  "F405",    # `AST` may be undefined, or defined from star imports
+  "E701",    # Multiple statements on one line (colon)
+  "E702",    # Multiple statements on one line (semicolon)
+  "E731",    # Do not assign a `lambda` expression, use a `def`
+  "E741",    # Ambiguous variable name: `l`
+  "ANN003",  # Missing type annotation for `**options`
+  "ANN204",  # Missing return type annotation for special method `__init__`
 ]

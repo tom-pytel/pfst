@@ -114,7 +114,7 @@ class fstview:
     def __len__(self) -> int:
         return self.stop - self.start
 
-    def __getitem__(self, idx: int | slice | str) -> Any:
+    def __getitem__(self, idx: int | slice | str) -> fstview | FST | str | None:
         r"""Get a single item or a slice view from this slice view. All indices (including negative) are relative to the
         bounds of this view. This is just an access, not a cut or a copy, so if you want a copy you must explicitly do
         `.copy()` on the returned value.
@@ -128,8 +128,9 @@ class fstview:
             statements, error otherwise). This is just a convenience and will probably change / expand in the future.
 
         **Returns:**
-        - `FST | fstview`: Either a single `FST` node if accessing a single item or a new `fstview` view according to
-            the slice passed.
+        - `fstview | `: Either a single `FST` node if accessing a single item or a new `fstview` view
+            according to the slice passed. `str` can also be returned from a view of `Global.names` or `None` from a
+            `Dict.keys`.
 
         **Examples:**
         ```py
@@ -175,7 +176,7 @@ class fstview:
 
         return fstview(self.fst, self.field, start + idx_start, start + idx_stop)
 
-    def __setitem__(self, idx: int | slice, code: Code | None):
+    def __setitem__(self, idx: int | slice, code: Code | None) -> None:
         """Set a single item or a slice view in this slice view. All indices (including negative) are relative to the
         bounds of this view. This is not just with a set, it is a full `FST` operation.
 
@@ -231,7 +232,7 @@ class fstview:
 
             self.stop += len(asts) - len_before
 
-    def __delitem__(self, idx: int | slice):
+    def __delitem__(self, idx: int | slice) -> None:
         """Delete a single item or a slice from this slice view. All indices (including negative) are relative to the
         bounds of this view.
 

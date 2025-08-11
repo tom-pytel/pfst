@@ -8,7 +8,7 @@ from ast import *
 from ast import dump as ast_dump, unparse as ast_unparse, mod as ast_mod
 from contextlib import contextmanager
 from io import TextIOBase
-from typing import Any, Callable, Generator, Literal, TextIO, Union
+from typing import Any, Callable, Generator, Iterator, Literal, TextIO, Union
 
 from .astutil import *
 from .astutil import (
@@ -61,7 +61,8 @@ _OPTIONS = {
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, feature_version=None, **kwargs) -> AST:
+def parse(source: builtins.str, filename: str = '<unknown>', mode: str = 'exec', *, type_comments: bool = False,
+          feature_version: tuple[int, int] | None = None, **kwargs) -> AST:
     r"""Executes `ast.parse()` and then adds `FST` nodes to the parsed tree. Drop-in replacement for `ast.parse()`. For
     parameters, see `ast.parse()`. Returned `AST` tree has added `.f` attribute at each node which accesses the parallel
     `FST` tree.
@@ -116,7 +117,7 @@ def parse(source, filename='<unknown>', mode='exec', *, type_comments=False, fea
                        **kwargs).a
 
 
-def unparse(ast_obj) -> str:
+def unparse(ast_obj: AST) -> str:
     """Returns the formatted source that is kept for this tree. Drop-in replacement for `ast.unparse()` If there is no
     `FST` information in the `AST` tree then just executes `ast.unparse()`.
 
@@ -166,7 +167,8 @@ def unparse(ast_obj) -> str:
     return ast_unparse(ast_obj)
 
 
-def dump(node, annotate_fields=True, include_attributes=False, *, indent=None, show_empty=True):
+def dump(node: AST, annotate_fields: bool = True, include_attributes: bool = False, *,
+         indent: int | str | None = None, show_empty: bool = True) -> str:
     """This function is a convenience function and only exists to make python version 3.13 and above `ast.dump()` output
     compatible on a default call with previous python versions (important for doctests). All arguments correspond to
     their respective `ast.dump()` arguments and `show_empty` is eaten on python versions below 3.13."""
@@ -419,7 +421,7 @@ class FST:
         return isinstance(self.a, ANONYMOUS_SCOPE)
 
     @property
-    def f(self):
+    def f(self) -> None:
         """@private"""
 
         raise RuntimeError(f"you probably think you're accessing an AST node '.f', but you're not, "
@@ -696,7 +698,8 @@ class FST:
 
     @staticmethod
     def fromast(ast: AST, mode: Mode | Literal[False] | None = None, *, filename: builtins.str = '<unknown>',
-                type_comments: bool | None = False, feature_version=None, ctx: bool = False) -> FST:
+                type_comments: bool | None = False, feature_version: tuple[int, int] | None = None, ctx: bool = False,
+                ) -> FST:
         r"""Unparse and reparse an `AST` for new `FST` (the reparse is necessary to make sure locations are correct).
 
         **Parameters:**
@@ -812,7 +815,7 @@ class FST:
         return _OPTIONS.copy()
 
     @staticmethod
-    def get_option(option: builtins.str, options: dict[builtins.str, Any] = {}) -> Any:
+    def get_option(option: builtins.str, options: dict[builtins.str, Any] = {}) -> object:
         """Get a single option from `options` dict or global default if option not in dict or is `None` there. For a
         list of options used see `options()`.
 
@@ -880,7 +883,7 @@ class FST:
 
     @staticmethod
     @contextmanager
-    def options(**options):
+    def options(**options) -> Iterator[dict[str, Any]]:
         """Context manager to temporarily set global options defaults for a group of operations.
 
         **WARNING!** Only the options specified in the call to this function will be returned to their original values
@@ -1435,7 +1438,7 @@ class FST:
 
         return self
 
-    def remove(self, **options):
+    def remove(self, **options) -> None:
         """Delete this node if possible, equivalent to `replace(None, ...)`. Cannot delete root node.
 
         **Parameters:**
@@ -5020,33 +5023,33 @@ class FST:
 def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> property:
     if cardinality == 1:
         @property
-        def accessor(self) -> FST | None | constant:
+        def accessor(self: FST) -> FST | None | constant:
             """@private"""
 
             return getattr(child, 'f', None) if isinstance(child := getattr(self.a, field), AST) else child
 
         @accessor.setter
-        def accessor(self, code: Code | builtins.str | constant | None):
+        def accessor(self: FST, code: Code | builtins.str | constant | None) -> None:
             """@private"""
 
             self.put(code, field)
 
     elif cardinality == 2:
         @property
-        def accessor(self) -> view.fstview:
+        def accessor(self: FST) -> view.fstview:
             """@private"""
 
             return view.fstview(self, field, 0, len(getattr(self.a, field)))
 
         @accessor.setter
-        def accessor(self, code: Code | builtins.str | None):
+        def accessor(self: FST, code: Code | builtins.str | None) -> None:
             """@private"""
 
             self.put_slice(code, field)
 
     else:  # cardinality == 3  # can be single element or list depending on the AST type
         @property
-        def accessor(self) -> view.fstview | FST | None | constant:
+        def accessor(self: FST) -> view.fstview | FST | None | constant:
             """@private"""
 
             if isinstance(child := getattr(self.a, field), list):
@@ -5057,7 +5060,7 @@ def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> prope
             return child
 
         @accessor.setter
-        def accessor(self, code: Code | builtins.str | None):
+        def accessor(self: FST, code: Code | builtins.str | None) -> None:
             """@private"""
 
             if isinstance(getattr(self.a, field), list):
@@ -5068,9 +5071,9 @@ def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> prope
     return accessor
 
 
-def _make_AST_field_accessors():
+def _make_AST_field_accessors() -> None:
     FST_dict    = FST.__dict__
-    cardinality = {}  # {'field': 1 means single element | 2 means list, ...}
+    cardinality = {}  # {'field': 1 means single element | 2 means list (3 means can be either)}
 
     for fields in FIELDS.values():
         for f, t in fields:

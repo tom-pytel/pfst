@@ -67,7 +67,7 @@ class bistr(str):
 
         return array('Q', b'\x00\x00\x00\x00\x00\x00\x00\x00' * (len_array + 1))
 
-    def _c2b_lookup(self, idx):
+    def _c2b_lookup(self, idx: int) -> int:
         return self._c2b[idx]
 
     def c2b(self, idx: int) -> int:
@@ -90,7 +90,7 @@ class bistr(str):
 
         return c2b[idx]
 
-    def _b2c_lookup(self, idx):
+    def _b2c_lookup(self, idx: int) -> int:
         return self._b2c[idx]
 
     def b2c(self, idx: int) -> int:
@@ -117,7 +117,7 @@ class bistr(str):
 
         return b2c[idx]
 
-    def clear_cache(self):
+    def clear_cache(self) -> None:
         """Remove the lookup array (if need to save some memory)."""
 
         try:
@@ -474,7 +474,7 @@ def get_field(parent: AST, name: str, idx: int | None = None) -> AST:
     return getattr(parent, name) if idx is None else getattr(parent, name)[idx]
 
 
-def set_field(parent: AST, child: Any, name: str, idx: int | None = None):
+def set_field(parent: AST, child: AST | constant, name: str, idx: int | None = None) -> None:
     """Set child node at field `name` in the given `parent` optionally at the given index `idx` to `child`."""
 
     if idx is None:
@@ -766,7 +766,7 @@ def copy_ast(ast: AST | None) -> AST | None:
     return ret
 
 
-def set_ctx(ast_or_stack: AST | list[AST], ctx: type[expr_context], *, doit=True,
+def set_ctx(ast_or_stack: AST | list[AST], ctx: type[expr_context], *, doit: bool = True,
             ) -> bool:
     """Set all `ctx` fields in this node and any children which may participate in an assignment (`Tuple`, `List`,
     `Starred`, `Subscript`, `Attribute`, `Name`) to the passed `ctx` type.
@@ -833,7 +833,7 @@ def get_func_class_or_ass_by_name(asts: Iterable[AST], name: str, ass: bool = Tr
     return None
 
 
-def _syntax_ordered_children_Call(ast):
+def _syntax_ordered_children_Call(ast: AST) -> list[AST]:
     children = [ast.func]
     args     = ast.args
     keywords = ast.keywords
@@ -864,7 +864,7 @@ def _syntax_ordered_children_Call(ast):
 
     return children
 
-def _syntax_ordered_children_arguments(ast):
+def _syntax_ordered_children_arguments(ast: AST) -> list[AST]:
     children = []
 
     if not (defaults := ast.defaults):
@@ -894,7 +894,7 @@ def _syntax_ordered_children_arguments(ast):
 
     return children
 
-def _syntax_ordered_children_default(ast):
+def _syntax_ordered_children_default(ast: AST) -> list[AST]:
     children = []
 
     for field in AST_FIELDS[ast.__class__]:
@@ -1072,7 +1072,7 @@ class _Precedence(IntEnum):
     AWAIT = auto()       # 'await'
     ATOM = auto()
 
-    def next(self):
+    def next(self) -> '_Precedence':
         try:
             return self.__class__(self + 1)
         except ValueError:

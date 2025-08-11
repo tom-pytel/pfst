@@ -63,14 +63,14 @@ _re_parse_all_category = re.compile(r'''
 ''', re.MULTILINE | re.VERBOSE)
 
 
-def _ast_parse1(src: str, parse_params: dict = {}):
+def _ast_parse1(src: str, parse_params: dict = {}) -> AST:
     if len(body := ast_parse(src, **parse_params).body) != 1:
         raise SyntaxError('expecting single element')
 
     return body[0]
 
 
-def _ast_parse1_case(src: str, parse_params: dict = {}):
+def _ast_parse1_case(src: str, parse_params: dict = {}) -> AST:
     if len(body := ast_parse(src, **parse_params).body) != 1 or len(cases := body[0].cases) != 1:
         raise SyntaxError('expecting single element')
 
@@ -106,7 +106,7 @@ def _offset_linenos(ast: AST, delta: int) -> AST:
     return ast
 
 
-def _fix_unparenthesized_tuple_parsed_parenthesized(src: str, ast: AST):
+def _fix_unparenthesized_tuple_parsed_parenthesized(src: str, ast: AST) -> None:
     elts           = ast.elts
     ast.lineno     = (e0 := elts[0]).lineno
     ast.col_offset = e0.col_offset
