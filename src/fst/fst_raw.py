@@ -5,12 +5,10 @@ This module contains functions which are imported as methods in the `FST` class.
 
 from __future__ import annotations
 
-from ast import *
-
 from . import fst
 
-from .astutil import *
-from .astutil import TryStar
+from .asttypes import AST, ExceptHandler, Match, Pass, Slice, Try, TryStar, match_case, mod
+from .astutil import bistr
 
 from .misc import (
     NodeError, astfield,
@@ -209,7 +207,7 @@ def _reparse_raw(self: fst.FST, code: Code | None, ln: int, col: int, end_ln: in
     root = self.root
 
     if not _reparse_raw_stmtish(self, new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block header), if fails then no statement found above
-        if (mode := root.a.__class__) is not Slice and (base := mode.__bases__[0]) not in (AST, mod, excepthandler):  # first generalize a bit
+        if (mode := root.a.__class__) is not Slice and (base := mode.__bases__[0]) not in (AST, mod, ExceptHandler):  # first generalize a bit
             mode = base
 
         _reparse_raw_base(self, new_lines, ln, col, end_ln, end_col, root._lines[:],  # fallback to reparse all source

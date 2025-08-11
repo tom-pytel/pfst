@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from ast import *
 from typing import Literal
 
 from . import fst
 
-from .astutil import *
-from .astutil import AST_FIELDS
+from .astutil import (
+    AST, Dict, Compare, MatchMapping, Call, arguments, expr_context, boolop, operator, unaryop, cmpop, AST_FIELDS
+)
 
 _AST_FIELDS_NEXT: dict[tuple[type[AST], str], str | None] = dict(sum((  # next field name from AST class and current field name
     [] if not fields else

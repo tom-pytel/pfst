@@ -6,13 +6,63 @@ This module contains functions which are imported as methods in the `FST` class.
 from __future__ import annotations
 
 import re
-from ast import *
 from typing import Any, Callable, Literal, Union
 
 from . import fst
 
-from .astutil import *
-from .astutil import re_identifier, TypeAlias, TryStar, TemplateStr, is_valid_target
+from .asttypes import (
+    AST,
+    Assign,
+    AsyncFor,
+    AsyncFunctionDef,
+    AsyncWith,
+    BoolOp,
+    Call,
+    ClassDef,
+    Compare,
+    Delete,
+    Dict,
+    DictComp,
+    ExceptHandler,
+    For,
+    FunctionDef,
+    GeneratorExp,
+    Global,
+    If,
+    Import,
+    ImportFrom,
+    Interactive,
+    JoinedStr,
+    List,
+    ListComp,
+    Load,
+    Match,
+    MatchAs,
+    MatchClass,
+    MatchMapping,
+    MatchOr,
+    MatchSequence,
+    Module,
+    Name,
+    NamedExpr,
+    Nonlocal,
+    Set,
+    SetComp,
+    Slice,
+    Starred,
+    Try,
+    Tuple,
+    While,
+    With,
+    Yield,
+    YieldFrom,
+    comprehension,
+    match_case,
+    TryStar,
+    TypeAlias,
+    TemplateStr,
+)
+from .astutil import re_identifier, bistr, is_valid_target, reduce_ast, set_ctx, copy_ast
 
 from .misc import (
     PYLT11, PYGE14,

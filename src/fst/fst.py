@@ -4,15 +4,86 @@ their respective `ast` module counterparts."""
 from __future__ import annotations
 
 import builtins  # because of the unfortunate choice for the name of an Interpolation field, '.str', we have a '.str' property in FST which messes with the type annotations
-from ast import *
+from ast import iter_fields
 from ast import dump as ast_dump, unparse as ast_unparse, mod as ast_mod
 from contextlib import contextmanager
 from io import TextIOBase
 from typing import Any, Callable, Generator, Iterator, Literal, Mapping, TextIO, Union
 
-from .astutil import *
+from .asttypes import (
+    AST,
+    AsyncFor,
+    AsyncFunctionDef,
+    AsyncWith,
+    Attribute,
+    Call,
+    ClassDef,
+    Constant,
+    Dict,
+    DictComp,
+    ExceptHandler,
+    Expression,
+    For,
+    FormattedValue,
+    FunctionDef,
+    GeneratorExp,
+    If,
+    ImportFrom,
+    Interactive,
+    IsNot,
+    JoinedStr,
+    Lambda,
+    List,
+    ListComp,
+    Load,
+    Match,
+    MatchClass,
+    MatchMapping,
+    MatchSequence,
+    MatchSingleton,
+    MatchStar,
+    MatchValue,
+    Module,
+    Name,
+    NamedExpr,
+    NotIn,
+    Pass,
+    Set,
+    SetComp,
+    Slice,
+    Starred,
+    Subscript,
+    Try,
+    Tuple,
+    TypeIgnore,
+    While,
+    With,
+    alias,
+    arg,
+    arguments,
+    boolop,
+    cmpop,
+    comprehension,
+    expr,
+    expr_context,
+    keyword,
+    match_case,
+    mod,
+    operator,
+    pattern,
+    stmt,
+    unaryop,
+    withitem,
+    TryStar,
+    TypeAlias,
+    type_param,
+    TemplateStr,
+    Interpolation,
+)
+
 from .astutil import (
-    FIELDS, AST_FIELDS, OPCLS2STR, OPSTR2CLS_AUG, TypeAlias, TryStar, TemplateStr, Interpolation, type_param,
+    bistr, constant, FIELDS, AST_FIELDS, OPCLS2STR, OPSTR2CLS_AUG, WalkFail,
+    has_type_comments, compare_asts, copy_ast, last_block_header_child, syntax_ordered_children,
 )
 
 from .misc import (
@@ -723,6 +794,7 @@ class FST:
         **Examples:**
         ```py
         >>> import ast
+        >>> from ast import Assign, Slice, Constant
         >>> FST.fromast(Assign(targets=[Name(id='var')],
         ...                    value=Constant(value=123))).dump('stmt')
         0: var = 123
@@ -4173,7 +4245,7 @@ class FST:
         >>> FST('a[b:c]').slice.is_parsable()
         True
 
-        >>> is_parsable(FST('a[b:c]').slice.a)
+        >>> astutil.is_parsable(FST('a[b:c]').slice.a)
         False
 
         >>> FST('f"{a!r:<8}"').values[0].is_parsable()
@@ -4200,7 +4272,7 @@ class FST:
         >>> FST('match a:\n  case 1: pass').cases[0].is_parsable()
         True
 
-        >>> is_parsable(FST('match a:\n  case 1: pass').cases[0].a)
+        >>> astutil.is_parsable(FST('match a:\n  case 1: pass').cases[0].a)
         False
         ```
         """

@@ -67,10 +67,10 @@ a `Interpolation.value` on python >= 3.12 fine, but the other fields may or may 
 prescribed operations are not done yet.
 """
 
-import ast
-from ast import *
-from .astutil import TryStar, TypeAlias, type_param, TypeVar, ParamSpec, TypeVarTuple, TemplateStr, Interpolation  # so at least the classes exist to be isinstance()d on pythons which don't have them
-from .misc import NodeError, fstloc, astfield
-from .view import fstview
-from .fst_parse import ParseError
-from .fst import parse, unparse, dump, FST
+import ast  # noqa: F401
+from ast import *  # noqa: F403
+from .asttypes import *  # noqa: F403
+from .misc import NodeError, fstloc, astfield  # noqa: F401
+from .view import fstview  # noqa: F401
+from .fst_parse import ParseError  # noqa: F401
+from .fst import parse, unparse, dump, FST  # noqa: F401

@@ -5,13 +5,15 @@ This module contains functions which are imported as methods in the `FST` class.
 
 from __future__ import annotations
 
-from ast import *
 from typing import Literal
 
 from . import fst
 
-from .astutil import *
-from .astutil import TryStar
+from .asttypes import (
+    AsyncFor, AsyncFunctionDef, AsyncWith, ClassDef, ExceptHandler, For, FunctionDef, If, Match, Module, Try, While,
+    With, TryStar, match_case, mod,
+)
+from .astutil import copy_ast
 
 from .misc import (
     astfield, fstloc,
@@ -317,3 +319,4 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
             self._set_block_end_from_last_child(block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
         elif put_body:
             self._set_end_pos((last_child := self.last_child()).end_lineno, last_child.end_col_offset)
+

@@ -11,18 +11,62 @@ This module contains functions which are imported as methods in the `FST` class.
 from __future__ import annotations
 
 import re
-from ast import *
 from ast import parse as ast_parse, unparse as ast_unparse, fix_missing_locations as ast_fix_missing_locations
 from typing import Any, Callable, Mapping, get_args
 from unicodedata import normalize
 
 from . import fst
 
-from .astutil import *
+from .asttypes import (
+    AST,
+    Assign,
+    AugAssign,
+    BinOp,
+    BoolOp,
+    Compare,
+    Constant,
+    Del,
+    ExceptHandler,
+    Expr,
+    Expression,
+    GeneratorExp,
+    Interactive,
+    IsNot,
+    ListComp,
+    Load,
+    MatchSequence,
+    Module,
+    NotIn,
+    Pass,
+    Slice,
+    Starred,
+    Store,
+    Tuple,
+    UnaryOp,
+    alias,
+    arg,
+    arguments,
+    boolop,
+    cmpop,
+    comprehension,
+    expr,
+    keyword,
+    match_case,
+    mod,
+    operator,
+    pattern,
+    stmt,
+    unaryop,
+    withitem,
+    TryStar,
+    type_param,
+)
+
 from .astutil import (
-    pat_alnum,
+    constant, pat_alnum, bistr,
     OPSTR2CLS_UNARY, OPSTR2CLS_BIN, OPSTR2CLS_CMP, OPSTR2CLS_BOOL, OPSTR2CLS_AUG, OPCLS2STR_AUG, OPCLS2STR,
-    TryStar, type_param,
+    is_valid_identifier, is_valid_identifier_dotted, is_valid_identifier_star, is_valid_identifier_alias,
+    walk, reduce_ast,
 )
 
 from .misc import (
@@ -1067,7 +1111,7 @@ def _code_as_ExceptHandlers(code: Code, parse_params: Mapping[str, Any] = {}, *,
                 raise ParseError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}')
 
             if is_trystar:
-                code = unparse(TryStar(body=[Pass()], handlers=[code], orelse=[], finalbody=[]))
+                code = _fixing_unparse(TryStar(body=[Pass()], handlers=[code], orelse=[], finalbody=[]))
                 code = code[code.index('except'):]
             else:
                 code = _fixing_unparse(code)

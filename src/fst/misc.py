@@ -2,15 +2,24 @@
 
 import re
 import sys
-from ast import *
+from ast import parse as ast_parse
 from functools import wraps
 from math import log10
-from typing import Any, Callable, ForwardRef, Literal, NamedTuple, Union
+from typing import Callable, ForwardRef, Literal, NamedTuple, Union
 
 import fst
 
-from .astutil import *
-from .astutil import TypeAlias, TryStar, TemplateStr, Interpolation, constant
+from .asttypes import (
+    AST, AnnAssign, Assert, Assign, AsyncFor, AsyncFunctionDef, AsyncWith, Attribute, AugAssign, Await, BoolOp, Call,
+    ClassDef, Compare, Constant, Delete, Dict, DictComp, ExceptHandler, Expr, Expression, For, FormattedValue,
+    FunctionDef, GeneratorExp, Global, If, Import, ImportFrom, Interactive, JoinedStr, Lambda, List, ListComp, Match,
+    MatchAs, MatchMapping, MatchOr, MatchSequence, MatchSingleton, MatchValue, Module, Name, NamedExpr, Nonlocal, Raise,
+    Return, Set, SetComp, Starred, Subscript, Try, Tuple, UnaryOp, While, With, Yield, YieldFrom, alias, arg, arguments,
+    boolop, cmpop, comprehension, expr, expr_context, keyword, match_case, mod, operator, stmt, unaryop, withitem,
+    TypeAlias, TryStar, TemplateStr, Interpolation,
+)
+from .astutil import constant, bistr
+
 
 try:
     from typing import Self
@@ -1162,7 +1171,7 @@ def _multiline_fstr_continuation_lns(lines: list[str], ln: int, col: int, end_ln
 
         for cur_ln in range(ln + 1, end_ln + 1):
             try:
-                parse('\n'.join(ls))
+                ast_parse('\n'.join(ls))
 
             except SyntaxError:
                 lns.append(cur_ln)

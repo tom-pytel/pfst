@@ -6,15 +6,61 @@ This module contains functions which are imported as methods in the `FST` class.
 from __future__ import annotations
 
 import re
-from ast import *
+from ast import literal_eval, iter_fields, iter_child_nodes, walk
 from math import log10
 from types import EllipsisType, TracebackType
 from typing import Callable, Literal
 
 from . import fst
 
-from .astutil import *
-from .astutil import re_alnumdot_alnum, re_identifier, OPCLS2STR, Interpolation, TemplateStr
+from .asttypes import (
+    AST,
+    AsyncFunctionDef,
+    Attribute,
+    Call,
+    Compare,
+    Constant,
+    Dict,
+    ExceptHandler,
+    Expr,
+    FormattedValue,
+    FunctionDef,
+    GeneratorExp,
+    Global,
+    If,
+    IsNot,
+    JoinedStr,
+    Lambda,
+    List,
+    Load,
+    MatchMapping,
+    MatchOr,
+    MatchSequence,
+    Module,
+    Name,
+    NamedExpr,
+    NotIn,
+    Set,
+    Starred,
+    Subscript,
+    Tuple,
+    UnaryOp,
+    arguments,
+    boolop,
+    cmpop,
+    expr,
+    expr_context,
+    match_case,
+    mod,
+    operator,
+    pattern,
+    stmt,
+    unaryop,
+    TemplateStr,
+    Interpolation,
+)
+
+from .astutil import bistr, re_alnumdot_alnum, re_identifier, OPCLS2STR, last_block_header_child
 
 from .misc import (
     Self, astfield, fstloc, srcwpos, nspace, pyver,

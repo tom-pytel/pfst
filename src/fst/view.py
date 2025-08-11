@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from ast import *
 from builtins import slice
-from typing import Any, Literal
+from typing import Literal
 
-from .astutil import *
+from .astutil import AST, get_func_class_or_ass_by_name
 from .misc import Code, _fixup_one_index, _fixup_slice_indices
 from .fst import FST
 

@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from ast import *
-
 from . import fst
 
+from .asttypes import Constant, Expr, If, mod
 from .astutil import bistr
+
 from .misc import (
     fstloc,
     NAMED_SCOPE,

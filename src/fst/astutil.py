@@ -1,16 +1,138 @@
 """Standalone AST utilities."""
 
 import re
-import sys
 from array import array
-from ast import *
+from ast import iter_fields, walk
 from itertools import chain
 from keyword import iskeyword as keyword_iskeyword
 from types import  EllipsisType, NoneType
 from typing import Any, Callable, Iterable, Iterator, Literal
 from enum import IntEnum, auto
 
-from_iterable = chain.from_iterable
+from .asttypes import (
+    AST,
+    Add,
+    And,
+    AnnAssign,
+    Assert,
+    Assign,
+    AsyncFor,
+    AsyncFunctionDef,
+    AsyncWith,
+    Attribute,
+    AugAssign,
+    Await,
+    BinOp,
+    BitAnd,
+    BitOr,
+    BitXor,
+    BoolOp,
+    Break,
+    Call,
+    ClassDef,
+    Compare,
+    Constant,
+    Continue,
+    Del,
+    Delete,
+    Dict,
+    DictComp,
+    Div,
+    Eq,
+    ExceptHandler,
+    Expr,
+    Expression,
+    FloorDiv,
+    For,
+    FormattedValue,
+    FunctionDef,
+    FunctionType,
+    GeneratorExp,
+    Global,
+    Gt,
+    GtE,
+    If,
+    IfExp,
+    Import,
+    ImportFrom,
+    In,
+    Interactive,
+    Invert,
+    Is,
+    IsNot,
+    JoinedStr,
+    LShift,
+    Lambda,
+    List,
+    ListComp,
+    Load,
+    Lt,
+    LtE,
+    MatMult,
+    Match,
+    MatchAs,
+    MatchClass,
+    MatchMapping,
+    MatchOr,
+    MatchSequence,
+    MatchSingleton,
+    MatchStar,
+    MatchValue,
+    Mod,
+    Module,
+    Mult,
+    Name,
+    NamedExpr,
+    Nonlocal,
+    Not,
+    NotEq,
+    NotIn,
+    Or,
+    Pass,
+    Pow,
+    RShift,
+    Raise,
+    Return,
+    Set,
+    SetComp,
+    Slice,
+    Starred,
+    Store,
+    Sub,
+    Subscript,
+    Try,
+    Tuple,
+    TypeIgnore,
+    UAdd,
+    USub,
+    UnaryOp,
+    While,
+    With,
+    Yield,
+    YieldFrom,
+    alias,
+    arg,
+    arguments,
+    boolop,
+    cmpop,
+    comprehension,
+    expr,
+    expr_context,
+    keyword,
+    match_case,
+    operator,
+    pattern,
+    type_ignore,
+    unaryop,
+    withitem,
+    TryStar,
+    TypeAlias,
+    TypeVar,
+    ParamSpec,
+    TypeVarTuple,
+    TemplateStr,
+    Interpolation,
+)
 
 __all__ = [
     'bistr', 'constant',
@@ -22,20 +144,7 @@ __all__ = [
     'precedence_require_parens_by_type', 'precedence_require_parens',
 ]
 
-
-if sys.version_info[:2] < (3, 11):  # for isinstance() checks
-    class TryStar(AST): pass  # should we try to duplicate params? opening up possible can of descent into madness there
-
-if sys.version_info[:2] < (3, 12):
-    class TypeAlias(AST): pass
-    class type_param(AST): pass
-    class TypeVar(AST): pass
-    class ParamSpec(AST): pass
-    class TypeVarTuple(AST): pass
-
-if sys.version_info[:2] < (3, 14):
-    class TemplateStr(AST): pass
-    class Interpolation(AST): pass
+from_iterable = chain.from_iterable
 
 
 class bistr(str):

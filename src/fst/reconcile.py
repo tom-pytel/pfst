@@ -3,12 +3,12 @@ possible."""
 
 from __future__ import annotations
 
-from ast import *
+from ast import iter_fields
 from typing import Any, Literal, Mapping
 
 from . import fst
 
-from .astutil import *
+from .astutil import AST, Dict, Global, MatchMapping, Nonlocal
 from .misc import NodeError, astfield
 
 
