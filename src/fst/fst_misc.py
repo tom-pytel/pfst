@@ -2326,7 +2326,7 @@ def _offset_lns(self: fst.FST, lns: set[int] | dict[int, int], dcol_offset: int 
 
 
 def _indent_lns(self: fst.FST, indent: str | None = None, lns: set[int] | None = None, *,
-                skip: int = 1, docstr: bool | Literal['strict'] | None = None) -> set[int]:
+                skip: int = 1, docstr: bool | Literal['strict'] | None = None) -> None:
     """Indent all indentable lines specified in `lns` with `indent` and adjust node locations accordingly.
 
     **WARNING!** This does not offset parent nodes.
@@ -2339,10 +2339,10 @@ def _indent_lns(self: fst.FST, indent: str | None = None, lns: set[int] | None =
     - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
         multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
         in expected docstring positions are indentable. `None` means use default.
-
-    **Returns:**
-    - `set[int]`: `lns` passed in or otherwise set of line numbers (zero based) which are sytactically indentable.
     """
+
+    if indent == '':
+        return
 
     root = self.root
 
@@ -2351,95 +2351,194 @@ def _indent_lns(self: fst.FST, indent: str | None = None, lns: set[int] | None =
     if docstr is None:
         docstr = self.get_option('docstr')
 
-    if not ((lns := self._get_indentable_lns(skip, docstr=docstr)) if lns is None else lns) or not indent:
-        return lns
+    if not ((lns := self._get_indentable_lns(skip, docstr=docstr)) if lns is None else lns):
+        return
 
-    self._offset_lns(lns, len(indent.encode()))
-
-    lines = root._lines
+    lines       = root._lines
+    dont_offset = set()
 
     for ln in lns:
         if l := lines[ln]:  # only indent non-empty lines
             lines[ln] = bistr(indent + l)
+        else:
+            dont_offset.add(ln)
 
+    self._offset_lns(lns - dont_offset if dont_offset else lns, len(indent.encode()))
     self._reparse_docstrings(docstr)
 
-    return lns
 
-
-def _dedent_lns(self: fst.FST, indent: str | None = None, lns: set[int] | None = None, *,
-                skip: int = 1, docstr: bool | Literal['strict'] | None = None) -> set[int]:
-    """Dedent all indentable lines specified in `lns` by removing `indent` prefix and adjust node locations
+def _dedent_lns(self: fst.FST, dedent: str | None = None, lns: set[int] | None = None, *,
+                skip: int = 1, docstr: bool | Literal['strict'] | None = None) -> None:
+    """Dedent all indentable lines specified in `lns` by removing `dedent` prefix and adjust node locations
     accordingly. If cannot dedent entire amount, will dedent as much as possible.
 
     **WARNING!** This does not offset parent nodes.
 
     **Parameters:**
-    - `indent`: The indentation string to remove from the beginning of each indentable line (if possible).
+    - `dedent`: The indentation string to remove from the beginning of each indentable line (if possible).
     - `lns`: A `set` of lines to apply dedentation to. If `None` then will be gotten from
         `_get_indentable_lns(skip=skip)`.
     - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
         multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
         in expected docstring positions are indentable. `None` means use default.
     - `skip`: If not providing `lns` then this value is passed to `_get_indentable_lns()`.
+    """
 
-    **Returns:**
-    - `set[int]`: `lns` passed in or otherwise set of line numbers (zero based) which are sytactically indentable.
+    if dedent == '':
+        return
+
+    root = self.root
+
+    if dedent is None:
+        dedent = root.indent
+    if docstr is None:
+        docstr = self.get_option('docstr')
+
+    if not ((lns := self._get_indentable_lns(skip, docstr=docstr)) if lns is None else lns):
+        return
+
+    lines        = root._lines
+    ldedent      = len(dedent)
+    dont_offset  = set()
+    dcol_offsets = None
+
+    def dedented(l: str, ldedent_: int) -> None:
+        if dcol_offsets is not None:
+            dcol_offsets[ln] = -ldedent_
+
+        return bistr(l[ldedent_:])
+
+    for ln in lns:
+        if not (l := lines[ln]):  # don't offset anything on an empty line, normally nothing there but during slicing empty lines may mark start and end of slices
+            dont_offset.add(ln)
+
+        else:
+            if l.startswith(dedent) or (lempty_start := re_empty_line_start.match(l).end()) >= ldedent:  # only full dedent non-empty lines which have dedent length leading space
+                l = dedented(l, ldedent)
+
+            else:  # inconsistent dedentation, need to do line-by-line offset
+                if not dcol_offsets:
+                    dcol_offsets = {}
+
+                    for ln2 in lns:
+                        if ln2 is ln:
+                            break
+
+                        nlindent = -ldedent
+
+                        if ln2 not in dont_offset:
+                            dcol_offsets[ln2] = nlindent
+
+                l = dedented(l, lempty_start)
+
+            lines[ln] = l
+
+    if dcol_offsets is not None:
+        self._offset_lns(dcol_offsets)
+    else:
+        self._offset_lns(lns - dont_offset if dont_offset else lns, -ldedent)
+
+    self._reparse_docstrings(docstr)
+
+
+def _redent_lns(self: fst.FST, dedent: str | None = None, indent: str | None = None, lns: set[int] | None = None, *,
+                skip: int = 1, docstr: bool | Literal['strict'] | None = None) -> None:
+    """Redent all indentable lines specified in `lns` by removing `dedent` prefix then indenting by `indent` for each
+    line and adjust node locations accordingly. The operation is carried out intelligently so that a dedent will not
+    be truncated if the following indent would move it off the start of the line. It is also done in one pass so is more
+    optimal than `_dedent_lns()` followed by `_indent_lns()`. If cannot dedent entire amount even with indent added,
+    will dedent as much as possible just like `_dedent_lns()`.
+
+    **WARNING!** This does not offset parent nodes.
+
+    **Parameters:**
+    - `dedent`: The indentation string to remove from the beginning of each indentable line (if possible).
+    - `indent`: The indentation string to prefix to each indentable line.
+    - `lns`: A `set` of lines to apply dedentation to. If `None` then will be gotten from
+        `_get_indentable_lns(skip=skip)`.
+    - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
+        multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
+        in expected docstring positions are indentable. `None` means use default.
+    - `skip`: If not providing `lns` then this value is passed to `_get_indentable_lns()`.
     """
 
     root = self.root
 
+    if dedent is None:
+        dedent = root.indent
     if indent is None:
         indent = root.indent
+
+    if dedent == indent:
+        return
+    if not dedent:
+        return self._indent_lns(indent, skip=skip, docstr=docstr)
+    if not indent:
+        return self._dedent_lns(indent, skip=skip, docstr=docstr)
+
     if docstr is None:
         docstr = self.get_option('docstr')
 
-    if not ((lns := self._get_indentable_lns(skip, docstr=docstr)) if lns is None else lns) or not indent:
-        return lns
+    if not ((lns := self._get_indentable_lns(skip, docstr=docstr)) if lns is None else lns):
+        return
 
     lines        = root._lines
+    ldedent      = len(dedent)
     lindent      = len(indent)
+    dredent      = lindent - ldedent
+    dont_offset  = set()
     dcol_offsets = None
-    newlines     = []
 
-    def dedent(l: str, lindent: int) -> None:
+    def dedented(l: str, ldedent_: int) -> None:
         if dcol_offsets is not None:
-            dcol_offsets[ln] = -lindent
+            dcol_offsets[ln] = -ldedent_
 
-        return bistr(l[lindent:])
+        return bistr(l[ldedent_:])
 
-    lns_seq = list(lns)
+    def redented(l: str, lindent_: int, lempty_start: int) -> None:
+        if dcol_offsets is not None:
+            dcol_offsets[ln] = dredent
 
-    for ln in lns_seq:
-        if l := lines[ln]:  # only dedent non-empty lines
-            if l.startswith(indent) or (lempty_start := re_empty_line_start.match(l).end()) >= lindent:
-                l = dedent(l, lindent)
+        return bistr(indent[:lindent_] + l[lempty_start:])
 
-            else:
+
+    def indented(l: str) -> None:
+        if dcol_offsets is not None:
+            dcol_offsets[ln] = dredent
+
+        return bistr(indent + l[ldedent:])
+
+    for ln in lns:
+        if not (l := lines[ln]):  # don't offset anything on an empty line, normally nothing there but during slicing empty lines may mark start and end of slices
+            dont_offset.add(ln)
+
+        else:
+            if l.startswith(dedent) or (lempty_start := re_empty_line_start.match(l).end()) >= ldedent:  # only full dedent non-empty lines which have dedent length leading space
+                l = indented(l)
+            elif (lindent_ := dredent + lempty_start) >= 0:
+                l = redented(l, lindent_, lempty_start)
+
+            else:  # inconsistent dedentation, need to do line-by-line offset
                 if not dcol_offsets:
                     dcol_offsets = {}
 
-                    for ln2 in lns_seq:
+                    for ln2 in lns:
                         if ln2 is ln:
                             break
 
-                        dcol_offsets[ln2] = -lindent
+                        if ln2 not in dont_offset:
+                            dcol_offsets[ln2] = dredent
 
-                l = dedent(l, lempty_start)
+                l = dedented(l, lempty_start)
 
-        newlines.append(l)
+            lines[ln] = l
 
-    for ln, l in zip(lns_seq, newlines, strict=True):
-        lines[ln] = l
-
-    if dcol_offsets:
+    if dcol_offsets is not None:
         self._offset_lns(dcol_offsets)
     else:
-        self._offset_lns(lns, -lindent)
+        self._offset_lns(lns - dont_offset if dont_offset else lns, dredent)
 
     self._reparse_docstrings(docstr)
-
-    return lns
 
 
 @staticmethod

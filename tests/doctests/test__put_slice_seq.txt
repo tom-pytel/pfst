@@ -187,26 +187,26 @@ leading newlines
 ...  b]
 ... '''.strip()), 1, 2, new100.copy()).lines))
 '[a,'
-'NEW]'
+' NEW]'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a, b]
 ... '''.strip()), 1, 2, new100.copy()).lines))
 '[a,'
-'NEW]'
+' NEW]'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a, b, c]
 ... '''.strip()), 1, 2, new100.copy()).lines))
 '[a,'
-'NEW, c]'
+' NEW, c]'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a, b, c]
 ... '''.strip()), 1, 2, new110.copy()).lines))
 '[a,'
-'NEW,'
-'c]'
+' NEW,'
+' c]'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a,
@@ -253,15 +253,15 @@ trailing newlines
 ... [a, b, c]
 ... '''.strip()), 1, 2, new110.copy()).lines))
 '[a,'
-'NEW,'
-'c]'
+' NEW,'
+' c]'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a, b,
 ...  c]
 ... '''.strip()), 1, 2, new110.copy()).lines))
 '[a,'
-'NEW,'
+' NEW,'
 ' c]'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
@@ -270,7 +270,7 @@ trailing newlines
 ...  c]
 ... '''.strip()), 1, 2, new110.copy()).lines))
 '[a,'
-'NEW,'
+' NEW,'
 ' c]'
 
 
@@ -301,26 +301,26 @@ leading newlines
 ...  b]
 ... '''.strip()), 1, 2, new101.copy()).lines))
 '[a,'
-'NEW]'
+' NEW]'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a, b]
 ... '''.strip()), 1, 2, new101.copy()).lines))
 '[a,'
-'NEW]'
+' NEW]'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a, b, c]
 ... '''.strip()), 1, 2, new101.copy()).lines))
 '[a,'
-'NEW, c]'
+' NEW, c]'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a, b, c]
 ... '''.strip()), 1, 2, new111.copy()).lines))
 '[a,'
-'NEW,'
-'c]'
+' NEW,'
+' c]'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a,
@@ -367,15 +367,15 @@ trailing newlines
 ... [a, b, c]
 ... '''.strip()), 1, 2, new111.copy()).lines))
 '[a,'
-'NEW,'
-'c]'
+' NEW,'
+' c]'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a, b,
 ...  c]
 ... '''.strip()), 1, 2, new111.copy()).lines))
 '[a,'
-'NEW,'
+' NEW,'
 ' c]'
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
@@ -384,7 +384,7 @@ trailing newlines
 ...  c]
 ... '''.strip()), 1, 2, new111.copy()).lines))
 '[a,'
-'NEW,'
+' NEW,'
 ' c]'
 
 
@@ -511,42 +511,42 @@ replace
 ... [a, b]
 ... '''.strip()), 0, new110.copy()).lines))
 '['
-'NEW,'
-'a, b]'
+' NEW,'
+' a, b]'
 
 >>> print('\n'.join(repr(l) for l in test_insert(FST('''
 ... [a, b]
 ... '''.strip()), 1, new110.copy()).lines))
 '[a,'
-'NEW,'
-'b]'
+' NEW,'
+' b]'
 
 >>> print('\n'.join(repr(l) for l in test_insert(FST('''
 ... [a, b]
 ... '''.strip()), 2, new110.copy()).lines))
 '[a, b,'
-'NEW'
+' NEW'
 ']'
 
 >>> print('\n'.join(repr(l) for l in test_insert(FST('''
 ... [a, b]
 ... '''.strip()), 0, new111.copy()).lines))
 '['
-'NEW,'
-'a, b]'
+' NEW,'
+' a, b]'
 
 >>> print('\n'.join(repr(l) for l in test_insert(FST('''
 ... [a, b]
 ... '''.strip()), 1, new111.copy()).lines))
 '[a,'
-'NEW,'
-'b]'
+' NEW,'
+' b]'
 
 >>> print('\n'.join(repr(l) for l in test_insert(FST('''
 ... [a, b]
 ... '''.strip()), 2, new111.copy()).lines))
 '[a, b,'
-'NEW'
+' NEW'
 ']'
 
 

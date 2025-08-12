@@ -224,7 +224,7 @@ def regen_put_slice():
 
             raise
 
-        newlines.extend(f'''(r"""{dst}""", {attr!r}, {start}, {stop}, {field!r}, {options!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
+        newlines.extend(f'''(r"""{dst}""", {attr!r}, {start!r}, {stop}, {field!r}, {options!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
         newlines.extend(tdump)
         newlines.append('"""),\n')
 
@@ -2125,23 +2125,23 @@ def func():
 
         # enclose leading / traling newlines
 
-        self.assertEqual('z = (\n\nc, \nd, b)', (f := FST('z = a, b')).value.put_slice('\n\nc, \nd', 0, 1).root.src)
+        self.assertEqual('z = (\n\n    c, \n    d, b)', (f := FST('z = a, b')).value.put_slice('\n\nc, \nd', 0, 1).root.src)
         f.verify()
 
-        self.assertEqual('case [\n\nc, \nd, b]: pass', (f := FST('case a, b: pass')).pattern.put_slice('\n\nc, \nd', 0, 1).root.src)
+        self.assertEqual('case [\n\n     c, \n     d, b]: pass', (f := FST('case a, b: pass')).pattern.put_slice('\n\nc, \nd', 0, 1).root.src)
         f.verify()
 
-        self.assertEqual('case (\n\nc | \nd | b): pass', (f := FST('case a | b: pass')).pattern.put_slice('\n\nc | \nd', 0, 1).root.src)
+        self.assertEqual('case (\n\n     c | \n     d | b): pass', (f := FST('case a | b: pass')).pattern.put_slice('\n\nc | \nd', 0, 1).root.src)
         f.verify()
 
         f = FST('case a | b: pass')
         self.assertEqual('\n\n# pre\ny # line\n# post\n', (g := FST('(x |\n\n# pre\ny | # line\n# post\n z)', pattern).get_slice(1, 2, trivia=('all+', 'all'))).src)
-        self.assertEqual('case (\n\n# pre\ny | # line\n# post\nb): pass', (f := FST('case a | b: pass')).pattern.put_slice(g, 0, 1).root.src)
+        self.assertEqual('case (\n\n     # pre\n     y | # line\n     # post\n     b): pass', (f := FST('case a | b: pass')).pattern.put_slice(g, 0, 1).root.src)
         f.verify()
 
         f = FST('case a | b: pass')
         self.assertEqual('\n\n# pre\n(y | # line\n# post\n z)', (g := FST('(x |\n\n# pre\ny | # line\n# post\n z)', pattern).get_slice(1, 3, trivia=('all+', 'all'))).src)
-        self.assertEqual('case (\n\n# pre\ny | # line\n# post\n z | b): pass', (f := FST('case a | b: pass')).pattern.put_slice(g, 0, 1).root.src)
+        self.assertEqual('case (\n\n     # pre\n     y | # line\n     # post\n      z | b): pass', (f := FST('case a | b: pass')).pattern.put_slice(g, 0, 1).root.src)
         f.verify()
 
         # unparenthesized tuple joined alnum by operation
@@ -2358,33 +2358,33 @@ a | (
 
         # List (for the brackets)
 
-        self.assertEqual('[1, a,\\\nb, \\\n 2]', (f := FST('[1, 2]').put_slice('a,\\\nb,\\\n', 1, 1)).src)
+        self.assertEqual('[1, a,\\\n b, \\\n 2]', (f := FST('[1, 2]').put_slice('a,\\\nb,\\\n', 1, 1)).src)
         f.verify()
-        self.assertEqual('[1, (a,\\\nb,\\\n), 2]', (f := FST('[1, 2]').put_slice('a,\\\nb,\\\n', 1, 1, one=True)).src)
-        f.verify()
-
-        self.assertEqual('[1, a, # comment\nb, \\\n 2]', (f := FST('[1, 2]').put_slice('a, # comment\nb,\\\n', 1, 1)).src)
-        f.verify()
-        self.assertEqual('[1, (a, # comment\nb,\\\n), 2]', (f := FST('[1, 2]').put_slice('a, # comment\nb,\\\n', 1, 1, one=True)).src)
+        self.assertEqual('[1, (a,\\\n b,\\\n ), 2]', (f := FST('[1, 2]').put_slice('a,\\\nb,\\\n', 1, 1, one=True)).src)
         f.verify()
 
-        self.assertEqual('[a,\n# pre\nc, # line\n# post\nb]', (f := FST('[a, b]').put_slice('\n# pre\nc, # line\n# post\n', 1, 1)).src)
+        self.assertEqual('[1, a, # comment\n b, \\\n 2]', (f := FST('[1, 2]').put_slice('a, # comment\nb,\\\n', 1, 1)).src)
         f.verify()
-        self.assertEqual('[a, (\n# pre\nc, # line\n# post\n), b]', (f := FST('[a, b]').put_slice('\n# pre\nc, # line\n# post\n', 1, 1, one=True)).src)
+        self.assertEqual('[1, (a, # comment\n b,\\\n ), 2]', (f := FST('[1, 2]').put_slice('a, # comment\nb,\\\n', 1, 1, one=True)).src)
+        f.verify()
+
+        self.assertEqual('[a,\n # pre\n c, # line\n # post\n b]', (f := FST('[a, b]').put_slice('\n# pre\nc, # line\n# post\n', 1, 1)).src)
+        f.verify()
+        self.assertEqual('[a, (\n # pre\n c, # line\n # post\n ), b]', (f := FST('[a, b]').put_slice('\n# pre\nc, # line\n# post\n', 1, 1, one=True)).src)
         f.verify()
 
         self.assertEqual('[a, c, # line\n b]', (f := FST('[a, b]').put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1)).src)
         f.verify()
-        self.assertEqual('[a,\n# pre\n[c, # line\n], # post\nb]', (f := FST('[a, b]').put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1, one=True)).src)
+        self.assertEqual('[a,\n # pre\n [c, # line\n ], # post\n b]', (f := FST('[a, b]').put_slice('\n# pre\n[c, # line\n]# post\n', 1, 1, one=True)).src)
         f.verify()
-        self.assertEqual('[a,\n(# pre\n[c, # line\n]), # post\nb]', (f := FST('[a, b]').put_slice('\n(# pre\n[c, # line\n])# post\n', 1, 1, one=True)).src)
+        self.assertEqual('[a,\n (# pre\n [c, # line\n ]), # post\n b]', (f := FST('[a, b]').put_slice('\n(# pre\n[c, # line\n])# post\n', 1, 1, one=True)).src)
         f.verify()
-        self.assertEqual('[a, (\n# pre\n[c, # line\n]# post\n), b]', (f := FST('[a, b]').put_slice('(\n# pre\n[c, # line\n]# post\n)', 1, 1, one=True)).src)
+        self.assertEqual('[a, (\n # pre\n [c, # line\n ]# post\n ), b]', (f := FST('[a, b]').put_slice('(\n# pre\n[c, # line\n]# post\n)', 1, 1, one=True)).src)
         f.verify()
 
         # Dict
 
-        self.assertEqual('{a: a,\n# pre\nc: c, # line\n# post\nb: b}', (f := FST('{a: a, b: b}').put_slice('{\n# pre\nc: c, # line\n# post\n}', 1, 1)).src)
+        self.assertEqual('{a: a,\n # pre\n c: c, # line\n # post\n b: b}', (f := FST('{a: a, b: b}').put_slice('{\n# pre\nc: c, # line\n# post\n}', 1, 1)).src)
         f.verify()
         self.assertEqual('{a: a, c: c, # line\n b: b}', (f := FST('{a: a, b: b}').put_slice('\n# pre\n{c: c, # line\n}# post\n', 1, 1)).src)
         f.verify()

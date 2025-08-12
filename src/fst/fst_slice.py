@@ -1037,12 +1037,15 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
 
     BE WARNED! Here there be dragons!
 
+    TODO: this really needs a refactor
+
     **Parameters:**
     - `start`, `stop`: Slice parameters.
     - `fst_`: The slice being put to `self` with delimiters stripped, or `None` for delete.
     - `fst_first`: The first element of the slice `FST` being put, or `None` if delete. Must be an `fstloc` for `Dict`
         key which is `None`.
     - `fst_last`: The last element of the slice `FST` being put, or `None` if delete.
+    - `len_fst`: Number of elements in `FST` being put, or 0 if delete.
     - (`bound_ln`, `bound_col`): Start of container (just past delimiters). DIFFERENT FROM _get_slice_seq()!!!
     - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters).
     - `trivia`: Standard option on how to handle leading and trailing comments and space, `None` means global default.
@@ -1058,18 +1061,46 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
         - `0`: Remove if not aesthetically significant (present on same line as end of element), otherwise leave.
     """
 
-    lines           = self.root._lines
-    body            = getattr(self.a, field)
-    body2           = body if field2 is None else getattr(self.a, field2)
-    len_body        = len(body)
-    is_first        = not start
-    is_last         = stop == len_body
-    is_del          = fst_ is None
-    is_ins          = start == stop  # will never be true if fst_ is None
-    is_ins_ln       = False
-    last            = None  # means body[-1]
-    len_self_suffix = self.end_col - bound_end_col  # will be 1 or 0 depending on if enclosed container or unparenthesized tuple
-    self_indent     = self.get_indent()
+    lines              = self.root._lines
+    body               = getattr(self.a, field)
+    body2              = body if field2 is None else getattr(self.a, field2)
+    len_body           = len(body)
+    is_first           = not start
+    is_last            = stop                == len_body
+    is_del             = fst_ is None
+    is_ins             = start               == stop  # will never be true if fst_ is None
+    is_ins_ln          = False
+    last               = None  # means body[-1]
+    len_self_suffix    = self.end_col - bound_end_col  # will be 1 or 0 depending on if enclosed container or undelimited tuple / matchseq
+    self_indent        = self.get_indent()
+    elts_indent_cached = ...  # cached value , ... means not present
+
+    def get_indent_elts() -> str:
+        nonlocal elts_indent_cached
+
+        if elts_indent_cached is not ...:
+            return elts_indent_cached
+
+        if (elts_indent_cached := _get_element_indent(self, body, body2, start)) is not None:
+            pass  # noop
+        elif body:  # match indentation of our own first element
+            elts_indent_cached = self_indent + ' ' * (self._loc_maybe_dict_key(0, True, body).col -
+                                                      len(self_indent))
+        else:
+            elts_indent_cached = self_indent + self.root.indent  # default
+
+        return elts_indent_cached
+
+    # maybe redent fst_ elements to match self element indentation
+
+    if not is_del and len(fst_._lines) > 1:
+        if (elts_indent := get_indent_elts()) is not None:  # we only do this if we have concrete indentation for elements of self
+            ast_       = fst_.a
+            fst_indent = _get_element_indent(fst_,
+                                             getattr(ast_, fst_first.pfield.name if fst_first.is_FST else 'keys'),
+                                             getattr(ast_, fst_last.pfield.name), 0)
+
+            fst_._redent_lns(fst_indent or '', elts_indent[len(self_indent):])  # fst_._indent_lns(elts_indent[len(self_indent):], fst_._dedent_lns(fst_indent or ''))
 
     # locations
 
@@ -1095,7 +1126,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
                 if ins_ln >= ln:
                     loc_first = fstloc(ln, col, ln, col)
 
-                else:  # TODO: this part changes if we do alignment of fst_ to self element indentation
+                else:  # TODO: this part changes if we do alignment of fst_ to self element indentation?
                     if not fst_._lines[0]:  # fst_ starts new line?
                         loc_first = fstloc(ins_ln, 0, ins_ln, 0)
 
@@ -1158,7 +1189,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
 
         # newlines and indentation
 
-        if fst_starts_nl := not put_lines[0]:  # slice to put start with pure newline?
+        if not put_lines[0]:  # slice to put start with pure newline?
             if not put_col:  # start element being put to starts a new line?
                 skip = 0
 
@@ -1187,17 +1218,8 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
                         put_end_col = copy_loc.end_col
                     elif del_indent is not None:  # have indent from locs function
                         post_indent = del_indent
-                    elif (post_indent := _get_element_indent(self, body, body2, start)) is not None:  # indentation from other elements in self
-                        pass  # noop
-                    elif fst_starts_nl:  # match indentation of first fst_ element on new line
-                        post_indent = (self_indent +
-                                       put_lines[(l := fst_first.pars() if fst_first.is_FST else fst_first).ln]
-                                                [:l.col])
-                    elif body:  # match indentation of our own first element
-                        post_indent = self_indent + ' ' * (self._loc_maybe_dict_key(0, True, body).col -
-                                                           len(self_indent))
                     else:
-                        post_indent = self_indent + self.root.indent  # default
+                        post_indent = get_indent_elts()
 
             else:  # nothing (or whitespace) at end of put end line
                 if put_end_ln < bound_end_ln:  # only do this if we are not at end of container
@@ -1307,7 +1329,10 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
 
 
 def _get_element_indent(self: fst.FST, body: list[AST], body2: list[AST], start: int) -> str | None:
-    """Get first exprish element indentation found for an element which starts its own line.
+    """Get first exprish element indentation found for an element which starts its own line. The FULL indentation, not
+    the element indentation with respect to container indentation. We just return the indentation of one element instead
+    of trying to figure out which indent is used most for both performance and were-just-not-gonna-deal-with-that-crap
+    reasons.
 
     **Parameters:**
     - `start`: The index of the element to start the search with (closest to area we want to indent).
@@ -1325,7 +1350,7 @@ def _get_element_indent(self: fst.FST, body: list[AST], body2: list[AST], start:
 
             for i in range(start - 2, -1, -1):
                 if loc.ln != (prev_loc := body[i].f.pars()).end_ln:  # only consider elements which start on a different line than the previous element ends on
-                    if re_empty_line.match(l := lines[loc.ln], 0, loc.col):
+                    if re_empty_line.match(l := lines[loc.ln], 0, loc.col):  # need to check regardless of different line because there may be stray separator
                         return l[:loc.col]
 
                 loc = prev_loc
@@ -1337,7 +1362,9 @@ def _get_element_indent(self: fst.FST, body: list[AST], body2: list[AST], start:
             loc = start_prev_loc
 
         else:
-            loc = fstloc(-1, -1, -1, -1)  # dummy
+            # loc = fstloc(-1, -1, -1, -1)  # dummy, will force pattern check for element 0 because there could be anything before it
+            ln, col, _, _ = self.loc
+            loc           = fstloc(-1, -1, ln, col)  # so we don't get indent of special first element if on same line as self starts (probably unindented intentionally)
 
         for i in range(start, len(body)):  # now search forward
             prev_loc = loc
@@ -1358,12 +1385,18 @@ def _get_element_indent(self: fst.FST, body: list[AST], body2: list[AST], start:
                     return l[:loc.col]
 
         else:
-            loc = fstloc(-1, -1, -1, -1)  # dummy
+            # loc = fstloc(-1, -1, -1, -1)  # dummy, will force pattern check for element 0 because there could be anything before it
+            ln, col, _, _ = self.loc
+            loc           = fstloc(-1, -1, ln, col)  # so we don't get indent of special first element if on same line as self starts (probably unindented intentionally)
 
         for i in range(start, len(body)):  # now search forward
-            if (loc := self._loc_maybe_dict_key(i, True, body)).ln != body2[i - 1].f.pars().end_ln:  # only consider elements which start on a different line than the previous element ends on
+            prev_loc = loc
+
+            if (loc := self._loc_maybe_dict_key(i, True, body)).ln != prev_loc.end_ln:  # only consider elements which start on a different line than the previous element ends on
                 if re_empty_line.match(l := lines[loc.ln], 0, loc.col):
                     return l[:loc.col]
+
+            prev_loc = body2[i].f.pars()
 
     return None
 

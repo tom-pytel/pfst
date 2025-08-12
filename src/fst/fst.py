@@ -4997,6 +4997,7 @@ class FST:
         _offset_lns,
         _indent_lns,
         _dedent_lns,
+        _redent_lns,
         _get_trivia_params,
     )
 

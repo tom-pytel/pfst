@@ -2889,11 +2889,11 @@ c, # c
 
         f = FST('a[:, b]')
         f.slice.put_slice('[\n"foo"\n]', 1, 2, 'elts')
-        self.assertEqual('a[:,\n"foo"\n]', f.src)
+        self.assertEqual('a[:,\n  "foo"\n]', f.src)
 
         f = FST('a = b, c')
         f.value.put_slice('[\n"foo"\n]', 1, 2, 'elts')
-        self.assertEqual('a = (b,\n"foo"\n)', f.src)
+        self.assertEqual('a = (b,\n    "foo"\n)', f.src)
 
         f = FST('a = b, c')
         f.value.put_slice('["foo"   ]', 1, 2, 'elts')
@@ -2901,7 +2901,7 @@ c, # c
 
         f = FST('for a, b in c: pass')
         f.target.put_slice('[\nz\n]', 1, 2, 'elts')
-        self.assertEqual('for (a,\nz\n) in c: pass', f.src)
+        self.assertEqual('for (a,\n    z\n) in c: pass', f.src)
 
         f = FST('for a, b in c: pass')
         f.target.put_slice('[z   ]', 1, 2, 'elts')

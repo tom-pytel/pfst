@@ -55,7 +55,7 @@ where = ["src"]
 version = { file = "VERSION" }
 
 [tool.ruff]
-line-length = 12000  # would be 120 but ruff includes comments in that
+line-length = 12000  # would be 120 but ruff includes comments in that and there is no way to turn that off
 exclude = ["tests", "src/fst/fuzz.py", "make_docs.py"]
 
 [tool.ruff.format]

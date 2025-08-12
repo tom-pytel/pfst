@@ -1133,29 +1133,34 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2'
 
         ast = parse(src)
-        lns = ast.f._indent_lns('  ')
+        lns = ast.f._get_indentable_lns(1)
+        ast.f._indent_lns('  ', lns)
         self.assertEqual({1, 2, 5, 6, 7, 8, 9}, lns)
         self.assertEqual('class cls:\n   if True:\n    i = """\nj\n"""\n    k = 3\n   else:\n    j \\\n  =\\\n   2', ast.f.src)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].f._indent_lns('  ')
+        lns = ast.body[0].body[0].f._get_indentable_lns(1)
+        ast.body[0].body[0].f._indent_lns('  ', lns)
         self.assertEqual({2, 5, 6, 7, 8, 9}, lns)
         self.assertEqual('class cls:\n if True:\n    i = """\nj\n"""\n    k = 3\n   else:\n    j \\\n  =\\\n   2', ast.f.src)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].body[0].f._indent_lns('  ')
+        lns = ast.body[0].body[0].body[0].f._get_indentable_lns(1)
+        ast.body[0].body[0].body[0].f._indent_lns('  ', lns)
         self.assertEqual(set(), lns)
         self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2', ast.f.src)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].orelse[0].f._indent_lns('  ')
+        lns = ast.body[0].body[0].orelse[0].f._get_indentable_lns(1)
+        ast.body[0].body[0].orelse[0].f._indent_lns('  ', lns)
         self.assertEqual({8, 9}, lns)
         self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n  =\\\n   2', ast.f.src)
 
         src = '@decorator\nclass cls:\n pass'
 
         ast = parse(src)
-        lns = ast.f._indent_lns('  ')
+        lns = ast.f._get_indentable_lns(1)
+        ast.f._indent_lns('  ', lns)
         self.assertEqual({1, 2}, lns)
         self.assertEqual('@decorator\n  class cls:\n   pass', ast.f.src)
 
@@ -1163,29 +1168,34 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2'
 
         ast = parse(src)
-        lns = ast.f._dedent_lns(' ')
+        lns = ast.f._get_indentable_lns(1)
+        ast.f._dedent_lns(' ', lns)
         self.assertEqual({1, 2, 5, 6, 7, 8, 9}, lns)
         self.assertEqual('class cls:\nif True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.src)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].f._dedent_lns(' ')
+        lns = ast.body[0].body[0].f._get_indentable_lns(1)
+        ast.body[0].body[0].f._dedent_lns(' ', lns)
         self.assertEqual({2, 5, 6, 7, 8, 9}, lns)
         self.assertEqual('class cls:\n if True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.src)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].body[0].f._dedent_lns(' ')
+        lns = ast.body[0].body[0].body[0].f._get_indentable_lns(1)
+        ast.body[0].body[0].body[0].f._dedent_lns(' ', lns)
         self.assertEqual(set(), lns)
         self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2', ast.f.src)
 
         ast = parse(src)
-        lns = ast.body[0].body[0].orelse[0].f._dedent_lns(' ')
+        lns = ast.body[0].body[0].orelse[0].f._get_indentable_lns(1)
+        ast.body[0].body[0].orelse[0].f._dedent_lns(' ', lns)
         self.assertEqual({8, 9}, lns)
         self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n2', ast.f.src)
 
         src = '@decorator\nclass cls:\n pass'
 
         ast = parse(src)
-        lns = ast.body[0].body[0].f._dedent_lns(' ')
+        lns = ast.body[0].body[0].f._get_indentable_lns(1)
+        ast.body[0].body[0].f._dedent_lns(' ', lns)
         self.assertEqual(set(), lns)
         self.assertEqual('@decorator\nclass cls:\n pass', ast.f.src)
 
@@ -1193,6 +1203,75 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         # lns = ast.body[0].body[0].f._dedent_lns(' ', skip=0)
         # self.assertEqual({2}, lns)
         # self.assertEqual('@decorator\nclass cls:\npass', ast.f.src)
+
+    def test__redent_lns(self):
+        f = FST('''
+[
+a,
+ b,
+  c,
+   d,
+    e,
+     f,
+      g,
+
+a,
+ b,
+  c,
+   d,
+    e,
+     f,
+      g,
+]
+            '''.strip())
+        f._redent_lns('    ', '012')
+        self.assertEqual('''
+[
+a,
+b,
+0c,
+01d,
+012e,
+012 f,
+012  g,
+
+a,
+b,
+0c,
+01d,
+012e,
+012 f,
+012  g,
+]
+            '''.strip(), f.src)
+        self.assertEqual((0, 0, 16, 1), f.loc)
+        self.assertEqual((1, 0, 1, 1), f.elts[0].loc)
+        self.assertEqual((2, 0, 2, 1), f.elts[1].loc)
+        self.assertEqual((3, 1, 3, 2), f.elts[2].loc)
+        self.assertEqual((4, 2, 4, 3), f.elts[3].loc)
+        self.assertEqual((5, 3, 5, 4), f.elts[4].loc)
+        self.assertEqual((6, 4, 6, 5), f.elts[5].loc)
+        self.assertEqual((7, 5, 7, 6), f.elts[6].loc)
+        self.assertEqual((9, 0, 9, 1), f.elts[7].loc)
+        self.assertEqual((10, 0, 10, 1), f.elts[8].loc)
+        self.assertEqual((11, 1, 11, 2), f.elts[9].loc)
+        self.assertEqual((12, 2, 12, 3), f.elts[10].loc)
+        self.assertEqual((13, 3, 13, 4), f.elts[11].loc)
+        self.assertEqual((14, 4, 14, 5), f.elts[12].loc)
+        self.assertEqual((15, 5, 15, 6), f.elts[13].loc)
+
+        f = FST('''
+    "OFFENDING RULE", self.ex.rule,
+''')
+        f.a.lineno = 1
+        f.a.col_offset = f.a.end_col_offset = 0
+        f.a.end_lineno = 3
+        f._redent_lns('    ', ' ')
+        self.assertEqual((0, 0, 2, 0), f.loc)
+        self.assertEqual((1, 1, 1, 17), f.elts[0].loc)
+        self.assertEqual((1, 19, 1, 31), f.elts[1].loc)
+        self.assertEqual((1, 19, 1, 26), f.elts[1].value.loc)
+        self.assertEqual((1, 19, 1, 23), f.elts[1].value.value.loc)
 
 
 if __name__ == '__main__':

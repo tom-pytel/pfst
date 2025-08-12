@@ -4296,7 +4296,7 @@ match a:
         m = (o := FST('[1]')).mark()
         o.a.elts.extend(FST('[2,#2\n3,#3\n4,#4\n]').a.elts)
         f = o.reconcile(m)
-        self.assertEqual('[1, 2,#2\n3,#3\n4,#4\n]', f.src)
+        self.assertEqual('[1, 2,#2\n 3,#3\n 4,#4\n]', f.src)
         f.verify()
 
         m = (o := FST('{a: b, **c}')).mark()
@@ -4343,20 +4343,20 @@ match a:
         m = (o := FST('[\n1, # 1\n2, # 2\n]')).mark()
         o.a = List(elts=[o.a.elts[1], o.a.elts[0]])
         f = o.reconcile(m)
-        self.assertEqual('[\n2, # 2\n1, # 1\n]', f.src)
+        self.assertEqual('[\n 2, # 2\n 1, # 1\n]', f.src)
         f.verify()
 
         m = (o := FST('[1,\n# 1and2\n2, 3,\n# 3and4\n4]')).mark()
         o.a = List(elts=[o.a.elts[2], o.a.elts[3], o.a.elts[0], o.a.elts[1]])
         f = o.reconcile(m)
-        self.assertEqual('[3,\n# 3and4\n4, 1,\n# 1and2\n2]', f.src)
+        self.assertEqual('[3,\n # 3and4\n 4, 1,\n # 1and2\n 2]', f.src)
         f.verify()
 
         m = (o := FST('[1,#1\n]')).mark()
         o.a = List(elts=[o.a.elts[0]])
         o.a.elts.extend(FST('[2,#2\n3,#3\n4,#4\n]').a.elts)
         f = o.reconcile(m)
-        self.assertEqual('[1, #1\n 2,#2\n3,#3\n4,#4\n]', f.src)
+        self.assertEqual('[1, #1\n 2,#2\n 3,#3\n 4,#4\n]', f.src)
         f.verify()
 
         m = (o := FST('{a: b, **c}')).mark()
@@ -4590,7 +4590,7 @@ if 1:
         a.elts[0].elts[0].elts[0].elts[0].elts[0] = List(elts=[a.elts[0].elts[0].elts[0].elts[0].elts[0].elts[0]])
         a.elts[0].elts[0].elts[0].elts[0].elts[0].elts[0].elts[0] = List(elts=[a.elts[0].elts[0].elts[0].elts[0].elts[0].elts[0].elts[0].elts[0]])
         f = o.reconcile(m)
-        self.assertEqual('[\n[\n[\n[\n[\n[\n[\n[\nx,#0\n],#1\n1\n],#2\n],#3\n3\n],#4\n],#5\n5\n],#6\n],#7\n7\n]', f.src)
+        self.assertEqual('[\n[\n [\n[\n [\n[\n [\n[\n x,#0\n],#1\n1\n],#2\n],#3\n3\n],#4\n],#5\n5\n],#6\n],#7\n7\n]', f.src)
         f.verify()
 
         a = (o := FST('[\n[\n[\n[\n[\n[\n[\n[\nx,#0\n0\n],#1\n1\n],#2\n2\n],#3\n3\n],#4\n4\n],#5\n5\n],#6\n6\n],#7\n7\n]')).a
@@ -4600,7 +4600,7 @@ if 1:
         a.elts[0].elts[0].elts[0].elts[0] = List(elts=[a.elts[0].elts[0].elts[0].elts[0].elts[0]])
         a.elts[0].elts[0].elts[0].elts[0].elts[0].elts[0] = List(elts=[a.elts[0].elts[0].elts[0].elts[0].elts[0].elts[0].elts[0]])
         f = o.reconcile(m)
-        self.assertEqual('[\n[\n[\n[\n[\n[\n[\n[\nx,#0\n0\n],#1\n],#2\n2\n],#3\n],#4\n4\n],#5\n],#6\n6\n],#7\n]', f.src)
+        self.assertEqual('[\n [\n[\n [\n[\n [\n[\n [\nx,#0\n0\n],#1\n],#2\n2\n],#3\n],#4\n4\n],#5\n],#6\n6\n],#7\n]', f.src)
         f.verify()
 
         a = (o := FST('f(#0\ng(#1\nh(#2\ni(#3\n))))')).a
