@@ -664,7 +664,7 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
     """
 
     if ast1.__class__ is not ast2.__class__:
-        raise WalkFail(f"top level nodes differ in '{ast1.__class__.__qualname__}' vs. '{ast1.__class__.__qualname__}'")
+        raise WalkFail(f"top level nodes differ in '{ast1.__class__.__qualname__}' vs. '{ast2.__class__.__qualname__}'")
 
     if skip1 is None:
         skip1 = ()

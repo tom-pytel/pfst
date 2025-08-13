@@ -462,7 +462,7 @@ def _parse_Interactive(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 @staticmethod
 def _parse_stmts(src: str, parse_params: Mapping[str, Any] = {}) -> AST:  # same as _parse_Module() but I want the IDE context coloring
-    """Parse one or more `stmt`s and return them in a `Module` `body` (just `ast.parse()` basically)."""
+    """Parse zero or more `stmt`s and return them in a `Module` `body` (just `ast.parse()` basically)."""
 
     return ast_parse(src, **parse_params)
 
@@ -471,7 +471,7 @@ def _parse_stmts(src: str, parse_params: Mapping[str, Any] = {}) -> AST:  # same
 def _parse_stmt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse exactly one `stmt` and return as itself."""
 
-    mod = _parse_stmts(src, parse_params)
+    mod = ast_parse(src, **parse_params)
 
     if len(body := mod.body) != 1:
         raise ParseError('expecting single stmt')
@@ -489,11 +489,7 @@ def _parse_ExceptHandlers(src: str, parse_params: Mapping[str, Any] = {}) -> AST
         raise
 
     except SyntaxError:
-        lines = src.split('\n')  # ugly way to check for IndentationError, TODO: do this clean and quicker with a regex
-
-        if ((firstsrc := _next_src(lines, 0, 0, len(lines) - 1, len(lines[-1]))) and
-            firstsrc.col and _re_except.match(firstsrc.src)
-        ):
+        if (m := _re_first_src.search(src)) and m.group(1):
             raise IndentationError('unexpected indent') from None
 
         try:
@@ -599,8 +595,12 @@ def _parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         ast = _ast_parse1(f'(\n{src}\n)', parse_params).value  # has newlines or indentation
 
     except SyntaxError:
-        elts = _ast_parse1(f'(\n{src}\n,)', parse_params).value.elts  # Starred expression with newlines or indentation
-        ast  = elts[0]
+        try:
+            elts = _ast_parse1(f'(\n{src}\n,)', parse_params).value.elts  # Starred expression with newlines or indentation
+        except SyntaxError:
+            raise SyntaxError('invalid expression') from None
+
+        ast = elts[0]
 
         assert isinstance(ast, Starred) and len(elts) == 1
 
@@ -650,16 +650,19 @@ def _parse_expr_slice(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         ast = _ast_parse1(f'a[\n{src}\n]', parse_params).value.slice
 
     except SyntaxError:  # maybe 'yield', also could be unparenthesized 'tuple' containing 'Starred' on py 3.10
-        ast = _ast_parse1(f'a[(\n{src}\n)]', parse_params).value.slice
+        try:
+            ast = _ast_parse1(f'a[(\n{src}\n)]', parse_params).value.slice
+        except SyntaxError:
+            raise SyntaxError('invalid slice expression') from None
 
         if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
-            raise SyntaxError('expecting slice expression, got unparenthesized GeneratorExp')
+            raise SyntaxError('expecting slice expression, got unparenthesized GeneratorExp') from None
 
         if isinstance(ast, Tuple):  # only py 3.10 because otherwise the parse above would have gotten it
             if ast.elts:
-                raise SyntaxError('cannot have unparenthesized tuple containing Starred in slice')
+                raise SyntaxError('cannot have unparenthesized tuple containing Starred in slice') from None
 
-            raise SyntaxError('expecting slice expression')
+            raise SyntaxError('expecting slice expression') from None
 
     return _offset_linenos(ast, -1) # _offset_linenos(_validate_indent(src, ast), -1)
 
@@ -698,8 +701,12 @@ def _parse_expr_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     try:
         ast = _parse_expr_slice(src, parse_params)
+
     except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11  # except IndentationError: raise  # before if checking that
-        ast = _parse_expr_callarg(src, parse_params)  # expr_callarg instead of expr because py 3.10 won't pick up `*not a` in a slice above
+        try:
+            ast = _parse_expr_callarg(src, parse_params)  # expr_callarg instead of expr because py 3.10 won't pick up `*not a` in a slice above
+        except SyntaxError:
+            raise SyntaxError('invalid expression (all types)') from None
 
     else:
         if (isinstance(ast, Tuple) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for '*starred' acting as '*starred,'
@@ -720,7 +727,11 @@ def _parse_Tuple(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         from_slice = True
 
     except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11  # except IndentationError: raise  # before if checking that
-        ast        = _parse_expr(src, parse_params)
+        try:
+            ast = _parse_expr(src, parse_params)
+        except SyntaxError:
+            raise SyntaxError('invalid tuple') from None
+
         from_slice = False
 
     if not isinstance(ast, Tuple):
@@ -851,7 +862,10 @@ def _parse_arg(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         args = _ast_parse1(f'def f(\n{src}\n): pass', parse_params).args
 
     except SyntaxError:  # may be '*vararg: *starred'  # except IndentationError: raise  # before if checking that
-        args = _ast_parse1(f'def f(*\n{src}\n): pass', parse_params).args
+        try:
+            args = _ast_parse1(f'def f(*\n{src}\n): pass', parse_params).args
+        except SyntaxError:
+            raise SyntaxError('invalid arg') from None
 
         if args.posonlyargs or args.args or args.kwonlyargs or args.defaults or args.kw_defaults or args.kwarg:
             ast = None
@@ -965,17 +979,20 @@ def _parse_pattern(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             ast = _ast_parse1_case(f'match _:\n case (\\\n{src}\n): pass', parse_params).pattern
 
         except SyntaxError:  # now just the case of a lone MatchStar
-            patterns = _ast_parse1_case(f'match _:\n case [\\\n{src}\n]: pass', parse_params).pattern.patterns
+            try:
+                patterns = _ast_parse1_case(f'match _:\n case [\\\n{src}\n]: pass', parse_params).pattern.patterns
+            except SyntaxError:
+                raise SyntaxError('invalid pattern') from None
 
             if len(patterns) != 1:
-                raise ParseError('expecting single pattern')
+                raise ParseError('expecting single pattern') from None
 
             ast = patterns[0]
 
         else:
             if ast.lineno < 3 and isinstance(ast, MatchSequence):
                 if not (patterns := ast.patterns):
-                    raise SyntaxError('empty pattern')
+                    raise SyntaxError('empty pattern') from None
 
                 ast.lineno         = 3  # remove our delimiters from location
                 ast.col_offset     = 0
@@ -1522,7 +1539,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     expr:                _parse_expr,
     Starred:             _parse_expr_callarg,  # because could have form '*a or b' and we want to parse any form of Starred here
     Slice:               _parse_expr_slice,    # because otherwise would be _parse_expr which doesn't do slice by default, parses '*a' to '*a,' on py 3.11+
-    Tuple:               _parse_Tuple,         # because could have slice in it and again we are parsing all forms
+    Tuple:               _parse_Tuple,         # because could have slice in it and we are parsing all forms including '*not a'
     boolop:              _parse_boolop,
     operator:            _parse_operator,
     unaryop:             _parse_unaryop,
