@@ -93,7 +93,7 @@ from .misc import (
     NodeError, astfield, fstloc, fstlocns, nspace,
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Self, Code,
-    _next_find, _next_pars, _prev_pars,
+    _next_src, _next_find, _next_pars, _prev_pars,
     _swizzle_getput_params, _fixup_field_body, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
 )
 
@@ -111,23 +111,23 @@ _DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_
 _DEFAULT_INDENT       = '    '
 
 _OPTIONS = {
-    'pars':          'auto', # True | False | 'auto'
-    'raw':           False,  # True | False | 'auto'
-    'trivia':        True,   # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line'), True means ('block', 'line')
-    'elif_':         True,   # True | False
-    'docstr':        True,   # True | False | 'strict'
-    'pars_walrus':   False,  # True | False
-    'set_get':       True,   # True | False | 'star' | 'call' | 'tuple'
-    'set_put':       True,   # True | False | 'star' | 'call' | 'both'
-    'set_del':       True,   # True | False | 'star' | 'call'
-    'matchor_get':   True,   # True | False | 'strict'
-    'matchor_put':   True,   # True | False | 'strict'
-    'matchor_del':   True,   # True | False | 'strict'
-    'pep8space':     True,   # True | False | 1
-    'precomms':      True,   # True | False | 'all'
-    'postcomms':     True,   # True | False | 'all' | 'block'
-    'prespace':      False,  # True | False | int
-    'postspace':     False,  # True | False | int
+    'pars':        'auto', # True | False | 'auto'
+    'raw':         False,  # True | False | 'auto'
+    'trivia':      True,   # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line'), True means ('block', 'line')
+    'elif_':       True,   # True | False
+    'docstr':      True,   # True | False | 'strict'
+    'pars_walrus': False,  # True | False
+    'set_get':     True,   # True | False | 'star' | 'call' | 'tuple'
+    'set_put':     True,   # True | False | 'star' | 'call' | 'both'
+    'set_del':     True,   # True | False | 'star' | 'call'
+    'matchor_get': True,   # True | False | 'strict'
+    'matchor_put': True,   # True | False | 'strict'
+    'matchor_del': True,   # True | False | 'strict'
+    'pep8space':   True,   # True | False | 1
+    'precomms':    True,   # True | False | 'all'
+    'postcomms':   True,   # True | False | 'all' | 'block'
+    'prespace':    False,  # True | False | int
+    'postspace':   False,  # True | False | int
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -1235,8 +1235,9 @@ class FST:
 
         **Parameters:**
         - `mode`: Parse mode to use, otherwise if `None` then use the top level AST node type for the mode. Depending on
-            how this is set will determine whether the verification is checking if is parsable by python (`'exec'` for
-            example), or if the node itself is just in a valid state (where `None` is good). See `fst.misc.Mode`.
+            how this is set will determine whether the verification is checking if is parsable by python (`'exec'` or
+            `'strict'` for example), or if the node itself is just in a valid state (where `None` is good). See
+            `fst.misc.Mode`.
         - `reparse`: Whether to reparse the source and compare ASTs (including location). Otherwise the check is limited
             to a structure check that all children have `FST` nodes which are all liked correctly to their parents.
             `reparse=True` only allowed on root node.
@@ -4058,7 +4059,7 @@ class FST:
         mode. Returns a mode which is guaranteed to reparse this assumed-valid element to an exact copy of itself. This
         mode is not guaranteed to be the same as was used to create the `FST`, just guaranteed to be able to recreate
         it. Mostly it just returns the `AST` type, but in cases where that won't parse to this `FST` it will return
-        a string mode.
+        a string mode. This is just an early-out interrogate function, doesn't verify that everything is correct.
 
         **Parameters:**
         - `raise_`: Whether to raise an exception on failure or return `None`.
@@ -4085,29 +4086,27 @@ class FST:
         ast = self.a
 
         try:
-            if isinstance(ast, Module):  # ExceptHandlers and match_cases
-                stmts = excepts = cases = 0
+            if isinstance(ast, Module):  # maybe ExceptHandlers and match_cases
+                if not (body := ast.body) or isinstance(b0 := body[0], stmt):
+                    return Module
+                elif isinstance(b0, ExceptHandler):
+                    return 'ExceptHandlers'
+                elif isinstance(b0, match_case):
+                    return 'match_cases'
 
-                for a in ast.body:
-                    if isinstance(a, ExceptHandler):
-                        excepts += 1
-                    elif isinstance(a, match_case):
-                        cases += 1
-                    else:
-                        stmts += 1
+                raise NodeError('invalid Module')
 
-                if bool(excepts) + bool(cases) + bool(stmts) > 1:
-                    raise NodeError('invalid Module')
+            if isinstance(ast, Tuple) and (elts := ast.elts):
+                if isinstance(e0 := elts[0], Starred):
+                    if len(elts) == 1:
+                        _, _, ln, col         = e0.f.loc
+                        _, _, end_ln, end_col = self.loc
 
-                return 'ExceptHandlers' if excepts else 'match_cases' if cases else Module
+                        if not _next_find(self.root.lines, ln, col, end_ln, end_col, ','):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
+                            return 'expr_slice'
 
-            if isinstance(ast, Tuple):
-                if len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred):
-                    _, _, ln, col         = e0.f.loc
-                    _, _, end_ln, end_col = self.loc
-
-                    if not _next_find(self.root.lines, ln, col, end_ln, end_col, ','):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
-                        return 'expr_slice'
+                elif isinstance(e0, type_param):
+                    return 'type_params'
 
             return ast.__class__  # otherwise regular parse by AST type is valid
 
@@ -4707,6 +4706,41 @@ class FST:
 
         return self._is_delimited_seq() if isinstance(self.a, Tuple) else None
 
+    def is_except_star(self) -> bool | None:
+        """Whether `self` is an `except*` `ExceptHandler` or a normal `ExceptHandler`, or not and `ExceptHandler` at
+        all.
+
+        **Returns:**
+        - `True` if is `except*` `ExceptHandler`, `False` if is normal `ExceptHandler`, `None` if is not `ExceptHandler`
+        at all.
+
+        **Examples:**
+        ```py
+        >>> import sys
+
+        >>> if sys.version_info[:2] >= (3, 11):
+        ...     print(FST('try: pass\\nexcept* Exception: pass').handlers[0].is_except_star())
+        ... else:
+        ...     print(True)
+        True
+
+        >>> if sys.version_info[:2] >= (3, 11):
+        ...     print(FST('try: pass\\nexcept Exception: pass').handlers[0].is_except_star())
+        ... else:
+        ...     print(False)
+        False
+
+        >>> print(FST('i = 1').is_except_star())
+        None
+        """
+
+        if not isinstance(self.a, ExceptHandler):
+            return None
+
+        ln, col, end_ln, end_col = self.loc
+
+        return _next_src(self.root.lines, ln, col + 6, end_ln, end_col).src.startswith('*')  # something must be there
+
     def is_empty_set_call(self) -> bool:
         """Whether `self` is an empty `set()` call.
 
@@ -4958,6 +4992,9 @@ class FST:
         _loc_call_pars,
         _loc_subscript_brackets,
         _loc_matchcls_pars,
+        _loc_funcdef_type_params_brackets,
+        _loc_classdef_type_params_brackets,
+        _loc_typealias_type_params_brackets,
         _loc_global_nonlocal_names,
         _loc_maybe_dict_key,
         _is_arguments_empty,
@@ -5011,15 +5048,15 @@ class FST:
         _parse_Interactive,
         _parse_stmts,
         _parse_stmt,
-        _parse_ExceptHandlers,
         _parse_ExceptHandler,
-        _parse_match_cases,
+        _parse_ExceptHandlers,
         _parse_match_case,
+        _parse_match_cases,
         _parse_expr,
+        _parse_expr_all,
         _parse_expr_callarg,
         _parse_expr_slice,
         _parse_expr_sliceelt,
-        _parse_expr_all,
         _parse_Tuple,
         _parse_boolop,
         _parse_operator,
@@ -5038,14 +5075,17 @@ class FST:
         _parse_withitem,
         _parse_pattern,
         _parse_type_param,
+        _parse_type_params,
         _code_as_all,
         _code_as_stmts,
         _code_as_ExceptHandlers,
         _code_as_match_cases,
         _code_as_expr,
+        _code_as_expr_all,
         _code_as_expr_callarg,
         _code_as_expr_slice,
         _code_as_expr_sliceelt,
+        _code_as_Tuple,
         _code_as_boolop,
         _code_as_binop,
         _code_as_augop,
@@ -5062,6 +5102,7 @@ class FST:
         _code_as_withitem,
         _code_as_pattern,
         _code_as_type_param,
+        _code_as_type_params,
         _code_as_identifier,
         _code_as_identifier_dotted,
         _code_as_identifier_star,

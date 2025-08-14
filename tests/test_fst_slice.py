@@ -7,7 +7,7 @@ import unittest
 
 from fst import *
 
-from fst.misc import PYLT11, PYLT12, PYGE14
+from fst.misc import PYVER, PYLT11, PYLT12, PYGE11, PYGE12, PYGE14
 
 from data_other import (
     GET_SLICE_EXPRISH_DATA, GET_SLICE_STMTISH_DATA,
@@ -25,19 +25,22 @@ def read(fnm):
 
 
 def regen_get_slice_seq():
+    ver      = PYVER[1]
+    fnm      = os.path.join(os.path.dirname(sys.argv[0]), 'data_other.py')
     newlines = []
-
-    fnm = os.path.join(os.path.dirname(sys.argv[0]), 'data_other.py')
 
     with open(fnm) as f:
         lines = f.read().split('\n')
 
     for name in ('GET_SLICE_EXPRISH_DATA',):
-        for i, (src, elt, start, stop, options, *_) in enumerate(globals()[name]):
+        for i, (src, elt, start, stop, field, options, *_) in enumerate(globals()[name]):
+            if options.get('_ver', 0) > ver:
+                continue
+
             try:
                 t     = parse(src)
                 f     = eval(f't.{elt}', {'t': t}).f
-                s     = f.get_slice(start, stop, cut=True, **options)
+                s     = f.get_slice(start, stop, field, cut=True, **options)
                 tsrc  = t.f.src
                 ssrc  = s.src
                 tdump = t.f.dump(out=list)
@@ -50,7 +53,7 @@ def regen_get_slice_seq():
                     t.f.verify(raise_=True)
                     s.verify(raise_=True)
 
-                newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {options}, r"""{tsrc}""", r"""{ssrc}""", r"""'''.split('\n'))
+                newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {field!r}, {options}, r"""{tsrc}""", r"""{ssrc}""", r"""'''.split('\n'))
                 newlines.extend(tdump)
                 newlines.append('""", r"""')
                 newlines.extend(sdump)
@@ -1550,12 +1553,17 @@ def func():
         self.assertEqual('{1: a, 2: b}', f.src)
 
     def test_get_slice_seq_copy(self):
-        for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_EXPRISH_DATA):
+        ver = PYVER[1]
+
+        for i, (src, elt, start, stop, field, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_EXPRISH_DATA):
+            if options.get('_ver', 0) > ver:
+                continue
+
             t = parse(src)
             f = eval(f't.{elt}', {'t': t}).f
 
             try:
-                s     = f.get_slice(start, stop, cut=False, **options)
+                s     = f.get_slice(start, stop, field, cut=False, **options)
                 tsrc  = t.f.src
                 ssrc  = s.src
                 sdump = s.dump(out=list)
@@ -1574,15 +1582,19 @@ def func():
                 raise
 
     def test_get_slice_seq_cut(self):
-        for i, (src, elt, start, stop, options, src_cut, slice_copy, src_cut_dump, slice_dump) in enumerate(GET_SLICE_EXPRISH_DATA):
+        ver = PYVER[1]
+
+        for i, (src, elt, start, stop, field, options, src_cut, slice_copy, src_cut_dump, slice_dump) in enumerate(GET_SLICE_EXPRISH_DATA):
+            if options.get('_ver', 0) > ver:
+                continue
+
             t = parse(src)
             f = eval(f't.{elt}', {'t': t}).f
 
             try:
-                s     = f.get_slice(start, stop, cut=True, **options)
+                s     = f.get_slice(start, stop, field, cut=True, **options)
                 tsrc  = t.f.src
                 ssrc  = s.src
-                t.f._touchall()
                 tdump = t.f.dump(out=list)
                 sdump = s.dump(out=list)
 
@@ -1669,12 +1681,17 @@ def func():
                 raise
 
     def test_put_slice_seq_from_get_slice_data(self):
-        for i, (src, elt, start, stop, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_EXPRISH_DATA):
+        ver = PYVER[1]
+
+        for i, (src, elt, start, stop, field, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_EXPRISH_DATA):
+            if options.get('_ver', 0) > ver:
+                continue
+
             t = parse(src)
             f = eval(f't.{elt}', {'t': t}).f
 
             try:
-                f.put_slice(None, start, stop, **options)
+                f.put_slice(None, start, stop, field, **options)
 
                 tdst  = t.f.src
                 tdump = t.f.dump(out=list)
@@ -1768,7 +1785,12 @@ def func():
                 raise
 
     def test_put_slice(self):
+        ver = PYVER[1]
+
         for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):
+            if options.get('_ver', 0) > ver:
+                continue
+
             t = parse(dst)
             f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
@@ -2007,7 +2029,7 @@ def func():
         f.verify()
 
         f = FST('a, b = c')
-        self.assertRaises(ValueError, f.targets[0].put_slice, '{z}', 1, 2, one=True)
+        self.assertRaises(NodeError, f.targets[0].put_slice, '{z}', 1, 2, one=True)
 
         f = FST('a, b = c, d')
         f.value.put_slice('(e := ((b + 1), 2))', 1, 2, one=True)
@@ -2046,27 +2068,27 @@ def func():
         # stars and slices
 
         f = FST('{1, 2}')
-        self.assertRaises(ValueError, f.put_slice, FST('x:y:z,', 'expr_slice'))
+        self.assertRaises(NodeError, f.put_slice, FST('x:y:z,', 'expr_slice'))
 
         f = FST('[1, 2]')
-        self.assertRaises(ValueError, f.put_slice, FST('x:y:z,', 'expr_slice'))
+        self.assertRaises(NodeError, f.put_slice, FST('x:y:z,', 'expr_slice'))
 
         f = FST('[a,] = b')
-        self.assertRaises(ValueError, f.targets[0].put_slice, '2,')
+        self.assertRaises(NodeError, f.targets[0].put_slice, '2,')
 
         f = FST('del [a]')
-        self.assertRaises(ValueError, f.targets[0].put_slice, '2,')
+        self.assertRaises(NodeError, f.targets[0].put_slice, '2,')
 
         f = FST('(1, 2)')
-        self.assertRaises(ValueError, f.put_slice, FST('x:y:z,', 'expr_slice'))
+        self.assertRaises(NodeError, f.put_slice, FST('x:y:z,', 'expr_slice'))
 
         f = FST('(a,) = b')
-        self.assertRaises(ValueError, f.targets[0].put_slice, '2,')
+        self.assertRaises(NodeError, f.targets[0].put_slice, '2,')
         f = FST('a, = b')
-        self.assertRaises(ValueError, f.targets[0].put_slice, '2,')
+        self.assertRaises(NodeError, f.targets[0].put_slice, '2,')
 
         f = FST('del (a,)')
-        self.assertRaises(ValueError, f.targets[0].put_slice, '2,')
+        self.assertRaises(NodeError, f.targets[0].put_slice, '2,')
 
         if PYLT11:
             f = FST('a[b, c]')
@@ -2082,7 +2104,7 @@ def func():
             f.verify()
 
             f = FST('a[b, c:d]')
-            self.assertRaises(ValueError, f.slice.put_slice, '*x,', 0, 1)
+            self.assertRaises(NodeError, f.slice.put_slice, '*x,', 0, 1)
 
         else:
             f = FST('a[b, c]')
@@ -2167,6 +2189,12 @@ def func():
 
         self.assertEqual('case 1 | c as b: pass', (f := FST('case 1 | "a"as b: pass')).pattern.pattern.put_slice('c', 1, 2).root.src)
         f.verify()
+
+        if PYGE11:
+            # lone starred slice without comma being put as 'one'
+
+            self.assertEqual('(*a,),', (f := FST('1, 2, 3')).put_slice(FST('*a', 'expr_slice'), one=True).src)
+            f.verify()
 
     def test_put_slice_seq_namedexpr_and_yield(self):
         self.assertEqual('a, (x := y)', (f := FST('a, b')).put_slice('x := y', 1, 2, one=True).src)
@@ -2416,6 +2444,70 @@ a | (
         f.verify()
         self.assertEqual('a, (\n# pre\n[c, # line\n]# post\n), b', (f := FST('a, b', pattern).put_slice('(\n# pre\n[c, # line\n]# post\n)', 1, 1, one=True)).src)
         f.verify()
+
+    def test_get_and_put_slice_from_to_slice(self):
+        self.assertEqual('a', g := (f := FST('a\nb\nc').get_slice(0, 2)).get_slice(0, 1).src)
+        self.assertEqual('a\nb\na\n', f.put_slice(g, 'end').src)
+        f.verify()
+
+        self.assertEqual('except a: pass', g := (f := FST('except a: pass\nexcept b: pass\nexcept c: pass').get_slice(0, 2)).get_slice(0, 1).src)
+        self.assertEqual('except a: pass\nexcept b: pass\nexcept a: pass\n', f.put_slice(g, 'end').src)
+        f.verify()
+
+        self.assertEqual('case a: pass', g := (f := FST('case a: pass\ncase b: pass\ncase c: pass').get_slice(0, 2)).get_slice(0, 1).src)
+        self.assertEqual('case a: pass\ncase b: pass\ncase a: pass\n', f.put_slice(g, 'end').src)
+        f.verify()
+
+        self.assertEqual('a,', g := (f := FST('a, b, c').get_slice(0, 2)).get_slice(0, 1).src)
+        self.assertEqual('a, b, a', f.put_slice(g, 'end').src)
+        f.verify()
+
+        self.assertEqual('(a,)', g := (f := FST('(a, b, c)').get_slice(0, 2)).get_slice(0, 1).src)
+        self.assertEqual('(a, b, a)', f.put_slice(g, 'end').src)
+        f.verify()
+
+        self.assertEqual('[a]', g := (f := FST('[a, b, c]').get_slice(0, 2)).get_slice(0, 1).src)
+        self.assertEqual('[a, b, a]', f.put_slice(g, 'end').src)
+        f.verify()
+
+        self.assertEqual('{a}', g := (f := FST('{a, b, c}').get_slice(0, 2)).get_slice(0, 1).src)
+        self.assertEqual('{a, b, a}', f.put_slice(g, 'end').src)
+        f.verify()
+
+        self.assertEqual('{1:a}', g := (f := FST('{1:a, 2:b, 3:c}').get_slice(0, 2)).get_slice(0, 1).src)
+        self.assertEqual('{1:a, 2:b, 1:a}', f.put_slice(g, 'end').src)
+        f.verify()
+
+        self.assertEqual('[a]', g := (f := FST('[a, b, c]', pattern).get_slice(0, 2)).get_slice(0, 1).src)
+        self.assertEqual('[a, b, a]', f.put_slice(g, 'end').src)
+        f.verify()
+
+        self.assertEqual('{1:a}', g := (f := FST('{1:a, 2:b, 3:c}', pattern).get_slice(0, 2)).get_slice(0, 1).src)
+        self.assertEqual('{1:a, 2:b, 1:a}', f.put_slice(g, 'end').src)
+        f.verify()
+
+        self.assertEqual('a', g := (f := FST('a | b | c', pattern).get_slice(0, 2)).get_slice(0, 1).src)
+        self.assertEqual('a | b | a', f.put_slice(g, 'end').src)
+        f.verify()
+
+        if PYGE12:
+            self.assertEqual('T,', g := (f := FST('def f[T, *U, **V](): pass').get_slice(0, 2, 'type_params')).get_slice(0, 1).src)
+            self.assertEqual('T, *U, T', f.put_slice(g, 'end').src)
+            f.verify()
+
+            self.assertEqual('T,', g := (f := FST('async def f[T, *U, **V](): pass').get_slice(0, 2, 'type_params')).get_slice(0, 1).src)
+            self.assertEqual('T, *U, T', f.put_slice(g, 'end').src)
+            f.verify()
+
+            self.assertEqual('T,', g := (f := FST('class cls[T, *U, **V]: pass').get_slice(0, 2, 'type_params')).get_slice(0, 1).src)
+            self.assertEqual('T, *U, T', f.put_slice(g, 'end').src)
+            f.verify()
+
+            self.assertEqual('T,', g := (f := FST('type t[T, *U, **V] = ...').get_slice(0, 2, 'type_params')).get_slice(0, 1).src)
+            self.assertEqual('T, *U, T', f.put_slice(g, 'end').src)
+            f.verify()
+
+
 
 
 if __name__ == '__main__':

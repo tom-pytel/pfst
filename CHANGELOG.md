@@ -2,13 +2,20 @@
 
 ### Fixed
 
+- allow put to except and case slices
+- allow put any kind of expression slice to tuple, including Slices
 - parse functions handle trailing comments without newlines correctly
 - unparse tuple with slices removes tuple parentheses
 
 ### Added
 
-- verify() invalid AST slices works
-- get_mode() gets parse mode for any FST, including invalid AST slices
+- prescribed slicing for `FunctionDef.type_params`
+- prescribed slicing for `AsyncFunctionDef.type_params`
+- prescribed slicing for `ClassDef.type_params`
+- prescribed slicing for `TypeAlias.type_params`
+- slices put match element indentation of target
+- verify() invalid-AST slices works
+- get_mode() gets parse mode for any FST, including invalid-AST slices
 
 ### Updated
 

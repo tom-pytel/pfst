@@ -78,7 +78,6 @@ class ParseError(SyntaxError):
     """Not technically a syntax error but mostly not the code we were expecting."""
 
 
-_re_except             = re.compile(r'except\b')
 _re_first_src          = re.compile(r'^([^\S\n]*)([^\s\\#]+)', re.MULTILINE)  # search for first non-comment non-linecont source code
 _re_parse_all_category = re.compile(r'''
     (?P<stmt>                          (?: assert | break | class | continue | def | del | from | global | import | nonlocal | pass | raise | return | try | while | with ) \b ) |
@@ -480,6 +479,18 @@ def _parse_stmt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 @staticmethod
+def _parse_ExceptHandler(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse exactly one `ExceptHandler` and return as itself."""
+
+    mod = _parse_ExceptHandlers(src, parse_params)
+
+    if len(body := mod.body) != 1:
+        raise ParseError('expecting single ExceptHandler')
+
+    return body[0]
+
+
+@staticmethod
 def _parse_ExceptHandlers(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse zero or more `ExceptHandler`s and return them in a `Module` `body`."""
 
@@ -512,13 +523,13 @@ def _parse_ExceptHandlers(src: str, parse_params: Mapping[str, Any] = {}) -> AST
 
 
 @staticmethod
-def _parse_ExceptHandler(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse exactly one `ExceptHandler` and return as itself."""
+def _parse_match_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse exactly one `match_case` and return as itself."""
 
-    mod = _parse_ExceptHandlers(src, parse_params)
+    mod = _parse_match_cases(src, parse_params)
 
     if len(body := mod.body) != 1:
-        raise ParseError('expecting single ExceptHandler')
+        raise ParseError('expecting single match_case')
 
     return body[0]
 
@@ -567,18 +578,6 @@ def _parse_match_cases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 @staticmethod
-def _parse_match_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse exactly one `match_case` and return as itself."""
-
-    mod = _parse_match_cases(src, parse_params)
-
-    if len(body := mod.body) != 1:
-        raise ParseError('expecting single match_case')
-
-    return body[0]
-
-
-@staticmethod
 def _parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a "standard" `ast.expr`, only things which are normally valid in an `expr` location, no `Slices` or
     `Starred` expressions which are only valid as a `Call` arg (`*not a`)."""
@@ -615,6 +614,29 @@ def _parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             _fix_unparenthesized_tuple_parsed_parenthesized(src, ast)  # we have to do some work to find a possible comma
 
     return _offset_linenos(ast, -1) # _offset_linenos(_validate_indent(src, ast), -1)
+
+
+@staticmethod
+def _parse_expr_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse to any kind of expression including `Slice`, `*not a` or `Tuple` of any of those combined. Lone `*a`
+    `Starred` is returned as a `Starred` and not `Tuple` as would be in a slice."""
+
+    try:
+        ast = _parse_expr_slice(src, parse_params)
+
+    except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11  # except IndentationError: raise  # before if checking that
+        try:
+            ast = _parse_expr_callarg(src, parse_params)  # expr_callarg instead of expr because py 3.10 won't pick up `*not a` in a slice above
+        except SyntaxError:
+            raise SyntaxError('invalid expression (all types)') from None
+
+    else:
+        if (isinstance(ast, Tuple) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for '*starred' acting as '*starred,'
+            e0.end_col_offset == ast.end_col_offset and e0.end_lineno == ast.end_lineno
+        ):
+            return e0
+
+    return ast
 
 
 @staticmethod
@@ -680,6 +702,7 @@ def _parse_expr_sliceelt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     try:
         ast = _parse_expr_slice(src, parse_params)
+
     except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11  # except IndentationError: raise  # before if checking that
         return _parse_expr(src, parse_params)
 
@@ -690,29 +713,6 @@ def _parse_expr_sliceelt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         e0.end_col_offset == ast.end_col_offset and e0.end_lineno == ast.end_lineno
     ):
         return e0
-
-    return ast
-
-
-@staticmethod
-def _parse_expr_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to any kind of expression including `Slice`, `*not a` or `Tuple` of any of those combined. Lone `*a`
-    `Starred` is returned as a `Starred` and not `Tuple` as would be in a slice."""
-
-    try:
-        ast = _parse_expr_slice(src, parse_params)
-
-    except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11  # except IndentationError: raise  # before if checking that
-        try:
-            ast = _parse_expr_callarg(src, parse_params)  # expr_callarg instead of expr because py 3.10 won't pick up `*not a` in a slice above
-        except SyntaxError:
-            raise SyntaxError('invalid expression (all types)') from None
-
-    else:
-        if (isinstance(ast, Tuple) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for '*starred' acting as '*starred,'
-            e0.end_col_offset == ast.end_col_offset and e0.end_lineno == ast.end_lineno
-        ):
-            return e0
 
     return ast
 
@@ -1014,6 +1014,36 @@ def _parse_type_param(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(type_params[0], -1)  # _offset_linenos(_validate_indent(src, type_params[0]), -1)
 
 
+@staticmethod
+def _parse_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse zero or more `ast.type_param`s and return them in a `Tuple`. Will accept empty tuple parentheses as well
+    as empty source for a zero-length slice."""
+
+    try:
+        type_params = _ast_parse1(f'type t[\n{src}\n] = None', parse_params).type_params
+        ast         = None
+
+    except SyntaxError as first_exc:  # maybe empty
+        try:
+            ast = _ast_parse1(f'(\n{src}\n)').value  # parse empty as well as zero-length tuple
+        except SyntaxError:
+            raise first_exc from None
+
+        if not isinstance(ast, Tuple) or ast.elts:
+            raise SyntaxError('invalid type_params slice') from None
+
+        if ast.lineno == 1:
+            ast = None
+
+        type_params = []
+
+    if not ast:
+        ast = Tuple(elts=type_params, ctx=Load(), lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
+                    end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
+
+    return _offset_linenos(ast, -1)  # _offset_linenos(_validate_indent(src, ast), -1)
+
+
 # ......................................................................................................................
 
 @staticmethod
@@ -1181,8 +1211,8 @@ def _code_as_match_cases(code: Code, parse_params: Mapping[str, Any] = {}) -> fs
 
 
 @staticmethod
-def _code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *, parse: Callable[[Code, dict], fst.FST] = _parse_expr,
-                  sanitize: bool = True) -> fst.FST:
+def _code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *,
+                  parse: Callable[[Code, dict], fst.FST] = _parse_expr, sanitize: bool = True) -> fst.FST:
     """Convert `code` to an `expr` or optionally `Slice` `FST` if possible."""
 
     if isinstance(code, fst.FST):
@@ -1227,10 +1257,17 @@ def _code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *, parse: Ca
 
 
 @staticmethod
-def _code_as_expr_callarg(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
+def _code_as_expr_all(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+    """Convert `code` to an `expr` using `_parse_expr_all()`."""
+
+    return _code_as_expr(code, parse_params, parse=_parse_expr_all, sanitize=sanitize)
+
+
+@staticmethod
+def _code_as_expr_callarg(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to an `expr` in the context of a `Call.args` which has special parse rules for `Starred`."""
 
-    return _code_as_expr(code, parse_params, parse=_parse_expr_callarg)
+    return _code_as_expr(code, parse_params, parse=_parse_expr_callarg, sanitize=sanitize)
 
 
 @staticmethod
@@ -1249,11 +1286,23 @@ def _code_as_expr_slice(code: Code, parse_params: Mapping[str, Any] = {}, *, san
 
 
 @staticmethod
-def _code_as_expr_sliceelt(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
+def _code_as_expr_sliceelt(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to an `expr` or `Slice` `FST` if possible. This exists because of the behavior of naked `Starred`
     expressions in a `Subscript` `slice` field."""
 
-    return _code_as_expr(code, parse_params, parse=_parse_expr_sliceelt)
+    return _code_as_expr(code, parse_params, parse=_parse_expr_sliceelt, sanitize=sanitize)
+
+
+@staticmethod
+def _code_as_Tuple(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+    """Convert `code` to a `Tuple` using `_parse_Tuple()`."""
+
+    fst_ = _code_as_expr(code, parse_params, parse=_parse_Tuple, sanitize=sanitize)
+
+    if not isinstance(fst_.a, Tuple):
+        raise ParseError(f'expecting Tuple, got {fst_.a.__class__.__name__}')
+
+    return fst_
 
 
 @staticmethod
@@ -1383,6 +1432,19 @@ def _code_as_type_param(code: Code, parse_params: Mapping[str, Any] = {}, *, san
 
 
 @staticmethod
+def _code_as_type_params(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+    """Convert `code` to a type_params slice `FST` if possible."""
+
+    ret = _code_as(code, Tuple, parse_params, _parse_type_params, sanitize=sanitize)
+
+    if ret is code:  # this means it was not parsed (came in as FST) and we need to verify it containes only type_params
+        if not all(isinstance(elt := e, type_param) for e in ret.a.elts):
+            raise ParseError(f'expecting only type_params, got {elt.__class__.__name__}')
+
+    return ret
+
+
+@staticmethod
 def _code_as_identifier(code: Code, parse_params: Mapping[str, Any] = {}) -> str:
     """Convert `code` to valid identifier string if possible."""
 
@@ -1502,15 +1564,15 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'single':            _parse_Interactive,
     'stmts':             _parse_stmts,
     'stmt':              _parse_stmt,
-    'ExceptHandlers':    _parse_ExceptHandlers,
     'ExceptHandler':     _parse_ExceptHandler,
-    'match_cases':       _parse_match_cases,
+    'ExceptHandlers':    _parse_ExceptHandlers,
     'match_case':        _parse_match_case,
+    'match_cases':       _parse_match_cases,
     'expr':              _parse_expr,
+    'expr_all':          _parse_expr_all,       # `a:b:c`, `*not c`, `*st`, `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`, `*not c`
     'expr_callarg':      _parse_expr_callarg,   # `*a or b`, `*not c`
     'expr_slice':        _parse_expr_slice,     # `a:b:c`, `*not c`, `a:b:c, x:y:z`, `*st` -> `*st,` (py 3.11+)
     'expr_sliceelt':     _parse_expr_sliceelt,  # `a:b:c`, `*not c`, `*st`
-    'expr_all':          _parse_expr_all,       # `a:b:c`, `*not c`, `*st`, `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`, `*not c`
     'Tuple':             _parse_Tuple,          # `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`
     'boolop':            _parse_boolop,
     'operator':          _parse_operator,
@@ -1529,8 +1591,8 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'withitem':          _parse_withitem,
     'pattern':           _parse_pattern,
     'type_param':        _parse_type_param,
+    'type_params':       _parse_type_params,
     mod:                 _parse_Module,    # parsing with an AST type doesn't mean it will be parsable by ast module
-    Module:              _parse_Module,
     Expression:          _parse_Expression,
     Interactive:         _parse_Interactive,
     stmt:                _parse_stmt,

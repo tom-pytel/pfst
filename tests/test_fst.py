@@ -5255,19 +5255,15 @@ if 1:
             self.assertEqual('try:\n    return\nexcept* Exception as e: continue\nelse:\n    break\nfinally:\n    f()\n', test(f, 'finalbody', 'f()', fstview, 'pass').src)
 
         if not PYLT12:
-            self.assertEqual('def func[U](): pass', test(FST('def func[T](): pass'), 'type_params', 'U', fstview,
-                                                         '<<FunctionDef ROOT 0,0..0,19>.type_params[0:1] [<TypeVar 0,9..0,10>]>').src)
+            self.assertEqual('def func[U](): pass', test(FST('def func[T](): pass'), 'type_params', 'U', fstview, 'T').src)
 
-            self.assertEqual('async def func[U](): pass', test(FST('async def func[T](): pass'), 'type_params', 'U', fstview,
-                                                               '<<AsyncFunctionDef ROOT 0,0..0,25>.type_params[0:1] [<TypeVar 0,15..0,16>]>').src)
+            self.assertEqual('async def func[U](): pass', test(FST('async def func[T](): pass'), 'type_params', 'U', fstview, 'T').src)
 
-            self.assertEqual('class cls[U]: pass', test(FST('class cls[T]: pass'), 'type_params', 'U', fstview,
-                                                        '<<ClassDef ROOT 0,0..0,18>.type_params[0:1] [<TypeVar 0,10..0,11>]>').src)
+            self.assertEqual('class cls[U]: pass', test(FST('class cls[T]: pass'), 'type_params', 'U', fstview, 'T').src)
 
             f = FST('type t[T] = v')
             self.assertEqual('type new[T] = v', test(f, 'name', 'new', FST, 't').src)
-            self.assertEqual('type new[U] = v', test(f, 'type_params', 'U', fstview,
-                                                        '<<TypeAlias ROOT 0,0..0,15>.type_params[0:1] [<TypeVar 0,9..0,10>]>').src)
+            self.assertEqual('type new[U] = v', test(f, 'type_params', 'U', fstview, 'T').src)
             self.assertEqual('type new[U] = zzz', test(f, 'value', 'zzz', FST, 'v').src)
 
             # these are complicated...

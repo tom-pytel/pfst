@@ -16,7 +16,7 @@ from typing import Any, Generator, Iterable, Literal, NamedTuple
 
 from .astutil import *
 from .astutil import re_alnumdot_alnum, TypeAlias, TemplateStr, Interpolation
-from .misc import PYLT11, PYLT12, PYLT14, astfield
+from .misc import PYLT11, PYLT12, PYLT14, PYGE12, astfield
 from .view import fstview
 from .fst import FST, NodeError
 
@@ -1637,11 +1637,12 @@ class SliceExprish(Fuzzy):
     forever = True
 
     class Bucket(NamedTuple):
-        field:      str | type[AST] | None
-        min_script: int
-        min_tmp:    int
-        one:        bool
-        fst:        FST
+        field:       str | None  # None means Dict or MatchMapping
+        slice_field: str | None  # None means same as field
+        min_script:  int
+        min_tmp:     int
+        one:         bool
+        fst:         FST
 
     @staticmethod
     def cat(fst: FST) -> str | type[AST] | None:
@@ -1653,7 +1654,8 @@ class SliceExprish(Fuzzy):
             return 'slice' if fst.has_Slice() else 'seq'
         if isinstance(ast, (List, Set)):
             return 'seq'
-        if isinstance(ast, (Dict, MatchSequence, MatchMapping, MatchOr)):
+        if isinstance(ast, (Dict, MatchSequence, MatchMapping, MatchOr,
+                            ClassDef, TypeAlias)):
             return ast.__class__
 
         return None
@@ -1665,7 +1667,10 @@ class SliceExprish(Fuzzy):
             choice(('none', 'block', 'all', 'line')) + choice(('', '', '', '', '-', '+', '-', '+', '-1', '-2', '-3', '+1', '+2', '+3')),
         )
 
-    def transfer(self, dir: str, cat: str, field: str | None, src: FST, dst: FST, min_src: int, min_dst: int, one: bool):
+    def transfer(self, dir: str, cat: str, field: str | None, slice_field: str | None, src: FST, dst: FST, min_src: int, min_dst: int, one: bool):
+        if slice_field is None:
+            slice_field = field
+
         src_len    = len(src_body := getattr(src.a, field or 'keys'))
         dst_len    = len(dst_body := getattr(dst.a, field or 'keys'))
         src_start  = randint(0, src_len)
@@ -1711,9 +1716,9 @@ class SliceExprish(Fuzzy):
 
         slice = src.get_slice(src_start, src_stop, field=field, cut=cut, trivia=src_trivia)
 
-        slice_elts = getattr(slice.a, field or 'keys')[:]
+        slice_elts = getattr(slice.a, slice_field or 'keys')[:]
 
-        if not field:  # Dict or MatchMapping
+        if not slice_field:  # Dict or MatchMapping
             slice_elts.extend(getattr(slice.a, 'values' if isinstance(src.a, Dict) else 'patterns'))
 
         if cut:
@@ -1740,14 +1745,22 @@ class SliceExprish(Fuzzy):
 
     def fuzz_one(self, fst, fnm) -> bool:
         buckets = {
-            'slice':       self.Bucket('elts', 1, 1, False, FST('a[1,]').slice,),  # 1 because of "a[b, c]", must always leave at least 1 element so it doesn't get parentheses
-            'target':      self.Bucket('elts', 0, 0, True, FST('()')),
-            'seq':         self.Bucket('elts', 1, 0, True, FST('()')), # 1 because of Set
-            Dict:          self.Bucket(None, 0, 0, False, FST('{}')),
-            MatchSequence: self.Bucket('patterns', 0, 0, True, FST('[]', pattern)),
-            MatchMapping:  self.Bucket(None, 0, 0, False, FST('{}', pattern)),
-            MatchOr:       self.Bucket('patterns', 2, 2, True, FST('(a | b)', pattern)),
+            'slice':       self.Bucket('elts', None, 1, 1, False, FST('a[1,]').slice,),  # 1 because of "a[b, c]", must always leave at least 1 element so it doesn't get parentheses
+            'target':      self.Bucket('elts', None, 0, 0, True, FST('()')),
+            'seq':         self.Bucket('elts', None, 1, 0, True, FST('()')), # 1 because of Set
+            Dict:          self.Bucket(None, None, 0, 0, False, FST('{}')),
+            MatchSequence: self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
+            MatchMapping:  self.Bucket(None, None, 0, 0, False, FST('{}', pattern)),
+            MatchOr:       self.Bucket('patterns', None, 2, 2, True, FST('(a | b)', pattern)),
         }
+
+        if PYGE12:
+            buckets.update({
+                FunctionDef:      self.Bucket('type_params', 'elts', 0, 0, False, type_params_bucket := FST('type t[T] = ...')),
+                AsyncFunctionDef: self.Bucket('type_params', 'elts', 0, 0, False, type_params_bucket),
+                ClassDef:         self.Bucket('type_params', 'elts', 0, 0, False, type_params_bucket),
+                TypeAlias:        self.Bucket('type_params', 'elts', 0, 0, False, type_params_bucket),
+            })
 
         exprishs = []  # [('cat', FST), ...]
 
@@ -1792,8 +1805,8 @@ class SliceExprish(Fuzzy):
                         continue
 
                     with FST.options(set_get=False, set_put=False, set_del=False, matchor_get=False, matchor_put=False, matchor_del=False):
-                        self.transfer('>', cat, bucket.field, exprish, bucket.fst, bucket.min_script, bucket.min_tmp, bucket.one)
-                        self.transfer('<', cat, bucket.field, bucket.fst, exprish, bucket.min_tmp, bucket.min_script, bucket.one)
+                        self.transfer('src > bkt:', cat, bucket.field, bucket.slice_field, exprish, bucket.fst, bucket.min_script, bucket.min_tmp, bucket.one)
+                        self.transfer('src < bkt:', cat, bucket.field, bucket.slice_field, bucket.fst, exprish, bucket.min_tmp, bucket.min_script, bucket.one)
 
                     if self.verify:
                         fst.verify()

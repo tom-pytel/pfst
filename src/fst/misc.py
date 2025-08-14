@@ -129,15 +129,15 @@ Mode = Literal[
     'single',
     'stmts',
     'stmt',
-    'ExceptHandlers',
     'ExceptHandler',
-    'match_cases',
+    'ExceptHandlers',
     'match_case',
+    'match_cases',
     'expr',
+    'expr_all',
     'expr_callarg',
     'expr_slice',
     'expr_sliceelt',
-    'expr_all',
     'Tuple',
     'boolop',
     'operator',
@@ -156,6 +156,7 @@ Mode = Literal[
     'withitem',
     'pattern',
     'type_param',
+    'type_params',
 ] | type[AST]
 
 """Parse modes:
@@ -174,20 +175,20 @@ Mode = Literal[
 - `'stmts'`: Parse zero or more `stmt`s returned in a `Module`. Same as passing `'exec'`, but not `Module` as that can
     parse `FST` slices.
 - `'stmt'`: Parse a single `stmt` returned as itself. Same as passing `stmt` type.
-- `'ExceptHandlers'`: Parse zero or more `ExceptHandler`s returned in a `Module`.
 - `'ExceptHandler'`: Parse as a single `ExceptHandler` returned as itself. Same as passing `ExceptHandler` type.
-- `'match_cases'`: Parse zero or more `match_case`s returned in a `Module`.
+- `'ExceptHandlers'`: Parse zero or more `ExceptHandler`s returned in a `Module`.
 - `'match_case'`: Parse a single `match_case` returned as itself. Same as passing `match_case` type.
+- `'match_cases'`: Parse zero or more `match_case`s returned in a `Module`.
 - `'expr'`: "expression", parse a single `expr` returned as itself. This is differentiated from the following three
     modes by the handling of slices and starred expressions. In this mode `a:b` and `*not v` are syntax errors. Same as
     passing `expr` type.
+- `'expr_all'`: Parse to any kind of expression including `Slice`, `*not a` or `Tuple` of any of those combined.
 - `'expr_callarg'`: "call argument expression", same as `'expr'` except that in this mode `a:b` is a syntax error and
     `*not v` parses to a starred expression `*(not v)`.
 - `'expr_slice'`: "slice expression", same as `'expr'` except that in this mode `a:b` parses to a `Slice` and `*not v`
     parses to a single element tuple containing a starred expression `(*(not v),)`.
 - `'expr_sliceelt'`: "slice tuple element expression", same as `'expr'` except that in this mode `a:b` parses to a
     `Slice` and `*not v` parses to a starred expression `*(not v)`. `Tuples` are parsed but cannot contain `Slice`s.
-- `'expr_all'`: Parse to any kind of expression including `Slice`, `*not a` or `Tuple` of any of those combined.
 - `'Tuple'`: Parse to a `Tuple` which may contain anything that a tuple can contain like multiple `Slice`s.
 - `'boolop'`: Parse to a `boolop` operator.
 - `'operator'`: Parse to an `operator` operator, either normal binary `'*'` or augmented `'*='`.
@@ -210,6 +211,7 @@ Mode = Literal[
 - `'pattern'`: Parse as a a single `pattern` returned as itself. Same as passing `pattern` type.
 - `'type_param'`: Parse as a single `type_param` returned as itself, either `TypeVar`, `ParamSpec` or
     `TypeVarTuple`. Same as passing `type_param` type.
+- `'type_params'`: Parse as a slice of zero or more `type_param`s returned in a `Tuple`.
 - `type[AST]`: If an `AST` type is passed then will attempt to parse to this type. This can be used to narrow
     the scope of desired return, for example `Constant` will parse as an expression but fail if the expression
     is not a `Constant`. These overlap with the string specifiers to an extent but not all of them. For example

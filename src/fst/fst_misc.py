@@ -954,7 +954,7 @@ def _loc_subscript_brackets(self: fst.FST) -> fstloc:
 
 
 def _loc_matchcls_pars(self: fst.FST) -> fstloc:
-    # assert isinstance(self.s, MatchClass)
+    # assert isinstance(self.a, MatchClass)
 
     ast                   = self.a
     lines                 = self.root._lines
@@ -963,6 +963,126 @@ def _loc_matchcls_pars(self: fst.FST) -> fstloc:
     ln, col               = _next_find(lines, ln, col, end_ln, end_col, '(')  # must be there
 
     return fstloc(ln, col, end_ln, end_col)
+
+
+def _loc_funcdef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tuple[int, int]]:
+    """Get location of brackets (if present) and end of name where brackets would / do NORMALLY start. This may return
+    a location for brackets if they are there even if there are no type_params (for editing purposes).
+
+    **Returns:**
+    - (loc brackets | None, pos end of name)
+    """
+
+    # assert isinstance(self.a, (FunctionDef, AsyncFunctionDef))
+
+    ast   = self.a
+    lines = self.root.lines
+    args  = ast.args
+
+    ln, col, end_ln, end_col = self.loc
+
+    if ((after := args.posonlyargs) or (after := args.args) or (after := args.vararg) or (after := args.kwonlyargs) or
+        (after := args.kwarg) or (after := ast.returns) or (after := ast.body)
+    ):
+        after_ln, after_col, _, _ = (after[0] if isinstance(after, list) else after).f.loc
+    else:  # accomodate temporarily empty bodies
+        after_ln  = end_ln
+        after_col = end_col
+
+    if isinstance(ast, AsyncFunctionDef):
+        ln, col = _next_find(lines, ln, col + 5, after_ln, after_col, 'def')  # must be there
+
+    name_end_ln, name_end_col, src = _next_find_re(lines, ln, col + 3, after_ln, after_col, re_identifier)  # must be there
+
+    name_end_col += len(src)
+
+    if not (pos := _next_find(lines, name_end_ln, name_end_col, after_ln, after_col, '[')):  # MAY be there
+        return None, (name_end_ln, name_end_col)
+
+    ln, col = pos
+
+    if type_params := ast.type_params:
+        _, _, end_ln, end_col = type_params[-1].f.loc
+    else:
+        end_ln  = ln
+        end_col = col + 1
+
+    end_ln, end_col = _next_find(lines, end_ln, end_col, after_ln, after_col, ']')  # must be there
+
+    return fstloc(ln, col, end_ln, end_col + 1), (name_end_ln, name_end_col)
+
+
+def _loc_classdef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tuple[int, int]]:
+    """Get location of brackets (if present) and end of name where brackets would / do NORMALLY start. This may return
+    a location for brackets if they are there even if there are no type_params (for editing purposes).
+
+    **Returns:**
+    - (loc brackets | None, pos end of name)
+    """
+
+    # assert isinstance(self.a, ClassDef)
+
+    ast   = self.a
+    lines = self.root.lines
+
+    ln, col, end_ln, end_col = self.loc
+
+    if (after := ast.bases) or (after := ast.keywords) or (after := ast.body):
+        after_ln, after_col, _, _ = after[0].f.loc
+    else:  # accomodate temporarily empty bodies
+        after_ln  = end_ln
+        after_col = end_col
+
+    name_end_ln, name_end_col, src = _next_find_re(lines, ln, col + 5, after_ln, after_col, re_identifier)  # must be there
+
+    name_end_col += len(src)
+
+    if not (pos := _next_find(lines, name_end_ln, name_end_col, after_ln, after_col, '[')):  # MAY be there
+        return None, (name_end_ln, name_end_col)
+
+    ln, col = pos
+
+    if type_params := ast.type_params:
+        _, _, end_ln, end_col = type_params[-1].f.loc
+    else:
+        end_ln  = ln
+        end_col = col + 1
+
+    end_ln, end_col = _next_find(lines, end_ln, end_col, after_ln, after_col, ']')  # must be there
+
+    return fstloc(ln, col, end_ln, end_col + 1), (name_end_ln, name_end_col)
+
+
+def _loc_typealias_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tuple[int, int]]:
+    """Get location of brackets (if present) and end of name where brackets would / do NORMALLY start. This may return
+    a location for brackets if they are there even if there are no type_params (for editing purposes).
+
+    **Returns:**
+    - (loc brackets | None, pos end of name)
+    """
+
+    # assert isinstance(self.a, TypeAlias)
+
+    ast   = self.a
+    lines = self.root.lines
+
+    _, _, name_end_ln, name_end_col = ast.name.f.loc
+    val_ln, val_col, _, _           = ast.value.f.loc
+
+    if not (pos := _next_find(lines, name_end_ln, name_end_col, val_ln, val_col, '[')):  # MAY be there
+        return None, (name_end_ln, name_end_col)
+
+    ln, col = pos
+
+    if type_params := ast.type_params:
+        _, _, end_ln, end_col = type_params[-1].f.loc
+    else:
+        end_ln  = ln
+        end_col = col + 1
+
+    end_ln, end_col = _next_find(lines, end_ln, end_col, val_ln, val_col, ']')  # must be there
+
+    return fstloc(ln, col, end_ln, end_col + 1), (name_end_ln, name_end_col)
 
 
 def _loc_global_nonlocal_names(self: fst.FST, first: int, last: int | None = None) -> fstloc | tuple[fstloc, fstloc]:

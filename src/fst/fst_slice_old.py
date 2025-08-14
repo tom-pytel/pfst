@@ -11,7 +11,7 @@ from . import fst
 
 from .asttypes import (
     AsyncFor, AsyncFunctionDef, AsyncWith, ClassDef, ExceptHandler, For, FunctionDef, If, Match, Module, Try, While,
-    With, TryStar, match_case, mod,
+    With, TryStar, match_case, mod, stmt,
 )
 from .astutil import copy_ast
 
@@ -107,18 +107,28 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
         # if any(not isinstance(bad_node := n, node_type) for n in put_body) and options.get('check_node_type', True):  # TODO: `check_node_type` is for some previously written tests, but really should fix those tests instead
         #     raise ValueError(f"cannot put {bad_node.__class__.__qualname__} node to '{field}' field")
 
-        if field == 'handlers':
+
+        if body and isinstance(ast, Module):  # check for slices
+            if isinstance(b0 := body[0], stmt):
+                put_fst = self._code_as_stmts(code, self.root.parse_params)
+            elif isinstance(b0, ExceptHandler):
+                put_fst = self._code_as_ExceptHandlers(code, self.root.parse_params,
+                                                       is_trystar=b0.f.is_except_star())
+            else:  # match_case
+                put_fst = self._code_as_match_cases(code, self.root.parse_params)
+
+        elif field == 'handlers':
             put_fst = self._code_as_ExceptHandlers(code, self.root.parse_params, is_trystar=isinstance(ast, TryStar))
-        elif field == 'cases':
-            put_fst = self._code_as_match_cases(code, self.root.parse_params)
-        else:  # 'body', 'orelse', 'finalbody'
+        elif field != 'cases':  # 'body', 'orelse', 'finalbody'
             put_fst = self._code_as_stmts(code, self.root.parse_params)
+        else:  # 'cases'
+            put_fst = self._code_as_match_cases(code, self.root.parse_params)
 
         put_ast  = put_fst.a
         put_body = put_ast.body
 
         if one and len(put_body) != 1:
-            raise ValueError('expecting a single statement')
+            raise ValueError('expecting a single element')
 
     start, stop = _fixup_slice_indices(len(body), start, stop)
     slice_len   = stop - start

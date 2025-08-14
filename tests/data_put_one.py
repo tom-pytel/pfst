@@ -7192,7 +7192,17 @@ Module - ROOT 0,0..1,13
  case _: pass""", 'body[0].cases[0].pattern', None, None, {}, r"""c.d""", r"""**ValueError('cannot create MatchAs.pattern in this state')**""", r"""
 """),
 
-(r"""def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
+(r"""def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""def f[U: (str)](): pass""", r"""
+Module - ROOT 0,0..0,23
+  .body[1]
+  0] FunctionDef - 0,0..0,23
+    .name 'f'
+    .body[1]
+    0] Pass - 0,19..0,23
+    .type_params[1]
+    0] TypeVar - 0,6..0,14
+      .name 'U'
+      .bound Name 'str' Load - 0,10..0,13
 """),
 
 (r"""def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""def f[V: list[int], U: (str)](): pass""", r"""
@@ -7274,7 +7284,17 @@ Module - ROOT 0,0..0,37
 (r"""def f[T: int, U: (str)](): pass""", 'body[0]', -4, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
+(r"""async def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""async def f[U: (str)](): pass""", r"""
+Module - ROOT 0,0..0,29
+  .body[1]
+  0] AsyncFunctionDef - 0,0..0,29
+    .name 'f'
+    .body[1]
+    0] Pass - 0,25..0,29
+    .type_params[1]
+    0] TypeVar - 0,12..0,20
+      .name 'U'
+      .bound Name 'str' Load - 0,16..0,19
 """),
 
 (r"""async def f[T: int, U: (str)](): pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""async def f[V: list[int], U: (str)](): pass""", r"""
@@ -7356,7 +7376,17 @@ Module - ROOT 0,0..0,43
 (r"""async def f[T: int, U: (str)](): pass""", 'body[0]', -4, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""class c[T: int, U: (str)]: pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
+(r"""class c[T: int, U: (str)]: pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""class c[U: (str)]: pass""", r"""
+Module - ROOT 0,0..0,23
+  .body[1]
+  0] ClassDef - 0,0..0,23
+    .name 'c'
+    .body[1]
+    0] Pass - 0,19..0,23
+    .type_params[1]
+    0] TypeVar - 0,8..0,16
+      .name 'U'
+      .bound Name 'str' Load - 0,12..0,15
 """),
 
 (r"""class c[T: int, U: (str)]: pass""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""class c[V: list[int], U: (str)]: pass""", r"""
@@ -7438,7 +7468,16 @@ Module - ROOT 0,0..0,37
 (r"""class c[T: int, U: (str)]: pass""", 'body[0]', -4, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""type t[T: int, U: (str)] = ...""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
+(r"""type t[T: int, U: (str)] = ...""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""**DEL**""", r"""type t[U: (str)] = ...""", r"""
+Module - ROOT 0,0..0,22
+  .body[1]
+  0] TypeAlias - 0,0..0,22
+    .name Name 't' Store - 0,5..0,6
+    .type_params[1]
+    0] TypeVar - 0,7..0,15
+      .name 'U'
+      .bound Name 'str' Load - 0,11..0,14
+    .value Constant Ellipsis - 0,19..0,22
 """),
 
 (r"""type t[T: int, U: (str)] = ...""", 'body[0]', 0, 'type_params', {'_ver': 12}, r"""V: list[int]""", r"""type t[V: list[int], U: (str)] = ...""", r"""

@@ -61,6 +61,7 @@ from .asttypes import (
     TryStar,
     TypeAlias,
     TemplateStr,
+    type_param,
 )
 from .astutil import re_identifier, bistr, is_valid_target, reduce_ast, set_ctx, copy_ast
 
@@ -72,7 +73,7 @@ from .misc import (
     _leading_trivia, _trailing_trivia,
 )
 
-from .fst_parse import _code_as_expr, _code_as_pattern
+from .fst_parse import _code_as_expr, _code_as_expr_all, _code_as_pattern, _code_as_type_params
 from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish
 
 _re_one_space            = re.compile(r'\s')
@@ -89,78 +90,78 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 # * Special unparse where needed.
 
 
-# (N)ormal container, (S)equence container
-# | Separator (trailing)
-# | |  Prefix (leaading)
-# | |  |  Delimiters
-# | |  |  |   Unparse special
-# | |  |  |   |
-#                                                                            .
-# N ,     ()      (Tuple, 'elts')                         # expr*            -> Tuple                  _parse_expr_sliceelts
-# N ,     []      (List, 'elts')                          # expr*            -> List                   _parse_expr / restrict seq
-# N ,     {}      (Set, 'elts')                           # expr*            -> Set                    _parse_expr / restrict seq
-#                                                                            .
-# N ,     {}      (Dict, 'keys':'values')                 # expr:expr*       -> Dict                   _parse_expr / restrict dict
-#                                                                            .
-# N ,     []      (MatchSequence, 'patterns'):            # pattern*         -> MatchSequence          _parse_pattern / restrict MatchSequence
-# N ,     {}      (MatchMapping, 'keys':'patterns'):      # expr:pattern*    -> MatchMapping           _parse_pattern / restrict MatchMapping
-#                                                                            .
-# N |             (MatchOr, 'patterns'):                  # pattern*         -> MatchOr                _parse_pattern / restrict MatchOr
-#                                                                            .
-#                                                                            .
-#                                                                            .
-# S ,             (ClassDef, 'bases'):                    # expr*            -> Tuple[expr_callarg]    _parse_expr_callargs
-# S ,             (Call, 'args'):                         # expr*            -> Tuple[expr_callarg]    _parse_expr_callargs
+#   (N)ormal container, (S)equence container
+#   | Separator (trailing)
+#   | |  Prefix (leaading)
+#   | |  |  Delimiters
+#   | |  |  |   Unparse special
+#   | |  |  |   |
+#                                                                              .
+# * N ,     ()      (Tuple, 'elts')                         # expr*            -> Tuple                  _parse_expr_sliceelts
+# * N ,     []      (List, 'elts')                          # expr*            -> List                   _parse_expr / restrict seq
+# * N ,     {}      (Set, 'elts')                           # expr*            -> Set                    _parse_expr / restrict seq
+#                                                                              .
+# * N ,     {}      (Dict, 'keys':'values')                 # expr:expr*       -> Dict                   _parse_expr / restrict dict
+#                                                                              .
+# * N ,     []      (MatchSequence, 'patterns'):            # pattern*         -> MatchSequence          _parse_pattern / restrict MatchSequence
+# * N ,     {}      (MatchMapping, 'keys':'patterns'):      # expr:pattern*    -> MatchMapping           _parse_pattern / restrict MatchMapping
+#                                                                              .
+# * N |             (MatchOr, 'patterns'):                  # pattern*         -> MatchOr                _parse_pattern / restrict MatchOr
+#                                                                              .
+#                                                                              .
+#                                                                              .
+#   S ,             (ClassDef, 'bases'):                    # expr*            -> Tuple[expr_callarg]    _parse_expr_callargs
+#   S ,             (Call, 'args'):                         # expr*            -> Tuple[expr_callarg]    _parse_expr_callargs
 #
-# S ,             (Delete, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
-# S ,             (Assign, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
-#                                                                            .
-#                                                                            .
-#                                                                            .
-# S ,             (MatchClass, 'patterns'):               # pattern*         -> Tuple[pattern]         _parse_pattern / restrict MatchSequence
-#                                                                            .
-# S ,             (ClassDef, 'keywords'):                 # keyword*         -> Tuple[keyword]         _parse_keywords
-# S ,             (Call, 'keywords'):                     # keyword*         -> Tuple[keyword]         _parse_keywords
-#                                                                            .
-# S ,             (FunctionDef, 'type_params'):           # type_param*      -> Tuple[type_param]      _parse_type_params
-# S ,             (AsyncFunctionDef, 'type_params'):      # type_param*      -> Tuple[type_param]      _parse_type_params
-# S ,             (ClassDef, 'type_params'):              # type_param*      -> Tuple[type_param]      _parse_type_params
-# S ,             (TypeAlias, 'type_params'):             # type_param*      -> Tuple[type_param]      _parse_type_params
-#                                                                            .
-# S ,             (With, 'items'):                        # withitem*        -> Tuple[withitem]        _parse_withitems               - no trailing commas
-# S ,             (AsyncWith, 'items'):                   # withitem*        -> Tuple[withitem]        _parse_withitems               - no trailing commas
-#                                                                            .
-# S ,             (Import, 'names'):                      # alias*           -> Tuple[alias]           _parse_aliases_dotted          - no trailing commas
-# S ,             (ImportFrom, 'names'):                  # alias*           -> Tuple[alias]           _parse_aliases_star            - no trailing commas
-#                                                                            .
-#                                                                            .
-#                                                                            .
-# S ,             (Global, 'names'):                      # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names   - no trailing commas, unparenthesized
-# S ,             (Nonlocal, 'names'):                    # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names   - no trailing commas, unparenthesized
-#                                                                            .
-#                                                                            .
-#                                                                            .
-# S    @      U   (FunctionDef, 'decorator_list'):        # expr*            -> Tuple[expr]            _parse_decorator_list  - can figure out from '@' first expr prefix
-# S    @      U   (AsyncFunctionDef, 'decorator_list'):   # expr*            -> Tuple[expr]            _parse_decorator_list
-# S    @      U   (ClassDef, 'decorator_list'):           # expr*            -> Tuple[expr]            _parse_decorator_list
-#                                                                            .
-# S           U   (ListComp, 'generators'):               # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
-# S           U   (SetComp, 'generators'):                # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
-# S           U   (DictComp, 'generators'):               # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
-# S           U   (GeneratorExp, 'generators'):           # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
-#                                                                            .
-# S    if     U   (comprehension, 'ifs'):                 # expr*            -> Tuple[expr]            _parse_comprehension_ifs  - can figure out from 'if' first expr prefix
-#                                                                            .
-#                                                                            .
-#                                                                            .
-# N co            (Compare, 'ops':'comparators'):         # cmpop:expr*      -> expr or Compare        _parse_expr / restrict expr or Compare
-#                                                                            .
-# N ao            (BoolOp, 'values'):                     # expr*            -> BoolOp                 _parse_expr / restrict BoolOp  - interchangeable between and / or
+#   S ,             (Delete, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
+#   S ,             (Assign, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
+#                                                                              .
+#                                                                              .
+#                                                                              .
+#   S ,             (MatchClass, 'patterns'):               # pattern*         -> Tuple[pattern]         _parse_pattern / restrict MatchSequence
+#                                                                              .
+#   S ,             (ClassDef, 'keywords'):                 # keyword*         -> Tuple[keyword]         _parse_keywords
+#   S ,             (Call, 'keywords'):                     # keyword*         -> Tuple[keyword]         _parse_keywords
+#                                                                              .
+# * S ,             (FunctionDef, 'type_params'):           # type_param*      -> Tuple[type_param]      _parse_type_params
+# * S ,             (AsyncFunctionDef, 'type_params'):      # type_param*      -> Tuple[type_param]      _parse_type_params
+# * S ,             (ClassDef, 'type_params'):              # type_param*      -> Tuple[type_param]      _parse_type_params
+# * S ,             (TypeAlias, 'type_params'):             # type_param*      -> Tuple[type_param]      _parse_type_params
+#                                                                              .
+#   S ,             (With, 'items'):                        # withitem*        -> Tuple[withitem]        _parse_withitems               - no trailing commas
+#   S ,             (AsyncWith, 'items'):                   # withitem*        -> Tuple[withitem]        _parse_withitems               - no trailing commas
+#                                                                              .
+#   S ,             (Import, 'names'):                      # alias*           -> Tuple[alias]           _parse_aliases_dotted          - no trailing commas
+#   S ,             (ImportFrom, 'names'):                  # alias*           -> Tuple[alias]           _parse_aliases_star            - no trailing commas
+#                                                                              .
+#                                                                              .
+#                                                                              .
+#   S ,             (Global, 'names'):                      # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names   - no trailing commas, unparenthesized
+#   S ,             (Nonlocal, 'names'):                    # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names   - no trailing commas, unparenthesized
+#                                                                              .
+#                                                                              .
+#                                                                              .
+#   S    @      U   (FunctionDef, 'decorator_list'):        # expr*            -> Tuple[expr]            _parse_decorator_list  - can figure out from '@' first expr prefix
+#   S    @      U   (AsyncFunctionDef, 'decorator_list'):   # expr*            -> Tuple[expr]            _parse_decorator_list
+#   S    @      U   (ClassDef, 'decorator_list'):           # expr*            -> Tuple[expr]            _parse_decorator_list
+#                                                                              .
+#   S           U   (ListComp, 'generators'):               # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
+#   S           U   (SetComp, 'generators'):                # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
+#   S           U   (DictComp, 'generators'):               # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
+#   S           U   (GeneratorExp, 'generators'):           # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
+#                                                                              .
+#   S    if     U   (comprehension, 'ifs'):                 # expr*            -> Tuple[expr]            _parse_comprehension_ifs  - can figure out from 'if' first expr prefix
+#                                                                              .
+#                                                                              .
+#                                                                              .
+#   N co            (Compare, 'ops':'comparators'):         # cmpop:expr*      -> expr or Compare        _parse_expr / restrict expr or Compare
+#                                                                              .
+#   N ao            (BoolOp, 'values'):                     # expr*            -> BoolOp                 _parse_expr / restrict BoolOp  - interchangeable between and / or
 #
 #
 #
-#                 (JoinedStr, 'values'):                  # Constant|FormattedValue*  -> JoinedStr
-#                 (TemplateStr, 'values'):                # Constant|Interpolation*   -> TemplateStr
+#                   (JoinedStr, 'values'):                  # Constant|FormattedValue*  -> JoinedStr
+#                   (TemplateStr, 'values'):                # Constant|Interpolation*   -> TemplateStr
 
 
 # Tuple[expr]            _parse_expr_sliceelts
@@ -703,7 +704,7 @@ def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop
     locs    = _locs_and_bound_get(self, start, stop, body, body, 1)
     asts    = _cut_or_copy_asts(start, stop, 'elts', cut, body)
     ctx     = ast.ctx.__class__
-    ret_ast = List(elts=asts, ctx=ctx())
+    ret_ast = List(elts=asts, ctx=ctx())  # we set ctx() so that if it is not Load then set_ctx() below will recurse into it
 
     if not issubclass(ctx, Load):  # new List root object must have ctx=Load
         set_ctx(ret_ast, Load)
@@ -882,6 +883,33 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
                           options.get('trivia'), 'names', '', '', ',', False, False)
 
 
+def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
+                           **options) -> fst.FST:
+    len_body    = len(body := (ast := self.a).type_params)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
+
+    if start == stop:
+        return fst.FST._new_empty_tuple(from_=self)
+
+    locs    = _locs_and_bound_get(self, start, stop, body, body, 1)
+    asts    = _cut_or_copy_asts(start, stop, 'type_params', cut, body)
+    ret_ast = Tuple(elts=asts, ctx=Load())
+
+    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
+                          options.get('trivia'), 'type_params', '', '', ',', 0, 0)
+
+    if not body:  # everything was cut, need to remove brackets
+        (_, _, bound_end_ln, bound_end_col), (name_ln, name_col) = (
+            (self._loc_typealias_type_params_brackets if isinstance(ast, TypeAlias) else
+             self._loc_classdef_type_params_brackets if isinstance(ast, ClassDef) else
+             self._loc_funcdef_type_params_brackets)  # FunctionDef, AsyncFunctionDef
+        )()
+
+        self._put_src(None, name_ln, name_col, bound_end_ln, bound_end_col, False)
+
+    return fst_
+
+
 # TODO: handle trailing line continuation backslashes
 def _get_slice_Global_Local_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                                   cut: bool, **options) -> fst.FST:
@@ -1003,10 +1031,10 @@ _GET_SLICE_HANDLERS = {
     (MatchClass, 'patterns'):             _get_slice_NOT_IMPLEMENTED_YET,  # pattern*
     (MatchOr, 'patterns'):                _get_slice_MatchOr_patterns,  # pattern*
 
-    (FunctionDef, 'type_params'):         _get_slice_NOT_IMPLEMENTED_YET,  # type_param*
-    (AsyncFunctionDef, 'type_params'):    _get_slice_NOT_IMPLEMENTED_YET,  # type_param*
-    (ClassDef, 'type_params'):            _get_slice_NOT_IMPLEMENTED_YET,  # type_param*
-    (TypeAlias, 'type_params'):           _get_slice_NOT_IMPLEMENTED_YET,  # type_param*
+    (FunctionDef, 'type_params'):         _get_slice_type_params,  # type_param*
+    (AsyncFunctionDef, 'type_params'):    _get_slice_type_params,  # type_param*
+    (ClassDef, 'type_params'):            _get_slice_type_params,  # type_param*
+    (TypeAlias, 'type_params'):           _get_slice_type_params,  # type_param*
 
     (Global, 'names'):                    _get_slice_NOT_IMPLEMENTED_YET,  # identifier*
     (Nonlocal, 'names'):                  _get_slice_NOT_IMPLEMENTED_YET,  # identifier*
@@ -1066,9 +1094,9 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
     body2              = body if field2 is None else getattr(self.a, field2)
     len_body           = len(body)
     is_first           = not start
-    is_last            = stop                == len_body
+    is_last            = stop == len_body
     is_del             = fst_ is None
-    is_ins             = start               == stop  # will never be true if fst_ is None
+    is_ins             = start == stop  # will never be true if fst_ is None
     is_ins_ln          = False
     last               = None  # means body[-1]
     len_self_suffix    = self.end_col - bound_end_col  # will be 1 or 0 depending on if enclosed container or undelimited tuple / matchseq
@@ -1100,7 +1128,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
                                              getattr(ast_, fst_first.pfield.name if fst_first.is_FST else 'keys'),
                                              getattr(ast_, fst_last.pfield.name), 0)
 
-            fst_._redent_lns(fst_indent or '', elts_indent[len(self_indent):])  # fst_._indent_lns(elts_indent[len(self_indent):], fst_._dedent_lns(fst_indent or ''))
+            fst_._redent_lns(fst_indent or '', elts_indent[len(self_indent):])  # fst_._dedent_lns(fst_indent or ''), fst_._indent_lns(elts_indent[len(self_indent):])
 
     # locations
 
@@ -1271,17 +1299,19 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
 
     # put source
 
-    self_ln, self_col, _, _ = self.loc
+    self_ln, self_col, self_end_ln, self_end_col = self.loc
+
+    is_last_and_at_self_end = is_last and (self_end_ln, self_end_col) <= (put_end_ln, put_end_col)
 
     if put_col == self_col and put_ln == self_ln:  # put at beginning of unenclosed sequence
         self._offset(
             *self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, is_last, False, self),
             True, True, self_=False)
 
-    elif not is_last:
+    elif is_last_and_at_self_end:  # because of insertion at end and maybe unenclosed sequence
+        self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, True, self)
+    else:  # in this case there may parts of self after so we need to recurse the offset into self
         self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, False)
-    else:
-        self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, True, self)  # because of insertion at end and maybe unenclosed sequence
 
     # put / del trailing and internal separators
 
@@ -1305,7 +1335,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
                 stop_ln, stop_col = _prev_find(lines, fst_last_end_ln, fst_last_end_col,
                                                (l := body2[stop].f.loc).end_ln, l.end_col, '**')  # '**' must be there
 
-            self._maybe_ins_separator(fst_last_end_ln, fst_last_end_col, True, stop_ln, stop_col, sep, None)  # last False is because elements of self are now past comma point so will need to be offset
+            self._maybe_ins_separator(fst_last_end_ln, fst_last_end_col, True, stop_ln, stop_col, sep, None)  # last None is because elements of self are now past comma point so will need to be offset
 
         if is_ins and not is_first:  # before newly appended slice at end
             _, _, stop_end_ln, stop_end_col = (f := body2[stop - 1].f).pars()
@@ -1313,7 +1343,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
             if not fst_first.is_FST:  # special case, should only happend for Dict None key, don't like this is messy
                 fst_first = fst_._loc_maybe_dict_key(0)
 
-            if is_last:
+            if is_last_and_at_self_end:
                 exclude         = ...
                 offset_excluded = True
 
@@ -1428,15 +1458,19 @@ def _set_loc_whole(self: fst.FST) -> None:
     self._touch()
 
 
-def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any]) -> fst.FST | None:
+def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any],
+                       code_as: Callable = _code_as_expr) -> fst.FST | None:
     if code is None:
         return None
 
-    fst_ = _code_as_expr(code, self.root.parse_params, sanitize=False)
+    fst_ = code_as(code, self.root.parse_params, sanitize=False)
 
     if one:
-        if fst_.is_parenthesized_tuple() is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
-            fst_._delimit_node()
+        if (is_par := fst_.is_parenthesized_tuple()) is not None:
+            fst_._maybe_add_singleton_tuple_comma(is_par)  # specifically for lone '*starred' without comma from slices, even though those can't be gotten alone organically
+
+            if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
+                fst_._delimit_node()
 
         elif isinstance(a := fst_.a, Set):
             if (empty := self.get_option('set_del', options)):  # putting an invalid empty Set as one, make it valid according to options
@@ -1452,7 +1486,7 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
 
         ls  = fst_._lines
         ast = List(elts=[fst_.a], ctx=Load(),
-                   lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)  # because List is valid target if checked in validate
+                   lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)  # List because it is valid target if checked in validate
 
         return fst.FST(ast, ls, from_=fst_, lcopy=False)
 
@@ -1598,10 +1632,10 @@ def _validate_put_seq(self: fst.FST, fst_: fst.FST, non_slice: str, *, check_tar
     ast_ = fst_.a
 
     if non_slice and isinstance(ast_, Tuple) and any(isinstance(e, Slice) for e in ast_.elts):
-        raise ValueError(f'cannot put Slice into a {non_slice}')
+        raise NodeError(f'cannot put Slice into {non_slice}')
 
     if check_target and not isinstance(ctx := ast.ctx, Load) and not is_valid_target(ast_.elts[:]):
-        raise ValueError(f'invalid slice for {ast.__class__.__name__} {ctx.__class__.__name__} target')
+        raise NodeError(f'invalid slice for {ast.__class__.__name__} {ctx.__class__.__name__} target')
 
 
 # ......................................................................................................................
@@ -1677,12 +1711,27 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
 
 def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                           field: str, one: bool = False, **options) -> None:
-    fst_        = _code_to_slice_seq(self, code, one, options)
+    """Tuple is used in many different ways in python, also for expressionish slices by `fst`."""
+
+    # tuple invalid-AST slices
+
+    code_as = _code_as_expr_all
+
+    if elts := (ast := self.a).elts:
+        if isinstance(e0 := elts[0], type_param):
+            if one:
+                raise ValueError("cannot put as 'one' item to a type_param slice")
+
+            code_as = _code_as_type_params
+
+    fst_        = _code_to_slice_seq(self, code, one, options, code_as)
     body        = (ast := self.a).elts
     start, stop = _fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
         return
+
+    # extra checks for tuple special usage
 
     is_par   = self._is_delimited_seq()
     is_slice = (pfield := self.pfield) and pfield.name == 'slice'
@@ -1691,16 +1740,21 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
     if fst_:
         len_fst_body = len(fst_body := fst_.a.elts)
 
+        if len_fst_body == 1 and isinstance(e0 := fst_body[0], Tuple) and any(isinstance(e, Slice) for e in e0.elts):  # putting a tuple with Slices as one
+            raise NodeError('cannot put tuple with Slices to tuple')
+
         if PYLT11:
             if is_slice and not is_par and any(isinstance(e, Starred) for e in fst_body):
                 if any(isinstance(e, Slice) for i, e in enumerate(body) if i < start or i >= stop):
-                    raise ValueError('cannot put Starred to a slice Tuple containing Slices')
+                    raise NodeError('cannot put Starred to a slice Tuple containing Slices')
 
                 need_par = True
 
         elif PYGE14:
             if not is_par and pfield == ('type', None) and any(isinstance(e, Starred) for e in fst_body):  # if putting Starred to unparenthesized ExceptHandler.type Tuple then parenthesize it
                 need_par = True
+
+    # normal stuff
 
     _validate_put_seq(self, fst_,
                       '' if not is_par and (not pfield or is_slice) else 'non-slice Tuple',
@@ -2020,6 +2074,65 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
     self._maybe_fix_matchor(matchor_del)
 
 
+def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+                           field: str, one: bool = False, **options) -> None:
+    fst_        = _code_to_slice_seq(self, code, one, options, _code_as_type_params)
+    len_body    =  len(body := (ast := self.a).type_params)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
+
+    bound, (name_ln, name_col) = (
+        (self._loc_typealias_type_params_brackets if isinstance(ast, TypeAlias) else
+         self._loc_classdef_type_params_brackets if isinstance(ast, ClassDef) else
+         self._loc_funcdef_type_params_brackets)  # FunctionDef, AsyncFunctionDef
+    )()
+
+    if bound:
+        bound_ln, bound_col, bound_end_ln, bound_end_col = bound
+
+    if not fst_:
+        if not (len_slice := stop - start):
+            return
+
+        if len_slice == len_body:  # deleting everything
+            self._put_src(None, name_ln, name_col, bound_end_ln, bound_end_col, False)
+        else:
+            _put_slice_seq(self, start, stop, None, None, None, 0,
+                           bound_ln, bound_col + 1, bound_end_ln, bound_end_col - 1,
+                           options.get('trivia'), options.get('ins_ln'), 'type_params')
+
+        self._unmake_fst_tree(body[start : stop])
+
+        del body[start : stop]
+
+        len_fst_body = 0
+
+    else:
+        len_fst_body = len(fst_body := fst_.a.elts)
+
+        if not body:  # brackets don't exist, add them first
+            self._put_src('[]', name_ln, name_col, name_ln, name_col, False)
+
+            bound_ln  = bound_end_ln  = name_ln
+            bound_col = bound_end_col = name_col + 1
+
+        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'), options.get('ins_ln'), 'type_params')
+
+        self._unmake_fst_tree(body[start : stop])
+        fst_._unmake_fst_parents(True)
+
+        body[start : stop] = fst_body
+
+        FST   = fst.FST
+        stack = [FST(body[i], self, astfield('type_params', i)) for i in range(start, start + len_fst_body)]
+
+        self._make_fst_tree(stack)
+
+    for i in range(start + len_fst_body, len(body)):
+        body[i].f.pfield = astfield('type_params', i)
+
+
 # ......................................................................................................................
 
 def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
@@ -2118,10 +2231,10 @@ _PUT_SLICE_HANDLERS = {
     (MatchClass, 'patterns'):             _put_slice_NOT_IMPLEMENTED_YET,  # pattern*
     (MatchOr, 'patterns'):                _put_slice_MatchOr_patterns,  # pattern*
 
-    (FunctionDef, 'type_params'):         _put_slice_NOT_IMPLEMENTED_YET,  # type_param*
-    (AsyncFunctionDef, 'type_params'):    _put_slice_NOT_IMPLEMENTED_YET,  # type_param*
-    (ClassDef, 'type_params'):            _put_slice_NOT_IMPLEMENTED_YET,  # type_param*
-    (TypeAlias, 'type_params'):           _put_slice_NOT_IMPLEMENTED_YET,  # type_param*
+    (FunctionDef, 'type_params'):         _put_slice_type_params,  # type_param*
+    (AsyncFunctionDef, 'type_params'):    _put_slice_type_params,  # type_param*
+    (ClassDef, 'type_params'):            _put_slice_type_params,  # type_param*
+    (TypeAlias, 'type_params'):           _put_slice_type_params,  # type_param*
 
     (Global, 'names'):                    _put_slice_NOT_IMPLEMENTED_YET,  # identifier*
     (Nonlocal, 'names'):                  _put_slice_NOT_IMPLEMENTED_YET,  # identifier*

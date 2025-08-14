@@ -175,3 +175,5 @@ cython_debug/
 .idea/
 *.swp
 *.swo
+
+.ruff_cache/
