@@ -187,6 +187,20 @@ def _has_trailing_comma(src: str, end_lineno: int, end_col_offset: int) -> bool:
     return bool(_re_trailing_comma.match(src, pos))
 
 
+def _parse_all_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Assumed to have something there starting with identifier or star."""
+
+    type_params = _ast_parse1(f'type t[\n{src}\n] = None', parse_params).type_params
+
+    ast = type_params[0]
+
+    if len(type_params) > 1 or _has_trailing_comma(src, ast.end_lineno - 1, ast.end_col_offset):
+        ast = Tuple(elts=type_params, ctx=Load(), lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
+                    end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
+
+    return _offset_linenos(ast, -1)  # _offset_linenos(_validate_indent(src, ast), -1)
+
+
 def _parse_all_multiple(src: str, parse_params: Mapping[str, Any], stmt: bool, rest: list[Callable]) -> AST:
     if stmt:
         try:
@@ -384,7 +398,7 @@ def _parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if groupdict['match_type_identifier']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
                                    (_parse_expr_all, _parse_pattern, _parse_arguments, _parse_arguments_lambda,
-                                    _parse_withitem, _parse_arg, _parse_type_param))
+                                    _parse_withitem, _parse_arg, _parse_all_type_params))
 
     if groupdict['stmt']:
         return reduce_ast(_parse_stmts(src, parse_params), True)
@@ -413,17 +427,17 @@ def _parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
         return _parse_all_multiple(src, parse_params, not first.group(1),
                                    (_parse_expr_all, _parse_pattern, _parse_arguments, _parse_arguments_lambda,
-                                    _parse_withitem, _parse_arg, _parse_type_param))
+                                    _parse_withitem, _parse_arg, _parse_all_type_params))
 
     if groupdict['at']:
         return reduce_ast(_parse_stmts(src, parse_params), True)
 
     if groupdict['star']:
         ast = _parse_all_multiple(src, parse_params, not first.group(1),
-                                  (_parse_expr_callarg, _parse_operator))  # could have _parse_type_param but
+                                  (_parse_expr_callarg, _parse_all_type_params, _parse_operator))
 
         if isinstance(ast, Assign) and len(targets := ast.targets) == 1 and isinstance(targets[0], Starred):  # '*T = ...' validly parses to Assign statement but is invalid compile, but valid type_param so reparse as that
-            return _parse_type_param(src, parse_params)
+            return _parse_all_type_params(src, parse_params)
 
         return ast
 
@@ -443,7 +457,7 @@ def _parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         return _parse_all_multiple(src, parse_params, False, (_parse_expr_all,))
 
     if groupdict['starstar']:
-        return _parse_all_multiple(src, parse_params, False, (_parse_type_param, _parse_operator))
+        return _parse_all_multiple(src, parse_params, False, (_parse_all_type_params, _parse_operator))
 
     if groupdict['plus']:
         return _parse_all_multiple(src, parse_params, not first.group(1),

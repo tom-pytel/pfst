@@ -562,6 +562,8 @@ if PYGE11:
 if PYGE12:
     PARSE_TESTS.extend([
         ('all',               FST._parse_type_param,        ParamSpec,      '**a'),
+        ('all',               FST._parse_type_params,       Tuple,          '*U, **V, **Z'),
+        ('all',               FST._parse_type_params,       Tuple,          'T: int, *U, **V, **Z'),
 
         ('type_param',        FST._parse_type_param,        TypeVar,        'a: int'),
         ('type_param',        FST._parse_type_param,        ParamSpec,      '**a'),
