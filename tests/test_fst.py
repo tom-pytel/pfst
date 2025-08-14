@@ -174,6 +174,16 @@ PARSE_TESTS = [
     ('expr',              FST._parse_expr,              SyntaxError,      'a:b'),
     ('expr',              FST._parse_expr,              SyntaxError,      'a:b:c'),
 
+    ('expr_all',          FST._parse_expr_all,          Name,             'j'),
+    ('expr_all',          FST._parse_expr_all,          Starred,          '*s'),
+    ('expr_all',          FST._parse_expr_all,          Starred,          '*\ns'),
+    ('expr_all',          FST._parse_expr_all,          Tuple,            '*\ns,'),
+    ('expr_all',          FST._parse_expr_all,          Tuple,            '1\n,\n2\n,'),
+    ('expr_all',          FST._parse_expr_all,          Slice,            'a:b'),
+    ('expr_all',          FST._parse_expr_all,          Slice,            'a:b:c'),
+    ('expr_all',          FST._parse_expr_all,          Tuple,            'j, k'),
+    ('expr_all',          FST._parse_expr_all,          Tuple,            'a:b:c, x:y:z'),
+
     ('expr_callarg',      FST._parse_expr_callarg,      Name,             'j'),
     ('expr_callarg',      FST._parse_expr_callarg,      Starred,          '*s'),
     ('expr_callarg',      FST._parse_expr_callarg,      Starred,          '*not a'),
@@ -191,16 +201,6 @@ PARSE_TESTS = [
     ('expr_sliceelt',     FST._parse_expr_sliceelt,     Slice,            'a:b'),
     ('expr_sliceelt',     FST._parse_expr_sliceelt,     Tuple,            'j, k'),
     ('expr_sliceelt',     FST._parse_expr_sliceelt,     SyntaxError,      'a:b:c, x:y:z'),
-
-    ('expr_all',          FST._parse_expr_all,          Name,             'j'),
-    ('expr_all',          FST._parse_expr_all,          Starred,          '*s'),
-    ('expr_all',          FST._parse_expr_all,          Starred,          '*\ns'),
-    ('expr_all',          FST._parse_expr_all,          Tuple,            '*\ns,'),
-    ('expr_all',          FST._parse_expr_all,          Tuple,            '1\n,\n2\n,'),
-    ('expr_all',          FST._parse_expr_all,          Slice,            'a:b'),
-    ('expr_all',          FST._parse_expr_all,          Slice,            'a:b:c'),
-    ('expr_all',          FST._parse_expr_all,          Tuple,            'j, k'),
-    ('expr_all',          FST._parse_expr_all,          Tuple,            'a:b:c, x:y:z'),
 
     ('boolop',            FST._parse_boolop,            And,              'and'),
     ('boolop',            FST._parse_boolop,            ParseError,       '*'),
@@ -547,12 +547,12 @@ if PYGE11:
     PARSE_TESTS.extend([
         ('ExceptHandler',     FST._parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
 
+        ('expr_all',          FST._parse_expr_all,          Starred,        '*not a'),
+
         ('expr_slice',        FST._parse_expr_slice,        Tuple,          '*s'),
         ('expr_slice',        FST._parse_expr_slice,        Tuple,          '*not a'),
 
         ('expr_sliceelt',     FST._parse_expr_sliceelt,     Starred,        '*not a'),
-
-        ('expr_all',          FST._parse_expr_all,          Starred,        '*not a'),
 
         (ExceptHandler,       FST._parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
 
@@ -566,6 +566,13 @@ if PYGE12:
         ('type_param',        FST._parse_type_param,        TypeVar,        'a: int'),
         ('type_param',        FST._parse_type_param,        ParamSpec,      '**a'),
         ('type_param',        FST._parse_type_param,        TypeVarTuple,   '*a'),
+        ('type_param',        FST._parse_type_param,        ParseError,     'a: int,'),
+
+        ('type_params',       FST._parse_type_params,       Tuple,          ''),
+        ('type_params',       FST._parse_type_params,       Tuple,          '()'),
+        ('type_params',       FST._parse_type_params,       Tuple,          'a: int'),
+        ('type_params',       FST._parse_type_params,       Tuple,          'a: int,'),
+        ('type_params',       FST._parse_type_params,       Tuple,          'a: int, *b, **c'),
 
         (type_param,          FST._parse_type_param,        TypeVar,        'a: int'),
         (TypeVar,             FST._parse_type_param,        TypeVar,        'a: int'),
@@ -1046,7 +1053,9 @@ class TestFST(unittest.TestCase):
                 fst = FST(src, mode)
 
                 fst.verify(mode)
-                fst.verify()
+
+                if not isinstance(fst.a, Tuple) or fst.a.elts:  # zero-length tuples may not be valid due to special use in slices
+                    fst.verify()
 
                 if isinstance(a := fst.a, Expression):
                     a = a.body
@@ -2792,8 +2801,8 @@ match a:
             ast = None
 
             try:
-                if func in (FST._parse_ExceptHandlers, FST._parse_match_cases):
-                    continue
+                # if func in (FST._parse_ExceptHandlers, FST._parse_match_cases, FST._parse_type_params):
+                #     continue
 
                 ast  = FST._parse(src, mode)
                 astc = copy_ast(ast)

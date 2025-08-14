@@ -90,7 +90,7 @@ from .misc import (
     PYLT13,
     EXPRISH_ALL, STMTISH, STMTISH_OR_MOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
     NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE,
-    NodeError, astfield, fstloc, fstlocns, nspace,
+    astfield, fstloc, fstlocns, nspace,
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Self, Code,
     _next_src, _next_find, _next_pars, _prev_pars,
@@ -4054,15 +4054,13 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
     # Low level
 
-    def get_parse_mode(self, raise_: bool = True) -> builtins.str | type[AST] | None:
+    def get_parse_mode(self) -> builtins.str | type[AST] | None:
         r"""Determine the parse mode for this node. This is the extended parse mode as per `Mode`, not the `ast.parse()`
         mode. Returns a mode which is guaranteed to reparse this assumed-valid element to an exact copy of itself. This
         mode is not guaranteed to be the same as was used to create the `FST`, just guaranteed to be able to recreate
         it. Mostly it just returns the `AST` type, but in cases where that won't parse to this `FST` it will return
-        a string mode. This is just an early-out interrogate function, doesn't verify that everything is correct.
-
-        **Parameters:**
-        - `raise_`: Whether to raise an exception on failure or return `None`.
+        a string mode. This is just a quick early-out screen function which assumes the `FST` is correct for what it is
+        and doesn't verify anything beyond the first indication of what the parse mode should be.
 
         **Returns:**
         - `str`: One of the special text specifiers. Will be returned for most slices and special cases like an `*a`
@@ -4085,36 +4083,21 @@ class FST:
 
         ast = self.a
 
-        try:
-            if isinstance(ast, Module):  # maybe ExceptHandlers and match_cases
-                if not (body := ast.body) or isinstance(b0 := body[0], stmt):
-                    return Module
-                elif isinstance(b0, ExceptHandler):
-                    return 'ExceptHandlers'
-                elif isinstance(b0, match_case):
-                    return 'match_cases'
+        if mode := self._get_special_parse_mode(ast):
+            return mode
 
-                raise NodeError('invalid Module')
+        # now we check the cases that need source code
 
-            if isinstance(ast, Tuple) and (elts := ast.elts):
-                if isinstance(e0 := elts[0], Starred):
-                    if len(elts) == 1:
-                        _, _, ln, col         = e0.f.loc
-                        _, _, end_ln, end_col = self.loc
+        if isinstance(ast, Tuple) and (elts := ast.elts):
+            if isinstance(e0 := elts[0], Starred):
+                if len(elts) == 1:
+                    _, _, ln, col         = e0.f.loc
+                    _, _, end_ln, end_col = self.loc
 
-                        if not _next_find(self.root.lines, ln, col, end_ln, end_col, ','):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
-                            return 'expr_slice'
+                    if not _next_find(self.root.lines, ln, col, end_ln, end_col, ','):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
+                        return 'expr_slice'
 
-                elif isinstance(e0, type_param):
-                    return 'type_params'
-
-            return ast.__class__  # otherwise regular parse by AST type is valid
-
-        except NodeError:
-            if raise_:
-                raise
-
-        return None
+        return ast.__class__  # otherwise regular parse by AST type is valid
 
     def get_indent(self) -> builtins.str:
         r"""Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
@@ -5039,6 +5022,7 @@ class FST:
     )
 
     from .fst_parse import (
+        _get_special_parse_mode,
         _unparse,
         _parse,
         _parse_all,

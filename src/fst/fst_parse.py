@@ -78,6 +78,8 @@ class ParseError(SyntaxError):
     """Not technically a syntax error but mostly not the code we were expecting."""
 
 
+_re_trailing_comma     = re.compile(r'(?: [)\s]* (?: (?: \\ | \#[^\n]* ) \n )? )* ,', re.VERBOSE)  # trailing comma search ignoring comments and line continuation backslashes
+
 _re_first_src          = re.compile(r'^([^\S\n]*)([^\s\\#]+)', re.MULTILINE)  # search for first non-comment non-linecont source code
 _re_parse_all_category = re.compile(r'''
     (?P<stmt>                          (?: assert | break | class | continue | def | del | from | global | import | nonlocal | pass | raise | return | try | while | with ) \b ) |
@@ -122,15 +124,20 @@ def _ast_parse1_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 def _fixing_unparse(ast: AST) -> str:
     try:
-        return ast_unparse(ast)
+        src = ast_unparse(ast)
 
     except AttributeError as exc:
         if not str(exc).endswith("has no attribute 'lineno'"):
             raise
 
-    ast_fix_missing_locations(ast)
+        ast_fix_missing_locations(ast)
 
-    return ast_unparse(ast)
+        src = ast_unparse(ast)
+
+    if isinstance(ast, Tuple) and (elts := ast.elts) and not isinstance(elts[0], expr):  # these are special invalid-AST slices without enclosing parentheses
+        src = src[1:-1]  # strip parentheses
+
+    return src
 
 
 # def _validate_indent(src: str, ret: Any = None) -> Any:
@@ -167,6 +174,17 @@ def _fix_unparenthesized_tuple_parsed_parenthesized(src: str, ast: AST) -> None:
         end_ln, end_col, _ = code
         ast.end_lineno     = end_ln + 2
         ast.end_col_offset = len(lines[end_ln][:end_col + 1].encode())
+
+
+def _has_trailing_comma(src: str, end_lineno: int, end_col_offset: int) -> bool:
+    pos = 0
+
+    for _ in range(end_lineno - 1):
+        pos = src.find('\n', pos) + 1  # assumed to all be there
+
+    pos += len(src[pos : pos + end_col_offset].encode()[:end_col_offset].decode())
+
+    return bool(_re_trailing_comma.match(src, pos))
 
 
 def _parse_all_multiple(src: str, parse_params: Mapping[str, Any], stmt: bool, rest: list[Callable]) -> AST:
@@ -262,6 +280,32 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any],
 
 # ----------------------------------------------------------------------------------------------------------------------
 # FST class private methods
+
+@staticmethod
+def _get_special_parse_mode(ast: AST) -> str | None:
+    r"""Determine to the best of ability if a special parse mode is needed for this `AST`. This is the extended parse
+    mode as per `Mode`, not the `ast.parse()` mode. If a special mode applies it is returned which should parse the
+    source of this `AST` back to itself. Otherwise `None` is returned.
+
+    **Returns:**
+    - `str`: One of the special parse modes.
+    - `None`: If no special parse mode applies or can be determined.
+    """
+
+    if isinstance(ast, Module):
+        if body := ast.body:
+            if isinstance(b0 := body[0], ExceptHandler):
+                return 'ExceptHandlers'
+            elif isinstance(b0, match_case):
+                return 'match_cases'
+
+    if isinstance(ast, Tuple):
+        if elts := ast.elts:
+            if isinstance(elts[0], type_param):
+                return 'type_params'
+
+    return None
+
 
 @staticmethod
 def _unparse(ast: AST) -> str:
@@ -1011,7 +1055,12 @@ def _parse_type_param(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if len(type_params) != 1:
         raise ParseError('expecting single type_param')
 
-    return _offset_linenos(type_params[0], -1)  # _offset_linenos(_validate_indent(src, type_params[0]), -1)
+    ast = type_params[0]
+
+    if _has_trailing_comma(src, ast.end_lineno - 1, ast.end_col_offset):
+        raise ParseError('expecting single type_param, has trailing comma')
+
+    return _offset_linenos(ast, -1)  # _offset_linenos(_validate_indent(src, type_params[0]), -1)
 
 
 @staticmethod
@@ -1057,7 +1106,7 @@ def _code_as_all(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:  
         return code
 
     if isinstance(code, AST):
-        mode  = code.__class__
+        mode  = _get_special_parse_mode(code) or code.__class__
         code  = _unparse(code)
         lines = code.split('\n')
 
