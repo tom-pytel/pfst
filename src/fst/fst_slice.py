@@ -1343,16 +1343,8 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
             if not fst_first.is_FST:  # special case, should only happend for Dict None key, don't like this is messy
                 fst_first = fst_._loc_maybe_dict_key(0)
 
-            if is_last_and_at_self_end:
-                exclude         = ...
-                offset_excluded = True
-
-            else:  # need to exclude this specifically because otherwise would extend its end to include the separator
-                exclude         = f
-                offset_excluded = False
-
             if code := self._maybe_ins_separator(stop_end_ln, stop_end_col, True, fst_first.ln, fst_first.col, sep,
-                                                 exclude, offset_excluded):  # if something was put (separator and / or space) then we need to explicitly offset the fst_ elements as well since they don't live in self yet but in fst_
+                                                 True if is_last_and_at_self_end else f):  # if something was put (separator and / or space) then we need to explicitly offset the fst_ elements as well since they don't live in self yet but in fst_
                 ln, col, src = code
 
                 fst_._offset(ln, col, 0, len(src))

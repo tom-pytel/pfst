@@ -17919,6 +17919,32 @@ Module - ROOT 0,0..0,24
     .value Constant Ellipsis - 0,21..0,24
 """),
 
+(r"""type t[**V]=...""", 'body[0]', 0, 0, 'type_params', {'_ver': 12}, r"""T""", r"""type t[T, **V]=...""", r"""
+Module - ROOT 0,0..0,18
+  .body[1]
+  0] TypeAlias - 0,0..0,18
+    .name Name 't' Store - 0,5..0,6
+    .type_params[2]
+    0] TypeVar - 0,7..0,8
+      .name 'T'
+    1] ParamSpec - 0,10..0,13
+      .name 'V'
+    .value Constant Ellipsis - 0,15..0,18
+"""),
+
+(r"""type t[**V]=...""", 'body[0]', 1, 1, 'type_params', {'_ver': 12}, r"""T""", r"""type t[**V, T]=...""", r"""
+Module - ROOT 0,0..0,18
+  .body[1]
+  0] TypeAlias - 0,0..0,18
+    .name Name 't' Store - 0,5..0,6
+    .type_params[2]
+    0] ParamSpec - 0,7..0,10
+      .name 'V'
+    1] TypeVar - 0,12..0,13
+      .name 'T'
+    .value Constant Ellipsis - 0,15..0,18
+"""),
+
 ]  # END OF PUT_SLICE_DATA
 
 PUT_SRC_DATA = [

@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 from ast import literal_eval, iter_fields, iter_child_nodes, walk
 from math import log10
-from types import EllipsisType, TracebackType
+from types import TracebackType
 from typing import Callable, Literal
 
 from . import fst
@@ -1354,7 +1354,7 @@ def _maybe_del_separator(self: fst.FST, ln: int, col: int, force: bool = False,
 
 def _maybe_ins_separator(self: fst.FST, ln: int, col: int, space: bool,
                          end_ln: int | None = None, end_col: int | None = None, sep: str = ',',
-                         exclude: fst.FST | None | EllipsisType = ..., offset_excluded: bool = True) -> srcwpos | None:
+                         exclude: Literal[True] | fst.FST | None = True) -> srcwpos | None:
     """Maybe insert separator at start of span if not already present as first code in span. Will skip any closing
     parentheses for check and add. We specifically don't use `pars()` here because is meant to be used where the element
     is being modified and may not be valid for that.
@@ -1366,9 +1366,10 @@ def _maybe_ins_separator(self: fst.FST, ln: int, col: int, space: bool,
         character exists and is not a space. Will add space before a separator being put if is not a comma. Will not
         insert space before an existing found separator if is not there.
     - `sep`: String separator to use. Any separator which is not a comma will have a space prepended to it if adding.
-    - `exclude`: `...` means exclude `self`, `None` excludes nothing and any other `FST` excludes that `FST`. Should be
-        `...` if separator is for sure being put past all elements of `self`.
-    - `offset_excluded`: Parameter to `_offset()`.
+    - `exclude`: `True` means exclude `self`, `None` excludes nothing and any other `FST` excludes that `FST`. Should be
+        `True` if separator is for sure being put past all elements of `self`. `FST` and `None` is meant for cases where
+        there may be elements following separator insertion location. `FST` specifically for elements which end just
+        before the search location so that their end position is not extended by the separator source put.
 
     **Returns:**
     - `srcwpos`: If something was put then returns location and what was put (separator, space or both).
@@ -1378,7 +1379,7 @@ def _maybe_ins_separator(self: fst.FST, ln: int, col: int, space: bool,
     if end_ln is None:
         _, _, end_ln, end_col = self.loc
 
-    if exclude is ...:
+    if offset_excluded := exclude is True:
         exclude = self
 
     lines = self.root._lines
