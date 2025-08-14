@@ -17945,6 +17945,25 @@ Module - ROOT 0,0..0,18
     .value Constant Ellipsis - 0,15..0,18
 """),
 
+(r"""type t[T, *U, **V] = ...""", 'body[0]', 0, 3, 'type_params', {'_ver': 12, 'one': True}, r"""*Z = ()""", r"""type t[*Z = ()] = ...""", r"""
+Module - ROOT 0,0..0,21
+  .body[1]
+  0] TypeAlias - 0,0..0,21
+    .name Name 't' Store - 0,5..0,6
+    .type_params[1]
+    0] TypeVarTuple - 0,7..0,14
+      .name 'Z'
+      .default_value Tuple - 0,12..0,14
+        .ctx Load
+    .value Constant Ellipsis - 0,18..0,21
+"""),
+
+(r"""type t[T, *U, **V] = ...""", 'body[0]', 0, 3, 'type_params', {'_ver': 12, 'one': True}, r"""T, *U""", r"""**ParseError('expecting single type_param')**""", r"""
+"""),
+
+(r"""type t[T, *U, **V] = ...""", 'body[0]', 0, 3, 'type_params', {'_ver': 12, 'one': True}, r"""T,""", r"""**ParseError('expecting single type_param, has trailing comma')**""", r"""
+"""),
+
 ]  # END OF PUT_SLICE_DATA
 
 PUT_SRC_DATA = [

@@ -73,7 +73,7 @@ from .misc import (
     _leading_trivia, _trailing_trivia,
 )
 
-from .fst_parse import _code_as_expr, _code_as_expr_all, _code_as_pattern, _code_as_type_params
+from .fst_parse import _code_as_expr, _code_as_expr_all, _code_as_pattern, _code_as_type_param, _code_as_type_params
 from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish
 
 _re_one_space            = re.compile(r'\s')
@@ -1616,6 +1616,32 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
     return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
 
+def _code_to_slice_type_params(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any]) -> fst.FST | None:
+    if code is None:
+        return None
+
+    if one:
+        fst_ = _code_as_type_param(code, self.root.parse_params, sanitize=False)
+
+        return fst.FST(Tuple(elts=[fst_.a], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                             end_col_offset=ls[-1].lenbytes), ls, from_=fst_, lcopy=False)
+
+    fst_ = _code_as_type_params(code, self.root.parse_params, sanitize=False)
+    ast_ = fst_.a
+
+    if not isinstance(ast_, Tuple):
+        raise NodeError(f"slice being assigned to {self.a.__class__.__name__}.type_params "
+                        f"must be a Tuple, not a {ast_.__class__.__name__}", rawable=True)
+
+    if not ast_.elts:  # put empty sequence is same as delete
+        return None
+
+    if fst_.is_parenthesized_tuple() is True:
+        _trim_delimiters(fst_)
+
+    return fst_
+
+
 def _validate_put_seq(self: fst.FST, fst_: fst.FST, non_slice: str, *, check_target: bool = False) -> None:
     if not fst_:
         return
@@ -1703,20 +1729,19 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
 
 def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                           field: str, one: bool = False, **options) -> None:
-    """Tuple is used in many different ways in python, also for expressionish slices by `fst`."""
+    """Tuple is used in many different ways in python, also for expressionish slices by us."""
 
     # tuple invalid-AST slices
 
-    code_as = _code_as_expr_all
+    fst_ = None
 
     if elts := (ast := self.a).elts:
         if isinstance(e0 := elts[0], type_param):
-            if one:
-                raise ValueError("cannot put as 'one' item to a type_param slice")
+            fst_ = _code_to_slice_type_params(self, code, one, options)
 
-            code_as = _code_as_type_params
+    if fst_ is None:
+        fst_ = _code_to_slice_seq(self, code, one, options, _code_as_expr_all)
 
-    fst_        = _code_to_slice_seq(self, code, one, options, code_as)
     body        = (ast := self.a).elts
     start, stop = _fixup_slice_indices(len(body), start, stop)
 
@@ -2068,7 +2093,7 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
 
 def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                            field: str, one: bool = False, **options) -> None:
-    fst_        = _code_to_slice_seq(self, code, one, options, _code_as_type_params)
+    fst_        = _code_to_slice_type_params(self, code, one, options)
     len_body    =  len(body := (ast := self.a).type_params)
     start, stop = _fixup_slice_indices(len_body, start, stop)
 

@@ -5,7 +5,7 @@ import sys
 from ast import parse as ast_parse
 from functools import wraps
 from math import log10
-from typing import Callable, ForwardRef, Literal, NamedTuple, Union
+from typing import Callable, ForwardRef, Literal, NamedTuple, Union  # , Sequence
 
 import fst
 
@@ -421,8 +421,12 @@ def _shortstr(s: str, maxlen: int = 64) -> str:
     return f'{s[:(t+1)//2]} .. [{l} chars] .. {s[-(t//2):]}'
 
 
-# ----------------------------------------------------------------------------------------------------------------------
-# FST class private methods
+# def _cls_names(cls: type | Sequence[type], last_separator: str = ' or ') -> str:
+#     if isinstance(cls, Sequence):
+#         return f'{", ".join(a.__name__ for a in cls[:-1])}{last_separator}{cls[-1].__name__}'
+
+#     return cls.__name__
+
 
 def _next_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
               comment: bool = False, lcont: bool | None = False) -> srcwpos | None:

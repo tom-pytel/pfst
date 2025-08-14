@@ -206,7 +206,7 @@ def regen_put_slice():
             try:
                 f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
 
-            except (NotImplementedError, NodeError) as exc:
+            except (NotImplementedError, NodeError, ParseError) as exc:
                 tdst  = f'**{exc!r}**'
                 tdump = ''
 
@@ -1798,7 +1798,7 @@ def func():
                 try:
                     f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
 
-                except (NotImplementedError, NodeError) as exc:
+                except (NotImplementedError, NodeError, ParseError) as exc:
                     tdst  = f'**{exc!r}**'
                     tdump = ['']
 
@@ -2507,7 +2507,12 @@ a | (
             self.assertEqual('T, *U, T', f.put_slice(g, 'end').src)
             f.verify()
 
+            # put single type_param as 'one' to tuple_params slice
 
+    def test_put_as_one_to_slice(self):
+        if PYGE12:
+            self.assertEqual('Z, **V', (f := FST('T, *U, **V', 'type_params').put_slice('Z', 0, 2)).src)
+            f.verify()
 
 
 if __name__ == '__main__':
