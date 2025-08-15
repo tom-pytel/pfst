@@ -2157,10 +2157,11 @@ def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | N
     if code is self.root:  # don't allow own root to be put to self
         raise ValueError('circular put detected')
 
-    raw = fst.FST.get_option('raw', options)
-
     if options.get('to') is not None:
         raise ValueError("cannot put slice with 'to' option")
+
+    raw        = fst.FST.get_option('raw', options)
+    nonraw_exc = None
 
     if raw is not True:
         try:
@@ -2177,8 +2178,13 @@ def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | N
             if not raw or (isinstance(exc, NodeError) and not exc.rawable):
                 raise
 
+            nonraw_exc = exc
+
     with self._modifying(field, True):
-        return _put_slice_raw(self, code, start, stop, field, one=one, **options)
+        try:
+            return _put_slice_raw(self, code, start, stop, field, one=one, **options)
+        except Exception as raw_exc:
+            raise raw_exc from nonraw_exc
 
 
 _PUT_SLICE_HANDLERS = {

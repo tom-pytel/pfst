@@ -209,7 +209,7 @@ def _parse_all_multiple(src: str, parse_params: Mapping[str, Any], stmt: bool, r
         except SyntaxError:  # except IndentationError: raise  # before if checking that
             pass
 
-    raise ParseError('could not parse')
+    raise ParseError('invalid syntax')
 
 
 def _code_as_op(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any],

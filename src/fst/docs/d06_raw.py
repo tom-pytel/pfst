@@ -190,7 +190,7 @@ But it can cause problems.
 ...     f.elts[0].replace('z', raw=True, pars=False, to=f.elts[2])
 ... except Exception as exc:
 ...     print(str(exc))
-could not parse
+invalid syntax
 
 >>> # this failed because the source code winds up being `[z, )]`
 

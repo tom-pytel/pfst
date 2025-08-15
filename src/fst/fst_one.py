@@ -1802,10 +1802,11 @@ def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, **op
     if code is self.root:  # don't allow own root to be put to self
         raise ValueError('circular put detected')
 
-    ast   = self.a
-    child = getattr(self.a, field) if field else None
-    raw   = fst.FST.get_option('raw', options)
-    to    = options.get('to')
+    ast        = self.a
+    child      = getattr(self.a, field) if field else None
+    raw        = fst.FST.get_option('raw', options)
+    to         = options.get('to')
+    nonraw_exc = None
 
     sliceable, handler, static = _PUT_ONE_HANDLERS.get((ast.__class__, field), (False, None, None))
 
@@ -1832,8 +1833,13 @@ def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, **op
             if not raw or (isinstance(exc, NodeError) and not exc.rawable):
                 raise
 
+            nonraw_exc = exc
+
     with self._modifying(field, True):
-        return _put_one_raw(self, code, idx, field, child, static, **options)
+        try:
+            return _put_one_raw(self, code, idx, field, child, static, **options)
+        except Exception as raw_exc:
+            raise raw_exc from nonraw_exc
 
 
 def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST | list[AST],
