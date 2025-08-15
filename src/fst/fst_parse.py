@@ -436,7 +436,7 @@ def _parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     if groupdict['star']:
         ast = _parse_all_multiple(src, parse_params, not first.group(1),
-                                  (_parse_expr_callarg, _parse_pattern, _parse_arguments, _parse_arguments_lambda,
+                                  (_parse_expr_arglike, _parse_pattern, _parse_arguments, _parse_arguments_lambda,
                                    _parse_all_type_params, _parse_operator))
 
         if isinstance(ast, Assign) and len(targets := ast.targets) == 1 and isinstance(targets[0], Starred):  # '*T = ...' validly parses to Assign statement but is invalid compile, but valid type_param so reparse as that
@@ -688,7 +688,7 @@ def _parse_expr_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11  # except IndentationError: raise  # before if checking that
         try:
-            ast = _parse_expr_callarg(src, parse_params)  # expr_callarg instead of expr because py 3.10 won't pick up `*not a` in a slice above
+            ast = _parse_expr_arglike(src, parse_params)  # expr_arglike instead of expr because py 3.10 won't pick up `*not a` in a slice above
         except SyntaxError:
             raise SyntaxError('invalid expression (all types)') from None
 
@@ -702,7 +702,7 @@ def _parse_expr_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 @staticmethod
-def _parse_expr_callarg(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def _parse_expr_arglike(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `expr` or in the context of a `Call.args` which treats `Starred` differently."""
 
     try:
@@ -1286,7 +1286,7 @@ def _code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *,
         return ('expecting Tuple' if parse is _parse_Tuple else
                 'expecting expression (slice element)' if parse is _parse_expr_sliceelt else
                 'expecting expression (slice)' if parse is _parse_expr_slice else
-                'expecting expression (call arg)' if parse is _parse_expr_callarg else
+                'expecting expression (arglike)' if parse is _parse_expr_arglike else
                 'expecting expression (any)' if parse is _parse_expr_all else
                 'expecting expression (standard)')
 
@@ -1345,10 +1345,10 @@ def _code_as_expr_all(code: Code, parse_params: Mapping[str, Any] = {}, *, sanit
 
 
 @staticmethod
-def _code_as_expr_callarg(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def _code_as_expr_arglike(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to an `expr` in the context of a `Call.args` which has special parse rules for `Starred`."""
 
-    return _code_as_expr(code, parse_params, parse=_parse_expr_callarg, sanitize=sanitize)
+    return _code_as_expr(code, parse_params, parse=_parse_expr_arglike, sanitize=sanitize)
 
 
 @staticmethod
@@ -1649,7 +1649,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'match_cases':       _parse_match_cases,
     'expr':              _parse_expr,
     'expr_all':          _parse_expr_all,       # `a:b:c`, `*not c`, `*st`, `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`, `*not c`
-    'expr_callarg':      _parse_expr_callarg,   # `*a or b`, `*not c`
+    'expr_arglike':      _parse_expr_arglike,   # `*a or b`, `*not c`
     'expr_slice':        _parse_expr_slice,     # `a:b:c`, `*not c`, `a:b:c, x:y:z`, `*st` -> `*st,` (py 3.11+)
     'expr_sliceelt':     _parse_expr_sliceelt,  # `a:b:c`, `*not c`, `*st`
     'Tuple':             _parse_Tuple,          # `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`
@@ -1677,8 +1677,8 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     stmt:                _parse_stmt,
     ExceptHandler:       _parse_ExceptHandler,
     match_case:          _parse_match_case,
-    expr:                _parse_expr,
-    Starred:             _parse_expr_callarg,  # because could have form '*a or b' and we want to parse any form of Starred here
+    expr:                _parse_expr,          # not _expr_all because those cases are handled in Starred, Slice and Tuple
+    Starred:             _parse_expr_arglike,  # because could have form '*a or b' and we want to parse any form of Starred here
     Slice:               _parse_expr_slice,    # because otherwise would be _parse_expr which doesn't do slice by default, parses '*a' to '*a,' on py 3.11+
     Tuple:               _parse_Tuple,         # because could have slice in it and we are parsing all forms including '*not a'
     boolop:              _parse_boolop,

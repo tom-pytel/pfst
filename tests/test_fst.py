@@ -185,13 +185,13 @@ PARSE_TESTS = [
     ('expr_all',          FST._parse_expr_all,          Tuple,            'j, k'),
     ('expr_all',          FST._parse_expr_all,          Tuple,            'a:b:c, x:y:z'),
 
-    ('expr_callarg',      FST._parse_expr_callarg,      Name,             'j'),
-    ('expr_callarg',      FST._parse_expr_callarg,      Starred,          '*s'),
-    ('expr_callarg',      FST._parse_expr_callarg,      Starred,          '*not a'),
-    ('expr_callarg',      FST._parse_expr_callarg,      Tuple,            'j, k'),
-    ('expr_callarg',      FST._parse_expr_callarg,      ParseError,       'i=1'),
-    ('expr_callarg',      FST._parse_expr_callarg,      SyntaxError,      'a:b'),
-    ('expr_callarg',      FST._parse_expr_callarg,      SyntaxError,      'a:b:c'),
+    ('expr_arglike',      FST._parse_expr_arglike,      Name,             'j'),
+    ('expr_arglike',      FST._parse_expr_arglike,      Starred,          '*s'),
+    ('expr_arglike',      FST._parse_expr_arglike,      Starred,          '*not a'),
+    ('expr_arglike',      FST._parse_expr_arglike,      Tuple,            'j, k'),
+    ('expr_arglike',      FST._parse_expr_arglike,      ParseError,       'i=1'),
+    ('expr_arglike',      FST._parse_expr_arglike,      SyntaxError,      'a:b'),
+    ('expr_arglike',      FST._parse_expr_arglike,      SyntaxError,      'a:b:c'),
 
     ('expr_slice',        FST._parse_expr_slice,        Name,             'j'),
     ('expr_slice',        FST._parse_expr_slice,        Slice,            'a:b'),
@@ -439,7 +439,7 @@ PARSE_TESTS = [
     (Name,                FST._parse_expr,              Name,             'j'),
     (Starred,             FST._parse_expr,              Starred,          '*s'),
 
-    (Starred,             FST._parse_expr_callarg,      Starred,          '*not a'),
+    (Starred,             FST._parse_expr_arglike,      Starred,          '*not a'),
 
     (Slice,               FST._parse_expr_slice,        Slice,            'a:b'),
 
@@ -524,7 +524,7 @@ PARSE_TESTS = [
     (MatchStar,           FST._parse_pattern,           MatchStar,        '*a'),
 
     ('expr',              FST._parse_expr,              Tuple,            ' *a,  # tail'),
-    ('expr_callarg',      FST._parse_expr_callarg,      Starred,          ' *not a  # tail'),
+    ('expr_arglike',      FST._parse_expr_arglike,      Starred,          ' *not a  # tail'),
     ('expr_slice',        FST._parse_expr_slice,        Slice,            ' a:b:c  # tail'),
     ('expr_slice',        FST._parse_expr_slice,        Yield,            ' yield  # tail'),
     ('boolop',            FST._parse_boolop,            And,              ' and  # tail'),
@@ -748,7 +748,7 @@ class TestFST(unittest.TestCase):
     def test__parse_special(self):
         self.assertRaises(SyntaxError, FST._parse_expr, 'i for i in j')
         self.assertRaises(SyntaxError, FST._parse_expr_slice, 'i for i in j')
-        self.assertRaises(SyntaxError, FST._parse_expr_callarg, 'i for i in j')
+        self.assertRaises(SyntaxError, FST._parse_expr_arglike, 'i for i in j')
 
         self.assertRaises(SyntaxError, FST._parse_withitem, 'i for i in j')
         self.assertRaises(SyntaxError, FST._parse_withitem, '')

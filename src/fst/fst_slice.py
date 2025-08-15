@@ -110,11 +110,11 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 #                                                                              .
 #                                                                              .
 #                                                                              .
-#   S ,             (ClassDef, 'bases'):                    # expr*            -> Tuple[expr_callarg]    _parse_expr_callargs
-#   S ,             (Call, 'args'):                         # expr*            -> Tuple[expr_callarg]    _parse_expr_callargs
+#   S ,             (ClassDef, 'bases'):                    # expr*            -> Tuple[expr_arglike]    _parse_expr_arglikes
+#   S ,             (Call, 'args'):                         # expr*            -> Tuple[expr_arglike]    _parse_expr_arglikes
 #
 #   S ,             (Delete, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
-#   S ,             (Assign, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
+#   S =             (Assign, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
 #                                                                              .
 #                                                                              .
 #                                                                              .
@@ -164,13 +164,13 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 #                   (TemplateStr, 'values'):                # Constant|Interpolation*   -> TemplateStr
 
 
-# Tuple[expr]            _parse_expr_sliceelts
-# Tuple[expr]            _parse_expr_callargs
-# Tuple[keyword]         _parse_keywords
-# Tuple[type_param]      _parse_type_params
-# Tuple[withitem]        _parse_withitems
-# Tuple[alias]           _parse_aliases_dotted
-# Tuple[alias]           _parse_aliases_star
+#   Tuple[expr]            _parse_expr_sliceelts
+#   Tuple[expr]            _parse_expr_arglikes
+#   Tuple[keyword]         _parse_keywords
+# * Tuple[type_param]      _parse_type_params
+#   Tuple[withitem]        _parse_withitems
+#   Tuple[alias]           _parse_aliases_dotted
+#   Tuple[alias]           _parse_aliases_star
 
 
 # --- NOT CONTIGUOUS! -------------------------------

@@ -2522,7 +2522,7 @@ a | (
             self.assertRaises(NodeError, FST('a = b').put, FST('T, **U', 'type_params'), 'value')  # expr
             self.assertRaises(NodeError, FST('a = b').put, FST('T, **U', 'type_params').a, 'value')
 
-            self.assertRaises(NodeError, FST('f(a)').put, FST('T, **U', 'type_params'), 0, 'args')  # expr_callarg
+            self.assertRaises(NodeError, FST('f(a)').put, FST('T, **U', 'type_params'), 0, 'args')  # expr_arglike
             self.assertRaises(NodeError, FST('f(a)').put, FST('T, **U', 'type_params').a, 0, 'args')
 
             self.assertRaises(NodeError, FST('a[b]').put, FST('T, **U', 'type_params'), 'slice')  # expr_slice

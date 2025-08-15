@@ -195,12 +195,12 @@ Have you ever dreamed of being able to parse the `+` operator? Well now you can!
 <Add ROOT 0,0..0,1>
 ```
 
-There are some special modes, like `'expr_callarg'`, which allow parsing some things which are not normally parsable in their
+There are some special modes, like `'expr_arglike'`, which allow parsing some things which are not normally parsable in their
 usual context. The below is not normally parsable in an expression context as it is special syntax for `Call` vararg
 arguments. For a full list of parse modes see `fst.misc.Mode`.
 
 ```py
->>> FST('*a or b', 'expr_callarg').dump()
+>>> FST('*a or b', 'expr_arglike').dump()
 Starred - ROOT 0,0..0,7
   .value BoolOp - 0,1..0,7
     .op Or

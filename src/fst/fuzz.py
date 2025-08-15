@@ -277,7 +277,7 @@ def ignorable_exc(exc: Exception, putsrc: str | Literal[False] | None = None):
 
         elif putsrc:  # Starred stuff like "*a or b" coming from original code
             try:
-                FST._parse_expr_callarg(putsrc)
+                FST._parse_expr_arglike(putsrc)
             except SyntaxError:
                 pass
             else:
