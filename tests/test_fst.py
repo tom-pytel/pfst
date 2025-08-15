@@ -2353,8 +2353,8 @@ call(a)
 
         g = FST('from a import b', 'exec').body[0].names[0]
         self.assertRaises(ValueError, f._code_as_stmts, f.body[0].test)
-        self.assertRaises(ParseError, f._code_as_stmts, g.copy())
-        self.assertRaises(ParseError, f._code_as_stmts, g.a)
+        self.assertRaises(NodeError, f._code_as_stmts, g.copy())
+        self.assertRaises(NodeError, f._code_as_stmts, g.a)
         self.assertRaises(SyntaxError, f._code_as_stmts, 'except Exception: pass')
 
         f = FST('f(a)', 'exec')
@@ -2407,8 +2407,8 @@ call(a)
         self.assertTrue(compare_asts(h.a, g.a, locs=False, raise_=True))
 
         self.assertRaises(ValueError, f._code_as_expr, FST('i = 1', 'exec').body[0])
-        self.assertRaises(ParseError, f._code_as_expr, FST('i = 1', 'exec').body[0].copy())
-        self.assertRaises(ParseError, f._code_as_expr, f.body[0].a)
+        self.assertRaises(NodeError, f._code_as_expr, FST('i = 1', 'exec').body[0].copy())
+        self.assertRaises(NodeError, f._code_as_expr, f.body[0].a)
         self.assertRaises(SyntaxError, f._code_as_expr, 'pass')
 
         # ExceptHandlers
@@ -2639,8 +2639,8 @@ call(a)
 
         g = FST('from a import b', 'exec').body[0].names[0]
         self.assertRaises(ValueError, f._code_as_stmts, f.body[0].test)
-        self.assertRaises(ParseError, f._code_as_stmts, g.copy())
-        self.assertRaises(ParseError, f._code_as_stmts, g.a)
+        self.assertRaises(NodeError, f._code_as_stmts, g.copy())
+        self.assertRaises(NodeError, f._code_as_stmts, g.a)
 
         f = FST('f(a)', 'exec')
         h = f._code_as_stmts(f.body[0].value.copy())

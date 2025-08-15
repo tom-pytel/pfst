@@ -2516,23 +2516,23 @@ a | (
     def test_invalid_AST_slice_usage_errors(self):
         # invalid-AST Tuple slice
 
-        self.assertRaises(ParseError, FST('a = b').put, FST('T, **U', 'type_params'), 'value')  # expr
-        self.assertRaises(ParseError, FST('a = b').put, FST('T, **U', 'type_params').a, 'value')
+        # TODO: with other invalid slices
 
-        self.assertRaises(ParseError, FST('f(a)').put, FST('T, **U', 'type_params'), 0, 'args')  # expr_callarg
-        self.assertRaises(ParseError, FST('f(a)').put, FST('T, **U', 'type_params').a, 0, 'args')
+        if PYGE12:
+            self.assertRaises(NodeError, FST('a = b').put, FST('T, **U', 'type_params'), 'value')  # expr
+            self.assertRaises(NodeError, FST('a = b').put, FST('T, **U', 'type_params').a, 'value')
 
-        self.assertRaises(ParseError, FST('a[b]').put, FST('T, **U', 'type_params'), 'slice')  # expr_slice
-        self.assertRaises(ParseError, FST('a[b]').put, FST('T, **U', 'type_params').a, 'slice')
+            self.assertRaises(NodeError, FST('f(a)').put, FST('T, **U', 'type_params'), 0, 'args')  # expr_callarg
+            self.assertRaises(NodeError, FST('f(a)').put, FST('T, **U', 'type_params').a, 0, 'args')
 
-        self.assertRaises(ParseError, FST('a[b, c]').slice.put, FST('T, **U', 'type_params'), 0, 'elts')  # expr_sliceelt
-        self.assertRaises(ParseError, FST('a[b, c]').slice.put, FST('T, **U', 'type_params').a, 0, 'elts')
+            self.assertRaises(NodeError, FST('a[b]').put, FST('T, **U', 'type_params'), 'slice')  # expr_slice
+            self.assertRaises(NodeError, FST('a[b]').put, FST('T, **U', 'type_params').a, 'slice')
 
-        self.assertRaises(ParseError, FST('(b, c)').put, FST('T, **U', 'type_params'), 0, 'elts')  # expr_sliceelt
-        self.assertRaises(ParseError, FST('(b, c)').put, FST('T, **U', 'type_params').a, 0, 'elts')
+            self.assertRaises(NodeError, FST('a[b, c]').slice.put, FST('T, **U', 'type_params'), 0, 'elts')  # expr_sliceelt
+            self.assertRaises(NodeError, FST('a[b, c]').slice.put, FST('T, **U', 'type_params').a, 0, 'elts')
 
-
-
+            self.assertRaises(NodeError, FST('(b, c)').put, FST('T, **U', 'type_params'), 0, 'elts')  # expr_sliceelt
+            self.assertRaises(NodeError, FST('(b, c)').put, FST('T, **U', 'type_params').a, 0, 'elts')
 
 
 if __name__ == '__main__':

@@ -70,7 +70,7 @@ from .astutil import (
 )
 
 from .misc import (
-    PYGE11, Code, Mode, _next_src, _shortstr
+    Code, Mode, NodeError, _next_src, _shortstr
 )
 
 
@@ -224,7 +224,7 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any]
         codea = code.a
 
         if not isinstance(codea, ast_type):
-            raise ParseError(f'expecting {ast_type.__name__}, got {codea.__class__.__name__}')
+            raise NodeError(f'expecting {ast_type.__name__}, got {codea.__class__.__name__}', rawable=True)
 
         code = code._sanitize()
 
@@ -233,13 +233,13 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any]
                 if _parse_cmpop(src).__class__ is codea:  # parses to same thing so just return the canonical str for the op, otherwise it gets complicated
                     return fst.FST(codea, [bistr(expected)], from_=code, lcopy=False)
 
-            raise ParseError(f'expecting {expected!r}, got {_shortstr(src)!r}')
+            raise NodeError(f'expecting {expected!r}, got {_shortstr(src)!r}', rawable=True)
 
         return code
 
     if isinstance(code, AST):
         if not isinstance(code, ast_type):
-            raise ParseError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
+            raise NodeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}', rawable=True)
 
         return fst.FST(code, [opcls2str[code.__class__]], parse_params=parse_params)
 
@@ -264,13 +264,13 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any],
             raise ValueError('expecting root node')
 
         if not isinstance(code.a, ast_type):
-            raise ParseError(f'expecting {ast_type.__name__}, got {code.a.__class__.__name__}')
+            raise NodeError(f'expecting {ast_type.__name__}, got {code.a.__class__.__name__}', rawable=True)
 
         return code._sanitize() if sanitize else code
 
     if is_ast := isinstance(code, AST):
         if not isinstance(code, ast_type):
-            raise ParseError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
+            raise NodeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}', rawable=True)
 
         src   = _unparse(code)
         lines = src.split('\n')
@@ -1124,7 +1124,7 @@ def _code_as_all(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:  
         return code
 
     if isinstance(code, AST):
-        mode  = code.__class__  # _get_special_parse_mode(code) or code.__class__
+        mode  = code.__class__  # _get_special_parse_mode(code) or code.__class__  # we do not accept invalid-AST SPECIAL SLICE ASTs on purpose
         code  = _unparse(code)
         lines = code.split('\n')
 
@@ -1165,19 +1165,19 @@ def _code_as_stmts(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
             if all(isinstance(a, stmt) for a in codea.body):
                 return code
 
-            raise ParseError(f'expecting zero or more stmts, got '
-                            f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
+            raise NodeError(f'expecting zero or more stmts, got '
+                            f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]', rawable=True)
 
         if isinstance(codea, Interactive):
             code._unmake_fst_parents()
 
             return fst.FST(Module(body=code.body, type_ignores=[]), code._lines, from_=code, lcopy=False)
 
-        raise ParseError(f'expecting zero or more stmts, got {codea.__class__.__name__}')
+        raise NodeError(f'expecting zero or more stmts, got {codea.__class__.__name__}', rawable=True)
 
     if isinstance(code, AST):
         if not isinstance(code, (stmt, expr, Module, Interactive, Expression)):  # all these can be coerced into stmts
-            raise ParseError(f'expecting zero or more stmts, got {code.__class__.__name__}')
+            raise NodeError(f'expecting zero or more stmts, got {code.__class__.__name__}', rawable=True)
 
         code  = _fixing_unparse(code)
         lines = code.split('\n')
@@ -1211,10 +1211,10 @@ def _code_as_ExceptHandlers(code: Code, parse_params: Mapping[str, Any] = {}, *,
             if all(isinstance(a, ExceptHandler) for a in codea.body):
                 return code
 
-            raise ParseError(f'expecting zero or more ExceptHandlers, got '
-                             f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
+            raise NodeError(f'expecting zero or more ExceptHandlers, got '
+                             f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]', rawable=True)
 
-        raise ParseError(f'expecting zero or more ExceptHandlers, got {codea.__class__.__name__}')
+        raise NodeError(f'expecting zero or more ExceptHandlers, got {codea.__class__.__name__}', rawable=True)
 
     if isinstance(code, AST):
         if isinstance(code, Module):  # may be slice of ExceptHandlers
@@ -1222,7 +1222,7 @@ def _code_as_ExceptHandlers(code: Code, parse_params: Mapping[str, Any] = {}, *,
 
         else:
             if not isinstance(code, ExceptHandler):
-                raise ParseError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}')
+                raise NodeError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}', rawable=True)
 
             if is_trystar:
                 code = _fixing_unparse(TryStar(body=[Pass()], handlers=[code], orelse=[], finalbody=[]))
@@ -1257,14 +1257,14 @@ def _code_as_match_cases(code: Code, parse_params: Mapping[str, Any] = {}) -> fs
             if all(isinstance(a, match_case) for a in codea.body):
                 return code
 
-            raise ParseError(f'expecting zero or more match_cases, got '
-                             f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]')
+            raise NodeError(f'expecting zero or more match_cases, got '
+                             f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]', rawable=True)
 
-        raise ParseError(f'expecting zero or more match_cases, got {codea.__class__.__name__}')
+        raise NodeError(f'expecting zero or more match_cases, got {codea.__class__.__name__}', rawable=True)
 
     if isinstance(code, AST):
         if not isinstance(code, (match_case, Module)):
-            raise ParseError(f'expecting zero or more match_cases, got {code.__class__.__name__}')
+            raise NodeError(f'expecting zero or more match_cases, got {code.__class__.__name__}', rawable=True)
 
         code  = _fixing_unparse(code)
         lines = code.split('\n')
@@ -1294,11 +1294,14 @@ def _code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *,
         if not code.is_root:
             raise ValueError('expecting root node')
 
-        if not isinstance(ast := reduce_ast(codea := code.a, ParseError), expr):
-            raise ParseError(f'{expecting()}, got {ast.__class__.__name__}')
+        if not (ast := reduce_ast(codea := code.a)):
+            raise NodeError(f'{expecting()}, got multiple statements', rawable=True)
+
+        if not isinstance(ast, expr):
+            raise NodeError(f'{expecting()}, got {ast.__class__.__name__}', rawable=True)
 
         if isinstance(ast, Tuple) and (elts := ast.elts) and not all(isinstance(elt := e, expr) for e in elts):  # SPECIAL SLICE!
-            raise ParseError(f'{expecting()}, got Tuple containing {elt.__class__.__name__}')
+            raise NodeError(f'{expecting()}, got Tuple containing {elt.__class__.__name__}', rawable=True)
 
         if ast is codea:
             return code._sanitize() if sanitize else code
@@ -1311,10 +1314,10 @@ def _code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *,
 
     if is_ast := isinstance(code, AST):
         if not isinstance(code, expr):
-            raise ParseError(f'{expecting()}, got {code.__class__.__name__}')
+            raise NodeError(f'{expecting()}, got {code.__class__.__name__}', rawable=True)
 
         if isinstance(code, Tuple) and (elts := code.elts) and not all(isinstance(elt := e, expr) for e in elts):  # SPECIAL SLICE!
-            raise ParseError(f'{expecting()}, got Tuple containing {elt.__class__.__name__}')
+            raise NodeError(f'{expecting()}, got Tuple containing {elt.__class__.__name__}', rawable=True)
 
         src   = _unparse(code)
         lines = src.split('\n')
@@ -1505,7 +1508,7 @@ def _code_as_type_params(code: Code, parse_params: Mapping[str, Any] = {}, *, sa
 
     if ret is code:  # this means it was not parsed (came in as FST) and we need to verify it containes only type_params
         if not all(isinstance(elt := e, type_param) for e in ret.a.elts):
-            raise ParseError(f'expecting only type_params, got {elt.__class__.__name__}')
+            raise NodeError(f'expecting only type_params, got {elt.__class__.__name__}', rawable=True)
 
     return ret
 
@@ -1608,14 +1611,24 @@ def _code_as_constant(code: constant, parse_params: Mapping[str, Any] = {}) -> c
 
     if isinstance(code, AST):
         if not isinstance(code, Constant):
-            raise ParseError('expecting constant')
+            raise NodeError('expecting constant', rawable=True)
 
         code = code.value
+
+        if isinstance(code, (int, float)):
+            if code < 0:
+                raise NodeError('constants cannot be negative', rawable=True)
+
+        elif isinstance(code, complex):
+            if code.real:
+                raise NodeError('imaginary constants cannot have real componenets', rawable=True)
+            if code.imag < 0:
+                raise NodeError('imaginary constants cannot be negative', rawable=True)
 
     elif isinstance(code, list):
         code = '\n'.join(code)
     elif not isinstance(code, constant):
-        raise ParseError('expecting constant')
+        raise NodeError('expecting constant', rawable=True)
 
     return code
 
