@@ -34,6 +34,7 @@ from .asttypes import (
     IsNot,
     ListComp,
     Load,
+    MatchOr,
     MatchSequence,
     Module,
     NotIn,
@@ -1459,24 +1460,24 @@ def _code_as_alias(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize
 def _code_as_alias_dotted(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a alias `FST` if possible, dotted as in `alias` for `Import.names`."""
 
-    ret = _code_as(code, alias, parse_params, _parse_alias_dotted, sanitize=sanitize)
+    fst_ = _code_as(code, alias, parse_params, _parse_alias_dotted, sanitize=sanitize)
 
-    if '*' in ret.a.name:
+    if '*' in fst_.a.name:
         raise ParseError("'*' not allowed in this alias")
 
-    return ret
+    return fst_
 
 
 @staticmethod
 def _code_as_alias_star(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a alias `FST` if possible, possibly star as in `alias` for `FromImport.names`."""
 
-    ret = _code_as(code, alias, parse_params, _parse_alias_star, sanitize=sanitize)
+    fst_ = _code_as(code, alias, parse_params, _parse_alias_star, sanitize=sanitize)
 
-    if '.' in ret.a.name:
+    if '.' in fst_.a.name:
         raise ParseError("'.' not allowed in this alias")
 
-    return ret
+    return fst_
 
 
 @staticmethod
@@ -1487,10 +1488,16 @@ def _code_as_withitem(code: Code, parse_params: Mapping[str, Any] = {}, *, sanit
 
 
 @staticmethod
-def _code_as_pattern(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def _code_as_pattern(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True,
+                     allow_invalid_matchor: bool = False) -> fst.FST:
     """Convert `code` to a pattern `FST` if possible."""
 
-    return _code_as(code, pattern, parse_params, _parse_pattern, sanitize=sanitize)
+    fst_ = _code_as(code, pattern, parse_params, _parse_pattern, sanitize=sanitize)
+
+    if not allow_invalid_matchor and isinstance(a := fst_.a, MatchOr) and len(a.patterns) < 2:  # SPECIAL SLICE, don't need to check if 'fst_ is code' because this could only have come from 'code' as FST
+        raise NodeError(f'expecting valid pattern, got invalid MatchOr slice')
+
+    return fst_
 
 
 @staticmethod
@@ -1504,13 +1511,13 @@ def _code_as_type_param(code: Code, parse_params: Mapping[str, Any] = {}, *, san
 def _code_as_type_params(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a type_params slice `FST` if possible."""
 
-    ret = _code_as(code, Tuple, parse_params, _parse_type_params, sanitize=sanitize)
+    fst_ = _code_as(code, Tuple, parse_params, _parse_type_params, sanitize=sanitize)
 
-    if ret is code:  # this means it was not parsed (came in as FST) and we need to verify it containes only type_params
-        if not all(isinstance(elt := e, type_param) for e in ret.a.elts):
+    if fst_ is code:  # this means it was not parsed (came in as FST) and we need to verify it containes only type_params
+        if not all(isinstance(elt := e, type_param) for e in fst_.a.elts):
             raise NodeError(f'expecting only type_params, got {elt.__class__.__name__}', rawable=True)
 
-    return ret
+    return fst_
 
 
 @staticmethod

@@ -1944,6 +1944,12 @@ def func():
         self.assertEqual('a | b | (c | d)', FST('a | b', pattern).put_slice(len2mo.copy(), 2, 2, one=True, matchor_put=False).src)
         self.assertEqual('a | b | (c | d)', FST('a | b', pattern).put_slice(len2mo.copy(), 2, 2, one=True, matchor_put=True).src)
 
+        self.assertEqual('a | y', FST('a | b | x | y', pattern).put_slice(len0mo.copy(), 1, 3, one=True, matchor_put=False).src)
+        self.assertEqual('a | y', FST('a | b | x | y', pattern).put_slice(len0mo.copy(), 1, 3, one=True, matchor_put=True).src)
+
+        self.assertEqual('a | c | y', FST('a | b | x | y', pattern).put_slice(len1mo.copy(), 1, 3, one=True, matchor_put=False).src)
+        self.assertEqual('a | c | y', FST('a | b | x | y', pattern).put_slice(len1mo.copy(), 1, 3, one=True, matchor_put=True).src)
+
         with FST.options(matchor_get=False):
             (f := FST('a | b', pattern)).get_slice(0, 0, cut=True, matchor_del=False)
             self.assertEqual('a | b', f.src)
@@ -2201,6 +2207,11 @@ def func():
 
             self.assertEqual('Z, **V', (f := FST('T, *U, **V', 'type_params').put_slice('Z', 0, 2)).src)
             f.verify()
+
+        # putting invalid MatchOr slice
+
+        self.assertRaises(NodeError, FST('[a, b, c]', pattern).put, FST('a | b', pattern).get_slice(1, matchor_get=False), 0)  # length 1
+        self.assertRaises(NodeError, FST('[a, b, c]', pattern).put, FST('a | b', pattern).get_slice(2, matchor_get=False), 0)  # length 0
 
     def test_put_slice_seq_namedexpr_and_yield(self):
         self.assertEqual('a, (x := y)', (f := FST('a, b')).put_slice('x := y', 1, 2, one=True).src)

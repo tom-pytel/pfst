@@ -1568,7 +1568,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
         return None
 
     try:
-        fst_ = _code_as_pattern(code, self.root.parse_params, sanitize=False)
+        fst_ = _code_as_pattern(code, self.root.parse_params, sanitize=False, allow_invalid_matchor=True)
 
     except SyntaxError:
         if (not (isinstance(code, list) or (isinstance(code, str) and (code := code.split('\n')))) or
