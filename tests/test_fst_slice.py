@@ -2210,8 +2210,10 @@ def func():
 
         # putting invalid MatchOr slice
 
-        self.assertRaises(NodeError, FST('[a, b, c]', pattern).put, FST('a | b', pattern).get_slice(1, fix_matchor_get=False), 0)  # length 1
-        self.assertRaises(NodeError, FST('[a, b, c]', pattern).put, FST('a | b', pattern).get_slice(2, fix_matchor_get=False), 0)  # length 0
+        self.assertRaises(NodeError, FST('[x, y, z]', pattern).put, FST('a | b', pattern).get_slice(2, fix_matchor_get=False), 0)  # length 0
+
+        self.assertEqual('[b, y, z]', (f := FST('[x, y, z]', pattern)).put(FST('a | b', pattern).get_slice(1, fix_matchor_get=False), 0).src)  # length 1
+        f.verify()
 
     def test_put_slice_seq_namedexpr_and_yield(self):
         self.assertEqual('a, (x := y)', (f := FST('a, b')).put_slice('x := y', 1, 2, one=True).src)
