@@ -2803,8 +2803,8 @@ match a:
             ast = None
 
             try:
-                # if func in (FST._parse_ExceptHandlers, FST._parse_match_cases, FST._parse_type_params):
-                #     continue
+                if func in (FST._parse_ExceptHandlers, FST._parse_match_cases, FST._parse_type_params):  # these are explicitly not guaranteed handled as AST input
+                    continue
 
                 ast  = FST._parse(src, mode)
                 astc = copy_ast(ast)
@@ -4205,9 +4205,9 @@ match a:
         # simple slice replace
 
         m = (o := FST('[\n1,  # one\n2,  # two\n3   # three\n]')).mark()
-        o.a.elts[0] = Constant(value=-1)
-        o.a.elts[1] = Constant(value=-2)
-        o.a.elts[2] = Constant(value=-3)
+        o.a.elts[0] = UnaryOp(USub(), Constant(value=1))
+        o.a.elts[1] = UnaryOp(USub(), Constant(value=2))
+        o.a.elts[2] = UnaryOp(USub(), Constant(value=3))
         f = o.reconcile(m)
         self.assertEqual('[\n-1,  # one\n-2,  # two\n-3   # three\n]', f.src)
         f.verify()

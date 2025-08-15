@@ -1731,11 +1731,9 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
                           field: str, one: bool = False, **options) -> None:
     """Tuple is used in many different ways in python, also for expressionish slices by us."""
 
-    # tuple invalid-AST slices
-
     fst_ = None
 
-    if elts := (ast := self.a).elts:
+    if elts := (ast := self.a).elts:  # tuple invalid-AST slices
         if isinstance(e0 := elts[0], type_param):
             fst_ = _code_to_slice_type_params(self, code, one, options)
 

@@ -124,20 +124,15 @@ def _ast_parse1_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 def _fixing_unparse(ast: AST) -> str:
     try:
-        src = ast_unparse(ast)
+        return ast_unparse(ast)
 
     except AttributeError as exc:
         if not str(exc).endswith("has no attribute 'lineno'"):
             raise
 
-        ast_fix_missing_locations(ast)
+    ast_fix_missing_locations(ast)
 
-        src = ast_unparse(ast)
-
-    if isinstance(ast, Tuple) and (elts := ast.elts) and not isinstance(elts[0], expr):  # these are special invalid-AST slices without enclosing parentheses
-        src = src[1:-1]  # strip parentheses
-
-    return src
+    return ast_unparse(ast)
 
 
 # def _validate_indent(src: str, ret: Any = None) -> Any:
@@ -263,8 +258,7 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any]
 
 
 def _code_as(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any],
-             parse: Callable[[fst.FST, Code], fst.FST], *,
-             strip_tup_pars: bool = False, sanitize: bool = True) -> fst.FST:
+             parse: Callable[[fst.FST, Code], fst.FST], *, sanitize: bool = True) -> fst.FST:
     if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
@@ -274,22 +268,26 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any],
 
         return code._sanitize() if sanitize else code
 
-    if isinstance(code, AST):
+    if is_ast := isinstance(code, AST):
         if not isinstance(code, ast_type):
             raise ParseError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
 
-        code  = (_fixing_unparse(code)[1:-1] if strip_tup_pars and isinstance(code, Tuple) and code.elts else
-                 _unparse(code))
-        lines = code.split('\n')
+        src   = _unparse(code)
+        lines = src.split('\n')
 
     elif isinstance(code, list):
-        code = '\n'.join(lines := code)
+        src = '\n'.join(lines := code)
     else:  # str
-        lines = code.split('\n')
+        lines = (src := code).split('\n')
 
-    code = fst.FST(parse(code, parse_params), lines, parse_params=parse_params)
+    ast = parse(src, parse_params)
 
-    return code._sanitize() if sanitize else code
+    if is_ast and ast.__class__ is not code.__class__:
+        raise ParseError(f'could not reparse AST to {code.__class__.__name__}, got {ast.__class__.__name__}')
+
+    fst_ = fst.FST(ast, lines, parse_params=parse_params)
+
+    return fst_._sanitize() if sanitize else fst_
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -297,9 +295,10 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any],
 
 @staticmethod
 def _get_special_parse_mode(ast: AST) -> str | None:
-    r"""Determine to the best of ability if a special parse mode is needed for this `AST`. This is the extended parse
-    mode as per `Mode`, not the `ast.parse()` mode. If a special mode applies it is returned which should parse the
-    source of this `AST` back to itself. Otherwise `None` is returned.
+    r"""Quick determination to the best of ability if a special parse mode is needed for this `AST`. This is the
+    extended parse mode as per `Mode`, not the `ast.parse()` mode. If a special mode applies it is returned which should
+    parse the source of this `AST` back to itself. Otherwise `None` is returned. This is a quick just a check, doesn't
+    verify everything.
 
     **Returns:**
     - `str`: One of the special parse modes.
@@ -313,7 +312,7 @@ def _get_special_parse_mode(ast: AST) -> str | None:
             elif isinstance(b0, match_case):
                 return 'match_cases'
 
-    if isinstance(ast, Tuple):
+    elif isinstance(ast, Tuple):
         if elts := ast.elts:
             if isinstance(elts[0], type_param):
                 return 'type_params'
@@ -323,18 +322,21 @@ def _get_special_parse_mode(ast: AST) -> str | None:
 
 @staticmethod
 def _unparse(ast: AST) -> str:
-    """AST unparse that handles misc case of comprehension starting with a single space by stripping it."""
-
-    if isinstance(ast, comprehension):  # strip prefix space from this
-        return _fixing_unparse(ast).lstrip()
-
-    if src := OPCLS2STR.get(ast.__class__):  # operators don't unparse to anything in ast
-        return src
+    """AST unparse that handles misc case of comprehension starting with a single space by stripping it as well as
+    removing parentheses from `Tuple`s with `Slice`s or special slice (our own) `Tuple`s."""
 
     src = _fixing_unparse(ast)
 
-    if isinstance(ast, Tuple) and any(isinstance(e, Slice) for e in ast.elts):  # tuples with Slices cannot have parentheses
-        src = src[1:-1]
+    if not src:
+        if s := OPCLS2STR.get(ast.__class__):  # operators don't unparse to anything in ast
+            return s
+
+    if isinstance(ast, Tuple):
+        if any(isinstance(e, Slice) or not isinstance(e, expr) for e in ast.elts):  # tuples with Slices cannot have parentheses, and neither can our own SPECIAL SLICES
+            return src[1:-1]
+
+    elif isinstance(ast, comprehension):  # strip prefix space from this
+        return src.lstrip()
 
     return src
 
@@ -1122,7 +1124,7 @@ def _code_as_all(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:  
         return code
 
     if isinstance(code, AST):
-        mode  = _get_special_parse_mode(code) or code.__class__
+        mode  = code.__class__  # _get_special_parse_mode(code) or code.__class__
         code  = _unparse(code)
         lines = code.split('\n')
 
@@ -1280,16 +1282,23 @@ def _code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *,
                   parse: Callable[[Code, dict], fst.FST] = _parse_expr, sanitize: bool = True) -> fst.FST:
     """Convert `code` to an `expr` or optionally `Slice` `FST` if possible."""
 
+    def expecting() -> str:
+        return ('expecting Tuple' if parse is _parse_Tuple else
+                'expecting expression (slice element)' if parse is _parse_expr_sliceelt else
+                'expecting expression (slice)' if parse is _parse_expr_slice else
+                'expecting expression (call arg)' if parse is _parse_expr_callarg else
+                'expecting expression (any)' if parse is _parse_expr_all else
+                'expecting expression (standard)')
+
     if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
 
         if not isinstance(ast := reduce_ast(codea := code.a, ParseError), expr):
-            raise ParseError(('expecting slice expression' if parse is _parse_expr_sliceelt else
-                              'expecting call arg expression' if parse is _parse_expr_callarg else
-                              'expecting Tuple' if parse is _parse_Tuple else
-                              'expecting expression') +
-                             f', got {ast.__class__.__name__}')
+            raise ParseError(f'{expecting()}, got {ast.__class__.__name__}')
+
+        if isinstance(ast, Tuple) and (elts := ast.elts) and not all(isinstance(elt := e, expr) for e in elts):  # SPECIAL SLICE!
+            raise ParseError(f'{expecting()}, got Tuple containing {elt.__class__.__name__}')
 
         if ast is codea:
             return code._sanitize() if sanitize else code
@@ -1300,25 +1309,29 @@ def _code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *,
 
         return code._sanitize() if sanitize else code
 
-    if isinstance(code, AST):
+    if is_ast := isinstance(code, AST):
         if not isinstance(code, expr):
-            raise ParseError(('expecting slice expression' if parse is _parse_expr_sliceelt else
-                              'expecting call arg expression' if parse is _parse_expr_callarg else
-                              'expecting Tuple' if parse is _parse_Tuple else
-                              'expecting expression') +
-                             f', got {code.__class__.__name__}')
+            raise ParseError(f'{expecting()}, got {code.__class__.__name__}')
 
-        code  = _fixing_unparse(code)
-        lines = code.split('\n')
+        if isinstance(code, Tuple) and (elts := code.elts) and not all(isinstance(elt := e, expr) for e in elts):  # SPECIAL SLICE!
+            raise ParseError(f'{expecting()}, got Tuple containing {elt.__class__.__name__}')
+
+        src   = _unparse(code)
+        lines = src.split('\n')
 
     elif isinstance(code, list):
-        code = '\n'.join(lines := code)
+        src = '\n'.join(lines := code)
     else:  # str
-        lines = code.split('\n')
+        lines = (src := code).split('\n')
 
-    code = fst.FST(parse(code, parse_params), lines, parse_params=parse_params)
+    ast = parse(src, parse_params)
 
-    return code._sanitize() if sanitize else code
+    if is_ast and ast.__class__ is not code.__class__:
+        raise ParseError(f'could not reparse AST to {code.__class__.__name__}, got {ast.__class__.__name__}')
+
+    fst_ = fst.FST(ast, lines, parse_params=parse_params)
+
+    return fst_._sanitize() if sanitize else fst_
 
 
 @staticmethod
@@ -1340,14 +1353,7 @@ def _code_as_expr_slice(code: Code, parse_params: Mapping[str, Any] = {}, *, san
     """Convert `code` to a Slice `FST` if possible (or anthing else that can serve in `Subscript.slice`, like any old
     generic `expr`)."""
 
-    strip_tup_pars = PYGE11 or (isinstance(code, Tuple) and any(isinstance(e, Slice) for e in code.elts))
-
-    ret = _code_as(code, expr, parse_params, _parse_expr_slice, strip_tup_pars=strip_tup_pars, sanitize=sanitize)
-
-    if isinstance(code, AST) and not isinstance(ret.a, code.__class__):  # because could reparse Starred into a single element Tuple with Starred
-        raise ParseError(f'cannot reparse {code.__class__.__name__} in slice as {code.__class__.__name__}')
-
-    return ret
+    return _code_as_expr(code, parse_params, parse=_parse_expr_slice, sanitize=sanitize)
 
 
 @staticmethod
@@ -1362,12 +1368,7 @@ def _code_as_expr_sliceelt(code: Code, parse_params: Mapping[str, Any] = {}, *, 
 def _code_as_Tuple(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a `Tuple` using `_parse_Tuple()`."""
 
-    fst_ = _code_as_expr(code, parse_params, parse=_parse_Tuple, sanitize=sanitize)
-
-    if not isinstance(fst_.a, Tuple):
-        raise ParseError(f'expecting Tuple, got {fst_.a.__class__.__name__}')
-
-    return fst_
+    return _code_as_expr(code, parse_params, parse=_parse_Tuple, sanitize=sanitize)
 
 
 @staticmethod

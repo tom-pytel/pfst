@@ -18,7 +18,8 @@ from .astutil import *
 from .astutil import re_alnumdot_alnum, TypeAlias, TemplateStr, Interpolation
 from .misc import PYLT11, PYLT12, PYLT14, PYGE12, astfield
 from .view import fstview
-from .fst import FST, NodeError
+from .fst import FST
+from . import NodeError
 
 PROGRAM = 'python -m fst.fuzz'
 

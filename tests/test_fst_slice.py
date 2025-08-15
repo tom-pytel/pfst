@@ -2196,6 +2196,12 @@ def func():
             self.assertEqual('(*a,),', (f := FST('1, 2, 3')).put_slice(FST('*a', 'expr_slice'), one=True).src)
             f.verify()
 
+        if PYGE12:
+            # put single type_param as 'one' to tuple_params slice
+
+            self.assertEqual('Z, **V', (f := FST('T, *U, **V', 'type_params').put_slice('Z', 0, 2)).src)
+            f.verify()
+
     def test_put_slice_seq_namedexpr_and_yield(self):
         self.assertEqual('a, (x := y)', (f := FST('a, b')).put_slice('x := y', 1, 2, one=True).src)
         f.verify()
@@ -2507,12 +2513,26 @@ a | (
             self.assertEqual('T, *U, T', f.put_slice(g, 'end').src)
             f.verify()
 
-            # put single type_param as 'one' to tuple_params slice
+    def test_invalid_AST_slice_usage_errors(self):
+        # invalid-AST Tuple slice
 
-    def test_put_as_one_to_slice(self):
-        if PYGE12:
-            self.assertEqual('Z, **V', (f := FST('T, *U, **V', 'type_params').put_slice('Z', 0, 2)).src)
-            f.verify()
+        self.assertRaises(ParseError, FST('a = b').put, FST('T, **U', 'type_params'), 'value')  # expr
+        self.assertRaises(ParseError, FST('a = b').put, FST('T, **U', 'type_params').a, 'value')
+
+        self.assertRaises(ParseError, FST('f(a)').put, FST('T, **U', 'type_params'), 0, 'args')  # expr_callarg
+        self.assertRaises(ParseError, FST('f(a)').put, FST('T, **U', 'type_params').a, 0, 'args')
+
+        self.assertRaises(ParseError, FST('a[b]').put, FST('T, **U', 'type_params'), 'slice')  # expr_slice
+        self.assertRaises(ParseError, FST('a[b]').put, FST('T, **U', 'type_params').a, 'slice')
+
+        self.assertRaises(ParseError, FST('a[b, c]').slice.put, FST('T, **U', 'type_params'), 0, 'elts')  # expr_sliceelt
+        self.assertRaises(ParseError, FST('a[b, c]').slice.put, FST('T, **U', 'type_params').a, 0, 'elts')
+
+        self.assertRaises(ParseError, FST('(b, c)').put, FST('T, **U', 'type_params'), 0, 'elts')  # expr_sliceelt
+        self.assertRaises(ParseError, FST('(b, c)').put, FST('T, **U', 'type_params').a, 0, 'elts')
+
+
+
 
 
 if __name__ == '__main__':

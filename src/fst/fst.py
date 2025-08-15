@@ -4059,8 +4059,7 @@ class FST:
         mode. Returns a mode which is guaranteed to reparse this assumed-valid element to an exact copy of itself. This
         mode is not guaranteed to be the same as was used to create the `FST`, just guaranteed to be able to recreate
         it. Mostly it just returns the `AST` type, but in cases where that won't parse to this `FST` it will return
-        a string mode. This is just a quick early-out screen function which assumes the `FST` is correct for what it is
-        and doesn't verify anything beyond the first indication of what the parse mode should be.
+        a string mode. This is a quick just a check, doesn't verify everything.
 
         **Returns:**
         - `str`: One of the special text specifiers. Will be returned for most slices and special cases like an `*a`
