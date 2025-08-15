@@ -720,9 +720,9 @@ def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop:
 
     if start == stop:
         return (
-            fst.FST._new_empty_set_curlies() if not (set_get := self.get_option('set_get', options)) else
-            fst.FST._new_empty_set_call() if set_get == 'call' else
-            fst.FST._new_empty_tuple() if set_get == 'tuple' else
+            fst.FST._new_empty_set_curlies() if not (fix_set_get := self.get_option('fix_set_get', options)) else
+            fst.FST._new_empty_set_call() if fix_set_get == 'call' else
+            fst.FST._new_empty_tuple() if fix_set_get == 'tuple' else
             fst.FST._new_empty_set_star()  # True, 'star'
         )
 
@@ -733,7 +733,7 @@ def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop:
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
                           options.get('trivia'), 'elts', '{', '}', ',', 0, 0)
 
-    self._maybe_fix_set(self.get_option('set_del', options))
+    self._maybe_fix_set(self.get_option('fix_set_self', options))
 
     return fst_
 
@@ -816,28 +816,28 @@ def _get_slice_MatchMapping(self: fst.FST, start: int | Literal['end'] | None, s
 
 def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                                 cut: bool, **options) -> fst.FST:
-    len_body    = len(body := self.a.patterns)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
-    len_slice   = stop - start
-    matchor_get = self.get_option('matchor_get', options)
-    matchor_del = self.get_option('matchor_del', options)
+    len_body         = len(body := self.a.patterns)
+    start, stop      = _fixup_slice_indices(len_body, start, stop)
+    len_slice        = stop - start
+    fix_matchor_get  = self.get_option('fix_matchor_get', options)
+    fix_matchor_self = self.get_option('fix_matchor_self', options)
 
     if not len_slice:
-        if matchor_get:
-            raise NodeError("cannot get empty slice from MatchOr without matchor_get=False")
+        if fix_matchor_get:
+            raise NodeError("cannot get empty slice from MatchOr without fix_matchor_get=False")
 
         return fst.FST._new_empty_matchor(from_=self)
 
-    if len_slice == 1 and matchor_get == 'strict':
-        raise NodeError("cannot get length 1 slice from MatchOr with matchor_get='strict'")
+    if len_slice == 1 and fix_matchor_get == 'strict':
+        raise NodeError("cannot get length 1 slice from MatchOr with fix_matchor_get='strict'")
 
     if cut:
         if not (len_left := len_body - len_slice):
-            if matchor_del:
-                raise NodeError("cannot cut MatchOr to empty without matchor_get=False")
+            if fix_matchor_self:
+                raise NodeError("cannot cut MatchOr to empty without fix_matchor_get=False")
 
-        elif len_left == 1 and matchor_del == 'strict':
-            raise NodeError("cannot cut MatchOr to length 1 with matchor_get='strict'")
+        elif len_left == 1 and fix_matchor_self == 'strict':
+            raise NodeError("cannot cut MatchOr to length 1 with fix_matchor_get='strict'")
 
     locs    = _locs_and_bound_get(self, start, stop, body, body, 0)
     asts    = _cut_or_copy_asts(start, stop, 'patterns', cut, body)
@@ -846,8 +846,8 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
                           options.get('trivia'), 'patterns', '', '', '|', False, False)
 
-    fst_._maybe_fix_matchor(bool(matchor_get))
-    self._maybe_fix_matchor(bool(matchor_del))
+    fst_._maybe_fix_matchor(bool(fix_matchor_get))
+    self._maybe_fix_matchor(bool(fix_matchor_self))
 
     return fst_
 
@@ -1465,7 +1465,7 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
                 fst_._delimit_node()
 
         elif isinstance(a := fst_.a, Set):
-            if (empty := self.get_option('set_del', options)):  # putting an invalid empty Set as one, make it valid according to options
+            if (empty := self.get_option('fix_set_self', options)):  # putting an invalid empty Set as one, make it valid according to options
                 fst_._maybe_fix_set(empty)
 
         elif isinstance(a, NamedExpr):  # this needs to be parenthesized if being put to unparenthesized tuple
@@ -1482,9 +1482,9 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
 
         return fst.FST(ast, ls, from_=fst_, lcopy=False)
 
-    if set_put := self.get_option('set_put', options):
-        if (fst_.is_empty_set_star() if set_put == 'star' else
-            fst_.is_empty_set_call() if set_put == 'call' else
+    if fix_set_put := self.get_option('fix_set_put', options):
+        if (fst_.is_empty_set_star() if fix_set_put == 'star' else
+            fst_.is_empty_set_call() if fix_set_put == 'call' else
             fst_.is_empty_set_star() or fst_.is_empty_set_call()  # True or 'both'
         ):
             return None
@@ -1598,9 +1598,10 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
             fst_._parenthesize_grouping()
 
     else:
-        if not one and not self.get_option('matchor_put', options):
+        if not one and not self.get_option('fix_matchor_put', options):
             raise NodeError(f"slice being assigned to a MatchOr "
-                            f"must be a MatchOr with matchor_put=False, not a {ast_.__class__.__name__}", rawable=True)
+                            f"must be a MatchOr with fix_matchor_put=False, not a {ast_.__class__.__name__}",
+                            rawable=True)
 
         if isinstance(ast_, MatchAs):
             if ast_.pattern is not None and not fst_.pars().n:
@@ -1917,7 +1918,7 @@ def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['
     for i in range(start + len_fst_body, len(body)):
         body[i].f.pfield = astfield('elts', i)
 
-    self._maybe_fix_set(self.get_option('set_del', options))
+    self._maybe_fix_set(self.get_option('fix_set_self', options))
 
 
 def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
@@ -2038,22 +2039,22 @@ def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Liter
 
 def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                                 field: str, one: bool = False, **options) -> None:
-    fst_        = _code_to_slice_MatchOr(self, code, one, options)
-    len_body    = len(body := self.a.patterns)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
-    len_slice   = stop - start
-    matchor_del = self.get_option('matchor_del', options)
+    fst_             = _code_to_slice_MatchOr(self, code, one, options)
+    len_body         = len(body := self.a.patterns)
+    start, stop      = _fixup_slice_indices(len_body, start, stop)
+    len_slice        = stop - start
+    fix_matchor_self = self.get_option('fix_matchor_self', options)
 
     if not fst_:
         if not len_slice:
             return
 
         if not (len_left := len_body - len_slice):
-            if matchor_del:
-                raise NodeError("cannot del MatchOr to empty without matchor_del=False")
+            if fix_matchor_self:
+                raise NodeError("cannot del MatchOr to empty without fix_matchor_self=False")
 
-        elif len_left == 1 and matchor_del == 'strict':
-            raise NodeError("cannot del MatchOr to length 1 with matchor_del='strict'")
+        elif len_left == 1 and fix_matchor_self == 'strict':
+            raise NodeError("cannot del MatchOr to length 1 with fix_matchor_self='strict'")
 
         _put_slice_seq(self, start, stop, None, None, None, 0, *self.loc,
                        options.get('trivia'), options.get('ins_ln'), 'patterns', None, '|', False)
@@ -2067,8 +2068,8 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
     else:
         len_fst_body = len(fst_body := fst_.a.patterns)
 
-        if (len_body - len_slice + len_fst_body) == 1 and matchor_del == 'strict':
-            raise NodeError("cannot put MatchOr to length 1 with matchor_del='strict'")
+        if (len_body - len_slice + len_fst_body) == 1 and fix_matchor_self == 'strict':
+            raise NodeError("cannot put MatchOr to length 1 with fix_matchor_self='strict'")
 
         _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body, *self.loc,
                        options.get('trivia'), options.get('ins_ln'), 'patterns', None, '|', False)
@@ -2086,7 +2087,7 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
     for i in range(start + len_fst_body, len(body)):
         body[i].f.pfield = astfield('patterns', i)
 
-    self._maybe_fix_matchor(matchor_del)
+    self._maybe_fix_matchor(fix_matchor_self)
 
 
 def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,

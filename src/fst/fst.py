@@ -111,23 +111,23 @@ _DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_
 _DEFAULT_INDENT       = '    '
 
 _OPTIONS = {
-    'pars':        'auto', # True | False | 'auto'
-    'raw':         False,  # True | False | 'auto'
-    'trivia':      True,   # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line'), True means ('block', 'line')
-    'elif_':       True,   # True | False
-    'docstr':      True,   # True | False | 'strict'
-    'pars_walrus': False,  # True | False
-    'set_get':     True,   # True | False | 'star' | 'call' | 'tuple'
-    'set_put':     True,   # True | False | 'star' | 'call' | 'both'
-    'set_del':     True,   # True | False | 'star' | 'call'
-    'matchor_get': True,   # True | False | 'strict'
-    'matchor_put': True,   # True | False | 'strict'
-    'matchor_del': True,   # True | False | 'strict'
-    'pep8space':   True,   # True | False | 1
-    'precomms':    True,   # True | False | 'all'
-    'postcomms':   True,   # True | False | 'all' | 'block'
-    'prespace':    False,  # True | False | int
-    'postspace':   False,  # True | False | int
+    'pars':             'auto', # True | False | 'auto'
+    'raw':              False,  # True | False | 'auto'
+    'trivia':           True,   # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line'), True means ('block', 'line')
+    'elif_':            True,   # True | False
+    'docstr':           True,   # True | False | 'strict'
+    'pars_walrus':      False,  # True | False
+    'fix_set_get':      True,   # True | False | 'star' | 'call' | 'tuple'
+    'fix_set_put':      True,   # True | False | 'star' | 'call' | 'both'
+    'fix_set_self':     True,   # True | False | 'star' | 'call'
+    'fix_matchor_get':  True,   # True | False | 'strict'
+    'fix_matchor_put':  True,   # True | False | 'strict'
+    'fix_matchor_self': True,   # True | False | 'strict'
+    'pep8space':        True,   # True | False | 1
+    'precomms':         True,   # True | False | 'all'
+    'postcomms':        True,   # True | False | 'all' | 'block'
+    'prespace':         False,  # True | False | int
+    'postspace':        False,  # True | False | int
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -870,12 +870,12 @@ class FST:
          'elif_': True,
          'docstr': True,
          'pars_walrus': False,
-         'set_get': True,
-         'set_put': True,
-         'set_del': True,
-         'matchor_get': True,
-         'matchor_put': True,
-         'matchor_del': True,
+         'fix_set_get': True,
+         'fix_set_put': True,
+         'fix_set_self': True,
+         'fix_matchor_get': True,
+         'fix_matchor_put': True,
+         'fix_matchor_self': True,
          'pep8space': True,
          'precomms': True,
          'postcomms': True,
@@ -1006,36 +1006,37 @@ class FST:
         - `pars_walrus`: Whether to parenthesize copied `NamedExpr` nodes or not (only if `pars` is also not `False`).
             - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions.
             - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions.
-        - `set_get`: Empty set to return when getting an empty slice from a set.
+        - `fix_set_get`: Empty set to return when getting an empty slice from a set.
             - `False`: Return an invalid `Set` with zero elements and curlies as delimiters (would parse to a `Dict`).
             - `True`: Same as `'star'`.
             - `'star'`: Starred sequence `{*()}`.
             - `'call'`: `set()` call.
             - `'tuple'`: Empty tuple `()`.
-        - `set_put`: What to consider an empty set that is being put (not the target of the put). This applies to puts
-            to any types which take a sequence as a source and not just puts to a `Set`, so puts to `Tuple` and `List`
-            as well.
+        - `fix_set_put`: What to consider an empty set that is being put (not the target of the put). This applies to
+            puts to any types which take a sequence as a source and not just puts to a `Set`, so puts to `Tuple` and
+            `List` as well.
             - `False`: Nothing is considered an empty set, `set()` is not considered a sequence and a `{*()}` set is put
                 verbatim.
             - `True`: Same a `'both'`.
             - `'star'`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
             - `'call'`: Only `set()` call is considered empty.
             - `'both'`: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
-        - `set_del`: What to leave for an empty set if a `Set` gets everything cut or deleted from it. This is also what
-            gets put if you put an invalid empty set with `one=True`.
+        - `fix_set_self`: What to leave for an empty set if a `Set` gets everything cut or deleted from it. This is also
+            what gets put if you put an invalid empty set with `one=True`.
             - `False`: Leave an invalid `Set` with zero elements and curlies as delimiters (would parse to a `Dict`).
             - `True`: Same as `'star'`.
             - `'star'`: Starred sequence `{*()}`.
             - `'call'`: `set()` call.
-        - `matchor_get`: How to handle zero or length 1 slice gets from a `MatchOr`. Zero-length `MatchOr`s, or any
+        - `fix_matchor_get`: How to handle zero or length 1 slice gets from a `MatchOr`. Zero-length `MatchOr`s, or any
             zero-length source spans really can be problematic, try not to hang on to them for too long.
             - `False`: Return invalid one and zero-length `MatchOr`.
             - `True`: Error on zero-length get, return single pattern element (not `MatchOr`) for length 1.
             - `'strict'`: Only allow get length 2+ `MatchOr`, error otherwise.
-        - `matchor_put`: How to handle slice puts to `MatchOr`
+        - `fix_matchor_put`: How to handle slice puts to `MatchOr`
             - `False`: Accept one or zero-length `MatchOr`, do not accept single element pattern as length 1.
             - `True`: Accept one or zero-length `MatchOr` as well as single element pattern as length 1.
-        - `matchor_del`: How to handle zero or length 1 `MatchOr` objects when a cut or del reduces them to this length.
+        - `fix_matchor_self`: How to handle zero or length 1 `MatchOr` objects when a cut or del reduces them to this
+            length.
             - `False`: Leave one or zero-length `MatchOr`.
             - `True`: Error on zero-length, convert to single element if length 1.
             - `'strict'`: Only allow length 2+ `MatchOr`, error otherwise.

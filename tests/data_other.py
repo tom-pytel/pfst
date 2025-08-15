@@ -1923,7 +1923,7 @@ Dict - ROOT 0,0..0,5
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 0, None, {'matchor_get': False, '_verify': False}, r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 0, None, {'fix_matchor_get': False, '_verify': False}, r"""match a:
  case a | b: pass""", r"""""", r"""
 Module - ROOT 0,0..1,17
   .body[1]
@@ -1944,7 +1944,7 @@ MatchOr - ROOT 0,0..0,0
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'matchor_get': False, 'matchor_del': False, '_verify': False}, r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_get': False, 'fix_matchor_self': False, '_verify': False}, r"""match a:
  case b: pass""", r"""a""", r"""
 Module - ROOT 0,0..1,13
   .body[1]
@@ -1966,7 +1966,7 @@ MatchOr - ROOT 0,0..0,1
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'matchor_del': False, '_verify': False}, r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': False, '_verify': False}, r"""match a:
  case : pass""", r"""a | b""", r"""
 Module - ROOT 0,0..1,12
   .body[1]
@@ -1987,7 +1987,7 @@ MatchOr - ROOT 0,0..0,5
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'matchor_get': True, 'matchor_del': True, '_verify': False}, r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_get': True, 'fix_matchor_self': True, '_verify': False}, r"""match a:
  case b: pass""", r"""a""", r"""
 Module - ROOT 0,0..1,13
   .body[1]
@@ -17527,7 +17527,7 @@ Module - ROOT 0,0..4,11
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'matchor_del': False, '_verify': False}, r"""**DEL**""", r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': False, '_verify': False}, r"""**DEL**""", r"""match a:
  case b: pass""", r"""
 Module - ROOT 0,0..1,13
   .body[1]
@@ -17544,7 +17544,7 @@ Module - ROOT 0,0..1,13
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'matchor_del': False, '_verify': False}, r"""**DEL**""", r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': False, '_verify': False}, r"""**DEL**""", r"""match a:
  case : pass""", r"""
 Module - ROOT 0,0..1,12
   .body[1]
@@ -17558,7 +17558,7 @@ Module - ROOT 0,0..1,12
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'matchor_del': True, '_verify': False}, r"""**DEL**""", r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': True, '_verify': False}, r"""**DEL**""", r"""match a:
  case b: pass""", r"""
 Module - ROOT 0,0..1,13
   .body[1]
@@ -17573,11 +17573,11 @@ Module - ROOT 0,0..1,13
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'matchor_del': True, '_verify': False}, r"""**DEL**""", r"""**NodeError('cannot del MatchOr to empty without matchor_del=False')**""", r"""
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': True, '_verify': False}, r"""**DEL**""", r"""**NodeError('cannot del MatchOr to empty without fix_matchor_self=False')**""", r"""
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'matchor_del': False, '_verify': False}, r"""z""", r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': False, '_verify': False}, r"""z""", r"""match a:
  case z | b: pass""", r"""
 Module - ROOT 0,0..1,17
   .body[1]
@@ -17596,7 +17596,7 @@ Module - ROOT 0,0..1,17
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'matchor_del': False, '_verify': False}, r"""z""", r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': False, '_verify': False}, r"""z""", r"""match a:
  case z: pass""", r"""
 Module - ROOT 0,0..1,13
   .body[1]
@@ -17613,7 +17613,7 @@ Module - ROOT 0,0..1,13
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'matchor_del': True, '_verify': False}, r"""z""", r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': True, '_verify': False}, r"""z""", r"""match a:
  case z | b: pass""", r"""
 Module - ROOT 0,0..1,17
   .body[1]
@@ -17632,7 +17632,7 @@ Module - ROOT 0,0..1,17
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'matchor_del': True, '_verify': False}, r"""z""", r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': True, '_verify': False}, r"""z""", r"""match a:
  case z: pass""", r"""
 Module - ROOT 0,0..1,13
   .body[1]
@@ -17647,7 +17647,7 @@ Module - ROOT 0,0..1,13
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'matchor_del': 'strict', '_verify': False}, r"""z""", r"""match a:
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': 'strict', '_verify': False}, r"""z""", r"""match a:
  case z | b: pass""", r"""
 Module - ROOT 0,0..1,17
   .body[1]
@@ -17666,11 +17666,11 @@ Module - ROOT 0,0..1,17
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'matchor_put': False, '_verify': False}, r"""z""", r"""**NodeError('slice being assigned to a MatchOr must be a MatchOr with matchor_put=False, not a MatchAs')**""", r"""
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_put': False, '_verify': False}, r"""z""", r"""**NodeError('slice being assigned to a MatchOr must be a MatchOr with fix_matchor_put=False, not a MatchAs')**""", r"""
 """),
 
 (r"""match a:
- case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'matchor_del': 'strict', '_verify': False}, r"""z""", r"""**NodeError("cannot put MatchOr to length 1 with matchor_del='strict'")**""", r"""
+ case a | b: pass""", 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': 'strict', '_verify': False}, r"""z""", r"""**NodeError("cannot put MatchOr to length 1 with fix_matchor_self='strict'")**""", r"""
 """),
 
 (r"""if 1:
