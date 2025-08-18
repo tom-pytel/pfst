@@ -32,6 +32,7 @@ from .asttypes import (
     ClassDef,
     Compare,
     Constant,
+    Del,
     Delete,
     Dict,
     DictComp,
@@ -114,7 +115,7 @@ from .asttypes import (
 
 from .astutil import (
     constant, re_alnum, re_alnumdot, re_alnumdot_alnum, re_identifier, re_identifier_dotted, re_identifier_alias,
-    bistr, is_valid_target, is_valid_MatchValue_value, is_valid_MatchMapping_key,
+    bistr, is_valid_target, is_valid_del_target, is_valid_MatchValue_value, is_valid_MatchMapping_key,
     get_field, set_field, set_ctx, copy_ast, precedence_require_parens,
 )
 
@@ -1838,8 +1839,11 @@ def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, **op
     with self._modifying(field, True):
         try:
             return _put_one_raw(self, code, idx, field, child, static, **options)
+
         except Exception as raw_exc:
-            raise raw_exc from nonraw_exc
+            raw_exc.__context__ = nonraw_exc
+
+            raise raw_exc
 
 
 def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST | list[AST],
@@ -2578,7 +2582,7 @@ _PUT_ONE_HANDLERS = {
     (ClassDef, 'keywords'):               (True,  _put_one_ClassDef_keywords, _onestatic_keyword_required),  # keyword*
     (ClassDef, 'body'):                   (True,  None, None),  # stmt*
     (Return, 'value'):                    (False, _put_one_exprish_optional, onestatic(_one_info_Return_value, _restrict_default)),  # expr?
-    (Delete, 'targets'):                  (True,  _put_one_exprish_required, _onestatic_target),  # expr*
+    (Delete, 'targets'):                  (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, is_valid_del_target, ctx=Del)),  # expr*
     (Assign, 'targets'):                  (True,  _put_one_exprish_required, _onestatic_target),  # expr*
     (Assign, 'value'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (TypeAlias, 'name'):                  (False, _put_one_exprish_required, _onestatic_target_Name),  # expr

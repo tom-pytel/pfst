@@ -2230,6 +2230,34 @@ Tuple - ROOT 0,0..0,10
   .ctx Load
 """),
 
+(r"""del a, b, c""", 'body[0]', 0, 2, None, {}, r"""del c""", r"""a, b""", r"""
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Delete - 0,0..0,5
+    .targets[1]
+    0] Name 'c' Del - 0,4..0,5
+""", r"""
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+"""),
+
+(r"""del a, b, c""", 'body[0]', 1, 3, None, {}, r"""del a""", r"""b, c""", r"""
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Delete - 0,0..0,5
+    .targets[1]
+    0] Name 'a' Del - 0,4..0,5
+""", r"""
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+  0] Name 'b' Load - 0,0..0,1
+  1] Name 'c' Load - 0,3..0,4
+  .ctx Load
+"""),
+
 ]  # END OF GET_SLICE_EXPRISH_DATA
 
 GET_SLICE_STMTISH_DATA = [
@@ -17962,6 +17990,84 @@ Module - ROOT 0,0..0,21
 """),
 
 (r"""type t[T, *U, **V] = ...""", 'body[0]', 0, 3, 'type_params', {'_ver': 12, 'one': True}, r"""T,""", r"""**ParseError('expecting single type_param, has trailing comma')**""", r"""
+"""),
+
+(r"""del a, b, c""", 'body[0]', None, None, None, {}, r"""x,""", r"""del x""", r"""
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Delete - 0,0..0,5
+    .targets[1]
+    0] Name 'x' Del - 0,4..0,5
+"""),
+
+(r"""del a, b, c""", 'body[0]', None, None, None, {}, r"""x""", r"""del x""", r"""
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Delete - 0,0..0,5
+    .targets[1]
+    0] Name 'x' Del - 0,4..0,5
+"""),
+
+(r"""del a, b, c""", 'body[0]', None, None, None, {'one': True}, r"""x""", r"""del x""", r"""
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Delete - 0,0..0,5
+    .targets[1]
+    0] Name 'x' Del - 0,4..0,5
+"""),
+
+(r"""del a, b, c""", 'body[0]', 1, 2, None, {}, r"""()""", r"""del a, c""", r"""
+Module - ROOT 0,0..0,8
+  .body[1]
+  0] Delete - 0,0..0,8
+    .targets[2]
+    0] Name 'a' Del - 0,4..0,5
+    1] Name 'c' Del - 0,7..0,8
+"""),
+
+(r"""del a, b, c""", 'body[0]', 1, 2, None, {}, r"""(),""", r"""del a, (), c""", r"""
+Module - ROOT 0,0..0,12
+  .body[1]
+  0] Delete - 0,0..0,12
+    .targets[3]
+    0] Name 'a' Del - 0,4..0,5
+    1] Tuple - 0,7..0,9
+      .ctx Del
+    2] Name 'c' Del - 0,11..0,12
+"""),
+
+(r"""del a, b, c""", 'body[0]', 1, 2, None, {'one': True}, r"""()""", r"""del a, (), c""", r"""
+Module - ROOT 0,0..0,12
+  .body[1]
+  0] Delete - 0,0..0,12
+    .targets[3]
+    0] Name 'a' Del - 0,4..0,5
+    1] Tuple - 0,7..0,9
+      .ctx Del
+    2] Name 'c' Del - 0,11..0,12
+"""),
+
+(r"""del a, b, c""", 'body[0]', 1, 2, None, {'one': True}, r"""(),""", r"""del a, ((),), c""", r"""
+Module - ROOT 0,0..0,15
+  .body[1]
+  0] Delete - 0,0..0,15
+    .targets[3]
+    0] Name 'a' Del - 0,4..0,5
+    1] Tuple - 0,7..0,12
+      .elts[1]
+      0] Tuple - 0,8..0,10
+        .ctx Del
+      .ctx Del
+    2] Name 'c' Del - 0,14..0,15
+"""),
+
+(r"""del a, b, c""", 'body[0]', 1, 2, None, {}, r"""x
+.
+y""", r"""**NotImplementedError('cannot put unenclosed multiline tartget(s) to Delete')**""", r"""
+"""),
+
+(r"""del a, b, c""", 'body[0]', 1, 2, None, {}, r"""x
+,""", r"""**NotImplementedError('cannot put unenclosed multiline tartget(s) to Delete')**""", r"""
 """),
 
 ]  # END OF PUT_SLICE_DATA

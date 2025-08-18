@@ -4997,8 +4997,7 @@ if 1:
 
         self.assertEqual('return yup', test(FST('return yes'), 'value', 'yup', FST, 'yes').src)
 
-        self.assertEqual('del zzz', test(FST('del a, b'), 'targets', 'zzz', fstview,
-                                         '<<Delete ROOT 0,0..0,8>.targets[0:2] [<Name 0,4..0,5>, <Name 0,7..0,8>]>').src)
+        self.assertEqual('del zzz', test(FST('del a, b'), 'targets', 'zzz', fstview, 'a, b').src)
 
         self.assertEqual('zzz = c', test(FST('a, b = c'), 'targets', 'zzz', fstview,
                                          '<<Assign ROOT 0,0..0,8>.targets[0:1] [<Tuple 0,0..0,4>]>').src)

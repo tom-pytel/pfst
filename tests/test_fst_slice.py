@@ -38,20 +38,30 @@ def regen_get_slice_seq():
                 continue
 
             try:
-                t     = parse(src)
-                f     = eval(f't.{elt}', {'t': t}).f
-                s     = f.get_slice(start, stop, field, cut=True, **options)
-                tsrc  = t.f.src
-                ssrc  = s.src
-                tdump = t.f.dump(out=list)
-                sdump = s.dump(out=list)
+                t = parse(src)
+                f = eval(f't.{elt}', {'t': t}).f
 
-                assert not tsrc.startswith('\n') or tsrc.endswith('\n')
-                assert not ssrc.startswith('\n') or ssrc.endswith('\n')
+                try:
+                    s = f.get_slice(start, stop, field, cut=True, **options)
 
-                if options.get('_verify', True):
-                    t.f.verify(raise_=True)
-                    s.verify(raise_=True)
+                except (NotImplementedError, NodeError, ParseError) as exc:
+                    tsrc  = f'**{exc!r}**'
+                    ssrc  = ''
+                    tdump = ''
+                    sdump = ''
+
+                else:
+                    tsrc  = t.f.src
+                    ssrc  = s.src
+                    tdump = t.f.dump(out=list)
+                    sdump = s.dump(out=list)
+
+                    assert not tsrc.startswith('\n') or tsrc.endswith('\n')
+                    assert not ssrc.startswith('\n') or ssrc.endswith('\n')
+
+                    if options.get('_verify', True):
+                        t.f.verify(raise_=True)
+                        s.verify(raise_=True)
 
                 newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {field!r}, {options}, r"""{tsrc}""", r"""{ssrc}""", r"""'''.split('\n'))
                 newlines.extend(tdump)
@@ -1552,6 +1562,20 @@ def func():
         f.put_slice('{2: b}', 1, 1)
         self.assertEqual('{1: a, 2: b}', f.src)
 
+    def test_cut_and_del_slice_del(self):
+        f = FST('del a, b, c')
+        self.assertRaises(NodeError, f.get_slice, cut=True)
+
+        f = FST('del a, b, c')
+        self.assertRaises(NodeError, f.put_slice, None)
+
+        f = FST('del a, b, c')
+        self.assertEqual('a, b, c', f.get_slice(cut=True, fix_del_self=False).src)
+        self.assertEqual('del ', f.src)
+
+        f = FST('del a, b, c')
+        self.assertEqual('del ', f.put_slice(None, fix_del_self=False).src)
+
     def test_get_slice_seq_copy(self):
         ver = PYVER[1]
 
@@ -1563,10 +1587,18 @@ def func():
             f = eval(f't.{elt}', {'t': t}).f
 
             try:
-                s     = f.get_slice(start, stop, field, cut=False, **options)
-                tsrc  = t.f.src
-                ssrc  = s.src
-                sdump = s.dump(out=list)
+                try:
+                    s = f.get_slice(start, stop, field, cut=False, **options)
+
+                except (NotImplementedError, NodeError, ParseError) as exc:
+                    tsrc  = f'**{exc!r}**'
+                    ssrc  = ''
+                    sdump = ['']
+
+                else:
+                    tsrc  = t.f.src
+                    ssrc  = s.src
+                    sdump = s.dump(out=list)
 
                 self.assertEqual(tsrc, src)
                 self.assertEqual(ssrc, slice_copy)
@@ -1592,11 +1624,20 @@ def func():
             f = eval(f't.{elt}', {'t': t}).f
 
             try:
-                s     = f.get_slice(start, stop, field, cut=True, **options)
-                tsrc  = t.f.src
-                ssrc  = s.src
-                tdump = t.f.dump(out=list)
-                sdump = s.dump(out=list)
+                try:
+                    s = f.get_slice(start, stop, field, cut=True, **options)
+
+                except (NotImplementedError, NodeError, ParseError) as exc:
+                    tsrc  = f'**{exc!r}**'
+                    ssrc  = ''
+                    tdump = ['']
+                    sdump = ['']
+
+                else:
+                    tsrc  = t.f.src
+                    ssrc  = s.src
+                    tdump = t.f.dump(out=list)
+                    sdump = s.dump(out=list)
 
                 self.assertEqual(tsrc, src_cut)
                 self.assertEqual(ssrc, slice_copy)
@@ -1698,6 +1739,9 @@ def func():
 
                 self.assertEqual(tdst, src_cut.strip())
                 self.assertEqual(tdump, src_dump.strip().split('\n'))
+
+            except NotImplementedError:
+                continue
 
             except Exception:
                 print(i, elt, start, stop)
@@ -2215,6 +2259,11 @@ def func():
         self.assertEqual('[b, y, z]', (f := FST('[x, y, z]', pattern)).put(FST('a | b', pattern).get_slice(1, fix_matchor_get=False), 0).src)  # length 1
         f.verify()
 
+        # del
+
+        self.assertRaises(NodeError, FST('del a, b, c').put, '*(),', 1, 2, fix_set_put=False)
+        self.assertRaises(NodeError, FST('del a, b, c').put, '*()', 1, 2, fix_set_put=False)
+
     def test_put_slice_seq_namedexpr_and_yield(self):
         self.assertEqual('a, (x := y)', (f := FST('a, b')).put_slice('x := y', 1, 2, one=True).src)
         f.verify()
@@ -2529,7 +2578,7 @@ a | (
     def test_invalid_AST_slice_usage_errors(self):
         # invalid-AST Tuple slice
 
-        # TODO: with other invalid slices
+        # TODO: with other invalid slices, e.g. Tuple[withitem]
 
         if PYGE12:
             self.assertRaises(NodeError, FST('a = b').put, FST('T, **U', 'type_params'), 'value')  # expr

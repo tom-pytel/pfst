@@ -137,7 +137,8 @@ from .asttypes import (
 __all__ = [
     'bistr', 'constant',
     'is_valid_identifier', 'is_valid_identifier_dotted', 'is_valid_identifier_star', 'is_valid_identifier_alias',
-    'is_valid_MatchSingleton_value', 'is_valid_MatchValue_value', 'is_valid_MatchMapping_key', 'is_valid_target',
+    'is_valid_MatchSingleton_value', 'is_valid_MatchValue_value', 'is_valid_MatchMapping_key',
+    'is_valid_target', 'is_valid_del_target',
     'reduce_ast', 'get_field', 'set_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx',
     'get_func_class_or_ass_by_name', 'syntax_ordered_children', 'last_block_header_child', 'is_atom',
@@ -529,17 +530,33 @@ def is_valid_MatchMapping_key(ast: AST) -> bool:
     return is_valid_MatchValue_value(ast, (str, bytes, int, float, complex, bool, NoneType))
 
 
-def is_valid_target(ast: AST | list[AST]) -> bool:
-    """Check if `ast` is a valid target for `Assign`, `Delete` or `For` operations. Must be `Name`, `Attribute`,
-    `Subscript`, `Starred` and / or possibly nested `Tuple` and `List`. If `ast` is a list of `AST`s then it is
-    consumed."""
+def is_valid_target(asts: AST | list[AST]) -> bool:
+    """Check if `asts` is a valid target for `Assign` or `For` operations. Must be `Name`, `Attribute`, `Subscript`
+    and / or possibly nested `Starred`, `Tuple` and `List`."""
 
-    stack = ast if isinstance(ast, list) else [ast]
+    stack = [asts] if isinstance(asts, AST) else list(asts)
 
     while stack:
         if isinstance(a := stack.pop(), (Tuple, List)):
             stack.extend(a.elts)
-        elif not isinstance(a, (Name, Attribute, Subscript, Starred)):
+        elif isinstance(a, Starred):
+            stack.append(a.value)
+        elif not isinstance(a, (Name, Attribute, Subscript)):
+            return False
+
+    return True
+
+
+def is_valid_del_target(asts: AST | list[AST]) -> bool:
+    """Check if `asts` is a valid target for `Delete` operations. Must be `Name`, `Attribute`, `Subscript` and / or
+    possibly nested `Tuple` and `List`."""
+
+    stack = [asts] if isinstance(asts, AST) else list(asts)
+
+    while stack:
+        if isinstance(a := stack.pop(), (Tuple, List)):
+            stack.extend(a.elts)
+        elif not isinstance(a, (Name, Attribute, Subscript)):
             return False
 
     return True
@@ -875,15 +892,17 @@ def copy_ast(ast: AST | None) -> AST | None:
     return ret
 
 
-def set_ctx(ast_or_stack: AST | list[AST], ctx: type[expr_context], *, doit: bool = True,
-            ) -> bool:
+def set_ctx(asts: AST | list[AST], ctx: type[expr_context], *, doit: bool = True) -> bool:
     """Set all `ctx` fields in this node and any children which may participate in an assignment (`Tuple`, `List`,
     `Starred`, `Subscript`, `Attribute`, `Name`) to the passed `ctx` type.
 
+    WARNING! This will not recurse into elements which have a `ctx` of the type being set.
+
     **Parameters:**
-    - `ast_or_stack`: Single `AST` (will be recursed) or list of `AST` nodes (each one will also be recursed) to
-        process.
-    - `ctx`: The `exprt_context` `AST` type to set.
+    - `asts`: Single `AST` (will be recursed) or list of `AST` nodes (will be consumed, each one will also be recursed)
+        to process.
+    - `ctx`: The `exprt_context` `AST` type to set. Any container encountered which matches this `ctx` will not be
+        recursed.
     - `doit`: Whether to actually carry out the assignments or just analyze and return whethere there are candidate
         locations for assignment. `doit=False` used to query if any context-modifiable `ctx` present.
 
@@ -892,7 +911,7 @@ def set_ctx(ast_or_stack: AST | list[AST], ctx: type[expr_context], *, doit: boo
     """
 
     change = False
-    stack  = [ast_or_stack] if isinstance(ast_or_stack, AST) else ast_or_stack
+    stack  = [asts] if isinstance(asts, AST) else asts
 
     while stack:
         if a := stack.pop():  # might be `None`s in there

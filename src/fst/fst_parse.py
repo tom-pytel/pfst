@@ -1496,7 +1496,7 @@ def _code_as_pattern(code: Code, parse_params: Mapping[str, Any] = {}, *, saniti
 
     if not allow_invalid_matchor and isinstance(a := fst_.a, MatchOr):  # SPECIAL SLICE, don't need to check if 'fst_ is code' because this could only have come from 'code' as FST
         if not (len_pattern := len(a.patterns)):
-            raise NodeError(f'expecting valid pattern, got zero-length MatchOr slice')
+            raise NodeError('expecting valid pattern, got zero-length MatchOr slice')
 
         if len_pattern == 1:  # a length 1 MatchOr can just return its single element pattern
             return fst.FST(a.patterns[0], fst_._lines, from_=fst_, lcopy=False)

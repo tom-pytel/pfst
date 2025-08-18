@@ -120,6 +120,7 @@ _OPTIONS = {
     'fix_set_get':      True,   # True | False | 'star' | 'call' | 'tuple'
     'fix_set_put':      True,   # True | False | 'star' | 'call' | 'both'
     'fix_set_self':     True,   # True | False | 'star' | 'call'
+    'fix_del_self':     True,   # True | False
     'fix_matchor_get':  True,   # True | False | 'strict'
     'fix_matchor_put':  True,   # True | False | 'strict'
     'fix_matchor_self': True,   # True | False | 'strict'
@@ -873,6 +874,7 @@ class FST:
          'fix_set_get': True,
          'fix_set_put': True,
          'fix_set_self': True,
+         'fix_del_self': True,
          'fix_matchor_get': True,
          'fix_matchor_put': True,
          'fix_matchor_self': True,
@@ -967,7 +969,7 @@ class FST:
             keep the slices usable. Raw puts generally do not have parentheses added or removed automatically, except
             maybe removed according to this from the destination node if putting to a node instead of a pure location.
             - `False`: Parentheses are not MODIFIED, doesn't mean remove all parentheses. Not copied with nodes or
-                removed on put from source or destination.
+                removed on put from source or destination. Using incorrectly can result in invalid trees.
             - `True`: Parentheses are copied with nodes, added to copies if needed and not present, removed from
                 destination on put if not needed there (but not source).
             - `'auto'`: Same as `True` except they are not returned with a copy and possibly removed from source
@@ -1027,6 +1029,10 @@ class FST:
             - `True`: Same as `'star'`.
             - `'star'`: Starred sequence `{*()}`.
             - `'call'`: `set()` call.
+        - `fix_del_self`: How to handle operations which would leave a `Del` with zero `targets`.
+            - `False`: Allow, this will leave an invalid `Del` which should have the `targets` replaces as soon as
+                possible.
+            - `True`: Don't allow, error.
         - `fix_matchor_get`: How to handle zero or length 1 slice gets from a `MatchOr`. Zero-length `MatchOr`s, or any
             zero-length source spans really can be problematic, try not to hang on to them for too long.
             - `False`: Return invalid one and zero-length `MatchOr`.

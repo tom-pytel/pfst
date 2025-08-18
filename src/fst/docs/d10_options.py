@@ -146,6 +146,7 @@ Or get all global options.
  'fix_set_get': True,
  'fix_set_put': True,
  'fix_set_self': True,
+ 'fix_del_self': True,
  'fix_matchor_get': True,
  'fix_matchor_put': True,
  'fix_matchor_self': True,

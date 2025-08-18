@@ -5715,7 +5715,13 @@ Module - ROOT 0,0..1,32
       0] Pass - 1,28..1,32
 """),
 
-(r"""del a, (b), c""", 'body[0]', 0, None, {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
+(r"""del a, (b), c""", 'body[0]', 0, None, {}, r"""**DEL**""", r"""del (b), c""", r"""
+Module - ROOT 0,0..0,10
+  .body[1]
+  0] Delete - 0,0..0,10
+    .targets[2]
+    0] Name 'b' Del - 0,5..0,6
+    1] Name 'c' Del - 0,9..0,10
 """),
 
 (r"""del a, (b), c""", 'body[0]', 0, None, {}, r"""new""", r"""del new, (b), c""", r"""

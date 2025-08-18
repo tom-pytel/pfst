@@ -2983,6 +2983,10 @@ c, # c
         self.assertEqual('with 1. as a: pass', (f := FST('with []as a: pass')).items[0].context_expr.replace('1.').root.src)
         f.verify()
 
+        # don't allow Starred as a target in del
+
+        self.assertRaises(NodeError, FST('del a').put, '*st', 0)
+
     def test_put_one_pattern(self):
 
         # pattern BinOp and UnaryOp

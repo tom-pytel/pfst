@@ -1646,22 +1646,6 @@ class SliceExprish(Fuzzy):
         fst:         FST
 
     @staticmethod
-    def cat(fst: FST) -> str | type[AST] | None:
-        ast = fst.a
-
-        if isinstance(getattr(ast, 'ctx', None), (Store, Del)):
-            return 'target' if isinstance(ast, (Tuple, List)) else None
-        if isinstance(ast, Tuple):
-            return 'slice' if fst.has_Slice() else 'seq'
-        if isinstance(ast, (List, Set)):
-            return 'seq'
-        if isinstance(ast, (Dict, MatchSequence, MatchMapping, MatchOr,
-                            ClassDef, TypeAlias)):
-            return ast.__class__
-
-        return None
-
-    @staticmethod
     def rnd_trivia():
         return (
             choice(('none', 'block', 'all')) + choice(('', '', '', '', '-', '+', '-', '+', '-1', '-2', '-3', '+1', '+2', '+3')),
@@ -1744,12 +1728,29 @@ class SliceExprish(Fuzzy):
             # dst.dump()
             print()
 
+    @staticmethod
+    def cat(fst: FST) -> str | type[AST] | None:
+        ast = fst.a
+
+        if isinstance(getattr(ast, 'ctx', None), (Store, Del)):
+            return 'target' if isinstance(ast, (Tuple, List)) else None
+        if isinstance(ast, Tuple):
+            return 'slice' if fst.has_Slice() else 'seq'
+        if isinstance(ast, (List, Set)):
+            return 'seq'
+        if isinstance(ast, (Dict, Delete, MatchSequence, MatchMapping, MatchOr,
+                            FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias)):
+            return ast.__class__
+
+        return None
+
     def fuzz_one(self, fst, fnm) -> bool:
         buckets = {
             'slice':       self.Bucket('elts', None, 1, 1, False, FST('a[1,]').slice,),  # 1 because of "a[b, c]", must always leave at least 1 element so it doesn't get parentheses
             'target':      self.Bucket('elts', None, 0, 0, True, FST('()')),
             'seq':         self.Bucket('elts', None, 1, 0, True, FST('()')), # 1 because of Set
             Dict:          self.Bucket(None, None, 0, 0, False, FST('{}')),
+            Delete:        self.Bucket('targets', 'elts', 1, 0, True, FST('del a')),
             MatchSequence: self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
             MatchMapping:  self.Bucket(None, None, 0, 0, False, FST('{}', pattern)),
             MatchOr:       self.Bucket('patterns', None, 2, 2, True, FST('(a | b)', pattern)),
@@ -1805,7 +1806,7 @@ class SliceExprish(Fuzzy):
                     else:
                         continue
 
-                    with FST.options(fix_set_get=False, fix_set_put=False, fix_set_self=False, fix_matchor_get=False, fix_matchor_put=False, fix_matchor_self=False):
+                    with FST.options(fix_set_get=False, fix_set_put=False, fix_set_self=False, fix_del_self=False, fix_matchor_get=False, fix_matchor_put=False, fix_matchor_self=False):
                         self.transfer('src > bkt:', cat, bucket.field, bucket.slice_field, exprish, bucket.fst, bucket.min_script, bucket.min_tmp, bucket.one)
                         self.transfer('src < bkt:', cat, bucket.field, bucket.slice_field, bucket.fst, exprish, bucket.min_tmp, bucket.min_script, bucket.one)
 

@@ -20,6 +20,7 @@ from .asttypes import (
     Call,
     ClassDef,
     Compare,
+    Del,
     Delete,
     Dict,
     DictComp,
@@ -63,7 +64,7 @@ from .asttypes import (
     TemplateStr,
     type_param,
 )
-from .astutil import re_identifier, bistr, is_valid_target, reduce_ast, set_ctx, copy_ast
+from .astutil import re_identifier, bistr, is_valid_target, is_valid_del_target, reduce_ast, set_ctx, copy_ast
 
 from .misc import (
     PYLT11, PYGE14,
@@ -113,7 +114,7 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 #   S ,             (ClassDef, 'bases'):                    # expr*            -> Tuple[expr_arglike]    _parse_expr_arglikes
 #   S ,             (Call, 'args'):                         # expr*            -> Tuple[expr_arglike]    _parse_expr_arglikes
 #
-#   S ,             (Delete, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
+# * S ,             (Delete, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
 #   S =             (Assign, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
 #                                                                              .
 #                                                                              .
@@ -173,14 +174,16 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 #   Tuple[alias]           _parse_aliases_star
 
 
-# --- NOT CONTIGUOUS! -------------------------------
+# --- NOT CONTIGUOUS --------------------------------
 
-# (arguments, 'posonlyargs'):           # arg*
-# (arguments, 'args'):                  # arg*
-# (arguments, 'kwonlyargs'):            # arg*
+# (arguments, 'posonlyargs'):           # arg*  - problematic because of defaults
+# (arguments, 'args'):                  # arg*  - problematic because of defaults
 
-# (MatchClass, 'kwd_attrs'):            # identifier*
-# (MatchClass, 'kwd_patterns'):         # pattern*     - maybe do as a two-element?
+# (arguments, 'kwonlyargs'):            # arg*  - maybe do as two-element, but is new type of two-element where the second element can be None
+# (arguments, 'kw_defaults'):           # arg*
+
+# (MatchClass, 'kwd_attrs'):            # identifier*  - maybe do as two-element
+# (MatchClass, 'kwd_patterns'):         # pattern*
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -392,6 +395,8 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
 
 def _locs_first_and_last(self: fst.FST, start: int, stop: int, body: list[AST], body2: list[AST],
                          ) -> tuple[fstloc, fstloc]:
+    """Get the location of the first and last elemnts of a one or two-element sequence (assumed present)."""
+
     stop_1 = stop - 1
 
     if body2 is body:
@@ -585,6 +590,14 @@ def _poss_end(self: fst.FST, field: str, len_suffix: int) -> tuple[int, int, int
 
 def _locs_and_bound_get(self: fst.FST, start: int, stop: int, body: list[AST], body2: list[AST], off: int,
                         ) -> tuple[fstloc, fstloc, int, int, int, int]:
+    """Get the location of the first and last elemnts (assumed present) and the bounding location of a one or
+    two-element sequence. The start bounding location must be past the ante-first element if present, otherwise start
+    of self past any delimiters. The end bounding location must be end of self before any delimiters.
+
+    **Returns:**
+    - `(loc of first element, loc of last element, bound_ln, bound_col, bound_end_ln, bound_end_col)`
+    """
+
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
     bound_end_col -= off
@@ -689,6 +702,41 @@ def _get_slice_Tuple_elts(self: fst.FST, start: int | Literal['end'] | None, sto
         fst_._maybe_fix_tuple(False)
 
     self._maybe_fix_tuple(is_par)
+
+    return fst_
+
+
+def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                              cut: bool, **options) -> fst.FST:
+    len_body    = len(body := self.a.targets)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
+    len_slice   = stop - start
+
+    if not len_slice:
+        return fst.FST._new_empty_tuple(from_=self)
+
+    if cut and len_slice == len_body and self.get_option('fix_del_self', options):
+        raise NodeError("cannot cut Delete to empty without fix_del_self=False")
+
+    loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
+
+    _, _, bound_end_ln, bound_end_col = self.loc
+
+    if start:
+        _, _, bound_ln, bound_col = body[start - 1].f.pars()
+    else:
+        bound_ln, bound_col, _, _ = loc_first
+
+    asts    = _cut_or_copy_asts(start, stop, 'targets', cut, body)
+    ret_ast = Tuple(elts=asts, ctx=Del())  # we initially set to Del so that set_ctx() won't skip it
+
+    set_ctx(ret_ast, Load)  # new Tuple root object must have ctx=Load
+
+    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
+                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
+                          options.get('trivia'), 'targets', '', '', ',', False, 1)
+
+    fst_._maybe_fix_tuple(False)
 
     return fst_
 
@@ -834,10 +882,10 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
     if cut:
         if not (len_left := len_body - len_slice):
             if fix_matchor_self:
-                raise NodeError("cannot cut MatchOr to empty without fix_matchor_get=False")
+                raise NodeError("cannot cut MatchOr to empty without fix_matchor_self=False")
 
         elif len_left == 1 and fix_matchor_self == 'strict':
-            raise NodeError("cannot cut MatchOr to length 1 with fix_matchor_get='strict'")
+            raise NodeError("cannot cut MatchOr to length 1 with fix_matchor_self='strict'")
 
     locs    = _locs_and_bound_get(self, start, stop, body, body, 0)
     asts    = _cut_or_copy_asts(start, stop, 'patterns', cut, body)
@@ -1005,7 +1053,7 @@ _GET_SLICE_HANDLERS = {
     (AsyncFunctionDef, 'decorator_list'): _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (ClassDef, 'decorator_list'):         _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (ClassDef, 'bases'):                  _get_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (Delete, 'targets'):                  _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Delete, 'targets'):                  _get_slice_Delete_targets,  # expr*
     (Assign, 'targets'):                  _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (BoolOp, 'values'):                   _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (Compare, ''):                        _get_slice_NOT_IMPLEMENTED_YET,  # expr*
@@ -1450,12 +1498,16 @@ def _set_loc_whole(self: fst.FST) -> None:
     self._touch()
 
 
-def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any],
-                       code_as: Callable = _code_as_expr) -> fst.FST | None:
+def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any], *,
+                       code_as: Callable = _code_as_expr, non_seq_as_one: bool = False) -> fst.FST | None:
     if code is None:
         return None
 
     fst_ = code_as(code, self.root.parse_params, sanitize=False)
+    ast_ = fst_.a
+
+    if non_seq_as_one and not one and not isinstance(ast_, (Tuple, List, Set)):
+        one = True
 
     if one:
         if (is_par := fst_.is_parenthesized_tuple()) is not None:
@@ -1464,23 +1516,23 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
             if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
                 fst_._delimit_node()
 
-        elif isinstance(a := fst_.a, Set):
+        elif isinstance(ast_, Set):
             if (empty := self.get_option('fix_set_self', options)):  # putting an invalid empty Set as one, make it valid according to options
                 fst_._maybe_fix_set(empty)
 
-        elif isinstance(a, NamedExpr):  # this needs to be parenthesized if being put to unparenthesized tuple
+        elif isinstance(ast_, NamedExpr):  # this needs to be parenthesized if being put to unparenthesized tuple
             if not fst_.pars().n and self.is_parenthesized_tuple() is False:
                 fst_._parenthesize_grouping()
 
-        elif isinstance(a, (Yield, YieldFrom)):  # these need to be parenthesized definitely
+        elif isinstance(ast_, (Yield, YieldFrom)):  # these need to be parenthesized definitely
             if not fst_.pars().n:
                 fst_._parenthesize_grouping()
 
-        ls  = fst_._lines
-        ast = List(elts=[fst_.a], ctx=Load(),
-                   lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)  # List because it is valid target if checked in validate
+        ls   = fst_._lines
+        ast_ = Tuple(elts=[fst_.a], ctx=Load(),  # fst_.a may have changed
+                     lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)  # Tuple because it is valid target if checked in validate and allows is_enclosed_or_line() check without delimiters to check content
 
-        return fst.FST(ast, ls, from_=fst_, lcopy=False)
+        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
     if fix_set_put := self.get_option('fix_set_put', options):
         if (fst_.is_empty_set_star() if fix_set_put == 'star' else
@@ -1488,8 +1540,6 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
             fst_.is_empty_set_star() or fst_.is_empty_set_call()  # True or 'both'
         ):
             return None
-
-    ast_ = fst_.a
 
     if not isinstance(ast_, (Tuple, List, Set)):
         raise NodeError(f"slice being assigned to a {self.a.__class__.__name__} "
@@ -1643,7 +1693,8 @@ def _code_to_slice_type_params(self: fst.FST, code: Code | None, one: bool, opti
     return fst_
 
 
-def _validate_put_seq(self: fst.FST, fst_: fst.FST, non_slice: str, *, check_target: bool = False) -> None:
+def _validate_put_seq(self: fst.FST, fst_: fst.FST, non_slice: str, *,
+                      check_target: Literal[False] | Callable = False) -> None:  # check_target like is_valid_target()
     if not fst_:
         return
 
@@ -1653,8 +1704,9 @@ def _validate_put_seq(self: fst.FST, fst_: fst.FST, non_slice: str, *, check_tar
     if non_slice and isinstance(ast_, Tuple) and any(isinstance(e, Slice) for e in ast_.elts):
         raise NodeError(f'cannot put Slice into {non_slice}')
 
-    if check_target and not isinstance(ctx := ast.ctx, Load) and not is_valid_target(ast_.elts[:]):
-        raise NodeError(f'invalid slice for {ast.__class__.__name__} {ctx.__class__.__name__} target')
+    if check_target and not isinstance(ctx := getattr(ast, 'ctx', None), Load) and not check_target(ast_.elts):
+        raise NodeError(f'invalid slice for {ast.__class__.__name__}'
+                        f'{f" {ctx.__class__.__name__}" if ctx else ""} target')
 
 
 # ......................................................................................................................
@@ -1739,7 +1791,7 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
             fst_ = _code_to_slice_type_params(self, code, one, options)
 
     if fst_ is None:
-        fst_ = _code_to_slice_seq(self, code, one, options, _code_as_expr_all)
+        fst_ = _code_to_slice_seq(self, code, one, options, code_as=_code_as_expr_all)
 
     body        = (ast := self.a).elts
     start, stop = _fixup_slice_indices(len(body), start, stop)
@@ -1774,7 +1826,7 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
 
     _validate_put_seq(self, fst_,
                       '' if not is_par and (not pfield or is_slice) else 'non-slice Tuple',
-                      check_target=True)
+                      check_target=is_valid_target)
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
@@ -1829,7 +1881,7 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
     if not fst_ and start == stop:
         return
 
-    _validate_put_seq(self, fst_, 'List', check_target=True)
+    _validate_put_seq(self, fst_, 'List', check_target=is_valid_target)
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
@@ -1919,6 +1971,70 @@ def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['
         body[i].f.pfield = astfield('elts', i)
 
     self._maybe_fix_set(self.get_option('fix_set_self', options))
+
+
+def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+                              field: str, one: bool = False, **options) -> None:
+    fst_        = _code_to_slice_seq(self, code, one, options, non_seq_as_one=True)
+    len_body    = len(body := self.a.targets)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
+    len_slice   = stop - start
+
+    if not fst_:
+        if not len_slice:
+            return
+
+        if len_slice == len_body and self.get_option('fix_del_self', options):
+            raise NodeError("cannot cut Delete to empty without fix_del_self=False")
+
+    _validate_put_seq(self, fst_, 'Del', check_target=is_valid_del_target)
+
+    _, _, bound_end_ln, bound_end_col = self.loc
+
+    if start:
+        _, _, bound_ln, bound_col = body[start - 1].f.pars()
+    elif body:
+        bound_ln, bound_col, _, _ = body[0].f.pars()
+    else:
+        bound_ln  = bound_end_ln
+        bound_col = bound_end_col
+
+    if not fst_:
+        _put_slice_seq(self, start, stop, None, None, None, 0,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'), options.get('ins_ln'), 'targets', None, ',', False)
+
+        self._unmake_fst_tree(body[start : stop])
+
+        del body[start : stop]
+
+        len_fst_body = 0
+
+    else:
+        if not fst_.is_enclosed_or_line(pars=False):
+            raise NotImplementedError('cannot put unenclosed multiline tartget(s) to Delete')
+
+        len_fst_body = len(fst_body := fst_.a.elts)
+
+        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'), options.get('ins_ln'), 'targets', None, ',', False)
+
+        self._unmake_fst_tree(body[start : stop])
+        fst_._unmake_fst_parents(True)
+
+        body[start : stop] = fst_body
+
+        FST   = fst.FST
+        stack = [FST(body[i], self, astfield('targets', i)) for i in range(start, start + len_fst_body)]
+
+        if stack:
+            set_ctx([f.a for f in stack], Del)
+
+        self._make_fst_tree(stack)
+
+    for i in range(start + len_fst_body, len(body)):
+        body[i].f.pfield = astfield('targets', i)
 
 
 def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
@@ -2184,8 +2300,11 @@ def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | N
     with self._modifying(field, True):
         try:
             return _put_slice_raw(self, code, start, stop, field, one=one, **options)
+
         except Exception as raw_exc:
-            raise raw_exc from nonraw_exc
+            raw_exc.__context__ = nonraw_exc
+
+            raise raw_exc
 
 
 _PUT_SLICE_HANDLERS = {
@@ -2227,7 +2346,7 @@ _PUT_SLICE_HANDLERS = {
     (AsyncFunctionDef, 'decorator_list'): _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (ClassDef, 'decorator_list'):         _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (ClassDef, 'bases'):                  _put_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (Delete, 'targets'):                  _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Delete, 'targets'):                  _put_slice_Delete_targets,  # expr*
     (Assign, 'targets'):                  _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (BoolOp, 'values'):                   _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (Compare, ''):                        _put_slice_NOT_IMPLEMENTED_YET,  # expr*

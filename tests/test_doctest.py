@@ -58,7 +58,7 @@ def load_tests(loader, tests, ignore):
 
 
 class TestDocTest(unittest.TestCase):
-    def test_fst(self):
+    def test_fst_module(self):
         options = fst.FST.get_options()
 
         try:
