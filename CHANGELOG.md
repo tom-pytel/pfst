@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- never automatically add parentheses to copied Slice
 - disallow Starred as a target to Delete
 - allow put to except and case slices
 - allow put any kind of expression slice to tuple, including Slices
@@ -10,6 +11,7 @@
 
 ### Added
 
+- prescribed slicing for `Assign.targets`
 - prescribed slicing for `Delete.targets`
 - prescribed slicing for `FunctionDef.type_params`
 - prescribed slicing for `AsyncFunctionDef.type_params`

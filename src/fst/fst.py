@@ -94,7 +94,8 @@ from .misc import (
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Self, Code,
     _next_src, _next_find, _next_pars, _prev_pars,
-    _swizzle_getput_params, _fixup_field_body, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
+    _swizzle_getput_params, _fixup_field_body,
+    _multiline_str_continuation_lns, _multiline_fstr_continuation_lns, _continuation_to_uncontinued_lns,
 )
 
 from . import view
@@ -121,6 +122,7 @@ _OPTIONS = {
     'fix_set_put':      True,   # True | False | 'star' | 'call' | 'both'
     'fix_set_self':     True,   # True | False | 'star' | 'call'
     'fix_del_self':     True,   # True | False
+    'fix_assign_self':  True,   # True | False
     'fix_matchor_get':  True,   # True | False | 'strict'
     'fix_matchor_put':  True,   # True | False | 'strict'
     'fix_matchor_self': True,   # True | False | 'strict'
@@ -875,6 +877,7 @@ class FST:
          'fix_set_put': True,
          'fix_set_self': True,
          'fix_del_self': True,
+         'fix_assign_self': True,
          'fix_matchor_get': True,
          'fix_matchor_put': True,
          'fix_matchor_self': True,
@@ -1029,8 +1032,12 @@ class FST:
             - `True`: Same as `'star'`.
             - `'star'`: Starred sequence `{*()}`.
             - `'call'`: `set()` call.
-        - `fix_del_self`: How to handle operations which would leave a `Del` with zero `targets`.
-            - `False`: Allow, this will leave an invalid `Del` which should have the `targets` replaces as soon as
+        - `fix_del_self`: How to handle operations which would leave a `Delete` with zero `targets`.
+            - `False`: Allow, this will leave an invalid `Delete` which should have the `targets` replaced as soon as
+                possible.
+            - `True`: Don't allow, error.
+        - `fix_assign_self`: How to handle operations which would leave a `Assign` with zero `targets`.
+            - `False`: Allow, this will leave an invalid `Assign` which should have the `targets` replaced as soon as
                 possible.
             - `True`: Don't allow, error.
         - `fix_matchor_get`: How to handle zero or length 1 slice gets from a `MatchOr`. Zero-length `MatchOr`s, or any
@@ -4100,7 +4107,7 @@ class FST:
                     _, _, ln, col         = e0.f.loc
                     _, _, end_ln, end_col = self.loc
 
-                    if not _next_find(self.root.lines, ln, col, end_ln, end_col, ','):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
+                    if not _next_find(self.root._lines, ln, col, end_ln, end_col, ','):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
                         return 'expr_slice'
 
         return ast.__class__  # otherwise regular parse by AST type is valid
@@ -4423,7 +4430,8 @@ class FST:
 
         return 'pars' if pars and self.pars().n else False
 
-    def is_enclosed_or_line(self, *, pars: bool = True) -> bool | Literal['pars']:
+    def is_enclosed_or_line(self, *, pars: bool = True, whole: bool = False, out_lns: set | None = None,
+                            ) -> bool | Literal['pars']:
         r"""Whether `self` lives on a single line or logical line (entirely terminated with line continuations) or is
         otherwise enclosed in some kind of delimiters `()`, `[]`, `{}` so that it can be parsed without error due to
         being spread across multiple lines. If logical line then internal enclosed elements spread over multiple lines
@@ -4442,11 +4450,16 @@ class FST:
         **Parameters:**
         - `pars`: Whether to check for grouping parentheses or not for nodes which are not enclosed or otherwise
             multiline-safe. Grouping parentheses are different from tuple parentheses which are always checked.
+        - `whole`: Whether entire source should be checked and not just the lines corresponding to the node. This is
+            only valid for a root node.
+        - `out_lns`: If this is not `None` then it is expected to be a `Set` which will get the line numbers added of
+            all the lines that would need line continuation backslashes in order to make this function True.
 
         **Returns:**
-        - `True`: Mode is enclosed.
-        - `'pars'` Enclosed by grouping parentheses and would not be otherwise.
-        - `False`: Not enclosed and should be parenthesized or put into an enclosed parent for successful parse.
+        - `True`: Node is enclosed or single logical line.
+        - `'pars'` Enclosed by grouping parentheses.
+        - `False`: Not enclosed or single logical line and should be parenthesized or put into an enclosed parent or
+            have line continuations added for successful parse.
 
         **Examples:**
         ```py
@@ -4486,58 +4499,90 @@ class FST:
         ```
         """
 
-        ast = self.a
+        lines = self.root._lines
+        ast   = self.a
+        loc   = self.loc
 
-        if isinstance(ast, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, FormattedValue, Interpolation,
-                            Name, Slice,
-                            MatchValue, MatchSingleton, MatchMapping,
-                            expr_context, boolop, operator, unaryop, ExceptHandler, keyword, type_param,
-                            stmt, match_case, mod, TypeIgnore)):
-            return True
+        if whole:
+            if not self.is_root:
+                raise ValueError("'whole=True' can only be specified on root nodes")
 
-        if not (loc := self.loc):  # this catches empty `arguments` mostly
-            return True
+            whole_end_ln = len(lines) - 1
 
-        ln, col, end_ln, end_col = loc
+            if loc and not loc.ln and loc.end_ln == whole_end_ln:  # if location spans over whole range of lines then is just normal check
+                whole = False
 
-        if end_ln == ln:
-            return True
+            else:  # if something doesn't have a loc or loc doesn't span over entire range of lines then we need to check the whole source
+                end_ln   = whole_end_ln
+                last_ln  = 0
+                children = [ast]
 
-        if pars and self.pars().n:
-            return 'pars'
-
-        if isinstance(ast, Constant):
-            if not isinstance(ast.value, (str, bytes)):
+        if not whole:
+            if not loc:  # this catches empty `arguments` mostly
                 return True
 
-            return len(_multiline_str_continuation_lns(self.root._lines, ln, col, end_ln, end_col)) == end_ln - ln
-
-        if isinstance(ast, (JoinedStr, TemplateStr)):
-            return len(_multiline_fstr_continuation_lns(self.root._lines, ln, col, end_ln, end_col)) == end_ln - ln
-
-        if (ret := self.is_parenthesized_tuple()) is not None:
-            if ret:
+            if isinstance(ast, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp,
+                                FormattedValue, Interpolation,
+                                Name,
+                                MatchValue, MatchSingleton, MatchMapping,
+                                expr_context, boolop, operator, unaryop, ExceptHandler, keyword, type_param,  # cmpop is not here because of #*^% like 'is \n not'
+                                stmt, match_case, mod, TypeIgnore)):
                 return True
 
-        elif (ret := self.get_matchseq_delimiters()) is not None:
-            if ret:
+            ln, col, end_ln, end_col = loc
+
+            if end_ln == ln:
                 return True
 
-        last_ln = ln
-        lines   = self.root._lines
+            if pars:
+                if self.pars().n:
+                    return 'pars'
 
-        if isinstance(ast, Call):
-            children = [ast.func,
-                        nspace(f=nspace(pars=lambda: self._loc_call_pars(), is_enclosed_or_line=lambda **kw: True))]
-        elif isinstance(ast, Subscript):
-            children = [ast.value,
-                        nspace(f=nspace(pars=lambda: self._loc_subscript_brackets(),
-                                        is_enclosed_or_line=lambda **kw: True))]
-        elif isinstance(ast, MatchClass):
-            children = [ast.cls,
-                        nspace(f=nspace(pars=lambda: self._loc_matchcls_pars(), is_enclosed_or_line=lambda **kw: True))]
-        else:  # we don't check always-enclosed statement fields here because statements will never get here
-            children = syntax_ordered_children(ast)
+                pars = False
+
+            if (is_const := isinstance(ast, Constant)) or isinstance(ast, (JoinedStr, TemplateStr)):
+                if is_const:
+                    if not isinstance(ast.value, (str, bytes)):
+                        return True
+
+                    lns = _multiline_str_continuation_lns(self.root._lines, ln, col, end_ln, end_col)
+
+                else:
+                    lns = _multiline_fstr_continuation_lns(self.root._lines, ln, col, end_ln, end_col)
+
+                if (ret := len(lns) == end_ln - ln) or out_lns is None:
+                    return ret
+
+                out_lns.update(_continuation_to_uncontinued_lns(lns, ln, col, end_ln, end_col))
+
+                return False
+
+            if (ret := self.is_parenthesized_tuple()) is not None:
+                if ret:
+                    return True
+
+            elif (ret := self.get_matchseq_delimiters()) is not None:
+                if ret:
+                    return True
+
+            last_ln = ln
+
+            if isinstance(ast, Call):
+                children = [ast.func,
+                            nspace(f=nspace(pars=lambda: self._loc_call_pars(),
+                                            is_enclosed_or_line=lambda **kw: True))]
+            elif isinstance(ast, Subscript):
+                children = [ast.value,
+                            nspace(f=nspace(pars=lambda: self._loc_subscript_brackets(),
+                                            is_enclosed_or_line=lambda **kw: True))]
+            elif isinstance(ast, MatchClass):
+                children = [ast.cls,
+                            nspace(f=nspace(pars=lambda: self._loc_matchcls_pars(),
+                                            is_enclosed_or_line=lambda **kw: True))]
+            else:  # we don't check always-enclosed statement fields here because statements will never get here
+                children = syntax_ordered_children(ast)
+
+        failed = False
 
         for child in children:
             if not child or not (loc := (childf := child.f).pars()) or (child_end_ln := loc.end_ln) == last_ln:
@@ -4545,16 +4590,35 @@ class FST:
 
             for ln in range(last_ln, loc.ln):
                 if re_line_end_cont_or_comment.match(lines[ln]).group(1) != '\\':
+                    if out_lns is None:
+                        return False
+
+                    else:
+                        failed = True
+
+                        out_lns.add(ln)
+
+            if not getattr(loc, 'n', 0) and not childf.is_enclosed_or_line(pars=pars, out_lns=out_lns):  # the incoming pars=pars will be passed on to the first child which will be self if `whole` was True
+                if out_lns is None:
                     return False
+                else:
+                    failed = True
 
-            if not getattr(loc, 'n', 0) and not childf.is_enclosed_or_line(pars=False):
-                return False
-
+            pars    = False
             last_ln = child_end_ln
 
         for ln in range(last_ln, end_ln):  # tail
             if re_line_end_cont_or_comment.match(lines[ln]).group(1) != '\\':
-                return False
+                if out_lns is None:
+                    return False
+
+                else:
+                    failed = True
+
+                    out_lns.add(ln)
+
+        if failed:
+            return False
 
         return True
 
@@ -4728,7 +4792,7 @@ class FST:
 
         ln, col, end_ln, end_col = self.loc
 
-        return _next_src(self.root.lines, ln, col + 6, end_ln, end_col).src.startswith('*')  # something must be there
+        return _next_src(self.root._lines, ln, col + 6, end_ln, end_col).src.startswith('*')  # something must be there
 
     def is_empty_set_call(self) -> bool:
         """Whether `self` is an empty `set()` call.
@@ -4993,6 +5057,7 @@ class FST:
         _set_end_pos,
         _set_block_end_from_last_child,
         _update_loc_up_parents,
+        _maybe_add_line_continuations,
         _maybe_del_separator,
         _maybe_ins_separator,
         _maybe_add_singleton_tuple_comma,
@@ -5066,6 +5131,7 @@ class FST:
         _parse_pattern,
         _parse_type_param,
         _parse_type_params,
+        _parse_Assign_targets,
         _code_as_all,
         _code_as_stmts,
         _code_as_ExceptHandlers,
@@ -5093,6 +5159,7 @@ class FST:
         _code_as_pattern,
         _code_as_type_param,
         _code_as_type_params,
+        _code_as_Assign_targets,
         _code_as_identifier,
         _code_as_identifier_dotted,
         _code_as_identifier_star,

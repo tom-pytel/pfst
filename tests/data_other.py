@@ -2258,6 +2258,194 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 """),
 
+(r"""a = b = c = z""", 'body[0]', 0, 2, 'targets', {}, r"""c = z""", r"""a = b =""", r"""
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'c' Store - 0,0..0,1
+    .value Name 'z' Load - 0,4..0,5
+""", r"""
+Assign - ROOT 0,0..0,7
+  .targets[2]
+  0] Name 'a' Store - 0,0..0,1
+  1] Name 'b' Store - 0,4..0,5
+  .value Name '' Load - 0,7..0,7
+"""),
+
+(r"""a = b = c = z""", 'body[0]', 1, 2, 'targets', {}, r"""a = c = z""", r"""b =""", r"""
+Module - ROOT 0,0..0,9
+  .body[1]
+  0] Assign - 0,0..0,9
+    .targets[2]
+    0] Name 'a' Store - 0,0..0,1
+    1] Name 'c' Store - 0,4..0,5
+    .value Name 'z' Load - 0,8..0,9
+""", r"""
+Assign - ROOT 0,0..0,3
+  .targets[1]
+  0] Name 'b' Store - 0,0..0,1
+  .value Name '' Load - 0,3..0,3
+"""),
+
+(r"""a = b = c = z""", 'body[0]', 1, 3, 'targets', {}, r"""a = z""", r"""b = c =""", r"""
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'a' Store - 0,0..0,1
+    .value Name 'z' Load - 0,4..0,5
+""", r"""
+Assign - ROOT 0,0..0,7
+  .targets[2]
+  0] Name 'b' Store - 0,0..0,1
+  1] Name 'c' Store - 0,4..0,5
+  .value Name '' Load - 0,7..0,7
+"""),
+
+(r"""a = b = c = z""", 'body[0]', 2, 3, 'targets', {}, r"""a = b = z""", r"""c =""", r"""
+Module - ROOT 0,0..0,9
+  .body[1]
+  0] Assign - 0,0..0,9
+    .targets[2]
+    0] Name 'a' Store - 0,0..0,1
+    1] Name 'b' Store - 0,4..0,5
+    .value Name 'z' Load - 0,8..0,9
+""", r"""
+Assign - ROOT 0,0..0,3
+  .targets[1]
+  0] Name 'c' Store - 0,0..0,1
+  .value Name '' Load - 0,3..0,3
+"""),
+
+(r"""a = b = c = z""", 'body[0]', 3, 3, 'targets', {'_verify': False}, r"""a = b = c = z""", r""" = """, r"""
+Module - ROOT 0,0..0,13
+  .body[1]
+  0] Assign - 0,0..0,13
+    .targets[3]
+    0] Name 'a' Store - 0,0..0,1
+    1] Name 'b' Store - 0,4..0,5
+    2] Name 'c' Store - 0,8..0,9
+    .value Name 'z' Load - 0,12..0,13
+""", r"""
+Assign - ROOT 0,0..0,3
+  .value Name '' Load - 0,3..0,3
+"""),
+
+(r"""a = \
+b = \
+c \
+= \
+z""", 'body[0]', 0, 2, 'targets', {}, r"""c \
+= \
+z""", r"""a = \
+b = \
+""", r"""
+Module - ROOT 0,0..2,1
+  .body[1]
+  0] Assign - 0,0..2,1
+    .targets[1]
+    0] Name 'c' Store - 0,0..0,1
+    .value Name 'z' Load - 2,0..2,1
+""", r"""
+Assign - ROOT 0,0..2,0
+  .targets[2]
+  0] Name 'a' Store - 0,0..0,1
+  1] Name 'b' Store - 1,0..1,1
+  .value Name '' Load - 2,0..2,0
+"""),
+
+(r"""a = \
+b = \
+c \
+= \
+z""", 'body[0]', 1, 2, 'targets', {}, r"""a = \
+c \
+= \
+z""", r"""b = \
+""", r"""
+Module - ROOT 0,0..3,1
+  .body[1]
+  0] Assign - 0,0..3,1
+    .targets[2]
+    0] Name 'a' Store - 0,0..0,1
+    1] Name 'c' Store - 1,0..1,1
+    .value Name 'z' Load - 3,0..3,1
+""", r"""
+Assign - ROOT 0,0..1,0
+  .targets[1]
+  0] Name 'b' Store - 0,0..0,1
+  .value Name '' Load - 1,0..1,0
+"""),
+
+(r"""a = \
+b = \
+c \
+= \
+z""", 'body[0]', 1, 3, 'targets', {}, r"""a = \
+z""", r"""b = \
+c \
+= \
+""", r"""
+Module - ROOT 0,0..1,1
+  .body[1]
+  0] Assign - 0,0..1,1
+    .targets[1]
+    0] Name 'a' Store - 0,0..0,1
+    .value Name 'z' Load - 1,0..1,1
+""", r"""
+Assign - ROOT 0,0..3,0
+  .targets[2]
+  0] Name 'b' Store - 0,0..0,1
+  1] Name 'c' Store - 1,0..1,1
+  .value Name '' Load - 3,0..3,0
+"""),
+
+(r"""a = \
+b = \
+c \
+= \
+z""", 'body[0]', 2, 3, 'targets', {}, r"""a = \
+b = \
+z""", r"""c \
+= \
+""", r"""
+Module - ROOT 0,0..2,1
+  .body[1]
+  0] Assign - 0,0..2,1
+    .targets[2]
+    0] Name 'a' Store - 0,0..0,1
+    1] Name 'b' Store - 1,0..1,1
+    .value Name 'z' Load - 2,0..2,1
+""", r"""
+Assign - ROOT 0,0..2,0
+  .targets[1]
+  0] Name 'c' Store - 0,0..0,1
+  .value Name '' Load - 2,0..2,0
+"""),
+
+(r"""a = \
+b = \
+c \
+= \
+z""", 'body[0]', 3, 3, 'targets', {'_verify': False}, r"""a = \
+b = \
+c \
+= \
+z""", r""" = """, r"""
+Module - ROOT 0,0..4,1
+  .body[1]
+  0] Assign - 0,0..4,1
+    .targets[3]
+    0] Name 'a' Store - 0,0..0,1
+    1] Name 'b' Store - 1,0..1,1
+    2] Name 'c' Store - 2,0..2,1
+    .value Name 'z' Load - 4,0..4,1
+""", r"""
+Assign - ROOT 0,0..0,3
+  .value Name '' Load - 0,3..0,3
+"""),
+
 ]  # END OF GET_SLICE_EXPRISH_DATA
 
 GET_SLICE_STMTISH_DATA = [
@@ -18063,11 +18251,11 @@ Module - ROOT 0,0..0,15
 
 (r"""del a, b, c""", 'body[0]', 1, 2, None, {}, r"""x
 .
-y""", r"""**NotImplementedError('cannot put unenclosed multiline tartget(s) to Delete')**""", r"""
+y""", r"""**NotImplementedError('cannot put unenclosed multiline tartget(s) to Delete.targets')**""", r"""
 """),
 
 (r"""del a, b, c""", 'body[0]', 1, 2, None, {}, r"""x
-,""", r"""**NotImplementedError('cannot put unenclosed multiline tartget(s) to Delete')**""", r"""
+,""", r"""**NotImplementedError('cannot put unenclosed multiline tartget(s) to Delete.targets')**""", r"""
 """),
 
 ]  # END OF PUT_SLICE_DATA

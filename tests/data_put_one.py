@@ -5784,7 +5784,18 @@ Module - ROOT 0,0..0,18
 (r"""del a, (b), c""", 'body[0]', -4, None, {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""a = (b, c) = d = z""", 'body[0]', 0, 'targets', {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
+(r"""a = (b, c) = d = z""", 'body[0]', 0, 'targets', {}, r"""**DEL**""", r"""(b, c) = d = z""", r"""
+Module - ROOT 0,0..0,14
+  .body[1]
+  0] Assign - 0,0..0,14
+    .targets[2]
+    0] Tuple - 0,0..0,6
+      .elts[2]
+      0] Name 'b' Store - 0,1..0,2
+      1] Name 'c' Store - 0,4..0,5
+      .ctx Store
+    1] Name 'd' Store - 0,9..0,10
+    .value Name 'z' Load - 0,13..0,14
 """),
 
 (r"""a = (b, c) = d = z""", 'body[0]', 0, 'targets', {}, r"""new""", r"""new = (b, c) = d = z""", r"""

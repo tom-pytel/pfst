@@ -896,7 +896,7 @@ def set_ctx(asts: AST | list[AST], ctx: type[expr_context], *, doit: bool = True
     """Set all `ctx` fields in this node and any children which may participate in an assignment (`Tuple`, `List`,
     `Starred`, `Subscript`, `Attribute`, `Name`) to the passed `ctx` type.
 
-    WARNING! This will not recurse into elements which have a `ctx` of the type being set.
+    **WARNING!** This will not recurse into elements which have a `ctx` of the type being set.
 
     **Parameters:**
     - `asts`: Single `AST` (will be recursed) or list of `AST` nodes (will be consumed, each one will also be recursed)

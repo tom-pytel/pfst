@@ -5,7 +5,7 @@ import sys
 from ast import parse as ast_parse
 from functools import wraps
 from math import log10
-from typing import Callable, ForwardRef, Literal, NamedTuple, Union  # , Sequence
+from typing import Callable, ForwardRef, Literal, NamedTuple, Iterable, Union
 
 import fst
 
@@ -157,6 +157,7 @@ Mode = Literal[
     'pattern',
     'type_param',
     'type_params',
+    'Assign_targets',
 ] | type[AST]
 
 """Parse modes:
@@ -213,6 +214,8 @@ Mode = Literal[
 - `'type_param'`: Parse as a single `type_param` returned as itself, either `TypeVar`, `ParamSpec` or
     `TypeVarTuple`. Same as passing `type_param` type.
 - `'type_params'`: Parse as a slice of zero or more `type_param`s returned in a `Tuple`.
+- `'Assign_targets'`: Parse as a single or multiple targets to an `Assign` node, with `=` as separators and an optional
+    trailing `=`. Returned as an `Assign` node with a `value` node which is an empty `Name`.
 - `type[AST]`: If an `AST` type is passed then will attempt to parse to this type. This can be used to narrow
     the scope of desired return, for example `Constant` will parse as an expression but fail if the expression
     is not a `Constant`. These overlap with the string specifiers to an extent but not all of them. For example
@@ -1021,8 +1024,14 @@ def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, en
     return (text_pos, None if space_pos == text_pos else space_pos, True)
 
 
+class _ParamsOffset(NamedTuple):
+    end_ln:      int
+    col_offset:  int
+    dln:         int
+    dcol_offset: int
+
 def _params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int, end_ln: int, end_col: int,
-                   ) -> tuple[int, int, int, int]:
+                   ) -> _ParamsOffset:
     """Calculate location and delta parameters for the `_offset()` function. The `col` parameter is calculated as a byte
     offset so that the `_offset()` function does not have to access the source at all."""
 
@@ -1034,7 +1043,7 @@ def _params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int
     if not dfst_ln:
         dcol_offset += lines[ln].c2b(col)
 
-    return end_ln, col_offset, dln, dcol_offset
+    return _ParamsOffset(end_ln, col_offset, dln, dcol_offset)
 
 
 def _swizzle_getput_params(start: int | Literal['end'] | None, stop: int | None | Literal[False], field: str | None,
@@ -1108,8 +1117,9 @@ def _fixup_slice_indices(len_: int, start: int, stop: int) -> tuple[int, int]:
 
 
 def _multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:
-    """Return the line numbers of a potentially multiline string `Constant`. The location passed MUST be from the
-    `Constant` `AST` node or calculated to be the same, otherwise this function will fail."""
+    """Return the line numbers of a potentially multiline string `Constant` continuation lines (lines which should not
+    be indented because they follow a newline inside triple quotes). The location passed MUST be from the `Constant`
+    `AST` node or calculated to be the same, otherwise this function will fail."""
 
 
     # TODO: use tokenize?
@@ -1161,10 +1171,12 @@ def _multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln:
 
 
 def _multiline_fstr_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:
-    """Lets try to find indentable lines by incrementally attempting to parse parts of multiline f-string (or t-)."""
+    """Lets try to find non-indentable lines by incrementally attempting to parse parts of multiline f-string (or
+    t-string)."""
 
 
     # TODO: p3.12+ has locations for these which should allow no use of parse, use tokenize?
+    # TODO: currently returns normal fstrs contained on line but with line continuation as continuation lines (this is not what is meant by the function name)
 
 
     lns = []
@@ -1194,3 +1206,23 @@ def _multiline_fstr_continuation_lns(lines: list[str], ln: int, col: int, end_ln
         col = 0
 
     return lns
+
+
+def _continuation_to_uncontinued_lns(lns: Iterable[int], ln: int, col: int, end_ln: int, end_col: int, *,
+                                     include_last: bool = False) -> set[int]:
+    """Convert `Iterable` of lines which are continued from the immediately previous line into a list of lines which are
+    not themselves continued below. If `lns` comes from the `_multiline_?str_*` functions then it does not include line
+    continuations outside of the string and those lines will be returned as uncontinued.
+
+    **Parameters:**
+    - `include_last`: Whether to include the last line as an uncontinues line or not.
+
+    **Returns:**
+    - `set[int]`: Set of uncontinued lines in the given range.
+    """
+
+    out = set(range(ln, end_ln + include_last))
+
+    out.difference_update(i - 1 for i in lns)
+
+    return out

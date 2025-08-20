@@ -161,6 +161,54 @@ two  # fake comment start""", **b
             }''').body[0].value
         self.assertEqual((1, 19, 1, 21), a.f._loc_maybe_dict_key(1))
 
+    def test__maybe_add_line_contunuations(self):
+        f = FST(r'''
+a + \
+("""
+*"""
+"c")
+''')
+        self.assertFalse(f._maybe_add_line_continuations(False))
+        self.assertEqual(r'''
+a + \
+("""
+*"""
+"c")
+''', f.src)
+        f.verify('strict')
+
+        f = FST(r'''
+a + \
+("""
+*"""
+"c")
+''')
+        f.right.unpar()
+        self.assertTrue(f._maybe_add_line_continuations(False))
+        self.assertEqual(r'''
+a + \
+"""
+*""" \
+"c"
+''', f.src)
+        f.verify('strict')
+
+        f = FST(r'''
+a + \
+("""
+*"""
+"c")
+''')
+        f.right.unpar()
+        self.assertTrue(f._maybe_add_line_continuations(True))
+        self.assertEqual(r'''\
+a + \
+"""
+*""" \
+"c" \
+''', f.src)
+        f.verify('strict')
+
     def test__maybe_ins_separator(self):
         f = FST('[a#c\n]')
         f._maybe_ins_separator(0, 2, False, 0, 2)
@@ -282,6 +330,11 @@ two  # fake comment start""", **b
             self.assertEqual('*tuple[int, ...]', fc.src)
             fc._maybe_fix_copy(pars=True)
             self.assertEqual('*tuple[int, ...],', fc.src)
+
+        # don't parenthesize copied Slice even if it looks like it needs it
+
+        self.assertEqual('b:\nc', (f := FST('a[b:\nc]').get('slice')).src)
+        f.verify()
 
     def test__parenthesize_grouping(self):
         f = parse('[i]').f

@@ -41,6 +41,7 @@ from .asttypes import (
     NamedExpr,
     NotIn,
     Set,
+    Slice,
     Starred,
     Subscript,
     Tuple,
@@ -67,7 +68,7 @@ from .misc import (
     EXPRISH, STMTISH, BLOCK, HAS_DOCSTRING,
     re_empty_line_start, re_line_trailing_space, re_line_end_cont_or_comment,
     _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars, _next_find_re,
-    _params_offset, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
+    _ParamsOffset, _params_offset, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
 )
 
 _HAS_FSTR_COMMENT_BUG  = f'{"a#b"=}' != '"a#b"=\'a#b\''
@@ -976,7 +977,7 @@ def _loc_funcdef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tup
     # assert isinstance(self.a, (FunctionDef, AsyncFunctionDef))
 
     ast   = self.a
-    lines = self.root.lines
+    lines = self.root._lines
     args  = ast.args
 
     ln, col, end_ln, end_col = self.loc
@@ -1023,7 +1024,7 @@ def _loc_classdef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tu
     # assert isinstance(self.a, ClassDef)
 
     ast   = self.a
-    lines = self.root.lines
+    lines = self.root._lines
 
     ln, col, end_ln, end_col = self.loc
 
@@ -1064,7 +1065,7 @@ def _loc_typealias_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, t
     # assert isinstance(self.a, TypeAlias)
 
     ast   = self.a
-    lines = self.root.lines
+    lines = self.root._lines
 
     _, _, name_end_ln, name_end_col = ast.name.f.loc
     val_ln, val_col, _, _           = ast.value.f.loc
@@ -1307,6 +1308,31 @@ def _update_loc_up_parents(self: fst.FST, lineno: int, col_offset: int, end_line
         self._touchall(True)
 
 
+def _maybe_add_line_continuations(self: fst.FST, whole: bool = False) -> bool:
+    """Check if `self` needs them and if so add line continuations to make parsable.
+
+    **Parameters:**
+    - `pars`: Whether to check for grouping parentheses or not for nodes which are not enclosed or otherwise
+        multiline-safe. Grouping parentheses are different from tuple parentheses which are always checked.
+    - `whole`: Whether to check (and add line continuations to) whole source (only if at root). Otherwise will just
+        check and modify lines that this node lives on.
+
+    **Returns:**
+    - `bool`: Whether modification was made or not.
+    """
+
+    if self.is_enclosed_or_line(whole=whole, out_lns=(lns := set())):
+        return False
+
+    lines = self.root._lines
+
+    for ln in lns:
+        if not (l := lines[ln]).endswith('\\'):
+            lines[ln] = bistr(l + ('\\' if not l or l[-1:].isspace() else ' \\'))
+
+    return True
+
+
 def _maybe_del_separator(self: fst.FST, ln: int, col: int, force: bool = False,
                          end_ln: int | None = None, end_col: int | None = None, sep: str = ',') -> bool:
     """Maybe delete a separator if present. Can be always deleted or allow function to decide aeshtetically. We
@@ -1398,8 +1424,7 @@ def _maybe_ins_separator(self: fst.FST, ln: int, col: int, space: bool,
                 break
 
             else:
-                if space and ((cln == end_ln and ccol == end_col) or
-                              not _re_one_space_or_end.match(lines[cln], ccol)):
+                if space and ((cln == end_ln and ccol == end_col) or not _re_one_space_or_end.match(lines[cln], ccol)):
                     self._put_src([' '], cln, ccol, cln, ccol, True, exclude=exclude, offset_excluded=offset_excluded)
 
                     return srcwpos(cln, ccol, ' ')
@@ -1411,11 +1436,11 @@ def _maybe_ins_separator(self: fst.FST, ln: int, col: int, space: bool,
 
         break
 
-    if space:
-        if (ln == end_ln and col == end_col) or not _re_one_space_or_end.match(lines[ln], col):
-            sep = ', ' if sep == ',' else f' {sep} '
-        elif sep != ',':
-            sep = ' ' + sep
+    if sep != ',':
+        sep = ' ' + sep
+
+    if space and ((ln == end_ln and col == end_col) or not _re_one_space_or_end.match(lines[ln], col)):
+        sep = sep + ' '
 
     self._put_src([sep], ln, col, ln, col, True, exclude=exclude, offset_excluded=offset_excluded)
 
@@ -1559,7 +1584,7 @@ def _maybe_fix_matchor(self: fst.FST, fix1: bool = False) -> None:
     """Maybe fix a `MatchOr` object that may have the wrong location. Will do nothing to a zero-length `MatchOr` and
     will convert a length 1 `MatchOr` to just its single element if `fix1=True`.
 
-    WARNING! This is currently expecting to be called from slice operations with specific conditions, not guaranteed
+    **WARNING!** This is currently expecting to be called from slice operations with specific conditions, not guaranteed
     will work on any-old `MatchOr`.
     """
 
@@ -1666,32 +1691,31 @@ def _maybe_fix_copy(self: fst.FST, pars: bool = True, pars_walrus: bool = False)
         self._maybe_fix_elif()
 
     elif isinstance(ast, expr):
-        if not self.loc or not self.is_parsable():
+        if not self.is_parsable() or isinstance(ast, Slice):  # is_parsable() makes sure there is a self.loc, Slice should never get pars
             return
 
-        self._set_ctx(Load)  # anything that is excluded by is_parsable() or does not have .loc does not need this
+        self._set_ctx(Load)  # anything that is excluded by is_parsable() above (or does not have .loc) does not need this
 
         if not pars:
             return
 
-        ast        = self.a
-        need_paren = None
+        need_pars = None
 
         if is_tuple := isinstance(ast, Tuple):
             if is_par := self._is_delimited_seq():
-                need_paren = False
+                need_pars = False
             elif any(isinstance(e, NamedExpr) and not e.f.pars().n for e in ast.elts):  # unparenthesized walrus in naked tuple?
-                need_paren = True
+                need_pars = True
 
             self._maybe_add_singleton_tuple_comma(is_par)  # this exists because of copy lone Starred out of a Subscript.slice
 
         elif isinstance(ast, NamedExpr):  # naked walrus
-            need_paren = pars_walrus
+            need_pars = pars_walrus
 
-        if need_paren is None:
-            need_paren = not self.is_enclosed_or_line()
+        if need_pars is None:
+            need_pars = not self.is_enclosed_or_line()
 
-        if need_paren:
+        if need_pars:
             if is_tuple:
                 self._delimit_node()
             else:
@@ -1733,7 +1757,7 @@ def _parenthesize_grouping(self: fst.FST, whole: bool = True, *, star_child: boo
     """Parenthesize anything with non-node grouping parentheses. Just adds text parens around node adjusting parent
     locations but not the node itself.
 
-    WARNING! DO NOT parenthesize an unparenthesized `Tuple` or undelimited `MatchSequence`.
+    **WARNING!** DO NOT parenthesize an unparenthesized `Tuple` or undelimited `MatchSequence`.
 
     **Parameters:**
     - `whole`: If at root then parenthesize whole source instead of just node.
@@ -1958,7 +1982,8 @@ def _reparse_docstrings(self: fst.FST, docstr: bool | Literal['strict'] | None =
 def _make_fst_and_dedent(self: fst.FST, indent: fst.FST | str, ast: AST, copy_loc: fstloc,
                          prefix: str = '', suffix: str = '',
                          put_loc: fstloc | None = None, put_lines: list[str] | None = None, *,
-                         docstr: bool | Literal['strict'] | None = None) -> fst.FST:
+                         docstr: bool | Literal['strict'] | None = None,
+                         ret_params_offset: bool = False) -> fst.FST | tuple[fst.FST, _ParamsOffset]:
     if not isinstance(indent, str):
         indent = indent.get_indent()
 
@@ -1979,9 +2004,11 @@ def _make_fst_and_dedent(self: fst.FST, indent: fst.FST | str, ast: AST, copy_lo
         fst_._dedent_lns(indent, skip=bool(copy_loc.col), docstr=docstr)  # if copy location starts at column 0 then we apply dedent to it as well (preceding comment or something)
 
     if put_loc:
-        self._put_src(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
+        params_offset = self._put_src(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
+    else:
+        params_offset = None
 
-    return fst_
+    return (fst_, params_offset) if ret_params_offset else fst_
 
 
 @pyver(ge=12)
@@ -2211,7 +2238,7 @@ def _touchall(self: fst.FST, parents: bool = False, self_: bool = True, children
 
 def _put_src(self: fst.FST, src: str | list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
              tail: bool | None = ..., head: bool | None = True, exclude: fst.FST | None = None, *,
-             offset_excluded: bool = True) -> tuple[int, int, int, int] | None:
+             offset_excluded: bool = True) -> _ParamsOffset | None:
     """Put or delete new source to currently stored source, optionally offsetting all nodes for the change. Must
     specify `tail` as `True`, `False` or `None` to enable offset of nodes according to source put. `...` ellipsis
     value is used as sentinel for `tail` to mean don't offset. Otherwise `tail` and params which followed are passed
@@ -2223,8 +2250,7 @@ def _put_src(self: fst.FST, src: str | list[str] | None, ln: int, col: int, end_
         is returned as a byte offset so that `offset()` doesn't attempt to calculate it from already modified
         source."""
 
-    ret = None
-    ls  = self.root._lines
+    ls = self.root._lines
 
     if is_del := src is None:
         lines = [bistr('')]
@@ -2233,10 +2259,13 @@ def _put_src(self: fst.FST, src: str | list[str] | None, ln: int, col: int, end_
     else:
         lines = [bistr(s) for s in src]
 
-    if tail is not ...:  # possibly offset nodes
-        ret = _params_offset(ls, lines, ln, col, end_ln, end_col)
+    if tail is ...:
+        params_offset = None
 
-        self.root._offset(*ret, tail, head, exclude, offset_excluded=offset_excluded)
+    else:
+        params_offset = _params_offset(ls, lines, ln, col, end_ln, end_col)
+
+        self.root._offset(*params_offset, tail, head, exclude, offset_excluded=offset_excluded)
 
     if is_del:  # delete lines
         if end_ln == ln:
@@ -2272,7 +2301,7 @@ def _put_src(self: fst.FST, src: str | list[str] | None, ln: int, col: int, end_
             ls[end_ln]          = bistr(lines[-1] + ls[end_ln][end_col:])
             ls[ln + 1 : end_ln] = lines[1:-1]
 
-    return ret
+    return params_offset
 
 
 def _offset(self: fst.FST, ln: int, col: int, dln: int, dcol_offset: int,

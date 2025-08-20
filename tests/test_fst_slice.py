@@ -2264,6 +2264,24 @@ def func():
         self.assertRaises(NodeError, FST('del a, b, c').put, '*(),', 1, 2, fix_set_put=False)
         self.assertRaises(NodeError, FST('del a, b, c').put, '*()', 1, 2, fix_set_put=False)
 
+        self.assertEqual('del a, x, y, c', (f := FST('del a, b, c')).put_slice('{x, y}', 1, 2).src)
+        f.verify()
+
+        self.assertEqual('del a, x, y, c', (f := FST('del a, b, c')).put_slice('[x, y]', 1, 2).src)
+        f.verify()
+
+        self.assertEqual('del b', (f := FST('del(a)')).put_slice('b', 0, 1).src)
+        f.verify()
+
+        f = FST('del(a),b')
+        self.assertEqual('(a),', f.get_slice(0, 1, cut=True).src)
+        self.assertEqual('del b', f.src)
+        f.verify()
+
+        f = FST('del(a),b')
+        self.assertEqual('del b', f.put_slice(None, 0, 1).src)
+        f.verify()
+
     def test_put_slice_seq_namedexpr_and_yield(self):
         self.assertEqual('a, (x := y)', (f := FST('a, b')).put_slice('x := y', 1, 2, one=True).src)
         f.verify()

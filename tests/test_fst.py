@@ -542,6 +542,18 @@ PARSE_TESTS = [
     ('withitem',          FST._parse_withitem,          withitem,         ' a as b,  # tail'),
     ('pattern',           FST._parse_pattern,           MatchOr,          ' 1 | 2 | 3  # tail'),
     ('pattern',           FST._parse_pattern,           MatchStar,        ' *a  # tail'),
+
+    ('Assign_targets',    FST._parse_Assign_targets,    Assign,           'a'),
+    ('Assign_targets',    FST._parse_Assign_targets,    Assign,           'a ='),
+    ('Assign_targets',    FST._parse_Assign_targets,    Assign,           'a = b'),
+    ('Assign_targets',    FST._parse_Assign_targets,    Assign,           'a = b ='),
+    ('Assign_targets',    FST._parse_Assign_targets,    Assign,           '\\\na\\\n = \\\n'),
+    ('Assign_targets',    FST._parse_Assign_targets,    IndentationError, ' a'),
+    ('Assign_targets',    FST._parse_Assign_targets,    SyntaxError,      '\na'),
+    ('Assign_targets',    FST._parse_Assign_targets,    SyntaxError,      'a\n='),
+    ('Assign_targets',    FST._parse_Assign_targets,    SyntaxError,      'a =  # tail'),
+    ('Assign_targets',    FST._parse_Assign_targets,    SyntaxError,      '# head\na ='),
+    ('all',               FST._parse_Assign_targets,    Assign,           'a = b ='),
   ]
 
 if PYGE11:
@@ -584,6 +596,7 @@ if PYGE12:
         (TypeVarTuple,        FST._parse_type_param,        TypeVarTuple,   '*a'),
 
         ('type_param',        FST._parse_type_param,        TypeVar,        ' a: int  # tail'),
+        ('type_params',       FST._parse_type_params,       Tuple,          ' a: int, *b, **c  # tail'),
     ])
 
 if PYGE13:
@@ -724,7 +737,9 @@ class TestFST(unittest.TestCase):
 
                 # trailing newline
 
-                if src != '*=':  # newline following augassign is syntactically impossible
+                if (src != '*=' and                    # newline following augassign is syntactically impossible
+                    func != FST._parse_Assign_targets  # this can't take trailing newline
+                ):
                     test = 'newline'
                     srcn = src + '\n'
                     ast  = FST._parse(srcn, mode)
@@ -816,7 +831,7 @@ class TestFST(unittest.TestCase):
 
                     self.assertEqual(src, fst.src)
                     self.assertEqual(fst.a.__class__, res)
-                    self.assertTrue(compare_asts(fst.a, ref, locs=True))
+                    self.assertTrue(compare_asts(fst.a, ref, locs=True, raise_=True))
 
             except Exception:
                 print()
@@ -1588,7 +1603,7 @@ with a as b, c as d:
         self.assertIs(True, parse('match a:\n case (1, 2): pass').body[0].cases[0].pattern.f.is_atom())
         self.assertIs(True, parse('match a:\n case [1, 2]: pass').body[0].cases[0].pattern.f.is_atom())
 
-    def test_is_enclosed_special(self):
+    def test_is_enclosed_or_line_special(self):
         # Call
         # JoinedStr
         # TemplateStr
@@ -1732,7 +1747,7 @@ t"x\
 y")
                 '''.strip(), 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
 
-    def test_is_enclosed_general(self):
+    def test_is_enclosed_or_line_general(self):
         self.assertTrue(FST('a < b', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
         self.assertFalse(FST('(a\n< b)', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
         self.assertTrue(FST('(a\\\n< b)', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
@@ -1753,8 +1768,49 @@ y")
         self.assertTrue(FST('a, [i,\nj], c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
         self.assertTrue(FST('a, b[\ni:j:k\n], c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
 
+        self.assertFalse(FST('a\n: \nb: \nc', 'expr_slice').is_enclosed_or_line())
+        self.assertTrue(FST('a\\\n: \\\nb: \\\nc', 'expr_slice').is_enclosed_or_line())
+
         if PYGE12:
             self.assertTrue(FST('a, f"{(1,\n2)}", c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
+
+        # whole
+
+        self.assertTrue(FST('\na + b\n').is_enclosed_or_line(whole=False))
+        self.assertFalse(FST('\na + b\n').is_enclosed_or_line(whole=True))
+        self.assertFalse(FST('\\\na + b\n').is_enclosed_or_line(whole=True))
+        self.assertFalse(FST('\na + b\\\n').is_enclosed_or_line(whole=True))
+        self.assertTrue(FST('\\\na + b\\\n').is_enclosed_or_line(whole=True))
+
+        self.assertTrue(FST('\na + b * c\n').right.is_enclosed_or_line(whole=False))
+        self.assertRaises(ValueError, FST('\na + b * c\n').right.is_enclosed_or_line, whole=True)
+
+        # out_lns
+
+        self.assertTrue(FST('\na + \\\n(b\n*\nc)\n').is_enclosed_or_line(whole=False, out_lns=(lns := set())))
+        self.assertEqual(set(), lns)
+
+        self.assertFalse(FST('\na + \n(b\n*\nc)\n').is_enclosed_or_line(whole=False, out_lns=(lns := set())))
+        self.assertEqual({1}, lns)
+
+        self.assertFalse(FST('\na + \n(b\n*\nc)\n').is_enclosed_or_line(whole=True, out_lns=(lns := set())))
+        self.assertEqual({0, 1, 4}, lns)
+
+        f = FST(r'''
+a + \
+("""
+*"""
+"c")
+''')
+        self.assertTrue(f.is_enclosed_or_line(whole=False, out_lns=(lns := set())))
+        self.assertEqual(set(), lns)
+
+        f.right.unpar()
+        self.assertFalse(f.is_enclosed_or_line(whole=False, out_lns=(lns := set())))
+        self.assertEqual({3}, lns)
+
+        self.assertFalse(f.is_enclosed_or_line(whole=True, out_lns=(lns := set())))
+        self.assertEqual({0, 3, 4}, lns)
 
     def test_is_enclosed_in_parents(self):
         self.assertFalse(FST('i', 'exec').body[0].is_enclosed_in_parents())
@@ -2803,7 +2859,8 @@ match a:
             ast = None
 
             try:
-                if func in (FST._parse_ExceptHandlers, FST._parse_match_cases, FST._parse_type_params):  # these are explicitly not guaranteed handled as AST input
+                if func in (FST._parse_ExceptHandlers, FST._parse_match_cases, FST._parse_type_params,
+                            FST._parse_Assign_targets):  # these are explicitly not guaranteed handled as AST input
                     continue
 
                 ast  = FST._parse(src, mode)
@@ -4999,8 +5056,7 @@ if 1:
 
         self.assertEqual('del zzz', test(FST('del a, b'), 'targets', 'zzz', fstview, 'a, b').src)
 
-        self.assertEqual('zzz = c', test(FST('a, b = c'), 'targets', 'zzz', fstview,
-                                         '<<Assign ROOT 0,0..0,8>.targets[0:1] [<Tuple 0,0..0,4>]>').src)
+        self.assertEqual('zzz = c', test(FST('a, b = c'), 'targets', 'zzz', fstview, 'a, b =').src)
         self.assertEqual('a, b = zzz', test(FST('a, b = c'), 'value', 'zzz', FST, 'c').src)
 
         f = FST('a += b')

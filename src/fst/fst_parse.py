@@ -37,6 +37,7 @@ from .asttypes import (
     MatchOr,
     MatchSequence,
     Module,
+    Name,
     NotIn,
     Pass,
     Slice,
@@ -109,15 +110,23 @@ _re_parse_all_category = re.compile(r'''
 ''', re.MULTILINE | re.VERBOSE)
 
 
+def _ast_parse(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Python craps out with unexpected EOF if you only have a single newline after a line continuation backslash."""
+
+    return ast_parse(src + '\n' if src.endswith('\\\n') else src, **parse_params)
+
+
 def _ast_parse1(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    if len(body := ast_parse(src, **parse_params).body) != 1:
+    if len(body := ast_parse(src + '\n' if src.endswith('\\\n') else src, **parse_params).body) != 1:
         raise SyntaxError('expecting single element')
 
     return body[0]
 
 
 def _ast_parse1_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    if len(body := ast_parse(src, **parse_params).body) != 1 or len(cases := body[0].cases) != 1:
+    if (len(body := ast_parse(src + '\n' if src.endswith('\\\n') else src, **parse_params).body) != 1 or
+        len(cases := body[0].cases) != 1
+    ):
         raise SyntaxError('expecting single element')
 
     return cases[0]
@@ -184,7 +193,9 @@ def _has_trailing_comma(src: str, end_lineno: int, end_col_offset: int) -> bool:
 
 
 def _parse_all_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Assumed to have something there starting with identifier or star."""
+    """Parse either a single `type_param` preferentially or multiple `type_param`s returned in `Tuple`. Called from
+    `_parse_all()` on finding a leading identifier character or star so that is assumed to be there, which will generate
+    at least one `type_param`."""
 
     type_params = _ast_parse1(f'type t[\n{src}\n] = None', parse_params).type_params
 
@@ -198,6 +209,8 @@ def _parse_all_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AS
 
 
 def _parse_all_multiple(src: str, parse_params: Mapping[str, Any], stmt: bool, rest: list[Callable]) -> AST:
+    """Attempt to parse one at a time using functions from a list until one succeeds."""
+
     if stmt:
         try:
             return reduce_ast(_parse_stmts(src, parse_params), True)
@@ -283,8 +296,12 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any],
 
     ast = parse(src, parse_params)
 
-    if is_ast and ast.__class__ is not code.__class__:
-        raise ParseError(f'could not reparse AST to {code.__class__.__name__}, got {ast.__class__.__name__}')
+    if is_ast:
+        if ast.__class__ is not code.__class__:
+            raise ParseError(f'could not reparse AST to {code.__class__.__name__}, got {ast.__class__.__name__}')
+
+    elif not isinstance(ast, ast_type):  # sanity check, parse func should guarantee what we want but maybe in future is used to get a specific subset of what parse func returns
+        raise ParseError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
 
     fst_ = fst.FST(ast, lines, parse_params=parse_params)
 
@@ -298,13 +315,19 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any],
 def _get_special_parse_mode(ast: AST) -> str | None:
     r"""Quick determination to the best of ability if a special parse mode is needed for this `AST`. This is the
     extended parse mode as per `Mode`, not the `ast.parse()` mode. If a special mode applies it is returned which should
-    parse the source of this `AST` back to itself. Otherwise `None` is returned. This is a quick just a check, doesn't
+    parse the source of this `AST` back to itself. Otherwise `None` is returned. This is a just quick a check, doesn't
     verify everything.
+
+    **WARNING!** This only gets special parse modes for where it can be inferred from the `AST` alone. This will not
+    return the special parse mode of `'expr_slice'` for example for `(*st,)` single-`Starred` `Tuple` which is
+    represented by the source `*st` from inside a `Subscript.slice`. That must be handled at a higher level.
 
     **Returns:**
     - `str`: One of the special parse modes.
     - `None`: If no special parse mode applies or can be determined.
     """
+
+    # SPECIAL SLICES
 
     if isinstance(ast, Module):
         if body := ast.body:
@@ -317,6 +340,10 @@ def _get_special_parse_mode(ast: AST) -> str | None:
         if elts := ast.elts:
             if isinstance(elts[0], type_param):
                 return 'type_params'
+
+    elif isinstance(ast, Assign):
+        if isinstance(v := ast.value, Name) and not v.id:
+            return 'Assign_targets'
 
     return None
 
@@ -385,10 +412,10 @@ def _parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     of what it could be."""
 
     if not (first := _re_first_src.search(src)):
-        return ast_parse(src, **parse_params)  # should return empty Module with src trivia
+        return _ast_parse(src, parse_params)  # should return empty Module with src trivia
 
     if not (cat := _re_parse_all_category.match(first.group(2))):
-        ast_parse(src, **parse_params)  # should raise SyntaxError
+        _ast_parse(src, parse_params)  # should raise SyntaxError
 
         raise RuntimeError('should not get here')
 
@@ -396,12 +423,12 @@ def _parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     if groupdict['stmt_or_expr_or_pat_or_witem']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (_parse_expr_all, _parse_pattern, _parse_withitem))  # _parse_expr_all because could be Slice
+                                   (_parse_expr_all, _parse_pattern, _parse_withitem, _parse_Assign_targets))  # _parse_expr_all because could be Slice
 
     if groupdict['match_type_identifier']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
                                    (_parse_expr_all, _parse_pattern, _parse_arguments, _parse_arguments_lambda,
-                                    _parse_withitem, _parse_arg, _parse_all_type_params))
+                                    _parse_withitem, _parse_arg, _parse_all_type_params, _parse_Assign_targets))
 
     if groupdict['stmt']:
         return reduce_ast(_parse_stmts(src, parse_params), True)
@@ -430,7 +457,7 @@ def _parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
         return _parse_all_multiple(src, parse_params, not first.group(1),
                                    (_parse_expr_all, _parse_pattern, _parse_arguments, _parse_arguments_lambda,
-                                    _parse_withitem, _parse_arg, _parse_all_type_params))
+                                    _parse_withitem, _parse_arg, _parse_all_type_params, _parse_Assign_targets))
 
     if groupdict['at']:
         return reduce_ast(_parse_stmts(src, parse_params), True)
@@ -438,7 +465,7 @@ def _parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if groupdict['star']:
         ast = _parse_all_multiple(src, parse_params, not first.group(1),
                                   (_parse_expr_arglike, _parse_pattern, _parse_arguments, _parse_arguments_lambda,
-                                   _parse_all_type_params, _parse_operator))
+                                   _parse_all_type_params, _parse_operator, _parse_Assign_targets))
 
         if isinstance(ast, Assign) and len(targets := ast.targets) == 1 and isinstance(targets[0], Starred):  # '*T = ...' validly parses to Assign statement but is invalid compile, but valid type_param so reparse as that
             return _parse_all_type_params(src, parse_params)
@@ -485,7 +512,7 @@ def _parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     # groupdict['syntax_error'] or something else unrecognized
 
-    ast_parse(src, **parse_params)  # should raise SyntaxError
+    _ast_parse(src, parse_params)  # should raise SyntaxError
 
     raise RuntimeError('should not get here')
 
@@ -495,21 +522,21 @@ def _parse_strict(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Attempt to parse valid parsable statements and then reduce to a single statement or expressing if possible. Only
     parses what `ast.parse()` can, no funny stuff."""
 
-    return reduce_ast(ast_parse(src, **parse_params), True)
+    return reduce_ast(_ast_parse(src, parse_params), True)
 
 
 @staticmethod
 def _parse_Module(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse `Module`, ast.parse(mode='exec')'."""
 
-    return ast_parse(src, mode='exec', **parse_params)
+    return _ast_parse(src, parse_params)
 
 
 @staticmethod
 def _parse_Expression(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse `Expression`, `ast.parse(mode='eval')."""
 
-    return ast_parse(src, mode='eval', **parse_params)
+    return _ast_parse(src, {**parse_params, 'mode': 'eval'})
 
 
 @staticmethod
@@ -519,21 +546,21 @@ def _parse_Interactive(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if not src.endswith('\n'):  # because otherwise error maybe
         src = src + '\n'
 
-    return ast_parse(src, mode='single', **parse_params)
+    return _ast_parse(src, {**parse_params, 'mode': 'single'})
 
 
 @staticmethod
 def _parse_stmts(src: str, parse_params: Mapping[str, Any] = {}) -> AST:  # same as _parse_Module() but I want the IDE context coloring
     """Parse zero or more `stmt`s and return them in a `Module` `body` (just `ast.parse()` basically)."""
 
-    return ast_parse(src, **parse_params)
+    return _ast_parse(src, parse_params)
 
 
 @staticmethod
 def _parse_stmt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse exactly one `stmt` and return as itself."""
 
-    mod = ast_parse(src, **parse_params)
+    mod = _ast_parse(src, parse_params)
 
     if len(body := mod.body) != 1:
         raise ParseError('expecting single stmt')
@@ -567,7 +594,7 @@ def _parse_ExceptHandlers(src: str, parse_params: Mapping[str, Any] = {}) -> AST
             raise IndentationError('unexpected indent') from None
 
         try:
-            ast = ast_parse(f'try: pass\n{src}', **parse_params)  # just reparse without our finally block to confirm if that was the error
+            ast = _ast_parse(f'try: pass\n{src}', parse_params)  # just reparse without our finally block to confirm if that was the error
         except SyntaxError:
             pass
 
@@ -646,7 +673,7 @@ def _parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     `Starred` expressions which are only valid as a `Call` arg (`*not a`)."""
 
     try:
-        body = ast_parse(src, **parse_params).body
+        body = _ast_parse(src, parse_params).body
     except SyntaxError:
         pass
     else:
@@ -1112,10 +1139,51 @@ def _parse_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(ast, -1)  # _offset_linenos(_validate_indent(src, ast), -1)
 
 
+@staticmethod
+def _parse_Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse zero or more `Assign` targets and return them in an `Assign` with the `value` node as an empty `Name`. Takes
+    `=` as separators with an optional trailing `=`."""
+
+    try:
+        ast = _ast_parse1(f'_=\\\n{src}  _')  # try assuming src has trailing equals
+
+    except SyntaxError:
+        try:
+            ast = _ast_parse1(f'_=\\\n{src} =_')  # now check assuming src does not have trailing equals
+        except SyntaxError:
+            raise SyntaxError('invalid Assign targets slice') from None
+
+    if not isinstance(ast, Assign):
+        raise ParseError(f'expecting Assign targets, got {ast.__class__.__name__}')
+
+    if not isinstance(name := ast.value, Name):
+        raise ParseError(f'unexpected value type parsing Assign targets, {name.__class__.__name__}')
+    elif name.id != '_':
+        raise ParseError(f'unexpected value id parsing Assign targets, {name.value!r}')
+
+    del (targets := ast.targets)[0]  # remove syntax check dummy target
+
+    if targets:
+        if col_offset := (t0 := targets[0]).col_offset:
+            raise IndentationError('unexpected indent')
+
+        ast.col_offset = col_offset  # set Assign to start at new first element
+        ast.lineno     = t0.lineno
+
+    else:
+        ast.col_offset = 0
+        ast.lineno     = 2
+
+    name.id         = ''  # mark as slice
+    name.col_offset = name.end_col_offset = ast.end_col_offset = ast.end_col_offset - 3
+
+    return _offset_linenos(ast, -1)  # _offset_linenos(_validate_indent(src, ast), -1)
+
+
 # ......................................................................................................................
 
 @staticmethod
-def _code_as_all(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:  # TODO: allow 'is_trystar'?
+def _code_as_all(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
     """Convert `code` to any parsable `FST` if possible. If `FST` passed then it is returned as itself."""
 
     if isinstance(code, fst.FST):
@@ -1125,7 +1193,7 @@ def _code_as_all(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:  
         return code
 
     if isinstance(code, AST):
-        mode  = code.__class__  # _get_special_parse_mode(code) or code.__class__  # we do not accept invalid-AST SPECIAL SLICE ASTs on purpose
+        mode  = code.__class__  # we do not accept invalid-AST SPECIAL SLICE ASTs on purpose, could accept them by setting `mode = _get_special_parse_mode(code) or code.__class__` but that gets complicated fast
         code  = _unparse(code)
         lines = code.split('\n')
 
@@ -1291,6 +1359,13 @@ def _code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *,
                 'expecting expression (any)' if parse is _parse_expr_all else
                 'expecting expression (standard)')
 
+    def validate(ast: AST) -> None:
+        if not isinstance(ast, expr):
+            raise NodeError(f'{expecting()}, got {ast.__class__.__name__}', rawable=True)
+
+        if isinstance(ast, Tuple) and (elts := ast.elts) and not all(isinstance(elt := e, expr) for e in elts):  # SPECIAL SLICE!
+            raise NodeError(f'{expecting()}, got Tuple containing {elt.__class__.__name__}', rawable=True)
+
     if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
@@ -1298,11 +1373,7 @@ def _code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *,
         if not (ast := reduce_ast(codea := code.a)):
             raise NodeError(f'{expecting()}, got multiple statements', rawable=True)
 
-        if not isinstance(ast, expr):
-            raise NodeError(f'{expecting()}, got {ast.__class__.__name__}', rawable=True)
-
-        if isinstance(ast, Tuple) and (elts := ast.elts) and not all(isinstance(elt := e, expr) for e in elts):  # SPECIAL SLICE!
-            raise NodeError(f'{expecting()}, got Tuple containing {elt.__class__.__name__}', rawable=True)
+        validate(ast)
 
         if ast is codea:
             return code._sanitize() if sanitize else code
@@ -1314,11 +1385,7 @@ def _code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *,
         return code._sanitize() if sanitize else code
 
     if is_ast := isinstance(code, AST):
-        if not isinstance(code, expr):
-            raise NodeError(f'{expecting()}, got {code.__class__.__name__}', rawable=True)
-
-        if isinstance(code, Tuple) and (elts := code.elts) and not all(isinstance(elt := e, expr) for e in elts):  # SPECIAL SLICE!
-            raise NodeError(f'{expecting()}, got Tuple containing {elt.__class__.__name__}', rawable=True)
+        validate(code)
 
         src   = _unparse(code)
         lines = src.split('\n')
@@ -1372,7 +1439,12 @@ def _code_as_expr_sliceelt(code: Code, parse_params: Mapping[str, Any] = {}, *, 
 def _code_as_Tuple(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a `Tuple` using `_parse_Tuple()`."""
 
-    return _code_as_expr(code, parse_params, parse=_parse_Tuple, sanitize=sanitize)
+    fst_ = _code_as_expr(code, parse_params, parse=_parse_Tuple, sanitize=sanitize)
+
+    if fst_ is code and not isinstance(fst_.a, Tuple):  # fst_ is code only if FST passed in, in which case is passed through and we need to check that was Tuple to begin with
+        raise NodeError(f'expecting Tuple, got {fst_.a.__class__.__name__}', rawable=True)
+
+    return fst_
 
 
 @staticmethod
@@ -1496,7 +1568,7 @@ def _code_as_pattern(code: Code, parse_params: Mapping[str, Any] = {}, *, saniti
 
     if not allow_invalid_matchor and isinstance(a := fst_.a, MatchOr):  # SPECIAL SLICE, don't need to check if 'fst_ is code' because this could only have come from 'code' as FST
         if not (len_pattern := len(a.patterns)):
-            raise NodeError('expecting valid pattern, got zero-length MatchOr slice')
+            raise NodeError('expecting valid pattern, got zero-length MatchOr')
 
         if len_pattern == 1:  # a length 1 MatchOr can just return its single element pattern
             return fst.FST(a.patterns[0], fst_._lines, from_=fst_, lcopy=False)
@@ -1520,6 +1592,18 @@ def _code_as_type_params(code: Code, parse_params: Mapping[str, Any] = {}, *, sa
     if fst_ is code:  # this means it was not parsed (came in as FST) and we need to verify it containes only type_params
         if not all(isinstance(elt := e, type_param) for e in fst_.a.elts):
             raise NodeError(f'expecting only type_params, got {elt.__class__.__name__}', rawable=True)
+
+    return fst_
+
+
+@staticmethod
+def _code_as_Assign_targets(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+    """Convert `code` to an `Assign` targets slice `FST` if possible."""
+
+    fst_ = _code_as(code, Assign, parse_params, _parse_Assign_targets, sanitize=sanitize)
+
+    if not isinstance(name := fst_.a.value, Name) or name.id:  # SPECIAL SLICE
+        raise NodeError('expecting Assign targets slice, got normal Assign', rawable=True)
 
     return fst_
 
@@ -1682,6 +1766,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'pattern':           _parse_pattern,
     'type_param':        _parse_type_param,
     'type_params':       _parse_type_params,
+    'Assign_targets':    _parse_Assign_targets,
     mod:                 _parse_Module,    # parsing with an AST type doesn't mean it will be parsable by ast module
     Expression:          _parse_Expression,
     Interactive:         _parse_Interactive,

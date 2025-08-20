@@ -1,4 +1,5 @@
-"""Get and put slice.
+"""Get and put slice. Some of the slice types are very specific, using `AST` containers in non-standard ways. Mosthly
+this is to allow preservation of trivia and formatting, especially with different separators like `|` or `=`.
 
 This module contains functions which are imported as methods in the `FST` class.
 """
@@ -51,6 +52,7 @@ from .asttypes import (
     SetComp,
     Slice,
     Starred,
+    Store,
     Try,
     Tuple,
     While,
@@ -64,24 +66,32 @@ from .asttypes import (
     TemplateStr,
     type_param,
 )
-from .astutil import re_identifier, bistr, is_valid_target, is_valid_del_target, reduce_ast, set_ctx, copy_ast
+
+from .astutil import (
+    re_alnumdot_alnum, re_identifier, bistr, is_valid_target, is_valid_del_target, reduce_ast, set_ctx, copy_ast,
+)
 
 from .misc import (
     PYLT11, PYGE14,
     Self, Code, NodeError, astfield, fstloc,
     re_empty_line_start, re_empty_line, re_line_trailing_space, re_empty_space, re_line_end_cont_or_comment,
+    _ParamsOffset,
     _next_src, _prev_find, _next_find, _next_find_re, _fixup_slice_indices,
     _leading_trivia, _trailing_trivia,
 )
 
-from .fst_parse import _code_as_expr, _code_as_expr_all, _code_as_pattern, _code_as_type_param, _code_as_type_params
+from .fst_parse import (
+    _code_as_expr, _code_as_expr_all, _code_as_pattern, _code_as_type_param, _code_as_type_params,
+    _code_as_Assign_targets,
+)
+
 from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish
 
-_re_one_space            = re.compile(r'\s')
-_re_close_delim_or_end   = re.compile(r'[)}\]]|$')
-_re_sep_line_nonexpr_end = {  # empty line with optional separator and line continuation or a pure comment line
+_re_close_delim_or_space_or_end = re.compile(r'[)}\s\]]|$')
+_re_sep_line_nonexpr_end        = {  # empty line with optional separator and line continuation or a pure comment line
     ',': re.compile(r'\s*(?:,\s*)?(?:\\|#.*)?$'),
     '|': re.compile(r'\s*(?:\|\s*)?(?:\\|#.*)?$'),
+    '=': re.compile(r'\s*(?:=\s*)?(?:\\|#.*)?$'),
 }
 
 
@@ -115,7 +125,7 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 #   S ,             (Call, 'args'):                         # expr*            -> Tuple[expr_arglike]    _parse_expr_arglikes
 #
 # * S ,             (Delete, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
-#   S =             (Assign, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
+#   N =             (Assign, 'targets'):                    # expr*            -> Assign, value.id=''    _parse_expr / restrict targets
 #                                                                              .
 #                                                                              .
 #                                                                              .
@@ -393,6 +403,20 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
     return copy_locs[:1] + cut_locs[1:]  # copy location from copy_locs and delete location and indent from cut_locs
 
 
+def _offset_pos_by_params(self: fst.FST, ln: int, col: int, col_offset: int, params_offset: _ParamsOffset,
+                          ) -> tuple[int, int]:
+    """Position to offset `(ln, col)` with `col_offset` = `lines[ln].c2b(col)`, is assumed to be at or past the offset
+    position."""
+
+    at_ln  = params_offset.end_ln == ln
+    ln    += params_offset.dln
+
+    if at_ln:
+        col = self.root._lines[ln].b2c(col_offset + params_offset.dcol_offset)
+
+    return ln, col
+
+
 def _locs_first_and_last(self: fst.FST, start: int, stop: int, body: list[AST], body2: list[AST],
                          ) -> tuple[fstloc, fstloc]:
     """Get the location of the first and last elemnts of a one or two-element sequence (assumed present)."""
@@ -456,9 +480,7 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
     cut from `self` leaves an empty unparenthesized tuple then parentheses will NOT be added here.
 
     **Note:** Will NOT remove existing trailing separator from `self` sequence if it is not touched even if
-    `self_tail_sep=False`. Will ADD trailing separator to sequence if `self_tail_sep=False` if it is not there because
-    this is a case for singleton tuples that may be left (even though that is detected here, allow override to force
-    it).
+    `self_tail_sep=False`.
 
     **WARNING!** (`bound_ln`, `bound_col`) is expected to be exactly the end of the previous element (past any closing
     pars) or the start of the container (past any opening delimiters) if no previous element. (`bound_end_ln`,
@@ -493,10 +515,11 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
         - `0`: Remove if not aesthetically significant (present on same line as end of element), otherwise leave.
     """
 
-    lines           = self.root._lines
-    is_first        = not start
-    is_last         = stop == len_body
-    len_self_suffix = self.end_col - bound_end_col  # will be 1 or 0 depending on if enclosed container or unparenthesized tuple
+    lines    = self.root._lines
+    is_first = not start
+    is_last  = stop == len_body
+
+    bound_end_col_offset = lines[bound_end_ln].c2b(bound_end_col)
 
     if ret_tail_sep and ret_tail_sep is not True and (stop - start) != 1:  # if ret_tail_sel == 1 and length will not be 1 then remove
         ret_tail_sep = 0
@@ -509,8 +532,8 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
     # get locations and adjust for trailing separator keep or delete if possible to optimize
 
     copy_loc, del_loc, del_indent, sep_end_pos = _locs_slice_seq(self, is_first, is_last, loc_first, loc_last,
-        bound_ln, bound_col, bound_end_ln, bound_end_col, trivia, sep, cut,
-    )
+                                                                 bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                                                 trivia, sep, cut)
 
     copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
 
@@ -536,8 +559,10 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
     ast.end_lineno     = copy_end_ln + 1
     ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
 
-    fst_ = self._make_fst_and_dedent(self, ast, copy_loc, prefix, suffix,
-                                     del_loc if cut else None, [del_indent] if del_indent and del_loc.end_col else None)
+    fst_, params_offset = self._make_fst_and_dedent(self, ast, copy_loc, prefix, suffix,
+                                                    del_loc if cut else None,
+                                                    [del_indent] if del_indent and del_loc.end_col else None,
+                                                    ret_params_offset=True)
 
     ast.col_offset     = 0  # before prefix
     ast.end_col_offset = fst_._lines[-1].lenbytes  # after suffix
@@ -560,32 +585,24 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
 
         fst_._maybe_ins_separator(last_end_ln, last_end_col, False, fst_end_ln, fst_end_col - len(suffix), sep)
 
-    if self_tail_sep:  # last element needs a trailing separator (singleton tuple maybe, requested by user)
-        last_end_ln, last_end_col, self_end_ln, self_end_col = _poss_end(self, field, len_self_suffix)
+    if self_tail_sep is not None:
+        if cut:  # bound end is guaranteed to be past any modifications
+            bound_end_ln, bound_end_col = _offset_pos_by_params(self, bound_end_ln, bound_end_col, bound_end_col_offset,
+                                                                params_offset)
 
-        self._maybe_ins_separator(last_end_ln, last_end_col, False, self_end_ln, self_end_col, sep)
+        if isinstance(last := getattr(self.a, field)[-1], AST):
+            _, _, last_end_ln, last_end_col = last.f.loc
 
-    elif self_tail_sep is not None:  # removed tail element(s) and what is left doesn't need its trailing separator
-        last_end_ln, last_end_col, self_end_ln, self_end_col = _poss_end(self, field, len_self_suffix)  # will work without len_self_suffix, but consistency
+        else:  # Globals or Locals names, no last element with location so we use end of bound
+            last_end_ln  = bound_end_ln
+            last_end_col = bound_end_col
 
-        self._maybe_del_separator(last_end_ln, last_end_col, self_tail_sep is False, self_end_ln, self_end_col, sep)
+        if self_tail_sep:  # last element needs a trailing separator (singleton tuple maybe, requested by user)
+            self._maybe_ins_separator(last_end_ln, last_end_col, False, bound_end_ln, bound_end_col, sep)
+        else:  # removed tail element(s) and what is left doesn't need its trailing separator
+            self._maybe_del_separator(last_end_ln, last_end_col, self_tail_sep is False, bound_end_ln, bound_end_col, sep)
 
     return fst_
-
-
-def _poss_end(self: fst.FST, field: str, len_suffix: int) -> tuple[int, int, int, int]:
-    """Get position of end of self minus length of delimiter suffix and position of last element past pars, assumed to
-    exist."""
-
-    _, _, end_ln, end_col  = self.loc
-    end_col               -= len_suffix
-
-    if not isinstance(last := getattr(self.a, field)[-1], AST):  # Globals or Locals names
-        return end_ln, end_col, end_ln, end_col
-
-    _, _, last_end_ln, last_end_col = last.f.loc
-
-    return last_end_ln, last_end_col, end_ln, end_col
 
 
 def _locs_and_bound_get(self: fst.FST, start: int, stop: int, body: list[AST], body2: list[AST], off: int,
@@ -658,6 +675,8 @@ def _get_slice_NOT_IMPLEMENTED_YET(self: fst.FST, start: int | Literal['end'] | 
 
 def _get_slice_Dict(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                     **options) -> fst.FST:
+    """A `Dict` slice is just a normal `Dict`."""
+
     len_body    = len(body := (ast := self.a).keys)
     body2       = ast.values
     start, stop = _fixup_slice_indices(len_body, start, stop)
@@ -675,6 +694,9 @@ def _get_slice_Dict(self: fst.FST, start: int | Literal['end'] | None, stop: int
 
 def _get_slice_Tuple_elts(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                           **options) -> fst.FST:
+    """A `Tuple` slice is just a normal `Tuple`. It attempts to copy the parenthesization of the parent. The converse is
+    not always true as a `Tuple` may serve as the container of a slice of other node types."""
+
     len_body    = len(body := (ast := self.a).elts)
     start, stop = _fixup_slice_indices(len_body, start, stop)
 
@@ -708,6 +730,9 @@ def _get_slice_Tuple_elts(self: fst.FST, start: int | Literal['end'] | None, sto
 
 def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                               cut: bool, **options) -> fst.FST:
+    """The slice of `Delete.targets` is a normal unparenthesized `Tuple` contianing valid target types, which is also a
+    valid python `Tuple`."""
+
     len_body    = len(body := self.a.targets)
     start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice   = stop - start
@@ -716,7 +741,7 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
         return fst.FST._new_empty_tuple(from_=self)
 
     if cut and len_slice == len_body and self.get_option('fix_del_self', options):
-        raise NodeError("cannot cut Delete to empty without fix_del_self=False")
+        raise NodeError("cannot cut Delete targets to empty without fix_del_self=False")
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
@@ -738,11 +763,66 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
 
     fst_._maybe_fix_tuple(False)
 
+    if cut and re_alnumdot_alnum.match(self.root._lines[ln := self.ln], col := self.col + 2):  # fix possibly joined alnums
+        self._put_src([' '], ln, col := col + 1, ln, col, False)
+
+    return fst_
+
+
+def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                              cut: bool, **options) -> fst.FST:
+    """The slice of `Assign.targets` is an invalid `Assign` contianing valid target types and a `value` which is an
+    empty `Name`."""
+
+    len_body    = len(body := (ast := self.a).targets)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
+    len_slice   = stop - start
+
+    if not len_slice:
+        return fst.FST(Assign(targets=[], value=Name(id='', ctx=Load(), lineno=1, col_offset=3, end_lineno=1,
+                                                     end_col_offset=3),
+                              lineno=1, col_offset=0, end_lineno=1, end_col_offset=3), [bistr(' = ')], from_=self,
+                              lcopy=False)
+
+    if cut and len_slice == len_body and self.get_option('fix_assign_self', options):
+        raise NodeError("cannot cut Assign targets to empty without fix_assign_self=False")
+
+
+    loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
+
+    bound_end_ln, bound_end_col, _, _ = ast.value.f.pars()
+
+    if bound_end_col and self.root._lines[bound_end_ln][bound_end_col - 1].isspace():  # leave space between end of bound and start of value so that we don't get stuff like 'a =b' on cut
+        bound_end_col -= 1
+
+    if start:
+        _, _, bound_ln, bound_col = body[start - 1].f.pars()
+    else:
+        bound_ln, bound_col, _, _ = loc_first
+
+    asts    = _cut_or_copy_asts(start, stop, 'targets', cut, body)
+    name    = Name(id='', ctx=Load())
+    ret_ast = Assign(targets=asts, value=name)
+
+    set_ctx(asts[:], Store)
+
+    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
+                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
+                          options.get('trivia'), 'targets', '', '', '=', True, True)
+
+    if not (fst_lines := fst_._lines)[0]:  # we do not allow starting a newline with these
+        fst_._put_src(None, 0, 0, 1, 0, False)
+
+    name.lineno     = name.end_lineno     = len(fst_lines)
+    name.col_offset = name.end_col_offset = len(fst_lines[-1].encode())  # empty name location right at end
+
     return fst_
 
 
 def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                          **options) -> fst.FST:
+    """A `List` slice is just a normal `List`."""
+
     len_body    = len(body := (ast := self.a).elts)
     start, stop = _fixup_slice_indices(len_body, start, stop)
 
@@ -763,6 +843,10 @@ def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop
 
 def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                          **options) -> fst.FST:
+    """A `Set` slice is just a normal `Set` when it has elements. In the case of a zero-length `Set` it may be
+    represented as `{*()}` or `set()` or as an invalid `AST` `Set` with curlies but no elements, according to
+    options."""
+
     len_body    = len(body := self.a.elts)
     start, stop = _fixup_slice_indices(len_body, start, stop)
 
@@ -788,6 +872,9 @@ def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop:
 
 def _get_slice_MatchSequence_patterns(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                                       cut: bool, **options) -> fst.FST:
+    """A `MatchSequence` slice is just a normal `MatchSequence`. It attempts to copy the parenthesization of the
+    parent."""
+
     len_body    = len(body := self.a.patterns)
     start, stop = _fixup_slice_indices(len_body, start, stop)
 
@@ -820,6 +907,8 @@ def _get_slice_MatchSequence_patterns(self: fst.FST, start: int | Literal['end']
 
 def _get_slice_MatchMapping(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                             **options) -> fst.FST:
+    """A `MatchMapping` slice is just a normal `MatchMapping`."""
+
     len_body    = len(body := (ast := self.a).keys)
     body2       = ast.patterns
     start, stop = _fixup_slice_indices(len_body, start, stop)
@@ -864,6 +953,10 @@ def _get_slice_MatchMapping(self: fst.FST, start: int | Literal['end'] | None, s
 
 def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                                 cut: bool, **options) -> fst.FST:
+    """A `MatchOr` slice is just a normal `MatchOr` when it has two elements or more. If it has one it may be returned
+    as a single `pattern` or as an invalid single-element `MatchOr`. If the slice would wind up with zero elements it
+    may raise and exception or return an invalid zero-element `MatchOr`, as specified by options."""
+
     len_body         = len(body := self.a.patterns)
     start, stop      = _fixup_slice_indices(len_body, start, stop)
     len_slice        = stop - start
@@ -933,25 +1026,41 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
 
 def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                            **options) -> fst.FST:
+    """A `type_params` slice is an invalid `Tuple` containing `type_params` elements. A zero-length slice is just an
+    empty `Tuple`, which has no way of knowing that it used to or should contain `type_params`."""
+
     len_body    = len(body := (ast := self.a).type_params)
     start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST._new_empty_tuple(from_=self)
 
-    locs    = _locs_and_bound_get(self, start, stop, body, body, 1)
+    loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
+
+    bound_func = (
+        self._loc_typealias_type_params_brackets if isinstance(ast, TypeAlias) else
+        self._loc_classdef_type_params_brackets if isinstance(ast, ClassDef) else
+        self._loc_funcdef_type_params_brackets  # FunctionDef, AsyncFunctionDef
+    )
+
+    (bound_ln, bound_col, bound_end_ln, bound_end_col), _ = bound_func()
+
+    bound_end_col -= 1
+
+    if start:
+        _, _, bound_ln, bound_col = body[start - 1].f.pars()
+    else:
+        bound_col += 1
+
     asts    = _cut_or_copy_asts(start, stop, 'type_params', cut, body)
     ret_ast = Tuple(elts=asts, ctx=Load())
 
-    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
+    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
+                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
                           options.get('trivia'), 'type_params', '', '', ',', 0, 0)
 
     if not body:  # everything was cut, need to remove brackets
-        (_, _, bound_end_ln, bound_end_col), (name_ln, name_col) = (
-            (self._loc_typealias_type_params_brackets if isinstance(ast, TypeAlias) else
-             self._loc_classdef_type_params_brackets if isinstance(ast, ClassDef) else
-             self._loc_funcdef_type_params_brackets)  # FunctionDef, AsyncFunctionDef
-        )()
+        (_, _, bound_end_ln, bound_end_col), (name_ln, name_col) = bound_func()
 
         self._put_src(None, name_ln, name_col, bound_end_ln, bound_end_col, False)
 
@@ -1054,7 +1163,7 @@ _GET_SLICE_HANDLERS = {
     (ClassDef, 'decorator_list'):         _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (ClassDef, 'bases'):                  _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (Delete, 'targets'):                  _get_slice_Delete_targets,  # expr*
-    (Assign, 'targets'):                  _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Assign, 'targets'):                  _get_slice_Assign_targets,  # expr*
     (BoolOp, 'values'):                   _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (Compare, ''):                        _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (Call, 'args'):                       _get_slice_NOT_IMPLEMENTED_YET,  # expr*
@@ -1137,20 +1246,6 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
         - `0`: Remove if not aesthetically significant (present on same line as end of element), otherwise leave.
     """
 
-    lines              = self.root._lines
-    body               = getattr(self.a, field)
-    body2              = body if field2 is None else getattr(self.a, field2)
-    len_body           = len(body)
-    is_first           = not start
-    is_last            = stop == len_body
-    is_del             = fst_ is None
-    is_ins             = start == stop  # will never be true if fst_ is None
-    is_ins_ln          = False
-    last               = None  # means body[-1]
-    len_self_suffix    = self.end_col - bound_end_col  # will be 1 or 0 depending on if enclosed container or undelimited tuple / matchseq
-    self_indent        = self.get_indent()
-    elts_indent_cached = ...  # cached value , ... means not present
-
     def get_indent_elts() -> str:
         nonlocal elts_indent_cached
 
@@ -1166,6 +1261,20 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
             elts_indent_cached = self_indent + self.root.indent  # default
 
         return elts_indent_cached
+
+    lines                = self.root._lines
+    body                 = getattr(self.a, field)
+    body2                = body if field2 is None else getattr(self.a, field2)
+    len_body             = len(body)
+    is_first             = not start
+    is_last              = stop == len_body
+    is_del               = fst_ is None
+    is_ins               = start == stop  # will never be true if fst_ is None
+    is_ins_ln            = False
+    last                 = None  # means body[-1]
+    self_indent          = self.get_indent()
+    elts_indent_cached   = ...  # cached value, ... means not present
+    bound_end_col_offset = lines[bound_end_ln].c2b(bound_end_col)
 
     # maybe redent fst_ elements to match self element indentation
 
@@ -1310,8 +1419,8 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
             else:  # otherwise add newline to slice
                 put_lines.append(bistr(''))  # this doesn't need to be post_indent-ed because its just a newline, doesn't do indentation of following text
 
-        elif (not _re_one_space.match(put_lines[-1][-1]) and   # putting something that ends with non-space to something that starts with not a closing delimiter, put space between
-              not _re_close_delim_or_end.match(lines[put_end_ln], put_end_col) and
+        elif (not put_lines[-1][-1].isspace() and   # putting something that ends with non-space to something that starts with not a closing delimiter or space, put space between
+              not _re_close_delim_or_space_or_end.match(lines[put_end_ln], put_end_col) and
               (put_end_ln < self.end_ln or put_end_col < self.end_col)  # but not at the very end of self
         ):
             put_lines[-1] = bistr(put_lines[-1] + ' ')
@@ -1352,26 +1461,28 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
     is_last_and_at_self_end = is_last and (self_end_ln, self_end_col) <= (put_end_ln, put_end_col)
 
     if put_col == self_col and put_ln == self_ln:  # put at beginning of unenclosed sequence
-        self._offset(
-            *self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, is_last, False, self),
-            True, True, self_=False)
+        params_offset = self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, is_last, False, self)
+
+        self._offset(*params_offset, True, True, self_=False)
 
     elif is_last_and_at_self_end:  # because of insertion at end and maybe unenclosed sequence
-        self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, True, self)
+        params_offset = self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, True, self)
     else:  # in this case there may parts of self after so we need to recurse the offset into self
-        self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, False)
+        params_offset = self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, False)
 
     # put / del trailing and internal separators
 
     if self_tail_sep is not None:  # trailing
-        _, _, last_end_ln, last_end_col  = (last or body2[-1].f).loc
-        _, _, self_end_ln, self_end_col  = self.loc
-        self_end_col                    -= len_self_suffix
+        _, _, last_end_ln, last_end_col = (f := last or body2[-1].f).loc
+        bound_end_ln, bound_end_col     = _offset_pos_by_params(self, bound_end_ln, bound_end_col,
+                                                                bound_end_col_offset, params_offset)
 
         if self_tail_sep:
-            self._maybe_ins_separator(last_end_ln, last_end_col, False, self_end_ln, self_end_col, sep)
+            self._maybe_ins_separator(last_end_ln, last_end_col, False, bound_end_ln, bound_end_col, sep,
+                                      True if is_last_and_at_self_end else f)
         else:
-            self._maybe_del_separator(last_end_ln, last_end_col, self_tail_sep is False, self_end_ln, self_end_col, sep)
+            self._maybe_del_separator(last_end_ln, last_end_col, self_tail_sep is False, bound_end_ln, bound_end_col,
+                                      sep)
 
     if not is_del:  # internal, this is messy because the source has been put but the ASTs have not, so locations have to be gotten from and updated in two trees
         if not is_last:  # past the newly put slice
@@ -1506,7 +1617,7 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
     fst_ = code_as(code, self.root.parse_params, sanitize=False)
     ast_ = fst_.a
 
-    if non_seq_as_one and not one and not isinstance(ast_, (Tuple, List, Set)):
+    if non_seq_as_one and not one and not isinstance(ast_, (Tuple, List, Set)):  # this exists as a convenience for allowing doing `assign.targets = target` (without trailing comma if string source)
         one = True
 
     if one:
@@ -1678,17 +1789,28 @@ def _code_to_slice_type_params(self: fst.FST, code: Code | None, one: bool, opti
                              end_col_offset=ls[-1].lenbytes), ls, from_=fst_, lcopy=False)
 
     fst_ = _code_as_type_params(code, self.root.parse_params, sanitize=False)
-    ast_ = fst_.a
 
-    if not isinstance(ast_, Tuple):
-        raise NodeError(f"slice being assigned to {self.a.__class__.__name__}.type_params "
-                        f"must be a Tuple, not a {ast_.__class__.__name__}", rawable=True)
-
-    if not ast_.elts:  # put empty sequence is same as delete
+    if not fst_.a.elts:  # put empty sequence is same as delete
         return None
 
     if fst_.is_parenthesized_tuple() is True:
         _trim_delimiters(fst_)
+
+    return fst_
+
+
+def _code_to_slice_Assign_targets(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any],
+                                  ) -> fst.FST | None:
+    if code is None:
+        return None
+
+    if one:
+        raise ValueError("cannot put as 'one' item to Assign.targets")
+
+    fst_ = _code_as_Assign_targets(code, self.root.parse_params, sanitize=False)
+
+    if not fst_.a.targets:  # put empty sequence is same as delete
+        return None
 
     return fst_
 
@@ -1786,7 +1908,7 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
 
     fst_ = None
 
-    if elts := (ast := self.a).elts:  # tuple invalid-AST slices
+    if elts := (ast := self.a).elts:  # SPECIAL SLICES
         if isinstance(e0 := elts[0], type_param):
             fst_ = _code_to_slice_type_params(self, code, one, options)
 
@@ -1975,6 +2097,11 @@ def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['
 
 def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                               field: str, one: bool = False, **options) -> None:
+    """Even though when getting a slice it will be returned as a `Tuple`, any sequence of valid target types is accepted
+    for the put operation. If putting a non-sequence element, it will be automatically put as `one=True` to match the
+    non-comma terminated syntax of `Delete` targets (a non-sequence `FST` or `AST` will not be accepted like this). This
+    allows correct-appearing syntax like `delfst.targets = 'target'` to work."""
+
     fst_        = _code_to_slice_seq(self, code, one, options, non_seq_as_one=True)
     len_body    = len(body := self.a.targets)
     start, stop = _fixup_slice_indices(len_body, start, stop)
@@ -1985,9 +2112,9 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
             return
 
         if len_slice == len_body and self.get_option('fix_del_self', options):
-            raise NodeError("cannot cut Delete to empty without fix_del_self=False")
+            raise NodeError("cannot cut Delete targets to empty without fix_del_self=False")
 
-    _validate_put_seq(self, fst_, 'Del', check_target=is_valid_del_target)
+    _validate_put_seq(self, fst_, 'Delete', check_target=is_valid_del_target)
 
     _, _, bound_end_ln, bound_end_col = self.loc
 
@@ -2012,7 +2139,7 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
 
     else:
         if not fst_.is_enclosed_or_line(pars=False):
-            raise NotImplementedError('cannot put unenclosed multiline tartget(s) to Delete')
+            raise NotImplementedError('cannot put unenclosed multiline tartget(s) to Delete.targets')
 
         len_fst_body = len(fst_body := fst_.a.elts)
 
@@ -2030,6 +2157,71 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
 
         if stack:
             set_ctx([f.a for f in stack], Del)
+
+        self._make_fst_tree(stack)
+
+    for i in range(start + len_fst_body, len(body)):
+        body[i].f.pfield = astfield('targets', i)
+
+    if re_alnumdot_alnum.match(self.root._lines[self.ln], self.col + 2):  # fix possibly joined alnums
+        self._put_src([' '], ln := self.ln, col := self.col + 3, ln, col, False)
+
+
+def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+                              field: str, one: bool = False, **options) -> None:
+    fst_        = _code_to_slice_Assign_targets(self, code, one, options)
+    len_body    = len(body := (ast := self.a).targets)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
+    len_slice   = stop - start
+
+    if not fst_:
+        if not len_slice:
+            return
+
+        if len_slice == len_body and self.get_option('fix_assign_self', options):
+            raise NodeError("cannot cut Assign targets to empty without fix_assign_self=False")
+
+    bound_end_ln, bound_end_col, _, _ = ast.value.f.pars()
+
+    if bound_end_col and self.root._lines[bound_end_ln][bound_end_col - 1].isspace():  # leave space between end of bound and start of value so that we don't get stuff like 'a =b'
+        bound_end_col -= 1
+
+    if start:
+        _, _, bound_ln, bound_col = body[start - 1].f.pars()
+    elif body:
+        bound_ln, bound_col, _, _ = body[0].f.pars()
+    else:
+        bound_ln  = bound_end_ln
+        bound_col = bound_end_col
+
+    if not fst_:
+        _put_slice_seq(self, start, stop, None, None, None, 0,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'), options.get('ins_ln'), 'targets', None, '=', True)
+
+        self._unmake_fst_tree(body[start : stop])
+
+        del body[start : stop]
+
+        len_fst_body = 0
+
+    else:
+        if not fst_.is_enclosed_or_line(pars=False):
+            raise NotImplementedError('cannot put unenclosed multiline tartget(s) to Assign.targets')
+
+        len_fst_body = len(fst_body := fst_.a.targets)
+
+        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'), options.get('ins_ln'), 'targets', None, '=', True)
+
+        self._unmake_fst_tree(body[start : stop])
+        fst_._unmake_fst_parents(True)
+
+        body[start : stop] = fst_body
+
+        FST   = fst.FST
+        stack = [FST(body[i], self, astfield('targets', i)) for i in range(start, start + len_fst_body)]
 
         self._make_fst_tree(stack)
 
@@ -2208,6 +2400,8 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
 
 def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                            field: str, one: bool = False, **options) -> None:
+    """An empty `Tuple` is accepted as a zero-element `type_params` slice."""
+
     fst_        = _code_to_slice_type_params(self, code, one, options)
     len_body    =  len(body := (ast := self.a).type_params)
     start, stop = _fixup_slice_indices(len_body, start, stop)
@@ -2347,7 +2541,7 @@ _PUT_SLICE_HANDLERS = {
     (ClassDef, 'decorator_list'):         _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (ClassDef, 'bases'):                  _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (Delete, 'targets'):                  _put_slice_Delete_targets,  # expr*
-    (Assign, 'targets'):                  _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Assign, 'targets'):                  _put_slice_Assign_targets,  # expr*
     (BoolOp, 'values'):                   _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (Compare, ''):                        _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (Call, 'args'):                       _put_slice_NOT_IMPLEMENTED_YET,  # expr*

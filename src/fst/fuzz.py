@@ -1739,7 +1739,8 @@ class SliceExprish(Fuzzy):
         if isinstance(ast, (List, Set)):
             return 'seq'
         if isinstance(ast, (Dict, Delete, MatchSequence, MatchMapping, MatchOr,
-                            FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias)):
+                            FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias,
+                            Assign)):
             return ast.__class__
 
         return None
@@ -1751,6 +1752,7 @@ class SliceExprish(Fuzzy):
             'seq':         self.Bucket('elts', None, 1, 0, True, FST('()')), # 1 because of Set
             Dict:          self.Bucket(None, None, 0, 0, False, FST('{}')),
             Delete:        self.Bucket('targets', 'elts', 1, 0, True, FST('del a')),
+            # Assign:        self.Bucket('targets', None, 1, 0, False, FST('a = b')),
             MatchSequence: self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
             MatchMapping:  self.Bucket(None, None, 0, 0, False, FST('{}', pattern)),
             MatchOr:       self.Bucket('patterns', None, 2, 2, True, FST('(a | b)', pattern)),
@@ -1806,7 +1808,7 @@ class SliceExprish(Fuzzy):
                     else:
                         continue
 
-                    with FST.options(fix_set_get=False, fix_set_put=False, fix_set_self=False, fix_del_self=False, fix_matchor_get=False, fix_matchor_put=False, fix_matchor_self=False):
+                    with FST.options(fix_set_get=False, fix_set_put=False, fix_set_self=False, fix_del_self=False, fix_assign_self=False, fix_matchor_get=False, fix_matchor_put=False, fix_matchor_self=False):
                         self.transfer('src > bkt:', cat, bucket.field, bucket.slice_field, exprish, bucket.fst, bucket.min_script, bucket.min_tmp, bucket.one)
                         self.transfer('src < bkt:', cat, bucket.field, bucket.slice_field, bucket.fst, exprish, bucket.min_tmp, bucket.min_script, bucket.one)
 
