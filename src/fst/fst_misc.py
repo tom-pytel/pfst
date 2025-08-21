@@ -1312,9 +1312,7 @@ def _maybe_add_line_continuations(self: fst.FST, whole: bool = False) -> bool:
     """Check if `self` needs them and if so add line continuations to make parsable.
 
     **Parameters:**
-    - `pars`: Whether to check for grouping parentheses or not for nodes which are not enclosed or otherwise
-        multiline-safe. Grouping parentheses are different from tuple parentheses which are always checked.
-    - `whole`: Whether to check (and add line continuations to) whole source (only if at root). Otherwise will just
+    - `whole`: Whether to check whole source (and add line continuations to, only if at root). Otherwise will just
         check and modify lines that this node lives on.
 
     **Returns:**

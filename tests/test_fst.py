@@ -1768,7 +1768,7 @@ y")
         self.assertTrue(FST('a, [i,\nj], c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
         self.assertTrue(FST('a, b[\ni:j:k\n], c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
 
-        self.assertFalse(FST('a\n: \nb: \nc', 'expr_slice').is_enclosed_or_line())
+        self.assertTrue(FST('a\n: \nb: \nc', 'expr_slice').is_enclosed_or_line())  # because is never used unenclosed
         self.assertTrue(FST('a\\\n: \\\nb: \\\nc', 'expr_slice').is_enclosed_or_line())
 
         if PYGE12:

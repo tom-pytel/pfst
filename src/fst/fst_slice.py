@@ -463,6 +463,41 @@ def _shorter_str(a: str, b: str) -> str:
     return a if len(a) < len(b) else b
 
 
+def _bound_Delete_targets(self: fst.FST, start: int, loc_first: fst.FST | None = None) -> tuple[int, int, int, int]:
+    body = self.a.targets
+
+    _, _, bound_end_ln, bound_end_col = self.loc
+
+    if start:
+        _, _, bound_ln, bound_col = body[start - 1].f.pars()
+    elif body:
+        bound_ln, bound_col, _, _ = loc_first or body[0].f.pars()
+    else:
+        bound_ln  = bound_end_ln
+        bound_col = bound_end_col
+
+    return bound_ln, bound_col, bound_end_ln, bound_end_col
+
+
+def _bound_Assign_targets(self: fst.FST, start: int, loc_first: fst.FST | None = None) -> tuple[int, int, int, int]:
+    body = (ast := self.a).targets
+
+    bound_end_ln, bound_end_col, _, _ = ast.value.f.pars()
+
+    if bound_end_col and self.root._lines[bound_end_ln][bound_end_col - 1].isspace():  # leave space between end of bound and start of value so that we don't get stuff like 'a =b'
+        bound_end_col -= 1
+
+    if start:
+        _, _, bound_ln, bound_col = body[start - 1].f.pars()
+    elif body:
+        bound_ln, bound_col, _, _ = loc_first or body[0].f.pars()
+    else:
+        bound_ln  = bound_end_ln
+        bound_col = bound_end_col
+
+    return bound_ln, bound_col, bound_end_ln, bound_end_col
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 # get
 
@@ -745,12 +780,7 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
-    _, _, bound_end_ln, bound_end_col = self.loc
-
-    if start:
-        _, _, bound_ln, bound_col = body[start - 1].f.pars()
-    else:
-        bound_ln, bound_col, _, _ = loc_first
+    bound_ln, bound_col, bound_end_ln, bound_end_col = _bound_Delete_targets(self, start, loc_first)
 
     asts    = _cut_or_copy_asts(start, stop, 'targets', cut, body)
     ret_ast = Tuple(elts=asts, ctx=Del())  # we initially set to Del so that set_ctx() won't skip it
@@ -763,8 +793,11 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
 
     fst_._maybe_fix_tuple(False)
 
-    if cut and re_alnumdot_alnum.match(self.root._lines[ln := self.ln], col := self.col + 2):  # fix possibly joined alnums
-        self._put_src([' '], ln, col := col + 1, ln, col, False)
+    if cut:
+        if re_alnumdot_alnum.match(self.root._lines[ln := self.ln], col := self.col + 2):  # fix possibly joined alnums
+            self._put_src([' '], ln, col := col + 1, ln, col, False)
+
+        self._maybe_add_line_continuations()
 
     return fst_
 
@@ -774,7 +807,7 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
     """The slice of `Assign.targets` is an invalid `Assign` contianing valid target types and a `value` which is an
     empty `Name`."""
 
-    len_body    = len(body := (ast := self.a).targets)
+    len_body    = len(body := self.a.targets)
     start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice   = stop - start
 
@@ -790,15 +823,7 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
-    bound_end_ln, bound_end_col, _, _ = ast.value.f.pars()
-
-    if bound_end_col and self.root._lines[bound_end_ln][bound_end_col - 1].isspace():  # leave space between end of bound and start of value so that we don't get stuff like 'a =b' on cut
-        bound_end_col -= 1
-
-    if start:
-        _, _, bound_ln, bound_col = body[start - 1].f.pars()
-    else:
-        bound_ln, bound_col, _, _ = loc_first
+    bound_ln, bound_col, bound_end_ln, bound_end_col = _bound_Assign_targets(self, start, loc_first)
 
     asts    = _cut_or_copy_asts(start, stop, 'targets', cut, body)
     name    = Name(id='', ctx=Load())
@@ -815,6 +840,9 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
 
     name.lineno     = name.end_lineno     = len(fst_lines)
     name.col_offset = name.end_col_offset = len(fst_lines[-1].encode())  # empty name location right at end
+
+    if cut:
+        self._maybe_add_line_continuations()
 
     return fst_
 
@@ -2116,15 +2144,7 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
 
     _validate_put_seq(self, fst_, 'Delete', check_target=is_valid_del_target)
 
-    _, _, bound_end_ln, bound_end_col = self.loc
-
-    if start:
-        _, _, bound_ln, bound_col = body[start - 1].f.pars()
-    elif body:
-        bound_ln, bound_col, _, _ = body[0].f.pars()
-    else:
-        bound_ln  = bound_end_ln
-        bound_col = bound_end_col
+    bound_ln, bound_col, bound_end_ln, bound_end_col = _bound_Delete_targets(self, start)
 
     if not fst_:
         _put_slice_seq(self, start, stop, None, None, None, 0,
@@ -2138,9 +2158,6 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
         len_fst_body = 0
 
     else:
-        if not fst_.is_enclosed_or_line(pars=False):
-            raise NotImplementedError('cannot put unenclosed multiline tartget(s) to Delete.targets')
-
         len_fst_body = len(fst_body := fst_.a.elts)
 
         _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
@@ -2166,11 +2183,13 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
     if re_alnumdot_alnum.match(self.root._lines[self.ln], self.col + 2):  # fix possibly joined alnums
         self._put_src([' '], ln := self.ln, col := self.col + 3, ln, col, False)
 
+    self._maybe_add_line_continuations()
+
 
 def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                               field: str, one: bool = False, **options) -> None:
     fst_        = _code_to_slice_Assign_targets(self, code, one, options)
-    len_body    = len(body := (ast := self.a).targets)
+    len_body    = len(body := self.a.targets)
     start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice   = stop - start
 
@@ -2181,18 +2200,7 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
         if len_slice == len_body and self.get_option('fix_assign_self', options):
             raise NodeError("cannot cut Assign targets to empty without fix_assign_self=False")
 
-    bound_end_ln, bound_end_col, _, _ = ast.value.f.pars()
-
-    if bound_end_col and self.root._lines[bound_end_ln][bound_end_col - 1].isspace():  # leave space between end of bound and start of value so that we don't get stuff like 'a =b'
-        bound_end_col -= 1
-
-    if start:
-        _, _, bound_ln, bound_col = body[start - 1].f.pars()
-    elif body:
-        bound_ln, bound_col, _, _ = body[0].f.pars()
-    else:
-        bound_ln  = bound_end_ln
-        bound_col = bound_end_col
+    bound_ln, bound_col, bound_end_ln, bound_end_col = _bound_Assign_targets(self, start)
 
     if not fst_:
         _put_slice_seq(self, start, stop, None, None, None, 0,
@@ -2206,9 +2214,6 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
         len_fst_body = 0
 
     else:
-        if not fst_.is_enclosed_or_line(pars=False):
-            raise NotImplementedError('cannot put unenclosed multiline tartget(s) to Assign.targets')
-
         len_fst_body = len(fst_body := fst_.a.targets)
 
         _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
@@ -2227,6 +2232,8 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
 
     for i in range(start + len_fst_body, len(body)):
         body[i].f.pfield = astfield('targets', i)
+
+    self._maybe_add_line_continuations()
 
 
 def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,

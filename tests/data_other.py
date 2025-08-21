@@ -18251,11 +18251,75 @@ Module - ROOT 0,0..0,15
 
 (r"""del a, b, c""", 'body[0]', 1, 2, None, {}, r"""x
 .
-y""", r"""**NotImplementedError('cannot put unenclosed multiline tartget(s) to Delete.targets')**""", r"""
+y""", r"""del a, x \
+    . \
+    y, c""", r"""
+Module - ROOT 0,0..2,8
+  .body[1]
+  0] Delete - 0,0..2,8
+    .targets[3]
+    0] Name 'a' Del - 0,4..0,5
+    1] Attribute - 0,7..2,5
+      .value Name 'x' Load - 0,7..0,8
+      .attr 'y'
+      .ctx Del
+    2] Name 'c' Del - 2,7..2,8
 """),
 
 (r"""del a, b, c""", 'body[0]', 1, 2, None, {}, r"""x
-,""", r"""**NotImplementedError('cannot put unenclosed multiline tartget(s) to Delete.targets')**""", r"""
+,""", r"""del a, x \
+    , c""", r"""
+Module - ROOT 0,0..1,7
+  .body[1]
+  0] Delete - 0,0..1,7
+    .targets[3]
+    0] Name 'a' Del - 0,4..0,5
+    1] Name 'x' Del - 0,7..0,8
+    2] Name 'c' Del - 1,6..1,7
+"""),
+
+(r"""a = b = c = d""", 'body[0]', None, None, 'targets', {}, r"""x""", r"""x = d""", r"""
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'x' Store - 0,0..0,1
+    .value Name 'd' Load - 0,4..0,5
+"""),
+
+(r"""a = b = c = d""", 'body[0]', None, None, 'targets', {'one': True}, r"""x""", r"""**ValueError("cannot put as 'one' item to Assign.targets")**""", r"""
+"""),
+
+(r"""a = b = c = d""", 'body[0]', None, None, 'targets', {}, r"""x =""", r"""x = d""", r"""
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'x' Store - 0,0..0,1
+    .value Name 'd' Load - 0,4..0,5
+"""),
+
+(r"""a = b = c = d""", 'body[0]', 1, 2, 'targets', {}, r"""x \
+. \
+y \
+= \
+z """, r"""a = x \
+. \
+y \
+= \
+z = c = d""", r"""
+Module - ROOT 0,0..4,9
+  .body[1]
+  0] Assign - 0,0..4,9
+    .targets[4]
+    0] Name 'a' Store - 0,0..0,1
+    1] Attribute - 0,4..2,1
+      .value Name 'x' Load - 0,4..0,5
+      .attr 'y'
+      .ctx Store
+    2] Name 'z' Store - 4,0..4,1
+    3] Name 'c' Store - 4,4..4,5
+    .value Name 'd' Load - 4,8..4,9
 """),
 
 ]  # END OF PUT_SLICE_DATA

@@ -4438,11 +4438,12 @@ class FST:
         without line continuations are fine. This does not mean it can't have other errors, such as a `Slice` outside of
         `Subscript.slice`.
 
-        Node types where this doesn't normally apply like `stmt`, `ExceptHandler`, `boolop`, `expr_context`, etc...
+        Node types where this doesn't or can't ever normally apply like `boolop`, `expr_context` or `Name`, etc...
         return `True`. Node types that are not enclosed but which are never used without being enclosed by a parent like
         `Slice`, `keyword` or `type_param` will also return `True`. Other node types which cannot be enclosed
         individually and are not on a single line or not parenthesized and do not have line continuations but would need
-        a parent to enclose them like `arguments` or the `cmpop`s `is not` or `not in` will return `False`.
+        a parent to enclose them like `arguments` (enclosable in `FunctionDef` but unenclosed in a `Lambda`) or the
+        `cmpop`s `is not` or `not in` will return `False`.
 
         This function does NOT check whether `self` is enclosed by some parent up the tree if it is not enclosed itself,
         for that see `is_enclosed_in_parents()`.
@@ -4522,12 +4523,16 @@ class FST:
                 return True
 
             if isinstance(ast, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp,
-                                FormattedValue, Interpolation,
-                                Name,
+                                FormattedValue, Interpolation, Name,
                                 MatchValue, MatchSingleton, MatchMapping,
-                                expr_context, boolop, operator, unaryop, ExceptHandler, keyword, type_param,  # cmpop is not here because of #*^% like 'is \n not'
-                                stmt, match_case, mod, TypeIgnore)):
+                                boolop, operator, unaryop,  # cmpop is not here because of #*^% like 'is \n not'
+                                Slice, keyword, type_param,  # these can be unenclosed by themselves but are never used without being enclosed by a parent
+                                expr_context, TypeIgnore)):
                 return True
+
+            if isinstance(ast, (Module, Interactive, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
+                                With, AsyncWith, Match, Try, TryStar, ExceptHandler, match_case)):
+                raise NotImplementedError("we don't do block statements yet")  # TODO: this
 
             ln, col, end_ln, end_col = loc
 
@@ -4598,7 +4603,7 @@ class FST:
 
                         out_lns.add(ln)
 
-            if not getattr(loc, 'n', 0) and not childf.is_enclosed_or_line(pars=pars, out_lns=out_lns):  # the incoming pars=pars will be passed on to the first child which will be self if `whole` was True
+            if not getattr(loc, 'n', 0) and not childf.is_enclosed_or_line(pars=pars, out_lns=out_lns):
                 if out_lns is None:
                     return False
                 else:

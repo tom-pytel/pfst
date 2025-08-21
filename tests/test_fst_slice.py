@@ -216,7 +216,7 @@ def regen_put_slice():
             try:
                 f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
 
-            except (NotImplementedError, NodeError, ParseError) as exc:
+            except (NotImplementedError, NodeError, ParseError, ValueError) as exc:
                 tdst  = f'**{exc!r}**'
                 tdump = ''
 
@@ -1562,7 +1562,7 @@ def func():
         f.put_slice('{2: b}', 1, 1)
         self.assertEqual('{1: a, 2: b}', f.src)
 
-    def test_cut_and_del_slice_del(self):
+    def test_cut_and_del_slice_delete(self):
         f = FST('del a, b, c')
         self.assertRaises(NodeError, f.get_slice, cut=True)
 
@@ -1842,7 +1842,7 @@ def func():
                 try:
                     f.put_slice(None if src == '**DEL**' else src, start, stop, field, **options)
 
-                except (NotImplementedError, NodeError, ParseError) as exc:
+                except (NotImplementedError, NodeError, ParseError, ValueError) as exc:
                     tdst  = f'**{exc!r}**'
                     tdump = ['']
 
@@ -2052,6 +2052,48 @@ def func():
 
             self.assertRaises(NodeError, (f := FST('a | b', pattern)).put_slice, None, 0, 2, fix_matchor_self=True)
             self.assertRaises(NodeError, (f := FST('a | b', pattern)).put_slice, None, 0, 2, fix_matchor_self='strict')
+
+    def test_slice_line_continuations(self):
+        f = FST(r'''del a, b, c, \
+ \
+z''')
+        g = f.get_slice(2, 3, 'targets', cut=True, trivia=(None, 'all-'))
+        self.assertEqual('del a, b, \\\nz', f.src)
+        self.assertEqual('c,', g.src)
+        f.verify()
+        g.verify()
+
+        f = FST(r'''del a, b, c, \
+ \
+z''')
+        f.put_slice(None, 2, 3, 'targets', trivia=(None, 'all-'))
+        self.assertEqual('del a, b, \\\nz', f.src)
+        f.verify()
+
+        self.assertEqual('del a, x, \\\n    y, c', (f := FST('del a, b, c')).put_slice('x,\ny', 1, 2).src)
+        f.verify()
+
+        f = FST(r'''a = b = c = \
+ \
+z''')
+        g = f.get_slice(2, 3, 'targets', cut=True, trivia=(None, 'all-'))
+        self.assertEqual('a = b = \\\nz', f.src)
+        self.assertEqual('c =', g.src)
+        f.verify()
+        g.verify()
+
+        f = FST(r'''a = b = c = \
+ \
+z''')
+        f.put_slice(None, 2, 3, 'targets', trivia=(None, 'all-'))
+        self.assertEqual('a = b = \\\nz', f.src)
+        f.verify()
+
+        s = FST('x =\\\ny', 'Assign_targets')
+        s._put_src(' ', 0, 3, 0, 4)
+        self.assertEqual('x = \ny', s.src)
+        self.assertEqual('a = x = \\\ny = c', (f := FST('a = b = c')).put_slice(s, 1, 2, 'targets').src)
+        f.verify()
 
     def test_get_slice_special(self):
         f = FST('''(

@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- don't add unnecessary parentheses to `NamedExpr.value`
 - never automatically add parentheses to copied Slice
 - disallow Starred as a target to Delete
 - allow put to except and case slices
