@@ -2,7 +2,6 @@
 
 ### Fixed
 
-- don't add unnecessary parentheses to `NamedExpr.value`
 - never automatically add parentheses to copied Slice
 - disallow Starred as a target to Delete
 - allow put to except and case slices
@@ -24,6 +23,7 @@
 
 ### Updated
 
+- reduced precedence of `NamedExpr.value` from ATOM to TEST (don't add unnecessary parentheses)
 - added ParseError and cleaned up exception usage
 - optimized _parse_all() which recognizes and parses any type of node source
 - parse expressionish elements don't have to start at beginning of line

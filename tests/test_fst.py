@@ -5414,7 +5414,7 @@ if 1:
                     truth   = next(data)
 
                     try:
-                        f.parent.put(s, f.pfield.idx, f.pfield.name)
+                        (parent := f.parent).put(s, idx := f.pfield.idx, name := f.pfield.name)
 
                     except Exception as exc:
                         is_exc = True
@@ -5436,11 +5436,16 @@ if 1:
 
                     # vs. python
 
+                    if attr == 'value' and isinstance(parent.a, NamedExpr):  # we explicitly parenthesize NamedExpr.value because by default we differ from python ast.unparse() and don't do this normally
+                        test = parent.put(src.body[0].value.copy().par(), idx, name, pars=True).root.src
+
                     d            = dst.copy()
                     s            = src.body[0].value.copy()
                     f            = eval(f'd.{attr}' if is_stmt else f'd.body[0].value.{attr}', {'d': d})
                     is_unpar_tup = False if is_stmt else (d.body[0].value.is_parenthesized_tuple() is False)
-                    fix_tup_tgt  = PYLT11 and isinstance(s.a, Tuple) and isinstance(d.a, (Assign, For, AsyncFor))  # py 3.10 parenthesizes target tuples, we do not
+
+                    if PYLT11 and isinstance(s.a, Tuple) and isinstance(d.a, (Assign, For, AsyncFor)):  # py 3.10 parenthesizes target tuples, we do not normally so we do it here explicitly for the compare
+                        test = parent.put(src.body[0].value.copy().par(), idx, name, pars=True).root.src
 
                     f.pfield.set(f.parent.a, s.a)
 
@@ -5448,9 +5453,6 @@ if 1:
 
                     if is_unpar_tup:
                         py_truth = py_truth[1:-1]
-
-                    if fix_tup_tgt:
-                        py_truth = py_truth.replace('(', '').replace(')', '')
 
                     self.assertEqual(test, py_truth)
 

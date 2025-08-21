@@ -1309,7 +1309,7 @@ _PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
 
     (BinOp, 'values'):         False,                    # should be passed as the 'op'
     (NamedExpr, 'target'):     _Precedence.ATOM,
-    (NamedExpr, 'value'):      _Precedence.ATOM,
+    (NamedExpr, 'value'):      _Precedence.TEST,         # XXX: python ast.unparse() has this as _Precedence.ATOM, which as far as I can tell is unnecessary
     (BinOp, 'left'):           False,                    # should be passed as the 'op'
     (BinOp, 'right'):          False,                    # should be passed as the 'op'
     (UnaryOp, 'operand'):      False,                    # should be passed as the 'op'
@@ -1326,7 +1326,7 @@ _PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
     (Call, 'func'):            _Precedence.ATOM,
     (FormattedValue, 'value'): _Precedence.TEST.next(),
     (Interpolation, 'value'):  _Precedence.TEST.next(),
-    (Attribute, 'value'):      False,                    # Constant integers require parentheses
+    (Attribute, 'value'):      False,                    # Constant integers require parentheses, e.g. '(1).bit_count()'
     (Subscript, 'value'):      _Precedence.ATOM,
     (Subscript, 'slice'):      False,                    # unparenthesized tuples put to slice don't need parens
     (Starred, 'value'):        False,                    # different precedence when Starred is a call argument
