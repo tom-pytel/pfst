@@ -11,7 +11,7 @@ from fst.astutil import OPCLS2STR, WalkFail, copy_ast, compare_asts
 
 from fst.misc import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14
 
-from data_other import PARS_DATA
+from data_other import PARS_DATA, PRECEDENCE_DATA
 
 PYFNMS = sum((
     [os.path.join(path, fnm) for path, _, fnms in os.walk(top) for fnm in fnms if fnm.endswith('.py')]
@@ -657,18 +657,40 @@ def regen_precedence_data():
     for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
         for src, *_ in PRECEDENCE_SRC_EXPRS:
             for attr in attrs:
+                d       = dst.copy()
+                s       = src.body[0].value.copy()
+                is_stmt = isinstance(d.a, stmt)
+                f       = eval(f'd.{attr}' if is_stmt else f'd.body[0].value.{attr}', {'d': d})
+
+                # # put python precedence
+
+                # is_unpar_tup = False if is_stmt else (d.body[0].value.is_parenthesized_tuple() is False)
+
+                # f.pfield.set(f.parent.a, s.a)
+
+                # truth = ast_unparse(f.root.a)
+
+                # if is_unpar_tup:
+                #     truth = truth[1:-1]
+
+                # newlines.append(f'    {truth!r},')
+
+                # put our precedence
+
                 d            = dst.copy()
                 s            = src.body[0].value.copy()
                 is_stmt      = isinstance(d.a, stmt)
                 f            = eval(f'd.{attr}' if is_stmt else f'd.body[0].value.{attr}', {'d': d})
-                is_unpar_tup = False if is_stmt else (d.body[0].value.is_parenthesized_tuple() is False)
 
-                f.pfield.set(f.parent.a, s.a)
+                try:
+                    f.parent.put(s, f.pfield.idx, f.pfield.name)
+                except Exception as exc:
+                    truth = str(exc)
 
-                truth = ast_unparse(f.root.a)
+                else:
+                    f.root.verify()
 
-                if is_unpar_tup:
-                    truth = truth[1:-1]
+                    truth = f.root.src
 
                 newlines.append(f'    {truth!r},')
 
@@ -5378,6 +5400,59 @@ if 1:
         self.assertRaises(NotImplementedError, FST('i = f"a{b}c"').value.values[1].value.replace, 'z')
         self.assertRaises(NotImplementedError, FST('f"a{b}c"').values[1].value.replace, 'z')
         self.assertRaises(NotImplementedError, FST('f"{a}"').values[0].value.replace, 'z')
+
+    def test_precedence(self):
+        data = iter(PRECEDENCE_DATA)
+
+        for dst, *attrs in PRECEDENCE_DST_STMTS + PRECEDENCE_DST_EXPRS + PRECEDENCE_SRC_EXPRS:
+            for src, *_ in PRECEDENCE_SRC_EXPRS:
+                for attr in attrs:
+                    d       = dst.copy()
+                    s       = src.body[0].value.copy()
+                    is_stmt = isinstance(d.a, stmt)
+                    f       = eval(f'd.{attr}' if is_stmt else f'd.body[0].value.{attr}', {'d': d})
+                    truth   = next(data)
+
+                    try:
+                        f.parent.put(s, f.pfield.idx, f.pfield.name)
+
+                    except Exception as exc:
+                        is_exc = True
+                        test   = str(exc)
+
+                        if test == 'put inside JoinedStr not implemented on python < 3.12':
+                            continue
+
+                    else:
+                        is_exc = False
+                        test   = f.root.src
+
+                        f.root.verify()
+
+                    self.assertEqual(test, truth)
+
+                    if is_exc:
+                        continue
+
+                    # vs. python
+
+                    d            = dst.copy()
+                    s            = src.body[0].value.copy()
+                    f            = eval(f'd.{attr}' if is_stmt else f'd.body[0].value.{attr}', {'d': d})
+                    is_unpar_tup = False if is_stmt else (d.body[0].value.is_parenthesized_tuple() is False)
+                    fix_tup_tgt  = PYLT11 and isinstance(s.a, Tuple) and isinstance(d.a, (Assign, For, AsyncFor))  # py 3.10 parenthesizes target tuples, we do not
+
+                    f.pfield.set(f.parent.a, s.a)
+
+                    py_truth = ast_unparse(f.root.a).replace('lambda :', 'lambda:')
+
+                    if is_unpar_tup:
+                        py_truth = py_truth[1:-1]
+
+                    if fix_tup_tgt:
+                        py_truth = py_truth.replace('(', '').replace(')', '')
+
+                    self.assertEqual(test, py_truth)
 
 
 if __name__ == '__main__':
