@@ -5,7 +5,7 @@ This module contains functions which are imported as methods in the `FST` class.
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal, Mapping
 
 from . import fst
 
@@ -13,6 +13,7 @@ from .asttypes import (
     AsyncFor, AsyncFunctionDef, AsyncWith, ClassDef, ExceptHandler, For, FunctionDef, If, Match, Module, Try, While,
     With, TryStar, match_case, mod, stmt,
 )
+
 from .astutil import copy_ast
 
 from .misc import (
@@ -29,7 +30,7 @@ from .srcedit_old import _src_edit
 # FST class private methods
 
 def _get_slice_stmtish(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-                       one: bool = False, **options) -> fst.FST:
+                       options: Mapping[str, Any], *, one: bool = False) -> fst.FST:
     ast         = self.a
     body        = getattr(ast, field)
     start, stop = _fixup_slice_indices(len(body), start, stop)
@@ -87,7 +88,7 @@ def _get_slice_stmtish(self: fst.FST, start: int | Literal['end'] | None, stop: 
 
 
 def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                       field: str, one: bool, **options) -> None:
+                       field: str, one: bool, options: Mapping[str, Any]) -> None:
     ast  = self.a
     body = getattr(ast, field)
 

@@ -9,7 +9,7 @@ from io import BytesIO
 from itertools import takewhile
 from tokenize import tokenize as tokenize_tokenize, STRING
 from types import FunctionType, NoneType
-from typing import Callable, NamedTuple, Union
+from typing import Any, Callable, Mapping, NamedTuple, Union
 
 from . import fst
 
@@ -93,16 +93,12 @@ from .asttypes import (
     alias,
     arg,
     arguments,
-    boolop,
-    cmpop,
     comprehension,
     expr,
     expr_context,
     keyword,
     match_case,
-    operator,
     pattern,
-    unaryop,
     withitem,
     TryStar,
     TypeAlias,
@@ -141,7 +137,8 @@ except ImportError:
     pass
 
 _GetOneRet  = Union['fst.FST', None, str, constant]
-_PutOneCode = Code | str | constant | None
+_PutOneCode = Code | str | constant | None  # yes, None is already in constant, but just to make this explicit that None may be in place of an expected AST where a constant is not expected
+_Child      = AST | list[AST] | constant | None
 
 
 def _params_Compare_combined(self: fst.FST, idx: int | None) -> tuple[int, str, AST | list[AST]]:
@@ -176,7 +173,7 @@ def _validate_get(self: fst.FST, idx: int | None, field: str) -> AST | None:
 
 # ......................................................................................................................
 
-def _get_one_default(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_default(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     child, idx = _validate_get(self, idx, field)
     childf     = child.f
     loc        = childf.pars() if self.get_option('pars', options) is True else childf.bloc
@@ -191,60 +188,64 @@ def _get_one_default(self: fst.FST, idx: int | None, field: str, cut: bool, **op
     return ret
 
 
-def _get_one_stmtish(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_stmtish(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     _, idx = _validate_get(self, idx, field)
 
-    return self._get_slice_stmtish(idx, idx + 1, field, cut=cut, one=True, **options)
+    return self._get_slice_stmtish(idx, idx + 1, field, cut, options, one=True)
 
 
-def _get_one_ctx(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_ctx(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
 
     return fst.FST(child.__class__(), [bistr('')], from_=self, lcopy=False)
 
 
-def _get_one_identifier(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_identifier(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any],
+                        ) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
 
     return child
 
 
-def _get_one_constant(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_constant(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
 
     return child
 
 
-def _get_one_arguments(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_arguments(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     if not self.a.args.f._is_arguments_empty():
-        return _get_one_default(self, idx, field, cut, **options)
+        return _get_one_default(self, idx, field, cut, options)
 
     _validate_get(self, idx, field)
 
     return fst.FST(arguments(posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[]), [''], from_=self)
 
 
-def _get_one_BoolOp_op(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_BoolOp_op(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
 
     return fst.FST(And(), ['and'], from_=self) if isinstance(child, And) else fst.FST(Or(), ['or'], from_=self)  # just create new ones because they can be in multiple places
 
 
-def _get_one_Compare_combined(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_Compare_combined(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any],
+                              ) -> _GetOneRet:
     idx, _, child = _params_Compare_combined(self, idx)
 
     return child.f if idx is None else child[idx].f
 
 
-def _get_one_invalid_combined(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_invalid_combined(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any],
+                              ) -> _GetOneRet:
     raise ValueError(f'cannot get single element from combined field of {self.a.__class__.__name__}')
 
 
 @pyver(lt=12, else_=_get_one_default)
-def _get_one_FormattedValue_value(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_FormattedValue_value(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any],
+                                  ) -> _GetOneRet:
     """Correct for py < 3.12 returning value unparenthesized tuple with `FormattedValue` curlies as delimiters."""
 
-    ret = _get_one_default(self, idx, field, cut, **options)
+    ret = _get_one_default(self, idx, field, cut, options)
 
     if isinstance(ret.a, Tuple):
         ln, col, end_ln, end_col = ret.loc
@@ -257,7 +258,8 @@ def _get_one_FormattedValue_value(self: fst.FST, idx: int | None, field: str, cu
     return ret
 
 
-def _get_one_conversion(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_conversion(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any],
+                        ) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
 
     if child == -1:
@@ -270,11 +272,13 @@ def _get_one_conversion(self: fst.FST, idx: int | None, field: str, cut: bool, *
 
 
 @pyver(lt=12)
-def _get_one_format_spec(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_format_spec(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any],
+                         ) -> _GetOneRet:
     raise NotImplementedError('get FormattedValue.format_spec not implemented on python < 3.12')
 
 @pyver(ge=12)
-def _get_one_format_spec(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one_format_spec(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any],
+                         ) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
     childf   = child.f
     loc      = childf.loc
@@ -331,13 +335,13 @@ def _get_one_format_spec(self: fst.FST, idx: int | None, field: str, cut: bool, 
 
 
 @pyver(lt=12)
-def _get_one_JoinedStr_TemplateStr_values(self: fst.FST, idx: int | None, field: str, cut: bool, **options,
-                                          ) -> _GetOneRet:
+def _get_one_JoinedStr_TemplateStr_values(self: fst.FST, idx: int | None, field: str, cut: bool,
+                                          options: Mapping[str, Any]) -> _GetOneRet:
     raise NotImplementedError('get JoinedStr.values not implemented on python < 3.12')
 
 @pyver(ge=12)
-def _get_one_JoinedStr_TemplateStr_values(self: fst.FST, idx: int | None, field: str, cut: bool, **options,
-                                          ) -> _GetOneRet:
+def _get_one_JoinedStr_TemplateStr_values(self: fst.FST, idx: int | None, field: str, cut: bool,
+                                          options: Mapping[str, Any]) -> _GetOneRet:
     child, _      = _validate_get(self, idx, field)
     childf        = child.f
 
@@ -389,22 +393,23 @@ def _get_one_JoinedStr_TemplateStr_values(self: fst.FST, idx: int | None, field:
 
 # ......................................................................................................................
 
-def _get_one(self: fst.FST, idx: int | None, field: str, cut: bool, **options) -> _GetOneRet:
+def _get_one(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     """Copy or cut (if possible) a node or non-node from a field of `self`."""
 
     if not (handler := _GET_ONE_HANDLERS.get((self.a.__class__, field))):
         raise NodeError(f"cannot get from {self.a.__class__.__name__}{f'.{field}' if field else ''}")
 
-    ret = handler(self, idx, field, cut, **options)
+    ret = handler(self, idx, field, cut, options)
 
     if handler is _get_one_stmtish:  # this one does its own cut (because of evil semicolons)
         return ret
 
     if cut:
+        options = options.copy()
         options['raw'] = False
         options['to']  = None
 
-        self._put_one(None, idx, field, **options)
+        self._put_one(None, idx, field, options)
 
     return ret
 
@@ -750,8 +755,8 @@ def _maybe_par_above(above: fst.FST, below: fst.FST) -> bool:
 # ......................................................................................................................
 # other
 
-def _put_one_constant(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: constant, static: onestatic,
-                      **options) -> fst.FST:
+def _put_one_constant(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child, static: onestatic,
+                      options: Mapping[str, Any]) -> fst.FST:  # child: constant
     """Put a single constant value, only Constant and MatchSingleton (and only exists because of the second one)."""
 
     _validate_put(self, code, idx, field, child, can_del=True)  # can_del so that None is accepted
@@ -777,8 +782,8 @@ def _put_one_constant(self: fst.FST, code: _PutOneCode, idx: int | None, field: 
     return self  # this breaks the rule of returning the child node since it is just a primitive
 
 
-def _put_one_op(self: fst.FST, code: _PutOneCode, idx: int | None, field: str,
-                child: type[boolop | operator | unaryop | cmpop], static: None, **options) -> fst.FST:
+def _put_one_op(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child, static: None,
+                options: Mapping[str, Any]) -> fst.FST:  # child: type[boolop | operator | unaryop | cmpop]
     """Put a single operator, with or without '=' for AugAssign, lots of rules to check."""
 
     child  = _validate_put(self, code, idx, field, child)
@@ -829,8 +834,8 @@ def _put_one_op(self: fst.FST, code: _PutOneCode, idx: int | None, field: str,
     return childf
 
 
-def _put_one_ctx(self: fst.FST, code: _PutOneCode, idx: int | None, field: str,
-                 child: type[boolop | operator | unaryop | cmpop], static: None, **options) -> fst.FST:
+def _put_one_ctx(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child, static: None,
+                 options: Mapping[str, Any]) -> fst.FST:  # child: expr_context
     """This only exists to absorb the put and validate that it is the only value it can be."""
 
     child = _validate_put(self, code, idx, field, child)
@@ -846,8 +851,8 @@ def _put_one_ctx(self: fst.FST, code: _PutOneCode, idx: int | None, field: str,
     return child.f
 
 
-def _put_one_AnnAssign_simple(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: int,
-                              static: onestatic, **options) -> fst.FST:
+def _put_one_AnnAssign_simple(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                              static: onestatic, options: Mapping[str, Any]) -> fst.FST:  # child: int
     """Parenthesize or unparenthesize `AnnAssign.value` according to this, overkill, definitely overkill."""
 
     ast   = self.a
@@ -874,8 +879,8 @@ def _put_one_AnnAssign_simple(self: fst.FST, code: _PutOneCode, idx: int | None,
     return self  # cannot return primitive
 
 
-def _put_one_ImportFrom_level(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: type[boolop],
-                              static: None, **options) -> fst.FST:
+def _put_one_ImportFrom_level(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                              static: None, options: Mapping[str, Any]) -> fst.FST:  # child: int
     """Set a comprehension as async or sync."""
 
     ast   = self.a
@@ -910,8 +915,8 @@ def _put_one_ImportFrom_level(self: fst.FST, code: _PutOneCode, idx: int | None,
     return self  # cannot return primitive
 
 
-def _put_one_BoolOp_op(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: type[boolop], static: None,
-                       **options) -> fst.FST:
+def _put_one_BoolOp_op(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child, static: None,
+                       options: Mapping[str, Any]) -> fst.FST:  # child: type[boolop]
     """Put BoolOp op to potentially multiple places."""
 
     child  = _validate_put(self, code, idx, field, child)
@@ -943,8 +948,8 @@ def _put_one_BoolOp_op(self: fst.FST, code: _PutOneCode, idx: int | None, field:
     return childf
 
 
-def _put_one_Constant_kind(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: type[boolop],
-                           static: None, **options) -> fst.FST:
+def _put_one_Constant_kind(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child, static: None,
+                           options: Mapping[str, Any]) -> fst.FST:  # child: str | None
     """Set a Constant string kind to 'u' or None, this is truly unnecessary."""
 
     child = _validate_put(self, code, idx, field, child, can_del=True)
@@ -973,8 +978,8 @@ def _put_one_Constant_kind(self: fst.FST, code: _PutOneCode, idx: int | None, fi
     return self  # cannot return primitive
 
 
-def _put_one_comprehension_is_async(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: type[boolop],
-                                    static: None, **options) -> fst.FST:
+def _put_one_comprehension_is_async(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                                    static: None, options: Mapping[str, Any]) -> fst.FST:  # child: int
     """Set a comprehension as async or sync."""
 
     child = _validate_put(self, code, idx, field, child)
@@ -999,20 +1004,20 @@ def _put_one_comprehension_is_async(self: fst.FST, code: _PutOneCode, idx: int |
     return self  # cannot return primitive
 
 
-def _put_one_NOT_IMPLEMENTED_YET(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: constant,
-                                 static: onestatic, **options) -> fst.FST:
+def _put_one_NOT_IMPLEMENTED_YET(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                                 static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     raise NotImplementedError('this is not implemented yet')
 
 
 @pyver(lt=12, else_=_put_one_NOT_IMPLEMENTED_YET)
-def _put_one_NOT_IMPLEMENTED_YET_12(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: constant,
-                                    static: onestatic, **options) -> fst.FST:
+def _put_one_NOT_IMPLEMENTED_YET_12(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                                    static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     raise NotImplementedError('this will only be implemented on python version 3.12 and above')
 
 
 @pyver(lt=14, else_=_put_one_NOT_IMPLEMENTED_YET)
-def _put_one_NOT_IMPLEMENTED_YET_14(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: constant,
-                                    static: onestatic, **options) -> fst.FST:
+def _put_one_NOT_IMPLEMENTED_YET_14(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                                    static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     raise NotImplementedError('this will only be implemented on python version 3.14 and above')
 
 
@@ -1020,8 +1025,9 @@ def _put_one_NOT_IMPLEMENTED_YET_14(self: fst.FST, code: _PutOneCode, idx: int |
 # exprish (expr, pattern, comprehension, etc...)
 
 def _make_exprish_fst(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, static: onestatic,
+                      options: Mapping[str, Any],
                       target: fst.FST | fstloc, ctx: type[expr_context], prefix: str  = '', suffix: str = '',
-                      validated: int = 0, **options) -> fst.FST:
+                      validated: int = 0) -> fst.FST:
     """Make an expression `FST` from `Code` for a field/idx containing an existing node or creating a new one. Takes
     care of parenthesizing, indenting and offsetting."""
 
@@ -1172,8 +1178,8 @@ def _make_exprish_fst(self: fst.FST, code: _PutOneCode, idx: int | None, field: 
 
 
 def _put_one_exprish_required(self: fst.FST, code: _PutOneCode, idx: int | None, field: str,
-                              child: list[AST] | AST | None, static: onestatic, validated: int = 0,
-                              target: fstloc | None = None, prefix: str = '', **options) -> fst.FST:
+                              child: list[AST] | AST | None, static: onestatic, options: Mapping[str, Any],
+                              validated: int = 0, target: fstloc | None = None, prefix: str = '') -> fst.FST:
     """Put a single required expression. Can be standalone or as part of sequence."""
 
     if not validated:
@@ -1185,7 +1191,7 @@ def _put_one_exprish_required(self: fst.FST, code: _PutOneCode, idx: int | None,
 
     childf  = child.f
     ctx     = ((ctx := getattr(child, 'ctx', None)) and ctx.__class__) or Load
-    put_fst = _make_exprish_fst(self, code, idx, field, static, target or childf, ctx, prefix, '', validated, **options)
+    put_fst = _make_exprish_fst(self, code, idx, field, static, options, target or childf, ctx, prefix, '', validated)
 
     childf._set_ast(put_fst.a)
 
@@ -1193,7 +1199,7 @@ def _put_one_exprish_required(self: fst.FST, code: _PutOneCode, idx: int | None,
 
 
 def _put_one_exprish_optional(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
-                              static: onestatic, validated: int = 0, **options) -> fst.FST | None:
+                              static: onestatic, options: Mapping[str, Any], validated: int = 0) -> fst.FST | None:
     """Put new, replace or delete an optional expression."""
 
     if not validated:
@@ -1204,7 +1210,7 @@ def _put_one_exprish_optional(self: fst.FST, code: _PutOneCode, idx: int | None,
             return None
 
     elif child:  # replace existing node
-        return _put_one_exprish_required(self, code, idx, field, child, static, max(1, validated), **options)
+        return _put_one_exprish_required(self, code, idx, field, child, static, options, max(1, validated))
 
     info = static.getinfo(self, static, idx, field)
     loc  = info.loc_insdel
@@ -1224,8 +1230,8 @@ def _put_one_exprish_optional(self: fst.FST, code: _PutOneCode, idx: int | None,
     if not loc:
         raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
 
-    put_fst = _make_exprish_fst(self, code, idx, field, static, loc, static.ctx, info.prefix, info.suffix,
-                                max(1, validated), **options)
+    put_fst = _make_exprish_fst(self, code, idx, field, static, options, loc, static.ctx, info.prefix, info.suffix,
+                                max(1, validated))
     put_fst = fst.FST(put_fst.a, self, astfield(field, idx))
 
     self._make_fst_tree([put_fst])
@@ -1234,17 +1240,16 @@ def _put_one_exprish_optional(self: fst.FST, code: _PutOneCode, idx: int | None,
     return put_fst
 
 
-def _put_one_FunctionDef_arguments(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
-                                   static: onestatic, **options) -> fst.FST:
+def _put_one_FunctionDef_arguments(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                                   static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Put FunctionDef.arguments. Does not have location if there are no arguments."""
 
-    return _put_one_exprish_required(self, code or '', idx, field, child, static,
-                                     target=None if (args := self.a.args.f).loc else args._loc_arguments_empty(),
-                                     **options)
+    return _put_one_exprish_required(self, code or '', idx, field, child, static, options,
+                                     target=None if (args := self.a.args.f).loc else args._loc_arguments_empty())
 
 
-def _put_one_ClassDef_bases(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
-                            static: onestatic, **options) -> fst.FST:
+def _put_one_ClassDef_bases(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                            static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Can't replace Starred base with non-Starred base after keywords."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1256,11 +1261,11 @@ def _put_one_ClassDef_bases(self: fst.FST, code: _PutOneCode, idx: int | None, f
         raise ValueError(f'cannot replace Starred ClassDef.bases[{idx}] '
                          'with non-Starred base in this state (after keywords)')
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+    return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
 
-def _put_one_ClassDef_keywords(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
-                               static: onestatic, **options) -> fst.FST:
+def _put_one_ClassDef_keywords(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                               static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Don't allow put of `**keyword` before `*arg`."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1269,22 +1274,22 @@ def _put_one_ClassDef_keywords(self: fst.FST, code: _PutOneCode, idx: int | None
     if code.a.arg is None and (bases := self.a.bases) and bases[-1].f.loc > self.keywords[idx].loc:
         raise ValueError(f"cannot put '**' ClassDef.keywords[{idx}] in this state (non-keywords follow)")
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+    return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
 
-def _put_one_AnnAssign_target(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: int,
-                              static: onestatic, **options) -> fst.FST:
+def _put_one_AnnAssign_target(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                              static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Update simple according to what was put."""
 
-    ret = _put_one_exprish_required(self, code, idx, field, child, static, **options)
+    ret = _put_one_exprish_required(self, code, idx, field, child, static, options)
 
     self.a.simple = 1 if isinstance(ret.a, Name) and not ret.pars().n else 0
 
     return ret
 
 
-def _put_one_ImportFrom_names(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: list[AST],
-                              static: onestatic, **options) -> fst.FST:
+def _put_one_ImportFrom_names(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                              static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Disallow put star to list of multiple names and unparenthesize if star was put to single name."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1294,7 +1299,7 @@ def _put_one_ImportFrom_names(self: fst.FST, code: _PutOneCode, idx: int | None,
         if len(self.a.names) != 1:
             raise NodeError('cannot put star alias to ImportFrom.names containing multiple aliases', rawable=True)
 
-    ret = _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+    ret = _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
     if is_star:  # try to remove parentheses if there
         _, _, ln, col         = (name := self.a.names[0].f).loc
@@ -1311,8 +1316,8 @@ def _put_one_ImportFrom_names(self: fst.FST, code: _PutOneCode, idx: int | None,
     return ret
 
 
-def _put_one_BinOp_left_right(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: list[AST],
-                              static: onestatic, **options) -> fst.FST:
+def _put_one_BinOp_left_right(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                              static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Disallow invalid constant changes in patterns."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1331,11 +1336,11 @@ def _put_one_BinOp_left_right(self: fst.FST, code: _PutOneCode, idx: int | None,
             if not isinstance(codea, Constant) or not isinstance(codea.value, (int, float)):
                 raise NodeError('can only put real Constant to a pattern BinOp.left', rawable=True)
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+    return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
 
-def _put_one_UnaryOp_operand(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: list[AST],
-                             static: onestatic, **options) -> fst.FST:
+def _put_one_UnaryOp_operand(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                             static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Disallow invalid constant changes in patterns."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1348,20 +1353,20 @@ def _put_one_UnaryOp_operand(self: fst.FST, code: _PutOneCode, idx: int | None, 
         if not isinstance(codea.value, (int, float) if isinstance(self.parent.a, BinOp) else (int, float, complex)):
             raise NodeError('invalid Constant for pattern UnaryOp.operand', rawable=True)
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+    return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
 
-def _put_one_with_items(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
-                        **options) -> fst.FST:
-    ret = _put_one_exprish_required(self, code, idx, field, child, static, **options)
+def _put_one_with_items(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child, static: onestatic,
+                        options: Mapping[str, Any]) -> fst.FST:
+    ret = _put_one_exprish_required(self, code, idx, field, child, static, options)
 
     self._maybe_fix_with_items()
 
     return ret
 
 
-def _put_one_Lambda_arguments(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
-                              static: onestatic, **options) -> fst.FST:
+def _put_one_Lambda_arguments(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                              static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Put Lambda.arguments. Does not have location if there are no arguments."""
 
     if code is None:
@@ -1372,20 +1377,20 @@ def _put_one_Lambda_arguments(self: fst.FST, code: _PutOneCode, idx: int | None,
     prefix = ' ' if code.loc else ''  # if arguments has .loc then it is not empty
     target = self._loc_lambda_args_entire()
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, 1, target, prefix, **options)
+    return _put_one_exprish_required(self, code, idx, field, child, static, options, 1, target, prefix)
 
 
-def _put_one_Compare_combined(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
-                              static: onestatic, **options) -> fst.FST:
+def _put_one_Compare_combined(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                              static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Put to combined [Compare.left, Compare.comparators] using this total indexing."""
 
     idx, field, child = _params_Compare_combined(self, idx)
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, **options)
+    return _put_one_exprish_required(self, code, idx, field, child, static, options)
 
 
-def _put_one_Call_args(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
-                       **options) -> fst.FST:
+def _put_one_Call_args(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child, static: onestatic,
+                       options: Mapping[str, Any]) -> fst.FST:
     """Can't replace Starred arg with non-Starred arg after keywords."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1396,11 +1401,11 @@ def _put_one_Call_args(self: fst.FST, code: _PutOneCode, idx: int | None, field:
     ):
         raise ValueError(f'cannot replace Starred Call.args[{idx}] with non-Starred arg in this state (after keywords)')
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+    return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
 
-def _put_one_Call_keywords(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
-                           **options) -> fst.FST:
+def _put_one_Call_keywords(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child, static: onestatic,
+                           options: Mapping[str, Any]) -> fst.FST:
     """Don't allow put of `**keyword` before `*arg`."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1409,11 +1414,11 @@ def _put_one_Call_keywords(self: fst.FST, code: _PutOneCode, idx: int | None, fi
     if code.a.arg is None and (args := self.a.args) and args[-1].f.loc > self.keywords[idx].loc:
         raise ValueError(f"cannot put '**' Call.keywords[{idx}] in this state (non-keywords follow)")
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+    return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
 
-def _put_one_Attribute_value(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
-                             static: onestatic, **options) -> fst.FST:
+def _put_one_Attribute_value(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                             static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """If this gets parenthesized in an `AnnAssign` then the whole `AnnAssign` target needs to be parenthesized. Also
     need to make sure only unparenthesized `Name` or `Attribute` is put to one of these in `pattern` expression."""
 
@@ -1442,7 +1447,7 @@ def _put_one_Attribute_value(self: fst.FST, code: _PutOneCode, idx: int | None, 
 
         above = parent
 
-    ret = _put_one_exprish_required(self, code, idx, field, child, static, validated=2, **options)
+    ret = _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
     if is_annass and not above.pars().n:
         if _maybe_par_above(above, ret):
@@ -1451,11 +1456,11 @@ def _put_one_Attribute_value(self: fst.FST, code: _PutOneCode, idx: int | None, 
     return ret
 
 
-def _put_one_Subscript_value(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
-                             static: onestatic, **options) -> fst.FST:
+def _put_one_Subscript_value(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                             static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """If this gets parenthesized in an AnnAssign then the whole AnnAssign target needs to be parenthesized."""
 
-    ret   = _put_one_exprish_required(self, code, idx, field, child, static, **options)
+    ret   = _put_one_exprish_required(self, code, idx, field, child, static, options)
     above = ret
 
     while (parent := above.parent) and above.pfield.name in ('value', 'target'):
@@ -1474,8 +1479,8 @@ def _put_one_Subscript_value(self: fst.FST, code: _PutOneCode, idx: int | None, 
 
 
 @pyver(lt=11, else_=_put_one_exprish_required)
-def _put_one_Subscript_slice(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST,  # py < 3.11
-                             static: onestatic, **options) -> fst.FST:
+def _put_one_Subscript_slice(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,  # py < 3.11
+                             static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Don't allow put unparenthesized tuple containing Starred."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1484,11 +1489,11 @@ def _put_one_Subscript_slice(self: fst.FST, code: _PutOneCode, idx: int | None, 
     if code.is_parenthesized_tuple() is False and any(isinstance(a, Starred) for a in code.a.elts):
         raise NodeError('cannot have unparenthesized tuple containing Starred in slice', rawable=True)
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+    return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
 
-def _put_one_List_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: list[AST],
-                       static: onestatic, **options) -> fst.FST:
+def _put_one_List_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                       static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Disallow non-targetable expressions in targets."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1498,11 +1503,11 @@ def _put_one_List_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field:
         if not is_valid_target(code.a):
             raise ValueError(f"invalid expression for List {ctx.__class__.__name__} target")
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+    return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
 
-def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: list[AST],
-                        static: onestatic, **options) -> fst.FST:
+def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                        static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Disallow non-targetable expressions in targets. If not an unparenthesized top level or slice tuple then disallow
     Slices."""
 
@@ -1529,7 +1534,7 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
             if any(isinstance(e, Slice) for e in elts if e is not r):
                 raise NodeError('cannot put Starred to a slice Tuple containing Slices', rawable=True)
 
-        ret = _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+        ret = _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
         if put_star_to_unpar_slice:
             self._delimit_node()
@@ -1542,7 +1547,7 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
 
         self_is_solo_star_in_slice = is_slice and len(elts := ast.elts) == 1 and isinstance(elts[0], Starred)  # because of replacing the Starred in 'a[*i_am_really_a_tuple]'
 
-        ret = _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+        ret = _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
         if self_is_solo_star_in_slice:
             self._maybe_add_singleton_tuple_comma(is_par)
@@ -1550,11 +1555,11 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
     return ret
 
 
-def _put_one_Dict_keys(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
-                       static: onestatic, **options) -> fst.FST:
+def _put_one_Dict_keys(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                       static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Put optional dict key and if deleted parenthesize the value if needed."""
 
-    ret = _put_one_exprish_optional(self, code, idx, field, child, static, **options)
+    ret = _put_one_exprish_optional(self, code, idx, field, child, static, options)
 
     if (code is None and not (value := (a := self.a).values[idx].f).is_atom() and
         precedence_require_parens(value.a, a, 'values',  idx)
@@ -1564,8 +1569,8 @@ def _put_one_Dict_keys(self: fst.FST, code: _PutOneCode, idx: int | None, field:
     return ret
 
 
-def _put_one_arg(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
-                 **options) -> fst.FST:
+def _put_one_arg(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child, static: onestatic,
+                 options: Mapping[str, Any]) -> fst.FST:
     """Don't allow arg with Starred annotation into non-vararg args."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1574,26 +1579,26 @@ def _put_one_arg(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
     if isinstance(code.a.annotation, Starred):
         raise NodeError(f'cannot put arg with Starred annotation to {self.a.__class__.__name__}.{field}', rawable=True)
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+    return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
 
 @pyver(ge=11, else_=_put_one_exprish_optional)  # _put_one_exprish_optional leaves the _restrict_default in the static which disallows Starred
-def _put_one_arg_annotation(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST,  # py >= 3.11
-                            static: onestatic, **options) -> fst.FST:
+def _put_one_arg_annotation(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,  # py >= 3.11
+                            static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Allow Starred in vararg arg annotation in py 3.11+."""
 
     if not self.parent or self.pfield.name == 'vararg':
         static = onestatic(_one_info_arg_annotation, _restrict_fmtval_slice)
 
-    return _put_one_exprish_optional(self, code, idx, field, child, static, **options)
+    return _put_one_exprish_optional(self, code, idx, field, child, static, options)
 
 
-def _put_one_withitem_context_expr(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: str,
-                                   static: onestatic, **options) -> str:
+def _put_one_withitem_context_expr(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                                   static: onestatic, options: Mapping[str, Any]) -> str:
     """If put a single context_expr `Tuple` with no optional_vars then need to add grouping parentheses if not present
     otherwise the tuple will be reparsed as multiple `withitems` instead of a single `Tuple`."""
 
-    ret = _put_one_exprish_optional(self, code, idx, field, child, static, **options)
+    ret = _put_one_exprish_optional(self, code, idx, field, child, static, options)
 
     if (parent := self.parent) and isinstance(parent.a, (With, AsyncWith)):
         parent._maybe_fix_with_items()
@@ -1601,12 +1606,12 @@ def _put_one_withitem_context_expr(self: fst.FST, code: _PutOneCode, idx: int | 
     return ret
 
 
-def _put_one_withitem_optional_vars(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: str,
-                                    static: onestatic, **options) -> str:
+def _put_one_withitem_optional_vars(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                                    static: onestatic, options: Mapping[str, Any]) -> str:
     """If delete leaves a single parenthesized context_expr `Tuple` then need to parenthesize that, otherwise it can be
     reparsed as multiple `withitems` instead of a single `Tuple`."""
 
-    ret = _put_one_exprish_optional(self, code, idx, field, child, static, **options)
+    ret = _put_one_exprish_optional(self, code, idx, field, child, static, options)
 
     if (parent := self.parent) and isinstance(parent.a, (With, AsyncWith)):
         parent._maybe_fix_with_items()
@@ -1614,12 +1619,12 @@ def _put_one_withitem_optional_vars(self: fst.FST, code: _PutOneCode, idx: int |
     return ret
 
 
-def _put_one_MatchValue_value(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
-                              static: onestatic, **options) -> fst.FST:
+def _put_one_MatchValue_value(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                              static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Put MatchValue.value. Need to do this because a standalone MatchValue does not encompass parenthesized value
     parentheses."""
 
-    ret              = _put_one_exprish_required(self, code, idx, field, child, static, **options)
+    ret              = _put_one_exprish_required(self, code, idx, field, child, static, options)
     a                = self.a
     v                = a.value
     a.lineno         = v.lineno
@@ -1630,8 +1635,8 @@ def _put_one_MatchValue_value(self: fst.FST, code: _PutOneCode, idx: int | None,
     return ret
 
 
-def _put_one_MatchAs_pattern(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
-                             static: onestatic, **options) -> fst.FST:
+def _put_one_MatchAs_pattern(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                             static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Enclose unenclosed MatchSequences being put here, if any."""
 
     child = _validate_put(self, code, idx, field, child, can_del=True)  # we want to do it in same order as all other puts
@@ -1642,14 +1647,14 @@ def _put_one_MatchAs_pattern(self: fst.FST, code: _PutOneCode, idx: int | None, 
         if isinstance(code.a, MatchStar):
             raise NodeError('cannot put a MatchStar to MatchAs.pattern', rawable=True)
 
-        if code.get_matchseq_delimiters() == '':
+        if code.is_delimited_matchseq() == '':
             code._delimit_node(delims='[]')
 
-    return _put_one_exprish_optional(self, code, idx, field, child, static, 2, **options)
+    return _put_one_exprish_optional(self, code, idx, field, child, static, options, 2)
 
 
-def _put_one_pattern(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST, static: onestatic,
-                      **options) -> fst.FST:
+def _put_one_pattern(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child, static: onestatic,
+                      options: Mapping[str, Any]) -> fst.FST:
     """Enclose unenclosed MatchSequences being put here."""
 
     child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
@@ -1659,17 +1664,17 @@ def _put_one_pattern(self: fst.FST, code: _PutOneCode, idx: int | None, field: s
         if not isinstance(self.a, MatchSequence):
             raise NodeError(f'cannot put a MatchStar to {self.a.__class__.__name__}.{field}', rawable=True)
 
-    elif code.get_matchseq_delimiters() == '':
+    elif code.is_delimited_matchseq() == '':
         code._delimit_node(delims='[]')
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, 2, **options)
+    return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
 
 # ......................................................................................................................
 # identifier
 
 def _put_one_identifier_required(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: str,
-                                 static: onestatic, **options) -> str:
+                                 static: onestatic, options: Mapping[str, Any]) -> str:
     """Put a single required identifier."""
 
     _validate_put(self, code, idx, field, child)
@@ -1683,8 +1688,8 @@ def _put_one_identifier_required(self: fst.FST, code: _PutOneCode, idx: int | No
     return code
 
 
-def _put_one_identifier_optional(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST,
-                                 static: onestatic, **options) -> _PutOneCode:
+def _put_one_identifier_optional(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: str | None,
+                                 static: onestatic, options: Mapping[str, Any]) -> _PutOneCode:
     """Put new, replace or delete an optional identifier."""
 
     child = _validate_put(self, code, idx, field, child, can_del=True)
@@ -1722,11 +1727,11 @@ def _put_one_identifier_optional(self: fst.FST, code: _PutOneCode, idx: int | No
     return code
 
 
-def _put_one_ExceptHandler_name(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: str,
-                                static: onestatic, **options) -> str:
+def _put_one_ExceptHandler_name(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                                static: onestatic, options: Mapping[str, Any]) -> str:  # child: str | None
     """If adding a name to an ExceptHandler with tuple of exceptions then make sure it is parenthesized."""
 
-    ret = _put_one_identifier_optional(self, code, idx, field, child, static, **options)
+    ret = _put_one_identifier_optional(self, code, idx, field, child, static, options)
 
     if ret and (typef := self.a.type.f).is_parenthesized_tuple() is False:
         typef._delimit_node()
@@ -1734,8 +1739,8 @@ def _put_one_ExceptHandler_name(self: fst.FST, code: _PutOneCode, idx: int | Non
     return ret
 
 
-def _put_one_keyword_arg(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: str,
-                         static: onestatic, **options) -> str:
+def _put_one_keyword_arg(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                         static: onestatic, options: Mapping[str, Any]) -> str:  # child: str | None
     """Don't allow delete keyword.arg if non-keywords follow."""
 
     if code is None and (parent := self.parent):
@@ -1747,17 +1752,17 @@ def _put_one_keyword_arg(self: fst.FST, code: _PutOneCode, idx: int | None, fiel
             if (bases := parenta.bases) and bases[-1].f.loc > self.loc:
                 raise ValueError(f'cannot delete ClassDef.keywords[{self.pfield.idx}].arg in this state (non-keywords follow)')
 
-    return _put_one_identifier_optional(self, code, idx, field, child, static, **options)
+    return _put_one_identifier_optional(self, code, idx, field, child, static, options)
 
 
-def _put_one_MatchStar_name(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: str,
-                            static: onestatic, **options) -> str:
+def _put_one_MatchStar_name(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                            static: onestatic, options: Mapping[str, Any]) -> str:  # child: str
     """Slightly annoying MatchStar.name. '_' really means delete."""
 
     if code is None:
         code = '_'
 
-    ret = _put_one_identifier_required(self, code, idx, field, child, static, **options)
+    ret = _put_one_identifier_required(self, code, idx, field, child, static, options)
 
     if self.a.name == '_':
         self.a.name = None
@@ -1765,8 +1770,8 @@ def _put_one_MatchStar_name(self: fst.FST, code: _PutOneCode, idx: int | None, f
     return ret
 
 
-def _put_one_MatchAs_name(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: str, static: onestatic,
-                          **options) -> str:
+def _put_one_MatchAs_name(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                          static: onestatic, options: Mapping[str, Any]) -> str:  # child: str
     """Very annoying MatchAs.name. '_' really means delete, which can't be done if there is a pattern, and can't be
     assigned to a pattern."""
 
@@ -1778,7 +1783,7 @@ def _put_one_MatchAs_name(self: fst.FST, code: _PutOneCode, idx: int | None, fie
     if self.a.pattern and code == '_':
         raise ValueError("cannot change MatchAs with pattern into wildcard '_'")
 
-    ret = _put_one_identifier_required(self, code, idx, field, child, static, **options)
+    ret = _put_one_identifier_required(self, code, idx, field, child, static, options)
 
     if self.a.name == '_':
         self.a.name = None
@@ -1788,7 +1793,7 @@ def _put_one_MatchAs_name(self: fst.FST, code: _PutOneCode, idx: int | None, fie
 
 # ......................................................................................................................
 
-def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, **options) -> fst.FST | None:  # -> Self or reparsed Self or could disappear due to raw
+def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, options: Mapping[str, Any]) -> fst.FST | None:  # -> Self or reparsed Self or could disappear due to raw
     """Put new, replace or delete a node (or limited non-node) to a field of `self`.
 
     **Parameters:**
@@ -1813,7 +1818,7 @@ def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, **op
 
     if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementishs and combined mapping fields
         idx      = _fixup_one_index(len(child if field else ast.keys), idx)  # field will be '' only for Dict and MatchMapping which both have keys, Compare is not considered sliceable for single element deletions
-        new_self = self._put_slice(code, idx, idx + 1, field, True, **options)
+        new_self = self._put_slice(code, idx, idx + 1, field, True, options)
 
         return None if code is None or not field else getattr(new_self.a, field)[idx].f  # guaranteed to be there if code is not None because was just replacement
 
@@ -1828,7 +1833,7 @@ def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, **op
                                 f"{f'.{field}' if field else ' combined fields'}", rawable=True)
 
             with self._modifying(field):
-                return handler(self, code, idx, field, child, static, **options)
+                return handler(self, code, idx, field, child, static, options)
 
         except (NodeError, SyntaxError, NotImplementedError) as exc:
             if not raw or (isinstance(exc, NodeError) and not exc.rawable):
@@ -1838,7 +1843,7 @@ def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, **op
 
     with self._modifying(field, True):
         try:
-            return _put_one_raw(self, code, idx, field, child, static, **options)
+            return _put_one_raw(self, code, idx, field, child, static, options)
 
         except Exception as raw_exc:
             raw_exc.__context__ = nonraw_exc
@@ -1847,7 +1852,7 @@ def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, **op
 
 
 def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST | list[AST],
-                 static: onestatic | None, **options) -> fst.FST | None:
+                 static: onestatic | None, options: Mapping[str, Any]) -> fst.FST | None:
 
     ast = self.a
     to  = options.get('to')

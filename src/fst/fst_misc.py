@@ -1567,7 +1567,7 @@ def _maybe_fix_matchseq(self: fst.FST, delims: Literal['', '[]', '()'] | None = 
     # assert isinstance(self.a, MatchSequence)
 
     if delims is None:
-        delims = self.get_matchseq_delimiters()
+        delims = self.is_delimited_matchseq()
 
     if len(body := self.a.patterns) == 1 and not delims.startswith('['):
         self._maybe_ins_separator((f := body[0].f).end_ln, f.end_col, False, self.end_ln, self.end_col - bool(delims))

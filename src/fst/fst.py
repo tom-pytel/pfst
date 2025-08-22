@@ -1453,7 +1453,7 @@ class FST:
         """
 
         if parent := self.parent:
-            return parent._get_one((pf := self.pfield).idx, pf.name, False, **options)
+            return parent._get_one((pf := self.pfield).idx, pf.name, False, options)
 
         return FST(copy_ast(self.a), self._lines[:], from_=self, lcopy=False)
 
@@ -1478,7 +1478,7 @@ class FST:
         """
 
         if parent := self.parent:
-            return parent._get_one((pf := self.pfield).idx, pf.name, True, **options)
+            return parent._get_one((pf := self.pfield).idx, pf.name, True, options)
 
         raise ValueError('cannot cut root node')
 
@@ -1511,7 +1511,7 @@ class FST:
         """
 
         if parent := self.parent:
-            return parent._put_one(code, (pf := self.pfield).idx, pf.name, **options)
+            return parent._put_one(code, (pf := self.pfield).idx, pf.name, options)
 
         if code is None:
             raise ValueError('cannot delete root node')
@@ -1539,7 +1539,7 @@ class FST:
         """
 
         if parent := self.parent:
-            return parent._put_one(None, (pf := self.pfield).idx, pf.name, **options)
+            return parent._put_one(None, (pf := self.pfield).idx, pf.name, options)
 
         raise ValueError('cannot delete root node')
 
@@ -1622,9 +1622,9 @@ class FST:
 
         if isinstance(body, list):
             if stop is not False:
-                return self._get_slice(idx, stop, field_, cut, **options)
+                return self._get_slice(idx, stop, field_, cut, options)
             if idx is None:
-                return self._get_slice(None, None, field_, cut, **options)
+                return self._get_slice(None, None, field_, cut, options)
 
             if idx == 'end':
                 raise IndexError("cannot get() non-slice from index 'end'")
@@ -1632,7 +1632,7 @@ class FST:
         elif stop is not False or idx is not None:
             raise IndexError(f'{ast.__class__.__name__}{f".{field_}" if field_ else ""} does not take an index')
 
-        return self._get_one(idx, field_, cut, **options)
+        return self._get_one(idx, field_, cut, options)
 
     def put(self, code: Code | builtins.str | constant | None, idx: int | Literal['end'] | None = None,
             stop: int | None | Literal[False] = False, field: builtins.str | None = None, *, one: bool = True,
@@ -1726,9 +1726,9 @@ class FST:
 
         if isinstance(body, list):
             if stop is not False:
-                return self._put_slice(code, idx, stop, field_, one, **options)
+                return self._put_slice(code, idx, stop, field_, one, options)
             if idx is None:
-                return self._put_slice(code, None, None, field_, one, **options)
+                return self._put_slice(code, None, None, field_, one, options)
 
             if idx == 'end':
                 raise IndexError("cannot put() non-slice to index 'end'")
@@ -1739,7 +1739,7 @@ class FST:
         if not one:
             raise ValueError("cannot use 'one=False' in non-slice put()")
 
-        self._put_one(code, idx, field_, **options)
+        self._put_one(code, idx, field_, options)
 
         return self.repath()
 
@@ -1798,7 +1798,7 @@ class FST:
         if not isinstance(body, list):
             raise ValueError(f'cannot get slice from non-list field {ast.__class__.__name__}.{field_}')
 
-        return self._get_slice(start, stop, field_, cut, **options)
+        return self._get_slice(start, stop, field_, cut, options)
 
     def put_slice(self, code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
                   field: builtins.str | None = None, *, one: bool = False, **options) -> Self:
@@ -1878,7 +1878,7 @@ class FST:
         if not isinstance(body, list):
             raise ValueError(f'cannot put slice to non-list field {ast.__class__.__name__}.{field_}')
 
-        return self._put_slice(code, start, stop, field_, one, **options)
+        return self._put_slice(code, start, stop, field_, one, options)
 
     def get_src(self, ln: int, col: int, end_ln: int, end_col: int, as_lines: bool = False,
                 ) -> builtins.str | list[builtins.str]:
@@ -4181,44 +4181,6 @@ class FST:
 
         return indent
 
-    def get_matchseq_delimiters(self) -> Literal['', '[]', '()'] | None:
-        r"""Whether `self` is a delimited `MatchSequence` or not (parenthesized or bracketed), or not a `MatchSequence`
-        at all.
-
-        **Returns:**
-        - `None`: If is not `MatchSequence` at all.
-        - `''`: If is undelimited `MatchSequence`.
-        - `'()'` or `'[]'`: Is delimited with these delimiters.
-
-        **Examples:**
-        ```py
-        >>> FST('match a:\n  case 1, 2: pass').cases[0].pattern.get_matchseq_delimiters()
-        ''
-
-        >>> FST('match a:\n  case [1, 2]: pass').cases[0].pattern.get_matchseq_delimiters()
-        '[]'
-
-        >>> FST('match a:\n  case (1, 2): pass').cases[0].pattern.get_matchseq_delimiters()
-        '()'
-
-        >>> print(FST('match a:\n  case 1: pass').cases[0].pattern.get_matchseq_delimiters())
-        None
-        ```
-        """
-
-        if not isinstance(self.a, MatchSequence):
-            return None
-
-        ln, col, _, _ = self.loc
-        lpar          = self.root._lines[ln][col : col + 1]  # could be end of line
-
-        if lpar == '(':
-            return '()' if self._is_delimited_seq('patterns', '()') else ''
-        if lpar == '[':
-            return '[]' if self._is_delimited_seq('patterns', '[]') else ''
-
-        return ''
-
     def is_parsable(self) -> bool:
         r"""Whether the source for this node is parsable by `FST` or not (if properly dedented for top level). This is
         different from `astutil.is_parsable` because that one indicates what is parsable by the python `ast` module,
@@ -4423,7 +4385,7 @@ class FST:
         if (ret := self.is_parenthesized_tuple()) is not None:  # if this is False then cannot be enclosed in grouping pars because that would reparse to a parenthesized Tuple and so is inconsistent
             return ret
 
-        if (ret := self.get_matchseq_delimiters()) is not None:  # like Tuple, cannot be enclosed in grouping pars
+        if (ret := self.is_delimited_matchseq()) is not None:  # like Tuple, cannot be enclosed in grouping pars
             return bool(ret)
 
         assert isinstance(ast, (expr, pattern))
@@ -4566,7 +4528,7 @@ class FST:
                 if ret:
                     return True
 
-            elif (ret := self.get_matchseq_delimiters()) is not None:
+            elif (ret := self.is_delimited_matchseq()) is not None:
                 if ret:
                     return True
 
@@ -4732,7 +4694,7 @@ class FST:
                 if ret:
                     return True
 
-            elif (ret := parent.get_matchseq_delimiters()) is not None:
+            elif (ret := parent.is_delimited_matchseq()) is not None:
                 if ret:
                     return True
 
@@ -4763,6 +4725,44 @@ class FST:
         """
 
         return self._is_delimited_seq() if isinstance(self.a, Tuple) else None
+
+    def is_delimited_matchseq(self) -> Literal['', '[]', '()'] | None:
+        r"""Whether `self` is a delimited `MatchSequence` or not (parenthesized or bracketed), or not a `MatchSequence`
+        at all.
+
+        **Returns:**
+        - `None`: If is not `MatchSequence` at all.
+        - `''`: If is undelimited `MatchSequence`.
+        - `'()'` or `'[]'`: Is delimited with these delimiters.
+
+        **Examples:**
+        ```py
+        >>> FST('match a:\n  case 1, 2: pass').cases[0].pattern.is_delimited_matchseq()
+        ''
+
+        >>> FST('match a:\n  case [1, 2]: pass').cases[0].pattern.is_delimited_matchseq()
+        '[]'
+
+        >>> FST('match a:\n  case (1, 2): pass').cases[0].pattern.is_delimited_matchseq()
+        '()'
+
+        >>> print(FST('match a:\n  case 1: pass').cases[0].pattern.is_delimited_matchseq())
+        None
+        ```
+        """
+
+        if not isinstance(self.a, MatchSequence):
+            return None
+
+        ln, col, _, _ = self.loc
+        lpar          = self.root._lines[ln][col : col + 1]  # could be end of line
+
+        if lpar == '(':
+            return '()' if self._is_delimited_seq('patterns', '()') else ''
+        if lpar == '[':
+            return '[]' if self._is_delimited_seq('patterns', '[]') else ''
+
+        return ''
 
     def is_except_star(self) -> bool | None:
         """Whether `self` is an `except*` `ExceptHandler` or a normal `ExceptHandler`, or not and `ExceptHandler` at

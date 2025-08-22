@@ -214,13 +214,13 @@ def _parse_all_multiple(src: str, parse_params: Mapping[str, Any], stmt: bool, r
     if stmt:
         try:
             return reduce_ast(_parse_stmts(src, parse_params), True)
-        except SyntaxError:  # except IndentationError: raise  # before if checking that
+        except SyntaxError:
             pass
 
     for parse in rest:
         try:
             return parse(src, parse_params)
-        except SyntaxError:  # except IndentationError: raise  # before if checking that
+        except SyntaxError:
             pass
 
     raise ParseError('invalid syntax')
@@ -267,7 +267,7 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any]
 
     try:
         return fst.FST(parse(code, parse_params), lines, parse_params=parse_params)  # fall back to actually trying to parse the thing
-    except SyntaxError:  # except IndentationError: raise  # before if checking that
+    except SyntaxError:
         raise ParseError(f'expecting {ast_type.__name__}, got {_shortstr(code)!r}') from None
 
 
@@ -452,7 +452,7 @@ def _parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if groupdict['case']:
         try:
             return reduce_ast(_parse_match_cases(src, parse_params), True)
-        except SyntaxError:  # except IndentationError: raise  # before if checking that
+        except SyntaxError:
             pass
 
         return _parse_all_multiple(src, parse_params, not first.group(1),
@@ -714,7 +714,7 @@ def _parse_expr_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     try:
         ast = _parse_expr_slice(src, parse_params)
 
-    except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11  # except IndentationError: raise  # before if checking that
+    except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11
         try:
             ast = _parse_expr_arglike(src, parse_params)  # expr_arglike instead of expr because py 3.10 won't pick up `*not a` in a slice above
         except SyntaxError:
@@ -735,7 +735,7 @@ def _parse_expr_arglike(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     try:
         return _parse_expr(src, parse_params)
-    except SyntaxError:  # stuff like '*[] or []'  # except IndentationError: raise  # before if checking that
+    except SyntaxError:  # stuff like '*[] or []'
         pass
 
     value = _ast_parse1(f'f(\n{src}\n)', parse_params).value
@@ -793,7 +793,7 @@ def _parse_expr_sliceelt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     try:
         ast = _parse_expr_slice(src, parse_params)
 
-    except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11  # except IndentationError: raise  # before if checking that
+    except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11
         return _parse_expr(src, parse_params)
 
     if isinstance(ast, Tuple) and any(isinstance(e, Slice) for e in ast.elts):
@@ -816,7 +816,7 @@ def _parse_Tuple(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         ast        = _parse_expr_slice(src, parse_params)
         from_slice = True
 
-    except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11  # except IndentationError: raise  # before if checking that
+    except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11
         try:
             ast = _parse_expr(src, parse_params)
         except SyntaxError:
@@ -951,7 +951,7 @@ def _parse_arg(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     try:
         args = _ast_parse1(f'def f(\n{src}\n): pass', parse_params).args
 
-    except SyntaxError:  # may be '*vararg: *starred'  # except IndentationError: raise  # before if checking that
+    except SyntaxError:  # may be '*vararg: *starred'
         try:
             args = _ast_parse1(f'def f(*\n{src}\n): pass', parse_params).args
         except SyntaxError:
@@ -995,7 +995,7 @@ def _parse_alias(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if '*' in src:
         try:
             return _parse_alias_star(src, parse_params)
-        except SyntaxError:  # except IndentationError: raise  # before if checking that
+        except SyntaxError:
             pass
 
     return _parse_alias_dotted(src, parse_params)
@@ -1064,7 +1064,7 @@ def _parse_pattern(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     try:
         ast = _ast_parse1_case(f'match _:\n case \\\n{src}: pass', parse_params).pattern
 
-    except SyntaxError:  # first in case needs to be enclosed  # except IndentationError: raise  # before if checking that
+    except SyntaxError:  # first in case needs to be enclosed
         try:
             ast = _ast_parse1_case(f'match _:\n case (\\\n{src}\n): pass', parse_params).pattern
 

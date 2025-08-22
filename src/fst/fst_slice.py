@@ -7,7 +7,7 @@ This module contains functions which are imported as methods in the `FST` class.
 from __future__ import annotations
 
 import re
-from typing import Any, Callable, Literal, Union
+from typing import Any, Callable, Literal, Mapping, Union
 
 from . import fst
 
@@ -704,12 +704,12 @@ def _cut_or_copy_asts2(start: int, stop: int, field: str, field2: str, cut: bool
 # ......................................................................................................................
 
 def _get_slice_NOT_IMPLEMENTED_YET(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
-                                   cut: bool, **options) -> fst.FST:
+                                   cut: bool, options: Mapping[str, Any]) -> fst.FST:
     raise NotImplementedError('this is not implemented yet')
 
 
 def _get_slice_Dict(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-                    **options) -> fst.FST:
+                    options: Mapping[str, Any]) -> fst.FST:
     """A `Dict` slice is just a normal `Dict`."""
 
     len_body    = len(body := (ast := self.a).keys)
@@ -728,7 +728,7 @@ def _get_slice_Dict(self: fst.FST, start: int | Literal['end'] | None, stop: int
 
 
 def _get_slice_Tuple_elts(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-                          **options) -> fst.FST:
+                          options: Mapping[str, Any]) -> fst.FST:
     """A `Tuple` slice is just a normal `Tuple`. It attempts to copy the parenthesization of the parent. The converse is
     not always true as a `Tuple` may serve as the container of a slice of other node types."""
 
@@ -764,7 +764,7 @@ def _get_slice_Tuple_elts(self: fst.FST, start: int | Literal['end'] | None, sto
 
 
 def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
-                              cut: bool, **options) -> fst.FST:
+                              cut: bool, options: Mapping[str, Any]) -> fst.FST:
     """The slice of `Delete.targets` is a normal unparenthesized `Tuple` contianing valid target types, which is also a
     valid python `Tuple`."""
 
@@ -803,7 +803,7 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
 
 
 def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
-                              cut: bool, **options) -> fst.FST:
+                              cut: bool, options: Mapping[str, Any]) -> fst.FST:
     """The slice of `Assign.targets` is an invalid `Assign` contianing valid target types and a `value` which is an
     empty `Name`."""
 
@@ -848,7 +848,7 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
 
 
 def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-                         **options) -> fst.FST:
+                         options: Mapping[str, Any]) -> fst.FST:
     """A `List` slice is just a normal `List`."""
 
     len_body    = len(body := (ast := self.a).elts)
@@ -870,7 +870,7 @@ def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop
 
 
 def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-                         **options) -> fst.FST:
+                         options: Mapping[str, Any]) -> fst.FST:
     """A `Set` slice is just a normal `Set` when it has elements. In the case of a zero-length `Set` it may be
     represented as `{*()}` or `set()` or as an invalid `AST` `Set` with curlies but no elements, according to
     options."""
@@ -899,7 +899,7 @@ def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop:
 
 
 def _get_slice_MatchSequence_patterns(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
-                                      cut: bool, **options) -> fst.FST:
+                                      cut: bool, options: Mapping[str, Any]) -> fst.FST:
     """A `MatchSequence` slice is just a normal `MatchSequence`. It attempts to copy the parenthesization of the
     parent."""
 
@@ -909,7 +909,7 @@ def _get_slice_MatchSequence_patterns(self: fst.FST, start: int | Literal['end']
     if start == stop:
         return fst.FST._new_empty_matchseq(from_=self)
 
-    delims  = self.get_matchseq_delimiters()
+    delims  = self.is_delimited_matchseq()
     locs    = _locs_and_bound_get(self, start, stop, body, body, bool(delims))
     asts    = _cut_or_copy_asts(start, stop, 'patterns', cut, body)
     ret_ast = MatchSequence(patterns=asts)
@@ -934,7 +934,7 @@ def _get_slice_MatchSequence_patterns(self: fst.FST, start: int | Literal['end']
 
 
 def _get_slice_MatchMapping(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-                            **options) -> fst.FST:
+                            options: Mapping[str, Any]) -> fst.FST:
     """A `MatchMapping` slice is just a normal `MatchMapping`."""
 
     len_body    = len(body := (ast := self.a).keys)
@@ -980,7 +980,7 @@ def _get_slice_MatchMapping(self: fst.FST, start: int | Literal['end'] | None, s
 
 
 def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
-                                cut: bool, **options) -> fst.FST:
+                                cut: bool, options: Mapping[str, Any]) -> fst.FST:
     """A `MatchOr` slice is just a normal `MatchOr` when it has two elements or more. If it has one it may be returned
     as a single `pattern` or as an invalid single-element `MatchOr`. If the slice would wind up with zero elements it
     may raise and exception or return an invalid zero-element `MatchOr`, as specified by options."""
@@ -1023,7 +1023,7 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
 
 # TODO: handle trailing line continuation backslashes
 def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-                            **options) -> fst.FST:
+                            options: Mapping[str, Any]) -> fst.FST:
     len_body    = len(body := self.a.names)
     start, stop = _fixup_slice_indices(len_body, start, stop)
 
@@ -1053,7 +1053,7 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
 
 
 def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-                           **options) -> fst.FST:
+                           options: Mapping[str, Any]) -> fst.FST:
     """A `type_params` slice is an invalid `Tuple` containing `type_params` elements. A zero-length slice is just an
     empty `Tuple`, which has no way of knowing that it used to or should contain `type_params`."""
 
@@ -1097,7 +1097,7 @@ def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, st
 
 # TODO: handle trailing line continuation backslashes
 def _get_slice_Global_Local_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
-                                  cut: bool, **options) -> fst.FST:
+                                  cut: bool, options: Mapping[str, Any]) -> fst.FST:
     len_body    = len((ast := self.a).names)
     start, stop = _fixup_slice_indices(len_body, start, stop)
 
@@ -1142,13 +1142,13 @@ def _get_slice_Global_Local_names(self: fst.FST, start: int | Literal['end'] | N
 # ......................................................................................................................
 
 def _get_slice(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-               **options) -> fst.FST:
+               options: Mapping[str, Any]) -> fst.FST:
     """Get a slice of child nodes from `self`."""
 
     if not (handler := _GET_SLICE_HANDLERS.get((self.a.__class__, field))):
         raise ValueError(f"cannot get slice from {self.a.__class__.__name__}{f'.{field}' if field else ''}")
 
-    return handler(self, start, stop, field, cut, **options)
+    return handler(self, start, stop, field, cut, options)
 
 
 _GET_SLICE_HANDLERS = {
@@ -1726,7 +1726,7 @@ def _code_to_slice_MatchSequence(self: fst.FST, code: Code | None, one: bool, op
     fst_ = _code_as_pattern(code, self.root.parse_params, sanitize=False)
 
     if one:
-        if fst_.get_matchseq_delimiters() == '':
+        if fst_.is_delimited_matchseq() == '':
             fst_._delimit_node(delims='[]')
 
         ls  = fst_._lines
@@ -1744,7 +1744,7 @@ def _code_to_slice_MatchSequence(self: fst.FST, code: Code | None, one: bool, op
     if not ast_.patterns:  # put empty sequence is same as delete
         return None
 
-    if fst_.get_matchseq_delimiters():  # delimited is restricted to the inside of the delimiters, which are removed
+    if fst_.is_delimited_matchseq():  # delimited is restricted to the inside of the delimiters, which are removed
         _trim_delimiters(fst_)
     else:  # if undelimited then use whole source, including leading and trailing trivia not included
         _set_loc_whole(fst_)
@@ -1797,7 +1797,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
                 fst_._parenthesize_grouping()
 
         elif isinstance(ast_, MatchSequence):
-            if not fst_.get_matchseq_delimiters():
+            if not fst_.is_delimited_matchseq():
                 fst_._delimit_node(delims='[]')
 
     ls   = fst_._lines
@@ -1862,13 +1862,13 @@ def _validate_put_seq(self: fst.FST, fst_: fst.FST, non_slice: str, *,
 # ......................................................................................................................
 
 def _put_slice_NOT_IMPLEMENTED_YET(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
-                                   stop: int | None, field: str, one: bool = False, **options,
+                                   stop: int | None, field: str, one: bool, options: Mapping[str, Any],
                                    ) -> None:
     raise NotImplementedError("not implemented yet, try with option raw='auto'")
 
 
 def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                    field: str, one: bool = False, **options) -> None:
+                    field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_        = _code_to_slice_seq2(self, code, one, options, _code_as_expr)
     body        = (ast := self.a).keys
     body2       = ast.values
@@ -1931,7 +1931,7 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
 
 
 def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                          field: str, one: bool = False, **options) -> None:
+                          field: str, one: bool, options: Mapping[str, Any]) -> None:
     """Tuple is used in many different ways in python, also for expressionish slices by us."""
 
     fst_ = None
@@ -2023,7 +2023,7 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
 
 
 def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                         field: str, one: bool = False, **options) -> None:
+                         field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_        = _code_to_slice_seq(self, code, one, options)
     body        = (ast := self.a).elts
     start, stop = _fixup_slice_indices(len(body), start, stop)
@@ -2074,7 +2074,7 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
 
 
 def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                        field: str, one: bool = False, **options) -> None:
+                        field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_        = _code_to_slice_seq(self, code, one, options)
     body        = self.a.elts
     start, stop = _fixup_slice_indices(len(body), start, stop)
@@ -2124,7 +2124,7 @@ def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['
 
 
 def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                              field: str, one: bool = False, **options) -> None:
+                              field: str, one: bool, options: Mapping[str, Any]) -> None:
     """Even though when getting a slice it will be returned as a `Tuple`, any sequence of valid target types is accepted
     for the put operation. If putting a non-sequence element, it will be automatically put as `one=True` to match the
     non-comma terminated syntax of `Delete` targets (a non-sequence `FST` or `AST` will not be accepted like this). This
@@ -2187,7 +2187,7 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
 
 
 def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                              field: str, one: bool = False, **options) -> None:
+                              field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_        = _code_to_slice_Assign_targets(self, code, one, options)
     len_body    = len(body := self.a.targets)
     start, stop = _fixup_slice_indices(len_body, start, stop)
@@ -2237,7 +2237,7 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
 
 
 def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
-                                      stop: int | None, field: str, one: bool = False, **options) -> None:
+                                      stop: int | None, field: str, one: bool, options: Mapping[str, Any]) -> None:
     # NOTE: we allow multiple MatchStars to be put to the same MatchSequence
     fst_        = _code_to_slice_MatchSequence(self, code, one, options)
     body        = self.a.patterns
@@ -2248,7 +2248,7 @@ def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: i
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    if delims := self.get_matchseq_delimiters():
+    if delims := self.is_delimited_matchseq():
         bound_col     += 1
         bound_end_col -= 1
 
@@ -2287,7 +2287,7 @@ def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: i
 
 
 def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                            field: str, one: bool = False, **options) -> None:
+                            field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_        = _code_to_slice_seq2(self, code, one, options, _code_as_pattern)
     len_body    = len(body := (ast := self.a).keys)
     body2       = ast.patterns
@@ -2353,7 +2353,7 @@ def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Liter
 
 
 def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                                field: str, one: bool = False, **options) -> None:
+                                field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_             = _code_to_slice_MatchOr(self, code, one, options)
     len_body         = len(body := self.a.patterns)
     start, stop      = _fixup_slice_indices(len_body, start, stop)
@@ -2406,7 +2406,7 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
 
 
 def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                           field: str, one: bool = False, **options) -> None:
+                           field: str, one: bool, options: Mapping[str, Any]) -> None:
     """An empty `Tuple` is accepted as a zero-element `type_params` slice."""
 
     fst_        = _code_to_slice_type_params(self, code, one, options)
@@ -2469,7 +2469,7 @@ def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Litera
 # ......................................................................................................................
 
 def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
-               one: bool = False, **options) -> Union[Self, fst.FST, None]:  # -> Self or reparsed Self or could disappear due to raw
+               one: bool, options: Mapping[str, Any]) -> Union[Self, fst.FST, None]:  # -> Self or reparsed Self or could disappear due to raw
     """Put an a slice of child nodes to `self`."""
 
     if code is self.root:  # don't allow own root to be put to self
@@ -2488,7 +2488,7 @@ def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | N
                                 rawable=True)
 
             with self._modifying(field):
-                handler(self, code, start, stop, field, one, **options)
+                handler(self, code, start, stop, field, one, options)
 
             return self
 
@@ -2500,7 +2500,7 @@ def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | N
 
     with self._modifying(field, True):
         try:
-            return _put_slice_raw(self, code, start, stop, field, one=one, **options)
+            return _put_slice_raw(self, code, start, stop, field, one, options)
 
         except Exception as raw_exc:
             raw_exc.__context__ = nonraw_exc
@@ -2659,7 +2659,7 @@ def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: 
 
 
 def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
-                   *, one: bool = False, **options) -> Union[Self, fst.FST, None]:  # -> Self or reparsed Self
+                   one: bool, options: Mapping[str, Any]) -> Union[Self, fst.FST, None]:  # -> Self or reparsed Self
     """Put a raw slice of child nodes to `self`."""
 
     if code is None:
