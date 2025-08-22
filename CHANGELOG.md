@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- fix some negative indexing get / put cases
 - never automatically add parentheses to copied Slice
 - disallow Starred as a target to Delete
 - allow put to except and case slices

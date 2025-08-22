@@ -152,7 +152,7 @@ def _params_Compare_combined(self: fst.FST, idx: int | None) -> tuple[int, str, 
 # ----------------------------------------------------------------------------------------------------------------------
 # get
 
-def _validate_get(self: fst.FST, idx: int | None, field: str) -> AST | None:
+def _validate_get(self: fst.FST, idx: int | None, field: str) -> tuple[AST | None, int]:
     """Check that `idx` was passed (or not) as needed."""
 
     child = getattr(self.a, field)
@@ -644,44 +644,43 @@ class oneinfo(NamedTuple):
 
 
 def _validate_put(self: fst.FST, code: Code | None, idx: int | None, field: str,
-                  child: list[AST] | AST | constant | None, *, can_del: bool = False) -> AST | constant | None:
+                  child: list[AST] | AST | constant | None, *, can_del: bool = False,
+                  ) -> tuple[AST | constant | None, int]:
     """Check that `idx` was passed (or not) as needed and that not deleting if not possible."""
 
     if isinstance(child, list):
         if idx is None:
             raise IndexError(f'{self.a.__class__.__name__}.{field} needs an index')
 
-        _fixup_one_index(len(child), idx)
-
+        idx   = _fixup_one_index(len(child), idx)
         child = child[idx]  # this will always be a required child, variable size lists will have been passed on to slice processing before getting here
 
     elif idx is not None:
         raise IndexError(f'{self.a.__class__.__name__}.{field} does not take an index')
 
     if not can_del and code is None:
-        raise ValueError(f'cannot delete {self.a.__class__.__name__}.{field}{"" if idx is None else f"[{idx}]"}')
+        raise ValueError(f'cannot delete{"" if idx is None else " from"} {self.a.__class__.__name__}.{field}')
 
-    return child
+    return child, idx
 
 
 def _validate_put_ast(self: fst.FST, put_ast: AST, idx: int | None, field: str, static: onestatic) -> None:
     if restrict := static.restrict:
         if isinstance(restrict, list):  # list means these types not allowed
             if isinstance(put_ast, tuple(restrict)):
-                raise NodeError(f'{self.a.__class__.__name__}.{field}{" " if idx is None else f"[{idx}] "}'
+                raise NodeError(f'{self.a.__class__.__name__}.{field}'
                                 f'cannot be {put_ast.__class__.__name__}', rawable=True)
 
         elif isinstance(restrict, FunctionType):
             if not restrict(put_ast):  # not "restrict" meaning is inverted here, really means "not allow"
                 raise NodeError(f'invalid value for {self.a.__class__.__name__}.{field}'
-                                f'{("" if idx is None else f"[{idx}]")}'
                                 f', got {put_ast.__class__.__name__}', rawable=True)
 
         elif not isinstance(put_ast, restrict):  # single AST type or tuple means only these allowed
             raise NodeError((f'expecting a {restrict.__name__} for {self.a.__class__.__name__}.{field}'
                               if isinstance(restrict, type) else
                               f'expecting one of ({", ".join(c.__name__ for c in restrict)}) for '
-                              f'{self.a.__class__.__name__}.{field}{"" if idx is None else f"[{idx}]"}') +
+                              f'{self.a.__class__.__name__}.{field}') +
                              f', got {put_ast.__class__.__name__}', rawable=True)
 
 
@@ -786,10 +785,10 @@ def _put_one_op(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, c
                 options: Mapping[str, Any]) -> fst.FST:  # child: type[boolop | operator | unaryop | cmpop]
     """Put a single operator, with or without '=' for AugAssign, lots of rules to check."""
 
-    child  = _validate_put(self, code, idx, field, child)
-    code   = static.code_as(code, self.root.parse_params)
-    codea  = code.a
-    childf = child.f
+    child, idx = _validate_put(self, code, idx, field, child)
+    code       = static.code_as(code, self.root.parse_params)
+    codea      = code.a
+    childf     = child.f
 
     if self.parent_pattern():  # if we are in a pattern then replacements are restricted
         if isinstance(child, USub):  # indicates we are in UnaryOp
@@ -838,7 +837,7 @@ def _put_one_ctx(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
                  options: Mapping[str, Any]) -> fst.FST:  # child: expr_context
     """This only exists to absorb the put and validate that it is the only value it can be."""
 
-    child = _validate_put(self, code, idx, field, child)
+    child, idx = _validate_put(self, code, idx, field, child)
 
     if isinstance(code, fst.FST):
         code = code.a
@@ -855,9 +854,9 @@ def _put_one_AnnAssign_simple(self: fst.FST, code: _PutOneCode, idx: int | None,
                               static: onestatic, options: Mapping[str, Any]) -> fst.FST:  # child: int
     """Parenthesize or unparenthesize `AnnAssign.value` according to this, overkill, definitely overkill."""
 
-    ast   = self.a
-    child = _validate_put(self, code, idx, field, child)
-    value = _code_as_constant(code, self.root.parse_params)
+    ast        = self.a
+    child, idx = _validate_put(self, code, idx, field, child)
+    value      = _code_as_constant(code, self.root.parse_params)
 
     if value.__class__ is not int or not 0 <= value <= 1:
         raise ValueError('expection 0 or 1')
@@ -883,9 +882,9 @@ def _put_one_ImportFrom_level(self: fst.FST, code: _PutOneCode, idx: int | None,
                               static: None, options: Mapping[str, Any]) -> fst.FST:  # child: int
     """Set a comprehension as async or sync."""
 
-    ast   = self.a
-    child = _validate_put(self, code, idx, field, child)
-    value = _code_as_constant(code, self.root.parse_params)
+    ast        = self.a
+    child, idx = _validate_put(self, code, idx, field, child)
+    value      = _code_as_constant(code, self.root.parse_params)
 
     if value.__class__ is not int or value < 0:
         raise ValueError(f'expection int >= 0, got {value!r}')
@@ -919,13 +918,13 @@ def _put_one_BoolOp_op(self: fst.FST, code: _PutOneCode, idx: int | None, field:
                        options: Mapping[str, Any]) -> fst.FST:  # child: type[boolop]
     """Put BoolOp op to potentially multiple places."""
 
-    child  = _validate_put(self, code, idx, field, child)
-    code   = _code_as_boolop(code, self.root.parse_params)
-    childf = child.f
-    src    = 'and' if isinstance(codea := code.a, And) else 'or'
-    tgt    = 'and' if isinstance(child, And) else 'or'
-    ltgt   = len(tgt)
-    lines  = self.root._lines
+    child, idx = _validate_put(self, code, idx, field, child)
+    code       = _code_as_boolop(code, self.root.parse_params)
+    childf     = child.f
+    src        = 'and' if isinstance(codea := code.a, And) else 'or'
+    tgt        = 'and' if isinstance(child, And) else 'or'
+    ltgt       = len(tgt)
+    lines      = self.root._lines
 
     _, _, end_ln, end_col = self.loc
 
@@ -952,8 +951,8 @@ def _put_one_Constant_kind(self: fst.FST, code: _PutOneCode, idx: int | None, fi
                            options: Mapping[str, Any]) -> fst.FST:  # child: str | None
     """Set a Constant string kind to 'u' or None, this is truly unnecessary."""
 
-    child = _validate_put(self, code, idx, field, child, can_del=True)
-    value = _code_as_constant(code, self.root.parse_params)
+    child, idx = _validate_put(self, code, idx, field, child, can_del=True)
+    value      = _code_as_constant(code, self.root.parse_params)
 
     if not isinstance(self.value, str):
         raise ValueError('cannot set kind of non-str Constant')
@@ -982,8 +981,8 @@ def _put_one_comprehension_is_async(self: fst.FST, code: _PutOneCode, idx: int |
                                     static: None, options: Mapping[str, Any]) -> fst.FST:  # child: int
     """Set a comprehension as async or sync."""
 
-    child = _validate_put(self, code, idx, field, child)
-    value = _code_as_constant(code, self.root.parse_params)
+    child, idx = _validate_put(self, code, idx, field, child)
+    value      = _code_as_constant(code, self.root.parse_params)
 
     if value.__class__ is not int or not 0 <= value <= 1:
         raise ValueError(f'expection 0 or 1, got {value!r}')
@@ -1183,11 +1182,10 @@ def _put_one_exprish_required(self: fst.FST, code: _PutOneCode, idx: int | None,
     """Put a single required expression. Can be standalone or as part of sequence."""
 
     if not validated:
-        child = _validate_put(self, code, idx, field, child)
+        child, idx = _validate_put(self, code, idx, field, child)
 
         if not child:
-            raise ValueError(f'cannot replace nonexistent {self.a.__class__.__name__}.{field}' +
-                             ("" if idx is None else f"[{idx}]"))
+            raise ValueError(f'cannot replace nonexistent {self.a.__class__.__name__}.{field}')
 
     childf  = child.f
     ctx     = ((ctx := getattr(child, 'ctx', None)) and ctx.__class__) or Load
@@ -1203,7 +1201,7 @@ def _put_one_exprish_optional(self: fst.FST, code: _PutOneCode, idx: int | None,
     """Put new, replace or delete an optional expression."""
 
     if not validated:
-        child = _validate_put(self, code, idx, field, child, can_del=True)
+        child, idx = _validate_put(self, code, idx, field, child, can_del=True)
 
     if code is None:
         if child is None:  # delete nonexistent node, noop
@@ -1252,14 +1250,14 @@ def _put_one_ClassDef_bases(self: fst.FST, code: _PutOneCode, idx: int | None, f
                             static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Can't replace Starred base with non-Starred base after keywords."""
 
-    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
-    code  = static.code_as(code, self.root.parse_params)
+    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code       = static.code_as(code, self.root.parse_params)
 
     if (isinstance(child, Starred) and not isinstance(code.a, Starred) and (keywords := self.a.keywords) and
         child.f.loc > keywords[0].f.loc
     ):
-        raise ValueError(f'cannot replace Starred ClassDef.bases[{idx}] '
-                         'with non-Starred base in this state (after keywords)')
+        raise ValueError('cannot replace Starred ClassDef.bases element '
+                         'with non-Starred base at this location (after keywords)')
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
@@ -1268,11 +1266,11 @@ def _put_one_ClassDef_keywords(self: fst.FST, code: _PutOneCode, idx: int | None
                                static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Don't allow put of `**keyword` before `*arg`."""
 
-    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
-    code  = static.code_as(code, self.root.parse_params)
+    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code       = static.code_as(code, self.root.parse_params)
 
     if code.a.arg is None and (bases := self.a.bases) and bases[-1].f.loc > self.keywords[idx].loc:
-        raise ValueError(f"cannot put '**' ClassDef.keywords[{idx}] in this state (non-keywords follow)")
+        raise ValueError("cannot put '**' ClassDef.keywords element at this location (non-keywords follow)")
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
@@ -1292,8 +1290,8 @@ def _put_one_ImportFrom_names(self: fst.FST, code: _PutOneCode, idx: int | None,
                               static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Disallow put star to list of multiple names and unparenthesize if star was put to single name."""
 
-    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
-    code  = static.code_as(code, self.root.parse_params)
+    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code       = static.code_as(code, self.root.parse_params)
 
     if is_star := ('*' in code.a.name):
         if len(self.a.names) != 1:
@@ -1320,8 +1318,8 @@ def _put_one_BinOp_left_right(self: fst.FST, code: _PutOneCode, idx: int | None,
                               static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Disallow invalid constant changes in patterns."""
 
-    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
-    code  = static.code_as(code, self.root.parse_params)
+    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code       = static.code_as(code, self.root.parse_params)
 
     if self.parent_pattern():
         if field == 'right':
@@ -1343,8 +1341,8 @@ def _put_one_UnaryOp_operand(self: fst.FST, code: _PutOneCode, idx: int | None, 
                              static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Disallow invalid constant changes in patterns."""
 
-    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
-    code  = static.code_as(code, self.root.parse_params)
+    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code       = static.code_as(code, self.root.parse_params)
 
     if self.parent_pattern():
         if not isinstance(codea := code.a, Constant):
@@ -1372,10 +1370,10 @@ def _put_one_Lambda_arguments(self: fst.FST, code: _PutOneCode, idx: int | None,
     if code is None:
         code = ''
 
-    child  = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
-    code   = static.code_as(code, self.root.parse_params)  # and we coerce here just so we can check if is empty args being put to set the prefix correctly
-    prefix = ' ' if code.loc else ''  # if arguments has .loc then it is not empty
-    target = self._loc_lambda_args_entire()
+    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code       = static.code_as(code, self.root.parse_params)  # and we coerce here just so we can check if is empty args being put to set the prefix correctly
+    prefix     = ' ' if code.loc else ''  # if arguments has .loc then it is not empty
+    target     = self._loc_lambda_args_entire()
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 1, target, prefix)
 
@@ -1393,13 +1391,14 @@ def _put_one_Call_args(self: fst.FST, code: _PutOneCode, idx: int | None, field:
                        options: Mapping[str, Any]) -> fst.FST:
     """Can't replace Starred arg with non-Starred arg after keywords."""
 
-    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
-    code  = static.code_as(code, self.root.parse_params)
+    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code       = static.code_as(code, self.root.parse_params)
 
     if (isinstance(child, Starred) and not isinstance(code.a, Starred) and (keywords := self.a.keywords) and
         child.f.loc > keywords[0].f.loc
     ):
-        raise ValueError(f'cannot replace Starred Call.args[{idx}] with non-Starred arg in this state (after keywords)')
+        raise ValueError('cannot replace Starred Call.args element with non-Starred arg at this location'
+                         ' (after keywords)')
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
@@ -1408,11 +1407,11 @@ def _put_one_Call_keywords(self: fst.FST, code: _PutOneCode, idx: int | None, fi
                            options: Mapping[str, Any]) -> fst.FST:
     """Don't allow put of `**keyword` before `*arg`."""
 
-    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
-    code  = static.code_as(code, self.root.parse_params)
+    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code       = static.code_as(code, self.root.parse_params)
 
     if code.a.arg is None and (args := self.a.args) and args[-1].f.loc > self.keywords[idx].loc:
-        raise ValueError(f"cannot put '**' Call.keywords[{idx}] in this state (non-keywords follow)")
+        raise ValueError("cannot put '**' Call.keywords element at this location (non-keywords follow)")
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
@@ -1422,10 +1421,10 @@ def _put_one_Attribute_value(self: fst.FST, code: _PutOneCode, idx: int | None, 
     """If this gets parenthesized in an `AnnAssign` then the whole `AnnAssign` target needs to be parenthesized. Also
     need to make sure only unparenthesized `Name` or `Attribute` is put to one of these in `pattern` expression."""
 
-    child     = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
-    code      = static.code_as(code, self.root.parse_params)
-    is_annass = False
-    above     = child.f
+    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code       = static.code_as(code, self.root.parse_params)
+    is_annass  = False
+    above      = child.f
 
     while (parent := above.parent) and (pfname := above.pfield.name) in ('value', 'target', 'keys', 'cls'):
         if isinstance(parenta := parent.a, AnnAssign):
@@ -1483,8 +1482,8 @@ def _put_one_Subscript_slice(self: fst.FST, code: _PutOneCode, idx: int | None, 
                              static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Don't allow put unparenthesized tuple containing Starred."""
 
-    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
-    code  = static.code_as(code, self.root.parse_params)
+    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code       = static.code_as(code, self.root.parse_params)
 
     if code.is_parenthesized_tuple() is False and any(isinstance(a, Starred) for a in code.a.elts):
         raise NodeError('cannot have unparenthesized tuple containing Starred in slice', rawable=True)
@@ -1496,8 +1495,8 @@ def _put_one_List_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field:
                        static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Disallow non-targetable expressions in targets."""
 
-    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
-    code  = static.code_as(code, self.root.parse_params)
+    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code       = static.code_as(code, self.root.parse_params)
 
     if not isinstance(ctx := self.a.ctx, Load):  # only allow possible expression targets into an expression target
         if not is_valid_target(code.a):
@@ -1511,12 +1510,12 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
     """Disallow non-targetable expressions in targets. If not an unparenthesized top level or slice tuple then disallow
     Slices."""
 
-    ast      = self.a
-    child    = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
-    code     = static.code_as(code, self.root.parse_params)
-    pfield   = self.pfield
-    is_slice = pfield == ('slice', None)
-    is_par   = None
+    ast        = self.a
+    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code       = static.code_as(code, self.root.parse_params)
+    pfield     = self.pfield
+    is_slice   = pfield == ('slice', None)
+    is_par     = None
 
     if (pfield and not is_slice) or (is_par := self._is_delimited_seq()):  # only allow slice in unparenthesized tuple, in slice or at root
         static = _onestatic_expr_required_starred  # default static allows slices, this disallows it
@@ -1573,8 +1572,8 @@ def _put_one_arg(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
                  options: Mapping[str, Any]) -> fst.FST:
     """Don't allow arg with Starred annotation into non-vararg args."""
 
-    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
-    code  = static.code_as(code, self.root.parse_params)
+    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code       = static.code_as(code, self.root.parse_params)
 
     if isinstance(code.a.annotation, Starred):
         raise NodeError(f'cannot put arg with Starred annotation to {self.a.__class__.__name__}.{field}', rawable=True)
@@ -1639,7 +1638,7 @@ def _put_one_MatchAs_pattern(self: fst.FST, code: _PutOneCode, idx: int | None, 
                              static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Enclose unenclosed MatchSequences being put here, if any."""
 
-    child = _validate_put(self, code, idx, field, child, can_del=True)  # we want to do it in same order as all other puts
+    child, idx = _validate_put(self, code, idx, field, child, can_del=True)  # we want to do it in same order as all other puts
 
     if code is not None:
         code = static.code_as(code, self.root.parse_params)
@@ -1657,8 +1656,8 @@ def _put_one_pattern(self: fst.FST, code: _PutOneCode, idx: int | None, field: s
                       options: Mapping[str, Any]) -> fst.FST:
     """Enclose unenclosed MatchSequences being put here."""
 
-    child = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
-    code  = static.code_as(code, self.root.parse_params)
+    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    code       = static.code_as(code, self.root.parse_params)
 
     if isinstance(code.a, MatchStar):
         if not isinstance(self.a, MatchSequence):
@@ -1677,7 +1676,7 @@ def _put_one_identifier_required(self: fst.FST, code: _PutOneCode, idx: int | No
                                  static: onestatic, options: Mapping[str, Any]) -> str:
     """Put a single required identifier."""
 
-    _validate_put(self, code, idx, field, child)
+    _, idx = _validate_put(self, code, idx, field, child)
 
     code = static.code_as(code, self.root.parse_params)
     info = static.getinfo(self, static, idx, field)
@@ -1692,7 +1691,7 @@ def _put_one_identifier_optional(self: fst.FST, code: _PutOneCode, idx: int | No
                                  static: onestatic, options: Mapping[str, Any]) -> _PutOneCode:
     """Put new, replace or delete an optional identifier."""
 
-    child = _validate_put(self, code, idx, field, child, can_del=True)
+    child, idx = _validate_put(self, code, idx, field, child, can_del=True)
 
     if code is None and child is None:  # delete nonexistent identifier, noop
         return None
@@ -1746,11 +1745,11 @@ def _put_one_keyword_arg(self: fst.FST, code: _PutOneCode, idx: int | None, fiel
     if code is None and (parent := self.parent):
         if isinstance(parenta := parent.a, Call):
             if (args := parenta.args) and args[-1].f.loc > self.loc:
-                raise ValueError(f'cannot delete Call.keywords[{self.pfield.idx}].arg in this state (non-keywords follow)')
+                raise ValueError('cannot delete arg from Call.keywords at this location (non-keywords follow)')
 
         elif isinstance(parenta, ClassDef):
             if (bases := parenta.bases) and bases[-1].f.loc > self.loc:
-                raise ValueError(f'cannot delete ClassDef.keywords[{self.pfield.idx}].arg in this state (non-keywords follow)')
+                raise ValueError('cannot delete arg from ClassDef.keywords at this location (non-keywords follow)')
 
     return _put_one_identifier_optional(self, code, idx, field, child, static, options)
 
@@ -1817,6 +1816,7 @@ def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, opti
     sliceable, handler, static = _PUT_ONE_HANDLERS.get((ast.__class__, field), (False, None, None))
 
     if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementishs and combined mapping fields
+        # we need to fixup index here explicitly to get an error if it is out of bounds because slice index fixups just limit it to [0..len(body))
         idx      = _fixup_one_index(len(child if field else ast.keys), idx)  # field will be '' only for Dict and MatchMapping which both have keys, Compare is not considered sliceable for single element deletions
         new_self = self._put_slice(code, idx, idx + 1, field, True, options)
 
@@ -1872,9 +1872,9 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
         else:
             raise ValueError(f'cannot put single element to combined field of {ast.__class__.__name__}')
 
-    child  = _validate_put(self, code, idx, field, child, can_del=True)
-    childf = child.f if isinstance(child, AST) else None
-    pars   = bool(fst.FST.get_option('pars', options))
+    child, idx = _validate_put(self, code, idx, field, child, can_del=True)
+    childf     = child.f if isinstance(child, AST) else None
+    pars       = bool(fst.FST.get_option('pars', options))
 
     if to is childf:
         to = None

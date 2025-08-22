@@ -241,6 +241,7 @@ def ignorable_exc(exc: Exception, putsrc: str | Literal[False] | None = None):
         msg.endswith('cannot be Starred') or
         'not implemented' in msg or
         'in this state' in msg or
+        'at this location' in msg or
         'pattern expression' in msg or
         'invalid value for MatchValue.value' in msg or
         'invalid value for MatchMapping.keys' in msg or
@@ -984,7 +985,7 @@ class ReputOne(Fuzzy):
                                         f.put(None, i, field=subfield, raw=False)
 
                                     except Exception as e:
-                                        if 'in this state' not in str(e):
+                                        if 'in this state' not in str(e) and 'at this location' not in str(e):
                                             raise
 
                                     if self.verify:
@@ -1010,7 +1011,7 @@ class ReputOne(Fuzzy):
                     try:
                         f.parent.put(None, idx, field=field, raw=False)
                     except Exception as e:
-                        if not str(e).endswith('in this state'): raise
+                        if 'in this state' not in (s := str(e)) and 'at this location' not in s: raise
 
                     if self.verify:
                         fst.verify()
@@ -1167,6 +1168,9 @@ class PutOne(Fuzzy):
                 parent       = f.parent
                 field, idx   = f.pfield
 
+                if idx is not None and randint(0, 1):  # randomly change index to negative (referring to same location)
+                    idx -= len(getattr(parent.a, field))
+
                 if not can_replace(f, repl):
                     continue
 
@@ -1193,7 +1197,7 @@ class PutOne(Fuzzy):
 
                 try:
                     if self.debug:
-                        print(f'... {put=}')
+                        print(f'... {put=}, {idx=}, {field=}')
                         print('\n'.join(debuglines))
                         print(f'{code=}')
                         print(f'{repl=}')
@@ -1519,21 +1523,31 @@ class SliceStmtish(Fuzzy):
             assert r is stmtish
 
         else:  # slice stmtish to dst_container
-            if random() < 0.5 or not dst_container:
-                to_start = to_stop = randint(0, len(dst_container))
-            else:
-                to_start = randint(0, len(dst_container) - 1)
-                to_stop  = randint(to_start + 1, len(dst_container))
+            len_stmtish = len(stmtish_container)
+            len_dst     = len(dst_container)
 
-            from_start = randint(0, len(stmtish_container) - 1)
-            from_stop  = randint(from_start + 1, len(stmtish_container))
-            fs         = stmtish_container[from_start : from_stop]
-            org_fsts   = list(fs)
-            cut        = fs.cut()
+            if random() < 0.5 or not dst_container:
+                to_start = to_stop = randint(0, len_dst)
+            else:
+                to_start = randint(0, len_dst - 1)
+                to_stop  = randint(to_start + 1, len_dst)
+
+            from_start  = randint(0, len_stmtish - 1)
+            from_stop   = randint(from_start + 1, len_stmtish)
+            from_start_ = from_start if from_start >= len_stmtish or randint(0, 1) else from_start - len_stmtish  # randomly change index to negative (referring to same location)
+            from_stop_  = from_stop if from_stop >= len_stmtish or randint(0, 1) else from_stop - len_stmtish
+
+            fs = stmtish_container[from_start_ : from_stop_]
+
+            org_fsts = list(fs)
+            cut      = fs.cut()
 
             assert all(f is g for f, g in zip(cut.body, org_fsts))
 
-            dst_container[to_start : to_stop] = cut
+            to_start_ = to_start if to_start >= len_dst or randint(0, 1) else to_start - len_dst  # randomly change index to negative (referring to same location)
+            to_stop_  = to_stop if to_stop >= len_dst or randint(0, 1) else to_stop - len_dst
+
+            dst_container[to_start_ : to_stop_] = cut
 
             assert all(f is g for f, g in zip(dst_container[to_start : to_start + (from_stop - from_start)], org_fsts))
 
@@ -1699,7 +1713,10 @@ class SliceExprish(Fuzzy):
         if not field:  # Dict or MatchMapping
             src_elts.extend(getattr(src.a, 'values' if isinstance(src.a, Dict) else 'patterns')[src_start : src_stop])
 
-        slice = src.get_slice(src_start, src_stop, field=field, cut=cut, trivia=src_trivia)
+        src_start_ = src_start if src_start >= src_len or randint(0, 1) else src_start - src_len  # randomly change index to negative (referring to same location)
+        src_stop_  = src_stop if src_stop >= src_len or randint(0, 1) else src_stop - src_len
+
+        slice = src.get_slice(src_start_, src_stop_, field=field, cut=cut, trivia=src_trivia)
 
         slice_elts = getattr(slice.a, slice_field or 'keys')[:]
 
@@ -1712,7 +1729,10 @@ class SliceExprish(Fuzzy):
         if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
             print('   SLICE:   ', slice, slice.src)
 
-        dst.put_slice(slice, dst_start, dst_stop, field=field, one=one, trivia=dst_trivia)
+        dst_start_ = dst_start if dst_start >= dst_len or randint(0, 1) else dst_start - dst_len  # randomly change index to negative (referring to same location)
+        dst_stop_  = dst_stop if dst_stop >= dst_len or randint(0, 1) else dst_stop - dst_len
+
+        dst.put_slice(slice, dst_start_, dst_stop_, field=field, one=one, trivia=dst_trivia)
 
         if not one:
             dst_elts = dst_body[dst_start : dst_start + (src_stop - src_start)]

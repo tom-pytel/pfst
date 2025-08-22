@@ -1125,7 +1125,10 @@ def _loc_global_nonlocal_names(self: fst.FST, first: int, last: int | None = Non
 def _loc_maybe_dict_key(self: fst.FST, idx: int, pars: bool = False, body: list[AST] | None = None) -> fstloc:
     """Return location of dictionary key even if it is `**` specified by a `None`. Optionally return the location of the
     grouping parentheses if key actually present. Can also be used to get the location (parenthesized or not) from any
-    list of `AST`s which is not a `Dict.keys` if an explicit `body` is passed in (assuming none of the are `None`)."""
+    list of `AST`s which is not a `Dict.keys` if an explicit `body` is passed in (assuming none of the are `None`).
+
+    **WARNING:** `idx` must be positive.
+    """
 
     # assert isinstance(self.a, Dict)
 

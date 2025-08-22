@@ -3214,7 +3214,7 @@ Module - ROOT 0,0..0,29
     0] Pass - 0,25..0,29
 """),
 
-(r"""class c(a=1, *b, c=2): pass""", 'body[0]', 0, 'keywords', {}, r"""**new""", r"""**ValueError("cannot put '**' ClassDef.keywords[0] in this state (non-keywords follow)")**""", r"""
+(r"""class c(a=1, *b, c=2): pass""", 'body[0]', 0, 'keywords', {}, r"""**new""", r"""**ValueError("cannot put '**' ClassDef.keywords element at this location (non-keywords follow)")**""", r"""
 """),
 
 (r"""match a:
@@ -5616,7 +5616,7 @@ Module - ROOT 0,0..1,22
 """),
 
 (r"""match a:
- case cls(a=b): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {}, r"""**DEL**""", r"""**ValueError('cannot delete MatchClass.kwd_attrs[0]')**""", r"""
+ case cls(a=b): pass""", 'body[0].cases[0].pattern', 0, 'kwd_attrs', {}, r"""**DEL**""", r"""**ValueError('cannot delete from MatchClass.kwd_attrs')**""", r"""
 """),
 
 (r"""match a:
@@ -5778,7 +5778,7 @@ Module - ROOT 0,0..0,18
       .ctx Del
 """),
 
-(r"""del a, (b), c""", 'body[0]', -1, None, {}, r"""f()""", r"""**NodeError('invalid value for Delete.targets[-1], got Call')**""", r"""
+(r"""del a, (b), c""", 'body[0]', -1, None, {}, r"""f()""", r"""**NodeError('invalid value for Delete.targets, got Call')**""", r"""
 """),
 
 (r"""del a, (b), c""", 'body[0]', -4, None, {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
@@ -5873,7 +5873,7 @@ Module - ROOT 0,0..0,21
     .value Name 'z' Load - 0,20..0,21
 """),
 
-(r"""del a, (b, c), d""", 'body[0]', -1, 'targets', {}, r"""f()""", r"""**NodeError('invalid value for Delete.targets[-1], got Call')**""", r"""
+(r"""del a, (b, c), d""", 'body[0]', -1, 'targets', {}, r"""f()""", r"""**NodeError('invalid value for Delete.targets, got Call')**""", r"""
 """),
 
 (r"""del a, (b, c), d""", 'body[0]', -4, 'targets', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
@@ -6569,7 +6569,7 @@ Module - ROOT 0,0..1,23
 """),
 
 (r"""match a:
- case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', 0, 'patterns', {}, r"""**DEL**""", r"""**ValueError('cannot delete MatchMapping.patterns[0]')**""", r"""
+ case {1: a, 2: (b), **rest}: pass""", 'body[0].cases[0].pattern', 0, 'patterns', {}, r"""**DEL**""", r"""**ValueError('cannot delete from MatchMapping.patterns')**""", r"""
 """),
 
 (r"""match a:
@@ -6777,7 +6777,7 @@ Module - ROOT 0,0..1,26
 """),
 
 (r"""match a:
- case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', 0, 'kwd_patterns', {}, r"""**DEL**""", r"""**ValueError('cannot delete MatchClass.kwd_patterns[0]')**""", r"""
+ case c(a={1: c}, b=(d())): pass""", 'body[0].cases[0].pattern', 0, 'kwd_patterns', {}, r"""**DEL**""", r"""**ValueError('cannot delete from MatchClass.kwd_patterns')**""", r"""
 """),
 
 (r"""match a:
@@ -7872,7 +7872,7 @@ Module - ROOT 0,0..0,39
 (r"""(i for j in k async for (i) in j)""", 'body[0].value', -4, 'generators', {}, r"""async for a in b""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', 0, 'posonlyargs', {}, r"""**DEL**""", r"""**ValueError('cannot delete arguments.posonlyargs[0]')**""", r"""
+(r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', 0, 'posonlyargs', {}, r"""**DEL**""", r"""**ValueError('cannot delete from arguments.posonlyargs')**""", r"""
 """),
 
 (r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', 0, 'posonlyargs', {}, r"""new""", r"""def f(new = 1, b: (str)='', /): pass""", r"""
@@ -7954,7 +7954,7 @@ Module - ROOT 0,0..0,36
 (r"""def f(a: int = 1, b: (str)='', /): pass""", 'body[0].args', -4, 'posonlyargs', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'args', {}, r"""**DEL**""", r"""**ValueError('cannot delete arguments.args[0]')**""", r"""
+(r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'args', {}, r"""**DEL**""", r"""**ValueError('cannot delete from arguments.args')**""", r"""
 """),
 
 (r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'args', {}, r"""new""", r"""def f(new = 1, b: (str)=''): pass""", r"""
@@ -8036,7 +8036,7 @@ Module - ROOT 0,0..0,33
 (r"""def f(a: int = 1, b: (str)=''): pass""", 'body[0].args', -4, 'args', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'kwonlyargs', {}, r"""**DEL**""", r"""**ValueError('cannot delete arguments.kwonlyargs[0]')**""", r"""
+(r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'kwonlyargs', {}, r"""**DEL**""", r"""**ValueError('cannot delete from arguments.kwonlyargs')**""", r"""
 """),
 
 (r"""def f(*, a: int = 1, b: (str)=''): pass""", 'body[0].args', 0, 'kwonlyargs', {}, r"""new""", r"""def f(*, new = 1, b: (str)=''): pass""", r"""
@@ -8272,7 +8272,7 @@ Module - ROOT 0,0..0,20
         .value Name 'new' Load - 0,16..0,19
 """),
 
-(r"""call(a=1, *b, c=1)""", 'body[0].value', 0, 'keywords', {}, r"""**new""", r"""**ValueError("cannot put '**' Call.keywords[0] in this state (non-keywords follow)")**""", r"""
+(r"""call(a=1, *b, c=1)""", 'body[0].value', 0, 'keywords', {}, r"""**new""", r"""**ValueError("cannot put '**' Call.keywords element at this location (non-keywords follow)")**""", r"""
 """),
 
 (r"""with (a as b, (f()) as d): pass""", 'body[0]', 0, 'items', {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""

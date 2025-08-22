@@ -3844,6 +3844,9 @@ c, # c
         f.put(g, field='right', pars='auto')
         self.assertEqual('i + x * y', f.root.src)
 
+    def test_put_one_negative_idx(self):
+        FST('{**b}').put('a', -1, 'keys')
+
     def test_put_src(self):
         for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_SRC_DATA):
             t = parse(dst)
