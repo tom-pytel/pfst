@@ -18,7 +18,8 @@
 - prescribed slicing for `AsyncFunctionDef.type_params`
 - prescribed slicing for `ClassDef.type_params`
 - prescribed slicing for `TypeAlias.type_params`
-- slices put match element indentation of target
+- if can't parenthesize to make parse-safe then will add line continuation backslashes
+- slices put element indentation matches elements of target container
 - verify() invalid-AST slices works
 - get_mode() gets parse mode for any FST, including invalid-AST slices
 

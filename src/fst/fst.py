@@ -5067,7 +5067,7 @@ class FST:
         _maybe_ins_separator,
         _maybe_add_singleton_tuple_comma,
         _maybe_fix_joined_alnum,
-        _maybe_fix_naked_seq,
+        _maybe_fix_undelimited_seq,
         _maybe_fix_tuple,
         _maybe_fix_matchseq,
         _maybe_fix_matchor,

@@ -161,7 +161,7 @@ two  # fake comment start""", **b
             }''').body[0].value
         self.assertEqual((1, 19, 1, 21), a.f._loc_maybe_dict_key(1))
 
-    def test__maybe_add_line_contunuations(self):
+    def test__maybe_add_line_continuations(self):
         f = FST(r'''
 a + \
 ("""
@@ -208,6 +208,22 @@ a + \
 "c" \
 ''', f.src)
         f.verify('strict')
+
+        f = FST(r'''(""" a
+b # c""",
+d)''')
+        f.unpar(True)
+        f._maybe_add_line_continuations()
+        self.assertEqual(r'''""" a
+b # c""", \
+d''', f.src)
+
+        f = FST(r'''(""" a
+b # c""",
+# comment
+d)''')
+        f.unpar(True)
+        self.assertRaises(NodeError, f._maybe_add_line_continuations)
 
     def test__maybe_ins_separator(self):
         f = FST('[a#c\n]')

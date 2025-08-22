@@ -64,7 +64,7 @@ from .asttypes import (
 from .astutil import bistr, re_alnumdot_alnum, re_identifier, OPCLS2STR, last_block_header_child
 
 from .misc import (
-    Self, astfield, fstloc, srcwpos, nspace, pyver,
+    Self, NodeError, astfield, fstloc, srcwpos, nspace, pyver,
     EXPRISH, STMTISH, BLOCK, HAS_DOCSTRING,
     re_empty_line_start, re_line_trailing_space, re_line_end_cont_or_comment,
     _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars, _next_find_re,
@@ -1325,11 +1325,22 @@ def _maybe_add_line_continuations(self: fst.FST, whole: bool = False) -> bool:
     if self.is_enclosed_or_line(whole=whole, out_lns=(lns := set())):
         return False
 
-    lines = self.root._lines
+    lines    = self.root._lines
+    end_cols = {}  # {end_ln: end_col, ...} last expression columns for lines, needed for comment checks (so we don't get false comments from inside strings)
+
+    for a in walk(self.a):
+        if (loc := a.f.loc) is not None:
+            _, _, end_ln, end_col = loc
+
+            end_cols[end_ln] = max(end_cols.get(end_ln, 0), end_col)
 
     for ln in lns:
-        if not (l := lines[ln]).endswith('\\'):
-            lines[ln] = bistr(l + ('\\' if not l or l[-1:].isspace() else ' \\'))
+        m = re_line_end_cont_or_comment.match(lines[ln], end_cols.get(ln, 0))
+
+        if not (g := m.group(1)):
+            lines[ln] = bistr((l := lines[ln]) + ('\\' if not l or l[-1:].isspace() else ' \\'))
+        elif g.startswith('#'):
+            raise NodeError('cannot add line continuation to line that ends with comment')
 
     return True
 
@@ -1475,8 +1486,8 @@ def _maybe_fix_joined_alnum(self: fst.FST, ln: int, col: int, end_ln: int | None
         self._put_src([' '], ln, col, ln, col, False)
 
 
-def _maybe_fix_naked_seq(self: fst.FST, body: list[AST], delims: str = '()') -> bool:
-    """Fix naked `Tuple` or `MatchSequence` if needed. Don't call on unnaked sequence."""
+def _maybe_fix_undelimited_seq(self: fst.FST, body: list[AST], delims: str = '()') -> bool:
+    """Fix undelimited `Tuple` or `MatchSequence` if needed. Don't call on delimited sequence."""
 
     # assert isinstance(self.a, (Tuple, MatchSequence))
 
@@ -1573,7 +1584,7 @@ def _maybe_fix_tuple(self: fst.FST, is_par: bool | None = None) -> bool:
         self._maybe_add_singleton_tuple_comma(is_par)
 
     if not is_par:
-        return self._maybe_fix_naked_seq(body)
+        return self._maybe_fix_undelimited_seq(body)
 
     return is_par
 
@@ -1588,7 +1599,7 @@ def _maybe_fix_matchseq(self: fst.FST, delims: Literal['', '[]', '()'] | None = 
         self._maybe_ins_separator((f := body[0].f).end_ln, f.end_col, False, self.end_ln, self.end_col - bool(delims))
 
     if not delims:
-        return self._maybe_fix_naked_seq(body, '[]')
+        return self._maybe_fix_undelimited_seq(body, '[]')
 
     return delims
 
@@ -1631,7 +1642,7 @@ def _maybe_fix_matchor(self: fst.FST, fix1: bool = False) -> None:
         col_offset     = lines[ln].c2b(col)
         end_col_offset = lines[end_ln].c2b(end_col)
 
-        _update_loc_up_parents(self, ln + 1, col_offset, end_ln + 1, end_col_offset)
+        self._update_loc_up_parents(ln + 1, col_offset, end_ln + 1, end_col_offset)
 
     if is_root:
         if not self.is_enclosed_or_line() and not self.is_enclosed_in_parents():
@@ -2063,7 +2074,9 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
         lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
 
         for i, l in enumerate(lines):
-            if (m := re_line_end_cont_or_comment.match(l)) and (g := m.group(1)) and g.startswith('#'):  # line ends in comment, nuke it
+            m = re_line_end_cont_or_comment.match(l)  # always matches
+
+            if (g := m.group(1)) and g.startswith('#'):  # line ends in comment, nuke it
                 lines[i] = l[:m.start(1)]
 
     else:
@@ -2101,7 +2114,9 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
                 if not i:  # if first line then need to remove offset of first value from first line of expression
                     c -= scol + 1
 
-                if (m := re_line_end_cont_or_comment.match(l, c)) and (g := m.group(1)) and g.startswith('#'):  # line ends in comment, nuke it
+                m = re_line_end_cont_or_comment.match(l, c)  # always matches
+
+                if (g := m.group(1)) and g.startswith('#'):  # line ends in comment, nuke it
                     lines[i] = l[:m.start(1)]
 
     dbg_str = '\n'.join(lines) if get_dbg else None
