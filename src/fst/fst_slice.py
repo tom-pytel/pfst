@@ -68,7 +68,7 @@ from .asttypes import (
 )
 
 from .astutil import (
-    re_alnumdot_alnum, re_identifier, bistr, is_valid_target, is_valid_del_target, reduce_ast, set_ctx, copy_ast,
+    re_identifier, bistr, is_valid_target, is_valid_del_target, reduce_ast, set_ctx, copy_ast,
 )
 
 from .misc import (
@@ -794,9 +794,9 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
     fst_._maybe_fix_tuple(False)
 
     if cut:
-        if re_alnumdot_alnum.match(self.root._lines[ln := self.ln], col := self.col + 2):  # fix possibly joined alnums
-            self._put_src([' '], ln, col := col + 1, ln, col, False)
+        ln, col, _, _ = self.loc
 
+        self._maybe_fix_joined_alnum(ln, col + 3)
         self._maybe_add_line_continuations()
 
     return fst_
@@ -2180,9 +2180,9 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
     for i in range(start + len_fst_body, len(body)):
         body[i].f.pfield = astfield('targets', i)
 
-    if re_alnumdot_alnum.match(self.root._lines[self.ln], self.col + 2):  # fix possibly joined alnums
-        self._put_src([' '], ln := self.ln, col := self.col + 3, ln, col, False)
+    ln, col, _, _ = self.loc
 
+    self._maybe_fix_joined_alnum(ln, col + 3)
     self._maybe_add_line_continuations()
 
 

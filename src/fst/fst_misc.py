@@ -1459,6 +1459,22 @@ def _maybe_add_singleton_tuple_comma(self: fst.FST, is_par: bool | None = None) 
                                   self.end_col - (self._is_delimited_seq() if is_par is None else is_par))
 
 
+def _maybe_fix_joined_alnum(self: fst.FST, ln: int, col: int, end_ln: int | None = None, end_col: int | None = None,
+                            ) -> None:
+    """Check if location(s) `lines[ln][col-1 : col+1]` and optionally `lines[end_ln][end_col-1 : end_col+1] is / are
+    alphanumeric and if so separate them with a space. This is for operations that may inadvertantly join two distinct
+    elements into a single parsable alphanumeric, e.g. `for i inb, 2: pass`."""
+
+    lines = self.root._lines
+
+    if end_ln is not None:
+        if end_col and re_alnumdot_alnum.match(lines[end_ln], end_col - 1):  # make sure last element didn't wind up joining two alphanumerics, and if so separate
+            self._put_src([' '], end_ln, end_col, end_ln, end_col, False)
+
+    if col and re_alnumdot_alnum.match(lines[ln], col - 1):  # make sure first element didn't wind up joining two alphanumerics, and if so separate
+        self._put_src([' '], ln, col, ln, col, False)
+
+
 def _maybe_fix_naked_seq(self: fst.FST, body: list[AST], delims: str = '()') -> bool:
     """Fix naked `Tuple` or `MatchSequence` if needed. Don't call on unnaked sequence."""
 
@@ -1538,11 +1554,7 @@ def _maybe_fix_naked_seq(self: fst.FST, body: list[AST], delims: str = '()') -> 
 
         _, _, end_ln, end_col = self.loc
 
-    if re_alnumdot_alnum.match(lines[end_ln], end_col):  # make sure last element didn't wind up joining two alphanumerics, and if so separate
-        self._put_src([' '], end_ln, end_col, end_ln, end_col, False)
-
-    if col and re_alnumdot_alnum.match(lines[ln], col - 1):  # make sure first element didn't wind up joining two alphanumerics, and if so separate
-        self._put_src([' '], ln, col, ln, col, False)
+    self._maybe_fix_joined_alnum(ln, col, end_ln, end_col)
 
     return False
 
@@ -1627,14 +1639,8 @@ def _maybe_fix_matchor(self: fst.FST, fix1: bool = False) -> None:
 
             did_par = True
 
-    if not did_par and not self.pars().n:  # make sure first or last element didn't wind up joining two alphanumerics, and if so separate
-        ln, col, end_ln, end_col = self.loc
-
-        if re_alnumdot_alnum.match(lines[end_ln], end_col):
-            self._put_src([' '], end_ln, end_col, end_ln, end_col, False)
-
-        if col and re_alnumdot_alnum.match(lines[ln], col - 1):
-            self._put_src([' '], ln, col, ln, col, False)
+    if not did_par:
+        self._maybe_fix_joined_alnum(*self.loc)
 
 
 def _maybe_fix_set(self: fst.FST, empty: bool | Literal['star', 'call'] = True) -> None:

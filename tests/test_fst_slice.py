@@ -2269,6 +2269,9 @@ z''')
         self.assertEqual('for (), b, c in a: pass', (f := FST('for (),in a: pass')).target.put_slice('b, c', 1, 1).root.src)
         f.verify()
 
+        self.assertEqual('for b, c in a: pass', (f := FST('for(),in a: pass')).target.put_slice('b, c', 0, 1).root.src)
+        f.verify()
+
         # undelimited matchsequence joined alnum by operation
 
         self.assertEqual('case b, 2: pass', (f := FST('case"a", 2: pass')).pattern.put_slice('b,', 0, 1).root.src)
