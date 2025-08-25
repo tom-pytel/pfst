@@ -1250,7 +1250,7 @@ def _put_one_ClassDef_bases(self: fst.FST, code: _PutOneCode, idx: int | None, f
                             static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Can't replace Starred base with non-Starred base after keywords."""
 
-    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    child, idx = _validate_put(self, code, idx, field, child)
     code       = static.code_as(code, self.root.parse_params)
 
     if (isinstance(child, Starred) and not isinstance(code.a, Starred) and (keywords := self.a.keywords) and
@@ -1266,7 +1266,7 @@ def _put_one_ClassDef_keywords(self: fst.FST, code: _PutOneCode, idx: int | None
                                static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Don't allow put of `**keyword` before `*arg`."""
 
-    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    child, idx = _validate_put(self, code, idx, field, child)
     code       = static.code_as(code, self.root.parse_params)
 
     if code.a.arg is None and (bases := self.a.bases) and bases[-1].f.loc > self.keywords[idx].loc:
@@ -1286,30 +1286,41 @@ def _put_one_AnnAssign_target(self: fst.FST, code: _PutOneCode, idx: int | None,
     return ret
 
 
+def _put_one_Import_names(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+                          static: onestatic, options: Mapping[str, Any]) -> fst.FST:
+    """Don't allow parenthesize multiline alias and instead add line continuation backslashes in this case.."""
+
+    child, idx = _validate_put(self, code, idx, field, child)
+    ret        = _put_one_exprish_required(self, code, idx, field, child, static, {**options, 'pars': False}, 1)
+
+    self.a.names[idx].f._maybe_add_line_continuations()
+
+    return ret
+
+
 def _put_one_ImportFrom_names(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
                               static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Disallow put star to list of multiple names and unparenthesize if star was put to single name."""
 
-    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    child, idx = _validate_put(self, code, idx, field, child)
     code       = static.code_as(code, self.root.parse_params)
 
     if is_star := ('*' in code.a.name):
         if len(self.a.names) != 1:
             raise NodeError('cannot put star alias to ImportFrom.names containing multiple aliases', rawable=True)
 
-    ret = _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
+    ret  = _put_one_exprish_required(self, code, idx, field, child, static, {**options, 'pars': False}, 2)
+    pars = self._loc_ImportFrom_names_pars()
 
-    if is_star:  # try to remove parentheses if there
-        _, _, ln, col         = (name := self.a.names[0].f).loc
-        _, _, end_ln, end_col = self.loc
-        lines                 = self.root._lines
+    if is_star:  # for star remove parentheses (including possible trailing comma) if there
+        if pars.n:
+            self._put_src('*', *pars, False)
 
-        if comma := _next_find(lines, ln, col, end_ln, end_col, ','):  # if there is a trailing comma then remove it
-            ln, col = comma
+    elif not pars.n and not self.is_enclosed_or_line(pars=False):  # otherwise if need them then add
+        ln, col, end_ln, end_col = pars
 
-            self._put_src(None, ln, col, ln, col + 1, True)
-
-        name.unpar(shared=None)
+        self._put_src(')', end_ln, end_col, end_ln, end_col, True, False, self)
+        self._put_src('(', ln, col, ln, col, False)
 
     return ret
 
@@ -1318,7 +1329,7 @@ def _put_one_BinOp_left_right(self: fst.FST, code: _PutOneCode, idx: int | None,
                               static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Disallow invalid constant changes in patterns."""
 
-    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    child, idx = _validate_put(self, code, idx, field, child)
     code       = static.code_as(code, self.root.parse_params)
 
     if self.parent_pattern():
@@ -1341,7 +1352,7 @@ def _put_one_UnaryOp_operand(self: fst.FST, code: _PutOneCode, idx: int | None, 
                              static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Disallow invalid constant changes in patterns."""
 
-    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    child, idx = _validate_put(self, code, idx, field, child)
     code       = static.code_as(code, self.root.parse_params)
 
     if self.parent_pattern():
@@ -1370,7 +1381,7 @@ def _put_one_Lambda_arguments(self: fst.FST, code: _PutOneCode, idx: int | None,
     if code is None:
         code = ''
 
-    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    child, idx = _validate_put(self, code, idx, field, child)
     code       = static.code_as(code, self.root.parse_params)  # and we coerce here just so we can check if is empty args being put to set the prefix correctly
     prefix     = ' ' if code.loc else ''  # if arguments has .loc then it is not empty
     target     = self._loc_lambda_args_entire()
@@ -1391,7 +1402,7 @@ def _put_one_Call_args(self: fst.FST, code: _PutOneCode, idx: int | None, field:
                        options: Mapping[str, Any]) -> fst.FST:
     """Can't replace Starred arg with non-Starred arg after keywords."""
 
-    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    child, idx = _validate_put(self, code, idx, field, child)
     code       = static.code_as(code, self.root.parse_params)
 
     if (isinstance(child, Starred) and not isinstance(code.a, Starred) and (keywords := self.a.keywords) and
@@ -1407,7 +1418,7 @@ def _put_one_Call_keywords(self: fst.FST, code: _PutOneCode, idx: int | None, fi
                            options: Mapping[str, Any]) -> fst.FST:
     """Don't allow put of `**keyword` before `*arg`."""
 
-    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    child, idx = _validate_put(self, code, idx, field, child)
     code       = static.code_as(code, self.root.parse_params)
 
     if code.a.arg is None and (args := self.a.args) and args[-1].f.loc > self.keywords[idx].loc:
@@ -1421,7 +1432,7 @@ def _put_one_Attribute_value(self: fst.FST, code: _PutOneCode, idx: int | None, 
     """If this gets parenthesized in an `AnnAssign` then the whole `AnnAssign` target needs to be parenthesized. Also
     need to make sure only unparenthesized `Name` or `Attribute` is put to one of these in `pattern` expression."""
 
-    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    child, idx = _validate_put(self, code, idx, field, child)
     code       = static.code_as(code, self.root.parse_params)
     is_annass  = False
     above      = child.f
@@ -1482,7 +1493,7 @@ def _put_one_Subscript_slice(self: fst.FST, code: _PutOneCode, idx: int | None, 
                              static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Don't allow put unparenthesized tuple containing Starred."""
 
-    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    child, idx = _validate_put(self, code, idx, field, child)
     code       = static.code_as(code, self.root.parse_params)
 
     if code.is_parenthesized_tuple() is False and any(isinstance(a, Starred) for a in code.a.elts):
@@ -1495,7 +1506,7 @@ def _put_one_List_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field:
                        static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Disallow non-targetable expressions in targets."""
 
-    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    child, idx = _validate_put(self, code, idx, field, child)
     code       = static.code_as(code, self.root.parse_params)
 
     if not isinstance(ctx := self.a.ctx, Load):  # only allow possible expression targets into an expression target
@@ -1511,7 +1522,7 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
     Slices."""
 
     ast        = self.a
-    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    child, idx = _validate_put(self, code, idx, field, child)
     code       = static.code_as(code, self.root.parse_params)
     pfield     = self.pfield
     is_slice   = pfield == ('slice', None)
@@ -1572,7 +1583,7 @@ def _put_one_arg(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
                  options: Mapping[str, Any]) -> fst.FST:
     """Don't allow arg with Starred annotation into non-vararg args."""
 
-    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    child, idx = _validate_put(self, code, idx, field, child)
     code       = static.code_as(code, self.root.parse_params)
 
     if isinstance(code.a.annotation, Starred):
@@ -1638,7 +1649,7 @@ def _put_one_MatchAs_pattern(self: fst.FST, code: _PutOneCode, idx: int | None, 
                              static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """Enclose unenclosed MatchSequences being put here, if any."""
 
-    child, idx = _validate_put(self, code, idx, field, child, can_del=True)  # we want to do it in same order as all other puts
+    child, idx = _validate_put(self, code, idx, field, child, can_del=True)
 
     if code is not None:
         code = static.code_as(code, self.root.parse_params)
@@ -1656,7 +1667,7 @@ def _put_one_pattern(self: fst.FST, code: _PutOneCode, idx: int | None, field: s
                       options: Mapping[str, Any]) -> fst.FST:
     """Enclose unenclosed MatchSequences being put here."""
 
-    child, idx = _validate_put(self, code, idx, field, child)  # we want to do it in same order as all other puts
+    child, idx = _validate_put(self, code, idx, field, child)
     code       = static.code_as(code, self.root.parse_params)
 
     if isinstance(code.a, MatchStar):
@@ -2632,7 +2643,7 @@ _PUT_ONE_HANDLERS = {
     (TryStar, 'finalbody'):               (True,  None, None),  # stmt*
     (Assert, 'test'):                     (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (Assert, 'msg'):                      (False, _put_one_exprish_optional, onestatic(_one_info_Assert_msg, _restrict_default)),  # expr?
-    (Import, 'names'):                    (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_dotted)),  # alias*
+    (Import, 'names'):                    (True,  _put_one_Import_names, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_dotted)),  # alias*
     (ImportFrom, 'module'):               (False, _put_one_identifier_optional, onestatic(_one_info_ImportFrom_module, _restrict_default, code_as=_code_as_identifier_dotted)),  # identifier? (dotted)
     (ImportFrom, 'names'):                (True,  _put_one_ImportFrom_names, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_star)),  # alias*
     (ImportFrom, 'level'):                (False, _put_one_ImportFrom_level, None),  # int?

@@ -5047,6 +5047,7 @@ class FST:
         _loc_lambda_args_entire,
         _loc_withitem,
         _loc_match_case,
+        _loc_ImportFrom_names_pars,
         _loc_call_pars,
         _loc_subscript_brackets,
         _loc_matchcls_pars,

@@ -125,7 +125,7 @@ _re_sep_line_nonexpr_end        = {  # empty line with optional separator and li
 #   S ,             (Call, 'args'):                         # expr*            -> Tuple[expr_arglike]    _parse_expr_arglikes
 #
 # * S ,             (Delete, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
-#   N =             (Assign, 'targets'):                    # expr*            -> Assign, value.id=''    _parse_expr / restrict targets
+# * N =             (Assign, 'targets'):                    # expr*            -> Assign, value.id=''    _parse_Assign_targets / restrict targets  - Maybe use special Slice container instead of invalid Assign?
 #                                                                              .
 #                                                                              .
 #                                                                              .

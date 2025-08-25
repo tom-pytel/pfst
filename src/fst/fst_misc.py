@@ -64,7 +64,7 @@ from .asttypes import (
 from .astutil import bistr, re_alnumdot_alnum, re_identifier, OPCLS2STR, last_block_header_child
 
 from .misc import (
-    Self, NodeError, astfield, fstloc, srcwpos, nspace, pyver,
+    Self, NodeError, astfield, fstloc, fstlocns, srcwpos, nspace, pyver,
     EXPRISH, STMTISH, BLOCK, HAS_DOCSTRING,
     re_empty_line_start, re_line_trailing_space, re_line_end_cont_or_comment,
     _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars, _next_find_re,
@@ -77,12 +77,14 @@ _astfieldctx           = astfield('ctx')
 
 _re_one_space_or_end   = re.compile(r'\s|$')
 
-_re_fval_expr_equals   = re.compile(r'(?:\s*(?:#.*|\\)\n)*\s*=\s*(?:(?:#.*|\\)\n\s*)*')  # format string expression tail '=' indicating self-documentation
+_re_fval_expr_equals   = re.compile(r'(?:\s*(?:#.*|\\)\n)*\s*=\s*(?:(?:#.*|\\)\n\s*)*')  # format string expression tail '=' indicating self-documenting debug str
 
 _re_par_open_alnums    = re.compile(r'\w[(]\w')
 _re_par_close_alnums   = re.compile(r'\w[)]\w')
 _re_delim_open_alnums  = re.compile(r'\w[([]\w')
 _re_delim_close_alnums = re.compile(r'\w[)\]]\w')
+
+_re_keyword_import     = re.compile(r'\bimport\b')
 
 
 @pyver(ge=12)
@@ -928,6 +930,34 @@ def _loc_match_case(self: fst.FST) -> fstloc:
     end_ln, end_col = _next_find(lines, last.bend_ln, last.bend_col, len(lines) - 1, len(lines[-1]), ':')  # special case, deleted whole body, end must be set to just past the colon (which MUST follow somewhere there)
 
     return fstloc(*start, end_ln, end_col + 1)
+
+
+def _loc_ImportFrom_names_pars(self: fst.FST) -> fstlocns:
+    """Location of `from ? import (...)` parentheses, or location where they should be put if adding.
+
+    Can handle empty `module` and `names`.
+
+    **Returns:**
+    - `fstlocns`: Just like from `FST.pars()`, with attribute `n=0` meaning no parentheses present and location is where
+        they should go and `n=1` meaning parentheses present and location is where they actually are.
+    """
+
+    lines                     =  self.root._lines
+    ln, col, end_ln, end_col  = self.loc
+    ln, col, _                = _next_find_re(lines, ln, col, end_ln, end_col, _re_keyword_import)  # must be there
+    col                      += 6
+
+    if (lpar := _next_src(lines, ln, col, end_ln, end_col)) and lpar.src.startswith('('):
+        ln, col, _ = lpar
+        rpar       = _prev_src(lines, ln, col + 1, end_ln, end_col)
+
+        assert rpar and rpar.src.endswith(')')
+
+        end_ln, end_col, src = rpar
+
+        return fstlocns(ln, col, end_ln, end_col + len(src), n=1)
+
+    return fstlocns(ln, col + 1 if lines[ln][col : col + 1].isspace() else col, end_ln, end_col, n=0)
 
 
 def _loc_call_pars(self: fst.FST) -> fstloc:

@@ -2987,6 +2987,25 @@ c, # c
 
         self.assertRaises(NodeError, FST('del a').put, '*st', 0)
 
+        # multiline Import name
+
+        self.assertEqual('import x, a \\\n. \\\nb, z', (f := FST('import x, y, z')).put('a\n.\nb', 1).root.src)
+        f.verify()
+
+        self.assertEqual('import x, a\\\n.\\\nb, z', (f := FST('import x, y, z')).put('a\\\n.\\\nb', 1).root.src)
+        f.verify()
+
+        # multiline ImportFrom name
+
+        self.assertEqual('from m import x, a as b, z', (f := FST('from m import x, y, z')).put('a as b', 1).root.src)
+        f.verify()
+
+        self.assertEqual('from m import (x, a\nas\nb, z)', (f := FST('from m import x, y, z')).put('a\nas\nb', 1).root.src)
+        f.verify()
+
+        self.assertEqual('from m import (x, a\nas\nb, z)', (f := FST('from m import (x, y, z)')).put('a\nas\nb', 1).root.src)
+        f.verify()
+
     def test_put_one_pattern(self):
 
         # pattern BinOp and UnaryOp

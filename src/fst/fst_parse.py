@@ -205,7 +205,7 @@ def _parse_all_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AS
         ast = Tuple(elts=type_params, ctx=Load(), lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
                     end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
 
-    return _offset_linenos(ast, -1)  # _offset_linenos(_validate_indent(src, ast), -1)
+    return _offset_linenos(ast, -1)
 
 
 def _parse_all_multiple(src: str, parse_params: Mapping[str, Any], stmt: bool, rest: list[Callable]) -> AST:
@@ -703,7 +703,7 @@ def _parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
             _fix_unparenthesized_tuple_parsed_parenthesized(src, ast)  # we have to do some work to find a possible comma
 
-    return _offset_linenos(ast, -1) # _offset_linenos(_validate_indent(src, ast), -1)
+    return _offset_linenos(ast, -1)
 
 
 @staticmethod
@@ -749,7 +749,7 @@ def _parse_expr_arglike(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
         raise ParseError('expecting call argument expression, got unparenthesized GeneratorExp')
 
-    return _offset_linenos(ast, -1) # _offset_linenos(_validate_indent(src, ast), -1)
+    return _offset_linenos(ast, -1)
 
 
 @staticmethod
@@ -776,7 +776,7 @@ def _parse_expr_slice(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
             raise SyntaxError('expecting slice expression') from None
 
-    return _offset_linenos(ast, -1) # _offset_linenos(_validate_indent(src, ast), -1)
+    return _offset_linenos(ast, -1)
 
 
 @staticmethod
@@ -844,7 +844,7 @@ def _parse_boolop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if not isinstance(ast, BoolOp):
         raise ParseError(f'expecting boolop, got {_shortstr(src)!r}')
 
-    return ast.op.__class__()  # _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
+    return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
 
 
 @staticmethod
@@ -869,7 +869,7 @@ def _parse_binop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if not isinstance(ast, BinOp):
         raise ParseError(f'expecting operator, got {_shortstr(src)!r}')
 
-    return ast.op.__class__()  # _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
+    return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
 
 
 @staticmethod
@@ -881,7 +881,7 @@ def _parse_augop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if not isinstance(ast, AugAssign):
         raise ParseError(f'expecting augmented operator, got {_shortstr(src)!r}')
 
-    return ast.op.__class__()  # _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
+    return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
 
 
 @staticmethod
@@ -893,7 +893,7 @@ def _parse_unaryop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if not isinstance(ast, UnaryOp):
         raise ParseError(f'expecting unaryop, got {_shortstr(src)!r}')
 
-    return ast.op.__class__()  # _validate_indent(src, ast.op.__class__())  # parse() returns the same identical object for all instances of the same operator
+    return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
 
 
 @staticmethod
@@ -908,7 +908,7 @@ def _parse_cmpop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if len(ops := ast.ops) != 1:
         raise ParseError('expecting single cmpop')
 
-    return ops[0].__class__()  # _validate_indent(src, ops[0].__class__())  # parse() returns the same identical object for all instances of the same operator
+    return ops[0].__class__()  # parse() returns the same identical object for all instances of the same operator
 
 
 @staticmethod
@@ -923,7 +923,7 @@ def _parse_comprehension(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if len(gens := ast.generators) != 1:
         raise ParseError('expecting single comprehension')
 
-    return _offset_linenos(gens[0], -1)  # _offset_linenos(_validate_indent(src, gens[0]), -1)
+    return _offset_linenos(gens[0], -1)
 
 
 @staticmethod
@@ -932,7 +932,7 @@ def _parse_arguments(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     ast = _ast_parse1(f'def f(\n{src}\n): pass', parse_params).args
 
-    return _offset_linenos(ast, -1) # _offset_linenos(_validate_indent(src, ast), -1)
+    return _offset_linenos(ast, -1)
 
 
 @staticmethod
@@ -941,7 +941,7 @@ def _parse_arguments_lambda(src: str, parse_params: Mapping[str, Any] = {}) -> A
 
     ast = _ast_parse1(f'(lambda \n{src}\n: None)', parse_params).value.args
 
-    return _offset_linenos(ast, -1) # _offset_linenos(_validate_indent(src, ast), -1)
+    return _offset_linenos(ast, -1)
 
 
 @staticmethod
@@ -973,7 +973,7 @@ def _parse_arg(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if ast is None:
         raise ParseError('expecting single argument without default')
 
-    return _offset_linenos(ast, -1) # _offset_linenos(_validate_indent(src, ast), -1)
+    return _offset_linenos(ast, -1)
 
 
 @staticmethod
@@ -985,17 +985,17 @@ def _parse_keyword(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if len(keywords) != 1:
         raise ParseError('expecting single keyword')
 
-    return _offset_linenos(keywords[0], -1)  # _offset_linenos(_validate_indent(src, keywords[0]), -1)
+    return _offset_linenos(keywords[0], -1)
 
 
 @staticmethod
 def _parse_alias(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.alias`, allowing star or dotted notation, e.g. "name as alias"."""
+    """Parse to an `ast.alias`, allowing star or dotted notation or star, e.g. "name as alias"."""
 
     if '*' in src:
         try:
             return _parse_alias_star(src, parse_params)
-        except SyntaxError:
+        except SyntaxError:  # '*' could have been in a comment
             pass
 
     return _parse_alias_dotted(src, parse_params)
@@ -1003,27 +1003,45 @@ def _parse_alias(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 @staticmethod
 def _parse_alias_dotted(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.alias`, allowing dotted notation (not all aliases are created equal),,
+    """Parse to an `ast.alias`, allowing dotted notation but not star (not all aliases are created equal),
     e.g. "name as alias"."""
 
-    names = _ast_parse1(f'import \\\n{src}', parse_params).names
+    try:
+        names = _ast_parse1(f'import \\\n{src}', parse_params).names
+
+    except SyntaxError as first_exc:
+        try:
+            src   = src.replace("\n", "\\\n")
+            names = _ast_parse1(f'import \\\n{src}', parse_params).names  # multiline?
+
+        except SyntaxError:
+            raise first_exc from None
 
     if len(names) != 1:
         raise ParseError('expecting single name')
 
-    return _offset_linenos(names[0], -1)  # _offset_linenos(_validate_indent(src, names[0]), -1)
+    return _offset_linenos(names[0], -1)
 
 
 @staticmethod
 def _parse_alias_star(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.alias`, allowing star,."""
+    """Parse to an `ast.alias`, allowing star but not dotted."""
 
-    names = _ast_parse1(f'from . import \\\n{src}', parse_params).names
+    try:
+        names = _ast_parse1(f'from . import \\\n{src}', parse_params).names
+
+    except SyntaxError as first_exc:
+        try:
+            src   = src.replace("\n", "\\\n")
+            names = _ast_parse1(f'from . import \\\n{src}', parse_params).names  # multiline?
+
+        except SyntaxError:
+            raise first_exc from None
 
     if len(names) != 1:
         raise ParseError('expecting single name')
 
-    return _offset_linenos(names[0], -1)  # _offset_linenos(_validate_indent(src, names[0]), -1)
+    return _offset_linenos(names[0], -1)
 
 
 @staticmethod
@@ -1054,7 +1072,7 @@ def _parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
         _fix_unparenthesized_tuple_parsed_parenthesized(src, ast)
 
-    return _offset_linenos(items[0], -1)  # _offset_linenos(_validate_indent(src, items[0]), -1)
+    return _offset_linenos(items[0], -1)
 
 
 @staticmethod
@@ -1089,7 +1107,7 @@ def _parse_pattern(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
                 ast.end_lineno     = (p_1 := patterns[-1]).end_lineno
                 ast.end_col_offset = p_1.end_col_offset
 
-    return _offset_linenos(ast, -2)  # _offset_linenos(_validate_indent(src, ast), -2)
+    return _offset_linenos(ast, -2)
 
 
 @staticmethod
@@ -1106,7 +1124,7 @@ def _parse_type_param(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if _has_trailing_comma(src, ast.end_lineno - 1, ast.end_col_offset):
         raise ParseError('expecting single type_param, has trailing comma')
 
-    return _offset_linenos(ast, -1)  # _offset_linenos(_validate_indent(src, type_params[0]), -1)
+    return _offset_linenos(ast, -1)
 
 
 @staticmethod
@@ -1136,7 +1154,7 @@ def _parse_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         ast = Tuple(elts=type_params, ctx=Load(), lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
                     end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
 
-    return _offset_linenos(ast, -1)  # _offset_linenos(_validate_indent(src, ast), -1)
+    return _offset_linenos(ast, -1)
 
 
 @staticmethod
@@ -1177,7 +1195,7 @@ def _parse_Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST
     name.id         = ''  # mark as slice
     name.col_offset = name.end_col_offset = ast.end_col_offset = ast.end_col_offset - 3
 
-    return _offset_linenos(ast, -1)  # _offset_linenos(_validate_indent(src, ast), -1)
+    return _offset_linenos(ast, -1)
 
 
 # ......................................................................................................................
