@@ -2,6 +2,8 @@
 
 ### Fixed
 
+- set `Starred` location correctly after unparenthesize of its value
+- don't parenthesize `Starred.value` multiple times if already has parentheses
 - handle multiline import aliases correctly
 - fix some negative indexing get / put cases
 - never automatically add parentheses to copied Slice

@@ -1814,14 +1814,21 @@ def _parenthesize_grouping(self: fst.FST, whole: bool = True, *, star_child: boo
         `whole` for the opening par.
     """
 
+    ast = self.a
+
     ln, col, end_ln, end_col = self.whole_loc if whole and self.is_root else self.loc
 
-    if isinstance(self.a, Starred) and star_child:
+    if is_star_child := isinstance(ast, Starred) and star_child:
         ln, col, _, _  = self.loc
         col           += 1
-        self           = self.a.value.f
+        self           = ast.value.f
 
     self._put_src([')'], end_ln, end_col, end_ln, end_col, True, True, self, offset_excluded=False)
+
+    if is_star_child:  # because of maybe `whole`, otherwise could just do it using _put_src(..., offset_excluded=is_star_child) above
+        ast.end_lineno     = end_ln + 1
+        ast.end_col_offset = self.root._lines[end_ln].b2c(end_col) + 1
+
     self._offset(*self._put_src(['('], ln, col, ln, col, False, False, self, offset_excluded=False))
 
 

@@ -668,7 +668,7 @@ def _validate_put_ast(self: fst.FST, put_ast: AST, idx: int | None, field: str, 
     if restrict := static.restrict:
         if isinstance(restrict, list):  # list means these types not allowed
             if isinstance(put_ast, tuple(restrict)):
-                raise NodeError(f'{self.a.__class__.__name__}.{field}'
+                raise NodeError(f'{self.a.__class__.__name__}.{field} '
                                 f'cannot be {put_ast.__class__.__name__}', rawable=True)
 
         elif isinstance(restrict, FunctionType):

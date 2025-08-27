@@ -2031,6 +2031,10 @@ class FST:
 
         This function is cached so feel free to call as often as is needed.
 
+        **Note:** For a `Starred` this will always return the location of the whole `Starred` since that cannot be
+        parenthesized itself but rather its child. If you want he parenteses of the child then do
+        `starred.value.pars()`.
+
         **Parameters:**
         - `shared`: If `True` then will include parentheses of a single call argument generator expression if they are
             shared with the call arguments enclosing parentheses with a count of 0. If `False` then does not return
@@ -2176,7 +2180,9 @@ class FST:
 
         if not force:
             if (not self.is_parenthesizable() or (is_atom := self.is_atom()) in (True, 'pars') or
-                (is_atom and self.is_enclosed_or_line())  # 'unenclosable'
+                ((is_atom or
+                  (isinstance(self.a, Starred) and self.a.value.f.is_atom() in (True, 'pars'))) and
+                 self.is_enclosed_or_line())  # is_enclosed_or_line() can return 'unenclosable'
             ):
                 return self
 
@@ -4257,6 +4263,8 @@ class FST:
         """Whether `self` is parenthesizable with grouping parentheses or not. Essentially all `expr`s and `pattern`s
         except for `Slice`.
 
+        **Note:** `Starred` returns `True` even though the `Starred` itself is not parenthesizable but rather its child.
+
         **Returns:**
         - `bool`: Whether is syntactically legal to add grouping parentheses or not. Can always be forced.
 
@@ -4363,9 +4371,9 @@ class FST:
                 return 'unenclosable' if isinstance(ast.value, (str, bytes)) else True
 
             elif isinstance(ast, (Call, JoinedStr, TemplateStr, Constant, Attribute, Subscript,
-                                MatchClass, MatchStar,
-                                cmpop, comprehension, arguments,
-                                arg, keyword, alias, withitem, type_param)):
+                                  MatchClass, MatchStar,
+                                  cmpop, comprehension, arguments,
+                                  arg, keyword, alias, withitem, type_param)):
                 return 'unenclosable'
 
         elif isinstance(ast, (comprehension, arguments, arg, keyword, alias, type_param)):  # can't be parenthesized

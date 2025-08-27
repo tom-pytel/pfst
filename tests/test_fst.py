@@ -1625,6 +1625,8 @@ with a as b, c as d:
         self.assertIs(True, parse('match a:\n case (1, 2): pass').body[0].cases[0].pattern.f.is_atom())
         self.assertIs(True, parse('match a:\n case [1, 2]: pass').body[0].cases[0].pattern.f.is_atom())
 
+        self.assertIs(False, FST('*a').is_atom())  # because of `*a or b`
+
     def test_is_enclosed_or_line_special(self):
         # Call
         # JoinedStr
@@ -3075,6 +3077,33 @@ match a:
         self.assertEqual('*(\na)', f.src)
         f.verify()
 
+        f.par()
+        self.assertEqual('*(\na)', f.src)
+        f.verify()
+
+        f = FST('\n*\na\n')
+        f.par()
+        self.assertEqual('\n*(\na\n)', f.src)
+        f.verify()
+
+        f.par()
+        self.assertEqual('\n*(\na\n)', f.src)
+        f.verify()
+
+        f = FST('\n*\na\n')
+        f.par(whole=False)
+        self.assertEqual('\n*(\na)\n', f.src)
+        f.verify()
+
+        f.par(whole=False)
+        self.assertEqual('\n*(\na)\n', f.src)
+        f.verify()
+
+        f = FST('*a')
+        f.par(True)
+        self.assertEqual('*(a)', f.src)
+        f.verify()
+
         # unparenthesizable
 
         self.assertEqual('a:b:c', FST('a:b:c').par().src)
@@ -3345,6 +3374,12 @@ match a:
 
         f = FST('*(\na)')
         self.assertEqual('*(\na)', f.src)
+        f.unpar()
+        self.assertEqual('*a', f.src)
+        f.verify()
+
+        f = FST('*(\na\n)')
+        self.assertEqual('*(\na\n)', f.src)
         f.unpar()
         self.assertEqual('*a', f.src)
         f.verify()
