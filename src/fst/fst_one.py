@@ -120,6 +120,8 @@ from .misc import (
     _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _fixup_one_index,
 )
 
+from .extparse import unparse
+
 from .fst_code import (
     _code_as_expr, _code_as_expr_slice, _code_as_expr_sliceelt, _code_as_expr_arglike,
     _code_as_boolop, _code_as_binop, _code_as_augop, _code_as_unaryop, _code_as_cmpop,
@@ -1900,7 +1902,7 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
         if isinstance(code, str):
             code = code.split('\n')
         elif isinstance(code, AST):
-            code = fst.FST._unparse(code).split('\n')
+            code = unparse(code).split('\n')
 
         elif isinstance(code, fst.FST):
             if not code.is_root:

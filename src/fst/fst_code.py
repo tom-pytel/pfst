@@ -54,38 +54,38 @@ from .misc import (
     Code, NodeError, _shortstr
 )
 
-from .fst_parse import (
+from .extparse import (
     ParseError,
     _fixing_unparse,
-    _unparse,
-    _parse,
-    _parse_stmts,
-    _parse_ExceptHandlers,
-    _parse_match_cases,
-    _parse_expr,
-    _parse_expr_all,
-    _parse_expr_arglike,
-    _parse_expr_slice,
-    _parse_expr_sliceelt,
-    _parse_Tuple,
-    _parse_boolop,
-    _parse_binop,
-    _parse_augop,
-    _parse_unaryop,
-    _parse_cmpop,
-    _parse_comprehension,
-    _parse_arguments,
-    _parse_arguments_lambda,
-    _parse_arg,
-    _parse_keyword,
-    _parse_alias,
-    _parse_alias_dotted,
-    _parse_alias_star,
-    _parse_withitem,
-    _parse_pattern,
-    _parse_type_param,
-    _parse_type_params,
-    _parse_Assign_targets,
+    unparse,
+    parse,
+    parse_stmts,
+    parse_ExceptHandlers,
+    parse_match_cases,
+    parse_expr,
+    parse_expr_all,
+    parse_expr_arglike,
+    parse_expr_slice,
+    parse_expr_sliceelt,
+    parse_Tuple,
+    parse_boolop,
+    parse_binop,
+    parse_augop,
+    parse_unaryop,
+    parse_cmpop,
+    parse_comprehension,
+    parse_arguments,
+    parse_arguments_lambda,
+    parse_arg,
+    parse_keyword,
+    parse_alias,
+    parse_alias_dotted,
+    parse_alias_star,
+    parse_withitem,
+    parse_pattern,
+    parse_type_param,
+    parse_type_params,
+    parse_Assign_targets,
 )
 
 
@@ -107,7 +107,7 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any]
 
         if (src := code.src) != (expected := opcls2str[codea.__class__]):
             if isinstance(codea, (NotIn, IsNot)):  # super-stupid case, someone did 'is # comment \n not' or something like this?
-                if _parse_cmpop(src).__class__ is codea:  # parses to same thing so just return the canonical str for the op, otherwise it gets complicated
+                if parse_cmpop(src).__class__ is codea:  # parses to same thing so just return the canonical str for the op, otherwise it gets complicated
                     return fst.FST(codea, [bistr(expected)], from_=code, lcopy=False)
 
             raise NodeError(f'expecting {expected!r}, got {_shortstr(src)!r}', rawable=True)
@@ -149,7 +149,7 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any],
         if not isinstance(code, ast_type):
             raise NodeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}', rawable=True)
 
-        src   = _unparse(code)
+        src   = unparse(code)
         lines = src.split('\n')
 
     elif isinstance(code, list):
@@ -186,7 +186,7 @@ def _code_as_all(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
 
     if isinstance(code, AST):
         mode  = code.__class__  # we do not accept invalid-AST SPECIAL SLICE ASTs on purpose, could accept them by setting `mode = _get_special_parse_mode(code) or code.__class__` but that gets complicated fast
-        code  = _unparse(code)
+        code  = unparse(code)
         lines = code.split('\n')
 
     else:
@@ -197,7 +197,7 @@ def _code_as_all(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
         else:  # str
             lines = code.split('\n')
 
-    return fst.FST(_parse(code, mode), lines, parse_params=parse_params)
+    return fst.FST(parse(code, mode), lines, parse_params=parse_params)
 
 
 @staticmethod
@@ -248,7 +248,7 @@ def _code_as_stmts(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
     else:  # str
         lines = code.split('\n')
 
-    return fst.FST(_parse_stmts(code, parse_params), lines, parse_params=parse_params)
+    return fst.FST(parse_stmts(code, parse_params), lines, parse_params=parse_params)
 
 
 @staticmethod
@@ -298,7 +298,7 @@ def _code_as_ExceptHandlers(code: Code, parse_params: Mapping[str, Any] = {}, *,
     else:  # str
         lines = code.split('\n')
 
-    return fst.FST(_parse_ExceptHandlers(code, parse_params), lines, parse_params=parse_params)
+    return fst.FST(parse_ExceptHandlers(code, parse_params), lines, parse_params=parse_params)
 
 
 @staticmethod
@@ -335,20 +335,20 @@ def _code_as_match_cases(code: Code, parse_params: Mapping[str, Any] = {}) -> fs
     else:  # str
         lines = code.split('\n')
 
-    return fst.FST(_parse_match_cases(code, parse_params), lines, parse_params=parse_params)
+    return fst.FST(parse_match_cases(code, parse_params), lines, parse_params=parse_params)
 
 
 @staticmethod
 def _code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *,
-                  parse: Callable[[Code, dict], fst.FST] = _parse_expr, sanitize: bool = True) -> fst.FST:
+                  parse: Callable[[Code, dict], fst.FST] = parse_expr, sanitize: bool = True) -> fst.FST:
     """Convert `code` to an `expr` or optionally `Slice` `FST` if possible."""
 
     def expecting() -> str:
-        return ('expecting Tuple' if parse is _parse_Tuple else
-                'expecting expression (slice element)' if parse is _parse_expr_sliceelt else
-                'expecting expression (slice)' if parse is _parse_expr_slice else
-                'expecting expression (arglike)' if parse is _parse_expr_arglike else
-                'expecting expression (any)' if parse is _parse_expr_all else
+        return ('expecting Tuple' if parse is parse_Tuple else
+                'expecting expression (slice element)' if parse is parse_expr_sliceelt else
+                'expecting expression (slice)' if parse is parse_expr_slice else
+                'expecting expression (arglike)' if parse is parse_expr_arglike else
+                'expecting expression (any)' if parse is parse_expr_all else
                 'expecting expression (standard)')
 
     def validate(ast: AST) -> None:
@@ -379,7 +379,7 @@ def _code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *,
     if is_ast := isinstance(code, AST):
         validate(code)
 
-        src   = _unparse(code)
+        src   = unparse(code)
         lines = src.split('\n')
 
     elif isinstance(code, list):
@@ -399,16 +399,16 @@ def _code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *,
 
 @staticmethod
 def _code_as_expr_all(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
-    """Convert `code` to an `expr` using `_parse_expr_all()`."""
+    """Convert `code` to an `expr` using `parse_expr_all()`."""
 
-    return _code_as_expr(code, parse_params, parse=_parse_expr_all, sanitize=sanitize)
+    return _code_as_expr(code, parse_params, parse=parse_expr_all, sanitize=sanitize)
 
 
 @staticmethod
 def _code_as_expr_arglike(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to an `expr` in the context of a `Call.args` which has special parse rules for `Starred`."""
 
-    return _code_as_expr(code, parse_params, parse=_parse_expr_arglike, sanitize=sanitize)
+    return _code_as_expr(code, parse_params, parse=parse_expr_arglike, sanitize=sanitize)
 
 
 @staticmethod
@@ -416,7 +416,7 @@ def _code_as_expr_slice(code: Code, parse_params: Mapping[str, Any] = {}, *, san
     """Convert `code` to a Slice `FST` if possible (or anthing else that can serve in `Subscript.slice`, like any old
     generic `expr`)."""
 
-    return _code_as_expr(code, parse_params, parse=_parse_expr_slice, sanitize=sanitize)
+    return _code_as_expr(code, parse_params, parse=parse_expr_slice, sanitize=sanitize)
 
 
 @staticmethod
@@ -424,14 +424,14 @@ def _code_as_expr_sliceelt(code: Code, parse_params: Mapping[str, Any] = {}, *, 
     """Convert `code` to an `expr` or `Slice` `FST` if possible. This exists because of the behavior of naked `Starred`
     expressions in a `Subscript` `slice` field."""
 
-    return _code_as_expr(code, parse_params, parse=_parse_expr_sliceelt, sanitize=sanitize)
+    return _code_as_expr(code, parse_params, parse=parse_expr_sliceelt, sanitize=sanitize)
 
 
 @staticmethod
 def _code_as_Tuple(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
-    """Convert `code` to a `Tuple` using `_parse_Tuple()`."""
+    """Convert `code` to a `Tuple` using `parse_Tuple()`."""
 
-    fst_ = _code_as_expr(code, parse_params, parse=_parse_Tuple, sanitize=sanitize)
+    fst_ = _code_as_expr(code, parse_params, parse=parse_Tuple, sanitize=sanitize)
 
     if fst_ is code and not isinstance(fst_.a, Tuple):  # fst_ is code only if FST passed in, in which case is passed through and we need to check that was Tuple to begin with
         raise NodeError(f'expecting Tuple, got {fst_.a.__class__.__name__}', rawable=True)
@@ -443,42 +443,42 @@ def _code_as_Tuple(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize
 def _code_as_boolop(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
     """Convert `code` to a `boolop` `FST` if possible."""
 
-    return _code_as_op(code, boolop, parse_params, _parse_boolop, OPSTR2CLS_BOOL)
+    return _code_as_op(code, boolop, parse_params, parse_boolop, OPSTR2CLS_BOOL)
 
 
 @staticmethod
 def _code_as_binop(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
     """Convert `code` to a `operator` `FST` if possible."""
 
-    return _code_as_op(code, operator, parse_params, _parse_binop, OPSTR2CLS_BIN)
+    return _code_as_op(code, operator, parse_params, parse_binop, OPSTR2CLS_BIN)
 
 
 @staticmethod
 def _code_as_augop(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
     """Convert `code` to an augmented `operator` `FST` if possible, e.g. "+="."""
 
-    return _code_as_op(code, operator, parse_params, _parse_augop, OPSTR2CLS_AUG, OPCLS2STR_AUG)
+    return _code_as_op(code, operator, parse_params, parse_augop, OPSTR2CLS_AUG, OPCLS2STR_AUG)
 
 
 @staticmethod
 def _code_as_unaryop(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
     """Convert `code` to a `unaryop` `FST` if possible."""
 
-    return _code_as_op(code, unaryop, parse_params, _parse_unaryop, OPSTR2CLS_UNARY)
+    return _code_as_op(code, unaryop, parse_params, parse_unaryop, OPSTR2CLS_UNARY)
 
 
 @staticmethod
 def _code_as_cmpop(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
     """Convert `code` to a `cmpop` `FST` if possible."""
 
-    return _code_as_op(code, cmpop, parse_params, _parse_cmpop, OPSTR2CLS_CMP)
+    return _code_as_op(code, cmpop, parse_params, parse_cmpop, OPSTR2CLS_CMP)
 
 
 @staticmethod
 def _code_as_comprehension(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a comprehension `FST` if possible."""
 
-    return _code_as(code, comprehension, parse_params, _parse_comprehension, sanitize=sanitize)
+    return _code_as(code, comprehension, parse_params, parse_comprehension, sanitize=sanitize)
 
 
 @staticmethod
@@ -487,7 +487,7 @@ def _code_as_arguments(code: Code, parse_params: Mapping[str, Any] = {}, *, sani
 
     # TODO: upcast FST and AST arg to arguments?
 
-    return _code_as(code, arguments, parse_params, _parse_arguments, sanitize=sanitize)
+    return _code_as(code, arguments, parse_params, parse_arguments, sanitize=sanitize)
 
 
 @staticmethod
@@ -496,35 +496,35 @@ def _code_as_arguments_lambda(code: Code, parse_params: Mapping[str, Any] = {}, 
 
     # TODO: upcast FST and AST arg to arguments?
 
-    return _code_as(code, arguments, parse_params, _parse_arguments_lambda, sanitize=sanitize)
+    return _code_as(code, arguments, parse_params, parse_arguments_lambda, sanitize=sanitize)
 
 
 @staticmethod
 def _code_as_arg(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to an arg `FST` if possible."""
 
-    return _code_as(code, arg, parse_params, _parse_arg, sanitize=sanitize)
+    return _code_as(code, arg, parse_params, parse_arg, sanitize=sanitize)
 
 
 @staticmethod
 def _code_as_keyword(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a keyword `FST` if possible."""
 
-    return _code_as(code, keyword, parse_params, _parse_keyword, sanitize=sanitize)
+    return _code_as(code, keyword, parse_params, parse_keyword, sanitize=sanitize)
 
 
 @staticmethod
 def _code_as_alias(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a alias `FST` if possible, star or dotted."""
 
-    return _code_as(code, alias, parse_params, _parse_alias, sanitize=sanitize)
+    return _code_as(code, alias, parse_params, parse_alias, sanitize=sanitize)
 
 
 @staticmethod
 def _code_as_alias_dotted(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a alias `FST` if possible, dotted as in `alias` for `Import.names`."""
 
-    fst_ = _code_as(code, alias, parse_params, _parse_alias_dotted, sanitize=sanitize)
+    fst_ = _code_as(code, alias, parse_params, parse_alias_dotted, sanitize=sanitize)
 
     if '*' in fst_.a.name:
         raise ParseError("'*' not allowed in this alias")
@@ -536,7 +536,7 @@ def _code_as_alias_dotted(code: Code, parse_params: Mapping[str, Any] = {}, *, s
 def _code_as_alias_star(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a alias `FST` if possible, possibly star as in `alias` for `FromImport.names`."""
 
-    fst_ = _code_as(code, alias, parse_params, _parse_alias_star, sanitize=sanitize)
+    fst_ = _code_as(code, alias, parse_params, parse_alias_star, sanitize=sanitize)
 
     if '.' in fst_.a.name:
         raise ParseError("'.' not allowed in this alias")
@@ -548,7 +548,7 @@ def _code_as_alias_star(code: Code, parse_params: Mapping[str, Any] = {}, *, san
 def _code_as_withitem(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a withitem `FST` if possible."""
 
-    return _code_as(code, withitem, parse_params, _parse_withitem, sanitize=sanitize)
+    return _code_as(code, withitem, parse_params, parse_withitem, sanitize=sanitize)
 
 
 @staticmethod
@@ -556,7 +556,7 @@ def _code_as_pattern(code: Code, parse_params: Mapping[str, Any] = {}, *, saniti
                      allow_invalid_matchor: bool = False) -> fst.FST:
     """Convert `code` to a pattern `FST` if possible."""
 
-    fst_ = _code_as(code, pattern, parse_params, _parse_pattern, sanitize=sanitize)
+    fst_ = _code_as(code, pattern, parse_params, parse_pattern, sanitize=sanitize)
 
     if not allow_invalid_matchor and isinstance(a := fst_.a, MatchOr):  # SPECIAL SLICE, don't need to check if 'fst_ is code' because this could only have come from 'code' as FST
         if not (len_pattern := len(a.patterns)):
@@ -572,14 +572,14 @@ def _code_as_pattern(code: Code, parse_params: Mapping[str, Any] = {}, *, saniti
 def _code_as_type_param(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a type_param `FST` if possible."""
 
-    return _code_as(code, type_param, parse_params, _parse_type_param, sanitize=sanitize)
+    return _code_as(code, type_param, parse_params, parse_type_param, sanitize=sanitize)
 
 
 @staticmethod
 def _code_as_type_params(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a type_params slice `FST` if possible."""
 
-    fst_ = _code_as(code, Tuple, parse_params, _parse_type_params, sanitize=sanitize)
+    fst_ = _code_as(code, Tuple, parse_params, parse_type_params, sanitize=sanitize)
 
     if fst_ is code:  # this means it was not parsed (came in as FST) and we need to verify it containes only type_params
         if not all(isinstance(elt := e, type_param) for e in fst_.a.elts):
@@ -592,7 +592,7 @@ def _code_as_type_params(code: Code, parse_params: Mapping[str, Any] = {}, *, sa
 def _code_as_Assign_targets(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to an `Assign` targets slice `FST` if possible."""
 
-    fst_ = _code_as(code, Assign, parse_params, _parse_Assign_targets, sanitize=sanitize)
+    fst_ = _code_as(code, Assign, parse_params, parse_Assign_targets, sanitize=sanitize)
 
     if not isinstance(name := fst_.a.value, Name) or name.id:  # SPECIAL SLICE
         raise NodeError('expecting Assign targets slice, got normal Assign', rawable=True)

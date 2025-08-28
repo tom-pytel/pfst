@@ -98,11 +98,10 @@ from .misc import (
     _multiline_str_continuation_lns, _multiline_fstr_continuation_lns, _continuation_to_uncontinued_lns,
 )
 
-from . import view
+from . import view, extparse
 from .structure import _AST_FIELDS_NEXT, _AST_FIELDS_PREV, _with_loc
 from .reconcile import _Reconcile
-
-from .fst_parse import Mode
+from .extparse import Mode, get_special_parse_mode
 
 __all__ = [
     'parse', 'unparse', 'dump', 'FST',
@@ -144,7 +143,7 @@ def parse(source: builtins.str, filename: str = '<unknown>', mode: str = 'exec',
     **Parameters:**
     - `source`: The python source to parse.
     - `filename`: `ast.parse()` parameter.
-    - `mode`: Parse mode, extended `ast.parse()` parameter, See `fst.misc.Mode`.
+    - `mode`: Parse mode, extended `ast.parse()` parameter, See `fst.extparse.Mode`.
     - `type_comments`: `ast.parse()` parameter.
     - `feature_version`: `ast.parse()` parameter.
 
@@ -520,11 +519,11 @@ class FST:
         This will create an `FST` from either an `AST` or source code in the form of a string or list of lines. The
         first parameter can be `None` instead of an `AST` or source to indicate a blank new module of one of the three
         types `'exec'`, `'eval'` or `'single'`. Otherwise if there is `source` or an `AST` then `mode` specifies how it
-        will be parsed / reparsed and it can take any of the values from `fst.misc.Mode`.
+        will be parsed / reparsed and it can take any of the values from `fst.extparse.Mode`.
 
         **Parameters:**
         - `ast_or_src`: Source code, an `AST` node or `None`.
-        - `mode`: See `fst.misc.Mode`. If this is `None` then if `ast_or_src` is an `AST` the mode defaults to the
+        - `mode`: See `fst.extparse.Mode`. If this is `None` then if `ast_or_src` is an `AST` the mode defaults to the
             type of the `AST`. Otherwise if the `ast_or_src` is actual source code then `mode` used is `'all'` to allow
             parsing anything. And if `ast_or_src` is `None` then `mode` must be provided and be one of `'exec'`,
             `'eval'` or `'single'`.
@@ -711,7 +710,7 @@ class FST:
 
         **Parameters:**
         - `src`: The source to parse as a single `str` or list of individual line strings (without newlines).
-        - `mode`: Parse mode, extended `ast.parse()` parameter, See `fst.misc.Mode`.
+        - `mode`: Parse mode, extended `ast.parse()` parameter, See `fst.extparse.Mode`.
         - `filename`: `ast.parse()` parameter.
         - `type_comments`: `ast.parse()` parameter.
         - `feature_version`: `ast.parse()` parameter.
@@ -766,7 +765,7 @@ class FST:
             src   = '\n'.join(lines)
 
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
-        ast          = FST._parse(src, mode, parse_params)
+        ast          = extparse.parse(src, mode, parse_params)
 
         return FST(ast, lines, parse_params=parse_params)
 
@@ -778,7 +777,7 @@ class FST:
 
         **Parameters:**
         - `ast`: The root `AST` node.
-        - `mode`: Parse mode, extended `ast.parse()` parameter, see `fst.misc.Mode`. Two special values are added:
+        - `mode`: Parse mode, extended `ast.parse()` parameter, see `fst.extparse.Mode`. Two special values are added:
             - `None`: This will attempt to reparse to the same node type as was passed in. This is the default and all
                 other values should be considered overrides for special cases.
             - `False`: This will skip the reparse and just `ast.unparse()` the `AST` to generate source for the `FST`.
@@ -833,12 +832,12 @@ class FST:
             type_comments = has_type_comments(ast)
 
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
-        src          = FST._unparse(ast)
+        src          = extparse.unparse(ast)
         lines        = src.split('\n')
 
         if mode is not False:
             org = ast
-            ast = FST._parse(src, ast.__class__ if mode is None else mode, parse_params)
+            ast = extparse.parse(src, ast.__class__ if mode is None else mode, parse_params)
 
             try:
                 compare_asts(ast, org, type_comments=type_comments, ctx=ctx, raise_=True)
@@ -1251,7 +1250,7 @@ class FST:
         - `mode`: Parse mode to use, otherwise if `None` then use the top level AST node type for the mode. Depending on
             how this is set will determine whether the verification is checking if is parsable by python (`'exec'` or
             `'strict'` for example), or if the node itself is just in a valid state (where `None` is good). See
-            `fst.misc.Mode`.
+            `fst.extparse.Mode`.
         - `reparse`: Whether to reparse the source and compare ASTs (including location). Otherwise the check is limited
             to a structure check that all children have `FST` nodes which are all liked correctly to their parents.
             `reparse=True` only allowed on root node.
@@ -1310,7 +1309,7 @@ class FST:
         parse_params = self.parse_params
 
         try:
-            astp = FST._parse(self.src, mode or self.get_parse_mode(), parse_params=parse_params)
+            astp = extparse.parse(self.src, mode or self.get_parse_mode(), parse_params=parse_params)
 
         except SyntaxError:
             if raise_:
@@ -4102,7 +4101,7 @@ class FST:
 
         ast = self.a
 
-        if mode := self._get_special_parse_mode(ast):
+        if mode := get_special_parse_mode(ast):
             return mode
 
         # now we check the cases that need source code
@@ -5105,48 +5104,6 @@ class FST:
         _dedent_lns,
         _redent_lns,
         _get_trivia_params,
-    )
-
-    from .fst_parse import (
-        _get_special_parse_mode,
-        _unparse,
-        _parse,
-        _parse_all,
-        _parse_strict,
-        _parse_Module,
-        _parse_Expression,
-        _parse_Interactive,
-        _parse_stmts,
-        _parse_stmt,
-        _parse_ExceptHandler,
-        _parse_ExceptHandlers,
-        _parse_match_case,
-        _parse_match_cases,
-        _parse_expr,
-        _parse_expr_all,
-        _parse_expr_arglike,
-        _parse_expr_slice,
-        _parse_expr_sliceelt,
-        _parse_Tuple,
-        _parse_boolop,
-        _parse_operator,
-        _parse_binop,
-        _parse_augop,
-        _parse_unaryop,
-        _parse_cmpop,
-        _parse_comprehension,
-        _parse_arguments,
-        _parse_arguments_lambda,
-        _parse_arg,
-        _parse_keyword,
-        _parse_alias,
-        _parse_alias_dotted,
-        _parse_alias_star,
-        _parse_withitem,
-        _parse_pattern,
-        _parse_type_param,
-        _parse_type_params,
-        _parse_Assign_targets,
     )
 
     from .fst_code import (

@@ -80,6 +80,8 @@ from .misc import (
     _leading_trivia, _trailing_trivia,
 )
 
+from .extparse import unparse
+
 from .fst_code import (
     _code_as_expr, _code_as_expr_all, _code_as_pattern, _code_as_type_param, _code_as_type_params,
     _code_as_Assign_targets,
@@ -2684,9 +2686,9 @@ def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end']
             ast = reduce_ast(code, True)
 
             if isinstance(ast, Tuple):  # strip delimiters because we want CONTENTS of slice for raw put, not the slice object itself
-                code = fst.FST._unparse(ast)[1 : (-2 if len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
+                code = unparse(ast)[1 : (-2 if len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
             elif isinstance(ast, (List, Dict, Set, MatchSequence, MatchMapping)):
-                code = fst.FST._unparse(ast)[1 : -1]
+                code = unparse(ast)[1 : -1]
 
     elif isinstance(code, fst.FST):
         if not code.is_root:

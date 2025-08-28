@@ -18,8 +18,10 @@ from .astutil import *
 from .astutil import re_alnumdot_alnum, TypeAlias, TemplateStr, Interpolation
 from .misc import PYLT11, PYLT12, PYLT14, PYGE12, astfield
 from .view import fstview
+from .extparse import parse, parse_expr_arglike
 from .fst import FST
 from . import NodeError
+
 
 PROGRAM = 'python -m fst.fuzz'
 
@@ -278,7 +280,7 @@ def ignorable_exc(exc: Exception, putsrc: str | Literal[False] | None = None):
 
         elif putsrc:  # Starred stuff like "*a or b" coming from original code
             try:
-                FST._parse_expr_arglike(putsrc)
+                parse_expr_arglike(putsrc)
             except SyntaxError:
                 pass
             else:
@@ -870,7 +872,7 @@ class Reparse(Fuzzy):
                 gen.send(False)
 
             f = f.copy()
-            a = FST._parse(f.src, f.a.__class__)
+            a = parse(f.src, f.a.__class__)
 
             compare_asts(a, f.a, locs=True, ctx=True, raise_=True)
 

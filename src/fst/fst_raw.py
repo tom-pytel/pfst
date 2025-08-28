@@ -16,7 +16,7 @@ from .misc import (
     Code,
 )
 
-from .fst_parse import Mode
+from .extparse import Mode, unparse
 
 _PATH_BODY          = [astfield('body', 0)]
 _PATH_BODY2         = [astfield('body', 0), astfield('body', 0)]
@@ -197,7 +197,7 @@ def _reparse_raw(self: fst.FST, code: Code | None, ln: int, col: int, end_ln: in
     elif isinstance(code, str):
         new_lines = code.split('\n')
     elif isinstance(code, AST):
-        new_lines = fst.FST._unparse(code).split('\n')
+        new_lines = unparse(code).split('\n')
     elif code is None:
         new_lines = [bistr('')]
     elif not code.is_root:  # isinstance(code, fst.FST)

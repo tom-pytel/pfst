@@ -1,18 +1,16 @@
-"""Extended AST pars.
+"""Extended AST parse.
 
 The parse functions in this module are oriented towards parsing all valid elements which they name which may include
 parsing things which are not those elements, common sense is applied liberally though. And just because an element is
 parsed successfully doesn't mean it may not need parentheses if used in the way intended. Or that it needs a trailing
 newline due to comment ending without an explicit trailing newline.
-
-This module contains functions which are imported as methods in the `FST` class.
 """
 
 from __future__ import annotations
 
 import re
 from ast import parse as ast_parse, unparse as ast_unparse, fix_missing_locations as ast_fix_missing_locations
-from typing import Any, Callable, Mapping, get_args
+from typing import Any, Callable, Literal, Mapping, get_args
 
 from . import fst
 
@@ -64,12 +62,52 @@ from .astutil import (
 )
 
 from .misc import (
-    Mode, _next_src, _shortstr
+    _next_src, _shortstr
 )
 
-
-class ParseError(SyntaxError):
-    """Not technically a syntax error but mostly not the code we were expecting."""
+__all__ = [
+    'Mode',
+    'ParseError',
+    'get_special_parse_mode',
+    'unparse',
+    'parse',
+    'parse_all',
+    'parse_strict',
+    'parse_Module',
+    'parse_Expression',
+    'parse_Interactive',
+    'parse_stmt',
+    'parse_stmts',
+    'parse_ExceptHandler',
+    'parse_ExceptHandlers',
+    'parse_match_case',
+    'parse_match_cases',
+    'parse_expr',
+    'parse_expr_all',
+    'parse_expr_arglike',
+    'parse_expr_slice',
+    'parse_expr_sliceelt',
+    'parse_Tuple',
+    'parse_boolop',
+    'parse_operator',
+    'parse_binop',
+    'parse_augop',
+    'parse_unaryop',
+    'parse_cmpop',
+    'parse_comprehension',
+    'parse_arguments',
+    'parse_arguments_lambda',
+    'parse_arg',
+    'parse_keyword',
+    'parse_alias',
+    'parse_alias_dotted',
+    'parse_alias_star',
+    'parse_withitem',
+    'parse_pattern',
+    'parse_type_param',
+    'parse_type_params',
+    'parse_Assign_targets',
+]
 
 
 _re_trailing_comma     = re.compile(r'(?: [)\s]* (?: (?: \\ | \#[^\n]* ) \n )? )* ,', re.VERBOSE)  # trailing comma search ignoring comments and line continuation backslashes
@@ -137,13 +175,6 @@ def _fixing_unparse(ast: AST) -> str:
     return ast_unparse(ast)
 
 
-# def _validate_indent(src: str, ret: Any = None) -> Any:
-#     if (m := _re_first_src_or_lcont.search(src)) and len(m.group(0)) > 1:
-#         raise IndentationError('unexpected indent')
-
-#     return ret
-
-
 def _offset_linenos(ast: AST, delta: int) -> AST:
     for a in walk(ast):
         if end_lineno := getattr(a, 'end_lineno', None):
@@ -186,7 +217,7 @@ def _has_trailing_comma(src: str, end_lineno: int, end_col_offset: int) -> bool:
 
 def _parse_all_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse either a single `type_param` preferentially or multiple `type_param`s returned in `Tuple`. Called from
-    `_parse_all()` on finding a leading identifier character or star so that is assumed to be there, which will generate
+    `parse_all()` on finding a leading identifier character or star so that is assumed to be there, which will generate
     at least one `type_param`."""
 
     type_params = _ast_parse1(f'type t[\n{src}\n] = None', parse_params).type_params
@@ -205,7 +236,7 @@ def _parse_all_multiple(src: str, parse_params: Mapping[str, Any], stmt: bool, r
 
     if stmt:
         try:
-            return reduce_ast(_parse_stmts(src, parse_params), True)
+            return reduce_ast(parse_stmts(src, parse_params), True)
         except SyntaxError:
             pass
 
@@ -219,11 +250,117 @@ def _parse_all_multiple(src: str, parse_params: Mapping[str, Any], stmt: bool, r
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# FST class private methods
 
-@staticmethod
-def _get_special_parse_mode(ast: AST) -> str | None:
-    r"""Quick determination to the best of ability if a special parse mode is needed for this `AST`. This is the
+Mode = Literal[
+    'all',
+    'strict',
+    'exec',
+    'eval',
+    'single',
+    'stmts',
+    'stmt',
+    'ExceptHandler',
+    'ExceptHandlers',
+    'match_case',
+    'match_cases',
+    'expr',
+    'expr_all',
+    'expr_arglike',
+    'expr_slice',
+    'expr_sliceelt',
+    'Tuple',
+    'boolop',
+    'operator',
+    'binop',
+    'augop',
+    'unaryop',
+    'cmpop',
+    'comprehension',
+    'arguments',
+    'arguments_lambda',
+    'arg',
+    'keyword',
+    'alias',
+    'alias_dotted',
+    'alias_star',
+    'withitem',
+    'pattern',
+    'type_param',
+    'type_params',
+    'Assign_targets',
+] | type[AST]
+
+"""Extended parse modes:
+- `'all'`: Check all possible parse modes (from most likely to least). There is syntax overlap so certain types will
+    never be returned, for example `TypeVar` is always shadowed by `AnnAssign`. Since this attempts many parses before
+    failing it is slower to do so than other modes, though the most likely success is just as fast. Will never return an
+    `Expression` or `Interactive`.
+- `'strict'`: Attempt parse minumum valid parsable code. If only one statement then return the statement itself instead
+    of the `Module`. If that statement is an `Expr` then return the expression instead of the statement. If nothing
+    present then return empty `Module`. Doesn't attempt any of the other parse modes which would not normally be
+    parsable by python, just anything that can be parsed natively by `ast.parse()`.
+- `'exec'`: Parse to a `Module`. Mostly same as passing `Module` type except that `Module` also parses anything that
+    `FST` puts into `Module`s, like slices of normally non-parsable stuff.
+- `'eval'`: Parse to an `Expression`. Same as passing `Expression` type.
+- `'single'`: Parse to an `Interactive`. Same as passing `Interactive` type.
+- `'stmts'`: Parse zero or more `stmt`s returned in a `Module`. Same as passing `'exec'`, but not `Module` as that can
+    parse `FST` slices.
+- `'stmt'`: Parse a single `stmt` returned as itself. Same as passing `stmt` type.
+- `'ExceptHandler'`: Parse as a single `ExceptHandler` returned as itself. Same as passing `ExceptHandler` type.
+- `'ExceptHandlers'`: Parse zero or more `ExceptHandler`s returned in a `Module`.
+- `'match_case'`: Parse a single `match_case` returned as itself. Same as passing `match_case` type.
+- `'match_cases'`: Parse zero or more `match_case`s returned in a `Module`.
+- `'expr'`: "expression", parse a single `expr` returned as itself. This is differentiated from the following three
+    modes by the handling of slices and starred expressions. In this mode `a:b` and `*not v` are syntax errors. Same as
+    passing `expr` type.
+- `'expr_all'`: Parse to any kind of expression including `Slice`, `*not a` or `Tuple` of any of those combined.
+- `'expr_arglike'`: Accept special syntax for `Starred` (call argument, class base definition, slice implicit tuple),
+    same as `'expr'` except that in this mode `a:b` is a syntax error and `*not v` parses to a starred expression
+    `*(not v)`.
+- `'expr_slice'`: "slice expression", same as `'expr'` except that in this mode `a:b` parses to a `Slice` and `*not v`
+    parses to a single element tuple containing a starred expression `(*(not v),)`.
+- `'expr_sliceelt'`: "slice tuple element expression", same as `'expr'` except that in this mode `a:b` parses to a
+    `Slice` and `*not v` parses to a starred expression `*(not v)`. `Tuples` are parsed but cannot contain `Slice`s.
+- `'Tuple'`: Parse to a `Tuple` which may contain anything that a tuple can contain like multiple `Slice`s.
+- `'boolop'`: Parse to a `boolop` operator.
+- `'operator'`: Parse to an `operator` operator, either normal binary `'*'` or augmented `'*='`.
+- `'binop'`: Parse to an `operator` only binary `'*'`, `'+'`, `'>>'`, etc...
+- `'augop'`: Parse to an `operator` only augmented `'*='`, `'+='`, `'>>='`, etc...
+- `'unaryop'`: Parse to a `unaryop` operator.
+- `'cmpop'`: Parse to a `cmpop` compare operator.
+- `'comprehension'`: Parse a single `comprehension` returned as itself. Same as passing `comprehension` type.
+- `'arguments'`: Parse as `arguments` for a `FunctionDef` or `AsyncFunctionDef` returned as itself. In this mode
+    type annotations are allowed for the arguments. Same as passing `arguments` type.
+- `'arguments_lambda'`: Parse as `arguments` for a `Lambda` returned as itself. In this mode type annotations
+    are not allowed for the arguments.
+- `'arg'`: Parse as a single `arg` returned as itself. Same as passing `arg` type.
+- `'keyword'`: Parse as a single `keyword` returned as itself. Same as passing `keyword` type.
+- `'alias'`: Parse as a single `alias` returned as itself. Either starred or dotted versions are accepted. Same
+    as passing `alias` type.
+- `'alias_dotted'`: Parse as a single `alias` returned as itself, with starred version being a syntax error.
+- `'alias_star'`: Parse as a single `alias` returned as itself, with dotted version being a syntax error.
+- `'withitem'`: Parse as a single `withitem` returned as itself. Same as passing `withitem` type.
+- `'pattern'`: Parse as a a single `pattern` returned as itself. Same as passing `pattern` type.
+- `'type_param'`: Parse as a single `type_param` returned as itself, either `TypeVar`, `ParamSpec` or
+    `TypeVarTuple`. Same as passing `type_param` type.
+- `'type_params'`: Parse as a slice of zero or more `type_param`s returned in a `Tuple`.
+- `'Assign_targets'`: Parse as a single or multiple targets to an `Assign` node, with `=` as separators and an optional
+    trailing `=`. Returned as an `Assign` node with a `value` node which is an empty `Name`.
+- `type[AST]`: If an `AST` type is passed then will attempt to parse to this type. This can be used to narrow
+    the scope of desired return, for example `Constant` will parse as an expression but fail if the expression
+    is not a `Constant`. These overlap with the string specifiers to an extent but not all of them. For example
+    `AST` type `ast.expr` is the same as passing `'expr'`. Not all string specified modes are can be matched, for
+    example `'arguments_lambda'`. Likewise `'exec'` and `'stmts'` specify the same parse mode. `Tuple` parse also allows
+    parsing `Slice`s in the `Tuple` as well as otherwise invalid star notation `*not a`.
+"""
+
+
+class ParseError(SyntaxError):
+    """Not technically a syntax error but mostly not the code we were expecting."""
+
+
+def get_special_parse_mode(ast: AST) -> str | None:
+    """Quick determination to the best of ability if a special parse mode is needed for this `AST`. This is the
     extended parse mode as per `Mode`, not the `ast.parse()` mode. If a special mode applies it is returned which should
     parse the source of this `AST` back to itself. Otherwise `None` is returned. This is a just quick a check, doesn't
     verify everything.
@@ -258,8 +395,7 @@ def _get_special_parse_mode(ast: AST) -> str | None:
     return None
 
 
-@staticmethod
-def _unparse(ast: AST) -> str:
+def unparse(ast: AST) -> str:
     """AST unparse that handles misc case of comprehension starting with a single space by stripping it as well as
     removing parentheses from `Tuple`s with `Slice`s or special slice (our own) `Tuple`s."""
 
@@ -279,8 +415,7 @@ def _unparse(ast: AST) -> str:
     return src
 
 
-@staticmethod
-def _parse(src: str, mode: Mode = 'all', parse_params: Mapping[str, Any] = {}) -> AST:
+def parse(src: str, mode: Mode = 'all', parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse any source to an AST, including things which normal `ast.parse()` doesn't handle, like individual
     `comprehension`s. Can be given a target type to parse or else will try to various parse methods until it finds one
     that succeeds (if any).
@@ -293,7 +428,7 @@ def _parse(src: str, mode: Mode = 'all', parse_params: Mapping[str, Any] = {}) -
     - `mode`: Either one of the standard `ast.parse()` modes `exec`, `eval` or `single` to parse to that type of module
         or one of our specific strings like `'ExceptHandlers'` or an actual `AST` type to parse to. If the mode is
         provided and cannot parse to the specified target then an error is raised and no other parse types are tried.
-        See `fst.misc.Mode`.
+        See `Mode`.
     - `parse_params`: Dictionary of optional parse parameters to pass to `ast.parse()`, can contain `filename`,
         `type_comments` and `feature_version`.
     """
@@ -316,8 +451,7 @@ def _parse(src: str, mode: Mode = 'all', parse_params: Mapping[str, Any] = {}) -
     raise ParseError(f'could not parse to {mode.__name__}')
 
 
-@staticmethod
-def _parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """All parse modes. Get a hint from starting source and attempt parse according to that from most probable to least
     of what it could be."""
 
@@ -333,49 +467,49 @@ def _parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     if groupdict['stmt_or_expr_or_pat_or_witem']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (_parse_expr_all, _parse_pattern, _parse_withitem, _parse_Assign_targets))  # _parse_expr_all because could be Slice
+                                   (parse_expr_all, parse_pattern, parse_withitem, parse_Assign_targets))  # parse_expr_all because could be Slice
 
     if groupdict['match_type_identifier']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (_parse_expr_all, _parse_pattern, _parse_arguments, _parse_arguments_lambda,
-                                    _parse_withitem, _parse_arg, _parse_all_type_params, _parse_Assign_targets))
+                                   (parse_expr_all, parse_pattern, parse_arguments, parse_arguments_lambda,
+                                    parse_withitem, parse_arg, _parse_all_type_params, parse_Assign_targets))
 
     if groupdict['stmt']:
-        return reduce_ast(_parse_stmts(src, parse_params), True)
+        return reduce_ast(parse_stmts(src, parse_params), True)
 
     if groupdict['True_False_None']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (_parse_expr_all, _parse_pattern, _parse_withitem))
+                                   (parse_expr_all, parse_pattern, parse_withitem))
 
     if groupdict['async_or_for']:
-        return _parse_all_multiple(src, parse_params, not first.group(1), (_parse_comprehension,))
+        return _parse_all_multiple(src, parse_params, not first.group(1), (parse_comprehension,))
 
     if groupdict['await_lambda_yield']:
-        return _parse_all_multiple(src, parse_params, not first.group(1), (_parse_expr_all,))
+        return _parse_all_multiple(src, parse_params, not first.group(1), (parse_expr_all,))
 
     if groupdict['if']:
-        return reduce_ast(_parse_stmts(src, parse_params), True)
+        return reduce_ast(parse_stmts(src, parse_params), True)
 
     if groupdict['except']:
-        return reduce_ast(_parse_ExceptHandlers(src, parse_params), True)
+        return reduce_ast(parse_ExceptHandlers(src, parse_params), True)
 
     if groupdict['case']:
         try:
-            return reduce_ast(_parse_match_cases(src, parse_params), True)
+            return reduce_ast(parse_match_cases(src, parse_params), True)
         except SyntaxError:
             pass
 
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (_parse_expr_all, _parse_pattern, _parse_arguments, _parse_arguments_lambda,
-                                    _parse_withitem, _parse_arg, _parse_all_type_params, _parse_Assign_targets))
+                                   (parse_expr_all, parse_pattern, parse_arguments, parse_arguments_lambda,
+                                    parse_withitem, parse_arg, _parse_all_type_params, parse_Assign_targets))
 
     if groupdict['at']:
-        return reduce_ast(_parse_stmts(src, parse_params), True)
+        return reduce_ast(parse_stmts(src, parse_params), True)
 
     if groupdict['star']:
         ast = _parse_all_multiple(src, parse_params, not first.group(1),
-                                  (_parse_expr_arglike, _parse_pattern, _parse_arguments, _parse_arguments_lambda,
-                                   _parse_all_type_params, _parse_operator, _parse_Assign_targets))
+                                  (parse_expr_arglike, parse_pattern, parse_arguments, parse_arguments_lambda,
+                                   _parse_all_type_params, parse_operator, parse_Assign_targets))
 
         if isinstance(ast, Assign) and len(targets := ast.targets) == 1 and isinstance(targets[0], Starred):  # '*T = ...' validly parses to Assign statement but is invalid compile, but valid type_param so reparse as that
             return _parse_all_type_params(src, parse_params)
@@ -384,41 +518,41 @@ def _parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     if groupdict['minus']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (_parse_expr_all, _parse_pattern, _parse_withitem, _parse_binop))
+                                   (parse_expr_all, parse_pattern, parse_withitem, parse_binop))
 
     if groupdict['not']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (_parse_expr_all, _parse_withitem, _parse_unaryop, _parse_cmpop))
+                                   (parse_expr_all, parse_withitem, parse_unaryop, parse_cmpop))
 
     if groupdict['tilde']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (_parse_expr_all, _parse_withitem, _parse_unaryop))
+                                   (parse_expr_all, parse_withitem, parse_unaryop))
 
     if groupdict['colon']:
-        return _parse_all_multiple(src, parse_params, False, (_parse_expr_all,))
+        return _parse_all_multiple(src, parse_params, False, (parse_expr_all,))
 
     if groupdict['starstar']:
-        return _parse_all_multiple(src, parse_params, False, (_parse_arguments, _parse_arguments_lambda,
-                                                              _parse_all_type_params, _parse_operator))
+        return _parse_all_multiple(src, parse_params, False, (parse_arguments, parse_arguments_lambda,
+                                                              _parse_all_type_params, parse_operator))
 
     if groupdict['plus']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (_parse_expr_all, _parse_withitem, _parse_binop))
+                                   (parse_expr_all, parse_withitem, parse_binop))
 
     if groupdict['cmpop_w']:
-        return _parse_cmpop(src, parse_params)
+        return parse_cmpop(src, parse_params)
 
     if groupdict['cmpop_o']:
-        return _parse_cmpop(src, parse_params)
+        return parse_cmpop(src, parse_params)
 
     if groupdict['boolop']:
-        return _parse_boolop(src, parse_params)
+        return parse_boolop(src, parse_params)
 
     if groupdict['augop']:
-        return _parse_augop(src, parse_params)
+        return parse_augop(src, parse_params)
 
     if groupdict['operator']:
-        return _parse_operator(src, parse_params)
+        return parse_operator(src, parse_params)
 
     # groupdict['syntax_error'] or something else unrecognized
 
@@ -427,30 +561,26 @@ def _parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     raise RuntimeError('should not get here')
 
 
-@staticmethod
-def _parse_strict(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_strict(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Attempt to parse valid parsable statements and then reduce to a single statement or expressing if possible. Only
     parses what `ast.parse()` can, no funny stuff."""
 
     return reduce_ast(_ast_parse(src, parse_params), True)
 
 
-@staticmethod
-def _parse_Module(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_Module(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse `Module`, ast.parse(mode='exec')'."""
 
     return _ast_parse(src, parse_params)
 
 
-@staticmethod
-def _parse_Expression(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_Expression(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse `Expression`, `ast.parse(mode='eval')."""
 
     return _ast_parse(src, {**parse_params, 'mode': 'eval'})
 
 
-@staticmethod
-def _parse_Interactive(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_Interactive(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse `Interactive`."""
 
     if not src.endswith('\n'):  # because otherwise error maybe
@@ -459,15 +589,13 @@ def _parse_Interactive(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _ast_parse(src, {**parse_params, 'mode': 'single'})
 
 
-@staticmethod
-def _parse_stmts(src: str, parse_params: Mapping[str, Any] = {}) -> AST:  # same as _parse_Module() but I want the IDE context coloring
+def parse_stmts(src: str, parse_params: Mapping[str, Any] = {}) -> AST:  # same as parse_Module() but I want the IDE context coloring
     """Parse zero or more `stmt`s and return them in a `Module` `body` (just `ast.parse()` basically)."""
 
     return _ast_parse(src, parse_params)
 
 
-@staticmethod
-def _parse_stmt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_stmt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse exactly one `stmt` and return as itself."""
 
     mod = _ast_parse(src, parse_params)
@@ -478,11 +606,10 @@ def _parse_stmt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return body[0]
 
 
-@staticmethod
-def _parse_ExceptHandler(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_ExceptHandler(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse exactly one `ExceptHandler` and return as itself."""
 
-    mod = _parse_ExceptHandlers(src, parse_params)
+    mod = parse_ExceptHandlers(src, parse_params)
 
     if len(body := mod.body) != 1:
         raise ParseError('expecting single ExceptHandler')
@@ -490,8 +617,7 @@ def _parse_ExceptHandler(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return body[0]
 
 
-@staticmethod
-def _parse_ExceptHandlers(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_ExceptHandlers(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse zero or more `ExceptHandler`s and return them in a `Module` `body`."""
 
     try:
@@ -522,11 +648,10 @@ def _parse_ExceptHandlers(src: str, parse_params: Mapping[str, Any] = {}) -> AST
     return Module(body=_offset_linenos(ast, -1).handlers, type_ignores=[])
 
 
-@staticmethod
-def _parse_match_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_match_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse exactly one `match_case` and return as itself."""
 
-    mod = _parse_match_cases(src, parse_params)
+    mod = parse_match_cases(src, parse_params)
 
     if len(body := mod.body) != 1:
         raise ParseError('expecting single match_case')
@@ -534,8 +659,7 @@ def _parse_match_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return body[0]
 
 
-@staticmethod
-def _parse_match_cases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_match_cases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse zero or more `match_case`s and return them in a `Module` `body`."""
 
     lines = [bistr('match x:'), bistr(' case None: pass')] + [bistr(' ' + l) for l in src.split('\n')]
@@ -577,8 +701,7 @@ def _parse_match_cases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return Module(body=ast.cases[1:], type_ignores=[])
 
 
-@staticmethod
-def _parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a "standard" `ast.expr`, only things which are normally valid in an `expr` location, no `Slices` or
     `Starred` expressions which are only valid as a `Call` arg (`*not a`)."""
 
@@ -616,17 +739,16 @@ def _parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(ast, -1)
 
 
-@staticmethod
-def _parse_expr_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_expr_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to any kind of expression including `Slice`, `*not a` or `Tuple` of any of those combined. Lone `*a`
     `Starred` is returned as a `Starred` and not `Tuple` as would be in a slice."""
 
     try:
-        ast = _parse_expr_slice(src, parse_params)
+        ast = parse_expr_slice(src, parse_params)
 
     except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11
         try:
-            ast = _parse_expr_arglike(src, parse_params)  # expr_arglike instead of expr because py 3.10 won't pick up `*not a` in a slice above
+            ast = parse_expr_arglike(src, parse_params)  # expr_arglike instead of expr because py 3.10 won't pick up `*not a` in a slice above
         except SyntaxError:
             raise SyntaxError('invalid expression (all types)') from None
 
@@ -639,12 +761,11 @@ def _parse_expr_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return ast
 
 
-@staticmethod
-def _parse_expr_arglike(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_expr_arglike(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `expr` or in the context of a `Call.args` which treats `Starred` differently."""
 
     try:
-        return _parse_expr(src, parse_params)
+        return parse_expr(src, parse_params)
     except SyntaxError:  # stuff like '*[] or []'
         pass
 
@@ -662,8 +783,7 @@ def _parse_expr_arglike(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(ast, -1)
 
 
-@staticmethod
-def _parse_expr_slice(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_expr_slice(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.Slice` or anything else that can go into `Subscript.slice` (`expr`), e.g. "start:stop:step" or
     "name" or even "a:b, c:d:e, g". Using this, naked `Starred` expressions parse to single element `Tuple` with the
     `Starred` as the only element."""
@@ -689,22 +809,21 @@ def _parse_expr_slice(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(ast, -1)
 
 
-@staticmethod
-def _parse_expr_sliceelt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_expr_sliceelt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an element of a slice `Tuple`, an `ast.expr` or `ast.Slice`. This exists because otherwise a naked
     `Starred` expression parses to an implicit single element `Tuple` and the caller of this function does not want that
     behavior. Using this, naked `Starred` expressions parse to just the `Starred` and not a `Tuple` like in
-    `_parse_expr_slice()`. Does not allow a `Tuple` with `Slice` in it as it is expected that this expression is already
+    `parse_expr_slice()`. Does not allow a `Tuple` with `Slice` in it as it is expected that this expression is already
     in a slice `Tuple` and that is not allowed in python.
 
     TODO: This can currently return `*not a, *a or b` as valid which are not valid normal tuples (nested as sliceelt).
     """
 
     try:
-        ast = _parse_expr_slice(src, parse_params)
+        ast = parse_expr_slice(src, parse_params)
 
     except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11
-        return _parse_expr(src, parse_params)
+        return parse_expr(src, parse_params)
 
     if isinstance(ast, Tuple) and any(isinstance(e, Slice) for e in ast.elts):
         raise SyntaxError('Slice not allowed in nested slice tuple')
@@ -717,18 +836,17 @@ def _parse_expr_sliceelt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return ast
 
 
-@staticmethod
-def _parse_Tuple(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_Tuple(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a `Tuple` which may or may not contain `Slice`s and otherwise invalid syntax in normal `Tuple`s like
     `*not a` (if not parenthesized)."""
 
     try:
-        ast        = _parse_expr_slice(src, parse_params)
+        ast        = parse_expr_slice(src, parse_params)
         from_slice = True
 
     except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11
         try:
-            ast = _parse_expr(src, parse_params)
+            ast = parse_expr(src, parse_params)
         except SyntaxError:
             raise SyntaxError('invalid tuple') from None
 
@@ -745,8 +863,7 @@ def _parse_Tuple(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return ast
 
 
-@staticmethod
-def _parse_boolop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_boolop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.boolop`."""
 
     ast = _ast_parse1(f'(a\n{src}\nb)', parse_params).value
@@ -757,21 +874,19 @@ def _parse_boolop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
 
 
-@staticmethod
-def _parse_operator(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_operator(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.boolop`."""
 
     if '=' in src:
         try:
-            return _parse_augop(src, parse_params)
+            return parse_augop(src, parse_params)
         except ParseError:  # maybe the '=' was in a comment, yes I know, a comment in an operator, people do strange things
             pass
 
-    return _parse_binop(src, parse_params)
+    return parse_binop(src, parse_params)
 
 
-@staticmethod
-def _parse_binop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_binop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.operator` in the context of a `BinOp`."""
 
     ast = _ast_parse1(f'(a\n{src}\nb)', parse_params).value
@@ -782,8 +897,7 @@ def _parse_binop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
 
 
-@staticmethod
-def _parse_augop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_augop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an augmented `ast.operator` in the context of a `AugAssign`."""
 
     ast = _ast_parse1(f'a \\\n{src} b', parse_params)
@@ -794,8 +908,7 @@ def _parse_augop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
 
 
-@staticmethod
-def _parse_unaryop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_unaryop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.unaryop`."""
 
     ast = _ast_parse1(f'(\n{src}\nb)', parse_params).value
@@ -806,8 +919,7 @@ def _parse_unaryop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
 
 
-@staticmethod
-def _parse_cmpop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_cmpop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.cmpop`."""
 
     ast = _ast_parse1(f'(a\n{src}\nb)', parse_params).value
@@ -821,8 +933,7 @@ def _parse_cmpop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return ops[0].__class__()  # parse() returns the same identical object for all instances of the same operator
 
 
-@staticmethod
-def _parse_comprehension(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_comprehension(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.comprehension`, e.g. "async for i in something() if i"."""
 
     ast = _ast_parse1(f'[_ \n{src}\n]', parse_params).value
@@ -836,8 +947,7 @@ def _parse_comprehension(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(gens[0], -1)
 
 
-@staticmethod
-def _parse_arguments(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_arguments(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.arguments`, e.g. "a: list[str], /, b: int = 1, *c, d=100, **e"."""
 
     ast = _ast_parse1(f'def f(\n{src}\n): pass', parse_params).args
@@ -845,8 +955,7 @@ def _parse_arguments(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(ast, -1)
 
 
-@staticmethod
-def _parse_arguments_lambda(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_arguments_lambda(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.arguments` for a `Lambda`, e.g. "a, /, b, *c, d=100, **e"."""
 
     ast = _ast_parse1(f'(lambda \n{src}\n: None)', parse_params).value.args
@@ -854,8 +963,7 @@ def _parse_arguments_lambda(src: str, parse_params: Mapping[str, Any] = {}) -> A
     return _offset_linenos(ast, -1)
 
 
-@staticmethod
-def _parse_arg(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_arg(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.arg`, e.g. "var: list[int]"."""
 
     try:
@@ -886,8 +994,7 @@ def _parse_arg(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(ast, -1)
 
 
-@staticmethod
-def _parse_keyword(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_keyword(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.keyword`, e.g. "var=val"."""
 
     keywords = _ast_parse1(f'f(\n{src}\n)', parse_params).value.keywords
@@ -898,21 +1005,19 @@ def _parse_keyword(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(keywords[0], -1)
 
 
-@staticmethod
-def _parse_alias(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_alias(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.alias`, allowing star or dotted notation or star, e.g. "name as alias"."""
 
     if '*' in src:
         try:
-            return _parse_alias_star(src, parse_params)
+            return parse_alias_star(src, parse_params)
         except SyntaxError:  # '*' could have been in a comment
             pass
 
-    return _parse_alias_dotted(src, parse_params)
+    return parse_alias_dotted(src, parse_params)
 
 
-@staticmethod
-def _parse_alias_dotted(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_alias_dotted(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.alias`, allowing dotted notation but not star (not all aliases are created equal),
     e.g. "name as alias"."""
 
@@ -933,8 +1038,7 @@ def _parse_alias_dotted(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(names[0], -1)
 
 
-@staticmethod
-def _parse_alias_star(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_alias_star(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.alias`, allowing star but not dotted."""
 
     try:
@@ -954,8 +1058,7 @@ def _parse_alias_star(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(names[0], -1)
 
 
-@staticmethod
-def _parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.withitem`, e.g. "something() as var"."""
 
     items = _ast_parse1(f'with (\n{src}\n): pass', parse_params).items
@@ -985,8 +1088,7 @@ def _parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(items[0], -1)
 
 
-@staticmethod
-def _parse_pattern(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_pattern(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.pattern`, e.g. "{a.b: i, **rest}"."""
 
     try:
@@ -1020,8 +1122,7 @@ def _parse_pattern(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(ast, -2)
 
 
-@staticmethod
-def _parse_type_param(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_type_param(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.type_param`, e.g. "t: Base = Subclass"."""
 
     type_params = _ast_parse1(f'type t[\n{src}\n] = None', parse_params).type_params
@@ -1037,8 +1138,7 @@ def _parse_type_param(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(ast, -1)
 
 
-@staticmethod
-def _parse_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse zero or more `ast.type_param`s and return them in a `Tuple`. Will accept empty tuple parentheses as well
     as empty source for a zero-length slice."""
 
@@ -1048,7 +1148,7 @@ def _parse_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     except SyntaxError as first_exc:  # maybe empty
         try:
-            ast = _ast_parse1(f'(\n{src}\n)').value  # parse empty as well as zero-length tuple
+            ast = _ast_parse1(f'(\n{src}\n)', parse_params).value  # parse empty as well as zero-length tuple
         except SyntaxError:
             raise first_exc from None
 
@@ -1067,17 +1167,16 @@ def _parse_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(ast, -1)
 
 
-@staticmethod
-def _parse_Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse zero or more `Assign` targets and return them in an `Assign` with the `value` node as an empty `Name`. Takes
     `=` as separators with an optional trailing `=`."""
 
     try:
-        ast = _ast_parse1(f'_=\\\n{src}  _')  # try assuming src has trailing equals
+        ast = _ast_parse1(f'_=\\\n{src}  _', parse_params)  # try assuming src has trailing equals
 
     except SyntaxError:
         try:
-            ast = _ast_parse1(f'_=\\\n{src} =_')  # now check assuming src does not have trailing equals
+            ast = _ast_parse1(f'_=\\\n{src} =_', parse_params)  # now check assuming src does not have trailing equals
         except SyntaxError:
             raise SyntaxError('invalid Assign targets slice') from None
 
@@ -1111,64 +1210,64 @@ def _parse_Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST
 # ......................................................................................................................
 
 _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type but that will parse ALL of those types without error, not all parsed in desired but all desired in parsed
-    'all':               _parse_all,
-    'strict':            _parse_strict,
-    'exec':              _parse_Module,
-    'eval':              _parse_Expression,
-    'single':            _parse_Interactive,
-    'stmts':             _parse_stmts,
-    'stmt':              _parse_stmt,
-    'ExceptHandler':     _parse_ExceptHandler,
-    'ExceptHandlers':    _parse_ExceptHandlers,
-    'match_case':        _parse_match_case,
-    'match_cases':       _parse_match_cases,
-    'expr':              _parse_expr,
-    'expr_all':          _parse_expr_all,       # `a:b:c`, `*not c`, `*st`, `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`, `*not c`
-    'expr_arglike':      _parse_expr_arglike,   # `*a or b`, `*not c`
-    'expr_slice':        _parse_expr_slice,     # `a:b:c`, `*not c`, `a:b:c, x:y:z`, `*st` -> `*st,` (py 3.11+)
-    'expr_sliceelt':     _parse_expr_sliceelt,  # `a:b:c`, `*not c`, `*st`
-    'Tuple':             _parse_Tuple,          # `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`
-    'boolop':            _parse_boolop,
-    'operator':          _parse_operator,
-    'binop':             _parse_binop,
-    'augop':             _parse_augop,
-    'unaryop':           _parse_unaryop,
-    'cmpop':             _parse_cmpop,
-    'comprehension':     _parse_comprehension,
-    'arguments':         _parse_arguments,
-    'arguments_lambda':  _parse_arguments_lambda,
-    'arg':               _parse_arg,
-    'keyword':           _parse_keyword,
-    'alias':             _parse_alias,
-    'alias_dotted':      _parse_alias_dotted,
-    'alias_star':        _parse_alias_star,
-    'withitem':          _parse_withitem,
-    'pattern':           _parse_pattern,
-    'type_param':        _parse_type_param,
-    'type_params':       _parse_type_params,
-    'Assign_targets':    _parse_Assign_targets,
-    mod:                 _parse_Module,    # parsing with an AST type doesn't mean it will be parsable by ast module
-    Expression:          _parse_Expression,
-    Interactive:         _parse_Interactive,
-    stmt:                _parse_stmt,
-    ExceptHandler:       _parse_ExceptHandler,
-    match_case:          _parse_match_case,
-    expr:                _parse_expr,          # not _expr_all because those cases are handled in Starred, Slice and Tuple
-    Starred:             _parse_expr_arglike,  # because could have form '*a or b' and we want to parse any form of Starred here
-    Slice:               _parse_expr_slice,    # because otherwise would be _parse_expr which doesn't do slice by default, parses '*a' to '*a,' on py 3.11+
-    Tuple:               _parse_Tuple,         # because could have slice in it and we are parsing all forms including '*not a'
-    boolop:              _parse_boolop,
-    operator:            _parse_operator,
-    unaryop:             _parse_unaryop,
-    cmpop:               _parse_cmpop,
-    comprehension:       _parse_comprehension,
-    arguments:           _parse_arguments,
-    arg:                 _parse_arg,
-    keyword:             _parse_keyword,
-    alias:               _parse_alias,
-    withitem:            _parse_withitem,
-    pattern:             _parse_pattern,
-    type_param:          _parse_type_param,
+    'all':               parse_all,
+    'strict':            parse_strict,
+    'exec':              parse_Module,
+    'eval':              parse_Expression,
+    'single':            parse_Interactive,
+    'stmts':             parse_stmts,
+    'stmt':              parse_stmt,
+    'ExceptHandler':     parse_ExceptHandler,
+    'ExceptHandlers':    parse_ExceptHandlers,
+    'match_case':        parse_match_case,
+    'match_cases':       parse_match_cases,
+    'expr':              parse_expr,
+    'expr_all':          parse_expr_all,       # `a:b:c`, `*not c`, `*st`, `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`, `*not c`
+    'expr_arglike':      parse_expr_arglike,   # `*a or b`, `*not c`
+    'expr_slice':        parse_expr_slice,     # `a:b:c`, `*not c`, `a:b:c, x:y:z`, `*st` -> `*st,` (py 3.11+)
+    'expr_sliceelt':     parse_expr_sliceelt,  # `a:b:c`, `*not c`, `*st`
+    'Tuple':             parse_Tuple,          # `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`
+    'boolop':            parse_boolop,
+    'operator':          parse_operator,
+    'binop':             parse_binop,
+    'augop':             parse_augop,
+    'unaryop':           parse_unaryop,
+    'cmpop':             parse_cmpop,
+    'comprehension':     parse_comprehension,
+    'arguments':         parse_arguments,
+    'arguments_lambda':  parse_arguments_lambda,
+    'arg':               parse_arg,
+    'keyword':           parse_keyword,
+    'alias':             parse_alias,
+    'alias_dotted':      parse_alias_dotted,
+    'alias_star':        parse_alias_star,
+    'withitem':          parse_withitem,
+    'pattern':           parse_pattern,
+    'type_param':        parse_type_param,
+    'type_params':       parse_type_params,
+    'Assign_targets':    parse_Assign_targets,
+    mod:                 parse_Module,    # parsing with an AST type doesn't mean it will be parsable by ast module
+    Expression:          parse_Expression,
+    Interactive:         parse_Interactive,
+    stmt:                parse_stmt,
+    ExceptHandler:       parse_ExceptHandler,
+    match_case:          parse_match_case,
+    expr:                parse_expr,          # not _expr_all because those cases are handled in Starred, Slice and Tuple
+    Starred:             parse_expr_arglike,  # because could have form '*a or b' and we want to parse any form of Starred here
+    Slice:               parse_expr_slice,    # because otherwise would be parse_expr which doesn't do slice by default, parses '*a' to '*a,' on py 3.11+
+    Tuple:               parse_Tuple,         # because could have slice in it and we are parsing all forms including '*not a'
+    boolop:              parse_boolop,
+    operator:            parse_operator,
+    unaryop:             parse_unaryop,
+    cmpop:               parse_cmpop,
+    comprehension:       parse_comprehension,
+    arguments:           parse_arguments,
+    arg:                 parse_arg,
+    keyword:             parse_keyword,
+    alias:               parse_alias,
+    withitem:            parse_withitem,
+    pattern:             parse_pattern,
+    type_param:          parse_type_param,
     Load:                lambda src, parse_params = {}: Load(),  # HACKS for verify() and other similar stuff
     Store:               lambda src, parse_params = {}: Store(),
     Del:                 lambda src, parse_params = {}: Del(),

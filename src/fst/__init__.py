@@ -72,5 +72,5 @@ from ast import *  # noqa: F403
 from .asttypes import *  # noqa: F403
 from .misc import NodeError, fstloc, astfield  # noqa: F401
 from .view import fstview  # noqa: F401
-from .fst_parse import ParseError  # noqa: F401
+from .extparse import ParseError  # noqa: F401
 from .fst import parse, unparse, dump, FST  # noqa: F401

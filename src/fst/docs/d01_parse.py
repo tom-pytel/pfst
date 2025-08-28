@@ -197,7 +197,7 @@ Have you ever dreamed of being able to parse the `+` operator? Well now you can!
 
 There are some special modes, like `'expr_arglike'`, which allow parsing some things which are not normally parsable in their
 usual context. The below is not normally parsable in an expression context as it is special syntax for `Call` vararg
-arguments. For a full list of parse modes see `fst.misc.Mode`.
+arguments. For a full list of parse modes see `fst.extparse.Mode`.
 
 ```py
 >>> FST('*a or b', 'expr_arglike').dump()

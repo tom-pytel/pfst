@@ -4,6 +4,7 @@ import unittest
 
 from fst import *
 from fst.astutil import re_identifier, re_identifier_only
+from fst.extparse import parse_expr
 
 IDENTIFIERS = [
     'ä',
@@ -36,7 +37,7 @@ class TestFSTUnicode(unittest.TestCase):
 
     def test_same_as_parse(self):
         for ident in IDENTIFIERS:
-            f = FST._parse_expr(ident)
+            f = parse_expr(ident)
             i = FST._code_as_identifier(ident)
             self.assertEqual(i, f.id)
 
