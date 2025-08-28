@@ -18287,7 +18287,13 @@ Module - ROOT 0,0..0,5
     .value Name 'd' Load - 0,4..0,5
 """),
 
-(r"""a = b = c = d""", 'body[0]', None, None, 'targets', {'one': True}, r"""x""", r"""**ValueError("cannot put as 'one' item to Assign.targets")**""", r"""
+(r"""a = b = c = d""", 'body[0]', None, None, 'targets', {'one': True}, r"""x""", r"""x = d""", r"""
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'x' Store - 0,0..0,1
+    .value Name 'd' Load - 0,4..0,5
 """),
 
 (r"""a = b = c = d""", 'body[0]', None, None, 'targets', {}, r"""x =""", r"""x = d""", r"""

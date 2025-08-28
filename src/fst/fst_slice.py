@@ -1833,12 +1833,26 @@ def _code_to_slice_Assign_targets(self: fst.FST, code: Code | None, one: bool, o
         return None
 
     if one:
-        raise ValueError("cannot put as 'one' item to Assign.targets")
+        fst_ = _code_as_expr(code, self.root.parse_params, sanitize=False)
+        ast_ = fst_.a
 
-    fst_ = _code_as_Assign_targets(code, self.root.parse_params, sanitize=False)
+        if not is_valid_target(ast_):
+            raise NodeError(f'expecting single Assign target, got {fst_.a.__class__.__name__}')
 
-    if not fst_.a.targets:  # put empty sequence is same as delete
-        return None
+        set_ctx(ast_, Store)
+
+        return fst.FST(Assign(targets=[ast_], value=Name(id='', ctx=Load(),
+                                                         lineno=(el := len(ls := fst_._lines)),
+                                                         col_offset=(ec := ls[-1].lenbytes),
+                                                         end_lineno=el, end_col_offset=ec),
+                              lineno=1, col_offset=0, end_lineno=el, end_col_offset=ec),
+                       ls, from_=fst_, lcopy=False)
+
+    else:
+        fst_ = _code_as_Assign_targets(code, self.root.parse_params, sanitize=False)
+
+        if not fst_.a.targets:  # put empty sequence is same as delete
+            return None
 
     return fst_
 
