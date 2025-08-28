@@ -13,10 +13,10 @@ from .astutil import bistr
 from .misc import (
     NodeError, astfield,
     STMTISH_FIELDS,
-    Code,
 )
 
 from .extparse import Mode, unparse
+from .code import Code
 
 _PATH_BODY          = [astfield('body', 0)]
 _PATH_BODY2         = [astfield('body', 0), astfield('body', 0)]

@@ -4,8 +4,9 @@ from builtins import slice
 from typing import Literal
 
 from .astutil import AST, get_func_class_or_ass_by_name
-from .misc import Code, _fixup_one_index, _fixup_slice_indices
-from .fst import FST
+from .misc import _fixup_one_index, _fixup_slice_indices
+from .code import Code
+from . import fst
 
 __all__ = ['fstview']
 
@@ -30,6 +31,8 @@ class fstview:
     view. Do not hold on to views, use them and discard.
 
     ```py
+    >>> from fst import FST
+
     >>> view = FST('[1, 2, 3]').elts
 
     >>> view[1].remove()  # operation on node
@@ -50,6 +53,8 @@ class fstview:
 
     **Examples:**
     ```py
+    >>> from fst import FST
+
     >>> f = FST('[0, 1, 2, 3]')
     >>> f
     <List ROOT 0,0..0,12>
@@ -86,20 +91,20 @@ class fstview:
     ```
     """
 
-    fst:   FST  ; """The target `FST` node this view references."""
-    field: str  ; """The target field this view references."""
-    start: int  ; """Start position within the target field list this view references."""
-    stop:  int  ; """One past the last element within the target field list this view references."""
+    fst:   fst.FST  ; """The target `FST` node this view references."""
+    field: str      ; """The target field this view references."""
+    start: int      ; """Start position within the target field list this view references."""
+    stop:  int      ; """One past the last element within the target field list this view references."""
 
     is_FST = False  ; """@private"""  # for quick checks vs. `FST`
 
     @property
-    def root(self) -> FST:
+    def root(self) -> fst.FST:
         """Root node of the `FST` node this view belongs to."""
 
         return self.fst.root
 
-    def __init__(self, fst: FST, field: str, start: int, stop: int):
+    def __init__(self, fst: fst.FST, field: str, start: int, stop: int):
         """@private"""
 
         self.fst   = fst
@@ -113,7 +118,7 @@ class fstview:
     def __len__(self) -> int:
         return self.stop - self.start
 
-    def __getitem__(self, idx: int | slice | str) -> fstview | FST | str | None:
+    def __getitem__(self, idx: int | slice | str) -> fstview | fst.FST | str | None:
         r"""Get a single item or a slice view from this slice view. All indices (including negative) are relative to the
         bounds of this view. This is just an access, not a cut or a copy, so if you want a copy you must explicitly do
         `.copy()` on the returned value.
@@ -133,6 +138,8 @@ class fstview:
 
         **Examples:**
         ```py
+        >>> from fst import FST
+
         >>> FST('[0, 1, 2, 3]').elts[1].src
         '1'
 
@@ -189,6 +196,8 @@ class fstview:
 
         **Examples:**
         ```py
+        >>> from fst import FST
+
         >>> (f := FST('[0, 1, 2, 3]')).elts[1] = '4'; f.src
         '[0, 4, 2, 3]'
 
@@ -245,6 +254,8 @@ class fstview:
 
         **Examples:**
         ```py
+        >>> from fst import FST
+
         >>> del (f := FST('[0, 1, 2, 3]')).elts[1]; f.src
         '[0, 2, 3]'
 
@@ -277,7 +288,7 @@ class fstview:
 
             self.stop = max(start, stop - (idx_stop - idx_start))
 
-    def copy(self, **options) -> FST:
+    def copy(self, **options) -> fst.FST:
         """Copy this slice to a new top-level tree, dedenting and fixing as necessary.
 
         **Parameters:**
@@ -288,6 +299,8 @@ class fstview:
 
         **Examples:**
         ```py
+        >>> from fst import FST
+
         >>> FST('[0, 1, 2, 3]').elts[1:3].copy().src
         '[1, 2]'
         ```
@@ -295,7 +308,7 @@ class fstview:
 
         return self.fst.get_slice(self.start, self.stop, self.field, cut=False, **options)
 
-    def cut(self, **options) -> FST:
+    def cut(self, **options) -> fst.FST:
         """Cut out this slice to a new top-level tree (if possible), dedenting and fixing as necessary. Cannot cut root
         node.
 
@@ -307,6 +320,8 @@ class fstview:
 
         **Examples:**
         ```py
+        >>> from fst import FST
+
         >>> (f := FST('[0, 1, 2, 3]')).elts[1:3].cut().src
         '[1, 2]'
 
@@ -335,6 +350,8 @@ class fstview:
 
         **Examples:**
         ```py
+        >>> from fst import FST
+
         >>> FST('[0, 1, 2, 3]').elts[1:3].replace('(4, 5)').fst.src
         '[0, (4, 5), 3]'
 
@@ -362,6 +379,8 @@ class fstview:
 
         **Examples:**
         ```py
+        >>> from fst import FST
+
         >>> FST('[0, 1, 2, 3]').elts[1:3].remove().fst.src
         '[0, 3]'
         ```
@@ -390,6 +409,8 @@ class fstview:
 
         **Examples:**
         ```py
+        >>> from fst import FST
+
         >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 1).fst.src
         '[0, (4, 5), 1, 2, 3]'
 
@@ -428,6 +449,8 @@ class fstview:
 
         **Examples:**
         ```py
+        >>> from fst import FST
+
         >>> FST('[0, 1, 2, 3]').elts.append('(4, 5)').fst.src
         '[0, 1, 2, 3, (4, 5)]'
 
@@ -454,6 +477,8 @@ class fstview:
 
         **Examples:**
         ```py
+        >>> from fst import FST
+
         >>> FST('[0, 1, 2, 3]').elts.extend('(4, 5)').fst.src
         '[0, 1, 2, 3, 4, 5]'
 
@@ -482,6 +507,8 @@ class fstview:
 
         **Examples:**
         ```py
+        >>> from fst import FST
+
         >>> FST('[0, 1, 2, 3]').elts.prepend('(4, 5)').fst.src
         '[(4, 5), 0, 1, 2, 3]'
 
@@ -508,6 +535,8 @@ class fstview:
 
         **Examples:**
         ```py
+        >>> from fst import FST
+
         >>> FST('[0, 1, 2, 3]').elts.prextend('(4, 5)').fst.src
         '[4, 5, 0, 1, 2, 3]'
 

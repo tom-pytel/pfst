@@ -116,19 +116,37 @@ from .astutil import (
 )
 
 from .misc import (
-    PYLT11, PYGE14, Code, NodeError, astfield, fstloc, pyver,
+    PYLT11, PYGE14, NodeError, astfield, fstloc, pyver,
     _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _fixup_one_index,
 )
 
 from .extparse import unparse
 
-from .fst_code import (
-    _code_as_expr, _code_as_expr_slice, _code_as_expr_sliceelt, _code_as_expr_arglike,
-    _code_as_boolop, _code_as_binop, _code_as_augop, _code_as_unaryop, _code_as_cmpop,
-    _code_as_pattern, _code_as_comprehension, _code_as_arguments,
-    _code_as_arguments_lambda, _code_as_arg, _code_as_keyword, _code_as_alias_dotted, _code_as_alias_star,
-    _code_as_withitem, _code_as_type_param, _code_as_identifier, _code_as_identifier_dotted, _code_as_identifier_alias,
-    _code_as_constant,
+from .code import (
+    Code,
+    code_as_expr,
+    code_as_expr_arglike,
+    code_as_expr_slice,
+    code_as_expr_sliceelt,
+    code_as_boolop,
+    code_as_binop,
+    code_as_augop,
+    code_as_unaryop,
+    code_as_cmpop,
+    code_as_comprehension,
+    code_as_arguments,
+    code_as_arguments_lambda,
+    code_as_arg,
+    code_as_keyword,
+    code_as_alias_dotted,
+    code_as_alias_star,
+    code_as_withitem,
+    code_as_pattern,
+    code_as_type_param,
+    code_as_identifier,
+    code_as_identifier_dotted,
+    code_as_identifier_alias,
+    code_as_constant,
 )
 
 FSTRING_END = TSTRING_END = None
@@ -633,7 +651,7 @@ _GET_ONE_HANDLERS = {
 class onestatic(NamedTuple):
     getinfo:  Callable[[fst.FST, onestatic, int | None, str], oneinfo] | None
     restrict: type[AST] | tuple[type[AST]] | list[type[AST]] | Callable[[AST], bool] | None = None
-    code_as:  Callable[[Code, dict], fst.FST]                                               = _code_as_expr
+    code_as:  Callable[[Code, dict], fst.FST]                                               = code_as_expr
     ctx:      type[expr_context]                                                            = Load
 
 
@@ -762,7 +780,7 @@ def _put_one_constant(self: fst.FST, code: _PutOneCode, idx: int | None, field: 
 
     _validate_put(self, code, idx, field, child, can_del=True)  # can_del so that None is accepted
 
-    value    = _code_as_constant(code, self.root.parse_params)
+    value    = code_as_constant(code, self.root.parse_params)
     restrict = static.restrict
 
     if not isinstance(value, restrict):
@@ -858,7 +876,7 @@ def _put_one_AnnAssign_simple(self: fst.FST, code: _PutOneCode, idx: int | None,
 
     ast        = self.a
     child, idx = _validate_put(self, code, idx, field, child)
-    value      = _code_as_constant(code, self.root.parse_params)
+    value      = code_as_constant(code, self.root.parse_params)
 
     if value.__class__ is not int or not 0 <= value <= 1:
         raise ValueError('expection 0 or 1')
@@ -886,7 +904,7 @@ def _put_one_ImportFrom_level(self: fst.FST, code: _PutOneCode, idx: int | None,
 
     ast        = self.a
     child, idx = _validate_put(self, code, idx, field, child)
-    value      = _code_as_constant(code, self.root.parse_params)
+    value      = code_as_constant(code, self.root.parse_params)
 
     if value.__class__ is not int or value < 0:
         raise ValueError(f'expection int >= 0, got {value!r}')
@@ -921,7 +939,7 @@ def _put_one_BoolOp_op(self: fst.FST, code: _PutOneCode, idx: int | None, field:
     """Put BoolOp op to potentially multiple places."""
 
     child, idx = _validate_put(self, code, idx, field, child)
-    code       = _code_as_boolop(code, self.root.parse_params)
+    code       = code_as_boolop(code, self.root.parse_params)
     childf     = child.f
     src        = 'and' if isinstance(codea := code.a, And) else 'or'
     tgt        = 'and' if isinstance(child, And) else 'or'
@@ -954,7 +972,7 @@ def _put_one_Constant_kind(self: fst.FST, code: _PutOneCode, idx: int | None, fi
     """Set a Constant string kind to 'u' or None, this is truly unnecessary."""
 
     child, idx = _validate_put(self, code, idx, field, child, can_del=True)
-    value      = _code_as_constant(code, self.root.parse_params)
+    value      = code_as_constant(code, self.root.parse_params)
 
     if not isinstance(self.value, str):
         raise ValueError('cannot set kind of non-str Constant')
@@ -984,7 +1002,7 @@ def _put_one_comprehension_is_async(self: fst.FST, code: _PutOneCode, idx: int |
     """Set a comprehension as async or sync."""
 
     child, idx = _validate_put(self, code, idx, field, child)
-    value      = _code_as_constant(code, self.root.parse_params)
+    value      = code_as_constant(code, self.root.parse_params)
 
     if value.__class__ is not int or not 0 <= value <= 1:
         raise ValueError(f'expection 0 or 1, got {value!r}')
@@ -1790,7 +1808,7 @@ def _put_one_MatchAs_name(self: fst.FST, code: _PutOneCode, idx: int | None, fie
     if code is None:
         code = '_'
     else:
-        code = _code_as_identifier(code, self.root.parse_params)
+        code = code_as_identifier(code, self.root.parse_params)
 
     if self.a.pattern and code == '_':
         raise ValueError("cannot change MatchAs with pattern into wildcard '_'")
@@ -2026,14 +2044,14 @@ def _one_info_exprish_required(self: fst.FST, static: onestatic, idx: int | None
 
 _onestatic_expr_required             = onestatic(_one_info_exprish_required, _restrict_default)
 _onestatic_expr_required_starred     = onestatic(_one_info_exprish_required, _restrict_fmtval_slice)
-_onestatic_comprehension_required    = onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_comprehension)
-_onestatic_arguments_required        = onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_arguments)
-_onestatic_arguments_lambda_required = onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_arguments_lambda)
-_onestatic_arg_required              = onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_arg)
-_onestatic_keyword_required          = onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_keyword)
-_onestatic_withitem_required         = onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_withitem)
-_onestatic_pattern_required          = onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_pattern)
-_onestatic_type_param_required       = onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_type_param)
+_onestatic_comprehension_required    = onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_comprehension)
+_onestatic_arguments_required        = onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_arguments)
+_onestatic_arguments_lambda_required = onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_arguments_lambda)
+_onestatic_arg_required              = onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_arg)
+_onestatic_keyword_required          = onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_keyword)
+_onestatic_withitem_required         = onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_withitem)
+_onestatic_pattern_required          = onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_pattern)
+_onestatic_type_param_required       = onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_type_param)
 _onestatic_target_Name               = onestatic(_one_info_exprish_required, Name, ctx=Store)
 _onestatic_target_single             = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript), ctx=Store)
 _onestatic_target                    = onestatic(_one_info_exprish_required, is_valid_target, ctx=Store)  # (Name, Attribute, Subscript, Tuple, List)
@@ -2054,7 +2072,7 @@ def _one_info_identifier_required(self: fst.FST, static: onestatic, idx: int | N
 
     return oneinfo('', None, fstloc(ln, col, ln, end_col))
 
-_onestatic_identifier_required = onestatic(_one_info_identifier_required, _restrict_default, code_as=_code_as_identifier)
+_onestatic_identifier_required = onestatic(_one_info_identifier_required, _restrict_default, code_as=code_as_identifier)
 
 def _one_info_identifier_alias(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:  # required, cannot delete or put new
     ln, col, end_ln, end_col = self.loc
@@ -2066,7 +2084,7 @@ def _one_info_identifier_alias(self: fst.FST, static: onestatic, idx: int | None
 def _one_info_FunctionDef_name(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _one_info_identifier_required(self, static, idx, field, 'def')
 
-_onestatic_FunctionDef_name = onestatic(_one_info_FunctionDef_name, _restrict_default, code_as=_code_as_identifier)
+_onestatic_FunctionDef_name = onestatic(_one_info_FunctionDef_name, _restrict_default, code_as=code_as_identifier)
 
 def _one_info_FunctionDef_returns(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     ln, col, end_ln, end_col = self._loc_block_header_end(True)
@@ -2138,7 +2156,7 @@ def _one_info_Global_Nonlocal_names(self: fst.FST, static: onestatic, idx: int |
 
     return oneinfo('', None, self._loc_global_nonlocal_names(idx))
 
-_onestatic_Global_Nonlocal_names = onestatic(_one_info_Global_Nonlocal_names, _restrict_default, code_as=_code_as_identifier)
+_onestatic_Global_Nonlocal_names = onestatic(_one_info_Global_Nonlocal_names, _restrict_default, code_as=code_as_identifier)
 
 def _one_info_Dict_key(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     end_ln, end_col, _, _ = self.a.values[idx].f.pars()
@@ -2594,7 +2612,7 @@ _PUT_ONE_HANDLERS = {
     (AsyncFunctionDef, 'returns'):        (False, _put_one_exprish_optional, _onestatic_FunctionDef_returns),  # expr?
     (AsyncFunctionDef, 'body'):           (True,  None, None),  # stmt*
     (ClassDef, 'decorator_list'):         (True,  _put_one_exprish_required, _onestatic_expr_required),  # expr*
-    (ClassDef, 'name'):                   (False, _put_one_identifier_required, onestatic(_one_info_ClassDef_name, _restrict_default, code_as=_code_as_identifier)),  # identifier
+    (ClassDef, 'name'):                   (False, _put_one_identifier_required, onestatic(_one_info_ClassDef_name, _restrict_default, code_as=code_as_identifier)),  # identifier
     (ClassDef, 'type_params'):            (True,  _put_one_exprish_required, _onestatic_type_param_required),  # type_param*
     (ClassDef, 'bases'):                  (True,  _put_one_ClassDef_bases, _onestatic_expr_required_starred),  # expr*
     (ClassDef, 'keywords'):               (True,  _put_one_ClassDef_keywords, _onestatic_keyword_required),  # keyword*
@@ -2607,7 +2625,7 @@ _PUT_ONE_HANDLERS = {
     (TypeAlias, 'type_params'):           (True,  _put_one_exprish_required, _onestatic_type_param_required),  # type_param*
     (TypeAlias, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (AugAssign, 'target'):                (False, _put_one_exprish_required, _onestatic_target_single),  # expr
-    (AugAssign, 'op'):                    (False, _put_one_op, onestatic(None, code_as=_code_as_augop)),  # operator
+    (AugAssign, 'op'):                    (False, _put_one_op, onestatic(None, code_as=code_as_augop)),  # operator
     (AugAssign, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (AnnAssign, 'target'):                (False, _put_one_AnnAssign_target, _onestatic_target_single),  # expr
     (AnnAssign, 'annotation'):            (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default)),  # expr  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
@@ -2645,9 +2663,9 @@ _PUT_ONE_HANDLERS = {
     (TryStar, 'finalbody'):               (True,  None, None),  # stmt*
     (Assert, 'test'):                     (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (Assert, 'msg'):                      (False, _put_one_exprish_optional, onestatic(_one_info_Assert_msg, _restrict_default)),  # expr?
-    (Import, 'names'):                    (True,  _put_one_Import_names, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_dotted)),  # alias*
-    (ImportFrom, 'module'):               (False, _put_one_identifier_optional, onestatic(_one_info_ImportFrom_module, _restrict_default, code_as=_code_as_identifier_dotted)),  # identifier? (dotted)
-    (ImportFrom, 'names'):                (True,  _put_one_ImportFrom_names, onestatic(_one_info_exprish_required, _restrict_default, code_as=_code_as_alias_star)),  # alias*
+    (Import, 'names'):                    (True,  _put_one_Import_names, onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_alias_dotted)),  # alias*
+    (ImportFrom, 'module'):               (False, _put_one_identifier_optional, onestatic(_one_info_ImportFrom_module, _restrict_default, code_as=code_as_identifier_dotted)),  # identifier? (dotted)
+    (ImportFrom, 'names'):                (True,  _put_one_ImportFrom_names, onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_alias_star)),  # alias*
     (ImportFrom, 'level'):                (False, _put_one_ImportFrom_level, None),  # int?
     (Global, 'names'):                    (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names),  # identifier*
     (Nonlocal, 'names'):                  (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names),  # identifier*
@@ -2657,9 +2675,9 @@ _PUT_ONE_HANDLERS = {
     (NamedExpr, 'target'):                (False, _put_one_exprish_required, _onestatic_target_Name),  # expr
     (NamedExpr, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (BinOp, 'left'):                      (False, _put_one_BinOp_left_right, _onestatic_expr_required),  # expr
-    (BinOp, 'op'):                        (False, _put_one_op, onestatic(None, code_as=_code_as_binop)),  # operator
+    (BinOp, 'op'):                        (False, _put_one_op, onestatic(None, code_as=code_as_binop)),  # operator
     (BinOp, 'right'):                     (False, _put_one_BinOp_left_right, _onestatic_expr_required),  # expr
-    (UnaryOp, 'op'):                      (False, _put_one_op, onestatic(None, code_as=_code_as_unaryop)),  # unaryop
+    (UnaryOp, 'op'):                      (False, _put_one_op, onestatic(None, code_as=code_as_unaryop)),  # unaryop
     (UnaryOp, 'operand'):                 (False, _put_one_UnaryOp_operand, _onestatic_expr_required),  # expr
     (Lambda, 'args'):                     (False, _put_one_Lambda_arguments, _onestatic_arguments_lambda_required),  # arguments
     (Lambda, 'body'):                     (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
@@ -2683,11 +2701,11 @@ _PUT_ONE_HANDLERS = {
     (Yield, 'value'):                     (False, _put_one_exprish_optional, onestatic(_one_info_Yield_value, _restrict_default)),  # expr?
     (YieldFrom, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (Compare, 'left'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
-    (Compare, 'ops'):                     (False, _put_one_op, onestatic(None, code_as=_code_as_cmpop)),  # cmpop*
+    (Compare, 'ops'):                     (False, _put_one_op, onestatic(None, code_as=code_as_cmpop)),  # cmpop*
     (Compare, 'comparators'):             (False, _put_one_exprish_required, _onestatic_expr_required),  # expr*
     (Compare, ''):                        (True,  _put_one_Compare_combined, _onestatic_expr_required),  # expr*
     (Call, 'func'):                       (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
-    (Call, 'args'):                       (True,  _put_one_Call_args, onestatic(_one_info_exprish_required, _restrict_fmtval_slice, code_as=_code_as_expr_arglike)),  # expr*
+    (Call, 'args'):                       (True,  _put_one_Call_args, onestatic(_one_info_exprish_required, _restrict_fmtval_slice, code_as=code_as_expr_arglike)),  # expr*
     (Call, 'keywords'):                   (True,  _put_one_Call_keywords, _onestatic_keyword_required),  # keyword*
     (FormattedValue, 'value'):            (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (FormattedValue, 'conversion'):       (False, _put_one_NOT_IMPLEMENTED_YET_12, onestatic(_one_info_conversion, Constant)),  # int  # onestatic only here for info for raw put, Constant must be str
@@ -2701,10 +2719,10 @@ _PUT_ONE_HANDLERS = {
     (Constant, 'value'):                  (False, _put_one_constant, onestatic(None, constant)),  # constant
     (Constant, 'kind'):                   (False, _put_one_Constant_kind, None),  # string?
     (Attribute, 'value'):                 (False, _put_one_Attribute_value, _onestatic_expr_required),  # expr
-    (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=_code_as_identifier)),  # identifier
+    (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=code_as_identifier)),  # identifier
     (Attribute, 'ctx'):                   (False, _put_one_ctx, _onestatic_ctx),  # expr_context
     (Subscript, 'value'):                 (False, _put_one_Subscript_value, _onestatic_expr_required),  # expr
-    (Subscript, 'slice'):                 (False, _put_one_Subscript_slice, onestatic(_one_info_exprish_required, _restrict_fmtval_starred, code_as=_code_as_expr_slice)),  # expr
+    (Subscript, 'slice'):                 (False, _put_one_Subscript_slice, onestatic(_one_info_exprish_required, _restrict_fmtval_starred, code_as=code_as_expr_slice)),  # expr
     (Subscript, 'ctx'):                   (False, _put_one_ctx, _onestatic_ctx),  # expr_context
     (Starred, 'value'):                   (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (Starred, 'ctx'):                     (False, _put_one_ctx, _onestatic_ctx),  # expr_context
@@ -2712,7 +2730,7 @@ _PUT_ONE_HANDLERS = {
     (Name, 'ctx'):                        (False, _put_one_ctx, _onestatic_ctx),  # expr_context
     (List, 'elts'):                       (True,  _put_one_List_elts, _onestatic_expr_required_starred),  # expr*
     (List, 'ctx'):                        (False, _put_one_ctx, _onestatic_ctx),  # expr_context
-    (Tuple, 'elts'):                      (True,  _put_one_Tuple_elts, onestatic(_one_info_exprish_required, _restrict_fmtval, code_as=_code_as_expr_sliceelt)),  # expr*  - special handling because Tuples can contain Slices in an unparenthesized .slice field
+    (Tuple, 'elts'):                      (True,  _put_one_Tuple_elts, onestatic(_one_info_exprish_required, _restrict_fmtval, code_as=code_as_expr_sliceelt)),  # expr*  - special handling because Tuples can contain Slices in an unparenthesized .slice field
     (Tuple, 'ctx'):                       (False, _put_one_ctx, _onestatic_ctx),  # expr_context
     (Slice, 'lower'):                     (False, _put_one_exprish_optional, _onestatic_Slice_lower),  # expr?
     (Slice, 'upper'):                     (False, _put_one_exprish_optional, _onestatic_Slice_upper),  # expr?
@@ -2722,21 +2740,21 @@ _PUT_ONE_HANDLERS = {
     (comprehension, 'ifs'):               (True,  _put_one_exprish_required, _onestatic_expr_required),  # expr*
     (comprehension, 'is_async'):          (False, _put_one_comprehension_is_async, None),  # int
     (ExceptHandler, 'type'):              (False, _put_one_exprish_optional, onestatic(_one_info_ExceptHandler_type, _restrict_default)),  # expr?
-    (ExceptHandler, 'name'):              (False, _put_one_ExceptHandler_name, onestatic(_one_info_ExceptHandler_name, _restrict_default, code_as=_code_as_identifier)),  # identifier?
+    (ExceptHandler, 'name'):              (False, _put_one_ExceptHandler_name, onestatic(_one_info_ExceptHandler_name, _restrict_default, code_as=code_as_identifier)),  # identifier?
     (ExceptHandler, 'body'):              (True,  None, None),  # stmt*
     (arguments, 'posonlyargs'):           (False, _put_one_arg, _onestatic_arg_required),  # arg*
     (arguments, 'args'):                  (False, _put_one_arg, _onestatic_arg_required),  # arg*
     (arguments, 'defaults'):              (False, _put_one_exprish_required, _onestatic_expr_required),  # expr*
-    (arguments, 'vararg'):                (False, _put_one_exprish_optional, onestatic(_one_info_arguments_vararg, _restrict_default, code_as=_code_as_arg)),  # arg?
+    (arguments, 'vararg'):                (False, _put_one_exprish_optional, onestatic(_one_info_arguments_vararg, _restrict_default, code_as=code_as_arg)),  # arg?
     (arguments, 'kwonlyargs'):            (False, _put_one_arg, _onestatic_arg_required),  # arg*
     (arguments, 'kw_defaults'):           (False, _put_one_exprish_optional, onestatic(_one_info_arguments_kw_defaults, _restrict_default)),  # expr*
-    (arguments, 'kwarg'):                 (False, _put_one_exprish_optional, onestatic(_one_info_arguments_kwarg, _restrict_default, code_as=_code_as_arg)),  # arg?
+    (arguments, 'kwarg'):                 (False, _put_one_exprish_optional, onestatic(_one_info_arguments_kwarg, _restrict_default, code_as=code_as_arg)),  # arg?
     (arg, 'arg'):                         (False, _put_one_identifier_required, _onestatic_identifier_required),  # identifier
     (arg, 'annotation'):                  (False, _put_one_arg_annotation, onestatic(_one_info_arg_annotation, _restrict_default)),  # expr?  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
-    (keyword, 'arg'):                     (False, _put_one_keyword_arg, onestatic(_one_info_keyword_arg, _restrict_default, code_as=_code_as_identifier)),  # identifier?
+    (keyword, 'arg'):                     (False, _put_one_keyword_arg, onestatic(_one_info_keyword_arg, _restrict_default, code_as=code_as_identifier)),  # identifier?
     (keyword, 'value'):                   (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
-    (alias, 'name'):                      (False, _put_one_identifier_required, onestatic(_one_info_identifier_alias, _restrict_default, code_as=_code_as_identifier_alias)),  # identifier  - alias star or dotted not valid for all uses but being general here (and lazy, don't feel like checking parent)
-    (alias, 'asname'):                    (False, _put_one_identifier_optional, onestatic(_one_info_alias_asname, _restrict_default, code_as=_code_as_identifier)),  # identifier?
+    (alias, 'name'):                      (False, _put_one_identifier_required, onestatic(_one_info_identifier_alias, _restrict_default, code_as=code_as_identifier_alias)),  # identifier  - alias star or dotted not valid for all uses but being general here (and lazy, don't feel like checking parent)
+    (alias, 'asname'):                    (False, _put_one_identifier_optional, onestatic(_one_info_alias_asname, _restrict_default, code_as=code_as_identifier)),  # identifier?
     (withitem, 'context_expr'):           (False, _put_one_withitem_context_expr, _onestatic_expr_required),  # expr
     (withitem, 'optional_vars'):          (False, _put_one_withitem_optional_vars, onestatic(_one_info_withitem_optional_vars, (Name, Tuple, List, Attribute, Subscript), ctx=Store)),  # expr?
     (match_case, 'pattern'):              (False, _put_one_pattern, _onestatic_pattern_required),  # pattern
@@ -2747,22 +2765,22 @@ _PUT_ONE_HANDLERS = {
     (MatchSequence, 'patterns'):          (True,  _put_one_pattern, _onestatic_pattern_required),  # pattern*
     (MatchMapping, 'keys'):               (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _is_valid_MatchMapping_key)),  # expr*  Ops for `-1` or `2+3j`
     (MatchMapping, 'patterns'):           (False, _put_one_pattern, _onestatic_pattern_required),  # pattern*
-    (MatchMapping, 'rest'):               (False, _put_one_identifier_optional, onestatic(_one_info_MatchMapping_rest, _restrict_default, code_as=_code_as_identifier)),  # identifier?
+    (MatchMapping, 'rest'):               (False, _put_one_identifier_optional, onestatic(_one_info_MatchMapping_rest, _restrict_default, code_as=code_as_identifier)),  # identifier?
     (MatchMapping, ''):                   (True,  None, None),  # expr*
     (MatchClass, 'cls'):                  (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _is_valid_MatchClass_cls)),  # expr
     (MatchClass, 'patterns'):             (True,  _put_one_pattern, _onestatic_pattern_required),  # pattern*
-    (MatchClass, 'kwd_attrs'):            (False, _put_one_identifier_required, onestatic(_one_info_MatchClass_kwd_attrs, _restrict_default, code_as=_code_as_identifier)),  # identifier*
+    (MatchClass, 'kwd_attrs'):            (False, _put_one_identifier_required, onestatic(_one_info_MatchClass_kwd_attrs, _restrict_default, code_as=code_as_identifier)),  # identifier*
     (MatchClass, 'kwd_patterns'):         (False, _put_one_pattern, _onestatic_pattern_required),  # pattern*
-    (MatchStar, 'name'):                  (False, _put_one_MatchStar_name, onestatic(_one_info_MatchStar_name, _restrict_default, code_as=_code_as_identifier)),  # identifier?
-    (MatchAs, 'pattern'):                 (False, _put_one_MatchAs_pattern, onestatic(_one_info_MatchAs_pattern, _restrict_default, code_as=_code_as_pattern)),  # pattern?
-    (MatchAs, 'name'):                    (False, _put_one_MatchAs_name, onestatic(_one_info_MatchAs_name, _restrict_default, code_as=_code_as_identifier)),  # identifier?
+    (MatchStar, 'name'):                  (False, _put_one_MatchStar_name, onestatic(_one_info_MatchStar_name, _restrict_default, code_as=code_as_identifier)),  # identifier?
+    (MatchAs, 'pattern'):                 (False, _put_one_MatchAs_pattern, onestatic(_one_info_MatchAs_pattern, _restrict_default, code_as=code_as_pattern)),  # pattern?
+    (MatchAs, 'name'):                    (False, _put_one_MatchAs_name, onestatic(_one_info_MatchAs_name, _restrict_default, code_as=code_as_identifier)),  # identifier?
     (MatchOr, 'patterns'):                (True,  _put_one_pattern, _onestatic_pattern_required),  # pattern*
     (TypeVar, 'name'):                    (False, _put_one_identifier_required, _onestatic_identifier_required),  # identifier
     (TypeVar, 'bound'):                   (False, _put_one_exprish_optional, onestatic(_one_info_TypeVar_bound, _restrict_default)),  # expr?
     (TypeVar, 'default_value'):           (False, _put_one_exprish_optional, onestatic(_one_info_TypeVar_default_value, _restrict_default)),  # expr?
-    (ParamSpec, 'name'):                  (False, _put_one_identifier_required, onestatic(_one_info_ParamSpec_name, _restrict_default, code_as=_code_as_identifier)),  # identifier
+    (ParamSpec, 'name'):                  (False, _put_one_identifier_required, onestatic(_one_info_ParamSpec_name, _restrict_default, code_as=code_as_identifier)),  # identifier
     (ParamSpec, 'default_value'):         (False, _put_one_exprish_optional, onestatic(_one_info_ParamSpec_default_value, _restrict_default)),  # expr?
-    (TypeVarTuple, 'name'):               (False, _put_one_identifier_required, onestatic(_one_info_TypeVarTuple_name, _restrict_default, code_as=_code_as_identifier)),  # identifier
+    (TypeVarTuple, 'name'):               (False, _put_one_identifier_required, onestatic(_one_info_TypeVarTuple_name, _restrict_default, code_as=code_as_identifier)),  # identifier
     (TypeVarTuple, 'default_value'):      (False, _put_one_exprish_optional, onestatic(_one_info_TypeVarTuple_default_value, _restrict_default)),  # expr?
 
 

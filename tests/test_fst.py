@@ -8,7 +8,8 @@ from ast import parse as ast_parse, unparse as ast_unparse
 from fst import *
 # from fst.asttypes import TemplateStr, type_param, TypeVar, ParamSpec, TypeVarTuple
 from fst.astutil import OPCLS2STR, WalkFail, copy_ast, compare_asts
-from fst.misc import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14
+from fst.misc import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, astfield, fstloc
+from fst.view import fstview
 
 from fst import extparse
 # from fst.extparse import (
@@ -49,6 +50,35 @@ from fst import extparse
 #     parse_unaryop,
 #     parse_withitem,
 # )
+
+from fst.code import (
+    code_as_all,
+    code_as_stmts,
+    code_as_ExceptHandlers,
+    code_as_match_cases,
+    code_as_expr,
+    code_as_expr_slice,
+    code_as_boolop,
+    code_as_binop,
+    code_as_augop,
+    code_as_unaryop,
+    code_as_cmpop,
+    code_as_comprehension,
+    code_as_arguments,
+    code_as_arguments_lambda,
+    code_as_arg,
+    code_as_keyword,
+    code_as_alias,
+    code_as_alias_dotted,
+    code_as_alias_star,
+    code_as_withitem,
+    code_as_pattern,
+    code_as_type_param,
+    code_as_identifier,
+    code_as_identifier_dotted,
+    code_as_identifier_star,
+    code_as_identifier_alias,
+)
 
 
 from data_other import PARS_DATA, PRECEDENCE_DATA
@@ -2405,42 +2435,42 @@ if 1:
 call(a)
 '''.strip(), 'exec')
 
-        h = f._code_as_stmts(f.copy())
+        h = code_as_stmts(f.copy())
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = f._code_as_stmts(f.src)
+        h = code_as_stmts(f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = f._code_as_stmts(f.a)
+        h = code_as_stmts(f.a)
         self.assertTrue(compare_asts(h.a, f.a, locs=False, raise_=True))
 
         f0 = f.body[0].copy()
-        h = f._code_as_stmts(f0.a)
+        h = code_as_stmts(f0.a)
         self.assertEqual(ast_unparse(f0.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, f0.a, locs=False, raise_=True))
 
         f1 = f.body[1].copy()
-        h = f._code_as_stmts(f1.a)
+        h = code_as_stmts(f1.a)
         self.assertEqual(ast_unparse(f1.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, f1.a, locs=False, raise_=True))
 
         g = FST('from a import b', 'exec').body[0].names[0]
-        self.assertRaises(ValueError, f._code_as_stmts, f.body[0].test)
-        self.assertRaises(NodeError, f._code_as_stmts, g.copy())
-        self.assertRaises(NodeError, f._code_as_stmts, g.a)
-        self.assertRaises(SyntaxError, f._code_as_stmts, 'except Exception: pass')
+        self.assertRaises(ValueError, code_as_stmts, f.body[0].test)
+        self.assertRaises(NodeError, code_as_stmts, g.copy())
+        self.assertRaises(NodeError, code_as_stmts, g.a)
+        self.assertRaises(SyntaxError, code_as_stmts, 'except Exception: pass')
 
         f = FST('f(a)', 'exec')
-        h = f._code_as_stmts(f.body[0].value.copy())
+        h = code_as_stmts(f.body[0].value.copy())
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = f._code_as_stmts(f.src)
+        h = code_as_stmts(f.src)
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = f._code_as_stmts(f.a)
+        h = code_as_stmts(f.a)
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
@@ -2448,42 +2478,42 @@ call(a)
 
         f = FST('a if b else {"c": f()}', 'eval')
 
-        h = f._code_as_expr(f.copy())
+        h = code_as_expr(f.copy())
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.body.a, locs=True, raise_=True))
 
         f = FST('a if b else {"c": f()}', 'single')
 
-        h = f._code_as_expr(f.copy())
+        h = code_as_expr(f.copy())
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.body[0].value.a, locs=True, raise_=True))
 
         f = FST('a if b else {"c": f()}', 'exec')
 
-        h = f._code_as_expr(f.copy())
+        h = code_as_expr(f.copy())
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.body[0].value.a, locs=True, raise_=True))
 
-        h = f._code_as_expr(f.body[0].copy())
+        h = code_as_expr(f.body[0].copy())
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.body[0].value.a, locs=True, raise_=True))
 
-        h = f._code_as_expr(f.body[0].value.copy())
+        h = code_as_expr(f.body[0].value.copy())
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.body[0].value.a, locs=True, raise_=True))
 
-        h = f._code_as_expr(f.src)
+        h = code_as_expr(f.src)
         self.assertTrue(compare_asts(h.a, f.body[0].value.a, locs=True, raise_=True))
 
         g = f.body[0].value.copy()
-        h = f._code_as_expr(g.a)
+        h = code_as_expr(g.a)
         self.assertEqual(ast_unparse(g.a), h.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=False, raise_=True))
 
-        self.assertRaises(ValueError, f._code_as_expr, FST('i = 1', 'exec').body[0])
-        self.assertRaises(NodeError, f._code_as_expr, FST('i = 1', 'exec').body[0].copy())
-        self.assertRaises(NodeError, f._code_as_expr, f.body[0].a)
-        self.assertRaises(SyntaxError, f._code_as_expr, 'pass')
+        self.assertRaises(ValueError, code_as_expr, FST('i = 1', 'exec').body[0])
+        self.assertRaises(NodeError, code_as_expr, FST('i = 1', 'exec').body[0].copy())
+        self.assertRaises(NodeError, code_as_expr, f.body[0].a)
+        self.assertRaises(SyntaxError, code_as_expr, 'pass')
 
         # ExceptHandlers
 
@@ -2510,26 +2540,26 @@ except Exception:
 
         g = f.body[0].get_slice(field='handlers')
 
-        h = f._code_as_ExceptHandlers(g.copy())
+        h = code_as_ExceptHandlers(g.copy())
         self.assertEqual(h.src, g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
-        h = f._code_as_ExceptHandlers(g.src)
+        h = code_as_ExceptHandlers(g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
         g0 = g.body[0].copy()
-        h = f._code_as_ExceptHandlers(g0.a)
+        h = code_as_ExceptHandlers(g0.a)
         self.assertEqual(ast_unparse(g0.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
 
         g1 = g.body[1].copy()
-        h = f._code_as_ExceptHandlers(g1.a)
+        h = code_as_ExceptHandlers(g1.a)
         self.assertEqual(ast_unparse(g1.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
 
-        self.assertRaises(ValueError, f._code_as_ExceptHandlers, f.body[0].handlers[0])
+        self.assertRaises(ValueError, code_as_ExceptHandlers, f.body[0].handlers[0])
 
-        self.assertEqual(0, len(FST._code_as_ExceptHandlers('').body))  # make sure we can parse zero ExceptHandlers
+        self.assertEqual(0, len(code_as_ExceptHandlers('').body))  # make sure we can parse zero ExceptHandlers
 
         # match_cases
 
@@ -2556,85 +2586,85 @@ match a:
 
         g = f.body[0].get_slice(field='cases')
 
-        h = f._code_as_match_cases(g.copy())
+        h = code_as_match_cases(g.copy())
         self.assertEqual(h.src, g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
-        h = f._code_as_match_cases(g.src)
+        h = code_as_match_cases(g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
         g0 = g.body[0].copy()
-        h = f._code_as_match_cases(g0.a)
+        h = code_as_match_cases(g0.a)
         self.assertEqual(ast_unparse(g0.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
 
         g1 = g.body[1].copy()
-        h = f._code_as_match_cases(g1.a)
+        h = code_as_match_cases(g1.a)
         self.assertEqual(ast_unparse(g1.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
 
-        self.assertRaises(ValueError, f._code_as_match_cases, f.body[0].cases[0])
+        self.assertRaises(ValueError, code_as_match_cases, f.body[0].cases[0])
 
-        self.assertEqual(0, len(FST._code_as_match_cases('').body))  # make sure we can parse zero match_cases
+        self.assertEqual(0, len(code_as_match_cases('').body))  # make sure we can parse zero match_cases
 
         # boolop
 
         f = FST(And(), ['and'])
 
-        h = f._code_as_boolop(f.copy())
+        h = code_as_boolop(f.copy())
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = f._code_as_boolop(f.a)
+        h = code_as_boolop(f.a)
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=False, raise_=True))
 
-        h = f._code_as_boolop(f.src)
+        h = code_as_boolop(f.src)
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
         # rest of AST ones
 
         CODE_ASES = [
-            (FST._code_as_expr_slice, 'body[0].value.slice', 'a[1]'),
-            (FST._code_as_expr_slice, 'body[0].value.slice', 'a[b:c:d]'),
-            (FST._code_as_expr_slice, 'body[0].value.slice', 'a[b:c:d, e:f]'),
-            (FST._code_as_binop, 'body[0].value.op', 'a + b'),
-            (FST._code_as_augop, 'body[0].op', 'a += b'),
-            (FST._code_as_unaryop, 'body[0].value.op', '~a'),
-            (FST._code_as_cmpop, 'body[0].value.ops[0]', 'a < b'),
-            (FST._code_as_comprehension, 'body[0].value.generators[0]', '[i for i in j if i < 0]'),
-            (FST._code_as_arguments, 'body[0].args', 'def f(a: str, /, b: int = 1, *c: tuple[bool], d: float = 2.0, **e: dict): pass'),
-            (FST._code_as_arguments_lambda, 'body[0].value.args', 'lambda a, /, b=1, *c, d=2, **e: None'),
-            (FST._code_as_arg, 'body[0].args.args[0]', 'def f(a: str = "test"): pass'),
-            (FST._code_as_keyword, 'body[0].keywords[0]', 'class cls(meta=something): pass'),
-            (FST._code_as_keyword, 'body[0].value.keywords[0]', 'call(key = word)'),
-            (FST._code_as_alias, 'body[0].names[0]', 'from a import b'),
-            (FST._code_as_alias, 'body[0].names[0]', 'from a import *'),
-            (FST._code_as_alias, 'body[0].names[0]', 'import a.b'),
-            (FST._code_as_alias_dotted, 'body[0].names[0]', 'import a'),
-            (FST._code_as_alias_dotted, 'body[0].names[0]', 'import a.b'),
-            (FST._code_as_alias_star, 'body[0].names[0]', 'from a import b'),
-            (FST._code_as_alias_star, 'body[0].names[0]', 'from a import *'),
-            (FST._code_as_withitem, 'body[0].items[0]', 'with a: pass'),
-            (FST._code_as_withitem, 'body[0].items[0]', 'with (a): pass'),
-            (FST._code_as_withitem, 'body[0].items[0]', 'with a as b: pass'),
-            (FST._code_as_withitem, 'body[0].items[0]', 'with (a as b): pass'),
-            (FST._code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case 42: pass'),
-            (FST._code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case None: pass'),
-            (FST._code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case [_, *_]: pass'),
-            (FST._code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case {"key": _}: pass'),
-            (FST._code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case SomeClass(attr=val): pass'),
-            (FST._code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case as_var: pass'),
-            (FST._code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case 1 | 2 | 3: pass'),
-            (FST._code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case _: pass'),
+            (code_as_expr_slice, 'body[0].value.slice', 'a[1]'),
+            (code_as_expr_slice, 'body[0].value.slice', 'a[b:c:d]'),
+            (code_as_expr_slice, 'body[0].value.slice', 'a[b:c:d, e:f]'),
+            (code_as_binop, 'body[0].value.op', 'a + b'),
+            (code_as_augop, 'body[0].op', 'a += b'),
+            (code_as_unaryop, 'body[0].value.op', '~a'),
+            (code_as_cmpop, 'body[0].value.ops[0]', 'a < b'),
+            (code_as_comprehension, 'body[0].value.generators[0]', '[i for i in j if i < 0]'),
+            (code_as_arguments, 'body[0].args', 'def f(a: str, /, b: int = 1, *c: tuple[bool], d: float = 2.0, **e: dict): pass'),
+            (code_as_arguments_lambda, 'body[0].value.args', 'lambda a, /, b=1, *c, d=2, **e: None'),
+            (code_as_arg, 'body[0].args.args[0]', 'def f(a: str = "test"): pass'),
+            (code_as_keyword, 'body[0].keywords[0]', 'class cls(meta=something): pass'),
+            (code_as_keyword, 'body[0].value.keywords[0]', 'call(key = word)'),
+            (code_as_alias, 'body[0].names[0]', 'from a import b'),
+            (code_as_alias, 'body[0].names[0]', 'from a import *'),
+            (code_as_alias, 'body[0].names[0]', 'import a.b'),
+            (code_as_alias_dotted, 'body[0].names[0]', 'import a'),
+            (code_as_alias_dotted, 'body[0].names[0]', 'import a.b'),
+            (code_as_alias_star, 'body[0].names[0]', 'from a import b'),
+            (code_as_alias_star, 'body[0].names[0]', 'from a import *'),
+            (code_as_withitem, 'body[0].items[0]', 'with a: pass'),
+            (code_as_withitem, 'body[0].items[0]', 'with (a): pass'),
+            (code_as_withitem, 'body[0].items[0]', 'with a as b: pass'),
+            (code_as_withitem, 'body[0].items[0]', 'with (a as b): pass'),
+            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case 42: pass'),
+            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case None: pass'),
+            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case [_, *_]: pass'),
+            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case {"key": _}: pass'),
+            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case SomeClass(attr=val): pass'),
+            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case as_var: pass'),
+            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case 1 | 2 | 3: pass'),
+            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case _: pass'),
         ]
 
         if PYGE12:
             CODE_ASES.extend([
-                (FST._code_as_type_param, 'body[0].type_params[0]', 'type t[T: int] = ...'),
-                (FST._code_as_type_param, 'body[0].type_params[0]', 'class c[T: int]: pass'),
-                (FST._code_as_type_param, 'body[0].type_params[0]', 'def f[T: int](): pass'),
+                (code_as_type_param, 'body[0].type_params[0]', 'type t[T: int] = ...'),
+                (code_as_type_param, 'body[0].type_params[0]', 'class c[T: int]: pass'),
+                (code_as_type_param, 'body[0].type_params[0]', 'def f[T: int](): pass'),
             ])
 
         for code_as, attr, src in CODE_ASES:
@@ -2655,33 +2685,33 @@ match a:
 
         f = FST('name', 'exec').body[0].value.copy()
 
-        self.assertEqual('name', FST._code_as_identifier(f.copy()))
-        self.assertEqual('name', FST._code_as_identifier(f.a))
-        self.assertEqual('name', FST._code_as_identifier(f.src))
+        self.assertEqual('name', code_as_identifier(f.copy()))
+        self.assertEqual('name', code_as_identifier(f.a))
+        self.assertEqual('name', code_as_identifier(f.src))
 
-        self.assertEqual('name', FST._code_as_identifier_alias(f.copy()))
-        self.assertEqual('name', FST._code_as_identifier_alias(f.a))
-        self.assertEqual('name', FST._code_as_identifier_alias(f.src))
+        self.assertEqual('name', code_as_identifier_alias(f.copy()))
+        self.assertEqual('name', code_as_identifier_alias(f.a))
+        self.assertEqual('name', code_as_identifier_alias(f.src))
 
         f = FST('name.attr', 'exec').body[0].value.copy()
 
-        self.assertEqual('name.attr', FST._code_as_identifier_dotted(f.copy()))
-        self.assertEqual('name.attr', FST._code_as_identifier_dotted(f.a))
-        self.assertEqual('name.attr', FST._code_as_identifier_dotted(f.src))
+        self.assertEqual('name.attr', code_as_identifier_dotted(f.copy()))
+        self.assertEqual('name.attr', code_as_identifier_dotted(f.a))
+        self.assertEqual('name.attr', code_as_identifier_dotted(f.src))
 
-        self.assertEqual('name.attr', FST._code_as_identifier_alias(f.copy()))
-        self.assertEqual('name.attr', FST._code_as_identifier_alias(f.a))
-        self.assertEqual('name.attr', FST._code_as_identifier_alias(f.src))
+        self.assertEqual('name.attr', code_as_identifier_alias(f.copy()))
+        self.assertEqual('name.attr', code_as_identifier_alias(f.a))
+        self.assertEqual('name.attr', code_as_identifier_alias(f.src))
 
         f = FST('from a import *', 'exec').body[0].names[0].copy()
 
-        self.assertEqual('*', FST._code_as_identifier_star(f.copy()))
-        self.assertEqual('*', FST._code_as_identifier_star(f.a))
-        self.assertEqual('*', FST._code_as_identifier_star(f.src))
+        self.assertEqual('*', code_as_identifier_star(f.copy()))
+        self.assertEqual('*', code_as_identifier_star(f.a))
+        self.assertEqual('*', code_as_identifier_star(f.src))
 
-        self.assertEqual('*', FST._code_as_identifier_alias(f.copy()))
-        self.assertEqual('*', FST._code_as_identifier_alias(f.a))
-        self.assertEqual('*', FST._code_as_identifier_alias(f.src))
+        self.assertEqual('*', code_as_identifier_alias(f.copy()))
+        self.assertEqual('*', code_as_identifier_alias(f.a))
+        self.assertEqual('*', code_as_identifier_alias(f.src))
 
     def test_code_as_stmts(self):
         f = FST(r'''
@@ -2691,41 +2721,41 @@ if 1:
 call(a)
 '''.strip(), 'exec')
 
-        h = f._code_as_stmts(f.copy())
+        h = code_as_stmts(f.copy())
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = f._code_as_stmts(f.src)
+        h = code_as_stmts(f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = f._code_as_stmts(f.a)
+        h = code_as_stmts(f.a)
         self.assertTrue(compare_asts(h.a, f.a, locs=False, raise_=True))
 
         f0 = f.body[0].copy()
-        h = f._code_as_stmts(f0.a)
+        h = code_as_stmts(f0.a)
         self.assertEqual(ast_unparse(f0.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, f0.a, locs=False, raise_=True))
 
         f1 = f.body[1].copy()
-        h = f._code_as_stmts(f1.a)
+        h = code_as_stmts(f1.a)
         self.assertEqual(ast_unparse(f1.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, f1.a, locs=False, raise_=True))
 
         g = FST('from a import b', 'exec').body[0].names[0]
-        self.assertRaises(ValueError, f._code_as_stmts, f.body[0].test)
-        self.assertRaises(NodeError, f._code_as_stmts, g.copy())
-        self.assertRaises(NodeError, f._code_as_stmts, g.a)
+        self.assertRaises(ValueError, code_as_stmts, f.body[0].test)
+        self.assertRaises(NodeError, code_as_stmts, g.copy())
+        self.assertRaises(NodeError, code_as_stmts, g.a)
 
         f = FST('f(a)', 'exec')
-        h = f._code_as_stmts(f.body[0].value.copy())
+        h = code_as_stmts(f.body[0].value.copy())
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = f._code_as_stmts(f.src)
+        h = code_as_stmts(f.src)
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-        h = f._code_as_stmts(f.a)
+        h = code_as_stmts(f.a)
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
@@ -2753,24 +2783,24 @@ except Exception:
 
         g = f.body[0].get_slice(field='handlers')
 
-        h = f._code_as_ExceptHandlers(g.copy())
+        h = code_as_ExceptHandlers(g.copy())
         self.assertEqual(h.src, g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
-        h = f._code_as_ExceptHandlers(g.src)
+        h = code_as_ExceptHandlers(g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
         g0 = g.body[0].copy()
-        h = f._code_as_ExceptHandlers(g0.a)
+        h = code_as_ExceptHandlers(g0.a)
         self.assertEqual(ast_unparse(g0.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
 
         g1 = g.body[1].copy()
-        h = f._code_as_ExceptHandlers(g1.a)
+        h = code_as_ExceptHandlers(g1.a)
         self.assertEqual(ast_unparse(g1.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
 
-        self.assertRaises(ValueError, f._code_as_ExceptHandlers, f.body[0].handlers[0])
+        self.assertRaises(ValueError, code_as_ExceptHandlers, f.body[0].handlers[0])
 
     def test_code_as_match_cases(self):
         f = FST(r'''
@@ -2796,77 +2826,77 @@ match a:
 
         g = f.body[0].get_slice(field='cases')
 
-        h = f._code_as_match_cases(g.copy())
+        h = code_as_match_cases(g.copy())
         self.assertEqual(h.src, g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
-        h = f._code_as_match_cases(g.src)
+        h = code_as_match_cases(g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
         g0 = g.body[0].copy()
-        h = f._code_as_match_cases(g0.a)
+        h = code_as_match_cases(g0.a)
         self.assertEqual(ast_unparse(g0.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
 
         g1 = g.body[1].copy()
-        h = f._code_as_match_cases(g1.a)
+        h = code_as_match_cases(g1.a)
         self.assertEqual(ast_unparse(g1.a), h.src)
         self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
 
-        self.assertRaises(ValueError, f._code_as_match_cases, f.body[0].cases[0])
+        self.assertRaises(ValueError, code_as_match_cases, f.body[0].cases[0])
 
         # special 'case' non-keyword
 
-        self.assertIsInstance(FST._code_as_match_cases('case 1: pass').body[0].a, match_case)
-        self.assertRaises(SyntaxError, FST._code_as_match_cases, 'case = 1')
-        self.assertRaises(SyntaxError, FST._code_as_match_cases, 'case.b = 1')
+        self.assertIsInstance(code_as_match_cases('case 1: pass').body[0].a, match_case)
+        self.assertRaises(SyntaxError, code_as_match_cases, 'case = 1')
+        self.assertRaises(SyntaxError, code_as_match_cases, 'case.b = 1')
 
     def test_code_as_sanitize(self):
         CODE_ASES = [
-            (FST._code_as_expr, 'f(a)'),
-            (FST._code_as_expr_slice, 'b:c:d'),
-            (FST._code_as_expr_slice, 'b:c:d, e:f'),
-            (FST._code_as_binop, '+'),
-            (FST._code_as_augop, '+='),
-            (FST._code_as_unaryop, '~'),
-            (FST._code_as_cmpop, '<'),
-            (FST._code_as_comprehension, 'for i in j if i < 0'),
-            (FST._code_as_arguments, 'a: str, /, b: int = 1, *c: tuple[bool], d: float = 2.0, **e: dict'),
-            (FST._code_as_arguments_lambda, 'a, /, b=1, *c, d=2, **e'),
-            (FST._code_as_arg, 'a: str'),
-            (FST._code_as_keyword, 'meta=something'),
-            (FST._code_as_keyword, 'key = word'),
-            (FST._code_as_alias_dotted, 'a'),
-            (FST._code_as_alias_dotted, 'a.b'),
-            (FST._code_as_alias_star, 'b'),
-            (FST._code_as_alias_star, '*'),
-            (FST._code_as_withitem, 'a'),
-            (FST._code_as_withitem, 'a as b'),
-            (FST._code_as_pattern, '42'),
-            (FST._code_as_pattern, 'None'),
-            (FST._code_as_pattern, '[_, *_]'),
-            (FST._code_as_pattern, '{"key": _}'),
-            (FST._code_as_pattern, 'SomeClass(attr=val)'),
-            (FST._code_as_pattern, 'as_var'),
-            (FST._code_as_pattern, '1 | 2 | 3'),
-            (FST._code_as_pattern, '_'),
+            (code_as_expr, 'f(a)'),
+            (code_as_expr_slice, 'b:c:d'),
+            (code_as_expr_slice, 'b:c:d, e:f'),
+            (code_as_binop, '+'),
+            (code_as_augop, '+='),
+            (code_as_unaryop, '~'),
+            (code_as_cmpop, '<'),
+            (code_as_comprehension, 'for i in j if i < 0'),
+            (code_as_arguments, 'a: str, /, b: int = 1, *c: tuple[bool], d: float = 2.0, **e: dict'),
+            (code_as_arguments_lambda, 'a, /, b=1, *c, d=2, **e'),
+            (code_as_arg, 'a: str'),
+            (code_as_keyword, 'meta=something'),
+            (code_as_keyword, 'key = word'),
+            (code_as_alias_dotted, 'a'),
+            (code_as_alias_dotted, 'a.b'),
+            (code_as_alias_star, 'b'),
+            (code_as_alias_star, '*'),
+            (code_as_withitem, 'a'),
+            (code_as_withitem, 'a as b'),
+            (code_as_pattern, '42'),
+            (code_as_pattern, 'None'),
+            (code_as_pattern, '[_, *_]'),
+            (code_as_pattern, '{"key": _}'),
+            (code_as_pattern, 'SomeClass(attr=val)'),
+            (code_as_pattern, 'as_var'),
+            (code_as_pattern, '1 | 2 | 3'),
+            (code_as_pattern, '_'),
         ]
 
         if PYGE12:
             CODE_ASES.extend([
-                (FST._code_as_type_param, 'T: int'),
+                (code_as_type_param, 'T: int'),
             ])
 
         for code_as, src in CODE_ASES:
             self.assertEqual(src, code_as(src).src)
             self.assertEqual(src, code_as(f'{src}  ').src)
 
-            if code_as in (FST._code_as_expr, FST._code_as_pattern):  # parenthesizable things so lets abuse
+            if code_as in (code_as_expr, code_as_pattern):  # parenthesizable things so lets abuse
                 srcp = f'(\n# pre\n{src} # post\n# post2\n)'
 
                 self.assertEqual(srcp, code_as(srcp).src)
 
-                if code_as is FST._code_as_expr:
+                if code_as is code_as_expr:
                     self.assertEqual(src, code_as(srcp[1:-1]).src)
 
     def test_code_as_from_ast(self):
@@ -2883,7 +2913,7 @@ match a:
 
                 ast  = extparse.parse(src, mode)
                 astc = copy_ast(ast)
-                fst  = FST._code_as_all(ast)
+                fst  = code_as_all(ast)
 
                 for a in walk(ast):
                     self.assertIs(False, getattr(a, 'f', False))

@@ -5,9 +5,7 @@ import sys
 from ast import parse as ast_parse
 from functools import wraps
 from math import log10
-from typing import Callable, ForwardRef, Literal, NamedTuple, Iterable, Union
-
-import fst
+from typing import Callable, ForwardRef, Literal, NamedTuple, Iterable
 
 from .asttypes import (
     AST, AnnAssign, Assert, Assign, AsyncFor, AsyncFunctionDef, AsyncWith, Attribute, AugAssign, Await, BoolOp, Call,
@@ -26,7 +24,7 @@ try:
 except ImportError:  # for py 3.10
     Self = ForwardRef('FST')
 
-__all__ = ['Code', 'NodeError', 'astfield', 'fstloc']
+__all__ = ['NodeError', 'astfield', 'fstloc']
 
 
 PYVER  = sys.version_info[:2]
@@ -118,8 +116,6 @@ _AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
     ('context_expr', (withitem,)),
     ('pattern',      (MatchAs,)),
 ] for cls in classes}
-
-Code = Union['fst.fst.FST', AST, list[str], str]  ; """Code types accepted for put to `FST`."""
 
 
 class NodeError(Exception):

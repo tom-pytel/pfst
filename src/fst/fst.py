@@ -92,16 +92,18 @@ from .misc import (
     NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE,
     astfield, fstloc, fstlocns, nspace,
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
-    Self, Code,
+    Self,
     _next_src, _next_find, _next_pars, _prev_pars,
     _swizzle_getput_params, _fixup_field_body,
     _multiline_str_continuation_lns, _multiline_fstr_continuation_lns, _continuation_to_uncontinued_lns,
 )
 
-from . import view, extparse
 from .structure import _AST_FIELDS_NEXT, _AST_FIELDS_PREV, _with_loc
 from .reconcile import _Reconcile
 from .extparse import Mode, get_special_parse_mode
+from .code import Code, code_as_all
+from .view import fstview
+from . import extparse
 
 __all__ = [
     'parse', 'unparse', 'dump', 'FST',
@@ -1517,7 +1519,7 @@ class FST:
         if options.get('to'):
             raise ValueError("cannot replace root node using a 'to' option")
 
-        code        = self._code_as_all(code, self.parse_params)
+        code        = code_as_all(code, self.parse_params)
         self._lines = code._lines
 
         self._set_ast(code.a, True)
@@ -5106,42 +5108,6 @@ class FST:
         _get_trivia_params,
     )
 
-    from .fst_code import (
-        _code_as_all,
-        _code_as_stmts,
-        _code_as_ExceptHandlers,
-        _code_as_match_cases,
-        _code_as_expr,
-        _code_as_expr_all,
-        _code_as_expr_arglike,
-        _code_as_expr_slice,
-        _code_as_expr_sliceelt,
-        _code_as_Tuple,
-        _code_as_boolop,
-        _code_as_binop,
-        _code_as_augop,
-        _code_as_unaryop,
-        _code_as_cmpop,
-        _code_as_comprehension,
-        _code_as_arguments,
-        _code_as_arguments_lambda,
-        _code_as_arg,
-        _code_as_keyword,
-        _code_as_alias,
-        _code_as_alias_dotted,
-        _code_as_alias_star,
-        _code_as_withitem,
-        _code_as_pattern,
-        _code_as_type_param,
-        _code_as_type_params,
-        _code_as_Assign_targets,
-        _code_as_identifier,
-        _code_as_identifier_dotted,
-        _code_as_identifier_star,
-        _code_as_identifier_alias,
-        _code_as_constant,
-    )
-
     from .fst_raw import (
         _reparse_raw,
     )
@@ -5182,10 +5148,10 @@ def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> prope
 
     elif cardinality == 2:
         @property
-        def accessor(self: FST) -> view.fstview:
+        def accessor(self: FST) -> fstview:
             """@private"""
 
-            return view.fstview(self, field, 0, len(getattr(self.a, field)))
+            return fstview(self, field, 0, len(getattr(self.a, field)))
 
         @accessor.setter
         def accessor(self: FST, code: Code | builtins.str | None) -> None:
@@ -5195,11 +5161,11 @@ def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> prope
 
     else:  # cardinality == 3  # can be single element or list depending on the AST type
         @property
-        def accessor(self: FST) -> view.fstview | FST | None | constant:
+        def accessor(self: FST) -> fstview | FST | None | constant:
             """@private"""
 
             if isinstance(child := getattr(self.a, field), list):
-                return view.fstview(self, field, 0, len(child))
+                return fstview(self, field, 0, len(child))
             elif isinstance(child, AST):
                 return getattr(child, 'f', None)
 

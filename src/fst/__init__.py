@@ -69,8 +69,7 @@ prescribed operations are not done yet.
 
 import ast  # noqa: F401
 from ast import *  # noqa: F403
-from .asttypes import *  # noqa: F403
-from .misc import NodeError, fstloc, astfield  # noqa: F401
-from .view import fstview  # noqa: F401
-from .extparse import ParseError  # noqa: F401
 from .fst import parse, unparse, dump, FST  # noqa: F401
+from .misc import NodeError  # noqa: F401
+from .extparse import ParseError  # noqa: F401
+from .asttypes import *  # noqa: F403

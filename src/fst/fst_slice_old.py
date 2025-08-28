@@ -18,11 +18,11 @@ from .astutil import copy_ast
 
 from .misc import (
     astfield, fstloc,
-    Code,
     _next_find, _prev_find,
     _fixup_slice_indices
 )
 
+from .code import Code, code_as_stmts, code_as_ExceptHandlers, code_as_match_cases
 from .srcedit_old import _src_edit
 
 
@@ -111,19 +111,19 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
 
         if body and isinstance(ast, Module):  # check for slices
             if isinstance(b0 := body[0], stmt):
-                put_fst = self._code_as_stmts(code, self.root.parse_params)
+                put_fst = code_as_stmts(code, self.root.parse_params)
             elif isinstance(b0, ExceptHandler):
-                put_fst = self._code_as_ExceptHandlers(code, self.root.parse_params,
+                put_fst = code_as_ExceptHandlers(code, self.root.parse_params,
                                                        is_trystar=b0.f.is_except_star())
             else:  # match_case
-                put_fst = self._code_as_match_cases(code, self.root.parse_params)
+                put_fst = code_as_match_cases(code, self.root.parse_params)
 
         elif field == 'handlers':
-            put_fst = self._code_as_ExceptHandlers(code, self.root.parse_params, is_trystar=isinstance(ast, TryStar))
+            put_fst = code_as_ExceptHandlers(code, self.root.parse_params, is_trystar=isinstance(ast, TryStar))
         elif field != 'cases':  # 'body', 'orelse', 'finalbody'
-            put_fst = self._code_as_stmts(code, self.root.parse_params)
+            put_fst = code_as_stmts(code, self.root.parse_params)
         else:  # 'cases'
-            put_fst = self._code_as_match_cases(code, self.root.parse_params)
+            put_fst = code_as_match_cases(code, self.root.parse_params)
 
         put_ast  = put_fst.a
         put_body = put_ast.body

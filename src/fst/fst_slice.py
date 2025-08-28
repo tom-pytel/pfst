@@ -73,7 +73,7 @@ from .astutil import (
 
 from .misc import (
     PYLT11, PYGE14,
-    Self, Code, NodeError, astfield, fstloc,
+    Self, NodeError, astfield, fstloc,
     re_empty_line_start, re_empty_line, re_line_trailing_space, re_empty_space, re_line_end_cont_or_comment,
     _ParamsOffset,
     _next_src, _prev_find, _next_find, _next_find_re, _fixup_slice_indices,
@@ -82,9 +82,9 @@ from .misc import (
 
 from .extparse import unparse
 
-from .fst_code import (
-    _code_as_expr, _code_as_expr_all, _code_as_pattern, _code_as_type_param, _code_as_type_params,
-    _code_as_Assign_targets,
+from .code import (
+    Code,
+    code_as_expr, code_as_expr_all, code_as_pattern, code_as_type_param, code_as_type_params, code_as_Assign_targets,
 )
 
 from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish
@@ -1640,7 +1640,7 @@ def _set_loc_whole(self: fst.FST) -> None:
 
 
 def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any], *,
-                       code_as: Callable = _code_as_expr, non_seq_as_one: bool = False) -> fst.FST | None:
+                       code_as: Callable = code_as_expr, non_seq_as_one: bool = False) -> fst.FST | None:
     if code is None:
         return None
 
@@ -1725,7 +1725,7 @@ def _code_to_slice_MatchSequence(self: fst.FST, code: Code | None, one: bool, op
     if code is None:
         return None
 
-    fst_ = _code_as_pattern(code, self.root.parse_params, sanitize=False)
+    fst_ = code_as_pattern(code, self.root.parse_params, sanitize=False)
 
     if one:
         if fst_.is_delimited_matchseq() == '':
@@ -1759,7 +1759,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
         return None
 
     try:
-        fst_ = _code_as_pattern(code, self.root.parse_params, sanitize=False, allow_invalid_matchor=True)
+        fst_ = code_as_pattern(code, self.root.parse_params, sanitize=False, allow_invalid_matchor=True)
 
     except SyntaxError:
         if (not (isinstance(code, list) or (isinstance(code, str) and (code := code.split('\n')))) or
@@ -1813,12 +1813,12 @@ def _code_to_slice_type_params(self: fst.FST, code: Code | None, one: bool, opti
         return None
 
     if one:
-        fst_ = _code_as_type_param(code, self.root.parse_params, sanitize=False)
+        fst_ = code_as_type_param(code, self.root.parse_params, sanitize=False)
 
         return fst.FST(Tuple(elts=[fst_.a], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                              end_col_offset=ls[-1].lenbytes), ls, from_=fst_, lcopy=False)
 
-    fst_ = _code_as_type_params(code, self.root.parse_params, sanitize=False)
+    fst_ = code_as_type_params(code, self.root.parse_params, sanitize=False)
 
     if not fst_.a.elts:  # put empty sequence is same as delete
         return None
@@ -1835,7 +1835,7 @@ def _code_to_slice_Assign_targets(self: fst.FST, code: Code | None, one: bool, o
         return None
 
     if one:
-        fst_ = _code_as_expr(code, self.root.parse_params, sanitize=False)
+        fst_ = code_as_expr(code, self.root.parse_params, sanitize=False)
         ast_ = fst_.a
 
         if not is_valid_target(ast_):
@@ -1851,7 +1851,7 @@ def _code_to_slice_Assign_targets(self: fst.FST, code: Code | None, one: bool, o
                        ls, from_=fst_, lcopy=False)
 
     else:
-        fst_ = _code_as_Assign_targets(code, self.root.parse_params, sanitize=False)
+        fst_ = code_as_Assign_targets(code, self.root.parse_params, sanitize=False)
 
         if not fst_.a.targets:  # put empty sequence is same as delete
             return None
@@ -1885,7 +1885,7 @@ def _put_slice_NOT_IMPLEMENTED_YET(self: fst.FST, code: Code | None, start: int 
 
 def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                     field: str, one: bool, options: Mapping[str, Any]) -> None:
-    fst_        = _code_to_slice_seq2(self, code, one, options, _code_as_expr)
+    fst_        = _code_to_slice_seq2(self, code, one, options, code_as_expr)
     body        = (ast := self.a).keys
     body2       = ast.values
     start, stop = _fixup_slice_indices(len(body), start, stop)
@@ -1957,7 +1957,7 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
             fst_ = _code_to_slice_type_params(self, code, one, options)
 
     if fst_ is None:
-        fst_ = _code_to_slice_seq(self, code, one, options, code_as=_code_as_expr_all)
+        fst_ = _code_to_slice_seq(self, code, one, options, code_as=code_as_expr_all)
 
     body        = (ast := self.a).elts
     start, stop = _fixup_slice_indices(len(body), start, stop)
@@ -2304,7 +2304,7 @@ def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: i
 
 def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                             field: str, one: bool, options: Mapping[str, Any]) -> None:
-    fst_        = _code_to_slice_seq2(self, code, one, options, _code_as_pattern)
+    fst_        = _code_to_slice_seq2(self, code, one, options, code_as_pattern)
     len_body    = len(body := (ast := self.a).keys)
     body2       = ast.patterns
     start, stop = _fixup_slice_indices(len_body, start, stop)
