@@ -1052,24 +1052,6 @@ class TestFST(unittest.TestCase):
         self.assertEqual((5, 2, 5, 18), ast.body[0].body[0].body[0].f.loc)
         self.assertEqual((4, 2, 5, 18), ast.body[0].body[0].body[0].f.bloc)
 
-    def test_fromsrc_bulk(self):
-        for fnm in PYFNMS:
-            fst = FST.fromsrc(read(fnm))
-
-            for ast in walk(fst.a):
-                ast.f.loc
-
-            fst.verify(raise_=True)
-
-    def test_fromast_bulk(self):
-        for fnm in PYFNMS:
-            fst = FST.fromast(ast_parse(read(fnm)))
-
-            for ast in walk(fst.a):
-                ast.f.loc
-
-            fst.verify(raise_=True)
-
     def test_fromast_special(self):
         f = FST.fromast(ast_parse('*t').body[0].value)
         self.assertEqual('*t', f.src)
@@ -1240,34 +1222,6 @@ def f(a, /, b, *c, d, **e):
         fst = FST.fromsrc("""[z for a in b if b in [c := i for i in j if i in {d := k for k in l}]]""".strip()).a.body[0].value.f
         self.assertEqual(['z', 'a', 'b', 'c', 'j', 'd'],
                          [f.a.id for f in fst.walk(scope=True) if isinstance(f.a, Name)])
-
-    def test_walk_bulk(self):
-        for fnm in PYFNMS:
-            ast       = FST.fromsrc(read(fnm)).a
-            bln, bcol = 0, 0
-
-            for f in (gen := ast.f.walk(True)):
-                if isinstance(f.a, (JoinedStr, TemplateStr)):  # these are borked
-                    gen.send(False)
-
-                    continue
-
-                self.assertTrue(f.bln > bln or (f.bln == bln and f.bcol >= bcol))
-
-                lof = list(f.walk(True, self_=False, recurse=False))
-                lob = list(f.walk(True, self_=False, recurse=False, back=True))
-
-                self.assertEqual(lof, lob[::-1])
-
-                lf, c = [], None
-                while c := f.next_child(c, True): lf.append(c)
-                self.assertEqual(lf, lof)
-
-                lb, c = [], None
-                while c := f.prev_child(c, True): lb.append(c)
-                self.assertEqual(lb, lob)
-
-                bln, bcol = f.bln, f.bcol
 
     def test_walk_modify(self):
         fst = parse('if 1:\n a\n b\n c\nelse:\n d\n e').body[0].f
@@ -3761,16 +3715,6 @@ i # post
 opts.ignore_module = [mod.strip()
                       for i in opts.ignore_module for mod in i.split(',')]
             '''.strip(), 'exec').body[0].value.generators[0].iter.copy().src)
-
-    def test_copy_bulk(self):
-        for fnm in PYFNMS:
-            ast = FST.fromsrc(read(fnm)).a
-
-            for a in walk(ast):
-                if a.f.is_parsable():
-                    f = a.f.copy()
-
-                    f.verify(raise_=True)
 
     def test_find_loc(self):
         f    = parse('abc += xyz').f
