@@ -120,7 +120,7 @@ from .misc import (
     _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _fixup_one_index,
 )
 
-from .fst_parse import (
+from .fst_code import (
     _code_as_expr, _code_as_expr_slice, _code_as_expr_sliceelt, _code_as_expr_arglike,
     _code_as_boolop, _code_as_binop, _code_as_augop, _code_as_unaryop, _code_as_cmpop,
     _code_as_pattern, _code_as_comprehension, _code_as_arguments,

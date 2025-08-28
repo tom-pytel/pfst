@@ -5147,6 +5147,9 @@ class FST:
         _parse_type_param,
         _parse_type_params,
         _parse_Assign_targets,
+    )
+
+    from .fst_code import (
         _code_as_all,
         _code_as_stmts,
         _code_as_ExceptHandlers,

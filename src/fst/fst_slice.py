@@ -80,7 +80,7 @@ from .misc import (
     _leading_trivia, _trailing_trivia,
 )
 
-from .fst_parse import (
+from .fst_code import (
     _code_as_expr, _code_as_expr_all, _code_as_pattern, _code_as_type_param, _code_as_type_params,
     _code_as_Assign_targets,
 )
