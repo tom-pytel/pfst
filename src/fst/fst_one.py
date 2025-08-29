@@ -117,7 +117,7 @@ from .astutil import (
 
 from .misc import (
     PYLT11, PYGE14, NodeError, astfield, fstloc, pyver,
-    _next_src, _prev_src, _next_find, _prev_find, _next_find_re, _fixup_one_index,
+    _next_frag, _prev_frag, _next_find, _prev_find, _next_find_re, _fixup_one_index,
 )
 
 from .extparse import unparse
@@ -916,7 +916,7 @@ def _put_one_ImportFrom_level(self: fst.FST, code: _PutOneCode, idx: int | None,
         lines                 = self.root._lines
         ln, col, _, _         = self.loc
         end_ln, end_col, _, _ = ast.names[0].f.loc
-        ln, col, _            = _next_src(lines, ln, col + 4, end_ln, end_col)  # must be there, col + 4 is just past 'from'
+        ln, col, _            = _next_frag(lines, ln, col + 4, end_ln, end_col)  # must be there, col + 4 is just past 'from'
         start_ln              = ln
         start_col             = col
 
@@ -1928,7 +1928,7 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
 
             code = code._lines
 
-        is_empty = not _next_src(code, 0, 0, len(code) - 1, 0x7fffffffffffffff)  # if only comments and line continuations then is functionally empty
+        is_empty = not _next_frag(code, 0, 0, len(code) - 1, 0x7fffffffffffffff)  # if only comments and line continuations then is functionally empty
 
     is_del_or_empty = is_del or is_empty
 
@@ -2141,7 +2141,7 @@ def _one_info_ImportFrom_module(self: fst.FST, static: onestatic, idx: int | Non
 
     self_ln, self_col, _, _ = self.loc
     ln, col                 = _prev_find(self.root._lines, self_ln, self_col, *self.a.names[0].f.loc[:2], 'import')
-    ln, col, src            = _prev_src(self.root._lines, self_ln, self_col, ln, col)  # must be there, the module name with any/some/all preceding '.' level indicators
+    ln, col, src            = _prev_frag(self.root._lines, self_ln, self_col, ln, col)  # must be there, the module name with any/some/all preceding '.' level indicators
     end_col                 = col + len(src)
     col                     = end_col - len((src[4:] if col == self_col and ln == self_ln else src).lstrip('.'))  # may be special case, dot right after 'from', e.g. 'from.something import ...'
 
@@ -2172,7 +2172,7 @@ def _one_info_Attribute_attr(self: fst.FST, static: onestatic, idx: int | None, 
     _, _, end_ln, end_col = self.loc
     lines                 = self.root._lines
     ln, col               = _next_find(lines, ln, col, end_ln, end_col, '.')  # must be there
-    ln, col, src          = _next_src(lines, ln, col + 1, end_ln, end_col)  # must be there
+    ln, col, src          = _next_frag(lines, ln, col + 1, end_ln, end_col)  # must be there
 
     return oneinfo('', None, fstloc(ln, col, ln, col + len(src)))
 
@@ -2232,7 +2232,7 @@ def _one_info_ExceptHandler_type(self: fst.FST, static: onestatic, idx: int | No
     ln, col, _, _ = self.loc
     col           = col + 6  # 'except'
 
-    if star := _next_src(self.root._lines, ln, col, end_ln, end_col):  # 'except*'?
+    if star := _next_frag(self.root._lines, ln, col, end_ln, end_col):  # 'except*'?
         if star.src.startswith('*'):
             return _oneinfo_default  # can not del type from except* and can not insert because can never not exist
 
@@ -2477,7 +2477,7 @@ def _one_info_MatchClass_kwd_attrs(self: fst.FST, static: onestatic, idx: int | 
         _, _, ln, col = ast.cls.f.loc
 
     end_ln, end_col = _prev_find(lines, ln, col, *kwd_patterns[idx].f.loc[:2], '=')  # must be there
-    ln, col, src    = _prev_src(lines, ln, col, end_ln, end_col)  # must be there
+    ln, col, src    = _prev_frag(lines, ln, col, end_ln, end_col)  # must be there
     end_col         = col + len(src)
     col             = end_col - len(src.lstrip('(,'))
 

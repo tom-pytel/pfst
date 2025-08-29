@@ -67,7 +67,7 @@ from .misc import (
     Self, NodeError, astfield, fstloc, fstlocns, srcwpos, nspace, pyver,
     EXPRISH, STMTISH, BLOCK, HAS_DOCSTRING,
     re_empty_line_start, re_line_trailing_space, re_line_end_cont_or_comment,
-    _next_src, _prev_src, _next_find, _prev_find, _next_pars, _prev_pars, _next_find_re,
+    _next_frag, _prev_frag, _next_find, _prev_find, _next_pars, _prev_pars, _next_find_re,
     _ParamsOffset, _params_offset, _multiline_str_continuation_lns, _multiline_fstr_continuation_lns,
 )
 
@@ -677,7 +677,7 @@ def _loc_operator(self: fst.FST) -> fstloc | None:
     lines = self.root._lines
 
     if not (parent := self.parent):  # standalone
-        ln, col, src = _next_src(lines, 0, 0, len(lines) - 1, 0x7fffffffffffffff)  # must be there
+        ln, col, src = _next_frag(lines, 0, 0, len(lines) - 1, 0x7fffffffffffffff)  # must be there
 
         if not isinstance(ast, (NotIn, IsNot)):  # simple one element operator means we are done
             assert src == op or (isinstance(ast, operator) and src == op + '=')
@@ -688,7 +688,7 @@ def _loc_operator(self: fst.FST) -> fstloc | None:
 
         assert src == op
 
-        end_ln, end_col, src = _next_src(lines, ln, col + len(op), len(lines) - 1, 0x7fffffffffffffff)  # must be there
+        end_ln, end_col, src = _next_frag(lines, ln, col + len(op), len(lines) - 1, 0x7fffffffffffffff)  # must be there
 
         assert src == op2
 
@@ -800,8 +800,8 @@ def _loc_arguments(self: fst.FST) -> fstloc | None:
         elif ast.kwarg:
             leading_stars = '**'  # leading double star just before varname
 
-    if (code := _next_src(lines, end_ln, end_col, end_lines, 0x7fffffffffffffff)) and code.src.startswith(','):  # trailing comma
-        end_ln, end_col, _  = code
+    if (frag := _next_frag(lines, end_ln, end_col, end_lines, 0x7fffffffffffffff)) and frag.src.startswith(','):  # trailing comma
+        end_ln, end_col, _  = frag
         end_col            += 1
 
     elif (parent := self.parent) and isinstance(parent.a, (FunctionDef, AsyncFunctionDef)):  # arguments enclosed in pars
@@ -814,8 +814,8 @@ def _loc_arguments(self: fst.FST) -> fstloc | None:
         end_ln, end_col  = _next_find(lines, end_ln, end_col, end_lines, 0x7fffffffffffffff, '/')  # must be there
         end_col         += 1
 
-        if (code := _next_src(lines, end_ln, end_col, end_lines, 0x7fffffffffffffff)) and code.src.startswith(','):  # silly, but, trailing comma trailing slash
-            end_ln, end_col, _  = code
+        if (frag := _next_frag(lines, end_ln, end_col, end_lines, 0x7fffffffffffffff)) and frag.src.startswith(','):  # silly, but, trailing comma trailing slash
+            end_ln, end_col, _  = frag
             end_col            += 1
 
     return fstloc(start_ln, start_col, end_ln, end_col)
@@ -947,9 +947,9 @@ def _loc_ImportFrom_names_pars(self: fst.FST) -> fstlocns:
     ln, col, _                = _next_find_re(lines, ln, col, end_ln, end_col, _re_keyword_import)  # must be there
     col                      += 6
 
-    if (lpar := _next_src(lines, ln, col, end_ln, end_col)) and lpar.src.startswith('('):
+    if (lpar := _next_frag(lines, ln, col, end_ln, end_col)) and lpar.src.startswith('('):
         ln, col, _ = lpar
-        rpar       = _prev_src(lines, ln, col + 1, end_ln, end_col)
+        rpar       = _prev_frag(lines, ln, col + 1, end_ln, end_col)
 
         assert rpar and rpar.src.endswith(')')
 
@@ -1191,7 +1191,7 @@ def _is_parenthesized_ImportFrom_names(self: fst.FST) -> bool:
     ln, col, _, _         = self.loc
     end_ln, end_col, _, _ = self.a.names[0].f.loc
 
-    return _prev_src(self.root._lines, ln, col, end_ln, end_col).src.endswith('(')  # something is there for sure
+    return _prev_frag(self.root._lines, ln, col, end_ln, end_col).src.endswith('(')  # something is there for sure
 
 
 def _is_parenthesized_With_items(self: fst.FST) -> bool:
@@ -1200,7 +1200,7 @@ def _is_parenthesized_With_items(self: fst.FST) -> bool:
     ln, col, _, _         = self.loc
     end_ln, end_col, _, _ = self.a.items[0].f.loc  # will include any pars in child so don't need to depar
 
-    return _prev_src(self.root._lines, ln, col, end_ln, end_col).src.endswith('(')  # something is there for sure
+    return _prev_frag(self.root._lines, ln, col, end_ln, end_col).src.endswith('(')  # something is there for sure
 
 
 def _is_delimited_seq(self: fst.FST, field: str = 'elts', delims: str | tuple[str, str] = '()') -> bool:
@@ -1403,12 +1403,12 @@ def _maybe_del_separator(self: fst.FST, ln: int, col: int, force: bool = False,
     sep_on_end_ln   = sep_ln == end_ln
     line_sep        = lines[sep_ln]
 
-    if not (code := _next_src(lines, sep_ln, sep_end_col, sep_ln, end_col if sep_on_end_ln else 0x7fffffffffffffff,
-                              True, True)):  # nothing on rest of line after separator?
+    if not (frag := _next_frag(lines, sep_ln, sep_end_col, sep_ln, end_col if sep_on_end_ln else 0x7fffffffffffffff,
+                               True, True)):  # nothing on rest of line after separator?
         sep_end_col = end_col if sep_on_end_ln else len(line_sep)
 
-    elif code.src[0] not in '#\\':  # not a comment or line continuation, closing delimiter or next element if being used that way
-        sep_end_col = code.col
+    elif frag.src[0] not in '#\\':  # not a comment or line continuation, closing delimiter or next element if being used that way
+        sep_end_col = frag.col
 
     elif not force:  # comment or line continuation follows, leave separator for aesthetic reasons if allowed
         return False
@@ -1452,8 +1452,8 @@ def _maybe_ins_separator(self: fst.FST, ln: int, col: int, space: bool,
 
     lines = self.root._lines
 
-    while code := _next_src(lines, ln, col, end_ln, end_col):  # find comma or something else, skipping close parens
-        cln, ccol, src = code
+    while frag := _next_frag(lines, ln, col, end_ln, end_col):  # find comma or something else, skipping close parens
+        cln, ccol, src = frag
 
         for c in src:
             ccol += 1
@@ -1525,7 +1525,7 @@ def _maybe_fix_undelimited_seq(self: fst.FST, body: list[AST], delims: str = '()
         lines                    = self.root._lines
         ln, col, end_ln, end_col = self.loc
 
-        if not _next_src(lines, ln, col, end_ln, end_col, True):  # if no comments in tuple area then just replace with '()'
+        if not _next_frag(lines, ln, col, end_ln, end_col, True):  # if no comments in tuple area then just replace with '()'
             self._put_src([delims], ln, col, end_ln, end_col, True, False)  # WARNING! `tail=True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, but haven't found a case where this can happen
 
         else:  # otherwise preserve comments by parenthesizing whole area

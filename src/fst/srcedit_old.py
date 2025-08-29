@@ -12,7 +12,7 @@ from .misc import (
     NAMED_SCOPE,
     re_empty_line_start, re_empty_line, re_comment_line_start, re_line_trailing_space,
     re_empty_line_cont_or_comment,
-    _next_src, _prev_src, _next_find, _prev_find,
+    _next_frag, _prev_frag, _next_find, _prev_find,
 )
 
 
@@ -83,12 +83,12 @@ class SrcEdit:
         blkpost = True if (allpost := postcomms == 'all') else postcomms == 'block'
 
         if single_ln := bound_end_ln == bound_ln:
-            code = _next_src(lines, bound_ln, bound_col, bound_ln, bound_end_col, True)
+            frag = _next_frag(lines, bound_ln, bound_col, bound_ln, bound_end_col, True)
         else:
-            code = _next_src(lines, bound_ln, bound_col, bound_ln, 0x7fffffffffffffff, True)
+            frag = _next_frag(lines, bound_ln, bound_col, bound_ln, 0x7fffffffffffffff, True)
 
-        if code:
-            if not code.src.startswith('#'):
+        if frag:
+            if not frag.src.startswith('#'):
                 return None
 
             if not blkpost:
@@ -157,8 +157,8 @@ class SrcEdit:
         if fpre:  # set block start to just past prev statement or block open (colon)
             block_ln, block_col = fpre.bloc[2:]
 
-        elif code := _prev_src(lines, bound_ln, bound_col, copy_loc.ln, copy_loc.col, False, False):
-            block_ln, block_col, src  = code
+        elif frag := _prev_frag(lines, bound_ln, bound_col, copy_loc.ln, copy_loc.col, False, False):
+            block_ln, block_col, src  = frag
             block_col                += len(src)
 
         else:
@@ -168,13 +168,13 @@ class SrcEdit:
         # get copy and delete locations according to possible combinations of preceding and trailing comments, semicolons and line continuation backslashes
 
         def fix_post_semi_with_tail(end_ln: int, end_col: int, starts_line: bool) -> tuple[fstloc, list[str]] | None:
-            if code := _next_src(lines, end_ln, end_col, end_ln,
-                                 bound_end_col if end_ln == bound_end_ln else 0x7ffffffffffffff, True, True):  # comment or backslash
+            if frag := _next_frag(lines, end_ln, end_col, end_ln,
+                                  bound_end_col if end_ln == bound_end_ln else 0x7ffffffffffffff, True, True):  # comment or backslash
                 put_lines = None
                 ln, col   = copy_loc[:2]
 
-                if code.src.startswith('#'):
-                    del_loc = fstloc(ln, col, end_ln, code.col)
+                if frag.src.startswith('#'):
+                    del_loc = fstloc(ln, col, end_ln, frag.col)
 
                     if starts_line and fpost:
                         put_lines = [re_empty_line_start.match(lines[copy_loc.ln]).group(0)]
@@ -255,8 +255,8 @@ class SrcEdit:
                 end_ln, end_col = copy_loc[2:]
                 at_bound_end_ln = end_ln == bound_end_ln
 
-                if _next_src(lines, end_ln, end_col, end_ln,
-                             bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):  # comment or backslash
+                if _next_frag(lines, end_ln, end_col, end_ln,
+                              bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):  # comment or backslash
                     del_loc = fstloc(*fpre.bloc[2:], end_ln, end_col)
                 else:
                     del_loc = fstloc(*fpre.bloc[2:], end_ln, len(lines[end_ln]))
@@ -268,9 +268,9 @@ class SrcEdit:
             ln, col, end_ln, end_col = copy_loc
             at_bound_end_ln          = end_ln == bound_end_ln
 
-            if code := _next_src(lines, end_ln, end_col, end_ln,
-                                 bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):  # comment or backslash
-                del_loc = fstloc(ln, col, end_ln, code.col)
+            if frag := _next_frag(lines, end_ln, end_col, end_ln,
+                                  bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):  # comment or backslash
+                del_loc = fstloc(ln, col, end_ln, frag.col)
 
             else:
                 del_col = 0 if ln != block_ln else block_col
@@ -331,8 +331,8 @@ class SrcEdit:
             new_del_ln = max(bound_ln + bool(bound_col), del_ln - prespace)  # first possible full empty line to delete to
 
             if del_ln > new_del_ln and (not del_col or re_empty_line.match(lines[del_ln], 0, del_col)):
-                if code := _prev_src(lines, new_del_ln, 0, del_ln, 0, True, False):
-                    new_del_ln = code.ln + 1
+                if frag := _prev_frag(lines, new_del_ln, 0, del_ln, 0, True, False):
+                    new_del_ln = frag.ln + 1
 
                 if new_del_ln < del_ln:
                     indent    = lines[del_ln][:del_col]
@@ -343,14 +343,15 @@ class SrcEdit:
         if postspace:
             if not del_end_col:
                 new_del_end_ln = min(bound_end_ln, del_end_ln + postspace)  # last possible end line to delete to
-                del_end_ln     = (code.ln
-                                  if (code := _next_src(lines, del_end_ln, 0, new_del_end_ln, 0, True, True)) else
+                del_end_ln     = (frag.ln
+                                  if (frag := _next_frag(lines, del_end_ln, 0, new_del_end_ln, 0, True, True)) else
                                   new_del_end_ln)
 
             elif del_end_col == len(lines[del_end_ln]):
                 new_del_end_ln = min(bound_end_ln, del_end_ln + postspace + 1)  # account for not ending on newline
-                del_end_ln     = (code.ln - 1
-                                  if (code := _next_src(lines, del_end_ln, del_end_col, new_del_end_ln, 0, True, True)) else
+                del_end_ln     = (frag.ln - 1
+                                  if (frag := _next_frag(lines, del_end_ln, del_end_col, new_del_end_ln, 0, True, True,
+                                                         )) else
                                   new_del_end_ln - 1)
                 del_end_col    = len(lines[del_end_ln])
 
@@ -366,8 +367,8 @@ class SrcEdit:
             new_del_ln  = del_ln - 1
             new_del_col = 0 if new_del_ln != bound_ln else bound_col
 
-            if code := _prev_src(lines, new_del_ln, new_del_col, new_del_ln, 0x7fffffffffffffff, True, False):  # skip over lcont but not comment if is there because that invalidates quick '\\' check above
-                new_del_col = None if (src := code.src).startswith('#') else code.col + len(src)
+            if frag := _prev_frag(lines, new_del_ln, new_del_col, new_del_ln, 0x7fffffffffffffff, True, False):  # skip over lcont but not comment if is there because that invalidates quick '\\' check above
+                new_del_col = None if (src := frag.src).startswith('#') else frag.col + len(src)
 
             if new_del_col is not None:
                 del_loc   = fstloc(new_del_ln, new_del_col, del_end_ln, del_end_col)
@@ -476,7 +477,7 @@ class SrcEdit:
                        ffirst: fst.FST, flast: fst.FST, fpre: fst.FST | None, fpost: fst.FST | None, **options,
     ) -> fstloc:  # put_loc
         """Put to block of statements(ish). Calculates put location and modifies `put_fst` as necessary to create proper
-        code. The "ish" in statemnents means this can be used to put `ExceptHandler`s to a 'handlers' field or
+        frag. The "ish" in statemnents means this can be used to put `ExceptHandler`s to a 'handlers' field or
         `match_case`s to a 'cases' field.
 
         If `ffirst` and `flast` are `None` it means that it is a pure insertion and no elements are being removed. In
@@ -544,12 +545,12 @@ class SrcEdit:
                 ln, col, end_ln, end_col = block_loc
 
                 while ln < end_ln:
-                    if not (code := _next_src(lines, ln, col, ln, 0x7fffffffffffffff, True, True)):
+                    if not (frag := _next_frag(lines, ln, col, ln, 0x7fffffffffffffff, True, True)):
                         put_loc = fstloc(ln, col, ln + 1, 0)
 
                         break
 
-                    cln, ccol, csrc = code
+                    cln, ccol, csrc = frag
 
                     if csrc.startswith('#'):
                         if cln < end_ln:
@@ -593,8 +594,8 @@ class SrcEdit:
                     ln, col  = _prev_find(lines, *block_loc, ':', True)
                     col     += 1
 
-                if code := _next_src(lines, ln, col, *block_loc[2:], True, None):
-                    ln, col, src  = code
+                if frag := _next_frag(lines, ln, col, *block_loc[2:], True, None):
+                    ln, col, src  = frag
                     col          += len(src)
 
                     assert ln < block_loc.end_ln
@@ -626,10 +627,10 @@ class SrcEdit:
 
                 single_ln = ln == end_ln
 
-                while code := _next_src(lines, ln, col, ln, end_col if single_ln else 0x7fffffffffffffff, True, False):
-                    _, ccol, csrc = code
+                while frag := _next_frag(lines, ln, col, ln, end_col if single_ln else 0x7fffffffffffffff, True, False):
+                    _, ccol, csrc = frag
 
-                    if code.src.startswith('#'):
+                    if frag.src.startswith('#'):
                         col = ccol + len(csrc)  # we want to put after any post-comments
 
                         break

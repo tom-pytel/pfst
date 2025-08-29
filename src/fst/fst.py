@@ -93,7 +93,7 @@ from .misc import (
     astfield, fstloc, fstlocns, nspace,
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Self,
-    _next_src, _next_find, _next_pars, _prev_pars,
+    _next_frag, _next_find, _next_pars, _prev_pars,
     _swizzle_getput_params, _fixup_field_body,
     _multiline_str_continuation_lns, _multiline_fstr_continuation_lns, _continuation_to_uncontinued_lns,
 )
@@ -4806,7 +4806,7 @@ class FST:
 
         ln, col, end_ln, end_col = self.loc
 
-        return _next_src(self.root._lines, ln, col + 6, end_ln, end_col).src.startswith('*')  # something must be there
+        return _next_frag(self.root._lines, ln, col + 6, end_ln, end_col).src.startswith('*')  # something must be there
 
     def is_empty_set_call(self) -> bool:
         """Whether `self` is an empty `set()` call.

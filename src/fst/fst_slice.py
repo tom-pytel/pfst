@@ -76,7 +76,7 @@ from .misc import (
     Self, NodeError, astfield, fstloc,
     re_empty_line_start, re_empty_line, re_line_trailing_space, re_empty_space, re_line_end_cont_or_comment,
     _ParamsOffset,
-    _next_src, _prev_find, _next_find, _next_find_re, _fixup_slice_indices,
+    _next_frag, _prev_find, _next_find, _next_find_re, _fixup_slice_indices,
     _leading_trivia, _trailing_trivia,
 )
 
@@ -307,10 +307,10 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
     if not single:
         _, _, last_end_ln, last_end_col = loc_last
 
-    if (sep and (code := _next_src(lines, last_end_ln, last_end_col, bound_end_ln, bound_end_col)) and
-        code.src.startswith(sep)
+    if (sep and (frag := _next_frag(lines, last_end_ln, last_end_col, bound_end_ln, bound_end_col)) and
+        frag.src.startswith(sep)
     ):  # if separator present then set end of element to just past it
-        sep_end_pos = end_pos = (last_end_ln := code.ln, last_end_col := code.col + len(sep))
+        sep_end_pos = end_pos = (last_end_ln := frag.ln, last_end_col := frag.col + len(sep))
 
     else:
         sep_end_pos = None
@@ -1763,7 +1763,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
 
     except SyntaxError:
         if (not (isinstance(code, list) or (isinstance(code, str) and (code := code.split('\n')))) or
-            not _next_src(code, 0, 0, len(code) - 1, len(code[-1]))
+            not _next_frag(code, 0, 0, len(code) - 1, len(code[-1]))
         ):  # nothing other than maybe comments or line continuations present, empty pattern, not an error but delete
             return None
 

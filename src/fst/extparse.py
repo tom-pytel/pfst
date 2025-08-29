@@ -62,7 +62,7 @@ from .astutil import (
 )
 
 from .misc import (
-    _next_src, _shortstr
+    _next_frag, _shortstr
 )
 
 __all__ = [
@@ -192,14 +192,14 @@ def _fix_unparenthesized_tuple_parsed_parenthesized(src: str, ast: AST) -> None:
     end_ln         = (e_1 := elts[-1]).end_lineno - 2  # -2 because of extra line introduced in parse
     end_col        = len(lines[end_ln].encode()[:e_1.end_col_offset].decode())  # bistr(lines[end_ln]).b2c(e_1.end_col_offset)
 
-    if (not (code := _next_src(lines, end_ln, end_col, ast.end_lineno - 3, 0x7fffffffffffffff)) or  # if nothing following then last element is ast end, -3 because end also had \n tacked on
-        not code.src.startswith(',')  # if no comma then last element is ast end
+    if (not (frag := _next_frag(lines, end_ln, end_col, ast.end_lineno - 3, 0x7fffffffffffffff)) or  # if nothing following then last element is ast end, -3 because end also had \n tacked on
+        not frag.src.startswith(',')  # if no comma then last element is ast end
     ):
         ast.end_lineno     = e_1.end_lineno
         ast.end_col_offset = e_1.end_col_offset
 
     else:
-        end_ln, end_col, _ = code
+        end_ln, end_col, _ = frag
         ast.end_lineno     = end_ln + 2
         ast.end_col_offset = len(lines[end_ln][:end_col + 1].encode())
 

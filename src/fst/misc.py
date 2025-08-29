@@ -324,12 +324,12 @@ def _shortstr(s: str, maxlen: int = 64) -> str:
 #     return cls.__name__
 
 
-def _next_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
-              comment: bool = False, lcont: bool | None = False) -> srcwpos | None:
-    """Get next source code which may or may not include comments or line continuation backslashes. May be restricted
-    to bound or further restricted to not exceed logical line. Assuming start pos not inside str or comment. Code is not
-    necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Code can include multiple AST nodes in
-    return str if there are no spaces between them like 'a+b'.
+def _next_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
+               comment: bool = False, lcont: bool | None = False) -> srcwpos | None:
+    """Get next fragment of source which may or may not include comments or line continuation backslashes. May be
+    restricted to bound or further restricted to not exceed logical line. Assuming start pos not inside str or comment.
+    The fragment is not necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Fragments can include
+    multiple AST nodes in return str if there are no spaces between them like 'a+b'.
 
     **Parameters:**
     - `comment`: Whether to return comments found, which will be the whole comment.
@@ -372,13 +372,13 @@ def _next_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     return None
 
 
-def _prev_src(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
-              comment: bool = False, lcont: bool | None = False, *,
-              state: list | None = None) -> srcwpos | None:
-    """Get prev source code which may or may not include comments or line continuation backslashes. May be restricted
-    to bound or further restricted to not exceed logical line. Assuming start pos not inside str or comment. Code is not
-    necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Code can include multiple AST nodes in
-    return str if there are no spaces between them like 'a+b'.
+def _prev_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
+               comment: bool = False, lcont: bool | None = False, *,
+               state: list | None = None) -> srcwpos | None:
+    """Get prev fragment of source which may or may not include comments or line continuation backslashes. May be
+    restricted to bound or further restricted to not exceed logical line. Assuming start pos not inside str or comment.
+    The fragment is not necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Fragments can include
+    multiple AST nodes in return str if there are no spaces between them like 'a+b'.
 
     **WARNING:** Make sure the starting position (`ln`, `col`) is not inside a string because that could give false
     positives for comments or line continuations. To this end, when searching for non-AST stuff, make sure the start
@@ -474,23 +474,23 @@ def _next_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
     **Parameters:**
     - `first`: If `False` then will skip over anything else which is not the string and keep looking until it hits the
         end of the bound. If `True` then will only succeed if `src` is the first thing found.
-    - `comment`: The `comment` parameter to `_next_src()`, can stop search on comments if `first` is `True`.
-    - `lcont`: The `lcont` parameter to `_next_src()`. Can stop search on line continuation if `first` is `True`.
+    - `comment`: The `comment` parameter to `_next_frag()`, can stop search on comments if `first` is `True`.
+    - `lcont`: The `lcont` parameter to `_next_frag()`. Can stop search on line continuation if `first` is `True`.
 
     **Returns:**
     - `fstpos | None`: Location of start of found `src` or `None` if not found with the given parameters.
     """
 
     if first:
-        if code := _next_src(lines, ln, col, end_ln, end_col, comment, lcont):
-            cln, ccol, csrc = code
+        if frag := _next_frag(lines, ln, col, end_ln, end_col, comment, lcont):
+            cln, ccol, csrc = frag
 
             if csrc.startswith(src):
                 return cln, ccol
 
     else:
-        while code := _next_src(lines, ln, col, end_ln, end_col, comment, lcont):
-            ln, col, csrc = code
+        while frag := _next_frag(lines, ln, col, end_ln, end_col, comment, lcont):
+            ln, col, csrc = frag
 
             if (idx := csrc.find(src)) != -1:
                 return ln, col + idx
@@ -509,9 +509,9 @@ def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
     **Parameters:**
     - `first`: If `False` then will skip over anything else which is not the string and keep looking until it hits the
         start of the bound. If `True` then will only succeed if `src` is the first thing found.
-    - `comment`: The `comment` parameter to `_prev_src()`, can stop search on comments if `first` is `True`.
-    - `lcont`: The `lcont` parameter to `_prev_src()`. Can stop search on line continuation if `first` is `True`.
-    - `state`: The `state` parameter to `_prev_src()`. Be careful using this here and keep in mind its line caching
+    - `comment`: The `comment` parameter to `_prev_frag()`, can stop search on comments if `first` is `True`.
+    - `lcont`: The `lcont` parameter to `_prev_frag()`. Can stop search on line continuation if `first` is `True`.
+    - `state`: The `state` parameter to `_prev_frag()`. Be careful using this here and keep in mind its line caching
         functionality if changing search parameters.
 
     **Returns:**
@@ -519,8 +519,8 @@ def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
     """
 
     if first:
-        if code := _prev_src(lines, ln, col, end_ln, end_col, comment, lcont, state=state):
-            ln, col, csrc = code
+        if frag := _prev_frag(lines, ln, col, end_ln, end_col, comment, lcont, state=state):
+            ln, col, csrc = frag
 
             if comment and csrc.startswith('#'):
                 if csrc.startswith(src):
@@ -533,8 +533,8 @@ def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
         if state is None:
             state = []
 
-        while code := _prev_src(lines, ln, col, end_ln, end_col, comment, lcont, state=state):
-            end_ln, end_col, csrc = code
+        while frag := _prev_frag(lines, ln, col, end_ln, end_col, comment, lcont, state=state):
+            end_ln, end_col, csrc = frag
 
             if comment and csrc.startswith('#'):
                 if csrc.startswith(src):
@@ -553,8 +553,8 @@ def _next_find_re(lines: list[str], ln: int, col: int, end_ln: int, end_col: int
     **Parameters:**
     - `first`: If `False` then will skip over anything else which is not the string and keep looking until it hits the
         end of the bound. If `True` then will only succeed if `src` is the first thing found.
-    - `comment`: The `comment` parameter to `_next_src()`, can stop search on comments if `first` is `True`.
-    - `lcont`: The `lcont` parameter to `_next_src()`. Can stop search on line continuation if `first` is `True`.
+    - `comment`: The `comment` parameter to `_next_frag()`, can stop search on comments if `first` is `True`.
+    - `lcont`: The `lcont` parameter to `_next_frag()`. Can stop search on line continuation if `first` is `True`.
 
     **Returns:**
     - `srcwpos | None`: Location of start of `pat` and the string matching the pattern or `None` if not found with the
@@ -562,15 +562,15 @@ def _next_find_re(lines: list[str], ln: int, col: int, end_ln: int, end_col: int
     """
 
     if first:
-        if code := _next_src(lines, ln, col, end_ln, end_col, comment, lcont):
-            ln, col, csrc = code
+        if frag := _next_frag(lines, ln, col, end_ln, end_col, comment, lcont):
+            ln, col, csrc = frag
 
             if m := pat.match(csrc):
                 return srcwpos(ln, col, m.group())
 
     else:
-        while code := _next_src(lines, ln, col, end_ln, end_col, comment, lcont):
-            ln, col, csrc = code
+        while frag := _next_frag(lines, ln, col, end_ln, end_col, comment, lcont):
+            ln, col, csrc = frag
 
             if m := pat.search(csrc):
                 return srcwpos(ln, col + m.start(), m.group())
@@ -592,8 +592,8 @@ def _next_pars(lines: list[str], pars_end_ln: int, pars_end_col: int, bound_end_
 
         pars = [(pars_end_ln, pars_end_col)]
 
-        while code := _next_src(lines, pars_end_ln, pars_end_col, bound_end_ln, bound_end_col):
-            ln, col, src = code
+        while frag := _next_frag(lines, pars_end_ln, pars_end_col, bound_end_ln, bound_end_col):
+            ln, col, src = frag
 
             for c in src:
                 if c != par:
@@ -625,8 +625,8 @@ def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pa
         pars  = [(pars_ln, pars_col)]
         state = []
 
-        while code := _prev_src(lines, bound_ln, bound_col, pars_ln, pars_col, state=state):
-            ln, col, src  = code
+        while frag := _prev_frag(lines, bound_ln, bound_col, pars_ln, pars_col, state=state):
+            ln, col, src  = frag
             col          += len(src)
 
             for c in src[::-1]:
@@ -816,10 +816,10 @@ def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, en
 
         len_line = len(lines[end_ln])
 
-        if not (code := _next_src(lines, end_ln, end_col, end_ln, bound_end_col, True)):
+        if not (frag := _next_frag(lines, end_ln, end_col, end_ln, bound_end_col, True)):
             space_col = min(bound_end_col, len_line)
-        elif comments == 'none' or not code.src.startswith('#'):
-            space_col = code.col
+        elif comments == 'none' or not frag.src.startswith('#'):
+            space_col = frag.col
         else:
             return ((end_ln, len_line), None, True)
 
@@ -827,9 +827,9 @@ def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, en
 
     is_lineno = isinstance(comments, int)
 
-    if code := _next_src(lines, end_ln, end_col, end_ln + 1, 0, True):
-        if not code.src.startswith('#') or (not is_lineno and comments == 'none'):
-            space_pos = None if (c := code.col) == end_col else (end_ln, c)
+    if frag := _next_frag(lines, end_ln, end_col, end_ln + 1, 0, True):
+        if not frag.src.startswith('#') or (not is_lineno and comments == 'none'):
+            space_pos = None if (c := frag.col) == end_col else (end_ln, c)
 
             return ((end_ln, end_col), space_pos, False)
 
@@ -1058,7 +1058,7 @@ def _multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln:
         if ln == end_ln and col == end_col:
             break
 
-        ln, col, _ = _next_src(lines, ln, col, end_ln, end_col)  # there must be a next one
+        ln, col, _ = _next_frag(lines, ln, col, end_ln, end_col)  # there must be a next one
 
     return lns
 
