@@ -392,10 +392,17 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
             else:
                 _out_lines(self, st.linefunc, *loc, st.eol)
 
-    elif (st.src == 'all' and not isinstance(ast, mod) and (not (parent := self.parent) or
-                                                            not isinstance(parent.a, Expr))):
-        if loc := self.loc:
-            _out_lines(self, st.linefunc, *loc, st.eol)
+    elif not isinstance(ast, mod):
+        if st.src == 'all':
+            if not (parent := self.parent) or not isinstance(parent.a, Expr):
+                if loc := self.loc:
+                    _out_lines(self, st.linefunc, *loc, st.eol)
+
+        elif st.src == 'stmt' and not self.parent:  # if putting statements but root is not statement or mod then just put root src and no src below
+            st.src = None
+
+            if loc := self.loc:
+                _out_lines(self, st.linefunc, *loc, st.eol)
 
     if not st.expand:
         if isinstance(ast, Name):

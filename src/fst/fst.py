@@ -98,8 +98,8 @@ from .misc import (
     multiline_str_continuation_lns, multiline_fstr_continuation_lns, continuation_to_uncontinued_lns,
 )
 
-from .structure import _AST_FIELDS_NEXT, _AST_FIELDS_PREV, _with_loc
-from .reconcile import _Reconcile
+from .traverse import AST_FIELDS_NEXT, AST_FIELDS_PREV, check_with_loc
+from .reconcile import Reconcile
 from .extparse import Mode, get_special_parse_mode
 from .code import Code, code_as_all
 from .view import fstview
@@ -1428,7 +1428,7 @@ class FST:
         if self._serial != mark._serial:
             raise RuntimeError('modification detected after mark(), irreconcilable')
 
-        rec = _Reconcile(self, mark, options)
+        rec = Reconcile(self, mark, options)
 
         rec.recurse_node(self.a)
 
@@ -2331,7 +2331,7 @@ class FST:
         name, idx = self.pfield
 
         while True:
-            next = _AST_FIELDS_NEXT[(aparent.__class__, name)]
+            next = AST_FIELDS_NEXT[(aparent.__class__, name)]
 
             if isinstance(next, int):  # special case?
                 while True:
@@ -2548,7 +2548,7 @@ class FST:
                             except IndexError:
                                 return None
 
-                    if _with_loc(f := a.f, with_loc):
+                    if check_with_loc(f := a.f, with_loc):
                         return f
 
             elif idx is not None:
@@ -2562,7 +2562,7 @@ class FST:
                     except IndexError:
                         break
 
-                    if _with_loc(f := a.f, with_loc):
+                    if check_with_loc(f := a.f, with_loc):
                         return f
 
             while next is not None:
@@ -2570,7 +2570,7 @@ class FST:
                     name = next
 
                     if isinstance(sibling := getattr(aparent, next, None), AST):  # None because we know about fields from future python versions
-                        if _with_loc(f := sibling.f, with_loc):
+                        if check_with_loc(f := sibling.f, with_loc):
                             return f
 
                     elif isinstance(sibling, list) and sibling:
@@ -2578,7 +2578,7 @@ class FST:
 
                         break
 
-                    next = _AST_FIELDS_NEXT[(aparent.__class__, name)]
+                    next = AST_FIELDS_NEXT[(aparent.__class__, name)]
 
                     continue
 
@@ -2636,7 +2636,7 @@ class FST:
         name, idx = self.pfield
 
         while True:
-            prev = _AST_FIELDS_PREV[(aparent.__class__, name)]
+            prev = AST_FIELDS_PREV[(aparent.__class__, name)]
 
             if isinstance(prev, int):  # special case?
                 while True:
@@ -2868,7 +2868,7 @@ class FST:
                             prev = 4
                             a    = aparent.keys[idx]
 
-                    if _with_loc(f := a.f, with_loc):
+                    if check_with_loc(f := a.f, with_loc):
                         return f
 
             else:
@@ -2878,7 +2878,7 @@ class FST:
                     if not (a := sibling[(idx := idx - 1)]):
                         continue
 
-                    if _with_loc(f := a.f, with_loc):
+                    if check_with_loc(f := a.f, with_loc):
                         return f
 
             while prev is not None:
@@ -2886,13 +2886,13 @@ class FST:
                     name = prev
 
                     if isinstance(sibling := getattr(aparent, prev, None), AST):  # None because could have fields from future python versions
-                        if _with_loc(f := sibling.f, with_loc):
+                        if check_with_loc(f := sibling.f, with_loc):
                             return f
 
                     elif isinstance(sibling, list) and (idx := len(sibling)):
                         break
 
-                    prev = _AST_FIELDS_PREV[(aparent.__class__, name)]
+                    prev = AST_FIELDS_PREV[(aparent.__class__, name)]
 
                     continue
 
@@ -2941,11 +2941,11 @@ class FST:
         for name in AST_FIELDS[(a := self.a).__class__]:
             if (child := getattr(a, name, None)):
                 if isinstance(child, AST):
-                    if _with_loc(f := child.f, with_loc):
+                    if check_with_loc(f := child.f, with_loc):
                         return f
 
                 elif isinstance(child, list):
-                    if (c := child[0]) and _with_loc(f := c.f, with_loc):
+                    if (c := child[0]) and check_with_loc(f := c.f, with_loc):
                         return f
 
                     return FST(Pass(), self, astfield(name, 0)).next(with_loc)  # Pass() is a hack just to have a simple AST node
@@ -2990,11 +2990,11 @@ class FST:
         for name in reversed(AST_FIELDS[(a := self.a).__class__]):
             if (child := getattr(a, name, None)):
                 if isinstance(child, AST):
-                    if _with_loc(f := child.f, with_loc):
+                    if check_with_loc(f := child.f, with_loc):
                         return f
 
                 elif isinstance(child, list):
-                    if (c := child[-1]) and _with_loc(f := c.f, with_loc):
+                    if (c := child[-1]) and check_with_loc(f := c.f, with_loc):
                         return f
 
                     return FST(Pass(), self, astfield(name, len(child) - 1)).prev(with_loc)  # Pass() is a hack just to have a simple AST node
@@ -3044,7 +3044,7 @@ class FST:
         if not (child := last_block_header_child(self.a)):
             return None
 
-        if _with_loc(f := child.f, with_loc):
+        if check_with_loc(f := child.f, with_loc):
             return f
 
         return self.prev_child(f, with_loc)
@@ -3376,7 +3376,7 @@ class FST:
         """
 
         if self_:
-            if not _with_loc(self, with_loc):
+            if not check_with_loc(self, with_loc):
                 return
 
             recurse_ = 1
@@ -3461,7 +3461,7 @@ class FST:
 
             fst_ = ast.f
 
-            if not _with_loc(fst_, with_loc):
+            if not check_with_loc(fst_, with_loc):
                 continue
 
             recurse_ = recurse

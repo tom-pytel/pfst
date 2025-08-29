@@ -11,8 +11,10 @@ from . import fst
 from .astutil import AST, Dict, Global, MatchMapping, Nonlocal
 from .misc import NodeError, astfield
 
+__all__ = ['Reconcile']
 
-class _Reconcile:
+
+class Reconcile:
     """The strategy is to make a copy of the original tree (mark) and then mutate it node by node according to the
     changes detected between the working tree and the marked reference tree."""
 
