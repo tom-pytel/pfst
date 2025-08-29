@@ -3986,7 +3986,7 @@ finally:
             raise
 
     def test_put_src_from_put_slice_data(self):
-        from fst.misc import _fixup_field_body
+        from fst.misc import fixup_field_body
         from fst.fst_slice import _loc_slice_raw_put
 
         for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):
@@ -3997,7 +3997,7 @@ finally:
             f = (eval(f't.{attr}', {'t': t}) if attr else t).f
 
             try:
-                field, _ = _fixup_field_body(f.a, field)
+                field, _ = fixup_field_body(f.a, field)
                 loc      = _loc_slice_raw_put(f, start, stop, field)
 
                 f.put_src(None if src == '**DEL**' else src, *loc)

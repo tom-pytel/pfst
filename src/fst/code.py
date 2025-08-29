@@ -51,7 +51,7 @@ from .astutil import (
 )
 
 from .misc import (
-    NodeError, _shortstr
+    NodeError, shortstr
 )
 
 from .extparse import (
@@ -150,7 +150,7 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any]
                 if parse_cmpop(src).__class__ is codea:  # parses to same thing so just return the canonical str for the op, otherwise it gets complicated
                     return fst.FST(codea, [bistr(expected)], from_=code, lcopy=False)
 
-            raise NodeError(f'expecting {expected!r}, got {_shortstr(src)!r}', rawable=True)
+            raise NodeError(f'expecting {expected!r}, got {shortstr(src)!r}', rawable=True)
 
         return code
 
@@ -171,7 +171,7 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any]
     try:
         return fst.FST(parse(code, parse_params), lines, parse_params=parse_params)  # fall back to actually trying to parse the thing
     except SyntaxError:
-        raise ParseError(f'expecting {ast_type.__name__}, got {_shortstr(code)!r}') from None
+        raise ParseError(f'expecting {ast_type.__name__}, got {shortstr(code)!r}') from None
 
 
 def _code_as(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any],
@@ -265,7 +265,7 @@ def code_as_stmts(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
                 return code
 
             raise NodeError(f'expecting zero or more stmts, got '
-                            f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]', rawable=True)
+                            f'[{shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]', rawable=True)
 
         if isinstance(codea, Interactive):
             code._unmake_fst_parents()
@@ -310,7 +310,7 @@ def code_as_ExceptHandlers(code: Code, parse_params: Mapping[str, Any] = {}, *, 
                 return code
 
             raise NodeError(f'expecting zero or more ExceptHandlers, got '
-                             f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]', rawable=True)
+                             f'[{shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]', rawable=True)
 
         raise NodeError(f'expecting zero or more ExceptHandlers, got {codea.__class__.__name__}', rawable=True)
 
@@ -355,7 +355,7 @@ def code_as_match_cases(code: Code, parse_params: Mapping[str, Any] = {}) -> fst
                 return code
 
             raise NodeError(f'expecting zero or more match_cases, got '
-                             f'[{_shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]', rawable=True)
+                             f'[{shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]', rawable=True)
 
         raise NodeError(f'expecting zero or more match_cases, got {codea.__class__.__name__}', rawable=True)
 
@@ -627,7 +627,7 @@ def code_as_identifier(code: Code, parse_params: Mapping[str, Any] = {}) -> str:
         code = '\n'.join(code)
 
     if not is_valid_identifier(code):
-        raise ParseError(f'expecting identifier, got {_shortstr(code)!r}')
+        raise ParseError(f'expecting identifier, got {shortstr(code)!r}')
 
     return normalize('NFKC', code)
 
@@ -647,7 +647,7 @@ def code_as_identifier_dotted(code: Code, parse_params: Mapping[str, Any] = {}) 
         code = '\n'.join(code)
 
     if not is_valid_identifier_dotted(code):
-        raise ParseError(f'expecting dotted identifier, got {_shortstr(code)!r}')
+        raise ParseError(f'expecting dotted identifier, got {shortstr(code)!r}')
 
     return normalize('NFKC', code)
 
@@ -667,7 +667,7 @@ def code_as_identifier_star(code: Code, parse_params: Mapping[str, Any] = {}) ->
         code = '\n'.join(code)
 
     if not is_valid_identifier_star(code):
-        raise ParseError(f"expecting identifier or '*', got {_shortstr(code)!r}")
+        raise ParseError(f"expecting identifier or '*', got {shortstr(code)!r}")
 
     return normalize('NFKC', code)
 
@@ -687,7 +687,7 @@ def code_as_identifier_alias(code: Code, parse_params: Mapping[str, Any] = {}) -
         code = '\n'.join(code)
 
     if not is_valid_identifier_alias(code):
-        raise ParseError(f"expecting dotted identifier or '*', got {_shortstr(code)!r}")
+        raise ParseError(f"expecting dotted identifier or '*', got {shortstr(code)!r}")
 
     return normalize('NFKC', code)
 

@@ -62,7 +62,7 @@ from .astutil import (
 )
 
 from .misc import (
-    _next_frag, _shortstr
+    next_frag, shortstr
 )
 
 __all__ = [
@@ -192,7 +192,7 @@ def _fix_unparenthesized_tuple_parsed_parenthesized(src: str, ast: AST) -> None:
     end_ln         = (e_1 := elts[-1]).end_lineno - 2  # -2 because of extra line introduced in parse
     end_col        = len(lines[end_ln].encode()[:e_1.end_col_offset].decode())  # bistr(lines[end_ln]).b2c(e_1.end_col_offset)
 
-    if (not (frag := _next_frag(lines, end_ln, end_col, ast.end_lineno - 3, 0x7fffffffffffffff)) or  # if nothing following then last element is ast end, -3 because end also had \n tacked on
+    if (not (frag := next_frag(lines, end_ln, end_col, ast.end_lineno - 3, 0x7fffffffffffffff)) or  # if nothing following then last element is ast end, -3 because end also had \n tacked on
         not frag.src.startswith(',')  # if no comma then last element is ast end
     ):
         ast.end_lineno     = e_1.end_lineno
@@ -929,7 +929,7 @@ def parse_boolop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     ast = _ast_parse1(f'(a\n{src}\nb)', parse_params).value
 
     if not isinstance(ast, BoolOp):
-        raise ParseError(f'expecting boolop, got {_shortstr(src)!r}')
+        raise ParseError(f'expecting boolop, got {shortstr(src)!r}')
 
     return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
 
@@ -958,7 +958,7 @@ def parse_binop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     ast = _ast_parse1(f'(a\n{src}\nb)', parse_params).value
 
     if not isinstance(ast, BinOp):
-        raise ParseError(f'expecting operator, got {_shortstr(src)!r}')
+        raise ParseError(f'expecting operator, got {shortstr(src)!r}')
 
     return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
 
@@ -972,7 +972,7 @@ def parse_augop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     ast = _ast_parse1(f'a \\\n{src} b', parse_params)
 
     if not isinstance(ast, AugAssign):
-        raise ParseError(f'expecting augmented operator, got {_shortstr(src)!r}')
+        raise ParseError(f'expecting augmented operator, got {shortstr(src)!r}')
 
     return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
 
@@ -986,7 +986,7 @@ def parse_unaryop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     ast = _ast_parse1(f'(\n{src}\nb)', parse_params).value
 
     if not isinstance(ast, UnaryOp):
-        raise ParseError(f'expecting unaryop, got {_shortstr(src)!r}')
+        raise ParseError(f'expecting unaryop, got {shortstr(src)!r}')
 
     return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
 
@@ -1000,7 +1000,7 @@ def parse_cmpop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     ast = _ast_parse1(f'(a\n{src}\nb)', parse_params).value
 
     if not isinstance(ast, Compare):
-        raise ParseError(f'expecting cmpop, got {_shortstr(src)!r}')
+        raise ParseError(f'expecting cmpop, got {shortstr(src)!r}')
 
     if len(ops := ast.ops) != 1:
         raise ParseError('expecting single cmpop')

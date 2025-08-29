@@ -75,9 +75,9 @@ from .misc import (
     PYLT11, PYGE14,
     Self, NodeError, astfield, fstloc,
     re_empty_line_start, re_empty_line, re_line_trailing_space, re_empty_space, re_line_end_cont_or_comment,
-    _ParamsOffset,
-    _next_frag, _prev_find, _next_find, _next_find_re, _fixup_slice_indices,
-    _leading_trivia, _trailing_trivia,
+    ParamsOffset,
+    next_frag, prev_find, next_find, next_find_re, fixup_slice_indices,
+    leading_trivia, trailing_trivia,
 )
 
 from .extparse import unparse
@@ -307,7 +307,7 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
     if not single:
         _, _, last_end_ln, last_end_col = loc_last
 
-    if (sep and (frag := _next_frag(lines, last_end_ln, last_end_col, bound_end_ln, bound_end_col)) and
+    if (sep and (frag := next_frag(lines, last_end_ln, last_end_col, bound_end_ln, bound_end_col)) and
         frag.src.startswith(sep)
     ):  # if separator present then set end of element to just past it
         sep_end_pos = end_pos = (last_end_ln := frag.ln, last_end_col := frag.col + len(sep))
@@ -321,10 +321,10 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
 
     ld_comms, ld_space, ld_neg, tr_comms, tr_space, tr_neg = fst.FST._get_trivia_params(trivia, neg)
 
-    ld_text_pos, ld_space_pos, indent = _leading_trivia(lines, bound_ln, bound_col,  # start of text / space
-                                                        first_ln, first_col, ld_comms, ld_space)
-    tr_text_pos, tr_space_pos, _      = _trailing_trivia(lines, bound_end_ln, bound_end_col,  # END of text / space
-                                                         last_end_ln, last_end_col, tr_comms, tr_space)
+    ld_text_pos, ld_space_pos, indent = leading_trivia(lines, bound_ln, bound_col,  # start of text / space
+                                                       first_ln, first_col, ld_comms, ld_space)
+    tr_text_pos, tr_space_pos, _      = trailing_trivia(lines, bound_end_ln, bound_end_col,  # END of text / space
+                                                        last_end_ln, last_end_col, tr_comms, tr_space)
 
     def calc_locs(ld_ln: int, ld_col: int, tr_ln: int, tr_col: int,
                   ) -> tuple[fstloc, fstloc, str | None, tuple[int, int] | None]:
@@ -332,7 +332,7 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
             del_col = re_line_trailing_space.match(lines[first_ln], 0 if first_ln > bound_ln else bound_col,
                                                    first_col).start(1)
 
-            if tr_ln == last_end_ln:  # does not extend past end of line (different from _trailing_trivia() 'ends_line')
+            if tr_ln == last_end_ln:  # does not extend past end of line (different from trailing_trivia() 'ends_line')
                 if not is_last or lines[last_end_ln].startswith('#', tr_col):  # if there is a next element or trailing line comment then don't delete space before this element
                     del_col = first_col
 
@@ -352,7 +352,7 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
 
         assert ld_col == 0
 
-        if tr_ln == last_end_ln:  # does not extend past end of line (different from _trailing_trivia() 'ends_line')
+        if tr_ln == last_end_ln:  # does not extend past end of line (different from trailing_trivia() 'ends_line')
             if ld_ln == first_ln:  # starts on first line which is copied / deleted
                 if single or not _re_sep_line_nonexpr_end[sep].match(lines[loc_first.end_ln], loc_first.end_col):  # if multiple elements and first element ends its own line then fall through to next case, yes the re match can extend beyond ending bound (its fine since its just informative)
                     return (fstloc(first_ln, first_col, last_end_ln, last_end_col),
@@ -405,16 +405,15 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
     return copy_locs[:1] + cut_locs[1:]  # copy location from copy_locs and delete location and indent from cut_locs
 
 
-def _offset_pos_by_params(self: fst.FST, ln: int, col: int, col_offset: int, params_offset: _ParamsOffset,
-                          ) -> tuple[int, int]:
+def _offset_pos_by_params(self: fst.FST, ln: int, col: int, col_offset: int, parsoff: ParamsOffset) -> tuple[int, int]:
     """Position to offset `(ln, col)` with `col_offset` = `lines[ln].c2b(col)`, is assumed to be at or past the offset
     position."""
 
-    at_ln  = params_offset.end_ln == ln
-    ln    += params_offset.dln
+    at_ln  = parsoff.ln == ln
+    ln    += parsoff.dln
 
     if at_ln:
-        col = self.root._lines[ln].b2c(col_offset + params_offset.dcol_offset)
+        col = self.root._lines[ln].b2c(col_offset + parsoff.dcol_offset)
 
     return ln, col
 
@@ -596,10 +595,10 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
     ast.end_lineno     = copy_end_ln + 1
     ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
 
-    fst_, params_offset = self._make_fst_and_dedent(self, ast, copy_loc, prefix, suffix,
-                                                    del_loc if cut else None,
-                                                    [del_indent] if del_indent and del_loc.end_col else None,
-                                                    ret_params_offset=True)
+    fst_, parsoff = self._make_fst_and_dedent(self, ast, copy_loc, prefix, suffix,
+                                              del_loc if cut else None,
+                                              [del_indent] if del_indent and del_loc.end_col else None,
+                                              ret_params_offset=True)
 
     ast.col_offset     = 0  # before prefix
     ast.end_col_offset = fst_._lines[-1].lenbytes  # after suffix
@@ -625,7 +624,7 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
     if self_tail_sep is not None:
         if cut:  # bound end is guaranteed to be past any modifications
             bound_end_ln, bound_end_col = _offset_pos_by_params(self, bound_end_ln, bound_end_col, bound_end_col_offset,
-                                                                params_offset)
+                                                                parsoff)
 
         if isinstance(last := getattr(self.a, field)[-1], AST):
             _, _, last_end_ln, last_end_col = last.f.loc
@@ -716,7 +715,7 @@ def _get_slice_Dict(self: fst.FST, start: int | Literal['end'] | None, stop: int
 
     len_body    = len(body := (ast := self.a).keys)
     body2       = ast.values
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST._new_empty_dict(from_=self)
@@ -735,7 +734,7 @@ def _get_slice_Tuple_elts(self: fst.FST, start: int | Literal['end'] | None, sto
     not always true as a `Tuple` may serve as the container of a slice of other node types."""
 
     len_body    = len(body := (ast := self.a).elts)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST._new_empty_tuple(from_=self)
@@ -771,7 +770,7 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
     valid python `Tuple`."""
 
     len_body    = len(body := self.a.targets)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice   = stop - start
 
     if not len_slice:
@@ -810,7 +809,7 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
     empty `Name`."""
 
     len_body    = len(body := self.a.targets)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice   = stop - start
 
     if not len_slice:
@@ -854,7 +853,7 @@ def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop
     """A `List` slice is just a normal `List`."""
 
     len_body    = len(body := (ast := self.a).elts)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST._new_empty_list(from_=self)
@@ -878,7 +877,7 @@ def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop:
     options."""
 
     len_body    = len(body := self.a.elts)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return (
@@ -906,7 +905,7 @@ def _get_slice_MatchSequence_patterns(self: fst.FST, start: int | Literal['end']
     parent."""
 
     len_body    = len(body := self.a.patterns)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST._new_empty_matchseq(from_=self)
@@ -941,7 +940,7 @@ def _get_slice_MatchMapping(self: fst.FST, start: int | Literal['end'] | None, s
 
     len_body    = len(body := (ast := self.a).keys)
     body2       = ast.patterns
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST._new_empty_matchmap(from_=self)
@@ -988,7 +987,7 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
     may raise and exception or return an invalid zero-element `MatchOr`, as specified by options."""
 
     len_body         = len(body := self.a.patterns)
-    start, stop      = _fixup_slice_indices(len_body, start, stop)
+    start, stop      = fixup_slice_indices(len_body, start, stop)
     len_slice        = stop - start
     fix_matchor_get  = self.get_option('fix_matchor_get', options)
     fix_matchor_self = self.get_option('fix_matchor_self', options)
@@ -1027,7 +1026,7 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
 def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                             options: Mapping[str, Any]) -> fst.FST:
     len_body    = len(body := self.a.names)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return self._new_empty_tuple(from_=self)
@@ -1060,7 +1059,7 @@ def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, st
     empty `Tuple`, which has no way of knowing that it used to or should contain `type_params`."""
 
     len_body    = len(body := (ast := self.a).type_params)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST._new_empty_tuple(from_=self)
@@ -1101,7 +1100,7 @@ def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, st
 def _get_slice_Global_Local_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                                   cut: bool, options: Mapping[str, Any]) -> fst.FST:
     len_body    = len((ast := self.a).names)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return self._new_empty_tuple(from_=self)
@@ -1116,11 +1115,11 @@ def _get_slice_Global_Local_names(self: fst.FST, start: int | Literal['end'] | N
     ret_ast   = Tuple(elts=ret_elts, ctx=Load())
 
     for _ in range(start):
-        ln, col  = _next_find(lines, ln, col, end_ln, end_col, ',')  # must be there
+        ln, col  = next_find(lines, ln, col, end_ln, end_col, ',')  # must be there
         col     += 1
 
     for i in range(stop - start):  # create tuple of Names from identifiers
-        ln, col, src = _next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
+        ln, col, src = next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
         lineno       = ln + 1
         end_col      = col + len(src)
 
@@ -1461,7 +1460,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
             last = fst_last
 
             if self_tail_sep is None:
-                if pos := _next_find(put_lines, fst_last.end_ln, fst_last.end_col, fst_.end_ln, fst_.end_col, sep):  # only remove if slice being put actually has trailing separator
+                if pos := next_find(put_lines, fst_last.end_ln, fst_last.end_col, fst_.end_ln, fst_.end_col, sep):  # only remove if slice being put actually has trailing separator
                     if re_empty_space.match(put_lines[pos[0]], pos[1] + len(sep)):  # which doesn't have stuff following it
                         self_tail_sep = 0
 
@@ -1491,21 +1490,21 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
     is_last_and_at_self_end = is_last and (self_end_ln, self_end_col) <= (put_end_ln, put_end_col)
 
     if put_col == self_col and put_ln == self_ln:  # put at beginning of unenclosed sequence
-        params_offset = self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, is_last, False, self)
+        parsoff = self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, is_last, False, self)
 
-        self._offset(*params_offset, True, True, self_=False)
+        self._offset(*parsoff, True, True, self_=False)
 
     elif is_last_and_at_self_end:  # because of insertion at end and maybe unenclosed sequence
-        params_offset = self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, True, self)
+        parsoff = self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, True, self)
     else:  # in this case there may parts of self after so we need to recurse the offset into self
-        params_offset = self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, False)
+        parsoff = self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, False)
 
     # put / del trailing and internal separators
 
     if self_tail_sep is not None:  # trailing
         _, _, last_end_ln, last_end_col = (f := last or body2[-1].f).loc
         bound_end_ln, bound_end_col     = _offset_pos_by_params(self, bound_end_ln, bound_end_col,
-                                                                bound_end_col_offset, params_offset)
+                                                                bound_end_col_offset, parsoff)
 
         if self_tail_sep:
             self._maybe_ins_separator(last_end_ln, last_end_col, False, bound_end_ln, bound_end_col, sep,
@@ -1521,8 +1520,8 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
             if a := body[stop]:  # explicit _loc_maybe_dict_key() logic because self AST tree is not complete
                 stop_ln, stop_col, _, _ = a.f.loc
             else:
-                stop_ln, stop_col = _prev_find(lines, fst_last_end_ln, fst_last_end_col,
-                                               (l := body2[stop].f.loc).end_ln, l.end_col, '**')  # '**' must be there
+                stop_ln, stop_col = prev_find(lines, fst_last_end_ln, fst_last_end_col,
+                                              (l := body2[stop].f.loc).end_ln, l.end_col, '**')  # '**' must be there
 
             self._maybe_ins_separator(fst_last_end_ln, fst_last_end_col, True, stop_ln, stop_col, sep, None)  # last None is because elements of self are now past comma point so will need to be offset
 
@@ -1763,7 +1762,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
 
     except SyntaxError:
         if (not (isinstance(code, list) or (isinstance(code, str) and (code := code.split('\n')))) or
-            not _next_frag(code, 0, 0, len(code) - 1, len(code[-1]))
+            not next_frag(code, 0, 0, len(code) - 1, len(code[-1]))
         ):  # nothing other than maybe comments or line continuations present, empty pattern, not an error but delete
             return None
 
@@ -1888,7 +1887,7 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
     fst_        = _code_to_slice_seq2(self, code, one, options, code_as_expr)
     body        = (ast := self.a).keys
     body2       = ast.values
-    start, stop = _fixup_slice_indices(len(body), start, stop)
+    start, stop = fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
         return
@@ -1960,7 +1959,7 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
         fst_ = _code_to_slice_seq(self, code, one, options, code_as=code_as_expr_all)
 
     body        = (ast := self.a).elts
-    start, stop = _fixup_slice_indices(len(body), start, stop)
+    start, stop = fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
         return
@@ -2042,7 +2041,7 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
                          field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_        = _code_to_slice_seq(self, code, one, options)
     body        = (ast := self.a).elts
-    start, stop = _fixup_slice_indices(len(body), start, stop)
+    start, stop = fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
         return
@@ -2093,7 +2092,7 @@ def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['
                         field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_        = _code_to_slice_seq(self, code, one, options)
     body        = self.a.elts
-    start, stop = _fixup_slice_indices(len(body), start, stop)
+    start, stop = fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
         return
@@ -2148,7 +2147,7 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
 
     fst_        = _code_to_slice_seq(self, code, one, options, non_seq_as_one=True)
     len_body    = len(body := self.a.targets)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice   = stop - start
 
     if not fst_:
@@ -2206,7 +2205,7 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
                               field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_        = _code_to_slice_Assign_targets(self, code, one, options)
     len_body    = len(body := self.a.targets)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice   = stop - start
 
     if not fst_:
@@ -2257,7 +2256,7 @@ def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: i
     # NOTE: we allow multiple MatchStars to be put to the same MatchSequence
     fst_        = _code_to_slice_MatchSequence(self, code, one, options)
     body        = self.a.patterns
-    start, stop = _fixup_slice_indices(len(body), start, stop)
+    start, stop = fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
         return
@@ -2307,7 +2306,7 @@ def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Liter
     fst_        = _code_to_slice_seq2(self, code, one, options, code_as_pattern)
     len_body    = len(body := (ast := self.a).keys)
     body2       = ast.patterns
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if not fst_ and start == stop:
         return
@@ -2372,7 +2371,7 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
                                 field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_             = _code_to_slice_MatchOr(self, code, one, options)
     len_body         = len(body := self.a.patterns)
-    start, stop      = _fixup_slice_indices(len_body, start, stop)
+    start, stop      = fixup_slice_indices(len_body, start, stop)
     len_slice        = stop - start
     fix_matchor_self = self.get_option('fix_matchor_self', options)
 
@@ -2427,7 +2426,7 @@ def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Litera
 
     fst_        = _code_to_slice_type_params(self, code, one, options)
     len_body    =  len(body := (ast := self.a).type_params)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     bound, (name_ln, name_col) = (
         (self._loc_typealias_type_params_brackets if isinstance(ast, TypeAlias) else
@@ -2608,7 +2607,7 @@ def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: 
     """Get location of a raw slice. Sepcial cases for decorators, comprehension ifs and other weird nodes."""
 
     def fixup_slice_index_for_raw(len_: int, start: int, stop: int) -> tuple[int, int]:
-        start, stop = _fixup_slice_indices(len_, start, stop)
+        start, stop = fixup_slice_indices(len_, start, stop)
 
         if start == stop:
             raise ValueError("invalid slice for raw operation")
@@ -2650,7 +2649,7 @@ def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: 
         ifs         = ast.ifs
         start, stop = fixup_slice_index_for_raw(len(ifs), start, stop)
         ffirst      = ifs[start].f
-        start_pos   = _prev_find(self.root._lines, *ffirst._prev_bound(), ffirst.ln, ffirst.col, 'if')
+        start_pos   = prev_find(self.root._lines, *ffirst._prev_bound(), ffirst.ln, ffirst.col, 'if')
 
         return fstloc(*start_pos, *ifs[stop - 1].f.pars()[2:])
 
@@ -2664,7 +2663,7 @@ def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: 
         decos       = ast.decorator_list
         start, stop = fixup_slice_index_for_raw(len(decos), start, stop)
         ffirst      = decos[start].f
-        start_pos   = _prev_find(self.root._lines, 0, 0, ffirst.ln, ffirst.col, '@')  # we can use '0, 0' because we know "@" starts on a newline
+        start_pos   = prev_find(self.root._lines, 0, 0, ffirst.ln, ffirst.col, '@')  # we can use '0, 0' because we know "@" starts on a newline
 
         return fstloc(*start_pos, *decos[stop - 1].f.pars()[2:])
 
@@ -2717,8 +2716,8 @@ def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end']
                 code._put_src(None, ln := code.ln, col := code.col, ln, col + 1, False)
 
             if elts := ast.values if is_dict else ast.patterns if is_match else ast.elts:
-                if comma := _next_find(code.root._lines, (l := elts[-1].f.loc).end_ln, l.end_col, code.end_ln,
-                                        code.end_col, ','):  # strip trailing comma
+                if comma := next_find(code.root._lines, (l := elts[-1].f.loc).end_ln, l.end_col, code.end_ln,
+                                      code.end_col, ','):  # strip trailing comma
                     ln, col = comma
 
                     code._put_src(None, ln, col, ln, col + 1, False)

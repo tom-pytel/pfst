@@ -12,7 +12,7 @@ from .misc import (
     NAMED_SCOPE,
     re_empty_line_start, re_empty_line, re_comment_line_start, re_line_trailing_space,
     re_empty_line_cont_or_comment,
-    _next_frag, _prev_frag, _next_find, _prev_find,
+    next_frag, prev_frag, next_find, prev_find,
 )
 
 
@@ -83,9 +83,9 @@ class SrcEdit:
         blkpost = True if (allpost := postcomms == 'all') else postcomms == 'block'
 
         if single_ln := bound_end_ln == bound_ln:
-            frag = _next_frag(lines, bound_ln, bound_col, bound_ln, bound_end_col, True)
+            frag = next_frag(lines, bound_ln, bound_col, bound_ln, bound_end_col, True)
         else:
-            frag = _next_frag(lines, bound_ln, bound_col, bound_ln, 0x7fffffffffffffff, True)
+            frag = next_frag(lines, bound_ln, bound_col, bound_ln, 0x7fffffffffffffff, True)
 
         if frag:
             if not frag.src.startswith('#'):
@@ -148,16 +148,16 @@ class SrcEdit:
                                        options.get('precomms'))
         post_comms = self.post_comments(lines, flast.bend_ln, flast.bend_col, bound_end_ln, bound_end_col,
                                         options.get('postcomms'))
-        pre_semi   = not pre_comms and _prev_find(lines, bound_ln, bound_col, ffirst.ln, ffirst.col, ';',
+        pre_semi   = not pre_comms and prev_find(lines, bound_ln, bound_col, ffirst.ln, ffirst.col, ';',
+                                                 True, comment=True, lcont=None)
+        post_semi  = not post_comms and next_find(lines, flast.end_ln, flast.end_col, bound_end_ln, bound_end_col, ';',
                                                   True, comment=True, lcont=None)
-        post_semi  = not post_comms and _next_find(lines, flast.end_ln, flast.end_col, bound_end_ln, bound_end_col, ';',
-                                                   True, comment=True, lcont=None)
         copy_loc   = fstloc(*(pre_comms or ffirst.bloc[:2]), *(post_comms or flast.bloc[2:]))
 
         if fpre:  # set block start to just past prev statement or block open (colon)
             block_ln, block_col = fpre.bloc[2:]
 
-        elif frag := _prev_frag(lines, bound_ln, bound_col, copy_loc.ln, copy_loc.col, False, False):
+        elif frag := prev_frag(lines, bound_ln, bound_col, copy_loc.ln, copy_loc.col, False, False):
             block_ln, block_col, src  = frag
             block_col                += len(src)
 
@@ -168,8 +168,8 @@ class SrcEdit:
         # get copy and delete locations according to possible combinations of preceding and trailing comments, semicolons and line continuation backslashes
 
         def fix_post_semi_with_tail(end_ln: int, end_col: int, starts_line: bool) -> tuple[fstloc, list[str]] | None:
-            if frag := _next_frag(lines, end_ln, end_col, end_ln,
-                                  bound_end_col if end_ln == bound_end_ln else 0x7ffffffffffffff, True, True):  # comment or backslash
+            if frag := next_frag(lines, end_ln, end_col, end_ln,
+                                 bound_end_col if end_ln == bound_end_ln else 0x7ffffffffffffff, True, True):  # comment or backslash
                 put_lines = None
                 ln, col   = copy_loc[:2]
 
@@ -255,8 +255,8 @@ class SrcEdit:
                 end_ln, end_col = copy_loc[2:]
                 at_bound_end_ln = end_ln == bound_end_ln
 
-                if _next_frag(lines, end_ln, end_col, end_ln,
-                              bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):  # comment or backslash
+                if next_frag(lines, end_ln, end_col, end_ln,
+                             bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):  # comment or backslash
                     del_loc = fstloc(*fpre.bloc[2:], end_ln, end_col)
                 else:
                     del_loc = fstloc(*fpre.bloc[2:], end_ln, len(lines[end_ln]))
@@ -268,8 +268,8 @@ class SrcEdit:
             ln, col, end_ln, end_col = copy_loc
             at_bound_end_ln          = end_ln == bound_end_ln
 
-            if frag := _next_frag(lines, end_ln, end_col, end_ln,
-                                  bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):  # comment or backslash
+            if frag := next_frag(lines, end_ln, end_col, end_ln,
+                                 bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):  # comment or backslash
                 del_loc = fstloc(ln, col, end_ln, frag.col)
 
             else:
@@ -288,8 +288,8 @@ class SrcEdit:
             ):
                 del_ln, del_col, del_end_ln, del_end_col = del_loc
 
-                del_ln, del_col = _prev_find(lines, bound_ln, bound_col, del_ln, del_col,
-                                             'finally' if is_finally else 'else', False, comment=False, lcont=False)  # `first=False` because have to skip over ':'
+                del_ln, del_col = prev_find(lines, bound_ln, bound_col, del_ln, del_col,
+                                            'finally' if is_finally else 'else', False, comment=False, lcont=False)  # `first=False` because have to skip over ':'
 
                 if put_lines:
                     put_lines[0] = lines[del_ln][:del_col] + put_lines[0]  # prepend block start indentation to existing indentation, silly but whatever
@@ -331,7 +331,7 @@ class SrcEdit:
             new_del_ln = max(bound_ln + bool(bound_col), del_ln - prespace)  # first possible full empty line to delete to
 
             if del_ln > new_del_ln and (not del_col or re_empty_line.match(lines[del_ln], 0, del_col)):
-                if frag := _prev_frag(lines, new_del_ln, 0, del_ln, 0, True, False):
+                if frag := prev_frag(lines, new_del_ln, 0, del_ln, 0, True, False):
                     new_del_ln = frag.ln + 1
 
                 if new_del_ln < del_ln:
@@ -344,14 +344,14 @@ class SrcEdit:
             if not del_end_col:
                 new_del_end_ln = min(bound_end_ln, del_end_ln + postspace)  # last possible end line to delete to
                 del_end_ln     = (frag.ln
-                                  if (frag := _next_frag(lines, del_end_ln, 0, new_del_end_ln, 0, True, True)) else
+                                  if (frag := next_frag(lines, del_end_ln, 0, new_del_end_ln, 0, True, True)) else
                                   new_del_end_ln)
 
             elif del_end_col == len(lines[del_end_ln]):
                 new_del_end_ln = min(bound_end_ln, del_end_ln + postspace + 1)  # account for not ending on newline
                 del_end_ln     = (frag.ln - 1
-                                  if (frag := _next_frag(lines, del_end_ln, del_end_col, new_del_end_ln, 0, True, True,
-                                                         )) else
+                                  if (frag := next_frag(lines, del_end_ln, del_end_col, new_del_end_ln, 0, True, True,
+                                                        )) else
                                   new_del_end_ln - 1)
                 del_end_col    = len(lines[del_end_ln])
 
@@ -367,7 +367,7 @@ class SrcEdit:
             new_del_ln  = del_ln - 1
             new_del_col = 0 if new_del_ln != bound_ln else bound_col
 
-            if frag := _prev_frag(lines, new_del_ln, new_del_col, new_del_ln, 0x7fffffffffffffff, True, False):  # skip over lcont but not comment if is there because that invalidates quick '\\' check above
+            if frag := prev_frag(lines, new_del_ln, new_del_col, new_del_ln, 0x7fffffffffffffff, True, False):  # skip over lcont but not comment if is there because that invalidates quick '\\' check above
                 new_del_col = None if (src := frag.src).startswith('#') else frag.col + len(src)
 
             if new_del_col is not None:
@@ -545,7 +545,7 @@ class SrcEdit:
                 ln, col, end_ln, end_col = block_loc
 
                 while ln < end_ln:
-                    if not (frag := _next_frag(lines, ln, col, ln, 0x7fffffffffffffff, True, True)):
+                    if not (frag := next_frag(lines, ln, col, ln, 0x7fffffffffffffff, True, True)):
                         put_loc = fstloc(ln, col, ln + 1, 0)
 
                         break
@@ -591,10 +591,10 @@ class SrcEdit:
                     ln, col = block_loc[:2]
 
                 else:
-                    ln, col  = _prev_find(lines, *block_loc, ':', True)
+                    ln, col  = prev_find(lines, *block_loc, ':', True)
                     col     += 1
 
-                if frag := _next_frag(lines, ln, col, *block_loc[2:], True, None):
+                if frag := next_frag(lines, ln, col, *block_loc[2:], True, None):
                     ln, col, src  = frag
                     col          += len(src)
 
@@ -627,7 +627,7 @@ class SrcEdit:
 
                 single_ln = ln == end_ln
 
-                while frag := _next_frag(lines, ln, col, ln, end_col if single_ln else 0x7fffffffffffffff, True, False):
+                while frag := next_frag(lines, ln, col, ln, end_col if single_ln else 0x7fffffffffffffff, True, False):
                     _, ccol, csrc = frag
 
                     if frag.src.startswith('#'):

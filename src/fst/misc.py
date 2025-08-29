@@ -24,7 +24,35 @@ try:
 except ImportError:  # for py 3.10
     Self = ForwardRef('FST')
 
-__all__ = ['NodeError', 'astfield', 'fstloc']
+__all__ = [
+    'NodeError',
+    'astfield',
+    'fstloc',
+    'fstlocns',
+    'srcwpos',
+    'nspace',
+    'shortstr',
+    'pyver',
+    'shortstr',
+    'next_frag',
+    'prev_frag',
+    'next_find',
+    'prev_find',
+    'next_find_re',
+    'next_pars',
+    'prev_pars',
+    'leading_trivia',
+    'trailing_trivia',
+    'ParamsOffset',
+    'params_offset',
+    'swizzle_getput_params',
+    'fixup_field_body',
+    'fixup_one_index',
+    'fixup_slice_indices',
+    'multiline_str_continuation_lns',
+    'multiline_fstr_continuation_lns',
+    'continuation_to_uncontinued_lns',
+]
 
 
 PYVER  = sys.version_info[:2]
@@ -306,7 +334,7 @@ def pyver(func: Callable | None = None, *, ge: int | None = None, lt: int | None
     return decorator if func is None else decorator(func)
 
 
-def _shortstr(s: str, maxlen: int = 64) -> str:
+def shortstr(s: str, maxlen: int = 64) -> str:
     """Return string of maximum length `maxlen`, shortening if necessary to "start .. [X chars] .. end"."""
 
     if (l := len(s)) <= maxlen:
@@ -317,15 +345,15 @@ def _shortstr(s: str, maxlen: int = 64) -> str:
     return f'{s[:(t+1)//2]} .. [{l} chars] .. {s[-(t//2):]}'
 
 
-# def _cls_names(cls: type | Sequence[type], last_separator: str = ' or ') -> str:
+# def cls_names(cls: type | Sequence[type], last_separator: str = ' or ') -> str:
 #     if isinstance(cls, Sequence):
 #         return f'{", ".join(a.__name__ for a in cls[:-1])}{last_separator}{cls[-1].__name__}'
 
 #     return cls.__name__
 
 
-def _next_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
-               comment: bool = False, lcont: bool | None = False) -> srcwpos | None:
+def next_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
+              comment: bool = False, lcont: bool | None = False) -> srcwpos | None:
     """Get next fragment of source which may or may not include comments or line continuation backslashes. May be
     restricted to bound or further restricted to not exceed logical line. Assuming start pos not inside str or comment.
     The fragment is not necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Fragments can include
@@ -372,9 +400,9 @@ def _next_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     return None
 
 
-def _prev_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
-               comment: bool = False, lcont: bool | None = False, *,
-               state: list | None = None) -> srcwpos | None:
+def prev_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
+              comment: bool = False, lcont: bool | None = False, *,
+              state: list | None = None) -> srcwpos | None:
     """Get prev fragment of source which may or may not include comments or line continuation backslashes. May be
     restricted to bound or further restricted to not exceed logical line. Assuming start pos not inside str or comment.
     The fragment is not necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Fragments can include
@@ -467,29 +495,29 @@ def _prev_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     return None
 
 
-def _next_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, src: str, first: bool = False, *,
-               comment: bool = False, lcont: bool | None = False) -> tuple[int, int] | None:
+def next_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, src: str, first: bool = False, *,
+              comment: bool = False, lcont: bool | None = False) -> tuple[int, int] | None:
     """Find location of a string in the bound walking forward from the start. Returns `None` if string not found.
 
     **Parameters:**
     - `first`: If `False` then will skip over anything else which is not the string and keep looking until it hits the
         end of the bound. If `True` then will only succeed if `src` is the first thing found.
-    - `comment`: The `comment` parameter to `_next_frag()`, can stop search on comments if `first` is `True`.
-    - `lcont`: The `lcont` parameter to `_next_frag()`. Can stop search on line continuation if `first` is `True`.
+    - `comment`: The `comment` parameter to `next_frag()`, can stop search on comments if `first` is `True`.
+    - `lcont`: The `lcont` parameter to `next_frag()`. Can stop search on line continuation if `first` is `True`.
 
     **Returns:**
     - `fstpos | None`: Location of start of found `src` or `None` if not found with the given parameters.
     """
 
     if first:
-        if frag := _next_frag(lines, ln, col, end_ln, end_col, comment, lcont):
+        if frag := next_frag(lines, ln, col, end_ln, end_col, comment, lcont):
             cln, ccol, csrc = frag
 
             if csrc.startswith(src):
                 return cln, ccol
 
     else:
-        while frag := _next_frag(lines, ln, col, end_ln, end_col, comment, lcont):
+        while frag := next_frag(lines, ln, col, end_ln, end_col, comment, lcont):
             ln, col, csrc = frag
 
             if (idx := csrc.find(src)) != -1:
@@ -500,8 +528,8 @@ def _next_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
     return None
 
 
-def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, src: str, first: bool = False, *,
-               comment: bool = False, lcont: bool | None = False, state: list | None = None) -> tuple[int, int] | None:
+def prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, src: str, first: bool = False, *,
+              comment: bool = False, lcont: bool | None = False, state: list | None = None) -> tuple[int, int] | None:
     """Find location of a string in the bound walking backwards from the end. Returns `None` if string not found. If
     `comment` is `True` then `src` must match the START of the src comment found, not the tail like for non-comment
      strings found in order to be considered successful.
@@ -509,9 +537,9 @@ def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
     **Parameters:**
     - `first`: If `False` then will skip over anything else which is not the string and keep looking until it hits the
         start of the bound. If `True` then will only succeed if `src` is the first thing found.
-    - `comment`: The `comment` parameter to `_prev_frag()`, can stop search on comments if `first` is `True`.
-    - `lcont`: The `lcont` parameter to `_prev_frag()`. Can stop search on line continuation if `first` is `True`.
-    - `state`: The `state` parameter to `_prev_frag()`. Be careful using this here and keep in mind its line caching
+    - `comment`: The `comment` parameter to `prev_frag()`, can stop search on comments if `first` is `True`.
+    - `lcont`: The `lcont` parameter to `prev_frag()`. Can stop search on line continuation if `first` is `True`.
+    - `state`: The `state` parameter to `prev_frag()`. Be careful using this here and keep in mind its line caching
         functionality if changing search parameters.
 
     **Returns:**
@@ -519,7 +547,7 @@ def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
     """
 
     if first:
-        if frag := _prev_frag(lines, ln, col, end_ln, end_col, comment, lcont, state=state):
+        if frag := prev_frag(lines, ln, col, end_ln, end_col, comment, lcont, state=state):
             ln, col, csrc = frag
 
             if comment and csrc.startswith('#'):
@@ -533,7 +561,7 @@ def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
         if state is None:
             state = []
 
-        while frag := _prev_frag(lines, ln, col, end_ln, end_col, comment, lcont, state=state):
+        while frag := prev_frag(lines, ln, col, end_ln, end_col, comment, lcont, state=state):
             end_ln, end_col, csrc = frag
 
             if comment and csrc.startswith('#'):
@@ -546,15 +574,15 @@ def _prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, s
     return None
 
 
-def _next_find_re(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, pat: re.Pattern, first: bool = False,
-                  *, comment: bool = False, lcont: bool | None = False) -> srcwpos | None:
+def next_find_re(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, pat: re.Pattern, first: bool = False,
+                 *, comment: bool = False, lcont: bool | None = False) -> srcwpos | None:
     """Find location of a regex pattern in the bound walking forward from the start. Returns `None` if string not found.
 
     **Parameters:**
     - `first`: If `False` then will skip over anything else which is not the string and keep looking until it hits the
         end of the bound. If `True` then will only succeed if `src` is the first thing found.
-    - `comment`: The `comment` parameter to `_next_frag()`, can stop search on comments if `first` is `True`.
-    - `lcont`: The `lcont` parameter to `_next_frag()`. Can stop search on line continuation if `first` is `True`.
+    - `comment`: The `comment` parameter to `next_frag()`, can stop search on comments if `first` is `True`.
+    - `lcont`: The `lcont` parameter to `next_frag()`. Can stop search on line continuation if `first` is `True`.
 
     **Returns:**
     - `srcwpos | None`: Location of start of `pat` and the string matching the pattern or `None` if not found with the
@@ -562,14 +590,14 @@ def _next_find_re(lines: list[str], ln: int, col: int, end_ln: int, end_col: int
     """
 
     if first:
-        if frag := _next_frag(lines, ln, col, end_ln, end_col, comment, lcont):
+        if frag := next_frag(lines, ln, col, end_ln, end_col, comment, lcont):
             ln, col, csrc = frag
 
             if m := pat.match(csrc):
                 return srcwpos(ln, col, m.group())
 
     else:
-        while frag := _next_frag(lines, ln, col, end_ln, end_col, comment, lcont):
+        while frag := next_frag(lines, ln, col, end_ln, end_col, comment, lcont):
             ln, col, csrc = frag
 
             if m := pat.search(csrc):
@@ -580,8 +608,8 @@ def _next_find_re(lines: list[str], ln: int, col: int, end_ln: int, end_col: int
     return None
 
 
-def _next_pars(lines: list[str], pars_end_ln: int, pars_end_col: int, bound_end_ln: int, bound_end_col: int,
-               par: str = ')') -> list[tuple[int, int]]:
+def next_pars(lines: list[str], pars_end_ln: int, pars_end_col: int, bound_end_ln: int, bound_end_col: int,
+              par: str = ')') -> list[tuple[int, int]]:
         """Return a list of the locations of closing parentheses (just past, or any specified character) starting at
         (`pars_end_ln`, `pars_end_col`) until the end of the bound. The list includes (`pars_end_ln`, `pars_end_col`) as
         the first element. The list ends if a non `par` character is encountered while searching forward.
@@ -592,7 +620,7 @@ def _next_pars(lines: list[str], pars_end_ln: int, pars_end_col: int, bound_end_
 
         pars = [(pars_end_ln, pars_end_col)]
 
-        while frag := _next_frag(lines, pars_end_ln, pars_end_col, bound_end_ln, bound_end_col):
+        while frag := next_frag(lines, pars_end_ln, pars_end_col, bound_end_ln, bound_end_col):
             ln, col, src = frag
 
             for c in src:
@@ -612,8 +640,8 @@ def _next_pars(lines: list[str], pars_end_ln: int, pars_end_col: int, bound_end_
         return pars
 
 
-def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pars_col: int, par: str = '(',
-               ) -> list[tuple[int, int]]:
+def prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pars_col: int, par: str = '(',
+              ) -> list[tuple[int, int]]:
         """Return a list of the locations of opening parentheses (or any specified character) starting at (`pars_ln`,
         `pars_col`) until the start of the bound. The list includes (`pars_ln`, `pars_col`) as the first element. The
         list ends if a non `par` character is encountered while searching backward.
@@ -625,7 +653,7 @@ def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pa
         pars  = [(pars_ln, pars_col)]
         state = []
 
-        while frag := _prev_frag(lines, bound_ln, bound_col, pars_ln, pars_col, state=state):
+        while frag := prev_frag(lines, bound_ln, bound_col, pars_ln, pars_col, state=state):
             ln, col, src  = frag
             col          += len(src)
 
@@ -646,9 +674,9 @@ def _prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pa
         return pars
 
 
-def _leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: int,
-                    comments: Literal['none', 'all', 'block'] | int, space: bool | int,
-                    ) -> tuple[tuple[int, int], tuple[int, int] | None, str | None]:
+def leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: int,
+                   comments: Literal['none', 'all', 'block'] | int, space: bool | int,
+                   ) -> tuple[tuple[int, int], tuple[int, int] | None, str | None]:
     """Get locations of leading trivia starting at the given bound up to (`ln`, `col`) where the element starts. Can get
     location of a block of comments (no spaces between), all comments after start of bound (with spaces inside) and any
     leading empty lines. Also returns the indentation of the element line if it starts the line.
@@ -754,9 +782,9 @@ def _leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, co
     return (text_pos, (ln, 0), indent)
 
 
-def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln: int, end_col: int,
-                     comments: Literal['none', 'all', 'block', 'line'] | int, space: bool | int,
-                     ) -> tuple[tuple[int, int], tuple[int, int] | None, bool]:
+def trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln: int, end_col: int,
+                    comments: Literal['none', 'all', 'block', 'line'] | int, space: bool | int,
+                    ) -> tuple[tuple[int, int], tuple[int, int] | None, bool]:
     """Get locations of trailing trivia starting at the element up to (`end_ln`, `end_col`) where the given bound ends.
     Can get location of a block of comments (no spaces between), all comments after start of bound (with spaces inside),
     a single comment on the ending line and any trailing empty lines. Also returns whether the element ends the line or
@@ -816,7 +844,7 @@ def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, en
 
         len_line = len(lines[end_ln])
 
-        if not (frag := _next_frag(lines, end_ln, end_col, end_ln, bound_end_col, True)):
+        if not (frag := next_frag(lines, end_ln, end_col, end_ln, bound_end_col, True)):
             space_col = min(bound_end_col, len_line)
         elif comments == 'none' or not frag.src.startswith('#'):
             space_col = frag.col
@@ -827,7 +855,7 @@ def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, en
 
     is_lineno = isinstance(comments, int)
 
-    if frag := _next_frag(lines, end_ln, end_col, end_ln + 1, 0, True):
+    if frag := next_frag(lines, end_ln, end_col, end_ln + 1, 0, True):
         if not frag.src.startswith('#') or (not is_lineno and comments == 'none'):
             space_pos = None if (c := frag.col) == end_col else (end_ln, c)
 
@@ -917,14 +945,14 @@ def _trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, en
     return (text_pos, None if space_pos == text_pos else space_pos, True)
 
 
-class _ParamsOffset(NamedTuple):
-    end_ln:      int
-    col_offset:  int
-    dln:         int
-    dcol_offset: int
+class ParamsOffset(NamedTuple):
+    ln:          int  # position of offset, FST coords (starts at 0)
+    col_offset:  int  # position of offset, byte offset (negative to indicate but value is abs(), positive would indicate character offset)
+    dln:         int  # delta lines
+    dcol_offset: int  # delta bytes
 
-def _params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int, end_ln: int, end_col: int,
-                   ) -> _ParamsOffset:
+def params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int, end_ln: int, end_col: int,
+                  ) -> ParamsOffset:
     """Calculate location and delta parameters for the `_offset()` function. The `col` parameter is calculated as a byte
     offset so that the `_offset()` function does not have to access the source at all."""
 
@@ -936,12 +964,12 @@ def _params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int
     if not dfst_ln:
         dcol_offset += lines[ln].c2b(col)
 
-    return _ParamsOffset(end_ln, col_offset, dln, dcol_offset)
+    return ParamsOffset(end_ln, col_offset, dln, dcol_offset)
 
 
-def _swizzle_getput_params(start: int | Literal['end'] | None, stop: int | None | Literal[False], field: str | None,
-                           default_stop: Literal[False] | None,
-                           ) -> tuple[int | Literal['end'] | None,int | None | Literal[False], str | None]:
+def swizzle_getput_params(start: int | Literal['end'] | None, stop: int | None | Literal[False], field: str | None,
+                          default_stop: Literal[False] | None,
+                          ) -> tuple[int | Literal['end'] | None,int | None | Literal[False], str | None]:
     """Allow passing `stop` and `field` for get/put() functions positionally."""
 
     if isinstance(start, str) and start != 'end':
@@ -952,17 +980,17 @@ def _swizzle_getput_params(start: int | Literal['end'] | None, stop: int | None 
     return start, stop, field
 
 
-def _fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True) -> tuple[str, 'AST']:
+def fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True) -> tuple[str, 'AST']:
     """Get `AST` member list for specified `field` or default if `field=None`."""
 
     if not field:
-        if (field := _AST_DEFAULT_BODY_FIELD.get(ast.__class__, _fixup_field_body)) is _fixup_field_body:  # _fixup_field_body serves as sentinel
+        if (field := _AST_DEFAULT_BODY_FIELD.get(ast.__class__, fixup_field_body)) is fixup_field_body:  # fixup_field_body serves as sentinel
             raise ValueError(f"{ast.__class__.__name__} has no default body field")
 
         if not field:  # special case ''
             return '', []
 
-    if (body := getattr(ast, field, _fixup_field_body)) is _fixup_field_body:
+    if (body := getattr(ast, field, fixup_field_body)) is fixup_field_body:
         raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
 
     if only_list and not isinstance(body, list):
@@ -972,14 +1000,14 @@ def _fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True
     return field, body
 
 
-def _fixup_one_index(len_: int, idx: int) -> int:
+def fixup_one_index(len_: int, idx: int) -> int:
     if not (0 <= ((idx := idx + len_) if idx < 0 else idx) < len_):
         raise IndexError('index out of range')
 
     return idx
 
 
-def _fixup_slice_indices(len_: int, start: int, stop: int) -> tuple[int, int]:
+def fixup_slice_indices(len_: int, start: int, stop: int) -> tuple[int, int]:
     if start is None:
         start = 0
 
@@ -1009,7 +1037,7 @@ def _fixup_slice_indices(len_: int, start: int, stop: int) -> tuple[int, int]:
     return start, stop
 
 
-def _multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:
+def multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:
     """Return the line numbers of a potentially multiline string `Constant` continuation lines (lines which should not
     be indented because they follow a newline inside triple quotes). The location passed MUST be from the `Constant`
     `AST` node or calculated to be the same, otherwise this function will fail."""
@@ -1058,12 +1086,12 @@ def _multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln:
         if ln == end_ln and col == end_col:
             break
 
-        ln, col, _ = _next_frag(lines, ln, col, end_ln, end_col)  # there must be a next one
+        ln, col, _ = next_frag(lines, ln, col, end_ln, end_col)  # there must be a next one
 
     return lns
 
 
-def _multiline_fstr_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:
+def multiline_fstr_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:
     """Lets try to find non-indentable lines by incrementally attempting to parse parts of multiline f-string (or
     t-string)."""
 
@@ -1101,7 +1129,7 @@ def _multiline_fstr_continuation_lns(lines: list[str], ln: int, col: int, end_ln
     return lns
 
 
-def _continuation_to_uncontinued_lns(lns: Iterable[int], ln: int, col: int, end_ln: int, end_col: int, *,
+def continuation_to_uncontinued_lns(lns: Iterable[int], ln: int, col: int, end_ln: int, end_col: int, *,
                                      include_last: bool = False) -> set[int]:
     """Convert `Iterable` of lines which are continued from the immediately previous line into a list of lines which are
     not themselves continued below. If `lns` comes from the `_multiline_?str_*` functions then it does not include line

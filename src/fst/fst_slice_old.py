@@ -18,8 +18,8 @@ from .astutil import copy_ast
 
 from .misc import (
     astfield, fstloc,
-    _next_find, _prev_find,
-    _fixup_slice_indices
+    next_find, prev_find,
+    fixup_slice_indices
 )
 
 from .code import Code, code_as_stmts, code_as_ExceptHandlers, code_as_match_cases
@@ -33,7 +33,7 @@ def _get_slice_stmtish(self: fst.FST, start: int | Literal['end'] | None, stop: 
                        options: Mapping[str, Any], *, one: bool = False) -> fst.FST:
     ast         = self.a
     body        = getattr(ast, field)
-    start, stop = _fixup_slice_indices(len(body), start, stop)
+    start, stop = fixup_slice_indices(len(body), start, stop)
 
     if start == stop:
         return self._new_empty_module(from_=self)
@@ -131,7 +131,7 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
         if one and len(put_body) != 1:
             raise ValueError('expecting a single element')
 
-    start, stop = _fixup_slice_indices(len(body), start, stop)
+    start, stop = fixup_slice_indices(len(body), start, stop)
     slice_len   = stop - start
 
     if not slice_len and (not put_fst or (not put_body and len(ls := put_fst._lines) == 1 and not ls[0])):  # deleting empty slice or assigning empty fst to empty slice, noop
@@ -186,7 +186,7 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
 
             else:  # special case because 'try:' doesn't have ASTs inside it and each 'except:' lives at the 'try:' indentation level
                 end_ln, end_col = fpost.bloc[:2]
-                ln, col         = _prev_find(lines, *fpost._prev_bound_step(), end_ln, end_col, ':')
+                ln, col         = prev_find(lines, *fpost._prev_bound_step(), end_ln, end_col, ':')
                 block_loc       = fstloc(ln, col + 1, end_ln, end_col)
 
             is_last_child = False
@@ -217,7 +217,7 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
 
                 else:  # field == 'body':
                     if orelse := ast.orelse:
-                        ln, col       = _next_find(lines, *(f := orelse[0].f).prev().bloc[2:], *f.bloc[:2], ':')  # we know its there
+                        ln, col       = next_find(lines, *(f := orelse[0].f).prev().bloc[2:], *f.bloc[:2], ':')  # we know its there
                         block_loc     = fstloc(ln, col + 1, *orelse[0].f.bloc[:2])
                         is_last_child = False
 
@@ -238,7 +238,7 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
 
                 elif field == 'orelse':
                     if finalbody := ast.finalbody:
-                        end_ln, end_col = _prev_find(lines, *self.bloc[:2], *finalbody[0].f.bloc[:2], 'finally')  # we can use bloc[:2] even if there are ASTs between that and here because 'finally' must be on its own line
+                        end_ln, end_col = prev_find(lines, *self.bloc[:2], *finalbody[0].f.bloc[:2], 'finally')  # we can use bloc[:2] even if there are ASTs between that and here because 'finally' must be on its own line
                         is_last_child   = False
 
                     else:
@@ -246,7 +246,7 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
                         is_last_child   = True
 
                     if not (block := ast.handlers) and not (block := ast.body):
-                        ln, col   = _prev_find(lines, *self.bloc[:2], end_ln, end_col, ':')
+                        ln, col   = prev_find(lines, *self.bloc[:2], end_ln, end_col, ':')
                         block_loc = fstloc(ln, col + 1, end_ln, end_col)
 
                     else:
@@ -254,11 +254,11 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
 
                 elif field == 'handlers':
                     if orelse := ast.orelse:
-                        end_ln, end_col = _prev_find(lines, *self.bloc[:2], *orelse[0].f.bloc[:2], 'else')
+                        end_ln, end_col = prev_find(lines, *self.bloc[:2], *orelse[0].f.bloc[:2], 'else')
                         is_last_child   = False
 
                     elif finalbody := ast.finalbody:
-                        end_ln, end_col = _prev_find(lines, *self.bloc[:2], *finalbody[0].f.bloc[:2], 'finally')
+                        end_ln, end_col = prev_find(lines, *self.bloc[:2], *finalbody[0].f.bloc[:2], 'finally')
                         is_last_child   = False
 
                     else:
@@ -266,7 +266,7 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
                         is_last_child   = True
 
                     if not (body_ := ast.body):
-                        ln, col   = _prev_find(lines, *self.bloc[:2], end_ln, end_col, ':')
+                        ln, col   = prev_find(lines, *self.bloc[:2], end_ln, end_col, ':')
                         block_loc = fstloc(ln, col + 1, end_ln, end_col)
 
                     else:
@@ -278,18 +278,18 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
                         is_last_child   = False
 
                     elif orelse := ast.orelse:
-                        end_ln, end_col = _prev_find(lines, *self.bloc[:2], *orelse[0].f.bloc[:2], 'else')
+                        end_ln, end_col = prev_find(lines, *self.bloc[:2], *orelse[0].f.bloc[:2], 'else')
                         is_last_child   = False
 
                     elif finalbody := ast.finalbody:
-                        end_ln, end_col = _prev_find(lines, *self.bloc[:2], *finalbody[0].f.bloc[:2], 'finally')
+                        end_ln, end_col = prev_find(lines, *self.bloc[:2], *finalbody[0].f.bloc[:2], 'finally')
                         is_last_child   = False
 
                     else:
                         end_ln, end_col = self._next_bound_step()
                         is_last_child   = True
 
-                    ln, col   = _prev_find(lines, *self.bloc[:2], end_ln, end_col, ':')
+                    ln, col   = prev_find(lines, *self.bloc[:2], end_ln, end_col, ':')
                     block_loc = fstloc(ln, col + 1, end_ln, end_col)
 
     if not put_fst:

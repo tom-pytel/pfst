@@ -93,9 +93,9 @@ from .misc import (
     astfield, fstloc, fstlocns, nspace,
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Self,
-    _next_frag, _next_find, _next_pars, _prev_pars,
-    _swizzle_getput_params, _fixup_field_body,
-    _multiline_str_continuation_lns, _multiline_fstr_continuation_lns, _continuation_to_uncontinued_lns,
+    next_frag, next_find, next_pars, prev_pars,
+    swizzle_getput_params, fixup_field_body,
+    multiline_str_continuation_lns, multiline_fstr_continuation_lns, continuation_to_uncontinued_lns,
 )
 
 from .structure import _AST_FIELDS_NEXT, _AST_FIELDS_PREV, _with_loc
@@ -1618,8 +1618,8 @@ class FST:
         """
 
         ast              = self.a
-        idx, stop, field = _swizzle_getput_params(idx, stop, field, False)
-        field_, body     = _fixup_field_body(ast, field, False)
+        idx, stop, field = swizzle_getput_params(idx, stop, field, False)
+        field_, body     = fixup_field_body(ast, field, False)
 
         if isinstance(body, list):
             if stop is not False:
@@ -1722,8 +1722,8 @@ class FST:
         """
 
         ast              = self.a
-        idx, stop, field = _swizzle_getput_params(idx, stop, field, False)
-        field_, body     = _fixup_field_body(ast, field, False)
+        idx, stop, field = swizzle_getput_params(idx, stop, field, False)
+        field_, body     = fixup_field_body(ast, field, False)
 
         if isinstance(body, list):
             if stop is not False:
@@ -1793,8 +1793,8 @@ class FST:
         """
 
         ast                = self.a
-        start, stop, field = _swizzle_getput_params(start, stop, field, None)
-        field_, body       = _fixup_field_body(ast, field)
+        start, stop, field = swizzle_getput_params(start, stop, field, None)
+        field_, body       = fixup_field_body(ast, field)
 
         if not isinstance(body, list):
             raise ValueError(f'cannot get slice from non-list field {ast.__class__.__name__}.{field_}')
@@ -1873,8 +1873,8 @@ class FST:
         """
 
         ast                = self.a
-        start, stop, field = _swizzle_getput_params(start, stop, field, None)
-        field_, body       = _fixup_field_body(ast, field)
+        start, stop, field = swizzle_getput_params(start, stop, field, None)
+        field_, body       = fixup_field_body(ast, field)
 
         if not isinstance(body, list):
             raise ValueError(f'cannot put slice to non-list field {ast.__class__.__name__}.{field_}')
@@ -2098,7 +2098,7 @@ class FST:
 
         ln, col, end_ln, end_col = self.bloc
 
-        rpars = _next_pars(self.root._lines, end_ln, end_col, *self._next_bound())
+        rpars = next_pars(self.root._lines, end_ln, end_col, *self._next_bound())
 
         if (lrpars := len(rpars)) == 1:  # no pars on right
             if not shared and self.is_solo_call_arg_genexp():
@@ -2110,7 +2110,7 @@ class FST:
 
             return locn
 
-        lpars = _prev_pars(self.root._lines, *self._prev_bound(), ln, col)
+        lpars = prev_pars(self.root._lines, *self._prev_bound(), ln, col)
 
         if (llpars := len(lpars)) == 1:  # no pars on left
             self._cache[key] = locn = fstlocns(ln, col, end_ln, end_col, n=0)
@@ -4114,7 +4114,7 @@ class FST:
                     _, _, ln, col         = e0.f.loc
                     _, _, end_ln, end_col = self.loc
 
-                    if not _next_find(self.root._lines, ln, col, end_ln, end_col, ','):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
+                    if not next_find(self.root._lines, ln, col, end_ln, end_col, ','):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
                         return 'expr_slice'
 
         return ast.__class__  # otherwise regular parse by AST type is valid
@@ -4521,15 +4521,15 @@ class FST:
                     if not isinstance(ast.value, (str, bytes)):
                         return True
 
-                    lns = _multiline_str_continuation_lns(self.root._lines, ln, col, end_ln, end_col)
+                    lns = multiline_str_continuation_lns(self.root._lines, ln, col, end_ln, end_col)
 
                 else:
-                    lns = _multiline_fstr_continuation_lns(self.root._lines, ln, col, end_ln, end_col)
+                    lns = multiline_fstr_continuation_lns(self.root._lines, ln, col, end_ln, end_col)
 
                 if (ret := len(lns) == end_ln - ln) or out_lns is None:
                     return ret
 
-                out_lns.update(_continuation_to_uncontinued_lns(lns, ln, col, end_ln, end_col))
+                out_lns.update(continuation_to_uncontinued_lns(lns, ln, col, end_ln, end_col))
 
                 return False
 
@@ -4806,7 +4806,7 @@ class FST:
 
         ln, col, end_ln, end_col = self.loc
 
-        return _next_frag(self.root._lines, ln, col + 6, end_ln, end_col).src.startswith('*')  # something must be there
+        return next_frag(self.root._lines, ln, col + 6, end_ln, end_col).src.startswith('*')  # something must be there
 
     def is_empty_set_call(self) -> bool:
         """Whether `self` is an empty `set()` call.
