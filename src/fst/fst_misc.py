@@ -1239,18 +1239,14 @@ def _is_delimited_seq(self: fst.FST, field: str = 'elts', delims: str | tuple[st
     if fn_end_col == self_end_col and fn_end_ln == self_end_ln:
         return False
 
-    # dagnabit! have to count parens
+    # dagnabit! have to count and balance delimiters around first element
 
-    self_end_col -= 1  # because for sure there is a comma between end of first element and end of tuple, so at worst we exclude either the tuple closing paren or a comma
+    self_end_col -= 1  # because in case of singleton tuple for sure there is a comma between end of first element and end of tuple, so at worst we exclude either the tuple closing paren or a comma, otherwise we exclude non-tuple closing delimiter
 
-    nparens = len(next_pars(lines, self_ln, self_col, self_end_ln, self_end_col, ldelim)) - 1  # yes, we use next_pars() to count opening parens because we know conditions allow it
+    ldelims = len(next_pars(lines, self_ln, self_col, f0_ln, f0_col, ldelim))  # yes, we use next_pars() to count opening delimiters because we know conditions allow it
+    rdelims = len(next_pars(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col, rdelim))
 
-    if not nparens:
-        return False
-
-    nparens -= len(next_pars(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col, rdelim)) - 1
-
-    return nparens > 0  # don't want to fiddle with checking if f0 is a parenthesized tuple
+    return ldelims > rdelims
 
 
 def _set_end_pos(self: fst.FST, end_lineno: int, end_col_offset: int, self_: bool = True) -> None:  # because of trailing non-AST junk in last statements

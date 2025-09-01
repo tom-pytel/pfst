@@ -161,6 +161,10 @@ two  # fake comment start""", **b
             }''').body[0].value
         self.assertEqual((1, 19, 1, 21), a.f._loc_maybe_dict_key(1))
 
+    def test__is_delimited_seq(self):
+        self.assertFalse(FST('((pos < len(ranges))>>32),(r&((1<<32)-1))')._is_delimited_seq())
+        self.assertFalse(FST('((1)+1),(1)')._is_delimited_seq())
+
     def test__maybe_add_line_continuations(self):
         f = FST(r'''
 a + \
