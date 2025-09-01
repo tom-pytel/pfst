@@ -39,8 +39,8 @@ __all__ = [
     'next_find',
     'prev_find',
     'next_find_re',
-    'next_pars',
-    'prev_pars',
+    'next_delims',
+    'prev_delims',
     'leading_trivia',
     'trailing_trivia',
     'ParamsOffset',
@@ -608,70 +608,71 @@ def next_find_re(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     return None
 
 
-def next_pars(lines: list[str], pars_end_ln: int, pars_end_col: int, bound_end_ln: int, bound_end_col: int,
-              par: str = ')') -> list[tuple[int, int]]:
-        """Return a list of the locations of closing parentheses (just past, or any specified character) starting at
-        (`pars_end_ln`, `pars_end_col`) until the end of the bound. The list includes (`pars_end_ln`, `pars_end_col`) as
-        the first element. The list ends if a non `par` character is encountered while searching forward.
+def next_delims(lines: list[str], end_ln: int, end_col: int, bound_end_ln: int, bound_end_col: int,
+                delim: str = ')') -> list[tuple[int, int]]:
+        """Return a list of the locations of closing parentheses (or any specified delimiter or character) starting at
+        (`end_ln`, `end_col`) until the end of the bound. The locations of the delimiters will be AFTER the delimiter.
+        The list includes (`end_ln`, `end_col`) as the first element. The list ends if a non `delim` character is
+        encountered while searching forward.
 
         **Returns:**
-        - `[(pars_end_ln, pars_end_col), (ln_end_par1, col_end_par1), (ln_end_par2, col_end_par2), ...]`
+        - `[(end_ln, end_col), (ln_end_par1, col_end_par1), (ln_end_par2, col_end_par2), ...]`
         """
 
-        pars = [(pars_end_ln, pars_end_col)]
+        delims = [(end_ln, end_col)]
 
-        while frag := next_frag(lines, pars_end_ln, pars_end_col, bound_end_ln, bound_end_col):
+        while frag := next_frag(lines, end_ln, end_col, bound_end_ln, bound_end_col):
             ln, col, src = frag
 
             for c in src:
-                if c != par:
+                if c != delim:
                     break
 
-                pars_end_ln  = ln
-                pars_end_col = (col := col + 1)
+                end_ln  = ln
+                end_col = (col := col + 1)
 
-                pars.append((pars_end_ln, pars_end_col))
+                delims.append((end_ln, end_col))
 
             else:
                 continue
 
             break
 
-        return pars
+        return delims
 
 
-def prev_pars(lines: list[str], bound_ln: int, bound_col: int, pars_ln: int, pars_col: int, par: str = '(',
-              ) -> list[tuple[int, int]]:
-        """Return a list of the locations of opening parentheses (or any specified character) starting at (`pars_ln`,
-        `pars_col`) until the start of the bound. The list includes (`pars_ln`, `pars_col`) as the first element. The
-        list ends if a non `par` character is encountered while searching backward.
+def prev_delims(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: int, delim: str = '(',
+                ) -> list[tuple[int, int]]:
+        """Return a list of the locations of opening parentheses (or any specified delimiter or character) starting at
+        (`ln`, `col`) going backwards until the start of the bound. The list includes (`ln`, `col`) as the first
+        element. The list ends if a non `par` character is encountered while searching backward.
 
         **Returns:**
-        - `[(pars_ln, pars_col), (ln_par1, col_par1), (ln_par2, col_par2), ...]`
+        - `[(ln, col), (ln_par1, col_par1), (ln_par2, col_par2), ...]`
         """
 
-        pars  = [(pars_ln, pars_col)]
-        state = []
+        delims = [(ln, col)]
+        state  = []
 
-        while frag := prev_frag(lines, bound_ln, bound_col, pars_ln, pars_col, state=state):
+        while frag := prev_frag(lines, bound_ln, bound_col, ln, col, state=state):
             ln, col, src  = frag
             col          += len(src)
 
             for c in src[::-1]:
-                if c != par:
+                if c != delim:
                     break
 
-                pars_ln  = ln
-                pars_col = (col := col - 1)
+                ln  = ln
+                col = (col := col - 1)
 
-                pars.append((pars_ln, pars_col))
+                delims.append((ln, col))
 
             else:
                 continue
 
             break
 
-        return pars
+        return delims
 
 
 def leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: int,

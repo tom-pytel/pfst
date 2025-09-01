@@ -67,7 +67,7 @@ from .misc import (
     Self, NodeError, astfield, fstloc, fstlocns, srcwpos, nspace, pyver,
     EXPRISH, STMTISH, BLOCK, HAS_DOCSTRING,
     re_empty_line_start, re_line_trailing_space, re_line_end_cont_or_comment,
-    next_frag, prev_frag, next_find, prev_find, next_pars, prev_pars, next_find_re,
+    next_frag, prev_frag, next_find, prev_find, next_delims, prev_delims, next_find_re,
     ParamsOffset, params_offset, multiline_str_continuation_lns, multiline_fstr_continuation_lns,
 )
 
@@ -758,7 +758,7 @@ def _loc_comprehension(self: fst.FST) -> fstloc:
     if ast.is_async:
         start_ln, start_col = prev_find(lines, ln, col, start_ln, start_col, 'async')  # must be there
 
-    rpars = next_pars(lines, last.end_ln, last.end_col, *self._next_bound_step('allown'))
+    rpars = next_delims(lines, last.end_ln, last.end_col, *self._next_bound_step('allown'))
 
     if (lrpars := len(rpars)) == 1:  # no pars, just use end of last
         end_ln, end_col = rpars[0]
@@ -771,7 +771,7 @@ def _loc_comprehension(self: fst.FST) -> fstloc:
             end_ln, end_col = rpars[0]
         else:
 
-            end_ln, end_col = rpars[len(prev_pars(lines, *last._prev_bound(), last.ln, last.col)) - 1]  # get rpar according to how many pars on left
+            end_ln, end_col = rpars[len(prev_delims(lines, *last._prev_bound(), last.ln, last.col)) - 1]  # get rpar according to how many pars on left
 
     return fstloc(start_ln, start_col, end_ln, end_col)
 
@@ -788,7 +788,7 @@ def _loc_arguments(self: fst.FST) -> fstloc | None:
     last      = self.last_child()
     lines     = self.root._lines
     end_lines = len(lines) - 1
-    rpars     = next_pars(lines, last.end_ln, last.end_col, *self._next_bound())
+    rpars     = next_delims(lines, last.end_ln, last.end_col, *self._next_bound())
 
     end_ln, end_col           = rpars[-1]
     start_ln, start_col, _, _ = first.loc
@@ -886,34 +886,34 @@ def _loc_withitem(self: fst.FST) -> fstloc:
     ce_ln, ce_col, ce_end_ln, ce_end_col = ce_loc = ce.loc
 
     if not (ov := ast.optional_vars):
-        rpars = next_pars(lines, ce_end_ln, ce_end_col, *self._next_bound_step('allown'))  # 'allown' so it doesn't recurse into calling `.loc`
+        rpars = next_delims(lines, ce_end_ln, ce_end_col, *self._next_bound_step('allown'))  # 'allown' so it doesn't recurse into calling `.loc`
 
         if (lrpars := len(rpars)) == 1:
             return ce_loc
 
-        lpars = prev_pars(lines, *self._prev_bound_step('allown'), ce_ln, ce_col)
+        lpars = prev_delims(lines, *self._prev_bound_step('allown'), ce_ln, ce_col)
         npars = min(lrpars, len(lpars)) - 1
 
         return fstloc(*lpars[npars], *rpars[npars])
 
     ov_ln, ov_col, ov_end_ln, ov_end_col = ov.f.loc
 
-    rpars = next_pars(lines, ce_end_ln, ce_end_col, ov_ln, ov_col)
+    rpars = next_delims(lines, ce_end_ln, ce_end_col, ov_ln, ov_col)
 
     if (lrpars := len(rpars)) == 1:
         ln  = ce_ln
         col = ce_col
 
     else:
-        lpars   = prev_pars(lines, *self._prev_bound_step('allown'), ce_ln, ce_col)
+        lpars   = prev_delims(lines, *self._prev_bound_step('allown'), ce_ln, ce_col)
         ln, col = lpars[min(lrpars, len(lpars)) - 1]
 
-    lpars = prev_pars(lines, ce_end_ln, ce_end_col, ov_ln, ov_col)
+    lpars = prev_delims(lines, ce_end_ln, ce_end_col, ov_ln, ov_col)
 
     if (llpars := len(lpars)) == 1:
         return fstloc(ln, col, ov_end_ln, ov_end_col)
 
-    rpars           = next_pars(lines, ov_end_ln, ov_end_col, *self._next_bound_step('allown'))
+    rpars           = next_delims(lines, ov_end_ln, ov_end_col, *self._next_bound_step('allown'))
     end_ln, end_col = rpars[min(llpars, len(rpars)) - 1]
 
     return fstloc(ln, col, end_ln, end_col)
@@ -1243,8 +1243,8 @@ def _is_delimited_seq(self: fst.FST, field: str = 'elts', delims: str | tuple[st
 
     self_end_col -= 1  # because in case of singleton tuple for sure there is a comma between end of first element and end of tuple, so at worst we exclude either the tuple closing paren or a comma, otherwise we exclude non-tuple closing delimiter
 
-    ldelims = len(next_pars(lines, self_ln, self_col, f0_ln, f0_col, ldelim))  # yes, we use next_pars() to count opening delimiters because we know conditions allow it
-    rdelims = len(next_pars(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col, rdelim))
+    ldelims = len(next_delims(lines, self_ln, self_col, f0_ln, f0_col, ldelim))  # yes, we use next_delims() to count opening delimiters because we know conditions allow it
+    rdelims = len(next_delims(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col, rdelim))
 
     return ldelims > rdelims
 
@@ -1724,7 +1724,7 @@ def _maybe_fix_with_items(self: fst.FST) -> None:
         if not is_par:
             cef._delimit_node()
 
-        if len(prev_pars(self.root._lines, self.ln, self.col, cef.ln, cef.col)) == 1:  # no pars between start of `with` and start of tuple?
+        if len(prev_delims(self.root._lines, self.ln, self.col, cef.ln, cef.col)) == 1:  # no pars between start of `with` and start of tuple?
             cef._parenthesize_grouping()  # these will wind up belonging to outer With
 
 

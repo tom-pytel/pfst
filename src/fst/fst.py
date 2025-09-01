@@ -93,7 +93,7 @@ from .misc import (
     astfield, fstloc, fstlocns, nspace,
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Self,
-    next_frag, next_find, next_pars, prev_pars,
+    next_frag, next_find, next_delims, prev_delims,
     swizzle_getput_params, fixup_field_body,
     multiline_str_continuation_lns, multiline_fstr_continuation_lns, continuation_to_uncontinued_lns,
 )
@@ -2098,7 +2098,7 @@ class FST:
 
         ln, col, end_ln, end_col = self.bloc
 
-        rpars = next_pars(self.root._lines, end_ln, end_col, *self._next_bound())
+        rpars = next_delims(self.root._lines, end_ln, end_col, *self._next_bound())
 
         if (lrpars := len(rpars)) == 1:  # no pars on right
             if not shared and self.is_solo_call_arg_genexp():
@@ -2110,7 +2110,7 @@ class FST:
 
             return locn
 
-        lpars = prev_pars(self.root._lines, *self._prev_bound(), ln, col)
+        lpars = prev_delims(self.root._lines, *self._prev_bound(), ln, col)
 
         if (llpars := len(lpars)) == 1:  # no pars on left
             self._cache[key] = locn = fstlocns(ln, col, end_ln, end_col, n=0)
