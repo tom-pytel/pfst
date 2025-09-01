@@ -29,14 +29,14 @@
             <h2>API Documentation</h2>
                 <ul class="memberlist">
             <li>
-                    <a class="variable" href="#Code">Code</a>
-            </li>
-            <li>
-                    <a class="variable" href="#Mode">Mode</a>
-            </li>
-            <li>
                     <a class="class" href="#NodeError">NodeError</a>
                             <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#NodeError.__init__">NodeError</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#NodeError.rawable">rawable</a>
+                        </li>
                 </ul>
 
             </li>
@@ -103,6 +103,12 @@
                 </ul>
 
             </li>
+            <li>
+                    <a class="class" href="#fstlocns">fstlocns</a>
+                            <ul class="memberlist">
+                </ul>
+
+            </li>
     </ul>
 
 
@@ -126,116 +132,45 @@
                 
                 
             </section>
-                <section id="Code">
-                    <div class="attr variable">
-            <span class="name">Code</span>        =
-<span class="default_value">typing.Union[ForwardRef(&#39;<a href="fst.html#FST">fst.fst.FST</a>&#39;), ast.AST, list[str], str]</span>
-
-        
-    </div>
-    <a class="headerlink" href="#Code"></a>
-    
-            <div class="docstring"><p>Code types accepted for put to <code>FST</code>.</p>
-</div>
-
-
-                </section>
-                <section id="Mode">
-                    <div class="attr variable">
-            <span class="name">Mode</span>        =
-<input id="Mode-view-value" class="view-value-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
-            <label class="view-value-button pdoc-button" for="Mode-view-value"></label><span class="default_value">typing.Union[typing.Literal[&#39;all&#39;, &#39;most&#39;, &#39;min&#39;, &#39;exec&#39;, &#39;eval&#39;, &#39;single&#39;, &#39;stmtishs&#39;, &#39;stmtish&#39;, &#39;stmts&#39;, &#39;stmt&#39;, &#39;ExceptHandlers&#39;, &#39;ExceptHandler&#39;, &#39;match_cases&#39;, &#39;match_case&#39;, &#39;expr&#39;, &#39;expr_slice&#39;, &#39;expr_sliceelt&#39;, &#39;expr_callarg&#39;, &#39;boolop&#39;, &#39;operator&#39;, &#39;binop&#39;, &#39;augop&#39;, &#39;unaryop&#39;, &#39;cmpop&#39;, &#39;comprehension&#39;, &#39;arguments&#39;, &#39;arguments_lambda&#39;, &#39;arg&#39;, &#39;keyword&#39;, &#39;alias&#39;, &#39;alias_dotted&#39;, &#39;alias_star&#39;, &#39;withitem&#39;, &#39;pattern&#39;, &#39;type_param&#39;], type[ast.AST]]</span>
-
-        
-    </div>
-    <a class="headerlink" href="#Mode"></a>
-    
-            <div class="docstring"><p>Parse modes:</p>
-
-<ul>
-<li><code>'all'</code>: Check all possible parse modes (from most likely to least). There is syntax overlap so certain types will
-never be returned, for example <code>TypeVar</code> is always shadowed by <code>AnnAssign</code>. Since this attempts many parses before
-failing it is slower to do so than other modes, though the most likely success is just as fast. Will never return an
-<code>Expression</code> or <code>Interactive</code>.</li>
-<li><code>'most'</code>: This is mostly meant for use as the first step when parsing <code>'all'</code>. Attempt parse <code>stmtishs</code>. If only one
-element then return the element itself instead of the <code>Module</code>. If that element is an <code>Expr</code> then return the
-expression instead of the statement. If nothing present then return empty <code>Module</code>. Doesn't attempt any of the other
-parse modes to keep things quick, though will parse anything that can be parsed natively by <code>ast.parse()</code> (plus
-<code>ExpressionHandler</code> and <code>match_case</code>). If you want exhaustive attempts that will parse any <code>AST</code> source node the
-mode for that is <code>'all'</code>. Will never return an <code>Expression</code> or <code>Interactive</code>.</li>
-<li><code>'min'</code>: Attempt parse minumum valid parsable code. If only one statement then return the statement itself instead of
-the <code>Module</code>. If that statement is an <code>Expr</code> then return the expression instead of the statement. If nothing present
-then return empty <code>Module</code>. Doesn't attempt any of the other parse modes which would not normally be parsable by
-python, just anything that can be parsed natively by <code>ast.parse()</code>.</li>
-<li><code>'exec'</code>: Parse to a <code>Module</code>. Mostly same as passing <code>Module</code> type except that <code>Module</code> also parses anything that
-<code>FST</code> puts into <code>Module</code>s, like slices of normally non-parsable stuff.</li>
-<li><code>'eval'</code>: Parse to an <code>Expression</code>. Same as passing <code>Expression</code> type.</li>
-<li><code>'single'</code>: Parse to an <code>Interactive</code>. Same as passing <code>Interactive</code> type.</li>
-<li><code>'stmtishs'</code>: Parse as zero or more of either <code>stmt</code>, <code>ExceptHandler</code> or <code>match_case</code> returned in a <code>Module</code>.</li>
-<li><code>'stmtish'</code>: Parse as a single <code>stmt</code>, <code>ExceptHandler</code> or <code>match_case</code> returned as itself.</li>
-<li><code>'stmts'</code>: Parse zero or more <code>stmt</code>s returned in a <code>Module</code>. Same as passing <code>'exec'</code>, but not <code>Module</code> as that can
-parse <code>FST</code> slices.</li>
-<li><code>'stmt'</code>: Parse a single <code>stmt</code> returned as itself. Same as passing <code>stmt</code> type.</li>
-<li><code>'ExceptHandlers'</code>: Parse zero or more <code>ExceptHandler</code>s returned in a <code>Module</code>.</li>
-<li><code>'ExceptHandler'</code>: Parse as a single <code>ExceptHandler</code> returned as itself. Same as passing <code>ExceptHandler</code> type.</li>
-<li><code>'match_cases'</code>: Parse zero or more <code>match_case</code>s returned in a <code>Module</code>.</li>
-<li><code>'match_case'</code>: Parse a single <code>match_case</code> returned as itself. Same as passing <code>match_case</code> type.</li>
-<li><code>'expr'</code>: "expression", parse a single <code>expr</code> returned as itself. This is differentiated from the following three
-modes by the handling of slices and starred expressions. In this mode <code>a:b</code> and <code>*not v</code> are syntax errors. Same as
-passing <code>expr</code> type.</li>
-<li><code>'expr_slice'</code>: "slice expression", same as <code>'expr'</code> except that in this mode <code>a:b</code> parses to a <code>Slice</code> and <code>*not v</code>
-parses to a single element tuple containing a starred expression <code>(*(not v),)</code>.</li>
-<li><code>'expr_sliceelt'</code>: "slice tuple element expression", same as <code>'expr'</code> except that in this mode <code>a:b</code> parses to a
-<code>Slice</code> and <code>*not v</code> parses to a starred expression <code>*(not v)</code>.</li>
-<li><code>'expr_callarg'</code>: "call argument expression", same as <code>'expr'</code> except that in this mode <code>a:b</code> is a syntax error and
-<code>*not v</code> parses to a starred expression <code>*(not v)</code>.</li>
-<li><code>'boolop'</code>: Parse to a <code>boolop</code> operator.</li>
-<li><code>'operator'</code>: Parse to an <code>operator</code> operator, either normal binary <code>'*'</code> or augmented <code>'*='</code>.</li>
-<li><code>'binop'</code>: Parse to an <code>operator</code> only binary <code>'*'</code>, <code>'+'</code>, <code>'&gt;&gt;'</code>, etc...</li>
-<li><code>'augop'</code>: Parse to an <code>operator</code> only augmented <code>'*='</code>, <code>'+='</code>, <code>'&gt;&gt;='</code>, etc...</li>
-<li><code>'unaryop'</code>: Parse to a <code>unaryop</code> operator.</li>
-<li><code>'cmpop'</code>: Parse to a <code>cmpop</code> compare operator.</li>
-<li><code>'comprehension'</code>: Parse a single <code>comprehension</code> returned as itself. Same as passing <code>comprehension</code> type.</li>
-<li><code>'arguments'</code>: Parse as <code>arguments</code> for a <code>FunctionDef</code> or <code>AsyncFunctionDef</code> returned as itself. In this mode
-type annotations are allowed for the arguments. Same as passing <code>arguments</code> type.</li>
-<li><code>'arguments_lambda'</code>: Parse as <code>arguments</code> for a <code>Lambda</code> returned as itself. In this mode type annotations
-are not allowed for the arguments.</li>
-<li><code>'arg'</code>: Parse as a single <code>arg</code> returned as itself. Same as passing <code>arg</code> type.</li>
-<li><code>'keyword'</code>: Parse as a single <code>keyword</code> returned as itself. Same as passing <code>keyword</code> type.</li>
-<li><code>'alias'</code>: Parse as a single <code>alias</code> returned as itself. Either starred or dotted versions are accepted. Same
-as passing <code>alias</code> type.</li>
-<li><code>'alias_dotted'</code>: Parse as a single <code>alias</code> returned as itself, with starred version being a syntax error.</li>
-<li><code>'alias_star'</code>: Parse as a single <code>alias</code> returned as itself, with dotted version being a syntax error.</li>
-<li><code>'withitem'</code>: Parse as a single <code>withitem</code> returned as itself. Same as passing <code>withitem</code> type.</li>
-<li><code>'pattern'</code>: Parse as a a single <code>pattern</code> returned as itself. Same as passing <code>pattern</code> type.</li>
-<li><code>'type_param'</code>: Parse as a single <code>type_param</code> returned as itself, either <code>TypeVar</code>, <code>ParamSpec</code> or
-<code>TypeVarTuple</code>. Same as passing <code>type_param</code> type.</li>
-<li><code>type[AST]</code>: If an <code>AST</code> type is passed then will attempt to parse to this type. This can be used to narrow
-the scope of desired return, for example <code>Constant</code> will parse as an expression but fail if the expression
-is not a <code>Constant</code>. These overlap with the string specifiers to an extent but not all of them. For example
-<code>AST</code> type <code>ast.expr</code> is the same as passing <code>'expr'</code>. Not all string specified modes are can be matched, for
-example <code>'arguments_lambda'</code>. Likewise <code>'exec'</code> and <code>'stmts'</code> specify the same parse mode, but not the same as
-<code>Module</code> since that is used as a general purpose slice container. <code>Tuple</code> parse also allows parsing <code>Slice</code>s in the
-<code>Tuple</code>.</li>
-</ul>
-</div>
-
-
-                </section>
                 <section id="NodeError">
                     <div class="attr class">
             
     <span class="def">class</span>
-    <span class="name">NodeError</span><wbr>(<span class="base">builtins.ValueError</span>):
+    <span class="name">NodeError</span><wbr>(<span class="base">builtins.Exception</span>):
 
         
     </div>
     <a class="headerlink" href="#NodeError"></a>
     
-            <div class="docstring"><p>General FST node error. Used and caught when a raw reparse is possible to fall back to the reparse if allowed.</p>
+            <div class="docstring"><p>General FST node error.</p>
 </div>
 
 
+                            <div id="NodeError.__init__" class="classattr">
+                                <div class="attr function">
+            
+        <span class="name">NodeError</span><span class="signature pdoc-code condensed">(<span class="param"><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">object</span>, </span><span class="param"><span class="n">rawable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></span>)</span>
+
+        
+    </div>
+    <a class="headerlink" href="#NodeError.__init__"></a>
+    
+    
+
+                            </div>
+                            <div id="NodeError.rawable" class="classattr">
+                                <div class="attr variable">
+            <span class="name">rawable</span><span class="annotation">: bool</span>
+
+        
+    </div>
+    <a class="headerlink" href="#NodeError.rawable"></a>
+    
+            <div class="docstring"><p>Whether the operation that caused this error can be retried in raw mode.</p>
+</div>
+
+
+                            </div>
                 </section>
                 <section id="astfield">
                     <div class="attr class">
@@ -295,7 +230,7 @@ example <code>'arguments_lambda'</code>. Likewise <code>'exec'</code> and <code>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">get</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">parent</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span></span><span class="return-annotation">) -> <span class="n">Any</span>:</span></span>
+        <span class="name">get</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">parent</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="n">ellipsis</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">complex</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
 
         
     </div>
@@ -310,7 +245,7 @@ example <code>'arguments_lambda'</code>. Likewise <code>'exec'</code> and <code>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">get_no_raise</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">parent</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>, </span><span class="param"><span class="n">default</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">False</span></span><span class="return-annotation">) -> <span class="n">Any</span>:</span></span>
+        <span class="name">get_no_raise</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">parent</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>,</span><span class="param">	<span class="n">default</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="n">ellipsis</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">complex</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">False</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="n">ellipsis</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">complex</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
 
         
     </div>
@@ -327,7 +262,7 @@ example <code>'arguments_lambda'</code>. Likewise <code>'exec'</code> and <code>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">set</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">parent</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>, </span><span class="param"><span class="n">child</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span></span><span class="return-annotation">):</span></span>
+        <span class="name">set</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">parent</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>, </span><span class="param"><span class="n">child</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
 
         
     </div>
@@ -496,6 +431,39 @@ example <code>'arguments_lambda'</code>. Likewise <code>'exec'</code> and <code>
 </div>
 
 
+                            </div>
+                </section>
+                <section id="fstlocns">
+                    <div class="attr class">
+            
+    <span class="def">class</span>
+    <span class="name">fstlocns</span><wbr>(<span class="base">typing.NamedTuple</span>):
+
+        
+    </div>
+    <a class="headerlink" href="#fstlocns"></a>
+    
+            <div class="docstring"><p>Version of <code><a href="#fstloc">fstloc</a></code> with a namespace, used for <code>pars().n</code>.</p>
+</div>
+
+
+                            <div class="inherited">
+                                <h5>Inherited Members</h5>
+                                <dl>
+                                    <div><dt><a href="#fstloc">fstloc</a></dt>
+                                <dd id="fstlocns.ln" class="variable"><a href="#fstloc.ln">ln</a></dd>
+                <dd id="fstlocns.col" class="variable"><a href="#fstloc.col">col</a></dd>
+                <dd id="fstlocns.end_ln" class="variable"><a href="#fstloc.end_ln">end_ln</a></dd>
+                <dd id="fstlocns.end_col" class="variable"><a href="#fstloc.end_col">end_col</a></dd>
+                <dd id="fstlocns.bln" class="variable"><a href="#fstloc.bln">bln</a></dd>
+                <dd id="fstlocns.bcol" class="variable"><a href="#fstloc.bcol">bcol</a></dd>
+                <dd id="fstlocns.bend_ln" class="variable"><a href="#fstloc.bend_ln">bend_ln</a></dd>
+                <dd id="fstlocns.bend_col" class="variable"><a href="#fstloc.bend_col">bend_col</a></dd>
+                <dd id="fstlocns.loc" class="variable"><a href="#fstloc.loc">loc</a></dd>
+                <dd id="fstlocns.bloc" class="variable"><a href="#fstloc.bloc">bloc</a></dd>
+
+            </div>
+                                </dl>
                             </div>
                 </section>
     </main>

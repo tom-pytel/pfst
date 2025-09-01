@@ -31,51 +31,86 @@ From GitHub, after cloning for development:
 Format preserving parse and unparse:
 
 ```py
->>> import fst
+>>> import ast, fst
 
->>> a = fst.parse('''
-... if a: func()  # comment
-... else:
-...     i = 1  # one
-...     j = 2  # two
-...     k = 3  # three
-... '''.strip())  # drop-in ast.parse() replacement
+>>> a = fst.parse('if a: b = c, d  # comment')
 
->>> print(dump(a)[:80])  # normal AST
-Module(body=[If(test=Name(id='a', ctx=Load()), body=[Expr(value=Call(func=Name(i
+>>> print(fst.unparse(a))
+if a: b = c, d  # comment
 
->>> print(fst.unparse(a))  # drop-in ast.unparse() replacement, with formatting
-if a: func()  # comment
-else:
-    i = 1  # one
-    j = 2  # two
-    k = 3  # three
+>>> print(ast.unparse(a))
+if a:
+    b = (c, d)
+
+>>> print(ast.dump(a))  # just a normal AST
+Module(
+  body=[
+    If(
+      test=Name(id='a', ctx=Load()),
+      body=[
+        Assign(
+          targets=[
+            Name(id='b', ctx=Store())],
+          value=Tuple(
+            elts=[
+              Name(id='c', ctx=Load()),
+              Name(id='d', ctx=Load())],
+            ctx=Load()))])])
 ```
 
 Basic operations:
 
 ```py
->>> print(a.f.body[0].orelse[1].replace('call()  # something else').root.src)
-if a: func()  # comment
-else:
-    i = 1  # one
-    call()  # something else
-    k = 3  # three
+>>> a.f.body[0].body.append('x = b')  # '.f' accesses FST functionality
+... <<If 0,0..2,9>.body[0:2] [<Assign 1,4..1,12>, <Assign 2,4..2,9>]>
 
->>> print((old := a.f.body[0].orelse[1:].copy()).src)
-call()  # something else
-k = 3  # three
+>>> print(a.f.src)  # source is always available
+if a:
+    b = c, d  # comment
+    x = b
 
->>> a.f.body[0].put('if b:\n    pass  # noop', 'orelse')
->>> a.f.body[0].orelse[0].orelse = old
+>>> a.body[0].body[0].value.f.elts[1:1] = 'u,\nv'  # slice, parentheses, indentation all handled
 
 >>> print(a.f.src)
-if a: func()  # comment
-elif b:
-    pass  # noop
+if a:
+    b = (c, u,
+        v, d)  # comment
+    x = b
+
+>>> a.f.body[0].orelse = a.f.body[0].body.copy()
+>>> a.f.body[0].body = 'x = a  # blah'
+
+>>> print(a.f.src)
+if a:
+    x = a  # blah
 else:
-    call()  # something else
-    k = 3  # three
+    b = (c, x,
+        y, d)  # comment
+    x = b
+
+>>> del a.f.body[0].orelse[0]
+
+>>> print(a.f.src)
+if a:
+    x = a  # blah
+else:
+    x = b
+
+>>> print(ast.dump(a))  # AST always matches the source
+Module(
+  body=[
+    If(
+      test=Name(id='a', ctx=Load()),
+      body=[
+        Assign(
+          targets=[
+            Name(id='x', ctx=Store())],
+          value=Name(id='a', ctx=Load()))],
+      orelse=[
+        Assign(
+          targets=[
+            Name(id='x', ctx=Store())],
+          value=Name(id='b', ctx=Load()))])])
 ```
 
 Reconcile, edit AST outside `fst` control while preserving formatting:
@@ -154,8 +189,6 @@ This package is not finished but functional enough that it can be useful.
   * `AsyncFunctionDef.decorator_list`
   * `ClassDef.decorator_list`
   * `ClassDef.bases`
-  * `Delete.targets`
-  * `Assign.targets`
   * `BoolOp.values`
   * `Compare`
   * `Call.args`
@@ -172,10 +205,6 @@ This package is not finished but functional enough that it can be useful.
   * `AsyncWith.items`
   * `MatchClass.patterns`
   * `MatchOr.patterns`
-  * `FunctionDef.type_params`
-  * `AsyncFunctionDef.type_params`
-  * `ClassDef.type_params`
-  * `TypeAlias.type_params`
   * `Global.names`
   * `Nonlocal.names`
   * `JoinedStr.values`

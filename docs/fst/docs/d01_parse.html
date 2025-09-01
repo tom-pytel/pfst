@@ -270,12 +270,12 @@
 </code></pre>
 </div>
 
-<p>There are some special modes, like <code>'expr_callarg'</code>, which allow parsing some things which are not normally parsable in their
+<p>There are some special modes, like <code>'expr_arglike'</code>, which allow parsing some things which are not normally parsable in their
 usual context. The below is not normally parsable in an expression context as it is special syntax for <code>Call</code> vararg
-arguments. For a full list of parse modes see <code><a href="../misc.html#Mode">fst.misc.Mode</a></code>.</p>
+arguments. For a full list of parse modes see <code><a href="../extparse.html#Mode">fst.extparse.Mode</a></code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;*a or b&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_callarg&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;*a or b&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="n">Starred</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">7</span>
   <span class="o">.</span><span class="n">value</span> <span class="n">BoolOp</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">1..0</span><span class="p">,</span><span class="mi">7</span>
     <span class="o">.</span><span class="n">op</span> <span class="n">Or</span>
@@ -327,7 +327,7 @@ information in them). When used like this, the <code>AST</code> nodes are not co
 <p>Except that <code>fromsrc()</code> defaults to <code>mode='exec'</code> instead of minimal node.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="o">.</span><span class="n">fromsrc</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">,</span> <span class="s1">&#39;min&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="o">.</span><span class="n">fromsrc</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="n">Assign</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span>
   <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
   <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">1</span>
