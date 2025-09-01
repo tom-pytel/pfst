@@ -1,4 +1,4 @@
-## 0.2.1 - alpha - ????-??-??
+## 0.2.1 - alpha - 2025-09-01
 
 ### Fixed
 
@@ -10,7 +10,6 @@
 - never automatically add parentheses to copied Slice
 - disallow Starred as a target to Delete
 - allow put to except and case slices
-- allow put any kind of expression slice to tuple, including Slices
 - parse functions handle trailing comments without newlines correctly
 - unparse tuple with slices removes tuple parentheses
 
@@ -33,6 +32,7 @@
 - added ParseError and cleaned up exception usage
 - optimized _parse_all() which recognizes and parses any type of node source
 - parse expressionish elements don't have to start at beginning of line
+- allow put any kind of expression slice to tuple, including Slices
 - lots of code cleanups
 
 
@@ -46,7 +46,7 @@
 - put to `ImportFrom.module` with dot following directly after 'from'
 
 ### Added
-s
+
 - trivia (comments and space) specification
 - prescribed slicing for `MatchSequence.patterns`
 - prescribed slicing for `MatchMapping.keys:patterns`

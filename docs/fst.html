@@ -25,7 +25,6 @@
   <li><a href="#index">Index</a></li>
   <li><a href="#links">Links</a></li>
   <li><a href="#details">Details</a></li>
-  <li><a href="#notes">Notes</a></li>
 </ul>
 
 
@@ -35,6 +34,7 @@
                     <li><a href="fst/fst.html">fst</a></li>
                     <li><a href="fst/view.html">view</a></li>
                     <li><a href="fst/misc.html">misc</a></li>
+                    <li><a href="fst/extparse.html">extparse</a></li>
                     <li><a href="fst/astutil.html">astutil</a></li>
             </ul>
 
@@ -52,7 +52,7 @@
                     <h1 class="modulename">
 fst    </h1>
 
-                        <div class="docstring"><p>Version 0.2.0</p>
+                        <div class="docstring"><p>Version 0.2.1</p>
 
 <h1 id="overview">Overview</h1>
 
@@ -88,6 +88,9 @@ works for those operations which are not.</p>
 
 <h1 id="details">Details</h1>
 
+<p>Disclaimer: The intended use of this module is if you just want to change code functionality without having to deal with
+miniutae, not lint or format, there are better options for that.</p>
+
 <p><code><a href="">fst</a></code> was written and tested on Python versions 3.10 through 3.14.</p>
 
 <p><code><a href="">fst</a></code> works by keeping a copy of the entire source at the root <code>FST</code> node of a tree and modifying this source alongside
@@ -117,14 +120,6 @@ the full source around the changes (at least statement level). <code><a href="fs
 to preserve formatting where possible. This is intended for existing code or third-party libraries which don't know
 anything about <code><a href="">fst</a></code> to maybe gain the ability to preserve some existing formatting when editing a tree.
 <code><a href="fst/docs/d09_reconcile.html">fst.docs.d09_reconcile</a></code>.</p>
-
-<h1 id="notes">Notes</h1>
-
-<ul>
-<li><code>JoinedStr</code> and <code>TemplateStr</code> internal accesses are not quite finished yet. You can get and put <code>FormattedValue.value</code>
-a <code>Interpolation.value</code> on python &gt;= 3.12 fine, but the other fields may or may not work putting in raw mode as
-prescribed operations are not done yet.</li>
-</ul>
 </div>
 
                 

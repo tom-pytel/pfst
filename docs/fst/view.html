@@ -135,7 +135,9 @@ use <code>fst.body[start:stop].replace(..., one=True)</code>.</p>
 view. Do not hold on to views, use them and discard.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">view</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="n">FST</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">view</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">view</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>  <span class="c1"># operation on node</span>
 
@@ -157,7 +159,9 @@ view. Do not hold on to views, use them and discard.</p>
 <p><strong>Examples:</strong></p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="n">FST</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">f</span>
 <span class="o">&lt;</span><span class="n">List</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">12</span><span class="o">&gt;</span>
 
@@ -264,7 +268,7 @@ view. Do not hold on to views, use them and discard.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">__getitem__</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">slice</span> <span class="o">|</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="n">Any</span>:</span></span>
+        <span class="name">__getitem__</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">slice</span> <span class="o">|</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="n"><a href="#fstview">fstview</a></span> <span class="o">|</span> <span class="n"><a href="fst.html#FST">fst.fst.FST</a></span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
 
         
     </div>
@@ -288,14 +292,17 @@ statements, error otherwise). This is just a convenience and will probably chang
 <p><strong>Returns:</strong></p>
 
 <ul>
-<li><code>FST | fstview</code>: Either a single <code>FST</code> node if accessing a single item or a new <code><a href="#fstview">fstview</a></code> view according to
-the slice passed.</li>
+<li><code>fstview |</code>: Either a single <code>FST</code> node if accessing a single item or a new <code><a href="#fstview">fstview</a></code> view
+according to the slice passed. <code>str</code> can also be returned from a view of <code>Global.names</code> or <code>None</code> from a
+<code>Dict.keys</code>.</li>
 </ul>
 
 <p><strong>Examples:</strong></p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="n">FST</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;1&#39;</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
@@ -325,7 +332,7 @@ the slice passed.</li>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">__setitem__</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">slice</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="fst.html#FST">fst.fst.FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="n">NoneType</span><span class="p">]</span></span><span class="return-annotation">):</span></span>
+        <span class="name">__setitem__</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">slice</span>,</span><span class="param">	<span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="fst.html#FST">fst.fst.FST</a></span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="n">NoneType</span><span class="p">]</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
 
         
     </div>
@@ -348,7 +355,9 @@ values.</p>
 <p><strong>Examples:</strong></p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;4&#39;</span><span class="p">;</span> <span class="n">f</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="n">FST</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;4&#39;</span><span class="p">;</span> <span class="n">f</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;[0, 4, 2, 3]&#39;</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">elts</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;[5]&#39;</span><span class="p">;</span> <span class="n">f</span><span class="o">.</span><span class="n">src</span>
@@ -377,7 +386,7 @@ values.</p>
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">__delitem__</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">slice</span></span><span class="return-annotation">):</span></span>
+        <span class="name">__delitem__</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">slice</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
 
         
     </div>
@@ -400,7 +409,9 @@ values.</p>
 <p><strong>Examples:</strong></p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">del</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span> <span class="n">f</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="n">FST</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">del</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span> <span class="n">f</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;[0, 2, 3]&#39;</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="k">del</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">elts</span><span class="p">[:</span><span class="mi">3</span><span class="p">];</span> <span class="n">f</span><span class="o">.</span><span class="n">src</span>
@@ -444,7 +455,9 @@ values.</p>
 <p><strong>Examples:</strong></p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="n">FST</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;[1, 2]&#39;</span>
 </code></pre>
 </div>
@@ -480,7 +493,9 @@ node.</p>
 <p><strong>Examples:</strong></p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">cut</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="n">FST</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">cut</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;[1, 2]&#39;</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">src</span>
@@ -521,7 +536,9 @@ a slice replacement (type must be compatible).</li>
 <p><strong>Examples:</strong></p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="n">FST</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;[0, (4, 5), 3]&#39;</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
@@ -559,7 +576,9 @@ a slice replacement (type must be compatible).</li>
 <p><strong>Examples:</strong></p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="n">FST</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;[0, 3]&#39;</span>
 </code></pre>
 </div>
@@ -598,7 +617,9 @@ a slice replacement (type must be compatible).</li>
 <p><strong>Examples:</strong></p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="n">FST</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;[0, (4, 5), 1, 2, 3]&#39;</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">,</span> <span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
@@ -644,7 +665,9 @@ a slice replacement (type must be compatible).</li>
 <p><strong>Examples:</strong></p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="n">FST</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;[0, 1, 2, 3, (4, 5)]&#39;</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;*star&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
@@ -683,7 +706,9 @@ a slice replacement (type must be compatible).</li>
 <p><strong>Examples:</strong></p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="n">FST</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;[0, 1, 2, 3, 4, 5]&#39;</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
@@ -722,7 +747,9 @@ a slice replacement (type must be compatible).</li>
 <p><strong>Examples:</strong></p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">prepend</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="n">FST</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">prepend</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;[(4, 5), 0, 1, 2, 3]&#39;</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">prepend</span><span class="p">(</span><span class="s1">&#39;*star&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
@@ -761,7 +788,9 @@ a slice replacement (type must be compatible).</li>
 <p><strong>Examples:</strong></p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">prextend</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="n">FST</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">prextend</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;[4, 5, 0, 1, 2, 3]&#39;</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[0, 1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">prextend</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fst</span><span class="o">.</span><span class="n">src</span>

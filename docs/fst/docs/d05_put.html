@@ -422,6 +422,28 @@ movements and <code>AST</code> setting will be done automatically. Under the hoo
 </code></pre>
 </div>
 
+<p>You can also delete by attribute.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">del</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="n">z</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="p">]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">del</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="n">z</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;def f() -&gt; int: pass&#39;</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">del</span> <span class="n">f</span><span class="o">.</span><span class="n">returns</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">():</span> <span class="k">pass</span>
+</code></pre>
+</div>
+
 <h2 id="put_src"><code>put_src()</code></h2>
 
 <p>Unlike <code>get_src()</code> which is a very simple function, <code>put_src()</code> doesn't just put text to the source code and leave it at
