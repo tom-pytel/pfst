@@ -147,7 +147,7 @@ _AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
 
 
 class NodeError(Exception):
-    """General FST node error. Used and caught when a raw reparse is possible to fall back to the reparse if allowed."""
+    """General FST node error."""
 
     rawable: bool  ; """Whether the operation that caused this error can be retried in raw mode."""
 
@@ -233,13 +233,16 @@ class fstlocns(fstloc):
 
 
 class srcwpos(NamedTuple):
+    """@private"""
+
     ln:  int
     col: int
     src: str
 
 
 class nspace:
-    """Simple namespace class used for several things."""
+    """Simple namespace class used for several things.
+    @private"""
 
     def __init__(self, **kwargs):
         for name, value in kwargs.items():
@@ -264,6 +267,8 @@ def pyver(func: Callable | None = None, *, ge: int | None = None, lt: int | None
         above `ge`. Both `ge` and `lt` cannot be `None` at the same time.
     - `else_`: If the current python version does not match the specified `ge` and `lt` then use this function instead
         of a standin which raises and error.
+
+    @private
     """
 
     if ge is None and lt is None:
@@ -335,7 +340,8 @@ def pyver(func: Callable | None = None, *, ge: int | None = None, lt: int | None
 
 
 def shortstr(s: str, maxlen: int = 64) -> str:
-    """Return string of maximum length `maxlen`, shortening if necessary to "start .. [X chars] .. end"."""
+    """Return string of maximum length `maxlen`, shortening if necessary to "start .. [X chars] .. end".
+    @private"""
 
     if (l := len(s)) <= maxlen:
         return s
@@ -363,6 +369,8 @@ def next_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     - `comment`: Whether to return comments found, which will be the whole comment.
     - `lcont`: Whether to return line continuations found (backslash at end of line) if `True`, skip over them if
         `False`, or skip over them and restrict search to logical line `None`.
+
+    @private
     """
 
     re_pat = (
@@ -418,6 +426,8 @@ def prev_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
         `False`, or skip over them and restrict search to logical line `None`.
     - `state`: Can be used to cache walk but must only be used if the walk is sequentially backwards starting each time
         at the start position of the previously returned match.
+
+    @private
     """
 
     re_pat = (
@@ -507,6 +517,8 @@ def next_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, sr
 
     **Returns:**
     - `fstpos | None`: Location of start of found `src` or `None` if not found with the given parameters.
+
+    @private
     """
 
     if first:
@@ -544,6 +556,8 @@ def prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, sr
 
     **Returns:**
     - `fstpos | None`: Location of start of found `src` or `None` if not found with the given parameters.
+
+    @private
     """
 
     if first:
@@ -587,6 +601,8 @@ def next_find_re(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     **Returns:**
     - `srcwpos | None`: Location of start of `pat` and the string matching the pattern or `None` if not found with the
         given parameters.
+
+    @private
     """
 
     if first:
@@ -610,69 +626,73 @@ def next_find_re(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
 
 def next_delims(lines: list[str], end_ln: int, end_col: int, bound_end_ln: int, bound_end_col: int,
                 delim: str = ')') -> list[tuple[int, int]]:
-        """Return a list of the locations of closing parentheses (or any specified delimiter or character) starting at
-        (`end_ln`, `end_col`) until the end of the bound. The locations of the delimiters will be AFTER the delimiter.
-        The list includes (`end_ln`, `end_col`) as the first element. The list ends if a non `delim` character is
-        encountered while searching forward.
+    """Return a list of the locations of closing parentheses (or any specified delimiter or character) starting at
+    (`end_ln`, `end_col`) until the end of the bound. The locations of the delimiters will be AFTER the delimiter.
+    The list includes (`end_ln`, `end_col`) as the first element. The list ends if a non `delim` character is
+    encountered while searching forward.
 
-        **Returns:**
-        - `[(end_ln, end_col), (ln_end_par1, col_end_par1), (ln_end_par2, col_end_par2), ...]`
-        """
+    **Returns:**
+    - `[(end_ln, end_col), (ln_end_par1, col_end_par1), (ln_end_par2, col_end_par2), ...]`
 
-        delims = [(end_ln, end_col)]
+    @private
+    """
 
-        while frag := next_frag(lines, end_ln, end_col, bound_end_ln, bound_end_col):
-            ln, col, src = frag
+    delims = [(end_ln, end_col)]
 
-            for c in src:
-                if c != delim:
-                    break
+    while frag := next_frag(lines, end_ln, end_col, bound_end_ln, bound_end_col):
+        ln, col, src = frag
 
-                end_ln  = ln
-                end_col = (col := col + 1)
+        for c in src:
+            if c != delim:
+                break
 
-                delims.append((end_ln, end_col))
+            end_ln  = ln
+            end_col = (col := col + 1)
 
-            else:
-                continue
+            delims.append((end_ln, end_col))
 
-            break
+        else:
+            continue
 
-        return delims
+        break
+
+    return delims
 
 
 def prev_delims(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: int, delim: str = '(',
                 ) -> list[tuple[int, int]]:
-        """Return a list of the locations of opening parentheses (or any specified delimiter or character) starting at
-        (`ln`, `col`) going backwards until the start of the bound. The list includes (`ln`, `col`) as the first
-        element. The list ends if a non `par` character is encountered while searching backward.
+    """Return a list of the locations of opening parentheses (or any specified delimiter or character) starting at
+    (`ln`, `col`) going backwards until the start of the bound. The list includes (`ln`, `col`) as the first
+    element. The list ends if a non `par` character is encountered while searching backward.
 
-        **Returns:**
-        - `[(ln, col), (ln_par1, col_par1), (ln_par2, col_par2), ...]`
-        """
+    **Returns:**
+    - `[(ln, col), (ln_par1, col_par1), (ln_par2, col_par2), ...]`
 
-        delims = [(ln, col)]
-        state  = []
+    @private
+    """
 
-        while frag := prev_frag(lines, bound_ln, bound_col, ln, col, state=state):
-            ln, col, src  = frag
-            col          += len(src)
+    delims = [(ln, col)]
+    state  = []
 
-            for c in src[::-1]:
-                if c != delim:
-                    break
+    while frag := prev_frag(lines, bound_ln, bound_col, ln, col, state=state):
+        ln, col, src  = frag
+        col          += len(src)
 
-                ln  = ln
-                col = (col := col - 1)
+        for c in src[::-1]:
+            if c != delim:
+                break
 
-                delims.append((ln, col))
+            ln  = ln
+            col = (col := col - 1)
 
-            else:
-                continue
+            delims.append((ln, col))
 
-            break
+        else:
+            continue
 
-        return delims
+        break
+
+    return delims
 
 
 def leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: int,
@@ -711,6 +731,8 @@ def leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col
         - `[2]`: The indentation of the element line if it starts its own line (and may or may not have preceding
             comments and / or empty space). An empty string indicates the element starts the line at column 0 and `None`
             indicates the element doesn't start the line.
+
+    @private
     """
 
     assert bound_ln <= ln
@@ -836,6 +858,8 @@ def trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end
             line then the first location will most likely have a column 0 and the returned line number will be after the
             element `end_ln`. But not always if the end bound was at the end of a line like can happen at the end of
             source if it doesn't have a trailing newline.
+
+    @private
     """
 
     assert bound_end_ln >= end_ln
@@ -947,6 +971,8 @@ def trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end
 
 
 class ParamsOffset(NamedTuple):
+    """@private"""
+
     ln:          int  # position of offset, FST coords (starts at 0)
     col_offset:  int  # position of offset, byte offset (negative to indicate but value is abs(), positive would indicate character offset)
     dln:         int  # delta lines
@@ -955,7 +981,10 @@ class ParamsOffset(NamedTuple):
 def params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int, end_ln: int, end_col: int,
                   ) -> ParamsOffset:
     """Calculate location and delta parameters for the `_offset()` function. The `col` parameter is calculated as a byte
-    offset so that the `_offset()` function does not have to access the source at all."""
+    offset so that the `_offset()` function does not have to access the source at all.
+
+    @private
+    """
 
     dfst_ln     = len(put_lines) - 1
     dln         = dfst_ln - (end_ln - ln)
@@ -971,7 +1000,10 @@ def params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int,
 def swizzle_getput_params(start: int | Literal['end'] | None, stop: int | None | Literal[False], field: str | None,
                           default_stop: Literal[False] | None,
                           ) -> tuple[int | Literal['end'] | None,int | None | Literal[False], str | None]:
-    """Allow passing `stop` and `field` for get/put() functions positionally."""
+    """Allow passing `stop` and `field` for get/put() functions positionally.
+
+    @private
+    """
 
     if isinstance(start, str) and start != 'end':
         return None, default_stop, start
@@ -982,7 +1014,10 @@ def swizzle_getput_params(start: int | Literal['end'] | None, stop: int | None |
 
 
 def fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True) -> tuple[str, 'AST']:
-    """Get `AST` member list for specified `field` or default if `field=None`."""
+    """Get `AST` member list for specified `field` or default if `field=None`.
+
+    @private
+    """
 
     if not field:
         if (field := _AST_DEFAULT_BODY_FIELD.get(ast.__class__, fixup_field_body)) is fixup_field_body:  # fixup_field_body serves as sentinel
@@ -1002,6 +1037,8 @@ def fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True)
 
 
 def fixup_one_index(len_: int, idx: int) -> int:
+    """@private"""
+
     if not (0 <= ((idx := idx + len_) if idx < 0 else idx) < len_):
         raise IndexError('index out of range')
 
@@ -1009,6 +1046,8 @@ def fixup_one_index(len_: int, idx: int) -> int:
 
 
 def fixup_slice_indices(len_: int, start: int, stop: int) -> tuple[int, int]:
+    """@private"""
+
     if start is None:
         start = 0
 
@@ -1041,7 +1080,10 @@ def fixup_slice_indices(len_: int, start: int, stop: int) -> tuple[int, int]:
 def multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:
     """Return the line numbers of a potentially multiline string `Constant` continuation lines (lines which should not
     be indented because they follow a newline inside triple quotes). The location passed MUST be from the `Constant`
-    `AST` node or calculated to be the same, otherwise this function will fail."""
+    `AST` node or calculated to be the same, otherwise this function will fail.
+
+    @private
+    """
 
 
     # TODO: use tokenize?
@@ -1094,7 +1136,10 @@ def multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln: 
 
 def multiline_fstr_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:
     """Lets try to find non-indentable lines by incrementally attempting to parse parts of multiline f-string (or
-    t-string)."""
+    t-string).
+
+    @private
+    """
 
 
     # TODO: p3.12+ has locations for these which should allow no use of parse, use tokenize?
@@ -1141,6 +1186,8 @@ def continuation_to_uncontinued_lns(lns: Iterable[int], ln: int, col: int, end_l
 
     **Returns:**
     - `set[int]`: Set of uncontinued lines in the given range.
+
+    @private
     """
 
     out = set(range(ln, end_ln + include_last))

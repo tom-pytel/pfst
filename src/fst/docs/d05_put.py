@@ -349,6 +349,27 @@ z = [x, a, b]
 z = [c, d, e]
 ```
 
+You can also delete by attribute.
+
+```py
+>>> del f.value.elts[1:]
+
+>>> print(f.src)
+z = [c]
+
+>>> del f.value.elts
+
+>>> print(f.src)
+z = []
+
+>>> f = FST('def f() -> int: pass')
+
+>>> del f.returns
+
+>>> print(f.src)
+def f(): pass
+```
+
 ## `put_src()`
 
 Unlike `get_src()` which is a very simple function, `put_src()` doesn't just put text to the source code and leave it at

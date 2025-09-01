@@ -4310,8 +4310,9 @@ class FST:
         Node types where this doesn't normally apply like `stmt` or `alias` return `True`.
 
         Being atomic precedence-wise does not guarantee parsability as an otherwise atomic node could be spread across
-        multiple lines without line continuations or grouping parentheses, in this case `'unenclosable'` is returned (if
-        these nodes are not excluded altogether with `always_enclosed=True`). Also see `is_enclosed_or_line()`.
+        multiple lines without line continuations or grouping parentheses. In the case that the node is one of these
+        (precedence atomic but MAY be split across lines) then `'unenclosable'` is returned (if these nodes are not
+        excluded altogether with `always_enclosed=True`). Also see `is_enclosed_or_line()`.
 
         If this function returns `'pars'` then `self` is enclosed due to the grouping parentheses.
 
@@ -4799,6 +4800,7 @@ class FST:
 
         >>> print(FST('i = 1').is_except_star())
         None
+        ```
         """
 
         if not isinstance(self.a, ExceptHandler):
@@ -5146,6 +5148,12 @@ def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> prope
 
             self.put(code, field)
 
+        @accessor.deleter
+        def accessor(self: FST) -> None:
+            """@private"""
+
+            self.put(None, field)
+
     elif cardinality == 2:
         @property
         def accessor(self: FST) -> fstview:
@@ -5158,6 +5166,12 @@ def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> prope
             """@private"""
 
             self.put_slice(code, field)
+
+        @accessor.deleter
+        def accessor(self: FST) -> None:
+            """@private"""
+
+            self.put_slice(None, field)
 
     else:  # cardinality == 3  # can be single element or list depending on the AST type
         @property
@@ -5179,6 +5193,15 @@ def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> prope
                 self.put_slice(code, field)
             else:
                 self.put(code, field)
+
+        @accessor.deleter
+        def accessor(self: FST) -> None:
+            """@private"""
+
+            if isinstance(getattr(self.a, field), list):
+                self.put_slice(None, field)
+            else:
+                self.put(None, field)
 
     return accessor
 

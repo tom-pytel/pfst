@@ -299,20 +299,18 @@ Mode = Literal[
     of the `Module`. If that statement is an `Expr` then return the expression instead of the statement. If nothing
     present then return empty `Module`. Doesn't attempt any of the other parse modes which would not normally be
     parsable by python, just anything that can be parsed natively by `ast.parse()`.
-- `'exec'`: Parse to a `Module`. Mostly same as passing `Module` type except that `Module` also parses anything that
-    `FST` puts into `Module`s, like slices of normally non-parsable stuff.
-- `'eval'`: Parse to an `Expression`. Same as passing `Expression` type.
-- `'single'`: Parse to an `Interactive`. Same as passing `Interactive` type.
-- `'stmts'`: Parse zero or more `stmt`s returned in a `Module`. Same as passing `'exec'`, but not `Module` as that can
-    parse `FST` slices.
+- `'exec'`: Parse to a `Module`. Same as passing `Module` type or `'stmts'`. Same as `ast.parse()` mode 'exec'.
+- `'eval'`: Parse to an `Expression`. Same as passing `Expression` type. Same as `ast.parse()` mode 'eval'.
+- `'single'`: Parse to an `Interactive`. Same as passing `Interactive` type. Same as `ast.parse()` mode 'single'.
+- `'stmts'`: Parse zero or more `stmt`s returned in a `Module`. Same as passing `'exec'` or `Module`.
 - `'stmt'`: Parse a single `stmt` returned as itself. Same as passing `stmt` type.
 - `'ExceptHandler'`: Parse as a single `ExceptHandler` returned as itself. Same as passing `ExceptHandler` type.
 - `'ExceptHandlers'`: Parse zero or more `ExceptHandler`s returned in a `Module`.
 - `'match_case'`: Parse a single `match_case` returned as itself. Same as passing `match_case` type.
 - `'match_cases'`: Parse zero or more `match_case`s returned in a `Module`.
-- `'expr'`: "expression", parse a single `expr` returned as itself. This is differentiated from the following three
-    modes by the handling of slices and starred expressions. In this mode `a:b` and `*not v` are syntax errors. Same as
-    passing `expr` type.
+- `'expr'`: "expression", parse a single `expr` returned as itself. This is differentiated from the following modes by
+    the handling of slices and starred expressions. In this mode `a:b` and `*not v` are syntax errors. Same as passing
+    `expr` type.
 - `'expr_all'`: Parse to any kind of expression including `Slice`, `*not a` or `Tuple` of any of those combined.
 - `'expr_arglike'`: Accept special syntax for `Starred` (call argument, class base definition, slice implicit tuple),
     same as `'expr'` except that in this mode `a:b` is a syntax error and `*not v` parses to a starred expression
@@ -337,15 +335,18 @@ Mode = Literal[
 - `'keyword'`: Parse as a single `keyword` returned as itself. Same as passing `keyword` type.
 - `'alias'`: Parse as a single `alias` returned as itself. Either starred or dotted versions are accepted. Same
     as passing `alias` type.
-- `'alias_dotted'`: Parse as a single `alias` returned as itself, with starred version being a syntax error.
-- `'alias_star'`: Parse as a single `alias` returned as itself, with dotted version being a syntax error.
+- `'alias_dotted'`: Parse as a single `alias` returned as itself, with starred version being a syntax error. This is the
+    `alias` used in `Import.names`.
+- `'alias_star'`: Parse as a single `alias` returned as itself, with dotted version being a syntax error. This is the
+    `alias` used in `ImportFrom.names`.
 - `'withitem'`: Parse as a single `withitem` returned as itself. Same as passing `withitem` type.
 - `'pattern'`: Parse as a a single `pattern` returned as itself. Same as passing `pattern` type.
 - `'type_param'`: Parse as a single `type_param` returned as itself, either `TypeVar`, `ParamSpec` or
     `TypeVarTuple`. Same as passing `type_param` type.
-- `'type_params'`: Parse as a slice of zero or more `type_param`s returned in a `Tuple`.
+- `'type_params'`: Parse as a slice of zero or more `type_param`s returned in a `Tuple`, does not need trailing comma
+    for a single element. This is our own SPECIAL SLICE use of a tuple and not valid in python.
 - `'Assign_targets'`: Parse as a single or multiple targets to an `Assign` node, with `=` as separators and an optional
-    trailing `=`. Returned as an `Assign` node with a `value` node which is an empty `Name`.
+    trailing `=`. Returned as an `Assign` node with a `value` node which is an empty `Name` (our own SPECIAL SLICE).
 - `type[AST]`: If an `AST` type is passed then will attempt to parse to this type. This can be used to narrow
     the scope of desired return, for example `Constant` will parse as an expression but fail if the expression
     is not a `Constant`. These overlap with the string specifiers to an extent but not all of them. For example

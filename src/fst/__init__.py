@@ -31,6 +31,9 @@ works for those operations which are not.
 
 # Details
 
+Disclaimer: The intended use of this module is if you just want to change code functionality without having to deal with
+miniutae, not lint or format, there are better options for that.
+
 `fst` was written and tested on Python versions 3.10 through 3.14.
 
 `fst` works by keeping a copy of the entire source at the root `FST` node of a tree and modifying this source alongside
@@ -59,12 +62,6 @@ There is also a mechanism for allowing outside editing of the `AST` tree and the
 to preserve formatting where possible. This is intended for existing code or third-party libraries which don't know
 anything about `fst` to maybe gain the ability to preserve some existing formatting when editing a tree.
 `fst.docs.d09_reconcile`.
-
-# Notes
-
-* `JoinedStr` and `TemplateStr` internal accesses are not quite finished yet. You can get and put `FormattedValue.value`
-a `Interpolation.value` on python >= 3.12 fine, but the other fields may or may not work putting in raw mode as
-prescribed operations are not done yet.
 """
 
 import ast  # noqa: F401
