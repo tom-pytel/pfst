@@ -4077,14 +4077,14 @@ class FST:
 
     def get_parse_mode(self) -> builtins.str | type[AST] | None:
         r"""Determine the parse mode for this node. This is the extended parse mode as per `Mode`, not the `ast.parse()`
-        mode. Returns a mode which is guaranteed to reparse this assumed-valid element to an exact copy of itself. This
-        mode is not guaranteed to be the same as was used to create the `FST`, just guaranteed to be able to recreate
-        it. Mostly it just returns the `AST` type, but in cases where that won't parse to this `FST` it will return
-        a string mode. This is a quick just a check, doesn't verify everything.
+        mode. Returns a mode which is guaranteed to reparse this element (which may be a SPECIAL SLICE) to an exact copy
+        of itself. This mode is not guaranteed to be the same as was used to create the `FST`, just guaranteed to be
+        able to recreate it. Mostly it just returns the `AST` type, but in cases where that won't parse to this `FST` it
+        will return a string mode. This is a quick just a check, doesn't verify everything.
 
         **Returns:**
         - `str`: One of the special text specifiers. Will be returned for most slices and special cases like an `*a`
-            which is actually a `Tuple` (which it only is inside a slice).
+            inside a `.slice` which is actually a `Tuple`, or a SPECIAL SLICE like `Assign.targets.copy()`.
         - `type[AST]`: Will be returned for nodes which can be reparsed correctly using only the `AST` type.
         - `None`: If invalid or cannot be determined.
 

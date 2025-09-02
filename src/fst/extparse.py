@@ -367,7 +367,7 @@ def get_special_parse_mode(ast: AST) -> str | None:
     verify everything.
 
     **WARNING!** This only gets special parse modes for where it can be inferred from the `AST` alone. This will not
-    return the special parse mode of `'expr_slice'` for example for `(*st,)` single-`Starred` `Tuple` which is
+    return the special parse mode of `'expr_slice'` for example for `a[*st]` single-`Starred` `Tuple` which is
     represented by the source `*st` from inside a `Subscript.slice`. That must be handled at a higher level.
 
     **Returns:**
@@ -407,12 +407,12 @@ def unparse(ast: AST) -> str:
 
     src = _fixing_unparse(ast)
 
-    if not src:
-        if s := OPCLS2STR.get(ast.__class__):  # operators don't unparse to anything in ast
+    if not src:  # operators don't unparse to anything in ast
+        if s := OPCLS2STR.get(ast.__class__):
             return s
 
     if isinstance(ast, Tuple):
-        if any(isinstance(e, Slice) or not isinstance(e, expr) for e in ast.elts):  # tuples with Slices cannot have parentheses, and neither can our own SPECIAL SLICES
+        if any(isinstance(e, Slice) or not isinstance(e, expr) for e in ast.elts):  # tuples with Slices cannot have parentheses, and neither can our own SPECIAL SLICEs
             return src[1:-1]
 
     elif isinstance(ast, comprehension):  # strip prefix space from this
