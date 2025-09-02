@@ -2935,14 +2935,16 @@ match a:
 
     def test_par(self):
         f = parse('1,').body[0].value.f.copy()
-        f.par()  # self.assertTrue(f.par())
+        f.par()
         self.assertEqual('(1,)', f.src)
-        f.par()  # self.assertFalse(f.par())
+        f.par()
         self.assertEqual('(1,)', f.src)
-        f.par(force=True)  # self.assertTrue(f.par(force=True))
+        f.par(force=True)
         self.assertEqual('((1,))', f.src)
-        f.par()  # self.assertFalse(f.par())
+        self.assertEqual((0, 1, 0, 5), f.loc)
+        f.par()
         self.assertEqual('((1,))', f.src)
+        self.assertEqual((0, 1, 0, 5), f.loc)
 
         # self.assertFalse(parse('()').body[0].value.f.copy().par())
         # self.assertFalse(parse('[]').body[0].value.f.copy().par())
@@ -2953,9 +2955,9 @@ match a:
 
         f = parse('i = 1').body[0].f.copy()
         f._put_src(['# comment', ''], 0, 0, 0, 0)
-        f.par()  # self.assertFalse(f.par())
+        f.par()
         self.assertEqual('# comment\ni = 1', f.src)
-        f.par(force=True)  # self.assertTrue(f.par(force=True))
+        f.par(force=True)
         self.assertEqual('(# comment\ni = 1)', f.src)
 
         if PYGE14:  # make sure parent Interpolation.str gets modified
@@ -3147,6 +3149,34 @@ match a:
             self.assertEqual('t: int', FST('t: int', type_param).par().src)
             self.assertEqual('*t', FST('*t', type_param).par().src)
             self.assertEqual('**t', FST('**t', type_param).par().src)
+
+        # make sure parenthesized elements update parent locations
+
+        self.assertEqual('if 1: *(a.b)', (f := FST('if 1: *a.b')).body[0].value.par().root.src)
+        self.assertEqual((0, 0, 0, 12), f.loc)
+        self.assertEqual((0, 6, 0, 12), f.body[0].loc)
+        self.assertEqual((0, 6, 0, 12), f.body[0].value.loc)
+        self.assertEqual((0, 8, 0, 11), f.body[0].value.value.loc)
+
+        self.assertEqual('if 1: (a, b)', (f := FST('if 1: a, b')).body[0].value.par().root.src)
+        self.assertEqual((0, 0, 0, 12), f.loc)
+        self.assertEqual((0, 6, 0, 12), f.body[0].loc)
+        self.assertEqual((0, 6, 0, 12), f.body[0].value.loc)
+
+        self.assertEqual('if 1: ((a, b))', f.body[0].value.par(force=True).root.src)
+        self.assertEqual((0, 0, 0, 14), f.loc)
+        self.assertEqual((0, 6, 0, 14), f.body[0].loc)
+        self.assertEqual((0, 7, 0, 13), f.body[0].value.loc)
+
+        self.assertEqual('case [a, b]: pass', (f := FST('case a, b: pass')).pattern.par().root.src)
+        self.assertEqual((0, 0, 0, 17), f.loc)
+        self.assertEqual((0, 5, 0, 11), f.pattern.loc)
+        self.assertEqual((0, 13, 0, 17), f.body[0].loc)
+
+        self.assertEqual('case ([a, b]): pass', f.pattern.par(force=True).root.src)
+        self.assertEqual((0, 0, 0, 19), f.loc)
+        self.assertEqual((0, 6, 0, 12), f.pattern.loc)
+        self.assertEqual((0, 15, 0, 19), f.body[0].loc)
 
     def test_unpar(self):
         f = parse('((1,))').body[0].value.f.copy(pars=True)

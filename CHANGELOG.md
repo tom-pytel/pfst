@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- fix `par(force=True)` on delimited `Tuple` or `MatchSequence`
 - disallow put `Starred` to `Delete` `Tuple` or `List` elements
 
 ### Added

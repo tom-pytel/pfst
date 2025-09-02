@@ -2189,11 +2189,18 @@ class FST:
 
         with self._modifying():
             if isinstance(self.a, Tuple):
-                self._delimit_node(whole)
+                if not (force and self.is_parenthesized_tuple()):
+                    self._delimit_node(whole)
+
+                    return self
+
             elif isinstance(self.a, MatchSequence):
-                self._delimit_node(whole, '[]')
-            else:
-                self._parenthesize_grouping(whole)
+                if not (force and self.is_delimited_matchseq()):
+                    self._delimit_node(whole, '[]')
+
+                    return self
+
+            self._parenthesize_grouping(whole)
 
         return self
 

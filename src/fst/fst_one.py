@@ -1651,20 +1651,20 @@ def _put_one_withitem_optional_vars(self: fst.FST, code: _PutOneCode, idx: int |
     return ret
 
 
-def _put_one_MatchValue_value(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
-                              static: onestatic, options: Mapping[str, Any]) -> fst.FST:
-    """Put MatchValue.value. Need to do this because a standalone MatchValue does not encompass parenthesized value
-    parentheses."""
+# def _put_one_MatchValue_value(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
+#                               static: onestatic, options: Mapping[str, Any]) -> fst.FST:
+#     """Put MatchValue.value. Need to do this because a standalone MatchValue does not encompass parenthesized value
+#     parentheses."""
 
-    ret              = _put_one_exprish_required(self, code, idx, field, child, static, options)
-    a                = self.a
-    v                = a.value
-    a.lineno         = v.lineno
-    a.col_offset     = v.col_offset
-    a.end_lineno     = v.end_lineno
-    a.end_col_offset = v.end_col_offset
+#     ret              = _put_one_exprish_required(self, code, idx, field, child, static, options)
+#     a                = self.a
+#     v                = a.value
+#     a.lineno         = v.lineno
+#     a.col_offset     = v.col_offset
+#     a.end_lineno     = v.end_lineno
+#     a.end_col_offset = v.end_col_offset
 
-    return ret
+#     return ret
 
 
 def _put_one_MatchAs_pattern(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
@@ -2762,7 +2762,8 @@ _PUT_ONE_HANDLERS = {
     (match_case, 'pattern'):              (False, _put_one_pattern, _onestatic_pattern_required),  # pattern
     (match_case, 'guard'):                (False, _put_one_exprish_optional, onestatic(_one_info_match_case_guard, _restrict_default)),  # expr?
     (match_case, 'body'):                 (True,  None, None),  # stmt*
-    (MatchValue, 'value'):                (False, _put_one_MatchValue_value, onestatic(_one_info_exprish_required, _is_valid_MatchValue_value)),  # expr
+    # (MatchValue, 'value'):                (False, _put_one_MatchValue_value, onestatic(_one_info_exprish_required, _is_valid_MatchValue_value)),  # expr
+    (MatchValue, 'value'):                (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _is_valid_MatchValue_value)),  # expr
     (MatchSingleton, 'value'):            (False, _put_one_constant, onestatic(None, (bool, NoneType))),  # constant
     (MatchSequence, 'patterns'):          (True,  _put_one_pattern, _onestatic_pattern_required),  # pattern*
     (MatchMapping, 'keys'):               (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _is_valid_MatchMapping_key)),  # expr*  Ops for `-1` or `2+3j`
