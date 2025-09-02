@@ -5200,11 +5200,9 @@ if 1:
                                                           '<<ImportFrom ROOT 0,0..0,21>.names[0:2] [<alias 0,17..0,18>, <alias 0,20..0,21>]>').src)
         self.assertEqual('from ...new import a, b, c', test(f, 'level', 3, None, 1).src)
 
-        self.assertEqual('global a, b, c', test(FST('global x, y'), 'names', 'a, b, c', fstview,
-                                                "<<Global ROOT 0,0..0,11>.names[0:2] ['x', 'y']>").src)
+        self.assertEqual('global a, b, c', test(FST('global x, y'), 'names', 'a, b, c', fstview, 'x, y').src)
 
-        self.assertEqual('nonlocal a, b, c', test(FST('nonlocal x, y'), 'names', 'a, b, c', fstview,
-                                                  "<<Nonlocal ROOT 0,0..0,13>.names[0:2] ['x', 'y']>").src)
+        self.assertEqual('nonlocal a, b, c', test(FST('nonlocal x, y'), 'names', 'a, b, c', fstview, 'x, y').src)
 
         self.assertEqual('new', test(FST('v', Expr), 'value', 'new', FST, 'v').src)
 

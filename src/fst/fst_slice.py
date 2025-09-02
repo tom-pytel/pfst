@@ -174,11 +174,12 @@ _re_sep_line_nonexpr_end        = {  # empty line with optional separator and li
 #                     (TemplateStr, 'values'):                # Constant|Interpolation*   -> TemplateStr
 
 
-#   Tuple[expr]            _parse_expr_sliceelts
-#   Tuple[expr]            _parse_expr_arglikes
+# * Tuple[target]          _parse_expr
+#   Tuple[expr_arglike]    _parse_expr_arglikes
 #   Tuple[keyword]         _parse_keywords
 # * Tuple[type_param]      _parse_type_params
 #   Tuple[withitem]        _parse_withitems
+#   Tuple[comprehension]   _parse_comprehensions
 #   Tuple[alias]           _parse_aliases_dotted
 #   Tuple[alias]           _parse_aliases_star
 
@@ -523,7 +524,7 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
     - `start`, `stop`, `len_body`: Slice parameters, `len_body` being current length of field.
     - `ast`: The already build new `AST` that is being gotten. The elements being gotten must be in this with their
         current locations in the `self`.
-    - `ast_last`: The `AST` of the last element copied or cut, not assumend to have `.f` `FST` attribute.
+    - `ast_last`: The `AST` of the last element copied or cut, not assumend to have `.f` `FST` attribute to begin with.
     - `loc_first`: The full location of the first element copied or cut, parentheses included.
     - `loc_last`: The full location of the last element copied or cut, parentheses included.
     - (`bound_ln`, `bound_col`): End of previous element (past pars) or start of container (just past
@@ -619,16 +620,15 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
         fst_._maybe_ins_separator(last_end_ln, last_end_col, False, fst_end_ln, fst_end_col - len(suffix), sep)
 
     if self_tail_sep is not None:
-        if cut:  # bound end is guaranteed to be past any modifications
-            bound_end_ln, bound_end_col = _offset_pos_by_params(self, bound_end_ln, bound_end_col, bound_end_col_offset,
-                                                                parsoff)
+        bound_end_ln, bound_end_col = _offset_pos_by_params(self, bound_end_ln, bound_end_col, bound_end_col_offset,
+                                                            parsoff)
 
         if isinstance(last := getattr(self.a, field)[-1], AST):
             _, _, last_end_ln, last_end_col = last.f.loc
 
-        else:  # Globals or Locals names, no last element with location so we use end of bound
-            last_end_ln  = bound_end_ln
-            last_end_col = bound_end_col
+        else:  # Globals or Locals names, no last element with location so we use start of bound which is just past last untouched element which is now the last element
+            last_end_ln  = bound_ln
+            last_end_col = bound_col
 
         if self_tail_sep:  # last element needs a trailing separator (singleton tuple maybe, requested by user)
             self._maybe_ins_separator(last_end_ln, last_end_col, False, bound_end_ln, bound_end_col, sep)
@@ -1094,8 +1094,8 @@ def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, st
 
 
 # TODO: handle trailing line continuation backslashes
-def _get_slice_Global_Local_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
-                                  cut: bool, options: Mapping[str, Any]) -> fst.FST:
+def _get_slice_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                                     cut: bool, options: Mapping[str, Any]) -> fst.FST:
     len_body    = len((ast := self.a).names)
     start, stop = fixup_slice_indices(len_body, start, stop)
 
@@ -1104,37 +1104,61 @@ def _get_slice_Global_Local_names(self: fst.FST, start: int | Literal['end'] | N
     if cut and not start and stop == len_body:
         raise ValueError(f'cannot cut all {ast.__class__.__name__}.names')
 
-    ln, col, end_ln, end_col = self.loc
+    ln, end_col, bound_end_ln, bound_end_col = self.loc
 
-    col      += 6 if isinstance(ast, Global) else 8
     lines     = self.root._lines
     ret_elts  = []
     ret_ast   = Tuple(elts=ret_elts, ctx=Load())
+    end_col  += 5 if isinstance(ast, Global) else 7  # will have another +1 added in search
 
-    for _ in range(start):
-        ln, col  = next_find(lines, ln, col, end_ln, end_col, ',')  # must be there
-        col     += 1
+    if not start:
+        bound_ln = None  # set later
+
+    else:
+        for _ in range(start - 1):
+            ln, end_col = next_find(lines, ln, end_col + 1, bound_end_ln, bound_end_col, ',')  # must be there
+
+        bound_ln, bound_col, src = next_find_re(lines, ln, end_col + 1, bound_end_ln, bound_end_col, re_identifier)  # must be there, + 1 skips comma
+
+        bound_col   += len(src)
+        ln, end_col  = next_find(lines, bound_ln, bound_col, bound_end_ln, bound_end_col, ',')  # must be there
 
     for i in range(stop - start):  # create tuple of Names from identifiers
-        ln, col, src = next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
+        ln, col, src = next_find_re(lines, ln, end_col + 1, bound_end_ln, bound_end_col, re_identifier)  # must be there, + 1 probably skips comma
         lineno       = ln + 1
         end_col      = col + len(src)
 
-        if not i:  # TODO: is this right???
-            bound_ln  = ln
-            bound_col = col
+        if not i:
+            loc_first = fstloc(ln, col, ln, end_col)
+
+            if bound_ln is None:
+                bound_ln  = ln
+                bound_col = col
 
         ret_elts.append(Name(id=src, ctx=Load(), lineno=lineno, col_offset=(l := lines[ln]).c2b(col), end_lineno=lineno,
                              end_col_offset=l.c2b(end_col)))
 
-        col = end_col + 1  # + 1 probably skip comma
+    loc_last = fstloc(ln, col, ln, end_col)
 
-    bound_end_ln  = ln
-    bound_end_col = col
+    if cut:
+        del ast.names[start : stop]
 
-    return _get_slice_seq(self, start, stop, len_body, cut, ret_ast,
-                          bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col,
-                          options.get('trivia'), 'names', '', '', ',', False, False)
+    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, ret_elts[-1],
+                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
+                          options.get('trivia'), 'names', '', '', ',', False, 1)
+
+    fst_._maybe_fix_tuple(False)  # this is in case of multiline elements to add pars, otherwise location would reparse different
+
+    if cut:
+        if stop == len_body:  # clean up any line continuation backslashes and make sure end location is set to end of last element
+            _, _, end_ln, end_col = self.loc
+
+            if end_col != bound_col or end_ln != bound_ln:
+                self._put_src(None, bound_ln, bound_col, end_ln, end_col, True)
+
+        self._maybe_add_line_continuations()
+
+    return fst_
 
 
 # ......................................................................................................................
@@ -1219,8 +1243,8 @@ _GET_SLICE_HANDLERS = {
     (ClassDef, 'type_params'):            _get_slice_type_params,  # type_param*
     (TypeAlias, 'type_params'):           _get_slice_type_params,  # type_param*
 
-    (Global, 'names'):                    _get_slice_NOT_IMPLEMENTED_YET,  # identifier*
-    (Nonlocal, 'names'):                  _get_slice_NOT_IMPLEMENTED_YET,  # identifier*
+    (Global, 'names'):                    _get_slice_Global_Nonlocal_names,  # identifier*
+    (Nonlocal, 'names'):                  _get_slice_Global_Nonlocal_names,  # identifier*
 
     (JoinedStr, 'values'):                _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (TemplateStr, 'values'):              _get_slice_NOT_IMPLEMENTED_YET,  # expr*
@@ -1260,6 +1284,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
     - (`bound_ln`, `bound_col`): Start of container (just past delimiters). DIFFERENT FROM _get_slice_seq()!!!
     - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters).
     - `trivia`: Standard option on how to handle leading and trailing comments and space, `None` means global default.
+    - `ins_ln`: Hint for line number where to insert if inserting, may not be honored if not possible.
     - `field`: Which field of `self` is being deleted / replaced / inserted to.
     - `field2`: If `self` is a two element sequence like `Dict` or `MatchMapping` then this should be the second field
         of each element, `values` or `patterns`.
@@ -1643,7 +1668,7 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
     fst_ = code_as(code, self.root.parse_params, sanitize=False)
     ast_ = fst_.a
 
-    if non_seq_as_one and not one and not isinstance(ast_, (Tuple, List, Set)):  # this exists as a convenience for allowing doing `assign.targets = target` (without trailing comma if string source)
+    if non_seq_as_one and not one and not isinstance(ast_, (Tuple, List, Set)):  # this exists as a convenience for allowing doing `Delete.targets = target` (without trailing comma if string source)
         one = True
 
     if one:
@@ -2139,8 +2164,8 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
                               field: str, one: bool, options: Mapping[str, Any]) -> None:
     """Even though when getting a slice it will be returned as a `Tuple`, any sequence of valid target types is accepted
     for the put operation. If putting a non-sequence element, it will be automatically put as `one=True` to match the
-    non-comma terminated syntax of `Delete` targets (a non-sequence `FST` or `AST` will not be accepted like this). This
-    allows correct-appearing syntax like `delfst.targets = 'target'` to work."""
+    non-comma terminated syntax of `Delete` targets. This allows correct-appearing syntax like
+    `delfst.targets = 'target'` to work."""
 
     fst_        = _code_to_slice_seq(self, code, one, options, non_seq_as_one=True)
     len_body    = len(body := self.a.targets)

@@ -2446,6 +2446,320 @@ Assign - ROOT 0,0..0,3
   .value Name '' Load - 0,3..0,3
 """),
 
+(r"""global a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""global a, c  # comment""", r"""b,""", r"""
+Module - ROOT 0,0..0,22
+  .body[1]
+  0] Global - 0,0..0,11
+    .names[2]
+    0] 'a'
+    1] 'c'
+""", r"""
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+  0] Name 'b' Load - 0,0..0,1
+  .ctx Load
+"""),
+
+(r"""global a, b, c  # comment""", 'body[0]', 1, 3, None, {}, r"""global a  # comment""", r"""b, c""", r"""
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Global - 0,0..0,8
+    .names[1]
+    0] 'a'
+""", r"""
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+  0] Name 'b' Load - 0,0..0,1
+  1] Name 'c' Load - 0,3..0,4
+  .ctx Load
+"""),
+
+(r"""global a, b, c  # comment""", 'body[0]', 0, 2, None, {}, r"""global c  # comment""", r"""a, b""", r"""
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Global - 0,0..0,8
+    .names[1]
+    0] 'c'
+""", r"""
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+"""),
+
+(r"""global a \
+, \
+b \
+, \
+c  # comment""", 'body[0]', 1, 2, None, {}, r"""global a \
+, \
+c  # comment""", r"""(
+b \
+, \
+)""", r"""
+Module - ROOT 0,0..2,12
+  .body[1]
+  0] Global - 0,0..2,1
+    .names[2]
+    0] 'a'
+    1] 'c'
+""", r"""
+Tuple - ROOT 0,0..3,1
+  .elts[1]
+  0] Name 'b' Load - 1,0..1,1
+  .ctx Load
+"""),
+
+(r"""global a \
+, \
+b \
+, \
+c  # comment""", 'body[0]', 0, 2, None, {}, r"""global \
+c  # comment""", r"""a \
+, \
+b \
+,""", r"""
+Module - ROOT 0,0..1,12
+  .body[1]
+  0] Global - 0,0..1,1
+    .names[1]
+    0] 'c'
+""", r"""
+Tuple - ROOT 0,0..3,1
+  .elts[2]
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'b' Load - 2,0..2,1
+  .ctx Load
+"""),
+
+(r"""global a \
+, \
+b \
+, \
+c  # comment""", 'body[0]', 1, 3, None, {}, r"""global a  # comment""", r"""(
+b \
+, \
+c)""", r"""
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Global - 0,0..0,8
+    .names[1]
+    0] 'a'
+""", r"""
+Tuple - ROOT 0,0..3,2
+  .elts[2]
+  0] Name 'b' Load - 1,0..1,1
+  1] Name 'c' Load - 3,0..3,1
+  .ctx Load
+"""),
+
+(r"""if 1:
+  global a \
+  , \
+  b  # comment
+  pass""", 'body[0].body[0]', 0, 1, None, {}, r"""if 1:
+  global  \
+  b  # comment
+  pass""", r"""a \
+,""", r"""
+Module - ROOT 0,0..3,6
+  .body[1]
+  0] If - 0,0..3,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Global - 1,2..2,3
+      .names[1]
+      0] 'b'
+    1] Pass - 3,2..3,6
+""", r"""
+Tuple - ROOT 0,0..1,1
+  .elts[1]
+  0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+"""),
+
+(r"""if 1:
+  global a \
+  , \
+  b  # comment
+  pass""", 'body[0].body[0]', 1, 2, None, {}, r"""if 1:
+  global a  # comment
+  pass""", r"""(
+b,)""", r"""
+Module - ROOT 0,0..2,6
+  .body[1]
+  0] If - 0,0..2,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Global - 1,2..1,10
+      .names[1]
+      0] 'a'
+    1] Pass - 2,2..2,6
+""", r"""
+Tuple - ROOT 0,0..1,3
+  .elts[1]
+  0] Name 'b' Load - 1,0..1,1
+  .ctx Load
+"""),
+
+(r"""nonlocal a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""nonlocal a, c  # comment""", r"""b,""", r"""
+Module - ROOT 0,0..0,24
+  .body[1]
+  0] Nonlocal - 0,0..0,13
+    .names[2]
+    0] 'a'
+    1] 'c'
+""", r"""
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+  0] Name 'b' Load - 0,0..0,1
+  .ctx Load
+"""),
+
+(r"""nonlocal a, b, c  # comment""", 'body[0]', 1, 3, None, {}, r"""nonlocal a  # comment""", r"""b, c""", r"""
+Module - ROOT 0,0..0,21
+  .body[1]
+  0] Nonlocal - 0,0..0,10
+    .names[1]
+    0] 'a'
+""", r"""
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+  0] Name 'b' Load - 0,0..0,1
+  1] Name 'c' Load - 0,3..0,4
+  .ctx Load
+"""),
+
+(r"""nonlocal a, b, c  # comment""", 'body[0]', 0, 2, None, {}, r"""nonlocal c  # comment""", r"""a, b""", r"""
+Module - ROOT 0,0..0,21
+  .body[1]
+  0] Nonlocal - 0,0..0,10
+    .names[1]
+    0] 'c'
+""", r"""
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+"""),
+
+(r"""nonlocal a \
+, \
+b \
+, \
+c  # comment""", 'body[0]', 1, 2, None, {}, r"""nonlocal a \
+, \
+c  # comment""", r"""(
+b \
+, \
+)""", r"""
+Module - ROOT 0,0..2,12
+  .body[1]
+  0] Nonlocal - 0,0..2,1
+    .names[2]
+    0] 'a'
+    1] 'c'
+""", r"""
+Tuple - ROOT 0,0..3,1
+  .elts[1]
+  0] Name 'b' Load - 1,0..1,1
+  .ctx Load
+"""),
+
+(r"""nonlocal a \
+, \
+b \
+, \
+c  # comment""", 'body[0]', 0, 2, None, {}, r"""nonlocal \
+c  # comment""", r"""a \
+, \
+b \
+,""", r"""
+Module - ROOT 0,0..1,12
+  .body[1]
+  0] Nonlocal - 0,0..1,1
+    .names[1]
+    0] 'c'
+""", r"""
+Tuple - ROOT 0,0..3,1
+  .elts[2]
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'b' Load - 2,0..2,1
+  .ctx Load
+"""),
+
+(r"""nonlocal a \
+, \
+b \
+, \
+c  # comment""", 'body[0]', 1, 3, None, {}, r"""nonlocal a  # comment""", r"""(
+b \
+, \
+c)""", r"""
+Module - ROOT 0,0..0,21
+  .body[1]
+  0] Nonlocal - 0,0..0,10
+    .names[1]
+    0] 'a'
+""", r"""
+Tuple - ROOT 0,0..3,2
+  .elts[2]
+  0] Name 'b' Load - 1,0..1,1
+  1] Name 'c' Load - 3,0..3,1
+  .ctx Load
+"""),
+
+(r"""if 1:
+  nonlocal a \
+  , \
+  b  # comment
+  pass""", 'body[0].body[0]', 0, 1, None, {}, r"""if 1:
+  nonlocal  \
+  b  # comment
+  pass""", r"""a \
+,""", r"""
+Module - ROOT 0,0..3,6
+  .body[1]
+  0] If - 0,0..3,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Nonlocal - 1,2..2,3
+      .names[1]
+      0] 'b'
+    1] Pass - 3,2..3,6
+""", r"""
+Tuple - ROOT 0,0..1,1
+  .elts[1]
+  0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+"""),
+
+(r"""if 1:
+  nonlocal a \
+  , \
+  b  # comment
+  pass""", 'body[0].body[0]', 1, 2, None, {}, r"""if 1:
+  nonlocal a  # comment
+  pass""", r"""(
+b,)""", r"""
+Module - ROOT 0,0..2,6
+  .body[1]
+  0] If - 0,0..2,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Nonlocal - 1,2..1,12
+      .names[1]
+      0] 'a'
+    1] Pass - 2,2..2,6
+""", r"""
+Tuple - ROOT 0,0..1,3
+  .elts[1]
+  0] Name 'b' Load - 1,0..1,1
+  .ctx Load
+"""),
+
 ]  # END OF GET_SLICE_EXPRISH_DATA
 
 GET_SLICE_STMTISH_DATA = [
