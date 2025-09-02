@@ -7,6 +7,9 @@
 
 ### Added
 
+- prescribed slicing for `Global.names`
+- prescribed slicing for `Nonlocal.names`
+
 ### Updated
 
 

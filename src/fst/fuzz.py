@@ -1725,7 +1725,7 @@ class SliceExprish(Fuzzy):
         if not slice_field:  # Dict or MatchMapping
             slice_elts.extend(getattr(slice.a, 'values' if isinstance(src.a, Dict) else 'patterns'))
 
-        if cut:
+        if cut and not isinstance(src.a, (Global, Nonlocal)):
             assert all(a is b for a, b in zip(src_elts, slice_elts))  # identity check
 
         if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
@@ -1742,7 +1742,8 @@ class SliceExprish(Fuzzy):
             if not field:  # Dict or MatchMapping
                 dst_elts.extend(getattr(dst.a, 'values' if isinstance(dst.a, Dict) else 'patterns')[dst_start : dst_start + (src_stop - src_start)])
 
-            assert all(a is b for a, b in zip(dst_elts, slice_elts))  # identity check
+            if not isinstance(src.a, (Global, Nonlocal)):
+                assert all(a is b for a, b in zip(dst_elts, slice_elts))  # identity check
 
         if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
             print('   POST SRC:', src, src.src)
@@ -1763,6 +1764,7 @@ class SliceExprish(Fuzzy):
         if isinstance(ast, (Delete, Assign,
                             Dict, MatchSequence, MatchMapping, MatchOr,
                             FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias,
+                            Global, Nonlocal,
                             )):
             return ast.__class__
 
@@ -1776,6 +1778,8 @@ class SliceExprish(Fuzzy):
             Dict:          self.Bucket(None, None, 0, 0, False, FST('{}')),
             Delete:        self.Bucket('targets', 'elts', 1, 0, True, FST('del a')),
             Assign:        self.Bucket('targets', None, 1, 0, False, FST('a = b')),
+            Global:        (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
+            Nonlocal:      glbucket,
             MatchSequence: self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
             MatchMapping:  self.Bucket(None, None, 0, 0, False, FST('{}', pattern)),
             MatchOr:       self.Bucket('patterns', None, 2, 2, True, FST('(a | b)', pattern)),

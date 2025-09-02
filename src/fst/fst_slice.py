@@ -1093,7 +1093,6 @@ def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, st
     return fst_
 
 
-# TODO: handle trailing line continuation backslashes
 def _get_slice_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                                      cut: bool, options: Mapping[str, Any]) -> fst.FST:
     len_body    = len((ast := self.a).names)
@@ -1661,14 +1660,14 @@ def _set_loc_whole(self: fst.FST) -> None:
 
 
 def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any], *,
-                       code_as: Callable = code_as_expr, non_seq_as_one: bool = False) -> fst.FST | None:
+                       code_as: Callable = code_as_expr, non_seq_str_as_one: bool = False) -> fst.FST | None:
     if code is None:
         return None
 
     fst_ = code_as(code, self.root.parse_params, sanitize=False)
     ast_ = fst_.a
 
-    if non_seq_as_one and not one and not isinstance(ast_, (Tuple, List, Set)):  # this exists as a convenience for allowing doing `Delete.targets = target` (without trailing comma if string source)
+    if non_seq_str_as_one and not one and not isinstance(ast_, (Tuple, List, Set)) and isinstance(code, (str, list)):  # this exists as a convenience for allowing doing `Delete.targets = target` (without trailing comma if string source)
         one = True
 
     if one:
@@ -2164,10 +2163,10 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
                               field: str, one: bool, options: Mapping[str, Any]) -> None:
     """Even though when getting a slice it will be returned as a `Tuple`, any sequence of valid target types is accepted
     for the put operation. If putting a non-sequence element, it will be automatically put as `one=True` to match the
-    non-comma terminated syntax of `Delete` targets. This allows correct-appearing syntax like
-    `delfst.targets = 'target'` to work."""
+    non-comma terminated syntax of `Delete` targets (a non-sequence `FST` or `AST` will not be accepted like this). This
+    allows correct-appearing syntax like `delfst.targets = 'target'` to work."""
 
-    fst_        = _code_to_slice_seq(self, code, one, options, non_seq_as_one=True)
+    fst_        = _code_to_slice_seq(self, code, one, options, non_seq_str_as_one=True)
     len_body    = len(body := self.a.targets)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice   = stop - start
@@ -2503,6 +2502,84 @@ def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Litera
         body[i].f.pfield = astfield('type_params', i)
 
 
+def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
+                                     stop: int | None, field: str, one: bool, options: Mapping[str, Any]) -> None:
+    """In order to do this put since `Global` and `Nonlocal` do not have child `AST` nodes but just identifiers, we
+    create a temporary container which does have `Name` elements for each name."""
+
+    fst_        = _code_to_slice_seq(self, code, one, options, non_seq_str_as_one=True)
+    len_body    = len(body := (ast := self.a).names)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+
+    if not fst_:
+        if start == stop:
+            return
+
+        if not start and stop == len_body:
+            raise ValueError(f'cannot delete all {ast.__class__.__name__}.names')
+
+    elif not all(isinstance(bad := e, Name) for e in fst_.a.elts):
+        raise NodeError(f'cannot put {bad.__class__.__name__} to {ast.__class__.__name__}.names')
+
+    ln, end_col, bound_end_ln, bound_end_col = self.loc
+
+    lines     = self.root._lines
+    tmp_elts  = []
+    end_col  += 5 if isinstance(ast, Global) else 7  # will have another +1 added in search
+
+    for _ in range(len_body):
+        ln, col, src = next_find_re(lines, ln, end_col + 1, bound_end_ln, bound_end_col, re_identifier)  # must be there, + 1 probably skips comma
+        lineno       = ln + 1
+        end_col      = col + len(src)
+
+        tmp_elts.append(Name(id=src, ctx=Load(), lineno=lineno, col_offset=(l := lines[ln]).c2b(col), end_lineno=lineno,
+                             end_col_offset=l.c2b(end_col)))
+
+    tmp_ast = Tuple(elts=tmp_elts, ctx=Load(), lineno=(e0 := tmp_elts[0]).lineno, col_offset=e0.col_offset,
+                    end_lineno=(en := tmp_elts[-1]).end_lineno, end_col_offset=en.end_col_offset)
+
+    self._set_ast(tmp_ast)  # temporarily swap out Global/Nonlocal AST for temporary Tuple AST so that offsetting propagates to the parents
+
+    if start:
+        _, _, bound_ln, bound_col = tmp_elts[start - 1].f.loc
+    else:
+        bound_ln, bound_col, _, _ = tmp_elts[0].f.loc
+
+    if not fst_:
+        _put_slice_seq(self, start, stop, None, None, None, 0,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'), options.get('ins_ln'), 'elts', None, ',', False)
+
+        del body[start : stop]
+
+    else:
+        len_fst_body = len(fst_body := fst_.a.elts)
+
+        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'), options.get('ins_ln'), 'elts', None, ',', False)
+
+        body[start : stop] = [e.id for e in fst_body]
+
+    ast.end_lineno     = tmp_ast.end_lineno  # copy new end from temporary FST to self (since it was swapped out)
+    ast.end_col_offset = tmp_ast.end_col_offset
+
+    self._set_ast(ast, True)
+    self._touch()  # because it was never offset so was never ._touch()ed
+
+    if not fst_ and stop == len_body:  # clean up any line continuation backslashes and make sure end location is set to end of last element
+        _, _, end_ln, end_col = self.loc
+
+        if end_col != bound_col or end_ln != bound_ln:
+            self._put_src(None, bound_ln, bound_col, end_ln, end_col, True)
+
+
+    # TODO: any other special fixing if actual non-None fst_ is put?
+
+
+    self._maybe_add_line_continuations()
+
+
 # ......................................................................................................................
 
 def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
@@ -2615,8 +2692,8 @@ _PUT_SLICE_HANDLERS = {
     (ClassDef, 'type_params'):            _put_slice_type_params,  # type_param*
     (TypeAlias, 'type_params'):           _put_slice_type_params,  # type_param*
 
-    (Global, 'names'):                    _put_slice_NOT_IMPLEMENTED_YET,  # identifier*
-    (Nonlocal, 'names'):                  _put_slice_NOT_IMPLEMENTED_YET,  # identifier*
+    (Global, 'names'):                    _put_slice_Global_Nonlocal_names,  # identifier*
+    (Nonlocal, 'names'):                  _put_slice_Global_Nonlocal_names,  # identifier*
 
     (JoinedStr, 'values'):                _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (TemplateStr, 'values'):              _put_slice_NOT_IMPLEMENTED_YET,  # expr*

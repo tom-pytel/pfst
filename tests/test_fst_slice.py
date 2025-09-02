@@ -2246,6 +2246,16 @@ def func():
         self.assertEqual('a = x = d = z', (f := FST('a = b = c = d = z')).put_slice('x', 1, 3, 'targets', one=True).root.src)
         f.verify()
 
+    def test_put_slice_Delete(self):
+        self.assertEqual('del z', (f := FST('del a, b')).put_slice('z').root.src)
+        f.verify()
+
+        self.assertEqual('del z', (f := FST('del a, b')).put_slice(['z']).root.src)
+        f.verify()
+
+        self.assertRaises(NodeError, FST('del a, b').put_slice, FST('z'))
+        self.assertRaises(NodeError, FST('del a, b').put_slice, FST('z').a)
+
     def test_slice_set_empty(self):
         self.assertEqual('[]', FST('[1, 2]').put_slice('set()', raw=False, fix_set_put=True).src)
         self.assertEqual('[]', FST('[1, 2]').put_slice('{*()}', raw=False, fix_set_put=True).src)
