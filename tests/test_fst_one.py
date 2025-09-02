@@ -2958,18 +2958,21 @@ c, # c
         # proper Store / Del targets
 
         f = FST('[a,] = b')
-        self.assertRaises(ValueError, f.targets[0].put, '2', 0, 'elts')
+        self.assertRaises(NodeError, f.targets[0].put, '2', 0, 'elts')
 
         f = FST('del [a]')
-        self.assertRaises(ValueError, f.targets[0].put, '2', 0, 'elts')
+        self.assertRaises(NodeError, f.targets[0].put, '2', 0, 'elts')
+        self.assertRaises(NodeError, f.targets[0].put, '*z', 0, 'elts')
 
         f = FST('(a,) = b')
-        self.assertRaises(ValueError, f.targets[0].put, '2', 0, 'elts')
+        self.assertRaises(NodeError, f.targets[0].put, '2', 0, 'elts')
         f = FST('a, = b')
-        self.assertRaises(ValueError, f.targets[0].put, '2', 0, 'elts')
+        self.assertRaises(NodeError, f.targets[0].put, '2', 0, 'elts')
+        self.assertEqual('*z, = b', f.targets[0].put('*z', 0, 'elts').root.src)
 
         f = FST('del (a,)')
-        self.assertRaises(ValueError, f.targets[0].put, '2', 0, 'elts')
+        self.assertRaises(NodeError, f.targets[0].put, '2', 0, 'elts')
+        self.assertRaises(NodeError, f.targets[0].put, '*z', 0, 'elts')
 
         # ImportFrom dot schenanigans
 

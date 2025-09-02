@@ -1530,8 +1530,8 @@ def _put_one_List_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field:
     code       = static.code_as(code, self.root.parse_params)
 
     if not isinstance(ctx := self.a.ctx, Load):  # only allow possible expression targets into an expression target
-        if not is_valid_target(code.a):
-            raise ValueError(f"invalid expression for List {ctx.__class__.__name__} target")
+        if not (is_valid_del_target if isinstance(ctx, Del) else is_valid_target)(code.a):
+            raise NodeError(f"invalid expression for List {ctx.__class__.__name__} target")
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
@@ -1549,11 +1549,13 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
     is_par     = None
 
     if (pfield and not is_slice) or (is_par := self._is_delimited_seq()):  # only allow slice in unparenthesized tuple, in slice or at root
-        static = _onestatic_expr_required_starred  # default static allows slices, this disallows it
+        static = _onestatic_expr_required_starred  # default static allows slices, this disallows them
 
     if not isinstance(ctx := ast.ctx, Load):  # only allow possible expression targets into an expression target
-        if not is_valid_target(code.a):
-            raise ValueError(f"invalid expression for Tuple {ctx.__class__.__name__} target")
+        if not (is_valid_del_target if isinstance(ctx, Del) else is_valid_target)(code.a):
+            raise NodeError(f"invalid expression for Tuple {ctx.__class__.__name__} target")
+
+    # TODO: validate SPECIAL SLICE puts?
 
     if PYLT11:
         if (put_star_to_unpar_slice := is_slice and isinstance(code.a, Starred) and

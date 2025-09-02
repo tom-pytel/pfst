@@ -2,6 +2,8 @@
 
 ### Fixed
 
+- disallow put `Starred` to `Delete` `Tuple` or `List` elements
+
 ### Added
 
 ### Updated
