@@ -56,7 +56,6 @@ from .asttypes import (
     Subscript,
     Try,
     Tuple,
-    TypeIgnore,
     While,
     With,
     alias,
@@ -77,6 +76,7 @@ from .asttypes import (
     withitem,
     TryStar,
     TypeAlias,
+    type_ignore,
     type_param,
     TemplateStr,
     Interpolation,
@@ -4292,7 +4292,7 @@ class FST:
 
         ast = self.a
 
-        if isinstance(ast, (expr_context, TypeIgnore, FormattedValue, Interpolation)):
+        if isinstance(ast, (expr_context, type_ignore, FormattedValue, Interpolation)):
             return False
 
         if parent := self.parent:
@@ -4411,7 +4411,7 @@ class FST:
         if isinstance(ast, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Name,
                             MatchValue, MatchSingleton, MatchMapping,
                             expr_context, boolop, operator, unaryop, ExceptHandler,
-                            stmt, match_case, mod, TypeIgnore)):
+                            stmt, match_case, mod, type_ignore)):
             return True
 
         if not always_enclosed:
@@ -4545,7 +4545,7 @@ class FST:
                                 MatchValue, MatchSingleton, MatchMapping,
                                 boolop, operator, unaryop,  # cmpop is not here because of #*^% like 'is \n not'
                                 Slice, keyword, type_param,  # these can be unenclosed by themselves but are never used without being enclosed by a parent
-                                expr_context, TypeIgnore)):
+                                expr_context, type_ignore)):
                 return True
 
             if isinstance(ast, (Module, Interactive, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
@@ -4731,7 +4731,7 @@ class FST:
             if isinstance(parenta, (With, AsyncWith)):
                 return parent._is_parenthesized_With_items()  # we know we are in `names`
 
-            if isinstance(parenta, (stmt, ExceptHandler, match_case, mod, TypeIgnore)):
+            if isinstance(parenta, (stmt, ExceptHandler, match_case, mod, type_ignore)):
                 return False
 
             if isinstance(parenta, Call):

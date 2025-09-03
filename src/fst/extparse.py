@@ -114,18 +114,18 @@ _re_trailing_comma     = re.compile(r'(?: [)\s]* (?: (?: \\ | \#[^\n]* ) \n )? )
 
 _re_first_src          = re.compile(r'^([^\S\n]*)([^\s\\#]+)', re.MULTILINE)  # search for first non-comment non-linecont source code
 _re_parse_all_category = re.compile(r'''
-    (?P<stmt>                          (?: assert | break | class | continue | def | del | from | global | import | nonlocal | pass | raise | return | try | while | with ) \b ) |
-    (?P<await_lambda_yield>            (?: await | lambda | yield ) \b ) |
-    (?P<True_False_None>               (?: True | False | None ) \b ) |
-    (?P<async_or_for>                  (?: async | for ) \b ) |
-    (?P<if>                            (?: if ) \b ) |
-    (?P<except>                        (?: except ) \b ) |
-    (?P<case>                          (?: case ) \b ) |
-    (?P<not>                           (?: not ) \b ) |
-    (?P<boolop>                        (?: and | or ) \b ) |
-    (?P<cmpop_w>                       (?: is | in ) \b ) |
-    (?P<syntax_error>                  (?: elif | else | finally | as ) \b ) |
-    (?P<match_type_identifier>         (?: match | type | [^\d\W][''' + pat_alnum + r''']* ) \b ) |
+    (?P<stmt>                   (?: assert | break | class | continue | def | del | from | global | import | nonlocal | pass | raise | return | try | while | with ) \b ) |
+    (?P<await_lambda_yield>     (?: await | lambda | yield ) \b ) |
+    (?P<True_False_None>        (?: True | False | None ) \b ) |
+    (?P<async_or_for>           (?: async | for ) \b ) |
+    (?P<if>                     (?: if ) \b ) |
+    (?P<except>                 (?: except ) \b ) |
+    (?P<case>                   (?: case ) \b ) |
+    (?P<not>                    (?: not ) \b ) |
+    (?P<boolop>                 (?: and | or ) \b ) |
+    (?P<cmpop_w>                (?: is | in ) \b ) |
+    (?P<syntax_error>           (?: elif | else | finally | as ) \b ) |
+    (?P<match_type_identifier>  (?: match | type | [^\d\W][''' + pat_alnum + r''']* ) \b ) |
     (?P<stmt_or_expr_or_pat_or_witem>  (?: [(\[{"'.\d] ) ) |
     (?P<augop>                         (?: \+= | -= | @= | \*= | /= | %= | <<= | >>= | \|= | \^= | &= | //= | \*\*= ) ) |
     (?P<minus>                         (?: - ) ) |

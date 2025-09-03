@@ -627,12 +627,13 @@ def is_parsable(ast: AST) -> bool:
         return False
 
     if isinstance(ast, (
-        expr_context, TypeIgnore, FormattedValue, Interpolation,  # Starred is inconsistent as source but should always unparse to something parsable
+        expr_context, FormattedValue,  # Starred is inconsistent as source but should always unparse to something parsable
         ExceptHandler, Slice,
         unaryop, boolop, operator, cmpop,
         alias, arguments, comprehension, withitem, match_case, pattern, type_ignore,
         arg, keyword,
         TypeVar, ParamSpec, TypeVarTuple,  # py 3.12+
+        Interpolation,  # py 3.14+
     )):
         return False
 

@@ -205,8 +205,6 @@ This package is not finished but functional enough that it can be useful.
   * `AsyncWith.items`
   * `MatchClass.patterns`
   * `MatchOr.patterns`
-  * `Global.names`
-  * `Nonlocal.names`
   * `JoinedStr.values`
   * `TemplateStr.values`
 
