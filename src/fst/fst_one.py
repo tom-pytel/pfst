@@ -1541,7 +1541,14 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
     """Disallow non-targetable expressions in targets. If not an unparenthesized top level or slice tuple then disallow
     Slices."""
 
-    ast        = self.a
+    ast = self.a
+
+    if (elts := ast.elts) and not isinstance(elts[0], expr):
+        raise NotImplementedError('putting individual element to SPECIAL SLICE')
+
+        # TODO: this
+
+
     child, idx = _validate_put(self, code, idx, field, child)
     code       = static.code_as(code, self.root.parse_params)
     pfield     = self.pfield
@@ -1554,8 +1561,6 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
     if not isinstance(ctx := ast.ctx, Load):  # only allow possible expression targets into an expression target
         if not (is_valid_del_target if isinstance(ctx, Del) else is_valid_target)(code.a):
             raise NodeError(f"invalid expression for Tuple {ctx.__class__.__name__} target")
-
-    # TODO: validate SPECIAL SLICE puts?
 
     if PYLT11:
         if (put_star_to_unpar_slice := is_slice and isinstance(code.a, Starred) and
@@ -2037,9 +2042,6 @@ _restrict_fmtval_slice   = [FormattedValue, Interpolation, Slice]
 _restrict_fmtval_starred = [FormattedValue, Interpolation, Starred]
 _restrict_fmtval         = [FormattedValue, Interpolation]
 _oneinfo_default         = oneinfo()
-
-def _one_info_constant(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:  # only Constant and MatchSingleton
-    return oneinfo('', None, self.loc)
 
 def _one_info_exprish_required(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     return _oneinfo_default

@@ -18,11 +18,9 @@ from .asttypes import (
     Expr,
     Expression,
     Interactive,
-    IsNot,
     MatchOr,
     Module,
     Name,
-    NotIn,
     Pass,
     Tuple,
     alias,
@@ -44,7 +42,7 @@ from .asttypes import (
 )
 
 from .astutil import (
-    constant, bistr,
+    constant,
     OPSTR2CLS_UNARY, OPSTR2CLS_BIN, OPSTR2CLS_CMP, OPSTR2CLS_BOOL, OPSTR2CLS_AUG, OPCLS2STR_AUG, OPCLS2STR,
     is_valid_identifier, is_valid_identifier_dotted, is_valid_identifier_star, is_valid_identifier_alias,
     reduce_ast,
@@ -137,7 +135,8 @@ Code = Union['fst.FST', AST, list[str], str]  ; """Code types accepted for put t
 
 def _code_as_op(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any],
                 parse: Callable[[fst.FST, Code], fst.FST],
-                opstr2cls: dict[str, type[AST]], opcls2str: dict[type[AST], str] = OPCLS2STR) -> fst.FST:
+                opstr2cls: dict[str, type[AST]], opcls2str: dict[type[AST], str] = OPCLS2STR, *,
+                sanitize: bool = True) -> fst.FST:
     """Convert `code` to an operation `FST` if possible."""
 
     if isinstance(code, fst.FST):
@@ -149,12 +148,16 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any]
         if not isinstance(codea, ast_type):
             raise NodeError(f'expecting {ast_type.__name__}, got {codea.__class__.__name__}', rawable=True)
 
-        code = code._sanitize()
+        if sanitize:
+            code._sanitize()
 
-        if (src := code.src) != (expected := opcls2str[codea.__class__]):
-            if isinstance(codea, (NotIn, IsNot)):  # super-stupid case, someone did 'is # comment \n not' or something like this?
-                if parse_cmpop(src).__class__ is codea:  # parses to same thing so just return the canonical str for the op, otherwise it gets complicated
-                    return fst.FST(codea, [bistr(expected)], from_=code, lcopy=False)
+        if (src := code.src) != (expected := opcls2str[codea.__class__]):  # maybe someone did 'is # comment \n not' or something like this?
+            try:
+                if parse(src).__class__ is codea.__class__:  # parses to same thing so just return the canonical str for the op, otherwise it gets complicated
+                    return code  # return fst.FST(codea, [bistr(expected)], from_=code, lcopy=False)
+
+            except SyntaxError:  # mostly for mismatched augop / binop operator types
+                pass
 
             raise NodeError(f'expecting {expected!r}, got {shortstr(src)!r}', rawable=True)
 
@@ -475,34 +478,34 @@ def code_as_Tuple(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize:
     return fst_
 
 
-def code_as_boolop(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
+def code_as_boolop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a `boolop` `FST` if possible."""
 
-    return _code_as_op(code, boolop, parse_params, parse_boolop, OPSTR2CLS_BOOL)
+    return _code_as_op(code, boolop, parse_params, parse_boolop, OPSTR2CLS_BOOL, sanitize=sanitize)
 
 
-def code_as_binop(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
+def code_as_binop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a `operator` `FST` if possible."""
 
-    return _code_as_op(code, operator, parse_params, parse_binop, OPSTR2CLS_BIN)
+    return _code_as_op(code, operator, parse_params, parse_binop, OPSTR2CLS_BIN, sanitize=sanitize)
 
 
-def code_as_augop(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
+def code_as_augop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to an augmented `operator` `FST` if possible, e.g. "+="."""
 
-    return _code_as_op(code, operator, parse_params, parse_augop, OPSTR2CLS_AUG, OPCLS2STR_AUG)
+    return _code_as_op(code, operator, parse_params, parse_augop, OPSTR2CLS_AUG, OPCLS2STR_AUG, sanitize=sanitize)
 
 
-def code_as_unaryop(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
+def code_as_unaryop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a `unaryop` `FST` if possible."""
 
-    return _code_as_op(code, unaryop, parse_params, parse_unaryop, OPSTR2CLS_UNARY)
+    return _code_as_op(code, unaryop, parse_params, parse_unaryop, OPSTR2CLS_UNARY, sanitize=sanitize)
 
 
-def code_as_cmpop(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
+def code_as_cmpop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a `cmpop` `FST` if possible."""
 
-    return _code_as_op(code, cmpop, parse_params, parse_cmpop, OPSTR2CLS_CMP)
+    return _code_as_op(code, cmpop, parse_params, parse_cmpop, OPSTR2CLS_CMP, sanitize=sanitize)
 
 
 def code_as_comprehension(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
