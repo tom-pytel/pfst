@@ -1132,10 +1132,10 @@ def _make_exprish_fst(self: fst.FST, code: _PutOneCode, idx: int | None, field: 
         ln, col, end_ln, end_col = target
 
     else:
-        loc = target.pars(False) if del_tgt_pars else target.loc
+        loc = target.pars(shared=False) if del_tgt_pars else target.loc
 
         if not del_tgt_pars and target.is_solo_call_arg_genexp():  # need to check this otherwise might eat Call args pars
-            if (loc2 := target.pars(False)) > loc:
+            if (loc2 := target.pars(shared=False)) > loc:
                 loc = loc2
 
         ln, col, end_ln, end_col = loc
@@ -1971,10 +1971,10 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
                     loc = self._loc_lambda_args_entire()
 
             else:
-                loc = childf.pars(False) if pars else childf.bloc
+                loc = childf.pars(shared=False) if pars else childf.bloc
 
                 if (loc and not pars and childf.is_solo_call_arg_genexp() and  # if loc includes `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
-                    (non_shared_loc := childf.pars(False)) > loc
+                    (non_shared_loc := childf.pars(shared=False)) > loc
                 ):
                     loc = non_shared_loc
 
@@ -2007,13 +2007,13 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
                 to_loc = to_info.loc_insdel
 
         if to_loc is None:  # empty arguments get special handling
-            if not (to_loc := to.pars(False) if pars else to.bloc):
+            if not (to_loc := to.pars(shared=False) if pars else to.bloc):
                 if isinstance(to.a, arguments):
                     to_loc = to._loc_arguments_empty()
                 else:
                     raise ValueError("'to' node must have a location")
 
-            if not pars and to.is_solo_call_arg_genexp() and (non_shared_loc := to.pars(False)) > to_loc:
+            if not pars and to.is_solo_call_arg_genexp() and (non_shared_loc := to.pars(shared=False)) > to_loc:
                 to_loc = non_shared_loc
 
         if to_loc[:2] < loc[:2]:

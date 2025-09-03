@@ -3578,23 +3578,23 @@ match a:
         f = FST('a:b:c')
         f.par(True)
         self.assertEqual((0, 1, 0, 6), f.pars())
-        self.assertEqual((0, 0, 0, 7), f.pars(None))
+        self.assertEqual((0, 0, 0, 7), f.pars(shared=None))
 
         f = FST('f(a)')
         self.assertEqual((0, 2, 0, 3), f.args[0].pars())
-        self.assertEqual((0, 1, 0, 4), f.args[0].pars(None))
+        self.assertEqual((0, 1, 0, 4), f.args[0].pars(shared=None))
 
         f = FST('class c(a): pass')
         self.assertEqual((0, 8, 0, 9), f.bases[0].pars())
-        self.assertEqual((0, 7, 0, 10), f.bases[0].pars(None))
+        self.assertEqual((0, 7, 0, 10), f.bases[0].pars(shared=None))
 
         f = FST('case f(a): pass')
         self.assertEqual((0, 7, 0, 8), f.pattern.patterns[0].pars())
-        self.assertEqual((0, 6, 0, 9), f.pattern.patterns[0].pars(None))
+        self.assertEqual((0, 6, 0, 9), f.pattern.patterns[0].pars(shared=None))
 
         f = FST('from a import (b)')
         self.assertEqual((0, 15, 0, 16), f.names[0].pars())
-        self.assertEqual((0, 14, 0, 17), f.names[0].pars(None))
+        self.assertEqual((0, 14, 0, 17), f.names[0].pars(shared=None))
 
         # walruses
 

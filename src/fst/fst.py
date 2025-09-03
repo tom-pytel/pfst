@@ -2019,7 +2019,7 @@ class FST:
 
         return parent._reparse_raw(code, ln, col, end_ln, end_col, exact)
 
-    def pars(self, shared: bool | None = True) -> fstloc | None:
+    def pars(self, *, shared: bool | None = True) -> fstloc | None:
         """Return the location of enclosing GROUPING parentheses if present. Will balance parentheses if `self` is an
         element of a tuple and not return the parentheses of the tuple. Likwise will not normally return the parentheses
         of an enclosing `arguments` parent or class bases list (unless `shared=None`, but that is mostly for internal
@@ -2279,7 +2279,7 @@ class FST:
 
         modifying = None
 
-        if self.pars(None if shared is None else True).n:
+        if self.pars(shared=None if shared is None else True).n:
             modifying = self._modifying().enter()
 
             self._unparenthesize_grouping(shared)

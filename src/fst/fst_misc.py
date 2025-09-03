@@ -61,7 +61,7 @@ from .asttypes import (
     Interpolation,
 )
 
-from .astutil import bistr, re_alnumdot_alnum, re_identifier, OPCLS2STR, last_block_header_child
+from .astutil import bistr, pat_alnum, re_alnumdot_alnum, re_identifier, OPCLS2STR, last_block_header_child
 
 from .misc import (
     Self, NodeError, astfield, fstloc, fstlocns, srcwpos, nspace, pyver,
@@ -79,10 +79,10 @@ _re_one_space_or_end   = re.compile(r'\s|$')
 
 _re_fval_expr_equals   = re.compile(r'(?:\s*(?:#.*|\\)\n)*\s*=\s*(?:(?:#.*|\\)\n\s*)*')  # format string expression tail '=' indicating self-documenting debug str
 
-_re_par_open_alnums    = re.compile(r'\w[(]\w')
-_re_par_close_alnums   = re.compile(r'\w[)]\w')
-_re_delim_open_alnums  = re.compile(r'\w[([]\w')
-_re_delim_close_alnums = re.compile(r'\w[)\]]\w')
+_re_par_open_alnums    = re.compile(rf'[{pat_alnum}.][(][{pat_alnum}]')
+_re_par_close_alnums   = re.compile(rf'[{pat_alnum}.][)][{pat_alnum}]')
+_re_delim_open_alnums  = re.compile(rf'[{pat_alnum}.][([][{pat_alnum}]')
+_re_delim_close_alnums = re.compile(rf'[{pat_alnum}.][)\]][{pat_alnum}]')
 
 _re_keyword_import     = re.compile(r'\bimport\b')
 
@@ -1853,7 +1853,7 @@ def _unparenthesize_grouping(self: fst.FST, shared: bool | None = True, *, star_
     if isinstance(self.a, Starred) and star_child:
         self = self.value
 
-    pars_loc = self.pars(None if shared is None else True)
+    pars_loc = self.pars(shared=None if shared is None else True)
 
     if shared:
         shared = self.is_solo_call_arg_genexp()

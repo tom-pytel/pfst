@@ -2779,7 +2779,7 @@ def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: 
     body        = getattr(ast, field)  # field must be valid by here
     start, stop = fixup_slice_index_for_raw(len(body), start, stop)
 
-    return fstloc(*body[start].f.pars(False)[:2], *body[stop - 1].f.pars(False)[2:])
+    return fstloc(*body[start].f.pars(shared=False)[:2], *body[stop - 1].f.pars(shared=False)[2:])
 
 
 def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
