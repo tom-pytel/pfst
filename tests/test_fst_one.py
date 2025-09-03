@@ -8,11 +8,13 @@ from random import randint, seed, shuffle
 
 from fst import *
 
+from fst.asttypes import *
 from fst.astutil import compare_asts
 from fst.misc import PYVER, PYLT11, PYLT12, PYGE12, PYGE14
 
 from data_put_one import PUT_ONE_DATA
 from data_other import PUT_SLICE_DATA, PUT_SRC_DATA, REPLACE_EXISTING_ONE_DATA
+
 
 def read(fnm):
     with open(fnm) as f:
@@ -3868,6 +3870,26 @@ c, # c
 
     def test_put_one_negative_idx(self):
         FST('{**b}').put('a', -1, 'keys')
+
+    def test_put_one_to_tuple_special_slice(self):
+        f = FST('a as b, x.y as z', 'aliases')
+        self.assertRaises(SyntaxError, f.put, 'c()', 0)
+        self.assertEqual('u as v, x.y as z', f.put('u as v', 0).root.src)
+        self.assertIsInstance(f.a.elts[0], alias)
+        self.assertEqual('u as v, u.v.w', f.put('u.v.w', 1).root.src)
+        self.assertIsInstance(f.a.elts[1], alias)
+        f.verify()
+
+        if PYGE12:
+            f = FST('T, *U, **V', 'type_params')
+            self.assertRaises(SyntaxError, f.put, 'c()', 0)
+            self.assertEqual('A, *U, **V', f.put('A', 0).root.src)
+            self.assertIsInstance(f.a.elts[0], TypeVar)
+            self.assertEqual('A, *B, **V', f.put('*B', 1).root.src)
+            self.assertIsInstance(f.a.elts[1], TypeVarTuple)
+            self.assertEqual('A, *B, **C', f.put('**C', 2).root.src)
+            self.assertIsInstance(f.a.elts[2], ParamSpec)
+            f.verify()
 
     def test_put_src(self):
         for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_SRC_DATA):

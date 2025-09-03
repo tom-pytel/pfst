@@ -100,6 +100,7 @@ from .asttypes import (
     match_case,
     pattern,
     withitem,
+    type_param,
     TryStar,
     TypeAlias,
     TypeVar,
@@ -138,6 +139,7 @@ from .code import (
     code_as_arguments_lambda,
     code_as_arg,
     code_as_keyword,
+    code_as_alias,
     code_as_Import_name,
     code_as_ImportFrom_name,
     code_as_withitem,
@@ -1543,11 +1545,13 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
 
     ast = self.a
 
-    if (elts := ast.elts) and not isinstance(elts[0], expr):
-        raise NotImplementedError('putting individual element to SPECIAL SLICE')
+    if (elts := ast.elts) and not isinstance(e0 := elts[0], expr):  # SPECIAL SLICE
+        if isinstance(e0, type_param):
+            return _put_one_exprish_required(self, code, idx, field, child, _onestatic_type_param_required, options)
+        if isinstance(e0, alias):
+            return _put_one_exprish_required(self, code, idx, field, child, _onestatic_alias_required, options)
 
-        # TODO: this
-
+        raise NodeError(f'unexpected Tuple contents, {e0.__class__.__name__}', rawable=True)
 
     child, idx = _validate_put(self, code, idx, field, child)
     code       = static.code_as(code, self.root.parse_params)
@@ -2048,14 +2052,15 @@ def _one_info_exprish_required(self: fst.FST, static: onestatic, idx: int | None
 
 _onestatic_expr_required             = onestatic(_one_info_exprish_required, _restrict_default)
 _onestatic_expr_required_starred     = onestatic(_one_info_exprish_required, _restrict_fmtval_slice)
-_onestatic_comprehension_required    = onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_comprehension)
-_onestatic_arguments_required        = onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_arguments)
-_onestatic_arguments_lambda_required = onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_arguments_lambda)
-_onestatic_arg_required              = onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_arg)
-_onestatic_keyword_required          = onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_keyword)
-_onestatic_withitem_required         = onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_withitem)
-_onestatic_pattern_required          = onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_pattern)
-_onestatic_type_param_required       = onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_type_param)
+_onestatic_comprehension_required    = onestatic(_one_info_exprish_required, comprehension, code_as=code_as_comprehension)
+_onestatic_arguments_required        = onestatic(_one_info_exprish_required, arguments, code_as=code_as_arguments)
+_onestatic_arguments_lambda_required = onestatic(_one_info_exprish_required, arguments, code_as=code_as_arguments_lambda)
+_onestatic_arg_required              = onestatic(_one_info_exprish_required, arg, code_as=code_as_arg)
+_onestatic_keyword_required          = onestatic(_one_info_exprish_required, keyword, code_as=code_as_keyword)
+_onestatic_alias_required            = onestatic(_one_info_exprish_required, alias, code_as=code_as_alias)
+_onestatic_withitem_required         = onestatic(_one_info_exprish_required, withitem, code_as=code_as_withitem)
+_onestatic_pattern_required          = onestatic(_one_info_exprish_required, pattern, code_as=code_as_pattern)
+_onestatic_type_param_required       = onestatic(_one_info_exprish_required, type_param, code_as=code_as_type_param)
 _onestatic_target_Name               = onestatic(_one_info_exprish_required, Name, ctx=Store)
 _onestatic_target_single             = onestatic(_one_info_exprish_required, (Name, Attribute, Subscript), ctx=Store)
 _onestatic_target                    = onestatic(_one_info_exprish_required, is_valid_target, ctx=Store)  # (Name, Attribute, Subscript, Tuple, List)
