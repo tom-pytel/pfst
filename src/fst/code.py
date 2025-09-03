@@ -79,8 +79,11 @@ from .extparse import (
     parse_arg,
     parse_keyword,
     parse_alias,
+    parse_aliases,
     parse_Import_name,
+    parse_Import_names,
     parse_ImportFrom_name,
+    parse_ImportFrom_names,
     parse_withitem,
     parse_pattern,
     parse_type_param,
@@ -111,8 +114,11 @@ __all__ = [
     'code_as_arg',
     'code_as_keyword',
     'code_as_alias',
+    'code_as_aliases',
     'code_as_Import_name',
+    'code_as_Import_names',
     'code_as_ImportFrom_name',
+    'code_as_ImportFrom_names',
     'code_as_withitem',
     'code_as_pattern',
     'code_as_type_param',
@@ -158,7 +164,7 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any]
         if not isinstance(code, ast_type):
             raise NodeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}', rawable=True)
 
-        return fst.FST(code, [opcls2str[code.__class__]], parse_params=parse_params)
+        return fst.FST(code.__class__(), [opcls2str[code.__class__]], parse_params=parse_params)  # don't use same AST as was passed in
 
     if isinstance(code, list):
         code = '\n'.join(code)
@@ -508,15 +514,11 @@ def code_as_comprehension(code: Code, parse_params: Mapping[str, Any] = {}, *, s
 def code_as_arguments(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a arguments `FST` if possible."""
 
-    # TODO: upcast FST and AST arg to arguments?
-
     return _code_as(code, arguments, parse_params, parse_arguments, sanitize=sanitize)
 
 
 def code_as_arguments_lambda(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a lambda arguments `FST` if possible (no annotations allowed)."""
-
-    # TODO: upcast FST and AST arg to arguments?
 
     return _code_as(code, arguments, parse_params, parse_arguments_lambda, sanitize=sanitize)
 
@@ -534,29 +536,71 @@ def code_as_keyword(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitiz
 
 
 def code_as_alias(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
-    """Convert `code` to a alias `FST` if possible, star or dotted."""
+    """Convert `code` to an `alias` `FST` if possible, star or dotted."""
 
     return _code_as(code, alias, parse_params, parse_alias, sanitize=sanitize)
 
 
+def code_as_aliases(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+    """Convert `code` to a `Tuple` of `alias` `FST` SPECIAL SLICE if possible, star or dotted."""
+
+    fst_ = _code_as(code, Tuple, parse_params, parse_aliases, sanitize=sanitize)
+
+    if fst_ is code:  # validation if was passed in as FST
+        if (elts := fst_.a.elts) and any(not isinstance(bad := e, alias) for e in elts):
+            raise ParseError(f'expecting aliases, got {bad.__class__.__name__}')
+
+    return fst_
+
+
 def code_as_Import_name(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
-    """Convert `code` to a alias `FST` if possible, dotted as in `alias` for `Import.names`."""
+    """Convert `code` to an `alias` `FST` if possible, dotted as in `alias` for `Import.names`."""
 
     fst_ = _code_as(code, alias, parse_params, parse_Import_name, sanitize=sanitize)
 
-    if '*' in fst_.a.name:
-        raise ParseError("'*' not allowed in this alias")
+    if fst_ is code:  # validation if was passed in as FST
+        if fst_.a.name == '*':
+            raise ParseError("'*' star alias not allowed")
+
+    return fst_
+
+
+def code_as_Import_names(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+    """Convert `code` to a `Tuple` of `alias` `FST` SPECIAL SLICE if possible, dotted as in `alias` for
+    `Import.names`."""
+
+    fst_ = _code_as(code, Tuple, parse_params, parse_Import_names, sanitize=sanitize)
+
+    if fst_ is code:  # validation if was passed in as FST
+        if (elts := fst_.a.elts) and any(not (is_alias := isinstance(bad := e, alias)) or e.name == '*' for e in elts):
+            raise ParseError("'*' star alias not allowed" if is_alias else
+                             f'expecting aliases, got {bad.__class__.__name__}')
 
     return fst_
 
 
 def code_as_ImportFrom_name(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
-    """Convert `code` to a alias `FST` if possible, possibly star as in `alias` for `FromImport.names`."""
+    """Convert `code` to an `alias` `FST` if possible, possibly star as in `alias` for `FromImport.names`."""
 
     fst_ = _code_as(code, alias, parse_params, parse_ImportFrom_name, sanitize=sanitize)
 
-    if '.' in fst_.a.name:
-        raise ParseError("'.' not allowed in this alias")
+    if fst_ is code:  # validation if was passed in as FST
+        if '.' in fst_.a.name:
+            raise ParseError("'.' dotted alias not allowed")
+
+    return fst_
+
+
+def code_as_ImportFrom_names(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+    """Convert `code` to a `Tuple` of `alias` `FST` SPECIAL SLICE if possible, possibly star as in `alias` for
+    `FromImport.names`."""
+
+    fst_ = _code_as(code, Tuple, parse_params, parse_ImportFrom_names, sanitize=sanitize)
+
+    if fst_ is code:  # validation if was passed in as FST
+        if (elts := fst_.a.elts) and any(not (is_alias := isinstance(bad := e, alias)) or '.' in e.name for e in elts):
+            raise ParseError("'.' dotted alias not allowed" if is_alias else
+                             f'expecting aliases, got {bad.__class__.__name__}')
 
     return fst_
 
@@ -573,12 +617,13 @@ def code_as_pattern(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitiz
 
     fst_ = _code_as(code, pattern, parse_params, parse_pattern, sanitize=sanitize)
 
-    if not allow_invalid_matchor and isinstance(a := fst_.a, MatchOr):  # SPECIAL SLICE, don't need to check if 'fst_ is code' because this could only have come from 'code' as FST
-        if not (len_pattern := len(a.patterns)):
-            raise NodeError('expecting valid pattern, got zero-length MatchOr')
+    if fst_ is code:  # validation if was passed in as FST
+        if not allow_invalid_matchor and isinstance(a := fst_.a, MatchOr):  # SPECIAL SLICE
+            if not (len_pattern := len(a.patterns)):
+                raise NodeError('expecting valid pattern, got zero-length MatchOr')
 
-        if len_pattern == 1:  # a length 1 MatchOr can just return its single element pattern
-            return fst.FST(a.patterns[0], fst_._lines, from_=fst_, lcopy=False)
+            if len_pattern == 1:  # a length 1 MatchOr can just return its single element pattern
+                return fst.FST(a.patterns[0], fst_._lines, from_=fst_, lcopy=False)
 
     return fst_
 
@@ -594,7 +639,7 @@ def code_as_type_params(code: Code, parse_params: Mapping[str, Any] = {}, *, san
 
     fst_ = _code_as(code, Tuple, parse_params, parse_type_params, sanitize=sanitize)
 
-    if fst_ is code:  # this means it was not parsed (came in as FST) and we need to verify it containes only type_params
+    if fst_ is code:  # validation if was passed in as FST
         if not all(isinstance(elt := e, type_param) for e in fst_.a.elts):
             raise NodeError(f'expecting only type_params, got {elt.__class__.__name__}', rawable=True)
 
@@ -602,12 +647,13 @@ def code_as_type_params(code: Code, parse_params: Mapping[str, Any] = {}, *, san
 
 
 def code_as_Assign_targets(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
-    """Convert `code` to an `Assign` targets slice `FST` if possible."""
+    """Convert `code` to an `Assign` targets SPECIAL SLICE `FST` if possible."""
 
     fst_ = _code_as(code, Assign, parse_params, parse_Assign_targets, sanitize=sanitize)
 
-    if not isinstance(name := fst_.a.value, Name) or name.id:  # SPECIAL SLICE
-        raise NodeError('expecting Assign targets slice, got normal Assign', rawable=True)
+    if fst_ is code:
+        if not isinstance(name := fst_.a.value, Name) or name.id:
+            raise NodeError('expecting Assign targets slice, got normal Assign', rawable=True)
 
     return fst_
 

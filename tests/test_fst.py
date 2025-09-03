@@ -11,46 +11,6 @@ from fst.astutil import OPCLS2STR, WalkFail, copy_ast, compare_asts
 from fst.misc import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, astfield, fstloc
 from fst.view import fstview
 
-from fst import extparse
-# from fst.extparse import (
-#     unparse,
-#     parse,
-#     parse_Assign_targets,
-#     parse_ExceptHandler,
-#     parse_ExceptHandlers,
-#     parse_Expression,
-#     parse_Interactive,
-#     parse_Module,
-#     parse_alias,
-#     parse_Import_name,
-#     parse_ImportFrom_name,
-#     parse_all,
-#     parse_arg,
-#     parse_arguments,
-#     parse_arguments_lambda,
-#     parse_augop,
-#     parse_binop,
-#     parse_boolop,
-#     parse_cmpop,
-#     parse_comprehension,
-#     parse_expr,
-#     parse_expr_all,
-#     parse_expr_arglike,
-#     parse_expr_slice,
-#     parse_expr_sliceelt,
-#     parse_keyword,
-#     parse_match_case,
-#     parse_match_cases,
-#     parse_operator,
-#     parse_pattern,
-#     parse_stmt,
-#     parse_stmts,
-#     parse_type_param,
-#     parse_type_params,
-#     parse_unaryop,
-#     parse_withitem,
-# )
-
 from fst.code import (
     code_as_all,
     code_as_stmts,
@@ -79,6 +39,8 @@ from fst.code import (
     code_as_identifier_star,
     code_as_identifier_alias,
 )
+
+from fst import extparse as ep, code
 
 
 from data_other import PARS_DATA, PRECEDENCE_DATA
@@ -150,576 +112,576 @@ PRECEDENCE_SRC_EXPRS = [
 ]
 
 PARSE_TESTS = [
-    ('all',               extparse.parse_stmts,             Module,           'i: int = 1\nj'),
-    ('all',               extparse.parse_ExceptHandlers,    Module,           'except Exception: pass\nexcept: pass'),
-    ('all',               extparse.parse_match_cases,       Module,           'case None: pass\ncase 1: pass'),
-    ('all',               extparse.parse_stmt,              AnnAssign,        'i: int = 1'),
-    ('all',               extparse.parse_ExceptHandler,     ExceptHandler,    'except: pass'),
-    ('all',               extparse.parse_match_case,        match_case,       'case None: pass'),
-    ('all',               extparse.parse_stmts,             Module,           'i: int = 1\nj'),
-    ('all',               extparse.parse_stmt,              AnnAssign,        'i: int = 1'),
-    ('all',               extparse.parse_ExceptHandlers,    Module,           'except Exception: pass\nexcept: pass'),
-    ('all',               extparse.parse_ExceptHandler,     ExceptHandler,    'except: pass'),
-    ('all',               extparse.parse_match_cases,       Module,           'case None: pass\ncase 1: pass'),
-    ('all',               extparse.parse_match_case,        match_case,       'case None: pass'),
-    ('all',               extparse.parse_expr,              Name,             'j'),
-    ('all',               extparse.parse_expr,              Starred,          '*s'),
-    ('all',               extparse.parse_expr_all,          Starred,          '*not a'),
-    ('all',               extparse.parse_stmt,              AnnAssign,        'a:b'),
-    ('all',               extparse.parse_expr_all,          Slice,            'a:b:c'),
-    ('all',               extparse.parse_pattern,           MatchAs,          '1 as a'),
-    ('all',               extparse.parse_arguments,         arguments,        'a: list[str], /, b: int = 1, *c, d=100, **e'),
-    ('all',               extparse.parse_arguments_lambda,  arguments,        'a, /, b, *c, d=100, **e'),
-    ('all',               extparse.parse_arguments,         arguments,        '**a: dict'),
-    ('all',               extparse.parse_pattern,           MatchSequence,    '*a, b as c'),
-    ('all',               extparse.parse_comprehension,     comprehension,    'for i in range(5) if i'),
-    ('all',               extparse.parse_withitem,          withitem,         'f(**a) as b'),
-    ('all',               extparse.parse_operator,          Mult,             '*'),
-    ('all',               extparse.parse_augop,             Mult,             '*='),
-    ('all',               extparse.parse_cmpop,             Gt,               '>'),
-    ('all',               extparse.parse_boolop,            And,              'and'),
-    ('all',               extparse.parse_unaryop,           Invert,           '~'),
+    ('all',               ep.parse_stmts,             Module,           'i: int = 1\nj'),
+    ('all',               ep.parse_ExceptHandlers,    Module,           'except Exception: pass\nexcept: pass'),
+    ('all',               ep.parse_match_cases,       Module,           'case None: pass\ncase 1: pass'),
+    ('all',               ep.parse_stmt,              AnnAssign,        'i: int = 1'),
+    ('all',               ep.parse_ExceptHandler,     ExceptHandler,    'except: pass'),
+    ('all',               ep.parse_match_case,        match_case,       'case None: pass'),
+    ('all',               ep.parse_stmts,             Module,           'i: int = 1\nj'),
+    ('all',               ep.parse_stmt,              AnnAssign,        'i: int = 1'),
+    ('all',               ep.parse_ExceptHandlers,    Module,           'except Exception: pass\nexcept: pass'),
+    ('all',               ep.parse_ExceptHandler,     ExceptHandler,    'except: pass'),
+    ('all',               ep.parse_match_cases,       Module,           'case None: pass\ncase 1: pass'),
+    ('all',               ep.parse_match_case,        match_case,       'case None: pass'),
+    ('all',               ep.parse_expr,              Name,             'j'),
+    ('all',               ep.parse_expr,              Starred,          '*s'),
+    ('all',               ep.parse_expr_all,          Starred,          '*not a'),
+    ('all',               ep.parse_stmt,              AnnAssign,        'a:b'),
+    ('all',               ep.parse_expr_all,          Slice,            'a:b:c'),
+    ('all',               ep.parse_pattern,           MatchAs,          '1 as a'),
+    ('all',               ep.parse_arguments,         arguments,        'a: list[str], /, b: int = 1, *c, d=100, **e'),
+    ('all',               ep.parse_arguments_lambda,  arguments,        'a, /, b, *c, d=100, **e'),
+    ('all',               ep.parse_arguments,         arguments,        '**a: dict'),
+    ('all',               ep.parse_pattern,           MatchSequence,    '*a, b as c'),
+    ('all',               ep.parse_comprehension,     comprehension,    'for i in range(5) if i'),
+    ('all',               ep.parse_withitem,          withitem,         'f(**a) as b'),
+    ('all',               ep.parse_operator,          Mult,             '*'),
+    ('all',               ep.parse_augop,             Mult,             '*='),
+    ('all',               ep.parse_cmpop,             Gt,               '>'),
+    ('all',               ep.parse_boolop,            And,              'and'),
+    ('all',               ep.parse_unaryop,           Invert,           '~'),
 
-    ('strict',            extparse.parse_stmts,             Module,           'i: int = 1\nj'),
-    ('strict',            extparse.parse_ExceptHandlers,    SyntaxError,      'except Exception: pass\nexcept: pass'),
-    ('strict',            extparse.parse_match_cases,       SyntaxError,      'case None: pass\ncase 1: pass'),
-    ('strict',            extparse.parse_stmt,              AnnAssign,        'i: int = 1'),
-    ('strict',            extparse.parse_ExceptHandler,     SyntaxError,      'except: pass'),
-    ('strict',            extparse.parse_match_case,        SyntaxError,      'case None: pass'),
-    ('strict',            extparse.parse_stmts,             Module,           'i: int = 1\nj'),
-    ('strict',            extparse.parse_stmt,              AnnAssign,        'i: int = 1'),
-    ('strict',            extparse.parse_ExceptHandlers,    SyntaxError,      'except Exception: pass\nexcept: pass'),
-    ('strict',            extparse.parse_ExceptHandler,     SyntaxError,      'except: pass'),
-    ('strict',            extparse.parse_match_cases,       SyntaxError,      'case None: pass\ncase 1: pass'),
-    ('strict',            extparse.parse_match_case,        SyntaxError,      'case None: pass'),
-    ('strict',            extparse.parse_expr,              Name,             'j'),
-    ('strict',            extparse.parse_expr,              Starred,          '*s'),
-    ('strict',            extparse.parse_all,               SyntaxError,      '*not a'),
-    ('strict',            extparse.parse_stmt,              AnnAssign,        'a:b'),
-    ('strict',            extparse.parse_all,               SyntaxError,      'a:b:c'),
-    ('strict',            extparse.parse_all,               SyntaxError,      '1 as a'),
-    ('strict',            extparse.parse_all,               SyntaxError,      'a: list[str], /, b: int = 1, *c, d=100, **e'),
-    ('strict',            extparse.parse_all,               SyntaxError,      'a, /, b, *c, d=100, **e'),
-    ('strict',            extparse.parse_all,               SyntaxError,      '*not a'),
-    ('strict',            extparse.parse_all,               SyntaxError,      'for i in range(5) if i'),
-    ('strict',            extparse.parse_all,               SyntaxError,      'f(**a) as b'),
-    ('strict',            extparse.parse_all,               SyntaxError,      '*'),
-    ('strict',            extparse.parse_all,               SyntaxError,      '*='),
-    ('strict',            extparse.parse_all,               SyntaxError,      '>'),
-    ('strict',            extparse.parse_all,               SyntaxError,      'and'),
-    ('strict',            extparse.parse_all,               SyntaxError,      '~'),
+    ('strict',            ep.parse_stmts,             Module,           'i: int = 1\nj'),
+    ('strict',            ep.parse_ExceptHandlers,    SyntaxError,      'except Exception: pass\nexcept: pass'),
+    ('strict',            ep.parse_match_cases,       SyntaxError,      'case None: pass\ncase 1: pass'),
+    ('strict',            ep.parse_stmt,              AnnAssign,        'i: int = 1'),
+    ('strict',            ep.parse_ExceptHandler,     SyntaxError,      'except: pass'),
+    ('strict',            ep.parse_match_case,        SyntaxError,      'case None: pass'),
+    ('strict',            ep.parse_stmts,             Module,           'i: int = 1\nj'),
+    ('strict',            ep.parse_stmt,              AnnAssign,        'i: int = 1'),
+    ('strict',            ep.parse_ExceptHandlers,    SyntaxError,      'except Exception: pass\nexcept: pass'),
+    ('strict',            ep.parse_ExceptHandler,     SyntaxError,      'except: pass'),
+    ('strict',            ep.parse_match_cases,       SyntaxError,      'case None: pass\ncase 1: pass'),
+    ('strict',            ep.parse_match_case,        SyntaxError,      'case None: pass'),
+    ('strict',            ep.parse_expr,              Name,             'j'),
+    ('strict',            ep.parse_expr,              Starred,          '*s'),
+    ('strict',            ep.parse_all,               SyntaxError,      '*not a'),
+    ('strict',            ep.parse_stmt,              AnnAssign,        'a:b'),
+    ('strict',            ep.parse_all,               SyntaxError,      'a:b:c'),
+    ('strict',            ep.parse_all,               SyntaxError,      '1 as a'),
+    ('strict',            ep.parse_all,               SyntaxError,      'a: list[str], /, b: int = 1, *c, d=100, **e'),
+    ('strict',            ep.parse_all,               SyntaxError,      'a, /, b, *c, d=100, **e'),
+    ('strict',            ep.parse_all,               SyntaxError,      '*not a'),
+    ('strict',            ep.parse_all,               SyntaxError,      'for i in range(5) if i'),
+    ('strict',            ep.parse_all,               SyntaxError,      'f(**a) as b'),
+    ('strict',            ep.parse_all,               SyntaxError,      '*'),
+    ('strict',            ep.parse_all,               SyntaxError,      '*='),
+    ('strict',            ep.parse_all,               SyntaxError,      '>'),
+    ('strict',            ep.parse_all,               SyntaxError,      'and'),
+    ('strict',            ep.parse_all,               SyntaxError,      '~'),
 
-    ('exec',              extparse.parse_Module,            Module,           'i: int = 1'),
-    ('eval',              extparse.parse_Expression,        Expression,       'None'),
-    ('single',            extparse.parse_Interactive,       Interactive,      'i: int = 1'),
+    ('exec',              ep.parse_Module,            Module,           'i: int = 1'),
+    ('eval',              ep.parse_Expression,        Expression,       'None'),
+    ('single',            ep.parse_Interactive,       Interactive,      'i: int = 1'),
 
-    ('stmts',             extparse.parse_stmts,             Module,           'i: int = 1\nj'),
-    ('stmts',             extparse.parse_stmts,             SyntaxError,      'except Exception: pass\nexcept: pass'),
-    ('stmt',              extparse.parse_stmt,              AnnAssign,        'i: int = 1'),
-    ('stmt',              extparse.parse_stmt,              Expr,             'j'),
-    ('stmt',              extparse.parse_stmt,              ParseError,       'i: int = 1\nj'),
-    ('stmt',              extparse.parse_stmt,              SyntaxError,      'except: pass'),
+    ('stmts',             ep.parse_stmts,             Module,           'i: int = 1\nj'),
+    ('stmts',             ep.parse_stmts,             SyntaxError,      'except Exception: pass\nexcept: pass'),
+    ('stmt',              ep.parse_stmt,              AnnAssign,        'i: int = 1'),
+    ('stmt',              ep.parse_stmt,              Expr,             'j'),
+    ('stmt',              ep.parse_stmt,              ParseError,       'i: int = 1\nj'),
+    ('stmt',              ep.parse_stmt,              SyntaxError,      'except: pass'),
 
-    ('ExceptHandlers',    extparse.parse_ExceptHandlers,    Module,           'except Exception: pass\nexcept: pass'),
-    ('ExceptHandlers',    extparse.parse_ExceptHandlers,    IndentationError, ' except Exception: pass\nexcept: pass'),
-    ('ExceptHandlers',    extparse.parse_ExceptHandlers,    ParseError,       'except Exception: pass\nexcept: pass\nelse: pass'),
-    ('ExceptHandlers',    extparse.parse_ExceptHandlers,    ParseError,       'except Exception: pass\nexcept: pass\nfinally: pass'),
-    ('ExceptHandlers',    extparse.parse_ExceptHandlers,    SyntaxError,      'i: int = 1\nj'),
-    ('ExceptHandler',     extparse.parse_ExceptHandler,     ExceptHandler,    'except: pass'),
-    ('ExceptHandler',     extparse.parse_ExceptHandler,     ParseError,       'except Exception: pass\nexcept: pass'),
-    ('ExceptHandler',     extparse.parse_ExceptHandler,     SyntaxError,      'i: int = 1'),
+    ('ExceptHandlers',    ep.parse_ExceptHandlers,    Module,           'except Exception: pass\nexcept: pass'),
+    ('ExceptHandlers',    ep.parse_ExceptHandlers,    IndentationError, ' except Exception: pass\nexcept: pass'),
+    ('ExceptHandlers',    ep.parse_ExceptHandlers,    ParseError,       'except Exception: pass\nexcept: pass\nelse: pass'),
+    ('ExceptHandlers',    ep.parse_ExceptHandlers,    ParseError,       'except Exception: pass\nexcept: pass\nfinally: pass'),
+    ('ExceptHandlers',    ep.parse_ExceptHandlers,    SyntaxError,      'i: int = 1\nj'),
+    ('ExceptHandler',     ep.parse_ExceptHandler,     ExceptHandler,    'except: pass'),
+    ('ExceptHandler',     ep.parse_ExceptHandler,     ParseError,       'except Exception: pass\nexcept: pass'),
+    ('ExceptHandler',     ep.parse_ExceptHandler,     SyntaxError,      'i: int = 1'),
 
-    ('match_cases',       extparse.parse_match_cases,       Module,           'case None: pass\ncase 1: pass'),
-    ('match_cases',       extparse.parse_match_cases,       IndentationError, ' case None: pass\ncase 1: pass'),
-    ('match_cases',       extparse.parse_match_cases,       SyntaxError,      'i: int = 1'),
-    ('match_case',        extparse.parse_match_case,        match_case,       'case None: pass'),
-    ('match_case',        extparse.parse_match_case,        ParseError,       'case None: pass\ncase 1: pass'),
-    ('match_case',        extparse.parse_match_case,        SyntaxError,      'i: int = 1'),
+    ('match_cases',       ep.parse_match_cases,       Module,           'case None: pass\ncase 1: pass'),
+    ('match_cases',       ep.parse_match_cases,       IndentationError, ' case None: pass\ncase 1: pass'),
+    ('match_cases',       ep.parse_match_cases,       SyntaxError,      'i: int = 1'),
+    ('match_case',        ep.parse_match_case,        match_case,       'case None: pass'),
+    ('match_case',        ep.parse_match_case,        ParseError,       'case None: pass\ncase 1: pass'),
+    ('match_case',        ep.parse_match_case,        SyntaxError,      'i: int = 1'),
 
-    ('expr',              extparse.parse_expr,              Name,             'j'),
-    ('expr',              extparse.parse_expr,              Starred,          '*s'),
-    ('expr',              extparse.parse_expr,              Starred,          '*\ns'),
-    ('expr',              extparse.parse_expr,              Tuple,            '*\ns,'),
-    ('expr',              extparse.parse_expr,              Tuple,            '1\n,\n2\n,'),
-    ('expr',              extparse.parse_expr,              SyntaxError,      '*not a'),
-    ('expr',              extparse.parse_expr,              SyntaxError,      'a:b'),
-    ('expr',              extparse.parse_expr,              SyntaxError,      'a:b:c'),
+    ('expr',              ep.parse_expr,              Name,             'j'),
+    ('expr',              ep.parse_expr,              Starred,          '*s'),
+    ('expr',              ep.parse_expr,              Starred,          '*\ns'),
+    ('expr',              ep.parse_expr,              Tuple,            '*\ns,'),
+    ('expr',              ep.parse_expr,              Tuple,            '1\n,\n2\n,'),
+    ('expr',              ep.parse_expr,              SyntaxError,      '*not a'),
+    ('expr',              ep.parse_expr,              SyntaxError,      'a:b'),
+    ('expr',              ep.parse_expr,              SyntaxError,      'a:b:c'),
 
-    ('expr_all',          extparse.parse_expr_all,          Name,             'j'),
-    ('expr_all',          extparse.parse_expr_all,          Starred,          '*s'),
-    ('expr_all',          extparse.parse_expr_all,          Starred,          '*\ns'),
-    ('expr_all',          extparse.parse_expr_all,          Tuple,            '*\ns,'),
-    ('expr_all',          extparse.parse_expr_all,          Tuple,            '1\n,\n2\n,'),
-    ('expr_all',          extparse.parse_expr_all,          Slice,            'a:b'),
-    ('expr_all',          extparse.parse_expr_all,          Slice,            'a:b:c'),
-    ('expr_all',          extparse.parse_expr_all,          Tuple,            'j, k'),
-    ('expr_all',          extparse.parse_expr_all,          Tuple,            'a:b:c, x:y:z'),
+    ('expr_all',          ep.parse_expr_all,          Name,             'j'),
+    ('expr_all',          ep.parse_expr_all,          Starred,          '*s'),
+    ('expr_all',          ep.parse_expr_all,          Starred,          '*\ns'),
+    ('expr_all',          ep.parse_expr_all,          Tuple,            '*\ns,'),
+    ('expr_all',          ep.parse_expr_all,          Tuple,            '1\n,\n2\n,'),
+    ('expr_all',          ep.parse_expr_all,          Slice,            'a:b'),
+    ('expr_all',          ep.parse_expr_all,          Slice,            'a:b:c'),
+    ('expr_all',          ep.parse_expr_all,          Tuple,            'j, k'),
+    ('expr_all',          ep.parse_expr_all,          Tuple,            'a:b:c, x:y:z'),
 
-    ('expr_arglike',      extparse.parse_expr_arglike,      Name,             'j'),
-    ('expr_arglike',      extparse.parse_expr_arglike,      Starred,          '*s'),
-    ('expr_arglike',      extparse.parse_expr_arglike,      Starred,          '*not a'),
-    ('expr_arglike',      extparse.parse_expr_arglike,      Tuple,            'j, k'),
-    ('expr_arglike',      extparse.parse_expr_arglike,      ParseError,       'i=1'),
-    ('expr_arglike',      extparse.parse_expr_arglike,      SyntaxError,      'a:b'),
-    ('expr_arglike',      extparse.parse_expr_arglike,      SyntaxError,      'a:b:c'),
+    ('expr_arglike',      ep.parse_expr_arglike,      Name,             'j'),
+    ('expr_arglike',      ep.parse_expr_arglike,      Starred,          '*s'),
+    ('expr_arglike',      ep.parse_expr_arglike,      Starred,          '*not a'),
+    ('expr_arglike',      ep.parse_expr_arglike,      Tuple,            'j, k'),
+    ('expr_arglike',      ep.parse_expr_arglike,      ParseError,       'i=1'),
+    ('expr_arglike',      ep.parse_expr_arglike,      SyntaxError,      'a:b'),
+    ('expr_arglike',      ep.parse_expr_arglike,      SyntaxError,      'a:b:c'),
 
-    ('expr_slice',        extparse.parse_expr_slice,        Name,             'j'),
-    ('expr_slice',        extparse.parse_expr_slice,        Slice,            'a:b'),
-    ('expr_slice',        extparse.parse_expr_slice,        Tuple,            'j, k'),
-    ('expr_slice',        extparse.parse_expr_slice,        Tuple,            'a:b:c, x:y:z'),
+    ('expr_slice',        ep.parse_expr_slice,        Name,             'j'),
+    ('expr_slice',        ep.parse_expr_slice,        Slice,            'a:b'),
+    ('expr_slice',        ep.parse_expr_slice,        Tuple,            'j, k'),
+    ('expr_slice',        ep.parse_expr_slice,        Tuple,            'a:b:c, x:y:z'),
 
-    ('expr_sliceelt',     extparse.parse_expr_sliceelt,     Name,             'j'),
-    ('expr_sliceelt',     extparse.parse_expr_sliceelt,     Slice,            'a:b'),
-    ('expr_sliceelt',     extparse.parse_expr_sliceelt,     Tuple,            'j, k'),
-    ('expr_sliceelt',     extparse.parse_expr_sliceelt,     SyntaxError,      'a:b:c, x:y:z'),
+    ('expr_sliceelt',     ep.parse_expr_sliceelt,     Name,             'j'),
+    ('expr_sliceelt',     ep.parse_expr_sliceelt,     Slice,            'a:b'),
+    ('expr_sliceelt',     ep.parse_expr_sliceelt,     Tuple,            'j, k'),
+    ('expr_sliceelt',     ep.parse_expr_sliceelt,     SyntaxError,      'a:b:c, x:y:z'),
 
-    ('boolop',            extparse.parse_boolop,            And,              'and'),
-    ('boolop',            extparse.parse_boolop,            ParseError,       '*'),
-    ('operator',          extparse.parse_operator,          Mult,             '*'),
-    ('operator',          extparse.parse_operator,          Mult,             '*='),
-    ('operator',          extparse.parse_operator,          ParseError,       'and'),
-    ('binop',             extparse.parse_binop,             Mult,             '*'),
-    ('binop',             extparse.parse_binop,             SyntaxError,      '*='),
-    ('augop',             extparse.parse_augop,             ParseError,       '*'),
-    ('augop',             extparse.parse_augop,             Mult,             '*='),
-    ('unaryop',           extparse.parse_unaryop,           UAdd,             '+'),
-    ('unaryop',           extparse.parse_unaryop,           SyntaxError,      'and'),
-    ('cmpop',             extparse.parse_cmpop,             GtE,              '>='),
-    ('cmpop',             extparse.parse_cmpop,             IsNot,            'is\nnot'),
-    ('cmpop',             extparse.parse_cmpop,             ParseError,       '>= a >='),
-    ('cmpop',             extparse.parse_cmpop,             ParseError,       'and'),
+    ('boolop',            ep.parse_boolop,            And,              'and'),
+    ('boolop',            ep.parse_boolop,            ParseError,       '*'),
+    ('operator',          ep.parse_operator,          Mult,             '*'),
+    ('operator',          ep.parse_operator,          Mult,             '*='),
+    ('operator',          ep.parse_operator,          ParseError,       'and'),
+    ('binop',             ep.parse_binop,             Mult,             '*'),
+    ('binop',             ep.parse_binop,             SyntaxError,      '*='),
+    ('augop',             ep.parse_augop,             ParseError,       '*'),
+    ('augop',             ep.parse_augop,             Mult,             '*='),
+    ('unaryop',           ep.parse_unaryop,           UAdd,             '+'),
+    ('unaryop',           ep.parse_unaryop,           SyntaxError,      'and'),
+    ('cmpop',             ep.parse_cmpop,             GtE,              '>='),
+    ('cmpop',             ep.parse_cmpop,             IsNot,            'is\nnot'),
+    ('cmpop',             ep.parse_cmpop,             ParseError,       '>= a >='),
+    ('cmpop',             ep.parse_cmpop,             ParseError,       'and'),
 
-    ('comprehension',     extparse.parse_comprehension,     comprehension,    'for u in v'),
-    ('comprehension',     extparse.parse_comprehension,     comprehension,    'for u in v if w'),
-    ('comprehension',     extparse.parse_comprehension,     ParseError,       'for u in v for s in t'),
+    ('comprehension',     ep.parse_comprehension,     comprehension,    'for u in v'),
+    ('comprehension',     ep.parse_comprehension,     comprehension,    'for u in v if w'),
+    ('comprehension',     ep.parse_comprehension,     ParseError,       'for u in v for s in t'),
 
-    ('arguments',         extparse.parse_arguments,         arguments,        ''),
-    ('arguments',         extparse.parse_arguments,         arguments,        'a: list[str], /, b: int = 1, *c, d=100, **e'),
+    ('arguments',         ep.parse_arguments,         arguments,        ''),
+    ('arguments',         ep.parse_arguments,         arguments,        'a: list[str], /, b: int = 1, *c, d=100, **e'),
 
-    ('arguments_lambda',  extparse.parse_arguments_lambda,  arguments,        ''),
-    ('arguments_lambda',  extparse.parse_arguments_lambda,  arguments,        'a, /, b, *c, d=100, **e'),
-    ('arguments_lambda',  extparse.parse_arguments_lambda,  arguments,        'a,\n/,\nb,\n*c,\nd=100,\n**e'),
-    ('arguments_lambda',  extparse.parse_arguments_lambda,  SyntaxError,      'a: list[str], /, b: int = 1, *c, d=100, **e'),
+    ('arguments_lambda',  ep.parse_arguments_lambda,  arguments,        ''),
+    ('arguments_lambda',  ep.parse_arguments_lambda,  arguments,        'a, /, b, *c, d=100, **e'),
+    ('arguments_lambda',  ep.parse_arguments_lambda,  arguments,        'a,\n/,\nb,\n*c,\nd=100,\n**e'),
+    ('arguments_lambda',  ep.parse_arguments_lambda,  SyntaxError,      'a: list[str], /, b: int = 1, *c, d=100, **e'),
 
-    ('arg',               extparse.parse_arg,               arg,              'a: b'),
-    ('arg',               extparse.parse_arg,               ParseError,       'a: b = c'),
-    ('arg',               extparse.parse_arg,               ParseError,       'a, b'),
-    ('arg',               extparse.parse_arg,               ParseError,       'a, /'),
-    ('arg',               extparse.parse_arg,               ParseError,       '*, a'),
-    ('arg',               extparse.parse_arg,               ParseError,       '*a'),
-    ('arg',               extparse.parse_arg,               ParseError,       '**a'),
+    ('arg',               ep.parse_arg,               arg,              'a: b'),
+    ('arg',               ep.parse_arg,               ParseError,       'a: b = c'),
+    ('arg',               ep.parse_arg,               ParseError,       'a, b'),
+    ('arg',               ep.parse_arg,               ParseError,       'a, /'),
+    ('arg',               ep.parse_arg,               ParseError,       '*, a'),
+    ('arg',               ep.parse_arg,               ParseError,       '*a'),
+    ('arg',               ep.parse_arg,               ParseError,       '**a'),
 
-    ('keyword',           extparse.parse_keyword,           keyword,          'a=1'),
-    ('keyword',           extparse.parse_keyword,           keyword,          '**a'),
-    ('keyword',           extparse.parse_keyword,           ParseError,       '1'),
-    ('keyword',           extparse.parse_keyword,           ParseError,       'a'),
-    ('keyword',           extparse.parse_keyword,           ParseError,       'a=1, b=2'),
+    ('keyword',           ep.parse_keyword,           keyword,          'a=1'),
+    ('keyword',           ep.parse_keyword,           keyword,          '**a'),
+    ('keyword',           ep.parse_keyword,           ParseError,       '1'),
+    ('keyword',           ep.parse_keyword,           ParseError,       'a'),
+    ('keyword',           ep.parse_keyword,           ParseError,       'a=1, b=2'),
 
-    ('alias',             extparse.parse_alias,             alias,            'a'),
-    ('alias',             extparse.parse_alias,             alias,            'a.b'),
-    ('alias',             extparse.parse_alias,             alias,            '*'),
-    ('alias',             extparse.parse_alias,             ParseError,       'a, b'),
-    ('alias',             extparse.parse_alias,             alias,            'a as c'),
-    ('alias',             extparse.parse_alias,             alias,            'a.b as c'),
-    ('alias',             extparse.parse_alias,             SyntaxError,      '* as c'),
-    ('alias',             extparse.parse_alias,             ParseError,       'a as x, b as y'),
-    ('alias',             extparse.parse_alias,             ParseError,       'a as x, a.b as y'),
+    ('alias',             ep.parse_alias,             alias,            'a'),
+    ('alias',             ep.parse_alias,             alias,            'a.b'),
+    ('alias',             ep.parse_alias,             alias,            '*'),
+    ('alias',             ep.parse_alias,             ParseError,       'a, b'),
+    ('alias',             ep.parse_alias,             alias,            'a as c'),
+    ('alias',             ep.parse_alias,             alias,            'a.b as c'),
+    ('alias',             ep.parse_alias,             SyntaxError,      '* as c'),
+    ('alias',             ep.parse_alias,             ParseError,       'a as x, b as y'),
+    ('alias',             ep.parse_alias,             ParseError,       'a as x, a.b as y'),
 
-    ('aliases',           extparse.parse_aliases,           Tuple,            'a'),
-    ('aliases',           extparse.parse_aliases,           Tuple,            'a.b'),
-    ('aliases',           extparse.parse_aliases,           Tuple,            '*'),
-    ('aliases',           extparse.parse_aliases,           Tuple,            'a, b'),
-    ('aliases',           extparse.parse_aliases,           Tuple,            'a as c'),
-    ('aliases',           extparse.parse_aliases,           Tuple,            'a.b as c'),
-    ('aliases',           extparse.parse_aliases,           SyntaxError,      '* as c'),
-    ('aliases',           extparse.parse_aliases,           Tuple,            'a as x, b as y'),
-    ('aliases',           extparse.parse_aliases,           Tuple,            'a as x, a.b as y'),
+    ('aliases',           ep.parse_aliases,           Tuple,            'a'),
+    ('aliases',           ep.parse_aliases,           Tuple,            'a.b'),
+    ('aliases',           ep.parse_aliases,           Tuple,            '*'),
+    ('aliases',           ep.parse_aliases,           Tuple,            'a, b'),
+    ('aliases',           ep.parse_aliases,           Tuple,            'a as c'),
+    ('aliases',           ep.parse_aliases,           Tuple,            'a.b as c'),
+    ('aliases',           ep.parse_aliases,           SyntaxError,      '* as c'),
+    ('aliases',           ep.parse_aliases,           Tuple,            'a as x, b as y'),
+    ('aliases',           ep.parse_aliases,           Tuple,            'a as x, a.b as y'),
 
-    ('Import_name',       extparse.parse_Import_name,       alias,            'a'),
-    ('Import_name',       extparse.parse_Import_name,       alias,            'a.b'),
-    ('Import_name',       extparse.parse_Import_name,       SyntaxError,      '*'),
-    ('Import_name',       extparse.parse_Import_name,       ParseError,       'a, b'),
-    ('Import_name',       extparse.parse_Import_name,       alias,            'a as c'),
-    ('Import_name',       extparse.parse_Import_name,       alias,            'a.b as c'),
-    ('Import_name',       extparse.parse_Import_name,       SyntaxError,      '* as c'),
-    ('Import_name',       extparse.parse_Import_name,       ParseError,       'a as x, b as y'),
-    ('Import_name',       extparse.parse_Import_name,       ParseError,       'a as x, a.b as y'),
+    ('Import_name',       ep.parse_Import_name,       alias,            'a'),
+    ('Import_name',       ep.parse_Import_name,       alias,            'a.b'),
+    ('Import_name',       ep.parse_Import_name,       SyntaxError,      '*'),
+    ('Import_name',       ep.parse_Import_name,       ParseError,       'a, b'),
+    ('Import_name',       ep.parse_Import_name,       alias,            'a as c'),
+    ('Import_name',       ep.parse_Import_name,       alias,            'a.b as c'),
+    ('Import_name',       ep.parse_Import_name,       SyntaxError,      '* as c'),
+    ('Import_name',       ep.parse_Import_name,       ParseError,       'a as x, b as y'),
+    ('Import_name',       ep.parse_Import_name,       ParseError,       'a as x, a.b as y'),
 
-    ('Import_names',      extparse.parse_Import_names,      Tuple,            'a'),
-    ('Import_names',      extparse.parse_Import_names,      Tuple,            'a.b'),
-    ('Import_names',      extparse.parse_Import_names,      SyntaxError,      '*'),
-    ('Import_names',      extparse.parse_Import_names,      Tuple,            'a, b'),
-    ('Import_names',      extparse.parse_Import_names,      Tuple,            'a as c'),
-    ('Import_names',      extparse.parse_Import_names,      Tuple,            'a.b as c'),
-    ('Import_names',      extparse.parse_Import_names,      SyntaxError,      '* as c'),
-    ('Import_names',      extparse.parse_Import_names,      Tuple,            'a as x, b as y'),
-    ('Import_names',      extparse.parse_Import_names,      Tuple,            'a as x, a.b as y'),
+    ('Import_names',      ep.parse_Import_names,      Tuple,            'a'),
+    ('Import_names',      ep.parse_Import_names,      Tuple,            'a.b'),
+    ('Import_names',      ep.parse_Import_names,      SyntaxError,      '*'),
+    ('Import_names',      ep.parse_Import_names,      Tuple,            'a, b'),
+    ('Import_names',      ep.parse_Import_names,      Tuple,            'a as c'),
+    ('Import_names',      ep.parse_Import_names,      Tuple,            'a.b as c'),
+    ('Import_names',      ep.parse_Import_names,      SyntaxError,      '* as c'),
+    ('Import_names',      ep.parse_Import_names,      Tuple,            'a as x, b as y'),
+    ('Import_names',      ep.parse_Import_names,      Tuple,            'a as x, a.b as y'),
 
-    ('ImportFrom_name',   extparse.parse_ImportFrom_name,   alias,            'a'),
-    ('ImportFrom_name',   extparse.parse_ImportFrom_name,   SyntaxError,      'a.b'),
-    ('ImportFrom_name',   extparse.parse_ImportFrom_name,   alias,            '*'),
-    ('ImportFrom_name',   extparse.parse_ImportFrom_name,   ParseError,       'a, b'),
-    ('ImportFrom_name',   extparse.parse_ImportFrom_name,   alias,            'a as c'),
-    ('ImportFrom_name',   extparse.parse_ImportFrom_name,   SyntaxError,      'a.b as c'),
-    ('ImportFrom_name',   extparse.parse_ImportFrom_name,   SyntaxError,      '* as c'),
-    ('ImportFrom_name',   extparse.parse_ImportFrom_name,   ParseError,       'a as x, b as y'),
-    ('ImportFrom_name',   extparse.parse_ImportFrom_name,   SyntaxError,      'a as x, a.b as y'),
+    ('ImportFrom_name',   ep.parse_ImportFrom_name,   alias,            'a'),
+    ('ImportFrom_name',   ep.parse_ImportFrom_name,   SyntaxError,      'a.b'),
+    ('ImportFrom_name',   ep.parse_ImportFrom_name,   alias,            '*'),
+    ('ImportFrom_name',   ep.parse_ImportFrom_name,   ParseError,       'a, b'),
+    ('ImportFrom_name',   ep.parse_ImportFrom_name,   alias,            'a as c'),
+    ('ImportFrom_name',   ep.parse_ImportFrom_name,   SyntaxError,      'a.b as c'),
+    ('ImportFrom_name',   ep.parse_ImportFrom_name,   SyntaxError,      '* as c'),
+    ('ImportFrom_name',   ep.parse_ImportFrom_name,   ParseError,       'a as x, b as y'),
+    ('ImportFrom_name',   ep.parse_ImportFrom_name,   SyntaxError,      'a as x, a.b as y'),
 
-    ('ImportFrom_names',  extparse.parse_ImportFrom_names,  Tuple,            'a'),
-    ('ImportFrom_names',  extparse.parse_ImportFrom_names,  SyntaxError,      'a.b'),
-    ('ImportFrom_names',  extparse.parse_ImportFrom_names,  Tuple,            '*'),
-    ('ImportFrom_names',  extparse.parse_ImportFrom_names,  Tuple,            'a, b'),
-    ('ImportFrom_names',  extparse.parse_ImportFrom_names,  Tuple,            'a as c'),
-    ('ImportFrom_names',  extparse.parse_ImportFrom_names,  SyntaxError,      'a.b as c'),
-    ('ImportFrom_names',  extparse.parse_ImportFrom_names,  SyntaxError,      '* as c'),
-    ('ImportFrom_names',  extparse.parse_ImportFrom_names,  Tuple,            'a as x, b as y'),
-    ('ImportFrom_names',  extparse.parse_ImportFrom_names,  SyntaxError,      'a as x, a.b as y'),
+    ('ImportFrom_names',  ep.parse_ImportFrom_names,  Tuple,            'a'),
+    ('ImportFrom_names',  ep.parse_ImportFrom_names,  SyntaxError,      'a.b'),
+    ('ImportFrom_names',  ep.parse_ImportFrom_names,  Tuple,            '*'),
+    ('ImportFrom_names',  ep.parse_ImportFrom_names,  Tuple,            'a, b'),
+    ('ImportFrom_names',  ep.parse_ImportFrom_names,  Tuple,            'a as c'),
+    ('ImportFrom_names',  ep.parse_ImportFrom_names,  SyntaxError,      'a.b as c'),
+    ('ImportFrom_names',  ep.parse_ImportFrom_names,  SyntaxError,      '* as c'),
+    ('ImportFrom_names',  ep.parse_ImportFrom_names,  Tuple,            'a as x, b as y'),
+    ('ImportFrom_names',  ep.parse_ImportFrom_names,  SyntaxError,      'a as x, a.b as y'),
 
-    ('withitem',          extparse.parse_withitem,          withitem,         'a'),
-    ('withitem',          extparse.parse_withitem,          withitem,         'a, b'),
-    ('withitem',          extparse.parse_withitem,          withitem,         '(a, b)'),
-    ('withitem',          extparse.parse_withitem,          withitem,         'a as b'),
-    ('withitem',          extparse.parse_withitem,          ParseError,       'a, b as c'),
-    ('withitem',          extparse.parse_withitem,          ParseError,       'a as b, x as y'),
-    ('withitem',          extparse.parse_withitem,          withitem,         '(a)'),
-    ('withitem',          extparse.parse_withitem,          SyntaxError,      '(a as b)'),
-    ('withitem',          extparse.parse_withitem,          SyntaxError,      '(a as b, x as y)'),
+    ('withitem',          ep.parse_withitem,          withitem,         'a'),
+    ('withitem',          ep.parse_withitem,          withitem,         'a, b'),
+    ('withitem',          ep.parse_withitem,          withitem,         '(a, b)'),
+    ('withitem',          ep.parse_withitem,          withitem,         'a as b'),
+    ('withitem',          ep.parse_withitem,          ParseError,       'a, b as c'),
+    ('withitem',          ep.parse_withitem,          ParseError,       'a as b, x as y'),
+    ('withitem',          ep.parse_withitem,          withitem,         '(a)'),
+    ('withitem',          ep.parse_withitem,          SyntaxError,      '(a as b)'),
+    ('withitem',          ep.parse_withitem,          SyntaxError,      '(a as b, x as y)'),
 
-    ('pattern',           extparse.parse_pattern,           MatchValue,       '42'),
-    ('pattern',           extparse.parse_pattern,           MatchSingleton,   'None'),
-    ('pattern',           extparse.parse_pattern,           MatchSequence,    '[a, *_]'),
-    ('pattern',           extparse.parse_pattern,           MatchSequence,    '[]'),
-    ('pattern',           extparse.parse_pattern,           MatchMapping,     '{"key": _}'),
-    ('pattern',           extparse.parse_pattern,           MatchMapping,     '{}'),
-    ('pattern',           extparse.parse_pattern,           MatchClass,       'SomeClass()'),
-    ('pattern',           extparse.parse_pattern,           MatchClass,       'SomeClass(attr=val)'),
-    ('pattern',           extparse.parse_pattern,           MatchAs,          'as_var'),
-    ('pattern',           extparse.parse_pattern,           MatchAs,          '1 as as_var'),
-    ('pattern',           extparse.parse_pattern,           MatchOr,          '1 | 2 | 3'),
-    ('pattern',           extparse.parse_pattern,           MatchAs,          '_'),
-    ('pattern',           extparse.parse_pattern,           MatchStar,        '*a'),
-    ('pattern',           extparse.parse_pattern,           SyntaxError,      ''),
+    ('pattern',           ep.parse_pattern,           MatchValue,       '42'),
+    ('pattern',           ep.parse_pattern,           MatchSingleton,   'None'),
+    ('pattern',           ep.parse_pattern,           MatchSequence,    '[a, *_]'),
+    ('pattern',           ep.parse_pattern,           MatchSequence,    '[]'),
+    ('pattern',           ep.parse_pattern,           MatchMapping,     '{"key": _}'),
+    ('pattern',           ep.parse_pattern,           MatchMapping,     '{}'),
+    ('pattern',           ep.parse_pattern,           MatchClass,       'SomeClass()'),
+    ('pattern',           ep.parse_pattern,           MatchClass,       'SomeClass(attr=val)'),
+    ('pattern',           ep.parse_pattern,           MatchAs,          'as_var'),
+    ('pattern',           ep.parse_pattern,           MatchAs,          '1 as as_var'),
+    ('pattern',           ep.parse_pattern,           MatchOr,          '1 | 2 | 3'),
+    ('pattern',           ep.parse_pattern,           MatchAs,          '_'),
+    ('pattern',           ep.parse_pattern,           MatchStar,        '*a'),
+    ('pattern',           ep.parse_pattern,           SyntaxError,      ''),
 
-    ('expr',              extparse.parse_expr,              BoolOp,           '\na\nor\nb\n'),
-    ('expr',              extparse.parse_expr,              NamedExpr,        '\na\n:=\nb\n'),
-    ('expr',              extparse.parse_expr,              BinOp,            '\na\n|\nb\n'),
-    ('expr',              extparse.parse_expr,              BinOp,            '\na\n**\nb\n'),
-    ('expr',              extparse.parse_expr,              UnaryOp,          '\nnot\na\n'),
-    ('expr',              extparse.parse_expr,              UnaryOp,          '\n~\na\n'),
-    ('expr',              extparse.parse_expr,              Lambda,           '\nlambda\n:\nNone\n'),
-    ('expr',              extparse.parse_expr,              IfExp,            '\na\nif\nb\nelse\nc\n'),
-    ('expr',              extparse.parse_expr,              Dict,             '\n{\na\n:\nb\n}\n'),
-    ('expr',              extparse.parse_expr,              Set,              '\n{\na\n,\nb\n}\n'),
-    ('expr',              extparse.parse_expr,              ListComp,         '\n[\na\nfor\na\nin\nb\n]\n'),
-    ('expr',              extparse.parse_expr,              SetComp,          '\n{\na\nfor\na\nin\nb\n}\n'),
-    ('expr',              extparse.parse_expr,              DictComp,         '\n{\na\n:\nc\nfor\na\n,\nc\nin\nb\n}\n'),
-    ('expr',              extparse.parse_expr,              GeneratorExp,     '\n(\na\nfor\na\nin\nb\n)\n'),
-    ('expr',              extparse.parse_expr,              Await,            '\nawait\na\n'),
-    ('expr',              extparse.parse_expr,              Yield,            '\nyield\n'),
-    ('expr',              extparse.parse_expr,              Yield,            '\nyield\na\n'),
-    ('expr',              extparse.parse_expr,              YieldFrom,        '\nyield\nfrom\na\n'),
-    ('expr',              extparse.parse_expr,              Compare,          '\na\n<\nb\n'),
-    ('expr',              extparse.parse_expr,              Call,             '\nf\n(\na\n)\n'),
-    ('expr',              extparse.parse_expr,              JoinedStr,        "\nf'{a}'\n"),
-    ('expr',              extparse.parse_expr,              JoinedStr,        '\nf"{a}"\n'),
-    ('expr',              extparse.parse_expr,              JoinedStr,        "\nf'''\n{\na\n}\n'''\n"),
-    ('expr',              extparse.parse_expr,              JoinedStr,        '\nf"""\n{\na\n}\n"""\n'),
-    ('expr',              extparse.parse_expr,              Constant,         '\n...\n'),
-    ('expr',              extparse.parse_expr,              Constant,         '\nNone\n'),
-    ('expr',              extparse.parse_expr,              Constant,         '\nTrue\n'),
-    ('expr',              extparse.parse_expr,              Constant,         '\nFalse\n'),
-    ('expr',              extparse.parse_expr,              Constant,         '\n1\n'),
-    ('expr',              extparse.parse_expr,              Constant,         '\n1.0\n'),
-    ('expr',              extparse.parse_expr,              Constant,         '\n1j\n'),
-    ('expr',              extparse.parse_expr,              Constant,         "\n'a'\n"),
-    ('expr',              extparse.parse_expr,              Constant,         '\n"a"\n'),
-    ('expr',              extparse.parse_expr,              Constant,         "\n'''\na\n'''\n"),
-    ('expr',              extparse.parse_expr,              Constant,         '\n"""\na\n"""\n'),
-    ('expr',              extparse.parse_expr,              Constant,         "\nb'a'\n"),
-    ('expr',              extparse.parse_expr,              Constant,         '\nb"a"\n'),
-    ('expr',              extparse.parse_expr,              Constant,         "\nb'''\na\n'''\n"),
-    ('expr',              extparse.parse_expr,              Constant,         '\nb"""\na\n"""\n'),
-    ('expr',              extparse.parse_expr,              Attribute,        '\na\n.\nb\n'),
-    ('expr',              extparse.parse_expr,              Subscript,        '\na\n[\nb\n]\n'),
-    ('expr',              extparse.parse_expr,              Starred,          '\n*\na\n'),
-    ('expr',              extparse.parse_expr,              List,             '\n[\na\n,\nb\n]\n'),
-    ('expr',              extparse.parse_expr,              Tuple,            '\n(\na\n,\nb\n)\n'),
-    ('expr',              extparse.parse_expr,              Tuple,            '\na\n,\n'),
-    ('expr',              extparse.parse_expr,              Tuple,            '\na\n,\nb\n'),
+    ('expr',              ep.parse_expr,              BoolOp,           '\na\nor\nb\n'),
+    ('expr',              ep.parse_expr,              NamedExpr,        '\na\n:=\nb\n'),
+    ('expr',              ep.parse_expr,              BinOp,            '\na\n|\nb\n'),
+    ('expr',              ep.parse_expr,              BinOp,            '\na\n**\nb\n'),
+    ('expr',              ep.parse_expr,              UnaryOp,          '\nnot\na\n'),
+    ('expr',              ep.parse_expr,              UnaryOp,          '\n~\na\n'),
+    ('expr',              ep.parse_expr,              Lambda,           '\nlambda\n:\nNone\n'),
+    ('expr',              ep.parse_expr,              IfExp,            '\na\nif\nb\nelse\nc\n'),
+    ('expr',              ep.parse_expr,              Dict,             '\n{\na\n:\nb\n}\n'),
+    ('expr',              ep.parse_expr,              Set,              '\n{\na\n,\nb\n}\n'),
+    ('expr',              ep.parse_expr,              ListComp,         '\n[\na\nfor\na\nin\nb\n]\n'),
+    ('expr',              ep.parse_expr,              SetComp,          '\n{\na\nfor\na\nin\nb\n}\n'),
+    ('expr',              ep.parse_expr,              DictComp,         '\n{\na\n:\nc\nfor\na\n,\nc\nin\nb\n}\n'),
+    ('expr',              ep.parse_expr,              GeneratorExp,     '\n(\na\nfor\na\nin\nb\n)\n'),
+    ('expr',              ep.parse_expr,              Await,            '\nawait\na\n'),
+    ('expr',              ep.parse_expr,              Yield,            '\nyield\n'),
+    ('expr',              ep.parse_expr,              Yield,            '\nyield\na\n'),
+    ('expr',              ep.parse_expr,              YieldFrom,        '\nyield\nfrom\na\n'),
+    ('expr',              ep.parse_expr,              Compare,          '\na\n<\nb\n'),
+    ('expr',              ep.parse_expr,              Call,             '\nf\n(\na\n)\n'),
+    ('expr',              ep.parse_expr,              JoinedStr,        "\nf'{a}'\n"),
+    ('expr',              ep.parse_expr,              JoinedStr,        '\nf"{a}"\n'),
+    ('expr',              ep.parse_expr,              JoinedStr,        "\nf'''\n{\na\n}\n'''\n"),
+    ('expr',              ep.parse_expr,              JoinedStr,        '\nf"""\n{\na\n}\n"""\n'),
+    ('expr',              ep.parse_expr,              Constant,         '\n...\n'),
+    ('expr',              ep.parse_expr,              Constant,         '\nNone\n'),
+    ('expr',              ep.parse_expr,              Constant,         '\nTrue\n'),
+    ('expr',              ep.parse_expr,              Constant,         '\nFalse\n'),
+    ('expr',              ep.parse_expr,              Constant,         '\n1\n'),
+    ('expr',              ep.parse_expr,              Constant,         '\n1.0\n'),
+    ('expr',              ep.parse_expr,              Constant,         '\n1j\n'),
+    ('expr',              ep.parse_expr,              Constant,         "\n'a'\n"),
+    ('expr',              ep.parse_expr,              Constant,         '\n"a"\n'),
+    ('expr',              ep.parse_expr,              Constant,         "\n'''\na\n'''\n"),
+    ('expr',              ep.parse_expr,              Constant,         '\n"""\na\n"""\n'),
+    ('expr',              ep.parse_expr,              Constant,         "\nb'a'\n"),
+    ('expr',              ep.parse_expr,              Constant,         '\nb"a"\n'),
+    ('expr',              ep.parse_expr,              Constant,         "\nb'''\na\n'''\n"),
+    ('expr',              ep.parse_expr,              Constant,         '\nb"""\na\n"""\n'),
+    ('expr',              ep.parse_expr,              Attribute,        '\na\n.\nb\n'),
+    ('expr',              ep.parse_expr,              Subscript,        '\na\n[\nb\n]\n'),
+    ('expr',              ep.parse_expr,              Starred,          '\n*\na\n'),
+    ('expr',              ep.parse_expr,              List,             '\n[\na\n,\nb\n]\n'),
+    ('expr',              ep.parse_expr,              Tuple,            '\n(\na\n,\nb\n)\n'),
+    ('expr',              ep.parse_expr,              Tuple,            '\na\n,\n'),
+    ('expr',              ep.parse_expr,              Tuple,            '\na\n,\nb\n'),
 
-    ('pattern',           extparse.parse_pattern,           MatchValue,       '\n42\n'),
-    ('pattern',           extparse.parse_pattern,           MatchSingleton,   '\nNone\n'),
-    ('pattern',           extparse.parse_pattern,           MatchSequence,    '\n[\na\n,\n*\nb\n]\n'),
-    ('pattern',           extparse.parse_pattern,           MatchSequence,    '\n\na\n,\n*\nb\n\n'),
-    ('pattern',           extparse.parse_pattern,           MatchMapping,     '\n{\n"key"\n:\n_\n}\n'),
-    ('pattern',           extparse.parse_pattern,           MatchClass,       '\nSomeClass\n(\nattr\n=\nval\n)\n'),
-    ('pattern',           extparse.parse_pattern,           MatchAs,          '\nas_var\n'),
-    ('pattern',           extparse.parse_pattern,           MatchAs,          '\n1\nas\nas_var\n'),
-    ('pattern',           extparse.parse_pattern,           MatchOr,          '\n1\n|\n2\n'),
+    ('pattern',           ep.parse_pattern,           MatchValue,       '\n42\n'),
+    ('pattern',           ep.parse_pattern,           MatchSingleton,   '\nNone\n'),
+    ('pattern',           ep.parse_pattern,           MatchSequence,    '\n[\na\n,\n*\nb\n]\n'),
+    ('pattern',           ep.parse_pattern,           MatchSequence,    '\n\na\n,\n*\nb\n\n'),
+    ('pattern',           ep.parse_pattern,           MatchMapping,     '\n{\n"key"\n:\n_\n}\n'),
+    ('pattern',           ep.parse_pattern,           MatchClass,       '\nSomeClass\n(\nattr\n=\nval\n)\n'),
+    ('pattern',           ep.parse_pattern,           MatchAs,          '\nas_var\n'),
+    ('pattern',           ep.parse_pattern,           MatchAs,          '\n1\nas\nas_var\n'),
+    ('pattern',           ep.parse_pattern,           MatchOr,          '\n1\n|\n2\n'),
 
-    ('expr',              extparse.parse_expr,              BoolOp,           '\n a\n or\n b\n '),
-    ('expr',              extparse.parse_expr,              NamedExpr,        '\n a\n :=\n b\n '),
-    ('expr',              extparse.parse_expr,              BinOp,            '\n a\n |\n b\n '),
-    ('expr',              extparse.parse_expr,              BinOp,            '\n a\n **\n b\n '),
-    ('expr',              extparse.parse_expr,              UnaryOp,          '\n not\n a\n '),
-    ('expr',              extparse.parse_expr,              UnaryOp,          '\n ~\n a\n '),
-    ('expr',              extparse.parse_expr,              Lambda,           '\n lambda\n :\n None\n '),
-    ('expr',              extparse.parse_expr,              IfExp,            '\n a\n if\n b\n else\n c\n '),
-    ('expr',              extparse.parse_expr,              Dict,             '\n {\n a\n :\n b\n }\n '),
-    ('expr',              extparse.parse_expr,              Set,              '\n {\n a\n ,\n b\n }\n '),
-    ('expr',              extparse.parse_expr,              ListComp,         '\n [\n a\n for\n a\n in\n b\n ]\n '),
-    ('expr',              extparse.parse_expr,              SetComp,          '\n {\n a\n for\n a\n in\n b\n }\n '),
-    ('expr',              extparse.parse_expr,              DictComp,         '\n {\n a\n :\n c\n for\n a\n ,\n c\n in\n b\n }\n '),
-    ('expr',              extparse.parse_expr,              GeneratorExp,     '\n (\n a\n for\n a\n in\n b\n )\n '),
-    ('expr',              extparse.parse_expr,              Await,            '\n await\n a\n '),
-    ('expr',              extparse.parse_expr,              Yield,            '\n yield\n '),
-    ('expr',              extparse.parse_expr,              Yield,            '\n yield\n a\n '),
-    ('expr',              extparse.parse_expr,              YieldFrom,        '\n yield\n from\n a\n '),
-    ('expr',              extparse.parse_expr,              Compare,          '\n a\n <\n b\n '),
-    ('expr',              extparse.parse_expr,              Call,             '\n f\n (\n a\n )\n '),
-    ('expr',              extparse.parse_expr,              JoinedStr,        "\n f'{a}'\n "),
-    ('expr',              extparse.parse_expr,              JoinedStr,        '\n f"{a}"\n '),
-    ('expr',              extparse.parse_expr,              JoinedStr,        "\n f'''\n {\n a\n }\n '''\n "),
-    ('expr',              extparse.parse_expr,              JoinedStr,        '\n f"""\n {\n a\n }\n """\n '),
-    ('expr',              extparse.parse_expr,              Constant,         '\n ...\n '),
-    ('expr',              extparse.parse_expr,              Constant,         '\n None\n '),
-    ('expr',              extparse.parse_expr,              Constant,         '\n True\n '),
-    ('expr',              extparse.parse_expr,              Constant,         '\n False\n '),
-    ('expr',              extparse.parse_expr,              Constant,         '\n 1\n '),
-    ('expr',              extparse.parse_expr,              Constant,         '\n 1.0\n '),
-    ('expr',              extparse.parse_expr,              Constant,         '\n 1j\n '),
-    ('expr',              extparse.parse_expr,              Constant,         "\n 'a'\n "),
-    ('expr',              extparse.parse_expr,              Constant,         '\n "a"\n '),
-    ('expr',              extparse.parse_expr,              Constant,         "\n '''\n a\n '''\n "),
-    ('expr',              extparse.parse_expr,              Constant,         '\n """\n a\n """\n '),
-    ('expr',              extparse.parse_expr,              Constant,         "\n b'a'\n "),
-    ('expr',              extparse.parse_expr,              Constant,         '\n b"a"\n '),
-    ('expr',              extparse.parse_expr,              Constant,         "\n b'''\n a\n '''\n "),
-    ('expr',              extparse.parse_expr,              Constant,         '\n b"""\n a\n """\n '),
-    ('expr',              extparse.parse_expr,              Attribute,        '\n a\n .\n b\n '),
-    ('expr',              extparse.parse_expr,              Subscript,        '\n a\n [\n b\n ]\n '),
-    ('expr',              extparse.parse_expr,              Starred,          '\n *\n a\n '),
-    ('expr',              extparse.parse_expr,              List,             '\n [\n a\n ,\n b\n ]\n '),
-    ('expr',              extparse.parse_expr,              Tuple,            '\n (\n a\n ,\n b\n )\n '),
-    ('expr',              extparse.parse_expr,              Tuple,            '\n a\n ,\n '),
-    ('expr',              extparse.parse_expr,              Tuple,            '\n a\n ,\n b\n '),
+    ('expr',              ep.parse_expr,              BoolOp,           '\n a\n or\n b\n '),
+    ('expr',              ep.parse_expr,              NamedExpr,        '\n a\n :=\n b\n '),
+    ('expr',              ep.parse_expr,              BinOp,            '\n a\n |\n b\n '),
+    ('expr',              ep.parse_expr,              BinOp,            '\n a\n **\n b\n '),
+    ('expr',              ep.parse_expr,              UnaryOp,          '\n not\n a\n '),
+    ('expr',              ep.parse_expr,              UnaryOp,          '\n ~\n a\n '),
+    ('expr',              ep.parse_expr,              Lambda,           '\n lambda\n :\n None\n '),
+    ('expr',              ep.parse_expr,              IfExp,            '\n a\n if\n b\n else\n c\n '),
+    ('expr',              ep.parse_expr,              Dict,             '\n {\n a\n :\n b\n }\n '),
+    ('expr',              ep.parse_expr,              Set,              '\n {\n a\n ,\n b\n }\n '),
+    ('expr',              ep.parse_expr,              ListComp,         '\n [\n a\n for\n a\n in\n b\n ]\n '),
+    ('expr',              ep.parse_expr,              SetComp,          '\n {\n a\n for\n a\n in\n b\n }\n '),
+    ('expr',              ep.parse_expr,              DictComp,         '\n {\n a\n :\n c\n for\n a\n ,\n c\n in\n b\n }\n '),
+    ('expr',              ep.parse_expr,              GeneratorExp,     '\n (\n a\n for\n a\n in\n b\n )\n '),
+    ('expr',              ep.parse_expr,              Await,            '\n await\n a\n '),
+    ('expr',              ep.parse_expr,              Yield,            '\n yield\n '),
+    ('expr',              ep.parse_expr,              Yield,            '\n yield\n a\n '),
+    ('expr',              ep.parse_expr,              YieldFrom,        '\n yield\n from\n a\n '),
+    ('expr',              ep.parse_expr,              Compare,          '\n a\n <\n b\n '),
+    ('expr',              ep.parse_expr,              Call,             '\n f\n (\n a\n )\n '),
+    ('expr',              ep.parse_expr,              JoinedStr,        "\n f'{a}'\n "),
+    ('expr',              ep.parse_expr,              JoinedStr,        '\n f"{a}"\n '),
+    ('expr',              ep.parse_expr,              JoinedStr,        "\n f'''\n {\n a\n }\n '''\n "),
+    ('expr',              ep.parse_expr,              JoinedStr,        '\n f"""\n {\n a\n }\n """\n '),
+    ('expr',              ep.parse_expr,              Constant,         '\n ...\n '),
+    ('expr',              ep.parse_expr,              Constant,         '\n None\n '),
+    ('expr',              ep.parse_expr,              Constant,         '\n True\n '),
+    ('expr',              ep.parse_expr,              Constant,         '\n False\n '),
+    ('expr',              ep.parse_expr,              Constant,         '\n 1\n '),
+    ('expr',              ep.parse_expr,              Constant,         '\n 1.0\n '),
+    ('expr',              ep.parse_expr,              Constant,         '\n 1j\n '),
+    ('expr',              ep.parse_expr,              Constant,         "\n 'a'\n "),
+    ('expr',              ep.parse_expr,              Constant,         '\n "a"\n '),
+    ('expr',              ep.parse_expr,              Constant,         "\n '''\n a\n '''\n "),
+    ('expr',              ep.parse_expr,              Constant,         '\n """\n a\n """\n '),
+    ('expr',              ep.parse_expr,              Constant,         "\n b'a'\n "),
+    ('expr',              ep.parse_expr,              Constant,         '\n b"a"\n '),
+    ('expr',              ep.parse_expr,              Constant,         "\n b'''\n a\n '''\n "),
+    ('expr',              ep.parse_expr,              Constant,         '\n b"""\n a\n """\n '),
+    ('expr',              ep.parse_expr,              Attribute,        '\n a\n .\n b\n '),
+    ('expr',              ep.parse_expr,              Subscript,        '\n a\n [\n b\n ]\n '),
+    ('expr',              ep.parse_expr,              Starred,          '\n *\n a\n '),
+    ('expr',              ep.parse_expr,              List,             '\n [\n a\n ,\n b\n ]\n '),
+    ('expr',              ep.parse_expr,              Tuple,            '\n (\n a\n ,\n b\n )\n '),
+    ('expr',              ep.parse_expr,              Tuple,            '\n a\n ,\n '),
+    ('expr',              ep.parse_expr,              Tuple,            '\n a\n ,\n b\n '),
 
-    ('pattern',           extparse.parse_pattern,           MatchValue,       '\n 42\n '),
-    ('pattern',           extparse.parse_pattern,           MatchSingleton,   '\n None\n '),
-    ('pattern',           extparse.parse_pattern,           MatchSequence,    '\n [\n a\n ,\n *\n b\n ]\n '),
-    ('pattern',           extparse.parse_pattern,           MatchSequence,    '\n \n a\n ,\n *\n b\n \n '),
-    ('pattern',           extparse.parse_pattern,           MatchMapping,     '\n {\n "key"\n :\n _\n }\n '),
-    ('pattern',           extparse.parse_pattern,           MatchClass,       '\n SomeClass\n (\n attr\n =\n val\n )\n '),
-    ('pattern',           extparse.parse_pattern,           MatchAs,          '\n as_var\n '),
-    ('pattern',           extparse.parse_pattern,           MatchAs,          '\n 1\n as\n as_var\n '),
-    ('pattern',           extparse.parse_pattern,           MatchOr,          '\n 1\n |\n 2\n '),
+    ('pattern',           ep.parse_pattern,           MatchValue,       '\n 42\n '),
+    ('pattern',           ep.parse_pattern,           MatchSingleton,   '\n None\n '),
+    ('pattern',           ep.parse_pattern,           MatchSequence,    '\n [\n a\n ,\n *\n b\n ]\n '),
+    ('pattern',           ep.parse_pattern,           MatchSequence,    '\n \n a\n ,\n *\n b\n \n '),
+    ('pattern',           ep.parse_pattern,           MatchMapping,     '\n {\n "key"\n :\n _\n }\n '),
+    ('pattern',           ep.parse_pattern,           MatchClass,       '\n SomeClass\n (\n attr\n =\n val\n )\n '),
+    ('pattern',           ep.parse_pattern,           MatchAs,          '\n as_var\n '),
+    ('pattern',           ep.parse_pattern,           MatchAs,          '\n 1\n as\n as_var\n '),
+    ('pattern',           ep.parse_pattern,           MatchOr,          '\n 1\n |\n 2\n '),
 
-    (mod,                 extparse.parse_Module,            Module,           'j'),
-    (Module,              extparse.parse_Module,            Module,           'j'),
-    (Expression,          extparse.parse_Expression,        Expression,       'None'),
-    (Interactive,         extparse.parse_Interactive,       Interactive,      'j'),
+    (mod,                 ep.parse_Module,            Module,           'j'),
+    (Module,              ep.parse_Module,            Module,           'j'),
+    (Expression,          ep.parse_Expression,        Expression,       'None'),
+    (Interactive,         ep.parse_Interactive,       Interactive,      'j'),
 
-    (stmt,                extparse.parse_stmt,              AnnAssign,        'i: int = 1'),
-    (stmt,                extparse.parse_stmt,              Expr,             'j'),
-    (stmt,                extparse.parse_stmt,              ParseError,       'i: int = 1\nj'),
-    (stmt,                extparse.parse_stmt,              SyntaxError,      'except: pass'),
-    (AnnAssign,           extparse.parse_stmt,              AnnAssign,        'i: int = 1'),
-    (Expr,                extparse.parse_stmt,              Expr,             'j'),
+    (stmt,                ep.parse_stmt,              AnnAssign,        'i: int = 1'),
+    (stmt,                ep.parse_stmt,              Expr,             'j'),
+    (stmt,                ep.parse_stmt,              ParseError,       'i: int = 1\nj'),
+    (stmt,                ep.parse_stmt,              SyntaxError,      'except: pass'),
+    (AnnAssign,           ep.parse_stmt,              AnnAssign,        'i: int = 1'),
+    (Expr,                ep.parse_stmt,              Expr,             'j'),
 
-    (ExceptHandler,       extparse.parse_ExceptHandler,     ExceptHandler,    'except: pass'),
-    (ExceptHandler,       extparse.parse_ExceptHandler,     ParseError,       'except Exception: pass\nexcept: pass'),
-    (ExceptHandler,       extparse.parse_ExceptHandler,     SyntaxError,      'i: int = 1'),
+    (ExceptHandler,       ep.parse_ExceptHandler,     ExceptHandler,    'except: pass'),
+    (ExceptHandler,       ep.parse_ExceptHandler,     ParseError,       'except Exception: pass\nexcept: pass'),
+    (ExceptHandler,       ep.parse_ExceptHandler,     SyntaxError,      'i: int = 1'),
 
-    (match_case,          extparse.parse_match_case,        match_case,       'case None: pass'),
-    (match_case,          extparse.parse_match_case,        ParseError,       'case None: pass\ncase 1: pass'),
-    (match_case,          extparse.parse_match_case,        SyntaxError,      'i: int = 1'),
+    (match_case,          ep.parse_match_case,        match_case,       'case None: pass'),
+    (match_case,          ep.parse_match_case,        ParseError,       'case None: pass\ncase 1: pass'),
+    (match_case,          ep.parse_match_case,        SyntaxError,      'i: int = 1'),
 
-    (expr,                extparse.parse_expr,              Name,             'j'),
-    (expr,                extparse.parse_expr,              Starred,          '*s'),
-    (expr,                extparse.parse_expr,              Starred,          '*\ns'),
-    (expr,                extparse.parse_expr,              Tuple,            '*\ns,'),
-    (expr,                extparse.parse_expr,              Tuple,            '1\n,\n2\n,'),
-    (expr,                extparse.parse_expr,              SyntaxError,      '*not a'),
-    (expr,                extparse.parse_expr,              SyntaxError,      'a:b'),
-    (expr,                extparse.parse_expr,              SyntaxError,      'a:b:c'),
-    (Name,                extparse.parse_expr,              Name,             'j'),
-    (Starred,             extparse.parse_expr,              Starred,          '*s'),
+    (expr,                ep.parse_expr,              Name,             'j'),
+    (expr,                ep.parse_expr,              Starred,          '*s'),
+    (expr,                ep.parse_expr,              Starred,          '*\ns'),
+    (expr,                ep.parse_expr,              Tuple,            '*\ns,'),
+    (expr,                ep.parse_expr,              Tuple,            '1\n,\n2\n,'),
+    (expr,                ep.parse_expr,              SyntaxError,      '*not a'),
+    (expr,                ep.parse_expr,              SyntaxError,      'a:b'),
+    (expr,                ep.parse_expr,              SyntaxError,      'a:b:c'),
+    (Name,                ep.parse_expr,              Name,             'j'),
+    (Starred,             ep.parse_expr,              Starred,          '*s'),
 
-    (Starred,             extparse.parse_expr_arglike,      Starred,          '*not a'),
+    (Starred,             ep.parse_expr_arglike,      Starred,          '*not a'),
 
-    (Slice,               extparse.parse_expr_slice,        Slice,            'a:b'),
+    (Slice,               ep.parse_expr_slice,        Slice,            'a:b'),
 
-    (boolop,              extparse.parse_boolop,            And,              'and'),
-    (boolop,              extparse.parse_boolop,            ParseError,       '*'),
-    (operator,            extparse.parse_operator,          Mult,             '*'),
-    (operator,            extparse.parse_operator,          Mult,             '*='),
-    (operator,            extparse.parse_operator,          ParseError,       'and'),
-    (unaryop,             extparse.parse_unaryop,           UAdd,             '+'),
-    (unaryop,             extparse.parse_unaryop,           SyntaxError,      'and'),
-    (cmpop,               extparse.parse_cmpop,             GtE,              '>='),
-    (cmpop,               extparse.parse_cmpop,             IsNot,            'is\nnot'),
-    (cmpop,               extparse.parse_cmpop,             ParseError,       '>= a >='),
-    (cmpop,               extparse.parse_cmpop,             ParseError,       'and'),
+    (boolop,              ep.parse_boolop,            And,              'and'),
+    (boolop,              ep.parse_boolop,            ParseError,       '*'),
+    (operator,            ep.parse_operator,          Mult,             '*'),
+    (operator,            ep.parse_operator,          Mult,             '*='),
+    (operator,            ep.parse_operator,          ParseError,       'and'),
+    (unaryop,             ep.parse_unaryop,           UAdd,             '+'),
+    (unaryop,             ep.parse_unaryop,           SyntaxError,      'and'),
+    (cmpop,               ep.parse_cmpop,             GtE,              '>='),
+    (cmpop,               ep.parse_cmpop,             IsNot,            'is\nnot'),
+    (cmpop,               ep.parse_cmpop,             ParseError,       '>= a >='),
+    (cmpop,               ep.parse_cmpop,             ParseError,       'and'),
 
-    (comprehension,       extparse.parse_comprehension,     comprehension,    'for u in v'),
-    (comprehension,       extparse.parse_comprehension,     comprehension,    'for u in v if w'),
-    (comprehension,       extparse.parse_comprehension,     ParseError,       '()'),
+    (comprehension,       ep.parse_comprehension,     comprehension,    'for u in v'),
+    (comprehension,       ep.parse_comprehension,     comprehension,    'for u in v if w'),
+    (comprehension,       ep.parse_comprehension,     ParseError,       '()'),
 
-    (arguments,           extparse.parse_arguments,         arguments,        ''),
-    (arguments,           extparse.parse_arguments,         arguments,        'a: list[str], /, b: int = 1, *c, d=100, **e'),
-    (arguments,           extparse.parse_arguments_lambda,  arguments,        'a, /, b, *c, d=100, **e'),
+    (arguments,           ep.parse_arguments,         arguments,        ''),
+    (arguments,           ep.parse_arguments,         arguments,        'a: list[str], /, b: int = 1, *c, d=100, **e'),
+    (arguments,           ep.parse_arguments_lambda,  arguments,        'a, /, b, *c, d=100, **e'),
 
-    (arg,                 extparse.parse_arg,               arg,              'a: b'),
-    (arg,                 extparse.parse_arg,               ParseError,       'a: b = c'),
-    (arg,                 extparse.parse_arg,               ParseError,       'a, b'),
-    (arg,                 extparse.parse_arg,               ParseError,       'a, /'),
-    (arg,                 extparse.parse_arg,               ParseError,       '*, a'),
-    (arg,                 extparse.parse_arg,               ParseError,       '*a'),
-    (arg,                 extparse.parse_arg,               ParseError,       '**a'),
+    (arg,                 ep.parse_arg,               arg,              'a: b'),
+    (arg,                 ep.parse_arg,               ParseError,       'a: b = c'),
+    (arg,                 ep.parse_arg,               ParseError,       'a, b'),
+    (arg,                 ep.parse_arg,               ParseError,       'a, /'),
+    (arg,                 ep.parse_arg,               ParseError,       '*, a'),
+    (arg,                 ep.parse_arg,               ParseError,       '*a'),
+    (arg,                 ep.parse_arg,               ParseError,       '**a'),
 
-    (keyword,             extparse.parse_keyword,           keyword,          'a=1'),
-    (keyword,             extparse.parse_keyword,           keyword,          '**a'),
-    (keyword,             extparse.parse_keyword,           ParseError,       '1'),
-    (keyword,             extparse.parse_keyword,           ParseError,       'a'),
-    (keyword,             extparse.parse_keyword,           ParseError,       'a=1, b=2'),
+    (keyword,             ep.parse_keyword,           keyword,          'a=1'),
+    (keyword,             ep.parse_keyword,           keyword,          '**a'),
+    (keyword,             ep.parse_keyword,           ParseError,       '1'),
+    (keyword,             ep.parse_keyword,           ParseError,       'a'),
+    (keyword,             ep.parse_keyword,           ParseError,       'a=1, b=2'),
 
-    (alias,               extparse.parse_alias,             alias,            'a'),
-    (alias,               extparse.parse_alias,             alias,            'a.b'),
-    (alias,               extparse.parse_alias,             alias,            '*'),
-    (alias,               extparse.parse_alias,             ParseError,       'a, b'),
-    (alias,               extparse.parse_alias,             alias,            'a as c'),
-    (alias,               extparse.parse_alias,             alias,            'a.b as c'),
-    (alias,               extparse.parse_alias,             SyntaxError,      '* as c'),
+    (alias,               ep.parse_alias,             alias,            'a'),
+    (alias,               ep.parse_alias,             alias,            'a.b'),
+    (alias,               ep.parse_alias,             alias,            '*'),
+    (alias,               ep.parse_alias,             ParseError,       'a, b'),
+    (alias,               ep.parse_alias,             alias,            'a as c'),
+    (alias,               ep.parse_alias,             alias,            'a.b as c'),
+    (alias,               ep.parse_alias,             SyntaxError,      '* as c'),
 
-    (withitem,            extparse.parse_withitem,          withitem,         'a'),
-    (withitem,            extparse.parse_withitem,          withitem,         'a, b'),
-    (withitem,            extparse.parse_withitem,          withitem,         '(a, b)'),
-    (withitem,            extparse.parse_withitem,          withitem,         'a as b'),
-    (withitem,            extparse.parse_withitem,          ParseError,       'a as b, x as y'),
-    (withitem,            extparse.parse_withitem,          withitem,         '(a)'),
-    (withitem,            extparse.parse_withitem,          SyntaxError,      '(a as b)'),
-    (withitem,            extparse.parse_withitem,          SyntaxError,      '(a as b, x as y)'),
+    (withitem,            ep.parse_withitem,          withitem,         'a'),
+    (withitem,            ep.parse_withitem,          withitem,         'a, b'),
+    (withitem,            ep.parse_withitem,          withitem,         '(a, b)'),
+    (withitem,            ep.parse_withitem,          withitem,         'a as b'),
+    (withitem,            ep.parse_withitem,          ParseError,       'a as b, x as y'),
+    (withitem,            ep.parse_withitem,          withitem,         '(a)'),
+    (withitem,            ep.parse_withitem,          SyntaxError,      '(a as b)'),
+    (withitem,            ep.parse_withitem,          SyntaxError,      '(a as b, x as y)'),
 
-    (pattern,             extparse.parse_pattern,           MatchValue,       '42'),
-    (pattern,             extparse.parse_pattern,           MatchSingleton,   'None'),
-    (pattern,             extparse.parse_pattern,           MatchSequence,    '[a, *_]'),
-    (pattern,             extparse.parse_pattern,           MatchSequence,    '[]'),
-    (pattern,             extparse.parse_pattern,           MatchMapping,     '{"key": _}'),
-    (pattern,             extparse.parse_pattern,           MatchMapping,     '{}'),
-    (pattern,             extparse.parse_pattern,           MatchClass,       'SomeClass()'),
-    (pattern,             extparse.parse_pattern,           MatchClass,       'SomeClass(attr=val)'),
-    (pattern,             extparse.parse_pattern,           MatchAs,          'as_var'),
-    (pattern,             extparse.parse_pattern,           MatchAs,          '1 as as_var'),
-    (pattern,             extparse.parse_pattern,           MatchOr,          '1 | 2 | 3'),
-    (pattern,             extparse.parse_pattern,           MatchAs,          '_'),
-    (pattern,             extparse.parse_pattern,           MatchStar,        '*a'),
-    (pattern,             extparse.parse_pattern,           SyntaxError,      ''),
+    (pattern,             ep.parse_pattern,           MatchValue,       '42'),
+    (pattern,             ep.parse_pattern,           MatchSingleton,   'None'),
+    (pattern,             ep.parse_pattern,           MatchSequence,    '[a, *_]'),
+    (pattern,             ep.parse_pattern,           MatchSequence,    '[]'),
+    (pattern,             ep.parse_pattern,           MatchMapping,     '{"key": _}'),
+    (pattern,             ep.parse_pattern,           MatchMapping,     '{}'),
+    (pattern,             ep.parse_pattern,           MatchClass,       'SomeClass()'),
+    (pattern,             ep.parse_pattern,           MatchClass,       'SomeClass(attr=val)'),
+    (pattern,             ep.parse_pattern,           MatchAs,          'as_var'),
+    (pattern,             ep.parse_pattern,           MatchAs,          '1 as as_var'),
+    (pattern,             ep.parse_pattern,           MatchOr,          '1 | 2 | 3'),
+    (pattern,             ep.parse_pattern,           MatchAs,          '_'),
+    (pattern,             ep.parse_pattern,           MatchStar,        '*a'),
+    (pattern,             ep.parse_pattern,           SyntaxError,      ''),
 
-    (MatchValue,          extparse.parse_pattern,           MatchValue,       '42'),
-    (MatchSingleton,      extparse.parse_pattern,           MatchSingleton,   'None'),
-    (MatchSequence,       extparse.parse_pattern,           MatchSequence,    '[a, *_]'),
-    (MatchSequence,       extparse.parse_pattern,           MatchSequence,    '[]'),
-    (MatchMapping,        extparse.parse_pattern,           MatchMapping,     '{"key": _}'),
-    (MatchMapping,        extparse.parse_pattern,           MatchMapping,     '{}'),
-    (MatchClass,          extparse.parse_pattern,           MatchClass,       'SomeClass()'),
-    (MatchClass,          extparse.parse_pattern,           MatchClass,       'SomeClass(attr=val)'),
-    (MatchAs,             extparse.parse_pattern,           MatchAs,          'as_var'),
-    (MatchAs,             extparse.parse_pattern,           MatchAs,          '1 as as_var'),
-    (MatchOr,             extparse.parse_pattern,           MatchOr,          '1 | 2 | 3'),
-    (MatchAs,             extparse.parse_pattern,           MatchAs,          '_'),
-    (MatchStar,           extparse.parse_pattern,           MatchStar,        '*a'),
+    (MatchValue,          ep.parse_pattern,           MatchValue,       '42'),
+    (MatchSingleton,      ep.parse_pattern,           MatchSingleton,   'None'),
+    (MatchSequence,       ep.parse_pattern,           MatchSequence,    '[a, *_]'),
+    (MatchSequence,       ep.parse_pattern,           MatchSequence,    '[]'),
+    (MatchMapping,        ep.parse_pattern,           MatchMapping,     '{"key": _}'),
+    (MatchMapping,        ep.parse_pattern,           MatchMapping,     '{}'),
+    (MatchClass,          ep.parse_pattern,           MatchClass,       'SomeClass()'),
+    (MatchClass,          ep.parse_pattern,           MatchClass,       'SomeClass(attr=val)'),
+    (MatchAs,             ep.parse_pattern,           MatchAs,          'as_var'),
+    (MatchAs,             ep.parse_pattern,           MatchAs,          '1 as as_var'),
+    (MatchOr,             ep.parse_pattern,           MatchOr,          '1 | 2 | 3'),
+    (MatchAs,             ep.parse_pattern,           MatchAs,          '_'),
+    (MatchStar,           ep.parse_pattern,           MatchStar,        '*a'),
 
-    ('expr',              extparse.parse_expr,              Tuple,            ' *a,  # tail'),
-    ('expr_arglike',      extparse.parse_expr_arglike,      Starred,          ' *not a  # tail'),
-    ('expr_slice',        extparse.parse_expr_slice,        Slice,            ' a:b:c  # tail'),
-    ('expr_slice',        extparse.parse_expr_slice,        Yield,            ' yield  # tail'),
-    ('boolop',            extparse.parse_boolop,            And,              ' and  # tail'),
-    ('binop',             extparse.parse_binop,             RShift,           ' >>  # tail'),
-    ('augop',             extparse.parse_augop,             SyntaxError,      ' >>=  # tail'),  # this can never be as a statement can never be enclosed and a line continuation cannot follow a comment
-    ('unaryop',           extparse.parse_unaryop,           Invert,           ' ~  # tail'),
-    ('cmpop',             extparse.parse_cmpop,             GtE,              ' >=  # tail'),
-    ('comprehension',     extparse.parse_comprehension,     comprehension,    ' for i in j  # tail'),
-    ('arguments',         extparse.parse_arguments,         arguments,        ' a: list[str], /, b: int = 1, *c, d=100, **e  # tail'),
-    ('arguments_lambda',  extparse.parse_arguments_lambda,  arguments,        ' a, /, b, *c, d=100, **e  # tail'),
-    ('arg',               extparse.parse_arg,               arg,              ' a: b  # tail'),
-    ('keyword',           extparse.parse_keyword,           keyword,          ' a=1  # tail'),
-    ('Import_name',       extparse.parse_Import_name,       alias,            ' a.b  # tail'),
-    ('ImportFrom_name',   extparse.parse_ImportFrom_name,   alias,            ' *  # tail'),
-    ('withitem',          extparse.parse_withitem,          withitem,         ' a as b,  # tail'),
-    ('pattern',           extparse.parse_pattern,           MatchOr,          ' 1 | 2 | 3  # tail'),
-    ('pattern',           extparse.parse_pattern,           MatchStar,        ' *a  # tail'),
+    ('expr',              ep.parse_expr,              Tuple,            ' *a,  # tail'),
+    ('expr_arglike',      ep.parse_expr_arglike,      Starred,          ' *not a  # tail'),
+    ('expr_slice',        ep.parse_expr_slice,        Slice,            ' a:b:c  # tail'),
+    ('expr_slice',        ep.parse_expr_slice,        Yield,            ' yield  # tail'),
+    ('boolop',            ep.parse_boolop,            And,              ' and  # tail'),
+    ('binop',             ep.parse_binop,             RShift,           ' >>  # tail'),
+    ('augop',             ep.parse_augop,             SyntaxError,      ' >>=  # tail'),  # this can never be as a statement can never be enclosed and a line continuation cannot follow a comment
+    ('unaryop',           ep.parse_unaryop,           Invert,           ' ~  # tail'),
+    ('cmpop',             ep.parse_cmpop,             GtE,              ' >=  # tail'),
+    ('comprehension',     ep.parse_comprehension,     comprehension,    ' for i in j  # tail'),
+    ('arguments',         ep.parse_arguments,         arguments,        ' a: list[str], /, b: int = 1, *c, d=100, **e  # tail'),
+    ('arguments_lambda',  ep.parse_arguments_lambda,  arguments,        ' a, /, b, *c, d=100, **e  # tail'),
+    ('arg',               ep.parse_arg,               arg,              ' a: b  # tail'),
+    ('keyword',           ep.parse_keyword,           keyword,          ' a=1  # tail'),
+    ('Import_name',       ep.parse_Import_name,       alias,            ' a.b  # tail'),
+    ('ImportFrom_name',   ep.parse_ImportFrom_name,   alias,            ' *  # tail'),
+    ('withitem',          ep.parse_withitem,          withitem,         ' a as b,  # tail'),
+    ('pattern',           ep.parse_pattern,           MatchOr,          ' 1 | 2 | 3  # tail'),
+    ('pattern',           ep.parse_pattern,           MatchStar,        ' *a  # tail'),
 
-    ('Assign_targets',    extparse.parse_Assign_targets,    Assign,           'a'),
-    ('Assign_targets',    extparse.parse_Assign_targets,    Assign,           'a ='),
-    ('Assign_targets',    extparse.parse_Assign_targets,    Assign,           'a = b'),
-    ('Assign_targets',    extparse.parse_Assign_targets,    Assign,           'a = b ='),
-    ('Assign_targets',    extparse.parse_Assign_targets,    Assign,           '\\\na\\\n = \\\n'),
-    ('Assign_targets',    extparse.parse_Assign_targets,    IndentationError, ' a'),
-    ('Assign_targets',    extparse.parse_Assign_targets,    SyntaxError,      '\na'),
-    ('Assign_targets',    extparse.parse_Assign_targets,    SyntaxError,      'a\n='),
-    ('Assign_targets',    extparse.parse_Assign_targets,    SyntaxError,      'a =  # tail'),
-    ('Assign_targets',    extparse.parse_Assign_targets,    SyntaxError,      '# head\na ='),
-    ('all',               extparse.parse_Assign_targets,    Assign,           'a = b ='),
+    ('Assign_targets',    ep.parse_Assign_targets,    Assign,           'a'),
+    ('Assign_targets',    ep.parse_Assign_targets,    Assign,           'a ='),
+    ('Assign_targets',    ep.parse_Assign_targets,    Assign,           'a = b'),
+    ('Assign_targets',    ep.parse_Assign_targets,    Assign,           'a = b ='),
+    ('Assign_targets',    ep.parse_Assign_targets,    Assign,           '\\\na\\\n = \\\n'),
+    ('Assign_targets',    ep.parse_Assign_targets,    IndentationError, ' a'),
+    ('Assign_targets',    ep.parse_Assign_targets,    SyntaxError,      '\na'),
+    ('Assign_targets',    ep.parse_Assign_targets,    SyntaxError,      'a\n='),
+    ('Assign_targets',    ep.parse_Assign_targets,    SyntaxError,      'a =  # tail'),
+    ('Assign_targets',    ep.parse_Assign_targets,    SyntaxError,      '# head\na ='),
+    ('all',               ep.parse_Assign_targets,    Assign,           'a = b ='),
   ]
 
 if PYGE11:
     PARSE_TESTS.extend([
-        ('ExceptHandler',     extparse.parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
+        ('ExceptHandler',     ep.parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
 
-        ('expr_all',          extparse.parse_expr_all,          Starred,        '*not a'),
+        ('expr_all',          ep.parse_expr_all,          Starred,        '*not a'),
 
-        ('expr_slice',        extparse.parse_expr_slice,        Tuple,          '*s'),
-        ('expr_slice',        extparse.parse_expr_slice,        Tuple,          '*not a'),
+        ('expr_slice',        ep.parse_expr_slice,        Tuple,          '*s'),
+        ('expr_slice',        ep.parse_expr_slice,        Tuple,          '*not a'),
 
-        ('expr_sliceelt',     extparse.parse_expr_sliceelt,     Starred,        '*not a'),
+        ('expr_sliceelt',     ep.parse_expr_sliceelt,     Starred,        '*not a'),
 
-        (ExceptHandler,       extparse.parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
+        (ExceptHandler,       ep.parse_ExceptHandler,     ExceptHandler,  'except* Exception: pass'),
 
-        ('arg',               extparse.parse_arg,               arg,            ' a: *b  # tail'),
+        ('arg',               ep.parse_arg,               arg,            ' a: *b  # tail'),
     ])
 
 if PYGE12:
     PARSE_TESTS.extend([
-        ('all',               extparse.parse_type_params,       Tuple,          '*U, **V, **Z'),
-        ('all',               extparse.parse_type_params,       Tuple,          'T: int, *U, **V, **Z'),
+        ('all',               ep.parse_type_params,       Tuple,          '*U, **V, **Z'),
+        ('all',               ep.parse_type_params,       Tuple,          'T: int, *U, **V, **Z'),
 
-        ('type_param',        extparse.parse_type_param,        TypeVar,        'a: int'),
-        ('type_param',        extparse.parse_type_param,        ParamSpec,      '**a'),
-        ('type_param',        extparse.parse_type_param,        TypeVarTuple,   '*a'),
-        ('type_param',        extparse.parse_type_param,        ParseError,     'a: int,'),
+        ('type_param',        ep.parse_type_param,        TypeVar,        'a: int'),
+        ('type_param',        ep.parse_type_param,        ParamSpec,      '**a'),
+        ('type_param',        ep.parse_type_param,        TypeVarTuple,   '*a'),
+        ('type_param',        ep.parse_type_param,        ParseError,     'a: int,'),
 
-        ('type_params',       extparse.parse_type_params,       Tuple,          ''),
-        ('type_params',       extparse.parse_type_params,       Tuple,          '()'),
-        ('type_params',       extparse.parse_type_params,       Tuple,          'a: int'),
-        ('type_params',       extparse.parse_type_params,       Tuple,          'a: int,'),
-        ('type_params',       extparse.parse_type_params,       Tuple,          'a: int, *b, **c'),
+        ('type_params',       ep.parse_type_params,       Tuple,          ''),
+        ('type_params',       ep.parse_type_params,       Tuple,          '()'),
+        ('type_params',       ep.parse_type_params,       Tuple,          'a: int'),
+        ('type_params',       ep.parse_type_params,       Tuple,          'a: int,'),
+        ('type_params',       ep.parse_type_params,       Tuple,          'a: int, *b, **c'),
 
-        (type_param,          extparse.parse_type_param,        TypeVar,        'a: int'),
-        (TypeVar,             extparse.parse_type_param,        TypeVar,        'a: int'),
-        (type_param,          extparse.parse_type_param,        ParamSpec,      '**a'),
-        (ParamSpec,           extparse.parse_type_param,        ParamSpec,      '**a'),
-        (type_param,          extparse.parse_type_param,        TypeVarTuple,   '*a'),
-        (TypeVarTuple,        extparse.parse_type_param,        TypeVarTuple,   '*a'),
+        (type_param,          ep.parse_type_param,        TypeVar,        'a: int'),
+        (TypeVar,             ep.parse_type_param,        TypeVar,        'a: int'),
+        (type_param,          ep.parse_type_param,        ParamSpec,      '**a'),
+        (ParamSpec,           ep.parse_type_param,        ParamSpec,      '**a'),
+        (type_param,          ep.parse_type_param,        TypeVarTuple,   '*a'),
+        (TypeVarTuple,        ep.parse_type_param,        TypeVarTuple,   '*a'),
 
-        ('type_param',        extparse.parse_type_param,        TypeVar,        ' a: int  # tail'),
-        ('type_params',       extparse.parse_type_params,       Tuple,          ' a: int, *b, **c  # tail'),
+        ('type_param',        ep.parse_type_param,        TypeVar,        ' a: int  # tail'),
+        ('type_params',       ep.parse_type_params,       Tuple,          ' a: int, *b, **c  # tail'),
     ])
 
 if PYGE13:
     PARSE_TESTS.extend([
-        ('all',               extparse.parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
-        ('all',               extparse.parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
+        ('all',               ep.parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
+        ('all',               ep.parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
 
-        ('type_param',        extparse.parse_type_param,        TypeVar,        'a: int = int'),
-        ('type_param',        extparse.parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
-        ('type_param',        extparse.parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
+        ('type_param',        ep.parse_type_param,        TypeVar,        'a: int = int'),
+        ('type_param',        ep.parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
+        ('type_param',        ep.parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
 
-        (type_param,          extparse.parse_type_param,        TypeVar,        'a: int = int'),
-        (TypeVar,             extparse.parse_type_param,        TypeVar,        'a: int = int'),
-        (type_param,          extparse.parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
-        (ParamSpec,           extparse.parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
-        (type_param,          extparse.parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
-        (TypeVarTuple,        extparse.parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
+        (type_param,          ep.parse_type_param,        TypeVar,        'a: int = int'),
+        (TypeVar,             ep.parse_type_param,        TypeVar,        'a: int = int'),
+        (type_param,          ep.parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
+        (ParamSpec,           ep.parse_type_param,        ParamSpec,      '**a = {T: int, U: str}'),
+        (type_param,          ep.parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
+        (TypeVarTuple,        ep.parse_type_param,        TypeVarTuple,   '*a = (int, str)'),
     ])
 
 
@@ -816,19 +778,19 @@ def regen_precedence_data():
 
 class TestFST(unittest.TestCase):
     def test__unparse(self):
-        self.assertEqual('for i in j', extparse.unparse(FST('[i for i in j]').generators[0].a))
+        self.assertEqual('for i in j', ep.unparse(FST('[i for i in j]').generators[0].a))
 
         for op in (Add, Sub, Mult, Div, Mod, Pow, LShift, RShift, BitOr, BitXor, BitAnd, FloorDiv, And, Or):
-            self.assertIs(OPCLS2STR[op], extparse.unparse(FST(f'a {OPCLS2STR[op]} b').op.a))
+            self.assertIs(OPCLS2STR[op], ep.unparse(FST(f'a {OPCLS2STR[op]} b').op.a))
 
         for op in (Add, Sub, Mult, Div, Mod, Pow, LShift, RShift, BitOr, BitXor, BitAnd, FloorDiv):
-            self.assertIs(OPCLS2STR[op], extparse.unparse(FST(f'a {OPCLS2STR[op]}= b').op.a))
+            self.assertIs(OPCLS2STR[op], ep.unparse(FST(f'a {OPCLS2STR[op]}= b').op.a))
 
         for op in (Invert, Not, UAdd, USub):
-            self.assertIs(OPCLS2STR[op], extparse.unparse(FST(f'{OPCLS2STR[op]} a').op.a))
+            self.assertIs(OPCLS2STR[op], ep.unparse(FST(f'{OPCLS2STR[op]} a').op.a))
 
         for op in (Eq, NotEq, Lt, LtE, Gt, GtE, Is, IsNot, In, NotIn):
-            self.assertIs(OPCLS2STR[op], extparse.unparse(FST(f'a {OPCLS2STR[op]} b').ops[0].a))
+            self.assertIs(OPCLS2STR[op], ep.unparse(FST(f'a {OPCLS2STR[op]} b').ops[0].a))
 
     def test__parse(self):
         for mode, func, res, src in PARSE_TESTS:
@@ -836,7 +798,7 @@ class TestFST(unittest.TestCase):
                 test = 'parse'
 
                 try:
-                    ast = extparse.parse(src, mode)
+                    ast = ep.parse(src, mode)
 
                 except SyntaxError as exc:
                     if res is not exc.__class__:
@@ -858,19 +820,19 @@ class TestFST(unittest.TestCase):
 
                 if src != '*=':  # augassign is ambiguous for unparse
                     test = 'reparse'
-                    unp  = ((s := extparse.unparse(ast)) and s.lstrip()) or src  # 'lstrip' because comprehension has leading space, 'or src' because unparse of operators gives nothing
-                    ast2 = extparse.parse(unp, mode)
+                    unp  = ((s := ep.unparse(ast)) and s.lstrip()) or src  # 'lstrip' because comprehension has leading space, 'or src' because unparse of operators gives nothing
+                    ast2 = ep.parse(unp, mode)
 
                     compare_asts(ast, ast2, raise_=True)
 
                 # trailing newline
 
                 if (src != '*=' and                    # newline following augassign is syntactically impossible
-                    func != extparse.parse_Assign_targets  # this can't take trailing newline
+                    func != ep.parse_Assign_targets  # this can't take trailing newline
                 ):
                     test = 'newline'
                     srcn = src + '\n'
-                    ast  = extparse.parse(srcn, mode)
+                    ast  = ep.parse(srcn, mode)
 
                 # # IndentationError
 
@@ -879,22 +841,25 @@ class TestFST(unittest.TestCase):
                 # if not src.startswith('\n') and src.strip():  # won't get IndentationError on stuff that starts with newlines or empty arguments
                 #     src = ' ' + src
 
-                #     self.assertRaises(IndentationError, extparse.parse, src, mode)
+                #     self.assertRaises(IndentationError, ep.parse, src, mode)
                 #     self.assertRaises(IndentationError, func, src)
 
             except Exception:
                 print()
-                print(test, mode, src, res, func)
+                print(f'{mode = }')
+                print(f'{func = }')
+                print(f'{res = }')
+                print(f'{src = !r}')
 
                 raise
 
     def test__parse_special(self):
-        self.assertRaises(SyntaxError, extparse.parse_expr, 'i for i in j')
-        self.assertRaises(SyntaxError, extparse.parse_expr_slice, 'i for i in j')
-        self.assertRaises(SyntaxError, extparse.parse_expr_arglike, 'i for i in j')
+        self.assertRaises(SyntaxError, ep.parse_expr, 'i for i in j')
+        self.assertRaises(SyntaxError, ep.parse_expr_slice, 'i for i in j')
+        self.assertRaises(SyntaxError, ep.parse_expr_arglike, 'i for i in j')
 
-        self.assertRaises(SyntaxError, extparse.parse_withitem, 'i for i in j')
-        self.assertRaises(SyntaxError, extparse.parse_withitem, '')
+        self.assertRaises(SyntaxError, ep.parse_withitem, 'i for i in j')
+        self.assertRaises(SyntaxError, ep.parse_withitem, '')
 
     def test___new__(self):
         f = FST(None, 'exec')
@@ -963,7 +928,10 @@ class TestFST(unittest.TestCase):
 
             except Exception:
                 print()
-                print(mode, src, res, func)
+                print(f'{mode = }')
+                print(f'{func = }')
+                print(f'{res = }')
+                print(f'{src = !r}')
 
                 raise
 
@@ -2935,7 +2903,7 @@ match a:
                 if code_as is code_as_expr:
                     self.assertEqual(src, code_as(srcp[1:-1]).src)
 
-    def test_code_as_from_ast(self):
+    def test_code_as_all_from_ast(self):
         for mode, func, res, src in PARSE_TESTS:
             if issubclass(res, Exception):
                 continue
@@ -2943,15 +2911,9 @@ match a:
             ast = None
 
             try:
-                # if func in (extparse.parse_ExceptHandlers, extparse.parse_match_cases,
-                #             extparse.parse_aliases, extparse.parse_Import_names, extparse.parse_ImportFrom_names,
-                #             extparse.parse_type_params,
-                #             extparse.parse_Assign_targets):  # these are explicitly not guaranteed handled as AST input
-                #     continue
+                ast = ep.parse(src, mode)
 
-                ast = extparse.parse(src, mode)
-
-                if extparse.get_special_parse_mode(ast):  # this tells us if it is a SPECIAL SLICE, which are not handled as input to `code_as_all()`
+                if ep.get_special_parse_mode(ast):  # this tells us if it is a SPECIAL SLICE, which are not handled as input to `code_as_all()`
                     continue
 
                 astc = copy_ast(ast)
@@ -2967,11 +2929,71 @@ match a:
 
             except Exception:
                 print()
-                print(f'{mode=}')
-                print(f'{src=}')
-                print(f'{res=}')
-                print(f'{func=}')
+                print(f'{mode = }')
+                print(f'{func = }')
+                print(f'{res = }')
+                print(f'{src = !r}')
                 print(ast)
+
+                raise
+
+    def test_code_as_from_parse_data(self):
+        for mode, func, res, src in PARSE_TESTS:
+            if issubclass(res, Exception):
+                continue
+
+            if not isinstance(mode, str):
+                continue
+
+            try:
+                for name in dict.fromkeys((mode, func.__name__[6:])):  # func.__name__[6:] means 'parse_something' -> 'something'
+                    test = None
+
+                    if not (code_as := getattr(code, f'code_as_{name}', False)):
+                        continue
+
+                    test    = 'parse'
+                    ref_ast = ep.parse(src, mode)
+
+                    test = 'src'
+
+                    try:
+                        fst = code_as(src, sanitize=False)
+                    except TypeError:
+                        fst = code_as(src)
+
+                    compare_asts(ref_ast, fst.a, locs=True, raise_=True)
+
+                    if not fst.is_special_slice():  # because pure AST SPECIAL SLICEs are not supported
+                        test = 'ast'
+
+                        try:
+                            ast_fst = code_as(fst.a, sanitize=False)
+                        except TypeError:
+                            ast_fst = code_as(fst.a)
+
+                        compare_asts(ref_ast, ast_fst.a, locs=False, raise_=True)
+
+                    test    = 'fst'
+                    fst_src = fst.src
+
+                    try:
+                        fst_fst = code_as(fst, sanitize=False)
+                    except TypeError:
+                        fst_fst = code_as(fst)
+
+                    compare_asts(ref_ast, fst_fst.a, locs=False, raise_=True)
+
+                    self.assertEqual(fst_fst.src, fst_src)
+
+            except Exception:
+                print()
+                print(f'{test = }')
+                print(f'{code_as = }')
+                print(f'{mode = }')
+                print(f'{func = }')
+                print(f'{res = }')
+                print(f'{src = !r}')
 
                 raise
 
