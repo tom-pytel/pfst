@@ -4197,11 +4197,11 @@ class FST:
         return ast.__class__  # otherwise regular parse by AST type is valid
 
     def is_special_slice(self) -> bool:
-        """Whether `self` is an instance of our own special slice format and not a valid python structure. For example
+        """Whether `self` is an instance of our own SPECIAL SLICE format and not a valid python structure. For example
         a `Set` or `MatchOr` with zero elements or a `Tuple` containing things it normally cannot.
 
         **Returns:**
-        - `bool`: Whether self is a recognized special slice or not (if not it still doesn't mean its valid).
+        - `bool`: Whether self is a recognized SPECIAL SLICE or not (if not it still doesn't mean its valid).
 
         **Examples:**
         ```py

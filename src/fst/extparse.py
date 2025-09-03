@@ -100,8 +100,11 @@ __all__ = [
     'parse_arg',
     'parse_keyword',
     'parse_alias',
-    'parse_alias_dotted',
-    'parse_alias_star',
+    'parse_aliases',
+    'parse_Import_name',
+    'parse_Import_names',
+    'parse_ImportFrom_name',
+    'parse_ImportFrom_names',
     'parse_withitem',
     'parse_pattern',
     'parse_type_param',
@@ -281,8 +284,11 @@ Mode = Literal[
     'arg',
     'keyword',
     'alias',
-    'alias_dotted',
-    'alias_star',
+    'aliases',
+    'Import_name',
+    'Import_names',
+    'ImportFrom_name',
+    'ImportFrom_names',
     'withitem',
     'pattern',
     'type_param',
@@ -335,10 +341,10 @@ Mode = Literal[
 - `'keyword'`: Parse as a single `keyword` returned as itself. Same as passing `keyword` type.
 - `'alias'`: Parse as a single `alias` returned as itself. Either starred or dotted versions are accepted. Same
     as passing `alias` type.
-- `'alias_dotted'`: Parse as a single `alias` returned as itself, with starred version being a syntax error. This is the
+- `'Import_name'`: Parse as a single `alias` returned as itself, with starred version being a syntax error. This is the
     `alias` used in `Import.names`.
-- `'alias_star'`: Parse as a single `alias` returned as itself, with dotted version being a syntax error. This is the
-    `alias` used in `ImportFrom.names`.
+- `'ImportFrom_name'`: Parse as a single `alias` returned as itself, with dotted version being a syntax error. This is
+    the `alias` used in `ImportFrom.names`.
 - `'withitem'`: Parse as a single `withitem` returned as itself. Same as passing `withitem` type.
 - `'pattern'`: Parse as a a single `pattern` returned as itself. Same as passing `pattern` type.
 - `'type_param'`: Parse as a single `type_param` returned as itself, either `TypeVar`, `ParamSpec` or
@@ -388,8 +394,11 @@ def get_special_parse_mode(ast: AST) -> str | None:
 
     elif isinstance(ast, Tuple):
         if elts := ast.elts:
-            if isinstance(elts[0], type_param):
+            if isinstance(e0 := elts[0], type_param):
                 return 'type_params'
+
+            if isinstance(e0, alias):
+                return 'aliases'
 
     elif isinstance(ast, Assign):
         if isinstance(v := ast.value, Name) and not v.id:
@@ -400,7 +409,7 @@ def get_special_parse_mode(ast: AST) -> str | None:
 
 def unparse(ast: AST) -> str:
     """AST unparse that handles misc case of comprehension starting with a single space by stripping it as well as
-    removing parentheses from `Tuple`s with `Slice`s or special slice (our own) `Tuple`s.
+    removing parentheses from `Tuple`s with `Slice`s or our own SPECIAL SLICE `Tuple`s.
 
     @private
     """
@@ -412,8 +421,12 @@ def unparse(ast: AST) -> str:
             return s
 
     if isinstance(ast, Tuple):
-        if any(isinstance(e, Slice) or not isinstance(e, expr) for e in ast.elts):  # tuples with Slices cannot have parentheses, and neither can our own SPECIAL SLICEs
-            return src[1:-1]
+        if elts := ast.elts:
+            if not isinstance(elts[0], expr):  # our own SPECIAL SLICEs cannot have parentheses OR trailing commas
+                return src[1 : (-1 if len(elts) != 1 else -2)]
+
+            if any(isinstance(e, Slice) for e in elts):  # tuples with Slices cannot have parentheses
+                return src[1 : -1]
 
     elif isinstance(ast, comprehension):  # strip prefix space from this
         return src.lstrip()
@@ -1104,14 +1117,30 @@ def parse_alias(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     if '*' in src:
         try:
-            return parse_alias_star(src, parse_params)
+            return parse_ImportFrom_name(src, parse_params)
         except SyntaxError:  # '*' could have been in a comment
             pass
 
-    return parse_alias_dotted(src, parse_params)
+    return parse_Import_name(src, parse_params)
 
 
-def parse_alias_dotted(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_aliases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse to a `Tuple` of `ast.alias` (our own SPECIAL SLICE), allowing star or dotted notation or star, e.g.
+    "name as alias".
+
+    @private
+    """
+
+    if '*' in src:
+        try:
+            return parse_ImportFrom_names(src, parse_params)
+        except SyntaxError:  # '*' could have been in a comment
+            pass
+
+    return parse_Import_names(src, parse_params)
+
+
+def parse_Import_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.alias`, allowing dotted notation but not star (not all aliases are created equal),
     e.g. "name as alias".
 
@@ -1135,14 +1164,37 @@ def parse_alias_dotted(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(names[0], -1)
 
 
-def parse_alias_star(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse_Import_names(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse to a `Tuple` of `ast.alias` (our own SPECIAL SLICE), allowing dotted notation but not star.
+
+    @private
+    """
+
+    try:
+        names = _ast_parse1(f'import \\\n{src}', parse_params).names
+
+    except SyntaxError as first_exc:
+        try:
+            src   = src.replace("\n", "\\\n")
+            names = _ast_parse1(f'import \\\n{src}', parse_params).names  # multiline?
+
+        except SyntaxError:
+            raise first_exc from None
+
+    ast = Tuple(elts=names, ctx=Load(), lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
+                end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
+
+    return _offset_linenos(ast, -1)
+
+
+def parse_ImportFrom_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.alias`, allowing star but not dotted.
 
     @private
     """
 
     try:
-        names = _ast_parse1(f'from . import \\\n{src}', parse_params).names
+        names = _ast_parse1(f'from . import \\\n{src}', parse_params).names  # this instead of parentheses because could be '*' which doesn't like parentheses
 
     except SyntaxError as first_exc:
         try:
@@ -1156,6 +1208,29 @@ def parse_alias_star(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         raise ParseError('expecting single name')
 
     return _offset_linenos(names[0], -1)
+
+
+def parse_ImportFrom_names(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse to a `Tuple` of `ast.alias` (our own SPECIAL SLICE), allowing star but not dotted.
+
+    @private
+    """
+
+    try:
+        names = _ast_parse1(f'from . import \\\n{src}', parse_params).names  # this instead of parentheses because could be '*' which doesn't like parentheses
+
+    except SyntaxError as first_exc:
+        try:
+            src   = src.replace("\n", "\\\n")
+            names = _ast_parse1(f'from . import \\\n{src}', parse_params).names  # multiline?
+
+        except SyntaxError:
+            raise first_exc from None
+
+    ast = Tuple(elts=names, ctx=Load(), lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
+                end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
+
+    return _offset_linenos(ast, -1)
 
 
 def parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
@@ -1354,8 +1429,11 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'arg':               parse_arg,
     'keyword':           parse_keyword,
     'alias':             parse_alias,
-    'alias_dotted':      parse_alias_dotted,
-    'alias_star':        parse_alias_star,
+    'aliases':           parse_aliases,
+    'Import_name':       parse_Import_name,
+    'Import_names':      parse_Import_names,
+    'ImportFrom_name':   parse_ImportFrom_name,
+    'ImportFrom_names':  parse_ImportFrom_names,
     'withitem':          parse_withitem,
     'pattern':           parse_pattern,
     'type_param':        parse_type_param,

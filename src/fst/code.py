@@ -79,8 +79,8 @@ from .extparse import (
     parse_arg,
     parse_keyword,
     parse_alias,
-    parse_alias_dotted,
-    parse_alias_star,
+    parse_Import_name,
+    parse_ImportFrom_name,
     parse_withitem,
     parse_pattern,
     parse_type_param,
@@ -111,8 +111,8 @@ __all__ = [
     'code_as_arg',
     'code_as_keyword',
     'code_as_alias',
-    'code_as_alias_dotted',
-    'code_as_alias_star',
+    'code_as_Import_name',
+    'code_as_ImportFrom_name',
     'code_as_withitem',
     'code_as_pattern',
     'code_as_type_param',
@@ -539,10 +539,10 @@ def code_as_alias(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize:
     return _code_as(code, alias, parse_params, parse_alias, sanitize=sanitize)
 
 
-def code_as_alias_dotted(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_Import_name(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a alias `FST` if possible, dotted as in `alias` for `Import.names`."""
 
-    fst_ = _code_as(code, alias, parse_params, parse_alias_dotted, sanitize=sanitize)
+    fst_ = _code_as(code, alias, parse_params, parse_Import_name, sanitize=sanitize)
 
     if '*' in fst_.a.name:
         raise ParseError("'*' not allowed in this alias")
@@ -550,10 +550,10 @@ def code_as_alias_dotted(code: Code, parse_params: Mapping[str, Any] = {}, *, sa
     return fst_
 
 
-def code_as_alias_star(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_ImportFrom_name(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a alias `FST` if possible, possibly star as in `alias` for `FromImport.names`."""
 
-    fst_ = _code_as(code, alias, parse_params, parse_alias_star, sanitize=sanitize)
+    fst_ = _code_as(code, alias, parse_params, parse_ImportFrom_name, sanitize=sanitize)
 
     if '.' in fst_.a.name:
         raise ParseError("'.' not allowed in this alias")

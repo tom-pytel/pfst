@@ -138,8 +138,8 @@ from .code import (
     code_as_arguments_lambda,
     code_as_arg,
     code_as_keyword,
-    code_as_alias_dotted,
-    code_as_alias_star,
+    code_as_Import_name,
+    code_as_ImportFrom_name,
     code_as_withitem,
     code_as_pattern,
     code_as_type_param,
@@ -2665,9 +2665,9 @@ _PUT_ONE_HANDLERS = {
     (TryStar, 'finalbody'):               (True,  None, None),  # stmt*
     (Assert, 'test'):                     (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (Assert, 'msg'):                      (False, _put_one_exprish_optional, onestatic(_one_info_Assert_msg, _restrict_default)),  # expr?
-    (Import, 'names'):                    (True,  _put_one_Import_names, onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_alias_dotted)),  # alias*
+    (Import, 'names'):                    (True,  _put_one_Import_names, onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_Import_name)),  # alias*
     (ImportFrom, 'module'):               (False, _put_one_identifier_optional, onestatic(_one_info_ImportFrom_module, _restrict_default, code_as=code_as_identifier_dotted)),  # identifier? (dotted)
-    (ImportFrom, 'names'):                (True,  _put_one_ImportFrom_names, onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_alias_star)),  # alias*
+    (ImportFrom, 'names'):                (True,  _put_one_ImportFrom_names, onestatic(_one_info_exprish_required, _restrict_default, code_as=code_as_ImportFrom_name)),  # alias*
     (ImportFrom, 'level'):                (False, _put_one_ImportFrom_level, None),  # int?
     (Global, 'names'):                    (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names),  # identifier*
     (Nonlocal, 'names'):                  (True,  _put_one_identifier_required, _onestatic_Global_Nonlocal_names),  # identifier*
