@@ -132,8 +132,8 @@ _re_sep_line_nonexpr_end        = {  # empty line with optional separator and li
 # * ! N =             (Assign, 'targets'):                    # expr*            -> Assign, value.id=''    _parse_Assign_targets / restrict targets  - Maybe use special Slice container instead of invalid Assign?
 #                                                                                .
 #                                                                                .
-#     S ,             (Global, 'names'):                      # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names   - no trailing commas, unparenthesized
-#     S ,             (Nonlocal, 'names'):                    # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names   - no trailing commas, unparenthesized
+# *   S ,             (Global, 'names'):                      # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names   - no trailing commas, unparenthesized
+# *   S ,             (Nonlocal, 'names'):                    # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names   - no trailing commas, unparenthesized
 #                                                                                .
 #                                                                                .
 #   ! S ,             (ClassDef, 'keywords'):                 # keyword*         -> Tuple[keyword]         _parse_keywords
@@ -163,11 +163,9 @@ _re_sep_line_nonexpr_end        = {  # empty line with optional separator and li
 #   % S    @      U   (ClassDef, 'decorator_list'):           # expr*            -> Tuple[expr]            _parse_decorator_list
 #                                                                                .
 #                                                                                .
-#                                                                                .
 #     N co            (Compare, 'ops':'comparators'):         # cmpop:expr*      -> expr or Compare        _parse_expr / restrict expr or Compare
 #                                                                                .
 #     N ao            (BoolOp, 'values'):                     # expr*            -> BoolOp                 _parse_expr / restrict BoolOp  - interchangeable between and / or
-#
 #
 #
 #                     (JoinedStr, 'values'):                  # Constant|FormattedValue*  -> JoinedStr
@@ -462,7 +460,7 @@ def _shorter_str(a: str, b: str) -> str:
     return a if len(a) < len(b) else b
 
 
-def _bound_Delete_targets(self: fst.FST, start: int, loc_first: fst.FST | None = None) -> tuple[int, int, int, int]:
+def _bound_Delete_targets(self: fst.FST, start: int = 0, loc_first: fst.FST | None = None) -> tuple[int, int, int, int]:
     body = self.a.targets
 
     _, _, bound_end_ln, bound_end_col = self.loc
@@ -478,7 +476,7 @@ def _bound_Delete_targets(self: fst.FST, start: int, loc_first: fst.FST | None =
     return bound_ln, bound_col, bound_end_ln, bound_end_col
 
 
-def _bound_Assign_targets(self: fst.FST, start: int, loc_first: fst.FST | None = None) -> tuple[int, int, int, int]:
+def _bound_Assign_targets(self: fst.FST, start: int = 0, loc_first: fst.FST | None = None) -> tuple[int, int, int, int]:
     body = (ast := self.a).targets
 
     bound_end_ln, bound_end_col, _, _ = ast.value.f.pars()
@@ -1667,7 +1665,7 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
     fst_ = code_as(code, self.root.parse_params, sanitize=False)
     ast_ = fst_.a
 
-    if non_seq_str_as_one and not one and not isinstance(ast_, (Tuple, List, Set)) and isinstance(code, (str, list)):  # this exists as a convenience for allowing doing `Delete.targets = target` (without trailing comma if string source)
+    if not one and non_seq_str_as_one and not isinstance(ast_, (Tuple, List, Set)) and isinstance(code, (str, list)):  # this exists as a convenience for allowing doing `Delete.targets = 'target'` (without trailing comma if string source)
         one = True
 
     if one:
@@ -2180,7 +2178,7 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
 
     _validate_put_seq(self, fst_, 'Delete', check_target=is_valid_del_target)
 
-    bound_ln, bound_col, bound_end_ln, bound_end_col = _bound_Delete_targets(self, start)
+    bound_ln, bound_col, bound_end_ln, bound_end_col = _bound_Delete_targets(self)
 
     if not fst_:
         _put_slice_seq(self, start, stop, None, None, None, 0,
@@ -2217,6 +2215,8 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
         body[i].f.pfield = astfield('targets', i)
 
     ln, col, _, _ = self.loc
+
+    # TODO: self._maybe_add_line_continuations() can fail below if we added lines with comments, need to possibly parenthesize above if we know we putting unfixable sequence
 
     self._maybe_fix_joined_alnum(ln, col + 3)
     self._maybe_add_line_continuations()
@@ -2518,8 +2518,12 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
         if not start and stop == len_body:
             raise ValueError(f'cannot delete all {ast.__class__.__name__}.names')
 
-    elif not all(isinstance(bad := e, Name) for e in fst_.a.elts):
-        raise NodeError(f'cannot put {bad.__class__.__name__} to {ast.__class__.__name__}.names')
+    else:
+        n = 0
+
+        if not all(isinstance(bad := e, Name) and not (n := e.f.pars().n) for e in fst_.a.elts):
+            raise NodeError(f'cannot put{" parenthesized" if n else ""} {bad.__class__.__name__} '
+                            f'to {ast.__class__.__name__}.names')
 
     ln, end_col, bound_end_ln, bound_end_col = self.loc
 
@@ -2540,10 +2544,14 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
 
     self._set_ast(tmp_ast)  # temporarily swap out Global/Nonlocal AST for temporary Tuple AST so that offsetting propagates to the parents
 
-    if start:
-        _, _, bound_ln, bound_col = tmp_elts[start - 1].f.loc
-    else:
-        bound_ln, bound_col, _, _ = tmp_elts[0].f.loc
+    bound_ln, bound_col, last_end_ln, last_end_col = tmp_elts[0].f.loc
+
+    if not start:
+        last_end_ln  = bound_ln
+        last_end_col = bound_col
+
+    elif start != 1:
+        _, _, last_end_ln, last_end_col = tmp_elts[start - 1].f.loc
 
     if not fst_:
         _put_slice_seq(self, start, stop, None, None, None, 0,
@@ -2554,10 +2562,13 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
 
     else:
         len_fst_body = len(fst_body := fst_.a.elts)
+        fst_last     = fst_body[-1].f
 
-        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
+        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_last, len_fst_body,
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
                        options.get('trivia'), options.get('ins_ln'), 'elts', None, ',', False)
+
+        fst_last_loc = fst_last.loc  # we get it here because ._set_ast() below makes this impossible
 
         body[start : stop] = [e.id for e in fst_body]
 
@@ -2567,15 +2578,14 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
     self._set_ast(ast, True)
     self._touch()  # because it was never offset so was never ._touch()ed
 
-    if not fst_ and stop == len_body:  # clean up any line continuation backslashes and make sure end location is set to end of last element
+    if stop == len_body:  # clean up any line continuation backslashes and make sure end location is set to end of last element
         _, _, end_ln, end_col = self.loc
 
-        if end_col != bound_col or end_ln != bound_ln:
-            self._put_src(None, bound_ln, bound_col, end_ln, end_col, True)
+        if fst_:
+            _, _, last_end_ln, last_end_col = fst_last_loc
 
-
-    # TODO: any other special fixing if actual non-None fst_ is put?
-
+        if end_col != last_end_col or end_ln != last_end_ln:
+            self._put_src(None, last_end_ln, last_end_col, end_ln, end_col, True)
 
     self._maybe_add_line_continuations()
 
@@ -2804,8 +2814,8 @@ def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end']
                 fst_._delimit_node()
 
         elif ((is_dict := isinstance(ast, Dict)) or
-                (is_match := isinstance(ast, (MatchSequence, MatchMapping))) or
-                isinstance(ast, (Tuple, List, Set))
+              (is_match := isinstance(ast, (MatchSequence, MatchMapping))) or
+              isinstance(ast, (Tuple, List, Set))
         ):
             if not ((is_par_tup := fst_.is_parenthesized_tuple()) is False or  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence
                     (is_par_tup is None and isinstance(ast, MatchSequence) and

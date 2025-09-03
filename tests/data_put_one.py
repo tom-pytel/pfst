@@ -8609,7 +8609,12 @@ Module - ROOT 0,0..0,8
       .ctx Load
 """),
 
-(r"""global a, b""", 'body[0]', 0, 'names', {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
+(r"""global a, b""", 'body[0]', 0, 'names', {}, r"""**DEL**""", r"""global b""", r"""
+Module - ROOT 0,0..0,8
+  .body[1]
+  0] Global - 0,0..0,8
+    .names[1]
+    0] 'b'
 """),
 
 (r"""global a, b""", 'body[0]', 0, 'names', {}, r"""new""", r"""global new, b""", r"""
@@ -8657,7 +8662,12 @@ Module - ROOT 0,0..3,1
 (r"""global a, b""", 'body[0]', -4, 'names', {}, r"""new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""nonlocal a, b""", 'body[0]', 0, 'names', {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
+(r"""nonlocal a, b""", 'body[0]', 0, 'names', {}, r"""**DEL**""", r"""nonlocal b""", r"""
+Module - ROOT 0,0..0,10
+  .body[1]
+  0] Nonlocal - 0,0..0,10
+    .names[1]
+    0] 'b'
 """),
 
 (r"""nonlocal a, b""", 'body[0]', 0, 'names', {}, r"""new""", r"""nonlocal new, b""", r"""

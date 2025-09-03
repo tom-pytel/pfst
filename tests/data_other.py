@@ -18642,6 +18642,410 @@ Module - ROOT 0,0..4,9
     .value Name 'd' Load - 4,8..4,9
 """),
 
+(r"""global a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""**DEL**""", r"""global a, c  # comment""", r"""
+Module - ROOT 0,0..0,22
+  .body[1]
+  0] Global - 0,0..0,11
+    .names[2]
+    0] 'a'
+    1] 'c'
+"""),
+
+(r"""global a, b, c  # comment""", 'body[0]', 1, 3, None, {}, r"""**DEL**""", r"""global a  # comment""", r"""
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Global - 0,0..0,8
+    .names[1]
+    0] 'a'
+"""),
+
+(r"""global a, b, c  # comment""", 'body[0]', 0, 2, None, {}, r"""**DEL**""", r"""global c  # comment""", r"""
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Global - 0,0..0,8
+    .names[1]
+    0] 'c'
+"""),
+
+(r"""global a \
+, \
+b \
+, \
+c  # comment""", 'body[0]', 1, 2, None, {}, r"""**DEL**""", r"""global a \
+, \
+c  # comment""", r"""
+Module - ROOT 0,0..2,12
+  .body[1]
+  0] Global - 0,0..2,1
+    .names[2]
+    0] 'a'
+    1] 'c'
+"""),
+
+(r"""global a \
+, \
+b \
+, \
+c  # comment""", 'body[0]', 0, 2, None, {}, r"""**DEL**""", r"""global \
+c  # comment""", r"""
+Module - ROOT 0,0..1,12
+  .body[1]
+  0] Global - 0,0..1,1
+    .names[1]
+    0] 'c'
+"""),
+
+(r"""global a \
+, \
+b \
+, \
+c  # comment""", 'body[0]', 1, 3, None, {}, r"""**DEL**""", r"""global a  # comment""", r"""
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Global - 0,0..0,8
+    .names[1]
+    0] 'a'
+"""),
+
+(r"""if 1:
+  global a \
+  , \
+  b  # comment
+  pass""", 'body[0].body[0]', 0, 1, None, {}, r"""**DEL**""", r"""if 1:
+  global  \
+  b  # comment
+  pass""", r"""
+Module - ROOT 0,0..3,6
+  .body[1]
+  0] If - 0,0..3,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Global - 1,2..2,3
+      .names[1]
+      0] 'b'
+    1] Pass - 3,2..3,6
+"""),
+
+(r"""if 1:
+  global a \
+  , \
+  b  # comment
+  pass""", 'body[0].body[0]', 1, 2, None, {}, r"""**DEL**""", r"""if 1:
+  global a  # comment
+  pass""", r"""
+Module - ROOT 0,0..2,6
+  .body[1]
+  0] If - 0,0..2,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Global - 1,2..1,10
+      .names[1]
+      0] 'a'
+    1] Pass - 2,2..2,6
+"""),
+
+(r"""if 1:
+  global a
+  pass""", 'body[0].body[0]', 1, 1, None, {}, r"""(
+    b \
+    , \
+  )""", r"""if 1:
+  global a, \
+         b
+  pass""", r"""
+Module - ROOT 0,0..3,6
+  .body[1]
+  0] If - 0,0..3,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Global - 1,2..2,10
+      .names[2]
+      0] 'a'
+      1] 'b'
+    1] Pass - 3,2..3,6
+"""),
+
+(r"""if 1:
+  global a
+  pass""", 'body[0].body[0]', 0, 0, None, {}, r"""x \
+  , \
+  y \
+  ,""", r"""if 1:
+  global x \
+         , \
+         y \
+         , a
+  pass""", r"""
+Module - ROOT 0,0..5,6
+  .body[1]
+  0] If - 0,0..5,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Global - 1,2..4,12
+      .names[3]
+      0] 'x'
+      1] 'y'
+      2] 'a'
+    1] Pass - 5,2..5,6
+"""),
+
+(r"""global a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""x""", r"""global a, x, c  # comment""", r"""
+Module - ROOT 0,0..0,25
+  .body[1]
+  0] Global - 0,0..0,14
+    .names[3]
+    0] 'a'
+    1] 'x'
+    2] 'c'
+"""),
+
+(r"""global a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""[x]""", r"""global a, x, c  # comment""", r"""
+Module - ROOT 0,0..0,25
+  .body[1]
+  0] Global - 0,0..0,14
+    .names[3]
+    0] 'a'
+    1] 'x'
+    2] 'c'
+"""),
+
+(r"""global a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""{x}""", r"""global a, x, c  # comment""", r"""
+Module - ROOT 0,0..0,25
+  .body[1]
+  0] Global - 0,0..0,14
+    .names[3]
+    0] 'a'
+    1] 'x'
+    2] 'c'
+"""),
+
+(r"""global a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""{*()}""", r"""global a, c  # comment""", r"""
+Module - ROOT 0,0..0,22
+  .body[1]
+  0] Global - 0,0..0,11
+    .names[2]
+    0] 'a'
+    1] 'c'
+"""),
+
+(r"""global a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""x,""", r"""global a, x, c  # comment""", r"""
+Module - ROOT 0,0..0,25
+  .body[1]
+  0] Global - 0,0..0,14
+    .names[3]
+    0] 'a'
+    1] 'x'
+    2] 'c'
+"""),
+
+(r"""global a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""x.y,""", r"""**NodeError('cannot put Attribute to Global.names')**""", r"""
+"""),
+
+(r"""global a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""(x),""", r"""**NodeError('cannot put parenthesized Name to Global.names')**""", r"""
+"""),
+
+(r"""nonlocal a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""**DEL**""", r"""nonlocal a, c  # comment""", r"""
+Module - ROOT 0,0..0,24
+  .body[1]
+  0] Nonlocal - 0,0..0,13
+    .names[2]
+    0] 'a'
+    1] 'c'
+"""),
+
+(r"""nonlocal a, b, c  # comment""", 'body[0]', 1, 3, None, {}, r"""**DEL**""", r"""nonlocal a  # comment""", r"""
+Module - ROOT 0,0..0,21
+  .body[1]
+  0] Nonlocal - 0,0..0,10
+    .names[1]
+    0] 'a'
+"""),
+
+(r"""nonlocal a, b, c  # comment""", 'body[0]', 0, 2, None, {}, r"""**DEL**""", r"""nonlocal c  # comment""", r"""
+Module - ROOT 0,0..0,21
+  .body[1]
+  0] Nonlocal - 0,0..0,10
+    .names[1]
+    0] 'c'
+"""),
+
+(r"""nonlocal a \
+, \
+b \
+, \
+c  # comment""", 'body[0]', 1, 2, None, {}, r"""**DEL**""", r"""nonlocal a \
+, \
+c  # comment""", r"""
+Module - ROOT 0,0..2,12
+  .body[1]
+  0] Nonlocal - 0,0..2,1
+    .names[2]
+    0] 'a'
+    1] 'c'
+"""),
+
+(r"""nonlocal a \
+, \
+b \
+, \
+c  # comment""", 'body[0]', 0, 2, None, {}, r"""**DEL**""", r"""nonlocal \
+c  # comment""", r"""
+Module - ROOT 0,0..1,12
+  .body[1]
+  0] Nonlocal - 0,0..1,1
+    .names[1]
+    0] 'c'
+"""),
+
+(r"""nonlocal a \
+, \
+b \
+, \
+c  # comment""", 'body[0]', 1, 3, None, {}, r"""**DEL**""", r"""nonlocal a  # comment""", r"""
+Module - ROOT 0,0..0,21
+  .body[1]
+  0] Nonlocal - 0,0..0,10
+    .names[1]
+    0] 'a'
+"""),
+
+(r"""if 1:
+  nonlocal a \
+  , \
+  b  # comment
+  pass""", 'body[0].body[0]', 0, 1, None, {}, r"""**DEL**""", r"""if 1:
+  nonlocal  \
+  b  # comment
+  pass""", r"""
+Module - ROOT 0,0..3,6
+  .body[1]
+  0] If - 0,0..3,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Nonlocal - 1,2..2,3
+      .names[1]
+      0] 'b'
+    1] Pass - 3,2..3,6
+"""),
+
+(r"""if 1:
+  nonlocal a \
+  , \
+  b  # comment
+  pass""", 'body[0].body[0]', 1, 2, None, {}, r"""**DEL**""", r"""if 1:
+  nonlocal a  # comment
+  pass""", r"""
+Module - ROOT 0,0..2,6
+  .body[1]
+  0] If - 0,0..2,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Nonlocal - 1,2..1,12
+      .names[1]
+      0] 'a'
+    1] Pass - 2,2..2,6
+"""),
+
+(r"""if 1:
+  nonlocal a
+  pass""", 'body[0].body[0]', 1, 1, None, {}, r"""(
+    b \
+    , \
+  )""", r"""if 1:
+  nonlocal a, \
+           b
+  pass""", r"""
+Module - ROOT 0,0..3,6
+  .body[1]
+  0] If - 0,0..3,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Nonlocal - 1,2..2,12
+      .names[2]
+      0] 'a'
+      1] 'b'
+    1] Pass - 3,2..3,6
+"""),
+
+(r"""if 1:
+  nonlocal a
+  pass""", 'body[0].body[0]', 0, 0, None, {}, r"""x \
+  , \
+  y \
+  ,""", r"""if 1:
+  nonlocal x \
+           , \
+           y \
+           , a
+  pass""", r"""
+Module - ROOT 0,0..5,6
+  .body[1]
+  0] If - 0,0..5,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Nonlocal - 1,2..4,14
+      .names[3]
+      0] 'x'
+      1] 'y'
+      2] 'a'
+    1] Pass - 5,2..5,6
+"""),
+
+(r"""nonlocal a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""x""", r"""nonlocal a, x, c  # comment""", r"""
+Module - ROOT 0,0..0,27
+  .body[1]
+  0] Nonlocal - 0,0..0,16
+    .names[3]
+    0] 'a'
+    1] 'x'
+    2] 'c'
+"""),
+
+(r"""nonlocal a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""[x]""", r"""nonlocal a, x, c  # comment""", r"""
+Module - ROOT 0,0..0,27
+  .body[1]
+  0] Nonlocal - 0,0..0,16
+    .names[3]
+    0] 'a'
+    1] 'x'
+    2] 'c'
+"""),
+
+(r"""nonlocal a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""{x}""", r"""nonlocal a, x, c  # comment""", r"""
+Module - ROOT 0,0..0,27
+  .body[1]
+  0] Nonlocal - 0,0..0,16
+    .names[3]
+    0] 'a'
+    1] 'x'
+    2] 'c'
+"""),
+
+(r"""nonlocal a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""{*()}""", r"""nonlocal a, c  # comment""", r"""
+Module - ROOT 0,0..0,24
+  .body[1]
+  0] Nonlocal - 0,0..0,13
+    .names[2]
+    0] 'a'
+    1] 'c'
+"""),
+
+(r"""nonlocal a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""x,""", r"""nonlocal a, x, c  # comment""", r"""
+Module - ROOT 0,0..0,27
+  .body[1]
+  0] Nonlocal - 0,0..0,16
+    .names[3]
+    0] 'a'
+    1] 'x'
+    2] 'c'
+"""),
+
+(r"""nonlocal a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""x.y,""", r"""**NodeError('cannot put Attribute to Nonlocal.names')**""", r"""
+"""),
+
+(r"""nonlocal a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""(x),""", r"""**NodeError('cannot put parenthesized Name to Nonlocal.names')**""", r"""
+"""),
+
 ]  # END OF PUT_SLICE_DATA
 
 PUT_SRC_DATA = [

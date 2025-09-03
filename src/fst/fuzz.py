@@ -1131,10 +1131,13 @@ class PutOne(Fuzzy):
                         changed = True
                         subs    = list(enumerate(child)) if isinstance(child, list) else [(None, child)]
 
+                        if self.debug:
+                            print(f'{subs = }')
+
                         for i, child in subs:
                             if isinstance(child, (str, NoneType)):
                                 try:
-                                    f.put(None, i, field=subfield, raw=False)
+                                    f.put('_' if isinstance(f.a, (Global, Nonlocal)) else None, i, field=subfield, raw=False)
 
                                 except Exception as e:
                                     msg = str(e)
