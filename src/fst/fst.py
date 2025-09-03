@@ -39,6 +39,7 @@ from .asttypes import (
     Match,
     MatchClass,
     MatchMapping,
+    MatchOr,
     MatchSequence,
     MatchSingleton,
     MatchStar,
@@ -4082,50 +4083,6 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
     # Low level
 
-    def get_parse_mode(self) -> builtins.str | type[AST] | None:
-        r"""Determine the parse mode for this node. This is the extended parse mode as per `Mode`, not the `ast.parse()`
-        mode. Returns a mode which is guaranteed to reparse this element (which may be a SPECIAL SLICE) to an exact copy
-        of itself. This mode is not guaranteed to be the same as was used to create the `FST`, just guaranteed to be
-        able to recreate it. Mostly it just returns the `AST` type, but in cases where that won't parse to this `FST` it
-        will return a string mode. This is a quick just a check, doesn't verify everything.
-
-        **Returns:**
-        - `str`: One of the special text specifiers. Will be returned for most slices and special cases like an `*a`
-            inside a `.slice` which is actually a `Tuple`, or a SPECIAL SLICE like `Assign.targets.copy()`.
-        - `type[AST]`: Will be returned for nodes which can be reparsed correctly using only the `AST` type.
-        - `None`: If invalid or cannot be determined.
-
-        **Examples:**
-        ```py
-        >>> FST('a | b').get_parse_mode()
-        <class 'ast.BinOp'>
-
-        >>> FST('a | b', 'pattern').get_parse_mode()
-        <class 'ast.MatchOr'>
-
-        >>> FST('except ValueError: pass\nexcept: pass', 'ExceptHandlers').get_parse_mode()
-        'ExceptHandlers'
-        ```
-        """
-
-        ast = self.a
-
-        if mode := get_special_parse_mode(ast):
-            return mode
-
-        # now we check the cases that need source code
-
-        if isinstance(ast, Tuple) and (elts := ast.elts):
-            if isinstance(e0 := elts[0], Starred):
-                if len(elts) == 1:
-                    _, _, ln, col         = e0.f.loc
-                    _, _, end_ln, end_col = self.loc
-
-                    if not next_find(self.root._lines, ln, col, end_ln, end_col, ','):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
-                        return 'expr_slice'
-
-        return ast.__class__  # otherwise regular parse by AST type is valid
-
     def get_indent(self) -> builtins.str:
         r"""Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
         continuation or on same line as block header. If indentation is impossible to determine because is solo
@@ -4194,6 +4151,88 @@ class FST:
             parent  = self.parent
 
         return indent
+
+    def get_parse_mode(self) -> builtins.str | type[AST] | None:
+        r"""Determine the parse mode for this node. This is the extended parse mode as per `Mode`, not the `ast.parse()`
+        mode. Returns a mode which is guaranteed to reparse this element (which may be a SPECIAL SLICE) to an exact copy
+        of itself. This mode is not guaranteed to be the same as was used to create the `FST`, just guaranteed to be
+        able to recreate it. Mostly it just returns the `AST` type, but in cases where that won't parse to this `FST` it
+        will return a string mode. This is a quick just a check, doesn't verify everything.
+
+        **Returns:**
+        - `str`: One of the special text specifiers. Will be returned for most slices and special cases like an `*a`
+            inside a `.slice` which is actually a `Tuple`, or a SPECIAL SLICE like `Assign.targets.copy()`.
+        - `type[AST]`: Will be returned for nodes which can be reparsed correctly using only the `AST` type.
+        - `None`: If invalid or cannot be determined.
+
+        **Examples:**
+        ```py
+        >>> FST('a | b').get_parse_mode()
+        <class 'ast.BinOp'>
+
+        >>> FST('a | b', 'pattern').get_parse_mode()
+        <class 'ast.MatchOr'>
+
+        >>> FST('except ValueError: pass\nexcept: pass', 'ExceptHandlers').get_parse_mode()
+        'ExceptHandlers'
+        ```
+        """
+
+        ast = self.a
+
+        if mode := get_special_parse_mode(ast):
+            return mode
+
+        # now we check the cases that need source code
+
+        if isinstance(ast, Tuple) and (elts := ast.elts):
+            if isinstance(e0 := elts[0], Starred):
+                if len(elts) == 1:
+                    _, _, ln, col         = e0.f.loc
+                    _, _, end_ln, end_col = self.loc
+
+                    if not next_find(self.root._lines, ln, col, end_ln, end_col, ','):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
+                        return 'expr_slice'
+
+        return ast.__class__  # otherwise regular parse by AST type is valid
+
+    def is_special_slice(self) -> bool:
+        """Whether `self` is an instance of our own special slice format and not a valid python structure. For example
+        a `Set` or `MatchOr` with zero elements or a `Tuple` containing things it normally cannot.
+
+        **Returns:**
+        - `bool`: Whether self is a recognized special slice or not (if not it still doesn't mean its valid).
+
+        **Examples:**
+        ```py
+        >>> FST('{1}').get_slice(0, 1).is_special_slice()
+        False
+
+        >>> FST('{1}').get_slice(0, 0, fix_set_get=False).is_special_slice()
+        True
+
+        >>> FST('a | b | c', pattern).get_slice(0, 0, fix_matchor_get=False).is_special_slice()
+        True
+
+        >>> FST('a = b = c').get_slice(0, 2, 'targets').is_special_slice()
+        True
+        ```
+        """
+
+        ast = self.a
+
+        if get_special_parse_mode(ast):
+            return True
+
+        if isinstance(ast, Set):
+            if not ast.elts:
+                return True
+
+        elif isinstance(ast, MatchOr):
+            if len(ast.patterns) < 2:
+                return True
+
+        return False
 
     def is_parsable(self) -> bool:
         r"""Whether the source for this node is parsable by `FST` or not (if properly dedented for top level). This is
