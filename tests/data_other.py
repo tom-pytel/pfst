@@ -2760,6 +2760,214 @@ Tuple - ROOT 0,0..1,3
   .ctx Load
 """),
 
+(r"""import a, b as y, c  # comment""", 'body[0]', 1, 2, None, {}, r"""import a, c  # comment""", r"""b as y""", r"""
+Module - ROOT 0,0..0,22
+  .body[1]
+  0] Import - 0,0..0,11
+    .names[2]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 0,10..0,11
+      .name 'c'
+""", r"""
+Tuple - ROOT 0,0..0,6
+  .elts[1]
+  0] alias - 0,0..0,6
+    .name 'b'
+    .asname
+      'y'
+  .ctx Load
+"""),
+
+(r"""import a, b as y, c  # comment""", 'body[0]', 1, 3, None, {}, r"""import a  # comment""", r"""b as y, c""", r"""
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Import - 0,0..0,8
+    .names[1]
+    0] alias - 0,7..0,8
+      .name 'a'
+""", r"""
+Tuple - ROOT 0,0..0,9
+  .elts[2]
+  0] alias - 0,0..0,6
+    .name 'b'
+    .asname
+      'y'
+  1] alias - 0,8..0,9
+    .name 'c'
+  .ctx Load
+"""),
+
+(r"""import a, b as y, c  # comment""", 'body[0]', 0, 2, None, {}, r"""import c  # comment""", r"""a, b as y""", r"""
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Import - 0,0..0,8
+    .names[1]
+    0] alias - 0,7..0,8
+      .name 'c'
+""", r"""
+Tuple - ROOT 0,0..0,9
+  .elts[2]
+  0] alias - 0,0..0,1
+    .name 'a'
+  1] alias - 0,3..0,9
+    .name 'b'
+    .asname
+      'y'
+  .ctx Load
+"""),
+
+(r"""import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment""", 'body[0]', 1, 2, None, {}, r"""import a \
+, \
+c  # comment""", r"""b \
+as \
+y""", r"""
+Module - ROOT 0,0..2,12
+  .body[1]
+  0] Import - 0,0..2,1
+    .names[2]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 2,0..2,1
+      .name 'c'
+""", r"""
+Tuple - ROOT 0,0..2,1
+  .elts[1]
+  0] alias - 0,0..2,1
+    .name 'b'
+    .asname
+      'y'
+  .ctx Load
+"""),
+
+(r"""import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment""", 'body[0]', 0, 2, None, {}, r"""import \
+c  # comment""", r"""a \
+, \
+b \
+as \
+y""", r"""
+Module - ROOT 0,0..1,12
+  .body[1]
+  0] Import - 0,0..1,1
+    .names[1]
+    0] alias - 1,0..1,1
+      .name 'c'
+""", r"""
+Tuple - ROOT 0,0..4,1
+  .elts[2]
+  0] alias - 0,0..0,1
+    .name 'a'
+  1] alias - 2,0..4,1
+    .name 'b'
+    .asname
+      'y'
+  .ctx Load
+"""),
+
+(r"""import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment""", 'body[0]', 1, 3, None, {}, r"""import a  # comment""", r"""b \
+as \
+y \
+, \
+c""", r"""
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Import - 0,0..0,8
+    .names[1]
+    0] alias - 0,7..0,8
+      .name 'a'
+""", r"""
+Tuple - ROOT 0,0..4,1
+  .elts[2]
+  0] alias - 0,0..2,1
+    .name 'b'
+    .asname
+      'y'
+  1] alias - 4,0..4,1
+    .name 'c'
+  .ctx Load
+"""),
+
+(r"""if 1:
+  import a \
+  , \
+  b \
+  as \
+  y # comment
+  pass""", 'body[0].body[0]', 0, 1, None, {}, r"""if 1:
+  import  \
+  b \
+  as \
+  y # comment
+  pass""", r"""a""", r"""
+Module - ROOT 0,0..5,6
+  .body[1]
+  0] If - 0,0..5,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Import - 1,2..4,3
+      .names[1]
+      0] alias - 2,2..4,3
+        .name 'b'
+        .asname
+          'y'
+    1] Pass - 5,2..5,6
+""", r"""
+Tuple - ROOT 0,0..0,1
+  .elts[1]
+  0] alias - 0,0..0,1
+    .name 'a'
+  .ctx Load
+"""),
+
+(r"""if 1:
+  import a \
+  , \
+  b \
+  as \
+  y # comment
+  pass""", 'body[0].body[0]', 1, 2, None, {}, r"""if 1:
+  import a # comment
+  pass""", r"""b \
+as \
+y""", r"""
+Module - ROOT 0,0..2,6
+  .body[1]
+  0] If - 0,0..2,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Import - 1,2..1,10
+      .names[1]
+      0] alias - 1,9..1,10
+        .name 'a'
+    1] Pass - 2,2..2,6
+""", r"""
+Tuple - ROOT 0,0..2,1
+  .elts[1]
+  0] alias - 0,0..2,1
+    .name 'b'
+    .asname
+      'y'
+  .ctx Load
+"""),
+
 ]  # END OF GET_SLICE_EXPRISH_DATA
 
 GET_SLICE_STMTISH_DATA = [

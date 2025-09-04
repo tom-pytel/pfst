@@ -5285,8 +5285,7 @@ if 1:
         self.assertEqual('assert toast, "msg"', test(f, 'test', 'toast', FST, 'test').src)
         self.assertEqual('assert toast, "sheep"', test(f, 'msg', '"sheep"', FST, '"msg"').src)
 
-        self.assertEqual('import a, b, c', test(FST('import x, y'), 'names', 'a, b, c', fstview,
-                                                '<<Import ROOT 0,0..0,11>.names[0:2] [<alias 0,7..0,8>, <alias 0,10..0,11>]>').src)
+        self.assertEqual('import a, b, c', test(FST('import x, y'), 'names', 'a, b, c', fstview, 'x, y').src)
 
         f = FST('from .module import x, y')
         self.assertEqual('from .new import x, y', test(f, 'module', 'new', None, 'module').src)

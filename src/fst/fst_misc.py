@@ -466,9 +466,9 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
         if is_list:
             for i, ast in enumerate(child):
                 if isinstance(ast, AST):
-                    ast.f._dump(st, cind + sind, f'{i}] ')
+                    ast.f._dump(st, cind + sind, f'{i}] ')  # ast.f._dump(st, cind + sind * 2, f'{i}] ')
                 else:
-                    st.linefunc(f'{sind}{cind}{i}] {ast!r}{st.eol}')
+                    st.linefunc(f'{sind}{cind}{i}] {ast!r}{st.eol}')  # st.linefunc(f'{sind}{sind}{cind}{i}] {ast!r}{st.eol}')
 
         elif isinstance(child, AST):
             child.f._dump(st, cind + sind * 2)

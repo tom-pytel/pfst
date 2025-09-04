@@ -1548,6 +1548,7 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
     if (elts := ast.elts) and not isinstance(e0 := elts[0], expr):  # SPECIAL SLICE
         if isinstance(e0, type_param):
             return _put_one_exprish_required(self, code, idx, field, child, _onestatic_type_param_required, options)
+
         if isinstance(e0, alias):
             return _put_one_exprish_required(self, code, idx, field, child, _onestatic_alias_required, options)
 

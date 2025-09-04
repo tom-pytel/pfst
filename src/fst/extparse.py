@@ -113,6 +113,7 @@ __all__ = [
 ]
 
 
+_re_non_lcont_newline  = re.compile(r'(?<!\\)\n')
 _re_trailing_comma     = re.compile(r'(?: [)\s]* (?: (?: \\ | \#[^\n]* ) \n )? )* ,', re.VERBOSE)  # trailing comma search ignoring comments and line continuation backslashes
 
 _re_first_src          = re.compile(r'^([^\S\n]*)([^\s\\#]+)', re.MULTILINE)  # search for first non-comment non-linecont source code
@@ -151,7 +152,7 @@ def _ast_parse(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 def _ast_parse1(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if len(body := ast_parse(src + '\n' if src.endswith('\\\n') else src, **parse_params).body) != 1:
-        raise SyntaxError('expecting single element')
+        raise SyntaxError('unexpected multiple statements')
 
     return body[0]
 
@@ -1152,7 +1153,7 @@ def parse_Import_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     except SyntaxError as first_exc:
         try:
-            src   = src.replace("\n", "\\\n")
+            src   = _re_non_lcont_newline.sub('\\\n', src)
             names = _ast_parse1(f'import \\\n{src}', parse_params).names  # multiline?
 
         except SyntaxError:
@@ -1175,7 +1176,7 @@ def parse_Import_names(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     except SyntaxError as first_exc:
         try:
-            src   = src.replace("\n", "\\\n")
+            src   = _re_non_lcont_newline.sub('\\\n', src)
             names = _ast_parse1(f'import \\\n{src}', parse_params).names  # multiline?
 
         except SyntaxError:
@@ -1198,7 +1199,7 @@ def parse_ImportFrom_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST
 
     except SyntaxError as first_exc:
         try:
-            src   = src.replace("\n", "\\\n")
+            src   = _re_non_lcont_newline.sub('\\\n', src)
             names = _ast_parse1(f'from . import \\\n{src}', parse_params).names  # multiline?
 
         except SyntaxError:
@@ -1221,7 +1222,7 @@ def parse_ImportFrom_names(src: str, parse_params: Mapping[str, Any] = {}) -> AS
 
     except SyntaxError as first_exc:
         try:
-            src   = src.replace("\n", "\\\n")
+            src   = _re_non_lcont_newline.sub('\\\n', src)
             names = _ast_parse1(f'from . import \\\n{src}', parse_params).names  # multiline?
 
         except SyntaxError:

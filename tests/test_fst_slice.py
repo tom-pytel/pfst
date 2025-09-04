@@ -2681,45 +2681,79 @@ a | (
         f.verify()
 
     def test_get_and_put_slice_from_to_slice(self):
+        # stmts
+
         self.assertEqual('a', g := (f := FST('a\nb\nc').get_slice(0, 2)).get_slice(0, 1).src)
         self.assertEqual('a\nb\na\n', f.put_slice(g, 'end').src)
         f.verify()
+
+        # ExceptHandlers
 
         self.assertEqual('except a: pass', g := (f := FST('except a: pass\nexcept b: pass\nexcept c: pass').get_slice(0, 2)).get_slice(0, 1).src)
         self.assertEqual('except a: pass\nexcept b: pass\nexcept a: pass\n', f.put_slice(g, 'end').src)
         f.verify()
 
+        # match_cases
+
         self.assertEqual('case a: pass', g := (f := FST('case a: pass\ncase b: pass\ncase c: pass').get_slice(0, 2)).get_slice(0, 1).src)
         self.assertEqual('case a: pass\ncase b: pass\ncase a: pass\n', f.put_slice(g, 'end').src)
         f.verify()
+
+        # Assign
+
+        self.assertEqual('a =', g := (f := FST('a = b = c = z').get_slice(0, 2, 'targets')).get_slice(0, 1, 'targets').src)
+        self.assertEqual('a = b = a =', f.put_slice(g, 'end', 'targets').src)
+        f.verify()
+
+        # Import
+
+
+
+
+
+        # Tuple (unparenthesized)
 
         self.assertEqual('a,', g := (f := FST('a, b, c').get_slice(0, 2)).get_slice(0, 1).src)
         self.assertEqual('a, b, a', f.put_slice(g, 'end').src)
         f.verify()
 
+        # Tuple (parenthesized)
+
         self.assertEqual('(a,)', g := (f := FST('(a, b, c)').get_slice(0, 2)).get_slice(0, 1).src)
         self.assertEqual('(a, b, a)', f.put_slice(g, 'end').src)
         f.verify()
+
+        # List
 
         self.assertEqual('[a]', g := (f := FST('[a, b, c]').get_slice(0, 2)).get_slice(0, 1).src)
         self.assertEqual('[a, b, a]', f.put_slice(g, 'end').src)
         f.verify()
 
+        # Set
+
         self.assertEqual('{a}', g := (f := FST('{a, b, c}').get_slice(0, 2)).get_slice(0, 1).src)
         self.assertEqual('{a, b, a}', f.put_slice(g, 'end').src)
         f.verify()
+
+        # Dict
 
         self.assertEqual('{1:a}', g := (f := FST('{1:a, 2:b, 3:c}').get_slice(0, 2)).get_slice(0, 1).src)
         self.assertEqual('{1:a, 2:b, 1:a}', f.put_slice(g, 'end').src)
         f.verify()
 
+        # MatchSequence
+
         self.assertEqual('[a]', g := (f := FST('[a, b, c]', pattern).get_slice(0, 2)).get_slice(0, 1).src)
         self.assertEqual('[a, b, a]', f.put_slice(g, 'end').src)
         f.verify()
 
+        # MatchMapping
+
         self.assertEqual('{1:a}', g := (f := FST('{1:a, 2:b, 3:c}', pattern).get_slice(0, 2)).get_slice(0, 1).src)
         self.assertEqual('{1:a, 2:b, 1:a}', f.put_slice(g, 'end').src)
         f.verify()
+
+        # MatchOr
 
         self.assertEqual('a', g := (f := FST('a | b | c', pattern).get_slice(0, 2)).get_slice(0, 1).src)
         self.assertEqual('a | b | a', f.put_slice(g, 'end').src)

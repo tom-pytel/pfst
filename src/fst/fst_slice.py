@@ -60,6 +60,7 @@ from .asttypes import (
     Yield,
     YieldFrom,
     comprehension,
+    alias,
     match_case,
     TryStar,
     TypeAlias,
@@ -84,7 +85,8 @@ from .extparse import unparse
 
 from .code import (
     Code,
-    code_as_expr, code_as_expr_all, code_as_pattern, code_as_type_param, code_as_type_params, code_as_Assign_targets,
+    code_as_expr, code_as_expr_all, code_as_pattern,
+    code_as_aliases, code_as_type_param, code_as_type_params, code_as_Assign_targets,
 )
 
 from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish
@@ -843,6 +845,124 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
     return fst_
 
 
+def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                            cut: bool, options: Mapping[str, Any]) -> fst.FST:
+    len_body    = len(body := self.a.names)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+
+    if start == stop:
+        return self._new_empty_tuple(from_=self)
+    if cut and not start and stop == len_body:
+        raise ValueError('cannot cut all Import.names')
+
+    _, _, bound_end_ln, bound_end_col = self.loc
+
+    loc_first = body[start].f.loc
+    loc_last  = loc_first if stop == start else body[stop - 1].f.loc
+
+    if start:
+        _, _, bound_ln, bound_col = body[start - 1].f.loc
+    else:
+        bound_ln, bound_col, _, _ = loc_first
+
+    asts    = _cut_or_copy_asts(start, stop, 'names', cut, body)
+    ret_ast = Tuple(elts=asts, ctx=Load())
+
+    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
+                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
+                          options.get('trivia'), 'names', '', '', ',', False, False)
+
+    if (fst_first := (elts := fst_.a.elts)[0].f.loc)[:2] != (0, 0):  # clean up newline start
+        fst_._put_src(None, 0, 0, fst_first.ln, fst_first.col, False)
+
+    if (fst_last := elts[-1].f.loc)[2:] != (fst_loc := fst_.loc)[2:]:  # clean up newline end
+        fst_._put_src(None, fst_last.end_ln, fst_last.end_col, fst_loc.end_ln, fst_loc.end_col, True)
+
+    if cut:
+        if stop == len_body:  # clean up any line continuation backslashes and make sure end location is set to end of last element
+            _, _, end_ln, end_col = self.loc
+
+            if end_col != bound_col or end_ln != bound_ln:
+                self._put_src(None, bound_ln, bound_col, end_ln, end_col, True)
+
+        self._maybe_add_line_continuations()
+
+    return fst_
+
+
+# TODO: handle trailing line continuation backslashes
+def _get_slice_ImportFrom_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                                cut: bool, options: Mapping[str, Any]) -> fst.FST:
+    raise NotImplementedError
+
+
+def _get_slice_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                                     cut: bool, options: Mapping[str, Any]) -> fst.FST:
+    len_body    = len((ast := self.a).names)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+
+    if start == stop:
+        return self._new_empty_tuple(from_=self)
+    if cut and not start and stop == len_body:
+        raise ValueError(f'cannot cut all {ast.__class__.__name__}.names')
+
+    ln, end_col, bound_end_ln, bound_end_col = self.loc
+
+    lines     = self.root._lines
+    ret_elts  = []
+    ret_ast   = Tuple(elts=ret_elts, ctx=Load())
+    end_col  += 5 if isinstance(ast, Global) else 7  # will have another +1 added in search
+
+    if not start:
+        bound_ln = None  # set later
+
+    else:
+        for _ in range(start - 1):
+            ln, end_col = next_find(lines, ln, end_col + 1, bound_end_ln, bound_end_col, ',')  # must be there
+
+        bound_ln, bound_col, src = next_find_re(lines, ln, end_col + 1, bound_end_ln, bound_end_col, re_identifier)  # must be there, + 1 skips comma
+
+        bound_col   += len(src)
+        ln, end_col  = next_find(lines, bound_ln, bound_col, bound_end_ln, bound_end_col, ',')  # must be there
+
+    for i in range(stop - start):  # create tuple of Names from identifiers
+        ln, col, src = next_find_re(lines, ln, end_col + 1, bound_end_ln, bound_end_col, re_identifier)  # must be there, + 1 probably skips comma
+        lineno       = ln + 1
+        end_col      = col + len(src)
+
+        if not i:
+            loc_first = fstloc(ln, col, ln, end_col)
+
+            if bound_ln is None:
+                bound_ln  = ln
+                bound_col = col
+
+        ret_elts.append(Name(id=src, ctx=Load(), lineno=lineno, col_offset=(l := lines[ln]).c2b(col), end_lineno=lineno,
+                             end_col_offset=l.c2b(end_col)))
+
+    loc_last = fstloc(ln, col, ln, end_col)
+
+    if cut:
+        del ast.names[start : stop]
+
+    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, ret_elts[-1],
+                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
+                          options.get('trivia'), 'names', '', '', ',', False, 1)
+
+    fst_._maybe_fix_tuple(False)  # this is in case of multiline elements to add pars, otherwise location would reparse different
+
+    if cut:
+        if stop == len_body:  # clean up any line continuation backslashes and make sure end location is set to end of last element
+            _, _, end_ln, end_col = self.loc
+
+            if end_col != bound_col or end_ln != bound_ln:
+                self._put_src(None, bound_ln, bound_col, end_ln, end_col, True)
+
+        self._maybe_add_line_continuations()
+
+    return fst_
+
+
 def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                          options: Mapping[str, Any]) -> fst.FST:
     """A `List` slice is just a normal `List`."""
@@ -1017,37 +1137,6 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
     return fst_
 
 
-# TODO: handle trailing line continuation backslashes
-def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-                            options: Mapping[str, Any]) -> fst.FST:
-    len_body    = len(body := self.a.names)
-    start, stop = fixup_slice_indices(len_body, start, stop)
-
-    if start == stop:
-        return self._new_empty_tuple(from_=self)
-    if cut and not start and stop == len_body:
-        raise ValueError('cannot cut all Import.names')
-
-    _, _, bound_end_ln, bound_end_col = body[-1].f.loc
-
-    if start:
-        _, _, bound_ln, bound_col = body[start - 1].f.loc
-    else:
-        bound_ln, bound_col, _, _ = body[0].f.loc
-
-    ln, col, end_ln, end_col = body[start].f.loc
-
-    if (last := stop - 1) != start:
-        _, _, end_ln, end_col = body[last].f.loc
-
-    asts    = _cut_or_copy_asts(start, stop, 'names', cut, body)
-    ret_ast = Tuple(elts=asts, ctx=Load())
-
-    return _get_slice_seq(self, start, stop, len_body, cut, ret_ast,
-                          bound_ln, bound_col, bound_end_ln, bound_end_col, ln, col, end_ln, end_col,
-                          options.get('trivia'), 'names', '', '', ',', False, False)
-
-
 def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                            options: Mapping[str, Any]) -> fst.FST:
     """A `type_params` slice is an invalid `Tuple` containing `type_params` elements. A zero-length slice is just an
@@ -1087,73 +1176,6 @@ def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, st
         (_, _, bound_end_ln, bound_end_col), (name_ln, name_col) = bound_func()
 
         self._put_src(None, name_ln, name_col, bound_end_ln, bound_end_col, False)
-
-    return fst_
-
-
-def _get_slice_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
-                                     cut: bool, options: Mapping[str, Any]) -> fst.FST:
-    len_body    = len((ast := self.a).names)
-    start, stop = fixup_slice_indices(len_body, start, stop)
-
-    if start == stop:
-        return self._new_empty_tuple(from_=self)
-    if cut and not start and stop == len_body:
-        raise ValueError(f'cannot cut all {ast.__class__.__name__}.names')
-
-    ln, end_col, bound_end_ln, bound_end_col = self.loc
-
-    lines     = self.root._lines
-    ret_elts  = []
-    ret_ast   = Tuple(elts=ret_elts, ctx=Load())
-    end_col  += 5 if isinstance(ast, Global) else 7  # will have another +1 added in search
-
-    if not start:
-        bound_ln = None  # set later
-
-    else:
-        for _ in range(start - 1):
-            ln, end_col = next_find(lines, ln, end_col + 1, bound_end_ln, bound_end_col, ',')  # must be there
-
-        bound_ln, bound_col, src = next_find_re(lines, ln, end_col + 1, bound_end_ln, bound_end_col, re_identifier)  # must be there, + 1 skips comma
-
-        bound_col   += len(src)
-        ln, end_col  = next_find(lines, bound_ln, bound_col, bound_end_ln, bound_end_col, ',')  # must be there
-
-    for i in range(stop - start):  # create tuple of Names from identifiers
-        ln, col, src = next_find_re(lines, ln, end_col + 1, bound_end_ln, bound_end_col, re_identifier)  # must be there, + 1 probably skips comma
-        lineno       = ln + 1
-        end_col      = col + len(src)
-
-        if not i:
-            loc_first = fstloc(ln, col, ln, end_col)
-
-            if bound_ln is None:
-                bound_ln  = ln
-                bound_col = col
-
-        ret_elts.append(Name(id=src, ctx=Load(), lineno=lineno, col_offset=(l := lines[ln]).c2b(col), end_lineno=lineno,
-                             end_col_offset=l.c2b(end_col)))
-
-    loc_last = fstloc(ln, col, ln, end_col)
-
-    if cut:
-        del ast.names[start : stop]
-
-    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, ret_elts[-1],
-                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
-                          options.get('trivia'), 'names', '', '', ',', False, 1)
-
-    fst_._maybe_fix_tuple(False)  # this is in case of multiline elements to add pars, otherwise location would reparse different
-
-    if cut:
-        if stop == len_body:  # clean up any line continuation backslashes and make sure end location is set to end of last element
-            _, _, end_ln, end_col = self.loc
-
-            if end_col != bound_col or end_ln != bound_ln:
-                self._put_src(None, bound_ln, bound_col, end_ln, end_col, True)
-
-        self._maybe_add_line_continuations()
 
     return fst_
 
@@ -1224,7 +1246,7 @@ _GET_SLICE_HANDLERS = {
     (ClassDef, 'keywords'):               _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
     (Call, 'keywords'):                   _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
 
-    (Import, 'names'):                    _get_slice_NOT_IMPLEMENTED_YET,  # alias*
+    (Import, 'names'):                    _get_slice_Import_names,  # alias*
     (ImportFrom, 'names'):                _get_slice_NOT_IMPLEMENTED_YET,  # alias*
 
     (With, 'items'):                      _get_slice_NOT_IMPLEMENTED_YET,  # withitem*
@@ -1826,6 +1848,21 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
     return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
 
+def _code_to_slice_aliases(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any]) -> fst.FST | None:
+    if code is None:
+        return None
+
+    if one:
+        raise ValueError(f"cannot put as 'one' item to {self.a.__class__.__name__}.names")
+
+    fst_ = code_as_aliases(code, self.root.parse_params, sanitize=False)
+
+    if not fst_.a.elts:  # put empty sequence is same as delete
+        return None
+
+    return fst_
+
+
 def _code_to_slice_type_params(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any]) -> fst.FST | None:
     if code is None:
         return None
@@ -1971,7 +2008,9 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
     fst_ = None
 
     if elts := (ast := self.a).elts:  # SPECIAL SLICEs
-        if isinstance(e0 := elts[0], type_param):
+        if isinstance(e0 := elts[0], alias):
+            fst_ = _code_to_slice_aliases(self, code, one, options)
+        elif isinstance(e0, type_param):
             fst_ = _code_to_slice_type_params(self, code, one, options)
 
     if fst_ is None:
@@ -2225,7 +2264,7 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
 def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                               field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_        = _code_to_slice_Assign_targets(self, code, one, options)
-    len_body    = len(body := self.a.targets)
+    len_body    = len(body := (ast := self.a).targets)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice   = stop - start
 
@@ -2268,6 +2307,98 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
 
     for i in range(start + len_fst_body, len(body)):
         body[i].f.pfield = astfield('targets', i)
+
+    if fst_ and stop == len_body and isinstance(v := ast.value, Name) and not v.id:  # SPECIAL SLICE, need to fix up empty value location since those are tricky and this one may not be offset properly
+        v.lineno     = v.end_lineno     = ast.end_lineno
+        v.col_offset = v.end_col_offset = ast.end_col_offset
+
+    self._maybe_add_line_continuations()
+
+
+def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
+                                     stop: int | None, field: str, one: bool, options: Mapping[str, Any]) -> None:
+    """In order to do this put since `Global` and `Nonlocal` do not have child `AST` nodes but just identifiers, we
+    create a temporary container which does have `Name` elements for each name."""
+
+    fst_        = _code_to_slice_seq(self, code, one, options, non_seq_str_as_one=True)
+    len_body    = len(body := (ast := self.a).names)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+
+    if not fst_:
+        if start == stop:
+            return
+
+        if not start and stop == len_body:
+            raise ValueError(f'cannot delete all {ast.__class__.__name__}.names')
+
+    else:
+        n = 0
+
+        if not all(isinstance(bad := e, Name) and not (n := e.f.pars().n) for e in fst_.a.elts):
+            raise NodeError(f'cannot put{" parenthesized" if n else ""} {bad.__class__.__name__} '
+                            f'to {ast.__class__.__name__}.names')
+
+    ln, end_col, bound_end_ln, bound_end_col = self.loc
+
+    lines     = self.root._lines
+    tmp_elts  = []
+    end_col  += 5 if isinstance(ast, Global) else 7  # will have another +1 added in search
+
+    for _ in range(len_body):
+        ln, col, src = next_find_re(lines, ln, end_col + 1, bound_end_ln, bound_end_col, re_identifier)  # must be there, + 1 probably skips comma
+        lineno       = ln + 1
+        end_col      = col + len(src)
+
+        tmp_elts.append(Name(id=src, ctx=Load(), lineno=lineno, col_offset=(l := lines[ln]).c2b(col), end_lineno=lineno,
+                             end_col_offset=l.c2b(end_col)))
+
+    tmp_ast = Tuple(elts=tmp_elts, ctx=Load(), lineno=(e0 := tmp_elts[0]).lineno, col_offset=e0.col_offset,
+                    end_lineno=(en := tmp_elts[-1]).end_lineno, end_col_offset=en.end_col_offset)
+
+    self._set_ast(tmp_ast)  # temporarily swap out Global/Nonlocal AST for temporary Tuple AST so that offsetting propagates to the parents
+
+    bound_ln, bound_col, last_end_ln, last_end_col = tmp_elts[0].f.loc
+
+    if not start:
+        last_end_ln  = bound_ln
+        last_end_col = bound_col
+
+    elif start != 1:
+        _, _, last_end_ln, last_end_col = tmp_elts[start - 1].f.loc
+
+    if not fst_:
+        _put_slice_seq(self, start, stop, None, None, None, 0,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'), options.get('ins_ln'), 'elts', None, ',', False)
+
+        del body[start : stop]
+
+    else:
+        len_fst_body = len(fst_body := fst_.a.elts)
+        fst_last     = fst_body[-1].f
+
+        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_last, len_fst_body,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'), options.get('ins_ln'), 'elts', None, ',', False)
+
+        fst_last_loc = fst_last.loc  # we get it here because ._set_ast() below makes this impossible
+
+        body[start : stop] = [e.id for e in fst_body]
+
+    ast.end_lineno     = tmp_ast.end_lineno  # copy new end from temporary FST to self (since it was swapped out)
+    ast.end_col_offset = tmp_ast.end_col_offset
+
+    self._set_ast(ast, True)
+    self._touch()  # because it was never offset so was never ._touch()ed
+
+    if stop == len_body:  # clean up any line continuation backslashes and make sure end location is set to end of last element
+        _, _, end_ln, end_col = self.loc
+
+        if fst_:
+            _, _, last_end_ln, last_end_col = fst_last_loc
+
+        if end_col != last_end_col or end_ln != last_end_ln:
+            self._put_src(None, last_end_ln, last_end_col, end_ln, end_col, True)
 
     self._maybe_add_line_continuations()
 
@@ -2500,94 +2631,6 @@ def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Litera
 
     for i in range(start + len_fst_body, len(body)):
         body[i].f.pfield = astfield('type_params', i)
-
-
-def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
-                                     stop: int | None, field: str, one: bool, options: Mapping[str, Any]) -> None:
-    """In order to do this put since `Global` and `Nonlocal` do not have child `AST` nodes but just identifiers, we
-    create a temporary container which does have `Name` elements for each name."""
-
-    fst_        = _code_to_slice_seq(self, code, one, options, non_seq_str_as_one=True)
-    len_body    = len(body := (ast := self.a).names)
-    start, stop = fixup_slice_indices(len_body, start, stop)
-
-    if not fst_:
-        if start == stop:
-            return
-
-        if not start and stop == len_body:
-            raise ValueError(f'cannot delete all {ast.__class__.__name__}.names')
-
-    else:
-        n = 0
-
-        if not all(isinstance(bad := e, Name) and not (n := e.f.pars().n) for e in fst_.a.elts):
-            raise NodeError(f'cannot put{" parenthesized" if n else ""} {bad.__class__.__name__} '
-                            f'to {ast.__class__.__name__}.names')
-
-    ln, end_col, bound_end_ln, bound_end_col = self.loc
-
-    lines     = self.root._lines
-    tmp_elts  = []
-    end_col  += 5 if isinstance(ast, Global) else 7  # will have another +1 added in search
-
-    for _ in range(len_body):
-        ln, col, src = next_find_re(lines, ln, end_col + 1, bound_end_ln, bound_end_col, re_identifier)  # must be there, + 1 probably skips comma
-        lineno       = ln + 1
-        end_col      = col + len(src)
-
-        tmp_elts.append(Name(id=src, ctx=Load(), lineno=lineno, col_offset=(l := lines[ln]).c2b(col), end_lineno=lineno,
-                             end_col_offset=l.c2b(end_col)))
-
-    tmp_ast = Tuple(elts=tmp_elts, ctx=Load(), lineno=(e0 := tmp_elts[0]).lineno, col_offset=e0.col_offset,
-                    end_lineno=(en := tmp_elts[-1]).end_lineno, end_col_offset=en.end_col_offset)
-
-    self._set_ast(tmp_ast)  # temporarily swap out Global/Nonlocal AST for temporary Tuple AST so that offsetting propagates to the parents
-
-    bound_ln, bound_col, last_end_ln, last_end_col = tmp_elts[0].f.loc
-
-    if not start:
-        last_end_ln  = bound_ln
-        last_end_col = bound_col
-
-    elif start != 1:
-        _, _, last_end_ln, last_end_col = tmp_elts[start - 1].f.loc
-
-    if not fst_:
-        _put_slice_seq(self, start, stop, None, None, None, 0,
-                       bound_ln, bound_col, bound_end_ln, bound_end_col,
-                       options.get('trivia'), options.get('ins_ln'), 'elts', None, ',', False)
-
-        del body[start : stop]
-
-    else:
-        len_fst_body = len(fst_body := fst_.a.elts)
-        fst_last     = fst_body[-1].f
-
-        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_last, len_fst_body,
-                       bound_ln, bound_col, bound_end_ln, bound_end_col,
-                       options.get('trivia'), options.get('ins_ln'), 'elts', None, ',', False)
-
-        fst_last_loc = fst_last.loc  # we get it here because ._set_ast() below makes this impossible
-
-        body[start : stop] = [e.id for e in fst_body]
-
-    ast.end_lineno     = tmp_ast.end_lineno  # copy new end from temporary FST to self (since it was swapped out)
-    ast.end_col_offset = tmp_ast.end_col_offset
-
-    self._set_ast(ast, True)
-    self._touch()  # because it was never offset so was never ._touch()ed
-
-    if stop == len_body:  # clean up any line continuation backslashes and make sure end location is set to end of last element
-        _, _, end_ln, end_col = self.loc
-
-        if fst_:
-            _, _, last_end_ln, last_end_col = fst_last_loc
-
-        if end_col != last_end_col or end_ln != last_end_ln:
-            self._put_src(None, last_end_ln, last_end_col, end_ln, end_col, True)
-
-    self._maybe_add_line_continuations()
 
 
 # ......................................................................................................................
