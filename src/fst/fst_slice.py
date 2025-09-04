@@ -85,6 +85,7 @@ from .extparse import unparse
 
 from .code import (
     Code,
+    code_as_Import_name, code_as_Import_names,
     code_as_expr, code_as_expr_all, code_as_pattern,
     code_as_aliases, code_as_type_param, code_as_type_params, code_as_Assign_targets,
 )
@@ -1914,6 +1915,26 @@ def _code_to_slice_Assign_targets(self: fst.FST, code: Code | None, one: bool, o
     return fst_
 
 
+def _code_to_slice_Import_names(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any]) -> fst.FST | None:
+    if code is None:
+        return None
+
+    if one:
+        fst_ = code_as_Import_name(code, self.root.parse_params, sanitize=False)
+
+        return fst.FST(Tuple(elts=[fst_.a], ctx=Load(), lineno=(el := len(ls := fst_._lines)),
+                             col_offset=(ec := ls[-1].lenbytes), end_lineno=el, end_col_offset=ec),
+                       ls, from_=fst_, lcopy=False)
+
+    else:
+        fst_ = code_as_Import_names(code, self.root.parse_params, sanitize=False)
+
+        if not fst_.a.elts:  # put empty sequence is same as delete
+            return None
+
+    return fst_
+
+
 def _validate_put_seq(self: fst.FST, fst_: fst.FST, non_slice: str, *,
                       check_target: Literal[False] | Callable = False) -> None:  # check_target like is_valid_target()
     if not fst_:
@@ -2313,6 +2334,21 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
         v.col_offset = v.end_col_offset = ast.end_col_offset
 
     self._maybe_add_line_continuations()
+
+
+def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+                            field: str, one: bool, options: Mapping[str, Any]) -> None:
+    fst_        = _code_to_slice_Import_names(self, code, one, options)
+    len_body    = len(body := (ast := self.a).names)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice   = stop - start
+
+    if not fst_ and not len_slice:
+        return
+
+    raise NotImplementedError
+
+
 
 
 def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,

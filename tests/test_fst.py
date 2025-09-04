@@ -198,6 +198,19 @@ PARSE_TESTS = [
     ('match_case',        ep.parse_match_case,        ParseError,       'case None: pass\ncase 1: pass'),
     ('match_case',        ep.parse_match_case,        SyntaxError,      'i: int = 1'),
 
+    ('Assign_targets',    ep.parse_Assign_targets,    Assign,           ''),
+    ('Assign_targets',    ep.parse_Assign_targets,    Assign,           'a'),
+    ('Assign_targets',    ep.parse_Assign_targets,    Assign,           'a ='),
+    ('Assign_targets',    ep.parse_Assign_targets,    Assign,           'a = b'),
+    ('Assign_targets',    ep.parse_Assign_targets,    Assign,           'a = b ='),
+    ('Assign_targets',    ep.parse_Assign_targets,    Assign,           '\\\na\\\n = \\\n'),
+    ('Assign_targets',    ep.parse_Assign_targets,    IndentationError, ' a'),
+    ('Assign_targets',    ep.parse_Assign_targets,    SyntaxError,      '\na'),
+    ('Assign_targets',    ep.parse_Assign_targets,    SyntaxError,      'a\n='),
+    ('Assign_targets',    ep.parse_Assign_targets,    SyntaxError,      'a =  # tail'),
+    ('Assign_targets',    ep.parse_Assign_targets,    SyntaxError,      '# head\na ='),
+    ('all',               ep.parse_Assign_targets,    Assign,           'a = b ='),
+
     ('expr',              ep.parse_expr,              Name,             'j'),
     ('expr',              ep.parse_expr,              Starred,          '*s'),
     ('expr',              ep.parse_expr,              Starred,          '*\ns'),
@@ -277,6 +290,7 @@ PARSE_TESTS = [
     ('keyword',           ep.parse_keyword,           ParseError,       'a'),
     ('keyword',           ep.parse_keyword,           ParseError,       'a=1, b=2'),
 
+    ('alias',             ep.parse_alias,             SyntaxError,      ''),
     ('alias',             ep.parse_alias,             alias,            'a'),
     ('alias',             ep.parse_alias,             alias,            'a.b'),
     ('alias',             ep.parse_alias,             alias,            '*'),
@@ -287,6 +301,7 @@ PARSE_TESTS = [
     ('alias',             ep.parse_alias,             ParseError,       'a as x, b as y'),
     ('alias',             ep.parse_alias,             ParseError,       'a as x, a.b as y'),
 
+    ('aliases',           ep.parse_aliases,           Tuple,            ''),
     ('aliases',           ep.parse_aliases,           Tuple,            'a'),
     ('aliases',           ep.parse_aliases,           Tuple,            'a.b'),
     ('aliases',           ep.parse_aliases,           Tuple,            '*'),
@@ -297,6 +312,7 @@ PARSE_TESTS = [
     ('aliases',           ep.parse_aliases,           Tuple,            'a as x, b as y'),
     ('aliases',           ep.parse_aliases,           Tuple,            'a as x, a.b as y'),
 
+    ('Import_name',       ep.parse_Import_name,       SyntaxError,      ''),
     ('Import_name',       ep.parse_Import_name,       alias,            'a'),
     ('Import_name',       ep.parse_Import_name,       alias,            'a.b'),
     ('Import_name',       ep.parse_Import_name,       SyntaxError,      '*'),
@@ -307,6 +323,7 @@ PARSE_TESTS = [
     ('Import_name',       ep.parse_Import_name,       ParseError,       'a as x, b as y'),
     ('Import_name',       ep.parse_Import_name,       ParseError,       'a as x, a.b as y'),
 
+    ('Import_names',      ep.parse_Import_names,      Tuple,            ''),
     ('Import_names',      ep.parse_Import_names,      Tuple,            'a'),
     ('Import_names',      ep.parse_Import_names,      Tuple,            'a.b'),
     ('Import_names',      ep.parse_Import_names,      SyntaxError,      '*'),
@@ -317,6 +334,7 @@ PARSE_TESTS = [
     ('Import_names',      ep.parse_Import_names,      Tuple,            'a as x, b as y'),
     ('Import_names',      ep.parse_Import_names,      Tuple,            'a as x, a.b as y'),
 
+    ('ImportFrom_name',   ep.parse_ImportFrom_name,   SyntaxError,      ''),
     ('ImportFrom_name',   ep.parse_ImportFrom_name,   alias,            'a'),
     ('ImportFrom_name',   ep.parse_ImportFrom_name,   SyntaxError,      'a.b'),
     ('ImportFrom_name',   ep.parse_ImportFrom_name,   alias,            '*'),
@@ -327,6 +345,7 @@ PARSE_TESTS = [
     ('ImportFrom_name',   ep.parse_ImportFrom_name,   ParseError,       'a as x, b as y'),
     ('ImportFrom_name',   ep.parse_ImportFrom_name,   SyntaxError,      'a as x, a.b as y'),
 
+    ('ImportFrom_names',  ep.parse_ImportFrom_names,  Tuple,            ''),
     ('ImportFrom_names',  ep.parse_ImportFrom_names,  Tuple,            'a'),
     ('ImportFrom_names',  ep.parse_ImportFrom_names,  SyntaxError,      'a.b'),
     ('ImportFrom_names',  ep.parse_ImportFrom_names,  Tuple,            '*'),
@@ -610,18 +629,6 @@ PARSE_TESTS = [
     ('withitem',          ep.parse_withitem,          withitem,         ' a as b,  # tail'),
     ('pattern',           ep.parse_pattern,           MatchOr,          ' 1 | 2 | 3  # tail'),
     ('pattern',           ep.parse_pattern,           MatchStar,        ' *a  # tail'),
-
-    ('Assign_targets',    ep.parse_Assign_targets,    Assign,           'a'),
-    ('Assign_targets',    ep.parse_Assign_targets,    Assign,           'a ='),
-    ('Assign_targets',    ep.parse_Assign_targets,    Assign,           'a = b'),
-    ('Assign_targets',    ep.parse_Assign_targets,    Assign,           'a = b ='),
-    ('Assign_targets',    ep.parse_Assign_targets,    Assign,           '\\\na\\\n = \\\n'),
-    ('Assign_targets',    ep.parse_Assign_targets,    IndentationError, ' a'),
-    ('Assign_targets',    ep.parse_Assign_targets,    SyntaxError,      '\na'),
-    ('Assign_targets',    ep.parse_Assign_targets,    SyntaxError,      'a\n='),
-    ('Assign_targets',    ep.parse_Assign_targets,    SyntaxError,      'a =  # tail'),
-    ('Assign_targets',    ep.parse_Assign_targets,    SyntaxError,      '# head\na ='),
-    ('all',               ep.parse_Assign_targets,    Assign,           'a = b ='),
   ]
 
 if PYGE11:
@@ -818,7 +825,9 @@ class TestFST(unittest.TestCase):
 
                 # reparse
 
-                if src != '*=':  # augassign is ambiguous for unparse
+                if (src != '*=' and  # augassign is ambiguous for unparse
+                    (src or func not in (ep.parse_Assign_targets, ep.parse_aliases, ep.parse_Import_names, ep.parse_ImportFrom_names))  # these unparse to '()' which can't be reparsed as these
+                ):
                     test = 'reparse'
                     unp  = ((s := ep.unparse(ast)) and s.lstrip()) or src  # 'lstrip' because comprehension has leading space, 'or src' because unparse of operators gives nothing
                     ast2 = ep.parse(unp, mode)
@@ -827,7 +836,7 @@ class TestFST(unittest.TestCase):
 
                 # trailing newline
 
-                if (src != '*=' and                    # newline following augassign is syntactically impossible
+                if (src != '*=' and                  # newline following augassign is syntactically impossible
                     func != ep.parse_Assign_targets  # this can't take trailing newline
                 ):
                     test = 'newline'
@@ -846,6 +855,7 @@ class TestFST(unittest.TestCase):
 
             except Exception:
                 print()
+                print(f'{test = }')
                 print(f'{mode = }')
                 print(f'{func = }')
                 print(f'{res = }')
@@ -2964,7 +2974,9 @@ match a:
 
                     compare_asts(ref_ast, fst.a, locs=True, raise_=True)
 
-                    if not fst.is_special_slice():  # because pure AST SPECIAL SLICEs are not supported
+                    if (not fst.is_special_slice() and  # because pure AST SPECIAL SLICEs are not supported
+                        (src or func not in (ep.parse_Assign_targets, ep.parse_aliases, ep.parse_Import_names, ep.parse_ImportFrom_names))  # these unparse to '()' which can't be reparsed as these
+                    ):
                         test = 'ast'
 
                         try:

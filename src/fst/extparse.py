@@ -1175,12 +1175,16 @@ def parse_Import_names(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         names = _ast_parse1(f'import \\\n{src}', parse_params).names
 
     except SyntaxError as first_exc:
-        try:
-            src   = _re_non_lcont_newline.sub('\\\n', src)
-            names = _ast_parse1(f'import \\\n{src}', parse_params).names  # multiline?
+        if not _re_first_src.search(src):  # empty?
+            names = []
 
-        except SyntaxError:
-            raise first_exc from None
+        else:
+            try:
+                src   = _re_non_lcont_newline.sub('\\\n', src)
+                names = _ast_parse1(f'import \\\n{src}', parse_params).names  # multiline?
+
+            except SyntaxError:
+                raise first_exc from None
 
     ast = Tuple(elts=names, ctx=Load(), lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
                 end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
@@ -1221,12 +1225,16 @@ def parse_ImportFrom_names(src: str, parse_params: Mapping[str, Any] = {}) -> AS
         names = _ast_parse1(f'from . import \\\n{src}', parse_params).names  # this instead of parentheses because could be '*' which doesn't like parentheses
 
     except SyntaxError as first_exc:
-        try:
-            src   = _re_non_lcont_newline.sub('\\\n', src)
-            names = _ast_parse1(f'from . import \\\n{src}', parse_params).names  # multiline?
+        if not _re_first_src.search(src):  # empty?
+            names = []
 
-        except SyntaxError:
-            raise first_exc from None
+        else:
+            try:
+                src   = _re_non_lcont_newline.sub('\\\n', src)
+                names = _ast_parse1(f'from . import \\\n{src}', parse_params).names  # multiline?
+
+            except SyntaxError:
+                raise first_exc from None
 
     ast = Tuple(elts=names, ctx=Load(), lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
                 end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
