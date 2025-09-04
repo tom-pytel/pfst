@@ -150,7 +150,7 @@ _re_sep_line_nonexpr_end        = {  # empty line with optional separator and li
 #   ! S ,             (With, 'items'):                        # withitem*        -> Tuple[withitem]        _parse_withitems               - no trailing commas
 #   ! S ,             (AsyncWith, 'items'):                   # withitem*        -> Tuple[withitem]        _parse_withitems               - no trailing commas
 #                                                                                .
-#   ! S ,             (Import, 'names'):                      # alias*           -> Tuple[alias]           _parse_aliases_dotted          - no trailing commas
+# * ! S ,             (Import, 'names'):                      # alias*           -> Tuple[alias]           _parse_aliases_dotted          - no trailing commas
 #   ! S ,             (ImportFrom, 'names'):                  # alias*           -> Tuple[alias]           _parse_aliases_star            - no trailing commas
 #                                                                                .
 #                                                                                .
@@ -181,7 +181,7 @@ _re_sep_line_nonexpr_end        = {  # empty line with optional separator and li
 # * Tuple[type_param]      _parse_type_params
 #   Tuple[withitem]        _parse_withitems
 #   Tuple[comprehension]   _parse_comprehensions
-#   Tuple[alias]           _parse_aliases_dotted
+# * Tuple[alias]           _parse_aliases_dotted
 #   Tuple[alias]           _parse_aliases_star
 
 
@@ -775,7 +775,7 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
         return fst.FST._new_empty_tuple(from_=self)
 
     if cut and len_slice == len_body and self.get_option('fix_del_self', options):
-        raise NodeError("cannot cut Delete targets to empty without fix_del_self=False")
+        raise NodeError("cannot cut all Delete.targets without fix_del_self=False")
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
@@ -817,8 +817,7 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
                               lcopy=False)
 
     if cut and len_slice == len_body and self.get_option('fix_assign_self', options):
-        raise NodeError("cannot cut Assign targets to empty without fix_assign_self=False")
-
+        raise NodeError("cannot cut all Assign.targets without fix_assign_self=False")
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
@@ -853,6 +852,7 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
 
     if start == stop:
         return self._new_empty_tuple(from_=self)
+
     if cut and not start and stop == len_body:
         raise ValueError('cannot cut all Import.names')
 
@@ -2225,7 +2225,7 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
     allows correct-appearing syntax like `delfst.targets = 'target'` to work."""
 
     fst_        = _code_to_slice_seq(self, code, one, options, non_seq_str_as_one=True)
-    len_body    = len(body := self.a.targets)
+    len_body    = len(body := (ast := self.a).targets)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice   = stop - start
 
@@ -2234,7 +2234,7 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
             return
 
         if len_slice == len_body and self.get_option('fix_del_self', options):
-            raise NodeError("cannot cut Delete targets to empty without fix_del_self=False")
+            raise NodeError("cannot delete Delete.targets to empty without fix_del_self=False")
 
     _validate_put_seq(self, fst_, 'Delete', check_target=is_valid_del_target)
 
@@ -2273,6 +2273,15 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
 
     for i in range(start + len_fst_body, len(body)):
         body[i].f.pfield = astfield('targets', i)
+
+    if stop == len_body:  # clean up any line continuation backslashes and make sure end location is set to end of last element
+        _, _, end_ln, end_col = self.loc
+
+        if targets := ast.targets:
+            _, _, last_end_ln, last_end_col = targets[-1].f.pars()
+
+            if end_col != last_end_col or end_ln != last_end_ln:
+                self._put_src(None, last_end_ln, last_end_col, end_ln, end_col, True)
 
     ln, col, _, _ = self.loc
 
@@ -2343,12 +2352,62 @@ def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Liter
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice   = stop - start
 
-    if not fst_ and not len_slice:
-        return
+    if not fst_:
+        if not len_slice:
+            return
 
-    raise NotImplementedError
+        if len_slice == len_body:
+            raise NodeError("cannot delete Import.names to empty")
 
+    _, _, bound_end_ln, bound_end_col = self.loc
 
+    if start:
+        _, _, bound_ln, bound_col = body[start - 1].f.pars()
+    elif body:
+        bound_ln, bound_col, _, _ = body[0].f.pars()
+    else:
+        bound_ln  = bound_end_ln
+        bound_col = bound_end_col
+
+    if not fst_:
+        _put_slice_seq(self, start, stop, None, None, None, 0,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'), options.get('ins_ln'), 'names', None, ',', False)
+
+        self._unmake_fst_tree(body[start : stop])
+
+        del body[start : stop]
+
+        len_fst_body = 0
+
+    else:
+        len_fst_body = len(fst_body := fst_.a.elts)
+
+        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'), options.get('ins_ln'), 'names', None, ',', False)
+
+        self._unmake_fst_tree(body[start : stop])
+        fst_._unmake_fst_parents(True)
+
+        body[start : stop] = fst_body
+
+        FST   = fst.FST
+        stack = [FST(body[i], self, astfield('names', i)) for i in range(start, start + len_fst_body)]
+
+        self._make_fst_tree(stack)
+
+    for i in range(start + len_fst_body, len(body)):
+        body[i].f.pfield = astfield('names', i)
+
+    if stop == len_body:  # clean up any line continuation backslashes and make sure end location is set to end of last element
+        _, _, end_ln,      end_col      = self.loc
+        _, _, last_end_ln, last_end_col = ast.names[-1].f.loc
+
+        if end_col != last_end_col or end_ln != last_end_ln:
+            self._put_src(None, last_end_ln, last_end_col, end_ln, end_col, True)
+
+    self._maybe_add_line_continuations()
 
 
 def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
@@ -2765,7 +2824,7 @@ _PUT_SLICE_HANDLERS = {
     (ClassDef, 'keywords'):               _put_slice_NOT_IMPLEMENTED_YET,  # keyword*
     (Call, 'keywords'):                   _put_slice_NOT_IMPLEMENTED_YET,  # keyword*
 
-    (Import, 'names'):                    _put_slice_NOT_IMPLEMENTED_YET,  # alias*
+    (Import, 'names'):                    _put_slice_Import_names,  # alias*
     (ImportFrom, 'names'):                _put_slice_NOT_IMPLEMENTED_YET,  # alias*
 
     (With, 'items'):                      _put_slice_NOT_IMPLEMENTED_YET,  # withitem*

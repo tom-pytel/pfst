@@ -18800,6 +18800,15 @@ Module - ROOT 0,0..1,7
     2] Name 'c' Del - 1,6..1,7
 """),
 
+(r"""del a, b, c""", 'body[0]', None, None, None, {}, r"""x \
+""", r"""del x""", r"""
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Delete - 0,0..0,5
+    .targets[1]
+    0] Name 'x' Del - 0,4..0,5
+"""),
+
 (r"""a = b = c = d""", 'body[0]', None, None, 'targets', {}, r"""x""", r"""x = d""", r"""
 Module - ROOT 0,0..0,5
   .body[1]
@@ -18848,6 +18857,17 @@ Module - ROOT 0,0..4,9
     2] Name 'z' Store - 4,0..4,1
     3] Name 'c' Store - 4,4..4,5
     .value Name 'd' Load - 4,8..4,9
+"""),
+
+(r"""a = b = c = d""", 'body[0]', None, None, 'targets', {}, r"""x \
+""", r"""x = \
+ d""", r"""
+Module - ROOT 0,0..1,2
+  .body[1]
+  0] Assign - 0,0..1,2
+    .targets[1]
+    0] Name 'x' Store - 0,0..0,1
+    .value Name 'd' Load - 1,1..1,2
 """),
 
 (r"""global a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""**DEL**""", r"""global a, c  # comment""", r"""
@@ -19052,6 +19072,15 @@ Module - ROOT 0,0..0,25
 (r"""global a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""(x),""", r"""**NodeError('cannot put parenthesized Name to Global.names')**""", r"""
 """),
 
+(r"""global a, b, c  # comment""", 'body[0]', None, None, None, {}, r"""x \
+""", r"""global x  # comment""", r"""
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Global - 0,0..0,8
+    .names[1]
+    0] 'x'
+"""),
+
 (r"""nonlocal a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""**DEL**""", r"""nonlocal a, c  # comment""", r"""
 Module - ROOT 0,0..0,24
   .body[1]
@@ -19252,6 +19281,190 @@ Module - ROOT 0,0..0,27
 """),
 
 (r"""nonlocal a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""(x),""", r"""**NodeError('cannot put parenthesized Name to Nonlocal.names')**""", r"""
+"""),
+
+(r"""nonlocal a, b, c  # comment""", 'body[0]', None, None, None, {}, r"""x \
+""", r"""nonlocal x  # comment""", r"""
+Module - ROOT 0,0..0,21
+  .body[1]
+  0] Nonlocal - 0,0..0,10
+    .names[1]
+    0] 'x'
+"""),
+
+(r"""import a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""**DEL**""", r"""import a, c  # comment""", r"""
+Module - ROOT 0,0..0,22
+  .body[1]
+  0] Import - 0,0..0,11
+    .names[2]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 0,10..0,11
+      .name 'c'
+"""),
+
+(r"""import a, b, c  # comment""", 'body[0]', 1, 3, None, {}, r"""**DEL**""", r"""import a  # comment""", r"""
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Import - 0,0..0,8
+    .names[1]
+    0] alias - 0,7..0,8
+      .name 'a'
+"""),
+
+(r"""import a, b, c  # comment""", 'body[0]', 0, 2, None, {}, r"""**DEL**""", r"""import c  # comment""", r"""
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Import - 0,0..0,8
+    .names[1]
+    0] alias - 0,7..0,8
+      .name 'c'
+"""),
+
+(r"""import a \
+, \
+b \
+, \
+c  # comment""", 'body[0]', 1, 2, None, {}, r"""**DEL**""", r"""import a \
+, \
+c  # comment""", r"""
+Module - ROOT 0,0..2,12
+  .body[1]
+  0] Import - 0,0..2,1
+    .names[2]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 2,0..2,1
+      .name 'c'
+"""),
+
+(r"""import a \
+, \
+b \
+, \
+c  # comment""", 'body[0]', 0, 2, None, {}, r"""**DEL**""", r"""import \
+c  # comment""", r"""
+Module - ROOT 0,0..1,12
+  .body[1]
+  0] Import - 0,0..1,1
+    .names[1]
+    0] alias - 1,0..1,1
+      .name 'c'
+"""),
+
+(r"""import a \
+, \
+b \
+, \
+c  # comment""", 'body[0]', 1, 3, None, {}, r"""**DEL**""", r"""import a  # comment""", r"""
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Import - 0,0..0,8
+    .names[1]
+    0] alias - 0,7..0,8
+      .name 'a'
+"""),
+
+(r"""if 1:
+  import a \
+  , \
+  b  # comment
+  pass""", 'body[0].body[0]', 0, 1, None, {}, r"""**DEL**""", r"""if 1:
+  import  \
+  b  # comment
+  pass""", r"""
+Module - ROOT 0,0..3,6
+  .body[1]
+  0] If - 0,0..3,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Import - 1,2..2,3
+      .names[1]
+      0] alias - 2,2..2,3
+        .name 'b'
+    1] Pass - 3,2..3,6
+"""),
+
+(r"""if 1:
+  import a \
+  , \
+  b  # comment
+  pass""", 'body[0].body[0]', 1, 2, None, {}, r"""**DEL**""", r"""if 1:
+  import a  # comment
+  pass""", r"""
+Module - ROOT 0,0..2,6
+  .body[1]
+  0] If - 0,0..2,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Import - 1,2..1,10
+      .names[1]
+      0] alias - 1,9..1,10
+        .name 'a'
+    1] Pass - 2,2..2,6
+"""),
+
+(r"""if 1:
+  import a
+  pass""", 'body[0].body[0]', 0, 0, None, {}, r"""x \
+  , \
+  y
+  """, r"""if 1:
+  import x \
+         , \
+         y, \
+         a
+  pass""", r"""
+Module - ROOT 0,0..5,6
+  .body[1]
+  0] If - 0,0..5,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Import - 1,2..4,10
+      .names[3]
+      0] alias - 1,9..1,10
+        .name 'x'
+      1] alias - 3,9..3,10
+        .name 'y'
+      2] alias - 4,9..4,10
+        .name 'a'
+    1] Pass - 5,2..5,6
+"""),
+
+(r"""import a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""x""", r"""import a, x, c  # comment""", r"""
+Module - ROOT 0,0..0,25
+  .body[1]
+  0] Import - 0,0..0,14
+    .names[3]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 0,10..0,11
+      .name 'x'
+    2] alias - 0,13..0,14
+      .name 'c'
+"""),
+
+(r"""import a, b, c  # comment""", 'body[0]', 1, 2, None, {}, r"""x.y""", r"""import a, x.y, c  # comment""", r"""
+Module - ROOT 0,0..0,27
+  .body[1]
+  0] Import - 0,0..0,16
+    .names[3]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 0,10..0,13
+      .name 'x.y'
+    2] alias - 0,15..0,16
+      .name 'c'
+"""),
+
+(r"""import a, b, c  # comment""", 'body[0]', None, None, None, {}, r"""x \
+""", r"""import x  # comment""", r"""
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Import - 0,0..0,8
+    .names[1]
+    0] alias - 0,7..0,8
+      .name 'x'
 """),
 
 ]  # END OF PUT_SLICE_DATA

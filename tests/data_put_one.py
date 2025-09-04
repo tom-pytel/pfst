@@ -8419,7 +8419,15 @@ Module - ROOT 0,0..0,41
 (r"""async with (a as b, (f()) as d): pass""", 'body[0]', -4, 'items', {}, r"""g() as new""", r"""**IndexError('index out of range')**""", r"""
 """),
 
-(r"""import a, c.d as e""", 'body[0]', 0, 'names', {}, r"""**DEL**""", r"""**NotImplementedError("not implemented yet, try with option raw='auto'")**""", r"""
+(r"""import a, c.d as e""", 'body[0]', 0, 'names', {}, r"""**DEL**""", r"""import c.d as e""", r"""
+Module - ROOT 0,0..0,15
+  .body[1]
+  0] Import - 0,0..0,15
+    .names[1]
+    0] alias - 0,7..0,15
+      .name 'c.d'
+      .asname
+        'e'
 """),
 
 (r"""import a, c.d as e""", 'body[0]', 0, 'names', {}, r"""f as g""", r"""import f as g, c.d as e""", r"""

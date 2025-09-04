@@ -1764,10 +1764,9 @@ class SliceExprish(Fuzzy):
             return 'slice' if fst.has_Slice() else 'seq'
         if isinstance(ast, (List, Set)):
             return 'seq'
-        if isinstance(ast, (Delete, Assign,
+        if isinstance(ast, (Delete, Assign, Import, Global, Nonlocal,
                             Dict, MatchSequence, MatchMapping, MatchOr,
                             FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias,
-                            Global, Nonlocal,
                             )):
             return ast.__class__
 
@@ -1781,6 +1780,7 @@ class SliceExprish(Fuzzy):
             Dict:          self.Bucket(None, None, 0, 0, False, FST('{}')),
             Delete:        self.Bucket('targets', 'elts', 1, 0, True, FST('del a')),
             Assign:        self.Bucket('targets', None, 1, 0, False, FST('a = b')),
+            Import:        self.Bucket('names', 'elts', 1, 1, False, FST('import a')),
             Global:        (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
             Nonlocal:      glbucket,
             MatchSequence: self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
