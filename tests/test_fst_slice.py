@@ -10,9 +10,14 @@ from fst import *
 from fst.misc import PYVER, PYLT11, PYLT12, PYGE11, PYGE12, PYGE14
 
 from data_other import (
-    GET_SLICE_EXPRISH_DATA, GET_SLICE_STMTISH_DATA,
     PUT_SLICE_EXPRISH_DATA, PUT_SLICE_STMTISH_DATA, PUT_SLICE_DATA,
 )
+
+from util import GetSliceCases
+
+
+DIR_NAME       = os.path.dirname(__file__)
+GET_SLICE_DATA = GetSliceCases(os.path.join(DIR_NAME, 'data/data_get_slice.py'))
 
 
 def fixtailspace(s, r='_'):
@@ -24,105 +29,9 @@ def read(fnm):
         return f.read()
 
 
-def regen_get_slice_seq():
-    ver      = PYVER[1]
-    fnm      = os.path.join(os.path.dirname(sys.argv[0]), 'data_other.py')
-    newlines = []
-
-    with open(fnm) as f:
-        lines = f.read().split('\n')
-
-    for name in ('GET_SLICE_EXPRISH_DATA',):
-        for i, (src, elt, start, stop, field, options, *_) in enumerate(globals()[name]):
-            if options.get('_ver', 0) > ver:
-                continue
-
-            try:
-                t = parse(src)
-                f = eval(f't.{elt}', {'t': t}).f
-
-                try:
-                    s = f.get_slice(start, stop, field, cut=True, **options)
-
-                except (NotImplementedError, NodeError, ParseError) as exc:
-                    tsrc  = f'**{exc!r}**'
-                    ssrc  = ''
-                    tdump = ''
-                    sdump = ''
-
-                else:
-                    tsrc  = t.f.src
-                    ssrc  = s.src
-                    tdump = t.f.dump(out=list)
-                    sdump = s.dump(out=list)
-
-                    assert not tsrc.startswith('\n') or tsrc.endswith('\n')
-                    assert not ssrc.startswith('\n') or ssrc.endswith('\n')
-
-                    if options.get('_verify', True):
-                        t.f.verify(raise_=True)
-                        s.verify(raise_=True)
-
-                newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {field!r}, {options}, r"""{tsrc}""", r"""{ssrc}""", r"""'''.split('\n'))
-                newlines.extend(tdump)
-                newlines.append('""", r"""')
-                newlines.extend(sdump)
-                newlines.append('"""),\n')
-
-            except Exception:
-                print(i, elt, start, stop, options)
-                print('...')
-                print(src)
-                print('...')
-                print(tsrc)
-                print('...')
-                print(ssrc)
-
-                raise
-
-        start = lines.index(f'{name} = [')
-        stop  = lines.index(f']  # END OF {name}')
-
-        lines[start + 1 : stop] = newlines
-
-    with open(fnm, 'w') as f:
-        lines = f.write('\n'.join(lines))
-
-
-def regen_get_slice_stmt():
-    fnm = os.path.join(os.path.dirname(sys.argv[0]), 'data_other.py')
-
-    with open(fnm) as f:
-        lines = f.read().split('\n')
-
-    newlines = []
-
-    for src, elt, start, stop, field, options, *_ in GET_SLICE_STMTISH_DATA:
-        t     = parse(src)
-        f     = (eval(f't.{elt}', {'t': t}) if elt else t).f
-        s     = f.get_slice(start, stop, field, cut=True, **options)
-        tsrc  = t.f.src
-        ssrc  = s.src
-        tdump = t.f.dump(out=list)
-        sdump = s.dump(out=list)
-
-        if options.get('_verify', True):
-            t.f.verify(raise_=True)
-            s.verify(raise_=True)
-
-        newlines.extend(f'''(r"""{src}""", {elt!r}, {start}, {stop}, {field!r}, {options}, r"""{tsrc}""", r"""{ssrc}""", r"""'''.split('\n'))
-        newlines.extend(tdump)
-        newlines.append('""", r"""')
-        newlines.extend(sdump)
-        newlines.append('"""),\n')
-
-    start = lines.index('GET_SLICE_STMTISH_DATA = [')
-    stop  = lines.index(']  # END OF GET_SLICE_STMTISH_DATA')
-
-    lines[start + 1 : stop] = newlines
-
-    with open(fnm, 'w') as f:
-        lines = f.write('\n'.join(lines))
+def regen_get_slice():
+    GET_SLICE_DATA.generate()
+    GET_SLICE_DATA.write()
 
 
 def regen_put_slice_seq():
@@ -256,6 +165,32 @@ def regen_put_slice():
 
 
 class TestFSTSlice(unittest.TestCase):
+    def test_get_slice_from_data(self):
+        for key, case, rest in GET_SLICE_DATA.iterate(True):
+            for idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
+                self.assertEqual(c, r, f'{key = }, {case.idx = }, rest {idx = }')
+
+    def test_del_slice_from_get_slice_data(self):
+        from util import _make_fst
+
+        for key, case, rest in GET_SLICE_DATA.iterate(True):
+            f    = _make_fst(case.code, case.attr)
+            root = f.root
+
+            try:
+                f.put_slice(None, case.start, case.stop, case.field, **case.options)
+
+            except Exception:
+                if not ((r0 := rest[0]).startswith('**') and r0.endswith('**')):
+                    raise RuntimeError(f'del raises while cut did not, {key = }, {case.idx = }')
+
+            else:
+                if root.src != rest[0]:
+                    raise RuntimeError(f'del and cut FST src are not identical\n{root.src}\n...\n{rest[0]}')
+
+                if (root_dump := root.dump(out=str)) != rest[1]:
+                    raise RuntimeError(f'del and cut FST dump are not identical\n{root_dump}\n...\n{rest[1]}')
+
     def test_cut_slice_neg_space(self):
         f = FST('''[
 
@@ -1576,151 +1511,6 @@ def func():
         f = FST('del a, b, c')
         self.assertEqual('del ', f.put_slice(None, fix_del_self=False).src)
 
-    def test_get_slice_seq_copy(self):
-        ver = PYVER[1]
-
-        for i, (src, elt, start, stop, field, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_EXPRISH_DATA):
-            if options.get('_ver', 0) > ver:
-                continue
-
-            t = parse(src)
-            f = eval(f't.{elt}', {'t': t}).f
-
-            try:
-                try:
-                    s = f.get_slice(start, stop, field, cut=False, **options)
-
-                except (NotImplementedError, NodeError, ParseError) as exc:
-                    tsrc  = f'**{exc!r}**'
-                    ssrc  = ''
-                    sdump = ['']
-
-                else:
-                    tsrc  = t.f.src
-                    ssrc  = s.src
-                    sdump = s.dump(out=list)
-
-                self.assertEqual(tsrc, src)
-                self.assertEqual(ssrc, slice_copy)
-                self.assertEqual(sdump, slice_dump.strip().split('\n'))
-
-            except Exception:
-                print('copy:', i, elt, start, stop)
-                print('---')
-                print(src)
-                print('...')
-                print(slice_copy)
-
-                raise
-
-    def test_get_slice_seq_cut(self):
-        ver = PYVER[1]
-
-        for i, (src, elt, start, stop, field, options, src_cut, slice_copy, src_cut_dump, slice_dump) in enumerate(GET_SLICE_EXPRISH_DATA):
-            if options.get('_ver', 0) > ver:
-                continue
-
-            t = parse(src)
-            f = eval(f't.{elt}', {'t': t}).f
-
-            try:
-                try:
-                    s = f.get_slice(start, stop, field, cut=True, **options)
-
-                except (NotImplementedError, NodeError, ParseError) as exc:
-                    tsrc  = f'**{exc!r}**'
-                    ssrc  = ''
-                    tdump = ['']
-                    sdump = ['']
-
-                else:
-                    tsrc  = t.f.src
-                    ssrc  = s.src
-                    tdump = t.f.dump(out=list)
-                    sdump = s.dump(out=list)
-
-                self.assertEqual(tsrc, src_cut)
-                self.assertEqual(ssrc, slice_copy)
-                self.assertEqual(tdump, src_cut_dump.strip().split('\n'))
-                self.assertEqual(sdump, slice_dump.strip().split('\n'))
-
-            except Exception:
-                print('cut:', i, elt, start, stop)
-                print('---')
-                print(src)
-                print('...')
-                print(src_cut)
-                print('...')
-                print(slice_copy)
-
-                print('='*80)
-                print('\n'.join(tdump))
-                print('-'*80)
-                print('\n'.join(src_cut_dump.strip().split('\n')))
-                print('.'*80)
-
-                raise
-
-    def test_get_slice_stmt_copy(self):
-        for src, elt, start, stop, field, options, _, slice_cut, _, slice_dump in GET_SLICE_STMTISH_DATA:
-            t = parse(src)
-            f = (eval(f't.{elt}', {'t': t}) if elt else t).f
-
-            try:
-                s     = f.get_slice(start, stop, field, cut=False, **options)
-                tsrc  = t.f.src
-                ssrc  = s.src
-                sdump = s.dump(out=list)
-
-                if options.get('_verify', True):
-                    t.f.verify(raise_=True)
-                    s.verify(raise_=True)
-
-                self.assertEqual(tsrc, src)
-                self.assertEqual(ssrc, slice_cut)
-                self.assertEqual(sdump, slice_dump.strip().split('\n'))
-
-            except Exception:
-                print(elt, start, stop)
-                print('---')
-                print(src)
-                print('...')
-                print(slice_cut)
-
-                raise
-
-    def test_get_slice_stmt_cut(self):
-        for src, elt, start, stop, field, options, src_cut, slice_cut, src_dump, slice_dump in GET_SLICE_STMTISH_DATA:
-            t = parse(src)
-            f = (eval(f't.{elt}', {'t': t}) if elt else t).f
-
-            try:
-                s     = f.get_slice(start, stop, field, cut=True, **options)
-                tsrc  = t.f.src
-                ssrc  = s.src
-                tdump = t.f.dump(out=list)
-                sdump = s.dump(out=list)
-
-                if options.get('_verify', True):
-                    t.f.verify(raise_=True)
-                    s.verify(raise_=True)
-
-                self.assertEqual(tsrc, src_cut)
-                self.assertEqual(ssrc, slice_cut)
-                self.assertEqual(tdump, src_dump.strip().split('\n'))
-                self.assertEqual(sdump, slice_dump.strip().split('\n'))
-
-            except Exception:
-                print(elt, start, stop)
-                print('---')
-                print(src)
-                print('...')
-                print(src_cut)
-                print('...')
-                print(slice_cut)
-
-                raise
-
     def test_get_slice_special(self):
         f = FST('''(
             TI(string="case"),
@@ -1728,35 +1518,6 @@ def func():
         g = f.get_slice(0, 1, cut=True)
         self.assertEqual('(\n            )', f.src)
         self.assertEqual('(\n            TI(string="case"),\n)', g.src)
-
-    def test_put_slice_seq_from_get_slice_data(self):
-        ver = PYVER[1]
-
-        for i, (src, elt, start, stop, field, options, src_cut, slice_copy, src_dump, slice_dump) in enumerate(GET_SLICE_EXPRISH_DATA):
-            if options.get('_ver', 0) > ver:
-                continue
-
-            t = parse(src)
-            f = eval(f't.{elt}', {'t': t}).f
-
-            try:
-                f.put_slice(None, start, stop, field, **options)
-
-                tdst  = t.f.src
-                tdump = t.f.dump(out=list)
-
-                self.assertEqual(tdst, src_cut.strip())
-                self.assertEqual(tdump, src_dump.strip().split('\n'))
-
-            except NotImplementedError:
-                continue
-
-            except Exception:
-                print(i, elt, start, stop)
-                print('---')
-                print(src)
-
-                raise
 
     def test_put_slice_seq(self):
         for i, (dst, elt, start, stop, src, put_src, put_dump) in enumerate(PUT_SLICE_EXPRISH_DATA):
@@ -1780,32 +1541,6 @@ def func():
                 print(src)
                 print('...')
                 print(put_src)
-
-                raise
-
-    def test_put_slice_stmt_del(self):
-        for src, elt, start, stop, field, options, src_cut, _, src_dump, _ in GET_SLICE_STMTISH_DATA:
-            t = parse(src)
-            f = (eval(f't.{elt}', {'t': t}) if elt else t).f
-
-            try:
-                f.put_slice(None, start, stop, field, **options)
-
-                tsrc  = t.f.src
-                tdump = t.f.dump(out=list)
-
-                if options.get('_verify', True):
-                    t.f.verify(raise_=True)
-
-                self.assertEqual(tsrc, src_cut)
-                self.assertEqual(tdump, src_dump.strip().split('\n'))
-
-            except Exception:
-                print(elt, start, stop)
-                print('---')
-                print(src)
-                print('...')
-                print(src_cut)
 
                 raise
 
@@ -2804,8 +2539,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='test_fst.py')
 
     parser.add_argument('--regen-all', default=False, action='store_true', help="regenerate everything")
-    parser.add_argument('--regen-get-slice-seq', default=False, action='store_true', help="regenerate get slice sequence test data")
-    parser.add_argument('--regen-get-slice-stmt', default=False, action='store_true', help="regenerate get slice statement test data")
+    parser.add_argument('--regen-get-slice', default=False, action='store_true', help="regenerate get slice test data")
     parser.add_argument('--regen-put-slice-seq', default=False, action='store_true', help="regenerate put slice sequence test data")
     parser.add_argument('--regen-put-slice-stmt', default=False, action='store_true', help="regenerate put slice statement test data")
     parser.add_argument('--regen-put-slice', default=False, action='store_true', help="regenerate put slice test data")
@@ -2816,13 +2550,9 @@ if __name__ == '__main__':
         if PYLT12:
             raise RuntimeError('cannot regenerate on python version < 3.12')
 
-    if args.regen_get_slice_seq or args.regen_all:
-        print('Regenerating get slice sequence test data...')
-        regen_get_slice_seq()
-
-    if args.regen_get_slice_stmt or args.regen_all:
-        print('Regenerating get slice statement cut test data...')
-        regen_get_slice_stmt()
+    if args.regen_get_slice or args.regen_all:
+        print('Regenerating get slice test data...')
+        regen_get_slice()
 
     if args.regen_put_slice_seq or args.regen_all:
         print('Regenerating put slice sequence test data...')

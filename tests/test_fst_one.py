@@ -13,7 +13,245 @@ from fst.astutil import compare_asts
 from fst.misc import PYVER, PYLT11, PYLT12, PYGE12, PYGE14
 
 from data_put_one import PUT_ONE_DATA
-from data_other import PUT_SLICE_DATA, PUT_SRC_DATA, REPLACE_EXISTING_ONE_DATA
+from data_other import PUT_SLICE_DATA, PUT_SRC_DATA
+
+
+REPLACE_EXISTING_ONE_DATA = [
+# FunctionDef
+("@d\ndef f(a) -> r: pass", 'body[0].decorator_list[0]', {}, "z", "z", "@z\ndef f(a) -> r: pass"),
+("@d\ndef f(a) -> r: pass", 'body[0].args', {}, "z", "z", "@d\ndef f(z) -> r: pass"),
+("@d\ndef f(a) -> r: pass", 'body[0].returns', {}, "z", "z", "@d\ndef f(a) -> z: pass"),
+
+# AsyncFunctionDef
+("@d\nasync def f(a) -> r: pass", 'body[0].decorator_list[0]', {}, "z", "z", "@z\nasync def f(a) -> r: pass"),
+("@d\nasync def f(a) -> r: pass", 'body[0].args', {}, "z", "z", "@d\nasync def f(z) -> r: pass"),
+("@d\nasync def f(a) -> r: pass", 'body[0].returns', {}, "z", "z", "@d\nasync def f(a) -> z: pass"),
+
+# ClassDef
+("@d\nclass c(b, k=v): pass", 'body[0].decorator_list[0]', {}, "z", "z", "@z\nclass c(b, k=v): pass"),
+("@d\nclass c(b, k=v): pass", 'body[0].bases[0]', {}, "z", "z", "@d\nclass c(z, k=v): pass"),
+("@d\nclass c(b, k=v): pass", 'body[0].keywords[0]', {}, "z=y", "z=y", "@d\nclass c(b, z=y): pass"),
+
+# Return
+("return r", 'body[0].value', {}, "z", "z", "return z"),
+
+# Delete
+("del d", 'body[0].targets[0]', {}, "z", "z", "del z"),
+
+# Assign
+("t = v", 'body[0].targets[0]', {}, "z", "z", "z = v"),
+("t = v", 'body[0].value', {}, "z", "z", "t = z"),
+
+# AugAssign
+("t += v", 'body[0].target', {}, "z", "z", "z += v"),
+("t += v", 'body[0].op', {}, "-=", "-=", "t -= v"),
+("t += v", 'body[0].value', {}, "z", "z", "t += z"),
+
+# AnnAssign
+("t: int = v", 'body[0].target', {}, "z", "z", "z: int = v"),
+("t: int = v", 'body[0].annotation', {}, "z", "z", "t: z = v"),
+("t: int = v", 'body[0].value', {}, "z", "z", "t: int = z"),
+
+# For
+("for i in r: pass", 'body[0].target', {}, "z", "z", "for z in r: pass"),
+("for i in r: pass", 'body[0].iter', {}, "z", "z", "for i in z: pass"),
+
+# AsyncFor
+("async for i in r: pass", 'body[0].target', {}, "z", "z", "async for z in r: pass"),
+("async for i in r: pass", 'body[0].iter', {}, "z", "z", "async for i in z: pass"),
+
+# While
+("while t: pass", 'body[0].test', {}, "z", "z", "while z: pass"),
+
+# If
+("if t: pass", 'body[0].test', {}, "z", "z", "if z: pass"),
+
+# With
+("with c: pass", 'body[0].items[0]', {}, "z", "z", "with z: pass"),
+
+# AsyncWith
+("async with c: pass", 'body[0].items[0]', {}, "z", "z", "async with z: pass"),
+
+# Match
+("match s:\n case 1: pass", 'body[0].subject', {}, "z", "z", "match z:\n case 1: pass"),
+
+# Raise
+("raise e from c", 'body[0].exc', {}, "z", "z", "raise z from c"),
+("raise e from c", 'body[0].cause', {}, "z", "z", "raise e from z"),
+
+# Try
+("try: pass\nexcept Exception as e: pass", 'body[0].handlers[0]', {}, "except: pass", "except: pass", "try: pass\nexcept: pass"),
+
+# TryStar, not available on py3.10 so no TryStar
+
+# Assert
+("assert a, m", 'body[0].test', {}, "z", "z", "assert z, m"),
+("assert a, m", 'body[0].msg', {}, "z", "z", "assert a, z"),
+
+# Import
+("import p as n", 'body[0].names[0]', {}, "z as y", "z as y", "import z as y"),
+
+# ImportFrom
+("from g import p as n", 'body[0].names[0]', {}, "z as y", "z as y", "from g import z as y"),
+
+# Expr
+("e", 'body[0].value', {}, "z", "z", "z"),
+
+# BoolOp
+("a and b", 'body[0].value.values[0]', {}, "z", "z", "z and b"),
+
+# NamedExpr
+("(t := v)", 'body[0].value.target', {}, "z", "z", "(z := v)"),
+("(t := v)", 'body[0].value.value', {}, "z", "z", "(t := z)"),
+
+# BinOp
+("a + b", 'body[0].value.left', {}, "z", "z", "z + b"),
+("a + b", 'body[0].value.op', {}, "-", "-", "a - b"),
+("a + b", 'body[0].value.right', {}, "z", "z", "a + z"),
+
+# UnaryOp
+("+a", 'body[0].value.op', {}, "-", "-", "-a"),
+("+a", 'body[0].value.operand', {}, "z", "z", "+z"),
+
+# Lambda
+("lambda a: None", 'body[0].value.args', {}, "z", "z", "lambda z: None"),
+
+# IfExp
+("a if t else b", 'body[0].value.body', {}, "z", "z", "z if t else b"),
+("a if t else b", 'body[0].value.test', {}, "z", "z", "a if z else b"),
+("a if t else b", 'body[0].value.orelse', {}, "z", "z", "a if t else z"),
+
+# Dict
+("{a: b}", 'body[0].value.keys[0]', {}, "z", "z", "{z: b}"),
+("{a: b}", 'body[0].value.values[0]', {}, "z", "z", "{a: z}"),
+
+# Set
+("{a}", 'body[0].value.elts[0]', {}, "z", "z", "{z}"),
+
+# ListComp
+("[i for i in t]", 'body[0].value.elt', {}, "z", "z", "[z for i in t]"),
+("[i for i in t]", 'body[0].value.generators[0]', {}, "for z in y", "for z in y", "[i for z in y]"),
+("[i for i in t]", 'body[0].value.generators[0]', {}, "async for z in y", "async for z in y", "[i async for z in y]"),
+("[i async for i in t]", 'body[0].value.generators[0]', {}, "for z in y", "for z in y", "[i for z in y]"),
+
+# SetComp
+("{i for i in t}", 'body[0].value.elt', {}, "z", "z", "{z for i in t}"),
+("{i for i in t}", 'body[0].value.generators[0]', {}, "for z in y", "for z in y", "{i for z in y}"),
+("{i for i in t}", 'body[0].value.generators[0]', {}, "async for z in y", "async for z in y", "{i async for z in y}"),
+("{i async for i in t}", 'body[0].value.generators[0]', {}, "for z in y", "for z in y", "{i for z in y}"),
+
+# DictComp
+("{k: v for i in t}", 'body[0].value.key', {}, "z", "z", "{z: v for i in t}"),
+("{k: v for i in t}", 'body[0].value.value', {}, "z", "z", "{k: z for i in t}"),
+("{k: v for i in t}", 'body[0].value.generators[0]', {}, "for z in y", "for z in y", "{k: v for z in y}"),
+("{k: v for i in t}", 'body[0].value.generators[0]', {}, "async for z in y", "async for z in y", "{k: v async for z in y}"),
+("{k: v async for i in t}", 'body[0].value.generators[0]', {}, "for z in y", "for z in y", "{k: v for z in y}"),
+
+# GeneratorExp
+("(i for i in t)", 'body[0].value.elt', {}, "z", "z", "(z for i in t)"),
+("(i for i in t)", 'body[0].value.generators[0]', {}, "for z in y", "for z in y", "(i for z in y)"),
+("(i for i in t)", 'body[0].value.generators[0]', {}, "async for z in y", "async for z in y", "(i async for z in y)"),
+("(i async for i in t)", 'body[0].value.generators[0]', {}, "for z in y", "for z in y", "(i for z in y)"),
+
+# Await
+("await w", 'body[0].value.value', {}, "z", "z", "await z"),
+
+# Yield
+("yield w", 'body[0].value.value', {}, "z", "z", "yield z"),
+
+# YieldFrom
+("yield from w", 'body[0].value.value', {}, "z", "z", "yield from z"),
+
+# Compare
+("a < b", 'body[0].value.left', {}, "z", "z", "z < b"),
+("a < b", 'body[0].value.ops[0]', {}, ">", ">", "a > b"),
+("a < b", 'body[0].value.comparators[0]', {}, "z", "z", "a < z"),
+
+# Call
+("c(a, b=c)", 'body[0].value.func', {}, "z", "z", "z(a, b=c)"),
+("c(a, b=c)", 'body[0].value.args[0]', {}, "z", "z", "c(z, b=c)"),
+("c(a, b=c)", 'body[0].value.keywords[0]', {}, "z=y", "z=y", "c(a, z=y)"),
+
+# FormattedValue, no locations in py3.10
+# JoinedStr, no locations in py3.10
+# Interpolation, no exist in py3.10
+# TemplateStr, no exist in py3.10
+
+# Attribute
+# (('value', 'expr'), ('attr', 'identifier'), ('ctx', 'expr_context'))),
+
+# Subscript
+("v[s]", 'body[0].value.value', {}, "z", "z", "z[s]"),
+("v[s]", 'body[0].value.slice', {}, "z", "z", "v[z]"),
+
+# Starred
+("[*s]", 'body[0].value.elts[0].value', {}, "z", "z", "[*z]"),
+
+# List
+("[e]", 'body[0].value.elts[0]', {}, "z", "z", "[z]"),
+
+# Tuple
+("(e,)", 'body[0].value.elts[0]', {}, "z", "z", "(z,)"),
+
+# Slice
+("v[a:b:c]", 'body[0].value.slice.lower', {}, "z", "z", "v[z:b:c]"),
+("v[a:b:c]", 'body[0].value.slice.upper', {}, "z", "z", "v[a:z:c]"),
+("v[a:b:c]", 'body[0].value.slice.step', {}, "z", "z", "v[a:b:z]"),
+
+# comprehension
+("[i for i in t if s]", 'body[0].value.generators[0].target', {}, "z", "z", "[i for z in t if s]"),
+("[i for i in t if s]", 'body[0].value.generators[0].iter', {}, "z", "z", "[i for i in z if s]"),
+("[i for i in t if s]", 'body[0].value.generators[0].ifs[0]', {}, "z", "z", "[i for i in t if z]"),
+
+# ExceptHandler
+("try: pass\nexcept Exception as e: pass", 'body[0].handlers[0].type', {}, "z", "z", "try: pass\nexcept z as e: pass"),
+
+# arguments
+("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.posonlyargs[0]', {}, "z", "z", "def f(z, /, b=1, *c, d=2, **e): pass"),
+("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.args[0]', {}, "z", "z", "def f(a, /, z=1, *c, d=2, **e): pass"),
+("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.defaults[0]', {}, "z", "z", "def f(a, /, b=z, *c, d=2, **e): pass"),
+("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.vararg', {}, "z", "z", "def f(a, /, b=1, *z, d=2, **e): pass"),
+("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.kwonlyargs[0]', {}, "z", "z", "def f(a, /, b=1, *c, z=2, **e): pass"),
+("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.kw_defaults[0]', {}, "z", "z", "def f(a, /, b=1, *c, d=z, **e): pass"),
+("def f(a, /, b=1, *c, d=2, **e): pass", 'body[0].args.kwarg', {}, "z", "z", "def f(a, /, b=1, *c, d=2, **z): pass"),
+
+# arg
+("def f(a: int): pass", 'body[0].args.args[0].annotation', {}, "z", "z", "def f(a: z): pass"),
+
+# keyword
+("class c(k=v): pass", 'body[0].keywords[0].value', {}, "z", "z", "class c(k=z): pass"),
+
+# alias nothing to test
+
+# withitem
+("with c as n: pass", 'body[0].items[0].context_expr', {}, "z", "z", "with z as n: pass"),
+("with c as n: pass", 'body[0].items[0].optional_vars', {}, "z", "z", "with c as z: pass"),
+
+# match_case
+("match s:\n case 1 as a if g: pass", 'body[0].cases[0].pattern', {}, "'z'", "'z'", "match s:\n case 'z' if g: pass"),
+("match s:\n case 1 as a if g: pass", 'body[0].cases[0].guard', {}, "z", "z", "match s:\n case 1 as a if z: pass"),
+
+# MatchValue
+("match s:\n case 1: pass", 'body[0].cases[0].pattern.value', {}, "2", "2", "match s:\n case 2: pass"),
+
+# MatchSequence
+("match s:\n case 1, 2: pass", 'body[0].cases[0].pattern.patterns[1].value', {}, "3", "3", "match s:\n case 1, 3: pass"),
+
+# MatchMapping
+("match s:\n case {1: a, **b}: pass", 'body[0].cases[0].pattern.keys[0]', {}, "2", "2", "match s:\n case {2: a, **b}: pass"),
+("match s:\n case {1: a, **b}: pass", 'body[0].cases[0].pattern.patterns[0]', {}, "z", "z", "match s:\n case {1: z, **b}: pass"),
+
+# MatchClass
+("match s:\n case c(1, a=2): pass", 'body[0].cases[0].pattern.cls', {}, "z", "z", "match s:\n case z(1, a=2): pass"),
+("match s:\n case c(1, a=2): pass", 'body[0].cases[0].pattern.patterns[0].value', {}, "3", "3", "match s:\n case c(3, a=2): pass"),
+("match s:\n case c(1, a=2): pass", 'body[0].cases[0].pattern.kwd_patterns[0].value', {}, "3", "3", "match s:\n case c(1, a=3): pass"),
+
+# MatchAs
+("match s:\n case 1 as a: pass", 'body[0].cases[0].pattern.pattern', {}, "2", "2", "match s:\n case 2 as a: pass"),
+
+# MatchOr
+("match s:\n case 1 | 2: pass", 'body[0].cases[0].pattern.patterns[0].value', {}, "3", "3", "match s:\n case 3 | 2: pass"),
+]
 
 
 def read(fnm):
