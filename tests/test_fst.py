@@ -43,7 +43,10 @@ from fst.code import (
 from fst import extparse as ep, code
 
 
-from data_other import PARS_DATA, PRECEDENCE_DATA
+from data.data_other import PARS_DATA, PRECEDENCE_DATA
+
+
+DIR_NAME = os.path.dirname(__file__)
 
 PYFNMS = sum((
     [os.path.join(path, fnm) for path, _, fnms in os.walk(top) for fnm in fnms if fnm.endswith('.py')]
@@ -712,7 +715,7 @@ def regen_pars_data():
         newlines.append('(r"""')
         newlines.extend(f'''{src}\n""", {elt!r}, r"""\n{ssrc}\n"""),\n'''.split('\n'))
 
-    fnm = os.path.join(os.path.dirname(sys.argv[0]), 'data_other.py')
+    fnm = os.path.join(DIR_NAME, 'data/data_other.py')
 
     with open(fnm) as f:
         lines = f.read().split('\n')
@@ -769,7 +772,7 @@ def regen_precedence_data():
 
                 newlines.append(f'    {truth!r},')
 
-    fnm = os.path.join(os.path.dirname(sys.argv[0]), 'data_other.py')
+    fnm = os.path.join(DIR_NAME, 'data/data_other.py')
 
     with open(fnm) as f:
         lines = f.read().split('\n')

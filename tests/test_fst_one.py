@@ -10,11 +10,15 @@ from fst import *
 
 from fst.asttypes import *
 from fst.astutil import compare_asts
-from fst.misc import PYVER, PYLT11, PYLT12, PYGE12, PYGE14
+from fst.misc import PYLT11, PYLT12, PYGE12, PYGE14
 
-from data_put_one import PUT_ONE_DATA
-from data_other import PUT_SRC_DATA
+from data.data_other import PUT_SRC_DATA
 
+from util import PutCases
+
+
+DIR_NAME     = os.path.dirname(__file__)
+DATA_PUT_ONE = PutCases(os.path.join(DIR_NAME, 'data/data_put_one.py'))
 
 REPLACE_EXISTING_ONE_DATA = [
 # FunctionDef
@@ -260,59 +264,8 @@ def read(fnm):
 
 
 def regen_put_one():
-    newlines = []
-
-    for i, (dst, attr, idx, field, options, src, put_src, put_dump) in enumerate(PUT_ONE_DATA):
-        t = parse(dst)
-        f = (eval(f't.{attr}', {'t': t}) if attr else t).f
-
-        try:
-            if options.get('raw') is True:
-                continue
-
-            options_ = {**options, 'raw': False}
-
-            try:
-                f.put(None if src == '**DEL**' else src, idx, field=field, **options_)
-
-            except Exception as exc:
-                tdst  = f'**{exc.__class__.__name__}**' if isinstance(exc, SyntaxError) and not isinstance(exc, ParseError) else f'**{exc!r}**'
-                tdump = ''
-
-            else:
-                tdst  = f.root.src
-                tdump = f.root.dump(out=list)
-
-                if options.get('_verify', True):
-                    f.root.verify(raise_=True)
-
-            newlines.extend(f'''(r"""{dst}""", {attr!r}, {idx}, {field!r}, {options!r}, r"""{src}""", r"""{tdst}""", r"""'''.split('\n'))
-            newlines.extend(tdump)
-            newlines.append('"""),\n')
-
-        except Exception:
-            print(i, attr, idx, field, src, options)
-            print('---')
-            print(repr(dst))
-            print('...')
-            print(src)
-            print('...')
-            print(put_src)
-
-            raise
-
-    fnm = os.path.join(os.path.dirname(sys.argv[0]), 'data_put_one.py')
-
-    with open(fnm) as f:
-        lines = f.read().split('\n')
-
-    start = lines.index('PUT_ONE_DATA = [')
-    stop  = lines.index(']  # END OF PUT_ONE_DATA')
-
-    lines[start + 1 : stop] = newlines
-
-    with open(fnm, 'w') as f:
-        lines = f.write('\n'.join(lines))
+    DATA_PUT_ONE.generate()
+    DATA_PUT_ONE.write()
 
 
 def regen_put_src():
@@ -345,7 +298,7 @@ def regen_put_src():
 
             raise
 
-    fnm = os.path.join(os.path.dirname(sys.argv[0]), 'data_other.py')
+    fnm = os.path.join(DIR_NAME, 'data/data_other.py')
 
     with open(fnm) as f:
         lines = f.read().split('\n')
@@ -360,6 +313,43 @@ def regen_put_src():
 
 
 class TestFSTPut(unittest.TestCase):
+    def test_put_one_from_data(self):
+        for key, case, rest in DATA_PUT_ONE.iterate(True):
+            for idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
+                self.assertEqual(c, r, f'{key = }, {case.idx = }, rest {idx = }')
+
+    def test_put_one_raw_from_put_one_data(self):
+        from util import _unfmt_code, _make_fst
+
+        for key, case, rest in DATA_PUT_ONE.iterate(True):
+            if case.options.get('raw') is False or rest[1].startswith('**'):
+                continue
+
+            options = {**case.options, 'raw': True}
+            f       = _make_fst(case.code, case.attr)
+            src     = _unfmt_code(r0 if isinstance(r0 := rest[0], str) else r0[1])
+
+            try:
+                f.put(None if src == '**DEL**' else src, case.start, case.stop, field=case.field, **options)
+
+                if options.get('_verify', True):
+                    f.root.verify(raise_=True)
+
+            except NotImplementedError:
+                continue
+
+            except Exception:
+                print(f'{key = }, {case.idx = }')
+
+                raise
+
+            else:
+                if f.root.src.rstrip() != rest[1].rstrip():  # .rstrip() because of trailing newline added with statement ops, need to fix
+                    raise RuntimeError(f'put raw and put FST src are not identical, {key = }, {case.idx = }\n{f.root.src}\n...\n{rest[1]}')
+
+                # if (root_dump := f.root.dump(out=str)) != rest[2]  # we don't do this because of trailing newline added with statement ops, need to fix
+                #     raise RuntimeError(f'put raw and put FST dump are not identical, {key = }, {case.idx = }\n{root_dump}\n...\n{rest[2]}')
+
     def test_get_one_constant(self):
         for v in (True, False, None):
             f = FST(f'match a:\n case {v}: pass').cases[0].pattern
@@ -2176,112 +2166,6 @@ class cls:
         self.assertEqual('{a: b, e: f}', FST('{a: b, c: d, e: f}', 'exec').body[0].value.put(None, 1, raw=False).root.src)
 
         FST.set_options(**old_options)
-
-    def test_put_one(self):
-        ver = PYVER[1]
-
-        for i, (dst, attr, idx, field, options, src, put_src, put_dump) in enumerate(PUT_ONE_DATA):
-            if options.get('_ver', 0) > ver:
-                continue
-
-            t = parse(dst)
-            f = (eval(f't.{attr}', {'t': t}) if attr else t).f
-
-            try:
-                if options.get('raw') is True:
-                    continue
-
-                options = {**options, 'raw': False}
-
-                try:
-                    f.put(None if src == '**DEL**' else src, idx, field=field, **options)
-
-                except Exception as exc:
-                    if not put_dump.strip() and put_src.startswith('**') and put_src.endswith('**'):
-                        tdst  = f'**{exc.__class__.__name__}**' if isinstance(exc, SyntaxError) and not isinstance(exc, ParseError) else f'**{exc!r}**'
-                        tdump = ['']
-
-                    else:
-                        raise
-
-                else:
-                    tdst  = f.root.src
-                    tdump = f.root.dump(out=list)
-
-                    if options.get('_verify', True):
-                        f.root.verify(raise_=True)
-
-                self.assertEqual(tdst, put_src)
-
-                if (vd := options.get('_verdump')) and PYVER < (3, vd):
-                    continue
-
-                self.assertEqual(tdump, put_dump.strip().split('\n'))
-
-            except Exception:
-                print(i, attr, idx, field, src, options)
-                print('---')
-                print(repr(dst))
-                print('...')
-                print(src)
-                print('...')
-                print(put_src)
-
-                raise
-
-    def test_put_one_raw(self):
-        ver = PYVER[1]
-
-        for i, (dst, attr, idx, field, options, src, put_src, put_dump) in enumerate(PUT_ONE_DATA):
-            if options.get('_ver', 0) > ver:
-                continue
-
-            t = parse(dst)
-            f = (eval(f't.{attr}', {'t': t}) if attr else t).f
-
-            try:
-                if options.get('raw') is False:
-                    continue
-
-                options = {**options, 'raw': True}
-
-                try:
-                    f.put(None if src == '**DEL**' else src, idx, field=field, **options)
-
-                except NotImplementedError:
-                    continue
-
-                except Exception:
-                    if not put_dump.strip() and put_src.startswith('**') and put_src.endswith('**'):
-                        continue  # assume raw errors in line with non-raw, just different actual error
-                    else:
-                        raise
-
-                else:
-                    tdst  = f.root.src
-                    # tdump = f.root.dump(out=list)
-
-                    if options.get('_verify', True):
-                        f.root.verify(raise_=True)
-
-                self.assertEqual(tdst.rstrip(), put_src.rstrip())
-                # self.assertEqual(tdump, put_dump.strip().split('\n'))
-
-                if (vd := options.get('_verdump')) and PYVER < (3, vd):
-                    continue
-
-                # self.assertEqual(tdump, put_dump.strip().split('\n'))  # don't compare this because of the trailing newline difference
-
-            except Exception:
-                print(i, attr, idx, field, src, options)
-                print('---')
-                print(repr(dst))
-                print('...')
-                print(src)
-                print('...')
-                print(put_src)
-
-                raise
 
     def test_put_one_constant(self):
         f = FST('None', Constant)

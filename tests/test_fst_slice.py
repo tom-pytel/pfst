@@ -2,7 +2,6 @@
 
 import os
 import re
-import sys
 import unittest
 
 from fst import *
@@ -85,10 +84,10 @@ class TestFSTSlice(unittest.TestCase):
             f.root.verify(raise_=True)
 
             if f.root.src != rest[1]:
-                raise RuntimeError(f'put_src and put(raw) FST src are not identical, {key = }, {case.idx = }\n{f.root.src}\n...\n{rest[1]}')
+                raise RuntimeError(f'put_src and put raw FST src are not identical, {key = }, {case.idx = }\n{f.root.src}\n...\n{rest[1]}')
 
             if (root_dump := f.root.dump(out=str)) != rest[2]:
-                raise RuntimeError(f'put_src and put(raw) FST dump are not identical, {key = }, {case.idx = }\n{root_dump}\n...\n{rest[2]}')
+                raise RuntimeError(f'put_src and put raw FST dump are not identical, {key = }, {case.idx = }\n{root_dump}\n...\n{rest[2]}')
 
     def test_cut_slice_neg_space(self):
         f = FST('''[
