@@ -1,3 +1,10 @@
+# (case idx, attr, start, stop, field, options, code | (parse_mode, code),
+#
+# code after cut,
+# dump code after cut)
+# - OR
+# error)
+
 DATA_GET_SLICE = {
 'old_stmtish': [  # ................................................................................
 

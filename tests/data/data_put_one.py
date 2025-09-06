@@ -1,3 +1,12 @@
+# (case idx, attr, start, False, field, options, code | (parse_mode, code), put_code | (parse_mode, put_code),
+#
+# code after put,
+# [code after put FST if different,]  - shouldn't be present if everything working correctly
+# [code after put AST if different,]  - can be present
+# dump code after put)
+# - OR
+# error)
+
 DATA_PUT_ONE = {
 'old': [  # ................................................................................
 

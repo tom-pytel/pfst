@@ -8,7 +8,7 @@ from fst import *
 
 from fst.misc import PYLT11, PYLT12, PYGE11, PYGE12, PYGE14
 
-from util import GetSliceCases, PutSliceCases
+from support import GetSliceCases, PutSliceCases
 
 
 DIR_NAME       = os.path.dirname(__file__)
@@ -42,7 +42,7 @@ class TestFSTSlice(unittest.TestCase):
                 self.assertEqual(c, r, f'{key = }, {case.idx = }, rest {idx = }')
 
     def test_del_slice_from_get_slice_data(self):
-        from util import _make_fst
+        from support import _make_fst
 
         for key, case, rest in DATA_GET_SLICE.iterate(True):
             f = _make_fst(case.code, case.attr)
@@ -69,7 +69,7 @@ class TestFSTSlice(unittest.TestCase):
     def test_put_src_from_put_slice_data(self):  # this test will probably go away at some point
         from fst.misc import fixup_field_body
         from fst.fst_slice import _loc_slice_raw_put
-        from util import _unfmt_code, _make_fst
+        from support import _unfmt_code, _make_fst
 
         for key, case, rest in DATA_PUT_SLICE.iterate(True):
             if not case.options.get('raw') or rest[1].startswith('**'):

@@ -14,7 +14,7 @@ from fst.misc import PYLT11, PYLT12, PYGE12, PYGE14
 
 from data.data_other import PUT_SRC_DATA
 
-from util import PutCases
+from support import PutCases
 
 
 DIR_NAME     = os.path.dirname(__file__)
@@ -319,7 +319,7 @@ class TestFSTPut(unittest.TestCase):
                 self.assertEqual(c, r, f'{key = }, {case.idx = }, rest {idx = }')
 
     def test_put_one_raw_from_put_one_data(self):
-        from util import _unfmt_code, _make_fst
+        from support import _unfmt_code, _make_fst
 
         for key, case, rest in DATA_PUT_ONE.iterate(True):
             if case.options.get('raw') is False or rest[1].startswith('**'):

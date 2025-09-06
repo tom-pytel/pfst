@@ -1,3 +1,4 @@
+import re
 import sys
 from typing import Any, Literal, NamedTuple
 
@@ -80,7 +81,8 @@ class GetPutCases(dict):
         if len(globs) != 1:
             raise RuntimeError(f'expecting only single data structure in {fnm!r}')
 
-        self.var = next(iter(globs.keys()))
+        self.var  = next(iter(globs.keys()))
+        self.head = src[:re.search(rf'^{self.var}\s*=', src, re.MULTILINE).start()]
 
         for key, file_cases in next(iter(globs.values())).items():
             self[key] = self_cases = []
@@ -94,7 +96,7 @@ class GetPutCases(dict):
                 self_cases.append(GetPutCase(j, attr, start, stop, field, options, code, rest))
 
     def write(self):
-        out = []
+        out = [self.head]
 
         out.append(f'{self.var} = {{\n')
 
