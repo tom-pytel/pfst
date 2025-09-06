@@ -13,7 +13,7 @@ from fst.astutil import compare_asts
 from fst.misc import PYVER, PYLT11, PYLT12, PYGE12, PYGE14
 
 from data_put_one import PUT_ONE_DATA
-from data_other import PUT_SLICE_DATA, PUT_SRC_DATA
+from data_other import PUT_SRC_DATA
 
 
 REPLACE_EXISTING_ONE_DATA = [
@@ -4247,42 +4247,6 @@ finally:
             print(copy.src)
 
             raise
-
-    def test_put_src_from_put_slice_data(self):
-        from fst.misc import fixup_field_body
-        from fst.fst_slice import _loc_slice_raw_put
-
-        for i, (dst, attr, start, stop, field, options, src, put_src, put_dump) in enumerate(PUT_SLICE_DATA):
-            if options != {'raw': True}:
-                continue
-
-            t = parse(dst)
-            f = (eval(f't.{attr}', {'t': t}) if attr else t).f
-
-            try:
-                field, _ = fixup_field_body(f.a, field)
-                loc      = _loc_slice_raw_put(f, start, stop, field)
-
-                f.put_src(None if src == '**DEL**' else src, *loc)
-
-                tdst  = f.root.src
-                tdump = f.root.dump(out=list)
-
-                f.root.verify(raise_=True)
-
-                self.assertEqual(tdst, put_src)
-                self.assertEqual(tdump, put_dump.strip().split('\n'))
-
-            except Exception:
-                print(i, src, start, stop, options)
-                print('---')
-                print(repr(dst))
-                print('...')
-                print(src)
-                print('...')
-                print(put_src)
-
-                raise
 
     def test_put_src_special(self):
         # tabs

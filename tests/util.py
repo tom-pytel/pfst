@@ -1,8 +1,8 @@
-import os
 import sys
 from typing import Any, Literal, NamedTuple
 
 from fst import FST
+from fst.astutil import copy_ast, compare_asts
 
 
 _PYVER = sys.version_info[1]
@@ -44,6 +44,12 @@ def _make_fst(code: str | tuple[str, str], attr: str = '') -> FST:
     root      = FST(src, mode)
 
     return eval(f'f.{attr}', {'f': root}) if attr else root
+
+
+def _san_exc(exc: Exception) -> Exception:
+    exc.args = exc.args[:1]
+
+    return exc
 
 
 class GetPutCase(NamedTuple):
@@ -96,7 +102,7 @@ class GetPutCases(dict):
             out.append(f'{key!r}: [  # ................................................................................\n')
 
             for idx, attr, start, stop, field, options, code, rest in cases:
-                out.append(f'\n({idx}, {attr!r}, {start}, {stop}, {field!r}, {options}')
+                out.append(f'\n({idx}, {attr!r}, {start!r}, {stop!r}, {field!r}, {options}')
 
                 for s in [code] + rest:
                     src, is_multiline = _fmt_code(s)
@@ -145,26 +151,25 @@ class GetCases(GetPutCases):
         h    = None
         g    = None
         f    = _make_fst(case.code, case.attr)
-        root = f.root
 
         try:
             g = func(f, case.start, case.stop, case.field, cut=False, **case.options)
         except Exception as exc:
-            rest = [f'**{exc!r}**']
+            rest = [f'**{_san_exc(exc)!r}**']
 
         else:
             try:
                 h = func(f, case.start, case.stop, case.field, cut=True, **case.options)
             except Exception as exc:
-                rest = [f'**{exc!r}**']
+                rest = [f'**{_san_exc(exc)!r}**']
 
         if rest is None:
-            rest = [root.src, root.dump(out=str)]
+            rest = [f.root.src, f.root.dump(out=str)]
 
         if g is not None:
             if (options := case.options).get('_verify', True):
                 if options.get('_verify_self', True):
-                    root.verify()
+                    f.root.verify()
 
                 if options.get('_verify_get', True):
                     g.verify()
@@ -188,22 +193,115 @@ class GetSliceCases(GetCases):
         super().__init__(fnm, FST.get_slice)
 
 
-class PutCases(GetPutCases):
+class PutCases(GetPutCases):  # TODO: maybe automatically test 'raw' here?
     def __init__(self, fnm, func=FST.put):  # func = fst.put or fst.put_slice
         super().__init__(fnm, func)
 
     def exec(self, case) -> list[str | tuple[str, str]]:  # rest
-        raise NotImplementedError
+        _, attr, start, stop, field, options, code, case_rest = case
+
+        func   = self.func
+        f      = _make_fst(code, attr)
+        is_raw = options.get('raw', False)
+        rest0  = case_rest[0]
+        rest   = [rest0]
+        tail   = None
+        src    = None if rest0 is None or rest0 == '**DEL**' else rest0 if isinstance(rest0, str) else None if ((rest01 := rest0[1]) == '**DEL**') else rest01
+
+        try:
+            g = func(f, src, start, stop, field, **options)
+        except Exception as exc:
+            rest.append(f'**{_san_exc(exc)!r}**')
+
+        else:
+            if is_raw:
+                f = g
+            elif g is not f:
+                raise RuntimeError('FST returned from func src put not identical to passed in')
+
+            rest.append(f.root.src)
+
+            f_dump = f.root.dump(out=str)
+            tail   = [f_dump]
+
+            # if src is not None:
+            if src is not None and not is_raw:  # TODO: can let this go through with raw, but do this when raw is solid
+                try:
+                    h = _make_fst(rest0)
+                except Exception as exc:
+                    rest.append(f'**{_san_exc(exc)!r}**')
+
+                else:
+                    is_special_slice = h.is_special_slice()
+
+                    a = copy_ast(h.a)
+                    k = _make_fst(code, attr)
+
+                    try:
+                        g = func(k, h, start, stop, field, **options)
+                    except Exception as exc:
+                        rest.append(f'**{_san_exc(exc)!r}**')
+
+                    else:
+                        if is_raw:
+                            k = g
+                        elif g is not k:
+                            raise RuntimeError('FST returned from func FST put not identical to passed in')
+
+                        if k.root.src != f.root.src:
+                            exc = RuntimeError(f'FST put and src put src are not identical\n{k.root.src}\n...\n{f.root.src}')
+
+                            if is_raw:
+                                rest.append(f'**{_san_exc(exc)!r}**')
+                            else:
+                                raise exc
+
+                        if (k_dump := k.root.dump(out=str)) != f_dump:
+                            exc = RuntimeError(f'FST put and src put dump are not identical\n{k_dump}\n...\n{f_dump}')
+
+                            if is_raw:
+                                rest.append(f'**{_san_exc(exc)!r}**')
+                            else:
+                                raise exc
+
+                        if not is_special_slice:
+                            l = _make_fst(code, attr)
+
+                            try:
+                                g = func(l, a, start, stop, field, **options)
+                            except Exception as exc:
+                                rest.append(f'**{_san_exc(exc)!r}**')
+
+                            else:
+                                if is_raw:
+                                    l = g
+                                elif g is not l:
+                                    raise RuntimeError('FST returned from func AST put not identical to passed in')
+
+                                if not compare_asts(l.root.a, f.root.a):
+                                    exc = RuntimeError(f'AST put and src put AST are not identical\n{l.root.a}\n...\n{f.root.a}')  # XXX: this repr(AST) for earlier py "<ast.Module object at 0x7f70c295bd30>"
+
+                                    if is_raw:
+                                        rest.append(f'**{_san_exc(exc)!r}**')
+                                    else:
+                                        raise exc
+
+                                if l.root.src != f.root.src:
+                                    rest.append(l.root.src)
+
+        return rest + tail if tail else rest
 
 
-class PutSliceCases(GetCases):
+class PutSliceCases(PutCases):
     def __init__(self, fnm):
         super().__init__(fnm, FST.put_slice)
 
 
 # if __name__ == '__main__':
-#     # gpc = GetCases('data/data_get.py', FST.get)
-#     gpc = GetSliceCases(os.path.join(os.path.dirname(__file__), 'data/data_get_slice.py'))
+#     # gpc = GetCases(os.path.join(os.path.dirname(__file__), 'data/data_get.py'))
+#     # gpc = GetSliceCases(os.path.join(os.path.dirname(__file__), 'data/data_get_slice.py'))
+#     gpc = PutCases(os.path.join(os.path.dirname(__file__), 'data/data_test.py'))
 
 #     gpc.generate()
 #     gpc.write()
+
