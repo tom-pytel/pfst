@@ -198,7 +198,7 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any],
         if not isinstance(code, ast_type):
             raise NodeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}', rawable=True)
 
-        src   = unparse(code)
+        src = unparse(code)
         lines = src.split('\n')
 
     elif isinstance(code, list):
@@ -233,8 +233,8 @@ def code_as_all(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
         return code
 
     if isinstance(code, AST):
-        mode  = code.__class__  # we do not accept invalid-AST SPECIAL SLICE ASTs on purpose, could accept them by setting `mode = _get_special_parse_mode(code) or code.__class__` but that gets complicated fast
-        code  = unparse(code)
+        mode = code.__class__  # we do not accept invalid-AST SPECIAL SLICE ASTs on purpose, could accept them by setting `mode = _get_special_parse_mode(code) or code.__class__` but that gets complicated fast
+        code = unparse(code)
         lines = code.split('\n')
 
     else:
@@ -287,7 +287,7 @@ def code_as_stmts(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
         if not isinstance(code, (stmt, expr, Module, Interactive, Expression)):  # all these can be coerced into stmts
             raise NodeError(f'expecting zero or more stmts, got {code.__class__.__name__}', rawable=True)
 
-        code  = _fixing_unparse(code)
+        code = _fixing_unparse(code)
         lines = code.split('\n')
 
     elif isinstance(code, list):
@@ -372,7 +372,7 @@ def code_as_match_cases(code: Code, parse_params: Mapping[str, Any] = {}) -> fst
         if not isinstance(code, (match_case, Module)):
             raise NodeError(f'expecting zero or more match_cases, got {code.__class__.__name__}', rawable=True)
 
-        code  = _fixing_unparse(code)
+        code = _fixing_unparse(code)
         lines = code.split('\n')
 
     elif isinstance(code, list):
@@ -423,7 +423,7 @@ def code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *,
     if is_ast := isinstance(code, AST):
         validate(code)
 
-        src   = unparse(code)
+        src = unparse(code)
         lines = src.split('\n')
 
     elif isinstance(code, list):

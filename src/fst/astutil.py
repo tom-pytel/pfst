@@ -189,13 +189,13 @@ class bistr(str):
             return idx
 
         c2b = self._c2b = self._make_array(lc, lb)
-        j   = 0
+        j = 0
 
         for i, c in enumerate(self):
-            c2b[i]  = j
-            j      += len(c.encode())
+            c2b[i] = j
+            j += len(c.encode())
 
-        c2b[-1]  = j
+        c2b[-1] = j
         self.c2b = self._c2b_lookup
 
         return c2b[idx]
@@ -690,7 +690,7 @@ def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], boo
     if skip2 is None:
         skip2 = ()
 
-    stack      = [(ast1, ast2)]
+    stack = [(ast1, ast2)]
     next_stack = stack if recurse else []
 
     while stack:
@@ -912,7 +912,7 @@ def set_ctx(asts: AST | list[AST], ctx: type[expr_context], *, doit: bool = True
     """
 
     change = False
-    stack  = [asts] if isinstance(asts, AST) else asts
+    stack = [asts] if isinstance(asts, AST) else asts
 
     while stack:
         if a := stack.pop():  # might be `None`s in there
@@ -964,7 +964,7 @@ def get_func_class_or_ass_by_name(asts: Iterable[AST], name: str, ass: bool = Tr
 
 def _syntax_ordered_children_Call(ast: AST) -> list[AST]:
     children = [ast.func]
-    args     = ast.args
+    args = ast.args
     keywords = ast.keywords
 
     if not args or not keywords or not isinstance(args[-1], Starred):
@@ -972,8 +972,8 @@ def _syntax_ordered_children_Call(ast: AST) -> list[AST]:
         children.extend(keywords)
 
     else:
-        star            = args[-1]
-        star_lineno     = star.lineno
+        star = args[-1]
+        star_lineno = star.lineno
         star_col_offset = star.col_offset
 
         children.extend(args[:-1])
@@ -1398,7 +1398,7 @@ def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[A
     - `bool`: Whether parentheses are needed around the child for correct parsing or not.
     """
 
-    child_precedence  = _PRECEDENCE_NODES.get(child_type, _Precedence.ATOM)
+    child_precedence = _PRECEDENCE_NODES.get(child_type, _Precedence.ATOM)
     parent_precedence = _PRECEDENCE_NODE_FIELDS.get((parent_type, field), _Precedence.TEST)
 
     assert child_precedence, "type of 'op' should be passed for 'BoolOp', 'BinOp' or 'UnaryOp'"
@@ -1456,7 +1456,7 @@ def precedence_require_parens(child: AST, parent: AST, field: str, idx: int | No
     - `bool`: Whether parentheses are needed around the child for correct parsing or not.
     """
 
-    child_type  = (child.op.__class__
+    child_type = (child.op.__class__
                    if (child_cls := child.__class__) in (BoolOp, BinOp, UnaryOp) else child_cls)
     parent_type = (parent.op.__class__
                    if (parent_cls := parent.__class__) in (BoolOp, BinOp, UnaryOp) else parent_cls)

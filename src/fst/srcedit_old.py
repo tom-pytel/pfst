@@ -54,7 +54,7 @@ class SrcEdit:
                 break
 
             if not allpre or (g := m.group(1)) and g.startswith('#'):
-                pre_ln  = ln
+                pre_ln = ln
                 pre_col = 0
 
         return None if pre_ln is None else (pre_ln, pre_col)
@@ -139,30 +139,30 @@ class SrcEdit:
             location and optionally lines to replace the deleted portion (which can only be non-coding source).
         """
 
-        bound_ln, bound_col         = fpre.bloc[2:] if fpre else block_loc[:2]
+        bound_ln, bound_col = fpre.bloc[2:] if fpre else block_loc[:2]
         bound_end_ln, bound_end_col = fpost.bloc[:2] if fpost else block_loc[2:]
 
-        lines      = get_fst.root._lines
-        put_lines  = None
-        pre_comms  = self.pre_comments(lines, bound_ln, bound_col, ffirst.bln, ffirst.bcol,
-                                       options.get('precomms'))
+        lines = get_fst.root._lines
+        put_lines = None
+        pre_comms = self.pre_comments(lines, bound_ln, bound_col, ffirst.bln, ffirst.bcol,
+                                      options.get('precomms'))
         post_comms = self.post_comments(lines, flast.bend_ln, flast.bend_col, bound_end_ln, bound_end_col,
                                         options.get('postcomms'))
-        pre_semi   = not pre_comms and prev_find(lines, bound_ln, bound_col, ffirst.ln, ffirst.col, ';',
+        pre_semi = not pre_comms and prev_find(lines, bound_ln, bound_col, ffirst.ln, ffirst.col, ';',
+                                               True, comment=True, lcont=None)
+        post_semi = not post_comms and next_find(lines, flast.end_ln, flast.end_col, bound_end_ln, bound_end_col, ';',
                                                  True, comment=True, lcont=None)
-        post_semi  = not post_comms and next_find(lines, flast.end_ln, flast.end_col, bound_end_ln, bound_end_col, ';',
-                                                  True, comment=True, lcont=None)
-        copy_loc   = fstloc(*(pre_comms or ffirst.bloc[:2]), *(post_comms or flast.bloc[2:]))
+        copy_loc = fstloc(*(pre_comms or ffirst.bloc[:2]), *(post_comms or flast.bloc[2:]))
 
         if fpre:  # set block start to just past prev statement or block open (colon)
             block_ln, block_col = fpre.bloc[2:]
 
         elif frag := prev_frag(lines, bound_ln, bound_col, copy_loc.ln, copy_loc.col, False, False):
-            block_ln, block_col, src  = frag
-            block_col                += len(src)
+            block_ln, block_col, src = frag
+            block_col += len(src)
 
         else:
-            block_ln  = bound_ln
+            block_ln = bound_ln
             block_col = bound_col
 
         # get copy and delete locations according to possible combinations of preceding and trailing comments, semicolons and line continuation backslashes
@@ -171,7 +171,7 @@ class SrcEdit:
             if frag := next_frag(lines, end_ln, end_col, end_ln,
                                  bound_end_col if end_ln == bound_end_ln else 0x7ffffffffffffff, True, True):  # comment or backslash
                 put_lines = None
-                ln, col   = copy_loc[:2]
+                ln, col = copy_loc[:2]
 
                 if frag.src.startswith('#'):
                     del_loc = fstloc(ln, col, end_ln, frag.col)
@@ -190,8 +190,8 @@ class SrcEdit:
             return None
 
         def fix_post_semi(post_semi: tuple[int, int]) -> tuple[fstloc, list[str] | None]:
-            end_ln, end_col  = post_semi
-            end_col         += 1
+            end_ln, end_col = post_semi
+            end_col += 1
 
             if t := fix_post_semi_with_tail(end_ln, end_col, False):
                 del_loc, put_lines = t
@@ -201,11 +201,11 @@ class SrcEdit:
                 del_col = 0 if ln != block_ln else block_col
 
                 if end_ln == bound_end_ln:
-                    del_loc   = fstloc(ln, col if fpost else del_col, bound_end_ln, bound_end_col)
+                    del_loc = fstloc(ln, col if fpost else del_col, bound_end_ln, bound_end_col)
                     put_lines = None
 
                 else:
-                    del_loc   = fstloc(ln, del_col, end_ln + 1, 0)
+                    del_loc = fstloc(ln, del_col, end_ln + 1, 0)
                     put_lines = ['', ''] if del_col else None
 
             return del_loc, put_lines
@@ -219,8 +219,8 @@ class SrcEdit:
                     end_ln, end_col = copy_loc[2:]
 
                 else:
-                    end_ln, end_col  = post_semi
-                    end_col         += 1
+                    end_ln, end_col = post_semi
+                    end_col += 1
 
                 if t := fix_post_semi_with_tail(end_ln, end_col, True):  # we know it starts a line because pre_comms exists
                     del_loc, put_lines = t
@@ -266,7 +266,7 @@ class SrcEdit:
 
         else:
             ln, col, end_ln, end_col = copy_loc
-            at_bound_end_ln          = end_ln == bound_end_ln
+            at_bound_end_ln = end_ln == bound_end_ln
 
             if frag := next_frag(lines, end_ln, end_col, end_ln,
                                  bound_end_col if at_bound_end_ln else 0x7ffffffffffffff, True, True):  # comment or backslash
@@ -306,7 +306,7 @@ class SrcEdit:
 
         # delete preceding and trailing empty lines according to 'pep8' and 'space' format flags
 
-        prespace  = (float('inf') if (o := fst.FST.get_option('prespace', options)) is True else int(o))
+        prespace = (float('inf') if (o := fst.FST.get_option('prespace', options)) is True else int(o))
         postspace = (float('inf') if (o := fst.FST.get_option('postspace', options)) is True else int(o))
         pep8space = fst.FST.get_option('pep8space', options)
 
@@ -335,25 +335,25 @@ class SrcEdit:
                     new_del_ln = frag.ln + 1
 
                 if new_del_ln < del_ln:
-                    indent    = lines[del_ln][:del_col]
+                    indent = lines[del_ln][:del_col]
                     put_lines = [indent + put_lines[0], *put_lines[1:]] if put_lines else [indent]
-                    del_ln    = new_del_ln
-                    del_col   = 0
+                    del_ln = new_del_ln
+                    del_col = 0
 
         if postspace:
             if not del_end_col:
                 new_del_end_ln = min(bound_end_ln, del_end_ln + postspace)  # last possible end line to delete to
-                del_end_ln     = (frag.ln
+                del_end_ln = (frag.ln
                                   if (frag := next_frag(lines, del_end_ln, 0, new_del_end_ln, 0, True, True)) else
                                   new_del_end_ln)
 
             elif del_end_col == len(lines[del_end_ln]):
                 new_del_end_ln = min(bound_end_ln, del_end_ln + postspace + 1)  # account for not ending on newline
-                del_end_ln     = (frag.ln - 1
+                del_end_ln = (frag.ln - 1
                                   if (frag := next_frag(lines, del_end_ln, del_end_col, new_del_end_ln, 0, True, True,
                                                         )) else
                                   new_del_end_ln - 1)
-                del_end_col    = len(lines[del_end_ln])
+                del_end_col = len(lines[del_end_ln])
 
         del_loc = fstloc(del_ln, del_col, del_end_ln, del_end_col)
 
@@ -364,15 +364,15 @@ class SrcEdit:
         if (del_ln > bound_ln and (not del_col or re_empty_line.match(lines[del_ln], 0, del_col)) and
             lines[del_ln - 1].endswith('\\')  # the endswith() is not definitive because of comments
         ):
-            new_del_ln  = del_ln - 1
+            new_del_ln = del_ln - 1
             new_del_col = 0 if new_del_ln != bound_ln else bound_col
 
             if frag := prev_frag(lines, new_del_ln, new_del_col, new_del_ln, 0x7fffffffffffffff, True, False):  # skip over lcont but not comment if is there because that invalidates quick '\\' check above
                 new_del_col = None if (src := frag.src).startswith('#') else frag.col + len(src)
 
             if new_del_col is not None:
-                del_loc   = fstloc(new_del_ln, new_del_col, del_end_ln, del_end_col)
-                indent    = lines[del_ln][:del_col]
+                del_loc = fstloc(new_del_ln, new_del_col, del_end_ln, del_end_col)
+                indent = lines[del_ln][:del_col]
                 put_lines = ['', indent + put_lines[0], *put_lines[1:]] if put_lines else ['', indent]
 
         # finally done
@@ -389,10 +389,10 @@ class SrcEdit:
         """Add preceding and trailing newlines as needed. We always insert statements (or blocks of them) as their own
         lines but may also add newlines according to PEP8."""
 
-        lines     = tgt_fst.root._lines
+        lines = tgt_fst.root._lines
         put_lines = put_fst._lines
-        put_body  = put_fst.a.body
-        put_col   = put_loc.col
+        put_body = put_fst.a.body
+        put_col = put_loc.col
         pep8space = fst.FST.get_option('pep8space', options)
 
         if not 0 <= pep8space <= 1:
@@ -413,7 +413,7 @@ class SrcEdit:
             if need := (want if not re_empty_line.match(put_lines[0]) else 1 if want == 2 and (  # how many empty lines at start of put_fst?
                         len(put_lines) < 2 or not re_empty_line.match(put_lines[1])) else 0):
                 bound_ln = block_loc.ln
-                ln       = put_loc.ln
+                ln = put_loc.ln
 
                 if not put_col:
                     need += 2
@@ -435,7 +435,7 @@ class SrcEdit:
 
         else:
             postpend = pep8space + 1
-            ln       = len(put_lines) - 1
+            ln = len(put_lines) - 1
 
             while postpend:  # how many empty lines at end of put_fst?
                 if (l := put_lines[ln]) and  not re_empty_line.match(l):
@@ -448,11 +448,11 @@ class SrcEdit:
 
             if postpend:  # reduce needed postpend by trailing empty lines present in destination
                 _, _, end_ln, end_col = put_loc
-                len_lines             = len(lines)
+                len_lines = len(lines)
 
                 while postpend and re_empty_line.match(lines[end_ln], end_col):
                     postpend -= 1
-                    end_col   = 0
+                    end_col = 0
 
                     if (end_ln := end_ln + 1) >= len_lines:
                         break
@@ -527,13 +527,13 @@ class SrcEdit:
             location currently.
         """
 
-        lines      = tgt_fst.root._lines
-        put_lines  = put_fst._lines
-        put_body   = put_fst.a.body
+        lines = tgt_fst.root._lines
+        put_lines = put_fst._lines
+        put_body = put_fst.a.body
         is_handler = field == 'handlers'
-        is_orelse  = field == 'orelse'
-        docstr     = options.get('docstr')
-        opt_elif   = fst.FST.get_option('elif_', options)
+        is_orelse = field == 'orelse'
+        docstr = options.get('docstr')
+        opt_elif = fst.FST.get_option('elif_', options)
 
         if not ffirst:  # pure insertion
             is_elif = (not fpre and not fpost and is_orelse and opt_elif and len(b := put_body) == 1 and
@@ -566,16 +566,16 @@ class SrcEdit:
                     else:
                         assert csrc == '\\'
 
-                        ln  += 1
-                        col  = 0
+                        ln += 1
+                        col = 0
 
                 else:
                     if fpost:  # next statement on semicolon separated line continuation
-                        indent  = bistr(block_indent)
+                        indent = bistr(block_indent)
                         put_loc = block_loc
 
                     else:
-                        indent  = bistr('')
+                        indent = bistr('')
                         put_loc = fstloc(end_ln, re_line_trailing_space.match(lines[end_ln], col).start(1),
                                          end_ln, end_col)
 
@@ -591,12 +591,12 @@ class SrcEdit:
                     ln, col = block_loc[:2]
 
                 else:
-                    ln, col  = prev_find(lines, *block_loc, ':', True)
-                    col     += 1
+                    ln, col = prev_find(lines, *block_loc, ':', True)
+                    col += 1
 
                 if frag := next_frag(lines, ln, col, *block_loc[2:], True, None):
-                    ln, col, src  = frag
-                    col          += len(src)
+                    ln, col, src = frag
+                    col += len(src)
 
                     assert ln < block_loc.end_ln
 
@@ -651,19 +651,19 @@ class SrcEdit:
         # replacement
 
         del_else_and_fin = False
-        indent           = opener_indent if is_handler else block_indent
+        indent = opener_indent if is_handler else block_indent
 
         if not fpre and not fpost and is_orelse and isinstance(tgt_fst.a, If):  # possible else <-> elif changes
-            put_body    = put_fst.a.body
-            orelse      = tgt_fst.a.orelse
-            opt_elif    = fst.FST.get_option('elif_', options)
+            put_body = put_fst.a.body
+            orelse = tgt_fst.a.orelse
+            opt_elif = fst.FST.get_option('elif_', options)
             is_old_elif = orelse[0].f.is_elif()
             is_new_elif = opt_elif and len(put_body) == 1 and isinstance(put_body[0], If)
 
             if is_new_elif:
                 ln, col, end_ln, end_col = put_body[0].f.bloc
-                del_else_and_fin         = True
-                indent                   = opener_indent
+                del_else_and_fin = True
+                indent = opener_indent
 
                 put_fst._put_src(['elif'], ln, col, ln, col + 2, False)  # replace 'if' with 'elif'
 
@@ -684,11 +684,11 @@ class SrcEdit:
 
         if pre_semi and post_semi:
             if fpost:  # sandwiched between two semicoloned statements
-                put_ln      = fpre.bend_ln
-                put_col     = fpre.bend_col
-                put_end_ln  = fpost.bln
+                put_ln = fpre.bend_ln
+                put_col = fpre.bend_col
+                put_end_ln = fpost.bln
                 put_end_col = fpost.bcol
-                del_lines   = [block_indent]
+                del_lines = [block_indent]
 
             else:  # eat whitespace after trailing useless semicolon
                 put_col = re_line_trailing_space.match(lines[put_ln], 0, put_col).start(1)

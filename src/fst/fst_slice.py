@@ -93,7 +93,8 @@ from .code import (
 from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish
 
 _re_close_delim_or_space_or_end = re.compile(r'[)}\s\]]|$')
-_re_sep_line_nonexpr_end        = {  # empty line with optional separator and line continuation or a pure comment line
+
+_re_sep_line_nonexpr_end = {  # empty line with optional separator and line continuation or a pure comment line
     ',': re.compile(r'\s*(?:,\s*)?(?:\\|#.*)?$'),
     '|': re.compile(r'\s*(?:\|\s*)?(?:\\|#.*)?$'),
     '=': re.compile(r'\s*(?:=\s*)?(?:\\|#.*)?$'),
@@ -298,7 +299,7 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
     ```
     """
 
-    lines  = self.root._lines
+    lines = self.root._lines
     single = loc_last is loc_first
 
     first_ln, first_col, last_end_ln, last_end_col = loc_first
@@ -313,7 +314,7 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
 
     else:
         sep_end_pos = None
-        end_pos     = (last_end_ln, last_end_col)
+        end_pos = (last_end_ln, last_end_col)
 
     # if is_first and is_last:
     #     return ((l := fstloc(bound_ln, bound_col, bound_end_ln, bound_end_col)), l, None, sep_end_pos)  # case 0
@@ -322,8 +323,8 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
 
     ld_text_pos, ld_space_pos, indent = leading_trivia(lines, bound_ln, bound_col,  # start of text / space
                                                        first_ln, first_col, ld_comms, ld_space)
-    tr_text_pos, tr_space_pos, _      = trailing_trivia(lines, bound_end_ln, bound_end_col,  # END of text / space
-                                                        last_end_ln, last_end_col, tr_comms, tr_space)
+    tr_text_pos, tr_space_pos, _ = trailing_trivia(lines, bound_end_ln, bound_end_col,  # END of text / space
+                                                   last_end_ln, last_end_col, tr_comms, tr_space)
 
     def calc_locs(ld_ln: int, ld_col: int, tr_ln: int, tr_col: int,
                   ) -> tuple[fstloc, fstloc, str | None, tuple[int, int] | None]:
@@ -382,7 +383,7 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
             ld_different = False
 
         else:
-            ld_ln  = ld_text_pos[0]  # this is where space would have been without negative
+            ld_ln = ld_text_pos[0]  # this is where space would have been without negative
             ld_col = 0
 
     if tr_different := tr_space_pos and tr_neg and tr_space:
@@ -393,8 +394,8 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
             tr_ln, tr_col = tr_text_pos
 
             if tr_col:
-                tr_ln  += 1
-                tr_col  = 0
+                tr_ln += 1
+                tr_col = 0
 
     if not (ld_different or tr_different):  # if negative space offsets would not affect locations then we are done
         return cut_locs  # really copy_locs here
@@ -408,8 +409,8 @@ def _offset_pos_by_params(self: fst.FST, ln: int, col: int, col_offset: int, par
     """Position to offset `(ln, col)` with `col_offset` = `lines[ln].c2b(col)`, is assumed to be at or past the offset
     position."""
 
-    at_ln  = parsoff.ln == ln
-    ln    += parsoff.dln
+    at_ln = parsoff.ln == ln
+    ln += parsoff.dln
 
     if at_ln:
         col = self.root._lines[ln].b2c(col_offset + parsoff.dcol_offset)
@@ -425,20 +426,20 @@ def _locs_first_and_last(self: fst.FST, start: int, stop: int, body: list[AST], 
 
     if body2 is body:
         loc_first = body[start].f.pars()
-        loc_last  = loc_first if start == stop_1 else body[stop_1].f.pars()
+        loc_last = loc_first if start == stop_1 else body[stop_1].f.pars()
 
     else:
-        ln, col, _, _         = self._loc_maybe_dict_key(start, True, body)
+        ln, col, _, _ = self._loc_maybe_dict_key(start, True, body)
         _, _, end_ln, end_col = body2[start].f.pars()
-        loc_first             = fstloc(ln, col, end_ln, end_col)
+        loc_first = fstloc(ln, col, end_ln, end_col)
 
         if start == stop_1:
             loc_last = loc_first
 
         else:
-            ln, col, _, _         = self._loc_maybe_dict_key(stop_1, True, body)
+            ln, col, _, _ = self._loc_maybe_dict_key(stop_1, True, body)
             _, _, end_ln, end_col = body2[stop_1].f.pars()
-            loc_last              = fstloc(ln, col, end_ln, end_col)
+            loc_last = fstloc(ln, col, end_ln, end_col)
 
     return loc_first, loc_last
 
@@ -473,7 +474,7 @@ def _bound_Delete_targets(self: fst.FST, start: int = 0, loc_first: fst.FST | No
     elif body:
         bound_ln, bound_col, _, _ = loc_first or body[0].f.pars()
     else:
-        bound_ln  = bound_end_ln
+        bound_ln = bound_end_ln
         bound_col = bound_end_col
 
     return bound_ln, bound_col, bound_end_ln, bound_end_col
@@ -492,7 +493,7 @@ def _bound_Assign_targets(self: fst.FST, start: int = 0, loc_first: fst.FST | No
     elif body:
         bound_ln, bound_col, _, _ = loc_first or body[0].f.pars()
     else:
-        bound_ln  = bound_end_ln
+        bound_ln = bound_end_ln
         bound_col = bound_end_col
 
     return bound_ln, bound_col, bound_end_ln, bound_end_col
@@ -550,9 +551,9 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
         - `0`: Remove if not aesthetically significant (present on same line as end of element), otherwise leave.
     """
 
-    lines    = self.root._lines
+    lines = self.root._lines
     is_first = not start
-    is_last  = stop == len_body
+    is_last = stop == len_body
 
     bound_end_col_offset = lines[bound_end_ln].c2b(bound_end_col)
 
@@ -577,21 +578,21 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
             ret_tail_sep = True  # this along with sep_end_pos != None will turn the ret_tail_sep checks below into noop
 
         elif sep_end_pos[0] == copy_end_ln == loc_last.end_ln and sep_end_pos[1] == copy_end_col:  # optimization common case, we can get rid of unneeded trailing separator in copy by just not copying it if it is at end of copy range on same line as end of element
-            copy_loc     = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col := loc_last.end_col)
+            copy_loc = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col := loc_last.end_col)
             ret_tail_sep = True
 
     if self_tail_sep == 0:  # (or False), optimization common case, we can get rid of unneeded trailing separator in self by adding it to the delete block if del block starts on same line as previous element ends and there is not a comment on the line
         del_ln, _, del_end_ln, del_end_col = del_loc
 
         if del_ln == bound_ln and (del_end_ln != bound_ln or not lines[bound_ln].startswith('#', del_end_col)):
-            del_loc       = fstloc(bound_ln, bound_col, del_end_ln, del_end_col)  # there can be nothing but a separator and whitespace between these locations
+            del_loc = fstloc(bound_ln, bound_col, del_end_ln, del_end_col)  # there can be nothing but a separator and whitespace between these locations
             self_tail_sep = None
 
     # set location of root node and make the actual FST
 
-    ast.lineno         = copy_ln + 1
-    ast.col_offset     = lines[copy_ln].c2b(copy_col)
-    ast.end_lineno     = copy_end_ln + 1
+    ast.lineno = copy_ln + 1
+    ast.col_offset = lines[copy_ln].c2b(copy_col)
+    ast.end_lineno = copy_end_ln + 1
     ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
 
     fst_, parsoff = self._make_fst_and_dedent(self, ast, copy_loc, prefix, suffix,
@@ -599,7 +600,7 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
                                               [del_indent] if del_indent and del_loc.end_col else None,
                                               ret_params_offset=True)
 
-    ast.col_offset     = 0  # before prefix
+    ast.col_offset = 0  # before prefix
     ast.end_col_offset = fst_._lines[-1].lenbytes  # after suffix
 
     fst_._touch()
@@ -609,14 +610,14 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
     if not ret_tail_sep:  # don't need or want return trailing separator
         if sep_end_pos:  # but have it
             _, _, last_end_ln, last_end_col = ast_last.f.loc  # this will now definitely have the .f attribute and FST, we don't use _poss_end() because field may not be the same
-            _, _, fst_end_ln,  fst_end_col  = fst_.loc
+            _, _, fst_end_ln, fst_end_col = fst_.loc
 
             fst_._maybe_del_separator(last_end_ln, last_end_col, ret_tail_sep is False,
                                       fst_end_ln, fst_end_col - len(suffix), sep)
 
     elif not sep_end_pos:  # need return trailing separator and don't have it
         _, _, last_end_ln, last_end_col = ast_last.f.loc
-        _, _, fst_end_ln,  fst_end_col  = fst_.loc
+        _, _, fst_end_ln, fst_end_col = fst_.loc
 
         fst_._maybe_ins_separator(last_end_ln, last_end_col, False, fst_end_ln, fst_end_col - len(suffix), sep)
 
@@ -628,7 +629,7 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
             _, _, last_end_ln, last_end_col = last.f.loc
 
         else:  # Globals or Locals names, no last element with location so we use start of bound which is just past last untouched element which is now the last element
-            last_end_ln  = bound_ln
+            last_end_ln = bound_ln
             last_end_col = bound_col
 
         if self_tail_sep:  # last element needs a trailing separator (singleton tuple maybe, requested by user)
@@ -681,11 +682,11 @@ def _cut_or_copy_asts(start: int, stop: int, field: str, cut: bool, body: list[A
 def _cut_or_copy_asts2(start: int, stop: int, field: str, field2: str, cut: bool, body: list[AST], body2: list[AST],
                        ) -> tuple[list[AST], list[AST]]:
     if not cut:
-        asts  = [copy_ast(body[i]) for i in range(start, stop)]
+        asts = [copy_ast(body[i]) for i in range(start, stop)]
         asts2 = [copy_ast(body2[i]) for i in range(start, stop)]
 
     else:
-        asts  = body[start : stop]
+        asts = body[start : stop]
         asts2 = body2[start : stop]
 
         del body[start : stop]
@@ -711,16 +712,16 @@ def _get_slice_Dict(self: fst.FST, start: int | Literal['end'] | None, stop: int
                     options: Mapping[str, Any]) -> fst.FST:
     """A `Dict` slice is just a normal `Dict`."""
 
-    len_body    = len(body := (ast := self.a).keys)
-    body2       = ast.values
+    len_body = len(body := (ast := self.a).keys)
+    body2 = ast.values
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST._new_empty_dict(from_=self)
 
-    locs        = _locs_and_bound_get(self, start, stop, body, body2, 1)
+    locs = _locs_and_bound_get(self, start, stop, body, body2, 1)
     asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'values', cut, body, body2)
-    ret_ast     = Dict(keys=asts, values=asts2)
+    ret_ast = Dict(keys=asts, values=asts2)
 
     return _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts2[-1], *locs,
                           options.get('trivia'), 'values', '{', '}', ',', 0, 0)
@@ -731,16 +732,16 @@ def _get_slice_Tuple_elts(self: fst.FST, start: int | Literal['end'] | None, sto
     """A `Tuple` slice is just a normal `Tuple`. It attempts to copy the parenthesization of the parent. The converse is
     not always true as a `Tuple` may serve as the container of a slice of other node types."""
 
-    len_body    = len(body := (ast := self.a).elts)
+    len_body = len(body := (ast := self.a).elts)
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST._new_empty_tuple(from_=self)
 
-    is_par  = self._is_delimited_seq()
-    locs    = _locs_and_bound_get(self, start, stop, body, body, is_par)
-    asts    = _cut_or_copy_asts(start, stop, 'elts', cut, body)
-    ctx     = ast.ctx.__class__
+    is_par = self._is_delimited_seq()
+    locs = _locs_and_bound_get(self, start, stop, body, body, is_par)
+    asts = _cut_or_copy_asts(start, stop, 'elts', cut, body)
+    ctx = ast.ctx.__class__
     ret_ast = Tuple(elts=asts, ctx=ctx())
 
     if not issubclass(ctx, Load):  # new Tuple root object must have ctx=Load
@@ -767,9 +768,9 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
     """The slice of `Delete.targets` is a normal unparenthesized `Tuple` contianing valid target types, which is also a
     valid python `Tuple`."""
 
-    len_body    = len(body := self.a.targets)
+    len_body = len(body := self.a.targets)
     start, stop = fixup_slice_indices(len_body, start, stop)
-    len_slice   = stop - start
+    len_slice = stop - start
 
     if not len_slice:
         return fst.FST._new_empty_tuple(from_=self)
@@ -781,7 +782,7 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bound_Delete_targets(self, start, loc_first)
 
-    asts    = _cut_or_copy_asts(start, stop, 'targets', cut, body)
+    asts = _cut_or_copy_asts(start, stop, 'targets', cut, body)
     ret_ast = Tuple(elts=asts, ctx=Del())  # we initially set to Del so that set_ctx() won't skip it
 
     set_ctx(ret_ast, Load)  # new Tuple root object must have ctx=Load
@@ -806,9 +807,9 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
     """The slice of `Assign.targets` is an invalid `Assign` contianing valid target types and a `value` which is an
     empty `Name`."""
 
-    len_body    = len(body := self.a.targets)
+    len_body = len(body := self.a.targets)
     start, stop = fixup_slice_indices(len_body, start, stop)
-    len_slice   = stop - start
+    len_slice = stop - start
 
     if not len_slice:
         return fst.FST(Assign(targets=[], value=Name(id='', ctx=Load(), lineno=1, col_offset=3, end_lineno=1,
@@ -823,8 +824,8 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bound_Assign_targets(self, start, loc_first)
 
-    asts    = _cut_or_copy_asts(start, stop, 'targets', cut, body)
-    name    = Name(id='', ctx=Load())
+    asts = _cut_or_copy_asts(start, stop, 'targets', cut, body)
+    name = Name(id='', ctx=Load())
     ret_ast = Assign(targets=asts, value=name)
 
     set_ctx(asts[:], Store)
@@ -836,7 +837,7 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
     if not (fst_lines := fst_._lines)[0]:  # we do not allow starting a newline with these
         fst_._put_src(None, 0, 0, 1, 0, False)
 
-    name.lineno     = name.end_lineno     = len(fst_lines)
+    name.lineno = name.end_lineno = len(fst_lines)
     name.col_offset = name.end_col_offset = len(fst_lines[-1].encode())  # empty name location right at end
 
     if cut:
@@ -847,7 +848,7 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
 
 def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                             cut: bool, options: Mapping[str, Any]) -> fst.FST:
-    len_body    = len(body := self.a.names)
+    len_body = len(body := self.a.names)
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
@@ -859,14 +860,14 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
     _, _, bound_end_ln, bound_end_col = self.loc
 
     loc_first = body[start].f.loc
-    loc_last  = loc_first if stop == start else body[stop - 1].f.loc
+    loc_last = loc_first if stop == start else body[stop - 1].f.loc
 
     if start:
         _, _, bound_ln, bound_col = body[start - 1].f.loc
     else:
         bound_ln, bound_col, _, _ = loc_first
 
-    asts    = _cut_or_copy_asts(start, stop, 'names', cut, body)
+    asts = _cut_or_copy_asts(start, stop, 'names', cut, body)
     ret_ast = Tuple(elts=asts, ctx=Load())
 
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
@@ -899,7 +900,7 @@ def _get_slice_ImportFrom_names(self: fst.FST, start: int | Literal['end'] | Non
 
 def _get_slice_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                                      cut: bool, options: Mapping[str, Any]) -> fst.FST:
-    len_body    = len((ast := self.a).names)
+    len_body = len((ast := self.a).names)
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
@@ -909,10 +910,10 @@ def _get_slice_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] 
 
     ln, end_col, bound_end_ln, bound_end_col = self.loc
 
-    lines     = self.root._lines
-    ret_elts  = []
-    ret_ast   = Tuple(elts=ret_elts, ctx=Load())
-    end_col  += 5 if isinstance(ast, Global) else 7  # will have another +1 added in search
+    lines = self.root._lines
+    ret_elts = []
+    ret_ast = Tuple(elts=ret_elts, ctx=Load())
+    end_col += 5 if isinstance(ast, Global) else 7  # will have another +1 added in search
 
     if not start:
         bound_ln = None  # set later
@@ -923,19 +924,19 @@ def _get_slice_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] 
 
         bound_ln, bound_col, src = next_find_re(lines, ln, end_col + 1, bound_end_ln, bound_end_col, re_identifier)  # must be there, + 1 skips comma
 
-        bound_col   += len(src)
-        ln, end_col  = next_find(lines, bound_ln, bound_col, bound_end_ln, bound_end_col, ',')  # must be there
+        bound_col += len(src)
+        ln, end_col = next_find(lines, bound_ln, bound_col, bound_end_ln, bound_end_col, ',')  # must be there
 
     for i in range(stop - start):  # create tuple of Names from identifiers
         ln, col, src = next_find_re(lines, ln, end_col + 1, bound_end_ln, bound_end_col, re_identifier)  # must be there, + 1 probably skips comma
-        lineno       = ln + 1
-        end_col      = col + len(src)
+        lineno = ln + 1
+        end_col = col + len(src)
 
         if not i:
             loc_first = fstloc(ln, col, ln, end_col)
 
             if bound_ln is None:
-                bound_ln  = ln
+                bound_ln = ln
                 bound_col = col
 
         ret_elts.append(Name(id=src, ctx=Load(), lineno=lineno, col_offset=(l := lines[ln]).c2b(col), end_lineno=lineno,
@@ -968,15 +969,15 @@ def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop
                          options: Mapping[str, Any]) -> fst.FST:
     """A `List` slice is just a normal `List`."""
 
-    len_body    = len(body := (ast := self.a).elts)
+    len_body = len(body := (ast := self.a).elts)
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST._new_empty_list(from_=self)
 
-    locs    = _locs_and_bound_get(self, start, stop, body, body, 1)
-    asts    = _cut_or_copy_asts(start, stop, 'elts', cut, body)
-    ctx     = ast.ctx.__class__
+    locs = _locs_and_bound_get(self, start, stop, body, body, 1)
+    asts = _cut_or_copy_asts(start, stop, 'elts', cut, body)
+    ctx = ast.ctx.__class__
     ret_ast = List(elts=asts, ctx=ctx())  # we set ctx() so that if it is not Load then set_ctx() below will recurse into it
 
     if not issubclass(ctx, Load):  # new List root object must have ctx=Load
@@ -992,7 +993,7 @@ def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop:
     represented as `{*()}` or `set()` or as an invalid `AST` `Set` with curlies but no elements, according to
     options."""
 
-    len_body    = len(body := self.a.elts)
+    len_body = len(body := self.a.elts)
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
@@ -1003,8 +1004,8 @@ def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop:
             fst.FST._new_empty_set_star()  # True, 'star'
         )
 
-    locs    = _locs_and_bound_get(self, start, stop, body, body, 1)
-    asts    = _cut_or_copy_asts(start, stop, 'elts', cut, body)
+    locs = _locs_and_bound_get(self, start, stop, body, body, 1)
+    asts = _cut_or_copy_asts(start, stop, 'elts', cut, body)
     ret_ast = Set(elts=asts)
 
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
@@ -1020,23 +1021,23 @@ def _get_slice_MatchSequence_patterns(self: fst.FST, start: int | Literal['end']
     """A `MatchSequence` slice is just a normal `MatchSequence`. It attempts to copy the parenthesization of the
     parent."""
 
-    len_body    = len(body := self.a.patterns)
+    len_body = len(body := self.a.patterns)
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST._new_empty_matchseq(from_=self)
 
-    delims  = self.is_delimited_matchseq()
-    locs    = _locs_and_bound_get(self, start, stop, body, body, bool(delims))
-    asts    = _cut_or_copy_asts(start, stop, 'patterns', cut, body)
+    delims = self.is_delimited_matchseq()
+    locs = _locs_and_bound_get(self, start, stop, body, body, bool(delims))
+    asts = _cut_or_copy_asts(start, stop, 'patterns', cut, body)
     ret_ast = MatchSequence(patterns=asts)
 
     if delims:
         prefix, suffix = delims
-        tail_sep       = 1 if delims == '()' else 0
+        tail_sep = 1 if delims == '()' else 0
 
     else:
-        prefix   = suffix = delims = ''
+        prefix = suffix = delims = ''
         tail_sep = 1
 
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
@@ -1054,23 +1055,23 @@ def _get_slice_MatchMapping(self: fst.FST, start: int | Literal['end'] | None, s
                             options: Mapping[str, Any]) -> fst.FST:
     """A `MatchMapping` slice is just a normal `MatchMapping`."""
 
-    len_body    = len(body := (ast := self.a).keys)
-    body2       = ast.patterns
+    len_body = len(body := (ast := self.a).keys)
+    body2 = ast.patterns
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST._new_empty_matchmap(from_=self)
 
-    locs        = _locs_and_bound_get(self, start, stop, body, body2, 1)
+    locs = _locs_and_bound_get(self, start, stop, body, body2, 1)
     asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'patterns', cut, body, body2)
-    ret_ast     = MatchMapping(keys=asts, patterns=asts2, rest=None)
+    ret_ast = MatchMapping(keys=asts, patterns=asts2, rest=None)
 
-    # locs          = _locs_and_bound_get(self, start, stop, body, body2, 1)
-    # asts, asts2   = _cut_or_copy_asts2(start, stop, 'keys', 'patterns', cut, body, body2)
-    # ret_ast       = MatchMapping(keys=asts, patterns=asts2, rest=None)
-    # have_rest     = ast.rest is not None
+    # locs = _locs_and_bound_get(self, start, stop, body, body2, 1)
+    # asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'patterns', cut, body, body2)
+    # ret_ast = MatchMapping(keys=asts, patterns=asts2, rest=None)
+    # have_rest = ast.rest is not None
     # self_tail_sep = (have_rest and cut) or None
-    # ret_tail_sep  = False if have_rest and stop == len_body else None
+    # ret_tail_sep = False if have_rest and stop == len_body else None
 
     # fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts2[-1], *locs,
     #                       options.get('trivia'), 'patterns', '{', '}', ',', self_tail_sep, ret_tail_sep)
@@ -1102,10 +1103,10 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
     as a single `pattern` or as an invalid single-element `MatchOr`. If the slice would wind up with zero elements it
     may raise and exception or return an invalid zero-element `MatchOr`, as specified by options."""
 
-    len_body         = len(body := self.a.patterns)
-    start, stop      = fixup_slice_indices(len_body, start, stop)
-    len_slice        = stop - start
-    fix_matchor_get  = self.get_option('fix_matchor_get', options)
+    len_body = len(body := self.a.patterns)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
+    fix_matchor_get = self.get_option('fix_matchor_get', options)
     fix_matchor_self = self.get_option('fix_matchor_self', options)
 
     if not len_slice:
@@ -1125,8 +1126,8 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
         elif len_left == 1 and fix_matchor_self == 'strict':
             raise NodeError("cannot cut MatchOr to length 1 with fix_matchor_self='strict'")
 
-    locs    = _locs_and_bound_get(self, start, stop, body, body, 0)
-    asts    = _cut_or_copy_asts(start, stop, 'patterns', cut, body)
+    locs = _locs_and_bound_get(self, start, stop, body, body, 0)
+    asts = _cut_or_copy_asts(start, stop, 'patterns', cut, body)
     ret_ast = MatchOr(patterns=asts)
 
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
@@ -1143,7 +1144,7 @@ def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, st
     """A `type_params` slice is an invalid `Tuple` containing `type_params` elements. A zero-length slice is just an
     empty `Tuple`, which has no way of knowing that it used to or should contain `type_params`."""
 
-    len_body    = len(body := (ast := self.a).type_params)
+    len_body = len(body := (ast := self.a).type_params)
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
@@ -1166,7 +1167,7 @@ def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, st
     else:
         bound_col += 1
 
-    asts    = _cut_or_copy_asts(start, stop, 'type_params', cut, body)
+    asts = _cut_or_copy_asts(start, stop, 'type_params', cut, body)
     ret_ast = Tuple(elts=asts, ctx=Load())
 
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
@@ -1333,25 +1334,25 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
 
         return elts_indent_cached
 
-    lines                = self.root._lines
-    body                 = getattr(self.a, field)
-    body2                = body if field2 is None else getattr(self.a, field2)
-    len_body             = len(body)
-    is_first             = not start
-    is_last              = stop == len_body
-    is_del               = fst_ is None
-    is_ins               = start == stop  # will never be true if fst_ is None
-    is_ins_ln            = False
-    last                 = None  # means body[-1]
-    self_indent          = self.get_indent()
-    elts_indent_cached   = ...  # cached value, ... means not present
+    lines = self.root._lines
+    body = getattr(self.a, field)
+    body2 = body if field2 is None else getattr(self.a, field2)
+    len_body = len(body)
+    is_first = not start
+    is_last = stop == len_body
+    is_del = fst_ is None
+    is_ins = start == stop  # will never be true if fst_ is None
+    is_ins_ln = False
+    last = None  # means body[-1]
+    self_indent = self.get_indent()
+    elts_indent_cached = ...  # cached value, ... means not present
     bound_end_col_offset = lines[bound_end_ln].c2b(bound_end_col)
 
     # maybe redent fst_ elements to match self element indentation
 
     if not is_del and len(fst_._lines) > 1:
         if (elts_indent := get_indent_elts()) is not None:  # we only do this if we have concrete indentation for elements of self
-            ast_       = fst_.a
+            ast_ = fst_.a
             fst_indent = _get_element_indent(fst_,
                                              getattr(ast_, fst_first.pfield.name if fst_first.is_FST else 'keys'),
                                              getattr(ast_, fst_last.pfield.name), 0)
@@ -1376,7 +1377,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
                     ln, col, _, _ = self._loc_maybe_dict_key(stop, True, body)
 
                 else:
-                    ln  = bound_end_ln
+                    ln = bound_end_ln
                     col = bound_end_col
 
                 if ins_ln >= ln:
@@ -1400,7 +1401,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
                 is_ins_ln = not loc_first.col
 
         elif not is_last:  # just before next element
-            ln, col, _, _        = self._loc_maybe_dict_key(stop, True, body)
+            ln, col, _, _ = self._loc_maybe_dict_key(stop, True, body)
             loc_first = fstloc(ln, col, ln, col)
 
         else:  # just past previous element or at start of bound
@@ -1418,13 +1419,13 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
     # delete
 
     if is_del:
-        put_lines     = [del_indent] if del_indent and put_end_col else None
+        put_lines = [del_indent] if del_indent and put_end_col else None
         self_tail_sep = _fixup_self_tail_sep_del(self, self_tail_sep, start, stop, len_body)
 
         if self_tail_sep == 0:  # (or False), optimization, we can get rid of unneeded trailing separator in self by adding it to the delete block if del block starts on same line as previous element ends and there is not a comment on the line
             if put_ln == bound_ln and (put_end_ln != bound_ln or not lines[bound_ln].startswith('#', put_end_col)):
-                put_ln        = bound_ln  # there can be nothing but a separator and whitespace between these locations
-                put_col       = bound_col
+                put_ln = bound_ln  # there can be nothing but a separator and whitespace between these locations
+                put_col = bound_col
                 self_tail_sep = None
 
             elif is_last:
@@ -1435,8 +1436,8 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
     else:
         copy_ln, copy_col, _, _ = copy_loc
 
-        put_lines   = fst_._lines
-        skip        = 1
+        put_lines = fst_._lines
+        skip = 1
         post_indent = None  # this is a FULL indent in self, not a partial indent in fst_
 
         if re_line_end_cont_or_comment.match(put_lines[l := len(put_lines) - 1],  # if last line of fst_ is a comment or line continuation without a newline then add one (don't need to check pars for last line)
@@ -1545,8 +1546,8 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
 
     if self_tail_sep is not None:  # trailing
         _, _, last_end_ln, last_end_col = (f := last or body2[-1].f).loc
-        bound_end_ln, bound_end_col     = _offset_pos_by_params(self, bound_end_ln, bound_end_col,
-                                                                bound_end_col_offset, parsoff)
+        bound_end_ln, bound_end_col = _offset_pos_by_params(self, bound_end_ln, bound_end_col,
+                                                            bound_end_col_offset, parsoff)
 
         if self_tail_sep:
             self._maybe_ins_separator(last_end_ln, last_end_col, False, bound_end_ln, bound_end_col, sep,
@@ -1616,7 +1617,7 @@ def _get_element_indent(self: fst.FST, body: list[AST], body2: list[AST], start:
         else:
             # loc = fstloc(-1, -1, -1, -1)  # dummy, will force pattern check for element 0 because there could be anything before it
             ln, col, _, _ = self.loc
-            loc           = fstloc(-1, -1, ln, col)  # so we don't get indent of special first element if on same line as self starts (probably unindented intentionally)
+            loc = fstloc(-1, -1, ln, col)  # so we don't get indent of special first element if on same line as self starts (probably unindented intentionally)
 
         for i in range(start, len(body)):  # now search forward
             prev_loc = loc
@@ -1639,7 +1640,7 @@ def _get_element_indent(self: fst.FST, body: list[AST], body2: list[AST], start:
         else:
             # loc = fstloc(-1, -1, -1, -1)  # dummy, will force pattern check for element 0 because there could be anything before it
             ln, col, _, _ = self.loc
-            loc           = fstloc(-1, -1, ln, col)  # so we don't get indent of special first element if on same line as self starts (probably unindented intentionally)
+            loc = fstloc(-1, -1, ln, col)  # so we don't get indent of special first element if on same line as self starts (probably unindented intentionally)
 
         for i in range(start, len(body)):  # now search forward
             prev_loc = loc
@@ -1654,27 +1655,27 @@ def _get_element_indent(self: fst.FST, body: list[AST], body2: list[AST], start:
 
 
 def _trim_delimiters(self: fst.FST) -> None:
-    lines                     = self._lines
-    ast                       = self.a
-    ln, col, end_ln, end_col  = self.loc
-    col                      += 1
-    end_col                  -= 1
-    ast.col_offset           += 1
-    ast.end_col_offset       -= 1
+    lines = self._lines
+    ast = self.a
+    ln, col, end_ln, end_col = self.loc
+    col += 1
+    end_col -= 1
+    ast.col_offset += 1
+    ast.end_col_offset -= 1
 
     self._offset(ln, col, -ln, -lines[ln].c2b(col))
 
     lines[end_ln] = bistr(lines[end_ln][:end_col])
-    lines[ln]     = bistr(lines[ln][col:])
+    lines[ln] = bistr(lines[ln][col:])
 
     del lines[end_ln + 1:], lines[:ln]
 
 
 def _set_loc_whole(self: fst.FST) -> None:
-    ast                = self.a
-    ast.lineno         = 1
-    ast.col_offset     = 0
-    ast.end_lineno     = len(ls := self._lines)
+    ast = self.a
+    ast.lineno = 1
+    ast.col_offset = 0
+    ast.end_lineno = len(ls := self._lines)
     ast.end_col_offset = ls[-1].lenbytes
 
     self._touch()
@@ -1710,7 +1711,7 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
             if not fst_.pars().n:
                 fst_._parenthesize_grouping()
 
-        ls   = fst_._lines
+        ls = fst_._lines
         ast_ = Tuple(elts=[fst_.a], ctx=Load(),  # fst_.a may have changed
                      lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)  # Tuple because it is valid target if checked in validate and allows is_enclosed_or_line() check without delimiters to check content
 
@@ -1772,7 +1773,7 @@ def _code_to_slice_MatchSequence(self: fst.FST, code: Code | None, one: bool, op
         if fst_.is_delimited_matchseq() == '':
             fst_._delimit_node(delims='[]')
 
-        ls  = fst_._lines
+        ls = fst_._lines
         ast = MatchSequence(patterns=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls),
                             end_col_offset=ls[-1].lenbytes)
 
@@ -1843,7 +1844,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
             if not fst_.is_delimited_matchseq():
                 fst_._delimit_node(delims='[]')
 
-    ls   = fst_._lines
+    ls = fst_._lines
     ast_ = MatchOr(patterns=[ast_], lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)
 
     return fst.FST(ast_, ls, from_=fst_, lcopy=False)
@@ -1940,7 +1941,7 @@ def _validate_put_seq(self: fst.FST, fst_: fst.FST, non_slice: str, *,
     if not fst_:
         return
 
-    ast  = self.a
+    ast = self.a
     ast_ = fst_.a
 
     if non_slice and isinstance(ast_, Tuple) and any(isinstance(e, Slice) for e in ast_.elts):
@@ -1961,9 +1962,9 @@ def _put_slice_NOT_IMPLEMENTED_YET(self: fst.FST, code: Code | None, start: int 
 
 def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                     field: str, one: bool, options: Mapping[str, Any]) -> None:
-    fst_        = _code_to_slice_seq2(self, code, one, options, code_as_expr)
-    body        = (ast := self.a).keys
-    body2       = ast.values
+    fst_ = _code_to_slice_seq2(self, code, one, options, code_as_expr)
+    body = (ast := self.a).keys
+    body2 = ast.values
     start, stop = fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
@@ -1971,7 +1972,7 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    bound_col     += 1
+    bound_col += 1
     bound_end_col -= 1
 
     if not fst_:
@@ -1987,11 +1988,11 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
         len_fst_body = 0
 
     else:
-        ast_         = fst_.a
-        fst_body     = ast_.keys
-        fst_body2    = ast_.values
+        ast_ = fst_.a
+        fst_body = ast_.keys
+        fst_body2 = ast_.values
         len_fst_body = len(fst_body)
-        fst_first    = a.f if (a := fst_body[0]) else fst_._loc_maybe_dict_key(0)
+        fst_first = a.f if (a := fst_body[0]) else fst_._loc_maybe_dict_key(0)
 
         _put_slice_seq(self, start, stop, fst_, fst_first, fst_body2[-1].f, len_fst_body,
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
@@ -2000,7 +2001,7 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
         self._unmake_fst_tree(body[start : stop] + body2[start : stop])
         fst_._unmake_fst_parents(True)
 
-        body[start : stop]  = fst_body
+        body[start : stop] = fst_body
         body2[start : stop] = fst_body2
 
         stack = []
@@ -2037,7 +2038,7 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
     if fst_ is None:
         fst_ = _code_to_slice_seq(self, code, one, options, code_as=code_as_expr_all)
 
-    body        = (ast := self.a).elts
+    body = (ast := self.a).elts
     start, stop = fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
@@ -2045,7 +2046,7 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
 
     # extra checks for tuple special usage
 
-    is_par   = self._is_delimited_seq()
+    is_par = self._is_delimited_seq()
     is_slice = (pfield := self.pfield) and pfield.name == 'slice'
     need_par = False
 
@@ -2075,7 +2076,7 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
     if is_par:
-        bound_col     += 1
+        bound_col += 1
         bound_end_col -= 1
 
     if not fst_:
@@ -2099,7 +2100,7 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
 
         body[start : stop] = fst_body
 
-        FST   = fst.FST
+        FST = fst.FST
         stack = [FST(body[i], self, astfield('elts', i)) for i in range(start, start + len_fst_body)]
 
         if stack:
@@ -2118,8 +2119,8 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
 
 def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                          field: str, one: bool, options: Mapping[str, Any]) -> None:
-    fst_        = _code_to_slice_seq(self, code, one, options)
-    body        = (ast := self.a).elts
+    fst_ = _code_to_slice_seq(self, code, one, options)
+    body = (ast := self.a).elts
     start, stop = fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
@@ -2129,7 +2130,7 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    bound_col     += 1
+    bound_col += 1
     bound_end_col -= 1
 
     if not fst_:
@@ -2155,7 +2156,7 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
 
         body[start : stop] = fst_body
 
-        FST   = fst.FST
+        FST = fst.FST
         stack = [FST(body[i], self, astfield('elts', i)) for i in range(start, start + len_fst_body)]
 
         if stack:
@@ -2169,8 +2170,8 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
 
 def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                         field: str, one: bool, options: Mapping[str, Any]) -> None:
-    fst_        = _code_to_slice_seq(self, code, one, options)
-    body        = self.a.elts
+    fst_ = _code_to_slice_seq(self, code, one, options)
+    body = self.a.elts
     start, stop = fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
@@ -2180,7 +2181,7 @@ def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    bound_col     += 1
+    bound_col += 1
     bound_end_col -= 1
 
     if not fst_:
@@ -2206,7 +2207,7 @@ def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['
 
         body[start : stop] = fst_body
 
-        FST   = fst.FST
+        FST = fst.FST
         stack = [FST(body[i], self, astfield('elts', i)) for i in range(start, start + len_fst_body)]
 
         self._make_fst_tree(stack)
@@ -2224,10 +2225,10 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
     non-comma terminated syntax of `Delete` targets (a non-sequence `FST` or `AST` will not be accepted like this). This
     allows correct-appearing syntax like `delfst.targets = 'target'` to work."""
 
-    fst_        = _code_to_slice_seq(self, code, one, options, non_seq_str_as_one=True)
-    len_body    = len(body := (ast := self.a).targets)
+    fst_ = _code_to_slice_seq(self, code, one, options, non_seq_str_as_one=True)
+    len_body = len(body := (ast := self.a).targets)
     start, stop = fixup_slice_indices(len_body, start, stop)
-    len_slice   = stop - start
+    len_slice = stop - start
 
     if not fst_:
         if not len_slice:
@@ -2263,7 +2264,7 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
 
         body[start : stop] = fst_body
 
-        FST   = fst.FST
+        FST = fst.FST
         stack = [FST(body[i], self, astfield('targets', i)) for i in range(start, start + len_fst_body)]
 
         if stack:
@@ -2293,10 +2294,10 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
 
 def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                               field: str, one: bool, options: Mapping[str, Any]) -> None:
-    fst_        = _code_to_slice_Assign_targets(self, code, one, options)
-    len_body    = len(body := (ast := self.a).targets)
+    fst_ = _code_to_slice_Assign_targets(self, code, one, options)
+    len_body = len(body := (ast := self.a).targets)
     start, stop = fixup_slice_indices(len_body, start, stop)
-    len_slice   = stop - start
+    len_slice = stop - start
 
     if not fst_:
         if not len_slice:
@@ -2330,7 +2331,7 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
 
         body[start : stop] = fst_body
 
-        FST   = fst.FST
+        FST = fst.FST
         stack = [FST(body[i], self, astfield('targets', i)) for i in range(start, start + len_fst_body)]
 
         self._make_fst_tree(stack)
@@ -2339,7 +2340,7 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
         body[i].f.pfield = astfield('targets', i)
 
     if fst_ and stop == len_body and isinstance(v := ast.value, Name) and not v.id:  # SPECIAL SLICE, need to fix up empty value location since those are tricky and this one may not be offset properly
-        v.lineno     = v.end_lineno     = ast.end_lineno
+        v.lineno = v.end_lineno = ast.end_lineno
         v.col_offset = v.end_col_offset = ast.end_col_offset
 
     self._maybe_add_line_continuations()
@@ -2347,10 +2348,10 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
 
 def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                             field: str, one: bool, options: Mapping[str, Any]) -> None:
-    fst_        = _code_to_slice_Import_names(self, code, one, options)
-    len_body    = len(body := (ast := self.a).names)
+    fst_ = _code_to_slice_Import_names(self, code, one, options)
+    len_body = len(body := (ast := self.a).names)
     start, stop = fixup_slice_indices(len_body, start, stop)
-    len_slice   = stop - start
+    len_slice = stop - start
 
     if not fst_:
         if not len_slice:
@@ -2366,7 +2367,7 @@ def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Liter
     elif body:
         bound_ln, bound_col, _, _ = body[0].f.pars()
     else:
-        bound_ln  = bound_end_ln
+        bound_ln = bound_end_ln
         bound_col = bound_end_col
 
     if not fst_:
@@ -2392,7 +2393,7 @@ def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Liter
 
         body[start : stop] = fst_body
 
-        FST   = fst.FST
+        FST = fst.FST
         stack = [FST(body[i], self, astfield('names', i)) for i in range(start, start + len_fst_body)]
 
         self._make_fst_tree(stack)
@@ -2401,7 +2402,7 @@ def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Liter
         body[i].f.pfield = astfield('names', i)
 
     if stop == len_body:  # clean up any line continuation backslashes and make sure end location is set to end of last element
-        _, _, end_ln,      end_col      = self.loc
+        _, _, end_ln, end_col = self.loc
         _, _, last_end_ln, last_end_col = ast.names[-1].f.loc
 
         if end_col != last_end_col or end_ln != last_end_ln:
@@ -2415,8 +2416,8 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
     """In order to do this put since `Global` and `Nonlocal` do not have child `AST` nodes but just identifiers, we
     create a temporary container which does have `Name` elements for each name."""
 
-    fst_        = _code_to_slice_seq(self, code, one, options, non_seq_str_as_one=True)
-    len_body    = len(body := (ast := self.a).names)
+    fst_ = _code_to_slice_seq(self, code, one, options, non_seq_str_as_one=True)
+    len_body = len(body := (ast := self.a).names)
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if not fst_:
@@ -2435,14 +2436,14 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
 
     ln, end_col, bound_end_ln, bound_end_col = self.loc
 
-    lines     = self.root._lines
-    tmp_elts  = []
-    end_col  += 5 if isinstance(ast, Global) else 7  # will have another +1 added in search
+    lines = self.root._lines
+    tmp_elts = []
+    end_col += 5 if isinstance(ast, Global) else 7  # will have another +1 added in search
 
     for _ in range(len_body):
         ln, col, src = next_find_re(lines, ln, end_col + 1, bound_end_ln, bound_end_col, re_identifier)  # must be there, + 1 probably skips comma
-        lineno       = ln + 1
-        end_col      = col + len(src)
+        lineno = ln + 1
+        end_col = col + len(src)
 
         tmp_elts.append(Name(id=src, ctx=Load(), lineno=lineno, col_offset=(l := lines[ln]).c2b(col), end_lineno=lineno,
                              end_col_offset=l.c2b(end_col)))
@@ -2455,7 +2456,7 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
     bound_ln, bound_col, last_end_ln, last_end_col = tmp_elts[0].f.loc
 
     if not start:
-        last_end_ln  = bound_ln
+        last_end_ln = bound_ln
         last_end_col = bound_col
 
     elif start != 1:
@@ -2470,7 +2471,7 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
 
     else:
         len_fst_body = len(fst_body := fst_.a.elts)
-        fst_last     = fst_body[-1].f
+        fst_last = fst_body[-1].f
 
         _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_last, len_fst_body,
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
@@ -2480,7 +2481,7 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
 
         body[start : stop] = [e.id for e in fst_body]
 
-    ast.end_lineno     = tmp_ast.end_lineno  # copy new end from temporary FST to self (since it was swapped out)
+    ast.end_lineno = tmp_ast.end_lineno  # copy new end from temporary FST to self (since it was swapped out)
     ast.end_col_offset = tmp_ast.end_col_offset
 
     self._set_ast(ast, True)
@@ -2501,8 +2502,8 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
 def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
                                       stop: int | None, field: str, one: bool, options: Mapping[str, Any]) -> None:
     # NOTE: we allow multiple MatchStars to be put to the same MatchSequence
-    fst_        = _code_to_slice_MatchSequence(self, code, one, options)
-    body        = self.a.patterns
+    fst_ = _code_to_slice_MatchSequence(self, code, one, options)
+    body = self.a.patterns
     start, stop = fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
@@ -2511,7 +2512,7 @@ def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: i
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
     if delims := self.is_delimited_matchseq():
-        bound_col     += 1
+        bound_col += 1
         bound_end_col -= 1
 
     if not fst_:
@@ -2537,7 +2538,7 @@ def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: i
 
         body[start : stop] = fst_body
 
-        FST   = fst.FST
+        FST = fst.FST
         stack = [FST(body[i], self, astfield('patterns', i)) for i in range(start, start + len_fst_body)]
 
         self._make_fst_tree(stack)
@@ -2550,9 +2551,9 @@ def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: i
 
 def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                             field: str, one: bool, options: Mapping[str, Any]) -> None:
-    fst_        = _code_to_slice_seq2(self, code, one, options, code_as_pattern)
-    len_body    = len(body := (ast := self.a).keys)
-    body2       = ast.patterns
+    fst_ = _code_to_slice_seq2(self, code, one, options, code_as_pattern)
+    len_body = len(body := (ast := self.a).keys)
+    body2 = ast.patterns
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if not fst_ and start == stop:
@@ -2560,7 +2561,7 @@ def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Liter
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    bound_col     += 1
+    bound_col += 1
     bound_end_col -= 1
 
     if not fst_:
@@ -2579,11 +2580,11 @@ def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Liter
         len_fst_body = 0
 
     else:
-        ast_         = fst_.a
-        fst_body     = ast_.keys
-        fst_body2    = ast_.patterns
+        ast_ = fst_.a
+        fst_body = ast_.keys
+        fst_body2 = ast_.patterns
         len_fst_body = len(fst_body)
-        tail_space   = False
+        tail_space = False
 
         _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body2[-1].f, len_fst_body,
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
@@ -2593,7 +2594,7 @@ def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Liter
         self._unmake_fst_tree(body[start : stop] + body2[start : stop])
         fst_._unmake_fst_parents(True)
 
-        body[start : stop]  = fst_body
+        body[start : stop] = fst_body
         body2[start : stop] = fst_body2
 
         stack = []
@@ -2607,7 +2608,7 @@ def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Liter
         self._make_fst_tree(stack)
 
     for i in range(start + len_fst_body, len(body)):
-        body[i].f.pfield  = astfield('keys', i)
+        body[i].f.pfield = astfield('keys', i)
         body2[i].f.pfield = astfield('patterns', i)
 
     if tail_space:  # if there is a **rest and we removed tail element so here we make sure there is a space between comma of the new last element and the **rest
@@ -2616,10 +2617,10 @@ def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Liter
 
 def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                                 field: str, one: bool, options: Mapping[str, Any]) -> None:
-    fst_             = _code_to_slice_MatchOr(self, code, one, options)
-    len_body         = len(body := self.a.patterns)
-    start, stop      = fixup_slice_indices(len_body, start, stop)
-    len_slice        = stop - start
+    fst_ = _code_to_slice_MatchOr(self, code, one, options)
+    len_body = len(body := self.a.patterns)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
     fix_matchor_self = self.get_option('fix_matchor_self', options)
 
     if not fst_:
@@ -2656,7 +2657,7 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
 
         body[start : stop] = fst_body
 
-        FST   = fst.FST
+        FST = fst.FST
         stack = [FST(body[i], self, astfield('patterns', i)) for i in range(start, start + len_fst_body)]
 
         self._make_fst_tree(stack)
@@ -2671,8 +2672,8 @@ def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Litera
                            field: str, one: bool, options: Mapping[str, Any]) -> None:
     """An empty `Tuple` is accepted as a zero-element `type_params` slice."""
 
-    fst_        = _code_to_slice_type_params(self, code, one, options)
-    len_body    =  len(body := (ast := self.a).type_params)
+    fst_ = _code_to_slice_type_params(self, code, one, options)
+    len_body = len(body := (ast := self.a).type_params)
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     bound, (name_ln, name_col) = (
@@ -2707,7 +2708,7 @@ def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Litera
         if not body:  # brackets don't exist, add them first
             self._put_src('[]', name_ln, name_col, name_ln, name_col, False)
 
-            bound_ln  = bound_end_ln  = name_ln
+            bound_ln = bound_end_ln = name_ln
             bound_col = bound_end_col = name_col + 1
 
         _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
@@ -2719,7 +2720,7 @@ def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Litera
 
         body[start : stop] = fst_body
 
-        FST   = fst.FST
+        FST = fst.FST
         stack = [FST(body[i], self, astfield('type_params', i)) for i in range(start, start + len_fst_body)]
 
         self._make_fst_tree(stack)
@@ -2740,7 +2741,7 @@ def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | N
     if options.get('to') is not None:
         raise ValueError("cannot put slice with 'to' option")
 
-    raw        = fst.FST.get_option('raw', options)
+    raw = fst.FST.get_option('raw', options)
     nonraw_exc = None
 
     if raw is not True:
@@ -2868,7 +2869,7 @@ def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: 
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
 
         start, stop = fixup_slice_index_for_raw(len(values := ast.values), start, stop)
-        start_loc   = self._loc_maybe_dict_key(start, True)
+        start_loc = self._loc_maybe_dict_key(start, True)
 
         return fstloc(start_loc.ln, start_loc.col, *values[stop - 1].f.pars()[2:])
 
@@ -2876,9 +2877,9 @@ def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: 
         if field:
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a Compare")
 
-        comparators  = ast.comparators  # virtual combined body of [Compare.left] + Compare.comparators
-        start, stop  = fixup_slice_index_for_raw(len(comparators) + 1, start, stop)
-        stop        -= 1
+        comparators = ast.comparators  # virtual combined body of [Compare.left] + Compare.comparators
+        start, stop = fixup_slice_index_for_raw(len(comparators) + 1, start, stop)
+        stop -= 1
 
         return fstloc(*(comparators[start - 1] if start else ast.left).f.pars()[:2],
                       *(comparators[stop - 1] if stop else ast.left).f.pars()[2:])
@@ -2887,34 +2888,34 @@ def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: 
         if field:
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a MatchMapping")
 
-        keys        = ast.keys
+        keys = ast.keys
         start, stop = fixup_slice_index_for_raw(len(keys), start, stop)
 
         return fstloc(*keys[start].f.loc[:2], *ast.patterns[stop - 1].f.pars()[2:])
 
     if isinstance(ast, comprehension):
-        ifs         = ast.ifs
+        ifs = ast.ifs
         start, stop = fixup_slice_index_for_raw(len(ifs), start, stop)
-        ffirst      = ifs[start].f
-        start_pos   = prev_find(self.root._lines, *ffirst._prev_bound(), ffirst.ln, ffirst.col, 'if')
+        ffirst = ifs[start].f
+        start_pos = prev_find(self.root._lines, *ffirst._prev_bound(), ffirst.ln, ffirst.col, 'if')
 
         return fstloc(*start_pos, *ifs[stop - 1].f.pars()[2:])
 
     if isinstance(ast, (Global, Nonlocal)):
-        start, stop         = fixup_slice_index_for_raw(len(ast.names), start, stop)
+        start, stop = fixup_slice_index_for_raw(len(ast.names), start, stop)
         start_loc, stop_loc = self._loc_global_nonlocal_names(start, stop - 1)
 
         return fstloc(start_loc.ln, start_loc.col, stop_loc.end_ln, stop_loc.end_col)
 
     if field == 'decorator_list':
-        decos       = ast.decorator_list
+        decos = ast.decorator_list
         start, stop = fixup_slice_index_for_raw(len(decos), start, stop)
-        ffirst      = decos[start].f
-        start_pos   = prev_find(self.root._lines, 0, 0, ffirst.ln, ffirst.col, '@')  # we can use '0, 0' because we know "@" starts on a newline
+        ffirst = decos[start].f
+        start_pos = prev_find(self.root._lines, 0, 0, ffirst.ln, ffirst.col, '@')  # we can use '0, 0' because we know "@" starts on a newline
 
         return fstloc(*start_pos, *decos[stop - 1].f.pars()[2:])
 
-    body        = getattr(ast, field)  # field must be valid by here
+    body = getattr(ast, field)  # field must be valid by here
     start, stop = fixup_slice_index_for_raw(len(body), start, stop)
 
     return fstloc(*body[start].f.pars(shared=False)[:2], *body[stop - 1].f.pars(shared=False)[2:])
@@ -2940,7 +2941,7 @@ def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end']
         if not code.is_root:
             raise ValueError('expecting root node')
 
-        ast  = reduce_ast(code.a, True)
+        ast = reduce_ast(code.a, True)
         fst_ = ast.f
 
         if one:

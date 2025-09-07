@@ -189,14 +189,14 @@ PATS = [FST(e, 'pattern') for e in PATS]
 
 
 def minify_src(source_code):
-    tokens   = tokenize.tokenize(BytesIO(source_code.encode()).readline)
-    result   = []
+    tokens = tokenize.tokenize(BytesIO(source_code.encode()).readline)
+    result = []
     prev_end = (1, 0)
     prev_str = ''
 
     for token in tokens:
-        tok_type   = token.type
-        tok_str    = token.string
+        tok_type = token.type
+        tok_str = token.string
         start, end = token.start, token.end
 
         if tok_type == tokenize.ENCODING:
@@ -339,13 +339,13 @@ class FSTParts:
 
     def __init__(self, fst: FST, exclude: type[AST] | tuple[type[AST]] | None = None):
         if isinstance(fst, FSTParts):
-            self.cats    = fst.cats.copy()
-            self.parts   = {c: fs.copy() for c, fs in fst.parts.items()}
+            self.cats = fst.cats.copy()
+            self.parts = {c: fs.copy() for c, fs in fst.parts.items()}
             self.exclude = fst.exclude if exclude is None else exclude
 
             return
 
-        cats  = {}                 # {FST: ASTCat, ...}
+        cats = {}                 # {FST: ASTCat, ...}
         parts = defaultdict(list)  # {ASTCat: [FST, ...], ...}
 
         if exclude is None:
@@ -355,13 +355,13 @@ class FSTParts:
             if isinstance(a, exclude):
                 continue
 
-            f   = a.f
+            f = a.f
             cat = cats[f] = fstcat(f)
 
             parts[cat].append(f)
 
-        self.cats    = cats
-        self.parts   = dict(parts)
+        self.cats = cats
+        self.parts = dict(parts)
         self.exclude = exclude
 
     def copy(self) -> 'FSTParts':
@@ -385,8 +385,8 @@ class FSTParts:
 
     def remove_all(self, fst: FST):
         exclude = self.exclude
-        parts   = self.parts
-        cats    = self.cats
+        parts = self.parts
+        cats = self.cats
 
         for a in walk(fst.a):
             if not isinstance(a, exclude) and (f := getattr(a, 'f', None)):
@@ -397,12 +397,12 @@ class FSTParts:
 
     def add_all(self, fst: FST):  # or put back removed
         exclude = self.exclude
-        parts   = self.parts
-        cats    = self.cats
+        parts = self.parts
+        cats = self.cats
 
         for a in walk(fst.a):
             if not isinstance(a, exclude):
-                f       = a.f
+                f = a.f
                 cats[f] = cat = fstcat(f)
 
                 if not (fs := parts.get(cat)):
@@ -427,7 +427,7 @@ class FSTParts:
 
 def test_replace(fst: FST, with_: FST | None) -> bool:
     stmt_ = fst.parent_stmt()
-    path  = stmt_.child_path(fst)
+    path = stmt_.child_path(fst)
     stmt_ = stmt_.copy()
 
     try:
@@ -441,9 +441,9 @@ def test_replace(fst: FST, with_: FST | None) -> bool:
 def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already been checked and only testing allowed category
     try:
         repla, repl_parenta = repl.a, repl.parent.a
-        tgta,  tgt_parenta  = tgt.a,  tgt.parent.a
-        tgt_field, _        = tgt.pfield
-        repl_field, _       = repl.pfield
+        tgta, tgt_parenta = tgt.a, tgt.parent.a
+        tgt_field, _ = tgt.pfield
+        repl_field, _ = repl.pfield
 
         if PYLT12:
             if any(isinstance(f.a, (JoinedStr, TemplateStr)) for f in tgt.parents()):
@@ -521,7 +521,7 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
                 return False
 
             allowed = None
-            f       = tgt
+            f = tgt
 
             while f := f.parent:
                 if isinstance(a := f.a, (Delete, Assign, For, AsyncFor, comprehension)):
@@ -664,20 +664,20 @@ def can_replace_ast(tgta: AST, tgt_parenta: AST, tgt_field: str, repla: AST, rep
 
 class Fuzzy:
     syspyfnms = None
-    name      = 'Fuzzy'
-    forever   = False
+    name = 'Fuzzy'
+    forever = False
 
     def __init__(self, args: dict[str, Any]):
-        self.args       = args
-        self.batch      = args.get('batch')
-        self.debug      = args.get('debug')
-        self.loop       = args.get('loop')
-        self.minify     = args.get('minify')
+        self.args = args
+        self.batch = args.get('batch')
+        self.debug = args.get('debug')
+        self.loop = args.get('loop')
+        self.minify = args.get('minify')
         self.minify_rnd = args.get('minify_rnd')
-        self.seed       = args.get('seed')
-        self.shuffle    = args.get('shuffle')
-        self.verbose    = args.get('verbose')
-        self.verify     = args.get('verify')
+        self.seed = args.get('seed')
+        self.shuffle = args.get('shuffle')
+        self.verbose = args.get('verbose')
+        self.verify = args.get('verify')
 
         if paths := args.get('PATH'):
             fnms = sum((find_pys(path) for path in paths), start=[])
@@ -691,7 +691,7 @@ class Fuzzy:
         self.fnms = fnms
 
     def iter_pys(self) -> Generator[tuple[str, FST], None, None]:
-        fnms  = self.fnms
+        fnms = self.fnms
         width = int(log10(len(fnms) - 1 or 1)) + 1
 
         if self.args['shuffle']:
@@ -795,7 +795,7 @@ class SynOrder(Fuzzy):
                 if not isinstance(f.a, (FormattedValue, Interpolation)):  # preceding '=' debug strings may start after these
                     assert f.bln > bln or (f.bln == bln and f.bcol >= bcol)
 
-                l2   = list(f.walk(True, self_=False, recurse=False))
+                l2 = list(f.walk(True, self_=False, recurse=False))
                 l, c = [], None
 
                 while c := f.next_child(c, True):
@@ -810,7 +810,7 @@ class SynOrder(Fuzzy):
 
                     raise
 
-                l3   = l2[::-1]
+                l3 = l2[::-1]
                 l, c = [], None
 
                 while c := f.prev_child(c, True):
@@ -858,7 +858,7 @@ class SynOrder(Fuzzy):
 
 
 class Reparse(Fuzzy):
-    name    = 'reparse'
+    name = 'reparse'
     forever = False
 
     def fuzz_one(self, fst, fnm) -> bool:
@@ -878,7 +878,7 @@ class Reparse(Fuzzy):
 
 
 class ReputSrc(Fuzzy):
-    name    = 'reput_src'
+    name = 'reput_src'
     forever = True
 
     def fuzz_one(self, fst, fnm) -> bool:
@@ -888,11 +888,11 @@ class ReputSrc(Fuzzy):
 
         try:
             for count in range(self.batch or 200):
-                copy      = fst.copy()
-                ln        = randint(0, len(lines) - 1)
-                col       = randint(0, len(lines[ln]))
-                end_ln    = randint(ln, len(lines) - 1)
-                end_col   = randint(col if end_ln == ln else 0, len(lines[end_ln]))
+                copy = fst.copy()
+                ln = randint(0, len(lines) - 1)
+                col = randint(0, len(lines[ln]))
+                end_ln = randint(ln, len(lines) - 1)
+                end_col = randint(col if end_ln == ln else 0, len(lines[end_ln]))
                 put_lines = fst.get_src(ln, col, end_ln, end_col, True)
 
                 if not (count % 10):
@@ -933,13 +933,13 @@ class ReputOne(Fuzzy):
 
     name = 'reput_one'
 
-    DELETE     = True  #False  #
-    VERIFY     = False  #True  #
+    DELETE = True  #False  #
+    VERIFY = False  #True  #
     VERIFY_DEL = True
 
     def fuzz_one(self, fst, fnm) -> bool:
         backup = fst.copy()
-        count  = 0
+        count = 0
 
         for f in fst.walk(True, self_=False):
 
@@ -957,8 +957,8 @@ class ReputOne(Fuzzy):
                 field, idx = f.pfield
 
                 put = None
-                g   = None
-                g   = f.copy()
+                g = None
+                g = f.copy()
                 ast = copy_ast(g.a)
                 src = g.src
                 put = 'ident'
@@ -973,12 +973,12 @@ class ReputOne(Fuzzy):
                     changed = False
 
                     if (child := getattr(f.a, subfield, False)) is not False:
-                        delete  = self.DELETE and ReputOne._PUT_ONE_HANDLERS.get(
+                        delete = self.DELETE and ReputOne._PUT_ONE_HANDLERS.get(
                             (f.a.__class__, subfield), [None])[1] in (ReputOne._put_one_identifier_optional,
                                                                       ReputOne._put_one_ExceptHandler_name,
                                                                       ReputOne._put_one_keyword_arg)
                         changed = True
-                        subs    = list(enumerate(child)) if isinstance(child, list) else [(None, child)]
+                        subs = list(enumerate(child)) if isinstance(child, list) else [(None, child)]
 
                         for i, child in subs:
                             if isinstance(child, (str, NoneType)):
@@ -1096,12 +1096,12 @@ class ReputOne(Fuzzy):
 class PutOne(Fuzzy):
     """Test as much _put_one() as possible, deletions, identifiers, etc..."""
 
-    name    = 'put_one'
+    name = 'put_one'
     forever = True
 
     def fuzz_one(self, fst, fnm) -> bool:
-        count     = 0
-        parts     = FSTParts(fst.copy())
+        count = 0
+        parts = FSTParts(fst.copy())
         dst_nodes = []
 
         for expr in EXPRS:
@@ -1129,7 +1129,7 @@ class PutOne(Fuzzy):
 
                     if (child := getattr(f.a, subfield, False)) is not False:
                         changed = True
-                        subs    = list(enumerate(child)) if isinstance(child, list) else [(None, child)]
+                        subs = list(enumerate(child)) if isinstance(child, list) else [(None, child)]
 
                         if self.debug:
                             print(f'{subs = }')
@@ -1167,11 +1167,11 @@ class PutOne(Fuzzy):
 
                 # NODE
 
-                cat          = fstcat(f)
+                cat = fstcat(f)
                 allowed_cats = astcat_allowed_replacements(cat)
-                repl, _      = parts.getrnd(allowed_cats)
-                parent       = f.parent
-                field, idx   = f.pfield
+                repl, _ = parts.getrnd(allowed_cats)
+                parent = f.parent
+                field, idx = f.pfield
 
                 if idx is not None and randint(0, 1):  # randomly change index to negative (referring to same location)
                     idx -= len(getattr(parent.a, field))
@@ -1233,7 +1233,7 @@ class PutOne(Fuzzy):
 class ReconcileRnd(Fuzzy):
     """This changes as many things as possible, so really testing reconcile."""
 
-    name    = 'reconcile_rnd'
+    name = 'reconcile_rnd'
     forever = True
     # forever = False  # DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG! DEBUG!
 
@@ -1242,10 +1242,10 @@ class ReconcileRnd(Fuzzy):
     def walk_ast(self, ast: AST, level: int = 0, parents: list[AST] = []):
         """Walk pure AST and replace random nodes."""
 
-        next_level   = level + 1
+        next_level = level + 1
         level_chance = self.LEVEL_CHANCE[min(len(self.LEVEL_CHANCE) - 1, level)]
-        exclude      = self.master_parts.exclude
-        parents      = parents + [ast]
+        exclude = self.master_parts.exclude
+        parents = parents + [ast]
 
         for field, child in iter_fields(ast):
             if isinstance(child, AST):
@@ -1260,9 +1260,9 @@ class ReconcileRnd(Fuzzy):
                     continue
 
                 if random() < level_chance:
-                    cat          = astcat(a, ast)
+                    cat = astcat(a, ast)
                     allowed_cats = astcat_allowed_replacements(cat)
-                    repltype     = choice(('fstin', 'fstout', 'ast'))
+                    repltype = choice(('fstin', 'fstout', 'ast'))
 
                     if repltype == 'fstout':
                         repl, _ = self.master_parts.getrnd(allowed_cats)
@@ -1303,20 +1303,20 @@ class ReconcileRnd(Fuzzy):
     def walk_fst(self, fst: FST, level: int = 0, parents: list[AST] = []):
         """Walk in-tree FST and replace random nodes."""
 
-        next_level   = level + 1
+        next_level = level + 1
         level_chance = self.LEVEL_CHANCE[min(len(self.LEVEL_CHANCE) - 1, level)]
-        exclude      = self.master_parts.exclude
-        ast          = fst.a
-        parents      = parents + [ast]
+        exclude = self.master_parts.exclude
+        ast = fst.a
+        parents = parents + [ast]
 
         for f in fst.walk(self_=False, recurse=False):
             if isinstance(f.a, exclude):
                 continue
 
             if random() < level_chance:
-                cat          = fstcat(f)
+                cat = fstcat(f)
                 allowed_cats = astcat_allowed_replacements(cat)
-                repltype     = choice(('fstin', 'fstout', 'ast'))
+                repltype = choice(('fstin', 'fstout', 'ast'))
 
                 if repltype == 'fstout':
                     repl, _ = self.master_parts.getrnd(allowed_cats)
@@ -1411,7 +1411,7 @@ class ReconcileRnd(Fuzzy):
         try:
             for count in range(self.batch or 100):
                 self.master_parts = FSTParts(real_master)
-                master            = real_master.copy()
+                master = real_master.copy()
 
                 if count:
                     self.reseed()  # allow first one to be with specified seed, otherwise reseed to have seed to this round to be able to get back to it quicker
@@ -1422,9 +1422,9 @@ class ReconcileRnd(Fuzzy):
 
                     self.parts = self.master_parts.copy()
 
-                    fst        = master.copy()
+                    fst = master.copy()
                     # self.parts = FSTParts(fst)
-                    mark       = fst.mark()
+                    mark = fst.mark()
 
                     self.walk_fst(fst)
 
@@ -1459,7 +1459,7 @@ class ReconcileRnd(Fuzzy):
 class ReconcileSame(Fuzzy):
     """Alternates nodes as AST and in-tree FST, sometimes ends with out-of-tree FST."""
 
-    name    = 'reconcile_same'
+    name = 'reconcile_same'
     forever = False
 
     def walk_ast(self, ast: AST, fst: FST):
@@ -1511,7 +1511,7 @@ class ReconcileSame(Fuzzy):
 class SliceStmtish(Fuzzy):
     """Test moving around stmtishs, empty bodies, fstview, stmtish FST identity stability and unmarking deleted FSTs."""
 
-    name    = 'slice_stmtish'
+    name = 'slice_stmtish'
     forever = True
 
     @staticmethod
@@ -1529,28 +1529,28 @@ class SliceStmtish(Fuzzy):
 
         else:  # slice stmtish to dst_container
             len_stmtish = len(stmtish_container)
-            len_dst     = len(dst_container)
+            len_dst = len(dst_container)
 
             if random() < 0.5 or not dst_container:
                 to_start = to_stop = randint(0, len_dst)
             else:
                 to_start = randint(0, len_dst - 1)
-                to_stop  = randint(to_start + 1, len_dst)
+                to_stop = randint(to_start + 1, len_dst)
 
-            from_start  = randint(0, len_stmtish - 1)
-            from_stop   = randint(from_start + 1, len_stmtish)
+            from_start = randint(0, len_stmtish - 1)
+            from_stop = randint(from_start + 1, len_stmtish)
             from_start_ = from_start if from_start >= len_stmtish or randint(0, 1) else from_start - len_stmtish  # randomly change index to negative (referring to same location)
-            from_stop_  = from_stop if from_stop >= len_stmtish or randint(0, 1) else from_stop - len_stmtish
+            from_stop_ = from_stop if from_stop >= len_stmtish or randint(0, 1) else from_stop - len_stmtish
 
             fs = stmtish_container[from_start_ : from_stop_]
 
             org_fsts = list(fs)
-            cut      = fs.cut()
+            cut = fs.cut()
 
             assert all(f is g for f, g in zip(cut.body, org_fsts))
 
             to_start_ = to_start if to_start >= len_dst or randint(0, 1) else to_start - len_dst  # randomly change index to negative (referring to same location)
-            to_stop_  = to_stop if to_stop >= len_dst or randint(0, 1) else to_stop - len_dst
+            to_stop_ = to_stop if to_stop >= len_dst or randint(0, 1) else to_stop - len_dst
 
             dst_container[to_start_ : to_stop_] = cut
 
@@ -1624,7 +1624,7 @@ class SliceStmtish(Fuzzy):
                     # refresh containers because of node operations
 
                     stmtish_container = getattr(stmtish_container.fst, stmtish_container.field)
-                    container         = getattr(container.fst, container.field)
+                    container = getattr(container.fst, container.field)
 
                     # from temporary container to source
 
@@ -1653,7 +1653,7 @@ class SliceStmtish(Fuzzy):
 class SliceExprish(Fuzzy):
     """Test moving around exprish slices, empty bodies, exprish FST identity stability and unmarking deleted FSTs."""
 
-    name    = 'slice_exprish'
+    name = 'slice_exprish'
     forever = True
 
     class Bucket(NamedTuple):
@@ -1675,19 +1675,19 @@ class SliceExprish(Fuzzy):
         if slice_field is None:
             slice_field = field
 
-        src_len    = len(src_body := getattr(src.a, field or 'keys'))
-        dst_len    = len(dst_body := getattr(dst.a, field or 'keys'))
-        src_start  = randint(0, src_len)
-        src_stop   = randint(src_start, src_len)
-        dst_start  = randint(0, dst_len)
-        dst_stop   = randint(dst_start, dst_len)
+        src_len = len(src_body := getattr(src.a, field or 'keys'))
+        dst_len = len(dst_body := getattr(dst.a, field or 'keys'))
+        src_start = randint(0, src_len)
+        src_stop = randint(src_start, src_len)
+        dst_start = randint(0, dst_len)
+        dst_stop = randint(dst_start, dst_len)
         src_trivia = SliceExprish.rnd_trivia()
         dst_trivia = SliceExprish.rnd_trivia()
 
         while dst_len - (dst_stop - dst_start) + (src_stop - src_start) < min_dst:  # make sure to respect min_dst (we assume src has enough elements to reach min_dst if necessary)
             if dst_stop != dst_start:  # first reduce size being overwritten if possible
                 dst_start += (i := randint(0, 1))
-                dst_stop  -= i ^ 1
+                dst_stop -= i ^ 1
 
             else:  # can't reduce any more
                 if src_start and (randint(0, 1) or src_stop == src_len):
@@ -1719,7 +1719,7 @@ class SliceExprish(Fuzzy):
             src_elts.extend(getattr(src.a, 'values' if isinstance(src.a, Dict) else 'patterns')[src_start : src_stop])
 
         src_start_ = src_start if src_start >= src_len or randint(0, 1) else src_start - src_len  # randomly change index to negative (referring to same location)
-        src_stop_  = src_stop if src_stop >= src_len or randint(0, 1) else src_stop - src_len
+        src_stop_ = src_stop if src_stop >= src_len or randint(0, 1) else src_stop - src_len
 
         slice = src.get_slice(src_start_, src_stop_, field=field, cut=cut, trivia=src_trivia)
 
@@ -1735,7 +1735,7 @@ class SliceExprish(Fuzzy):
             print('   SLICE:   ', slice, slice.src)
 
         dst_start_ = dst_start if dst_start >= dst_len or randint(0, 1) else dst_start - dst_len  # randomly change index to negative (referring to same location)
-        dst_stop_  = dst_stop if dst_stop >= dst_len or randint(0, 1) else dst_stop - dst_len
+        dst_stop_ = dst_stop if dst_stop >= dst_len or randint(0, 1) else dst_stop - dst_len
 
         dst.put_slice(slice, dst_start_, dst_stop_, field=field, one=one, trivia=dst_trivia)
 
@@ -1924,7 +1924,7 @@ def main():
         raise ValueError(f'invalid fuzzy: {fuzzy}')
 
     fuzzies = []
-    args    = vars(args)
+    args = vars(args)
 
     for f in fuzz:
         fuzzies.append(FUZZIES[f](args))

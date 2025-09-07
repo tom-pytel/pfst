@@ -4,8 +4,8 @@
 
 >>> def test_cut(fst_, start, stop, trivia=None, self_tail_sep=None, ret_tail_sep=None):
 ...     ast_type = fst_.a.__class__
-...     elts     = fst_.a.elts
-...     off      = 1
+...     elts = fst_.a.elts
+...     off = 1
 ...
 ...     if ast_type is Tuple:
 ...         prefix, suffix = '()'
@@ -21,7 +21,7 @@
 ...         bound_col += off
 ...
 ...     self_tail_sep = 1 if self_tail_sep is None and ast_type is Tuple else self_tail_sep
-...     ret_tail_sep  = 1 if ret_tail_sep is None and ast_type is Tuple else ret_tail_sep
+...     ret_tail_sep = 1 if ret_tail_sep is None and ast_type is Tuple else ret_tail_sep
 ...
 ...     return _get_slice_seq(fst_, start, stop, len(fst_.elts), True, ast_type(elts=fst_.a.elts[start : stop]),
 ...         elts[stop - 1], elts[start].f.pars(), elts[stop - 1].f.pars(),
@@ -411,8 +411,8 @@ more trailing separator checks
 
 >>> def test_cut_b(fst_, start, stop, trivia=None, self_tail_sep=None, ret_tail_sep=None):
 ...     ast_type = fst_.a.__class__
-...     elts     = fst_.a.elts
-...     off      = 1
+...     elts = fst_.a.elts
+...     off = 1
 ...
 ...     if ast_type is Tuple:
 ...         prefix, suffix = '()'
@@ -429,7 +429,7 @@ more trailing separator checks
 ...
 ...     len_body = len(elts)
 ...     ast_elts = elts[start : stop]
-...     ast      = ast_type(elts=ast_elts)
+...     ast = ast_type(elts=ast_elts)
 ...
 ...     del elts[start : stop]
 ...

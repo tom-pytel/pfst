@@ -306,4 +306,3 @@ class PutSliceCases(PutCases):
 
 #     gpc.generate()
 #     gpc.write()
-

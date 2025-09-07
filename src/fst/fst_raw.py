@@ -54,7 +54,7 @@ def _reparse_raw_base(self: fst.FST, new_lines: list[str], ln: int, col: int, en
 
     if not path:  # root
         self._lines = copy_root._lines
-        copy        = copy_root
+        copy = copy_root
 
     else:
         copy = copy_root.child_from_path(path)
@@ -82,22 +82,22 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
 
     pln, pcol, pend_ln, pend_col = stmtish.bloc
 
-    root     = self.root
-    lines    = root._lines
+    root = self.root
+    lines = root._lines
     stmtisha = stmtish.a
 
     if in_blkopen := (blkopen_end := stmtish._loc_block_header_end()) and (end_ln, end_col) <= blkopen_end:  # block statement with modification limited to block header
         pend_ln, pend_col = blkopen_end
 
     elif stmtish is root:  # reparse may include trailing comments which would not otherwise be included
-        pend_ln  = len(lines) - 1
+        pend_ln = len(lines) - 1
         pend_col = len(lines[-1])
 
     if isinstance(stmtisha, match_case):
         copy_lines = ([bistr('')] * (pln - 1) +
                       [bistr('match a:')] +
                       lines[pln : pend_ln + 1])
-        path       = _PATH_BODYCASES
+        path = _PATH_BODYCASES
 
     else:
         indent = stmtish.get_indent()
@@ -123,19 +123,19 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
             assert pln > bool(indent)
 
             copy_lines[pln - 1] = bistr(indent + 'try: pass')
-            path                = _PATH_BODY2HANDLERS if indent else _PATH_BODYHANDLERS
+            path = _PATH_BODY2HANDLERS if indent else _PATH_BODYHANDLERS
 
         elif not pcol:  # not 'not indent' because could be semicolon
             if stmtish.is_elif():
                 copy_lines[0] = bistr('if 2: pass')
-                path          = _PATH_BODYORELSE
+                path = _PATH_BODYORELSE
             else:
                 path = _PATH_BODY
 
         else:
             if stmtish.is_elif():
                 copy_lines[1] = bistr(indent + 'if 2: pass')
-                path          = _PATH_BODY2ORELSE
+                path = _PATH_BODY2ORELSE
             else:
                 path = _PATH_BODY2
 
@@ -159,11 +159,11 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
         if isinstance(stmtisha, (Try, TryStar)):  # this one is just silly, nothing to put there, but we cover it
             copy_lines.append(bistr(indent + 'finally: pass'))
 
-    copy  = _reparse_raw_base(stmtish, new_lines, ln, col, end_ln, end_col, copy_lines, path, False)
+    copy = _reparse_raw_base(stmtish, new_lines, ln, col, end_ln, end_col, copy_lines, path, False)
     copya = copy.a
 
     if not isinstance(stmtisha, match_case):  # match_case doesn't have AST location
-        copya.end_lineno     = stmtisha.end_lineno
+        copya.end_lineno = stmtisha.end_lineno
         copya.end_col_offset = stmtisha.end_col_offset
 
     for field in STMTISH_FIELDS:
@@ -218,11 +218,11 @@ def _reparse_raw(self: fst.FST, code: Code | None, ln: int, col: int, end_ln: in
         return None
 
     if len(new_lines) == 1:
-        end_ln  = ln
+        end_ln = ln
         end_col = col + len(new_lines[0])
 
     else:
-        end_ln  = ln + len(new_lines) - 1
+        end_ln = ln + len(new_lines) - 1
         end_col = len(new_lines[-1])
 
     return (root.find_in_loc(ln, col, end_ln, end_col) or  # `root` instead of `self` because some changes may propagate farther up the tree, like 'elif' -> 'else'

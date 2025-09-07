@@ -118,18 +118,18 @@ _re_trailing_comma     = re.compile(r'(?: [)\s]* (?: (?: \\ | \#[^\n]* ) \n )? )
 
 _re_first_src          = re.compile(r'^([^\S\n]*)([^\s\\#]+)', re.MULTILINE)  # search for first non-comment non-linecont source code
 _re_parse_all_category = re.compile(r'''
-    (?P<stmt>                   (?: assert | break | class | continue | def | del | from | global | import | nonlocal | pass | raise | return | try | while | with ) \b ) |
-    (?P<await_lambda_yield>     (?: await | lambda | yield ) \b ) |
-    (?P<True_False_None>        (?: True | False | None ) \b ) |
-    (?P<async_or_for>           (?: async | for ) \b ) |
-    (?P<if>                     (?: if ) \b ) |
-    (?P<except>                 (?: except ) \b ) |
-    (?P<case>                   (?: case ) \b ) |
-    (?P<not>                    (?: not ) \b ) |
-    (?P<boolop>                 (?: and | or ) \b ) |
-    (?P<cmpop_w>                (?: is | in ) \b ) |
-    (?P<syntax_error>           (?: elif | else | finally | as ) \b ) |
-    (?P<match_type_identifier>  (?: match | type | [^\d\W][''' + pat_alnum + r''']* ) \b ) |
+    (?P<stmt>                          (?: assert | break | class | continue | def | del | from | global | import | nonlocal | pass | raise | return | try | while | with ) \b ) |
+    (?P<await_lambda_yield>            (?: await | lambda | yield ) \b ) |
+    (?P<True_False_None>               (?: True | False | None ) \b ) |
+    (?P<async_or_for>                  (?: async | for ) \b ) |
+    (?P<if>                            (?: if ) \b ) |
+    (?P<except>                        (?: except ) \b ) |
+    (?P<case>                          (?: case ) \b ) |
+    (?P<not>                           (?: not ) \b ) |
+    (?P<boolop>                        (?: and | or ) \b ) |
+    (?P<cmpop_w>                       (?: is | in ) \b ) |
+    (?P<syntax_error>                  (?: elif | else | finally | as ) \b ) |
+    (?P<match_type_identifier>         (?: match | type | [^\d\W][''' + pat_alnum + r''']* ) \b ) |
     (?P<stmt_or_expr_or_pat_or_witem>  (?: [(\[{"'.\d] ) ) |
     (?P<augop>                         (?: \+= | -= | @= | \*= | /= | %= | <<= | >>= | \|= | \^= | &= | //= | \*\*= ) ) |
     (?P<minus>                         (?: - ) ) |
@@ -182,29 +182,29 @@ def _fixing_unparse(ast: AST) -> str:
 def _offset_linenos(ast: AST, delta: int) -> AST:
     for a in walk(ast):
         if end_lineno := getattr(a, 'end_lineno', None):
-            a.end_lineno  = end_lineno + delta
-            a.lineno     += delta
+            a.end_lineno = end_lineno + delta
+            a.lineno += delta
 
     return ast
 
 
 def _fix_unparenthesized_tuple_parsed_parenthesized(src: str, ast: AST) -> None:
-    elts           = ast.elts
-    ast.lineno     = (e0 := elts[0]).lineno
+    elts = ast.elts
+    ast.lineno = (e0 := elts[0]).lineno
     ast.col_offset = e0.col_offset
-    lines          = src.split('\n')
-    end_ln         = (e_1 := elts[-1]).end_lineno - 2  # -2 because of extra line introduced in parse
-    end_col        = len(lines[end_ln].encode()[:e_1.end_col_offset].decode())  # bistr(lines[end_ln]).b2c(e_1.end_col_offset)
+    lines = src.split('\n')
+    end_ln = (e_1 := elts[-1]).end_lineno - 2  # -2 because of extra line introduced in parse
+    end_col = len(lines[end_ln].encode()[:e_1.end_col_offset].decode())  # bistr(lines[end_ln]).b2c(e_1.end_col_offset)
 
     if (not (frag := next_frag(lines, end_ln, end_col, ast.end_lineno - 3, 0x7fffffffffffffff)) or  # if nothing following then last element is ast end, -3 because end also had \n tacked on
         not frag.src.startswith(',')  # if no comma then last element is ast end
     ):
-        ast.end_lineno     = e_1.end_lineno
+        ast.end_lineno = e_1.end_lineno
         ast.end_col_offset = e_1.end_col_offset
 
     else:
         end_ln, end_col, _ = frag
-        ast.end_lineno     = end_ln + 2
+        ast.end_lineno = end_ln + 2
         ast.end_col_offset = len(lines[end_ln][:end_col + 1].encode())
 
 
@@ -718,9 +718,9 @@ def parse_match_cases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """
 
     lines = [bistr('match x:'), bistr(' case None: pass')] + [bistr(' ' + l) for l in src.split('\n')]
-    ast   = _ast_parse1('\n'.join(lines), parse_params)
-    fst_  = fst.FST(ast, lines, parse_params=parse_params, lcopy=False)
-    lns   = fst_._get_indentable_lns(2, docstr=False)
+    ast = _ast_parse1('\n'.join(lines), parse_params)
+    fst_ = fst.FST(ast, lines, parse_params=parse_params, lcopy=False)
+    lns = fst_._get_indentable_lns(2, docstr=False)
 
     if len(lns) != len(lines) - 2:  # if there are multiline strings then we need to dedent them and reparse, because of f-strings, TODO: optimize out second reparse if no f-strings
         strlns = set(range(2, len(lines)))
@@ -730,7 +730,7 @@ def parse_match_cases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         for ln in strlns:
             lines[ln] = bistr(lines[ln][1:])
 
-        ast  = _ast_parse1('\n'.join(lines), parse_params)
+        ast = _ast_parse1('\n'.join(lines), parse_params)
         fst_ = fst.FST(ast, lines, parse_params=parse_params, lcopy=False)
 
     lns_ = set()
@@ -744,7 +744,7 @@ def parse_match_cases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         del a.f  # remove all trace of FST
 
         if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
-            a.lineno     = lineno     = a.lineno - 2
+            a.lineno = lineno = a.lineno - 2
             a.end_lineno = end_lineno = a.end_lineno - 2
 
             if lineno in lns_:
@@ -834,7 +834,7 @@ def parse_expr_arglike(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         pass
 
     value = _ast_parse1(f'f(\n{src}\n)', parse_params).value
-    args  = value.args
+    args = value.args
 
     if len(args) != 1 or value.keywords:
         raise ParseError('expecting single call argument expression')
@@ -913,7 +913,7 @@ def parse_Tuple(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """
 
     try:
-        ast        = parse_expr_slice(src, parse_params)
+        ast = parse_expr_slice(src, parse_params)
         from_slice = True
 
     except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11
@@ -1153,7 +1153,7 @@ def parse_Import_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     except SyntaxError as first_exc:
         try:
-            src   = _re_non_lcont_newline.sub('\\\n', src)
+            src = _re_non_lcont_newline.sub('\\\n', src)
             names = _ast_parse1(f'import \\\n{src}', parse_params).names  # multiline?
 
         except SyntaxError:
@@ -1180,7 +1180,7 @@ def parse_Import_names(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
         else:
             try:
-                src   = _re_non_lcont_newline.sub('\\\n', src)
+                src = _re_non_lcont_newline.sub('\\\n', src)
                 names = _ast_parse1(f'import \\\n{src}', parse_params).names  # multiline?
 
             except SyntaxError:
@@ -1203,7 +1203,7 @@ def parse_ImportFrom_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST
 
     except SyntaxError as first_exc:
         try:
-            src   = _re_non_lcont_newline.sub('\\\n', src)
+            src = _re_non_lcont_newline.sub('\\\n', src)
             names = _ast_parse1(f'from . import \\\n{src}', parse_params).names  # multiline?
 
         except SyntaxError:
@@ -1230,7 +1230,7 @@ def parse_ImportFrom_names(src: str, parse_params: Mapping[str, Any] = {}) -> AS
 
         else:
             try:
-                src   = _re_non_lcont_newline.sub('\\\n', src)
+                src = _re_non_lcont_newline.sub('\\\n', src)
                 names = _ast_parse1(f'from . import \\\n{src}', parse_params).names  # multiline?
 
             except SyntaxError:
@@ -1304,9 +1304,9 @@ def parse_pattern(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
                 if not (patterns := ast.patterns):
                     raise SyntaxError('empty pattern') from None
 
-                ast.lineno         = 3  # remove our delimiters from location
-                ast.col_offset     = 0
-                ast.end_lineno     = (p_1 := patterns[-1]).end_lineno
+                ast.lineno = 3  # remove our delimiters from location
+                ast.col_offset = 0
+                ast.end_lineno = (p_1 := patterns[-1]).end_lineno
                 ast.end_col_offset = p_1.end_col_offset
 
     return _offset_linenos(ast, -2)
@@ -1340,7 +1340,7 @@ def parse_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     try:
         type_params = _ast_parse1(f'type t[\n{src}\n] = None', parse_params).type_params
-        ast         = None
+        ast = None
 
     except SyntaxError as first_exc:  # maybe empty
         try:
@@ -1394,13 +1394,13 @@ def parse_Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             raise IndentationError('unexpected indent')
 
         ast.col_offset = col_offset  # set Assign to start at new first element
-        ast.lineno     = t0.lineno
+        ast.lineno = t0.lineno
 
     else:
         ast.col_offset = 0
-        ast.lineno     = 2
+        ast.lineno = 2
 
-    name.id         = ''  # mark as slice
+    name.id = ''  # mark as slice
     name.col_offset = name.end_col_offset = ast.end_col_offset = ast.end_col_offset - 3
 
     return _offset_linenos(ast, -1)

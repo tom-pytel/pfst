@@ -111,7 +111,7 @@ __all__ = [
 ]
 
 _DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_version=None)
-_DEFAULT_INDENT       = '    '
+_DEFAULT_INDENT = '    '
 
 _OPTIONS = {
     'pars':             'auto', # True | False | 'auto'
@@ -339,9 +339,9 @@ class FST:
         ast = self.a
 
         try:
-            ln             = ast.lineno - 1
-            col_offset     = ast.col_offset
-            end_ln         = ast.end_lineno - 1
+            ln = ast.lineno - 1
+            col_offset = ast.col_offset
+            end_ln = ast.end_lineno - 1
             end_col_offset = ast.end_col_offset
 
         except AttributeError:
@@ -361,9 +361,9 @@ class FST:
                 loc = None
 
         else:
-            col     = self.root._lines[ln].b2c(col_offset)
+            col = self.root._lines[ln].b2c(col_offset)
             end_col = self.root._lines[end_ln].b2c(end_col_offset)
-            loc     = fstloc(ln, col, end_ln, end_col)
+            loc = fstloc(ln, col, end_ln, end_col)
 
         self._cache['loc'] = loc
 
@@ -422,8 +422,8 @@ class FST:
 
         return (l := self.bloc) and l[0]
 
-    bcol     = col  # for symmetry
-    bend_ln  = end_ln
+    bcol = col  # for symmetry
+    bend_ln = end_ln
     bend_col = end_col
 
     @property
@@ -585,36 +585,36 @@ class FST:
         else:
             self = ast_or_src.f = object.__new__(cls)
 
-        self.a       = ast_or_src  # we don't assume `self.a` is `ast_or_src` if `.f` exists
-        self.pfield  = pfield
-        self._cache  = {}
+        self.a = ast_or_src  # we don't assume `self.a` is `ast_or_src` if `.f` exists
+        self.pfield = pfield
+        self._cache = {}
         self._serial = 0
 
         if pfield is not None:
             self.parent = mode_or_lines_or_parent
-            self.root   = mode_or_lines_or_parent.root
+            self.root = mode_or_lines_or_parent.root
 
             return self
 
         # ROOT
 
         self.parent = None
-        self.root   = self
+        self.root = self
         self._lines = ([bistr(s) for s in mode_or_lines_or_parent] if kwargs.get('lcopy', True) else
                        mode_or_lines_or_parent)
 
         if from_ := kwargs.get('from_'):  # copy params from source tree
-            from_root         = from_.root
+            from_root = from_.root
             self.parse_params = kwargs.get('parse_params', from_root.parse_params)
-            self.indent       = kwargs.get('indent', from_root.indent)
+            self.indent = kwargs.get('indent', from_root.indent)
 
         else:
             self.parse_params = kwargs.get('parse_params', _DEFAULT_PARSE_PARAMS)
-            self.indent       = (('?'
-                                  if isinstance(ast_or_src, Module) else
-                                  _DEFAULT_INDENT)
-                                 if (indent := kwargs.get('indent')) is None else
-                                 indent)
+            self.indent = (('?'
+                            if isinstance(ast_or_src, Module) else
+                            _DEFAULT_INDENT)
+                           if (indent := kwargs.get('indent')) is None else
+                           indent)
 
         self._make_fst_tree()
 
@@ -765,10 +765,10 @@ class FST:
             lines = src.split('\n')
         else:
             lines = src
-            src   = '\n'.join(lines)
+            src = '\n'.join(lines)
 
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
-        ast          = extparse.parse(src, mode, parse_params)
+        ast = extparse.parse(src, mode, parse_params)
 
         return FST(ast, lines, parse_params=parse_params)
 
@@ -835,8 +835,8 @@ class FST:
             type_comments = has_type_comments(ast)
 
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
-        src          = extparse.unparse(ast)
-        lines        = src.split('\n')
+        src = extparse.unparse(ast)
+        lines = src.split('\n')
 
         if mode is not False:
             org = ast
@@ -1216,9 +1216,9 @@ class FST:
                 if src.replace('f', '').replace('e', '').replace('a', '').replace('s', ''):
                     raise ValueError("invalid character(s) in 'src' string")
 
-                full   = 'f' in src
+                full = 'f' in src
                 expand = 'e' in src
-                src    = 'all' if 'a' in src else 'stmt' if 's' in src else None
+                src = 'all' if 'a' in src else 'stmt' if 's' in src else None
 
         if isinstance(out, TextIOBase):
             out = out.write
@@ -1232,7 +1232,7 @@ class FST:
         st = nspace(src=src, full=full, expand=expand, indent=indent, eol=eol)
 
         if out in (str, list):
-            lines       = []
+            lines = []
             st.linefunc = lines.append
 
             self._dump(st)
@@ -1279,7 +1279,7 @@ class FST:
 
         # validate tree links
 
-        ast   = self.a
+        ast = self.a
         stack = [(ast, self.parent, self.pfield)]  # [(AST, parent FST, pfield), ...]
 
         while stack:
@@ -1289,8 +1289,8 @@ class FST:
                 if not raise_:
                     return None
 
-                path   = self.child_path(parent) + [pfield] if a is not ast else []
-                path   = '.'.join(af.name if (i := af.idx) is None else f'{af.name}[{i}]' for af in path)
+                path = self.child_path(parent) + [pfield] if a is not ast else []
+                path = '.'.join(af.name if (i := af.idx) is None else f'{af.name}[{i}]' for af in path)
                 reason = ', no AST.f node' if not f else ', bad parent' if f.parent is not parent else ', bad pfield'
 
                 raise WalkFail(f'invalid child {a.__class__.__name__} at {path if path else "self"}{reason}')
@@ -1341,7 +1341,7 @@ class FST:
         if not self.is_root:
             raise ValueError('can only mark root nodes')
 
-        mark         = self.copy()
+        mark = self.copy()
         mark._serial = self._serial
 
         return mark
@@ -1520,7 +1520,7 @@ class FST:
         if options.get('to'):
             raise ValueError("cannot replace root node using a 'to' option")
 
-        code        = code_as_all(code, self.parse_params)
+        code = code_as_all(code, self.parse_params)
         self._lines = code._lines
 
         self._set_ast(code.a, True)
@@ -1618,9 +1618,9 @@ class FST:
         ```
         """
 
-        ast              = self.a
+        ast = self.a
         idx, stop, field = swizzle_getput_params(idx, stop, field, False)
-        field_, body     = fixup_field_body(ast, field, False)
+        field_, body = fixup_field_body(ast, field, False)
 
         if isinstance(body, list):
             if stop is not False:
@@ -1722,9 +1722,9 @@ class FST:
         ```
         """
 
-        ast              = self.a
+        ast = self.a
         idx, stop, field = swizzle_getput_params(idx, stop, field, False)
-        field_, body     = fixup_field_body(ast, field, False)
+        field_, body = fixup_field_body(ast, field, False)
 
         if isinstance(body, list):
             if stop is not False:
@@ -1793,9 +1793,9 @@ class FST:
         ```
         """
 
-        ast                = self.a
+        ast = self.a
         start, stop, field = swizzle_getput_params(start, stop, field, None)
-        field_, body       = fixup_field_body(ast, field)
+        field_, body = fixup_field_body(ast, field)
 
         if not isinstance(body, list):
             raise ValueError(f'cannot get slice from non-list field {ast.__class__.__name__}.{field_}')
@@ -1873,9 +1873,9 @@ class FST:
         ```
         """
 
-        ast                = self.a
+        ast = self.a
         start, stop, field = swizzle_getput_params(start, stop, field, None)
-        field_, body       = fixup_field_body(ast, field)
+        field_, body = fixup_field_body(ast, field)
 
         if not isinstance(body, list):
             raise ValueError(f'cannot put slice to non-list field {ast.__class__.__name__}.{field_}')
@@ -2310,12 +2310,12 @@ class FST:
         **Parameters:**
         - `with_loc`: Return nodes depending on their location information.
             - `False`: All nodes with or without location.
-            - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            - `True`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
                 `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually arguments
                 present).
             - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
                 do not always have a well defined location).
-            - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger
+            - `'own'`: Only nodes with their own intrinsic `AST` locations, same as `True` but excludes those larger
                 nodes with calculated locations.
 
         **Returns:**
@@ -2335,7 +2335,7 @@ class FST:
         if not (parent := self.parent):
             return None
 
-        aparent   = parent.a
+        aparent = parent.a
         name, idx = self.pfield
 
         while True:
@@ -2346,7 +2346,7 @@ class FST:
                     match next:
                         case 0:  # from Dict.keys
                             next = 1
-                            a    = aparent.values[idx]
+                            a = aparent.values[idx]
 
                         case 1:  # from Dict.values
                             next = 0
@@ -2359,7 +2359,7 @@ class FST:
 
                         case 2:  # from Compare.ops
                             next = 3
-                            a    = aparent.comparators[idx]
+                            a = aparent.comparators[idx]
 
                         case 6:  # all the logic for Call.args and Call.keywords
                             if not (keywords := aparent.keywords):  # no keywords
@@ -2381,7 +2381,7 @@ class FST:
 
                                     except IndexError:
                                         name = 'keywords'
-                                        a    = keywords[(idx := 0)]
+                                        a = keywords[(idx := 0)]
 
                                 else:
                                     try:
@@ -2398,8 +2398,8 @@ class FST:
                                             (star.lineno, star.col_offset)
                                         ):  # reached star and there is a keyword before it
                                             name = 'keywords'
-                                            idx  = 0
-                                            a    = kw
+                                            idx = 0
+                                            a = kw
 
                                             break
 
@@ -2419,8 +2419,8 @@ class FST:
                                     except IndexError:  # ran off the end of keywords, now need to check if star lives here
                                         if ((sa := self.a).lineno, sa.col_offset) < (star.lineno, star.col_offset):
                                             name = 'args'
-                                            idx  = len(args) - 1
-                                            a    = star
+                                            idx = len(args) - 1
+                                            a = star
 
                                         else:
                                             return None
@@ -2432,8 +2432,8 @@ class FST:
                                             (a.lineno, a.col_offset) > star_pos
                                         ):  # crossed star, jump back to it
                                             name = 'args'
-                                            idx  = len(args) - 1
-                                            a    = star
+                                            idx = len(args) - 1
+                                            a = star
 
                         case 3:  # from Compare.comparators or Compare.left (via comparators)
                             next = 2
@@ -2448,7 +2448,7 @@ class FST:
                                 match name:
                                     case 'posonlyargs':
                                         posonlyargs = aparent.posonlyargs
-                                        defaults    = aparent.defaults
+                                        defaults = aparent.defaults
 
                                         if (not defaults or (didx := (idx + ((ldefaults := len(defaults)) -
                                             len(args := aparent.args) - len(posonlyargs)))) < 0 or didx >= ldefaults
@@ -2458,16 +2458,16 @@ class FST:
 
                                             except IndexError:
                                                 name = 'args'
-                                                idx  = -1
+                                                idx = -1
 
                                                 continue
 
                                         else:
                                             name = 'defaults'
-                                            a    = defaults[idx := didx]
+                                            a = defaults[idx := didx]
 
                                     case 'args':
-                                        args     = aparent.args
+                                        args = aparent.args
                                         defaults = aparent.defaults
 
                                         if (not defaults or (didx := (idx + ((ldefaults := len(defaults)) -
@@ -2484,7 +2484,7 @@ class FST:
 
                                         else:
                                             name = 'defaults'
-                                            a    = defaults[idx := didx]
+                                            a = defaults[idx := didx]
 
                                     case 'defaults':
                                         if idx == (ldefaults := len(aparent.defaults)) - 1:  # end of defaults
@@ -2495,16 +2495,16 @@ class FST:
 
                                         elif (idx := idx + len(args := aparent.args) - ldefaults + 1) >= 0:
                                             name = 'args'
-                                            a    = args[idx]
+                                            a = args[idx]
 
                                         else:
                                             name = 'posonlyargs'
-                                            a    = (posonlyargs := aparent.posonlyargs)[(idx := idx + len(posonlyargs))]
+                                            a = (posonlyargs := aparent.posonlyargs)[(idx := idx + len(posonlyargs))]
 
                                     case 'vararg':
                                         if kwonlyargs := aparent.kwonlyargs:
                                             name = 'kwonlyargs'
-                                            a    = kwonlyargs[(idx := 0)]
+                                            a = kwonlyargs[(idx := 0)]
 
                                         elif a := aparent.kwarg:
                                             name = 'kwarg'
@@ -2546,7 +2546,7 @@ class FST:
 
                         case 4:  # from MatchMapping.keys
                             next = 5
-                            a    = aparent.patterns[idx]
+                            a = aparent.patterns[idx]
 
                         case 5:  # from MatchMapping.patterns
                             next = 4
@@ -2595,10 +2595,10 @@ class FST:
                 match next:
                     case 2:  # from Compare.left
                         name = 'comparators'  # will cause to get .ops[0]
-                        idx  = -1
+                        idx = -1
 
                     case 6:  # from Call.func
-                        idx  = -1  # will cause to get .args[0]
+                        idx = -1  # will cause to get .args[0]
 
                 break
 
@@ -2615,12 +2615,12 @@ class FST:
         **Parameters:**
         - `with_loc`: Return nodes depending on their location information.
             - `False`: All nodes with or without location.
-            - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            - `True`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
                 `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
                 arguments present).
             - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
                 do not always have a well defined location).
-            - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger
+            - `'own'`: Only nodes with their own intrinsic `AST` locations, same as `True` but excludes those larger
                 nodes with calculated locations.
 
         **Returns:**
@@ -2640,7 +2640,7 @@ class FST:
         if not (parent := self.parent):
             return None
 
-        aparent   = parent.a
+        aparent = parent.a
         name, idx = self.pfield
 
         while True:
@@ -2655,7 +2655,7 @@ class FST:
 
                             else:
                                 prev = 1
-                                a    = aparent.values[(idx := idx - 1)]
+                                a = aparent.values[(idx := idx - 1)]
 
                         case 1:  # from Dict.values
                             prev = 0
@@ -2670,7 +2670,7 @@ class FST:
 
                                 else:
                                     name = 'func'
-                                    a    = aparent.func
+                                    a = aparent.func
 
                             elif not (args := aparent.args):  # no args
                                 if idx:
@@ -2678,7 +2678,7 @@ class FST:
 
                                 else:
                                     name = 'func'
-                                    a    = aparent.func
+                                    a = aparent.func
 
                             elif not isinstance(star := args[-1], Starred):  # both args and keywords but no Starred
                                 if name == 'args':
@@ -2687,7 +2687,7 @@ class FST:
 
                                     else:
                                         name = 'func'
-                                        a    = aparent.func
+                                        a = aparent.func
 
                                 else:
                                     if idx:
@@ -2695,7 +2695,7 @@ class FST:
 
                                     else:
                                         name = 'args'
-                                        a    = args[(idx := len(args) - 1)]
+                                        a = args[(idx := len(args) - 1)]
 
                             else:  # args, keywords AND Starred
                                 if name == 'args':
@@ -2705,8 +2705,8 @@ class FST:
                                         for i in range(len(keywords) - 1, -1, -1):
                                             if ((kw := keywords[i]).lineno, kw.col_offset) < star_pos:
                                                 name = 'keywords'
-                                                idx  = i
-                                                a    = kw
+                                                idx = i
+                                                a = kw
 
                                                 break
 
@@ -2716,14 +2716,14 @@ class FST:
 
                                             else:
                                                 name = 'func'
-                                                a    = aparent.func
+                                                a = aparent.func
 
                                     elif idx:
                                         a = args[(idx := idx - 1)]
 
                                     else:
                                         name = 'func'
-                                        a    = aparent.func
+                                        a = aparent.func
 
                                 else:  # name == 'keywords'
                                     star_pos = (star.lineno, star.col_offset)
@@ -2732,12 +2732,12 @@ class FST:
                                         name = 'args'
 
                                         if ((sa := self.a).lineno, sa.col_offset) > star_pos:  # all keywords above star so pass on to star
-                                            idx  = len(args) - 1
-                                            a    = star
+                                            idx = len(args) - 1
+                                            a = star
 
                                         elif (largs := len(args)) < 2:  # no args left, we done here
                                             name = 'func'
-                                            a    = aparent.func
+                                            a = aparent.func
 
                                         else:  # some args left, go to those
                                             a = args[(idx := largs - 2)]
@@ -2749,8 +2749,8 @@ class FST:
                                             ((sa := self.a).lineno, sa.col_offset) > star_pos
                                         ):  # crossed star walking back, return star
                                             name = 'args'
-                                            idx  = len(args) - 1
-                                            a    = star
+                                            idx = len(args) - 1
+                                            a = star
 
                         case 2:  # from Compare.ops
                             if not idx:
@@ -2760,24 +2760,24 @@ class FST:
 
                             else:
                                 prev = 3
-                                a    = aparent.comparators[(idx := idx - 1)]
+                                a = aparent.comparators[(idx := idx - 1)]
 
                         case 3:  # from Compare.comparators
                             prev = 2
-                            a    = aparent.ops[idx]
+                            a = aparent.ops[idx]
 
                         case 7:
                             while True:
                                 match name:
                                     case 'posonlyargs':
                                         posonlyargs = aparent.posonlyargs
-                                        defaults    = aparent.defaults
+                                        defaults = aparent.defaults
 
                                         if ((didx := idx - len(aparent.args) - len(posonlyargs) + len(defaults) - 1) >=
                                             0
                                         ):
                                             name = 'defaults'
-                                            a    = defaults[(idx := didx)]
+                                            a = defaults[(idx := didx)]
 
                                         elif idx > 0:
                                             a = posonlyargs[(idx := idx - 1)]
@@ -2785,47 +2785,47 @@ class FST:
                                             return None
 
                                     case 'args':
-                                        args     = aparent.args
+                                        args = aparent.args
                                         defaults = aparent.defaults
 
                                         if (didx := idx - len(args) + len(defaults) - 1) >= 0:
                                             name = 'defaults'
-                                            a    = defaults[(idx := didx)]
+                                            a = defaults[(idx := didx)]
 
                                         elif idx > 0:
                                             a = args[(idx := idx - 1)]
 
                                         elif posonlyargs := aparent.posonlyargs:
                                             name = 'posonlyargs'
-                                            a    = posonlyargs[(idx := len(posonlyargs) - 1)]
+                                            a = posonlyargs[(idx := len(posonlyargs) - 1)]
 
                                         else:
                                             return None
 
                                     case 'defaults':
-                                        args     = aparent.args
+                                        args = aparent.args
                                         defaults = aparent.defaults
 
                                         if (idx := idx + len(args) - len(defaults)) >= 0:
                                             name = 'args'
-                                            a    = args[idx]
+                                            a = args[idx]
 
                                         else:
                                             name = 'posonlyargs'
-                                            a    = (posonlyargs := aparent.posonlyargs)[idx + len(posonlyargs)]
+                                            a = (posonlyargs := aparent.posonlyargs)[idx + len(posonlyargs)]
 
                                     case 'vararg':
                                         if defaults := aparent.defaults:
                                             name = 'defaults'
-                                            a    = defaults[(idx := len(defaults) - 1)]
+                                            a = defaults[(idx := len(defaults) - 1)]
 
                                         elif args := aparent.args:
                                             name = 'args'
-                                            a    = args[(idx := len(args) - 1)]
+                                            a = args[(idx := len(args) - 1)]
 
                                         elif posonlyargs := aparent.posonlyargs:
                                             name = 'posonlyargs'
-                                            a    = posonlyargs[(idx := len(posonlyargs) - 1)]
+                                            a = posonlyargs[(idx := len(posonlyargs) - 1)]
 
                                         else:
                                             return None
@@ -2845,7 +2845,7 @@ class FST:
 
                                     case 'kw_defaults':
                                         name = 'kwonlyargs'
-                                        a    = aparent.kwonlyargs[idx]
+                                        a = aparent.kwonlyargs[idx]
 
                                     case 'kwarg':
                                         if kw_defaults := aparent.kw_defaults:
@@ -2854,7 +2854,7 @@ class FST:
 
                                             else:
                                                 name = 'kwonlyargs'
-                                                a    = (kwonlyargs := aparent.kwonlyargs)[(idx := len(kwonlyargs) - 1)]
+                                                a = (kwonlyargs := aparent.kwonlyargs)[(idx := len(kwonlyargs) - 1)]
 
                                         else:
                                             name = 'vararg'
@@ -2870,11 +2870,11 @@ class FST:
 
                             else:
                                 prev = 5
-                                a    = aparent.patterns[(idx := idx - 1)]
+                                a = aparent.patterns[(idx := idx - 1)]
 
                         case 5:  # from Keys.patterns
                             prev = 4
-                            a    = aparent.keys[idx]
+                            a = aparent.keys[idx]
 
                     if check_with_loc(f := a.f, with_loc):
                         return f
@@ -2921,12 +2921,12 @@ class FST:
         **Parameters:**
         - `with_loc`: Return nodes depending on their location information.
             - `False`: All nodes with or without location.
-            - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            - `True`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
                 `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
                 arguments present).
             - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
                 do not always have a well defined location).
-            - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger
+            - `'own'`: Only nodes with their own intrinsic `AST` locations, same as `True` but excludes those larger
                 nodes with calculated locations.
 
         **Returns:**
@@ -2966,12 +2966,12 @@ class FST:
         **Parameters:**
         - `with_loc`: Return nodes depending on their location information.
             - `False`: All nodes with or without location.
-            - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            - `True`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
                 `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
                 arguments present).
             - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
                 do not always have a well defined location).
-            - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger
+            - `'own'`: Only nodes with their own intrinsic `AST` locations, same as `True` but excludes those larger
                 nodes with calculated locations.
 
         **Returns:**
@@ -2989,8 +2989,8 @@ class FST:
         """
 
         if (isinstance(a := self.a, Call)) and a.args and (keywords := a.keywords) and isinstance(a.args[-1], Starred):  # super-special case Call with args and keywords and a Starred, it could be anywhere in there, including after last keyword, defer to prev() logic
-            fst_         = FST(f := Pass(), self, astfield('keywords', len(keywords)))
-            f.lineno     = 0x7fffffffffffffff
+            fst_ = FST(f := Pass(), self, astfield('keywords', len(keywords)))
+            f.lineno = 0x7fffffffffffffff
             f.col_offset = 0
 
             return fst_.prev(with_loc)
@@ -3016,12 +3016,12 @@ class FST:
         **Parameters:**
         - `with_loc`: Return nodes depending on their location information.
             - `False`: All nodes with or without location.
-            - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            - `True`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
                 `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
                 arguments present).
             - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
                 do not always have a well defined location).
-            - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger
+            - `'own'`: Only nodes with their own intrinsic `AST` locations, same as `True` but excludes those larger
                 nodes with calculated locations.
 
         **Returns:**
@@ -3067,12 +3067,12 @@ class FST:
         - `from_child`: Child node we are coming from which may or may not have location.
         - `with_loc`: Return nodes depending on their location information.
             - `False`: All nodes with or without location.
-            - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            - `True`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
                 `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
                 arguments present).
             - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
                 do not always have a well defined location).
-            - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger
+            - `'own'`: Only nodes with their own intrinsic `AST` locations, same as `True` but excludes those larger
                 nodes with calculated locations.
 
         **Returns:**
@@ -3109,12 +3109,12 @@ class FST:
         - `from_child`: Child node we are coming from which may or may not have location.
         - `with_loc`: Return nodes depending on their location information.
             - `False`: All nodes with or without location.
-            - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            - `True`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
                 `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually arguments
                 present).
             - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they do
                 not always have a well defined location).
-            - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger nodes
+            - `'own'`: Only nodes with their own intrinsic `AST` locations, same as `True` but excludes those larger nodes
                 with calculated locations.
 
         **Returns:**
@@ -3150,12 +3150,12 @@ class FST:
         **Parameters:**
         - `with_loc`: Return nodes depending on their location information.
             - `False`: All nodes with or without location.
-            - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            - `True`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
                 `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
                 arguments present).
             - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
                 do not always have a well defined location).
-            - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger
+            - `'own'`: Only nodes with their own intrinsic `AST` locations, same as `True` but excludes those larger
                 nodes with calculated locations.
             - `'allown'` Same as `'own'` but recurse into nodes with non-own locations (even though those nodes are not
                 returned). This is only really meant for internal use to safely call from `.loc` location calculation.
@@ -3222,12 +3222,12 @@ class FST:
         **Parameters:**
         - `with_loc`: Return nodes depending on their location information.
             - `False`: All nodes with or without location.
-            - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            - `True`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
                 `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
                 arguments present).
             - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
                 do not always have a well defined location).
-            - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger
+            - `'own'`: Only nodes with their own intrinsic `AST` locations, same as `True` but excludes those larger
                 nodes with calculated locations.
             - `'allown'` Same as `'own'` but recurse into nodes with non-own locations (even though those nodes are not
                 returned). This is only really meant for internal use to safely call from `.loc` location calculation.
@@ -3306,12 +3306,12 @@ class FST:
         **Parameters:**
         - `with_loc`: Return nodes depending on their location information.
             - `False`: All nodes with or without location.
-            - `True`: Only nodes which have implicit `AST` locations and also larger computed location nodes like
+            - `True`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
                 `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
                 arguments present).
             - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
                 do not always have a well defined location).
-            - `'own'`: Only nodes with their own implicit `AST` locations, same as `True` but excludes those larger
+            - `'own'`: Only nodes with their own intrinsic `AST` locations, same as `True` but excludes those larger
                 nodes with calculated locations.
         - `self_`: If `True` then self will be returned first with the possibility to skip children with `send(False)`,
             otherwise will start directly with children.
@@ -3400,10 +3400,10 @@ class FST:
 
             elif recurse_ is True:  # user changed their mind?!?
                 recurse = True
-                scope   = False
+                scope = False
 
         stack = None
-        ast   = self.a
+        ast = self.a
 
         if scope:  # some parts of a FunctionDef or ClassDef are outside its scope
             if isinstance(ast, list):
@@ -3522,7 +3522,7 @@ class FST:
 
                     elif isinstance(ast, (ListComp, SetComp, DictComp, GeneratorExp)):
                         comp_first_iter = ast.generators[0].iter
-                        gen             = fst_.walk(with_loc, self_=False, back=back)
+                        gen = fst_.walk(with_loc, self_=False, back=back)
 
                         for f in gen:  # all NamedExpr assignments below are visible here, yeah, its ugly
                             if (a := f.a) is comp_first_iter or (f.pfield.name == 'target' and isinstance(a, Name) and
@@ -4123,16 +4123,16 @@ class FST:
         while (parent := self.parent) and not isinstance(self.a, STMTISH):
             self = parent
 
-        root   = self.root
-        lines  = root._lines
+        root = self.root
+        lines = root._lines
         indent = ''
 
         while parent:
-            f             = getattr(parent.a, self.pfield.name)[0].f
+            f = getattr(parent.a, self.pfield.name)[0].f
             ln, col, _, _ = f.loc
-            prev          = f.prev(True)  # there may not be one ("try" at start of module)
-            prev_end_ln   = prev.end_ln if prev else -2  # -2 so it never hits it
-            good_line     = ''
+            prev = f.prev(True)  # there may not be one ("try" at start of module)
+            prev_end_ln = prev.end_ln if prev else -2  # -2 so it never hits it
+            good_line = ''
 
             while ln > prev_end_ln and re_empty_line.match(line_start := lines[ln], 0, col):
                 end_col = 0 if (preceding_ln := ln - 1) != prev_end_ln else prev.end_col
@@ -4143,12 +4143,12 @@ class FST:
                 if col:  # we do this to skip backslashes at the start of line as those are just a noop
                     good_line = line_start[:col]
 
-                ln  = preceding_ln
+                ln = preceding_ln
                 col = len(l) - 1  # was line continuation so last char is '\' and rest should be empty
 
             indent += root.indent
-            self    = parent
-            parent  = self.parent
+            self = parent
+            parent = self.parent
 
         return indent
 
@@ -4188,7 +4188,7 @@ class FST:
         if isinstance(ast, Tuple) and (elts := ast.elts):
             if isinstance(e0 := elts[0], Starred):
                 if len(elts) == 1:
-                    _, _, ln, col         = e0.f.loc
+                    _, _, ln, col = e0.f.loc
                     _, _, end_ln, end_col = self.loc
 
                     if not next_find(self.root._lines, ln, col, end_ln, end_col, ','):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
@@ -4519,8 +4519,8 @@ class FST:
         """
 
         lines = self.root._lines
-        ast   = self.a
-        loc   = self.loc
+        ast = self.a
+        loc = self.loc
 
         if whole:
             if not self.is_root:
@@ -4532,8 +4532,8 @@ class FST:
                 whole = False
 
             else:  # if something doesn't have a loc or loc doesn't span over entire range of lines then we need to check the whole source
-                end_ln   = whole_end_ln
-                last_ln  = 0
+                end_ln = whole_end_ln
+                last_ln = 0
                 children = [ast]
 
         if not whole:
@@ -4627,7 +4627,7 @@ class FST:
                 else:
                     failed = True
 
-            pars    = False
+            pars = False
             last_ln = child_end_ln
 
         for ln in range(last_ln, end_ln):  # tail
@@ -4811,7 +4811,7 @@ class FST:
             return None
 
         ln, col, _, _ = self.loc
-        lpar          = self.root._lines[ln][col : col + 1]  # could be end of line
+        lpar = self.root._lines[ln][col : col + 1]  # could be end of line
 
         if lpar == '(':
             return '()' if self._is_delimited_seq('patterns', '()') else ''
@@ -5253,7 +5253,7 @@ def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> prope
 
 
 def _make_AST_field_accessors() -> None:
-    FST_dict    = FST.__dict__
+    FST_dict = FST.__dict__
     cardinality = {}  # {'field': 1 means single element | 2 means list (3 means can be either)}
 
     for fields in FIELDS.values():

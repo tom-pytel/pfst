@@ -108,10 +108,10 @@ class fstview:
     def __init__(self, fst: fst.FST, field: str, start: int, stop: int):
         """@private"""
 
-        self.fst   = fst
+        self.fst = fst
         self.field = field
         self.start = start
-        self.stop  = stop
+        self.stop = stop
 
     def __repr__(self) -> str:
         return f'<{self.fst!r}.{self.field}[{self.start}:{self.stop}] {list(self)}>'
@@ -223,7 +223,7 @@ class fstview:
         """
 
         if isinstance(idx, int):
-            idx        = fixup_one_index(self.stop - (start := self.start), idx)
+            idx = fixup_one_index(self.stop - (start := self.start), idx)
             len_before = len(asts := getattr(self.fst.a, self.field))
 
             self.fst = self.fst.put(code, start + idx, field=self.field) or self.fst
@@ -235,7 +235,7 @@ class fstview:
 
         else:
             idx_start, idx_stop = fixup_slice_indices(self.stop - (start := self.start), idx.start, idx.stop)
-            len_before          = len(asts := getattr(self.fst.a, self.field))
+            len_before = len(asts := getattr(self.fst.a, self.field))
 
             self.fst = self.fst.put_slice(code, start + idx_start, start + idx_stop, self.field)
 
@@ -428,7 +428,7 @@ class fstview:
         """
 
         len_before = len(asts := getattr(self.fst.a, self.field))
-        idx        = (self.stop if idx == 'end' else
+        idx = (self.stop if idx == 'end' else
                       stop if idx > (l := (stop := self.stop) - (start := self.start)) else
                       start + (idx if idx >= 0 else max(0, idx + l)))
 

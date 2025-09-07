@@ -132,7 +132,7 @@ class _Modifying:
 
         if self.fst:
             self.field = field
-            self.data  = data = []  # [(FormattedValue or Interpolation FST, len(dbg_str) or None, bool do val_str), ...]
+            self.data = data = []  # [(FormattedValue or Interpolation FST, len(dbg_str) or None, bool do val_str), ...]
 
             while isinstance(fst_.a, EXPRISH):
                 parent = fst_.parent
@@ -158,7 +158,7 @@ class _Modifying:
                     break
 
                 field = pfield.name
-                fst_  = parent
+                fst_ = parent
 
     def __enter__(self) -> Self:
         return self.enter()
@@ -200,7 +200,7 @@ class _Modifying:
 
                 if strs is first:  # on first one check to make sure no double '{{', and if so then fix: f'{{a}}' -> f'{ {a}}'
                     ln, col, _, _ = fst_.a.value.f.loc
-                    fix_const     = ((parent := fst_.parent) and (idx := fst_.pfield.idx) and   # parent should exist here but just in case, whether we need to reset start of debug string or not
+                    fix_const = ((parent := fst_.parent) and (idx := fst_.pfield.idx) and   # parent should exist here but just in case, whether we need to reset start of debug string or not
                         (f := parent.a.values[idx - 1].f).col == col and f.ln == ln)
 
                     if fst_.root._lines[ln].startswith('{', col):
@@ -215,10 +215,10 @@ class _Modifying:
                     fst_.a.str = val_str
 
                 if len_old_dbg_str is not None:
-                    lines            = fst_.root._lines
-                    c                = fst_.parent.a.values[fst_.pfield.idx - 1]
-                    c.value          = c.value[:-len_old_dbg_str] + dbg_str
-                    c.end_lineno     = end_ln + 1
+                    lines = fst_.root._lines
+                    c = fst_.parent.a.values[fst_.pfield.idx - 1]
+                    c.value = c.value[:-len_old_dbg_str] + dbg_str
+                    c.end_lineno = end_ln + 1
                     c.end_col_offset = lines[end_ln].c2b(end_col)
 
 @pyver(lt=12)  # override _Modifying if py too low
@@ -273,9 +273,9 @@ def _out_lines(fst_: fst.FST, linefunc: Callable, ln: int, col: int, end_ln: int
     lines[-1] = l
 
     if (l := lines[0]).startswith(' ') and col:
-        lines[0]  = f'{" " * (col - 1)}>{l}'
+        lines[0] = f'{" " * (col - 1)}>{l}'
     else:
-        lines[0]  = ' ' * col + l
+        lines[0] = ' ' * col + l
 
     for i, l in zip(range(ln, end_ln + 1), lines, strict=True):
         linefunc(f'{i:<{width}}: {l}{eol}')
@@ -378,7 +378,7 @@ def _repr_tail(self: fst.FST) -> str:
 
 
 def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
-    ast  = self.a
+    ast = self.a
     tail = self._repr_tail()
     sind = ' ' * st.indent
 
@@ -537,14 +537,14 @@ def _set_ast(self: fst.FST, ast: AST, valid_fst: bool = False, unmake: bool = Tr
             f.a = None
 
     self.a = ast
-    ast.f  = self
+    ast.f = self
 
     if not valid_fst:
         self._make_fst_tree()
 
     else:
         root = self.root
-        itr  = walk(ast)
+        itr = walk(ast)
 
         try:
             if (f := next(itr).f).root is not root:  # if tree already has same root then we don't need to do this
@@ -655,11 +655,11 @@ def _loc_block_header_end(self: fst.FST, ret_bound: bool = False) -> fstloc | tu
             _, _, cend_ln, cend_col = child.loc
 
         else:
-            cend_ln  = ln
+            cend_ln = ln
             cend_col = col
 
     elif isinstance(a, BLOCK):
-        cend_ln  = ln
+        cend_ln = ln
         cend_col = col
 
     else:
@@ -743,9 +743,9 @@ def _loc_comprehension(self: fst.FST) -> fstloc:
 
     # assert isinstance(self.s, comprehension)
 
-    ast   = self.a
+    ast = self.a
     first = ast.target.f
-    last  = ifs[-1].f if (ifs := ast.ifs) else ast.iter.f  # self.last_child(), could be .iter or last .ifs
+    last = ifs[-1].f if (ifs := ast.ifs) else ast.iter.f  # self.last_child(), could be .iter or last .ifs
     lines = self.root._lines
 
     if prev := self.step_back('allown', recurse_self=False):  # 'allown' so it doesn't recurse into calling `.loc`
@@ -784,17 +784,17 @@ def _loc_arguments(self: fst.FST) -> fstloc | None:
     if not (first := self.first_child()):
         return None
 
-    ast       = self.a
-    last      = self.last_child()
-    lines     = self.root._lines
+    ast = self.a
+    last = self.last_child()
+    lines = self.root._lines
     end_lines = len(lines) - 1
-    rpars     = next_delims(lines, last.end_ln, last.end_col, *self._next_bound())
+    rpars = next_delims(lines, last.end_ln, last.end_col, *self._next_bound())
 
-    end_ln, end_col           = rpars[-1]
+    end_ln, end_col = rpars[-1]
     start_ln, start_col, _, _ = first.loc
 
     if ast.posonlyargs:
-        leading_stars  = None  # no leading stars
+        leading_stars = None  # no leading stars
         trailing_slash = False if ast.args or ast.vararg or ast.kwonlyargs or ast.kwarg else True
 
     else:
@@ -808,8 +808,8 @@ def _loc_arguments(self: fst.FST) -> fstloc | None:
             leading_stars = '**'  # leading double star just before varname
 
     if (frag := next_frag(lines, end_ln, end_col, end_lines, 0x7fffffffffffffff)) and frag.src.startswith(','):  # trailing comma
-        end_ln, end_col, _  = frag
-        end_col            += 1
+        end_ln, end_col, _ = frag
+        end_col += 1
 
     elif (parent := self.parent) and isinstance(parent.a, (FunctionDef, AsyncFunctionDef)):  # arguments enclosed in pars
         end_ln, end_col = rpars[-2]  # must be there
@@ -818,12 +818,12 @@ def _loc_arguments(self: fst.FST) -> fstloc | None:
         start_ln, start_col = prev_find(lines, *self._prev_bound(), start_ln, start_col, leading_stars)
 
     if trailing_slash:
-        end_ln, end_col  = next_find(lines, end_ln, end_col, end_lines, 0x7fffffffffffffff, '/')  # must be there
-        end_col         += 1
+        end_ln, end_col = next_find(lines, end_ln, end_col, end_lines, 0x7fffffffffffffff, '/')  # must be there
+        end_col += 1
 
         if (frag := next_frag(lines, end_ln, end_col, end_lines, 0x7fffffffffffffff)) and frag.src.startswith(','):  # silly, but, trailing comma trailing slash
-            end_ln, end_col, _  = frag
-            end_col            += 1
+            end_ln, end_col, _ = frag
+            end_col += 1
 
     return fstloc(start_ln, start_col, end_ln, end_col)
 
@@ -837,19 +837,19 @@ def _loc_arguments_empty(self: fst.FST) -> fstloc:
         return fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))  # parent=None means we are root
 
     ln, col, end_ln, end_col = parent.loc
-    lines                    = self.root._lines
+    lines = self.root._lines
 
     if isinstance(parenta := parent.a, Lambda):
-        col             += 6
-        end_ln, end_col  = next_find(lines, ln, col, end_ln, end_col, ':')
+        col += 6
+        end_ln, end_col = next_find(lines, ln, col, end_ln, end_col, ':')
 
     else:
         if type_params := getattr(parenta, 'type_params', None):  # doesn't exist in py < 3.12
             _, _, ln, col = type_params[-1].f.loc
 
-        ln, col          = next_find(lines, ln, col, end_ln, end_col, '(')
-        col             += 1
-        end_ln, end_col  = next_find(lines, ln, col, end_ln, end_col, ')')
+        ln, col = next_find(lines, ln, col, end_ln, end_col, '(')
+        col += 1
+        end_ln, end_col = next_find(lines, ln, col, end_ln, end_col, ')')
 
     return fstloc(ln, col, end_ln, end_col)
 
@@ -860,9 +860,9 @@ def _loc_lambda_args_entire(self: fst.FST) -> fstloc:
 
     # assert isinstance(self.a, Lambda)
 
-    ln, col, end_ln, end_col  = self.loc
-    col                      += 6
-    lines                     = self.root._lines
+    ln, col, end_ln, end_col = self.loc
+    col += 6
+    lines = self.root._lines
 
     if not (args := self.a.args.f).loc:
         end_ln, end_col = next_find(lines, ln, col, end_ln, end_col, ':')
@@ -879,8 +879,8 @@ def _loc_withitem(self: fst.FST) -> fstloc:
 
     # assert isinstance(self.s, withitem)
 
-    ast   = self.a
-    ce    = ast.context_expr.f
+    ast = self.a
+    ce = ast.context_expr.f
     lines = self.root._lines
 
     ce_ln, ce_col, ce_end_ln, ce_end_col = ce_loc = ce.loc
@@ -901,11 +901,11 @@ def _loc_withitem(self: fst.FST) -> fstloc:
     rpars = next_delims(lines, ce_end_ln, ce_end_col, ov_ln, ov_col)
 
     if (lrpars := len(rpars)) == 1:
-        ln  = ce_ln
+        ln = ce_ln
         col = ce_col
 
     else:
-        lpars   = prev_delims(lines, *self._prev_bound_step('allown'), ce_ln, ce_col)
+        lpars = prev_delims(lines, *self._prev_bound_step('allown'), ce_ln, ce_col)
         ln, col = lpars[min(lrpars, len(lpars)) - 1]
 
     lpars = prev_delims(lines, ce_end_ln, ce_end_col, ov_ln, ov_col)
@@ -913,7 +913,7 @@ def _loc_withitem(self: fst.FST) -> fstloc:
     if (llpars := len(lpars)) == 1:
         return fstloc(ln, col, ov_end_ln, ov_end_col)
 
-    rpars           = next_delims(lines, ov_end_ln, ov_end_col, *self._next_bound_step('allown'))
+    rpars = next_delims(lines, ov_end_ln, ov_end_col, *self._next_bound_step('allown'))
     end_ln, end_col = rpars[min(llpars, len(rpars)) - 1]
 
     return fstloc(ln, col, end_ln, end_col)
@@ -924,9 +924,9 @@ def _loc_match_case(self: fst.FST) -> fstloc:
 
     # assert isinstance(self.a, match_case)
 
-    ast   = self.a
+    ast = self.a
     first = ast.pattern.f
-    last  = self.last_child()
+    last = self.last_child()
     lines = self.root._lines
 
     start = prev_find(lines, 0, 0, first.ln, first.col, 'case')  # we can use '0, 0' because we know "case" starts on a newline
@@ -949,14 +949,14 @@ def _loc_ImportFrom_names_pars(self: fst.FST) -> fstlocns:
         they should go and `n=1` meaning parentheses present and location is where they actually are.
     """
 
-    lines                     =  self.root._lines
-    ln, col, end_ln, end_col  = self.loc
-    ln, col, _                = next_find_re(lines, ln, col, end_ln, end_col, _re_keyword_import)  # must be there
-    col                      += 6
+    lines = self.root._lines
+    ln, col, end_ln, end_col = self.loc
+    ln, col, _ = next_find_re(lines, ln, col, end_ln, end_col, _re_keyword_import)  # must be there
+    col += 6
 
     if (lpar := next_frag(lines, ln, col, end_ln, end_col)) and lpar.src.startswith('('):
         ln, col, _ = lpar
-        rpar       = prev_frag(lines, ln, col + 1, end_ln, end_col)
+        rpar = prev_frag(lines, ln, col + 1, end_ln, end_col)
 
         assert rpar and rpar.src.endswith(')')
 
@@ -970,11 +970,11 @@ def _loc_ImportFrom_names_pars(self: fst.FST) -> fstlocns:
 def _loc_call_pars(self: fst.FST) -> fstloc:
     # assert isinstance(self.s, Call)
 
-    ast                   = self.a
-    lines                 = self.root._lines
-    _, _, ln, col         = ast.func.f.loc
+    ast = self.a
+    lines = self.root._lines
+    _, _, ln, col = ast.func.f.loc
     _, _, end_ln, end_col = self.loc
-    ln, col               = next_find(lines, ln, col, end_ln, end_col, '(')  # must be there
+    ln, col = next_find(lines, ln, col, end_ln, end_col, '(')  # must be there
 
     return fstloc(ln, col, end_ln, end_col)
 
@@ -982,11 +982,11 @@ def _loc_call_pars(self: fst.FST) -> fstloc:
 def _loc_subscript_brackets(self: fst.FST) -> fstloc:
     # assert isinstance(self.s, Subscript)
 
-    ast                   = self.a
-    lines                 = self.root._lines
-    _, _, ln, col         = ast.value.f.loc
+    ast = self.a
+    lines = self.root._lines
+    _, _, ln, col = ast.value.f.loc
     _, _, end_ln, end_col = self.loc
-    ln, col               = next_find(lines, ln, col, end_ln, end_col, '[')  # must be there
+    ln, col = next_find(lines, ln, col, end_ln, end_col, '[')  # must be there
 
     return fstloc(ln, col, end_ln, end_col)
 
@@ -994,11 +994,11 @@ def _loc_subscript_brackets(self: fst.FST) -> fstloc:
 def _loc_matchcls_pars(self: fst.FST) -> fstloc:
     # assert isinstance(self.a, MatchClass)
 
-    ast                   = self.a
-    lines                 = self.root._lines
-    _, _, ln, col         = ast.cls.f.loc
+    ast = self.a
+    lines = self.root._lines
+    _, _, ln, col = ast.cls.f.loc
     _, _, end_ln, end_col = self.loc
-    ln, col               = next_find(lines, ln, col, end_ln, end_col, '(')  # must be there
+    ln, col = next_find(lines, ln, col, end_ln, end_col, '(')  # must be there
 
     return fstloc(ln, col, end_ln, end_col)
 
@@ -1013,9 +1013,9 @@ def _loc_funcdef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tup
 
     # assert isinstance(self.a, (FunctionDef, AsyncFunctionDef))
 
-    ast   = self.a
+    ast = self.a
     lines = self.root._lines
-    args  = ast.args
+    args = ast.args
 
     ln, col, end_ln, end_col = self.loc
 
@@ -1024,7 +1024,7 @@ def _loc_funcdef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tup
     ):
         after_ln, after_col, _, _ = (after[0] if isinstance(after, list) else after).f.loc
     else:  # accomodate temporarily empty bodies
-        after_ln  = end_ln
+        after_ln = end_ln
         after_col = end_col
 
     if isinstance(ast, AsyncFunctionDef):
@@ -1042,7 +1042,7 @@ def _loc_funcdef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tup
     if type_params := ast.type_params:
         _, _, end_ln, end_col = type_params[-1].f.loc
     else:
-        end_ln  = ln
+        end_ln = ln
         end_col = col + 1
 
     end_ln, end_col = next_find(lines, end_ln, end_col, after_ln, after_col, ']')  # must be there
@@ -1060,7 +1060,7 @@ def _loc_classdef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tu
 
     # assert isinstance(self.a, ClassDef)
 
-    ast   = self.a
+    ast = self.a
     lines = self.root._lines
 
     ln, col, end_ln, end_col = self.loc
@@ -1068,7 +1068,7 @@ def _loc_classdef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tu
     if (after := ast.bases) or (after := ast.keywords) or (after := ast.body):
         after_ln, after_col, _, _ = after[0].f.loc
     else:  # accomodate temporarily empty bodies
-        after_ln  = end_ln
+        after_ln = end_ln
         after_col = end_col
 
     name_end_ln, name_end_col, src = next_find_re(lines, ln, col + 5, after_ln, after_col, re_identifier)  # must be there
@@ -1083,7 +1083,7 @@ def _loc_classdef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tu
     if type_params := ast.type_params:
         _, _, end_ln, end_col = type_params[-1].f.loc
     else:
-        end_ln  = ln
+        end_ln = ln
         end_col = col + 1
 
     end_ln, end_col = next_find(lines, end_ln, end_col, after_ln, after_col, ']')  # must be there
@@ -1101,11 +1101,11 @@ def _loc_typealias_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, t
 
     # assert isinstance(self.a, TypeAlias)
 
-    ast   = self.a
+    ast = self.a
     lines = self.root._lines
 
     _, _, name_end_ln, name_end_col = ast.name.f.loc
-    val_ln, val_col, _, _           = ast.value.f.loc
+    val_ln, val_col, _, _ = ast.value.f.loc
 
     if not (pos := next_find(lines, name_end_ln, name_end_col, val_ln, val_col, '[')):  # MAY be there
         return None, (name_end_ln, name_end_col)
@@ -1115,7 +1115,7 @@ def _loc_typealias_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, t
     if type_params := ast.type_params:
         _, _, end_ln, end_col = type_params[-1].f.loc
     else:
-        end_ln  = ln
+        end_ln = ln
         end_col = col + 1
 
     end_ln, end_col = next_find(lines, end_ln, end_col, val_ln, val_col, ']')  # must be there
@@ -1131,17 +1131,17 @@ def _loc_global_nonlocal_names(self: fst.FST, first: int, last: int | None = Non
 
     ln, col, end_ln, end_col = self.loc
 
-    col   += 6 if isinstance(self.a, Global) else 8
-    lines  = self.root._lines
-    idx    = first
+    col += 6 if isinstance(self.a, Global) else 8
+    lines = self.root._lines
+    idx = first
 
     while idx:  # skip the commas
-        ln, col  = next_find(lines, ln, col, end_ln, end_col, ',')  # must be there
-        col     += 1
-        idx     -= 1
+        ln, col = next_find(lines, ln, col, end_ln, end_col, ',')  # must be there
+        col += 1
+        idx -= 1
 
     ln, col, src = next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
-    first_loc    = fstloc(ln, col, ln, col := col + len(src))
+    first_loc = fstloc(ln, col, ln, col := col + len(src))
 
     if last is None:
         return first_loc
@@ -1150,9 +1150,9 @@ def _loc_global_nonlocal_names(self: fst.FST, first: int, last: int | None = Non
         return first_loc, first_loc
 
     while idx:
-        ln, col  = next_find(lines, ln, col, end_ln, end_col, ',')  # must be there
-        col     += 1
-        idx     -= 1
+        ln, col = next_find(lines, ln, col, end_ln, end_col, ',')  # must be there
+        col += 1
+        idx -= 1
 
     ln, col, src = next_find_re(lines, ln, col, end_ln, end_col, re_identifier)  # must be there
 
@@ -1195,7 +1195,7 @@ def _is_arguments_empty(self: fst.FST) -> bool:
 def _is_parenthesized_ImportFrom_names(self: fst.FST) -> bool:
     # assert isinstance(self.a, ImportFrom)
 
-    ln, col, _, _         = self.loc
+    ln, col, _, _ = self.loc
     end_ln, end_col, _, _ = self.a.names[0].f.loc
 
     return prev_frag(self.root._lines, ln, col, end_ln, end_col).src.endswith('(')  # something is there for sure
@@ -1204,7 +1204,7 @@ def _is_parenthesized_ImportFrom_names(self: fst.FST) -> bool:
 def _is_parenthesized_With_items(self: fst.FST) -> bool:
     # assert isinstance(self.a, (With, AsyncWith))
 
-    ln, col, _, _         = self.loc
+    ln, col, _, _ = self.loc
     end_ln, end_col, _, _ = self.a.items[0].f.loc  # will include any pars in child so don't need to depar
 
     return prev_frag(self.root._lines, ln, col, end_ln, end_col).src.endswith('(')  # something is there for sure
@@ -1216,7 +1216,7 @@ def _is_delimited_seq(self: fst.FST, field: str = 'elts', delims: str | tuple[st
     Tuple. Other use is for `MatchSequence`, whether parenthesized or bracketed."""
 
     ldelim, rdelim = delims
-    lines          = self.root._lines
+    lines = self.root._lines
 
     self_ln, self_col, self_end_ln, self_end_col = self.loc
 
@@ -1260,7 +1260,7 @@ def _set_end_pos(self: fst.FST, end_lineno: int, end_col_offset: int, self_: boo
 
         else:
             if hasattr(a := self.a, 'end_lineno'):  # because of ASTs which locations
-                a.end_lineno     = end_lineno
+                a.end_lineno = end_lineno
                 a.end_col_offset = end_col_offset
 
             self._touch()
@@ -1287,21 +1287,21 @@ def _set_block_end_from_last_child(self: fst.FST, bound_ln: int, bound_col: int,
 
     if last_child := self.last_child():  # easy enough when we have a new last child
         if last_child.pfield.name in ('body', 'orelse', 'handlers', 'finalbody', 'cases'):  # but make sure its past the block open colon
-            end_lineno     = last_child.end_lineno
+            end_lineno = last_child.end_lineno
             end_col_offset = last_child.end_col_offset
 
     if end_lineno is None:
         lines = self.root._lines
 
         if end := prev_find(lines, bound_ln, bound_col, bound_end_ln, bound_end_col, ':'):  # find first preceding block colon, its there unless first opened block in module
-            end_ln, end_col  = end
-            end_col         += 1  # just past the colon
+            end_ln, end_col = end
+            end_col += 1  # just past the colon
 
         else:
-            end_ln  = bound_ln
+            end_ln = bound_ln
             end_col = bound_col
 
-        end_lineno     = end_ln + 1
+        end_lineno = end_ln + 1
         end_col_offset = lines[end_ln].c2b(end_col)
 
     self._set_end_pos(end_lineno, end_col_offset)
@@ -1311,14 +1311,14 @@ def _update_loc_up_parents(self: fst.FST, lineno: int, col_offset: int, end_line
     """Change own location adn walk up parent chain changing any start or end locations which coincide with our own old
     location to the new one."""
 
-    ast                = self.a
-    old_lineno         = ast.lineno
-    old_col_offset     = ast.col_offset
-    old_end_lineno     = ast.end_lineno
+    ast = self.a
+    old_lineno = ast.lineno
+    old_col_offset = ast.col_offset
+    old_end_lineno = ast.end_lineno
     old_end_col_offset = ast.end_col_offset
-    ast.lineno         = lineno
-    ast.col_offset     = col_offset
-    ast.end_lineno     = end_lineno
+    ast.lineno = lineno
+    ast.col_offset = col_offset
+    ast.end_lineno = end_lineno
     ast.end_col_offset = end_col_offset
 
     self._touch()
@@ -1328,11 +1328,11 @@ def _update_loc_up_parents(self: fst.FST, lineno: int, col_offset: int, end_line
             break
 
         if n := self_end_col_offset == old_end_col_offset and a.end_lineno == old_end_lineno:  # only change if matches old location
-            a.end_lineno     = end_lineno
+            a.end_lineno = end_lineno
             a.end_col_offset = end_col_offset
 
         if a.col_offset == old_col_offset and a.lineno == old_lineno:
-            a.lineno     = lineno
+            a.lineno = lineno
             a.col_offset = col_offset
 
         elif not n:
@@ -1358,7 +1358,7 @@ def _maybe_add_line_continuations(self: fst.FST, whole: bool = False) -> bool:
     if self.is_enclosed_or_line(whole=whole, out_lns=(lns := set())):
         return False
 
-    lines    = self.root._lines
+    lines = self.root._lines
     end_cols = {}  # {end_ln: end_col, ...} last expression columns for lines, needed for comment checks (so we don't get false comments from inside strings)
 
     for a in walk(self.a):
@@ -1402,9 +1402,9 @@ def _maybe_del_separator(self: fst.FST, ln: int, col: int, force: bool = False,
         return False
 
     sep_ln, sep_col = pos
-    sep_end_col     = sep_col + len(sep)
-    sep_on_end_ln   = sep_ln == end_ln
-    line_sep        = lines[sep_ln]
+    sep_end_col = sep_col + len(sep)
+    sep_on_end_ln = sep_ln == end_ln
+    line_sep = lines[sep_ln]
 
     if not (frag := next_frag(lines, sep_ln, sep_end_col, sep_ln, end_col if sep_on_end_ln else 0x7fffffffffffffff,
                              True, True)):  # nothing on rest of line after separator?
@@ -1462,7 +1462,7 @@ def _maybe_ins_separator(self: fst.FST, ln: int, col: int, space: bool,
             ccol += 1
 
             if c == ')':
-                ln  = cln
+                ln = cln
                 col = ccol
 
             elif c != sep:
@@ -1525,7 +1525,7 @@ def _maybe_fix_undelimited_seq(self: fst.FST, body: list[AST], delims: str = '()
     # assert isinstance(self.a, (Tuple, MatchSequence))
 
     if not body:  # if is empty then just need to delimit
-        lines                    = self.root._lines
+        lines = self.root._lines
         ln, col, end_ln, end_col = self.loc
 
         if not next_frag(lines, ln, col, end_ln, end_col, True):  # if no comments in tuple area then just replace with '()'
@@ -1547,7 +1547,7 @@ def _maybe_fix_undelimited_seq(self: fst.FST, body: list[AST], delims: str = '()
         return True
 
     ln, col, end_ln, end_col = self.loc
-    encpar                   = None
+    encpar = None
 
     if ((end_ln != ln and not self.is_enclosed_or_line(pars=False) and not (encpar := self.is_enclosed_in_parents())) or  # could have line continuations
         (any(isinstance(e, NamedExpr) and not e.f.pars().n for e in body))  # yeah, this is fine in parenthesized tuples but not in naked ones, only applies to tuples and not MatchSequence obviously
@@ -1557,7 +1557,7 @@ def _maybe_fix_undelimited_seq(self: fst.FST, body: list[AST], delims: str = '()
         return True
 
     eln, ecol, _, _ = body[0].f.pars()
-    lines           = self.root._lines
+    lines = self.root._lines
 
     if ecol != col or eln != ln:  # to be super safe we enforce that an undelimited node must start at the first element
         self._put_src(None, ln, col, eln, ecol, False)
@@ -1567,19 +1567,19 @@ def _maybe_fix_undelimited_seq(self: fst.FST, body: list[AST], delims: str = '()
     _, _, eend_ln, eend_col = body[-1].f.pars()
 
     if comma := next_find(lines, eend_ln, eend_col, end_ln, end_col, ','):  # could be closing grouping pars before comma
-        eend_ln, eend_col  = comma
-        eend_col          += 1
+        eend_ln, eend_col = comma
+        eend_col += 1
 
     if end_col != eend_col or end_ln != eend_ln:  # need to update end position because it had some whitespace after which will not be enclosed by delimiters
         if not (encpar or self.is_enclosed_in_parents()):
             self._put_src(None, eend_ln, eend_col, end_ln, end_col, True)  # be safe, nuke everything after last element since we won't have delimiters or parent to delimit it
 
         else:  # enclosed in parents so we can leave crap at the end
-            a                  = self.a
-            cur_end_lineno     = a.end_lineno
+            a = self.a
+            cur_end_lineno = a.end_lineno
             cur_end_col_offset = a.end_col_offset
-            end_lineno         = a.end_lineno     = eend_ln + 1
-            end_col_offset     = a.end_col_offset = lines[eend_ln].c2b(eend_col)
+            end_lineno = a.end_lineno = eend_ln + 1
+            end_col_offset = a.end_col_offset = lines[eend_ln].c2b(eend_col)
 
             self._touch()
 
@@ -1587,7 +1587,7 @@ def _maybe_fix_undelimited_seq(self: fst.FST, body: list[AST], delims: str = '()
                     getattr(a := self.a, 'end_col_offset', -1) == cur_end_col_offset and
                     a.end_lineno == cur_end_lineno
             ):  # update parents, only as long as they end exactly where we end
-                a.end_lineno     = end_lineno
+                a.end_lineno = end_lineno
                 a.end_col_offset = end_col_offset
 
                 self._touch()
@@ -1650,7 +1650,7 @@ def _maybe_fix_matchor(self: fst.FST, fix1: bool = False) -> None:
     if not (patterns := self.a.patterns):
         return
 
-    lines   = self.root._lines
+    lines = self.root._lines
     did_par = False
 
     if not (is_root := self.is_root):  # if not root then it needs ot be fixed here
@@ -1672,7 +1672,7 @@ def _maybe_fix_matchor(self: fst.FST, fix1: bool = False) -> None:
         if len_patterns > 1:
             _, _, end_ln, end_col = patterns[-1].f.pars()
 
-        col_offset     = lines[ln].c2b(col)
+        col_offset = lines[ln].c2b(col)
         end_col_offset = lines[end_ln].c2b(end_col)
 
         self._update_loc_up_parents(ln + 1, col_offset, end_ln + 1, end_col_offset)
@@ -1706,7 +1706,7 @@ def _maybe_fix_elif(self: fst.FST) -> None:
     # assert isinstance(self.a, If)
 
     ln, col, _, _ = self.loc
-    lines         = self.root._lines
+    lines = self.root._lines
 
     if lines[ln].startswith('elif', col):
         self._put_src(None, ln, col, ln, col + 2, False)
@@ -1792,12 +1792,12 @@ def _sanitize(self: fst.FST) -> Self:
         return self
 
     ln, col, end_ln, end_col = loc
-    lines                    = self._lines
+    lines = self._lines
 
     self._offset(ln, col, -ln, -lines[ln].c2b(col))
 
     lines[end_ln] = bistr(lines[end_ln][:end_col])
-    lines[ln]     = bistr(lines[ln][col:])
+    lines[ln] = bistr(lines[ln][col:])
 
     del lines[end_ln + 1:], lines[:ln]
 
@@ -1822,14 +1822,14 @@ def _parenthesize_grouping(self: fst.FST, whole: bool = True, *, star_child: boo
     ln, col, end_ln, end_col = self.whole_loc if whole and self.is_root else self.loc
 
     if is_star_child := isinstance(ast, Starred) and star_child:
-        ln, col, _, _  = self.loc
-        col           += 1
-        self           = ast.value.f
+        ln, col, _, _ = self.loc
+        col += 1
+        self = ast.value.f
 
     self._put_src([')'], end_ln, end_col, end_ln, end_col, True, True, self, offset_excluded=False)
 
     if is_star_child:  # because of maybe `whole`, otherwise could just do it using _put_src(..., offset_excluded=is_star_child) above
-        ast.end_lineno     = end_ln + 1
+        ast.end_lineno = end_ln + 1
         ast.end_col_offset = self.root._lines[end_ln].b2c(end_col) + 1
 
     self._offset(*self._put_src(['('], ln, col, ln, col, False, False, self, offset_excluded=False))
@@ -1861,15 +1861,15 @@ def _unparenthesize_grouping(self: fst.FST, shared: bool | None = True, *, star_
     if not getattr(pars_loc, 'n', 0) and not shared:
         return False
 
-    ln , col,  end_ln,  end_col  = self.bloc
+    ln, col, end_ln, end_col = self.bloc
     pln, pcol, pend_ln, pend_col = pars_loc
 
     if shared:  # special case merge solo argument GeneratorExp parentheses with call argument parens
-        lines                    = self.root._lines
-        _, _, cend_ln, cend_col  = self.parent.func.loc
-        pln, pcol                = prev_find(lines, cend_ln, cend_col, pln, pcol, '(')  # it must be there
-        pend_ln, pend_col        = next_find(lines, pend_ln, pend_col, len(lines) - 1, len(lines[-1]), ')')  # ditto
-        pend_col                += 1
+        lines = self.root._lines
+        _, _, cend_ln, cend_col = self.parent.func.loc
+        pln, pcol = prev_find(lines, cend_ln, cend_col, pln, pcol, '(')  # it must be there
+        pend_ln, pend_col = next_find(lines, pend_ln, pend_col, len(lines) - 1, len(lines[-1]), ')')  # ditto
+        pend_col += 1
 
         self._put_src(None, end_ln, end_col, pend_ln, pend_col, True, self)
         self._put_src(None, pln, pcol, ln, col, False)
@@ -1906,14 +1906,14 @@ def _delimit_node(self: fst.FST, whole: bool = True, delims: str = '()') -> None
 
     self._put_src([delims[1]], end_ln, end_col, end_ln, end_col, True, False, self)
 
-    lines            = self.root._lines
-    a                = self.a
-    a.end_lineno     = end_ln + 1  # yes this can change
+    lines = self.root._lines
+    a = self.a
+    a.end_lineno = end_ln + 1  # yes this can change
     a.end_col_offset = lines[end_ln].c2b(end_col + 1)  # can't count on this being set by put_src() because end of `whole` could be past end of tuple
 
     self._offset(*self._put_src([delims[0]], ln, col, ln, col, False, False, self), self_=False)
 
-    a.lineno     = ln + 1
+    a.lineno = ln + 1
     a.col_offset = lines[ln].c2b(col)  # ditto on the `whole` thing
 
 
@@ -1935,12 +1935,12 @@ def _undelimit_node(self: fst.FST, field: str = 'elts') -> bool:
         return False
 
     ln, col, end_ln, end_col = self.loc
-    lines                    = self.root._lines
+    lines = self.root._lines
 
     if comma := next_find(self.root._lines, en_end_ln := (en := body[-1].f).end_ln, en_end_col := en.end_col,
                           end_ln, end_col, ','):  # need to leave trailing comma if its there
-        en_end_ln, en_end_col  = comma
-        en_end_col            += 1
+        en_end_ln, en_end_col = comma
+        en_end_col += 1
 
     else:  # when no trailing comma need to make sure par is not separating us from an alphanumeric on either side, and if so then insert a space at the end before deleting the right par
         if end_col >= 2 and _re_delim_close_alnums.match(lines[end_ln], end_col - 2):
@@ -1976,9 +1976,9 @@ def _normalize_block(self: fst.FST, field: str = 'body', *, indent: str | None =
     if isinstance(self.a, mod) or not (block := getattr(self.a, field)) or not isinstance(block, list):
         return
 
-    b0                  = block[0].f
+    b0 = block[0].f
     b0_ln, b0_col, _, _ = b0.bloc
-    root                = self.root
+    root = self.root
 
     if not (colon := prev_find(root._lines, *b0._prev_bound(), b0_ln, b0_col, ':', True, comment=True, lcont=None)):  # must be there
         return
@@ -2046,7 +2046,7 @@ def _make_fst_and_dedent(self: fst.FST, indent: fst.FST | str, ast: AST, copy_lo
         indent = indent.get_indent()
 
     lines = self.root._lines
-    fst_  = fst.FST(ast, lines, from_=self, lcopy=False)  # we use original lines for nodes offset calc before putting new lines
+    fst_ = fst.FST(ast, lines, from_=self, lcopy=False)  # we use original lines for nodes offset calc before putting new lines
 
     fst_._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix.encode()) - lines[copy_loc.ln].c2b(copy_loc.col))
 
@@ -2090,21 +2090,21 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
         if not isinstance(ast, FormattedValue):
             return None
 
-    lines                        = self.root._lines
+    lines = self.root._lines
     sln, scol, send_ln, send_col = self.loc
-    _, _, vend_ln, vend_col      = ast.value.f.pars()
+    _, _, vend_ln, vend_col = ast.value.f.pars()
 
     if fspec := ast.format_spec:
         end_ln, end_col, _, _ = fspec.f.loc
     else:
-        end_ln  = send_ln
+        end_ln = send_ln
         end_col = send_col - 1
 
     if ast.conversion != -1:
         if prev := prev_find(lines, vend_ln, vend_col, end_ln, end_col, '!'):
             end_ln, end_col = prev
 
-    src     = self.get_src(vend_ln, vend_col, end_ln, end_col)  # source from end of parenthesized value to end of FormattedValue or start of conversion or format_spec
+    src = self.get_src(vend_ln, vend_col, end_ln, end_col)  # source from end of parenthesized value to end of FormattedValue or start of conversion or format_spec
     get_dbg = src and (m := _re_fval_expr_equals.match(src)) and m.end() == len(src)
 
     if not get_dbg and not get_val:
@@ -2120,12 +2120,12 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
                 lines[i] = l[:m.start(1)]
 
     else:
-        lns  = set()
+        lns = set()
         ends = {}  # the starting column of where to search for comment '#', past end of any expression on given line
 
         for f in (walking := ast.value.f.walk(True)):  # find multiline continuation line numbers
             fln, _, fend_ln, fend_col = f.loc
-            ends[fend_ln]             = max(fend_col, ends.get(fend_ln, 0))
+            ends[fend_ln] = max(fend_col, ends.get(fend_ln, 0))
 
             if fend_ln == fln:  # everything on one line, don't need to recurse
                 walking.send(False)
@@ -2141,10 +2141,10 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
                 for a in walk(f.a):  # we walk ourselves to get end-of-expression locations for lines
                     if loc := a.f.loc:
                         _, _, fend_ln, fend_col = loc
-                        ends[fend_ln]           = max(fend_col, ends.get(fend_ln, 0))
+                        ends[fend_ln] = max(fend_col, ends.get(fend_ln, 0))
 
-        off   = sln + 1
-        lns   = {v - off for v in lns}  # these are line numbers where comments are not possible because next line is a string continuation
+        off = sln + 1
+        lns = {v - off for v in lns}  # these are line numbers where comments are not possible because next line is a string continuation
         lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
 
         for i, l in enumerate(lines):
@@ -2225,8 +2225,8 @@ def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal[
         docstr = self.get_option('docstr')
 
     strict = docstr == 'strict'
-    lines  = self.root._lines
-    lns    = set(range(skip, len(lines))) if self.is_root else set(range(self.bln + skip, self.bend_ln + 1))
+    lines = self.root._lines
+    lns = set(range(skip, len(lines))) if self.is_root else set(range(self.bln + skip, self.bend_ln + 1))
 
     while (parent := self.parent) and not isinstance(self.a, STMTISH):
         self = parent
@@ -2353,14 +2353,14 @@ def _put_src(self: fst.FST, src: str | list[str] | None, ln: int, col: int, end_
                 del ls[ln + 1 : end_ln + 1]
 
         elif not dln:  # replace single line with multiple lines
-            lend                 = bistr(lines[-1] + (l := ls[ln])[end_col:])
-            ls[ln]               = bistr(l[:col] + lines[0])
-            ls[ln + 1 : ln + 1]  = lines[1:]
+            lend = bistr(lines[-1] + (l := ls[ln])[end_col:])
+            ls[ln] = bistr(l[:col] + lines[0])
+            ls[ln + 1 : ln + 1] = lines[1:]
             ls[ln + nnew_ln - 1] = lend
 
         else:  # replace multiple lines with multiple lines
-            ls[ln]              = bistr(ls[ln][:col] + lines[0])
-            ls[end_ln]          = bistr(lines[-1] + ls[end_ln][end_col:])
+            ls[ln] = bistr(ls[ln][:col] + lines[0])
+            ls[end_ln] = bistr(lines[-1] + ls[end_ln][end_col:])
             ls[ln + 1 : end_ln] = lines[1:-1]
 
     return parsoff
@@ -2451,10 +2451,10 @@ def _offset(self: fst.FST, ln: int, col: int, dln: int, dcol_offset: int,
     else:
         stack = list(iter_child_nodes(self.a))
 
-    lno  = ln + 1
+    lno = ln + 1
     colo = (-col if col <= 0 else  # yes, -0 to not look up 0
             (l := ls[ln]).c2b(min(col, len(l))) if ln < len(ls := self.root._lines) else 0x7fffffffffffffff)
-    fwd  = dln > 0 or (not dln and dcol_offset >= 0)
+    fwd = dln > 0 or (not dln and dcol_offset >= 0)
 
     while stack:
         a = stack.pop()
@@ -2470,7 +2470,7 @@ def _offset(self: fst.FST, ln: int, col: int, dln: int, dcol_offset: int,
         f._touch()
 
         if (fend_colo := getattr(a, 'end_col_offset', None)) is not None:
-            flno  = a.lineno
+            flno = a.lineno
             fcolo = a.col_offset
 
             if (fend_lno := a.end_lineno) < lno:
@@ -2481,9 +2481,9 @@ def _offset(self: fst.FST, ln: int, col: int, dln: int, dcol_offset: int,
                 continue
 
             elif (fend_colo > colo or
-                    (tail and (fwd or head is not False or fcolo != fend_colo or flno != fend_lno)) or  # at (ln, col), moving tail allowed and not blocked by head?
-                    (tail is None and head and fwd and fcolo == fend_colo and flno == fend_lno)):  # allowed to be and being moved by head?
-                a.end_lineno     = fend_lno + dln
+                  (tail and (fwd or head is not False or fcolo != fend_colo or flno != fend_lno)) or  # at (ln, col), moving tail allowed and not blocked by head?
+                  (tail is None and head and fwd and fcolo == fend_colo and flno == fend_lno)):  # allowed to be and being moved by head?
+                a.end_lineno = fend_lno + dln
                 a.end_col_offset = fend_colo + dcol_offset
 
             if flno > lno:
@@ -2493,9 +2493,9 @@ def _offset(self: fst.FST, ln: int, col: int, dln: int, dcol_offset: int,
                 a.lineno = flno + dln
 
             elif (flno == lno and (fcolo > colo or (fcolo == colo and (
-                    (head and (not fwd or tail is not False or fcolo != fend_colo or flno != fend_lno)) or  # at (ln, col), moving head allowed and not blocked by tail?
-                    (head is None and tail and not fwd and fcolo == fend_colo and flno == fend_lno))))):  # allowed to be and being moved by tail?
-                a.lineno     = flno + dln
+                  (head and (not fwd or tail is not False or fcolo != fend_colo or flno != fend_lno)) or  # at (ln, col), moving head allowed and not blocked by tail?
+                  (head is None and tail and not fwd and fcolo == fend_colo and flno == fend_lno))))):  # allowed to be and being moved by tail?
+                a.lineno = flno + dln
                 a.col_offset = fcolo + dcol_offset
 
         stack.extend(children)
@@ -2566,7 +2566,7 @@ def _indent_lns(self: fst.FST, indent: str | None = None, lns: set[int] | None =
     if not ((lns := self._get_indentable_lns(skip, docstr=docstr)) if lns is None else lns):
         return
 
-    lines       = root._lines
+    lines = root._lines
     dont_offset = set()
 
     for ln in lns:
@@ -2609,9 +2609,9 @@ def _dedent_lns(self: fst.FST, dedent: str | None = None, lns: set[int] | None =
     if not ((lns := self._get_indentable_lns(skip, docstr=docstr)) if lns is None else lns):
         return
 
-    lines        = root._lines
-    ldedent      = len(dedent)
-    dont_offset  = set()
+    lines = root._lines
+    ldedent = len(dedent)
+    dont_offset = set()
     dcol_offsets = None
 
     def dedented(l: str, ldedent_: int) -> None:
@@ -2694,11 +2694,11 @@ def _redent_lns(self: fst.FST, dedent: str | None = None, indent: str | None = N
     if not ((lns := self._get_indentable_lns(skip, docstr=docstr)) if lns is None else lns):
         return
 
-    lines        = root._lines
-    ldedent      = len(dedent)
-    lindent      = len(indent)
-    dredent      = lindent - ldedent
-    dont_offset  = set()
+    lines = root._lines
+    ldedent = len(dedent)
+    lindent = len(indent)
+    dredent = lindent - ldedent
+    dont_offset = set()
     dcol_offsets = None
 
     def dedented(l: str, ldedent_: int) -> None:
@@ -2798,12 +2798,12 @@ def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool 
 
     elif isinstance(lead_comments, str):
         if (i := lead_comments.find('+')) != -1:
-            lead_space    = int(n) if (n := lead_comments[i + 1:]) else True
+            lead_space = int(n) if (n := lead_comments[i + 1:]) else True
             lead_comments = lead_comments[:i] or 'none'
 
         elif (i := lead_comments.find('-')) != -1:
-            lead_neg      = True
-            lead_space    = (int(n) if (n := lead_comments[i + 1:]) else True) if neg else 0
+            lead_neg = True
+            lead_space = (int(n) if (n := lead_comments[i + 1:]) else True) if neg else 0
             lead_comments = lead_comments[:i] or 'none'
 
         assert lead_comments != 'line'
@@ -2815,12 +2815,12 @@ def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool 
 
     elif isinstance(trail_comments, str):
         if (i := trail_comments.find('+')) != -1:
-            trail_space    = int(n) if (n := trail_comments[i + 1:]) else True
+            trail_space = int(n) if (n := trail_comments[i + 1:]) else True
             trail_comments = trail_comments[:i] or 'none'
 
         elif (i := trail_comments.find('-')) != -1:
-            trail_neg      = True
-            trail_space    = (int(n) if (n := trail_comments[i + 1:]) else True) if neg else 0
+            trail_neg = True
+            trail_space = (int(n) if (n := trail_comments[i + 1:]) else True) if neg else 0
             trail_comments = trail_comments[:i] or 'none'
 
     return lead_comments, lead_space, lead_neg, trail_comments, trail_space, trail_neg

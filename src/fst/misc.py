@@ -90,8 +90,8 @@ re_line_continuation     = re.compile(r'[^#]*\\$')   # line continuation with ba
 re_line_trailing_space   = re.compile(r'.*?(\s*)$')  # location of trailing whitespace at the end of a line
 re_empty_space           = re.compile(r'\s*$')       # completely empty or space-filled line (from start pos, start of line indentation, any space, not just line indenting space)
 
-re_oneline_str           = re.compile(r'(?:b|r|rb|br|u|)  (?:  \'(?:\\.|[^\\\'])*?\'  |  "(?:\\.|[^\\"])*?"  )',   # I f'])*?\'ng hate these!
-                                     re.VERBOSE | re.IGNORECASE)
+re_oneline_str           = re.compile(r'(?:b|r|rb|br|u|)  (?:  \'(?:\\.|[^\\\'])*?\'  |  "(?:\\.|[^\\"])*?"  )',  # I f'])*?\'ng hate these!
+                                      re.VERBOSE | re.IGNORECASE)
 re_contline_str_start    = re.compile(r'(?:b|r|rb|br|u|)  (\'|")', re.VERBOSE | re.IGNORECASE)
 re_contline_str_end_sq   = re.compile(r'(?:\\.|[^\\\'])*?  \'', re.VERBOSE)
 re_contline_str_end_dq   = re.compile(r'(?:\\.|[^\\"])*?  "', re.VERBOSE)
@@ -108,7 +108,7 @@ re_next_src_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next 
 re_next_src_or_lcont            = re.compile(r'\s*([^\s#\\]+|\\$)')      # next non-space non-comment code including logical line end, don't look into strings with this!
 re_next_src_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # next non-space non-continuation code or comment text including logical line end, don't look into strings with this!
 
-_AST_DEFAULT_BODY_FIELD  = {cls: field for field, classes in [
+_AST_DEFAULT_BODY_FIELD = {cls: field for field, classes in [
     ('body',         (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
                       With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
     ('cases',        (Match,)),
@@ -218,7 +218,7 @@ class fstlocns(fstloc):
 
     def __repr__(self) -> str:
         ln, col, end_ln, end_col = self
-        ns                       = ', '.join(f'{n}={v!r}' for n, v in self.__dict__.items())
+        ns = ', '.join(f'{n}={v!r}' for n, v in self.__dict__.items())
 
         return (f'fstlocns({ln}, {col}, {end_ln}, {end_col}, {ns})' if ns else
                 f'fstlocns({ln}, {col}, {end_ln}, {end_col})')
@@ -252,7 +252,7 @@ class nspace:
 assert sys.version_info[0] == 3, 'pyver() assumes python major version 3'
 
 _pyver_registry = {}  # {'__module__.__qualname__': [(func, (ge, lt) | unbound +ge | unbound -lt]), ...}
-_pyver          = sys.version_info[1]  # just the minor version
+_pyver = sys.version_info[1]  # just the minor version
 
 def pyver(func: Callable | None = None, *, ge: int | None = None, lt: int | None = None, else_: Callable | None = None,
           ) -> Callable:
@@ -472,8 +472,8 @@ def prev_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
         cont_ln = end_ln
 
         if not (m := last_match(lines[end_ln], 0, end_col, re_next_src_or_comment_or_lcont)):
-            end_ln  -= 1
-            end_col  = 0x7fffffffffffffff
+            end_ln -= 1
+            end_col = 0x7fffffffffffffff
 
         else:
             if not (s := m.group(1)).startswith('#') or comment:
@@ -489,9 +489,9 @@ def prev_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
                     return None
 
             elif (s := m.group(1)) == '\\':
-                cont_ln  = ln
-                end_col  = m.start(1)  # in case state was exhausted
-                i       += 1  # to search same line again, possibly from new end_col
+                cont_ln = ln
+                end_col = m.start(1)  # in case state was exhausted
+                i += 1  # to search same line again, possibly from new end_col
 
                 continue
 
@@ -646,7 +646,7 @@ def next_delims(lines: list[str], end_ln: int, end_col: int, bound_end_ln: int, 
             if c != delim:
                 break
 
-            end_ln  = ln
+            end_ln = ln
             end_col = (col := col + 1)
 
             delims.append((end_ln, end_col))
@@ -672,17 +672,17 @@ def prev_delims(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: i
     """
 
     delims = [(ln, col)]
-    state  = []
+    state = []
 
     while frag := prev_frag(lines, bound_ln, bound_col, ln, col, state=state):
-        ln, col, src  = frag
-        col          += len(src)
+        ln, col, src = frag
+        col += len(src)
 
         for c in src[::-1]:
             if c != delim:
                 break
 
-            ln  = ln
+            ln = ln
             col = (col := col - 1)
 
             delims.append((ln, col))
@@ -740,12 +740,12 @@ def leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col
     if (bound_ln == ln and bound_col) or not re_empty_line.match(l := lines[ln], 0, col):
         return ((ln, col), None, None)
 
-    indent    = l[:col]
+    indent = l[:col]
     is_lineno = isinstance(comments, int)
-    text_pos  = (ln, col)  # start of comments or start of element
-    top_ln    = bound_ln + bool(bound_col)  # topmost possible line to be considered, min return location is (top_ln, 0)
-    stop_ln   = comments if is_lineno and comments > top_ln else top_ln
-    start_ln  = ln
+    text_pos = (ln, col)  # start of comments or start of element
+    top_ln = bound_ln + bool(bound_col)  # topmost possible line to be considered, min return location is (top_ln, 0)
+    stop_ln = comments if is_lineno and comments > top_ln else top_ln
+    start_ln = ln
 
     if comments == 'all':
         comments_ln = ln
@@ -757,8 +757,8 @@ def leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col
             if (g := m.group(1)) and g.startswith('#'):
                 comments_ln = ln
 
-        ln           += 1
-        comments_pos  = (comments_ln, 0)
+        ln += 1
+        comments_pos = (comments_ln, 0)
 
         if comments_ln != start_ln:
             text_pos = comments_pos
@@ -895,12 +895,12 @@ def trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end
 
     if bound_end_col >= (ll := len(lines[bound_end_ln])):  # special stuff happens if bound is at EOL
         bound_end_pos = (bound_end_ln, ll)  # this is only used if bound is at EOL so doesn't need to be set if not
-        bottom_ln     = past_bound_end_ln  # two past bottommost line to be considered, max return location is bound_end_pos
+        bottom_ln = past_bound_end_ln  # two past bottommost line to be considered, max return location is bound_end_pos
 
     else:
-        bottom_ln     = bound_end_ln  # one past bottommost line to be considered, max return location is (bottom_ln, 0)
+        bottom_ln = bound_end_ln  # one past bottommost line to be considered, max return location is (bottom_ln, 0)
 
-    stop_ln  = comments + 1 if is_lineno and comments < bottom_ln else bottom_ln
+    stop_ln = comments + 1 if is_lineno and comments < bottom_ln else bottom_ln
     start_ln = end_ln + 1
 
     if comments == 'all':
@@ -931,7 +931,7 @@ def trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end
         if space is True:
             return (text_pos, space_pos, True)  # infinite space requested so return everything we got
 
-        space_ln  = comments_ln + min(space, end_ln - comments_ln)
+        space_ln = comments_ln + min(space, end_ln - comments_ln)
         space_pos = (space_ln, 0) if space_ln < past_bound_end_ln else bound_end_pos
 
         return (text_pos, space_pos, True)  # return only number of lines limited by finite requested space
@@ -986,10 +986,10 @@ def params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int,
     @private
     """
 
-    dfst_ln     = len(put_lines) - 1
-    dln         = dfst_ln - (end_ln - ln)
+    dfst_ln = len(put_lines) - 1
+    dln = dfst_ln - (end_ln - ln)
     dcol_offset = put_lines[-1].lenbytes - lines[end_ln].c2b(end_col)
-    col_offset  = -lines[end_ln].c2b(end_col)
+    col_offset = -lines[end_ln].c2b(end_col)
 
     if not dfst_ln:
         dcol_offset += lines[ln].c2b(col)
@@ -1118,13 +1118,13 @@ def multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln: 
                 col = m.end()
 
             else:  # UGH! a line continuation string, pffft...
-                m          = re_contline_str_start.match(l, col)
+                m = re_contline_str_start.match(l, col)
                 re_str_end = re_contline_str_end_sq if m.group(1) == "'" else re_contline_str_end_dq
-                ln, col    = walk_multiline(ln, end_ln, m, re_str_end)  # find end of multiline line continuation string
+                ln, col = walk_multiline(ln, end_ln, m, re_str_end)  # find end of multiline line continuation string
 
         else:
             re_str_end = re_multiline_str_end_sq if m.group(1) == "'''" else re_multiline_str_end_dq
-            ln, col    = walk_multiline(ln, end_ln, m, re_str_end)  # find end of multiline string
+            ln, col = walk_multiline(ln, end_ln, m, re_str_end)  # find end of multiline string
 
         if ln == end_ln and col == end_col:
             break

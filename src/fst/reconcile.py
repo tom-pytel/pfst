@@ -28,9 +28,9 @@ class Reconcile:
             raise ValueError("cannot use reconcile with 'raw' option")
 
         self.options = options
-        self.work    = work
-        self.mark    = mark
-        self.out     = mark.copy()
+        self.work = work
+        self.mark = mark
+        self.out = mark.copy()
 
     def put_node(self, code: fst.FST | AST, out_parent: fst.FST | None = None, pfield: astfield | None = None) -> None:
         if out_parent:
@@ -42,18 +42,18 @@ class Reconcile:
         """Recurse into a combined slice of a Dict's keys and values using slice operations to copy over formatting
         where possible (if not already there). Can be recursing an in-tree FST parent or a pure AST parent."""
 
-        keys     = node.keys
-        values   = node.values
+        keys = node.keys
+        values = node.values
         len_body = len(keys)
 
         if len(values) != len_body:
             raise RuntimeError(f'Dict.keys length ({len_body}) != Dict.values length ({len(values)})')
 
-        nodef     = getattr(node, 'f', False)  # this determines if it came from an in-tree FST or a pure AST
-        outa      = outf.a
+        nodef = getattr(node, 'f', False)  # this determines if it came from an in-tree FST or a pure AST
+        outa = outf.a
         outa_keys = outa.keys
         work_root = self.work
-        start     = 0
+        start = 0
 
         while start < len_body:
             if (not (valf := getattr(values[start], 'f', None)) or       # if value doesn't have FST
@@ -78,8 +78,8 @@ class Reconcile:
 
             else:  # slice operation, even if its just one element because slice copies more formatting and comments
                 child_parent_keys = child_parent.a.keys
-                child_idx         = val_pfield.idx
-                child_off_idx     = child_idx - start
+                child_idx = val_pfield.idx
+                child_off_idx = child_idx - start
 
                 for end in range(start + 1, len_body):  # get length of contiguous slice
                     if (not (f := getattr(values[end], 'f', None)) or
@@ -122,7 +122,7 @@ class Reconcile:
 
                 else:
                     mark_parent = self.mark.child_from_path(self.work.child_path(child_parent))
-                    slice       = mark_parent.get_slice(child_idx, child_idx - start + end, None)
+                    slice = mark_parent.get_slice(child_idx, child_idx - start + end, None)
 
                     outf.put_slice(slice, start, end, None, raw=False, **self.options)
 
@@ -151,13 +151,13 @@ class Reconcile:
         """Recurse into a slice of children using slice operations to copy over formatting where possible (if not
         already there). Can be recursing an in-tree FST parent or a pure AST parent."""
 
-        nodef     = getattr(node, 'f', False)  # this determines if it came from an in-tree FST or a pure AST
-        outa      = outf.a
+        nodef = getattr(node, 'f', False)  # this determines if it came from an in-tree FST or a pure AST
+        outa = outf.a
         outa_body = getattr(outa, field)
         work_root = self.work
-        len_body  = len(body)
-        start     = 0
-        node_sig  = (node.__class__, field)
+        len_body = len(body)
+        start = 0
+        node_sig = (node.__class__, field)
 
         while start < len_body:
             if (not (childf := getattr(body[start], 'f', None)) or                                       # if child doesn't have FST
@@ -203,7 +203,7 @@ class Reconcile:
 
                 else:
                     mark_parent = self.mark.child_from_path(self.work.child_path(child_parent))
-                    slice       = mark_parent.get_slice(child_idx, child_off_idx + end, child_field)
+                    slice = mark_parent.get_slice(child_idx, child_off_idx + end, child_field)
 
                     outf.put_slice(slice, start, end, field, raw=False, **self.options)
 
@@ -229,7 +229,7 @@ class Reconcile:
             return
 
         nodef = getattr(node, 'f', False)  # this determines if it came from an in-tree FST or a pure AST
-        outf  = outa.f
+        outf = outa.f
 
         for field, child in iter_fields(node):
             if field in ('ctx', 'str'):  # redundant or possibly contradictory, TODO: exclude 'level', 'kind', 'is_async'?
