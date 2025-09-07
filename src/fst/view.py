@@ -429,8 +429,8 @@ class fstview:
 
         len_before = len(asts := getattr(self.fst.a, self.field))
         idx = (self.stop if idx == 'end' else
-                      stop if idx > (l := (stop := self.stop) - (start := self.start)) else
-                      start + (idx if idx >= 0 else max(0, idx + l)))
+               stop if idx > (l := (stop := self.stop) - (start := self.start)) else
+               start + (idx if idx >= 0 else max(0, idx + l)))
 
         self.fst = self.fst.put_slice(code, idx, idx, self.field, one=one, **options)
 

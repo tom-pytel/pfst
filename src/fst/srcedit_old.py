@@ -344,15 +344,14 @@ class SrcEdit:
             if not del_end_col:
                 new_del_end_ln = min(bound_end_ln, del_end_ln + postspace)  # last possible end line to delete to
                 del_end_ln = (frag.ln
-                                  if (frag := next_frag(lines, del_end_ln, 0, new_del_end_ln, 0, True, True)) else
-                                  new_del_end_ln)
+                              if (frag := next_frag(lines, del_end_ln, 0, new_del_end_ln, 0, True, True)) else
+                              new_del_end_ln)
 
             elif del_end_col == len(lines[del_end_ln]):
                 new_del_end_ln = min(bound_end_ln, del_end_ln + postspace + 1)  # account for not ending on newline
                 del_end_ln = (frag.ln - 1
-                                  if (frag := next_frag(lines, del_end_ln, del_end_col, new_del_end_ln, 0, True, True,
-                                                        )) else
-                                  new_del_end_ln - 1)
+                              if (frag := next_frag(lines, del_end_ln, del_end_col, new_del_end_ln, 0, True, True)) else
+                              new_del_end_ln - 1)
                 del_end_col = len(lines[del_end_ln])
 
         del_loc = fstloc(del_ln, del_col, del_end_ln, del_end_col)

@@ -176,10 +176,9 @@ class astfield(NamedTuple):
         `AttributError` or `IndexError`, `False` works well because not normally found locations where `AST` nodes can
          reside in `AST` trees."""
 
-        return (
-            getattr(parent, self.name, default) if (idx := self.idx) is None else
-            default if (body := getattr(parent, self.name, False)) is False or idx >= len(body) else
-            body[idx])
+        return (getattr(parent, self.name, default) if (idx := self.idx) is None else
+                default if (body := getattr(parent, self.name, False)) is False or idx >= len(body) else
+                body[idx])
 
     def set(self, parent: AST, child: AST) -> None:
         """Set `child` node at this field in the given `parent`."""

@@ -114,7 +114,7 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
                 put_fst = code_as_stmts(code, self.root.parse_params)
             elif isinstance(b0, ExceptHandler):
                 put_fst = code_as_ExceptHandlers(code, self.root.parse_params,
-                                                       is_trystar=b0.f.is_except_star())
+                                                 is_trystar=b0.f.is_except_star())
             else:  # match_case
                 put_fst = code_as_match_cases(code, self.root.parse_params)
 

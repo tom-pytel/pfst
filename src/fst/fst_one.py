@@ -403,7 +403,7 @@ def _get_one_JoinedStr_TemplateStr_values(self: fst.FST, idx: int | None, field:
         typ = 'f' if isinstance(child, FormattedValue) else 't'
         prefix = typ + prefix[1:]
         fmt = childf._make_fst_and_dedent(childf, copy_ast(child), childf.loc, prefix, prefix[1:],
-                                                docstr=options.get('docstr'))
+                                          docstr=options.get('docstr'))
         lprefix = len(prefix)
         ret = fst.FST((JoinedStr if typ == 'f' else TemplateStr)
                       (values=[fmt.a], lineno=fmt.lineno, col_offset=fmt.col_offset - lprefix,
@@ -2087,7 +2087,7 @@ _onestatic_identifier_required = onestatic(_one_info_identifier_required, _restr
 def _one_info_identifier_alias(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:  # required, cannot delete or put new
     ln, col, end_ln, end_col = self.loc
     end_col = re_identifier_alias.match(self.root._lines[ln], col,
-                                                         end_col if end_ln == ln else 0x7fffffffffffffff).end()  # must be there
+                                        end_col if end_ln == ln else 0x7fffffffffffffff).end()  # must be there
 
     return oneinfo('', None, fstloc(ln, col, ln, end_col))
 

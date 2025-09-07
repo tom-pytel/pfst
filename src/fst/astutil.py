@@ -1457,7 +1457,7 @@ def precedence_require_parens(child: AST, parent: AST, field: str, idx: int | No
     """
 
     child_type = (child.op.__class__
-                   if (child_cls := child.__class__) in (BoolOp, BinOp, UnaryOp) else child_cls)
+                  if (child_cls := child.__class__) in (BoolOp, BinOp, UnaryOp) else child_cls)
     parent_type = (parent.op.__class__
                    if (parent_cls := parent.__class__) in (BoolOp, BinOp, UnaryOp) else parent_cls)
 

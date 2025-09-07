@@ -1410,9 +1410,8 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
         loc_last = loc_first
 
     copy_loc, del_loc, del_indent, _ = _locs_slice_seq(self, is_first, is_last, loc_first, loc_last,
-        bound_ln, bound_col, bound_end_ln, bound_end_col,
-        trivia, sep, is_del,
-    )
+                                                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                                       trivia, sep, is_del)
 
     put_ln, put_col, put_end_ln, put_end_col = del_loc
 

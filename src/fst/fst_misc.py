@@ -201,7 +201,7 @@ class _Modifying:
                 if strs is first:  # on first one check to make sure no double '{{', and if so then fix: f'{{a}}' -> f'{ {a}}'
                     ln, col, _, _ = fst_.a.value.f.loc
                     fix_const = ((parent := fst_.parent) and (idx := fst_.pfield.idx) and   # parent should exist here but just in case, whether we need to reset start of debug string or not
-                        (f := parent.a.values[idx - 1].f).col == col and f.ln == ln)
+                                 (f := parent.a.values[idx - 1].f).col == col and f.ln == ln)
 
                     if fst_.root._lines[ln].startswith('{', col):
                         fst_._put_src([' '], ln, col, ln, col, False)
