@@ -10,7 +10,7 @@ from fst import *
 
 from fst.asttypes import *
 from fst.astutil import compare_asts
-from fst.misc import PYLT11, PYLT12, PYGE12, PYGE14
+from fst.misc import PYLT11, PYLT12, PYGE11, PYGE12, PYGE14
 
 from data.data_other import PUT_SRC_DATA
 
@@ -4258,6 +4258,21 @@ if u:
         f.put_src(' = 2', 2, 5, 2, 9)
         self.assertEqual('if 1:\n \\\n  a;b = 2', f.src)
         f.verify()
+
+        if PYGE11:
+            # make sure TryStar reparses to TryStar
+
+            f = FST('''
+try:
+    raise Exception('yarr!')
+except* BaseException:
+    hit_except = True
+finally:
+    hit_finally = True
+                '''.strip())
+            f.put_src('ry', 0, 1, 0, 3)
+            self.assertIsInstance(f.a, TryStar)
+            f.verify()
 
     def test_put_default_non_list_field(self):
         self.assertEqual('y', parse('n').body[0].f.put('y').root.src)  # Expr

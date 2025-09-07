@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- fix raw reparse `TryStar` erroneously to `Try`
 - fix `par(force=True)` on delimited `Tuple` or `MatchSequence`
 - disallow put `Starred` to `Delete` `Tuple` or `List` elements
 
@@ -12,6 +13,8 @@
 - prescribed slicing for `Nonlocal.names`
 
 ### Updated
+
+- generalized get / put one and slice test framework and added auto `AST` / `FST` put tests
 
 
 ## 0.2.1 - alpha - 2025-09-01

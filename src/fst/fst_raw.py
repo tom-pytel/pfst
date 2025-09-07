@@ -156,8 +156,12 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
     else:
         copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col] + ' pass')
 
-        if isinstance(stmtisha, (Try, TryStar)):  # this one is just silly, nothing to put there, but we cover it
-            copy_lines.append(bistr(indent + 'finally: pass'))
+        # if isinstance(stmtisha, (Try, TryStar)):  # this one is just silly, nothing to put there, but we cover it, BUG: this reparses TryStar to Try
+        #     copy_lines.append(bistr(indent + 'finally: pass'))
+        if isinstance(stmtisha, Try):  # this one is just silly, nothing to put there, but we cover it
+            copy_lines.append(bistr(indent + 'except: pass'))
+        elif isinstance(stmtisha, TryStar):  # ditto
+            copy_lines.append(bistr(indent + 'except* Exception: pass'))
 
     copy = _reparse_raw_base(stmtish, new_lines, ln, col, end_ln, end_col, copy_lines, path, False)
     copya = copy.a
