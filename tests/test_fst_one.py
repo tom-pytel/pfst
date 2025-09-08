@@ -14,10 +14,11 @@ from fst.misc import PYLT11, PYLT12, PYGE11, PYGE12, PYGE14
 
 from data.data_other import PUT_SRC_DATA
 
-from support import PutCases
+from support import GetCases, PutCases
 
 
 DIR_NAME     = os.path.dirname(__file__)
+DATA_GET_ONE = GetCases(os.path.join(DIR_NAME, 'data/data_get_one.py'))
 DATA_PUT_ONE = PutCases(os.path.join(DIR_NAME, 'data/data_put_one.py'))
 
 REPLACE_EXISTING_ONE_DATA = [
@@ -263,6 +264,11 @@ def read(fnm):
         return f.read()
 
 
+def regen_get_one():
+    DATA_GET_ONE.generate()
+    DATA_GET_ONE.write()
+
+
 def regen_put_one():
     DATA_PUT_ONE.generate()
     DATA_PUT_ONE.write()
@@ -313,6 +319,11 @@ def regen_put_src():
 
 
 class TestFSTPut(unittest.TestCase):
+    def test_get_one_from_data(self):
+        for key, case, rest in DATA_GET_ONE.iterate(True):
+            for idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
+                self.assertEqual(c, r, f'{key = }, {case.idx = }, rest {idx = }')
+
     def test_put_one_from_data(self):
         for key, case, rest in DATA_PUT_ONE.iterate(True):
             for idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
@@ -4605,6 +4616,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='test_fst.py')
 
     parser.add_argument('--regen-all', default=False, action='store_true', help="regenerate everything")
+    parser.add_argument('--regen-get-one', default=False, action='store_true', help="regenerate get one test data")
     parser.add_argument('--regen-put-one', default=False, action='store_true', help="regenerate put one test data")
     parser.add_argument('--regen-put-src', default=False, action='store_true', help="regenerate put src test data")
 
@@ -4613,6 +4625,10 @@ if __name__ == '__main__':
     if any(getattr(args, n) for n in dir(args) if n.startswith('regen_')):
         if PYLT12:
             raise RuntimeError('cannot regenerate on python version < 3.12')
+
+    if args.regen_get_one or args.regen_all:
+        print('Regenerating get one test data...')
+        regen_get_one()
 
     if args.regen_put_one or args.regen_all:
         print('Regenerating put one test data...')

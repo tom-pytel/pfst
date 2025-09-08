@@ -2243,7 +2243,7 @@ a | (
 
         # Assign
 
-        self.assertEqual('a =', g := (f := FST('a = b = c = z').get_slice(0, 2, 'targets')).get_slice(0, 1, 'targets').src)
+        self.assertEqual('a =', g := (f := FST('a = b = c = z').get_slice(0, 2, 'targets')).get_slice(0, 1).src)
         self.assertEqual('a = b = a =', f.put_slice(g, 'end', 'targets').src)
         f.verify()
 

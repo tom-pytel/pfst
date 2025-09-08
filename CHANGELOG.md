@@ -14,6 +14,7 @@
 
 ### Updated
 
+- reworked non-AST compatible slices to use custom `_slice` base `AST`
 - generalized get / put one and slice test framework and added auto `AST` / `FST` put tests
 
 

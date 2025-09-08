@@ -16,26 +16,55 @@ from . import fst
 
 from .asttypes import (
     AST,
+    Add,
+    And,
     Assign,
     AugAssign,
     BinOp,
+    BitOr,
+    BitXor,
+    BitAnd,
     BoolOp,
     Compare,
     Del,
+    Div,
+    Eq,
     ExceptHandler,
     Expr,
     Expression,
+    FloorDiv,
     GeneratorExp,
+    Gt,
+    GtE,
     Interactive,
+    In,
+    Invert,
+    Is,
+    IsNot,
+    LShift,
     ListComp,
     Load,
+    Lt,
+    LtE,
+    MatMult,
     MatchSequence,
+    Mod,
     Module,
+    Mult,
     Name,
+    Not,
+    NotEq,
+    NotIn,
+    Or,
+    Pow,
+    RShift,
     Slice,
     Starred,
     Store,
+    Sub,
     Tuple,
+    UAdd,
+    USub,
     UnaryOp,
     alias,
     arg,
@@ -53,7 +82,10 @@ from .asttypes import (
     unaryop,
     withitem,
     type_param,
+    _slice,
+    _slice_Assign_targets,
 )
+
 
 from .astutil import (
     pat_alnum, bistr,
@@ -115,7 +147,6 @@ __all__ = [
 
 _re_non_lcont_newline  = re.compile(r'(?<!\\)\n')
 _re_trailing_comma     = re.compile(r'(?: [)\s]* (?: (?: \\ | \#[^\n]* ) \n )? )* ,', re.VERBOSE)  # trailing comma search ignoring comments and line continuation backslashes
-
 _re_first_src          = re.compile(r'^([^\S\n]*)([^\s\\#]+)', re.MULTILINE)  # search for first non-comment non-linecont source code
 _re_parse_all_category = re.compile(r'''
     (?P<stmt>                          (?: assert | break | class | continue | def | del | from | global | import | nonlocal | pass | raise | return | try | while | with ) \b ) |
@@ -143,6 +174,76 @@ _re_parse_all_category = re.compile(r'''
     (?P<tilde>                         (?: ~ ) )
 ''', re.MULTILINE | re.VERBOSE)
 
+_SLICE_PARSE_MODES = {
+    _slice_Assign_targets: 'Assign_targets',
+}
+
+
+def _fixing_unparse(ast: AST) -> str:
+    try:
+        return ast_unparse(ast)
+
+    except AttributeError as exc:
+        if not str(exc).endswith("has no attribute 'lineno'"):
+            raise
+
+    ast_fix_missing_locations(ast)
+
+    return ast_unparse(ast)
+
+
+def _unparse_special_Tuple(ast: AST) -> str:
+    src = _fixing_unparse(ast)
+
+    if elts := ast.elts:
+        if not isinstance(elts[0], expr):  # our own SPECIAL SLICEs cannot have parentheses OR trailing commas
+            return src[1 : (-1 if len(elts) != 1 else -2)]
+
+        if any(isinstance(e, Slice) for e in elts):  # tuples with Slices cannot have parentheses
+            return src[1 : -1]
+
+    return src
+
+def _unparse_special__slice_Assign_targets(ast: AST) -> str:
+    return _fixing_unparse(Assign(targets=ast.targets, value=Name(id='', ctx=Load(), lineno=1, col_offset=0,
+                                                                  end_lineno=1, end_col_offset=0),
+                                  lineno=1, col_offset=0, end_lineno=1, end_col_offset=0)).rstrip()
+
+_UNPARSE_FUNCS = {
+    Tuple:                  _unparse_special_Tuple,
+    Invert:                 lambda ast: '~',
+    Not:                    lambda ast: 'not',
+    UAdd:                   lambda ast: '+',
+    USub:                   lambda ast: '-',
+    Add:                    lambda ast: '+',
+    Sub:                    lambda ast: '-',
+    Mult:                   lambda ast: '*',
+    MatMult:                lambda ast: '@',
+    Div:                    lambda ast: '/',
+    Mod:                    lambda ast: '%',
+    LShift:                 lambda ast: '<<',
+    RShift:                 lambda ast: '>>',
+    BitOr:                  lambda ast: '|',
+    BitXor:                 lambda ast: '^',
+    BitAnd:                 lambda ast: '&',
+    FloorDiv:               lambda ast: '//',
+    Pow:                    lambda ast: '**',
+    Eq:                     lambda ast: '==',
+    NotEq:                  lambda ast: '!=',
+    Lt:                     lambda ast: '<',
+    LtE:                    lambda ast: '<=',
+    Gt:                     lambda ast: '>',
+    GtE:                    lambda ast: '>=',
+    Is:                     lambda ast: 'is',
+    IsNot:                  lambda ast: 'is not',
+    In:                     lambda ast: 'in',
+    NotIn:                  lambda ast: 'not in',
+    And:                    lambda ast: 'and',
+    Or:                     lambda ast: 'or',
+    comprehension:          lambda ast: _fixing_unparse(ast).lstrip(),  # strip prefix space from this
+    _slice_Assign_targets: _unparse_special__slice_Assign_targets,
+}
+
 
 def _ast_parse(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Python craps out with unexpected EOF if you only have a single newline after a line continuation backslash."""
@@ -164,19 +265,6 @@ def _ast_parse1_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         raise SyntaxError('expecting single element')
 
     return cases[0]
-
-
-def _fixing_unparse(ast: AST) -> str:
-    try:
-        return ast_unparse(ast)
-
-    except AttributeError as exc:
-        if not str(exc).endswith("has no attribute 'lineno'"):
-            raise
-
-    ast_fix_missing_locations(ast)
-
-    return ast_unparse(ast)
 
 
 def _offset_linenos(ast: AST, delta: int) -> AST:
@@ -352,8 +440,8 @@ Mode = Literal[
     `TypeVarTuple`. Same as passing `type_param` type.
 - `'type_params'`: Parse as a slice of zero or more `type_param`s returned in a `Tuple`, does not need trailing comma
     for a single element. This is our own SPECIAL SLICE use of a tuple and not valid in python.
-- `'Assign_targets'`: Parse as a single or multiple targets to an `Assign` node, with `=` as separators and an optional
-    trailing `=`. Returned as an `Assign` node with a `value` node which is an empty `Name` (our own SPECIAL SLICE).
+- `'Assign_targets'`: Parse as a single or multiple targets to an `_slice_Assign_targets` node, with `=` as separators
+    and an optional trailing `=` (our own SPECIAL SLICE).
 - `type[AST]`: If an `AST` type is passed then will attempt to parse to this type. This can be used to narrow
     the scope of desired return, for example `Constant` will parse as an expression but fail if the expression
     is not a `Constant`. These overlap with the string specifiers to an extent but not all of them. For example
@@ -401,38 +489,20 @@ def get_special_parse_mode(ast: AST) -> str | None:
             if isinstance(e0, alias):
                 return 'aliases'
 
-    elif isinstance(ast, Assign):
-        if isinstance(v := ast.value, Name) and not v.id:
-            return 'Assign_targets'
+    elif isinstance(ast, _slice):
+        return _SLICE_PARSE_MODES[ast.__class__]
 
     return None
 
 
 def unparse(ast: AST) -> str:
     """AST unparse that handles misc case of comprehension starting with a single space by stripping it as well as
-    removing parentheses from `Tuple`s with `Slice`s or our own SPECIAL SLICE `Tuple`s.
+    removing parentheses from `Tuple`s with `Slice`s.
 
     @private
     """
 
-    src = _fixing_unparse(ast)
-
-    if not src:  # operators don't unparse to anything in ast
-        if s := OPCLS2STR.get(ast.__class__):
-            return s
-
-    if isinstance(ast, Tuple):
-        if elts := ast.elts:
-            if not isinstance(elts[0], expr):  # our own SPECIAL SLICEs cannot have parentheses OR trailing commas
-                return src[1 : (-1 if len(elts) != 1 else -2)]
-
-            if any(isinstance(e, Slice) for e in elts):  # tuples with Slices cannot have parentheses
-                return src[1 : -1]
-
-    elif isinstance(ast, comprehension):  # strip prefix space from this
-        return src.lstrip()
-
-    return src
+    return _UNPARSE_FUNCS.get(ast.__class__, _fixing_unparse)(ast)
 
 
 def parse(src: str, mode: Mode = 'all', parse_params: Mapping[str, Any] = {}) -> AST:
@@ -1364,18 +1434,20 @@ def parse_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse zero or more `Assign` targets and return them in an `Assign` with the `value` node as an empty `Name`. Takes
+    """Parse zero or more `Assign` targets and return them in an `_slice_Assign_targets` (our own SPECIAL SLICE). Takes
     `=` as separators with an optional trailing `=`.
 
     @private
     """
 
+    src_ = '\\' + src if src.startswith('\n') else src  # we allow an initial non-line-continuated newline because that is a slice indicator to start on new line and will have line continuation added in slice put to Assign
+
     try:
-        ast = _ast_parse1(f'_=\\\n{src}  _', parse_params)  # try assuming src has trailing equals
+        ast = _ast_parse1(f'_=\\\n{src_}  _', parse_params)  # try assuming src has trailing equals
 
     except SyntaxError:
         try:
-            ast = _ast_parse1(f'_=\\\n{src} =_', parse_params)  # now check assuming src does not have trailing equals
+            ast = _ast_parse1(f'_=\\\n{src_} =_', parse_params)  # now check assuming src does not have trailing equals
         except SyntaxError:
             raise SyntaxError('invalid Assign targets slice') from None
 
@@ -1387,21 +1459,13 @@ def parse_Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     elif name.id != '_':
         raise ParseError(f'unexpected value id parsing Assign targets, {name.value!r}')
 
-    del (targets := ast.targets)[0]  # remove syntax check dummy target
+    del (targets := ast.targets)[0]  # remove syntax check dummy target `_`
 
-    if targets:
-        if col_offset := (t0 := targets[0]).col_offset:
-            raise IndentationError('unexpected indent')
+    # if targets and targets[0].col_offset:
+    #     raise IndentationError('unexpected indent')
 
-        ast.col_offset = col_offset  # set Assign to start at new first element
-        ast.lineno = t0.lineno
-
-    else:
-        ast.col_offset = 0
-        ast.lineno = 2
-
-    name.id = ''  # mark as slice
-    name.col_offset = name.end_col_offset = ast.end_col_offset = ast.end_col_offset - 3
+    ast = _slice_Assign_targets(targets=targets, lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
+                                end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
 
     return _offset_linenos(ast, -1)
 
@@ -1409,70 +1473,71 @@ def parse_Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 # ......................................................................................................................
 
 _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type but that will parse ALL of those types without error, not all parsed in desired but all desired in parsed
-    'all':               parse_all,
-    'strict':            parse_strict,
-    'exec':              parse_Module,
-    'eval':              parse_Expression,
-    'single':            parse_Interactive,
-    'stmts':             parse_stmts,
-    'stmt':              parse_stmt,
-    'ExceptHandler':     parse_ExceptHandler,
-    'ExceptHandlers':    parse_ExceptHandlers,
-    'match_case':        parse_match_case,
-    'match_cases':       parse_match_cases,
-    'expr':              parse_expr,
-    'expr_all':          parse_expr_all,       # `a:b:c`, `*not c`, `*st`, `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`, `*not c`
-    'expr_arglike':      parse_expr_arglike,   # `*a or b`, `*not c`
-    'expr_slice':        parse_expr_slice,     # `a:b:c`, `*not c`, `a:b:c, x:y:z`, `*st` -> `*st,` (py 3.11+)
-    'expr_sliceelt':     parse_expr_sliceelt,  # `a:b:c`, `*not c`, `*st`
-    'Tuple':             parse_Tuple,          # `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`
-    'boolop':            parse_boolop,
-    'operator':          parse_operator,
-    'binop':             parse_binop,
-    'augop':             parse_augop,
-    'unaryop':           parse_unaryop,
-    'cmpop':             parse_cmpop,
-    'comprehension':     parse_comprehension,
-    'arguments':         parse_arguments,
-    'arguments_lambda':  parse_arguments_lambda,
-    'arg':               parse_arg,
-    'keyword':           parse_keyword,
-    'alias':             parse_alias,
-    'aliases':           parse_aliases,
-    'Import_name':       parse_Import_name,
-    'Import_names':      parse_Import_names,
-    'ImportFrom_name':   parse_ImportFrom_name,
-    'ImportFrom_names':  parse_ImportFrom_names,
-    'withitem':          parse_withitem,
-    'pattern':           parse_pattern,
-    'type_param':        parse_type_param,
-    'type_params':       parse_type_params,
-    'Assign_targets':    parse_Assign_targets,
-    mod:                 parse_Module,    # parsing with an AST type doesn't mean it will be parsable by ast module
-    Expression:          parse_Expression,
-    Interactive:         parse_Interactive,
-    stmt:                parse_stmt,
-    ExceptHandler:       parse_ExceptHandler,
-    match_case:          parse_match_case,
-    expr:                parse_expr,          # not _expr_all because those cases are handled in Starred, Slice and Tuple
-    Starred:             parse_expr_arglike,  # because could have form '*a or b' and we want to parse any form of Starred here
-    Slice:               parse_expr_slice,    # because otherwise would be parse_expr which doesn't do slice by default, parses '*a' to '*a,' on py 3.11+
-    Tuple:               parse_Tuple,         # because could have slice in it and we are parsing all forms including '*not a'
-    boolop:              parse_boolop,
-    operator:            parse_operator,
-    unaryop:             parse_unaryop,
-    cmpop:               parse_cmpop,
-    comprehension:       parse_comprehension,
-    arguments:           parse_arguments,
-    arg:                 parse_arg,
-    keyword:             parse_keyword,
-    alias:               parse_alias,
-    withitem:            parse_withitem,
-    pattern:             parse_pattern,
-    type_param:          parse_type_param,
-    Load:                lambda src, parse_params = {}: Load(),  # HACKS for verify() and other similar stuff
-    Store:               lambda src, parse_params = {}: Store(),
-    Del:                 lambda src, parse_params = {}: Del(),
+    'all':                    parse_all,
+    'strict':                 parse_strict,
+    'exec':                   parse_Module,
+    'eval':                   parse_Expression,
+    'single':                 parse_Interactive,
+    'stmts':                  parse_stmts,
+    'stmt':                   parse_stmt,
+    'ExceptHandler':          parse_ExceptHandler,
+    'ExceptHandlers':         parse_ExceptHandlers,
+    'match_case':             parse_match_case,
+    'match_cases':            parse_match_cases,
+    'expr':                   parse_expr,
+    'expr_all':               parse_expr_all,       # `a:b:c`, `*not c`, `*st`, `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`, `*not c`
+    'expr_arglike':           parse_expr_arglike,   # `*a or b`, `*not c`
+    'expr_slice':             parse_expr_slice,     # `a:b:c`, `*not c`, `a:b:c, x:y:z`, `*st` -> `*st,` (py 3.11+)
+    'expr_sliceelt':          parse_expr_sliceelt,  # `a:b:c`, `*not c`, `*st`
+    'Tuple':                  parse_Tuple,          # `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`
+    'boolop':                 parse_boolop,
+    'operator':               parse_operator,
+    'binop':                  parse_binop,
+    'augop':                  parse_augop,
+    'unaryop':                parse_unaryop,
+    'cmpop':                  parse_cmpop,
+    'comprehension':          parse_comprehension,
+    'arguments':              parse_arguments,
+    'arguments_lambda':       parse_arguments_lambda,
+    'arg':                    parse_arg,
+    'keyword':                parse_keyword,
+    'alias':                  parse_alias,
+    'aliases':                parse_aliases,
+    'Import_name':            parse_Import_name,
+    'Import_names':           parse_Import_names,
+    'ImportFrom_name':        parse_ImportFrom_name,
+    'ImportFrom_names':       parse_ImportFrom_names,
+    'withitem':               parse_withitem,
+    'pattern':                parse_pattern,
+    'type_param':             parse_type_param,
+    'type_params':            parse_type_params,
+    'Assign_targets':         parse_Assign_targets,
+    mod:                      parse_Module,    # parsing with an AST type doesn't mean it will be parsable by ast module
+    Expression:               parse_Expression,
+    Interactive:              parse_Interactive,
+    stmt:                     parse_stmt,
+    ExceptHandler:            parse_ExceptHandler,
+    match_case:               parse_match_case,
+    expr:                     parse_expr,          # not _expr_all because those cases are handled in Starred, Slice and Tuple
+    Starred:                  parse_expr_arglike,  # because could have form '*a or b' and we want to parse any form of Starred here
+    Slice:                    parse_expr_slice,    # because otherwise would be parse_expr which doesn't do slice by default, parses '*a' to '*a,' on py 3.11+
+    Tuple:                    parse_Tuple,         # because could have slice in it and we are parsing all forms including '*not a'
+    boolop:                   parse_boolop,
+    operator:                 parse_operator,
+    unaryop:                  parse_unaryop,
+    cmpop:                    parse_cmpop,
+    comprehension:            parse_comprehension,
+    arguments:                parse_arguments,
+    arg:                      parse_arg,
+    keyword:                  parse_keyword,
+    alias:                    parse_alias,
+    withitem:                 parse_withitem,
+    pattern:                  parse_pattern,
+    type_param:               parse_type_param,
+    Load:                     lambda src, parse_params = {}: Load(),  # HACKS for verify() and other similar stuff
+    Store:                    lambda src, parse_params = {}: Store(),
+    Del:                      lambda src, parse_params = {}: Del(),
+    _slice_Assign_targets:    parse_Assign_targets,
 }
 
 assert not set(get_args(get_args(Mode)[0])).symmetric_difference(k for k in _PARSE_MODE_FUNCS if isinstance(k, str)), \

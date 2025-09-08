@@ -108,6 +108,7 @@ from .asttypes import (
     TypeVarTuple,
     TemplateStr,
     Interpolation,
+    _slice_Assign_targets,
 )
 
 from .astutil import (
@@ -625,6 +626,8 @@ _GET_ONE_HANDLERS = {
     (ParamSpec, 'default_value'):         _get_one_default,  # expr?
     (TypeVarTuple, 'name'):               _get_one_identifier,  # identifier
     (TypeVarTuple, 'default_value'):      _get_one_default,  # expr?
+
+    (_slice_Assign_targets, 'targets'):   _get_one_default,  # expr*
 
 
     # NOT DONE:
@@ -2793,6 +2796,8 @@ _PUT_ONE_HANDLERS = {
     (ParamSpec, 'default_value'):         (False, _put_one_exprish_optional, onestatic(_one_info_ParamSpec_default_value, _restrict_default)),  # expr?
     (TypeVarTuple, 'name'):               (False, _put_one_identifier_required, onestatic(_one_info_TypeVarTuple_name, _restrict_default, code_as=code_as_identifier)),  # identifier
     (TypeVarTuple, 'default_value'):      (False, _put_one_exprish_optional, onestatic(_one_info_TypeVarTuple_default_value, _restrict_default)),  # expr?
+
+    (_slice_Assign_targets, 'targets'):   (True,  _put_one_exprish_required, _onestatic_target),  # expr*
 
 
     # NOT DONE:

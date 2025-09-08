@@ -7,7 +7,7 @@ This module contains functions which are imported as methods in the `FST` class.
 from __future__ import annotations
 
 import re
-from typing import Any, Callable, Literal, Mapping, Union
+from typing import Any, Callable, Literal, Mapping, NamedTuple, Union
 
 from . import fst
 
@@ -66,6 +66,7 @@ from .asttypes import (
     TypeAlias,
     TemplateStr,
     type_param,
+    _slice_Assign_targets,
 )
 
 from .astutil import (
@@ -107,7 +108,7 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 # * Special unparse where needed.
 
 
-#   (!) SPECIAL SLICE, (?) sometimes SPECIAL SLICE, (%) normal slice with special formatting
+#   (!) SPECIAL SLICE, (?) sometimes SPECIAL SLICE???
 #   | (N)ormal container, (S)equence container
 #   | | Separator (trailing)
 #   | | |  Prefix (leaading)
@@ -115,61 +116,61 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 #   | | |  |  |   Unparse special
 #   | | |  |  |   |
 #                                                                                .
-# *   N ,     ()      (Tuple, 'elts')                         # expr*            -> Tuple                  _parse_expr_sliceelts
-# *   N ,     []      (List, 'elts')                          # expr*            -> List                   _parse_expr / restrict seq
-# * ? N ,     {}      (Set, 'elts')                           # expr*            -> Set                    _parse_expr / restrict seq
+# *   N ,     ()      (Tuple, 'elts')                         # expr*            -> Tuple                      _parse_expr_sliceelts
+# *   N ,     []      (List, 'elts')                          # expr*            -> List                       _parse_expr / restrict seq
+# * ? N ,     {}      (Set, 'elts')                           # expr*            -> Set                        _parse_expr / restrict seq
 #                                                                                .
-# *   N ,     {}      (Dict, 'keys':'values')                 # expr:expr*       -> Dict                   _parse_expr / restrict dict
+# *   N ,     {}      (Dict, 'keys':'values')                 # expr:expr*       -> Dict                       _parse_expr / restrict dict
 #                                                                                .
-# *   N ,     []      (MatchSequence, 'patterns'):            # pattern*         -> MatchSequence          _parse_pattern / restrict MatchSequence
-# *   N ,     {}      (MatchMapping, 'keys':'patterns'):      # expr:pattern*    -> MatchMapping           _parse_pattern / restrict MatchMapping
+# *   N ,     []      (MatchSequence, 'patterns'):            # pattern*         -> MatchSequence              _parse_pattern / restrict MatchSequence
+# *   N ,     {}      (MatchMapping, 'keys':'patterns'):      # expr:pattern*    -> MatchMapping               _parse_pattern / restrict MatchMapping
 #                                                                                .
-# * ? N |             (MatchOr, 'patterns'):                  # pattern*         -> MatchOr                _parse_pattern / restrict MatchOr
+# * ? N |             (MatchOr, 'patterns'):                  # pattern*         -> MatchOr                    _parse_pattern / restrict MatchOr
 #                                                                                .
-#     S ,             (MatchClass, 'patterns'):               # pattern*         -> MatchSequence          _parse_pattern / restrict MatchSequence  - allow empty pattern?
+#     S ,             (MatchClass, 'patterns'):               # pattern*         -> MatchSequence              _parse_pattern / restrict MatchSequence  - allow empty pattern?
 #                                                                                .
 #                                                                                .
-#     S ,             (ClassDef, 'bases'):                    # expr*            -> Tuple[expr_arglike]    _parse_expr_arglikes
-#     S ,             (Call, 'args'):                         # expr*            -> Tuple[expr_arglike]    _parse_expr_arglikes
+#     S ,             (ClassDef, 'bases'):                    # expr*            -> Tuple[expr_arglike]        _parse_expr_arglikes
+#     S ,             (Call, 'args'):                         # expr*            -> Tuple[expr_arglike]        _parse_expr_arglikes
 #
-# *   S ,             (Delete, 'targets'):                    # expr*            -> Tuple[target]          _parse_expr / restrict targets
-# * ! N =             (Assign, 'targets'):                    # expr*            -> Assign, value.id=''    _parse_Assign_targets / restrict targets  - Maybe use special Slice container instead of invalid Assign?
+# *   S ,             (Delete, 'targets'):                    # expr*            -> Tuple[target]              _parse_expr / restrict del_targets
+# * ! N =             (Assign, 'targets'):                    # expr*            -> _slice_Assign_targets      _parse_Assign_targets
 #                                                                                .
 #                                                                                .
-# *   S ,             (Global, 'names'):                      # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names   - no trailing commas, unparenthesized
-# *   S ,             (Nonlocal, 'names'):                    # identifier*,     -> Tuple[Name]            _parse_expr / restrict Names   - no trailing commas, unparenthesized
+# *   S ,             (Global, 'names'):                      # identifier*,     -> Tuple[Name]                _parse_expr / restrict Names   - no trailing commas, unparenthesized
+# *   S ,             (Nonlocal, 'names'):                    # identifier*,     -> Tuple[Name]                _parse_expr / restrict Names   - no trailing commas, unparenthesized
 #                                                                                .
 #                                                                                .
-#   ! S ,             (ClassDef, 'keywords'):                 # keyword*         -> Tuple[keyword]         _parse_keywords
-#   ! S ,             (Call, 'keywords'):                     # keyword*         -> Tuple[keyword]         _parse_keywords
+#   ! S ,             (ClassDef, 'keywords'):                 # keyword*         -> _slice_keywords            _parse_keywords
+#   ! S ,             (Call, 'keywords'):                     # keyword*         -> _slice_keywords            _parse_keywords
 #                                                                                .
-# * ! S ,             (FunctionDef, 'type_params'):           # type_param*      -> Tuple[type_param]      _parse_type_params
-# * ! S ,             (AsyncFunctionDef, 'type_params'):      # type_param*      -> Tuple[type_param]      _parse_type_params
-# * ! S ,             (ClassDef, 'type_params'):              # type_param*      -> Tuple[type_param]      _parse_type_params
-# * ! S ,             (TypeAlias, 'type_params'):             # type_param*      -> Tuple[type_param]      _parse_type_params
+# * ! S ,             (FunctionDef, 'type_params'):           # type_param*      -> _slice_type_params         _parse_type_params
+# * ! S ,             (AsyncFunctionDef, 'type_params'):      # type_param*      -> _slice_type_params         _parse_type_params
+# * ! S ,             (ClassDef, 'type_params'):              # type_param*      -> _slice_type_params         _parse_type_params
+# * ! S ,             (TypeAlias, 'type_params'):             # type_param*      -> _slice_type_params         _parse_type_params
 #                                                                                .
-#   ! S ,             (With, 'items'):                        # withitem*        -> Tuple[withitem]        _parse_withitems               - no trailing commas
-#   ! S ,             (AsyncWith, 'items'):                   # withitem*        -> Tuple[withitem]        _parse_withitems               - no trailing commas
+#   ! S ,             (With, 'items'):                        # withitem*        -> _slice_withitems           _parse_withitems               - no trailing commas
+#   ! S ,             (AsyncWith, 'items'):                   # withitem*        -> _slice_withitems           _parse_withitems               - no trailing commas
 #                                                                                .
-# * ! S ,             (Import, 'names'):                      # alias*           -> Tuple[alias]           _parse_aliases_dotted          - no trailing commas
-#   ! S ,             (ImportFrom, 'names'):                  # alias*           -> Tuple[alias]           _parse_aliases_star            - no trailing commas
-#                                                                                .
-#                                                                                .
-#   ! S           U   (ListComp, 'generators'):               # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
-#   ! S           U   (SetComp, 'generators'):                # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
-#   ! S           U   (DictComp, 'generators'):               # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
-#   ! S           U   (GeneratorExp, 'generators'):           # comprehension*   -> Tuple[comprehension]   _parse_comprehensions
-#                                                                                .
-#   % S    if     U   (comprehension, 'ifs'):                 # expr*            -> Tuple[expr]            _parse_comprehension_ifs  - can figure out from 'if' first expr prefix
-#                                                                                .
-#   % S    @      U   (FunctionDef, 'decorator_list'):        # expr*            -> Tuple[expr]            _parse_decorator_list  - can figure out from '@' first expr prefix
-#   % S    @      U   (AsyncFunctionDef, 'decorator_list'):   # expr*            -> Tuple[expr]            _parse_decorator_list
-#   % S    @      U   (ClassDef, 'decorator_list'):           # expr*            -> Tuple[expr]            _parse_decorator_list
+# * ! S ,             (Import, 'names'):                      # alias*           -> _slice_aliases             _parse_aliases_dotted          - no trailing commas
+#   ! S ,             (ImportFrom, 'names'):                  # alias*           -> _slice_aliases             _parse_aliases_star            - no trailing commas
 #                                                                                .
 #                                                                                .
-#     N co            (Compare, 'ops':'comparators'):         # cmpop:expr*      -> expr or Compare        _parse_expr / restrict expr or Compare
+#   ! S           U   (ListComp, 'generators'):               # comprehension*   -> _slice_comprehensions      _parse_comprehensions
+#   ! S           U   (SetComp, 'generators'):                # comprehension*   -> _slice_comprehensions      _parse_comprehensions
+#   ! S           U   (DictComp, 'generators'):               # comprehension*   -> _slice_comprehensions      _parse_comprehensions
+#   ! S           U   (GeneratorExp, 'generators'):           # comprehension*   -> _slice_comprehensions      _parse_comprehensions
 #                                                                                .
-#     N ao            (BoolOp, 'values'):                     # expr*            -> BoolOp                 _parse_expr / restrict BoolOp  - interchangeable between and / or
+#   ! S    if     U   (comprehension, 'ifs'):                 # expr*            -> _slice_comprehension_ifs   _parse_comprehension_ifs
+#                                                                                .
+#   ! S    @      U   (FunctionDef, 'decorator_list'):        # expr*            -> _slice_decorator_list      _parse_decorator_list
+#   ! S    @      U   (AsyncFunctionDef, 'decorator_list'):   # expr*            -> _slice_decorator_list      _parse_decorator_list
+#   ! S    @      U   (ClassDef, 'decorator_list'):           # expr*            -> _slice_decorator_list      _parse_decorator_list
+#                                                                                .
+#                                                                                .
+#     N co            (Compare, 'ops':'comparators'):         # cmpop:expr*      -> expr or Compare            _parse_expr / restrict expr or Compare
+#                                                                                .
+#     N ao            (BoolOp, 'values'):                     # expr*            -> BoolOp                     _parse_expr / restrict BoolOp  - interchangeable between and / or
 #
 #
 #                     (JoinedStr, 'values'):                  # Constant|FormattedValue*  -> JoinedStr
@@ -812,21 +813,18 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
     len_slice = stop - start
 
     if not len_slice:
-        return fst.FST(Assign(targets=[], value=Name(id='', ctx=Load(), lineno=1, col_offset=3, end_lineno=1,
-                                                     end_col_offset=3),
-                              lineno=1, col_offset=0, end_lineno=1, end_col_offset=3), [bistr(' = ')], from_=self,
-                              lcopy=False)
+        return fst.FST(_slice_Assign_targets(targets=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''],
+                       from_=self)
 
     if cut and len_slice == len_body and self.get_option('fix_assign_self', options):
-        raise NodeError("cannot cut all Assign.targets without fix_assign_self=False")
+        raise NodeError("cannot cut all Assign targets without fix_assign_self=False")
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bound_Assign_targets(self, start, loc_first)
 
     asts = _cut_or_copy_asts(start, stop, 'targets', cut, body)
-    name = Name(id='', ctx=Load())
-    ret_ast = Assign(targets=asts, value=name)
+    ret_ast = _slice_Assign_targets(targets=asts)
 
     set_ctx(asts[:], Store)
 
@@ -834,11 +832,9 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
                           options.get('trivia'), 'targets', '', '', '=', True, True)
 
-    if not (fst_lines := fst_._lines)[0]:  # we do not allow starting a newline with these
-        fst_._put_src(None, 0, 0, 1, 0, False)
-
-    name.lineno = name.end_lineno = len(fst_lines)
-    name.col_offset = name.end_col_offset = len(fst_lines[-1].encode())  # empty name location right at end
+    # if not fst_._lines[0]:  # we do not allow starting a newline with these
+    #     fst_._put_src(None, 0, 0, 1, 0, False)
+    # # fst_._maybe_add_line_continuations()
 
     if cut:
         self._maybe_add_line_continuations()
@@ -1182,6 +1178,33 @@ def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, st
     return fst_
 
 
+def _get_slice__slice(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
+                      options: Mapping[str, Any]) -> fst.FST:
+    """Our own general non-AST-compatible slice of some `type[AST]` list field."""
+
+    static = _SLICE_STATICS[cls := (ast := self.a).__class__]
+    len_body = len(body := getattr(ast, field))
+    start, stop = fixup_slice_indices(len_body, start, stop)
+
+    if start == stop:
+        return fst.FST(cls([], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], from_=self)
+
+    loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+
+    asts = _cut_or_copy_asts(start, stop, field, cut, body)
+    ret_ast = cls(asts)
+
+    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
+                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
+                          options.get('trivia'), field, '', '', static.sep, static.self_tail_sep, static.ret_tail_sep)
+
+    # if cls is _slice_Assign_targets and not fst_._lines[0]:  # we do not allow starting a newline with these
+    #     fst_._put_src(None, 0, 0, 1, 0, False)
+
+    return fst_
+
 # ......................................................................................................................
 
 def _get_slice(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
@@ -1195,81 +1218,85 @@ def _get_slice(self: fst.FST, start: int | Literal['end'] | None, stop: int | No
 
 
 _GET_SLICE_HANDLERS = {
-    (Module, 'body'):                     _get_slice_stmtish,  # stmt*
-    (Interactive, 'body'):                _get_slice_stmtish,  # stmt*
-    (FunctionDef, 'body'):                _get_slice_stmtish,  # stmt*
-    (AsyncFunctionDef, 'body'):           _get_slice_stmtish,  # stmt*
-    (ClassDef, 'body'):                   _get_slice_stmtish,  # stmt*
-    (For, 'body'):                        _get_slice_stmtish,  # stmt*
-    (For, 'orelse'):                      _get_slice_stmtish,  # stmt*
-    (AsyncFor, 'body'):                   _get_slice_stmtish,  # stmt*
-    (AsyncFor, 'orelse'):                 _get_slice_stmtish,  # stmt*
-    (While, 'body'):                      _get_slice_stmtish,  # stmt*
-    (While, 'orelse'):                    _get_slice_stmtish,  # stmt*
-    (If, 'body'):                         _get_slice_stmtish,  # stmt*
-    (If, 'orelse'):                       _get_slice_stmtish,  # stmt*
-    (With, 'body'):                       _get_slice_stmtish,  # stmt*
-    (AsyncWith, 'body'):                  _get_slice_stmtish,  # stmt*
-    (Try, 'body'):                        _get_slice_stmtish,  # stmt*
-    (Try, 'orelse'):                      _get_slice_stmtish,  # stmt*
-    (Try, 'finalbody'):                   _get_slice_stmtish,  # stmt*
-    (TryStar, 'body'):                    _get_slice_stmtish,  # stmt*
-    (TryStar, 'orelse'):                  _get_slice_stmtish,  # stmt*
-    (TryStar, 'finalbody'):               _get_slice_stmtish,  # stmt*
-    (ExceptHandler, 'body'):              _get_slice_stmtish,  # stmt*
-    (match_case, 'body'):                 _get_slice_stmtish,  # stmt*
+    (Module, 'body'):                         _get_slice_stmtish,  # stmt*
+    (Interactive, 'body'):                    _get_slice_stmtish,  # stmt*
+    (FunctionDef, 'body'):                    _get_slice_stmtish,  # stmt*
+    (AsyncFunctionDef, 'body'):               _get_slice_stmtish,  # stmt*
+    (ClassDef, 'body'):                       _get_slice_stmtish,  # stmt*
+    (For, 'body'):                            _get_slice_stmtish,  # stmt*
+    (For, 'orelse'):                          _get_slice_stmtish,  # stmt*
+    (AsyncFor, 'body'):                       _get_slice_stmtish,  # stmt*
+    (AsyncFor, 'orelse'):                     _get_slice_stmtish,  # stmt*
+    (While, 'body'):                          _get_slice_stmtish,  # stmt*
+    (While, 'orelse'):                        _get_slice_stmtish,  # stmt*
+    (If, 'body'):                             _get_slice_stmtish,  # stmt*
+    (If, 'orelse'):                           _get_slice_stmtish,  # stmt*
+    (With, 'body'):                           _get_slice_stmtish,  # stmt*
+    (AsyncWith, 'body'):                      _get_slice_stmtish,  # stmt*
+    (Try, 'body'):                            _get_slice_stmtish,  # stmt*
+    (Try, 'orelse'):                          _get_slice_stmtish,  # stmt*
+    (Try, 'finalbody'):                       _get_slice_stmtish,  # stmt*
+    (TryStar, 'body'):                        _get_slice_stmtish,  # stmt*
+    (TryStar, 'orelse'):                      _get_slice_stmtish,  # stmt*
+    (TryStar, 'finalbody'):                   _get_slice_stmtish,  # stmt*
+    (ExceptHandler, 'body'):                  _get_slice_stmtish,  # stmt*
+    (match_case, 'body'):                     _get_slice_stmtish,  # stmt*
 
-    (Match, 'cases'):                     _get_slice_stmtish,  # match_case*
-    (Try, 'handlers'):                    _get_slice_stmtish,  # excepthandler*
-    (TryStar, 'handlers'):                _get_slice_stmtish,  # excepthandlerstar*
+    (Match, 'cases'):                         _get_slice_stmtish,  # match_case*
+    (Try, 'handlers'):                        _get_slice_stmtish,  # excepthandler*
+    (TryStar, 'handlers'):                    _get_slice_stmtish,  # excepthandlerstar*
 
-    (Dict, ''):                           _get_slice_Dict,  # key:value*
+    (Dict, ''):                               _get_slice_Dict,  # key:value*
 
-    (Set, 'elts'):                        _get_slice_Set_elts,  # expr*
-    (List, 'elts'):                       _get_slice_List_elts,  # expr*
-    (Tuple, 'elts'):                      _get_slice_Tuple_elts,  # expr*
+    (Set, 'elts'):                            _get_slice_Set_elts,  # expr*
+    (List, 'elts'):                           _get_slice_List_elts,  # expr*
+    (Tuple, 'elts'):                          _get_slice_Tuple_elts,  # expr*
 
-    (FunctionDef, 'decorator_list'):      _get_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (AsyncFunctionDef, 'decorator_list'): _get_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (ClassDef, 'decorator_list'):         _get_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (ClassDef, 'bases'):                  _get_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (Delete, 'targets'):                  _get_slice_Delete_targets,  # expr*
-    (Assign, 'targets'):                  _get_slice_Assign_targets,  # expr*
-    (BoolOp, 'values'):                   _get_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (Compare, ''):                        _get_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (Call, 'args'):                       _get_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (comprehension, 'ifs'):               _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (FunctionDef, 'decorator_list'):          _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (AsyncFunctionDef, 'decorator_list'):     _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (ClassDef, 'decorator_list'):             _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (ClassDef, 'bases'):                      _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Delete, 'targets'):                      _get_slice_Delete_targets,  # expr*
+    (Assign, 'targets'):                      _get_slice_Assign_targets,  # expr*
+    (BoolOp, 'values'):                       _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Compare, ''):                            _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Call, 'args'):                           _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (comprehension, 'ifs'):                   _get_slice_NOT_IMPLEMENTED_YET,  # expr*
 
-    (ListComp, 'generators'):             _get_slice_NOT_IMPLEMENTED_YET,  # comprehension*
-    (SetComp, 'generators'):              _get_slice_NOT_IMPLEMENTED_YET,  # comprehension*
-    (DictComp, 'generators'):             _get_slice_NOT_IMPLEMENTED_YET,  # comprehension*
-    (GeneratorExp, 'generators'):         _get_slice_NOT_IMPLEMENTED_YET,  # comprehension*
+    (ListComp, 'generators'):                 _get_slice_NOT_IMPLEMENTED_YET,  # comprehension*
+    (SetComp, 'generators'):                  _get_slice_NOT_IMPLEMENTED_YET,  # comprehension*
+    (DictComp, 'generators'):                 _get_slice_NOT_IMPLEMENTED_YET,  # comprehension*
+    (GeneratorExp, 'generators'):             _get_slice_NOT_IMPLEMENTED_YET,  # comprehension*
 
-    (ClassDef, 'keywords'):               _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
-    (Call, 'keywords'):                   _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
+    (ClassDef, 'keywords'):                   _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
+    (Call, 'keywords'):                       _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
 
-    (Import, 'names'):                    _get_slice_Import_names,  # alias*
-    (ImportFrom, 'names'):                _get_slice_NOT_IMPLEMENTED_YET,  # alias*
+    (Import, 'names'):                        _get_slice_Import_names,  # alias*
+    (ImportFrom, 'names'):                    _get_slice_NOT_IMPLEMENTED_YET,  # alias*
 
-    (With, 'items'):                      _get_slice_NOT_IMPLEMENTED_YET,  # withitem*
-    (AsyncWith, 'items'):                 _get_slice_NOT_IMPLEMENTED_YET,  # withitem*
+    (With, 'items'):                          _get_slice_NOT_IMPLEMENTED_YET,  # withitem*
+    (AsyncWith, 'items'):                     _get_slice_NOT_IMPLEMENTED_YET,  # withitem*
 
-    (MatchSequence, 'patterns'):          _get_slice_MatchSequence_patterns,  # pattern*
-    (MatchMapping, ''):                   _get_slice_MatchMapping,  # key:pattern*
-    (MatchClass, 'patterns'):             _get_slice_NOT_IMPLEMENTED_YET,  # pattern*
-    (MatchOr, 'patterns'):                _get_slice_MatchOr_patterns,  # pattern*
+    (MatchSequence, 'patterns'):              _get_slice_MatchSequence_patterns,  # pattern*
+    (MatchMapping, ''):                       _get_slice_MatchMapping,  # key:pattern*
+    (MatchClass, 'patterns'):                 _get_slice_NOT_IMPLEMENTED_YET,  # pattern*
+    (MatchOr, 'patterns'):                    _get_slice_MatchOr_patterns,  # pattern*
 
-    (FunctionDef, 'type_params'):         _get_slice_type_params,  # type_param*
-    (AsyncFunctionDef, 'type_params'):    _get_slice_type_params,  # type_param*
-    (ClassDef, 'type_params'):            _get_slice_type_params,  # type_param*
-    (TypeAlias, 'type_params'):           _get_slice_type_params,  # type_param*
+    (FunctionDef, 'type_params'):             _get_slice_type_params,  # type_param*
+    (AsyncFunctionDef, 'type_params'):        _get_slice_type_params,  # type_param*
+    (ClassDef, 'type_params'):                _get_slice_type_params,  # type_param*
+    (TypeAlias, 'type_params'):               _get_slice_type_params,  # type_param*
 
-    (Global, 'names'):                    _get_slice_Global_Nonlocal_names,  # identifier*
-    (Nonlocal, 'names'):                  _get_slice_Global_Nonlocal_names,  # identifier*
+    (Global, 'names'):                        _get_slice_Global_Nonlocal_names,  # identifier*
+    (Nonlocal, 'names'):                      _get_slice_Global_Nonlocal_names,  # identifier*
 
-    (JoinedStr, 'values'):                _get_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (TemplateStr, 'values'):              _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (JoinedStr, 'values'):                    _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (TemplateStr, 'values'):                  _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+
+    (_slice_Assign_targets, 'targets'):       _get_slice__slice,
+    # (_slice_Assign_comprehension_ifs, 'ifs'): _get_slice__slice,
 }
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # put
@@ -1680,7 +1707,25 @@ def _set_loc_whole(self: fst.FST) -> None:
     self._touch()
 
 
-def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any], *,
+def _validate_put_seq(self: fst.FST, fst_: fst.FST, non_slice: str, *,
+                      check_target: Literal[False] | Callable = False) -> None:  # check_target like is_valid_target()
+    if not fst_:
+        return
+
+    ast = self.a
+    ast_ = fst_.a
+
+    if non_slice and isinstance(ast_, Tuple) and any(isinstance(e, Slice) for e in ast_.elts):
+        raise NodeError(f'cannot put Slice into {non_slice}')
+
+    if check_target and not isinstance(ctx := getattr(ast, 'ctx', None), Load) and not check_target(ast_.elts):
+        raise NodeError(f'invalid slice for {ast.__class__.__name__}'
+                        f'{f" {ctx.__class__.__name__}" if ctx else ""} target')
+
+
+# ......................................................................................................................
+
+def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any], *,
                        code_as: Callable = code_as_expr, non_seq_str_as_one: bool = False) -> fst.FST | None:
     if code is None:
         return None
@@ -1738,7 +1783,7 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: dic
     return fst_
 
 
-def _code_to_slice_seq2(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any], code_as: Callable,
+def _code_to_slice_seq2(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any], code_as: Callable,
                         ) -> fst.FST | None:
     if code is None:
         return None
@@ -1761,7 +1806,7 @@ def _code_to_slice_seq2(self: fst.FST, code: Code | None, one: bool, options: di
     return fst_
 
 
-def _code_to_slice_MatchSequence(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any],
+def _code_to_slice_MatchSequence(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
                                  ) -> fst.FST | None:
     if code is None:
         return None
@@ -1795,7 +1840,7 @@ def _code_to_slice_MatchSequence(self: fst.FST, code: Code | None, one: bool, op
     return fst_
 
 
-def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any]) -> fst.FST | None:
+def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]) -> fst.FST | None:
     if code is None:
         return None
 
@@ -1849,7 +1894,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
     return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
 
-def _code_to_slice_aliases(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any]) -> fst.FST | None:
+def _code_to_slice_aliases(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]) -> fst.FST | None:
     if code is None:
         return None
 
@@ -1864,7 +1909,7 @@ def _code_to_slice_aliases(self: fst.FST, code: Code | None, one: bool, options:
     return fst_
 
 
-def _code_to_slice_type_params(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any]) -> fst.FST | None:
+def _code_to_slice_type_params(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]) -> fst.FST | None:
     if code is None:
         return None
 
@@ -1885,7 +1930,7 @@ def _code_to_slice_type_params(self: fst.FST, code: Code | None, one: bool, opti
     return fst_
 
 
-def _code_to_slice_Assign_targets(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any],
+def _code_to_slice_Assign_targets(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
                                   ) -> fst.FST | None:
     if code is None:
         return None
@@ -1895,15 +1940,12 @@ def _code_to_slice_Assign_targets(self: fst.FST, code: Code | None, one: bool, o
         ast_ = fst_.a
 
         if not is_valid_target(ast_):
-            raise NodeError(f'expecting single Assign target, got {fst_.a.__class__.__name__}')
+            raise NodeError(f'expecting one Assign target, got {fst_.a.__class__.__name__}')
 
         set_ctx(ast_, Store)
 
-        return fst.FST(Assign(targets=[ast_], value=Name(id='', ctx=Load(),
-                                                         lineno=(el := len(ls := fst_._lines)),
-                                                         col_offset=(ec := ls[-1].lenbytes),
-                                                         end_lineno=el, end_col_offset=ec),
-                              lineno=1, col_offset=0, end_lineno=el, end_col_offset=ec),
+        return fst.FST(_slice_Assign_targets(targets=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                                             end_col_offset=ls[-1].lenbytes),
                        ls, from_=fst_, lcopy=False)
 
     else:
@@ -1915,7 +1957,7 @@ def _code_to_slice_Assign_targets(self: fst.FST, code: Code | None, one: bool, o
     return fst_
 
 
-def _code_to_slice_Import_names(self: fst.FST, code: Code | None, one: bool, options: dict[str, Any]) -> fst.FST | None:
+def _code_to_slice_Import_names(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]) -> fst.FST | None:
     if code is None:
         return None
 
@@ -1933,22 +1975,6 @@ def _code_to_slice_Import_names(self: fst.FST, code: Code | None, one: bool, opt
             return None
 
     return fst_
-
-
-def _validate_put_seq(self: fst.FST, fst_: fst.FST, non_slice: str, *,
-                      check_target: Literal[False] | Callable = False) -> None:  # check_target like is_valid_target()
-    if not fst_:
-        return
-
-    ast = self.a
-    ast_ = fst_.a
-
-    if non_slice and isinstance(ast_, Tuple) and any(isinstance(e, Slice) for e in ast_.elts):
-        raise NodeError(f'cannot put Slice into {non_slice}')
-
-    if check_target and not isinstance(ctx := getattr(ast, 'ctx', None), Load) and not check_target(ast_.elts):
-        raise NodeError(f'invalid slice for {ast.__class__.__name__}'
-                        f'{f" {ctx.__class__.__name__}" if ctx else ""} target')
 
 
 # ......................................................................................................................
@@ -2294,7 +2320,7 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
 def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                               field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_ = _code_to_slice_Assign_targets(self, code, one, options)
-    len_body = len(body := (ast := self.a).targets)
+    len_body = len(body := self.a.targets)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
@@ -2304,6 +2330,9 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
 
         if len_slice == len_body and self.get_option('fix_assign_self', options):
             raise NodeError("cannot cut Assign targets to empty without fix_assign_self=False")
+
+    elif (a0 := (fst_body := fst_.a.targets)[0]).col_offset:  # if first element of slice doesn't start at column 0 then dedent it
+        fst_._put_src(None, ln := (f := a0.f).ln, 0, ln, f.col, False)
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bound_Assign_targets(self, start)
 
@@ -2319,7 +2348,7 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
         len_fst_body = 0
 
     else:
-        len_fst_body = len(fst_body := fst_.a.targets)
+        len_fst_body = len(fst_body)
 
         _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
@@ -2337,10 +2366,6 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
 
     for i in range(start + len_fst_body, len(body)):
         body[i].f.pfield = astfield('targets', i)
-
-    if fst_ and stop == len_body and isinstance(v := ast.value, Name) and not v.id:  # SPECIAL SLICE, need to fix up empty value location since those are tricky and this one may not be offset properly
-        v.lineno = v.end_lineno = ast.end_lineno
-        v.col_offset = v.end_col_offset = ast.end_col_offset
 
     self._maybe_add_line_continuations()
 
@@ -2728,6 +2753,51 @@ def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Litera
         body[i].f.pfield = astfield('type_params', i)
 
 
+def _put_slice__slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+                      field: str, one: bool, options: Mapping[str, Any]) -> None:
+    static = _SLICE_STATICS[(ast := self.a).__class__]
+    fst_ = static.code_to(self, code, one, options)
+    len_body = len(body := getattr(ast, field))
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
+
+    if not fst_ and not len_slice:
+        return
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+
+    if not fst_:
+        _put_slice_seq(self, start, stop, None, None, None, 0,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'), options.get('ins_ln'), field, None, static.sep, static.self_tail_sep)
+
+        self._unmake_fst_tree(body[start : stop])
+
+        del body[start : stop]
+
+        len_fst_body = 0
+
+    else:
+        len_fst_body = len(fst_body := getattr(fst_.a, field))
+
+        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
+                       bound_ln, bound_col, bound_end_ln, bound_end_col,
+                       options.get('trivia'), options.get('ins_ln'), field, None, static.sep, static.self_tail_sep)
+
+        self._unmake_fst_tree(body[start : stop])
+        fst_._unmake_fst_parents(True)
+
+        body[start : stop] = fst_body
+
+        FST = fst.FST
+        stack = [FST(body[i], self, astfield(field, i)) for i in range(start, start + len_fst_body)]
+
+        self._make_fst_tree(stack)
+
+    for i in range(start + len_fst_body, len(body)):
+        body[i].f.pfield = astfield(field, i)
+
+
 # ......................................................................................................................
 
 def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
@@ -2771,80 +2841,83 @@ def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | N
 
 
 _PUT_SLICE_HANDLERS = {
-    (Module, 'body'):                     _put_slice_stmtish,  # stmt*
-    (Interactive, 'body'):                _put_slice_stmtish,  # stmt*
-    (FunctionDef, 'body'):                _put_slice_stmtish,  # stmt*
-    (AsyncFunctionDef, 'body'):           _put_slice_stmtish,  # stmt*
-    (ClassDef, 'body'):                   _put_slice_stmtish,  # stmt*
-    (For, 'body'):                        _put_slice_stmtish,  # stmt*
-    (For, 'orelse'):                      _put_slice_stmtish,  # stmt*
-    (AsyncFor, 'body'):                   _put_slice_stmtish,  # stmt*
-    (AsyncFor, 'orelse'):                 _put_slice_stmtish,  # stmt*
-    (While, 'body'):                      _put_slice_stmtish,  # stmt*
-    (While, 'orelse'):                    _put_slice_stmtish,  # stmt*
-    (If, 'body'):                         _put_slice_stmtish,  # stmt*
-    (If, 'orelse'):                       _put_slice_stmtish,  # stmt*
-    (With, 'body'):                       _put_slice_stmtish,  # stmt*
-    (AsyncWith, 'body'):                  _put_slice_stmtish,  # stmt*
-    (Try, 'body'):                        _put_slice_stmtish,  # stmt*
-    (Try, 'orelse'):                      _put_slice_stmtish,  # stmt*
-    (Try, 'finalbody'):                   _put_slice_stmtish,  # stmt*
-    (TryStar, 'body'):                    _put_slice_stmtish,  # stmt*
-    (TryStar, 'orelse'):                  _put_slice_stmtish,  # stmt*
-    (TryStar, 'finalbody'):               _put_slice_stmtish,  # stmt*
-    (ExceptHandler, 'body'):              _put_slice_stmtish,  # stmt*
-    (match_case, 'body'):                 _put_slice_stmtish,  # stmt*
+    (Module, 'body'):                         _put_slice_stmtish,  # stmt*
+    (Interactive, 'body'):                    _put_slice_stmtish,  # stmt*
+    (FunctionDef, 'body'):                    _put_slice_stmtish,  # stmt*
+    (AsyncFunctionDef, 'body'):               _put_slice_stmtish,  # stmt*
+    (ClassDef, 'body'):                       _put_slice_stmtish,  # stmt*
+    (For, 'body'):                            _put_slice_stmtish,  # stmt*
+    (For, 'orelse'):                          _put_slice_stmtish,  # stmt*
+    (AsyncFor, 'body'):                       _put_slice_stmtish,  # stmt*
+    (AsyncFor, 'orelse'):                     _put_slice_stmtish,  # stmt*
+    (While, 'body'):                          _put_slice_stmtish,  # stmt*
+    (While, 'orelse'):                        _put_slice_stmtish,  # stmt*
+    (If, 'body'):                             _put_slice_stmtish,  # stmt*
+    (If, 'orelse'):                           _put_slice_stmtish,  # stmt*
+    (With, 'body'):                           _put_slice_stmtish,  # stmt*
+    (AsyncWith, 'body'):                      _put_slice_stmtish,  # stmt*
+    (Try, 'body'):                            _put_slice_stmtish,  # stmt*
+    (Try, 'orelse'):                          _put_slice_stmtish,  # stmt*
+    (Try, 'finalbody'):                       _put_slice_stmtish,  # stmt*
+    (TryStar, 'body'):                        _put_slice_stmtish,  # stmt*
+    (TryStar, 'orelse'):                      _put_slice_stmtish,  # stmt*
+    (TryStar, 'finalbody'):                   _put_slice_stmtish,  # stmt*
+    (ExceptHandler, 'body'):                  _put_slice_stmtish,  # stmt*
+    (match_case, 'body'):                     _put_slice_stmtish,  # stmt*
 
-    (Match, 'cases'):                     _put_slice_stmtish,  # match_case*
-    (Try, 'handlers'):                    _put_slice_stmtish,  # excepthandler*
-    (TryStar, 'handlers'):                _put_slice_stmtish,  # excepthandlerstar*
+    (Match, 'cases'):                         _put_slice_stmtish,  # match_case*
+    (Try, 'handlers'):                        _put_slice_stmtish,  # excepthandler*
+    (TryStar, 'handlers'):                    _put_slice_stmtish,  # excepthandlerstar*
 
-    (Dict, ''):                           _put_slice_Dict,  # key:value*
+    (Dict, ''):                               _put_slice_Dict,  # key:value*
 
-    (Set, 'elts'):                        _put_slice_Set_elts,  # expr*
-    (List, 'elts'):                       _put_slice_List_elts,  # expr*
-    (Tuple, 'elts'):                      _put_slice_Tuple_elts,  # expr*
+    (Set, 'elts'):                            _put_slice_Set_elts,  # expr*
+    (List, 'elts'):                           _put_slice_List_elts,  # expr*
+    (Tuple, 'elts'):                          _put_slice_Tuple_elts,  # expr*
 
-    (FunctionDef, 'decorator_list'):      _put_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (AsyncFunctionDef, 'decorator_list'): _put_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (ClassDef, 'decorator_list'):         _put_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (ClassDef, 'bases'):                  _put_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (Delete, 'targets'):                  _put_slice_Delete_targets,  # expr*
-    (Assign, 'targets'):                  _put_slice_Assign_targets,  # expr*
-    (BoolOp, 'values'):                   _put_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (Compare, ''):                        _put_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (Call, 'args'):                       _put_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (comprehension, 'ifs'):               _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (FunctionDef, 'decorator_list'):          _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (AsyncFunctionDef, 'decorator_list'):     _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (ClassDef, 'decorator_list'):             _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (ClassDef, 'bases'):                      _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Delete, 'targets'):                      _put_slice_Delete_targets,  # expr*
+    (Assign, 'targets'):                      _put_slice_Assign_targets,  # expr*
+    (BoolOp, 'values'):                       _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Compare, ''):                            _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Call, 'args'):                           _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (comprehension, 'ifs'):                   _put_slice_NOT_IMPLEMENTED_YET,  # expr*
 
-    (ListComp, 'generators'):             _put_slice_NOT_IMPLEMENTED_YET,  # comprehension*
-    (SetComp, 'generators'):              _put_slice_NOT_IMPLEMENTED_YET,  # comprehension*
-    (DictComp, 'generators'):             _put_slice_NOT_IMPLEMENTED_YET,  # comprehension*
-    (GeneratorExp, 'generators'):         _put_slice_NOT_IMPLEMENTED_YET,  # comprehension*
+    (ListComp, 'generators'):                 _put_slice_NOT_IMPLEMENTED_YET,  # comprehension*
+    (SetComp, 'generators'):                  _put_slice_NOT_IMPLEMENTED_YET,  # comprehension*
+    (DictComp, 'generators'):                 _put_slice_NOT_IMPLEMENTED_YET,  # comprehension*
+    (GeneratorExp, 'generators'):             _put_slice_NOT_IMPLEMENTED_YET,  # comprehension*
 
-    (ClassDef, 'keywords'):               _put_slice_NOT_IMPLEMENTED_YET,  # keyword*
-    (Call, 'keywords'):                   _put_slice_NOT_IMPLEMENTED_YET,  # keyword*
+    (ClassDef, 'keywords'):                   _put_slice_NOT_IMPLEMENTED_YET,  # keyword*
+    (Call, 'keywords'):                       _put_slice_NOT_IMPLEMENTED_YET,  # keyword*
 
-    (Import, 'names'):                    _put_slice_Import_names,  # alias*
-    (ImportFrom, 'names'):                _put_slice_NOT_IMPLEMENTED_YET,  # alias*
+    (Import, 'names'):                        _put_slice_Import_names,  # alias*
+    (ImportFrom, 'names'):                    _put_slice_NOT_IMPLEMENTED_YET,  # alias*
 
-    (With, 'items'):                      _put_slice_NOT_IMPLEMENTED_YET,  # withitem*
-    (AsyncWith, 'items'):                 _put_slice_NOT_IMPLEMENTED_YET,  # withitem*
+    (With, 'items'):                          _put_slice_NOT_IMPLEMENTED_YET,  # withitem*
+    (AsyncWith, 'items'):                     _put_slice_NOT_IMPLEMENTED_YET,  # withitem*
 
-    (MatchSequence, 'patterns'):          _put_slice_MatchSequence_patterns,  # pattern*
-    (MatchMapping, ''):                   _put_slice_MatchMapping,  # key:pattern*
-    (MatchClass, 'patterns'):             _put_slice_NOT_IMPLEMENTED_YET,  # pattern*
-    (MatchOr, 'patterns'):                _put_slice_MatchOr_patterns,  # pattern*
+    (MatchSequence, 'patterns'):              _put_slice_MatchSequence_patterns,  # pattern*
+    (MatchMapping, ''):                       _put_slice_MatchMapping,  # key:pattern*
+    (MatchClass, 'patterns'):                 _put_slice_NOT_IMPLEMENTED_YET,  # pattern*
+    (MatchOr, 'patterns'):                    _put_slice_MatchOr_patterns,  # pattern*
 
-    (FunctionDef, 'type_params'):         _put_slice_type_params,  # type_param*
-    (AsyncFunctionDef, 'type_params'):    _put_slice_type_params,  # type_param*
-    (ClassDef, 'type_params'):            _put_slice_type_params,  # type_param*
-    (TypeAlias, 'type_params'):           _put_slice_type_params,  # type_param*
+    (FunctionDef, 'type_params'):             _put_slice_type_params,  # type_param*
+    (AsyncFunctionDef, 'type_params'):        _put_slice_type_params,  # type_param*
+    (ClassDef, 'type_params'):                _put_slice_type_params,  # type_param*
+    (TypeAlias, 'type_params'):               _put_slice_type_params,  # type_param*
 
-    (Global, 'names'):                    _put_slice_Global_Nonlocal_names,  # identifier*
-    (Nonlocal, 'names'):                  _put_slice_Global_Nonlocal_names,  # identifier*
+    (Global, 'names'):                        _put_slice_Global_Nonlocal_names,  # identifier*
+    (Nonlocal, 'names'):                      _put_slice_Global_Nonlocal_names,  # identifier*
 
-    (JoinedStr, 'values'):                _put_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (TemplateStr, 'values'):              _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (JoinedStr, 'values'):                    _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (TemplateStr, 'values'):                  _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+
+    (_slice_Assign_targets, 'targets'):       _put_slice__slice,
+    # (_slice_Assign_comprehension_ifs, 'ifs'): _put_slice__slice,
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -2972,6 +3045,21 @@ def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end']
     self._reparse_raw(code, *_loc_slice_raw_put(self, start, stop, field))
 
     return self.repath()
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+class slicestatic(NamedTuple):
+    field:         str
+    code_to:       Callable[[fst.FST, Code, bool, dict], fst.FST]
+    sep:           str
+    self_tail_sep: bool | Literal[0, 1] | None
+    ret_tail_sep:  bool | Literal[0, 1] | None
+
+
+_SLICE_STATICS = {
+    _slice_Assign_targets: slicestatic('targets', _code_to_slice_Assign_targets, '=', True, True),
+}
 
 
 # ----------------------------------------------------------------------------------------------------------------------

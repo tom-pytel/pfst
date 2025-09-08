@@ -132,6 +132,7 @@ from .asttypes import (
     TypeVarTuple,
     TemplateStr,
     Interpolation,
+    _slice_Assign_targets,
 )
 
 __all__ = [
@@ -388,6 +389,10 @@ FIELDS = dict([
     (TypeVar,            (('name', 'identifier'), ('bound', 'expr?'), ('default_value', 'expr?'))),
     (ParamSpec,          (('name', 'identifier'), ('default_value', 'expr?'))),
     (TypeVarTuple,       (('name', 'identifier'), ('default_value', 'expr?'))),
+
+    (_slice_Assign_targets,    (('targets', 'AST*'),)),
+    # (_slice_comprehension_ifs, (('targets', 'AST*'),)),
+
 ])  ; """List of all fields for AST classes: [(`AST` class, (('field name', 'type name'), ...)), ...]"""
 
 # only fields which can contain an AST, {cls: ('field1', 'field2', ...), ...}
@@ -815,9 +820,10 @@ def compare_asts(ast1: AST, ast2: AST, *, locs: bool = False, ctx: bool = True, 
                     getattr(n1, 'end_lineno', None) != getattr(n2, 'end_lineno', None) or
                     getattr(n1, 'end_col_offset', None) != getattr(n2, 'end_col_offset', None)
                 ):
-                    raise WalkFail(f"locations differ in '{n1.__class__.__qualname__}', "
-                                   f"{(n1.lineno, n1.col_offset, n1.end_lineno, n1.end_col_offset)} vs. "
-                                   f"{(n2.lineno, n2.col_offset, n2.end_lineno, n2.end_col_offset)}")
+                    locs = (f"{(getattr(n1, 'lineno', '?'), getattr(n1, 'col_offset', '?'), getattr(n1, 'end_lineno', '?'), getattr(n1, 'end_col_offset', '?'))} / "
+                            f"{(getattr(n2, 'lineno', '?'), getattr(n2, 'col_offset', '?'), getattr(n2, 'end_lineno', '?'), getattr(n2, 'end_col_offset', '?'))}")
+
+                    raise WalkFail(f"locations differ in '{n1.__class__.__qualname__}', {locs}")
 
     except WalkFail:
         if raise_:

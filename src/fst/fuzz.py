@@ -1779,7 +1779,7 @@ class SliceExprish(Fuzzy):
             'seq':         self.Bucket('elts', None, 1, 0, True, FST('()')), # 1 because of Set
             Dict:          self.Bucket(None, None, 0, 0, False, FST('{}')),
             Delete:        self.Bucket('targets', 'elts', 1, 0, True, FST('del a')),
-            Assign:        self.Bucket('targets', None, 1, 0, False, FST('a = b')),
+            Assign:        self.Bucket('targets', None, 1, 0, False, FST('', 'Assign_targets')),
             Import:        self.Bucket('names', 'elts', 1, 1, False, FST('import a')),
             Global:        (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
             Nonlocal:      glbucket,

@@ -5950,239 +5950,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-(84, 'body[0]', 0, 2, 'targets', {}, ('exec',
-r'''a = b = c = z'''),
-r'''c = z''', r'''
-Module - ROOT 0,0..0,5
-  .body[1]
-  0] Assign - 0,0..0,5
-    .targets[1]
-    0] Name 'c' Store - 0,0..0,1
-    .value Name 'z' Load - 0,4..0,5
-''',
-r'''a = b =''', r'''
-Assign - ROOT 0,0..0,7
-  .targets[2]
-  0] Name 'a' Store - 0,0..0,1
-  1] Name 'b' Store - 0,4..0,5
-  .value Name '' Load - 0,7..0,7
-'''),
-
-(85, 'body[0]', 1, 2, 'targets', {}, ('exec',
-r'''a = b = c = z'''),
-r'''a = c = z''', r'''
-Module - ROOT 0,0..0,9
-  .body[1]
-  0] Assign - 0,0..0,9
-    .targets[2]
-    0] Name 'a' Store - 0,0..0,1
-    1] Name 'c' Store - 0,4..0,5
-    .value Name 'z' Load - 0,8..0,9
-''',
-r'''b =''', r'''
-Assign - ROOT 0,0..0,3
-  .targets[1]
-  0] Name 'b' Store - 0,0..0,1
-  .value Name '' Load - 0,3..0,3
-'''),
-
-(86, 'body[0]', 1, 3, 'targets', {}, ('exec',
-r'''a = b = c = z'''),
-r'''a = z''', r'''
-Module - ROOT 0,0..0,5
-  .body[1]
-  0] Assign - 0,0..0,5
-    .targets[1]
-    0] Name 'a' Store - 0,0..0,1
-    .value Name 'z' Load - 0,4..0,5
-''',
-r'''b = c =''', r'''
-Assign - ROOT 0,0..0,7
-  .targets[2]
-  0] Name 'b' Store - 0,0..0,1
-  1] Name 'c' Store - 0,4..0,5
-  .value Name '' Load - 0,7..0,7
-'''),
-
-(87, 'body[0]', 2, 3, 'targets', {}, ('exec',
-r'''a = b = c = z'''),
-r'''a = b = z''', r'''
-Module - ROOT 0,0..0,9
-  .body[1]
-  0] Assign - 0,0..0,9
-    .targets[2]
-    0] Name 'a' Store - 0,0..0,1
-    1] Name 'b' Store - 0,4..0,5
-    .value Name 'z' Load - 0,8..0,9
-''',
-r'''c =''', r'''
-Assign - ROOT 0,0..0,3
-  .targets[1]
-  0] Name 'c' Store - 0,0..0,1
-  .value Name '' Load - 0,3..0,3
-'''),
-
-(88, 'body[0]', 3, 3, 'targets', {'_verify': False}, ('exec',
-r'''a = b = c = z'''),
-r'''a = b = c = z''', r'''
-Module - ROOT 0,0..0,13
-  .body[1]
-  0] Assign - 0,0..0,13
-    .targets[3]
-    0] Name 'a' Store - 0,0..0,1
-    1] Name 'b' Store - 0,4..0,5
-    2] Name 'c' Store - 0,8..0,9
-    .value Name 'z' Load - 0,12..0,13
-''',
-r''' = ''', r'''
-Assign - ROOT 0,0..0,3
-  .value Name '' Load - 0,3..0,3
-'''),
-
-(89, 'body[0]', 0, 2, 'targets', {}, ('exec', r'''
-a = \
-b = \
-c \
-= \
-z
-'''), r'''
-c \
-= \
-z
-''', r'''
-Module - ROOT 0,0..2,1
-  .body[1]
-  0] Assign - 0,0..2,1
-    .targets[1]
-    0] Name 'c' Store - 0,0..0,1
-    .value Name 'z' Load - 2,0..2,1
-''', r'''
-a = \
-b = \
-
-''', r'''
-Assign - ROOT 0,0..2,0
-  .targets[2]
-  0] Name 'a' Store - 0,0..0,1
-  1] Name 'b' Store - 1,0..1,1
-  .value Name '' Load - 2,0..2,0
-'''),
-
-(90, 'body[0]', 1, 2, 'targets', {}, ('exec', r'''
-a = \
-b = \
-c \
-= \
-z
-'''), r'''
-a = \
-c \
-= \
-z
-''', r'''
-Module - ROOT 0,0..3,1
-  .body[1]
-  0] Assign - 0,0..3,1
-    .targets[2]
-    0] Name 'a' Store - 0,0..0,1
-    1] Name 'c' Store - 1,0..1,1
-    .value Name 'z' Load - 3,0..3,1
-''', r'''
-b = \
-
-''', r'''
-Assign - ROOT 0,0..1,0
-  .targets[1]
-  0] Name 'b' Store - 0,0..0,1
-  .value Name '' Load - 1,0..1,0
-'''),
-
-(91, 'body[0]', 1, 3, 'targets', {}, ('exec', r'''
-a = \
-b = \
-c \
-= \
-z
-'''), r'''
-a = \
-z
-''', r'''
-Module - ROOT 0,0..1,1
-  .body[1]
-  0] Assign - 0,0..1,1
-    .targets[1]
-    0] Name 'a' Store - 0,0..0,1
-    .value Name 'z' Load - 1,0..1,1
-''', r'''
-b = \
-c \
-= \
-
-''', r'''
-Assign - ROOT 0,0..3,0
-  .targets[2]
-  0] Name 'b' Store - 0,0..0,1
-  1] Name 'c' Store - 1,0..1,1
-  .value Name '' Load - 3,0..3,0
-'''),
-
-(92, 'body[0]', 2, 3, 'targets', {}, ('exec', r'''
-a = \
-b = \
-c \
-= \
-z
-'''), r'''
-a = \
-b = \
-z
-''', r'''
-Module - ROOT 0,0..2,1
-  .body[1]
-  0] Assign - 0,0..2,1
-    .targets[2]
-    0] Name 'a' Store - 0,0..0,1
-    1] Name 'b' Store - 1,0..1,1
-    .value Name 'z' Load - 2,0..2,1
-''', r'''
-c \
-= \
-
-''', r'''
-Assign - ROOT 0,0..2,0
-  .targets[1]
-  0] Name 'c' Store - 0,0..0,1
-  .value Name '' Load - 2,0..2,0
-'''),
-
-(93, 'body[0]', 3, 3, 'targets', {'_verify': False}, ('exec', r'''
-a = \
-b = \
-c \
-= \
-z
-'''), r'''
-a = \
-b = \
-c \
-= \
-z
-''', r'''
-Module - ROOT 0,0..4,1
-  .body[1]
-  0] Assign - 0,0..4,1
-    .targets[3]
-    0] Name 'a' Store - 0,0..0,1
-    1] Name 'b' Store - 1,0..1,1
-    2] Name 'c' Store - 2,0..2,1
-    .value Name 'z' Load - 4,0..4,1
-''',
-r''' = ''', r'''
-Assign - ROOT 0,0..0,3
-  .value Name '' Load - 0,3..0,3
-'''),
-
-(94, 'body[0]', 1, 2, None, {}, ('exec',
+(84, 'body[0]', 1, 2, None, {}, ('exec',
 r'''global a, b, c  # comment'''),
 r'''global a, c  # comment''', r'''
 Module - ROOT 0,0..0,22
@@ -6199,7 +5967,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-(95, 'body[0]', 1, 3, None, {}, ('exec',
+(85, 'body[0]', 1, 3, None, {}, ('exec',
 r'''global a, b, c  # comment'''),
 r'''global a  # comment''', r'''
 Module - ROOT 0,0..0,19
@@ -6216,7 +5984,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-(96, 'body[0]', 0, 2, None, {}, ('exec',
+(86, 'body[0]', 0, 2, None, {}, ('exec',
 r'''global a, b, c  # comment'''),
 r'''global c  # comment''', r'''
 Module - ROOT 0,0..0,19
@@ -6233,7 +6001,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-(97, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(87, 'body[0]', 1, 2, None, {}, ('exec', r'''
 global a \
 , \
 b \
@@ -6262,7 +6030,7 @@ Tuple - ROOT 0,0..3,1
   .ctx Load
 '''),
 
-(98, 'body[0]', 0, 2, None, {}, ('exec', r'''
+(88, 'body[0]', 0, 2, None, {}, ('exec', r'''
 global a \
 , \
 b \
@@ -6290,7 +6058,7 @@ Tuple - ROOT 0,0..3,1
   .ctx Load
 '''),
 
-(99, 'body[0]', 1, 3, None, {}, ('exec', r'''
+(89, 'body[0]', 1, 3, None, {}, ('exec', r'''
 global a \
 , \
 b \
@@ -6316,7 +6084,7 @@ Tuple - ROOT 0,0..3,2
   .ctx Load
 '''),
 
-(100, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
+(90, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
   global a \
   , \
@@ -6347,7 +6115,7 @@ Tuple - ROOT 0,0..1,1
   .ctx Load
 '''),
 
-(101, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
+(91, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
 if 1:
   global a \
   , \
@@ -6377,7 +6145,7 @@ Tuple - ROOT 0,0..1,3
   .ctx Load
 '''),
 
-(102, 'body[0]', 1, 2, None, {}, ('exec',
+(92, 'body[0]', 1, 2, None, {}, ('exec',
 r'''nonlocal a, b, c  # comment'''),
 r'''nonlocal a, c  # comment''', r'''
 Module - ROOT 0,0..0,24
@@ -6394,7 +6162,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-(103, 'body[0]', 1, 3, None, {}, ('exec',
+(93, 'body[0]', 1, 3, None, {}, ('exec',
 r'''nonlocal a, b, c  # comment'''),
 r'''nonlocal a  # comment''', r'''
 Module - ROOT 0,0..0,21
@@ -6411,7 +6179,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-(104, 'body[0]', 0, 2, None, {}, ('exec',
+(94, 'body[0]', 0, 2, None, {}, ('exec',
 r'''nonlocal a, b, c  # comment'''),
 r'''nonlocal c  # comment''', r'''
 Module - ROOT 0,0..0,21
@@ -6428,7 +6196,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-(105, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(95, 'body[0]', 1, 2, None, {}, ('exec', r'''
 nonlocal a \
 , \
 b \
@@ -6457,7 +6225,7 @@ Tuple - ROOT 0,0..3,1
   .ctx Load
 '''),
 
-(106, 'body[0]', 0, 2, None, {}, ('exec', r'''
+(96, 'body[0]', 0, 2, None, {}, ('exec', r'''
 nonlocal a \
 , \
 b \
@@ -6485,7 +6253,7 @@ Tuple - ROOT 0,0..3,1
   .ctx Load
 '''),
 
-(107, 'body[0]', 1, 3, None, {}, ('exec', r'''
+(97, 'body[0]', 1, 3, None, {}, ('exec', r'''
 nonlocal a \
 , \
 b \
@@ -6511,7 +6279,7 @@ Tuple - ROOT 0,0..3,2
   .ctx Load
 '''),
 
-(108, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
+(98, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
   nonlocal a \
   , \
@@ -6542,7 +6310,7 @@ Tuple - ROOT 0,0..1,1
   .ctx Load
 '''),
 
-(109, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
+(99, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
 if 1:
   nonlocal a \
   , \
@@ -6572,7 +6340,7 @@ Tuple - ROOT 0,0..1,3
   .ctx Load
 '''),
 
-(110, 'body[0]', 1, 2, None, {}, ('exec',
+(100, 'body[0]', 1, 2, None, {}, ('exec',
 r'''import a, b as y, c  # comment'''),
 r'''import a, c  # comment''', r'''
 Module - ROOT 0,0..0,22
@@ -6594,7 +6362,7 @@ Tuple - ROOT 0,0..0,6
   .ctx Load
 '''),
 
-(111, 'body[0]', 1, 3, None, {}, ('exec',
+(101, 'body[0]', 1, 3, None, {}, ('exec',
 r'''import a, b as y, c  # comment'''),
 r'''import a  # comment''', r'''
 Module - ROOT 0,0..0,19
@@ -6616,7 +6384,7 @@ Tuple - ROOT 0,0..0,9
   .ctx Load
 '''),
 
-(112, 'body[0]', 0, 2, None, {}, ('exec',
+(102, 'body[0]', 0, 2, None, {}, ('exec',
 r'''import a, b as y, c  # comment'''),
 r'''import c  # comment''', r'''
 Module - ROOT 0,0..0,19
@@ -6638,7 +6406,7 @@ Tuple - ROOT 0,0..0,9
   .ctx Load
 '''),
 
-(113, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(103, 'body[0]', 1, 2, None, {}, ('exec', r'''
 import a \
 , \
 b \
@@ -6673,7 +6441,7 @@ Tuple - ROOT 0,0..2,1
   .ctx Load
 '''),
 
-(114, 'body[0]', 0, 2, None, {}, ('exec', r'''
+(104, 'body[0]', 0, 2, None, {}, ('exec', r'''
 import a \
 , \
 b \
@@ -6709,7 +6477,7 @@ Tuple - ROOT 0,0..4,1
   .ctx Load
 '''),
 
-(115, 'body[0]', 1, 3, None, {}, ('exec', r'''
+(105, 'body[0]', 1, 3, None, {}, ('exec', r'''
 import a \
 , \
 b \
@@ -6743,7 +6511,7 @@ Tuple - ROOT 0,0..4,1
   .ctx Load
 '''),
 
-(116, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
+(106, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
   import a \
   , \
@@ -6780,7 +6548,7 @@ Tuple - ROOT 0,0..0,1
   .ctx Load
 '''),
 
-(117, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
+(107, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
 if 1:
   import a \
   , \
@@ -6816,6 +6584,358 @@ Tuple - ROOT 0,0..2,1
       'y'
   .ctx Load
 '''),
+],
+
+'Assign_targets': [  # ................................................................................
+
+(0, 'body[0]', 0, 2, 'targets', {}, ('exec',
+r'''a = b = c = z'''),
+r'''c = z''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'c' Store - 0,0..0,1
+    .value Name 'z' Load - 0,4..0,5
+''',
+r'''a = b =''', r'''
+_slice_Assign_targets - ROOT 0,0..0,7
+  .targets[2]
+  0] Name 'a' Store - 0,0..0,1
+  1] Name 'b' Store - 0,4..0,5
+'''),
+
+(1, 'body[0]', 1, 2, 'targets', {}, ('exec',
+r'''a = b = c = z'''),
+r'''a = c = z''', r'''
+Module - ROOT 0,0..0,9
+  .body[1]
+  0] Assign - 0,0..0,9
+    .targets[2]
+    0] Name 'a' Store - 0,0..0,1
+    1] Name 'c' Store - 0,4..0,5
+    .value Name 'z' Load - 0,8..0,9
+''',
+r'''b =''', r'''
+_slice_Assign_targets - ROOT 0,0..0,3
+  .targets[1]
+  0] Name 'b' Store - 0,0..0,1
+'''),
+
+(2, 'body[0]', 1, 3, 'targets', {}, ('exec',
+r'''a = b = c = z'''),
+r'''a = z''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'a' Store - 0,0..0,1
+    .value Name 'z' Load - 0,4..0,5
+''',
+r'''b = c =''', r'''
+_slice_Assign_targets - ROOT 0,0..0,7
+  .targets[2]
+  0] Name 'b' Store - 0,0..0,1
+  1] Name 'c' Store - 0,4..0,5
+'''),
+
+(3, 'body[0]', 2, 3, 'targets', {}, ('exec',
+r'''a = b = c = z'''),
+r'''a = b = z''', r'''
+Module - ROOT 0,0..0,9
+  .body[1]
+  0] Assign - 0,0..0,9
+    .targets[2]
+    0] Name 'a' Store - 0,0..0,1
+    1] Name 'b' Store - 0,4..0,5
+    .value Name 'z' Load - 0,8..0,9
+''',
+r'''c =''', r'''
+_slice_Assign_targets - ROOT 0,0..0,3
+  .targets[1]
+  0] Name 'c' Store - 0,0..0,1
+'''),
+
+(4, 'body[0]', 3, 3, 'targets', {'_verify': False}, ('exec',
+r'''a = b = c = z'''),
+r'''a = b = c = z''', r'''
+Module - ROOT 0,0..0,13
+  .body[1]
+  0] Assign - 0,0..0,13
+    .targets[3]
+    0] Name 'a' Store - 0,0..0,1
+    1] Name 'b' Store - 0,4..0,5
+    2] Name 'c' Store - 0,8..0,9
+    .value Name 'z' Load - 0,12..0,13
+''',
+r'''''',
+r'''_slice_Assign_targets - ROOT 0,0..0,0'''),
+
+(5, 'body[0]', 0, 2, 'targets', {}, ('exec', r'''
+a = \
+b = \
+c \
+= \
+z
+'''), r'''
+c \
+= \
+z
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[1]
+  0] Assign - 0,0..2,1
+    .targets[1]
+    0] Name 'c' Store - 0,0..0,1
+    .value Name 'z' Load - 2,0..2,1
+''', r'''
+a = \
+b = \
+
+''', r'''
+_slice_Assign_targets - ROOT 0,0..2,0
+  .targets[2]
+  0] Name 'a' Store - 0,0..0,1
+  1] Name 'b' Store - 1,0..1,1
+'''),
+
+(6, 'body[0]', 1, 2, 'targets', {}, ('exec', r'''
+a = \
+b = \
+c \
+= \
+z
+'''), r'''
+a = \
+c \
+= \
+z
+''', r'''
+Module - ROOT 0,0..3,1
+  .body[1]
+  0] Assign - 0,0..3,1
+    .targets[2]
+    0] Name 'a' Store - 0,0..0,1
+    1] Name 'c' Store - 1,0..1,1
+    .value Name 'z' Load - 3,0..3,1
+''', r'''
+
+b = \
+
+''', r'''
+_slice_Assign_targets - ROOT 0,0..2,0
+  .targets[1]
+  0] Name 'b' Store - 1,0..1,1
+'''),
+
+(7, 'body[0]', 1, 3, 'targets', {}, ('exec', r'''
+a = \
+b = \
+c \
+= \
+z
+'''), r'''
+a = \
+z
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[1]
+  0] Assign - 0,0..1,1
+    .targets[1]
+    0] Name 'a' Store - 0,0..0,1
+    .value Name 'z' Load - 1,0..1,1
+''', r'''
+
+b = \
+c \
+= \
+
+''', r'''
+_slice_Assign_targets - ROOT 0,0..4,0
+  .targets[2]
+  0] Name 'b' Store - 1,0..1,1
+  1] Name 'c' Store - 2,0..2,1
+'''),
+
+(8, 'body[0]', 2, 3, 'targets', {}, ('exec', r'''
+a = \
+b = \
+c \
+= \
+z
+'''), r'''
+a = \
+b = \
+z
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[1]
+  0] Assign - 0,0..2,1
+    .targets[2]
+    0] Name 'a' Store - 0,0..0,1
+    1] Name 'b' Store - 1,0..1,1
+    .value Name 'z' Load - 2,0..2,1
+''', r'''
+
+c \
+= \
+
+''', r'''
+_slice_Assign_targets - ROOT 0,0..3,0
+  .targets[1]
+  0] Name 'c' Store - 1,0..1,1
+'''),
+
+(9, 'body[0]', 3, 3, 'targets', {}, ('exec', r'''
+a = \
+b = \
+c \
+= \
+z
+'''), r'''
+a = \
+b = \
+c \
+= \
+z
+''', r'''
+Module - ROOT 0,0..4,1
+  .body[1]
+  0] Assign - 0,0..4,1
+    .targets[3]
+    0] Name 'a' Store - 0,0..0,1
+    1] Name 'b' Store - 1,0..1,1
+    2] Name 'c' Store - 2,0..2,1
+    .value Name 'z' Load - 4,0..4,1
+''',
+r'''''',
+r'''_slice_Assign_targets - ROOT 0,0..0,0'''),
+
+(10, '', 0, 2, 'targets', {}, ('Assign_targets', r'''
+a = \
+b = \
+c \
+= \
+
+'''), r'''
+c \
+= \
+
+''', r'''
+_slice_Assign_targets - ROOT 0,0..2,0
+  .targets[1]
+  0] Name 'c' Store - 0,0..0,1
+''', r'''
+a = \
+b = \
+
+''', r'''
+_slice_Assign_targets - ROOT 0,0..2,0
+  .targets[2]
+  0] Name 'a' Store - 0,0..0,1
+  1] Name 'b' Store - 1,0..1,1
+'''),
+
+(11, '', 1, 2, 'targets', {}, ('Assign_targets', r'''
+a = \
+b = \
+c \
+= \
+
+'''), r'''
+a = \
+c \
+= \
+
+''', r'''
+_slice_Assign_targets - ROOT 0,0..3,0
+  .targets[2]
+  0] Name 'a' Store - 0,0..0,1
+  1] Name 'c' Store - 1,0..1,1
+''', r'''
+
+b = \
+
+''', r'''
+_slice_Assign_targets - ROOT 0,0..2,0
+  .targets[1]
+  0] Name 'b' Store - 1,0..1,1
+'''),
+
+(12, '', 1, 3, 'targets', {}, ('Assign_targets', r'''
+a = \
+b = \
+c \
+= \
+
+'''), r'''
+a = \
+
+''', r'''
+_slice_Assign_targets - ROOT 0,0..1,0
+  .targets[1]
+  0] Name 'a' Store - 0,0..0,1
+''', r'''
+
+b = \
+c \
+= \
+
+''', r'''
+_slice_Assign_targets - ROOT 0,0..4,0
+  .targets[2]
+  0] Name 'b' Store - 1,0..1,1
+  1] Name 'c' Store - 2,0..2,1
+'''),
+
+(13, '', 2, 3, 'targets', {}, ('Assign_targets', r'''
+a = \
+b = \
+c \
+= \
+
+'''), r'''
+a = \
+b = \
+
+''', r'''
+_slice_Assign_targets - ROOT 0,0..2,0
+  .targets[2]
+  0] Name 'a' Store - 0,0..0,1
+  1] Name 'b' Store - 1,0..1,1
+''', r'''
+
+c \
+= \
+
+''', r'''
+_slice_Assign_targets - ROOT 0,0..3,0
+  .targets[1]
+  0] Name 'c' Store - 1,0..1,1
+'''),
+
+(14, '', 3, 3, 'targets', {}, ('Assign_targets', r'''
+a = \
+b = \
+c \
+= \
+z
+'''), r'''
+a = \
+b = \
+c \
+= \
+z
+''', r'''
+_slice_Assign_targets - ROOT 0,0..4,1
+  .targets[4]
+  0] Name 'a' Store - 0,0..0,1
+  1] Name 'b' Store - 1,0..1,1
+  2] Name 'c' Store - 2,0..2,1
+  3] Name 'z' Store - 4,0..4,1
+''',
+r'''''',
+r'''_slice_Assign_targets - ROOT 0,0..0,0'''),
 ],
 
 }

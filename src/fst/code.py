@@ -12,7 +12,6 @@ from . import fst
 
 from .asttypes import (
     AST,
-    Assign,
     Constant,
     ExceptHandler,
     Expr,
@@ -39,6 +38,7 @@ from .asttypes import (
     withitem,
     TryStar,
     type_param,
+    _slice_Assign_targets,
 )
 
 from .astutil import (
@@ -650,15 +650,9 @@ def code_as_type_params(code: Code, parse_params: Mapping[str, Any] = {}, *, san
 
 
 def code_as_Assign_targets(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
-    """Convert `code` to an `Assign` targets SPECIAL SLICE `FST` if possible."""
+    """Convert `code` to an `_slice_Assign_targets` SPECIAL SLICE `FST` if possible."""
 
-    fst_ = _code_as(code, Assign, parse_params, parse_Assign_targets, sanitize=sanitize)
-
-    if fst_ is code:
-        if not isinstance(name := fst_.a.value, Name) or name.id:
-            raise NodeError('expecting Assign targets slice, got normal Assign', rawable=True)
-
-    return fst_
+    return _code_as(code, _slice_Assign_targets, parse_params, parse_Assign_targets, sanitize=sanitize)
 
 
 def code_as_identifier(code: Code, parse_params: Mapping[str, Any] = {}) -> str:
