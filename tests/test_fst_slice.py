@@ -2302,19 +2302,21 @@ a | (
         f.verify()
 
         if PYGE12:
-            self.assertEqual('T,', g := (f := FST('def f[T, *U, **V](): pass').get_slice(0, 2, 'type_params')).get_slice(0, 1).src)
+            # type_params
+
+            self.assertEqual('T', g := (f := FST('def f[T, *U, **V](): pass').get_slice(0, 2, 'type_params')).get_slice(0, 1).src)
             self.assertEqual('T, *U, T', f.put_slice(g, 'end').src)
             f.verify()
 
-            self.assertEqual('T,', g := (f := FST('async def f[T, *U, **V](): pass').get_slice(0, 2, 'type_params')).get_slice(0, 1).src)
+            self.assertEqual('T', g := (f := FST('async def f[T, *U, **V](): pass').get_slice(0, 2, 'type_params')).get_slice(0, 1).src)
             self.assertEqual('T, *U, T', f.put_slice(g, 'end').src)
             f.verify()
 
-            self.assertEqual('T,', g := (f := FST('class cls[T, *U, **V]: pass').get_slice(0, 2, 'type_params')).get_slice(0, 1).src)
+            self.assertEqual('T', g := (f := FST('class cls[T, *U, **V]: pass').get_slice(0, 2, 'type_params')).get_slice(0, 1).src)
             self.assertEqual('T, *U, T', f.put_slice(g, 'end').src)
             f.verify()
 
-            self.assertEqual('T,', g := (f := FST('type t[T, *U, **V] = ...').get_slice(0, 2, 'type_params')).get_slice(0, 1).src)
+            self.assertEqual('T', g := (f := FST('type t[T, *U, **V] = ...').get_slice(0, 2, 'type_params')).get_slice(0, 1).src)
             self.assertEqual('T, *U, T', f.put_slice(g, 'end').src)
             f.verify()
 

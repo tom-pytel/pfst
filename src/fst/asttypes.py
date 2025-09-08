@@ -287,7 +287,7 @@ __all__ = [
     # '_slice_keywords',
     # '_slice_aliases',
     # '_slice_withitems',
-    # '_slice_type_params',
+    '_slice_type_params',
 ]
 
 
@@ -369,9 +369,18 @@ class _slice_Assign_targets(_slice):
 #     # _parse_mode = 'withitems'
 
 
-# class _slice_type_params(_slice):
-#     """Slice of `FunctionDef/AsyncFunctionDef/ClassDef/TypeAlias.type_params`.
+class _slice_type_params(_slice):
+    """Slice of `FunctionDef/AsyncFunctionDef/ClassDef/TypeAlias.type_params`.
 
-#     This is a special slice because elements are `type_param`."""
+    This is a special slice because elements are `type_param`."""
 
-#     # _parse_mode = 'type_params'
+    _fields      = ('type_params',)
+    _field_types = {'type_params': list[AST]}
+
+    def __init__(self, type_params: list[AST] = [], lineno: int = 1, col_offset: int = 0, end_lineno: int = 1,
+                 end_col_offset: int = 0):
+        self.type_params = type_params or []
+        self.lineno = lineno
+        self.col_offset = col_offset
+        self.end_lineno = end_lineno
+        self.end_col_offset = end_col_offset

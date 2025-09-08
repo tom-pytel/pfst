@@ -5,7 +5,7 @@ import unittest
 from ast import parse as ast_parse, unparse as ast_unparse
 
 from fst import *
-from fst.asttypes import _slice_Assign_targets
+from fst.asttypes import _slice_Assign_targets, _slice_type_params
 from fst.astutil import OPCLS2STR, WalkFail, copy_ast, compare_asts
 from fst.misc import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, astfield, fstloc
 from fst.view import fstview
@@ -651,19 +651,18 @@ if PYGE11:
 
 if PYGE12:
     PARSE_TESTS.extend([
-        ('all',               ep.parse_type_params,       Tuple,                  '*U, **V, **Z'),
-        ('all',               ep.parse_type_params,       Tuple,                  'T: int, *U, **V, **Z'),
+        ('all',               ep.parse_type_params,       _slice_type_params,     '*U, **V, **Z'),
+        ('all',               ep.parse_type_params,       _slice_type_params,     'T: int, *U, **V, **Z'),
 
         ('type_param',        ep.parse_type_param,        TypeVar,                'a: int'),
         ('type_param',        ep.parse_type_param,        ParamSpec,              '**a'),
         ('type_param',        ep.parse_type_param,        TypeVarTuple,           '*a'),
         ('type_param',        ep.parse_type_param,        ParseError,             'a: int,'),
 
-        ('type_params',       ep.parse_type_params,       Tuple,                  ''),
-        ('type_params',       ep.parse_type_params,       Tuple,                  '()'),
-        ('type_params',       ep.parse_type_params,       Tuple,                  'a: int'),
-        ('type_params',       ep.parse_type_params,       Tuple,                  'a: int,'),
-        ('type_params',       ep.parse_type_params,       Tuple,                  'a: int, *b, **c'),
+        ('type_params',       ep.parse_type_params,       _slice_type_params,     ''),
+        ('type_params',       ep.parse_type_params,       _slice_type_params,     'a: int'),
+        ('type_params',       ep.parse_type_params,       _slice_type_params,     'a: int,'),
+        ('type_params',       ep.parse_type_params,       _slice_type_params,     'a: int, *b, **c'),
 
         (type_param,          ep.parse_type_param,        TypeVar,                'a: int'),
         (TypeVar,             ep.parse_type_param,        TypeVar,                'a: int'),
@@ -673,7 +672,7 @@ if PYGE12:
         (TypeVarTuple,        ep.parse_type_param,        TypeVarTuple,           '*a'),
 
         ('type_param',        ep.parse_type_param,        TypeVar,                ' a: int  # tail'),
-        ('type_params',       ep.parse_type_params,       Tuple,                  ' a: int, *b, **c  # tail'),
+        ('type_params',       ep.parse_type_params,       _slice_type_params,     ' a: int, *b, **c  # tail'),
     ])
 
 if PYGE13:
@@ -805,6 +804,8 @@ class TestFST(unittest.TestCase):
         for mode, func, res, src in PARSE_TESTS:
             try:
                 test = 'parse'
+                ast  = None
+                unp  = None
 
                 try:
                     ast = ep.parse(src, mode)
@@ -828,7 +829,7 @@ class TestFST(unittest.TestCase):
                 # reparse
 
                 if (src != '*=' and  # augassign is ambiguous for unparse
-                    (src or func not in (ep.parse_Assign_targets, ep.parse_aliases, ep.parse_Import_names, ep.parse_ImportFrom_names))  # these unparse to '()' which can't be reparsed as these
+                    (src or func not in (ep.parse_aliases, ep.parse_Import_names, ep.parse_ImportFrom_names))  # these unparse to '()' which can't be reparsed as these
                 ):
                     test = 'reparse'
                     unp  = ((s := ep.unparse(ast)) and s.lstrip()) or src  # 'lstrip' because comprehension has leading space, 'or src' because unparse of operators gives nothing
@@ -862,6 +863,8 @@ class TestFST(unittest.TestCase):
                 print(f'{func = }')
                 print(f'{res = }')
                 print(f'{src = !r}')
+                print(f'{ast = }')
+                print(f'{unp = }')
 
                 raise
 

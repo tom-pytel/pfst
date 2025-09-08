@@ -5738,185 +5738,7 @@ MatchOr - ROOT 2,1..3,1
     .name 'c'
 '''),
 
-(74, 'body[0]', 1, 2, 'type_params', {'_ver': 12}, ('exec',
-r'''def f[T, *U, **V](): pass'''),
-r'''def f[T, **V](): pass''', r'''
-Module - ROOT 0,0..0,21
-  .body[1]
-  0] FunctionDef - 0,0..0,21
-    .name 'f'
-    .body[1]
-    0] Pass - 0,17..0,21
-    .type_params[2]
-    0] TypeVar - 0,6..0,7
-      .name 'T'
-    1] ParamSpec - 0,9..0,12
-      .name 'V'
-''',
-r'''*U''', r'''
-Tuple - ROOT 0,0..0,2
-  .elts[1]
-  0] TypeVarTuple - 0,0..0,2
-    .name 'U'
-  .ctx Load
-'''),
-
-(75, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
-r'''def f[T, *U, **V](): pass'''),
-r'''def f(): pass''', r'''
-Module - ROOT 0,0..0,13
-  .body[1]
-  0] FunctionDef - 0,0..0,13
-    .name 'f'
-    .body[1]
-    0] Pass - 0,9..0,13
-''',
-r'''T, *U, **V''', r'''
-Tuple - ROOT 0,0..0,10
-  .elts[3]
-  0] TypeVar - 0,0..0,1
-    .name 'T'
-  1] TypeVarTuple - 0,3..0,5
-    .name 'U'
-  2] ParamSpec - 0,7..0,10
-    .name 'V'
-  .ctx Load
-'''),
-
-(76, 'body[0]', 1, 2, 'type_params', {'_ver': 12}, ('exec',
-r'''async def f[T, *U, **V](): pass'''),
-r'''async def f[T, **V](): pass''', r'''
-Module - ROOT 0,0..0,27
-  .body[1]
-  0] AsyncFunctionDef - 0,0..0,27
-    .name 'f'
-    .body[1]
-    0] Pass - 0,23..0,27
-    .type_params[2]
-    0] TypeVar - 0,12..0,13
-      .name 'T'
-    1] ParamSpec - 0,15..0,18
-      .name 'V'
-''',
-r'''*U''', r'''
-Tuple - ROOT 0,0..0,2
-  .elts[1]
-  0] TypeVarTuple - 0,0..0,2
-    .name 'U'
-  .ctx Load
-'''),
-
-(77, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
-r'''async def f[T, *U, **V](): pass'''),
-r'''async def f(): pass''', r'''
-Module - ROOT 0,0..0,19
-  .body[1]
-  0] AsyncFunctionDef - 0,0..0,19
-    .name 'f'
-    .body[1]
-    0] Pass - 0,15..0,19
-''',
-r'''T, *U, **V''', r'''
-Tuple - ROOT 0,0..0,10
-  .elts[3]
-  0] TypeVar - 0,0..0,1
-    .name 'T'
-  1] TypeVarTuple - 0,3..0,5
-    .name 'U'
-  2] ParamSpec - 0,7..0,10
-    .name 'V'
-  .ctx Load
-'''),
-
-(78, 'body[0]', 1, 2, 'type_params', {'_ver': 12}, ('exec',
-r'''class cls[T, *U, **V]: pass'''),
-r'''class cls[T, **V]: pass''', r'''
-Module - ROOT 0,0..0,23
-  .body[1]
-  0] ClassDef - 0,0..0,23
-    .name 'cls'
-    .body[1]
-    0] Pass - 0,19..0,23
-    .type_params[2]
-    0] TypeVar - 0,10..0,11
-      .name 'T'
-    1] ParamSpec - 0,13..0,16
-      .name 'V'
-''',
-r'''*U''', r'''
-Tuple - ROOT 0,0..0,2
-  .elts[1]
-  0] TypeVarTuple - 0,0..0,2
-    .name 'U'
-  .ctx Load
-'''),
-
-(79, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
-r'''class cls[T, *U, **V]: pass'''),
-r'''class cls: pass''', r'''
-Module - ROOT 0,0..0,15
-  .body[1]
-  0] ClassDef - 0,0..0,15
-    .name 'cls'
-    .body[1]
-    0] Pass - 0,11..0,15
-''',
-r'''T, *U, **V''', r'''
-Tuple - ROOT 0,0..0,10
-  .elts[3]
-  0] TypeVar - 0,0..0,1
-    .name 'T'
-  1] TypeVarTuple - 0,3..0,5
-    .name 'U'
-  2] ParamSpec - 0,7..0,10
-    .name 'V'
-  .ctx Load
-'''),
-
-(80, 'body[0]', 1, 2, 'type_params', {'_ver': 12}, ('exec',
-r'''type t[T, *U, **V] = ...'''),
-r'''type t[T, **V] = ...''', r'''
-Module - ROOT 0,0..0,20
-  .body[1]
-  0] TypeAlias - 0,0..0,20
-    .name Name 't' Store - 0,5..0,6
-    .type_params[2]
-    0] TypeVar - 0,7..0,8
-      .name 'T'
-    1] ParamSpec - 0,10..0,13
-      .name 'V'
-    .value Constant Ellipsis - 0,17..0,20
-''',
-r'''*U''', r'''
-Tuple - ROOT 0,0..0,2
-  .elts[1]
-  0] TypeVarTuple - 0,0..0,2
-    .name 'U'
-  .ctx Load
-'''),
-
-(81, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
-r'''type t[T, *U, **V] = ...'''),
-r'''type t = ...''', r'''
-Module - ROOT 0,0..0,12
-  .body[1]
-  0] TypeAlias - 0,0..0,12
-    .name Name 't' Store - 0,5..0,6
-    .value Constant Ellipsis - 0,9..0,12
-''',
-r'''T, *U, **V''', r'''
-Tuple - ROOT 0,0..0,10
-  .elts[3]
-  0] TypeVar - 0,0..0,1
-    .name 'T'
-  1] TypeVarTuple - 0,3..0,5
-    .name 'U'
-  2] ParamSpec - 0,7..0,10
-    .name 'V'
-  .ctx Load
-'''),
-
-(82, 'body[0]', 0, 2, None, {}, ('exec',
+(74, 'body[0]', 0, 2, None, {}, ('exec',
 r'''del a, b, c'''),
 r'''del c''', r'''
 Module - ROOT 0,0..0,5
@@ -5933,7 +5755,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-(83, 'body[0]', 1, 3, None, {}, ('exec',
+(75, 'body[0]', 1, 3, None, {}, ('exec',
 r'''del a, b, c'''),
 r'''del a''', r'''
 Module - ROOT 0,0..0,5
@@ -5950,7 +5772,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-(84, 'body[0]', 1, 2, None, {}, ('exec',
+(76, 'body[0]', 1, 2, None, {}, ('exec',
 r'''global a, b, c  # comment'''),
 r'''global a, c  # comment''', r'''
 Module - ROOT 0,0..0,22
@@ -5967,7 +5789,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-(85, 'body[0]', 1, 3, None, {}, ('exec',
+(77, 'body[0]', 1, 3, None, {}, ('exec',
 r'''global a, b, c  # comment'''),
 r'''global a  # comment''', r'''
 Module - ROOT 0,0..0,19
@@ -5984,7 +5806,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-(86, 'body[0]', 0, 2, None, {}, ('exec',
+(78, 'body[0]', 0, 2, None, {}, ('exec',
 r'''global a, b, c  # comment'''),
 r'''global c  # comment''', r'''
 Module - ROOT 0,0..0,19
@@ -6001,7 +5823,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-(87, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(79, 'body[0]', 1, 2, None, {}, ('exec', r'''
 global a \
 , \
 b \
@@ -6030,7 +5852,7 @@ Tuple - ROOT 0,0..3,1
   .ctx Load
 '''),
 
-(88, 'body[0]', 0, 2, None, {}, ('exec', r'''
+(80, 'body[0]', 0, 2, None, {}, ('exec', r'''
 global a \
 , \
 b \
@@ -6058,7 +5880,7 @@ Tuple - ROOT 0,0..3,1
   .ctx Load
 '''),
 
-(89, 'body[0]', 1, 3, None, {}, ('exec', r'''
+(81, 'body[0]', 1, 3, None, {}, ('exec', r'''
 global a \
 , \
 b \
@@ -6084,7 +5906,7 @@ Tuple - ROOT 0,0..3,2
   .ctx Load
 '''),
 
-(90, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
+(82, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
   global a \
   , \
@@ -6115,7 +5937,7 @@ Tuple - ROOT 0,0..1,1
   .ctx Load
 '''),
 
-(91, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
+(83, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
 if 1:
   global a \
   , \
@@ -6145,7 +5967,7 @@ Tuple - ROOT 0,0..1,3
   .ctx Load
 '''),
 
-(92, 'body[0]', 1, 2, None, {}, ('exec',
+(84, 'body[0]', 1, 2, None, {}, ('exec',
 r'''nonlocal a, b, c  # comment'''),
 r'''nonlocal a, c  # comment''', r'''
 Module - ROOT 0,0..0,24
@@ -6162,7 +5984,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-(93, 'body[0]', 1, 3, None, {}, ('exec',
+(85, 'body[0]', 1, 3, None, {}, ('exec',
 r'''nonlocal a, b, c  # comment'''),
 r'''nonlocal a  # comment''', r'''
 Module - ROOT 0,0..0,21
@@ -6179,7 +6001,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-(94, 'body[0]', 0, 2, None, {}, ('exec',
+(86, 'body[0]', 0, 2, None, {}, ('exec',
 r'''nonlocal a, b, c  # comment'''),
 r'''nonlocal c  # comment''', r'''
 Module - ROOT 0,0..0,21
@@ -6196,7 +6018,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-(95, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(87, 'body[0]', 1, 2, None, {}, ('exec', r'''
 nonlocal a \
 , \
 b \
@@ -6225,7 +6047,7 @@ Tuple - ROOT 0,0..3,1
   .ctx Load
 '''),
 
-(96, 'body[0]', 0, 2, None, {}, ('exec', r'''
+(88, 'body[0]', 0, 2, None, {}, ('exec', r'''
 nonlocal a \
 , \
 b \
@@ -6253,7 +6075,7 @@ Tuple - ROOT 0,0..3,1
   .ctx Load
 '''),
 
-(97, 'body[0]', 1, 3, None, {}, ('exec', r'''
+(89, 'body[0]', 1, 3, None, {}, ('exec', r'''
 nonlocal a \
 , \
 b \
@@ -6279,7 +6101,7 @@ Tuple - ROOT 0,0..3,2
   .ctx Load
 '''),
 
-(98, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
+(90, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
   nonlocal a \
   , \
@@ -6310,7 +6132,7 @@ Tuple - ROOT 0,0..1,1
   .ctx Load
 '''),
 
-(99, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
+(91, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
 if 1:
   nonlocal a \
   , \
@@ -6340,7 +6162,7 @@ Tuple - ROOT 0,0..1,3
   .ctx Load
 '''),
 
-(100, 'body[0]', 1, 2, None, {}, ('exec',
+(92, 'body[0]', 1, 2, None, {}, ('exec',
 r'''import a, b as y, c  # comment'''),
 r'''import a, c  # comment''', r'''
 Module - ROOT 0,0..0,22
@@ -6362,7 +6184,7 @@ Tuple - ROOT 0,0..0,6
   .ctx Load
 '''),
 
-(101, 'body[0]', 1, 3, None, {}, ('exec',
+(93, 'body[0]', 1, 3, None, {}, ('exec',
 r'''import a, b as y, c  # comment'''),
 r'''import a  # comment''', r'''
 Module - ROOT 0,0..0,19
@@ -6384,7 +6206,7 @@ Tuple - ROOT 0,0..0,9
   .ctx Load
 '''),
 
-(102, 'body[0]', 0, 2, None, {}, ('exec',
+(94, 'body[0]', 0, 2, None, {}, ('exec',
 r'''import a, b as y, c  # comment'''),
 r'''import c  # comment''', r'''
 Module - ROOT 0,0..0,19
@@ -6406,7 +6228,7 @@ Tuple - ROOT 0,0..0,9
   .ctx Load
 '''),
 
-(103, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(95, 'body[0]', 1, 2, None, {}, ('exec', r'''
 import a \
 , \
 b \
@@ -6441,7 +6263,7 @@ Tuple - ROOT 0,0..2,1
   .ctx Load
 '''),
 
-(104, 'body[0]', 0, 2, None, {}, ('exec', r'''
+(96, 'body[0]', 0, 2, None, {}, ('exec', r'''
 import a \
 , \
 b \
@@ -6477,7 +6299,7 @@ Tuple - ROOT 0,0..4,1
   .ctx Load
 '''),
 
-(105, 'body[0]', 1, 3, None, {}, ('exec', r'''
+(97, 'body[0]', 1, 3, None, {}, ('exec', r'''
 import a \
 , \
 b \
@@ -6511,7 +6333,7 @@ Tuple - ROOT 0,0..4,1
   .ctx Load
 '''),
 
-(106, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
+(98, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
   import a \
   , \
@@ -6548,7 +6370,7 @@ Tuple - ROOT 0,0..0,1
   .ctx Load
 '''),
 
-(107, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
+(99, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
 if 1:
   import a \
   , \
@@ -6936,6 +6758,211 @@ _slice_Assign_targets - ROOT 0,0..4,1
 ''',
 r'''''',
 r'''_slice_Assign_targets - ROOT 0,0..0,0'''),
+],
+
+'type_params': [  # ................................................................................
+
+(0, 'body[0]', 1, 2, 'type_params', {'_ver': 12}, ('exec',
+r'''def f[T, *U, **V](): pass'''),
+r'''def f[T, **V](): pass''', r'''
+Module - ROOT 0,0..0,21
+  .body[1]
+  0] FunctionDef - 0,0..0,21
+    .name 'f'
+    .body[1]
+    0] Pass - 0,17..0,21
+    .type_params[2]
+    0] TypeVar - 0,6..0,7
+      .name 'T'
+    1] ParamSpec - 0,9..0,12
+      .name 'V'
+''',
+r'''*U''', r'''
+_slice_type_params - ROOT 0,0..0,2
+  .type_params[1]
+  0] TypeVarTuple - 0,0..0,2
+    .name 'U'
+'''),
+
+(1, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
+r'''def f[T, *U, **V](): pass'''),
+r'''def f(): pass''', r'''
+Module - ROOT 0,0..0,13
+  .body[1]
+  0] FunctionDef - 0,0..0,13
+    .name 'f'
+    .body[1]
+    0] Pass - 0,9..0,13
+''',
+r'''T, *U, **V''', r'''
+_slice_type_params - ROOT 0,0..0,10
+  .type_params[3]
+  0] TypeVar - 0,0..0,1
+    .name 'T'
+  1] TypeVarTuple - 0,3..0,5
+    .name 'U'
+  2] ParamSpec - 0,7..0,10
+    .name 'V'
+'''),
+
+(2, 'body[0]', 1, 2, 'type_params', {'_ver': 12}, ('exec',
+r'''async def f[T, *U, **V](): pass'''),
+r'''async def f[T, **V](): pass''', r'''
+Module - ROOT 0,0..0,27
+  .body[1]
+  0] AsyncFunctionDef - 0,0..0,27
+    .name 'f'
+    .body[1]
+    0] Pass - 0,23..0,27
+    .type_params[2]
+    0] TypeVar - 0,12..0,13
+      .name 'T'
+    1] ParamSpec - 0,15..0,18
+      .name 'V'
+''',
+r'''*U''', r'''
+_slice_type_params - ROOT 0,0..0,2
+  .type_params[1]
+  0] TypeVarTuple - 0,0..0,2
+    .name 'U'
+'''),
+
+(3, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
+r'''async def f[T, *U, **V](): pass'''),
+r'''async def f(): pass''', r'''
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] AsyncFunctionDef - 0,0..0,19
+    .name 'f'
+    .body[1]
+    0] Pass - 0,15..0,19
+''',
+r'''T, *U, **V''', r'''
+_slice_type_params - ROOT 0,0..0,10
+  .type_params[3]
+  0] TypeVar - 0,0..0,1
+    .name 'T'
+  1] TypeVarTuple - 0,3..0,5
+    .name 'U'
+  2] ParamSpec - 0,7..0,10
+    .name 'V'
+'''),
+
+(4, 'body[0]', 1, 2, 'type_params', {'_ver': 12}, ('exec',
+r'''class cls[T, *U, **V]: pass'''),
+r'''class cls[T, **V]: pass''', r'''
+Module - ROOT 0,0..0,23
+  .body[1]
+  0] ClassDef - 0,0..0,23
+    .name 'cls'
+    .body[1]
+    0] Pass - 0,19..0,23
+    .type_params[2]
+    0] TypeVar - 0,10..0,11
+      .name 'T'
+    1] ParamSpec - 0,13..0,16
+      .name 'V'
+''',
+r'''*U''', r'''
+_slice_type_params - ROOT 0,0..0,2
+  .type_params[1]
+  0] TypeVarTuple - 0,0..0,2
+    .name 'U'
+'''),
+
+(5, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
+r'''class cls[T, *U, **V]: pass'''),
+r'''class cls: pass''', r'''
+Module - ROOT 0,0..0,15
+  .body[1]
+  0] ClassDef - 0,0..0,15
+    .name 'cls'
+    .body[1]
+    0] Pass - 0,11..0,15
+''',
+r'''T, *U, **V''', r'''
+_slice_type_params - ROOT 0,0..0,10
+  .type_params[3]
+  0] TypeVar - 0,0..0,1
+    .name 'T'
+  1] TypeVarTuple - 0,3..0,5
+    .name 'U'
+  2] ParamSpec - 0,7..0,10
+    .name 'V'
+'''),
+
+(6, 'body[0]', 1, 2, 'type_params', {'_ver': 12}, ('exec',
+r'''type t[T, *U, **V] = ...'''),
+r'''type t[T, **V] = ...''', r'''
+Module - ROOT 0,0..0,20
+  .body[1]
+  0] TypeAlias - 0,0..0,20
+    .name Name 't' Store - 0,5..0,6
+    .type_params[2]
+    0] TypeVar - 0,7..0,8
+      .name 'T'
+    1] ParamSpec - 0,10..0,13
+      .name 'V'
+    .value Constant Ellipsis - 0,17..0,20
+''',
+r'''*U''', r'''
+_slice_type_params - ROOT 0,0..0,2
+  .type_params[1]
+  0] TypeVarTuple - 0,0..0,2
+    .name 'U'
+'''),
+
+(7, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
+r'''type t[T, *U, **V] = ...'''),
+r'''type t = ...''', r'''
+Module - ROOT 0,0..0,12
+  .body[1]
+  0] TypeAlias - 0,0..0,12
+    .name Name 't' Store - 0,5..0,6
+    .value Constant Ellipsis - 0,9..0,12
+''',
+r'''T, *U, **V''', r'''
+_slice_type_params - ROOT 0,0..0,10
+  .type_params[3]
+  0] TypeVar - 0,0..0,1
+    .name 'T'
+  1] TypeVarTuple - 0,3..0,5
+    .name 'U'
+  2] ParamSpec - 0,7..0,10
+    .name 'V'
+'''),
+
+(8, '', 1, 2, 'type_params', {'_ver': 12}, ('type_params',
+r'''T, *U, **V'''),
+r'''T, **V''', r'''
+_slice_type_params - ROOT 0,0..0,6
+  .type_params[2]
+  0] TypeVar - 0,0..0,1
+    .name 'T'
+  1] ParamSpec - 0,3..0,6
+    .name 'V'
+''',
+r'''*U''', r'''
+_slice_type_params - ROOT 0,0..0,2
+  .type_params[1]
+  0] TypeVarTuple - 0,0..0,2
+    .name 'U'
+'''),
+
+(9, '', 0, 3, 'type_params', {'_ver': 12}, ('type_params',
+r'''T, *U, **V'''),
+r'''''',
+r'''_slice_type_params - ROOT 0,0..0,0''',
+r'''T, *U, **V''', r'''
+_slice_type_params - ROOT 0,0..0,10
+  .type_params[3]
+  0] TypeVar - 0,0..0,1
+    .name 'T'
+  1] TypeVarTuple - 0,3..0,5
+    .name 'U'
+  2] ParamSpec - 0,7..0,10
+    .name 'V'
+'''),
 ],
 
 }

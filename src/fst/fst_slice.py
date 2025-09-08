@@ -65,8 +65,8 @@ from .asttypes import (
     TryStar,
     TypeAlias,
     TemplateStr,
-    type_param,
     _slice_Assign_targets,
+    _slice_type_params,
 )
 
 from .astutil import (
@@ -1144,7 +1144,7 @@ def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, st
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
-        return fst.FST._new_empty_tuple(from_=self)
+        return fst.FST(_slice_type_params([], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], from_=self)
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
@@ -1164,11 +1164,11 @@ def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, st
         bound_col += 1
 
     asts = _cut_or_copy_asts(start, stop, 'type_params', cut, body)
-    ret_ast = Tuple(elts=asts, ctx=Load())
+    ret_ast = _slice_type_params(type_params=asts)
 
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
-                          options.get('trivia'), 'type_params', '', '', ',', 0, 0)
+                          options.get('trivia'), 'type_params', '', '', ',', False, False)
 
     if not body:  # everything was cut, need to remove brackets
         (_, _, bound_end_ln, bound_end_col), (name_ln, name_col) = bound_func()
@@ -1192,6 +1192,9 @@ def _get_slice__slice(self: fst.FST, start: int | Literal['end'] | None, stop: i
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+
+    if start:
+        _, _, bound_ln, bound_col = body[start - 1].f.pars()
 
     asts = _cut_or_copy_asts(start, stop, field, cut, body)
     ret_ast = cls(asts)
@@ -1295,6 +1298,7 @@ _GET_SLICE_HANDLERS = {
 
     (_slice_Assign_targets, 'targets'):       _get_slice__slice,
     # (_slice_Assign_comprehension_ifs, 'ifs'): _get_slice__slice,
+    (_slice_type_params, 'type_params'):      _get_slice__slice,
 }
 
 
@@ -1916,16 +1920,14 @@ def _code_to_slice_type_params(self: fst.FST, code: Code | None, one: bool, opti
     if one:
         fst_ = code_as_type_param(code, self.root.parse_params, sanitize=False)
 
-        return fst.FST(Tuple(elts=[fst_.a], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                             end_col_offset=ls[-1].lenbytes), ls, from_=fst_, lcopy=False)
+        return fst.FST(_slice_type_params(type_params=[fst_.a], lineno=1, col_offset=0,
+                                          end_lineno=len(ls := fst_._lines), end_col_offset=ls[-1].lenbytes),
+                       ls, from_=fst_, lcopy=False)
 
     fst_ = code_as_type_params(code, self.root.parse_params, sanitize=False)
 
-    if not fst_.a.elts:  # put empty sequence is same as delete
+    if not fst_.a.type_params:  # put empty sequence is same as delete
         return None
-
-    if fst_.is_parenthesized_tuple() is True:
-        _trim_delimiters(fst_)
 
     return fst_
 
@@ -2057,8 +2059,8 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
     if elts := (ast := self.a).elts:  # SPECIAL SLICEs
         if isinstance(e0 := elts[0], alias):
             fst_ = _code_to_slice_aliases(self, code, one, options)
-        elif isinstance(e0, type_param):
-            fst_ = _code_to_slice_type_params(self, code, one, options)
+        # elif isinstance(e0, type_param):
+        #     fst_ = _code_to_slice_type_params(self, code, one, options)
 
     if fst_ is None:
         fst_ = _code_to_slice_seq(self, code, one, options, code_as=code_as_expr_all)
@@ -2727,7 +2729,7 @@ def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Litera
         len_fst_body = 0
 
     else:
-        len_fst_body = len(fst_body := fst_.a.elts)
+        len_fst_body = len(fst_body := fst_.a.type_params)
 
         if not body:  # brackets don't exist, add them first
             self._put_src('[]', name_ln, name_col, name_ln, name_col, False)
@@ -2918,7 +2920,9 @@ _PUT_SLICE_HANDLERS = {
 
     (_slice_Assign_targets, 'targets'):       _put_slice__slice,
     # (_slice_Assign_comprehension_ifs, 'ifs'): _put_slice__slice,
+    (_slice_type_params, 'type_params'):      _put_slice__slice,
 }
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # put raw
@@ -3059,6 +3063,7 @@ class slicestatic(NamedTuple):
 
 _SLICE_STATICS = {
     _slice_Assign_targets: slicestatic('targets', _code_to_slice_Assign_targets, '=', True, True),
+    _slice_type_params:    slicestatic('type_params', _code_to_slice_type_params, ',', False, False),
 }
 
 

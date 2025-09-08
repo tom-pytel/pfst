@@ -42,6 +42,7 @@ from .asttypes import (
     Is,
     IsNot,
     LShift,
+    List,
     ListComp,
     Load,
     Lt,
@@ -84,6 +85,7 @@ from .asttypes import (
     type_param,
     _slice,
     _slice_Assign_targets,
+    _slice_type_params,
 )
 
 
@@ -176,6 +178,7 @@ _re_parse_all_category = re.compile(r'''
 
 _SLICE_PARSE_MODES = {
     _slice_Assign_targets: 'Assign_targets',
+    _slice_type_params:    'type_params',
 }
 
 
@@ -192,7 +195,7 @@ def _fixing_unparse(ast: AST) -> str:
     return ast_unparse(ast)
 
 
-def _unparse_special_Tuple(ast: AST) -> str:
+def _unparse_Tuple(ast: AST) -> str:
     src = _fixing_unparse(ast)
 
     if elts := ast.elts:
@@ -204,13 +207,19 @@ def _unparse_special_Tuple(ast: AST) -> str:
 
     return src
 
-def _unparse_special__slice_Assign_targets(ast: AST) -> str:
+
+def _unparse__slice_Assign_targets(ast: AST) -> str:
     return _fixing_unparse(Assign(targets=ast.targets, value=Name(id='', ctx=Load(), lineno=1, col_offset=0,
                                                                   end_lineno=1, end_col_offset=0),
                                   lineno=1, col_offset=0, end_lineno=1, end_col_offset=0)).rstrip()
 
+
+def _unparse__slice_type_params(ast: AST) -> str:
+    return _fixing_unparse(List(elts=ast.type_params, lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[1:-1]
+
+
 _UNPARSE_FUNCS = {
-    Tuple:                  _unparse_special_Tuple,
+    Tuple:                  _unparse_Tuple,
     Invert:                 lambda ast: '~',
     Not:                    lambda ast: 'not',
     UAdd:                   lambda ast: '+',
@@ -241,7 +250,8 @@ _UNPARSE_FUNCS = {
     And:                    lambda ast: 'and',
     Or:                     lambda ast: 'or',
     comprehension:          lambda ast: _fixing_unparse(ast).lstrip(),  # strip prefix space from this
-    _slice_Assign_targets: _unparse_special__slice_Assign_targets,
+    _slice_Assign_targets: _unparse__slice_Assign_targets,
+    _slice_type_params:    _unparse__slice_type_params,
 }
 
 
@@ -317,8 +327,8 @@ def _parse_all_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AS
     ast = type_params[0]
 
     if len(type_params) > 1 or _has_trailing_comma(src, ast.end_lineno - 1, ast.end_col_offset):
-        ast = Tuple(elts=type_params, ctx=Load(), lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
-                    end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
+        ast = _slice_type_params(type_params=type_params, lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
+                                 end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
 
     return _offset_linenos(ast, -1)
 
@@ -438,10 +448,10 @@ Mode = Literal[
 - `'pattern'`: Parse as a a single `pattern` returned as itself. Same as passing `pattern` type.
 - `'type_param'`: Parse as a single `type_param` returned as itself, either `TypeVar`, `ParamSpec` or
     `TypeVarTuple`. Same as passing `type_param` type.
-- `'type_params'`: Parse as a slice of zero or more `type_param`s returned in a `Tuple`, does not need trailing comma
-    for a single element. This is our own SPECIAL SLICE use of a tuple and not valid in python.
-- `'Assign_targets'`: Parse as a single or multiple targets to an `_slice_Assign_targets` node, with `=` as separators
-    and an optional trailing `=` (our own SPECIAL SLICE).
+- `'type_params'`: Parse as a slice of zero or more `type_param`s returned in `_slice_type_params` node, does not need
+    trailing comma for a single element (our own SPECIAL SLICE).
+- `'Assign_targets'`: Parse as a single or multiple targets, returned in `_slice_Assign_targets` node, with `=` as
+    separators and an optional trailing `=` (our own SPECIAL SLICE).
 - `type[AST]`: If an `AST` type is passed then will attempt to parse to this type. This can be used to narrow
     the scope of desired return, for example `Constant` will parse as an expression but fail if the expression
     is not a `Constant`. These overlap with the string specifiers to an extent but not all of them. For example
@@ -483,10 +493,10 @@ def get_special_parse_mode(ast: AST) -> str | None:
 
     elif isinstance(ast, Tuple):
         if elts := ast.elts:
-            if isinstance(e0 := elts[0], type_param):
-                return 'type_params'
+            # if isinstance(e0 := elts[0], type_param):
+            #     return 'type_params'
 
-            if isinstance(e0, alias):
+            if isinstance(elts[0], alias):
                 return 'aliases'
 
     elif isinstance(ast, _slice):
@@ -1402,45 +1412,34 @@ def parse_type_param(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse zero or more `ast.type_param`s and return them in a `Tuple`. Will accept empty tuple parentheses as well
-    as empty source for a zero-length slice.
+    """Parse zero or more `ast.type_param`s and return them in a `_slice_type_params` (our own SPECIAL SLICE).
 
     @private
     """
 
     try:
         type_params = _ast_parse1(f'type t[\n{src}\n] = None', parse_params).type_params
-        ast = None
 
-    except SyntaxError as first_exc:  # maybe empty
-        try:
-            ast = _ast_parse1(f'(\n{src}\n)', parse_params).value  # parse empty as well as zero-length tuple
-        except SyntaxError:
-            raise first_exc from None
-
-        if not isinstance(ast, Tuple) or ast.elts:
-            raise SyntaxError('invalid type_params slice') from None
-
-        if ast.lineno == 1:
-            ast = None
+    except SyntaxError:  # maybe empty
+        if _re_first_src.search(src):  # if not empty then error
+            raise
 
         type_params = []
 
-    if not ast:
-        ast = Tuple(elts=type_params, ctx=Load(), lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
-                    end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
+    ast = _slice_type_params(type_params=type_params, lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
+                             end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
 
     return _offset_linenos(ast, -1)
 
 
 def parse_Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse zero or more `Assign` targets and return them in an `_slice_Assign_targets` (our own SPECIAL SLICE). Takes
-    `=` as separators with an optional trailing `=`.
+    """Parse zero or more `Assign` targets and return them in a `_slice_Assign_targets` (our own SPECIAL SLICE). Takes
+    `=` as separators and accepts an optional trailing `=`.
 
     @private
     """
 
-    src_ = '\\' + src if src.startswith('\n') else src  # we allow an initial non-line-continuated newline because that is a slice indicator to start on new line and will have line continuation added in slice put to Assign
+    src_ = '\\' + src if src.startswith('\n') else src  # we allow an initial non-line-continued newline because that is a slice indicator to start on new line and will have line continuation added in slice put to Assign
 
     try:
         ast = _ast_parse1(f'_=\\\n{src_}  _', parse_params)  # try assuming src has trailing equals
@@ -1538,6 +1537,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     Store:                    lambda src, parse_params = {}: Store(),
     Del:                      lambda src, parse_params = {}: Del(),
     _slice_Assign_targets:    parse_Assign_targets,
+    _slice_type_params:       parse_type_params,
 }
 
 assert not set(get_args(get_args(Mode)[0])).symmetric_difference(k for k in _PARSE_MODE_FUNCS if isinstance(k, str)), \

@@ -1790,10 +1790,10 @@ class SliceExprish(Fuzzy):
 
         if PYGE12:
             buckets.update({
-                FunctionDef:      self.Bucket('type_params', 'elts', 0, 0, False, type_params_bucket := FST('type t[T] = ...')),
-                AsyncFunctionDef: self.Bucket('type_params', 'elts', 0, 0, False, type_params_bucket),
-                ClassDef:         self.Bucket('type_params', 'elts', 0, 0, False, type_params_bucket),
-                TypeAlias:        self.Bucket('type_params', 'elts', 0, 0, False, type_params_bucket),
+                FunctionDef:      self.Bucket('type_params', None, 0, 0, False, type_params_bucket := FST('', 'type_params')),
+                AsyncFunctionDef: self.Bucket('type_params', None, 0, 0, False, type_params_bucket),
+                ClassDef:         self.Bucket('type_params', None, 0, 0, False, type_params_bucket),
+                TypeAlias:        self.Bucket('type_params', None, 0, 0, False, type_params_bucket),
             })
 
         exprishs = []  # [('cat', FST), ...]

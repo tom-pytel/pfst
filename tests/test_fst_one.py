@@ -4013,17 +4013,6 @@ c, # c
         self.assertIsInstance(f.a.elts[1], alias)
         f.verify()
 
-        if PYGE12:
-            f = FST('T, *U, **V', 'type_params')
-            self.assertRaises(SyntaxError, f.put, 'c()', 0)
-            self.assertEqual('A, *U, **V', f.put('A', 0).root.src)
-            self.assertIsInstance(f.a.elts[0], TypeVar)
-            self.assertEqual('A, *B, **V', f.put('*B', 1).root.src)
-            self.assertIsInstance(f.a.elts[1], TypeVarTuple)
-            self.assertEqual('A, *B, **C', f.put('**C', 2).root.src)
-            self.assertIsInstance(f.a.elts[2], ParamSpec)
-            f.verify()
-
     def test_put_src(self):
         for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_SRC_DATA):
             t = parse(dst)

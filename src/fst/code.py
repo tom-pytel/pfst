@@ -39,6 +39,7 @@ from .asttypes import (
     TryStar,
     type_param,
     _slice_Assign_targets,
+    _slice_type_params,
 )
 
 from .astutil import (
@@ -233,7 +234,7 @@ def code_as_all(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
         return code
 
     if isinstance(code, AST):
-        mode = code.__class__  # we do not accept invalid-AST SPECIAL SLICE ASTs on purpose, could accept them by setting `mode = _get_special_parse_mode(code) or code.__class__` but that gets complicated fast
+        mode = code.__class__
         code = unparse(code)
         lines = code.split('\n')
 
@@ -640,13 +641,7 @@ def code_as_type_param(code: Code, parse_params: Mapping[str, Any] = {}, *, sani
 def code_as_type_params(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a type_params slice `FST` if possible."""
 
-    fst_ = _code_as(code, Tuple, parse_params, parse_type_params, sanitize=sanitize)
-
-    if fst_ is code:  # validation if was passed in as FST
-        if not all(isinstance(elt := e, type_param) for e in fst_.a.elts):
-            raise NodeError(f'expecting only type_params, got {elt.__class__.__name__}', rawable=True)
-
-    return fst_
+    return _code_as(code, _slice_type_params, parse_params, parse_type_params, sanitize=sanitize)
 
 
 def code_as_Assign_targets(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:

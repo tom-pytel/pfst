@@ -86,6 +86,7 @@ from .asttypes import (
     TemplateStr,
     Interpolation,
     _slice_Assign_targets,
+    _slice_type_params,
 )
 
 from .astutil import constant, bistr
@@ -188,7 +189,7 @@ _AST_DEFAULT_BODY_FIELD = {cls: field for field, classes in [
     ('elts',         (Tuple, List, Set)),
     ('patterns',     (MatchSequence, MatchOr)),
     ('targets',      (Delete, _slice_Assign_targets)),
-    ('type_params',  (TypeAlias,)),
+    ('type_params',  (TypeAlias, _slice_type_params)),
     ('names',        (Import, ImportFrom, Global, Nonlocal)),
     ('ifs',          (comprehension,)),
     ('values',       (BoolOp, JoinedStr, TemplateStr)),

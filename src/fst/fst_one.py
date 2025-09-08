@@ -109,6 +109,7 @@ from .asttypes import (
     TemplateStr,
     Interpolation,
     _slice_Assign_targets,
+    _slice_type_params,
 )
 
 from .astutil import (
@@ -628,6 +629,7 @@ _GET_ONE_HANDLERS = {
     (TypeVarTuple, 'default_value'):      _get_one_default,  # expr?
 
     (_slice_Assign_targets, 'targets'):   _get_one_default,  # expr*
+    (_slice_type_params, 'type_params'):  _get_one_default,  # type_param*
 
 
     # NOT DONE:
@@ -1549,8 +1551,8 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
     ast = self.a
 
     if (elts := ast.elts) and not isinstance(e0 := elts[0], expr):  # SPECIAL SLICE
-        if isinstance(e0, type_param):
-            return _put_one_exprish_required(self, code, idx, field, child, _onestatic_type_param_required, options)
+        # if isinstance(e0, type_param):
+        #     return _put_one_exprish_required(self, code, idx, field, child, _onestatic_type_param_required, options)
 
         if isinstance(e0, alias):
             return _put_one_exprish_required(self, code, idx, field, child, _onestatic_alias_required, options)
@@ -2798,6 +2800,7 @@ _PUT_ONE_HANDLERS = {
     (TypeVarTuple, 'default_value'):      (False, _put_one_exprish_optional, onestatic(_one_info_TypeVarTuple_default_value, _restrict_default)),  # expr?
 
     (_slice_Assign_targets, 'targets'):   (True,  _put_one_exprish_required, _onestatic_target),  # expr*
+    (_slice_type_params, 'type_params'):  (True,  _put_one_exprish_required, _onestatic_type_param_required),  # type_param*
 
 
     # NOT DONE:
