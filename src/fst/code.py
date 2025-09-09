@@ -67,6 +67,7 @@ from .extparse import (
     parse_expr_slice,
     parse_expr_sliceelt,
     parse_Tuple,
+    parse_Assign_targets,
     parse_boolop,
     parse_binop,
     parse_augop,
@@ -87,7 +88,6 @@ from .extparse import (
     parse_pattern,
     parse_type_param,
     parse_type_params,
-    parse_Assign_targets,
 )
 
 __all__ = [
@@ -102,6 +102,7 @@ __all__ = [
     'code_as_expr_slice',
     'code_as_expr_sliceelt',
     'code_as_Tuple',
+    'code_as_Assign_targets',
     'code_as_boolop',
     'code_as_binop',
     'code_as_augop',
@@ -122,7 +123,6 @@ __all__ = [
     'code_as_pattern',
     'code_as_type_param',
     'code_as_type_params',
-    'code_as_Assign_targets',
     'code_as_identifier',
     'code_as_identifier_dotted',
     'code_as_identifier_star',
@@ -476,6 +476,12 @@ def code_as_Tuple(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize:
     return fst_
 
 
+def code_as_Assign_targets(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+    """Convert `code` to an `_slice_Assign_targets` SPECIAL SLICE if possible."""
+
+    return _code_as(code, _slice_Assign_targets, parse_params, parse_Assign_targets, sanitize=sanitize)
+
+
 def code_as_boolop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a `boolop` `FST` if possible."""
 
@@ -631,12 +637,6 @@ def code_as_type_params(code: Code, parse_params: Mapping[str, Any] = {}, *, san
     """Convert `code` to a type_params slice `FST` if possible."""
 
     return _code_as(code, _slice_type_params, parse_params, parse_type_params, sanitize=sanitize)
-
-
-def code_as_Assign_targets(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
-    """Convert `code` to an `_slice_Assign_targets` SPECIAL SLICE if possible."""
-
-    return _code_as(code, _slice_Assign_targets, parse_params, parse_Assign_targets, sanitize=sanitize)
 
 
 def code_as_identifier(code: Code, parse_params: Mapping[str, Any] = {}) -> str:

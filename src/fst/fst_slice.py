@@ -86,11 +86,12 @@ from .extparse import unparse
 
 from .code import (
     Code,
+    code_as_expr, code_as_expr_all, code_as_Assign_targets,
     code_as_alias, code_as_aliases,
     code_as_Import_name, code_as_Import_names,
     # code_as_ImportFrom_name, code_as_ImportFrom_names,
-    code_as_expr, code_as_expr_all, code_as_pattern,
-    code_as_type_param, code_as_type_params, code_as_Assign_targets,
+    code_as_pattern,
+    code_as_type_param, code_as_type_params,
 )
 
 from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish
@@ -767,6 +768,57 @@ def _get_slice_Tuple_elts(self: fst.FST, start: int | Literal['end'] | None, sto
     return fst_
 
 
+def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
+                         options: Mapping[str, Any]) -> fst.FST:
+    """A `List` slice is just a normal `List`."""
+
+    len_body = len(body := (ast := self.a).elts)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+
+    if start == stop:
+        return fst.FST._new_empty_list(from_=self)
+
+    locs = _locs_and_bound_get(self, start, stop, body, body, 1)
+    asts = _cut_or_copy_asts(start, stop, 'elts', cut, body)
+    ctx = ast.ctx.__class__
+    ret_ast = List(elts=asts, ctx=ctx())  # we set ctx() so that if it is not Load then set_ctx() below will recurse into it
+
+    if not issubclass(ctx, Load):  # new List root object must have ctx=Load
+        set_ctx(ret_ast, Load)
+
+    return _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
+                          options.get('trivia'), 'elts', '[', ']', ',', 0, 0)
+
+
+def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
+                         options: Mapping[str, Any]) -> fst.FST:
+    """A `Set` slice is just a normal `Set` when it has elements. In the case of a zero-length `Set` it may be
+    represented as `{*()}` or `set()` or as an invalid `AST` `Set` with curlies but no elements, according to
+    options."""
+
+    len_body = len(body := self.a.elts)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+
+    if start == stop:
+        return (
+            fst.FST._new_empty_set_curlies() if not (fix_set_get := self.get_option('fix_set_get', options)) else
+            fst.FST._new_empty_set_call() if fix_set_get == 'call' else
+            fst.FST._new_empty_tuple() if fix_set_get == 'tuple' else
+            fst.FST._new_empty_set_star()  # True, 'star'
+        )
+
+    locs = _locs_and_bound_get(self, start, stop, body, body, 1)
+    asts = _cut_or_copy_asts(start, stop, 'elts', cut, body)
+    ret_ast = Set(elts=asts)
+
+    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
+                          options.get('trivia'), 'elts', '{', '}', ',', 0, 0)
+
+    self._maybe_fix_set(self.get_option('fix_set_self', options))
+
+    return fst_
+
+
 def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                               cut: bool, options: Mapping[str, Any]) -> fst.FST:
     """The slice of `Delete.targets` is a normal unparenthesized `Tuple` contianing valid target types, which is also a
@@ -961,57 +1013,6 @@ def _get_slice_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] 
                 self._put_src(None, bound_ln, bound_col, end_ln, end_col, True)
 
         self._maybe_add_line_continuations()
-
-    return fst_
-
-
-def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-                         options: Mapping[str, Any]) -> fst.FST:
-    """A `List` slice is just a normal `List`."""
-
-    len_body = len(body := (ast := self.a).elts)
-    start, stop = fixup_slice_indices(len_body, start, stop)
-
-    if start == stop:
-        return fst.FST._new_empty_list(from_=self)
-
-    locs = _locs_and_bound_get(self, start, stop, body, body, 1)
-    asts = _cut_or_copy_asts(start, stop, 'elts', cut, body)
-    ctx = ast.ctx.__class__
-    ret_ast = List(elts=asts, ctx=ctx())  # we set ctx() so that if it is not Load then set_ctx() below will recurse into it
-
-    if not issubclass(ctx, Load):  # new List root object must have ctx=Load
-        set_ctx(ret_ast, Load)
-
-    return _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
-                          options.get('trivia'), 'elts', '[', ']', ',', 0, 0)
-
-
-def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-                         options: Mapping[str, Any]) -> fst.FST:
-    """A `Set` slice is just a normal `Set` when it has elements. In the case of a zero-length `Set` it may be
-    represented as `{*()}` or `set()` or as an invalid `AST` `Set` with curlies but no elements, according to
-    options."""
-
-    len_body = len(body := self.a.elts)
-    start, stop = fixup_slice_indices(len_body, start, stop)
-
-    if start == stop:
-        return (
-            fst.FST._new_empty_set_curlies() if not (fix_set_get := self.get_option('fix_set_get', options)) else
-            fst.FST._new_empty_set_call() if fix_set_get == 'call' else
-            fst.FST._new_empty_tuple() if fix_set_get == 'tuple' else
-            fst.FST._new_empty_set_star()  # True, 'star'
-        )
-
-    locs = _locs_and_bound_get(self, start, stop, body, body, 1)
-    asts = _cut_or_copy_asts(start, stop, 'elts', cut, body)
-    ret_ast = Set(elts=asts)
-
-    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
-                          options.get('trivia'), 'elts', '{', '}', ',', 0, 0)
-
-    self._maybe_fix_set(self.get_option('fix_set_self', options))
 
     return fst_
 
@@ -1812,6 +1813,54 @@ def _code_to_slice_seq2(self: fst.FST, code: Code | None, one: bool, options: Ma
     return fst_
 
 
+def _code_to_slice_Assign_targets(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
+                                  ) -> fst.FST | None:
+    if code is None:
+        return None
+
+    if one:
+        fst_ = code_as_expr(code, self.root.parse_params, sanitize=False)
+        ast_ = fst_.a
+
+        if not is_valid_target(ast_):
+            raise NodeError(f'expecting one Assign target, got {fst_.a.__class__.__name__}')
+
+        set_ctx(ast_, Store)
+
+        return fst.FST(_slice_Assign_targets(targets=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                                             end_col_offset=ls[-1].lenbytes),
+                       ls, from_=fst_, lcopy=False)
+
+    else:
+        fst_ = code_as_Assign_targets(code, self.root.parse_params, sanitize=False)
+
+        if not fst_.a.targets:  # put empty sequence is same as delete
+            return None
+
+    return fst_
+
+
+def _code_to_slice_aliases(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
+                           code_as_one: Callable = code_as_alias, code_as_slice: Callable = code_as_aliases,
+                           ) -> fst.FST | None:
+    if code is None:
+        return None
+
+    if one:
+        fst_ = code_as_one(code, self.root.parse_params, sanitize=False)
+
+        return fst.FST(_slice_aliases(names=[fst_.a], lineno=(el := len(ls := fst_._lines)),
+                                      col_offset=(ec := ls[-1].lenbytes), end_lineno=el, end_col_offset=ec),
+                       ls, from_=fst_, lcopy=False)
+
+    fst_ = code_as_slice(code, self.root.parse_params, sanitize=False)
+
+    if not fst_.a.names:  # put empty sequence is same as delete
+        return None
+
+    return fst_
+
+
 def _code_to_slice_MatchSequence(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
                                  ) -> fst.FST | None:
     if code is None:
@@ -1900,27 +1949,6 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
     return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
 
-def _code_to_slice_aliases(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
-                           code_as_one: Callable = code_as_alias, code_as_slice: Callable = code_as_aliases,
-                           ) -> fst.FST | None:
-    if code is None:
-        return None
-
-    if one:
-        fst_ = code_as_one(code, self.root.parse_params, sanitize=False)
-
-        return fst.FST(_slice_aliases(names=[fst_.a], lineno=(el := len(ls := fst_._lines)),
-                                      col_offset=(ec := ls[-1].lenbytes), end_lineno=el, end_col_offset=ec),
-                       ls, from_=fst_, lcopy=False)
-
-    fst_ = code_as_slice(code, self.root.parse_params, sanitize=False)
-
-    if not fst_.a.names:  # put empty sequence is same as delete
-        return None
-
-    return fst_
-
-
 def _code_to_slice_type_params(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]) -> fst.FST | None:
     if code is None:
         return None
@@ -1936,33 +1964,6 @@ def _code_to_slice_type_params(self: fst.FST, code: Code | None, one: bool, opti
 
     if not fst_.a.type_params:  # put empty sequence is same as delete
         return None
-
-    return fst_
-
-
-def _code_to_slice_Assign_targets(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
-                                  ) -> fst.FST | None:
-    if code is None:
-        return None
-
-    if one:
-        fst_ = code_as_expr(code, self.root.parse_params, sanitize=False)
-        ast_ = fst_.a
-
-        if not is_valid_target(ast_):
-            raise NodeError(f'expecting one Assign target, got {fst_.a.__class__.__name__}')
-
-        set_ctx(ast_, Store)
-
-        return fst.FST(_slice_Assign_targets(targets=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                                             end_col_offset=ls[-1].lenbytes),
-                       ls, from_=fst_, lcopy=False)
-
-    else:
-        fst_ = code_as_Assign_targets(code, self.root.parse_params, sanitize=False)
-
-        if not fst_.a.targets:  # put empty sequence is same as delete
-            return None
 
     return fst_
 

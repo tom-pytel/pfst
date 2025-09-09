@@ -122,6 +122,7 @@ __all__ = [
     'parse_expr_slice',
     'parse_expr_sliceelt',
     'parse_Tuple',
+    'parse_Assign_targets',
     'parse_boolop',
     'parse_operator',
     'parse_binop',
@@ -143,7 +144,6 @@ __all__ = [
     'parse_pattern',
     'parse_type_param',
     'parse_type_params',
-    'parse_Assign_targets',
 ]
 
 
@@ -373,6 +373,7 @@ Mode = Literal[
     'expr_slice',
     'expr_sliceelt',
     'Tuple',
+    'Assign_targets',
     'boolop',
     'operator',
     'binop',
@@ -394,7 +395,6 @@ Mode = Literal[
     'pattern',
     'type_param',
     'type_params',
-    'Assign_targets',
 ] | type[AST]
 
 """Extended parse modes:
@@ -427,6 +427,8 @@ Mode = Literal[
 - `'expr_sliceelt'`: "slice tuple element expression", same as `'expr'` except that in this mode `a:b` parses to a
     `Slice` and `*not v` parses to a starred expression `*(not v)`. `Tuples` are parsed but cannot contain `Slice`s.
 - `'Tuple'`: Parse to a `Tuple` which may contain anything that a tuple can contain like multiple `Slice`s.
+- `'Assign_targets'`: Parse zero or more `Assign` targets returned in a `_slice_Assign_targets` SPECIAL SLICE, with `=`
+    as separators and an optional trailing `=`.
 - `'boolop'`: Parse to a `boolop` operator.
 - `'operator'`: Parse to an `operator` operator, either normal binary `'*'` or augmented `'*='`.
 - `'binop'`: Parse to an `operator` only binary `'*'`, `'+'`, `'>>'`, etc...
@@ -459,8 +461,6 @@ Mode = Literal[
     `TypeVarTuple`. Same as passing `type_param` type.
 - `'type_params'`: Parse zero or more `type_param`s returned in a `_slice_type_params` SPECIAL SLICE. Does not need
     trailing comma for a single element.
-- `'Assign_targets'`: Parse zero or more `Assign` targets returned in a `_slice_Assign_targets` SPECIAL SLICE, with `=`
-    as separators and an optional trailing `=`.
 - `type[AST]`: If an `AST` type is passed then will attempt to parse to this type. This can be used to narrow
     the scope of desired return, for example `Constant` will parse as an expression but fail if the expression
     is not a `Constant`. These overlap with the string specifiers to an extent but not all of them. For example
@@ -1016,6 +1016,43 @@ def parse_Tuple(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return ast
 
 
+def parse_Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse zero or more `Assign` targets and return them in a `_slice_Assign_targets` SPECIAL SLICE. Takes `=` as
+    separators and accepts an optional trailing `=`.
+
+    @private
+    """
+
+    src_ = '\\' + src if src.startswith('\n') else src  # we allow an initial non-line-continued newline because that is a slice indicator to start on new line and will have line continuation added in slice put to Assign
+
+    try:
+        ast = _ast_parse1(f'_=\\\n{src_}  _', parse_params)  # try assuming src has trailing equals
+
+    except SyntaxError:
+        try:
+            ast = _ast_parse1(f'_=\\\n{src_} =_', parse_params)  # now check assuming src does not have trailing equals
+        except SyntaxError:
+            raise SyntaxError('invalid Assign targets slice') from None
+
+    if not isinstance(ast, Assign):
+        raise ParseError(f'expecting Assign targets, got {ast.__class__.__name__}')
+
+    if not isinstance(name := ast.value, Name):
+        raise ParseError(f'unexpected value type parsing Assign targets, {name.__class__.__name__}')
+    elif name.id != '_':
+        raise ParseError(f'unexpected value id parsing Assign targets, {name.value!r}')
+
+    del (targets := ast.targets)[0]  # remove syntax check dummy target `_`
+
+    # if targets and targets[0].col_offset:
+    #     raise IndentationError('unexpected indent')
+
+    ast = _slice_Assign_targets(targets=targets, lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
+                                end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
+
+    return _offset_linenos(ast, -1)
+
+
 def parse_boolop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `ast.boolop`.
 
@@ -1432,43 +1469,6 @@ def parse_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(ast, -1)
 
 
-def parse_Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse zero or more `Assign` targets and return them in a `_slice_Assign_targets` SPECIAL SLICE. Takes `=` as
-    separators and accepts an optional trailing `=`.
-
-    @private
-    """
-
-    src_ = '\\' + src if src.startswith('\n') else src  # we allow an initial non-line-continued newline because that is a slice indicator to start on new line and will have line continuation added in slice put to Assign
-
-    try:
-        ast = _ast_parse1(f'_=\\\n{src_}  _', parse_params)  # try assuming src has trailing equals
-
-    except SyntaxError:
-        try:
-            ast = _ast_parse1(f'_=\\\n{src_} =_', parse_params)  # now check assuming src does not have trailing equals
-        except SyntaxError:
-            raise SyntaxError('invalid Assign targets slice') from None
-
-    if not isinstance(ast, Assign):
-        raise ParseError(f'expecting Assign targets, got {ast.__class__.__name__}')
-
-    if not isinstance(name := ast.value, Name):
-        raise ParseError(f'unexpected value type parsing Assign targets, {name.__class__.__name__}')
-    elif name.id != '_':
-        raise ParseError(f'unexpected value id parsing Assign targets, {name.value!r}')
-
-    del (targets := ast.targets)[0]  # remove syntax check dummy target `_`
-
-    # if targets and targets[0].col_offset:
-    #     raise IndentationError('unexpected indent')
-
-    ast = _slice_Assign_targets(targets=targets, lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
-                                end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
-
-    return _offset_linenos(ast, -1)
-
-
 # ......................................................................................................................
 
 _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type but that will parse ALL of those types without error, not all parsed in desired but all desired in parsed
@@ -1489,6 +1489,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'expr_slice':             parse_expr_slice,     # `a:b:c`, `*not c`, `a:b:c, x:y:z`, `*st` -> `*st,` (py 3.11+)
     'expr_sliceelt':          parse_expr_sliceelt,  # `a:b:c`, `*not c`, `*st`
     'Tuple':                  parse_Tuple,          # `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`
+    'Assign_targets':         parse_Assign_targets,
     'boolop':                 parse_boolop,
     'operator':               parse_operator,
     'binop':                  parse_binop,
@@ -1510,7 +1511,6 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'pattern':                parse_pattern,
     'type_param':             parse_type_param,
     'type_params':            parse_type_params,
-    'Assign_targets':         parse_Assign_targets,
     mod:                      parse_Module,    # parsing with an AST type doesn't mean it will be parsable by ast module
     Expression:               parse_Expression,
     Interactive:              parse_Interactive,
