@@ -5773,6 +5773,241 @@ Tuple - ROOT 0,0..0,4
 '''),
 ],
 
+'Delete_targets': [  # ................................................................................
+
+(0, 'body[0]', 1, 2, None, {}, ('exec',
+r'''del a, b, c  # comment'''),
+r'''del a, c  # comment''', r'''
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Delete - 0,0..0,8
+    .targets[2]
+    0] Name 'a' Del - 0,4..0,5
+    1] Name 'c' Del - 0,7..0,8
+''',
+r'''b,''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+  0] Name 'b' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+(1, 'body[0]', 1, 3, None, {}, ('exec',
+r'''del a, b, c  # comment'''),
+r'''del a  # comment''', r'''
+Module - ROOT 0,0..0,16
+  .body[1]
+  0] Delete - 0,0..0,5
+    .targets[1]
+    0] Name 'a' Del - 0,4..0,5
+''',
+r'''b, c''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+  0] Name 'b' Load - 0,0..0,1
+  1] Name 'c' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+(2, 'body[0]', 0, 2, None, {}, ('exec',
+r'''del a, b, c  # comment'''),
+r'''del c  # comment''', r'''
+Module - ROOT 0,0..0,16
+  .body[1]
+  0] Delete - 0,0..0,5
+    .targets[1]
+    0] Name 'c' Del - 0,4..0,5
+''',
+r'''a, b''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+(3, 'body[0]', 1, 2, None, {}, ('exec', r'''
+del a \
+, \
+b \
+, \
+c  # comment
+'''), r'''
+del a \
+, \
+c  # comment
+''', r'''
+Module - ROOT 0,0..2,12
+  .body[1]
+  0] Delete - 0,0..2,1
+    .targets[2]
+    0] Name 'a' Del - 0,4..0,5
+    1] Name 'c' Del - 2,0..2,1
+''', r'''
+(
+b \
+, \
+)
+''', r'''
+Tuple - ROOT 0,0..3,1
+  .elts[1]
+  0] Name 'b' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+(4, 'body[0]', 0, 2, None, {}, ('exec', r'''
+del a \
+, \
+b \
+, \
+c  # comment
+'''), r'''
+del \
+c  # comment
+''', r'''
+Module - ROOT 0,0..1,12
+  .body[1]
+  0] Delete - 0,0..1,1
+    .targets[1]
+    0] Name 'c' Del - 1,0..1,1
+''', r'''
+a \
+, \
+b \
+,
+''', r'''
+Tuple - ROOT 0,0..3,1
+  .elts[2]
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'b' Load - 2,0..2,1
+  .ctx Load
+'''),
+
+(5, 'body[0]', 1, 3, None, {}, ('exec', r'''
+del a \
+, \
+b \
+, \
+c  # comment
+'''), r'''
+del a \
+ \
+  # comment
+''', r'''
+Module - ROOT 0,0..2,11
+  .body[1]
+  0] Delete - 0,0..0,5
+    .targets[1]
+    0] Name 'a' Del - 0,4..0,5
+''', r'''
+(
+b \
+, \
+c)
+''', r'''
+Tuple - ROOT 0,0..3,2
+  .elts[2]
+  0] Name 'b' Load - 1,0..1,1
+  1] Name 'c' Load - 3,0..3,1
+  .ctx Load
+'''),
+
+(6, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
+if 1:
+  del a \
+  , \
+  b # comment
+  pass
+'''), r'''
+if 1:
+  del  \
+  b # comment
+  pass
+''', r'''
+Module - ROOT 0,0..3,6
+  .body[1]
+  0] If - 0,0..3,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Delete - 1,2..2,3
+      .targets[1]
+      0] Name 'b' Del - 2,2..2,3
+    1] Pass - 3,2..3,6
+''', r'''
+a \
+,
+''', r'''
+Tuple - ROOT 0,0..1,1
+  .elts[1]
+  0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+(7, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+  del a \
+  , \
+  b # comment
+  pass
+'''), r'''
+if 1:
+  del a \
+   \
+   # comment
+  pass
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+  0] If - 0,0..4,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Delete - 1,2..1,7
+      .targets[1]
+      0] Name 'a' Del - 1,6..1,7
+    1] Pass - 4,2..4,6
+''',
+r'''b,''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+  0] Name 'b' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+(8, '', 0, 3, None, {}, (None,
+r'''del a, b, c'''),
+r'''**ValueError('cannot cut all Delete.targets without fix_delete_self=False')**''',
+r'''a, b, c''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[3]
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'b' Load - 0,3..0,4
+  2] Name 'c' Load - 0,6..0,7
+  .ctx Load
+'''),
+
+(9, '', 0, 3, None, {'fix_import_self': False, '_verify_self': False}, (None, r'''
+del a \
+, \
+b \
+, \
+c  # comment
+'''),
+r'''**ValueError('cannot cut all Delete.targets without fix_delete_self=False')**''', r'''
+a \
+, \
+b \
+, \
+c
+''', r'''
+Tuple - ROOT 0,0..4,1
+  .elts[3]
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'b' Load - 2,0..2,1
+  2] Name 'c' Load - 4,0..4,1
+  .ctx Load
+'''),
+],
+
 'Assign_targets': [  # ................................................................................
 
 (0, 'body[0]', 0, 2, 'targets', {}, ('exec',

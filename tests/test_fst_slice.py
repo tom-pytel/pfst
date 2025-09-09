@@ -1488,6 +1488,59 @@ def func():
         f.put_slice('x, y, z')
         self.assertEqual('nonlocal x, y, z', f.src)
 
+    def test_slice_special(self):
+        # Global.names preserves trailing commas and locations
+
+        f = FST(src := r'''
+del a \
+, \
+b \
+, \
+c  # comment
+            '''.strip())
+        g = f.get_slice(1, 2, cut=True)
+        f.put_slice(g, 1, 1)
+        self.assertEqual(f.src, src)
+        f.verify()
+
+        f = FST(src := r'''
+a = \
+b = \
+c = \
+d  # comment
+            '''.strip())
+        g = f.get_slice(1, 2, 'targets', cut=True)
+        f.put_slice(g, 1, 1, 'targets')
+        self.assertEqual(f.src, src)
+        f.verify()
+
+        # Import.names slice doesn't preserve trailing commas (or their locations)
+
+        f = FST(src := r'''
+import a \
+, \
+b, \
+c  # comment
+            '''.strip())
+        g = f.get_slice(1, 2, cut=True)
+        f.put_slice(g, 1, 1)
+        self.assertEqual(f.src, src)
+        f.verify()
+
+        # Global.names preserves trailing commas and locations
+
+        f = FST(src := r'''
+global a \
+, \
+b \
+, \
+c  # comment
+            '''.strip())
+        g = f.get_slice(1, 2, cut=True)
+        f.put_slice(g, 1, 1)
+        self.assertEqual(f.src, src)
+        f.verify()
+
     def test_get_slice_special(self):
         f = FST('''(
             TI(string="case"),

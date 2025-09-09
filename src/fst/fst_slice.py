@@ -850,6 +850,9 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
     fst_._maybe_fix_tuple(False)
 
     if cut:
+        if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
+            self._set_end_pos(bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col), True, True)
+
         ln, col, _, _ = self.loc
 
         self._maybe_fix_joined_alnum(ln, col + 3)
@@ -2260,21 +2263,16 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
     for i in range(start + len_fst_body, len(body)):
         body[i].f.pfield = astfield('targets', i)
 
-    if stop == len_body:  # clean up any line continuation backslashes and make sure end location is set to end of last element
-        _, _, end_ln, end_col = self.loc
+    if stop == len_body:  # if del till and something left then may need to reset end position of self due to new trailing trivia
+        if body:
+            _, _, bound_ln, bound_col = body[-1].f.pars()
 
-        if targets := ast.targets:
-            _, _, last_end_ln, last_end_col = targets[-1].f.pars()
-
-            if end_col != last_end_col or end_ln != last_end_ln:
-                self._put_src(None, last_end_ln, last_end_col, end_ln, end_col, True)
+        self._set_end_pos(bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col), True, True)
 
     ln, col, _, _ = self.loc
 
-    # TODO: self._maybe_add_line_continuations() can fail below if we added lines with comments, need to possibly parenthesize above if we know we putting unfixable sequence
-
     self._maybe_fix_joined_alnum(ln, col + 3)
-    self._maybe_add_line_continuations()
+    self._maybe_add_line_continuations()  # TODO: self._maybe_add_line_continuations() can fail if we added lines with comments, need to possibly parenthesize above if we know we putting unfixable sequence
 
 
 def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
@@ -2385,8 +2383,11 @@ def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Liter
     for i in range(start + len_fst_body, len(body)):
         body[i].f.pfield = astfield('names', i)
 
-    if not fst_ and start and stop == len_body:  # if del till and something left then may need to reset end position of self due to new trailing trivia
-        self._set_end_pos((bn := body[-1]).end_lineno, bn.end_col_offset, True, True)
+    if stop == len_body:  # if del till and something left then may need to reset end position of self due to new trailing trivia
+        if body:
+            self._set_end_pos((bn := body[-1]).end_lineno, bn.end_col_offset, True, True)
+        else:
+            self._set_end_pos(bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col), True, True)
 
     # self._maybe_fix_joined_alnum(self.ln, self.col + 5)  # THEORETICALLY this can happen if delete to empty then remove trailing whitespace from 'import' and then put new stuff, but there are so many easier ways to F S up that we don't bother with this
     self._maybe_add_line_continuations()

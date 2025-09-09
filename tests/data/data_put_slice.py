@@ -15318,10 +15318,12 @@ Module - ROOT 0,0..1,7
 r'''del a, b, c'''), (None, r'''
 x \
 
-'''),
-r'''del x''',
+'''), r'''
+del x \
+
+''',
 r'''**NodeError('slice being assigned to a Delete must be a Tuple, List or Set, not a Name')**''', r'''
-Module - ROOT 0,0..0,5
+Module - ROOT 0,0..1,0
   .body[1]
   0] Delete - 0,0..0,5
     .targets[1]
@@ -15339,12 +15341,14 @@ if 1:
 '''), r'''
 if 1:
   del a, \
-      b
+      b \
+       \
+    
 ''', r'''
 if 1:
   del a, b
 ''', r'''
-Module - ROOT 0,0..2,7
+Module - ROOT 0,0..4,4
   .body[1]
   0] If - 0,0..2,7
     .test Constant 1 - 0,3..0,4
@@ -15365,12 +15369,13 @@ if 1:
 '''), r'''
 if 1:
   del a, \
-      b
+      b \
+
 ''', r'''
 if 1:
   del a, b
 ''', r'''
-Module - ROOT 0,0..2,7
+Module - ROOT 0,0..3,0
   .body[1]
   0] If - 0,0..2,7
     .test Constant 1 - 0,3..0,4
@@ -15392,11 +15397,12 @@ if 1:
 if 1:
   del a, \
       b
+
 ''', r'''
 if 1:
   del a, b
 ''', r'''
-Module - ROOT 0,0..2,7
+Module - ROOT 0,0..3,0
   .body[1]
   0] If - 0,0..2,7
     .test Constant 1 - 0,3..0,4
@@ -15827,7 +15833,7 @@ import x \
 ''', r'''
 Module - ROOT 0,0..1,11
   .body[1]
-  0] Import - 0,0..1,0
+  0] Import - 0,0..0,8
     .names[1]
     0] alias - 0,7..0,8
       .name 'x'
@@ -15843,6 +15849,56 @@ r'''import a, b, c  # comment'''),
 r'''**DEL**''',
 r'''import   # comment''',
 r'''Import - ROOT 0,0..0,7'''),
+
+(14, 'body[0]', 1, 1, None, {}, ('exec',
+r'''import a'''), ('Import_names', r'''
+b \
+, \
+c \
+
+'''), r'''
+import a, b \
+       , \
+       c \
+
+''', r'''
+Module - ROOT 0,0..3,0
+  .body[1]
+  0] Import - 0,0..2,8
+    .names[3]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 0,10..0,11
+      .name 'b'
+    2] alias - 2,7..2,8
+      .name 'c'
+'''),
+
+(15, 'body[0]', 1, 1, None, {}, ('exec',
+r'''import a'''), ('Import_names', r'''
+\
+b \
+, \
+c \
+
+'''), r'''
+import a, \
+       b \
+       , \
+       c \
+
+''', r'''
+Module - ROOT 0,0..4,0
+  .body[1]
+  0] Import - 0,0..3,8
+    .names[3]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 1,7..1,8
+      .name 'b'
+    2] alias - 3,7..3,8
+      .name 'c'
+'''),
 ],
 
 'Global_names': [  # ................................................................................
