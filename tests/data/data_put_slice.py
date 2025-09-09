@@ -14999,7 +14999,7 @@ match a:
  case a | b: pass
 '''), (None,
 r'''**DEL**'''),
-r'''**NodeError('cannot delete all MatchOr.patterns without fix_matchor_self=False')**'''),
+r'''**ValueError('cannot delete all MatchOr.patterns without fix_matchor_self=False')**'''),
 
 (97, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': False, '_verify': False}, ('exec', r'''
 match a:

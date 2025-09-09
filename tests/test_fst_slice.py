@@ -1924,12 +1924,12 @@ def func():
 
     def test_slice_matchor_empty_or_len1(self):
         self.assertEqual('', FST('a | b', pattern).get_slice(0, 0, fix_matchor_get=False).src)
-        self.assertRaises(NodeError, FST('a | b', pattern).get_slice, 0, 0, fix_matchor_get=True)
-        self.assertRaises(NodeError, FST('a | b', pattern).get_slice, 0, 0, fix_matchor_get='strict')
+        self.assertRaises(ValueError, FST('a | b', pattern).get_slice, 0, 0, fix_matchor_get=True)
+        self.assertRaises(ValueError, FST('a | b', pattern).get_slice, 0, 0, fix_matchor_get='strict')
 
         self.assertEqual('a', FST('a | b', pattern).get_slice(0, 1, fix_matchor_get=False).src)
         self.assertEqual('a', FST('a | b', pattern).get_slice(0, 1, fix_matchor_get=True).src)
-        self.assertRaises(NodeError, FST('a | b', pattern).get_slice, 0, 1, fix_matchor_get='strict')
+        self.assertRaises(ValueError, FST('a | b', pattern).get_slice, 0, 1, fix_matchor_get='strict')
 
         self.assertEqual('a | b', FST('a | b', pattern).get_slice(0, 2, fix_matchor_get=False).src)
         self.assertEqual('a | b', FST('a | b', pattern).get_slice(0, 2, fix_matchor_get=True).src)
@@ -1990,14 +1990,14 @@ def func():
             self.assertEqual('b', f.src)
             self.assertIsInstance(f.a, MatchAs)
 
-            self.assertRaises(NodeError, (f := FST('a | b', pattern)).get_slice, 0, 1, cut=True, fix_matchor_self='strict')
+            self.assertRaises(ValueError, (f := FST('a | b', pattern)).get_slice, 0, 1, cut=True, fix_matchor_self='strict')
 
             (f := FST('a | b', pattern)).get_slice(0, 2, cut=True, fix_matchor_self=False)
             self.assertEqual('', f.src)
             self.assertIsInstance(f.a, MatchOr)
 
-            self.assertRaises(NodeError, (f := FST('a | b', pattern)).get_slice, 0, 2, cut=True, fix_matchor_self=True)
-            self.assertRaises(NodeError, (f := FST('a | b', pattern)).get_slice, 0, 2, cut=True, fix_matchor_self='strict')
+            self.assertRaises(ValueError, (f := FST('a | b', pattern)).get_slice, 0, 2, cut=True, fix_matchor_self=True)
+            self.assertRaises(ValueError, (f := FST('a | b', pattern)).get_slice, 0, 2, cut=True, fix_matchor_self='strict')
 
             (f := FST('a | b', pattern)).put_slice(None, 0, 0, fix_matchor_self=False)
             self.assertEqual('a | b', f.src)
@@ -2019,14 +2019,14 @@ def func():
             self.assertEqual('b', f.src)
             self.assertIsInstance(f.a, MatchAs)
 
-            self.assertRaises(NodeError, (f := FST('a | b', pattern)).put_slice, None, 0, 1, fix_matchor_self='strict')
+            self.assertRaises(ValueError, (f := FST('a | b', pattern)).put_slice, None, 0, 1, fix_matchor_self='strict')
 
             (f := FST('a | b', pattern)).put_slice(None, 0, 2, fix_matchor_self=False)
             self.assertEqual('', f.src)
             self.assertIsInstance(f.a, MatchOr)
 
-            self.assertRaises(NodeError, (f := FST('a | b', pattern)).put_slice, None, 0, 2, fix_matchor_self=True)
-            self.assertRaises(NodeError, (f := FST('a | b', pattern)).put_slice, None, 0, 2, fix_matchor_self='strict')
+            self.assertRaises(ValueError, (f := FST('a | b', pattern)).put_slice, None, 0, 2, fix_matchor_self=True)
+            self.assertRaises(ValueError, (f := FST('a | b', pattern)).put_slice, None, 0, 2, fix_matchor_self='strict')
 
     def test_slice_line_continuations(self):
         f = FST(r'''del a, b, c, \

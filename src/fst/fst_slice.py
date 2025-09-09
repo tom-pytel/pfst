@@ -1095,20 +1095,20 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
 
     if not len_slice:
         if fix_matchor_get:
-            raise NodeError("cannot get empty slice from MatchOr without fix_matchor_get=False")
+            raise ValueError("cannot get empty slice from MatchOr without fix_matchor_get=False")
 
         return fst.FST._new_empty_matchor(from_=self)
 
     if len_slice == 1 and fix_matchor_get == 'strict':
-        raise NodeError("cannot get length 1 slice from MatchOr with fix_matchor_get='strict'")
+        raise ValueError("cannot get length 1 slice from MatchOr with fix_matchor_get='strict'")
 
     if cut:
         if not (len_left := len_body - len_slice):
             if fix_matchor_self:
-                raise NodeError("cannot cut all MatchOr.patterns without fix_matchor_self=False")
+                raise ValueError("cannot cut all MatchOr.patterns without fix_matchor_self=False")
 
         elif len_left == 1 and fix_matchor_self == 'strict':
-            raise NodeError("cannot cut MatchOr to length 1 with fix_matchor_self='strict'")
+            raise ValueError("cannot cut MatchOr to length 1 with fix_matchor_self='strict'")
 
     locs = _locs_and_bound_get(self, start, stop, body, body, 0)
     asts = _cut_or_copy_asts(start, stop, 'patterns', cut, body)
@@ -2610,10 +2610,10 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
 
         if not (len_left := len_body - len_slice):
             if fix_matchor_self:
-                raise NodeError("cannot delete all MatchOr.patterns without fix_matchor_self=False")
+                raise ValueError("cannot delete all MatchOr.patterns without fix_matchor_self=False")
 
         elif len_left == 1 and fix_matchor_self == 'strict':
-            raise NodeError("cannot del MatchOr to length 1 with fix_matchor_self='strict'")
+            raise ValueError("cannot del MatchOr to length 1 with fix_matchor_self='strict'")
 
         _put_slice_seq(self, start, stop, None, None, None, 0, *self.loc,
                        options.get('trivia'), options.get('ins_ln'), 'patterns', None, '|', False)
