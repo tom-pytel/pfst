@@ -831,8 +831,8 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
     if not len_slice:
         return fst.FST._new_empty_tuple(from_=self)
 
-    if cut and len_slice == len_body and self.get_option('fix_del_self', options):
-        raise ValueError("cannot cut all Delete.targets without fix_del_self=False")
+    if cut and len_slice == len_body and self.get_option('fix_delete_self', options):
+        raise ValueError("cannot cut all Delete.targets without fix_delete_self=False")
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
@@ -937,11 +937,13 @@ def _get_slice_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] 
                                      cut: bool, options: Mapping[str, Any]) -> fst.FST:
     len_body = len((ast := self.a).names)
     start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
 
-    if start == stop:
+    if not len_slice:
         return self._new_empty_tuple(from_=self)
-    if cut and not start and stop == len_body:
-        raise ValueError(f'cannot cut all {ast.__class__.__name__}.names')
+
+    if cut and len_slice == len_body and self.get_option('fix_global_self', options):
+        raise ValueError(f'cannot cut all {ast.__class__.__name__}.names without fix_global_self=False')
 
     ln, end_col, bound_end_ln, bound_end_col = self.loc
 
@@ -989,11 +991,8 @@ def _get_slice_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] 
     fst_._maybe_fix_tuple(False)  # this is in case of multiline elements to add pars, otherwise location would reparse different
 
     if cut:
-        if stop == len_body:  # clean up any line continuation backslashes and make sure end location is set to end of last element
-            _, _, end_ln, end_col = self.loc
-
-            if end_col != bound_col or end_ln != bound_ln:
-                self._put_src(None, bound_ln, bound_col, end_ln, end_col, True)
+        if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
+            self._set_end_pos(bound_ln + 1, lines[bound_ln].c2b(bound_col), True, True)
 
         self._maybe_add_line_continuations()
 
@@ -1856,7 +1855,7 @@ def _code_to_slice_MatchSequence(self: fst.FST, code: Code | None, one: bool, op
         ast = MatchSequence(patterns=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls),
                             end_col_offset=ls[-1].lenbytes)
 
-        return fst.FST(ast, ls, from_=self, lcopy=False)
+        return fst.FST(ast, ls, from_=fst_, lcopy=False)
 
     ast_ = fst_.a
 
@@ -2220,8 +2219,8 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
         if not len_slice:
             return
 
-        if len_slice == len_body and self.get_option('fix_del_self', options):
-            raise ValueError("cannot delete all Delete.targets without fix_del_self=False")
+        if len_slice == len_body and self.get_option('fix_delete_self', options):
+            raise ValueError("cannot delete all Delete.targets without fix_delete_self=False")
 
     _validate_put_seq(self, fst_, 'Delete', check_target=is_valid_del_target)
 
@@ -2389,6 +2388,7 @@ def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Liter
     if not fst_ and start and stop == len_body:  # if del till and something left then may need to reset end position of self due to new trailing trivia
         self._set_end_pos((bn := body[-1]).end_lineno, bn.end_col_offset, True, True)
 
+    # self._maybe_fix_joined_alnum(self.ln, self.col + 5)  # THEORETICALLY this can happen if delete to empty then remove trailing whitespace from 'import' and then put new stuff, but there are so many easier ways to F S up that we don't bother with this
     self._maybe_add_line_continuations()
 
 
@@ -2400,13 +2400,14 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
     fst_ = _code_to_slice_seq(self, code, one, options, non_seq_str_as_one=True)
     len_body = len(body := (ast := self.a).names)
     start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
 
     if not fst_:
-        if start == stop:
+        if not len_slice:
             return
 
-        if not start and stop == len_body:
-            raise ValueError(f'cannot delete all {ast.__class__.__name__}.names')
+        if len_slice == len_body and self.get_option('fix_global_self', options):
+            raise ValueError(f'cannot delete all {ast.__class__.__name__}.names without fix_global_self=False')
 
     else:
         n = 0
@@ -2414,6 +2415,8 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
         if not all(isinstance(bad := e, Name) and not (n := e.f.pars().n) for e in fst_.a.elts):
             raise NodeError(f'cannot put{" parenthesized" if n else ""} {bad.__class__.__name__} '
                             f'to {ast.__class__.__name__}.names')
+
+        # TODO? could have some logic here to strip trailing newline from fst_ if putting at end and there is no trivia on same line as last element to not introduce a spurisous newline? seems a bit over-the-top, XXX be careful of semicolons separating statements!
 
     ln, end_col, bound_end_ln, bound_end_col = self.loc
 
@@ -2429,19 +2432,27 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
         tmp_elts.append(Name(id=src, ctx=Load(), lineno=lineno, col_offset=(l := lines[ln]).c2b(col), end_lineno=lineno,
                              end_col_offset=l.c2b(end_col)))
 
-    tmp_ast = Tuple(elts=tmp_elts, ctx=Load(), lineno=(e0 := tmp_elts[0]).lineno, col_offset=e0.col_offset,
-                    end_lineno=(en := tmp_elts[-1]).end_lineno, end_col_offset=en.end_col_offset)
+    if tmp_elts:
+        tmp_ast = Tuple(elts=tmp_elts, ctx=Load(), lineno=(e0 := tmp_elts[0]).lineno, col_offset=e0.col_offset,
+                        end_lineno=(en := tmp_elts[-1]).end_lineno, end_col_offset=en.end_col_offset)
+    else:
+        tmp_ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=0)
 
     self._set_ast(tmp_ast)  # temporarily swap out Global/Nonlocal AST for temporary Tuple AST so that offsetting propagates to the parents
 
-    bound_ln, bound_col, last_end_ln, last_end_col = tmp_elts[0].f.loc
+    if tmp_elts:
+        bound_ln, bound_col, last_end_ln, last_end_col = tmp_elts[0].f.loc
 
-    if not start:
-        last_end_ln = bound_ln
-        last_end_col = bound_col
+        if not start:
+            last_end_ln = bound_ln
+            last_end_col = bound_col
 
-    elif start != 1:
-        _, _, last_end_ln, last_end_col = tmp_elts[start - 1].f.loc
+        elif start != 1:
+            _, _, last_end_ln, last_end_col = tmp_elts[start - 1].f.loc
+
+    else:
+        bound_ln = last_end_ln = bound_end_ln
+        bound_col = last_end_col = bound_end_col
 
     if not fst_:
         _put_slice_seq(self, start, stop, None, None, None, 0,
@@ -2468,15 +2479,13 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
     self._set_ast(ast, True)
     self._touch()  # because it was never offset so was never ._touch()ed
 
-    if stop == len_body:  # clean up any line continuation backslashes and make sure end location is set to end of last element
-        _, _, end_ln, end_col = self.loc
-
+    if stop == len_body:  # if del OR put till and something left then may need to reset end position of self due to new trailing trivia, put because could come from trailing trivia of last element of parenthesized tuple
         if fst_:
             _, _, last_end_ln, last_end_col = fst_last_loc
 
-        if end_col != last_end_col or end_ln != last_end_ln:
-            self._put_src(None, last_end_ln, last_end_col, end_ln, end_col, True)
+        self._set_end_pos(last_end_ln + 1, lines[last_end_ln].c2b(last_end_col), True, True)
 
+    # self._maybe_fix_joined_alnum(self.ln, self.col + (6 if isinstance(ast, Global) else 8))  # THEORETICALLY this can happen if delete to empty then remove trailing whitespace from 'import' and then put new stuff, but there are so many easier ways to F S up that we don't bother with this
     self._maybe_add_line_continuations()
 
 

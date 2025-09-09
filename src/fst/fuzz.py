@@ -1838,7 +1838,7 @@ class SliceExprish(Fuzzy):
                     else:
                         continue
 
-                    with FST.options(fix_set_get=False, fix_set_put=False, fix_set_self=False, fix_del_self=False, fix_assign_self=False, fix_matchor_get=False, fix_matchor_put=False, fix_matchor_self=False):
+                    with FST.options(fix_set_get=False, fix_set_put=False, fix_set_self=False, fix_delete_self=False, fix_assign_self=False, fix_matchor_get=False, fix_matchor_put=False, fix_matchor_self=False):
                         self.transfer('src > bkt:', cat, bucket.field, bucket.slice_field, exprish, bucket.fst, bucket.min_script, bucket.min_tmp, bucket.one)
                         self.transfer('src < bkt:', cat, bucket.field, bucket.slice_field, bucket.fst, exprish, bucket.min_tmp, bucket.min_script, bucket.one)
 

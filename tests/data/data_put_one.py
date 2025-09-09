@@ -9916,163 +9916,7 @@ Module - ROOT 0,0..0,8
       .ctx Load
 '''),
 
-(624, 'body[0]', 0, False, 'names', {}, ('exec',
-r'''global a, b'''), (None,
-r'''**DEL**'''),
-r'''global b''', r'''
-Module - ROOT 0,0..0,8
-  .body[1]
-  0] Global - 0,0..0,8
-    .names[1]
-    0] 'b'
-'''),
-
-(625, 'body[0]', 0, False, 'names', {}, ('exec',
-r'''global a, b'''), (None,
-r'''new'''),
-r'''global new, b''', r'''
-Module - ROOT 0,0..0,13
-  .body[1]
-  0] Global - 0,0..0,13
-    .names[2]
-    0] 'new'
-    1] 'b'
-'''),
-
-(626, 'body[0]', 1, False, 'names', {}, ('exec',
-r'''global a, b'''), (None,
-r'''new'''),
-r'''global a, new''', r'''
-Module - ROOT 0,0..0,13
-  .body[1]
-  0] Global - 0,0..0,13
-    .names[2]
-    0] 'a'
-    1] 'new'
-'''),
-
-(627, 'body[0]', -1, False, 'names', {}, ('exec',
-r'''global a, b'''), (None,
-r'''new'''),
-r'''global a, new''', r'''
-Module - ROOT 0,0..0,13
-  .body[1]
-  0] Global - 0,0..0,13
-    .names[2]
-    0] 'a'
-    1] 'new'
-'''),
-
-(628, 'body[0]', -2, False, 'names', {}, ('exec', r'''
-global \
-a \
-,\
-b
-'''), (None,
-r'''new'''), r'''
-global \
-new \
-,\
-b
-''', r'''
-Module - ROOT 0,0..3,1
-  .body[1]
-  0] Global - 0,0..3,1
-    .names[2]
-    0] 'new'
-    1] 'b'
-'''),
-
-(629, 'body[0]', -4, False, 'names', {}, ('exec',
-r'''global a, b'''), (None,
-r'''new'''),
-r'''**IndexError('index out of range')**'''),
-
-(630, 'body[0]', 0, False, 'names', {}, ('exec',
-r'''nonlocal a, b'''), (None,
-r'''**DEL**'''),
-r'''nonlocal b''', r'''
-Module - ROOT 0,0..0,10
-  .body[1]
-  0] Nonlocal - 0,0..0,10
-    .names[1]
-    0] 'b'
-'''),
-
-(631, 'body[0]', 0, False, 'names', {}, ('exec',
-r'''nonlocal a, b'''), (None,
-r'''new'''),
-r'''nonlocal new, b''', r'''
-Module - ROOT 0,0..0,15
-  .body[1]
-  0] Nonlocal - 0,0..0,15
-    .names[2]
-    0] 'new'
-    1] 'b'
-'''),
-
-(632, 'body[0]', 1, False, 'names', {}, ('exec',
-r'''nonlocal a, b'''), (None,
-r'''new'''),
-r'''nonlocal a, new''', r'''
-Module - ROOT 0,0..0,15
-  .body[1]
-  0] Nonlocal - 0,0..0,15
-    .names[2]
-    0] 'a'
-    1] 'new'
-'''),
-
-(633, 'body[0]', -1, False, 'names', {}, ('exec',
-r'''nonlocal a, b'''), (None,
-r'''new'''),
-r'''nonlocal a, new''', r'''
-Module - ROOT 0,0..0,15
-  .body[1]
-  0] Nonlocal - 0,0..0,15
-    .names[2]
-    0] 'a'
-    1] 'new'
-'''),
-
-(634, 'body[0]', -2, False, 'names', {}, ('exec', r'''
-nonlocal \
-a \
-,\
-b
-'''), (None,
-r'''new'''), r'''
-nonlocal \
-new \
-,\
-b
-''', r'''
-Module - ROOT 0,0..3,1
-  .body[1]
-  0] Nonlocal - 0,0..3,1
-    .names[2]
-    0] 'new'
-    1] 'b'
-'''),
-
-(635, 'body[0]', -4, False, 'names', {}, ('exec',
-r'''nonlocal a, b'''), (None,
-r'''new'''),
-r'''**IndexError('index out of range')**'''),
-
-(636, 'body[0]', None, False, 'args', {}, ('exec',
-r'''def f(a=1): pass'''), (None,
-r'''**DEL**'''),
-r'''def f(): pass''', r'''
-Module - ROOT 0,0..0,13
-  .body[1]
-  0] FunctionDef - 0,0..0,13
-    .name 'f'
-    .body[1]
-    0] Pass - 0,9..0,13
-'''),
-
-(637, 'body[0]', None, False, 'args', {}, ('exec',
+(624, 'body[0]', None, False, 'args', {}, ('exec',
 r'''def f(a=1): pass'''), (None,
 r'''a: list[str], /, b: int = 1, *c, d=100, **e'''),
 r'''def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass''',
@@ -10108,7 +9952,7 @@ Module - ROOT 0,0..0,56
     0] Pass - 0,52..0,56
 '''),
 
-(638, 'body[0]', None, False, 'args', {}, ('exec',
+(625, 'body[0]', None, False, 'args', {}, ('exec',
 r'''def f(): pass'''), (None,
 r'''a: list[str], /, b: int = 1, *c, d=100, **e'''),
 r'''def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass''',
@@ -10144,7 +9988,7 @@ Module - ROOT 0,0..0,56
     0] Pass - 0,52..0,56
 '''),
 
-(639, 'body[0]', None, False, 'args', {}, ('exec', r'''
+(626, 'body[0]', None, False, 'args', {}, ('exec', r'''
 def f(\
 \
 ): pass
@@ -10183,12 +10027,12 @@ Module - ROOT 0,0..0,56
     0] Pass - 0,52..0,56
 '''),
 
-(640, 'body[0]', 0, False, 'args', {}, ('exec',
+(627, 'body[0]', 0, False, 'args', {}, ('exec',
 r'''def f(a=1): pass'''), (None,
 r'''a: list[str], /, b: int = 1, *c, d=100, **e'''),
 r'''**IndexError('FunctionDef.args does not take an index')**'''),
 
-(641, 'body[0]', None, False, 'args', {}, ('exec',
+(628, 'body[0]', None, False, 'args', {}, ('exec',
 r'''def f(a=1): pass'''), ('arguments',
 r''''''),
 r'''def f(): pass''', r'''
@@ -10200,7 +10044,7 @@ Module - ROOT 0,0..0,13
     0] Pass - 0,9..0,13
 '''),
 
-(642, 'body[0]', None, False, 'args', {}, ('exec',
+(629, 'body[0]', None, False, 'args', {}, ('exec',
 r'''async def f(a=1): pass'''), (None,
 r'''**DEL**'''),
 r'''async def f(): pass''', r'''
@@ -10212,7 +10056,7 @@ Module - ROOT 0,0..0,19
     0] Pass - 0,15..0,19
 '''),
 
-(643, 'body[0]', None, False, 'args', {}, ('exec',
+(630, 'body[0]', None, False, 'args', {}, ('exec',
 r'''async def f(a=1): pass'''), (None,
 r'''a: list[str], /, b: int = 1, *c, d=100, **e'''),
 r'''async def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass''',
@@ -10248,7 +10092,7 @@ Module - ROOT 0,0..0,62
     0] Pass - 0,58..0,62
 '''),
 
-(644, 'body[0]', None, False, 'args', {}, ('exec',
+(631, 'body[0]', None, False, 'args', {}, ('exec',
 r'''async def f(): pass'''), (None,
 r'''a: list[str], /, b: int = 1, *c, d=100, **e'''),
 r'''async def f(a: list[str], /, b: int = 1, *c, d=100, **e): pass''',
@@ -10284,7 +10128,7 @@ Module - ROOT 0,0..0,62
     0] Pass - 0,58..0,62
 '''),
 
-(645, 'body[0]', None, False, 'args', {}, ('exec', r'''
+(632, 'body[0]', None, False, 'args', {}, ('exec', r'''
 async def f(\
 \
 ): pass
@@ -10323,12 +10167,12 @@ Module - ROOT 0,0..0,62
     0] Pass - 0,58..0,62
 '''),
 
-(646, 'body[0]', 0, False, 'args', {}, ('exec',
+(633, 'body[0]', 0, False, 'args', {}, ('exec',
 r'''async def f(a=1): pass'''), (None,
 r'''a: list[str], /, b: int = 1, *c, d=100, **e'''),
 r'''**IndexError('AsyncFunctionDef.args does not take an index')**'''),
 
-(647, 'body[0]', None, False, 'args', {}, ('exec',
+(634, 'body[0]', None, False, 'args', {}, ('exec',
 r'''async def f(a=1): pass'''), ('arguments',
 r''''''),
 r'''async def f(): pass''', r'''
@@ -10340,7 +10184,7 @@ Module - ROOT 0,0..0,19
     0] Pass - 0,15..0,19
 '''),
 
-(648, 'body[0].value', None, False, 'args', {}, ('exec',
+(635, 'body[0].value', None, False, 'args', {}, ('exec',
 r'''lambda a=1: None'''), (None,
 r'''**DEL**'''),
 r'''lambda: None''', r'''
@@ -10351,12 +10195,12 @@ Module - ROOT 0,0..0,12
       .body Constant None - 0,8..0,12
 '''),
 
-(649, 'body[0].value', None, False, 'args', {}, ('exec',
+(636, 'body[0].value', None, False, 'args', {}, ('exec',
 r'''lambda a=1: None'''), (None,
 r'''a: list[str], /, b: int = 1, *c, d=100, **e'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(650, 'body[0].value', None, False, 'args', {}, ('exec',
+(637, 'body[0].value', None, False, 'args', {}, ('exec',
 r'''lambda a=1: None'''), (None,
 r'''a, /, b=1, *c, d=100, **e'''),
 r'''lambda a, /, b=1, *c, d=100, **e: None''', r'''
@@ -10385,7 +10229,7 @@ Module - ROOT 0,0..0,38
       .body Constant None - 0,34..0,38
 '''),
 
-(651, 'body[0].value', None, False, 'args', {}, ('exec',
+(638, 'body[0].value', None, False, 'args', {}, ('exec',
 r'''lambda: None'''), (None,
 r'''a, /, b=1, *c, d=100, **e'''),
 r'''lambda a, /, b=1, *c, d=100, **e: None''', r'''
@@ -10414,7 +10258,7 @@ Module - ROOT 0,0..0,38
       .body Constant None - 0,34..0,38
 '''),
 
-(652, 'body[0].value', None, False, 'args', {}, ('exec', r'''
+(639, 'body[0].value', None, False, 'args', {}, ('exec', r'''
 lambda\
 \
 : None
@@ -10446,12 +10290,12 @@ Module - ROOT 0,0..0,38
       .body Constant None - 0,34..0,38
 '''),
 
-(653, 'body[0].value', 0, False, 'args', {}, ('exec',
+(640, 'body[0].value', 0, False, 'args', {}, ('exec',
 r'''lambda a=1: None'''), ('arguments',
 r'''a, /, b=1, *c, d=100, **e'''),
 r'''**IndexError('Lambda.args does not take an index')**'''),
 
-(654, 'body[0].value', None, False, 'args', {}, ('exec',
+(641, 'body[0].value', None, False, 'args', {}, ('exec',
 r'''lambda a=1: None'''), ('arguments',
 r''''''),
 r'''lambda: None''', r'''
@@ -10462,7 +10306,7 @@ Module - ROOT 0,0..0,12
       .body Constant None - 0,8..0,12
 '''),
 
-(655, 'body[0].value', None, False, 'op', {'raw': False}, ('exec',
+(642, 'body[0].value', None, False, 'op', {'raw': False}, ('exec',
 r'''a and b'''), (None,
 r'''or'''),
 r'''a or b''', r'''
@@ -10476,12 +10320,12 @@ Module - ROOT 0,0..0,6
       1] Name 'b' Load - 0,5..0,6
 '''),
 
-(656, 'body[0].value', None, False, 'op', {}, ('exec',
+(643, 'body[0].value', None, False, 'op', {}, ('exec',
 r'''a and b'''), (None,
 r'''+'''),
 r'''**ParseError("expecting boolop, got '+'")**'''),
 
-(657, 'body[0].value', None, False, 'op', {'raw': False}, ('exec',
+(644, 'body[0].value', None, False, 'op', {'raw': False}, ('exec',
 r'''a and b and c'''), (None,
 r'''or'''),
 r'''a or b or c''', r'''
@@ -10496,7 +10340,7 @@ Module - ROOT 0,0..0,11
       2] Name 'c' Load - 0,10..0,11
 '''),
 
-(658, 'body[0].value', None, False, 'op', {'raw': False}, ('exec', r'''
+(645, 'body[0].value', None, False, 'op', {'raw': False}, ('exec', r'''
 (a) or ( b ) or (
 c
 )
@@ -10517,7 +10361,7 @@ Module - ROOT 0,0..2,1
       2] Name 'c' Load - 1,0..1,1
 '''),
 
-(659, 'body[0].value', None, False, 'op', {'raw': False}, ('exec', r'''
+(646, 'body[0].value', None, False, 'op', {'raw': False}, ('exec', r'''
 a\
 and\
 b \
@@ -10542,7 +10386,7 @@ Module - ROOT 0,0..4,2
       2] Name 'c' Load - 4,1..4,2
 '''),
 
-(660, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(647, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(): pass'''), ('arg',
 r'''**DEL**'''),
 r'''def f(): pass''', r'''
@@ -10554,7 +10398,7 @@ Module - ROOT 0,0..0,13
     0] Pass - 0,9..0,13
 '''),
 
-(661, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(648, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(*b): pass'''), ('arg',
 r'''**DEL**'''),
 r'''def f(): pass''', r'''
@@ -10566,7 +10410,7 @@ Module - ROOT 0,0..0,13
     0] Pass - 0,9..0,13
 '''),
 
-(662, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(649, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(*b): pass'''), ('arg',
 r'''new'''),
 r'''def f(*new): pass''', r'''
@@ -10581,7 +10425,7 @@ Module - ROOT 0,0..0,17
     0] Pass - 0,13..0,17
 '''),
 
-(663, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(650, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(a=(1), *b): pass'''), ('arg',
 r'''**DEL**'''),
 r'''def f(a=(1)): pass''', r'''
@@ -10599,7 +10443,7 @@ Module - ROOT 0,0..0,18
     0] Pass - 0,14..0,18
 '''),
 
-(664, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(651, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(a=(1), *b): pass'''), ('arg',
 r'''new'''),
 r'''def f(a=(1), *new): pass''', r'''
@@ -10619,7 +10463,7 @@ Module - ROOT 0,0..0,24
     0] Pass - 0,20..0,24
 '''),
 
-(665, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(652, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(a=(1), /, *b): pass'''), ('arg',
 r'''**DEL**'''),
 r'''def f(a=(1), /): pass''', r'''
@@ -10637,7 +10481,7 @@ Module - ROOT 0,0..0,21
     0] Pass - 0,17..0,21
 '''),
 
-(666, 'body[0].args', None, False, 'vararg', {}, ('exec', r'''
+(653, 'body[0].args', None, False, 'vararg', {}, ('exec', r'''
 def f(a=(1), * \
  b \
  ): pass
@@ -10660,7 +10504,7 @@ Module - ROOT 0,0..1,8
     0] Pass - 1,4..1,8
 '''),
 
-(667, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(654, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(*b, c=(1)): pass'''), ('arg',
 r'''**DEL**'''),
 r'''def f(*, c=(1)): pass''', r'''
@@ -10678,7 +10522,7 @@ Module - ROOT 0,0..0,21
     0] Pass - 0,17..0,21
 '''),
 
-(668, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(655, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(*b, c=(1)): pass'''), ('arg',
 r'''new'''),
 r'''def f(*new, c=(1)): pass''', r'''
@@ -10698,7 +10542,7 @@ Module - ROOT 0,0..0,24
     0] Pass - 0,20..0,24
 '''),
 
-(669, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(656, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(*b, ** c): pass'''), ('arg',
 r'''**DEL**'''),
 r'''def f(** c): pass''', r'''
@@ -10713,7 +10557,7 @@ Module - ROOT 0,0..0,17
     0] Pass - 0,13..0,17
 '''),
 
-(670, 'body[0].args', None, False, 'vararg', {}, ('exec', r'''
+(657, 'body[0].args', None, False, 'vararg', {}, ('exec', r'''
 def f(*\
 b\
 , c=(1)): pass
@@ -10734,7 +10578,7 @@ Module - ROOT 0,0..0,21
     0] Pass - 0,17..0,21
 '''),
 
-(671, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(658, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(a, *b, c=(1)): pass'''), ('arg',
 r'''new'''),
 r'''def f(a, *new, c=(1)): pass''', r'''
@@ -10757,7 +10601,7 @@ Module - ROOT 0,0..0,27
     0] Pass - 0,23..0,27
 '''),
 
-(672, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(659, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(a, *b, ** c): pass'''), (None,
 r'''**DEL**'''),
 r'''def f(a, ** c): pass''', r'''
@@ -10775,7 +10619,7 @@ Module - ROOT 0,0..0,20
     0] Pass - 0,16..0,20
 '''),
 
-(673, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(660, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(a, /, *b, c=(1)): pass'''), ('arg',
 r'''new'''),
 r'''def f(a, /, *new, c=(1)): pass''', r'''
@@ -10798,7 +10642,7 @@ Module - ROOT 0,0..0,30
     0] Pass - 0,26..0,30
 '''),
 
-(674, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(661, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(a, /, *b, c=(1)): pass'''), ('arg',
 r'''**DEL**'''),
 r'''def f(a, /, *, c=(1)): pass''', r'''
@@ -10819,7 +10663,7 @@ Module - ROOT 0,0..0,27
     0] Pass - 0,23..0,27
 '''),
 
-(675, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(662, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(a, /, *b, ** c): pass'''), ('arg',
 r'''**DEL**'''),
 r'''def f(a, /, ** c): pass''', r'''
@@ -10837,7 +10681,7 @@ Module - ROOT 0,0..0,23
     0] Pass - 0,19..0,23
 '''),
 
-(676, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(663, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda: None'''), ('arg',
 r'''**DEL**'''),
 r'''lambda: None''', r'''
@@ -10848,7 +10692,7 @@ Module - ROOT 0,0..0,12
       .body Constant None - 0,8..0,12
 '''),
 
-(677, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(664, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda *b: None'''), ('arg',
 r'''**DEL**'''),
 r'''lambda: None''', r'''
@@ -10859,7 +10703,7 @@ Module - ROOT 0,0..0,12
       .body Constant None - 0,8..0,12
 '''),
 
-(678, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(665, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda *b: None'''), ('arg',
 r'''new'''),
 r'''lambda *new: None''', r'''
@@ -10873,7 +10717,7 @@ Module - ROOT 0,0..0,17
       .body Constant None - 0,13..0,17
 '''),
 
-(679, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(666, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda a=(1), *b: None'''), ('arg',
 r'''**DEL**'''),
 r'''lambda a=(1): None''', r'''
@@ -10890,7 +10734,7 @@ Module - ROOT 0,0..0,18
       .body Constant None - 0,14..0,18
 '''),
 
-(680, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(667, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda a=(1), *b: None'''), ('arg',
 r'''new'''),
 r'''lambda a=(1), *new: None''', r'''
@@ -10909,7 +10753,7 @@ Module - ROOT 0,0..0,24
       .body Constant None - 0,20..0,24
 '''),
 
-(681, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(668, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda a=(1), /, *b: None'''), ('arg',
 r'''**DEL**'''),
 r'''lambda a=(1), /: None''', r'''
@@ -10926,7 +10770,7 @@ Module - ROOT 0,0..0,21
       .body Constant None - 0,17..0,21
 '''),
 
-(682, 'body[0].value.args', None, False, 'vararg', {}, ('exec', r'''
+(669, 'body[0].value.args', None, False, 'vararg', {}, ('exec', r'''
 lambda a=(1), * \
  b \
  : None
@@ -10948,7 +10792,7 @@ Module - ROOT 0,0..1,7
       .body Constant None - 1,3..1,7
 '''),
 
-(683, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(670, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda *b, c=(1): None'''), ('arg',
 r'''**DEL**'''),
 r'''lambda *, c=(1): None''', r'''
@@ -10965,7 +10809,7 @@ Module - ROOT 0,0..0,21
       .body Constant None - 0,17..0,21
 '''),
 
-(684, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(671, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda *b, ** c: None'''), ('arg',
 r'''**DEL**'''),
 r'''lambda ** c: None''', r'''
@@ -10979,7 +10823,7 @@ Module - ROOT 0,0..0,17
       .body Constant None - 0,13..0,17
 '''),
 
-(685, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(672, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda *b, c=(1): None'''), ('arg',
 r'''new'''),
 r'''lambda *new, c=(1): None''', r'''
@@ -10998,7 +10842,7 @@ Module - ROOT 0,0..0,24
       .body Constant None - 0,20..0,24
 '''),
 
-(686, 'body[0].value.args', None, False, 'vararg', {}, ('exec', r'''
+(673, 'body[0].value.args', None, False, 'vararg', {}, ('exec', r'''
 lambda *\
 b\
 , c=(1): None
@@ -11018,7 +10862,7 @@ Module - ROOT 0,0..0,21
       .body Constant None - 0,17..0,21
 '''),
 
-(687, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(674, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda a, *b, ** c: None'''), ('arg',
 r'''**DEL**'''),
 r'''lambda a, ** c: None''', r'''
@@ -11035,7 +10879,7 @@ Module - ROOT 0,0..0,20
       .body Constant None - 0,16..0,20
 '''),
 
-(688, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(675, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda a, *b, c=(1): None'''), ('arg',
 r'''new'''),
 r'''lambda a, *new, c=(1): None''', r'''
@@ -11057,7 +10901,7 @@ Module - ROOT 0,0..0,27
       .body Constant None - 0,23..0,27
 '''),
 
-(689, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(676, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda a, /, *b, ** c: None'''), ('arg',
 r'''**DEL**'''),
 r'''lambda a, /, ** c: None''', r'''
@@ -11074,7 +10918,7 @@ Module - ROOT 0,0..0,23
       .body Constant None - 0,19..0,23
 '''),
 
-(690, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(677, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda a, /, *b, c=(2), ** d: None'''), ('arg',
 r'''**DEL**'''),
 r'''lambda a, /, *, c=(2), ** d: None''', r'''
@@ -11096,7 +10940,7 @@ Module - ROOT 0,0..0,33
       .body Constant None - 0,29..0,33
 '''),
 
-(691, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(678, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda a, /, *b, c=(1): None'''), ('arg',
 r'''new'''),
 r'''lambda a, /, *new, c=(1): None''', r'''
@@ -11118,7 +10962,7 @@ Module - ROOT 0,0..0,30
       .body Constant None - 0,26..0,30
 '''),
 
-(692, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(679, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda a, /, *b, c=(1): None'''), ('arg',
 r'''**DEL**'''),
 r'''lambda a, /, *, c=(1): None''', r'''
@@ -11138,7 +10982,7 @@ Module - ROOT 0,0..0,27
       .body Constant None - 0,23..0,27
 '''),
 
-(693, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(680, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(*, c=(1)): pass'''), ('arg',
 r'''new'''),
 r'''def f(*new, c=(1)): pass''', r'''
@@ -11158,7 +11002,7 @@ Module - ROOT 0,0..0,24
     0] Pass - 0,20..0,24
 '''),
 
-(694, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(681, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(**d): pass'''), ('arg',
 r'''new'''),
 r'''def f(*new, **d): pass''', r'''
@@ -11175,7 +11019,7 @@ Module - ROOT 0,0..0,22
     0] Pass - 0,18..0,22
 '''),
 
-(695, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(682, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(b=(2), **d): pass'''), ('arg',
 r'''new'''),
 r'''def f(b=(2), *new, **d): pass''', r'''
@@ -11197,7 +11041,7 @@ Module - ROOT 0,0..0,29
     0] Pass - 0,25..0,29
 '''),
 
-(696, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(683, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(b=(2)): pass'''), ('arg',
 r'''new'''),
 r'''def f(b=(2), *new): pass''', r'''
@@ -11217,7 +11061,7 @@ Module - ROOT 0,0..0,24
     0] Pass - 0,20..0,24
 '''),
 
-(697, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(684, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(b=(2),): pass'''), ('arg',
 r'''new'''),
 r'''def f(b=(2), *new,): pass''', r'''
@@ -11237,7 +11081,7 @@ Module - ROOT 0,0..0,25
     0] Pass - 0,21..0,25
 '''),
 
-(698, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(685, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(b): pass'''), ('arg',
 r'''new'''),
 r'''def f(b, *new): pass''', r'''
@@ -11255,7 +11099,7 @@ Module - ROOT 0,0..0,20
     0] Pass - 0,16..0,20
 '''),
 
-(699, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(686, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(a=(3), /): pass'''), ('arg',
 r'''new'''),
 r'''def f(a=(3), /, *new): pass''', r'''
@@ -11275,7 +11119,7 @@ Module - ROOT 0,0..0,27
     0] Pass - 0,23..0,27
 '''),
 
-(700, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(687, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(a, /): pass'''), ('arg',
 r'''new'''),
 r'''def f(a, /, *new): pass''', r'''
@@ -11293,7 +11137,7 @@ Module - ROOT 0,0..0,23
     0] Pass - 0,19..0,23
 '''),
 
-(701, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(688, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(): pass'''), ('arg',
 r'''new'''),
 r'''def f(*new): pass''', r'''
@@ -11308,7 +11152,7 @@ Module - ROOT 0,0..0,17
     0] Pass - 0,13..0,17
 '''),
 
-(702, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(689, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(b=(2), *, c=(1)): pass'''), ('arg',
 r'''new'''),
 r'''def f(b=(2), *new, c=(1)): pass''', r'''
@@ -11333,7 +11177,7 @@ Module - ROOT 0,0..0,31
     0] Pass - 0,27..0,31
 '''),
 
-(703, 'body[0].args', None, False, 'vararg', {}, ('exec',
+(690, 'body[0].args', None, False, 'vararg', {}, ('exec',
 r'''def f(a=(1), /, *, c=(1)): pass'''), ('arg',
 r'''new'''),
 r'''def f(a=(1), /, *new, c=(1)): pass''', r'''
@@ -11358,7 +11202,7 @@ Module - ROOT 0,0..0,34
     0] Pass - 0,30..0,34
 '''),
 
-(704, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(691, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda *, c=(1): None'''), ('arg',
 r'''new'''),
 r'''lambda *new, c=(1): None''', r'''
@@ -11377,7 +11221,7 @@ Module - ROOT 0,0..0,24
       .body Constant None - 0,20..0,24
 '''),
 
-(705, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(692, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda **d: None'''), ('arg',
 r'''new'''),
 r'''lambda *new, **d: None''', r'''
@@ -11393,7 +11237,7 @@ Module - ROOT 0,0..0,22
       .body Constant None - 0,18..0,22
 '''),
 
-(706, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(693, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda b=(2), **d: None'''), ('arg',
 r'''new'''),
 r'''lambda b=(2), *new, **d: None''', r'''
@@ -11414,7 +11258,7 @@ Module - ROOT 0,0..0,29
       .body Constant None - 0,25..0,29
 '''),
 
-(707, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(694, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda b=(2): None'''), ('arg',
 r'''new'''),
 r'''lambda b=(2), *new: None''', r'''
@@ -11433,7 +11277,7 @@ Module - ROOT 0,0..0,24
       .body Constant None - 0,20..0,24
 '''),
 
-(708, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(695, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda b=(2),: None'''), ('arg',
 r'''new'''),
 r'''lambda b=(2), *new,: None''', r'''
@@ -11452,7 +11296,7 @@ Module - ROOT 0,0..0,25
       .body Constant None - 0,21..0,25
 '''),
 
-(709, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(696, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda b: None'''), ('arg',
 r'''new'''),
 r'''lambda b, *new: None''', r'''
@@ -11469,7 +11313,7 @@ Module - ROOT 0,0..0,20
       .body Constant None - 0,16..0,20
 '''),
 
-(710, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(697, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda a=(2), /: None'''), ('arg',
 r'''new'''),
 r'''lambda a=(2), /, *new: None''', r'''
@@ -11488,7 +11332,7 @@ Module - ROOT 0,0..0,27
       .body Constant None - 0,23..0,27
 '''),
 
-(711, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(698, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda a, /: None'''), ('arg',
 r'''new'''),
 r'''lambda a, /, *new: None''', r'''
@@ -11505,7 +11349,7 @@ Module - ROOT 0,0..0,23
       .body Constant None - 0,19..0,23
 '''),
 
-(712, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(699, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda a, /: None'''), ('arg',
 r'''new'''),
 r'''lambda a, /, *new: None''', r'''
@@ -11522,7 +11366,7 @@ Module - ROOT 0,0..0,23
       .body Constant None - 0,19..0,23
 '''),
 
-(713, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(700, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda b=(2), *, c=(1): None'''), ('arg',
 r'''new'''),
 r'''lambda b=(2), *new, c=(1): None''', r'''
@@ -11546,7 +11390,7 @@ Module - ROOT 0,0..0,31
       .body Constant None - 0,27..0,31
 '''),
 
-(714, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
+(701, 'body[0].value.args', None, False, 'vararg', {}, ('exec',
 r'''lambda a=(1), /, *, c=(1): None'''), ('arg',
 r'''new'''),
 r'''lambda a=(1), /, *new, c=(1): None''', r'''
@@ -11570,7 +11414,7 @@ Module - ROOT 0,0..0,34
       .body Constant None - 0,30..0,34
 '''),
 
-(715, 'body[0].args', None, False, 'kwarg', {}, ('exec',
+(702, 'body[0].args', None, False, 'kwarg', {}, ('exec',
 r'''def f(**e): pass'''), ('arg',
 r'''**DEL**'''),
 r'''def f(): pass''', r'''
@@ -11582,7 +11426,7 @@ Module - ROOT 0,0..0,13
     0] Pass - 0,9..0,13
 '''),
 
-(716, 'body[0].args', None, False, 'kwarg', {}, ('exec',
+(703, 'body[0].args', None, False, 'kwarg', {}, ('exec',
 r'''def f(**e): pass'''), ('arg',
 r'''new'''),
 r'''def f(**new): pass''', r'''
@@ -11597,7 +11441,7 @@ Module - ROOT 0,0..0,18
     0] Pass - 0,14..0,18
 '''),
 
-(717, 'body[0].args', None, False, 'kwarg', {}, ('exec',
+(704, 'body[0].args', None, False, 'kwarg', {}, ('exec',
 r'''def f(d=(1), **e): pass'''), (None,
 r'''**DEL**'''),
 r'''def f(d=(1)): pass''', r'''
@@ -11615,7 +11459,7 @@ Module - ROOT 0,0..0,18
     0] Pass - 0,14..0,18
 '''),
 
-(718, 'body[0].args', None, False, 'kwarg', {}, ('exec',
+(705, 'body[0].args', None, False, 'kwarg', {}, ('exec',
 r'''def f(d=(1), **e): pass'''), ('arg',
 r'''new'''),
 r'''def f(d=(1), **new): pass''', r'''
@@ -11635,7 +11479,7 @@ Module - ROOT 0,0..0,25
     0] Pass - 0,21..0,25
 '''),
 
-(719, 'body[0].args', None, False, 'kwarg', {}, ('exec',
+(706, 'body[0].args', None, False, 'kwarg', {}, ('exec',
 r'''def f(*c, **e): pass'''), ('arg',
 r'''**DEL**'''),
 r'''def f(*c): pass''', r'''
@@ -11650,7 +11494,7 @@ Module - ROOT 0,0..0,15
     0] Pass - 0,11..0,15
 '''),
 
-(720, 'body[0].args', None, False, 'kwarg', {}, ('exec',
+(707, 'body[0].args', None, False, 'kwarg', {}, ('exec',
 r'''def f(*c, **e): pass'''), ('arg',
 r'''new'''),
 r'''def f(*c, **new): pass''', r'''
@@ -11667,7 +11511,7 @@ Module - ROOT 0,0..0,22
     0] Pass - 0,18..0,22
 '''),
 
-(721, 'body[0].args', None, False, 'kwarg', {}, ('exec',
+(708, 'body[0].args', None, False, 'kwarg', {}, ('exec',
 r'''def f(a, /, **e): pass'''), ('arg',
 r'''**DEL**'''),
 r'''def f(a, /): pass''', r'''
@@ -11683,7 +11527,7 @@ Module - ROOT 0,0..0,17
     0] Pass - 0,13..0,17
 '''),
 
-(722, 'body[0].args', None, False, 'kwarg', {}, ('exec',
+(709, 'body[0].args', None, False, 'kwarg', {}, ('exec',
 r'''def f(a=(2), /, **e): pass'''), ('arg',
 r'''**DEL**'''),
 r'''def f(a=(2), /): pass''', r'''
@@ -11701,7 +11545,7 @@ Module - ROOT 0,0..0,21
     0] Pass - 0,17..0,21
 '''),
 
-(723, 'body[0].args', None, False, 'kwarg', {}, ('exec',
+(710, 'body[0].args', None, False, 'kwarg', {}, ('exec',
 r'''def f(a: int, /, **e): pass'''), ('arg',
 r'''**DEL**'''),
 r'''def f(a: int, /): pass''', r'''
@@ -11718,7 +11562,7 @@ Module - ROOT 0,0..0,22
     0] Pass - 0,18..0,22
 '''),
 
-(724, 'body[0].args', None, False, 'kwarg', {}, ('exec',
+(711, 'body[0].args', None, False, 'kwarg', {}, ('exec',
 r'''def f(a, /, **e): pass'''), ('arg',
 r'''new'''),
 r'''def f(a, /, **new): pass''', r'''
@@ -11736,7 +11580,7 @@ Module - ROOT 0,0..0,24
     0] Pass - 0,20..0,24
 '''),
 
-(725, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
+(712, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
 r'''lambda **e: None'''), ('arg',
 r'''**DEL**'''),
 r'''lambda: None''', r'''
@@ -11747,7 +11591,7 @@ Module - ROOT 0,0..0,12
       .body Constant None - 0,8..0,12
 '''),
 
-(726, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
+(713, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
 r'''lambda **e: None'''), ('arg',
 r'''new'''),
 r'''lambda **new: None''', r'''
@@ -11761,7 +11605,7 @@ Module - ROOT 0,0..0,18
       .body Constant None - 0,14..0,18
 '''),
 
-(727, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
+(714, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
 r'''lambda d=(1), **e: None'''), ('arg',
 r'''**DEL**'''),
 r'''lambda d=(1): None''', r'''
@@ -11778,7 +11622,7 @@ Module - ROOT 0,0..0,18
       .body Constant None - 0,14..0,18
 '''),
 
-(728, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
+(715, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
 r'''lambda d=(1), **e: None'''), ('arg',
 r'''new'''),
 r'''lambda d=(1), **new: None''', r'''
@@ -11797,7 +11641,7 @@ Module - ROOT 0,0..0,25
       .body Constant None - 0,21..0,25
 '''),
 
-(729, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
+(716, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
 r'''lambda *c, **e: None'''), ('arg',
 r'''**DEL**'''),
 r'''lambda *c: None''', r'''
@@ -11811,7 +11655,7 @@ Module - ROOT 0,0..0,15
       .body Constant None - 0,11..0,15
 '''),
 
-(730, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
+(717, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
 r'''lambda *c, **e: None'''), ('arg',
 r'''new'''),
 r'''lambda *c, **new: None''', r'''
@@ -11827,7 +11671,7 @@ Module - ROOT 0,0..0,22
       .body Constant None - 0,18..0,22
 '''),
 
-(731, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
+(718, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
 r'''lambda a, /, **e: None'''), ('arg',
 r'''**DEL**'''),
 r'''lambda a, /: None''', r'''
@@ -11842,7 +11686,7 @@ Module - ROOT 0,0..0,17
       .body Constant None - 0,13..0,17
 '''),
 
-(732, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
+(719, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
 r'''lambda a=(2), /, **e: None'''), ('arg',
 r'''**DEL**'''),
 r'''lambda a=(2), /: None''', r'''
@@ -11859,7 +11703,7 @@ Module - ROOT 0,0..0,21
       .body Constant None - 0,17..0,21
 '''),
 
-(733, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
+(720, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
 r'''lambda a, /, **e: None'''), ('arg',
 r'''new'''),
 r'''lambda a, /, **new: None''', r'''
@@ -11876,7 +11720,7 @@ Module - ROOT 0,0..0,24
       .body Constant None - 0,20..0,24
 '''),
 
-(734, 'body[0].args', None, False, 'kwarg', {}, ('exec',
+(721, 'body[0].args', None, False, 'kwarg', {}, ('exec',
 r'''def f(): pass'''), ('arg',
 r'''new'''),
 r'''def f(**new): pass''', r'''
@@ -11891,7 +11735,7 @@ Module - ROOT 0,0..0,18
     0] Pass - 0,14..0,18
 '''),
 
-(735, 'body[0].args', None, False, 'kwarg', {}, ('exec',
+(722, 'body[0].args', None, False, 'kwarg', {}, ('exec',
 r'''def f(c=(1)): pass'''), ('arg',
 r'''new'''),
 r'''def f(c=(1), **new): pass''', r'''
@@ -11911,7 +11755,7 @@ Module - ROOT 0,0..0,25
     0] Pass - 0,21..0,25
 '''),
 
-(736, 'body[0].args', None, False, 'kwarg', {}, ('exec',
+(723, 'body[0].args', None, False, 'kwarg', {}, ('exec',
 r'''def f(c=(1),): pass'''), ('arg',
 r'''new'''),
 r'''def f(c=(1), **new): pass''', r'''
@@ -11931,7 +11775,7 @@ Module - ROOT 0,0..0,25
     0] Pass - 0,21..0,25
 '''),
 
-(737, 'body[0].args', None, False, 'kwarg', {}, ('exec',
+(724, 'body[0].args', None, False, 'kwarg', {}, ('exec',
 r'''def f(a=(1), /): pass'''), ('arg',
 r'''new'''),
 r'''def f(a=(1), /, **new): pass''', r'''
@@ -11951,7 +11795,7 @@ Module - ROOT 0,0..0,28
     0] Pass - 0,24..0,28
 '''),
 
-(738, 'body[0].args', None, False, 'kwarg', {}, ('exec',
+(725, 'body[0].args', None, False, 'kwarg', {}, ('exec',
 r'''def f(a: int, /): pass'''), ('arg',
 r'''new'''),
 r'''def f(a: int, /, **new): pass''', r'''
@@ -11970,7 +11814,7 @@ Module - ROOT 0,0..0,29
     0] Pass - 0,25..0,29
 '''),
 
-(739, 'body[0].args', None, False, 'kwarg', {}, ('exec',
+(726, 'body[0].args', None, False, 'kwarg', {}, ('exec',
 r'''def f(a, /): pass'''), (None,
 r'''new'''),
 r'''def f(a, /, **new): pass''',
@@ -11989,7 +11833,7 @@ Module - ROOT 0,0..0,24
     0] Pass - 0,20..0,24
 '''),
 
-(740, 'body[0].args', None, False, 'kwarg', {}, ('exec',
+(727, 'body[0].args', None, False, 'kwarg', {}, ('exec',
 r'''def f(a, /, ): pass'''), ('arg',
 r'''new'''),
 r'''def f(a, /, **new ): pass''', r'''
@@ -12007,7 +11851,7 @@ Module - ROOT 0,0..0,25
     0] Pass - 0,21..0,25
 '''),
 
-(741, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
+(728, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
 r'''lambda: None'''), ('arg',
 r'''new'''),
 r'''lambda **new: None''', r'''
@@ -12021,7 +11865,7 @@ Module - ROOT 0,0..0,18
       .body Constant None - 0,14..0,18
 '''),
 
-(742, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
+(729, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
 r'''lambda c=(1): None'''), ('arg',
 r'''new'''),
 r'''lambda c=(1), **new: None''', r'''
@@ -12040,7 +11884,7 @@ Module - ROOT 0,0..0,25
       .body Constant None - 0,21..0,25
 '''),
 
-(743, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
+(730, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
 r'''lambda c=(1),: None'''), ('arg',
 r'''new'''),
 r'''lambda c=(1), **new: None''', r'''
@@ -12059,7 +11903,7 @@ Module - ROOT 0,0..0,25
       .body Constant None - 0,21..0,25
 '''),
 
-(744, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
+(731, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
 r'''lambda a=(1), /: None'''), ('arg',
 r'''new'''),
 r'''lambda a=(1), /, **new: None''', r'''
@@ -12078,7 +11922,7 @@ Module - ROOT 0,0..0,28
       .body Constant None - 0,24..0,28
 '''),
 
-(745, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
+(732, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
 r'''lambda a, /: None'''), ('arg',
 r'''new'''),
 r'''lambda a, /, **new: None''', r'''
@@ -12095,7 +11939,7 @@ Module - ROOT 0,0..0,24
       .body Constant None - 0,20..0,24
 '''),
 
-(746, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
+(733, 'body[0].value.args', None, False, 'kwarg', {}, ('exec',
 r'''lambda a, /, : None'''), ('arg',
 r'''new'''),
 r'''lambda a, /, **new : None''', r'''
@@ -12112,7 +11956,7 @@ Module - ROOT 0,0..0,25
       .body Constant None - 0,21..0,25
 '''),
 
-(747, 'body[0].value.values[0].value', None, False, 'operand', {'_ver': 12}, ('exec',
+(734, 'body[0].value.values[0].value', None, False, 'operand', {'_ver': 12}, ('exec',
 "\nf'{-0.:.1f}'\n"), (None,
 r'''0.0'''),
 "\nf'{-0.0:.1f}'\n", r'''
@@ -12131,22 +11975,22 @@ Module - ROOT 0,0..0,13
           0] Constant '.1f' - 0,8..0,11
 '''),
 
-(748, 'body[0].targets[0]', 0, False, 'elts', {}, ('exec',
+(735, 'body[0].targets[0]', 0, False, 'elts', {}, ('exec',
 r'''(a, b) = c'''), (None,
 r'''i in j'''),
 r'''**NodeError('invalid expression for Tuple Store target')**'''),
 
-(749, 'body[0].targets[0]', 0, False, 'elts', {}, ('exec',
+(736, 'body[0].targets[0]', 0, False, 'elts', {}, ('exec',
 r'''[a, b] = c'''), (None,
 r'''i in j'''),
 r'''**NodeError('invalid expression for List Store target')**'''),
 
-(750, 'body[0].targets[0]', 0, False, 'elts', {}, ('exec',
+(737, 'body[0].targets[0]', 0, False, 'elts', {}, ('exec',
 r'''del (a, b)'''), (None,
 r'''i in j'''),
 r'''**NodeError('invalid expression for Tuple Del target')**'''),
 
-(751, 'body[0].targets[0]', 0, False, 'elts', {}, ('exec',
+(738, 'body[0].targets[0]', 0, False, 'elts', {}, ('exec',
 r'''del [a, b]'''), (None,
 r'''i in j'''),
 r'''**NodeError('invalid expression for List Del target')**'''),
@@ -12860,6 +12704,168 @@ Module - ROOT 0,0..0,30
 r'''from z import (a, c as d)'''), ('alias',
 r'''f as g'''),
 r'''**IndexError('index out of range')**'''),
+],
+
+'Global_names': [  # ................................................................................
+
+(0, 'body[0]', 0, False, 'names', {}, ('exec',
+r'''global a, b'''), (None,
+r'''**DEL**'''),
+r'''global b''', r'''
+Module - ROOT 0,0..0,8
+  .body[1]
+  0] Global - 0,0..0,8
+    .names[1]
+    0] 'b'
+'''),
+
+(1, 'body[0]', 0, False, 'names', {}, ('exec',
+r'''global a, b'''), (None,
+r'''new'''),
+r'''global new, b''', r'''
+Module - ROOT 0,0..0,13
+  .body[1]
+  0] Global - 0,0..0,13
+    .names[2]
+    0] 'new'
+    1] 'b'
+'''),
+
+(2, 'body[0]', 1, False, 'names', {}, ('exec',
+r'''global a, b'''), (None,
+r'''new'''),
+r'''global a, new''', r'''
+Module - ROOT 0,0..0,13
+  .body[1]
+  0] Global - 0,0..0,13
+    .names[2]
+    0] 'a'
+    1] 'new'
+'''),
+
+(3, 'body[0]', -1, False, 'names', {}, ('exec',
+r'''global a, b'''), (None,
+r'''new'''),
+r'''global a, new''', r'''
+Module - ROOT 0,0..0,13
+  .body[1]
+  0] Global - 0,0..0,13
+    .names[2]
+    0] 'a'
+    1] 'new'
+'''),
+
+(4, 'body[0]', -2, False, 'names', {}, ('exec', r'''
+global \
+a \
+,\
+b
+'''), (None,
+r'''new'''), r'''
+global \
+new \
+,\
+b
+''', r'''
+Module - ROOT 0,0..3,1
+  .body[1]
+  0] Global - 0,0..3,1
+    .names[2]
+    0] 'new'
+    1] 'b'
+'''),
+
+(5, 'body[0]', -4, False, 'names', {}, ('exec',
+r'''global a, b'''), (None,
+r'''new'''),
+r'''**IndexError('index out of range')**'''),
+],
+
+'Nonlocal_names': [  # ................................................................................
+
+(0, 'body[0]', 0, False, 'names', {}, ('exec',
+r'''nonlocal a, b'''), (None,
+r'''**DEL**'''),
+r'''nonlocal b''', r'''
+Module - ROOT 0,0..0,10
+  .body[1]
+  0] Nonlocal - 0,0..0,10
+    .names[1]
+    0] 'b'
+'''),
+
+(1, 'body[0]', 0, False, 'names', {}, ('exec',
+r'''nonlocal a, b'''), (None,
+r'''new'''),
+r'''nonlocal new, b''', r'''
+Module - ROOT 0,0..0,15
+  .body[1]
+  0] Nonlocal - 0,0..0,15
+    .names[2]
+    0] 'new'
+    1] 'b'
+'''),
+
+(2, 'body[0]', 1, False, 'names', {}, ('exec',
+r'''nonlocal a, b'''), (None,
+r'''new'''),
+r'''nonlocal a, new''', r'''
+Module - ROOT 0,0..0,15
+  .body[1]
+  0] Nonlocal - 0,0..0,15
+    .names[2]
+    0] 'a'
+    1] 'new'
+'''),
+
+(3, 'body[0]', -1, False, 'names', {}, ('exec',
+r'''nonlocal a, b'''), (None,
+r'''new'''),
+r'''nonlocal a, new''', r'''
+Module - ROOT 0,0..0,15
+  .body[1]
+  0] Nonlocal - 0,0..0,15
+    .names[2]
+    0] 'a'
+    1] 'new'
+'''),
+
+(4, 'body[0]', -2, False, 'names', {}, ('exec', r'''
+nonlocal \
+a \
+,\
+b
+'''), (None,
+r'''new'''), r'''
+nonlocal \
+new \
+,\
+b
+''', r'''
+Module - ROOT 0,0..3,1
+  .body[1]
+  0] Nonlocal - 0,0..3,1
+    .names[2]
+    0] 'new'
+    1] 'b'
+'''),
+
+(5, 'body[0]', -4, False, 'names', {}, ('exec',
+r'''nonlocal a, b'''), (None,
+r'''new'''),
+r'''**IndexError('index out of range')**'''),
+
+(6, 'body[0]', None, False, 'args', {}, ('exec',
+r'''def f(a=1): pass'''), (None,
+r'''**DEL**'''),
+r'''def f(): pass''', r'''
+Module - ROOT 0,0..0,13
+  .body[1]
+  0] FunctionDef - 0,0..0,13
+    .name 'f'
+    .body[1]
+    0] Pass - 0,9..0,13
+'''),
 ],
 
 'type_params': [  # ................................................................................

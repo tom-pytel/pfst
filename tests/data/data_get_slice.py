@@ -5771,396 +5771,6 @@ Tuple - ROOT 0,0..0,4
   1] Name 'c' Load - 0,3..0,4
   .ctx Load
 '''),
-
-(76, 'body[0]', 1, 2, None, {}, ('exec',
-r'''global a, b, c  # comment'''),
-r'''global a, c  # comment''', r'''
-Module - ROOT 0,0..0,22
-  .body[1]
-  0] Global - 0,0..0,11
-    .names[2]
-    0] 'a'
-    1] 'c'
-''',
-r'''b,''', r'''
-Tuple - ROOT 0,0..0,2
-  .elts[1]
-  0] Name 'b' Load - 0,0..0,1
-  .ctx Load
-'''),
-
-(77, 'body[0]', 1, 3, None, {}, ('exec',
-r'''global a, b, c  # comment'''),
-r'''global a  # comment''', r'''
-Module - ROOT 0,0..0,19
-  .body[1]
-  0] Global - 0,0..0,8
-    .names[1]
-    0] 'a'
-''',
-r'''b, c''', r'''
-Tuple - ROOT 0,0..0,4
-  .elts[2]
-  0] Name 'b' Load - 0,0..0,1
-  1] Name 'c' Load - 0,3..0,4
-  .ctx Load
-'''),
-
-(78, 'body[0]', 0, 2, None, {}, ('exec',
-r'''global a, b, c  # comment'''),
-r'''global c  # comment''', r'''
-Module - ROOT 0,0..0,19
-  .body[1]
-  0] Global - 0,0..0,8
-    .names[1]
-    0] 'c'
-''',
-r'''a, b''', r'''
-Tuple - ROOT 0,0..0,4
-  .elts[2]
-  0] Name 'a' Load - 0,0..0,1
-  1] Name 'b' Load - 0,3..0,4
-  .ctx Load
-'''),
-
-(79, 'body[0]', 1, 2, None, {}, ('exec', r'''
-global a \
-, \
-b \
-, \
-c  # comment
-'''), r'''
-global a \
-, \
-c  # comment
-''', r'''
-Module - ROOT 0,0..2,12
-  .body[1]
-  0] Global - 0,0..2,1
-    .names[2]
-    0] 'a'
-    1] 'c'
-''', r'''
-(
-b \
-, \
-)
-''', r'''
-Tuple - ROOT 0,0..3,1
-  .elts[1]
-  0] Name 'b' Load - 1,0..1,1
-  .ctx Load
-'''),
-
-(80, 'body[0]', 0, 2, None, {}, ('exec', r'''
-global a \
-, \
-b \
-, \
-c  # comment
-'''), r'''
-global \
-c  # comment
-''', r'''
-Module - ROOT 0,0..1,12
-  .body[1]
-  0] Global - 0,0..1,1
-    .names[1]
-    0] 'c'
-''', r'''
-a \
-, \
-b \
-,
-''', r'''
-Tuple - ROOT 0,0..3,1
-  .elts[2]
-  0] Name 'a' Load - 0,0..0,1
-  1] Name 'b' Load - 2,0..2,1
-  .ctx Load
-'''),
-
-(81, 'body[0]', 1, 3, None, {}, ('exec', r'''
-global a \
-, \
-b \
-, \
-c  # comment
-'''),
-r'''global a  # comment''', r'''
-Module - ROOT 0,0..0,19
-  .body[1]
-  0] Global - 0,0..0,8
-    .names[1]
-    0] 'a'
-''', r'''
-(
-b \
-, \
-c)
-''', r'''
-Tuple - ROOT 0,0..3,2
-  .elts[2]
-  0] Name 'b' Load - 1,0..1,1
-  1] Name 'c' Load - 3,0..3,1
-  .ctx Load
-'''),
-
-(82, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
-if 1:
-  global a \
-  , \
-  b  # comment
-  pass
-'''), r'''
-if 1:
-  global  \
-  b  # comment
-  pass
-''', r'''
-Module - ROOT 0,0..3,6
-  .body[1]
-  0] If - 0,0..3,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Global - 1,2..2,3
-      .names[1]
-      0] 'b'
-    1] Pass - 3,2..3,6
-''', r'''
-a \
-,
-''', r'''
-Tuple - ROOT 0,0..1,1
-  .elts[1]
-  0] Name 'a' Load - 0,0..0,1
-  .ctx Load
-'''),
-
-(83, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
-if 1:
-  global a \
-  , \
-  b  # comment
-  pass
-'''), r'''
-if 1:
-  global a  # comment
-  pass
-''', r'''
-Module - ROOT 0,0..2,6
-  .body[1]
-  0] If - 0,0..2,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Global - 1,2..1,10
-      .names[1]
-      0] 'a'
-    1] Pass - 2,2..2,6
-''', r'''
-(
-b,)
-''', r'''
-Tuple - ROOT 0,0..1,3
-  .elts[1]
-  0] Name 'b' Load - 1,0..1,1
-  .ctx Load
-'''),
-
-(84, 'body[0]', 1, 2, None, {}, ('exec',
-r'''nonlocal a, b, c  # comment'''),
-r'''nonlocal a, c  # comment''', r'''
-Module - ROOT 0,0..0,24
-  .body[1]
-  0] Nonlocal - 0,0..0,13
-    .names[2]
-    0] 'a'
-    1] 'c'
-''',
-r'''b,''', r'''
-Tuple - ROOT 0,0..0,2
-  .elts[1]
-  0] Name 'b' Load - 0,0..0,1
-  .ctx Load
-'''),
-
-(85, 'body[0]', 1, 3, None, {}, ('exec',
-r'''nonlocal a, b, c  # comment'''),
-r'''nonlocal a  # comment''', r'''
-Module - ROOT 0,0..0,21
-  .body[1]
-  0] Nonlocal - 0,0..0,10
-    .names[1]
-    0] 'a'
-''',
-r'''b, c''', r'''
-Tuple - ROOT 0,0..0,4
-  .elts[2]
-  0] Name 'b' Load - 0,0..0,1
-  1] Name 'c' Load - 0,3..0,4
-  .ctx Load
-'''),
-
-(86, 'body[0]', 0, 2, None, {}, ('exec',
-r'''nonlocal a, b, c  # comment'''),
-r'''nonlocal c  # comment''', r'''
-Module - ROOT 0,0..0,21
-  .body[1]
-  0] Nonlocal - 0,0..0,10
-    .names[1]
-    0] 'c'
-''',
-r'''a, b''', r'''
-Tuple - ROOT 0,0..0,4
-  .elts[2]
-  0] Name 'a' Load - 0,0..0,1
-  1] Name 'b' Load - 0,3..0,4
-  .ctx Load
-'''),
-
-(87, 'body[0]', 1, 2, None, {}, ('exec', r'''
-nonlocal a \
-, \
-b \
-, \
-c  # comment
-'''), r'''
-nonlocal a \
-, \
-c  # comment
-''', r'''
-Module - ROOT 0,0..2,12
-  .body[1]
-  0] Nonlocal - 0,0..2,1
-    .names[2]
-    0] 'a'
-    1] 'c'
-''', r'''
-(
-b \
-, \
-)
-''', r'''
-Tuple - ROOT 0,0..3,1
-  .elts[1]
-  0] Name 'b' Load - 1,0..1,1
-  .ctx Load
-'''),
-
-(88, 'body[0]', 0, 2, None, {}, ('exec', r'''
-nonlocal a \
-, \
-b \
-, \
-c  # comment
-'''), r'''
-nonlocal \
-c  # comment
-''', r'''
-Module - ROOT 0,0..1,12
-  .body[1]
-  0] Nonlocal - 0,0..1,1
-    .names[1]
-    0] 'c'
-''', r'''
-a \
-, \
-b \
-,
-''', r'''
-Tuple - ROOT 0,0..3,1
-  .elts[2]
-  0] Name 'a' Load - 0,0..0,1
-  1] Name 'b' Load - 2,0..2,1
-  .ctx Load
-'''),
-
-(89, 'body[0]', 1, 3, None, {}, ('exec', r'''
-nonlocal a \
-, \
-b \
-, \
-c  # comment
-'''),
-r'''nonlocal a  # comment''', r'''
-Module - ROOT 0,0..0,21
-  .body[1]
-  0] Nonlocal - 0,0..0,10
-    .names[1]
-    0] 'a'
-''', r'''
-(
-b \
-, \
-c)
-''', r'''
-Tuple - ROOT 0,0..3,2
-  .elts[2]
-  0] Name 'b' Load - 1,0..1,1
-  1] Name 'c' Load - 3,0..3,1
-  .ctx Load
-'''),
-
-(90, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
-if 1:
-  nonlocal a \
-  , \
-  b  # comment
-  pass
-'''), r'''
-if 1:
-  nonlocal  \
-  b  # comment
-  pass
-''', r'''
-Module - ROOT 0,0..3,6
-  .body[1]
-  0] If - 0,0..3,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Nonlocal - 1,2..2,3
-      .names[1]
-      0] 'b'
-    1] Pass - 3,2..3,6
-''', r'''
-a \
-,
-''', r'''
-Tuple - ROOT 0,0..1,1
-  .elts[1]
-  0] Name 'a' Load - 0,0..0,1
-  .ctx Load
-'''),
-
-(91, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
-if 1:
-  nonlocal a \
-  , \
-  b  # comment
-  pass
-'''), r'''
-if 1:
-  nonlocal a  # comment
-  pass
-''', r'''
-Module - ROOT 0,0..2,6
-  .body[1]
-  0] If - 0,0..2,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Nonlocal - 1,2..1,12
-      .names[1]
-      0] 'a'
-    1] Pass - 2,2..2,6
-''', r'''
-(
-b,)
-''', r'''
-Tuple - ROOT 0,0..1,3
-  .elts[1]
-  0] Name 'b' Load - 1,0..1,1
-  .ctx Load
-'''),
 ],
 
 'Assign_targets': [  # ................................................................................
@@ -6835,6 +6445,468 @@ _slice_aliases - ROOT 0,0..6,1
       'y'
   2] alias - 6,0..6,1
     .name 'c'
+'''),
+],
+
+'Global_names': [  # ................................................................................
+
+(0, 'body[0]', 1, 2, None, {}, ('exec',
+r'''global a, b, c  # comment'''),
+r'''global a, c  # comment''', r'''
+Module - ROOT 0,0..0,22
+  .body[1]
+  0] Global - 0,0..0,11
+    .names[2]
+    0] 'a'
+    1] 'c'
+''',
+r'''b,''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+  0] Name 'b' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+(1, 'body[0]', 1, 3, None, {}, ('exec',
+r'''global a, b, c  # comment'''),
+r'''global a  # comment''', r'''
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Global - 0,0..0,8
+    .names[1]
+    0] 'a'
+''',
+r'''b, c''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+  0] Name 'b' Load - 0,0..0,1
+  1] Name 'c' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+(2, 'body[0]', 0, 2, None, {}, ('exec',
+r'''global a, b, c  # comment'''),
+r'''global c  # comment''', r'''
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Global - 0,0..0,8
+    .names[1]
+    0] 'c'
+''',
+r'''a, b''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+(3, 'body[0]', 1, 2, None, {}, ('exec', r'''
+global a \
+, \
+b \
+, \
+c  # comment
+'''), r'''
+global a \
+, \
+c  # comment
+''', r'''
+Module - ROOT 0,0..2,12
+  .body[1]
+  0] Global - 0,0..2,1
+    .names[2]
+    0] 'a'
+    1] 'c'
+''', r'''
+(
+b \
+, \
+)
+''', r'''
+Tuple - ROOT 0,0..3,1
+  .elts[1]
+  0] Name 'b' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+(4, 'body[0]', 0, 2, None, {}, ('exec', r'''
+global a \
+, \
+b \
+, \
+c  # comment
+'''), r'''
+global \
+c  # comment
+''', r'''
+Module - ROOT 0,0..1,12
+  .body[1]
+  0] Global - 0,0..1,1
+    .names[1]
+    0] 'c'
+''', r'''
+a \
+, \
+b \
+,
+''', r'''
+Tuple - ROOT 0,0..3,1
+  .elts[2]
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'b' Load - 2,0..2,1
+  .ctx Load
+'''),
+
+(5, 'body[0]', 1, 3, None, {}, ('exec', r'''
+global a \
+, \
+b \
+, \
+c  # comment
+'''), r'''
+global a \
+ \
+  # comment
+''', r'''
+Module - ROOT 0,0..2,11
+  .body[1]
+  0] Global - 0,0..0,8
+    .names[1]
+    0] 'a'
+''', r'''
+(
+b \
+, \
+c)
+''', r'''
+Tuple - ROOT 0,0..3,2
+  .elts[2]
+  0] Name 'b' Load - 1,0..1,1
+  1] Name 'c' Load - 3,0..3,1
+  .ctx Load
+'''),
+
+(6, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
+if 1:
+  global a \
+  , \
+  b  # comment
+  pass
+'''), r'''
+if 1:
+  global  \
+  b  # comment
+  pass
+''', r'''
+Module - ROOT 0,0..3,6
+  .body[1]
+  0] If - 0,0..3,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Global - 1,2..2,3
+      .names[1]
+      0] 'b'
+    1] Pass - 3,2..3,6
+''', r'''
+a \
+,
+''', r'''
+Tuple - ROOT 0,0..1,1
+  .elts[1]
+  0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+(7, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+  global a \
+  , \
+  b  # comment
+  pass
+'''), r'''
+if 1:
+  global a \
+   \
+    # comment
+  pass
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+  0] If - 0,0..4,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Global - 1,2..1,10
+      .names[1]
+      0] 'a'
+    1] Pass - 4,2..4,6
+''', r'''
+(
+b,)
+''', r'''
+Tuple - ROOT 0,0..1,3
+  .elts[1]
+  0] Name 'b' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+(8, 'body[0]', None, None, None, {}, ('exec',
+r'''global a, b, c  # comment'''),
+r'''**ValueError('cannot cut all Global.names without fix_global_self=False')**''',
+r'''a, b, c''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[3]
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'b' Load - 0,3..0,4
+  2] Name 'c' Load - 0,6..0,7
+  .ctx Load
+'''),
+
+(9, 'body[0]', None, None, None, {'fix_global_self': False, '_verify_self': False}, ('exec',
+r'''global a, b, c  # comment'''),
+r'''global   # comment''', r'''
+Module - ROOT 0,0..0,18
+  .body[1]
+  0] Global - 0,0..0,7
+''',
+r'''a, b, c''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[3]
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'b' Load - 0,3..0,4
+  2] Name 'c' Load - 0,6..0,7
+  .ctx Load
+'''),
+],
+
+'Nonlocal_names': [  # ................................................................................
+
+(0, 'body[0]', 1, 2, None, {}, ('exec',
+r'''nonlocal a, b, c  # comment'''),
+r'''nonlocal a, c  # comment''', r'''
+Module - ROOT 0,0..0,24
+  .body[1]
+  0] Nonlocal - 0,0..0,13
+    .names[2]
+    0] 'a'
+    1] 'c'
+''',
+r'''b,''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+  0] Name 'b' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+(1, 'body[0]', 1, 3, None, {}, ('exec',
+r'''nonlocal a, b, c  # comment'''),
+r'''nonlocal a  # comment''', r'''
+Module - ROOT 0,0..0,21
+  .body[1]
+  0] Nonlocal - 0,0..0,10
+    .names[1]
+    0] 'a'
+''',
+r'''b, c''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+  0] Name 'b' Load - 0,0..0,1
+  1] Name 'c' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+(2, 'body[0]', 0, 2, None, {}, ('exec',
+r'''nonlocal a, b, c  # comment'''),
+r'''nonlocal c  # comment''', r'''
+Module - ROOT 0,0..0,21
+  .body[1]
+  0] Nonlocal - 0,0..0,10
+    .names[1]
+    0] 'c'
+''',
+r'''a, b''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[2]
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'b' Load - 0,3..0,4
+  .ctx Load
+'''),
+
+(3, 'body[0]', 1, 2, None, {}, ('exec', r'''
+nonlocal a \
+, \
+b \
+, \
+c  # comment
+'''), r'''
+nonlocal a \
+, \
+c  # comment
+''', r'''
+Module - ROOT 0,0..2,12
+  .body[1]
+  0] Nonlocal - 0,0..2,1
+    .names[2]
+    0] 'a'
+    1] 'c'
+''', r'''
+(
+b \
+, \
+)
+''', r'''
+Tuple - ROOT 0,0..3,1
+  .elts[1]
+  0] Name 'b' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+(4, 'body[0]', 0, 2, None, {}, ('exec', r'''
+nonlocal a \
+, \
+b \
+, \
+c  # comment
+'''), r'''
+nonlocal \
+c  # comment
+''', r'''
+Module - ROOT 0,0..1,12
+  .body[1]
+  0] Nonlocal - 0,0..1,1
+    .names[1]
+    0] 'c'
+''', r'''
+a \
+, \
+b \
+,
+''', r'''
+Tuple - ROOT 0,0..3,1
+  .elts[2]
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'b' Load - 2,0..2,1
+  .ctx Load
+'''),
+
+(5, 'body[0]', 1, 3, None, {}, ('exec', r'''
+nonlocal a \
+, \
+b \
+, \
+c  # comment
+'''), r'''
+nonlocal a \
+ \
+  # comment
+''', r'''
+Module - ROOT 0,0..2,11
+  .body[1]
+  0] Nonlocal - 0,0..0,10
+    .names[1]
+    0] 'a'
+''', r'''
+(
+b \
+, \
+c)
+''', r'''
+Tuple - ROOT 0,0..3,2
+  .elts[2]
+  0] Name 'b' Load - 1,0..1,1
+  1] Name 'c' Load - 3,0..3,1
+  .ctx Load
+'''),
+
+(6, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
+if 1:
+  nonlocal a \
+  , \
+  b  # comment
+  pass
+'''), r'''
+if 1:
+  nonlocal  \
+  b  # comment
+  pass
+''', r'''
+Module - ROOT 0,0..3,6
+  .body[1]
+  0] If - 0,0..3,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Nonlocal - 1,2..2,3
+      .names[1]
+      0] 'b'
+    1] Pass - 3,2..3,6
+''', r'''
+a \
+,
+''', r'''
+Tuple - ROOT 0,0..1,1
+  .elts[1]
+  0] Name 'a' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+(7, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+  nonlocal a \
+  , \
+  b  # comment
+  pass
+'''), r'''
+if 1:
+  nonlocal a \
+   \
+    # comment
+  pass
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+  0] If - 0,0..4,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Nonlocal - 1,2..1,12
+      .names[1]
+      0] 'a'
+    1] Pass - 4,2..4,6
+''', r'''
+(
+b,)
+''', r'''
+Tuple - ROOT 0,0..1,3
+  .elts[1]
+  0] Name 'b' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+(8, 'body[0]', None, None, None, {}, ('exec',
+r'''nonlocal a, b, c  # comment'''),
+r'''**ValueError('cannot cut all Nonlocal.names without fix_global_self=False')**''',
+r'''a, b, c''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[3]
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'b' Load - 0,3..0,4
+  2] Name 'c' Load - 0,6..0,7
+  .ctx Load
+'''),
+
+(9, 'body[0]', None, None, None, {'fix_global_self': False, '_verify_self': False}, ('exec',
+r'''nonlocal a, b, c  # comment'''),
+r'''nonlocal   # comment''', r'''
+Module - ROOT 0,0..0,20
+  .body[1]
+  0] Nonlocal - 0,0..0,9
+''',
+r'''a, b, c''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[3]
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'b' Load - 0,3..0,4
+  2] Name 'c' Load - 0,6..0,7
+  .ctx Load
 '''),
 ],
 

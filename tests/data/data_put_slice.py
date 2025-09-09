@@ -13317,81 +13317,7 @@ Module - ROOT 0,0..0,4
       0] Name 'a' Load - 0,2..0,3
 '''),
 
-(37, 'body[0]', 0, 2, None, {'raw': True}, ('exec',
-r'''global a, b, c'''), (None,
-r'''x'''),
-r'''global x, c''', r'''
-Module - ROOT 0,0..0,11
-  .body[1]
-  0] Global - 0,0..0,11
-    .names[2]
-    0] 'x'
-    1] 'c'
-'''),
-
-(38, 'body[0]', None, None, None, {'raw': True}, ('exec',
-r'''global a, b, c'''), (None,
-r'''x'''),
-r'''global x''', r'''
-Module - ROOT 0,0..0,8
-  .body[1]
-  0] Global - 0,0..0,8
-    .names[1]
-    0] 'x'
-'''),
-
-(39, 'body[0]', 1, 2, None, {'raw': True}, ('exec',
-r'''global a, b, c'''), (None,
-r'''x, y'''),
-r'''global a, x, y, c''', r'''
-Module - ROOT 0,0..0,17
-  .body[1]
-  0] Global - 0,0..0,17
-    .names[4]
-    0] 'a'
-    1] 'x'
-    2] 'y'
-    3] 'c'
-'''),
-
-(40, 'body[0]', 0, 2, None, {'raw': True}, ('exec',
-r'''nonlocal a, b, c'''), (None,
-r'''x'''),
-r'''nonlocal x, c''', r'''
-Module - ROOT 0,0..0,13
-  .body[1]
-  0] Nonlocal - 0,0..0,13
-    .names[2]
-    0] 'x'
-    1] 'c'
-'''),
-
-(41, 'body[0]', None, None, None, {'raw': True}, ('exec',
-r'''nonlocal a, b, c'''), (None,
-r'''x'''),
-r'''nonlocal x''', r'''
-Module - ROOT 0,0..0,10
-  .body[1]
-  0] Nonlocal - 0,0..0,10
-    .names[1]
-    0] 'x'
-'''),
-
-(42, 'body[0]', 1, 2, None, {'raw': True}, ('exec',
-r'''nonlocal a, b, c'''), (None,
-r'''x, y'''),
-r'''nonlocal a, x, y, c''', r'''
-Module - ROOT 0,0..0,19
-  .body[1]
-  0] Nonlocal - 0,0..0,19
-    .names[4]
-    0] 'a'
-    1] 'x'
-    2] 'y'
-    3] 'c'
-'''),
-
-(43, 'body[0].value', 1, 1, None, {'trivia': (None, False)}, ('exec', r'''
+(37, 'body[0].value', 1, 1, None, {'trivia': (None, False)}, ('exec', r'''
 [a# comment
 ]
 '''), (None,
@@ -13409,7 +13335,7 @@ Module - ROOT 0,0..1,1
       .ctx Load
 '''),
 
-(44, 'body[0].value', 1, 1, None, {'trivia': (None, False)}, ('exec', r'''
+(38, 'body[0].value', 1, 1, None, {'trivia': (None, False)}, ('exec', r'''
 [a# comment
 ]
 '''), (None,
@@ -13427,7 +13353,7 @@ Module - ROOT 0,0..1,1
       .ctx Load
 '''),
 
-(45, 'body[0].value', 1, 1, None, {'trivia': (None, False)}, ('exec', r'''
+(39, 'body[0].value', 1, 1, None, {'trivia': (None, False)}, ('exec', r'''
 [a,  # test
 ]
 '''), (None,
@@ -13445,7 +13371,7 @@ Module - ROOT 0,0..1,1
       .ctx Load
 '''),
 
-(46, 'body[0].value', 1, 1, None, {'trivia': (None, False)}, ('exec', r'''
+(40, 'body[0].value', 1, 1, None, {'trivia': (None, False)}, ('exec', r'''
 [a,  # test
 ]
 '''), (None,
@@ -13463,7 +13389,7 @@ Module - ROOT 0,0..1,1
       .ctx Load
 '''),
 
-(47, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
+(41, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
 [
 # c0
 
@@ -13486,7 +13412,7 @@ Module - ROOT 0,0..4,1
       .ctx Load
 '''),
 
-(48, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
+(42, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
 [
 # c0
 
@@ -13509,7 +13435,7 @@ Module - ROOT 0,0..4,1
       .ctx Load
 '''),
 
-(49, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
+(43, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
 [
 # c0
 
@@ -13532,7 +13458,7 @@ Module - ROOT 0,0..4,1
       .ctx Load
 '''),
 
-(50, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
+(44, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
 [
 # c0
 
@@ -13555,7 +13481,7 @@ Module - ROOT 0,0..4,1
       .ctx Load
 '''),
 
-(51, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
+(45, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
 [
 # c0
 
@@ -13578,7 +13504,7 @@ Module - ROOT 0,0..4,2
       .ctx Load
 '''),
 
-(52, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
+(46, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
 [
 # c0
 
@@ -13611,7 +13537,7 @@ Module - ROOT 0,0..5,1
       .ctx Load
 '''),
 
-(53, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
+(47, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
 [
 # c0
 
@@ -13644,7 +13570,7 @@ Module - ROOT 0,0..5,1
       .ctx Load
 '''),
 
-(54, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
+(48, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
 [
 # c0
 
@@ -13676,7 +13602,7 @@ Module - ROOT 0,0..4,1
       .ctx Load
 '''),
 
-(55, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
+(49, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
 [
 # c0
 
@@ -13709,7 +13635,7 @@ Module - ROOT 0,0..5,1
       .ctx Load
 '''),
 
-(56, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
+(50, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
 [
 # c0
 
@@ -13742,7 +13668,7 @@ Module - ROOT 0,0..5,1
       .ctx Load
 '''),
 
-(57, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
+(51, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
 if 1: [
     # c0
 
@@ -13768,7 +13694,7 @@ Module - ROOT 0,0..4,3
         .ctx Load
 '''),
 
-(58, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
+(52, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
 if 1: [
     # c0
 
@@ -13794,7 +13720,7 @@ Module - ROOT 0,0..4,3
         .ctx Load
 '''),
 
-(59, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
+(53, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
 if 1: [
     # c0
 
@@ -13820,7 +13746,7 @@ Module - ROOT 0,0..4,3
         .ctx Load
 '''),
 
-(60, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
+(54, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
 if 1: [
     # c0
 
@@ -13846,7 +13772,7 @@ Module - ROOT 0,0..4,3
         .ctx Load
 '''),
 
-(61, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
+(55, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
 if 1: [
     # c0
 
@@ -13872,7 +13798,7 @@ Module - ROOT 0,0..4,4
         .ctx Load
 '''),
 
-(62, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
+(56, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
 if 1: [
     # c0
 
@@ -13907,7 +13833,7 @@ Module - ROOT 0,0..5,3
         .ctx Load
 '''),
 
-(63, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
+(57, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
 if 1: [
     # c0
 
@@ -13941,7 +13867,7 @@ Module - ROOT 0,0..4,3
         .ctx Load
 '''),
 
-(64, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
+(58, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
 if 1: [
     # c0
 
@@ -13975,7 +13901,7 @@ Module - ROOT 0,0..4,3
         .ctx Load
 '''),
 
-(65, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
+(59, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
 if 1: [
     # c0
 
@@ -14009,7 +13935,7 @@ Module - ROOT 0,0..4,3
         .ctx Load
 '''),
 
-(66, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
+(60, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
 if 1: [
     # c0
 
@@ -14043,7 +13969,7 @@ Module - ROOT 0,0..4,10
         .ctx Load
 '''),
 
-(67, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
+(61, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
 if 1: [
     # c0
 
@@ -14071,7 +13997,7 @@ Module - ROOT 0,0..4,3
         .ctx Load
 '''),
 
-(68, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
+(62, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
 if 1: [
     # c0
 
@@ -14106,7 +14032,7 @@ Module - ROOT 0,0..5,3
         .ctx Load
 '''),
 
-(69, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
+(63, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
 if 1: [
     # c0
 
@@ -14134,7 +14060,7 @@ Module - ROOT 0,0..4,3
         .ctx Load
 '''),
 
-(70, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
+(64, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
 if 1: [
     # c0
 
@@ -14169,7 +14095,7 @@ Module - ROOT 0,0..5,3
         .ctx Load
 '''),
 
-(71, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
+(65, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
 if 1: [
     # c0
 
@@ -14204,7 +14130,7 @@ Module - ROOT 0,0..5,3
         .ctx Load
 '''),
 
-(72, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
+(66, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
 if 1: [
     # c0
 
@@ -14240,7 +14166,7 @@ Module - ROOT 0,0..5,3
         .ctx Load
 '''),
 
-(73, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
+(67, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
 if 1: [
     # c0
 
@@ -14276,7 +14202,7 @@ Module - ROOT 0,0..5,3
         .ctx Load
 '''),
 
-(74, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
+(68, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
 if 1: [
     # c0
 
@@ -14311,7 +14237,7 @@ Module - ROOT 0,0..4,3
         .ctx Load
 '''),
 
-(75, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
+(69, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
 if 1: [
     # c0
 
@@ -14347,7 +14273,7 @@ Module - ROOT 0,0..5,3
         .ctx Load
 '''),
 
-(76, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
+(70, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
 if 1: [
     # c0
 
@@ -14383,7 +14309,7 @@ Module - ROOT 0,0..5,3
         .ctx Load
 '''),
 
-(77, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
+(71, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
 if 1: [x,
     # c0
 
@@ -14411,7 +14337,7 @@ Module - ROOT 0,0..4,4
         .ctx Load
 '''),
 
-(78, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
+(72, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
 if 1: [x,
     # c0
 
@@ -14439,7 +14365,7 @@ Module - ROOT 0,0..4,4
         .ctx Load
 '''),
 
-(79, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
+(73, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
 if 1: [x,
     # c0
 
@@ -14467,7 +14393,7 @@ Module - ROOT 0,0..4,4
         .ctx Load
 '''),
 
-(80, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
+(74, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
 if 1: [x,
     # c0
 
@@ -14495,7 +14421,7 @@ Module - ROOT 0,0..4,4
         .ctx Load
 '''),
 
-(81, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
+(75, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
 if 1: [x,
     # c0
 
@@ -14523,7 +14449,7 @@ Module - ROOT 0,0..4,7
         .ctx Load
 '''),
 
-(82, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
+(76, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
 if 1: [x,
     # c0
 
@@ -14561,7 +14487,7 @@ Module - ROOT 0,0..5,4
         .ctx Load
 '''),
 
-(83, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
+(77, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
 if 1: [x,
     # c0
 
@@ -14599,7 +14525,7 @@ Module - ROOT 0,0..5,4
         .ctx Load
 '''),
 
-(84, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
+(78, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
 if 1: [x,
     # c0
 
@@ -14630,7 +14556,7 @@ Module - ROOT 0,0..4,4
         .ctx Load
 '''),
 
-(85, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
+(79, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
 if 1: [x,
     # c0
 
@@ -14668,7 +14594,7 @@ Module - ROOT 0,0..5,4
         .ctx Load
 '''),
 
-(86, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
+(80, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
 if 1: [x,
     # c0
 
@@ -14706,7 +14632,7 @@ Module - ROOT 0,0..5,4
         .ctx Load
 '''),
 
-(87, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
+(81, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
 if 1: [x,
     # c0
 
@@ -14746,7 +14672,7 @@ Module - ROOT 0,0..6,4
         .ctx Load
 '''),
 
-(88, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
+(82, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
 if 1: [x,
     # c0
 
@@ -14785,7 +14711,7 @@ Module - ROOT 0,0..5,4
         .ctx Load
 '''),
 
-(89, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
+(83, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
 if 1: [x,
     # c0
 
@@ -14824,7 +14750,7 @@ Module - ROOT 0,0..5,4
         .ctx Load
 '''),
 
-(90, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
+(84, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
 if 1: [x,
     # c0
 
@@ -14863,7 +14789,7 @@ Module - ROOT 0,0..5,4
         .ctx Load
 '''),
 
-(91, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
+(85, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
 if 1: [x,
     # c0
 
@@ -14902,7 +14828,7 @@ Module - ROOT 0,0..5,10
         .ctx Load
 '''),
 
-(92, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
+(86, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
 if 1: {**x,
     # c0
 
@@ -14933,7 +14859,7 @@ Module - ROOT 0,0..4,11
         2] Name 'y' Load - 4,9..4,10
 '''),
 
-(93, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': False, '_verify': False}, ('exec', r'''
+(87, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': False, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), (None,
@@ -14955,7 +14881,7 @@ Module - ROOT 0,0..1,13
       0] Pass - 1,9..1,13
 '''),
 
-(94, 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': False, '_verify': False}, ('exec', r'''
+(88, 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': False, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), (None,
@@ -14974,7 +14900,7 @@ Module - ROOT 0,0..1,12
       0] Pass - 1,8..1,12
 '''),
 
-(95, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': True, '_verify': False}, ('exec', r'''
+(89, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), (None,
@@ -14994,14 +14920,14 @@ Module - ROOT 0,0..1,13
       0] Pass - 1,9..1,13
 '''),
 
-(96, 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': True, '_verify': False}, ('exec', r'''
+(90, 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), (None,
 r'''**DEL**'''),
 r'''**ValueError('cannot delete all MatchOr.patterns without fix_matchor_self=False')**'''),
 
-(97, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': False, '_verify': False}, ('exec', r'''
+(91, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': False, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
@@ -15025,7 +14951,7 @@ Module - ROOT 0,0..1,17
       0] Pass - 1,13..1,17
 '''),
 
-(98, 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': False, '_verify': False}, ('exec', r'''
+(92, 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': False, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
@@ -15047,7 +14973,7 @@ Module - ROOT 0,0..1,13
       0] Pass - 1,9..1,13
 '''),
 
-(99, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': True, '_verify': False}, ('exec', r'''
+(93, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
@@ -15071,7 +14997,7 @@ Module - ROOT 0,0..1,17
       0] Pass - 1,13..1,17
 '''),
 
-(100, 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': True, '_verify': False}, ('exec', r'''
+(94, 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
@@ -15091,7 +15017,7 @@ Module - ROOT 0,0..1,13
       0] Pass - 1,9..1,13
 '''),
 
-(101, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': 'strict', '_verify': False}, ('exec', r'''
+(95, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': 'strict', '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
@@ -15115,21 +15041,21 @@ Module - ROOT 0,0..1,17
       0] Pass - 1,13..1,17
 '''),
 
-(102, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_put': False, '_verify': False}, ('exec', r'''
+(96, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_put': False, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
 r'''z'''),
 r'''**NodeError('slice being assigned to a MatchOr must be a MatchOr with fix_matchor_put=False, not a MatchAs')**'''),
 
-(103, 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': 'strict', '_verify': False}, ('exec', r'''
+(97, 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': 'strict', '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
 r'''z'''),
 r'''**NodeError("cannot put MatchOr to length 1 with fix_matchor_self='strict'")**'''),
 
-(104, 'body[0].body[0].value', 'end', None, None, {'one': True}, ('exec', r'''
+(98, 'body[0].body[0].value', 'end', None, None, {'one': True}, ('exec', r'''
 if 1:
   [
     a, # a
@@ -15175,7 +15101,7 @@ Module - ROOT 0,0..7,3
         .ctx Load
 '''),
 
-(105, 'body[0].body[0].value', 1, 1, None, {'one': True}, ('exec', r'''
+(99, 'body[0].body[0].value', 1, 1, None, {'one': True}, ('exec', r'''
 if 1:
   [
     a, # a
@@ -15221,7 +15147,7 @@ Module - ROOT 0,0..7,3
         .ctx Load
 '''),
 
-(106, 'body[0].value.slice', 2, 2, None, {}, ('exec',
+(100, 'body[0].value.slice', 2, 2, None, {}, ('exec',
 r'''a[b:c:d, e:f:g]'''), (None,
 r'''x:y:z,'''),
 r'''a[b:c:d, e:f:g, x:y:z]''', r'''
@@ -15248,12 +15174,15 @@ Module - ROOT 0,0..0,22
       .ctx Load
 '''),
 
-(107, 'body[0].value.slice', 2, 2, None, {'one': True}, ('exec',
+(101, 'body[0].value.slice', 2, 2, None, {'one': True}, ('exec',
 r'''a[b:c:d, e:f:g]'''), (None,
 r'''x:y:z,'''),
 r'''**NodeError('cannot put tuple with Slices to tuple')**'''),
+],
 
-(108, 'body[0]', None, None, None, {}, ('exec',
+'Delete_targets': [  # ................................................................................
+
+(0, 'body[0]', None, None, None, {}, ('exec',
 r'''del a, b, c'''), (None,
 r'''x,'''),
 r'''del x''', r'''
@@ -15264,7 +15193,7 @@ Module - ROOT 0,0..0,5
     0] Name 'x' Del - 0,4..0,5
 '''),
 
-(109, 'body[0]', None, None, None, {}, ('exec',
+(1, 'body[0]', None, None, None, {}, ('exec',
 r'''del a, b, c'''), (None,
 r'''x'''),
 r'''del x''',
@@ -15276,7 +15205,7 @@ Module - ROOT 0,0..0,5
     0] Name 'x' Del - 0,4..0,5
 '''),
 
-(110, 'body[0]', None, None, None, {'one': True}, ('exec',
+(2, 'body[0]', None, None, None, {'one': True}, ('exec',
 r'''del a, b, c'''), (None,
 r'''x'''),
 r'''del x''', r'''
@@ -15287,7 +15216,7 @@ Module - ROOT 0,0..0,5
     0] Name 'x' Del - 0,4..0,5
 '''),
 
-(111, 'body[0]', 1, 2, None, {}, ('exec',
+(3, 'body[0]', 1, 2, None, {}, ('exec',
 r'''del a, b, c'''), (None,
 r'''()'''),
 r'''del a, c''', r'''
@@ -15299,7 +15228,7 @@ Module - ROOT 0,0..0,8
     1] Name 'c' Del - 0,7..0,8
 '''),
 
-(112, 'body[0]', 1, 2, None, {}, ('exec',
+(4, 'body[0]', 1, 2, None, {}, ('exec',
 r'''del a, b, c'''), (None,
 r'''(),'''),
 r'''del a, (), c''', r'''
@@ -15313,7 +15242,7 @@ Module - ROOT 0,0..0,12
     2] Name 'c' Del - 0,11..0,12
 '''),
 
-(113, 'body[0]', 1, 2, None, {'one': True}, ('exec',
+(5, 'body[0]', 1, 2, None, {'one': True}, ('exec',
 r'''del a, b, c'''), (None,
 r'''()'''),
 r'''del a, (), c''', r'''
@@ -15327,7 +15256,7 @@ Module - ROOT 0,0..0,12
     2] Name 'c' Del - 0,11..0,12
 '''),
 
-(114, 'body[0]', 1, 2, None, {'one': True}, ('exec',
+(6, 'body[0]', 1, 2, None, {'one': True}, ('exec',
 r'''del a, b, c'''), (None,
 r'''(),'''),
 r'''del a, ((),), c''', r'''
@@ -15344,7 +15273,7 @@ Module - ROOT 0,0..0,15
     2] Name 'c' Del - 0,14..0,15
 '''),
 
-(115, 'body[0]', 1, 2, None, {}, ('exec',
+(7, 'body[0]', 1, 2, None, {}, ('exec',
 r'''del a, b, c'''), (None, r'''
 x
 .
@@ -15367,7 +15296,7 @@ Module - ROOT 0,0..2,8
     2] Name 'c' Del - 2,7..2,8
 '''),
 
-(116, 'body[0]', 1, 2, None, {}, ('exec',
+(8, 'body[0]', 1, 2, None, {}, ('exec',
 r'''del a, b, c'''), (None, r'''
 x
 ,
@@ -15385,7 +15314,7 @@ Module - ROOT 0,0..1,7
     2] Name 'c' Del - 1,6..1,7
 '''),
 
-(117, 'body[0]', None, None, None, {}, ('exec',
+(9, 'body[0]', None, None, None, {}, ('exec',
 r'''del a, b, c'''), (None, r'''
 x \
 
@@ -15399,145 +15328,9 @@ Module - ROOT 0,0..0,5
     0] Name 'x' Del - 0,4..0,5
 '''),
 
-(118, 'body[0]', 1, 2, None, {}, ('exec',
-r'''global a, b, c  # comment'''), (None,
-r'''**DEL**'''),
-r'''global a, c  # comment''', r'''
-Module - ROOT 0,0..0,22
-  .body[1]
-  0] Global - 0,0..0,11
-    .names[2]
-    0] 'a'
-    1] 'c'
-'''),
-
-(119, 'body[0]', 1, 3, None, {}, ('exec',
-r'''global a, b, c  # comment'''), (None,
-r'''**DEL**'''),
-r'''global a  # comment''', r'''
-Module - ROOT 0,0..0,19
-  .body[1]
-  0] Global - 0,0..0,8
-    .names[1]
-    0] 'a'
-'''),
-
-(120, 'body[0]', 0, 2, None, {}, ('exec',
-r'''global a, b, c  # comment'''), (None,
-r'''**DEL**'''),
-r'''global c  # comment''', r'''
-Module - ROOT 0,0..0,19
-  .body[1]
-  0] Global - 0,0..0,8
-    .names[1]
-    0] 'c'
-'''),
-
-(121, 'body[0]', 1, 2, None, {}, ('exec', r'''
-global a \
-, \
-b \
-, \
-c  # comment
-'''), (None,
-r'''**DEL**'''), r'''
-global a \
-, \
-c  # comment
-''', r'''
-Module - ROOT 0,0..2,12
-  .body[1]
-  0] Global - 0,0..2,1
-    .names[2]
-    0] 'a'
-    1] 'c'
-'''),
-
-(122, 'body[0]', 0, 2, None, {}, ('exec', r'''
-global a \
-, \
-b \
-, \
-c  # comment
-'''), (None,
-r'''**DEL**'''), r'''
-global \
-c  # comment
-''', r'''
-Module - ROOT 0,0..1,12
-  .body[1]
-  0] Global - 0,0..1,1
-    .names[1]
-    0] 'c'
-'''),
-
-(123, 'body[0]', 1, 3, None, {}, ('exec', r'''
-global a \
-, \
-b \
-, \
-c  # comment
-'''), (None,
-r'''**DEL**'''),
-r'''global a  # comment''', r'''
-Module - ROOT 0,0..0,19
-  .body[1]
-  0] Global - 0,0..0,8
-    .names[1]
-    0] 'a'
-'''),
-
-(124, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
+(10, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
 if 1:
-  global a \
-  , \
-  b  # comment
-  pass
-'''), (None,
-r'''**DEL**'''), r'''
-if 1:
-  global  \
-  b  # comment
-  pass
-''', r'''
-Module - ROOT 0,0..3,6
-  .body[1]
-  0] If - 0,0..3,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Global - 1,2..2,3
-      .names[1]
-      0] 'b'
-    1] Pass - 3,2..3,6
-'''),
-
-(125, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
-if 1:
-  global a \
-  , \
-  b  # comment
-  pass
-'''), (None,
-r'''**DEL**'''), r'''
-if 1:
-  global a  # comment
-  pass
-''', r'''
-Module - ROOT 0,0..2,6
-  .body[1]
-  0] If - 0,0..2,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Global - 1,2..1,10
-      .names[1]
-      0] 'a'
-    1] Pass - 2,2..2,6
-'''),
-
-(126, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
-if 1:
-  global a
-  pass
+  del a
 '''), (None, r'''
 (
     b \
@@ -15545,436 +15338,73 @@ if 1:
   )
 '''), r'''
 if 1:
-  global a, \
-         b
-  pass
+  del a, \
+      b
 ''', r'''
 if 1:
-  global a, b
-  pass
+  del a, b
 ''', r'''
-Module - ROOT 0,0..3,6
+Module - ROOT 0,0..2,7
   .body[1]
-  0] If - 0,0..3,6
+  0] If - 0,0..2,7
     .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Global - 1,2..2,10
-      .names[2]
-      0] 'a'
-      1] 'b'
-    1] Pass - 3,2..3,6
+    .body[1]
+    0] Delete - 1,2..2,7
+      .targets[2]
+      0] Name 'a' Del - 1,6..1,7
+      1] Name 'b' Del - 2,6..2,7
 '''),
 
-(127, 'body[0].body[0]', 0, 0, None, {}, ('exec', r'''
+(11, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
 if 1:
-  global a
-  pass
-'''), (None, r'''
-x \
-  , \
-  y \
-  ,
-'''), r'''
-if 1:
-  global x \
-         , \
-         y \
-         , a
-  pass
-''', r'''
-if 1:
-  global x, y, a
-  pass
-''', r'''
-Module - ROOT 0,0..5,6
-  .body[1]
-  0] If - 0,0..5,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Global - 1,2..4,12
-      .names[3]
-      0] 'x'
-      1] 'y'
-      2] 'a'
-    1] Pass - 5,2..5,6
-'''),
-
-(128, 'body[0]', 1, 2, None, {}, ('exec',
-r'''global a, b, c  # comment'''), (None,
-r'''x'''),
-r'''global a, x, c  # comment''',
-r'''**NodeError('slice being assigned to a Global must be a Tuple, List or Set, not a Name')**''', r'''
-Module - ROOT 0,0..0,25
-  .body[1]
-  0] Global - 0,0..0,14
-    .names[3]
-    0] 'a'
-    1] 'x'
-    2] 'c'
-'''),
-
-(129, 'body[0]', 1, 2, None, {}, ('exec',
-r'''global a, b, c  # comment'''), (None,
-r'''[x]'''),
-r'''global a, x, c  # comment''', r'''
-Module - ROOT 0,0..0,25
-  .body[1]
-  0] Global - 0,0..0,14
-    .names[3]
-    0] 'a'
-    1] 'x'
-    2] 'c'
-'''),
-
-(130, 'body[0]', 1, 2, None, {}, ('exec',
-r'''global a, b, c  # comment'''), (None,
-r'''{x}'''),
-r'''global a, x, c  # comment''', r'''
-Module - ROOT 0,0..0,25
-  .body[1]
-  0] Global - 0,0..0,14
-    .names[3]
-    0] 'a'
-    1] 'x'
-    2] 'c'
-'''),
-
-(131, 'body[0]', 1, 2, None, {}, ('exec',
-r'''global a, b, c  # comment'''), (None,
-r'''{*()}'''),
-r'''global a, c  # comment''', r'''
-Module - ROOT 0,0..0,22
-  .body[1]
-  0] Global - 0,0..0,11
-    .names[2]
-    0] 'a'
-    1] 'c'
-'''),
-
-(132, 'body[0]', 1, 2, None, {}, ('exec',
-r'''global a, b, c  # comment'''), (None,
-r'''x,'''),
-r'''global a, x, c  # comment''', r'''
-Module - ROOT 0,0..0,25
-  .body[1]
-  0] Global - 0,0..0,14
-    .names[3]
-    0] 'a'
-    1] 'x'
-    2] 'c'
-'''),
-
-(133, 'body[0]', 1, 2, None, {}, ('exec',
-r'''global a, b, c  # comment'''), (None,
-r'''x.y,'''),
-r'''**NodeError('cannot put Attribute to Global.names')**'''),
-
-(134, 'body[0]', 1, 2, None, {}, ('exec',
-r'''global a, b, c  # comment'''), (None,
-r'''(x),'''),
-r'''**NodeError('cannot put parenthesized Name to Global.names')**'''),
-
-(135, 'body[0]', None, None, None, {}, ('exec',
-r'''global a, b, c  # comment'''), (None, r'''
-x \
-
-'''),
-r'''global x  # comment''',
-r'''**NodeError('slice being assigned to a Global must be a Tuple, List or Set, not a Name')**''', r'''
-Module - ROOT 0,0..0,19
-  .body[1]
-  0] Global - 0,0..0,8
-    .names[1]
-    0] 'x'
-'''),
-
-(136, 'body[0]', 1, 2, None, {}, ('exec',
-r'''nonlocal a, b, c  # comment'''), (None,
-r'''**DEL**'''),
-r'''nonlocal a, c  # comment''', r'''
-Module - ROOT 0,0..0,24
-  .body[1]
-  0] Nonlocal - 0,0..0,13
-    .names[2]
-    0] 'a'
-    1] 'c'
-'''),
-
-(137, 'body[0]', 1, 3, None, {}, ('exec',
-r'''nonlocal a, b, c  # comment'''), (None,
-r'''**DEL**'''),
-r'''nonlocal a  # comment''', r'''
-Module - ROOT 0,0..0,21
-  .body[1]
-  0] Nonlocal - 0,0..0,10
-    .names[1]
-    0] 'a'
-'''),
-
-(138, 'body[0]', 0, 2, None, {}, ('exec',
-r'''nonlocal a, b, c  # comment'''), (None,
-r'''**DEL**'''),
-r'''nonlocal c  # comment''', r'''
-Module - ROOT 0,0..0,21
-  .body[1]
-  0] Nonlocal - 0,0..0,10
-    .names[1]
-    0] 'c'
-'''),
-
-(139, 'body[0]', 1, 2, None, {}, ('exec', r'''
-nonlocal a \
-, \
-b \
-, \
-c  # comment
-'''), (None,
-r'''**DEL**'''), r'''
-nonlocal a \
-, \
-c  # comment
-''', r'''
-Module - ROOT 0,0..2,12
-  .body[1]
-  0] Nonlocal - 0,0..2,1
-    .names[2]
-    0] 'a'
-    1] 'c'
-'''),
-
-(140, 'body[0]', 0, 2, None, {}, ('exec', r'''
-nonlocal a \
-, \
-b \
-, \
-c  # comment
-'''), (None,
-r'''**DEL**'''), r'''
-nonlocal \
-c  # comment
-''', r'''
-Module - ROOT 0,0..1,12
-  .body[1]
-  0] Nonlocal - 0,0..1,1
-    .names[1]
-    0] 'c'
-'''),
-
-(141, 'body[0]', 1, 3, None, {}, ('exec', r'''
-nonlocal a \
-, \
-b \
-, \
-c  # comment
-'''), (None,
-r'''**DEL**'''),
-r'''nonlocal a  # comment''', r'''
-Module - ROOT 0,0..0,21
-  .body[1]
-  0] Nonlocal - 0,0..0,10
-    .names[1]
-    0] 'a'
-'''),
-
-(142, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
-if 1:
-  nonlocal a \
-  , \
-  b  # comment
-  pass
-'''), (None,
-r'''**DEL**'''), r'''
-if 1:
-  nonlocal  \
-  b  # comment
-  pass
-''', r'''
-Module - ROOT 0,0..3,6
-  .body[1]
-  0] If - 0,0..3,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Nonlocal - 1,2..2,3
-      .names[1]
-      0] 'b'
-    1] Pass - 3,2..3,6
-'''),
-
-(143, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
-if 1:
-  nonlocal a \
-  , \
-  b  # comment
-  pass
-'''), (None,
-r'''**DEL**'''), r'''
-if 1:
-  nonlocal a  # comment
-  pass
-''', r'''
-Module - ROOT 0,0..2,6
-  .body[1]
-  0] If - 0,0..2,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Nonlocal - 1,2..1,12
-      .names[1]
-      0] 'a'
-    1] Pass - 2,2..2,6
-'''),
-
-(144, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
-if 1:
-  nonlocal a
-  pass
+  del a
 '''), (None, r'''
 (
-    b \
-    , \
-  )
+    b, \
+)
 '''), r'''
 if 1:
-  nonlocal a, \
-           b
-  pass
+  del a, \
+      b
 ''', r'''
 if 1:
-  nonlocal a, b
-  pass
+  del a, b
 ''', r'''
-Module - ROOT 0,0..3,6
+Module - ROOT 0,0..2,7
   .body[1]
-  0] If - 0,0..3,6
+  0] If - 0,0..2,7
     .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Nonlocal - 1,2..2,12
-      .names[2]
-      0] 'a'
-      1] 'b'
-    1] Pass - 3,2..3,6
+    .body[1]
+    0] Delete - 1,2..2,7
+      .targets[2]
+      0] Name 'a' Del - 1,6..1,7
+      1] Name 'b' Del - 2,6..2,7
 '''),
 
-(145, 'body[0].body[0]', 0, 0, None, {}, ('exec', r'''
+(12, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
 if 1:
-  nonlocal a
-  pass
+  del a
 '''), (None, r'''
-x \
-  , \
-  y \
-  ,
+(
+    b,
+)
 '''), r'''
 if 1:
-  nonlocal x \
-           , \
-           y \
-           , a
-  pass
+  del a, \
+      b
 ''', r'''
 if 1:
-  nonlocal x, y, a
-  pass
+  del a, b
 ''', r'''
-Module - ROOT 0,0..5,6
+Module - ROOT 0,0..2,7
   .body[1]
-  0] If - 0,0..5,6
+  0] If - 0,0..2,7
     .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Nonlocal - 1,2..4,14
-      .names[3]
-      0] 'x'
-      1] 'y'
-      2] 'a'
-    1] Pass - 5,2..5,6
-'''),
-
-(146, 'body[0]', 1, 2, None, {}, ('exec',
-r'''nonlocal a, b, c  # comment'''), (None,
-r'''x'''),
-r'''nonlocal a, x, c  # comment''',
-r'''**NodeError('slice being assigned to a Nonlocal must be a Tuple, List or Set, not a Name')**''', r'''
-Module - ROOT 0,0..0,27
-  .body[1]
-  0] Nonlocal - 0,0..0,16
-    .names[3]
-    0] 'a'
-    1] 'x'
-    2] 'c'
-'''),
-
-(147, 'body[0]', 1, 2, None, {}, ('exec',
-r'''nonlocal a, b, c  # comment'''), (None,
-r'''[x]'''),
-r'''nonlocal a, x, c  # comment''', r'''
-Module - ROOT 0,0..0,27
-  .body[1]
-  0] Nonlocal - 0,0..0,16
-    .names[3]
-    0] 'a'
-    1] 'x'
-    2] 'c'
-'''),
-
-(148, 'body[0]', 1, 2, None, {}, ('exec',
-r'''nonlocal a, b, c  # comment'''), (None,
-r'''{x}'''),
-r'''nonlocal a, x, c  # comment''', r'''
-Module - ROOT 0,0..0,27
-  .body[1]
-  0] Nonlocal - 0,0..0,16
-    .names[3]
-    0] 'a'
-    1] 'x'
-    2] 'c'
-'''),
-
-(149, 'body[0]', 1, 2, None, {}, ('exec',
-r'''nonlocal a, b, c  # comment'''), (None,
-r'''{*()}'''),
-r'''nonlocal a, c  # comment''', r'''
-Module - ROOT 0,0..0,24
-  .body[1]
-  0] Nonlocal - 0,0..0,13
-    .names[2]
-    0] 'a'
-    1] 'c'
-'''),
-
-(150, 'body[0]', 1, 2, None, {}, ('exec',
-r'''nonlocal a, b, c  # comment'''), (None,
-r'''x,'''),
-r'''nonlocal a, x, c  # comment''', r'''
-Module - ROOT 0,0..0,27
-  .body[1]
-  0] Nonlocal - 0,0..0,16
-    .names[3]
-    0] 'a'
-    1] 'x'
-    2] 'c'
-'''),
-
-(151, 'body[0]', 1, 2, None, {}, ('exec',
-r'''nonlocal a, b, c  # comment'''), (None,
-r'''x.y,'''),
-r'''**NodeError('cannot put Attribute to Nonlocal.names')**'''),
-
-(152, 'body[0]', 1, 2, None, {}, ('exec',
-r'''nonlocal a, b, c  # comment'''), (None,
-r'''(x),'''),
-r'''**NodeError('cannot put parenthesized Name to Nonlocal.names')**'''),
-
-(153, 'body[0]', None, None, None, {}, ('exec',
-r'''nonlocal a, b, c  # comment'''), (None, r'''
-x \
-
-'''),
-r'''nonlocal x  # comment''',
-r'''**NodeError('slice being assigned to a Nonlocal must be a Tuple, List or Set, not a Name')**''', r'''
-Module - ROOT 0,0..0,21
-  .body[1]
-  0] Nonlocal - 0,0..0,10
-    .names[1]
-    0] 'x'
+    .body[1]
+    0] Delete - 1,2..2,7
+      .targets[2]
+      0] Name 'a' Del - 1,6..1,7
+      1] Name 'b' Del - 2,6..2,7
 '''),
 ],
 
@@ -16413,6 +15843,822 @@ r'''import a, b, c  # comment'''),
 r'''**DEL**''',
 r'''import   # comment''',
 r'''Import - ROOT 0,0..0,7'''),
+],
+
+'Global_names': [  # ................................................................................
+
+(0, 'body[0]', 0, 2, None, {'raw': True}, ('exec',
+r'''global a, b, c'''), (None,
+r'''x'''),
+r'''global x, c''', r'''
+Module - ROOT 0,0..0,11
+  .body[1]
+  0] Global - 0,0..0,11
+    .names[2]
+    0] 'x'
+    1] 'c'
+'''),
+
+(1, 'body[0]', None, None, None, {'raw': True}, ('exec',
+r'''global a, b, c'''), (None,
+r'''x'''),
+r'''global x''', r'''
+Module - ROOT 0,0..0,8
+  .body[1]
+  0] Global - 0,0..0,8
+    .names[1]
+    0] 'x'
+'''),
+
+(2, 'body[0]', 1, 2, None, {'raw': True}, ('exec',
+r'''global a, b, c'''), (None,
+r'''x, y'''),
+r'''global a, x, y, c''', r'''
+Module - ROOT 0,0..0,17
+  .body[1]
+  0] Global - 0,0..0,17
+    .names[4]
+    0] 'a'
+    1] 'x'
+    2] 'y'
+    3] 'c'
+'''),
+
+(3, 'body[0]', 1, 2, None, {}, ('exec',
+r'''global a, b, c  # comment'''), (None,
+r'''**DEL**'''),
+r'''global a, c  # comment''', r'''
+Module - ROOT 0,0..0,22
+  .body[1]
+  0] Global - 0,0..0,11
+    .names[2]
+    0] 'a'
+    1] 'c'
+'''),
+
+(4, 'body[0]', 1, 3, None, {}, ('exec',
+r'''global a, b, c  # comment'''), (None,
+r'''**DEL**'''),
+r'''global a  # comment''', r'''
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Global - 0,0..0,8
+    .names[1]
+    0] 'a'
+'''),
+
+(5, 'body[0]', 0, 2, None, {}, ('exec',
+r'''global a, b, c  # comment'''), (None,
+r'''**DEL**'''),
+r'''global c  # comment''', r'''
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Global - 0,0..0,8
+    .names[1]
+    0] 'c'
+'''),
+
+(6, 'body[0]', 1, 2, None, {}, ('exec', r'''
+global a \
+, \
+b \
+, \
+c  # comment
+'''), (None,
+r'''**DEL**'''), r'''
+global a \
+, \
+c  # comment
+''', r'''
+Module - ROOT 0,0..2,12
+  .body[1]
+  0] Global - 0,0..2,1
+    .names[2]
+    0] 'a'
+    1] 'c'
+'''),
+
+(7, 'body[0]', 0, 2, None, {}, ('exec', r'''
+global a \
+, \
+b \
+, \
+c  # comment
+'''), (None,
+r'''**DEL**'''), r'''
+global \
+c  # comment
+''', r'''
+Module - ROOT 0,0..1,12
+  .body[1]
+  0] Global - 0,0..1,1
+    .names[1]
+    0] 'c'
+'''),
+
+(8, 'body[0]', 1, 3, None, {}, ('exec', r'''
+global a \
+, \
+b \
+, \
+c  # comment
+'''), (None,
+r'''**DEL**'''), r'''
+global a \
+ \
+  # comment
+''', r'''
+Module - ROOT 0,0..2,11
+  .body[1]
+  0] Global - 0,0..0,8
+    .names[1]
+    0] 'a'
+'''),
+
+(9, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
+if 1:
+  global a \
+  , \
+  b  # comment
+  pass
+'''), (None,
+r'''**DEL**'''), r'''
+if 1:
+  global  \
+  b  # comment
+  pass
+''', r'''
+Module - ROOT 0,0..3,6
+  .body[1]
+  0] If - 0,0..3,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Global - 1,2..2,3
+      .names[1]
+      0] 'b'
+    1] Pass - 3,2..3,6
+'''),
+
+(10, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+  global a \
+  , \
+  b  # comment
+  pass
+'''), (None,
+r'''**DEL**'''), r'''
+if 1:
+  global a \
+   \
+    # comment
+  pass
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+  0] If - 0,0..4,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Global - 1,2..1,10
+      .names[1]
+      0] 'a'
+    1] Pass - 4,2..4,6
+'''),
+
+(11, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
+if 1:
+  global a
+  pass
+'''), (None, r'''
+(
+    b \
+    , \
+  )
+'''),
+'if 1:\n  global a, \\\n         b \\\n          \\\n       \n  pass', r'''
+if 1:
+  global a, b
+  pass
+''', r'''
+Module - ROOT 0,0..5,6
+  .body[1]
+  0] If - 0,0..5,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Global - 1,2..2,10
+      .names[2]
+      0] 'a'
+      1] 'b'
+    1] Pass - 5,2..5,6
+'''),
+
+(12, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
+if 1:
+  global a
+  pass
+'''), (None, r'''
+(
+    b, \
+)
+'''), r'''
+if 1:
+  global a, \
+         b \
+
+  pass
+''', r'''
+if 1:
+  global a, b
+  pass
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+  0] If - 0,0..4,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Global - 1,2..2,10
+      .names[2]
+      0] 'a'
+      1] 'b'
+    1] Pass - 4,2..4,6
+'''),
+
+(13, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
+if 1:
+  global a
+  pass
+'''), (None, r'''
+(
+    b,
+)
+'''), r'''
+if 1:
+  global a, \
+         b
+
+  pass
+''', r'''
+if 1:
+  global a, b
+  pass
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+  0] If - 0,0..4,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Global - 1,2..2,10
+      .names[2]
+      0] 'a'
+      1] 'b'
+    1] Pass - 4,2..4,6
+'''),
+
+(14, 'body[0].body[0]', 0, 0, None, {}, ('exec', r'''
+if 1:
+  global a
+  pass
+'''), (None, r'''
+x \
+  , \
+  y \
+  ,
+'''), r'''
+if 1:
+  global x \
+         , \
+         y \
+         , a
+  pass
+''', r'''
+if 1:
+  global x, y, a
+  pass
+''', r'''
+Module - ROOT 0,0..5,6
+  .body[1]
+  0] If - 0,0..5,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Global - 1,2..4,12
+      .names[3]
+      0] 'x'
+      1] 'y'
+      2] 'a'
+    1] Pass - 5,2..5,6
+'''),
+
+(15, 'body[0]', 1, 2, None, {}, ('exec',
+r'''global a, b, c  # comment'''), (None,
+r'''x'''),
+r'''global a, x, c  # comment''',
+r'''**NodeError('slice being assigned to a Global must be a Tuple, List or Set, not a Name')**''', r'''
+Module - ROOT 0,0..0,25
+  .body[1]
+  0] Global - 0,0..0,14
+    .names[3]
+    0] 'a'
+    1] 'x'
+    2] 'c'
+'''),
+
+(16, 'body[0]', 1, 2, None, {}, ('exec',
+r'''global a, b, c  # comment'''), (None,
+r'''[x]'''),
+r'''global a, x, c  # comment''', r'''
+Module - ROOT 0,0..0,25
+  .body[1]
+  0] Global - 0,0..0,14
+    .names[3]
+    0] 'a'
+    1] 'x'
+    2] 'c'
+'''),
+
+(17, 'body[0]', 1, 2, None, {}, ('exec',
+r'''global a, b, c  # comment'''), (None,
+r'''{x}'''),
+r'''global a, x, c  # comment''', r'''
+Module - ROOT 0,0..0,25
+  .body[1]
+  0] Global - 0,0..0,14
+    .names[3]
+    0] 'a'
+    1] 'x'
+    2] 'c'
+'''),
+
+(18, 'body[0]', 1, 2, None, {}, ('exec',
+r'''global a, b, c  # comment'''), (None,
+r'''{*()}'''),
+r'''global a, c  # comment''', r'''
+Module - ROOT 0,0..0,22
+  .body[1]
+  0] Global - 0,0..0,11
+    .names[2]
+    0] 'a'
+    1] 'c'
+'''),
+
+(19, 'body[0]', 1, 2, None, {}, ('exec',
+r'''global a, b, c  # comment'''), (None,
+r'''x,'''),
+r'''global a, x, c  # comment''', r'''
+Module - ROOT 0,0..0,25
+  .body[1]
+  0] Global - 0,0..0,14
+    .names[3]
+    0] 'a'
+    1] 'x'
+    2] 'c'
+'''),
+
+(20, 'body[0]', 1, 2, None, {}, ('exec',
+r'''global a, b, c  # comment'''), (None,
+r'''x.y,'''),
+r'''**NodeError('cannot put Attribute to Global.names')**'''),
+
+(21, 'body[0]', 1, 2, None, {}, ('exec',
+r'''global a, b, c  # comment'''), (None,
+r'''(x),'''),
+r'''**NodeError('cannot put parenthesized Name to Global.names')**'''),
+
+(22, 'body[0]', None, None, None, {}, ('exec',
+r'''global a, b, c  # comment'''), (None, r'''
+x \
+
+'''), r'''
+global x \
+  # comment
+''',
+r'''**NodeError('slice being assigned to a Global must be a Tuple, List or Set, not a Name')**''', r'''
+Module - ROOT 0,0..1,11
+  .body[1]
+  0] Global - 0,0..0,8
+    .names[1]
+    0] 'x'
+'''),
+
+(23, 'body[0]', None, None, None, {}, ('exec',
+r'''global a, b, c  # comment'''),
+r'''**DEL**''',
+r'''**ValueError('cannot delete all Global.names without fix_global_self=False')**'''),
+
+(24, 'body[0]', None, None, None, {'fix_global_self': False, '_verify_self': False}, ('exec',
+r'''global a, b, c  # comment'''),
+r'''**DEL**''',
+r'''global   # comment''', r'''
+Module - ROOT 0,0..0,18
+  .body[1]
+  0] Global - 0,0..0,7
+'''),
+],
+
+'Nonlocal_names': [  # ................................................................................
+
+(0, 'body[0]', 0, 2, None, {'raw': True}, ('exec',
+r'''nonlocal a, b, c'''), (None,
+r'''x'''),
+r'''nonlocal x, c''', r'''
+Module - ROOT 0,0..0,13
+  .body[1]
+  0] Nonlocal - 0,0..0,13
+    .names[2]
+    0] 'x'
+    1] 'c'
+'''),
+
+(1, 'body[0]', None, None, None, {'raw': True}, ('exec',
+r'''nonlocal a, b, c'''), (None,
+r'''x'''),
+r'''nonlocal x''', r'''
+Module - ROOT 0,0..0,10
+  .body[1]
+  0] Nonlocal - 0,0..0,10
+    .names[1]
+    0] 'x'
+'''),
+
+(2, 'body[0]', 1, 2, None, {'raw': True}, ('exec',
+r'''nonlocal a, b, c'''), (None,
+r'''x, y'''),
+r'''nonlocal a, x, y, c''', r'''
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Nonlocal - 0,0..0,19
+    .names[4]
+    0] 'a'
+    1] 'x'
+    2] 'y'
+    3] 'c'
+'''),
+
+(3, 'body[0]', 1, 2, None, {}, ('exec',
+r'''nonlocal a, b, c  # comment'''), (None,
+r'''**DEL**'''),
+r'''nonlocal a, c  # comment''', r'''
+Module - ROOT 0,0..0,24
+  .body[1]
+  0] Nonlocal - 0,0..0,13
+    .names[2]
+    0] 'a'
+    1] 'c'
+'''),
+
+(4, 'body[0]', 1, 3, None, {}, ('exec',
+r'''nonlocal a, b, c  # comment'''), (None,
+r'''**DEL**'''),
+r'''nonlocal a  # comment''', r'''
+Module - ROOT 0,0..0,21
+  .body[1]
+  0] Nonlocal - 0,0..0,10
+    .names[1]
+    0] 'a'
+'''),
+
+(5, 'body[0]', 0, 2, None, {}, ('exec',
+r'''nonlocal a, b, c  # comment'''), (None,
+r'''**DEL**'''),
+r'''nonlocal c  # comment''', r'''
+Module - ROOT 0,0..0,21
+  .body[1]
+  0] Nonlocal - 0,0..0,10
+    .names[1]
+    0] 'c'
+'''),
+
+(6, 'body[0]', 1, 2, None, {}, ('exec', r'''
+nonlocal a \
+, \
+b \
+, \
+c  # comment
+'''), (None,
+r'''**DEL**'''), r'''
+nonlocal a \
+, \
+c  # comment
+''', r'''
+Module - ROOT 0,0..2,12
+  .body[1]
+  0] Nonlocal - 0,0..2,1
+    .names[2]
+    0] 'a'
+    1] 'c'
+'''),
+
+(7, 'body[0]', 0, 2, None, {}, ('exec', r'''
+nonlocal a \
+, \
+b \
+, \
+c  # comment
+'''), (None,
+r'''**DEL**'''), r'''
+nonlocal \
+c  # comment
+''', r'''
+Module - ROOT 0,0..1,12
+  .body[1]
+  0] Nonlocal - 0,0..1,1
+    .names[1]
+    0] 'c'
+'''),
+
+(8, 'body[0]', 1, 3, None, {}, ('exec', r'''
+nonlocal a \
+, \
+b \
+, \
+c  # comment
+'''), (None,
+r'''**DEL**'''), r'''
+nonlocal a \
+ \
+  # comment
+''', r'''
+Module - ROOT 0,0..2,11
+  .body[1]
+  0] Nonlocal - 0,0..0,10
+    .names[1]
+    0] 'a'
+'''),
+
+(9, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
+if 1:
+  nonlocal a \
+  , \
+  b  # comment
+  pass
+'''), (None,
+r'''**DEL**'''), r'''
+if 1:
+  nonlocal  \
+  b  # comment
+  pass
+''', r'''
+Module - ROOT 0,0..3,6
+  .body[1]
+  0] If - 0,0..3,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Nonlocal - 1,2..2,3
+      .names[1]
+      0] 'b'
+    1] Pass - 3,2..3,6
+'''),
+
+(10, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+  nonlocal a \
+  , \
+  b  # comment
+  pass
+'''), (None,
+r'''**DEL**'''), r'''
+if 1:
+  nonlocal a \
+   \
+    # comment
+  pass
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+  0] If - 0,0..4,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Nonlocal - 1,2..1,12
+      .names[1]
+      0] 'a'
+    1] Pass - 4,2..4,6
+'''),
+
+(11, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
+if 1:
+  nonlocal a
+  pass
+'''), (None, r'''
+(
+    b \
+    , \
+  )
+'''),
+'if 1:\n  nonlocal a, \\\n           b \\\n            \\\n         \n  pass', r'''
+if 1:
+  nonlocal a, b
+  pass
+''', r'''
+Module - ROOT 0,0..5,6
+  .body[1]
+  0] If - 0,0..5,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Nonlocal - 1,2..2,12
+      .names[2]
+      0] 'a'
+      1] 'b'
+    1] Pass - 5,2..5,6
+'''),
+
+(12, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
+if 1:
+  nonlocal a
+  pass
+'''), (None, r'''
+(
+    b, \
+)
+'''), r'''
+if 1:
+  nonlocal a, \
+           b \
+
+  pass
+''', r'''
+if 1:
+  nonlocal a, b
+  pass
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+  0] If - 0,0..4,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Nonlocal - 1,2..2,12
+      .names[2]
+      0] 'a'
+      1] 'b'
+    1] Pass - 4,2..4,6
+'''),
+
+(13, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
+if 1:
+  nonlocal a
+  pass
+'''), (None, r'''
+(
+    b,
+)
+'''), r'''
+if 1:
+  nonlocal a, \
+           b
+
+  pass
+''', r'''
+if 1:
+  nonlocal a, b
+  pass
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+  0] If - 0,0..4,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Nonlocal - 1,2..2,12
+      .names[2]
+      0] 'a'
+      1] 'b'
+    1] Pass - 4,2..4,6
+'''),
+
+(14, 'body[0].body[0]', 0, 0, None, {}, ('exec', r'''
+if 1:
+  nonlocal a
+  pass
+'''), (None, r'''
+x \
+  , \
+  y \
+  ,
+'''), r'''
+if 1:
+  nonlocal x \
+           , \
+           y \
+           , a
+  pass
+''', r'''
+if 1:
+  nonlocal x, y, a
+  pass
+''', r'''
+Module - ROOT 0,0..5,6
+  .body[1]
+  0] If - 0,0..5,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Nonlocal - 1,2..4,14
+      .names[3]
+      0] 'x'
+      1] 'y'
+      2] 'a'
+    1] Pass - 5,2..5,6
+'''),
+
+(15, 'body[0]', 1, 2, None, {}, ('exec',
+r'''nonlocal a, b, c  # comment'''), (None,
+r'''x'''),
+r'''nonlocal a, x, c  # comment''',
+r'''**NodeError('slice being assigned to a Nonlocal must be a Tuple, List or Set, not a Name')**''', r'''
+Module - ROOT 0,0..0,27
+  .body[1]
+  0] Nonlocal - 0,0..0,16
+    .names[3]
+    0] 'a'
+    1] 'x'
+    2] 'c'
+'''),
+
+(16, 'body[0]', 1, 2, None, {}, ('exec',
+r'''nonlocal a, b, c  # comment'''), (None,
+r'''[x]'''),
+r'''nonlocal a, x, c  # comment''', r'''
+Module - ROOT 0,0..0,27
+  .body[1]
+  0] Nonlocal - 0,0..0,16
+    .names[3]
+    0] 'a'
+    1] 'x'
+    2] 'c'
+'''),
+
+(17, 'body[0]', 1, 2, None, {}, ('exec',
+r'''nonlocal a, b, c  # comment'''), (None,
+r'''{x}'''),
+r'''nonlocal a, x, c  # comment''', r'''
+Module - ROOT 0,0..0,27
+  .body[1]
+  0] Nonlocal - 0,0..0,16
+    .names[3]
+    0] 'a'
+    1] 'x'
+    2] 'c'
+'''),
+
+(18, 'body[0]', 1, 2, None, {}, ('exec',
+r'''nonlocal a, b, c  # comment'''), (None,
+r'''{*()}'''),
+r'''nonlocal a, c  # comment''', r'''
+Module - ROOT 0,0..0,24
+  .body[1]
+  0] Nonlocal - 0,0..0,13
+    .names[2]
+    0] 'a'
+    1] 'c'
+'''),
+
+(19, 'body[0]', 1, 2, None, {}, ('exec',
+r'''nonlocal a, b, c  # comment'''), (None,
+r'''x,'''),
+r'''nonlocal a, x, c  # comment''', r'''
+Module - ROOT 0,0..0,27
+  .body[1]
+  0] Nonlocal - 0,0..0,16
+    .names[3]
+    0] 'a'
+    1] 'x'
+    2] 'c'
+'''),
+
+(20, 'body[0]', 1, 2, None, {}, ('exec',
+r'''nonlocal a, b, c  # comment'''), (None,
+r'''x.y,'''),
+r'''**NodeError('cannot put Attribute to Nonlocal.names')**'''),
+
+(21, 'body[0]', 1, 2, None, {}, ('exec',
+r'''nonlocal a, b, c  # comment'''), (None,
+r'''(x),'''),
+r'''**NodeError('cannot put parenthesized Name to Nonlocal.names')**'''),
+
+(22, 'body[0]', None, None, None, {}, ('exec',
+r'''nonlocal a, b, c  # comment'''), (None, r'''
+x \
+
+'''), r'''
+nonlocal x \
+  # comment
+''',
+r'''**NodeError('slice being assigned to a Nonlocal must be a Tuple, List or Set, not a Name')**''', r'''
+Module - ROOT 0,0..1,11
+  .body[1]
+  0] Nonlocal - 0,0..0,10
+    .names[1]
+    0] 'x'
+'''),
+
+(23, 'body[0]', None, None, None, {}, ('exec',
+r'''nonlocal a, b, c  # comment'''),
+r'''**DEL**''',
+r'''**ValueError('cannot delete all Nonlocal.names without fix_global_self=False')**'''),
+
+(24, 'body[0]', None, None, None, {'fix_global_self': False, '_verify_self': False}, ('exec',
+r'''nonlocal a, b, c  # comment'''),
+r'''**DEL**''',
+r'''nonlocal   # comment''', r'''
+Module - ROOT 0,0..0,20
+  .body[1]
+  0] Nonlocal - 0,0..0,9
+'''),
 ],
 
 'type_params': [  # ................................................................................

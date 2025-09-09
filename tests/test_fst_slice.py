@@ -1403,13 +1403,13 @@ def func():
         self.assertRaises(ValueError, f.put_slice, None)
 
         f = FST('del a, b, c')
-        self.assertEqual('a, b, c', f.get_slice(cut=True, fix_del_self=False).src)
+        self.assertEqual('a, b, c', f.get_slice(cut=True, fix_delete_self=False).src)
         self.assertEqual('del ', f.src)
         f.put_slice('x, y, z')
         self.assertEqual('del x, y, z', f.src)
 
         f = FST('del a, b, c')
-        self.assertEqual('del ', f.put_slice(None, fix_del_self=False).src)
+        self.assertEqual('del ', f.put_slice(None, fix_delete_self=False).src)
         f.put_slice('x, y, z')
         self.assertEqual('del x, y, z', f.src)
 
@@ -1448,6 +1448,45 @@ def func():
         self.assertEqual('import ', f.put_slice(None, fix_import_self=False).src)
         f.put_slice('x, y, z')
         self.assertEqual('import x, y, z', f.src)
+
+    def test_cut_and_del_slice_global_and_nonlocal(self):
+        # global
+
+        f = FST('global a, b, c')
+        self.assertRaises(ValueError, f.get_slice, cut=True)
+
+        f = FST('global a, b, c')
+        self.assertRaises(ValueError, f.put_slice, None)
+
+        f = FST('global a, b, c')
+        self.assertEqual('a, b, c', f.get_slice(cut=True, fix_global_self=False).src)
+        self.assertEqual('global ', f.src)
+        f.put_slice('x, y, z')
+        self.assertEqual('global x, y, z', f.src)
+
+        f = FST('global a, b, c')
+        self.assertEqual('global ', f.put_slice(None, fix_global_self=False).src)
+        f.put_slice('x, y, z')
+        self.assertEqual('global x, y, z', f.src)
+
+        # nonlocal
+
+        f = FST('nonlocal a, b, c')
+        self.assertRaises(ValueError, f.get_slice, cut=True)
+
+        f = FST('nonlocal a, b, c')
+        self.assertRaises(ValueError, f.put_slice, None)
+
+        f = FST('nonlocal a, b, c')
+        self.assertEqual('a, b, c', f.get_slice(cut=True, fix_global_self=False).src)
+        self.assertEqual('nonlocal ', f.src)
+        f.put_slice('x, y, z')
+        self.assertEqual('nonlocal x, y, z', f.src)
+
+        f = FST('nonlocal a, b, c')
+        self.assertEqual('nonlocal ', f.put_slice(None, fix_global_self=False).src)
+        f.put_slice('x, y, z')
+        self.assertEqual('nonlocal x, y, z', f.src)
 
     def test_get_slice_special(self):
         f = FST('''(
