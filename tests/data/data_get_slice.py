@@ -6513,6 +6513,31 @@ _slice_Assign_targets - ROOT 0,0..4,1
 ''',
 r'''''',
 r'''_slice_Assign_targets - ROOT 0,0..0,0'''),
+
+(15, '', 0, 3, 'targets', {}, (None,
+r'''a = b = c = z'''),
+r'''**ValueError('cannot cut all Assign.targets without fix_assign_self=False')**''',
+r'''a = b = c =''', r'''
+_slice_Assign_targets - ROOT 0,0..0,11
+  .targets[3]
+  0] Name 'a' Store - 0,0..0,1
+  1] Name 'b' Store - 0,4..0,5
+  2] Name 'c' Store - 0,8..0,9
+'''),
+
+(16, '', 0, 3, 'targets', {'fix_assign_self': False, '_verify_self': False}, (None,
+r'''a = b = c = z'''),
+r''' z''', r'''
+Assign - ROOT 0,0..0,2
+  .value Name 'z' Load - 0,1..0,2
+''',
+r'''a = b = c =''', r'''
+_slice_Assign_targets - ROOT 0,0..0,11
+  .targets[3]
+  0] Name 'a' Store - 0,0..0,1
+  1] Name 'b' Store - 0,4..0,5
+  2] Name 'c' Store - 0,8..0,9
+'''),
 ],
 
 'Import_names': [  # ................................................................................
@@ -6602,13 +6627,16 @@ Module - ROOT 0,0..2,12
     1] alias - 2,0..2,1
       .name 'c'
 ''', r'''
+
 b \
 as \
-y
+y \
+ \
+
 ''', r'''
-_slice_aliases - ROOT 0,0..2,1
+_slice_aliases - ROOT 0,0..5,0
   .names[1]
-  0] alias - 0,0..2,1
+  0] alias - 1,0..3,1
     .name 'b'
     .asname
       'y'
@@ -6637,9 +6665,11 @@ a \
 , \
 b \
 as \
-y
+y \
+ \
+
 ''', r'''
-_slice_aliases - ROOT 0,0..4,1
+_slice_aliases - ROOT 0,0..6,0
   .names[2]
   0] alias - 0,0..0,1
     .name 'a'
@@ -6657,28 +6687,32 @@ as \
 y \
 , \
 c  # comment
-'''),
-r'''import a  # comment''', r'''
-Module - ROOT 0,0..0,19
+'''), r'''
+import a \
+ \
+  # comment
+''', r'''
+Module - ROOT 0,0..2,11
   .body[1]
   0] Import - 0,0..0,8
     .names[1]
     0] alias - 0,7..0,8
       .name 'a'
 ''', r'''
+
 b \
 as \
 y \
 , \
 c
 ''', r'''
-_slice_aliases - ROOT 0,0..4,1
+_slice_aliases - ROOT 0,0..5,1
   .names[2]
-  0] alias - 0,0..2,1
+  0] alias - 1,0..3,1
     .name 'b'
     .asname
       'y'
-  1] alias - 4,0..4,1
+  1] alias - 5,0..5,1
     .name 'c'
 '''),
 
@@ -6710,9 +6744,11 @@ Module - ROOT 0,0..5,6
         .asname
           'y'
     1] Pass - 5,2..5,6
-''',
-r'''a''', r'''
-_slice_aliases - ROOT 0,0..0,1
+''', r'''
+a \
+
+''', r'''
+_slice_aliases - ROOT 0,0..1,0
   .names[1]
   0] alias - 0,0..0,1
     .name 'a'
@@ -6728,19 +6764,21 @@ if 1:
   pass
 '''), r'''
 if 1:
-  import a # comment
+  import a \
+   \
+   # comment
   pass
 ''', r'''
-Module - ROOT 0,0..2,6
+Module - ROOT 0,0..4,6
   .body[1]
-  0] If - 0,0..2,6
+  0] If - 0,0..4,6
     .test Constant 1 - 0,3..0,4
     .body[2]
     0] Import - 1,2..1,10
       .names[1]
       0] alias - 1,9..1,10
         .name 'a'
-    1] Pass - 2,2..2,6
+    1] Pass - 4,2..4,6
 ''', r'''
 b \
 as \
@@ -6752,6 +6790,51 @@ _slice_aliases - ROOT 0,0..2,1
     .name 'b'
     .asname
       'y'
+'''),
+
+(8, '', 0, 3, None, {}, (None,
+r'''import a, b, c'''),
+r'''**ValueError('cannot cut all Import.names without fix_import_self=False')**''',
+r'''a, b, c''', r'''
+_slice_aliases - ROOT 0,0..0,7
+  .names[3]
+  0] alias - 0,0..0,1
+    .name 'a'
+  1] alias - 0,3..0,4
+    .name 'b'
+  2] alias - 0,6..0,7
+    .name 'c'
+'''),
+
+(9, '', 0, 3, None, {'fix_import_self': False, '_verify_self': False}, (None, r'''
+import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment
+'''),
+r'''import   # comment''',
+r'''Import - ROOT 0,0..0,7''', r'''
+a \
+, \
+b \
+as \
+y \
+, \
+c
+''', r'''
+_slice_aliases - ROOT 0,0..6,1
+  .names[3]
+  0] alias - 0,0..0,1
+    .name 'a'
+  1] alias - 2,0..4,1
+    .name 'b'
+    .asname
+      'y'
+  2] alias - 6,0..6,1
+    .name 'c'
 '''),
 ],
 

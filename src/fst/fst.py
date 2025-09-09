@@ -126,6 +126,7 @@ _OPTIONS = {
     'fix_set_self':     True,   # True | False | 'star' | 'call'
     'fix_del_self':     True,   # True | False
     'fix_assign_self':  True,   # True | False
+    'fix_import_self':  True,   # True | False
     'fix_matchor_get':  True,   # True | False | 'strict'
     'fix_matchor_put':  True,   # True | False | 'strict'
     'fix_matchor_self': True,   # True | False | 'strict'
@@ -881,6 +882,7 @@ class FST:
          'fix_set_self': True,
          'fix_del_self': True,
          'fix_assign_self': True,
+         'fix_import_self': True,
          'fix_matchor_get': True,
          'fix_matchor_put': True,
          'fix_matchor_self': True,
@@ -1039,8 +1041,12 @@ class FST:
             - `False`: Allow, this will leave an invalid `Delete` which should have the `targets` replaced as soon as
                 possible.
             - `True`: Don't allow, error.
-        - `fix_assign_self`: How to handle operations which would leave a `Assign` with zero `targets`.
+        - `fix_assign_self`: How to handle operations which would leave an `Assign` with zero `targets`.
             - `False`: Allow, this will leave an invalid `Assign` which should have the `targets` replaced as soon as
+                possible.
+            - `True`: Don't allow, error.
+        - `fix_import_self`: How to handle operations which would leave an `Import` with zero `names`.
+            - `False`: Allow, this will leave an invalid `Import` which should have the `names` replaced as soon as
                 possible.
             - `True`: Don't allow, error.
         - `fix_matchor_get`: How to handle zero or length 1 slice gets from a `MatchOr`. Zero-length `MatchOr`s, or any

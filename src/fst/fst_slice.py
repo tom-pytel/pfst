@@ -832,7 +832,7 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
         return fst.FST._new_empty_tuple(from_=self)
 
     if cut and len_slice == len_body and self.get_option('fix_del_self', options):
-        raise NodeError("cannot cut all Delete.targets without fix_del_self=False")
+        raise ValueError("cannot cut all Delete.targets without fix_del_self=False")
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
@@ -860,9 +860,6 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
 
 def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                               cut: bool, options: Mapping[str, Any]) -> fst.FST:
-    """The slice of `Assign.targets` is an invalid `Assign` contianing valid target types and a `value` which is an
-    empty `Name`."""
-
     len_body = len(body := self.a.targets)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
@@ -872,7 +869,7 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
                        from_=self)
 
     if cut and len_slice == len_body and self.get_option('fix_assign_self', options):
-        raise NodeError("cannot cut all Assign targets without fix_assign_self=False")
+        raise ValueError("cannot cut all Assign.targets without fix_assign_self=False")
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
@@ -881,15 +878,9 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
     asts = _cut_or_copy_asts(start, stop, 'targets', cut, body)
     ret_ast = _slice_Assign_targets(targets=asts)
 
-    set_ctx(asts[:], Store)
-
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
                           options.get('trivia'), 'targets', '', '', '=', True, True)
-
-    # if not fst_._lines[0]:  # we do not allow starting a newline with these
-    #     fst_._put_src(None, 0, 0, 1, 0, False)
-    # # fst_._maybe_add_line_continuations()
 
     if cut:
         self._maybe_add_line_continuations()
@@ -901,13 +892,14 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
                             cut: bool, options: Mapping[str, Any]) -> fst.FST:
     len_body = len(body := self.a.names)
     start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
 
-    if start == stop:
+    if not len_slice:
         return fst.FST(_slice_aliases(names=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''],
                        from_=self)
 
-    if cut and not start and stop == len_body:
-        raise ValueError('cannot cut all Import.names')
+    if cut and len_slice == len_body and self.get_option('fix_import_self', options):
+        raise ValueError('cannot cut all Import.names without fix_import_self=False')
 
     _, _, bound_end_ln, bound_end_col = self.loc
 
@@ -926,18 +918,9 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
                           options.get('trivia'), 'names', '', '', ',', False, False)
 
-    if (fst_first := (names := fst_.a.names)[0].f.loc)[:2] != (0, 0):  # clean up newline start
-        fst_._put_src(None, 0, 0, fst_first.ln, fst_first.col, False)
-
-    if (fst_last := names[-1].f.loc)[2:] != (fst_loc := fst_.loc)[2:]:  # clean up newline end
-        fst_._put_src(None, fst_last.end_ln, fst_last.end_col, fst_loc.end_ln, fst_loc.end_col, True)
-
     if cut:
-        if stop == len_body:  # clean up any line continuation backslashes and make sure end location is set to end of last element
-            _, _, end_ln, end_col = self.loc
-
-            if end_col != bound_col or end_ln != bound_ln:
-                self._put_src(None, bound_ln, bound_col, end_ln, end_col, True)
+        if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
+            self._set_end_pos((bn := body[-1]).end_lineno, bn.end_col_offset, True, True)
 
         self._maybe_add_line_continuations()
 
@@ -1122,7 +1105,7 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
     if cut:
         if not (len_left := len_body - len_slice):
             if fix_matchor_self:
-                raise NodeError("cannot cut MatchOr to empty without fix_matchor_self=False")
+                raise NodeError("cannot cut all MatchOr.patterns without fix_matchor_self=False")
 
         elif len_left == 1 and fix_matchor_self == 'strict':
             raise NodeError("cannot cut MatchOr to length 1 with fix_matchor_self='strict'")
@@ -1142,9 +1125,6 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
 
 def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                            options: Mapping[str, Any]) -> fst.FST:
-    """A `type_params` slice is an invalid `Tuple` containing `type_params` elements. A zero-length slice is just an
-    empty `Tuple`, which has no way of knowing that it used to or should contain `type_params`."""
-
     len_body = len(body := (ast := self.a).type_params)
     start, stop = fixup_slice_indices(len_body, start, stop)
 
@@ -2241,7 +2221,7 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
             return
 
         if len_slice == len_body and self.get_option('fix_del_self', options):
-            raise NodeError("cannot delete Delete.targets to empty without fix_del_self=False")
+            raise ValueError("cannot delete all Delete.targets without fix_del_self=False")
 
     _validate_put_seq(self, fst_, 'Delete', check_target=is_valid_del_target)
 
@@ -2310,7 +2290,7 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
             return
 
         if len_slice == len_body and self.get_option('fix_assign_self', options):
-            raise NodeError("cannot cut Assign targets to empty without fix_assign_self=False")
+            raise ValueError("cannot cut all Assign.targets without fix_assign_self=False")
 
     elif (a0 := (fst_body := fst_.a.targets)[0]).col_offset:  # if first element of slice doesn't start at column 0 then dedent it
         fst_._put_src(None, ln := (f := a0.f).ln, 0, ln, f.col, False)
@@ -2354,7 +2334,7 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
 def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                             field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_ = _code_to_slice_aliases(self, code, one, options, code_as_Import_name, code_as_Import_names)
-    len_body = len(body := (ast := self.a).names)
+    len_body = len(body := self.a.names)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
@@ -2362,8 +2342,8 @@ def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Liter
         if not len_slice:
             return
 
-        if len_slice == len_body:
-            raise NodeError("cannot delete Import.names to empty")
+        if len_slice == len_body and self.get_option('fix_import_self', options):
+            raise ValueError('cannot delete all Import.names without fix_import_self=False')
 
     _, _, bound_end_ln, bound_end_col = self.loc
 
@@ -2406,12 +2386,8 @@ def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Liter
     for i in range(start + len_fst_body, len(body)):
         body[i].f.pfield = astfield('names', i)
 
-    if stop == len_body:  # clean up any line continuation backslashes and make sure end location is set to end of last element
-        _, _, end_ln, end_col = self.loc
-        _, _, last_end_ln, last_end_col = ast.names[-1].f.loc
-
-        if end_col != last_end_col or end_ln != last_end_ln:
-            self._put_src(None, last_end_ln, last_end_col, end_ln, end_col, True)
+    if not fst_ and start and stop == len_body:  # if del till and something left then may need to reset end position of self due to new trailing trivia
+        self._set_end_pos((bn := body[-1]).end_lineno, bn.end_col_offset, True, True)
 
     self._maybe_add_line_continuations()
 
@@ -2634,7 +2610,7 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
 
         if not (len_left := len_body - len_slice):
             if fix_matchor_self:
-                raise NodeError("cannot del MatchOr to empty without fix_matchor_self=False")
+                raise NodeError("cannot delete all MatchOr.patterns without fix_matchor_self=False")
 
         elif len_left == 1 and fix_matchor_self == 'strict':
             raise NodeError("cannot del MatchOr to length 1 with fix_matchor_self='strict'")

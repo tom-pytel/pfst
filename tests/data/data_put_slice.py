@@ -14999,7 +14999,7 @@ match a:
  case a | b: pass
 '''), (None,
 r'''**DEL**'''),
-r'''**NodeError('cannot del MatchOr to empty without fix_matchor_self=False')**'''),
+r'''**NodeError('cannot delete all MatchOr.patterns without fix_matchor_self=False')**'''),
 
 (97, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': False, '_verify': False}, ('exec', r'''
 match a:
@@ -16077,7 +16077,20 @@ Module - ROOT 0,0..1,2
     .value Name 'd' Load - 1,1..1,2
 '''),
 
-(6, '', None, None, 'targets', {}, ('Assign_targets',
+(6, '', None, None, 'targets', {}, (None,
+r'''a = b = c = d'''),
+r'''**DEL**''',
+r'''**ValueError('cannot cut all Assign.targets without fix_assign_self=False')**'''),
+
+(7, '', None, None, 'targets', {'fix_assign_self': False, '_verify_self': False}, (None,
+r'''a = b = c = d'''),
+r'''**DEL**''',
+r''' d''', r'''
+Assign - ROOT 0,0..0,2
+  .value Name 'd' Load - 0,1..0,2
+'''),
+
+(8, '', None, None, 'targets', {}, ('Assign_targets',
 r'''a = b = c ='''), ('Assign_targets',
 r'''x'''),
 r'''x =''', r'''
@@ -16086,7 +16099,7 @@ _slice_Assign_targets - ROOT 0,0..0,3
   0] Name 'x' Store - 0,0..0,1
 '''),
 
-(7, '', None, None, 'targets', {'one': True}, ('Assign_targets',
+(9, '', None, None, 'targets', {'one': True}, ('Assign_targets',
 r'''a = b = c ='''), (None,
 r'''x'''),
 r'''x =''', r'''
@@ -16095,7 +16108,7 @@ _slice_Assign_targets - ROOT 0,0..0,3
   0] Name 'x' Store - 0,0..0,1
 '''),
 
-(8, '', None, None, 'targets', {}, ('Assign_targets',
+(10, '', None, None, 'targets', {}, ('Assign_targets',
 r'''a = b = c ='''), (None,
 r'''x ='''),
 r'''x =''', r'''
@@ -16104,7 +16117,7 @@ _slice_Assign_targets - ROOT 0,0..0,3
   0] Name 'x' Store - 0,0..0,1
 '''),
 
-(9, '', 1, 2, 'targets', {}, ('Assign_targets',
+(11, '', 1, 2, 'targets', {}, ('Assign_targets',
 r'''a = b = c ='''), ('Assign_targets', r'''
 x \
 . \
@@ -16129,7 +16142,7 @@ _slice_Assign_targets - ROOT 0,0..4,7
   3] Name 'c' Store - 4,4..4,5
 '''),
 
-(10, '', None, None, 'targets', {}, ('Assign_targets',
+(12, '', None, None, 'targets', {}, ('Assign_targets',
 r'''a = b = c ='''), ('Assign_targets', r'''
 x \
 
@@ -16142,7 +16155,7 @@ _slice_Assign_targets - ROOT 0,0..1,0
   0] Name 'x' Store - 0,0..0,1
 '''),
 
-(11, '', None, None, 'targets', {}, ('Assign_targets',
+(13, '', None, None, 'targets', {}, ('Assign_targets',
 r'''a = b = c ='''), ('Assign_targets', r'''
 
 x \
@@ -16245,9 +16258,12 @@ b \
 , \
 c  # comment
 '''), (None,
-r'''**DEL**'''),
-r'''import a  # comment''', r'''
-Module - ROOT 0,0..0,19
+r'''**DEL**'''), r'''
+import a \
+ \
+  # comment
+''', r'''
+Module - ROOT 0,0..2,11
   .body[1]
   0] Import - 0,0..0,8
     .names[1]
@@ -16289,19 +16305,21 @@ if 1:
 '''), (None,
 r'''**DEL**'''), r'''
 if 1:
-  import a  # comment
+  import a \
+   \
+    # comment
   pass
 ''', r'''
-Module - ROOT 0,0..2,6
+Module - ROOT 0,0..4,6
   .body[1]
-  0] If - 0,0..2,6
+  0] If - 0,0..4,6
     .test Constant 1 - 0,3..0,4
     .body[2]
     0] Import - 1,2..1,10
       .names[1]
       0] alias - 1,9..1,10
         .name 'a'
-    1] Pass - 2,2..2,6
+    1] Pass - 4,2..4,6
 '''),
 
 (8, 'body[0].body[0]', 0, 0, None, {}, ('exec', r'''
@@ -16373,15 +16391,28 @@ Module - ROOT 0,0..0,27
 r'''import a, b, c  # comment'''), ('Import_names', r'''
 x \
 
-'''),
-r'''import x  # comment''', r'''
-Module - ROOT 0,0..0,19
+'''), r'''
+import x \
+  # comment
+''', r'''
+Module - ROOT 0,0..1,11
   .body[1]
-  0] Import - 0,0..0,8
+  0] Import - 0,0..1,0
     .names[1]
     0] alias - 0,7..0,8
       .name 'x'
 '''),
+
+(12, '', None, None, None, {}, (None,
+r'''import a, b, c  # comment'''),
+r'''**DEL**''',
+r'''**ValueError('cannot delete all Import.names without fix_import_self=False')**'''),
+
+(13, '', None, None, None, {'fix_import_self': False, '_verify_self': False}, (None,
+r'''import a, b, c  # comment'''),
+r'''**DEL**''',
+r'''import   # comment''',
+r'''Import - ROOT 0,0..0,7'''),
 ],
 
 'type_params': [  # ................................................................................

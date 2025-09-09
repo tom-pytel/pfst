@@ -1397,17 +1397,57 @@ def func():
 
     def test_cut_and_del_slice_delete(self):
         f = FST('del a, b, c')
-        self.assertRaises(NodeError, f.get_slice, cut=True)
+        self.assertRaises(ValueError, f.get_slice, cut=True)
 
         f = FST('del a, b, c')
-        self.assertRaises(NodeError, f.put_slice, None)
+        self.assertRaises(ValueError, f.put_slice, None)
 
         f = FST('del a, b, c')
         self.assertEqual('a, b, c', f.get_slice(cut=True, fix_del_self=False).src)
         self.assertEqual('del ', f.src)
+        f.put_slice('x, y, z')
+        self.assertEqual('del x, y, z', f.src)
 
         f = FST('del a, b, c')
         self.assertEqual('del ', f.put_slice(None, fix_del_self=False).src)
+        f.put_slice('x, y, z')
+        self.assertEqual('del x, y, z', f.src)
+
+    def test_cut_and_del_slice_assign(self):
+        f = FST('a = b = c = q')
+        self.assertRaises(ValueError, f.get_slice, 'targets', cut=True)
+
+        f = FST('a = b = c = q')
+        self.assertRaises(ValueError, f.put_slice, None, 'targets')
+
+        f = FST('a = b = c = q')
+        self.assertEqual('a = b = c =', f.get_slice('targets', cut=True, fix_assign_self=False).src)
+        self.assertEqual(' q', f.src)
+        f.put_slice('x = y = z', 'targets')
+        self.assertEqual('x = y = z = q', f.src)
+
+        f = FST('a = b = c = q')
+        self.assertEqual(' q', f.put_slice(None, 'targets', fix_assign_self=False).src)
+        f.put_slice('x = y = z =', 'targets')
+        self.assertEqual('x = y = z = q', f.src)
+
+    def test_cut_and_del_slice_import(self):
+        f = FST('import a, b, c')
+        self.assertRaises(ValueError, f.get_slice, cut=True)
+
+        f = FST('import a, b, c')
+        self.assertRaises(ValueError, f.put_slice, None)
+
+        f = FST('import a, b, c')
+        self.assertEqual('a, b, c', f.get_slice(cut=True, fix_import_self=False).src)
+        self.assertEqual('import ', f.src)
+        f.put_slice('x, y, z')
+        self.assertEqual('import x, y, z', f.src)
+
+        f = FST('import a, b, c')
+        self.assertEqual('import ', f.put_slice(None, fix_import_self=False).src)
+        f.put_slice('x, y, z')
+        self.assertEqual('import x, y, z', f.src)
 
     def test_get_slice_special(self):
         f = FST('''(
@@ -2253,9 +2293,9 @@ a | (
 
         # Import
 
-
-
-
+        self.assertEqual('a', g := (f := FST('import a, b, c').get_slice(0, 2)).get_slice(0, 1).src)
+        self.assertEqual('a, b, a', f.put_slice(g, 'end').src)
+        f.verify()
 
         # Tuple (unparenthesized)
 
