@@ -15976,230 +15976,6 @@ Module - ROOT 0,0..0,21
     .names[1]
     0] 'x'
 '''),
-
-(154, 'body[0]', 1, 2, None, {}, ('exec',
-r'''import a, b, c  # comment'''), (None,
-r'''**DEL**'''),
-r'''import a, c  # comment''', r'''
-Module - ROOT 0,0..0,22
-  .body[1]
-  0] Import - 0,0..0,11
-    .names[2]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 0,10..0,11
-      .name 'c'
-'''),
-
-(155, 'body[0]', 1, 3, None, {}, ('exec',
-r'''import a, b, c  # comment'''), (None,
-r'''**DEL**'''),
-r'''import a  # comment''', r'''
-Module - ROOT 0,0..0,19
-  .body[1]
-  0] Import - 0,0..0,8
-    .names[1]
-    0] alias - 0,7..0,8
-      .name 'a'
-'''),
-
-(156, 'body[0]', 0, 2, None, {}, ('exec',
-r'''import a, b, c  # comment'''), (None,
-r'''**DEL**'''),
-r'''import c  # comment''', r'''
-Module - ROOT 0,0..0,19
-  .body[1]
-  0] Import - 0,0..0,8
-    .names[1]
-    0] alias - 0,7..0,8
-      .name 'c'
-'''),
-
-(157, 'body[0]', 1, 2, None, {}, ('exec', r'''
-import a \
-, \
-b \
-, \
-c  # comment
-'''), (None,
-r'''**DEL**'''), r'''
-import a \
-, \
-c  # comment
-''', r'''
-Module - ROOT 0,0..2,12
-  .body[1]
-  0] Import - 0,0..2,1
-    .names[2]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 2,0..2,1
-      .name 'c'
-'''),
-
-(158, 'body[0]', 0, 2, None, {}, ('exec', r'''
-import a \
-, \
-b \
-, \
-c  # comment
-'''), (None,
-r'''**DEL**'''), r'''
-import \
-c  # comment
-''', r'''
-Module - ROOT 0,0..1,12
-  .body[1]
-  0] Import - 0,0..1,1
-    .names[1]
-    0] alias - 1,0..1,1
-      .name 'c'
-'''),
-
-(159, 'body[0]', 1, 3, None, {}, ('exec', r'''
-import a \
-, \
-b \
-, \
-c  # comment
-'''), (None,
-r'''**DEL**'''),
-r'''import a  # comment''', r'''
-Module - ROOT 0,0..0,19
-  .body[1]
-  0] Import - 0,0..0,8
-    .names[1]
-    0] alias - 0,7..0,8
-      .name 'a'
-'''),
-
-(160, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
-if 1:
-  import a \
-  , \
-  b  # comment
-  pass
-'''), (None,
-r'''**DEL**'''), r'''
-if 1:
-  import  \
-  b  # comment
-  pass
-''', r'''
-Module - ROOT 0,0..3,6
-  .body[1]
-  0] If - 0,0..3,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Import - 1,2..2,3
-      .names[1]
-      0] alias - 2,2..2,3
-        .name 'b'
-    1] Pass - 3,2..3,6
-'''),
-
-(161, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
-if 1:
-  import a \
-  , \
-  b  # comment
-  pass
-'''), (None,
-r'''**DEL**'''), r'''
-if 1:
-  import a  # comment
-  pass
-''', r'''
-Module - ROOT 0,0..2,6
-  .body[1]
-  0] If - 0,0..2,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Import - 1,2..1,10
-      .names[1]
-      0] alias - 1,9..1,10
-        .name 'a'
-    1] Pass - 2,2..2,6
-'''),
-
-(162, 'body[0].body[0]', 0, 0, None, {}, ('exec', r'''
-if 1:
-  import a
-  pass
-'''), ('Import_names', r'''
-x \
-  , \
-  y
-
-'''), r'''
-if 1:
-  import x \
-         , \
-         y, \
-         a
-  pass
-''', r'''
-Module - ROOT 0,0..5,6
-  .body[1]
-  0] If - 0,0..5,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Import - 1,2..4,10
-      .names[3]
-      0] alias - 1,9..1,10
-        .name 'x'
-      1] alias - 3,9..3,10
-        .name 'y'
-      2] alias - 4,9..4,10
-        .name 'a'
-    1] Pass - 5,2..5,6
-'''),
-
-(163, 'body[0]', 1, 2, None, {}, ('exec',
-r'''import a, b, c  # comment'''), ('Import_names',
-r'''x'''),
-r'''import a, x, c  # comment''', r'''
-Module - ROOT 0,0..0,25
-  .body[1]
-  0] Import - 0,0..0,14
-    .names[3]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 0,10..0,11
-      .name 'x'
-    2] alias - 0,13..0,14
-      .name 'c'
-'''),
-
-(164, 'body[0]', 1, 2, None, {}, ('exec',
-r'''import a, b, c  # comment'''), ('Import_names',
-r'''x.y'''),
-r'''import a, x.y, c  # comment''', r'''
-Module - ROOT 0,0..0,27
-  .body[1]
-  0] Import - 0,0..0,16
-    .names[3]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 0,10..0,13
-      .name 'x.y'
-    2] alias - 0,15..0,16
-      .name 'c'
-'''),
-
-(165, 'body[0]', None, None, None, {}, ('exec',
-r'''import a, b, c  # comment'''), ('Import_names', r'''
-x \
-
-'''),
-r'''import x  # comment''', r'''
-Module - ROOT 0,0..0,19
-  .body[1]
-  0] Import - 0,0..0,8
-    .names[1]
-    0] alias - 0,7..0,8
-      .name 'x'
-'''),
 ],
 
 'Assign_targets': [  # ................................................................................
@@ -16378,6 +16154,233 @@ x = \
 _slice_Assign_targets - ROOT 0,0..1,0
   .targets[1]
   0] Name 'x' Store - 0,0..0,1
+'''),
+],
+
+'Import_names': [  # ................................................................................
+
+(0, 'body[0]', 1, 2, None, {}, ('exec',
+r'''import a, b, c  # comment'''), (None,
+r'''**DEL**'''),
+r'''import a, c  # comment''', r'''
+Module - ROOT 0,0..0,22
+  .body[1]
+  0] Import - 0,0..0,11
+    .names[2]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 0,10..0,11
+      .name 'c'
+'''),
+
+(1, 'body[0]', 1, 3, None, {}, ('exec',
+r'''import a, b, c  # comment'''), (None,
+r'''**DEL**'''),
+r'''import a  # comment''', r'''
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Import - 0,0..0,8
+    .names[1]
+    0] alias - 0,7..0,8
+      .name 'a'
+'''),
+
+(2, 'body[0]', 0, 2, None, {}, ('exec',
+r'''import a, b, c  # comment'''), (None,
+r'''**DEL**'''),
+r'''import c  # comment''', r'''
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Import - 0,0..0,8
+    .names[1]
+    0] alias - 0,7..0,8
+      .name 'c'
+'''),
+
+(3, 'body[0]', 1, 2, None, {}, ('exec', r'''
+import a \
+, \
+b \
+, \
+c  # comment
+'''), (None,
+r'''**DEL**'''), r'''
+import a \
+, \
+c  # comment
+''', r'''
+Module - ROOT 0,0..2,12
+  .body[1]
+  0] Import - 0,0..2,1
+    .names[2]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 2,0..2,1
+      .name 'c'
+'''),
+
+(4, 'body[0]', 0, 2, None, {}, ('exec', r'''
+import a \
+, \
+b \
+, \
+c  # comment
+'''), (None,
+r'''**DEL**'''), r'''
+import \
+c  # comment
+''', r'''
+Module - ROOT 0,0..1,12
+  .body[1]
+  0] Import - 0,0..1,1
+    .names[1]
+    0] alias - 1,0..1,1
+      .name 'c'
+'''),
+
+(5, 'body[0]', 1, 3, None, {}, ('exec', r'''
+import a \
+, \
+b \
+, \
+c  # comment
+'''), (None,
+r'''**DEL**'''),
+r'''import a  # comment''', r'''
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Import - 0,0..0,8
+    .names[1]
+    0] alias - 0,7..0,8
+      .name 'a'
+'''),
+
+(6, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
+if 1:
+  import a \
+  , \
+  b  # comment
+  pass
+'''), (None,
+r'''**DEL**'''), r'''
+if 1:
+  import  \
+  b  # comment
+  pass
+''', r'''
+Module - ROOT 0,0..3,6
+  .body[1]
+  0] If - 0,0..3,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Import - 1,2..2,3
+      .names[1]
+      0] alias - 2,2..2,3
+        .name 'b'
+    1] Pass - 3,2..3,6
+'''),
+
+(7, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+  import a \
+  , \
+  b  # comment
+  pass
+'''), (None,
+r'''**DEL**'''), r'''
+if 1:
+  import a  # comment
+  pass
+''', r'''
+Module - ROOT 0,0..2,6
+  .body[1]
+  0] If - 0,0..2,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Import - 1,2..1,10
+      .names[1]
+      0] alias - 1,9..1,10
+        .name 'a'
+    1] Pass - 2,2..2,6
+'''),
+
+(8, 'body[0].body[0]', 0, 0, None, {}, ('exec', r'''
+if 1:
+  import a
+  pass
+'''), ('Import_names', r'''
+x \
+  , \
+  y
+
+'''), r'''
+if 1:
+  import x \
+         , \
+         y, \
+         a
+  pass
+''', r'''
+Module - ROOT 0,0..5,6
+  .body[1]
+  0] If - 0,0..5,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Import - 1,2..4,10
+      .names[3]
+      0] alias - 1,9..1,10
+        .name 'x'
+      1] alias - 3,9..3,10
+        .name 'y'
+      2] alias - 4,9..4,10
+        .name 'a'
+    1] Pass - 5,2..5,6
+'''),
+
+(9, 'body[0]', 1, 2, None, {}, ('exec',
+r'''import a, b, c  # comment'''), ('Import_names',
+r'''x'''),
+r'''import a, x, c  # comment''', r'''
+Module - ROOT 0,0..0,25
+  .body[1]
+  0] Import - 0,0..0,14
+    .names[3]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 0,10..0,11
+      .name 'x'
+    2] alias - 0,13..0,14
+      .name 'c'
+'''),
+
+(10, 'body[0]', 1, 2, None, {}, ('exec',
+r'''import a, b, c  # comment'''), ('Import_names',
+r'''x.y'''),
+r'''import a, x.y, c  # comment''', r'''
+Module - ROOT 0,0..0,27
+  .body[1]
+  0] Import - 0,0..0,16
+    .names[3]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 0,10..0,13
+      .name 'x.y'
+    2] alias - 0,15..0,16
+      .name 'c'
+'''),
+
+(11, 'body[0]', None, None, None, {}, ('exec',
+r'''import a, b, c  # comment'''), ('Import_names', r'''
+x \
+
+'''),
+r'''import x  # comment''', r'''
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Import - 0,0..0,8
+    .names[1]
+    0] alias - 0,7..0,8
+      .name 'x'
 '''),
 ],
 

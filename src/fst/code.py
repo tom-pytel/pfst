@@ -19,7 +19,6 @@ from .asttypes import (
     Interactive,
     MatchOr,
     Module,
-    Name,
     Pass,
     Tuple,
     alias,
@@ -39,6 +38,7 @@ from .asttypes import (
     TryStar,
     type_param,
     _slice_Assign_targets,
+    _slice_aliases,
     _slice_type_params,
 )
 
@@ -400,9 +400,6 @@ def code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *,
         if not isinstance(ast, expr):
             raise NodeError(f'{expecting()}, got {ast.__class__.__name__}', rawable=True)
 
-        if isinstance(ast, Tuple) and (elts := ast.elts) and not all(isinstance(elt := e, expr) for e in elts):  # SPECIAL SLICE!
-            raise NodeError(f'{expecting()}, got Tuple containing {elt.__class__.__name__}', rawable=True)
-
     if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
@@ -546,15 +543,9 @@ def code_as_alias(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize:
 
 
 def code_as_aliases(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
-    """Convert `code` to a `Tuple` of `alias` `FST` SPECIAL SLICE if possible, star or dotted."""
+    """Convert `code` to a `_slice_alias` of `alias` SPECIAL SLICE if possible, star or dotted."""
 
-    fst_ = _code_as(code, Tuple, parse_params, parse_aliases, sanitize=sanitize)
-
-    if fst_ is code:  # validation if was passed in as FST
-        if (elts := fst_.a.elts) and any(not isinstance(bad := e, alias) for e in elts):
-            raise ParseError(f'expecting aliases, got {bad.__class__.__name__}')
-
-    return fst_
+    return _code_as(code, _slice_aliases, parse_params, parse_aliases, sanitize=sanitize)
 
 
 def code_as_Import_name(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
@@ -570,15 +561,14 @@ def code_as_Import_name(code: Code, parse_params: Mapping[str, Any] = {}, *, san
 
 
 def code_as_Import_names(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
-    """Convert `code` to a `Tuple` of `alias` `FST` SPECIAL SLICE if possible, dotted as in `alias` for
+    """Convert `code` to a `_slice_alias` of `alias` SPECIAL SLICE if possible, dotted as in `alias` for
     `Import.names`."""
 
-    fst_ = _code_as(code, Tuple, parse_params, parse_Import_names, sanitize=sanitize)
+    fst_ = _code_as(code, _slice_aliases, parse_params, parse_Import_names, sanitize=sanitize)
 
     if fst_ is code:  # validation if was passed in as FST
-        if (elts := fst_.a.elts) and any(not (is_alias := isinstance(bad := e, alias)) or e.name == '*' for e in elts):
-            raise ParseError("'*' star alias not allowed" if is_alias else
-                             f'expecting aliases, got {bad.__class__.__name__}')
+        if any(n.name == '*' for n in fst_.a.names):
+            raise ParseError("'*' star alias not allowed")
 
     return fst_
 
@@ -596,15 +586,14 @@ def code_as_ImportFrom_name(code: Code, parse_params: Mapping[str, Any] = {}, *,
 
 
 def code_as_ImportFrom_names(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
-    """Convert `code` to a `Tuple` of `alias` `FST` SPECIAL SLICE if possible, possibly star as in `alias` for
-    `FromImport.names`."""
+    """Convert `code` to a `_slice_alias` of `alias` SPECIAL SLICE if possible, possibly star as in `alias`
+    for `FromImport.names`."""
 
-    fst_ = _code_as(code, Tuple, parse_params, parse_ImportFrom_names, sanitize=sanitize)
+    fst_ = _code_as(code, _slice_aliases, parse_params, parse_ImportFrom_names, sanitize=sanitize)
 
     if fst_ is code:  # validation if was passed in as FST
-        if (elts := fst_.a.elts) and any(not (is_alias := isinstance(bad := e, alias)) or '.' in e.name for e in elts):
-            raise ParseError("'.' dotted alias not allowed" if is_alias else
-                             f'expecting aliases, got {bad.__class__.__name__}')
+        if any('.' in n.name for n in fst_.a.names):
+            raise ParseError("'.' dotted alias not allowed")
 
     return fst_
 
@@ -645,7 +634,7 @@ def code_as_type_params(code: Code, parse_params: Mapping[str, Any] = {}, *, san
 
 
 def code_as_Assign_targets(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
-    """Convert `code` to an `_slice_Assign_targets` SPECIAL SLICE `FST` if possible."""
+    """Convert `code` to an `_slice_Assign_targets` SPECIAL SLICE if possible."""
 
     return _code_as(code, _slice_Assign_targets, parse_params, parse_Assign_targets, sanitize=sanitize)
 

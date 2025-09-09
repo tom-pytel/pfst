@@ -109,6 +109,7 @@ from .asttypes import (
     TemplateStr,
     Interpolation,
     _slice_Assign_targets,
+    _slice_aliases,
     _slice_type_params,
 )
 
@@ -629,6 +630,7 @@ _GET_ONE_HANDLERS = {
     (TypeVarTuple, 'default_value'):      _get_one_default,  # expr?
 
     (_slice_Assign_targets, 'targets'):   _get_one_default,  # expr*
+    (_slice_aliases, 'names'):            _get_one_default,  # alias*
     (_slice_type_params, 'type_params'):  _get_one_default,  # type_param*
 
 
@@ -1549,16 +1551,6 @@ def _put_one_Tuple_elts(self: fst.FST, code: _PutOneCode, idx: int | None, field
     Slices."""
 
     ast = self.a
-
-    if (elts := ast.elts) and not isinstance(e0 := elts[0], expr):  # SPECIAL SLICE
-        # if isinstance(e0, type_param):
-        #     return _put_one_exprish_required(self, code, idx, field, child, _onestatic_type_param_required, options)
-
-        if isinstance(e0, alias):
-            return _put_one_exprish_required(self, code, idx, field, child, _onestatic_alias_required, options)
-
-        raise NodeError(f'unexpected Tuple contents, {e0.__class__.__name__}', rawable=True)
-
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params)
     pfield = self.pfield
@@ -2800,6 +2792,7 @@ _PUT_ONE_HANDLERS = {
     (TypeVarTuple, 'default_value'):      (False, _put_one_exprish_optional, onestatic(_one_info_TypeVarTuple_default_value, _restrict_default)),  # expr?
 
     (_slice_Assign_targets, 'targets'):   (True,  _put_one_exprish_required, _onestatic_target),  # expr*
+    (_slice_aliases, 'names'):            (True,  _put_one_exprish_required, _onestatic_alias_required),  # alias*
     (_slice_type_params, 'type_params'):  (True,  _put_one_exprish_required, _onestatic_type_param_required),  # type_param*
 
 

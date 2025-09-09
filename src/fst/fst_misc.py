@@ -71,6 +71,7 @@ from .misc import (
     ParamsOffset, params_offset, multiline_str_continuation_lns, multiline_fstr_continuation_lns,
 )
 
+
 _HAS_FSTR_COMMENT_BUG  = f'{"a#b"=}' != '"a#b"=\'a#b\''
 
 _astfieldctx           = astfield('ctx')

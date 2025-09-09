@@ -60,12 +60,12 @@ from .asttypes import (
     Yield,
     YieldFrom,
     comprehension,
-    alias,
     match_case,
     TryStar,
     TypeAlias,
     TemplateStr,
     _slice_Assign_targets,
+    _slice_aliases,
     _slice_type_params,
 )
 
@@ -86,12 +86,15 @@ from .extparse import unparse
 
 from .code import (
     Code,
+    code_as_alias, code_as_aliases,
     code_as_Import_name, code_as_Import_names,
+    # code_as_ImportFrom_name, code_as_ImportFrom_names,
     code_as_expr, code_as_expr_all, code_as_pattern,
-    code_as_aliases, code_as_type_param, code_as_type_params, code_as_Assign_targets,
+    code_as_type_param, code_as_type_params, code_as_Assign_targets,
 )
 
 from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish
+
 
 _re_close_delim_or_space_or_end = re.compile(r'[)}\s\]]|$')
 
@@ -848,7 +851,8 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
-        return self._new_empty_tuple(from_=self)
+        return fst.FST(_slice_aliases(names=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''],
+                       from_=self)
 
     if cut and not start and stop == len_body:
         raise ValueError('cannot cut all Import.names')
@@ -864,16 +868,16 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
         bound_ln, bound_col, _, _ = loc_first
 
     asts = _cut_or_copy_asts(start, stop, 'names', cut, body)
-    ret_ast = Tuple(elts=asts, ctx=Load())
+    ret_ast = _slice_aliases(names=asts)
 
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
                           options.get('trivia'), 'names', '', '', ',', False, False)
 
-    if (fst_first := (elts := fst_.a.elts)[0].f.loc)[:2] != (0, 0):  # clean up newline start
+    if (fst_first := (names := fst_.a.names)[0].f.loc)[:2] != (0, 0):  # clean up newline start
         fst_._put_src(None, 0, 0, fst_first.ln, fst_first.col, False)
 
-    if (fst_last := elts[-1].f.loc)[2:] != (fst_loc := fst_.loc)[2:]:  # clean up newline end
+    if (fst_last := names[-1].f.loc)[2:] != (fst_loc := fst_.loc)[2:]:  # clean up newline end
         fst_._put_src(None, fst_last.end_ln, fst_last.end_col, fst_loc.end_ln, fst_loc.end_col, True)
 
     if cut:
@@ -1203,9 +1207,6 @@ def _get_slice__slice(self: fst.FST, start: int | Literal['end'] | None, stop: i
                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
                           options.get('trivia'), field, '', '', static.sep, static.self_tail_sep, static.ret_tail_sep)
 
-    # if cls is _slice_Assign_targets and not fst_._lines[0]:  # we do not allow starting a newline with these
-    #     fst_._put_src(None, 0, 0, 1, 0, False)
-
     return fst_
 
 # ......................................................................................................................
@@ -1298,6 +1299,7 @@ _GET_SLICE_HANDLERS = {
 
     (_slice_Assign_targets, 'targets'):       _get_slice__slice,
     # (_slice_Assign_comprehension_ifs, 'ifs'): _get_slice__slice,
+    (_slice_aliases, 'names'):                _get_slice__slice,
     (_slice_type_params, 'type_params'):      _get_slice__slice,
 }
 
@@ -1898,16 +1900,22 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
     return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
 
-def _code_to_slice_aliases(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]) -> fst.FST | None:
+def _code_to_slice_aliases(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
+                           code_as_one: Callable = code_as_alias, code_as_slice: Callable = code_as_aliases,
+                           ) -> fst.FST | None:
     if code is None:
         return None
 
     if one:
-        raise ValueError(f"cannot put as 'one' item to {self.a.__class__.__name__}.names")
+        fst_ = code_as_one(code, self.root.parse_params, sanitize=False)
 
-    fst_ = code_as_aliases(code, self.root.parse_params, sanitize=False)
+        return fst.FST(_slice_aliases(names=[fst_.a], lineno=(el := len(ls := fst_._lines)),
+                                      col_offset=(ec := ls[-1].lenbytes), end_lineno=el, end_col_offset=ec),
+                       ls, from_=fst_, lcopy=False)
 
-    if not fst_.a.elts:  # put empty sequence is same as delete
+    fst_ = code_as_slice(code, self.root.parse_params, sanitize=False)
+
+    if not fst_.a.names:  # put empty sequence is same as delete
         return None
 
     return fst_
@@ -1954,26 +1962,6 @@ def _code_to_slice_Assign_targets(self: fst.FST, code: Code | None, one: bool, o
         fst_ = code_as_Assign_targets(code, self.root.parse_params, sanitize=False)
 
         if not fst_.a.targets:  # put empty sequence is same as delete
-            return None
-
-    return fst_
-
-
-def _code_to_slice_Import_names(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]) -> fst.FST | None:
-    if code is None:
-        return None
-
-    if one:
-        fst_ = code_as_Import_name(code, self.root.parse_params, sanitize=False)
-
-        return fst.FST(Tuple(elts=[fst_.a], ctx=Load(), lineno=(el := len(ls := fst_._lines)),
-                             col_offset=(ec := ls[-1].lenbytes), end_lineno=el, end_col_offset=ec),
-                       ls, from_=fst_, lcopy=False)
-
-    else:
-        fst_ = code_as_Import_names(code, self.root.parse_params, sanitize=False)
-
-        if not fst_.a.elts:  # put empty sequence is same as delete
             return None
 
     return fst_
@@ -2054,17 +2042,7 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
                           field: str, one: bool, options: Mapping[str, Any]) -> None:
     """Tuple is used in many different ways in python, also for expressionish slices by us."""
 
-    fst_ = None
-
-    if elts := (ast := self.a).elts:  # SPECIAL SLICEs
-        if isinstance(e0 := elts[0], alias):
-            fst_ = _code_to_slice_aliases(self, code, one, options)
-        # elif isinstance(e0, type_param):
-        #     fst_ = _code_to_slice_type_params(self, code, one, options)
-
-    if fst_ is None:
-        fst_ = _code_to_slice_seq(self, code, one, options, code_as=code_as_expr_all)
-
+    fst_ = _code_to_slice_seq(self, code, one, options, code_as=code_as_expr_all)
     body = (ast := self.a).elts
     start, stop = fixup_slice_indices(len(body), start, stop)
 
@@ -2374,7 +2352,7 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
 
 def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                             field: str, one: bool, options: Mapping[str, Any]) -> None:
-    fst_ = _code_to_slice_Import_names(self, code, one, options)
+    fst_ = _code_to_slice_aliases(self, code, one, options, code_as_Import_name, code_as_Import_names)
     len_body = len(body := (ast := self.a).names)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
@@ -2408,7 +2386,7 @@ def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Liter
         len_fst_body = 0
 
     else:
-        len_fst_body = len(fst_body := fst_.a.elts)
+        len_fst_body = len(fst_body := fst_.a.names)
 
         _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
                        bound_ln, bound_col, bound_end_ln, bound_end_col,
@@ -2920,6 +2898,7 @@ _PUT_SLICE_HANDLERS = {
 
     (_slice_Assign_targets, 'targets'):       _put_slice__slice,
     # (_slice_Assign_comprehension_ifs, 'ifs'): _put_slice__slice,
+    (_slice_aliases, 'names'):                _put_slice__slice,
     (_slice_type_params, 'type_params'):      _put_slice__slice,
 }
 
@@ -3063,6 +3042,7 @@ class slicestatic(NamedTuple):
 
 _SLICE_STATICS = {
     _slice_Assign_targets: slicestatic('targets', _code_to_slice_Assign_targets, '=', True, True),
+    _slice_aliases:        slicestatic('names', _code_to_slice_aliases, ',', False, False),
     _slice_type_params:    slicestatic('type_params', _code_to_slice_type_params, ',', False, False),
 }
 

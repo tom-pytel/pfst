@@ -1641,6 +1641,10 @@ def func():
         self.assertEqual('del b', f.put_slice(None, 0, 1).src)
         f.verify()
 
+        # make sure we can't put '* to Import.names
+
+        self.assertRaises(NodeError, FST('import a, b, c').put, FST('*', 'ImportFrom_names'), 1, 2)
+
     def test_put_slice_seq_namedexpr_and_yield(self):
         self.assertEqual('a, (x := y)', (f := FST('a, b')).put_slice('x := y', 1, 2, one=True).src)
         f.verify()

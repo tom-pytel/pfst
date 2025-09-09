@@ -18,6 +18,7 @@ from .misc import (
 from .extparse import Mode, unparse
 from .code import Code
 
+
 _PATH_BODY          = [astfield('body', 0)]
 _PATH_BODY2         = [astfield('body', 0), astfield('body', 0)]
 _PATH_BODYORELSE    = [astfield('body', 0), astfield('orelse', 0)]

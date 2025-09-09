@@ -4004,15 +4004,6 @@ c, # c
     def test_put_one_negative_idx(self):
         FST('{**b}').put('a', -1, 'keys')
 
-    def test_put_one_to_tuple_special_slice(self):
-        f = FST('a as b, x.y as z', 'aliases')
-        self.assertRaises(SyntaxError, f.put, 'c()', 0)
-        self.assertEqual('u as v, x.y as z', f.put('u as v', 0).root.src)
-        self.assertIsInstance(f.a.elts[0], alias)
-        self.assertEqual('u as v, u.v.w', f.put('u.v.w', 1).root.src)
-        self.assertIsInstance(f.a.elts[1], alias)
-        f.verify()
-
     def test_put_src(self):
         for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_SRC_DATA):
             t = parse(dst)

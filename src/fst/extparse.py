@@ -85,13 +85,13 @@ from .asttypes import (
     type_param,
     _slice,
     _slice_Assign_targets,
+    _slice_aliases,
     _slice_type_params,
 )
 
 
 from .astutil import (
     pat_alnum, bistr,
-    OPCLS2STR,
     walk, reduce_ast,
 )
 
@@ -178,6 +178,7 @@ _re_parse_all_category = re.compile(r'''
 
 _SLICE_PARSE_MODES = {
     _slice_Assign_targets: 'Assign_targets',
+    _slice_aliases:        'aliases',
     _slice_type_params:    'type_params',
 }
 
@@ -198,12 +199,8 @@ def _fixing_unparse(ast: AST) -> str:
 def _unparse_Tuple(ast: AST) -> str:
     src = _fixing_unparse(ast)
 
-    if elts := ast.elts:
-        if not isinstance(elts[0], expr):  # our own SPECIAL SLICEs cannot have parentheses OR trailing commas
-            return src[1 : (-1 if len(elts) != 1 else -2)]
-
-        if any(isinstance(e, Slice) for e in elts):  # tuples with Slices cannot have parentheses
-            return src[1 : -1]
+    if (elts := ast.elts) and any(isinstance(e, Slice) for e in elts):  # tuples with Slices cannot have parentheses
+        return src[1 : -1]
 
     return src
 
@@ -212,6 +209,10 @@ def _unparse__slice_Assign_targets(ast: AST) -> str:
     return _fixing_unparse(Assign(targets=ast.targets, value=Name(id='', ctx=Load(), lineno=1, col_offset=0,
                                                                   end_lineno=1, end_col_offset=0),
                                   lineno=1, col_offset=0, end_lineno=1, end_col_offset=0)).rstrip()
+
+
+def _unparse__slice_aliases(ast: AST) -> str:
+    return _fixing_unparse(List(elts=ast.names, lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[1:-1]
 
 
 def _unparse__slice_type_params(ast: AST) -> str:
@@ -251,6 +252,7 @@ _UNPARSE_FUNCS = {
     Or:                     lambda ast: 'or',
     comprehension:          lambda ast: _fixing_unparse(ast).lstrip(),  # strip prefix space from this
     _slice_Assign_targets: _unparse__slice_Assign_targets,
+    _slice_aliases:        _unparse__slice_aliases,
     _slice_type_params:    _unparse__slice_type_params,
 }
 
@@ -440,18 +442,25 @@ Mode = Literal[
 - `'keyword'`: Parse as a single `keyword` returned as itself. Same as passing `keyword` type.
 - `'alias'`: Parse as a single `alias` returned as itself. Either starred or dotted versions are accepted. Same
     as passing `alias` type.
+- `'aliases'`: Parse zero or more `alias`es returned in a `_slice_aliases` SPECIAL SLICE. Either starred or dotted
+    versions are accepted. Does not need trailing comma for a single element.
 - `'Import_name'`: Parse as a single `alias` returned as itself, with starred version being a syntax error. This is the
     `alias` used in `Import.names`.
+- `'Import_names'`: Parse zero or more `alias` returned in a `_slice_aliases` SPECIAL SLICE, with starred version being
+    a syntax error. Does not need trailing comma for a single element. This is the `alias` used in `Import.names`.
 - `'ImportFrom_name'`: Parse as a single `alias` returned as itself, with dotted version being a syntax error. This is
     the `alias` used in `ImportFrom.names`.
+- `'ImportFrom_names'`: Parse zero or more `alias` returned in a `_slice_aliases` SPECIAL SLICE, with dotted version
+    being a syntax error. Does not need trailing comma for a single element. This is the `alias` used in
+    `ImportFrom.names`.
 - `'withitem'`: Parse as a single `withitem` returned as itself. Same as passing `withitem` type.
 - `'pattern'`: Parse as a a single `pattern` returned as itself. Same as passing `pattern` type.
 - `'type_param'`: Parse as a single `type_param` returned as itself, either `TypeVar`, `ParamSpec` or
     `TypeVarTuple`. Same as passing `type_param` type.
-- `'type_params'`: Parse as a slice of zero or more `type_param`s returned in `_slice_type_params` node, does not need
-    trailing comma for a single element (our own SPECIAL SLICE).
-- `'Assign_targets'`: Parse as a single or multiple targets, returned in `_slice_Assign_targets` node, with `=` as
-    separators and an optional trailing `=` (our own SPECIAL SLICE).
+- `'type_params'`: Parse zero or more `type_param`s returned in a `_slice_type_params` SPECIAL SLICE. Does not need
+    trailing comma for a single element.
+- `'Assign_targets'`: Parse zero or more `Assign` targets returned in a `_slice_Assign_targets` SPECIAL SLICE, with `=`
+    as separators and an optional trailing `=`.
 - `type[AST]`: If an `AST` type is passed then will attempt to parse to this type. This can be used to narrow
     the scope of desired return, for example `Constant` will parse as an expression but fail if the expression
     is not a `Constant`. These overlap with the string specifiers to an extent but not all of them. For example
@@ -490,14 +499,6 @@ def get_special_parse_mode(ast: AST) -> str | None:
                 return 'ExceptHandlers'
             elif isinstance(b0, match_case):
                 return 'match_cases'
-
-    elif isinstance(ast, Tuple):
-        if elts := ast.elts:
-            # if isinstance(e0 := elts[0], type_param):
-            #     return 'type_params'
-
-            if isinstance(elts[0], alias):
-                return 'aliases'
 
     elif isinstance(ast, _slice):
         return _SLICE_PARSE_MODES[ast.__class__]
@@ -1206,8 +1207,7 @@ def parse_alias(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_aliases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to a `Tuple` of `ast.alias` (our own SPECIAL SLICE), allowing star or dotted notation or star, e.g.
-    "name as alias".
+    """Parse to a `_slice_aliases` of `alias` SPECIAL SLICE, allowing star or dotted, e.g. "name as alias".
 
     @private
     """
@@ -1246,7 +1246,7 @@ def parse_Import_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_Import_names(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to a `Tuple` of `ast.alias` (our own SPECIAL SLICE), allowing dotted notation but not star.
+    """Parse to a `_slice_aliases` of `alias` SPECIAL SLICE, allowing dotted notation but not star.
 
     @private
     """
@@ -1266,8 +1266,8 @@ def parse_Import_names(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             except SyntaxError:
                 raise first_exc from None
 
-    ast = Tuple(elts=names, ctx=Load(), lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
-                end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
+    ast = _slice_aliases(names=names, lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
+                         end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
 
     return _offset_linenos(ast, -1)
 
@@ -1296,7 +1296,7 @@ def parse_ImportFrom_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST
 
 
 def parse_ImportFrom_names(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to a `Tuple` of `ast.alias` (our own SPECIAL SLICE), allowing star but not dotted.
+    """Parse to a `_slice_aliases` of `alias` SPECIAL SLICE, allowing star but not dotted.
 
     @private
     """
@@ -1316,8 +1316,8 @@ def parse_ImportFrom_names(src: str, parse_params: Mapping[str, Any] = {}) -> AS
             except SyntaxError:
                 raise first_exc from None
 
-    ast = Tuple(elts=names, ctx=Load(), lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
-                end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
+    ast = _slice_aliases(names=names, lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
+                         end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
 
     return _offset_linenos(ast, -1)
 
@@ -1412,7 +1412,7 @@ def parse_type_param(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse zero or more `ast.type_param`s and return them in a `_slice_type_params` (our own SPECIAL SLICE).
+    """Parse zero or more `ast.type_param`s and return them in a `_slice_type_params` SPECIAL SLICE.
 
     @private
     """
@@ -1433,8 +1433,8 @@ def parse_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse zero or more `Assign` targets and return them in a `_slice_Assign_targets` (our own SPECIAL SLICE). Takes
-    `=` as separators and accepts an optional trailing `=`.
+    """Parse zero or more `Assign` targets and return them in a `_slice_Assign_targets` SPECIAL SLICE. Takes `=` as
+    separators and accepts an optional trailing `=`.
 
     @private
     """
@@ -1537,6 +1537,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     Store:                    lambda src, parse_params = {}: Store(),
     Del:                      lambda src, parse_params = {}: Del(),
     _slice_Assign_targets:    parse_Assign_targets,
+    _slice_aliases:           parse_aliases,
     _slice_type_params:       parse_type_params,
 }
 

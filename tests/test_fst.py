@@ -5,7 +5,7 @@ import unittest
 from ast import parse as ast_parse, unparse as ast_unparse
 
 from fst import *
-from fst.asttypes import _slice_Assign_targets, _slice_type_params
+from fst.asttypes import _slice_Assign_targets, _slice_aliases, _slice_type_params
 from fst.astutil import OPCLS2STR, WalkFail, copy_ast, compare_asts
 from fst.misc import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, astfield, fstloc
 from fst.view import fstview
@@ -303,16 +303,16 @@ PARSE_TESTS = [
     ('alias',             ep.parse_alias,             ParseError,               'a as x, b as y'),
     ('alias',             ep.parse_alias,             ParseError,               'a as x, a.b as y'),
 
-    ('aliases',           ep.parse_aliases,           Tuple,                    ''),
-    ('aliases',           ep.parse_aliases,           Tuple,                    'a'),
-    ('aliases',           ep.parse_aliases,           Tuple,                    'a.b'),
-    ('aliases',           ep.parse_aliases,           Tuple,                    '*'),
-    ('aliases',           ep.parse_aliases,           Tuple,                    'a, b'),
-    ('aliases',           ep.parse_aliases,           Tuple,                    'a as c'),
-    ('aliases',           ep.parse_aliases,           Tuple,                    'a.b as c'),
+    ('aliases',           ep.parse_aliases,           _slice_aliases,           ''),
+    ('aliases',           ep.parse_aliases,           _slice_aliases,           'a'),
+    ('aliases',           ep.parse_aliases,           _slice_aliases,           'a.b'),
+    ('aliases',           ep.parse_aliases,           _slice_aliases,           '*'),
+    ('aliases',           ep.parse_aliases,           _slice_aliases,           'a, b'),
+    ('aliases',           ep.parse_aliases,           _slice_aliases,           'a as c'),
+    ('aliases',           ep.parse_aliases,           _slice_aliases,           'a.b as c'),
     ('aliases',           ep.parse_aliases,           SyntaxError,              '* as c'),
-    ('aliases',           ep.parse_aliases,           Tuple,                    'a as x, b as y'),
-    ('aliases',           ep.parse_aliases,           Tuple,                    'a as x, a.b as y'),
+    ('aliases',           ep.parse_aliases,           _slice_aliases,           'a as x, b as y'),
+    ('aliases',           ep.parse_aliases,           _slice_aliases,           'a as x, a.b as y'),
 
     ('Import_name',       ep.parse_Import_name,       SyntaxError,              ''),
     ('Import_name',       ep.parse_Import_name,       alias,                    'a'),
@@ -325,16 +325,16 @@ PARSE_TESTS = [
     ('Import_name',       ep.parse_Import_name,       ParseError,               'a as x, b as y'),
     ('Import_name',       ep.parse_Import_name,       ParseError,               'a as x, a.b as y'),
 
-    ('Import_names',      ep.parse_Import_names,      Tuple,                    ''),
-    ('Import_names',      ep.parse_Import_names,      Tuple,                    'a'),
-    ('Import_names',      ep.parse_Import_names,      Tuple,                    'a.b'),
+    ('Import_names',      ep.parse_Import_names,      _slice_aliases,           ''),
+    ('Import_names',      ep.parse_Import_names,      _slice_aliases,           'a'),
+    ('Import_names',      ep.parse_Import_names,      _slice_aliases,           'a.b'),
     ('Import_names',      ep.parse_Import_names,      SyntaxError,              '*'),
-    ('Import_names',      ep.parse_Import_names,      Tuple,                    'a, b'),
-    ('Import_names',      ep.parse_Import_names,      Tuple,                    'a as c'),
-    ('Import_names',      ep.parse_Import_names,      Tuple,                    'a.b as c'),
+    ('Import_names',      ep.parse_Import_names,      _slice_aliases,           'a, b'),
+    ('Import_names',      ep.parse_Import_names,      _slice_aliases,           'a as c'),
+    ('Import_names',      ep.parse_Import_names,      _slice_aliases,           'a.b as c'),
     ('Import_names',      ep.parse_Import_names,      SyntaxError,              '* as c'),
-    ('Import_names',      ep.parse_Import_names,      Tuple,                    'a as x, b as y'),
-    ('Import_names',      ep.parse_Import_names,      Tuple,                    'a as x, a.b as y'),
+    ('Import_names',      ep.parse_Import_names,      _slice_aliases,           'a as x, b as y'),
+    ('Import_names',      ep.parse_Import_names,      _slice_aliases,           'a as x, a.b as y'),
 
     ('ImportFrom_name',   ep.parse_ImportFrom_name,   SyntaxError,              ''),
     ('ImportFrom_name',   ep.parse_ImportFrom_name,   alias,                    'a'),
@@ -347,15 +347,15 @@ PARSE_TESTS = [
     ('ImportFrom_name',   ep.parse_ImportFrom_name,   ParseError,               'a as x, b as y'),
     ('ImportFrom_name',   ep.parse_ImportFrom_name,   SyntaxError,              'a as x, a.b as y'),
 
-    ('ImportFrom_names',  ep.parse_ImportFrom_names,  Tuple,                    ''),
-    ('ImportFrom_names',  ep.parse_ImportFrom_names,  Tuple,                    'a'),
+    ('ImportFrom_names',  ep.parse_ImportFrom_names,  _slice_aliases,           ''),
+    ('ImportFrom_names',  ep.parse_ImportFrom_names,  _slice_aliases,           'a'),
     ('ImportFrom_names',  ep.parse_ImportFrom_names,  SyntaxError,              'a.b'),
-    ('ImportFrom_names',  ep.parse_ImportFrom_names,  Tuple,                    '*'),
-    ('ImportFrom_names',  ep.parse_ImportFrom_names,  Tuple,                    'a, b'),
-    ('ImportFrom_names',  ep.parse_ImportFrom_names,  Tuple,                    'a as c'),
+    ('ImportFrom_names',  ep.parse_ImportFrom_names,  _slice_aliases,           '*'),
+    ('ImportFrom_names',  ep.parse_ImportFrom_names,  _slice_aliases,           'a, b'),
+    ('ImportFrom_names',  ep.parse_ImportFrom_names,  _slice_aliases,           'a as c'),
     ('ImportFrom_names',  ep.parse_ImportFrom_names,  SyntaxError,              'a.b as c'),
     ('ImportFrom_names',  ep.parse_ImportFrom_names,  SyntaxError,              '* as c'),
-    ('ImportFrom_names',  ep.parse_ImportFrom_names,  Tuple,                    'a as x, b as y'),
+    ('ImportFrom_names',  ep.parse_ImportFrom_names,  _slice_aliases,           'a as x, b as y'),
     ('ImportFrom_names',  ep.parse_ImportFrom_names,  SyntaxError,              'a as x, a.b as y'),
 
     ('withitem',          ep.parse_withitem,          withitem,                 'a'),
@@ -2928,7 +2928,7 @@ match a:
             try:
                 ast = ep.parse(src, mode)
 
-                if ep.get_special_parse_mode(ast):  # this tells us if it is a SPECIAL SLICE, which are not handled as input to `code_as_all()`
+                if ep.get_special_parse_mode(ast):  # this tells us if it is a SPECIAL SLICE, which are not handled as input to `code_as_all()`  TODO: remove this check once ExceptHandler and match_case special slices moved from Module to their own _slice_? AST classes
                     continue
 
                 astc = copy_ast(ast)
@@ -2979,9 +2979,7 @@ match a:
 
                     compare_asts(ref_ast, fst.a, locs=True, raise_=True)
 
-                    if (not fst.is_special_slice() and  # because pure AST SPECIAL SLICEs are not supported
-                        (src or func not in (ep.parse_Assign_targets, ep.parse_aliases, ep.parse_Import_names, ep.parse_ImportFrom_names))  # these unparse to '()' which can't be reparsed as these
-                    ):
+                    if fst.get_parse_mode() not in ('ExceptHandlers', 'match_cases'):  # this tells us if it is a SPECIAL SLICE, which can not be unparsed  TODO: remove this check once ExceptHandler and match_case special slices moved from Module to their own _slice_? AST classes
                         test = 'ast'
 
                         try:

@@ -110,6 +110,7 @@ __all__ = [
     'parse', 'unparse', 'dump', 'FST',
 ]
 
+
 _DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_version=None)
 _DEFAULT_INDENT = '    '
 
@@ -4198,7 +4199,7 @@ class FST:
 
     def is_special_slice(self) -> bool:
         """Whether `self` is an instance of our own SPECIAL SLICE format and not a valid python structure. For example
-        a `Set` or `MatchOr` with zero elements or a `Tuple` containing things it normally cannot.
+        a `Set` or `MatchOr` with zero elements or our own `_special_slice_*` `AST` class.
 
         **Returns:**
         - `bool`: Whether self is a recognized SPECIAL SLICE or not (if not it still doesn't mean its valid).

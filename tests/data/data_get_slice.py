@@ -6161,251 +6161,6 @@ Tuple - ROOT 0,0..1,3
   0] Name 'b' Load - 1,0..1,1
   .ctx Load
 '''),
-
-(92, 'body[0]', 1, 2, None, {}, ('exec',
-r'''import a, b as y, c  # comment'''),
-r'''import a, c  # comment''', r'''
-Module - ROOT 0,0..0,22
-  .body[1]
-  0] Import - 0,0..0,11
-    .names[2]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 0,10..0,11
-      .name 'c'
-''',
-r'''b as y''', r'''
-Tuple - ROOT 0,0..0,6
-  .elts[1]
-  0] alias - 0,0..0,6
-    .name 'b'
-    .asname
-      'y'
-  .ctx Load
-'''),
-
-(93, 'body[0]', 1, 3, None, {}, ('exec',
-r'''import a, b as y, c  # comment'''),
-r'''import a  # comment''', r'''
-Module - ROOT 0,0..0,19
-  .body[1]
-  0] Import - 0,0..0,8
-    .names[1]
-    0] alias - 0,7..0,8
-      .name 'a'
-''',
-r'''b as y, c''', r'''
-Tuple - ROOT 0,0..0,9
-  .elts[2]
-  0] alias - 0,0..0,6
-    .name 'b'
-    .asname
-      'y'
-  1] alias - 0,8..0,9
-    .name 'c'
-  .ctx Load
-'''),
-
-(94, 'body[0]', 0, 2, None, {}, ('exec',
-r'''import a, b as y, c  # comment'''),
-r'''import c  # comment''', r'''
-Module - ROOT 0,0..0,19
-  .body[1]
-  0] Import - 0,0..0,8
-    .names[1]
-    0] alias - 0,7..0,8
-      .name 'c'
-''',
-r'''a, b as y''', r'''
-Tuple - ROOT 0,0..0,9
-  .elts[2]
-  0] alias - 0,0..0,1
-    .name 'a'
-  1] alias - 0,3..0,9
-    .name 'b'
-    .asname
-      'y'
-  .ctx Load
-'''),
-
-(95, 'body[0]', 1, 2, None, {}, ('exec', r'''
-import a \
-, \
-b \
-as \
-y \
-, \
-c  # comment
-'''), r'''
-import a \
-, \
-c  # comment
-''', r'''
-Module - ROOT 0,0..2,12
-  .body[1]
-  0] Import - 0,0..2,1
-    .names[2]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 2,0..2,1
-      .name 'c'
-''', r'''
-b \
-as \
-y
-''', r'''
-Tuple - ROOT 0,0..2,1
-  .elts[1]
-  0] alias - 0,0..2,1
-    .name 'b'
-    .asname
-      'y'
-  .ctx Load
-'''),
-
-(96, 'body[0]', 0, 2, None, {}, ('exec', r'''
-import a \
-, \
-b \
-as \
-y \
-, \
-c  # comment
-'''), r'''
-import \
-c  # comment
-''', r'''
-Module - ROOT 0,0..1,12
-  .body[1]
-  0] Import - 0,0..1,1
-    .names[1]
-    0] alias - 1,0..1,1
-      .name 'c'
-''', r'''
-a \
-, \
-b \
-as \
-y
-''', r'''
-Tuple - ROOT 0,0..4,1
-  .elts[2]
-  0] alias - 0,0..0,1
-    .name 'a'
-  1] alias - 2,0..4,1
-    .name 'b'
-    .asname
-      'y'
-  .ctx Load
-'''),
-
-(97, 'body[0]', 1, 3, None, {}, ('exec', r'''
-import a \
-, \
-b \
-as \
-y \
-, \
-c  # comment
-'''),
-r'''import a  # comment''', r'''
-Module - ROOT 0,0..0,19
-  .body[1]
-  0] Import - 0,0..0,8
-    .names[1]
-    0] alias - 0,7..0,8
-      .name 'a'
-''', r'''
-b \
-as \
-y \
-, \
-c
-''', r'''
-Tuple - ROOT 0,0..4,1
-  .elts[2]
-  0] alias - 0,0..2,1
-    .name 'b'
-    .asname
-      'y'
-  1] alias - 4,0..4,1
-    .name 'c'
-  .ctx Load
-'''),
-
-(98, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
-if 1:
-  import a \
-  , \
-  b \
-  as \
-  y # comment
-  pass
-'''), r'''
-if 1:
-  import  \
-  b \
-  as \
-  y # comment
-  pass
-''', r'''
-Module - ROOT 0,0..5,6
-  .body[1]
-  0] If - 0,0..5,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Import - 1,2..4,3
-      .names[1]
-      0] alias - 2,2..4,3
-        .name 'b'
-        .asname
-          'y'
-    1] Pass - 5,2..5,6
-''',
-r'''a''', r'''
-Tuple - ROOT 0,0..0,1
-  .elts[1]
-  0] alias - 0,0..0,1
-    .name 'a'
-  .ctx Load
-'''),
-
-(99, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
-if 1:
-  import a \
-  , \
-  b \
-  as \
-  y # comment
-  pass
-'''), r'''
-if 1:
-  import a # comment
-  pass
-''', r'''
-Module - ROOT 0,0..2,6
-  .body[1]
-  0] If - 0,0..2,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Import - 1,2..1,10
-      .names[1]
-      0] alias - 1,9..1,10
-        .name 'a'
-    1] Pass - 2,2..2,6
-''', r'''
-b \
-as \
-y
-''', r'''
-Tuple - ROOT 0,0..2,1
-  .elts[1]
-  0] alias - 0,0..2,1
-    .name 'b'
-    .asname
-      'y'
-  .ctx Load
-'''),
 ],
 
 'Assign_targets': [  # ................................................................................
@@ -6758,6 +6513,246 @@ _slice_Assign_targets - ROOT 0,0..4,1
 ''',
 r'''''',
 r'''_slice_Assign_targets - ROOT 0,0..0,0'''),
+],
+
+'Import_names': [  # ................................................................................
+
+(0, 'body[0]', 1, 2, None, {}, ('exec',
+r'''import a, b as y, c  # comment'''),
+r'''import a, c  # comment''', r'''
+Module - ROOT 0,0..0,22
+  .body[1]
+  0] Import - 0,0..0,11
+    .names[2]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 0,10..0,11
+      .name 'c'
+''',
+r'''b as y''', r'''
+_slice_aliases - ROOT 0,0..0,6
+  .names[1]
+  0] alias - 0,0..0,6
+    .name 'b'
+    .asname
+      'y'
+'''),
+
+(1, 'body[0]', 1, 3, None, {}, ('exec',
+r'''import a, b as y, c  # comment'''),
+r'''import a  # comment''', r'''
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Import - 0,0..0,8
+    .names[1]
+    0] alias - 0,7..0,8
+      .name 'a'
+''',
+r'''b as y, c''', r'''
+_slice_aliases - ROOT 0,0..0,9
+  .names[2]
+  0] alias - 0,0..0,6
+    .name 'b'
+    .asname
+      'y'
+  1] alias - 0,8..0,9
+    .name 'c'
+'''),
+
+(2, 'body[0]', 0, 2, None, {}, ('exec',
+r'''import a, b as y, c  # comment'''),
+r'''import c  # comment''', r'''
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Import - 0,0..0,8
+    .names[1]
+    0] alias - 0,7..0,8
+      .name 'c'
+''',
+r'''a, b as y''', r'''
+_slice_aliases - ROOT 0,0..0,9
+  .names[2]
+  0] alias - 0,0..0,1
+    .name 'a'
+  1] alias - 0,3..0,9
+    .name 'b'
+    .asname
+      'y'
+'''),
+
+(3, 'body[0]', 1, 2, None, {}, ('exec', r'''
+import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment
+'''), r'''
+import a \
+, \
+c  # comment
+''', r'''
+Module - ROOT 0,0..2,12
+  .body[1]
+  0] Import - 0,0..2,1
+    .names[2]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 2,0..2,1
+      .name 'c'
+''', r'''
+b \
+as \
+y
+''', r'''
+_slice_aliases - ROOT 0,0..2,1
+  .names[1]
+  0] alias - 0,0..2,1
+    .name 'b'
+    .asname
+      'y'
+'''),
+
+(4, 'body[0]', 0, 2, None, {}, ('exec', r'''
+import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment
+'''), r'''
+import \
+c  # comment
+''', r'''
+Module - ROOT 0,0..1,12
+  .body[1]
+  0] Import - 0,0..1,1
+    .names[1]
+    0] alias - 1,0..1,1
+      .name 'c'
+''', r'''
+a \
+, \
+b \
+as \
+y
+''', r'''
+_slice_aliases - ROOT 0,0..4,1
+  .names[2]
+  0] alias - 0,0..0,1
+    .name 'a'
+  1] alias - 2,0..4,1
+    .name 'b'
+    .asname
+      'y'
+'''),
+
+(5, 'body[0]', 1, 3, None, {}, ('exec', r'''
+import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment
+'''),
+r'''import a  # comment''', r'''
+Module - ROOT 0,0..0,19
+  .body[1]
+  0] Import - 0,0..0,8
+    .names[1]
+    0] alias - 0,7..0,8
+      .name 'a'
+''', r'''
+b \
+as \
+y \
+, \
+c
+''', r'''
+_slice_aliases - ROOT 0,0..4,1
+  .names[2]
+  0] alias - 0,0..2,1
+    .name 'b'
+    .asname
+      'y'
+  1] alias - 4,0..4,1
+    .name 'c'
+'''),
+
+(6, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
+if 1:
+  import a \
+  , \
+  b \
+  as \
+  y # comment
+  pass
+'''), r'''
+if 1:
+  import  \
+  b \
+  as \
+  y # comment
+  pass
+''', r'''
+Module - ROOT 0,0..5,6
+  .body[1]
+  0] If - 0,0..5,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Import - 1,2..4,3
+      .names[1]
+      0] alias - 2,2..4,3
+        .name 'b'
+        .asname
+          'y'
+    1] Pass - 5,2..5,6
+''',
+r'''a''', r'''
+_slice_aliases - ROOT 0,0..0,1
+  .names[1]
+  0] alias - 0,0..0,1
+    .name 'a'
+'''),
+
+(7, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+  import a \
+  , \
+  b \
+  as \
+  y # comment
+  pass
+'''), r'''
+if 1:
+  import a # comment
+  pass
+''', r'''
+Module - ROOT 0,0..2,6
+  .body[1]
+  0] If - 0,0..2,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Import - 1,2..1,10
+      .names[1]
+      0] alias - 1,9..1,10
+        .name 'a'
+    1] Pass - 2,2..2,6
+''', r'''
+b \
+as \
+y
+''', r'''
+_slice_aliases - ROOT 0,0..2,1
+  .names[1]
+  0] alias - 0,0..2,1
+    .name 'b'
+    .asname
+      'y'
+'''),
 ],
 
 'type_params': [  # ................................................................................

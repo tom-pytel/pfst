@@ -86,11 +86,11 @@ from .asttypes import (
     TemplateStr,
     Interpolation,
     _slice_Assign_targets,
+    _slice_aliases,
     _slice_type_params,
 )
 
 from .astutil import constant, bistr
-
 
 try:
     from typing import Self
@@ -190,7 +190,7 @@ _AST_DEFAULT_BODY_FIELD = {cls: field for field, classes in [
     ('patterns',     (MatchSequence, MatchOr)),
     ('targets',      (Delete, _slice_Assign_targets)),
     ('type_params',  (TypeAlias, _slice_type_params)),
-    ('names',        (Import, ImportFrom, Global, Nonlocal)),
+    ('names',        (Import, ImportFrom, Global, Nonlocal, _slice_aliases)),
     ('ifs',          (comprehension,)),
     ('values',       (BoolOp, JoinedStr, TemplateStr)),
     ('generators',   (ListComp, SetComp, DictComp, GeneratorExp)),

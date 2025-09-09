@@ -133,6 +133,7 @@ from .asttypes import (
     TemplateStr,
     Interpolation,
     _slice_Assign_targets,
+    _slice_aliases,
     _slice_type_params,
 )
 
@@ -393,6 +394,7 @@ FIELDS = dict([
 
     (_slice_Assign_targets,    (('targets', 'expr*'),)),
     # (_slice_comprehension_ifs, (('targets', 'expr*'),)),
+    (_slice_aliases,           (('targets', 'alias*'),)),
     (_slice_type_params,       (('type_params', 'type_param*'),)),
 
 ])  ; """List of all fields for AST classes: [(`AST` class, (('field name', 'type name'), ...)), ...]"""
