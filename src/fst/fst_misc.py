@@ -1250,20 +1250,19 @@ def _is_delimited_seq(self: fst.FST, field: str = 'elts', delims: str | tuple[st
     return ldelims > rdelims
 
 
-def _set_end_pos(self: fst.FST, end_lineno: int, end_col_offset: int, self_: bool = True, skip_if_at: bool = False,
-                 ) -> None:
+def _set_end_pos(self: fst.FST, end_lineno: int, end_col_offset: int, force: bool = False, self_: bool = True) -> None:
     """Walk up parent chain (starting at `self`) setting `.end_lineno` and `.end_col_offset` to `end_lineno` and
     `end_col_offset` if self is last child of parent. Initial `self` is corrected always. Used for correcting
     parents after an `offset()` which removed or modified last child statements of block parents, or other nodes.
 
     **Parameters:**
     - `(end_lineno, end_col_offset)` - Position which should be the new end.
+    - `force`: If this is not `True` and the end position of `self` is already the one passed in then nothing is done.
     - `self_`: Whether to set for `self` or not, if not then will skip `self` and set for parents.
-    - `skip_if_at`: Don't do anything if already at location.
 
     """
 
-    if skip_if_at and end_col_offset == (a := self.a).end_col_offset and end_lineno == a.end_lineno:
+    if not force and end_col_offset == (a := self.a).end_col_offset and end_lineno == a.end_lineno:
         return
 
     while True:
@@ -1316,7 +1315,7 @@ def _set_block_end_from_last_child(self: fst.FST, bound_ln: int, bound_col: int,
         end_lineno = end_ln + 1
         end_col_offset = lines[end_ln].c2b(end_col)
 
-    self._set_end_pos(end_lineno, end_col_offset)
+    self._set_end_pos(end_lineno, end_col_offset, True)
 
 
 def _update_loc_up_parents(self: fst.FST, lineno: int, col_offset: int, end_lineno: int, end_col_offset: int) -> None:
@@ -2013,7 +2012,7 @@ def _elif_to_else_if(self: fst.FST) -> None:
     self._indent_lns(skip=0)
 
     if not self.next():  # last child?
-        self._set_end_pos((a := self.a).end_lineno, a.end_col_offset, False)
+        self._set_end_pos((a := self.a).end_lineno, a.end_col_offset, True, False)
 
     ln, col, _, _ = self.loc
 

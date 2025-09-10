@@ -1399,7 +1399,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
                 if ins_ln >= ln:
                     loc_first = fstloc(ln, col, ln, col)
 
-                else:  # TODO: this part changes if we do alignment of fst_ to self element indentation?
+                else:
                     if not fst_._lines[0]:  # fst_ starts new line?
                         loc_first = fstloc(ins_ln, 0, ins_ln, 0)
 
