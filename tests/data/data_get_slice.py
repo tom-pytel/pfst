@@ -6006,6 +6006,27 @@ Tuple - ROOT 0,0..4,1
   2] Name 'c' Load - 4,0..4,1
   .ctx Load
 '''),
+
+(10, 'body[0]', 1, 2, None, {}, (None, r'''
+if 1:
+  del a, b;
+'''), r'''
+if 1:
+  del a;
+''', r'''
+If - ROOT 0,0..1,8
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] Delete - 1,2..1,7
+    .targets[1]
+    0] Name 'a' Del - 1,6..1,7
+''',
+r'''b,''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+  0] Name 'b' Load - 0,0..0,1
+  .ctx Load
+'''),
 ],
 
 'Assign_targets': [  # ................................................................................
@@ -6681,6 +6702,28 @@ _slice_aliases - ROOT 0,0..6,1
   2] alias - 6,0..6,1
     .name 'c'
 '''),
+
+(10, 'body[0]', 1, 2, None, {}, (None, r'''
+if 1:
+  import a, b;
+'''), r'''
+if 1:
+  import a;
+''', r'''
+If - ROOT 0,0..1,11
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] Import - 1,2..1,10
+    .names[1]
+    0] alias - 1,9..1,10
+      .name 'a'
+''',
+r'''b''', r'''
+_slice_aliases - ROOT 0,0..0,1
+  .names[1]
+  0] alias - 0,0..0,1
+    .name 'b'
+'''),
 ],
 
 'Global_names': [  # ................................................................................
@@ -6912,6 +6955,27 @@ Tuple - ROOT 0,0..0,7
   2] Name 'c' Load - 0,6..0,7
   .ctx Load
 '''),
+
+(10, 'body[0]', 1, 2, None, {}, (None, r'''
+if 1:
+  global a, b;
+'''), r'''
+if 1:
+  global a;
+''', r'''
+If - ROOT 0,0..1,11
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] Global - 1,2..1,10
+    .names[1]
+    0] 'a'
+''',
+r'''b,''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+  0] Name 'b' Load - 0,0..0,1
+  .ctx Load
+'''),
 ],
 
 'Nonlocal_names': [  # ................................................................................
@@ -7141,6 +7205,27 @@ Tuple - ROOT 0,0..0,7
   0] Name 'a' Load - 0,0..0,1
   1] Name 'b' Load - 0,3..0,4
   2] Name 'c' Load - 0,6..0,7
+  .ctx Load
+'''),
+
+(10, 'body[0]', 1, 2, None, {}, (None, r'''
+if 1:
+  nonlocal a, b;
+'''), r'''
+if 1:
+  nonlocal a;
+''', r'''
+If - ROOT 0,0..1,13
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] Nonlocal - 1,2..1,12
+    .names[1]
+    0] 'a'
+''',
+r'''b,''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+  0] Name 'b' Load - 0,0..0,1
   .ctx Load
 '''),
 ],

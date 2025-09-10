@@ -329,4 +329,4 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
         if not put_fst:
             self._set_block_end_from_last_child(block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
         elif put_body:
-            self._set_end_pos((last_child := self.last_child()).end_lineno, last_child.end_col_offset, True)
+            self._set_end_pos((last_child := self.last_child()).end_lineno, last_child.end_col_offset)

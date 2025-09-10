@@ -15450,6 +15450,24 @@ Delete - ROOT 0,0..3,5
   2] Name 'y' Del - 2,4..2,5
   3] Name 'c' Del - 3,4..3,5
 '''),
+
+(15, 'body[0]', 1, 1, None, {}, (None, r'''
+if 1:
+  del x;
+'''), (None,
+r'''y'''), r'''
+if 1:
+  del x, y;
+''',
+r'''**NodeError('slice being assigned to a Delete must be a Tuple, List or Set, not a Name')**''', r'''
+If - ROOT 0,0..1,11
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] Delete - 1,2..1,10
+    .targets[2]
+    0] Name 'x' Del - 1,6..1,7
+    1] Name 'y' Del - 1,9..1,10
+'''),
 ],
 
 'Assign_targets': [  # ................................................................................
@@ -15937,6 +15955,26 @@ Module - ROOT 0,0..4,0
     2] alias - 3,7..3,8
       .name 'c'
 '''),
+
+(16, 'body[0]', 1, 1, None, {}, (None, r'''
+if 1:
+  import x;
+'''), (None,
+r'''y'''), r'''
+if 1:
+  import x, y;
+''',
+r'''**NodeError('expecting _slice_aliases, got Name')**''', r'''
+If - ROOT 0,0..1,14
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] Import - 1,2..1,13
+    .names[2]
+    0] alias - 1,9..1,10
+      .name 'x'
+    1] alias - 1,12..1,13
+      .name 'y'
+'''),
 ],
 
 'Global_names': [  # ................................................................................
@@ -16345,6 +16383,23 @@ Module - ROOT 0,0..0,18
   .body[1]
   0] Global - 0,0..0,7
 '''),
+
+(25, 'body[0]', 1, 1, None, {}, (None, r'''
+if 1:
+  global x;
+'''), (None,
+r'''y,'''), r'''
+if 1:
+  global x, y;
+''', r'''
+If - ROOT 0,0..1,14
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] Global - 1,2..1,13
+    .names[2]
+    0] 'x'
+    1] 'y'
+'''),
 ],
 
 'Nonlocal_names': [  # ................................................................................
@@ -16752,6 +16807,23 @@ r'''nonlocal   # comment''', r'''
 Module - ROOT 0,0..0,20
   .body[1]
   0] Nonlocal - 0,0..0,9
+'''),
+
+(25, 'body[0]', 1, 1, None, {}, (None, r'''
+if 1:
+  nonlocal x;
+'''), (None,
+r'''y,'''), r'''
+if 1:
+  nonlocal x, y;
+''', r'''
+If - ROOT 0,0..1,16
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] Nonlocal - 1,2..1,15
+    .names[2]
+    0] 'x'
+    1] 'y'
 '''),
 ],
 

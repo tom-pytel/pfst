@@ -504,6 +504,28 @@ def _bound_Assign_targets(self: fst.FST, start: int = 0, loc_first: fst.FST | No
     return bound_ln, bound_col, bound_end_ln, bound_end_col
 
 
+def _maybe_set_end_pos(self: fst.FST, end_lineno: int, end_col_offset: int,
+                       old_end_lineno: int, old_end_col_offset: int) -> None:
+    """Maybe set end position if is not already at this position. If it is not then walk up parent chain setting those
+    end positions to the new one but only as long as they are at an expected end position. Used to fix end position
+    which might have been offset by trailing trivia."""
+
+    while True:
+        if (co := getattr(a := self.a, 'end_col_offset', None)) is not None:  # because of ASTs which locations
+            if co != old_end_col_offset or a.end_lineno != old_end_lineno:  # if parent doesn't end at expected location then we are done
+                break
+
+            a.end_lineno = end_lineno
+            a.end_col_offset = end_col_offset
+
+        self._touch()  # even if AST doesn't have location, it may be calculated and needs to be cleared out anyway
+
+        if not (parent := self.parent) or self.next():
+            break
+
+        self = parent
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 # get
 
@@ -824,7 +846,7 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
     """The slice of `Delete.targets` is a normal unparenthesized `Tuple` contianing valid target types, which is also a
     valid python `Tuple`."""
 
-    len_body = len(body := self.a.targets)
+    len_body = len(body := (ast := self.a).targets)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
@@ -851,7 +873,8 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
 
     if cut:
         if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
-            self._set_end_pos(bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col), True, True)
+            _maybe_set_end_pos(self, bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col),
+                               ast.end_lineno, ast.end_col_offset)
 
         ln, col, _, _ = self.loc
 
@@ -893,7 +916,7 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
 
 def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                             cut: bool, options: Mapping[str, Any]) -> fst.FST:
-    len_body = len(body := self.a.names)
+    len_body = len(body := (ast := self.a).names)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
@@ -923,7 +946,7 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
 
     if cut:
         if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
-            self._set_end_pos((bn := body[-1]).end_lineno, bn.end_col_offset, True, True)
+            _maybe_set_end_pos(self, (bn := body[-1]).end_lineno, bn.end_col_offset, ast.end_lineno, ast.end_col_offset)
 
         self._maybe_add_line_continuations()
 
@@ -995,7 +1018,7 @@ def _get_slice_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] 
 
     if cut:
         if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
-            self._set_end_pos(bound_ln + 1, lines[bound_ln].c2b(bound_col), True, True)
+            _maybe_set_end_pos(self, bound_ln + 1, lines[bound_ln].c2b(bound_col), ast.end_lineno, ast.end_col_offset)
 
         self._maybe_add_line_continuations()
 
@@ -2267,7 +2290,8 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
         if body:
             _, _, bound_ln, bound_col = body[-1].f.pars()
 
-        self._set_end_pos(bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col), True, True)
+        _maybe_set_end_pos(self, bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col),
+                           ast.end_lineno, ast.end_col_offset)
 
     ln, col, _, _ = self.loc
 
@@ -2331,7 +2355,7 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
 def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                             field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_ = _code_to_slice_aliases(self, code, one, options, code_as_Import_name, code_as_Import_names)
-    len_body = len(body := self.a.names)
+    len_body = len(body := (ast := self.a).names)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
@@ -2385,9 +2409,10 @@ def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Liter
 
     if stop == len_body:  # if del till and something left then may need to reset end position of self due to new trailing trivia
         if body:
-            self._set_end_pos((bn := body[-1]).end_lineno, bn.end_col_offset, True, True)
+            _maybe_set_end_pos(self, (bn := body[-1]).end_lineno, bn.end_col_offset, ast.end_lineno, ast.end_col_offset)
         else:
-            self._set_end_pos(bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col), True, True)
+            _maybe_set_end_pos(self, bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col),
+                               ast.end_lineno, ast.end_col_offset)
 
     # self._maybe_fix_joined_alnum(self.ln, self.col + 5)  # THEORETICALLY this can happen if delete to empty then remove trailing whitespace from 'import' and then put new stuff, but there are so many easier ways to F S up that we don't bother with this
     self._maybe_add_line_continuations()
@@ -2484,7 +2509,8 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
         if fst_:
             _, _, last_end_ln, last_end_col = fst_last_loc
 
-        self._set_end_pos(last_end_ln + 1, lines[last_end_ln].c2b(last_end_col), True, True)
+        _maybe_set_end_pos(self, last_end_ln + 1, lines[last_end_ln].c2b(last_end_col),
+                           ast.end_lineno, ast.end_col_offset)
 
     # self._maybe_fix_joined_alnum(self.ln, self.col + (6 if isinstance(ast, Global) else 8))  # THEORETICALLY this can happen if delete to empty then remove trailing whitespace from 'import' and then put new stuff, but there are so many easier ways to F S up that we don't bother with this
     self._maybe_add_line_continuations()
