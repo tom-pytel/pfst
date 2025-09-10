@@ -172,7 +172,7 @@ a + \
 *"""
 "c")
 ''')
-        self.assertFalse(f._maybe_add_line_continuations(False))
+        self.assertFalse(f._maybe_add_line_continuations(whole=False))
         self.assertEqual(r'''
 a + \
 ("""
@@ -188,7 +188,7 @@ a + \
 "c")
 ''')
         f.right.unpar()
-        self.assertTrue(f._maybe_add_line_continuations(False))
+        self.assertTrue(f._maybe_add_line_continuations(whole=False))
         self.assertEqual(r'''
 a + \
 """
@@ -204,7 +204,7 @@ a + \
 "c")
 ''')
         f.right.unpar()
-        self.assertTrue(f._maybe_add_line_continuations(True))
+        self.assertTrue(f._maybe_add_line_continuations(whole=True))
         self.assertEqual(r'''\
 a + \
 """
@@ -224,10 +224,27 @@ d''', f.src)
 
         f = FST(r'''(""" a
 b # c""",
-# comment
-d)''')
+# comment0
+  # comment1
+e,  # comment2
+d)  # comment3''')
         f.unpar(True)
-        self.assertRaises(NodeError, f._maybe_add_line_continuations)
+        self.assertRaises(NodeError, f._maybe_add_line_continuations, del_comments=False)
+
+        f = FST(r'''(""" a
+b # c""",
+# comment0
+  # comment1
+e,  # comment2
+d)  # comment3''')
+        f.unpar(True)
+        f._maybe_add_line_continuations(del_comments=True)
+        self.assertEqual(r'''""" a
+b # c""", \
+\
+  \
+e, \
+d  # comment3''', f.src)
 
     def test__maybe_ins_separator(self):
         f = FST('[a#c\n]')

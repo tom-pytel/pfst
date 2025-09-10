@@ -2272,7 +2272,7 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
     ln, col, _, _ = self.loc
 
     self._maybe_fix_joined_alnum(ln, col + 3)
-    self._maybe_add_line_continuations()  # TODO: self._maybe_add_line_continuations() can fail if we added lines with comments, need to possibly parenthesize above if we know we putting unfixable sequence
+    self._maybe_add_line_continuations()
 
 
 def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,

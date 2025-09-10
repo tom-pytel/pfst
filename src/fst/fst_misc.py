@@ -1355,12 +1355,14 @@ def _update_loc_up_parents(self: fst.FST, lineno: int, col_offset: int, end_line
         self._touchall(True)
 
 
-def _maybe_add_line_continuations(self: fst.FST, whole: bool = False) -> bool:
+def _maybe_add_line_continuations(self: fst.FST, whole: bool = False, del_comments: bool = True) -> bool:
     """Check if `self` needs them and if so add line continuations to make parsable.
 
     **Parameters:**
     - `whole`: Whether to check whole source (and add line continuations to, only if at root). Otherwise will just
         check and modify lines that this node lives on.
+    - `del_comments`: If `True` then will delete comments which prevent line continuations from making the source
+        parsable. If `False` then will raise an error if this is encountered.
 
     **Returns:**
     - `bool`: Whether modification was made or not.
@@ -1379,12 +1381,19 @@ def _maybe_add_line_continuations(self: fst.FST, whole: bool = False) -> bool:
             end_cols[end_ln] = max(end_cols.get(end_ln, 0), end_col)
 
     for ln in lns:
-        m = re_line_end_cont_or_comment.match(lines[ln], end_cols.get(ln, 0))
+        m = re_line_end_cont_or_comment.match(l := lines[ln], end_cols.get(ln, 0))
 
         if not (g := m.group(1)):
-            lines[ln] = bistr((l := lines[ln]) + ('\\' if not l or l[-1:].isspace() else ' \\'))
+            lines[ln] = bistr(l + ('\\' if not l or l[-1:].isspace() else ' \\'))
+
         elif g.startswith('#'):
-            raise NodeError('cannot add line continuation to line that ends with comment')
+            if not del_comments:
+                raise NodeError('cannot add line continuation to line that ends with comment')
+
+            # maybe just delete line if contains only comment?
+
+            c = c + 1 if (c := re_line_trailing_space.match(l, 0, cc := m.start(1)).start(1)) else cc
+            lines[ln] = bistr(l[:c] + '\\')
 
     return True
 

@@ -15412,6 +15412,44 @@ Module - ROOT 0,0..3,0
       0] Name 'a' Del - 1,6..1,7
       1] Name 'b' Del - 2,6..2,7
 '''),
+
+(13, '', 1, 2, None, {}, (None,
+r'''del a, b, c'''), (None, r'''
+(x,  # blah
+# blah
+)  # blah
+'''), r'''
+del a, x, \
+    \
+    c
+''',
+r'''del a, x, c''', r'''
+Delete - ROOT 0,0..2,5
+  .targets[3]
+  0] Name 'a' Del - 0,4..0,5
+  1] Name 'x' Del - 0,7..0,8
+  2] Name 'c' Del - 2,4..2,5
+'''),
+
+(14, '', 1, 2, None, {}, (None,
+r'''del a, b, c'''), (None, r'''
+x,  # blah
+  # blah
+y  # blah
+'''), r'''
+del a, x, \
+      \
+    y, \
+    c
+''',
+r'''**NodeError('expecting expression (standard), got multiple statements')**''', r'''
+Delete - ROOT 0,0..3,5
+  .targets[4]
+  0] Name 'a' Del - 0,4..0,5
+  1] Name 'x' Del - 0,7..0,8
+  2] Name 'y' Del - 2,4..2,5
+  3] Name 'c' Del - 3,4..3,5
+'''),
 ],
 
 'Assign_targets': [  # ................................................................................
