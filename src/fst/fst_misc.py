@@ -436,14 +436,13 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
                 continue
 
             if (name in ('type', 'id', 'attr', 'module', 'arg', 'vararg', 'kwarg', 'rest', 'format_spec',
-                            'name', 'value', 'left', 'right', 'operand', 'returns', 'target',
-                            'annotation', 'iter', 'test','exc', 'cause', 'msg', 'elt', 'key', 'func',
-                            'slice', 'lower', 'upper', 'step', 'guard', 'context_expr', 'optional_vars',
-                            'cls', 'bound', 'default_value', 'pattern', 'subject',
-                            'type_comment', 'lineno', 'tag', 'op',
-                            'simple', 'level', 'conversion', 'str', 'is_async', 'lineno')
-                        or (not is_list and name in
-                            ('body', 'orelse'))
+                         'name', 'asname', 'value', 'left', 'right', 'operand', 'returns', 'target',
+                         'annotation', 'iter', 'test','exc', 'cause', 'msg', 'elt', 'key', 'func',
+                         'slice', 'lower', 'upper', 'step', 'guard', 'context_expr', 'optional_vars',
+                         'cls', 'bound', 'default_value', 'pattern', 'subject',
+                         'type_comment', 'lineno', 'tag', 'op',
+                         'simple', 'level', 'conversion', 'str', 'is_async', 'lineno') or
+                (not is_list and name in ('body', 'orelse'))
             ):
                 if isinstance(child, AST):
                     child.f._dump(st, cind + sind, f'.{name} ')

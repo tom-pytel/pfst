@@ -322,8 +322,7 @@ Module - ROOT 0,0..0,18
       .name 'a'
     1] alias - 0,10..0,18
       .name 'z'
-      .asname
-        'xyz'
+      .asname 'xyz'
 """),
 
 (r"""from mod import a, b, c""", '', (0, 19, 0, 23), {}, r"""z as xyz""", r"""z as xyz""", r"""from mod import a, z as xyz""", r"""
@@ -336,8 +335,7 @@ Module - ROOT 0,0..0,27
       .name 'a'
     1] alias - 0,19..0,27
       .name 'z'
-      .asname
-        'xyz'
+      .asname 'xyz'
     .level 0
 """),
 

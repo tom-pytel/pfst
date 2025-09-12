@@ -6425,8 +6425,7 @@ _slice_aliases - ROOT 0,0..0,6
   .names[1]
   0] alias - 0,0..0,6
     .name 'b'
-    .asname
-      'y'
+    .asname 'y'
 '''),
 
 (1, 'body[0]', 1, 3, None, {}, ('exec',
@@ -6444,8 +6443,7 @@ _slice_aliases - ROOT 0,0..0,9
   .names[2]
   0] alias - 0,0..0,6
     .name 'b'
-    .asname
-      'y'
+    .asname 'y'
   1] alias - 0,8..0,9
     .name 'c'
 '''),
@@ -6467,8 +6465,7 @@ _slice_aliases - ROOT 0,0..0,9
     .name 'a'
   1] alias - 0,3..0,9
     .name 'b'
-    .asname
-      'y'
+    .asname 'y'
 '''),
 
 (3, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -6504,8 +6501,7 @@ _slice_aliases - ROOT 0,0..5,0
   .names[1]
   0] alias - 1,0..3,1
     .name 'b'
-    .asname
-      'y'
+    .asname 'y'
 '''),
 
 (4, 'body[0]', 0, 2, None, {}, ('exec', r'''
@@ -6541,8 +6537,7 @@ _slice_aliases - ROOT 0,0..6,0
     .name 'a'
   1] alias - 2,0..4,1
     .name 'b'
-    .asname
-      'y'
+    .asname 'y'
 '''),
 
 (5, 'body[0]', 1, 3, None, {}, ('exec', r'''
@@ -6576,8 +6571,7 @@ _slice_aliases - ROOT 0,0..5,1
   .names[2]
   0] alias - 1,0..3,1
     .name 'b'
-    .asname
-      'y'
+    .asname 'y'
   1] alias - 5,0..5,1
     .name 'c'
 '''),
@@ -6607,8 +6601,7 @@ Module - ROOT 0,0..5,6
       .names[1]
       0] alias - 2,2..4,3
         .name 'b'
-        .asname
-          'y'
+        .asname 'y'
     1] Pass - 5,2..5,6
 ''', r'''
 a \
@@ -6654,8 +6647,7 @@ _slice_aliases - ROOT 0,0..2,1
   .names[1]
   0] alias - 0,0..2,1
     .name 'b'
-    .asname
-      'y'
+    .asname 'y'
 '''),
 
 (8, '', 0, 3, None, {}, (None,
@@ -6697,8 +6689,7 @@ _slice_aliases - ROOT 0,0..6,1
     .name 'a'
   1] alias - 2,0..4,1
     .name 'b'
-    .asname
-      'y'
+    .asname 'y'
   2] alias - 6,0..6,1
     .name 'c'
 '''),

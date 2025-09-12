@@ -12833,8 +12833,7 @@ Module - ROOT 0,0..0,18
       .name 'a'
     1] alias - 0,10..0,18
       .name 'z'
-      .asname
-        'xyz'
+      .asname 'xyz'
 '''),
 
 (10, 'body[0]', 1, 3, None, {'raw': True}, ('exec',
@@ -12850,8 +12849,7 @@ Module - ROOT 0,0..0,27
       .name 'a'
     1] alias - 0,19..0,27
       .name 'z'
-      .asname
-        'xyz'
+      .asname 'xyz'
     .level 0
 '''),
 

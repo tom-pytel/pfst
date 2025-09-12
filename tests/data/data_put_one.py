@@ -1157,8 +1157,7 @@ Module - ROOT 0,0..0,19
     .names[1]
     0] alias - 0,7..0,19
       .name 'new'
-      .asname
-        'thing'
+      .asname 'thing'
 '''),
 
 (70, 'body[0].type_params[0]', None, False, 'name', {'_ver': 12}, ('exec',
@@ -5599,8 +5598,7 @@ Module - ROOT 0,0..0,15
     .names[1]
     0] alias - 0,7..0,15
       .name 'a'
-      .asname
-        'new'
+      .asname 'new'
 '''),
 
 (374, 'body[0].names[0]', None, False, 'asname', {}, ('exec',
@@ -5625,8 +5623,7 @@ Module - ROOT 0,0..0,15
     .names[1]
     0] alias - 0,7..0,15
       .name 'a'
-      .asname
-        'new'
+      .asname 'new'
 '''),
 
 (376, 'body[0].names[0]', None, False, 'asname', {}, ('exec',
@@ -5651,8 +5648,7 @@ Module - ROOT 0,0..0,18
     .names[2]
     0] alias - 0,7..0,15
       .name 'a'
-      .asname
-        'new'
+      .asname 'new'
     1] alias - 0,17..0,18
       .name 'c'
 '''),
@@ -5681,8 +5677,7 @@ Module - ROOT 0,0..0,18
     .names[2]
     0] alias - 0,7..0,15
       .name 'a'
-      .asname
-        'new'
+      .asname 'new'
     1] alias - 0,17..0,18
       .name 'c'
 '''),
@@ -5713,8 +5708,7 @@ Module - ROOT 0,0..0,18
       .name 'c'
     1] alias - 0,10..0,18
       .name 'a'
-      .asname
-        'new'
+      .asname 'new'
 '''),
 
 (382, 'body[0].names[1]', None, False, 'asname', {}, ('exec',
@@ -5743,8 +5737,7 @@ Module - ROOT 0,0..0,18
       .name 'c'
     1] alias - 0,10..0,18
       .name 'a'
-      .asname
-        'new'
+      .asname 'new'
 '''),
 
 (384, 'body[0].names[1]', None, False, 'asname', {}, ('exec',
@@ -5772,8 +5765,7 @@ Module - ROOT 0,0..0,24
     .names[1]
     0] alias - 0,15..0,23
       .name 'a'
-      .asname
-        'new'
+      .asname 'new'
     .level 0
 '''),
 
@@ -5802,8 +5794,7 @@ Module - ROOT 0,0..0,24
     .names[1]
     0] alias - 0,15..0,23
       .name 'a'
-      .asname
-        'new'
+      .asname 'new'
     .level 0
 '''),
 
@@ -5832,8 +5823,7 @@ Module - ROOT 0,0..0,27
     .names[2]
     0] alias - 0,15..0,23
       .name 'a'
-      .asname
-        'new'
+      .asname 'new'
     1] alias - 0,25..0,26
       .name 'c'
     .level 0
@@ -5866,8 +5856,7 @@ Module - ROOT 0,0..0,27
     .names[2]
     0] alias - 0,15..0,23
       .name 'a'
-      .asname
-        'new'
+      .asname 'new'
     1] alias - 0,25..0,26
       .name 'c'
     .level 0
@@ -5902,8 +5891,7 @@ Module - ROOT 0,0..0,27
       .name 'c'
     1] alias - 0,18..0,26
       .name 'b'
-      .asname
-        'new'
+      .asname 'new'
     .level 0
 '''),
 
@@ -5936,8 +5924,7 @@ Module - ROOT 0,0..0,27
       .name 'c'
     1] alias - 0,18..0,26
       .name 'a'
-      .asname
-        'new'
+      .asname 'new'
     .level 0
 '''),
 
@@ -12218,8 +12205,7 @@ Module - ROOT 0,0..0,15
     .names[1]
     0] alias - 0,7..0,15
       .name 'c.d'
-      .asname
-        'e'
+      .asname 'e'
 '''),
 
 (1, 'body[0]', 0, False, 'names', {}, ('exec',
@@ -12232,12 +12218,10 @@ Module - ROOT 0,0..0,23
     .names[2]
     0] alias - 0,7..0,13
       .name 'f'
-      .asname
-        'g'
+      .asname 'g'
     1] alias - 0,15..0,23
       .name 'c.d'
-      .asname
-        'e'
+      .asname 'e'
 '''),
 
 (2, 'body[0]', 1, False, 'names', {}, ('exec',
@@ -12252,8 +12236,7 @@ Module - ROOT 0,0..0,16
       .name 'a'
     1] alias - 0,10..0,16
       .name 'f'
-      .asname
-        'g'
+      .asname 'g'
 '''),
 
 (3, 'body[0]', -1, False, 'names', {}, ('exec',
@@ -12268,8 +12251,7 @@ Module - ROOT 0,0..0,16
       .name 'a'
     1] alias - 0,10..0,16
       .name 'f'
-      .asname
-        'g'
+      .asname 'g'
 '''),
 
 (4, 'body[0]', -2, False, 'names', {}, ('exec',
@@ -12282,12 +12264,10 @@ Module - ROOT 0,0..0,23
     .names[2]
     0] alias - 0,7..0,13
       .name 'f'
-      .asname
-        'g'
+      .asname 'g'
     1] alias - 0,15..0,23
       .name 'c.d'
-      .asname
-        'e'
+      .asname 'e'
 '''),
 
 (5, 'body[0]', -4, False, 'names', {}, ('exec',
@@ -12305,12 +12285,10 @@ Module - ROOT 0,0..0,25
     .names[2]
     0] alias - 0,7..0,15
       .name 'x.y'
-      .asname
-        'z'
+      .asname 'z'
     1] alias - 0,17..0,25
       .name 'c.d'
-      .asname
-        'e'
+      .asname 'e'
 '''),
 ],
 
@@ -12635,12 +12613,10 @@ Module - ROOT 0,0..0,30
     .names[2]
     0] alias - 0,15..0,21
       .name 'f'
-      .asname
-        'g'
+      .asname 'g'
     1] alias - 0,23..0,29
       .name 'c'
-      .asname
-        'd'
+      .asname 'd'
     .level 0
 '''),
 
@@ -12657,8 +12633,7 @@ Module - ROOT 0,0..0,25
       .name 'a'
     1] alias - 0,18..0,24
       .name 'f'
-      .asname
-        'g'
+      .asname 'g'
     .level 0
 '''),
 
@@ -12675,8 +12650,7 @@ Module - ROOT 0,0..0,25
       .name 'a'
     1] alias - 0,18..0,24
       .name 'f'
-      .asname
-        'g'
+      .asname 'g'
     .level 0
 '''),
 
@@ -12691,12 +12665,10 @@ Module - ROOT 0,0..0,30
     .names[2]
     0] alias - 0,15..0,21
       .name 'f'
-      .asname
-        'g'
+      .asname 'g'
     1] alias - 0,23..0,29
       .name 'c'
-      .asname
-        'd'
+      .asname 'd'
     .level 0
 '''),
 
