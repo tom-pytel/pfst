@@ -5,11 +5,15 @@ from typing import Any, Literal, NamedTuple
 from fst import FST
 from fst.astutil import copy_ast, compare_asts
 
+from ast import AST
+
 
 _PYVER = sys.version_info[1]
 
+ParseMode = str | type[AST] | None
 
-def _unfmt_code(code: str | tuple[str, str]) -> str | tuple[str, str]:
+
+def _unfmt_code(code: str | tuple[str, str]) -> str | tuple[ParseMode, str]:
     if isinstance(code, str):
         if code.startswith('\n') and code.endswith('\n'):
             return code[1 : -1]
@@ -21,14 +25,15 @@ def _unfmt_code(code: str | tuple[str, str]) -> str | tuple[str, str]:
     return code
 
 
-def _fmt_code(code: str | tuple[str, str]) -> tuple[str, bool]:  # -> (src, is_multiline)
+def _fmt_code(code: str | tuple[ParseMode, str]) -> tuple[str, bool]:  # -> (src, is_multiline)
     if isinstance(code, tuple):
         src, is_multiline = _fmt_code(code[1])
+        c0 = c0.__name__ if isinstance(c0 := code[0], type) else repr(c0)
 
         if is_multiline:
-            return f'({code[0]!r}, {src})', is_multiline
+            return f'({c0}, {src})', is_multiline
         else:
-            return f'({code[0]!r},\n{src})', True
+            return f'({c0},\n{src})', True
 
     if code.find(' \n') != -1:
         return repr(code), False
@@ -78,13 +83,13 @@ class GetPutCases(dict):
 
         del globs['__builtins__']
 
-        if len(globs) != 1:
-            raise RuntimeError(f'expecting only single data structure in {fnm!r}')
-
-        self.var  = next(iter(globs.keys()))
+        self.var  = list(globs.keys())[-1]
         self.head = src[:re.search(rf'^{self.var}\s*=', src, re.MULTILINE).start()]
+        cases     = globs[self.var]
 
-        for key, file_cases in next(iter(globs.values())).items():
+        assert isinstance(cases, dict) and self.var == self.var.upper(), 'last element of cases data file must be the dictionary of cases'
+
+        for key, file_cases in cases.items():  # next(iter(globs.values())).items():
             self[key] = self_cases = []
 
             for j, (_, attr, start, stop, field, options, code, *rest) in enumerate(file_cases):
@@ -151,7 +156,7 @@ class GetCases(GetPutCases):
         func = self.func
         rest = None
         h    = None
-        g    = None
+        g    = exec  # sentinel
         f    = _make_fst(case.code, case.attr)
 
         try:
@@ -168,24 +173,35 @@ class GetCases(GetPutCases):
         if rest is None:
             rest = [f.root.src, f.root.dump(out=str)]
 
-        if g is not None:
+        if g is exec:
+            pass  # noop
+        elif g is None:
+            rest.append('**None**')
+
+        else:
+            g_is_FST = isinstance(g, FST)
+
             if (options := case.options).get('_verify', True):
                 if options.get('_verify_self', True):
                     f.root.verify()
 
-                if options.get('_verify_get', True):
+                if options.get('_verify_get', True) and g_is_FST:
                     g.verify()
 
-            g_dump = g.dump(out=str)
+            if not g_is_FST:
+                rest.extend([repr(g), f'{type(g)}'])
 
-            if h is not None:
-                if h.src != g.src:
-                    raise RuntimeError(f'cut and copied FST src are not identical\n{h.src}\n...\n{g.src}')
+            else:
+                g_dump = g.dump(out=str)
 
-                if (h_dump := h.dump(out=str)) != g_dump:
-                    raise RuntimeError(f'cut and copied FST dump are not identical\n{h_dump}\n...\n{g_dump}')
+                if h is not None:
+                    if h.src != g.src:
+                        raise RuntimeError(f'cut and copied FST src are not identical\n{h.src}\n...\n{g.src}')
 
-            rest.extend([g.src, g_dump])
+                    if (h_dump := h.dump(out=str)) != g_dump:
+                        raise RuntimeError(f'cut and copied FST dump are not identical\n{h_dump}\n...\n{g_dump}')
+
+                rest.extend([g.src, g_dump])
 
         return rest
 

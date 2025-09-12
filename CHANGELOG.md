@@ -2,8 +2,9 @@
 
 ### Fixed
 
-- fix raw reparse `TryStar` erroneously to `Try`
-- fix `par(force=True)` on delimited `Tuple` or `MatchSequence`
+- get one from field which can contain a value but is currently `None`
+- raw reparse `TryStar` erroneously to `Try`
+- `par(force=True)` on delimited `Tuple` or `MatchSequence`
 - disallow put `Starred` to `Delete` `Tuple` or `List` elements
 
 ### Added

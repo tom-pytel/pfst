@@ -200,6 +200,10 @@ def _validate_get(self: fst.FST, idx: int | None, field: str) -> tuple[AST | Non
 
 def _get_one_default(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     child, idx = _validate_get(self, idx, field)
+
+    if child is None:
+        return None
+
     childf = child.f
     loc = childf.pars() if self.get_option('pars', options) is True else childf.bloc
 
@@ -1856,6 +1860,10 @@ def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, opti
     sliceable, handler, static = _PUT_ONE_HANDLERS.get((ast.__class__, field), (False, None, None))
 
     if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementishs and combined mapping fields
+
+        if isinstance(ast, Compare) and not field:
+            raise NotImplementedError('still need to decide how to handle this case')
+
         # we need to fixup index here explicitly to get an error if it is out of bounds because slice index fixups just limit it to [0..len(body))
         idx = fixup_one_index(len(child if field else ast.keys), idx)  # field will be '' only for Dict and MatchMapping which both have keys, Compare is not considered sliceable for single element deletions
         new_self = self._put_slice(code, idx, idx + 1, field, True, options)
