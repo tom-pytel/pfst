@@ -16,6 +16,7 @@ from . import fst
 from .asttypes import (
     AST,
     AsyncFunctionDef,
+    AsyncWith,
     Attribute,
     Call,
     Compare,
@@ -86,6 +87,7 @@ _re_delim_open_alnums  = re.compile(rf'[{pat_alnum}.][([][{pat_alnum}]')
 _re_delim_close_alnums = re.compile(rf'[{pat_alnum}.][)\]][{pat_alnum}]')
 
 _re_keyword_import     = re.compile(r'\bimport\b')
+_re_keyword_with       = re.compile(r'\bwith\b')
 
 
 @pyver(ge=12)
@@ -644,8 +646,6 @@ def _loc_block_header_end(self: fst.FST, ret_bound: bool = False) -> fstloc | tu
         no child nodes in header.
     """
 
-    # assert isinstance(self.s, BLOCK)
-
     ln, col, end_ln, end_col = self.loc
 
     if child := last_block_header_child(a := self.a):
@@ -665,7 +665,7 @@ def _loc_block_header_end(self: fst.FST, ret_bound: bool = False) -> fstloc | tu
     else:
         return None
 
-    ln, col = next_find(self.root._lines, cend_ln, cend_col, end_ln, end_col, ':')  # it must be there
+    ln, col = next_find(self.root._lines, cend_ln, cend_col, end_ln, end_col, ':')  # must be there
 
     return fstloc(cend_ln, cend_col, ln, col + 1) if ret_bound else (ln, col + 1)
 
@@ -940,7 +940,8 @@ def _loc_match_case(self: fst.FST) -> fstloc:
 
 
 def _loc_ImportFrom_names_pars(self: fst.FST) -> fstlocns:
-    """Location of `from ? import (...)` parentheses, or location where they should be put if adding.
+    """Location of `from ? import (...)` whole names field-enclosing parentheses, or location where they should be put
+    if not present currently.
 
     Can handle empty `module` and `names`.
 
@@ -949,22 +950,74 @@ def _loc_ImportFrom_names_pars(self: fst.FST) -> fstlocns:
         they should go and `n=1` meaning parentheses present and location is where they actually are.
     """
 
+    # assert isinstance(self.a, ImportFrom)
+
     lines = self.root._lines
     ln, col, end_ln, end_col = self.loc
-    ln, col, _ = next_find_re(lines, ln, col, end_ln, end_col, _re_keyword_import)  # must be there
+    ln, col, _ = next_find_re(lines, ln, col, end_ln, end_col, _re_keyword_import)  # must be there (and 'import' is invalid as module or dotted component of it)
     col += 6
 
-    if (lpar := next_frag(lines, ln, col, end_ln, end_col)) and lpar.src.startswith('('):
+    if (lpar := next_frag(lines, ln, col, end_ln, end_col)) and lpar.src.startswith('('):  # opening par follows 'import'
+        assert end_col and lines[end_ln][end_col - 1] == ')'  # closing par must be exactly at end
+
         ln, col, _ = lpar
-        rpar = prev_frag(lines, ln, col + 1, end_ln, end_col)
+        n = 1
+
+    else:
+        if lines[ln][col : col + 1].isspace():
+            col += 1
+
+        n = 0
+
+    return fstlocns(ln, col, end_ln, end_col, n=n)
+
+
+def _loc_With_items_pars(self: fst.FST) -> fstlocns:
+    """Location of `with (...)` whole items field-enclosing parentheses, or location where they should be put if not
+    present currently.
+
+    Can handle empty `items`.
+
+    **Note:** Parenthesizing the `items` if not present where it says may still result in "unparenthesized" with as
+    those parentheses may pass on to belong to the child if it is a single item with no `optional_vars`.
+
+    **Returns:**
+    - `fstlocns`: Just like from `FST.pars()`, with attribute `n=0` meaning no parentheses present and location is where
+        they should go and `n=1` meaning parentheses present and location is where they actually are.
+    """
+
+    # assert isinstance(self.a, (With, AsyncWith))
+
+    ast = self.a
+    lines = self.root._lines
+    ln, col, end_ln, end_col = self.loc
+
+    if isinstance(ast, AsyncWith):
+        ln, col, _ = next_find_re(lines, ln, col, end_ln, end_col, _re_keyword_with)  # must be there
+
+    col += 4
+
+    end_ln, end_col = next_find(lines, ln, col, end_ln, end_col, ':')  # must be there
+
+    if ((lpar := next_frag(lines, ln, col, end_ln, end_col)) and lpar.src.startswith('(') and  # opening par follows 'with' and (there is not exactly one item or the single item has an `optional_vars` (otherwise the parse belong to the item))
+        (len(items := ast.items) != 1 or items[0].optional_vars is not None)
+    ):
+        ln, col, _ = lpar
+        rpar = prev_frag(lines, ln, col + 1, end_ln, end_col)  # closing par may not immediately precede the ':'
 
         assert rpar and rpar.src.endswith(')')
 
         end_ln, end_col, src = rpar
+        end_col += len(src)
+        n = 1
 
-        return fstlocns(ln, col, end_ln, end_col + len(src), n=1)
+    else:
+        if lines[ln][col : col + 1].isspace():
+            col += 1
 
-    return fstlocns(ln, col + 1 if lines[ln][col : col + 1].isspace() else col, end_ln, end_col, n=0)
+        n = 0
+
+    return fstlocns(ln, col, end_ln, end_col, n=n)
 
 
 def _loc_call_pars(self: fst.FST) -> fstloc:
@@ -1190,24 +1243,6 @@ def _is_arguments_empty(self: fst.FST) -> bool:
     # assert isinstance(self.a, arguments)
 
     return not ((a := self.a).posonlyargs or a.args or a.vararg or a.kwonlyargs or a.kwarg)
-
-
-def _is_parenthesized_ImportFrom_names(self: fst.FST) -> bool:
-    # assert isinstance(self.a, ImportFrom)
-
-    ln, col, _, _ = self.loc
-    end_ln, end_col, _, _ = self.a.names[0].f.loc
-
-    return prev_frag(self.root._lines, ln, col, end_ln, end_col).src.endswith('(')  # something is there for sure
-
-
-def _is_parenthesized_With_items(self: fst.FST) -> bool:
-    # assert isinstance(self.a, (With, AsyncWith))
-
-    ln, col, _, _ = self.loc
-    end_ln, end_col, _, _ = self.a.items[0].f.loc  # will include any pars in child so don't need to depar
-
-    return prev_frag(self.root._lines, ln, col, end_ln, end_col).src.endswith('(')  # something is there for sure
 
 
 def _is_delimited_seq(self: fst.FST, field: str = 'elts', delims: str | tuple[str, str] = '()') -> bool:
@@ -1882,7 +1917,7 @@ def _unparenthesize_grouping(self: fst.FST, shared: bool | None = True, *, star_
     if shared:  # special case merge solo argument GeneratorExp parentheses with call argument parens
         lines = self.root._lines
         _, _, cend_ln, cend_col = self.parent.func.loc
-        pln, pcol = prev_find(lines, cend_ln, cend_col, pln, pcol, '(')  # it must be there
+        pln, pcol = prev_find(lines, cend_ln, cend_col, pln, pcol, '(')  # must be there
         pend_ln, pend_col = next_find(lines, pend_ln, pend_col, len(lines) - 1, len(lines[-1]), ')')  # ditto
         pend_col += 1
 

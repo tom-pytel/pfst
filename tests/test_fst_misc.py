@@ -47,6 +47,48 @@ class TestFSTMisc(unittest.TestCase):
             self.assertEqual((2, False, False, 'line', False, False), FST._get_trivia_params(trivia=2, neg=False))
             self.assertEqual((2, False, False, 3, False, False), FST._get_trivia_params(trivia=(2, 3), neg=False))
 
+    def test__loc_ImportFrom_names_pars(self):
+        self.assertEqual('fstlocns(0, 14, 0, 15, n=0)', str(FST('from . import a')._loc_ImportFrom_names_pars()))
+        self.assertEqual('fstlocns(0, 14, 0, 17, n=1)', str(FST('from . import (a)')._loc_ImportFrom_names_pars()))
+        self.assertEqual('fstlocns(0, 14, 2, 1, n=1)', str(FST('from . import (\na\n)')._loc_ImportFrom_names_pars()))
+        self.assertEqual('fstlocns(1, 0, 3, 1, n=1)', str(FST('from . import \\\n(\na\n)')._loc_ImportFrom_names_pars()))
+        self.assertEqual('fstlocns(0, 14, 1, 1, n=0)', str(FST('from . import \\\na')._loc_ImportFrom_names_pars()))
+        self.assertEqual('fstlocns(0, 13, 1, 1, n=0)', str(FST('from . import\\\na')._loc_ImportFrom_names_pars()))
+
+    def test__loc_With_items_pars(self):
+        self.assertEqual('fstlocns(0, 5, 0, 6, n=0)', str(FST('with a: pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(0, 5, 0, 8, n=0)', str(FST('with (a): pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(0, 5, 0, 13, n=1)', str(FST('with (a as b): pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(0, 5, 2, 1, n=1)', str(FST('with (\na as b\n): pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(1, 0, 3, 1, n=1)', str(FST('with \\\n(\na as b\n): pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(0, 5, 1, 1, n=0)', str(FST('with \\\na: pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(0, 4, 1, 1, n=0)', str(FST('with\\\na: pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(0, 4, 3, 0, n=0)', str(FST('with\\\n\\\na\\\n: pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(0, 5, 0, 8, n=0)', str(FST('with  a : pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(0, 6, 0, 14, n=1)', str(FST('with  (a as b)  : pass')._loc_With_items_pars()))
+
+        self.assertEqual('fstlocns(0, 11, 0, 12, n=0)', str(FST('async with a: pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(0, 11, 0, 14, n=0)', str(FST('async with (a): pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(0, 11, 0, 19, n=1)', str(FST('async with (a as b): pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(0, 11, 2, 1, n=1)', str(FST('async with (\na as b\n): pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(1, 0, 3, 1, n=1)', str(FST('async with \\\n(\na as b\n): pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(0, 11, 1, 1, n=0)', str(FST('async with \\\na: pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(0, 10, 1, 1, n=0)', str(FST('async with\\\na: pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(0, 10, 3, 0, n=0)', str(FST('async with\\\n\\\na\\\n: pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(0, 11, 0, 14, n=0)', str(FST('async with  a : pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(0, 12, 0, 20, n=1)', str(FST('async with  (a as b)  : pass')._loc_With_items_pars()))
+
+        self.assertEqual('fstlocns(1, 6, 1, 7, n=0)', str(FST('async \\\n with a: pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(1, 6, 1, 9, n=0)', str(FST('async \\\n with (a): pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(1, 6, 1, 14, n=1)', str(FST('async \\\n with (a as b): pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(1, 6, 3, 1, n=1)', str(FST('async \\\n with (\na as b\n): pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(2, 0, 4, 1, n=1)', str(FST('async \\\n with \\\n(\na as b\n): pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(1, 6, 2, 1, n=0)', str(FST('async \\\n with \\\na: pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(1, 5, 2, 1, n=0)', str(FST('async \\\n with\\\na: pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(1, 5, 4, 0, n=0)', str(FST('async \\\n with\\\n\\\na\\\n: pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(1, 6, 1, 9, n=0)', str(FST('async \\\n with  a : pass')._loc_With_items_pars()))
+        self.assertEqual('fstlocns(1, 7, 1, 15, n=1)', str(FST('async \\\n with  (a as b)  : pass')._loc_With_items_pars()))
+
     def test__loc_block_header_end(self):
         self.assertEqual((0, 16), parse('def f(a) -> int: pass').body[0].f._loc_block_header_end())
         self.assertEqual((0, 9),  parse('def f(a): pass').body[0].f._loc_block_header_end())

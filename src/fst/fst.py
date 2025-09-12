@@ -4739,10 +4739,10 @@ class FST:
                 return self.pfield.name == 'type_params'
 
             if isinstance(parenta, ImportFrom):
-                return parent._is_parenthesized_ImportFrom_names()  # we know we are in `names`
+                return bool(parent._loc_ImportFrom_names_pars().n)  # we know we are in `names`
 
             if isinstance(parenta, (With, AsyncWith)):
-                return parent._is_parenthesized_With_items()  # we know we are in `names`
+                return bool(parent._loc_With_items_pars().n)  # we know we are in `items`
 
             if isinstance(parenta, (stmt, ExceptHandler, match_case, mod, type_ignore)):
                 return False
@@ -5118,6 +5118,7 @@ class FST:
         _loc_withitem,
         _loc_match_case,
         _loc_ImportFrom_names_pars,
+        _loc_With_items_pars,
         _loc_call_pars,
         _loc_subscript_brackets,
         _loc_matchcls_pars,
@@ -5127,8 +5128,6 @@ class FST:
         _loc_global_nonlocal_names,
         _loc_maybe_dict_key,
         _is_arguments_empty,
-        _is_parenthesized_ImportFrom_names,
-        _is_parenthesized_With_items,
         _is_delimited_seq,
         _set_end_pos,
         _set_block_end_from_last_child,
