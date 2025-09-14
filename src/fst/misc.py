@@ -436,6 +436,9 @@ def next_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     The fragment is not necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Fragments can include
     multiple AST nodes in return str if there are no spaces between them like 'a+b'.
 
+    **WARNING!** Make sure the search span does not include any AST strings as those can cause false positives for
+    comment hash and line continuation backslashes.
+
     **Parameters:**
     - `comment`: Whether to return comments found, which will be the whole comment.
     - `lcont`: Whether to return line continuations found (backslash at end of line) if `True`, skip over them if
@@ -487,9 +490,8 @@ def prev_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     The fragment is not necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Fragments can include
     multiple AST nodes in return str if there are no spaces between them like 'a+b'.
 
-    **WARNING:** Make sure the starting position (`ln`, `col`) is not inside a string because that could give false
-    positives for comments or line continuations. To this end, when searching for non-AST stuff, make sure the start
-    position does not start INSIDE OF or BEFORE any valid ASTs.
+    **WARNING!** Make sure the search span does not include any AST strings as those can cause false positives for
+    comment hash and line continuation backslashes.
 
     **Parameters:**
     - `comment`: Whether to return comments found, which will be the whole comment.
@@ -580,6 +582,9 @@ def next_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, sr
               comment: bool = False, lcont: bool | None = False) -> tuple[int, int] | None:
     """Find location of a string in the bound walking forward from the start. Returns `None` if string not found.
 
+    **WARNING!** Make sure the search span does not include any AST strings as those can cause false positives for
+    comment hash and line continuation backslashes.
+
     **Parameters:**
     - `first`: If `False` then will skip over anything else which is not the string and keep looking until it hits the
         end of the bound. If `True` then will only succeed if `src` is the first thing found.
@@ -616,6 +621,9 @@ def prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, sr
     """Find location of a string in the bound walking backwards from the end. Returns `None` if string not found. If
     `comment` is `True` then `src` must match the START of the src comment found, not the tail like for non-comment
      strings found in order to be considered successful.
+
+    **WARNING!** Make sure the search span does not include any AST strings as those can cause false positives for
+    comment hash and line continuation backslashes.
 
     **Parameters:**
     - `first`: If `False` then will skip over anything else which is not the string and keep looking until it hits the

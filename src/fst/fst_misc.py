@@ -993,17 +993,28 @@ def _loc_With_items_pars(self: fst.FST) -> fstlocns:
     ln, col, end_ln, end_col = self.loc
 
     if isinstance(ast, AsyncWith):
-        ln, col, _ = next_find_re(lines, ln, col, end_ln, end_col, _re_keyword_with)  # must be there
+        ln, col, _ = next_find_re(lines, ln, col, end_ln, end_col, _re_keyword_with)  # must be there, skip the 'async'
 
     col += 4
 
-    end_ln, end_col = next_find(lines, ln, col, end_ln, end_col, ':')  # must be there
+    if items := ast.items:
+        _, _, after_items_ln, after_items_col = items[-1].f.loc
 
-    if ((lpar := next_frag(lines, ln, col, end_ln, end_col)) and lpar.src.startswith('(') and  # opening par follows 'with' and (there is not exactly one item or the single item has an `optional_vars` (otherwise the parse belong to the item))
-        (len(items := ast.items) != 1 or items[0].optional_vars is not None)
+    else:  # we handle temporarily empty items
+        after_items_ln = ln
+        after_items_col = col
+
+    end_ln, end_col = next_find(lines, after_items_ln, after_items_col, end_ln, end_col, ':')  # must be there
+
+    if ((lpar := next_frag(lines, ln, col, end_ln, end_col)) and lpar.src.startswith('(') and  # does opening par follow 'with'
+        not (items and ((loc_i0 := items[0].f.loc).col == lpar.col and loc_i0.ln == lpar.ln))  # if there are items and first `withitem` starts at lpar found then we know that lpar belongs to it and whole `items` field doesn't have pars
     ):
         ln, col, _ = lpar
-        rpar = prev_frag(lines, ln, col + 1, end_ln, end_col)  # closing par may not immediately precede the ':'
+
+        if items:
+            rpar = prev_frag(lines, after_items_ln, after_items_col, end_ln, end_col)  # closing par may not immediately precede the ':'
+        else:
+            rpar = prev_frag(lines, ln, col + 1, end_ln, end_col)
 
         assert rpar and rpar.src.endswith(')')
 
