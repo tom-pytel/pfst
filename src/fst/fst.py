@@ -4611,6 +4611,11 @@ class FST:
                 children = [ast.value,
                             nspace(f=nspace(pars=lambda: self._loc_subscript_brackets(),
                                             is_enclosed_or_line=lambda **kw: True))]
+            elif isinstance(ast, ImportFrom):
+                children = ([nspace(f=nspace(pars=lambda: pars_names,
+                                             is_enclosed_or_line=lambda **kw: True))]
+                            if (pars_names := self._loc_ImportFrom_names_pars()).n else
+                            ast.names)
             elif isinstance(ast, MatchClass):
                 children = [ast.cls,
                             nspace(f=nspace(pars=lambda: self._loc_matchcls_pars(),

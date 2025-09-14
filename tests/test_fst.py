@@ -1840,7 +1840,12 @@ y")
         self.assertTrue(FST('a\\\n: \\\nb: \\\nc', 'expr_slice').is_enclosed_or_line())
 
         self.assertTrue(FST('from a import \\\nb').is_enclosed_or_line())
-        # self.assertTrue(FST('from a import (\nb)').is_enclosed_or_line())
+        self.assertTrue(FST('from a import (\nb)').is_enclosed_or_line())
+
+        f = FST('from a import (\nb)')
+        f._put_src(None, 1, 1, 1, 2, True)
+        f._put_src(None, 0, 14, 0, 15, False)
+        self.assertFalse(f.is_enclosed_or_line())
 
         if PYGE12:
             self.assertTrue(FST('a, f"{(1,\n2)}", c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
