@@ -37,6 +37,8 @@ def _fmt_code(code: str | tuple[ParseMode, str]) -> tuple[str, bool]:  # -> (src
 
     if code.find(' \n') != -1:
         return repr(code), False
+    elif code.endswith(' '):
+        return repr(code) if '\n' in code else f"r'''{code}'''", False
     elif '\n' in code:
         return f"r'''\n{code}\n'''", True
     elif code.endswith("'"):
@@ -236,6 +238,9 @@ class PutCases(GetPutCases):  # TODO: maybe automatically test 'raw' here?
                 f = g
             elif g is not f:
                 raise RuntimeError('FST returned from func src put not identical to passed in')
+
+            if options.get('_verify', True) and options.get('_verify_self', True):
+                f.root.verify()
 
             rest.append(f.root.src)
 

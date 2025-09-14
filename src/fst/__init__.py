@@ -32,8 +32,8 @@ works for those operations which are not.
 # Details
 
 Disclaimer: The intended use of this module is if you want to change code functionality without having to deal with
-miniutae, not lint or format, there are better options for that. The main focus of `pfst` is not necessarily to be fast
-but rather to handle all the weird cases of python syntax so that functional code always results, use a formatter
+syntax details, not lint or format, there are better options for that. The main focus of `fst` is not necessarily to be
+fast but rather to handle all the weird cases of python syntax so that functional code always results, use a formatter
 afterwards as needed.
 
 `fst` was written and tested on Python versions 3.10 through 3.14.

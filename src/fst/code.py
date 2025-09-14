@@ -573,7 +573,7 @@ def code_as_Import_names(code: Code, parse_params: Mapping[str, Any] = {}, *, sa
     fst_ = _code_as(code, _slice_aliases, parse_params, parse_Import_names, sanitize=sanitize)
 
     if fst_ is code:  # validation if was passed in as FST
-        if any(n.name == '*' for n in fst_.a.names):
+        if any(a.name == '*' for a in fst_.a.names):
             raise ParseError("'*' star alias not allowed")
 
     return fst_
@@ -598,8 +598,15 @@ def code_as_ImportFrom_names(code: Code, parse_params: Mapping[str, Any] = {}, *
     fst_ = _code_as(code, _slice_aliases, parse_params, parse_ImportFrom_names, sanitize=sanitize)
 
     if fst_ is code:  # validation if was passed in as FST
-        if any('.' in n.name for n in fst_.a.names):
-            raise ParseError("'.' dotted alias not allowed")
+        for a in (names := fst_.a.names):
+            if '.' in (n := a.name):
+                raise ParseError("'.' dotted alias not allowed")
+
+            if n == '*' and a is not names[0]:
+                raise ParseError("'*' star can only be a single element")
+
+        if len(names) > 1 and names[0].name == '*':
+            raise ParseError("'*' star can only be a single element")
 
     return fst_
 
@@ -611,7 +618,7 @@ def code_as_withitem(code: Code, parse_params: Mapping[str, Any] = {}, *, saniti
 
 
 def code_as_pattern(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True,
-                     allow_invalid_matchor: bool = False) -> fst.FST:
+                    allow_invalid_matchor: bool = False) -> fst.FST:
     """Convert `code` to a pattern `FST` if possible."""
 
     fst_ = _code_as(code, pattern, parse_params, parse_pattern, sanitize=sanitize)

@@ -10,6 +10,7 @@
 ### Added
 
 - prescribed slicing for `Import.names`
+- prescribed slicing for `ImportFrom.names`
 - prescribed slicing for `Global.names`
 - prescribed slicing for `Nonlocal.names`
 

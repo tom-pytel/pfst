@@ -12600,7 +12600,17 @@ Module - ROOT 0,0..0,19
 (22, 'body[0]', 0, False, 'names', {}, ('exec',
 r'''from z import (a, c as d)'''), ('alias',
 r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''from z import (c as d)''', r'''
+Module - ROOT 0,0..0,22
+  .body[1]
+  0] ImportFrom - 0,0..0,22
+    .module 'z'
+    .names[1]
+    0] alias - 0,15..0,21
+      .name 'c'
+      .asname 'd'
+    .level 0
+'''),
 
 (23, 'body[0]', 0, False, 'names', {}, ('exec',
 r'''from z import (a, c as d)'''), ('alias',

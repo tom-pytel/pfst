@@ -6717,6 +6717,678 @@ _slice_aliases - ROOT 0,0..0,1
 '''),
 ],
 
+'ImportFrom_names': [  # ................................................................................
+
+(0, 'body[0]', 1, 2, None, {}, ('exec',
+r'''from mod import a, b as y, c  # comment'''),
+r'''from mod import a, c  # comment''', r'''
+Module - ROOT 0,0..0,31
+  .body[1]
+  0] ImportFrom - 0,0..0,20
+    .module 'mod'
+    .names[2]
+    0] alias - 0,16..0,17
+      .name 'a'
+    1] alias - 0,19..0,20
+      .name 'c'
+    .level 0
+''',
+r'''b as y''', r'''
+_slice_aliases - ROOT 0,0..0,6
+  .names[1]
+  0] alias - 0,0..0,6
+    .name 'b'
+    .asname 'y'
+'''),
+
+(1, 'body[0]', 1, 3, None, {}, ('exec',
+r'''from mod import a, b as y, c  # comment'''),
+r'''from mod import a  # comment''', r'''
+Module - ROOT 0,0..0,28
+  .body[1]
+  0] ImportFrom - 0,0..0,17
+    .module 'mod'
+    .names[1]
+    0] alias - 0,16..0,17
+      .name 'a'
+    .level 0
+''',
+r'''b as y, c''', r'''
+_slice_aliases - ROOT 0,0..0,9
+  .names[2]
+  0] alias - 0,0..0,6
+    .name 'b'
+    .asname 'y'
+  1] alias - 0,8..0,9
+    .name 'c'
+'''),
+
+(2, 'body[0]', 0, 2, None, {}, ('exec',
+r'''from mod import a, b as y, c  # comment'''),
+r'''from mod import c  # comment''', r'''
+Module - ROOT 0,0..0,28
+  .body[1]
+  0] ImportFrom - 0,0..0,17
+    .module 'mod'
+    .names[1]
+    0] alias - 0,16..0,17
+      .name 'c'
+    .level 0
+''',
+r'''a, b as y''', r'''
+_slice_aliases - ROOT 0,0..0,9
+  .names[2]
+  0] alias - 0,0..0,1
+    .name 'a'
+  1] alias - 0,3..0,9
+    .name 'b'
+    .asname 'y'
+'''),
+
+(3, 'body[0]', 1, 2, None, {}, ('exec', r'''
+from mod import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment
+'''), r'''
+from mod import a \
+, \
+c  # comment
+''', r'''
+Module - ROOT 0,0..2,12
+  .body[1]
+  0] ImportFrom - 0,0..2,1
+    .module 'mod'
+    .names[2]
+    0] alias - 0,16..0,17
+      .name 'a'
+    1] alias - 2,0..2,1
+      .name 'c'
+    .level 0
+''', r'''
+
+b \
+as \
+y \
+ \
+
+''', r'''
+_slice_aliases - ROOT 0,0..5,0
+  .names[1]
+  0] alias - 1,0..3,1
+    .name 'b'
+    .asname 'y'
+'''),
+
+(4, 'body[0]', 0, 2, None, {}, ('exec', r'''
+from mod import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment
+'''), r'''
+from mod import (
+c)  # comment
+''', r'''
+Module - ROOT 0,0..1,13
+  .body[1]
+  0] ImportFrom - 0,0..1,2
+    .module 'mod'
+    .names[1]
+    0] alias - 1,0..1,1
+      .name 'c'
+    .level 0
+''', r'''
+a \
+, \
+b \
+as \
+y \
+ \
+
+''', r'''
+_slice_aliases - ROOT 0,0..6,0
+  .names[2]
+  0] alias - 0,0..0,1
+    .name 'a'
+  1] alias - 2,0..4,1
+    .name 'b'
+    .asname 'y'
+'''),
+
+(5, 'body[0]', 1, 3, None, {}, ('exec', r'''
+from mod import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment
+'''), r'''
+from mod import a \
+ \
+  # comment
+''', r'''
+Module - ROOT 0,0..2,11
+  .body[1]
+  0] ImportFrom - 0,0..0,17
+    .module 'mod'
+    .names[1]
+    0] alias - 0,16..0,17
+      .name 'a'
+    .level 0
+''', r'''
+
+b \
+as \
+y \
+, \
+c
+''', r'''
+_slice_aliases - ROOT 0,0..5,1
+  .names[2]
+  0] alias - 1,0..3,1
+    .name 'b'
+    .asname 'y'
+  1] alias - 5,0..5,1
+    .name 'c'
+'''),
+
+(6, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
+if 1:
+  from mod import a \
+  , \
+  b \
+  as \
+  y # comment
+  pass
+'''), r'''
+if 1:
+  from mod import  \
+  b \
+  as \
+  y # comment
+  pass
+''', r'''
+Module - ROOT 0,0..5,6
+  .body[1]
+  0] If - 0,0..5,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] ImportFrom - 1,2..4,3
+      .module 'mod'
+      .names[1]
+      0] alias - 2,2..4,3
+        .name 'b'
+        .asname 'y'
+      .level 0
+    1] Pass - 5,2..5,6
+''', r'''
+a \
+
+''', r'''
+_slice_aliases - ROOT 0,0..1,0
+  .names[1]
+  0] alias - 0,0..0,1
+    .name 'a'
+'''),
+
+(7, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+  from mod import a \
+  , \
+  b \
+  as \
+  y # comment
+  pass
+'''), r'''
+if 1:
+  from mod import a \
+   \
+   # comment
+  pass
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+  0] If - 0,0..4,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] ImportFrom - 1,2..1,19
+      .module 'mod'
+      .names[1]
+      0] alias - 1,18..1,19
+        .name 'a'
+      .level 0
+    1] Pass - 4,2..4,6
+''', r'''
+b \
+as \
+y
+''', r'''
+_slice_aliases - ROOT 0,0..2,1
+  .names[1]
+  0] alias - 0,0..2,1
+    .name 'b'
+    .asname 'y'
+'''),
+
+(8, '', 0, 3, None, {}, (None,
+r'''from mod import a, b, c'''),
+r'''**ValueError('cannot cut all ImportFrom.names without fix_import_self=False')**''',
+r'''a, b, c''', r'''
+_slice_aliases - ROOT 0,0..0,7
+  .names[3]
+  0] alias - 0,0..0,1
+    .name 'a'
+  1] alias - 0,3..0,4
+    .name 'b'
+  2] alias - 0,6..0,7
+    .name 'c'
+'''),
+
+(9, '', 0, 3, None, {'fix_import_self': False, '_verify_self': False}, (None, r'''
+from mod import a \
+, \
+b \
+as \
+y \
+, \
+c  # comment
+'''),
+r'''from mod import   # comment''', r'''
+ImportFrom - ROOT 0,0..0,16
+  .module 'mod'
+  .level 0
+''', r'''
+a \
+, \
+b \
+as \
+y \
+, \
+c
+''', r'''
+_slice_aliases - ROOT 0,0..6,1
+  .names[3]
+  0] alias - 0,0..0,1
+    .name 'a'
+  1] alias - 2,0..4,1
+    .name 'b'
+    .asname 'y'
+  2] alias - 6,0..6,1
+    .name 'c'
+'''),
+
+(10, 'body[0]', 1, 2, None, {}, (None, r'''
+if 1:
+  from mod import a, b;
+'''), r'''
+if 1:
+  from mod import a;
+''', r'''
+If - ROOT 0,0..1,20
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] ImportFrom - 1,2..1,19
+    .module 'mod'
+    .names[1]
+    0] alias - 1,18..1,19
+      .name 'a'
+    .level 0
+''',
+r'''b''', r'''
+_slice_aliases - ROOT 0,0..0,1
+  .names[1]
+  0] alias - 0,0..0,1
+    .name 'b'
+'''),
+],
+
+'ImportFrom_names_w_pars': [  # ................................................................................
+
+(0, 'body[0]', 1, 2, None, {}, ('exec',
+r'''from mod import (a, b as y, c)  # comment'''),
+r'''from mod import (a, c)  # comment''', r'''
+Module - ROOT 0,0..0,33
+  .body[1]
+  0] ImportFrom - 0,0..0,22
+    .module 'mod'
+    .names[2]
+    0] alias - 0,17..0,18
+      .name 'a'
+    1] alias - 0,20..0,21
+      .name 'c'
+    .level 0
+''',
+r'''b as y''', r'''
+_slice_aliases - ROOT 0,0..0,6
+  .names[1]
+  0] alias - 0,0..0,6
+    .name 'b'
+    .asname 'y'
+'''),
+
+(1, 'body[0]', 1, 3, None, {}, ('exec',
+r'''from mod import (a, b as y, c)  # comment'''),
+r'''from mod import (a)  # comment''', r'''
+Module - ROOT 0,0..0,30
+  .body[1]
+  0] ImportFrom - 0,0..0,19
+    .module 'mod'
+    .names[1]
+    0] alias - 0,17..0,18
+      .name 'a'
+    .level 0
+''',
+r'''b as y, c''', r'''
+_slice_aliases - ROOT 0,0..0,9
+  .names[2]
+  0] alias - 0,0..0,6
+    .name 'b'
+    .asname 'y'
+  1] alias - 0,8..0,9
+    .name 'c'
+'''),
+
+(2, 'body[0]', 0, 2, None, {}, ('exec',
+r'''from mod import (a, b as y, c)  # comment'''),
+r'''from mod import (c)  # comment''', r'''
+Module - ROOT 0,0..0,30
+  .body[1]
+  0] ImportFrom - 0,0..0,19
+    .module 'mod'
+    .names[1]
+    0] alias - 0,17..0,18
+      .name 'c'
+    .level 0
+''',
+r'''a, b as y''', r'''
+_slice_aliases - ROOT 0,0..0,9
+  .names[2]
+  0] alias - 0,0..0,1
+    .name 'a'
+  1] alias - 0,3..0,9
+    .name 'b'
+    .asname 'y'
+'''),
+
+(3, 'body[0]', 1, 2, None, {}, ('exec', r'''
+from mod import (a
+,
+b
+as
+y
+,
+c  # blah
+)  # comment
+'''), r'''
+from mod import (a
+,
+c  # blah
+)  # comment
+''', r'''
+Module - ROOT 0,0..3,12
+  .body[1]
+  0] ImportFrom - 0,0..3,1
+    .module 'mod'
+    .names[2]
+    0] alias - 0,17..0,18
+      .name 'a'
+    1] alias - 2,0..2,1
+      .name 'c'
+    .level 0
+''', r'''
+
+b
+as
+y
+
+
+''', r'''
+_slice_aliases - ROOT 0,0..5,0
+  .names[1]
+  0] alias - 1,0..3,1
+    .name 'b'
+    .asname 'y'
+'''),
+
+(4, 'body[0]', 0, 2, None, {}, ('exec', r'''
+from mod import (a
+,
+b
+as
+y
+,  # blah
+c)  # comment
+'''), r'''
+from mod import (
+c)  # comment
+''', r'''
+Module - ROOT 0,0..1,13
+  .body[1]
+  0] ImportFrom - 0,0..1,2
+    .module 'mod'
+    .names[1]
+    0] alias - 1,0..1,1
+      .name 'c'
+    .level 0
+''', r'''
+a
+,
+b
+as
+y
+  # blah
+
+''', r'''
+_slice_aliases - ROOT 0,0..6,0
+  .names[2]
+  0] alias - 0,0..0,1
+    .name 'a'
+  1] alias - 2,0..4,1
+    .name 'b'
+    .asname 'y'
+'''),
+
+(5, 'body[0]', 1, 3, None, {}, ('exec', r'''
+from mod import (a
+,
+b
+as
+y
+,
+c  # blah
+)  # comment
+'''), r'''
+from mod import (a
+
+)  # comment
+''', r'''
+Module - ROOT 0,0..2,12
+  .body[1]
+  0] ImportFrom - 0,0..2,1
+    .module 'mod'
+    .names[1]
+    0] alias - 0,17..0,18
+      .name 'a'
+    .level 0
+''', r'''
+
+b
+as
+y
+,
+c  # blah
+
+''', r'''
+_slice_aliases - ROOT 0,0..6,0
+  .names[2]
+  0] alias - 1,0..3,1
+    .name 'b'
+    .asname 'y'
+  1] alias - 5,0..5,1
+    .name 'c'
+'''),
+
+(6, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
+if 1:
+  from mod import (a
+  ,
+  b
+  as
+  y  # blah
+  )  # comment
+  pass
+'''), r'''
+if 1:
+  from mod import (
+  b
+  as
+  y  # blah
+  )  # comment
+  pass
+''', r'''
+Module - ROOT 0,0..6,6
+  .body[1]
+  0] If - 0,0..6,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] ImportFrom - 1,2..5,3
+      .module 'mod'
+      .names[1]
+      0] alias - 2,2..4,3
+        .name 'b'
+        .asname 'y'
+      .level 0
+    1] Pass - 6,2..6,6
+''', r'''
+a
+
+''', r'''
+_slice_aliases - ROOT 0,0..1,0
+  .names[1]
+  0] alias - 0,0..0,1
+    .name 'a'
+'''),
+
+(7, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+  from mod import (a
+  ,
+  b
+  as
+  y  # blah
+  )  # comment
+  pass
+'''),
+'if 1:\n  from mod import (a\n  \n  )  # comment\n  pass', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+  0] If - 0,0..4,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] ImportFrom - 1,2..3,3
+      .module 'mod'
+      .names[1]
+      0] alias - 1,19..1,20
+        .name 'a'
+      .level 0
+    1] Pass - 4,2..4,6
+''', r'''
+
+b
+as
+y  # blah
+
+''', r'''
+_slice_aliases - ROOT 0,0..4,0
+  .names[1]
+  0] alias - 1,0..3,1
+    .name 'b'
+    .asname 'y'
+'''),
+
+(8, '', 0, 3, None, {}, (None,
+r'''from mod import a, b, c'''),
+r'''**ValueError('cannot cut all ImportFrom.names without fix_import_self=False')**''',
+r'''a, b, c''', r'''
+_slice_aliases - ROOT 0,0..0,7
+  .names[3]
+  0] alias - 0,0..0,1
+    .name 'a'
+  1] alias - 0,3..0,4
+    .name 'b'
+  2] alias - 0,6..0,7
+    .name 'c'
+'''),
+
+(9, '', 0, 3, None, {'fix_import_self': False, '_verify_self': False}, (None, r'''
+from mod import (a
+,
+b
+as
+y
+,
+c  # blah
+)  # comment
+'''), r'''
+from mod import (
+)  # comment
+''', r'''
+ImportFrom - ROOT 0,0..1,1
+  .module 'mod'
+  .level 0
+''', r'''
+a
+,
+b
+as
+y
+,
+c  # blah
+
+''', r'''
+_slice_aliases - ROOT 0,0..7,0
+  .names[3]
+  0] alias - 0,0..0,1
+    .name 'a'
+  1] alias - 2,0..4,1
+    .name 'b'
+    .asname 'y'
+  2] alias - 6,0..6,1
+    .name 'c'
+'''),
+
+(10, 'body[0]', 1, 2, None, {}, (None, r'''
+if 1:
+  from mod import (a, b);
+'''), r'''
+if 1:
+  from mod import (a);
+''', r'''
+If - ROOT 0,0..1,22
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] ImportFrom - 1,2..1,21
+    .module 'mod'
+    .names[1]
+    0] alias - 1,19..1,20
+      .name 'a'
+    .level 0
+''',
+r'''b''', r'''
+_slice_aliases - ROOT 0,0..0,1
+  .names[1]
+  0] alias - 0,0..0,1
+    .name 'b'
+'''),
+],
+
 'Global_names': [  # ................................................................................
 
 (0, 'body[0]', 1, 2, None, {}, ('exec',

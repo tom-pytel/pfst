@@ -30,6 +30,7 @@ from fst.code import (
     code_as_alias,
     code_as_Import_name,
     code_as_ImportFrom_name,
+    code_as_ImportFrom_names,
     code_as_withitem,
     code_as_pattern,
     code_as_type_param,
@@ -1838,6 +1839,9 @@ y")
         self.assertTrue(FST('a\n: \nb: \nc', 'expr_slice').is_enclosed_or_line())  # because is never used unenclosed
         self.assertTrue(FST('a\\\n: \\\nb: \\\nc', 'expr_slice').is_enclosed_or_line())
 
+        self.assertTrue(FST('from a import \\\nb').is_enclosed_or_line())
+        # self.assertTrue(FST('from a import (\nb)').is_enclosed_or_line())
+
         if PYGE12:
             self.assertTrue(FST('a, f"{(1,\n2)}", c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
 
@@ -1871,11 +1875,9 @@ a + \
 ''')
         self.assertTrue(f.is_enclosed_or_line(whole=False, out_lns=(lns := set())))
         self.assertEqual(set(), lns)
-
         f.right.unpar()
         self.assertFalse(f.is_enclosed_or_line(whole=False, out_lns=(lns := set())))
         self.assertEqual({3}, lns)
-
         self.assertFalse(f.is_enclosed_or_line(whole=True, out_lns=(lns := set())))
         self.assertEqual({0, 3, 4}, lns)
 
@@ -3011,6 +3013,13 @@ match a:
                 print(f'{src = !r}')
 
                 raise
+
+    def test_code_as_special(self):
+        # aliases slice multiple stars
+
+        self.assertRaises(ParseError, code_as_ImportFrom_names, FST('*', 'aliases').names.append('*').fst)
+        self.assertRaises(ParseError, code_as_ImportFrom_names, FST('a', 'aliases').names.append('*').fst)
+        self.assertEqual('*', code_as_ImportFrom_names(FST('*', 'aliases')).src)
 
     def test_par(self):
         f = parse('1,').body[0].value.f.copy()
@@ -5304,8 +5313,7 @@ if 1:
 
         f = FST('from .module import x, y')
         self.assertEqual('from .new import x, y', test(f, 'module', 'new', None, 'module').src)
-        self.assertEqual('from .new import a, b, c', test(f, 'names', 'a, b, c', fstview,
-                                                          '<<ImportFrom ROOT 0,0..0,21>.names[0:2] [<alias 0,17..0,18>, <alias 0,20..0,21>]>').src)
+        self.assertEqual('from .new import a, b, c', test(f, 'names', 'a, b, c', fstview, 'x, y').src)
         self.assertEqual('from ...new import a, b, c', test(f, 'level', 3, None, 1).src)
 
         self.assertEqual('global a, b, c', test(FST('global x, y'), 'names', 'a, b, c', fstview, 'x, y').src)

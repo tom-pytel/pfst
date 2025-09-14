@@ -89,7 +89,7 @@ from .code import (
     code_as_expr, code_as_expr_all, code_as_Assign_targets,
     code_as_alias, code_as_aliases,
     code_as_Import_name, code_as_Import_names,
-    # code_as_ImportFrom_name, code_as_ImportFrom_names,
+    code_as_ImportFrom_name, code_as_ImportFrom_names,
     code_as_pattern,
     code_as_type_param, code_as_type_params,
 )
@@ -506,8 +506,8 @@ def _bound_Assign_targets(self: fst.FST, start: int = 0, loc_first: fst.FST | No
 
 def _maybe_set_end_pos(self: fst.FST, end_lineno: int, end_col_offset: int,
                        old_end_lineno: int, old_end_col_offset: int) -> None:
-    """Maybe set end position if is not already at this position. If it is not then walk up parent chain setting those
-    end positions to the new one but only as long as they are at an expected end position. Used to fix end position
+    """Maybe set end position if is not already at old position. If it is not then walk up parent chain setting those
+    end positions to the new one but only as long as they are at an expected old end position. Used to fix end position
     which might have been offset by trailing trivia."""
 
     while True:
@@ -927,10 +927,10 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
     if cut and len_slice == len_body and self.get_option('fix_import_self', options):
         raise ValueError('cannot cut all Import.names without fix_import_self=False')
 
-    _, _, bound_end_ln, bound_end_col = self.loc
-
     loc_first = body[start].f.loc
     loc_last = loc_first if stop == start else body[stop - 1].f.loc
+
+    _, _, bound_end_ln, bound_end_col = self.loc
 
     if start:
         _, _, bound_ln, bound_col = body[start - 1].f.loc
@@ -953,10 +953,50 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
     return fst_
 
 
-# TODO: handle trailing line continuation backslashes
 def _get_slice_ImportFrom_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                                 cut: bool, options: Mapping[str, Any]) -> fst.FST:
-    raise NotImplementedError
+    len_body = len(body := (ast := self.a).names)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
+
+    if not len_slice:
+        return fst.FST(_slice_aliases(names=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''],
+                       from_=self)
+
+    if cut and len_slice == len_body and self.get_option('fix_import_self', options):
+        raise ValueError('cannot cut all ImportFrom.names without fix_import_self=False')
+
+    loc_first = body[start].f.loc
+    loc_last = loc_first if stop == start else body[stop - 1].f.loc
+
+    pars = self._loc_ImportFrom_names_pars()  # may be pars or may be where pars would go from just after `import` to end of node
+    pars_ln, pars_col, pars_end_ln, pars_end_col = pars
+    pars_n = pars.n
+
+    if start:
+        _, _, bound_ln, bound_col = body[start - 1].f.loc
+    else:
+        bound_ln = pars_ln
+        bound_col = pars_col + pars_n
+
+    asts = _cut_or_copy_asts(start, stop, 'names', cut, body)
+    ret_ast = _slice_aliases(names=asts)
+
+    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
+                          loc_first, loc_last, bound_ln, bound_col, pars_end_ln, pars_end_col - pars_n,
+                          options.get('trivia'), 'names', '', '', ',', False, False)
+
+    if cut and not pars_n:  # only need to fix maybe if there are no parentheses
+        if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
+            _maybe_set_end_pos(self, (bn := body[-1]).end_lineno, bn.end_col_offset, ast.end_lineno, ast.end_col_offset)
+
+        if not self.is_enclosed_or_line():  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
+            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()  # will just give where pars should go (because maybe something like `async \\\n\\\n   with ...`)
+
+            self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, True, False, self)
+            self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
+
+    return fst_
 
 
 def _get_slice_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
@@ -1282,7 +1322,7 @@ _GET_SLICE_HANDLERS = {
     (Call, 'keywords'):                       _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
 
     (Import, 'names'):                        _get_slice_Import_names,  # alias*
-    (ImportFrom, 'names'):                    _get_slice_NOT_IMPLEMENTED_YET,  # alias*
+    (ImportFrom, 'names'):                    _get_slice_ImportFrom_names,  # alias*
 
     (With, 'items'):                          _get_slice_NOT_IMPLEMENTED_YET,  # withitem*
     (AsyncWith, 'items'):                     _get_slice_NOT_IMPLEMENTED_YET,  # withitem*
@@ -1330,7 +1370,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
     elements. If an `fst_` is provided then it is assumed it has at least one element. No empty put to empty location,
     likewise no delete from empty location.
 
-    BE WARNED! Here there be dragons!
+    **WARNING!** Here there be dragons!
 
     TODO: this really needs a refactor
 
@@ -2414,8 +2454,91 @@ def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Liter
             _maybe_set_end_pos(self, bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col),
                                ast.end_lineno, ast.end_col_offset)
 
-    # self._maybe_fix_joined_alnum(self.ln, self.col + 5)  # THEORETICALLY this can happen if delete to empty then remove trailing whitespace from 'import' and then put new stuff, but there are so many easier ways to F S up that we don't bother with this
-    self._maybe_add_line_continuations()
+    self._maybe_add_line_continuations()  # THEORETICALLY could need to _maybe_fix_joined_alnum() but only if the user goes out of their way to F S up, so we don't bother with this
+
+
+def _put_slice_ImportFrom_names(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+                                field: str, one: bool, options: Mapping[str, Any]) -> None:
+    fst_ = _code_to_slice_aliases(self, code, one, options, code_as_ImportFrom_name, code_as_ImportFrom_names)
+    len_body = len(body := (ast := self.a).names)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
+    put_star = False
+
+    if not fst_:
+        if not len_slice:
+            return
+
+        if len_slice == len_body and self.get_option('fix_import_self', options):
+            raise ValueError('cannot delete all ImportFrom.names without fix_import_self=False')
+
+    else:
+        if put_star := fst_.a.names[0].name == '*':  # if putting star then it must overwrite everything
+            if len_slice != len_body:
+                raise NodeError("if putting star '*' alias it must overwrite all other aliases")
+
+        elif body and body[0].name == '*':  # putting to star then it must be overwritten
+            if start > 0 or stop < 1:
+                raise NodeError("if putting over star '*' alias it must be overwritten")
+
+    pars = self._loc_ImportFrom_names_pars()  # may be pars or may be where pars would go from just after `import` to end of node
+    pars_ln, pars_col, pars_end_ln, pars_end_col = pars
+    pars_n = pars.n
+
+    if not fst_:
+        _put_slice_seq(self, start, stop, None, None, None, 0,
+                       pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n,
+                       options.get('trivia'), options.get('ins_ln'), 'names', None, ',', False)
+
+        self._unmake_fst_tree(body[start : stop])
+
+        del body[start : stop]
+
+        len_fst_body = 0
+
+    else:
+        len_fst_body = len(fst_body := fst_.a.names)
+
+        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
+                       pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n,
+                       options.get('trivia'), options.get('ins_ln'), 'names', None, ',', False)
+
+        self._unmake_fst_tree(body[start : stop])
+        fst_._unmake_fst_parents(True)
+
+        body[start : stop] = fst_body
+
+        FST = fst.FST
+        stack = [FST(body[i], self, astfield('names', i)) for i in range(start, start + len_fst_body)]
+
+        self._make_fst_tree(stack)
+
+    for i in range(start + len_fst_body, len(body)):
+        body[i].f.pfield = astfield('names', i)
+
+    if not pars_n:  # only need to fix maybe if there are no parentheses
+        if stop == len_body:  # if del till and something left then may need to reset end position of self due to new trailing trivia
+            if body:
+                _maybe_set_end_pos(self, (bn := body[-1]).end_lineno, bn.end_col_offset,
+                                   ast.end_lineno, ast.end_col_offset)
+            else:
+                _maybe_set_end_pos(self, pars_ln + 1, self.root._lines[pars_ln].c2b(pars_col),
+                                   ast.end_lineno, ast.end_col_offset)
+
+        if not self.is_enclosed_or_line():  # if no parentheses and wound up not valid for parse then adding parentheses around names should fix
+            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()  # will just give where pars should go (because maybe something like `async \\\n\\\n   with ...`)
+
+            self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, True, False, self)
+            self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
+
+        # THEORETICALLY could need to _maybe_fix_joined_alnum() but only if the user goes out of their way to F S up, so we don't bother with this
+
+    elif put_star:  # if put star then must remove parentheses (including any trivia inside them)
+        pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()
+        star_ln, star_col, star_end_ln, star_end_col = body[0].f.loc
+
+        self._put_src(None, star_end_ln, star_end_col, pars_end_ln, pars_end_col, True)
+        self._put_src(None, pars_ln, pars_col, star_ln, star_col, False)
 
 
 def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
@@ -2512,8 +2635,7 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
         _maybe_set_end_pos(self, last_end_ln + 1, lines[last_end_ln].c2b(last_end_col),
                            ast.end_lineno, ast.end_col_offset)
 
-    # self._maybe_fix_joined_alnum(self.ln, self.col + (6 if isinstance(ast, Global) else 8))  # THEORETICALLY this can happen if delete to empty then remove trailing whitespace from 'import' and then put new stuff, but there are so many easier ways to F S up that we don't bother with this
-    self._maybe_add_line_continuations()
+    self._maybe_add_line_continuations()  # THEORETICALLY could need to _maybe_fix_joined_alnum() but only if the user goes out of their way to F S up, so we don't bother with this
 
 
 def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
@@ -2888,7 +3010,7 @@ _PUT_SLICE_HANDLERS = {
     (Call, 'keywords'):                       _put_slice_NOT_IMPLEMENTED_YET,  # keyword*
 
     (Import, 'names'):                        _put_slice_Import_names,  # alias*
-    (ImportFrom, 'names'):                    _put_slice_NOT_IMPLEMENTED_YET,  # alias*
+    (ImportFrom, 'names'):                    _put_slice_ImportFrom_names,  # alias*
 
     (With, 'items'):                          _put_slice_NOT_IMPLEMENTED_YET,  # withitem*
     (AsyncWith, 'items'):                     _put_slice_NOT_IMPLEMENTED_YET,  # withitem*

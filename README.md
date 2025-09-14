@@ -1,10 +1,10 @@
 # Overview
 
-This module exists in order to facilitate quick and easy editing of Python source while preserving formatting. It automatically deals with all the silly nonsense like indentation, parentheses, commas, comments, docstrings, semicolons, line continuations, precedence, else vs. elif, etc... And especially the many, many niche special cases of Python syntax.
+This module exists in order to facilitate high level quick and easy editing of Python source while preserving formatting. `fst` grew out of a frustration of not being able to just edit python source to change some bit of functionality without having to deal with the miniutae of indentation, parentheses, commas, comments, docstrings, semicolons, line continuations, precedence, else vs. elif, etc... `fst` deals with all of these for you and especially the many, many niche special cases of Python syntax.
 
-`fst` provides its own format-preserving operations for `AST` trees, but also allows the `AST` tree to be changed by anything else outside of its control and can then reconcile the changes with what it knows to preserve formatting where possible. It works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute which keep extra structure information, the original source, and provide the interface to the format-preserving operations.
+`fst` works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute which keep extra structure information, the original source, and provide the interface to format-preserving operations. Each operation through `fst` is a simultaneous edit of the `AST` tree and the source code and those are kept synchronized so that the source always corresponds to the current tree.
 
-The fact that it just extends existing `AST` nodes means that the `AST` tree can be used (and edited) as normal anywhere that `AST` is used, and later `unparse()` with formatting preserved where it can be. The degree to which formatting is preserved depends on how many operations are executed natively through `fst` mechanisms and how well `FST.reconcile()` works for those operations which are not.
+Apart from its own format-preserving operations, `fst` also allows the `AST` tree to be changed by anything else outside of its control and can then reconcile the changes with what it knows to preserve formatting where possible. The degree to which formatting is preserved depends on how many operations are executed natively through `fst` mechanisms and how well `FST.reconcile()` works for those operations which are not.
 
 # Links
 
@@ -69,7 +69,7 @@ if a:
     b = c, d  # comment
     x = b
 
->>> a.body[0].body[0].value.f.elts[1:1] = 'u,\nv'  # slice, parentheses, indentation all handled
+>>> a.body[0].body[0].value.f.elts[1:1] = 'u,\nv'  # proper syntax fluff handled automatically
 
 >>> print(a.f.src)
 if a:
@@ -199,7 +199,6 @@ This package is not finished but functional enough that it can be useful.
   * `GeneratorExp.generators`
   * `ClassDef.keywords`
   * `Call.keywords`
-  * `Import.names`
   * `ImportFrom.names`
   * `With.items`
   * `AsyncWith.items`

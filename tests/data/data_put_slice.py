@@ -15336,13 +15336,8 @@ if 1:
     b \
     , \
   )
-'''), r'''
-if 1:
-  del a, \
-      b \
-       \
-    
-''', r'''
+'''),
+'if 1:\n  del a, \\\n      b \\\n       \\\n    ', r'''
 if 1:
   del a, b
 ''', r'''
@@ -15972,6 +15967,786 @@ If - ROOT 0,0..1,14
       .name 'x'
     1] alias - 1,12..1,13
       .name 'y'
+'''),
+],
+
+'ImportFrom_names': [  # ................................................................................
+
+(0, 'body[0]', 1, 2, None, {}, ('exec',
+r'''from mod import a, b, c  # comment'''), (None,
+r'''**DEL**'''),
+r'''from mod import a, c  # comment''', r'''
+Module - ROOT 0,0..0,31
+  .body[1]
+  0] ImportFrom - 0,0..0,20
+    .module 'mod'
+    .names[2]
+    0] alias - 0,16..0,17
+      .name 'a'
+    1] alias - 0,19..0,20
+      .name 'c'
+    .level 0
+'''),
+
+(1, 'body[0]', 1, 3, None, {}, ('exec',
+r'''from mod import a, b, c  # comment'''), (None,
+r'''**DEL**'''),
+r'''from mod import a  # comment''', r'''
+Module - ROOT 0,0..0,28
+  .body[1]
+  0] ImportFrom - 0,0..0,17
+    .module 'mod'
+    .names[1]
+    0] alias - 0,16..0,17
+      .name 'a'
+    .level 0
+'''),
+
+(2, 'body[0]', 0, 2, None, {}, ('exec',
+r'''from mod import a, b, c  # comment'''), (None,
+r'''**DEL**'''),
+r'''from mod import c  # comment''', r'''
+Module - ROOT 0,0..0,28
+  .body[1]
+  0] ImportFrom - 0,0..0,17
+    .module 'mod'
+    .names[1]
+    0] alias - 0,16..0,17
+      .name 'c'
+    .level 0
+'''),
+
+(3, 'body[0]', 1, 2, None, {}, ('exec', r'''
+from mod import a \
+, \
+b \
+, \
+c  # comment
+'''), (None,
+r'''**DEL**'''), r'''
+from mod import a \
+, \
+c  # comment
+''', r'''
+Module - ROOT 0,0..2,12
+  .body[1]
+  0] ImportFrom - 0,0..2,1
+    .module 'mod'
+    .names[2]
+    0] alias - 0,16..0,17
+      .name 'a'
+    1] alias - 2,0..2,1
+      .name 'c'
+    .level 0
+'''),
+
+(4, 'body[0]', 0, 2, None, {}, ('exec', r'''
+from mod import a \
+, \
+b \
+, \
+c  # comment
+'''), (None,
+r'''**DEL**'''), r'''
+from mod import (
+c)  # comment
+''', r'''
+Module - ROOT 0,0..1,13
+  .body[1]
+  0] ImportFrom - 0,0..1,2
+    .module 'mod'
+    .names[1]
+    0] alias - 1,0..1,1
+      .name 'c'
+    .level 0
+'''),
+
+(5, 'body[0]', 1, 3, None, {}, ('exec', r'''
+from mod import a \
+, \
+b \
+, \
+c  # comment
+'''), (None,
+r'''**DEL**'''), r'''
+from mod import a \
+ \
+  # comment
+''', r'''
+Module - ROOT 0,0..2,11
+  .body[1]
+  0] ImportFrom - 0,0..0,17
+    .module 'mod'
+    .names[1]
+    0] alias - 0,16..0,17
+      .name 'a'
+    .level 0
+'''),
+
+(6, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
+if 1:
+  from mod import a \
+  , \
+  b  # comment
+  pass
+'''), (None,
+r'''**DEL**'''), r'''
+if 1:
+  from mod import  \
+  b  # comment
+  pass
+''', r'''
+Module - ROOT 0,0..3,6
+  .body[1]
+  0] If - 0,0..3,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] ImportFrom - 1,2..2,3
+      .module 'mod'
+      .names[1]
+      0] alias - 2,2..2,3
+        .name 'b'
+      .level 0
+    1] Pass - 3,2..3,6
+'''),
+
+(7, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+  from mod import a \
+  , \
+  b  # comment
+  pass
+'''), (None,
+r'''**DEL**'''), r'''
+if 1:
+  from mod import a \
+   \
+    # comment
+  pass
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+  0] If - 0,0..4,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] ImportFrom - 1,2..1,19
+      .module 'mod'
+      .names[1]
+      0] alias - 1,18..1,19
+        .name 'a'
+      .level 0
+    1] Pass - 4,2..4,6
+'''),
+
+(8, 'body[0].body[0]', 0, 0, None, {}, ('exec', r'''
+if 1:
+  from mod import a
+  pass
+'''), ('Import_names', r'''
+x \
+  , \
+  y
+
+'''), r'''
+if 1:
+  from mod import (x \
+                  , \
+                  y,
+                  a)
+  pass
+''', r'''
+Module - ROOT 0,0..5,6
+  .body[1]
+  0] If - 0,0..5,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] ImportFrom - 1,2..4,20
+      .module 'mod'
+      .names[3]
+      0] alias - 1,19..1,20
+        .name 'x'
+      1] alias - 3,18..3,19
+        .name 'y'
+      2] alias - 4,18..4,19
+        .name 'a'
+      .level 0
+    1] Pass - 5,2..5,6
+'''),
+
+(9, 'body[0]', 1, 2, None, {}, ('exec',
+r'''from mod import a, b, c  # comment'''), ('Import_names',
+r'''x'''),
+r'''from mod import a, x, c  # comment''', r'''
+Module - ROOT 0,0..0,34
+  .body[1]
+  0] ImportFrom - 0,0..0,23
+    .module 'mod'
+    .names[3]
+    0] alias - 0,16..0,17
+      .name 'a'
+    1] alias - 0,19..0,20
+      .name 'x'
+    2] alias - 0,22..0,23
+      .name 'c'
+    .level 0
+'''),
+
+(10, 'body[0]', 1, 2, None, {}, ('exec',
+r'''from mod import a, b, c  # comment'''), ('Import_names',
+r'''x.y'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+(11, 'body[0]', None, None, None, {}, ('exec',
+r'''from mod import a, b, c  # comment'''), ('Import_names', r'''
+x \
+
+'''), r'''
+from mod import x \
+  # comment
+''', r'''
+Module - ROOT 0,0..1,11
+  .body[1]
+  0] ImportFrom - 0,0..0,17
+    .module 'mod'
+    .names[1]
+    0] alias - 0,16..0,17
+      .name 'x'
+    .level 0
+'''),
+
+(12, '', None, None, None, {}, (None,
+r'''from mod import a, b, c  # comment'''),
+r'''**DEL**''',
+r'''**ValueError('cannot delete all ImportFrom.names without fix_import_self=False')**'''),
+
+(13, '', None, None, None, {'fix_import_self': False, '_verify_self': False}, (None,
+r'''from mod import a, b, c  # comment'''),
+r'''**DEL**''',
+r'''from mod import   # comment''', r'''
+ImportFrom - ROOT 0,0..0,16
+  .module 'mod'
+  .level 0
+'''),
+
+(14, 'body[0]', 1, 1, None, {}, ('exec',
+r'''from mod import a'''), ('Import_names', r'''
+b \
+, \
+c \
+
+'''), r'''
+from mod import a, b \
+                , \
+                c \
+
+''', r'''
+Module - ROOT 0,0..3,0
+  .body[1]
+  0] ImportFrom - 0,0..2,17
+    .module 'mod'
+    .names[3]
+    0] alias - 0,16..0,17
+      .name 'a'
+    1] alias - 0,19..0,20
+      .name 'b'
+    2] alias - 2,16..2,17
+      .name 'c'
+    .level 0
+'''),
+
+(15, 'body[0]', 1, 1, None, {}, ('exec',
+r'''from mod import a'''), ('Import_names', r'''
+\
+b \
+, \
+c \
+
+'''), r'''
+from mod import a, \
+                b \
+                , \
+                c \
+
+''', r'''
+Module - ROOT 0,0..4,0
+  .body[1]
+  0] ImportFrom - 0,0..3,17
+    .module 'mod'
+    .names[3]
+    0] alias - 0,16..0,17
+      .name 'a'
+    1] alias - 1,16..1,17
+      .name 'b'
+    2] alias - 3,16..3,17
+      .name 'c'
+    .level 0
+'''),
+
+(16, 'body[0]', 1, 1, None, {}, (None, r'''
+if 1:
+  from mod import x;
+'''), (None,
+r'''y'''), r'''
+if 1:
+  from mod import x, y;
+''',
+r'''**NodeError('expecting _slice_aliases, got Name')**''', r'''
+If - ROOT 0,0..1,23
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] ImportFrom - 1,2..1,22
+    .module 'mod'
+    .names[2]
+    0] alias - 1,18..1,19
+      .name 'x'
+    1] alias - 1,21..1,22
+      .name 'y'
+    .level 0
+'''),
+],
+
+'ImportFrom_names_w_pars': [  # ................................................................................
+
+(0, 'body[0]', 1, 2, None, {}, ('exec',
+r'''from mod import (a, b, c)  # comment'''), (None,
+r'''**DEL**'''),
+r'''from mod import (a, c)  # comment''', r'''
+Module - ROOT 0,0..0,33
+  .body[1]
+  0] ImportFrom - 0,0..0,22
+    .module 'mod'
+    .names[2]
+    0] alias - 0,17..0,18
+      .name 'a'
+    1] alias - 0,20..0,21
+      .name 'c'
+    .level 0
+'''),
+
+(1, 'body[0]', 1, 3, None, {}, ('exec',
+r'''from mod import (a, b, c)  # comment'''), (None,
+r'''**DEL**'''),
+r'''from mod import (a)  # comment''', r'''
+Module - ROOT 0,0..0,30
+  .body[1]
+  0] ImportFrom - 0,0..0,19
+    .module 'mod'
+    .names[1]
+    0] alias - 0,17..0,18
+      .name 'a'
+    .level 0
+'''),
+
+(2, 'body[0]', 0, 2, None, {}, ('exec',
+r'''from mod import (a, b, c)  # comment'''), (None,
+r'''**DEL**'''),
+r'''from mod import (c)  # comment''', r'''
+Module - ROOT 0,0..0,30
+  .body[1]
+  0] ImportFrom - 0,0..0,19
+    .module 'mod'
+    .names[1]
+    0] alias - 0,17..0,18
+      .name 'c'
+    .level 0
+'''),
+
+(3, 'body[0]', 1, 2, None, {}, ('exec', r'''
+from mod import (a \
+, \
+b \
+, \
+c  # blah
+)  # comment
+'''), (None,
+r'''**DEL**'''), r'''
+from mod import (a \
+, \
+c  # blah
+)  # comment
+''', r'''
+Module - ROOT 0,0..3,12
+  .body[1]
+  0] ImportFrom - 0,0..3,1
+    .module 'mod'
+    .names[2]
+    0] alias - 0,17..0,18
+      .name 'a'
+    1] alias - 2,0..2,1
+      .name 'c'
+    .level 0
+'''),
+
+(4, 'body[0]', 0, 2, None, {}, ('exec', r'''
+from mod import (a \
+, \
+b \
+, \
+c  # blah
+)  # comment
+'''), (None,
+r'''**DEL**'''), r'''
+from mod import (
+c  # blah
+)  # comment
+''', r'''
+Module - ROOT 0,0..2,12
+  .body[1]
+  0] ImportFrom - 0,0..2,1
+    .module 'mod'
+    .names[1]
+    0] alias - 1,0..1,1
+      .name 'c'
+    .level 0
+'''),
+
+(5, 'body[0]', 1, 3, None, {}, ('exec', r'''
+from mod import (a \
+, \
+b \
+, \
+c  # blah
+)  # comment
+'''), (None,
+r'''**DEL**'''), r'''
+from mod import (a \
+ \
+)  # comment
+''', r'''
+Module - ROOT 0,0..2,12
+  .body[1]
+  0] ImportFrom - 0,0..2,1
+    .module 'mod'
+    .names[1]
+    0] alias - 0,17..0,18
+      .name 'a'
+    .level 0
+'''),
+
+(6, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
+if 1:
+  from mod import (a \
+  , \
+  b  # blah
+  )  # comment
+  pass
+'''), (None,
+r'''**DEL**'''), r'''
+if 1:
+  from mod import ( \
+  b  # blah
+  )  # comment
+  pass
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+  0] If - 0,0..4,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] ImportFrom - 1,2..3,3
+      .module 'mod'
+      .names[1]
+      0] alias - 2,2..2,3
+        .name 'b'
+      .level 0
+    1] Pass - 4,2..4,6
+'''),
+
+(7, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+  from mod import (a \
+  , \
+  b  # blah
+  )  # comment
+  pass
+'''), (None,
+r'''**DEL**'''), r'''
+if 1:
+  from mod import (a \
+   \
+  )  # comment
+  pass
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+  0] If - 0,0..4,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] ImportFrom - 1,2..3,3
+      .module 'mod'
+      .names[1]
+      0] alias - 1,19..1,20
+        .name 'a'
+      .level 0
+    1] Pass - 4,2..4,6
+'''),
+
+(8, 'body[0].body[0]', 0, 0, None, {}, ('exec', r'''
+if 1:
+  from mod import (a)
+  pass
+'''), ('Import_names', r'''
+x \
+  , \
+  y
+
+'''), r'''
+if 1:
+  from mod import (x \
+                   , \
+                   y,
+                   a)
+  pass
+''', r'''
+Module - ROOT 0,0..5,6
+  .body[1]
+  0] If - 0,0..5,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] ImportFrom - 1,2..4,21
+      .module 'mod'
+      .names[3]
+      0] alias - 1,19..1,20
+        .name 'x'
+      1] alias - 3,19..3,20
+        .name 'y'
+      2] alias - 4,19..4,20
+        .name 'a'
+      .level 0
+    1] Pass - 5,2..5,6
+'''),
+
+(9, 'body[0]', 1, 2, None, {}, ('exec',
+r'''from mod import (a, b, c)  # comment'''), ('Import_names',
+r'''x'''),
+r'''from mod import (a, x, c)  # comment''', r'''
+Module - ROOT 0,0..0,36
+  .body[1]
+  0] ImportFrom - 0,0..0,25
+    .module 'mod'
+    .names[3]
+    0] alias - 0,17..0,18
+      .name 'a'
+    1] alias - 0,20..0,21
+      .name 'x'
+    2] alias - 0,23..0,24
+      .name 'c'
+    .level 0
+'''),
+
+(10, 'body[0]', 1, 2, None, {}, ('exec',
+r'''from mod import (a, b, c)  # comment'''), ('Import_names',
+r'''x.y'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+(11, 'body[0]', None, None, None, {}, ('exec',
+r'''from mod import (a, b, c)  # comment'''), ('Import_names', r'''
+x \
+
+'''), r'''
+from mod import (x \
+)  # comment
+''', r'''
+Module - ROOT 0,0..1,12
+  .body[1]
+  0] ImportFrom - 0,0..1,1
+    .module 'mod'
+    .names[1]
+    0] alias - 0,17..0,18
+      .name 'x'
+    .level 0
+'''),
+
+(12, '', None, None, None, {}, (None,
+r'''from mod import (a, b, c)  # comment'''),
+r'''**DEL**''',
+r'''**ValueError('cannot delete all ImportFrom.names without fix_import_self=False')**'''),
+
+(13, '', None, None, None, {'fix_import_self': False, '_verify_self': False}, (None,
+r'''from mod import (a, b, c)  # comment'''),
+r'''**DEL**''',
+r'''from mod import ()  # comment''', r'''
+ImportFrom - ROOT 0,0..0,18
+  .module 'mod'
+  .level 0
+'''),
+
+(14, 'body[0]', 1, 1, None, {}, ('exec',
+r'''from mod import (a)'''), ('Import_names', r'''
+b \
+, \
+c \
+  # blah
+'''), r'''
+from mod import (a, b \
+                 , \
+                 c \
+                   # blah
+)
+''', r'''
+Module - ROOT 0,0..4,1
+  .body[1]
+  0] ImportFrom - 0,0..4,1
+    .module 'mod'
+    .names[3]
+    0] alias - 0,17..0,18
+      .name 'a'
+    1] alias - 0,20..0,21
+      .name 'b'
+    2] alias - 2,17..2,18
+      .name 'c'
+    .level 0
+'''),
+
+(15, 'body[0]', 1, 1, None, {}, ('exec',
+r'''from mod import (a)'''), ('Import_names', r'''
+\
+b \
+, \
+c \
+  # blah
+'''), r'''
+from mod import (a, \
+                 b \
+                 , \
+                 c \
+                   # blah
+)
+''', r'''
+Module - ROOT 0,0..5,1
+  .body[1]
+  0] ImportFrom - 0,0..5,1
+    .module 'mod'
+    .names[3]
+    0] alias - 0,17..0,18
+      .name 'a'
+    1] alias - 1,17..1,18
+      .name 'b'
+    2] alias - 3,17..3,18
+      .name 'c'
+    .level 0
+'''),
+
+(16, 'body[0]', 1, 1, None, {}, (None, r'''
+if 1:
+  from mod import (x);
+'''), (None,
+r'''y'''), r'''
+if 1:
+  from mod import (x, y);
+''',
+r'''**NodeError('expecting _slice_aliases, got Name')**''', r'''
+If - ROOT 0,0..1,25
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] ImportFrom - 1,2..1,24
+    .module 'mod'
+    .names[2]
+    0] alias - 1,19..1,20
+      .name 'x'
+    1] alias - 1,22..1,23
+      .name 'y'
+    .level 0
+'''),
+],
+
+'ImportFrom_names_star': [  # ................................................................................
+
+(0, 'body[0]', 0, 1, None, {}, ('exec',
+r'''from mod import a'''), ('ImportFrom_names',
+r'''*'''),
+r'''from mod import *''', r'''
+Module - ROOT 0,0..0,17
+  .body[1]
+  0] ImportFrom - 0,0..0,17
+    .module 'mod'
+    .names[1]
+    0] alias - 0,16..0,17
+      .name '*'
+    .level 0
+'''),
+
+(1, 'body[0]', 0, 0, None, {}, ('exec',
+r'''from mod import a'''), ('ImportFrom_names',
+r'''*'''),
+r'''**NodeError("if putting star '*' alias it must overwrite all other aliases")**'''),
+
+(2, 'body[0]', 1, 1, None, {}, ('exec',
+r'''from mod import a'''), ('ImportFrom_names',
+r'''*'''),
+r'''**NodeError("if putting star '*' alias it must overwrite all other aliases")**'''),
+
+(3, 'body[0]', 0, 1, None, {}, ('exec',
+r'''from mod import *'''), ('ImportFrom_names',
+r'''a'''),
+r'''from mod import a''', r'''
+Module - ROOT 0,0..0,17
+  .body[1]
+  0] ImportFrom - 0,0..0,17
+    .module 'mod'
+    .names[1]
+    0] alias - 0,16..0,17
+      .name 'a'
+    .level 0
+'''),
+
+(4, 'body[0]', 0, 0, None, {}, ('exec',
+r'''from mod import *'''), ('ImportFrom_names',
+r'''a'''),
+r'''**NodeError("if putting over star '*' alias it must be overwritten")**'''),
+
+(5, 'body[0]', 1, 1, None, {}, ('exec',
+r'''from mod import *'''), ('ImportFrom_names',
+r'''a'''),
+r'''**NodeError("if putting over star '*' alias it must be overwritten")**'''),
+
+(6, 'body[0]', None, None, None, {}, ('exec',
+r'''from mod import *'''), ('ImportFrom_names',
+r'''*'''),
+r'''from mod import *''', r'''
+Module - ROOT 0,0..0,17
+  .body[1]
+  0] ImportFrom - 0,0..0,17
+    .module 'mod'
+    .names[1]
+    0] alias - 0,16..0,17
+      .name '*'
+    .level 0
+'''),
+
+(7, 'body[0]', None, None, None, {}, ('exec',
+r'''from mod import a'''), ('ImportFrom_names', r'''
+* \
+# blah
+'''), r'''
+from mod import * \
+                # blah
+
+''', r'''
+Module - ROOT 0,0..2,0
+  .body[1]
+  0] ImportFrom - 0,0..0,17
+    .module 'mod'
+    .names[1]
+    0] alias - 0,16..0,17
+      .name '*'
+    .level 0
+'''),
+
+(8, 'body[0]', None, None, None, {}, ('exec',
+r'''from mod import (a)'''), ('ImportFrom_names', r'''
+* \
+# blah
+'''),
+r'''from mod import *''', r'''
+Module - ROOT 0,0..0,17
+  .body[1]
+  0] ImportFrom - 0,0..0,17
+    .module 'mod'
+    .names[1]
+    0] alias - 0,16..0,17
+      .name '*'
+    .level 0
 '''),
 ],
 

@@ -908,7 +908,13 @@ r'''<class 'str'>'''),
 
 (81, '', None, False, 'names', {}, (ImportFrom,
 r'''from mod import name'''),
-r'''**NotImplementedError('this is not implemented yet')**'''),
+r'''**ValueError('cannot cut all ImportFrom.names without fix_import_self=False')**''',
+r'''name''', r'''
+_slice_aliases - ROOT 0,0..0,4
+  .names[1]
+  0] alias - 0,0..0,4
+    .name 'name'
+'''),
 
 (82, '', None, False, 'level', {}, (ImportFrom,
 r'''from mod import name'''),
