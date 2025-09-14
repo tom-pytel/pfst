@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- recognize multiline parenthesized `ImportFrom.names` as enclosed
 - get one from field which can contain a value but is currently `None`
 - raw reparse `TryStar` erroneously to `Try`
 - `par(force=True)` on delimited `Tuple` or `MatchSequence`

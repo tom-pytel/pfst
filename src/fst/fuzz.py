@@ -1769,6 +1769,8 @@ class SliceExprish(Fuzzy):
                             FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias,
                             )):
             return ast.__class__
+        if isinstance(ast, ImportFrom):
+            return ImportFrom if ast.module != '__future__' and ast.names[0].name != '*' else None
 
         return None
 
@@ -1781,6 +1783,7 @@ class SliceExprish(Fuzzy):
             Delete:        self.Bucket('targets', 'elts', 1, 0, True, FST('del a')),
             Assign:        self.Bucket('targets', None, 1, 0, False, FST('', 'Assign_targets')),
             Import:        self.Bucket('names', None, 1, 0, False, FST('', 'aliases')),
+            ImportFrom:    self.Bucket('names', None, 1, 0, False, FST('', 'aliases')),
             Global:        (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
             Nonlocal:      glbucket,
             MatchSequence: self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
