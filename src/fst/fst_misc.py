@@ -391,7 +391,7 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
     elif isinstance(ast, (stmt, ExceptHandler, match_case)):  # src = 'stmt' or 'all'
         if loc := self.bloc:
             if isinstance(ast, BLOCK):
-                _out_lines(self, st.linefunc, loc.ln, loc.col, *self._loc_block_header_end(), st.eol)
+                _out_lines(self, st.linefunc, loc.ln, loc.col, (c := self._loc_block_header_end())[0], c[1] + 1, st.eol)
             else:
                 _out_lines(self, st.linefunc, *loc, st.eol)
 
@@ -636,14 +636,21 @@ def _prev_bound_step(self: fst.FST, with_loc: bool | Literal['all', 'own', 'allo
     return 0, 0
 
 
-def _loc_block_header_end(self: fst.FST, ret_bound: bool = False) -> fstloc | tuple[int, int] | None:
-    """Return location of the end of the block header line(s) for block node, just past the ':', or None if `self`
+def _loc_block_header_end(self: fst.FST, ret_bound: bool = False) -> tuple[int, int, int, int] | tuple[int, int] | None:
+    """Return location of the end of the block header line(s) for block node, just BEFORE the ':', or None if `self`
     is not a block header node.
 
     **Parameters:**
     - `ret_bound`: If `False` then just returns the end position. `True` means return the range used for the search,
-        which includes a start at the end of the last child node in the block header or beginning of the block node if
-        no child nodes in header.
+        which includes a start at the end of the last child node in the block header (without skipping any closing pars)
+        or beginning of the block node if no child nodes in header.
+
+    **Returns:**
+    - `(colon ln, colon col)` or `(colon ln, colon col, last child end_ln, last child end_col)`: Returns the location
+        just BEFORE the ending colon `:` of the block header. If `ret_bound=True` then also returns two other elements
+        which are the end line and end column of the last child in the header or the start line and column of `self` if
+        there is not last child (`Try`, `TryStar`). End location of child does NOT include any possibly closing
+        parenthesis.
     """
 
     ln, col, end_ln, end_col = self.loc
@@ -667,7 +674,7 @@ def _loc_block_header_end(self: fst.FST, ret_bound: bool = False) -> fstloc | tu
 
     ln, col = next_find(self.root._lines, cend_ln, cend_col, end_ln, end_col, ':')  # must be there
 
-    return fstloc(cend_ln, cend_col, ln, col + 1) if ret_bound else (ln, col + 1)
+    return (ln, col, cend_ln, cend_col) if ret_bound else (ln, col)
 
 
 def _loc_operator(self: fst.FST) -> fstloc | None:

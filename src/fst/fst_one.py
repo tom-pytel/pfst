@@ -2102,9 +2102,9 @@ def _one_info_FunctionDef_name(self: fst.FST, static: onestatic, idx: int | None
 _onestatic_FunctionDef_name = onestatic(_one_info_FunctionDef_name, _restrict_default, code_as=code_as_identifier)
 
 def _one_info_FunctionDef_returns(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-    ln, col, end_ln, end_col = self._loc_block_header_end(True)
+    end_ln, end_col, ln, col = self._loc_block_header_end(True)
     ret_end_ln = end_ln
-    ret_end_col = end_col - 1
+    ret_end_col = end_col
 
     if returns := self.a.returns:
         ln, col = prev.loc[2:] if (prev := (retf := returns.f).prev()) else self.loc[:2]
@@ -2242,7 +2242,6 @@ def _one_info_ExceptHandler_type(self: fst.FST, static: onestatic, idx: int | No
         _, _, end_ln, end_col = type_.f.pars()
     else:
         end_ln, end_col = self._loc_block_header_end()  # because 'name' can not be there
-        end_col -= 1
 
     ln, col, _, _ = self.loc
     col = col + 6  # 'except'
@@ -2259,7 +2258,7 @@ def _one_info_ExceptHandler_name(self: fst.FST, static: onestatic, idx: int | No
 
     _, _, ln, col = type_.f.pars()
     end_ln, end_col = self._loc_block_header_end()
-    loc_insdel = fstloc(ln, col, end_ln, end_col - 1)
+    loc_insdel = fstloc(ln, col, end_ln, end_col)
 
     if (name := a.name) is None:
         loc_ident = None
@@ -2455,7 +2454,6 @@ def _one_info_withitem_optional_vars(self: fst.FST, static: onestatic, idx: int 
 def _one_info_match_case_guard(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     _, _, ln, col = self.a.pattern.f.pars()
     end_ln, end_col = self._loc_block_header_end()
-    end_col -= 1
 
     return oneinfo(' if ', fstloc(ln, col, end_ln, end_col))
 
