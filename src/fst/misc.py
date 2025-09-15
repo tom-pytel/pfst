@@ -87,6 +87,7 @@ from .asttypes import (
     Interpolation,
     _slice_Assign_targets,
     _slice_aliases,
+    _slice_withitems,
     _slice_type_params,
 )
 
@@ -191,6 +192,7 @@ _AST_DEFAULT_BODY_FIELD = {cls: field for field, classes in [
     ('targets',      (Delete, _slice_Assign_targets)),
     ('type_params',  (TypeAlias, _slice_type_params)),
     ('names',        (Import, ImportFrom, Global, Nonlocal, _slice_aliases)),
+    ('items',        (_slice_withitems,)),
     ('ifs',          (comprehension,)),
     ('values',       (BoolOp, JoinedStr, TemplateStr)),
     ('generators',   (ListComp, SetComp, DictComp, GeneratorExp)),

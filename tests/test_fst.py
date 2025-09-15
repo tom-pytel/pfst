@@ -5,7 +5,7 @@ import unittest
 from ast import parse as ast_parse, unparse as ast_unparse
 
 from fst import *
-from fst.asttypes import _slice_Assign_targets, _slice_aliases, _slice_type_params
+from fst.asttypes import _slice_Assign_targets, _slice_aliases, _slice_withitems, _slice_type_params
 from fst.astutil import OPCLS2STR, WalkFail, copy_ast, compare_asts
 from fst.misc import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, astfield, fstloc
 from fst.view import fstview
@@ -363,11 +363,23 @@ PARSE_TESTS = [
     ('withitem',          ep.parse_withitem,          withitem,                 'a, b'),
     ('withitem',          ep.parse_withitem,          withitem,                 '(a, b)'),
     ('withitem',          ep.parse_withitem,          withitem,                 'a as b'),
+    ('withitem',          ep.parse_withitem,          withitem,                 '(a) as (b)'),
     ('withitem',          ep.parse_withitem,          ParseError,               'a, b as c'),
     ('withitem',          ep.parse_withitem,          ParseError,               'a as b, x as y'),
     ('withitem',          ep.parse_withitem,          withitem,                 '(a)'),
     ('withitem',          ep.parse_withitem,          SyntaxError,              '(a as b)'),
     ('withitem',          ep.parse_withitem,          SyntaxError,              '(a as b, x as y)'),
+
+    ('withitems',         ep.parse_withitems,         _slice_withitems,         'a'),
+    ('withitems',         ep.parse_withitems,         _slice_withitems,         'a, b'),
+    ('withitems',         ep.parse_withitems,         _slice_withitems,         '(a, b)'),
+    ('withitems',         ep.parse_withitems,         _slice_withitems,         'a as b'),
+    ('withitems',         ep.parse_withitems,         _slice_withitems,         '(a) as (b)'),
+    ('withitems',         ep.parse_withitems,         _slice_withitems,         'a, b as c'),
+    ('withitems',         ep.parse_withitems,         _slice_withitems,         'a as b, x as y'),
+    ('withitems',         ep.parse_withitems,         _slice_withitems,         '(a)'),
+    ('withitems',         ep.parse_withitems,         SyntaxError,              '(a as b)'),
+    ('withitems',         ep.parse_withitems,         SyntaxError,              '(a as b, x as y)'),
 
     ('pattern',           ep.parse_pattern,           MatchValue,               '42'),
     ('pattern',           ep.parse_pattern,           MatchSingleton,           'None'),

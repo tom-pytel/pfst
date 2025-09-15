@@ -86,6 +86,7 @@ from .asttypes import (
     _slice,
     _slice_Assign_targets,
     _slice_aliases,
+    _slice_withitems,
     _slice_type_params,
 )
 
@@ -141,6 +142,7 @@ __all__ = [
     'parse_ImportFrom_name',
     'parse_ImportFrom_names',
     'parse_withitem',
+    'parse_withitems',
     'parse_pattern',
     'parse_type_param',
     'parse_type_params',
@@ -179,11 +181,14 @@ _re_parse_all_category = re.compile(r'''
 _SLICE_PARSE_MODES = {
     _slice_Assign_targets: 'Assign_targets',
     _slice_aliases:        'aliases',
+    _slice_withitems:      'withitems',
     _slice_type_params:    'type_params',
 }
 
 
 def _fixing_unparse(ast: AST) -> str:
+    """"fixing" unparse because it will fix missing locations."""
+
     try:
         return ast_unparse(ast)
 
@@ -213,6 +218,10 @@ def _unparse__slice_Assign_targets(ast: AST) -> str:
 
 def _unparse__slice_aliases(ast: AST) -> str:
     return _fixing_unparse(List(elts=ast.names, lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[1:-1]
+
+
+def _unparse__slice_withitems(ast: AST) -> str:
+    return _fixing_unparse(List(elts=ast.items, lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[1:-1]
 
 
 def _unparse__slice_type_params(ast: AST) -> str:
@@ -253,6 +262,7 @@ _UNPARSE_FUNCS = {
     comprehension:          lambda ast: _fixing_unparse(ast).lstrip(),  # strip prefix space from this
     _slice_Assign_targets: _unparse__slice_Assign_targets,
     _slice_aliases:        _unparse__slice_aliases,
+    _slice_withitems:      _unparse__slice_withitems,
     _slice_type_params:    _unparse__slice_type_params,
 }
 
@@ -392,6 +402,7 @@ Mode = Literal[
     'ImportFrom_name',
     'ImportFrom_names',
     'withitem',
+    'withitems',
     'pattern',
     'type_param',
     'type_params',
@@ -456,6 +467,7 @@ Mode = Literal[
     being a syntax error. Does not need trailing comma for a single element. This is the `alias` used in
     `ImportFrom.names`.
 - `'withitem'`: Parse as a single `withitem` returned as itself. Same as passing `withitem` type.
+- `'withitems'`: Parse zero or more `withitem`s returned in a `_slice_withitems` SPECIAL SLICE.
 - `'pattern'`: Parse as a a single `pattern` returned as itself. Same as passing `pattern` type.
 - `'type_param'`: Parse as a single `type_param` returned as itself, either `TypeVar`, `ParamSpec` or
     `TypeVarTuple`. Same as passing `type_param` type.
@@ -464,9 +476,9 @@ Mode = Literal[
 - `type[AST]`: If an `AST` type is passed then will attempt to parse to this type. This can be used to narrow
     the scope of desired return, for example `Constant` will parse as an expression but fail if the expression
     is not a `Constant`. These overlap with the string specifiers to an extent but not all of them. For example
-    `AST` type `ast.expr` is the same as passing `'expr'`. Not all string specified modes are can be matched, for
-    example `'arguments_lambda'`. Likewise `'exec'` and `'stmts'` specify the same parse mode. `Tuple` parse also allows
-    parsing `Slice`s in the `Tuple` as well as otherwise invalid star notation `*not a`.
+    `AST` type `expr` is the same as passing `'expr'`. Not all string specified modes are can be matched, for example
+    `'arguments_lambda'`. Likewise `'exec'` and `'stmts'` specify the same parse mode. `Tuple` parse also allows parsing
+    `Slice`s in the `Tuple` as well as otherwise invalid star notation `*not a`.
 """
 
 
@@ -838,7 +850,7 @@ def parse_match_cases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to a "standard" `ast.expr`, only things which are normally valid in an `expr` location, no `Slices` or
+    """Parse to a "standard" `expr`, only things which are normally valid in an `expr` location, no `Slices` or
     `Starred` expressions which are only valid as a `Call` arg (`*not a`).
 
     @private
@@ -929,9 +941,9 @@ def parse_expr_arglike(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_expr_slice(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.Slice` or anything else that can go into `Subscript.slice` (`expr`), e.g. "start:stop:step" or
-    "name" or even "a:b, c:d:e, g". Using this, naked `Starred` expressions parse to single element `Tuple` with the
-    `Starred` as the only element.
+    """Parse to a `Slice` or anything else that can go into `Subscript.slice` (`expr`), e.g. "start:stop:step" or "name"
+    or even "a:b, c:d:e, g". Using this, naked `Starred` expressions parse to single element `Tuple` with the `Starred`
+    as the only element.
 
     @private
     """
@@ -958,11 +970,11 @@ def parse_expr_slice(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_expr_sliceelt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an element of a slice `Tuple`, an `ast.expr` or `ast.Slice`. This exists because otherwise a naked
-    `Starred` expression parses to an implicit single element `Tuple` and the caller of this function does not want that
-    behavior. Using this, naked `Starred` expressions parse to just the `Starred` and not a `Tuple` like in
-    `parse_expr_slice()`. Does not allow a `Tuple` with `Slice` in it as it is expected that this expression is already
-    in a slice `Tuple` and that is not allowed in python.
+    """Parse to an element of a slice `Tuple`, an `expr` or `Slice`. This exists because otherwise a naked `Starred`
+    expression parses to an implicit single element `Tuple` and the caller of this function does not want that behavior.
+    Using this, naked `Starred` expressions parse to just the `Starred` and not a `Tuple` like in `parse_expr_slice()`.
+    Does not allow a `Tuple` with `Slice` in it as it is expected that this expression is already in a slice `Tuple` and
+    that is not allowed in python.
 
     TODO: This can currently return `*not a, *a or b` as valid which are not valid normal tuples (nested as sliceelt).
 
@@ -1054,7 +1066,7 @@ def parse_Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_boolop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.boolop`.
+    """Parse to a `boolop`.
 
     @private
     """
@@ -1068,7 +1080,7 @@ def parse_boolop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_operator(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.boolop`.
+    """Parse to an `operator`.
 
     @private
     """
@@ -1083,7 +1095,7 @@ def parse_operator(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_binop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.operator` in the context of a `BinOp`.
+    """Parse to an `operator` in the context of a `BinOp`.
 
     @private
     """
@@ -1097,7 +1109,7 @@ def parse_binop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_augop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an augmented `ast.operator` in the context of a `AugAssign`.
+    """Parse to an augmented `operator` in the context of a `AugAssign`.
 
     @private
     """
@@ -1111,7 +1123,7 @@ def parse_augop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_unaryop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.unaryop`.
+    """Parse to a `unaryop`.
 
     @private
     """
@@ -1125,7 +1137,7 @@ def parse_unaryop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_cmpop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.cmpop`.
+    """Parse to a `cmpop`.
 
     @private
     """
@@ -1142,7 +1154,7 @@ def parse_cmpop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_comprehension(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.comprehension`, e.g. "async for i in something() if i".
+    """Parse to a `comprehension`, e.g. "async for i in something() if i".
 
     @private
     """
@@ -1159,7 +1171,7 @@ def parse_comprehension(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_arguments(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.arguments`, e.g. "a: list[str], /, b: int = 1, *c, d=100, **e".
+    """Parse to an `arguments`, e.g. "a: list[str], /, b: int = 1, *c, d=100, **e".
 
     @private
     """
@@ -1170,7 +1182,7 @@ def parse_arguments(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_arguments_lambda(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.arguments` for a `Lambda`, e.g. "a, /, b, *c, d=100, **e".
+    """Parse to an `arguments` for a `Lambda`, e.g. "a, /, b, *c, d=100, **e".
 
     @private
     """
@@ -1181,7 +1193,7 @@ def parse_arguments_lambda(src: str, parse_params: Mapping[str, Any] = {}) -> AS
 
 
 def parse_arg(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.arg`, e.g. "var: list[int]".
+    """Parse to an `arg`, e.g. "var: list[int]".
 
     @private
     """
@@ -1215,7 +1227,7 @@ def parse_arg(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_keyword(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.keyword`, e.g. "var=val".
+    """Parse to a `keyword`, e.g. "var=val".
 
     @private
     """
@@ -1229,7 +1241,7 @@ def parse_keyword(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_alias(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.alias`, allowing star or dotted notation or star, e.g. "name as alias".
+    """Parse to an `alias`, allowing star or dotted notation or star, e.g. "name as alias".
 
     @private
     """
@@ -1259,8 +1271,8 @@ def parse_aliases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_Import_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.alias`, allowing dotted notation but not star (not all aliases are created equal),
-    e.g. "name as alias".
+    """Parse to an `alias`, allowing dotted notation but not star (not all aliases are created equal), e.g.
+    "name as alias".
 
     @private
     """
@@ -1310,7 +1322,7 @@ def parse_Import_names(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_ImportFrom_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.alias`, allowing star but not dotted.
+    """Parse to an `alias`, allowing star but not dotted.
 
     @private
     """
@@ -1360,7 +1372,7 @@ def parse_ImportFrom_names(src: str, parse_params: Mapping[str, Any] = {}) -> AS
 
 
 def parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.withitem`, e.g. "something() as var".
+    """Parse to a `withitem`, e.g. "something() as var".
 
     @private
     """
@@ -1377,7 +1389,7 @@ def parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             raise SyntaxError('expecting withitem')
 
     else:  # unparenthesized Tuple
-        if all(not i.optional_vars for i in items):
+        if all(i.optional_vars is None for i in items):
             items = _ast_parse1(f'with ((\n{src}\n)): pass', parse_params).items
 
         if len(items) != 1:
@@ -1392,8 +1404,31 @@ def parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(items[0], -1)
 
 
+def parse_withitems(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse to zero or more `withitem`s, returned as a `_slice_withitems`.
+
+    @private
+    """
+
+    items = _ast_parse1(f'with (\n{src}\n): pass', parse_params).items
+
+    if len(items) == 1:
+        ast = items[0].context_expr
+
+        if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
+            raise SyntaxError('expecting withitem, got unparenthesized GeneratorExp')
+
+        if isinstance(ast, Tuple) and not ast.elts:
+            raise SyntaxError('expecting withitem')
+
+    ast = _slice_withitems(items=items, lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
+                           end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
+
+    return _offset_linenos(ast, -1)
+
+
 def parse_pattern(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.pattern`, e.g. "{a.b: i, **rest}".
+    """Parse to a `pattern`, e.g. "{a.b: i, **rest}".
 
     @private
     """
@@ -1430,7 +1465,7 @@ def parse_pattern(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_type_param(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `ast.type_param`, e.g. "t: Base = Subclass".
+    """Parse to a `type_param`, e.g. "t: Base = Subclass".
 
     @private
     """
@@ -1449,7 +1484,7 @@ def parse_type_param(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse zero or more `ast.type_param`s and return them in a `_slice_type_params` SPECIAL SLICE.
+    """Parse zero or more `type_param`s and return them in a `_slice_type_params` SPECIAL SLICE.
 
     @private
     """
@@ -1508,6 +1543,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'ImportFrom_name':        parse_ImportFrom_name,
     'ImportFrom_names':       parse_ImportFrom_names,
     'withitem':               parse_withitem,
+    'withitems':              parse_withitems,
     'pattern':                parse_pattern,
     'type_param':             parse_type_param,
     'type_params':            parse_type_params,
@@ -1538,6 +1574,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     Del:                      lambda src, parse_params = {}: Del(),
     _slice_Assign_targets:    parse_Assign_targets,
     _slice_aliases:           parse_aliases,
+    _slice_withitems:         parse_withitems,
     _slice_type_params:       parse_type_params,
 }
 

@@ -110,6 +110,7 @@ from .asttypes import (
     Interpolation,
     _slice_Assign_targets,
     _slice_aliases,
+    _slice_withitems,
     _slice_type_params,
 )
 
@@ -635,6 +636,7 @@ _GET_ONE_HANDLERS = {
 
     (_slice_Assign_targets, 'targets'):   _get_one_default,  # expr*
     (_slice_aliases, 'names'):            _get_one_default,  # alias*
+    (_slice_withitems, 'items'):          _get_one_default,  # withitem*
     (_slice_type_params, 'type_params'):  _get_one_default,  # type_param*
 
 
@@ -2799,6 +2801,7 @@ _PUT_ONE_HANDLERS = {
 
     (_slice_Assign_targets, 'targets'):   (True,  _put_one_exprish_required, _onestatic_target),  # expr*
     (_slice_aliases, 'names'):            (True,  _put_one_exprish_required, _onestatic_alias_required),  # alias*
+    (_slice_withitems, 'items'):          (True,  _put_one_exprish_required, _onestatic_withitem_required),  # withitem*
     (_slice_type_params, 'type_params'):  (True,  _put_one_exprish_required, _onestatic_type_param_required),  # type_param*
 
 

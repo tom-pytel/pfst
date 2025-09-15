@@ -39,6 +39,7 @@ from .asttypes import (
     type_param,
     _slice_Assign_targets,
     _slice_aliases,
+    _slice_withitems,
     _slice_type_params,
 )
 

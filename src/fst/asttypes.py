@@ -286,7 +286,7 @@ __all__ = [
     # '_slice_comprehension_ifs',
     # '_slice_keywords',
     '_slice_aliases',
-    # '_slice_withitems',
+    '_slice_withitems',
     '_slice_type_params',
 ]
 
@@ -366,10 +366,21 @@ class _slice_aliases(_slice):
         self.end_col_offset = end_col_offset
 
 
-# class _slice_withitems(_slice):
-#     """Slice of `With/AsyncWith.items`.
+class _slice_withitems(_slice):
+    """Slice of `With/AsyncWith.items`.
 
-#     This is a special slice because elements are `withitem`."""
+    This is a special slice because elements are `withitem`."""
+
+    _fields      = ('items',)
+    _field_types = {'items': list[withitem]}
+
+    def __init__(self, items: list[withitem], lineno: int = 1, col_offset: int = 0, end_lineno: int = 1,
+                 end_col_offset: int = 0):
+        self.items = items or []
+        self.lineno = lineno
+        self.col_offset = col_offset
+        self.end_lineno = end_lineno
+        self.end_col_offset = end_col_offset
 
 
 class _slice_type_params(_slice):

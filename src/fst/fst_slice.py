@@ -66,6 +66,7 @@ from .asttypes import (
     TemplateStr,
     _slice_Assign_targets,
     _slice_aliases,
+    _slice_withitems,
     _slice_type_params,
 )
 
@@ -1346,6 +1347,7 @@ _GET_SLICE_HANDLERS = {
     (_slice_Assign_targets, 'targets'):       _get_slice__slice,
     # (_slice_Assign_comprehension_ifs, 'ifs'): _get_slice__slice,
     (_slice_aliases, 'names'):                _get_slice__slice,
+    (_slice_withitems, 'items'):              _get_slice__slice,
     (_slice_type_params, 'type_params'):      _get_slice__slice,
 }
 
@@ -1888,6 +1890,28 @@ def _code_to_slice_Assign_targets(self: fst.FST, code: Code | None, one: bool, o
 def _code_to_slice_aliases(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
                            code_as_one: Callable = code_as_alias, code_as_slice: Callable = code_as_aliases,
                            ) -> fst.FST | None:
+    if code is None:
+        return None
+
+    if one:
+        fst_ = code_as_one(code, self.root.parse_params, sanitize=False)
+
+        return fst.FST(_slice_aliases(names=[fst_.a], lineno=(el := len(ls := fst_._lines)),
+                                      col_offset=(ec := ls[-1].lenbytes), end_lineno=el, end_col_offset=ec),
+                       ls, from_=fst_, lcopy=False)
+
+    fst_ = code_as_slice(code, self.root.parse_params, sanitize=False)
+
+    if not fst_.a.names:  # put empty sequence is same as delete
+        return None
+
+    return fst_
+
+
+def _code_to_slice_withitems(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
+                             code_as_one: Callable = code_as_alias, code_as_slice: Callable = code_as_aliases,
+                             ) -> fst.FST | None:
+    raise NotImplementedError
     if code is None:
         return None
 
@@ -3034,6 +3058,7 @@ _PUT_SLICE_HANDLERS = {
     (_slice_Assign_targets, 'targets'):       _put_slice__slice,
     # (_slice_Assign_comprehension_ifs, 'ifs'): _put_slice__slice,
     (_slice_aliases, 'names'):                _put_slice__slice,
+    (_slice_withitems, 'items'):              _put_slice__slice,
     (_slice_type_params, 'type_params'):      _put_slice__slice,
 }
 
@@ -3178,6 +3203,7 @@ class slicestatic(NamedTuple):
 _SLICE_STATICS = {
     _slice_Assign_targets: slicestatic('targets', _code_to_slice_Assign_targets, '=', True, True),
     _slice_aliases:        slicestatic('names', _code_to_slice_aliases, ',', False, False),
+    _slice_withitems:      slicestatic('items', _code_to_slice_withitems, ',', False, False),
     _slice_type_params:    slicestatic('type_params', _code_to_slice_type_params, ',', False, False),
 }
 
