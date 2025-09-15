@@ -1839,14 +1839,6 @@ y")
         self.assertTrue(FST('a\n: \nb: \nc', 'expr_slice').is_enclosed_or_line())  # because is never used unenclosed
         self.assertTrue(FST('a\\\n: \\\nb: \\\nc', 'expr_slice').is_enclosed_or_line())
 
-        self.assertTrue(FST('from a import \\\nb').is_enclosed_or_line())
-        self.assertTrue(FST('from a import (\nb)').is_enclosed_or_line())
-
-        f = FST('from a import (\nb)')
-        f._put_src(None, 1, 1, 1, 2, True)
-        f._put_src(None, 0, 14, 0, 15, False)
-        self.assertFalse(f.is_enclosed_or_line())
-
         if PYGE12:
             self.assertTrue(FST('a, f"{(1,\n2)}", c', 'exec').body[0].value.copy(pars=False).is_enclosed_or_line())
 
@@ -1885,6 +1877,26 @@ a + \
         self.assertEqual({3}, lns)
         self.assertFalse(f.is_enclosed_or_line(whole=True, out_lns=(lns := set())))
         self.assertEqual({0, 3, 4}, lns)
+
+        # ImportFrom
+
+        self.assertTrue(FST('from a import \\\nb').is_enclosed_or_line())
+        self.assertTrue(FST('from a import (\nb)').is_enclosed_or_line())
+
+        f = FST('from a import (\nb)')
+        f._put_src(None, 1, 1, 1, 2, True)
+        f._put_src(None, 0, 14, 0, 15, False)
+        self.assertFalse(f.is_enclosed_or_line())
+
+        # With / AsyncWith
+
+        self.assertTrue(FST('with \\\nb\\\n:\n  pass').is_enclosed_or_line())
+        self.assertTrue(FST('with (\nb\n):\n  pass').is_enclosed_or_line())
+
+        f = FST('with (\na\n):\n  pass')
+        f._put_src(None, 2, 0, 2, 1, True)
+        f._put_src(None, 0, 5, 0, 6, False)
+        self.assertFalse(f.is_enclosed_or_line())
 
     def test_is_enclosed_in_parents(self):
         self.assertFalse(FST('i', 'exec').body[0].is_enclosed_in_parents())

@@ -276,7 +276,7 @@ class FST:
     _serial:      int
 
     # class attributes
-    is_FST:       bool = True      ; """@private"""  # for quick checks vs. `fstloc` or `fstview`
+    is_FST:       bool = True  ; """@private"""  # for quick checks vs. `fstloc` or `fstview`
 
     @property
     def lines(self) -> list[builtins.str] | None:
@@ -4476,6 +4476,9 @@ class FST:
         a parent to enclose them like `arguments` (enclosable in `FunctionDef` but unenclosed in a `Lambda`) or the
         `cmpop`s `is not` or `not in` will return `False`.
 
+        Block statements are not done and raise `NotImplementedError`, except for `With` and `AsyncWith`, which only
+        check the block header up to the `:` (as common sense would indicate).
+
         This function does NOT check whether `self` is enclosed by some parent up the tree if it is not enclosed itself,
         for that see `is_enclosed_in_parents()`.
 
@@ -4485,7 +4488,7 @@ class FST:
         - `whole`: Whether entire source should be checked and not just the lines corresponding to the node. This is
             only valid for a root node.
         - `out_lns`: If this is not `None` then it is expected to be a `Set` which will get the line numbers added of
-            all the lines that would need line continuation backslashes in order to make this function True.
+            all the lines that would need line continuation backslashes in order to make this function `True`.
 
         **Returns:**
         - `True`: Node is enclosed or single logical line.
@@ -4562,7 +4565,7 @@ class FST:
                 return True
 
             if isinstance(ast, (Module, Interactive, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
-                                With, AsyncWith, Match, Try, TryStar, ExceptHandler, match_case)):
+                                Match, Try, TryStar, ExceptHandler, match_case)):  # With, AsyncWith not checked because they are handled
                 raise NotImplementedError("we don't do block statements yet")  # TODO: this
 
             ln, col, end_ln, end_col = loc
@@ -4603,23 +4606,36 @@ class FST:
 
             last_ln = ln
 
-            if isinstance(ast, Call):
+            if isinstance(ast, Call):  # these will replace any fields which we know to be enclosed with mock FST nodes which just say the location is enclosed
                 children = [ast.func,
                             nspace(f=nspace(pars=lambda: self._loc_call_pars(),
                                             is_enclosed_or_line=lambda **kw: True))]
+
             elif isinstance(ast, Subscript):
                 children = [ast.value,
                             nspace(f=nspace(pars=lambda: self._loc_subscript_brackets(),
                                             is_enclosed_or_line=lambda **kw: True))]
+
             elif isinstance(ast, ImportFrom):
+                pars_names = self._loc_ImportFrom_names_pars()
                 children = ([nspace(f=nspace(pars=lambda: pars_names,
                                              is_enclosed_or_line=lambda **kw: True))]
-                            if (pars_names := self._loc_ImportFrom_names_pars()).n else
+                            if pars_names.n else
                             ast.names)
+
+            elif isinstance(ast, (With, AsyncWith)):
+                pars_items = self._loc_With_items_pars()
+                end_ln = pars_items.bound.end_ln
+                children = ([nspace(f=nspace(pars=lambda: pars_items,
+                                             is_enclosed_or_line=lambda **kw: True))]
+                            if pars_items.n else
+                            ast.items)
+
             elif isinstance(ast, MatchClass):
                 children = [ast.cls,
                             nspace(f=nspace(pars=lambda: self._loc_matchcls_pars(),
                                             is_enclosed_or_line=lambda **kw: True))]
+
             else:  # we don't check always-enclosed statement fields here because statements will never get here
                 children = syntax_ordered_children(ast)
 

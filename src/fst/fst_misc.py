@@ -982,8 +982,10 @@ def _loc_With_items_pars(self: fst.FST) -> fstlocns:
     those parentheses may pass on to belong to the child if it is a single item with no `optional_vars`.
 
     **Returns:**
-    - `fstlocns`: Just like from `FST.pars()`, with attribute `n=0` meaning no parentheses present and location is where
-        they should go and `n=1` meaning parentheses present and location is where they actually are.
+    - `fstlocns(..., n = pars present or not, bound = bound of search)`: Just like from `FST.pars()`, with attribute
+        `n=0` meaning no parentheses present and location is where they should go and `n=1` meaning parentheses present
+        and location is where they actually are. There is also a `bound` attribute which is an `fstloc` which is the
+        location from just past the `with` (no space) to just before the `:`.
     """
 
     # assert isinstance(self.a, (With, AsyncWith))
@@ -1005,6 +1007,8 @@ def _loc_With_items_pars(self: fst.FST) -> fstlocns:
         after_items_col = col
 
     end_ln, end_col = next_find(lines, after_items_ln, after_items_col, end_ln, end_col, ':')  # must be there
+
+    bound = fstloc(ln, col, end_ln, end_col)
 
     if ((lpar := next_frag(lines, ln, col, end_ln, end_col)) and lpar.src.startswith('(') and  # does opening par follow 'with'
         not (items and ((loc_i0 := items[0].f.loc).col == lpar.col and loc_i0.ln == lpar.ln))  # if there are items and first `withitem` starts at lpar found then we know that lpar belongs to it and whole `items` field doesn't have pars
@@ -1028,7 +1032,7 @@ def _loc_With_items_pars(self: fst.FST) -> fstlocns:
 
         n = 0
 
-    return fstlocns(ln, col, end_ln, end_col, n=n)
+    return fstlocns(ln, col, end_ln, end_col, n=n, bound=bound)
 
 
 def _loc_call_pars(self: fst.FST) -> fstloc:

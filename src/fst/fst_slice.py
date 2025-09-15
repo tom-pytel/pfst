@@ -990,7 +990,7 @@ def _get_slice_ImportFrom_names(self: fst.FST, start: int | Literal['end'] | Non
         if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
             _maybe_set_end_pos(self, (bn := body[-1]).end_lineno, bn.end_col_offset, ast.end_lineno, ast.end_col_offset)
 
-        if not self.is_enclosed_or_line():  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
+        if not self.is_enclosed_or_line(pars=False):  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
             pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()  # will just give where pars should go (because maybe something like `async \\\n\\\n   with ...`)
 
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, True, False, self)
@@ -2525,7 +2525,7 @@ def _put_slice_ImportFrom_names(self: fst.FST, code: Code | None, start: int | L
                 _maybe_set_end_pos(self, pars_ln + 1, self.root._lines[pars_ln].c2b(pars_col),
                                    ast.end_lineno, ast.end_col_offset)
 
-        if not self.is_enclosed_or_line():  # if no parentheses and wound up not valid for parse then adding parentheses around names should fix
+        if not self.is_enclosed_or_line(pars=False):  # if no parentheses and wound up not valid for parse then adding parentheses around names should fix
             pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()  # will just give where pars should go (because maybe something like `async \\\n\\\n   with ...`)
 
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, True, False, self)

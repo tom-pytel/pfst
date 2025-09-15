@@ -2454,7 +2454,7 @@ def _one_info_withitem_optional_vars(self: fst.FST, static: onestatic, idx: int 
 
 def _one_info_match_case_guard(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     _, _, ln, col = self.a.pattern.f.pars()
-    _, _, end_ln, end_col = self._loc_block_header_end(True)
+    end_ln, end_col = self._loc_block_header_end()
     end_col -= 1
 
     return oneinfo(' if ', fstloc(ln, col, end_ln, end_col))
