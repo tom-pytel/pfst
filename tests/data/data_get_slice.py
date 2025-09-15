@@ -6406,6 +6406,1332 @@ _slice_Assign_targets - ROOT 0,0..0,11
 '''),
 ],
 
+'With_items': [  # ................................................................................
+
+(0, 'body[0]', 1, 2, 'items', {}, ('exec',
+r'''with a, b as y, c: pass  # comment'''),
+r'''with a, c: pass  # comment''', r'''
+Module - ROOT 0,0..0,26
+  .body[1]
+  0] With - 0,0..0,15
+    .items[2]
+    0] withitem - 0,5..0,6
+      .context_expr Name 'a' Load - 0,5..0,6
+    1] withitem - 0,8..0,9
+      .context_expr Name 'c' Load - 0,8..0,9
+    .body[1]
+    0] Pass - 0,11..0,15
+''',
+r'''b as y''', r'''
+_slice_withitems - ROOT 0,0..0,6
+  .items[1]
+  0] withitem - 0,0..0,6
+    .context_expr Name 'b' Load - 0,0..0,1
+    .optional_vars Name 'y' Store - 0,5..0,6
+'''),
+
+(1, 'body[0]', 1, 3, 'items', {}, ('exec',
+r'''with a, b as y, c: pass  # comment'''),
+r'''with a: pass  # comment''', r'''
+Module - ROOT 0,0..0,23
+  .body[1]
+  0] With - 0,0..0,12
+    .items[1]
+    0] withitem - 0,5..0,6
+      .context_expr Name 'a' Load - 0,5..0,6
+    .body[1]
+    0] Pass - 0,8..0,12
+''',
+r'''b as y, c''', r'''
+_slice_withitems - ROOT 0,0..0,9
+  .items[2]
+  0] withitem - 0,0..0,6
+    .context_expr Name 'b' Load - 0,0..0,1
+    .optional_vars Name 'y' Store - 0,5..0,6
+  1] withitem - 0,8..0,9
+    .context_expr Name 'c' Load - 0,8..0,9
+'''),
+
+(2, 'body[0]', 0, 2, 'items', {}, ('exec',
+r'''with a, b as y, c: pass  # comment'''),
+r'''with c: pass  # comment''', r'''
+Module - ROOT 0,0..0,23
+  .body[1]
+  0] With - 0,0..0,12
+    .items[1]
+    0] withitem - 0,5..0,6
+      .context_expr Name 'c' Load - 0,5..0,6
+    .body[1]
+    0] Pass - 0,8..0,12
+''',
+r'''a, b as y''', r'''
+_slice_withitems - ROOT 0,0..0,9
+  .items[2]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+  1] withitem - 0,3..0,9
+    .context_expr Name 'b' Load - 0,3..0,4
+    .optional_vars Name 'y' Store - 0,8..0,9
+'''),
+
+(3, 'body[0]', 1, 2, 'items', {}, ('exec', r'''
+with a \
+, \
+b \
+as \
+y \
+, \
+c: pass  # comment
+'''), r'''
+with a \
+, \
+c: pass  # comment
+''', r'''
+Module - ROOT 0,0..2,18
+  .body[1]
+  0] With - 0,0..2,7
+    .items[2]
+    0] withitem - 0,5..0,6
+      .context_expr Name 'a' Load - 0,5..0,6
+    1] withitem - 2,0..2,1
+      .context_expr Name 'c' Load - 2,0..2,1
+    .body[1]
+    0] Pass - 2,3..2,7
+''', r'''
+
+b \
+as \
+y \
+ \
+
+''', r'''
+_slice_withitems - ROOT 0,0..5,0
+  .items[1]
+  0] withitem - 1,0..3,1
+    .context_expr Name 'b' Load - 1,0..1,1
+    .optional_vars Name 'y' Store - 3,0..3,1
+'''),
+
+(4, 'body[0]', 0, 2, 'items', {}, ('exec', r'''
+with a \
+, \
+b \
+as \
+y \
+, \
+c: pass  # comment
+'''), r'''
+with (
+c): pass  # comment
+''', r'''
+Module - ROOT 0,0..1,19
+  .body[1]
+  0] With - 0,0..1,8
+    .items[1]
+    0] withitem - 0,5..1,2
+      .context_expr Name 'c' Load - 1,0..1,1
+    .body[1]
+    0] Pass - 1,4..1,8
+''', r'''
+a \
+, \
+b \
+as \
+y \
+ \
+
+''', r'''
+_slice_withitems - ROOT 0,0..6,0
+  .items[2]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+  1] withitem - 2,0..4,1
+    .context_expr Name 'b' Load - 2,0..2,1
+    .optional_vars Name 'y' Store - 4,0..4,1
+'''),
+
+(5, 'body[0]', 1, 3, 'items', {}, ('exec', r'''
+with a \
+, \
+b \
+as \
+y \
+, \
+c: pass  # comment
+'''), r'''
+with a \
+ \
+: pass  # comment
+''', r'''
+Module - ROOT 0,0..2,17
+  .body[1]
+  0] With - 0,0..2,6
+    .items[1]
+    0] withitem - 0,5..0,6
+      .context_expr Name 'a' Load - 0,5..0,6
+    .body[1]
+    0] Pass - 2,2..2,6
+''', r'''
+
+b \
+as \
+y \
+, \
+c
+''', r'''
+_slice_withitems - ROOT 0,0..5,1
+  .items[2]
+  0] withitem - 1,0..3,1
+    .context_expr Name 'b' Load - 1,0..1,1
+    .optional_vars Name 'y' Store - 3,0..3,1
+  1] withitem - 5,0..5,1
+    .context_expr Name 'c' Load - 5,0..5,1
+'''),
+
+(6, 'body[0].body[0]', 0, 1, 'items', {}, ('exec', r'''
+if 1:
+  with a \
+  , \
+  b \
+  as \
+  y: pass  # comment
+  pass
+'''), r'''
+if 1:
+  with  \
+  b \
+  as \
+  y: pass  # comment
+  pass
+''', r'''
+Module - ROOT 0,0..5,6
+  .body[1]
+  0] If - 0,0..5,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] With - 1,2..4,9
+      .items[1]
+      0] withitem - 2,2..4,3
+        .context_expr Name 'b' Load - 2,2..2,3
+        .optional_vars Name 'y' Store - 4,2..4,3
+      .body[1]
+      0] Pass - 4,5..4,9
+    1] Pass - 5,2..5,6
+''', r'''
+a \
+
+''', r'''
+_slice_withitems - ROOT 0,0..1,0
+  .items[1]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+'''),
+
+(7, 'body[0].body[0]', 1, 2, 'items', {}, ('exec', r'''
+if 1:
+  with a \
+  , \
+  b \
+  as \
+  y: pass  # comment
+  pass
+'''), r'''
+if 1:
+  with a \
+   \
+  : pass  # comment
+  pass
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+  0] If - 0,0..4,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] With - 1,2..3,8
+      .items[1]
+      0] withitem - 1,7..1,8
+        .context_expr Name 'a' Load - 1,7..1,8
+      .body[1]
+      0] Pass - 3,4..3,8
+    1] Pass - 4,2..4,6
+''', r'''
+b \
+as \
+y
+''', r'''
+_slice_withitems - ROOT 0,0..2,1
+  .items[1]
+  0] withitem - 0,0..2,1
+    .context_expr Name 'b' Load - 0,0..0,1
+    .optional_vars Name 'y' Store - 2,0..2,1
+'''),
+
+(8, '', 0, 3, 'items', {}, (None,
+r'''with a, b, c: pass'''),
+r'''**ValueError('cannot cut all With.items without fix_with_self=False')**''',
+r'''a, b, c''', r'''
+_slice_withitems - ROOT 0,0..0,7
+  .items[3]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+  1] withitem - 0,3..0,4
+    .context_expr Name 'b' Load - 0,3..0,4
+  2] withitem - 0,6..0,7
+    .context_expr Name 'c' Load - 0,6..0,7
+'''),
+
+(9, '', 0, 3, 'items', {'fix_with_self': False, '_verify_self': False}, (None, r'''
+with a \
+, \
+b \
+as \
+y \
+, \
+c: pass  # comment
+'''),
+r'''with : pass  # comment''', r'''
+With - ROOT 0,0..0,11
+  .body[1]
+  0] Pass - 0,7..0,11
+''', r'''
+a \
+, \
+b \
+as \
+y \
+, \
+c
+''', r'''
+_slice_withitems - ROOT 0,0..6,1
+  .items[3]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+  1] withitem - 2,0..4,1
+    .context_expr Name 'b' Load - 2,0..2,1
+    .optional_vars Name 'y' Store - 4,0..4,1
+  2] withitem - 6,0..6,1
+    .context_expr Name 'c' Load - 6,0..6,1
+'''),
+
+(10, 'body[0]', 1, 2, 'items', {}, (None, r'''
+if 1:
+  with a, b:
+    pass;
+'''), r'''
+if 1:
+  with a:
+    pass;
+''', r'''
+If - ROOT 0,0..2,9
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] With - 1,2..2,9
+    .items[1]
+    0] withitem - 1,7..1,8
+      .context_expr Name 'a' Load - 1,7..1,8
+    .body[1]
+    0] Pass - 2,4..2,8
+''',
+r'''b''', r'''
+_slice_withitems - ROOT 0,0..0,1
+  .items[1]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'b' Load - 0,0..0,1
+'''),
+],
+
+'With_items_w_pars': [  # ................................................................................
+
+(0, 'body[0]', 1, 2, 'items', {}, ('exec',
+r'''with (a, b as y, c): pass  # comment'''),
+r'''with (a, c): pass  # comment''', r'''
+Module - ROOT 0,0..0,28
+  .body[1]
+  0] With - 0,0..0,17
+    .items[2]
+    0] withitem - 0,6..0,7
+      .context_expr Name 'a' Load - 0,6..0,7
+    1] withitem - 0,9..0,10
+      .context_expr Name 'c' Load - 0,9..0,10
+    .body[1]
+    0] Pass - 0,13..0,17
+''',
+r'''b as y''', r'''
+_slice_withitems - ROOT 0,0..0,6
+  .items[1]
+  0] withitem - 0,0..0,6
+    .context_expr Name 'b' Load - 0,0..0,1
+    .optional_vars Name 'y' Store - 0,5..0,6
+'''),
+
+(1, 'body[0]', 1, 3, 'items', {}, ('exec',
+r'''with (a, b as y, c): pass  # comment'''),
+r'''with (a): pass  # comment''', r'''
+Module - ROOT 0,0..0,25
+  .body[1]
+  0] With - 0,0..0,14
+    .items[1]
+    0] withitem - 0,5..0,8
+      .context_expr Name 'a' Load - 0,6..0,7
+    .body[1]
+    0] Pass - 0,10..0,14
+''',
+r'''b as y, c''', r'''
+_slice_withitems - ROOT 0,0..0,9
+  .items[2]
+  0] withitem - 0,0..0,6
+    .context_expr Name 'b' Load - 0,0..0,1
+    .optional_vars Name 'y' Store - 0,5..0,6
+  1] withitem - 0,8..0,9
+    .context_expr Name 'c' Load - 0,8..0,9
+'''),
+
+(2, 'body[0]', 0, 2, 'items', {}, ('exec',
+r'''with (a, b as y, c): pass  # comment'''),
+r'''with (c): pass  # comment''', r'''
+Module - ROOT 0,0..0,25
+  .body[1]
+  0] With - 0,0..0,14
+    .items[1]
+    0] withitem - 0,5..0,8
+      .context_expr Name 'c' Load - 0,6..0,7
+    .body[1]
+    0] Pass - 0,10..0,14
+''',
+r'''a, b as y''', r'''
+_slice_withitems - ROOT 0,0..0,9
+  .items[2]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+  1] withitem - 0,3..0,9
+    .context_expr Name 'b' Load - 0,3..0,4
+    .optional_vars Name 'y' Store - 0,8..0,9
+'''),
+
+(3, 'body[0]', 1, 2, 'items', {}, ('exec', r'''
+with (a
+,
+b
+as
+y
+,
+c): pass  # comment
+'''), r'''
+with (a
+,
+c): pass  # comment
+''', r'''
+Module - ROOT 0,0..2,19
+  .body[1]
+  0] With - 0,0..2,8
+    .items[2]
+    0] withitem - 0,6..0,7
+      .context_expr Name 'a' Load - 0,6..0,7
+    1] withitem - 2,0..2,1
+      .context_expr Name 'c' Load - 2,0..2,1
+    .body[1]
+    0] Pass - 2,4..2,8
+''', r'''
+
+b
+as
+y
+
+
+''', r'''
+_slice_withitems - ROOT 0,0..5,0
+  .items[1]
+  0] withitem - 1,0..3,1
+    .context_expr Name 'b' Load - 1,0..1,1
+    .optional_vars Name 'y' Store - 3,0..3,1
+'''),
+
+(4, 'body[0]', 0, 2, 'items', {}, ('exec', r'''
+with (a
+,
+b
+as
+y
+,
+c): pass  # comment
+'''), r'''
+with (
+c): pass  # comment
+''', r'''
+Module - ROOT 0,0..1,19
+  .body[1]
+  0] With - 0,0..1,8
+    .items[1]
+    0] withitem - 0,5..1,2
+      .context_expr Name 'c' Load - 1,0..1,1
+    .body[1]
+    0] Pass - 1,4..1,8
+''', r'''
+a
+,
+b
+as
+y
+
+
+''', r'''
+_slice_withitems - ROOT 0,0..6,0
+  .items[2]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+  1] withitem - 2,0..4,1
+    .context_expr Name 'b' Load - 2,0..2,1
+    .optional_vars Name 'y' Store - 4,0..4,1
+'''),
+
+(5, 'body[0]', 1, 3, 'items', {}, ('exec', r'''
+with (a
+,
+b
+as
+y
+,
+c): pass  # comment
+'''), r'''
+with (a
+
+): pass  # comment
+''', r'''
+Module - ROOT 0,0..2,18
+  .body[1]
+  0] With - 0,0..2,7
+    .items[1]
+    0] withitem - 0,5..2,1
+      .context_expr Name 'a' Load - 0,6..0,7
+    .body[1]
+    0] Pass - 2,3..2,7
+''', r'''
+
+b
+as
+y
+,
+c
+''', r'''
+_slice_withitems - ROOT 0,0..5,1
+  .items[2]
+  0] withitem - 1,0..3,1
+    .context_expr Name 'b' Load - 1,0..1,1
+    .optional_vars Name 'y' Store - 3,0..3,1
+  1] withitem - 5,0..5,1
+    .context_expr Name 'c' Load - 5,0..5,1
+'''),
+
+(6, 'body[0].body[0]', 0, 1, 'items', {}, ('exec', r'''
+if 1:
+  with (a
+  ,
+  b
+  as
+  y): pass  # comment
+  pass
+'''), r'''
+if 1:
+  with (
+  b
+  as
+  y): pass  # comment
+  pass
+''', r'''
+Module - ROOT 0,0..5,6
+  .body[1]
+  0] If - 0,0..5,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] With - 1,2..4,10
+      .items[1]
+      0] withitem - 2,2..4,3
+        .context_expr Name 'b' Load - 2,2..2,3
+        .optional_vars Name 'y' Store - 4,2..4,3
+      .body[1]
+      0] Pass - 4,6..4,10
+    1] Pass - 5,2..5,6
+''', r'''
+a
+
+''', r'''
+_slice_withitems - ROOT 0,0..1,0
+  .items[1]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+'''),
+
+(7, 'body[0].body[0]', 1, 2, 'items', {}, ('exec', r'''
+if 1:
+  with (a
+  ,
+  b
+  as
+  y): pass  # comment
+  pass
+'''),
+'if 1:\n  with (a\n  \n  ): pass  # comment\n  pass', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+  0] If - 0,0..4,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] With - 1,2..3,9
+      .items[1]
+      0] withitem - 1,7..3,3
+        .context_expr Name 'a' Load - 1,8..1,9
+      .body[1]
+      0] Pass - 3,5..3,9
+    1] Pass - 4,2..4,6
+''', r'''
+b
+as
+y
+''', r'''
+_slice_withitems - ROOT 0,0..2,1
+  .items[1]
+  0] withitem - 0,0..2,1
+    .context_expr Name 'b' Load - 0,0..0,1
+    .optional_vars Name 'y' Store - 2,0..2,1
+'''),
+
+(8, '', 0, 3, 'items', {}, (None,
+r'''with (a, b, c): pass'''),
+r'''**ValueError('cannot cut all With.items without fix_with_self=False')**''',
+r'''a, b, c''', r'''
+_slice_withitems - ROOT 0,0..0,7
+  .items[3]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+  1] withitem - 0,3..0,4
+    .context_expr Name 'b' Load - 0,3..0,4
+  2] withitem - 0,6..0,7
+    .context_expr Name 'c' Load - 0,6..0,7
+'''),
+
+(9, '', 0, 3, 'items', {'fix_with_self': False, '_verify_self': False}, (None, r'''
+with (a
+,
+b
+as
+y
+,
+c): pass  # comment
+'''),
+r'''with (): pass  # comment''', r'''
+With - ROOT 0,0..0,13
+  .body[1]
+  0] Pass - 0,9..0,13
+''', r'''
+a
+,
+b
+as
+y
+,
+c
+''', r'''
+_slice_withitems - ROOT 0,0..6,1
+  .items[3]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+  1] withitem - 2,0..4,1
+    .context_expr Name 'b' Load - 2,0..2,1
+    .optional_vars Name 'y' Store - 4,0..4,1
+  2] withitem - 6,0..6,1
+    .context_expr Name 'c' Load - 6,0..6,1
+'''),
+
+(10, 'body[0]', 1, 2, 'items', {}, (None, r'''
+if 1:
+  with (a, b):
+    pass;
+'''), r'''
+if 1:
+  with (a):
+    pass;
+''', r'''
+If - ROOT 0,0..2,9
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] With - 1,2..2,9
+    .items[1]
+    0] withitem - 1,7..1,10
+      .context_expr Name 'a' Load - 1,8..1,9
+    .body[1]
+    0] Pass - 2,4..2,8
+''',
+r'''b''', r'''
+_slice_withitems - ROOT 0,0..0,1
+  .items[1]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'b' Load - 0,0..0,1
+'''),
+],
+
+'AsyncWith_items': [  # ................................................................................
+
+(0, 'body[0]', 1, 2, 'items', {}, ('exec',
+r'''async with a, b as y, c: pass  # comment'''),
+r'''async with a, c: pass  # comment''', r'''
+Module - ROOT 0,0..0,32
+  .body[1]
+  0] AsyncWith - 0,0..0,21
+    .items[2]
+    0] withitem - 0,11..0,12
+      .context_expr Name 'a' Load - 0,11..0,12
+    1] withitem - 0,14..0,15
+      .context_expr Name 'c' Load - 0,14..0,15
+    .body[1]
+    0] Pass - 0,17..0,21
+''',
+r'''b as y''', r'''
+_slice_withitems - ROOT 0,0..0,6
+  .items[1]
+  0] withitem - 0,0..0,6
+    .context_expr Name 'b' Load - 0,0..0,1
+    .optional_vars Name 'y' Store - 0,5..0,6
+'''),
+
+(1, 'body[0]', 1, 3, 'items', {}, ('exec',
+r'''async with a, b as y, c: pass  # comment'''),
+r'''async with a: pass  # comment''', r'''
+Module - ROOT 0,0..0,29
+  .body[1]
+  0] AsyncWith - 0,0..0,18
+    .items[1]
+    0] withitem - 0,11..0,12
+      .context_expr Name 'a' Load - 0,11..0,12
+    .body[1]
+    0] Pass - 0,14..0,18
+''',
+r'''b as y, c''', r'''
+_slice_withitems - ROOT 0,0..0,9
+  .items[2]
+  0] withitem - 0,0..0,6
+    .context_expr Name 'b' Load - 0,0..0,1
+    .optional_vars Name 'y' Store - 0,5..0,6
+  1] withitem - 0,8..0,9
+    .context_expr Name 'c' Load - 0,8..0,9
+'''),
+
+(2, 'body[0]', 0, 2, 'items', {}, ('exec',
+r'''async with a, b as y, c: pass  # comment'''),
+r'''async with c: pass  # comment''', r'''
+Module - ROOT 0,0..0,29
+  .body[1]
+  0] AsyncWith - 0,0..0,18
+    .items[1]
+    0] withitem - 0,11..0,12
+      .context_expr Name 'c' Load - 0,11..0,12
+    .body[1]
+    0] Pass - 0,14..0,18
+''',
+r'''a, b as y''', r'''
+_slice_withitems - ROOT 0,0..0,9
+  .items[2]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+  1] withitem - 0,3..0,9
+    .context_expr Name 'b' Load - 0,3..0,4
+    .optional_vars Name 'y' Store - 0,8..0,9
+'''),
+
+(3, 'body[0]', 1, 2, 'items', {}, ('exec', r'''
+async with a \
+, \
+b \
+as \
+y \
+, \
+c: pass  # comment
+'''), r'''
+async with a \
+, \
+c: pass  # comment
+''', r'''
+Module - ROOT 0,0..2,18
+  .body[1]
+  0] AsyncWith - 0,0..2,7
+    .items[2]
+    0] withitem - 0,11..0,12
+      .context_expr Name 'a' Load - 0,11..0,12
+    1] withitem - 2,0..2,1
+      .context_expr Name 'c' Load - 2,0..2,1
+    .body[1]
+    0] Pass - 2,3..2,7
+''', r'''
+
+b \
+as \
+y \
+ \
+
+''', r'''
+_slice_withitems - ROOT 0,0..5,0
+  .items[1]
+  0] withitem - 1,0..3,1
+    .context_expr Name 'b' Load - 1,0..1,1
+    .optional_vars Name 'y' Store - 3,0..3,1
+'''),
+
+(4, 'body[0]', 0, 2, 'items', {}, ('exec', r'''
+async with a \
+, \
+b \
+as \
+y \
+, \
+c: pass  # comment
+'''), r'''
+async with (
+c): pass  # comment
+''', r'''
+Module - ROOT 0,0..1,19
+  .body[1]
+  0] AsyncWith - 0,0..1,8
+    .items[1]
+    0] withitem - 0,11..1,2
+      .context_expr Name 'c' Load - 1,0..1,1
+    .body[1]
+    0] Pass - 1,4..1,8
+''', r'''
+a \
+, \
+b \
+as \
+y \
+ \
+
+''', r'''
+_slice_withitems - ROOT 0,0..6,0
+  .items[2]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+  1] withitem - 2,0..4,1
+    .context_expr Name 'b' Load - 2,0..2,1
+    .optional_vars Name 'y' Store - 4,0..4,1
+'''),
+
+(5, 'body[0]', 1, 3, 'items', {}, ('exec', r'''
+async with a \
+, \
+b \
+as \
+y \
+, \
+c: pass  # comment
+'''), r'''
+async with a \
+ \
+: pass  # comment
+''', r'''
+Module - ROOT 0,0..2,17
+  .body[1]
+  0] AsyncWith - 0,0..2,6
+    .items[1]
+    0] withitem - 0,11..0,12
+      .context_expr Name 'a' Load - 0,11..0,12
+    .body[1]
+    0] Pass - 2,2..2,6
+''', r'''
+
+b \
+as \
+y \
+, \
+c
+''', r'''
+_slice_withitems - ROOT 0,0..5,1
+  .items[2]
+  0] withitem - 1,0..3,1
+    .context_expr Name 'b' Load - 1,0..1,1
+    .optional_vars Name 'y' Store - 3,0..3,1
+  1] withitem - 5,0..5,1
+    .context_expr Name 'c' Load - 5,0..5,1
+'''),
+
+(6, 'body[0].body[0]', 0, 1, 'items', {}, ('exec', r'''
+if 1:
+  async with a \
+  , \
+  b \
+  as \
+  y: pass  # comment
+  pass
+'''), r'''
+if 1:
+  async with  \
+  b \
+  as \
+  y: pass  # comment
+  pass
+''', r'''
+Module - ROOT 0,0..5,6
+  .body[1]
+  0] If - 0,0..5,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] AsyncWith - 1,2..4,9
+      .items[1]
+      0] withitem - 2,2..4,3
+        .context_expr Name 'b' Load - 2,2..2,3
+        .optional_vars Name 'y' Store - 4,2..4,3
+      .body[1]
+      0] Pass - 4,5..4,9
+    1] Pass - 5,2..5,6
+''', r'''
+a \
+
+''', r'''
+_slice_withitems - ROOT 0,0..1,0
+  .items[1]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+'''),
+
+(7, 'body[0].body[0]', 1, 2, 'items', {}, ('exec', r'''
+if 1:
+  async with a \
+  , \
+  b \
+  as \
+  y: pass  # comment
+  pass
+'''), r'''
+if 1:
+  async with a \
+   \
+  : pass  # comment
+  pass
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+  0] If - 0,0..4,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] AsyncWith - 1,2..3,8
+      .items[1]
+      0] withitem - 1,13..1,14
+        .context_expr Name 'a' Load - 1,13..1,14
+      .body[1]
+      0] Pass - 3,4..3,8
+    1] Pass - 4,2..4,6
+''', r'''
+b \
+as \
+y
+''', r'''
+_slice_withitems - ROOT 0,0..2,1
+  .items[1]
+  0] withitem - 0,0..2,1
+    .context_expr Name 'b' Load - 0,0..0,1
+    .optional_vars Name 'y' Store - 2,0..2,1
+'''),
+
+(8, '', 0, 3, 'items', {}, (None,
+r'''async with a, b, c: pass'''),
+r'''**ValueError('cannot cut all AsyncWith.items without fix_with_self=False')**''',
+r'''a, b, c''', r'''
+_slice_withitems - ROOT 0,0..0,7
+  .items[3]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+  1] withitem - 0,3..0,4
+    .context_expr Name 'b' Load - 0,3..0,4
+  2] withitem - 0,6..0,7
+    .context_expr Name 'c' Load - 0,6..0,7
+'''),
+
+(9, '', 0, 3, 'items', {'fix_with_self': False, '_verify_self': False}, (None, r'''
+async with a \
+, \
+b \
+as \
+y \
+, \
+c: pass  # comment
+'''),
+r'''async with : pass  # comment''', r'''
+AsyncWith - ROOT 0,0..0,17
+  .body[1]
+  0] Pass - 0,13..0,17
+''', r'''
+a \
+, \
+b \
+as \
+y \
+, \
+c
+''', r'''
+_slice_withitems - ROOT 0,0..6,1
+  .items[3]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+  1] withitem - 2,0..4,1
+    .context_expr Name 'b' Load - 2,0..2,1
+    .optional_vars Name 'y' Store - 4,0..4,1
+  2] withitem - 6,0..6,1
+    .context_expr Name 'c' Load - 6,0..6,1
+'''),
+
+(10, 'body[0]', 1, 2, 'items', {}, (None, r'''
+if 1:
+  async with a, b:
+    pass;
+'''), r'''
+if 1:
+  async with a:
+    pass;
+''', r'''
+If - ROOT 0,0..2,9
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] AsyncWith - 1,2..2,9
+    .items[1]
+    0] withitem - 1,13..1,14
+      .context_expr Name 'a' Load - 1,13..1,14
+    .body[1]
+    0] Pass - 2,4..2,8
+''',
+r'''b''', r'''
+_slice_withitems - ROOT 0,0..0,1
+  .items[1]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'b' Load - 0,0..0,1
+'''),
+],
+
+'AsyncWith_items_w_pars': [  # ................................................................................
+
+(0, 'body[0]', 1, 2, 'items', {}, ('exec',
+r'''async with (a, b as y, c): pass  # comment'''),
+r'''async with (a, c): pass  # comment''', r'''
+Module - ROOT 0,0..0,34
+  .body[1]
+  0] AsyncWith - 0,0..0,23
+    .items[2]
+    0] withitem - 0,12..0,13
+      .context_expr Name 'a' Load - 0,12..0,13
+    1] withitem - 0,15..0,16
+      .context_expr Name 'c' Load - 0,15..0,16
+    .body[1]
+    0] Pass - 0,19..0,23
+''',
+r'''b as y''', r'''
+_slice_withitems - ROOT 0,0..0,6
+  .items[1]
+  0] withitem - 0,0..0,6
+    .context_expr Name 'b' Load - 0,0..0,1
+    .optional_vars Name 'y' Store - 0,5..0,6
+'''),
+
+(1, 'body[0]', 1, 3, 'items', {}, ('exec',
+r'''async with (a, b as y, c): pass  # comment'''),
+r'''async with (a): pass  # comment''', r'''
+Module - ROOT 0,0..0,31
+  .body[1]
+  0] AsyncWith - 0,0..0,20
+    .items[1]
+    0] withitem - 0,11..0,14
+      .context_expr Name 'a' Load - 0,12..0,13
+    .body[1]
+    0] Pass - 0,16..0,20
+''',
+r'''b as y, c''', r'''
+_slice_withitems - ROOT 0,0..0,9
+  .items[2]
+  0] withitem - 0,0..0,6
+    .context_expr Name 'b' Load - 0,0..0,1
+    .optional_vars Name 'y' Store - 0,5..0,6
+  1] withitem - 0,8..0,9
+    .context_expr Name 'c' Load - 0,8..0,9
+'''),
+
+(2, 'body[0]', 0, 2, 'items', {}, ('exec',
+r'''async with (a, b as y, c): pass  # comment'''),
+r'''async with (c): pass  # comment''', r'''
+Module - ROOT 0,0..0,31
+  .body[1]
+  0] AsyncWith - 0,0..0,20
+    .items[1]
+    0] withitem - 0,11..0,14
+      .context_expr Name 'c' Load - 0,12..0,13
+    .body[1]
+    0] Pass - 0,16..0,20
+''',
+r'''a, b as y''', r'''
+_slice_withitems - ROOT 0,0..0,9
+  .items[2]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+  1] withitem - 0,3..0,9
+    .context_expr Name 'b' Load - 0,3..0,4
+    .optional_vars Name 'y' Store - 0,8..0,9
+'''),
+
+(3, 'body[0]', 1, 2, 'items', {}, ('exec', r'''
+async with (a
+,
+b
+as
+y
+,
+c): pass  # comment
+'''), r'''
+async with (a
+,
+c): pass  # comment
+''', r'''
+Module - ROOT 0,0..2,19
+  .body[1]
+  0] AsyncWith - 0,0..2,8
+    .items[2]
+    0] withitem - 0,12..0,13
+      .context_expr Name 'a' Load - 0,12..0,13
+    1] withitem - 2,0..2,1
+      .context_expr Name 'c' Load - 2,0..2,1
+    .body[1]
+    0] Pass - 2,4..2,8
+''', r'''
+
+b
+as
+y
+
+
+''', r'''
+_slice_withitems - ROOT 0,0..5,0
+  .items[1]
+  0] withitem - 1,0..3,1
+    .context_expr Name 'b' Load - 1,0..1,1
+    .optional_vars Name 'y' Store - 3,0..3,1
+'''),
+
+(4, 'body[0]', 0, 2, 'items', {}, ('exec', r'''
+async with (a
+,
+b
+as
+y
+,
+c): pass  # comment
+'''), r'''
+async with (
+c): pass  # comment
+''', r'''
+Module - ROOT 0,0..1,19
+  .body[1]
+  0] AsyncWith - 0,0..1,8
+    .items[1]
+    0] withitem - 0,11..1,2
+      .context_expr Name 'c' Load - 1,0..1,1
+    .body[1]
+    0] Pass - 1,4..1,8
+''', r'''
+a
+,
+b
+as
+y
+
+
+''', r'''
+_slice_withitems - ROOT 0,0..6,0
+  .items[2]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+  1] withitem - 2,0..4,1
+    .context_expr Name 'b' Load - 2,0..2,1
+    .optional_vars Name 'y' Store - 4,0..4,1
+'''),
+
+(5, 'body[0]', 1, 3, 'items', {}, ('exec', r'''
+async with (a
+,
+b
+as
+y
+,
+c): pass  # comment
+'''), r'''
+async with (a
+
+): pass  # comment
+''', r'''
+Module - ROOT 0,0..2,18
+  .body[1]
+  0] AsyncWith - 0,0..2,7
+    .items[1]
+    0] withitem - 0,11..2,1
+      .context_expr Name 'a' Load - 0,12..0,13
+    .body[1]
+    0] Pass - 2,3..2,7
+''', r'''
+
+b
+as
+y
+,
+c
+''', r'''
+_slice_withitems - ROOT 0,0..5,1
+  .items[2]
+  0] withitem - 1,0..3,1
+    .context_expr Name 'b' Load - 1,0..1,1
+    .optional_vars Name 'y' Store - 3,0..3,1
+  1] withitem - 5,0..5,1
+    .context_expr Name 'c' Load - 5,0..5,1
+'''),
+
+(6, 'body[0].body[0]', 0, 1, 'items', {}, ('exec', r'''
+if 1:
+  async with (a
+  ,
+  b
+  as
+  y): pass  # comment
+  pass
+'''), r'''
+if 1:
+  async with (
+  b
+  as
+  y): pass  # comment
+  pass
+''', r'''
+Module - ROOT 0,0..5,6
+  .body[1]
+  0] If - 0,0..5,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] AsyncWith - 1,2..4,10
+      .items[1]
+      0] withitem - 2,2..4,3
+        .context_expr Name 'b' Load - 2,2..2,3
+        .optional_vars Name 'y' Store - 4,2..4,3
+      .body[1]
+      0] Pass - 4,6..4,10
+    1] Pass - 5,2..5,6
+''', r'''
+a
+
+''', r'''
+_slice_withitems - ROOT 0,0..1,0
+  .items[1]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+'''),
+
+(7, 'body[0].body[0]', 1, 2, 'items', {}, ('exec', r'''
+if 1:
+  async with (a
+  ,
+  b
+  as
+  y): pass  # comment
+  pass
+'''),
+'if 1:\n  async with (a\n  \n  ): pass  # comment\n  pass', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+  0] If - 0,0..4,6
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] AsyncWith - 1,2..3,9
+      .items[1]
+      0] withitem - 1,13..3,3
+        .context_expr Name 'a' Load - 1,14..1,15
+      .body[1]
+      0] Pass - 3,5..3,9
+    1] Pass - 4,2..4,6
+''', r'''
+b
+as
+y
+''', r'''
+_slice_withitems - ROOT 0,0..2,1
+  .items[1]
+  0] withitem - 0,0..2,1
+    .context_expr Name 'b' Load - 0,0..0,1
+    .optional_vars Name 'y' Store - 2,0..2,1
+'''),
+
+(8, '', 0, 3, 'items', {}, (None,
+r'''async with (a, b, c): pass'''),
+r'''**ValueError('cannot cut all AsyncWith.items without fix_with_self=False')**''',
+r'''a, b, c''', r'''
+_slice_withitems - ROOT 0,0..0,7
+  .items[3]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+  1] withitem - 0,3..0,4
+    .context_expr Name 'b' Load - 0,3..0,4
+  2] withitem - 0,6..0,7
+    .context_expr Name 'c' Load - 0,6..0,7
+'''),
+
+(9, '', 0, 3, 'items', {'fix_with_self': False, '_verify_self': False}, (None, r'''
+async with (a
+,
+b
+as
+y
+,
+c): pass  # comment
+'''),
+r'''async with (): pass  # comment''', r'''
+AsyncWith - ROOT 0,0..0,19
+  .body[1]
+  0] Pass - 0,15..0,19
+''', r'''
+a
+,
+b
+as
+y
+,
+c
+''', r'''
+_slice_withitems - ROOT 0,0..6,1
+  .items[3]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'a' Load - 0,0..0,1
+  1] withitem - 2,0..4,1
+    .context_expr Name 'b' Load - 2,0..2,1
+    .optional_vars Name 'y' Store - 4,0..4,1
+  2] withitem - 6,0..6,1
+    .context_expr Name 'c' Load - 6,0..6,1
+'''),
+
+(10, 'body[0]', 1, 2, 'items', {}, (None, r'''
+if 1:
+  async with (a, b):
+    pass;
+'''), r'''
+if 1:
+  async with (a):
+    pass;
+''', r'''
+If - ROOT 0,0..2,9
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] AsyncWith - 1,2..2,9
+    .items[1]
+    0] withitem - 1,13..1,16
+      .context_expr Name 'a' Load - 1,14..1,15
+    .body[1]
+    0] Pass - 2,4..2,8
+''',
+r'''b''', r'''
+_slice_withitems - ROOT 0,0..0,1
+  .items[1]
+  0] withitem - 0,0..0,1
+    .context_expr Name 'b' Load - 0,0..0,1
+'''),
+],
+
 'Import_names': [  # ................................................................................
 
 (0, 'body[0]', 1, 2, None, {}, ('exec',

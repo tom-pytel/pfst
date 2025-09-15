@@ -126,6 +126,7 @@ _OPTIONS = {
     'fix_set_self':     True,   # True | False | 'star' | 'call'
     'fix_delete_self':  True,   # True | False
     'fix_assign_self':  True,   # True | False
+    'fix_with_self':    True,   # True | False
     'fix_import_self':  True,   # True | False
     'fix_global_self':  True,   # True | False
     'fix_matchor_get':  True,   # True | False | 'strict'
@@ -883,6 +884,7 @@ class FST:
          'fix_set_self': True,
          'fix_delete_self': True,
          'fix_assign_self': True,
+         'fix_with_self': True,
          'fix_import_self': True,
          'fix_global_self': True,
          'fix_matchor_get': True,

@@ -1549,6 +1549,14 @@ c  # comment
         self.assertEqual('(\n            )', f.src)
         self.assertEqual('(\n            TI(string="case"),\n)', g.src)
 
+        # With / AsyncWith get doesn't join alnums on cut
+
+        (f := FST('with(a),b: pass')).get_slice(0, 1, 'items', cut=True)
+        self.assertEqual('with b: pass', f.src)
+
+        (f := FST('async with(a),b: pass')).get_slice(0, 1, 'items', cut=True)
+        self.assertEqual('async with b: pass', f.src)
+
     def test_put_slice_special(self):
         if PYGE14:  # make sure parent Interpolation.str gets modified
             f = FST('t"{(1, 2)}"', 'exec').body[0].value.copy()
@@ -1776,6 +1784,17 @@ c  # comment
         # make sure we can't put '* to Import.names
 
         self.assertRaises(NodeError, FST('import a, b, c').put, FST('*', 'ImportFrom_names'), 1, 2)
+
+        # With / AsyncWith put doesn't join alnums on del or put
+
+        self.assertEqual('with b: pass', FST('with(a),b: pass').put_slice(None, 0, 1, 'items').src)
+        self.assertEqual('async with b: pass', FST('async with(a),b: pass').put_slice(None, 0, 1, 'items').src)
+
+        self.assertEqual('with b: pass', FST('with(a): pass').put_slice('b', 0, 1, 'items').src)
+        self.assertEqual('async with b: pass', FST('async with(a): pass').put_slice('b', 0, 1, 'items').src)
+
+        self.assertEqual('with b: pass', FST('with(a): pass').put_slice(None, 0, 1, 'items', fix_with_self=False).put_slice('b', 0, 1, 'items').src)
+        self.assertEqual('async with b: pass', FST('async with(a): pass').put_slice(None, 0, 1, 'items', fix_with_self=False).put_slice('b', 0, 1, 'items').src)
 
     def test_put_slice_seq_namedexpr_and_yield(self):
         self.assertEqual('a, (x := y)', (f := FST('a, b')).put_slice('x := y', 1, 2, one=True).src)

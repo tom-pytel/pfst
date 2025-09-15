@@ -10,6 +10,8 @@
 
 ### Added
 
+- prescribed slicing for `With.items`
+- prescribed slicing for `AsyncWith.items`
 - prescribed slicing for `Import.names`
 - prescribed slicing for `ImportFrom.names`
 - prescribed slicing for `Global.names`

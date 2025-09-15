@@ -1419,7 +1419,7 @@ def parse_withitems(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             raise SyntaxError('expecting withitem, got unparenthesized GeneratorExp')
 
         if isinstance(ast, Tuple) and not ast.elts and ast.col_offset == 5:
-            raise SyntaxError('expecting withitem')
+            items = []
 
     ast = _slice_withitems(items=items, lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
                            end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))

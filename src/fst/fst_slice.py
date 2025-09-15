@@ -91,6 +91,7 @@ from .code import (
     code_as_alias, code_as_aliases,
     code_as_Import_name, code_as_Import_names,
     code_as_ImportFrom_name, code_as_ImportFrom_names,
+    code_as_withitem, code_as_withitems,
     code_as_pattern,
     code_as_type_param, code_as_type_params,
 )
@@ -98,7 +99,7 @@ from .code import (
 from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish
 
 
-_re_close_delim_or_space_or_end = re.compile(r'[)}\s\]]|$')
+_re_close_delim_or_space_or_end = re.compile(r'[)}\s\]:]|$')  # this is a very special set of terminations which are considered to not need a space before if a slice put ends with a non-space right before them
 
 _re_sep_line_nonexpr_end = {  # empty line with optional separator and line continuation or a pure comment line
     ',': re.compile(r'\s*(?:,\s*)?(?:\\|#.*)?$'),
@@ -154,8 +155,8 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 # * ! S ,             (ClassDef, 'type_params'):              # type_param*      -> _slice_type_params         _parse_type_params
 # * ! S ,             (TypeAlias, 'type_params'):             # type_param*      -> _slice_type_params         _parse_type_params
 #                                                                                .
-#   ! S ,             (With, 'items'):                        # withitem*        -> _slice_withitems           _parse_withitems               - no trailing commas
-#   ! S ,             (AsyncWith, 'items'):                   # withitem*        -> _slice_withitems           _parse_withitems               - no trailing commas
+# * ! S ,             (With, 'items'):                        # withitem*        -> _slice_withitems           _parse_withitems               - no trailing commas
+# * ! S ,             (AsyncWith, 'items'):                   # withitem*        -> _slice_withitems           _parse_withitems               - no trailing commas
 #                                                                                .
 # * ! S ,             (Import, 'names'):                      # alias*           -> _slice_aliases             _parse_aliases_dotted          - no trailing commas
 #   ! S ,             (ImportFrom, 'names'):                  # alias*           -> _slice_aliases             _parse_aliases_star            - no trailing commas
@@ -915,6 +916,54 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
     return fst_
 
 
+def _get_slice_With_AsyncWith_items(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                          cut: bool, options: Mapping[str, Any]) -> fst.FST:
+    len_body = len(body := (ast := self.a).items)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
+
+    if not len_slice:
+        return fst.FST(_slice_withitems(items=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''],
+                       from_=self)
+
+    if cut and len_slice == len_body and self.get_option('fix_with_self', options):
+        raise ValueError(f'cannot cut all {ast.__class__.__name__}.items without fix_with_self=False')
+
+    loc_first = body[start].f.loc
+    loc_last = loc_first if stop == start else body[stop - 1].f.loc
+
+    pars = self._loc_With_items_pars()  # may be pars or may be where pars would go from just after `with` to end of block header
+    pars_ln, pars_col, pars_end_ln, pars_end_col = pars
+    pars_n = pars.n
+
+    if start:
+        _, _, bound_ln, bound_col = body[start - 1].f.loc
+    else:
+        bound_ln = pars_ln
+        bound_col = pars_col + pars_n
+
+    asts = _cut_or_copy_asts(start, stop, 'items', cut, body)
+    ret_ast = _slice_withitems(items=asts)
+
+    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
+                          loc_first, loc_last, bound_ln, bound_col, pars_end_ln, pars_end_col - pars_n,
+                          options.get('trivia'), 'items', '', '', ',', False, False)
+
+    if cut and not pars_n:  # only need to fix maybe if there are no parentheses
+        if not self.is_enclosed_or_line(pars=False):  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
+            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_With_items_pars()  # will just give where pars should go (because maybe something like `async \\\n\\\n   with ...`)
+
+            self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, False)
+            self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
+
+        elif not start and len_slice != len_body:  # if not adding pars then need to make sure cut didn't join new first `withitem` with the `with`
+            ln, col, _, _ = pars.bound
+
+            self._maybe_fix_joined_alnum(ln, col)
+
+    return fst_
+
+
 def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                             cut: bool, options: Mapping[str, Any]) -> fst.FST:
     len_body = len(body := (ast := self.a).names)
@@ -992,7 +1041,7 @@ def _get_slice_ImportFrom_names(self: fst.FST, start: int | Literal['end'] | Non
             _maybe_set_end_pos(self, (bn := body[-1]).end_lineno, bn.end_col_offset, ast.end_lineno, ast.end_col_offset)
 
         if not self.is_enclosed_or_line(pars=False):  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
-            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()  # will just give where pars should go (because maybe something like `async \\\n\\\n   with ...`)
+            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()
 
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, True, False, self)
             self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
@@ -1325,8 +1374,8 @@ _GET_SLICE_HANDLERS = {
     (Import, 'names'):                        _get_slice_Import_names,  # alias*
     (ImportFrom, 'names'):                    _get_slice_ImportFrom_names,  # alias*
 
-    (With, 'items'):                          _get_slice_NOT_IMPLEMENTED_YET,  # withitem*
-    (AsyncWith, 'items'):                     _get_slice_NOT_IMPLEMENTED_YET,  # withitem*
+    (With, 'items'):                          _get_slice_With_AsyncWith_items,  # withitem*
+    (AsyncWith, 'items'):                     _get_slice_With_AsyncWith_items,  # withitem*
 
     (MatchSequence, 'patterns'):              _get_slice_MatchSequence_patterns,  # pattern*
     (MatchMapping, ''):                       _get_slice_MatchMapping,  # key:pattern*
@@ -1909,22 +1958,20 @@ def _code_to_slice_aliases(self: fst.FST, code: Code | None, one: bool, options:
 
 
 def _code_to_slice_withitems(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
-                             code_as_one: Callable = code_as_alias, code_as_slice: Callable = code_as_aliases,
                              ) -> fst.FST | None:
-    raise NotImplementedError
     if code is None:
         return None
 
     if one:
-        fst_ = code_as_one(code, self.root.parse_params, sanitize=False)
+        fst_ = code_as_withitem(code, self.root.parse_params, sanitize=False)
 
-        return fst.FST(_slice_aliases(names=[fst_.a], lineno=(el := len(ls := fst_._lines)),
-                                      col_offset=(ec := ls[-1].lenbytes), end_lineno=el, end_col_offset=ec),
+        return fst.FST(_slice_withitems(names=[fst_.a], lineno=(el := len(ls := fst_._lines)),
+                                        col_offset=(ec := ls[-1].lenbytes), end_lineno=el, end_col_offset=ec),
                        ls, from_=fst_, lcopy=False)
 
-    fst_ = code_as_slice(code, self.root.parse_params, sanitize=False)
+    fst_ = code_as_withitems(code, self.root.parse_params, sanitize=False)
 
-    if not fst_.a.names:  # put empty sequence is same as delete
+    if not fst_.a.items:  # put empty sequence is same as delete
         return None
 
     return fst_
@@ -2416,6 +2463,68 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
     self._maybe_add_line_continuations()
 
 
+def _put_slice_With_AsyncWith_items(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+                                    field: str, one: bool, options: Mapping[str, Any]) -> None:
+    fst_ = _code_to_slice_withitems(self, code, one, options)
+    len_body = len(body := (ast := self.a).items)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
+
+    if not fst_:
+        if not len_slice:
+            return
+
+        if len_slice == len_body and self.get_option('fix_with_self', options):
+            raise ValueError(f'cannot delete all {ast.__class__.__name__}.items without fix_with_self=False')
+
+    pars = self._loc_With_items_pars()  # may be pars or may be where pars would go from just after `with` to end of block header `:`
+    pars_ln, pars_col, pars_end_ln, pars_end_col = pars
+    pars_n = pars.n
+
+    if not fst_:
+        _put_slice_seq(self, start, stop, None, None, None, 0,
+                       pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n,
+                       options.get('trivia'), options.get('ins_ln'), 'items', None, ',', False)
+
+        self._unmake_fst_tree(body[start : stop])
+
+        del body[start : stop]
+
+        len_fst_body = 0
+
+    else:
+        len_fst_body = len(fst_body := fst_.a.items)
+
+        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
+                       pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n,
+                       options.get('trivia'), options.get('ins_ln'), 'items', None, ',', False)
+
+        self._unmake_fst_tree(body[start : stop])
+        fst_._unmake_fst_parents(True)
+
+        body[start : stop] = fst_body
+
+        FST = fst.FST
+        stack = [FST(body[i], self, astfield('items', i)) for i in range(start, start + len_fst_body)]
+
+        self._make_fst_tree(stack)
+
+    for i in range(start + len_fst_body, len(body)):
+        body[i].f.pfield = astfield('items', i)
+
+    if not pars_n:  # only need to fix maybe if there are no parentheses
+        if not self.is_enclosed_or_line(pars=False):  # if no parentheses and wound up not valid for parse then adding parentheses around items should fix
+            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_With_items_pars()
+
+            self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, False)
+            self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
+
+        elif not start:  # if not adding pars then need to make sure del or put didn't join new first `withitem` with the `with`
+            ln, col, _, _ = pars.bound
+
+            self._maybe_fix_joined_alnum(ln, col)
+
+
 def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                             field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_ = _code_to_slice_aliases(self, code, one, options, code_as_Import_name, code_as_Import_names)
@@ -2550,7 +2659,7 @@ def _put_slice_ImportFrom_names(self: fst.FST, code: Code | None, start: int | L
                                    ast.end_lineno, ast.end_col_offset)
 
         if not self.is_enclosed_or_line(pars=False):  # if no parentheses and wound up not valid for parse then adding parentheses around names should fix
-            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()  # will just give where pars should go (because maybe something like `async \\\n\\\n   with ...`)
+            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()
 
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, True, False, self)
             self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
@@ -3036,8 +3145,8 @@ _PUT_SLICE_HANDLERS = {
     (Import, 'names'):                        _put_slice_Import_names,  # alias*
     (ImportFrom, 'names'):                    _put_slice_ImportFrom_names,  # alias*
 
-    (With, 'items'):                          _put_slice_NOT_IMPLEMENTED_YET,  # withitem*
-    (AsyncWith, 'items'):                     _put_slice_NOT_IMPLEMENTED_YET,  # withitem*
+    (With, 'items'):                          _put_slice_With_AsyncWith_items,  # withitem*
+    (AsyncWith, 'items'):                     _put_slice_With_AsyncWith_items,  # withitem*
 
     (MatchSequence, 'patterns'):              _put_slice_MatchSequence_patterns,  # pattern*
     (MatchMapping, ''):                       _put_slice_MatchMapping,  # key:pattern*

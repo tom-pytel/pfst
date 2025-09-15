@@ -359,6 +359,7 @@ PARSE_TESTS = [
     ('ImportFrom_names',  px.parse_ImportFrom_names,  _slice_aliases,           'a as x, b as y'),
     ('ImportFrom_names',  px.parse_ImportFrom_names,  SyntaxError,              'a as x, a.b as y'),
 
+    ('withitem',          px.parse_withitem,          SyntaxError,              ''),
     ('withitem',          px.parse_withitem,          withitem,                 'a'),
     ('withitem',          px.parse_withitem,          withitem,                 'a, b'),
     ('withitem',          px.parse_withitem,          withitem,                 '(a, b)'),
@@ -371,6 +372,7 @@ PARSE_TESTS = [
     ('withitem',          px.parse_withitem,          SyntaxError,              '(a as b)'),
     ('withitem',          px.parse_withitem,          SyntaxError,              '(a as b, x as y)'),
 
+    ('withitems',         px.parse_withitems,         _slice_withitems,         ''),
     ('withitems',         px.parse_withitems,         _slice_withitems,         'a'),
     ('withitems',         px.parse_withitems,         _slice_withitems,         'a, b'),
     ('withitems',         px.parse_withitems,         _slice_withitems,         '(a, b)'),
@@ -5313,13 +5315,11 @@ if 1:
         self.assertEqual('if new:\n    return\nelse:\n    continue\n', test(f, 'orelse', 'continue', fstview, 'pass').src)
 
         f = FST('with a as b: pass')
-        self.assertEqual('with old as new: pass', test(f, 'items', 'old as new', fstview,
-                                                       '<<With ROOT 0,0..0,17>.items[0:1] [<withitem 0,5..0,11>]>').src)
+        self.assertEqual('with old as new: pass', test(f, 'items', 'old as new', fstview, 'a as b').src)
         self.assertEqual('with old as new:\n    return\n', test(f, 'body', 'return', fstview, 'pass').src)
 
         f = FST('async with a as b: pass')
-        self.assertEqual('async with old as new: pass', test(f, 'items', 'old as new', fstview,
-                                                       '<<AsyncWith ROOT 0,0..0,23>.items[0:1] [<withitem 0,11..0,17>]>').src)
+        self.assertEqual('async with old as new: pass', test(f, 'items', 'old as new', fstview, 'a as b').src)
         self.assertEqual('async with old as new:\n    return\n', test(f, 'body', 'return', fstview, 'pass').src)
 
         f = FST('match a:\n    case _: pass')

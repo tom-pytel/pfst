@@ -9673,7 +9673,18 @@ r'''**ValueError("cannot put '**' Call.keywords element at this location (non-ke
 (607, 'body[0]', 0, False, 'items', {}, ('exec',
 r'''with (a as b, (f()) as d): pass'''), (None,
 r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''with ((f()) as d): pass''', r'''
+Module - ROOT 0,0..0,23
+  .body[1]
+  0] With - 0,0..0,23
+    .items[1]
+    0] withitem - 0,6..0,16
+      .context_expr Call - 0,7..0,10
+        .func Name 'f' Load - 0,7..0,8
+      .optional_vars Name 'd' Store - 0,15..0,16
+    .body[1]
+    0] Pass - 0,19..0,23
+'''),
 
 (608, 'body[0]', 0, False, 'items', {}, ('exec',
 r'''with (a as b, (f()) as d): pass'''), ('withitem',
@@ -9761,7 +9772,18 @@ r'''**IndexError('index out of range')**'''),
 (613, 'body[0]', 0, False, 'items', {}, ('exec',
 r'''async with (a as b, (f()) as d): pass'''), ('withitem',
 r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''async with ((f()) as d): pass''', r'''
+Module - ROOT 0,0..0,29
+  .body[1]
+  0] AsyncWith - 0,0..0,29
+    .items[1]
+    0] withitem - 0,12..0,22
+      .context_expr Call - 0,13..0,16
+        .func Name 'f' Load - 0,13..0,14
+      .optional_vars Name 'd' Store - 0,21..0,22
+    .body[1]
+    0] Pass - 0,25..0,29
+'''),
 
 (614, 'body[0]', 0, False, 'items', {}, ('exec',
 r'''async with (a as b, (f()) as d): pass'''), ('withitem',
