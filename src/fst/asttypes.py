@@ -293,7 +293,7 @@ __all__ = [
 
 class _slice(AST):
     """General non-AST-compatible slice of some `type[AST]` list field. This is not generally usable as an `AST` and
-    will not `ast.unparse()` correctly (though `FST.extparse.unparse()` will unparse correctly). Meant only to be used
+    will not `ast.unparse()` correctly (though `FST.parsex.unparse()` will unparse correctly). Meant only to be used
     as a container with `FST` taking care of source and all operations.
 
     **Note:** This class has nothing to do with `ast.slice` or `ast.Slice`, thise are indices, this is a slice

@@ -4,7 +4,7 @@ import unittest
 
 from fst import *
 from fst.astutil import re_identifier, re_identifier_only
-from fst.extparse import parse_expr
+from fst.parsex import parse_expr
 from fst.code import code_as_identifier
 
 IDENTIFIERS = [

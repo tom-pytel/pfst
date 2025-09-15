@@ -125,7 +125,7 @@ from .misc import (
     next_frag, prev_frag, next_find, prev_find, next_find_re, fixup_one_index,
 )
 
-from .extparse import unparse
+from .parsex import unparse
 
 from .code import (
     Code,

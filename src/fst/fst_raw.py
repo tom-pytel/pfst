@@ -15,7 +15,7 @@ from .misc import (
     STMTISH_FIELDS,
 )
 
-from .extparse import Mode, unparse
+from .parsex import Mode, unparse
 from .code import Code
 
 

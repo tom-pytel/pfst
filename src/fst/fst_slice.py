@@ -83,7 +83,7 @@ from .misc import (
     leading_trivia, trailing_trivia,
 )
 
-from .extparse import unparse
+from .parsex import unparse
 
 from .code import (
     Code,

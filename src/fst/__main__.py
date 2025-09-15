@@ -1,7 +1,7 @@
 from typing import get_args
 
 from .fst import parse
-from .extparse import Mode
+from .parsex import Mode
 
 
 def main() -> None:

@@ -54,7 +54,7 @@ from .misc import (
     NodeError, shortstr
 )
 
-from .extparse import (
+from .parsex import (
     ParseError,
     _fixing_unparse,
     unparse,

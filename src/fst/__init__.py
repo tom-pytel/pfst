@@ -66,9 +66,9 @@ anything about `fst` to maybe gain the ability to preserve some existing formatt
 `fst.docs.d09_reconcile`.
 """
 
-import ast  # noqa: F401
+import ast  # noqa: F401  - make everything from ast module available here
 from ast import *  # noqa: F403
 from .fst import parse, unparse, dump, FST  # noqa: F401
 from .misc import NodeError  # noqa: F401
-from .extparse import ParseError  # noqa: F401
+from .parsex import ParseError  # noqa: F401
 from .asttypes import *  # noqa: F403
