@@ -1385,7 +1385,7 @@ def parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
             raise SyntaxError('expecting withitem, got unparenthesized GeneratorExp')
 
-        if isinstance(ast, Tuple) and not ast.elts:
+        if isinstance(ast, Tuple) and not ast.elts and ast.col_offset == 5:
             raise SyntaxError('expecting withitem')
 
     else:  # unparenthesized Tuple
@@ -1418,7 +1418,7 @@ def parse_withitems(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
             raise SyntaxError('expecting withitem, got unparenthesized GeneratorExp')
 
-        if isinstance(ast, Tuple) and not ast.elts:
+        if isinstance(ast, Tuple) and not ast.elts and ast.col_offset == 5:
             raise SyntaxError('expecting withitem')
 
     ast = _slice_withitems(items=items, lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),

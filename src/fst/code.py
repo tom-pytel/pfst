@@ -86,6 +86,7 @@ from .parsex import (
     parse_ImportFrom_name,
     parse_ImportFrom_names,
     parse_withitem,
+    parse_withitems,
     parse_pattern,
     parse_type_param,
     parse_type_params,
@@ -121,6 +122,7 @@ __all__ = [
     'code_as_ImportFrom_name',
     'code_as_ImportFrom_names',
     'code_as_withitem',
+    'code_as_withitems',
     'code_as_pattern',
     'code_as_type_param',
     'code_as_type_params',
@@ -616,6 +618,12 @@ def code_as_withitem(code: Code, parse_params: Mapping[str, Any] = {}, *, saniti
     """Convert `code` to a withitem `FST` if possible."""
 
     return _code_as(code, withitem, parse_params, parse_withitem, sanitize=sanitize)
+
+
+def code_as_withitems(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+    """Convert `code` to a withitem `FST` if possible."""
+
+    return _code_as(code, _slice_withitems, parse_params, parse_withitems, sanitize=sanitize)
 
 
 def code_as_pattern(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True,
