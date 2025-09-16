@@ -1785,16 +1785,34 @@ c  # comment
 
         self.assertRaises(NodeError, FST('import a, b, c').put, FST('*', 'ImportFrom_names'), 1, 2)
 
+        # from import with import in modules
+
+        self.assertEqual('from importlib.support import (a,\n                              b)', (f := FST('from importlib.support import a')).put_slice('\nb', 1, 1).src)
+
         # With / AsyncWith put doesn't join alnums on del or put
 
-        self.assertEqual('with b: pass', FST('with(a),b: pass').put_slice(None, 0, 1, 'items').src)
-        self.assertEqual('async with b: pass', FST('async with(a),b: pass').put_slice(None, 0, 1, 'items').src)
+        self.assertEqual('with b: pass', (f := FST('with(a),b: pass')).put_slice(None, 0, 1, 'items').src)
+        f.verify()
+        self.assertEqual('async with b: pass', (f := FST('async with(a),b: pass')).put_slice(None, 0, 1, 'items').src)
+        f.verify()
 
-        self.assertEqual('with b: pass', FST('with(a): pass').put_slice('b', 0, 1, 'items').src)
-        self.assertEqual('async with b: pass', FST('async with(a): pass').put_slice('b', 0, 1, 'items').src)
+        self.assertEqual('with b: pass', (f := FST('with(a): pass')).put_slice('b', 0, 1, 'items').src)
+        f.verify()
+        self.assertEqual('async with b: pass', (f := FST('async with(a): pass')).put_slice('b', 0, 1, 'items').src)
+        f.verify()
 
-        self.assertEqual('with b: pass', FST('with(a): pass').put_slice(None, 0, 1, 'items', fix_with_self=False).put_slice('b', 0, 1, 'items').src)
-        self.assertEqual('async with b: pass', FST('async with(a): pass').put_slice(None, 0, 1, 'items', fix_with_self=False).put_slice('b', 0, 1, 'items').src)
+        self.assertEqual('with b: pass', (f := FST('with(a): pass')).put_slice(None, 0, 1, 'items', fix_with_self=False).put_slice('b', 0, 1, 'items').src)
+        f.verify()
+        self.assertEqual('async with b: pass', (f := FST('async with(a): pass')).put_slice(None, 0, 1, 'items', fix_with_self=False).put_slice('b', 0, 1, 'items').src)
+        f.verify()
+
+        # withitem dynamic location calculation in put slice
+
+        self.assertEqual('with (z), (c): pass', (f := FST('with a, \\\nb, (c): pass')).put_slice('(z)', 0, 2, 'items').src)
+        f.verify()
+
+        self.assertEqual('(z), (c)', (f := FST('a, \\\nb, (c)', 'withitems')).put_slice('(z)', 0, 2, 'items').src)
+        f.verify()
 
     def test_put_slice_seq_namedexpr_and_yield(self):
         self.assertEqual('a, (x := y)', (f := FST('a, b')).put_slice('x := y', 1, 2, one=True).src)

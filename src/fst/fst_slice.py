@@ -7,6 +7,7 @@ This module contains functions which are imported as methods in the `FST` class.
 from __future__ import annotations
 
 import re
+from types import TracebackType
 from typing import Any, Callable, Literal, Mapping, NamedTuple, Union
 
 from . import fst
@@ -1404,6 +1405,44 @@ _GET_SLICE_HANDLERS = {
 # ----------------------------------------------------------------------------------------------------------------------
 # put
 
+class _HackComputedLocPutFix:
+    """This class exists because some locations are computed from adjacent elements (`withitem`, `comprehension`), which
+    does not play well with how `_put_slice_seq()` currently works. Specifically at the end where it may need to insert
+    or remove a trailing or internal separator. Until and unless that is reworked (which it probably should be), this
+    class solves the problem by temporarily caching locations in those `AST` nodes in the standard `lineno` ..
+    `end_col_offset` attributes which don't normally have them for the operation so that adjacent elements are not
+    accessed in `.loc` during slice puts."""
+
+    def __init__(self, fst_: fst.FST, field: str | None = None):
+        self.fst_ = fst_
+        self.field = field
+
+    def __enter__(self) -> Self:
+        if field := self.field:
+            fst_ = self.fst_
+            lines = fst_.root._lines
+
+            for a in getattr(fst_.a, field):
+                ln, col, end_ln, end_col = a.f.loc
+                a.lineno = ln + 1
+                a.col_offset = lines[ln].c2b(col)
+                a.end_lineno = end_ln + 1
+                a.end_col_offset = lines[end_ln].c2b(end_col)
+
+        return self
+
+    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None,
+                 exc_tb: TracebackType | None) -> bool:
+        if field := self.field:
+            for a in getattr(self.fst_.a, field):
+                try:
+                    del a.lineno, a.col_offset, a.end_lineno, a.end_col_offset
+                except AttributeError:
+                    pass
+
+        return False
+
+
 def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
                    fst_first: fst.FST | fstloc | None, fst_last: fst.FST | None, len_fst: int,
                    bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
@@ -1671,7 +1710,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
     else:  # in this case there may parts of self after so we need to recurse the offset into self
         parsoff = self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, False)
 
-    # put / del trailing and internal separators
+    # put / del trailing and internal separators, THIS IS THE DANGER ZONE where the source doesn't match the AST tree, this is where we need _HackComputedLocPutFix
 
     if self_tail_sep is not None:  # trailing
         _, _, last_end_ln, last_end_col = (f := last or body2[-1].f).loc
@@ -1687,7 +1726,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
 
     if not is_del:  # internal, this is messy because the source has been put but the ASTs have not, so locations have to be gotten from and updated in two trees
         if not is_last:  # past the newly put slice
-            _, _, fst_last_end_ln, fst_last_end_col = fst_last.pars()
+            _, _, fst_last_end_ln, fst_last_end_col = fst_last.loc
 
             if a := body[stop]:  # explicit _loc_maybe_dict_key() logic because self AST tree is not complete
                 stop_ln, stop_col, _, _ = a.f.loc
@@ -1698,7 +1737,7 @@ def _put_slice_seq(self: fst.FST, start: int, stop: int, fst_: fst.FST | None,
             self._maybe_ins_separator(fst_last_end_ln, fst_last_end_col, True, stop_ln, stop_col, sep, None)  # last None is because elements of self are now past comma point so will need to be offset
 
         if is_ins and not is_first:  # before newly appended slice at end
-            _, _, stop_end_ln, stop_end_col = (f := body2[stop - 1].f).pars()
+            _, _, stop_end_ln, stop_end_col = (f := body2[stop - 1].f).loc
 
             if not fst_first.is_FST:  # special case, should only happend for Dict None key, don't like this is messy
                 fst_first = fst_._loc_maybe_dict_key(0)
@@ -2481,36 +2520,37 @@ def _put_slice_With_AsyncWith_items(self: fst.FST, code: Code | None, start: int
     pars_ln, pars_col, pars_end_ln, pars_end_col = pars
     pars_n = pars.n
 
-    if not fst_:
-        _put_slice_seq(self, start, stop, None, None, None, 0,
-                       pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n,
-                       options.get('trivia'), options.get('ins_ln'), 'items', None, ',', False)
+    with _HackComputedLocPutFix(self, 'items'):
+        if not fst_:
+            _put_slice_seq(self, start, stop, None, None, None, 0,
+                           pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n,
+                           options.get('trivia'), options.get('ins_ln'), 'items', None, ',', False)
 
-        self._unmake_fst_tree(body[start : stop])
+            self._unmake_fst_tree(body[start : stop])
 
-        del body[start : stop]
+            del body[start : stop]
 
-        len_fst_body = 0
+            len_fst_body = 0
 
-    else:
-        len_fst_body = len(fst_body := fst_.a.items)
+        else:
+            len_fst_body = len(fst_body := fst_.a.items)
 
-        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
-                       pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n,
-                       options.get('trivia'), options.get('ins_ln'), 'items', None, ',', False)
+            _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
+                           pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n,
+                           options.get('trivia'), options.get('ins_ln'), 'items', None, ',', False)
 
-        self._unmake_fst_tree(body[start : stop])
-        fst_._unmake_fst_parents(True)
+            self._unmake_fst_tree(body[start : stop])
+            fst_._unmake_fst_parents(True)
 
-        body[start : stop] = fst_body
+            body[start : stop] = fst_body
 
-        FST = fst.FST
-        stack = [FST(body[i], self, astfield('items', i)) for i in range(start, start + len_fst_body)]
+            FST = fst.FST
+            stack = [FST(body[i], self, astfield('items', i)) for i in range(start, start + len_fst_body)]
 
-        self._make_fst_tree(stack)
+            self._make_fst_tree(stack)
 
-    for i in range(start + len_fst_body, len(body)):
-        body[i].f.pfield = astfield('items', i)
+        for i in range(start + len_fst_body, len(body)):
+            body[i].f.pfield = astfield('items', i)
 
     if not pars_n:  # only need to fix maybe if there are no parentheses
         if not self.is_enclosed_or_line(pars=False):  # if no parentheses and wound up not valid for parse then adding parentheses around items should fix
@@ -2519,7 +2559,7 @@ def _put_slice_With_AsyncWith_items(self: fst.FST, code: Code | None, start: int
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, False)
             self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
 
-        elif not start:  # if not adding pars then need to make sure del or put didn't join new first `withitem` with the `with`
+        if not start:  # if not adding pars then need to make sure del or put didn't join new first `withitem` with the `with`
             ln, col, _, _ = pars.bound
 
             self._maybe_fix_joined_alnum(ln, col)
@@ -3014,36 +3054,37 @@ def _put_slice__slice(self: fst.FST, code: Code | None, start: int | Literal['en
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    if not fst_:
-        _put_slice_seq(self, start, stop, None, None, None, 0,
-                       bound_ln, bound_col, bound_end_ln, bound_end_col,
-                       options.get('trivia'), options.get('ins_ln'), field, None, static.sep, static.self_tail_sep)
+    with _HackComputedLocPutFix(self, field if field in ('items', 'generators') else None):
+        if not fst_:
+            _put_slice_seq(self, start, stop, None, None, None, 0,
+                           bound_ln, bound_col, bound_end_ln, bound_end_col,
+                           options.get('trivia'), options.get('ins_ln'), field, None, static.sep, static.self_tail_sep)
 
-        self._unmake_fst_tree(body[start : stop])
+            self._unmake_fst_tree(body[start : stop])
 
-        del body[start : stop]
+            del body[start : stop]
 
-        len_fst_body = 0
+            len_fst_body = 0
 
-    else:
-        len_fst_body = len(fst_body := getattr(fst_.a, field))
+        else:
+            len_fst_body = len(fst_body := getattr(fst_.a, field))
 
-        _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
-                       bound_ln, bound_col, bound_end_ln, bound_end_col,
-                       options.get('trivia'), options.get('ins_ln'), field, None, static.sep, static.self_tail_sep)
+            _put_slice_seq(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
+                           bound_ln, bound_col, bound_end_ln, bound_end_col,
+                           options.get('trivia'), options.get('ins_ln'), field, None, static.sep, static.self_tail_sep)
 
-        self._unmake_fst_tree(body[start : stop])
-        fst_._unmake_fst_parents(True)
+            self._unmake_fst_tree(body[start : stop])
+            fst_._unmake_fst_parents(True)
 
-        body[start : stop] = fst_body
+            body[start : stop] = fst_body
 
-        FST = fst.FST
-        stack = [FST(body[i], self, astfield(field, i)) for i in range(start, start + len_fst_body)]
+            FST = fst.FST
+            stack = [FST(body[i], self, astfield(field, i)) for i in range(start, start + len_fst_body)]
 
-        self._make_fst_tree(stack)
+            self._make_fst_tree(stack)
 
-    for i in range(start + len_fst_body, len(body)):
-        body[i].f.pfield = astfield(field, i)
+        for i in range(start + len_fst_body, len(body)):
+            body[i].f.pfield = astfield(field, i)
 
 
 # ......................................................................................................................

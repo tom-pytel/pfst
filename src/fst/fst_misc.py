@@ -86,8 +86,8 @@ _re_par_close_alnums   = re.compile(rf'[{pat_alnum}.][)][{pat_alnum}]')
 _re_delim_open_alnums  = re.compile(rf'[{pat_alnum}.][([][{pat_alnum}]')
 _re_delim_close_alnums = re.compile(rf'[{pat_alnum}.][)\]][{pat_alnum}]')
 
-_re_keyword_import     = re.compile(r'\bimport\b')
-_re_keyword_with       = re.compile(r'\bwith\b')
+_re_keyword_import     = re.compile(r'\bimport\b')  # we end with a '\b' because we need exactly this word and there may be other similar ones between `from` and `import`
+_re_keyword_with_start = re.compile(r'\bwith')  # we do not end with '\b' because the search using this may be checking source where the `with` is joined with a following `withitem` and there are no other words between `async` and `with`
 
 
 @pyver(ge=12)
@@ -1002,7 +1002,7 @@ def _loc_With_items_pars(self: fst.FST) -> fstlocns:
     ln, col, end_ln, end_col = self.loc
 
     if isinstance(ast, AsyncWith):
-        ln, col, _ = next_find_re(lines, ln, col, end_ln, end_col, _re_keyword_with)  # must be there, skip the 'async'
+        ln, col, _ = next_find_re(lines, ln, col, end_ln, end_col, _re_keyword_with_start)  # must be there, skip the 'async'
 
     col += 4
 

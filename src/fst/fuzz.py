@@ -1777,30 +1777,30 @@ class SliceExprish(Fuzzy):
 
     def fuzz_one(self, fst, fnm) -> bool:
         buckets = {
-            # 'slice':       self.Bucket('elts', None, 1, 1, False, FST('a[1,]').slice,),  # 1 because of "a[b, c]", must always leave at least 1 element so it doesn't get parentheses
-            # 'target':      self.Bucket('elts', None, 0, 0, True, FST('()')),
-            # 'seq':         self.Bucket('elts', None, 1, 0, True, FST('()')), # 1 because of Set
-            # Dict:          self.Bucket(None, None, 0, 0, False, FST('{}')),
-            # Delete:        self.Bucket('targets', 'elts', 1, 0, True, FST('del a')),
-            # Assign:        self.Bucket('targets', None, 1, 0, False, FST('', 'Assign_targets')),
+            'slice':       self.Bucket('elts', None, 1, 1, False, FST('a[1,]').slice,),  # 1 because of "a[b, c]", must always leave at least 1 element so it doesn't get parentheses
+            'target':      self.Bucket('elts', None, 0, 0, True, FST('()')),
+            'seq':         self.Bucket('elts', None, 1, 0, True, FST('()')), # 1 because of Set
+            Dict:          self.Bucket(None, None, 0, 0, False, FST('{}')),
+            Delete:        self.Bucket('targets', 'elts', 1, 0, True, FST('del a')),
+            Assign:        self.Bucket('targets', None, 1, 0, False, FST('', 'Assign_targets')),
             With:          (wbucket := self.Bucket('items', None, 1, 0, False, FST('', 'withitems'))),
             AsyncWith:     wbucket,
-            # Import:        self.Bucket('names', None, 1, 0, False, FST('', 'aliases')),
-            # ImportFrom:    self.Bucket('names', None, 1, 0, False, FST('', 'aliases')),
-            # Global:        (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
-            # Nonlocal:      glbucket,
-            # MatchSequence: self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
-            # MatchMapping:  self.Bucket(None, None, 0, 0, False, FST('{}', pattern)),
-            # MatchOr:       self.Bucket('patterns', None, 2, 2, True, FST('(a | b)', pattern)),
+            Import:        self.Bucket('names', None, 1, 0, False, FST('', 'aliases')),
+            ImportFrom:    self.Bucket('names', None, 1, 0, False, FST('', 'aliases')),
+            Global:        (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
+            Nonlocal:      glbucket,
+            MatchSequence: self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
+            MatchMapping:  self.Bucket(None, None, 0, 0, False, FST('{}', pattern)),
+            MatchOr:       self.Bucket('patterns', None, 2, 2, True, FST('(a | b)', pattern)),
         }
 
-        # if PYGE12:
-        #     buckets.update({
-        #         FunctionDef:      self.Bucket('type_params', None, 0, 0, False, type_params_bucket := FST('', 'type_params')),
-        #         AsyncFunctionDef: self.Bucket('type_params', None, 0, 0, False, type_params_bucket),
-        #         ClassDef:         self.Bucket('type_params', None, 0, 0, False, type_params_bucket),
-        #         TypeAlias:        self.Bucket('type_params', None, 0, 0, False, type_params_bucket),
-        #     })
+        if PYGE12:
+            buckets.update({
+                FunctionDef:      self.Bucket('type_params', None, 0, 0, False, type_params_bucket := FST('', 'type_params')),
+                AsyncFunctionDef: self.Bucket('type_params', None, 0, 0, False, type_params_bucket),
+                ClassDef:         self.Bucket('type_params', None, 0, 0, False, type_params_bucket),
+                TypeAlias:        self.Bucket('type_params', None, 0, 0, False, type_params_bucket),
+            })
 
         exprishs = []  # [('cat', FST), ...]
 
@@ -1850,6 +1850,8 @@ class SliceExprish(Fuzzy):
 
                     if self.verify:
                         fst.verify()
+
+                    # input('Waiting...')
 
                 except Exception:
                     print()
