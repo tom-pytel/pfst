@@ -1234,7 +1234,8 @@ def _loc_global_nonlocal_names(self: fst.FST, first: int, last: int | None = Non
     return first_loc, fstloc(ln, col, ln, col + len(src))
 
 
-def _loc_maybe_dict_key(self: fst.FST, idx: int, pars: bool = False, body: list[AST] | None = None) -> fstloc:
+def _loc_maybe_dict_key(self: fst.FST, idx: int, pars: bool = False, body: list[AST] | None = None,
+                        body2: list[AST] | None = None) -> fstloc:
     """Return location of dictionary key even if it is `**` specified by a `None`. Optionally return the location of the
     grouping parentheses if key actually present. Can also be used to get the location (parenthesized or not) from any
     list of `AST`s which is not a `Dict.keys` if an explicit `body` is passed in (assuming none of the are `None`).
@@ -1247,10 +1248,13 @@ def _loc_maybe_dict_key(self: fst.FST, idx: int, pars: bool = False, body: list[
     if key := (body or self.a.keys)[idx]:
         return key.f.pars() if pars else key.f.loc
 
-    val_ln, val_col, _, _ = (values := self.a.values)[idx].f.loc
+    if body2 is None:
+        body2 = self.a.values
+
+    val_ln, val_col, _, _ = body2[idx].f.loc
 
     if idx:
-        _, _, ln, col = values[idx - 1].f.loc
+        _, _, ln, col = body2[idx - 1].f.loc
     else:
         ln, col, _, _ = self.loc
 
@@ -1459,7 +1463,10 @@ def _maybe_del_separator(self: fst.FST, ln: int, col: int, force: bool = False,
     found then nothing is deleted.
 
     **Parameters:**
+    - (`ln`, `col`): Location of start of span.
     - `force`: Whether to always delete a separator if it is present or maybe leave based on aesthetics.
+    - (`end_ln`, `end_col`): Location of end of span, otherwise gotten from end of `self`.
+    - `sep`: Separator to delete, usually comma.
 
     **Returns:**
     - `bool`: Whether a separator was deleted or not

@@ -1,6 +1,7 @@
 >>> from pprint import pp
 >>> from fst import *
->>> from fst.fst_slice import _put_slice_seq
+>>> from fst.misc import astfield
+>>> from fst.fst_slice import _put_slice_seq_begin, _put_slice_seq_end
 
 
 delete
@@ -8,9 +9,13 @@ delete
 >>> def test_delete(fst_, start, stop, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
 ...     self_tail_sep = 1 if self_tail_sep is None and isinstance(fst_.a, Tuple) else self_tail_sep
 ...
-...     _put_slice_seq(fst_, start, stop, None, None, None, 0,
-...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
-...                    trivia, None, field, None, sep, self_tail_sep)
+...     end_params = _put_slice_seq_begin(fst_, start, stop, None, None, None, 0,
+...                                       fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
+...                                       trivia, None, field, None, sep, self_tail_sep)
+...
+...     del getattr(fst_.a, field)[start : stop]
+...
+...     _put_slice_seq_end(fst_, end_params)
 ...
 ...     return fst_
 
@@ -154,12 +159,24 @@ delete
 replace
 
 >>> def test_replace(fst_, start, stop, new, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
+...     body = getattr(fst_.a, field)
 ...     new_body = getattr(new.a, field)
 ...     self_tail_sep = 1 if self_tail_sep is None and isinstance(fst_.a, Tuple) else self_tail_sep
 ...
-...     _put_slice_seq(fst_, start, stop, new, new_body[0].f, new_body[-1].f, len(new_body),
-...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
-...                    trivia, None, field, None, sep, self_tail_sep)
+...     end_params = _put_slice_seq_begin(fst_, start, stop, new, new_body[0].f, new_body[-1].f, len(new_body),
+...                                       fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
+...                                       trivia, None, field, None, sep, self_tail_sep)
+...
+...     fst_._unmake_fst_tree(body[start : stop])
+...     new._unmake_fst_parents(True)
+...
+...     body[start : stop] = new_body
+...
+...     stack = [FST(body[i], fst_, astfield('elts', i)) for i in range(start, start + len(new_body))]
+...
+...     fst_._make_fst_tree(stack)
+...
+...     _put_slice_seq_end(fst_, end_params)
 ...
 ...     return fst_
 
@@ -465,9 +482,13 @@ replace
 ...     new_body = getattr(new.a, field)
 ...     self_tail_sep = 1 if self_tail_sep is None and isinstance(fst_.a, Tuple) else self_tail_sep
 ...
-...     _put_slice_seq(fst_, idx, idx, new, new_body[0].f, new_body[-1].f, len(new_body),
-...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
-...                    trivia, None, field, None, sep, self_tail_sep)
+...     end_params = _put_slice_seq_begin(fst_, idx, idx, new, new_body[0].f, new_body[-1].f, len(new_body),
+...                                       fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
+...                                       trivia, None, field, None, sep, self_tail_sep)
+...
+...     getattr(fst_.a, field)[idx : idx] = new_body
+...
+...     _put_slice_seq_end(fst_, end_params)
 ...
 ...     return fst_
 
@@ -838,9 +859,14 @@ delete (two-element sequence)
 >>> def test_delete2(fst_, start, stop, trivia=None, off=1, field='keys', field2='values', sep=',', self_tail_sep=None):
 ...     self_tail_sep = 1 if self_tail_sep is None and isinstance(fst_.a, Tuple) else self_tail_sep
 ...
-...     _put_slice_seq(fst_, start, stop, None, None, None, 0,
-...                    fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
-...                    trivia, None, field, field2, sep, self_tail_sep)
+...     end_params = _put_slice_seq_begin(fst_, start, stop, None, None, None, 0,
+...                                       fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
+...                                       trivia, None, field, field2, sep, self_tail_sep)
+...
+...     del getattr(fst_.a, field)[start : stop]
+...     del getattr(fst_.a, field2)[start : stop]
+...
+...     _put_slice_seq_end(fst_, end_params)
 ...
 ...     return fst_
 
