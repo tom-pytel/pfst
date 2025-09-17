@@ -55,6 +55,11 @@ class TestFSTMisc(unittest.TestCase):
         self.assertEqual('fstlocns(0, 14, 1, 1, n=0)', str(FST('from . import \\\na')._loc_ImportFrom_names_pars()))
         self.assertEqual('fstlocns(0, 13, 1, 1, n=0)', str(FST('from . import\\\na')._loc_ImportFrom_names_pars()))
 
+        self.assertEqual('fstlocns(0, 22, 0, 23, n=0)', str(FST('from importlib import b')._loc_ImportFrom_names_pars()))
+        self.assertEqual('fstlocns(0, 22, 1, 1, n=0)', str(FST('from importlib import \\\nb')._loc_ImportFrom_names_pars()))
+        self.assertEqual('fstlocns(0, 22, 0, 25, n=1)', str(FST('from importlib import (b)')._loc_ImportFrom_names_pars()))
+        self.assertEqual('fstlocns(0, 22, 2, 1, n=1)', str(FST('from importlib import (\nb\n)')._loc_ImportFrom_names_pars()))
+
         f = FST('from . import a')
         f._put_src(None, 0, 14, 0, 15, True)
         del f.a.names[:]
