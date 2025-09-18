@@ -218,6 +218,36 @@ def minify_src(source_code):
     return ''.join(result)
 
 
+def add_lineconts(fst: FST) -> None:
+    lines = fst._lines
+    g = None
+
+    for f in (gen := fst.walk('all')):
+        if f.is_stmtish or f.is_mod:
+            continue
+
+        if isinstance(a := f.a, (JoinedStr, TemplateStr)) or (isinstance(a, Constant) and isinstance(a.value, (str, bytes))):
+            gen.send(False)
+
+            g = None  # we don't want to accidentally pick a span which includes this
+
+            continue
+
+        if g is not None and f.parent is g.parent and (ln := g.end_ln) == f.ln:
+            # print('...', g, f)
+            col = randint(g.end_col, f.col)
+
+            if lines[ln][col].isspace():
+                fst._put_src('\\\n', ln, col, ln, col, False)
+
+                # if not fst.verify(raise_=False):
+                #     print('   ', col)
+                #     print(f.parent.lines)
+                #     raise RuntimeError
+
+        g = f
+
+
 def find_pys(path) -> list[str]:
     if os.path.isfile(path):
         return [path] if path.endswith('.py') else []
@@ -672,6 +702,8 @@ class Fuzzy:
         self.batch = args.get('batch')
         self.debug = args.get('debug')
         self.loop = args.get('loop')
+        self.linecont = args.get('linecont')
+        self.linecont_rnd = args.get('linecont_rnd')
         self.minify = args.get('minify')
         self.minify_rnd = args.get('minify_rnd')
         self.seed = args.get('seed')
@@ -710,6 +742,9 @@ class Fuzzy:
                     src = minify_src(src)
 
                 fst = FST.fromsrc(src)
+
+                if self.args['linecont'] or (self.args['linecont_rnd'] and randint(0, 1)):
+                    add_lineconts(fst)
 
             except (NodeError, SyntaxError, UnicodeDecodeError) as exc:
                 print(f'{head} - read/parse fail: **{exc.__class__.__name__}**')
@@ -1894,6 +1929,10 @@ def main():
                         help='debug mode, print info, do more debug stuff')
     parser.add_argument('-l', '--loop', type=int, default=None,
                         help='number of times to loop, default forever')
+    parser.add_argument('-c', '--linecont', default=False, action='store_true',
+                        help='add line continuations to source')
+    parser.add_argument('-C', '--linecont-rnd', default=False, action='store_true',
+                        help='randomly add line continuations to source')
     parser.add_argument('-m', '--minify', default=False, action='store_true',
                         help='minify all source')
     parser.add_argument('-M', '--minify-rnd', default=False, action='store_true',
@@ -1914,7 +1953,8 @@ def main():
     print(f'{args = }')
 
     fuzz = dict.fromkeys(sum((f.replace(',', ' ').split() for f in args.fuzz), start=[])
-                         if args.fuzz or args.fuzz_rnd or args.fuzz_det else FUZZIES)
+                         if args.fuzz or args.fuzz_rnd or args.fuzz_det else
+                         FUZZIES)
 
     if args.fuzz_rnd:
         for n, f in FUZZIES.items():

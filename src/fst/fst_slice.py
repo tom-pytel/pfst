@@ -7,7 +7,6 @@ This module contains functions which are imported as methods in the `FST` class.
 from __future__ import annotations
 
 import re
-from types import TracebackType
 from typing import Any, Callable, Literal, Mapping, NamedTuple, Union
 
 from . import fst
