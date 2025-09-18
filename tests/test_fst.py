@@ -235,7 +235,9 @@ PARSE_TESTS = [
 
     ('expr_arglike',      px.parse_expr_arglike,      Name,                     'j'),
     ('expr_arglike',      px.parse_expr_arglike,      Starred,                  '*s'),
+    ('expr_arglike',      px.parse_expr_arglike,      Tuple,                    '*s,'),
     ('expr_arglike',      px.parse_expr_arglike,      Starred,                  '*not a'),
+    ('expr_arglike',      px.parse_expr_arglike,      SyntaxError,              '*not a,'),
     ('expr_arglike',      px.parse_expr_arglike,      Tuple,                    'j, k'),
     ('expr_arglike',      px.parse_expr_arglike,      ParseError,               'i=1'),
     ('expr_arglike',      px.parse_expr_arglike,      SyntaxError,              'a:b'),

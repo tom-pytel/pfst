@@ -923,19 +923,23 @@ def parse_expr_arglike(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     try:
         return parse_expr(src, parse_params)
-    except SyntaxError:  # stuff like '*[] or []'
+    except SyntaxError:  # stuff like '*not a'
         pass
 
-    value = _ast_parse1(f'f(\n{src}\n)', parse_params).value
+    try:
+        value = _ast_parse1(f'f(\n{src}\n,)', parse_params).value
+    except SyntaxError:
+        raise SyntaxError('invalid argument-like expression') from None
+
     args = value.args
 
     if len(args) != 1 or value.keywords:
-        raise ParseError('expecting single call argument expression')
+        raise ParseError('expecting single argumnent-like expression')
 
     ast = args[0]
 
     if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
-        raise ParseError('expecting call argument expression, got unparenthesized GeneratorExp')
+        raise ParseError('expecting argumnent-like expression, got unparenthesized GeneratorExp')
 
     return _offset_linenos(ast, -1)
 
