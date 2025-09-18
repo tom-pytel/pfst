@@ -528,6 +528,18 @@ def _maybe_set_end_pos(self: fst.FST, end_lineno: int, end_col_offset: int,
         self = parent
 
 
+def _maybe_fix_Assign_target0(self: fst.FST) -> None:
+    """If `Assign` has `target`s and first target does not start at same location as `self` then delete everything in
+    between so that it starts at `self`."""
+
+    if targets := self.a.targets:
+        t0_ln, t0_col, _, _ = targets[0].f.pars()
+        self_ln, self_col, _, _ = self.loc
+
+        if t0_col != self_col or t0_ln != self_ln:
+            self._put_src(None, self_ln, self_col, t0_ln, t0_col, False)
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 # get
 
@@ -911,6 +923,7 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
                           options.get('trivia'), 'targets', '', '', '=', True, True)
 
     if cut:
+        _maybe_fix_Assign_target0(self)
         self._maybe_add_line_continuations()
 
     return fst_
@@ -2444,8 +2457,8 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
         if len_slice == len_body and self.get_option('fix_assign_self', options):
             raise ValueError("cannot cut all Assign.targets without fix_assign_self=False")
 
-    elif (a0 := (fst_body := fst_.a.targets)[0]).col_offset:  # if first element of slice doesn't start at column 0 then dedent it
-        fst_._put_src(None, ln := (f := a0.f).ln, 0, ln, f.col, False)
+    # elif (a0 := (fst_body := fst_.a.targets)[0]).col_offset:  # if first element of slice doesn't start at column 0 then dedent it
+    #     fst_._put_src(None, ln := (f := a0.f).ln, 0, ln, f.col, False)
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bound_Assign_targets(self, start)
 
@@ -2461,7 +2474,7 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
         len_fst_body = 0
 
     else:
-        len_fst_body = len(fst_body)
+        len_fst_body = len(fst_body := fst_.a.targets)
 
         end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
@@ -2482,6 +2495,7 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
 
     _put_slice_seq_end(self, end_params)
 
+    _maybe_fix_Assign_target0(self)
     self._maybe_add_line_continuations()
 
 

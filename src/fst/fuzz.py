@@ -237,7 +237,7 @@ def add_lineconts(fst: FST) -> None:
             # print('...', g, f)
             col = randint(g.end_col, f.col)
 
-            if lines[ln][col].isspace():
+            if (l := lines[ln])[col].isspace() or (col and l[col - 1].isspace()):
                 fst._put_src('\\\n', ln, col, ln, col, False)
 
                 # if not fst.verify(raise_=False):

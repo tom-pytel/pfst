@@ -1541,6 +1541,28 @@ c  # comment
         self.assertEqual(f.src, src)
         f.verify()
 
+        # Assign target 0 must always start at same position as Assign
+
+        (f := FST('a = \\\n  \\\n b = z')).get_slice(0, 1, 'targets', cut=True)
+        self.assertEqual('b = z', f.src)
+        f.verify()
+
+        self.assertEqual('b = z', (f := FST('a = \\\n  \\\n b = z')).put_slice(None, 0, 1, 'targets').src)
+        f.verify()
+
+        self.assertEqual('c = b = z', (f := FST('a = b = z')).put_slice('\\\n  \\\n c =', 0, 1, 'targets').src)
+        f.verify()
+
+        (f := FST('a = \\\n  \\\n (b) = z')).get_slice(0, 1, 'targets', cut=True)
+        self.assertEqual('(b) = z', f.src)
+        f.verify()
+
+        self.assertEqual('(b) = z', (f := FST('a = \\\n  \\\n (b) = z')).put_slice(None, 0, 1, 'targets').src)
+        f.verify()
+
+        self.assertEqual('(c) = b = z', (f := FST('a = b = z')).put_slice('\\\n  \\\n (c) =', 0, 1, 'targets').src)
+        f.verify()
+
     def test_get_slice_special(self):
         f = FST('''(
             TI(string="case"),
