@@ -103,10 +103,10 @@ class _Modifying:
         """Call before modifying `FST` node (even just source) to mark possible data for updates after modification.
         This function just collects information when it enters so is safe to call without ever explicitly exiting.
         Though it should be called on a successful modification because it increments the modification cound
-        `_serial`. Can be used as a context manager or can just call `.enter()` and `.done()` manually.
+        `_serial`. Can be used as a context manager or can just call `.enter()` and `.success()` manually.
 
         It is assumed that neither the `fst_` node passed in or its parents will not be changed, otherwise this must
-        be used manually and not as a context manager and the changed node must be passed into the `.done()` method
+        be used manually and not as a context manager and the changed node must be passed into the `.success()` method
         on success. In this case currently no parents are updated as it is assumed the changes are due to raw
         reparse which goes up to the statement level and would thus include any modifications this class would make.
 
@@ -169,14 +169,14 @@ class _Modifying:
     def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None,
                  exc_tb: TracebackType | None) -> bool:
         if exc_type is None:
-            self.done()
+            self.success()
 
         return False
 
     def enter(self) -> Self:
         return self
 
-    def done(self, fst_: fst.FST | None | Literal[False] = False) -> None:
+    def success(self, fst_: fst.FST | None | Literal[False] = False) -> None:
         """Call after modifying `FST` node to apply any needed changes to parents.
 
         **Parameters:**
@@ -245,14 +245,14 @@ class _Modifying:
     def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None,
                  exc_tb: TracebackType | None) -> bool:
         if exc_type is None:
-            self.done()
+            self.success()
 
         return False
 
     def enter(self) -> Self:
         return self
 
-    def done(self, fst_: fst.FST | None | Literal[False] = False) -> None:
+    def success(self, fst_: fst.FST | None | Literal[False] = False) -> None:
         self.root._serial += 1
 
 
@@ -1043,6 +1043,8 @@ def _loc_With_items_pars(self: fst.FST) -> fstlocns:
 
 
 def _loc_call_pars(self: fst.FST) -> fstloc:
+    """Location is from just before opening par to just past closing par."""
+
     # assert isinstance(self.s, Call)
 
     ast = self.a
@@ -2333,9 +2335,9 @@ def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal[
 
 def _modifying(self: fst.FST, field: str | Literal[False] = False, raw: bool = False) -> _Modifying:
     """Call before modifying `FST` node (even just source) to mark possible data for updates after modification. This
-    function just collects information so is safe to call without ever calling `.done()` method of the return value in
-    case of failure, though it should be called on success. In fact, this method is not called if the return is used as
-    a context manager and is exited with an exception.
+    function just collects information so is safe to call without ever calling `.success()` method of the return value
+    in case of failure, though it should be called on success. In fact, this method is not called if the return is used
+    as a context manager and is exited with an exception.
 
     **Parameters:**
     - `self`: Parent of or actual node being modified, depending on value of `field` (because actual child may be being
@@ -2345,8 +2347,8 @@ def _modifying(self: fst.FST, field: str | Literal[False] = False, raw: bool = F
     - `raw`: Whether this is going to be a raw modification or not.
 
     **Returns:**
-    - `_Modifying`: Can be used as a context manager or `.enter()`ed manually, in which case `.done()` should be called
-        on success, and nothing if no modification was performed.
+    - `_Modifying`: Can be used as a context manager or `.enter()`ed manually, in which case `.success()` should be
+        called on success, and nothing if no modification was performed.
     """
 
     return _Modifying(self, field, raw)

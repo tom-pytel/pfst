@@ -82,7 +82,7 @@ def _get_slice_stmtish(self: fst.FST, start: int | Literal['end'] | None, stop: 
         a.f._maybe_fix_elif()
 
     if modifying:
-        modifying.done()
+        modifying.success()
 
     return fst_
 

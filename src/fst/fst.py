@@ -2312,7 +2312,7 @@ class FST:
                 self._undelimit_node('patterns')
 
         if modifying:
-            modifying.done()
+            modifying.success()
 
         return self  # ret
 

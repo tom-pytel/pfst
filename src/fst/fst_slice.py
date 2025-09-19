@@ -87,7 +87,7 @@ from .parsex import unparse
 
 from .code import (
     Code,
-    code_as_expr, code_as_expr_all, code_as_Assign_targets,
+    code_as_expr, code_as_expr_all, code_as_expr_arglike, code_as_Tuple, code_as_Assign_targets,
     code_as_alias, code_as_aliases,
     code_as_Import_name, code_as_Import_names,
     code_as_ImportFrom_name, code_as_ImportFrom_names,
@@ -136,8 +136,8 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 #     S ,             (MatchClass, 'patterns'):               # pattern*         -> MatchSequence              _parse_pattern / restrict MatchSequence  - allow empty pattern?
 #                                                                                .
 #                                                                                .
-#     S ,             (ClassDef, 'bases'):                    # expr*            -> Tuple[expr_arglike]        _parse_expr_arglikes
-#     S ,             (Call, 'args'):                         # expr*            -> Tuple[expr_arglike]        _parse_expr_arglikes
+#     S ,             (ClassDef, 'bases'):                    # expr*            -> Tuple[expr_arglike]        _parse_expr_arglikes  - keywords and Starred bases can mix
+#     S ,             (Call, 'args'):                         # expr*            -> Tuple[expr_arglike]        _parse_expr_arglikes  - keywords and Starred args can mix
 #
 # *   S ,             (Delete, 'targets'):                    # expr*            -> Tuple[target]              _parse_expr / restrict del_targets
 # * ! N =             (Assign, 'targets'):                    # expr*            -> _slice_Assign_targets      _parse_Assign_targets
@@ -147,8 +147,8 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 # *   S ,             (Nonlocal, 'names'):                    # identifier*,     -> Tuple[Name]                _parse_expr / restrict Names   - no trailing commas, unparenthesized
 #                                                                                .
 #                                                                                .
-#   ! S ,             (ClassDef, 'keywords'):                 # keyword*         -> _slice_keywords            _parse_keywords
-#   ! S ,             (Call, 'keywords'):                     # keyword*         -> _slice_keywords            _parse_keywords
+#   ! S ,             (ClassDef, 'keywords'):                 # keyword*         -> _slice_keywords            _parse_keywords  - keywords and Starred bases can mix
+#   ! S ,             (Call, 'keywords'):                     # keyword*         -> _slice_keywords            _parse_keywords  - keywords and Starred args can mix
 #                                                                                .
 # * ! S ,             (FunctionDef, 'type_params'):           # type_param*      -> _slice_type_params         _parse_type_params
 # * ! S ,             (AsyncFunctionDef, 'type_params'):      # type_param*      -> _slice_type_params         _parse_type_params
@@ -572,7 +572,9 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
     - `loc_last`: The full location of the last element copied or cut, parentheses included.
     - (`bound_ln`, `bound_col`): End of previous element (past pars) or start of container (just past
         delimiters) if no previous element. DIFFERENT FROM _put_slice_seq_begin()!!!
-    - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters).
+    - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters). This can be past last element of
+        sequence if there are other things which follow and look like part of the sequence (like a `rest` in a
+        `MatchMapping`).
     - `trivia`: Standard option on how to handle leading and trailing comments and space, `None` means global default.
     - `field`: Which field of is being gotten from. In the case of two-field sequences like `Dict` this should be the
         last field syntactically, `value` in the case of `Dict` and should always have valid entries and not `None`.
@@ -1128,6 +1130,53 @@ def _get_slice_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] 
     return fst_
 
 
+def _get_slice_Call_args(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
+                         options: Mapping[str, Any]) -> fst.FST:
+    """A `Call.args` slice is just a normal `Tuple`, with possibly expr_arglike elements which are invalid in a normal
+    expression tuple."""
+
+    len_body = len(body := (ast := self.a).args)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
+
+    if start == stop:
+        return fst.FST._new_empty_tuple(from_=self)
+
+    if keywords := ast.keywords:
+        if (kw0_pos := keywords[0].f.loc[:2]) < body[stop - 1].f.loc[2:]:
+            raise NodeError('cannot get this Call.args slice because it includes parts after a keyword')
+
+        self_tail_sep = True if body[-1].f.loc[2:] < kw0_pos else None
+
+    else:
+        self_tail_sep = None
+
+        if body and (f0 := body[0].f).is_solo_call_arg_genexp() and f0.pars(shared=False).n == -1:  # single call argument GeneratorExp shares parentheses with Call?
+            f0._parenthesize_grouping()
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_call_pars()
+    bound_end_col -= 1
+
+    if start:
+        _, _, bound_ln, bound_col = body[start - 1].f.pars()
+    else:
+        bound_col += 1
+
+    loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
+
+    asts = _cut_or_copy_asts(start, stop, 'args', cut, body)
+    ret_ast = Tuple(elts=asts, ctx=Load())
+
+    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
+                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
+                          options.get('trivia'), 'args', '(', ')', ',', self_tail_sep, len_slice == 1)
+
+    if cut and start and keywords and stop == len_body:  # HACK if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
+        self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+
+    return fst_
+
+
 def _get_slice_MatchSequence_patterns(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                                       cut: bool, options: Mapping[str, Any]) -> fst.FST:
     """A `MatchSequence` slice is just a normal `MatchSequence`. It attempts to copy the parenthesization of the
@@ -1175,36 +1224,16 @@ def _get_slice_MatchMapping(self: fst.FST, start: int | Literal['end'] | None, s
         return fst.FST._new_empty_matchmap(from_=self)
 
     locs = _locs_and_bound_get(self, start, stop, body, body2, 1)
+    self_tail_sep = True if (rest := ast.rest) else 0
+
     asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'patterns', cut, body, body2)
     ret_ast = MatchMapping(keys=asts, patterns=asts2, rest=None)
 
-    # locs = _locs_and_bound_get(self, start, stop, body, body2, 1)
-    # asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'patterns', cut, body, body2)
-    # ret_ast = MatchMapping(keys=asts, patterns=asts2, rest=None)
-    # have_rest = ast.rest is not None
-    # self_tail_sep = (have_rest and cut) or None
-    # ret_tail_sep = False if have_rest and stop == len_body else None
+    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts2[-1], *locs,
+                          options.get('trivia'), 'patterns', '{', '}', ',', self_tail_sep, False)
 
-    # fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts2[-1], *locs,
-    #                       options.get('trivia'), 'patterns', '{', '}', ',', self_tail_sep, ret_tail_sep)
-
-    # if self_tail_sep and start and stop == len_body:  # if there is a **rest and we removed tail element so here we make sure there is a space between comma of the new last element and the **rest
-    #     self._maybe_ins_separator(*body2[-1].f.loc[2:], True)  # this will only maybe add a space, comma is already there
-
-    # return fst_
-
-    if ast.rest is None or stop < len_body:
-        fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts2[-1], *locs,
-                              options.get('trivia'), 'patterns', '{', '}', ',', None, None)
-
-    else:  # HACK to get trailing comma behavior same as if it was a longer list (because the **rest looks like its part of the list but is not)
-        cut_and_start = cut and start
-
-        fst_ = _get_slice_seq(self, start, stop, len_body + 1, cut, ret_ast, asts2[-1], *locs,
-                              options.get('trivia'), 'patterns', '{', '}', ',', True if cut_and_start else None, None)
-
-        if cut_and_start and stop == len_body:  # if there is a **rest and we removed tail element so here we make sure there is a space between comma of the new last element and the **rest
-            self._maybe_ins_separator(*body2[-1].f.loc[2:], True)  # this will only maybe add a space, comma is already there
+    if cut and start and rest and stop == len_body:  # HACK if there is a rest element and we removed tail element we make sure there is a space between comma of the new last element and the rest
+        self._maybe_ins_separator(*(f := body2[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
 
     return fst_
 
@@ -1327,7 +1356,15 @@ def _get_slice(self: fst.FST, start: int | Literal['end'] | None, stop: int | No
     if not (handler := _GET_SLICE_HANDLERS.get((self.a.__class__, field))):
         raise ValueError(f"cannot get slice from {self.a.__class__.__name__}{f'.{field}' if field else ''}")
 
-    return handler(self, start, stop, field, cut, options)
+    if cut:
+        modifying = self._modifying(field).enter()
+
+    ret = handler(self, start, stop, field, cut, options)
+
+    if cut:
+        modifying.success()
+
+    return ret
 
 
 _GET_SLICE_HANDLERS = {
@@ -1373,7 +1410,7 @@ _GET_SLICE_HANDLERS = {
     (Assign, 'targets'):                      _get_slice_Assign_targets,  # expr*
     (BoolOp, 'values'):                       _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (Compare, ''):                            _get_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (Call, 'args'):                           _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Call, 'args'):                           _get_slice_Call_args,  # expr*
     (comprehension, 'ifs'):                   _get_slice_NOT_IMPLEMENTED_YET,  # expr*
 
     (ListComp, 'generators'):                 _get_slice_NOT_IMPLEMENTED_YET,  # comprehension*
@@ -1881,9 +1918,8 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: Map
             if not fst_.pars().n:
                 fst_._parenthesize_grouping()
 
-        ls = fst_._lines
-        ast_ = Tuple(elts=[fst_.a], ctx=Load(),  # fst_.a may have changed
-                     lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)  # Tuple because it is valid target if checked in validate and allows is_enclosed_or_line() check without delimiters to check content
+        ast_ = Tuple(elts=[fst_.a], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),  # fst_.a because may have changed in Set processing
+                     end_col_offset=ls[-1].lenbytes)  # Tuple because it is valid target if checked in validate and allows is_enclosed_or_line() check without delimiters to check content
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
@@ -1946,9 +1982,10 @@ def _code_to_slice_Assign_targets(self: fst.FST, code: Code | None, one: bool, o
 
         set_ctx(ast_, Store)
 
-        return fst.FST(_slice_Assign_targets(targets=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                                             end_col_offset=ls[-1].lenbytes),
-                       ls, from_=fst_, lcopy=False)
+        ast_ = _slice_Assign_targets(targets=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                                     end_col_offset=ls[-1].lenbytes)
+
+        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
     else:
         fst_ = code_as_Assign_targets(code, self.root.parse_params, sanitize=False)
@@ -1967,10 +2004,10 @@ def _code_to_slice_aliases(self: fst.FST, code: Code | None, one: bool, options:
 
     if one:
         fst_ = code_as_one(code, self.root.parse_params, sanitize=False)
+        ast_ = _slice_aliases(names=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                              end_col_offset=ls[-1].lenbytes)
 
-        return fst.FST(_slice_aliases(names=[fst_.a], lineno=(el := len(ls := fst_._lines)),
-                                      col_offset=(ec := ls[-1].lenbytes), end_lineno=el, end_col_offset=ec),
-                       ls, from_=fst_, lcopy=False)
+        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
     fst_ = code_as_slice(code, self.root.parse_params, sanitize=False)
 
@@ -1987,15 +2024,43 @@ def _code_to_slice_withitems(self: fst.FST, code: Code | None, one: bool, option
 
     if one:
         fst_ = code_as_withitem(code, self.root.parse_params, sanitize=False)
+        ast_ = _slice_withitems(names=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                                end_col_offset=ls[-1].lenbytes)
 
-        return fst.FST(_slice_withitems(names=[fst_.a], lineno=(el := len(ls := fst_._lines)),
-                                        col_offset=(ec := ls[-1].lenbytes), end_lineno=el, end_col_offset=ec),
-                       ls, from_=fst_, lcopy=False)
+        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
     fst_ = code_as_withitems(code, self.root.parse_params, sanitize=False)
 
     if not fst_.a.items:  # put empty sequence is same as delete
         return None
+
+    return fst_
+
+
+def _code_to_slice_arglikes(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]) -> fst.FST | None:
+    if code is None:
+        return None
+
+    if one:
+        fst_ = code_as_expr_arglike(code, self.root.parse_params, sanitize=False)
+
+        if fst_.is_parenthesized_tuple() is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
+            fst_._delimit_node()
+
+        ast_ = Tuple(elts=[fst_.a], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                     end_col_offset=ls[-1].lenbytes)
+
+        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+
+    fst_ = code_as_Tuple(code, self.root.parse_params, sanitize=False)
+
+    if not fst_.a.elts:  # put empty sequence is same as delete
+        return None
+
+    if fst_.is_parenthesized_tuple() is not False:  # parenthesize tuple is restricted to the inside of the delimiters, which are removed
+        _trim_delimiters(fst_)
+    else:  # if unparenthesized tuple then use whole source, including leading and trailing trivia not included
+        _set_loc_whole(fst_)
 
     return fst_
 
@@ -2011,11 +2076,10 @@ def _code_to_slice_MatchSequence(self: fst.FST, code: Code | None, one: bool, op
         if fst_.is_delimited_matchseq() == '':
             fst_._delimit_node(delims='[]')
 
-        ls = fst_._lines
-        ast = MatchSequence(patterns=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls),
-                            end_col_offset=ls[-1].lenbytes)
+        ast_ = MatchSequence(patterns=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                             end_col_offset=ls[-1].lenbytes)
 
-        return fst.FST(ast, ls, from_=fst_, lcopy=False)
+        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
     ast_ = fst_.a
 
@@ -2082,8 +2146,8 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
             if not fst_.is_delimited_matchseq():
                 fst_._delimit_node(delims='[]')
 
-    ls = fst_._lines
-    ast_ = MatchOr(patterns=[ast_], lineno=1, col_offset=0, end_lineno=len(ls), end_col_offset=ls[-1].lenbytes)
+    ast_ = MatchOr(patterns=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                   end_col_offset=ls[-1].lenbytes)
 
     return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
@@ -2094,10 +2158,10 @@ def _code_to_slice_type_params(self: fst.FST, code: Code | None, one: bool, opti
 
     if one:
         fst_ = code_as_type_param(code, self.root.parse_params, sanitize=False)
+        ast_ = _slice_type_params(type_params=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                                  end_col_offset=ls[-1].lenbytes)
 
-        return fst.FST(_slice_type_params(type_params=[fst_.a], lineno=1, col_offset=0,
-                                          end_lineno=len(ls := fst_._lines), end_col_offset=ls[-1].lenbytes),
-                       ls, from_=fst_, lcopy=False)
+        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
     fst_ = code_as_type_params(code, self.root.parse_params, sanitize=False)
 
@@ -2835,6 +2899,71 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
     self._maybe_add_line_continuations()  # THEORETICALLY could need to _maybe_fix_joined_alnum() but only if the user goes out of their way to F S up, so we don't bother with this
 
 
+def _put_slice_Call_args(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+                         field: str, one: bool, options: Mapping[str, Any]) -> None:
+    fst_ = _code_to_slice_arglikes(self, code, one, options)
+    len_body = len(body := (ast := self.a).args)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+
+    if not fst_ and start == stop:
+        return
+
+    _validate_put_seq(self, fst_, 'Call.args')
+
+    if keywords := ast.keywords:
+        if body and keywords[0].f.loc[:2] < body[stop - 1].f.loc[2:] and stop:
+            raise NodeError('cannot get this Call.args slice because it includes parts after a keyword')
+
+    else:
+        if body and (f0 := body[0].f).is_solo_call_arg_genexp() and f0.pars(shared=False).n == -1:  # single call argument GeneratorExp shares parentheses with Call?
+            f0._parenthesize_grouping()
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_call_pars()
+    bound_col += 1
+    bound_end_col -= 1
+
+    if not fst_:
+        self_tail_sep = (start and keywords and stop == len_body) or None
+
+        end_params = _put_slice_seq_begin(self, start, stop, None, None, None, 0,
+                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                          options.get('trivia'), options.get('ins_ln'), 'args', None, ',',
+                                          self_tail_sep)
+
+        self._unmake_fst_tree(body[start : stop])
+
+        del body[start : stop]
+
+        len_fst_body = 0
+
+    else:
+        self_tail_sep = (keywords and stop == len_body) or None
+        len_fst_body = len(fst_body := fst_.a.elts)
+
+        end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
+                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                          options.get('trivia'), options.get('ins_ln'), 'args', None, ',',
+                                          self_tail_sep)
+
+        self._unmake_fst_tree(body[start : stop])
+        fst_._unmake_fst_parents(True)
+
+        body[start : stop] = fst_body
+
+        FST = fst.FST
+        stack = [FST(body[i], self, astfield('args', i)) for i in range(start, start + len_fst_body)]
+
+        self._make_fst_tree(stack)
+
+    for i in range(start + len_fst_body, len(body)):
+        body[i].f.pfield = astfield('args', i)
+
+    _put_slice_seq_end(self, end_params)
+
+    if self_tail_sep:  # HACK if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
+        self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+
+
 def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
                                       stop: int | None, field: str, one: bool, options: Mapping[str, Any]) -> None:
     # NOTE: we allow multiple MatchStars to be put to the same MatchSequence
@@ -2903,12 +3032,12 @@ def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Liter
     bound_end_col -= 1
 
     if not fst_:
-        tail_space = (start and stop == len_body and ast.rest is not None) or None
+        self_tail_sep = (start and ast.rest and stop == len_body) or None
 
         end_params = _put_slice_seq_begin(self, start, stop, None, None, None, 0,
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                          options.get('trivia'), options.get('ins_ln'), 'keys', 'patterns',
-                                          self_tail_sep=tail_space)
+                                          options.get('trivia'), options.get('ins_ln'), 'keys', 'patterns', ',',
+                                          self_tail_sep)
 
         self._unmake_fst_tree(body[start : stop] + body2[start : stop])
 
@@ -2922,12 +3051,12 @@ def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Liter
         fst_body = ast_.keys
         fst_body2 = ast_.patterns
         len_fst_body = len(fst_body)
-        tail_space = False
+        self_tail_sep = (ast.rest and stop == len_body) or None
 
         end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body2[-1].f, len_fst_body,
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                          options.get('trivia'), options.get('ins_ln'), 'keys', 'patterns',
-                                          self_tail_sep=ast.rest is not None)
+                                          options.get('trivia'), options.get('ins_ln'), 'keys', 'patterns', ',',
+                                          self_tail_sep)
 
         self._unmake_fst_tree(body[start : stop] + body2[start : stop])
         fst_._unmake_fst_parents(True)
@@ -2951,7 +3080,7 @@ def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Liter
 
     _put_slice_seq_end(self, end_params)
 
-    if tail_space:  # if there is a **rest and we removed tail element so here we make sure there is a space between comma of the new last element and the **rest
+    if self_tail_sep:  # if there is a **rest and we removed tail element so here we make sure there is a space between comma of the new last element and the **rest
         self._maybe_ins_separator(*body2[-1].f.loc[2:], True)  # this will only maybe add a space, comma is already there
 
 
@@ -3210,7 +3339,7 @@ _PUT_SLICE_HANDLERS = {
     (Assign, 'targets'):                      _put_slice_Assign_targets,  # expr*
     (BoolOp, 'values'):                       _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (Compare, ''):                            _put_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (Call, 'args'):                           _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Call, 'args'):                           _put_slice_Call_args,  # expr*
     (comprehension, 'ifs'):                   _put_slice_NOT_IMPLEMENTED_YET,  # expr*
 
     (ListComp, 'generators'):                 _put_slice_NOT_IMPLEMENTED_YET,  # comprehension*

@@ -1218,7 +1218,10 @@ r'''Name 'call' Load - ROOT 0,0..0,4'''),
 
 (128, '', 0, False, 'args', {}, (Call,
 r'''call(arg)'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
+r'''call()''', r'''
+Call - ROOT 0,0..0,6
+  .func Name 'call' Load - 0,0..0,4
+''',
 r'''arg''',
 r'''Name 'arg' Load - ROOT 0,0..0,3'''),
 

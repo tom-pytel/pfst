@@ -7708,7 +7708,15 @@ r'''**IndexError('index out of range')**'''),
 (496, 'body[0].value', 0, False, None, {}, ('exec',
 r'''call(a, (b))'''), (None,
 r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''call((b))''', r'''
+Module - ROOT 0,0..0,9
+  .body[1]
+  0] Expr - 0,0..0,9
+    .value Call - 0,0..0,9
+      .func Name 'call' Load - 0,0..0,4
+      .args[1]
+      0] Name 'b' Load - 0,6..0,7
+'''),
 
 (497, 'body[0].value', 0, False, None, {}, ('exec',
 r'''call(a, (b))'''), (None,

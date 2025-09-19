@@ -2,14 +2,16 @@
 
 ### Fixed
 
+- use Modifying context manager on `get_slice(..., cut=True)`
 - recognize multiline parenthesized `ImportFrom.names` as enclosed
 - get one from field which can contain a value but is currently `None`
-- raw reparse `TryStar` erroneously to `Try`
-- `par(force=True)` on delimited `Tuple` or `MatchSequence`
+- fix raw reparse `TryStar` erroneously to `Try`
+- fix `par(force=True)` on delimited `Tuple` or `MatchSequence`
 - disallow put `Starred` to `Delete` `Tuple` or `List` elements
 
 ### Added
 
+- prescribed slicing for `Call.args`
 - prescribed slicing for `With.items`
 - prescribed slicing for `AsyncWith.items`
 - prescribed slicing for `Import.names`

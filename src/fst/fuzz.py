@@ -1805,6 +1805,13 @@ class SliceExprish(Fuzzy):
                             With, AsyncWith,
                             )):
             return ast.__class__
+
+        if (isinstance(ast, Call) and
+            (ast.keywords or len(ast.args) != 1 or not isinstance(ast.args[0], GeneratorExp)) and  # safe `GeneratorExp`, two possible slices - `args` and `keywords`?
+            not ast.keywords
+        ):
+            return 'Call_args'
+
         if isinstance(ast, ImportFrom):
             return ImportFrom if ast.module != '__future__' and ast.names[0].name != '*' else None
 
@@ -1824,6 +1831,7 @@ class SliceExprish(Fuzzy):
             ImportFrom:    self.Bucket('names', None, 1, 0, False, FST('', 'aliases')),
             Global:        (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
             Nonlocal:      glbucket,
+            'Call_args':   self.Bucket('args', 'elts', 0, 0, False, FST('call()')),  # TODO: one=True, validate in put_slice_Call_args
             MatchSequence: self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
             MatchMapping:  self.Bucket(None, None, 0, 0, False, FST('{}', pattern)),
             MatchOr:       self.Bucket('patterns', None, 2, 2, True, FST('(a | b)', pattern)),
@@ -1890,6 +1898,9 @@ class SliceExprish(Fuzzy):
 
                 except Exception:
                     print()
+
+                    if self.verbose:
+                        print(fst.src)
 
                     raise
 

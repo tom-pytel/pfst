@@ -5420,8 +5420,7 @@ if 1:
         self.assertEqual('<<Compare ROOT 0,0..0,11>.comparators[0:2] [<Name 0,6..0,7>, <Name 0,10..0,11>]>', str(f.comparators))
 
         f = FST('call(arg, kw=blah)')
-        self.assertEqual('call(a, b, kw=blah)', test(f, 'args', 'a, b', fstview,
-                                                     '<<Call ROOT 0,0..0,18>.args[0:1] [<Name 0,5..0,8>]>').src)
+        self.assertEqual('call(a, b, kw=blah)', test(f, 'args', 'a, b', fstview, '(arg,)').src)
         self.assertEqual('call(a, b, kw1=bloh, kws=hmm)', test(f, 'keywords', 'kw1=bloh, kws=hmm', fstview,
                                                                '<<Call ROOT 0,0..0,19>.keywords[0:1] [<keyword 0,11..0,18>]>').src)
 

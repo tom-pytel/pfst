@@ -9219,6 +9219,543 @@ Tuple - ROOT 0,0..0,2
 '''),
 ],
 
+'Call_args': [  # ................................................................................
+
+(0, '', 0, 0, None, {}, (None,
+r'''call(a, *b)'''),
+r'''call(a, *b)''', r'''
+Call - ROOT 0,0..0,11
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+  0] Name 'a' Load - 0,5..0,6
+  1] Starred - 0,8..0,10
+    .value Name 'b' Load - 0,9..0,10
+    .ctx Load
+''',
+r'''()''', r'''
+Tuple - ROOT 0,0..0,2
+  .ctx Load
+'''),
+
+(1, '', None, None, None, {}, (None,
+r'''call(a, *b)'''),
+r'''call()''', r'''
+Call - ROOT 0,0..0,6
+  .func Name 'call' Load - 0,0..0,4
+''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[2]
+  0] Name 'a' Load - 0,1..0,2
+  1] Starred - 0,4..0,6
+    .value Name 'b' Load - 0,5..0,6
+    .ctx Load
+  .ctx Load
+'''),
+
+(2, '', 0, 1, None, {}, (None,
+r'''call(a, *b)'''),
+r'''call(*b)''', r'''
+Call - ROOT 0,0..0,8
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+  0] Starred - 0,5..0,7
+    .value Name 'b' Load - 0,6..0,7
+    .ctx Load
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(3, '', 1, 2, None, {}, (None,
+r'''call(a, *b)'''),
+r'''call(a)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+  0] Name 'a' Load - 0,5..0,6
+''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[1]
+  0] Starred - 0,1..0,3
+    .value Name 'b' Load - 0,2..0,3
+    .ctx Load
+  .ctx Load
+'''),
+
+(4, '', None, None, None, {}, (None,
+r'''call(a, *b, c=d)'''),
+r'''call(c=d)''', r'''
+Call - ROOT 0,0..0,9
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[1]
+  0] keyword - 0,5..0,8
+    .arg 'c'
+    .value Name 'd' Load - 0,7..0,8
+''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[2]
+  0] Name 'a' Load - 0,1..0,2
+  1] Starred - 0,4..0,6
+    .value Name 'b' Load - 0,5..0,6
+    .ctx Load
+  .ctx Load
+'''),
+
+(5, '', 0, 1, None, {}, (None,
+r'''call(a, *b, c=d)'''),
+r'''call(*b, c=d)''', r'''
+Call - ROOT 0,0..0,13
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+  0] Starred - 0,5..0,7
+    .value Name 'b' Load - 0,6..0,7
+    .ctx Load
+  .keywords[1]
+  0] keyword - 0,9..0,12
+    .arg 'c'
+    .value Name 'd' Load - 0,11..0,12
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(6, '', 1, 2, None, {}, (None,
+r'''call(a, *b, c=d)'''),
+r'''call(a, c=d)''', r'''
+Call - ROOT 0,0..0,12
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+  0] Name 'a' Load - 0,5..0,6
+  .keywords[1]
+  0] keyword - 0,8..0,11
+    .arg 'c'
+    .value Name 'd' Load - 0,10..0,11
+''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[1]
+  0] Starred - 0,1..0,3
+    .value Name 'b' Load - 0,2..0,3
+    .ctx Load
+  .ctx Load
+'''),
+
+(7, '', None, None, None, {}, (None,
+r'''call(a, *b, **c)'''),
+r'''call(**c)''', r'''
+Call - ROOT 0,0..0,9
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[1]
+  0] keyword - 0,5..0,8
+    .value Name 'c' Load - 0,7..0,8
+''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[2]
+  0] Name 'a' Load - 0,1..0,2
+  1] Starred - 0,4..0,6
+    .value Name 'b' Load - 0,5..0,6
+    .ctx Load
+  .ctx Load
+'''),
+
+(8, '', 0, 1, None, {}, (None,
+r'''call(a, *b, **c)'''),
+r'''call(*b, **c)''', r'''
+Call - ROOT 0,0..0,13
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+  0] Starred - 0,5..0,7
+    .value Name 'b' Load - 0,6..0,7
+    .ctx Load
+  .keywords[1]
+  0] keyword - 0,9..0,12
+    .value Name 'c' Load - 0,11..0,12
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(9, '', 1, 2, None, {}, (None,
+r'''call(a, *b, **c)'''),
+r'''call(a, **c)''', r'''
+Call - ROOT 0,0..0,12
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+  0] Name 'a' Load - 0,5..0,6
+  .keywords[1]
+  0] keyword - 0,8..0,11
+    .value Name 'c' Load - 0,10..0,11
+''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[1]
+  0] Starred - 0,1..0,3
+    .value Name 'b' Load - 0,2..0,3
+    .ctx Load
+  .ctx Load
+'''),
+
+(10, '', 1, 2, None, {}, (None, r'''
+call( \
+a \
+, \
+* \
+b \
+, \
+c \
+, \
+** \
+d \
+)
+'''), r'''
+call( \
+a \
+, \
+c \
+, \
+** \
+d \
+)
+''', r'''
+Call - ROOT 0,0..7,1
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+  0] Name 'a' Load - 1,0..1,1
+  1] Name 'c' Load - 3,0..3,1
+  .keywords[1]
+  0] keyword - 5,0..6,1
+    .value Name 'd' Load - 6,0..6,1
+''', r'''
+(
+* \
+b \
+, \
+)
+''', r'''
+Tuple - ROOT 0,0..4,1
+  .elts[1]
+  0] Starred - 1,0..2,1
+    .value Name 'b' Load - 2,0..2,1
+    .ctx Load
+  .ctx Load
+'''),
+
+(11, '', 0, 3, None, {}, (None, r'''
+call( \
+a \
+, \
+* \
+b \
+, \
+c \
+, \
+** \
+d \
+)
+'''), r'''
+call( \
+** \
+d \
+)
+''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[1]
+  0] keyword - 1,0..2,1
+    .value Name 'd' Load - 2,0..2,1
+''', r'''
+(
+a \
+, \
+* \
+b \
+, \
+c \
+ \
+)
+''', r'''
+Tuple - ROOT 0,0..8,1
+  .elts[3]
+  0] Name 'a' Load - 1,0..1,1
+  1] Starred - 3,0..4,1
+    .value Name 'b' Load - 4,0..4,1
+    .ctx Load
+  2] Name 'c' Load - 6,0..6,1
+  .ctx Load
+'''),
+
+(12, '', 0, 3, None, {}, (None, r'''
+call( \
+a, \
+* \
+b, \
+c, \
+** \
+d \
+)
+'''), r'''
+call( \
+** \
+d \
+)
+''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[1]
+  0] keyword - 1,0..2,1
+    .value Name 'd' Load - 2,0..2,1
+''', r'''
+(
+a, \
+* \
+b, \
+c \
+)
+''', r'''
+Tuple - ROOT 0,0..5,1
+  .elts[3]
+  0] Name 'a' Load - 1,0..1,1
+  1] Starred - 2,0..3,1
+    .value Name 'b' Load - 3,0..3,1
+    .ctx Load
+  2] Name 'c' Load - 4,0..4,1
+  .ctx Load
+'''),
+
+(13, '', 1, 2, None, {}, (None, r'''
+call(
+a
+,
+*
+b
+,
+c
+,
+**
+d
+)
+'''), r'''
+call(
+a
+,
+c
+,
+**
+d
+)
+''', r'''
+Call - ROOT 0,0..7,1
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+  0] Name 'a' Load - 1,0..1,1
+  1] Name 'c' Load - 3,0..3,1
+  .keywords[1]
+  0] keyword - 5,0..6,1
+    .value Name 'd' Load - 6,0..6,1
+''', r'''
+(
+*
+b
+,
+)
+''', r'''
+Tuple - ROOT 0,0..4,1
+  .elts[1]
+  0] Starred - 1,0..2,1
+    .value Name 'b' Load - 2,0..2,1
+    .ctx Load
+  .ctx Load
+'''),
+
+(14, '', 0, 3, None, {}, (None, r'''
+call(
+a
+,
+*
+b
+,
+c
+,
+**
+d
+)
+'''), r'''
+call(
+**
+d
+)
+''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[1]
+  0] keyword - 1,0..2,1
+    .value Name 'd' Load - 2,0..2,1
+''', r'''
+(
+a
+,
+*
+b
+,
+c
+
+)
+''', r'''
+Tuple - ROOT 0,0..8,1
+  .elts[3]
+  0] Name 'a' Load - 1,0..1,1
+  1] Starred - 3,0..4,1
+    .value Name 'b' Load - 4,0..4,1
+    .ctx Load
+  2] Name 'c' Load - 6,0..6,1
+  .ctx Load
+'''),
+
+(15, '', 0, 3, None, {}, (None, r'''
+call(
+a,
+*
+b,
+c,
+**
+d
+)
+'''), r'''
+call(
+**
+d
+)
+''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[1]
+  0] keyword - 1,0..2,1
+    .value Name 'd' Load - 2,0..2,1
+''', r'''
+(
+a,
+*
+b,
+c
+)
+''', r'''
+Tuple - ROOT 0,0..5,1
+  .elts[3]
+  0] Name 'a' Load - 1,0..1,1
+  1] Starred - 2,0..3,1
+    .value Name 'b' Load - 3,0..3,1
+    .ctx Load
+  2] Name 'c' Load - 4,0..4,1
+  .ctx Load
+'''),
+
+(16, '', 0, 2, None, {}, (None,
+r'''call(a, b=c, *d)'''),
+r'''**NodeError('cannot get this Call.args slice because it includes parts after a keyword')**'''),
+
+(17, '', 1, 2, None, {}, (None,
+r'''call(a, b=c, *d)'''),
+r'''**NodeError('cannot get this Call.args slice because it includes parts after a keyword')**'''),
+
+(18, '', 0, 1, None, {}, (None,
+r'''call(a, b, c=d, *e)'''),
+r'''call(b, c=d, *e)''', r'''
+Call - ROOT 0,0..0,16
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+  0] Name 'b' Load - 0,5..0,6
+  1] Starred - 0,13..0,15
+    .value Name 'e' Load - 0,14..0,15
+    .ctx Load
+  .keywords[1]
+  0] keyword - 0,8..0,11
+    .arg 'c'
+    .value Name 'd' Load - 0,10..0,11
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(19, '', 1, 2, None, {}, (None,
+r'''call(a, b, c=d, *e)'''),
+r'''call(a, c=d, *e)''', r'''
+Call - ROOT 0,0..0,16
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+  0] Name 'a' Load - 0,5..0,6
+  1] Starred - 0,13..0,15
+    .value Name 'e' Load - 0,14..0,15
+    .ctx Load
+  .keywords[1]
+  0] keyword - 0,8..0,11
+    .arg 'c'
+    .value Name 'd' Load - 0,10..0,11
+''',
+r'''(b,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'b' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(20, '', 1, 2, None, {}, (None,
+r'''call(a, b, c=d, *e,)'''),
+r'''call(a, c=d, *e,)''', r'''
+Call - ROOT 0,0..0,17
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+  0] Name 'a' Load - 0,5..0,6
+  1] Starred - 0,13..0,15
+    .value Name 'e' Load - 0,14..0,15
+    .ctx Load
+  .keywords[1]
+  0] keyword - 0,8..0,11
+    .arg 'c'
+    .value Name 'd' Load - 0,10..0,11
+''',
+r'''(b,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'b' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(21, '', 0, 1, None, {}, (None,
+r'''call(i for i in j)'''),
+r'''call()''', r'''
+Call - ROOT 0,0..0,6
+  .func Name 'call' Load - 0,0..0,4
+''',
+r'''((i for i in j),)''', r'''
+Tuple - ROOT 0,0..0,17
+  .elts[1]
+  0] GeneratorExp - 0,1..0,15
+    .elt Name 'i' Load - 0,2..0,3
+    .generators[1]
+    0] comprehension - 0,4..0,14
+      .target Name 'i' Store - 0,8..0,9
+      .iter Name 'j' Load - 0,13..0,14
+      .is_async 0
+  .ctx Load
+'''),
+],
+
 'type_params': [  # ................................................................................
 
 (0, 'body[0]', 1, 2, 'type_params', {'_ver': 12}, ('exec',
