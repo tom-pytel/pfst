@@ -626,7 +626,7 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     if groupdict['star']:
         ast = _parse_all_multiple(src, parse_params, not first.group(1),
-                                  (parse_expr_arglike, parse_pattern, parse_arguments, parse_arguments_lambda,
+                                  (parse_expr_all, parse_pattern, parse_arguments, parse_arguments_lambda,
                                    _parse_all_type_params, parse_operator, parse_Assign_targets))
 
         if isinstance(ast, Assign) and len(targets := ast.targets) == 1 and isinstance(targets[0], Starred):  # '*T = ...' validly parses to Assign statement but is invalid compile, but valid type_param so reparse as that

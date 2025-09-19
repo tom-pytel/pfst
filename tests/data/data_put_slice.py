@@ -19729,11 +19729,11 @@ Call - ROOT 0,0..0,12
     .ctx Load
 '''),
 
-(41, '', 0, 2, None, {'_ver': 12}, (None,
+(41, '', 0, 2, None, {'_ver': 11}, (None,
 r'''call(a, b, c)'''), (None,
 r'''*not a,'''),
 r'''call(*not a, c)''',
-r'''**ParseError('invalid syntax')**''', r'''
+r'''call(*(not a), c)''', r'''
 Call - ROOT 0,0..0,15
   .func Name 'call' Load - 0,0..0,4
   .args[2]
@@ -19745,11 +19745,11 @@ Call - ROOT 0,0..0,15
   1] Name 'c' Load - 0,13..0,14
 '''),
 
-(42, '', 1, 3, None, {'_ver': 12}, (None,
+(42, '', 1, 3, None, {'_ver': 11}, (None,
 r'''call(a, b, c)'''), (None,
 r'''*not a,'''),
 r'''call(a, *not a)''',
-r'''**ParseError('invalid syntax')**''', r'''
+r'''call(a, *(not a))''', r'''
 Call - ROOT 0,0..0,15
   .func Name 'call' Load - 0,0..0,4
   .args[2]
@@ -19761,11 +19761,11 @@ Call - ROOT 0,0..0,15
     .ctx Load
 '''),
 
-(43, '', 0, 3, None, {'_ver': 12}, (None,
+(43, '', 0, 3, None, {'_ver': 11}, (None,
 r'''call(a, b, c)'''), (None,
 r'''*not a,'''),
 r'''call(*not a)''',
-r'''**ParseError('invalid syntax')**''', r'''
+r'''call(*(not a))''', r'''
 Call - ROOT 0,0..0,12
   .func Name 'call' Load - 0,0..0,4
   .args[1]
