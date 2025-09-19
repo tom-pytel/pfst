@@ -4265,6 +4265,16 @@ finally:
             self.assertIsInstance(f.a, TryStar)
             f.verify()
 
+        # statement that lives on compound block header line
+
+        f = FST(src := r'''
+if 1:
+    if \
+ args:args=['-']
+            '''.strip())
+        f.put_src('', 2, 15, 2, 15)
+        self.assertEqual(src, f.src)
+
     def test_put_default_non_list_field(self):
         self.assertEqual('y', parse('n').body[0].f.put('y').root.src)  # Expr
         self.assertEqual('return y', parse('return n').body[0].f.put('y').root.src)  # Return

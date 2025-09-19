@@ -108,9 +108,11 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
             copy_lines = [bistr('')] * pln + lines[pln : pend_ln + 1]
 
         elif pln:
+            dpcol = pcol - len(indent)  # this will be negative if the statement is compound and lives on a block header line and the actual start column is before where the extra block indent would have it
+            pcol_indent = f'{indent}{" " * dpcol}' if dpcol >= 0 else indent[:dpcol]
             copy_lines = ([bistr('if 1:')] +
                           [bistr('')] * (pln - 1) +
-                          [bistr(f'{indent}{" " * (pcol - len(indent))}{lines[pln][pcol:]}')] +
+                          [bistr(f'{pcol_indent}{lines[pln][pcol:]}')] +
                           lines[pln + 1 : pend_ln + 1])
 
         elif (off := pcol - 4) < 0:

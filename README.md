@@ -191,7 +191,6 @@ This package is not finished but functional enough that it can be useful.
   * `ClassDef.bases`
   * `BoolOp.values`
   * `Compare`
-  * `Call.args`
   * `comprehension.ifs`
   * `ListComp.generators`
   * `SetComp.generators`
@@ -199,11 +198,7 @@ This package is not finished but functional enough that it can be useful.
   * `GeneratorExp.generators`
   * `ClassDef.keywords`
   * `Call.keywords`
-  * `ImportFrom.names`
-  * `With.items`
-  * `AsyncWith.items`
   * `MatchClass.patterns`
-  * `MatchOr.patterns`
   * `JoinedStr.values`
   * `TemplateStr.values`
 

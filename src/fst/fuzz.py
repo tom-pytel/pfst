@@ -938,6 +938,10 @@ class ReputSrc(Fuzzy):
                     sys.stdout.flush()
 
                 try:
+                    if self.debug:
+                        ls = copy._lines
+                        old_lines = ls[max(0, ln - 5) : min(len(ls), end_ln + 6)]
+
                     copy.put_src(put_lines, ln, col, end_ln, end_col)
                     copy.verify()
 
@@ -945,12 +949,17 @@ class ReputSrc(Fuzzy):
 
                     assert copy.src == fst.src
 
-                except:
+                except Exception:
                     # print('\nRandom seed was:', rnd_seed)
                     print()
                     print(count, ln, col, end_ln, end_col)
-                    print('-'*80)
+                    print('.'*80)
                     print(put_lines)
+
+                    if self.debug:
+                        print('.'*80)
+                        print(old_lines)
+
                     # print('.'*80)
                     # print(copy.src)
 
