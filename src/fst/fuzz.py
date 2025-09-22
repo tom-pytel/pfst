@@ -1803,45 +1803,47 @@ class SliceExprish(Fuzzy):
             print()
 
     @staticmethod
-    def cat(fst: FST) -> str | type[AST] | None:
+    def cat(fst: FST) -> tuple[str | type[AST], ...]:
         ast = fst.a
 
         if isinstance(getattr(ast, 'ctx', None), (Store, Del)):
-            return 'target' if isinstance(ast, (Tuple, List)) else None
+            return ('target',) if isinstance(ast, (Tuple, List)) else ()
         if isinstance(ast, Tuple):
-            return 'slice' if fst.has_Slice() else 'seq'
+            return ('slice' if fst.has_Slice() else 'seq'),
         if isinstance(ast, (List, Set)):
-            return 'seq'
-
-        if isinstance(ast, ClassDef):
-            if not ast.keywords:
-                return 'ClassDef_bases'
-            else:
-                return None
+            return 'seq',
 
         if isinstance(ast, (Delete, Assign, Import, Global, Nonlocal,
                             Dict, MatchSequence, MatchMapping, MatchOr,
-                            FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias,
                             With, AsyncWith,
                             )):
-            return ast.__class__
+            return ast.__class__,
+
+        if isinstance(ast, (FunctionDef, AsyncFunctionDef, TypeAlias)):
+            return 'type_params'
+
+        if isinstance(ast, ClassDef):
+            if not ast.keywords:
+                return ('type_params', 'ClassDef_bases')
+            else:
+                return ('type_params',)
 
         if isinstance(ast, Call):
             if ((ast.keywords or len(ast.args) != 1 or not isinstance(ast.args[0], GeneratorExp)) and  # safe `GeneratorExp`, two possible slices - `args` and `keywords`?
                 not ast.keywords
             ):
-                return 'Call_args'
+                return 'Call_args',
             else:
-                return None
+                return ()
 
         if isinstance(ast, ImportFrom):
-            return ImportFrom if ast.module != '__future__' and ast.names[0].name != '*' else None
+            return (ImportFrom,) if ast.module != '__future__' and ast.names[0].name != '*' else ()
 
-        return None
+        return ()
 
     def fuzz_one(self, fst, fnm) -> bool:
         buckets = {
-            'slice':          self.Bucket('elts', None, 1, 1, False, FST('a[1,]').slice,),  # 1 because of "a[b, c]", must always leave at least 1 element so it doesn't get parentheses
+            'slice':          self.Bucket('elts', None, 1, 1, False, FST('tmp[1,]').slice,),  # 1 because of "a[b, c]", must always leave at least 1 element so it doesn't get parentheses
             'target':         self.Bucket('elts', None, 0, 0, True, FST('()')),
             'seq':            self.Bucket('elts', None, 1, 0, True, FST('()')),  # 1 because of Set
             Dict:             self.Bucket(None, None, 0, 0, False, FST('{}')),
@@ -1853,7 +1855,7 @@ class SliceExprish(Fuzzy):
             ImportFrom:       self.Bucket('names', None, 1, 0, False, FST('', 'aliases')),
             Global:           (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
             Nonlocal:         glbucket,
-            'ClassDef_bases': self.Bucket('bases', 'elts', 0, 0, False, FST('class cls(): pass')),
+            'ClassDef_bases': self.Bucket('bases', 'elts', 0, 0, False, FST('class tmp(): pass')),
             'Call_args':      self.Bucket('args', 'elts', 0, 0, False, FST('call()')),
             MatchSequence:    self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
             MatchMapping:     self.Bucket(None, None, 0, 0, False, FST('{}', pattern)),
@@ -1862,10 +1864,7 @@ class SliceExprish(Fuzzy):
 
         if PYGE12:
             buckets.update({
-                FunctionDef:      self.Bucket('type_params', None, 0, 0, False, type_params_bucket := FST('', 'type_params')),
-                AsyncFunctionDef: self.Bucket('type_params', None, 0, 0, False, type_params_bucket),
-                ClassDef:         self.Bucket('type_params', None, 0, 0, False, type_params_bucket),
-                TypeAlias:        self.Bucket('type_params', None, 0, 0, False, type_params_bucket),
+                'type_params': self.Bucket('type_params', None, 0, 0, False, FST('', 'type_params')),
             })
 
         exprishs = []  # [('cat', FST), ...]
@@ -1876,8 +1875,10 @@ class SliceExprish(Fuzzy):
 
                 continue
 
-            if (cat := self.cat(f)) in buckets:
-                exprishs.append((cat, f))
+            if cat := self.cat(f):
+                for c in cat:
+                    if c in buckets:
+                        exprishs.append((c, f))
 
         if not exprishs:
             return
@@ -1902,7 +1903,8 @@ class SliceExprish(Fuzzy):
 
                         bucket = buckets[cat]
 
-                        if exprish.root is bucket.fst:
+                        # if exprish.root is bucket.fst:
+                        if exprish.root is not fst:
                             continue
 
                         break
