@@ -4641,7 +4641,7 @@ class FST:
             else:  # we don't check always-enclosed statement fields here because statements will never get here
                 children = syntax_ordered_children(ast)
 
-        failed = False
+        failed = False  # this is flagged for return False after process all because user may be requesting all lines which need line continuations
 
         for child in children:
             if not child or not (loc := (childf := child.f).pars()) or (child_end_ln := loc.end_ln) == last_ln:

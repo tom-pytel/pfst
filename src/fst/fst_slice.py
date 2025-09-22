@@ -119,68 +119,67 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 #   | | Separator (trailing)
 #   | | |  Prefix (leaading)
 #   | | |  |  Delimiters
-#   | | |  |  |   Unparse special
-#   | | |  |  |   |
-#                                                                                .
-# *   N ,     ()      (Tuple, 'elts')                         # expr*            -> Tuple                      _parse_expr_sliceelts
-# *   N ,     []      (List, 'elts')                          # expr*            -> List                       _parse_expr / restrict seq
-# * ? N ,     {}      (Set, 'elts')                           # expr*            -> Set                        _parse_expr / restrict seq
-#                                                                                .
-# *   N ,     {}      (Dict, 'keys':'values')                 # expr:expr*       -> Dict                       _parse_expr / restrict dict
-#                                                                                .
-# *   N ,     []      (MatchSequence, 'patterns'):            # pattern*         -> MatchSequence              _parse_pattern / restrict MatchSequence
-# *   N ,     {}      (MatchMapping, 'keys':'patterns'):      # expr:pattern*    -> MatchMapping               _parse_pattern / restrict MatchMapping
-#                                                                                .
-# * ? N |             (MatchOr, 'patterns'):                  # pattern*         -> MatchOr                    _parse_pattern / restrict MatchOr
-#                                                                                .
-#     S ,             (MatchClass, 'patterns'):               # pattern*         -> MatchSequence              _parse_pattern / restrict MatchSequence  - allow empty pattern?
-#                                                                                .
-#                                                                                .
-#     S ,             (ClassDef, 'bases'):                    # expr*            -> Tuple[expr_arglike]        _parse_expr_arglikes  - keywords and Starred bases can mix
-# *   S ,             (Call, 'args'):                         # expr*            -> Tuple[expr_arglike]        _parse_expr_arglikes  - keywords and Starred args can mix
-#
-# *   S ,             (Delete, 'targets'):                    # expr*            -> Tuple[target]              _parse_expr / restrict del_targets
-# * ! N =             (Assign, 'targets'):                    # expr*            -> _slice_Assign_targets      _parse_Assign_targets
-#                                                                                .
-#                                                                                .
-# *   S ,             (Global, 'names'):                      # identifier*,     -> Tuple[Name]                _parse_expr / restrict Names   - no trailing commas, unparenthesized
-# *   S ,             (Nonlocal, 'names'):                    # identifier*,     -> Tuple[Name]                _parse_expr / restrict Names   - no trailing commas, unparenthesized
-#                                                                                .
-#                                                                                .
-#   ! S ,             (ClassDef, 'keywords'):                 # keyword*         -> _slice_keywords            _parse_keywords  - keywords and Starred bases can mix
-#   ! S ,             (Call, 'keywords'):                     # keyword*         -> _slice_keywords            _parse_keywords  - keywords and Starred args can mix
-#                                                                                .
-# * ! S ,             (FunctionDef, 'type_params'):           # type_param*      -> _slice_type_params         _parse_type_params
-# * ! S ,             (AsyncFunctionDef, 'type_params'):      # type_param*      -> _slice_type_params         _parse_type_params
-# * ! S ,             (ClassDef, 'type_params'):              # type_param*      -> _slice_type_params         _parse_type_params
-# * ! S ,             (TypeAlias, 'type_params'):             # type_param*      -> _slice_type_params         _parse_type_params
-#                                                                                .
-# * ! S ,             (With, 'items'):                        # withitem*        -> _slice_withitems           _parse_withitems               - no trailing commas
-# * ! S ,             (AsyncWith, 'items'):                   # withitem*        -> _slice_withitems           _parse_withitems               - no trailing commas
-#                                                                                .
-# * ! S ,             (Import, 'names'):                      # alias*           -> _slice_aliases             _parse_aliases_dotted          - no trailing commas
-#   ! S ,             (ImportFrom, 'names'):                  # alias*           -> _slice_aliases             _parse_aliases_star            - no trailing commas
-#                                                                                .
-#                                                                                .
-#   ! S           U   (ListComp, 'generators'):               # comprehension*   -> _slice_comprehensions      _parse_comprehensions
-#   ! S           U   (SetComp, 'generators'):                # comprehension*   -> _slice_comprehensions      _parse_comprehensions
-#   ! S           U   (DictComp, 'generators'):               # comprehension*   -> _slice_comprehensions      _parse_comprehensions
-#   ! S           U   (GeneratorExp, 'generators'):           # comprehension*   -> _slice_comprehensions      _parse_comprehensions
-#                                                                                .
-#   ! S    if     U   (comprehension, 'ifs'):                 # expr*            -> _slice_comprehension_ifs   _parse_comprehension_ifs
-#                                                                                .
-#   ! S    @      U   (FunctionDef, 'decorator_list'):        # expr*            -> _slice_decorator_list      _parse_decorator_list
-#   ! S    @      U   (AsyncFunctionDef, 'decorator_list'):   # expr*            -> _slice_decorator_list      _parse_decorator_list
-#   ! S    @      U   (ClassDef, 'decorator_list'):           # expr*            -> _slice_decorator_list      _parse_decorator_list
-#                                                                                .
-#                                                                                .
-#     N co            (Compare, 'ops':'comparators'):         # cmpop:expr*      -> expr or Compare            _parse_expr / restrict expr or Compare
-#                                                                                .
-#     N ao            (BoolOp, 'values'):                     # expr*            -> BoolOp                     _parse_expr / restrict BoolOp  - interchangeable between and / or
-#
-#
-#                     (JoinedStr, 'values'):                  # Constant|FormattedValue*  -> JoinedStr
-#                     (TemplateStr, 'values'):                # Constant|Interpolation*   -> TemplateStr
+#   | | |  |  |
+#                                                                             .
+# *   N ,     ()   (Tuple, 'elts')                         # expr*            -> Tuple                      _parse_expr_sliceelts
+# *   N ,     []   (List, 'elts')                          # expr*            -> List                       _parse_expr / restrict seq
+# * ? N ,     {}   (Set, 'elts')                           # expr*            -> Set                        _parse_expr / restrict seq
+#                                                                             .
+# *   N ,     {}   (Dict, 'keys':'values')                 # expr:expr*       -> Dict                       _parse_expr / restrict dict
+#                                                                             .
+# *   N ,     []   (MatchSequence, 'patterns'):            # pattern*         -> MatchSequence              _parse_pattern / restrict MatchSequence
+# *   N ,     {}   (MatchMapping, 'keys':'patterns'):      # expr:pattern*    -> MatchMapping               _parse_pattern / restrict MatchMapping
+#                                                                             .
+# * ? N |          (MatchOr, 'patterns'):                  # pattern*         -> MatchOr                    _parse_pattern / restrict MatchOr
+#                                                                             .
+#     S ,          (MatchClass, 'patterns'):               # pattern*         -> MatchSequence              _parse_pattern / restrict MatchSequence  - allow empty pattern?
+#                                                                             .
+#                                                                             .
+#     S ,          (ClassDef, 'bases'):                    # expr*            -> Tuple[expr_arglike]        _parse_expr_arglikes  - keywords and Starred bases can mix
+# *   S ,          (Call, 'args'):                         # expr*            -> Tuple[expr_arglike]        _parse_expr_arglikes  - keywords and Starred args can mix
+#                                                                             .
+# *   S ,          (Delete, 'targets'):                    # expr*            -> Tuple[target]              _parse_expr / restrict del_targets
+# * ! N =          (Assign, 'targets'):                    # expr*            -> _slice_Assign_targets      _parse_Assign_targets
+#                                                                             .
+#                                                                             .
+# *   S ,          (Global, 'names'):                      # identifier*,     -> Tuple[Name]                _parse_expr / restrict Names   - no trailing commas, unparenthesized
+# *   S ,          (Nonlocal, 'names'):                    # identifier*,     -> Tuple[Name]                _parse_expr / restrict Names   - no trailing commas, unparenthesized
+#                                                                             .
+#                                                                             .
+#   ! S ,          (ClassDef, 'keywords'):                 # keyword*         -> _slice_keywords            _parse_keywords  - keywords and Starred bases can mix
+#   ! S ,          (Call, 'keywords'):                     # keyword*         -> _slice_keywords            _parse_keywords  - keywords and Starred args can mix
+#                                                                             .
+# * ! S ,          (FunctionDef, 'type_params'):           # type_param*      -> _slice_type_params         _parse_type_params
+# * ! S ,          (AsyncFunctionDef, 'type_params'):      # type_param*      -> _slice_type_params         _parse_type_params
+# * ! S ,          (ClassDef, 'type_params'):              # type_param*      -> _slice_type_params         _parse_type_params
+# * ! S ,          (TypeAlias, 'type_params'):             # type_param*      -> _slice_type_params         _parse_type_params
+#                                                                             .
+# * ! S ,          (With, 'items'):                        # withitem*        -> _slice_withitems           _parse_withitems               - no trailing commas
+# * ! S ,          (AsyncWith, 'items'):                   # withitem*        -> _slice_withitems           _parse_withitems               - no trailing commas
+#                                                                             .
+# * ! S ,          (Import, 'names'):                      # alias*           -> _slice_aliases             _parse_aliases_dotted          - no trailing commas
+# * ! S ,          (ImportFrom, 'names'):                  # alias*           -> _slice_aliases             _parse_aliases_star            - no trailing commas
+#                                                                             .
+#                                                                             .
+#   ! S            (ListComp, 'generators'):               # comprehension*   -> _slice_comprehensions      _parse_comprehensions
+#   ! S            (SetComp, 'generators'):                # comprehension*   -> _slice_comprehensions      _parse_comprehensions
+#   ! S            (DictComp, 'generators'):               # comprehension*   -> _slice_comprehensions      _parse_comprehensions
+#   ! S            (GeneratorExp, 'generators'):           # comprehension*   -> _slice_comprehensions      _parse_comprehensions
+#                                                                             .
+#   ! S    if      (comprehension, 'ifs'):                 # expr*            -> _slice_comprehension_ifs   _parse_comprehension_ifs
+#                                                                             .
+#   ! S    @       (FunctionDef, 'decorator_list'):        # expr*            -> _slice_decorator_list      _parse_decorator_list
+#   ! S    @       (AsyncFunctionDef, 'decorator_list'):   # expr*            -> _slice_decorator_list      _parse_decorator_list
+#   ! S    @       (ClassDef, 'decorator_list'):           # expr*            -> _slice_decorator_list      _parse_decorator_list
+#                                                                             .
+#                                                                             .
+#     N co         (Compare, 'ops':'comparators'):         # cmpop:expr*      -> expr or Compare            _parse_expr / restrict expr or Compare
+#                                                                             .
+#     N ao         (BoolOp, 'values'):                     # expr*            -> BoolOp                     _parse_expr / restrict BoolOp  - interchangeable between and / or
+#                                                                             .
+#                                                                             .
+#                  (JoinedStr, 'values'):                  # Constant|FormattedValue*  -> JoinedStr
+#                  (TemplateStr, 'values'):                # Constant|Interpolation*   -> TemplateStr
 
 
 # * Tuple[target]          _parse_expr
@@ -200,6 +199,8 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 
 # (arguments, 'kwonlyargs'):            # arg*  - maybe do as two-element, but is new type of two-element where the second element can be None
 # (arguments, 'kw_defaults'):           # arg*
+
+# could do argmnents slice as arguments instance (lots of logic needed on put)?
 
 # (MatchClass, 'kwd_attrs'):            # identifier*  - maybe do as two-element
 # (MatchClass, 'kwd_patterns'):         # pattern*

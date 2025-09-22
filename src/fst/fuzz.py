@@ -732,18 +732,21 @@ class Fuzzy:
             shuffle(fnms)
 
         for i, fnm in enumerate(fnms):
+            self.minified = self.args['minify'] or (self.args['minify_rnd'] and randint(0, 1))
+            self.lineconted = self.args['linecont'] or (self.args['linecont_rnd'] and randint(0, 1))
+
             head = f'{i:<{width}}: {fnm}'
 
             try:
                 with open(fnm) as f:
                     src = f.read()
 
-                if self.args['minify'] or (self.args['minify_rnd'] and randint(0, 1)):
+                if self.minified:
                     src = minify_src(src)
 
                 fst = FST.fromsrc(src)
 
-                if self.args['linecont'] or (self.args['linecont_rnd'] and randint(0, 1)):
+                if self.lineconted:
                     add_lineconts(fst)
 
             except (NodeError, SyntaxError, UnicodeDecodeError) as exc:
@@ -770,9 +773,10 @@ class Fuzzy:
 
             except Exception:
                 print('-'*80)
-                print('File was:', fnm)
-                print('Random seed was:', self.rnd_seed)
-                print('Command line was:', ' '.join(sys.argv))
+                print('Command line:', ' '.join(sys.argv))
+                print('File:', fnm)
+                print(f'Preprocessing: {"" if self.minified else "NOT "}minified, {"" if self.lineconted else "NOT "}lineconted')
+                print('Random seed:', self.rnd_seed)
 
                 raise
 
@@ -1840,7 +1844,7 @@ class SliceExprish(Fuzzy):
             ImportFrom:    self.Bucket('names', None, 1, 0, False, FST('', 'aliases')),
             Global:        (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
             Nonlocal:      glbucket,
-            'Call_args':   self.Bucket('args', 'elts', 0, 0, False, FST('call()')),  # TODO: one=True, validate in put_slice_Call_args
+            'Call_args':   self.Bucket('args', 'elts', 0, 0, True, FST('call()')),
             MatchSequence: self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
             MatchMapping:  self.Bucket(None, None, 0, 0, False, FST('{}', pattern)),
             MatchOr:       self.Bucket('patterns', None, 2, 2, True, FST('(a | b)', pattern)),
@@ -1966,7 +1970,7 @@ def main():
     parser.add_argument('-v', '--verbose', default=False, action='store_true',
                         help='verbose output, where applicable')
     parser.add_argument('-y', '--verify', default=False, action='store_true',
-                        help='do more verifies, usually after everything (slower)')
+                        help='do more verifies, usually after each step (slower)')
 
     args = parser.parse_args()
 

@@ -4,7 +4,7 @@
 
 - negative col start offset for raw put to statement which lives on compound block header line
 - use Modifying context manager on `get_slice(..., cut=True)`
-- recognize multiline parenthesized `ImportFrom.names` as enclosed
+- recognize multiline parenthesized `ImportFrom.names` and `With.items` as enclosed
 - get one from field which can contain a value but is currently `None`
 - fix raw reparse `TryStar` erroneously to `Try`
 - fix `par(force=True)` on delimited `Tuple` or `MatchSequence`
