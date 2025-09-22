@@ -5251,30 +5251,29 @@ if 1:
         self.assertEqual('a', test(FST('i', 'eval'), 'body', 'a', FST, 'i').src)
 
         f = FST('@deco\ndef func(args) -> ret: pass')
-        self.assertEqual('@neco\ndef func(args) -> ret: pass', test(f, 'decorator_list', '@neco', fstview,
+        self.assertEqual('@deco\ndef func(args) -> ret: pass', test(f, 'decorator_list', '@deco', fstview,
                                                                     '<<FunctionDef ROOT 1,0..1,27>.decorator_list[0:1] [<Name 0,1..0,5>]>').src)
-        self.assertEqual('@neco\ndef new(args) -> ret: pass', test(f, 'name', 'new', None, 'func').src)
-        self.assertEqual('@neco\ndef new(nargs) -> ret: pass', test(f, 'args', 'nargs', FST, 'args').src)
-        self.assertEqual('@neco\ndef new(nargs) -> int: pass', test(f, 'returns', 'int', FST, 'ret').src)
-        self.assertEqual('@neco\ndef new(nargs) -> int:\n    return\n', test(f, 'body', 'return', fstview, 'pass').src)
+        self.assertEqual('@deco\ndef new(args) -> ret: pass', test(f, 'name', 'new', None, 'func').src)
+        self.assertEqual('@deco\ndef new(nargs) -> ret: pass', test(f, 'args', 'nargs', FST, 'args').src)
+        self.assertEqual('@deco\ndef new(nargs) -> int: pass', test(f, 'returns', 'int', FST, 'ret').src)
+        self.assertEqual('@deco\ndef new(nargs) -> int:\n    return\n', test(f, 'body', 'return', fstview, 'pass').src)
 
         f = FST('@deco\nasync def func(args) -> ret: pass')
-        self.assertEqual('@neco\nasync def func(args) -> ret: pass', test(f, 'decorator_list', '@neco', fstview,
+        self.assertEqual('@deco\nasync def func(args) -> ret: pass', test(f, 'decorator_list', '@deco', fstview,
                                                                           '<<AsyncFunctionDef ROOT 1,0..1,33>.decorator_list[0:1] [<Name 0,1..0,5>]>').src)
-        self.assertEqual('@neco\nasync def new(args) -> ret: pass', test(f, 'name', 'new', None, 'func').src)
-        self.assertEqual('@neco\nasync def new(nargs) -> ret: pass', test(f, 'args', 'nargs', FST, 'args').src)
-        self.assertEqual('@neco\nasync def new(nargs) -> int: pass', test(f, 'returns', 'int', FST, 'ret').src)
-        self.assertEqual('@neco\nasync def new(nargs) -> int:\n    return\n', test(f, 'body', 'return', fstview, 'pass').src)
+        self.assertEqual('@deco\nasync def new(args) -> ret: pass', test(f, 'name', 'new', None, 'func').src)
+        self.assertEqual('@deco\nasync def new(nargs) -> ret: pass', test(f, 'args', 'nargs', FST, 'args').src)
+        self.assertEqual('@deco\nasync def new(nargs) -> int: pass', test(f, 'returns', 'int', FST, 'ret').src)
+        self.assertEqual('@deco\nasync def new(nargs) -> int:\n    return\n', test(f, 'body', 'return', fstview, 'pass').src)
 
         f = FST('@deco\nclass cls(base, meta=other): pass')
-        self.assertEqual('@neco\nclass cls(base, meta=other): pass', test(f, 'decorator_list', '@neco', fstview,
+        self.assertEqual('@deco\nclass cls(base, meta=other): pass', test(f, 'decorator_list', '@deco', fstview,
                                                                           '<<ClassDef ROOT 1,0..1,33>.decorator_list[0:1] [<Name 0,1..0,5>]>').src)
-        self.assertEqual('@neco\nclass new(base, meta=other): pass', test(f, 'name', 'new', None, 'cls').src)
-        self.assertEqual('@neco\nclass new(bass, meta=other): pass', test(f, 'bases', 'bass', fstview,
-                                                                          '<<ClassDef ROOT 1,0..1,33>.bases[0:1] [<Name 1,10..1,14>]>').src)
-        self.assertEqual('@neco\nclass new(bass, moto=some): pass', test(f, 'keywords', 'moto=some', fstview,
+        self.assertEqual('@deco\nclass new(base, meta=other): pass', test(f, 'name', 'new', None, 'cls').src)
+        self.assertEqual('@deco\nclass new(bass, meta=other): pass', test(f, 'bases', 'bass,', fstview, '(base,)').src)
+        self.assertEqual('@deco\nclass new(bass, moto=some): pass', test(f, 'keywords', 'moto=some', fstview,
                                                                          '<<ClassDef ROOT 1,0..1,33>.keywords[0:1] [<keyword 1,16..1,26>]>').src)
-        self.assertEqual('@neco\nclass new(bass, moto=some):\n    return\n', test(f, 'body', 'return', fstview, 'pass').src)
+        self.assertEqual('@deco\nclass new(bass, moto=some):\n    return\n', test(f, 'body', 'return', fstview, 'pass').src)
 
         self.assertEqual('return yup', test(FST('return yes'), 'value', 'yup', FST, 'yes').src)
 

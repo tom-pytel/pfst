@@ -388,7 +388,7 @@ def code_as_match_cases(code: Code, parse_params: Mapping[str, Any] = {}) -> fst
 
 
 def code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *,
-                  parse: Callable[[Code, dict], fst.FST] = parse_expr, sanitize: bool = True) -> fst.FST:
+                 parse: Callable[[Code, dict], fst.FST] = parse_expr, sanitize: bool = True) -> fst.FST:
     """Convert `code` to an `expr` or optionally `Slice` `FST` if possible."""
 
     def expecting() -> str:

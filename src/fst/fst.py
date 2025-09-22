@@ -5140,6 +5140,7 @@ class FST:
         _loc_lambda_args_entire,
         _loc_withitem,
         _loc_match_case,
+        _loc_ClassDef_bases_pars,
         _loc_ImportFrom_names_pars,
         _loc_With_items_pars,
         _loc_call_pars,

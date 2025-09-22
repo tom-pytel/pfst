@@ -12,6 +12,7 @@
 
 ### Added
 
+- prescribed slicing for `ClassDef.bases`
 - prescribed slicing for `Call.args`
 - prescribed slicing for `With.items`
 - prescribed slicing for `AsyncWith.items`

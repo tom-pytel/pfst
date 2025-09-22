@@ -1131,6 +1131,56 @@ def _get_slice_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] 
     return fst_
 
 
+def _get_slice_ClassDef_bases(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                              cut: bool, options: Mapping[str, Any]) -> fst.FST:
+    """A `ClassDef.bases` slice is just a normal `Tuple`, with possibly expr_arglike elements which are invalid in a
+    normal expression tuple."""
+
+    len_body = len(body := (ast := self.a).bases)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
+
+    if start == stop:
+        return fst.FST._new_empty_tuple(from_=self)
+
+    if keywords := ast.keywords:
+        if (kw0_pos := keywords[0].f.loc[:2]) < body[stop - 1].f.loc[2:]:
+            raise NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')
+
+        self_tail_sep = True if body[-1].f.loc[2:] < kw0_pos else None
+
+    else:
+        self_tail_sep = None
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_ClassDef_bases_pars()  # definitely exist
+    bound_end_col -= 1
+
+    if start:
+        _, _, bound_ln, bound_col = body[start - 1].f.pars()
+    else:
+        bound_col += 1
+
+    loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
+
+    asts = _cut_or_copy_asts(start, stop, 'bases', cut, body)
+    ret_ast = Tuple(elts=asts, ctx=Load())
+
+    fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
+                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
+                          options.get('trivia'), 'bases', '(', ')', ',', self_tail_sep, len_slice == 1)
+
+    if keywords:
+        if cut and start and stop == len_body:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
+            self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+
+    elif not body:  # everything was cut and no keywords, remove parentheses
+        pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ClassDef_bases_pars()  # definitely exist
+
+        self._put_src(None, pars_ln, pars_col, pars_end_ln, pars_end_col, False)
+
+    return fst_
+
+
 def _get_slice_Call_args(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                          options: Mapping[str, Any]) -> fst.FST:
     """A `Call.args` slice is just a normal `Tuple`, with possibly expr_arglike elements which are invalid in a normal
@@ -1172,7 +1222,7 @@ def _get_slice_Call_args(self: fst.FST, start: int | Literal['end'] | None, stop
                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
                           options.get('trivia'), 'args', '(', ')', ',', self_tail_sep, len_slice == 1)
 
-    if cut and start and keywords and stop == len_body:  # HACK if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
+    if cut and start and keywords and stop == len_body:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
         self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
 
     return fst_
@@ -1233,7 +1283,7 @@ def _get_slice_MatchMapping(self: fst.FST, start: int | Literal['end'] | None, s
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts2[-1], *locs,
                           options.get('trivia'), 'patterns', '{', '}', ',', self_tail_sep, False)
 
-    if cut and start and rest and stop == len_body:  # HACK if there is a rest element and we removed tail element we make sure there is a space between comma of the new last element and the rest
+    if cut and start and rest and stop == len_body:  # if there is a rest element and we removed tail element we make sure there is a space between comma of the new last element and the rest
         self._maybe_ins_separator(*(f := body2[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
 
     return fst_
@@ -1406,7 +1456,7 @@ _GET_SLICE_HANDLERS = {
     (FunctionDef, 'decorator_list'):          _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (AsyncFunctionDef, 'decorator_list'):     _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (ClassDef, 'decorator_list'):             _get_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (ClassDef, 'bases'):                      _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (ClassDef, 'bases'):                      _get_slice_ClassDef_bases,  # expr*
     (Delete, 'targets'):                      _get_slice_Delete_targets,  # expr*
     (Assign, 'targets'):                      _get_slice_Assign_targets,  # expr*
     (BoolOp, 'values'):                       _get_slice_NOT_IMPLEMENTED_YET,  # expr*
@@ -2038,7 +2088,7 @@ def _code_to_slice_withitems(self: fst.FST, code: Code | None, one: bool, option
     return fst_
 
 
-def _code_to_slice_arglikes(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]) -> fst.FST | None:
+def _code_to_slice_expr_arglikes(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]) -> fst.FST | None:
     if code is None:
         return None
 
@@ -2900,9 +2950,89 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
     self._maybe_add_line_continuations()  # THEORETICALLY could need to _maybe_fix_joined_alnum() but only if the user goes out of their way to F S up, so we don't bother with this
 
 
+def _put_slice_ClassDef_bases(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
+                              field: str, one: bool, options: Mapping[str, Any]) -> None:
+    fst_ = _code_to_slice_expr_arglikes(self, code, one, options)
+    len_body = len(body := (ast := self.a).bases)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
+
+    if not fst_ and not len_slice:
+        return
+
+    _validate_put_seq(self, fst_, 'ClassDef.bases')
+
+    if keywords := ast.keywords:
+        if body and keywords[0].f.loc[:2] < body[stop - 1].f.loc[2:] and stop:
+            raise NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col = bases_pars = self._loc_ClassDef_bases_pars()
+
+    if not fst_:
+        if not keywords and len_slice == len_body:  # deleting everything so remove pars
+            self._put_src(None, bound_ln, bound_col, bound_end_ln, bound_end_col, False)
+
+            end_params = None
+
+        else:
+            bound_col += 1
+            bound_end_col -= 1
+            self_tail_sep = (start and keywords and stop == len_body) or None
+
+            end_params = _put_slice_seq_begin(self, start, stop, None, None, None, 0,
+                                              bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                              options.get('trivia'), options.get('ins_ln'), 'bases', None, ',',
+                                              self_tail_sep)
+
+        self._unmake_fst_tree(body[start : stop])
+
+        del body[start : stop]
+
+        len_fst_body = 0
+
+    else:
+        if bases_pars.n:
+            bound_col += 1
+            bound_end_col -= 1
+
+        else:  # parentheses don't exist, add them first
+            self._put_src('()', bound_ln, bound_col, bound_end_ln, bound_end_col, False)
+
+            bound_col += 1
+            bound_end_col = bound_col
+            bound_end_ln = bound_ln
+
+        self_tail_sep = (keywords and stop == len_body) or None
+        len_fst_body = len(fst_body := fst_.a.elts)
+
+        end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
+                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                          options.get('trivia'), options.get('ins_ln'), 'bases', None, ',',
+                                          self_tail_sep)
+
+        self._unmake_fst_tree(body[start : stop])
+        fst_._unmake_fst_parents(True)
+
+        body[start : stop] = fst_body
+
+        FST = fst.FST
+        stack = [FST(body[i], self, astfield('bases', i)) for i in range(start, start + len_fst_body)]
+
+        self._make_fst_tree(stack)
+
+    for i in range(start + len_fst_body, len(body)):
+        body[i].f.pfield = astfield('bases', i)
+
+    if end_params:
+        _put_slice_seq_end(self, end_params)
+
+        if self_tail_sep:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
+            self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+
+
 def _put_slice_Call_args(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                          field: str, one: bool, options: Mapping[str, Any]) -> None:
-    fst_ = _code_to_slice_arglikes(self, code, one, options)
+    fst_ = _code_to_slice_expr_arglikes(self, code, one, options)
     len_body = len(body := (ast := self.a).args)
     start, stop = fixup_slice_indices(len_body, start, stop)
 
@@ -2961,7 +3091,7 @@ def _put_slice_Call_args(self: fst.FST, code: Code | None, start: int | Literal[
 
     _put_slice_seq_end(self, end_params)
 
-    if self_tail_sep:  # HACK if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
+    if self_tail_sep:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
         self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
 
 
@@ -3147,6 +3277,7 @@ def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Litera
     fst_ = _code_to_slice_type_params(self, code, one, options)
     len_body = len(body := (ast := self.a).type_params)
     start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
 
     bound, (name_ln, name_col) = (
         (self._loc_typealias_type_params_brackets if isinstance(ast, TypeAlias) else
@@ -3158,10 +3289,10 @@ def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Litera
         bound_ln, bound_col, bound_end_ln, bound_end_col = bound
 
     if not fst_:
-        if not (len_slice := stop - start):
+        if not len_slice:
             return
 
-        if len_slice == len_body:  # deleting everything
+        if len_slice == len_body:  # deleting everything so remove brackets
             self._put_src(None, name_ln, name_col, bound_end_ln, bound_end_col, False)
 
             end_params = None
@@ -3178,13 +3309,13 @@ def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Litera
         len_fst_body = 0
 
     else:
-        len_fst_body = len(fst_body := fst_.a.type_params)
-
         if not body:  # brackets don't exist, add them first
             self._put_src('[]', name_ln, name_col, name_ln, name_col, False)
 
             bound_ln = bound_end_ln = name_ln
             bound_col = bound_end_col = name_col + 1
+
+        len_fst_body = len(fst_body := fst_.a.type_params)
 
         end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
@@ -3335,7 +3466,7 @@ _PUT_SLICE_HANDLERS = {
     (FunctionDef, 'decorator_list'):          _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (AsyncFunctionDef, 'decorator_list'):     _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (ClassDef, 'decorator_list'):             _put_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (ClassDef, 'bases'):                      _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (ClassDef, 'bases'):                      _put_slice_ClassDef_bases,  # expr*
     (Delete, 'targets'):                      _put_slice_Delete_targets,  # expr*
     (Assign, 'targets'):                      _put_slice_Assign_targets,  # expr*
     (BoolOp, 'values'):                       _put_slice_NOT_IMPLEMENTED_YET,  # expr*

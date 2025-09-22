@@ -47,6 +47,54 @@ class TestFSTMisc(unittest.TestCase):
             self.assertEqual((2, False, False, 'line', False, False), FST._get_trivia_params(trivia=2, neg=False))
             self.assertEqual((2, False, False, 3, False, False), FST._get_trivia_params(trivia=(2, 3), neg=False))
 
+    def test__loc_ClassDef_bases_pars(self):
+        self.assertEqual('fstlocns(0, 9, 0, 9, n=0)', str(FST('class cls: pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(0, 9, 0, 10, n=0)', str(FST('class cls : pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(1, 3, 1, 4, n=0)', str(FST('class \\\ncls : pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(0, 9, 1, 0, n=0)', str(FST('class cls \\\n: pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(0, 9, 0, 11, n=1)', str(FST('class cls(): pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(1, 0, 1, 2, n=1)', str(FST('class cls\\\n(): pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(0, 9, 1, 1, n=1)', str(FST('class cls(\n): pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(1, 0, 2, 1, n=1)', str(FST('class cls \\\n(\n): pass')._loc_ClassDef_bases_pars()))
+
+        self.assertEqual('fstlocns(0, 9, 0, 12, n=1)', str(FST('class cls(b): pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(0, 9, 0, 14, n=1)', str(FST('class cls(k=v): pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(0, 9, 0, 14, n=1)', str(FST('class cls(**v): pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(0, 9, 0, 17, n=1)', str(FST('class cls(b, k=v): pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(0, 9, 0, 17, n=1)', str(FST('class cls(b, **v): pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(0, 9, 2, 1, n=1)', str(FST('class cls(\nb\n): pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(1, 1, 3, 1, n=1)', str(FST('class cls \\\n (\nb\n) \\\n: pass')._loc_ClassDef_bases_pars()))
+
+        self.assertEqual('fstlocns(0, 9, 0, 13, n=1)', str(FST('class cls(b,): pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(0, 9, 0, 15, n=1)', str(FST('class cls(k=v,): pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(0, 9, 0, 15, n=1)', str(FST('class cls(**v,): pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(0, 9, 0, 18, n=1)', str(FST('class cls(b, k=v,): pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(0, 9, 0, 18, n=1)', str(FST('class cls(b, **v,): pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(0, 9, 3, 1, n=1)', str(FST('class cls(\nb\n,\n): pass')._loc_ClassDef_bases_pars()))
+        self.assertEqual('fstlocns(1, 1, 4, 1, n=1)', str(FST('class cls \\\n (\nb\n,\n) \\\n: pass')._loc_ClassDef_bases_pars()))
+
+        if PYGE12:
+            self.assertEqual('fstlocns(0, 12, 0, 12, n=0)', str(FST('class cls[T]: pass')._loc_ClassDef_bases_pars()))
+            self.assertEqual('fstlocns(0, 12, 0, 13, n=0)', str(FST('class cls[T] : pass')._loc_ClassDef_bases_pars()))
+            self.assertEqual('fstlocns(0, 13, 0, 13, n=0)', str(FST('class cls[T,]: pass')._loc_ClassDef_bases_pars()))
+            self.assertEqual('fstlocns(0, 12, 0, 14, n=1)', str(FST('class cls[T](): pass')._loc_ClassDef_bases_pars()))
+            self.assertEqual('fstlocns(0, 13, 0, 15, n=1)', str(FST('class cls[T,](): pass')._loc_ClassDef_bases_pars()))
+            self.assertEqual('fstlocns(0, 15, 0, 17, n=1)', str(FST('class cls[T, U](): pass')._loc_ClassDef_bases_pars()))
+            self.assertEqual('fstlocns(1, 3, 1, 5, n=1)', str(FST('class cls \\\n[T](): pass')._loc_ClassDef_bases_pars()))
+            self.assertEqual('fstlocns(2, 1, 2, 3, n=1)', str(FST('class cls[\nT\n](): pass')._loc_ClassDef_bases_pars()))
+            self.assertEqual('fstlocns(3, 1, 3, 3, n=1)', str(FST('class cls \\\n[\nT\n](): pass')._loc_ClassDef_bases_pars()))
+            self.assertEqual('fstlocns(4, 0, 5, 1, n=1)', str(FST('class cls \\\n[\nT\n]\\\n(\n): pass')._loc_ClassDef_bases_pars()))
+            self.assertEqual('fstlocns(6, 0, 7, 1, n=1)', str(FST('class cls \\\n[\nT\n,\nU\n]\\\n( \\\n): pass')._loc_ClassDef_bases_pars()))
+
+            self.assertEqual('fstlocns(0, 12, 0, 15, n=1)', str(FST('class cls[T](b): pass')._loc_ClassDef_bases_pars()))
+            self.assertEqual('fstlocns(0, 18, 0, 25, n=1)', str(FST('class cls[T, **U,]( b , ): pass')._loc_ClassDef_bases_pars()))
+            self.assertEqual('fstlocns(1, 3, 1, 6, n=1)', str(FST('class cls \\\n[T](b): pass')._loc_ClassDef_bases_pars()))
+            self.assertEqual('fstlocns(2, 1, 2, 4, n=1)', str(FST('class cls[\nT\n](b): pass')._loc_ClassDef_bases_pars()))
+            self.assertEqual('fstlocns(3, 1, 3, 4, n=1)', str(FST('class cls \\\n[\nT\n](b): pass')._loc_ClassDef_bases_pars()))
+
+            self.assertEqual('fstlocns(4, 0, 7, 1, n=1)', str(FST('class cls \\\n[\nT\n]\\\n(\nb\n,\n): pass')._loc_ClassDef_bases_pars()))
+            self.assertEqual('fstlocns(6, 0, 7, 3, n=1)', str(FST('class cls \\\n[\nT\n,\nU\n]\\\n( \\\nb,): pass')._loc_ClassDef_bases_pars()))
+
     def test__loc_ImportFrom_names_pars(self):
         self.assertEqual('fstlocns(0, 14, 0, 15, n=0)', str(FST('from . import a')._loc_ImportFrom_names_pars()))
         self.assertEqual('fstlocns(0, 14, 0, 17, n=1)', str(FST('from . import (a)')._loc_ImportFrom_names_pars()))

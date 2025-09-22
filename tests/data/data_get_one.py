@@ -264,7 +264,12 @@ TypeVar - ROOT 0,0..0,1
 
 (22, '', 0, False, 'bases', {}, (ClassDef,
 r'''class cls(base): pass'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
+r'''class cls: pass''', r'''
+ClassDef - ROOT 0,0..0,15
+  .name 'cls'
+  .body[1]
+  0] Pass - 0,11..0,15
+''',
 r'''base''',
 r'''Name 'base' Load - ROOT 0,0..0,4'''),
 

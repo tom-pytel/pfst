@@ -946,6 +946,53 @@ def _loc_match_case(self: fst.FST) -> fstloc:
     return fstloc(*start, end_ln, end_col + 1)
 
 
+def _loc_ClassDef_bases_pars(self: fst.FST) -> fstlocns:
+    """Location of `class cls(...)` bases AND keywords fields-enclosing parentheses, or location where they should be
+    put if not present currently (from end of `name` or `type_params` to just before `:`).
+
+    **Returns:**
+    - `fstlocns(..., n = pars present or not)`: Just like from `FST.pars()`, with attribute `n=0` meaning no parentheses
+        present and location is where they should go and `n=1` meaning parentheses present and location is where they
+        actually are.
+    """
+
+    # assert isinstance(self.a, ClassDef)
+
+    ast = self.a
+    lines = self.root._lines
+    ln, col, end_ln, end_col = self.loc
+
+    if body := ast.body:
+        end_ln, end_col, _, _ = body[0].f.bloc
+
+    if type_params := getattr(ast, 'type_params', None):  # if type_params then end of '[T, ...]' (py < 3.12 AST.type_params doesn't exist)
+        _, _, ln, col = type_params[-1].f.loc
+
+        ln, col = next_find(lines, ln, col, end_ln, end_col, ']')  # must be there
+        col += 1
+
+    else:  # otherwise end of class name
+        ln, col, src = next_find_re(lines, ln, col + 5, end_ln, end_col, re_identifier)  # must be there
+        col += len(src)
+
+    lpln, lpcol, lpsrc = next_frag(lines, ln, col, end_ln, end_col)
+
+    if not lpsrc.startswith('('):  # no parenthesis, must be ':'
+        assert lpsrc.startswith(':')
+
+        return fstlocns(ln, col, lpln, lpcol, n=0)
+
+    if last := last[-1].value if (last := ast.keywords) else last[-1] if (last := ast.bases) else None:
+        _, _, ln, col = last.f.pars()
+    else:
+        ln = lpln
+        col = lpcol + 1
+
+    rpln, rpcol = next_find(lines, ln, col, end_ln, end_col, ')')  # must be there
+
+    return fstlocns(lpln, lpcol, rpln, rpcol + 1, n=1)
+
+
 def _loc_ImportFrom_names_pars(self: fst.FST) -> fstlocns:
     """Location of `from ? import (...)` whole names field-enclosing parentheses, or location where they should be put
     if not present currently.
@@ -1008,7 +1055,6 @@ def _loc_With_items_pars(self: fst.FST) -> fstlocns:
 
     if items := ast.items:
         _, _, after_items_ln, after_items_col = items[-1].f.loc
-
     else:  # we handle temporarily empty items
         after_items_ln = ln
         after_items_col = col
@@ -1143,7 +1189,7 @@ def _loc_classdef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tu
     ln, col, end_ln, end_col = self.loc
 
     if (after := ast.bases) or (after := ast.keywords) or (after := ast.body):
-        after_ln, after_col, _, _ = after[0].f.loc
+        after_ln, after_col, _, _ = after[0].f.bloc  # .bloc because body[0] might start with a decorator
     else:  # accomodate temporarily empty bodies
         after_ln = end_ln
         after_col = end_col

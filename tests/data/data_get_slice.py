@@ -9756,6 +9756,1392 @@ Tuple - ROOT 0,0..0,17
 '''),
 ],
 
+'ClassDef_bases': [  # ................................................................................
+
+(0, '', 0, 0, 'bases', {}, (None,
+r'''class cls(a, *b): pass'''),
+r'''class cls(a, *b): pass''', r'''
+ClassDef - ROOT 0,0..0,22
+  .name 'cls'
+  .bases[2]
+  0] Name 'a' Load - 0,10..0,11
+  1] Starred - 0,13..0,15
+    .value Name 'b' Load - 0,14..0,15
+    .ctx Load
+  .body[1]
+  0] Pass - 0,18..0,22
+''',
+r'''()''', r'''
+Tuple - ROOT 0,0..0,2
+  .ctx Load
+'''),
+
+(1, '', None, None, 'bases', {}, (None,
+r'''class cls(a, *b): pass'''),
+r'''class cls: pass''', r'''
+ClassDef - ROOT 0,0..0,15
+  .name 'cls'
+  .body[1]
+  0] Pass - 0,11..0,15
+''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[2]
+  0] Name 'a' Load - 0,1..0,2
+  1] Starred - 0,4..0,6
+    .value Name 'b' Load - 0,5..0,6
+    .ctx Load
+  .ctx Load
+'''),
+
+(2, '', None, None, 'bases', {}, (None,
+r'''class cls (a) : pass'''),
+r'''class cls  : pass''', r'''
+ClassDef - ROOT 0,0..0,17
+  .name 'cls'
+  .body[1]
+  0] Pass - 0,13..0,17
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(3, '', None, None, 'bases', {}, (None, r'''
+class cls (
+a
+) : pass
+'''),
+r'''class cls  : pass''', r'''
+ClassDef - ROOT 0,0..0,17
+  .name 'cls'
+  .body[1]
+  0] Pass - 0,13..0,17
+''', r'''
+(
+a,
+)
+''', r'''
+Tuple - ROOT 0,0..2,1
+  .elts[1]
+  0] Name 'a' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+(4, '', None, None, 'bases', {}, (None, r'''
+class cls \
+(a) \
+ : pass
+'''), r'''
+class cls \
+ \
+ : pass
+''', r'''
+ClassDef - ROOT 0,0..2,7
+  .name 'cls'
+  .body[1]
+  0] Pass - 2,3..2,7
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(5, '', 0, 1, 'bases', {}, (None,
+r'''class cls(a, *b): pass'''),
+r'''class cls(*b): pass''', r'''
+ClassDef - ROOT 0,0..0,19
+  .name 'cls'
+  .bases[1]
+  0] Starred - 0,10..0,12
+    .value Name 'b' Load - 0,11..0,12
+    .ctx Load
+  .body[1]
+  0] Pass - 0,15..0,19
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(6, '', 1, 2, 'bases', {}, (None,
+r'''class cls(a, *b): pass'''),
+r'''class cls(a): pass''', r'''
+ClassDef - ROOT 0,0..0,18
+  .name 'cls'
+  .bases[1]
+  0] Name 'a' Load - 0,10..0,11
+  .body[1]
+  0] Pass - 0,14..0,18
+''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[1]
+  0] Starred - 0,1..0,3
+    .value Name 'b' Load - 0,2..0,3
+    .ctx Load
+  .ctx Load
+'''),
+
+(7, '', None, None, 'bases', {}, (None,
+r'''class cls(a, *b, c=d): pass'''),
+r'''class cls(c=d): pass''', r'''
+ClassDef - ROOT 0,0..0,20
+  .name 'cls'
+  .keywords[1]
+  0] keyword - 0,10..0,13
+    .arg 'c'
+    .value Name 'd' Load - 0,12..0,13
+  .body[1]
+  0] Pass - 0,16..0,20
+''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[2]
+  0] Name 'a' Load - 0,1..0,2
+  1] Starred - 0,4..0,6
+    .value Name 'b' Load - 0,5..0,6
+    .ctx Load
+  .ctx Load
+'''),
+
+(8, '', 0, 1, 'bases', {}, (None,
+r'''class cls(a, *b, c=d): pass'''),
+r'''class cls(*b, c=d): pass''', r'''
+ClassDef - ROOT 0,0..0,24
+  .name 'cls'
+  .bases[1]
+  0] Starred - 0,10..0,12
+    .value Name 'b' Load - 0,11..0,12
+    .ctx Load
+  .keywords[1]
+  0] keyword - 0,14..0,17
+    .arg 'c'
+    .value Name 'd' Load - 0,16..0,17
+  .body[1]
+  0] Pass - 0,20..0,24
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(9, '', 1, 2, 'bases', {}, (None,
+r'''class cls(a, *b, c=d): pass'''),
+r'''class cls(a, c=d): pass''', r'''
+ClassDef - ROOT 0,0..0,23
+  .name 'cls'
+  .bases[1]
+  0] Name 'a' Load - 0,10..0,11
+  .keywords[1]
+  0] keyword - 0,13..0,16
+    .arg 'c'
+    .value Name 'd' Load - 0,15..0,16
+  .body[1]
+  0] Pass - 0,19..0,23
+''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[1]
+  0] Starred - 0,1..0,3
+    .value Name 'b' Load - 0,2..0,3
+    .ctx Load
+  .ctx Load
+'''),
+
+(10, '', None, None, 'bases', {}, (None,
+r'''class cls(a, *b, **c): pass'''),
+r'''class cls(**c): pass''', r'''
+ClassDef - ROOT 0,0..0,20
+  .name 'cls'
+  .keywords[1]
+  0] keyword - 0,10..0,13
+    .value Name 'c' Load - 0,12..0,13
+  .body[1]
+  0] Pass - 0,16..0,20
+''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[2]
+  0] Name 'a' Load - 0,1..0,2
+  1] Starred - 0,4..0,6
+    .value Name 'b' Load - 0,5..0,6
+    .ctx Load
+  .ctx Load
+'''),
+
+(11, '', 0, 1, 'bases', {}, (None,
+r'''class cls(a, *b, **c): pass'''),
+r'''class cls(*b, **c): pass''', r'''
+ClassDef - ROOT 0,0..0,24
+  .name 'cls'
+  .bases[1]
+  0] Starred - 0,10..0,12
+    .value Name 'b' Load - 0,11..0,12
+    .ctx Load
+  .keywords[1]
+  0] keyword - 0,14..0,17
+    .value Name 'c' Load - 0,16..0,17
+  .body[1]
+  0] Pass - 0,20..0,24
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(12, '', 1, 2, 'bases', {}, (None,
+r'''class cls(a, *b, **c): pass'''),
+r'''class cls(a, **c): pass''', r'''
+ClassDef - ROOT 0,0..0,23
+  .name 'cls'
+  .bases[1]
+  0] Name 'a' Load - 0,10..0,11
+  .keywords[1]
+  0] keyword - 0,13..0,16
+    .value Name 'c' Load - 0,15..0,16
+  .body[1]
+  0] Pass - 0,19..0,23
+''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[1]
+  0] Starred - 0,1..0,3
+    .value Name 'b' Load - 0,2..0,3
+    .ctx Load
+  .ctx Load
+'''),
+
+(13, '', 1, 2, 'bases', {}, (None, r'''
+class cls( \
+a \
+, \
+* \
+b \
+, \
+c \
+, \
+** \
+d \
+): pass
+'''), r'''
+class cls( \
+a \
+, \
+c \
+, \
+** \
+d \
+): pass
+''', r'''
+ClassDef - ROOT 0,0..7,7
+  .name 'cls'
+  .bases[2]
+  0] Name 'a' Load - 1,0..1,1
+  1] Name 'c' Load - 3,0..3,1
+  .keywords[1]
+  0] keyword - 5,0..6,1
+    .value Name 'd' Load - 6,0..6,1
+  .body[1]
+  0] Pass - 7,3..7,7
+''', r'''
+(
+* \
+b \
+, \
+)
+''', r'''
+Tuple - ROOT 0,0..4,1
+  .elts[1]
+  0] Starred - 1,0..2,1
+    .value Name 'b' Load - 2,0..2,1
+    .ctx Load
+  .ctx Load
+'''),
+
+(14, '', 0, 3, 'bases', {}, (None, r'''
+class cls( \
+a \
+, \
+* \
+b \
+, \
+c \
+, \
+** \
+d \
+): pass
+'''), r'''
+class cls( \
+** \
+d \
+): pass
+''', r'''
+ClassDef - ROOT 0,0..3,7
+  .name 'cls'
+  .keywords[1]
+  0] keyword - 1,0..2,1
+    .value Name 'd' Load - 2,0..2,1
+  .body[1]
+  0] Pass - 3,3..3,7
+''', r'''
+(
+a \
+, \
+* \
+b \
+, \
+c \
+ \
+)
+''', r'''
+Tuple - ROOT 0,0..8,1
+  .elts[3]
+  0] Name 'a' Load - 1,0..1,1
+  1] Starred - 3,0..4,1
+    .value Name 'b' Load - 4,0..4,1
+    .ctx Load
+  2] Name 'c' Load - 6,0..6,1
+  .ctx Load
+'''),
+
+(15, '', 0, 3, 'bases', {}, (None, r'''
+class cls( \
+a, \
+* \
+b, \
+c, \
+** \
+d \
+): pass
+'''), r'''
+class cls( \
+** \
+d \
+): pass
+''', r'''
+ClassDef - ROOT 0,0..3,7
+  .name 'cls'
+  .keywords[1]
+  0] keyword - 1,0..2,1
+    .value Name 'd' Load - 2,0..2,1
+  .body[1]
+  0] Pass - 3,3..3,7
+''', r'''
+(
+a, \
+* \
+b, \
+c \
+)
+''', r'''
+Tuple - ROOT 0,0..5,1
+  .elts[3]
+  0] Name 'a' Load - 1,0..1,1
+  1] Starred - 2,0..3,1
+    .value Name 'b' Load - 3,0..3,1
+    .ctx Load
+  2] Name 'c' Load - 4,0..4,1
+  .ctx Load
+'''),
+
+(16, '', 1, 2, 'bases', {}, (None, r'''
+class cls(
+a
+,
+*
+b
+,
+c
+,
+**
+d
+): pass
+'''), r'''
+class cls(
+a
+,
+c
+,
+**
+d
+): pass
+''', r'''
+ClassDef - ROOT 0,0..7,7
+  .name 'cls'
+  .bases[2]
+  0] Name 'a' Load - 1,0..1,1
+  1] Name 'c' Load - 3,0..3,1
+  .keywords[1]
+  0] keyword - 5,0..6,1
+    .value Name 'd' Load - 6,0..6,1
+  .body[1]
+  0] Pass - 7,3..7,7
+''', r'''
+(
+*
+b
+,
+)
+''', r'''
+Tuple - ROOT 0,0..4,1
+  .elts[1]
+  0] Starred - 1,0..2,1
+    .value Name 'b' Load - 2,0..2,1
+    .ctx Load
+  .ctx Load
+'''),
+
+(17, '', 0, 3, 'bases', {}, (None, r'''
+class cls(
+a
+,
+*
+b
+,
+c
+,
+**
+d
+): pass
+'''), r'''
+class cls(
+**
+d
+): pass
+''', r'''
+ClassDef - ROOT 0,0..3,7
+  .name 'cls'
+  .keywords[1]
+  0] keyword - 1,0..2,1
+    .value Name 'd' Load - 2,0..2,1
+  .body[1]
+  0] Pass - 3,3..3,7
+''', r'''
+(
+a
+,
+*
+b
+,
+c
+
+)
+''', r'''
+Tuple - ROOT 0,0..8,1
+  .elts[3]
+  0] Name 'a' Load - 1,0..1,1
+  1] Starred - 3,0..4,1
+    .value Name 'b' Load - 4,0..4,1
+    .ctx Load
+  2] Name 'c' Load - 6,0..6,1
+  .ctx Load
+'''),
+
+(18, '', 0, 3, 'bases', {}, (None, r'''
+class cls(
+a,
+*
+b,
+c,
+**
+d
+): pass
+'''), r'''
+class cls(
+**
+d
+): pass
+''', r'''
+ClassDef - ROOT 0,0..3,7
+  .name 'cls'
+  .keywords[1]
+  0] keyword - 1,0..2,1
+    .value Name 'd' Load - 2,0..2,1
+  .body[1]
+  0] Pass - 3,3..3,7
+''', r'''
+(
+a,
+*
+b,
+c
+)
+''', r'''
+Tuple - ROOT 0,0..5,1
+  .elts[3]
+  0] Name 'a' Load - 1,0..1,1
+  1] Starred - 2,0..3,1
+    .value Name 'b' Load - 3,0..3,1
+    .ctx Load
+  2] Name 'c' Load - 4,0..4,1
+  .ctx Load
+'''),
+
+(19, '', 0, 2, 'bases', {}, (None,
+r'''class cls(a, b=c, *d): pass'''),
+r'''**NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')**'''),
+
+(20, '', 1, 2, 'bases', {}, (None,
+r'''class cls(a, b=c, *d): pass'''),
+r'''**NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')**'''),
+
+(21, '', 0, 1, 'bases', {}, (None,
+r'''class cls(a, b, c=d, *e): pass'''),
+r'''class cls(b, c=d, *e): pass''', r'''
+ClassDef - ROOT 0,0..0,27
+  .name 'cls'
+  .bases[2]
+  0] Name 'b' Load - 0,10..0,11
+  1] Starred - 0,18..0,20
+    .value Name 'e' Load - 0,19..0,20
+    .ctx Load
+  .keywords[1]
+  0] keyword - 0,13..0,16
+    .arg 'c'
+    .value Name 'd' Load - 0,15..0,16
+  .body[1]
+  0] Pass - 0,23..0,27
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(22, '', 1, 2, 'bases', {}, (None,
+r'''class cls(a, b, c=d, *e): pass'''),
+r'''class cls(a, c=d, *e): pass''', r'''
+ClassDef - ROOT 0,0..0,27
+  .name 'cls'
+  .bases[2]
+  0] Name 'a' Load - 0,10..0,11
+  1] Starred - 0,18..0,20
+    .value Name 'e' Load - 0,19..0,20
+    .ctx Load
+  .keywords[1]
+  0] keyword - 0,13..0,16
+    .arg 'c'
+    .value Name 'd' Load - 0,15..0,16
+  .body[1]
+  0] Pass - 0,23..0,27
+''',
+r'''(b,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'b' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(23, '', 1, 2, 'bases', {}, (None,
+r'''class cls(a, b, c=d, *e,): pass'''),
+r'''class cls(a, c=d, *e,): pass''', r'''
+ClassDef - ROOT 0,0..0,28
+  .name 'cls'
+  .bases[2]
+  0] Name 'a' Load - 0,10..0,11
+  1] Starred - 0,18..0,20
+    .value Name 'e' Load - 0,19..0,20
+    .ctx Load
+  .keywords[1]
+  0] keyword - 0,13..0,16
+    .arg 'c'
+    .value Name 'd' Load - 0,15..0,16
+  .body[1]
+  0] Pass - 0,24..0,28
+''',
+r'''(b,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'b' Load - 0,1..0,2
+  .ctx Load
+'''),
+],
+
+'ClassDef_bases_w_type_params': [  # ................................................................................
+
+(0, '', 0, 0, 'bases', {'_ver': 12}, (None,
+r'''class cls[T](a, *b): pass'''),
+r'''class cls[T](a, *b): pass''', r'''
+ClassDef - ROOT 0,0..0,25
+  .name 'cls'
+  .bases[2]
+  0] Name 'a' Load - 0,13..0,14
+  1] Starred - 0,16..0,18
+    .value Name 'b' Load - 0,17..0,18
+    .ctx Load
+  .body[1]
+  0] Pass - 0,21..0,25
+  .type_params[1]
+  0] TypeVar - 0,10..0,11
+    .name 'T'
+''',
+r'''()''', r'''
+Tuple - ROOT 0,0..0,2
+  .ctx Load
+'''),
+
+(1, '', None, None, 'bases', {'_ver': 12}, (None,
+r'''class cls[T, *U](a, *b): pass'''),
+r'''class cls[T, *U]: pass''', r'''
+ClassDef - ROOT 0,0..0,22
+  .name 'cls'
+  .body[1]
+  0] Pass - 0,18..0,22
+  .type_params[2]
+  0] TypeVar - 0,10..0,11
+    .name 'T'
+  1] TypeVarTuple - 0,13..0,15
+    .name 'U'
+''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[2]
+  0] Name 'a' Load - 0,1..0,2
+  1] Starred - 0,4..0,6
+    .value Name 'b' Load - 0,5..0,6
+    .ctx Load
+  .ctx Load
+'''),
+
+(2, '', None, None, 'bases', {'_ver': 12}, (None, r'''
+class cls [T,
+*U] (a) : pass
+'''), r'''
+class cls [T,
+*U]  : pass
+''', r'''
+ClassDef - ROOT 0,0..1,11
+  .name 'cls'
+  .body[1]
+  0] Pass - 1,7..1,11
+  .type_params[2]
+  0] TypeVar - 0,11..0,12
+    .name 'T'
+  1] TypeVarTuple - 1,0..1,2
+    .name 'U'
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(3, '', None, None, 'bases', {'_ver': 12}, (None, r'''
+class cls [
+T
+] \
+(
+a
+) : pass
+'''), r'''
+class cls [
+T
+] \
+ : pass
+''', r'''
+ClassDef - ROOT 0,0..3,7
+  .name 'cls'
+  .body[1]
+  0] Pass - 3,3..3,7
+  .type_params[1]
+  0] TypeVar - 1,0..1,1
+    .name 'T'
+''', r'''
+(
+a,
+)
+''', r'''
+Tuple - ROOT 0,0..2,1
+  .elts[1]
+  0] Name 'a' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+(4, '', None, None, 'bases', {'_ver': 12}, (None, r'''
+class cls \
+[T] \
+(a) \
+ : pass
+'''), r'''
+class cls \
+[T] \
+ \
+ : pass
+''', r'''
+ClassDef - ROOT 0,0..3,7
+  .name 'cls'
+  .body[1]
+  0] Pass - 3,3..3,7
+  .type_params[1]
+  0] TypeVar - 1,1..1,2
+    .name 'T'
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(5, '', 0, 1, 'bases', {'_ver': 12}, (None, r'''
+class cls[T, *U
+](a, *b): pass
+'''), r'''
+class cls[T, *U
+](*b): pass
+''', r'''
+ClassDef - ROOT 0,0..1,11
+  .name 'cls'
+  .bases[1]
+  0] Starred - 1,2..1,4
+    .value Name 'b' Load - 1,3..1,4
+    .ctx Load
+  .body[1]
+  0] Pass - 1,7..1,11
+  .type_params[2]
+  0] TypeVar - 0,10..0,11
+    .name 'T'
+  1] TypeVarTuple - 0,13..0,15
+    .name 'U'
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(6, '', 1, 2, 'bases', {'_ver': 12}, (None, r'''
+class cls \
+[
+T, *U
+] \
+(a, *b): pass
+'''), r'''
+class cls \
+[
+T, *U
+] \
+(a): pass
+''', r'''
+ClassDef - ROOT 0,0..4,9
+  .name 'cls'
+  .bases[1]
+  0] Name 'a' Load - 4,1..4,2
+  .body[1]
+  0] Pass - 4,5..4,9
+  .type_params[2]
+  0] TypeVar - 2,0..2,1
+    .name 'T'
+  1] TypeVarTuple - 2,3..2,5
+    .name 'U'
+''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[1]
+  0] Starred - 0,1..0,3
+    .value Name 'b' Load - 0,2..0,3
+    .ctx Load
+  .ctx Load
+'''),
+
+(7, '', None, None, 'bases', {'_ver': 12}, (None,
+r'''class cls[T, *U, **V](a, *b, c=d): pass'''),
+r'''class cls[T, *U, **V](c=d): pass''', r'''
+ClassDef - ROOT 0,0..0,32
+  .name 'cls'
+  .keywords[1]
+  0] keyword - 0,22..0,25
+    .arg 'c'
+    .value Name 'd' Load - 0,24..0,25
+  .body[1]
+  0] Pass - 0,28..0,32
+  .type_params[3]
+  0] TypeVar - 0,10..0,11
+    .name 'T'
+  1] TypeVarTuple - 0,13..0,15
+    .name 'U'
+  2] ParamSpec - 0,17..0,20
+    .name 'V'
+''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[2]
+  0] Name 'a' Load - 0,1..0,2
+  1] Starred - 0,4..0,6
+    .value Name 'b' Load - 0,5..0,6
+    .ctx Load
+  .ctx Load
+'''),
+
+(8, '', 0, 1, 'bases', {'_ver': 12}, (None, r'''
+class cls \
+[T, *U, \
+**V] \
+(a, *b, c=d): pass
+'''), r'''
+class cls \
+[T, *U, \
+**V] \
+(*b, c=d): pass
+''', r'''
+ClassDef - ROOT 0,0..3,15
+  .name 'cls'
+  .bases[1]
+  0] Starred - 3,1..3,3
+    .value Name 'b' Load - 3,2..3,3
+    .ctx Load
+  .keywords[1]
+  0] keyword - 3,5..3,8
+    .arg 'c'
+    .value Name 'd' Load - 3,7..3,8
+  .body[1]
+  0] Pass - 3,11..3,15
+  .type_params[3]
+  0] TypeVar - 1,1..1,2
+    .name 'T'
+  1] TypeVarTuple - 1,4..1,6
+    .name 'U'
+  2] ParamSpec - 2,0..2,3
+    .name 'V'
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(9, '', 1, 2, 'bases', {'_ver': 12}, (None, r'''
+class cls[
+T, *U, **V] \
+(a, *b, c=d): pass
+'''), r'''
+class cls[
+T, *U, **V] \
+(a, c=d): pass
+''', r'''
+ClassDef - ROOT 0,0..2,14
+  .name 'cls'
+  .bases[1]
+  0] Name 'a' Load - 2,1..2,2
+  .keywords[1]
+  0] keyword - 2,4..2,7
+    .arg 'c'
+    .value Name 'd' Load - 2,6..2,7
+  .body[1]
+  0] Pass - 2,10..2,14
+  .type_params[3]
+  0] TypeVar - 1,0..1,1
+    .name 'T'
+  1] TypeVarTuple - 1,3..1,5
+    .name 'U'
+  2] ParamSpec - 1,7..1,10
+    .name 'V'
+''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[1]
+  0] Starred - 0,1..0,3
+    .value Name 'b' Load - 0,2..0,3
+    .ctx Load
+  .ctx Load
+'''),
+
+(10, '', None, None, 'bases', {'_ver': 12}, (None,
+r'''class cls [T, *U, **V] (a, *b, **c): pass'''),
+r'''class cls [T, *U, **V] (**c): pass''', r'''
+ClassDef - ROOT 0,0..0,34
+  .name 'cls'
+  .keywords[1]
+  0] keyword - 0,24..0,27
+    .value Name 'c' Load - 0,26..0,27
+  .body[1]
+  0] Pass - 0,30..0,34
+  .type_params[3]
+  0] TypeVar - 0,11..0,12
+    .name 'T'
+  1] TypeVarTuple - 0,14..0,16
+    .name 'U'
+  2] ParamSpec - 0,18..0,21
+    .name 'V'
+''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[2]
+  0] Name 'a' Load - 0,1..0,2
+  1] Starred - 0,4..0,6
+    .value Name 'b' Load - 0,5..0,6
+    .ctx Load
+  .ctx Load
+'''),
+
+(11, '', 0, 1, 'bases', {'_ver': 12}, (None, r'''
+class cls [T,
+*U,
+**V,
+] (a, *b, **c): pass
+'''), r'''
+class cls [T,
+*U,
+**V,
+] (*b, **c): pass
+''', r'''
+ClassDef - ROOT 0,0..3,17
+  .name 'cls'
+  .bases[1]
+  0] Starred - 3,3..3,5
+    .value Name 'b' Load - 3,4..3,5
+    .ctx Load
+  .keywords[1]
+  0] keyword - 3,7..3,10
+    .value Name 'c' Load - 3,9..3,10
+  .body[1]
+  0] Pass - 3,13..3,17
+  .type_params[3]
+  0] TypeVar - 0,11..0,12
+    .name 'T'
+  1] TypeVarTuple - 1,0..1,2
+    .name 'U'
+  2] ParamSpec - 2,0..2,3
+    .name 'V'
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(12, '', 1, 2, 'bases', {'_ver': 12}, (None,
+r'''class cls[T,](a, *b, **c): pass'''),
+r'''class cls[T,](a, **c): pass''', r'''
+ClassDef - ROOT 0,0..0,27
+  .name 'cls'
+  .bases[1]
+  0] Name 'a' Load - 0,14..0,15
+  .keywords[1]
+  0] keyword - 0,17..0,20
+    .value Name 'c' Load - 0,19..0,20
+  .body[1]
+  0] Pass - 0,23..0,27
+  .type_params[1]
+  0] TypeVar - 0,10..0,11
+    .name 'T'
+''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[1]
+  0] Starred - 0,1..0,3
+    .value Name 'b' Load - 0,2..0,3
+    .ctx Load
+  .ctx Load
+'''),
+
+(13, '', 1, 2, 'bases', {'_ver': 12}, (None, r'''
+class cls[ \
+T \
+, \
+* \
+U \
+, \
+** \
+V \
+, \
+]( \
+a \
+, \
+* \
+b \
+, \
+c \
+, \
+** \
+d \
+): pass
+'''), r'''
+class cls[ \
+T \
+, \
+* \
+U \
+, \
+** \
+V \
+, \
+]( \
+a \
+, \
+c \
+, \
+** \
+d \
+): pass
+''', r'''
+ClassDef - ROOT 0,0..16,7
+  .name 'cls'
+  .bases[2]
+  0] Name 'a' Load - 10,0..10,1
+  1] Name 'c' Load - 12,0..12,1
+  .keywords[1]
+  0] keyword - 14,0..15,1
+    .value Name 'd' Load - 15,0..15,1
+  .body[1]
+  0] Pass - 16,3..16,7
+  .type_params[3]
+  0] TypeVar - 1,0..1,1
+    .name 'T'
+  1] TypeVarTuple - 3,0..4,1
+    .name 'U'
+  2] ParamSpec - 6,0..7,1
+    .name 'V'
+''', r'''
+(
+* \
+b \
+, \
+)
+''', r'''
+Tuple - ROOT 0,0..4,1
+  .elts[1]
+  0] Starred - 1,0..2,1
+    .value Name 'b' Load - 2,0..2,1
+    .ctx Load
+  .ctx Load
+'''),
+
+(14, '', 0, 3, 'bases', {'_ver': 12}, (None, r'''
+class cls \
+[ \
+T \
+, \
+* \
+U \
+, \
+** \
+V \
+, \
+] \
+( \
+a \
+, \
+* \
+b \
+, \
+c \
+, \
+** \
+d \
+): pass
+'''), r'''
+class cls \
+[ \
+T \
+, \
+* \
+U \
+, \
+** \
+V \
+, \
+] \
+( \
+** \
+d \
+): pass
+''', r'''
+ClassDef - ROOT 0,0..14,7
+  .name 'cls'
+  .keywords[1]
+  0] keyword - 12,0..13,1
+    .value Name 'd' Load - 13,0..13,1
+  .body[1]
+  0] Pass - 14,3..14,7
+  .type_params[3]
+  0] TypeVar - 2,0..2,1
+    .name 'T'
+  1] TypeVarTuple - 4,0..5,1
+    .name 'U'
+  2] ParamSpec - 7,0..8,1
+    .name 'V'
+''', r'''
+(
+a \
+, \
+* \
+b \
+, \
+c \
+ \
+)
+''', r'''
+Tuple - ROOT 0,0..8,1
+  .elts[3]
+  0] Name 'a' Load - 1,0..1,1
+  1] Starred - 3,0..4,1
+    .value Name 'b' Load - 4,0..4,1
+    .ctx Load
+  2] Name 'c' Load - 6,0..6,1
+  .ctx Load
+'''),
+
+(15, '', 0, 3, 'bases', {'_ver': 12}, (None, r'''
+class cls[ \
+T] \
+( \
+a, \
+* \
+b, \
+c, \
+** \
+d \
+): pass
+'''), r'''
+class cls[ \
+T] \
+( \
+** \
+d \
+): pass
+''', r'''
+ClassDef - ROOT 0,0..5,7
+  .name 'cls'
+  .keywords[1]
+  0] keyword - 3,0..4,1
+    .value Name 'd' Load - 4,0..4,1
+  .body[1]
+  0] Pass - 5,3..5,7
+  .type_params[1]
+  0] TypeVar - 1,0..1,1
+    .name 'T'
+''', r'''
+(
+a, \
+* \
+b, \
+c \
+)
+''', r'''
+Tuple - ROOT 0,0..5,1
+  .elts[3]
+  0] Name 'a' Load - 1,0..1,1
+  1] Starred - 2,0..3,1
+    .value Name 'b' Load - 3,0..3,1
+    .ctx Load
+  2] Name 'c' Load - 4,0..4,1
+  .ctx Load
+'''),
+
+(16, '', 1, 2, 'bases', {'_ver': 12}, (None, r'''
+class cls[
+T
+,
+*
+U
+,
+**
+V
+,
+](
+a
+,
+*
+b
+,
+c
+,
+**
+d
+): pass
+'''), r'''
+class cls[
+T
+,
+*
+U
+,
+**
+V
+,
+](
+a
+,
+c
+,
+**
+d
+): pass
+''', r'''
+ClassDef - ROOT 0,0..16,7
+  .name 'cls'
+  .bases[2]
+  0] Name 'a' Load - 10,0..10,1
+  1] Name 'c' Load - 12,0..12,1
+  .keywords[1]
+  0] keyword - 14,0..15,1
+    .value Name 'd' Load - 15,0..15,1
+  .body[1]
+  0] Pass - 16,3..16,7
+  .type_params[3]
+  0] TypeVar - 1,0..1,1
+    .name 'T'
+  1] TypeVarTuple - 3,0..4,1
+    .name 'U'
+  2] ParamSpec - 6,0..7,1
+    .name 'V'
+''', r'''
+(
+*
+b
+,
+)
+''', r'''
+Tuple - ROOT 0,0..4,1
+  .elts[1]
+  0] Starred - 1,0..2,1
+    .value Name 'b' Load - 2,0..2,1
+    .ctx Load
+  .ctx Load
+'''),
+
+(17, '', 0, 3, 'bases', {'_ver': 12}, (None, r'''
+class cls[
+T
+,
+*
+U
+,
+**
+V
+] \
+(
+a
+,
+*
+b
+,
+c
+,
+**
+d
+): pass
+'''), r'''
+class cls[
+T
+,
+*
+U
+,
+**
+V
+] \
+(
+**
+d
+): pass
+''', r'''
+ClassDef - ROOT 0,0..12,7
+  .name 'cls'
+  .keywords[1]
+  0] keyword - 10,0..11,1
+    .value Name 'd' Load - 11,0..11,1
+  .body[1]
+  0] Pass - 12,3..12,7
+  .type_params[3]
+  0] TypeVar - 1,0..1,1
+    .name 'T'
+  1] TypeVarTuple - 3,0..4,1
+    .name 'U'
+  2] ParamSpec - 6,0..7,1
+    .name 'V'
+''', r'''
+(
+a
+,
+*
+b
+,
+c
+
+)
+''', r'''
+Tuple - ROOT 0,0..8,1
+  .elts[3]
+  0] Name 'a' Load - 1,0..1,1
+  1] Starred - 3,0..4,1
+    .value Name 'b' Load - 4,0..4,1
+    .ctx Load
+  2] Name 'c' Load - 6,0..6,1
+  .ctx Load
+'''),
+
+(18, '', 0, 3, 'bases', {'_ver': 12}, (None, r'''
+class cls[ T, *U ](
+a,
+*
+b,
+c,
+**
+d
+): pass
+'''), r'''
+class cls[ T, *U ](
+**
+d
+): pass
+''', r'''
+ClassDef - ROOT 0,0..3,7
+  .name 'cls'
+  .keywords[1]
+  0] keyword - 1,0..2,1
+    .value Name 'd' Load - 2,0..2,1
+  .body[1]
+  0] Pass - 3,3..3,7
+  .type_params[2]
+  0] TypeVar - 0,11..0,12
+    .name 'T'
+  1] TypeVarTuple - 0,14..0,16
+    .name 'U'
+''', r'''
+(
+a,
+*
+b,
+c
+)
+''', r'''
+Tuple - ROOT 0,0..5,1
+  .elts[3]
+  0] Name 'a' Load - 1,0..1,1
+  1] Starred - 2,0..3,1
+    .value Name 'b' Load - 3,0..3,1
+    .ctx Load
+  2] Name 'c' Load - 4,0..4,1
+  .ctx Load
+'''),
+
+(19, '', 0, 2, 'bases', {'_ver': 12}, (None,
+r'''class cls[T](a, b=c, *d): pass'''),
+r'''**NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')**'''),
+
+(20, '', 1, 2, 'bases', {'_ver': 12}, (None,
+r'''class cls[T](a, b=c, *d): pass'''),
+r'''**NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')**'''),
+],
+
 'type_params': [  # ................................................................................
 
 (0, 'body[0]', 1, 2, 'type_params', {'_ver': 12}, ('exec',

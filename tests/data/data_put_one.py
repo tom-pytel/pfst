@@ -7413,7 +7413,16 @@ r'''**IndexError('index out of range')**'''),
 (472, 'body[0]', 0, False, 'bases', {}, ('exec',
 r'''class c(a, (b)): pass'''), (None,
 r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''class c((b)): pass''', r'''
+Module - ROOT 0,0..0,18
+  .body[1]
+  0] ClassDef - 0,0..0,18
+    .name 'c'
+    .bases[1]
+    0] Name 'b' Load - 0,9..0,10
+    .body[1]
+    0] Pass - 0,14..0,18
+'''),
 
 (473, 'body[0]', 0, False, 'bases', {}, ('exec',
 r'''class c(a, (b)): pass'''), (None,
@@ -7484,7 +7493,14 @@ r'''**IndexError('index out of range')**'''),
 (478, 'body[0]', 0, False, 'bases', {'raw': False}, ('exec',
 r'''class c(a): pass'''), (None,
 r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''class c: pass''', r'''
+Module - ROOT 0,0..0,13
+  .body[1]
+  0] ClassDef - 0,0..0,13
+    .name 'c'
+    .body[1]
+    0] Pass - 0,9..0,13
+'''),
 
 (479, 'body[0]', 0, False, 'bases', {}, ('exec',
 r'''class c(a): pass'''), (None,
@@ -7517,7 +7533,14 @@ Module - ROOT 0,0..0,19
 (481, 'body[0]', 0, False, 'bases', {'raw': False}, ('exec',
 r'''class c((a)): pass'''), (None,
 r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''class c: pass''', r'''
+Module - ROOT 0,0..0,13
+  .body[1]
+  0] ClassDef - 0,0..0,13
+    .name 'c'
+    .body[1]
+    0] Pass - 0,9..0,13
+'''),
 
 (482, 'body[0]', 0, False, 'bases', {}, ('exec',
 r'''class c((a)): pass'''), (None,

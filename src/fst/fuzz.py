@@ -1812,6 +1812,13 @@ class SliceExprish(Fuzzy):
             return 'slice' if fst.has_Slice() else 'seq'
         if isinstance(ast, (List, Set)):
             return 'seq'
+
+        if isinstance(ast, ClassDef):
+            if not ast.keywords:
+                return 'ClassDef_bases'
+            else:
+                return None
+
         if isinstance(ast, (Delete, Assign, Import, Global, Nonlocal,
                             Dict, MatchSequence, MatchMapping, MatchOr,
                             FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias,
@@ -1819,11 +1826,13 @@ class SliceExprish(Fuzzy):
                             )):
             return ast.__class__
 
-        if (isinstance(ast, Call) and
-            (ast.keywords or len(ast.args) != 1 or not isinstance(ast.args[0], GeneratorExp)) and  # safe `GeneratorExp`, two possible slices - `args` and `keywords`?
-            not ast.keywords
-        ):
-            return 'Call_args'
+        if isinstance(ast, Call):
+            if ((ast.keywords or len(ast.args) != 1 or not isinstance(ast.args[0], GeneratorExp)) and  # safe `GeneratorExp`, two possible slices - `args` and `keywords`?
+                not ast.keywords
+            ):
+                return 'Call_args'
+            else:
+                return None
 
         if isinstance(ast, ImportFrom):
             return ImportFrom if ast.module != '__future__' and ast.names[0].name != '*' else None
@@ -1832,22 +1841,23 @@ class SliceExprish(Fuzzy):
 
     def fuzz_one(self, fst, fnm) -> bool:
         buckets = {
-            'slice':       self.Bucket('elts', None, 1, 1, False, FST('a[1,]').slice,),  # 1 because of "a[b, c]", must always leave at least 1 element so it doesn't get parentheses
-            'target':      self.Bucket('elts', None, 0, 0, True, FST('()')),
-            'seq':         self.Bucket('elts', None, 1, 0, True, FST('()')), # 1 because of Set
-            Dict:          self.Bucket(None, None, 0, 0, False, FST('{}')),
-            Delete:        self.Bucket('targets', 'elts', 1, 0, True, FST('del a')),
-            Assign:        self.Bucket('targets', None, 1, 0, False, FST('', 'Assign_targets')),
-            With:          (wbucket := self.Bucket('items', None, 1, 0, False, FST('', 'withitems'))),
-            AsyncWith:     wbucket,
-            Import:        self.Bucket('names', None, 1, 0, False, FST('', 'aliases')),
-            ImportFrom:    self.Bucket('names', None, 1, 0, False, FST('', 'aliases')),
-            Global:        (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
-            Nonlocal:      glbucket,
-            'Call_args':   self.Bucket('args', 'elts', 0, 0, True, FST('call()')),
-            MatchSequence: self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
-            MatchMapping:  self.Bucket(None, None, 0, 0, False, FST('{}', pattern)),
-            MatchOr:       self.Bucket('patterns', None, 2, 2, True, FST('(a | b)', pattern)),
+            'slice':          self.Bucket('elts', None, 1, 1, False, FST('a[1,]').slice,),  # 1 because of "a[b, c]", must always leave at least 1 element so it doesn't get parentheses
+            'target':         self.Bucket('elts', None, 0, 0, True, FST('()')),
+            'seq':            self.Bucket('elts', None, 1, 0, True, FST('()')),  # 1 because of Set
+            Dict:             self.Bucket(None, None, 0, 0, False, FST('{}')),
+            Delete:           self.Bucket('targets', 'elts', 1, 0, True, FST('del a')),
+            Assign:           self.Bucket('targets', None, 1, 0, False, FST('', 'Assign_targets')),
+            With:             (wbucket := self.Bucket('items', None, 1, 0, False, FST('', 'withitems'))),
+            AsyncWith:        wbucket,
+            Import:           self.Bucket('names', None, 1, 0, False, FST('', 'aliases')),
+            ImportFrom:       self.Bucket('names', None, 1, 0, False, FST('', 'aliases')),
+            Global:           (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
+            Nonlocal:         glbucket,
+            'ClassDef_bases': self.Bucket('bases', 'elts', 0, 0, False, FST('class cls(): pass')),
+            'Call_args':      self.Bucket('args', 'elts', 0, 0, False, FST('call()')),
+            MatchSequence:    self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
+            MatchMapping:     self.Bucket(None, None, 0, 0, False, FST('{}', pattern)),
+            MatchOr:          self.Bucket('patterns', None, 2, 2, True, FST('(a | b)', pattern)),
         }
 
         if PYGE12:
