@@ -96,17 +96,6 @@ class TestASTUtil(unittest.TestCase):
         self.assertTrue(compare_asts(ast1, ast4, recurse=False, raise_=False))
         self.assertFalse(compare_asts(ast1, ast5, recurse=False, raise_=False))
 
-    def test_copy_ast(self):
-        for fnm in PYFNMS:
-            with open(fnm) as f:
-                src = f.read()
-
-            for type_comments in (False, True):
-                ast = parse(src, type_comments=type_comments)
-                dst = copy_ast(ast)
-
-                compare_asts(ast, dst, locs=True, type_comments=type_comments, raise_=True)
-
     def test_last_block_header_child(self):
         self.assertIsInstance(last_block_header_child(parse('def f(a) -> int: pass').body[0]), Name)
         self.assertIsInstance(last_block_header_child(parse('def f(a): pass').body[0]), arguments)

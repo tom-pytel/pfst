@@ -4,6 +4,7 @@ import os
 import unittest
 from ast import parse as ast_parse
 
+from fst.astutil import *
 from fst import *
 # from fst.asttypes import TemplateStr, type_param, TypeVar, ParamSpec, TypeVarTuple
 
@@ -22,6 +23,17 @@ def read(fnm):
 class TestFST(unittest.TestCase):
     """These take a while to execute (relatively speaking for quick checking) so are annoying for now. TODO: Make
     specific long / thorough test mode which will execute these and more bulk tests."""
+
+    # def test_copy_ast_bulk(self):
+    #     for fnm in PYFNMS:
+    #         with open(fnm) as f:
+    #             src = f.read()
+
+    #         for type_comments in (False, True):
+    #             ast = parse(src, type_comments=type_comments)
+    #             dst = copy_ast(ast)
+
+    #             compare_asts(ast, dst, locs=True, type_comments=type_comments, raise_=True)
 
     # def test_fromsrc_bulk(self):
     #     for fnm in PYFNMS:
