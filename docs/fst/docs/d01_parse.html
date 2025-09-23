@@ -262,7 +262,7 @@
 </code></pre>
 </div>
 
-<p>Have you ever dreamed of being able to parse the <code>+</code> operator? Well now you can!</p>
+<p>Have you ever dreamed of being able to parse the <code>+</code> operator by itself? Well now you can!</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">))</span>
@@ -270,9 +270,9 @@
 </code></pre>
 </div>
 
-<p>There are some special modes, like <code>'expr_arglike'</code>, which allow parsing some things which are not normally parsable in their
-usual context. The below is not normally parsable in an expression context as it is special syntax for <code>Call</code> vararg
-arguments. For a full list of parse modes see <code><a href="../extparse.html#Mode">fst.extparse.Mode</a></code>.</p>
+<p>There are some special modes, like <code>'expr_arglike'</code>, which allow parsing some things which are not normally parsable in
+their usual context. The below is not normally parsable in an expression context as it is special syntax for <code>Call</code>
+starred arguments. For a full list of parse modes see <code><a href="../parsex.html#Mode">fst.parsex.Mode</a></code>.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;*a or b&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
@@ -349,7 +349,7 @@ information in them). When used like this, the <code>AST</code> nodes are not co
 <h2 id="source">Source</h2>
 
 <p>A note on the <code>.src</code> attribute, it gives the full valid source only if accessed at the root node. If accessed at any
-node below, it will return the UNINDENTED source for the location of the node, except for the first line which will be
+node below, it will return the INDENTED source for the location of the node, except for the first line which will be
 completely unindented. If you want full correctly unindented source for nodes which are not root, you should <code>copy()</code>
 that node and get the source of that. E.g.</p>
 

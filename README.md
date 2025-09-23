@@ -68,15 +68,19 @@ Basic operations:
 if a:
     b = c, d  # comment
     x = b
+```
 
->>> a.body[0].body[0].value.f.elts[1:1] = 'u,\nv'  # proper syntax fluff handled automatically
+```py
+>>> a.body[0].body[0].value.f.elts[1:1] = 'u,\nv'  # syntax misc handled automatically
 
 >>> print(a.f.src)
 if a:
     b = (c, u,
         v, d)  # comment
     x = b
+```
 
+```py
 >>> a.f.body[0].orelse = a.f.body[0].body.copy()
 >>> a.f.body[0].body = 'x = a  # blah'
 
@@ -87,7 +91,9 @@ else:
     b = (c, x,
         y, d)  # comment
     x = b
+```
 
+```py
 >>> del a.f.body[0].orelse[0]
 
 >>> print(a.f.src)
@@ -95,7 +101,9 @@ if a:
     x = a  # blah
 else:
     x = b
+```
 
+```py
 >>> print(ast.dump(a))  # AST always matches the source
 Module(
   body=[
@@ -123,12 +131,29 @@ Reconcile, edit AST outside `fst` control while preserving formatting:
 ...         x * 0.6  # x gets 60%
 ...         + y * 0.4  # y gets 40%
 ...     )
-...
+... '''.strip())
+
+>>> m = a.f.mark()
+
+>>> # pure AST manipulation
+>>> a.body[0].body[0].value.left.right = Name(id='scalar1')
+>>> a.body[0].body[0].value.right.right = Name(id='scalar2')
+
+>>> print(a.f.reconcile(m).src)
+def compute(x, y):
+    # Compute the weighted sum
+    result = (
+        x * scalar1  # x gets 60%
+        + y * scalar2  # y gets 40%
+    )
+```
+
+```py
+>>> a = fst.parse('''
+... def compute(x, y):
 ...     # Apply thresholding
 ...     if (
-...         result > 10
-...         # cap high values
-...         and result < 100  # ignore overflow
+...         result > 10  # cap high values
 ...     ):
 ...         return result
 ...     else:
@@ -137,9 +162,6 @@ Reconcile, edit AST outside `fst` control while preserving formatting:
 
 >>> m = a.f.mark()
 
->>> # pure AST manipulation
->>> a.body[0].body[0].value.left.right = Name(id='scalar1')
->>> a.body[0].body[0].value.right.right = Name(id='scalar2')
 >>> a.body[0].body[-1].orelse[0] = (
 ...     If(test=Compare(left=Name(id='result'),
 ...                     ops=[Gt()],
@@ -151,17 +173,9 @@ Reconcile, edit AST outside `fst` control while preserving formatting:
 
 >>> print(a.f.reconcile(m).src)
 def compute(x, y):
-    # Compute the weighted sum
-    result = (
-        x * scalar1  # x gets 60%
-        + y * scalar2  # y gets 40%
-    )
-
     # Apply thresholding
     if (
-        result > 10
-        # cap high values
-        and result < 100  # ignore overflow
+        result > 10  # cap high values
     ):
         return result
     elif result > 1:

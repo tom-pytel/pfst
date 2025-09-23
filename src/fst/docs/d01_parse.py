@@ -188,16 +188,16 @@ In some cases you must tell it what you want (valid empty arguments).
 <arguments ROOT>
 ```
 
-Have you ever dreamed of being able to parse the `+` operator? Well now you can!
+Have you ever dreamed of being able to parse the `+` operator by itself? Well now you can!
 
 ```py
 >>> print(FST('+'))
 <Add ROOT 0,0..0,1>
 ```
 
-There are some special modes, like `'expr_arglike'`, which allow parsing some things which are not normally parsable in their
-usual context. The below is not normally parsable in an expression context as it is special syntax for `Call` vararg
-arguments. For a full list of parse modes see `fst.extparse.Mode`.
+There are some special modes, like `'expr_arglike'`, which allow parsing some things which are not normally parsable in
+their usual context. The below is not normally parsable in an expression context as it is special syntax for `Call`
+starred arguments. For a full list of parse modes see `fst.parsex.Mode`.
 
 ```py
 >>> FST('*a or b', 'expr_arglike').dump()
@@ -268,7 +268,7 @@ Slice - ROOT 0,0..0,5
 ## Source
 
 A note on the `.src` attribute, it gives the full valid source only if accessed at the root node. If accessed at any
-node below, it will return the UNINDENTED source for the location of the node, except for the first line which will be
+node below, it will return the INDENTED source for the location of the node, except for the first line which will be
 completely unindented. If you want full correctly unindented source for nodes which are not root, you should `copy()`
 that node and get the source of that. E.g.
 

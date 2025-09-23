@@ -6,11 +6,6 @@ To be able to execute the examples, import this.
 >>> from fst import *
 ```
 
-**Note:** `fst` is eventually intended to run with the global option `raw` set to `'auto'`, but as the prescribed slice
-operations are not all implemented yet it is currently set as `False`. This is because `'auto'` can lead to some raw put
-attempts which can result in some confusing error messages. If you are fine with some weird syntax exceptions then do
-`FST.set_options(raw='auto')` and you should get slice puts succeeding where otherwise they wouldn't.
-
 ## Basics
 
 Raw put operations are different from the standard prescribed operations in that for the most part they do not take into
@@ -160,8 +155,8 @@ cannot put slice with 'to' option
 
 ## Parentheses
 
-As stated, raw mode node operations do not take into account precedence or parenthesization and do not add any
-parentheses, but they do remove them from targets.
+Raw mode node operations do not take into account precedence or parenthesization and do not add any parentheses, but
+they do remove them from targets.
 
 ```py
 >>> f = FST('[(a), (b), (c)]')

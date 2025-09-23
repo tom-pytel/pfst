@@ -60,11 +60,6 @@
 </code></pre>
 </div>
 
-<p><strong>Note:</strong> <code><a href="../../fst.html">fst</a></code> is eventually intended to run with the global option <code>raw</code> set to <code>'auto'</code>, but as the prescribed slice
-operations are not all implemented yet it is currently set as <code>False</code>. This is because <code>'auto'</code> can lead to some raw put
-attempts which can result in some confusing error messages. If you are fine with some weird syntax exceptions then do
-<code>FST.set_options(raw='auto')</code> and you should get slice puts succeeding where otherwise they wouldn't.</p>
-
 <h2 id="basics">Basics</h2>
 
 <p>Raw put operations are different from the standard prescribed operations in that for the most part they do not take into
@@ -220,8 +215,8 @@ could get confusing with those operations also specifying an explicit end locati
 
 <h2 id="parentheses">Parentheses</h2>
 
-<p>As stated, raw mode node operations do not take into account precedence or parenthesization and do not add any
-parentheses, but they do remove them from targets.</p>
+<p>Raw mode node operations do not take into account precedence or parenthesization and do not add any parentheses, but
+they do remove them from targets.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[(a), (b), (c)]&#39;</span><span class="p">)</span>

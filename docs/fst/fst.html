@@ -281,10 +281,13 @@
                                 <a class="function" href="#FST.find_in_loc">find_in_loc</a>
                         </li>
                         <li>
+                                <a class="function" href="#FST.get_indent">get_indent</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#FST.get_parse_mode">get_parse_mode</a>
                         </li>
                         <li>
-                                <a class="function" href="#FST.get_indent">get_indent</a>
+                                <a class="function" href="#FST.is_special_slice">is_special_slice</a>
                         </li>
                         <li>
                                 <a class="function" href="#FST.is_parsable">is_parsable</a>
@@ -386,7 +389,7 @@ parameters, see <code>ast.parse()</code>. Returned <code>AST</code> tree has add
 <ul>
 <li><code>source</code>: The python source to parse.</li>
 <li><code>filename</code>: <code>ast.parse()</code> parameter.</li>
-<li><code>mode</code>: Parse mode, extended <code>ast.parse()</code> parameter, See <code><a href="extparse.html#Mode">fst.extparse.Mode</a></code>.</li>
+<li><code>mode</code>: Parse mode, extended <code>ast.parse()</code> parameter, See <code><a href="parsex.html#Mode">fst.parsex.Mode</a></code>.</li>
 <li><code>type_comments</code>: <code>ast.parse()</code> parameter.</li>
 <li><code>feature_version</code>: <code>ast.parse()</code> parameter.</li>
 </ul>
@@ -530,7 +533,7 @@ any direction.</p>
                             <div id="FST.__init__" class="classattr">
                                 <div class="attr function">
             
-        <span class="name">FST</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">ast_or_src</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">mode_or_lines_or_parent</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="#FST">FST</a></span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;stmts&#39;</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandlers&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">,</span> <span class="s1">&#39;match_cases&#39;</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_all&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_sliceelt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple&#39;</span><span class="p">,</span> <span class="s1">&#39;boolop&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;binop&#39;</span><span class="p">,</span> <span class="s1">&#39;augop&#39;</span><span class="p">,</span> <span class="s1">&#39;unaryop&#39;</span><span class="p">,</span> <span class="s1">&#39;cmpop&#39;</span><span class="p">,</span> <span class="s1">&#39;comprehension&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments_lambda&#39;</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="s1">&#39;alias_dotted&#39;</span><span class="p">,</span> <span class="s1">&#39;alias_star&#39;</span><span class="p">,</span> <span class="s1">&#39;withitem&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="s1">&#39;type_param&#39;</span><span class="p">,</span> <span class="s1">&#39;type_params&#39;</span><span class="p">,</span> <span class="s1">&#39;Assign_targets&#39;</span><span class="p">],</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">pfield</span><span class="p">:</span> <span class="n"><a href="misc.html#astfield">fst.misc.astfield</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="o">/</span>,</span><span class="param">	<span class="o">**</span><span class="n">kwargs</span></span>)</span>
+        <span class="name">FST</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">ast_or_src</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">mode_or_lines_or_parent</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n"><a href="#FST">FST</a></span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;stmts&#39;</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandlers&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">,</span> <span class="s1">&#39;match_cases&#39;</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_all&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_sliceelt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple&#39;</span><span class="p">,</span> <span class="s1">&#39;Assign_targets&#39;</span><span class="p">,</span> <span class="s1">&#39;boolop&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;binop&#39;</span><span class="p">,</span> <span class="s1">&#39;augop&#39;</span><span class="p">,</span> <span class="s1">&#39;unaryop&#39;</span><span class="p">,</span> <span class="s1">&#39;cmpop&#39;</span><span class="p">,</span> <span class="s1">&#39;comprehension&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments_lambda&#39;</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="s1">&#39;aliases&#39;</span><span class="p">,</span> <span class="s1">&#39;Import_name&#39;</span><span class="p">,</span> <span class="s1">&#39;Import_names&#39;</span><span class="p">,</span> <span class="s1">&#39;ImportFrom_name&#39;</span><span class="p">,</span> <span class="s1">&#39;ImportFrom_names&#39;</span><span class="p">,</span> <span class="s1">&#39;withitem&#39;</span><span class="p">,</span> <span class="s1">&#39;withitems&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="s1">&#39;type_param&#39;</span><span class="p">,</span> <span class="s1">&#39;type_params&#39;</span><span class="p">],</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">pfield</span><span class="p">:</span> <span class="n"><a href="misc.html#astfield">fst.misc.astfield</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="o">/</span>,</span><span class="param">	<span class="o">**</span><span class="n">kwargs</span></span>)</span>
 
         
     </div>
@@ -544,13 +547,13 @@ any direction.</p>
 <p>This will create an <code><a href="#FST">FST</a></code> from either an <code>AST</code> or source code in the form of a string or list of lines. The
 first parameter can be <code>None</code> instead of an <code>AST</code> or source to indicate a blank new module of one of the three
 types <code>'exec'</code>, <code>'eval'</code> or <code>'single'</code>. Otherwise if there is <code>source</code> or an <code>AST</code> then <code>mode</code> specifies how it
-will be parsed / reparsed and it can take any of the values from <code><a href="extparse.html#Mode">fst.extparse.Mode</a></code>.</p>
+will be parsed / reparsed and it can take any of the values from <code><a href="parsex.html#Mode">fst.parsex.Mode</a></code>.</p>
 
 <p><strong>Parameters:</strong></p>
 
 <ul>
 <li><code>ast_or_src</code>: Source code, an <code>AST</code> node or <code>None</code>.</li>
-<li><code>mode</code>: See <code><a href="extparse.html#Mode">fst.extparse.Mode</a></code>. If this is <code>None</code> then if <code>ast_or_src</code> is an <code>AST</code> the mode defaults to the
+<li><code>mode</code>: See <code><a href="parsex.html#Mode">fst.parsex.Mode</a></code>. If this is <code>None</code> then if <code>ast_or_src</code> is an <code>AST</code> the mode defaults to the
 type of the <code>AST</code>. Otherwise if the <code>ast_or_src</code> is actual source code then <code>mode</code> used is <code>'all'</code> to allow
 parsing anything. And if <code>ast_or_src</code> is <code>None</code> then <code>mode</code> must be provided and be one of <code>'exec'</code>,
 <code>'eval'</code> or <code>'single'</code>.</li>
@@ -1079,7 +1082,7 @@ statements.</p>
                     <div class="decorator decorator-staticmethod">@staticmethod</div>
 
         <span class="def">def</span>
-        <span class="name">fromsrc</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">src</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>,</span><span class="param">	<span class="n">mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;stmts&#39;</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandlers&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">,</span> <span class="s1">&#39;match_cases&#39;</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_all&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_sliceelt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple&#39;</span><span class="p">,</span> <span class="s1">&#39;boolop&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;binop&#39;</span><span class="p">,</span> <span class="s1">&#39;augop&#39;</span><span class="p">,</span> <span class="s1">&#39;unaryop&#39;</span><span class="p">,</span> <span class="s1">&#39;cmpop&#39;</span><span class="p">,</span> <span class="s1">&#39;comprehension&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments_lambda&#39;</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="s1">&#39;alias_dotted&#39;</span><span class="p">,</span> <span class="s1">&#39;alias_star&#39;</span><span class="p">,</span> <span class="s1">&#39;withitem&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="s1">&#39;type_param&#39;</span><span class="p">,</span> <span class="s1">&#39;type_params&#39;</span><span class="p">,</span> <span class="s1">&#39;Assign_targets&#39;</span><span class="p">],</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">]]</span> <span class="o">=</span> <span class="s1">&#39;exec&#39;</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&lt;unknown&gt;&#39;</span>,</span><span class="param">	<span class="n">type_comments</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="n">feature_version</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span>:</span></span>
+        <span class="name">fromsrc</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">src</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>,</span><span class="param">	<span class="n">mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;stmts&#39;</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandlers&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">,</span> <span class="s1">&#39;match_cases&#39;</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_all&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_sliceelt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple&#39;</span><span class="p">,</span> <span class="s1">&#39;Assign_targets&#39;</span><span class="p">,</span> <span class="s1">&#39;boolop&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;binop&#39;</span><span class="p">,</span> <span class="s1">&#39;augop&#39;</span><span class="p">,</span> <span class="s1">&#39;unaryop&#39;</span><span class="p">,</span> <span class="s1">&#39;cmpop&#39;</span><span class="p">,</span> <span class="s1">&#39;comprehension&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments_lambda&#39;</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="s1">&#39;aliases&#39;</span><span class="p">,</span> <span class="s1">&#39;Import_name&#39;</span><span class="p">,</span> <span class="s1">&#39;Import_names&#39;</span><span class="p">,</span> <span class="s1">&#39;ImportFrom_name&#39;</span><span class="p">,</span> <span class="s1">&#39;ImportFrom_names&#39;</span><span class="p">,</span> <span class="s1">&#39;withitem&#39;</span><span class="p">,</span> <span class="s1">&#39;withitems&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="s1">&#39;type_param&#39;</span><span class="p">,</span> <span class="s1">&#39;type_params&#39;</span><span class="p">],</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">]]</span> <span class="o">=</span> <span class="s1">&#39;exec&#39;</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&lt;unknown&gt;&#39;</span>,</span><span class="param">	<span class="n">type_comments</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="n">feature_version</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span>:</span></span>
 
         
     </div>
@@ -1091,7 +1094,7 @@ statements.</p>
 
 <ul>
 <li><code><a href="#FST.src">src</a></code>: The source to parse as a single <code>str</code> or list of individual line strings (without newlines).</li>
-<li><code>mode</code>: Parse mode, extended <code>ast.parse()</code> parameter, See <code><a href="extparse.html#Mode">fst.extparse.Mode</a></code>.</li>
+<li><code>mode</code>: Parse mode, extended <code>ast.parse()</code> parameter, See <code><a href="parsex.html#Mode">fst.parsex.Mode</a></code>.</li>
 <li><code>filename</code>: <code>ast.parse()</code> parameter.</li>
 <li><code>type_comments</code>: <code>ast.parse()</code> parameter.</li>
 <li><code>feature_version</code>: <code>ast.parse()</code> parameter.</li>
@@ -1152,7 +1155,7 @@ statements.</p>
                     <div class="decorator decorator-staticmethod">@staticmethod</div>
 
         <span class="def">def</span>
-        <span class="name">fromast</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">ast</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>,</span><span class="param">	<span class="n">mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;stmts&#39;</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandlers&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">,</span> <span class="s1">&#39;match_cases&#39;</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_all&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_sliceelt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple&#39;</span><span class="p">,</span> <span class="s1">&#39;boolop&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;binop&#39;</span><span class="p">,</span> <span class="s1">&#39;augop&#39;</span><span class="p">,</span> <span class="s1">&#39;unaryop&#39;</span><span class="p">,</span> <span class="s1">&#39;cmpop&#39;</span><span class="p">,</span> <span class="s1">&#39;comprehension&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments_lambda&#39;</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="s1">&#39;alias_dotted&#39;</span><span class="p">,</span> <span class="s1">&#39;alias_star&#39;</span><span class="p">,</span> <span class="s1">&#39;withitem&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="s1">&#39;type_param&#39;</span><span class="p">,</span> <span class="s1">&#39;type_params&#39;</span><span class="p">,</span> <span class="s1">&#39;Assign_targets&#39;</span><span class="p">],</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">],</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&lt;unknown&gt;&#39;</span>,</span><span class="param">	<span class="n">type_comments</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="n">feature_version</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">ctx</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span>:</span></span>
+        <span class="name">fromast</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">ast</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>,</span><span class="param">	<span class="n">mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;stmts&#39;</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandlers&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">,</span> <span class="s1">&#39;match_cases&#39;</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_all&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_sliceelt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple&#39;</span><span class="p">,</span> <span class="s1">&#39;Assign_targets&#39;</span><span class="p">,</span> <span class="s1">&#39;boolop&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;binop&#39;</span><span class="p">,</span> <span class="s1">&#39;augop&#39;</span><span class="p">,</span> <span class="s1">&#39;unaryop&#39;</span><span class="p">,</span> <span class="s1">&#39;cmpop&#39;</span><span class="p">,</span> <span class="s1">&#39;comprehension&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments_lambda&#39;</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="s1">&#39;aliases&#39;</span><span class="p">,</span> <span class="s1">&#39;Import_name&#39;</span><span class="p">,</span> <span class="s1">&#39;Import_names&#39;</span><span class="p">,</span> <span class="s1">&#39;ImportFrom_name&#39;</span><span class="p">,</span> <span class="s1">&#39;ImportFrom_names&#39;</span><span class="p">,</span> <span class="s1">&#39;withitem&#39;</span><span class="p">,</span> <span class="s1">&#39;withitems&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="s1">&#39;type_param&#39;</span><span class="p">,</span> <span class="s1">&#39;type_params&#39;</span><span class="p">],</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">],</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&lt;unknown&gt;&#39;</span>,</span><span class="param">	<span class="n">type_comments</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="n">feature_version</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">ctx</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></span><span class="return-annotation">) -> <span class="n"><a href="#FST">FST</a></span>:</span></span>
 
         
     </div>
@@ -1164,7 +1167,7 @@ statements.</p>
 
 <ul>
 <li><code>ast</code>: The root <code>AST</code> node.</li>
-<li><code>mode</code>: Parse mode, extended <code>ast.parse()</code> parameter, see <code><a href="extparse.html#Mode">fst.extparse.Mode</a></code>. Two special values are added:
+<li><code>mode</code>: Parse mode, extended <code>ast.parse()</code> parameter, see <code><a href="parsex.html#Mode">fst.parsex.Mode</a></code>. Two special values are added:
 <ul>
 <li><code>None</code>: This will attempt to reparse to the same node type as was passed in. This is the default and all
 other values should be considered overrides for special cases.</li>
@@ -1270,8 +1273,11 @@ used.</p>
  <span class="s1">&#39;fix_set_get&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;fix_set_put&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;fix_set_self&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
- <span class="s1">&#39;fix_del_self&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;fix_delete_self&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;fix_assign_self&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;fix_with_self&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;fix_import_self&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;fix_global_self&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;fix_matchor_get&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;fix_matchor_put&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
  <span class="s1">&#39;fix_matchor_self&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
@@ -1389,7 +1395,7 @@ defaults set here for those individual operations, see <code><a href="#FST.optio
         <div class="decorator decorator-contextmanager">@contextmanager</div>
 
         <span class="def">def</span>
-        <span class="name">options</span><span class="signature pdoc-code condensed">(<span class="param"><span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n">Iterator</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="o">&lt;</span><span class="nb">property</span> <span class="nb">object</span> <span class="n">at</span> <span class="mh">0x7d2e8315c9a0</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>:</span></span>
+        <span class="name">options</span><span class="signature pdoc-code condensed">(<span class="param"><span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n">Iterator</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="o">&lt;</span><span class="nb">property</span> <span class="nb">object</span> <span class="n">at</span> <span class="mh">0x7f154be18450</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>:</span></span>
 
         
     </div>
@@ -1488,16 +1494,28 @@ what gets put if you put an invalid empty set with <code>one=True</code>.
 <li><code>'star'</code>: Starred sequence <code>{*()}</code>.</li>
 <li><code>'call'</code>: <code>set()</code> call.</li>
 </ul></li>
-<li><code>fix_del_self</code>: How to handle operations which would leave a <code>Delete</code> with zero <code>targets</code>.
+<li><code>fix_delete_self</code>: How to handle operations which would leave a <code>Delete</code> with zero <code>targets</code>.
 <ul>
 <li><code>False</code>: Allow, this will leave an invalid <code>Delete</code> which should have the <code>targets</code> replaced as soon as
 possible.</li>
 <li><code>True</code>: Don't allow, error.</li>
 </ul></li>
-<li><code>fix_assign_self</code>: How to handle operations which would leave a <code>Assign</code> with zero <code>targets</code>.
+<li><code>fix_assign_self</code>: How to handle operations which would leave an <code>Assign</code> with zero <code>targets</code>.
 <ul>
 <li><code>False</code>: Allow, this will leave an invalid <code>Assign</code> which should have the <code>targets</code> replaced as soon as
 possible.</li>
+<li><code>True</code>: Don't allow, error.</li>
+</ul></li>
+<li><code>fix_import_self</code>: How to handle operations which would leave an <code>Import</code> with zero <code>names</code>.
+<ul>
+<li><code>False</code>: Allow, this will leave an invalid <code>Import</code> which should have the <code>names</code> replaced as soon as
+possible.</li>
+<li><code>True</code>: Don't allow, error.</li>
+</ul></li>
+<li><code>fix_global_self</code>: How to handle operations which would leave a <code>Global</code> or 'Nonlocal' with zero <code>names</code>.
+<ul>
+<li><code>False</code>: Allow, this will leave an invalid <code>Global</code> or <code>Nonlocal</code> which should have the <code>names</code> replaced
+as soon as possible.</li>
 <li><code>True</code>: Don't allow, error.</li>
 </ul></li>
 <li><code>fix_matchor_get</code>: How to handle zero or length 1 slice gets from a <code>MatchOr</code>. Zero-length <code>MatchOr</code>s, or any
@@ -1705,7 +1723,7 @@ line at a time to <code>linefunc</code>, which by default is <code>print</code>.
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">verify</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;stmts&#39;</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandlers&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">,</span> <span class="s1">&#39;match_cases&#39;</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_all&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_sliceelt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple&#39;</span><span class="p">,</span> <span class="s1">&#39;boolop&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;binop&#39;</span><span class="p">,</span> <span class="s1">&#39;augop&#39;</span><span class="p">,</span> <span class="s1">&#39;unaryop&#39;</span><span class="p">,</span> <span class="s1">&#39;cmpop&#39;</span><span class="p">,</span> <span class="s1">&#39;comprehension&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments_lambda&#39;</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="s1">&#39;alias_dotted&#39;</span><span class="p">,</span> <span class="s1">&#39;alias_star&#39;</span><span class="p">,</span> <span class="s1">&#39;withitem&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="s1">&#39;type_param&#39;</span><span class="p">,</span> <span class="s1">&#39;type_params&#39;</span><span class="p">,</span> <span class="s1">&#39;Assign_targets&#39;</span><span class="p">],</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">reparse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">locs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="n">ctx</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="n">raise_</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="n">Optional</span><span class="p">[</span><span class="n">Self</span><span class="p">]</span>:</span></span>
+        <span class="name">verify</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;stmts&#39;</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandlers&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">,</span> <span class="s1">&#39;match_cases&#39;</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_all&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_sliceelt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple&#39;</span><span class="p">,</span> <span class="s1">&#39;Assign_targets&#39;</span><span class="p">,</span> <span class="s1">&#39;boolop&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;binop&#39;</span><span class="p">,</span> <span class="s1">&#39;augop&#39;</span><span class="p">,</span> <span class="s1">&#39;unaryop&#39;</span><span class="p">,</span> <span class="s1">&#39;cmpop&#39;</span><span class="p">,</span> <span class="s1">&#39;comprehension&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments_lambda&#39;</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="s1">&#39;aliases&#39;</span><span class="p">,</span> <span class="s1">&#39;Import_name&#39;</span><span class="p">,</span> <span class="s1">&#39;Import_names&#39;</span><span class="p">,</span> <span class="s1">&#39;ImportFrom_name&#39;</span><span class="p">,</span> <span class="s1">&#39;ImportFrom_names&#39;</span><span class="p">,</span> <span class="s1">&#39;withitem&#39;</span><span class="p">,</span> <span class="s1">&#39;withitems&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="s1">&#39;type_param&#39;</span><span class="p">,</span> <span class="s1">&#39;type_params&#39;</span><span class="p">],</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>,</span><span class="param">	<span class="n">reparse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">locs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="n">ctx</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>,</span><span class="param">	<span class="n">raise_</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="n">Optional</span><span class="p">[</span><span class="n">Self</span><span class="p">]</span>:</span></span>
 
         
     </div>
@@ -1721,7 +1739,7 @@ everything). The reparse can only be carried out on root nodes but the link vali
 <li><code>mode</code>: Parse mode to use, otherwise if <code>None</code> then use the top level AST node type for the mode. Depending on
 how this is set will determine whether the verification is checking if is parsable by python (<code>'exec'</code> or
 <code>'strict'</code> for example), or if the node itself is just in a valid state (where <code>None</code> is good). See
-<code><a href="extparse.html#Mode">fst.extparse.Mode</a></code>.</li>
+<code><a href="parsex.html#Mode">fst.parsex.Mode</a></code>.</li>
 <li><code>reparse</code>: Whether to reparse the source and compare ASTs (including location). Otherwise the check is limited
 to a structure check that all children have <code><a href="#FST">FST</a></code> nodes which are all liked correctly to their parents.
 <code>reparse=True</code> only allowed on root node.</li>
@@ -2536,7 +2554,7 @@ or <code>False</code> then will attempt to return a node which encloses the loca
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">pars</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">shared</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="n"><a href="misc.html#fstloc">fst.misc.fstloc</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+        <span class="name">pars</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="o">*</span>, </span><span class="param"><span class="n">shared</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">True</span></span><span class="return-annotation">) -> <span class="n"><a href="misc.html#fstloc">fst.misc.fstloc</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
 
         
     </div>
@@ -2784,12 +2802,12 @@ belong to this node or not (meant for internal use).</li>
 <li><code>with_loc</code>: Return nodes depending on their location information.
 <ul>
 <li><code>False</code>: All nodes with or without location.</li>
-<li><code>True</code>: Only nodes which have implicit <code>AST</code> locations and also larger computed location nodes like
+<li><code>True</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger computed location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually arguments
 present).</li>
 <li><code>'all'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
 do not always have a well defined location).</li>
-<li><code>'own'</code>: Only nodes with their own implicit <code>AST</code> locations, same as <code>True</code> but excludes those larger
+<li><code>'own'</code>: Only nodes with their own intrinsic <code>AST</code> locations, same as <code>True</code> but excludes those larger
 nodes with calculated locations.</li>
 </ul></li>
 </ul>
@@ -2833,12 +2851,12 @@ nodes with calculated locations.</li>
 <li><code>with_loc</code>: Return nodes depending on their location information.
 <ul>
 <li><code>False</code>: All nodes with or without location.</li>
-<li><code>True</code>: Only nodes which have implicit <code>AST</code> locations and also larger computed location nodes like
+<li><code>True</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger computed location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually
 arguments present).</li>
 <li><code>'all'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
 do not always have a well defined location).</li>
-<li><code>'own'</code>: Only nodes with their own implicit <code>AST</code> locations, same as <code>True</code> but excludes those larger
+<li><code>'own'</code>: Only nodes with their own intrinsic <code>AST</code> locations, same as <code>True</code> but excludes those larger
 nodes with calculated locations.</li>
 </ul></li>
 </ul>
@@ -2882,12 +2900,12 @@ nodes with calculated locations.</li>
 <li><code>with_loc</code>: Return nodes depending on their location information.
 <ul>
 <li><code>False</code>: All nodes with or without location.</li>
-<li><code>True</code>: Only nodes which have implicit <code>AST</code> locations and also larger computed location nodes like
+<li><code>True</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger computed location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually
 arguments present).</li>
 <li><code>'all'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
 do not always have a well defined location).</li>
-<li><code>'own'</code>: Only nodes with their own implicit <code>AST</code> locations, same as <code>True</code> but excludes those larger
+<li><code>'own'</code>: Only nodes with their own intrinsic <code>AST</code> locations, same as <code>True</code> but excludes those larger
 nodes with calculated locations.</li>
 </ul></li>
 </ul>
@@ -2934,12 +2952,12 @@ nodes with calculated locations.</li>
 <li><code>with_loc</code>: Return nodes depending on their location information.
 <ul>
 <li><code>False</code>: All nodes with or without location.</li>
-<li><code>True</code>: Only nodes which have implicit <code>AST</code> locations and also larger computed location nodes like
+<li><code>True</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger computed location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually
 arguments present).</li>
 <li><code>'all'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
 do not always have a well defined location).</li>
-<li><code>'own'</code>: Only nodes with their own implicit <code>AST</code> locations, same as <code>True</code> but excludes those larger
+<li><code>'own'</code>: Only nodes with their own intrinsic <code>AST</code> locations, same as <code>True</code> but excludes those larger
 nodes with calculated locations.</li>
 </ul></li>
 </ul>
@@ -2984,12 +3002,12 @@ nodes with calculated locations.</li>
 <li><code>with_loc</code>: Return nodes depending on their location information.
 <ul>
 <li><code>False</code>: All nodes with or without location.</li>
-<li><code>True</code>: Only nodes which have implicit <code>AST</code> locations and also larger computed location nodes like
+<li><code>True</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger computed location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually
 arguments present).</li>
 <li><code>'all'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
 do not always have a well defined location).</li>
-<li><code>'own'</code>: Only nodes with their own implicit <code>AST</code> locations, same as <code>True</code> but excludes those larger
+<li><code>'own'</code>: Only nodes with their own intrinsic <code>AST</code> locations, same as <code>True</code> but excludes those larger
 nodes with calculated locations.</li>
 </ul></li>
 </ul>
@@ -3048,12 +3066,12 @@ the walk as long as the replaced node and its parent is used for the following c
 <li><code>with_loc</code>: Return nodes depending on their location information.
 <ul>
 <li><code>False</code>: All nodes with or without location.</li>
-<li><code>True</code>: Only nodes which have implicit <code>AST</code> locations and also larger computed location nodes like
+<li><code>True</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger computed location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually
 arguments present).</li>
 <li><code>'all'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
 do not always have a well defined location).</li>
-<li><code>'own'</code>: Only nodes with their own implicit <code>AST</code> locations, same as <code>True</code> but excludes those larger
+<li><code>'own'</code>: Only nodes with their own intrinsic <code>AST</code> locations, same as <code>True</code> but excludes those larger
 nodes with calculated locations.</li>
 </ul></li>
 </ul>
@@ -3109,12 +3127,12 @@ walk as long as the replaced node and its parent is used for the following call.
 <li><code>with_loc</code>: Return nodes depending on their location information.
 <ul>
 <li><code>False</code>: All nodes with or without location.</li>
-<li><code>True</code>: Only nodes which have implicit <code>AST</code> locations and also larger computed location nodes like
+<li><code>True</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger computed location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually arguments
 present).</li>
 <li><code>'all'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they do
 not always have a well defined location).</li>
-<li><code>'own'</code>: Only nodes with their own implicit <code>AST</code> locations, same as <code>True</code> but excludes those larger nodes
+<li><code>'own'</code>: Only nodes with their own intrinsic <code>AST</code> locations, same as <code>True</code> but excludes those larger nodes
 with calculated locations.</li>
 </ul></li>
 </ul>
@@ -3168,12 +3186,12 @@ thing.</p>
 <li><code>with_loc</code>: Return nodes depending on their location information.
 <ul>
 <li><code>False</code>: All nodes with or without location.</li>
-<li><code>True</code>: Only nodes which have implicit <code>AST</code> locations and also larger computed location nodes like
+<li><code>True</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger computed location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually
 arguments present).</li>
 <li><code>'all'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
 do not always have a well defined location).</li>
-<li><code>'own'</code>: Only nodes with their own implicit <code>AST</code> locations, same as <code>True</code> but excludes those larger
+<li><code>'own'</code>: Only nodes with their own intrinsic <code>AST</code> locations, same as <code>True</code> but excludes those larger
 nodes with calculated locations.</li>
 <li><code>'allown'</code> Same as <code>'own'</code> but recurse into nodes with non-own locations (even though those nodes are not
 returned). This is only really meant for internal use to safely call from <code>.loc</code> location calculation.</li>
@@ -3242,12 +3260,12 @@ of the whole thing.</p>
 <li><code>with_loc</code>: Return nodes depending on their location information.
 <ul>
 <li><code>False</code>: All nodes with or without location.</li>
-<li><code>True</code>: Only nodes which have implicit <code>AST</code> locations and also larger computed location nodes like
+<li><code>True</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger computed location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually
 arguments present).</li>
 <li><code>'all'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
 do not always have a well defined location).</li>
-<li><code>'own'</code>: Only nodes with their own implicit <code>AST</code> locations, same as <code>True</code> but excludes those larger
+<li><code>'own'</code>: Only nodes with their own intrinsic <code>AST</code> locations, same as <code>True</code> but excludes those larger
 nodes with calculated locations.</li>
 <li><code>'allown'</code> Same as <code>'own'</code> but recurse into nodes with non-own locations (even though those nodes are not
 returned). This is only really meant for internal use to safely call from <code>.loc</code> location calculation.</li>
@@ -3328,12 +3346,12 @@ or whistles then <code>ast.walk()</code> will be a bit faster.</p>
 <li><code>with_loc</code>: Return nodes depending on their location information.
 <ul>
 <li><code>False</code>: All nodes with or without location.</li>
-<li><code>True</code>: Only nodes which have implicit <code>AST</code> locations and also larger computed location nodes like
+<li><code>True</code>: Only nodes which have intrinsic <code>AST</code> locations and also larger computed location nodes like
 <code>comprehension</code>, <code>withitem</code>, <code>match_case</code> and <code>arguments</code> (the last one only if there are actually
 arguments present).</li>
 <li><code>'all'</code>: Same as <code>True</code> but also operators with calculated locations (excluding <code>and</code> and <code>or</code> since they
 do not always have a well defined location).</li>
-<li><code>'own'</code>: Only nodes with their own implicit <code>AST</code> locations, same as <code>True</code> but excludes those larger
+<li><code>'own'</code>: Only nodes with their own intrinsic <code>AST</code> locations, same as <code>True</code> but excludes those larger
 nodes with calculated locations.</li>
 </ul></li>
 <li><code>self_</code>: If <code>True</code> then self will be returned first with the possibility to skip children with <code>send(False)</code>,
@@ -3976,48 +3994,6 @@ parent.</li>
 
 
                             </div>
-                            <div id="FST.get_parse_mode" class="classattr">
-                                <div class="attr function">
-            
-        <span class="def">def</span>
-        <span class="name">get_parse_mode</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="s1">&#39;builtins.str | type[AST] | None&#39;</span>:</span></span>
-
-        
-    </div>
-    <a class="headerlink" href="#FST.get_parse_mode"></a>
-    
-            <div class="docstring"><p>Determine the parse mode for this node. This is the extended parse mode as per <code>Mode</code>, not the <code>ast.parse()</code>
-mode. Returns a mode which is guaranteed to reparse this assumed-valid element to an exact copy of itself. This
-mode is not guaranteed to be the same as was used to create the <code><a href="#FST">FST</a></code>, just guaranteed to be able to recreate
-it. Mostly it just returns the <code>AST</code> type, but in cases where that won't parse to this <code><a href="#FST">FST</a></code> it will return
-a string mode. This is a quick just a check, doesn't verify everything.</p>
-
-<p><strong>Returns:</strong></p>
-
-<ul>
-<li><code>str</code>: One of the special text specifiers. Will be returned for most slices and special cases like an <code>*a</code>
-which is actually a <code>Tuple</code> (which it only is inside a slice).</li>
-<li><code>type[AST]</code>: Will be returned for nodes which can be reparsed correctly using only the <code>AST</code> type.</li>
-<li><code>None</code>: If invalid or cannot be determined.</li>
-</ul>
-
-<p><strong>Examples:</strong></p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a | b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_parse_mode</span><span class="p">()</span>
-<span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="err">&#39;</span><span class="nc">ast</span><span class="o">.</span><span class="n">BinOp</span><span class="s1">&#39;&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a | b&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_parse_mode</span><span class="p">()</span>
-<span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="err">&#39;</span><span class="nc">ast</span><span class="o">.</span><span class="n">MatchOr</span><span class="s1">&#39;&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;except ValueError: pass</span><span class="se">\n</span><span class="s1">except: pass&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandlers&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_parse_mode</span><span class="p">()</span>
-<span class="s1">&#39;ExceptHandlers&#39;</span>
-</code></pre>
-</div>
-</div>
-
-
-                            </div>
                             <div id="FST.get_indent" class="classattr">
                                 <div class="attr function">
             
@@ -4065,6 +4041,87 @@ indentation and returned.</p>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if 1:</span><span class="se">\n</span><span class="s1"> </span><span class="se">\\\n</span><span class="s1">  i = 1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_indent</span><span class="p">()</span>
 <span class="s1">&#39; &#39;</span>
+</code></pre>
+</div>
+</div>
+
+
+                            </div>
+                            <div id="FST.get_parse_mode" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">get_parse_mode</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="s1">&#39;builtins.str | type[AST] | None&#39;</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#FST.get_parse_mode"></a>
+    
+            <div class="docstring"><p>Determine the parse mode for this node. This is the extended parse mode as per <code>Mode</code>, not the <code>ast.parse()</code>
+mode. Returns a mode which is guaranteed to reparse this element (which may be a SPECIAL SLICE) to an exact copy
+of itself. This mode is not guaranteed to be the same as was used to create the <code><a href="#FST">FST</a></code>, just guaranteed to be
+able to recreate it. Mostly it just returns the <code>AST</code> type, but in cases where that won't parse to this <code><a href="#FST">FST</a></code> it
+will return a string mode. This is a quick just a check, doesn't verify everything.</p>
+
+<p><strong>Returns:</strong></p>
+
+<ul>
+<li><code>str</code>: One of the special text specifiers. Will be returned for most slices and special cases like an <code>*a</code>
+inside a <code>.slice</code> which is actually a <code>Tuple</code>, or a SPECIAL SLICE like <code>Assign.targets.copy()</code>.</li>
+<li><code>type[AST]</code>: Will be returned for nodes which can be reparsed correctly using only the <code>AST</code> type.</li>
+<li><code>None</code>: If invalid or cannot be determined.</li>
+</ul>
+
+<p><strong>Examples:</strong></p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a | b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_parse_mode</span><span class="p">()</span>
+<span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="err">&#39;</span><span class="nc">ast</span><span class="o">.</span><span class="n">BinOp</span><span class="s1">&#39;&gt;</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a | b&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_parse_mode</span><span class="p">()</span>
+<span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="err">&#39;</span><span class="nc">ast</span><span class="o">.</span><span class="n">MatchOr</span><span class="s1">&#39;&gt;</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;except ValueError: pass</span><span class="se">\n</span><span class="s1">except: pass&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandlers&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_parse_mode</span><span class="p">()</span>
+<span class="s1">&#39;ExceptHandlers&#39;</span>
+</code></pre>
+</div>
+</div>
+
+
+                            </div>
+                            <div id="FST.is_special_slice" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">is_special_slice</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="nb">bool</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#FST.is_special_slice"></a>
+    
+            <div class="docstring"><p>Whether <code>self</code> is an instance of our own SPECIAL SLICE format and not a valid python structure. For example
+a <code>Set</code> or <code>MatchOr</code> with zero elements or our own <code>_special_slice_*</code> <code>AST</code> class.</p>
+
+<p><strong>Returns:</strong></p>
+
+<ul>
+<li><code>bool</code>: Whether self is a recognized SPECIAL SLICE or not (if not it still doesn't mean its valid).</li>
+</ul>
+
+<p><strong>Examples:</strong></p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{1}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">is_special_slice</span><span class="p">()</span>
+<span class="kc">False</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{1}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">fix_set_get</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">is_special_slice</span><span class="p">()</span>
+<span class="kc">True</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a | b | c&#39;</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">fix_matchor_get</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">is_special_slice</span><span class="p">()</span>
+<span class="kc">True</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = b = c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;targets&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_special_slice</span><span class="p">()</span>
+<span class="kc">True</span>
 </code></pre>
 </div>
 </div>
@@ -4296,6 +4353,9 @@ individually and are not on a single line or not parenthesized and do not have l
 a parent to enclose them like <code>arguments</code> (enclosable in <code>FunctionDef</code> but unenclosed in a <code>Lambda</code>) or the
 <code>cmpop</code>s <code>is not</code> or <code>not in</code> will return <code>False</code>.</p>
 
+<p>Block statements are not done and raise <code>NotImplementedError</code>, except for <code>With</code> and <code>AsyncWith</code>, which only
+check the block header up to the <code>:</code> (as common sense would indicate).</p>
+
 <p>This function does NOT check whether <code>self</code> is enclosed by some parent up the tree if it is not enclosed itself,
 for that see <code><a href="#FST.is_enclosed_in_parents">is_enclosed_in_parents()</a></code>.</p>
 
@@ -4307,7 +4367,7 @@ multiline-safe. Grouping parentheses are different from tuple parentheses which 
 <li><code>whole</code>: Whether entire source should be checked and not just the lines corresponding to the node. This is
 only valid for a root node.</li>
 <li><code>out_lns</code>: If this is not <code>None</code> then it is expected to be a <code>Set</code> which will get the line numbers added of
-all the lines that would need line continuation backslashes in order to make this function True.</li>
+all the lines that would need line continuation backslashes in order to make this function <code>True</code>.</li>
 </ul>
 
 <p><strong>Returns:</strong></p>
