@@ -383,7 +383,7 @@ def _repr_tail(self: fst.FST) -> str:
 def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
     ast = self.a
     tail = self._repr_tail()
-    sind = ' ' * st.indent
+    sind = st.sind
 
     if not st.src:  # noop
         pass
@@ -432,7 +432,7 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
                 continue
 
             if name == 'ctx':
-                st.linefunc(f'{sind}{cind}.{name} '
+                st.linefunc(f'{cind}{sind}.{name} '
                             f'{child.__class__.__qualname__ if isinstance(child, AST) else child}{st.eol}')
 
                 continue
@@ -449,7 +449,7 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
                 if isinstance(child, AST):
                     child.f._dump(st, cind + sind, f'.{name} ')
                 else:
-                    st.linefunc(f'{sind}{cind}.{name} {child!r}{st.eol}')
+                    st.linefunc(f'{cind}{sind}.{name} {child!r}{st.eol}')
 
                 continue
 
@@ -463,19 +463,19 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
                     continue
 
         if st.full or (child != []):
-            st.linefunc(f'{sind}{cind}.{name}{f"[{len(child)}]" if is_list else ""}{st.eol}')
+            st.linefunc(f'{cind}{sind}.{name}{f"[{len(child)}]" if is_list else ""}{st.eol}')
 
         if is_list:
             for i, ast in enumerate(child):
                 if isinstance(ast, AST):
-                    ast.f._dump(st, cind + sind, f'{i}] ')  # ast.f._dump(st, cind + sind * 2, f'{i}] ')
+                    ast.f._dump(st, cind + st.lind, f'{i}] ')  # ast.f._dump(st, cind + sind * 2, f'{i}] ')
                 else:
-                    st.linefunc(f'{sind}{cind}{i}] {ast!r}{st.eol}')  # st.linefunc(f'{sind}{sind}{cind}{i}] {ast!r}{st.eol}')
+                    st.linefunc(f'{cind}{st.lind}{i}] {ast!r}{st.eol}')  # st.linefunc(f'{sind}{sind}{cind}{i}] {ast!r}{st.eol}')
 
         elif isinstance(child, AST):
             child.f._dump(st, cind + sind * 2)
         else:
-            st.linefunc(f'{sind}{sind}{cind}{child!r}{st.eol}')
+            st.linefunc(f'{cind}{sind}{sind}{child!r}{st.eol}')
 
 
 def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None) -> None:

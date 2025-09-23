@@ -202,7 +202,6 @@ This package is not finished but functional enough that it can be useful.
   * `FunctionDef.decorator_list`
   * `AsyncFunctionDef.decorator_list`
   * `ClassDef.decorator_list`
-  * `ClassDef.bases`
   * `BoolOp.values`
   * `Compare`
   * `comprehension.ifs`

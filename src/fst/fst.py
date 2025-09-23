@@ -1129,28 +1129,30 @@ class FST:
             FST.set_options(**old_options)
 
     def dump(self, src: Literal['stmt', 'all'] | None = None, full: bool = False, expand: bool = False, *,
-             indent: int = 2, out: Callable | TextIO = print, eol: builtins.str | None = None,
-             ) -> builtins.str | list[builtins.str] | None:
+             indent: int = 2, list_indent: int | bool = 0, out: Callable | TextIO = print,
+             eol: builtins.str | None = None) -> builtins.str | list[builtins.str] | None:
         r"""Dump a representation of the tree to stdout or other `TextIO` or return as a `str` or `list` of lines, or
         call a provided function once with each line of the output.
 
         **Parameters:**
-        - `src`: `'stmt'` means output statement source lines (including `ExceptHandler` and `match_case`), `'all'`
-            means output source for each individual and node and `None` does not output any source. Can also be a string
-            for shortcut specification of source and flags by first letter: `'s'` means `src='stmt'`, `'a'` means
-            `src='all'`, `'f'` means `full=True` and `'e'` means `expand=True`, so `'sfe'` would be a full expanded dump
-            showing statement source lines.
+        - `src`: `'stmt'` means output statement source lines (including `ExceptHandler` and `match_case`) or top level
+            source if level is below statement. `'all'` means output source for each individual and node and `None` does
+            not output any source. Can also be a string for shortcut specification of source and flags by first letter:
+            `'s'` means `src='stmt'`, `'a'` means `src='all'`, `'f'` means `full=True` and `'e'` means `expand=True`, so
+            `'sfe'` would be equivalent to `.dump(src='stmt', full=True, expand=True)`.
         - `full`: If `True` then will list all fields in nodes including empty ones, otherwise will exclude most empty
             fields.
         - `expand`: If `True` then the output is a nice compact representation. If `False` then it is ugly and wasteful.
-        - `indent`: The average airspeed of an unladen swallow (European).
+        - `indent`: Indentation per level as an integer (number of spaces) or a string.
+        - `list_indent`: Extra indentation for elements of lists as an integer or string (added to indent, normally 0).
+            If `True` then will be same as `indent`.
         - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
             `TextIO` will cann the `write` method for each line of output. Otherwise a `Callable[[str], None]` which is
             called for each line of output individually.
         - `eol`: What to put at the end of each text line, `None` means newline for `TextIO` out and nothing for other.
 
         **Returns:**
-        - `str | list[str]`: If those were requested with `out=str` or `out=list` else `None` and the output is send one
+        - `str | list[str]`: If those were requested with `out=str` or `out=list` else `None` and the output is sent one
             line at a time to `linefunc`, which by default is `print`.
         - `None`: Otherwise.
 
@@ -1158,71 +1160,64 @@ class FST:
         ```py
         >>> f = FST('''
         ... if 1:
-        ...     call(a[i], **b)
+        ...     call(a=b, **c)
         ... '''.strip())
 
         >>> f.dump()
-        If - ROOT 0,0..1,19
+        If - ROOT 0,0..1,18
           .test Constant 1 - 0,3..0,4
           .body[1]
-          0] Expr - 1,4..1,19
-            .value Call - 1,4..1,19
+          0] Expr - 1,4..1,18
+            .value Call - 1,4..1,18
               .func Name 'call' Load - 1,4..1,8
-              .args[1]
-              0] Subscript - 1,9..1,13
-                .value Name 'a' Load - 1,9..1,10
-                .slice Name 'i' Load - 1,11..1,12
-                .ctx Load
-              .keywords[1]
-              0] keyword - 1,15..1,18
-                .value Name 'b' Load - 1,17..1,18
+              .keywords[2]
+              0] keyword - 1,9..1,12
+                .arg 'a'
+                .value Name 'b' Load - 1,11..1,12
+              1] keyword - 1,14..1,17
+                .value Name 'c' Load - 1,16..1,17
 
-        >>> f.dump(src='all', indent=4)
+        >>> f.dump(src='all', indent=3, list_indent=True)
         0: if 1:
-        If - ROOT 0,0..1,19
+        If - ROOT 0,0..1,18
         0:    1
-            .test Constant 1 - 0,3..0,4
-            .body[1]
-        1:     call(a[i], **b)
-            0] Expr - 1,4..1,19
-                .value Call - 1,4..1,19
+           .test Constant 1 - 0,3..0,4
+           .body[1]
+        1:     call(a=b, **c)
+              0] Expr - 1,4..1,18
+                 .value Call - 1,4..1,18
         1:     call
                     .func Name 'call' Load - 1,4..1,8
-                    .args[1]
-        1:          a[i]
-                    0] Subscript - 1,9..1,13
-        1:          a
-                        .value Name 'a' Load - 1,9..1,10
-        1:            i
-                        .slice Name 'i' Load - 1,11..1,12
-                        .ctx Load
-                    .keywords[1]
-        1:                **b
-                    0] keyword - 1,15..1,18
-        1:                  b
-                        .value Name 'b' Load - 1,17..1,18
+                    .keywords[2]
+        1:          a=b
+                       0] keyword - 1,9..1,12
+                          .arg 'a'
+        1:            b
+                          .value Name 'b' Load - 1,11..1,12
+        1:               **c
+                       1] keyword - 1,14..1,17
+        1:                 c
+                          .value Name 'c' Load - 1,16..1,17
 
         >>> f.dump(out=str)[:64]
-        'If - ROOT 0,0..1,19\n  .test Constant 1 - 0,3..0,4\n  .body[1]\n  0'
+        'If - ROOT 0,0..1,18\n  .test Constant 1 - 0,3..0,4\n  .body[1]\n  0'
 
-        >>> for l in f.dump('stmt', out=list):
-        ...     print(repr(l))
-        '0: if 1:'
-        'If - ROOT 0,0..1,19'
-        '  .test Constant 1 - 0,3..0,4'
-        '  .body[1]'
-        '1:     call(a[i], **b)'
-        '  0] Expr - 1,4..1,19'
-        '    .value Call - 1,4..1,19'
-        "      .func Name 'call' Load - 1,4..1,8"
-        '      .args[1]'
-        '      0] Subscript - 1,9..1,13'
-        "        .value Name 'a' Load - 1,9..1,10"
-        "        .slice Name 'i' Load - 1,11..1,12"
-        '        .ctx Load'
-        '      .keywords[1]'
-        '      0] keyword - 1,15..1,18'
-        "        .value Name 'b' Load - 1,17..1,18"
+        >>> from pprint import pp
+        >>> pp(f.dump('stmt', out=list))
+        ['0: if 1:',
+         'If - ROOT 0,0..1,18',
+         '  .test Constant 1 - 0,3..0,4',
+         '  .body[1]',
+         '1:     call(a=b, **c)',
+         '  0] Expr - 1,4..1,18',
+         '    .value Call - 1,4..1,18',
+         "      .func Name 'call' Load - 1,4..1,8",
+         '      .keywords[2]',
+         '      0] keyword - 1,9..1,12',
+         "        .arg 'a'",
+         "        .value Name 'b' Load - 1,11..1,12",
+         '      1] keyword - 1,14..1,17',
+         "        .value Name 'c' Load - 1,16..1,17"]
         ```
         """
 
@@ -1244,7 +1239,11 @@ class FST:
         elif eol is None:
             eol = ''
 
-        st = nspace(src=src, full=full, expand=expand, indent=indent, eol=eol)
+        sind = indent if isinstance(indent, str) else ' ' * indent
+        lind = sind + (sind if list_indent is True else
+                       list_indent if isinstance(list_indent, str) else
+                       ' ' * list_indent)
+        st = nspace(src=src, full=full, expand=expand, eol=eol, sind=sind, lind=lind)
 
         if out in (str, list):
             lines = []
