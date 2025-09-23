@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import threading
 import unittest
 from ast import parse as ast_parse, unparse as ast_unparse
 
@@ -4356,6 +4357,26 @@ match a:
             pass
 
         self.assertEqual(old, FST.set_options(**old))
+
+    def test_options_thread_local(self):
+        def threadfunc(barrier, ret, option, value):
+            FST.set_options(**{option: value})
+            barrier.wait()
+
+            ret[0] = FST.get_option(option)
+
+        barrier = threading.Barrier(2)
+        thread0 = threading.Thread(target=threadfunc, args=(barrier, ret0 := [None], 'pars', True))
+        thread1 = threading.Thread(target=threadfunc, args=(barrier, ret1 := [None], 'pars', False))
+
+        thread0.start()
+        thread1.start()
+        thread0.join()
+        thread1.join()
+
+        self.assertEqual('auto', FST.get_option('pars'))
+        self.assertEqual(True, ret0[0])
+        self.assertEqual(False, ret1[0])
 
     def test_reconcile(self):
         # basic replacements

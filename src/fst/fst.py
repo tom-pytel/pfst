@@ -4,6 +4,7 @@ their respective `ast` module counterparts."""
 from __future__ import annotations
 
 import builtins  # because of the unfortunate choice for the name of an Interpolation field, '.str', we have a '.str' property in FST which messes with the type annotations
+import threading
 from ast import iter_fields
 from ast import dump as ast_dump, unparse as ast_unparse, mod as ast_mod
 from contextlib import contextmanager
@@ -111,33 +112,38 @@ __all__ = [
 ]
 
 
+class _Local(threading.local):
+    def __init__(self):
+        self.options = {
+            'pars':             'auto', # True | False | 'auto'
+            'raw':              False,  # True | False | 'auto'
+            'trivia':           True,   # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line'), True means ('block', 'line')
+            'elif_':            True,   # True | False
+            'docstr':           True,   # True | False | 'strict'
+            'pars_walrus':      False,  # True | False
+            'fix_set_get':      True,   # True | False | 'star' | 'call' | 'tuple'
+            'fix_set_put':      True,   # True | False | 'star' | 'call' | 'both'
+            'fix_set_self':     True,   # True | False | 'star' | 'call'
+            'fix_delete_self':  True,   # True | False
+            'fix_assign_self':  True,   # True | False
+            'fix_with_self':    True,   # True | False
+            'fix_import_self':  True,   # True | False
+            'fix_global_self':  True,   # True | False
+            'fix_matchor_get':  True,   # True | False | 'strict'
+            'fix_matchor_put':  True,   # True | False | 'strict'
+            'fix_matchor_self': True,   # True | False | 'strict'
+            'pep8space':        True,   # True | False | 1
+            'precomms':         True,   # True | False | 'all'
+            'postcomms':        True,   # True | False | 'all' | 'block'
+            'prespace':         False,  # True | False | int
+            'postspace':        False,  # True | False | int
+        }
+
+
+_LOCAL = _Local()
+
 _DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_version=None)
 _DEFAULT_INDENT = '    '
-
-_OPTIONS = {
-    'pars':             'auto', # True | False | 'auto'
-    'raw':              False,  # True | False | 'auto'
-    'trivia':           True,   # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line'), True means ('block', 'line')
-    'elif_':            True,   # True | False
-    'docstr':           True,   # True | False | 'strict'
-    'pars_walrus':      False,  # True | False
-    'fix_set_get':      True,   # True | False | 'star' | 'call' | 'tuple'
-    'fix_set_put':      True,   # True | False | 'star' | 'call' | 'both'
-    'fix_set_self':     True,   # True | False | 'star' | 'call'
-    'fix_delete_self':  True,   # True | False
-    'fix_assign_self':  True,   # True | False
-    'fix_with_self':    True,   # True | False
-    'fix_import_self':  True,   # True | False
-    'fix_global_self':  True,   # True | False
-    'fix_matchor_get':  True,   # True | False | 'strict'
-    'fix_matchor_put':  True,   # True | False | 'strict'
-    'fix_matchor_self': True,   # True | False | 'strict'
-    'pep8space':        True,   # True | False | 1
-    'precomms':         True,   # True | False | 'all'
-    'postcomms':        True,   # True | False | 'all' | 'block'
-    'prespace':         False,  # True | False | int
-    'postspace':        False,  # True | False | int
-}
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -898,7 +904,7 @@ class FST:
         ```
         """
 
-        return _OPTIONS.copy()
+        return _LOCAL.options.copy()
 
     @staticmethod
     def get_option(option: builtins.str, options: Mapping[builtins.str, Any] = {}) -> object:
@@ -926,7 +932,7 @@ class FST:
         ```
         """
 
-        return _OPTIONS.get(option) if (o := options.get(option)) is None else o
+        return _LOCAL.options.get(option) if (o := options.get(option)) is None else o
 
     @staticmethod
     def set_options(**options) -> dict[builtins.str, Any]:
@@ -961,9 +967,10 @@ class FST:
         ```
         """
 
-        ret = {o: _OPTIONS[o] for o in options}
+        _options = _LOCAL.options
+        ret = {o: _options[o] for o in options}
 
-        _OPTIONS.update(options)
+        _options.update(options)
 
         return ret
 
