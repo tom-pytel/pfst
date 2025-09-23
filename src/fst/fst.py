@@ -147,8 +147,8 @@ _DEFAULT_INDENT = '    '
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def parse(source: builtins.str, filename: str = '<unknown>', mode: str = 'exec', *, type_comments: bool = False,
-          feature_version: tuple[int, int] | None = None, **kwargs) -> AST:
+def parse(source: builtins.str | bytes | AST, filename: str = '<unknown>', mode: str = 'exec', *,
+          type_comments: bool = False, feature_version: tuple[int, int] | None = None, **kwargs) -> AST:
     r"""Executes `ast.parse()` and then adds `FST` nodes to the parsed tree. Drop-in replacement for `ast.parse()`. For
     parameters, see `ast.parse()`. Returned `AST` tree has added `.f` attribute at each node which accesses the parallel
     `FST` tree.
@@ -199,8 +199,15 @@ def parse(source: builtins.str, filename: str = '<unknown>', mode: str = 'exec',
     ```
     """
 
-    return FST.fromsrc(source, mode, filename=filename, type_comments=type_comments, feature_version=feature_version,
-                       **kwargs).a
+    if isinstance(source, AST):
+        return FST.fromast(source, None, filename=filename, type_comments=type_comments,
+                           feature_version=feature_version, **kwargs).a
+
+    if not isinstance(source, str):
+        source = bytes(source).decode()
+
+    return FST.fromsrc(source, mode, filename=filename, type_comments=type_comments,
+                       feature_version=feature_version, **kwargs).a
 
 
 def unparse(ast_obj: AST) -> str:

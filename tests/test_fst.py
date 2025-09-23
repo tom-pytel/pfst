@@ -805,6 +805,14 @@ def regen_precedence_data():
 
 
 class TestFST(unittest.TestCase):
+    def test_fst_parse_non_str(self):
+        self.assertEqual('if 1: pass', parse(b'if 1: pass').f.src)
+        self.assertEqual('if 1: pass', parse(memoryview(b'if 1: pass')).f.src)
+
+        self.assertEqual('if 1:\n    pass', parse(FST('if 1: pass').a).f.src)
+        self.assertEqual('a:b:c', parse(FST('a:b:c').a).f.src)
+        self.assertEqual('except:\n    pass', parse(FST('except: pass').a).f.src)
+
     def test_unparse(self):
         self.assertEqual('for i in j', px.unparse(FST('[i for i in j]').generators[0].a))
 
