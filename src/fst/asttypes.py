@@ -1,4 +1,4 @@
-"""AST types and standins (for `isinstance()` use)."""
+"""AST types and standins (for `isinstance()` use). Also custom fst AST slice types."""
 
 import sys
 
@@ -125,13 +125,11 @@ from ast import (
 
 if sys.version_info[:2] >= (3, 11):  # for isinstance() checks
     from ast import TryStar
-
 else:
     class TryStar(AST): """Standin."""  # should we try to duplicate params? opening up possible can of descent into madness there
 
 if sys.version_info[:2] >= (3, 12):
     from ast import TypeAlias, type_param, TypeVar, ParamSpec, TypeVarTuple
-
 else:
     class TypeAlias(AST): """Standin."""
     class type_param(AST): """Standin."""
@@ -141,7 +139,6 @@ else:
 
 if sys.version_info[:2] >= (3, 14):
     from ast import TemplateStr, Interpolation
-
 else:
     class TemplateStr(AST): """Standin."""
     class Interpolation(AST): """Standin."""

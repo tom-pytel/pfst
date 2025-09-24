@@ -90,15 +90,8 @@ from .asttypes import (
     _slice_type_params,
 )
 
-
-from .astutil import (
-    pat_alnum, bistr,
-    walk, reduce_ast,
-)
-
-from .misc import (
-    next_frag, shortstr
-)
+from .astutil import pat_alnum, bistr, walk, reduce_ast
+from .misc import next_frag, shortstr
 
 __all__ = [
     'Mode',

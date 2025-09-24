@@ -1,6 +1,6 @@
 """Low level common data and functions that are aware of or meant to be used as part of the FST class.
 
-This module contains functions which are imported as methods in the `FST` class.
+This module contains functions which are imported as methods in the `FST` class (for now).
 """
 
 from __future__ import annotations
@@ -261,7 +261,7 @@ def _make_tree_fst(ast: AST, parent: fst.FST, pfield: astfield) -> fst.FST:
     return fst.FST(ast, parent, pfield)
 
 
-def _out_lines(fst_: fst.FST, linefunc: Callable, ln: int, col: int, end_ln: int, end_col: int, eol: str = '') -> None:
+def _dump_lines(fst_: fst.FST, linefunc: Callable, ln: int, col: int, end_ln: int, end_col: int, eol: str = '') -> None:
     width = int(log10(len(fst_.root._lines) - 1 or 1)) + 1
     lines = fst_.get_src(ln, col, end_ln, end_col, True)
 
@@ -346,21 +346,21 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
     elif isinstance(ast, (stmt, ExceptHandler, match_case)):  # src = 'stmt' or 'all'
         if loc := self.bloc:
             if isinstance(ast, BLOCK):
-                _out_lines(self, st.linefunc, loc.ln, loc.col, (c := self._loc_block_header_end())[0], c[1] + 1, st.eol)
+                _dump_lines(self, st.linefunc, loc.ln, loc.col, (c := self._loc_block_header_end())[0], c[1] + 1, st.eol)
             else:
-                _out_lines(self, st.linefunc, *loc, st.eol)
+                _dump_lines(self, st.linefunc, *loc, st.eol)
 
     elif not isinstance(ast, mod):
         if st.src == 'all':
             if not (parent := self.parent) or not isinstance(parent.a, Expr):
                 if loc := self.loc:
-                    _out_lines(self, st.linefunc, *loc, st.eol)
+                    _dump_lines(self, st.linefunc, *loc, st.eol)
 
         elif st.src == 'stmt' and not self.parent:  # if putting statements but root is not statement or mod then just put root src and no src below
             st.src = None
 
             if loc := self.loc:
-                _out_lines(self, st.linefunc, *loc, st.eol)
+                _dump_lines(self, st.linefunc, *loc, st.eol)
 
     if not st.expand:
         if isinstance(ast, Name):
@@ -1241,12 +1241,10 @@ def _loc_maybe_dict_key(self: fst.FST, idx: int, pars: bool = False, body: list[
                         body2: list[AST] | None = None) -> fstloc:
     """Return location of dictionary key even if it is `**` specified by a `None`. Optionally return the location of the
     grouping parentheses if key actually present. Can also be used to get the location (parenthesized or not) from any
-    list of `AST`s which is not a `Dict.keys` if an explicit `body` is passed in (assuming none of the are `None`).
+    list of `AST`s which is not a `Dict.keys` if an explicit `body` and / or `body2` is passed in.
 
     **WARNING:** `idx` must be positive.
     """
-
-    # assert isinstance(self.a, Dict)
 
     if key := (body or self.a.keys)[idx]:
         return key.f.pars() if pars else key.f.loc

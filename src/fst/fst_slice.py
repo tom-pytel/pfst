@@ -1,7 +1,6 @@
-"""Get and put slice. Some of the slice types are very specific, using `AST` containers in non-standard ways. Mosthly
-this is to allow preservation of trivia and formatting, especially with different separators like `|` or `=`.
+"""Get and put slice. Some slices can use normal AST types and others need special custom fst AST container classes.
 
-This module contains functions which are imported as methods in the `FST` class.
+This module contains functions which are imported as methods in the `FST` class (for now).
 """
 
 from __future__ import annotations
@@ -846,7 +845,7 @@ def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop:
             fst.FST._new_empty_set_curlies(from_=self) if not (fix_set_get := self.get_option('fix_set_get', options)) else
             fst.FST._new_empty_set_call(from_=self) if fix_set_get == 'call' else
             fst.FST._new_empty_tuple(from_=self) if fix_set_get == 'tuple' else
-            fst.FST._new_empty_set_star(from_=self)  # True, 'star'
+            fst.FST._new_empty_set_star(from_=self)  # True, 'star' default
         )
 
     locs = _locs_and_bound_get(self, start, stop, body, body, 1)
@@ -1075,7 +1074,7 @@ def _get_slice_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] 
     len_slice = stop - start
 
     if not len_slice:
-        return self._new_empty_tuple(from_=self)
+        return fst.FST._new_empty_tuple(from_=self)
 
     if cut and len_slice == len_body and self.get_option('fix_global_self', options):
         raise ValueError(f'cannot cut all {ast.__class__.__name__}.names without fix_global_self=False')

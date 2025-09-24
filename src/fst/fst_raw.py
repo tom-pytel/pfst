@@ -1,6 +1,6 @@
 """Raw reparse FST methods.
 
-This module contains functions which are imported as methods in the `FST` class.
+This module contains functions which are imported as methods in the `FST` class (for now).
 """
 
 from __future__ import annotations

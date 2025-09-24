@@ -97,6 +97,7 @@ try:
     from typing import Self
 except ImportError:  # for py 3.10
     from typing import ForwardRef
+
     Self = ForwardRef('FST')
 
 __all__ = [

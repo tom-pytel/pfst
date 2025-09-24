@@ -1,7 +1,4 @@
-"""Convert `Code` to `FST`.
-
-This module contains functions which are imported as methods in the `FST` class.
-"""
+"""Convert `Code` to `FST`."""
 
 from __future__ import annotations
 
@@ -55,8 +52,8 @@ from .misc import (
 )
 
 from .parsex import (
-    ParseError,
     _fixing_unparse,
+    ParseError,
     unparse,
     parse,
     parse_stmts,
@@ -225,7 +222,6 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any],
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# FST class private methods
 
 def code_as_all(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
     """Convert `code` to any parsable `FST` if possible. If `FST` passed then it is returned as itself."""
