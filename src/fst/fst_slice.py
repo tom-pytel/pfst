@@ -64,6 +64,7 @@ from .asttypes import (
     TryStar,
     TypeAlias,
     TemplateStr,
+    expr_context,
     _slice_Assign_targets,
     _slice_aliases,
     _slice_withitems,
@@ -1827,6 +1828,77 @@ def _put_slice_seq_end(self: fst.FST, params: tuple) -> None:
             return self
 
 
+def _put_slice_asts(self: fst.FST, start: int, stop: int, field: str, body: list[AST],
+                    fst_: fst.FST | None, asts: list[AST] | None, *, ctx: type[expr_context] | None = None) -> None:
+    """Put or delete the actual `AST` nodes to `self` body and create `FST` nodes for them."""
+
+    self._unmake_fst_tree(body[start : stop])
+
+    if not asts:
+        len_asts = 0
+
+        del body[start : stop]
+
+    else:
+        len_asts = len(asts)
+
+        fst_._unmake_fst_parents(True)
+
+        body[start : stop] = asts
+
+        FST = fst.FST
+        new_fsts = [FST(body[i], self, astfield(field, i)) for i in range(start, start + len_asts)]
+
+        if new_fsts and ctx:
+            set_ctx([f.a for f in new_fsts], ctx)
+
+        self._make_fst_tree(new_fsts)
+
+    for i in range(start + len_asts, len(body)):
+        body[i].f.pfield = astfield(field, i)
+
+
+def _put_slice_asts2(self: fst.FST, start: int, stop: int, field2: str, body: list[AST], body2: list[AST],
+                     fst_: fst.FST | None, asts: list[AST] | None, asts2: list[AST] | None) -> None:
+    """Put or delete the actual `AST` nodes to `self` body and create `FST` nodes for them. This is the two element
+    version for Dict and MatchMapping."""
+
+    self._unmake_fst_tree(body[start : stop] + body2[start : stop])
+
+    if not asts:
+        len_asts = 0
+
+        del body[start : stop]
+        del body2[start : stop]
+
+    else:
+        len_asts = len(asts)
+
+        fst_._unmake_fst_parents(True)
+
+        body[start : stop] = asts
+        body2[start : stop] = asts2
+
+        FST = fst.FST
+        new_fsts = []
+
+        for i in range(len_asts):
+            startplusi = start + i
+
+            new_fsts.append(FST(body2[startplusi], self, astfield(field2, startplusi)))
+
+            if key := body[startplusi]:
+                new_fsts.append(FST(key, self, astfield('keys', startplusi)))
+
+        self._make_fst_tree(new_fsts)
+
+    for i in range(start + len_asts, len(body)):
+        body2[i].f.pfield = astfield(field2, i)
+
+        if key := body[i]:  # could be None from ** in Dict
+            key.f.pfield = astfield('keys', i)
+
+
 def _get_element_indent(self: fst.FST, body: list[AST], body2: list[AST], start: int) -> str | None:
     """Get first exprish element indentation found for an element which starts its own line. The FULL indentation, not
     the element indentation with respect to container indentation. We just return the indentation of one element instead
@@ -2256,12 +2328,7 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
                                           options.get('trivia'), options.get('ins_ln'), 'keys', 'values')
 
-        self._unmake_fst_tree(body[start : stop] + body2[start : stop])
-
-        del body[start : stop]
-        del body2[start : stop]
-
-        len_fst_body = 0
+        _put_slice_asts2(self, start, stop, 'values', body, body2, None, None, None)
 
     else:
         ast_ = fst_.a
@@ -2274,29 +2341,7 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
                                           options.get('trivia'), options.get('ins_ln'), 'keys', 'values')
 
-        self._unmake_fst_tree(body[start : stop] + body2[start : stop])
-        fst_._unmake_fst_parents(True)
-
-        body[start : stop] = fst_body
-        body2[start : stop] = fst_body2
-
-        stack = []
-
-        for i in range(len_fst_body):
-            startplusi = start + i
-
-            stack.append(fst.FST(body2[startplusi], self, astfield('values', startplusi)))
-
-            if key := body[startplusi]:
-                stack.append(fst.FST(key, self, astfield('keys', startplusi)))
-
-        self._make_fst_tree(stack)
-
-    for i in range(start + len_fst_body, len(body)):
-        body2[i].f.pfield = astfield('values', i)
-
-        if key := body[i]:  # could be None from **
-            key.f.pfield = astfield('keys', i)
+        _put_slice_asts2(self, start, stop, 'values', body, body2, fst_, fst_body, fst_body2)
 
     _put_slice_seq_end(self, end_params)
 
@@ -2352,32 +2397,14 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
                                           options.get('trivia'), options.get('ins_ln'), self_tail_sep=1)
 
-        self._unmake_fst_tree(body[start : stop])
-
-        del body[start : stop]
-
-        len_fst_body = 0
+        _put_slice_asts(self, start, stop, 'elts', body, None, None)
 
     else:
         end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
                                           options.get('trivia'), options.get('ins_ln'), self_tail_sep=1)
 
-        self._unmake_fst_tree(body[start : stop])
-        fst_._unmake_fst_parents(True)
-
-        body[start : stop] = fst_body
-
-        FST = fst.FST
-        stack = [FST(body[i], self, astfield('elts', i)) for i in range(start, start + len_fst_body)]
-
-        if stack:
-            set_ctx([f.a for f in stack], ast.ctx.__class__)
-
-        self._make_fst_tree(stack)
-
-    for i in range(start + len_fst_body, len(body)):
-        body[i].f.pfield = astfield('elts', i)
+        _put_slice_asts(self, start, stop, 'elts', body, fst_, fst_body, ctx=ast.ctx.__class__)
 
     _put_slice_seq_end(self, end_params)
 
@@ -2408,11 +2435,7 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
                                           options.get('trivia'), options.get('ins_ln'))
 
-        self._unmake_fst_tree(body[start : stop])
-
-        del body[start : stop]
-
-        len_fst_body = 0
+        _put_slice_asts(self, start, stop, 'elts', body, None, None)
 
     else:
         len_fst_body = len(fst_body := fst_.a.elts)
@@ -2421,21 +2444,7 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
                                           options.get('trivia'), options.get('ins_ln'))
 
-        self._unmake_fst_tree(body[start : stop])
-        fst_._unmake_fst_parents(True)
-
-        body[start : stop] = fst_body
-
-        FST = fst.FST
-        stack = [FST(body[i], self, astfield('elts', i)) for i in range(start, start + len_fst_body)]
-
-        if stack:
-            set_ctx([f.a for f in stack], ast.ctx.__class__)
-
-        self._make_fst_tree(stack)
-
-    for i in range(start + len_fst_body, len(body)):
-        body[i].f.pfield = astfield('elts', i)
+        _put_slice_asts(self, start, stop, 'elts', body, fst_, fst_body, ctx=ast.ctx.__class__)
 
     _put_slice_seq_end(self, end_params)
 
@@ -2461,11 +2470,7 @@ def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
                                           options.get('trivia'), options.get('ins_ln'))
 
-        self._unmake_fst_tree(body[start : stop])
-
-        del body[start : stop]
-
-        len_fst_body = 0
+        _put_slice_asts(self, start, stop, 'elts', body, None, None)
 
     else:
         len_fst_body = len(fst_body := fst_.a.elts)
@@ -2474,18 +2479,7 @@ def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
                                           options.get('trivia'), options.get('ins_ln'))
 
-        self._unmake_fst_tree(body[start : stop])
-        fst_._unmake_fst_parents(True)
-
-        body[start : stop] = fst_body
-
-        FST = fst.FST
-        stack = [FST(body[i], self, astfield('elts', i)) for i in range(start, start + len_fst_body)]
-
-        self._make_fst_tree(stack)
-
-    for i in range(start + len_fst_body, len(body)):
-        body[i].f.pfield = astfield('elts', i)
+        _put_slice_asts(self, start, stop, 'elts', body, fst_, fst_body)
 
     _put_slice_seq_end(self, end_params)
 
@@ -2520,11 +2514,7 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
                                           options.get('trivia'), options.get('ins_ln'), 'targets', None, ',', False)
 
-        self._unmake_fst_tree(body[start : stop])
-
-        del body[start : stop]
-
-        len_fst_body = 0
+        _put_slice_asts(self, start, stop, 'targets', body, None, None)
 
     else:
         len_fst_body = len(fst_body := fst_.a.elts)
@@ -2533,21 +2523,7 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
                                           options.get('trivia'), options.get('ins_ln'), 'targets', None, ',', False)
 
-        self._unmake_fst_tree(body[start : stop])
-        fst_._unmake_fst_parents(True)
-
-        body[start : stop] = fst_body
-
-        FST = fst.FST
-        stack = [FST(body[i], self, astfield('targets', i)) for i in range(start, start + len_fst_body)]
-
-        if stack:
-            set_ctx([f.a for f in stack], Del)
-
-        self._make_fst_tree(stack)
-
-    for i in range(start + len_fst_body, len(body)):
-        body[i].f.pfield = astfield('targets', i)
+        _put_slice_asts(self, start, stop, 'targets', body, fst_, fst_body, ctx=Del)
 
     _put_slice_seq_end(self, end_params)
 
@@ -2578,9 +2554,6 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
         if len_slice == len_body and self.get_option('fix_assign_self', options):
             raise ValueError("cannot cut all Assign.targets without fix_assign_self=False")
 
-    # elif (a0 := (fst_body := fst_.a.targets)[0]).col_offset:  # if first element of slice doesn't start at column 0 then dedent it
-    #     fst_._put_src(None, ln := (f := a0.f).ln, 0, ln, f.col, False)
-
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bound_Assign_targets(self, start)
 
     if not fst_:
@@ -2588,11 +2561,7 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
                                           options.get('trivia'), options.get('ins_ln'), 'targets', None, '=', True)
 
-        self._unmake_fst_tree(body[start : stop])
-
-        del body[start : stop]
-
-        len_fst_body = 0
+        _put_slice_asts(self, start, stop, 'targets', body, None, None)
 
     else:
         len_fst_body = len(fst_body := fst_.a.targets)
@@ -2601,18 +2570,7 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
                                           options.get('trivia'), options.get('ins_ln'), 'targets', None, '=', True)
 
-        self._unmake_fst_tree(body[start : stop])
-        fst_._unmake_fst_parents(True)
-
-        body[start : stop] = fst_body
-
-        FST = fst.FST
-        stack = [FST(body[i], self, astfield('targets', i)) for i in range(start, start + len_fst_body)]
-
-        self._make_fst_tree(stack)
-
-    for i in range(start + len_fst_body, len(body)):
-        body[i].f.pfield = astfield('targets', i)
+        _put_slice_asts(self, start, stop, 'targets', body, fst_, fst_body)
 
     _put_slice_seq_end(self, end_params)
 
@@ -2643,11 +2601,7 @@ def _put_slice_With_AsyncWith_items(self: fst.FST, code: Code | None, start: int
                                           pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n,
                                           options.get('trivia'), options.get('ins_ln'), 'items', None, ',', False)
 
-        self._unmake_fst_tree(body[start : stop])
-
-        del body[start : stop]
-
-        len_fst_body = 0
+        _put_slice_asts(self, start, stop, 'items', body, None, None)
 
     else:
         len_fst_body = len(fst_body := fst_.a.items)
@@ -2656,18 +2610,7 @@ def _put_slice_With_AsyncWith_items(self: fst.FST, code: Code | None, start: int
                                           pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n,
                                           options.get('trivia'), options.get('ins_ln'), 'items', None, ',', False)
 
-        self._unmake_fst_tree(body[start : stop])
-        fst_._unmake_fst_parents(True)
-
-        body[start : stop] = fst_body
-
-        FST = fst.FST
-        stack = [FST(body[i], self, astfield('items', i)) for i in range(start, start + len_fst_body)]
-
-        self._make_fst_tree(stack)
-
-    for i in range(start + len_fst_body, len(body)):
-        body[i].f.pfield = astfield('items', i)
+        _put_slice_asts(self, start, stop, 'items', body, fst_, fst_body)
 
     _put_slice_seq_end(self, end_params)
 
@@ -2713,11 +2656,7 @@ def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Liter
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
                                           options.get('trivia'), options.get('ins_ln'), 'names', None, ',', False)
 
-        self._unmake_fst_tree(body[start : stop])
-
-        del body[start : stop]
-
-        len_fst_body = 0
+        _put_slice_asts(self, start, stop, 'names', body, None, None)
 
     else:
         len_fst_body = len(fst_body := fst_.a.names)
@@ -2726,18 +2665,7 @@ def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Liter
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
                                           options.get('trivia'), options.get('ins_ln'), 'names', None, ',', False)
 
-        self._unmake_fst_tree(body[start : stop])
-        fst_._unmake_fst_parents(True)
-
-        body[start : stop] = fst_body
-
-        FST = fst.FST
-        stack = [FST(body[i], self, astfield('names', i)) for i in range(start, start + len_fst_body)]
-
-        self._make_fst_tree(stack)
-
-    for i in range(start + len_fst_body, len(body)):
-        body[i].f.pfield = astfield('names', i)
+        _put_slice_asts(self, start, stop, 'names', body, fst_, fst_body)
 
     _put_slice_seq_end(self, end_params)
 
@@ -2784,11 +2712,7 @@ def _put_slice_ImportFrom_names(self: fst.FST, code: Code | None, start: int | L
                                           pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n,
                                           options.get('trivia'), options.get('ins_ln'), 'names', None, ',', False)
 
-        self._unmake_fst_tree(body[start : stop])
-
-        del body[start : stop]
-
-        len_fst_body = 0
+        _put_slice_asts(self, start, stop, 'names', body, None, None)
 
     else:
         len_fst_body = len(fst_body := fst_.a.names)
@@ -2797,18 +2721,7 @@ def _put_slice_ImportFrom_names(self: fst.FST, code: Code | None, start: int | L
                                           pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n,
                                           options.get('trivia'), options.get('ins_ln'), 'names', None, ',', False)
 
-        self._unmake_fst_tree(body[start : stop])
-        fst_._unmake_fst_parents(True)
-
-        body[start : stop] = fst_body
-
-        FST = fst.FST
-        stack = [FST(body[i], self, astfield('names', i)) for i in range(start, start + len_fst_body)]
-
-        self._make_fst_tree(stack)
-
-    for i in range(start + len_fst_body, len(body)):
-        body[i].f.pfield = astfield('names', i)
+        _put_slice_asts(self, start, stop, 'names', body, fst_, fst_body)
 
     _put_slice_seq_end(self, end_params)
 
@@ -2867,7 +2780,7 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
     ln, end_col, bound_end_ln, bound_end_col = self.loc
 
     lines = self.root._lines
-    tmp_elts = []
+    tmp_elts = []  # these will be temporary AST nodes so that we can edit the source using existing code
     end_col += 5 if isinstance(ast, Global) else 7  # will have another +1 added in search
 
     for _ in range(len_body):
@@ -2907,11 +2820,7 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
 
         del body[start : stop]  # this is the real update
 
-        self._unmake_fst_tree(tmp_elts[start : stop])
-
-        del tmp_elts[start : stop]  # this is the fake temporary update
-
-        len_fst_body = 0
+        _put_slice_asts(self, start, stop, 'elts', tmp_elts, None, None)  # this is the fake temporary update
 
     else:
         len_fst_body = len(fst_body := fst_.a.elts)
@@ -2923,18 +2832,7 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
 
         body[start : stop] = [e.id for e in fst_body]  # this is the real update
 
-        self._unmake_fst_tree(tmp_elts[start : stop])  # lets just pretend like its has real AST children, needed for _put_slice_seq_end()
-        fst_._unmake_fst_parents(True)
-
-        tmp_elts[start : stop] = fst_body  # this is the fake temporary update
-
-        FST = fst.FST
-        stack = [FST(tmp_elts[i], self, astfield('elts', i)) for i in range(start, start + len_fst_body)]
-
-        self._make_fst_tree(stack)
-
-    for i in range(start + len_fst_body, len(tmp_elts)):
-        tmp_elts[i].f.pfield = astfield('elts', i)
+        _put_slice_asts(self, start, stop, 'elts', tmp_elts, fst_, fst_body)  # this is the fake temporary update, lets just pretend like its has real AST children, needed for _put_slice_seq_end()
 
     _put_slice_seq_end(self, end_params)
 
@@ -2990,11 +2888,7 @@ def _put_slice_ClassDef_bases(self: fst.FST, code: Code | None, start: int | Lit
                                               options.get('trivia'), options.get('ins_ln'), 'bases', None, ',',
                                               self_tail_sep)
 
-        self._unmake_fst_tree(body[start : stop])
-
-        del body[start : stop]
-
-        len_fst_body = 0
+        _put_slice_asts(self, start, stop, 'bases', body, None, None)
 
     else:
         if bases_pars.n:
@@ -3016,18 +2910,7 @@ def _put_slice_ClassDef_bases(self: fst.FST, code: Code | None, start: int | Lit
                                           options.get('trivia'), options.get('ins_ln'), 'bases', None, ',',
                                           self_tail_sep)
 
-        self._unmake_fst_tree(body[start : stop])
-        fst_._unmake_fst_parents(True)
-
-        body[start : stop] = fst_body
-
-        FST = fst.FST
-        stack = [FST(body[i], self, astfield('bases', i)) for i in range(start, start + len_fst_body)]
-
-        self._make_fst_tree(stack)
-
-    for i in range(start + len_fst_body, len(body)):
-        body[i].f.pfield = astfield('bases', i)
+        _put_slice_asts(self, start, stop, 'bases', body, fst_, fst_body)
 
     if end_params:
         _put_slice_seq_end(self, end_params)
@@ -3067,11 +2950,7 @@ def _put_slice_Call_args(self: fst.FST, code: Code | None, start: int | Literal[
                                           options.get('trivia'), options.get('ins_ln'), 'args', None, ',',
                                           self_tail_sep)
 
-        self._unmake_fst_tree(body[start : stop])
-
-        del body[start : stop]
-
-        len_fst_body = 0
+        _put_slice_asts(self, start, stop, 'args', body, None, None)
 
     else:
         self_tail_sep = (keywords and stop == len_body) or None
@@ -3082,18 +2961,7 @@ def _put_slice_Call_args(self: fst.FST, code: Code | None, start: int | Literal[
                                           options.get('trivia'), options.get('ins_ln'), 'args', None, ',',
                                           self_tail_sep)
 
-        self._unmake_fst_tree(body[start : stop])
-        fst_._unmake_fst_parents(True)
-
-        body[start : stop] = fst_body
-
-        FST = fst.FST
-        stack = [FST(body[i], self, astfield('args', i)) for i in range(start, start + len_fst_body)]
-
-        self._make_fst_tree(stack)
-
-    for i in range(start + len_fst_body, len(body)):
-        body[i].f.pfield = astfield('args', i)
+        _put_slice_asts(self, start, stop, 'args', body, fst_, fst_body)
 
     _put_slice_seq_end(self, end_params)
 
@@ -3122,11 +2990,7 @@ def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: i
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
                                           options.get('trivia'), options.get('ins_ln'), 'patterns', None, ',', 0)
 
-        self._unmake_fst_tree(body[start : stop])
-
-        del body[start : stop]
-
-        len_fst_body = 0
+        _put_slice_asts(self, start, stop, 'patterns', body, None, None)
 
     else:
         len_fst_body = len(fst_body := fst_.a.patterns)
@@ -3135,18 +2999,7 @@ def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: i
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
                                           options.get('trivia'), options.get('ins_ln'), 'patterns', None, ',', 0)
 
-        self._unmake_fst_tree(body[start : stop])
-        fst_._unmake_fst_parents(True)
-
-        body[start : stop] = fst_body
-
-        FST = fst.FST
-        stack = [FST(body[i], self, astfield('patterns', i)) for i in range(start, start + len_fst_body)]
-
-        self._make_fst_tree(stack)
-
-    for i in range(start + len_fst_body, len(body)):
-        body[i].f.pfield = astfield('patterns', i)
+        _put_slice_asts(self, start, stop, 'patterns', body, fst_, fst_body)
 
     _put_slice_seq_end(self, end_params)
 
@@ -3176,12 +3029,7 @@ def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Liter
                                           options.get('trivia'), options.get('ins_ln'), 'keys', 'patterns', ',',
                                           self_tail_sep)
 
-        self._unmake_fst_tree(body[start : stop] + body2[start : stop])
-
-        del body[start : stop]
-        del body2[start : stop]
-
-        len_fst_body = 0
+        _put_slice_asts2(self, start, stop, 'patterns', body, body2, None, None, None)
 
     else:
         ast_ = fst_.a
@@ -3195,25 +3043,7 @@ def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Liter
                                           options.get('trivia'), options.get('ins_ln'), 'keys', 'patterns', ',',
                                           self_tail_sep)
 
-        self._unmake_fst_tree(body[start : stop] + body2[start : stop])
-        fst_._unmake_fst_parents(True)
-
-        body[start : stop] = fst_body
-        body2[start : stop] = fst_body2
-
-        stack = []
-
-        for i in range(len_fst_body):
-            startplusi = start + i
-
-            stack.append(fst.FST(body[startplusi], self, astfield('keys', startplusi)))
-            stack.append(fst.FST(body2[startplusi], self, astfield('patterns', startplusi)))
-
-        self._make_fst_tree(stack)
-
-    for i in range(start + len_fst_body, len(body)):
-        body[i].f.pfield = astfield('keys', i)
-        body2[i].f.pfield = astfield('patterns', i)
+        _put_slice_asts2(self, start, stop, 'patterns', body, body2, fst_, fst_body, fst_body2)
 
     _put_slice_seq_end(self, end_params)
 
@@ -3243,11 +3073,7 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
         end_params = _put_slice_seq_begin(self, start, stop, None, None, None, 0, *self.loc,
                                           options.get('trivia'), options.get('ins_ln'), 'patterns', None, '|', False)
 
-        self._unmake_fst_tree(body[start : stop])
-
-        del body[start : stop]
-
-        len_fst_body = 0
+        _put_slice_asts(self, start, stop, 'patterns', body, None, None)
 
     else:
         len_fst_body = len(fst_body := fst_.a.patterns)
@@ -3258,18 +3084,7 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
         end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body, *self.loc,
                                           options.get('trivia'), options.get('ins_ln'), 'patterns', None, '|', False)
 
-        self._unmake_fst_tree(body[start : stop])
-        fst_._unmake_fst_parents(True)
-
-        body[start : stop] = fst_body
-
-        FST = fst.FST
-        stack = [FST(body[i], self, astfield('patterns', i)) for i in range(start, start + len_fst_body)]
-
-        self._make_fst_tree(stack)
-
-    for i in range(start + len_fst_body, len(body)):
-        body[i].f.pfield = astfield('patterns', i)
+        _put_slice_asts(self, start, stop, 'patterns', body, fst_, fst_body)
 
     _put_slice_seq_end(self, end_params)
 
@@ -3308,11 +3123,7 @@ def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Litera
                                               bound_ln, bound_col + 1, bound_end_ln, bound_end_col - 1,
                                               options.get('trivia'), options.get('ins_ln'), 'type_params')
 
-        self._unmake_fst_tree(body[start : stop])
-
-        del body[start : stop]
-
-        len_fst_body = 0
+        _put_slice_asts(self, start, stop, 'type_params', body, None, None)
 
     else:
         if not body:  # brackets don't exist, add them first
@@ -3327,18 +3138,7 @@ def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Litera
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
                                           options.get('trivia'), options.get('ins_ln'), 'type_params')
 
-        self._unmake_fst_tree(body[start : stop])
-        fst_._unmake_fst_parents(True)
-
-        body[start : stop] = fst_body
-
-        FST = fst.FST
-        stack = [FST(body[i], self, astfield('type_params', i)) for i in range(start, start + len_fst_body)]
-
-        self._make_fst_tree(stack)
-
-    for i in range(start + len_fst_body, len(body)):
-        body[i].f.pfield = astfield('type_params', i)
+        _put_slice_asts(self, start, stop, 'type_params', body, fst_, fst_body)
 
     if end_params:
         _put_slice_seq_end(self, end_params)

@@ -6,7 +6,7 @@
 
 ### Updated
 
-- lots of code cleanups
+- lots of code cleanups, refactor
 
 
 ## 0.2.2 - alpha - 2025-09-23
