@@ -83,6 +83,12 @@ from .misc import (
     leading_trivia, trailing_trivia,
 )
 
+from .locs import (
+    loc_With_items_pars, loc_ImportFrom_names_pars, loc_ClassDef_bases_pars, loc_Call_pars,
+    loc_TypeAlias_type_params_brackets, loc_ClassDef_type_params_brackets, loc_FunctionDef_type_params_brackets,
+    loc_Global_Nonlocal_names,
+)
+
 from .parsex import unparse
 
 from .code import (
@@ -437,7 +443,7 @@ def _locs_first_and_last(self: fst.FST, start: int, stop: int, body: list[AST], 
         loc_last = loc_first if start == stop_1 else body[stop_1].f.pars()
 
     else:
-        ln, col, _, _ = self._loc_maybe_dict_key(start, True, body)
+        ln, col, _, _ = self._loc_key(start, True, body)
         _, _, end_ln, end_col = body2[start].f.pars()
         loc_first = fstloc(ln, col, end_ln, end_col)
 
@@ -445,7 +451,7 @@ def _locs_first_and_last(self: fst.FST, start: int, stop: int, body: list[AST], 
             loc_last = loc_first
 
         else:
-            ln, col, _, _ = self._loc_maybe_dict_key(stop_1, True, body)
+            ln, col, _, _ = self._loc_key(stop_1, True, body)
             _, _, end_ln, end_col = body2[stop_1].f.pars()
             loc_last = fstloc(ln, col, end_ln, end_col)
 
@@ -950,7 +956,7 @@ def _get_slice_With_AsyncWith_items(self: fst.FST, start: int | Literal['end'] |
     loc_first = body[start].f.loc
     loc_last = loc_first if stop == start else body[stop - 1].f.loc
 
-    pars = self._loc_With_items_pars()  # may be pars or may be where pars would go from just after `with` to end of block header
+    pars = loc_With_items_pars(self)  # may be pars or may be where pars would go from just after `with` to end of block header
     pars_ln, pars_col, pars_end_ln, pars_end_col = pars
     pars_n = pars.n
 
@@ -969,7 +975,7 @@ def _get_slice_With_AsyncWith_items(self: fst.FST, start: int | Literal['end'] |
 
     if cut and not pars_n:  # only need to fix maybe if there are no parentheses
         if not self.is_enclosed_or_line(pars=False):  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
-            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_With_items_pars()  # will just give where pars should go (because maybe something like `async \\\n\\\n   with ...`)
+            pars_ln, pars_col, pars_end_ln, pars_end_col = loc_With_items_pars(self)  # will just give where pars should go (because maybe something like `async \\\n\\\n   with ...`)
 
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, False)
             self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
@@ -1037,7 +1043,7 @@ def _get_slice_ImportFrom_names(self: fst.FST, start: int | Literal['end'] | Non
     loc_first = body[start].f.loc
     loc_last = loc_first if stop == start else body[stop - 1].f.loc
 
-    pars = self._loc_ImportFrom_names_pars()  # may be pars or may be where pars would go from just after `import` to end of node
+    pars = loc_ImportFrom_names_pars(self)  # may be pars or may be where pars would go from just after `import` to end of node
     pars_ln, pars_col, pars_end_ln, pars_end_col = pars
     pars_n = pars.n
 
@@ -1059,7 +1065,7 @@ def _get_slice_ImportFrom_names(self: fst.FST, start: int | Literal['end'] | Non
             _maybe_set_end_pos(self, (bn := body[-1]).end_lineno, bn.end_col_offset, ast.end_lineno, ast.end_col_offset)
 
         if not self.is_enclosed_or_line(pars=False):  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
-            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()
+            pars_ln, pars_col, pars_end_ln, pars_end_col = loc_ImportFrom_names_pars(self)
 
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, True, False, self)
             self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
@@ -1154,7 +1160,7 @@ def _get_slice_ClassDef_bases(self: fst.FST, start: int | Literal['end'] | None,
     else:
         self_tail_sep = None
 
-    bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_ClassDef_bases_pars()  # definitely exist
+    bound_ln, bound_col, bound_end_ln, bound_end_col = loc_ClassDef_bases_pars(self)  # definitely exist
     bound_end_col -= 1
 
     if start:
@@ -1176,7 +1182,7 @@ def _get_slice_ClassDef_bases(self: fst.FST, start: int | Literal['end'] | None,
             self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
 
     elif not body:  # everything was cut and no keywords, remove parentheses
-        pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ClassDef_bases_pars()  # definitely exist
+        pars_ln, pars_col, pars_end_ln, pars_end_col = loc_ClassDef_bases_pars(self)  # definitely exist
 
         self._put_src(None, pars_ln, pars_col, pars_end_ln, pars_end_col, False)
 
@@ -1207,7 +1213,7 @@ def _get_slice_Call_args(self: fst.FST, start: int | Literal['end'] | None, stop
         if body and (f0 := body[0].f).is_solo_call_arg_genexp() and f0.pars(shared=False).n == -1:  # single call argument GeneratorExp shares parentheses with Call?
             f0._parenthesize_grouping()
 
-    bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_call_pars()
+    bound_ln, bound_col, bound_end_ln, bound_end_col = loc_Call_pars(self)
     bound_end_col -= 1
 
     if start:
@@ -1348,12 +1354,12 @@ def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, st
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
     bound_func = (
-        self._loc_typealias_type_params_brackets if isinstance(ast, TypeAlias) else
-        self._loc_classdef_type_params_brackets if isinstance(ast, ClassDef) else
-        self._loc_funcdef_type_params_brackets  # FunctionDef, AsyncFunctionDef
+        loc_TypeAlias_type_params_brackets if isinstance(ast, TypeAlias) else
+        loc_ClassDef_type_params_brackets if isinstance(ast, ClassDef) else
+        loc_FunctionDef_type_params_brackets  # FunctionDef, AsyncFunctionDef
     )
 
-    (bound_ln, bound_col, bound_end_ln, bound_end_col), _ = bound_func()
+    (bound_ln, bound_col, bound_end_ln, bound_end_col), _ = bound_func(self)
 
     bound_end_col -= 1
 
@@ -1370,7 +1376,7 @@ def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, st
                           options.get('trivia'), 'type_params', '', '', ',', False, False)
 
     if not body:  # everything was cut, need to remove brackets
-        (_, _, bound_end_ln, bound_end_col), (name_ln, name_col) = bound_func()
+        (_, _, bound_end_ln, bound_end_col), (name_ln, name_col) = bound_func(self)
 
         self._put_src(None, name_ln, name_col, bound_end_ln, bound_end_col, False)
 
@@ -1571,7 +1577,7 @@ def _put_slice_seq_begin(self: fst.FST, start: int, stop: int, fst_: fst.FST | N
         if (elts_indent_cached := _get_element_indent(self, body, body2, start)) is not None:
             pass  # noop
         elif body:  # match indentation of our own first element
-            elts_indent_cached = self_indent + ' ' * (self._loc_maybe_dict_key(0, True, body).col -
+            elts_indent_cached = self_indent + ' ' * (self._loc_key(0, True, body).col -
                                                       len(self_indent))
         else:
             elts_indent_cached = self_indent + self.root.indent  # default
@@ -1617,7 +1623,7 @@ def _put_slice_seq_begin(self: fst.FST, start: int, stop: int, fst_: fst.FST | N
 
             else:
                 if not is_last:
-                    ln, col, _, _ = self._loc_maybe_dict_key(stop, True, body)
+                    ln, col, _, _ = self._loc_key(stop, True, body)
 
                 else:
                     ln = bound_end_ln
@@ -1644,7 +1650,7 @@ def _put_slice_seq_begin(self: fst.FST, start: int, stop: int, fst_: fst.FST | N
                 is_ins_ln = not loc_first.col
 
         elif not is_last:  # just before next element
-            ln, col, _, _ = self._loc_maybe_dict_key(stop, True, body)
+            ln, col, _, _ = self._loc_key(stop, True, body)
             loc_first = fstloc(ln, col, ln, col)
 
         else:  # just past previous element or at start of bound
@@ -1811,7 +1817,7 @@ def _put_slice_seq_end(self: fst.FST, params: tuple) -> None:
             put_last = body2[new_stop - 1].f
 
             _, _, put_last_end_ln, put_last_end_col = put_last.loc
-            new_stop_ln, new_stop_col, _, _ = self._loc_maybe_dict_key(new_stop, True, body, body2).loc
+            new_stop_ln, new_stop_col, _, _ = self._loc_key(new_stop, True, body, body2).loc
 
             self._maybe_ins_separator(put_last_end_ln, put_last_end_col, True, new_stop_ln, new_stop_col, sep, put_last)
 
@@ -1819,7 +1825,7 @@ def _put_slice_seq_end(self: fst.FST, params: tuple) -> None:
             self_split = body2[start - 1].f
 
             _, _, self_split_end_ln, self_split_end_col = self_split.loc
-            put_first_ln, put_first_col, _, _ = self._loc_maybe_dict_key(start, True, body, body2).loc
+            put_first_ln, put_first_col, _, _ = self._loc_key(start, True, body, body2).loc
 
             self._maybe_ins_separator(self_split_end_ln, self_split_end_col, True, put_first_ln, put_first_col, sep,
                                       self_split)
@@ -1971,11 +1977,11 @@ def _get_element_indent(self: fst.FST, body: list[AST], body2: list[AST], start:
     else:  # two-element sequence (Dict, MatchMapping)
         if start >= 1:  # first search backward for an element which starts its own line (if there are elements before)
             for i in range(start - 2, -1, -1):
-                if (loc := self._loc_maybe_dict_key(i + 1, True, body)).ln != body2[i].f.pars().end_ln:  # only consider elements which start on a different line than the previous element ends on
+                if (loc := self._loc_key(i + 1, True, body)).ln != body2[i].f.pars().end_ln:  # only consider elements which start on a different line than the previous element ends on
                     if re_empty_line.match(l := lines[loc.ln], 0, loc.col):
                         return l[:loc.col]
 
-            if (loc := self._loc_maybe_dict_key(0, True, body)).ln != self.ln:  # only consider element 0 if it is not on same line as self starts
+            if (loc := self._loc_key(0, True, body)).ln != self.ln:  # only consider element 0 if it is not on same line as self starts
                 if re_empty_line.match(l := lines[loc.ln], 0, loc.col):
                     return l[:loc.col]
 
@@ -1987,7 +1993,7 @@ def _get_element_indent(self: fst.FST, body: list[AST], body2: list[AST], start:
         for i in range(start, len(body)):  # now search forward
             prev_loc = loc
 
-            if (loc := self._loc_maybe_dict_key(i, True, body)).ln != prev_loc.end_ln:  # only consider elements which start on a different line than the previous element ends on
+            if (loc := self._loc_key(i, True, body)).ln != prev_loc.end_ln:  # only consider elements which start on a different line than the previous element ends on
                 if re_empty_line.match(l := lines[loc.ln], 0, loc.col):
                     return l[:loc.col]
 
@@ -2359,7 +2365,7 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
         fst_body = ast_.keys
         fst_body2 = ast_.values
         len_fst_body = len(fst_body)
-        fst_first = a.f if (a := fst_body[0]) else fst_._loc_maybe_dict_key(0)
+        fst_first = a.f if (a := fst_body[0]) else fst_._loc_key(0)
 
         end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_first, fst_body2[-1].f, len_fst_body,
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
@@ -2543,7 +2549,7 @@ def _put_slice_With_AsyncWith_items(self: fst.FST, code: Code | None, start: int
         if len_slice == len_body and self.get_option('fix_with_self', options):
             raise ValueError(f'cannot delete all {ast.__class__.__name__}.items without fix_with_self=False')
 
-    pars = self._loc_With_items_pars()  # may be pars or may be where pars would go from just after `with` to end of block header `:`
+    pars = loc_With_items_pars(self)  # may be pars or may be where pars would go from just after `with` to end of block header `:`
     pars_ln, pars_col, pars_end_ln, pars_end_col = pars
     pars_n = pars.n
 
@@ -2552,7 +2558,7 @@ def _put_slice_With_AsyncWith_items(self: fst.FST, code: Code | None, start: int
 
     if not pars_n:  # only need to fix maybe if there are no parentheses
         if not self.is_enclosed_or_line(pars=False):  # if no parentheses and wound up not valid for parse then adding parentheses around items should fix
-            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_With_items_pars()
+            pars_ln, pars_col, pars_end_ln, pars_end_col = loc_With_items_pars(self)
 
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, False)
             self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
@@ -2624,7 +2630,7 @@ def _put_slice_ImportFrom_names(self: fst.FST, code: Code | None, start: int | L
             if start > 0 or stop < 1:
                 raise NodeError("if putting over star '*' alias it must be overwritten")
 
-    pars = self._loc_ImportFrom_names_pars()  # may be pars or may be where pars would go from just after `import` to end of node
+    pars = loc_ImportFrom_names_pars(self)  # may be pars or may be where pars would go from just after `import` to end of node
     pars_ln, pars_col, pars_end_ln, pars_end_col = pars
     pars_n = pars.n
 
@@ -2641,7 +2647,7 @@ def _put_slice_ImportFrom_names(self: fst.FST, code: Code | None, start: int | L
                                    ast.end_lineno, ast.end_col_offset)
 
         if not self.is_enclosed_or_line(pars=False):  # if no parentheses and wound up not valid for parse then adding parentheses around names should fix
-            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()
+            pars_ln, pars_col, pars_end_ln, pars_end_col = loc_ImportFrom_names_pars(self)
 
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, True, False, self)
             self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
@@ -2649,7 +2655,7 @@ def _put_slice_ImportFrom_names(self: fst.FST, code: Code | None, start: int | L
         # THEORETICALLY could need to _maybe_fix_joined_alnum() but only if the user goes out of their way to F S up, so we don't bother with this
 
     elif put_star:  # if put star then must remove parentheses (including any trivia inside them)
-        pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()
+        pars_ln, pars_col, pars_end_ln, pars_end_col = loc_ImportFrom_names_pars(self)
         star_ln, star_col, star_end_ln, star_end_col = body[0].f.loc
 
         self._put_src(None, star_end_ln, star_end_col, pars_end_ln, pars_end_col, True)
@@ -2776,7 +2782,7 @@ def _put_slice_ClassDef_bases(self: fst.FST, code: Code | None, start: int | Lit
         if body and keywords[0].f.loc[:2] < body[stop - 1].f.loc[2:] and stop:
             raise NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')
 
-    bound_ln, bound_col, bound_end_ln, bound_end_col = bases_pars = self._loc_ClassDef_bases_pars()
+    bound_ln, bound_col, bound_end_ln, bound_end_col = bases_pars = loc_ClassDef_bases_pars(self)
 
     if not fst_:
         if not keywords and len_slice == len_body:  # deleting everything so remove pars
@@ -2844,7 +2850,7 @@ def _put_slice_Call_args(self: fst.FST, code: Code | None, start: int | Literal[
         if body and (f0 := body[0].f).is_solo_call_arg_genexp() and f0.pars(shared=False).n == -1:  # single call argument GeneratorExp shares parentheses with Call?
             f0._parenthesize_grouping()
 
-    bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_call_pars()
+    bound_ln, bound_col, bound_end_ln, bound_end_col = loc_Call_pars(self)
     bound_col += 1
     bound_end_col -= 1
 
@@ -2974,10 +2980,10 @@ def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Litera
     len_slice = stop - start
 
     bound, (name_ln, name_col) = (
-        (self._loc_typealias_type_params_brackets if isinstance(ast, TypeAlias) else
-         self._loc_classdef_type_params_brackets if isinstance(ast, ClassDef) else
-         self._loc_funcdef_type_params_brackets)  # FunctionDef, AsyncFunctionDef
-    )()
+        (loc_TypeAlias_type_params_brackets if isinstance(ast, TypeAlias) else
+         loc_ClassDef_type_params_brackets if isinstance(ast, ClassDef) else
+         loc_FunctionDef_type_params_brackets)  # FunctionDef, AsyncFunctionDef
+    )(self)
 
     if bound:
         bound_ln, bound_col, bound_end_ln, bound_end_col = bound
@@ -3212,7 +3218,7 @@ def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: 
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
 
         start, stop = fixup_slice_index_for_raw(len(values := ast.values), start, stop)
-        start_loc = self._loc_maybe_dict_key(start, True)
+        start_loc = self._loc_key(start, True)
 
         return fstloc(start_loc.ln, start_loc.col, *values[stop - 1].f.pars()[2:])
 
@@ -3246,7 +3252,7 @@ def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: 
 
     if isinstance(ast, (Global, Nonlocal)):
         start, stop = fixup_slice_index_for_raw(len(ast.names), start, stop)
-        start_loc, stop_loc = self._loc_global_nonlocal_names(start, stop - 1)
+        start_loc, stop_loc = loc_Global_Nonlocal_names(self, start, stop - 1)
 
         return fstloc(start_loc.ln, start_loc.col, stop_loc.end_ln, stop_loc.end_col)
 

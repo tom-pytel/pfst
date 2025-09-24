@@ -11,6 +11,8 @@ from contextlib import contextmanager
 from io import TextIOBase
 from typing import Any, Callable, Generator, Iterator, Literal, Mapping, TextIO, Union
 
+from . import parsex
+
 from .asttypes import (
     AST,
     AsyncFor,
@@ -100,12 +102,16 @@ from .misc import (
     multiline_str_continuation_lns, multiline_fstr_continuation_lns, continuation_to_uncontinued_lns,
 )
 
+from .locs import (
+    loc_arguments, loc_comprehension, loc_withitem, loc_match_case, loc_operator,
+    loc_Call_pars, loc_Subscript_brackets, loc_ImportFrom_names_pars, loc_With_items_pars, loc_MatchClass_pars,
+)
+
 from .traverse import AST_FIELDS_NEXT, AST_FIELDS_PREV, check_with_loc
-from .reconcile import Reconcile
 from .parsex import Mode, get_special_parse_mode
 from .code import Code, code_as_all
 from .view import fstview
-from . import parsex
+from .reconcile import Reconcile
 
 __all__ = [
     'parse', 'unparse', 'dump', 'FST',
@@ -363,15 +369,15 @@ class FST:
 
         except AttributeError:
             if isinstance(ast, arguments):
-                loc = self._loc_arguments()
+                loc = loc_arguments(self)
             elif isinstance(ast, comprehension):
-                loc = self._loc_comprehension()
+                loc = loc_comprehension(self)
             elif isinstance(ast, withitem):
-                loc = self._loc_withitem()
+                loc = loc_withitem(self)
             elif isinstance(ast, match_case):
-                loc = self._loc_match_case()
+                loc = loc_match_case(self)
             elif isinstance(ast, (boolop, operator, unaryop, cmpop)):
-                loc = self._loc_operator()
+                loc = loc_operator(self)
             elif not self.parent:
                 loc = fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
             else:
@@ -4624,23 +4630,23 @@ class FST:
 
             if isinstance(ast, Call):  # these will replace any fields which we know to be enclosed with mock FST nodes which just say the location is enclosed
                 children = [ast.func,
-                            nspace(f=nspace(pars=lambda: self._loc_call_pars(),
+                            nspace(f=nspace(pars=lambda: loc_Call_pars(self),
                                             is_enclosed_or_line=lambda **kw: True))]
 
             elif isinstance(ast, Subscript):
                 children = [ast.value,
-                            nspace(f=nspace(pars=lambda: self._loc_subscript_brackets(),
+                            nspace(f=nspace(pars=lambda: loc_Subscript_brackets(self),
                                             is_enclosed_or_line=lambda **kw: True))]
 
             elif isinstance(ast, ImportFrom):
-                pars_names = self._loc_ImportFrom_names_pars()
+                pars_names = loc_ImportFrom_names_pars(self)
                 children = ([nspace(f=nspace(pars=lambda: pars_names,
                                              is_enclosed_or_line=lambda **kw: True))]
                             if pars_names.n else
                             ast.names)
 
             elif isinstance(ast, (With, AsyncWith)):
-                pars_items = self._loc_With_items_pars()
+                pars_items = loc_With_items_pars(self)
                 end_ln = pars_items.bound.end_ln
                 children = ([nspace(f=nspace(pars=lambda: pars_items,
                                              is_enclosed_or_line=lambda **kw: True))]
@@ -4649,7 +4655,7 @@ class FST:
 
             elif isinstance(ast, MatchClass):
                 children = [ast.cls,
-                            nspace(f=nspace(pars=lambda: self._loc_matchcls_pars(),
+                            nspace(f=nspace(pars=lambda: loc_MatchClass_pars(self),
                                             is_enclosed_or_line=lambda **kw: True))]
 
             else:  # we don't check always-enclosed statement fields here because statements will never get here
@@ -4776,10 +4782,10 @@ class FST:
                 return self.pfield.name == 'type_params'
 
             if isinstance(parenta, ImportFrom):
-                return bool(parent._loc_ImportFrom_names_pars().n)  # we know we are in `names`
+                return bool(loc_ImportFrom_names_pars(parent).n)  # we know we are in `names`
 
             if isinstance(parenta, (With, AsyncWith)):
-                return bool(parent._loc_With_items_pars().n)  # we know we are in `items`
+                return bool(loc_With_items_pars(parent).n)  # we know we are in `items`
 
             if isinstance(parenta, (stmt, ExceptHandler, match_case, mod, type_ignore)):
                 return False
@@ -5140,25 +5146,7 @@ class FST:
         _prev_bound,
         _next_bound_step,
         _prev_bound_step,
-        _loc_block_header_end,
-        _loc_operator,
-        _loc_comprehension,
-        _loc_arguments,
-        _loc_arguments_empty,
-        _loc_lambda_args_entire,
-        _loc_withitem,
-        _loc_match_case,
-        _loc_ClassDef_bases_pars,
-        _loc_ImportFrom_names_pars,
-        _loc_With_items_pars,
-        _loc_call_pars,
-        _loc_subscript_brackets,
-        _loc_matchcls_pars,
-        _loc_funcdef_type_params_brackets,
-        _loc_classdef_type_params_brackets,
-        _loc_typealias_type_params_brackets,
-        _loc_global_nonlocal_names,
-        _loc_maybe_dict_key,
+        _loc_key,
         _is_arguments_empty,
         _is_delimited_seq,
         _set_end_pos,

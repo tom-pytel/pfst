@@ -15,6 +15,7 @@ from .misc import (
     STMTISH_FIELDS,
 )
 
+from .locs import loc_block_header_end
 from .parsex import Mode, unparse
 from .code import Code
 
@@ -87,7 +88,7 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
     lines = root._lines
     stmtisha = stmtish.a
 
-    if in_blkopen := (blkopen_end := stmtish._loc_block_header_end()) and (end_ln, end_col) <= blkopen_end:  # block statement with modification limited to block header
+    if in_blkopen := (blkopen_end := loc_block_header_end(stmtish)) and (end_ln, end_col) <= blkopen_end:  # block statement with modification limited to block header
         pend_ln, pend_col = blkopen_end
         pend_col += 1
 

@@ -125,6 +125,11 @@ from .misc import (
     next_frag, prev_frag, next_find, prev_find, next_find_re, fixup_one_index,
 )
 
+from .locs import (
+    loc_arguments_empty, loc_ImportFrom_names_pars, loc_Lambda_args_entire, loc_block_header_end,
+    loc_Global_Nonlocal_names,
+)
+
 from .parsex import unparse
 
 from .code import (
@@ -1278,7 +1283,7 @@ def _put_one_FunctionDef_arguments(self: fst.FST, code: _PutOneCode, idx: int | 
     """Put FunctionDef.arguments. Does not have location if there are no arguments."""
 
     return _put_one_exprish_required(self, code or '', idx, field, child, static, options,
-                                     target=None if (args := self.a.args.f).loc else args._loc_arguments_empty())
+                                     target=None if (args := self.a.args.f).loc else loc_arguments_empty(args))
 
 
 def _put_one_ClassDef_bases(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
@@ -1345,7 +1350,7 @@ def _put_one_ImportFrom_names(self: fst.FST, code: _PutOneCode, idx: int | None,
             raise NodeError('cannot put star alias to ImportFrom.names containing multiple aliases', rawable=True)
 
     ret = _put_one_exprish_required(self, code, idx, field, child, static, {**options, 'pars': False}, 2)
-    pars = self._loc_ImportFrom_names_pars()
+    pars = loc_ImportFrom_names_pars(self)
 
     if is_star:  # for star remove parentheses (including possible trailing comma) if there
         if pars.n:
@@ -1419,7 +1424,7 @@ def _put_one_Lambda_arguments(self: fst.FST, code: _PutOneCode, idx: int | None,
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params)  # and we coerce here just so we can check if is empty args being put to set the prefix correctly
     prefix = ' ' if code.loc else ''  # if arguments has .loc then it is not empty
-    target = self._loc_lambda_args_entire()
+    target = loc_Lambda_args_entire(self)
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 1, target, prefix)
 
@@ -1979,13 +1984,13 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
         if childf:
             if isinstance(child, arguments):  # empty arguments do not have a location and lambda args need to add or remove a preceding space
                 if not (loc := childf.loc):
-                    loc = childf._loc_arguments_empty()
+                    loc = loc_arguments_empty(childf)
 
                     if not is_del_or_empty and isinstance(ast, Lambda):  # adding to nonexistent lambda pars, need to add space prefix
                         code[0] = ' ' + code[0]
 
                 elif is_del_or_empty and isinstance(ast, Lambda):  # deleting existing lambda pars, need to eat space prefix
-                    loc = self._loc_lambda_args_entire()
+                    loc = loc_Lambda_args_entire(self)
 
             else:
                 loc = childf.pars(shared=False) if pars else childf.bloc
@@ -2026,7 +2031,7 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
         if to_loc is None:  # empty arguments get special handling
             if not (to_loc := to.pars(shared=False) if pars else to.bloc):
                 if isinstance(to.a, arguments):
-                    to_loc = to._loc_arguments_empty()
+                    to_loc = loc_arguments_empty(to)
                 else:
                     raise ValueError("'to' node must have a location")
 
@@ -2104,7 +2109,7 @@ def _one_info_FunctionDef_name(self: fst.FST, static: onestatic, idx: int | None
 _onestatic_FunctionDef_name = onestatic(_one_info_FunctionDef_name, _restrict_default, code_as=code_as_identifier)
 
 def _one_info_FunctionDef_returns(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-    end_ln, end_col, ln, col = self._loc_block_header_end(True)
+    end_ln, end_col, ln, col = loc_block_header_end(self, True)
     ret_end_ln = end_ln
     ret_end_col = end_col
 
@@ -2171,13 +2176,13 @@ def _one_info_Global_Nonlocal_names(self: fst.FST, static: onestatic, idx: int |
 
     idx = fixup_one_index(len(self.a.names), idx)
 
-    return oneinfo('', None, self._loc_global_nonlocal_names(idx))
+    return oneinfo('', None, loc_Global_Nonlocal_names(self, idx))
 
 _onestatic_Global_Nonlocal_names = onestatic(_one_info_Global_Nonlocal_names, _restrict_default, code_as=code_as_identifier)
 
 def _one_info_Dict_key(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     end_ln, end_col, _, _ = self.a.values[idx].f.pars()
-    ln, col, _, _ = self._loc_maybe_dict_key(idx, True)
+    ln, col, _, _ = self._loc_key(idx, True)
 
     return oneinfo('', fstloc(ln, col, end_ln, end_col), None, ': ', '**')
 
@@ -2243,7 +2248,7 @@ def _one_info_ExceptHandler_type(self: fst.FST, static: onestatic, idx: int | No
     if type_ := a.type:
         _, _, end_ln, end_col = type_.f.pars()
     else:
-        end_ln, end_col = self._loc_block_header_end()  # because 'name' can not be there
+        end_ln, end_col = loc_block_header_end(self)  # because 'name' can not be there
 
     ln, col, _, _ = self.loc
     col = col + 6  # 'except'
@@ -2259,7 +2264,7 @@ def _one_info_ExceptHandler_name(self: fst.FST, static: onestatic, idx: int | No
         return _oneinfo_default  # can not put new and does not exist
 
     _, _, ln, col = type_.f.pars()
-    end_ln, end_col = self._loc_block_header_end()
+    end_ln, end_col = loc_block_header_end(self)
     loc_insdel = fstloc(ln, col, end_ln, end_col)
 
     if (name := a.name) is None:
@@ -2349,7 +2354,7 @@ def _one_info_arguments_vararg(self: fst.FST, static: onestatic, idx: int | None
 
         return oneinfo(', *', fstloc(ln, (col := col + 1), ln, col))
 
-    loc = self._loc_arguments_empty()
+    loc = loc_arguments_empty(self)
     prefix = ' *' if (parent := self.parent) and isinstance(parent.a, Lambda) else '*'
 
     return oneinfo(prefix, loc)
@@ -2397,7 +2402,7 @@ def _one_info_arguments_kwarg(self: fst.FST, static: onestatic, idx: int | None,
     # insert location
 
     if not (loc := self.loc):
-        loc = self._loc_arguments_empty()
+        loc = loc_arguments_empty(self)
         prefix = ' **' if (parent := self.parent) and isinstance(parent.a, Lambda) else '**'
 
         return oneinfo(prefix, loc)
@@ -2455,7 +2460,7 @@ def _one_info_withitem_optional_vars(self: fst.FST, static: onestatic, idx: int 
 
 def _one_info_match_case_guard(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     _, _, ln, col = self.a.pattern.f.pars()
-    end_ln, end_col = self._loc_block_header_end()
+    end_ln, end_col = loc_block_header_end(self)
 
     return oneinfo(' if ', fstloc(ln, col, end_ln, end_col))
 
