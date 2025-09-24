@@ -286,8 +286,8 @@ class FST:
     # ROOT ONLY
     parse_params: Mapping[builtins.str, Any]  ; """The parameters to use for any `ast.parse()` that needs to be done (filename, type_comments, feature_version), root node only."""
     indent:       builtins.str                ; """The default single level of block indentation string for this tree when not available from context, root node only."""
-    _lines:       list[bistr]
-    _serial:      int
+    _lines:       list[bistr]                 ; """The actual full source lines as `bistr`."""
+    _serial:      int                         ; """Serial number of modifications, used to make sure tree wasn't modified on `.reconcile()` after `.mark()`."""
 
     # class attributes
     is_FST:       bool = True  ; """@private"""  # for quick checks vs. `fstloc` or `fstview`
@@ -579,8 +579,9 @@ class FST:
             indent = None
 
             if from_ := kwargs.get('from_'): # copy parse params from source tree
-                params = {**from_.root.parse_params, **params}
-                indent = from_.indent
+                from_root = from_.root
+                params = {**from_root.parse_params, **params}
+                indent = from_root.indent
 
             if ast_or_src is None:
                 f = FST.new('exec' if mode_or_lines_or_parent is None else mode_or_lines_or_parent, **params)
@@ -5124,16 +5125,10 @@ class FST:
     # Private and other misc stuff
 
     from .fst_misc import (
-        _new_empty_module,
         _new_empty_tuple,
-        _new_empty_list,
-        _new_empty_dict,
         _new_empty_set_star,
         _new_empty_set_call,
         _new_empty_set_curlies,
-        _new_empty_matchseq,
-        _new_empty_matchmap,
-        _new_empty_matchor,
         _make_fst_tree,
         _unmake_fst_tree,
         _unmake_fst_parents,
@@ -5307,7 +5302,7 @@ def _make_AST_field_accessors() -> None:
 
     for fields in FIELDS.values():
         for f, t in fields:
-            if f == 'lineno':
+            if f == 'lineno':  # TypeIgnore.lineno
                 continue
 
             if f in FST_dict:

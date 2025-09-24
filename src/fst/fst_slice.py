@@ -761,7 +761,8 @@ def _get_slice_Dict(self: fst.FST, start: int | Literal['end'] | None, stop: int
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
-        return fst.FST._new_empty_dict(from_=self)
+        return fst.FST(Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
+                       ['{}'], from_=self)
 
     locs = _locs_and_bound_get(self, start, stop, body, body2, 1)
     asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'values', cut, body, body2)
@@ -815,7 +816,8 @@ def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
-        return fst.FST._new_empty_list(from_=self)
+        return fst.FST(List(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
+                       ['[]'], from_=self)
 
     locs = _locs_and_bound_get(self, start, stop, body, body, 1)
     asts = _cut_or_copy_asts(start, stop, 'elts', cut, body)
@@ -840,10 +842,10 @@ def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop:
 
     if start == stop:
         return (
-            fst.FST._new_empty_set_curlies() if not (fix_set_get := self.get_option('fix_set_get', options)) else
-            fst.FST._new_empty_set_call() if fix_set_get == 'call' else
-            fst.FST._new_empty_tuple() if fix_set_get == 'tuple' else
-            fst.FST._new_empty_set_star()  # True, 'star'
+            fst.FST._new_empty_set_curlies(from_=self) if not (fix_set_get := self.get_option('fix_set_get', options)) else
+            fst.FST._new_empty_set_call(from_=self) if fix_set_get == 'call' else
+            fst.FST._new_empty_tuple(from_=self) if fix_set_get == 'tuple' else
+            fst.FST._new_empty_set_star(from_=self)  # True, 'star'
         )
 
     locs = _locs_and_bound_get(self, start, stop, body, body, 1)
@@ -1237,7 +1239,8 @@ def _get_slice_MatchSequence_patterns(self: fst.FST, start: int | Literal['end']
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
-        return fst.FST._new_empty_matchseq(from_=self)
+        return fst.FST(MatchSequence(patterns=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
+                       ['[]'], from_=self)
 
     delims = self.is_delimited_matchseq()
     locs = _locs_and_bound_get(self, start, stop, body, body, bool(delims))
@@ -1272,7 +1275,9 @@ def _get_slice_MatchMapping(self: fst.FST, start: int | Literal['end'] | None, s
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
-        return fst.FST._new_empty_matchmap(from_=self)
+        return fst.FST(MatchMapping(keys=[], patterns=[], rest=None, lineno=1, col_offset=0, end_lineno=1,
+                                    end_col_offset=2),
+                       ['{}'], from_=self)
 
     locs = _locs_and_bound_get(self, start, stop, body, body2, 1)
     self_tail_sep = True if (rest := ast.rest) else 0
@@ -1305,7 +1310,8 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
         if fix_matchor_get:
             raise ValueError("cannot get empty slice from MatchOr without fix_matchor_get=False")
 
-        return fst.FST._new_empty_matchor(from_=self)
+        return fst.FST(MatchOr(patterns=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
+                       [''], from_=self)
 
     if len_slice == 1 and fix_matchor_get == 'strict':
         raise ValueError("cannot get length 1 slice from MatchOr with fix_matchor_get='strict'")

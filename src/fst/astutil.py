@@ -152,115 +152,23 @@ __all__ = [
 from_iterable = chain.from_iterable
 
 
-class bistr(str):
-    """Byte-indexed string, easy mapping between character and encoded byte index (including 1 past last valid unit).
-    Only positive indices."""
-
-    _c2b: array  # character to byte indices
-    _b2c: array  # byte to character indices
-
-    _i2i_same = lambda idx: idx
-
-    @property
-    def lenbytes(self) -> int:
-        """Length of encoded string in bytes."""
-
-        return self.c2b(len(self))
-
-    def __new__(cls, s: str) -> 'bistr':
-        return s if isinstance(s, bistr) else str.__new__(cls, s)
-
-    @staticmethod
-    def _make_array(len_array: int, highest_value: int) -> array:
-        if highest_value < 0x100:
-            return array('B', b'\x00' * (len_array + 1))
-        if highest_value < 0x10000:
-            return array('H', b'\x00\x00' * (len_array + 1))
-        if highest_value < 0x100000000:
-            return array('I', b'\x00\x00\x00\x00' * (len_array + 1))
-
-        return array('Q', b'\x00\x00\x00\x00\x00\x00\x00\x00' * (len_array + 1))
-
-    def _c2b_lookup(self, idx: int) -> int:
-        return self._c2b[idx]
-
-    def c2b(self, idx: int) -> int:
-        """Character to encoded byte index, [0..len(str)] inclusive."""
-
-        if (lc := len(self)) == (lb := len(self.encode())):
-            self.c2b = self.b2c = bistr._i2i_same
-
-            return idx
-
-        c2b = self._c2b = self._make_array(lc, lb)
-        j = 0
-
-        for i, c in enumerate(self):
-            c2b[i] = j
-            j += len(c.encode())
-
-        c2b[-1] = j
-        self.c2b = self._c2b_lookup
-
-        return c2b[idx]
-
-    def _b2c_lookup(self, idx: int) -> int:
-        return self._b2c[idx]
-
-    def b2c(self, idx: int) -> int:
-        """Encoded byte to character index, [0..len(str.encode())] inclusive. Indices inside encoded characters are
-        mapped to the beginning of the character."""
-
-        if (lb := self.c2b(lc := len(self))) == lc:
-            return idx  # no chars > '\x7f' so funcs are `_i2i_same` identity
-
-        b2c = self._b2c = self._make_array(lb, lc)
-
-        for i, j in enumerate(self._c2b):
-            b2c[j] = i
-
-        k = 0
-
-        for i, j in enumerate(b2c):  # set off-boundary utf8 byte indices for safety
-            if j:
-                k = j
-            else:
-                b2c[i] = k
-
-        self.b2c = self._b2c_lookup
-
-        return b2c[idx]
-
-    def clear_cache(self) -> None:
-        """Remove the lookup array (if need to save some memory)."""
-
-        try:
-            del self.c2b, self._c2b
-        except AttributeError:
-            pass
-
-        try:
-            del self.b2c, self._b2c
-        except AttributeError:
-            pass
-
-
 constant = EllipsisType | int | float | complex | str | bytes | bool | None
 
 pat_alnum                  = r'\w\uFE00-\uFE0F\U000E0100-\U000E01EF'
+pat_identifier             = rf'[^\d\W][{pat_alnum}]*'
 
-re_alnum                   = re.compile(r'[\w\uFE00-\uFE0F\U000E0100-\U000E01EF]')
-re_alnumdot                = re.compile(r'[\w\uFE00-\uFE0F\U000E0100-\U000E01EF.]')
-re_alnumdot_alnum          = re.compile(r'[\w\uFE00-\uFE0F\U000E0100-\U000E01EF.][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]')
+re_alnum                   = re.compile(rf'[{pat_alnum}]')
+re_alnumdot                = re.compile(rf'[{pat_alnum}.]')
+re_alnumdot_alnum          = re.compile(rf'[{pat_alnum}.][{pat_alnum}]')
 
-re_identifier              = re.compile(r'[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*')  # some other weird unicode crap accepted by python but no, just no
-re_identifier_only         = re.compile(r'^[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*$')
-re_identifier_dotted       = re.compile(r'[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*(?:\.[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*)*')
-re_identifier_dotted_only  = re.compile(r'^[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*(?:\.[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*)*$')
-re_identifier_or_star      = re.compile(r'(?:\*|[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*)')
-re_identifier_or_star_only = re.compile(r'^(?:\*|[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*)$')
-re_identifier_alias        = re.compile(r'(?:\*|[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*(?:\.[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*)*)')
-re_identifier_alias_only   = re.compile(r'^(?:\*|[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*(?:\.[^\d\W][\w\uFE00-\uFE0F\U000E0100-\U000E01EF]*)*)$')
+re_identifier              = re.compile(rf'{pat_identifier}')  # some other weird unicode crap accepted by python but no, just no
+re_identifier_only         = re.compile(rf'^{pat_identifier}$')
+re_identifier_dotted       = re.compile(rf'{pat_identifier}(?:\.{pat_identifier})*')
+re_identifier_dotted_only  = re.compile(rf'^{pat_identifier}(?:\.{pat_identifier})*$')
+re_identifier_or_star      = re.compile(rf'(?:\*|{pat_identifier})')
+re_identifier_or_star_only = re.compile(rf'^(?:\*|{pat_identifier})$')
+re_identifier_alias        = re.compile(rf'(?:\*|{pat_identifier}(?:\.{pat_identifier})*)')
+re_identifier_alias_only   = re.compile(rf'^(?:\*|{pat_identifier}(?:\.{pat_identifier})*)$')
 
 # Mostly in syntax order except a few special cases:
 #   BoolOp        - multiple simultaneous locations possible for single `op`
@@ -469,6 +377,99 @@ OPSTR2CLS     = {**OPSTR2CLS_UNARY, **OPSTR2CLS_BIN, **OPSTR2CLS_CMP, **OPSTR2CL
 OPSTR2CLSWAUG = {**OPSTR2CLS, **OPSTR2CLS}                                                                             ; """Mapping of all operator strings to operator `AST` class including AugAssign operators."""
 OPCLS2STR     = {v: k for d in (OPSTR2CLS_UNARY, OPSTR2CLS_BIN, OPSTR2CLS_CMP, OPSTR2CLS_BOOL) for k, v in d.items()}  ; """Mapping of operator `AST` class to operator string, e.g. `ast.Add: '+'`."""
 OPCLS2STR_AUG = {v: k for k, v in OPSTR2CLS_AUG.items()}                                                               ; """Mapping of operator `AST` class to operator string mapping to augmented operator strings, e.g. `ast.Add: '+='`."""
+
+
+class bistr(str):
+    """Byte-indexed string, easy mapping between character and encoded byte index (including 1 past last valid unit).
+    Only positive indices."""
+
+    _c2b: array  # character to byte indices
+    _b2c: array  # byte to character indices
+
+    _i2i_same = lambda idx: idx
+
+    @property
+    def lenbytes(self) -> int:
+        """Length of encoded string in bytes."""
+
+        return self.c2b(len(self))
+
+    def __new__(cls, s: str) -> 'bistr':
+        return s if isinstance(s, bistr) else str.__new__(cls, s)
+
+    @staticmethod
+    def _make_array(len_array: int, highest_value: int) -> array:
+        if highest_value < 0x100:
+            return array('B', b'\x00' * (len_array + 1))
+        if highest_value < 0x10000:
+            return array('H', b'\x00\x00' * (len_array + 1))
+        if highest_value < 0x100000000:
+            return array('I', b'\x00\x00\x00\x00' * (len_array + 1))
+
+        return array('Q', b'\x00\x00\x00\x00\x00\x00\x00\x00' * (len_array + 1))
+
+    def _c2b_lookup(self, idx: int) -> int:
+        return self._c2b[idx]
+
+    def c2b(self, idx: int) -> int:
+        """Character to encoded byte index, [0..len(str)] inclusive."""
+
+        if (lc := len(self)) == (lb := len(self.encode())):
+            self.c2b = self.b2c = bistr._i2i_same
+
+            return idx
+
+        c2b = self._c2b = self._make_array(lc, lb)
+        j = 0
+
+        for i, c in enumerate(self):
+            c2b[i] = j
+            j += len(c.encode())
+
+        c2b[-1] = j
+        self.c2b = self._c2b_lookup
+
+        return c2b[idx]
+
+    def _b2c_lookup(self, idx: int) -> int:
+        return self._b2c[idx]
+
+    def b2c(self, idx: int) -> int:
+        """Encoded byte to character index, [0..len(str.encode())] inclusive. Indices inside encoded characters are
+        mapped to the beginning of the character."""
+
+        if (lb := self.c2b(lc := len(self))) == lc:
+            return idx  # no chars > '\x7f' so funcs are `_i2i_same` identity
+
+        b2c = self._b2c = self._make_array(lb, lc)
+
+        for i, j in enumerate(self._c2b):
+            b2c[j] = i
+
+        k = 0
+
+        for i, j in enumerate(b2c):  # set off-boundary utf8 byte indices for safety
+            if j:
+                k = j
+            else:
+                b2c[i] = k
+
+        self.b2c = self._b2c_lookup
+
+        return b2c[idx]
+
+    def clear_cache(self) -> None:
+        """Remove the lookup array (if need to save some memory)."""
+
+        try:
+            del self.c2b, self._c2b
+        except AttributeError:
+            pass
+
+        try:
+            del self.b2c, self._b2c
+        except AttributeError:
+            pass
 
 
 def is_valid_identifier(s: str) -> bool:

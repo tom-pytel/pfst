@@ -36,7 +36,7 @@ def _get_slice_stmtish(self: fst.FST, start: int | Literal['end'] | None, stop: 
     start, stop = fixup_slice_indices(len(body), start, stop)
 
     if start == stop:
-        return self._new_empty_module(from_=self)
+        return fst.FST(Module(body=[], type_ignores=[]), [''], from_=self, lcopy=False)
 
     ffirst = body[start].f
     flast = body[stop - 1].f

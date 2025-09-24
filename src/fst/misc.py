@@ -5,7 +5,7 @@ import sys
 from ast import parse as ast_parse
 from functools import wraps
 from math import log10
-from typing import Callable, ForwardRef, Literal, NamedTuple, Iterable
+from typing import Callable, Literal, NamedTuple, Iterable
 
 from .asttypes import (
     AST,
@@ -96,6 +96,7 @@ from .astutil import constant, bistr
 try:
     from typing import Self
 except ImportError:  # for py 3.10
+    from typing import ForwardRef
     Self = ForwardRef('FST')
 
 __all__ = [
@@ -422,13 +423,6 @@ def shortstr(s: str, maxlen: int = 64) -> str:
     t = maxlen - 16 - (int(log10(l)) + 1)
 
     return f'{s[:(t+1)//2]} .. [{l} chars] .. {s[-(t//2):]}'
-
-
-# def cls_names(cls: type | Sequence[type], last_separator: str = ' or ') -> str:
-#     if isinstance(cls, Sequence):
-#         return f'{", ".join(a.__name__ for a in cls[:-1])}{last_separator}{cls[-1].__name__}'
-
-#     return cls.__name__
 
 
 def next_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,

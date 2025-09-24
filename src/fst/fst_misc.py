@@ -259,7 +259,7 @@ class _Modifying:
 def _make_tree_fst(ast: AST, parent: fst.FST, pfield: astfield) -> fst.FST:
     """Make `FST` node from `AST`, recreating possibly non-unique AST nodes."""
 
-    if not getattr(ast, 'f', None):  # if `.f` exists then this has already been done
+    if not getattr(ast, 'f', None):  # if `.f` exists and points to an FST then this has already been done
         if isinstance(ast, (expr_context, unaryop, operator, boolop, cmpop)):  # ast.parse() reuses simple objects, we need all objects to be unique
             pfield.set(parent.a, ast := ast.__class__())
 
@@ -288,29 +288,10 @@ def _out_lines(fst_: fst.FST, linefunc: Callable, ln: int, col: int, end_ln: int
 # FST class private methods
 
 @staticmethod
-def _new_empty_module(*, from_: fst.FST | None = None) -> fst.FST:
-    return fst.FST(Module(body=[], type_ignores=[]), [''], from_=from_, lcopy=False)
-
-
-@staticmethod
 def _new_empty_tuple(*, from_: fst.FST | None = None) -> fst.FST:
     ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
 
     return fst.FST(ast, ['()'], from_=from_)
-
-
-@staticmethod
-def _new_empty_list(*, from_: fst.FST | None = None) -> fst.FST:
-    ast = List(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
-
-    return fst.FST(ast, ['[]'], from_=from_)
-
-
-@staticmethod
-def _new_empty_dict(*, from_: fst.FST | None = None) -> fst.FST:
-    ast = Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
-
-    return fst.FST(ast, ['{}'], from_=from_)
 
 
 @staticmethod
@@ -344,27 +325,6 @@ def _new_empty_set_curlies(lineno: int = 1, col_offset: int = 0, *, from_: fst.F
               end_col_offset=col_offset + 2)
 
     return fst.FST(ast, ['{}'], from_=from_)
-
-
-@staticmethod
-def _new_empty_matchseq(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None) -> fst.FST:
-    return fst.FST(MatchSequence(patterns=[], lineno=lineno, col_offset=col_offset,
-                                 end_lineno=lineno, end_col_offset=col_offset + 2),
-                   ['[]'], from_=from_)
-
-
-@staticmethod
-def _new_empty_matchmap(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None) -> fst.FST:
-    return fst.FST(MatchMapping(keys=[], patterns=[], rest=None, lineno=lineno, col_offset=col_offset,
-                                end_lineno=lineno, end_col_offset=col_offset + 2),
-                   ['{}'], from_=from_)
-
-
-@staticmethod
-def _new_empty_matchor(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None) -> fst.FST:
-    return fst.FST(MatchOr(patterns=[], lineno=lineno, col_offset=col_offset,
-                           end_lineno=lineno, end_col_offset=col_offset),
-                   [''], from_=from_)
 
 
 def _repr_tail(self: fst.FST) -> str:

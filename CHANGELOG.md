@@ -6,6 +6,8 @@
 
 ### Updated
 
+- lots of code cleanups
+
 
 ## 0.2.2 - alpha - 2025-09-23
 
