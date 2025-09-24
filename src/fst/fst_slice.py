@@ -1829,7 +1829,7 @@ def _put_slice_seq_end(self: fst.FST, params: tuple) -> None:
 
 
 def _put_slice_asts(self: fst.FST, start: int, stop: int, field: str, body: list[AST],
-                    fst_: fst.FST | None, asts: list[AST] | None, *, ctx: type[expr_context] | None = None) -> None:
+                    fst_: fst.FST | None, asts: list[AST] | None, ctx: type[expr_context] | None = None) -> None:
     """Put or delete the actual `AST` nodes to `self` body and create `FST` nodes for them."""
 
     self._unmake_fst_tree(body[start : stop])
@@ -1856,6 +1856,31 @@ def _put_slice_asts(self: fst.FST, start: int, stop: int, field: str, body: list
 
     for i in range(start + len_asts, len(body)):
         body[i].f.pfield = astfield(field, i)
+
+
+def _put_slice_seq_and_asts(self: fst.FST, start: int, stop: int, field: str, body: list[AST],
+                            fst_: fst.FST | None, fst_field: str, ctx: type[expr_context] | None,
+                            bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
+                            sep: str, self_tail_sep: bool | Literal[0, 1] | None,
+                            options: Mapping[str, Any]) -> None:
+
+    if not fst_:
+        end_params = _put_slice_seq_begin(self, start, stop, None, None, None, 0,
+                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                          options.get('trivia'), options.get('ins_ln'), field, None, sep, self_tail_sep)
+
+        _put_slice_asts(self, start, stop, field, body, None, None)
+
+    else:
+        fst_body = getattr(fst_.a, fst_field)
+
+        end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len(fst_body),
+                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                          options.get('trivia'), options.get('ins_ln'), field, None, sep, self_tail_sep)
+
+        _put_slice_asts(self, start, stop, field, body, fst_, fst_body, ctx)
+
+    _put_slice_seq_end(self, end_params)
 
 
 def _put_slice_asts2(self: fst.FST, start: int, stop: int, field2: str, body: list[AST], body2: list[AST],
@@ -2392,21 +2417,8 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
         bound_col += 1
         bound_end_col -= 1
 
-    if not fst_:
-        end_params = _put_slice_seq_begin(self, start, stop, None, None, None, 0,
-                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                          options.get('trivia'), options.get('ins_ln'), self_tail_sep=1)
-
-        _put_slice_asts(self, start, stop, 'elts', body, None, None)
-
-    else:
-        end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
-                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                          options.get('trivia'), options.get('ins_ln'), self_tail_sep=1)
-
-        _put_slice_asts(self, start, stop, 'elts', body, fst_, fst_body, ctx=ast.ctx.__class__)
-
-    _put_slice_seq_end(self, end_params)
+    _put_slice_seq_and_asts(self, start, stop, 'elts', body, fst_, 'elts', ast.ctx.__class__,
+                            bound_ln, bound_col, bound_end_ln, bound_end_col, ',', 1, options)
 
     is_par = self._maybe_fix_tuple(is_par)
 
@@ -2430,23 +2442,8 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
     bound_col += 1
     bound_end_col -= 1
 
-    if not fst_:
-        end_params = _put_slice_seq_begin(self, start, stop, None, None, None, 0,
-                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                          options.get('trivia'), options.get('ins_ln'))
-
-        _put_slice_asts(self, start, stop, 'elts', body, None, None)
-
-    else:
-        len_fst_body = len(fst_body := fst_.a.elts)
-
-        end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
-                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                          options.get('trivia'), options.get('ins_ln'))
-
-        _put_slice_asts(self, start, stop, 'elts', body, fst_, fst_body, ctx=ast.ctx.__class__)
-
-    _put_slice_seq_end(self, end_params)
+    _put_slice_seq_and_asts(self, start, stop, 'elts', body, fst_, 'elts', ast.ctx.__class__,
+                            bound_ln, bound_col, bound_end_ln, bound_end_col, ',', None, options)
 
 
 def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
@@ -2465,23 +2462,8 @@ def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['
     bound_col += 1
     bound_end_col -= 1
 
-    if not fst_:
-        end_params = _put_slice_seq_begin(self, start, stop, None, None, None, 0,
-                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                          options.get('trivia'), options.get('ins_ln'))
-
-        _put_slice_asts(self, start, stop, 'elts', body, None, None)
-
-    else:
-        len_fst_body = len(fst_body := fst_.a.elts)
-
-        end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
-                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                          options.get('trivia'), options.get('ins_ln'))
-
-        _put_slice_asts(self, start, stop, 'elts', body, fst_, fst_body)
-
-    _put_slice_seq_end(self, end_params)
+    _put_slice_seq_and_asts(self, start, stop, 'elts', body, fst_, 'elts', None,
+                            bound_ln, bound_col, bound_end_ln, bound_end_col, ',', None, options)
 
     self._maybe_fix_set(self.get_option('fix_set_self', options))
 
@@ -2509,23 +2491,8 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bound_Delete_targets(self)
 
-    if not fst_:
-        end_params = _put_slice_seq_begin(self, start, stop, None, None, None, 0,
-                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                          options.get('trivia'), options.get('ins_ln'), 'targets', None, ',', False)
-
-        _put_slice_asts(self, start, stop, 'targets', body, None, None)
-
-    else:
-        len_fst_body = len(fst_body := fst_.a.elts)
-
-        end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
-                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                          options.get('trivia'), options.get('ins_ln'), 'targets', None, ',', False)
-
-        _put_slice_asts(self, start, stop, 'targets', body, fst_, fst_body, ctx=Del)
-
-    _put_slice_seq_end(self, end_params)
+    _put_slice_seq_and_asts(self, start, stop, 'targets', body, fst_, 'elts', Del,
+                            bound_ln, bound_col, bound_end_ln, bound_end_col, ',', False, options)
 
     if stop == len_body:  # if del till and something left then may need to reset end position of self due to new trailing trivia
         if body:
@@ -2556,23 +2523,8 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bound_Assign_targets(self, start)
 
-    if not fst_:
-        end_params = _put_slice_seq_begin(self, start, stop, None, None, None, 0,
-                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                          options.get('trivia'), options.get('ins_ln'), 'targets', None, '=', True)
-
-        _put_slice_asts(self, start, stop, 'targets', body, None, None)
-
-    else:
-        len_fst_body = len(fst_body := fst_.a.targets)
-
-        end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
-                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                          options.get('trivia'), options.get('ins_ln'), 'targets', None, '=', True)
-
-        _put_slice_asts(self, start, stop, 'targets', body, fst_, fst_body)
-
-    _put_slice_seq_end(self, end_params)
+    _put_slice_seq_and_asts(self, start, stop, 'targets', body, fst_, 'targets', None,
+                            bound_ln, bound_col, bound_end_ln, bound_end_col, '=', True, options)
 
     _maybe_fix_Assign_target0(self)
     self._maybe_add_line_continuations()
@@ -2596,23 +2548,8 @@ def _put_slice_With_AsyncWith_items(self: fst.FST, code: Code | None, start: int
     pars_ln, pars_col, pars_end_ln, pars_end_col = pars
     pars_n = pars.n
 
-    if not fst_:
-        end_params = _put_slice_seq_begin(self, start, stop, None, None, None, 0,
-                                          pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n,
-                                          options.get('trivia'), options.get('ins_ln'), 'items', None, ',', False)
-
-        _put_slice_asts(self, start, stop, 'items', body, None, None)
-
-    else:
-        len_fst_body = len(fst_body := fst_.a.items)
-
-        end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
-                                          pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n,
-                                          options.get('trivia'), options.get('ins_ln'), 'items', None, ',', False)
-
-        _put_slice_asts(self, start, stop, 'items', body, fst_, fst_body)
-
-    _put_slice_seq_end(self, end_params)
+    _put_slice_seq_and_asts(self, start, stop, 'items', body, fst_, 'items', None,
+                            pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n, ',', False, options)
 
     if not pars_n:  # only need to fix maybe if there are no parentheses
         if not self.is_enclosed_or_line(pars=False):  # if no parentheses and wound up not valid for parse then adding parentheses around items should fix
@@ -2651,23 +2588,8 @@ def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Liter
         bound_ln = bound_end_ln
         bound_col = bound_end_col
 
-    if not fst_:
-        end_params = _put_slice_seq_begin(self, start, stop, None, None, None, 0,
-                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                          options.get('trivia'), options.get('ins_ln'), 'names', None, ',', False)
-
-        _put_slice_asts(self, start, stop, 'names', body, None, None)
-
-    else:
-        len_fst_body = len(fst_body := fst_.a.names)
-
-        end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
-                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                          options.get('trivia'), options.get('ins_ln'), 'names', None, ',', False)
-
-        _put_slice_asts(self, start, stop, 'names', body, fst_, fst_body)
-
-    _put_slice_seq_end(self, end_params)
+    _put_slice_seq_and_asts(self, start, stop, 'names', body, fst_, 'names', None,
+                            bound_ln, bound_col, bound_end_ln, bound_end_col, ',', False, options)
 
     if stop == len_body:  # if del till and something left then may need to reset end position of self due to new trailing trivia
         if body:
@@ -2707,23 +2629,8 @@ def _put_slice_ImportFrom_names(self: fst.FST, code: Code | None, start: int | L
     pars_ln, pars_col, pars_end_ln, pars_end_col = pars
     pars_n = pars.n
 
-    if not fst_:
-        end_params = _put_slice_seq_begin(self, start, stop, None, None, None, 0,
-                                          pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n,
-                                          options.get('trivia'), options.get('ins_ln'), 'names', None, ',', False)
-
-        _put_slice_asts(self, start, stop, 'names', body, None, None)
-
-    else:
-        len_fst_body = len(fst_body := fst_.a.names)
-
-        end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
-                                          pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n,
-                                          options.get('trivia'), options.get('ins_ln'), 'names', None, ',', False)
-
-        _put_slice_asts(self, start, stop, 'names', body, fst_, fst_body)
-
-    _put_slice_seq_end(self, end_params)
+    _put_slice_seq_and_asts(self, start, stop, 'names', body, fst_, 'names', None,
+                            pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n, ',', False, options)
 
     if not pars_n:  # only need to fix maybe if there are no parentheses
         if stop == len_body:  # if del till and something left then may need to reset end position of self due to new trailing trivia
@@ -2942,28 +2849,10 @@ def _put_slice_Call_args(self: fst.FST, code: Code | None, start: int | Literal[
     bound_col += 1
     bound_end_col -= 1
 
-    if not fst_:
-        self_tail_sep = (start and keywords and stop == len_body) or None
+    self_tail_sep = ((fst_ or start) and keywords and stop == len_body) or None
 
-        end_params = _put_slice_seq_begin(self, start, stop, None, None, None, 0,
-                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                          options.get('trivia'), options.get('ins_ln'), 'args', None, ',',
-                                          self_tail_sep)
-
-        _put_slice_asts(self, start, stop, 'args', body, None, None)
-
-    else:
-        self_tail_sep = (keywords and stop == len_body) or None
-        len_fst_body = len(fst_body := fst_.a.elts)
-
-        end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
-                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                          options.get('trivia'), options.get('ins_ln'), 'args', None, ',',
-                                          self_tail_sep)
-
-        _put_slice_asts(self, start, stop, 'args', body, fst_, fst_body)
-
-    _put_slice_seq_end(self, end_params)
+    _put_slice_seq_and_asts(self, start, stop, 'args', body, fst_, 'elts', None,
+                            bound_ln, bound_col, bound_end_ln, bound_end_col, ',', self_tail_sep, options)
 
     if self_tail_sep:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
         self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
@@ -2985,23 +2874,8 @@ def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: i
         bound_col += 1
         bound_end_col -= 1
 
-    if not fst_:
-        end_params = _put_slice_seq_begin(self, start, stop, None, None, None, 0,
-                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                          options.get('trivia'), options.get('ins_ln'), 'patterns', None, ',', 0)
-
-        _put_slice_asts(self, start, stop, 'patterns', body, None, None)
-
-    else:
-        len_fst_body = len(fst_body := fst_.a.patterns)
-
-        end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
-                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                          options.get('trivia'), options.get('ins_ln'), 'patterns', None, ',', 0)
-
-        _put_slice_asts(self, start, stop, 'patterns', body, fst_, fst_body)
-
-    _put_slice_seq_end(self, end_params)
+    _put_slice_seq_and_asts(self, start, stop, 'patterns', body, fst_, 'patterns', None,
+                            bound_ln, bound_col, bound_end_ln, bound_end_col, ',', 0, options)
 
     self._maybe_fix_matchseq(delims)
 
