@@ -96,7 +96,7 @@ from .code import (
     code_as_type_param, code_as_type_params,
 )
 
-from .locs import (
+from .locations import (
     loc_With_items_pars, loc_ImportFrom_names_pars, loc_ClassDef_bases_pars, loc_Call_pars,
     loc_TypeAlias_type_params_brackets, loc_ClassDef_type_params_brackets, loc_FunctionDef_type_params_brackets,
     loc_Global_Nonlocal_names,

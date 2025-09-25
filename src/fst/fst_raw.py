@@ -14,7 +14,7 @@ from .misc import NodeError, astfield
 
 from .parsex import Mode, unparse
 from .code import Code
-from .locs import loc_block_header_end
+from .locations import loc_block_header_end
 
 
 _STMTISH_FIELDS     = frozenset(('body', 'orelse', 'finalbody', 'handlers', 'cases'))

@@ -14,6 +14,8 @@ from typing import Any, Callable, Generator, Iterator, Literal, Mapping, TextIO,
 from . import parsex
 
 from .asttypes import (
+    ASTS_EXPRISH_ALL, ASTS_STMTISH, ASTS_STMTISH_OR_MOD, ASTS_BLOCK, ASTS_BLOCK_OR_MOD, ASTS_SCOPE, ASTS_SCOPE_OR_MOD,
+    ASTS_SCOPE_NAMED, ASTS_SCOPE_NAMED_OR_MOD, ASTS_SCOPE_ANONYMOUS,
     AST,
     AsyncFor,
     AsyncFunctionDef,
@@ -92,8 +94,6 @@ from .astutil import (
 
 from .misc import (
     PYLT13,
-    EXPRISH_ALL, STMTISH, STMTISH_OR_MOD, BLOCK, BLOCK_OR_MOD, SCOPE, SCOPE_OR_MOD, NAMED_SCOPE,
-    NAMED_SCOPE_OR_MOD, ANONYMOUS_SCOPE,
     astfield, fstloc, fstlocns, nspace,
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Self,
@@ -105,7 +105,7 @@ from .misc import (
 from .parsex import Mode, get_special_parse_mode
 from .code import Code, code_as_all
 
-from .locs import (
+from .locations import (
     loc_arguments, loc_comprehension, loc_withitem, loc_match_case, loc_operator,
     loc_Call_pars, loc_Subscript_brackets, loc_ImportFrom_names_pars, loc_With_items_pars, loc_MatchClass_pars,
 )
@@ -484,7 +484,7 @@ class FST:
     def is_stmtish(self) -> bool:
         """Is a `stmt`, `ExceptHandler` or `match_case`."""
 
-        return isinstance(self.a, STMTISH)
+        return isinstance(self.a, ASTS_STMTISH)
 
     @property
     def is_stmt(self) -> bool:
@@ -498,27 +498,27 @@ class FST:
         `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`, `TryStar`, `ExceptHandler`, `match_case` or
         `mod`."""
 
-        return isinstance(self.a, BLOCK_OR_MOD)
+        return isinstance(self.a, ASTS_BLOCK_OR_MOD)
 
     @property
     def is_scope(self) -> bool:
         """Is a node which opens a scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `Lambda`,
         `ListComp`, `SetComp`, `DictComp`, `GeneratorExp` or `mod`."""
 
-        return isinstance(self.a, SCOPE_OR_MOD)
+        return isinstance(self.a, ASTS_SCOPE_OR_MOD)
 
     @property
     def is_named_scope(self) -> bool:
         """Is a node which opens a named scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `mod`."""
 
-        return isinstance(self.a, NAMED_SCOPE_OR_MOD)
+        return isinstance(self.a, ASTS_SCOPE_NAMED_OR_MOD)
 
     @property
     def is_anon_scope(self) -> bool:
         """Is a node which opens an anonymous scope. Types include `Lambda`, `ListComp`, `SetComp`, `DictComp` or
         `GeneratorExp`."""
 
-        return isinstance(self.a, ANONYMOUS_SCOPE)
+        return isinstance(self.a, ASTS_SCOPE_ANONYMOUS)
 
     @property
     def f(self) -> None:
@@ -3681,7 +3681,7 @@ class FST:
         ```
         """
 
-        types = STMTISH_OR_MOD if mod else STMTISH
+        types = ASTS_STMTISH_OR_MOD if mod else ASTS_STMTISH
 
         if self_ and isinstance(self.a, types):
             return self
@@ -3707,7 +3707,7 @@ class FST:
         ```
         """
 
-        types = BLOCK_OR_MOD if mod else BLOCK
+        types = ASTS_BLOCK_OR_MOD if mod else ASTS_BLOCK
 
         if self_ and isinstance(self.a, types):
             return self
@@ -3739,7 +3739,7 @@ class FST:
         ```
         """
 
-        types = SCOPE_OR_MOD if mod else SCOPE
+        types = ASTS_SCOPE_OR_MOD if mod else ASTS_SCOPE
 
         if self_ and isinstance(self.a, types):
             return self
@@ -3773,7 +3773,7 @@ class FST:
         ```
         """
 
-        types = NAMED_SCOPE_OR_MOD if mod else NAMED_SCOPE
+        types = ASTS_SCOPE_NAMED_OR_MOD if mod else ASTS_SCOPE_NAMED
 
         if self_ and isinstance(self.a, types):
             return self
@@ -3813,7 +3813,7 @@ class FST:
         ```
         """
 
-        types = expr if strict else EXPRISH_ALL  # ops because of maybe self_
+        types = expr if strict else ASTS_EXPRISH_ALL  # ops because of maybe self_
 
         if self_ and not isinstance(self.a, types):
             return self
@@ -4156,7 +4156,7 @@ class FST:
         ```
         """
 
-        while (parent := self.parent) and not isinstance(self.a, STMTISH):
+        while (parent := self.parent) and not isinstance(self.a, ASTS_STMTISH):
             self = parent
 
         root = self.root

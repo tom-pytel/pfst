@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from . import fst
 
-from .asttypes import Constant, Expr, If, mod
+from .asttypes import ASTS_SCOPE_NAMED, Constant, Expr, If, mod
 from .astutil import bistr
 
 from .misc import (
     fstloc,
-    NAMED_SCOPE,
     re_empty_line_start, re_empty_line, re_comment_line_start, re_line_trailing_space,
     re_empty_line_cont_or_comment,
     next_frag, prev_frag, next_find, prev_find,
@@ -316,13 +315,13 @@ class SrcEdit:
 
             pep8space = 2 if pep8space is True and (p := get_fst.parent_scope(True)) and isinstance(p.a, mod) else 1
 
-            if fpre and isinstance(ffirst.a, NAMED_SCOPE) and (fpre.pfield.idx or
+            if fpre and isinstance(ffirst.a, ASTS_SCOPE_NAMED) and (fpre.pfield.idx or
                                                                not isinstance(a := fpre.a, Expr) or
                                                                not isinstance(v := a.value, Constant) or
                                                                not isinstance(v.value, str)):
                 prespace = max(prespace, pep8space)
 
-            elif fpost and isinstance(flast.a, NAMED_SCOPE):
+            elif fpost and isinstance(flast.a, ASTS_SCOPE_NAMED):
                 postspace = max(postspace, pep8space)
 
         del_ln, del_col, del_end_ln, del_end_col = del_loc
@@ -402,7 +401,7 @@ class SrcEdit:
 
         prepend = 2 if put_col else 0  # don't put initial empty line if putting on a first AST line at root
 
-        if is_pep8 and fpre and ((put_ns := isinstance(put_body[0], NAMED_SCOPE)) or isinstance(fpre.a, NAMED_SCOPE)):  # preceding space
+        if is_pep8 and fpre and ((put_ns := isinstance(put_body[0], ASTS_SCOPE_NAMED)) or isinstance(fpre.a, ASTS_SCOPE_NAMED)):  # preceding space
             if pep8space == 1 or (not fpre.pfield.idx and isinstance(a := fpre.a, Expr) and   # docstring
                                   isinstance(v := a.value, Constant) and isinstance(v.value, str)):
                 want = 1
@@ -429,7 +428,7 @@ class SrcEdit:
 
                 prepend += need
 
-        if not (is_pep8 and fpost and (isinstance(put_body[-1], NAMED_SCOPE) or isinstance(fpost.a, NAMED_SCOPE))):  # trailing space
+        if not (is_pep8 and fpost and (isinstance(put_body[-1], ASTS_SCOPE_NAMED) or isinstance(fpost.a, ASTS_SCOPE_NAMED))):  # trailing space
             postpend = bool((l := put_lines[-1]) and not re_empty_line.match(l))
 
         else:

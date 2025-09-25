@@ -155,7 +155,7 @@ from .code import (
     code_as_constant,
 )
 
-from .locs import (
+from .locations import (
     loc_arguments_empty, loc_ImportFrom_names_pars, loc_Lambda_args_entire, loc_block_header_end,
     loc_Global_Nonlocal_names,
 )

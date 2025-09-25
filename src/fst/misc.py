@@ -68,18 +68,9 @@ from .asttypes import (
     YieldFrom,
     alias,
     arg,
-    arguments,
-    boolop,
-    cmpop,
     comprehension,
-    expr,
-    expr_context,
     keyword,
     match_case,
-    mod,
-    operator,
-    stmt,
-    unaryop,
     withitem,
     TypeAlias,
     TryStar,
@@ -140,20 +131,6 @@ PYGE11 = PYVER >= (3, 11)
 PYGE12 = PYVER >= (3, 12)
 PYGE13 = PYVER >= (3, 13)
 PYGE14 = PYVER >= (3, 14)
-
-EXPRISH                  = (expr, comprehension, arguments, arg, keyword)  # can be in expression chain (have expressions above)
-EXPRISH_ALL              = EXPRISH + (expr_context, boolop, operator, unaryop, cmpop)
-STMTISH                  = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
-STMTISH_OR_MOD           = STMTISH + (mod,)
-STMTISH_OR_STMTMOD       = STMTISH + (Module, Interactive)
-BLOCK                    = (FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith, Match,
-                            Try, TryStar, ExceptHandler, match_case)
-BLOCK_OR_MOD             = BLOCK + (mod,)
-SCOPE                    = (FunctionDef, AsyncFunctionDef, ClassDef, Lambda, ListComp, SetComp, DictComp, GeneratorExp)
-SCOPE_OR_MOD             = SCOPE + (mod,)
-NAMED_SCOPE              = (FunctionDef, AsyncFunctionDef, ClassDef)
-NAMED_SCOPE_OR_MOD       = NAMED_SCOPE + (mod,)
-ANONYMOUS_SCOPE          = (Lambda, ListComp, SetComp, DictComp, GeneratorExp)
 
 re_empty_line_start      = re.compile(r'[ \t]*')     # start of completely empty or space-filled line (from start pos, start of line indentation)
 re_empty_line            = re.compile(r'[ \t]*$')    # completely empty or space-filled line (from start pos, start of line indentation)

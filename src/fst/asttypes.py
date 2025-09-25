@@ -288,6 +288,21 @@ __all__ = [
 ]
 
 
+ASTS_EXPRISH            = (expr, comprehension, arguments, arg, keyword)  # can be in expression chain (have expressions above)
+ASTS_EXPRISH_ALL        = ASTS_EXPRISH + (expr_context, boolop, operator, unaryop, cmpop)
+ASTS_STMTISH            = (stmt, ExceptHandler, match_case)  # always in lists, cannot be inside multilines
+ASTS_STMTISH_OR_MOD     = ASTS_STMTISH + (mod,)
+ASTS_STMTISH_OR_STMTMOD = ASTS_STMTISH + (Module, Interactive)
+ASTS_BLOCK              = (FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith, Match,
+                           Try, TryStar, ExceptHandler, match_case)
+ASTS_BLOCK_OR_MOD       = ASTS_BLOCK + (mod,)
+ASTS_SCOPE              = (FunctionDef, AsyncFunctionDef, ClassDef, Lambda, ListComp, SetComp, DictComp, GeneratorExp)
+ASTS_SCOPE_OR_MOD       = ASTS_SCOPE + (mod,)
+ASTS_SCOPE_NAMED        = (FunctionDef, AsyncFunctionDef, ClassDef)
+ASTS_SCOPE_NAMED_OR_MOD = ASTS_SCOPE_NAMED + (mod,)
+ASTS_SCOPE_ANONYMOUS    = (Lambda, ListComp, SetComp, DictComp, GeneratorExp)
+
+
 class _slice(AST):
     """General non-AST-compatible slice of some `type[AST]` list field. This is not generally usable as an `AST` and
     will not `ast.unparse()` correctly (though `FST.parsex.unparse()` will unparse correctly). Meant only to be used

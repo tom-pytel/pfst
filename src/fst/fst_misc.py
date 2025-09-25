@@ -14,6 +14,7 @@ from typing import Callable, Literal
 from . import fst
 
 from .asttypes import (
+    ASTS_EXPRISH, ASTS_STMTISH, ASTS_BLOCK, ASTS_SCOPE_NAMED_OR_MOD,
     AST,
     Attribute,
     Call,
@@ -51,13 +52,12 @@ from .astutil import bistr, pat_alnum, re_alnumdot_alnum
 
 from .misc import (
     Self, NodeError, astfield, fstloc, srcwpos, nspace, pyver,
-    EXPRISH, STMTISH, BLOCK, NAMED_SCOPE_OR_MOD,
     re_empty_line_start, re_line_trailing_space, re_line_end_cont_or_comment,
     next_frag, next_find, prev_find, next_delims, prev_delims,
     ParamsOffset, params_offset, multiline_str_continuation_lns, multiline_fstr_continuation_lns,
 )
 
-from .locs import loc_block_header_end
+from .locations import loc_block_header_end
 
 
 _HAS_FSTR_COMMENT_BUG  = f'{"a#b"=}' != '"a#b"=\'a#b\''
@@ -121,7 +121,7 @@ class _Modifying:
             self.field = field
             self.data = data = []  # [(FormattedValue or Interpolation FST, len(dbg_str) or None, bool do val_str), ...]
 
-            while isinstance(fst_.a, EXPRISH):
+            while isinstance(fst_.a, ASTS_EXPRISH):
                 parent = fst_.parent
                 pfield = fst_.pfield
 
@@ -334,7 +334,7 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
 
     elif isinstance(ast, (stmt, ExceptHandler, match_case)):  # src = 'stmt' or 'all'
         if loc := self.bloc:
-            if isinstance(ast, BLOCK):
+            if isinstance(ast, ASTS_BLOCK):
                 _dump_lines(self, st.linefunc, loc.ln, loc.col, (c := loc_block_header_end(self))[0], c[1] + 1, st.eol)
             else:
                 _dump_lines(self, st.linefunc, *loc, st.eol)
@@ -1455,7 +1455,7 @@ def _reparse_docstrings(self: fst.FST, docstr: bool | Literal['strict'] | None =
 
     else:
         for a in walk(self.a):
-            if isinstance(a, NAMED_SCOPE_OR_MOD):
+            if isinstance(a, ASTS_SCOPE_NAMED_OR_MOD):
                 if ((body := a.body) and isinstance(b0 := body[0], Expr) and isinstance(v := b0.value, Constant) and
                     isinstance(v.value, str)
                 ):
@@ -1653,7 +1653,7 @@ def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal[
     lines = self.root._lines
     lns = set(range(skip, len(lines))) if self.is_root else set(range(self.bln + skip, self.bend_ln + 1))
 
-    while (parent := self.parent) and not isinstance(self.a, STMTISH):
+    while (parent := self.parent) and not isinstance(self.a, ASTS_STMTISH):
         self = parent
 
     for f in (walking := self.walk(False)):  # find multiline strings and exclude their unindentable lines
@@ -1665,7 +1665,7 @@ def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal[
                 not docstr or
                 not ((parent := f.parent) and isinstance(parent.a, Expr) and
                         (not strict or ((pparent := parent.parent) and parent.pfield == ('body', 0) and
-                                        isinstance(pparent.a, NAMED_SCOPE_OR_MOD)
+                                        isinstance(pparent.a, ASTS_SCOPE_NAMED_OR_MOD)
             )))):
                 lns.difference_update(multiline_str_continuation_lns(lines, *f.loc))
 

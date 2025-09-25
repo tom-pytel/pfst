@@ -569,7 +569,7 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
 
                     break
 
-                if not isinstance(a, expr):  # EXPRISH?
+                if not isinstance(a, expr):  # ASTS_EXPRISH?
                     break
 
             if not allowed or not isinstance(repla, allowed):
@@ -680,7 +680,7 @@ def can_replace_ast(tgta: AST, tgt_parenta: AST, tgt_field: str, repla: AST, rep
 
         #             break
 
-        #         if not isinstance(a, expr):  # EXPRISH?
+        #         if not isinstance(a, expr):  # ASTS_EXPRISH?
         #             break
 
         #     if not allowed or not isinstance(repla, allowed):

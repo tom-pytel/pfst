@@ -6,7 +6,7 @@ from fst import *
 
 from fst.misc import PYGE12
 
-from fst.locs import (
+from fst.locations import (
     loc_ClassDef_bases_pars, loc_ImportFrom_names_pars, loc_With_items_pars, loc_block_header_end, loc_Call_pars,
     loc_Subscript_brackets, loc_MatchClass_pars,
 )

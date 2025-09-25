@@ -1273,13 +1273,13 @@ def func():
 '''     ):
 
             ast  = parse(src.strip())
-            asts = [a for a in walk(ast) if isinstance(a, fst.STMTISH)]
+            asts = [a for a in walk(ast) if isinstance(a, fst.ASTS_STMTISH)]
 
             for a in asts[::-1]:
                 a.f.cut()
 
             ast  = parse(src.strip())
-            asts = [a for a in walk(ast) if isinstance(a, fst.STMTISH)]
+            asts = [a for a in walk(ast) if isinstance(a, fst.ASTS_STMTISH)]
 
             for a in asts[::-1]:
                 field, idx = a.f.pfield
