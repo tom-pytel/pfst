@@ -159,8 +159,7 @@ class fstlocns(fstloc):
     def __new__(cls, ln: int, col: int, end_ln: int, end_col: int, **kwargs):
         self = fstloc.__new__(cls, ln, col, end_ln, end_col)
 
-        for name, value in kwargs.items():
-            setattr(self, name, value)
+        self.__dict__.update(kwargs)
 
         return self
 
@@ -175,11 +174,12 @@ class srcwpos(NamedTuple):
 
 class nspace:
     """Simple namespace class used for several things.
-    @private"""
+
+    @private
+    """
 
     def __init__(self, **kwargs):
-        for name, value in kwargs.items():
-            setattr(self, name, value)
+        self.__dict__.update(kwargs)
 
 
 assert sys.version_info[0] == 3, 'pyver() assumes python major version 3'
@@ -190,13 +190,16 @@ _pyver = sys.version_info[1]  # just the minor version
 def pyver(func: Callable | None = None, *, ge: int | None = None, lt: int | None = None, else_: Callable | None = None,
           ) -> Callable:
     """Decorator to restrict to a range of python versions. If the version of python does not match the parameters
-    passed then will return a previously registered function that does match or `None` if no matching function. Yes we
-    are only comparing minor version, if python goes to major 4 then this will be the least of your incompatibilities.
+    passed then will return a previously registered function that does match or `None` if no matching function. Does not
+    wrap the functions but rather returns the originals to not add unnecessary overhead.
+
+    **Note:** Yes we are only comparing minor version, if python goes to major 4 then this will be the least of your
+    incompatibilities.
 
     **Parameters:**
     - `func`: The function (or class) being decorated.
     - `ge`: Minimum allowed version of python for this function. `None` for unbound below `lt`.
-    - `lt`: Maximum NOT allowed version of python for this function (exclusive, LESS THAN THIS). `None` for unbound
+    - `lt`: Minimum NOT allowed version of python for this function (exclusive, LESS THAN THIS). `None` for unbound
         above `ge`. Both `ge` and `lt` cannot be `None` at the same time.
     - `else_`: If the current python version does not match the specified `ge` and `lt` then use this function instead
         of a standin which raises and error.

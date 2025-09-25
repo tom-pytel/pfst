@@ -1191,7 +1191,7 @@ def _make_exprish_fst(self: fst.FST, code: _PutOneCode, idx: int | None, field: 
 
     parsoff = self._put_src(put_lines, ln, col, end_ln, end_col, True, False, exclude=self)
 
-    self._offset(*parsoff, exclude=target, self_=False)  # excluding an fstloc instead of FST is harmless, will not exclude anything
+    self._offset(*parsoff, exclude=target, self_=False)  # excluding an fstloc instead of FST is harmless (if target is fstloc), will not exclude anything
     put_fst._offset(0, 0, ln, dcol_offset)
     set_ctx(put_ast, ctx)
 
