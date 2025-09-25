@@ -250,18 +250,19 @@ class _ParamsOffset(NamedTuple):
     dcol_offset: int  # delta bytes
 
 
-def _params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int, end_ln: int, end_col: int,
+def _params_offset(lines: list[str], put_lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
                    ) -> _ParamsOffset:
     """Calculate location and delta parameters for the `_offset()` function. The `col` parameter is calculated as a byte
-    offset so that the `_offset()` function does not have to access the source at all."""
+    offset so that the `_offset()` function does not have to access the source at all. Explicit `.encode()` is used to
+    get byte offsets instead of `bistr` functions so that this function works with lists of just `str`."""
 
     dfst_ln = len(put_lines) - 1
     dln = dfst_ln - (end_ln - ln)
-    col_offset = -lines[end_ln].c2b(end_col)  # negative to indicate this is a BYTE and not a CHAR offset, will be used positively
-    dcol_offset = put_lines[-1].lenbytes + col_offset
+    col_offset = -len(lines[end_ln][:end_col].encode())  # negative to indicate this is a BYTE and not a CHAR offset, will be used positively
+    dcol_offset = len(put_lines[-1].encode()) + col_offset
 
     if not dfst_ln:
-        dcol_offset += lines[ln].c2b(col)
+        dcol_offset += len(lines[ln][:col].encode())
 
     return _ParamsOffset(end_ln, col_offset, dln, dcol_offset)
 
@@ -1757,6 +1758,15 @@ def _put_src(self: fst.FST, src: str | list[str] | None, ln: int, col: int, end_
     value is used as sentinel for `tail` to mean don't offset. Otherwise `tail` and params which followed are passed
     to `self._offset()` with calculated offset location and deltas.
 
+    The offset location is at the end of the span `(ln, col, end_ln, end_col)` and the `head` and `tail` rules apply to
+    this location. The `tail`, `head`, `exclude` and `offset_excluded` parameters are exactly as would be passed to the
+    `_offset()` function. Leaving the default `tail` value means no offset is to be done.
+
+    **Parameters:**
+    - `src`: The source to put as a string or list of lines, or `None` to specify delete.
+    - `tail`: This not only specifies the offset treatment of tails which exist exactly at the offset location, but if
+        left as default value specifies that no offset is to be done, just put the source.
+
     **Returns:**
     - `(ln: int, col: int, dln: int, dcol_offset: int) | None`: If `tail` was not `...` then the calculated
         `offset()` parameters are returned for any potential followup offsetting. The `col` parameter in this case
@@ -1766,11 +1776,11 @@ def _put_src(self: fst.FST, src: str | list[str] | None, ln: int, col: int, end_
     lines = self.root._lines
 
     if is_del := src is None:
-        put_lines = [bistr('')]
+        put_lines = ['']
     elif isinstance(src, str):
-        put_lines = [bistr(s) for s in src.split('\n')]
-    else:
-        put_lines = [bistr(s) for s in src]
+        put_lines = src.split('\n')
+    else:  # isinstance(src, list)
+        put_lines = src
 
     if tail is ...:
         params_offset = None
@@ -1806,13 +1816,13 @@ def _put_src(self: fst.FST, src: str | list[str] | None, ln: int, col: int, end_
         elif not dln:  # replace single line with multiple lines
             lend = bistr(put_lines[-1] + (l := lines[ln])[end_col:])
             lines[ln] = bistr(l[:col] + put_lines[0])
-            lines[ln + 1 : ln + 1] = put_lines[1:]
+            lines[ln + 1 : ln + 1] = map(bistr, put_lines[1:])
             lines[ln + nnew_ln - 1] = lend
 
         else:  # replace multiple put_lines with multiple lines
             lines[ln] = bistr(lines[ln][:col] + put_lines[0])
             lines[end_ln] = bistr(put_lines[-1] + lines[end_ln][end_col:])
-            lines[ln + 1 : end_ln] = put_lines[1:-1]
+            lines[ln + 1 : end_ln] = map(bistr, put_lines[1:-1])
 
     return params_offset
 
