@@ -155,10 +155,6 @@ NAMED_SCOPE              = (FunctionDef, AsyncFunctionDef, ClassDef)
 NAMED_SCOPE_OR_MOD       = NAMED_SCOPE + (mod,)
 ANONYMOUS_SCOPE          = (Lambda, ListComp, SetComp, DictComp, GeneratorExp)
 
-HAS_DOCSTRING            = NAMED_SCOPE_OR_MOD
-
-STMTISH_FIELDS           = frozenset(('body', 'orelse', 'finalbody', 'handlers', 'cases'))
-
 re_empty_line_start      = re.compile(r'[ \t]*')     # start of completely empty or space-filled line (from start pos, start of line indentation)
 re_empty_line            = re.compile(r'[ \t]*$')    # completely empty or space-filled line (from start pos, start of line indentation)
 re_comment_line_start    = re.compile(r'[ \t]*#')    # empty line preceding a comment

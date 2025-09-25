@@ -10,15 +10,14 @@ from . import fst
 from .asttypes import AST, ExceptHandler, Match, Pass, Slice, Try, TryStar, match_case, mod
 from .astutil import bistr
 
-from .misc import (
-    NodeError, astfield,
-    STMTISH_FIELDS,
-)
+from .misc import NodeError, astfield
 
-from .locs import loc_block_header_end
 from .parsex import Mode, unparse
 from .code import Code
+from .locs import loc_block_header_end
 
+
+_STMTISH_FIELDS     = frozenset(('body', 'orelse', 'finalbody', 'handlers', 'cases'))
 
 _PATH_BODY          = [astfield('body', 0)]
 _PATH_BODY2         = [astfield('body', 0), astfield('body', 0)]
@@ -175,7 +174,7 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
         copya.end_lineno = stmtisha.end_lineno
         copya.end_col_offset = stmtisha.end_col_offset
 
-    for field in STMTISH_FIELDS:
+    for field in _STMTISH_FIELDS:
         if (body := getattr(stmtisha, field, None)) is not None:
             setattr(copya, field, body)
 

@@ -125,11 +125,6 @@ from .misc import (
     next_frag, prev_frag, next_find, prev_find, next_find_re, fixup_one_index,
 )
 
-from .locs import (
-    loc_arguments_empty, loc_ImportFrom_names_pars, loc_Lambda_args_entire, loc_block_header_end,
-    loc_Global_Nonlocal_names,
-)
-
 from .parsex import unparse
 
 from .code import (
@@ -160,10 +155,15 @@ from .code import (
     code_as_constant,
 )
 
+from .locs import (
+    loc_arguments_empty, loc_ImportFrom_names_pars, loc_Lambda_args_entire, loc_block_header_end,
+    loc_Global_Nonlocal_names,
+)
+
 FSTRING_END = TSTRING_END = None
 
 try:
-    from tokenize import FSTRING_END, TSTRING_END  # may not be present, ORDER MATTERS!
+    from tokenize import FSTRING_END, TSTRING_END  # may not be present, ORDER OF IMPORT MATTERS!
 except ImportError:
     pass
 

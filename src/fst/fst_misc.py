@@ -51,7 +51,7 @@ from .astutil import bistr, pat_alnum, re_alnumdot_alnum
 
 from .misc import (
     Self, NodeError, astfield, fstloc, srcwpos, nspace, pyver,
-    EXPRISH, STMTISH, BLOCK, HAS_DOCSTRING,
+    EXPRISH, STMTISH, BLOCK, NAMED_SCOPE_OR_MOD,
     re_empty_line_start, re_line_trailing_space, re_line_end_cont_or_comment,
     next_frag, next_find, prev_find, next_delims, prev_delims,
     ParamsOffset, params_offset, multiline_str_continuation_lns, multiline_fstr_continuation_lns,
@@ -455,7 +455,7 @@ def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None) -> None:
 def _unmake_fst_parents(self: fst.FST, self_: bool = False) -> None:
     """Walk up parent list unmaking each parent along the way. This does not unmake the entire parent tree, just the
     parents directly above this node (and including `self` if `self_` is `True). Meant for when you know the parents are
-    just a direct succession like Expr -> Module."""
+    just a direct succession like `expr` -> `Expr` -> `Module` with just the single `Expr` element in `Module`."""
 
     if self_:
         self.a.f = self.a = None
@@ -585,7 +585,8 @@ def _loc_key(self: fst.FST, idx: int, pars: bool = False, body: list[AST] | None
     """Return location of dictionary key even if it is `**` specified by a `None`. Optionally return the location of the
     grouping parentheses if key actually present. Can also be used to get the location (parenthesized or not) from any
     list of `AST`s which is not a `Dict.keys` if an explicit `body` and / or `body2` is passed in, e.g. will safely get
-    location of `MatchMapping` keys.
+    location of `MatchMapping` keys. Will just return parenthesized or not location from any `body` assuming there are
+    no `None`s to force a check from `body2` and a search back from that for a `**`.
 
     **WARNING:** `idx` must be positive.
     """
@@ -1454,7 +1455,7 @@ def _reparse_docstrings(self: fst.FST, docstr: bool | Literal['strict'] | None =
 
     else:
         for a in walk(self.a):
-            if isinstance(a, HAS_DOCSTRING):
+            if isinstance(a, NAMED_SCOPE_OR_MOD):
                 if ((body := a.body) and isinstance(b0 := body[0], Expr) and isinstance(v := b0.value, Constant) and
                     isinstance(v.value, str)
                 ):
@@ -1664,7 +1665,7 @@ def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal[
                 not docstr or
                 not ((parent := f.parent) and isinstance(parent.a, Expr) and
                         (not strict or ((pparent := parent.parent) and parent.pfield == ('body', 0) and
-                                        isinstance(pparent.a, HAS_DOCSTRING)
+                                        isinstance(pparent.a, NAMED_SCOPE_OR_MOD)
             )))):
                 lns.difference_update(multiline_str_continuation_lns(lines, *f.loc))
 

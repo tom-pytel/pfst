@@ -293,7 +293,7 @@ class _slice(AST):
     will not `ast.unparse()` correctly (though `FST.parsex.unparse()` will unparse correctly). Meant only to be used
     as a container with `FST` taking care of source and all operations.
 
-    **Note:** This class has nothing to do with `ast.slice` or `ast.Slice`, thise are indices, this is a slice
+    **Note:** This class has nothing to do with `ast.slice` or `ast.Slice`, those are indices, this is a slice
     CONTAINER.
     """
 

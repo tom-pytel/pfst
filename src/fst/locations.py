@@ -8,6 +8,7 @@ import re
 from . import fst
 
 from .asttypes import (
+    ASTS_BLOCK,
     AsyncFunctionDef,
     AsyncWith,
     Compare,
@@ -25,7 +26,6 @@ from .astutil import re_identifier, OPCLS2STR, last_block_header_child
 
 from .misc import (
     fstloc, fstlocns,
-    BLOCK,
     next_frag, prev_frag, next_find, prev_find, next_delims, prev_delims, next_find_re,
 )
 
@@ -322,7 +322,7 @@ def loc_block_header_end(self: fst.FST, ret_bound: bool = False) -> tuple[int, i
             cend_ln = ln
             cend_col = col
 
-    elif isinstance(a, BLOCK):
+    elif isinstance(a, ASTS_BLOCK):
         cend_ln = ln
         cend_col = col
 

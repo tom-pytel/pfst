@@ -83,12 +83,6 @@ from .misc import (
     leading_trivia, trailing_trivia,
 )
 
-from .locs import (
-    loc_With_items_pars, loc_ImportFrom_names_pars, loc_ClassDef_bases_pars, loc_Call_pars,
-    loc_TypeAlias_type_params_brackets, loc_ClassDef_type_params_brackets, loc_FunctionDef_type_params_brackets,
-    loc_Global_Nonlocal_names,
-)
-
 from .parsex import unparse
 
 from .code import (
@@ -100,6 +94,12 @@ from .code import (
     code_as_withitem, code_as_withitems,
     code_as_pattern,
     code_as_type_param, code_as_type_params,
+)
+
+from .locs import (
+    loc_With_items_pars, loc_ImportFrom_names_pars, loc_ClassDef_bases_pars, loc_Call_pars,
+    loc_TypeAlias_type_params_brackets, loc_ClassDef_type_params_brackets, loc_FunctionDef_type_params_brackets,
+    loc_Global_Nonlocal_names,
 )
 
 from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish

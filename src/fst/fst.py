@@ -102,14 +102,15 @@ from .misc import (
     multiline_str_continuation_lns, multiline_fstr_continuation_lns, continuation_to_uncontinued_lns,
 )
 
+from .parsex import Mode, get_special_parse_mode
+from .code import Code, code_as_all
+
 from .locs import (
     loc_arguments, loc_comprehension, loc_withitem, loc_match_case, loc_operator,
     loc_Call_pars, loc_Subscript_brackets, loc_ImportFrom_names_pars, loc_With_items_pars, loc_MatchClass_pars,
 )
 
 from .traverse import AST_FIELDS_NEXT, AST_FIELDS_PREV, check_with_loc
-from .parsex import Mode, get_special_parse_mode
-from .code import Code, code_as_all
 from .view import fstview
 from .reconcile import Reconcile
 
