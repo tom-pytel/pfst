@@ -122,7 +122,7 @@ from .astutil import (
 
 from .misc import (
     PYLT11, PYGE14, NodeError, astfield, fstloc, pyver,
-    next_frag, prev_frag, next_find, prev_find, next_find_re, fixup_one_index,
+    next_frag, prev_frag, next_find, prev_find, next_find_re,
 )
 
 from .parsex import unparse
@@ -172,10 +172,19 @@ _PutOneCode = Code | str | constant | None  # yes, None is already in constant, 
 _Child      = AST | list[AST] | constant | None
 
 
+def _fixup_one_index(len_: int, idx: int) -> int:
+    """Negative to positive indices."""
+
+    if not (0 <= ((idx := idx + len_) if idx < 0 else idx) < len_):
+        raise IndexError('index out of range')
+
+    return idx
+
+
 def _params_Compare_combined(self: fst.FST, idx: int | None) -> tuple[int, str, AST | list[AST]]:
     ast = self.a
     comparators = ast.comparators
-    idx = fixup_one_index(len(comparators) + 1, idx)
+    idx = _fixup_one_index(len(comparators) + 1, idx)
 
     return (idx - 1, 'comparators', comparators) if idx else (None, 'left', ast.left)
 
@@ -192,7 +201,7 @@ def _validate_get(self: fst.FST, idx: int | None, field: str) -> tuple[AST | Non
         if idx is None:
             raise IndexError(f'{self.a.__class__.__name__}.{field} needs an index')
 
-        fixup_one_index(len(child), idx)
+        _fixup_one_index(len(child), idx)
 
         child = child[idx]
 
@@ -692,7 +701,7 @@ def _validate_put(self: fst.FST, code: Code | None, idx: int | None, field: str,
         if idx is None:
             raise IndexError(f'{self.a.__class__.__name__}.{field} needs an index')
 
-        idx = fixup_one_index(len(child), idx)
+        idx = _fixup_one_index(len(child), idx)
         child = child[idx]  # this will always be a required child, variable size lists will have been passed on to slice processing before getting here
 
     elif idx is not None:
@@ -1872,7 +1881,7 @@ def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, opti
             raise NotImplementedError('still need to decide how to handle this case')
 
         # we need to fixup index here explicitly to get an error if it is out of bounds because slice index fixups just limit it to [0..len(body))
-        idx = fixup_one_index(len(child if field else ast.keys), idx)  # field will be '' only for Dict and MatchMapping which both have keys, Compare is not considered sliceable for single element deletions
+        idx = _fixup_one_index(len(child if field else ast.keys), idx)  # field will be '' only for Dict and MatchMapping which both have keys, Compare is not considered sliceable for single element deletions
         new_self = self._put_slice(code, idx, idx + 1, field, True, options)
 
         return None if code is None or not field else getattr(new_self.a, field)[idx].f  # guaranteed to be there if code is not None because was just replacement
@@ -1917,7 +1926,7 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
             static = _PUT_ONE_HANDLERS[(cls, 'keys')][-1]
             child = ast.keys
             field = 'keys'
-            idx = fixup_one_index(len(child), idx)
+            idx = _fixup_one_index(len(child), idx)
 
             if not to:
                 to = self.values[idx] if is_dict else self.patterns[idx]
@@ -2174,7 +2183,7 @@ def _one_info_ImportFrom_module(self: fst.FST, static: onestatic, idx: int | Non
 
 def _one_info_Global_Nonlocal_names(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
 
-    idx = fixup_one_index(len(self.a.names), idx)
+    idx = _fixup_one_index(len(self.a.names), idx)
 
     return oneinfo('', None, loc_Global_Nonlocal_names(self, idx))
 

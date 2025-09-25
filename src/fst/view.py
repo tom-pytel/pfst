@@ -6,8 +6,9 @@ from typing import Literal
 from . import fst
 
 from .astutil import AST, get_func_class_or_ass_by_name
-from .misc import fixup_one_index, fixup_slice_indices
 from .code import Code
+from .fst_slice import _fixup_slice_indices
+from .fst_one import _fixup_one_index
 
 __all__ = ['fstview']
 
@@ -166,7 +167,7 @@ class fstview:
         """
 
         if isinstance(idx, int):
-            idx = fixup_one_index(self.stop - (start := self.start), idx)
+            idx = _fixup_one_index(self.stop - (start := self.start), idx)
 
             return a.f if isinstance(a := getattr(self.fst.a, self.field)[start + idx], AST) else a
 
@@ -179,7 +180,7 @@ class fstview:
         if idx.step is not None:
             raise IndexError('step slicing not supported')
 
-        idx_start, idx_stop = fixup_slice_indices(self.stop - (start := self.start), idx.start, idx.stop)
+        idx_start, idx_stop = _fixup_slice_indices(self.stop - (start := self.start), idx.start, idx.stop)
 
         return fstview(self.fst, self.field, start + idx_start, start + idx_stop)
 
@@ -223,7 +224,7 @@ class fstview:
         """
 
         if isinstance(idx, int):
-            idx = fixup_one_index(self.stop - (start := self.start), idx)
+            idx = _fixup_one_index(self.stop - (start := self.start), idx)
             len_before = len(asts := getattr(self.fst.a, self.field))
 
             self.fst = self.fst.put(code, start + idx, field=self.field) or self.fst
@@ -234,7 +235,7 @@ class fstview:
             raise IndexError('step slicing not supported')
 
         else:
-            idx_start, idx_stop = fixup_slice_indices(self.stop - (start := self.start), idx.start, idx.stop)
+            idx_start, idx_stop = _fixup_slice_indices(self.stop - (start := self.start), idx.start, idx.stop)
             len_before = len(asts := getattr(self.fst.a, self.field))
 
             self.fst = self.fst.put_slice(code, start + idx_start, start + idx_stop, self.field)
@@ -273,7 +274,7 @@ class fstview:
         """
 
         if isinstance(idx, int):
-            idx = fixup_one_index((stop := self.stop) - (start := self.start), idx)
+            idx = _fixup_one_index((stop := self.stop) - (start := self.start), idx)
 
             self.fst = self.fst.put_slice(None, start + idx, start + idx + 1, field=self.field)
 
@@ -283,7 +284,7 @@ class fstview:
             raise IndexError('step slicing not supported')
 
         else:
-            idx_start, idx_stop = fixup_slice_indices((stop := self.stop) - (start := self.start), idx.start, idx.stop)
+            idx_start, idx_stop = _fixup_slice_indices((stop := self.stop) - (start := self.start), idx.start, idx.stop)
 
             self.fst = self.fst.put_slice(None, start + idx_start, start + idx_stop, self.field)
 

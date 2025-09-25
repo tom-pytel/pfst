@@ -7,81 +7,7 @@ from functools import wraps
 from math import log10
 from typing import Callable, Literal, NamedTuple, Iterable
 
-from .asttypes import (
-    AST,
-    AnnAssign,
-    Assert,
-    Assign,
-    AsyncFor,
-    AsyncFunctionDef,
-    AsyncWith,
-    Attribute,
-    AugAssign,
-    Await,
-    BoolOp,
-    Call,
-    ClassDef,
-    Compare,
-    Constant,
-    Delete,
-    Dict,
-    DictComp,
-    ExceptHandler,
-    Expr,
-    Expression,
-    For,
-    FormattedValue,
-    FunctionDef,
-    GeneratorExp,
-    Global,
-    If,
-    Import,
-    ImportFrom,
-    Interactive,
-    JoinedStr,
-    Lambda,
-    List,
-    ListComp,
-    Match,
-    MatchAs,
-    MatchMapping,
-    MatchOr,
-    MatchSequence,
-    MatchSingleton,
-    MatchValue,
-    Module,
-    Name,
-    NamedExpr,
-    Nonlocal,
-    Raise,
-    Return,
-    Set,
-    SetComp,
-    Starred,
-    Subscript,
-    Try,
-    Tuple,
-    UnaryOp,
-    While,
-    With,
-    Yield,
-    YieldFrom,
-    alias,
-    arg,
-    comprehension,
-    keyword,
-    match_case,
-    withitem,
-    TypeAlias,
-    TryStar,
-    TemplateStr,
-    Interpolation,
-    _slice_Assign_targets,
-    _slice_aliases,
-    _slice_withitems,
-    _slice_type_params,
-)
-
+from .asttypes import AST
 from .astutil import constant, bistr
 
 try:
@@ -112,10 +38,6 @@ __all__ = [
     'trailing_trivia',
     'ParamsOffset',
     'params_offset',
-    'swizzle_getput_params',
-    'fixup_field_body',
-    'fixup_one_index',
-    'fixup_slice_indices',
     'multiline_str_continuation_lns',
     'multiline_fstr_continuation_lns',
     'continuation_to_uncontinued_lns',
@@ -156,43 +78,6 @@ re_next_src                     = re.compile(r'\s*([^\s#\\]+)')          # next 
 re_next_src_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next non-space non-continuation code or comment text, don't look into strings with this!
 re_next_src_or_lcont            = re.compile(r'\s*([^\s#\\]+|\\$)')      # next non-space non-comment code including logical line end, don't look into strings with this!
 re_next_src_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # next non-space non-continuation code or comment text including logical line end, don't look into strings with this!
-
-_AST_DEFAULT_BODY_FIELD = {cls: field for field, classes in [
-    ('body',         (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
-                      With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
-    ('cases',        (Match,)),
-
-    ('elts',         (Tuple, List, Set)),
-    ('patterns',     (MatchSequence, MatchOr)),
-    ('targets',      (Delete, _slice_Assign_targets)),
-    ('type_params',  (TypeAlias, _slice_type_params)),
-    ('names',        (Import, ImportFrom, Global, Nonlocal, _slice_aliases)),
-    ('items',        (_slice_withitems,)),
-    ('ifs',          (comprehension,)),
-    ('values',       (BoolOp, JoinedStr, TemplateStr)),
-    ('generators',   (ListComp, SetComp, DictComp, GeneratorExp)),
-    ('args',         (Call,)),  # potential conflict of default body with put to empty 'set()'
-
-    # ('items',        (With, AsyncWith)),  # 'body' takes precedence
-
-    # special cases, field names here only for checks to succeed, otherwise all handled programatically
-    ('',             (Dict,)),
-    ('',             (MatchMapping,)),
-    ('',             (Compare,)),
-
-    # other single value fields
-    ('value',        (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,
-                      FormattedValue, Interpolation, Constant, Attribute, Subscript, Starred, keyword, MatchValue,
-                      MatchSingleton)),
-    ('exc',          (Raise,)),
-    ('test',         (Assert,)),
-    ('operand',      (UnaryOp,)),
-    ('id',           (Name,)),
-    ('arg',          (arg,)),
-    ('name',         (alias,)),
-    ('context_expr', (withitem,)),
-    ('pattern',      (MatchAs,)),
-] for cls in classes}
 
 
 class NodeError(Exception):
@@ -1044,86 +929,6 @@ def params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int,
         dcol_offset += lines[ln].c2b(col)
 
     return ParamsOffset(end_ln, col_offset, dln, dcol_offset)
-
-
-def swizzle_getput_params(start: int | Literal['end'] | None, stop: int | None | Literal[False], field: str | None,
-                          default_stop: Literal[False] | None,
-                          ) -> tuple[int | Literal['end'] | None,int | None | Literal[False], str | None]:
-    """Allow passing `stop` and `field` for get/put() functions positionally.
-
-    @private
-    """
-
-    if isinstance(start, str) and start != 'end':
-        return None, default_stop, start
-    if isinstance(stop, str):
-        return start, default_stop, stop
-
-    return start, stop, field
-
-
-def fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True) -> tuple[str, 'AST']:
-    """Get `AST` member list for specified `field` or default if `field=None`.
-
-    @private
-    """
-
-    if not field:
-        if (field := _AST_DEFAULT_BODY_FIELD.get(ast.__class__, fixup_field_body)) is fixup_field_body:  # fixup_field_body serves as sentinel
-            raise ValueError(f"{ast.__class__.__name__} has no default body field")
-
-        if not field:  # special case ''
-            return '', []
-
-    if (body := getattr(ast, field, fixup_field_body)) is fixup_field_body:
-        raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
-
-    if only_list and not isinstance(body, list):
-        raise ValueError(f"cannot perform slice operations non-list field "
-                         f"{ast.__class__.__name__}{f'.{field}' if field else ''}")
-
-    return field, body
-
-
-def fixup_one_index(len_: int, idx: int) -> int:
-    """@private"""
-
-    if not (0 <= ((idx := idx + len_) if idx < 0 else idx) < len_):
-        raise IndexError('index out of range')
-
-    return idx
-
-
-def fixup_slice_indices(len_: int, start: int, stop: int) -> tuple[int, int]:
-    """@private"""
-
-    if start is None:
-        start = 0
-
-    elif start == 'end':
-        start = len_
-
-    elif start < 0:
-        if (start := start + len_) < 0:
-            start = 0
-
-    elif start > len_:
-        start = len_
-
-    if stop is None:
-        stop = len_
-
-    elif stop < 0:
-        if (stop := stop + len_) < 0:
-            stop = 0
-
-    elif stop > len_:
-        stop = len_
-
-    if stop < start:
-        stop = start
-
-    return start, stop
 
 
 def multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:

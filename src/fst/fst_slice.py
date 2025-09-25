@@ -79,7 +79,7 @@ from .misc import (
     Self, NodeError, astfield, fstloc,
     re_empty_line_start, re_empty_line, re_line_trailing_space, re_empty_space, re_line_end_cont_or_comment,
     ParamsOffset,
-    next_frag, prev_find, next_find, next_find_re, fixup_slice_indices,
+    next_frag, prev_find, next_find, next_find_re,
     leading_trivia, trailing_trivia,
 )
 
@@ -213,6 +213,38 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+
+def _fixup_slice_indices(len_: int, start: int, stop: int) -> tuple[int, int]:
+    """@private"""
+
+    if start is None:
+        start = 0
+
+    elif start == 'end':
+        start = len_
+
+    elif start < 0:
+        if (start := start + len_) < 0:
+            start = 0
+
+    elif start > len_:
+        start = len_
+
+    if stop is None:
+        stop = len_
+
+    elif stop < 0:
+        if (stop := stop + len_) < 0:
+            stop = 0
+
+    elif stop > len_:
+        stop = len_
+
+    if stop < start:
+        stop = start
+
+    return start, stop
+
 
 def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fstloc, loc_last: fstloc,
                     bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
@@ -764,7 +796,7 @@ def _get_slice_Dict(self: fst.FST, start: int | Literal['end'] | None, stop: int
 
     len_body = len(body := (ast := self.a).keys)
     body2 = ast.values
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST(Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
@@ -784,7 +816,7 @@ def _get_slice_Tuple_elts(self: fst.FST, start: int | Literal['end'] | None, sto
     not always true as a `Tuple` may serve as the container of a slice of other node types."""
 
     len_body = len(body := (ast := self.a).elts)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST._new_empty_tuple(from_=self)
@@ -819,7 +851,7 @@ def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop
     """A `List` slice is just a normal `List`."""
 
     len_body = len(body := (ast := self.a).elts)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST(List(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
@@ -844,7 +876,7 @@ def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop:
     options."""
 
     len_body = len(body := self.a.elts)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return (
@@ -872,7 +904,7 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
     valid python `Tuple`."""
 
     len_body = len(body := (ast := self.a).targets)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not len_slice:
@@ -912,7 +944,7 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
 def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                               cut: bool, options: Mapping[str, Any]) -> fst.FST:
     len_body = len(body := self.a.targets)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not len_slice:
@@ -943,7 +975,7 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
 def _get_slice_With_AsyncWith_items(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                           cut: bool, options: Mapping[str, Any]) -> fst.FST:
     len_body = len(body := (ast := self.a).items)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not len_slice:
@@ -991,7 +1023,7 @@ def _get_slice_With_AsyncWith_items(self: fst.FST, start: int | Literal['end'] |
 def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                             cut: bool, options: Mapping[str, Any]) -> fst.FST:
     len_body = len(body := (ast := self.a).names)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not len_slice:
@@ -1030,7 +1062,7 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
 def _get_slice_ImportFrom_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                                 cut: bool, options: Mapping[str, Any]) -> fst.FST:
     len_body = len(body := (ast := self.a).names)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not len_slice:
@@ -1076,7 +1108,7 @@ def _get_slice_ImportFrom_names(self: fst.FST, start: int | Literal['end'] | Non
 def _get_slice_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                                      cut: bool, options: Mapping[str, Any]) -> fst.FST:
     len_body = len((ast := self.a).names)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not len_slice:
@@ -1145,7 +1177,7 @@ def _get_slice_ClassDef_bases(self: fst.FST, start: int | Literal['end'] | None,
     normal expression tuple."""
 
     len_body = len(body := (ast := self.a).bases)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if start == stop:
@@ -1195,7 +1227,7 @@ def _get_slice_Call_args(self: fst.FST, start: int | Literal['end'] | None, stop
     expression tuple."""
 
     len_body = len(body := (ast := self.a).args)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if start == stop:
@@ -1242,7 +1274,7 @@ def _get_slice_MatchSequence_patterns(self: fst.FST, start: int | Literal['end']
     parent."""
 
     len_body = len(body := self.a.patterns)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST(MatchSequence(patterns=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
@@ -1278,7 +1310,7 @@ def _get_slice_MatchMapping(self: fst.FST, start: int | Literal['end'] | None, s
 
     len_body = len(body := (ast := self.a).keys)
     body2 = ast.patterns
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST(MatchMapping(keys=[], patterns=[], rest=None, lineno=1, col_offset=0, end_lineno=1,
@@ -1307,7 +1339,7 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
     may raise and exception or return an invalid zero-element `MatchOr`, as specified by options."""
 
     len_body = len(body := self.a.patterns)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
     fix_matchor_get = self.get_option('fix_matchor_get', options)
     fix_matchor_self = self.get_option('fix_matchor_self', options)
@@ -1346,7 +1378,7 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
 def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                            options: Mapping[str, Any]) -> fst.FST:
     len_body = len(body := (ast := self.a).type_params)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST(_slice_type_params([], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], from_=self)
@@ -1389,7 +1421,7 @@ def _get_slice__slice(self: fst.FST, start: int | Literal['end'] | None, stop: i
 
     static = _SLICE_STATICS[cls := (ast := self.a).__class__]
     len_body = len(body := getattr(ast, field))
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST(cls([], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], from_=self)
@@ -2343,7 +2375,7 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
     fst_ = _code_to_slice_seq2(self, code, one, options, code_as_expr)
     body = (ast := self.a).keys
     body2 = ast.values
-    start, stop = fixup_slice_indices(len(body), start, stop)
+    start, stop = _fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
         return
@@ -2382,7 +2414,7 @@ def _put_slice_Tuple_elts(self: fst.FST, code: Code | None, start: int | Literal
 
     fst_ = _code_to_slice_seq(self, code, one, options, code_as=code_as_expr_all)
     body = (ast := self.a).elts
-    start, stop = fixup_slice_indices(len(body), start, stop)
+    start, stop = _fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
         return
@@ -2435,7 +2467,7 @@ def _put_slice_List_elts(self: fst.FST, code: Code | None, start: int | Literal[
                          field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_ = _code_to_slice_seq(self, code, one, options)
     body = (ast := self.a).elts
-    start, stop = fixup_slice_indices(len(body), start, stop)
+    start, stop = _fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
         return
@@ -2455,7 +2487,7 @@ def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['
                         field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_ = _code_to_slice_seq(self, code, one, options)
     body = self.a.elts
-    start, stop = fixup_slice_indices(len(body), start, stop)
+    start, stop = _fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
         return
@@ -2482,7 +2514,7 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
 
     fst_ = _code_to_slice_seq(self, code, one, options, non_seq_str_as_one=True)
     len_body = len(body := (ast := self.a).targets)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not fst_:
@@ -2516,7 +2548,7 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
                               field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_ = _code_to_slice_Assign_targets(self, code, one, options)
     len_body = len(body := self.a.targets)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not fst_:
@@ -2539,7 +2571,7 @@ def _put_slice_With_AsyncWith_items(self: fst.FST, code: Code | None, start: int
                                     field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_ = _code_to_slice_withitems(self, code, one, options)
     len_body = len(body := (ast := self.a).items)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not fst_:
@@ -2573,7 +2605,7 @@ def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Liter
                             field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_ = _code_to_slice_aliases(self, code, one, options, code_as_Import_name, code_as_Import_names)
     len_body = len(body := (ast := self.a).names)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not fst_:
@@ -2610,7 +2642,7 @@ def _put_slice_ImportFrom_names(self: fst.FST, code: Code | None, start: int | L
                                 field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_ = _code_to_slice_aliases(self, code, one, options, code_as_ImportFrom_name, code_as_ImportFrom_names)
     len_body = len(body := (ast := self.a).names)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
     put_star = False
 
@@ -2670,7 +2702,7 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
 
     fst_ = _code_to_slice_seq(self, code, one, options, non_seq_str_as_one=True)
     len_body = len(body := (ast := self.a).names)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not fst_:
@@ -2770,7 +2802,7 @@ def _put_slice_ClassDef_bases(self: fst.FST, code: Code | None, start: int | Lit
                               field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_ = _code_to_slice_expr_arglikes(self, code, one, options)
     len_body = len(body := (ast := self.a).bases)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not fst_ and not len_slice:
@@ -2835,7 +2867,7 @@ def _put_slice_Call_args(self: fst.FST, code: Code | None, start: int | Literal[
                          field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_ = _code_to_slice_expr_arglikes(self, code, one, options)
     len_body = len(body := (ast := self.a).args)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if not fst_ and start == stop:
         return
@@ -2868,7 +2900,7 @@ def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: i
     # NOTE: we allow multiple MatchStars to be put to the same MatchSequence
     fst_ = _code_to_slice_MatchSequence(self, code, one, options)
     body = self.a.patterns
-    start, stop = fixup_slice_indices(len(body), start, stop)
+    start, stop = _fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
         return
@@ -2890,7 +2922,7 @@ def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Liter
     fst_ = _code_to_slice_seq2(self, code, one, options, code_as_pattern)
     len_body = len(body := (ast := self.a).keys)
     body2 = ast.patterns
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if not fst_ and start == stop:
         return
@@ -2934,7 +2966,7 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
                                 field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_ = _code_to_slice_MatchOr(self, code, one, options)
     len_body = len(body := self.a.patterns)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
     fix_matchor_self = self.get_option('fix_matchor_self', options)
 
@@ -2976,7 +3008,7 @@ def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Litera
 
     fst_ = _code_to_slice_type_params(self, code, one, options)
     len_body = len(body := (ast := self.a).type_params)
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     bound, (name_ln, name_col) = (
@@ -3028,7 +3060,7 @@ def _put_slice__slice(self: fst.FST, code: Code | None, start: int | Literal['en
     static = _SLICE_STATICS[(ast := self.a).__class__]
     fst_ = static.code_to(self, code, one, options)
     len_body = len(body := getattr(ast, field))
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not fst_ and not len_slice:
@@ -3204,7 +3236,7 @@ def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: 
     """Get location of a raw slice. Sepcial cases for decorators, comprehension ifs and other weird nodes."""
 
     def fixup_slice_index_for_raw(len_: int, start: int, stop: int) -> tuple[int, int]:
-        start, stop = fixup_slice_indices(len_, start, stop)
+        start, stop = _fixup_slice_indices(len_, start, stop)
 
         if start == stop:
             raise ValueError("invalid slice for raw operation")

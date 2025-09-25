@@ -17,22 +17,33 @@ from .asttypes import (
     ASTS_EXPRISH_ALL, ASTS_STMTISH, ASTS_STMTISH_OR_MOD, ASTS_BLOCK, ASTS_BLOCK_OR_MOD, ASTS_SCOPE, ASTS_SCOPE_OR_MOD,
     ASTS_SCOPE_NAMED, ASTS_SCOPE_NAMED_OR_MOD, ASTS_SCOPE_ANONYMOUS,
     AST,
+    AnnAssign,
+    Assert,
+    Assign,
     AsyncFor,
     AsyncFunctionDef,
     AsyncWith,
     Attribute,
+    AugAssign,
+    Await,
+    BoolOp,
     Call,
     ClassDef,
+    Compare,
     Constant,
+    Delete,
     Dict,
     DictComp,
     ExceptHandler,
+    Expr,
     Expression,
     For,
     FormattedValue,
     FunctionDef,
     GeneratorExp,
+    Global,
     If,
+    Import,
     ImportFrom,
     Interactive,
     IsNot,
@@ -42,6 +53,7 @@ from .asttypes import (
     ListComp,
     Load,
     Match,
+    MatchAs,
     MatchClass,
     MatchMapping,
     MatchOr,
@@ -52,8 +64,11 @@ from .asttypes import (
     Module,
     Name,
     NamedExpr,
+    Nonlocal,
     NotIn,
     Pass,
+    Raise,
+    Return,
     Set,
     SetComp,
     Slice,
@@ -61,8 +76,11 @@ from .asttypes import (
     Subscript,
     Try,
     Tuple,
+    UnaryOp,
     While,
     With,
+    Yield,
+    YieldFrom,
     alias,
     arg,
     arguments,
@@ -85,6 +103,10 @@ from .asttypes import (
     type_param,
     TemplateStr,
     Interpolation,
+    _slice_Assign_targets,
+    _slice_aliases,
+    _slice_withitems,
+    _slice_type_params,
 )
 
 from .astutil import (
@@ -98,7 +120,6 @@ from .misc import (
     re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Self,
     next_frag, next_find, next_delims, prev_delims,
-    swizzle_getput_params, fixup_field_body,
     multiline_str_continuation_lns, multiline_fstr_continuation_lns, continuation_to_uncontinued_lns,
 )
 
@@ -119,7 +140,7 @@ __all__ = [
 ]
 
 
-class _Local(threading.local):
+class _ThreadLocal(threading.local):
     def __init__(self):
         self.options = {
             'pars':             'auto', # True | False | 'auto'
@@ -147,10 +168,82 @@ class _Local(threading.local):
         }
 
 
-_LOCAL = _Local()
+_TLOCAL = _ThreadLocal()
 
 _DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_version=None)
 _DEFAULT_INDENT = '    '
+
+_DEFAULT_AST_FIELD = {cls: field for field, classes in [
+    ('body',         (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
+                      With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
+    ('cases',        (Match,)),
+
+    ('elts',         (Tuple, List, Set)),
+    ('patterns',     (MatchSequence, MatchOr)),
+    ('targets',      (Delete, _slice_Assign_targets)),
+    ('type_params',  (TypeAlias, _slice_type_params)),
+    ('names',        (Import, ImportFrom, Global, Nonlocal, _slice_aliases)),
+    ('items',        (_slice_withitems,)),
+    ('ifs',          (comprehension,)),
+    ('values',       (BoolOp, JoinedStr, TemplateStr)),
+    ('generators',   (ListComp, SetComp, DictComp, GeneratorExp)),
+    ('args',         (Call,)),  # potential conflict of default body with put to empty 'set()'
+
+    # ('items',        (With, AsyncWith)),  # 'body' takes precedence
+
+    # special cases, field names here only for checks to succeed, otherwise all handled programatically
+    ('',             (Dict,)),
+    ('',             (MatchMapping,)),
+    ('',             (Compare,)),
+
+    # other single value fields
+    ('value',        (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,
+                      FormattedValue, Interpolation, Constant, Attribute, Subscript, Starred, keyword, MatchValue,
+                      MatchSingleton)),
+    ('exc',          (Raise,)),
+    ('test',         (Assert,)),
+    ('operand',      (UnaryOp,)),
+    ('id',           (Name,)),
+    ('arg',          (arg,)),
+    ('name',         (alias,)),
+    ('context_expr', (withitem,)),
+    ('pattern',      (MatchAs,)),
+] for cls in classes}
+
+
+def _fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True) -> tuple[str, 'AST']:
+    """Get `AST` member list for specified `field` or default if `field=None`."""
+
+    if not field:
+        if (field := _DEFAULT_AST_FIELD.get(ast.__class__, _fixup_field_body)) is _fixup_field_body:  # _fixup_field_body serves as sentinel
+            raise ValueError(f"{ast.__class__.__name__} has no default body field")
+
+        if not field:  # special case ''
+            return '', []
+
+    if (body := getattr(ast, field, _fixup_field_body)) is _fixup_field_body:
+        raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
+
+    if only_list and not isinstance(body, list):
+        raise ValueError(f"cannot perform slice operations non-list field "
+                         f"{ast.__class__.__name__}{f'.{field}' if field else ''}")
+
+    return field, body
+
+
+def _swizzle_getput_params(start: int | Literal['end'] | None, stop: int | None | Literal[False], field: str | None,
+                           default_stop: Literal[False] | None,
+                           ) -> tuple[int | Literal['end'] | None,int | None | Literal[False], str | None]:
+    """Allow passing `stop` and `field` for get/put() functions positionally. Will accept `get/put('field')`,
+    `get/put(start, 'field')` and `get/put(start, stop, 'field')`."""
+
+    if isinstance(start, str) and start != 'end':
+        return None, default_stop, start
+    if isinstance(stop, str):
+        return start, default_stop, stop
+
+    return start, stop, field
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -278,6 +371,8 @@ def dump(node: AST, annotate_fields: bool = True, include_attributes: bool = Fal
     else:
         return ast_dump(node, annotate_fields, include_attributes, indent=indent, show_empty=show_empty)
 
+
+# ----------------------------------------------------------------------------------------------------------------------
 
 class FST:
     """Class which maintains structure and formatted source code for an `AST` tree. An instance of this class is added
@@ -919,7 +1014,7 @@ class FST:
         ```
         """
 
-        return _LOCAL.options.copy()
+        return _TLOCAL.options.copy()
 
     @staticmethod
     def get_option(option: builtins.str, options: Mapping[builtins.str, Any] = {}) -> object:
@@ -947,7 +1042,7 @@ class FST:
         ```
         """
 
-        return _LOCAL.options.get(option) if (o := options.get(option)) is None else o
+        return _TLOCAL.options.get(option) if (o := options.get(option)) is None else o
 
     @staticmethod
     def set_options(**options) -> dict[builtins.str, Any]:
@@ -982,7 +1077,7 @@ class FST:
         ```
         """
 
-        _options = _LOCAL.options
+        _options = _TLOCAL.options
         ret = {o: _options[o] for o in options}
 
         _options.update(options)
@@ -1655,8 +1750,8 @@ class FST:
         """
 
         ast = self.a
-        idx, stop, field = swizzle_getput_params(idx, stop, field, False)
-        field_, body = fixup_field_body(ast, field, False)
+        idx, stop, field = _swizzle_getput_params(idx, stop, field, False)
+        field_, body = _fixup_field_body(ast, field, False)
 
         if isinstance(body, list):
             if stop is not False:
@@ -1759,8 +1854,8 @@ class FST:
         """
 
         ast = self.a
-        idx, stop, field = swizzle_getput_params(idx, stop, field, False)
-        field_, body = fixup_field_body(ast, field, False)
+        idx, stop, field = _swizzle_getput_params(idx, stop, field, False)
+        field_, body = _fixup_field_body(ast, field, False)
 
         if isinstance(body, list):
             if stop is not False:
@@ -1830,8 +1925,8 @@ class FST:
         """
 
         ast = self.a
-        start, stop, field = swizzle_getput_params(start, stop, field, None)
-        field_, body = fixup_field_body(ast, field)
+        start, stop, field = _swizzle_getput_params(start, stop, field, None)
+        field_, body = _fixup_field_body(ast, field)
 
         if not isinstance(body, list):
             raise ValueError(f'cannot get slice from non-list field {ast.__class__.__name__}.{field_}')
@@ -1910,8 +2005,8 @@ class FST:
         """
 
         ast = self.a
-        start, stop, field = swizzle_getput_params(start, stop, field, None)
-        field_, body = fixup_field_body(ast, field)
+        start, stop, field = _swizzle_getput_params(start, stop, field, None)
+        field_, body = _fixup_field_body(ast, field)
 
         if not isinstance(body, list):
             raise ValueError(f'cannot put slice to non-list field {ast.__class__.__name__}.{field_}')

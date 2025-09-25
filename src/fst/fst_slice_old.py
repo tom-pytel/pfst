@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Any, Literal, Mapping
 
 from . import fst
+from . import fst_slice
 
 from .asttypes import (
     AsyncFor, AsyncFunctionDef, AsyncWith, ClassDef, ExceptHandler, For, FunctionDef, If, Match, Module, Try, While,
@@ -15,13 +16,7 @@ from .asttypes import (
 )
 
 from .astutil import copy_ast
-
-from .misc import (
-    astfield, fstloc,
-    next_find, prev_find,
-    fixup_slice_indices
-)
-
+from .misc import astfield, fstloc, next_find, prev_find
 from .code import Code, code_as_stmts, code_as_ExceptHandlers, code_as_match_cases
 from .srcedit_old import _src_edit
 
@@ -33,7 +28,7 @@ def _get_slice_stmtish(self: fst.FST, start: int | Literal['end'] | None, stop: 
                        options: Mapping[str, Any], *, one: bool = False) -> fst.FST:
     ast = self.a
     body = getattr(ast, field)
-    start, stop = fixup_slice_indices(len(body), start, stop)
+    start, stop = fst_slice._fixup_slice_indices(len(body), start, stop)
 
     if start == stop:
         return fst.FST(Module(body=[], type_ignores=[]), [''], from_=self, lcopy=False)
@@ -131,7 +126,7 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
         if one and len(put_body) != 1:
             raise ValueError('expecting a single element')
 
-    start, stop = fixup_slice_indices(len(body), start, stop)
+    start, stop = fst_slice._fixup_slice_indices(len(body), start, stop)
     slice_len = stop - start
 
     if not slice_len and (not put_fst or (not put_body and len(ls := put_fst._lines) == 1 and not ls[0])):  # deleting empty slice or assigning empty fst to empty slice, noop
