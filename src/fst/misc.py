@@ -8,7 +8,7 @@ from math import log10
 from typing import Callable, Literal, NamedTuple, Iterable
 
 from .asttypes import AST
-from .astutil import constant, bistr
+from .astutil import constant
 
 try:
     from typing import Self
@@ -36,8 +36,6 @@ __all__ = [
     'prev_delims',
     'leading_trivia',
     'trailing_trivia',
-    'ParamsOffset',
-    'params_offset',
     'multiline_str_continuation_lns',
     'multiline_fstr_continuation_lns',
     'continuation_to_uncontinued_lns',
@@ -905,33 +903,6 @@ def trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end
     space_pos = (end_ln, 0) if end_ln < past_bound_end_ln else bound_end_pos
 
     return (text_pos, None if space_pos == text_pos else space_pos, True)
-
-
-class ParamsOffset(NamedTuple):
-    """@private"""
-
-    ln:          int  # position of offset, FST coords (starts at 0)
-    col_offset:  int  # position of offset, byte offset (negative to indicate but value is abs(), positive would indicate character offset)
-    dln:         int  # delta lines
-    dcol_offset: int  # delta bytes
-
-def params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int, end_ln: int, end_col: int,
-                  ) -> ParamsOffset:
-    """Calculate location and delta parameters for the `_offset()` function. The `col` parameter is calculated as a byte
-    offset so that the `_offset()` function does not have to access the source at all.
-
-    @private
-    """
-
-    dfst_ln = len(put_lines) - 1
-    dln = dfst_ln - (end_ln - ln)
-    dcol_offset = put_lines[-1].lenbytes - lines[end_ln].c2b(end_col)
-    col_offset = -lines[end_ln].c2b(end_col)
-
-    if not dfst_ln:
-        dcol_offset += lines[ln].c2b(col)
-
-    return ParamsOffset(end_ln, col_offset, dln, dcol_offset)
 
 
 def multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:

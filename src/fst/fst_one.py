@@ -1189,9 +1189,9 @@ def _make_exprish_fst(self: fst.FST, code: _PutOneCode, idx: int | None, field: 
     dcol_offset = lines[ln].c2b(col) + merge_alnum_start
     end_col_offset = lines[end_ln].c2b(end_col)
 
-    parsoff = self._put_src(put_lines, ln, col, end_ln, end_col, True, False, exclude=self)
+    params_offset = self._put_src(put_lines, ln, col, end_ln, end_col, True, False, exclude=self)
 
-    self._offset(*parsoff, exclude=target, self_=False)  # excluding an fstloc instead of FST is harmless (if target is fstloc), will not exclude anything
+    self._offset(*params_offset, exclude=target, self_=False)  # excluding an fstloc instead of FST is harmless (if target is fstloc), will not exclude anything
     put_fst._offset(0, 0, ln, dcol_offset)
     set_ctx(put_ast, ctx)
 
@@ -1778,9 +1778,9 @@ def _put_one_identifier_optional(self: fst.FST, code: _PutOneCode, idx: int | No
         if not loc:
             raise ValueError(f'cannot create {self.a.__class__.__name__}.{field} in this state')
 
-        parsoff = self._put_src(info.prefix + code + info.suffix, *loc, True, exclude=self)
+        params_offset = self._put_src(info.prefix + code + info.suffix, *loc, True, exclude=self)
 
-        self._offset(*parsoff, self_=False)
+        self._offset(*params_offset, self_=False)
         set_field(self.a, code, field, idx)
 
     return code

@@ -78,7 +78,6 @@ from .misc import (
     PYLT11, PYGE14,
     Self, NodeError, astfield, fstloc,
     re_empty_line_start, re_empty_line, re_line_trailing_space, re_empty_space, re_line_end_cont_or_comment,
-    ParamsOffset,
     next_frag, prev_find, next_find, next_find_re,
     leading_trivia, trailing_trivia,
 )
@@ -102,6 +101,7 @@ from .locations import (
     loc_Global_Nonlocal_names,
 )
 
+from .fst_misc import _ParamsOffset
 from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish
 
 
@@ -451,15 +451,16 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
     return copy_locs[:1] + cut_locs[1:]  # copy location from copy_locs and delete location and indent from cut_locs
 
 
-def _offset_pos_by_params(self: fst.FST, ln: int, col: int, col_offset: int, parsoff: ParamsOffset) -> tuple[int, int]:
+def _offset_pos_by_params(self: fst.FST, ln: int, col: int, col_offset: int, params_offset: _ParamsOffset,
+                          ) -> tuple[int, int]:
     """Position to offset `(ln, col)` with `col_offset` = `lines[ln].c2b(col)`, is assumed to be at or past the offset
     position."""
 
-    at_ln = parsoff.ln == ln
-    ln += parsoff.dln
+    at_ln = params_offset.ln == ln
+    ln += params_offset.dln
 
     if at_ln:
-        col = self.root._lines[ln].b2c(col_offset + parsoff.dcol_offset)
+        col = self.root._lines[ln].b2c(col_offset + params_offset.dcol_offset)
 
     return ln, col
 
@@ -677,10 +678,10 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
     ast.end_lineno = copy_end_ln + 1
     ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
 
-    fst_, parsoff = self._make_fst_and_dedent(self, ast, copy_loc, prefix, suffix,
-                                              del_loc if cut else None,
-                                              [del_indent] if del_indent and del_loc.end_col else None,
-                                              ret_params_offset=True)
+    fst_, params_offset = self._make_fst_and_dedent(self, ast, copy_loc, prefix, suffix,
+                                                    del_loc if cut else None,
+                                                    [del_indent] if del_indent and del_loc.end_col else None,
+                                                    ret_params_offset=True)
 
     ast.col_offset = 0  # before prefix
     ast.end_col_offset = fst_._lines[-1].lenbytes  # after suffix
@@ -705,7 +706,7 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
 
     if self_tail_sep is not None:
         bound_end_ln, bound_end_col = _offset_pos_by_params(self, bound_end_ln, bound_end_col, bound_end_col_offset,
-                                                            parsoff)
+                                                            params_offset)
 
         if isinstance(last := getattr(self.a, field)[-1], AST):
             _, _, last_end_ln, last_end_col = last.f.loc
@@ -1807,26 +1808,26 @@ def _put_slice_seq_begin(self: fst.FST, start: int, stop: int, fst_: fst.FST | N
                                            (self_end_ln == put_end_ln and self_end_col <= put_end_col))
 
     if put_col == self_col and put_ln == self_ln:  # put at beginning of unenclosed sequence
-        parsoff = self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, is_last, False, self)
+        params_offset = self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, is_last, False, self)
 
-        self._offset(*parsoff, True, True, self_=False)
+        self._offset(*params_offset, True, True, self_=False)
 
     elif is_last_and_at_self_end:  # because of insertion at end and maybe unenclosed sequence
-        parsoff = self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, True, self)
+        params_offset = self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, True, True, self)
     else:  # in this case there may parts of self after so we need to recurse the offset into self
-        parsoff = self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, False)
+        params_offset = self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, False)
 
     # parameters for put / del trailing and internal separators, we return explicitly so that the ASTs can be modified so the next part doesn't get too screwy
 
-    return (start, len_fst, body, body2, sep, self_tail_sep, bound_end_ln, bound_end_col, bound_end_col_offset, parsoff,
-            is_last, is_del, is_ins)
+    return (start, len_fst, body, body2, sep, self_tail_sep, bound_end_ln, bound_end_col, bound_end_col_offset,
+            params_offset, is_last, is_del, is_ins)
 
 
 def _put_slice_seq_end(self: fst.FST, params: tuple) -> None:
     """Finish up sequence slice put with separators. `AST` nodes are assumed to have been modified by here and general
     structure of `self` is correct, even if it is not parsable due to separators in source not being correct yet."""
 
-    (start, len_fst, body, body2, sep, self_tail_sep, bound_end_ln, bound_end_col, bound_end_col_offset, parsoff,
+    (start, len_fst, body, body2, sep, self_tail_sep, bound_end_ln, bound_end_col, bound_end_col_offset, params_offset,
      is_last, is_del, is_ins) = params
 
     if self_tail_sep is not None:  # trailing
@@ -1834,7 +1835,7 @@ def _put_slice_seq_end(self: fst.FST, params: tuple) -> None:
 
         _, _, last_end_ln, last_end_col = last.loc
         bound_end_ln, bound_end_col = _offset_pos_by_params(self, bound_end_ln, bound_end_col,
-                                                            bound_end_col_offset, parsoff)
+                                                            bound_end_col_offset, params_offset)
 
         if self_tail_sep:
             self._maybe_ins_separator(last_end_ln, last_end_col, False, bound_end_ln, bound_end_col, sep, last)

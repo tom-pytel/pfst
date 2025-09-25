@@ -9,7 +9,7 @@ import re
 from ast import literal_eval, iter_fields, iter_child_nodes, walk
 from math import log10
 from types import TracebackType
-from typing import Callable, Literal
+from typing import Callable, Literal, NamedTuple
 
 from . import fst
 
@@ -54,7 +54,7 @@ from .misc import (
     Self, NodeError, astfield, fstloc, srcwpos, nspace, pyver,
     re_empty_line_start, re_line_trailing_space, re_line_end_cont_or_comment,
     next_frag, next_find, prev_find, next_delims, prev_delims,
-    ParamsOffset, params_offset, multiline_str_continuation_lns, multiline_fstr_continuation_lns,
+    multiline_str_continuation_lns, multiline_fstr_continuation_lns,
 )
 
 from .locations import loc_block_header_end
@@ -238,6 +238,32 @@ class _Modifying:
 
     def success(self, fst_: fst.FST | None | Literal[False] = False) -> None:
         self.root._serial += 1
+
+
+class _ParamsOffset(NamedTuple):
+    """First four parameters to `_offset()` function with the `col_offset` stored as a byte so that `_offset()` doesn't
+    need to check the source. This exists in order to facilitate multipart offsetting which changing source code."""
+
+    ln:          int  # position of offset, FST coords (starts at 0)
+    col_offset:  int  # NEGATIVE position of offset in BYTES (negative to indicate byte offset but value is abs(), positive would indicate character offset)
+    dln:         int  # delta lines
+    dcol_offset: int  # delta bytes
+
+
+def _params_offset(lines: list[bistr], put_lines: list[bistr], ln: int, col: int, end_ln: int, end_col: int,
+                   ) -> _ParamsOffset:
+    """Calculate location and delta parameters for the `_offset()` function. The `col` parameter is calculated as a byte
+    offset so that the `_offset()` function does not have to access the source at all."""
+
+    dfst_ln = len(put_lines) - 1
+    dln = dfst_ln - (end_ln - ln)
+    col_offset = -lines[end_ln].c2b(end_col)  # negative to indicate this is a BYTE and not a CHAR offset, will be used positively
+    dcol_offset = put_lines[-1].lenbytes + col_offset
+
+    if not dfst_ln:
+        dcol_offset += lines[ln].c2b(col)
+
+    return _ParamsOffset(end_ln, col_offset, dln, dcol_offset)
 
 
 def _make_tree_fst(ast: AST, parent: fst.FST, pfield: astfield) -> fst.FST:
@@ -1466,7 +1492,7 @@ def _make_fst_and_dedent(self: fst.FST, indent: fst.FST | str, ast: AST, copy_lo
                          prefix: str = '', suffix: str = '',
                          put_loc: fstloc | None = None, put_lines: list[str] | None = None, *,
                          docstr: bool | Literal['strict'] | None = None,
-                         ret_params_offset: bool = False) -> fst.FST | tuple[fst.FST, ParamsOffset]:
+                         ret_params_offset: bool = False) -> fst.FST | tuple[fst.FST, _ParamsOffset]:
     if not isinstance(indent, str):
         indent = indent.get_indent()
 
@@ -1487,11 +1513,11 @@ def _make_fst_and_dedent(self: fst.FST, indent: fst.FST | str, ast: AST, copy_lo
         fst_._dedent_lns(indent, skip=bool(copy_loc.col), docstr=docstr)  # if copy location starts at column 0 then we apply dedent to it as well (preceding comment or something)
 
     if put_loc:
-        parsoff = self._put_src(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
+        params_offset = self._put_src(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0
     else:
-        parsoff = None
+        params_offset = None
 
-    return (fst_, parsoff) if ret_params_offset else fst_
+    return (fst_, params_offset) if ret_params_offset else fst_
 
 
 @pyver(ge=12)
@@ -1725,7 +1751,7 @@ def _touchall(self: fst.FST, parents: bool = False, self_: bool = True, children
 
 def _put_src(self: fst.FST, src: str | list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
              tail: bool | None = ..., head: bool | None = True, exclude: fst.FST | None = None, *,
-             offset_excluded: bool = True) -> ParamsOffset | None:
+             offset_excluded: bool = True) -> _ParamsOffset | None:
     """Put or delete new source to currently stored source, optionally offsetting all nodes for the change. Must
     specify `tail` as `True`, `False` or `None` to enable offset of nodes according to source put. `...` ellipsis
     value is used as sentinel for `tail` to mean don't offset. Otherwise `tail` and params which followed are passed
@@ -1737,58 +1763,58 @@ def _put_src(self: fst.FST, src: str | list[str] | None, ln: int, col: int, end_
         is returned as a byte offset so that `offset()` doesn't attempt to calculate it from already modified
         source."""
 
-    ls = self.root._lines
+    lines = self.root._lines
 
     if is_del := src is None:
-        lines = [bistr('')]
+        put_lines = [bistr('')]
     elif isinstance(src, str):
-        lines = [bistr(s) for s in src.split('\n')]
+        put_lines = [bistr(s) for s in src.split('\n')]
     else:
-        lines = [bistr(s) for s in src]
+        put_lines = [bistr(s) for s in src]
 
     if tail is ...:
-        parsoff = None
+        params_offset = None
 
     else:
-        parsoff = params_offset(ls, lines, ln, col, end_ln, end_col)
+        params_offset = _params_offset(lines, put_lines, ln, col, end_ln, end_col)
 
-        self.root._offset(*parsoff, tail, head, exclude, offset_excluded=offset_excluded)
+        self.root._offset(*params_offset, tail, head, exclude, offset_excluded=offset_excluded)
 
     if is_del:  # delete lines
         if end_ln == ln:
-            ls[ln] = bistr((l := ls[ln])[:col] + l[end_col:])
+            lines[ln] = bistr((l := lines[ln])[:col] + l[end_col:])
 
         else:
-            ls[end_ln] = bistr(ls[ln][:col] + ls[end_ln][end_col:])
+            lines[end_ln] = bistr(lines[ln][:col] + lines[end_ln][end_col:])
 
-            del ls[ln : end_ln]
+            del lines[ln : end_ln]
 
     else:  # put lines
         dln = end_ln - ln
 
-        if (nnew_ln := len(lines)) <= 1:
-            s = lines[0] if nnew_ln else ''
+        if (nnew_ln := len(put_lines)) <= 1:
+            s = put_lines[0] if nnew_ln else ''
 
             if not dln:  # replace single line with single or no line
-                ls[ln] = bistr(f'{(l := ls[ln])[:col]}{s}{l[end_col:]}')
+                lines[ln] = bistr(f'{(l := lines[ln])[:col]}{s}{l[end_col:]}')
 
             else:  # replace multiple lines with single or no line
-                ls[ln] = bistr(f'{ls[ln][:col]}{s}{ls[end_ln][end_col:]}')
+                lines[ln] = bistr(f'{lines[ln][:col]}{s}{lines[end_ln][end_col:]}')
 
-                del ls[ln + 1 : end_ln + 1]
+                del lines[ln + 1 : end_ln + 1]
 
         elif not dln:  # replace single line with multiple lines
-            lend = bistr(lines[-1] + (l := ls[ln])[end_col:])
-            ls[ln] = bistr(l[:col] + lines[0])
-            ls[ln + 1 : ln + 1] = lines[1:]
-            ls[ln + nnew_ln - 1] = lend
+            lend = bistr(put_lines[-1] + (l := lines[ln])[end_col:])
+            lines[ln] = bistr(l[:col] + put_lines[0])
+            lines[ln + 1 : ln + 1] = put_lines[1:]
+            lines[ln + nnew_ln - 1] = lend
 
-        else:  # replace multiple lines with multiple lines
-            ls[ln] = bistr(ls[ln][:col] + lines[0])
-            ls[end_ln] = bistr(lines[-1] + ls[end_ln][end_col:])
-            ls[ln + 1 : end_ln] = lines[1:-1]
+        else:  # replace multiple put_lines with multiple lines
+            lines[ln] = bistr(lines[ln][:col] + put_lines[0])
+            lines[end_ln] = bistr(put_lines[-1] + lines[end_ln][end_col:])
+            lines[ln + 1 : end_ln] = put_lines[1:-1]
 
-    return parsoff
+    return params_offset
 
 
 def _offset(self: fst.FST, ln: int, col: int, dln: int, dcol_offset: int,
