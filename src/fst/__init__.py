@@ -66,9 +66,14 @@ anything about `fst` to maybe gain the ability to preserve some existing formatt
 `fst.docs.d09_reconcile`.
 """
 
-import ast  # noqa: F401  - make everything from ast module available here
-from ast import *  # noqa: F403
-from .fst import parse, unparse, dump, FST  # noqa: F401
+import ast
+from ast import *  # noqa: F403  - make everything from ast module available here (differs between py versions)
+from .fst import FST, parse, unparse, dump  # noqa: F401
 from .misc import NodeError  # noqa: F401
 from .parsex import ParseError  # noqa: F401
-from .asttypes import *  # noqa: F403
+from .asttypes import *  # noqa: F403  - import standins form some AST classes which may not exist in ast module
+
+from . import asttypes
+
+__all__ = (['FST', 'NodeError', 'ParseError'] +
+           [n for n in dict.fromkeys(dir(ast) + asttypes.__all__) if not n.startswith('_')])

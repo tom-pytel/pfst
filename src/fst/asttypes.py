@@ -274,17 +274,17 @@ __all__ = [
     'TemplateStr',
     'Interpolation',
 
-    '_slice',
-    # '_slice_ExceptHandlers',
-    # '_slice_match_cases',
-    '_slice_Assign_targets',
-    # '_slice_decorator_list',
-    # '_slice_comprehensions',
-    # '_slice_comprehension_ifs',
-    # '_slice_keywords',
-    '_slice_aliases',
-    '_slice_withitems',
-    '_slice_type_params',
+    # '_slice',
+    # # '_slice_ExceptHandlers',
+    # # '_slice_match_cases',
+    # '_slice_Assign_targets',
+    # # '_slice_decorator_list',
+    # # '_slice_comprehensions',
+    # # '_slice_comprehension_ifs',
+    # # '_slice_keywords',
+    # '_slice_aliases',
+    # '_slice_withitems',
+    # '_slice_type_params',
 ]
 
 

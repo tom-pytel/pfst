@@ -6,6 +6,7 @@ import unittest
 
 from fst import *
 
+from fst.asttypes import ASTS_STMTISH
 from fst.misc import PYLT11, PYLT12, PYGE11, PYGE12, PYGE14
 
 from support import GetSliceCases, PutSliceCases
@@ -1273,13 +1274,13 @@ def func():
 '''     ):
 
             ast  = parse(src.strip())
-            asts = [a for a in walk(ast) if isinstance(a, fst.ASTS_STMTISH)]
+            asts = [a for a in walk(ast) if isinstance(a, ASTS_STMTISH)]
 
             for a in asts[::-1]:
                 a.f.cut()
 
             ast  = parse(src.strip())
-            asts = [a for a in walk(ast) if isinstance(a, fst.ASTS_STMTISH)]
+            asts = [a for a in walk(ast) if isinstance(a, ASTS_STMTISH)]
 
             for a in asts[::-1]:
                 field, idx = a.f.pfield
