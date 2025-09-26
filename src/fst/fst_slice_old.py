@@ -20,6 +20,7 @@ from .misc import astfield, fstloc, next_find, prev_find
 from .code import Code, code_as_stmts, code_as_ExceptHandlers, code_as_match_cases
 from .traverse import prev_bound, next_bound_step, prev_bound_step
 from .srcedit_old import _src_edit
+from .fst_one import _maybe_fix_elif
 
 
 def _set_end_pos(self: fst.FST, end_lineno: int, end_col_offset: int, self_: bool = True) -> None:
@@ -191,7 +192,7 @@ def _get_slice_stmtish(self: fst.FST, start: int | Literal['end'] | None, stop: 
         _set_block_end_from_last_child(self, block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
 
     if len(asts) == 1 and isinstance(a := asts[0], If):
-        a.f._maybe_fix_elif()
+        _maybe_fix_elif(a.f)
 
     if modifying:
         modifying.success()

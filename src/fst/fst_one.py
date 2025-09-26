@@ -122,7 +122,7 @@ from .astutil import (
 
 from .misc import (
     PYLT11, PYGE14, NodeError, astfield, fstloc, pyver,
-    next_frag, prev_frag, next_find, prev_find, next_find_re,
+    next_frag, prev_frag, next_find, prev_find, next_find_re, prev_delims,
 )
 
 from .parsex import unparse
@@ -189,6 +189,77 @@ def _params_Compare_combined(self: fst.FST, idx: int | None) -> tuple[int, str, 
     return (idx - 1, 'comparators', comparators) if idx else (None, 'left', ast.left)
 
 
+def _maybe_fix_With_items(self: fst.FST) -> None:
+    """If `Tuple` only element in `items` then add appropriate parentheses."""
+
+    # assert isinstance(self.a, (With, AsyncWith))
+
+    if (len(items := self.items) == 1 and
+        not (i0a := items[0].a).optional_vars and
+        (is_par := (cef := i0a.context_expr.f).is_parenthesized_tuple()) is not None
+    ):
+        if not is_par:
+            cef._delimit_node()
+
+        if len(prev_delims(self.root._lines, self.ln, self.col, cef.ln, cef.col)) == 1:  # no pars between start of `with` and start of tuple?
+            cef._parenthesize_grouping()  # these will wind up belonging to outer With
+
+
+def _maybe_fix_elif(self: fst.FST) -> None:
+    # assert isinstance(self.a, If)
+
+    ln, col, _, _ = self.loc
+    lines = self.root._lines
+
+    if lines[ln].startswith('elif', col):
+        self._put_src(None, ln, col, ln, col + 2, False)
+
+
+def _maybe_fix_copy(self: fst.FST, pars: bool = True, pars_walrus: bool = False) -> None:
+    """Maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the source is not after
+    the operation). If cannot fix or ast is not parsable by itself then ast will be unchanged. Is meant to be a quick
+    fix after a cut or copy operation, not full check, for that use `verify()`.
+
+    **WARNING!** Only call on root node!
+    """
+
+    # assert self.is_root
+
+    if isinstance(ast := self.a, If):
+        _maybe_fix_elif(self)
+
+    elif isinstance(ast, expr):
+        if not self.is_parsable() or isinstance(ast, Slice):  # is_parsable() makes sure there is a self.loc, Slice should never get pars
+            return
+
+        self._set_ctx(Load)  # anything that is excluded by is_parsable() above (or does not have .loc) does not need this
+
+        if not pars:
+            return
+
+        need_pars = None
+
+        if is_tuple := isinstance(ast, Tuple):
+            if is_par := self._is_delimited_seq():
+                need_pars = False
+            elif any(isinstance(e, NamedExpr) and not e.f.pars().n for e in ast.elts):  # unparenthesized walrus in naked tuple?
+                need_pars = True
+
+            self._maybe_add_singleton_tuple_comma(is_par)  # this exists because of copy lone Starred out of a Subscript.slice
+
+        elif isinstance(ast, NamedExpr):  # naked walrus
+            need_pars = pars_walrus
+
+        if need_pars is None:
+            need_pars = not self.is_enclosed_or_line()
+
+        if need_pars:
+            if is_tuple:
+                self._delimit_node()
+            else:
+                self._parenthesize_grouping()
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 # get
 
@@ -227,7 +298,7 @@ def _get_one_default(self: fst.FST, idx: int | None, field: str, cut: bool, opti
 
     ret = childf._make_fst_and_dedent(childf, copy_ast(child), loc, docstr=options.get('docstr'))
 
-    ret._maybe_fix_copy(self.get_option('pars', options), self.get_option('pars_walrus', options))
+    _maybe_fix_copy(ret, self.get_option('pars', options), self.get_option('pars_walrus', options))
 
     return ret
 
@@ -1418,7 +1489,7 @@ def _put_one_with_items(self: fst.FST, code: _PutOneCode, idx: int | None, field
                         options: Mapping[str, Any]) -> fst.FST:
     ret = _put_one_exprish_required(self, code, idx, field, child, static, options)
 
-    self._maybe_fix_with_items()
+    _maybe_fix_With_items(self)
 
     return ret
 
@@ -1660,7 +1731,7 @@ def _put_one_withitem_context_expr(self: fst.FST, code: _PutOneCode, idx: int | 
     ret = _put_one_exprish_optional(self, code, idx, field, child, static, options)
 
     if (parent := self.parent) and isinstance(parent.a, (With, AsyncWith)):
-        parent._maybe_fix_with_items()
+        _maybe_fix_With_items(parent)
 
     return ret
 
@@ -1673,7 +1744,7 @@ def _put_one_withitem_optional_vars(self: fst.FST, code: _PutOneCode, idx: int |
     ret = _put_one_exprish_optional(self, code, idx, field, child, static, options)
 
     if (parent := self.parent) and isinstance(parent.a, (With, AsyncWith)):
-        parent._maybe_fix_with_items()
+        _maybe_fix_With_items(parent)
 
     return ret
 
