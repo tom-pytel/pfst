@@ -5267,7 +5267,6 @@ class FST:
         _elif_to_else_if,
         _reparse_docstrings,
         _make_fst_and_dedent,
-        _get_fmtval_interp_strs,
         _get_indentable_lns,
         _modifying,
         _touchall,

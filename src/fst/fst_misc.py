@@ -76,6 +76,120 @@ _re_delim_close_alnums = re.compile(rf'[{pat_alnum}.][)\]][{pat_alnum}]')
 
 
 @pyver(ge=12)
+def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int, int] | None:
+    """Get debug and value strings and location for a `FormattedValue` or `Interpolation` IF THEY ARE PRESENT.
+    Meaning that if the `.value` ends with an appropriate `'='` character for debug and the value str if is
+    `Interpolation`. This does not check for the presence or equivalence of the actual preceding `Constant` string.
+    The returned strings are stripped of comments just like the python parser does.
+
+    **Returns:**
+    - `None`: If not a valid debug `FormattedValue` or `Interpolation`.
+    - `(debug str, value str, end_ln, end_col)`: A tuple including the full string which includes the `'='`
+        character (if applicable, else `None`), a string which only includes the value expression (if Interpolation,
+        else `None`) and the end line and column numbers of the whole thing which will correspond to what the
+        preceding Constant should have for its end line and column in the case of debug string present.
+    """
+
+    ast = self.a
+
+    if not (get_val := isinstance(ast, Interpolation)):
+        if not isinstance(ast, FormattedValue):
+            return None
+
+    lines = self.root._lines
+    sln, scol, send_ln, send_col = self.loc
+    _, _, vend_ln, vend_col = ast.value.f.pars()
+
+    if fspec := ast.format_spec:
+        end_ln, end_col, _, _ = fspec.f.loc
+    else:
+        end_ln = send_ln
+        end_col = send_col - 1
+
+    if ast.conversion != -1:
+        if prev := prev_find(lines, vend_ln, vend_col, end_ln, end_col, '!'):
+            end_ln, end_col = prev
+
+    src = self.get_src(vend_ln, vend_col, end_ln, end_col)  # source from end of parenthesized value to end of FormattedValue or start of conversion or format_spec
+    get_dbg = src and (m := _re_fval_expr_equals.match(src)) and m.end() == len(src)
+
+    if not get_dbg and not get_val:
+        return None, None, 0, 0
+
+    if _HAS_FSTR_COMMENT_BUG:  # '#' characters inside strings erroneously removed as if they were comments
+        lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
+
+        for i, l in enumerate(lines):
+            m = re_line_end_cont_or_comment.match(l)  # always matches
+
+            if (g := m.group(1)) and g.startswith('#'):  # line ends in comment, nuke it
+                lines[i] = l[:m.start(1)]
+
+    else:
+        lns = set()
+        ends = {}  # the starting column of where to search for comment '#', past end of any expression on given line
+
+        for f in (walking := ast.value.f.walk(True)):  # find multiline continuation line numbers
+            fln, _, fend_ln, fend_col = f.loc
+            ends[fend_ln] = max(fend_col, ends.get(fend_ln, 0))
+
+            if fend_ln == fln:  # everything on one line, don't need to recurse
+                walking.send(False)
+
+            elif isinstance(a := f.a, Constant):  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
+                lns.update(multiline_str_continuation_lns(lines, *f.loc))
+
+            elif isinstance(a, (JoinedStr, TemplateStr)):
+                lns.update(multiline_fstr_continuation_lns(lines, *f.loc))
+
+                walking.send(False)  # skip everything inside regardless, because it is evil
+
+                for a in walk(f.a):  # we walk ourselves to get end-of-expression locations for lines
+                    if loc := a.f.loc:
+                        _, _, fend_ln, fend_col = loc
+                        ends[fend_ln] = max(fend_col, ends.get(fend_ln, 0))
+
+        off = sln + 1
+        lns = {v - off for v in lns}  # these are line numbers where comments are not possible because next line is a string continuation
+        lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
+
+        for i, l in enumerate(lines):
+            if i not in lns:
+                c = ends.get(i + sln, 0)
+
+                if not i:  # if first line then need to remove offset of first value from first line of expression
+                    c -= scol + 1
+
+                m = re_line_end_cont_or_comment.match(l, c)  # always matches
+
+                if (g := m.group(1)) and g.startswith('#'):  # line ends in comment, nuke it
+                    lines[i] = l[:m.start(1)]
+
+    dbg_str = '\n'.join(lines) if get_dbg else None
+
+    if not get_val:
+        val_str = None
+
+    else:
+        if not (vend_ln := vend_ln - sln):
+            vend_col -= scol + 1
+
+        del lines[vend_ln + 1:]
+
+        lines[vend_ln] = lines[vend_ln][:vend_col]
+
+        val_str = '\n'.join(lines).rstrip()
+
+    return dbg_str, val_str, end_ln, end_col
+
+@pyver(lt=12)  # override _get_fmtval_interp_strs if py too low, not used now but for completeness if it is at some point
+def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int, int] | None:
+    """Dummy because py < 3.12 doesn't have f-string location information."""
+
+    return None
+
+
+@pyver(ge=12)
 class _Modifying:
     """Modification context manager. Updates some parent stuff after a successful modification."""
 
@@ -126,7 +240,7 @@ class _Modifying:
                 parent = fst_.parent
                 pfield = fst_.pfield
 
-                if field == 'value' and (strs := fst_._get_fmtval_interp_strs()):  # this will never proc for py < 3.12, in case we ever make this code common
+                if field == 'value' and (strs := _get_fmtval_interp_strs(fst_)):  # this will never proc for py < 3.12, in case we ever make this code common
                     dbg_str, val_str, end_ln, end_col = strs
 
                     if (dbg_str is None or not parent or not (idx := pfield.idx) or
@@ -197,7 +311,7 @@ class _Modifying:
                         if fix_const:
                             f.a.col_offset -= 1
 
-                dbg_str, val_str, end_ln, end_col = fst_._get_fmtval_interp_strs()
+                dbg_str, val_str, end_ln, end_col = _get_fmtval_interp_strs(fst_)
 
                 if do_val_str:
                     fst_.a.str = val_str
@@ -1476,120 +1590,6 @@ def _make_fst_and_dedent(self: fst.FST, indent: fst.FST | str, ast: AST, copy_lo
         params_offset = None
 
     return (fst_, params_offset) if ret_params_offset else fst_
-
-
-@pyver(ge=12)
-def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int, int] | None:
-    """Get debug and value strings and location for a `FormattedValue` or `Interpolation` IF THEY ARE PRESENT.
-    Meaning that if the `.value` ends with an appropriate `'='` character for debug and the value str if is
-    `Interpolation`. This does not check for the presence or equivalence of the actual preceding `Constant` string.
-    The returned strings are stripped of comments just like the python parser does.
-
-    **Returns:**
-    - `None`: If not a valid debug `FormattedValue` or `Interpolation`.
-    - `(debug str, value str, end_ln, end_col)`: A tuple including the full string which includes the `'='`
-        character (if applicable, else `None`), a string which only includes the value expression (if Interpolation,
-        else `None`) and the end line and column numbers of the whole thing which will correspond to what the
-        preceding Constant should have for its end line and column in the case of debug string present.
-    """
-
-    ast = self.a
-
-    if not (get_val := isinstance(ast, Interpolation)):
-        if not isinstance(ast, FormattedValue):
-            return None
-
-    lines = self.root._lines
-    sln, scol, send_ln, send_col = self.loc
-    _, _, vend_ln, vend_col = ast.value.f.pars()
-
-    if fspec := ast.format_spec:
-        end_ln, end_col, _, _ = fspec.f.loc
-    else:
-        end_ln = send_ln
-        end_col = send_col - 1
-
-    if ast.conversion != -1:
-        if prev := prev_find(lines, vend_ln, vend_col, end_ln, end_col, '!'):
-            end_ln, end_col = prev
-
-    src = self.get_src(vend_ln, vend_col, end_ln, end_col)  # source from end of parenthesized value to end of FormattedValue or start of conversion or format_spec
-    get_dbg = src and (m := _re_fval_expr_equals.match(src)) and m.end() == len(src)
-
-    if not get_dbg and not get_val:
-        return None, None, 0, 0
-
-    if _HAS_FSTR_COMMENT_BUG:  # '#' characters inside strings erroneously removed as if they were comments
-        lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
-
-        for i, l in enumerate(lines):
-            m = re_line_end_cont_or_comment.match(l)  # always matches
-
-            if (g := m.group(1)) and g.startswith('#'):  # line ends in comment, nuke it
-                lines[i] = l[:m.start(1)]
-
-    else:
-        lns = set()
-        ends = {}  # the starting column of where to search for comment '#', past end of any expression on given line
-
-        for f in (walking := ast.value.f.walk(True)):  # find multiline continuation line numbers
-            fln, _, fend_ln, fend_col = f.loc
-            ends[fend_ln] = max(fend_col, ends.get(fend_ln, 0))
-
-            if fend_ln == fln:  # everything on one line, don't need to recurse
-                walking.send(False)
-
-            elif isinstance(a := f.a, Constant):  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
-                lns.update(multiline_str_continuation_lns(lines, *f.loc))
-
-            elif isinstance(a, (JoinedStr, TemplateStr)):
-                lns.update(multiline_fstr_continuation_lns(lines, *f.loc))
-
-                walking.send(False)  # skip everything inside regardless, because it is evil
-
-                for a in walk(f.a):  # we walk ourselves to get end-of-expression locations for lines
-                    if loc := a.f.loc:
-                        _, _, fend_ln, fend_col = loc
-                        ends[fend_ln] = max(fend_col, ends.get(fend_ln, 0))
-
-        off = sln + 1
-        lns = {v - off for v in lns}  # these are line numbers where comments are not possible because next line is a string continuation
-        lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
-
-        for i, l in enumerate(lines):
-            if i not in lns:
-                c = ends.get(i + sln, 0)
-
-                if not i:  # if first line then need to remove offset of first value from first line of expression
-                    c -= scol + 1
-
-                m = re_line_end_cont_or_comment.match(l, c)  # always matches
-
-                if (g := m.group(1)) and g.startswith('#'):  # line ends in comment, nuke it
-                    lines[i] = l[:m.start(1)]
-
-    dbg_str = '\n'.join(lines) if get_dbg else None
-
-    if not get_val:
-        val_str = None
-
-    else:
-        if not (vend_ln := vend_ln - sln):
-            vend_col -= scol + 1
-
-        del lines[vend_ln + 1:]
-
-        lines[vend_ln] = lines[vend_ln][:vend_col]
-
-        val_str = '\n'.join(lines).rstrip()
-
-    return dbg_str, val_str, end_ln, end_col
-
-@pyver(lt=12)  # override _get_fmtval_interp_strs if py too low
-def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int, int] | None:
-    """Dummy because py < 3.12 doesn't have f-string location information."""
-
-    return None
 
 
 def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal['strict'] | None = None) -> set[int]:
