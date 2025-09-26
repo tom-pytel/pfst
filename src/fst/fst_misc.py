@@ -57,7 +57,6 @@ from .misc import (
     multiline_str_continuation_lns, multiline_fstr_continuation_lns,
 )
 
-from .traverse import prev_bound
 from .locations import loc_block_header_end
 
 
@@ -408,6 +407,34 @@ def _dump_lines(fst_: fst.FST, linefunc: Callable, ln: int, col: int, end_ln: in
 
     for i, l in zip(range(ln, end_ln + 1), lines, strict=True):
         linefunc(f'{i:<{width}}: {l}{eol}')
+
+
+def _reparse_docstr_Constants(self: fst.FST, docstr: bool | Literal['strict'] | None = None) -> None:
+    """Reparse docstrings in `self` and all descendants from source into their `Constant` values.
+
+    **Parameters:**
+    - `docstr`: Which strings to reparse. `True` means all `Expr` multiline strings. `'strict'` means only multiline
+        strings in expected docstring. `False` doesn't reparse anything and just returns. `None` means use default
+        (`True`).
+    """
+
+    if docstr is None:
+        docstr = self.get_option('docstr')
+    if not docstr:
+        return
+
+    if docstr != 'strict':  # True
+        for a in walk(self.a):
+            if isinstance(a, Expr) and isinstance(v := a.value, Constant) and isinstance(v.value, str):
+                v.value = literal_eval((f := a.f).get_src(*f.loc))
+
+    else:
+        for a in walk(self.a):
+            if isinstance(a, ASTS_SCOPE_NAMED_OR_MOD):
+                if ((body := a.body) and isinstance(b0 := body[0], Expr) and isinstance(v := b0.value, Constant) and
+                    isinstance(v.value, str)
+                ):
+                    v.value = literal_eval((f := b0.f).get_src(*f.loc))
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -1480,40 +1507,6 @@ def _undelimit_node(self: fst.FST, field: str = 'elts') -> bool:
     return True
 
 
-def _normalize_block(self: fst.FST, field: str = 'body', *, indent: str | None = None) -> None:
-    """Move statements on the same logical line as a block open to their own line, e.g:
-    ```
-    if a: call()
-    ```
-    Becomes:
-    ```
-    if a:
-        call()
-    ```
-
-    **Parameters:**
-    - `field`: Which block to normalize (`'body'`, `'orelse'`, `'handlers'`, `'finalbody'`).
-    - `indent`: The indentation to use for the relocated line if already known, saves a call to `get_indent()`.
-    """
-
-    if isinstance(self.a, mod) or not (block := getattr(self.a, field)) or not isinstance(block, list):
-        return
-
-    b0 = block[0].f
-    b0_ln, b0_col, _, _ = b0.bloc
-    root = self.root
-
-    if not (colon := prev_find(root._lines, *prev_bound(b0), b0_ln, b0_col, ':', True, comment=True, lcont=None)):  # must be there
-        return
-
-    if indent is None:
-        indent = b0.get_indent()
-
-    ln, col = colon
-
-    self._put_src(['', indent], ln, col + 1, b0_ln, b0_col, False)
-
-
 def _elif_to_else_if(self: fst.FST) -> None:
     """Convert an 'elif something:\\n  ...' to 'else:\\n  if something:\\n    ...'. Make sure to only call on an
     actual `elif`, meaning the lone `If` statement in the parent's `orelse` block which is an actual `elif` and not
@@ -1530,34 +1523,6 @@ def _elif_to_else_if(self: fst.FST) -> None:
 
     self._put_src(['if'], ln, col, ln, col + 4, False)
     self._put_src([indent + 'else:', indent + self.root.indent], ln, 0, ln, col, False)
-
-
-def _reparse_docstrings(self: fst.FST, docstr: bool | Literal['strict'] | None = None) -> None:
-    """Reparse docstrings in `self` and all descendants.
-
-    **Parameters:**
-    - `docstr`: Which strings to reparse. `True` means all `Expr` multiline strings. `'strict'` means only multiline
-        strings in expected docstring. `False` doesn't reparse anything and just returns. `None` means use default
-        (`True`).
-    """
-
-    if docstr is None:
-        docstr = self.get_option('docstr')
-    if not docstr:
-        return
-
-    if docstr != 'strict':  # True
-        for a in walk(self.a):
-            if isinstance(a, Expr) and isinstance(v := a.value, Constant) and isinstance(v.value, str):
-                v.value = literal_eval((f := a.f).get_src(*f.loc))
-
-    else:
-        for a in walk(self.a):
-            if isinstance(a, ASTS_SCOPE_NAMED_OR_MOD):
-                if ((body := a.body) and isinstance(b0 := body[0], Expr) and isinstance(v := b0.value, Constant) and
-                    isinstance(v.value, str)
-                ):
-                    v.value = literal_eval((f := b0.f).get_src(*f.loc))
 
 
 def _make_fst_and_dedent(self: fst.FST, indent: fst.FST | str, ast: AST, copy_loc: fstloc,
@@ -1994,7 +1959,8 @@ def _indent_lns(self: fst.FST, indent: str | None = None, lns: set[int] | None =
             dont_offset.add(ln)
 
     self._offset_lns(lns - dont_offset if dont_offset else lns, len(indent.encode()))
-    self._reparse_docstrings(docstr)
+
+    _reparse_docstr_Constants(self, docstr)
 
 
 def _dedent_lns(self: fst.FST, dedent: str | None = None, lns: set[int] | None = None, *,
@@ -2068,7 +2034,7 @@ def _dedent_lns(self: fst.FST, dedent: str | None = None, lns: set[int] | None =
     else:
         self._offset_lns(lns - dont_offset if dont_offset else lns, -ldedent)
 
-    self._reparse_docstrings(docstr)
+    _reparse_docstr_Constants(self, docstr)
 
 
 def _redent_lns(self: fst.FST, dedent: str | None = None, indent: str | None = None, lns: set[int] | None = None, *,
@@ -2168,7 +2134,7 @@ def _redent_lns(self: fst.FST, dedent: str | None = None, indent: str | None = N
     else:
         self._offset_lns(lns - dont_offset if dont_offset else lns, dredent)
 
-    self._reparse_docstrings(docstr)
+    _reparse_docstr_Constants(self, docstr)
 
 
 @staticmethod

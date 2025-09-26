@@ -18,8 +18,42 @@ from .asttypes import (
 from .astutil import copy_ast
 from .misc import astfield, fstloc, next_find, prev_find
 from .code import Code, code_as_stmts, code_as_ExceptHandlers, code_as_match_cases
-from .traverse import next_bound_step, prev_bound_step
+from .traverse import prev_bound, next_bound_step, prev_bound_step
 from .srcedit_old import _src_edit
+
+
+def _normalize_block(self: fst.FST, field: str = 'body', *, indent: str | None = None) -> None:
+    """Move statements on the same logical line as a block open to their own line, e.g:
+    ```
+    if a: call()
+    ```
+    Becomes:
+    ```
+    if a:
+        call()
+    ```
+
+    **Parameters:**
+    - `field`: Which block to normalize (`'body'`, `'orelse'`, `'handlers'`, `'finalbody'`).
+    - `indent`: The indentation to use for the relocated line if already known, saves a call to `get_indent()`.
+    """
+
+    if isinstance(self.a, mod) or not (block := getattr(self.a, field)) or not isinstance(block, list):
+        return
+
+    b0 = block[0].f
+    b0_ln, b0_col, _, _ = b0.bloc
+    root = self.root
+
+    if not (colon := prev_find(root._lines, *prev_bound(b0), b0_ln, b0_col, ':', True, comment=True, lcont=None)):  # must be there
+        return
+
+    if indent is None:
+        indent = b0.get_indent()
+
+    ln, col = colon
+
+    self._put_src(['', indent], ln, col + 1, b0_ln, b0_col, False)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -151,7 +185,7 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
             block_indent = opener_indent + root.indent
 
         if fpre or fpost:
-            self._normalize_block(field, indent=block_indent)  # don't want to bother figuring out if valid to insert to statements on single block logical line
+            _normalize_block(self, field, indent=block_indent)  # don't want to bother figuring out if valid to insert to statements on single block logical line
 
     if slice_len:  # replacement
         ffirst = body[start].f

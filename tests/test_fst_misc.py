@@ -926,10 +926,12 @@ d  # comment3''', f.src)
         self.assertEqual('case 1,2 as c: pass', f.src)
 
     def test__normalize_block(self):
+        from fst.fst_slice_old import _normalize_block
+
         a = parse('''
 if 1: i ; j ; l ; m
             '''.strip())
-        a.body[0].f._normalize_block()
+        _normalize_block(a.body[0].f)
         a.f.verify()
         self.assertEqual(a.f.src, 'if 1:\n    i ; j ; l ; m')
 
@@ -939,13 +941,13 @@ def f() -> int: \\
   ; \\
   j
             '''.strip())
-        a.body[0].f._normalize_block()
+        _normalize_block(a.body[0].f)
         a.f.verify()
         self.assertEqual(a.f.src, 'def f() -> int:\n    i \\\n  ; \\\n  j')
 
         a = parse('''def f(a = """ a
 ...   # something """): i = 2''')
-        a.body[0].f._normalize_block()
+        _normalize_block(a.body[0].f)
         self.assertEqual(a.f.src, 'def f(a = """ a\n...   # something """):\n    i = 2')
 
     def test__elif_to_else_if(self):
