@@ -781,43 +781,6 @@ def _is_delimited_seq(self: fst.FST, field: str = 'elts', delims: str | tuple[st
     return ldelims > rdelims
 
 
-def _update_loc_up_parents(self: fst.FST, lineno: int, col_offset: int, end_lineno: int, end_col_offset: int) -> None:
-    """Change own location adn walk up parent chain changing any start or end locations which coincide with our own old
-    location to the new one."""
-
-    ast = self.a
-    old_lineno = ast.lineno
-    old_col_offset = ast.col_offset
-    old_end_lineno = ast.end_lineno
-    old_end_col_offset = ast.end_col_offset
-    ast.lineno = lineno
-    ast.col_offset = col_offset
-    ast.end_lineno = end_lineno
-    ast.end_col_offset = end_col_offset
-
-    self._touch()
-
-    while self := self.parent:
-        if (self_end_col_offset := getattr(a := self.a, 'end_col_offset', None)) is None:
-            break
-
-        if n := self_end_col_offset == old_end_col_offset and a.end_lineno == old_end_lineno:  # only change if matches old location
-            a.end_lineno = end_lineno
-            a.end_col_offset = end_col_offset
-
-        if a.col_offset == old_col_offset and a.lineno == old_lineno:
-            a.lineno = lineno
-            a.col_offset = col_offset
-
-        elif not n:
-            break
-
-        self._touch()
-
-    if self:
-        self._touchall(True)
-
-
 def _maybe_add_line_continuations(self: fst.FST, whole: bool = False, del_comments: bool = True) -> bool:
     """Check if `self` needs them and if so add line continuations to make parsable.
 
@@ -1108,96 +1071,6 @@ def _maybe_fix_tuple(self: fst.FST, is_par: bool | None = None) -> bool:
     return is_par
 
 
-def _maybe_fix_matchseq(self: fst.FST, delims: Literal['', '[]', '()'] | None = None) -> str:
-    # assert isinstance(self.a, MatchSequence)
-
-    if delims is None:
-        delims = self.is_delimited_matchseq()
-
-    if len(body := self.a.patterns) == 1 and not delims.startswith('['):
-        self._maybe_ins_separator((f := body[0].f).end_ln, f.end_col, False, self.end_ln, self.end_col - bool(delims))
-
-    if not delims:
-        return self._maybe_fix_undelimited_seq(body, '[]')
-
-    return delims
-
-
-def _maybe_fix_matchor(self: fst.FST, fix1: bool = False) -> None:
-    """Maybe fix a `MatchOr` object that may have the wrong location. Will do nothing to a zero-length `MatchOr` and
-    will convert a length 1 `MatchOr` to just its single element if `fix1=True`.
-
-    **WARNING!** This is currently expecting to be called from slice operations with specific conditions, not guaranteed
-    will work on any-old `MatchOr`.
-    """
-
-    # assert isinstance(self.a, MatchOr)
-
-    if not (patterns := self.a.patterns):
-        return
-
-    lines = self.root._lines
-    did_par = False
-
-    if not (is_root := self.is_root):  # if not root then it needs ot be fixed here
-        if not self.is_enclosed_or_line() and not self.is_enclosed_in_parents():
-            self._parenthesize_grouping()  # we do this instead or _sanitize() to keep any trivia, and we do it first to make sure we don't introduce any unenclosed newlines
-
-            did_par = True
-
-    if (len_patterns := len(patterns)) == 1 and fix1:
-        pat0 = patterns[0]
-
-        del patterns[0]
-
-        self._set_ast(pat0, True)
-
-    else:
-        ln, col, end_ln, end_col = patterns[0].f.pars()
-
-        if len_patterns > 1:
-            _, _, end_ln, end_col = patterns[-1].f.pars()
-
-        col_offset = lines[ln].c2b(col)
-        end_col_offset = lines[end_ln].c2b(end_col)
-
-        self._update_loc_up_parents(ln + 1, col_offset, end_ln + 1, end_col_offset)
-
-    if is_root:
-        if not self.is_enclosed_or_line() and not self.is_enclosed_in_parents():
-            self._parenthesize_grouping(False)
-
-            did_par = True
-
-    if not did_par:
-        self._maybe_fix_joined_alnum(*self.loc)
-
-
-def _maybe_fix_set(self: fst.FST, empty: bool | Literal['star', 'call'] = True) -> None:
-    # assert isinstance(self.a, Set)
-
-    if empty and not (a := self.a).elts:
-        if empty == 'call':
-            ast, src = _new_empty_set_call(a.lineno, a.col_offset, as_fst=False)
-        else:  # True, 'star'
-            ast, src = _new_empty_set_star(a.lineno, a.col_offset, as_fst=False)
-
-        ln, col, end_ln, end_col = self.loc
-
-        self._put_src(src, ln, col, end_ln, end_col, True)
-        self._set_ast(ast)
-
-
-def _maybe_fix_elif(self: fst.FST) -> None:
-    # assert isinstance(self.a, If)
-
-    ln, col, _, _ = self.loc
-    lines = self.root._lines
-
-    if lines[ln].startswith('elif', col):
-        self._put_src(None, ln, col, ln, col + 2, False)
-
-
 def _maybe_fix_with_items(self: fst.FST) -> None:
     """If `Tuple` only element in `items` then add appropriate parentheses."""
 
@@ -1212,6 +1085,16 @@ def _maybe_fix_with_items(self: fst.FST) -> None:
 
         if len(prev_delims(self.root._lines, self.ln, self.col, cef.ln, cef.col)) == 1:  # no pars between start of `with` and start of tuple?
             cef._parenthesize_grouping()  # these will wind up belonging to outer With
+
+
+def _maybe_fix_elif(self: fst.FST) -> None:
+    # assert isinstance(self.a, If)
+
+    ln, col, _, _ = self.loc
+    lines = self.root._lines
+
+    if lines[ln].startswith('elif', col):
+        self._put_src(None, ln, col, ln, col + 2, False)
 
 
 def _maybe_fix_copy(self: fst.FST, pars: bool = True, pars_walrus: bool = False) -> None:

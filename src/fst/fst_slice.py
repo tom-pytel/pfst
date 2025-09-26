@@ -582,6 +582,123 @@ def _maybe_fix_Assign_target0(self: fst.FST) -> None:
             self._put_src(None, self_ln, self_col, t0_ln, t0_col, False)
 
 
+def _maybe_fix_Set(self: fst.FST, empty: bool | Literal['star', 'call'] = True) -> None:
+    # assert isinstance(self.a, Set)
+
+    if empty and not (a := self.a).elts:
+        if empty == 'call':
+            ast, src = fst.FST._new_empty_set_call(a.lineno, a.col_offset, as_fst=False)
+        else:  # True, 'star'
+            ast, src = fst.FST._new_empty_set_star(a.lineno, a.col_offset, as_fst=False)
+
+        ln, col, end_ln, end_col = self.loc
+
+        self._put_src(src, ln, col, end_ln, end_col, True)
+        self._set_ast(ast)
+
+
+def _maybe_fix_MatchSequence(self: fst.FST, delims: Literal['', '[]', '()'] | None = None) -> str:
+    # assert isinstance(self.a, MatchSequence)
+
+    if delims is None:
+        delims = self.is_delimited_matchseq()
+
+    if len(body := self.a.patterns) == 1 and not delims.startswith('['):
+        self._maybe_ins_separator((f := body[0].f).end_ln, f.end_col, False, self.end_ln, self.end_col - bool(delims))
+
+    if not delims:
+        return self._maybe_fix_undelimited_seq(body, '[]')
+
+    return delims
+
+
+def _update_loc_up_parents(self: fst.FST, lineno: int, col_offset: int, end_lineno: int, end_col_offset: int) -> None:
+    """Change own location and walk up parent chain changing any start or end locations which coincide with our own old
+    location to the new one."""
+
+    ast = self.a
+    old_lineno = ast.lineno
+    old_col_offset = ast.col_offset
+    old_end_lineno = ast.end_lineno
+    old_end_col_offset = ast.end_col_offset
+    ast.lineno = lineno
+    ast.col_offset = col_offset
+    ast.end_lineno = end_lineno
+    ast.end_col_offset = end_col_offset
+
+    self._touch()
+
+    while self := self.parent:
+        if (self_end_col_offset := getattr(a := self.a, 'end_col_offset', None)) is None:
+            break
+
+        if n := self_end_col_offset == old_end_col_offset and a.end_lineno == old_end_lineno:  # only change if matches old location
+            a.end_lineno = end_lineno
+            a.end_col_offset = end_col_offset
+
+        if a.col_offset == old_col_offset and a.lineno == old_lineno:
+            a.lineno = lineno
+            a.col_offset = col_offset
+
+        elif not n:
+            break
+
+        self._touch()
+
+    if self:
+        self._touchall(True)
+
+
+def _maybe_fix_MatchOr(self: fst.FST, fix1: bool = False) -> None:
+    """Maybe fix a `MatchOr` object that may have the wrong location. Will do nothing to a zero-length `MatchOr` and
+    will convert a length 1 `MatchOr` to just its single element if `fix1=True`.
+
+    **WARNING!** This is currently expecting to be called from slice operations with specific conditions, not guaranteed
+    will work on any-old `MatchOr`.
+    """
+
+    # assert isinstance(self.a, MatchOr)
+
+    if not (patterns := self.a.patterns):
+        return
+
+    lines = self.root._lines
+    did_par = False
+
+    if not (is_root := self.is_root):  # if not root then it needs ot be fixed here
+        if not self.is_enclosed_or_line() and not self.is_enclosed_in_parents():
+            self._parenthesize_grouping()  # we do this instead or _sanitize() to keep any trivia, and we do it first to make sure we don't introduce any unenclosed newlines
+
+            did_par = True
+
+    if (len_patterns := len(patterns)) == 1 and fix1:
+        pat0 = patterns[0]
+
+        del patterns[0]
+
+        self._set_ast(pat0, True)
+
+    else:
+        ln, col, end_ln, end_col = patterns[0].f.pars()
+
+        if len_patterns > 1:
+            _, _, end_ln, end_col = patterns[-1].f.pars()
+
+        col_offset = lines[ln].c2b(col)
+        end_col_offset = lines[end_ln].c2b(end_col)
+
+        _update_loc_up_parents(self, ln + 1, col_offset, end_ln + 1, end_col_offset)
+
+    if is_root:
+        if not self.is_enclosed_or_line() and not self.is_enclosed_in_parents():
+            self._parenthesize_grouping(False)
+
+            did_par = True
+
+    if not did_par:
+        self._maybe_fix_joined_alnum(*self.loc)
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 # get
 
@@ -896,7 +1013,7 @@ def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop:
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
                           options.get('trivia'), 'elts', '{', '}', ',', 0, 0)
 
-    self._maybe_fix_set(self.get_option('fix_set_self', options))
+    _maybe_fix_Set(self, self.get_option('fix_set_self', options))
 
     return fst_
 
@@ -1300,9 +1417,9 @@ def _get_slice_MatchSequence_patterns(self: fst.FST, start: int | Literal['end']
                           options.get('trivia'), 'patterns', prefix, suffix, ',', tail_sep, tail_sep)
 
     if not delims:
-        fst_._maybe_fix_matchseq('')
+        _maybe_fix_MatchSequence(fst_, '')
 
-    self._maybe_fix_matchseq(delims)
+    _maybe_fix_MatchSequence(self, delims)
 
     return fst_
 
@@ -1372,8 +1489,8 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
                           options.get('trivia'), 'patterns', '', '', '|', False, False)
 
-    fst_._maybe_fix_matchor(bool(fix_matchor_get))
-    self._maybe_fix_matchor(bool(fix_matchor_self))
+    _maybe_fix_MatchOr(fst_, bool(fix_matchor_get))
+    _maybe_fix_MatchOr(self, bool(fix_matchor_self))
 
     return fst_
 
@@ -2102,7 +2219,7 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: Map
 
         elif isinstance(ast_, Set):
             if (empty := self.get_option('fix_set_self', options)):  # putting an invalid empty Set as one, make it valid according to options
-                fst_._maybe_fix_set(empty)
+                _maybe_fix_Set(fst_, empty)
 
         elif isinstance(ast_, NamedExpr):  # this needs to be parenthesized if being put to unparenthesized tuple
             if not fst_.pars().n and self.is_parenthesized_tuple() is False:
@@ -2505,7 +2622,7 @@ def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['
     _put_slice_seq_and_asts(self, start, stop, 'elts', body, fst_, 'elts', None,
                             bound_ln, bound_col, bound_end_ln, bound_end_col, ',', None, options)
 
-    self._maybe_fix_set(self.get_option('fix_set_self', options))
+    _maybe_fix_Set(self, self.get_option('fix_set_self', options))
 
 
 def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
@@ -2917,7 +3034,7 @@ def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: i
     _put_slice_seq_and_asts(self, start, stop, 'patterns', body, fst_, 'patterns', None,
                             bound_ln, bound_col, bound_end_ln, bound_end_col, ',', 0, options)
 
-    self._maybe_fix_matchseq(delims)
+    _maybe_fix_MatchSequence(self, delims)
 
 
 def _put_slice_MatchMapping(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
@@ -3002,7 +3119,7 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
 
     _put_slice_seq_end(self, end_params)
 
-    self._maybe_fix_matchor(fix_matchor_self)
+    _maybe_fix_MatchOr(self, fix_matchor_self)
 
 
 def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
