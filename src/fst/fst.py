@@ -1615,7 +1615,8 @@ class FST:
                 in `to` with the `code` passed.
 
         **Returns:**
-        - `FST | None`: Returns the new node if successfully replaced or `None` if deleted.
+        - `FST` or `None`: Returns the new node if successfully replaced or `None` if deleted or raw replace and
+            corresponding new node could not be found.
 
         **Examples:**
         ```py
@@ -1755,7 +1756,7 @@ class FST:
 
     def put(self, code: Code | builtins.str | constant | None, idx: int | Literal['end'] | None = None,
             stop: int | None | Literal[False] = False, field: builtins.str | None = None, *, one: bool = True,
-            **options) -> Self:
+            **options) -> Self | None:
         r"""Put an individual node or a slice of nodes to `self` if possible. This function can do everything that
         `put_slice()` can. The node is passed as an existing top-level `FST`, `AST`, string or list of string lines. If
         passed as an `FST` then it should be considered "consumed" after this function returns and is no logner valid,
@@ -1796,7 +1797,7 @@ class FST:
         is being gotten from `idx` and not a slice.
 
         **Returns:**
-        - `self`
+        - `self` or `None` if a raw put was done and corresponding new node could not be found.
 
         **Examples:**
         ```py
@@ -1920,7 +1921,7 @@ class FST:
         return self._get_slice(start, stop, field_, cut, options)
 
     def put_slice(self, code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
-                  field: builtins.str | None = None, *, one: bool = False, **options) -> Self:
+                  field: builtins.str | None = None, *, one: bool = False, **options) -> Self | None:
         r"""Put a slice of nodes to `self` if possible.  The node is passed as an existing top-level `FST`, `AST`, string
         or list of string lines. If passed as an `FST` then it should be considered "consumed" after this function
         returns and is no logner valid, even on failure. `AST` is copied.
@@ -1947,7 +1948,7 @@ class FST:
         `start` to the end of the range.
 
         **Returns:**
-        - `self`
+        - `self` or `None` if a raw put was done and corresponding new node could not be found.
 
         **Examples:**
         ```py

@@ -1200,7 +1200,7 @@ def _touchall(self: fst.FST, parents: bool = False, self_: bool = True, children
         while stack:
             child = stack.pop()
 
-            child.f._touch()
+            child.f._cache.clear()  # child.f._touch()
             stack.extend(iter_child_nodes(child))
 
     elif self_:
@@ -1210,7 +1210,7 @@ def _touchall(self: fst.FST, parents: bool = False, self_: bool = True, children
         parent = self
 
         while parent := parent.parent:
-            parent._touch()
+            parent._cache.clear()  # parent._touch()
 
     return self
 
