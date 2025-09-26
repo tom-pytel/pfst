@@ -103,7 +103,7 @@ from .locations import (
     loc_Global_Nonlocal_names,
 )
 
-from .fst_misc import _ParamsOffset
+from .fst_core import _ParamsOffset
 from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish
 
 
@@ -601,7 +601,7 @@ def _maybe_fix_MatchSequence(self: fst.FST, delims: Literal['', '[]', '()'] | No
     # assert isinstance(self.a, MatchSequence)
 
     if delims is None:
-        delims = self.is_delimited_matchseq()
+        delims = self._is_delimited_matchseq()
 
     if len(body := self.a.patterns) == 1 and not delims.startswith('['):
         self._maybe_ins_separator((f := body[0].f).end_ln, f.end_col, False, self.end_ln, self.end_col - bool(delims))
@@ -666,7 +666,7 @@ def _maybe_fix_MatchOr(self: fst.FST, fix1: bool = False) -> None:
     did_par = False
 
     if not (is_root := self.is_root):  # if not root then it needs ot be fixed here
-        if not self.is_enclosed_or_line() and not self.is_enclosed_in_parents():
+        if not self._is_enclosed_or_line() and not self._is_enclosed_in_parents():
             self._parenthesize_grouping()  # we do this instead or _sanitize() to keep any trivia, and we do it first to make sure we don't introduce any unenclosed newlines
 
             did_par = True
@@ -690,7 +690,7 @@ def _maybe_fix_MatchOr(self: fst.FST, fix1: bool = False) -> None:
         _update_loc_up_parents(self, ln + 1, col_offset, end_ln + 1, end_col_offset)
 
     if is_root:
-        if not self.is_enclosed_or_line() and not self.is_enclosed_in_parents():
+        if not self._is_enclosed_or_line() and not self._is_enclosed_in_parents():
             self._parenthesize_grouping(False)
 
             did_par = True
@@ -1126,7 +1126,7 @@ def _get_slice_With_AsyncWith_items(self: fst.FST, start: int | Literal['end'] |
                           options.get('trivia'), 'items', '', '', ',', False, False)
 
     if cut and not pars_n:  # only need to fix maybe if there are no parentheses
-        if not self.is_enclosed_or_line(pars=False):  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
+        if not self._is_enclosed_or_line(pars=False):  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
             pars_ln, pars_col, pars_end_ln, pars_end_col = loc_With_items_pars(self)  # will just give where pars should go (because maybe something like `async \\\n\\\n   with ...`)
 
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, False)
@@ -1216,7 +1216,7 @@ def _get_slice_ImportFrom_names(self: fst.FST, start: int | Literal['end'] | Non
         if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
             _maybe_set_end_pos(self, (bn := body[-1]).end_lineno, bn.end_col_offset, ast.end_lineno, ast.end_col_offset)
 
-        if not self.is_enclosed_or_line(pars=False):  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
+        if not self._is_enclosed_or_line(pars=False):  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
             pars_ln, pars_col, pars_end_ln, pars_end_col = loc_ImportFrom_names_pars(self)
 
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, True, False, self)
@@ -1362,7 +1362,7 @@ def _get_slice_Call_args(self: fst.FST, start: int | Literal['end'] | None, stop
     else:
         self_tail_sep = None
 
-        if body and (f0 := body[0].f).is_solo_call_arg_genexp() and f0.pars(shared=False).n == -1:  # single call argument GeneratorExp shares parentheses with Call?
+        if body and (f0 := body[0].f)._is_solo_call_arg_genexp() and f0.pars(shared=False).n == -1:  # single call argument GeneratorExp shares parentheses with Call?
             f0._parenthesize_grouping()
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = loc_Call_pars(self)
@@ -1400,7 +1400,7 @@ def _get_slice_MatchSequence_patterns(self: fst.FST, start: int | Literal['end']
         return fst.FST(MatchSequence(patterns=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
                        ['[]'], from_=self)
 
-    delims = self.is_delimited_matchseq()
+    delims = self._is_delimited_matchseq()
     locs = _locs_and_bound_get(self, start, stop, body, body, bool(delims))
     asts = _cut_or_copy_asts(start, stop, 'patterns', cut, body)
     ret_ast = MatchSequence(patterns=asts)
@@ -1745,7 +1745,7 @@ def _put_slice_seq_begin(self: fst.FST, start: int, stop: int, fst_: fst.FST | N
     is_del = fst_ is None
     is_ins = start == stop  # will never be true if fst_ is None
     is_ins_ln = False
-    self_indent = self.get_indent()
+    self_indent = self._get_indent()
     elts_indent_cached = ...  # cached value, ... means not present
     bound_end_col_offset = lines[bound_end_ln].c2b(bound_end_col)
 
@@ -2211,7 +2211,7 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: Map
         one = True
 
     if one:
-        if (is_par := fst_.is_parenthesized_tuple()) is not None:
+        if (is_par := fst_._is_parenthesized_tuple()) is not None:
             fst_._maybe_add_singleton_tuple_comma(is_par)  # specifically for lone '*starred' without comma from slices, even though those can't be gotten alone organically
 
             if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
@@ -2222,7 +2222,7 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: Map
                 _maybe_fix_Set(fst_, empty)
 
         elif isinstance(ast_, NamedExpr):  # this needs to be parenthesized if being put to unparenthesized tuple
-            if not fst_.pars().n and self.is_parenthesized_tuple() is False:
+            if not fst_.pars().n and self._is_parenthesized_tuple() is False:
                 fst_._parenthesize_grouping()
 
         elif isinstance(ast_, (Yield, YieldFrom)):  # these need to be parenthesized definitely
@@ -2230,14 +2230,14 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: Map
                 fst_._parenthesize_grouping()
 
         ast_ = Tuple(elts=[fst_.a], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),  # fst_.a because may have changed in Set processing
-                     end_col_offset=ls[-1].lenbytes)  # Tuple because it is valid target if checked in validate and allows is_enclosed_or_line() check without delimiters to check content
+                     end_col_offset=ls[-1].lenbytes)  # Tuple because it is valid target if checked in validate and allows _is_enclosed_or_line() check without delimiters to check content
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
     if fix_set_put := self.get_option('fix_set_put', options):
-        if (fst_.is_empty_set_star() if fix_set_put == 'star' else
-            fst_.is_empty_set_call() if fix_set_put == 'call' else
-            fst_.is_empty_set_star() or fst_.is_empty_set_call()  # True or 'both'
+        if (fst_._is_empty_set_star() if fix_set_put == 'star' else
+            fst_._is_empty_set_call() if fix_set_put == 'call' else
+            fst_._is_empty_set_star() or fst_._is_empty_set_call()  # True or 'both'
         ):
             return None
 
@@ -2248,7 +2248,7 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: Map
     if not ast_.elts:  # put empty sequence is same as delete
         return None
 
-    if fst_.is_parenthesized_tuple() is not False:  # anything that is not an unparenthesize tuple is restricted to the inside of the delimiters, which are removed
+    if fst_._is_parenthesized_tuple() is not False:  # anything that is not an unparenthesize tuple is restricted to the inside of the delimiters, which are removed
         _trim_delimiters(fst_)
     else:  # if unparenthesized tuple then use whole source, including leading and trailing trivia not included
         _set_loc_whole(fst_)
@@ -2355,7 +2355,7 @@ def _code_to_slice_expr_arglikes(self: fst.FST, code: Code | None, one: bool, op
     if one:
         fst_ = code_as_expr_arglike(code, self.root.parse_params, sanitize=False)
 
-        if fst_.is_parenthesized_tuple() is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
+        if fst_._is_parenthesized_tuple() is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
             fst_._delimit_node()
 
         ast_ = Tuple(elts=[fst_.a], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
@@ -2368,7 +2368,7 @@ def _code_to_slice_expr_arglikes(self: fst.FST, code: Code | None, one: bool, op
     if not fst_.a.elts:  # put empty sequence is same as delete
         return None
 
-    if fst_.is_parenthesized_tuple() is not False:  # parenthesize tuple is restricted to the inside of the delimiters, which are removed
+    if fst_._is_parenthesized_tuple() is not False:  # parenthesize tuple is restricted to the inside of the delimiters, which are removed
         _trim_delimiters(fst_)
     else:  # if unparenthesized tuple then use whole source, including leading and trailing trivia not included
         _set_loc_whole(fst_)
@@ -2384,7 +2384,7 @@ def _code_to_slice_MatchSequence(self: fst.FST, code: Code | None, one: bool, op
     fst_ = code_as_pattern(code, self.root.parse_params, sanitize=False)
 
     if one:
-        if fst_.is_delimited_matchseq() == '':
+        if fst_._is_delimited_matchseq() == '':
             fst_._delimit_node(delims='[]')
 
         ast_ = MatchSequence(patterns=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
@@ -2401,7 +2401,7 @@ def _code_to_slice_MatchSequence(self: fst.FST, code: Code | None, one: bool, op
     if not ast_.patterns:  # put empty sequence is same as delete
         return None
 
-    if fst_.is_delimited_matchseq():  # delimited is restricted to the inside of the delimiters, which are removed
+    if fst_._is_delimited_matchseq():  # delimited is restricted to the inside of the delimiters, which are removed
         _trim_delimiters(fst_)
     else:  # if undelimited then use whole source, including leading and trailing trivia not included
         _set_loc_whole(fst_)
@@ -2454,7 +2454,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
                 fst_._parenthesize_grouping()
 
         elif isinstance(ast_, MatchSequence):
-            if not fst_.is_delimited_matchseq():
+            if not fst_._is_delimited_matchseq():
                 fst_._delimit_node(delims='[]')
 
     ast_ = MatchOr(patterns=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
@@ -2709,7 +2709,7 @@ def _put_slice_With_AsyncWith_items(self: fst.FST, code: Code | None, start: int
                             pars_ln, pars_col + pars_n, pars_end_ln, pars_end_col - pars_n, ',', False, options)
 
     if not pars_n:  # only need to fix maybe if there are no parentheses
-        if not self.is_enclosed_or_line(pars=False):  # if no parentheses and wound up not valid for parse then adding parentheses around items should fix
+        if not self._is_enclosed_or_line(pars=False):  # if no parentheses and wound up not valid for parse then adding parentheses around items should fix
             pars_ln, pars_col, pars_end_ln, pars_end_col = loc_With_items_pars(self)
 
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, False)
@@ -2798,7 +2798,7 @@ def _put_slice_ImportFrom_names(self: fst.FST, code: Code | None, start: int | L
                 _maybe_set_end_pos(self, pars_ln + 1, self.root._lines[pars_ln].c2b(pars_col),
                                    ast.end_lineno, ast.end_col_offset)
 
-        if not self.is_enclosed_or_line(pars=False):  # if no parentheses and wound up not valid for parse then adding parentheses around names should fix
+        if not self._is_enclosed_or_line(pars=False):  # if no parentheses and wound up not valid for parse then adding parentheses around names should fix
             pars_ln, pars_col, pars_end_ln, pars_end_col = loc_ImportFrom_names_pars(self)
 
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, True, False, self)
@@ -2999,7 +2999,7 @@ def _put_slice_Call_args(self: fst.FST, code: Code | None, start: int | Literal[
             raise NodeError('cannot get this Call.args slice because it includes parts after a keyword')
 
     else:
-        if body and (f0 := body[0].f).is_solo_call_arg_genexp() and f0.pars(shared=False).n == -1:  # single call argument GeneratorExp shares parentheses with Call?
+        if body and (f0 := body[0].f)._is_solo_call_arg_genexp() and f0.pars(shared=False).n == -1:  # single call argument GeneratorExp shares parentheses with Call?
             f0._parenthesize_grouping()
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = loc_Call_pars(self)
@@ -3027,7 +3027,7 @@ def _put_slice_MatchSequence_patterns(self: fst.FST, code: Code | None, start: i
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    if delims := self.is_delimited_matchseq():
+    if delims := self._is_delimited_matchseq():
         bound_col += 1
         bound_end_col -= 1
 
@@ -3446,7 +3446,7 @@ def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end']
         fst_ = ast.f
 
         if one:
-            if (is_par_tup := fst_.is_parenthesized_tuple()) is None:  # only need to parenthesize this, others are already enclosed
+            if (is_par_tup := fst_._is_parenthesized_tuple()) is None:  # only need to parenthesize this, others are already enclosed
                 if isinstance(ast, MatchSequence) and not fst_._is_delimited_seq('patterns'):
                     fst_._parenthesize_grouping()
 
@@ -3457,7 +3457,7 @@ def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end']
               (is_match := isinstance(ast, (MatchSequence, MatchMapping))) or
               isinstance(ast, (Tuple, List, Set))
         ):
-            if not ((is_par_tup := fst_.is_parenthesized_tuple()) is False or  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence
+            if not ((is_par_tup := fst_._is_parenthesized_tuple()) is False or  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence
                     (is_par_tup is None and isinstance(ast, MatchSequence) and
                      not fst_._is_delimited_seq('patterns'))
             ):

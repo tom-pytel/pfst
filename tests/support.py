@@ -255,7 +255,7 @@ class PutCases(GetPutCases):  # TODO: maybe automatically test 'raw' here?
                     rest.append(f'**{_san_exc(exc)!r}**')
 
                 else:
-                    is_special_slice = h.is_special_slice()
+                    is_special_slice = h._is_special_slice()
 
                     a = copy_ast(h.a)
                     k = _make_fst(code, attr)

@@ -196,7 +196,7 @@ def _maybe_fix_With_items(self: fst.FST) -> None:
 
     if (len(items := self.items) == 1 and
         not (i0a := items[0].a).optional_vars and
-        (is_par := (cef := i0a.context_expr.f).is_parenthesized_tuple()) is not None
+        (is_par := (cef := i0a.context_expr.f)._is_parenthesized_tuple()) is not None
     ):
         if not is_par:
             cef._delimit_node()
@@ -251,7 +251,7 @@ def _maybe_fix_copy(self: fst.FST, pars: bool = True, pars_walrus: bool = False)
             need_pars = pars_walrus
 
         if need_pars is None:
-            need_pars = not self.is_enclosed_or_line()
+            need_pars = not self._is_enclosed_or_line()
 
         if need_pars:
             if is_tuple:
@@ -487,7 +487,7 @@ def _get_one_JoinedStr_TemplateStr_values(self: fst.FST, idx: int | None, field:
 
         # ret._touch()
 
-        # if indent := childf.get_indent():
+        # if indent := childf._get_indent():
         #     ret._dedent_lns(indent, skip=1, docstr=options.get('docstr'))
 
     else:
@@ -1163,7 +1163,7 @@ def _make_exprish_fst(self: fst.FST, code: _PutOneCode, idx: int | None, field: 
     del_tgt_pars = False
 
     def need_pars(adding: bool) -> bool:
-        if not put_fst.is_atom(pars=False):
+        if not put_fst._is_atom(pars=False):
             if not put_is_star:
                 if precedence_require_parens(put_ast, self.a, field, idx):
                     return True
@@ -1177,7 +1177,7 @@ def _make_exprish_fst(self: fst.FST, code: _PutOneCode, idx: int | None, field: 
               (tgt_parent := target.parent) and isinstance(tgt_parent.a, Attribute)):
             return True
 
-        if not self.is_enclosed_in_parents(field) and not put_fst.is_enclosed_or_line(pars=adding):
+        if not self._is_enclosed_in_parents(field) and not put_fst._is_enclosed_or_line(pars=adding):
             return True
 
         if isinstance(put_ast, Lambda):  # Lambda inside FormattedValue/Interpolation needs pars
@@ -1191,7 +1191,7 @@ def _make_exprish_fst(self: fst.FST, code: _PutOneCode, idx: int | None, field: 
 
                     break
 
-                if s.is_atom(pars=True, always_enclosed=True):
+                if s._is_atom(pars=True, always_enclosed=True):
                     break
 
                 if not (f := s.pfield):
@@ -1212,7 +1212,7 @@ def _make_exprish_fst(self: fst.FST, code: _PutOneCode, idx: int | None, field: 
 
         else:  # src does not have grouping pars
             if ((tgt_has_pars := tgt_is_FST and getattr(target.pars(), 'n', 0)) and
-                put_fst.is_parenthesized_tuple() is False
+                put_fst._is_parenthesized_tuple() is False
             ):
                 del_tgt_pars = True
                 tgt_has_pars = False
@@ -1234,7 +1234,7 @@ def _make_exprish_fst(self: fst.FST, code: _PutOneCode, idx: int | None, field: 
     else:
         loc = target.pars(shared=False) if del_tgt_pars else target.loc
 
-        if not del_tgt_pars and target.is_solo_call_arg_genexp():  # need to check this otherwise might eat Call args pars
+        if not del_tgt_pars and target._is_solo_call_arg_genexp():  # need to check this otherwise might eat Call args pars
             if (loc2 := target.pars(shared=False)) > loc:
                 loc = loc2
 
@@ -1255,7 +1255,7 @@ def _make_exprish_fst(self: fst.FST, code: _PutOneCode, idx: int | None, field: 
     if suffix:
         put_lines[-1] = bistr(put_lines[-1] + suffix)  # don't need to offset anything so just tack onto the end
 
-    put_fst._indent_lns(self.get_indent(), docstr=options.get('docstr'))
+    put_fst._indent_lns(self._get_indent(), docstr=options.get('docstr'))
 
     dcol_offset = lines[ln].c2b(col) + merge_alnum_start
     end_col_offset = lines[end_ln].c2b(end_col)
@@ -1436,7 +1436,7 @@ def _put_one_ImportFrom_names(self: fst.FST, code: _PutOneCode, idx: int | None,
         if pars.n:
             self._put_src('*', *pars, False)
 
-    elif not pars.n and not self.is_enclosed_or_line(pars=False):  # otherwise if need them then add
+    elif not pars.n and not self._is_enclosed_or_line(pars=False):  # otherwise if need them then add
         ln, col, end_ln, end_col = pars
 
         self._put_src(')', end_ln, end_col, end_ln, end_col, True, False, self)
@@ -1564,7 +1564,7 @@ def _put_one_Attribute_value(self: fst.FST, code: _PutOneCode, idx: int | None, 
             break
 
         if isinstance(parenta, pattern):
-            if code.end_ln != code.ln and not above.is_enclosed_in_parents():
+            if code.end_ln != code.ln and not above._is_enclosed_in_parents():
                 raise NodeError(f'cannot put multiline {above.a.__class__.__name__} to uneclosed pattern expression',
                                 rawable=True)
 
@@ -1616,7 +1616,7 @@ def _put_one_Subscript_slice(self: fst.FST, code: _PutOneCode, idx: int | None, 
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params)
 
-    if code.is_parenthesized_tuple() is False and any(isinstance(a, Starred) for a in code.a.elts):
+    if code._is_parenthesized_tuple() is False and any(isinstance(a, Starred) for a in code.a.elts):
         raise NodeError('cannot have unparenthesized tuple containing Starred in slice', rawable=True)
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
@@ -1691,7 +1691,7 @@ def _put_one_Dict_keys(self: fst.FST, code: _PutOneCode, idx: int | None, field:
 
     ret = _put_one_exprish_optional(self, code, idx, field, child, static, options)
 
-    if (code is None and not (value := (a := self.a).values[idx].f).is_atom() and
+    if (code is None and not (value := (a := self.a).values[idx].f)._is_atom() and
         precedence_require_parens(value.a, a, 'values',  idx)
     ):
         value._parenthesize_grouping()
@@ -1777,7 +1777,7 @@ def _put_one_MatchAs_pattern(self: fst.FST, code: _PutOneCode, idx: int | None, 
         if isinstance(code.a, MatchStar):
             raise NodeError('cannot put a MatchStar to MatchAs.pattern', rawable=True)
 
-        if code.is_delimited_matchseq() == '':
+        if code._is_delimited_matchseq() == '':
             code._delimit_node(delims='[]')
 
     return _put_one_exprish_optional(self, code, idx, field, child, static, options, 2)
@@ -1794,7 +1794,7 @@ def _put_one_pattern(self: fst.FST, code: _PutOneCode, idx: int | None, field: s
         if not isinstance(self.a, MatchSequence):
             raise NodeError(f'cannot put a MatchStar to {self.a.__class__.__name__}.{field}', rawable=True)
 
-    elif code.is_delimited_matchseq() == '':
+    elif code._is_delimited_matchseq() == '':
         code._delimit_node(delims='[]')
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
@@ -1863,7 +1863,7 @@ def _put_one_ExceptHandler_name(self: fst.FST, code: _PutOneCode, idx: int | Non
 
     ret = _put_one_identifier_optional(self, code, idx, field, child, static, options)
 
-    if ret and (typef := self.a.type.f).is_parenthesized_tuple() is False:
+    if ret and (typef := self.a.type.f)._is_parenthesized_tuple() is False:
         typef._delimit_node()
 
     return ret
@@ -2075,7 +2075,7 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
             else:
                 loc = childf.pars(shared=False) if pars else childf.bloc
 
-                if (loc and not pars and childf.is_solo_call_arg_genexp() and  # if loc includes `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
+                if (loc and not pars and childf._is_solo_call_arg_genexp() and  # if loc includes `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
                     (non_shared_loc := childf.pars(shared=False)) > loc
                 ):
                     loc = non_shared_loc
@@ -2115,7 +2115,7 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
                 else:
                     raise ValueError("'to' node must have a location")
 
-            if not pars and to.is_solo_call_arg_genexp() and (non_shared_loc := to.pars(shared=False)) > to_loc:
+            if not pars and to._is_solo_call_arg_genexp() and (non_shared_loc := to.pars(shared=False)) > to_loc:
                 to_loc = non_shared_loc
 
         if to_loc[:2] < loc[:2]:

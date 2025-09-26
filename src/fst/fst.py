@@ -46,32 +46,26 @@ from .asttypes import (
     Import,
     ImportFrom,
     Interactive,
-    IsNot,
     JoinedStr,
     Lambda,
     List,
     ListComp,
-    Load,
     Match,
     MatchAs,
-    MatchClass,
     MatchMapping,
     MatchOr,
     MatchSequence,
     MatchSingleton,
-    MatchStar,
     MatchValue,
     Module,
     Name,
     NamedExpr,
     Nonlocal,
-    NotIn,
     Pass,
     Raise,
     Return,
     Set,
     SetComp,
-    Slice,
     Starred,
     Subscript,
     Try,
@@ -88,7 +82,6 @@ from .asttypes import (
     cmpop,
     comprehension,
     expr,
-    expr_context,
     keyword,
     match_case,
     mod,
@@ -99,8 +92,6 @@ from .asttypes import (
     withitem,
     TryStar,
     TypeAlias,
-    type_ignore,
-    type_param,
     TemplateStr,
     Interpolation,
     _slice_Assign_targets,
@@ -110,27 +101,21 @@ from .asttypes import (
 )
 
 from .astutil import (
-    bistr, constant, FIELDS, AST_FIELDS, OPCLS2STR, OPSTR2CLS_AUG, WalkFail,
+    bistr, constant, FIELDS, AST_FIELDS, OPCLS2STR, WalkFail,
     has_type_comments, compare_asts, copy_ast, last_block_header_child, syntax_ordered_children,
 )
 
 from .misc import (
     PYLT13,
     astfield, fstloc, fstlocns, nspace,
-    re_empty_line, re_line_continuation, re_line_end_cont_or_comment,
     Self,
-    next_frag, next_find, next_delims, prev_delims,
-    multiline_str_continuation_lns, multiline_fstr_continuation_lns, continuation_to_uncontinued_lns,
+    next_delims, prev_delims,
 )
 
-from .parsex import Mode, get_special_parse_mode
+from .parsex import Mode
 from .code import Code, code_as_all
 
-from .locations import (
-    loc_arguments, loc_comprehension, loc_withitem, loc_match_case, loc_operator,
-    loc_Call_pars, loc_Subscript_brackets, loc_ImportFrom_names_pars, loc_With_items_pars, loc_MatchClass_pars,
-)
-
+from .locations import loc_arguments, loc_comprehension, loc_withitem, loc_match_case, loc_operator
 from .traverse import AST_FIELDS_NEXT, AST_FIELDS_PREV, next_bound, prev_bound, check_with_loc
 from .view import fstview
 from .reconcile import Reconcile
@@ -742,23 +727,23 @@ class FST:
             for a in ast_or_src.body:
                 if isinstance(a, (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, ExceptHandler,
                                   match_case)):  # we check ExceptHandler and match_case because they may be supported as standalone parsed elements eventually
-                    indent = a.body[0].f.get_indent()
+                    indent = a.body[0].f._get_indent()
 
                 elif isinstance(a, (For, AsyncFor, While, If)):
-                    if (indent := a.body[0].f.get_indent()) == '?' and (orelse := a.orelse):
-                        if not (indent := orelse[0].f.get_indent()):  # because can be 'elif'
+                    if (indent := a.body[0].f._get_indent()) == '?' and (orelse := a.orelse):
+                        if not (indent := orelse[0].f._get_indent()):  # because can be 'elif'
                             indent = '?'
 
                 elif isinstance(a, (Try, TryStar)):
-                    if (indent := a.body[0].f.get_indent()) == '?':
-                        if not (orelse := a.orelse) or (indent := orelse[0].f.get_indent()) == '?':
-                            if not (finalbody := a.finalbody) or (indent := finalbody[0].f.get_indent()) == '?':
+                    if (indent := a.body[0].f._get_indent()) == '?':
+                        if not (orelse := a.orelse) or (indent := orelse[0].f._get_indent()) == '?':
+                            if not (finalbody := a.finalbody) or (indent := finalbody[0].f._get_indent()) == '?':
                                 for handler in a.handlers:
-                                    if (indent := handler.body[0].f.get_indent()) != '?':
+                                    if (indent := handler.body[0].f._get_indent()) != '?':
                                         break
 
                 elif isinstance(a, Match):
-                    indent = a.cases[0].f.get_indent()
+                    indent = a.cases[0].f._get_indent()
 
                 else:
                     continue
@@ -874,7 +859,8 @@ class FST:
           .body[1]
           0] Pass - 0,13..0,17
 
-        >>> FST.fromsrc('a:b', Slice).dump()
+        >>> import ast
+        >>> FST.fromsrc('a:b', ast.Slice).dump()
         Slice - ROOT 0,0..0,3
           .lower Name 'a' Load - 0,0..0,1
           .upper Name 'b' Load - 0,2..0,3
@@ -1443,7 +1429,7 @@ class FST:
         parse_params = self.parse_params
 
         try:
-            astp = parsex.parse(self.src, mode or self.get_parse_mode(), parse_params=parse_params)
+            astp = parsex.parse(self.src, mode or self._get_parse_mode(), parse_params=parse_params)
 
         except SyntaxError:
             if raise_:
@@ -2223,7 +2209,7 @@ class FST:
         else:
             return cached
 
-        if not self.is_parenthesizable() and shared is not None:
+        if not self._is_parenthesizable() and shared is not None:
             self._cache[key] = locn = None if (l := self.bloc) is None else fstlocns(l[0], l[1], l[2], l[3], n=0)
 
             return locn
@@ -2233,7 +2219,7 @@ class FST:
         rpars = next_delims(self.root._lines, end_ln, end_col, *next_bound(self))
 
         if (lrpars := len(rpars)) == 1:  # no pars on right
-            if not shared and self.is_solo_call_arg_genexp():
+            if not shared and self._is_solo_call_arg_genexp():
                 locn = fstlocns(ln, col + 1, end_ln, end_col - 1, n=-1)
             else:
                 locn = fstlocns(ln, col, end_ln, end_col, n=0)
@@ -2250,7 +2236,7 @@ class FST:
             return locn
 
         if (llpars <= lrpars and shared is not None and
-            (self.is_solo_call_arg() or self.is_solo_class_base() or self.is_solo_matchcls_pat())
+            (self._is_solo_call_arg() or self._is_solo_class_base() or self._is_solo_matchcls_pat())
         ):
             llpars -= 1
 
@@ -2265,9 +2251,9 @@ class FST:
 
     def par(self, force: bool = False, *, whole: bool = True) -> Self:
         """Parenthesize node if it MAY need it. Will not parenthesize atoms which are always enclosed like `List`, or
-        nodes which are not `is_parenthesizable()`, unless `force=True`. Will add parentheses to unparenthesized `Tuple`
-        and brackets to unbracketed `MatchSequence` adjusting the node location. If dealing with a `Starred` then the
-        parentheses are applied to the child.
+        nodes which are not `_is_parenthesizable()`, unless `force=True`. Will add parentheses to unparenthesized
+        `Tuple` and brackets to unbracketed `MatchSequence` adjusting the node location. If dealing with a `Starred`
+        then the parentheses are applied to the child.
 
         **WARNING!** This function doesn't do any higher level syntactic validation. So if you parenthesize something
         that shouldn't be parenthesized, and you wind up poking an eye out, that's on you.
@@ -2312,22 +2298,22 @@ class FST:
         """
 
         if not force:
-            if (not self.is_parenthesizable() or (is_atom := self.is_atom()) in (True, 'pars') or
+            if (not self._is_parenthesizable() or (is_atom := self._is_atom()) in (True, 'pars') or
                 ((is_atom or
-                  (isinstance(self.a, Starred) and self.a.value.f.is_atom() in (True, 'pars'))) and
-                 self.is_enclosed_or_line())  # is_enclosed_or_line() can return 'unenclosable'
+                  (isinstance(self.a, Starred) and self.a.value.f._is_atom() in (True, 'pars'))) and
+                 self._is_enclosed_or_line())  # _is_enclosed_or_line() can return 'unenclosable'
             ):
                 return self
 
         with self._modifying():
             if isinstance(self.a, Tuple):
-                if not (force and self.is_parenthesized_tuple()):
+                if not (force and self._is_parenthesized_tuple()):
                     self._delimit_node(whole)
 
                     return self
 
             elif isinstance(self.a, MatchSequence):
-                if not (force and self.is_delimited_matchseq()):
+                if not (force and self._is_delimited_matchseq()):
                     self._delimit_node(whole, '[]')
 
                     return self
@@ -2433,7 +2419,7 @@ class FST:
         return self  # ret
 
     # ------------------------------------------------------------------------------------------------------------------
-    # Structure stuff
+    # Traverse
 
     def next(self, with_loc: bool | Literal['all', 'own'] = True) -> FST | None:  # TODO: refactor
         """Get next sibling of `self` in syntactic order, only within parent.
@@ -4212,966 +4198,68 @@ class FST:
                 return None
 
     # ------------------------------------------------------------------------------------------------------------------
-    # Low level
+    # Private
 
-    def get_indent(self) -> builtins.str:
-        r"""Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
-        continuation or on same line as block header. If indentation is impossible to determine because is solo
-        statement on same line as parent block then the current tree default indentation is added to the parent block
-        indentation and returned.
-
-        **Returns:**
-        - `str`: Entire indentation string for the block this node lives in (not just a single level).
-
-        **Examples:**
-        ```py
-        >>> FST('i = 1').get_indent()
-        ''
-
-        >>> FST('if 1:\n  i = 1').body[0].get_indent()
-        '  '
-
-        >>> FST('if 1: i = 1').body[0].get_indent()
-        '    '
-
-        >>> FST('if 1: i = 1; j = 2').body[1].get_indent()
-        '    '
-
-        >>> FST('if 1:\n  i = 1\n  j = 2').body[1].get_indent()
-        '  '
-
-        >>> FST('if 2:\n    if 1:\n      i = 1\n      j = 2').body[0].body[1].get_indent()
-        '      '
-
-        >>> FST('if 1:\n\\\n  i = 1').body[0].get_indent()
-        '  '
-
-        >>> FST('if 1:\n \\\n  i = 1').body[0].get_indent()
-        ' '
-        ```
-        """
-
-        while (parent := self.parent) and not isinstance(self.a, ASTS_STMTISH):
-            self = parent
-
-        root = self.root
-        lines = root._lines
-        indent = ''
-
-        while parent:
-            f = getattr(parent.a, self.pfield.name)[0].f
-            ln, col, _, _ = f.loc
-            prev = f.prev(True)  # there may not be one ("try" at start of module)
-            prev_end_ln = prev.end_ln if prev else -2  # -2 so it never hits it
-            good_line = ''
-
-            while ln > prev_end_ln and re_empty_line.match(line_start := lines[ln], 0, col):
-                end_col = 0 if (preceding_ln := ln - 1) != prev_end_ln else prev.end_col
-
-                if not ln or not re_line_continuation.match((l := lines[preceding_ln]), end_col):
-                    return (line_start[:col] if col else good_line) + indent
-
-                if col:  # we do this to skip backslashes at the start of line as those are just a noop
-                    good_line = line_start[:col]
-
-                ln = preceding_ln
-                col = len(l) - 1  # was line continuation so last char is '\' and rest should be empty
-
-            indent += root.indent
-            self = parent
-            parent = self.parent
-
-        return indent
-
-    def get_parse_mode(self) -> builtins.str | type[AST] | None:
-        r"""Determine the parse mode for this node. This is the extended parse mode as per `Mode`, not the `ast.parse()`
-        mode. Returns a mode which is guaranteed to reparse this element (which may be a SPECIAL SLICE) to an exact copy
-        of itself. This mode is not guaranteed to be the same as was used to create the `FST`, just guaranteed to be
-        able to recreate it. Mostly it just returns the `AST` type, but in cases where that won't parse to this `FST` it
-        will return a string mode. This is a quick just a check, doesn't verify everything.
-
-        **Returns:**
-        - `str`: One of the special text specifiers. Will be returned for most slices and special cases like an `*a`
-            inside a `.slice` which is actually a `Tuple`, or a SPECIAL SLICE like `Assign.targets.copy()`.
-        - `type[AST]`: Will be returned for nodes which can be reparsed correctly using only the `AST` type.
-        - `None`: If invalid or cannot be determined.
-
-        **Examples:**
-        ```py
-        >>> FST('a | b').get_parse_mode()
-        <class 'ast.BinOp'>
-
-        >>> FST('a | b', 'pattern').get_parse_mode()
-        <class 'ast.MatchOr'>
-
-        >>> FST('except ValueError: pass\nexcept: pass', 'ExceptHandlers').get_parse_mode()
-        'ExceptHandlers'
-        ```
-        """
-
-        ast = self.a
-
-        if mode := get_special_parse_mode(ast):
-            return mode
-
-        # now we check the cases that need source code
-
-        if isinstance(ast, Tuple) and (elts := ast.elts):
-            if isinstance(e0 := elts[0], Starred):
-                if len(elts) == 1:
-                    _, _, ln, col = e0.f.loc
-                    _, _, end_ln, end_col = self.loc
-
-                    if not next_find(self.root._lines, ln, col, end_ln, end_col, ','):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
-                        return 'expr_slice'
-
-        return ast.__class__  # otherwise regular parse by AST type is valid
-
-    def is_special_slice(self) -> bool:
-        """Whether `self` is an instance of our own SPECIAL SLICE format and not a valid python structure. For example
-        a `Set` or `MatchOr` with zero elements or our own `_special_slice_*` `AST` class.
-
-        **Returns:**
-        - `bool`: Whether self is a recognized SPECIAL SLICE or not (if not it still doesn't mean its valid).
-
-        **Examples:**
-        ```py
-        >>> FST('{1}').get_slice(0, 1).is_special_slice()
-        False
-
-        >>> FST('{1}').get_slice(0, 0, fix_set_get=False).is_special_slice()
-        True
-
-        >>> FST('a | b | c', pattern).get_slice(0, 0, fix_matchor_get=False).is_special_slice()
-        True
-
-        >>> FST('a = b = c').get_slice(0, 2, 'targets').is_special_slice()
-        True
-        ```
-        """
-
-        ast = self.a
-
-        if get_special_parse_mode(ast):
-            return True
-
-        if isinstance(ast, Set):
-            if not ast.elts:
-                return True
-
-        elif isinstance(ast, MatchOr):
-            if len(ast.patterns) < 2:
-                return True
-
-        return False
-
-    def is_parenthesizable(self) -> bool:
-        """Whether `self` is parenthesizable with grouping parentheses or not. Essentially all `expr`s and `pattern`s
-        except for `Slice`, `FormattedValue` or `Interpolation`.
-
-        **Note:** `Starred` returns `True` even though the `Starred` itself is not parenthesizable but rather its child.
-
-        **Returns:**
-        - `bool`: Whether is syntactically legal to add grouping parentheses or not. Can always be forced.
-
-        **Examples:**
-        ```py
-        >>> FST('i + j').is_parenthesizable()  # expr
-        True
-
-        >>> FST('{a.b: c, **d}', 'pattern').is_parenthesizable()
-        True
-
-        >>> FST('a:b:c').is_parenthesizable()  # Slice
-        False
-
-        >>> FST('for i in j').is_parenthesizable()  # comprehension
-        False
-
-        >>> FST('a: int, b=2').is_parenthesizable()  # arguments
-        False
-
-        >>> FST('a: int', 'arg').is_parenthesizable()
-        False
-
-        >>> FST('key="word"', 'keyword').is_parenthesizable()
-        False
-
-        >>> FST('a as b', 'alias').is_parenthesizable()
-        False
-
-        >>> FST('a as b', 'withitem').is_parenthesizable()
-        False
-        ```
-        """
-
-        if isinstance(a := self.a, expr):
-            return not isinstance(a, (Slice, FormattedValue, Interpolation))
-
-        return isinstance(a, pattern)
-
-    def is_atom(self, *, pars: bool = True, always_enclosed: bool = False) -> bool | Literal['unenclosable', 'pars']:
-        r"""Whether `self` is innately atomic precedence-wise like `Name`, `Constant`, `List`, etc... Or otherwise
-        optionally enclosed in parentheses so that it functions as a parsable atom and cannot be split up by precedence
-        rules when reparsed.
-
-        Node types where this doesn't normally apply like `stmt` or `alias` return `True`.
-
-        Being atomic precedence-wise does not guarantee parsability as an otherwise atomic node could be spread across
-        multiple lines without line continuations or grouping parentheses. In the case that the node is one of these
-        (precedence atomic but MAY be split across lines) then `'unenclosable'` is returned (if these nodes are not
-        excluded altogether with `always_enclosed=True`). Also see `is_enclosed_or_line()`.
-
-        If this function returns `'pars'` then `self` is enclosed due to the grouping parentheses.
-
-        **Parameters:**
-        - `pars`: Whether to check for grouping parentheses or not for node types which are not innately atomic
-            (`NamedExpr`, `BinOp`, `Yield`, etc...). If `True` then `(a + b)` is considered atomic, if `False` then it
-            is not.
-        - `always_enclosed`: If `True` then will only consider nodes innately atomic which are always enclosed like
-            `List` or parenthesized `Tuple`. Nodes which may be split up across multiple lines like `Call` or
-            `Attribute` will not be considered atomic and will return `False` unless `pars=True` and grouping
-            parentheses present, in which case `'pars'` is returned.
-
-        **Returns:**
-        - `True`: Is atomic and no combination of changes in the source will make it parse to a different node.
-        - `'unenclosable'`: Is atomic precedence-wise but may be made non-parsable by being spread over multiple lines.
-        - `'pars'`: Is atomic due to enclosing grouping parentheses and would not be otherwise, can not be returned for
-            `'unenclosable'` nodes if `always_enclosed=False`.
-        - `False`: Not atomic.
-
-        **Examples:**
-        ```py
-        >>> FST('a').is_atom()
-        True
-
-        >>> FST('a + b').is_atom()
-        False
-
-        >>> FST('(a + b)').is_atom()
-        'pars'
-
-        >>> FST('(a + b)').is_atom(pars=False)
-        False
-
-        >>> FST('a.b').is_atom()
-        'unenclosable'
-
-        >>> FST('a.b').is_atom(always_enclosed=True)  # because of "a\n.b"
-        False
-
-        >>> FST('(a.b)').is_atom(always_enclosed=True)
-        'pars'
-
-        >>> FST('[]').is_atom(always_enclosed=True)  # because List is always enclosed
-        True
-        ```
-        """
-
-        ast = self.a
-
-        if isinstance(ast, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Name,
-                            MatchValue, MatchSingleton, MatchMapping,
-                            expr_context, boolop, operator, unaryop, ExceptHandler,
-                            stmt, match_case, mod, type_ignore)):
-            return True
-
-        if not always_enclosed:
-            if isinstance(ast, Constant):
-                return 'unenclosable' if isinstance(ast.value, (str, bytes)) else True
-
-            elif isinstance(ast, (Call, JoinedStr, TemplateStr, Constant, Attribute, Subscript,
-                                  MatchClass, MatchStar,
-                                  cmpop, comprehension, arguments,
-                                  arg, keyword, alias, withitem, type_param)):
-                return 'unenclosable'
-
-        elif isinstance(ast, (comprehension, arguments, arg, keyword, alias, type_param)):  # can't be parenthesized
-            return False
-
-        elif isinstance(ast, Constant):
-            if not isinstance(ast.value, (str, bytes)):  # str and bytes can be multiline implicit needing parentheses
-                return True
-
-        elif isinstance(ast, withitem):  # isn't atom on its own and can't be parenthesized directly but if only has context_expr then take on value of that if starts and ends on same lines
-            return (not ast.optional_vars and self.loc[::2] == (ce := ast.context_expr.f).pars()[::2] and
-                    ce.is_atom(pars=pars, always_enclosed=always_enclosed))
-
-        elif isinstance(ast, cmpop):
-            return not isinstance(ast, (IsNot, NotIn))  # could be spread across multiple lines
-
-        if (ret := self.is_parenthesized_tuple()) is not None:  # if this is False then cannot be enclosed in grouping pars because that would reparse to a parenthesized Tuple and so is inconsistent
-            return ret
-
-        if (ret := self.is_delimited_matchseq()) is not None:  # like Tuple, cannot be enclosed in grouping pars
-            return bool(ret)
-
-        assert isinstance(ast, (expr, pattern))
-
-        return 'pars' if pars and self.pars().n else False
-
-    def is_enclosed_or_line(self, *, pars: bool = True, whole: bool = False, out_lns: set | None = None,
-                            ) -> bool | Literal['pars']:
-        r"""Whether `self` lives on a single line or logical line (entirely terminated with line continuations) or is
-        otherwise enclosed in some kind of delimiters `()`, `[]`, `{}` so that it can be parsed without error due to
-        being spread across multiple lines. If logical line then internal enclosed elements spread over multiple lines
-        without line continuations are fine. This does not mean it can't have other errors, such as a `Slice` outside of
-        `Subscript.slice`.
-
-        Node types where this doesn't or can't ever normally apply like `boolop`, `expr_context` or `Name`, etc...
-        return `True`. Node types that are not enclosed but which are never used without being enclosed by a parent like
-        `Slice`, `keyword` or `type_param` will also return `True`. Other node types which cannot be enclosed
-        individually and are not on a single line or not parenthesized and do not have line continuations but would need
-        a parent to enclose them like `arguments` (enclosable in `FunctionDef` but unenclosed in a `Lambda`) or the
-        `cmpop`s `is not` or `not in` will return `False`.
-
-        Block statements are not done and raise `NotImplementedError`, except for `With` and `AsyncWith`, which only
-        check the block header up to the `:` (as common sense would indicate).
-
-        This function does NOT check whether `self` is enclosed by some parent up the tree if it is not enclosed itself,
-        for that see `is_enclosed_in_parents()`.
-
-        **Parameters:**
-        - `pars`: Whether to check for grouping parentheses or not for nodes which are not enclosed or otherwise
-            multiline-safe. Grouping parentheses are different from tuple parentheses which are always checked.
-        - `whole`: Whether entire source should be checked and not just the lines corresponding to the node. This is
-            only valid for a root node.
-        - `out_lns`: If this is not `None` then it is expected to be a `Set` which will get the line numbers added of
-            all the lines that would need line continuation backslashes in order to make this function `True`.
-
-        **Returns:**
-        - `True`: Node is enclosed or single logical line.
-        - `'pars'` Enclosed by grouping parentheses.
-        - `False`: Not enclosed or single logical line and should be parenthesized or put into an enclosed parent or
-            have line continuations added for successful parse.
-
-        **Examples:**
-        ```py
-        >>> FST('a').is_enclosed_or_line()
-        True
-
-        >>> FST('a + \\\n b').is_enclosed_or_line()  # because of the line continuation
-        True
-
-        >>> FST('(a + \n b)').is_enclosed_or_line()
-        'pars'
-
-        >>> FST('a + \n b').is_enclosed_or_line()
-        False
-
-        >>> FST('[a + \n b]').elts[0].is_enclosed_or_line()
-        False
-
-        >>> FST('[a + \n b]').elts[0].is_enclosed_in_parents()
-        True
-
-        >>> FST('def f(a, b): pass').args.is_enclosed_or_line()
-        True
-
-        >>> # because the parentheses belong to the FunctionDef
-        >>> FST('def f(a,\n b): pass').args.is_enclosed_or_line()
-        False
-
-        >>> FST('def f(a,\n b): pass').args.is_enclosed_in_parents()
-        True
-
-        >>> FST('(a is not b)').ops[0].is_enclosed_or_line()
-        True
-
-        >>> FST('(a is \n not b)').ops[0].is_enclosed_or_line()
-        False
-        ```
-        """
-
-        lines = self.root._lines
-        ast = self.a
-        loc = self.loc
-
-        if whole:
-            if not self.is_root:
-                raise ValueError("'whole=True' can only be specified on root nodes")
-
-            whole_end_ln = len(lines) - 1
-
-            if loc and not loc.ln and loc.end_ln == whole_end_ln:  # if location spans over whole range of lines then is just normal check
-                whole = False
-
-            else:  # if something doesn't have a loc or loc doesn't span over entire range of lines then we need to check the whole source
-                end_ln = whole_end_ln
-                last_ln = 0
-                children = [ast]
-
-        if not whole:
-            if not loc:  # this catches empty `arguments` mostly
-                return True
-
-            if isinstance(ast, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp,
-                                FormattedValue, Interpolation, Name,
-                                MatchValue, MatchSingleton, MatchMapping,
-                                boolop, operator, unaryop,  # cmpop is not here because of #*^% like 'is \n not'
-                                Slice, keyword, type_param,  # these can be unenclosed by themselves but are never used without being enclosed by a parent
-                                expr_context, type_ignore)):
-                return True
-
-            if isinstance(ast, (Module, Interactive, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
-                                Match, Try, TryStar, ExceptHandler, match_case)):  # With, AsyncWith not checked because they are handled
-                raise NotImplementedError("we don't do block statements yet")  # TODO: this
-
-            ln, col, end_ln, end_col = loc
-
-            if end_ln == ln:
-                return True
-
-            if pars:
-                if self.pars().n:
-                    return 'pars'
-
-                pars = False
-
-            if (is_const := isinstance(ast, Constant)) or isinstance(ast, (JoinedStr, TemplateStr)):
-                if is_const:
-                    if not isinstance(ast.value, (str, bytes)):
-                        return True
-
-                    lns = multiline_str_continuation_lns(self.root._lines, ln, col, end_ln, end_col)
-
-                else:
-                    lns = multiline_fstr_continuation_lns(self.root._lines, ln, col, end_ln, end_col)
-
-                if (ret := len(lns) == end_ln - ln) or out_lns is None:
-                    return ret
-
-                out_lns.update(continuation_to_uncontinued_lns(lns, ln, col, end_ln, end_col))
-
-                return False
-
-            if (ret := self.is_parenthesized_tuple()) is not None:
-                if ret:
-                    return True
-
-            elif (ret := self.is_delimited_matchseq()) is not None:
-                if ret:
-                    return True
-
-            last_ln = ln
-
-            if isinstance(ast, Call):  # these will replace any fields which we know to be enclosed with mock FST nodes which just say the location is enclosed
-                children = [ast.func,
-                            nspace(f=nspace(pars=lambda: loc_Call_pars(self),
-                                            is_enclosed_or_line=lambda **kw: True))]
-
-            elif isinstance(ast, Subscript):
-                children = [ast.value,
-                            nspace(f=nspace(pars=lambda: loc_Subscript_brackets(self),
-                                            is_enclosed_or_line=lambda **kw: True))]
-
-            elif isinstance(ast, ImportFrom):
-                pars_names = loc_ImportFrom_names_pars(self)
-                children = ([nspace(f=nspace(pars=lambda: pars_names,
-                                             is_enclosed_or_line=lambda **kw: True))]
-                            if pars_names.n else
-                            ast.names)
-
-            elif isinstance(ast, (With, AsyncWith)):
-                pars_items = loc_With_items_pars(self)
-                end_ln = pars_items.bound.end_ln
-                children = ([nspace(f=nspace(pars=lambda: pars_items,
-                                             is_enclosed_or_line=lambda **kw: True))]
-                            if pars_items.n else
-                            ast.items)
-
-            elif isinstance(ast, MatchClass):
-                children = [ast.cls,
-                            nspace(f=nspace(pars=lambda: loc_MatchClass_pars(self),
-                                            is_enclosed_or_line=lambda **kw: True))]
-
-            else:  # we don't check always-enclosed statement fields here because statements will never get here
-                children = syntax_ordered_children(ast)
-
-        failed = False  # this is flagged for return False after process all because user may be requesting all lines which need line continuations
-
-        for child in children:
-            if not child or not (loc := (childf := child.f).pars()) or (child_end_ln := loc.end_ln) == last_ln:
-                continue
-
-            for ln in range(last_ln, loc.ln):
-                if re_line_end_cont_or_comment.match(lines[ln]).group(1) != '\\':
-                    if out_lns is None:
-                        return False
-
-                    else:
-                        failed = True
-
-                        out_lns.add(ln)
-
-            if not getattr(loc, 'n', 0) and not childf.is_enclosed_or_line(pars=pars, out_lns=out_lns):
-                if out_lns is None:
-                    return False
-                else:
-                    failed = True
-
-            pars = False
-            last_ln = child_end_ln
-
-        for ln in range(last_ln, end_ln):  # tail
-            if re_line_end_cont_or_comment.match(lines[ln]).group(1) != '\\':
-                if out_lns is None:
-                    return False
-
-                else:
-                    failed = True
-
-                    out_lns.add(ln)
-
-        if failed:
-            return False
-
-        return True
-
-    def is_enclosed_in_parents(self, field: builtins.str | None = None) -> bool:
-        """Whether `self` is enclosed by some parent up the tree. This is different from `is_enclosed_or_line()` as it
-        does not check for line continuations or anyting like that, just enclosing delimiters like from `Call` or
-        `FunctionDef` arguments parentheses, `List` brackets, `FormattedValue`, parent grouping parentheses, etc...
-        Statements do not generally enclose except for a few parts of things like `FunctionDef.args` or `type_params`,
-        `ClassDef.bases`, etc...
-
-        **Parameters:**
-        - `field`: This is meant to allow check for nonexistent child which would go into this field of `self`. If this
-            is not `None` then `self` is considered the first parent with an imaginary child being checked at `field`.
-
-        **WARNING!** This will not pick up parentheses which belong to `self` and the rules for this can be confusing.
-        E.g. in `with (x): pass` the parentheses belong to the variable `x` while `with (x as y): pass` they belong to
-        the `with` because `alias`es cannot be parenthesized.
-
-        Will pick up parentheses which belong to `self` if `field` is passed because in that case `self` is considered
-        the first parent and we are really considering the node which would live at `field`, whether it exists or not.
-
-        **Examples:**
-        ```py
-        >>> FST('1 + 2').left.is_enclosed_in_parents()
-        False
-
-        >>> FST('(1 + 2)').left.is_enclosed_in_parents()
-        True
-
-        >>> FST('(1 + 2)').is_enclosed_in_parents()  # because owns the parentheses
-        False
-
-        >>> FST('[1 + 2]').elts[0].left.is_enclosed_in_parents()
-        True
-
-        >>> FST('[1 + 2]').elts[0].is_enclosed_in_parents()
-        True
-
-        >>> FST('f(1)').args[0].is_enclosed_in_parents()
-        True
-
-        >>> FST('f"{1}"').values[0].value.is_enclosed_in_parents()
-        True
-
-        >>> FST('[]').is_enclosed_in_parents()
-        False
-
-        >>> FST('[]').is_enclosed_in_parents(field='elts')
-        True
-
-        >>> FST('with (x): pass').items[0].is_enclosed_in_parents()
-        False
-
-        >>> FST('with (x as y): pass').items[0].is_enclosed_in_parents()
-        True
-        ```
-        """
-
-        if field:
-            if field != 'ctx':  # so that the `ctx` of a List is not considered enclosed
-                self = nspace(parent=self, pfield=astfield(field))
-
-        elif isinstance(self.a, expr_context):  # so that the `ctx` of a List is not considered enclosed
-            if not (self := self.parent):
-                return False
-
-        while parent := self.parent:
-            parenta = parent.a
-
-            if isinstance(parenta, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp,
-                                    FormattedValue, Interpolation, JoinedStr, TemplateStr,
-                                    MatchMapping)):
-                return True
-
-            if isinstance(parenta, (FunctionDef, AsyncFunctionDef)):
-                return self.pfield.name in ('type_params', 'args')
-
-            if isinstance(parenta, ClassDef):
-                return self.pfield.name in ('type_params', 'bases', 'keywords')
-
-            if isinstance(parenta, TypeAlias):
-                return self.pfield.name == 'type_params'
-
-            if isinstance(parenta, ImportFrom):
-                return bool(loc_ImportFrom_names_pars(parent).n)  # we know we are in `names`
-
-            if isinstance(parenta, (With, AsyncWith)):
-                return bool(loc_With_items_pars(parent).n)  # we know we are in `items`
-
-            if isinstance(parenta, (stmt, ExceptHandler, match_case, mod, type_ignore)):
-                return False
-
-            if isinstance(parenta, Call):
-                if self.pfield.name in ('args', 'keywords'):
-                    return True
-
-            elif isinstance(parenta, Subscript):
-                if self.pfield.name == 'slice':
-                    return True
-
-            elif isinstance(parenta, MatchClass):
-                if self.pfield.name in ('patterns', 'kwd_attrs', 'kwd_patterns'):
-                    return True
-
-            elif (ret := parent.is_parenthesized_tuple()) is not None:
-                if ret:
-                    return True
-
-            elif (ret := parent.is_delimited_matchseq()) is not None:
-                if ret:
-                    return True
-
-            if getattr(parent.pars(), 'n', 0):  # could be empty args which has None for a loc
-                return True
-
-            self = parent
-
-        return False
-
-    def is_parenthesized_tuple(self) -> bool | None:
-        """Whether `self` is a parenthesized `Tuple` or not, or not a `Tuple` at all.
-
-        **Returns:**
-        - `True` if is parenthesized `Tuple`, `False` if is unparenthesized `Tuple`, `None` if is not `Tuple` at all.
-
-        **Examples:**
-        ```py
-        >>> FST('1, 2').is_parenthesized_tuple()
-        False
-
-        >>> FST('(1, 2)').is_parenthesized_tuple()
-        True
-
-        >>> print(FST('1').is_parenthesized_tuple())
-        None
-        ```
-        """
-
-        return self._is_delimited_seq() if isinstance(self.a, Tuple) else None
-
-    def is_delimited_matchseq(self) -> Literal['', '[]', '()'] | None:
-        r"""Whether `self` is a delimited `MatchSequence` or not (parenthesized or bracketed), or not a `MatchSequence`
-        at all.
-
-        **Returns:**
-        - `None`: If is not `MatchSequence` at all.
-        - `''`: If is undelimited `MatchSequence`.
-        - `'()'` or `'[]'`: Is delimited with these delimiters.
-
-        **Examples:**
-        ```py
-        >>> FST('match a:\n  case 1, 2: pass').cases[0].pattern.is_delimited_matchseq()
-        ''
-
-        >>> FST('match a:\n  case [1, 2]: pass').cases[0].pattern.is_delimited_matchseq()
-        '[]'
-
-        >>> FST('match a:\n  case (1, 2): pass').cases[0].pattern.is_delimited_matchseq()
-        '()'
-
-        >>> print(FST('match a:\n  case 1: pass').cases[0].pattern.is_delimited_matchseq())
-        None
-        ```
-        """
-
-        if not isinstance(self.a, MatchSequence):
-            return None
-
-        ln, col, _, _ = self.loc
-        lpar = self.root._lines[ln][col : col + 1]  # could be end of line
-
-        if lpar == '(':
-            return '()' if self._is_delimited_seq('patterns', '()') else ''
-        if lpar == '[':
-            return '[]' if self._is_delimited_seq('patterns', '[]') else ''
-
-        return ''
-
-    def is_except_star(self) -> bool | None:
-        """Whether `self` is an `except*` `ExceptHandler` or a normal `ExceptHandler`, or not and `ExceptHandler` at
-        all.
-
-        **Returns:**
-        - `True` if is `except*` `ExceptHandler`, `False` if is normal `ExceptHandler`, `None` if is not `ExceptHandler`
-        at all.
-
-        **Examples:**
-        ```py
-        >>> import sys
-
-        >>> if sys.version_info[:2] >= (3, 11):
-        ...     print(FST('try: pass\\nexcept* Exception: pass').handlers[0].is_except_star())
-        ... else:
-        ...     print(True)
-        True
-
-        >>> if sys.version_info[:2] >= (3, 11):
-        ...     print(FST('try: pass\\nexcept Exception: pass').handlers[0].is_except_star())
-        ... else:
-        ...     print(False)
-        False
-
-        >>> print(FST('i = 1').is_except_star())
-        None
-        ```
-        """
-
-        if not isinstance(self.a, ExceptHandler):
-            return None
-
-        ln, col, end_ln, end_col = self.loc
-
-        return next_frag(self.root._lines, ln, col + 6, end_ln, end_col).src.startswith('*')  # something must be there
-
-    def is_empty_set_call(self) -> bool:
-        """Whether `self` is an empty `set()` call.
-
-        **Examples:**
-        ```py
-        >>> FST('{1}').is_empty_set_call()
-        False
-
-        >>> FST('set()').is_empty_set_call()
-        True
-
-        >>> FST('frozenset()').is_empty_set_call()
-        False
-
-        >>> FST('{*()}').is_empty_set_call()
-        False
-        ```
-        """
-
-        return (isinstance(ast := self.a, Call) and not ast.args and not ast.keywords and
-                isinstance(func := ast.func, Name) and func.id == 'set' and isinstance(func.ctx, Load))
-
-    def is_empty_set_star(self) -> bool:
-        """Whether `self` is an empty `Set` from an empty `Starred` `Constant` sequence, recognized are `{*()}`, `{*[]}`
-        and `{*{}}`.
-
-        **Examples:**
-        ```py
-        >>> FST('{1}').is_empty_set_star()
-        False
-
-        >>> FST('{*()}').is_empty_set_star()
-        True
-
-        >>> FST('set()').is_empty_set_star()
-        False
-        ```
-        """
-
-        return (isinstance(ast := self.a, Set) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and
-                ((isinstance(v := e0.value, (Tuple, List)) and not v.elts) or (isinstance(v, Dict) and not v.keys)))
-
-    def is_elif(self) -> bool | None:
-        r"""Whether `self` is an `elif` or not, or not an `If` at all.
-
-        **Returns:**
-        - `True` if is `elif` `If`, `False` if is normal `If`, `None` if is not `If` at all.
-
-        **Examples:**
-        ```py
-        >>> FST('if 1: pass\nelif 2: pass').orelse[0].is_elif()
-        True
-
-        >>> FST('if 1: pass\nelse:\n  if 2: pass').orelse[0].is_elif()
-        False
-
-        >>> print(FST('if 1: pass\nelse:\n  i = 2').orelse[0].is_elif())
-        None
-        ```
-        """
-
-        return self.root._lines[(loc := self.loc).ln].startswith('elif', loc.col) if isinstance(self.a, If) else None
-
-    def is_solo_class_base(self) -> bool | None:
-        """Whether `self` is a solo `ClassDef` base in list without any keywords, or not a class base at all.
-
-        **Returns:**
-        - `True` if is solo class base, `False` if is class base, but not solo and `None` if is not class base at all.
-
-        **Examples:**
-        ```py
-        >>> FST('class cls(b1): pass').bases[0].is_solo_class_base()
-        True
-
-        >>> FST('class cls(b1, b2): pass').bases[0].is_solo_class_base()
-        False
-
-        >>> FST('class cls(b1, meta=m): pass').bases[0].is_solo_class_base()
-        False
-
-        >>> print(FST('class cls(b1, meta=m): pass').keywords[0].is_solo_class_base())
-        None
-        ```
-        """
-
-        if not (parent := self.parent) or self.pfield.name != 'bases':
-            return None
-
-        return len((parenta := parent.a).bases) == 1 and not parenta.keywords
-
-    def is_solo_call_arg(self) -> bool:
-        """Whether `self` is a solo `Call` non-keyword argument.
-
-        **Examples:**
-        ```py
-        >>> FST('call(a)').args[0].is_solo_call_arg()
-        True
-
-        >>> FST('call(a, b)').args[0].is_solo_call_arg()
-        False
-
-        >>> FST('call(i for i in range(3))').args[0].is_solo_call_arg()
-        True
-        ```
-        """
-
-        return ((parent := self.parent) and self.pfield.name == 'args' and isinstance(parenta := parent.a, Call) and
-                not parenta.keywords and len(parenta.args) == 1)
-
-    def is_solo_call_arg_genexp(self) -> bool:
-        """Whether `self` is the dreaded solo call non-keyword argument generator expression in `sum(i for i in a)`.
-        This function doesn't say if it shares its parentheses or not, so it could still be `sum((i for i in a))` or
-        even `sum(((i for i in a)))`. To differentiate that see `pars(shared=False)`.
-
-        **Examples:**
-        ```py
-        >>> FST('call(i for i in range(3))').args[0].is_solo_call_arg_genexp()
-        True
-
-        >>> FST('call((i for i in range(3)))').args[0].is_solo_call_arg_genexp()
-        True
-
-        >>> FST('call((i for i in range(3)), b)').args[0].is_solo_call_arg_genexp()
-        False
-
-        >>> FST('call(a)').args[0].is_solo_call_arg_genexp()
-        False
-        ```
-        """
-
-        return ((parent := self.parent) and self.pfield.name == 'args' and isinstance(self.a, GeneratorExp) and
-                isinstance(parenta := parent.a, Call) and not parenta.keywords and len(parenta.args) == 1)
-
-    def is_solo_matchcls_pat(self) -> bool:
-        r"""Whether `self` is a solo `MatchClass` non-keyword pattern. The solo `Constant` held by a `MatchValue`
-        qualifies as `True` for this check if the `MatchValue` does.
-
-        **Examples:**
-        ```py
-        >>> (FST('match a:\n  case cls(a): pass')
-        ...  .cases[0].pattern.patterns[0].is_solo_matchcls_pat())
-        True
-
-        >>> (FST('match a:\n  case cls(a, b): pass')
-        ...  .cases[0].pattern.patterns[0].is_solo_matchcls_pat())
-        False
-        ```
-        """
-
-        if not (parent := self.parent):
-            return False
-
-        if isinstance(parenta := parent.a, MatchValue):
-            self = parent
-
-        return ((parent := self.parent) and self.pfield.name == 'patterns' and
-                isinstance(parenta := parent.a, MatchClass) and not parenta.kwd_patterns and len(parenta.patterns) == 1)
-
-    def is_augop(self) -> bool | None:
-        """Whether `self` is an augmented `operator` or not, or not an `operator` at all.
-
-        **Returns:**
-        - `True` if is augmented `operator`, `False` if non-augmented `operator` and `None` if is not `operator` at all.
-
-        **Examples:**
-        ```py
-        >>> FST('+').is_augop()
-        False
-
-        >>> FST('+=').is_augop()
-        True
-
-        >>> repr(FST('~').is_augop())
-        'None'
-        ```
-        """
-
-        return None if not isinstance(self.a, operator) else self.get_src(*self.loc) in OPSTR2CLS_AUG
-
-    def has_Slice(self) -> bool:
-        """Whether self is a `Slice` or a `Tuple` which directly contains any `Slice`.
-
-        **Examples:**
-        ```py
-        >>> FST('a:b:c', 'expr_slice').has_Slice()
-        True
-
-        >>> FST('1, d:e', 'expr_slice').has_Slice()  # Tuple contains at least one Slice
-        True
-
-        >>> # b is in the .slice field but is not a Slice or Slice Tuple
-        >>> FST('a[b]').slice.has_Slice()
-        False
-        ```
-        """
-
-        return isinstance(a := self.a, Slice) or (isinstance(a, Tuple) and
-                                                  any(isinstance(e, Slice) for e in a.elts))
-
-    def has_Starred(self) -> bool:
-        """Whether self is a `Starred` or a `Tuple`, `List` or `Set` which directly contains any `Starred`.
-
-        **Examples:**
-        ```py
-        >>> FST('*a').has_Starred()
-        True
-
-        >>> FST('1, *a').has_Starred()  # Tuple contains at least one Starred
-        True
-        ```
-        """
-
-        return isinstance(a := self.a, Starred) or (isinstance(a, (Tuple, List, Set)) and
-                                                    any(isinstance(e, Starred) for e in a.elts))
-
-    # ------------------------------------------------------------------------------------------------------------------
-    # Private and other misc stuff
-
-    from .fst_misc import (
-        _new_empty_tuple,
-        _new_empty_set_star,
-        _new_empty_set_call,
-        _new_empty_set_curlies,
+    from .fst_core import (
         _make_fst_tree,
         _unmake_fst_tree,
         _unmake_fst_parents,
         _set_ast,
         _set_ctx,
+
+        _get_parse_mode,
+        _is_special_slice,
+        _is_parenthesizable,
+        _is_atom,
+        _is_enclosed_or_line,
+        _is_enclosed_in_parents,
+        _loc_key,
+
+        _modifying,
+        _touch,
+        _touchall,
+        _offset,
+        _get_indent,
+        _get_indentable_lns,
+        _offset_lns,
+        _indent_lns,
+        _dedent_lns,
+        _redent_lns,
+
+        _put_src,
+        _sanitize,
+        _make_fst_and_dedent,
+    )
+
+    from .fst_misc import (
         _repr_tail,
         _dump,
-        _loc_key,
+        _new_empty_tuple,
+        _new_empty_set_star,
+        _new_empty_set_call,
+        _new_empty_set_curlies,
+
+        _is_parenthesized_tuple,
+        _is_delimited_matchseq,
+        _is_except_star,
+        _is_empty_set_call,
+        _is_empty_set_star,
+        _is_elif,
+        _is_solo_class_base,
+        _is_solo_call_arg,
+        _is_solo_call_arg_genexp,
+        _is_solo_matchcls_pat,
+        _is_augop,
         _is_arguments_empty,
         _is_delimited_seq,
+        _has_Slice,
+        _has_Starred,
+
+        _parenthesize_grouping,
+        _unparenthesize_grouping,
+        _delimit_node,
+        _undelimit_node,
+
         _maybe_add_line_continuations,
         _maybe_del_separator,
         _maybe_ins_separator,
@@ -5179,22 +4267,7 @@ class FST:
         _maybe_fix_joined_alnum,
         _maybe_fix_undelimited_seq,
         _maybe_fix_tuple,
-        _touch,
-        _sanitize,
-        _parenthesize_grouping,
-        _unparenthesize_grouping,
-        _delimit_node,
-        _undelimit_node,
-        _make_fst_and_dedent,
-        _get_indentable_lns,
-        _modifying,
-        _touchall,
-        _put_src,
-        _offset,
-        _offset_lns,
-        _indent_lns,
-        _dedent_lns,
-        _redent_lns,
+
         _get_trivia_params,
     )
 

@@ -182,7 +182,7 @@ class SrcEdit:
                     del_loc = fstloc(ln, 0, bound_end_ln, bound_end_col)
 
                     if fpost:
-                        put_lines = [ffirst.get_indent()]  # SHOULDN'T DO THIS HERE!!!
+                        put_lines = [ffirst._get_indent()]  # SHOULDN'T DO THIS HERE!!!
 
                 return del_loc, put_lines
 
@@ -655,7 +655,7 @@ class SrcEdit:
             put_body = put_fst.a.body
             orelse = tgt_fst.a.orelse
             opt_elif = fst.FST.get_option('elif_', options)
-            is_old_elif = orelse[0].f.is_elif()
+            is_old_elif = orelse[0].f._is_elif()
             is_new_elif = opt_elif and len(put_body) == 1 and isinstance(put_body[0], If)
 
             if is_new_elif:

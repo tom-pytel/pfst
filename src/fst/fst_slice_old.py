@@ -92,7 +92,7 @@ def _elif_to_else_if(self: fst.FST) -> None:
     actual `elif`, meaning the lone `If` statement in the parent's `orelse` block which is an actual `elif` and not
     an `if`."""
 
-    indent = self.get_indent()
+    indent = self._get_indent()
 
     self._indent_lns(skip=0)
 
@@ -118,7 +118,7 @@ def _normalize_block(self: fst.FST, field: str = 'body', *, indent: str | None =
 
     **Parameters:**
     - `field`: Which block to normalize (`'body'`, `'orelse'`, `'handlers'`, `'finalbody'`).
-    - `indent`: The indentation to use for the relocated line if already known, saves a call to `get_indent()`.
+    - `indent`: The indentation to use for the relocated line if already known, saves a call to `_get_indent()`.
     """
 
     if isinstance(self.a, mod) or not (block := getattr(self.a, field)) or not isinstance(block, list):
@@ -132,7 +132,7 @@ def _normalize_block(self: fst.FST, field: str = 'body', *, indent: str | None =
         return
 
     if indent is None:
-        indent = b0.get_indent()
+        indent = b0._get_indent()
 
     ln, col = colon
 
@@ -155,7 +155,7 @@ def _get_slice_stmtish(self: fst.FST, start: int | Literal['end'] | None, stop: 
     flast = body[stop - 1].f
     fpre = body[start - 1].f if start else None
     fpost = body[stop].f if stop < len(body) else None
-    indent = ffirst.get_indent()
+    indent = ffirst._get_indent()
 
     block_loc = fstloc(*(fpre.bloc[2:] if fpre else prev_bound_step(ffirst)),
                        *(fpost.bloc[:2] if fpost else next_bound_step(flast)))
@@ -227,7 +227,7 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
                 put_fst = code_as_stmts(code, self.root.parse_params)
             elif isinstance(b0, ExceptHandler):
                 put_fst = code_as_ExceptHandlers(code, self.root.parse_params,
-                                                 is_trystar=b0.f.is_except_star())
+                                                 is_trystar=b0.f._is_except_star())
             else:  # match_case
                 put_fst = code_as_match_cases(code, self.root.parse_params)
 
@@ -256,14 +256,14 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
     fpost = body[stop].f if stop < len(body) else None
 
     if put_fst:
-        opener_indent = self.get_indent()
+        opener_indent = self._get_indent()
 
         if not body:
             block_indent = opener_indent if isinstance(self.a, mod) else opener_indent + root.indent
-        elif not (b0 := body[0]).f.is_elif():
-            block_indent = b0.f.get_indent()
+        elif not (b0 := body[0]).f._is_elif():
+            block_indent = b0.f._get_indent()
         elif (bb := b0.body) or (bb := b0.orelse):
-            block_indent = bb[0].f.get_indent()
+            block_indent = bb[0].f._get_indent()
         else:
             block_indent = opener_indent + root.indent
 
@@ -282,7 +282,7 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
     else:  # insertion
         ffirst = flast = None
 
-        if field == 'orelse' and len(body) == 1 and (f := body[0].f).is_elif():
+        if field == 'orelse' and len(body) == 1 and (f := body[0].f)._is_elif():
             _elif_to_else_if(f)
 
         if fpre:

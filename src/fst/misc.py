@@ -275,7 +275,9 @@ def pyver(func: Callable | None = None, *, ge: int | None = None, lt: int | None
 
 def shortstr(s: str, maxlen: int = 64) -> str:
     """Return string of maximum length `maxlen`, shortening if necessary to "start .. [X chars] .. end".
-    @private"""
+
+    @private
+    """
 
     if (l := len(s)) <= maxlen:
         return s
