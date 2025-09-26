@@ -781,70 +781,6 @@ def _is_delimited_seq(self: fst.FST, field: str = 'elts', delims: str | tuple[st
     return ldelims > rdelims
 
 
-def _set_end_pos(self: fst.FST, end_lineno: int, end_col_offset: int, self_: bool = True) -> None:
-    """Walk up parent chain (starting at `self`) setting `.end_lineno` and `.end_col_offset` to `end_lineno` and
-    `end_col_offset` if self is last child of parent. Initial `self` is corrected always. Used for correcting
-    parents after an `offset()` which removed or modified last child statements of block parents, or other nodes.
-
-    **Parameters:**
-    - `(end_lineno, end_col_offset)` - Position which should be the new end.
-    - `self_`: Whether to set for `self` or not, if not then will skip `self` and set for parents.
-
-    """
-
-    while True:
-        if not self_:
-            self_ = True
-
-        else:
-            if hasattr(a := self.a, 'end_lineno'):  # because of ASTs which locations
-                a.end_lineno = end_lineno
-                a.end_col_offset = end_col_offset
-
-            self._touch()  # even if AST doesn't have location, it may be calculated and needs to be cleared out anyway
-
-        if not (parent := self.parent) or self.next():  # self is not parent.last_child():
-            break
-
-        self = parent
-
-
-def _set_block_end_from_last_child(self: fst.FST, bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
-                                   ) -> None:
-    """Fix end location of a block statement after its last child (position-wise, not last existing child) has been
-    cut or deleted. Will set end position of `self` and any parents who `self` is the last child of to the new last
-    child if it is past the block-open colon, otherwise set end at just past the block-open colon.
-
-    **Parameters:**
-    - `bound_ln`, `bound_col`: Position before block colon but after and pre-colon `AST` node.
-    - `bound_end_ln`, `bound_end_col`: Position after block colon, probably start of deleted region, only used if
-        new last child is before colon.
-    """
-
-    end_lineno = None
-
-    if last_child := self.last_child():  # easy enough when we have a new last child
-        if last_child.pfield.name in ('body', 'orelse', 'handlers', 'finalbody', 'cases'):  # but make sure its past the block open colon
-            end_lineno = last_child.end_lineno
-            end_col_offset = last_child.end_col_offset
-
-    if end_lineno is None:
-        lines = self.root._lines
-
-        if end := prev_find(lines, bound_ln, bound_col, bound_end_ln, bound_end_col, ':'):  # find first preceding block colon, its there unless first opened block in module
-            end_ln, end_col = end
-            end_col += 1  # just past the colon
-
-        else:
-            end_ln = bound_ln
-            end_col = bound_col
-
-        end_lineno = end_ln + 1
-        end_col_offset = lines[end_ln].c2b(end_col)
-
-    self._set_end_pos(end_lineno, end_col_offset)
-
-
 def _update_loc_up_parents(self: fst.FST, lineno: int, col_offset: int, end_lineno: int, end_col_offset: int) -> None:
     """Change own location adn walk up parent chain changing any start or end locations which coincide with our own old
     location to the new one."""
@@ -1505,24 +1441,6 @@ def _undelimit_node(self: fst.FST, field: str = 'elts') -> bool:
         self._put_src(' ', ln, col, ln, col, False)
 
     return True
-
-
-def _elif_to_else_if(self: fst.FST) -> None:
-    """Convert an 'elif something:\\n  ...' to 'else:\\n  if something:\\n    ...'. Make sure to only call on an
-    actual `elif`, meaning the lone `If` statement in the parent's `orelse` block which is an actual `elif` and not
-    an `if`."""
-
-    indent = self.get_indent()
-
-    self._indent_lns(skip=0)
-
-    if not self.next():  # last child?
-        self._set_end_pos((a := self.a).end_lineno, a.end_col_offset, False)
-
-    ln, col, _, _ = self.loc
-
-    self._put_src(['if'], ln, col, ln, col + 4, False)
-    self._put_src([indent + 'else:', indent + self.root.indent], ln, 0, ln, col, False)
 
 
 def _make_fst_and_dedent(self: fst.FST, indent: fst.FST | str, ast: AST, copy_loc: fstloc,

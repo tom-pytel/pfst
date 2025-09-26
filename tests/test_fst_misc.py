@@ -951,11 +951,13 @@ def f() -> int: \\
         self.assertEqual(a.f.src, 'def f(a = """ a\n...   # something """):\n    i = 2')
 
     def test__elif_to_else_if(self):
+        from fst.fst_slice_old import _elif_to_else_if
+
         a = parse('''
 if 1: pass
 elif 2: pass
         '''.strip())
-        a.body[0].orelse[0].f._elif_to_else_if()
+        _elif_to_else_if(a.body[0].orelse[0].f)
         a.f.verify()
         self.assertEqual(a.f.src, '''
 if 1: pass
@@ -968,7 +970,7 @@ def f():
     if 1: pass
     elif 2: pass
         '''.strip())
-        a.body[0].body[0].orelse[0].f._elif_to_else_if()
+        _elif_to_else_if(a.body[0].body[0].orelse[0].f)
         a.f.verify()
         self.assertEqual(a.f.src, '''
 def f():
@@ -982,7 +984,7 @@ if 1: pass
 elif 2: pass
 return
         '''.strip())
-        a.body[0].orelse[0].f._elif_to_else_if()
+        _elif_to_else_if(a.body[0].orelse[0].f)
         a.f.verify()
         self.assertEqual(a.f.src, '''
 if 1: pass
@@ -997,7 +999,7 @@ def f():
     elif 2: pass
     return
         '''.strip())
-        a.body[0].body[0].orelse[0].f._elif_to_else_if()
+        _elif_to_else_if(a.body[0].body[0].orelse[0].f)
         a.f.verify()
         self.assertEqual(a.f.src, '''
 def f():
@@ -1012,7 +1014,7 @@ if 1: pass
 elif 2: pass
 elif 3: pass
         '''.strip())
-        a.body[0].orelse[0].f._elif_to_else_if()
+        _elif_to_else_if(a.body[0].orelse[0].f)
         a.f.verify()
         self.assertEqual(a.f.src, '''
 if 1: pass
@@ -1027,7 +1029,7 @@ def f():
     elif 2: pass
     elif 3: pass
         '''.strip())
-        a.body[0].body[0].orelse[0].f._elif_to_else_if()
+        _elif_to_else_if(a.body[0].body[0].orelse[0].f)
         a.f.verify()
         self.assertEqual(a.f.src, '''
 def f():
