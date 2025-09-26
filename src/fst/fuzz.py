@@ -263,6 +263,79 @@ def find_pys(path) -> list[str]:
     raise ValueError(f'unknown thing: {path}')
 
 
+def is_parsable(self) -> bool:
+    r"""Whether the source for this node is parsable by `FST` or not (if properly dedented for top level). This is
+    different from `astutil.is_parsable` because that one indicates what is parsable by the python `ast` module,
+    while `FST` can parse more things. For example, an unparenthesized `NamedExpr` is considered parsable even
+    though it would not parse directly using `ast.parse()`.
+
+    **Returns:**
+    - `bool`: Whether is parsable by `FST` from a string or not.
+
+    **Examples:**
+    ```py
+    >>> from fst import astutil
+    >>> FST('i').is_parsable()
+    True
+
+    >>> FST('a[b]').slice.is_parsable()
+    True
+
+    >>> FST('a[b:c]').slice.is_parsable()
+    True
+
+    >>> astutil.is_parsable(FST('a[b:c]').slice.a)
+    False
+
+    >>> FST('f"{a!r:<8}"').values[0].is_parsable()
+    False
+
+    >>> FST('f"{a!r:<8}"').values[0].value.is_parsable()
+    True
+
+    >>> FST('f"{a!r:<8}"').values[0].format_spec.is_parsable()
+    False
+
+    >>> FST('try: pass\nexcept: pass').body[0].is_parsable()
+    True
+
+    >>> FST('try: pass\nexcept: pass').handlers[0].is_parsable()
+    True
+
+    >>> astutil.is_parsable(FST('try: pass\nexcept: pass').handlers[0].a)
+    False
+
+    >>> FST('try: pass\nexcept: pass').handlers[0].body[0].is_parsable()
+    True
+
+    >>> FST('match a:\n  case 1: pass').cases[0].is_parsable()
+    True
+
+    >>> astutil.is_parsable(FST('match a:\n  case 1: pass').cases[0].a)
+    False
+    ```
+    """
+
+    if not self.loc:
+        return False
+
+    ast = self.a
+
+    if isinstance(ast, (expr_context, type_ignore, FormattedValue, Interpolation)):
+        return False
+
+    if parent := self.parent:
+        if isinstance(ast, JoinedStr):  # TemplateStr doesn't go into a .format_spec, '.1f' type strings without quote delimiters
+            if self.pfield.name == 'format_spec':  # isinstance(parent.a, (FormattedValue, Interpolation)):
+                return False
+
+        elif isinstance(ast, Constant):  # string parts of f-string without quote delimiters (probably, unless parts of implicit strings)
+            if self.pfield.name == 'values' and isinstance(parent.a, (JoinedStr, TemplateStr)):  # isinstance(ast.value, str)
+                return False
+
+    return True
+
+
 def ignorable_exc(exc: Exception, putsrc: str | Literal[False] | None = None):
     if isinstance(exc, NotImplementedError):
         return True
@@ -793,7 +866,7 @@ class VerifyCopy(Fuzzy):
 
     def fuzz_one(self, fst, fnm) -> bool:
         for f in fst.walk('all'):
-            if not f.is_parsable():  # because .verify() needs to parse
+            if not is_parsable(f):  # because .verify() needs to parse
                 continue
 
             g = None

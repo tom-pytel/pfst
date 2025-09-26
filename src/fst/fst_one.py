@@ -229,7 +229,7 @@ def _maybe_fix_copy(self: fst.FST, pars: bool = True, pars_walrus: bool = False)
         _maybe_fix_elif(self)
 
     elif isinstance(ast, expr):
-        if not self.is_parsable() or isinstance(ast, Slice):  # is_parsable() makes sure there is a self.loc, Slice should never get pars
+        if isinstance(ast, (Slice, FormattedValue, Interpolation)):  # things that should not get pars
             return
 
         self._set_ctx(Load)  # anything that is excluded by is_parsable() above (or does not have .loc) does not need this
