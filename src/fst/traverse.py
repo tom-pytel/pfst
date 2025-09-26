@@ -10,7 +10,10 @@ from .astutil import (
     AST, Dict, Compare, MatchMapping, Call, arguments, expr_context, boolop, operator, unaryop, cmpop, AST_FIELDS
 )
 
-__all__ = ['AST_FIELDS_NEXT', 'AST_FIELDS_PREV', 'check_with_loc']
+__all__ = [
+    'AST_FIELDS_NEXT', 'AST_FIELDS_PREV',
+    'next_bound', 'prev_bound', 'next_bound_step', 'prev_bound_step', 'check_with_loc',
+]
 
 
 AST_FIELDS_NEXT: dict[tuple[type[AST], str], str | None] = dict(sum((  # next field name from AST class and current field name
@@ -58,6 +61,50 @@ AST_FIELDS_PREV[(arguments, 'kwonlyargs')]  = 7
 AST_FIELDS_PREV[(arguments, 'defaults')]    = 7
 AST_FIELDS_PREV[(arguments, 'kw_defaults')] = 7
 AST_FIELDS_PREV[(arguments, 'kwarg')]       = 7
+
+
+def next_bound(self: fst.FST, with_loc: bool | Literal['all', 'own'] = 'all') -> tuple[int, int]:
+    """Get a next bound for search before any following ASTs for this object within parent. If no siblings found after
+    self then return end of parent. If no parent then return end of source."""
+
+    if next := self.next(with_loc):
+        return next.bloc[:2]
+    elif parent := self.parent:
+        return parent.bloc[2:]
+
+    return len(ls := self.root._lines) - 1, len(ls[-1])
+
+
+def prev_bound(self: fst.FST, with_loc: bool | Literal['all', 'own'] = 'all') -> tuple[int, int]:
+    """Get a prev bound for search after any previous ASTs for this object within parent. If no siblings found before
+    self then return start of parent. If no parent then return (0, 0)."""
+
+    if prev := self.prev(with_loc):
+        return prev.bloc[2:]
+    elif parent := self.parent:
+        return parent.bloc[:2]
+    else:
+        return 0, 0
+
+
+def next_bound_step(self: fst.FST, with_loc: bool | Literal['all', 'own', 'allown'] = 'all') -> tuple[int, int]:
+    """Get a next bound for search before any following ASTs for this object using `step_fwd()`. This is safe to call
+    for nodes that live inside nodes without their own locations if `with_loc='allown'`."""
+
+    if next := self.step_fwd(with_loc, recurse_self=False):
+        return next.bloc[:2]
+
+    return len(ls := self.root._lines) - 1, len(ls[-1])
+
+
+def prev_bound_step(self: fst.FST, with_loc: bool | Literal['all', 'own', 'allown'] = 'all') -> tuple[int, int]:
+    """Get a prev bound for search after any previous ASTs for this object using `step_back()`. This is safe to call for
+    nodes that live inside nodes without their own locations if `with_loc='allown'`."""
+
+    if prev := self.step_back(with_loc, recurse_self=False):
+        return prev.bloc[2:]
+
+    return 0, 0
 
 
 def check_with_loc(fst_: fst.FST, with_loc: bool | Literal['all', 'own'] = True) -> bool:

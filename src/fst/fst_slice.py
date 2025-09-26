@@ -95,6 +95,8 @@ from .code import (
     code_as_type_param, code_as_type_params,
 )
 
+from .traverse import prev_bound
+
 from .locations import (
     loc_With_items_pars, loc_ImportFrom_names_pars, loc_ClassDef_bases_pars, loc_Call_pars,
     loc_TypeAlias_type_params_brackets, loc_ClassDef_type_params_brackets, loc_FunctionDef_type_params_brackets,
@@ -3279,7 +3281,7 @@ def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: 
         ifs = ast.ifs
         start, stop = fixup_slice_index_for_raw(len(ifs), start, stop)
         ffirst = ifs[start].f
-        start_pos = prev_find(self.root._lines, *ffirst._prev_bound(), ffirst.ln, ffirst.col, 'if')
+        start_pos = prev_find(self.root._lines, *prev_bound(ffirst), ffirst.ln, ffirst.col, 'if')
 
         return fstloc(*start_pos, *ifs[stop - 1].f.pars()[2:])
 

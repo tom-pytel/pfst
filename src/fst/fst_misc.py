@@ -57,6 +57,7 @@ from .misc import (
     multiline_str_continuation_lns, multiline_fstr_continuation_lns,
 )
 
+from .traverse import prev_bound
 from .locations import loc_block_header_end
 
 
@@ -561,50 +562,6 @@ def _set_ctx(self: fst.FST, ctx: type[expr_context]) -> None:
                 stack.extend(a.elts)
             elif is_starred:
                 stack.append(a.value)
-
-
-def _next_bound(self: fst.FST, with_loc: bool | Literal['all', 'own'] = 'all') -> tuple[int, int]:
-    """Get a next bound for search before any following ASTs for this object within parent. If no siblings found after
-    self then return end of parent. If no parent then return end of source."""
-
-    if next := self.next(with_loc):
-        return next.bloc[:2]
-    elif parent := self.parent:
-        return parent.bloc[2:]
-
-    return len(ls := self.root._lines) - 1, len(ls[-1])
-
-
-def _prev_bound(self: fst.FST, with_loc: bool | Literal['all', 'own'] = 'all') -> tuple[int, int]:
-    """Get a prev bound for search after any previous ASTs for this object within parent. If no siblings found before
-    self then return start of parent. If no parent then return (0, 0)."""
-
-    if prev := self.prev(with_loc):
-        return prev.bloc[2:]
-    elif parent := self.parent:
-        return parent.bloc[:2]
-    else:
-        return 0, 0
-
-
-def _next_bound_step(self: fst.FST, with_loc: bool | Literal['all', 'own', 'allown'] = 'all') -> tuple[int, int]:
-    """Get a next bound for search before any following ASTs for this object using `step_fwd()`. This is safe to call
-    for nodes that live inside nodes without their own locations if `with_loc='allown'`."""
-
-    if next := self.step_fwd(with_loc, recurse_self=False):
-        return next.bloc[:2]
-
-    return len(ls := self.root._lines) - 1, len(ls[-1])
-
-
-def _prev_bound_step(self: fst.FST, with_loc: bool | Literal['all', 'own', 'allown'] = 'all') -> tuple[int, int]:
-    """Get a prev bound for search after any previous ASTs for this object using `step_back()`. This is safe to call for
-    nodes that live inside nodes without their own locations if `with_loc='allown'`."""
-
-    if prev := self.step_back(with_loc, recurse_self=False):
-        return prev.bloc[2:]
-
-    return 0, 0
 
 
 def _loc_key(self: fst.FST, idx: int, pars: bool = False, body: list[AST] | None = None,
@@ -1432,7 +1389,7 @@ def _normalize_block(self: fst.FST, field: str = 'body', *, indent: str | None =
     b0_ln, b0_col, _, _ = b0.bloc
     root = self.root
 
-    if not (colon := prev_find(root._lines, *b0._prev_bound(), b0_ln, b0_col, ':', True, comment=True, lcont=None)):  # must be there
+    if not (colon := prev_find(root._lines, *prev_bound(b0), b0_ln, b0_col, ':', True, comment=True, lcont=None)):  # must be there
         return
 
     if indent is None:

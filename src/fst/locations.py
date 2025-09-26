@@ -29,6 +29,8 @@ from .misc import (
     next_frag, prev_frag, next_find, prev_find, next_delims, prev_delims, next_find_re,
 )
 
+from .traverse import next_bound, prev_bound, next_bound_step, prev_bound_step
+
 __all__ = [
     'loc_arguments',
     'loc_comprehension',
@@ -70,7 +72,7 @@ def loc_arguments(self: fst.FST) -> fstloc | None:
     last = self.last_child()
     lines = self.root._lines
     end_lines = len(lines) - 1
-    rpars = next_delims(lines, last.end_ln, last.end_col, *self._next_bound())
+    rpars = next_delims(lines, last.end_ln, last.end_col, *next_bound(self))
 
     end_ln, end_col = rpars[-1]
     start_ln, start_col, _, _ = first.loc
@@ -97,7 +99,7 @@ def loc_arguments(self: fst.FST) -> fstloc | None:
         end_ln, end_col = rpars[-2]  # must be there
 
     if leading_stars:  # find star to the left, we know it exists so we don't check for None return
-        start_ln, start_col = prev_find(lines, *self._prev_bound(), start_ln, start_col, leading_stars)
+        start_ln, start_col = prev_find(lines, *prev_bound(self), start_ln, start_col, leading_stars)
 
     if trailing_slash:
         end_ln, end_col = next_find(lines, end_ln, end_col, end_lines, 0x7fffffffffffffff, '/')  # must be there
@@ -133,7 +135,7 @@ def loc_comprehension(self: fst.FST) -> fstloc:
     if ast.is_async:
         start_ln, start_col = prev_find(lines, ln, col, start_ln, start_col, 'async')  # must be there
 
-    rpars = next_delims(lines, last.end_ln, last.end_col, *self._next_bound_step('allown'))
+    rpars = next_delims(lines, last.end_ln, last.end_col, *next_bound_step(self, 'allown'))
 
     if (lrpars := len(rpars)) == 1:  # no pars, just use end of last
         end_ln, end_col = rpars[0]
@@ -146,7 +148,7 @@ def loc_comprehension(self: fst.FST) -> fstloc:
             end_ln, end_col = rpars[0]
         else:
 
-            end_ln, end_col = rpars[len(prev_delims(lines, *last._prev_bound(), last.ln, last.col)) - 1]  # get rpar according to how many pars on left
+            end_ln, end_col = rpars[len(prev_delims(lines, *prev_bound(last), last.ln, last.col)) - 1]  # get rpar according to how many pars on left
 
     return fstloc(start_ln, start_col, end_ln, end_col)
 
@@ -166,12 +168,12 @@ def loc_withitem(self: fst.FST) -> fstloc:
     ce_ln, ce_col, ce_end_ln, ce_end_col = ce_loc = ce.loc
 
     if not (ov := ast.optional_vars):
-        rpars = next_delims(lines, ce_end_ln, ce_end_col, *self._next_bound_step('allown'))  # 'allown' so it doesn't recurse into calling `.loc`
+        rpars = next_delims(lines, ce_end_ln, ce_end_col, *next_bound_step(self, 'allown'))  # 'allown' so it doesn't recurse into calling `.loc`
 
         if (lrpars := len(rpars)) == 1:
             return ce_loc
 
-        lpars = prev_delims(lines, *self._prev_bound_step('allown'), ce_ln, ce_col)
+        lpars = prev_delims(lines, *prev_bound_step(self, 'allown'), ce_ln, ce_col)
         npars = min(lrpars, len(lpars)) - 1
 
         return fstloc(*lpars[npars], *rpars[npars])
@@ -185,7 +187,7 @@ def loc_withitem(self: fst.FST) -> fstloc:
         col = ce_col
 
     else:
-        lpars = prev_delims(lines, *self._prev_bound_step('allown'), ce_ln, ce_col)
+        lpars = prev_delims(lines, *prev_bound_step(self, 'allown'), ce_ln, ce_col)
         ln, col = lpars[min(lrpars, len(lpars)) - 1]
 
     lpars = prev_delims(lines, ce_end_ln, ce_end_col, ov_ln, ov_col)
@@ -193,7 +195,7 @@ def loc_withitem(self: fst.FST) -> fstloc:
     if (llpars := len(lpars)) == 1:
         return fstloc(ln, col, ov_end_ln, ov_end_col)
 
-    rpars = next_delims(lines, ov_end_ln, ov_end_col, *self._next_bound_step('allown'))
+    rpars = next_delims(lines, ov_end_ln, ov_end_col, *next_bound_step(self, 'allown'))
     end_ln, end_col = rpars[min(llpars, len(rpars)) - 1]
 
     return fstloc(ln, col, end_ln, end_col)

@@ -131,7 +131,7 @@ from .locations import (
     loc_Call_pars, loc_Subscript_brackets, loc_ImportFrom_names_pars, loc_With_items_pars, loc_MatchClass_pars,
 )
 
-from .traverse import AST_FIELDS_NEXT, AST_FIELDS_PREV, check_with_loc
+from .traverse import AST_FIELDS_NEXT, AST_FIELDS_PREV, next_bound, prev_bound, check_with_loc
 from .view import fstview
 from .reconcile import Reconcile
 
@@ -2230,7 +2230,7 @@ class FST:
 
         ln, col, end_ln, end_col = self.bloc
 
-        rpars = next_delims(self.root._lines, end_ln, end_col, *self._next_bound())
+        rpars = next_delims(self.root._lines, end_ln, end_col, *next_bound(self))
 
         if (lrpars := len(rpars)) == 1:  # no pars on right
             if not shared and self.is_solo_call_arg_genexp():
@@ -2242,7 +2242,7 @@ class FST:
 
             return locn
 
-        lpars = prev_delims(self.root._lines, *self._prev_bound(), ln, col)
+        lpars = prev_delims(self.root._lines, *prev_bound(self), ln, col)
 
         if (llpars := len(lpars)) == 1:  # no pars on left
             self._cache[key] = locn = fstlocns(ln, col, end_ln, end_col, n=0)
@@ -5238,10 +5238,6 @@ class FST:
         _set_ctx,
         _repr_tail,
         _dump,
-        _next_bound,
-        _prev_bound,
-        _next_bound_step,
-        _prev_bound_step,
         _loc_key,
         _is_arguments_empty,
         _is_delimited_seq,
