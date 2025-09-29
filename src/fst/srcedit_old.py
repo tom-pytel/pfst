@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from . import fst
 
-from .asttypes import ASTS_SCOPE_NAMED, Constant, Expr, If, mod
+from .asttypes import ASTS_SCOPE_NAMED, AST, Constant, Expr, If, mod
 from .astutil import bistr
 
 from .misc import (
@@ -472,7 +472,9 @@ class SrcEdit:
 
     def put_slice_stmt(self, tgt_fst: fst.FST, put_fst: fst.FST, field: str,
                        block_loc: fstloc, opener_indent: str, block_indent: str,
-                       ffirst: fst.FST, flast: fst.FST, fpre: fst.FST | None, fpost: fst.FST | None, **options,
+                       ffirst: fst.FST, flast: fst.FST, fpre: fst.FST | None, fpost: fst.FST | None, *,
+                       docstr_strict_exclude: AST | None = None,
+                       **options,
     ) -> fstloc:  # put_loc
         """Put to block of statements(ish). Calculates put location and modifies `put_fst` as necessary to create proper
         frag. The "ish" in statemnents means this can be used to put `ExceptHandler`s to a 'handlers' field or
@@ -537,7 +539,8 @@ class SrcEdit:
             is_elif = (not fpre and not fpost and is_orelse and opt_elif and len(b := put_body) == 1 and
                        isinstance(b[0], If) and isinstance(tgt_fst.a, If))
 
-            put_fst._indent_lns(opener_indent if is_handler or is_elif else block_indent, skip=0, docstr=docstr)
+            put_fst._indent_lns(opener_indent if is_handler or is_elif else block_indent, skip=0, docstr=docstr,
+                                docstr_strict_exclude=docstr_strict_exclude)
 
             if fpre:  # with preceding statement, maybe trailing statement
                 ln, col, end_ln, end_col = block_loc
@@ -668,11 +671,11 @@ class SrcEdit:
             elif is_old_elif:
                 indent = None
 
-                put_fst._indent_lns(block_indent, skip=0, docstr=docstr)
+                put_fst._indent_lns(block_indent, skip=0, docstr=docstr, docstr_strict_exclude=docstr_strict_exclude)
                 put_fst._put_src([opener_indent + 'else:', ''], 0, 0, 0, 0, False)
 
         if indent is not None:
-            put_fst._indent_lns(indent, skip=0, docstr=docstr)
+            put_fst._indent_lns(indent, skip=0, docstr=docstr, docstr_strict_exclude=docstr_strict_exclude)
 
         copy_loc, put_loc, del_lines, bound, pre_comms, post_comms, pre_semi, post_semi, block_start = (
             self.get_slice_stmt(tgt_fst, field, True, block_loc, ffirst, flast, fpre, fpost,

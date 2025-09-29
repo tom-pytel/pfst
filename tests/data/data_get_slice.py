@@ -5924,6 +5924,123 @@ Module - ROOT 0,0..5,12
   3] Expr - 4,4..5,12
     .value Constant 'Five\n      Six' - 4,4..5,12
 '''),
+
+(4, 'body[0]', 1, 4, None, {}, ('exec', r'''
+def f():
+    """One
+      Two"""
+    """Three
+      Four"""
+    i ; """Five
+      Six"""
+    pass
+'''), r'''
+def f():
+    """One
+      Two"""
+    pass
+''', r'''
+Module - ROOT 0,0..3,8
+  .body[1]
+  0] FunctionDef - 0,0..3,8
+    .name 'f'
+    .body[2]
+    0] Expr - 1,4..2,12
+      .value Constant 'One\n      Two' - 1,4..2,12
+    1] Pass - 3,4..3,8
+''', r'''
+"""Three
+  Four"""
+i ; """Five
+  Six"""
+''', r'''
+Module - ROOT 0,0..3,8
+  .body[3]
+  0] Expr - 0,0..1,9
+    .value Constant 'Three\n  Four' - 0,0..1,9
+  1] Expr - 2,0..2,1
+    .value Name 'i' Load - 2,0..2,1
+  2] Expr - 2,4..3,8
+    .value Constant 'Five\n  Six' - 2,4..3,8
+'''),
+
+(5, 'body[0]', 1, 4, None, {'docstr': 'strict'}, ('exec', r'''
+def f():
+    """One
+      Two"""
+    """Three
+      Four"""
+    i ; """Five
+      Six"""
+    pass
+'''), r'''
+def f():
+    """One
+      Two"""
+    pass
+''', r'''
+Module - ROOT 0,0..3,8
+  .body[1]
+  0] FunctionDef - 0,0..3,8
+    .name 'f'
+    .body[2]
+    0] Expr - 1,4..2,12
+      .value Constant 'One\n      Two' - 1,4..2,12
+    1] Pass - 3,4..3,8
+''', r'''
+"""Three
+      Four"""
+i ; """Five
+      Six"""
+''', r'''
+Module - ROOT 0,0..3,12
+  .body[3]
+  0] Expr - 0,0..1,13
+    .value Constant 'Three\n      Four' - 0,0..1,13
+  1] Expr - 2,0..2,1
+    .value Name 'i' Load - 2,0..2,1
+  2] Expr - 2,4..3,12
+    .value Constant 'Five\n      Six' - 2,4..3,12
+'''),
+
+(6, 'body[0]', 1, 4, None, {'docstr': False}, ('exec', r'''
+def f():
+    """One
+      Two"""
+    """Three
+      Four"""
+    i ; """Five
+      Six"""
+    pass
+'''), r'''
+def f():
+    """One
+      Two"""
+    pass
+''', r'''
+Module - ROOT 0,0..3,8
+  .body[1]
+  0] FunctionDef - 0,0..3,8
+    .name 'f'
+    .body[2]
+    0] Expr - 1,4..2,12
+      .value Constant 'One\n      Two' - 1,4..2,12
+    1] Pass - 3,4..3,8
+''', r'''
+"""Three
+      Four"""
+i ; """Five
+      Six"""
+''', r'''
+Module - ROOT 0,0..3,12
+  .body[3]
+  0] Expr - 0,0..1,13
+    .value Constant 'Three\n      Four' - 0,0..1,13
+  1] Expr - 2,0..2,1
+    .value Name 'i' Load - 2,0..2,1
+  2] Expr - 2,4..3,12
+    .value Constant 'Five\n      Six' - 2,4..3,12
+'''),
 ],
 
 'Delete_targets': [  # ................................................................................

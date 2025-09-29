@@ -2,10 +2,13 @@
 
 ### Fixed
 
+- put string `Expr` as `'strict'` docstr dont in/dedent if not first element
+
 ### Added
 
 ### Updated
 
+- `get_src()` and `put_src()` clip and validate coordinates
 - LOTS of code cleanups, refactor, clean up API
 
 
