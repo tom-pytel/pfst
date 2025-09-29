@@ -420,26 +420,21 @@ def _make_tree_fst(ast: AST, parent: fst.FST, pfield: astfield) -> fst.FST:
     return fst.FST(ast, parent, pfield)
 
 
-def _reparse_docstr_Constants(self: fst.FST, docstr: bool | Literal['strict'] | None = None) -> None:
-    """Reparse docstrings in `self` and all descendants from source into their `Constant` values.
+def _reparse_docstr_Constants(self: fst.FST, docstr: bool | Literal['strict'] = True) -> None:
+    """Reparse docstrings in `self` and all descendants from source into their `Constant` values (because the source has
+    changed).
 
     **Parameters:**
     - `docstr`: Which strings to reparse. `True` means all `Expr` multiline strings. `'strict'` means only multiline
-        strings in expected docstring. `False` doesn't reparse anything and just returns. `None` means use default
-        (`True`).
+        strings in standard docstring locations. `False` doesn't reparse anything and just returns.
     """
 
-    if docstr is None:
-        docstr = self.get_option('docstr')
-    if not docstr:
-        return
-
-    if docstr != 'strict':  # True
+    if docstr is True:
         for a in walk(self.a):
             if isinstance(a, Expr) and isinstance(v := a.value, Constant) and isinstance(v.value, str):
                 v.value = literal_eval((f := a.f).get_src(*f.loc))
 
-    else:
+    elif docstr == 'strict':
         for a in walk(self.a):
             if isinstance(a, ASTS_SCOPE_NAMED_OR_MOD):
                 if ((body := a.body) and isinstance(b0 := body[0], Expr) and isinstance(v := b0.value, Constant) and
@@ -1424,7 +1419,7 @@ def _get_indent(self: fst.FST) -> str:
     return indent
 
 
-def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal['strict'] | None = None) -> set[int]:
+def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal['strict'] = True) -> set[int]:
     r"""Get set of indentable lines within this node.
 
     **Parameters:**
@@ -1433,7 +1428,7 @@ def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal[
         on cut).
     - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
         multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
-        in expected docstring positions are indentable. `None` means use default.
+        in standard docstring locations are indentable.
 
     **Returns:**
     - `set[int]`: Set of line numbers (zero based) which are sytactically indentable.
@@ -1461,9 +1456,6 @@ def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal[
     {0, 1, 2, 3, 6}
     ```
     """
-
-    if docstr is None:
-        docstr = self.get_option('docstr')
 
     strict = docstr == 'strict'
     lines = self.root._lines
@@ -1526,7 +1518,7 @@ def _offset_lns(self: fst.FST, lns: set[int] | dict[int, int], dcol_offset: int 
 
 
 def _indent_lns(self: fst.FST, indent: str | None = None, lns: set[int] | None = None, *,
-                skip: int = 1, docstr: bool | Literal['strict'] | None = None) -> None:
+                skip: int = 1, docstr: bool | Literal['strict'] = True) -> None:
     """Indent all indentable lines specified in `lns` with `indent` and adjust node locations accordingly.
 
     **WARNING!** This does not offset parent nodes.
@@ -1538,7 +1530,7 @@ def _indent_lns(self: fst.FST, indent: str | None = None, lns: set[int] | None =
     - `skip`: If not providing `lns` then this value is passed to `_get_indentable_lns()`.
     - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
         multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
-        in expected docstring positions are indentable. `None` means use default.
+        in standard docstring locations are indentable.
     """
 
     if indent == '':
@@ -1548,8 +1540,6 @@ def _indent_lns(self: fst.FST, indent: str | None = None, lns: set[int] | None =
 
     if indent is None:
         indent = root.indent
-    if docstr is None:
-        docstr = self.get_option('docstr')
 
     if not ((lns := self._get_indentable_lns(skip, docstr=docstr)) if lns is None else lns):
         return
@@ -1569,7 +1559,7 @@ def _indent_lns(self: fst.FST, indent: str | None = None, lns: set[int] | None =
 
 
 def _dedent_lns(self: fst.FST, dedent: str | None = None, lns: set[int] | None = None, *,
-                skip: int = 1, docstr: bool | Literal['strict'] | None = None) -> None:
+                skip: int = 1, docstr: bool | Literal['strict'] = True) -> None:
     """Dedent all indentable lines specified in `lns` by removing `dedent` prefix and adjust node locations
     accordingly. If cannot dedent entire amount, will dedent as much as possible.
 
@@ -1581,7 +1571,7 @@ def _dedent_lns(self: fst.FST, dedent: str | None = None, lns: set[int] | None =
         `_get_indentable_lns(skip=skip)`.
     - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
         multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
-        in expected docstring positions are indentable. `None` means use default.
+        in standard docstring locations are indentable.
     - `skip`: If not providing `lns` then this value is passed to `_get_indentable_lns()`.
     """
 
@@ -1592,8 +1582,6 @@ def _dedent_lns(self: fst.FST, dedent: str | None = None, lns: set[int] | None =
 
     if dedent is None:
         dedent = root.indent
-    if docstr is None:
-        docstr = self.get_option('docstr')
 
     if not ((lns := self._get_indentable_lns(skip, docstr=docstr)) if lns is None else lns):
         return
@@ -1643,7 +1631,7 @@ def _dedent_lns(self: fst.FST, dedent: str | None = None, lns: set[int] | None =
 
 
 def _redent_lns(self: fst.FST, dedent: str | None = None, indent: str | None = None, lns: set[int] | None = None, *,
-                skip: int = 1, docstr: bool | Literal['strict'] | None = None) -> None:
+                skip: int = 1, docstr: bool | Literal['strict'] = True) -> None:
     """Redent all indentable lines specified in `lns` by removing `dedent` prefix then indenting by `indent` for each
     line and adjust node locations accordingly. The operation is carried out intelligently so that a dedent will not
     be truncated if the following indent would move it off the start of the line. It is also done in one pass so is more
@@ -1659,7 +1647,7 @@ def _redent_lns(self: fst.FST, dedent: str | None = None, indent: str | None = N
         `_get_indentable_lns(skip=skip)`.
     - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
         multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
-        in expected docstring positions are indentable. `None` means use default.
+        in standard docstring locations are indentable.
     - `skip`: If not providing `lns` then this value is passed to `_get_indentable_lns()`.
     """
 
@@ -1676,9 +1664,6 @@ def _redent_lns(self: fst.FST, dedent: str | None = None, indent: str | None = N
         return self._indent_lns(indent, skip=skip, docstr=docstr)
     if not indent:
         return self._dedent_lns(indent, skip=skip, docstr=docstr)
-
-    if docstr is None:
-        docstr = self.get_option('docstr')
 
     if not ((lns := self._get_indentable_lns(skip, docstr=docstr)) if lns is None else lns):
         return
@@ -1845,7 +1830,7 @@ def _sanitize(self: fst.FST) -> Self:
 def _make_fst_and_dedent(self: fst.FST, indent: fst.FST | str, ast: AST, copy_loc: fstloc,
                          prefix: str = '', suffix: str = '',
                          put_loc: fstloc | None = None, put_lines: list[str] | None = None, *,
-                         docstr: bool | Literal['strict'] | None = None,
+                         docstr: bool | Literal['strict'] = True,
                          ret_params_offset: bool = False) -> fst.FST | tuple[fst.FST, _ParamsOffset]:
     if not isinstance(indent, str):
         indent = indent._get_indent()

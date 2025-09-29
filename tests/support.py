@@ -220,13 +220,14 @@ class PutCases(GetPutCases):  # TODO: maybe automatically test 'raw' here?
     def exec(self, case) -> list[str | tuple[str, str]]:  # rest
         _, attr, start, stop, field, options, code, case_rest = case
 
-        func   = self.func
-        f      = _make_fst(code, attr)
-        is_raw = options.get('raw', False)
-        rest0  = case_rest[0]
-        rest   = [rest0]
-        tail   = None
-        src    = None if rest0 is None or rest0 == '**DEL**' else rest0 if isinstance(rest0, str) else None if ((rest01 := rest0[1]) == '**DEL**') else rest01
+        func     = self.func
+        f        = _make_fst(code, attr)
+        is_raw   = options.get('raw', False)
+        cmp_asts = options.get('_cmp_asts', True)
+        rest0    = case_rest[0]
+        rest     = [rest0]
+        tail     = None
+        src      = None if rest0 is None or rest0 == '**DEL**' else rest0 if isinstance(rest0, str) else None if ((rest01 := rest0[1]) == '**DEL**') else rest01
 
         try:
             g = func(f, src, start, stop, field, **options)
@@ -301,8 +302,8 @@ class PutCases(GetPutCases):  # TODO: maybe automatically test 'raw' here?
                                 elif g is not l:
                                     raise RuntimeError('FST returned from func AST put not identical to passed in')
 
-                                if not compare_asts(l.root.a, f.root.a):
-                                    exc = RuntimeError(f'AST put and src put AST are not identical\n{l.root.a}\n...\n{f.root.a}')  # XXX: this repr(AST) for earlier py "<ast.Module object at 0x7f70c295bd30>"
+                                if cmp_asts and not compare_asts(l.root.a, f.root.a):
+                                    exc = RuntimeError(f'AST put and src put AST are not identical\n{l.root.dump(out=str)}\n...\n{f.root.dump(out=str)}')  # XXX: this repr(AST) for earlier py "<ast.Module object at 0x7f70c295bd30>"
 
                                     if is_raw:
                                         rest.append(f'**{_san_exc(exc)!r}**')

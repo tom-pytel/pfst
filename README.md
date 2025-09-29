@@ -34,14 +34,20 @@ Format preserving parse and unparse:
 >>> import ast, fst
 
 >>> a = fst.parse('if a: b = c, d  # comment')
+```
 
+```py
 >>> print(fst.unparse(a))
 if a: b = c, d  # comment
+```
 
+```py
 >>> print(ast.unparse(a))
 if a:
     b = (c, d)
+```
 
+```py
 >>> print(ast.dump(a))  # just a normal AST
 Module(
   body=[

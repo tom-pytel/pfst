@@ -11,7 +11,7 @@ delete
 ...
 ...     end_params = _put_slice_seq_begin(fst_, start, stop, None, None, None, 0,
 ...                                       fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
-...                                       trivia, None, field, None, sep, self_tail_sep)
+...                                       {'trivia': trivia}, field, None, sep, self_tail_sep)
 ...
 ...     del getattr(fst_.a, field)[start : stop]
 ...
@@ -165,7 +165,7 @@ replace
 ...
 ...     end_params = _put_slice_seq_begin(fst_, start, stop, new, new_body[0].f, new_body[-1].f, len(new_body),
 ...                                       fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
-...                                       trivia, None, field, None, sep, self_tail_sep)
+...                                       {'trivia': trivia}, field, None, sep, self_tail_sep)
 ...
 ...     fst_._unmake_fst_tree(body[start : stop])
 ...     new._unmake_fst_parents(True)
@@ -484,7 +484,7 @@ replace
 ...
 ...     end_params = _put_slice_seq_begin(fst_, idx, idx, new, new_body[0].f, new_body[-1].f, len(new_body),
 ...                                       fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
-...                                       trivia, None, field, None, sep, self_tail_sep)
+...                                       {'trivia': trivia}, field, None, sep, self_tail_sep)
 ...
 ...     getattr(fst_.a, field)[idx : idx] = new_body
 ...
@@ -861,7 +861,7 @@ delete (two-element sequence)
 ...
 ...     end_params = _put_slice_seq_begin(fst_, start, stop, None, None, None, 0,
 ...                                       fst_.ln, fst_.col + off, fst_.end_ln, fst_.end_col - off,
-...                                       trivia, None, field, field2, sep, self_tail_sep)
+...                                       {'trivia': trivia}, field, field2, sep, self_tail_sep)
 ...
 ...     del getattr(fst_.a, field)[start : stop]
 ...     del getattr(fst_.a, field2)[start : stop]

@@ -5773,6 +5773,159 @@ Tuple - ROOT 0,0..0,4
 '''),
 ],
 
+'docstr': [  # ................................................................................
+
+(0, '', 0, 4, None, {}, ('exec', r'''
+"""One
+  Two"""
+"""Three
+  Four"""
+i ; """Five
+  Six"""
+pass
+'''),
+r'''pass''', r'''
+Module - ROOT 0,0..0,4
+  .body[1]
+  0] Pass - 0,0..0,4
+''', r'''
+"""One
+  Two"""
+"""Three
+  Four"""
+i ; """Five
+  Six"""
+''', r'''
+Module - ROOT 0,0..5,8
+  .body[4]
+  0] Expr - 0,0..1,8
+    .value Constant 'One\n  Two' - 0,0..1,8
+  1] Expr - 2,0..3,9
+    .value Constant 'Three\n  Four' - 2,0..3,9
+  2] Expr - 4,0..4,1
+    .value Name 'i' Load - 4,0..4,1
+  3] Expr - 4,4..5,8
+    .value Constant 'Five\n  Six' - 4,4..5,8
+'''),
+
+(1, 'body[0]', 0, 4, None, {}, ('exec', r'''
+def f():
+    """One
+      Two"""
+    """Three
+      Four"""
+    i ; """Five
+      Six"""
+    pass
+'''), r'''
+def f():
+    pass
+''', r'''
+Module - ROOT 0,0..1,8
+  .body[1]
+  0] FunctionDef - 0,0..1,8
+    .name 'f'
+    .body[1]
+    0] Pass - 1,4..1,8
+''', r'''
+"""One
+  Two"""
+"""Three
+  Four"""
+i ; """Five
+  Six"""
+''', r'''
+Module - ROOT 0,0..5,8
+  .body[4]
+  0] Expr - 0,0..1,8
+    .value Constant 'One\n  Two' - 0,0..1,8
+  1] Expr - 2,0..3,9
+    .value Constant 'Three\n  Four' - 2,0..3,9
+  2] Expr - 4,0..4,1
+    .value Name 'i' Load - 4,0..4,1
+  3] Expr - 4,4..5,8
+    .value Constant 'Five\n  Six' - 4,4..5,8
+'''),
+
+(2, 'body[0]', 0, 4, None, {'docstr': 'strict'}, ('exec', r'''
+def f():
+    """One
+      Two"""
+    """Three
+      Four"""
+    i ; """Five
+      Six"""
+    pass
+'''), r'''
+def f():
+    pass
+''', r'''
+Module - ROOT 0,0..1,8
+  .body[1]
+  0] FunctionDef - 0,0..1,8
+    .name 'f'
+    .body[1]
+    0] Pass - 1,4..1,8
+''', r'''
+"""One
+  Two"""
+"""Three
+      Four"""
+i ; """Five
+      Six"""
+''', r'''
+Module - ROOT 0,0..5,12
+  .body[4]
+  0] Expr - 0,0..1,8
+    .value Constant 'One\n  Two' - 0,0..1,8
+  1] Expr - 2,0..3,13
+    .value Constant 'Three\n      Four' - 2,0..3,13
+  2] Expr - 4,0..4,1
+    .value Name 'i' Load - 4,0..4,1
+  3] Expr - 4,4..5,12
+    .value Constant 'Five\n      Six' - 4,4..5,12
+'''),
+
+(3, 'body[0]', 0, 4, None, {'docstr': False}, ('exec', r'''
+def f():
+    """One
+      Two"""
+    """Three
+      Four"""
+    i ; """Five
+      Six"""
+    pass
+'''), r'''
+def f():
+    pass
+''', r'''
+Module - ROOT 0,0..1,8
+  .body[1]
+  0] FunctionDef - 0,0..1,8
+    .name 'f'
+    .body[1]
+    0] Pass - 1,4..1,8
+''', r'''
+"""One
+      Two"""
+"""Three
+      Four"""
+i ; """Five
+      Six"""
+''', r'''
+Module - ROOT 0,0..5,12
+  .body[4]
+  0] Expr - 0,0..1,12
+    .value Constant 'One\n      Two' - 0,0..1,12
+  1] Expr - 2,0..3,13
+    .value Constant 'Three\n      Four' - 2,0..3,13
+  2] Expr - 4,0..4,1
+    .value Name 'i' Load - 4,0..4,1
+  3] Expr - 4,4..5,12
+    .value Constant 'Five\n      Six' - 4,4..5,12
+'''),
+],
+
 'Delete_targets': [  # ................................................................................
 
 (0, 'body[0]', 1, 2, None, {}, ('exec',

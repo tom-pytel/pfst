@@ -525,13 +525,13 @@ class SrcEdit:
             location currently.
         """
 
+        opt_elif = fst.FST.get_option('elif_', options)
+        docstr = fst.FST.get_option('docstr', options)
         lines = tgt_fst.root._lines
         put_lines = put_fst._lines
         put_body = put_fst.a.body
         is_handler = field == 'handlers'
         is_orelse = field == 'orelse'
-        docstr = options.get('docstr')
-        opt_elif = fst.FST.get_option('elif_', options)
 
         if not ffirst:  # pure insertion
             is_elif = (not fpre and not fpost and is_orelse and opt_elif and len(b := put_body) == 1 and

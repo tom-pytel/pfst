@@ -1003,7 +1003,7 @@ class FST:
         return _TLOCAL.options.copy()
 
     @staticmethod
-    def get_option(option: builtins.str, options: Mapping[builtins.str, Any] = {}) -> object:
+    def get_option(option: builtins.str, options: Mapping[builtins.str, Any] = {}) -> Any:
         """Get a single option from `options` dict or global default if option not in dict or is `None` there. For a
         list of options used see `options()`.
 

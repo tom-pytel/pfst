@@ -87,14 +87,14 @@ def _set_block_end_from_last_child(self: fst.FST, bound_ln: int, bound_col: int,
     _set_end_pos(self, end_lineno, end_col_offset)
 
 
-def _elif_to_else_if(self: fst.FST) -> None:
+def _elif_to_else_if(self: fst.FST, docstr: bool | Literal['strict'] = True) -> None:
     """Convert an 'elif something:\\n  ...' to 'else:\\n  if something:\\n    ...'. Make sure to only call on an
     actual `elif`, meaning the lone `If` statement in the parent's `orelse` block which is an actual `elif` and not
     an `if`."""
 
     indent = self._get_indent()
 
-    self._indent_lns(skip=0)
+    self._indent_lns(skip=0, docstr=docstr)
 
     if not self.next():  # last child?
         _set_end_pos(self, (a := self.a).end_lineno, a.end_col_offset, False)
@@ -186,7 +186,7 @@ def _get_slice_stmtish(self: fst.FST, start: int | Literal['end'] | None, stop: 
         raise ValueError('cannot specify `one=True` if getting multiple statements')
 
     fst_ = self._make_fst_and_dedent(indent, get_ast, copy_loc, '', '', put_loc, put_lines,
-                                     docstr=options.get('docstr'))
+                                     docstr=self.get_option('docstr', options))
 
     if cut and is_last_child:  # correct for removed last child nodes or last nodes past the block open colon
         _set_block_end_from_last_child(self, block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
@@ -283,7 +283,7 @@ def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['e
         ffirst = flast = None
 
         if field == 'orelse' and len(body) == 1 and (f := body[0].f)._is_elif():
-            _elif_to_else_if(f)
+            _elif_to_else_if(f, self.get_option('docstr', options))
 
         if fpre:
             block_loc = fstloc(*fpre.bloc[2:], *(fpost.bloc[:2] if fpost else next_bound_step(fpre)))
