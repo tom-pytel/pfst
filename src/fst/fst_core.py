@@ -1830,8 +1830,15 @@ def _sanitize(self: fst.FST) -> Self:
 def _make_fst_and_dedent(self: fst.FST, indent: fst.FST | str, ast: AST, copy_loc: fstloc,
                          prefix: str = '', suffix: str = '',
                          put_loc: fstloc | None = None, put_lines: list[str] | None = None, *,
-                         docstr: bool | Literal['strict'] = True,
-                         ret_params_offset: bool = False) -> fst.FST | tuple[fst.FST, _ParamsOffset]:
+                         docstr: bool | Literal['strict'] = True) -> tuple[fst.FST, _ParamsOffset]:
+    """Make an `FST` from a prepared `AST` and a location in the source of `self` to copy (or cut) from. The copied
+    source is dedented and if a cut is being done (`put_loc` is not None) then `put_lines` is put to the source of
+    `self`.
+
+    **Returns:**
+    - `(new FST, _ParamsOffset of delete if cut else None)`
+    """
+
     if not isinstance(indent, str):
         indent = indent._get_indent()
 
@@ -1856,4 +1863,4 @@ def _make_fst_and_dedent(self: fst.FST, indent: fst.FST | str, ast: AST, copy_lo
     else:
         params_offset = None
 
-    return (fst_, params_offset) if ret_params_offset else fst_
+    return fst_, params_offset

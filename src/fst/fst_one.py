@@ -296,7 +296,7 @@ def _get_one_default(self: fst.FST, idx: int | None, field: str, cut: bool, opti
     if not loc:
         raise ValueError('cannot copy node which does not have a location')
 
-    ret = childf._make_fst_and_dedent(childf, copy_ast(child), loc, docstr=self.get_option('docstr', options))
+    ret, _ = childf._make_fst_and_dedent(childf, copy_ast(child), loc, docstr=self.get_option('docstr', options))
 
     _maybe_fix_copy(ret, self.get_option('pars', options), self.get_option('pars_walrus', options))
 
@@ -433,8 +433,8 @@ def _get_one_format_spec(self: fst.FST, idx: int | None, field: str, cut: bool, 
         quotes = next(iter(quotes))
         prefix = 'f' + quotes[2:]
 
-    ret = childf._make_fst_and_dedent(childf, copy_ast(child), loc, prefix, quotes,
-                                      docstr=self.get_option('docstr', options))
+    ret, _ = childf._make_fst_and_dedent(childf, copy_ast(child), loc, prefix, quotes,
+                                         docstr=self.get_option('docstr', options))
     reta = ret.a
 
     if len(quotes) == 1:
@@ -481,7 +481,7 @@ def _get_one_JoinedStr_TemplateStr_values(self: fst.FST, idx: int | None, field:
         #     except SyntaxError:
         #         suffix = prefix
 
-        # ret = childf._make_fst_and_dedent('', copy_ast(child), loc, prefix, suffix)
+        # ret, _ = childf._make_fst_and_dedent('', copy_ast(child), loc, prefix, suffix)
         # reta = ret.a
         # reta.col_offset = 0
         # reta.end_col_offset += len(suffix)
@@ -496,8 +496,8 @@ def _get_one_JoinedStr_TemplateStr_values(self: fst.FST, idx: int | None, field:
 
         typ = 'f' if isinstance(child, FormattedValue) else 't'
         prefix = typ + prefix[1:]
-        fmt = childf._make_fst_and_dedent(childf, copy_ast(child), childf.loc, prefix, prefix[1:],
-                                          docstr=self.get_option('docstr', options))
+        fmt, _ = childf._make_fst_and_dedent(childf, copy_ast(child), childf.loc, prefix, prefix[1:],
+                                             docstr=self.get_option('docstr', options))
         lprefix = len(prefix)
         ret = fst.FST((JoinedStr if typ == 'f' else TemplateStr)
                       (values=[fmt.a], lineno=fmt.lineno, col_offset=fmt.col_offset - lprefix,

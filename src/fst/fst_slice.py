@@ -800,8 +800,7 @@ def _get_slice_seq(self: fst.FST, start: int, stop: int, len_body: int, cut: boo
     fst_, params_offset = self._make_fst_and_dedent(self, ast, copy_loc, prefix, suffix,
                                                     del_loc if cut else None,
                                                     [del_indent] if del_indent and del_loc.end_col else None,
-                                                    docstr=False,  # docstr False because none of the things handled by this function can have any form of docstring
-                                                    ret_params_offset=True)
+                                                    docstr=False)  # docstr False because none of the things handled by this function can have any form of docstring
 
     ast.col_offset = 0  # before prefix
     ast.end_col_offset = fst_._lines[-1].lenbytes  # after suffix
