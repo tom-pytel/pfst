@@ -4106,7 +4106,7 @@ finally:
                 col       = randint(0, len(lines[ln]))
                 end_ln    = randint(ln, len(lines) - 1)
                 end_col   = randint(col if end_ln == ln else 0, len(lines[end_ln]))
-                put_lines = master.get_src(ln, col, end_ln, end_col, True)
+                put_lines = master._get_src(ln, col, end_ln, end_col, True)
 
                 copy.put_src(put_lines, ln, col, end_ln, end_col)
                 copy.verify()
@@ -4139,7 +4139,7 @@ if u:
 \t\t\tpass
             '''.strip()
         f = FST(src)
-        s = f.get_src(5, 8, 8, 14)
+        s = f._get_src(5, 8, 8, 14)
         f.put_src(s, 5, 8, 8, 14)
         self.assertEqual(f.src, src)
         f.verify()
@@ -4188,7 +4188,7 @@ if u:
       # directory (with paths underneath it). E.g., "foo" matches "foo",
             '''.strip()
         f = FST(src)
-        s = f.get_src(5, 8, 8, 14)
+        s = f._get_src(5, 8, 8, 14)
         f.put_src(s, 5, 8, 8, 14)
         self.assertEqual(f.src, src)
         f.verify()

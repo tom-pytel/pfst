@@ -61,7 +61,7 @@ _re_delim_close_alnums = re.compile(rf'[{pat_alnum}.][)\]][{pat_alnum}]')
 
 def _dump_lines(fst_: fst.FST, linefunc: Callable, ln: int, col: int, end_ln: int, end_col: int, eol: str = '') -> None:
     width = int(log10(len(fst_.root._lines) - 1 or 1)) + 1
-    lines = fst_.get_src(ln, col, end_ln, end_col, True)
+    lines = fst_._get_src(ln, col, end_ln, end_col, True)
 
     if (l := lines[-1][:end_col]).endswith(' '):
         l += '<'
@@ -513,7 +513,7 @@ def _is_augop(self: fst.FST) -> bool | None:
     ```
     """
 
-    return None if not isinstance(self.a, operator) else self.get_src(*self.loc) in OPSTR2CLS_AUG
+    return None if not isinstance(self.a, operator) else self._get_src(*self.loc) in OPSTR2CLS_AUG
 
 
 def _has_Slice(self: fst.FST) -> bool:

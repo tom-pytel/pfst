@@ -726,7 +726,7 @@ def regen_pars_data():
         t     = parse(src)
         f     = eval(f't.{elt}', {'t': t}).f
         l     = f.pars()
-        ssrc  = f.get_src(*l)
+        ssrc  = f._get_src(*l)
 
         assert not ssrc.startswith('\n') or ssrc.endswith('\n')
 
@@ -1682,6 +1682,44 @@ with a as b, c as d:
 
         self.assertRaises(ValueError, f.child_path, parse('1').f)
 
+    def test_get_src_clip(self):
+        f = FST('if 1:\n    j = 2\n    pass')
+
+        self.assertEqual('if', f.get_src(-1, -1, 0, 2))
+        self.assertEqual('pass', f.get_src(2, 4, 999, 999))
+        self.assertEqual('if 1:\n    j = 2\n    pass', f.get_src(-1, -1, 999, 999))
+        self.assertEqual('    j = 2', f.get_src(1, -1, 1, 999))
+        self.assertEqual('1:\n    j = 2\n    p', f.get_src(-1, 3, 999, 5))
+
+        self.assertRaises(ValueError, f.get_src, 2, 0, 1, 0)
+        self.assertRaises(ValueError, f.get_src, 1, 2, 1, 1)
+
+    def test_put_src_clip(self):
+        f = FST('if 1:\n    j = 2\n    pass')
+
+        f.put_src('if', -1, -1, 0, 2)
+        self.assertEqual('if 1:\n    j = 2\n    pass', f.src)
+        f.verify()
+
+        f.put_src('pass', 2, 4, 999, 999)
+        self.assertEqual('if 1:\n    j = 2\n    pass', f.src)
+        f.verify()
+
+        f.put_src('if 1:\n    j = 2\n    pass', -1, -1, 999, 999)
+        self.assertEqual('if 1:\n    j = 2\n    pass', f.src)
+        f.verify()
+
+        f.put_src('    j = 2', 1, -1, 1, 999)
+        self.assertEqual('if 1:\n    j = 2\n    pass', f.src)
+        f.verify()
+
+        f.put_src('1:\n    j = 2\n    p', -1, 3, 999, 5)
+        self.assertEqual('if 1:\n    j = 2\n    pass', f.src)
+        f.verify()
+
+        self.assertRaises(ValueError, f.put_src, None, 2, 0, 1, 0)
+        self.assertRaises(ValueError, f.put_src, None, 1, 2, 1, 1)
+
     def test_is_atom(self):
         self.assertIs(False, parse('1 + 2').body[0].value.f._is_atom())
         self.assertEqual('unenclosable', parse('f()').body[0].value.f._is_atom())
@@ -2482,13 +2520,13 @@ def func():
         src = 'class cls:\n if True:\n  i = 1\n else:\n  j = 2'
         ast = parse(src)
 
-        self.assertEqual(src.split('\n'), ast.f.get_src(*ast.f.loc, True))
-        self.assertEqual(src.split('\n'), ast.body[0].f.get_src(*ast.body[0].f.loc, True))
-        self.assertEqual('if True:\n  i = 1\n else:\n  j = 2'.split('\n'), ast.body[0].body[0].f.get_src(*ast.body[0].body[0].f.loc, True))
-        self.assertEqual(['i = 1'], ast.body[0].body[0].body[0].f.get_src(*ast.body[0].body[0].body[0].f.loc, True))
-        self.assertEqual(['j = 2'], ast.body[0].body[0].orelse[0].f.get_src(*ast.body[0].body[0].orelse[0].f.loc, True))
+        self.assertEqual(src.split('\n'), ast.f._get_src(*ast.f.loc, True))
+        self.assertEqual(src.split('\n'), ast.body[0].f._get_src(*ast.body[0].f.loc, True))
+        self.assertEqual('if True:\n  i = 1\n else:\n  j = 2'.split('\n'), ast.body[0].body[0].f._get_src(*ast.body[0].body[0].f.loc, True))
+        self.assertEqual(['i = 1'], ast.body[0].body[0].body[0].f._get_src(*ast.body[0].body[0].body[0].f.loc, True))
+        self.assertEqual(['j = 2'], ast.body[0].body[0].orelse[0].f._get_src(*ast.body[0].body[0].orelse[0].f.loc, True))
 
-        self.assertEqual(['True:', '  i'], ast.f.root.get_src(1, 4, 2, 3, True))
+        self.assertEqual(['True:', '  i'], ast.f.root._get_src(1, 4, 2, 3, True))
 
     def test_code_as_simple(self):
         # stmts
@@ -3606,7 +3644,7 @@ match a:
             t    = parse(src)
             f    = eval(f't.{elt}', {'t': t}).f
             l    = f.pars()
-            ssrc = f.get_src(*l)
+            ssrc = f._get_src(*l)
 
             try:
                 self.assertEqual(ssrc, slice_copy.strip())
@@ -3916,7 +3954,7 @@ i = 1
 
 # end
             '''.strip())
-        self.assertEqual((g := f.copy()).get_src(*g.loc), f.src)
+        self.assertEqual((g := f.copy())._get_src(*g.loc), f.src)
 
         a = parse('''
 # prepre

@@ -1005,7 +1005,7 @@ class ReputSrc(Fuzzy):
                 col = randint(0, len(lines[ln]))
                 end_ln = randint(ln, len(lines) - 1)
                 end_col = randint(col if end_ln == ln else 0, len(lines[end_ln]))
-                put_lines = fst.get_src(ln, col, end_ln, end_col, True)
+                put_lines = fst._get_src(ln, col, end_ln, end_col, True)
 
                 if not (count % 10):
                     # s = f'{count, ln, col, end_ln, end_col}'

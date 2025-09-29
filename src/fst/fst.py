@@ -196,6 +196,38 @@ _DEFAULT_AST_FIELD = {cls: field for field, classes in [
 ] for cls in classes}
 
 
+def _clip_src_loc(self: FST, ln: int, col: int, end_ln: int, end_col: int) -> tuple[int, int, int, int]:
+    """Clip location to valid source coordinates and verify that the end does not precede the start."""
+
+    lines = self.root._lines
+    last_ln = len(lines) - 1
+
+    if ln > end_ln or ((end_ln == ln) and col > end_col):  # we do this before so that out-of-bounds coordinates are still validated wrt common sense as wrong order may indicate other bugs
+        raise ValueError('end location cannot precede start location')
+
+    if ln < 0:
+        ln = 0
+    elif ln > last_ln:
+        ln = last_ln
+
+    if col < 0:
+        col = 0
+    elif col > (len_line := len(lines[ln])):
+        col = len_line
+
+    if end_ln < 0:
+        end_ln = 0
+    elif end_ln > last_ln:
+        end_ln = last_ln
+
+    if end_col < 0:
+        end_col = 0
+    elif end_col > (len_line := len(lines[end_ln])):
+        end_col = len_line
+
+    return ln, col, end_ln, end_col
+
+
 def _fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True) -> tuple[str, 'AST']:
     """Get `AST` member list for specified `field` or default if `field=None`."""
 
@@ -403,7 +435,7 @@ class FST:
         if self.is_root:
             return '\n'.join(self._lines)
         elif loc := self.bloc:
-            return self.get_src(*loc)
+            return self._get_src(*loc)
         elif isinstance(a := self.a, arguments):  # arguments with no loc are empty arguments
             return ''
         else:
@@ -1003,7 +1035,7 @@ class FST:
         return _TLOCAL.options.copy()
 
     @staticmethod
-    def get_option(option: builtins.str, options: Mapping[builtins.str, Any] = {}) -> Any:
+    def get_option(option: builtins.str, options: Mapping[builtins.str, Any] = {}) -> object:
         """Get a single option from `options` dict or global default if option not in dict or is `None` there. For a
         list of options used see `options()`.
 
@@ -2007,6 +2039,8 @@ class FST:
 
         Can call on any node in tree to access source for the whole tree.
 
+        The coordinates passed in are clipped to the whole valid source area.
+
         **Parameters:**
         - `ln`: Start line of span to get (0 based).
         - `col`: Start column (character) on start line.
@@ -2032,16 +2066,9 @@ class FST:
         ```
         """
 
-        ls = self.root._lines
+        ln, col, end_ln, end_col = _clip_src_loc(self, ln, col, end_ln, end_col)
 
-        if as_lines:
-            return ([bistr(ls[ln][col : end_col])]  # no real reason for bistr, just to be consistent and minor optimization if passed back into put_src()
-                    if end_ln == ln else
-                    [bistr(ls[ln][col:])] + ls[ln + 1 : end_ln] + [bistr(ls[end_ln][:end_col])])
-        else:
-            return (ls[ln][col : end_col]
-                    if end_ln == ln else
-                    '\n'.join([ls[ln][col:]] + ls[ln + 1 : end_ln] + [ls[end_ln][:end_col]]))
+        return self._get_src(ln, col, end_ln, end_col, as_lines)
 
     def put_src(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
                 exact: bool | None = True) -> FST | None:
@@ -2063,6 +2090,8 @@ class FST:
         candidate is found (since this can be used to delete or merge nodes).
 
         Can call on any node in tree to modify source for the whole tree.
+
+        The coordinates passed in are clipped to the whole valid source area.
 
         **Parameters:**
         - `code`: The code to put as an `FST` (must be root node), `AST`, a string or list of line strings.
@@ -2134,6 +2163,7 @@ class FST:
         ```
         """
 
+        ln, col, end_ln, end_col = _clip_src_loc(self, ln, col, end_ln, end_col)
         parent = self.root.find_loc(ln, col, end_ln, end_col, False) or self.root
 
         return parent._reparse_raw(code, ln, col, end_ln, end_col, exact)
@@ -4227,6 +4257,7 @@ class FST:
         _dedent_lns,
         _redent_lns,
 
+        _get_src,
         _put_src,
         _sanitize,
         _make_fst_and_dedent,

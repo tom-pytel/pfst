@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import re
 from ast import literal_eval, iter_fields, iter_child_nodes, walk
-from types import TracebackType
+from types import EllipsisType, TracebackType
 from typing import Literal, NamedTuple
 
 from . import fst
@@ -138,14 +138,14 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
         if prev := prev_find(lines, vend_ln, vend_col, end_ln, end_col, '!'):
             end_ln, end_col = prev
 
-    src = self.get_src(vend_ln, vend_col, end_ln, end_col)  # source from end of parenthesized value to end of FormattedValue or start of conversion or format_spec
+    src = self._get_src(vend_ln, vend_col, end_ln, end_col)  # source from end of parenthesized value to end of FormattedValue or start of conversion or format_spec
     get_dbg = src and (m := _re_fval_expr_equals.match(src)) and m.end() == len(src)
 
     if not get_dbg and not get_val:
         return None, None, 0, 0
 
     if _HAS_FSTR_COMMENT_BUG:  # '#' characters inside strings erroneously removed as if they were comments
-        lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
+        lines = self._get_src(sln, scol + 1, end_ln, end_col, True)
 
         for i, l in enumerate(lines):
             m = re_line_end_cont_or_comment.match(l)  # always matches
@@ -179,7 +179,7 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
 
         off = sln + 1
         lns = {v - off for v in lns}  # these are line numbers where comments are not possible because next line is a string continuation
-        lines = self.get_src(sln, scol + 1, end_ln, end_col, True)
+        lines = self._get_src(sln, scol + 1, end_ln, end_col, True)
 
         for i, l in enumerate(lines):
             if i not in lns:
@@ -432,7 +432,7 @@ def _reparse_docstr_Constants(self: fst.FST, docstr: bool | Literal['strict'] = 
     if docstr is True:
         for a in walk(self.a):
             if isinstance(a, Expr) and isinstance(v := a.value, Constant) and isinstance(v.value, str):
-                v.value = literal_eval((f := a.f).get_src(*f.loc))
+                v.value = literal_eval((f := a.f)._get_src(*f.loc))
 
     elif docstr == 'strict':
         for a in walk(self.a):
@@ -440,7 +440,7 @@ def _reparse_docstr_Constants(self: fst.FST, docstr: bool | Literal['strict'] = 
                 if ((body := a.body) and isinstance(b0 := body[0], Expr) and isinstance(v := b0.value, Constant) and
                     isinstance(v.value, str)
                 ):
-                    v.value = literal_eval((f := b0.f).get_src(*f.loc))
+                    v.value = literal_eval((f := b0.f)._get_src(*f.loc))
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -1727,8 +1727,40 @@ def _redent_lns(self: fst.FST, dedent: str | None = None, indent: str | None = N
     _reparse_docstr_Constants(self, docstr)
 
 
+def _get_src(self: fst.FST, ln: int, col: int, end_ln: int, end_col: int, as_lines: bool = False) -> str | list[str]:
+    r"""Get source at location, without dedenting or any other modification, returned as a string or individual
+    lines. The first and last lines are cropped to start `col` and `end_col`.
+
+    Can call on any node in tree to access source for the whole tree.
+
+    **Parameters:**
+    - `ln`: Start line of span to get (0 based).
+    - `col`: Start column (character) on start line.
+    - `end_ln`: End line of span to get (0 based, inclusive).
+    - `end_col`: End column (character, exclusive) on end line.
+    - `as_lines`: If `False` then source is returned as a single string with embedded newlines. If `True` then
+        source is returned as a list of line strings (without newlines).
+
+    **Returns:**
+    - `str | list[str]`: A single string or a list of lines if `as_lines=True`. If lines then there are no trailing
+        newlines in the individual line strings.
+    ```
+    """
+
+    lines = self.root._lines
+
+    if as_lines:
+        return ([bistr(lines[ln][col : end_col])]  # no real reason for bistr, just to be consistent and minor optimization if passed back into put_src()
+                if end_ln == ln else
+                [bistr(lines[ln][col:])] + lines[ln + 1 : end_ln] + [bistr(lines[end_ln][:end_col])])
+    else:
+        return (lines[ln][col : end_col]
+                if end_ln == ln else
+                '\n'.join([lines[ln][col:]] + lines[ln + 1 : end_ln] + [lines[end_ln][:end_col]]))
+
+
 def _put_src(self: fst.FST, src: str | list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
-             tail: bool | None = ..., head: bool | None = True, exclude: fst.FST | None = None, *,
+             tail: bool | None | EllipsisType = ..., head: bool | None = True, exclude: fst.FST | None = None, *,
              offset_excluded: bool = True) -> _ParamsOffset | None:
     """Put or delete new source to currently stored source, optionally offsetting all nodes for the change. Must
     specify `tail` as `True`, `False` or `None` to enable offset of nodes according to source put. `...` ellipsis
@@ -1847,7 +1879,7 @@ def _make_fst_and_dedent(self: fst.FST, indent: fst.FST | str, ast: AST, copy_lo
 
     fst_._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix.encode()) - lines[copy_loc.ln].c2b(copy_loc.col))
 
-    fst_._lines = fst_lines = self.get_src(*copy_loc, True)
+    fst_._lines = fst_lines = self._get_src(*copy_loc, True)
 
     if suffix:
         fst_lines[-1] = bistr(fst_lines[-1] + suffix)

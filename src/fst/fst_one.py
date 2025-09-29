@@ -397,7 +397,7 @@ def _get_one_format_spec(self: fst.FST, idx: int | None, field: str, cut: bool, 
     child, _ = _validate_get(self, idx, field)
     childf = child.f
     loc = childf.loc
-    src = childf.get_src(*loc)
+    src = childf._get_src(*loc)
 
     if "'" not in src:  # early out for quotes
         prefix = 'f'
@@ -477,7 +477,7 @@ def _get_one_JoinedStr_TemplateStr_values(self: fst.FST, idx: int | None, field:
 
         # if idx < len(self.a.values) - 1:  # this is ugly, but so are f-strings, its in case of stupidity like: f"{a}b" "c" 'ddd'
         #     try:
-        #         literal_eval(f'{prefix}{self.get_src(*loc)}')
+        #         literal_eval(f'{prefix}{self._get_src(*loc)}')
         #     except SyntaxError:
         #         suffix = prefix
 
