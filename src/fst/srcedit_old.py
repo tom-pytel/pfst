@@ -7,7 +7,7 @@ from . import fst
 from .asttypes import ASTS_SCOPE_NAMED, AST, Constant, Expr, If, mod
 from .astutil import bistr
 
-from .misc import (
+from .common import (
     fstloc,
     re_empty_line_start, re_empty_line, re_comment_line_start, re_line_trailing_space,
     re_empty_line_cont_or_comment,

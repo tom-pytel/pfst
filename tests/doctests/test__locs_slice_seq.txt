@@ -1,5 +1,5 @@
 >>> from fst import *
->>> from fst.misc import fstloc
+>>> from fst.common import fstloc
 >>> from fst.fst_slice import _locs_slice_seq
 
 

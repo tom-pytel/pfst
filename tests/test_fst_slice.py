@@ -7,7 +7,7 @@ import unittest
 from fst import *
 
 from fst.asttypes import ASTS_STMTISH
-from fst.misc import PYLT11, PYLT12, PYGE11, PYGE12, PYGE14
+from fst.common import PYLT11, PYLT12, PYGE11, PYGE12, PYGE14
 
 from support import GetSliceCases, PutSliceCases
 

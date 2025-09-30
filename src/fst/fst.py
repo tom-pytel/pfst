@@ -105,7 +105,7 @@ from .astutil import (
     has_type_comments, compare_asts, copy_ast, last_block_header_child, syntax_ordered_children,
 )
 
-from .misc import (
+from .common import (
     PYLT13,
     astfield, fstloc, fstlocns, nspace,
     Self,

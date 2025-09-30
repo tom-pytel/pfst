@@ -24,7 +24,7 @@ from .asttypes import (
 
 from .astutil import re_identifier, OPCLS2STR, last_block_header_child
 
-from .misc import (
+from .common import (
     fstloc, fstlocns,
     next_frag, prev_frag, next_find, prev_find, next_delims, prev_delims, next_find_re,
 )

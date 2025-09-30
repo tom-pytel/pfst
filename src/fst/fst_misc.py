@@ -42,7 +42,7 @@ from .asttypes import (
 
 from .astutil import OPSTR2CLS_AUG, bistr, pat_alnum, re_alnumdot_alnum
 
-from .misc import (
+from .common import (
     NodeError, srcwpos, nspace,
     re_line_trailing_space, re_line_end_cont_or_comment,
     next_frag, next_find, prev_find, next_delims,

@@ -8,7 +8,7 @@ from ast import parse as ast_parse, unparse as ast_unparse
 from fst import *
 from fst.asttypes import _slice_Assign_targets, _slice_aliases, _slice_withitems, _slice_type_params
 from fst.astutil import OPCLS2STR, WalkFail, copy_ast, compare_asts
-from fst.misc import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, astfield, fstloc
+from fst.common import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, astfield, fstloc
 from fst.view import fstview
 
 from fst.code import (

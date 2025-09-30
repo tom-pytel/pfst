@@ -10,7 +10,7 @@ from fst import *
 
 from fst.asttypes import *
 from fst.astutil import compare_asts
-from fst.misc import PYLT11, PYLT12, PYGE11, PYGE12, PYGE14
+from fst.common import PYLT11, PYLT12, PYGE11, PYGE12, PYGE14
 
 from data.data_other import PUT_SRC_DATA
 

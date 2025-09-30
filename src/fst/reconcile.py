@@ -9,7 +9,7 @@ from typing import Any, Literal, Mapping
 from . import fst
 
 from .astutil import AST, Dict, Global, MatchMapping, Nonlocal
-from .misc import NodeError, astfield
+from .common import NodeError, astfield
 
 __all__ = ['Reconcile']
 

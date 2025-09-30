@@ -74,7 +74,7 @@ from .astutil import (
     re_identifier, bistr, is_valid_target, is_valid_del_target, reduce_ast, set_ctx, copy_ast,
 )
 
-from .misc import (
+from .common import (
     PYLT11, PYGE14,
     Self, NodeError, astfield, fstloc,
     re_empty_line_start, re_empty_line, re_line_trailing_space, re_empty_space, re_line_end_cont_or_comment,

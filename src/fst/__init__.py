@@ -69,7 +69,7 @@ anything about `fst` to maybe gain the ability to preserve some existing formatt
 import ast
 from ast import *  # noqa: F403  - make everything from ast module available here (differs between py versions)
 from .fst import FST, parse, unparse, dump  # noqa: F401
-from .misc import NodeError  # noqa: F401
+from .common import NodeError  # noqa: F401
 from .parsex import ParseError  # noqa: F401
 from .asttypes import *  # noqa: F403  - import standins form some AST classes which may not exist in ast module
 

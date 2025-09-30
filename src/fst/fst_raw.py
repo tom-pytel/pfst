@@ -10,7 +10,7 @@ from . import fst
 from .asttypes import AST, ExceptHandler, Match, Pass, Slice, Try, TryStar, match_case, mod
 from .astutil import bistr
 
-from .misc import NodeError, astfield
+from .common import NodeError, astfield
 
 from .parsex import Mode, unparse
 from .code import Code

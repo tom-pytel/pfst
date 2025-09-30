@@ -120,7 +120,7 @@ from .astutil import (
     get_field, set_field, set_ctx, copy_ast, precedence_require_parens,
 )
 
-from .misc import (
+from .common import (
     PYLT11, PYGE14, NodeError, astfield, fstloc, pyver,
     next_frag, prev_frag, next_find, prev_find, next_find_re, prev_delims,
 )

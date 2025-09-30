@@ -1,6 +1,6 @@
 >>> from pprint import pp
 >>> from fst import *
->>> from fst.misc import astfield
+>>> from fst.common import astfield
 >>> from fst.fst_slice import _put_slice_seq_begin, _put_slice_seq_end
 
 

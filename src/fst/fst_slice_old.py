@@ -16,7 +16,7 @@ from .asttypes import (
 )
 
 from .astutil import copy_ast
-from .misc import astfield, fstloc, next_find, prev_find
+from .common import astfield, fstloc, next_find, prev_find
 from .code import Code, code_as_stmts, code_as_ExceptHandlers, code_as_match_cases
 from .traverse import prev_bound, next_bound_step, prev_bound_step
 from .srcedit_old import _src_edit

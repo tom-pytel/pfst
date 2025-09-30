@@ -91,7 +91,7 @@ from .asttypes import (
 )
 
 from .astutil import pat_alnum, bistr, walk, reduce_ast
-from .misc import next_frag, shortstr
+from .common import next_frag, shortstr
 
 __all__ = [
     'Mode',

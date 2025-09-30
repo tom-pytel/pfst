@@ -16,7 +16,7 @@ from typing import Any, Generator, Iterable, Literal, NamedTuple
 
 from .astutil import *
 from .astutil import re_alnumdot_alnum, TypeAlias, TemplateStr, Interpolation
-from .misc import PYLT11, PYLT12, PYLT14, PYGE12, astfield
+from .common import PYLT11, PYLT12, PYLT14, PYGE12, astfield
 from .view import fstview
 from .parsex import parse, parse_expr_arglike
 from .fst import FST

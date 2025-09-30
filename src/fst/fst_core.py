@@ -82,7 +82,7 @@ from .asttypes import (
 
 from .astutil import bistr, syntax_ordered_children
 
-from .misc import (
+from .common import (
     Self, astfield, fstloc, nspace, pyver,
     re_empty_line, re_empty_line_start, re_line_continuation, re_line_end_cont_or_comment,
     next_find, prev_find,

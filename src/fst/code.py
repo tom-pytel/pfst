@@ -47,7 +47,7 @@ from .astutil import (
     reduce_ast,
 )
 
-from .misc import (
+from .common import (
     NodeError, shortstr
 )
 

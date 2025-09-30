@@ -3,12 +3,12 @@
 import re
 import unittest
 
-from fst.misc import PYGE14
+from fst.common import PYGE14
 
 
 class TestMisc(unittest.TestCase):
     def test__next_prev_frag(self):
-        from fst.misc import next_frag, prev_frag
+        from fst.common import next_frag, prev_frag
 
         lines = '''
   # pre
@@ -118,7 +118,7 @@ k \\
         self.assertEqual((0, 0, '('), prev_frag(['(\\', ''], 0, 0, 1, 0, True, None))
 
     def test__next_prev_find(self):
-        from fst.misc import next_find, prev_find
+        from fst.common import next_find, prev_find
 
         lines = '''
   ; \\
@@ -166,7 +166,7 @@ k \\
         self.assertEqual(None, next_find(lines, 3, 0, 6, 0, '# word', True, comment=True, lcont=True))
 
     def test__next_find_re(self):
-        from fst.misc import next_find_re
+        from fst.common import next_find_re
 
         lines = '''
   \\
@@ -196,7 +196,7 @@ b # word
         self.assertEqual(None, next_find_re(lines, 4, 0, 6, 0, pat, True, comment=True, lcont=True))
 
     def test__leading_trivia(self):
-        from fst.misc import leading_trivia
+        from fst.common import leading_trivia
 
         self.assertEqual(((0, 0), None, ''), leading_trivia(['a'], 0, 0, 0, 0, 'all', True))
 
@@ -435,7 +435,7 @@ b # word
         self.assertEqual(((0, 0), None, ' '), leading_trivia([' ', '# c', ' a'], 0, 0, 2, 1, 0, True))
 
     def test__trailing_trivia(self):
-        from fst.misc import trailing_trivia
+        from fst.common import trailing_trivia
 
         self.assertEqual(((0, 1), (0, 4), True), trailing_trivia(['a   '], 0, 4, 0, 1, 'all', True))
         self.assertEqual(((0, 1), (0, 4), True), trailing_trivia(['a  \\'], 0, 4, 0, 1, 'all', True))
@@ -693,7 +693,7 @@ b # word
         self.assertEqual(((0, 1), (2, 1), True), trailing_trivia(['a ', '   ', ' '], 2, 1, 0, 1, 'block', 2))
 
     def test__multiline_str_continuation_lns(self):
-        from fst.misc import multiline_str_continuation_lns as mscl
+        from fst.common import multiline_str_continuation_lns as mscl
 
         self.assertEqual([], mscl(ls := r'''
 'a'
@@ -814,7 +814,7 @@ e"
             '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
 
     def test__multiline_fstr_continuation_lns(self):
-        from fst.misc import multiline_fstr_continuation_lns as mscl
+        from fst.common import multiline_fstr_continuation_lns as mscl
 
         self.assertEqual([], mscl(ls := r'''
 f'a'
@@ -944,7 +944,7 @@ y"
 
     @unittest.skipUnless(PYGE14, 'only valid for py >= 3.14')
     def test__multiline_tstr_continuation_lns(self):
-        from fst.misc import multiline_fstr_continuation_lns as mscl
+        from fst.common import multiline_fstr_continuation_lns as mscl
 
         self.assertEqual([], mscl(ls := r'''
 t'a'
