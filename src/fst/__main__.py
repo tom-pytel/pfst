@@ -27,6 +27,8 @@ def main() -> None:
                         help="add information about type comments")
     parser.add_argument('-i', '--indent', type=int, default=2,
                         help='indentation of nodes (number of spaces)')
+    parser.add_argument('-l', '--list-indent', default=False, action='store_true',
+                        help="indent list elements")
     parser.add_argument('--no-verify', default=False, action='store_true',
                         help="don't verify parsed AST")
 
@@ -51,7 +53,7 @@ def main() -> None:
 
     src = 'all' if args.all else 'stmt' if args.stmt else None
 
-    ast.f.dump(src=src, full=args.full, expand=args.expand, indent=args.indent)
+    ast.f.dump(src=src, full=args.full, expand=args.expand, indent=args.indent, list_indent=args.list_indent)
 
 
 if __name__ == '__main__':
