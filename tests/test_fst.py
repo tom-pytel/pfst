@@ -3993,19 +3993,19 @@ opts.ignore_module = [mod.strip()
         fpeq = fass.op
         fxyz = fass.value
 
-        self.assertIs(fass, f.find_loc(0, 0, 0, 10))
-        self.assertIs(None, f.find_loc(0, 0, 0, 10, False))
-        self.assertIs(fabc, f.find_loc(0, 0, 0, 3))
-        self.assertIs(fass, f.find_loc(0, 0, 0, 3, False))
-        self.assertIs(fass, f.find_loc(0, 0, 0, 4))
-        self.assertIs(fass, f.find_loc(0, 0, 0, 4, False))
-        self.assertIs(fass, f.find_loc(0, 3, 0, 4, False))
-        self.assertIs(fpeq, f.find_loc(0, 4, 0, 6))
-        self.assertIs(fass, f.find_loc(0, 4, 0, 6, False))
-        self.assertIs(fxyz, f.find_loc(0, 7, 0, 10))
-        self.assertIs(fass, f.find_loc(0, 7, 0, 10, False))
-        self.assertIs(fass, f.find_loc(0, 6, 0, 10))
-        self.assertIs(fass, f.find_loc(0, 6, 0, 10, False))
+        self.assertIs(fass, f.find_loc_in(0, 0, 0, 10))
+        self.assertIs(None, f.find_loc_in(0, 0, 0, 10, False))
+        self.assertIs(fabc, f.find_loc_in(0, 0, 0, 3))
+        self.assertIs(fass, f.find_loc_in(0, 0, 0, 3, False))
+        self.assertIs(fass, f.find_loc_in(0, 0, 0, 4))
+        self.assertIs(fass, f.find_loc_in(0, 0, 0, 4, False))
+        self.assertIs(fass, f.find_loc_in(0, 3, 0, 4, False))
+        self.assertIs(fpeq, f.find_loc_in(0, 4, 0, 6))
+        self.assertIs(fass, f.find_loc_in(0, 4, 0, 6, False))
+        self.assertIs(fxyz, f.find_loc_in(0, 7, 0, 10))
+        self.assertIs(fass, f.find_loc_in(0, 7, 0, 10, False))
+        self.assertIs(fass, f.find_loc_in(0, 6, 0, 10))
+        self.assertIs(fass, f.find_loc_in(0, 6, 0, 10, False))
 
         f  = parse('a+b').f
         fx = f.body[0]
@@ -4014,16 +4014,16 @@ opts.ignore_module = [mod.strip()
         fp = fo.op
         fb = fo.right
 
-        self.assertIs(fa, f.find_loc(0, 0, 0, 0))
-        self.assertIs(fp, f.find_loc(0, 1, 0, 1))
-        self.assertIs(fb, f.find_loc(0, 2, 0, 2))
-        self.assertIs(f, f.find_loc(0, 3, 0, 3))
-        self.assertIs(fa, f.find_loc(0, 0, 0, 1))
-        self.assertIs(fo, f.find_loc(0, 0, 0, 2))
-        self.assertIs(fo, f.find_loc(0, 0, 0, 3))
-        self.assertIs(fp, f.find_loc(0, 1, 0, 2))
-        self.assertIs(fo, f.find_loc(0, 1, 0, 3))
-        self.assertIs(fb, f.find_loc(0, 2, 0, 3))
+        self.assertIs(fa, f.find_loc_in(0, 0, 0, 0))
+        self.assertIs(fp, f.find_loc_in(0, 1, 0, 1))
+        self.assertIs(fb, f.find_loc_in(0, 2, 0, 2))
+        self.assertIs(f, f.find_loc_in(0, 3, 0, 3))
+        self.assertIs(fa, f.find_loc_in(0, 0, 0, 1))
+        self.assertIs(fo, f.find_loc_in(0, 0, 0, 2))
+        self.assertIs(fo, f.find_loc_in(0, 0, 0, 3))
+        self.assertIs(fp, f.find_loc_in(0, 1, 0, 2))
+        self.assertIs(fo, f.find_loc_in(0, 1, 0, 3))
+        self.assertIs(fb, f.find_loc_in(0, 2, 0, 3))
 
     def test_find_in_loc(self):
         f    = parse('abc += xyz').body[0].f

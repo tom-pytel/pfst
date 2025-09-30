@@ -187,17 +187,14 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
 # ----------------------------------------------------------------------------------------------------------------------
 # FST class private methods
 
-def _reparse_raw(self: fst.FST, code: Code | None, ln: int, col: int, end_ln: int, end_col: int,
-                 exact: bool | None = None) -> fst.FST | None:
+def _reparse_raw(self: fst.FST, code: Code | None, ln: int, col: int, end_ln: int, end_col: int) -> tuple[int, int]:
     """Reparse this node which entirely contatins the span which is to be replaced with `code` source. `self` must
     be a node which entirely contains the location and is guaranteed not to be deleted. `self` and some of its
     parents going up may be replaced (root node `FST` will never change, the `AST` it points to may though). Not
     safe to use in a `walk()`.
 
     **Returns:**
-    - `FST | None`: FIRST highest level node contained entirely within replacement source or `None` if no candidate.
-        This could wind up being just an operator like '+' depending on the replacement. If `exact` is passed and
-        not `None` then will attempt a `find_loc(..., exact)` if could not find candidate node with `find_in_loc()`.
+    - `(end_ln, end_col)`: New end location of source put (all source after this was not modified).
     """
 
     if isinstance(code, list):
@@ -213,25 +210,16 @@ def _reparse_raw(self: fst.FST, code: Code | None, ln: int, col: int, end_ln: in
     else:
         new_lines = code._lines
 
-    root = self.root
-
     if not _reparse_raw_stmtish(self, new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block header), if fails then no statement found above
+        root = self.root
+
         if (mode := root.a.__class__) is not Slice and (base := mode.__bases__[0]) not in (AST, mod, ExceptHandler):  # first generalize a bit
             mode = base
 
         _reparse_raw_base(self, new_lines, ln, col, end_ln, end_col, root._lines[:],  # fallback to reparse all source
                           None if self is root else root.child_path(self), True, mode)
 
-    if code is None:
-        return None
-
     if len(new_lines) == 1:
-        end_ln = ln
-        end_col = col + len(new_lines[0])
-
+        return ln, col + len(new_lines[0])
     else:
-        end_ln = ln + len(new_lines) - 1
-        end_col = len(new_lines[-1])
-
-    return (root.find_in_loc(ln, col, end_ln, end_col) or  # `root` instead of `self` because some changes may propagate farther up the tree, like 'elif' -> 'else'
-            (root.find_loc(ln, col, end_ln, end_col, exact) if exact is not None else None))
+        return ln + len(new_lines) - 1, len(new_lines[-1])

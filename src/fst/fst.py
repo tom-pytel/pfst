@@ -1893,7 +1893,7 @@ class FST:
 
         self._put_one(code, idx, field_, options)
 
-        return self.repath()
+        return self if self.a else self.repath()
 
     def get_slice(self, start: int | Literal['end'] | None = None, stop: int | None = None,
                   field: builtins.str | None = None, *, cut: bool = False, **options) -> FST:
@@ -2070,8 +2070,7 @@ class FST:
 
         return self._get_src(ln, col, end_ln, end_col, as_lines)
 
-    def put_src(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int, *,
-                exact: bool | None = True) -> FST | None:
+    def put_src(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int) -> FST | None:
         r"""Put source and reparse. There are no rules on what is put, it is simply put and parse is attempted. If the
         `code` is passed as an `AST` then it is unparsed to a string and that string is put into the location. If `FST`
         then the exact source of the `FST` is put. If passed as a string or lines then that is put directly.
@@ -2099,40 +2098,29 @@ class FST:
         - `col`: Start column (character) on start line.
         - `end_ln`: End line of span to put (0 based, inclusive).
         - `end_col`: End column (character, exclusive) on end line.
-        - `exact`: This specifies how the node check after a successful reparse is done. `True` means allow return of
-            node which matches location exactly. Otherwise if `False`, the location must be inside the node but cannot
-            be touching BOTH ends of the node. This basically determines whether you can get the exact node of the
-            location or its parent. If passed as `None` then the check is even more restricted.
 
         **Returns:**
-        - `FST | None`: FIRST highest level node contained entirely within replacement source location (there may be
-            others following), or `None` if no such candidate and `exact=None`. If no candidate and `exact` is `True`
-            or `False` then will attempt to return a node which encloses the location using `find_loc(..., exact)`.
+        - `(end_ln, end_col)`: New end location of source put (all source after this was not modified).
 
         **Examples:**
         ```py
-        >>> FST('i = 1').put_src('2', 0, 4, 0, 5).root.src
+        >>> f = FST('i = 1')
+        >>> f.put_src('2', 0, 4, 0, 5)
+        (0, 5)
+        >>> f.src
         'i = 2'
 
-        >>> FST('i = 1').put_src('+= 3', 0, 2, 0, 5).root.src
+        >>> f = FST('i = 1')
+        >>> f.put_src('+= 3', 0, 2, 0, 5)
+        (0, 6)
+        >>> f.src
         'i += 3'
 
-        >>> FST('{a: b, c: d, e: f}').put_src('**', 0, 7, 0, 10).root.src
+        >>> f = FST('{a: b, c: d, e: f}')
+        >>> f.put_src('**', 0, 7, 0, 10)
+        (0, 9)
+        >>> f.src
         '{a: b, **d, e: f}'
-
-        >>> f = FST('i = 1')
-        >>> g = f.targets[0]
-        >>> print(type(g.a))
-        <class 'ast.Name'>
-
-        >>> f.put_src('4', 0, 4, 0, 5).src
-        '4'
-
-        >>> print(g.a)
-        None
-
-        >>> print(type(f.targets[0].a))
-        <class 'ast.Name'>
 
         >>> f = FST('''
         ... if a:
@@ -2152,7 +2140,7 @@ class FST:
         ...   if b:
         ...     k = 4
         ... '''.strip(), *f.orelse[0].loc[:2], *f.loc[2:])
-        <If 3,2..4,9>
+        (4, 9)
 
         >>> print(f.src)
         if a:
@@ -2164,9 +2152,9 @@ class FST:
         """
 
         ln, col, end_ln, end_col = _clip_src_loc(self, ln, col, end_ln, end_col)
-        parent = self.root.find_loc(ln, col, end_ln, end_col, False) or self.root
+        parent = self.root.find_loc_in(ln, col, end_ln, end_col, False) or self.root
 
-        return parent._reparse_raw(code, ln, col, end_ln, end_col, exact)
+        return parent._reparse_raw(code, ln, col, end_ln, end_col)
 
     def pars(self, *, shared: bool | None = True) -> fstloc | None:
         """Return the location of enclosing GROUPING parentheses if present. Will balance parentheses if `self` is an
@@ -4094,18 +4082,18 @@ class FST:
 
         return (root := self.root).child_from_path(root.child_path(self))
 
-    def find_loc(self, ln: int, col: int, end_ln: int, end_col: int, exact: bool = True) -> FST | None:
-        r"""Find the lowest level node which entirely contains location (starting search at `self`). To reiterate, the
-        search will only find nodes at self or below, no parents.
+    def find_loc_in(self, ln: int, col: int, end_ln: int, end_col: int, allow_exact: bool = True) -> FST | None:
+        r"""Find the lowest level node which entirely contains location (starting search at `self`). The search will
+        only find nodes at self or below, no parents.
 
         **Parameters:**
         - `ln`: Start line of location to search for (0 based).
         - `col`: Start column (character) on start line.
         - `end_ln`: End line of location to search for (0 based, inclusive).
         - `end_col`: End column (character, inclusive with `FST.end_col`, exclusive with `FST.col`) on end line.
-        - `exact`: Whether to allow return of exact location match with node or not. `True` means allow return of node
-            which matches location exactly. Otherwise the location must be inside the node but cannot be touching BOTH
-            ends of the node. This basically determines whether you can get the exact node of the location or its
+        - `allow_exact`: Whether to allow return of exact location match with node or not. `True` means allow return of
+            node which matches location exactly. Otherwise the location must be inside the node but cannot be touching
+            BOTH ends of the node. This basically determines whether you can get the exact node of the location or its
             parent.
 
         **Returns:**
@@ -4113,31 +4101,31 @@ class FST:
 
         **Examples:**
         ```py
-        >>> FST('i = val', 'exec').find_loc(0, 6, 0, 7)
+        >>> FST('i = val', 'exec').find_loc_in(0, 6, 0, 7)
         <Name 0,4..0,7>
 
-        >>> FST('i = val', 'exec').find_loc(0, 4, 0, 7)
+        >>> FST('i = val', 'exec').find_loc_in(0, 4, 0, 7)
         <Name 0,4..0,7>
 
-        >>> FST('i = val', 'exec').find_loc(0, 4, 0, 7, exact=False)
+        >>> FST('i = val', 'exec').find_loc_in(0, 4, 0, 7, allow_exact=False)
         <Assign 0,0..0,7>
 
-        >>> FST('i = val', 'exec').find_loc(0, 5, 0, 7, exact=False)
+        >>> FST('i = val', 'exec').find_loc_in(0, 5, 0, 7, allow_exact=False)
         <Name 0,4..0,7>
 
-        >>> FST('i = val', 'exec').find_loc(0, 4, 0, 6, exact=False)
+        >>> FST('i = val', 'exec').find_loc_in(0, 4, 0, 6, allow_exact=False)
         <Name 0,4..0,7>
 
-        >>> FST('i = val', 'exec').find_loc(0, 3, 0, 7)
+        >>> FST('i = val', 'exec').find_loc_in(0, 3, 0, 7)
         <Assign 0,0..0,7>
 
-        >>> FST('i = val', 'exec').find_loc(0, 3, 0, 7, exact=False)
+        >>> FST('i = val', 'exec').find_loc_in(0, 3, 0, 7, allow_exact=False)
         <Assign 0,0..0,7>
 
-        >>> print(FST('i = val', 'exec').find_loc(0, 0, 0, 7, exact=False))
+        >>> print(FST('i = val', 'exec').find_loc_in(0, 0, 0, 7, allow_exact=False))
         None
 
-        >>> FST('i = val\n', 'exec').find_loc(0, 0, 0, 7, exact=False)
+        >>> FST('i = val\n', 'exec').find_loc_in(0, 0, 0, 7, allow_exact=False)
         <Module ROOT 0,0..1,0>
         ```
         """
@@ -4147,7 +4135,7 @@ class FST:
         if ((((same_ln := fln == ln) and fcol <= col) or fln < ln) and
             (((same_end_ln := fend_ln == end_ln) and fend_col >= end_col) or fend_ln > end_ln)
         ):
-            if not exact and same_ln and same_end_ln and fcol == col and fend_col == end_col:
+            if not allow_exact and same_ln and same_end_ln and fcol == col and fend_col == end_col:
                 return None
 
         else:
@@ -4165,7 +4153,7 @@ class FST:
                 ):
                     return self
 
-                if not exact and same_ln and same_end_ln and fcol == col and fend_col == end_col:
+                if not allow_exact and same_ln and same_end_ln and fcol == col and fend_col == end_col:
                     return self
 
                 self = f
@@ -4186,7 +4174,8 @@ class FST:
         - `end_col`: End column (character, inclusive with `FST.end_col`, exclusive with `FST.col`) on end line.
 
         **Returns:**
-        - `FST | None`: First node which is entirely contained in the location or `None` if no such node.
+        - `FST | None`: First node in syntactic order which is entirely contained in the location or `None` if no such
+            node.
 
         **Examples:**
         ```py

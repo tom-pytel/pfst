@@ -224,15 +224,15 @@ Or searching for a node which contains a location.
 
 ```py
 >>> # or you can search for a node entirely CONTAINING THE LOCATION
->>> f.find_loc(0, 4, 0, 6).src
+>>> f.find_loc_in(0, 4, 0, 6).src
 'a < b'
 
 >>> # will return nodes matching the location EXACTLY by default
->>> f.find_loc(0, 3, 0, 8).src
+>>> f.find_loc_in(0, 3, 0, 8).src
 'a < b'
 
 >>> # but that can be disabled
->>> f.find_loc(0, 3, 0, 8, exact=False).src
+>>> f.find_loc_in(0, 3, 0, 8, allow_exact=False).src
 'if a < b:\n    print(a)'
 ```
 """

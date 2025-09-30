@@ -3467,7 +3467,7 @@ def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end']
 
     self._reparse_raw(code, *_loc_slice_raw_put(self, start, stop, field))
 
-    return self.repath()
+    return self if self.a else self.repath()
 
 
 # ----------------------------------------------------------------------------------------------------------------------

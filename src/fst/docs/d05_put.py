@@ -370,7 +370,7 @@ z = []
 def f(): pass
 ```
 
-## `put_src()`
+## `put_src()` **DEPRECATED!!!**
 
 Unlike `get_src()` which is a very simple function, `put_src()` doesn't just put text to the source code and leave it at
 that. `put_src()` attempts to reparse the part of the source code which is modified in order to update the node tree for
@@ -400,7 +400,7 @@ is called on, the domain is always over the entire tree.
 ... = x:
 ...     if y !=
 ... '''.strip(), 0, 6, 1, 10)
-<Name 0,8..0,9>
+(1, 11)
 
 >>> print(f.src)
 if a <= x:
@@ -417,8 +417,8 @@ which is `True` by default. If `exact=None` and no node is found inside the loca
 `None` is returned.
 
 ```py
->>> f.put_src(' >', 0, 4, 0, 6).src
-'a >= x'
+>>> f.put_src(' >', 0, 4, 0, 6)
+(0, 6)
 
 >>> print(f.src)
 if a >= x:
@@ -427,8 +427,8 @@ if a >= x:
     else:
         t()
 
->>> f.put_src(' <', 0, 4, 0, 6, exact=None) is None
-True
+>>> f.put_src(' <', 0, 4, 0, 6)
+(0, 6)
 
 >>> print(f.src)
 if a <= x:
@@ -437,8 +437,8 @@ if a <= x:
     else:
         t()
 
->>> f.put_src(' ==', 0, 4, 0, 7, exact=None).src
-'=='
+>>> f.put_src(' ==', 0, 4, 0, 7)
+(0, 7)
 
 >>> print(f.src)
 if a == x:
@@ -456,7 +456,7 @@ everything is correct with respect to this and parentheses and everything else.
 ... elif z != e:
 ...         pass
 ... '''.strip(), 3, 4, 4, 11)
-<If 3,4..4,12>
+(4, 12)
 
 >>> print(f.src)
 if a == x:

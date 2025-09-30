@@ -1989,7 +1989,6 @@ def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, opti
 
 def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST | list[AST],
                  static: onestatic | None, options: Mapping[str, Any]) -> fst.FST | None:
-
     ast = self.a
     to = options.get('to')
 
@@ -2129,7 +2128,13 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
 
     # do it
 
-    return parent._reparse_raw(code, loc.ln, loc.col, to_loc.end_ln, to_loc.end_col)
+    ln, col, _, _ = loc
+    end_ln, end_col = parent._reparse_raw(code, ln, col, to_loc.end_ln, to_loc.end_col)
+
+    if is_del:
+        return None
+
+    return parent.root.find_in_loc(ln, col, end_ln, end_col)  # parent should stay same MOST of the time, `root` instead of `self` because some changes may propagate farther up the tree, like 'elif' -> 'else'
 
 
 # ......................................................................................................................
