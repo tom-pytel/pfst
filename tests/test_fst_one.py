@@ -282,7 +282,7 @@ def regen_put_src():
 
         try:
             eln, ecol = f.put_src(None if src == '**DEL**' else src, ln, col, end_ln, end_col, **options) or f.root
-            g = (r := f.root).find_in_loc(ln, col, eln, ecol) or r.find_loc_in(ln, col, eln, ecol)
+            g = f.root.find_loc(ln, col, eln, ecol)
 
             tdst  = f.root.src
             tdump = f.root.dump(out=list)
@@ -3912,7 +3912,7 @@ c, # c
 
             try:
                 eln, ecol = f.put_src(None if src == '**DEL**' else src, ln, col, end_ln, end_col, **options) or f.root
-                g = (r := f.root).find_in_loc(ln, col, eln, ecol) or r.find_loc_in(ln, col, eln, ecol)
+                g = f.root.find_loc(ln, col, eln, ecol)
 
                 tdst  = f.root.src
                 tdump = f.root.dump(out=list)

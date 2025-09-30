@@ -1991,6 +1991,7 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
                  static: onestatic | None, options: Mapping[str, Any]) -> fst.FST | None:
     ast = self.a
     to = options.get('to')
+    root = self.root
 
     if not field:  # special case field
         if (is_dict := (cls := ast.__class__) is Dict) or cls is MatchMapping:
@@ -2096,7 +2097,7 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
         if not (to_parent := to.parent):
             raise ValueError("'to' node cannot be root")
 
-        if (root := self.root) is not to.root:
+        if root is not to.root:
             raise ValueError("'to' must be part of same tree")
 
         to_loc = None
@@ -2134,7 +2135,7 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
     if is_del:
         return None
 
-    return parent.root.find_in_loc(ln, col, end_ln, end_col)  # parent should stay same MOST of the time, `root` instead of `self` because some changes may propagate farther up the tree, like 'elif' -> 'else'
+    return root.find_in_loc(ln, col, end_ln, end_col)  # parent should stay same MOST of the time, `root` instead of `self` because some changes may propagate farther up the tree, like 'elif' -> 'else'
 
 
 # ......................................................................................................................

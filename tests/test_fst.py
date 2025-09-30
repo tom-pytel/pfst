@@ -3986,7 +3986,7 @@ opts.ignore_module = [mod.strip()
                       for i in opts.ignore_module for mod in i.split(',')]
             '''.strip(), 'exec').body[0].value.generators[0].iter.copy().src)
 
-    def test_find_loc(self):
+    def test_find_loc_in(self):
         f    = parse('abc += xyz').f
         fass = f.body[0]
         fabc = fass.target
@@ -3995,17 +3995,24 @@ opts.ignore_module = [mod.strip()
 
         self.assertIs(fass, f.find_loc_in(0, 0, 0, 10))
         self.assertIs(None, f.find_loc_in(0, 0, 0, 10, False))
+        self.assertIs(f, f.find_loc_in(0, 0, 0, 10, 'top'))
         self.assertIs(fabc, f.find_loc_in(0, 0, 0, 3))
         self.assertIs(fass, f.find_loc_in(0, 0, 0, 3, False))
+        self.assertIs(fabc, f.find_loc_in(0, 0, 0, 3, 'top'))
         self.assertIs(fass, f.find_loc_in(0, 0, 0, 4))
         self.assertIs(fass, f.find_loc_in(0, 0, 0, 4, False))
+        self.assertIs(fass, f.find_loc_in(0, 0, 0, 4, 'top'))
         self.assertIs(fass, f.find_loc_in(0, 3, 0, 4, False))
+        self.assertIs(fass, f.find_loc_in(0, 3, 0, 4, 'top'))
         self.assertIs(fpeq, f.find_loc_in(0, 4, 0, 6))
         self.assertIs(fass, f.find_loc_in(0, 4, 0, 6, False))
+        self.assertIs(fpeq, f.find_loc_in(0, 4, 0, 6, 'top'))
         self.assertIs(fxyz, f.find_loc_in(0, 7, 0, 10))
         self.assertIs(fass, f.find_loc_in(0, 7, 0, 10, False))
+        self.assertIs(fxyz, f.find_loc_in(0, 7, 0, 10, 'top'))
         self.assertIs(fass, f.find_loc_in(0, 6, 0, 10))
-        self.assertIs(fass, f.find_loc_in(0, 6, 0, 10, False))
+        self.assertIs(fass, f.find_loc_in(0, 7, 0, 10, False))
+        self.assertIs(fass, f.find_loc_in(0, 6, 0, 10, 'top'))
 
         f  = parse('a+b').f
         fx = f.body[0]
@@ -4025,6 +4032,23 @@ opts.ignore_module = [mod.strip()
         self.assertIs(fo, f.find_loc_in(0, 1, 0, 3))
         self.assertIs(fb, f.find_loc_in(0, 2, 0, 3))
 
+        froot = FST('var', 'exec')
+        fexpr = froot.body[0]
+        fname = fexpr.value
+
+        self.assertIs(fname, froot.find_loc_in(0, 0, 0, 3, True))
+        self.assertIs(None, froot.find_loc_in(0, 0, 0, 3, False))
+        self.assertIs(froot, froot.find_loc_in(0, 0, 0, 3, 'top'))
+        self.assertIs(fname, froot.find_loc_in(0, 1, 0, 2, True))
+        self.assertIs(fname, froot.find_loc_in(0, 1, 0, 2, False))
+        self.assertIs(fname, froot.find_loc_in(0, 1, 0, 2, 'top'))
+        self.assertIs(fname, froot.find_loc_in(0, 0, 0, 1, True))
+        self.assertIs(fname, froot.find_loc_in(0, 0, 0, 1, False))
+        self.assertIs(fname, froot.find_loc_in(0, 0, 0, 1, 'top'))
+        self.assertIs(fname, froot.find_loc_in(0, 2, 0, 3, True))
+        self.assertIs(fname, froot.find_loc_in(0, 2, 0, 3, False))
+        self.assertIs(fname, froot.find_loc_in(0, 2, 0, 3, 'top'))
+
     def test_find_in_loc(self):
         f    = parse('abc += xyz').body[0].f
         fabc = f.target
@@ -4037,6 +4061,78 @@ opts.ignore_module = [mod.strip()
         self.assertIs(fpeq, f.find_in_loc(0, 1, 0, 10))
         self.assertIs(fxyz, f.find_in_loc(0, 5, 0, 10))
         self.assertIs(None, f.find_in_loc(0, 5, 0, 6))
+
+    def test_find_loc(self):
+        f    = parse('abc += xyz').f
+        fass = f.body[0]
+        fabc = fass.target
+        fpeq = fass.op
+        fxyz = fass.value
+
+        self.assertIs(fass, f.find_loc(0, 0, 0, 10))
+        self.assertIs(f, f.find_loc(0, 0, 0, 10, True))
+        self.assertIs(fabc, f.find_loc(0, 0, 0, 3))
+        self.assertIs(fabc, f.find_loc(0, 0, 0, 3, True))
+        self.assertIs(fabc, f.find_loc(0, 0, 0, 4))
+        self.assertIs(fabc, f.find_loc(0, 0, 0, 4, True))
+        self.assertIs(fass, f.find_loc(0, 3, 0, 4))
+        self.assertIs(fass, f.find_loc(0, 3, 0, 4, True))
+        self.assertIs(fpeq, f.find_loc(0, 4, 0, 6))
+        self.assertIs(fpeq, f.find_loc(0, 4, 0, 6, True))
+        self.assertIs(fxyz, f.find_loc(0, 7, 0, 10))
+        self.assertIs(fxyz, f.find_loc(0, 7, 0, 10, True))
+        self.assertIs(fxyz, f.find_loc(0, 6, 0, 10))
+        self.assertIs(fxyz, f.find_loc(0, 6, 0, 10, True))
+        self.assertIs(fass, f.find_loc(0, 6, 0, 9))
+        self.assertIs(fass, f.find_loc(0, 6, 0, 9, True))
+
+        f  = parse('a+b').f
+        fx = f.body[0]
+        fo = fx.value
+        fa = fo.left
+        fp = fo.op
+        fb = fo.right
+
+        self.assertIs(fa, f.find_loc(0, 0, 0, 0))
+        self.assertIs(fp, f.find_loc(0, 1, 0, 1))
+        self.assertIs(fb, f.find_loc(0, 2, 0, 2))
+        self.assertIs(f, f.find_loc(0, 3, 0, 3))
+        self.assertIs(fa, f.find_loc(0, 0, 0, 1))
+        self.assertIs(fa, f.find_loc(0, 0, 0, 2))
+        self.assertIs(fo, f.find_loc(0, 0, 0, 3))
+        self.assertIs(f, f.find_loc(0, 0, 0, 3, True))
+        self.assertIs(fp, f.find_loc(0, 1, 0, 2))
+        self.assertIs(fp, f.find_loc(0, 1, 0, 3))
+        self.assertIs(fb, f.find_loc(0, 2, 0, 3))
+
+        froot = FST('var', 'exec')
+        fexpr = froot.body[0]
+        fname = fexpr.value
+
+        self.assertIs(fname, froot.find_loc(0, 0, 0, 3))
+        self.assertIs(froot, froot.find_loc(0, 0, 0, 3, True))
+        self.assertIs(fname, froot.find_loc(0, 1, 0, 2))
+        self.assertIs(fname, froot.find_loc(0, 1, 0, 2, True))
+        self.assertIs(fname, froot.find_loc(0, 0, 0, 1))
+        self.assertIs(fname, froot.find_loc(0, 0, 0, 1, True))
+        self.assertIs(fname, froot.find_loc(0, 2, 0, 3))
+        self.assertIs(fname, froot.find_loc(0, 2, 0, 3, True))
+
+        f    = parse('abc += xyz').f
+        fass = f.body[0]
+        fabc = fass.target
+        fpeq = fass.op
+        fxyz = fass.value
+
+        self.assertIs(fass, f.find_loc(0, 0, 0, 10))
+        self.assertIs(f, f.find_loc(0, 0, 0, 10, True))
+        self.assertIs(f, f.find_loc(-1, -1, 1, 11))
+        self.assertIs(fabc, f.find_loc(0, 0, 0, 3))
+        self.assertIs(fpeq, f.find_loc(0, 1, 0, 10))
+        self.assertIs(fxyz, f.find_loc(0, 5, 0, 10))
+        self.assertIs(fpeq, f.find_loc(0, 5, 0, 6))
+        self.assertIs(fass, f.find_loc(0, 6, 0, 7))
+        self.assertIs(fass, f.find_loc(0, 6, 0, 7, True))
 
     def test_fstview(self):
         self.assertEqual('a', parse('if 1: a').f.body[0].body[0].src)

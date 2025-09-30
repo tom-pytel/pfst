@@ -4082,7 +4082,8 @@ class FST:
 
         return (root := self.root).child_from_path(root.child_path(self))
 
-    def find_loc_in(self, ln: int, col: int, end_ln: int, end_col: int, allow_exact: bool = True) -> FST | None:
+    def find_loc_in(self, ln: int, col: int, end_ln: int, end_col: int, allow_exact: bool | Literal['top'] = True,
+                    ) -> FST | None:
         r"""Find the lowest level node which entirely contains location (starting search at `self`). The search will
         only find nodes at self or below, no parents.
 
@@ -4092,9 +4093,12 @@ class FST:
         - `end_ln`: End line of location to search for (0 based, inclusive).
         - `end_col`: End column (character, inclusive with `FST.end_col`, exclusive with `FST.col`) on end line.
         - `allow_exact`: Whether to allow return of exact location match with node or not. `True` means allow return of
-            node which matches location exactly. Otherwise the location must be inside the node but cannot be touching
+            node which matches location exactly. `False` means location must be inside the node but cannot be touching
             BOTH ends of the node. This basically determines whether you can get the exact node of the location or its
-            parent.
+            parent. A value of `'top'` specifies an exact match is allowed and return the highest level node with the
+            match, otherwise the lowest level exact match is returned. This only applies to nodes like `Expr` which will
+            have the same location as the contained `expr` or a `Module` which only contains a single statement without
+            any other junk like comments or empty lines surrounding it.
 
         **Returns:**
         - `FST | None`: Node which entirely contains location, either exactly or not, or `None` if no such node.
@@ -4127,6 +4131,12 @@ class FST:
 
         >>> FST('i = val\n', 'exec').find_loc_in(0, 0, 0, 7, allow_exact=False)
         <Module ROOT 0,0..1,0>
+
+        >>> FST('i = val', 'exec').find_loc_in(0, 0, 0, 7)
+        <Assign 0,0..0,7>
+
+        >>> FST('i = val', 'exec').find_loc_in(0, 0, 0, 7, allow_exact='top')
+        <Module ROOT 0,0..0,7>
         ```
         """
 
@@ -4135,8 +4145,12 @@ class FST:
         if ((((same_ln := fln == ln) and fcol <= col) or fln < ln) and
             (((same_end_ln := fend_ln == end_ln) and fend_col >= end_col) or fend_ln > end_ln)
         ):
-            if not allow_exact and same_ln and same_end_ln and fcol == col and fend_col == end_col:
-                return None
+            if same_ln and same_end_ln and fcol == col and fend_col == end_col:
+                if not allow_exact:
+                    return None
+
+                if allow_exact == 'top':
+                    return self
 
         else:
             return None
@@ -4216,6 +4230,57 @@ class FST:
 
             else:
                 return None
+
+    def find_loc(self, ln: int, col: int, end_ln: int, end_col: int, exact_top: bool = False) -> FST | None:
+        r"""Find node which best fits location. If an exact location match is found then that is returned with the `top`
+        parameter specifying which of multiple nodes at same location is returned if that is the case. Otherwise
+        `find_in_loc()` is preferred if there is a match and if not then `find_loc_in()`. The search is done efficiently
+        so that the same nodes are not walked multiple times.
+
+        **Parameters:**
+        - `ln`: Start line of location to search for (0 based).
+        - `col`: Start column (character) on start line.
+        - `end_ln`: End line of location to search for (0 based, inclusive).
+        - `end_col`: End column (character, inclusive with `FST.end_col`, exclusive with `FST.col`) on end line.
+        - `exact_top`: If an exact location match is found and multiple nodes share this location (`Expr` and `expr`)
+            then this decides whether the highest level node is returned or the lowest (`True` means highest).
+
+        **Returns:**
+        - `FST | None`: Node found if any.
+
+        **Examples:**
+        ```py
+        >>> FST('var', 'exec').find_loc(0, 0, 0, 3)
+        <Name 0,0..0,3>
+
+        >>> FST('var', 'exec').find_loc(0, 0, 0, 3, exact_top=True)
+        <Module ROOT 0,0..0,3>
+
+        >>> FST('var', 'exec').find_loc(0, 1, 0, 2)
+        <Name 0,0..0,3>
+
+        >>> FST('var', 'exec').find_loc(0, 1, 0, 2, exact_top=True)
+        <Name 0,0..0,3>
+
+        >>> FST('var', 'exec').find_loc(0, 0, 1, 4)
+        <Module ROOT 0,0..0,3>
+
+        >>> repr(FST('var', 'exec').find_loc(0, 2, 1, 4))
+        'None'
+        ```
+        """
+
+        f = self.find_loc_in(ln, col, end_ln, end_col, 'top' if exact_top else True)
+
+        if not f:
+            return self.find_in_loc(ln, col, end_ln, end_col)
+
+        fln, fcol, fend_ln, fend_col = f.loc
+
+        if fcol == col and fend_col == end_col and fln == ln and fend_ln == end_ln:
+            return f
+
+        return f.find_in_loc(ln, col, end_ln, end_col) or f
 
     # ------------------------------------------------------------------------------------------------------------------
     # Private
