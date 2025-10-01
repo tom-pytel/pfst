@@ -1647,7 +1647,8 @@ def _dedent_lns(self: fst.FST, dedent: str | None = None, lns: set[int] | None =
 
 
 def _redent_lns(self: fst.FST, dedent: str | None = None, indent: str | None = None, lns: set[int] | None = None, *,
-                skip: int = 1, docstr: bool | Literal['strict'] = True) -> None:
+                skip: int = 1, docstr: bool | Literal['strict'] = True, docstr_strict_exclude: AST | None = None,
+                ) -> None:
     """Redent all indentable lines specified in `lns` by removing `dedent` prefix then indenting by `indent` for each
     line and adjust node locations accordingly. The operation is carried out intelligently so that a dedent will not
     be truncated if the following indent would move it off the start of the line. It is also done in one pass so is more
@@ -1661,10 +1662,12 @@ def _redent_lns(self: fst.FST, dedent: str | None = None, indent: str | None = N
     - `indent`: The indentation string to prefix to each indentable line.
     - `lns`: A `set` of lines to apply dedentation to. If `None` then will be gotten from
         `_get_indentable_lns(skip=skip)`.
+    - `skip`: If not providing `lns` then this value is passed to `_get_indentable_lns()`.
     - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
         multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
         in standard docstring locations are indentable.
-    - `skip`: If not providing `lns` then this value is passed to `_get_indentable_lns()`.
+    - `docstr_strict_exclude`: Special parameter for excluding non-first elements from `'strict'` `docstr` check even if
+        they come first in a slice. Should be the `Expr` of the docstr if excluding.
     """
 
     root = self.root
@@ -1677,11 +1680,14 @@ def _redent_lns(self: fst.FST, dedent: str | None = None, indent: str | None = N
     if dedent == indent:
         return
     if not dedent:
-        return self._indent_lns(indent, skip=skip, docstr=docstr)
+        return self._indent_lns(indent, skip=skip, docstr=docstr, docstr_strict_exclude=docstr_strict_exclude)
     if not indent:
-        return self._dedent_lns(indent, skip=skip, docstr=docstr)
+        return self._dedent_lns(indent, skip=skip, docstr=docstr, docstr_strict_exclude=docstr_strict_exclude)
 
-    if not ((lns := self._get_indentable_lns(skip, docstr=docstr)) if lns is None else lns):
+    if lns is None:
+        lns = self._get_indentable_lns(skip, docstr=docstr, docstr_strict_exclude=docstr_strict_exclude)
+
+    if not lns:
         return
 
     lines = root._lines
