@@ -2,9 +2,15 @@
 
 ### Fixed
 
-- put string `Expr` as `'strict'` docstr dont in/dedent if not first element
+- put string `Expr` as `'strict'` docstr don't in/dedent if not first element
 
 ### Added
+
+- `put_src()` offset and no AST change modes
+- `find_loc()` simple find location in or containing given location
+- `fst.parse()` handles `bytes` and `AST` as source
+- `dump()` specifiable list indentation
+- global options made thread-safe (thread local)
 
 ### Updated
 

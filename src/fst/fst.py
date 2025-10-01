@@ -107,7 +107,7 @@ from .astutil import (
 
 from .common import (
     PYLT13,
-    astfield, fstloc, fstlocns, nspace,
+    astfield, fstloc, fstlocn, nspace,
     Self,
     next_delims, prev_delims,
 )
@@ -2262,34 +2262,34 @@ class FST:
         **Examples:**
         ```py
         >>> FST('i').pars()
-        fstlocns(0, 0, 0, 1, n=0)
+        fstlocn(0, 0, 0, 1, n=0)
 
         >>> FST('(i)').pars()
-        fstlocns(0, 0, 0, 3, n=1)
+        fstlocn(0, 0, 0, 3, n=1)
 
         >>> FST('((i))').pars()
-        fstlocns(0, 0, 0, 5, n=2)
+        fstlocn(0, 0, 0, 5, n=2)
 
         >>> FST('(1, 2)').pars()  # tuple pars are not considered grouping pars
-        fstlocns(0, 0, 0, 6, n=0)
+        fstlocn(0, 0, 0, 6, n=0)
 
         >>> FST('((1, 2))').pars()
-        fstlocns(0, 0, 0, 8, n=1)
+        fstlocn(0, 0, 0, 8, n=1)
 
         >>> FST('call(a)').args[0].pars()  # any node, not just root
-        fstlocns(0, 5, 0, 6, n=0)
+        fstlocn(0, 5, 0, 6, n=0)
 
         >>> FST('call((a))').args[0].pars()
-        fstlocns(0, 5, 0, 8, n=1)
+        fstlocn(0, 5, 0, 8, n=1)
 
         >>> FST('call(i for i in j)').args[0].pars()
-        fstlocns(0, 4, 0, 18, n=0)
+        fstlocn(0, 4, 0, 18, n=0)
 
         >>> FST('call(i for i in j)').args[0].pars(shared=False)  # exclude shared pars
-        fstlocns(0, 5, 0, 17, n=-1)
+        fstlocn(0, 5, 0, 17, n=-1)
 
         >>> FST('call((i for i in j))').args[0].pars(shared=False)
-        fstlocns(0, 5, 0, 19, n=0)
+        fstlocn(0, 5, 0, 19, n=0)
         ```
         """
 
@@ -2303,7 +2303,7 @@ class FST:
             return cached
 
         if not self._is_parenthesizable() and shared is not None:
-            self._cache[key] = locn = None if (l := self.bloc) is None else fstlocns(l[0], l[1], l[2], l[3], n=0)
+            self._cache[key] = locn = None if (l := self.bloc) is None else fstlocn(l[0], l[1], l[2], l[3], n=0)
 
             return locn
 
@@ -2313,9 +2313,9 @@ class FST:
 
         if (lrpars := len(rpars)) == 1:  # no pars on right
             if not shared and self._is_solo_call_arg_genexp():
-                locn = fstlocns(ln, col + 1, end_ln, end_col - 1, n=-1)
+                locn = fstlocn(ln, col + 1, end_ln, end_col - 1, n=-1)
             else:
-                locn = fstlocns(ln, col, end_ln, end_col, n=0)
+                locn = fstlocn(ln, col, end_ln, end_col, n=0)
 
             self._cache[key] = locn
 
@@ -2324,7 +2324,7 @@ class FST:
         lpars = prev_delims(self.root._lines, *prev_bound(self), ln, col)
 
         if (llpars := len(lpars)) == 1:  # no pars on left
-            self._cache[key] = locn = fstlocns(ln, col, end_ln, end_col, n=0)
+            self._cache[key] = locn = fstlocn(ln, col, end_ln, end_col, n=0)
 
             return locn
 
@@ -2334,9 +2334,9 @@ class FST:
             llpars -= 1
 
         if llpars != lrpars:  # unbalanced pars so we know we can safely use the lower count
-            locn = fstlocns(*lpars[npars := min(llpars, lrpars) - 1], *rpars[npars], n=npars)
+            locn = fstlocn(*lpars[npars := min(llpars, lrpars) - 1], *rpars[npars], n=npars)
         else:
-            locn = fstlocns(*lpars[npars := llpars - 1], *rpars[npars], n=npars)
+            locn = fstlocn(*lpars[npars := llpars - 1], *rpars[npars], n=npars)
 
         self._cache[key] = locn
 

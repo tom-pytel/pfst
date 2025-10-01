@@ -206,34 +206,34 @@ make sure to take this into accound where the node you are querying may not have
 
 ```py
 >>> (f := FST('(a + b)')).loc, f.pars()
-(fstloc(0, 1, 0, 6), fstlocns(0, 0, 0, 7, n=1))
+(fstloc(0, 1, 0, 6), fstlocn(0, 0, 0, 7, n=1))
 
 >>> (f := FST('((a + b))')).loc, f.pars()
-(fstloc(0, 2, 0, 7), fstlocns(0, 0, 0, 9, n=2))
+(fstloc(0, 2, 0, 7), fstlocn(0, 0, 0, 9, n=2))
 
 >>> (f := FST('(  ((a + b))  )')).loc, f.pars()
-(fstloc(0, 5, 0, 10), fstlocns(0, 0, 0, 15, n=3))
+(fstloc(0, 5, 0, 10), fstlocn(0, 0, 0, 15, n=3))
 ```
 
 If the node does not have parentheses then the node locations will be returned with `n=0`.
 
 ```py
 >>> (f := FST('a + b')).loc, f.pars()
-(fstloc(0, 0, 0, 5), fstlocns(0, 0, 0, 5, n=0))
+(fstloc(0, 0, 0, 5), fstlocn(0, 0, 0, 5, n=0))
 ```
 
 `pars()` will not return parentheses intrinsic to a node.
 
 ```py
 >>> (f := FST('(a, b)')).loc, f.pars()
-(fstloc(0, 0, 0, 6), fstlocns(0, 0, 0, 6, n=0))
+(fstloc(0, 0, 0, 6), fstlocn(0, 0, 0, 6, n=0))
 ```
 
 But it will return parentheses around that.
 
 ```py
 >>> (f := FST('((a, b))')).loc, f.pars()
-(fstloc(0, 1, 0, 7), fstlocns(0, 0, 0, 8, n=1))
+(fstloc(0, 1, 0, 7), fstlocn(0, 0, 0, 8, n=1))
 ```
 
 There is a special case with a single call argument which is a generator expression, this can share its parentheses with
@@ -243,35 +243,35 @@ parentheses (making the source invalid for a generator expression).
 
 ```py
 >>> (f := FST('call(i for i in j)').args[0]).loc, f.pars()
-(fstloc(0, 4, 0, 18), fstlocns(0, 4, 0, 18, n=0))
+(fstloc(0, 4, 0, 18), fstlocn(0, 4, 0, 18, n=0))
 
 >>> (f := FST('call(i for i in j)').args[0]).loc, f.pars(shared=False)
-(fstloc(0, 4, 0, 18), fstlocns(0, 5, 0, 17, n=-1))
+(fstloc(0, 4, 0, 18), fstlocn(0, 5, 0, 17, n=-1))
 
 >>> print(f.get_src(*f.pars(shared=False)))
 i for i in j
 
 >>> (f := FST('call((i for i in j))').args[0]).loc, f.pars(shared=False)
-(fstloc(0, 5, 0, 19), fstlocns(0, 5, 0, 19, n=0))
+(fstloc(0, 5, 0, 19), fstlocn(0, 5, 0, 19, n=0))
 
 >>> (f := FST('call(((i for i in j)))').args[0]).loc, f.pars(shared=False)
-(fstloc(0, 6, 0, 20), fstlocns(0, 5, 0, 21, n=1))
+(fstloc(0, 6, 0, 20), fstlocn(0, 5, 0, 21, n=1))
 ```
 
 `pars()` will also not return parentheses which technically enclose a single node but belong to the parent.
 
 ```py
 >>> FST('call(a)').args[0].pars()
-fstlocns(0, 5, 0, 6, n=0)
+fstlocn(0, 5, 0, 6, n=0)
 
 >>> FST('class cls(base): pass').bases[0].pars()
-fstlocns(0, 10, 0, 14, n=0)
+fstlocn(0, 10, 0, 14, n=0)
 
 >>> FST('from a import (b)').names[0].pars()
-fstlocns(0, 15, 0, 16, n=0)
+fstlocn(0, 15, 0, 16, n=0)
 
 >>> FST('with (a): pass').items[0].pars()
-fstlocns(0, 5, 0, 8, n=0)
+fstlocn(0, 5, 0, 8, n=0)
 ```
 
 ## Adding parentheses manually
@@ -298,7 +298,7 @@ normal delimiters. Parentheses added in this way will not show up in `pars()` as
 '(a, b)'
 
 >>> f.loc, f.pars()
-(fstloc(0, 0, 0, 6), fstlocns(0, 0, 0, 6, n=0))
+(fstloc(0, 0, 0, 6), fstlocn(0, 0, 0, 6, n=0))
 
 >>> f = FST('case a, b: pass')
 
@@ -309,7 +309,7 @@ normal delimiters. Parentheses added in this way will not show up in `pars()` as
 case [a, b]: pass
 
 >>> f.pattern.loc, f.pattern.pars()
-(fstloc(0, 5, 0, 11), fstlocns(0, 5, 0, 11, n=0))
+(fstloc(0, 5, 0, 11), fstlocn(0, 5, 0, 11, n=0))
 ```
 
 `par()` and `unpar()` work on any node, not just root.

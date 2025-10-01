@@ -25,7 +25,7 @@ from .asttypes import (
 from .astutil import re_identifier, OPCLS2STR, last_block_header_child
 
 from .common import (
-    fstloc, fstlocns,
+    fstloc, fstlocn,
     next_frag, prev_frag, next_find, prev_find, next_delims, prev_delims, next_find_re,
 )
 
@@ -382,12 +382,12 @@ def loc_Lambda_args_entire(self: fst.FST) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def loc_ClassDef_bases_pars(self: fst.FST) -> fstlocns:
+def loc_ClassDef_bases_pars(self: fst.FST) -> fstlocn:
     """Location of `class cls(...)` bases AND keywords fields-enclosing parentheses, or location where they should be
     put if not present currently (from end of `name` or `type_params` to just before `:`).
 
     **Returns:**
-    - `fstlocns(..., n = pars present or not)`: Just like from `FST.pars()`, with attribute `n=0` meaning no parentheses
+    - `fstlocn(..., n = pars present or not)`: Just like from `FST.pars()`, with attribute `n=0` meaning no parentheses
         present and location is where they should go and `n=1` meaning parentheses present and location is where they
         actually are.
     """
@@ -416,7 +416,7 @@ def loc_ClassDef_bases_pars(self: fst.FST) -> fstlocns:
     if not lpsrc.startswith('('):  # no parenthesis, must be ':'
         assert lpsrc.startswith(':')
 
-        return fstlocns(ln, col, lpln, lpcol, n=0)
+        return fstlocn(ln, col, lpln, lpcol, n=0)
 
     if last := last[-1].value if (last := ast.keywords) else last[-1] if (last := ast.bases) else None:
         _, _, ln, col = last.f.pars()
@@ -426,17 +426,17 @@ def loc_ClassDef_bases_pars(self: fst.FST) -> fstlocns:
 
     rpln, rpcol = next_find(lines, ln, col, end_ln, end_col, ')')  # must be there
 
-    return fstlocns(lpln, lpcol, rpln, rpcol + 1, n=1)
+    return fstlocn(lpln, lpcol, rpln, rpcol + 1, n=1)
 
 
-def loc_ImportFrom_names_pars(self: fst.FST) -> fstlocns:
+def loc_ImportFrom_names_pars(self: fst.FST) -> fstlocn:
     """Location of `from ? import (...)` whole names field-enclosing parentheses, or location where they should be put
     if not present currently.
 
     Can handle empty `module` and `names`.
 
     **Returns:**
-    - `fstlocns`: Just like from `FST.pars()`, with attribute `n=0` meaning no parentheses present and location is where
+    - `fstlocn`: Just like from `FST.pars()`, with attribute `n=0` meaning no parentheses present and location is where
         they should go and `n=1` meaning parentheses present and location is where they actually are.
     """
 
@@ -459,10 +459,10 @@ def loc_ImportFrom_names_pars(self: fst.FST) -> fstlocns:
 
         n = 0
 
-    return fstlocns(ln, col, end_ln, end_col, n=n)
+    return fstlocn(ln, col, end_ln, end_col, n=n)
 
 
-def loc_With_items_pars(self: fst.FST) -> fstlocns:
+def loc_With_items_pars(self: fst.FST) -> fstlocn:
     """Location of `with (...)` whole items field-enclosing parentheses, or location where they should be put if not
     present currently.
 
@@ -472,7 +472,7 @@ def loc_With_items_pars(self: fst.FST) -> fstlocns:
     those parentheses may pass on to belong to the child if it is a single item with no `optional_vars`.
 
     **Returns:**
-    - `fstlocns(..., n = pars present or not, bound = bound of search)`: Just like from `FST.pars()`, with attribute
+    - `fstlocn(..., n = pars present or not, bound = bound of search)`: Just like from `FST.pars()`, with attribute
         `n=0` meaning no parentheses present and location is where they should go and `n=1` meaning parentheses present
         and location is where they actually are. There is also a `bound` attribute which is an `fstloc` which is the
         location from just past the `with` (no space) to just before the `:`.
@@ -521,7 +521,7 @@ def loc_With_items_pars(self: fst.FST) -> fstlocns:
 
         n = 0
 
-    return fstlocns(ln, col, end_ln, end_col, n=n, bound=bound)
+    return fstlocn(ln, col, end_ln, end_col, n=n, bound=bound)
 
 
 def loc_Call_pars(self: fst.FST) -> fstloc:

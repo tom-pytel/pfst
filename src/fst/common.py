@@ -21,7 +21,7 @@ __all__ = [
     'NodeError',
     'astfield',
     'fstloc',
-    'fstlocns',
+    'fstlocn',
     'srcwpos',
     'nspace',
     'shortstr',
@@ -146,15 +146,15 @@ class fstloc(NamedTuple):
         return f'fstloc({ln}, {col}, {end_ln}, {end_col})'
 
 
-class fstlocns(fstloc):
+class fstlocn(fstloc):
     """Version of `fstloc` with a namespace, used for `pars().n`."""
 
     def __repr__(self) -> str:
         ln, col, end_ln, end_col = self
         ns = ', '.join(f'{n}={v!r}' for n, v in self.__dict__.items())
 
-        return (f'fstlocns({ln}, {col}, {end_ln}, {end_col}, {ns})' if ns else
-                f'fstlocns({ln}, {col}, {end_ln}, {end_col})')
+        return (f'fstlocn({ln}, {col}, {end_ln}, {end_col}, {ns})' if ns else
+                f'fstlocn({ln}, {col}, {end_ln}, {end_col})')
 
     def __new__(cls, ln: int, col: int, end_ln: int, end_col: int, **kwargs):
         self = fstloc.__new__(cls, ln, col, end_ln, end_col)
