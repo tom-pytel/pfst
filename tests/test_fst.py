@@ -42,6 +42,11 @@ from fst.code import (
     code_as_identifier_alias,
 )
 
+from fst.locations import (
+    loc_ClassDef_bases_pars, loc_ImportFrom_names_pars, loc_With_items_pars, loc_block_header_end, loc_Call_pars,
+    loc_Subscript_brackets, loc_MatchClass_pars,
+)
+
 from fst import parsex as px, code
 
 from data.data_other import PARS_DATA, PUT_SRC_REPARSE_DATA, PRECEDENCE_DATA
@@ -848,14 +853,6 @@ def regen_precedence_data():
 
 
 class TestFST(unittest.TestCase):
-    def test_fst_parse_non_str(self):
-        self.assertEqual('if 1: pass', parse(b'if 1: pass').f.src)
-        self.assertEqual('if 1: pass', parse(memoryview(b'if 1: pass')).f.src)
-
-        self.assertEqual('if 1:\n    pass', parse(FST('if 1: pass').a).f.src)
-        self.assertEqual('a:b:c', parse(FST('a:b:c').a).f.src)
-        self.assertEqual('except:\n    pass', parse(FST('except: pass').a).f.src)
-
     def test_unparse(self):
         self.assertEqual('for i in j', px.unparse(FST('[i for i in j]').generators[0].a))
 
@@ -946,6 +943,2848 @@ class TestFST(unittest.TestCase):
 
         self.assertRaises(SyntaxError, px.parse_withitem, 'i for i in j')
         self.assertRaises(SyntaxError, px.parse_withitem, '')
+
+    def test_code_as_simple(self):
+        # stmts
+
+        f = FST(r'''
+if 1:
+    pass
+
+call(a)
+'''.strip(), 'exec')
+
+        h = code_as_stmts(f.copy())
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+        h = code_as_stmts(f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+        h = code_as_stmts(f.a)
+        self.assertTrue(compare_asts(h.a, f.a, locs=False, raise_=True))
+
+        f0 = f.body[0].copy()
+        h = code_as_stmts(f0.a)
+        self.assertEqual(ast_unparse(f0.a), h.src)
+        self.assertTrue(compare_asts(h.body[0].a, f0.a, locs=False, raise_=True))
+
+        f1 = f.body[1].copy()
+        h = code_as_stmts(f1.a)
+        self.assertEqual(ast_unparse(f1.a), h.src)
+        self.assertTrue(compare_asts(h.body[0].a, f1.a, locs=False, raise_=True))
+
+        g = FST('from a import b', 'exec').body[0].names[0]
+        self.assertRaises(ValueError, code_as_stmts, f.body[0].test)
+        self.assertRaises(NodeError, code_as_stmts, g.copy())
+        self.assertRaises(NodeError, code_as_stmts, g.a)
+        self.assertRaises(SyntaxError, code_as_stmts, 'except Exception: pass')
+
+        f = FST('f(a)', 'exec')
+        h = code_as_stmts(f.body[0].value.copy())
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+        h = code_as_stmts(f.src)
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+        h = code_as_stmts(f.a)
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+        # expr
+
+        f = FST('a if b else {"c": f()}', 'eval')
+
+        h = code_as_expr(f.copy())
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.body.a, locs=True, raise_=True))
+
+        f = FST('a if b else {"c": f()}', 'single')
+
+        h = code_as_expr(f.copy())
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.body[0].value.a, locs=True, raise_=True))
+
+        f = FST('a if b else {"c": f()}', 'exec')
+
+        h = code_as_expr(f.copy())
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.body[0].value.a, locs=True, raise_=True))
+
+        h = code_as_expr(f.body[0].copy())
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.body[0].value.a, locs=True, raise_=True))
+
+        h = code_as_expr(f.body[0].value.copy())
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.body[0].value.a, locs=True, raise_=True))
+
+        h = code_as_expr(f.src)
+        self.assertTrue(compare_asts(h.a, f.body[0].value.a, locs=True, raise_=True))
+
+        g = f.body[0].value.copy()
+        h = code_as_expr(g.a)
+        self.assertEqual(ast_unparse(g.a), h.src)
+        self.assertTrue(compare_asts(h.a, g.a, locs=False, raise_=True))
+
+        self.assertRaises(ValueError, code_as_expr, FST('i = 1', 'exec').body[0])
+        self.assertRaises(NodeError, code_as_expr, FST('i = 1', 'exec').body[0].copy())
+        self.assertRaises(NodeError, code_as_expr, f.body[0].a)
+        self.assertRaises(SyntaxError, code_as_expr, 'pass')
+
+        # ExceptHandlers
+
+        f = FST(r'''
+try: pass
+except (ValueError, RuntimeError) as exc:
+    def f():
+        """doc
+  string"""
+
+        pass
+
+    i = f"""a
+  {test}
+        b"""
+
+except Exception:
+    ("a"
+"b")
+    k = \
+("c"
+    "d")
+'''.strip(), 'exec')
+
+        g = f.body[0].get_slice(field='handlers')
+
+        h = code_as_ExceptHandlers(g.copy())
+        self.assertEqual(h.src, g.src)
+        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
+
+        h = code_as_ExceptHandlers(g.src)
+        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
+
+        g0 = g.body[0].copy()
+        h = code_as_ExceptHandlers(g0.a)
+        self.assertEqual(ast_unparse(g0.a), h.src)
+        self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
+
+        g1 = g.body[1].copy()
+        h = code_as_ExceptHandlers(g1.a)
+        self.assertEqual(ast_unparse(g1.a), h.src)
+        self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
+
+        self.assertRaises(ValueError, code_as_ExceptHandlers, f.body[0].handlers[0])
+
+        self.assertEqual(0, len(code_as_ExceptHandlers('').body))  # make sure we can parse zero ExceptHandlers
+
+        # match_cases
+
+        f = FST(r'''
+match a:
+    case 1:
+        def f():
+            """doc
+  string"""
+
+            pass
+
+        i = f"""a
+  {test}
+        b"""
+
+    case 2:
+        ("a"
+"b")
+        k = \
+("c"
+    "d")
+'''.strip(), 'exec')
+
+        g = f.body[0].get_slice(field='cases')
+
+        h = code_as_match_cases(g.copy())
+        self.assertEqual(h.src, g.src)
+        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
+
+        h = code_as_match_cases(g.src)
+        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
+
+        g0 = g.body[0].copy()
+        h = code_as_match_cases(g0.a)
+        self.assertEqual(ast_unparse(g0.a), h.src)
+        self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
+
+        g1 = g.body[1].copy()
+        h = code_as_match_cases(g1.a)
+        self.assertEqual(ast_unparse(g1.a), h.src)
+        self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
+
+        self.assertRaises(ValueError, code_as_match_cases, f.body[0].cases[0])
+
+        self.assertEqual(0, len(code_as_match_cases('').body))  # make sure we can parse zero match_cases
+
+        # boolop
+
+        f = FST(And(), ['and'])
+
+        h = code_as_boolop(f.copy())
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+        h = code_as_boolop(f.a)
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=False, raise_=True))
+
+        h = code_as_boolop(f.src)
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+        # rest of AST ones
+
+        CODE_ASES = [
+            (code_as_expr_slice, 'body[0].value.slice', 'a[1]'),
+            (code_as_expr_slice, 'body[0].value.slice', 'a[b:c:d]'),
+            (code_as_expr_slice, 'body[0].value.slice', 'a[b:c:d, e:f]'),
+            (code_as_binop, 'body[0].value.op', 'a + b'),
+            (code_as_augop, 'body[0].op', 'a += b'),
+            (code_as_unaryop, 'body[0].value.op', '~a'),
+            (code_as_cmpop, 'body[0].value.ops[0]', 'a < b'),
+            (code_as_comprehension, 'body[0].value.generators[0]', '[i for i in j if i < 0]'),
+            (code_as_arguments, 'body[0].args', 'def f(a: str, /, b: int = 1, *c: tuple[bool], d: float = 2.0, **e: dict): pass'),
+            (code_as_arguments_lambda, 'body[0].value.args', 'lambda a, /, b=1, *c, d=2, **e: None'),
+            (code_as_arg, 'body[0].args.args[0]', 'def f(a: str = "test"): pass'),
+            (code_as_keyword, 'body[0].keywords[0]', 'class cls(meta=something): pass'),
+            (code_as_keyword, 'body[0].value.keywords[0]', 'call(key = word)'),
+            (code_as_alias, 'body[0].names[0]', 'from a import b'),
+            (code_as_alias, 'body[0].names[0]', 'from a import *'),
+            (code_as_alias, 'body[0].names[0]', 'import a.b'),
+            (code_as_Import_name, 'body[0].names[0]', 'import a'),
+            (code_as_Import_name, 'body[0].names[0]', 'import a.b'),
+            (code_as_ImportFrom_name, 'body[0].names[0]', 'from a import b'),
+            (code_as_ImportFrom_name, 'body[0].names[0]', 'from a import *'),
+            (code_as_withitem, 'body[0].items[0]', 'with a: pass'),
+            (code_as_withitem, 'body[0].items[0]', 'with (a): pass'),
+            (code_as_withitem, 'body[0].items[0]', 'with a as b: pass'),
+            (code_as_withitem, 'body[0].items[0]', 'with (a as b): pass'),
+            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case 42: pass'),
+            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case None: pass'),
+            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case [_, *_]: pass'),
+            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case {"key": _}: pass'),
+            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case SomeClass(attr=val): pass'),
+            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case as_var: pass'),
+            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case 1 | 2 | 3: pass'),
+            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case _: pass'),
+        ]
+
+        if PYGE12:
+            CODE_ASES.extend([
+                (code_as_type_param, 'body[0].type_params[0]', 'type t[T: int] = ...'),
+                (code_as_type_param, 'body[0].type_params[0]', 'class c[T: int]: pass'),
+                (code_as_type_param, 'body[0].type_params[0]', 'def f[T: int](): pass'),
+            ])
+
+        for code_as, attr, src in CODE_ASES:
+            m = FST(src, 'exec')
+            f = eval(f'm.{attr}', {'m': m}).copy()
+
+            g = code_as(f.copy())
+            self.assertEqual(g.src, f.src)
+            self.assertTrue(compare_asts(g.a, f.a, locs=True, raise_=True))
+
+            g = code_as(f.copy().a)
+            self.assertEqual(ast_unparse(g.a), ast_unparse(f.a))
+            self.assertTrue(compare_asts(g.a, f.a, locs=False, raise_=True))
+
+            self.assertRaises(ValueError, code_as, eval(f'm.{attr}', {'m': m}))
+
+        # identifiers
+
+        f = FST('name', 'exec').body[0].value.copy()
+
+        self.assertEqual('name', code_as_identifier(f.copy()))
+        self.assertEqual('name', code_as_identifier(f.a))
+        self.assertEqual('name', code_as_identifier(f.src))
+
+        self.assertEqual('name', code_as_identifier_alias(f.copy()))
+        self.assertEqual('name', code_as_identifier_alias(f.a))
+        self.assertEqual('name', code_as_identifier_alias(f.src))
+
+        f = FST('name.attr', 'exec').body[0].value.copy()
+
+        self.assertEqual('name.attr', code_as_identifier_dotted(f.copy()))
+        self.assertEqual('name.attr', code_as_identifier_dotted(f.a))
+        self.assertEqual('name.attr', code_as_identifier_dotted(f.src))
+
+        self.assertEqual('name.attr', code_as_identifier_alias(f.copy()))
+        self.assertEqual('name.attr', code_as_identifier_alias(f.a))
+        self.assertEqual('name.attr', code_as_identifier_alias(f.src))
+
+        f = FST('from a import *', 'exec').body[0].names[0].copy()
+
+        self.assertEqual('*', code_as_identifier_star(f.copy()))
+        self.assertEqual('*', code_as_identifier_star(f.a))
+        self.assertEqual('*', code_as_identifier_star(f.src))
+
+        self.assertEqual('*', code_as_identifier_alias(f.copy()))
+        self.assertEqual('*', code_as_identifier_alias(f.a))
+        self.assertEqual('*', code_as_identifier_alias(f.src))
+
+    def test_code_as_stmts(self):
+        f = FST(r'''
+if 1:
+    pass
+
+call(a)
+'''.strip(), 'exec')
+
+        h = code_as_stmts(f.copy())
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+        h = code_as_stmts(f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+        h = code_as_stmts(f.a)
+        self.assertTrue(compare_asts(h.a, f.a, locs=False, raise_=True))
+
+        f0 = f.body[0].copy()
+        h = code_as_stmts(f0.a)
+        self.assertEqual(ast_unparse(f0.a), h.src)
+        self.assertTrue(compare_asts(h.body[0].a, f0.a, locs=False, raise_=True))
+
+        f1 = f.body[1].copy()
+        h = code_as_stmts(f1.a)
+        self.assertEqual(ast_unparse(f1.a), h.src)
+        self.assertTrue(compare_asts(h.body[0].a, f1.a, locs=False, raise_=True))
+
+        g = FST('from a import b', 'exec').body[0].names[0]
+        self.assertRaises(ValueError, code_as_stmts, f.body[0].test)
+        self.assertRaises(NodeError, code_as_stmts, g.copy())
+        self.assertRaises(NodeError, code_as_stmts, g.a)
+
+        f = FST('f(a)', 'exec')
+        h = code_as_stmts(f.body[0].value.copy())
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+        h = code_as_stmts(f.src)
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+        h = code_as_stmts(f.a)
+        self.assertEqual(h.src, f.src)
+        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
+
+    def test_code_as_ExceptHandlers(self):
+        f = FST(r'''
+try: pass
+except (ValueError, RuntimeError) as exc:
+    def f():
+        """doc
+  string"""
+
+        pass
+
+    i = f"""a
+  {test}
+        b"""
+
+except Exception:
+    ("a"
+"b")
+    k = \
+("c"
+    "d")
+'''.strip(), 'exec')
+
+        g = f.body[0].get_slice(field='handlers')
+
+        h = code_as_ExceptHandlers(g.copy())
+        self.assertEqual(h.src, g.src)
+        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
+
+        h = code_as_ExceptHandlers(g.src)
+        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
+
+        g0 = g.body[0].copy()
+        h = code_as_ExceptHandlers(g0.a)
+        self.assertEqual(ast_unparse(g0.a), h.src)
+        self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
+
+        g1 = g.body[1].copy()
+        h = code_as_ExceptHandlers(g1.a)
+        self.assertEqual(ast_unparse(g1.a), h.src)
+        self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
+
+        self.assertRaises(ValueError, code_as_ExceptHandlers, f.body[0].handlers[0])
+
+    def test_code_as_match_cases(self):
+        f = FST(r'''
+match a:
+    case 1:
+        def f():
+            """doc
+  string"""
+
+            pass
+
+        i = f"""a
+  {test}
+        b"""
+
+    case 2:
+        ("a"
+"b")
+        k = \
+("c"
+    "d")
+'''.strip(), 'exec')
+
+        g = f.body[0].get_slice(field='cases')
+
+        h = code_as_match_cases(g.copy())
+        self.assertEqual(h.src, g.src)
+        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
+
+        h = code_as_match_cases(g.src)
+        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
+
+        g0 = g.body[0].copy()
+        h = code_as_match_cases(g0.a)
+        self.assertEqual(ast_unparse(g0.a), h.src)
+        self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
+
+        g1 = g.body[1].copy()
+        h = code_as_match_cases(g1.a)
+        self.assertEqual(ast_unparse(g1.a), h.src)
+        self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
+
+        self.assertRaises(ValueError, code_as_match_cases, f.body[0].cases[0])
+
+        # special 'case' non-keyword
+
+        self.assertIsInstance(code_as_match_cases('case 1: pass').body[0].a, match_case)
+        self.assertRaises(SyntaxError, code_as_match_cases, 'case = 1')
+        self.assertRaises(SyntaxError, code_as_match_cases, 'case.b = 1')
+
+    def test_code_as_sanitize(self):
+        CODE_ASES = [
+            (code_as_expr, 'f(a)'),
+            (code_as_expr_slice, 'b:c:d'),
+            (code_as_expr_slice, 'b:c:d, e:f'),
+            (code_as_binop, '+'),
+            (code_as_augop, '+='),
+            (code_as_unaryop, '~'),
+            (code_as_cmpop, '<'),
+            (code_as_comprehension, 'for i in j if i < 0'),
+            (code_as_arguments, 'a: str, /, b: int = 1, *c: tuple[bool], d: float = 2.0, **e: dict'),
+            (code_as_arguments_lambda, 'a, /, b=1, *c, d=2, **e'),
+            (code_as_arg, 'a: str'),
+            (code_as_keyword, 'meta=something'),
+            (code_as_keyword, 'key = word'),
+            (code_as_Import_name, 'a'),
+            (code_as_Import_name, 'a.b'),
+            (code_as_ImportFrom_name, 'b'),
+            (code_as_ImportFrom_name, '*'),
+            (code_as_withitem, 'a'),
+            (code_as_withitem, 'a as b'),
+            (code_as_pattern, '42'),
+            (code_as_pattern, 'None'),
+            (code_as_pattern, '[_, *_]'),
+            (code_as_pattern, '{"key": _}'),
+            (code_as_pattern, 'SomeClass(attr=val)'),
+            (code_as_pattern, 'as_var'),
+            (code_as_pattern, '1 | 2 | 3'),
+            (code_as_pattern, '_'),
+        ]
+
+        if PYGE12:
+            CODE_ASES.extend([
+                (code_as_type_param, 'T: int'),
+            ])
+
+        for code_as, src in CODE_ASES:
+            self.assertEqual(src, code_as(src).src)
+            self.assertEqual(src, code_as(f'{src}  ').src)
+
+            if code_as in (code_as_expr, code_as_pattern):  # parenthesizable things so lets abuse
+                srcp = f'(\n# pre\n{src} # post\n# post2\n)'
+
+                self.assertEqual(srcp, code_as(srcp).src)
+
+                if code_as is code_as_expr:
+                    self.assertEqual(src, code_as(srcp[1:-1]).src)
+
+    def test_code_as_all_from_ast(self):
+        for mode, func, res, src in PARSE_TESTS:
+            if issubclass(res, Exception):
+                continue
+
+            ast = None
+
+            try:
+                ast = px.parse(src, mode)
+
+                if px.get_special_parse_mode(ast):  # this tells us if it is a SPECIAL SLICE, which are not handled as input to `code_as_all()`  TODO: remove this check once ExceptHandler and match_case special slices moved from Module to their own _slice_? AST classes
+                    continue
+
+                astc = copy_ast(ast)
+                fst  = code_as_all(ast)
+
+                for a in walk(ast):
+                    self.assertIs(False, getattr(a, 'f', False))
+
+                self.assertIsNot(fst.a, ast)
+
+                compare_asts(ast, fst.a, locs=False, raise_=True)
+                compare_asts(ast, astc, locs=True, raise_=True)
+
+            except Exception:
+                print()
+                print(f'{mode = }')
+                print(f'{func = }')
+                print(f'{res = }')
+                print(f'{src = !r}')
+                print(ast)
+
+                raise
+
+    def test_code_as_from_parse_data(self):
+        for mode, func, res, src in PARSE_TESTS:
+            if issubclass(res, Exception):
+                continue
+
+            if not isinstance(mode, str):
+                continue
+
+            try:
+                for name in dict.fromkeys((mode, func.__name__[6:])):  # func.__name__[6:] means 'parse_something' -> 'something'
+                    test = None
+
+                    if not (code_as := getattr(code, f'code_as_{name}', False)):
+                        continue
+
+                    test    = 'parse'
+                    ref_ast = px.parse(src, mode)
+
+                    test = 'src'
+
+                    try:
+                        fst = code_as(src, sanitize=False)
+                    except TypeError:
+                        fst = code_as(src)
+
+                    compare_asts(ref_ast, fst.a, locs=True, raise_=True)
+
+                    if fst._get_parse_mode() not in ('ExceptHandlers', 'match_cases'):  # this tells us if it is a SPECIAL SLICE, which can not be unparsed  TODO: remove this check once ExceptHandler and match_case special slices moved from Module to their own _slice_? AST classes
+                        test = 'ast'
+
+                        try:
+                            ast_fst = code_as(fst.a, sanitize=False)
+                        except TypeError:
+                            ast_fst = code_as(fst.a)
+
+                        compare_asts(ref_ast, ast_fst.a, locs=False, raise_=True)
+
+                    test    = 'fst'
+                    fst_src = fst.src
+
+                    try:
+                        fst_fst = code_as(fst, sanitize=False)
+                    except TypeError:
+                        fst_fst = code_as(fst)
+
+                    compare_asts(ref_ast, fst_fst.a, locs=False, raise_=True)
+
+                    self.assertEqual(fst_fst.src, fst_src)
+
+            except Exception:
+                print()
+                print(f'{test = }')
+                print(f'{code_as = }')
+                print(f'{mode = }')
+                print(f'{func = }')
+                print(f'{res = }')
+                print(f'{src = !r}')
+
+                raise
+
+    def test_code_as_special(self):
+        # aliases slice multiple stars
+
+        self.assertRaises(ParseError, code_as_ImportFrom_names, FST('*', 'aliases').names.append('*').fst)
+        self.assertRaises(ParseError, code_as_ImportFrom_names, FST('a', 'aliases').names.append('*').fst)
+        self.assertEqual('*', code_as_ImportFrom_names(FST('*', 'aliases')).src)
+
+    def test_loc_operator_no_parent(self):
+        self.assertEqual((1, 0, 1, 1), FST(Invert(), ['# pre', '~ # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 3), FST(Not(), ['# pre', 'not # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 1), FST(UAdd(), ['# pre', '+ # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 1), FST(USub(), ['# pre', '- # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 1), FST(Add(), ['# pre', '+ # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 1), FST(Sub(), ['# pre', '- # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 1), FST(Mult(), ['# pre', '* # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 1), FST(MatMult(), ['# pre', '@ # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 1), FST(Div(), ['# pre', '/ # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 1), FST(Mod(), ['# pre', '% # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(LShift(), ['# pre', '<< # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(RShift(), ['# pre', '>> # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 1), FST(BitOr(), ['# pre', '| # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 1), FST(BitXor(), ['# pre', '^ # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 1), FST(BitAnd(), ['# pre', '& # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(FloorDiv(), ['# pre', '// # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(Pow(), ['# pre', '** # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(Eq(), ['# pre', '== # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(NotEq(), ['# pre', '!= # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 1), FST(Lt(), ['# pre', '< # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(LtE(), ['# pre', '<= # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 1), FST(Gt(), ['# pre', '> # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(GtE(), ['# pre', '>= # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(Is(), ['# pre', 'is # post', '# next']).loc)
+        self.assertEqual((1, 0, 2, 3), FST(IsNot(), ['# pre', 'is # inner', 'not # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(In(), ['# pre', 'in # post', '# next']).loc)
+        self.assertEqual((1, 0, 2, 2), FST(NotIn(), ['# pre', 'not # inner', 'in # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 3), FST(And(), ['# pre', 'and # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(Or(), ['# pre', 'or # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(Add(), ['# pre', '+= # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(Sub(), ['# pre', '-= # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(Mult(), ['# pre', '*= # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(MatMult(), ['# pre', '@= # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(Div(), ['# pre', '/= # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(Mod(), ['# pre', '%= # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 3), FST(LShift(), ['# pre', '<<= # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 3), FST(RShift(), ['# pre', '>>= # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(BitOr(), ['# pre', '|= # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(BitXor(), ['# pre', '^= # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 2), FST(BitAnd(), ['# pre', '&= # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 3), FST(FloorDiv(), ['# pre', '//= # post', '# next']).loc)
+        self.assertEqual((1, 0, 1, 3), FST(Pow(), ['# pre', '**= # post', '# next']).loc)
+
+    def test_loc_block_header_end(self):
+        self.assertEqual((0, 15), loc_block_header_end(parse('def f(a) -> int: pass').body[0].f))
+        self.assertEqual((0, 8),  loc_block_header_end(parse('def f(a): pass').body[0].f))
+        self.assertEqual((0, 7),  loc_block_header_end(parse('def f(): pass').body[0].f))
+        self.assertEqual((0, 21), loc_block_header_end(parse('async def f(a) -> int: pass').body[0].f))
+        self.assertEqual((0, 14), loc_block_header_end(parse('async def f(a): pass').body[0].f))
+        self.assertEqual((0, 13), loc_block_header_end(parse('async def f(): pass').body[0].f))
+        self.assertEqual((0, 26), loc_block_header_end(parse('class cls(base, keyword=1): pass').body[0].f))
+        self.assertEqual((0, 15), loc_block_header_end(parse('class cls(base): pass').body[0].f))
+        self.assertEqual((0, 10), loc_block_header_end(parse('for a in b: pass\nelse: pass').body[0].f))
+        self.assertEqual((0, 16), loc_block_header_end(parse('async for a in b: pass\nelse: pass').body[0].f))
+        self.assertEqual((0, 7),  loc_block_header_end(parse('while a: pass\nelse: pass').body[0].f))
+        self.assertEqual((0, 4),  loc_block_header_end(parse('if a: pass\nelse: pass').body[0].f))
+        self.assertEqual((0, 8),  loc_block_header_end(parse('with f(): pass').body[0].f))
+        self.assertEqual((0, 13), loc_block_header_end(parse('with f() as v: pass').body[0].f))
+        self.assertEqual((0, 14), loc_block_header_end(parse('async with f(): pass').body[0].f))
+        self.assertEqual((0, 19), loc_block_header_end(parse('async with f() as v: pass').body[0].f))
+        self.assertEqual((0, 7),  loc_block_header_end(parse('match a:\n case 2: pass').body[0].f))
+        self.assertEqual((1, 7),  loc_block_header_end(parse('match a:\n case 2: pass').body[0].cases[0].f))
+        self.assertEqual((1, 15), loc_block_header_end(parse('match a:\n case 2 if True: pass').body[0].cases[0].f))
+        self.assertEqual((0, 3),  loc_block_header_end(parse('try: pass\nexcept: pass\nelse: pass\nfinally: pass').body[0].f))
+        self.assertEqual((1, 6),  loc_block_header_end(parse('try: pass\nexcept: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
+        self.assertEqual((1, 16), loc_block_header_end(parse('try: pass\nexcept Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
+        self.assertEqual((1, 33), loc_block_header_end(parse('try: pass\nexcept (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
+        self.assertEqual((1, 38), loc_block_header_end(parse('try: pass\nexcept (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
+
+        if PYGE12:
+            self.assertEqual((0, 3),  loc_block_header_end(parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].f))
+            self.assertEqual((1, 17), loc_block_header_end(parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
+            self.assertEqual((1, 34), loc_block_header_end(parse('try: pass\nexcept* (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
+            self.assertEqual((1, 39), loc_block_header_end(parse('try: pass\nexcept* (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
+            self.assertEqual((0, 12), loc_block_header_end(parse('class cls[T]: pass').body[0].f))
+
+        self.assertEqual((0, 15, 0, 15), loc_block_header_end(parse('def f(a) -> int: pass').body[0].f, True))
+        self.assertEqual((0, 8, 0, 7), loc_block_header_end(parse('def f(a): pass').body[0].f, True))
+        self.assertEqual((0, 7, 0, 0), loc_block_header_end(parse('def f(): pass').body[0].f, True))
+        self.assertEqual((0, 21, 0, 21), loc_block_header_end(parse('async def f(a) -> int: pass').body[0].f, True))
+        self.assertEqual((0, 14, 0, 13), loc_block_header_end(parse('async def f(a): pass').body[0].f, True))
+        self.assertEqual((0, 13, 0, 0), loc_block_header_end(parse('async def f(): pass').body[0].f, True))
+        self.assertEqual((0, 26, 0, 25), loc_block_header_end(parse('class cls(base, keyword=1): pass').body[0].f, True))
+        self.assertEqual((0, 15, 0, 14), loc_block_header_end(parse('class cls(base): pass').body[0].f, True))
+        self.assertEqual((0, 10, 0, 10), loc_block_header_end(parse('for a in b: pass\nelse: pass').body[0].f, True))
+        self.assertEqual((0, 16, 0, 16), loc_block_header_end(parse('async for a in b: pass\nelse: pass').body[0].f, True))
+        self.assertEqual((0, 7, 0, 7), loc_block_header_end(parse('while a: pass\nelse: pass').body[0].f, True))
+        self.assertEqual((0, 4, 0, 4), loc_block_header_end(parse('if a: pass\nelse: pass').body[0].f, True))
+        self.assertEqual((0, 8, 0, 8), loc_block_header_end(parse('with f(): pass').body[0].f, True))
+        self.assertEqual((0, 13, 0, 13), loc_block_header_end(parse('with f() as v: pass').body[0].f, True))
+        self.assertEqual((0, 14, 0, 14), loc_block_header_end(parse('async with f(): pass').body[0].f, True))
+        self.assertEqual((0, 19, 0, 19), loc_block_header_end(parse('async with f() as v: pass').body[0].f, True))
+        self.assertEqual((0, 7, 0, 7), loc_block_header_end(parse('match a:\n case 2: pass').body[0].f, True))
+        self.assertEqual((1, 7, 1, 7), loc_block_header_end(parse('match a:\n case 2: pass').body[0].cases[0].f, True))
+        self.assertEqual((1, 15, 1, 15), loc_block_header_end(parse('match a:\n case 2 if True: pass').body[0].cases[0].f, True))
+        self.assertEqual((0, 3, 0, 0), loc_block_header_end(parse('try: pass\nexcept: pass\nelse: pass\nfinally: pass').body[0].f, True))
+        self.assertEqual((1, 6, 1, 0), loc_block_header_end(parse('try: pass\nexcept: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f, True))
+        self.assertEqual((1, 16, 1, 16), loc_block_header_end(parse('try: pass\nexcept Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f, True))
+        self.assertEqual((1, 33, 1, 33), loc_block_header_end(parse('try: pass\nexcept (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0].f, True))
+        self.assertEqual((1, 38, 1, 33), loc_block_header_end(parse('try: pass\nexcept (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f, True))
+
+        if PYGE12:
+            self.assertEqual((0, 3, 0, 0), loc_block_header_end(parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].f, True))
+            self.assertEqual((1, 17, 1, 17), loc_block_header_end(parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f, True))
+            self.assertEqual((1, 34, 1, 34), loc_block_header_end(parse('try: pass\nexcept* (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0].f, True))
+            self.assertEqual((1, 39, 1, 34), loc_block_header_end(parse('try: pass\nexcept* (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f, True))
+            self.assertEqual((0, 12, 0, 11), loc_block_header_end(parse('class cls[T]: pass').body[0].f, True))
+
+        self.assertEqual((0, 17, 0, 16), loc_block_header_end(parse('def f(a) -> (int): pass').body[0].f, True))
+        self.assertEqual((0, 28, 0, 27), loc_block_header_end(parse('class cls(base, keyword=(1)): pass').body[0].f, True))
+        self.assertEqual((0, 17, 0, 15), loc_block_header_end(parse('class cls((base)): pass').body[0].f, True))
+        self.assertEqual((0, 12, 0, 11), loc_block_header_end(parse('for a in (b): pass\nelse: pass').body[0].f, True))
+
+    def test_loc_ClassDef_bases_pars(self):
+        self.assertEqual('fstlocns(0, 9, 0, 9, n=0)', str(loc_ClassDef_bases_pars(FST('class cls: pass'))))
+        self.assertEqual('fstlocns(0, 9, 0, 10, n=0)', str(loc_ClassDef_bases_pars(FST('class cls : pass'))))
+        self.assertEqual('fstlocns(1, 3, 1, 4, n=0)', str(loc_ClassDef_bases_pars(FST('class \\\ncls : pass'))))
+        self.assertEqual('fstlocns(0, 9, 1, 0, n=0)', str(loc_ClassDef_bases_pars(FST('class cls \\\n: pass'))))
+        self.assertEqual('fstlocns(0, 9, 0, 11, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(): pass'))))
+        self.assertEqual('fstlocns(1, 0, 1, 2, n=1)', str(loc_ClassDef_bases_pars(FST('class cls\\\n(): pass'))))
+        self.assertEqual('fstlocns(0, 9, 1, 1, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(\n): pass'))))
+        self.assertEqual('fstlocns(1, 0, 2, 1, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n(\n): pass'))))
+
+        self.assertEqual('fstlocns(0, 9, 0, 12, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(b): pass'))))
+        self.assertEqual('fstlocns(0, 9, 0, 14, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(k=v): pass'))))
+        self.assertEqual('fstlocns(0, 9, 0, 14, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(**v): pass'))))
+        self.assertEqual('fstlocns(0, 9, 0, 17, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(b, k=v): pass'))))
+        self.assertEqual('fstlocns(0, 9, 0, 17, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(b, **v): pass'))))
+        self.assertEqual('fstlocns(0, 9, 2, 1, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(\nb\n): pass'))))
+        self.assertEqual('fstlocns(1, 1, 3, 1, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n (\nb\n) \\\n: pass'))))
+
+        self.assertEqual('fstlocns(0, 9, 0, 13, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(b,): pass'))))
+        self.assertEqual('fstlocns(0, 9, 0, 15, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(k=v,): pass'))))
+        self.assertEqual('fstlocns(0, 9, 0, 15, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(**v,): pass'))))
+        self.assertEqual('fstlocns(0, 9, 0, 18, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(b, k=v,): pass'))))
+        self.assertEqual('fstlocns(0, 9, 0, 18, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(b, **v,): pass'))))
+        self.assertEqual('fstlocns(0, 9, 3, 1, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(\nb\n,\n): pass'))))
+        self.assertEqual('fstlocns(1, 1, 4, 1, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n (\nb\n,\n) \\\n: pass'))))
+
+        if PYGE12:
+            self.assertEqual('fstlocns(0, 12, 0, 12, n=0)', str(loc_ClassDef_bases_pars(FST('class cls[T]: pass'))))
+            self.assertEqual('fstlocns(0, 12, 0, 13, n=0)', str(loc_ClassDef_bases_pars(FST('class cls[T] : pass'))))
+            self.assertEqual('fstlocns(0, 13, 0, 13, n=0)', str(loc_ClassDef_bases_pars(FST('class cls[T,]: pass'))))
+            self.assertEqual('fstlocns(0, 12, 0, 14, n=1)', str(loc_ClassDef_bases_pars(FST('class cls[T](): pass'))))
+            self.assertEqual('fstlocns(0, 13, 0, 15, n=1)', str(loc_ClassDef_bases_pars(FST('class cls[T,](): pass'))))
+            self.assertEqual('fstlocns(0, 15, 0, 17, n=1)', str(loc_ClassDef_bases_pars(FST('class cls[T, U](): pass'))))
+            self.assertEqual('fstlocns(1, 3, 1, 5, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n[T](): pass'))))
+            self.assertEqual('fstlocns(2, 1, 2, 3, n=1)', str(loc_ClassDef_bases_pars(FST('class cls[\nT\n](): pass'))))
+            self.assertEqual('fstlocns(3, 1, 3, 3, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n[\nT\n](): pass'))))
+            self.assertEqual('fstlocns(4, 0, 5, 1, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n[\nT\n]\\\n(\n): pass'))))
+            self.assertEqual('fstlocns(6, 0, 7, 1, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n[\nT\n,\nU\n]\\\n( \\\n): pass'))))
+
+            self.assertEqual('fstlocns(0, 12, 0, 15, n=1)', str(loc_ClassDef_bases_pars(FST('class cls[T](b): pass'))))
+            self.assertEqual('fstlocns(0, 18, 0, 25, n=1)', str(loc_ClassDef_bases_pars(FST('class cls[T, **U,]( b , ): pass'))))
+            self.assertEqual('fstlocns(1, 3, 1, 6, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n[T](b): pass'))))
+            self.assertEqual('fstlocns(2, 1, 2, 4, n=1)', str(loc_ClassDef_bases_pars(FST('class cls[\nT\n](b): pass'))))
+            self.assertEqual('fstlocns(3, 1, 3, 4, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n[\nT\n](b): pass'))))
+
+            self.assertEqual('fstlocns(4, 0, 7, 1, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n[\nT\n]\\\n(\nb\n,\n): pass'))))
+            self.assertEqual('fstlocns(6, 0, 7, 3, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n[\nT\n,\nU\n]\\\n( \\\nb,): pass'))))
+
+    def test_loc_ImportFrom_names_pars(self):
+        self.assertEqual('fstlocns(0, 14, 0, 15, n=0)', str(loc_ImportFrom_names_pars(FST('from . import a'))))
+        self.assertEqual('fstlocns(0, 14, 0, 17, n=1)', str(loc_ImportFrom_names_pars(FST('from . import (a)'))))
+        self.assertEqual('fstlocns(0, 14, 2, 1, n=1)', str(loc_ImportFrom_names_pars(FST('from . import (\na\n)'))))
+        self.assertEqual('fstlocns(1, 0, 3, 1, n=1)', str(loc_ImportFrom_names_pars(FST('from . import \\\n(\na\n)'))))
+        self.assertEqual('fstlocns(0, 14, 1, 1, n=0)', str(loc_ImportFrom_names_pars(FST('from . import \\\na'))))
+        self.assertEqual('fstlocns(0, 13, 1, 1, n=0)', str(loc_ImportFrom_names_pars(FST('from . import\\\na'))))
+
+        self.assertEqual('fstlocns(0, 22, 0, 23, n=0)', str(loc_ImportFrom_names_pars(FST('from importlib import b'))))
+        self.assertEqual('fstlocns(0, 22, 1, 1, n=0)', str(loc_ImportFrom_names_pars(FST('from importlib import \\\nb'))))
+        self.assertEqual('fstlocns(0, 22, 0, 25, n=1)', str(loc_ImportFrom_names_pars(FST('from importlib import (b)'))))
+        self.assertEqual('fstlocns(0, 22, 2, 1, n=1)', str(loc_ImportFrom_names_pars(FST('from importlib import (\nb\n)'))))
+
+        f = FST('from . import a')
+        f._put_src(None, 0, 14, 0, 15, True)
+        del f.a.names[:]
+        self.assertEqual('fstlocns(0, 14, 0, 14, n=0)', str(loc_ImportFrom_names_pars(f)))
+        f._put_src(None, 0, 13, 0, 14, True)
+        self.assertEqual('fstlocns(0, 13, 0, 13, n=0)', str(loc_ImportFrom_names_pars(f)))
+        f._put_src('\n', 0, 13, 0, 13, True)
+        self.assertEqual('fstlocns(0, 13, 1, 0, n=0)', str(loc_ImportFrom_names_pars(f)))
+
+    def test_loc_With_items_pars(self):
+        def str_(loc_ret):
+            del loc_ret.bound
+
+            return str(loc_ret)
+
+        self.assertEqual('fstlocns(0, 5, 0, 6, n=0)', str_(loc_With_items_pars(FST('with a: pass'))))
+        self.assertEqual('fstlocns(0, 5, 0, 8, n=0)', str_(loc_With_items_pars(FST('with (a): pass'))))
+        self.assertEqual('fstlocns(0, 5, 0, 13, n=1)', str_(loc_With_items_pars(FST('with (a as b): pass'))))
+        self.assertEqual('fstlocns(0, 5, 2, 1, n=1)', str_(loc_With_items_pars(FST('with (\na as b\n): pass'))))
+        self.assertEqual('fstlocns(1, 0, 3, 1, n=1)', str_(loc_With_items_pars(FST('with \\\n(\na as b\n): pass'))))
+        self.assertEqual('fstlocns(0, 5, 1, 1, n=0)', str_(loc_With_items_pars(FST('with \\\na: pass'))))
+        self.assertEqual('fstlocns(0, 4, 1, 1, n=0)', str_(loc_With_items_pars(FST('with\\\na: pass'))))
+        self.assertEqual('fstlocns(0, 4, 3, 0, n=0)', str_(loc_With_items_pars(FST('with\\\n\\\na\\\n: pass'))))
+        self.assertEqual('fstlocns(0, 5, 0, 8, n=0)', str_(loc_With_items_pars(FST('with  a : pass'))))
+        self.assertEqual('fstlocns(0, 6, 0, 14, n=1)', str_(loc_With_items_pars(FST('with  (a as b)  : pass'))))
+
+        self.assertEqual('fstlocns(0, 11, 0, 12, n=0)', str_(loc_With_items_pars(FST('async with a: pass'))))
+        self.assertEqual('fstlocns(0, 11, 0, 14, n=0)', str_(loc_With_items_pars(FST('async with (a): pass'))))
+        self.assertEqual('fstlocns(0, 11, 0, 19, n=1)', str_(loc_With_items_pars(FST('async with (a as b): pass'))))
+        self.assertEqual('fstlocns(0, 11, 2, 1, n=1)', str_(loc_With_items_pars(FST('async with (\na as b\n): pass'))))
+        self.assertEqual('fstlocns(1, 0, 3, 1, n=1)', str_(loc_With_items_pars(FST('async with \\\n(\na as b\n): pass'))))
+        self.assertEqual('fstlocns(0, 11, 1, 1, n=0)', str_(loc_With_items_pars(FST('async with \\\na: pass'))))
+        self.assertEqual('fstlocns(0, 10, 1, 1, n=0)', str_(loc_With_items_pars(FST('async with\\\na: pass'))))
+        self.assertEqual('fstlocns(0, 10, 3, 0, n=0)', str_(loc_With_items_pars(FST('async with\\\n\\\na\\\n: pass'))))
+        self.assertEqual('fstlocns(0, 11, 0, 14, n=0)', str_(loc_With_items_pars(FST('async with  a : pass'))))
+        self.assertEqual('fstlocns(0, 12, 0, 20, n=1)', str_(loc_With_items_pars(FST('async with  (a as b)  : pass'))))
+
+        self.assertEqual('fstlocns(1, 6, 1, 7, n=0)', str_(loc_With_items_pars(FST('async \\\n with a: pass'))))
+        self.assertEqual('fstlocns(1, 6, 1, 9, n=0)', str_(loc_With_items_pars(FST('async \\\n with (a): pass'))))
+        self.assertEqual('fstlocns(1, 6, 1, 14, n=1)', str_(loc_With_items_pars(FST('async \\\n with (a as b): pass'))))
+        self.assertEqual('fstlocns(1, 6, 3, 1, n=1)', str_(loc_With_items_pars(FST('async \\\n with (\na as b\n): pass'))))
+        self.assertEqual('fstlocns(2, 0, 4, 1, n=1)', str_(loc_With_items_pars(FST('async \\\n with \\\n(\na as b\n): pass'))))
+        self.assertEqual('fstlocns(1, 6, 2, 1, n=0)', str_(loc_With_items_pars(FST('async \\\n with \\\na: pass'))))
+        self.assertEqual('fstlocns(1, 5, 2, 1, n=0)', str_(loc_With_items_pars(FST('async \\\n with\\\na: pass'))))
+        self.assertEqual('fstlocns(1, 5, 4, 0, n=0)', str_(loc_With_items_pars(FST('async \\\n with\\\n\\\na\\\n: pass'))))
+        self.assertEqual('fstlocns(1, 6, 1, 9, n=0)', str_(loc_With_items_pars(FST('async \\\n with  a : pass'))))
+        self.assertEqual('fstlocns(1, 7, 1, 15, n=1)', str_(loc_With_items_pars(FST('async \\\n with  (a as b)  : pass'))))
+
+        f = FST('with a: pass')
+        f._put_src(None, 0, 5, 0, 6, True)
+        del f.a.items[:]
+        self.assertEqual('fstlocns(0, 5, 0, 5, n=0)', str_(loc_With_items_pars(f)))
+        f._put_src(None, 0, 4, 0, 5, True)
+        self.assertEqual('fstlocns(0, 4, 0, 4, n=0)', str_(loc_With_items_pars(f)))
+        f._put_src('\n', 0, 4, 0, 4, True)
+        self.assertEqual('fstlocns(0, 4, 1, 0, n=0)', str_(loc_With_items_pars(f)))
+
+        self.assertEqual('fstlocns(0, 5, 0, 8, n=0)', str_(loc_With_items_pars(FST('with (a): pass'))))
+        self.assertEqual('fstlocns(0, 5, 0, 13, n=0)', str_(loc_With_items_pars(FST('with (a) as b: pass'))))
+        self.assertEqual('fstlocns(0, 5, 0, 15, n=1)', str_(loc_With_items_pars(FST('with ((a) as b): pass'))))
+        self.assertEqual('fstlocns(0, 5, 0, 15, n=0)', str_(loc_With_items_pars(FST('with (a) as (b): pass'))))
+        self.assertEqual('fstlocns(0, 5, 0, 17, n=1)', str_(loc_With_items_pars(FST('with ((a) as (b)): pass'))))
+
+    def test_loc_Call_pars(self):
+        self.assertEqual((0, 4, 0, 6), loc_Call_pars(FST('call()', 'exec').body[0].value))
+        self.assertEqual((0, 4, 0, 7), loc_Call_pars(FST('call(a)', 'exec').body[0].value))
+        self.assertEqual((0, 4, 2, 1), loc_Call_pars(FST('call(\na\n)', 'exec').body[0].value))
+        self.assertEqual((0, 4, 2, 1), loc_Call_pars(FST('call(\na, b=2\n)', 'exec').body[0].value))
+        self.assertEqual((0, 4, 0, 12), loc_Call_pars(FST('call(c="()")', 'exec').body[0].value))
+        self.assertEqual((1, 0, 8, 1), loc_Call_pars(FST('call\\\n(\nc\n=\n"\\\n(\\\n)\\\n"\n)', 'exec').body[0].value))
+        self.assertEqual((1, 0, 8, 1), loc_Call_pars(FST('"()("\\\n(\nc\n=\n"\\\n(\\\n)\\\n"\n)', 'exec').body[0].value))
+
+    def test_loc_Subscript_brackets(self):
+        self.assertEqual((0, 1, 0, 4), loc_Subscript_brackets(FST('a[b]', 'exec').body[0].value))
+        self.assertEqual((0, 1, 0, 8), loc_Subscript_brackets(FST('a[b:c:d]', 'exec').body[0].value))
+        self.assertEqual((0, 1, 0, 7), loc_Subscript_brackets(FST('a["[]"]', 'exec').body[0].value))
+        self.assertEqual((1, 0, 7, 1), loc_Subscript_brackets(FST('a\\\n[\nb\n:\nc\n:\nd\n]', 'exec').body[0].value))
+        self.assertEqual((1, 0, 7, 1), loc_Subscript_brackets(FST('"[]["\\\n[\nb\n:\nc\n:\nd\n]', 'exec').body[0].value))
+
+    def test_loc_MatchClass_pars(self):
+        self.assertEqual((1, 9, 1, 11), loc_MatchClass_pars(FST('match a:\n case cls(): pass', 'exec').body[0].cases[0].pattern))
+        self.assertEqual((1, 9, 1, 12), loc_MatchClass_pars(FST('match a:\n case cls(a): pass', 'exec').body[0].cases[0].pattern))
+        self.assertEqual((1, 9, 3, 1), loc_MatchClass_pars(FST('match a:\n case cls(\na\n): pass', 'exec').body[0].cases[0].pattern))
+        self.assertEqual((1, 9, 3, 1), loc_MatchClass_pars(FST('match a:\n case cls(\na, b=2\n): pass', 'exec').body[0].cases[0].pattern))
+        self.assertEqual((1, 9, 1, 17), loc_MatchClass_pars(FST('match a:\n case cls(c="()"): pass', 'exec').body[0].cases[0].pattern))
+        self.assertEqual((2, 0, 9, 1), loc_MatchClass_pars(FST('match a:\n case cls\\\n(\nc\n=\n"\\\n(\\\n)\\\n"\n): pass', 'exec').body[0].cases[0].pattern))
+
+    def test__is_atom(self):
+        self.assertIs(False, parse('1 + 2').body[0].value.f._is_atom())
+        self.assertEqual('unenclosable', parse('f()').body[0].value.f._is_atom())
+        self.assertEqual('pars', parse('(1 + 2)').body[0].value.f._is_atom())
+        self.assertIs(False, parse('(1 + 2)').body[0].value.f._is_atom(pars=False))
+
+        self.assertIs(False, parse('1, 2').body[0].value.f._is_atom())
+        self.assertIs(True, parse('(1, 2)').body[0].value.f._is_atom())
+        self.assertIs(True, parse('[1, 2]').body[0].value.f._is_atom())
+
+        self.assertIs(False, parse('match a:\n case 1, 2: pass').body[0].cases[0].pattern.f._is_atom())
+        self.assertIs(True, parse('match a:\n case (1, 2): pass').body[0].cases[0].pattern.f._is_atom())
+        self.assertIs(True, parse('match a:\n case [1, 2]: pass').body[0].cases[0].pattern.f._is_atom())
+
+        self.assertIs(False, FST('*a')._is_atom())  # because of `*a or b`
+
+    def test__is_enclosed_or_line_special(self):
+        # Call
+        # JoinedStr
+        # TemplateStr
+        # Constant - str
+        # Attribute
+        # Subscript
+        # MatchClass
+        # MatchStar
+        # MatchAs
+        # cmpop
+        # comprehension
+        # arguments
+        # arg
+        # alias
+        # withitem
+
+        self.assertTrue(FST('f(a, b=1)', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('f\\\n(a, b=1)', 'exec').body[0].copy(pars=False).value._is_enclosed_or_line())
+        self.assertTrue(FST('(f\\\n(a, b=1))', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('(f\n(a, b=1))', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('(f(\na\n,\nb\n=\n1))', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('(f(\na\n,\nb\n=\n"()"))', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+
+        if PYGE12:
+            self.assertTrue(FST(r'''
+(f"a{(1,
+
+2)}b" f"""{3}
+
+{4}
+{5}""" f"x\
+y")
+                '''.strip(), 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+            self.assertFalse(FST(r'''
+(f"a{(1,
+
+2)}b" f"""{3}
+
+{4}
+{5}"""
+f"x\
+y")
+                '''.strip(), 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+
+            self.assertTrue(FST(r'''
+(f"a" f"""c
+b""" f"d\
+\
+e")
+                '''.strip(), 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+
+            self.assertFalse(FST(r'''
+(f"a" f"""c
+b"""
+
+f"d\
+\
+e")
+                '''.strip(), 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+
+        self.assertTrue(FST('a.b', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('(a\n.\nb)', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('(a\\\n.\\\nb)', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+
+        self.assertTrue(FST('a[b]', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('(a\n[\nb\n])', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('(a\n[(\nb\n)])', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('(a\\\n[(\nb\n)])', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('(a\\\n[\\\nb\\\n])', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+
+        self.assertTrue(FST('match a:\n case f(a, b=1): pass', 'exec').body[0].cases[0].pattern._is_enclosed_or_line())
+        self.assertTrue(FST('match a:\n case f\\\n(a, b=1): pass', 'exec').body[0].cases[0].pattern._is_enclosed_or_line())
+        self.assertTrue(FST('match a:\n case (f\\\n(a, b=1)): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('match a:\n case (f\n(a, b=1)): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('match a:\n case (f(\na\n,\nb\n=\n1)): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('match a:\n case (f(\na\n,\nb\n=\n"()")): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
+
+        self.assertTrue(FST('match a:\n case *s,: pass', 'exec').body[0].cases[0].pattern.patterns[0]._is_enclosed_or_line())
+        self.assertFalse(FST('match a:\n case (*\ns,): pass', 'exec').body[0].cases[0].pattern.patterns[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('match a:\n case *\\\ns,: pass', 'exec').body[0].cases[0].pattern.patterns[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('match a:\n case (*\\\ns,): pass', 'exec').body[0].cases[0].pattern.patterns[0].copy(pars=False)._is_enclosed_or_line())
+
+        self.assertTrue(FST('match a:\n case a as b: pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('match a:\n case (a as b): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('match a:\n case (a\nas b): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('match a:\n case (a\\\nas b): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('match a:\n case (a\\\nas\nb): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('match a:\n case (a\\\nas\\\nb): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('match a:\n case (a\\\nas\n\\\nb): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
+
+        self.assertTrue(FST('a not in b', 'exec').body[0].value.ops[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('(a not in b)', 'exec').body[0].value.ops[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('(a not\nin b)', 'exec').body[0].value.ops[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('(a not\\\nin b)', 'exec').body[0].value.ops[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('(a is\nnot b)', 'exec').body[0].value.ops[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('(a is\\\nnot b)', 'exec').body[0].value.ops[0].copy(pars=False)._is_enclosed_or_line())
+
+        self.assertTrue(FST('[i for i in j]', 'exec').body[0].value.generators[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('[i for\n i in j]', 'exec').body[0].value.generators[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('[i for i\n in j]', 'exec').body[0].value.generators[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('[i for i in\n j]', 'exec').body[0].value.generators[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('[i for\\\n i in j]', 'exec').body[0].value.generators[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('[i for i\\\n in j]', 'exec').body[0].value.generators[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('[i for i in\\\n j]', 'exec').body[0].value.generators[0].copy(pars=False)._is_enclosed_or_line())
+
+        self.assertTrue(FST('def f(a, b=1): pass', 'exec').body[0].args.copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('def f(a,\n b=1): pass', 'exec').body[0].args.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('def f(a,\\\n b=1): pass', 'exec').body[0].args.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('def f(a, b=(1,\n2)): pass', 'exec').body[0].args.copy(pars=False)._is_enclosed_or_line())
+
+        self.assertTrue(FST('def f(a: int): pass', 'exec').body[0].args.args[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('def f(a:\n int): pass', 'exec').body[0].args.args[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('def f(a:\\\n int): pass', 'exec').body[0].args.args[0].copy(pars=False)._is_enclosed_or_line())
+
+        self.assertTrue(FST('from a import (b as c)', 'exec').body[0].names[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('from a import (b\n as c)', 'exec').body[0].names[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('from a import (b\\\n as c)', 'exec').body[0].names[0].copy(pars=False)._is_enclosed_or_line())
+
+        self.assertTrue(FST('with (b as c): pass', 'exec').body[0].items[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('with (b\n as c): pass', 'exec').body[0].items[0].copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('with (b\\\n as c): pass', 'exec').body[0].items[0].copy(pars=False)._is_enclosed_or_line())
+
+        if PYGE14:
+            self.assertTrue(FST(r'''
+(t"a{(1,
+
+2)}b" t"""{3}
+
+{4}
+{5}""" t"x\
+y")
+                '''.strip(), 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+            self.assertFalse(FST(r'''
+(t"a{(1,
+
+2)}b" t"""{3}
+
+{4}
+{5}"""
+t"x\
+y")
+                '''.strip(), 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+
+    def test__is_enclosed_or_line_general(self):
+        self.assertTrue(FST('a < b', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('(a\n< b)', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('(a\\\n< b)', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('(a\\\n<\nb)', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('(a\\\n<\\\nb)', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertFalse(FST('(a\\\n<\n\\\nb)', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+
+        self.assertTrue(FST('a, b, c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('a, b\\\n, c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('a, [\nb\n], c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+
+        self.assertTrue(FST('a, {\nx: y\n}, c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('a, {\nb\n}, c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('a, [\ni for i in j\n], c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('a, {\ni for i in j\n}, c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('a, {\ni: j for i, j in k\n}, c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('a, (\ni for i in j\n), c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('a, [i,\nj], c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+        self.assertTrue(FST('a, b[\ni:j:k\n], c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+
+        self.assertTrue(FST('a\n: \nb: \nc', 'expr_slice')._is_enclosed_or_line())  # because is never used unenclosed
+        self.assertTrue(FST('a\\\n: \\\nb: \\\nc', 'expr_slice')._is_enclosed_or_line())
+
+        if PYGE12:
+            self.assertTrue(FST('a, f"{(1,\n2)}", c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
+
+        # whole
+
+        self.assertTrue(FST('\na + b\n')._is_enclosed_or_line(whole=False))
+        self.assertFalse(FST('\na + b\n')._is_enclosed_or_line(whole=True))
+        self.assertFalse(FST('\\\na + b\n')._is_enclosed_or_line(whole=True))
+        self.assertFalse(FST('\na + b\\\n')._is_enclosed_or_line(whole=True))
+        self.assertTrue(FST('\\\na + b\\\n')._is_enclosed_or_line(whole=True))
+
+        self.assertTrue(FST('\na + b * c\n').right._is_enclosed_or_line(whole=False))
+        self.assertRaises(ValueError, FST('\na + b * c\n').right._is_enclosed_or_line, whole=True)
+
+        # out_lns
+
+        self.assertTrue(FST('\na + \\\n(b\n*\nc)\n')._is_enclosed_or_line(whole=False, out_lns=(lns := set())))
+        self.assertEqual(set(), lns)
+
+        self.assertFalse(FST('\na + \n(b\n*\nc)\n')._is_enclosed_or_line(whole=False, out_lns=(lns := set())))
+        self.assertEqual({1}, lns)
+
+        self.assertFalse(FST('\na + \n(b\n*\nc)\n')._is_enclosed_or_line(whole=True, out_lns=(lns := set())))
+        self.assertEqual({0, 1, 4}, lns)
+
+        f = FST(r'''
+a + \
+("""
+*"""
+"c")
+''')
+        self.assertTrue(f._is_enclosed_or_line(whole=False, out_lns=(lns := set())))
+        self.assertEqual(set(), lns)
+        f.right.unpar()
+        self.assertFalse(f._is_enclosed_or_line(whole=False, out_lns=(lns := set())))
+        self.assertEqual({3}, lns)
+        self.assertFalse(f._is_enclosed_or_line(whole=True, out_lns=(lns := set())))
+        self.assertEqual({0, 3, 4}, lns)
+
+        # ImportFrom
+
+        self.assertTrue(FST('from a import \\\nb')._is_enclosed_or_line())
+        self.assertTrue(FST('from a import (\nb)')._is_enclosed_or_line())
+
+        f = FST('from a import (\nb)')
+        f._put_src(None, 1, 1, 1, 2, True)
+        f._put_src(None, 0, 14, 0, 15, False)
+        self.assertFalse(f._is_enclosed_or_line())
+
+        # With / AsyncWith
+
+        self.assertTrue(FST('with \\\nb\\\n:\n  pass')._is_enclosed_or_line())
+        self.assertTrue(FST('with (\nb\n):\n  pass')._is_enclosed_or_line())
+
+        f = FST('with (\na\n):\n  pass')
+        f._put_src(None, 2, 0, 2, 1, True)
+        f._put_src(None, 0, 5, 0, 6, False)
+        self.assertFalse(f._is_enclosed_or_line())
+
+    def test__is_enclosed_in_parents(self):
+        self.assertFalse(FST('i', 'exec').body[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('i', 'single').body[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('i', 'eval').body._is_enclosed_in_parents())
+
+        self.assertFalse(FST('@d\ndef f(): pass', 'exec').body[0].decorator_list[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('def f(): pass', 'exec').body[0].args._is_enclosed_in_parents())
+        self.assertTrue(FST('def f(a) -> int: pass', 'exec').body[0].args._is_enclosed_in_parents())
+        self.assertFalse(FST('def f(a) -> int: pass', 'exec').body[0].returns._is_enclosed_in_parents())
+
+        self.assertFalse(FST('@d\nasync def f(): pass', 'exec').body[0].decorator_list[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('async def f(): pass', 'exec').body[0].args._is_enclosed_in_parents())
+        self.assertTrue(FST('async def f(a) -> int: pass', 'exec').body[0].args._is_enclosed_in_parents())
+        self.assertFalse(FST('async def f(a) -> int: pass', 'exec').body[0].returns._is_enclosed_in_parents())
+
+        self.assertFalse(FST('@d\nclass c: pass', 'exec').body[0].decorator_list[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('class c(b, k=v): pass', 'exec').body[0].bases[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('class c(b, k=v): pass', 'exec').body[0].keywords[0]._is_enclosed_in_parents())
+
+        self.assertFalse(FST('return v', 'exec').body[0].value._is_enclosed_in_parents())
+        self.assertFalse(FST('del v', 'exec').body[0].targets[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('t = v', 'exec').body[0].targets[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('t = v', 'exec').body[0].value._is_enclosed_in_parents())
+        self.assertFalse(FST('t += v', 'exec').body[0].target._is_enclosed_in_parents())
+        self.assertFalse(FST('t += v', 'exec').body[0].op._is_enclosed_in_parents())
+        self.assertFalse(FST('t += v', 'exec').body[0].value._is_enclosed_in_parents())
+        self.assertFalse(FST('t: int = v', 'exec').body[0].target._is_enclosed_in_parents())
+        self.assertFalse(FST('t: int = v', 'exec').body[0].annotation._is_enclosed_in_parents())
+        self.assertFalse(FST('t: int = v', 'exec').body[0].value._is_enclosed_in_parents())
+
+        self.assertFalse(FST('for a in b: pass', 'exec').body[0].target._is_enclosed_in_parents())
+        self.assertFalse(FST('for a in b: pass', 'exec').body[0].iter._is_enclosed_in_parents())
+        self.assertFalse(FST('async for a in b: pass', 'exec').body[0].target._is_enclosed_in_parents())
+        self.assertFalse(FST('async for a in b: pass', 'exec').body[0].iter._is_enclosed_in_parents())
+        self.assertFalse(FST('while a: pass', 'exec').body[0].test._is_enclosed_in_parents())
+        self.assertFalse(FST('if a: pass', 'exec').body[0].test._is_enclosed_in_parents())
+
+        self.assertFalse(FST('with a: pass', 'exec').body[0].items[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('with (a): pass', 'exec').body[0].items[0]._is_enclosed_in_parents())  # pars belong to `a`
+        self.assertFalse(FST('with ((a)): pass', 'exec').body[0].items[0]._is_enclosed_in_parents())  # pars belong to `a`
+        self.assertTrue(FST('with (a as b): pass', 'exec').body[0].items[0]._is_enclosed_in_parents())  # pars belong to `with`
+        self.assertTrue(FST('with ((a) as b): pass', 'exec').body[0].items[0]._is_enclosed_in_parents())  # outer pars belong to `with`
+        self.assertFalse(FST('async with a: pass', 'exec').body[0].items[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('async with (a): pass', 'exec').body[0].items[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('async with ((a)): pass', 'exec').body[0].items[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('async with (a as b): pass', 'exec').body[0].items[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('async with ((a) as b): pass', 'exec').body[0].items[0]._is_enclosed_in_parents())
+
+        self.assertFalse(FST('match (a):\n case 1: pass', 'exec').body[0].subject._is_enclosed_in_parents())
+        self.assertFalse(FST('raise exc from cause', 'exec').body[0].exc._is_enclosed_in_parents())
+        self.assertFalse(FST('raise exc from cause', 'exec').body[0].cause._is_enclosed_in_parents())
+        self.assertFalse(FST('try: pass\nexcept Exception as exc: pass', 'exec').body[0].handlers[0].type._is_enclosed_in_parents())
+        self.assertFalse(FST('try: pass\nexcept (Exception) as exc: pass', 'exec').body[0].handlers[0].type._is_enclosed_in_parents())  # because pars belong to `type`
+        self.assertFalse(FST('try: pass\nexcept ((Exception, ValueError)) as exc: pass', 'exec').body[0].handlers[0].type._is_enclosed_in_parents())  # same
+        self.assertFalse(FST('assert (a), (b)', 'exec').body[0].test._is_enclosed_in_parents())
+        self.assertFalse(FST('assert (a), (b)', 'exec').body[0].msg._is_enclosed_in_parents())
+        self.assertFalse(FST('import a as b', 'exec').body[0].names[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('from a import b', 'exec').body[0].names[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('from a import b as c', 'exec').body[0].names[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('from a import (b)', 'exec').body[0].names[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('from a import (b as c)', 'exec').body[0].names[0]._is_enclosed_in_parents())
+
+        self.assertFalse(FST('(a)', 'exec').body[0].value._is_enclosed_in_parents())
+        self.assertFalse(FST('(a) or (b)', 'exec').body[0].value.op._is_enclosed_in_parents())
+        self.assertFalse(FST('(a) or (b)', 'exec').body[0].value.values[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('(a) or (b)', 'exec').body[0].value.values[1]._is_enclosed_in_parents())
+        self.assertFalse(FST('(a := b)', 'exec').body[0].value._is_enclosed_in_parents())
+        self.assertFalse(FST('(a) + (b)', 'exec').body[0].value.left._is_enclosed_in_parents())
+        self.assertFalse(FST('(a) + (b)', 'exec').body[0].value.op._is_enclosed_in_parents())
+        self.assertFalse(FST('(a) + (b)', 'exec').body[0].value.right._is_enclosed_in_parents())
+        self.assertFalse(FST('-(a)', 'exec').body[0].value.op._is_enclosed_in_parents())
+        self.assertFalse(FST('-(a)', 'exec').body[0].value.operand._is_enclosed_in_parents())
+        self.assertFalse(FST('lambda a: (b)', 'exec').body[0].value.args._is_enclosed_in_parents())
+        self.assertFalse(FST('lambda a: (b)', 'exec').body[0].value.body._is_enclosed_in_parents())
+        self.assertFalse(FST('(a) if (b) else (c)', 'exec').body[0].value.body._is_enclosed_in_parents())
+        self.assertFalse(FST('(a) if (b) else (c)', 'exec').body[0].value.test._is_enclosed_in_parents())
+        self.assertFalse(FST('(a) if (b) else (c)', 'exec').body[0].value.orelse._is_enclosed_in_parents())
+        self.assertTrue(FST('{k: v}', 'exec').body[0].value.keys[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('{k: v}', 'exec').body[0].value.values[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('{a}', 'exec').body[0].value.elts[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('[i for i in j]', 'exec').body[0].value.elt._is_enclosed_in_parents())
+        self.assertTrue(FST('[i for i in j]', 'exec').body[0].value.generators[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('{i for i in j}', 'exec').body[0].value.elt._is_enclosed_in_parents())
+        self.assertTrue(FST('{i for i in j}', 'exec').body[0].value.generators[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('{k: v for k, v in j}', 'exec').body[0].value.key._is_enclosed_in_parents())
+        self.assertTrue(FST('{k: v for k, v in j}', 'exec').body[0].value.value._is_enclosed_in_parents())
+        self.assertTrue(FST('{k: v for k, v in j}', 'exec').body[0].value.generators[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('(i for i in j)', 'exec').body[0].value.elt._is_enclosed_in_parents())
+        self.assertTrue(FST('(i for i in j)', 'exec').body[0].value.generators[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('await (a)', 'exec').body[0].value._is_enclosed_in_parents())
+        self.assertFalse(FST('yield (a)', 'exec').body[0].value._is_enclosed_in_parents())
+        self.assertFalse(FST('yield from (a)', 'exec').body[0].value._is_enclosed_in_parents())
+        self.assertFalse(FST('(a) < (b)', 'exec').body[0].value.left._is_enclosed_in_parents())
+        self.assertFalse(FST('(a) < (b)', 'exec').body[0].value.ops[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('(a) < (b)', 'exec').body[0].value.comparators[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('call(a, b=c)', 'exec').body[0].value.func._is_enclosed_in_parents())
+        self.assertTrue(FST('call(a, b=c)', 'exec').body[0].value.args[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('call(a, b=c)', 'exec').body[0].value.keywords[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('''f"1{2}"''', 'exec').body[0].value.values[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('''f"1{2}"''', 'exec').body[0].value.values[1].value._is_enclosed_in_parents())
+
+        self.assertFalse(FST('(a).b', 'exec').body[0].value.value._is_enclosed_in_parents())
+        self.assertFalse(FST('(a).b', 'exec').body[0].value.ctx._is_enclosed_in_parents())
+        self.assertFalse(FST('(a)[b]', 'exec').body[0].value.value._is_enclosed_in_parents())
+        self.assertTrue(FST('(a)[b]', 'exec').body[0].value.slice._is_enclosed_in_parents())
+        self.assertFalse(FST('(a)[b]', 'exec').body[0].value.ctx._is_enclosed_in_parents())
+        self.assertFalse(FST('*(a)', 'exec').body[0].value.value._is_enclosed_in_parents())
+        self.assertFalse(FST('*(a)', 'exec').body[0].value.ctx._is_enclosed_in_parents())
+        self.assertFalse(FST('a', 'exec').body[0].value.ctx._is_enclosed_in_parents())
+        self.assertFalse(FST('(a)', 'exec').body[0].value.ctx._is_enclosed_in_parents())
+
+        self.assertTrue(FST('[a]', 'exec').body[0].value.elts[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('[a]', 'exec').body[0].value.ctx._is_enclosed_in_parents())
+        self.assertTrue(FST('(a,)', 'exec').body[0].value.elts[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('(a,)', 'exec').body[0].value.ctx._is_enclosed_in_parents())
+        self.assertFalse(FST('a,', 'exec').body[0].value.elts[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('a,', 'exec').body[0].value.ctx._is_enclosed_in_parents())
+
+        self.assertFalse(FST('a[b:c:d]', 'exec').body[0].value.slice.copy(pars=True).lower._is_enclosed_in_parents())
+        self.assertFalse(FST('a[b:c:d]', 'exec').body[0].value.slice.copy(pars=True).upper._is_enclosed_in_parents())
+        self.assertFalse(FST('a[b:c:d]', 'exec').body[0].value.slice.copy(pars=True).step._is_enclosed_in_parents())
+
+        self.assertFalse(FST('[i for (i) in (j) if (i)]', 'exec').body[0].value.generators[0].copy(pars=True).target._is_enclosed_in_parents())
+        self.assertFalse(FST('[i for (i) in (j) if (i)]', 'exec').body[0].value.generators[0].copy(pars=True).iter._is_enclosed_in_parents())
+        self.assertFalse(FST('[i for (i) in (j) if (i)]', 'exec').body[0].value.generators[0].copy(pars=True).ifs[0]._is_enclosed_in_parents())
+
+        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True).posonlyargs[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True).args[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True).defaults[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True).vararg._is_enclosed_in_parents())
+        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True).kwonlyargs[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True).kw_defaults[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True).kwarg._is_enclosed_in_parents())
+        self.assertFalse(FST('def f(a: int): pass', 'exec').body[0].args.args[0].copy(pars=True).annotation._is_enclosed_in_parents())
+
+        self.assertFalse(FST('call(k=v)', 'exec').body[0].value.keywords[0].copy(pars=True).value._is_enclosed_in_parents())
+
+        self.assertFalse(FST('with ((a) as (b)): pass', 'exec').body[0].items[0].copy(pars=True).context_expr._is_enclosed_in_parents())
+        self.assertFalse(FST('with ((a) as (b)): pass', 'exec').body[0].items[0].copy(pars=True).optional_vars._is_enclosed_in_parents())
+
+        self.assertFalse(FST('match a:\n case (1 as i) if (i): pass', 'exec').body[0].cases[0].copy(pars=True).pattern._is_enclosed_in_parents())
+        self.assertFalse(FST('match a:\n case (1 as i) if (i): pass', 'exec').body[0].cases[0].copy(pars=True).guard._is_enclosed_in_parents())
+        self.assertFalse(FST('match a:\n case 1: pass', 'exec').body[0].cases[0].pattern.copy(pars=True).value._is_enclosed_in_parents())
+        self.assertTrue(FST('match a:\n case (1): pass', 'exec').body[0].cases[0].pattern.copy(pars=True).value._is_enclosed_in_parents())  # inconsistent case, MatchValue owns the pars
+        self.assertFalse(FST('match a:\n case 1, 2: pass', 'exec').body[0].cases[0].pattern.copy(pars=True).patterns[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('match a:\n case (1, 2): pass', 'exec').body[0].cases[0].pattern.copy(pars=True).patterns[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('match a:\n case [1, 2]: pass', 'exec').body[0].cases[0].pattern.copy(pars=True).patterns[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('match a:\n case {1: a}: pass', 'exec').body[0].cases[0].pattern.copy(pars=True).keys[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('match a:\n case {1: a}: pass', 'exec').body[0].cases[0].pattern.copy(pars=True).patterns[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('match a:\n case c(a, b=c): pass', 'exec').body[0].cases[0].pattern.copy(pars=True).cls._is_enclosed_in_parents())
+        self.assertTrue(FST('match a:\n case c(a, b=c): pass', 'exec').body[0].cases[0].pattern.copy(pars=True).patterns[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('match a:\n case c(a, b=c): pass', 'exec').body[0].cases[0].pattern.copy(pars=True).kwd_patterns[0]._is_enclosed_in_parents())
+        self.assertFalse(FST('match a:\n case 1 as a: pass', 'exec').body[0].cases[0].pattern.copy(pars=True).pattern._is_enclosed_in_parents())
+        self.assertTrue(FST('match a:\n case (1 as a): pass', 'exec').body[0].cases[0].pattern.copy(pars=True).pattern._is_enclosed_in_parents())
+        self.assertFalse(FST('match a:\n case 1 | 2: pass', 'exec').body[0].cases[0].pattern.copy(pars=True).patterns[0]._is_enclosed_in_parents())
+        self.assertTrue(FST('match a:\n case (1 | 2): pass', 'exec').body[0].cases[0].pattern.copy(pars=True).patterns[0]._is_enclosed_in_parents())
+
+        if PYGE12:
+            self.assertTrue(FST('def f[T]() -> int: pass', 'exec').body[0].type_params[0]._is_enclosed_in_parents())
+            self.assertTrue(FST('async def f[T]() -> int: pass', 'exec').body[0].type_params[0]._is_enclosed_in_parents())
+            self.assertTrue(FST('class c[T]: pass', 'exec').body[0].type_params[0]._is_enclosed_in_parents())
+
+            self.assertFalse(FST('type t[T] = v', 'exec').body[0].name._is_enclosed_in_parents())
+            self.assertTrue(FST('type t[T] = v', 'exec').body[0].type_params[0]._is_enclosed_in_parents())
+            self.assertFalse(FST('type t[T] = v', 'exec').body[0].value._is_enclosed_in_parents())
+            self.assertFalse(FST('try: pass\nexcept* Exception as exc: pass', 'exec').body[0].handlers[0].type._is_enclosed_in_parents())
+            self.assertFalse(FST('try: pass\nexcept* (Exception) as exc: pass', 'exec').body[0].handlers[0].type._is_enclosed_in_parents())
+            self.assertFalse(FST('try: pass\nexcept* ((Exception, ValueError)) as exc: pass', 'exec').body[0].handlers[0].type._is_enclosed_in_parents())
+            self.assertFalse(FST('type t[T] = v', 'exec').body[0].type_params[0].copy()._is_enclosed_in_parents())
+            self.assertFalse(FST('type t[*T] = v', 'exec').body[0].type_params[0].copy()._is_enclosed_in_parents())
+            self.assertFalse(FST('type t[**T] = v', 'exec').body[0].type_params[0].copy()._is_enclosed_in_parents())
+
+        if PYGE14:
+            self.assertTrue(FST('t"1{2}"', 'exec').body[0].value.values[0]._is_enclosed_in_parents())
+            self.assertTrue(FST('t"1{2}"', 'exec').body[0].value.values[1].value._is_enclosed_in_parents())
+
+        # with field
+
+        self.assertFalse(FST('i', 'exec')._is_enclosed_in_parents('body'))
+        self.assertFalse(FST('i', 'single')._is_enclosed_in_parents('body'))
+        self.assertFalse(FST('i', 'eval')._is_enclosed_in_parents('body'))
+
+        self.assertFalse(FST('@d\ndef f(): pass', 'exec').body[0]._is_enclosed_in_parents('decorator_list'))
+        self.assertTrue(FST('def f(): pass', 'exec').body[0]._is_enclosed_in_parents('args'))
+        self.assertTrue(FST('def f(a) -> int: pass', 'exec').body[0]._is_enclosed_in_parents('args'))
+        self.assertFalse(FST('def f(a) -> int: pass', 'exec').body[0]._is_enclosed_in_parents('returns'))
+
+        self.assertFalse(FST('@d\nasync def f(): pass', 'exec').body[0]._is_enclosed_in_parents('decorator_list'))
+        self.assertTrue(FST('async def f(): pass', 'exec').body[0]._is_enclosed_in_parents('args'))
+        self.assertTrue(FST('async def f(a) -> int: pass', 'exec').body[0]._is_enclosed_in_parents('args'))
+        self.assertFalse(FST('async def f(a) -> int: pass', 'exec').body[0]._is_enclosed_in_parents('returns'))
+
+        self.assertFalse(FST('@d\nclass c: pass', 'exec').body[0]._is_enclosed_in_parents('decorator_list'))
+        self.assertTrue(FST('class c(b, k=v): pass', 'exec').body[0]._is_enclosed_in_parents('bases'))
+        self.assertTrue(FST('class c(b, k=v): pass', 'exec').body[0]._is_enclosed_in_parents('keywords'))
+
+        self.assertFalse(FST('return v', 'exec').body[0]._is_enclosed_in_parents('value'))
+        self.assertFalse(FST('del v', 'exec').body[0]._is_enclosed_in_parents('targets'))
+        self.assertFalse(FST('t = v', 'exec').body[0]._is_enclosed_in_parents('targets'))
+        self.assertFalse(FST('t = v', 'exec').body[0]._is_enclosed_in_parents('value'))
+        self.assertFalse(FST('t += v', 'exec').body[0]._is_enclosed_in_parents('target'))
+        self.assertFalse(FST('t += v', 'exec').body[0]._is_enclosed_in_parents('op'))
+        self.assertFalse(FST('t += v', 'exec').body[0]._is_enclosed_in_parents('value'))
+        self.assertFalse(FST('t: int = v', 'exec').body[0]._is_enclosed_in_parents('target'))
+        self.assertFalse(FST('t: int = v', 'exec').body[0]._is_enclosed_in_parents('annotation'))
+        self.assertFalse(FST('t: int = v', 'exec').body[0]._is_enclosed_in_parents('value'))
+
+        self.assertFalse(FST('for a in b: pass', 'exec').body[0]._is_enclosed_in_parents('target'))
+        self.assertFalse(FST('for a in b: pass', 'exec').body[0]._is_enclosed_in_parents('iter'))
+        self.assertFalse(FST('async for a in b: pass', 'exec').body[0]._is_enclosed_in_parents('target'))
+        self.assertFalse(FST('async for a in b: pass', 'exec').body[0]._is_enclosed_in_parents('iter'))
+        self.assertFalse(FST('while a: pass', 'exec').body[0]._is_enclosed_in_parents('test'))
+        self.assertFalse(FST('if a: pass', 'exec').body[0]._is_enclosed_in_parents('test'))
+
+        self.assertFalse(FST('with a: pass', 'exec').body[0]._is_enclosed_in_parents('items'))
+        self.assertFalse(FST('with (a): pass', 'exec').body[0]._is_enclosed_in_parents('items'))  # pars belong to `a`
+        self.assertFalse(FST('with ((a)): pass', 'exec').body[0]._is_enclosed_in_parents('items'))  # pars belong to `a`
+        self.assertTrue(FST('with (a as b): pass', 'exec').body[0]._is_enclosed_in_parents('items'))  # pars belong to `with`
+        self.assertTrue(FST('with ((a) as b): pass', 'exec').body[0]._is_enclosed_in_parents('items'))  # outer pars belong to `with`
+        self.assertFalse(FST('async with a: pass', 'exec').body[0]._is_enclosed_in_parents('items'))
+        self.assertFalse(FST('async with (a): pass', 'exec').body[0]._is_enclosed_in_parents('items'))
+        self.assertFalse(FST('async with ((a)): pass', 'exec').body[0]._is_enclosed_in_parents('items'))
+        self.assertTrue(FST('async with (a as b): pass', 'exec').body[0]._is_enclosed_in_parents('items'))
+        self.assertTrue(FST('async with ((a) as b): pass', 'exec').body[0]._is_enclosed_in_parents('items'))
+
+        self.assertFalse(FST('match (a):\n case 1: pass', 'exec').body[0]._is_enclosed_in_parents('subject'))
+        self.assertFalse(FST('raise exc from cause', 'exec').body[0]._is_enclosed_in_parents('exc'))
+        self.assertFalse(FST('raise exc from cause', 'exec').body[0]._is_enclosed_in_parents('cause'))
+        self.assertFalse(FST('try: pass\nexcept Exception as exc: pass', 'exec').body[0].handlers[0]._is_enclosed_in_parents('type'))
+        self.assertFalse(FST('try: pass\nexcept (Exception) as exc: pass', 'exec').body[0].handlers[0]._is_enclosed_in_parents('type'))  # because pars belong to `type`
+        self.assertFalse(FST('try: pass\nexcept ((Exception, ValueError)) as exc: pass', 'exec').body[0].handlers[0]._is_enclosed_in_parents('type'))  # same
+        self.assertFalse(FST('assert (a), (b)', 'exec').body[0]._is_enclosed_in_parents('test'))
+        self.assertFalse(FST('assert (a), (b)', 'exec').body[0]._is_enclosed_in_parents('msg'))
+        self.assertFalse(FST('import a as b', 'exec').body[0]._is_enclosed_in_parents('names'))
+        self.assertFalse(FST('from a import b', 'exec').body[0]._is_enclosed_in_parents('names'))
+        self.assertFalse(FST('from a import b as c', 'exec').body[0]._is_enclosed_in_parents('names'))
+        self.assertTrue(FST('from a import (b)', 'exec').body[0]._is_enclosed_in_parents('names'))
+        self.assertTrue(FST('from a import (b as c)', 'exec').body[0]._is_enclosed_in_parents('names'))
+
+        self.assertFalse(FST('(a)', 'exec').body[0]._is_enclosed_in_parents('value'))
+        self.assertFalse(FST('(a) or (b)', 'exec').body[0].value._is_enclosed_in_parents('op'))
+        self.assertFalse(FST('(a) or (b)', 'exec').body[0].value._is_enclosed_in_parents('values'))
+        self.assertFalse(FST('(a) or (b)', 'exec').body[0].value.values[1]._is_enclosed_in_parents())
+        self.assertFalse(FST('(a := b)', 'exec').body[0]._is_enclosed_in_parents('value'))
+        self.assertFalse(FST('(a) + (b)', 'exec').body[0].value._is_enclosed_in_parents('left'))
+        self.assertFalse(FST('(a) + (b)', 'exec').body[0].value._is_enclosed_in_parents('op'))
+        self.assertFalse(FST('(a) + (b)', 'exec').body[0].value._is_enclosed_in_parents('right'))
+        self.assertFalse(FST('-(a)', 'exec').body[0].value._is_enclosed_in_parents('op'))
+        self.assertFalse(FST('-(a)', 'exec').body[0].value._is_enclosed_in_parents('operand'))
+        self.assertFalse(FST('lambda a: (b)', 'exec').body[0].value._is_enclosed_in_parents('args'))
+        self.assertFalse(FST('lambda a: (b)', 'exec').body[0].value._is_enclosed_in_parents('body'))
+        self.assertFalse(FST('(a) if (b) else (c)', 'exec').body[0].value._is_enclosed_in_parents('body'))
+        self.assertFalse(FST('(a) if (b) else (c)', 'exec').body[0].value._is_enclosed_in_parents('test'))
+        self.assertFalse(FST('(a) if (b) else (c)', 'exec').body[0].value._is_enclosed_in_parents('orelse'))
+        self.assertTrue(FST('{k: v}', 'exec').body[0].value._is_enclosed_in_parents('keys'))
+        self.assertTrue(FST('{k: v}', 'exec').body[0].value._is_enclosed_in_parents('values'))
+        self.assertTrue(FST('{a}', 'exec').body[0].value._is_enclosed_in_parents('elts'))
+        self.assertTrue(FST('[i for i in j]', 'exec').body[0].value._is_enclosed_in_parents('elt'))
+        self.assertTrue(FST('[i for i in j]', 'exec').body[0].value._is_enclosed_in_parents('generators'))
+        self.assertTrue(FST('{i for i in j}', 'exec').body[0].value._is_enclosed_in_parents('elt'))
+        self.assertTrue(FST('{i for i in j}', 'exec').body[0].value._is_enclosed_in_parents('generators'))
+        self.assertTrue(FST('{k: v for k, v in j}', 'exec').body[0].value._is_enclosed_in_parents('key'))
+        self.assertTrue(FST('{k: v for k, v in j}', 'exec').body[0].value._is_enclosed_in_parents('value'))
+        self.assertTrue(FST('{k: v for k, v in j}', 'exec').body[0].value._is_enclosed_in_parents('generators'))
+        self.assertTrue(FST('(i for i in j)', 'exec').body[0].value._is_enclosed_in_parents('elt'))
+        self.assertTrue(FST('(i for i in j)', 'exec').body[0].value._is_enclosed_in_parents('generators'))
+        self.assertFalse(FST('await (a)', 'exec').body[0]._is_enclosed_in_parents('value'))
+        self.assertFalse(FST('yield (a)', 'exec').body[0]._is_enclosed_in_parents('value'))
+        self.assertFalse(FST('yield from (a)', 'exec').body[0]._is_enclosed_in_parents('value'))
+        self.assertFalse(FST('(a) < (b)', 'exec').body[0].value._is_enclosed_in_parents('left'))
+        self.assertFalse(FST('(a) < (b)', 'exec').body[0].value._is_enclosed_in_parents('ops'))
+        self.assertFalse(FST('(a) < (b)', 'exec').body[0].value._is_enclosed_in_parents('comparators'))
+        self.assertFalse(FST('call(a, b=c)', 'exec').body[0].value._is_enclosed_in_parents('func'))
+        self.assertTrue(FST('call(a, b=c)', 'exec').body[0].value._is_enclosed_in_parents('args'))
+        self.assertTrue(FST('call(a, b=c)', 'exec').body[0].value._is_enclosed_in_parents('keywords'))
+        self.assertTrue(FST('''f"1{2}"''', 'exec').body[0].value._is_enclosed_in_parents('values'))
+        self.assertTrue(FST('''f"1{2}"''', 'exec').body[0].value.values[1]._is_enclosed_in_parents('value'))
+
+        self.assertFalse(FST('(a).b', 'exec').body[0].value._is_enclosed_in_parents('value'))
+        self.assertFalse(FST('(a).b', 'exec').body[0].value._is_enclosed_in_parents('ctx'))
+        self.assertFalse(FST('(a)[b]', 'exec').body[0].value._is_enclosed_in_parents('value'))
+        self.assertTrue(FST('(a)[b]', 'exec').body[0].value._is_enclosed_in_parents('slice'))
+        self.assertFalse(FST('(a)[b]', 'exec').body[0].value._is_enclosed_in_parents('ctx'))
+        self.assertFalse(FST('*(a)', 'exec').body[0].value._is_enclosed_in_parents('value'))
+        self.assertFalse(FST('*(a)', 'exec').body[0].value._is_enclosed_in_parents('ctx'))
+        self.assertFalse(FST('a', 'exec').body[0].value._is_enclosed_in_parents('ctx'))
+        self.assertFalse(FST('(a)', 'exec').body[0].value._is_enclosed_in_parents('ctx'))
+
+        self.assertTrue(FST('[a]', 'exec').body[0].value._is_enclosed_in_parents('elts'))
+        self.assertFalse(FST('[a]', 'exec').body[0].value._is_enclosed_in_parents('ctx'))
+        self.assertTrue(FST('(a,)', 'exec').body[0].value._is_enclosed_in_parents('elts'))
+        self.assertFalse(FST('(a,)', 'exec').body[0].value._is_enclosed_in_parents('ctx'))
+        self.assertFalse(FST('a,', 'exec').body[0].value._is_enclosed_in_parents('elts'))
+        self.assertFalse(FST('a,', 'exec').body[0].value._is_enclosed_in_parents('ctx'))
+
+        self.assertFalse(FST('a[b:c:d]', 'exec').body[0].value.slice.copy(pars=True)._is_enclosed_in_parents('lower'))
+        self.assertFalse(FST('a[b:c:d]', 'exec').body[0].value.slice.copy(pars=True)._is_enclosed_in_parents('upper'))
+        self.assertFalse(FST('a[b:c:d]', 'exec').body[0].value.slice.copy(pars=True)._is_enclosed_in_parents('step'))
+
+        self.assertFalse(FST('[i for (i) in (j) if (i)]', 'exec').body[0].value.generators[0].copy(pars=True)._is_enclosed_in_parents('target'))
+        self.assertFalse(FST('[i for (i) in (j) if (i)]', 'exec').body[0].value.generators[0].copy(pars=True)._is_enclosed_in_parents('iter'))
+        self.assertFalse(FST('[i for (i) in (j) if (i)]', 'exec').body[0].value.generators[0].copy(pars=True)._is_enclosed_in_parents('ifs'))
+
+        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True)._is_enclosed_in_parents('posonlyargs'))
+        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True)._is_enclosed_in_parents('args'))
+        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True)._is_enclosed_in_parents('defaults'))
+        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True)._is_enclosed_in_parents('vararg'))
+        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True)._is_enclosed_in_parents('kwonlyargs'))
+        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True)._is_enclosed_in_parents('kw_defaults'))
+        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True)._is_enclosed_in_parents('kwarg'))
+        self.assertFalse(FST('def f(a: int): pass', 'exec').body[0].args.args[0].copy(pars=True)._is_enclosed_in_parents('annotation'))
+
+        self.assertFalse(FST('call(k=v)', 'exec').body[0].value.keywords[0].copy(pars=True)._is_enclosed_in_parents('value'))
+
+        self.assertFalse(FST('with ((a) as (b)): pass', 'exec').body[0].items[0].copy(pars=True)._is_enclosed_in_parents('context_expr'))
+        self.assertFalse(FST('with ((a) as (b)): pass', 'exec').body[0].items[0].copy(pars=True)._is_enclosed_in_parents('optional_vars'))
+
+        self.assertFalse(FST('match a:\n case (1 as i) if (i): pass', 'exec').body[0].cases[0].copy(pars=True)._is_enclosed_in_parents('pattern'))
+        self.assertFalse(FST('match a:\n case (1 as i) if (i): pass', 'exec').body[0].cases[0].copy(pars=True)._is_enclosed_in_parents('guard'))
+        self.assertFalse(FST('match a:\n case 1: pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('value'))
+        self.assertTrue(FST('match a:\n case (1): pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('value'))  # inconsistent case, MatchValue owns the pars
+        self.assertFalse(FST('match a:\n case 1, 2: pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('patterns'))
+        self.assertTrue(FST('match a:\n case (1, 2): pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('patterns'))
+        self.assertTrue(FST('match a:\n case [1, 2]: pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('patterns'))
+        self.assertTrue(FST('match a:\n case {1: a}: pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('keys'))
+        self.assertTrue(FST('match a:\n case {1: a}: pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('patterns'))
+        self.assertFalse(FST('match a:\n case c(a, b=c): pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('cls'))
+        self.assertTrue(FST('match a:\n case c(a, b=c): pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('patterns'))
+        self.assertTrue(FST('match a:\n case c(a, b=c): pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('kwd_patterns'))
+        self.assertFalse(FST('match a:\n case 1 as a: pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('pattern'))
+        self.assertTrue(FST('match a:\n case (1 as a): pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('pattern'))
+        self.assertFalse(FST('match a:\n case 1 | 2: pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('patterns'))
+        self.assertTrue(FST('match a:\n case (1 | 2): pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('patterns'))
+
+        if PYGE12:
+            self.assertTrue(FST('def f[T]() -> int: pass', 'exec').body[0]._is_enclosed_in_parents('type_params'))
+            self.assertTrue(FST('async def f[T]() -> int: pass', 'exec').body[0]._is_enclosed_in_parents('type_params'))
+            self.assertTrue(FST('class c[T]: pass', 'exec').body[0]._is_enclosed_in_parents('type_params'))
+
+            self.assertFalse(FST('type t[T] = v', 'exec').body[0]._is_enclosed_in_parents('name'))
+            self.assertTrue(FST('type t[T] = v', 'exec').body[0]._is_enclosed_in_parents('type_params'))
+            self.assertFalse(FST('type t[T] = v', 'exec').body[0]._is_enclosed_in_parents('value'))
+            self.assertFalse(FST('try: pass\nexcept* Exception as exc: pass', 'exec').body[0].handlers[0]._is_enclosed_in_parents('type'))
+            self.assertFalse(FST('try: pass\nexcept* (Exception) as exc: pass', 'exec').body[0].handlers[0]._is_enclosed_in_parents('type'))
+            self.assertFalse(FST('try: pass\nexcept* ((Exception, ValueError)) as exc: pass', 'exec').body[0].handlers[0]._is_enclosed_in_parents('type'))
+            self.assertFalse(FST('type t[T] = v', 'exec').body[0].type_params[0].copy()._is_enclosed_in_parents())
+            self.assertFalse(FST('type t[*T] = v', 'exec').body[0].type_params[0].copy()._is_enclosed_in_parents())
+            self.assertFalse(FST('type t[**T] = v', 'exec').body[0].type_params[0].copy()._is_enclosed_in_parents())
+
+        if PYGE14:
+            self.assertTrue(FST('t"1{2}"', 'exec').body[0].value._is_enclosed_in_parents('values'))
+            self.assertTrue(FST('t"1{2}"', 'exec').body[0].value.values[1]._is_enclosed_in_parents('value'))
+
+    def test__loc_key(self):
+        a = parse('''{
+    a: """test
+two  # fake comment start""", **b
+            }''').body[0].value
+        self.assertEqual((2, 30, 2, 32), a.f._loc_key(1))
+
+        a = parse('''{
+    a: """test""", **  # comment
+    b
+            }''').body[0].value
+        self.assertEqual((1, 19, 1, 21), a.f._loc_key(1))
+
+    def test__touchall(self):
+        a = parse('i = [1]').body[0]
+        self.assertEqual(7, a.f.end_col)
+        self.assertEqual(7, a.value.f.end_col)
+        self.assertEqual(6, a.value.elts[0].f.end_col)
+
+        a.end_col_offset = 8
+        a.value.end_col_offset = 8
+        a.value.elts[0].end_col_offset = 7
+
+        self.assertEqual(7, a.f.end_col)
+        self.assertEqual(7, a.value.f.end_col)
+        self.assertEqual(6, a.value.elts[0].f.end_col)
+
+        a.value.f._touchall()
+        self.assertEqual(7, a.f.end_col)
+        self.assertEqual(8, a.value.f.end_col)
+        self.assertEqual(6, a.value.elts[0].f.end_col)
+
+        a.value.f._touchall(parents=True)
+        self.assertEqual(8, a.f.end_col)
+        self.assertEqual(8, a.value.f.end_col)
+        self.assertEqual(6, a.value.elts[0].f.end_col)
+
+        a.value.f._touchall(children=True)
+        self.assertEqual(8, a.f.end_col)
+        self.assertEqual(8, a.value.f.end_col)
+        self.assertEqual(7, a.value.elts[0].f.end_col)
+
+    def test__offset(self):
+        src = 'i = 1\nj = 2\nk = 3'
+
+        ast = parse(src)
+        ast.f._offset(1, 4, 0, 1)
+        self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 6), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 5, 2, 6), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 0, 3, 1), ((n := ast.body[2].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+
+        ast = parse(src)
+        ast.f._offset(1, 4, 0, 1, exclude=ast.body[1].f)
+        self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 6), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 4, 2, 5), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 0, 3, 1), ((n := ast.body[2].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+
+        ast = parse(src)
+        ast.f._offset(1, 4, 0, 1, exclude=ast.body[1].f, offset_excluded=False)
+        self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 5), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 4, 2, 5), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 0, 3, 1), ((n := ast.body[2].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+
+        ast = parse(src)
+        ast.f._offset(1, 5, 0, 1)
+        self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 5), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 4, 2, 5), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 0, 3, 1), ((n := ast.body[2].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+
+        ast = parse(src)
+        ast.f._offset(1, 5, 0, 1, True)
+        self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 6), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 4, 2, 6), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 0, 3, 1), ((n := ast.body[2].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 4, 3, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+
+        ast = parse(src)
+        ast.f._offset(1, 4, 1, -1)
+        self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 3, 4), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((3, 3, 3, 4), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((4, 0, 4, 1), ((n := ast.body[2].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((4, 4, 4, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+
+        ast = parse(src)
+        ast.f._offset(1, 5, 1, -1)
+        self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 5), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 4, 2, 5), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((4, 0, 4, 1), ((n := ast.body[2].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((4, 4, 4, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+
+        ast = parse(src)
+        ast.f._offset(1, 5, 1, -1, True)
+        self.assertEqual((1, 4, 1, 5), ((n := ast.body[0].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 3, 4), ((n := ast.body[1]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 0, 2, 1), ((n := ast.body[1].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((2, 4, 3, 4), ((n := ast.body[1].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((4, 0, 4, 1), ((n := ast.body[2].targets[0]).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+        self.assertEqual((4, 4, 4, 5), ((n := ast.body[2].value).lineno, n.col_offset, n.end_lineno, n.end_col_offset))
+
+        def get():
+            m = parse('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nbbbb\ncccc')
+
+            m.body[0] = m.body[0].value
+            m.body[1] = m.body[1].value
+            m.body[2] = m.body[2].value
+
+            m.body[0].lineno         = 1
+            m.body[0].end_lineno     = 1
+            m.body[0].col_offset     = 2
+            m.body[0].end_col_offset = 6
+            m.body[1].lineno         = 1
+            m.body[1].end_lineno     = 1
+            m.body[1].col_offset     = 6
+            m.body[1].end_col_offset = 10
+            m.body[2].lineno         = 1
+            m.body[2].end_lineno     = 1
+            m.body[2].col_offset     = 6
+            m.body[2].end_col_offset = 6
+
+            return m
+
+        m = get()
+        m.f._offset(0, 6, 0, 2, False, True)
+        self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
+        self.assertEqual((0, 8, 0, 12), m.body[1].f.loc)
+        self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
+
+        m = get()
+        m.f._offset(0, 6, 0, 2, True, True)
+        self.assertEqual((0, 2, 0, 8), m.body[0].f.loc)
+        self.assertEqual((0, 8, 0, 12), m.body[1].f.loc)
+        self.assertEqual((0, 8, 0, 8), m.body[2].f.loc)
+
+        m = get()
+        m.f._offset(0, 6, 0, 2, False, False)
+        self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
+        self.assertEqual((0, 6, 0, 12), m.body[1].f.loc)
+        self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
+
+        m = get()
+        m.f._offset(0, 6, 0, 2, True, False)
+        self.assertEqual((0, 2, 0, 8), m.body[0].f.loc)
+        self.assertEqual((0, 6, 0, 12), m.body[1].f.loc)
+        self.assertEqual((0, 6, 0, 8), m.body[2].f.loc)
+
+        m = get()
+        m.f._offset(0, 6, 0, -2, False, True)
+        self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
+        self.assertEqual((0, 4, 0, 8), m.body[1].f.loc)
+        self.assertEqual((0, 4, 0, 6), m.body[2].f.loc)
+
+        m = get()
+        m.f._offset(0, 6, 0, -2, True, True)
+        self.assertEqual((0, 2, 0, 4), m.body[0].f.loc)
+        self.assertEqual((0, 4, 0, 8), m.body[1].f.loc)
+        self.assertEqual((0, 4, 0, 4), m.body[2].f.loc)
+
+        m = get()
+        m.f._offset(0, 6, 0, -2, False, False)
+        self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
+        self.assertEqual((0, 6, 0, 8), m.body[1].f.loc)
+        self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
+
+        m = get()
+        m.f._offset(0, 6, 0, -2, True, False)
+        self.assertEqual((0, 2, 0, 4), m.body[0].f.loc)
+        self.assertEqual((0, 6, 0, 8), m.body[1].f.loc)
+        self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
+
+        m = get()
+        m.f._offset(0, 6, 0, 2, None, True)
+        self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
+        self.assertEqual((0, 8, 0, 12), m.body[1].f.loc)
+        self.assertEqual((0, 8, 0, 8), m.body[2].f.loc)
+
+        m = get()
+        m.f._offset(0, 6, 0, 2, None, False)
+        self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
+        self.assertEqual((0, 6, 0, 12), m.body[1].f.loc)
+        self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
+
+        m = get()
+        m.f._offset(0, 6, 0, 2, None, None)
+        self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
+        self.assertEqual((0, 6, 0, 12), m.body[1].f.loc)
+        self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
+
+        m = get()
+        m.f._offset(0, 6, 0, -2, False, None)
+        self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
+        self.assertEqual((0, 6, 0, 8), m.body[1].f.loc)
+        self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
+
+        m = get()
+        m.f._offset(0, 6, 0, -2, True, None)
+        self.assertEqual((0, 2, 0, 4), m.body[0].f.loc)
+        self.assertEqual((0, 6, 0, 8), m.body[1].f.loc)
+        self.assertEqual((0, 4, 0, 4), m.body[2].f.loc)
+
+        m = get()
+        m.f._offset(0, 6, 0, -2, None, None)
+        self.assertEqual((0, 2, 0, 6), m.body[0].f.loc)
+        self.assertEqual((0, 6, 0, 8), m.body[1].f.loc)
+        self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
+
+    def test__get_indent(self):
+        ast = parse('i = 1; j = 2')
+
+        self.assertEqual('', ast.body[0].f._get_indent())
+        self.assertEqual('', ast.body[1].f._get_indent())
+
+        ast = parse('def f(): \\\n i = 1')
+
+        self.assertEqual('', ast.body[0].f._get_indent())
+        self.assertEqual(ast.f.root.indent, ast.body[0].body[0].f._get_indent())
+
+        ast = parse('class cls: i = 1')
+
+        self.assertEqual('', ast.body[0].f._get_indent())
+        self.assertEqual(ast.f.root.indent, ast.body[0].body[0].f._get_indent())
+
+        ast = parse('class cls: i = 1; \\\n    j = 2')
+
+        self.assertEqual(ast.f.root.indent, ast.body[0].body[0].f._get_indent())
+        self.assertEqual(ast.f.root.indent, ast.body[0].body[1].f._get_indent())
+
+        ast = parse('class cls:\n  i = 1; \\\n    j = 2')
+
+        self.assertEqual('  ', ast.body[0].body[0].f._get_indent())
+        self.assertEqual('  ', ast.body[0].body[1].f._get_indent())
+
+        ast = parse('class cls:\n   def f(): i = 1')
+
+        self.assertEqual('   ', ast.body[0].body[0].f._get_indent())
+        self.assertEqual('   ' + ast.f.root.indent, ast.body[0].body[0].body[0].f._get_indent())
+
+        self.assertEqual('   ', parse('def f():\n   1').body[0].body[0].f._get_indent())
+        self.assertEqual('    ', parse('def f(): 1').body[0].body[0].f._get_indent())
+        self.assertEqual('    ', parse('def f(): \\\n  1').body[0].body[0].f._get_indent())
+        self.assertEqual('  ', parse('def f(): # \\\n  1').body[0].body[0].f._get_indent())
+
+        self.assertEqual('    ', parse('class cls:\n def f():\n    1').body[0].body[0].body[0].f._get_indent())
+        self.assertEqual('  ', parse('class cls:\n def f(): 1').body[0].body[0].body[0].f._get_indent())  # indentation inferred otherwise would be '     '
+        self.assertEqual('  ', parse('class cls:\n def f(): \\\n   1').body[0].body[0].body[0].f._get_indent())  # indentation inferred otherwise would be '     '
+        self.assertEqual('   ', parse('class cls:\n def f(): # \\\n   1').body[0].body[0].body[0].f._get_indent())
+
+        self.assertEqual('  ', parse('if 1:\n  2\nelse:\n   3').body[0].body[0].f._get_indent())
+        self.assertEqual('   ', parse('if 1: 2\nelse:\n   3').body[0].body[0].f._get_indent())  # candidate for sibling indentation, indentation inferred otherwise would be '    '
+        self.assertEqual('   ', parse('if 1: \\\n 2\nelse:\n   3').body[0].body[0].f._get_indent())  # candidate for sibling indentation, indentation inferred otherwise would be '    '
+        self.assertEqual('  ', parse('if 1: # \\\n  2\nelse:\n   3').body[0].body[0].f._get_indent())
+
+        self.assertEqual('   ', parse('if 1:\n  2\nelse:\n   3').body[0].orelse[0].f._get_indent())
+        self.assertEqual('  ', parse('if 1:\n  2\nelse: 3').body[0].orelse[0].f._get_indent())  # candidate for sibling indentation, indentation inferred otherwise would be '    '
+        self.assertEqual('  ', parse('if 1:\n  2\nelse: \\\n 3').body[0].orelse[0].f._get_indent())  # candidate for sibling indentation, indentation inferred otherwise would be '    '
+        self.assertEqual('   ', parse('if 1:\n  2\nelse: # \\\n   3').body[0].orelse[0].f._get_indent())
+
+        self.assertEqual('   ', parse('def f():\n   1; 2').body[0].body[1].f._get_indent())
+        self.assertEqual('    ', parse('def f(): 1; 2').body[0].body[1].f._get_indent())
+        self.assertEqual('    ', parse('def f(): \\\n  1; 2').body[0].body[1].f._get_indent())
+        self.assertEqual('  ', parse('def f(): # \\\n  1; 2').body[0].body[1].f._get_indent())
+
+        self.assertEqual('  ', parse('try:\n\n  \\\ni\n  j\nexcept: pass').body[0].body[1].f._get_indent())
+        self.assertEqual('  ', parse('try:\n\n  \\\ni\n  j\nexcept: pass').body[0].body[0].f._get_indent())
+        self.assertEqual('  ', parse('try:\n  \\\ni\n  j\nexcept: pass').body[0].body[1].f._get_indent())
+        self.assertEqual('  ', parse('try:\n  \\\ni\n  j\nexcept: pass').body[0].body[0].f._get_indent())
+
+        self.assertEqual('   ', parse('def f():\n   i; j').body[0].body[0].f._get_indent())
+        self.assertEqual('   ', parse('def f():\n   i; j').body[0].body[1].f._get_indent())
+        self.assertEqual('    ', parse('def f(): i; j').body[0].body[0].f._get_indent())
+        self.assertEqual('    ', parse('def f(): i; j').body[0].body[1].f._get_indent())
+
+        self.assertEqual('', parse('\\\ni').body[0].f._get_indent())
+        self.assertEqual('    ', parse('try: i\nexcept: pass').body[0].body[0].f._get_indent())
+
+        self.assertEqual('', parse('if 1: i\nelif 2: j').body[0].f._get_indent())
+        self.assertEqual('    ', parse('if 1: i\nelif 2: j').body[0].body[0].f._get_indent())
+        self.assertEqual('', parse('if 1: i\nelif 2: j').body[0].orelse[0].f._get_indent())
+        self.assertEqual('    ', parse('if 1: i\nelif 2: j').body[0].orelse[0].body[0].f._get_indent())
+        self.assertEqual('    ', parse('if 1: i\nelif 2: j\nelse: k').body[0].orelse[0].orelse[0].f._get_indent())
+        self.assertEqual('    ', parse('if 1: i\nelif 2: j\nelif 3: k').body[0].orelse[0].orelse[0].body[0].f._get_indent())
+
+        # self.assertEqual('  ', parse('if 1: i\nelse:\n  j').body[0].body[0].f._get_indent())  # candidate for sibling indentation, nope, not doing this
+
+        self.assertEqual('  ', parse('if 1:\n\\\n  \\\n i').body[0].body[0].f._get_indent())
+        self.assertEqual('  ', parse('if 1:\n  \\\n\\\n i').body[0].body[0].f._get_indent())
+        self.assertEqual('  ', parse('if 1:\n  \\\n   \\\n\\\n i').body[0].body[0].f._get_indent())
+        self.assertEqual('   ', parse('if 1:\n   \\\n  \\\n\\\n i').body[0].body[0].f._get_indent())
+        self.assertEqual('    ', parse('if 1: \\\n\\\n  \\\n   \\\n\\\n i').body[0].body[0].f._get_indent())
+        self.assertEqual('  ', parse('if 1:\n\\\n  \\\n   \\\n\\\n i').body[0].body[0].f._get_indent())
+        self.assertEqual('     ', parse('if 1:\n\\\n\\\n     \\\n\\\n\\\n  \\\n\\\n   \\\n\\\n i').body[0].body[0].f._get_indent())
+
+        self.assertEqual('          ', parse('if 2:\n     if 1:\\\n\\\n\\\n  \\\n\\\n\\\n  \\\n\\\n   \\\n\\\n i').body[0].body[0].body[0].f._get_indent())  # indentation inferred otherwise would be '         '
+        self.assertEqual('      ', parse('if 2:\n     if 1:\n\\\n      \\\n  \\\n\\\n\\\n  \\\n\\\n   \\\n\\\n i').body[0].body[0].body[0].f._get_indent())
+
+    def test__get_indentable_lns(self):
+        src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = "... \\\n2"\n else:\n  j \\\n=\\\n 2'
+        ast = parse(src)
+
+        self.assertEqual({1, 2, 5, 7, 8, 9, 10}, ast.f._get_indentable_lns(1))
+        self.assertEqual({0, 1, 2, 5, 7, 8, 9, 10}, ast.f._get_indentable_lns(0))
+
+        f = FST.fromsrc('''
+def _splitext(p, sep, altsep, extsep):
+    """Split the extension from a pathname.
+
+    Extension is everything from the last dot to the end, ignoring
+    leading dots.  Returns "(root, ext)"; ext may be empty."""
+    # NOTE: This code must work for text and bytes strings.
+
+    sepIndex = p.rfind(sep)
+            '''.strip())
+        self.assertEqual({0, 1, 2, 3, 4, 5, 6, 7}, f._get_indentable_lns(docstr=True))
+        self.assertEqual({0, 1, 5, 6, 7}, f._get_indentable_lns(docstr=False))
+
+        f = FST.fromsrc(r'''
+_CookiePattern = re.compile(r"""
+    \s*                            # Optional whitespace at start of cookie
+    (?P<key>                       # Start of group 'key'
+    [""" + _LegalKeyChars + r"""]+?   # Any word of at least one letter
+    )                              # End of group 'key'
+    (                              # Optional group: there may not be a value.
+    \s*=\s*                          # Equal Sign
+    (?P<val>                         # Start of group 'val'
+    "(?:[^\\"]|\\.)*"                  # Any doublequoted string
+    |                                  # or
+    \w{3},\s[\w\d\s-]{9,11}\s[\d:]{8}\sGMT  # Special case for "expires" attr
+    |                                  # or
+    [""" + _LegalValueChars + r"""]*      # Any word or empty string
+    )                                # End of group 'val'
+    )?                             # End of optional value group
+    \s*                            # Any number of spaces.
+    (\s+|;|$)                      # Ending either at space, semicolon, or EOS.
+    """, re.ASCII | re.VERBOSE)    # re.ASCII may be removed if safe.
+            '''.strip())
+        self.assertEqual({0}, f._get_indentable_lns(docstr=True))
+        self.assertEqual({0}, f._get_indentable_lns(docstr=False))
+
+        f = FST.fromsrc('''
+"distutils.command.sdist.check_metadata is deprecated, \\
+        use the check command instead"
+            '''.strip())
+        self.assertEqual({0, 1}, f._get_indentable_lns(docstr=True))
+        self.assertEqual({0}, f._get_indentable_lns(docstr=False))
+
+        f = FST.fromsrc('''
+f"distutils.command.sdist.check_metadata is deprecated, \\
+        use the check command instead"
+            '''.strip())
+        self.assertEqual({0}, f._get_indentable_lns(docstr=True))  # because f-strings cannot be docstrings
+        self.assertEqual({0}, f._get_indentable_lns(docstr=False))
+
+    def test__offset_lns(self):
+        src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j = 2'
+
+        ast = parse(src)
+        lns = ast.f._get_indentable_lns(1)
+        ast.f._offset_lns(lns, 1)
+        self.assertEqual({1, 2, 5, 6, 7}, lns)
+        self.assertEqual((0, 0, 7, 7), ast.f.loc)
+        self.assertEqual((0, 0, 7, 8), ast.body[0].f.loc)
+        self.assertEqual((1, 2, 7, 8), ast.body[0].body[0].f.loc)
+        self.assertEqual((1, 5, 1, 9), ast.body[0].body[0].test.f.loc)
+        self.assertEqual((2, 3, 4, 3), ast.body[0].body[0].body[0].f.loc)
+        self.assertEqual((2, 3, 2, 4), ast.body[0].body[0].body[0].targets[0].f.loc)
+        self.assertEqual((2, 7, 4, 3), ast.body[0].body[0].body[0].value.f.loc)
+        self.assertEqual((5, 3, 5, 8), ast.body[0].body[0].body[1].f.loc)
+        self.assertEqual((5, 3, 5, 4), ast.body[0].body[0].body[1].targets[0].f.loc)
+        self.assertEqual((5, 7, 5, 8), ast.body[0].body[0].body[1].value.f.loc)
+        self.assertEqual((7, 3, 7, 8), ast.body[0].body[0].orelse[0].f.loc)
+        self.assertEqual((7, 3, 7, 4), ast.body[0].body[0].orelse[0].targets[0].f.loc)
+        self.assertEqual((7, 7, 7, 8), ast.body[0].body[0].orelse[0].value.f.loc)
+
+        ast = parse(src)
+        lns = ast.body[0].body[0].f._get_indentable_lns(1)
+        ast.body[0].body[0].f._offset_lns(lns, 1)
+        self.assertEqual({2, 5, 6, 7}, lns)
+        self.assertEqual((1, 1, 7, 8), ast.body[0].body[0].f.loc)
+        self.assertEqual((1, 4, 1, 8), ast.body[0].body[0].test.f.loc)
+        self.assertEqual((2, 3, 4, 3), ast.body[0].body[0].body[0].f.loc)
+        self.assertEqual((2, 3, 2, 4), ast.body[0].body[0].body[0].targets[0].f.loc)
+        self.assertEqual((2, 7, 4, 3), ast.body[0].body[0].body[0].value.f.loc)
+        self.assertEqual((5, 3, 5, 8), ast.body[0].body[0].body[1].f.loc)
+        self.assertEqual((5, 3, 5, 4), ast.body[0].body[0].body[1].targets[0].f.loc)
+        self.assertEqual((5, 7, 5, 8), ast.body[0].body[0].body[1].value.f.loc)
+        self.assertEqual((7, 3, 7, 8), ast.body[0].body[0].orelse[0].f.loc)
+        self.assertEqual((7, 3, 7, 4), ast.body[0].body[0].orelse[0].targets[0].f.loc)
+        self.assertEqual((7, 7, 7, 8), ast.body[0].body[0].orelse[0].value.f.loc)
+
+        ast = parse(src)
+        lns = ast.body[0].body[0].body[0].f._get_indentable_lns(1)
+        ast.body[0].body[0].body[0].f._offset_lns(lns, 1)
+        self.assertEqual(set(), lns)
+        self.assertEqual((2, 2, 4, 3), ast.body[0].body[0].body[0].f.loc)
+        self.assertEqual((2, 2, 2, 3), ast.body[0].body[0].body[0].targets[0].f.loc)
+        self.assertEqual((2, 6, 4, 3), ast.body[0].body[0].body[0].value.f.loc)
+
+        src = 'i = 1\nj = 2\nk = 3\nl = \\\n4'
+        ast = parse(src)
+        off = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4}
+
+        ast.f._offset_lns(off)
+        self.assertEqual((0, 0, 4, 1), ast.f.loc)
+        self.assertEqual((0, 0, 0, 5), ast.body[0].f.loc)
+        self.assertEqual((0, 0, 0, 1), ast.body[0].targets[0].f.loc)
+        self.assertEqual((0, 4, 0, 5), ast.body[0].value.f.loc)
+        self.assertEqual((1, 1, 1, 6), ast.body[1].f.loc)
+        self.assertEqual((1, 1, 1, 2), ast.body[1].targets[0].f.loc)
+        self.assertEqual((1, 5, 1, 6), ast.body[1].value.f.loc)
+        self.assertEqual((2, 2, 2, 7), ast.body[2].f.loc)
+        self.assertEqual((2, 2, 2, 3), ast.body[2].targets[0].f.loc)
+        self.assertEqual((2, 6, 2, 7), ast.body[2].value.f.loc)
+        self.assertEqual((3, 3, 4, 5), ast.body[3].f.loc)
+        self.assertEqual((3, 3, 3, 4), ast.body[3].targets[0].f.loc)
+        self.assertEqual((4, 4, 4, 5), ast.body[3].value.f.loc)
+
+    def test__indent_lns(self):
+        src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2'
+
+        ast = parse(src)
+        lns = ast.f._get_indentable_lns(1)
+        ast.f._indent_lns('  ', lns)
+        self.assertEqual({1, 2, 5, 6, 7, 8, 9}, lns)
+        self.assertEqual('class cls:\n   if True:\n    i = """\nj\n"""\n    k = 3\n   else:\n    j \\\n  =\\\n   2', ast.f.src)
+
+        ast = parse(src)
+        lns = ast.body[0].body[0].f._get_indentable_lns(1)
+        ast.body[0].body[0].f._indent_lns('  ', lns)
+        self.assertEqual({2, 5, 6, 7, 8, 9}, lns)
+        self.assertEqual('class cls:\n if True:\n    i = """\nj\n"""\n    k = 3\n   else:\n    j \\\n  =\\\n   2', ast.f.src)
+
+        ast = parse(src)
+        lns = ast.body[0].body[0].body[0].f._get_indentable_lns(1)
+        ast.body[0].body[0].body[0].f._indent_lns('  ', lns)
+        self.assertEqual(set(), lns)
+        self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2', ast.f.src)
+
+        ast = parse(src)
+        lns = ast.body[0].body[0].orelse[0].f._get_indentable_lns(1)
+        ast.body[0].body[0].orelse[0].f._indent_lns('  ', lns)
+        self.assertEqual({8, 9}, lns)
+        self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n  =\\\n   2', ast.f.src)
+
+        src = '@decorator\nclass cls:\n pass'
+
+        ast = parse(src)
+        lns = ast.f._get_indentable_lns(1)
+        ast.f._indent_lns('  ', lns)
+        self.assertEqual({1, 2}, lns)
+        self.assertEqual('@decorator\n  class cls:\n   pass', ast.f.src)
+
+    def test__dedent_lns(self):
+        src = 'class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2'
+
+        ast = parse(src)
+        lns = ast.f._get_indentable_lns(1)
+        ast.f._dedent_lns(' ', lns)
+        self.assertEqual({1, 2, 5, 6, 7, 8, 9}, lns)
+        self.assertEqual('class cls:\nif True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.src)
+
+        ast = parse(src)
+        lns = ast.body[0].body[0].f._get_indentable_lns(1)
+        ast.body[0].body[0].f._dedent_lns(' ', lns)
+        self.assertEqual({2, 5, 6, 7, 8, 9}, lns)
+        self.assertEqual('class cls:\n if True:\n i = """\nj\n"""\n k = 3\nelse:\n j \\\n=\\\n2', ast.f.src)
+
+        ast = parse(src)
+        lns = ast.body[0].body[0].body[0].f._get_indentable_lns(1)
+        ast.body[0].body[0].body[0].f._dedent_lns(' ', lns)
+        self.assertEqual(set(), lns)
+        self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n 2', ast.f.src)
+
+        ast = parse(src)
+        lns = ast.body[0].body[0].orelse[0].f._get_indentable_lns(1)
+        ast.body[0].body[0].orelse[0].f._dedent_lns(' ', lns)
+        self.assertEqual({8, 9}, lns)
+        self.assertEqual('class cls:\n if True:\n  i = """\nj\n"""\n  k = 3\n else:\n  j \\\n=\\\n2', ast.f.src)
+
+        src = '@decorator\nclass cls:\n pass'
+
+        ast = parse(src)
+        lns = ast.body[0].body[0].f._get_indentable_lns(1)
+        ast.body[0].body[0].f._dedent_lns(' ', lns)
+        self.assertEqual(set(), lns)
+        self.assertEqual('@decorator\nclass cls:\n pass', ast.f.src)
+
+        # ast = parse(src)
+        # lns = ast.body[0].body[0].f._dedent_lns(' ', skip=0)
+        # self.assertEqual({2}, lns)
+        # self.assertEqual('@decorator\nclass cls:\npass', ast.f.src)
+
+    def test__redent_lns(self):
+        f = FST('''
+[
+a,
+ b,
+  c,
+   d,
+    e,
+     f,
+      g,
+
+a,
+ b,
+  c,
+   d,
+    e,
+     f,
+      g,
+]
+            '''.strip())
+        f._redent_lns('    ', '012')
+        self.assertEqual('''
+[
+a,
+b,
+0c,
+01d,
+012e,
+012 f,
+012  g,
+
+a,
+b,
+0c,
+01d,
+012e,
+012 f,
+012  g,
+]
+            '''.strip(), f.src)
+        self.assertEqual((0, 0, 16, 1), f.loc)
+        self.assertEqual((1, 0, 1, 1), f.elts[0].loc)
+        self.assertEqual((2, 0, 2, 1), f.elts[1].loc)
+        self.assertEqual((3, 1, 3, 2), f.elts[2].loc)
+        self.assertEqual((4, 2, 4, 3), f.elts[3].loc)
+        self.assertEqual((5, 3, 5, 4), f.elts[4].loc)
+        self.assertEqual((6, 4, 6, 5), f.elts[5].loc)
+        self.assertEqual((7, 5, 7, 6), f.elts[6].loc)
+        self.assertEqual((9, 0, 9, 1), f.elts[7].loc)
+        self.assertEqual((10, 0, 10, 1), f.elts[8].loc)
+        self.assertEqual((11, 1, 11, 2), f.elts[9].loc)
+        self.assertEqual((12, 2, 12, 3), f.elts[10].loc)
+        self.assertEqual((13, 3, 13, 4), f.elts[11].loc)
+        self.assertEqual((14, 4, 14, 5), f.elts[12].loc)
+        self.assertEqual((15, 5, 15, 6), f.elts[13].loc)
+
+        f = FST('''
+    "OFFENDING RULE", self.ex.rule,
+''')
+        f.a.lineno = 1
+        f.a.col_offset = f.a.end_col_offset = 0
+        f.a.end_lineno = 3
+        f._redent_lns('    ', ' ')
+        self.assertEqual((0, 0, 2, 0), f.loc)
+        self.assertEqual((1, 1, 1, 17), f.elts[0].loc)
+        self.assertEqual((1, 19, 1, 31), f.elts[1].loc)
+        self.assertEqual((1, 19, 1, 26), f.elts[1].value.loc)
+        self.assertEqual((1, 19, 1, 23), f.elts[1].value.value.loc)
+
+    def test__put_src(self):
+        f = FST(Load(), [''])
+        f._put_src('test', 0, 0, 0, 0)
+        self.assertEqual(f.lines, ['test'])
+        f._put_src('test', 0, 0, 0, 0)
+        self.assertEqual(f.lines, ['testtest'])
+        f._put_src('tost', 0, 0, 0, 8)
+        self.assertEqual(f.lines, ['tost'])
+        f._put_src('a\nb\nc', 0, 2, 0, 2)
+        self.assertEqual(f.lines, ['toa', 'b', 'cst'])
+        f._put_src('', 0, 3, 2, 1)
+        self.assertEqual(f.lines, ['toast'])
+        f._put_src('a\nb\nc\nd', 0, 0, 0, 5)
+        self.assertEqual(f.lines, ['a', 'b', 'c', 'd'])
+        f._put_src('efg\nhij', 1, 0, 2, 1)
+        self.assertEqual(f.lines, ['a', 'efg', 'hij', 'd'])
+        f._put_src('***', 1, 2, 2, 1)
+        self.assertEqual(f.lines, ['a', 'ef***ij', 'd'])
+
+    def test__is_parenthesized_tuple(self):
+        self.assertTrue(parse('(1, 2)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('(1,)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('((1),)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('((1,))').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('((1,),)').body[0].value.f._is_parenthesized_tuple())
+
+        self.assertTrue(parse('((a), b)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('(a, (b))').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('((a), (b))').body[0].value.f._is_parenthesized_tuple())
+
+        self.assertTrue(parse('(\n1,2)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('(1\n,2)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('(1,\n2)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('(1,2\n)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('(1\n,)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('(1,\n)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('(\n(1),)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('((\n1),)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('((1\n),)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('((1)\n,)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('((1),\n)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('(\n(1,))').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('((\n1,))').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('((1\n,))').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('((1,\n))').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('((1,)\n)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('(\n(1,),)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('((\n1,),)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('((1\n,),)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('((1,\n),)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('((1,)\n,)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('((1,),\n)').body[0].value.f._is_parenthesized_tuple())
+
+        self.assertTrue(parse('((a), b)').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('(a, (b))').body[0].value.f._is_parenthesized_tuple())
+        self.assertTrue(parse('((a), (b))').body[0].value.f._is_parenthesized_tuple())
+
+        self.assertFalse(parse('(1,),').body[0].value.f._is_parenthesized_tuple())
+        self.assertFalse(parse('(1),').body[0].value.f._is_parenthesized_tuple())
+        self.assertFalse(parse('((1)),').body[0].value.f._is_parenthesized_tuple())
+        self.assertFalse(parse('((1,),),').body[0].value.f._is_parenthesized_tuple())
+
+        self.assertFalse(parse('(a), b').body[0].value.f._is_parenthesized_tuple())
+        self.assertFalse(parse('((a)), b').body[0].value.f._is_parenthesized_tuple())
+        self.assertFalse(parse('a, (b)').body[0].value.f._is_parenthesized_tuple())
+        self.assertFalse(parse('a, ((b))').body[0].value.f._is_parenthesized_tuple())
+        self.assertFalse(parse('(a), (b)').body[0].value.f._is_parenthesized_tuple())
+        self.assertFalse(parse('((a)), ((b))').body[0].value.f._is_parenthesized_tuple())
+
+        self.assertIsNone(parse('[(a), (b)]').body[0].value.f._is_parenthesized_tuple())
+
+    def test__is_delimited_seq(self):
+        self.assertFalse(FST('((pos < len(ranges))>>32),(r&((1<<32)-1))')._is_delimited_seq())
+        self.assertFalse(FST('((1)+1),(1)')._is_delimited_seq())
+
+    def test__maybe_add_line_continuations(self):
+        f = FST(r'''
+a + \
+("""
+*"""
+"c")
+''')
+        self.assertFalse(f._maybe_add_line_continuations(whole=False))
+        self.assertEqual(r'''
+a + \
+("""
+*"""
+"c")
+''', f.src)
+        f.verify('strict')
+
+        f = FST(r'''
+a + \
+("""
+*"""
+"c")
+''')
+        f.right.unpar()
+        self.assertTrue(f._maybe_add_line_continuations(whole=False))
+        self.assertEqual(r'''
+a + \
+"""
+*""" \
+"c"
+''', f.src)
+        f.verify('strict')
+
+        f = FST(r'''
+a + \
+("""
+*"""
+"c")
+''')
+        f.right.unpar()
+        self.assertTrue(f._maybe_add_line_continuations(whole=True))
+        self.assertEqual(r'''\
+a + \
+"""
+*""" \
+"c" \
+''', f.src)
+        f.verify('strict')
+
+        f = FST(r'''(""" a
+b # c""",
+d)''')
+        f.unpar(True)
+        f._maybe_add_line_continuations()
+        self.assertEqual(r'''""" a
+b # c""", \
+d''', f.src)
+
+        f = FST(r'''(""" a
+b # c""",
+# comment0
+  # comment1
+e,  # comment2
+d)  # comment3''')
+        f.unpar(True)
+        self.assertRaises(NodeError, f._maybe_add_line_continuations, del_comments=False)
+
+        f = FST(r'''(""" a
+b # c""",
+# comment0
+  # comment1
+e,  # comment2
+d)  # comment3''')
+        f.unpar(True)
+        f._maybe_add_line_continuations(del_comments=True)
+        self.assertEqual(r'''""" a
+b # c""", \
+\
+  \
+e, \
+d  # comment3''', f.src)
+
+    def test__maybe_ins_separator(self):
+        f = FST('[a#c\n]')
+        f._maybe_ins_separator(0, 2, False, 0, 2)
+        self.assertEqual('[a,#c\n]', f.src)
+
+        f = FST('[a#c\n]')
+        f._maybe_ins_separator(0, 2, True, 0, 2)
+        self.assertEqual('[a, #c\n]', f.src)
+
+        f = FST('[a#c\n]')
+        f._maybe_ins_separator(0, 2, False, 0, 6)
+        self.assertEqual('[a,#c\n]', f.src)
+
+        f = FST('[a#c\n]')
+        f._maybe_ins_separator(0, 2, True, 0, 6)
+        self.assertEqual('[a, #c\n]', f.src)
+
+        f = FST('[a#c\n]')
+        f._maybe_ins_separator(0, 2, False, 1, 0)
+        self.assertEqual('[a,#c\n]', f.src)
+
+        f = FST('[a#c\n]')
+        f._maybe_ins_separator(0, 2, True, 1, 0)
+        self.assertEqual('[a, #c\n]', f.src)
+
+    def test__maybe_fix_tuple(self):
+        # parenthesize naked tuple preserve comments if present
+
+        f = FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=0), ['# comment', ''])
+        f._maybe_fix_tuple()
+        self.assertEqual('(# comment\n)', f.src)
+        f.verify()
+
+        f = FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=1), [' # comment', ' '])
+        f._maybe_fix_tuple()
+        self.assertEqual('(# comment\n)', f.src)
+        f.verify()
+
+        f = FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=0), ['         ', ''])
+        f._maybe_fix_tuple()
+        self.assertEqual('()', f.src)
+        f.verify()
+
+    def test__maybe_fix_copy(self):
+        from fst.fst_one import _maybe_fix_copy
+
+        f = FST.fromsrc('if 1:\n a\nelif 2:\n b')
+        fc = f.a.body[0].orelse[0].f.copy()
+        self.assertEqual(fc.lines[0], 'if 2:')
+        fc.verify(raise_=True)
+
+        f = FST.fromsrc('(1 +\n2)')
+        fc = f.a.body[0].value.f.copy(pars=False)
+        self.assertEqual(fc.src, '1 +\n2')
+        _maybe_fix_copy(fc, pars=True)
+        self.assertEqual(fc.src, '(1 +\n2)')
+        fc.verify(raise_=True)
+
+        f = FST.fromsrc('i = 1')
+        self.assertIs(f.a.body[0].targets[0].ctx.__class__, Store)
+        fc = f.a.body[0].targets[0].f.copy()
+        self.assertIs(fc.a.ctx.__class__, Load)
+        fc.verify(raise_=True)
+
+        f = FST.fromsrc('if 1: pass\nelif 2: pass').a.body[0].orelse[0].f.copy()
+        self.assertEqual('if 2: pass', f.src)
+
+        f = FST.fromsrc('i, j = 1, 2').a.body[0].targets[0].f.copy(pars=False)
+        self.assertEqual('i, j', f.src)
+        _maybe_fix_copy(fc, pars=True)
+        self.assertEqual('i, j', f.src)  # because doesn't NEED them
+
+        f = FST.fromsrc('match w := x,:\n case 0: pass').a.body[0].subject.f.copy(pars=False)
+        self.assertEqual('w := x,', f.src)
+        _maybe_fix_copy(f, pars=True)
+        self.assertEqual('(w := x,)', f.src)
+
+        f = FST.fromsrc('yield a1, a2')
+        fc = f.a.body[0].value.f.copy(pars=False)
+        self.assertEqual('yield a1, a2', fc.src)
+        _maybe_fix_copy(fc, pars=True)
+        self.assertEqual('yield a1, a2', fc.src)
+
+        f = FST.fromsrc('yield from a')
+        fc = f.a.body[0].value.f.copy()
+        self.assertEqual('yield from a', fc.src)
+        _maybe_fix_copy(fc, pars=True)
+        self.assertEqual('yield from a', fc.src)
+
+        f = FST.fromsrc("""[
+"Bad value substitution: option {!r} in section {!r} contains "
+               "an interpolation key {!r} which is not a valid option name. "
+               "Raw value: {!r}".format
+]""".strip())
+        fc = f.a.body[0].value.elts[0].f.copy(pars=False)
+        self.assertEqual("""
+"Bad value substitution: option {!r} in section {!r} contains "
+               "an interpolation key {!r} which is not a valid option name. "
+               "Raw value: {!r}".format""".strip(), fc.src)
+        _maybe_fix_copy(fc, pars=True)
+        self.assertEqual("""
+("Bad value substitution: option {!r} in section {!r} contains "
+               "an interpolation key {!r} which is not a valid option name. "
+               "Raw value: {!r}".format)""".strip(), fc.src)
+
+        f = FST.fromsrc("""
+((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
+            isinstance(a, (Name, Subscript, Attribute)))
+        """.strip())
+        fc = f.a.body[0].value.f.copy(pars=False)
+        self.assertEqual("""
+(is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
+            isinstance(a, (Name, Subscript, Attribute))""".strip(), fc.src)
+        _maybe_fix_copy(fc, pars=True)
+        self.assertEqual("""
+((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
+            isinstance(a, (Name, Subscript, Attribute)))""".strip(), fc.src)
+
+        if PYGE12:
+            fc = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(pars=False)
+            self.assertEqual('*tuple[int, ...]', fc.src)
+            _maybe_fix_copy(fc, pars=True)
+            self.assertEqual('*tuple[int, ...],', fc.src)
+
+        # don't parenthesize copied Slice even if it looks like it needs it
+
+        self.assertEqual('b:\nc', (f := FST('a[b:\nc]').get('slice')).src)
+        f.verify()
+
+    def test__parenthesize_grouping(self):
+        f = parse('[i]').f
+        f.body[0].value.elts[0]._parenthesize_grouping()
+        self.assertEqual('[(i)]', f.src)
+        self.assertEqual((0, 0, 0, 5), f.loc)
+        self.assertEqual((0, 0, 0, 5), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 5), f.body[0].value.loc)
+        self.assertEqual((0, 2, 0, 3), f.body[0].value.elts[0].loc)
+
+        f = parse('a + b').f
+        f.body[0].value.left._parenthesize_grouping()
+        f.body[0].value.right._parenthesize_grouping()
+        self.assertEqual('(a) + (b)', f.src)
+        self.assertEqual((0, 0, 0, 9), f.loc)
+        self.assertEqual((0, 0, 0, 9), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 9), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.left.loc)
+        self.assertEqual((0, 4, 0, 5), f.body[0].value.op.loc)
+        self.assertEqual((0, 7, 0, 8), f.body[0].value.right.loc)
+
+        f = parse('a + b').f
+        f.body[0].value.right._parenthesize_grouping()
+        f.body[0].value.left._parenthesize_grouping()
+        self.assertEqual('(a) + (b)', f.src)
+        self.assertEqual((0, 0, 0, 9), f.loc)
+        self.assertEqual((0, 0, 0, 9), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 9), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.left.loc)
+        self.assertEqual((0, 4, 0, 5), f.body[0].value.op.loc)
+        self.assertEqual((0, 7, 0, 8), f.body[0].value.right.loc)
+        f.body[0].value._parenthesize_grouping()
+        self.assertEqual('((a) + (b))', f.src)
+        f.body[0].value.left._parenthesize_grouping()
+        self.assertEqual('(((a)) + (b))', f.src)
+        f.body[0].value.right._parenthesize_grouping()
+        self.assertEqual('(((a)) + ((b)))', f.src)
+
+        f = parse('call(i for i in j)').f
+        f.body[0].value.args[0]._parenthesize_grouping()
+        self.assertEqual(f.src, 'call((i for i in j))')
+        f.body[0].value.args[0]._parenthesize_grouping()
+        self.assertEqual(f.src, 'call(((i for i in j)))')
+
+        f = parse('i').body[0].value.f.copy()
+        f._put_src('\n# post', 0, 1, 0, 1, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
+        f._parenthesize_grouping(whole=True)
+        self.assertEqual((1, 0, 1, 1), f.loc)
+        self.assertEqual(f.root.src, '(# pre\ni\n# post)')
+
+        f = parse('i').body[0].value.f.copy()
+        f._put_src('\n# post', 0, 1, 0, 1, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
+        f._parenthesize_grouping(whole=False)
+        self.assertEqual((1, 1, 1, 2), f.loc)
+        self.assertEqual(f.root.src, '# pre\n(i)\n# post')
+
+        # special rules for Starred
+
+        f = FST('*\na')
+        f._parenthesize_grouping()
+        self.assertEqual('*(\na)', f.src)
+        f.verify()
+
+        f = FST('*\na')
+        f._parenthesize_grouping(star_child=False)
+        self.assertEqual('(*\na)', f.src)
+
+    def test__unparenthesize_grouping(self):
+        f = parse('a').f
+        f.body[0].value._unparenthesize_grouping(shared=False)
+        self.assertEqual('a', f.src)
+        self.assertEqual((0, 0, 0, 1), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
+
+        f = parse('(a)').f
+        f.body[0].value._unparenthesize_grouping(shared=False)
+        self.assertEqual('a', f.src)
+        self.assertEqual((0, 0, 0, 1), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
+
+        f = parse('((a))').f
+        f.body[0].value._unparenthesize_grouping(shared=False)
+        self.assertEqual('a', f.src)
+        self.assertEqual((0, 0, 0, 1), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
+
+        f = parse('(\n ( (a) )  \n)').f
+        f.body[0].value._unparenthesize_grouping(shared=False)
+        self.assertEqual('a', f.src)
+        self.assertEqual((0, 0, 0, 1), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
+
+        f = parse('((i,))').f
+        f.body[0].value._unparenthesize_grouping(shared=False)
+        self.assertEqual('(i,)', f.src)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
+
+        f = parse('(\n ( (i,) ) \n)').f
+        f.body[0].value._unparenthesize_grouping(shared=False)
+        self.assertEqual('(i,)', f.src)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
+
+        f = parse('call((((i for i in j))))').f
+        f.body[0].value.args[0]._unparenthesize_grouping(shared=False)
+        self.assertEqual(f.src, 'call((i for i in j))')
+        self.assertEqual((0, 0, 0, 20), f.loc)
+        self.assertEqual((0, 0, 0, 20), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 20), f.body[0].value.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
+        self.assertEqual((0, 5, 0, 19), f.body[0].value.args[0].loc)
+
+        f = parse('call((((i for i in j))))').f
+        f.body[0].value.args[0]._unparenthesize_grouping(shared=True)
+        self.assertEqual(f.src, 'call(i for i in j)')
+        self.assertEqual((0, 0, 0, 18), f.loc)
+        self.assertEqual((0, 0, 0, 18), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 18), f.body[0].value.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
+        self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
+
+        f = parse('call( ( ( (i for i in j) ) ) )').f
+        f.body[0].value.args[0]._unparenthesize_grouping(shared=True)
+        self.assertEqual(f.src, 'call(i for i in j)')
+        self.assertEqual((0, 0, 0, 18), f.loc)
+        self.assertEqual((0, 0, 0, 18), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 18), f.body[0].value.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
+        self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
+
+        f = parse('call((((i for i in j))),)').f
+        f.body[0].value.args[0]._unparenthesize_grouping(shared=True)
+        self.assertEqual(f.src, 'call(i for i in j)')
+        self.assertEqual((0, 0, 0, 18), f.loc)
+        self.assertEqual((0, 0, 0, 18), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 18), f.body[0].value.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
+        self.assertEqual((0, 4, 0, 18), f.body[0].value.args[0].loc)
+
+        f = parse('call((((i for i in j))),)').f
+        f.body[0].value.args[0]._unparenthesize_grouping(shared=False)
+        self.assertEqual(f.src, 'call((i for i in j),)')
+        self.assertEqual((0, 0, 0, 21), f.loc)
+        self.assertEqual((0, 0, 0, 21), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 21), f.body[0].value.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.func.loc)
+        self.assertEqual((0, 5, 0, 19), f.body[0].value.args[0].loc)
+
+        f = parse('( # pre\ni\n# post\n)').f
+        f.body[0].value._unparenthesize_grouping(shared=False)
+        self.assertEqual('i', f.src)
+        self.assertEqual((0, 0, 0, 1), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].value.loc)
+
+        f = parse('( # pre\ni\n# post\n)').body[0].value.f.copy(pars=True)
+        f._unparenthesize_grouping(shared=False)
+        self.assertEqual('i', f.src)
+        self.assertEqual((0, 0, 0, 1), f.loc)
+
+        f = parse('( # pre\n(i,)\n# post\n)').f
+        f.body[0].value._unparenthesize_grouping(shared=False)
+        self.assertEqual('(i,)', f.src)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
+
+        f = parse('( # pre\n(i)\n# post\n)').body[0].value.f.copy(pars=True)
+        f._unparenthesize_grouping(shared=False)
+        self.assertEqual('i', f.src)
+        self.assertEqual((0, 0, 0, 1), f.loc)
+
+        # replace with space where directly touching other text
+
+        f = FST('[a for a in b if(a)if(a)]', 'exec')
+        f.body[0].value.generators[0].ifs[0]._unparenthesize_grouping(shared=False)
+        f.body[0].value.generators[0].ifs[1]._unparenthesize_grouping(shared=False)
+        self.assertEqual('[a for a in b if a if a]', f.src)
+
+        f = FST('for(a)in b: pass', 'exec')
+        f.body[0].target._unparenthesize_grouping(shared=False)
+        self.assertEqual('for a in b: pass', f.src)
+
+        f = FST('assert(test)', 'exec')
+        f.body[0].test._unparenthesize_grouping(shared=False)
+        self.assertEqual('assert test', f.src)
+
+        f = FST('assert({test})', 'exec')
+        f.body[0].test._unparenthesize_grouping(shared=False)
+        self.assertEqual('assert{test}', f.src)
+
+        # special rules for Starred
+
+        f = FST('*(\na)')
+        self.assertEqual('*(\na)', f.src)
+        f._unparenthesize_grouping(star_child=False)
+        self.assertEqual('*(\na)', f.src)
+        f._unparenthesize_grouping()
+        self.assertEqual('*a', f.src)
+        f.verify()
+
+        f = FST('*\na')
+        f._parenthesize_grouping(star_child=False)
+        self.assertEqual('(*\na)', f.src)
+        f._unparenthesize_grouping()
+        self.assertEqual('(*\na)', f.src)
+        f._unparenthesize_grouping(star_child=False)
+        self.assertEqual('*\na', f.src)
+        f.verify()
+
+    def test__delimit_node(self):
+        # Tuple
+
+        f = parse('i,').f
+        f.body[0].value._delimit_node()
+        self.assertEqual('(i,)', f.src)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
+
+        f = parse('a, b').f
+        f.body[0].value._delimit_node()
+        self.assertEqual('(a, b)', f.src)
+        self.assertEqual((0, 0, 0, 6), f.loc)
+        self.assertEqual((0, 0, 0, 6), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 6), f.body[0].value.loc)
+        self.assertEqual((0, 1, 0, 2), f.body[0].value.elts[0].loc)
+        self.assertEqual((0, 4, 0, 5), f.body[0].value.elts[1].loc)
+
+        f = parse('i,').body[0].value.f.copy()
+        f._put_src('\n# post', 0, 2, 0, 2, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
+        f._delimit_node(whole=True)
+        self.assertEqual((0, 0, 2, 7), f.loc)
+        self.assertEqual(f.src, '(# pre\ni,\n# post)')
+
+        f = parse('i,').body[0].value.f.copy()
+        f._put_src('\n# post', 0, 2, 0, 2, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
+        f._delimit_node(whole=False)
+        self.assertEqual((1, 0, 1, 4), f.loc)
+        self.assertEqual(f.src, '# pre\n(i,)\n# post')
+
+        # MatchSequence
+
+        f = FST('i,', pattern)
+        f._delimit_node(delims='[]')
+        self.assertEqual('[i,]', f.src)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+        self.assertEqual((0, 1, 0, 2), f.patterns[0].loc)
+
+        f = FST('a, b', pattern)
+        f._delimit_node(delims='[]')
+        self.assertEqual('[a, b]', f.src)
+        self.assertEqual((0, 0, 0, 6), f.loc)
+        self.assertEqual((0, 1, 0, 2), f.patterns[0].loc)
+        self.assertEqual((0, 4, 0, 5), f.patterns[1].loc)
+
+        f = FST('i,', pattern)
+        f._put_src('\n# post', 0, 2, 0, 2, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
+        f._delimit_node(whole=True, delims='[]')
+        self.assertEqual((0, 0, 2, 7), f.loc)
+        self.assertEqual(f.src, '[# pre\ni,\n# post]')
+
+        f = FST('i,', pattern)
+        f._put_src('\n# post', 0, 2, 0, 2, False)
+        f._put_src('# pre\n', 0, 0, 0, 0, False)
+        f._delimit_node(whole=False, delims='[]')
+        self.assertEqual((1, 0, 1, 4), f.loc)
+        self.assertEqual(f.src, '# pre\n[i,]\n# post')
+
+    def test__undelimit_node(self):
+        # Tuple
+
+        f = parse('()').f
+        f.body[0].value._undelimit_node()
+        self.assertEqual('()', f.src)
+        self.assertEqual((0, 0, 0, 2), f.loc)
+        self.assertEqual((0, 0, 0, 2), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 2), f.body[0].value.loc)
+
+        f = parse('(i,)').f
+        f.body[0].value._undelimit_node()
+        self.assertEqual('i,', f.src)
+        self.assertEqual((0, 0, 0, 2), f.loc)
+        self.assertEqual((0, 0, 0, 2), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 2), f.body[0].value.loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].value.elts[0].loc)
+
+        f = parse('(a, b)').f
+        f.body[0].value._undelimit_node()
+        self.assertEqual('a, b', f.src)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 4), f.body[0].value.loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].value.elts[0].loc)
+        self.assertEqual((0, 3, 0, 4), f.body[0].value.elts[1].loc)
+
+        f = parse('( # pre\ni,\n# post\n)').f
+        f.body[0].value._undelimit_node()
+        self.assertEqual('i,', f.src)
+        self.assertEqual((0, 0, 0, 2), f.loc)
+        self.assertEqual((0, 0, 0, 2), f.body[0].loc)
+        self.assertEqual((0, 0, 0, 2), f.body[0].value.loc)
+        self.assertEqual((0, 0, 0, 1), f.body[0].value.elts[0].loc)
+
+        f = parse('( # pre\ni,\n# post\n)').body[0].value.f.copy()
+        f._undelimit_node()
+        self.assertEqual('i,', f.src)
+        self.assertEqual((0, 0, 0, 2), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.elts[0].loc)
+
+        # MatchSequence
+
+        f = FST('()', pattern)
+        f._undelimit_node('patterns')
+        self.assertEqual('()', f.src)
+        self.assertEqual((0, 0, 0, 2), f.loc)
+
+        f = FST('[i,]', pattern)
+        f._undelimit_node('patterns')
+        self.assertEqual('i,', f.src)
+        self.assertEqual((0, 0, 0, 2), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.patterns[0].loc)
+
+        f = FST('(a, b)', pattern)
+        f._undelimit_node('patterns')
+        self.assertEqual('a, b', f.src)
+        self.assertEqual((0, 0, 0, 4), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.patterns[0].loc)
+        self.assertEqual((0, 3, 0, 4), f.patterns[1].loc)
+
+        f = FST('[ # pre\ni,\n# post\n]', pattern)
+        f._undelimit_node('patterns')
+        self.assertEqual('i,', f.src)
+        self.assertEqual((0, 0, 0, 2), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.patterns[0].loc)
+
+        f = FST('( # pre\ni,\n# post\n)', pattern)
+        f._undelimit_node('patterns')
+        self.assertEqual('i,', f.src)
+        self.assertEqual((0, 0, 0, 1), f.patterns[0].loc)
+
+        # replace with space where directly touching other text
+
+        f = FST('[a for a in b if(a,b)if(a,)if(a,b)]', 'exec')
+        f.body[0].value.generators[0].ifs[0]._undelimit_node()
+        f.body[0].value.generators[0].ifs[1]._undelimit_node()
+        f.body[0].value.generators[0].ifs[2]._undelimit_node()
+        self.assertEqual('[a for a in b if a,b if a,if a,b]', f.src)
+        f.body[0].value.generators[0].ifs[0]._delimit_node()  # so that it will verify
+        f.body[0].value.generators[0].ifs[1]._delimit_node()
+        f.body[0].value.generators[0].ifs[2]._delimit_node()
+        self.assertEqual('[a for a in b if (a,b) if (a,)if (a,b)]', f.src)
+        f.verify()
+
+        f = FST('for(a,b)in b: pass', 'exec')
+        f.body[0].target._undelimit_node()
+        self.assertEqual('for a,b in b: pass', f.src)
+        f.verify()
+
+        f = FST('for(a,)in b: pass', 'exec')
+        f.body[0].target._undelimit_node()
+        self.assertEqual('for a,in b: pass', f.src)
+        f.verify()
+
+        f = FST('case[1,2]as c: pass')
+        f.pattern.pattern._undelimit_node('patterns')
+        self.assertEqual('case 1,2 as c: pass', f.src)
+
+        f = FST('case(1,2)as c: pass')
+        f.pattern.pattern._undelimit_node('patterns')
+        self.assertEqual('case 1,2 as c: pass', f.src)
+
+    def test__get_trivia_params(self):
+        with FST.options(trivia=False):
+            self.assertEqual(('none', False, False, 'line', False, False), FST._get_trivia_params(neg=False))
+            self.assertEqual(('block', False, False, 'line', False, False), FST._get_trivia_params(trivia=True, neg=False))
+            self.assertEqual(('block', False, False, 'line', False, False), FST._get_trivia_params(trivia=(True, True), neg=False))
+
+        with FST.options(trivia=(False, False)):
+            self.assertEqual(('none', False, False, 'none', False, False), FST._get_trivia_params(neg=False))
+            self.assertEqual(('block', False, False, 'none', False, False), FST._get_trivia_params(trivia=True, neg=False))
+            self.assertEqual(('block', False, False, 'line', False, False), FST._get_trivia_params(trivia=(True, True), neg=False))
+
+        with FST.options(trivia=(False, True)):
+            self.assertEqual(('none', False, False, 'line', False, False), FST._get_trivia_params(neg=False))
+            self.assertEqual(('block', False, False, 'line', False, False), FST._get_trivia_params(trivia=True, neg=False))
+            self.assertEqual(('block', False, False, 'line', False, False), FST._get_trivia_params(trivia=(True, True), neg=False))
+            self.assertEqual(('block', False, False, 'none', False, False), FST._get_trivia_params(trivia=(True, False), neg=False))
+
+        with FST.options(trivia='all+1'):
+            self.assertEqual(('all', 1, False, 'line', False, False), FST._get_trivia_params(neg=False))
+            self.assertEqual(('all', 1, False, 'line', False, False), FST._get_trivia_params(neg=True))
+
+        with FST.options(trivia='all-1'):
+            self.assertEqual(('all', False, True, 'line', False, False), FST._get_trivia_params(neg=False))
+            self.assertEqual(('all', 1, True, 'line', False, False), FST._get_trivia_params(neg=True))
+
+        with FST.options(trivia='all-1'):
+            self.assertEqual(('block', 2, False, 'line', False, False), FST._get_trivia_params(trivia='block+2', neg=False))
+            self.assertEqual(('block', 2, False, 'line', False, False), FST._get_trivia_params(trivia='block+2', neg=True))
+            self.assertEqual(('block', 2, False, 'line', 3, False), FST._get_trivia_params(trivia=('block+2', 'line+3'), neg=False))
+            self.assertEqual(('block', 2, False, 'line', 3, False), FST._get_trivia_params(trivia=('block+2', 'line+3'), neg=True))
+            self.assertEqual(('block', 2, False, 'line', 3, True), FST._get_trivia_params(trivia=('block+2', 'line-3'), neg=True))
+            self.assertEqual(('block', 2, False, 'line', False, True), FST._get_trivia_params(trivia=('block+2', 'line-3'), neg=False))
+            self.assertEqual(('block', False, True, 'line', False, True), FST._get_trivia_params(trivia=('block-2', 'line-3'), neg=False))
+
+        with FST.options(trivia=1):
+            self.assertEqual((1, False, False, 'line', False, False), FST._get_trivia_params(neg=False))
+            self.assertEqual((2, False, False, 'line', False, False), FST._get_trivia_params(trivia=2, neg=False))
+            self.assertEqual((2, False, False, 3, False, False), FST._get_trivia_params(trivia=(2, 3), neg=False))
+
+    def test__normalize_block(self):
+        from fst.fst_slice_old import _normalize_block
+
+        a = parse('''
+if 1: i ; j ; l ; m
+            '''.strip())
+        _normalize_block(a.body[0].f)
+        a.f.verify()
+        self.assertEqual(a.f.src, 'if 1:\n    i ; j ; l ; m')
+
+        a = parse('''
+def f() -> int: \\
+  i \\
+  ; \\
+  j
+            '''.strip())
+        _normalize_block(a.body[0].f)
+        a.f.verify()
+        self.assertEqual(a.f.src, 'def f() -> int:\n    i \\\n  ; \\\n  j')
+
+        a = parse('''def f(a = """ a
+...   # something """): i = 2''')
+        _normalize_block(a.body[0].f)
+        self.assertEqual(a.f.src, 'def f(a = """ a\n...   # something """):\n    i = 2')
+
+    def test__elif_to_else_if(self):
+        from fst.fst_slice_old import _elif_to_else_if
+
+        a = parse('''
+if 1: pass
+elif 2: pass
+        '''.strip())
+        _elif_to_else_if(a.body[0].orelse[0].f)
+        a.f.verify()
+        self.assertEqual(a.f.src, '''
+if 1: pass
+else:
+    if 2: pass
+            '''.strip())
+
+        a = parse('''
+def f():
+    if 1: pass
+    elif 2: pass
+        '''.strip())
+        _elif_to_else_if(a.body[0].body[0].orelse[0].f)
+        a.f.verify()
+        self.assertEqual(a.f.src, '''
+def f():
+    if 1: pass
+    else:
+        if 2: pass
+            '''.strip())
+
+        a = parse('''
+if 1: pass
+elif 2: pass
+return
+        '''.strip())
+        _elif_to_else_if(a.body[0].orelse[0].f)
+        a.f.verify()
+        self.assertEqual(a.f.src, '''
+if 1: pass
+else:
+    if 2: pass
+return
+            '''.strip())
+
+        a = parse('''
+def f():
+    if 1: pass
+    elif 2: pass
+    return
+        '''.strip())
+        _elif_to_else_if(a.body[0].body[0].orelse[0].f)
+        a.f.verify()
+        self.assertEqual(a.f.src, '''
+def f():
+    if 1: pass
+    else:
+        if 2: pass
+    return
+            '''.strip())
+
+        a = parse('''
+if 1: pass
+elif 2: pass
+elif 3: pass
+        '''.strip())
+        _elif_to_else_if(a.body[0].orelse[0].f)
+        a.f.verify()
+        self.assertEqual(a.f.src, '''
+if 1: pass
+else:
+    if 2: pass
+    elif 3: pass
+            '''.strip())
+
+        a = parse('''
+def f():
+    if 1: pass
+    elif 2: pass
+    elif 3: pass
+        '''.strip())
+        _elif_to_else_if(a.body[0].body[0].orelse[0].f)
+        a.f.verify()
+        self.assertEqual(a.f.src, '''
+def f():
+    if 1: pass
+    else:
+        if 2: pass
+        elif 3: pass
+            '''.strip())
+
+    def test_fst_parse_non_str(self):
+        self.assertEqual('if 1: pass', parse(b'if 1: pass').f.src)
+        self.assertEqual('if 1: pass', parse(memoryview(b'if 1: pass')).f.src)
+
+        self.assertEqual('if 1:\n    pass', parse(FST('if 1: pass').a).f.src)
+        self.assertEqual('a:b:c', parse(FST('a:b:c').a).f.src)
+        self.assertEqual('except:\n    pass', parse(FST('except: pass').a).f.src)
 
     def test___new__(self):
         f = FST(None, 'exec')
@@ -2161,743 +5000,6 @@ elif 2:
         self.assertRaises(ValueError, f.elts[1].put_src, ' ', 0, 3, 0, 5, 'offset')
         self.assertRaises(ValueError, f.elts[1].put_src, ' ', 0, 2, 0, 5, 'offset')
 
-    def test__is_atom(self):
-        self.assertIs(False, parse('1 + 2').body[0].value.f._is_atom())
-        self.assertEqual('unenclosable', parse('f()').body[0].value.f._is_atom())
-        self.assertEqual('pars', parse('(1 + 2)').body[0].value.f._is_atom())
-        self.assertIs(False, parse('(1 + 2)').body[0].value.f._is_atom(pars=False))
-
-        self.assertIs(False, parse('1, 2').body[0].value.f._is_atom())
-        self.assertIs(True, parse('(1, 2)').body[0].value.f._is_atom())
-        self.assertIs(True, parse('[1, 2]').body[0].value.f._is_atom())
-
-        self.assertIs(False, parse('match a:\n case 1, 2: pass').body[0].cases[0].pattern.f._is_atom())
-        self.assertIs(True, parse('match a:\n case (1, 2): pass').body[0].cases[0].pattern.f._is_atom())
-        self.assertIs(True, parse('match a:\n case [1, 2]: pass').body[0].cases[0].pattern.f._is_atom())
-
-        self.assertIs(False, FST('*a')._is_atom())  # because of `*a or b`
-
-    def test__is_enclosed_or_line_special(self):
-        # Call
-        # JoinedStr
-        # TemplateStr
-        # Constant - str
-        # Attribute
-        # Subscript
-        # MatchClass
-        # MatchStar
-        # MatchAs
-        # cmpop
-        # comprehension
-        # arguments
-        # arg
-        # alias
-        # withitem
-
-        self.assertTrue(FST('f(a, b=1)', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('f\\\n(a, b=1)', 'exec').body[0].copy(pars=False).value._is_enclosed_or_line())
-        self.assertTrue(FST('(f\\\n(a, b=1))', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('(f\n(a, b=1))', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('(f(\na\n,\nb\n=\n1))', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('(f(\na\n,\nb\n=\n"()"))', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-
-        if PYGE12:
-            self.assertTrue(FST(r'''
-(f"a{(1,
-
-2)}b" f"""{3}
-
-{4}
-{5}""" f"x\
-y")
-                '''.strip(), 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-            self.assertFalse(FST(r'''
-(f"a{(1,
-
-2)}b" f"""{3}
-
-{4}
-{5}"""
-f"x\
-y")
-                '''.strip(), 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-
-            self.assertTrue(FST(r'''
-(f"a" f"""c
-b""" f"d\
-\
-e")
-                '''.strip(), 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-
-            self.assertFalse(FST(r'''
-(f"a" f"""c
-b"""
-
-f"d\
-\
-e")
-                '''.strip(), 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-
-        self.assertTrue(FST('a.b', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('(a\n.\nb)', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('(a\\\n.\\\nb)', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-
-        self.assertTrue(FST('a[b]', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('(a\n[\nb\n])', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('(a\n[(\nb\n)])', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('(a\\\n[(\nb\n)])', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('(a\\\n[\\\nb\\\n])', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-
-        self.assertTrue(FST('match a:\n case f(a, b=1): pass', 'exec').body[0].cases[0].pattern._is_enclosed_or_line())
-        self.assertTrue(FST('match a:\n case f\\\n(a, b=1): pass', 'exec').body[0].cases[0].pattern._is_enclosed_or_line())
-        self.assertTrue(FST('match a:\n case (f\\\n(a, b=1)): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('match a:\n case (f\n(a, b=1)): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('match a:\n case (f(\na\n,\nb\n=\n1)): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('match a:\n case (f(\na\n,\nb\n=\n"()")): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
-
-        self.assertTrue(FST('match a:\n case *s,: pass', 'exec').body[0].cases[0].pattern.patterns[0]._is_enclosed_or_line())
-        self.assertFalse(FST('match a:\n case (*\ns,): pass', 'exec').body[0].cases[0].pattern.patterns[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('match a:\n case *\\\ns,: pass', 'exec').body[0].cases[0].pattern.patterns[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('match a:\n case (*\\\ns,): pass', 'exec').body[0].cases[0].pattern.patterns[0].copy(pars=False)._is_enclosed_or_line())
-
-        self.assertTrue(FST('match a:\n case a as b: pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('match a:\n case (a as b): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('match a:\n case (a\nas b): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('match a:\n case (a\\\nas b): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('match a:\n case (a\\\nas\nb): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('match a:\n case (a\\\nas\\\nb): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('match a:\n case (a\\\nas\n\\\nb): pass', 'exec').body[0].cases[0].pattern.copy(pars=False)._is_enclosed_or_line())
-
-        self.assertTrue(FST('a not in b', 'exec').body[0].value.ops[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('(a not in b)', 'exec').body[0].value.ops[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('(a not\nin b)', 'exec').body[0].value.ops[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('(a not\\\nin b)', 'exec').body[0].value.ops[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('(a is\nnot b)', 'exec').body[0].value.ops[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('(a is\\\nnot b)', 'exec').body[0].value.ops[0].copy(pars=False)._is_enclosed_or_line())
-
-        self.assertTrue(FST('[i for i in j]', 'exec').body[0].value.generators[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('[i for\n i in j]', 'exec').body[0].value.generators[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('[i for i\n in j]', 'exec').body[0].value.generators[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('[i for i in\n j]', 'exec').body[0].value.generators[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('[i for\\\n i in j]', 'exec').body[0].value.generators[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('[i for i\\\n in j]', 'exec').body[0].value.generators[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('[i for i in\\\n j]', 'exec').body[0].value.generators[0].copy(pars=False)._is_enclosed_or_line())
-
-        self.assertTrue(FST('def f(a, b=1): pass', 'exec').body[0].args.copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('def f(a,\n b=1): pass', 'exec').body[0].args.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('def f(a,\\\n b=1): pass', 'exec').body[0].args.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('def f(a, b=(1,\n2)): pass', 'exec').body[0].args.copy(pars=False)._is_enclosed_or_line())
-
-        self.assertTrue(FST('def f(a: int): pass', 'exec').body[0].args.args[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('def f(a:\n int): pass', 'exec').body[0].args.args[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('def f(a:\\\n int): pass', 'exec').body[0].args.args[0].copy(pars=False)._is_enclosed_or_line())
-
-        self.assertTrue(FST('from a import (b as c)', 'exec').body[0].names[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('from a import (b\n as c)', 'exec').body[0].names[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('from a import (b\\\n as c)', 'exec').body[0].names[0].copy(pars=False)._is_enclosed_or_line())
-
-        self.assertTrue(FST('with (b as c): pass', 'exec').body[0].items[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('with (b\n as c): pass', 'exec').body[0].items[0].copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('with (b\\\n as c): pass', 'exec').body[0].items[0].copy(pars=False)._is_enclosed_or_line())
-
-        if PYGE14:
-            self.assertTrue(FST(r'''
-(t"a{(1,
-
-2)}b" t"""{3}
-
-{4}
-{5}""" t"x\
-y")
-                '''.strip(), 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-            self.assertFalse(FST(r'''
-(t"a{(1,
-
-2)}b" t"""{3}
-
-{4}
-{5}"""
-t"x\
-y")
-                '''.strip(), 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-
-    def test__is_enclosed_or_line_general(self):
-        self.assertTrue(FST('a < b', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('(a\n< b)', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('(a\\\n< b)', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('(a\\\n<\nb)', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('(a\\\n<\\\nb)', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertFalse(FST('(a\\\n<\n\\\nb)', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-
-        self.assertTrue(FST('a, b, c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('a, b\\\n, c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('a, [\nb\n], c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-
-        self.assertTrue(FST('a, {\nx: y\n}, c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('a, {\nb\n}, c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('a, [\ni for i in j\n], c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('a, {\ni for i in j\n}, c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('a, {\ni: j for i, j in k\n}, c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('a, (\ni for i in j\n), c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('a, [i,\nj], c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-        self.assertTrue(FST('a, b[\ni:j:k\n], c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-
-        self.assertTrue(FST('a\n: \nb: \nc', 'expr_slice')._is_enclosed_or_line())  # because is never used unenclosed
-        self.assertTrue(FST('a\\\n: \\\nb: \\\nc', 'expr_slice')._is_enclosed_or_line())
-
-        if PYGE12:
-            self.assertTrue(FST('a, f"{(1,\n2)}", c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
-
-        # whole
-
-        self.assertTrue(FST('\na + b\n')._is_enclosed_or_line(whole=False))
-        self.assertFalse(FST('\na + b\n')._is_enclosed_or_line(whole=True))
-        self.assertFalse(FST('\\\na + b\n')._is_enclosed_or_line(whole=True))
-        self.assertFalse(FST('\na + b\\\n')._is_enclosed_or_line(whole=True))
-        self.assertTrue(FST('\\\na + b\\\n')._is_enclosed_or_line(whole=True))
-
-        self.assertTrue(FST('\na + b * c\n').right._is_enclosed_or_line(whole=False))
-        self.assertRaises(ValueError, FST('\na + b * c\n').right._is_enclosed_or_line, whole=True)
-
-        # out_lns
-
-        self.assertTrue(FST('\na + \\\n(b\n*\nc)\n')._is_enclosed_or_line(whole=False, out_lns=(lns := set())))
-        self.assertEqual(set(), lns)
-
-        self.assertFalse(FST('\na + \n(b\n*\nc)\n')._is_enclosed_or_line(whole=False, out_lns=(lns := set())))
-        self.assertEqual({1}, lns)
-
-        self.assertFalse(FST('\na + \n(b\n*\nc)\n')._is_enclosed_or_line(whole=True, out_lns=(lns := set())))
-        self.assertEqual({0, 1, 4}, lns)
-
-        f = FST(r'''
-a + \
-("""
-*"""
-"c")
-''')
-        self.assertTrue(f._is_enclosed_or_line(whole=False, out_lns=(lns := set())))
-        self.assertEqual(set(), lns)
-        f.right.unpar()
-        self.assertFalse(f._is_enclosed_or_line(whole=False, out_lns=(lns := set())))
-        self.assertEqual({3}, lns)
-        self.assertFalse(f._is_enclosed_or_line(whole=True, out_lns=(lns := set())))
-        self.assertEqual({0, 3, 4}, lns)
-
-        # ImportFrom
-
-        self.assertTrue(FST('from a import \\\nb')._is_enclosed_or_line())
-        self.assertTrue(FST('from a import (\nb)')._is_enclosed_or_line())
-
-        f = FST('from a import (\nb)')
-        f._put_src(None, 1, 1, 1, 2, True)
-        f._put_src(None, 0, 14, 0, 15, False)
-        self.assertFalse(f._is_enclosed_or_line())
-
-        # With / AsyncWith
-
-        self.assertTrue(FST('with \\\nb\\\n:\n  pass')._is_enclosed_or_line())
-        self.assertTrue(FST('with (\nb\n):\n  pass')._is_enclosed_or_line())
-
-        f = FST('with (\na\n):\n  pass')
-        f._put_src(None, 2, 0, 2, 1, True)
-        f._put_src(None, 0, 5, 0, 6, False)
-        self.assertFalse(f._is_enclosed_or_line())
-
-    def test__is_enclosed_in_parents(self):
-        self.assertFalse(FST('i', 'exec').body[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('i', 'single').body[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('i', 'eval').body._is_enclosed_in_parents())
-
-        self.assertFalse(FST('@d\ndef f(): pass', 'exec').body[0].decorator_list[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('def f(): pass', 'exec').body[0].args._is_enclosed_in_parents())
-        self.assertTrue(FST('def f(a) -> int: pass', 'exec').body[0].args._is_enclosed_in_parents())
-        self.assertFalse(FST('def f(a) -> int: pass', 'exec').body[0].returns._is_enclosed_in_parents())
-
-        self.assertFalse(FST('@d\nasync def f(): pass', 'exec').body[0].decorator_list[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('async def f(): pass', 'exec').body[0].args._is_enclosed_in_parents())
-        self.assertTrue(FST('async def f(a) -> int: pass', 'exec').body[0].args._is_enclosed_in_parents())
-        self.assertFalse(FST('async def f(a) -> int: pass', 'exec').body[0].returns._is_enclosed_in_parents())
-
-        self.assertFalse(FST('@d\nclass c: pass', 'exec').body[0].decorator_list[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('class c(b, k=v): pass', 'exec').body[0].bases[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('class c(b, k=v): pass', 'exec').body[0].keywords[0]._is_enclosed_in_parents())
-
-        self.assertFalse(FST('return v', 'exec').body[0].value._is_enclosed_in_parents())
-        self.assertFalse(FST('del v', 'exec').body[0].targets[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('t = v', 'exec').body[0].targets[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('t = v', 'exec').body[0].value._is_enclosed_in_parents())
-        self.assertFalse(FST('t += v', 'exec').body[0].target._is_enclosed_in_parents())
-        self.assertFalse(FST('t += v', 'exec').body[0].op._is_enclosed_in_parents())
-        self.assertFalse(FST('t += v', 'exec').body[0].value._is_enclosed_in_parents())
-        self.assertFalse(FST('t: int = v', 'exec').body[0].target._is_enclosed_in_parents())
-        self.assertFalse(FST('t: int = v', 'exec').body[0].annotation._is_enclosed_in_parents())
-        self.assertFalse(FST('t: int = v', 'exec').body[0].value._is_enclosed_in_parents())
-
-        self.assertFalse(FST('for a in b: pass', 'exec').body[0].target._is_enclosed_in_parents())
-        self.assertFalse(FST('for a in b: pass', 'exec').body[0].iter._is_enclosed_in_parents())
-        self.assertFalse(FST('async for a in b: pass', 'exec').body[0].target._is_enclosed_in_parents())
-        self.assertFalse(FST('async for a in b: pass', 'exec').body[0].iter._is_enclosed_in_parents())
-        self.assertFalse(FST('while a: pass', 'exec').body[0].test._is_enclosed_in_parents())
-        self.assertFalse(FST('if a: pass', 'exec').body[0].test._is_enclosed_in_parents())
-
-        self.assertFalse(FST('with a: pass', 'exec').body[0].items[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('with (a): pass', 'exec').body[0].items[0]._is_enclosed_in_parents())  # pars belong to `a`
-        self.assertFalse(FST('with ((a)): pass', 'exec').body[0].items[0]._is_enclosed_in_parents())  # pars belong to `a`
-        self.assertTrue(FST('with (a as b): pass', 'exec').body[0].items[0]._is_enclosed_in_parents())  # pars belong to `with`
-        self.assertTrue(FST('with ((a) as b): pass', 'exec').body[0].items[0]._is_enclosed_in_parents())  # outer pars belong to `with`
-        self.assertFalse(FST('async with a: pass', 'exec').body[0].items[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('async with (a): pass', 'exec').body[0].items[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('async with ((a)): pass', 'exec').body[0].items[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('async with (a as b): pass', 'exec').body[0].items[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('async with ((a) as b): pass', 'exec').body[0].items[0]._is_enclosed_in_parents())
-
-        self.assertFalse(FST('match (a):\n case 1: pass', 'exec').body[0].subject._is_enclosed_in_parents())
-        self.assertFalse(FST('raise exc from cause', 'exec').body[0].exc._is_enclosed_in_parents())
-        self.assertFalse(FST('raise exc from cause', 'exec').body[0].cause._is_enclosed_in_parents())
-        self.assertFalse(FST('try: pass\nexcept Exception as exc: pass', 'exec').body[0].handlers[0].type._is_enclosed_in_parents())
-        self.assertFalse(FST('try: pass\nexcept (Exception) as exc: pass', 'exec').body[0].handlers[0].type._is_enclosed_in_parents())  # because pars belong to `type`
-        self.assertFalse(FST('try: pass\nexcept ((Exception, ValueError)) as exc: pass', 'exec').body[0].handlers[0].type._is_enclosed_in_parents())  # same
-        self.assertFalse(FST('assert (a), (b)', 'exec').body[0].test._is_enclosed_in_parents())
-        self.assertFalse(FST('assert (a), (b)', 'exec').body[0].msg._is_enclosed_in_parents())
-        self.assertFalse(FST('import a as b', 'exec').body[0].names[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('from a import b', 'exec').body[0].names[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('from a import b as c', 'exec').body[0].names[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('from a import (b)', 'exec').body[0].names[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('from a import (b as c)', 'exec').body[0].names[0]._is_enclosed_in_parents())
-
-        self.assertFalse(FST('(a)', 'exec').body[0].value._is_enclosed_in_parents())
-        self.assertFalse(FST('(a) or (b)', 'exec').body[0].value.op._is_enclosed_in_parents())
-        self.assertFalse(FST('(a) or (b)', 'exec').body[0].value.values[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('(a) or (b)', 'exec').body[0].value.values[1]._is_enclosed_in_parents())
-        self.assertFalse(FST('(a := b)', 'exec').body[0].value._is_enclosed_in_parents())
-        self.assertFalse(FST('(a) + (b)', 'exec').body[0].value.left._is_enclosed_in_parents())
-        self.assertFalse(FST('(a) + (b)', 'exec').body[0].value.op._is_enclosed_in_parents())
-        self.assertFalse(FST('(a) + (b)', 'exec').body[0].value.right._is_enclosed_in_parents())
-        self.assertFalse(FST('-(a)', 'exec').body[0].value.op._is_enclosed_in_parents())
-        self.assertFalse(FST('-(a)', 'exec').body[0].value.operand._is_enclosed_in_parents())
-        self.assertFalse(FST('lambda a: (b)', 'exec').body[0].value.args._is_enclosed_in_parents())
-        self.assertFalse(FST('lambda a: (b)', 'exec').body[0].value.body._is_enclosed_in_parents())
-        self.assertFalse(FST('(a) if (b) else (c)', 'exec').body[0].value.body._is_enclosed_in_parents())
-        self.assertFalse(FST('(a) if (b) else (c)', 'exec').body[0].value.test._is_enclosed_in_parents())
-        self.assertFalse(FST('(a) if (b) else (c)', 'exec').body[0].value.orelse._is_enclosed_in_parents())
-        self.assertTrue(FST('{k: v}', 'exec').body[0].value.keys[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('{k: v}', 'exec').body[0].value.values[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('{a}', 'exec').body[0].value.elts[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('[i for i in j]', 'exec').body[0].value.elt._is_enclosed_in_parents())
-        self.assertTrue(FST('[i for i in j]', 'exec').body[0].value.generators[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('{i for i in j}', 'exec').body[0].value.elt._is_enclosed_in_parents())
-        self.assertTrue(FST('{i for i in j}', 'exec').body[0].value.generators[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('{k: v for k, v in j}', 'exec').body[0].value.key._is_enclosed_in_parents())
-        self.assertTrue(FST('{k: v for k, v in j}', 'exec').body[0].value.value._is_enclosed_in_parents())
-        self.assertTrue(FST('{k: v for k, v in j}', 'exec').body[0].value.generators[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('(i for i in j)', 'exec').body[0].value.elt._is_enclosed_in_parents())
-        self.assertTrue(FST('(i for i in j)', 'exec').body[0].value.generators[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('await (a)', 'exec').body[0].value._is_enclosed_in_parents())
-        self.assertFalse(FST('yield (a)', 'exec').body[0].value._is_enclosed_in_parents())
-        self.assertFalse(FST('yield from (a)', 'exec').body[0].value._is_enclosed_in_parents())
-        self.assertFalse(FST('(a) < (b)', 'exec').body[0].value.left._is_enclosed_in_parents())
-        self.assertFalse(FST('(a) < (b)', 'exec').body[0].value.ops[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('(a) < (b)', 'exec').body[0].value.comparators[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('call(a, b=c)', 'exec').body[0].value.func._is_enclosed_in_parents())
-        self.assertTrue(FST('call(a, b=c)', 'exec').body[0].value.args[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('call(a, b=c)', 'exec').body[0].value.keywords[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('''f"1{2}"''', 'exec').body[0].value.values[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('''f"1{2}"''', 'exec').body[0].value.values[1].value._is_enclosed_in_parents())
-
-        self.assertFalse(FST('(a).b', 'exec').body[0].value.value._is_enclosed_in_parents())
-        self.assertFalse(FST('(a).b', 'exec').body[0].value.ctx._is_enclosed_in_parents())
-        self.assertFalse(FST('(a)[b]', 'exec').body[0].value.value._is_enclosed_in_parents())
-        self.assertTrue(FST('(a)[b]', 'exec').body[0].value.slice._is_enclosed_in_parents())
-        self.assertFalse(FST('(a)[b]', 'exec').body[0].value.ctx._is_enclosed_in_parents())
-        self.assertFalse(FST('*(a)', 'exec').body[0].value.value._is_enclosed_in_parents())
-        self.assertFalse(FST('*(a)', 'exec').body[0].value.ctx._is_enclosed_in_parents())
-        self.assertFalse(FST('a', 'exec').body[0].value.ctx._is_enclosed_in_parents())
-        self.assertFalse(FST('(a)', 'exec').body[0].value.ctx._is_enclosed_in_parents())
-
-        self.assertTrue(FST('[a]', 'exec').body[0].value.elts[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('[a]', 'exec').body[0].value.ctx._is_enclosed_in_parents())
-        self.assertTrue(FST('(a,)', 'exec').body[0].value.elts[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('(a,)', 'exec').body[0].value.ctx._is_enclosed_in_parents())
-        self.assertFalse(FST('a,', 'exec').body[0].value.elts[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('a,', 'exec').body[0].value.ctx._is_enclosed_in_parents())
-
-        self.assertFalse(FST('a[b:c:d]', 'exec').body[0].value.slice.copy(pars=True).lower._is_enclosed_in_parents())
-        self.assertFalse(FST('a[b:c:d]', 'exec').body[0].value.slice.copy(pars=True).upper._is_enclosed_in_parents())
-        self.assertFalse(FST('a[b:c:d]', 'exec').body[0].value.slice.copy(pars=True).step._is_enclosed_in_parents())
-
-        self.assertFalse(FST('[i for (i) in (j) if (i)]', 'exec').body[0].value.generators[0].copy(pars=True).target._is_enclosed_in_parents())
-        self.assertFalse(FST('[i for (i) in (j) if (i)]', 'exec').body[0].value.generators[0].copy(pars=True).iter._is_enclosed_in_parents())
-        self.assertFalse(FST('[i for (i) in (j) if (i)]', 'exec').body[0].value.generators[0].copy(pars=True).ifs[0]._is_enclosed_in_parents())
-
-        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True).posonlyargs[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True).args[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True).defaults[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True).vararg._is_enclosed_in_parents())
-        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True).kwonlyargs[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True).kw_defaults[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True).kwarg._is_enclosed_in_parents())
-        self.assertFalse(FST('def f(a: int): pass', 'exec').body[0].args.args[0].copy(pars=True).annotation._is_enclosed_in_parents())
-
-        self.assertFalse(FST('call(k=v)', 'exec').body[0].value.keywords[0].copy(pars=True).value._is_enclosed_in_parents())
-
-        self.assertFalse(FST('with ((a) as (b)): pass', 'exec').body[0].items[0].copy(pars=True).context_expr._is_enclosed_in_parents())
-        self.assertFalse(FST('with ((a) as (b)): pass', 'exec').body[0].items[0].copy(pars=True).optional_vars._is_enclosed_in_parents())
-
-        self.assertFalse(FST('match a:\n case (1 as i) if (i): pass', 'exec').body[0].cases[0].copy(pars=True).pattern._is_enclosed_in_parents())
-        self.assertFalse(FST('match a:\n case (1 as i) if (i): pass', 'exec').body[0].cases[0].copy(pars=True).guard._is_enclosed_in_parents())
-        self.assertFalse(FST('match a:\n case 1: pass', 'exec').body[0].cases[0].pattern.copy(pars=True).value._is_enclosed_in_parents())
-        self.assertTrue(FST('match a:\n case (1): pass', 'exec').body[0].cases[0].pattern.copy(pars=True).value._is_enclosed_in_parents())  # inconsistent case, MatchValue owns the pars
-        self.assertFalse(FST('match a:\n case 1, 2: pass', 'exec').body[0].cases[0].pattern.copy(pars=True).patterns[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('match a:\n case (1, 2): pass', 'exec').body[0].cases[0].pattern.copy(pars=True).patterns[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('match a:\n case [1, 2]: pass', 'exec').body[0].cases[0].pattern.copy(pars=True).patterns[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('match a:\n case {1: a}: pass', 'exec').body[0].cases[0].pattern.copy(pars=True).keys[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('match a:\n case {1: a}: pass', 'exec').body[0].cases[0].pattern.copy(pars=True).patterns[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('match a:\n case c(a, b=c): pass', 'exec').body[0].cases[0].pattern.copy(pars=True).cls._is_enclosed_in_parents())
-        self.assertTrue(FST('match a:\n case c(a, b=c): pass', 'exec').body[0].cases[0].pattern.copy(pars=True).patterns[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('match a:\n case c(a, b=c): pass', 'exec').body[0].cases[0].pattern.copy(pars=True).kwd_patterns[0]._is_enclosed_in_parents())
-        self.assertFalse(FST('match a:\n case 1 as a: pass', 'exec').body[0].cases[0].pattern.copy(pars=True).pattern._is_enclosed_in_parents())
-        self.assertTrue(FST('match a:\n case (1 as a): pass', 'exec').body[0].cases[0].pattern.copy(pars=True).pattern._is_enclosed_in_parents())
-        self.assertFalse(FST('match a:\n case 1 | 2: pass', 'exec').body[0].cases[0].pattern.copy(pars=True).patterns[0]._is_enclosed_in_parents())
-        self.assertTrue(FST('match a:\n case (1 | 2): pass', 'exec').body[0].cases[0].pattern.copy(pars=True).patterns[0]._is_enclosed_in_parents())
-
-        if PYGE12:
-            self.assertTrue(FST('def f[T]() -> int: pass', 'exec').body[0].type_params[0]._is_enclosed_in_parents())
-            self.assertTrue(FST('async def f[T]() -> int: pass', 'exec').body[0].type_params[0]._is_enclosed_in_parents())
-            self.assertTrue(FST('class c[T]: pass', 'exec').body[0].type_params[0]._is_enclosed_in_parents())
-
-            self.assertFalse(FST('type t[T] = v', 'exec').body[0].name._is_enclosed_in_parents())
-            self.assertTrue(FST('type t[T] = v', 'exec').body[0].type_params[0]._is_enclosed_in_parents())
-            self.assertFalse(FST('type t[T] = v', 'exec').body[0].value._is_enclosed_in_parents())
-            self.assertFalse(FST('try: pass\nexcept* Exception as exc: pass', 'exec').body[0].handlers[0].type._is_enclosed_in_parents())
-            self.assertFalse(FST('try: pass\nexcept* (Exception) as exc: pass', 'exec').body[0].handlers[0].type._is_enclosed_in_parents())
-            self.assertFalse(FST('try: pass\nexcept* ((Exception, ValueError)) as exc: pass', 'exec').body[0].handlers[0].type._is_enclosed_in_parents())
-            self.assertFalse(FST('type t[T] = v', 'exec').body[0].type_params[0].copy()._is_enclosed_in_parents())
-            self.assertFalse(FST('type t[*T] = v', 'exec').body[0].type_params[0].copy()._is_enclosed_in_parents())
-            self.assertFalse(FST('type t[**T] = v', 'exec').body[0].type_params[0].copy()._is_enclosed_in_parents())
-
-        if PYGE14:
-            self.assertTrue(FST('t"1{2}"', 'exec').body[0].value.values[0]._is_enclosed_in_parents())
-            self.assertTrue(FST('t"1{2}"', 'exec').body[0].value.values[1].value._is_enclosed_in_parents())
-
-        # with field
-
-        self.assertFalse(FST('i', 'exec')._is_enclosed_in_parents('body'))
-        self.assertFalse(FST('i', 'single')._is_enclosed_in_parents('body'))
-        self.assertFalse(FST('i', 'eval')._is_enclosed_in_parents('body'))
-
-        self.assertFalse(FST('@d\ndef f(): pass', 'exec').body[0]._is_enclosed_in_parents('decorator_list'))
-        self.assertTrue(FST('def f(): pass', 'exec').body[0]._is_enclosed_in_parents('args'))
-        self.assertTrue(FST('def f(a) -> int: pass', 'exec').body[0]._is_enclosed_in_parents('args'))
-        self.assertFalse(FST('def f(a) -> int: pass', 'exec').body[0]._is_enclosed_in_parents('returns'))
-
-        self.assertFalse(FST('@d\nasync def f(): pass', 'exec').body[0]._is_enclosed_in_parents('decorator_list'))
-        self.assertTrue(FST('async def f(): pass', 'exec').body[0]._is_enclosed_in_parents('args'))
-        self.assertTrue(FST('async def f(a) -> int: pass', 'exec').body[0]._is_enclosed_in_parents('args'))
-        self.assertFalse(FST('async def f(a) -> int: pass', 'exec').body[0]._is_enclosed_in_parents('returns'))
-
-        self.assertFalse(FST('@d\nclass c: pass', 'exec').body[0]._is_enclosed_in_parents('decorator_list'))
-        self.assertTrue(FST('class c(b, k=v): pass', 'exec').body[0]._is_enclosed_in_parents('bases'))
-        self.assertTrue(FST('class c(b, k=v): pass', 'exec').body[0]._is_enclosed_in_parents('keywords'))
-
-        self.assertFalse(FST('return v', 'exec').body[0]._is_enclosed_in_parents('value'))
-        self.assertFalse(FST('del v', 'exec').body[0]._is_enclosed_in_parents('targets'))
-        self.assertFalse(FST('t = v', 'exec').body[0]._is_enclosed_in_parents('targets'))
-        self.assertFalse(FST('t = v', 'exec').body[0]._is_enclosed_in_parents('value'))
-        self.assertFalse(FST('t += v', 'exec').body[0]._is_enclosed_in_parents('target'))
-        self.assertFalse(FST('t += v', 'exec').body[0]._is_enclosed_in_parents('op'))
-        self.assertFalse(FST('t += v', 'exec').body[0]._is_enclosed_in_parents('value'))
-        self.assertFalse(FST('t: int = v', 'exec').body[0]._is_enclosed_in_parents('target'))
-        self.assertFalse(FST('t: int = v', 'exec').body[0]._is_enclosed_in_parents('annotation'))
-        self.assertFalse(FST('t: int = v', 'exec').body[0]._is_enclosed_in_parents('value'))
-
-        self.assertFalse(FST('for a in b: pass', 'exec').body[0]._is_enclosed_in_parents('target'))
-        self.assertFalse(FST('for a in b: pass', 'exec').body[0]._is_enclosed_in_parents('iter'))
-        self.assertFalse(FST('async for a in b: pass', 'exec').body[0]._is_enclosed_in_parents('target'))
-        self.assertFalse(FST('async for a in b: pass', 'exec').body[0]._is_enclosed_in_parents('iter'))
-        self.assertFalse(FST('while a: pass', 'exec').body[0]._is_enclosed_in_parents('test'))
-        self.assertFalse(FST('if a: pass', 'exec').body[0]._is_enclosed_in_parents('test'))
-
-        self.assertFalse(FST('with a: pass', 'exec').body[0]._is_enclosed_in_parents('items'))
-        self.assertFalse(FST('with (a): pass', 'exec').body[0]._is_enclosed_in_parents('items'))  # pars belong to `a`
-        self.assertFalse(FST('with ((a)): pass', 'exec').body[0]._is_enclosed_in_parents('items'))  # pars belong to `a`
-        self.assertTrue(FST('with (a as b): pass', 'exec').body[0]._is_enclosed_in_parents('items'))  # pars belong to `with`
-        self.assertTrue(FST('with ((a) as b): pass', 'exec').body[0]._is_enclosed_in_parents('items'))  # outer pars belong to `with`
-        self.assertFalse(FST('async with a: pass', 'exec').body[0]._is_enclosed_in_parents('items'))
-        self.assertFalse(FST('async with (a): pass', 'exec').body[0]._is_enclosed_in_parents('items'))
-        self.assertFalse(FST('async with ((a)): pass', 'exec').body[0]._is_enclosed_in_parents('items'))
-        self.assertTrue(FST('async with (a as b): pass', 'exec').body[0]._is_enclosed_in_parents('items'))
-        self.assertTrue(FST('async with ((a) as b): pass', 'exec').body[0]._is_enclosed_in_parents('items'))
-
-        self.assertFalse(FST('match (a):\n case 1: pass', 'exec').body[0]._is_enclosed_in_parents('subject'))
-        self.assertFalse(FST('raise exc from cause', 'exec').body[0]._is_enclosed_in_parents('exc'))
-        self.assertFalse(FST('raise exc from cause', 'exec').body[0]._is_enclosed_in_parents('cause'))
-        self.assertFalse(FST('try: pass\nexcept Exception as exc: pass', 'exec').body[0].handlers[0]._is_enclosed_in_parents('type'))
-        self.assertFalse(FST('try: pass\nexcept (Exception) as exc: pass', 'exec').body[0].handlers[0]._is_enclosed_in_parents('type'))  # because pars belong to `type`
-        self.assertFalse(FST('try: pass\nexcept ((Exception, ValueError)) as exc: pass', 'exec').body[0].handlers[0]._is_enclosed_in_parents('type'))  # same
-        self.assertFalse(FST('assert (a), (b)', 'exec').body[0]._is_enclosed_in_parents('test'))
-        self.assertFalse(FST('assert (a), (b)', 'exec').body[0]._is_enclosed_in_parents('msg'))
-        self.assertFalse(FST('import a as b', 'exec').body[0]._is_enclosed_in_parents('names'))
-        self.assertFalse(FST('from a import b', 'exec').body[0]._is_enclosed_in_parents('names'))
-        self.assertFalse(FST('from a import b as c', 'exec').body[0]._is_enclosed_in_parents('names'))
-        self.assertTrue(FST('from a import (b)', 'exec').body[0]._is_enclosed_in_parents('names'))
-        self.assertTrue(FST('from a import (b as c)', 'exec').body[0]._is_enclosed_in_parents('names'))
-
-        self.assertFalse(FST('(a)', 'exec').body[0]._is_enclosed_in_parents('value'))
-        self.assertFalse(FST('(a) or (b)', 'exec').body[0].value._is_enclosed_in_parents('op'))
-        self.assertFalse(FST('(a) or (b)', 'exec').body[0].value._is_enclosed_in_parents('values'))
-        self.assertFalse(FST('(a) or (b)', 'exec').body[0].value.values[1]._is_enclosed_in_parents())
-        self.assertFalse(FST('(a := b)', 'exec').body[0]._is_enclosed_in_parents('value'))
-        self.assertFalse(FST('(a) + (b)', 'exec').body[0].value._is_enclosed_in_parents('left'))
-        self.assertFalse(FST('(a) + (b)', 'exec').body[0].value._is_enclosed_in_parents('op'))
-        self.assertFalse(FST('(a) + (b)', 'exec').body[0].value._is_enclosed_in_parents('right'))
-        self.assertFalse(FST('-(a)', 'exec').body[0].value._is_enclosed_in_parents('op'))
-        self.assertFalse(FST('-(a)', 'exec').body[0].value._is_enclosed_in_parents('operand'))
-        self.assertFalse(FST('lambda a: (b)', 'exec').body[0].value._is_enclosed_in_parents('args'))
-        self.assertFalse(FST('lambda a: (b)', 'exec').body[0].value._is_enclosed_in_parents('body'))
-        self.assertFalse(FST('(a) if (b) else (c)', 'exec').body[0].value._is_enclosed_in_parents('body'))
-        self.assertFalse(FST('(a) if (b) else (c)', 'exec').body[0].value._is_enclosed_in_parents('test'))
-        self.assertFalse(FST('(a) if (b) else (c)', 'exec').body[0].value._is_enclosed_in_parents('orelse'))
-        self.assertTrue(FST('{k: v}', 'exec').body[0].value._is_enclosed_in_parents('keys'))
-        self.assertTrue(FST('{k: v}', 'exec').body[0].value._is_enclosed_in_parents('values'))
-        self.assertTrue(FST('{a}', 'exec').body[0].value._is_enclosed_in_parents('elts'))
-        self.assertTrue(FST('[i for i in j]', 'exec').body[0].value._is_enclosed_in_parents('elt'))
-        self.assertTrue(FST('[i for i in j]', 'exec').body[0].value._is_enclosed_in_parents('generators'))
-        self.assertTrue(FST('{i for i in j}', 'exec').body[0].value._is_enclosed_in_parents('elt'))
-        self.assertTrue(FST('{i for i in j}', 'exec').body[0].value._is_enclosed_in_parents('generators'))
-        self.assertTrue(FST('{k: v for k, v in j}', 'exec').body[0].value._is_enclosed_in_parents('key'))
-        self.assertTrue(FST('{k: v for k, v in j}', 'exec').body[0].value._is_enclosed_in_parents('value'))
-        self.assertTrue(FST('{k: v for k, v in j}', 'exec').body[0].value._is_enclosed_in_parents('generators'))
-        self.assertTrue(FST('(i for i in j)', 'exec').body[0].value._is_enclosed_in_parents('elt'))
-        self.assertTrue(FST('(i for i in j)', 'exec').body[0].value._is_enclosed_in_parents('generators'))
-        self.assertFalse(FST('await (a)', 'exec').body[0]._is_enclosed_in_parents('value'))
-        self.assertFalse(FST('yield (a)', 'exec').body[0]._is_enclosed_in_parents('value'))
-        self.assertFalse(FST('yield from (a)', 'exec').body[0]._is_enclosed_in_parents('value'))
-        self.assertFalse(FST('(a) < (b)', 'exec').body[0].value._is_enclosed_in_parents('left'))
-        self.assertFalse(FST('(a) < (b)', 'exec').body[0].value._is_enclosed_in_parents('ops'))
-        self.assertFalse(FST('(a) < (b)', 'exec').body[0].value._is_enclosed_in_parents('comparators'))
-        self.assertFalse(FST('call(a, b=c)', 'exec').body[0].value._is_enclosed_in_parents('func'))
-        self.assertTrue(FST('call(a, b=c)', 'exec').body[0].value._is_enclosed_in_parents('args'))
-        self.assertTrue(FST('call(a, b=c)', 'exec').body[0].value._is_enclosed_in_parents('keywords'))
-        self.assertTrue(FST('''f"1{2}"''', 'exec').body[0].value._is_enclosed_in_parents('values'))
-        self.assertTrue(FST('''f"1{2}"''', 'exec').body[0].value.values[1]._is_enclosed_in_parents('value'))
-
-        self.assertFalse(FST('(a).b', 'exec').body[0].value._is_enclosed_in_parents('value'))
-        self.assertFalse(FST('(a).b', 'exec').body[0].value._is_enclosed_in_parents('ctx'))
-        self.assertFalse(FST('(a)[b]', 'exec').body[0].value._is_enclosed_in_parents('value'))
-        self.assertTrue(FST('(a)[b]', 'exec').body[0].value._is_enclosed_in_parents('slice'))
-        self.assertFalse(FST('(a)[b]', 'exec').body[0].value._is_enclosed_in_parents('ctx'))
-        self.assertFalse(FST('*(a)', 'exec').body[0].value._is_enclosed_in_parents('value'))
-        self.assertFalse(FST('*(a)', 'exec').body[0].value._is_enclosed_in_parents('ctx'))
-        self.assertFalse(FST('a', 'exec').body[0].value._is_enclosed_in_parents('ctx'))
-        self.assertFalse(FST('(a)', 'exec').body[0].value._is_enclosed_in_parents('ctx'))
-
-        self.assertTrue(FST('[a]', 'exec').body[0].value._is_enclosed_in_parents('elts'))
-        self.assertFalse(FST('[a]', 'exec').body[0].value._is_enclosed_in_parents('ctx'))
-        self.assertTrue(FST('(a,)', 'exec').body[0].value._is_enclosed_in_parents('elts'))
-        self.assertFalse(FST('(a,)', 'exec').body[0].value._is_enclosed_in_parents('ctx'))
-        self.assertFalse(FST('a,', 'exec').body[0].value._is_enclosed_in_parents('elts'))
-        self.assertFalse(FST('a,', 'exec').body[0].value._is_enclosed_in_parents('ctx'))
-
-        self.assertFalse(FST('a[b:c:d]', 'exec').body[0].value.slice.copy(pars=True)._is_enclosed_in_parents('lower'))
-        self.assertFalse(FST('a[b:c:d]', 'exec').body[0].value.slice.copy(pars=True)._is_enclosed_in_parents('upper'))
-        self.assertFalse(FST('a[b:c:d]', 'exec').body[0].value.slice.copy(pars=True)._is_enclosed_in_parents('step'))
-
-        self.assertFalse(FST('[i for (i) in (j) if (i)]', 'exec').body[0].value.generators[0].copy(pars=True)._is_enclosed_in_parents('target'))
-        self.assertFalse(FST('[i for (i) in (j) if (i)]', 'exec').body[0].value.generators[0].copy(pars=True)._is_enclosed_in_parents('iter'))
-        self.assertFalse(FST('[i for (i) in (j) if (i)]', 'exec').body[0].value.generators[0].copy(pars=True)._is_enclosed_in_parents('ifs'))
-
-        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True)._is_enclosed_in_parents('posonlyargs'))
-        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True)._is_enclosed_in_parents('args'))
-        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True)._is_enclosed_in_parents('defaults'))
-        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True)._is_enclosed_in_parents('vararg'))
-        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True)._is_enclosed_in_parents('kwonlyargs'))
-        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True)._is_enclosed_in_parents('kw_defaults'))
-        self.assertFalse(FST('def f(a, /, b=1, *c, d=2, **e): pass', 'exec').body[0].args.copy(pars=True)._is_enclosed_in_parents('kwarg'))
-        self.assertFalse(FST('def f(a: int): pass', 'exec').body[0].args.args[0].copy(pars=True)._is_enclosed_in_parents('annotation'))
-
-        self.assertFalse(FST('call(k=v)', 'exec').body[0].value.keywords[0].copy(pars=True)._is_enclosed_in_parents('value'))
-
-        self.assertFalse(FST('with ((a) as (b)): pass', 'exec').body[0].items[0].copy(pars=True)._is_enclosed_in_parents('context_expr'))
-        self.assertFalse(FST('with ((a) as (b)): pass', 'exec').body[0].items[0].copy(pars=True)._is_enclosed_in_parents('optional_vars'))
-
-        self.assertFalse(FST('match a:\n case (1 as i) if (i): pass', 'exec').body[0].cases[0].copy(pars=True)._is_enclosed_in_parents('pattern'))
-        self.assertFalse(FST('match a:\n case (1 as i) if (i): pass', 'exec').body[0].cases[0].copy(pars=True)._is_enclosed_in_parents('guard'))
-        self.assertFalse(FST('match a:\n case 1: pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('value'))
-        self.assertTrue(FST('match a:\n case (1): pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('value'))  # inconsistent case, MatchValue owns the pars
-        self.assertFalse(FST('match a:\n case 1, 2: pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('patterns'))
-        self.assertTrue(FST('match a:\n case (1, 2): pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('patterns'))
-        self.assertTrue(FST('match a:\n case [1, 2]: pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('patterns'))
-        self.assertTrue(FST('match a:\n case {1: a}: pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('keys'))
-        self.assertTrue(FST('match a:\n case {1: a}: pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('patterns'))
-        self.assertFalse(FST('match a:\n case c(a, b=c): pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('cls'))
-        self.assertTrue(FST('match a:\n case c(a, b=c): pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('patterns'))
-        self.assertTrue(FST('match a:\n case c(a, b=c): pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('kwd_patterns'))
-        self.assertFalse(FST('match a:\n case 1 as a: pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('pattern'))
-        self.assertTrue(FST('match a:\n case (1 as a): pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('pattern'))
-        self.assertFalse(FST('match a:\n case 1 | 2: pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('patterns'))
-        self.assertTrue(FST('match a:\n case (1 | 2): pass', 'exec').body[0].cases[0].pattern.copy(pars=True)._is_enclosed_in_parents('patterns'))
-
-        if PYGE12:
-            self.assertTrue(FST('def f[T]() -> int: pass', 'exec').body[0]._is_enclosed_in_parents('type_params'))
-            self.assertTrue(FST('async def f[T]() -> int: pass', 'exec').body[0]._is_enclosed_in_parents('type_params'))
-            self.assertTrue(FST('class c[T]: pass', 'exec').body[0]._is_enclosed_in_parents('type_params'))
-
-            self.assertFalse(FST('type t[T] = v', 'exec').body[0]._is_enclosed_in_parents('name'))
-            self.assertTrue(FST('type t[T] = v', 'exec').body[0]._is_enclosed_in_parents('type_params'))
-            self.assertFalse(FST('type t[T] = v', 'exec').body[0]._is_enclosed_in_parents('value'))
-            self.assertFalse(FST('try: pass\nexcept* Exception as exc: pass', 'exec').body[0].handlers[0]._is_enclosed_in_parents('type'))
-            self.assertFalse(FST('try: pass\nexcept* (Exception) as exc: pass', 'exec').body[0].handlers[0]._is_enclosed_in_parents('type'))
-            self.assertFalse(FST('try: pass\nexcept* ((Exception, ValueError)) as exc: pass', 'exec').body[0].handlers[0]._is_enclosed_in_parents('type'))
-            self.assertFalse(FST('type t[T] = v', 'exec').body[0].type_params[0].copy()._is_enclosed_in_parents())
-            self.assertFalse(FST('type t[*T] = v', 'exec').body[0].type_params[0].copy()._is_enclosed_in_parents())
-            self.assertFalse(FST('type t[**T] = v', 'exec').body[0].type_params[0].copy()._is_enclosed_in_parents())
-
-        if PYGE14:
-            self.assertTrue(FST('t"1{2}"', 'exec').body[0].value._is_enclosed_in_parents('values'))
-            self.assertTrue(FST('t"1{2}"', 'exec').body[0].value.values[1]._is_enclosed_in_parents('value'))
-
-    def test__is_parenthesized_tuple(self):
-        self.assertTrue(parse('(1, 2)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('(1,)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('((1),)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('((1,))').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('((1,),)').body[0].value.f._is_parenthesized_tuple())
-
-        self.assertTrue(parse('((a), b)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('(a, (b))').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('((a), (b))').body[0].value.f._is_parenthesized_tuple())
-
-        self.assertTrue(parse('(\n1,2)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('(1\n,2)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('(1,\n2)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('(1,2\n)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('(1\n,)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('(1,\n)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('(\n(1),)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('((\n1),)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('((1\n),)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('((1)\n,)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('((1),\n)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('(\n(1,))').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('((\n1,))').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('((1\n,))').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('((1,\n))').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('((1,)\n)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('(\n(1,),)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('((\n1,),)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('((1\n,),)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('((1,\n),)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('((1,)\n,)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('((1,),\n)').body[0].value.f._is_parenthesized_tuple())
-
-        self.assertTrue(parse('((a), b)').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('(a, (b))').body[0].value.f._is_parenthesized_tuple())
-        self.assertTrue(parse('((a), (b))').body[0].value.f._is_parenthesized_tuple())
-
-        self.assertFalse(parse('(1,),').body[0].value.f._is_parenthesized_tuple())
-        self.assertFalse(parse('(1),').body[0].value.f._is_parenthesized_tuple())
-        self.assertFalse(parse('((1)),').body[0].value.f._is_parenthesized_tuple())
-        self.assertFalse(parse('((1,),),').body[0].value.f._is_parenthesized_tuple())
-
-        self.assertFalse(parse('(a), b').body[0].value.f._is_parenthesized_tuple())
-        self.assertFalse(parse('((a)), b').body[0].value.f._is_parenthesized_tuple())
-        self.assertFalse(parse('a, (b)').body[0].value.f._is_parenthesized_tuple())
-        self.assertFalse(parse('a, ((b))').body[0].value.f._is_parenthesized_tuple())
-        self.assertFalse(parse('(a), (b)').body[0].value.f._is_parenthesized_tuple())
-        self.assertFalse(parse('((a)), ((b))').body[0].value.f._is_parenthesized_tuple())
-
-        self.assertIsNone(parse('[(a), (b)]').body[0].value.f._is_parenthesized_tuple())
-
-    def test__get_indent(self):
-        ast = parse('i = 1; j = 2')
-
-        self.assertEqual('', ast.body[0].f._get_indent())
-        self.assertEqual('', ast.body[1].f._get_indent())
-
-        ast = parse('def f(): \\\n i = 1')
-
-        self.assertEqual('', ast.body[0].f._get_indent())
-        self.assertEqual(ast.f.root.indent, ast.body[0].body[0].f._get_indent())
-
-        ast = parse('class cls: i = 1')
-
-        self.assertEqual('', ast.body[0].f._get_indent())
-        self.assertEqual(ast.f.root.indent, ast.body[0].body[0].f._get_indent())
-
-        ast = parse('class cls: i = 1; \\\n    j = 2')
-
-        self.assertEqual(ast.f.root.indent, ast.body[0].body[0].f._get_indent())
-        self.assertEqual(ast.f.root.indent, ast.body[0].body[1].f._get_indent())
-
-        ast = parse('class cls:\n  i = 1; \\\n    j = 2')
-
-        self.assertEqual('  ', ast.body[0].body[0].f._get_indent())
-        self.assertEqual('  ', ast.body[0].body[1].f._get_indent())
-
-        ast = parse('class cls:\n   def f(): i = 1')
-
-        self.assertEqual('   ', ast.body[0].body[0].f._get_indent())
-        self.assertEqual('   ' + ast.f.root.indent, ast.body[0].body[0].body[0].f._get_indent())
-
-        self.assertEqual('   ', parse('def f():\n   1').body[0].body[0].f._get_indent())
-        self.assertEqual('    ', parse('def f(): 1').body[0].body[0].f._get_indent())
-        self.assertEqual('    ', parse('def f(): \\\n  1').body[0].body[0].f._get_indent())
-        self.assertEqual('  ', parse('def f(): # \\\n  1').body[0].body[0].f._get_indent())
-
-        self.assertEqual('    ', parse('class cls:\n def f():\n    1').body[0].body[0].body[0].f._get_indent())
-        self.assertEqual('  ', parse('class cls:\n def f(): 1').body[0].body[0].body[0].f._get_indent())  # indentation inferred otherwise would be '     '
-        self.assertEqual('  ', parse('class cls:\n def f(): \\\n   1').body[0].body[0].body[0].f._get_indent())  # indentation inferred otherwise would be '     '
-        self.assertEqual('   ', parse('class cls:\n def f(): # \\\n   1').body[0].body[0].body[0].f._get_indent())
-
-        self.assertEqual('  ', parse('if 1:\n  2\nelse:\n   3').body[0].body[0].f._get_indent())
-        self.assertEqual('   ', parse('if 1: 2\nelse:\n   3').body[0].body[0].f._get_indent())  # candidate for sibling indentation, indentation inferred otherwise would be '    '
-        self.assertEqual('   ', parse('if 1: \\\n 2\nelse:\n   3').body[0].body[0].f._get_indent())  # candidate for sibling indentation, indentation inferred otherwise would be '    '
-        self.assertEqual('  ', parse('if 1: # \\\n  2\nelse:\n   3').body[0].body[0].f._get_indent())
-
-        self.assertEqual('   ', parse('if 1:\n  2\nelse:\n   3').body[0].orelse[0].f._get_indent())
-        self.assertEqual('  ', parse('if 1:\n  2\nelse: 3').body[0].orelse[0].f._get_indent())  # candidate for sibling indentation, indentation inferred otherwise would be '    '
-        self.assertEqual('  ', parse('if 1:\n  2\nelse: \\\n 3').body[0].orelse[0].f._get_indent())  # candidate for sibling indentation, indentation inferred otherwise would be '    '
-        self.assertEqual('   ', parse('if 1:\n  2\nelse: # \\\n   3').body[0].orelse[0].f._get_indent())
-
-        self.assertEqual('   ', parse('def f():\n   1; 2').body[0].body[1].f._get_indent())
-        self.assertEqual('    ', parse('def f(): 1; 2').body[0].body[1].f._get_indent())
-        self.assertEqual('    ', parse('def f(): \\\n  1; 2').body[0].body[1].f._get_indent())
-        self.assertEqual('  ', parse('def f(): # \\\n  1; 2').body[0].body[1].f._get_indent())
-
-        self.assertEqual('  ', parse('try:\n\n  \\\ni\n  j\nexcept: pass').body[0].body[1].f._get_indent())
-        self.assertEqual('  ', parse('try:\n\n  \\\ni\n  j\nexcept: pass').body[0].body[0].f._get_indent())
-        self.assertEqual('  ', parse('try:\n  \\\ni\n  j\nexcept: pass').body[0].body[1].f._get_indent())
-        self.assertEqual('  ', parse('try:\n  \\\ni\n  j\nexcept: pass').body[0].body[0].f._get_indent())
-
-        self.assertEqual('   ', parse('def f():\n   i; j').body[0].body[0].f._get_indent())
-        self.assertEqual('   ', parse('def f():\n   i; j').body[0].body[1].f._get_indent())
-        self.assertEqual('    ', parse('def f(): i; j').body[0].body[0].f._get_indent())
-        self.assertEqual('    ', parse('def f(): i; j').body[0].body[1].f._get_indent())
-
-        self.assertEqual('', parse('\\\ni').body[0].f._get_indent())
-        self.assertEqual('    ', parse('try: i\nexcept: pass').body[0].body[0].f._get_indent())
-
-        self.assertEqual('', parse('if 1: i\nelif 2: j').body[0].f._get_indent())
-        self.assertEqual('    ', parse('if 1: i\nelif 2: j').body[0].body[0].f._get_indent())
-        self.assertEqual('', parse('if 1: i\nelif 2: j').body[0].orelse[0].f._get_indent())
-        self.assertEqual('    ', parse('if 1: i\nelif 2: j').body[0].orelse[0].body[0].f._get_indent())
-        self.assertEqual('    ', parse('if 1: i\nelif 2: j\nelse: k').body[0].orelse[0].orelse[0].f._get_indent())
-        self.assertEqual('    ', parse('if 1: i\nelif 2: j\nelif 3: k').body[0].orelse[0].orelse[0].body[0].f._get_indent())
-
-        # self.assertEqual('  ', parse('if 1: i\nelse:\n  j').body[0].body[0].f._get_indent())  # candidate for sibling indentation, nope, not doing this
-
-        self.assertEqual('  ', parse('if 1:\n\\\n  \\\n i').body[0].body[0].f._get_indent())
-        self.assertEqual('  ', parse('if 1:\n  \\\n\\\n i').body[0].body[0].f._get_indent())
-        self.assertEqual('  ', parse('if 1:\n  \\\n   \\\n\\\n i').body[0].body[0].f._get_indent())
-        self.assertEqual('   ', parse('if 1:\n   \\\n  \\\n\\\n i').body[0].body[0].f._get_indent())
-        self.assertEqual('    ', parse('if 1: \\\n\\\n  \\\n   \\\n\\\n i').body[0].body[0].f._get_indent())
-        self.assertEqual('  ', parse('if 1:\n\\\n  \\\n   \\\n\\\n i').body[0].body[0].f._get_indent())
-        self.assertEqual('     ', parse('if 1:\n\\\n\\\n     \\\n\\\n\\\n  \\\n\\\n   \\\n\\\n i').body[0].body[0].f._get_indent())
-
-        self.assertEqual('          ', parse('if 2:\n     if 1:\\\n\\\n\\\n  \\\n\\\n\\\n  \\\n\\\n   \\\n\\\n i').body[0].body[0].body[0].f._get_indent())  # indentation inferred otherwise would be '         '
-        self.assertEqual('      ', parse('if 2:\n     if 1:\n\\\n      \\\n  \\\n\\\n\\\n  \\\n\\\n   \\\n\\\n i').body[0].body[0].body[0].f._get_indent())
-
     def test_dedent_multiline_strings(self):
         f = parse('''
 class cls:
@@ -2968,581 +5070,6 @@ def func():
         self.assertEqual(['j = 2'], ast.body[0].body[0].orelse[0].f._get_src(*ast.body[0].body[0].orelse[0].f.loc, True))
 
         self.assertEqual(['True:', '  i'], ast.f.root._get_src(1, 4, 2, 3, True))
-
-    def test_code_as_simple(self):
-        # stmts
-
-        f = FST(r'''
-if 1:
-    pass
-
-call(a)
-'''.strip(), 'exec')
-
-        h = code_as_stmts(f.copy())
-        self.assertEqual(h.src, f.src)
-        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
-
-        h = code_as_stmts(f.src)
-        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
-
-        h = code_as_stmts(f.a)
-        self.assertTrue(compare_asts(h.a, f.a, locs=False, raise_=True))
-
-        f0 = f.body[0].copy()
-        h = code_as_stmts(f0.a)
-        self.assertEqual(ast_unparse(f0.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, f0.a, locs=False, raise_=True))
-
-        f1 = f.body[1].copy()
-        h = code_as_stmts(f1.a)
-        self.assertEqual(ast_unparse(f1.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, f1.a, locs=False, raise_=True))
-
-        g = FST('from a import b', 'exec').body[0].names[0]
-        self.assertRaises(ValueError, code_as_stmts, f.body[0].test)
-        self.assertRaises(NodeError, code_as_stmts, g.copy())
-        self.assertRaises(NodeError, code_as_stmts, g.a)
-        self.assertRaises(SyntaxError, code_as_stmts, 'except Exception: pass')
-
-        f = FST('f(a)', 'exec')
-        h = code_as_stmts(f.body[0].value.copy())
-        self.assertEqual(h.src, f.src)
-        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
-
-        h = code_as_stmts(f.src)
-        self.assertEqual(h.src, f.src)
-        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
-
-        h = code_as_stmts(f.a)
-        self.assertEqual(h.src, f.src)
-        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
-
-        # expr
-
-        f = FST('a if b else {"c": f()}', 'eval')
-
-        h = code_as_expr(f.copy())
-        self.assertEqual(h.src, f.src)
-        self.assertTrue(compare_asts(h.a, f.body.a, locs=True, raise_=True))
-
-        f = FST('a if b else {"c": f()}', 'single')
-
-        h = code_as_expr(f.copy())
-        self.assertEqual(h.src, f.src)
-        self.assertTrue(compare_asts(h.a, f.body[0].value.a, locs=True, raise_=True))
-
-        f = FST('a if b else {"c": f()}', 'exec')
-
-        h = code_as_expr(f.copy())
-        self.assertEqual(h.src, f.src)
-        self.assertTrue(compare_asts(h.a, f.body[0].value.a, locs=True, raise_=True))
-
-        h = code_as_expr(f.body[0].copy())
-        self.assertEqual(h.src, f.src)
-        self.assertTrue(compare_asts(h.a, f.body[0].value.a, locs=True, raise_=True))
-
-        h = code_as_expr(f.body[0].value.copy())
-        self.assertEqual(h.src, f.src)
-        self.assertTrue(compare_asts(h.a, f.body[0].value.a, locs=True, raise_=True))
-
-        h = code_as_expr(f.src)
-        self.assertTrue(compare_asts(h.a, f.body[0].value.a, locs=True, raise_=True))
-
-        g = f.body[0].value.copy()
-        h = code_as_expr(g.a)
-        self.assertEqual(ast_unparse(g.a), h.src)
-        self.assertTrue(compare_asts(h.a, g.a, locs=False, raise_=True))
-
-        self.assertRaises(ValueError, code_as_expr, FST('i = 1', 'exec').body[0])
-        self.assertRaises(NodeError, code_as_expr, FST('i = 1', 'exec').body[0].copy())
-        self.assertRaises(NodeError, code_as_expr, f.body[0].a)
-        self.assertRaises(SyntaxError, code_as_expr, 'pass')
-
-        # ExceptHandlers
-
-        f = FST(r'''
-try: pass
-except (ValueError, RuntimeError) as exc:
-    def f():
-        """doc
-  string"""
-
-        pass
-
-    i = f"""a
-  {test}
-        b"""
-
-except Exception:
-    ("a"
-"b")
-    k = \
-("c"
-    "d")
-'''.strip(), 'exec')
-
-        g = f.body[0].get_slice(field='handlers')
-
-        h = code_as_ExceptHandlers(g.copy())
-        self.assertEqual(h.src, g.src)
-        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
-
-        h = code_as_ExceptHandlers(g.src)
-        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
-
-        g0 = g.body[0].copy()
-        h = code_as_ExceptHandlers(g0.a)
-        self.assertEqual(ast_unparse(g0.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
-
-        g1 = g.body[1].copy()
-        h = code_as_ExceptHandlers(g1.a)
-        self.assertEqual(ast_unparse(g1.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
-
-        self.assertRaises(ValueError, code_as_ExceptHandlers, f.body[0].handlers[0])
-
-        self.assertEqual(0, len(code_as_ExceptHandlers('').body))  # make sure we can parse zero ExceptHandlers
-
-        # match_cases
-
-        f = FST(r'''
-match a:
-    case 1:
-        def f():
-            """doc
-  string"""
-
-            pass
-
-        i = f"""a
-  {test}
-        b"""
-
-    case 2:
-        ("a"
-"b")
-        k = \
-("c"
-    "d")
-'''.strip(), 'exec')
-
-        g = f.body[0].get_slice(field='cases')
-
-        h = code_as_match_cases(g.copy())
-        self.assertEqual(h.src, g.src)
-        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
-
-        h = code_as_match_cases(g.src)
-        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
-
-        g0 = g.body[0].copy()
-        h = code_as_match_cases(g0.a)
-        self.assertEqual(ast_unparse(g0.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
-
-        g1 = g.body[1].copy()
-        h = code_as_match_cases(g1.a)
-        self.assertEqual(ast_unparse(g1.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
-
-        self.assertRaises(ValueError, code_as_match_cases, f.body[0].cases[0])
-
-        self.assertEqual(0, len(code_as_match_cases('').body))  # make sure we can parse zero match_cases
-
-        # boolop
-
-        f = FST(And(), ['and'])
-
-        h = code_as_boolop(f.copy())
-        self.assertEqual(h.src, f.src)
-        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
-
-        h = code_as_boolop(f.a)
-        self.assertEqual(h.src, f.src)
-        self.assertTrue(compare_asts(h.a, f.a, locs=False, raise_=True))
-
-        h = code_as_boolop(f.src)
-        self.assertEqual(h.src, f.src)
-        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
-
-        # rest of AST ones
-
-        CODE_ASES = [
-            (code_as_expr_slice, 'body[0].value.slice', 'a[1]'),
-            (code_as_expr_slice, 'body[0].value.slice', 'a[b:c:d]'),
-            (code_as_expr_slice, 'body[0].value.slice', 'a[b:c:d, e:f]'),
-            (code_as_binop, 'body[0].value.op', 'a + b'),
-            (code_as_augop, 'body[0].op', 'a += b'),
-            (code_as_unaryop, 'body[0].value.op', '~a'),
-            (code_as_cmpop, 'body[0].value.ops[0]', 'a < b'),
-            (code_as_comprehension, 'body[0].value.generators[0]', '[i for i in j if i < 0]'),
-            (code_as_arguments, 'body[0].args', 'def f(a: str, /, b: int = 1, *c: tuple[bool], d: float = 2.0, **e: dict): pass'),
-            (code_as_arguments_lambda, 'body[0].value.args', 'lambda a, /, b=1, *c, d=2, **e: None'),
-            (code_as_arg, 'body[0].args.args[0]', 'def f(a: str = "test"): pass'),
-            (code_as_keyword, 'body[0].keywords[0]', 'class cls(meta=something): pass'),
-            (code_as_keyword, 'body[0].value.keywords[0]', 'call(key = word)'),
-            (code_as_alias, 'body[0].names[0]', 'from a import b'),
-            (code_as_alias, 'body[0].names[0]', 'from a import *'),
-            (code_as_alias, 'body[0].names[0]', 'import a.b'),
-            (code_as_Import_name, 'body[0].names[0]', 'import a'),
-            (code_as_Import_name, 'body[0].names[0]', 'import a.b'),
-            (code_as_ImportFrom_name, 'body[0].names[0]', 'from a import b'),
-            (code_as_ImportFrom_name, 'body[0].names[0]', 'from a import *'),
-            (code_as_withitem, 'body[0].items[0]', 'with a: pass'),
-            (code_as_withitem, 'body[0].items[0]', 'with (a): pass'),
-            (code_as_withitem, 'body[0].items[0]', 'with a as b: pass'),
-            (code_as_withitem, 'body[0].items[0]', 'with (a as b): pass'),
-            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case 42: pass'),
-            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case None: pass'),
-            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case [_, *_]: pass'),
-            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case {"key": _}: pass'),
-            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case SomeClass(attr=val): pass'),
-            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case as_var: pass'),
-            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case 1 | 2 | 3: pass'),
-            (code_as_pattern, 'body[0].cases[0].pattern', 'match x:\n case _: pass'),
-        ]
-
-        if PYGE12:
-            CODE_ASES.extend([
-                (code_as_type_param, 'body[0].type_params[0]', 'type t[T: int] = ...'),
-                (code_as_type_param, 'body[0].type_params[0]', 'class c[T: int]: pass'),
-                (code_as_type_param, 'body[0].type_params[0]', 'def f[T: int](): pass'),
-            ])
-
-        for code_as, attr, src in CODE_ASES:
-            m = FST(src, 'exec')
-            f = eval(f'm.{attr}', {'m': m}).copy()
-
-            g = code_as(f.copy())
-            self.assertEqual(g.src, f.src)
-            self.assertTrue(compare_asts(g.a, f.a, locs=True, raise_=True))
-
-            g = code_as(f.copy().a)
-            self.assertEqual(ast_unparse(g.a), ast_unparse(f.a))
-            self.assertTrue(compare_asts(g.a, f.a, locs=False, raise_=True))
-
-            self.assertRaises(ValueError, code_as, eval(f'm.{attr}', {'m': m}))
-
-        # identifiers
-
-        f = FST('name', 'exec').body[0].value.copy()
-
-        self.assertEqual('name', code_as_identifier(f.copy()))
-        self.assertEqual('name', code_as_identifier(f.a))
-        self.assertEqual('name', code_as_identifier(f.src))
-
-        self.assertEqual('name', code_as_identifier_alias(f.copy()))
-        self.assertEqual('name', code_as_identifier_alias(f.a))
-        self.assertEqual('name', code_as_identifier_alias(f.src))
-
-        f = FST('name.attr', 'exec').body[0].value.copy()
-
-        self.assertEqual('name.attr', code_as_identifier_dotted(f.copy()))
-        self.assertEqual('name.attr', code_as_identifier_dotted(f.a))
-        self.assertEqual('name.attr', code_as_identifier_dotted(f.src))
-
-        self.assertEqual('name.attr', code_as_identifier_alias(f.copy()))
-        self.assertEqual('name.attr', code_as_identifier_alias(f.a))
-        self.assertEqual('name.attr', code_as_identifier_alias(f.src))
-
-        f = FST('from a import *', 'exec').body[0].names[0].copy()
-
-        self.assertEqual('*', code_as_identifier_star(f.copy()))
-        self.assertEqual('*', code_as_identifier_star(f.a))
-        self.assertEqual('*', code_as_identifier_star(f.src))
-
-        self.assertEqual('*', code_as_identifier_alias(f.copy()))
-        self.assertEqual('*', code_as_identifier_alias(f.a))
-        self.assertEqual('*', code_as_identifier_alias(f.src))
-
-    def test_code_as_stmts(self):
-        f = FST(r'''
-if 1:
-    pass
-
-call(a)
-'''.strip(), 'exec')
-
-        h = code_as_stmts(f.copy())
-        self.assertEqual(h.src, f.src)
-        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
-
-        h = code_as_stmts(f.src)
-        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
-
-        h = code_as_stmts(f.a)
-        self.assertTrue(compare_asts(h.a, f.a, locs=False, raise_=True))
-
-        f0 = f.body[0].copy()
-        h = code_as_stmts(f0.a)
-        self.assertEqual(ast_unparse(f0.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, f0.a, locs=False, raise_=True))
-
-        f1 = f.body[1].copy()
-        h = code_as_stmts(f1.a)
-        self.assertEqual(ast_unparse(f1.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, f1.a, locs=False, raise_=True))
-
-        g = FST('from a import b', 'exec').body[0].names[0]
-        self.assertRaises(ValueError, code_as_stmts, f.body[0].test)
-        self.assertRaises(NodeError, code_as_stmts, g.copy())
-        self.assertRaises(NodeError, code_as_stmts, g.a)
-
-        f = FST('f(a)', 'exec')
-        h = code_as_stmts(f.body[0].value.copy())
-        self.assertEqual(h.src, f.src)
-        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
-
-        h = code_as_stmts(f.src)
-        self.assertEqual(h.src, f.src)
-        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
-
-        h = code_as_stmts(f.a)
-        self.assertEqual(h.src, f.src)
-        self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
-
-    def test_code_as_ExceptHandlers(self):
-        f = FST(r'''
-try: pass
-except (ValueError, RuntimeError) as exc:
-    def f():
-        """doc
-  string"""
-
-        pass
-
-    i = f"""a
-  {test}
-        b"""
-
-except Exception:
-    ("a"
-"b")
-    k = \
-("c"
-    "d")
-'''.strip(), 'exec')
-
-        g = f.body[0].get_slice(field='handlers')
-
-        h = code_as_ExceptHandlers(g.copy())
-        self.assertEqual(h.src, g.src)
-        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
-
-        h = code_as_ExceptHandlers(g.src)
-        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
-
-        g0 = g.body[0].copy()
-        h = code_as_ExceptHandlers(g0.a)
-        self.assertEqual(ast_unparse(g0.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
-
-        g1 = g.body[1].copy()
-        h = code_as_ExceptHandlers(g1.a)
-        self.assertEqual(ast_unparse(g1.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
-
-        self.assertRaises(ValueError, code_as_ExceptHandlers, f.body[0].handlers[0])
-
-    def test_code_as_match_cases(self):
-        f = FST(r'''
-match a:
-    case 1:
-        def f():
-            """doc
-  string"""
-
-            pass
-
-        i = f"""a
-  {test}
-        b"""
-
-    case 2:
-        ("a"
-"b")
-        k = \
-("c"
-    "d")
-'''.strip(), 'exec')
-
-        g = f.body[0].get_slice(field='cases')
-
-        h = code_as_match_cases(g.copy())
-        self.assertEqual(h.src, g.src)
-        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
-
-        h = code_as_match_cases(g.src)
-        self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
-
-        g0 = g.body[0].copy()
-        h = code_as_match_cases(g0.a)
-        self.assertEqual(ast_unparse(g0.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
-
-        g1 = g.body[1].copy()
-        h = code_as_match_cases(g1.a)
-        self.assertEqual(ast_unparse(g1.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
-
-        self.assertRaises(ValueError, code_as_match_cases, f.body[0].cases[0])
-
-        # special 'case' non-keyword
-
-        self.assertIsInstance(code_as_match_cases('case 1: pass').body[0].a, match_case)
-        self.assertRaises(SyntaxError, code_as_match_cases, 'case = 1')
-        self.assertRaises(SyntaxError, code_as_match_cases, 'case.b = 1')
-
-    def test_code_as_sanitize(self):
-        CODE_ASES = [
-            (code_as_expr, 'f(a)'),
-            (code_as_expr_slice, 'b:c:d'),
-            (code_as_expr_slice, 'b:c:d, e:f'),
-            (code_as_binop, '+'),
-            (code_as_augop, '+='),
-            (code_as_unaryop, '~'),
-            (code_as_cmpop, '<'),
-            (code_as_comprehension, 'for i in j if i < 0'),
-            (code_as_arguments, 'a: str, /, b: int = 1, *c: tuple[bool], d: float = 2.0, **e: dict'),
-            (code_as_arguments_lambda, 'a, /, b=1, *c, d=2, **e'),
-            (code_as_arg, 'a: str'),
-            (code_as_keyword, 'meta=something'),
-            (code_as_keyword, 'key = word'),
-            (code_as_Import_name, 'a'),
-            (code_as_Import_name, 'a.b'),
-            (code_as_ImportFrom_name, 'b'),
-            (code_as_ImportFrom_name, '*'),
-            (code_as_withitem, 'a'),
-            (code_as_withitem, 'a as b'),
-            (code_as_pattern, '42'),
-            (code_as_pattern, 'None'),
-            (code_as_pattern, '[_, *_]'),
-            (code_as_pattern, '{"key": _}'),
-            (code_as_pattern, 'SomeClass(attr=val)'),
-            (code_as_pattern, 'as_var'),
-            (code_as_pattern, '1 | 2 | 3'),
-            (code_as_pattern, '_'),
-        ]
-
-        if PYGE12:
-            CODE_ASES.extend([
-                (code_as_type_param, 'T: int'),
-            ])
-
-        for code_as, src in CODE_ASES:
-            self.assertEqual(src, code_as(src).src)
-            self.assertEqual(src, code_as(f'{src}  ').src)
-
-            if code_as in (code_as_expr, code_as_pattern):  # parenthesizable things so lets abuse
-                srcp = f'(\n# pre\n{src} # post\n# post2\n)'
-
-                self.assertEqual(srcp, code_as(srcp).src)
-
-                if code_as is code_as_expr:
-                    self.assertEqual(src, code_as(srcp[1:-1]).src)
-
-    def test_code_as_all_from_ast(self):
-        for mode, func, res, src in PARSE_TESTS:
-            if issubclass(res, Exception):
-                continue
-
-            ast = None
-
-            try:
-                ast = px.parse(src, mode)
-
-                if px.get_special_parse_mode(ast):  # this tells us if it is a SPECIAL SLICE, which are not handled as input to `code_as_all()`  TODO: remove this check once ExceptHandler and match_case special slices moved from Module to their own _slice_? AST classes
-                    continue
-
-                astc = copy_ast(ast)
-                fst  = code_as_all(ast)
-
-                for a in walk(ast):
-                    self.assertIs(False, getattr(a, 'f', False))
-
-                self.assertIsNot(fst.a, ast)
-
-                compare_asts(ast, fst.a, locs=False, raise_=True)
-                compare_asts(ast, astc, locs=True, raise_=True)
-
-            except Exception:
-                print()
-                print(f'{mode = }')
-                print(f'{func = }')
-                print(f'{res = }')
-                print(f'{src = !r}')
-                print(ast)
-
-                raise
-
-    def test_code_as_from_parse_data(self):
-        for mode, func, res, src in PARSE_TESTS:
-            if issubclass(res, Exception):
-                continue
-
-            if not isinstance(mode, str):
-                continue
-
-            try:
-                for name in dict.fromkeys((mode, func.__name__[6:])):  # func.__name__[6:] means 'parse_something' -> 'something'
-                    test = None
-
-                    if not (code_as := getattr(code, f'code_as_{name}', False)):
-                        continue
-
-                    test    = 'parse'
-                    ref_ast = px.parse(src, mode)
-
-                    test = 'src'
-
-                    try:
-                        fst = code_as(src, sanitize=False)
-                    except TypeError:
-                        fst = code_as(src)
-
-                    compare_asts(ref_ast, fst.a, locs=True, raise_=True)
-
-                    if fst._get_parse_mode() not in ('ExceptHandlers', 'match_cases'):  # this tells us if it is a SPECIAL SLICE, which can not be unparsed  TODO: remove this check once ExceptHandler and match_case special slices moved from Module to their own _slice_? AST classes
-                        test = 'ast'
-
-                        try:
-                            ast_fst = code_as(fst.a, sanitize=False)
-                        except TypeError:
-                            ast_fst = code_as(fst.a)
-
-                        compare_asts(ref_ast, ast_fst.a, locs=False, raise_=True)
-
-                    test    = 'fst'
-                    fst_src = fst.src
-
-                    try:
-                        fst_fst = code_as(fst, sanitize=False)
-                    except TypeError:
-                        fst_fst = code_as(fst)
-
-                    compare_asts(ref_ast, fst_fst.a, locs=False, raise_=True)
-
-                    self.assertEqual(fst_fst.src, fst_src)
-
-            except Exception:
-                print()
-                print(f'{test = }')
-                print(f'{code_as = }')
-                print(f'{mode = }')
-                print(f'{func = }')
-                print(f'{res = }')
-                print(f'{src = !r}')
-
-                raise
-
-    def test_code_as_special(self):
-        # aliases slice multiple stars
-
-        self.assertRaises(ParseError, code_as_ImportFrom_names, FST('*', 'aliases').names.append('*').fst)
-        self.assertRaises(ParseError, code_as_ImportFrom_names, FST('a', 'aliases').names.append('*').fst)
-        self.assertEqual('*', code_as_ImportFrom_names(FST('*', 'aliases')).src)
 
     def test_par(self):
         f = parse('1,').body[0].value.f.copy()
