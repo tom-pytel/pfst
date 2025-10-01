@@ -4,6 +4,7 @@ import os
 import threading
 import unittest
 from ast import parse as ast_parse, unparse as ast_unparse
+from random import randint, seed
 
 from fst import *
 from fst.asttypes import _slice_Assign_targets, _slice_aliases, _slice_withitems, _slice_type_params
@@ -43,7 +44,7 @@ from fst.code import (
 
 from fst import parsex as px, code
 
-from data.data_other import PARS_DATA, PRECEDENCE_DATA
+from data.data_other import PARS_DATA, PUT_SRC_REPARSE_DATA, PRECEDENCE_DATA
 
 
 DIR_NAME = os.path.dirname(__file__)
@@ -54,9 +55,6 @@ PYFNMS = sum((
     start=[]
 )
 
-# ASTEXPR = lambda src: ast_parse(src).body[0].value
-# ASTSTMT = lambda src: ast_parse(src).body[0]
-# ASTEXPR = lambda src: parse(src).body[0].value.f.copy(pars=False)
 ASTSTMT = lambda src: parse(src).body[0].f.copy()
 ASTEXPR = lambda src: parse(src).f
 
@@ -740,6 +738,51 @@ def regen_pars_data():
 
     start = lines.index('PARS_DATA = [')
     stop  = lines.index(']  # END OF PARS_DATA')
+
+    lines[start + 1 : stop] = newlines
+
+    with open(fnm, 'w') as f:
+        lines = f.write('\n'.join(lines))
+
+
+def regen_put_src():
+    newlines = []
+
+    for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_SRC_REPARSE_DATA):
+        t = parse(dst)
+        f = (eval(f't.{attr}', {'t': t}) if attr else t).f
+
+        try:
+            eln, ecol = f.put_src(None if src == '**DEL**' else src, ln, col, end_ln, end_col, **options) or f.root
+            g = f.root.find_loc(ln, col, eln, ecol)
+
+            tdst  = f.root.src
+            tdump = f.root.dump(out=list)
+
+            f.root.verify(raise_=True)
+
+            newlines.extend(f'''(r"""{dst}""", {attr!r}, ({ln}, {col}, {end_ln}, {end_col}), {options!r}, r"""{src}""", r"""{g.src}""", r"""{tdst}""", r"""'''.split('\n'))
+            newlines.extend(tdump)
+            newlines.append('"""),\n')
+
+        except Exception:
+            print(i, attr, (ln, col, end_ln, end_col), src, options)
+            print('---')
+            print(repr(dst))
+            print('...')
+            print(src)
+            print('...')
+            print(put_src)
+
+            raise
+
+    fnm = os.path.join(DIR_NAME, 'data/data_other.py')
+
+    with open(fnm) as f:
+        lines = f.read().split('\n')
+
+    start = lines.index('PUT_SRC_REPARSE_DATA = [')
+    stop  = lines.index(']  # END OF PUT_SRC_REPARSE_DATA')
 
     lines[start + 1 : stop] = newlines
 
@@ -1720,7 +1763,405 @@ with a as b, c as d:
         self.assertRaises(ValueError, f.put_src, None, 2, 0, 1, 0)
         self.assertRaises(ValueError, f.put_src, None, 1, 2, 1, 1)
 
-    def test_is_atom(self):
+    def test_put_src_reparse(self):
+        for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_SRC_REPARSE_DATA):
+            t = parse(dst)
+            f = (eval(f't.{attr}', {'t': t}) if attr else t).f
+
+            try:
+                eln, ecol = f.put_src(None if src == '**DEL**' else src, ln, col, end_ln, end_col, **options) or f.root
+                g = f.root.find_loc(ln, col, eln, ecol)
+
+                tdst  = f.root.src
+                tdump = f.root.dump(out=list)
+
+                f.root.verify(raise_=True)
+
+                self.assertEqual(g.src, put_ret)
+                self.assertEqual(tdst, put_src)
+                self.assertEqual(tdump, put_dump.strip().split('\n'))
+
+            except Exception:
+                print(i, attr, (ln, col, end_ln, end_col), src, options)
+                print('---')
+                print(repr(dst))
+                print('...')
+                print(src)
+                print('...')
+                print(put_src)
+
+                raise
+
+    def test_put_src_reparse_random_same(self):
+        seed(rndseed := randint(0, 0x7fffffff))
+
+        try:
+            master = parse('''
+def f():
+    i = 1
+
+async def af():
+    i = 2
+
+class cls:
+    i = 3
+
+for _ in ():
+    i = 4
+else:
+    i = 5
+
+async for _ in ():
+    i = 6
+else:
+    i = 7
+
+while _:
+    i = 8
+else:
+    i = 9
+
+if _:
+    i = 10
+elif _:
+    i = 11
+else:
+    i = 12
+
+with _:
+    i = 13
+
+async with _:
+    i = 14
+
+match _:
+    case 15:
+        i = 15
+
+    case 16:
+        i = 16
+
+    case 17:
+        i = 17
+
+try:
+    i = 18
+except Exception as e:
+    i = 19
+except ValueError as v:
+    i = 20
+except:
+    i = 21
+else:
+    i = 22
+finally:
+    i = 23
+                '''.strip()).f
+
+            lines = master._lines
+
+            for i in range(100):
+                copy      = master.copy()
+                ln        = randint(0, len(lines) - 1)
+                col       = randint(0, len(lines[ln]))
+                end_ln    = randint(ln, len(lines) - 1)
+                end_col   = randint(col if end_ln == ln else 0, len(lines[end_ln]))
+                put_lines = master._get_src(ln, col, end_ln, end_col, True)
+
+                copy.put_src(put_lines, ln, col, end_ln, end_col)
+                copy.verify()
+
+                compare_asts(master.a, copy.a, locs=True, raise_=True)
+
+                assert copy.src == master.src
+
+        except Exception:
+            print('Random seed was:', rndseed)
+            print(i, ln, col, end_ln, end_col)
+            print('-'*80)
+            print(copy.src)
+
+            raise
+
+    def test_put_src_reparse_special(self):
+        # tabs
+
+        src = '''
+if u:
+\tif a:
+\t\tpass
+\telif x:
+\t\tif y:
+\t\t\toutput.append('/')
+\t\tif z:
+\t\t\tpass
+\t\t\t# directory (with paths underneath it). E.g., "foo" matches "foo",
+\t\t\tpass
+            '''.strip()
+        f = FST(src)
+        s = f._get_src(5, 8, 8, 14)
+        f.put_src(s, 5, 8, 8, 14)
+        self.assertEqual(f.src, src)
+        f.verify()
+
+        f = FST('''
+if u:
+\tmatch x:
+\t\tcase 1:
+\t\t\ti = 2
+            '''.strip())
+        f.put_src('2', 2, 7, 2, 8)
+        self.assertEqual(f.src, '''
+if u:
+\tmatch x:
+\t\tcase 2:
+\t\t\ti = 2
+            '''.strip())
+        f.verify()
+
+        f = FST('''
+if u:
+\tmatch x:
+\t\tcase 1:
+\t\t\ti = 2
+            '''.strip())
+        f.put_src('2:\n\t\t\tj', 2, 7, 3, 4)
+        self.assertEqual(f.src, '''
+if u:
+\tmatch x:
+\t\tcase 2:
+\t\t\tj = 2
+            '''.strip())
+        f.verify()
+
+        # comments trailing single global root statement
+
+        src = '''
+if u:
+  if a:
+    pass
+  elif x:
+    if y:
+      output.append('/')
+    if z:
+      pass
+      # directory (with paths underneath it). E.g., "foo" matches "foo",
+            '''.strip()
+        f = FST(src)
+        s = f._get_src(5, 8, 8, 14)
+        f.put_src(s, 5, 8, 8, 14)
+        self.assertEqual(f.src, src)
+        f.verify()
+
+        # semicoloned statements
+
+        f = FST('\na; b = 1; c')
+        f.put_src(' = 2', 1, 4, 1, 8)
+        self.assertEqual('\na; b = 2; c', f.src)
+        f.verify()
+
+        f = FST('aaa;b = 1; c')
+        f.put_src(' = 2', 0, 5, 0, 9)
+        self.assertEqual('aaa;b = 2; c', f.src)
+        f.verify()
+
+        f = FST('a;b = 1; c')
+        self.assertRaises(NotImplementedError, f.put_src, ' = 2', 0, 3, 0, 7)
+        f.verify()
+
+        f = FST('a; b = 1; c')
+        self.assertRaises(NotImplementedError, f.put_src, ' = 2', 0, 4, 0, 8)
+        f.verify()
+
+        # line continuations
+
+        f = FST('\\\nb = 1')
+        f.put_src(' = 2', 1, 1, 1, 5)
+        self.assertEqual('\\\nb = 2', f.src)
+        f.verify()
+
+        f = FST('if 1:\n \\\nb = 1')
+        f.put_src(' = 2', 2, 1, 2, 5)
+        self.assertEqual('if 1:\n \\\nb = 2', f.src)
+        f.verify()
+
+        f = FST('if 1:\n \\\n b = 1')
+        f.put_src(' = 2', 2, 2, 2, 6)
+        self.assertEqual('if 1:\n \\\n b = 2', f.src)
+        f.verify()
+
+        f = FST('if 1:\n \\\n  b = 1')
+        f.put_src(' = 2', 2, 3, 2, 7)
+        self.assertEqual('if 1:\n \\\n  b = 2', f.src)
+        f.verify()
+
+        f = FST('if 1:\n \\\naa; b = 1')
+        f.put_src(' = 2', 2, 5, 2, 9)
+        self.assertEqual('if 1:\n \\\naa; b = 2', f.src)
+        f.verify()
+
+        f = FST('if 1:\n \\\n a; b = 1')
+        f.put_src(' = 2', 2, 5, 2, 9)
+        self.assertEqual('if 1:\n \\\n a; b = 2', f.src)
+        f.verify()
+
+        f = FST('if 1:\n \\\n  a;b = 1')
+        f.put_src(' = 2', 2, 5, 2, 9)
+        self.assertEqual('if 1:\n \\\n  a;b = 2', f.src)
+        f.verify()
+
+        if PYGE11:
+            # make sure TryStar reparses to TryStar
+
+            f = FST('''
+try:
+    raise Exception('yarr!')
+except* BaseException:
+    hit_except = True
+finally:
+    hit_finally = True
+                '''.strip())
+            f.put_src('ry', 0, 1, 0, 3)
+            self.assertIsInstance(f.a, TryStar)
+            f.verify()
+
+        # statement that lives on compound block header line
+
+        f = FST(src := r'''
+if 1:
+    if \
+ args:args=['-']
+            '''.strip())
+        f.put_src('', 2, 15, 2, 15)
+        self.assertEqual(src, f.src)
+        f.verify()
+
+        # calling on a node which is not in the location of source being changed
+
+        f = FST(r'''
+if 1: pass
+else:
+    if 2:
+        i = 3
+            '''.strip(), 'exec')
+        f.body[0].orelse[0].body[0].value.put_src(r'''
+if 2:
+    if 3:
+        j +='''.strip(), 1, 2, 3, 11)
+        self.assertEqual(r'''
+if 1: pass
+elif 2:
+    if 3:
+        j += 3
+            '''.strip(), f.src)
+        f.verify()
+
+    def test_put_src_offset(self):
+        f = FST('a, b, c')
+        f.put_src(' ', 0, 0, 0, 0, 'offset')
+        self.assertEqual(' a, b, c', f.src)
+        self.assertEqual((0, 0, 0, 8), f.loc)
+        self.assertEqual((0, 1, 0, 2), f.elts[0].loc)
+        self.assertEqual((0, 4, 0, 5), f.elts[1].loc)
+        self.assertEqual((0, 7, 0, 8), f.elts[2].loc)
+
+        f = FST('a, b, c')
+        f.put_src(' ', 0, 1, 0, 1, 'offset')
+        self.assertEqual('a , b, c', f.src)
+        self.assertEqual((0, 0, 0, 8), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.elts[0].loc)
+        self.assertEqual((0, 4, 0, 5), f.elts[1].loc)
+        self.assertEqual((0, 7, 0, 8), f.elts[2].loc)
+
+        f = FST('a, b, c')
+        f.put_src(' ', 0, 3, 0, 3, 'offset')
+        self.assertEqual('a,  b, c', f.src)
+        self.assertEqual((0, 0, 0, 8), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.elts[0].loc)
+        self.assertEqual((0, 4, 0, 5), f.elts[1].loc)
+        self.assertEqual((0, 7, 0, 8), f.elts[2].loc)
+
+        f = FST('a, b, c')
+        f.put_src(' ', 0, 4, 0, 4, 'offset')
+        self.assertEqual('a, b , c', f.src)
+        self.assertEqual((0, 0, 0, 8), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.elts[0].loc)
+        self.assertEqual((0, 3, 0, 4), f.elts[1].loc)
+        self.assertEqual((0, 7, 0, 8), f.elts[2].loc)
+
+        f = FST('a, b, c')
+        f.put_src(' ', 0, 6, 0, 6, 'offset')
+        self.assertEqual('a, b,  c', f.src)
+        self.assertEqual((0, 0, 0, 8), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.elts[0].loc)
+        self.assertEqual((0, 3, 0, 4), f.elts[1].loc)
+        self.assertEqual((0, 7, 0, 8), f.elts[2].loc)
+
+        f = FST('a, b, c')
+        f.put_src(' ', 0, 7, 0, 7, 'offset')
+        self.assertEqual('a, b, c ', f.src)
+        self.assertEqual((0, 0, 0, 8), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.elts[0].loc)
+        self.assertEqual((0, 3, 0, 4), f.elts[1].loc)
+        self.assertEqual((0, 6, 0, 7), f.elts[2].loc)
+
+        f = FST('a, b, c')
+        f.elts[0].put_src(' ', 0, 0, 0, 0, 'offset')
+        self.assertEqual(' a, b, c', f.src)
+        self.assertEqual((0, 0, 0, 8), f.loc)
+        self.assertEqual((0, 0, 0, 2), f.elts[0].loc)
+        self.assertEqual((0, 4, 0, 5), f.elts[1].loc)
+        self.assertEqual((0, 7, 0, 8), f.elts[2].loc)
+
+        f = FST('a, b, c')
+        f.elts[0].put_src(' ', 0, 1, 0, 1, 'offset')
+        self.assertEqual('a , b, c', f.src)
+        self.assertEqual((0, 0, 0, 8), f.loc)
+        self.assertEqual((0, 0, 0, 2), f.elts[0].loc)
+        self.assertEqual((0, 4, 0, 5), f.elts[1].loc)
+        self.assertEqual((0, 7, 0, 8), f.elts[2].loc)
+
+        f = FST('a, b, c')
+        f.elts[1].put_src(' ', 0, 3, 0, 3, 'offset')
+        self.assertEqual('a,  b, c', f.src)
+        self.assertEqual((0, 0, 0, 8), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.elts[0].loc)
+        self.assertEqual((0, 3, 0, 5), f.elts[1].loc)
+        self.assertEqual((0, 7, 0, 8), f.elts[2].loc)
+
+        f = FST('a, b, c')
+        f.elts[1].put_src(' ', 0, 4, 0, 4, 'offset')
+        self.assertEqual('a, b , c', f.src)
+        self.assertEqual((0, 0, 0, 8), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.elts[0].loc)
+        self.assertEqual((0, 3, 0, 5), f.elts[1].loc)
+        self.assertEqual((0, 7, 0, 8), f.elts[2].loc)
+
+        f = FST('a, b, c')
+        f.elts[2].put_src(' ', 0, 6, 0, 6, 'offset')
+        self.assertEqual('a, b,  c', f.src)
+        self.assertEqual((0, 0, 0, 8), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.elts[0].loc)
+        self.assertEqual((0, 3, 0, 4), f.elts[1].loc)
+        self.assertEqual((0, 6, 0, 8), f.elts[2].loc)
+
+        f = FST('a, b, c')
+        f.elts[2].put_src(' ', 0, 7, 0, 7, 'offset')
+        self.assertEqual('a, b, c ', f.src)
+        self.assertEqual((0, 0, 0, 8), f.loc)
+        self.assertEqual((0, 0, 0, 1), f.elts[0].loc)
+        self.assertEqual((0, 3, 0, 4), f.elts[1].loc)
+        self.assertEqual((0, 6, 0, 8), f.elts[2].loc)
+
+        f = FST('a, b, c')
+        self.assertRaises(ValueError, f.elts[0].put_src, ' ', 0, 2, 0, 2, 'offset')
+        self.assertRaises(ValueError, f.elts[1].put_src, ' ', 0, 2, 0, 2, 'offset')
+        self.assertRaises(ValueError, f.elts[1].put_src, ' ', 0, 5, 0, 5, 'offset')
+        self.assertRaises(ValueError, f.elts[1].put_src, ' ', 0, 2, 0, 4, 'offset')
+        self.assertRaises(ValueError, f.elts[1].put_src, ' ', 0, 3, 0, 5, 'offset')
+        self.assertRaises(ValueError, f.elts[1].put_src, ' ', 0, 2, 0, 5, 'offset')
+
+    def test__is_atom(self):
         self.assertIs(False, parse('1 + 2').body[0].value.f._is_atom())
         self.assertEqual('unenclosable', parse('f()').body[0].value.f._is_atom())
         self.assertEqual('pars', parse('(1 + 2)').body[0].value.f._is_atom())
@@ -1736,7 +2177,7 @@ with a as b, c as d:
 
         self.assertIs(False, FST('*a')._is_atom())  # because of `*a or b`
 
-    def test_is_enclosed_or_line_special(self):
+    def test__is_enclosed_or_line_special(self):
         # Call
         # JoinedStr
         # TemplateStr
@@ -1880,7 +2321,7 @@ t"x\
 y")
                 '''.strip(), 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
 
-    def test_is_enclosed_or_line_general(self):
+    def test__is_enclosed_or_line_general(self):
         self.assertTrue(FST('a < b', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
         self.assertFalse(FST('(a\n< b)', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
         self.assertTrue(FST('(a\\\n< b)', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
@@ -1963,7 +2404,7 @@ a + \
         f._put_src(None, 0, 5, 0, 6, False)
         self.assertFalse(f._is_enclosed_or_line())
 
-    def test_is_enclosed_in_parents(self):
+    def test__is_enclosed_in_parents(self):
         self.assertFalse(FST('i', 'exec').body[0]._is_enclosed_in_parents())
         self.assertFalse(FST('i', 'single').body[0]._is_enclosed_in_parents())
         self.assertFalse(FST('i', 'eval').body._is_enclosed_in_parents())
@@ -2316,7 +2757,7 @@ a + \
             self.assertTrue(FST('t"1{2}"', 'exec').body[0].value._is_enclosed_in_parents('values'))
             self.assertTrue(FST('t"1{2}"', 'exec').body[0].value.values[1]._is_enclosed_in_parents('value'))
 
-    def test_is_parenthesized_tuple(self):
+    def test__is_parenthesized_tuple(self):
         self.assertTrue(parse('(1, 2)').body[0].value.f._is_parenthesized_tuple())
         self.assertTrue(parse('(1,)').body[0].value.f._is_parenthesized_tuple())
         self.assertTrue(parse('((1),)').body[0].value.f._is_parenthesized_tuple())
@@ -2368,7 +2809,7 @@ a + \
 
         self.assertIsNone(parse('[(a), (b)]').body[0].value.f._is_parenthesized_tuple())
 
-    def test_get_indent(self):
+    def test__get_indent(self):
         ast = parse('i = 1; j = 2')
 
         self.assertEqual('', ast.body[0].f._get_indent())
@@ -5821,6 +6262,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--regen-all', default=False, action='store_true', help="regenerate everything")
     parser.add_argument('--regen-pars', default=False, action='store_true', help="regenerate parentheses test data")
+    parser.add_argument('--regen-put-src', default=False, action='store_true', help="regenerate put src test data")
     parser.add_argument('--regen-precedence', default=False, action='store_true', help="regenerate precedence test data")
 
     args, _ = parser.parse_known_args()
@@ -5832,6 +6274,10 @@ if __name__ == '__main__':
     if args.regen_pars or args.regen_all:
         print('Regenerating parentheses test data...')
         regen_pars_data()
+
+    if args.regen_put_src or args.regen_all:
+        print('Regenerating put raw test data...')
+        regen_put_src()
 
     if args.regen_precedence or args.regen_all:
         print('Regenerating precedence test data...')

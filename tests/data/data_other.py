@@ -170,7 +170,7 @@ f(((i for i in j)))
 
 ]  # END OF PARS_DATA
 
-PUT_SRC_DATA = [
+PUT_SRC_REPARSE_DATA = [
 (r"""(1, 2, 3)""", '', (0, 4, 0, 5), {}, r"""*z""", r"""*z""", r"""(1, *z, 3)""", r"""
 Module - ROOT 0,0..0,10
   .body[1]
@@ -694,7 +694,7 @@ Module - ROOT 0,0..0,13
     0] Pass - 0,9..0,13
 """),
 
-]  # END OF PUT_SRC_DATA
+]  # END OF PUT_SRC_REPARSE_DATA
 
 PRECEDENCE_DATA = [
     'z',

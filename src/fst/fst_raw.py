@@ -204,7 +204,7 @@ def _reparse_raw(self: fst.FST, code: Code | None, ln: int, col: int, end_ln: in
     elif isinstance(code, AST):
         new_lines = unparse(code).split('\n')
     elif code is None:
-        new_lines = [bistr('')]
+        new_lines = ['']
     elif not code.is_root:  # isinstance(code, fst.FST)
         raise ValueError('expecting root node')
     else:

@@ -112,7 +112,7 @@ from .common import (
     next_delims, prev_delims,
 )
 
-from .parsex import Mode
+from .parsex import Mode, unparse as parsex_unparse
 from .code import Code, code_as_all
 
 from .locations import loc_arguments, loc_comprehension, loc_withitem, loc_match_case, loc_operator
@@ -2070,25 +2070,48 @@ class FST:
 
         return self._get_src(ln, col, end_ln, end_col, as_lines)
 
-    def put_src(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int) -> FST | None:
-        r"""Put source and reparse. There are no rules on what is put, it is simply put and parse is attempted. If the
-        `code` is passed as an `AST` then it is unparsed to a string and that string is put into the location. If `FST`
-        then the exact source of the `FST` is put. If passed as a string or lines then that is put directly.
+    def put_src(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int,
+                ast_op: Literal['reparse', 'offset'] | None = 'reparse') -> FST | None:
+        r"""Put source and maybe adjust `AST` tree for source modified. The adjustment may be a reparse of the area
+        changed, an offset of nodes (assuming put source was just trivia and wouldn't affect the tree) or nothing at
+        all. The `ast_op` options are:
 
-        The reparse that is triggered is of at least a statement level node or a statement block header, and can be
-        multiple statements if the location spans those or even statements outside of the location if the reparse
-        affects things like `elif`. `FST` nodes in the region of the put or even outside of it can become invalid. The
-        only `FST` node guaranteed not to change is the root node (identity, the `AST` it holds can change).
+        * `'reparse'`: Put source and reparse. There are no rules on what is put, it is simply put and parse is
+          attempted.
 
-        When putting source raw by location like this there are no automatic modifications made to the source or
-        destination. No parenthesization, prefixes or suffixes or indentation, the source is just put and parsed so you
-        are responsible for the correct indentation and precedence.
+          The reparse that is triggered is of at least a statement level node or a statement block header, and can be
+          multiple statements if the location spans those or even statements outside of the location if the reparse
+          affects things like `elif`. `FST` nodes in the region of the put or even outside of it can become invalid. The
+          only `FST` node guaranteed not to change is the root node (identity, the `AST` it holds can change).
 
-        After put and successful reparse the location of the put is examined and an appropriate node is returned which
-        fits best for a node which may have been added or replaced. It is possible that `None` is returned if no good
-        candidate is found (since this can be used to delete or merge nodes).
+          When putting source raw by location like this there are no automatic modifications made to the source or
+          destination. No parenthesization, prefixes or suffixes or indentation, the source is just put and parsed so you
+          are responsible for the correct indentation and precedence.
 
-        Can call on any node in tree to modify source for the whole tree.
+          After put and successful reparse a new node can be found using `find_loc()` functions from the original start
+          `ln` and `col` and newly returned `end_ln` and `end_col`. It is possible that `None` is returned from these
+          functions if no good candidate is found (since this can be used to delete or merge nodes).
+
+          `self` doesn't matter in this case, can call on any node in tree, even one which is not touched by the source
+          change and the appropriate nodes will be found and reparsed.
+
+        * `'offset'`: Put source and offset nodes around it according to what node the `put_src()` was called on. In
+          this case `self` matters and should be the last node down within which the location is contained. Any child
+          nodes of this node are offset differently from this `self` node and its parents.
+
+          The `self` node and its parents will not have their start locations offset if the put is an insert at the
+          start (as the location is considered to be INSIDE these nodes), whereas child nodes will be moved.
+
+          The `self` node and its parents will have their end locations offset if the put ends at this location whereas
+          child nodes will not.
+
+        * `None`: Nothing is reparsed or offset, the source is just put. There are few cases where this will result in
+          a valid tree but can include removal of comments and trailing whitespace on a line or changing lines between
+          empty and comment.
+
+        If the `code` is passed as an `AST` then it is unparsed to a string and that string is put into the location. If
+        `code` is an `FST` then the exact source of the `FST` is put. If passed as a string or lines then that is put
+        directly.
 
         The coordinates passed in are clipped to the whole valid source area.
 
@@ -2098,6 +2121,7 @@ class FST:
         - `col`: Start column (character) on start line.
         - `end_ln`: End line of span to put (0 based, inclusive).
         - `end_col`: End column (character, exclusive) on end line.
+        - `ast_op`: What action to take on the `AST` tree, the options are `'reparse'`, `'offset'` or `None`.
 
         **Returns:**
         - `(end_ln, end_col)`: New end location of source put (all source after this was not modified).
@@ -2148,13 +2172,63 @@ class FST:
         else:
           if b:
             k = 4
+
+        >>> f = FST('a, b')
+        >>> f.put_src(' ', 0, 4, 0, 4, 'offset')
+        (0, 5)
+
+        >>> f.src, f.loc, f.elts[1].loc
+        ('a, b ', fstloc(0, 0, 0, 5), fstloc(0, 3, 0, 4))
         ```
         """
 
+        root = self.root
         ln, col, end_ln, end_col = _clip_src_loc(self, ln, col, end_ln, end_col)
-        parent = self.root.find_loc_in(ln, col, end_ln, end_col, False) or self.root
 
-        return parent._reparse_raw(code, ln, col, end_ln, end_col)
+        if ast_op == 'reparse':
+            parent = root.find_loc_in(ln, col, end_ln, end_col, False) or root
+
+            return parent._reparse_raw(code, ln, col, end_ln, end_col)
+
+        if isinstance(code, list):
+            new_lines = code
+        elif isinstance(code, str):
+            new_lines = code = code.split('\n')
+        elif isinstance(code, AST):
+            new_lines = code = parsex_unparse(code).split('\n')
+        elif code is None:
+            new_lines = ['']  # minor opt, don't set `code` so _put_src() knows its a delete
+        elif not code.is_root:  # isinstance(code, fst.FST)
+            raise ValueError('expecting root node')
+        else:
+            new_lines = code = code._lines
+
+        if ast_op == 'offset':
+            # TODO: there may be issues with certain zero-length trees but I can't think of any that might occur in normal usage
+
+            if not (loc := self.loc):
+                raise ValueError("cannot be called with 'offset' on a node which has no location")
+
+            self_ln, self_col, self_end_ln, self_end_col = loc
+
+            if (ln < self_ln or (ln == self_ln and col < self_col) or
+                end_ln > self_end_ln or (end_ln == self_end_ln and end_col > self_end_col)
+            ):
+                raise ValueError("location with 'offset' must be at or inside location of node")
+
+            params_offset = root._put_src(code, ln, col, end_ln, end_col, True, False, self)
+
+            self._offset(*params_offset, False, True, self_=False)
+
+        else:  # ast_op is None
+            assert ast_op is None
+
+            root._put_src(code, ln, col, end_ln, end_col)
+
+        if len(new_lines) == 1:
+            return ln, col + len(new_lines[0])
+        else:
+            return ln + len(new_lines) - 1, len(new_lines[-1])
 
     def pars(self, *, shared: bool | None = True) -> fstloc | None:
         """Return the location of enclosing GROUPING parentheses if present. Will balance parentheses if `self` is an
@@ -3227,7 +3301,7 @@ class FST:
         >>> n = None
         >>> while n := f.next_child(n):
         ...     if isinstance(n.a, Name):
-        ...         n = n.replace(n.id[::-1], raw=True)  # raw here reparses all nodes
+        ...         n = n.replace(n.id[::-1])
         >>> f.src
         '[siht, _si, desraper, hcae, pets, _dna, llits, sklaw, ko]'
         ```
@@ -3269,7 +3343,7 @@ class FST:
         >>> n = None
         >>> while n := f.prev_child(n):
         ...     if isinstance(n.a, Name):
-        ...         n = n.replace(n.id[::-1], raw=True)  # raw here reparses all nodes
+        ...         n = n.replace(n.id[::-1])
         >>> f.src
         '[siht, _si, desraper, hcae, pets, _dna, llits, sklaw, ko]'
         ```
@@ -3323,7 +3397,7 @@ class FST:
         >>> n = f.elts[0]
         >>> while True:
         ...     if isinstance(n.a, Name):
-        ...         n = n.replace(n.id[::-1], raw=True)  # raw here reparses all nodes
+        ...         n = n.replace(n.id[::-1])
         ...     if not (n := n.step_fwd()):
         ...         break
         >>> f.src
@@ -3397,7 +3471,7 @@ class FST:
         >>> n = f.elts[-1]
         >>> while True:
         ...     if isinstance(n.a, Name):
-        ...         n = n.replace(n.id[::-1], raw=True)  # raw here reparses all nodes
+        ...         n = n.replace(n.id[::-1])
         ...     if not (n := n.step_back()):
         ...         break
         >>> f.src

@@ -1,17 +1,13 @@
 #!/usr/bin/env python
 
 import os
-import sys
 import unittest
-from random import randint, seed, shuffle
+from random import seed, shuffle
 
 from fst import *
 
 from fst.asttypes import *
-from fst.astutil import compare_asts
-from fst.common import PYLT11, PYLT12, PYGE11, PYGE12, PYGE14
-
-from data.data_other import PUT_SRC_DATA
+from fst.common import PYLT11, PYLT12, PYGE12, PYGE14
 
 from support import GetCases, PutCases
 
@@ -271,51 +267,6 @@ def regen_get_one():
 def regen_put_one():
     DATA_PUT_ONE.generate()
     DATA_PUT_ONE.write()
-
-
-def regen_put_src():
-    newlines = []
-
-    for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_SRC_DATA):
-        t = parse(dst)
-        f = (eval(f't.{attr}', {'t': t}) if attr else t).f
-
-        try:
-            eln, ecol = f.put_src(None if src == '**DEL**' else src, ln, col, end_ln, end_col, **options) or f.root
-            g = f.root.find_loc(ln, col, eln, ecol)
-
-            tdst  = f.root.src
-            tdump = f.root.dump(out=list)
-
-            f.root.verify(raise_=True)
-
-            newlines.extend(f'''(r"""{dst}""", {attr!r}, ({ln}, {col}, {end_ln}, {end_col}), {options!r}, r"""{src}""", r"""{g.src}""", r"""{tdst}""", r"""'''.split('\n'))
-            newlines.extend(tdump)
-            newlines.append('"""),\n')
-
-        except Exception:
-            print(i, attr, (ln, col, end_ln, end_col), src, options)
-            print('---')
-            print(repr(dst))
-            print('...')
-            print(src)
-            print('...')
-            print(put_src)
-
-            raise
-
-    fnm = os.path.join(DIR_NAME, 'data/data_other.py')
-
-    with open(fnm) as f:
-        lines = f.read().split('\n')
-
-    start = lines.index('PUT_SRC_DATA = [')
-    stop  = lines.index(']  # END OF PUT_SRC_DATA')
-
-    lines[start + 1 : stop] = newlines
-
-    with open(fnm, 'w') as f:
-        lines = f.write('\n'.join(lines))
 
 
 class TestFSTPut(unittest.TestCase):
@@ -3905,278 +3856,6 @@ c, # c
     def test_put_one_negative_idx(self):
         FST('{**b}').put('a', -1, 'keys')
 
-    def test_put_src(self):
-        for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_SRC_DATA):
-            t = parse(dst)
-            f = (eval(f't.{attr}', {'t': t}) if attr else t).f
-
-            try:
-                eln, ecol = f.put_src(None if src == '**DEL**' else src, ln, col, end_ln, end_col, **options) or f.root
-                g = f.root.find_loc(ln, col, eln, ecol)
-
-                tdst  = f.root.src
-                tdump = f.root.dump(out=list)
-
-                f.root.verify(raise_=True)
-
-                self.assertEqual(g.src, put_ret)
-                self.assertEqual(tdst, put_src)
-                self.assertEqual(tdump, put_dump.strip().split('\n'))
-
-            except Exception:
-                print(i, attr, (ln, col, end_ln, end_col), src, options)
-                print('---')
-                print(repr(dst))
-                print('...')
-                print(src)
-                print('...')
-                print(put_src)
-
-                raise
-
-    def test_put_src_random_same(self):
-        seed(rndseed := randint(0, 0x7fffffff))
-
-        try:
-            master = parse('''
-def f():
-    i = 1
-
-async def af():
-    i = 2
-
-class cls:
-    i = 3
-
-for _ in ():
-    i = 4
-else:
-    i = 5
-
-async for _ in ():
-    i = 6
-else:
-    i = 7
-
-while _:
-    i = 8
-else:
-    i = 9
-
-if _:
-    i = 10
-elif _:
-    i = 11
-else:
-    i = 12
-
-with _:
-    i = 13
-
-async with _:
-    i = 14
-
-match _:
-    case 15:
-        i = 15
-
-    case 16:
-        i = 16
-
-    case 17:
-        i = 17
-
-try:
-    i = 18
-except Exception as e:
-    i = 19
-except ValueError as v:
-    i = 20
-except:
-    i = 21
-else:
-    i = 22
-finally:
-    i = 23
-                '''.strip()).f
-
-            lines = master._lines
-
-            for i in range(100):
-                copy      = master.copy()
-                ln        = randint(0, len(lines) - 1)
-                col       = randint(0, len(lines[ln]))
-                end_ln    = randint(ln, len(lines) - 1)
-                end_col   = randint(col if end_ln == ln else 0, len(lines[end_ln]))
-                put_lines = master._get_src(ln, col, end_ln, end_col, True)
-
-                copy.put_src(put_lines, ln, col, end_ln, end_col)
-                copy.verify()
-
-                compare_asts(master.a, copy.a, locs=True, raise_=True)
-
-                assert copy.src == master.src
-
-        except Exception:
-            print('Random seed was:', rndseed)
-            print(i, ln, col, end_ln, end_col)
-            print('-'*80)
-            print(copy.src)
-
-            raise
-
-    def test_put_src_special(self):
-        # tabs
-
-        src = '''
-if u:
-\tif a:
-\t\tpass
-\telif x:
-\t\tif y:
-\t\t\toutput.append('/')
-\t\tif z:
-\t\t\tpass
-\t\t\t# directory (with paths underneath it). E.g., "foo" matches "foo",
-\t\t\tpass
-            '''.strip()
-        f = FST(src)
-        s = f._get_src(5, 8, 8, 14)
-        f.put_src(s, 5, 8, 8, 14)
-        self.assertEqual(f.src, src)
-        f.verify()
-
-        f = FST('''
-if u:
-\tmatch x:
-\t\tcase 1:
-\t\t\ti = 2
-            '''.strip())
-        f.put_src('2', 2, 7, 2, 8)
-        self.assertEqual(f.src, '''
-if u:
-\tmatch x:
-\t\tcase 2:
-\t\t\ti = 2
-            '''.strip())
-        f.verify()
-
-        f = FST('''
-if u:
-\tmatch x:
-\t\tcase 1:
-\t\t\ti = 2
-            '''.strip())
-        f.put_src('2:\n\t\t\tj', 2, 7, 3, 4)
-        self.assertEqual(f.src, '''
-if u:
-\tmatch x:
-\t\tcase 2:
-\t\t\tj = 2
-            '''.strip())
-        f.verify()
-
-        # comments trailing single global root statement
-
-        src = '''
-if u:
-  if a:
-    pass
-  elif x:
-    if y:
-      output.append('/')
-    if z:
-      pass
-      # directory (with paths underneath it). E.g., "foo" matches "foo",
-            '''.strip()
-        f = FST(src)
-        s = f._get_src(5, 8, 8, 14)
-        f.put_src(s, 5, 8, 8, 14)
-        self.assertEqual(f.src, src)
-        f.verify()
-
-        # semicoloned statements
-
-        f = FST('\na; b = 1; c')
-        f.put_src(' = 2', 1, 4, 1, 8)
-        self.assertEqual('\na; b = 2; c', f.src)
-        f.verify()
-
-        f = FST('aaa;b = 1; c')
-        f.put_src(' = 2', 0, 5, 0, 9)
-        self.assertEqual('aaa;b = 2; c', f.src)
-        f.verify()
-
-        f = FST('a;b = 1; c')
-        self.assertRaises(NotImplementedError, f.put_src, ' = 2', 0, 3, 0, 7)
-        f.verify()
-
-        f = FST('a; b = 1; c')
-        self.assertRaises(NotImplementedError, f.put_src, ' = 2', 0, 4, 0, 8)
-        f.verify()
-
-        # line continuations
-
-        f = FST('\\\nb = 1')
-        f.put_src(' = 2', 1, 1, 1, 5)
-        self.assertEqual('\\\nb = 2', f.src)
-        f.verify()
-
-        f = FST('if 1:\n \\\nb = 1')
-        f.put_src(' = 2', 2, 1, 2, 5)
-        self.assertEqual('if 1:\n \\\nb = 2', f.src)
-        f.verify()
-
-        f = FST('if 1:\n \\\n b = 1')
-        f.put_src(' = 2', 2, 2, 2, 6)
-        self.assertEqual('if 1:\n \\\n b = 2', f.src)
-        f.verify()
-
-        f = FST('if 1:\n \\\n  b = 1')
-        f.put_src(' = 2', 2, 3, 2, 7)
-        self.assertEqual('if 1:\n \\\n  b = 2', f.src)
-        f.verify()
-
-        f = FST('if 1:\n \\\naa; b = 1')
-        f.put_src(' = 2', 2, 5, 2, 9)
-        self.assertEqual('if 1:\n \\\naa; b = 2', f.src)
-        f.verify()
-
-        f = FST('if 1:\n \\\n a; b = 1')
-        f.put_src(' = 2', 2, 5, 2, 9)
-        self.assertEqual('if 1:\n \\\n a; b = 2', f.src)
-        f.verify()
-
-        f = FST('if 1:\n \\\n  a;b = 1')
-        f.put_src(' = 2', 2, 5, 2, 9)
-        self.assertEqual('if 1:\n \\\n  a;b = 2', f.src)
-        f.verify()
-
-        if PYGE11:
-            # make sure TryStar reparses to TryStar
-
-            f = FST('''
-try:
-    raise Exception('yarr!')
-except* BaseException:
-    hit_except = True
-finally:
-    hit_finally = True
-                '''.strip())
-            f.put_src('ry', 0, 1, 0, 3)
-            self.assertIsInstance(f.a, TryStar)
-            f.verify()
-
-        # statement that lives on compound block header line
-
-        f = FST(src := r'''
-if 1:
-    if \
- args:args=['-']
-            '''.strip())
-        f.put_src('', 2, 15, 2, 15)
-        self.assertEqual(src, f.src)
-
     def test_put_default_non_list_field(self):
         self.assertEqual('y', parse('n').body[0].f.put('y').root.src)  # Expr
         self.assertEqual('return y', parse('return n').body[0].f.put('y').root.src)  # Return
@@ -4515,7 +4194,6 @@ if __name__ == '__main__':
     parser.add_argument('--regen-all', default=False, action='store_true', help="regenerate everything")
     parser.add_argument('--regen-get-one', default=False, action='store_true', help="regenerate get one test data")
     parser.add_argument('--regen-put-one', default=False, action='store_true', help="regenerate put one test data")
-    parser.add_argument('--regen-put-src', default=False, action='store_true', help="regenerate put src test data")
 
     args, _ = parser.parse_known_args()
 
@@ -4530,10 +4208,6 @@ if __name__ == '__main__':
     if args.regen_put_one or args.regen_all:
         print('Regenerating put one test data...')
         regen_put_one()
-
-    if args.regen_put_src or args.regen_all:
-        print('Regenerating put raw test data...')
-        regen_put_src()
 
     if (all(not getattr(args, n) for n in dir(args) if n.startswith('regen_'))):
         unittest.main()

@@ -81,9 +81,11 @@ re_next_src_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # next 
 class NodeError(Exception):
     """General FST node error."""
 
-    rawable: bool  ; """Whether the operation that caused this error can be retried in raw mode."""
+    rawable: bool  ; """Whether the operation that caused this error can be retried in raw mode. @private"""
 
     def __init__(self, *args: object, rawable: bool = False):
+        """@private"""
+
         super().__init__(*args)
 
         self.rawable = rawable
