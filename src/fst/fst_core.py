@@ -1462,7 +1462,7 @@ def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal[
 
     strict = docstr == 'strict'
     lines = self.root._lines
-    lns = set(range(skip, len(lines))) if self.is_root else set(range(self.bln + skip, self.bend_ln + 1))
+    lns = set(range(skip, len(lines))) if self.is_root else set(range(self.bln + skip, self.bend_ln + 1))  # start with all lines indentable and remove multiline strings which are not docstrings
 
     while (parent := self.parent) and not isinstance(self.a, ASTS_STMTISH):
         self = parent
@@ -1473,6 +1473,7 @@ def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal[
 
         elif isinstance(a := f.a, Constant):  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
             if (not docstr or
+                not isinstance(a.value, str) or  # could be bytes
                 not ((parent := f.parent) and
                      isinstance(parent.a, Expr) and
                      (not strict or ((pparent := parent.parent) and

@@ -143,7 +143,7 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 #     S ,          (MatchClass, 'patterns'):               # pattern*         -> MatchSequence              _parse_pattern / restrict MatchSequence  - allow empty pattern?
 #                                                                             .
 #                                                                             .
-#     S ,          (ClassDef, 'bases'):                    # expr*            -> Tuple[expr_arglike]        _parse_expr_arglikes  - keywords and Starred bases can mix
+# *   S ,          (ClassDef, 'bases'):                    # expr*            -> Tuple[expr_arglike]        _parse_expr_arglikes  - keywords and Starred bases can mix
 # *   S ,          (Call, 'args'):                         # expr*            -> Tuple[expr_arglike]        _parse_expr_arglikes  - keywords and Starred args can mix
 #                                                                             .
 # *   S ,          (Delete, 'targets'):                    # expr*            -> Tuple[target]              _parse_expr / restrict del_targets
