@@ -926,8 +926,11 @@ def multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln: 
         return lns
 
     lines = lines[ln : end_ln + 1]  # crop to just location
-    lines[-1] = lines[-1][:end_col] + ')'  # parentheses added to avoid at end: `IndentationError: unindent does not match any outer indentation level`
+
+    lines[-1] = lines[-1][:end_col]  # parentheses added to avoid at end: `IndentationError: unindent does not match any outer indentation level`
     lines[0] = '(' + lines[0][col:]
+
+    lines.append(')')  # XXX we need to add this as a separate line and not to the end of the last line because otherwise we can get `UnicodeDecodeError: 'utf-8' codec can't decode bytes in position ...: unexpected end of data` incorrectly
 
     tokens = tokenize_tokenize(BytesIO('\n'.join(lines).encode()).readline)
 

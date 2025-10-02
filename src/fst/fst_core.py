@@ -96,7 +96,7 @@ from .locations import (
 )
 
 
-_HAS_FSTR_COMMENT_BUG = f'{"a#b"=}' != '"a#b"=\'a#b\''
+_HAS_FSTR_COMMENT_BUG = f'{"a#b"=}' != '"a#b"=\'a#b\''  # gh-135148
 
 _astfieldctx = astfield('ctx')
 

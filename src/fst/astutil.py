@@ -1323,7 +1323,7 @@ _PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
 
     (BinOp, 'values'):         False,                    # should be passed as the 'op'
     (NamedExpr, 'target'):     _Precedence.ATOM,
-    (NamedExpr, 'value'):      _Precedence.TEST,         # XXX: python ast.unparse() has this as _Precedence.ATOM, which as far as I can tell is unnecessary
+    (NamedExpr, 'value'):      _Precedence.TEST,         # XXX python ast.unparse() has this as _Precedence.ATOM, which as far as I can tell is unnecessary
     (BinOp, 'left'):           False,                    # should be passed as the 'op'
     (BinOp, 'right'):          False,                    # should be passed as the 'op'
     (UnaryOp, 'operand'):      False,                    # should be passed as the 'op'
