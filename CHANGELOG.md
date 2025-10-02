@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- multiline f/t-strings joined by line continuations indented correctly
 - put string `Expr` as `'strict'` docstr don't in/dedent if not first element
 
 ### Added

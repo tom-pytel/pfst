@@ -223,6 +223,8 @@ This package is not finished but functional enough that it can be useful.
 
 * Improve comment handling and get/put specification and get rid of ugly trailing newlines in statement slices.
 
+* Preserve comments if requested in single element non-statement operations.
+
 * Lots of code cleanup.
 
 

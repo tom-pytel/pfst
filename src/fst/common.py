@@ -2,13 +2,21 @@
 
 import re
 import sys
-from ast import parse as ast_parse
 from functools import wraps
+from io import BytesIO
 from math import log10
+from tokenize import tokenize as tokenize_tokenize, STRING
 from typing import Callable, Literal, NamedTuple, Iterable
 
 from .asttypes import AST
 from .astutil import constant
+
+FSTRING_START = FSTRING_END = TSTRING_START = TSTRING_END = None
+
+try:
+    from tokenize import FSTRING_START, FSTRING_END, TSTRING_START, TSTRING_END  # may not be present, ORDER OF IMPORT MATTERS!
+except ImportError:
+    pass
 
 try:
     from typing import Self
@@ -37,7 +45,7 @@ __all__ = [
     'leading_trivia',
     'trailing_trivia',
     'multiline_str_continuation_lns',
-    'multiline_fstr_continuation_lns',
+    'multiline_ftstr_continuation_lns',
     'continuation_to_uncontinued_lns',
 ]
 
@@ -58,15 +66,6 @@ re_comment_line_start    = re.compile(r'[ \t]*#')    # empty line preceding a co
 re_line_continuation     = re.compile(r'[^#]*\\$')   # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
 re_line_trailing_space   = re.compile(r'.*?(\s*)$')  # location of trailing whitespace at the end of a line
 re_empty_space           = re.compile(r'\s*$')       # completely empty or space-filled line (from start pos, start of line indentation, any space, not just line indenting space)
-
-re_oneline_str           = re.compile(r'(?:b|r|rb|br|u|)  (?:  \'(?:\\.|[^\\\'])*?\'  |  "(?:\\.|[^\\"])*?"  )',  # I f'])*?\'ng hate these!
-                                      re.VERBOSE | re.IGNORECASE)
-re_contline_str_start    = re.compile(r'(?:b|r|rb|br|u|)  (\'|")', re.VERBOSE | re.IGNORECASE)
-re_contline_str_end_sq   = re.compile(r'(?:\\.|[^\\\'])*?  \'', re.VERBOSE)
-re_contline_str_end_dq   = re.compile(r'(?:\\.|[^\\"])*?  "', re.VERBOSE)
-re_multiline_str_start   = re.compile(r'(?:b|r|rb|br|u|)  (\'\'\'|""")', re.VERBOSE | re.IGNORECASE)
-re_multiline_str_end_sq  = re.compile(r'(?:\\.|[^\\])*?  \'\'\'', re.VERBOSE)
-re_multiline_str_end_dq  = re.compile(r'(?:\\.|[^\\])*?  """', re.VERBOSE)
 
 re_empty_line_or_cont           = re.compile(r'[ \t]*(\\)?$')            # empty line or line continuation
 re_empty_line_cont_or_comment   = re.compile(r'[ \t]*(\\|#.*)?$')        # empty line or line continuation or a pure comment line
@@ -909,102 +908,54 @@ def trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end
     return (text_pos, None if space_pos == text_pos else space_pos, True)
 
 
+_F_OR_T_STRING_STARTS = (FSTRING_START, TSTRING_START)
+_F_OR_T_STRING_ENDS = (FSTRING_END, TSTRING_END)
+
 def multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:
-    """Return the line numbers of a potentially multiline string `Constant` continuation lines (lines which should not
-    be indented because they follow a newline inside triple quotes). The location passed MUST be from the `Constant`
-    `AST` node or calculated to be the same, otherwise this function will fail.
+    """Return the line numbers of a potentially multiline string `Constant` or f or t-string continuation lines (lines
+    which should not be indented because their start is part of the string value because they follow a newline inside
+    triple quotes or single quoted backslash continued lines). The location passed MUST be from the `Constant`,
+    `JoinedStr` or `TemplateStr` `AST` node or calculated to be the same, otherwise this function will fail.
 
     @private
     """
-
-
-    # TODO: use tokenize?
-
-
-    def walk_multiline(start_ln: int, end_ln: int, m: re.Match, re_str_end: re.Pattern) -> tuple[int, re.Match]:
-        nonlocal lns, lines
-
-        col = m.end()
-
-        for ln in range(start_ln, end_ln + 1):
-            if m := re_str_end.match(lines[ln], col):
-                break
-
-            col = 0
-
-        else:
-            raise RuntimeError('should not get here')
-
-        lns.extend(range(start_ln + 1, ln + 1))
-
-        return ln, m.end()
 
     lns = []
 
     if end_ln <= ln:
         return lns
 
-    while True:
-        if not (m := re_multiline_str_start.match(l := lines[ln], col)):
-            if m := re_oneline_str.match(l, col):
-                col = m.end()
+    lines = lines[ln : end_ln + 1]  # crop to just location
+    lines[-1] = lines[-1][:end_col] + ')'  # parentheses added to avoid at end: `IndentationError: unindent does not match any outer indentation level`
+    lines[0] = '(' + lines[0][col:]
 
-            else:  # UGH! a line continuation string, pffft...
-                m = re_contline_str_start.match(l, col)
-                re_str_end = re_contline_str_end_sq if m.group(1) == "'" else re_contline_str_end_dq
-                ln, col = walk_multiline(ln, end_ln, m, re_str_end)  # find end of multiline line continuation string
+    tokens = tokenize_tokenize(BytesIO('\n'.join(lines).encode()).readline)
 
-        else:
-            re_str_end = re_multiline_str_end_sq if m.group(1) == "'''" else re_multiline_str_end_dq
-            ln, col = walk_multiline(ln, end_ln, m, re_str_end)  # find end of multiline string
+    for token in tokens:
+        if (ttype := token.type) == STRING:
+            lns.extend(range(token.start[0] + ln, token.end[0] + ln))
 
-        if ln == end_ln and col == end_col:
-            break
+        elif ttype in _F_OR_T_STRING_STARTS:
+            start_lineno = token.start[0]
+            nesting = 1
 
-        ln, col, _ = next_frag(lines, ln, col, end_ln, end_col)  # there must be a next one
+            for token in tokens:
+                if (ttype := token.type) in _F_OR_T_STRING_STARTS:
+                    nesting += 1
 
-    return lns
+                elif ttype in _F_OR_T_STRING_ENDS:
+                    if not (nesting := nesting - 1):
+                        lns.extend(range(start_lineno + ln, token.end[0] + ln))
 
-
-def multiline_fstr_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:
-    """Lets try to find non-indentable lines by incrementally attempting to parse parts of multiline f-string (or
-    t-string).
-
-    @private
-    """
-
-
-    # TODO: p3.12+ has locations for these which should allow no use of parse, use tokenize?
-    # TODO: currently returns normal fstrs contained on line but with line continuation as continuation lines (this is not what is meant by the function name)
-
-
-    lns = []
-
-    if end_ln <= ln:
-        return lns
-
-    while True:
-        ls = [lines[ln][col:].lstrip()]
-
-        for cur_ln in range(ln + 1, end_ln + 1):
-            try:
-                ast_parse('\n'.join(ls))
-
-            except SyntaxError:
-                lns.append(cur_ln)
-                ls.append(lines[cur_ln])
+                        break
 
             else:
-                break
-
-        if (ln := cur_ln) >= end_ln:
-            assert ln == end_ln
-
-            break
-
-        col = 0
+                raise RuntimeError('f or t-string not closed')
 
     return lns
+
+
+multiline_ftstr_continuation_lns = multiline_str_continuation_lns
 
 
 def continuation_to_uncontinued_lns(lns: Iterable[int], ln: int, col: int, end_ln: int, end_col: int, *,
@@ -1014,7 +965,7 @@ def continuation_to_uncontinued_lns(lns: Iterable[int], ln: int, col: int, end_l
     continuations outside of the string and those lines will be returned as uncontinued.
 
     **Parameters:**
-    - `include_last`: Whether to include the last line as an uncontinues line or not.
+    - `include_last`: Whether to include the last line as an uncontinued line or not.
 
     **Returns:**
     - `set[int]`: Set of uncontinued lines in the given range.

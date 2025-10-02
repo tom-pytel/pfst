@@ -86,7 +86,7 @@ from .common import (
     Self, astfield, fstloc, nspace, pyver,
     re_empty_line, re_empty_line_start, re_line_continuation, re_line_end_cont_or_comment,
     next_find, prev_find,
-    multiline_str_continuation_lns, multiline_fstr_continuation_lns, continuation_to_uncontinued_lns,
+    multiline_str_continuation_lns, multiline_ftstr_continuation_lns, continuation_to_uncontinued_lns,
 )
 
 from .parsex import get_special_parse_mode
@@ -168,7 +168,7 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
                 lns.update(multiline_str_continuation_lns(lines, *f.loc))
 
             elif isinstance(a, (JoinedStr, TemplateStr)):
-                lns.update(multiline_fstr_continuation_lns(lines, *f.loc))
+                lns.update(multiline_ftstr_continuation_lns(lines, *f.loc))
 
                 walking.send(False)  # skip everything inside regardless, because it is evil
 
@@ -917,7 +917,7 @@ def _is_enclosed_or_line(self: fst.FST, *, pars: bool = True, whole: bool = Fals
                 lns = multiline_str_continuation_lns(self.root._lines, ln, col, end_ln, end_col)
 
             else:
-                lns = multiline_fstr_continuation_lns(self.root._lines, ln, col, end_ln, end_col)
+                lns = multiline_ftstr_continuation_lns(self.root._lines, ln, col, end_ln, end_col)
 
             if (ret := len(lns) == end_ln - ln) or out_lns is None:
                 return ret
@@ -1431,7 +1431,7 @@ def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal[
         multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
         in standard docstring locations are indentable.
     - `docstr_strict_exclude`: Special parameter for excluding non-first elements from `'strict'` `docstr` check even if
-        they come first in a slice. Should be the `Expr` of the docstr if excluding.
+        they come first in a slice. Should be the `Expr` of the docstring if excluding.
 
     **Returns:**
     - `set[int]`: Set of line numbers (zero based) which are sytactically indentable.
@@ -1482,7 +1482,7 @@ def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal[
                 lns.difference_update(multiline_str_continuation_lns(lines, *f.loc))
 
         elif isinstance(a, (JoinedStr, TemplateStr)):
-            lns.difference_update(multiline_fstr_continuation_lns(lines, *f.loc))
+            lns.difference_update(multiline_ftstr_continuation_lns(lines, *f.loc))
 
             walking.send(False)  # skip everything inside regardless, because it is evil
 
