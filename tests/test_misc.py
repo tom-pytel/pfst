@@ -692,8 +692,8 @@ b # word
         self.assertEqual(((2, 1), None, True), trailing_trivia(['a ', '   ', ' '], 2, 1, 0, 1, 2, 0))
         self.assertEqual(((0, 1), (2, 1), True), trailing_trivia(['a ', '   ', ' '], 2, 1, 0, 1, 'block', 2))
 
-    def test_multiline_str_continuation_lns(self):
-        from fst.common import multiline_str_continuation_lns as mscl
+    def test__multiline_str_continuation_lns(self):
+        from fst.fst_core import _multiline_str_continuation_lns as mscl
 
         self.assertEqual([], mscl(ls := r'''
 'a'
@@ -827,8 +827,8 @@ c' \
             '        r\'[][\\-a-zA-Z0-9./,:;+*%?!&$\\(\\)_#=~\\\'"@]*(?=[\\s>/<])))?\'',
             "    r')*\\s*/?\\s*(?=[<>])'"], 0, 0, len(ls) - 1, len(ls[-1])))
 
-    def test_multiline_ftstr_continuation_lns(self):
-        from fst.common import multiline_ftstr_continuation_lns as mscl
+    def test__multiline_ftstr_continuation_lns(self):
+        from fst.fst_core import _multiline_ftstr_continuation_lns as mscl
 
         self.assertEqual([], mscl(ls := r'''
 f'a'
@@ -963,10 +963,9 @@ f"a{(1,)}\
 y"
             '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
 
-
     @unittest.skipUnless(PYGE12, 'only valid for py >= 3.12')
-    def test_multiline_ftstr_continuation_lns_pyge12(self):
-        from fst.common import multiline_ftstr_continuation_lns as mscl
+    def test__multiline_ftstr_continuation_lns_pyge12(self):
+        from fst.fst_core import _multiline_ftstr_continuation_lns as mscl
 
         self.assertEqual([1], mscl(ls := r'''
 f"a{(1,
@@ -1020,8 +1019,8 @@ y"
             '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
 
     @unittest.skipUnless(PYGE14, 'only valid for py >= 3.14')
-    def test_multiline_tstr_continuation_lns(self):
-        from fst.common import multiline_ftstr_continuation_lns as mscl
+    def test__multiline_tstr_continuation_lns(self):
+        from fst.fst_core import _multiline_ftstr_continuation_lns as mscl
 
         self.assertEqual([], mscl(ls := r'''
 t'a'

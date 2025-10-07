@@ -3,20 +3,11 @@
 import re
 import sys
 from functools import wraps
-from io import BytesIO
 from math import log10
-from tokenize import tokenize as tokenize_tokenize, STRING
-from typing import Callable, Literal, NamedTuple, Iterable
+from typing import Callable, Literal, NamedTuple
 
 from .asttypes import AST
 from .astutil import constant
-
-FSTRING_START = FSTRING_END = TSTRING_START = TSTRING_END = None
-
-try:
-    from tokenize import FSTRING_START, FSTRING_END, TSTRING_START, TSTRING_END  # may not be present, ORDER OF IMPORT MATTERS!
-except ImportError:
-    pass
 
 try:
     from typing import Self
@@ -44,9 +35,6 @@ __all__ = [
     'prev_delims',
     'leading_trivia',
     'trailing_trivia',
-    'multiline_str_continuation_lns',
-    'multiline_ftstr_continuation_lns',
-    'continuation_to_uncontinued_lns',
 ]
 
 
@@ -60,21 +48,20 @@ PYGE12 = PYVER >= (3, 12)
 PYGE13 = PYVER >= (3, 13)
 PYGE14 = PYVER >= (3, 14)
 
-re_empty_line_start      = re.compile(r'[ \t]*')     # start of completely empty or space-filled line (from start pos, start of line indentation)
-re_empty_line            = re.compile(r'[ \t]*$')    # completely empty or space-filled line (from start pos, start of line indentation)
-re_comment_line_start    = re.compile(r'[ \t]*#')    # empty line preceding a comment
-re_line_continuation     = re.compile(r'[^#]*\\$')   # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
-re_line_trailing_space   = re.compile(r'.*?(\s*)$')  # location of trailing whitespace at the end of a line
-re_empty_space           = re.compile(r'\s*$')       # completely empty or space-filled line (from start pos, start of line indentation, any space, not just line indenting space)
+re_empty_line_start           = re.compile(r'[ \t]*')            # start of completely empty or space-filled line (from start pos, start of line indentation)
+re_empty_line                 = re.compile(r'[ \t]*$')           # completely empty or space-filled line (from start pos, start of line indentation)
+re_comment_line_start         = re.compile(r'[ \t]*#')           # empty line preceding a comment
+re_line_continuation          = re.compile(r'[^#]*\\$')          # line continuation with backslash not following a comment start '#' (from start pos, assumed no asts contained in line)
+re_line_trailing_space        = re.compile(r'.*?(\s*)$')         # location of trailing whitespace at the end of a line
+re_empty_space                = re.compile(r'\s*$')              # completely empty or space-filled line (from start pos, start of line indentation, any space, not just line indenting space)
+re_empty_line_or_cont         = re.compile(r'[ \t]*(\\)?$')      # empty line or line continuation
+re_empty_line_cont_or_comment = re.compile(r'[ \t]*(\\|#.*)?$')  # empty line or line continuation or a pure comment line
+re_line_end_cont_or_comment   = re.compile(r'.*?(\\|#.*)?$')     # line end line continuation or a comment, the first part is mostly meant to skip closing parentheses and separators, not expression stuff
 
-re_empty_line_or_cont           = re.compile(r'[ \t]*(\\)?$')            # empty line or line continuation
-re_empty_line_cont_or_comment   = re.compile(r'[ \t]*(\\|#.*)?$')        # empty line or line continuation or a pure comment line
-re_line_end_cont_or_comment     = re.compile(r'.*?(\\|#.*)?$')           # line end line continuation or a comment, the first part is mostly meant to skip closing parentheses and separators, not expression stuff
-
-re_next_src                     = re.compile(r'\s*([^\s#\\]+)')          # next non-space non-continuation non-comment code text, don't look into strings with this!
-re_next_src_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next non-space non-continuation code or comment text, don't look into strings with this!
-re_next_src_or_lcont            = re.compile(r'\s*([^\s#\\]+|\\$)')      # next non-space non-comment code including logical line end, don't look into strings with this!
-re_next_src_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # next non-space non-continuation code or comment text including logical line end, don't look into strings with this!
+_re_next_frag                     = re.compile(r'\s*([^\s#\\]+)')          # next non-space non-continuation non-comment code text, don't look into strings with this!
+_re_next_frag_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next non-space non-continuation code or comment text, don't look into strings with this!
+_re_next_frag_or_lcont            = re.compile(r'\s*([^\s#\\]+|\\$)')      # next non-space non-comment code including logical line end, don't look into strings with this!
+_re_next_frag_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # next non-space non-continuation code or comment text including logical line end, don't look into strings with this!
 
 
 class NodeError(Exception):
@@ -307,9 +294,9 @@ def next_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     """
 
     re_pat = (
-        (re_next_src_or_comment_or_lcont if comment else re_next_src_or_lcont)
+        (_re_next_frag_or_comment_or_lcont if comment else _re_next_frag_or_lcont)
         if lcont else
-        (re_next_src_or_comment if comment else re_next_src)
+        (_re_next_frag_or_comment if comment else _re_next_frag)
     )
 
     if end_ln == ln:
@@ -324,7 +311,7 @@ def next_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
 
     else:  # only match to end of logical line, regardless of (end_ln, end_col) bound
         for i in range(ln, end_ln):
-            if not (m := re_next_src_or_comment_or_lcont.match(lines[i], col)):
+            if not (m := _re_next_frag_or_comment_or_lcont.match(lines[i], col)):
                 return None
 
             if (s := m.group(1)).startswith('#'):
@@ -363,9 +350,9 @@ def prev_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     """
 
     re_pat = (
-        (re_next_src_or_comment_or_lcont if comment else re_next_src_or_lcont)
+        (_re_next_frag_or_comment_or_lcont if comment else _re_next_frag_or_lcont)
         if lcont else
-        (re_next_src_or_comment if comment else re_next_src)
+        (_re_next_frag_or_comment if comment else _re_next_frag)
     )
 
     if state is None:
@@ -403,7 +390,7 @@ def prev_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     else:  # only match to start of logical line, regardless of (ln, col) bound
         cont_ln = end_ln
 
-        if not (m := last_match(lines[end_ln], 0, end_col, re_next_src_or_comment_or_lcont)):
+        if not (m := last_match(lines[end_ln], 0, end_col, _re_next_frag_or_comment_or_lcont)):
             end_ln -= 1
             end_col = 0x7fffffffffffffff
 
@@ -416,7 +403,7 @@ def prev_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
         i = end_ln + 1
 
         while (i := i - 1) >= ln:
-            if not (m := last_match(lines[i], 0 if i > ln else col, end_col, re_next_src_or_comment_or_lcont)):
+            if not (m := last_match(lines[i], 0 if i > ln else col, end_col, _re_next_frag_or_comment_or_lcont)):
                 if i < cont_ln:  # early out
                     return None
 
@@ -906,78 +893,3 @@ def trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end
     space_pos = (end_ln, 0) if end_ln < past_bound_end_ln else bound_end_pos
 
     return (text_pos, None if space_pos == text_pos else space_pos, True)
-
-
-_F_OR_T_STRING_STARTS = (FSTRING_START, TSTRING_START)
-_F_OR_T_STRING_ENDS = (FSTRING_END, TSTRING_END)
-
-def multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:
-    """Return the line numbers of a potentially multiline string `Constant` or f or t-string continuation lines (lines
-    which should not be indented because their start is part of the string value because they follow a newline inside
-    triple quotes or single quoted backslash continued lines). The location passed MUST be from the `Constant`,
-    `JoinedStr` or `TemplateStr` `AST` node or calculated to be the same, otherwise this function will fail.
-
-    @private
-    """
-
-    lns = []
-
-    if end_ln <= ln:
-        return lns
-
-    lines = lines[ln : end_ln + 1]  # crop to just location
-
-    lines[-1] = lines[-1][:end_col]  # parentheses added to avoid at end: `IndentationError: unindent does not match any outer indentation level`
-    lines[0] = '(' + lines[0][col:]
-
-    lines.append(')')  # XXX we need to add this as a separate line and not to the end of the last line because otherwise we can get `UnicodeDecodeError: 'utf-8' codec can't decode bytes in position ...: unexpected end of data` incorrectly
-
-    tokens = tokenize_tokenize(BytesIO('\n'.join(lines).encode()).readline)
-
-    for token in tokens:
-        if (ttype := token.type) == STRING:
-            lns.extend(range(token.start[0] + ln, token.end[0] + ln))
-
-        elif ttype in _F_OR_T_STRING_STARTS:
-            start_lineno = token.start[0]
-            nesting = 1
-
-            for token in tokens:
-                if (ttype := token.type) in _F_OR_T_STRING_STARTS:
-                    nesting += 1
-
-                elif ttype in _F_OR_T_STRING_ENDS:
-                    if not (nesting := nesting - 1):
-                        lns.extend(range(start_lineno + ln, token.end[0] + ln))
-
-                        break
-
-            else:
-                raise RuntimeError('f or t-string not closed')
-
-    return lns
-
-
-multiline_ftstr_continuation_lns = multiline_str_continuation_lns
-
-
-def continuation_to_uncontinued_lns(lns: Iterable[int], ln: int, col: int, end_ln: int, end_col: int, *,
-                                     include_last: bool = False) -> set[int]:
-    """Convert `Iterable` of lines which are continued from the immediately previous line into a list of lines which are
-    not themselves continued below. If `lns` comes from the `_multiline_?str_*` functions then it does not include line
-    continuations outside of the string and those lines will be returned as uncontinued.
-
-    **Parameters:**
-    - `include_last`: Whether to include the last line as an uncontinued line or not.
-
-    **Returns:**
-    - `set[int]`: Set of uncontinued lines in the given range.
-
-    @private
-    """
-
-    out = set(range(ln, end_ln + include_last))
-
-    out.difference_update(i - 1 for i in lns)
-
-    return out

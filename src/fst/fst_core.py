@@ -7,8 +7,10 @@ from __future__ import annotations
 
 import re
 from ast import literal_eval, iter_fields, iter_child_nodes, walk
+from io import BytesIO
+from tokenize import tokenize as tokenize_tokenize, STRING
 from types import EllipsisType, TracebackType
-from typing import Literal, NamedTuple
+from typing import Iterable, Literal, NamedTuple
 
 from . import fst
 
@@ -86,7 +88,6 @@ from .common import (
     Self, astfield, fstloc, nspace, pyver,
     re_empty_line, re_empty_line_start, re_line_continuation, re_line_end_cont_or_comment,
     next_find, prev_find,
-    multiline_str_continuation_lns, multiline_ftstr_continuation_lns, continuation_to_uncontinued_lns,
 )
 
 from .parsex import get_special_parse_mode
@@ -95,6 +96,16 @@ from .locations import (
     loc_Call_pars, loc_Subscript_brackets, loc_ImportFrom_names_pars, loc_With_items_pars, loc_MatchClass_pars,
 )
 
+FSTRING_START = FSTRING_END = TSTRING_START = TSTRING_END = None
+
+try:
+    from tokenize import FSTRING_START, FSTRING_END, TSTRING_START, TSTRING_END  # may not be present, ORDER OF IMPORT MATTERS!
+except ImportError:
+    pass
+
+
+_F_OR_T_STRING_STARTS = (FSTRING_START, TSTRING_START)
+_F_OR_T_STRING_ENDS = (FSTRING_END, TSTRING_END)
 
 _HAS_FSTR_COMMENT_BUG = f'{"a#b"=}' != '"a#b"=\'a#b\''  # gh-135148
 
@@ -165,10 +176,10 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
                 walking.send(False)
 
             elif isinstance(a := f.a, Constant):  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
-                lns.update(multiline_str_continuation_lns(lines, *f.loc))
+                lns.update(_multiline_str_continuation_lns(lines, *f.loc))
 
             elif isinstance(a, (JoinedStr, TemplateStr)):
-                lns.update(multiline_ftstr_continuation_lns(lines, *f.loc))
+                lns.update(_multiline_ftstr_continuation_lns(lines, *f.loc))
 
                 walking.send(False)  # skip everything inside regardless, because it is evil
 
@@ -418,6 +429,78 @@ def _make_tree_fst(ast: AST, parent: fst.FST, pfield: astfield) -> fst.FST:
             pfield.set(parent.a, ast := ast.__class__())
 
     return fst.FST(ast, parent, pfield)
+
+
+def _multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:
+    """Return the line numbers of a potentially multiline string `Constant` or f or t-string continuation lines (lines
+    which should not be indented because their start is part of the string value because they follow a newline inside
+    triple quotes or single quoted backslash continued lines). The location passed MUST be from the `Constant`,
+    `JoinedStr` or `TemplateStr` `AST` node or calculated to be the same, otherwise this function will fail.
+
+    @private
+    """
+
+    lns = []
+
+    if end_ln <= ln:
+        return lns
+
+    lines = lines[ln : end_ln + 1]  # crop to just location
+
+    lines[-1] = lines[-1][:end_col]  # parentheses added to avoid at end: `IndentationError: unindent does not match any outer indentation level`
+    lines[0] = '(' + lines[0][col:]
+
+    lines.append(')')  # XXX we need to add this as a separate line and not to the end of the last line because otherwise we can get `UnicodeDecodeError: 'utf-8' codec can't decode bytes in position ...: unexpected end of data` incorrectly
+
+    tokens = tokenize_tokenize(BytesIO('\n'.join(lines).encode()).readline)
+
+    for token in tokens:
+        if (ttype := token.type) == STRING:
+            lns.extend(range(token.start[0] + ln, token.end[0] + ln))
+
+        elif ttype in _F_OR_T_STRING_STARTS:
+            start_lineno = token.start[0]
+            nesting = 1
+
+            for token in tokens:
+                if (ttype := token.type) in _F_OR_T_STRING_STARTS:
+                    nesting += 1
+
+                elif ttype in _F_OR_T_STRING_ENDS:
+                    if not (nesting := nesting - 1):
+                        lns.extend(range(start_lineno + ln, token.end[0] + ln))
+
+                        break
+
+            else:
+                raise RuntimeError('f or t-string not closed')
+
+    return lns
+
+
+_multiline_ftstr_continuation_lns = _multiline_str_continuation_lns
+
+
+def _continuation_to_uncontinued_lns(lns: Iterable[int], ln: int, col: int, end_ln: int, end_col: int, *,
+                                     include_last: bool = False) -> set[int]:
+    """Convert `Iterable` of lines which are continued from the immediately previous line into a list of lines which are
+    not themselves continued below. If `lns` comes from the `_multiline_?str_*` functions then it does not include line
+    continuations outside of the string and those lines will be returned as uncontinued.
+
+    **Parameters:**
+    - `include_last`: Whether to include the last line as an uncontinued line or not.
+
+    **Returns:**
+    - `set[int]`: Set of uncontinued lines in the given range.
+
+    @private
+    """
+
+    out = set(range(ln, end_ln + include_last))
+
+    out.difference_update(i - 1 for i in lns)
+
+    return out
 
 
 def _reparse_docstr_Constants(self: fst.FST, docstr: bool | Literal['strict'] = True) -> None:
@@ -914,15 +997,15 @@ def _is_enclosed_or_line(self: fst.FST, *, pars: bool = True, whole: bool = Fals
                 if not isinstance(ast.value, (str, bytes)):
                     return True
 
-                lns = multiline_str_continuation_lns(self.root._lines, ln, col, end_ln, end_col)
+                lns = _multiline_str_continuation_lns(self.root._lines, ln, col, end_ln, end_col)
 
             else:
-                lns = multiline_ftstr_continuation_lns(self.root._lines, ln, col, end_ln, end_col)
+                lns = _multiline_ftstr_continuation_lns(self.root._lines, ln, col, end_ln, end_col)
 
             if (ret := len(lns) == end_ln - ln) or out_lns is None:
                 return ret
 
-            out_lns.update(continuation_to_uncontinued_lns(lns, ln, col, end_ln, end_col))
+            out_lns.update(_continuation_to_uncontinued_lns(lns, ln, col, end_ln, end_col))
 
             return False
 
@@ -1480,10 +1563,10 @@ def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal[
                                      parent.pfield == ('body', 0) and
                                      isinstance(pparent.a, ASTS_SCOPE_NAMED_OR_MOD) and
                                      parent.a is not docstr_strict_exclude)))):
-                lns.difference_update(multiline_str_continuation_lns(lines, *f.loc))
+                lns.difference_update(_multiline_str_continuation_lns(lines, *f.loc))
 
         elif isinstance(a, (JoinedStr, TemplateStr)):
-            lns.difference_update(multiline_ftstr_continuation_lns(lines, *f.loc))
+            lns.difference_update(_multiline_ftstr_continuation_lns(lines, *f.loc))
 
             walking.send(False)  # skip everything inside regardless, because it is evil
 
