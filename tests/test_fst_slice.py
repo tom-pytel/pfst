@@ -1838,6 +1838,11 @@ c  # comment
         self.assertEqual('(z), (c)', (f := FST('a, \\\nb, (c)', 'withitems')).put_slice('(z)', 0, 2, 'items').src)
         f.verify()
 
+        if PYGE11:
+            # multiple arglikes as `one` to single arglike field
+
+            self.assertRaises(NodeError, FST('call()').put_slice, FST('*not a, *b or c', Tuple), one=True)
+
     def test_put_slice_seq_namedexpr_and_yield(self):
         self.assertEqual('a, (x := y)', (f := FST('a, b')).put_slice('x := y', 1, 2, one=True).src)
         f.verify()

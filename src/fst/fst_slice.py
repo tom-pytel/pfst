@@ -169,10 +169,10 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 # * ! S ,          (ImportFrom, 'names'):                  # alias*           -> _slice_aliases             _parse_aliases_star            - no trailing commas
 #                                                                             .
 #                                                                             .
-#   ! S            (ListComp, 'generators'):               # comprehension*   -> _slice_comprehensions      _parse_comprehensions
-#   ! S            (SetComp, 'generators'):                # comprehension*   -> _slice_comprehensions      _parse_comprehensions
-#   ! S            (DictComp, 'generators'):               # comprehension*   -> _slice_comprehensions      _parse_comprehensions
-#   ! S            (GeneratorExp, 'generators'):           # comprehension*   -> _slice_comprehensions      _parse_comprehensions
+#   ! S ' '        (ListComp, 'generators'):               # comprehension*   -> _slice_comprehensions      _parse_comprehensions
+#   ! S ' '        (SetComp, 'generators'):                # comprehension*   -> _slice_comprehensions      _parse_comprehensions
+#   ! S ' '        (DictComp, 'generators'):               # comprehension*   -> _slice_comprehensions      _parse_comprehensions
+#   ! S ' '        (GeneratorExp, 'generators'):           # comprehension*   -> _slice_comprehensions      _parse_comprehensions
 #                                                                             .
 #   ! S    if      (comprehension, 'ifs'):                 # expr*            -> _slice_comprehension_ifs   _parse_comprehension_ifs
 #                                                                             .
@@ -2354,11 +2354,16 @@ def _code_to_slice_expr_arglikes(self: fst.FST, code: Code | None, one: bool, op
 
     if one:
         fst_ = code_as_expr_arglike(code, self.root.parse_params, sanitize=False)
+        ast_ = fst_.a
 
-        if fst_._is_parenthesized_tuple() is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
-            fst_._delimit_node()
+        if (is_par := fst_._is_parenthesized_tuple()) is not None:
+            if fst_ is code and any(e.f.is_expr_arglike for e in ast_.elts):
+                raise NodeError("cannot put argument-like expression(s) in a Tuple as 'one'")
 
-        ast_ = Tuple(elts=[fst_.a], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+            if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
+                fst_._delimit_node()
+
+        ast_ = Tuple(elts=[ast_], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                      end_col_offset=ls[-1].lenbytes)
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)

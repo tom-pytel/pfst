@@ -26,6 +26,7 @@ from .asttypes import (
     Attribute,
     AugAssign,
     Await,
+    BinOp,
     BoolOp,
     Call,
     ClassDef,
@@ -101,8 +102,9 @@ from .asttypes import (
 )
 
 from .astutil import (
-    bistr, constant, FIELDS, AST_FIELDS, OPCLS2STR, WalkFail,
+    constant, FIELDS, AST_FIELDS, OPCLS2STR, bistr, WalkFail,
     has_type_comments, compare_asts, copy_ast, last_block_header_child, syntax_ordered_children,
+    precedence_require_parens_by_type,
 )
 
 from .common import (
@@ -631,6 +633,24 @@ class FST:
         `GeneratorExp`."""
 
         return isinstance(self.a, ASTS_SCOPE_ANONYMOUS)
+
+    @property
+    def is_expr_arglike(self) -> bool:
+        """Is an argument-like expression which can only appear in a `Call.args`, `ClassDef.bases` or `.slice`
+        `Tuple.elts` list, e.g. `*not a`, `*a or b`. Normal expressions and properly parenthesized `Starred` expressions
+        return `False`."""
+
+        if not isinstance(ast := self.a, Starred):
+            return False
+
+        child_type = (child.op.__class__
+                      if (child_cls := (child := ast.value).__class__) in (BoolOp, BinOp, UnaryOp) else
+                      child_cls)
+
+        if not precedence_require_parens_by_type(child_type, Starred, 'value'):
+            return False
+
+        return not child.f.pars().n
 
     @property
     def f(self) -> None:
