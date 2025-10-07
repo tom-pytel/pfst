@@ -20308,6 +20308,35 @@ ClassDef - ROOT 0,0..0,29
   .body[1]
   0] Pass - 0,25..0,29
 '''),
+
+(44, '', None, None, 'bases', {'_ver': 11}, (None,
+r'''class cls: pass'''), (None,
+r'''*not a, *b or c'''),
+r'''class cls(*not a, *b or c): pass''',
+r'''class cls(*(not a), *(b or c)): pass''', r'''
+ClassDef - ROOT 0,0..0,32
+  .name 'cls'
+  .bases[2]
+  0] Starred - 0,10..0,16
+    .value UnaryOp - 0,11..0,16
+      .op Not - 0,11..0,14
+      .operand Name 'a' Load - 0,15..0,16
+    .ctx Load
+  1] Starred - 0,18..0,25
+    .value BoolOp - 0,19..0,25
+      .op Or
+      .values[2]
+      0] Name 'b' Load - 0,19..0,20
+      1] Name 'c' Load - 0,24..0,25
+    .ctx Load
+  .body[1]
+  0] Pass - 0,28..0,32
+'''),
+
+(45, '', None, None, 'bases', {'one': True}, (None,
+r'''class cls: pass'''), (None,
+r'''*not a, *b or c'''),
+r'''**ParseError('expecting single argumnent-like expression')**'''),
 ],
 
 'ClassDef_bases_w_type_params': [  # ................................................................................
@@ -22428,6 +22457,33 @@ Call - ROOT 0,0..0,18
   0] keyword - 0,13..0,16
     .value Name 'c' Load - 0,15..0,16
 '''),
+
+(49, '', 0, 2, None, {'_ver': 11}, (None,
+r'''call()'''), (None,
+r'''*not a, *b or c'''),
+r'''call(*not a, *b or c)''',
+r'''call(*(not a), *(b or c))''', r'''
+Call - ROOT 0,0..0,21
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+  0] Starred - 0,5..0,11
+    .value UnaryOp - 0,6..0,11
+      .op Not - 0,6..0,9
+      .operand Name 'a' Load - 0,10..0,11
+    .ctx Load
+  1] Starred - 0,13..0,20
+    .value BoolOp - 0,14..0,20
+      .op Or
+      .values[2]
+      0] Name 'b' Load - 0,14..0,15
+      1] Name 'c' Load - 0,19..0,20
+    .ctx Load
+'''),
+
+(50, '', 0, 2, None, {'one': True}, (None,
+r'''call()'''), (None,
+r'''*not a, *b or c'''),
+r'''**ParseError('expecting single argumnent-like expression')**'''),
 ],
 
 'MatchMapping': [  # ................................................................................

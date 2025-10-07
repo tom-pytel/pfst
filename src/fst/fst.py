@@ -636,9 +636,9 @@ class FST:
 
     @property
     def is_expr_arglike(self) -> bool:
-        """Is an argument-like expression which can only appear in a `Call.args`, `ClassDef.bases` or `.slice`
-        `Tuple.elts` list, e.g. `*not a`, `*a or b`. Normal expressions and properly parenthesized `Starred` expressions
-        return `False`."""
+        """Is an argument-like expression which can only appear in a `Call.args` or `ClassDef.bases` (or a `.slice`
+        `Tuple.elts` in py 3.11+) list, e.g. `*not a`, `*a or b`. Normal expressions and properly parenthesized
+        `Starred` expressions return `False`."""
 
         if not isinstance(ast := self.a, Starred):
             return False

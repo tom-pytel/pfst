@@ -882,8 +882,8 @@ def parse_expr_arglike(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     ast = args[0]
 
-    if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
-        raise ParseError('expecting argumnent-like expression, got unparenthesized GeneratorExp')
+    # if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
+    #     raise ParseError('expecting argumnent-like expression, got unparenthesized GeneratorExp')
 
     return _offset_linenos(ast, -1)
 

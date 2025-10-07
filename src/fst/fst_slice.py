@@ -597,6 +597,14 @@ def _maybe_fix_Set(self: fst.FST, empty: bool | Literal['star', 'call'] = True) 
         self._set_ast(ast)
 
 
+def _maybe_fix_Tuple_arglikes(self: fst.FST) -> None:
+    # assert isinstance(self.a, Tuple)
+
+    for e in self.a.elts:
+        if (f := e.f).is_expr_arglike:
+            f.value.par()  # will be a Starred
+
+
 def _maybe_fix_MatchSequence(self: fst.FST, delims: Literal['', '[]', '()'] | None = None) -> str:
     # assert isinstance(self.a, MatchSequence)
 
@@ -1329,6 +1337,9 @@ def _get_slice_ClassDef_bases(self: fst.FST, start: int | Literal['end'] | None,
                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
                           options, 'bases', '(', ')', ',', self_tail_sep, len_slice == 1)
 
+    if self.get_option('pars', options):  # parenthesize any arglike expressions
+        _maybe_fix_Tuple_arglikes(fst_)
+
     if keywords:
         if cut and start and stop == len_body:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
             self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
@@ -1381,6 +1392,9 @@ def _get_slice_Call_args(self: fst.FST, start: int | Literal['end'] | None, stop
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
                           options, 'args', '(', ')', ',', self_tail_sep, len_slice == 1)
+
+    if self.get_option('pars', options):  # parenthesize any arglike expressions
+        _maybe_fix_Tuple_arglikes(fst_)
 
     if cut and start and keywords and stop == len_body:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
         self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there

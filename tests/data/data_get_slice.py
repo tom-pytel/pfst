@@ -10024,6 +10024,54 @@ Tuple - ROOT 0,0..0,17
       .is_async 0
   .ctx Load
 '''),
+
+(22, '', None, None, None, {}, (None,
+r'''call(*not a, *b or c)'''),
+r'''call()''', r'''
+Call - ROOT 0,0..0,6
+  .func Name 'call' Load - 0,0..0,4
+''',
+r'''(*(not a), *(b or c))''', r'''
+Tuple - ROOT 0,0..0,21
+  .elts[2]
+  0] Starred - 0,1..0,9
+    .value UnaryOp - 0,3..0,8
+      .op Not - 0,3..0,6
+      .operand Name 'a' Load - 0,7..0,8
+    .ctx Load
+  1] Starred - 0,11..0,20
+    .value BoolOp - 0,13..0,19
+      .op Or
+      .values[2]
+      0] Name 'b' Load - 0,13..0,14
+      1] Name 'c' Load - 0,18..0,19
+    .ctx Load
+  .ctx Load
+'''),
+
+(23, '', None, None, None, {'pars': False, '_verify_get': False}, (None,
+r'''call(*not a, *b or c)'''),
+r'''call()''', r'''
+Call - ROOT 0,0..0,6
+  .func Name 'call' Load - 0,0..0,4
+''',
+r'''(*not a, *b or c)''', r'''
+Tuple - ROOT 0,0..0,17
+  .elts[2]
+  0] Starred - 0,1..0,7
+    .value UnaryOp - 0,2..0,7
+      .op Not - 0,2..0,5
+      .operand Name 'a' Load - 0,6..0,7
+    .ctx Load
+  1] Starred - 0,9..0,16
+    .value BoolOp - 0,10..0,16
+      .op Or
+      .values[2]
+      0] Name 'b' Load - 0,10..0,11
+      1] Name 'c' Load - 0,15..0,16
+    .ctx Load
+  .ctx Load
+'''),
 ],
 
 'ClassDef_bases': [  # ................................................................................
@@ -10635,6 +10683,58 @@ r'''(b,)''', r'''
 Tuple - ROOT 0,0..0,4
   .elts[1]
   0] Name 'b' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(24, '', None, None, 'bases', {}, (None,
+r'''class cls(*not a, *b or c): pass'''),
+r'''class cls: pass''', r'''
+ClassDef - ROOT 0,0..0,15
+  .name 'cls'
+  .body[1]
+  0] Pass - 0,11..0,15
+''',
+r'''(*(not a), *(b or c))''', r'''
+Tuple - ROOT 0,0..0,21
+  .elts[2]
+  0] Starred - 0,1..0,9
+    .value UnaryOp - 0,3..0,8
+      .op Not - 0,3..0,6
+      .operand Name 'a' Load - 0,7..0,8
+    .ctx Load
+  1] Starred - 0,11..0,20
+    .value BoolOp - 0,13..0,19
+      .op Or
+      .values[2]
+      0] Name 'b' Load - 0,13..0,14
+      1] Name 'c' Load - 0,18..0,19
+    .ctx Load
+  .ctx Load
+'''),
+
+(25, '', None, None, 'bases', {'pars': False, '_verify_get': False}, (None,
+r'''class cls(*not a, *b or c): pass'''),
+r'''class cls: pass''', r'''
+ClassDef - ROOT 0,0..0,15
+  .name 'cls'
+  .body[1]
+  0] Pass - 0,11..0,15
+''',
+r'''(*not a, *b or c)''', r'''
+Tuple - ROOT 0,0..0,17
+  .elts[2]
+  0] Starred - 0,1..0,7
+    .value UnaryOp - 0,2..0,7
+      .op Not - 0,2..0,5
+      .operand Name 'a' Load - 0,6..0,7
+    .ctx Load
+  1] Starred - 0,9..0,16
+    .value BoolOp - 0,10..0,16
+      .op Or
+      .values[2]
+      0] Name 'b' Load - 0,10..0,11
+      1] Name 'c' Load - 0,15..0,16
+    .ctx Load
   .ctx Load
 '''),
 ],
