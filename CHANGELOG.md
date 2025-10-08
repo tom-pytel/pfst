@@ -2,12 +2,14 @@
 
 ### Fixed
 
+- get one from `Compare` returns copied node instead of original
 - never consider `bytes` as docstrings
 - multiline f/t-strings joined by line continuations indented correctly
 - put string `Expr` as `'strict'` docstr don't in/dedent if not first element
 
 ### Added
 
+- `FST.is_expr_arglike` to determine if expression only valid in `Call.args` or `ClassDef.bases`
 - `put_src()` offset and no AST change modes
 - `find_loc()` simple find location in or containing given location
 - `fst.parse()` handles `bytes` and `AST` as source
@@ -16,6 +18,7 @@
 
 ### Updated
 
+- put slice source to `Call.args` and `ClassDef.bases` doesn't need trialing comma
 - `get_src()` and `put_src()` clip and validate coordinates
 - LOTS of code cleanups, refactor, clean up API
 

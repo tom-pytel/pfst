@@ -294,7 +294,7 @@ def _get_one_default(self: fst.FST, idx: int | None, field: str, cut: bool, opti
     loc = childf.pars() if self.get_option('pars', options) is True else childf.bloc
 
     if not loc:
-        raise ValueError('cannot copy node which does not have a location')
+        raise ValueError('cannot get node which does not have a location')
 
     ret, _ = childf._make_fst_and_dedent(childf, copy_ast(child), loc, docstr=self.get_option('docstr', options))
 
@@ -343,11 +343,11 @@ def _get_one_BoolOp_op(self: fst.FST, idx: int | None, field: str, cut: bool, op
     return fst.FST(And(), ['and'], from_=self) if isinstance(child, And) else fst.FST(Or(), ['or'], from_=self)  # just create new ones because they can be in multiple places
 
 
-def _get_one_Compare_combined(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any],
+def _get_one_Compare_(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any],
                               ) -> _GetOneRet:
-    idx, _, child = _params_Compare_combined(self, idx)
+    idx, field, _ = _params_Compare_combined(self, idx)
 
-    return child.f if idx is None else child[idx].f
+    return _get_one_default(self, idx, field, cut, options)
 
 
 def _get_one_invalid_combined(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any],
@@ -640,7 +640,7 @@ _GET_ONE_HANDLERS = {
     (Compare, 'left'):                    _get_one_default,  # expr
     (Compare, 'ops'):                     _get_one_default,  # cmpop*
     (Compare, 'comparators'):             _get_one_default,  # expr*
-    (Compare, ''):                        _get_one_Compare_combined,  # expr*
+    (Compare, ''):                        _get_one_Compare_,  # expr*
     (Call, 'func'):                       _get_one_default,  # expr
     (Call, 'args'):                       _get_one_default,  # expr*
     (Call, 'keywords'):                   _get_one_default,  # keyword*
