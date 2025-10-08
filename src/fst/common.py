@@ -13,10 +13,32 @@ try:
     from typing import Self
 except ImportError:  # for py 3.10
     from typing import ForwardRef
-
     Self = ForwardRef('FST')
 
+FSTRING_START = FSTRING_END = TSTRING_START = TSTRING_END = None
+
+try:
+    from tokenize import FSTRING_START, FSTRING_END
+except ImportError:
+    FTSTRING_START_TOKENS = FTSTRING_END_TOKENS = ()
+else:
+    try:
+        from tokenize import TSTRING_START, TSTRING_END
+    except ImportError:
+        FTSTRING_START_TOKENS = (FSTRING_START,)
+        FTSTRING_END_TOKENS = (FSTRING_END,)
+    else:
+        FTSTRING_START_TOKENS = (FSTRING_START, TSTRING_START)
+        FTSTRING_END_TOKENS = (FSTRING_END, TSTRING_END)
+
 __all__ = [
+    'Self',
+    'FSTRING_START',
+    'FSTRING_END',
+    'TSTRING_START',
+    'TSTRING_END',
+    'FTSTRING_START_TOKENS',
+    'FTSTRING_END_TOKENS',
     'NodeError',
     'astfield',
     'fstloc',

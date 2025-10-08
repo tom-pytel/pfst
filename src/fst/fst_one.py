@@ -121,7 +121,7 @@ from .astutil import (
 )
 
 from .common import (
-    PYLT11, PYGE14, NodeError, astfield, fstloc, pyver,
+    FTSTRING_END_TOKENS, PYLT11, PYGE14, NodeError, astfield, fstloc, pyver,
     next_frag, prev_frag, next_find, prev_find, next_find_re, prev_delims,
 )
 
@@ -160,12 +160,6 @@ from .locations import (
     loc_Global_Nonlocal_names,
 )
 
-FSTRING_END = TSTRING_END = None
-
-try:
-    from tokenize import FSTRING_END, TSTRING_END  # may not be present, ORDER OF IMPORT MATTERS!
-except ImportError:
-    pass
 
 _GetOneRet  = Union['fst.FST', None, str, constant]
 _PutOneCode = Code | str | constant | None  # yes, None is already in constant, but just to make this explicit that None may be in place of an expected AST where a constant is not expected
@@ -439,7 +433,7 @@ def _get_one_format_spec(self: fst.FST, idx: int | None, field: str, cut: bool, 
                 if (q := token.string[-3:]) not in ('"""', "'''"):
                     q = q[-1:]
 
-            elif ttype == FSTRING_END or ttype == TSTRING_END:
+            elif ttype in FTSTRING_END_TOKENS:
                 q = token.string
             else:
                 continue

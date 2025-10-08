@@ -85,6 +85,7 @@ from .asttypes import (
 from .astutil import bistr, syntax_ordered_children
 
 from .common import (
+    FTSTRING_START_TOKENS, FTSTRING_END_TOKENS,
     Self, astfield, fstloc, nspace, pyver,
     re_empty_line, re_empty_line_start, re_line_continuation, re_line_end_cont_or_comment,
     next_find, prev_find,
@@ -96,16 +97,6 @@ from .locations import (
     loc_Call_pars, loc_Subscript_brackets, loc_ImportFrom_names_pars, loc_With_items_pars, loc_MatchClass_pars,
 )
 
-FSTRING_START = FSTRING_END = TSTRING_START = TSTRING_END = None
-
-try:
-    from tokenize import FSTRING_START, FSTRING_END, TSTRING_START, TSTRING_END  # may not be present, ORDER OF IMPORT MATTERS!
-except ImportError:
-    pass
-
-
-_F_OR_T_STRING_STARTS = (FSTRING_START, TSTRING_START)
-_F_OR_T_STRING_ENDS = (FSTRING_END, TSTRING_END)
 
 _HAS_FSTR_COMMENT_BUG = f'{"a#b"=}' != '"a#b"=\'a#b\''  # gh-135148
 
@@ -450,7 +441,7 @@ def _multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln:
     lines[-1] = lines[-1][:end_col]  # parentheses added to avoid at end: `IndentationError: unindent does not match any outer indentation level`
     lines[0] = '(' + lines[0][col:]
 
-    lines.append(')')  # XXX we need to add this as a separate line and not to the end of the last line because otherwise we can get `UnicodeDecodeError: 'utf-8' codec can't decode bytes in position ...: unexpected end of data` incorrectly
+    lines.append(')')  # XXX gh-139516 we add this as a separate line and not to the end of the last line because it can help bug `UnicodeDecodeError: 'utf-8' codec can't decode bytes in position ...: unexpected end of data` incorrectly
 
     tokens = tokenize_tokenize(BytesIO('\n'.join(lines).encode()).readline)
 
@@ -458,15 +449,15 @@ def _multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln:
         if (ttype := token.type) == STRING:
             lns.extend(range(token.start[0] + ln, token.end[0] + ln))
 
-        elif ttype in _F_OR_T_STRING_STARTS:
+        elif ttype in FTSTRING_START_TOKENS:
             start_lineno = token.start[0]
             nesting = 1
 
             for token in tokens:
-                if (ttype := token.type) in _F_OR_T_STRING_STARTS:
+                if (ttype := token.type) in FTSTRING_START_TOKENS:
                     nesting += 1
 
-                elif ttype in _F_OR_T_STRING_ENDS:
+                elif ttype in FTSTRING_END_TOKENS:
                     if not (nesting := nesting - 1):
                         lns.extend(range(start_lineno + ln, token.end[0] + ln))
 
