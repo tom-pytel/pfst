@@ -1376,6 +1376,34 @@ def parse_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 # ......................................................................................................................
 
+def _parse_expr_arglikes(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse to a `Tuple` of zero or more arglike expressions as would be seen as a sequence of `Call.args`. If there
+    are parentheses then they belong to the elements as the `Tuple` itself cannot have any. If there is a single element
+    it does not need to have a trailing comma.
+
+    **WARNING!** The `Tuple` that is returned may be an invalid python `Tuple` as it may be an empty `Tuple` `AST` with
+    source having no parentheses or an unparenthesized `Tuple` with incorrect start and stop locations. Intended as a
+    convenience for putting slices.
+
+    **Note:** This parse mode is NOT included as a string parse `Mode`.
+    """
+
+    try:
+        value = _ast_parse1(f'f(\n{src}\n)', parse_params).value
+    except SyntaxError:
+        raise SyntaxError('invalid argument-like expression(s)') from None
+
+    if value.keywords:
+        raise ParseError('expecting only argumnent-like expression(s), got keyword')
+
+    ast = Tuple(elts=value.args, ctx=Load(), lineno=2, col_offset=0, end_lineno=2 + src.count('\n'),
+                end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
+
+    return _offset_linenos(ast, -1)
+
+
+# ......................................................................................................................
+
 _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type but that will parse ALL of those types without error, not all parsed in desired but all desired in parsed
     'all':                    parse_all,
     'strict':                 parse_strict,

@@ -87,6 +87,7 @@ from .parsex import (
     parse_pattern,
     parse_type_param,
     parse_type_params,
+    _parse_expr_arglikes,
 )
 
 __all__ = [
@@ -764,3 +765,22 @@ def code_as_constant(code: constant, parse_params: Mapping[str, Any] = {}) -> co
         raise NodeError('expecting constant', rawable=True)
 
     return code
+
+
+# ......................................................................................................................
+
+def _code_as_expr_arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+    """Convert `code` to a `Tuple` contianing possibly arglike expressions. Meant for putting slices to `Call.args` and
+    `ClassDef.bases`.
+
+    **WARNING!** The `Tuple` that is returned may be an invalid python `Tuple` as it may be an empty `Tuple` `AST` with
+    source having no parentheses or an unparenthesized `Tuple` with incorrect start and stop locations. Meant as a
+    convenience for putting slices.
+
+    **Note:** This parse mode is NOT included as a string parse `Mode`.
+    """
+
+    if isinstance(code, Tuple):  # strip parentheses
+        code = _fixing_unparse(code)[1:-1]
+
+    return _code_as(code, Tuple, parse_params, _parse_expr_arglikes, sanitize=sanitize)

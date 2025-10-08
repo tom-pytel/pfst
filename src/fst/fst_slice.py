@@ -86,13 +86,14 @@ from .parsex import unparse
 
 from .code import (
     Code,
-    code_as_expr, code_as_expr_all, code_as_expr_arglike, code_as_Tuple, code_as_Assign_targets,
+    code_as_expr, code_as_expr_all, code_as_expr_arglike, code_as_Assign_targets,
     code_as_alias, code_as_aliases,
     code_as_Import_name, code_as_Import_names,
     code_as_ImportFrom_name, code_as_ImportFrom_names,
     code_as_withitem, code_as_withitems,
     code_as_pattern,
     code_as_type_param, code_as_type_params,
+    _code_as_expr_arglikes,
 )
 
 from .traverse import prev_bound
@@ -2358,27 +2359,8 @@ def _code_to_slice_expr_arglikes(self: fst.FST, code: Code | None, one: bool, op
     if code is None:
         return None
 
-    fst_ = None
-
-    if not one:  # this block exists to allow assignment of non-sequence expr_arglike source to slice
-        try:
-            fst_ = code_as_Tuple(code, self.root.parse_params, sanitize=False)
-
-        except (SyntaxError, NodeError) as exc:
-            if not isinstance(code, (str, list)):  # this exists as a convenience for allowing doing `class.bases = base` (without trailing comma if string source)
-                raise
-
-            try:
-                fst_ = code_as_expr_arglike(code, self.root.parse_params, sanitize=False)
-            except (SyntaxError, NodeError):
-                raise exc from None
-
-            one = True
-
     if one:
-        if fst_ is None:
-            fst_ = code_as_expr_arglike(code, self.root.parse_params, sanitize=False)
-
+        fst_ = code_as_expr_arglike(code, self.root.parse_params, sanitize=False)
         ast_ = fst_.a
 
         if (is_par := fst_._is_parenthesized_tuple()) is not None:
@@ -2393,7 +2375,7 @@ def _code_to_slice_expr_arglikes(self: fst.FST, code: Code | None, one: bool, op
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
-    # fst_ = code_as_Tuple(code, self.root.parse_params, sanitize=False)
+    fst_ = _code_as_expr_arglikes(code, self.root.parse_params, sanitize=False)
 
     if not fst_.a.elts:  # put empty sequence is same as delete
         return None

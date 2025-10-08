@@ -4139,9 +4139,7 @@ def f():
                 fst = FST(src, mode)
 
                 fst.verify(mode)
-
-                if not isinstance(fst.a, Tuple) or fst.a.elts:  # zero-length tuples may not be valid due to special use in slices
-                    fst.verify()
+                fst.verify()
 
                 if isinstance(a := fst.a, Expression):
                     a = a.body
