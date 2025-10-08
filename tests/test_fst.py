@@ -2024,6 +2024,72 @@ a + \
         f._put_src(None, 0, 5, 0, 6, False)
         self.assertFalse(f._is_enclosed_or_line())
 
+    def test__is_enclosed_or_multiline_str(self):
+        self.assertTrue(FST(r'''["""a
+b
+c"""]''').elts[0]._is_enclosed_or_line())
+
+        self.assertTrue(FST(r'''["a \
+b \
+c"]''').elts[0]._is_enclosed_or_line())
+
+        self.assertTrue(FST(r'''["a" \
+"b" \
+"c"]''').elts[0]._is_enclosed_or_line())
+
+        self.assertTrue(FST(r'''["a" \
+"b \
+c"]''').elts[0]._is_enclosed_or_line())
+
+        self.assertFalse(FST(r'''["a" \
+"b"
+"c"]''').elts[0]._is_enclosed_or_line())
+
+        # f-string
+
+        self.assertTrue(FST(r'''[f"""a
+b
+c"""]''').elts[0]._is_enclosed_or_line())
+
+        self.assertTrue(FST(r'''[f"a \
+b \
+c"]''').elts[0]._is_enclosed_or_line())
+
+        self.assertTrue(FST(r'''[f"a" \
+f"b" \
+f"c"]''').elts[0]._is_enclosed_or_line())
+
+        self.assertTrue(FST(r'''[f"a" \
+f"b \
+c"]''').elts[0]._is_enclosed_or_line())
+
+        self.assertFalse(FST(r'''[f"a" \
+f"b"
+f"c"]''').elts[0]._is_enclosed_or_line())
+
+        # t-string
+
+        if PYGE14:
+            self.assertTrue(FST(r'''[t"""a
+b
+c"""]''').elts[0]._is_enclosed_or_line())
+
+            self.assertTrue(FST(r'''[t"a \
+b \
+c"]''').elts[0]._is_enclosed_or_line())
+
+            self.assertTrue(FST(r'''[t"a" \
+t"b" \
+t"c"]''').elts[0]._is_enclosed_or_line())
+
+            self.assertTrue(FST(r'''[t"a" \
+t"b \
+c"]''').elts[0]._is_enclosed_or_line())
+
+            self.assertFalse(FST(r'''[t"a" \
+t"b"
+t"c"]''').elts[0]._is_enclosed_or_line())
+
     def test__is_enclosed_in_parents(self):
         self.assertFalse(FST('i', 'exec').body[0]._is_enclosed_in_parents())
         self.assertFalse(FST('i', 'single').body[0]._is_enclosed_in_parents())

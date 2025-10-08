@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- multiline implicit strings with line continuations no longer considered unenclosed
 - get one from `Compare` returns copied node instead of original
 - never consider `bytes` as docstrings
 - multiline f/t-strings joined by line continuations indented correctly

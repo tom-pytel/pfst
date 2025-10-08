@@ -426,10 +426,7 @@ def _multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln:
     """Return the line numbers of a potentially multiline string `Constant` or f or t-string continuation lines (lines
     which should not be indented because their start is part of the string value because they follow a newline inside
     triple quotes or single quoted backslash continued lines). The location passed MUST be from the `Constant`,
-    `JoinedStr` or `TemplateStr` `AST` node or calculated to be the same, otherwise this function will fail.
-
-    @private
-    """
+    `JoinedStr` or `TemplateStr` `AST` node or calculated to be the same, otherwise this function will fail."""
 
     lns = []
 
@@ -483,8 +480,6 @@ def _continuation_to_uncontinued_lns(lns: Iterable[int], ln: int, col: int, end_
 
     **Returns:**
     - `set[int]`: Set of uncontinued lines in the given range.
-
-    @private
     """
 
     out = set(range(ln, end_ln + include_last))
@@ -992,6 +987,12 @@ def _is_enclosed_or_line(self: fst.FST, *, pars: bool = True, whole: bool = Fals
 
             else:
                 lns = _multiline_ftstr_continuation_lns(self.root._lines, ln, col, end_ln, end_col)
+
+            lns = set(lns)
+
+            for i in range(ln, end_ln):  # set any line that follows a line continuation as a continuation (not normally set by _multiline_str_* functions)
+                if lines[i].endswith('\\'):  # this is fine whether it is part of string or not
+                    lns.add(i + 1)
 
             if (ret := len(lns) == end_ln - ln) or out_lns is None:
                 return ret
