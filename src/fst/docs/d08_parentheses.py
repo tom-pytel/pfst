@@ -162,6 +162,35 @@ This can be changed with the `pars_walrus` option (which also needs `pars` to no
 (b := c)
 ```
 
+Argument-like expressions which may not be valid outside their normal context (`Call.args`, `ClassDef.bases` or a
+`Subscript.slice` `Tuple`) are normally parenthesized on get. This can be turned off via the `pars_arglike` option.
+
+```py
+>>> f = FST('call(*a or b)')
+
+>>> g = f.args[0].copy()
+
+>>> print(g.src)
+*(a or b)
+
+>>> g = f.args[0].copy(pars_arglike=False)
+
+>>> print(g.src)
+*a or b
+```
+
+They are also not parenthesized if `pars=False`.
+
+```py
+>>> f = FST('class cls(*not a, *b, *c or d): pass')
+
+>>> print(f.get_slice('bases').src)
+(*(not a), *b, *(c or d))
+
+>>> print(f.get_slice('bases', pars=False).src)
+(*not a, *b, *c or d)
+```
+
 ## `pars` modes
 
 The `pars` option has been mentioned above with two possible values, `True` and `False`, but its default value of

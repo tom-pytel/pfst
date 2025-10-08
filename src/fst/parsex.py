@@ -926,7 +926,6 @@ def parse_expr_sliceelt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     try:
         ast = parse_expr_slice(src, parse_params)
-
     except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11
         return parse_expr(src, parse_params)
 
