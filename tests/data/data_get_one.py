@@ -2328,6 +2328,210 @@ TypeVarTuple - ROOT 0,0..0,2
 r'''**None**'''),
 ],
 
+'arglike': [  # ................................................................................
+
+(0, '', 0, False, 'bases', {}, (ClassDef,
+r'''class cls(*a): pass'''),
+r'''class cls: pass''', r'''
+ClassDef - ROOT 0,0..0,15
+  .name 'cls'
+  .body[1]
+  0] Pass - 0,11..0,15
+''',
+r'''*a''', r'''
+Starred - ROOT 0,0..0,2
+  .value Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(1, '', 0, False, 'bases', {}, (ClassDef,
+r'''class cls(*not a): pass'''),
+r'''class cls: pass''', r'''
+ClassDef - ROOT 0,0..0,15
+  .name 'cls'
+  .body[1]
+  0] Pass - 0,11..0,15
+''',
+r'''*(not a)''', r'''
+Starred - ROOT 0,0..0,8
+  .value UnaryOp - 0,2..0,7
+    .op Not - 0,2..0,5
+    .operand Name 'a' Load - 0,6..0,7
+  .ctx Load
+'''),
+
+(2, '', 0, False, 'bases', {'pars': False}, (ClassDef,
+r'''class cls(*not a): pass'''),
+r'''class cls: pass''', r'''
+ClassDef - ROOT 0,0..0,15
+  .name 'cls'
+  .body[1]
+  0] Pass - 0,11..0,15
+''',
+r'''*not a''', r'''
+Starred - ROOT 0,0..0,6
+  .value UnaryOp - 0,1..0,6
+    .op Not - 0,1..0,4
+    .operand Name 'a' Load - 0,5..0,6
+  .ctx Load
+'''),
+
+(3, '', 0, False, 'bases', {'pars_arglike': False}, (ClassDef,
+r'''class cls(*not a): pass'''),
+r'''class cls: pass''', r'''
+ClassDef - ROOT 0,0..0,15
+  .name 'cls'
+  .body[1]
+  0] Pass - 0,11..0,15
+''',
+r'''*not a''', r'''
+Starred - ROOT 0,0..0,6
+  .value UnaryOp - 0,1..0,6
+    .op Not - 0,1..0,4
+    .operand Name 'a' Load - 0,5..0,6
+  .ctx Load
+'''),
+
+(4, '', 0, False, 'args', {}, (Call,
+r'''call(*a)'''),
+r'''call()''', r'''
+Call - ROOT 0,0..0,6
+  .func Name 'call' Load - 0,0..0,4
+''',
+r'''*a''', r'''
+Starred - ROOT 0,0..0,2
+  .value Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(5, '', 0, False, 'args', {}, (Call,
+r'''call(*not a)'''),
+r'''call()''', r'''
+Call - ROOT 0,0..0,6
+  .func Name 'call' Load - 0,0..0,4
+''',
+r'''*(not a)''', r'''
+Starred - ROOT 0,0..0,8
+  .value UnaryOp - 0,2..0,7
+    .op Not - 0,2..0,5
+    .operand Name 'a' Load - 0,6..0,7
+  .ctx Load
+'''),
+
+(6, '', 0, False, 'args', {'pars': False}, (Call,
+r'''call(*not a)'''),
+r'''call()''', r'''
+Call - ROOT 0,0..0,6
+  .func Name 'call' Load - 0,0..0,4
+''',
+r'''*not a''', r'''
+Starred - ROOT 0,0..0,6
+  .value UnaryOp - 0,1..0,6
+    .op Not - 0,1..0,4
+    .operand Name 'a' Load - 0,5..0,6
+  .ctx Load
+'''),
+
+(7, 'slice', 0, False, 'elts', {'_ver': 11}, (Subscript,
+r'''sub[*a]'''),
+r'''sub[()]''', r'''
+Subscript - ROOT 0,0..0,7
+  .value Name 'sub' Load - 0,0..0,3
+  .slice Tuple - 0,4..0,6
+    .ctx Load
+  .ctx Load
+''',
+r'''*a''', r'''
+Starred - ROOT 0,0..0,2
+  .value Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(8, 'slice', 0, False, 'elts', {'_ver': 11}, (Subscript,
+r'''sub[*not a]'''),
+r'''sub[()]''', r'''
+Subscript - ROOT 0,0..0,7
+  .value Name 'sub' Load - 0,0..0,3
+  .slice Tuple - 0,4..0,6
+    .ctx Load
+  .ctx Load
+''',
+r'''*(not a)''', r'''
+Starred - ROOT 0,0..0,8
+  .value UnaryOp - 0,2..0,7
+    .op Not - 0,2..0,5
+    .operand Name 'a' Load - 0,6..0,7
+  .ctx Load
+'''),
+
+(9, 'slice', 0, False, 'elts', {'_ver': 11, 'pars': False}, (Subscript,
+r'''sub[*not a]'''),
+r'''sub[()]''', r'''
+Subscript - ROOT 0,0..0,7
+  .value Name 'sub' Load - 0,0..0,3
+  .slice Tuple - 0,4..0,6
+    .ctx Load
+  .ctx Load
+''',
+r'''*not a''', r'''
+Starred - ROOT 0,0..0,6
+  .value UnaryOp - 0,1..0,6
+    .op Not - 0,1..0,4
+    .operand Name 'a' Load - 0,5..0,6
+  .ctx Load
+'''),
+
+(10, '', None, False, 'slice', {'_ver': 11}, (Subscript,
+r'''sub[*not a, b, *c or d, *e]'''),
+r'''**ValueError('cannot delete Subscript.slice')**''',
+r'''*(not a), b, *(c or d), *e''', r'''
+Tuple - ROOT 0,0..0,26
+  .elts[4]
+  0] Starred - 0,0..0,8
+    .value UnaryOp - 0,2..0,7
+      .op Not - 0,2..0,5
+      .operand Name 'a' Load - 0,6..0,7
+    .ctx Load
+  1] Name 'b' Load - 0,10..0,11
+  2] Starred - 0,13..0,22
+    .value BoolOp - 0,15..0,21
+      .op Or
+      .values[2]
+      0] Name 'c' Load - 0,15..0,16
+      1] Name 'd' Load - 0,20..0,21
+    .ctx Load
+  3] Starred - 0,24..0,26
+    .value Name 'e' Load - 0,25..0,26
+    .ctx Load
+  .ctx Load
+'''),
+
+(11, '', None, False, 'slice', {'_ver': 11, 'pars': False}, (Subscript,
+r'''sub[*not a, b, *c or d, *e]'''),
+r'''**ValueError('cannot delete Subscript.slice')**''',
+r'''*not a, b, *c or d, *e''', r'''
+Tuple - ROOT 0,0..0,22
+  .elts[4]
+  0] Starred - 0,0..0,6
+    .value UnaryOp - 0,1..0,6
+      .op Not - 0,1..0,4
+      .operand Name 'a' Load - 0,5..0,6
+    .ctx Load
+  1] Name 'b' Load - 0,8..0,9
+  2] Starred - 0,11..0,18
+    .value BoolOp - 0,12..0,18
+      .op Or
+      .values[2]
+      0] Name 'c' Load - 0,12..0,13
+      1] Name 'd' Load - 0,17..0,18
+    .ctx Load
+  3] Starred - 0,20..0,22
+    .value Name 'e' Load - 0,21..0,22
+    .ctx Load
+  .ctx Load
+'''),
+],
+
 'Assign_targets': [  # ................................................................................
 
 (0, 'body[0]', 0, False, 'targets', {}, ('exec',

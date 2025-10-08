@@ -143,6 +143,7 @@ Or get all global options.
  'elif_': True,
  'docstr': True,
  'pars_walrus': False,
+ 'pars_arglike': True,
  'fix_set_get': True,
  'fix_set_put': True,
  'fix_set_self': True,

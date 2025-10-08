@@ -136,6 +136,7 @@ class _ThreadLocal(threading.local):
             'elif_':            True,   # True | False
             'docstr':           True,   # True | False | 'strict'
             'pars_walrus':      False,  # True | False
+            'pars_arglike':     True,   # True | False
             'fix_set_get':      True,   # True | False | 'star' | 'call' | 'tuple'
             'fix_set_put':      True,   # True | False | 'star' | 'call' | 'both'
             'fix_set_self':     True,   # True | False | 'star' | 'call'
@@ -1033,6 +1034,7 @@ class FST:
          'elif_': True,
          'docstr': True,
          'pars_walrus': False,
+         'pars_arglike': True,
          'fix_set_get': True,
          'fix_set_put': True,
          'fix_set_self': True,
@@ -1172,9 +1174,14 @@ class FST:
             - `False`: None.
             - `True`: All `Expr` multiline strings (as they serve no coding purpose).
             - `'strict'`: Only multiline strings in expected docstring positions (functions and classes).
-        - `pars_walrus`: Whether to parenthesize copied `NamedExpr` nodes or not (only if `pars` is also not `False`).
+        - `pars_walrus`: Whether to parenthesize top level cuy / copied `NamedExpr` nodes or not (only if `pars` is also
+            not `False`).
             - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions.
             - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions.
+        - `pars_arglike`: Whether to parenthesize argument-like expressions (`*not a`, `*b or c`) when cut / copied
+            either as single element or as part of a slice (only if `pars` is also not `False`).
+            - `False`: Do not parenthesize cut / copied argument-like expressions.
+            - `True`: Parenthesize cut / copied argument-like expressions.
         - `fix_set_get`: Empty set to return when getting an empty slice from a set.
             - `False`: Return an invalid `Set` with zero elements and curlies as delimiters (would parse to a `Dict`).
             - `True`: Same as `'star'`.
@@ -4447,6 +4454,8 @@ class FST:
         _maybe_fix_joined_alnum,
         _maybe_fix_undelimited_seq,
         _maybe_fix_tuple,
+        _maybe_fix_arglike,
+        _maybe_fix_arglikes,
 
         _get_trivia_params,
     )

@@ -1394,7 +1394,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'expr_arglike':           parse_expr_arglike,   # `*a or b`, `*not c`
     'expr_slice':             parse_expr_slice,     # `a:b:c`, `*not c`, `a:b:c, x:y:z`, `*st` -> `*st,` (py 3.11+)
     'expr_sliceelt':          parse_expr_sliceelt,  # `a:b:c`, `*not c`, `*st`
-    'Tuple':                  parse_Tuple,          # `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`
+    'Tuple':                  parse_Tuple,          # `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`, `*not a,` (py 3.11+)
     'Assign_targets':         parse_Assign_targets,
     'boolop':                 parse_boolop,
     'operator':               parse_operator,

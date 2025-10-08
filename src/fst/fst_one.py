@@ -303,6 +303,28 @@ def _get_one_default(self: fst.FST, idx: int | None, field: str, cut: bool, opti
     return ret
 
 
+def _get_one_arglike(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
+    """Possibly returns an arglike expression which needs parenthesizing."""
+
+    fst_ = _get_one_default(self, idx, field, cut, options)
+
+    fst_._maybe_fix_arglike(options)
+
+    return fst_
+
+
+def _get_one_arglikes(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
+    """Possibly returns a `Tuple` of arglike expressions which need parenthesizing. Meant for unparenthesized `Tuple`
+    from a `Subscript.slice`."""
+
+    fst_ = _get_one_default(self, idx, field, cut, options)
+
+    if isinstance(fst_.a, Tuple):
+        fst_._maybe_fix_arglikes(options)
+
+    return fst_
+
+
 def _get_one_stmtish(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     _, idx = _validate_get(self, idx, field)
 
@@ -551,7 +573,7 @@ _GET_ONE_HANDLERS = {
     (ClassDef, 'decorator_list'):         _get_one_default,  # expr*
     (ClassDef, 'name'):                   _get_one_identifier,  # identifier
     (ClassDef, 'type_params'):            _get_one_default,  # type_param*
-    (ClassDef, 'bases'):                  _get_one_default,  # expr*
+    (ClassDef, 'bases'):                  _get_one_arglike,  # expr*
     (ClassDef, 'keywords'):               _get_one_default,  # keyword*
     (ClassDef, 'body'):                   _get_one_stmtish,  # stmt*
     (Return, 'value'):                    _get_one_default,  # expr?
@@ -642,7 +664,7 @@ _GET_ONE_HANDLERS = {
     (Compare, 'comparators'):             _get_one_default,  # expr*
     (Compare, ''):                        _get_one_Compare_,  # expr*
     (Call, 'func'):                       _get_one_default,  # expr
-    (Call, 'args'):                       _get_one_default,  # expr*
+    (Call, 'args'):                       _get_one_arglike,  # expr*
     (Call, 'keywords'):                   _get_one_default,  # keyword*
     (FormattedValue, 'value'):            _get_one_FormattedValue_value,  # expr
     (FormattedValue, 'conversion'):       _get_one_conversion,  # int
@@ -659,7 +681,7 @@ _GET_ONE_HANDLERS = {
     (Attribute, 'attr'):                  _get_one_identifier,  # identifier
     (Attribute, 'ctx'):                   _get_one_ctx,  # expr_context
     (Subscript, 'value'):                 _get_one_default,  # expr
-    (Subscript, 'slice'):                 _get_one_default,  # expr
+    (Subscript, 'slice'):                 _get_one_arglikes,  # expr
     (Subscript, 'ctx'):                   _get_one_ctx,  # expr_context
     (Starred, 'value'):                   _get_one_default,  # expr
     (Starred, 'ctx'):                     _get_one_ctx,  # expr_context
@@ -667,7 +689,7 @@ _GET_ONE_HANDLERS = {
     (Name, 'ctx'):                        _get_one_ctx,  # expr_context
     (List, 'elts'):                       _get_one_default,  # expr*
     (List, 'ctx'):                        _get_one_ctx,  # expr_context
-    (Tuple, 'elts'):                      _get_one_default,  # expr*
+    (Tuple, 'elts'):                      _get_one_arglike,  # expr*
     (Tuple, 'ctx'):                       _get_one_ctx,  # expr_context
     (Slice, 'lower'):                     _get_one_default,  # expr?
     (Slice, 'upper'):                     _get_one_default,  # expr?

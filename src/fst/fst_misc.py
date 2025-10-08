@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 from ast import iter_fields, walk
 from math import log10
-from typing import Callable, Literal
+from typing import Any, Callable, Literal, Mapping
 
 from . import fst
 
@@ -891,6 +891,25 @@ def _maybe_fix_tuple(self: fst.FST, is_par: bool | None = None) -> bool:
         return self._maybe_fix_undelimited_seq(body)
 
     return is_par
+
+
+def _maybe_fix_arglike(self: fst.FST, options: Mapping[str, Any]) -> None:
+    """Parenthesize `self` if is arglike expression according to `options`."""
+
+    if self.get_option('pars', options) and self.get_option('pars_arglike', options):
+        if self.is_expr_arglike:
+            self.par()
+
+
+def _maybe_fix_arglikes(self: fst.FST, options: Mapping[str, Any]) -> None:
+    """Parenthesize any arglike expressions in `self` which is assumed to be a `Tuple` according to `options`."""
+
+    # assert isinstance(self.a, Tuple)
+
+    if self.get_option('pars', options) and self.get_option('pars_arglike', options):
+        for e in self.a.elts:
+            if (f := e.f).is_expr_arglike:
+                f.value.par()  # will be a Starred so we just go for .value
 
 
 def _parenthesize_grouping(self: fst.FST, whole: bool = True, *, star_child: bool = True) -> None:

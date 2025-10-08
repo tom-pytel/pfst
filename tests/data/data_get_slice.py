@@ -6043,6 +6043,102 @@ Module - ROOT 0,0..3,12
 '''),
 ],
 
+'Tuple_elts': [  # ................................................................................
+
+(0, 'slice', None, None, None, {'_ver': 11}, (None,
+r'''a[*not a, b, *c or d, *e]'''),
+r'''a[()]''', r'''
+Subscript - ROOT 0,0..0,5
+  .value Name 'a' Load - 0,0..0,1
+  .slice Tuple - 0,2..0,4
+    .ctx Load
+  .ctx Load
+''',
+r'''*(not a), b, *(c or d), *e''', r'''
+Tuple - ROOT 0,0..0,26
+  .elts[4]
+  0] Starred - 0,0..0,8
+    .value UnaryOp - 0,2..0,7
+      .op Not - 0,2..0,5
+      .operand Name 'a' Load - 0,6..0,7
+    .ctx Load
+  1] Name 'b' Load - 0,10..0,11
+  2] Starred - 0,13..0,22
+    .value BoolOp - 0,15..0,21
+      .op Or
+      .values[2]
+      0] Name 'c' Load - 0,15..0,16
+      1] Name 'd' Load - 0,20..0,21
+    .ctx Load
+  3] Starred - 0,24..0,26
+    .value Name 'e' Load - 0,25..0,26
+    .ctx Load
+  .ctx Load
+'''),
+
+(1, 'slice', None, None, None, {'_ver': 11, 'pars': False, '_verify_get': False}, (None,
+r'''a[*not a, b, *c or d, *e]'''),
+r'''a[()]''', r'''
+Subscript - ROOT 0,0..0,5
+  .value Name 'a' Load - 0,0..0,1
+  .slice Tuple - 0,2..0,4
+    .ctx Load
+  .ctx Load
+''',
+r'''*not a, b, *c or d, *e''', r'''
+Tuple - ROOT 0,0..0,22
+  .elts[4]
+  0] Starred - 0,0..0,6
+    .value UnaryOp - 0,1..0,6
+      .op Not - 0,1..0,4
+      .operand Name 'a' Load - 0,5..0,6
+    .ctx Load
+  1] Name 'b' Load - 0,8..0,9
+  2] Starred - 0,11..0,18
+    .value BoolOp - 0,12..0,18
+      .op Or
+      .values[2]
+      0] Name 'c' Load - 0,12..0,13
+      1] Name 'd' Load - 0,17..0,18
+    .ctx Load
+  3] Starred - 0,20..0,22
+    .value Name 'e' Load - 0,21..0,22
+    .ctx Load
+  .ctx Load
+'''),
+
+(2, 'slice', None, None, None, {'_ver': 11, 'pars_arglike': False, '_verify_get': False}, (None,
+r'''a[*not a, b, *c or d, *e]'''),
+r'''a[()]''', r'''
+Subscript - ROOT 0,0..0,5
+  .value Name 'a' Load - 0,0..0,1
+  .slice Tuple - 0,2..0,4
+    .ctx Load
+  .ctx Load
+''',
+r'''*not a, b, *c or d, *e''', r'''
+Tuple - ROOT 0,0..0,22
+  .elts[4]
+  0] Starred - 0,0..0,6
+    .value UnaryOp - 0,1..0,6
+      .op Not - 0,1..0,4
+      .operand Name 'a' Load - 0,5..0,6
+    .ctx Load
+  1] Name 'b' Load - 0,8..0,9
+  2] Starred - 0,11..0,18
+    .value BoolOp - 0,12..0,18
+      .op Or
+      .values[2]
+      0] Name 'c' Load - 0,12..0,13
+      1] Name 'd' Load - 0,17..0,18
+    .ctx Load
+  3] Starred - 0,20..0,22
+    .value Name 'e' Load - 0,21..0,22
+    .ctx Load
+  .ctx Load
+'''),
+],
+
 'Delete_targets': [  # ................................................................................
 
 (0, 'body[0]', 1, 2, None, {}, ('exec',
@@ -10026,49 +10122,57 @@ Tuple - ROOT 0,0..0,17
 '''),
 
 (22, '', None, None, None, {}, (None,
-r'''call(*not a, *b or c)'''),
+r'''call(*not a, b, *c or d, *e)'''),
 r'''call()''', r'''
 Call - ROOT 0,0..0,6
   .func Name 'call' Load - 0,0..0,4
 ''',
-r'''(*(not a), *(b or c))''', r'''
-Tuple - ROOT 0,0..0,21
-  .elts[2]
+r'''(*(not a), b, *(c or d), *e)''', r'''
+Tuple - ROOT 0,0..0,28
+  .elts[4]
   0] Starred - 0,1..0,9
     .value UnaryOp - 0,3..0,8
       .op Not - 0,3..0,6
       .operand Name 'a' Load - 0,7..0,8
     .ctx Load
-  1] Starred - 0,11..0,20
-    .value BoolOp - 0,13..0,19
+  1] Name 'b' Load - 0,11..0,12
+  2] Starred - 0,14..0,23
+    .value BoolOp - 0,16..0,22
       .op Or
       .values[2]
-      0] Name 'b' Load - 0,13..0,14
-      1] Name 'c' Load - 0,18..0,19
+      0] Name 'c' Load - 0,16..0,17
+      1] Name 'd' Load - 0,21..0,22
+    .ctx Load
+  3] Starred - 0,25..0,27
+    .value Name 'e' Load - 0,26..0,27
     .ctx Load
   .ctx Load
 '''),
 
 (23, '', None, None, None, {'pars': False, '_verify_get': False}, (None,
-r'''call(*not a, *b or c)'''),
+r'''call(*not a, b, *c or d, *e)'''),
 r'''call()''', r'''
 Call - ROOT 0,0..0,6
   .func Name 'call' Load - 0,0..0,4
 ''',
-r'''(*not a, *b or c)''', r'''
-Tuple - ROOT 0,0..0,17
-  .elts[2]
+r'''(*not a, b, *c or d, *e)''', r'''
+Tuple - ROOT 0,0..0,24
+  .elts[4]
   0] Starred - 0,1..0,7
     .value UnaryOp - 0,2..0,7
       .op Not - 0,2..0,5
       .operand Name 'a' Load - 0,6..0,7
     .ctx Load
-  1] Starred - 0,9..0,16
-    .value BoolOp - 0,10..0,16
+  1] Name 'b' Load - 0,9..0,10
+  2] Starred - 0,12..0,19
+    .value BoolOp - 0,13..0,19
       .op Or
       .values[2]
-      0] Name 'b' Load - 0,10..0,11
-      1] Name 'c' Load - 0,15..0,16
+      0] Name 'c' Load - 0,13..0,14
+      1] Name 'd' Load - 0,18..0,19
+    .ctx Load
+  3] Starred - 0,21..0,23
+    .value Name 'e' Load - 0,22..0,23
     .ctx Load
   .ctx Load
 '''),
@@ -10687,53 +10791,61 @@ Tuple - ROOT 0,0..0,4
 '''),
 
 (24, '', None, None, 'bases', {}, (None,
-r'''class cls(*not a, *b or c): pass'''),
+r'''class cls(*not a, b, *c or d, *e): pass'''),
 r'''class cls: pass''', r'''
 ClassDef - ROOT 0,0..0,15
   .name 'cls'
   .body[1]
   0] Pass - 0,11..0,15
 ''',
-r'''(*(not a), *(b or c))''', r'''
-Tuple - ROOT 0,0..0,21
-  .elts[2]
+r'''(*(not a), b, *(c or d), *e)''', r'''
+Tuple - ROOT 0,0..0,28
+  .elts[4]
   0] Starred - 0,1..0,9
     .value UnaryOp - 0,3..0,8
       .op Not - 0,3..0,6
       .operand Name 'a' Load - 0,7..0,8
     .ctx Load
-  1] Starred - 0,11..0,20
-    .value BoolOp - 0,13..0,19
+  1] Name 'b' Load - 0,11..0,12
+  2] Starred - 0,14..0,23
+    .value BoolOp - 0,16..0,22
       .op Or
       .values[2]
-      0] Name 'b' Load - 0,13..0,14
-      1] Name 'c' Load - 0,18..0,19
+      0] Name 'c' Load - 0,16..0,17
+      1] Name 'd' Load - 0,21..0,22
+    .ctx Load
+  3] Starred - 0,25..0,27
+    .value Name 'e' Load - 0,26..0,27
     .ctx Load
   .ctx Load
 '''),
 
 (25, '', None, None, 'bases', {'pars': False, '_verify_get': False}, (None,
-r'''class cls(*not a, *b or c): pass'''),
+r'''class cls(*not a, b, *c or d, *e): pass'''),
 r'''class cls: pass''', r'''
 ClassDef - ROOT 0,0..0,15
   .name 'cls'
   .body[1]
   0] Pass - 0,11..0,15
 ''',
-r'''(*not a, *b or c)''', r'''
-Tuple - ROOT 0,0..0,17
-  .elts[2]
+r'''(*not a, b, *c or d, *e)''', r'''
+Tuple - ROOT 0,0..0,24
+  .elts[4]
   0] Starred - 0,1..0,7
     .value UnaryOp - 0,2..0,7
       .op Not - 0,2..0,5
       .operand Name 'a' Load - 0,6..0,7
     .ctx Load
-  1] Starred - 0,9..0,16
-    .value BoolOp - 0,10..0,16
+  1] Name 'b' Load - 0,9..0,10
+  2] Starred - 0,12..0,19
+    .value BoolOp - 0,13..0,19
       .op Or
       .values[2]
-      0] Name 'b' Load - 0,10..0,11
-      1] Name 'c' Load - 0,15..0,16
+      0] Name 'c' Load - 0,13..0,14
+      1] Name 'd' Load - 0,18..0,19
+    .ctx Load
+  3] Starred - 0,21..0,23
+    .value Name 'e' Load - 0,22..0,23
     .ctx Load
   .ctx Load
 '''),
