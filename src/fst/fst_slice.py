@@ -2362,12 +2362,32 @@ def _code_to_slice_withitems(self: fst.FST, code: Code | None, one: bool, option
     return fst_
 
 
-def _code_to_slice_expr_arglikes(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]) -> fst.FST | None:
+def _code_to_slice_expr_arglikes(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
+                                 ) -> fst.FST | None:
     if code is None:
         return None
 
+    fst_ = None
+
+    if not one:  # this block exists to allow assignment of non-sequence expr_arglike source to slice
+        try:
+            fst_ = code_as_Tuple(code, self.root.parse_params, sanitize=False)
+
+        except (SyntaxError, NodeError) as exc:
+            if not isinstance(code, (str, list)):  # this exists as a convenience for allowing doing `class.bases = base` (without trailing comma if string source)
+                raise
+
+            try:
+                fst_ = code_as_expr_arglike(code, self.root.parse_params, sanitize=False)
+            except (SyntaxError, NodeError):
+                raise exc from None
+
+            one = True
+
     if one:
-        fst_ = code_as_expr_arglike(code, self.root.parse_params, sanitize=False)
+        if fst_ is None:
+            fst_ = code_as_expr_arglike(code, self.root.parse_params, sanitize=False)
+
         ast_ = fst_.a
 
         if (is_par := fst_._is_parenthesized_tuple()) is not None:
@@ -2382,7 +2402,7 @@ def _code_to_slice_expr_arglikes(self: fst.FST, code: Code | None, one: bool, op
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
-    fst_ = code_as_Tuple(code, self.root.parse_params, sanitize=False)
+    # fst_ = code_as_Tuple(code, self.root.parse_params, sanitize=False)
 
     if not fst_.a.elts:  # put empty sequence is same as delete
         return None
@@ -2482,7 +2502,8 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
     return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
 
-def _code_to_slice_type_params(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]) -> fst.FST | None:
+def _code_to_slice_type_params(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
+                               ) -> fst.FST | None:
     if code is None:
         return None
 
@@ -2706,8 +2727,8 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
     self._maybe_add_line_continuations()
 
 
-def _put_slice_With_AsyncWith_items(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                                    field: str, one: bool, options: Mapping[str, Any]) -> None:
+def _put_slice_With_AsyncWith_items(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
+                                    stop: int | None, field: str, one: bool, options: Mapping[str, Any]) -> None:
     fst_ = _code_to_slice_withitems(self, code, one, options)
     len_body = len(body := (ast := self.a).items)
     start, stop = _fixup_slice_indices(len_body, start, stop)

@@ -20337,6 +20337,24 @@ ClassDef - ROOT 0,0..0,32
 r'''class cls: pass'''), (None,
 r'''*not a, *b or c'''),
 r'''**ParseError('expecting single argumnent-like expression')**'''),
+
+(46, '', 0, 2, 'bases', {}, (None,
+r'''class cls(a, b, c): pass'''), (None,
+r'''*not a'''),
+r'''class cls(*not a, c): pass''',
+r'''**NodeError('expecting Tuple, got Starred')**''', r'''
+ClassDef - ROOT 0,0..0,26
+  .name 'cls'
+  .bases[2]
+  0] Starred - 0,10..0,16
+    .value UnaryOp - 0,11..0,16
+      .op Not - 0,11..0,14
+      .operand Name 'a' Load - 0,15..0,16
+    .ctx Load
+  1] Name 'c' Load - 0,18..0,19
+  .body[1]
+  0] Pass - 0,22..0,26
+'''),
 ],
 
 'ClassDef_bases_w_type_params': [  # ................................................................................
@@ -22484,6 +22502,22 @@ Call - ROOT 0,0..0,21
 r'''call()'''), (None,
 r'''*not a, *b or c'''),
 r'''**ParseError('expecting single argumnent-like expression')**'''),
+
+(51, '', 0, 2, None, {}, (None,
+r'''call(a, b, c)'''), (None,
+r'''*not a'''),
+r'''call(*not a, c)''',
+r'''**NodeError('expecting Tuple, got Starred')**''', r'''
+Call - ROOT 0,0..0,15
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+  0] Starred - 0,5..0,11
+    .value UnaryOp - 0,6..0,11
+      .op Not - 0,6..0,9
+      .operand Name 'a' Load - 0,10..0,11
+    .ctx Load
+  1] Name 'c' Load - 0,13..0,14
+'''),
 ],
 
 'MatchMapping': [  # ................................................................................
