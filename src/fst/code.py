@@ -87,7 +87,7 @@ from .parsex import (
     parse_pattern,
     parse_type_param,
     parse_type_params,
-    _parse_expr_arglikes,
+    parse__expr_arglikes,
 )
 
 __all__ = [
@@ -129,6 +129,7 @@ __all__ = [
     'code_as_identifier_star',
     'code_as_identifier_alias',
     'code_as_constant',
+    'code_as__expr_arglikes',
 ]
 
 
@@ -768,8 +769,9 @@ def code_as_constant(code: constant, parse_params: Mapping[str, Any] = {}) -> co
 
 
 # ......................................................................................................................
+# internal code_as stuff, not meant for user
 
-def _code_as_expr_arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as__expr_arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a `Tuple` contianing possibly arglike expressions. Meant for putting slices to `Call.args` and
     `ClassDef.bases`.
 
@@ -783,4 +785,4 @@ def _code_as_expr_arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, 
     if isinstance(code, Tuple):  # strip parentheses
         code = _fixing_unparse(code)[1:-1]
 
-    return _code_as(code, Tuple, parse_params, _parse_expr_arglikes, sanitize=sanitize)
+    return _code_as(code, Tuple, parse_params, parse__expr_arglikes, sanitize=sanitize)

@@ -139,6 +139,7 @@ __all__ = [
     'parse_pattern',
     'parse_type_param',
     'parse_type_params',
+    'parse__expr_arglikes',
 ]
 
 
@@ -399,6 +400,7 @@ Mode = Literal[
     'pattern',
     'type_param',
     'type_params',
+    '_expr_arglikes',
 ] | type[AST]
 
 """Extended parse modes:
@@ -1375,8 +1377,9 @@ def parse_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 # ......................................................................................................................
+# internal parse stuff, not meant for user
 
-def _parse_expr_arglikes(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse__expr_arglikes(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a `Tuple` of zero or more arglike expressions as would be seen as a sequence of `Call.args`. If there
     are parentheses then they belong to the elements as the `Tuple` itself cannot have any. If there is a single element
     it does not need to have a trailing comma.
@@ -1474,6 +1477,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     _slice_aliases:           parse_aliases,
     _slice_withitems:         parse_withitems,
     _slice_type_params:       parse_type_params,
+    '_expr_arglikes':         parse__expr_arglikes,
 }
 
 assert not set(get_args(get_args(Mode)[0])).symmetric_difference(k for k in _PARSE_MODE_FUNCS if isinstance(k, str)), \

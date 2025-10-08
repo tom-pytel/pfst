@@ -93,7 +93,7 @@ from .code import (
     code_as_withitem, code_as_withitems,
     code_as_pattern,
     code_as_type_param, code_as_type_params,
-    _code_as_expr_arglikes,
+    code_as__expr_arglikes,
 )
 
 from .traverse import prev_bound
@@ -2375,7 +2375,7 @@ def _code_to_slice_expr_arglikes(self: fst.FST, code: Code | None, one: bool, op
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
-    fst_ = _code_as_expr_arglikes(code, self.root.parse_params, sanitize=False)
+    fst_ = code_as__expr_arglikes(code, self.root.parse_params, sanitize=False)
 
     if not fst_.a.elts:  # put empty sequence is same as delete
         return None

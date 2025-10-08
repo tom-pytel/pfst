@@ -1291,7 +1291,7 @@ class FST:
             FST.set_options(**old_options)
 
     def dump(self, src: Literal['stmt', 'all'] | None = None, full: bool = False, expand: bool = False, *,
-             indent: int = 2, list_indent: int | bool = 0, out: Callable | TextIO = print,
+             indent: int = 2, list_indent: int | bool = 0, loc: bool = True, out: Callable | TextIO = print,
              eol: builtins.str | None = None) -> builtins.str | list[builtins.str] | None:
         r"""Dump a representation of the tree to stdout or other `TextIO` or return as a `str` or `list` of lines, or
         call a provided function once with each line of the output.
@@ -1300,14 +1300,16 @@ class FST:
         - `src`: `'stmt'` means output statement source lines (including `ExceptHandler` and `match_case`) or top level
             source if level is below statement. `'all'` means output source for each individual and node and `None` does
             not output any source. Can also be a string for shortcut specification of source and flags by first letter:
-            `'s'` means `src='stmt'`, `'a'` means `src='all'`, `'f'` means `full=True` and `'e'` means `expand=True`, so
-            `'sfe'` would be equivalent to `.dump(src='stmt', full=True, expand=True)`.
+            `'s'` means `src='stmt'`, `'a'` means `src='all'`, `'f'` means `full=True`, `'e'` means `expand=True` and
+            `'l'` means DON'T put location, so `'sfel'` would be equivalent to
+            `.dump(src='stmt', full=True, expand=True, loc=False)`.
         - `full`: If `True` then will list all fields in nodes including empty ones, otherwise will exclude most empty
             fields.
         - `expand`: If `True` then the output is a nice compact representation. If `False` then it is ugly and wasteful.
         - `indent`: Indentation per level as an integer (number of spaces) or a string.
         - `list_indent`: Extra indentation for elements of lists as an integer or string (added to indent, normally 0).
             If `True` then will be same as `indent`.
+        - `loc`: Whether to put location of node in source or not.
         - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
             `TextIO` will cann the `write` method for each line of output. Otherwise a `Callable[[str], None]` which is
             called for each line of output individually.
@@ -1365,31 +1367,32 @@ class FST:
         'If - ROOT 0,0..1,18\n  .test Constant 1 - 0,3..0,4\n  .body[1]\n  0'
 
         >>> from pprint import pp
-        >>> pp(f.dump('stmt', out=list))
+        >>> pp(f.dump('stmt', loc=False, out=list))
         ['0: if 1:',
-         'If - ROOT 0,0..1,18',
-         '  .test Constant 1 - 0,3..0,4',
+         'If - ROOT',
+         '  .test Constant 1',
          '  .body[1]',
          '1:     call(a=b, **c)',
-         '  0] Expr - 1,4..1,18',
-         '    .value Call - 1,4..1,18',
-         "      .func Name 'call' Load - 1,4..1,8",
+         '  0] Expr',
+         '    .value Call',
+         "      .func Name 'call' Load",
          '      .keywords[2]',
-         '      0] keyword - 1,9..1,12',
+         '      0] keyword',
          "        .arg 'a'",
-         "        .value Name 'b' Load - 1,11..1,12",
-         '      1] keyword - 1,14..1,17',
-         "        .value Name 'c' Load - 1,16..1,17"]
+         "        .value Name 'b' Load",
+         '      1] keyword',
+         "        .value Name 'c' Load"]
         ```
         """
 
         if isinstance(src, str):
             if (src := src.lower()) not in ('stmt', 'all'):
-                if src.replace('f', '').replace('e', '').replace('a', '').replace('s', ''):
+                if src.replace('f', '').replace('e', '').replace('a', '').replace('s', '').replace('l', ''):
                     raise ValueError("invalid character(s) in 'src' string")
 
                 full = 'f' in src
                 expand = 'e' in src
+                loc = 'l' not in src
                 src = 'all' if 'a' in src else 'stmt' if 's' in src else None
 
         if isinstance(out, TextIOBase):
@@ -1405,7 +1408,7 @@ class FST:
         lind = sind + (sind if list_indent is True else
                        list_indent if isinstance(list_indent, str) else
                        ' ' * list_indent)
-        st = nspace(src=src, full=full, expand=expand, eol=eol, sind=sind, lind=lind)
+        st = nspace(src=src, full=full, expand=expand, loc=loc, eol=eol, sind=sind, lind=lind)
 
         if out in (str, list):
             lines = []

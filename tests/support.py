@@ -7,6 +7,8 @@ from fst.astutil import copy_ast, compare_asts
 
 from ast import AST
 
+__all__ = ['ParseCases', 'GetCases', 'GetSliceCases', 'PutCases', 'PutSliceCases']
+
 
 _PYVER = sys.version_info[1]
 
@@ -35,16 +37,18 @@ def _fmt_code(code: str | tuple[ParseMode, str]) -> tuple[str, bool]:  # -> (src
         else:
             return f'({c0},\n{src})', True
 
+    q = '"""' if "'''" in code else "'''"
+
     if code.find(' \n') != -1:
         return repr(code), False
     elif code.endswith(' '):
-        return repr(code) if '\n' in code else f"r'''{code}'''", False
+        return repr(code) if '\n' in code else f"r{q}{code}{q}", False
     elif '\n' in code:
-        return f"r'''\n{code}\n'''", True
+        return f"r{q}\n{code}\n{q}", True
     elif code.endswith("'"):
         return repr(f'\n{code}\n'), False
     else:
-        return f"r'''{code}'''", False
+        return f"r{q}{code}{q}", False
 
 
 def _make_fst(code: str | tuple[str, str], attr: str = '') -> FST:
@@ -60,7 +64,7 @@ def _san_exc(exc: Exception) -> Exception:
     return exc
 
 
-class GetPutCase(NamedTuple):
+class BaseCase(NamedTuple):
     idx:     int
     attr:    str
     start:   int | Literal['end'] | None
@@ -71,7 +75,7 @@ class GetPutCase(NamedTuple):
     rest:    list[str | tuple[str, str]]
 
 
-class GetPutCases(dict):
+class BaseCases(dict):
     def __init__(self, fnm, func):
         self.fnm  = fnm
         self.func = func
@@ -100,7 +104,7 @@ class GetPutCases(dict):
                 for i, r in enumerate(rest):
                     rest[i] = _unfmt_code(r)
 
-                self_cases.append(GetPutCase(j, attr, start, stop, field, options, code, rest))
+                self_cases.append(BaseCase(j, attr, start, stop, field, options, code, rest))
 
     def write(self):
         out = [self.head]
@@ -144,13 +148,35 @@ class GetPutCases(dict):
 
     def generate(self):
         for key, case, rest in self.iterate(True):
-            self[key][case.idx] = GetPutCase(*case[:-1], rest)
+            self[key][case.idx] = BaseCase(*case[:-1], rest)
 
     def exec(self, case) -> list[str | tuple[str, str]]:  # rest
         raise NotImplementedError('this must be implemented in a subclass')
 
 
-class GetCases(GetPutCases):
+class ParseCases(BaseCases):
+    def __init__(self, fnm):
+        super().__init__(fnm, None)
+
+    def exec(self, case) -> list[str | tuple[str, str]]:  # rest
+        try:
+            f = _make_fst(case.code, '')
+        except Exception as exc:
+            rest = [f'**{_san_exc(exc)!r}**']
+        else:
+            rest = [f.root.dump(out=str, loc=case.field != 'JoinedStr')]
+
+        if (r0 := rest[0]).startswith('**'):
+            s = f'**{case.field}'
+        else:
+            s = case.field
+
+        assert s == r0[:len(s)], f"expected node type or error doesn't match, {case.field}"
+
+        return rest
+
+
+class GetCases(BaseCases):
     def __init__(self, fnm, func=FST.get):
         super().__init__(fnm, func)
 
@@ -213,7 +239,7 @@ class GetSliceCases(GetCases):
         super().__init__(fnm, FST.get_slice)
 
 
-class PutCases(GetPutCases):  # TODO: maybe automatically test 'raw' here?
+class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
     def __init__(self, fnm, func=FST.put):  # func = fst.put or fst.put_slice
         super().__init__(fnm, func)
 

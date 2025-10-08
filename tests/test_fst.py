@@ -49,16 +49,12 @@ from fst.locations import (
 
 from fst import parsex as px, code
 
+from support import ParseCases
 from data.data_other import PARS_DATA, PUT_SRC_REPARSE_DATA, PRECEDENCE_DATA
 
 
 DIR_NAME = os.path.dirname(__file__)
-
-PYFNMS = sum((
-    [os.path.join(path, fnm) for path, _, fnms in os.walk(top) for fnm in fnms if fnm.endswith('.py')]
-    for top in ('src', 'tests')),
-    start=[]
-)
+FNM_PARSE_AUTOGEN = os.path.join(DIR_NAME, 'data/data_parse_autogen.py')
 
 ASTSTMT = lambda src: parse(src).body[0].f.copy()
 ASTEXPR = lambda src: parse(src).f
@@ -246,6 +242,17 @@ PARSE_TESTS = [
     ('expr_arglike',      px.parse_expr_arglike,      ParseError,               'i=1'),
     ('expr_arglike',      px.parse_expr_arglike,      SyntaxError,              'a:b'),
     ('expr_arglike',      px.parse_expr_arglike,      SyntaxError,              'a:b:c'),
+
+    ('_expr_arglikes',    px.parse__expr_arglikes,    Tuple,                    'j'),
+    ('_expr_arglikes',    px.parse__expr_arglikes,    Tuple,                    '*s'),
+    ('_expr_arglikes',    px.parse__expr_arglikes,    Tuple,                    '*s,'),
+    ('_expr_arglikes',    px.parse__expr_arglikes,    Tuple,                    '*not a'),
+    ('_expr_arglikes',    px.parse__expr_arglikes,    Tuple,                    '*not a,'),
+    ('_expr_arglikes',    px.parse__expr_arglikes,    Tuple,                    '*not a, *b or c'),
+    ('_expr_arglikes',    px.parse__expr_arglikes,    Tuple,                    'j, k'),
+    ('_expr_arglikes',    px.parse__expr_arglikes,    ParseError,               'i=1'),
+    ('_expr_arglikes',    px.parse__expr_arglikes,    SyntaxError,              'a:b'),
+    ('_expr_arglikes',    px.parse__expr_arglikes,    SyntaxError,              'a:b:c'),
 
     ('expr_slice',        px.parse_expr_slice,        Name,                     'j'),
     ('expr_slice',        px.parse_expr_slice,        Slice,                    'a:b'),
@@ -656,8 +663,10 @@ PARSE_TESTS = [
     ('pattern',           px.parse_pattern,           MatchStar,                ' *a  # tail'),
   ]
 
+PARSE_TESTS_10 = PARSE_TESTS.copy()
+
 if PYGE11:
-    PARSE_TESTS.extend([
+    PARSE_TESTS.extend(PARSE_TESTS_11 := [
         ('ExceptHandler',     px.parse_ExceptHandler,     ExceptHandler,          'except* Exception: pass'),
 
         ('expr_all',          px.parse_expr_all,          Starred,                '*not a'),
@@ -673,7 +682,7 @@ if PYGE11:
     ])
 
 if PYGE12:
-    PARSE_TESTS.extend([
+    PARSE_TESTS.extend(PARSE_TESTS_12 := [
         ('all',               px.parse_type_params,       _slice_type_params,     '*U, **V, **Z'),
         ('all',               px.parse_type_params,       _slice_type_params,     'T: int, *U, **V, **Z'),
 
@@ -699,7 +708,7 @@ if PYGE12:
     ])
 
 if PYGE13:
-    PARSE_TESTS.extend([
+    PARSE_TESTS.extend(PARSE_TESTS_13 := [
         ('all',               px.parse_type_param,        ParamSpec,              '**a = {T: int, U: str}'),
         ('all',               px.parse_type_param,        TypeVarTuple,           '*a = (int, str)'),
 
@@ -852,7 +861,43 @@ def regen_precedence_data():
         lines = f.write('\n'.join(lines))
 
 
+def regen_parse_autogen_data():
+    with open(FNM_PARSE_AUTOGEN) as f:
+        lines = f.readlines()
+
+    for i, l in enumerate(lines):
+        if l.startswith('DATA_PARSE_AUTOGEN'):
+            del lines[i + 1:]
+
+    lines.append("'autogen': [\n")
+
+    for tests, _ver in ((PARSE_TESTS_10, 10), (PARSE_TESTS_11, 11), (PARSE_TESTS_12, 12), (PARSE_TESTS_13, 13)):
+        for mode, func, res, src in tests:
+            mode_str = repr(mode) if isinstance(mode, str) else mode.__name__
+            options = '{}' if _ver < 11 else "{'_ver': 11}" if _ver == 11 else "{'_ver': 12}" if _ver == 12 else "{'_ver': 13}"
+
+            lines.append(f'(-1, {func.__name__!r}, 0, 0, {res.__name__!r}, {options}, ({mode_str}, {src!r})),\n')
+
+    lines.append(']}\n')
+
+    with open(FNM_PARSE_AUTOGEN, 'w') as f:
+        f.writelines(lines)
+
+    DATA_PARSE_AUTOGEN = ParseCases(FNM_PARSE_AUTOGEN)
+
+    DATA_PARSE_AUTOGEN.generate()
+    DATA_PARSE_AUTOGEN.write()
+
+
 class TestFST(unittest.TestCase):
+    def test_parse_autogen(self):
+        DATA_PARSE_AUTOGEN = ParseCases(FNM_PARSE_AUTOGEN)
+
+        for key, case, rest in DATA_PARSE_AUTOGEN.iterate(True):
+            for idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
+                if not (c.startswith('**SyntaxError(') and r.startswith('**SyntaxError(')):  # because we will get different texts for different py versions
+                    self.assertEqual(c, r, f'{key = }, {case.idx = }, rest {idx = }')
+
     def test_unparse(self):
         self.assertEqual('for i in j', px.unparse(FST('[i for i in j]').generators[0].a))
 
@@ -891,7 +936,7 @@ class TestFST(unittest.TestCase):
                     self.assertEqual(ast.__class__, res)
                     self.assertTrue(compare_asts(ast, ref, locs=True))
 
-                if issubclass(res, Exception):
+                if issubclass(res, Exception) or (isinstance(mode, str) and mode.startswith('_')):
                     continue
 
                 # reparse
@@ -4133,7 +4178,7 @@ def f():
 
         for mode, func, res, src in PARSE_TESTS:
             try:
-                if issubclass(res, Exception):
+                if issubclass(res, Exception) or (isinstance(mode, str) and mode.startswith('_')):
                     continue
 
                 fst = FST(src, mode)
@@ -7855,6 +7900,7 @@ if __name__ == '__main__':
     parser.add_argument('--regen-pars', default=False, action='store_true', help="regenerate parentheses test data")
     parser.add_argument('--regen-put-src', default=False, action='store_true', help="regenerate put src test data")
     parser.add_argument('--regen-precedence', default=False, action='store_true', help="regenerate precedence test data")
+    parser.add_argument('--regen-parse-autogen', default=False, action='store_true', help="regenerate autogenerated parse test data")
 
     args, _ = parser.parse_known_args()
 
@@ -7873,6 +7919,10 @@ if __name__ == '__main__':
     if args.regen_precedence or args.regen_all:
         print('Regenerating precedence test data...')
         regen_precedence_data()
+
+    if args.regen_parse_autogen or args.regen_all:
+        print('Regenerating autogenerated parse test data...')
+        regen_parse_autogen_data()
 
     if (all(not getattr(args, n) for n in dir(args) if n.startswith('regen_'))):
         unittest.main()

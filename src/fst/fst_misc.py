@@ -80,11 +80,12 @@ def _dump_lines(fst_: fst.FST, linefunc: Callable, ln: int, col: int, end_ln: in
 # ----------------------------------------------------------------------------------------------------------------------
 # FST class methods
 
-def _repr_tail(self: fst.FST) -> str:
-    try:
-        loc = self.loc
-    except Exception:  # maybe in middle of operation changing locations and lines
-        loc = '????'
+def _repr_tail(self: fst.FST, loc: bool = True) -> str:
+    if loc:
+        try:
+            loc = self.loc
+        except Exception:  # maybe in middle of operation changing locations and lines
+            loc = '????'
 
     self._touchall(False, True, True)  # for debugging because we may have cached locs which would not have otherwise been cached during execution
 
@@ -95,7 +96,7 @@ def _repr_tail(self: fst.FST) -> str:
 
 def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
     ast = self.a
-    tail = self._repr_tail()
+    tail = self._repr_tail(st.loc)
     sind = st.sind
 
     if not st.src:  # noop
