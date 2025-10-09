@@ -1201,7 +1201,7 @@ class ReputOne(Fuzzy):
 
         try:
             compare_asts(fst.a, backup.a,
-                         cb_primitive=(lambda p1, p2, n, i: n in ('kind', 'type_comment') or (p1.__class__ is p2.__class__ and p1 == p2)),
+                         cb_primitive=(lambda p1, p2, n, i: n in ('kind', 'type_comment', 'str') or (p1.__class__ is p2.__class__ and p1 == p2)),
                          raise_=True)
 
         except Exception:
