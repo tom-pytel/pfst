@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- statement-ish operations at end of source no longer add trailing newline
 - multiline implicit strings with line continuations no longer considered unenclosed
 - get one from `Compare` returns copied node instead of original
 - never consider `bytes` as docstrings
@@ -11,7 +12,7 @@
 ### Added
 
 - `FST.is_expr_arglike` to determine if expression only valid in `Call.args` or `ClassDef.bases`
-- `put_src()` offset and no AST change modes
+- `put_src()` "offset" and "no AST change" modes
 - `find_loc()` simple find location in or containing given location
 - `fst.parse()` handles `bytes` and `AST` as source
 - `dump()` specifiable list indentation

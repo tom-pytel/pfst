@@ -4468,11 +4468,6 @@ class FST:
         _reparse_raw,
     )
 
-    from .fst_slice_old import (
-        _get_slice_stmtish,
-        _put_slice_stmtish,
-    )
-
     from .fst_slice import (
         _is_slice_compatible,
         _get_slice,

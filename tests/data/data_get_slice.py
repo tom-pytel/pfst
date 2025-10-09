@@ -2865,9 +2865,8 @@ else:
 '''), r'''
 if 1: i
 
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,0
   .body[1]
   0] If - 0,0..0,7
     .test Constant 1 - 0,3..0,4
@@ -2898,11 +2897,9 @@ else:
 
   # pre 2
   j
-'''), r'''
-if 1: i
-
-''', r'''
-Module - ROOT 0,0..1,0
+'''),
+r'''if 1: i''', r'''
+Module - ROOT 0,0..0,7
   .body[1]
   0] If - 0,0..0,7
     .test Constant 1 - 0,3..0,4
@@ -6040,6 +6037,320 @@ Module - ROOT 0,0..3,12
     .value Name 'i' Load - 2,0..2,1
   2] Expr - 2,4..3,12
     .value Constant 'Five\n      Six' - 2,4..3,12
+'''),
+],
+
+'stmtish_trailing_newline': [  # ................................................................................
+
+(0, '', 1, 2, None, {}, (None, r'''
+if 1:
+    i = 1
+    j = 2
+'''), r'''
+if 1:
+    i = 1
+''', r'''
+If - ROOT 0,0..1,9
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] Assign - 1,4..1,9
+    .targets[1]
+    0] Name 'i' Store - 1,4..1,5
+    .value Constant 1 - 1,8..1,9
+''',
+r'''j = 2''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'j' Store - 0,0..0,1
+    .value Constant 2 - 0,4..0,5
+'''),
+
+(1, '', 1, 2, None, {}, (None, r'''
+if 1:
+    i = 1
+    j = 2  # comment
+'''), r'''
+if 1:
+    i = 1
+''', r'''
+If - ROOT 0,0..1,9
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] Assign - 1,4..1,9
+    .targets[1]
+    0] Name 'i' Store - 1,4..1,5
+    .value Constant 1 - 1,8..1,9
+''',
+r'''j = 2  # comment''', r'''
+Module - ROOT 0,0..0,16
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'j' Store - 0,0..0,1
+    .value Constant 2 - 0,4..0,5
+'''),
+
+(2, '', 1, 2, None, {}, (None, r'''
+if 1:
+    i = 1
+    j = 2  # comment
+
+'''), r'''
+if 1:
+    i = 1
+
+''', r'''
+If - ROOT 0,0..1,9
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] Assign - 1,4..1,9
+    .targets[1]
+    0] Name 'i' Store - 1,4..1,5
+    .value Constant 1 - 1,8..1,9
+''', r'''
+j = 2  # comment
+
+''', r'''
+Module - ROOT 0,0..1,0
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'j' Store - 0,0..0,1
+    .value Constant 2 - 0,4..0,5
+'''),
+
+(3, '', 1, 2, None, {}, (None, r'''
+if 1:
+    i = 1
+    j = 2
+
+'''), r'''
+if 1:
+    i = 1
+
+''', r'''
+If - ROOT 0,0..1,9
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] Assign - 1,4..1,9
+    .targets[1]
+    0] Name 'i' Store - 1,4..1,5
+    .value Constant 1 - 1,8..1,9
+''',
+r'''j = 2''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'j' Store - 0,0..0,1
+    .value Constant 2 - 0,4..0,5
+'''),
+
+(4, 'body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+    i = 1
+    j = 2
+'''), r'''
+if 1:
+    i = 1
+''', r'''
+Module - ROOT 0,0..1,9
+  .body[1]
+  0] If - 0,0..1,9
+    .test Constant 1 - 0,3..0,4
+    .body[1]
+    0] Assign - 1,4..1,9
+      .targets[1]
+      0] Name 'i' Store - 1,4..1,5
+      .value Constant 1 - 1,8..1,9
+''',
+r'''j = 2''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'j' Store - 0,0..0,1
+    .value Constant 2 - 0,4..0,5
+'''),
+
+(5, 'body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+    i = 1
+    j = 2  # comment
+'''), r'''
+if 1:
+    i = 1
+''', r'''
+Module - ROOT 0,0..1,9
+  .body[1]
+  0] If - 0,0..1,9
+    .test Constant 1 - 0,3..0,4
+    .body[1]
+    0] Assign - 1,4..1,9
+      .targets[1]
+      0] Name 'i' Store - 1,4..1,5
+      .value Constant 1 - 1,8..1,9
+''',
+r'''j = 2  # comment''', r'''
+Module - ROOT 0,0..0,16
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'j' Store - 0,0..0,1
+    .value Constant 2 - 0,4..0,5
+'''),
+
+(6, 'body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+    i = 1
+    j = 2  # comment
+
+'''), r'''
+if 1:
+    i = 1
+
+''', r'''
+Module - ROOT 0,0..2,0
+  .body[1]
+  0] If - 0,0..1,9
+    .test Constant 1 - 0,3..0,4
+    .body[1]
+    0] Assign - 1,4..1,9
+      .targets[1]
+      0] Name 'i' Store - 1,4..1,5
+      .value Constant 1 - 1,8..1,9
+''', r'''
+j = 2  # comment
+
+''', r'''
+Module - ROOT 0,0..1,0
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'j' Store - 0,0..0,1
+    .value Constant 2 - 0,4..0,5
+'''),
+
+(7, 'body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+    i = 1
+    j = 2
+
+'''), r'''
+if 1:
+    i = 1
+
+''', r'''
+Module - ROOT 0,0..2,0
+  .body[1]
+  0] If - 0,0..1,9
+    .test Constant 1 - 0,3..0,4
+    .body[1]
+    0] Assign - 1,4..1,9
+      .targets[1]
+      0] Name 'i' Store - 1,4..1,5
+      .value Constant 1 - 1,8..1,9
+''',
+r'''j = 2''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'j' Store - 0,0..0,1
+    .value Constant 2 - 0,4..0,5
+'''),
+
+(8, '', 1, 2, None, {}, ('exec', r'''
+i = 1
+j = 2
+'''),
+r'''i = 1''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'i' Store - 0,0..0,1
+    .value Constant 1 - 0,4..0,5
+''',
+r'''j = 2''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'j' Store - 0,0..0,1
+    .value Constant 2 - 0,4..0,5
+'''),
+
+(9, '', 1, 2, None, {}, ('exec', r'''
+i = 1
+j = 2
+
+'''), r'''
+i = 1
+
+''', r'''
+Module - ROOT 0,0..1,0
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'i' Store - 0,0..0,1
+    .value Constant 1 - 0,4..0,5
+''',
+r'''j = 2''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'j' Store - 0,0..0,1
+    .value Constant 2 - 0,4..0,5
+'''),
+
+(10, '', 0, 1, None, {}, ('exec',
+r'''i = 1'''),
+r'''''',
+r'''Module - ROOT 0,0..0,0''',
+r'''i = 1''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'i' Store - 0,0..0,1
+    .value Constant 1 - 0,4..0,5
+'''),
+
+(11, '', 0, 1, None, {}, ('exec', r'''
+i = 1
+
+'''),
+r'''''',
+r'''Module - ROOT 0,0..0,0''',
+r'''i = 1''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'i' Store - 0,0..0,1
+    .value Constant 1 - 0,4..0,5
+'''),
+
+(12, '', 0, 1, None, {}, ('exec', r'''
+i = 1
+
+
+'''), r'''
+
+
+''',
+r'''Module - ROOT 0,0..1,0''',
+r'''i = 1''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'i' Store - 0,0..0,1
+    .value Constant 1 - 0,4..0,5
 '''),
 ],
 

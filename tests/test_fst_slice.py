@@ -298,7 +298,7 @@ match a:
     async def func():
   case 9:
     class cls:
-'''.lstrip())
+'''.strip())
 
         a.body[0].cases[0].body[0].f.cut()
         a.body[0].cases[1].body[0].f.cut()
@@ -323,7 +323,7 @@ match a:
   case 7:
   case 8:
   case 9:
-'''.lstrip())
+'''.strip())
 
         a.body[0].cases[0].f.cut()
         a.body[0].cases[0].f.cut()
@@ -336,7 +336,7 @@ match a:
         a.body[0].cases[0].f.cut()
         a.body[0].cases[0].f.cut()
 
-        self.assertEqual(a.f.src, '''match a:\n''')
+        self.assertEqual(a.f.src, '''match a:''')
 
         a = parse('''
 match a:
@@ -425,7 +425,7 @@ match a:
     async def func():
   case 9:
     class cls:
-'''.lstrip())
+'''.strip())
 
         a.body[0].cases[9].body[0].f.cut()
         a.body[0].cases[8].body[0].f.cut()
@@ -450,7 +450,7 @@ match a:
   case 7:
   case 8:
   case 9:
-'''.lstrip())
+'''.strip())
 
         a.body[0].cases[9].f.cut()
         a.body[0].cases[8].f.cut()
@@ -463,7 +463,7 @@ match a:
         a.body[0].cases[1].f.cut()
         a.body[0].cases[0].f.cut()
 
-        self.assertEqual(a.f.src, '''match a:\n''')
+        self.assertEqual(a.f.src, '''match a:''')
 
     def test_cut_and_del_stmtish_special(self):  # TODO: legacy, do better when possible
         fst = parse('''
@@ -2527,19 +2527,19 @@ a | (
         # stmts
 
         self.assertEqual('a', g := (f := FST('a\nb\nc').get_slice(0, 2)).get_slice(0, 1).src)
-        self.assertEqual('a\nb\na\n', f.put_slice(g, 'end').src)
+        self.assertEqual('a\nb\na', f.put_slice(g, 'end').src)
         f.verify()
 
         # ExceptHandlers
 
         self.assertEqual('except a: pass', g := (f := FST('except a: pass\nexcept b: pass\nexcept c: pass').get_slice(0, 2)).get_slice(0, 1).src)
-        self.assertEqual('except a: pass\nexcept b: pass\nexcept a: pass\n', f.put_slice(g, 'end').src)
+        self.assertEqual('except a: pass\nexcept b: pass\nexcept a: pass', f.put_slice(g, 'end').src)
         f.verify()
 
         # match_cases
 
         self.assertEqual('case a: pass', g := (f := FST('case a: pass\ncase b: pass\ncase c: pass').get_slice(0, 2)).get_slice(0, 1).src)
-        self.assertEqual('case a: pass\ncase b: pass\ncase a: pass\n', f.put_slice(g, 'end').src)
+        self.assertEqual('case a: pass\ncase b: pass\ncase a: pass', f.put_slice(g, 'end').src)
         f.verify()
 
         # Assign

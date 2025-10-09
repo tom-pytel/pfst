@@ -160,6 +160,8 @@ from .locations import (
     loc_Global_Nonlocal_names,
 )
 
+from .fst_slice_old import _get_slice_stmtish
+
 
 _GetOneRet  = Union['fst.FST', None, str, constant]
 _PutOneCode = Code | str | constant | None  # yes, None is already in constant, but just to make this explicit that None may be in place of an expected AST where a constant is not expected
@@ -322,7 +324,7 @@ def _get_one_arglikes(self: fst.FST, idx: int | None, field: str, cut: bool, opt
 def _get_one_stmtish(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     _, idx = _validate_get(self, idx, field)
 
-    return self._get_slice_stmtish(idx, idx + 1, field, cut, options, one=True)
+    return _get_slice_stmtish(self, idx, idx + 1, field, cut, options, one=True)
 
 
 def _get_one_ctx(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:

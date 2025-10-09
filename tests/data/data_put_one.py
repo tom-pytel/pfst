@@ -45,9 +45,8 @@ r'''l = 4'''), r'''
 i = 1
 j = 2
 l = 4
-
 ''', r'''
-Module - ROOT 0,0..3,0
+Module - ROOT 0,0..2,5
   .body[3]
   0] Assign - 0,0..0,5
     .targets[1]

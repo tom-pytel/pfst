@@ -372,9 +372,8 @@ r'''k'''), r'''
 if 1:
     i
     k
-
 ''', r'''
-Module - ROOT 0,0..3,0
+Module - ROOT 0,0..2,5
   .body[1]
   0] If - 0,0..2,5
     .test Constant 1 - 0,3..0,4
@@ -393,9 +392,8 @@ r'''k'''), r'''
 if 1:
     i  # post
     k
-
 ''', r'''
-Module - ROOT 0,0..3,0
+Module - ROOT 0,0..2,5
   .body[1]
   0] If - 0,0..2,5
     .test Constant 1 - 0,3..0,4
@@ -434,9 +432,8 @@ r'''k'''), r'''
 if 1:
     i
     k
-
 ''', r'''
-Module - ROOT 0,0..3,0
+Module - ROOT 0,0..2,5
   .body[1]
   0] If - 0,0..2,5
     .test Constant 1 - 0,3..0,4
@@ -453,9 +450,8 @@ r'''k'''), r'''
 if 1:
     i  # post
     k
-
 ''', r'''
-Module - ROOT 0,0..3,0
+Module - ROOT 0,0..2,5
   .body[1]
   0] If - 0,0..2,5
     .test Constant 1 - 0,3..0,4
@@ -689,16 +685,14 @@ def f():
     if 1:
         pass
     elif 2: break
-
 ''', r'''
 def f():
     if 1:
         pass
     elif 2:
         break
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,17
   .body[1]
   0] FunctionDef - 0,0..3,17
     .name 'f'
@@ -1002,9 +996,8 @@ r'''# comment'''), (None,
 r'''i'''), r'''
 # comment
 i
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,1
   .body[1]
   0] Expr - 1,0..1,1
     .value Name 'i' Load - 1,0..1,1
@@ -1020,9 +1013,8 @@ r'''i'''), r'''
 
 # another comment
 i
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,1
   .body[1]
   0] Expr - 3,0..3,1
     .value Name 'i' Load - 3,0..3,1
@@ -1061,9 +1053,8 @@ r'''j'''), r'''
 # another comment
 i
 j
-
 ''', r'''
-Module - ROOT 0,0..5,0
+Module - ROOT 0,0..4,1
   .body[2]
   0] Expr - 3,0..3,1
     .value Name 'i' Load - 3,0..3,1
@@ -1111,9 +1102,8 @@ def f():
     else:
         if 2: pass
         break
-
 ''', r'''
-Module - ROOT 0,0..5,0
+Module - ROOT 0,0..4,13
   .body[1]
   0] FunctionDef - 0,0..4,13
     .name 'f'
@@ -1174,9 +1164,8 @@ def f():
         if 2:
             pass
         break
-
 ''', r'''
-Module - ROOT 0,0..6,0
+Module - ROOT 0,0..5,13
   .body[1]
   0] FunctionDef - 0,0..5,13
     .name 'f'
@@ -1242,9 +1231,8 @@ def f():
         if 2: continue
         elif 3: raise
         break
-
 ''', r'''
-Module - ROOT 0,0..6,0
+Module - ROOT 0,0..5,13
   .body[1]
   0] FunctionDef - 0,0..5,13
     .name 'f'
@@ -1315,9 +1303,8 @@ def f():
     else:
         if 3: raise
         break
-
 ''', r'''
-Module - ROOT 0,0..6,0
+Module - ROOT 0,0..5,13
   .body[1]
   0] FunctionDef - 0,0..5,13
     .name 'f'
@@ -1368,12 +1355,11 @@ r'''# comment'''), r'''
 def f():
     i
     # comment
-
 ''', r'''
 def f():
     i
 ''', r'''
-Module - ROOT 0,0..3,0
+Module - ROOT 0,0..2,13
   .body[1]
   0] FunctionDef - 0,0..1,5
     .name 'f'
@@ -1437,12 +1423,11 @@ r'''# comment'''), r'''
 def f():
     i ; j
     # comment
-
 ''', r'''
 def f():
     i ; j
 ''', r'''
-Module - ROOT 0,0..3,0
+Module - ROOT 0,0..2,13
   .body[1]
   0] FunctionDef - 0,0..1,9
     .name 'f'
@@ -1529,7 +1514,6 @@ def f():
   ; \
   j
     # comment
-
 ''', r'''
 def f():
     i \
@@ -1537,7 +1521,7 @@ def f():
   ; \
   j
 ''', r'''
-Module - ROOT 0,0..6,0
+Module - ROOT 0,0..5,13
   .body[1]
   0] FunctionDef - 0,0..4,3
     .name 'f'
@@ -1596,16 +1580,14 @@ r'''def func(): pass'''), r'''
    docstring"""
 
 def func(): pass
-
 ''', r'''
 """Module
    docstring"""
 
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,16
   .body[2]
   0] Expr - 0,0..1,15
     .value Constant 'Module\n   docstring' - 0,0..1,15
@@ -1624,16 +1606,14 @@ r'''def func(): pass'''), r'''
    docstring"""
 
 def func(): pass
-
 ''', r'''
 """Module
    docstring"""
 
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,16
   .body[2]
   0] Expr - 0,0..1,15
     .value Constant 'Module\n   docstring' - 0,0..1,15
@@ -1654,16 +1634,14 @@ def func(): pass
    docstring"""
 
 def func(): pass
-
 ''', r'''
 """Module
    docstring"""
 
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,16
   .body[2]
   0] Expr - 0,0..1,15
     .value Constant 'Module\n   docstring' - 0,0..1,15
@@ -1686,16 +1664,14 @@ def func(): pass
 
 
 def func(): pass
-
 ''', r'''
 """Module
    docstring"""
 
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..5,0
+Module - ROOT 0,0..4,16
   .body[2]
   0] Expr - 0,0..1,15
     .value Constant 'Module\n   docstring' - 0,0..1,15
@@ -1712,16 +1688,14 @@ def prefunc(): pass
 
 
 def func(): pass
-
 ''', r'''
 def prefunc(): pass
 
 
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,16
   .body[2]
   0] FunctionDef - 0,0..0,19
     .name 'prefunc'
@@ -1739,15 +1713,13 @@ r'''def func(): pass'''), r'''
 def prefunc(): pass
 
 def func(): pass
-
 ''', r'''
 def prefunc(): pass
 
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..3,0
+Module - ROOT 0,0..2,16
   .body[2]
   0] FunctionDef - 0,0..0,19
     .name 'prefunc'
@@ -1764,14 +1736,12 @@ r'''def prefunc(): pass'''), (None,
 r'''def func(): pass'''), r'''
 def prefunc(): pass
 def func(): pass
-
 ''', r'''
 def prefunc(): pass
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,16
   .body[2]
   0] FunctionDef - 0,0..0,19
     .name 'prefunc'
@@ -1792,16 +1762,14 @@ def prefunc(): pass
 
 
 def func(): pass
-
 ''', r'''
 def prefunc(): pass
 
 
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,16
   .body[2]
   0] FunctionDef - 0,0..0,19
     .name 'prefunc'
@@ -1821,15 +1789,13 @@ def func(): pass
 def prefunc(): pass
 
 def func(): pass
-
 ''', r'''
 def prefunc(): pass
 
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..3,0
+Module - ROOT 0,0..2,16
   .body[2]
   0] FunctionDef - 0,0..0,19
     .name 'prefunc'
@@ -1846,14 +1812,12 @@ r'''def prefunc(): pass'''), (None,
 r'''def func(): pass'''), r'''
 def prefunc(): pass
 def func(): pass
-
 ''', r'''
 def prefunc(): pass
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,16
   .body[2]
   0] FunctionDef - 0,0..0,19
     .name 'prefunc'
@@ -1875,16 +1839,14 @@ def prefunc(): pass
 
 
 def func(): pass
-
 ''', r'''
 def prefunc(): pass
 
 
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,16
   .body[2]
   0] FunctionDef - 0,0..0,19
     .name 'prefunc'
@@ -1906,15 +1868,13 @@ def prefunc(): pass
 
 
 def func(): pass
-
 ''', r'''
 def prefunc(): pass
 
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,16
   .body[2]
   0] FunctionDef - 0,0..0,19
     .name 'prefunc'
@@ -1938,16 +1898,14 @@ def prefunc(): pass
 
 
 def func(): pass
-
 ''', r'''
 def prefunc(): pass
 
 
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..5,0
+Module - ROOT 0,0..4,16
   .body[2]
   0] FunctionDef - 0,0..0,19
     .name 'prefunc'
@@ -1966,16 +1924,14 @@ import stuff
 
 
 def func(): pass
-
 ''', r'''
 import stuff
 
 
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,16
   .body[2]
   0] Import - 0,0..0,12
     .names[1]
@@ -1996,16 +1952,14 @@ import stuff
 
 
 def func(): pass
-
 ''', r'''
 import stuff
 
 
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,16
   .body[2]
   0] Import - 0,0..0,12
     .names[1]
@@ -2027,16 +1981,14 @@ import stuff
 
 
 def func(): pass
-
 ''', r'''
 import stuff
 
 
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,16
   .body[2]
   0] Import - 0,0..0,12
     .names[1]
@@ -2058,16 +2010,14 @@ import stuff
 
 
 def func(): pass
-
 ''', r'''
 import stuff
 
 
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,16
   .body[2]
   0] Import - 0,0..0,12
     .names[1]
@@ -2635,7 +2585,6 @@ class cls:
        docstring"""
 
     def meth(): pass
-
 ''', r'''
 class cls:
     """Class
@@ -2643,9 +2592,8 @@ class cls:
 
     def meth():
         pass
-
 ''', r'''
-Module - ROOT 0,0..5,0
+Module - ROOT 0,0..4,20
   .body[1]
   0] ClassDef - 0,0..4,20
     .name 'cls'
@@ -2671,7 +2619,6 @@ class cls:
        docstring"""
 
     def meth(): pass
-
 ''', r'''
 class cls:
     """Class
@@ -2679,9 +2626,8 @@ class cls:
 
     def meth():
         pass
-
 ''', r'''
-Module - ROOT 0,0..5,0
+Module - ROOT 0,0..4,20
   .body[1]
   0] ClassDef - 0,0..4,20
     .name 'cls'
@@ -2709,7 +2655,6 @@ class cls:
 
 
     def meth(): pass
-
 ''', r'''
 class cls:
     """Class
@@ -2717,9 +2662,8 @@ class cls:
 
     def meth():
         pass
-
 ''', r'''
-Module - ROOT 0,0..6,0
+Module - ROOT 0,0..5,20
   .body[1]
   0] ClassDef - 0,0..5,20
     .name 'cls'
@@ -2741,16 +2685,14 @@ class cls:
     def premeth(): pass
 
     def meth(): pass
-
 ''', r'''
 class cls:
     def premeth(): pass
 
     def meth():
         pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,20
   .body[1]
   0] ClassDef - 0,0..3,20
     .name 'cls'
@@ -2776,16 +2718,14 @@ class cls:
     def premeth(): pass
 
     def meth(): pass
-
 ''', r'''
 class cls:
     def premeth(): pass
 
     def meth():
         pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,20
   .body[1]
   0] ClassDef - 0,0..3,20
     .name 'cls'
@@ -2813,16 +2753,14 @@ class cls:
 
 
     def meth(): pass
-
 ''', r'''
 class cls:
     def premeth(): pass
 
     def meth():
         pass
-
 ''', r'''
-Module - ROOT 0,0..5,0
+Module - ROOT 0,0..4,20
   .body[1]
   0] ClassDef - 0,0..4,20
     .name 'cls'
@@ -4215,11 +4153,9 @@ Module - ROOT 0,0..7,5
 
 (142, '', 0, 1, None, {}, ('exec',
 r'''i'''), (None,
-r'''l'''), r'''
-l
-
-''', r'''
-Module - ROOT 0,0..1,0
+r'''l'''),
+r'''l''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
   0] Expr - 0,0..0,1
     .value Name 'l' Load - 0,0..0,1
@@ -4248,9 +4184,8 @@ j
 r'''l'''), r'''
 i
 l
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,1
   .body[2]
   0] Expr - 0,0..0,1
     .value Name 'i' Load - 0,0..0,1
@@ -4265,9 +4200,8 @@ if 1:
 r'''l'''), r'''
 if 1:
     l
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,5
   .body[1]
   0] If - 0,0..1,5
     .test Constant 1 - 0,3..0,4
@@ -4306,9 +4240,8 @@ r'''l'''), r'''
 if 1:
     i
     l
-
 ''', r'''
-Module - ROOT 0,0..3,0
+Module - ROOT 0,0..2,5
   .body[1]
   0] If - 0,0..2,5
     .test Constant 1 - 0,3..0,4
@@ -4816,9 +4749,8 @@ r'''i ; j'''), (None,
 r'''l'''), r'''
 i
 l
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,1
   .body[2]
   0] Expr - 0,0..0,1
     .value Name 'i' Load - 0,0..0,1
@@ -4833,9 +4765,8 @@ i \
 r'''l'''), r'''
 i
 l
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,1
   .body[2]
   0] Expr - 0,0..0,1
     .value Name 'i' Load - 0,0..0,1
@@ -4850,9 +4781,8 @@ i ; \
 r'''l'''), r'''
 i
 l
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,1
   .body[2]
   0] Expr - 0,0..0,1
     .value Name 'i' Load - 0,0..0,1
@@ -4868,9 +4798,8 @@ j
 r'''l'''), r'''
 i
 l
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,1
   .body[2]
   0] Expr - 0,0..0,1
     .value Name 'i' Load - 0,0..0,1
@@ -4886,9 +4815,8 @@ r'''l'''), r'''
 if 1:
     i
     l
-
 ''', r'''
-Module - ROOT 0,0..3,0
+Module - ROOT 0,0..2,5
   .body[1]
   0] If - 0,0..2,5
     .test Constant 1 - 0,3..0,4
@@ -4908,9 +4836,8 @@ r'''l'''), r'''
 if 1:
     i
     l
-
 ''', r'''
-Module - ROOT 0,0..3,0
+Module - ROOT 0,0..2,5
   .body[1]
   0] If - 0,0..2,5
     .test Constant 1 - 0,3..0,4
@@ -4930,9 +4857,8 @@ r'''l'''), r'''
 if 1:
     i
     l
-
 ''', r'''
-Module - ROOT 0,0..3,0
+Module - ROOT 0,0..2,5
   .body[1]
   0] If - 0,0..2,5
     .test Constant 1 - 0,3..0,4
@@ -4953,9 +4879,8 @@ r'''l'''), r'''
 if 1:
     i
     l
-
 ''', r'''
-Module - ROOT 0,0..3,0
+Module - ROOT 0,0..2,5
   .body[1]
   0] If - 0,0..2,5
     .test Constant 1 - 0,3..0,4
@@ -5199,11 +5124,9 @@ Module - ROOT 0,0..2,5
 
 (184, '', 0, 1, None, {}, ('exec',
 r'''i ;'''), (None,
-r'''l'''), r'''
-l
-
-''', r'''
-Module - ROOT 0,0..1,0
+r'''l'''),
+r'''l''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
   0] Expr - 0,0..0,1
     .value Name 'l' Load - 0,0..0,1
@@ -5225,11 +5148,9 @@ Module - ROOT 0,0..1,6
 i ; \
  # post
 '''), (None,
-r'''l'''), r'''
-l
-
-''', r'''
-Module - ROOT 0,0..1,0
+r'''l'''),
+r'''l''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
   0] Expr - 0,0..0,1
     .value Name 'l' Load - 0,0..0,1
@@ -5240,11 +5161,9 @@ i \
  ; \
  # post
 '''), (None,
-r'''l'''), r'''
-l
-
-''', r'''
-Module - ROOT 0,0..1,0
+r'''l'''),
+r'''l''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
   0] Expr - 0,0..0,1
     .value Name 'l' Load - 0,0..0,1
@@ -5257,9 +5176,8 @@ if 1:
 r'''l'''), r'''
 if 1:
     l
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,5
   .body[1]
   0] If - 0,0..1,5
     .test Constant 1 - 0,3..0,4
@@ -5294,9 +5212,8 @@ if 1:
 r'''l'''), r'''
 if 1:
     l
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,5
   .body[1]
   0] If - 0,0..1,5
     .test Constant 1 - 0,3..0,4
@@ -5314,9 +5231,8 @@ if 1:
 r'''l'''), r'''
 if 1:
     l
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,5
   .body[1]
   0] If - 0,0..1,5
     .test Constant 1 - 0,3..0,4
@@ -5708,11 +5624,9 @@ Module - ROOT 0,0..2,5
 # pre
 i ;
 '''), (None,
-r'''l'''), r'''
-l
-
-''', r'''
-Module - ROOT 0,0..1,0
+r'''l'''),
+r'''l''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
   0] Expr - 0,0..0,1
     .value Name 'l' Load - 0,0..0,1
@@ -5737,11 +5651,9 @@ Module - ROOT 0,0..1,6
 i ; \
  # post
 '''), (None,
-r'''l'''), r'''
-l
-
-''', r'''
-Module - ROOT 0,0..1,0
+r'''l'''),
+r'''l''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
   0] Expr - 0,0..0,1
     .value Name 'l' Load - 0,0..0,1
@@ -5753,11 +5665,9 @@ i \
  ; \
  # post
 '''), (None,
-r'''l'''), r'''
-l
-
-''', r'''
-Module - ROOT 0,0..1,0
+r'''l'''),
+r'''l''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
   0] Expr - 0,0..0,1
     .value Name 'l' Load - 0,0..0,1
@@ -5771,9 +5681,8 @@ if 1:
 r'''l'''), r'''
 if 1:
     l
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,5
   .body[1]
   0] If - 0,0..1,5
     .test Constant 1 - 0,3..0,4
@@ -5810,9 +5719,8 @@ if 1:
 r'''l'''), r'''
 if 1:
     l
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,5
   .body[1]
   0] If - 0,0..1,5
     .test Constant 1 - 0,3..0,4
@@ -5831,9 +5739,8 @@ if 1:
 r'''l'''), r'''
 if 1:
     l
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,5
   .body[1]
   0] If - 0,0..1,5
     .test Constant 1 - 0,3..0,4
@@ -6104,16 +6011,14 @@ def prefunc(): pass
 
 
 def func(): pass
-
 ''', r'''
 def prefunc(): pass
 
 
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,16
   .body[2]
   0] FunctionDef - 0,0..0,19
     .name 'prefunc'
@@ -6428,7 +6333,6 @@ if 1:
 
 
     def meth(): pass
-
 ''', r'''
 if 1:
     def premeth(): pass
@@ -6436,9 +6340,8 @@ if 1:
 
     def meth():
         pass
-
 ''', r'''
-Module - ROOT 0,0..5,0
+Module - ROOT 0,0..4,20
   .body[1]
   0] If - 0,0..4,20
     .test Constant 1 - 0,3..0,4
@@ -7815,16 +7718,14 @@ i
 
 
 def f(): pass
-
 ''', r'''
 i
 
 
 def f():
     pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,13
   .body[2]
   0] Expr - 0,0..0,1
     .value Name 'i' Load - 0,0..0,1
@@ -7844,16 +7745,14 @@ i ;
 
 
 def f(): pass
-
 ''', r'''
 i ;
 
 
 def f():
     pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,13
   .body[2]
   0] Expr - 0,0..0,1
     .value Name 'i' Load - 0,0..0,1
@@ -7872,16 +7771,14 @@ i
 
 
 def f(): pass
-
 ''', r'''
 i
 
 
 def f():
     pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,13
   .body[2]
   0] Expr - 0,0..0,1
     .value Name 'i' Load - 0,0..0,1
@@ -7903,7 +7800,6 @@ i \
 
 
 def f(): pass
-
 ''', r'''
 i \
  ;
@@ -7911,9 +7807,8 @@ i \
 
 def f():
     pass
-
 ''', r'''
-Module - ROOT 0,0..5,0
+Module - ROOT 0,0..4,13
   .body[2]
   0] Expr - 0,0..0,1
     .value Name 'i' Load - 0,0..0,1
@@ -7932,16 +7827,14 @@ class cls:
     i
 
     def f(): pass
-
 ''', r'''
 class cls:
     i
 
     def f():
         pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,17
   .body[1]
   0] ClassDef - 0,0..3,17
     .name 'cls'
@@ -7964,16 +7857,14 @@ class cls:
     i ;
 
     def f(): pass
-
 ''', r'''
 class cls:
     i ;
 
     def f():
         pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,17
   .body[1]
   0] ClassDef - 0,0..3,17
     .name 'cls'
@@ -7996,16 +7887,14 @@ class cls:
     i
 
     def f(): pass
-
 ''', r'''
 class cls:
     i
 
     def f():
         pass
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,17
   .body[1]
   0] ClassDef - 0,0..3,17
     .name 'cls'
@@ -8031,7 +7920,6 @@ class cls:
  ;
 
     def f(): pass
-
 ''', r'''
 class cls:
     i \
@@ -8039,9 +7927,8 @@ class cls:
 
     def f():
         pass
-
 ''', r'''
-Module - ROOT 0,0..5,0
+Module - ROOT 0,0..4,17
   .body[1]
   0] ClassDef - 0,0..4,17
     .name 'cls'
@@ -8313,9 +8200,8 @@ r'''break'''), r'''
 if 1: pass
 else:
     break
-
 ''', r'''
-Module - ROOT 0,0..3,0
+Module - ROOT 0,0..2,9
   .body[1]
   0] If - 0,0..2,9
     .test Constant 1 - 0,3..0,4
@@ -8334,15 +8220,13 @@ r'''if 3: break'''), r'''
 if 1: pass
 else:
     if 3: break
-
 ''', r'''
 if 1: pass
 else:
     if 3:
         break
-
 ''', r'''
-Module - ROOT 0,0..3,0
+Module - ROOT 0,0..2,15
   .body[1]
   0] If - 0,0..2,15
     .test Constant 1 - 0,3..0,4
@@ -8363,14 +8247,12 @@ elif 2:
 r'''if 3: break'''), r'''
 if 1: pass
 elif 3: break
-
 ''', r'''
 if 1: pass
 elif 3:
     break
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,13
   .body[1]
   0] If - 0,0..1,13
     .test Constant 1 - 0,3..0,4
@@ -8391,14 +8273,12 @@ else:
 r'''if 3: break'''), r'''
 if 1: pass
 elif 3: break
-
 ''', r'''
 if 1: pass
 elif 3:
     break
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,13
   .body[1]
   0] If - 0,0..1,13
     .test Constant 1 - 0,3..0,4
@@ -8422,9 +8302,8 @@ class cls:
     if 1: pass
     else:
         break
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,13
   .body[1]
   0] ClassDef - 0,0..3,13
     .name 'cls'
@@ -8448,16 +8327,14 @@ class cls:
     if 1: pass
     else:
         if 3: break
-
 ''', r'''
 class cls:
     if 1: pass
     else:
         if 3:
             break
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,19
   .body[1]
   0] ClassDef - 0,0..3,19
     .name 'cls'
@@ -8483,15 +8360,13 @@ r'''if 3: break'''), r'''
 class cls:
     if 1: pass
     elif 3: break
-
 ''', r'''
 class cls:
     if 1: pass
     elif 3:
         break
-
 ''', r'''
-Module - ROOT 0,0..3,0
+Module - ROOT 0,0..2,17
   .body[1]
   0] ClassDef - 0,0..2,17
     .name 'cls'
@@ -8517,15 +8392,13 @@ r'''if 3: break'''), r'''
 class cls:
     if 1: pass
     elif 3: break
-
 ''', r'''
 class cls:
     if 1: pass
     elif 3:
         break
-
 ''', r'''
-Module - ROOT 0,0..3,0
+Module - ROOT 0,0..2,17
   .body[1]
   0] ClassDef - 0,0..2,17
     .name 'cls'
@@ -8555,7 +8428,6 @@ else:
     if 3: break
     else:
         continue
-
 ''', r'''
 if 1: pass
 else:
@@ -8563,9 +8435,8 @@ else:
         break
     else:
         continue
-
 ''', r'''
-Module - ROOT 0,0..5,0
+Module - ROOT 0,0..4,16
   .body[1]
   0] If - 0,0..4,16
     .test Constant 1 - 0,3..0,4
@@ -8593,16 +8464,14 @@ if 1: pass
 elif 3: break
 else:
     continue
-
 ''', r'''
 if 1: pass
 elif 3:
     break
 else:
     continue
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,12
   .body[1]
   0] If - 0,0..3,12
     .test Constant 1 - 0,3..0,4
@@ -8633,7 +8502,6 @@ else:
     if 3: break
     else:
         continue
-
 ''', r'''
 if 1: pass
 elif 2:
@@ -8643,9 +8511,8 @@ else:
         break
     else:
         continue
-
 ''', r'''
-Module - ROOT 0,0..7,0
+Module - ROOT 0,0..6,16
   .body[1]
   0] If - 0,0..6,16
     .test Constant 1 - 0,3..0,4
@@ -8680,7 +8547,6 @@ elif 2:
 elif 3: break
 else:
     continue
-
 ''', r'''
 if 1: pass
 elif 2:
@@ -8689,9 +8555,8 @@ elif 3:
     break
 else:
     continue
-
 ''', r'''
-Module - ROOT 0,0..6,0
+Module - ROOT 0,0..5,12
   .body[1]
   0] If - 0,0..5,12
     .test Constant 1 - 0,3..0,4
@@ -8727,7 +8592,6 @@ class cls:
         if 3: break
         else:
             continue
-
 ''', r'''
 class cls:
     if 1: pass
@@ -8736,9 +8600,8 @@ class cls:
             break
         else:
             continue
-
 ''', r'''
-Module - ROOT 0,0..6,0
+Module - ROOT 0,0..5,20
   .body[1]
   0] ClassDef - 0,0..5,20
     .name 'cls'
@@ -8771,7 +8634,6 @@ class cls:
     elif 3: break
     else:
         continue
-
 ''', r'''
 class cls:
     if 1: pass
@@ -8779,9 +8641,8 @@ class cls:
         break
     else:
         continue
-
 ''', r'''
-Module - ROOT 0,0..5,0
+Module - ROOT 0,0..4,16
   .body[1]
   0] ClassDef - 0,0..4,16
     .name 'cls'
@@ -8817,7 +8678,6 @@ class cls:
         if 3: break
         else:
             continue
-
 ''', r'''
 class cls:
     if 1: pass
@@ -8828,9 +8688,8 @@ class cls:
             break
         else:
             continue
-
 ''', r'''
-Module - ROOT 0,0..8,0
+Module - ROOT 0,0..7,20
   .body[1]
   0] ClassDef - 0,0..7,20
     .name 'cls'
@@ -8870,7 +8729,6 @@ class cls:
     elif 3: break
     else:
         continue
-
 ''', r'''
 class cls:
     if 1: pass
@@ -8880,9 +8738,8 @@ class cls:
         break
     else:
         continue
-
 ''', r'''
-Module - ROOT 0,0..7,0
+Module - ROOT 0,0..6,16
   .body[1]
   0] ClassDef - 0,0..6,16
     .name 'cls'
@@ -8914,9 +8771,8 @@ if 1:
     pass;
 else:
     i
-
 ''', r'''
-Module - ROOT 0,0..4,0
+Module - ROOT 0,0..3,5
   .body[1]
   0] If - 0,0..3,5
     .test Constant 1 - 0,3..0,4
@@ -15367,7 +15223,6 @@ def f():
       Four"""
     i ; """Five
       Six"""
-
 ''', r'''
 def f():
     """One
@@ -15375,9 +15230,8 @@ def f():
     'Three\n  Four'
     i
     'Five\n  Six'
-
 ''', r'''
-Module - ROOT 0,0..7,0
+Module - ROOT 0,0..6,12
   .body[1]
   0] FunctionDef - 0,0..6,12
     .name 'f'
@@ -15410,7 +15264,6 @@ def f():
   Four"""
     i ; """Five
   Six"""
-
 ''', r'''
 def f():
     """One
@@ -15418,9 +15271,8 @@ def f():
     'Three\n  Four'
     i
     'Five\n  Six'
-
 ''', r'''
-Module - ROOT 0,0..7,0
+Module - ROOT 0,0..6,8
   .body[1]
   0] FunctionDef - 0,0..6,8
     .name 'f'
@@ -15453,7 +15305,6 @@ def f():
   Four"""
     i ; """Five
   Six"""
-
 ''', r'''
 def f():
     """One
@@ -15461,9 +15312,8 @@ def f():
     'Three\n  Four'
     i
     'Five\n  Six'
-
 ''', r'''
-Module - ROOT 0,0..7,0
+Module - ROOT 0,0..6,8
   .body[1]
   0] FunctionDef - 0,0..6,8
     .name 'f'
@@ -15497,7 +15347,6 @@ def f():
       Four"""
     i ; """Five
       Six"""
-
 ''', r'''
 def f():
     pass
@@ -15506,9 +15355,8 @@ def f():
     'Three\n  Four'
     i
     'Five\n  Six'
-
 ''', r'''
-Module - ROOT 0,0..8,0
+Module - ROOT 0,0..7,12
   .body[1]
   0] FunctionDef - 0,0..7,12
     .name 'f'
@@ -15543,7 +15391,6 @@ def f():
   Four"""
     i ; """Five
   Six"""
-
 ''', r'''
 def f():
     pass
@@ -15552,9 +15399,8 @@ def f():
     'Three\n  Four'
     i
     'Five\n  Six'
-
 ''', r'''
-Module - ROOT 0,0..8,0
+Module - ROOT 0,0..7,8
   .body[1]
   0] FunctionDef - 0,0..7,8
     .name 'f'
@@ -15589,7 +15435,6 @@ def f():
   Four"""
     i ; """Five
   Six"""
-
 ''', r'''
 def f():
     pass
@@ -15598,9 +15443,8 @@ def f():
     'Three\n  Four'
     i
     'Five\n  Six'
-
 ''', r'''
-Module - ROOT 0,0..8,0
+Module - ROOT 0,0..7,8
   .body[1]
   0] FunctionDef - 0,0..7,8
     .name 'f'
@@ -15614,6 +15458,517 @@ Module - ROOT 0,0..8,0
       .value Name 'i' Load - 6,4..6,5
     4] Expr - 6,8..7,8
       .value Constant 'Five\n  Six' - 6,8..7,8
+'''),
+],
+
+'stmtish_trailing_newline': [  # ................................................................................
+
+(0, '', 1, 2, None, {}, (None, r'''
+if 1:
+    i = 1
+    j = 2
+'''), (None,
+r'''k = 3'''), r'''
+if 1:
+    i = 1
+    k = 3
+''', r'''
+If - ROOT 0,0..2,9
+  .test Constant 1 - 0,3..0,4
+  .body[2]
+  0] Assign - 1,4..1,9
+    .targets[1]
+    0] Name 'i' Store - 1,4..1,5
+    .value Constant 1 - 1,8..1,9
+  1] Assign - 2,4..2,9
+    .targets[1]
+    0] Name 'k' Store - 2,4..2,5
+    .value Constant 3 - 2,8..2,9
+'''),
+
+(1, '', 1, 2, None, {}, (None, r'''
+if 1:
+    i = 1
+    j = 2
+'''), (None, r'''
+k = 3
+
+'''), r'''
+if 1:
+    i = 1
+    k = 3
+
+''', r'''
+if 1:
+    i = 1
+    k = 3
+''', r'''
+If - ROOT 0,0..2,9
+  .test Constant 1 - 0,3..0,4
+  .body[2]
+  0] Assign - 1,4..1,9
+    .targets[1]
+    0] Name 'i' Store - 1,4..1,5
+    .value Constant 1 - 1,8..1,9
+  1] Assign - 2,4..2,9
+    .targets[1]
+    0] Name 'k' Store - 2,4..2,5
+    .value Constant 3 - 2,8..2,9
+'''),
+
+(2, '', 2, 2, None, {}, (None, r'''
+if 1:
+    i = 1
+    j = 2
+'''), (None,
+r'''k = 3'''), r'''
+if 1:
+    i = 1
+    j = 2
+    k = 3
+''', r'''
+If - ROOT 0,0..3,9
+  .test Constant 1 - 0,3..0,4
+  .body[3]
+  0] Assign - 1,4..1,9
+    .targets[1]
+    0] Name 'i' Store - 1,4..1,5
+    .value Constant 1 - 1,8..1,9
+  1] Assign - 2,4..2,9
+    .targets[1]
+    0] Name 'j' Store - 2,4..2,5
+    .value Constant 2 - 2,8..2,9
+  2] Assign - 3,4..3,9
+    .targets[1]
+    0] Name 'k' Store - 3,4..3,5
+    .value Constant 3 - 3,8..3,9
+'''),
+
+(3, '', 2, 2, None, {}, (None, r'''
+if 1:
+    i = 1
+    j = 2
+'''), (None, r'''
+k = 3
+
+'''), r'''
+if 1:
+    i = 1
+    j = 2
+    k = 3
+
+''', r'''
+if 1:
+    i = 1
+    j = 2
+    k = 3
+''', r'''
+If - ROOT 0,0..3,9
+  .test Constant 1 - 0,3..0,4
+  .body[3]
+  0] Assign - 1,4..1,9
+    .targets[1]
+    0] Name 'i' Store - 1,4..1,5
+    .value Constant 1 - 1,8..1,9
+  1] Assign - 2,4..2,9
+    .targets[1]
+    0] Name 'j' Store - 2,4..2,5
+    .value Constant 2 - 2,8..2,9
+  2] Assign - 3,4..3,9
+    .targets[1]
+    0] Name 'k' Store - 3,4..3,5
+    .value Constant 3 - 3,8..3,9
+'''),
+
+(4, 'body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+    i = 1
+    j = 2
+'''), (None,
+r'''k = 3'''), r'''
+if 1:
+    i = 1
+    k = 3
+''', r'''
+Module - ROOT 0,0..2,9
+  .body[1]
+  0] If - 0,0..2,9
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Assign - 1,4..1,9
+      .targets[1]
+      0] Name 'i' Store - 1,4..1,5
+      .value Constant 1 - 1,8..1,9
+    1] Assign - 2,4..2,9
+      .targets[1]
+      0] Name 'k' Store - 2,4..2,5
+      .value Constant 3 - 2,8..2,9
+'''),
+
+(5, 'body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+    i = 1
+    j = 2
+'''), (None, r'''
+k = 3
+
+'''), r'''
+if 1:
+    i = 1
+    k = 3
+
+''', r'''
+if 1:
+    i = 1
+    k = 3
+''', r'''
+Module - ROOT 0,0..3,0
+  .body[1]
+  0] If - 0,0..2,9
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Assign - 1,4..1,9
+      .targets[1]
+      0] Name 'i' Store - 1,4..1,5
+      .value Constant 1 - 1,8..1,9
+    1] Assign - 2,4..2,9
+      .targets[1]
+      0] Name 'k' Store - 2,4..2,5
+      .value Constant 3 - 2,8..2,9
+'''),
+
+(6, 'body[0]', 2, 2, None, {}, ('exec', r'''
+if 1:
+    i = 1
+    j = 2
+'''), (None,
+r'''k = 3'''), r'''
+if 1:
+    i = 1
+    j = 2
+    k = 3
+''', r'''
+Module - ROOT 0,0..3,9
+  .body[1]
+  0] If - 0,0..3,9
+    .test Constant 1 - 0,3..0,4
+    .body[3]
+    0] Assign - 1,4..1,9
+      .targets[1]
+      0] Name 'i' Store - 1,4..1,5
+      .value Constant 1 - 1,8..1,9
+    1] Assign - 2,4..2,9
+      .targets[1]
+      0] Name 'j' Store - 2,4..2,5
+      .value Constant 2 - 2,8..2,9
+    2] Assign - 3,4..3,9
+      .targets[1]
+      0] Name 'k' Store - 3,4..3,5
+      .value Constant 3 - 3,8..3,9
+'''),
+
+(7, 'body[0]', 2, 2, None, {}, ('exec', r'''
+if 1:
+    i = 1
+    j = 2
+'''), (None, r'''
+k = 3
+
+'''), r'''
+if 1:
+    i = 1
+    j = 2
+    k = 3
+
+''', r'''
+if 1:
+    i = 1
+    j = 2
+    k = 3
+''', r'''
+Module - ROOT 0,0..4,0
+  .body[1]
+  0] If - 0,0..3,9
+    .test Constant 1 - 0,3..0,4
+    .body[3]
+    0] Assign - 1,4..1,9
+      .targets[1]
+      0] Name 'i' Store - 1,4..1,5
+      .value Constant 1 - 1,8..1,9
+    1] Assign - 2,4..2,9
+      .targets[1]
+      0] Name 'j' Store - 2,4..2,5
+      .value Constant 2 - 2,8..2,9
+    2] Assign - 3,4..3,9
+      .targets[1]
+      0] Name 'k' Store - 3,4..3,5
+      .value Constant 3 - 3,8..3,9
+'''),
+
+(8, '', 0, 0, None, {}, ('exec', r'''
+if 1:
+    i = 1
+    j = 2
+'''), (None,
+r'''k = 3'''), r'''
+k = 3
+if 1:
+    i = 1
+    j = 2
+''', r'''
+Module - ROOT 0,0..3,9
+  .body[2]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'k' Store - 0,0..0,1
+    .value Constant 3 - 0,4..0,5
+  1] If - 1,0..3,9
+    .test Constant 1 - 1,3..1,4
+    .body[2]
+    0] Assign - 2,4..2,9
+      .targets[1]
+      0] Name 'i' Store - 2,4..2,5
+      .value Constant 1 - 2,8..2,9
+    1] Assign - 3,4..3,9
+      .targets[1]
+      0] Name 'j' Store - 3,4..3,5
+      .value Constant 2 - 3,8..3,9
+'''),
+
+(9, '', 0, 0, None, {}, ('exec', r'''
+if 1:
+    i = 1
+    j = 2
+'''), (None, r'''
+k = 3
+
+'''), r'''
+k = 3
+if 1:
+    i = 1
+    j = 2
+''', r'''
+Module - ROOT 0,0..3,9
+  .body[2]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'k' Store - 0,0..0,1
+    .value Constant 3 - 0,4..0,5
+  1] If - 1,0..3,9
+    .test Constant 1 - 1,3..1,4
+    .body[2]
+    0] Assign - 2,4..2,9
+      .targets[1]
+      0] Name 'i' Store - 2,4..2,5
+      .value Constant 1 - 2,8..2,9
+    1] Assign - 3,4..3,9
+      .targets[1]
+      0] Name 'j' Store - 3,4..3,5
+      .value Constant 2 - 3,8..3,9
+'''),
+
+(10, '', 0, 0, None, {}, ('exec', r'''
+if 1:
+    i = 1
+    j = 2
+'''), (None, r'''
+k = 3
+
+
+'''), r'''
+k = 3
+
+if 1:
+    i = 1
+    j = 2
+''', r'''
+k = 3
+if 1:
+    i = 1
+    j = 2
+''', r'''
+Module - ROOT 0,0..4,9
+  .body[2]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'k' Store - 0,0..0,1
+    .value Constant 3 - 0,4..0,5
+  1] If - 2,0..4,9
+    .test Constant 1 - 2,3..2,4
+    .body[2]
+    0] Assign - 3,4..3,9
+      .targets[1]
+      0] Name 'i' Store - 3,4..3,5
+      .value Constant 1 - 3,8..3,9
+    1] Assign - 4,4..4,9
+      .targets[1]
+      0] Name 'j' Store - 4,4..4,5
+      .value Constant 2 - 4,8..4,9
+'''),
+
+(11, '', 0, 1, None, {}, ('exec', r'''
+if 1:
+    i = 1
+    j = 2
+'''), (None,
+r'''k = 3'''),
+r'''k = 3''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'k' Store - 0,0..0,1
+    .value Constant 3 - 0,4..0,5
+'''),
+
+(12, '', 0, 1, None, {}, ('exec', r'''
+if 1:
+    i = 1
+    j = 2
+'''), (None, r'''
+k = 3
+
+'''), r'''
+k = 3
+
+''',
+r'''k = 3''', r'''
+Module - ROOT 0,0..1,0
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'k' Store - 0,0..0,1
+    .value Constant 3 - 0,4..0,5
+'''),
+
+(13, '', 0, 1, None, {}, ('exec', r'''
+if 1:
+    i = 1
+    j = 2
+'''), (None, r'''
+k = 3
+
+
+'''), r'''
+k = 3
+
+
+''',
+r'''k = 3''', r'''
+Module - ROOT 0,0..2,0
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'k' Store - 0,0..0,1
+    .value Constant 3 - 0,4..0,5
+'''),
+
+(14, '', 1, 1, None, {}, ('exec', r'''
+if 1:
+    i = 1
+    j = 2
+'''), (None,
+r'''k = 3'''), r'''
+if 1:
+    i = 1
+    j = 2
+k = 3
+''', r'''
+Module - ROOT 0,0..3,5
+  .body[2]
+  0] If - 0,0..2,9
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Assign - 1,4..1,9
+      .targets[1]
+      0] Name 'i' Store - 1,4..1,5
+      .value Constant 1 - 1,8..1,9
+    1] Assign - 2,4..2,9
+      .targets[1]
+      0] Name 'j' Store - 2,4..2,5
+      .value Constant 2 - 2,8..2,9
+  1] Assign - 3,0..3,5
+    .targets[1]
+    0] Name 'k' Store - 3,0..3,1
+    .value Constant 3 - 3,4..3,5
+'''),
+
+(15, '', 1, 1, None, {}, ('exec', r'''
+if 1:
+    i = 1
+    j = 2
+'''), (None, r'''
+k = 3
+
+'''), r'''
+if 1:
+    i = 1
+    j = 2
+k = 3
+
+''', r'''
+if 1:
+    i = 1
+    j = 2
+k = 3
+''', r'''
+Module - ROOT 0,0..4,0
+  .body[2]
+  0] If - 0,0..2,9
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Assign - 1,4..1,9
+      .targets[1]
+      0] Name 'i' Store - 1,4..1,5
+      .value Constant 1 - 1,8..1,9
+    1] Assign - 2,4..2,9
+      .targets[1]
+      0] Name 'j' Store - 2,4..2,5
+      .value Constant 2 - 2,8..2,9
+  1] Assign - 3,0..3,5
+    .targets[1]
+    0] Name 'k' Store - 3,0..3,1
+    .value Constant 3 - 3,4..3,5
+'''),
+
+(16, '', 1, 1, None, {}, ('exec', r'''
+if 1:
+    i = 1
+    j = 2
+'''), (None, r'''
+k = 3
+
+
+'''), r'''
+if 1:
+    i = 1
+    j = 2
+k = 3
+
+
+''', r'''
+if 1:
+    i = 1
+    j = 2
+k = 3
+''', r'''
+Module - ROOT 0,0..5,0
+  .body[2]
+  0] If - 0,0..2,9
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Assign - 1,4..1,9
+      .targets[1]
+      0] Name 'i' Store - 1,4..1,5
+      .value Constant 1 - 1,8..1,9
+    1] Assign - 2,4..2,9
+      .targets[1]
+      0] Name 'j' Store - 2,4..2,5
+      .value Constant 2 - 2,8..2,9
+  1] Assign - 3,0..3,5
+    .targets[1]
+    0] Name 'k' Store - 3,0..3,1
+    .value Constant 3 - 3,4..3,5
 '''),
 ],
 

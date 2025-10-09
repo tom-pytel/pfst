@@ -431,10 +431,8 @@ r'''Pass - ROOT 0,0..0,4'''),
 (44, '', 0, False, 'orelse', {}, (For, r'''
 for var in iter(): pass
 else: continue
-'''), r'''
-for var in iter(): pass
-
-''', r'''
+'''),
+r'''for var in iter(): pass''', r'''
 For - ROOT 0,0..0,23
   .target Name 'var' Store - 0,4..0,7
   .iter Call - 0,11..0,17
@@ -473,10 +471,8 @@ r'''Pass - ROOT 0,0..0,4'''),
 (48, '', 0, False, 'orelse', {}, (AsyncFor, r'''
 async for var in iter(): pass
 else: continue
-'''), r'''
-async for var in iter(): pass
-
-''', r'''
+'''),
+r'''async for var in iter(): pass''', r'''
 AsyncFor - ROOT 0,0..0,29
   .target Name 'var' Store - 0,10..0,13
   .iter Call - 0,17..0,23
@@ -505,10 +501,8 @@ r'''Pass - ROOT 0,0..0,4'''),
 (51, '', 0, False, 'orelse', {}, (While, r'''
 while var: pass
 else: continue
-'''), r'''
-while var: pass
-
-''', r'''
+'''),
+r'''while var: pass''', r'''
 While - ROOT 0,0..0,15
   .test Name 'var' Load - 0,6..0,9
   .body[1]
@@ -535,10 +529,8 @@ r'''Pass - ROOT 0,0..0,4'''),
 (54, '', 0, False, 'orelse', {}, (If, r'''
 if var: pass
 else: continue
-'''), r'''
-if var: pass
-
-''', r'''
+'''),
+r'''if var: pass''', r'''
 If - ROOT 0,0..0,12
   .test Name 'var' Load - 0,3..0,6
   .body[1]
@@ -596,10 +588,8 @@ r'''Name 'var' Load - ROOT 0,0..0,3'''),
 (60, '', 0, False, 'cases', {'_verify_self': False}, (Match, r'''
 match var:
   case 1: pass
-'''), r'''
-match var:
-
-''', r'''
+'''),
+r'''match var:''', r'''
 Match - ROOT 0,0..0,10
   .subject Name 'var' Load - 0,6..0,9
 ''',
@@ -659,10 +649,8 @@ r'''Pass - ROOT 0,0..0,4'''),
 (66, '', 0, False, 'handlers', {'_verify_self': False}, (Try, r'''
 try: pass
 except Exception: continue
-'''), r'''
-try: pass
-
-''', r'''
+'''),
+r'''try: pass''', r'''
 Try - ROOT 0,0..0,9
   .body[1]
   0] Pass - 0,5..0,9
@@ -681,7 +669,6 @@ else: break
 '''), r'''
 try: pass
 except Exception: continue
-
 ''', r'''
 Try - ROOT 0,0..1,26
   .body[1]
@@ -702,7 +689,6 @@ finally: ...
 '''), r'''
 try: pass
 except Exception: continue
-
 ''', r'''
 Try - ROOT 0,0..1,26
   .body[1]
@@ -736,10 +722,8 @@ r'''Pass - ROOT 0,0..0,4'''),
 (70, '', 0, False, 'handlers', {'_ver': 11, '_verify_self': False}, (TryStar, r'''
 try: pass
 except* Exception: continue
-'''), r'''
-try: pass
-
-''', r'''
+'''),
+r'''try: pass''', r'''
 TryStar - ROOT 0,0..0,9
   .body[1]
   0] Pass - 0,5..0,9
@@ -758,7 +742,6 @@ else: break
 '''), r'''
 try: pass
 except* Exception: continue
-
 ''', r'''
 TryStar - ROOT 0,0..1,27
   .body[1]
@@ -779,7 +762,6 @@ finally: ...
 '''), r'''
 try: pass
 except* Exception: continue
-
 ''', r'''
 TryStar - ROOT 0,0..1,27
   .body[1]

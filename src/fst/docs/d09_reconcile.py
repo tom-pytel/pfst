@@ -157,7 +157,6 @@ def compute(x, y):
         return 0
     else:
         return -1
-.
 ```
 
 ## How it works
