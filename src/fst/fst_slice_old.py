@@ -1178,6 +1178,28 @@ def _put_slice_stmtish_old(self: fst.FST, code: Code | None, start: int | Litera
 # ----------------------------------------------------------------------------------------------------------------------
 # Hack adapt new trivia params to old and fix for introduced trailing newline on put or cut
 
+# Old trivia parameters for code above:
+# - `precomms`: Preceding comments.  - DEPRECATED, STILL USED FOR STMTS, WILL BE REPLACED WITH `trivia`!
+#     - `False`: No preceding comments.
+#     - `True`: Single contiguous comment block immediately preceding position.
+#     - `'all'`: Comment blocks (possibly separated by empty lines) preceding position.
+# - `postcomms`: Trailing comments.  - DEPRECATED, STILL USED FOR STMTS, WILL BE REPLACED WITH `trivia`!
+#     - `False`: No trailing comments.
+#     - `True`: Only comment trailing on line of position, nothing past that on its own lines.
+#     - `'block'`: Single contiguous comment block following position.
+#     - `'all'`: Comment blocks (possibly separated by empty lines) following position.
+# - `prespace`: Preceding empty lines (max of this and `pep8space` used).  - DEPRECATED, STILL USED FOR STMTS,
+#     WILL BE REPLACED WITH `trivia`!
+#     - `False`: No empty lines.
+#     - `True`: All empty lines.
+#     - `int`: A maximum number of empty lines.
+# - `postspace`: Same as `prespace` except for trailing empty lines.  - DEPRECATED, STILL USED FOR STMTS, WILL BE
+#     REPLACED WITH `trivia`!
+
+_trivia2precomms  = {False: False, 'none': False, 'block': True, 'all': 'all', True: True}
+_trivia2postcomms = {False: False, 'none': False, 'line': True, 'block': 'block', 'all': 'all', True: True}
+
+
 def _maybe_del_trailing_newline(self: fst.FST, old_last_line: str, put_fst_end_nl: bool) -> None:
     lines = (root := self.root)._lines
 
@@ -1194,13 +1216,29 @@ def _maybe_del_trailing_newline(self: fst.FST, old_last_line: str, put_fst_end_n
             root._touchall(True)
 
 
-# ......................................................................................................................
-
 def _get_slice_stmtish(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
                        options: Mapping[str, Any], *, one: bool = False) -> fst.FST:
     old_last_line = self.root._lines[-1]
+    ld_comms, ld_space, ld_neg, tr_comms, tr_space, tr_neg = fst.FST._get_trivia_params(options.get('trivia'), True)
+    ld_or_tr_neg = ld_neg or tr_neg
 
-    fst_ = _get_slice_stmtish_old(self, start, stop, field, cut, options, one=one)
+    options = dict(options,
+        precomms=_trivia2precomms[ld_comms],
+        postcomms=_trivia2postcomms[tr_comms],
+        prespace=False if ld_neg else ld_space,
+        postspace=False if tr_neg else tr_space,
+    )
+
+    fst_ = _get_slice_stmtish_old(self, start, stop, field, cut and not ld_or_tr_neg, options, one=one)
+
+    if cut and ld_or_tr_neg:  # if there were '-#' spaces in trivia then we need to do in two steps because old code only supports a single step with '+#'
+        if ld_neg:
+            options['prespace'] = ld_space
+
+        if tr_neg:
+            options['postspace'] = tr_space
+
+        _put_slice_stmtish_old(self, None, start, stop, field, options)
 
     _maybe_del_trailing_newline(self, old_last_line, not cut)
 
@@ -1210,6 +1248,15 @@ def _get_slice_stmtish(self: fst.FST, start: int | Literal['end'] | None, stop: 
 def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                        field: str, one: bool, options: Mapping[str, Any]) -> None:
     old_last_line = self.root._lines[-1]
+    is_del = code is None
+    ld_comms, ld_space, _, tr_comms, tr_space, _ = fst.FST._get_trivia_params(options.get('trivia'), is_del)
+
+    options = dict(options,
+        precomms=_trivia2precomms[ld_comms],
+        postcomms=_trivia2postcomms[tr_comms],
+        prespace=ld_space,
+        postspace=tr_space,
+    )
 
     put_fst_end_nl = _put_slice_stmtish_old(self, code, start, stop, field, one, options)
 

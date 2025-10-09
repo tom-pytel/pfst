@@ -675,7 +675,7 @@ Module - ROOT 0,0..2,23
       .value Name 'j' Load - 2,8..2,9
 '''),
 
-(29, 'body[0].body[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, ('exec', r'''
+(29, 'body[0].body[0]', 0, 0, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 def f():
     if 1:
         pass
@@ -708,7 +708,7 @@ Module - ROOT 0,0..3,17
         0] Break - 3,12..3,17
 '''),
 
-(30, 'body[0].body[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, ('exec', r'''
+(30, 'body[0].body[0]', 0, 0, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 def f():
     if 1:
         pass  # post-if
@@ -747,7 +747,7 @@ Module - ROOT 0,0..5,15
         0] Break - 4,12..4,17
 '''),
 
-(31, 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, ('exec', r'''
+(31, 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 def f():
     if 1:
         pass  # post-if
@@ -799,7 +799,7 @@ Module - ROOT 0,0..8,15
           0] Continue - 7,8..7,16
 '''),
 
-(32, 'body[0].body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(32, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 def f():
     if 1:
         pass  # post-if
@@ -829,7 +829,7 @@ Module - ROOT 0,0..5,15
       0] Pass - 2,8..2,12
 '''),
 
-(33, 'body[0].body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(33, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (True, False), 'pep8space': False}, ('exec', r'''
 def f():
     if 1:
         pass  # post-if
@@ -858,7 +858,7 @@ Module - ROOT 0,0..4,15
       0] Pass - 2,8..2,12
 '''),
 
-(34, 'body[0].body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': True, 'pep8space': False}, ('exec', r'''
+(34, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (False, True), 'pep8space': False}, ('exec', r'''
 def f():
     if 1:
         pass  # post-if
@@ -887,7 +887,7 @@ Module - ROOT 0,0..4,15
       0] Pass - 2,8..2,12
 '''),
 
-(35, 'body[0].body[0]', 0, 1, 'orelse', {'precomms': True, 'postcomms': True}, ('exec', r'''
+(35, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (True, True)}, ('exec', r'''
 def f():
     if 1:
         pass  # post-if
@@ -915,7 +915,7 @@ Module - ROOT 0,0..3,15
       0] Pass - 2,8..2,12
 '''),
 
-(36, 'body[0].body[0].orelse[0]', 0, 1, 'orelse', {'precomms': 'all', 'postcomms': True, 'pep8space': False, 'prespace': True}, ('exec', r'''
+(36, 'body[0].body[0].orelse[0]', 0, 1, 'orelse', {'trivia': ('all+', True), 'pep8space': False}, ('exec', r'''
 def f():
     if 1:
         pass  # post-if
@@ -1731,7 +1731,7 @@ Module - ROOT 0,0..2,16
     0] Pass - 2,12..2,16
 '''),
 
-(68, '', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec',
+(68, '', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec',
 r'''def prefunc(): pass'''), (None,
 r'''def func(): pass'''), r'''
 def prefunc(): pass
@@ -1807,7 +1807,7 @@ Module - ROOT 0,0..2,16
     0] Pass - 2,12..2,16
 '''),
 
-(71, '', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec',
+(71, '', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec',
 r'''def prefunc(): pass'''), (None,
 r'''def func(): pass'''), r'''
 def prefunc(): pass
@@ -2079,7 +2079,7 @@ Module - ROOT 0,0..2,19
     0] Pass - 2,15..2,19
 '''),
 
-(81, '', 0, 0, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec',
+(81, '', 0, 0, None, {'trivia': (False, False), 'pep8space': False}, ('exec',
 r'''def prefunc(): pass'''), (None,
 r'''def func(): pass'''), r'''
 def func(): pass
@@ -2460,7 +2460,7 @@ Module - ROOT 0,0..4,20
     0] Pass - 4,16..4,20
 '''),
 
-(92, '', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(92, '', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 def prefunc(): pass
 def postfunc(): pass
 '''), (None,
@@ -3081,7 +3081,7 @@ Module - ROOT 0,0..7,24
       0] Pass - 7,20..7,24
 '''),
 
-(109, 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(109, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 class cls:
     def premeth(): pass
     def postmeth(): pass
@@ -3255,7 +3255,7 @@ Module - ROOT 0,0..8,24
       0] Pass - 8,20..8,24
 '''),
 
-(113, 'body[0]', 1, 2, None, {'precomms': False}, ('exec', r'''
+(113, 'body[0]', 1, 2, None, {'trivia': False}, ('exec', r'''
 class cls:
     def premeth(): pass
 
@@ -3403,7 +3403,7 @@ Module - ROOT 0,0..2,1
     .value Name 'k' Load - 2,0..2,1
 '''),
 
-(118, '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(118, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 i
 # pre
 j  # post
@@ -3454,7 +3454,7 @@ Module - ROOT 0,0..3,1
     .value Name 'k' Load - 3,0..3,1
 '''),
 
-(120, '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(120, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 i
 # pre
 j  # post
@@ -3537,7 +3537,7 @@ Module - ROOT 0,0..3,5
       .value Name 'k' Load - 3,4..3,5
 '''),
 
-(123, 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(123, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1:
     i
     # pre
@@ -3599,7 +3599,7 @@ Module - ROOT 0,0..4,5
       .value Name 'k' Load - 4,4..4,5
 '''),
 
-(125, 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(125, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1:
     i
     # pre
@@ -3637,7 +3637,7 @@ Module - ROOT 0,0..6,5
       .value Name 'k' Load - 6,4..6,5
 '''),
 
-(126, '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(126, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 i \
 # pre-before
 j  # post-before
@@ -3660,7 +3660,7 @@ Module - ROOT 0,0..4,1
     .value Name 'k' Load - 4,0..4,1
 '''),
 
-(127, '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(127, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 i \
 # pre-before
 j \
@@ -3685,7 +3685,7 @@ Module - ROOT 0,0..5,1
     .value Name 'k' Load - 5,0..5,1
 '''),
 
-(128, '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(128, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 i
 # pre-before
 j \
@@ -3710,7 +3710,7 @@ Module - ROOT 0,0..5,1
     .value Name 'k' Load - 5,0..5,1
 '''),
 
-(129, '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(129, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 i \
 
 j \
@@ -3735,7 +3735,7 @@ Module - ROOT 0,0..5,1
     .value Name 'k' Load - 5,0..5,1
 '''),
 
-(130, '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(130, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 i \
 # pre-before
 j  # post-before
@@ -3767,7 +3767,7 @@ Module - ROOT 0,0..5,1
     .value Name 'k' Load - 5,0..5,1
 '''),
 
-(131, '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(131, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 i \
 # pre-before
 j \
@@ -3802,7 +3802,7 @@ Module - ROOT 0,0..6,1
     .value Name 'k' Load - 6,0..6,1
 '''),
 
-(132, '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(132, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 i
 # pre-before
 j \
@@ -3837,7 +3837,7 @@ Module - ROOT 0,0..6,1
     .value Name 'k' Load - 6,0..6,1
 '''),
 
-(133, '', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(133, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 i \
 
 j \
@@ -3872,7 +3872,7 @@ Module - ROOT 0,0..6,1
     .value Name 'k' Load - 6,0..6,1
 '''),
 
-(134, 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(134, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1:
     i \
     # pre-before
@@ -3900,7 +3900,7 @@ Module - ROOT 0,0..5,5
       .value Name 'k' Load - 5,4..5,5
 '''),
 
-(135, 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(135, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1:
     i \
     # pre-before
@@ -3930,7 +3930,7 @@ Module - ROOT 0,0..6,5
       .value Name 'k' Load - 6,4..6,5
 '''),
 
-(136, 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(136, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1:
     i
     # pre-before
@@ -3960,7 +3960,7 @@ Module - ROOT 0,0..6,5
       .value Name 'k' Load - 6,4..6,5
 '''),
 
-(137, 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(137, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1:
     i \
 
@@ -3990,7 +3990,7 @@ Module - ROOT 0,0..6,5
       .value Name 'k' Load - 6,4..6,5
 '''),
 
-(138, 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(138, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1:
     i \
     # pre-before
@@ -4028,7 +4028,7 @@ Module - ROOT 0,0..6,5
       .value Name 'k' Load - 6,4..6,5
 '''),
 
-(139, 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(139, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1:
     i \
     # pre-before
@@ -4069,7 +4069,7 @@ Module - ROOT 0,0..7,5
       .value Name 'k' Load - 7,4..7,5
 '''),
 
-(140, 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(140, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1:
     i
     # pre-before
@@ -4110,7 +4110,7 @@ Module - ROOT 0,0..7,5
       .value Name 'k' Load - 7,4..7,5
 '''),
 
-(141, 'body[0]', 1, 2, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(141, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1:
     i \
 
@@ -6837,7 +6837,7 @@ Module - ROOT 0,0..9,8
     0] Pass - 9,4..9,8
 '''),
 
-(245, 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(245, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 def f():
     i
     j
@@ -6869,7 +6869,7 @@ Module - ROOT 0,0..3,5
       .value Name 'j' Load - 3,4..3,5
 '''),
 
-(246, 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(246, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 async def f():
     i
     j
@@ -6901,7 +6901,7 @@ Module - ROOT 0,0..3,5
       .value Name 'j' Load - 3,4..3,5
 '''),
 
-(247, 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(247, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 class cls:
     i
     j
@@ -6933,7 +6933,7 @@ Module - ROOT 0,0..3,5
       .value Name 'j' Load - 3,4..3,5
 '''),
 
-(248, 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(248, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 for a in b:
     i
     j
@@ -6966,7 +6966,7 @@ Module - ROOT 0,0..3,5
       .value Name 'j' Load - 3,4..3,5
 '''),
 
-(249, 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(249, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 async for a in b:
     i
     j
@@ -6999,7 +6999,7 @@ Module - ROOT 0,0..3,5
       .value Name 'j' Load - 3,4..3,5
 '''),
 
-(250, 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(250, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 while a:
     i
     j
@@ -7031,7 +7031,7 @@ Module - ROOT 0,0..3,5
       .value Name 'j' Load - 3,4..3,5
 '''),
 
-(251, 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(251, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if a:
     i
     j
@@ -7063,7 +7063,7 @@ Module - ROOT 0,0..3,5
       .value Name 'j' Load - 3,4..3,5
 '''),
 
-(252, 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(252, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 with a:
     i
     j
@@ -7097,7 +7097,7 @@ Module - ROOT 0,0..3,5
       .value Name 'j' Load - 3,4..3,5
 '''),
 
-(253, 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(253, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 async with a:
     i
     j
@@ -7131,7 +7131,7 @@ Module - ROOT 0,0..3,5
       .value Name 'j' Load - 3,4..3,5
 '''),
 
-(254, 'body[0].cases[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(254, 'body[0].cases[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 match a:
     case b:
         i
@@ -7170,7 +7170,7 @@ Module - ROOT 0,0..4,9
         .value Name 'j' Load - 4,8..4,9
 '''),
 
-(255, 'body[0]', 1, 1, None, {'precomms': False, 'postcomms': False, 'pep8space': False}, ('exec', r'''
+(255, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 try:
     i
     j
@@ -8239,7 +8239,7 @@ Module - ROOT 0,0..2,15
       0] Break - 2,10..2,15
 '''),
 
-(291, 'body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, ('exec', r'''
+(291, 'body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 if 1: pass
 elif 2:
     pass
@@ -8265,7 +8265,7 @@ Module - ROOT 0,0..1,13
       0] Break - 1,8..1,13
 '''),
 
-(292, 'body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, ('exec', r'''
+(292, 'body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 if 1: pass
 else:
     pass
@@ -8350,7 +8350,7 @@ Module - ROOT 0,0..3,19
         0] Break - 3,14..3,19
 '''),
 
-(295, 'body[0].body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, ('exec', r'''
+(295, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 class cls:
     if 1: pass
     elif 2:
@@ -8382,7 +8382,7 @@ Module - ROOT 0,0..2,17
         0] Break - 2,12..2,17
 '''),
 
-(296, 'body[0].body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, ('exec', r'''
+(296, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 class cls:
     if 1: pass
     else:
@@ -8451,7 +8451,7 @@ Module - ROOT 0,0..4,16
       0] Continue - 4,8..4,16
 '''),
 
-(298, 'body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, ('exec', r'''
+(298, 'body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 if 1: pass
 elif 2:
     pass
@@ -8532,7 +8532,7 @@ Module - ROOT 0,0..6,16
         0] Continue - 6,8..6,16
 '''),
 
-(300, 'body[0].orelse[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, ('exec', r'''
+(300, 'body[0].orelse[0]', 0, 0, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 if 1: pass
 elif 2:
     pass
@@ -8619,7 +8619,7 @@ Module - ROOT 0,0..5,20
         0] Continue - 5,12..5,20
 '''),
 
-(302, 'body[0].body[0]', 0, 1, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, ('exec', r'''
+(302, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 class cls:
     if 1: pass
     elif 2:
@@ -8712,7 +8712,7 @@ Module - ROOT 0,0..7,20
           0] Continue - 7,12..7,20
 '''),
 
-(304, 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {'precomms': False, 'postcomms': False, 'pep8space': False, 'elif_': True}, ('exec', r'''
+(304, 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 class cls:
     if 1: pass
     elif 2:

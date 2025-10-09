@@ -155,11 +155,7 @@ Or get all global options.
  'fix_matchor_get': True,
  'fix_matchor_put': True,
  'fix_matchor_self': True,
- 'pep8space': True,
- 'precomms': True,
- 'postcomms': True,
- 'prespace': False,
- 'postspace': False}
+ 'pep8space': True}
 ```
 
 ## Special

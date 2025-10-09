@@ -1069,10 +1069,10 @@ def _undelimit_node(self: fst.FST, field: str = 'elts') -> bool:
 @staticmethod
 def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None = None,
                        neg: bool = False,
-                       ) -> tuple[Literal['none', 'all', 'block'] | int,
+                       ) -> tuple[Literal['none', 'all', 'block'],
                                   bool | int,
                                   bool,
-                                  Literal['none', 'all', 'block', 'line'] | int,
+                                  Literal['none', 'all', 'block', 'line'],
                                   bool | int,
                                   bool,
                                   ]:

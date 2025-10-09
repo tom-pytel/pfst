@@ -6041,14 +6041,14 @@ i = 1
 i # post
 # postpost
             ''')
-        self.assertEqual('i', a.body[0].f.copy(precomms=False, postcomms=False).src)
-        self.assertEqual('# pre\ni', a.body[0].f.copy(precomms=True, postcomms=False).src)
-        self.assertEqual('# pre\ni # post\n', a.body[0].f.copy(precomms=True, postcomms=True).src)
-        self.assertEqual('# prepre\n\n# pre\ni', a.body[0].f.copy(precomms='all', postcomms=False).src)
+        self.assertEqual('i', a.body[0].f.copy(trivia=(False, False)).src)  # , precomms=False, postcomms=False
+        self.assertEqual('# pre\ni', a.body[0].f.copy(trivia=(True, False)).src)  # , precomms=True, postcomms=False
+        self.assertEqual('# pre\ni # post\n', a.body[0].f.copy(trivia=(True, True)).src)  # , precomms=True, postcomms=True
+        self.assertEqual('# prepre\n\n# pre\ni', a.body[0].f.copy(trivia=('all', False)).src)  # , precomms='all', postcomms=False
 
         a = parse('( i )')
-        self.assertEqual('i', a.body[0].value.f.copy(precomms=False, postcomms=False).src)
-        self.assertEqual('( i )', a.body[0].value.f.copy(precomms=False, postcomms=False, pars=True).src)
+        self.assertEqual('i', a.body[0].value.f.copy(trivia=(False, False)).src)  # , precomms=False, postcomms=False
+        self.assertEqual('( i )', a.body[0].value.f.copy(trivia=(False, False), pars=True).src)  # , precomms=False, postcomms=False
 
         if PYGE12:
             f = FST.fromsrc('a[*b]').a.body[0].value.slice.f.copy()
@@ -6543,10 +6543,7 @@ match a:
     def test_options(self):
         new = dict(
             docstr    = 'test_docstr',
-            precomms  = 'test_precomms',
-            postcomms = 'test_postcomms',
-            prespace  = 'test_prespace',
-            postspace = 'test_postspace',
+            trivia    = 'test_trivia',
             pep8space = 'test_pep8space',
             pars      = 'test_pars',
             elif_     = 'test_elif_',

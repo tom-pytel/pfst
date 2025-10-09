@@ -149,10 +149,6 @@ class _ThreadLocal(threading.local):
             'fix_matchor_put':  True,   # True | False | 'strict'
             'fix_matchor_self': True,   # True | False | 'strict'
             'pep8space':        True,   # True | False | 1
-            'precomms':         True,   # True | False | 'all'
-            'postcomms':        True,   # True | False | 'all' | 'block'
-            'prespace':         False,  # True | False | int
-            'postspace':        False,  # True | False | int
         }
 
 
@@ -176,8 +172,6 @@ _DEFAULT_AST_FIELD = {cls: field for field, classes in [
     ('values',       (BoolOp, JoinedStr, TemplateStr)),
     ('generators',   (ListComp, SetComp, DictComp, GeneratorExp)),
     ('args',         (Call,)),  # potential conflict of default body with put to empty 'set()'
-
-    # ('items',        (With, AsyncWith)),  # 'body' takes precedence
 
     # special cases, field names here only for checks to succeed, otherwise all handled programatically
     ('',             (Dict,)),
@@ -1046,11 +1040,7 @@ class FST:
          'fix_matchor_get': True,
          'fix_matchor_put': True,
          'fix_matchor_self': True,
-         'pep8space': True,
-         'precomms': True,
-         'postcomms': True,
-         'prespace': False,
-         'postspace': False}
+         'pep8space': True}
         ```
         """
 
@@ -1236,22 +1226,6 @@ class FST:
             - `False`: No empty lines.
             - `True`: Two empty lines at module scope and one empty line in other scopes.
             - `1`: One empty line in all scopes.
-        - `precomms`: Preceding comments.  - DEPRECATED, STILL USED FOR STMTS, WILL BE REPLACED WITH `trivia`!
-            - `False`: No preceding comments.
-            - `True`: Single contiguous comment block immediately preceding position.
-            - `'all'`: Comment blocks (possibly separated by empty lines) preceding position.
-        - `postcomms`: Trailing comments.  - DEPRECATED, STILL USED FOR STMTS, WILL BE REPLACED WITH `trivia`!
-            - `False`: No trailing comments.
-            - `True`: Only comment trailing on line of position, nothing past that on its own lines.
-            - `'block'`: Single contiguous comment block following position.
-            - `'all'`: Comment blocks (possibly separated by empty lines) following position.
-        - `prespace`: Preceding empty lines (max of this and `pep8space` used).  - DEPRECATED, STILL USED FOR STMTS,
-            WILL BE REPLACED WITH `trivia`!
-            - `False`: No empty lines.
-            - `True`: All empty lines.
-            - `int`: A maximum number of empty lines.
-        - `postspace`: Same as `prespace` except for trailing empty lines.  - DEPRECATED, STILL USED FOR STMTS, WILL BE
-            REPLACED WITH `trivia`!
 
         **Note:** `pars` behavior:
         ```

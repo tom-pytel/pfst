@@ -168,7 +168,7 @@ class TestFSTSlice(unittest.TestCase):
 i # post
 # postpost
             '''.strip())
-        self.assertEqual('i', a.body[0].f.cut(precomms=False, postcomms=False).src)
+        self.assertEqual('i', a.body[0].f.cut(trivia=(False, False)).src)  # , precomms=False, postcomms=False
         self.assertEqual('# prepre\n\n# pre\n# post\n# postpost', a.f.src)
 
         a = parse('''
@@ -178,7 +178,7 @@ i # post
 i # post
 # postpost
             '''.strip())
-        self.assertEqual('# pre\ni', a.body[0].f.cut(precomms=True, postcomms=False).src)
+        self.assertEqual('# pre\ni', a.body[0].f.cut(trivia=(True, False)).src)  # , precomms=True, postcomms=False
         self.assertEqual('# prepre\n\n# post\n# postpost', a.f.src)
 
         a = parse('''
@@ -188,7 +188,7 @@ i # post
 i # post
 # postpost
             '''.strip())
-        self.assertEqual('# pre\ni # post\n', a.body[0].f.cut(precomms=True, postcomms=True).src)
+        self.assertEqual('# pre\ni # post\n', a.body[0].f.cut(trivia=(True, True)).src)  # , precomms=True, postcomms=True
         self.assertEqual('# prepre\n\n# postpost', a.f.src)
 
         a = parse('''
@@ -198,16 +198,16 @@ i # post
 i # post
 # postpost
             '''.strip())
-        self.assertEqual('# prepre\n\n# pre\ni', a.body[0].f.cut(precomms='all', postcomms=False).src)
+        self.assertEqual('# prepre\n\n# pre\ni', a.body[0].f.cut(trivia=('all', False)).src)  # , precomms='all', postcomms=False
         self.assertEqual('# post\n# postpost', a.f.src)
 
         a = parse('( ( i ), )')
-        f = a.body[0].value.elts[0].f.cut(precomms=False, postcomms=False)
+        f = a.body[0].value.elts[0].f.cut(trivia=(False, False))  # , precomms=False, postcomms=False
         self.assertEqual('()', a.f.src)
         self.assertEqual('i', f.src)
 
         a = parse('( ( i ), )')
-        f = a.body[0].value.elts[0].f.cut(precomms=False, postcomms=False, pars=True)
+        f = a.body[0].value.elts[0].f.cut(trivia=(False, False), pars=True)  # , precomms=False, postcomms=False
         self.assertEqual('()', a.f.src)
         self.assertEqual('( i )', f.src)
 
