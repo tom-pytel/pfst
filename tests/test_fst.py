@@ -675,6 +675,7 @@ if PYGE11:
         ('expr_slice',        px.parse_expr_slice,        Tuple,                  '*not a'),
 
         ('expr_sliceelt',     px.parse_expr_sliceelt,     Starred,                '*not a'),
+        ('expr_sliceelt',     px.parse_expr_sliceelt,     SyntaxError,            '*not a, *b or c'),
 
         (ExceptHandler,       px.parse_ExceptHandler,     ExceptHandler,          'except* Exception: pass'),
 
@@ -7905,8 +7906,8 @@ if __name__ == '__main__':
     args, _ = parser.parse_known_args()
 
     if any(getattr(args, n) for n in dir(args) if n.startswith('regen_')):
-        if PYLT12:
-            raise RuntimeError('cannot regenerate on python version < 3.12')
+        if PYLT14:
+            raise RuntimeError('cannot regenerate on python version < 3.14')
 
     if args.regen_pars or args.regen_all:
         print('Regenerating parentheses test data...')

@@ -438,23 +438,23 @@ def _multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln:
     lines[-1] = lines[-1][:end_col]  # parentheses added to avoid at end: `IndentationError: unindent does not match any outer indentation level`
     lines[0] = '(' + lines[0][col:]
 
-    lines.append(')')  # XXX gh-139516 we add this as a separate line and not to the end of the last line because it can help bug `UnicodeDecodeError: 'utf-8' codec can't decode bytes in position ...: unexpected end of data` incorrectly
+    lines.append(')')  # XXX gh-139516 we add this as a separate line and not to the end of the last line because it can help this bug
 
     tokens = tokenize_tokenize(BytesIO('\n'.join(lines).encode()).readline)
 
     for token in tokens:
-        if (ttype := token.type) == STRING:
+        if (token_type := token.type) == STRING:
             lns.extend(range(token.start[0] + ln, token.end[0] + ln))
 
-        elif ttype in FTSTRING_START_TOKENS:
+        elif token_type in FTSTRING_START_TOKENS:
             start_lineno = token.start[0]
             nesting = 1
 
             for token in tokens:
-                if (ttype := token.type) in FTSTRING_START_TOKENS:
+                if (token_type := token.type) in FTSTRING_START_TOKENS:
                     nesting += 1
 
-                elif ttype in FTSTRING_END_TOKENS:
+                elif token_type in FTSTRING_END_TOKENS:
                     if not (nesting := nesting - 1):
                         lns.extend(range(start_lineno + ln, token.end[0] + ln))
 
@@ -990,7 +990,7 @@ def _is_enclosed_or_line(self: fst.FST, *, pars: bool = True, whole: bool = Fals
 
             lns = set(lns)
 
-            for i in range(ln, end_ln):  # set any line that follows a line continuation as a continuation (not normally set by _multiline_str_* functions)
+            for i in range(ln, end_ln):  # set any line that follows a line continuation `\` as a continuation (not normally set by _multiline_str_* functions)
                 if lines[i].endswith('\\'):  # this is fine whether it is part of string or not
                     lns.add(i + 1)
 
@@ -1023,16 +1023,14 @@ def _is_enclosed_or_line(self: fst.FST, *, pars: bool = True, whole: bool = Fals
 
         elif isinstance(ast, ImportFrom):
             pars_names = loc_ImportFrom_names_pars(self)
-            children = ([nspace(f=nspace(pars=lambda: pars_names,
-                                            _is_enclosed_or_line=lambda **kw: True))]
+            children = ([nspace(f=nspace(pars=lambda: pars_names, _is_enclosed_or_line=lambda **kw: True))]
                         if pars_names.n else
                         ast.names)
 
         elif isinstance(ast, (With, AsyncWith)):
             pars_items = loc_With_items_pars(self)
             end_ln = pars_items.bound.end_ln
-            children = ([nspace(f=nspace(pars=lambda: pars_items,
-                                            _is_enclosed_or_line=lambda **kw: True))]
+            children = ([nspace(f=nspace(pars=lambda: pars_items, _is_enclosed_or_line=lambda **kw: True))]
                         if pars_items.n else
                         ast.items)
 
@@ -1848,7 +1846,7 @@ def _get_src(self: fst.FST, ln: int, col: int, end_ln: int, end_col: int, as_lin
     lines = self.root._lines
 
     if as_lines:
-        return ([bistr(lines[ln][col : end_col])]  # no real reason for bistr, just to be consistent and minor optimization if passed back into put_src()
+        return ([bistr(lines[ln][col : end_col])]  # no real reason for bistr, just to be consistent
                 if end_ln == ln else
                 [bistr(lines[ln][col:])] + lines[ln + 1 : end_ln] + [bistr(lines[end_ln][:end_col])])
     else:

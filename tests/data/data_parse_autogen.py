@@ -1080,7 +1080,7 @@ Tuple - ROOT 0,0..0,4
 
 (136, 'parse_expr_sliceelt', 0, 0, 'SyntaxError', {}, ('expr_sliceelt',
 r'''a:b:c, x:y:z'''),
-r'''**SyntaxError('Slice not allowed in nested slice tuple')**'''),
+r'''**SyntaxError('invalid expression')**'''),
 
 (137, 'parse_boolop', 0, 0, 'And', {}, ('boolop',
 r'''and'''),
@@ -3746,7 +3746,11 @@ Starred - ROOT 0,0..0,6
   .ctx Load
 '''),
 
-(504, 'parse_ExceptHandler', 0, 0, 'ExceptHandler', {'_ver': 11}, (ExceptHandler,
+(504, 'parse_expr_sliceelt', 0, 0, 'SyntaxError', {'_ver': 11}, ('expr_sliceelt',
+r'''*not a, *b or c'''),
+r'''**SyntaxError('invalid expression')**'''),
+
+(505, 'parse_ExceptHandler', 0, 0, 'ExceptHandler', {'_ver': 11}, (ExceptHandler,
 r'''except* Exception: pass'''), r'''
 ExceptHandler - ROOT 0,0..0,23
   .type Name 'Exception' Load - 0,8..0,17
@@ -3754,7 +3758,7 @@ ExceptHandler - ROOT 0,0..0,23
   0] Pass - 0,19..0,23
 '''),
 
-(505, 'parse_arg', 0, 0, 'arg', {'_ver': 11}, ('arg',
+(506, 'parse_arg', 0, 0, 'arg', {'_ver': 11}, ('arg',
 r''' a: *b  # tail'''), r'''
 arg - ROOT 0,1..0,6
   .arg 'a'
@@ -3763,7 +3767,7 @@ arg - ROOT 0,1..0,6
     .ctx Load
 '''),
 
-(506, 'parse_type_params', 0, 0, '_slice_type_params', {'_ver': 12}, ('all',
+(507, 'parse_type_params', 0, 0, '_slice_type_params', {'_ver': 12}, ('all',
 r'''*U, **V, **Z'''), r'''
 _slice_type_params - ROOT 0,0..0,12
   .type_params[3]
@@ -3775,7 +3779,7 @@ _slice_type_params - ROOT 0,0..0,12
     .name 'Z'
 '''),
 
-(507, 'parse_type_params', 0, 0, '_slice_type_params', {'_ver': 12}, ('all',
+(508, 'parse_type_params', 0, 0, '_slice_type_params', {'_ver': 12}, ('all',
 r'''T: int, *U, **V, **Z'''), r'''
 _slice_type_params - ROOT 0,0..0,20
   .type_params[4]
@@ -3790,34 +3794,34 @@ _slice_type_params - ROOT 0,0..0,20
     .name 'Z'
 '''),
 
-(508, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 12}, ('type_param',
+(509, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 12}, ('type_param',
 r'''a: int'''), r'''
 TypeVar - ROOT 0,0..0,6
   .name 'a'
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-(509, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 12}, ('type_param',
+(510, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 12}, ('type_param',
 r'''**a'''), r'''
 ParamSpec - ROOT 0,0..0,3
   .name 'a'
 '''),
 
-(510, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 12}, ('type_param',
+(511, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 12}, ('type_param',
 r'''*a'''), r'''
 TypeVarTuple - ROOT 0,0..0,2
   .name 'a'
 '''),
 
-(511, 'parse_type_param', 0, 0, 'ParseError', {'_ver': 12}, ('type_param',
+(512, 'parse_type_param', 0, 0, 'ParseError', {'_ver': 12}, ('type_param',
 r'''a: int,'''),
 r'''**ParseError('expecting single type_param, has trailing comma')**'''),
 
-(512, 'parse_type_params', 0, 0, '_slice_type_params', {'_ver': 12}, ('type_params',
+(513, 'parse_type_params', 0, 0, '_slice_type_params', {'_ver': 12}, ('type_params',
 r''''''),
 r'''_slice_type_params - ROOT 0,0..0,0'''),
 
-(513, 'parse_type_params', 0, 0, '_slice_type_params', {'_ver': 12}, ('type_params',
+(514, 'parse_type_params', 0, 0, '_slice_type_params', {'_ver': 12}, ('type_params',
 r'''a: int'''), r'''
 _slice_type_params - ROOT 0,0..0,6
   .type_params[1]
@@ -3826,7 +3830,7 @@ _slice_type_params - ROOT 0,0..0,6
     .bound Name 'int' Load - 0,3..0,6
 '''),
 
-(514, 'parse_type_params', 0, 0, '_slice_type_params', {'_ver': 12}, ('type_params',
+(515, 'parse_type_params', 0, 0, '_slice_type_params', {'_ver': 12}, ('type_params',
 r'''a: int,'''), r'''
 _slice_type_params - ROOT 0,0..0,7
   .type_params[1]
@@ -3835,7 +3839,7 @@ _slice_type_params - ROOT 0,0..0,7
     .bound Name 'int' Load - 0,3..0,6
 '''),
 
-(515, 'parse_type_params', 0, 0, '_slice_type_params', {'_ver': 12}, ('type_params',
+(516, 'parse_type_params', 0, 0, '_slice_type_params', {'_ver': 12}, ('type_params',
 r'''a: int, *b, **c'''), r'''
 _slice_type_params - ROOT 0,0..0,15
   .type_params[3]
@@ -3848,52 +3852,52 @@ _slice_type_params - ROOT 0,0..0,15
     .name 'c'
 '''),
 
-(516, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 12}, (type_param,
+(517, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 12}, (type_param,
 r'''a: int'''), r'''
 TypeVar - ROOT 0,0..0,6
   .name 'a'
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-(517, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 12}, (TypeVar,
+(518, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 12}, (TypeVar,
 r'''a: int'''), r'''
 TypeVar - ROOT 0,0..0,6
   .name 'a'
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-(518, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 12}, (type_param,
+(519, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 12}, (type_param,
 r'''**a'''), r'''
 ParamSpec - ROOT 0,0..0,3
   .name 'a'
 '''),
 
-(519, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 12}, (ParamSpec,
+(520, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 12}, (ParamSpec,
 r'''**a'''), r'''
 ParamSpec - ROOT 0,0..0,3
   .name 'a'
 '''),
 
-(520, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 12}, (type_param,
+(521, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 12}, (type_param,
 r'''*a'''), r'''
 TypeVarTuple - ROOT 0,0..0,2
   .name 'a'
 '''),
 
-(521, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 12}, (TypeVarTuple,
+(522, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 12}, (TypeVarTuple,
 r'''*a'''), r'''
 TypeVarTuple - ROOT 0,0..0,2
   .name 'a'
 '''),
 
-(522, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 12}, ('type_param',
+(523, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 12}, ('type_param',
 r''' a: int  # tail'''), r'''
 TypeVar - ROOT 0,1..0,7
   .name 'a'
   .bound Name 'int' Load - 0,4..0,7
 '''),
 
-(523, 'parse_type_params', 0, 0, '_slice_type_params', {'_ver': 12}, ('type_params',
+(524, 'parse_type_params', 0, 0, '_slice_type_params', {'_ver': 12}, ('type_params',
 r''' a: int, *b, **c  # tail'''), r'''
 _slice_type_params - ROOT 0,0..0,24
   .type_params[3]
@@ -3906,7 +3910,7 @@ _slice_type_params - ROOT 0,0..0,24
     .name 'c'
 '''),
 
-(524, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 13}, ('all',
+(525, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 13}, ('all',
 r'''**a = {T: int, U: str}'''), r'''
 ParamSpec - ROOT 0,0..0,22
   .name 'a'
@@ -3919,7 +3923,7 @@ ParamSpec - ROOT 0,0..0,22
     1] Name 'str' Load - 0,18..0,21
 '''),
 
-(525, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, ('all',
+(526, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, ('all',
 r'''*a = (int, str)'''), r'''
 TypeVarTuple - ROOT 0,0..0,15
   .name 'a'
@@ -3930,7 +3934,7 @@ TypeVarTuple - ROOT 0,0..0,15
     .ctx Load
 '''),
 
-(526, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 13}, ('type_param',
+(527, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 13}, ('type_param',
 r'''a: int = int'''), r'''
 TypeVar - ROOT 0,0..0,12
   .name 'a'
@@ -3938,7 +3942,7 @@ TypeVar - ROOT 0,0..0,12
   .default_value Name 'int' Load - 0,9..0,12
 '''),
 
-(527, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 13}, ('type_param',
+(528, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 13}, ('type_param',
 r'''**a = {T: int, U: str}'''), r'''
 ParamSpec - ROOT 0,0..0,22
   .name 'a'
@@ -3951,7 +3955,7 @@ ParamSpec - ROOT 0,0..0,22
     1] Name 'str' Load - 0,18..0,21
 '''),
 
-(528, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, ('type_param',
+(529, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, ('type_param',
 r'''*a = (int, str)'''), r'''
 TypeVarTuple - ROOT 0,0..0,15
   .name 'a'
@@ -3962,7 +3966,7 @@ TypeVarTuple - ROOT 0,0..0,15
     .ctx Load
 '''),
 
-(529, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 13}, (type_param,
+(530, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 13}, (type_param,
 r'''a: int = int'''), r'''
 TypeVar - ROOT 0,0..0,12
   .name 'a'
@@ -3970,7 +3974,7 @@ TypeVar - ROOT 0,0..0,12
   .default_value Name 'int' Load - 0,9..0,12
 '''),
 
-(530, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 13}, (TypeVar,
+(531, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 13}, (TypeVar,
 r'''a: int = int'''), r'''
 TypeVar - ROOT 0,0..0,12
   .name 'a'
@@ -3978,7 +3982,7 @@ TypeVar - ROOT 0,0..0,12
   .default_value Name 'int' Load - 0,9..0,12
 '''),
 
-(531, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 13}, (type_param,
+(532, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 13}, (type_param,
 r'''**a = {T: int, U: str}'''), r'''
 ParamSpec - ROOT 0,0..0,22
   .name 'a'
@@ -3991,7 +3995,7 @@ ParamSpec - ROOT 0,0..0,22
     1] Name 'str' Load - 0,18..0,21
 '''),
 
-(532, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 13}, (ParamSpec,
+(533, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 13}, (ParamSpec,
 r'''**a = {T: int, U: str}'''), r'''
 ParamSpec - ROOT 0,0..0,22
   .name 'a'
@@ -4004,7 +4008,7 @@ ParamSpec - ROOT 0,0..0,22
     1] Name 'str' Load - 0,18..0,21
 '''),
 
-(533, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, (type_param,
+(534, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, (type_param,
 r'''*a = (int, str)'''), r'''
 TypeVarTuple - ROOT 0,0..0,15
   .name 'a'
@@ -4015,7 +4019,7 @@ TypeVarTuple - ROOT 0,0..0,15
     .ctx Load
 '''),
 
-(534, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, (TypeVarTuple,
+(535, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, (TypeVarTuple,
 r'''*a = (int, str)'''), r'''
 TypeVarTuple - ROOT 0,0..0,15
   .name 'a'

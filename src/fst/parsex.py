@@ -921,25 +921,23 @@ def parse_expr_sliceelt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     expression parses to an implicit single element `Tuple` and the caller of this function does not want that behavior.
     Using this, naked `Starred` expressions parse to just the `Starred` and not a `Tuple` like in `parse_expr_slice()`.
     Does not allow a `Tuple` with `Slice` in it as it is expected that this expression is already in a slice `Tuple` and
-    that is not allowed in python.
-
-    TODO: This can currently return `*not a, *a or b` as valid which are not valid normal tuples (nested as sliceelt).
-    """
+    that is not allowed in python."""
 
     try:
         ast = parse_expr_slice(src, parse_params)
     except SyntaxError:  # in case of lone naked Starred in slice in py < 3.11
-        return parse_expr(src, parse_params)
+        pass
 
-    if isinstance(ast, Tuple) and any(isinstance(e, Slice) for e in ast.elts):
-        raise SyntaxError('Slice not allowed in nested slice tuple')
+    else:
+        if not isinstance(ast, Tuple):
+            return ast
 
-    if (isinstance(ast, Tuple) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for '*starred' acting as '*starred,'
-        e0.end_col_offset == ast.end_col_offset and e0.end_lineno == ast.end_lineno
-    ):
-        return e0
+        if (len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for '*starred' acting as '*starred,'
+            e0.end_col_offset == ast.end_col_offset and e0.end_lineno == ast.end_lineno
+        ):
+            return e0
 
-    return ast
+    return parse_expr(src, parse_params)
 
 
 def parse_Tuple(src: str, parse_params: Mapping[str, Any] = {}) -> AST:

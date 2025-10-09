@@ -1618,7 +1618,8 @@ class FST:
     # High level
 
     def copy(self, **options) -> FST:
-        """Copy this node to a new top-level tree, dedenting and fixing as necessary.
+        """Copy this node to a new top-level tree, dedenting and fixing as necessary. If copying root node then an
+        identical copy is made and no fixes / modifications are applied.
 
         **Parameters:**
         - `options`: See `options()`.
