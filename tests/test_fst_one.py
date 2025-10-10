@@ -2996,6 +2996,10 @@ c, # c
         self.assertEqual('from m import (x, a\nas\nb, z)', (f := FST('from m import (x, y, z)')).put('a\nas\nb', 1).root.src)
         f.verify()
 
+        # Constant.value which is in JoinedStr/TemplateStr.values
+
+        self.assertRaises(NotImplementedError, FST('f"a"').values[0].put, '"b"')
+
     def test_put_one_pattern(self):
 
         # pattern BinOp and UnaryOp

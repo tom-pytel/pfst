@@ -1566,6 +1566,16 @@ def _put_one_Call_keywords(self: fst.FST, code: _PutOneCode, idx: int | None, fi
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
 
+def _put_one_Constant_value(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child, static: None,
+                            options: Mapping[str, Any]) -> fst.FST:
+    """Set a `Constant` value, mostly normal unless its a child of a `JoinedStr` or `TemplateStr`."""
+
+    if not ((parent := self.parent) and isinstance(parent.a, (JoinedStr, TemplateStr))):
+        return _put_one_constant(self, code, idx, field, child, static, options)
+
+    raise NotImplementedError('put Constant.value which is in JoinedStr/TemplateStr.values')
+
+
 def _put_one_Attribute_value(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
                              static: onestatic, options: Mapping[str, Any]) -> fst.FST:
     """If this gets parenthesized in an `AnnAssign` then the whole `AnnAssign` target needs to be parenthesized. Also
@@ -2841,7 +2851,7 @@ _PUT_ONE_HANDLERS = {
     (Interpolation, 'format_spec'):       (False, _put_one_NOT_IMPLEMENTED_YET_14, onestatic(_one_info_format_spec, JoinedStr)),  # expr?  # onestatic only here for info for raw put
     (JoinedStr, 'values'):                (True,  _put_one_NOT_IMPLEMENTED_YET_12, None),  # expr*
     (TemplateStr, 'values'):              (True,  _put_one_NOT_IMPLEMENTED_YET_12, None),  # expr*
-    (Constant, 'value'):                  (False, _put_one_constant, onestatic(None, constant)),  # constant
+    (Constant, 'value'):                  (False, _put_one_Constant_value, onestatic(None, constant)),  # constant
     (Constant, 'kind'):                   (False, _put_one_Constant_kind, None),  # string?
     (Attribute, 'value'):                 (False, _put_one_Attribute_value, _onestatic_expr_required),  # expr
     (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=code_as_identifier)),  # identifier
