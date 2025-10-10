@@ -19,11 +19,11 @@ IDENTIFIERS = [
     '中文',        # Chinese
     'кириллица',  # Cyrillic
     'Ελληνικά',   # Greek
-    # 'עִברִית',       # Hebrew      - no work because of combining characters
+    'עִברִית',       # Hebrew
     '日本語',      # Japanese
     '한국어',       # Korean
     'ไทย',        # Thai
-    # 'देवनागरी',      # Devanagari   - ditto, should add to regex?
+    'देवनागरी',      # Devanagari
 ]
 
 

@@ -154,7 +154,7 @@ from_iterable = chain.from_iterable
 
 constant = EllipsisType | int | float | complex | str | bytes | bool | None
 
-pat_alnum                  = r'\w\uFE00-\uFE0F\U000E0100-\U000E01EF'
+pat_alnum                  = r'\w\uFE00-\uFE0F\U000E0100-\U000E01EF\u0903-\u0980\u0591-\u05f2'
 pat_identifier             = rf'[^\d\W][{pat_alnum}]*'
 
 re_alnum                   = re.compile(rf'[{pat_alnum}]')

@@ -22,6 +22,7 @@
 
 ### Updated
 
+- recognize Devanagari and Hebrew for identifiers
 - adapt statement-ish operations to use new trivia parameters
 - put slice source to `Call.args` and `ClassDef.bases` doesn't need trialing comma
 - `get_src()` and `put_src()` clip and validate coordinates
