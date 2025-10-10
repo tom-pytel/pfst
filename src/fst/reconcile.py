@@ -10,6 +10,7 @@ from . import fst
 
 from .astutil import AST, Dict, Global, MatchMapping, Nonlocal
 from .common import NodeError, astfield
+from .fst_slice import is_slice_compatible
 
 __all__ = ['Reconcile']
 
@@ -166,7 +167,7 @@ class Reconcile:
                 (
                     child_idx == start                                                                   # or (child is at the correct location
                     if (child_field := child_pfield.name) == field and child_parent is nodef else        # if is from same field and our own child, else
-                    not fst.FST._is_slice_compatible(node_sig, (child_parent.a.__class__, child_field))  # child slice is not compatible)
+                    not is_slice_compatible(node_sig, (child_parent.a.__class__, child_field))  # child slice is not compatible)
                 )
             ):                                                                                           # then can't possibly slice, or it doesn't make sense to
                 end = start + 1

@@ -3230,6 +3230,7 @@ def _put_slice__slice(self: fst.FST, code: Code | None, start: int | Literal['en
 
     _put_slice_seq_end(self, end_params)
 
+
 # ......................................................................................................................
 
 def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
@@ -3503,8 +3504,7 @@ _SLICE_STATICS = {
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-@staticmethod
-def _is_slice_compatible(sig1: tuple[type[AST], str], sig2: tuple[type[AST], str]) -> bool:  # sig = (AST type, field)
+def is_slice_compatible(sig1: tuple[type[AST], str], sig2: tuple[type[AST], str]) -> bool:  # sig = (AST type, field)
     """Whether slices are compatible between these type / fields."""
 
     return ((v := _SLICE_COMAPTIBILITY.get(sig1)) == _SLICE_COMAPTIBILITY.get(sig2) and v is not None)

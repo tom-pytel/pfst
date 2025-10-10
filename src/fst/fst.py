@@ -4443,7 +4443,6 @@ class FST:
     )
 
     from .fst_slice import (
-        _is_slice_compatible,
         _get_slice,
         _put_slice,
     )
