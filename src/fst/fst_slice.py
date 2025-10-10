@@ -963,7 +963,9 @@ def _get_slice_Tuple_elts(self: fst.FST, start: int | Literal['end'] | None, sto
         fst_._maybe_fix_tuple(False)
 
     fst_._maybe_fix_arglikes(options)  # parenthesize any arglike expressions (could have come from a slice)
-    self._maybe_fix_tuple(is_par)
+
+    if cut:
+        self._maybe_fix_tuple(is_par)
 
     return fst_
 
@@ -1015,7 +1017,8 @@ def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop:
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
                           options, 'elts', '{', '}', ',', 0, 0)
 
-    _maybe_fix_Set(self, self.get_option('fix_set_self', options))
+    if cut:
+        _maybe_fix_Set(self, self.get_option('fix_set_self', options))
 
     return fst_
 
@@ -1333,14 +1336,15 @@ def _get_slice_ClassDef_bases(self: fst.FST, start: int | Literal['end'] | None,
 
     fst_._maybe_fix_arglikes(options)  # parenthesize any arglike expressions
 
-    if keywords:
-        if cut and start and stop == len_body:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
-            self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+    if cut:
+        if keywords:
+            if cut and start and stop == len_body:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
+                self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
 
-    elif not body:  # everything was cut and no keywords, remove parentheses
-        pars_ln, pars_col, pars_end_ln, pars_end_col = loc_ClassDef_bases_pars(self)  # definitely exist
+        elif not body:  # everything was cut and no keywords, remove parentheses
+            pars_ln, pars_col, pars_end_ln, pars_end_col = loc_ClassDef_bases_pars(self)  # definitely exist
 
-        self._put_src(None, pars_ln, pars_col, pars_end_ln, pars_end_col, False)
+            self._put_src(None, pars_ln, pars_col, pars_end_ln, pars_end_col, False)
 
     return fst_
 
@@ -1425,7 +1429,8 @@ def _get_slice_MatchSequence_patterns(self: fst.FST, start: int | Literal['end']
     if not delims:
         _maybe_fix_MatchSequence(fst_, '')
 
-    _maybe_fix_MatchSequence(self, delims)
+    if cut:
+        _maybe_fix_MatchSequence(self, delims)
 
     return fst_
 
@@ -1496,7 +1501,9 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
                           options, 'patterns', '', '', '|', False, False)
 
     _maybe_fix_MatchOr(fst_, bool(fix_matchor_get))
-    _maybe_fix_MatchOr(self, bool(fix_matchor_self))
+
+    if cut:
+        _maybe_fix_MatchOr(self, bool(fix_matchor_self))
 
     return fst_
 
@@ -1533,7 +1540,7 @@ def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, st
                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
                           options, 'type_params', '', '', ',', False, False)
 
-    if not body:  # everything was cut, need to remove brackets
+    if cut and not body:  # everything was cut, need to remove brackets
         (_, _, bound_end_ln, bound_end_col), (name_ln, name_col) = bound_func(self)
 
         self._put_src(None, name_ln, name_col, bound_end_ln, bound_end_col, False)

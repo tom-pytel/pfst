@@ -653,6 +653,11 @@ if 1:
             self.assertEqual("f'\\n'", (f := FST(r'''f"{a:\n}"''').values[0].format_spec.copy()).src)
             f.verify()
 
+        # misc error found under py < 3.12
+
+        self.assertEqual('3,', (f := FST("f'{3,}'")).values[0].value.get_slice().src)
+        f.verify()
+
     @unittest.skipUnless(PYGE12, 'only valid for py >= 3.12')
     def test_get_format_spec(self):
         self.assertEqual('''f" {a}, 'b': {b}, 'c': {c}"''', (f := FST('''f"{'a': {a}, 'b': {b}, 'c': {c}}"''').values[0].format_spec.copy()).src)

@@ -161,15 +161,15 @@ class Reconcile:
         node_sig = (node.__class__, field)
 
         while start < len_body:
-            if (not (childf := getattr(body[start], 'f', None)) or                                       # if child doesn't have FST
-                not (child_parent := childf.parent) or                                                   # or no parent
-                (child_idx := (child_pfield := childf.pfield).idx) is None or                            # or no index (not part of a sliceable list)
+            if (not (childf := getattr(body[start], 'f', None)) or                                 # if child doesn't have FST
+                not (child_parent := childf.parent) or                                             # or no parent
+                (child_idx := (child_pfield := childf.pfield).idx) is None or                      # or no index (not part of a sliceable list)
                 (
-                    child_idx == start                                                                   # or (child is at the correct location
-                    if (child_field := child_pfield.name) == field and child_parent is nodef else        # if is from same field and our own child, else
-                    not is_slice_compatible(node_sig, (child_parent.a.__class__, child_field))  # child slice is not compatible)
+                    child_idx == start                                                             # or (child is at the correct location
+                    if (child_field := child_pfield.name) == field and child_parent is nodef else  # if is from same field and our own child, else
+                    not is_slice_compatible(node_sig, (child_parent.a.__class__, child_field))     # child slice is not compatible)
                 )
-            ):                                                                                           # then can't possibly slice, or it doesn't make sense to
+            ):                                                                                     # then can't possibly slice, or it doesn't make sense to
                 end = start + 1
 
             else:  # slice operation, even if its just one element because slice copies more formatting and comments
