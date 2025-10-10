@@ -5,6 +5,7 @@ This module contains functions which are imported as methods in the `FST` class 
 
 from __future__ import annotations
 
+from ast import literal_eval
 from io import BytesIO
 from itertools import takewhile
 from tokenize import tokenize as tokenize_tokenize, STRING
@@ -121,7 +122,7 @@ from .astutil import (
 )
 
 from .common import (
-    FTSTRING_END_TOKENS, PYLT11, PYGE14, NodeError, astfield, fstloc, pyver,
+    FTSTRING_END_TOKENS, PYLT11, PYGE13, PYGE14, NodeError, astfield, fstloc, pyver,
     next_frag, prev_frag, next_find, prev_find, next_find_re, prev_delims,
 )
 
@@ -451,6 +452,8 @@ def _get_one_format_spec(self: fst.FST, idx: int | None, field: str, cut: bool, 
         quotes = next(iter(quotes))
         prefix = 'f' + quotes[2:]
 
+    assert isinstance(child, JoinedStr)
+
     ret, _ = childf._make_fst_and_dedent(childf, copy_ast(child), loc, prefix, quotes,
                                          docstr=self.get_option('docstr', options))
     reta = ret.a
@@ -464,6 +467,14 @@ def _get_one_format_spec(self: fst.FST, idx: int | None, field: str, cut: bool, 
     reta.end_col_offset += len(quotes)
 
     ret._touch()
+
+    if PYGE13:
+        for a in child.values:  # see if we need to make a raw formatted string, prepend an 'r' to the string start  # TODO: optimize this into the puts above
+            if isinstance(a, Constant):
+                if '\\' in (v := a.value) and v != literal_eval(f'{quotes}{childf._get_src(*a.f.loc)}{quotes}'):
+                    ret._put_src('r', 0, 0, 0, 0, False, False)
+
+                    break
 
     return ret
 

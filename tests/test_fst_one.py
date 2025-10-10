@@ -7,7 +7,7 @@ from random import seed, shuffle
 from fst import *
 
 from fst.asttypes import *
-from fst.common import PYLT11, PYLT12, PYGE12, PYGE14
+from fst.common import PYLT11, PYLT12, PYGE12, PYGE13, PYGE14
 
 from support import GetCases, PutCases
 
@@ -618,6 +618,41 @@ if 1:
             self.assertEqual('( a, b )', FST('f"{ a, b }"').values[0].get().src)
             self.assertEqual('(a, b)', FST('f"{ (a, b) }"').values[0].get().src)
 
+        # these are truly evil
+
+        if PYGE12:
+            if PYGE13:
+                self.assertEqual("rf'\\xFF'", (f := FST(r'''rf"{a:\xFF}"''').values[0].format_spec.copy()).src)
+                f.verify()
+
+                self.assertEqual("rf'\\n'", (f := FST(r'''rf"{a:\n}"''').values[0].format_spec.copy()).src)
+                f.verify()
+
+            else:
+                self.assertEqual("f'\\xFF'", (f := FST(r'''rf"{a:\xFF}"''').values[0].format_spec.copy()).src)
+                f.verify()
+
+                self.assertEqual("f'\\n'", (f := FST(r'''rf"{a:\n}"''').values[0].format_spec.copy()).src)
+                f.verify()
+
+            self.assertEqual("f'\\xFF'", (f := FST(r'''f"{a:\xFF}"''').values[0].format_spec.copy()).src)
+            f.verify()
+
+            self.assertEqual('f"{\'\\xff\'}"', (f := FST(r'''f"{a:{'\xff'}}"''').values[0].format_spec.copy()).src)
+            f.verify()
+
+            self.assertEqual('f"{\'\\xff\'}"', (f := FST(r'''rf"{a:{'\xff'}}"''').values[0].format_spec.copy()).src)
+            f.verify()
+
+            self.assertEqual('f"{r\'\\xff\'}"', (f := FST(r'''f"{a:{r'\xff'}}"''').values[0].format_spec.copy()).src)
+            f.verify()
+
+            self.assertEqual('f"{\'\\xff\'}{r\'\\xff\'}"', (f := FST(r'''f"{a:{'\xff'}{r'\xff'}}"''').values[0].format_spec.copy()).src)
+            f.verify()
+
+            self.assertEqual("f'\\n'", (f := FST(r'''f"{a:\n}"''').values[0].format_spec.copy()).src)
+            f.verify()
+
     @unittest.skipUnless(PYGE12, 'only valid for py >= 3.12')
     def test_get_format_spec(self):
         self.assertEqual('''f" {a}, 'b': {b}, 'c': {c}"''', (f := FST('''f"{'a': {a}, 'b': {b}, 'c': {c}}"''').values[0].format_spec.copy()).src)
@@ -662,6 +697,23 @@ if 1:
 
             self.assertEqual("""f'''"2", '3', "4"'''""", (f := FST('''t"""{1:"2", '3', "4"}"""''').values[0].format_spec.copy()).src)
             f.verify()
+
+        # evil s@&t
+
+        if PYGE12:
+            if PYGE13:
+                self.assertEqual(FST(r'''rf"{1:\xFF}"''').values[0].format_spec.copy().a.values[0].value, '\\xFF')
+            else:
+                self.assertEqual(FST(r'''rf"{1:\xFF}"''').values[0].format_spec.copy().a.values[0].value, 'ÿ')
+
+            self.assertEqual(FST(r'''f"{1:\xFF}"''').values[0].format_spec.copy().a.values[0].value, 'ÿ')
+            self.assertEqual(FST(r'''rf"{1:{'\xFF'}}"''').values[0].format_spec.copy().a.values[0].value.value, 'ÿ')
+            self.assertEqual(FST(r'''f"{1:{r'\xFF'}}"''').values[0].format_spec.copy().a.values[0].value.value, '\\xFF')
+            self.assertEqual(FST(r'''rf"{1:{r'\xFF'}}"''').values[0].format_spec.copy().a.values[0].value.value, '\\xFF')
+            self.assertEqual(FST(r'''f"""{1:{'a'\
+                                             'b'}}"""''').values[0].format_spec.copy().a.values[0].value.value, 'ab')
+            self.assertEqual(FST(r'''rf"""{1:{'a'\
+                                              'b'}}"""''').values[0].format_spec.copy().a.values[0].value.value, 'ab')
 
     def test_insert_into_empty_block(self):
         a = parse('''

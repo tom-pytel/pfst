@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- fix get format_spec escape sequences from `rf'{...:\xFF}'` string
 - statement-ish operations at end of source no longer add trailing newline
 - multiline implicit strings with line continuations no longer considered unenclosed
 - get one from `Compare` returns copied node instead of original
