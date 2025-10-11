@@ -288,14 +288,14 @@ def _get_one_default(self: fst.FST, idx: int | None, field: str, cut: bool, opti
         return None
 
     childf = child.f
-    loc = childf.pars() if self.get_option('pars', options) is True else childf.bloc
+    loc = childf.pars() if fst.FST.get_option('pars', options) is True else childf.bloc
 
     if not loc:
         raise ValueError('cannot get node which does not have a location')
 
-    ret, _ = childf._make_fst_and_dedent(childf, copy_ast(child), loc, docstr=self.get_option('docstr', options))
+    ret, _ = childf._make_fst_and_dedent(childf, copy_ast(child), loc, docstr=fst.FST.get_option('docstr', options))
 
-    _maybe_fix_copy(ret, self.get_option('pars', options), self.get_option('pars_walrus', options))
+    _maybe_fix_copy(ret, fst.FST.get_option('pars', options), fst.FST.get_option('pars_walrus', options))
 
     return ret
 
@@ -455,7 +455,7 @@ def _get_one_format_spec(self: fst.FST, idx: int | None, field: str, cut: bool, 
     assert isinstance(child, JoinedStr)
 
     ret, _ = childf._make_fst_and_dedent(childf, copy_ast(child), loc, prefix, quotes,
-                                         docstr=self.get_option('docstr', options))
+                                         docstr=fst.FST.get_option('docstr', options))
     reta = ret.a
 
     if len(quotes) == 1:
@@ -518,7 +518,7 @@ def _get_one_JoinedStr_TemplateStr_values(self: fst.FST, idx: int | None, field:
         # ret._touch()
 
         # if indent := childf._get_indent():
-        #     ret._dedent_lns(indent, skip=1, docstr=self.get_option('docstr', options))
+        #     ret._dedent_lns(indent, skip=1, docstr=fst.FST.get_option('docstr', options))
 
     else:
         assert isinstance(child, (FormattedValue, Interpolation))
@@ -526,7 +526,7 @@ def _get_one_JoinedStr_TemplateStr_values(self: fst.FST, idx: int | None, field:
         typ = 'f' if isinstance(child, FormattedValue) else 't'
         prefix = typ + prefix[1:]
         fmt, _ = childf._make_fst_and_dedent(childf, copy_ast(child), childf.loc, prefix, prefix[1:],
-                                             docstr=self.get_option('docstr', options))
+                                             docstr=fst.FST.get_option('docstr', options))
         lprefix = len(prefix)
         ret = fst.FST((JoinedStr if typ == 'f' else TemplateStr)
                       (values=[fmt.a], lineno=fmt.lineno, col_offset=fmt.col_offset - lprefix,
@@ -1284,7 +1284,7 @@ def _make_exprish_fst(self: fst.FST, code: _PutOneCode, idx: int | None, field: 
     if suffix:
         put_lines[-1] = bistr(put_lines[-1] + suffix)  # don't need to offset anything so just tack onto the end
 
-    put_fst._indent_lns(self._get_indent(), docstr=self.get_option('docstr', options))
+    put_fst._indent_lns(self._get_indent(), docstr=fst.FST.get_option('docstr', options))
 
     dcol_offset = lines[ln].c2b(col) + merge_alnum_start
     end_col_offset = lines[end_ln].c2b(end_col)

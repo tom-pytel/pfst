@@ -1549,7 +1549,7 @@ class ReconcileRnd(Fuzzy):
 
                     self.walk_fst(fst)
 
-                    with fst.options(docstr=False):
+                    with FST.options(docstr=False):
                         fst = fst.reconcile(mark)
 
                     try:
@@ -1619,7 +1619,7 @@ class ReconcileSame(Fuzzy):
 
             self.walk_fst(fst)
 
-            with fst.options(docstr=False):
+            with FST.options(docstr=False):
                 fst = fst.reconcile(mark)
 
             fst.verify()

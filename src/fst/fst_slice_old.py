@@ -908,7 +908,7 @@ def _get_slice_stmtish_old(self: fst.FST, start: int | Literal['end'] | None, st
         raise ValueError('cannot specify `one=True` if getting multiple statements')
 
     fst_, _ = self._make_fst_and_dedent(indent, get_ast, copy_loc, '', '', put_loc, put_lines,
-                                        docstr=self.get_option('docstr', options),
+                                        docstr=fst.FST.get_option('docstr', options),
                                         docstr_strict_exclude=asts[0] if asts and start else None)  # if slice gotten doesn't start at 0 then first element cannot be a 'strict' docstr even though it is first in the new slice
 
     if cut and is_last_child:  # correct for removed last child nodes or last nodes past the block open colon
@@ -1008,7 +1008,7 @@ def _put_slice_stmtish_old(self: fst.FST, code: Code | None, start: int | Litera
         ffirst = flast = None
 
         if field == 'orelse' and len(body) == 1 and (f := body[0].f)._is_elif():
-            _elif_to_else_if(f, self.get_option('docstr', options))
+            _elif_to_else_if(f, fst.FST.get_option('docstr', options))
 
         if fpre:
             block_loc = fstloc(*fpre.bloc[2:], *(fpost.bloc[:2] if fpost else next_bound_step(fpre)))

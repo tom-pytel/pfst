@@ -984,7 +984,7 @@ def _maybe_fix_tuple(self: fst.FST, is_par: bool | None = None) -> bool:
 def _maybe_fix_arglike(self: fst.FST, options: Mapping[str, Any]) -> None:
     """Parenthesize `self` if is arglike expression according to `options`."""
 
-    if self.get_option('pars', options) and self.get_option('pars_arglike', options):
+    if fst.FST.get_option('pars', options) and fst.FST.get_option('pars_arglike', options):
         if self.is_expr_arglike:
             self.par()
 
@@ -994,7 +994,7 @@ def _maybe_fix_arglikes(self: fst.FST, options: Mapping[str, Any]) -> None:
 
     # assert isinstance(self.a, Tuple)
 
-    if self.get_option('pars', options) and self.get_option('pars_arglike', options):
+    if fst.FST.get_option('pars', options) and fst.FST.get_option('pars_arglike', options):
         for e in self.a.elts:
             if (f := e.f).is_expr_arglike:
                 f.value.par()  # will be a Starred so we just go for .value
