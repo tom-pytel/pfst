@@ -145,11 +145,12 @@ __all__ = [
     'is_valid_target', 'is_valid_del_target',
     'reduce_ast', 'get_field', 'set_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx',
-    'get_func_class_or_ass_by_name', 'syntax_ordered_children', 'last_block_header_child', 'is_atom',
+    'get_func_class_or_ass_by_name', 'last_block_header_child', 'is_atom',
+    'syntax_ordered_children',
     'precedence_require_parens_by_type', 'precedence_require_parens',
 ]
 
-from_iterable = chain.from_iterable
+chain_from_iterable = chain.from_iterable
 
 
 constant = EllipsisType | int | float | complex | str | bytes | bool | None
@@ -975,157 +976,6 @@ def get_func_class_or_ass_by_name(asts: Iterable[AST], name: str, ass: bool = Tr
     return None
 
 
-def _syntax_ordered_children_Call(ast: AST) -> list[AST]:
-    children = [ast.func]
-    args = ast.args
-    keywords = ast.keywords
-
-    if not args or not keywords or not isinstance(args[-1], Starred):
-        children.extend(args)
-        children.extend(keywords)
-
-    else:
-        star = args[-1]
-        star_lineno = star.lineno
-        star_col_offset = star.col_offset
-
-        children.extend(args[:-1])
-
-        for i, kw in enumerate(keywords):
-            if (lineno := kw.lineno) < star_lineno or ((lineno == star_lineno) and kw.col_offset < star_col_offset):
-                children.append(kw)
-
-            else:
-                children.append(star)
-                children.extend(keywords[i:])
-
-                break
-
-        else:
-            children.append(star)
-
-    return children
-
-def _syntax_ordered_children_arguments(ast: AST) -> list[AST]:
-    children = []
-
-    if not (defaults := ast.defaults):
-        children.extend(ast.posonlyargs)
-        children.extend(ast.args)
-
-    elif (ldefaults := len(defaults)) <= (largs := len(args := ast.args)):
-        children.extend(ast.posonlyargs)
-        children.extend(args[:-ldefaults])
-        children.extend(from_iterable(zip(args[-ldefaults:], defaults, strict=True)))
-
-    else:
-        children.extend((posonlyargs := ast.posonlyargs)[:-(lposonly_defaults := ldefaults - largs)])
-        children.extend(from_iterable(zip(posonlyargs[-lposonly_defaults:], defaults[:lposonly_defaults], strict=True)))
-        children.extend(from_iterable(zip(args, defaults[lposonly_defaults:], strict=True)))
-
-    if (vararg := ast.vararg):
-        children.append(vararg)
-
-    if not (kw_defaults := ast.kw_defaults):
-        children.extend(ast.kwonlyargs)
-    else:
-        children.extend(from_iterable(zip(ast.kwonlyargs, kw_defaults, strict=True)))
-
-    if (kwarg := ast.kwarg):
-        children.append(kwarg)
-
-    return children
-
-def _syntax_ordered_children_default(ast: AST) -> list[AST]:
-    children = []
-
-    for field in AST_FIELDS[ast.__class__]:
-        if child := getattr(ast, field, None):
-            if isinstance(child, list):
-                children.extend(child)
-            else:
-                children.append(child)
-
-    return children
-
-_syntax_ordered_children_nothing      = lambda ast: []
-_syntax_ordered_children_value        = lambda ast: [ast.value]
-_syntax_ordered_children_elts         = lambda ast: ast.elts[:]
-_syntax_ordered_children_elts_and_ctx = lambda ast: [*ast.elts, ast.ctx]
-_syntax_ordered_children_ctx          = lambda ast: [ast.ctx]
-
-_SYNTAX_ORDERED_CHILDREN = {
-    # quick optimized get
-
-    Return:       _syntax_ordered_children_value,
-    Expr:         _syntax_ordered_children_value,
-    Await:        _syntax_ordered_children_value,
-    Yield:        _syntax_ordered_children_value,
-    YieldFrom:    _syntax_ordered_children_value,
-
-    Set:          _syntax_ordered_children_elts,
-    List:         _syntax_ordered_children_elts_and_ctx,
-    Tuple:        _syntax_ordered_children_elts_and_ctx,
-
-    Name:         _syntax_ordered_children_ctx,
-
-    Pass:         _syntax_ordered_children_nothing,
-    Break:        _syntax_ordered_children_nothing,
-    Continue:     _syntax_ordered_children_nothing,
-
-    Constant:     _syntax_ordered_children_nothing,
-
-    Load:         _syntax_ordered_children_nothing,
-    Store:        _syntax_ordered_children_nothing,
-    Del:          _syntax_ordered_children_nothing,
-    And:          _syntax_ordered_children_nothing,
-    Or:           _syntax_ordered_children_nothing,
-    Add:          _syntax_ordered_children_nothing,
-    Sub:          _syntax_ordered_children_nothing,
-    Mult:         _syntax_ordered_children_nothing,
-    MatMult:      _syntax_ordered_children_nothing,
-    Div:          _syntax_ordered_children_nothing,
-    Mod:          _syntax_ordered_children_nothing,
-    Pow:          _syntax_ordered_children_nothing,
-    LShift:       _syntax_ordered_children_nothing,
-    RShift:       _syntax_ordered_children_nothing,
-    BitOr:        _syntax_ordered_children_nothing,
-    BitXor:       _syntax_ordered_children_nothing,
-    BitAnd:       _syntax_ordered_children_nothing,
-    FloorDiv:     _syntax_ordered_children_nothing,
-    Invert:       _syntax_ordered_children_nothing,
-    Not:          _syntax_ordered_children_nothing,
-    UAdd:         _syntax_ordered_children_nothing,
-    USub:         _syntax_ordered_children_nothing,
-    Eq:           _syntax_ordered_children_nothing,
-    NotEq:        _syntax_ordered_children_nothing,
-    Lt:           _syntax_ordered_children_nothing,
-    LtE:          _syntax_ordered_children_nothing,
-    Gt:           _syntax_ordered_children_nothing,
-    GtE:          _syntax_ordered_children_nothing,
-    Is:           _syntax_ordered_children_nothing,
-    IsNot:        _syntax_ordered_children_nothing,
-    In:           _syntax_ordered_children_nothing,
-    NotIn:        _syntax_ordered_children_nothing,
-
-    # special cases
-
-    Dict:         lambda ast: list(from_iterable(zip(ast.keys, ast.values, strict=True))),
-    Compare:      lambda ast: [ast.left] + (list(from_iterable(zip(ops, ast.comparators, strict=True)))
-                                            if len(ops := ast.ops) > 1 else [ops[0], ast.comparators[0]]),
-    Call:         _syntax_ordered_children_Call,
-    arguments:    _syntax_ordered_children_arguments,
-    MatchMapping: lambda ast: list(from_iterable(zip(ast.keys, ast.patterns, strict=True))),
-}
-
-def syntax_ordered_children(ast: AST) -> list:
-    """Get list of all `AST` children in syntax order. This will include individual fields and aggregate fields like
-    `body` all smushed up together into a single flat list. The list may contain `None` values for example from a `Dict`
-    `keys` field which has `**` elements."""
-
-    return _SYNTAX_ORDERED_CHILDREN.get(ast.__class__, _syntax_ordered_children_default)(ast)
-
-
 def last_block_header_child(ast: AST) -> AST | None:
     """Return last `AST` node in the block header before the ':'. Returns `None` for non-block nodes and things like
     `Try` and empty  `ExceptHandler` nodes or other block nodes which might have normally present fields missing."""
@@ -1190,7 +1040,170 @@ def is_atom(ast: AST, *, unparse_pars_as_atom: bool | None = None, tuple_as_atom
     return True
 
 
-# directly from python ast
+# ......................................................................................................................
+# syntax orderding
+
+def _syntax_ordered_children_Call(ast: AST) -> list[AST]:
+    children = [ast.func]
+    args = ast.args
+    keywords = ast.keywords
+
+    if not args or not keywords or not isinstance(args[-1], Starred):
+        children.extend(args)
+        children.extend(keywords)
+
+    else:
+        star = args[-1]
+        star_lineno = star.lineno
+        star_col_offset = star.col_offset
+
+        children.extend(args[:-1])
+
+        for i, kw in enumerate(keywords):
+            if (lineno := kw.lineno) < star_lineno or ((lineno == star_lineno) and kw.col_offset < star_col_offset):
+                children.append(kw)
+
+            else:
+                children.append(star)
+                children.extend(keywords[i:])
+
+                break
+
+        else:
+            children.append(star)
+
+    return children
+
+
+def _syntax_ordered_children_arguments(ast: AST) -> list[AST]:
+    children = []
+
+    if not (defaults := ast.defaults):
+        children.extend(ast.posonlyargs)
+        children.extend(ast.args)
+
+    elif (ldefaults := len(defaults)) <= (largs := len(args := ast.args)):
+        children.extend(ast.posonlyargs)
+        children.extend(args[:-ldefaults])
+        children.extend(chain_from_iterable(zip(args[-ldefaults:], defaults, strict=True)))
+
+    else:
+        children.extend((posonlyargs := ast.posonlyargs)[:-(lposonly_defaults := ldefaults - largs)])
+        children.extend(chain_from_iterable(zip(posonlyargs[-lposonly_defaults:], defaults[:lposonly_defaults],
+                                                strict=True)))
+        children.extend(chain_from_iterable(zip(args, defaults[lposonly_defaults:], strict=True)))
+
+    if (vararg := ast.vararg):
+        children.append(vararg)
+
+    if not (kw_defaults := ast.kw_defaults):
+        children.extend(ast.kwonlyargs)
+    else:
+        children.extend(chain_from_iterable(zip(ast.kwonlyargs, kw_defaults, strict=True)))
+
+    if (kwarg := ast.kwarg):
+        children.append(kwarg)
+
+    return children
+
+
+def _syntax_ordered_children_default(ast: AST) -> list[AST]:
+    children = []
+
+    for field in AST_FIELDS[ast.__class__]:
+        if child := getattr(ast, field, None):
+            if isinstance(child, list):
+                children.extend(child)
+            else:
+                children.append(child)
+
+    return children
+
+
+_syntax_ordered_children_nothing      = lambda ast: []
+_syntax_ordered_children_value        = lambda ast: [ast.value]
+_syntax_ordered_children_elts         = lambda ast: ast.elts.copy()
+_syntax_ordered_children_elts_and_ctx = lambda ast: [*ast.elts, ast.ctx]
+_syntax_ordered_children_ctx          = lambda ast: [ast.ctx]
+
+_SYNTAX_ORDERED_CHILDREN = {
+    # quick optimized get
+
+    Return:       _syntax_ordered_children_value,
+    Expr:         _syntax_ordered_children_value,
+    Await:        _syntax_ordered_children_value,
+    Yield:        _syntax_ordered_children_value,
+    YieldFrom:    _syntax_ordered_children_value,
+
+    Set:          _syntax_ordered_children_elts,
+    List:         _syntax_ordered_children_elts_and_ctx,
+    Tuple:        _syntax_ordered_children_elts_and_ctx,
+
+    Name:         _syntax_ordered_children_ctx,
+
+    Pass:         _syntax_ordered_children_nothing,
+    Break:        _syntax_ordered_children_nothing,
+    Continue:     _syntax_ordered_children_nothing,
+
+    Constant:     _syntax_ordered_children_nothing,
+
+    Load:         _syntax_ordered_children_nothing,
+    Store:        _syntax_ordered_children_nothing,
+    Del:          _syntax_ordered_children_nothing,
+    And:          _syntax_ordered_children_nothing,
+    Or:           _syntax_ordered_children_nothing,
+    Add:          _syntax_ordered_children_nothing,
+    Sub:          _syntax_ordered_children_nothing,
+    Mult:         _syntax_ordered_children_nothing,
+    MatMult:      _syntax_ordered_children_nothing,
+    Div:          _syntax_ordered_children_nothing,
+    Mod:          _syntax_ordered_children_nothing,
+    Pow:          _syntax_ordered_children_nothing,
+    LShift:       _syntax_ordered_children_nothing,
+    RShift:       _syntax_ordered_children_nothing,
+    BitOr:        _syntax_ordered_children_nothing,
+    BitXor:       _syntax_ordered_children_nothing,
+    BitAnd:       _syntax_ordered_children_nothing,
+    FloorDiv:     _syntax_ordered_children_nothing,
+    Invert:       _syntax_ordered_children_nothing,
+    Not:          _syntax_ordered_children_nothing,
+    UAdd:         _syntax_ordered_children_nothing,
+    USub:         _syntax_ordered_children_nothing,
+    Eq:           _syntax_ordered_children_nothing,
+    NotEq:        _syntax_ordered_children_nothing,
+    Lt:           _syntax_ordered_children_nothing,
+    LtE:          _syntax_ordered_children_nothing,
+    Gt:           _syntax_ordered_children_nothing,
+    GtE:          _syntax_ordered_children_nothing,
+    Is:           _syntax_ordered_children_nothing,
+    IsNot:        _syntax_ordered_children_nothing,
+    In:           _syntax_ordered_children_nothing,
+    NotIn:        _syntax_ordered_children_nothing,
+
+    # special cases
+
+    Dict:         lambda ast: list(chain_from_iterable(zip(ast.keys, ast.values, strict=True))),
+    Compare:      lambda ast: [ast.left] + (list(chain_from_iterable(zip(ops, ast.comparators, strict=True)))
+                                            if len(ops := ast.ops) > 1 else [ops[0], ast.comparators[0]]),
+    Call:         _syntax_ordered_children_Call,
+    arguments:    _syntax_ordered_children_arguments,
+    MatchMapping: lambda ast: list(chain_from_iterable(zip(ast.keys, ast.patterns, strict=True))),
+}
+
+
+def syntax_ordered_children(ast: AST) -> list:
+    """Get list of all `AST` children in syntax order. This will include individual fields and aggregate fields like
+    `body` all smushed up together into a single flat list. The list may contain `None` values for example from a `Dict`
+    `keys` field which has `**` elements."""
+
+    # TODO: optimize for each AST type
+
+    return _SYNTAX_ORDERED_CHILDREN.get(ast.__class__, _syntax_ordered_children_default)(ast)
+
+
+# ......................................................................................................................
+# precedence stuff
+
 class _Precedence(IntEnum):
     """Precedence table that originated from python grammar."""
 
@@ -1219,6 +1232,7 @@ class _Precedence(IntEnum):
             return self.__class__(self + 1)
         except ValueError:
             return self
+
 
 # Special precedence rules:
 # * Unparenthesized tuple should always be parenthesized.
@@ -1390,6 +1404,7 @@ _PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
     (MatchOr, 'patterns'):     _Precedence.BOR.next(),
 }
 
+
 def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[AST], field: str,
                                       **flags: dict[str, bool]) -> bool:
     """Returns whether parentheses are required for the child for the given parent / child combination or not. Both
@@ -1451,6 +1466,7 @@ def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[A
             raise ValueError("type of 'op' should be passed")
 
     return child_precedence < parent_precedence
+
 
 def precedence_require_parens(child: AST, parent: AST, field: str, idx: int | None = None, **flags: dict[str, bool],
                               ) -> bool:
