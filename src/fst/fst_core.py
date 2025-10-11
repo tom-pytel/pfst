@@ -1258,7 +1258,7 @@ def _touch(self: fst.FST) -> Self:
     return self
 
 
-def _touchall(self: fst.FST, parents: bool = False, self_: bool = True, children: bool = False) -> Self:
+def _touchall(self: fst.FST, parents: bool = True, self_: bool = True, children: bool = True) -> Self:
     """Touch self, parents and children, optionally. Flushes location cache so that changes to `AST` locations will
     get picked up."""
 
@@ -1417,7 +1417,7 @@ def _offset(self: fst.FST, ln: int, col: int, dln: int, dcol_offset: int,
 
         stack.extend(children)
 
-    self._touchall(True, False)
+    self._touchall(True, False, False)
 
     return self
 
@@ -1579,7 +1579,7 @@ def _offset_lns(self: fst.FST, lns: set[int] | dict[int, int], dcol_offset: int 
 
             a.f._touch()
 
-        self._touchall(True, False)
+        self._touchall(True, False, False)
 
     elif dcol_offset:  # lns is set[int] OR dict[int, int] (overriding with a single dcol_offset)
         for a in walk(self.a):
@@ -1592,7 +1592,7 @@ def _offset_lns(self: fst.FST, lns: set[int] | dict[int, int], dcol_offset: int 
 
             a.f._touch()
 
-        self._touchall(True, False)
+        self._touchall(True, False, False)
 
 
 def _indent_lns(self: fst.FST, indent: str | None = None, lns: set[int] | None = None, *,

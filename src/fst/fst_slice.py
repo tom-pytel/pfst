@@ -646,7 +646,7 @@ def _update_loc_up_parents(self: fst.FST, lineno: int, col_offset: int, end_line
         self._touch()
 
     if self:
-        self._touchall(True)
+        self._touchall(True, True, False)
 
 
 def _maybe_fix_MatchOr(self: fst.FST, fix1: bool = False) -> None:

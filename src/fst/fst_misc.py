@@ -880,7 +880,7 @@ def _maybe_fix_undelimited_seq(self: fst.FST, body: list[AST], delims: str = '()
 
             else:
                 if self:
-                    self._touchall(True)
+                    self._touchall(True, True, False)
 
         _, _, end_ln, end_col = self.loc
 

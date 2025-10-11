@@ -1212,7 +1212,7 @@ def _maybe_del_trailing_newline(self: fst.FST, old_last_line: str, put_fst_end_n
         elif root.end_ln < len(lines) - 1:  # make sure position doesn't include last line (possibly body cut down to zero elements)
             del lines[-1]
 
-            root._touchall(True)
+            root._touchall(True, True, False)
 
 
 def _get_slice_stmtish(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
