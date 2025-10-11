@@ -4168,6 +4168,30 @@ def f():
         self.assertEqual('*t', f.src)
         self.assertIsInstance(f.a, Starred)
 
+    def test_dump(self):
+        f = FST('a = b ; ')
+        f.value.put_src(' b ', 0, 4, 0, 5, 'offset')
+        self.assertEqual(f.dump('all', out=list), [
+            '0: a =  b  ; <*END*',
+            'Assign - ROOT 0,0..0,7',
+            '  .targets[1]',
+            '0: a',
+            "  0] Name 'a' Store - 0,0..0,1",
+            '0:    > b <*END*',
+            "  .value Name 'b' Load - 0,4..0,7",
+        ])
+
+        f = FST('call() ;', 'exec')
+        self.assertEqual(f.dump('all', out=list), [
+            'Module - ROOT 0,0..0,8',
+            '  .body[1]',
+            '0: call() ;',
+            '  0] Expr - 0,0..0,6',
+            '    .value Call - 0,0..0,6',
+            '0: call',
+            "      .func Name 'call' Load - 0,0..0,4",
+        ])
+
     def test_verify(self):
         ast = parse('i = 1')
         ast.f.verify(raise_=True)

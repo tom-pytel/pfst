@@ -51,6 +51,7 @@ from .common import (
 from .locations import loc_block_header_end
 
 
+_re_stmt_tail          = re.compile(r'\s*(?:;\s*)?')
 _re_one_space_or_end   = re.compile(r'\s|$')
 
 _re_par_open_alnums    = re.compile(rf'[{pat_alnum}.][(][{pat_alnum}]')
@@ -59,19 +60,32 @@ _re_delim_open_alnums  = re.compile(rf'[{pat_alnum}.][([][{pat_alnum}]')
 _re_delim_close_alnums = re.compile(rf'[{pat_alnum}.][)\]][{pat_alnum}]')
 
 
-def _dump_lines(fst_: fst.FST, linefunc: Callable, ln: int, col: int, end_ln: int, end_col: int, eol: str = '') -> None:
+def _dump_lines(fst_: fst.FST, linefunc: Callable, ln: int, col: int, end_ln: int, end_col: int, eol: str = '',
+                is_full_stmt: bool = False) -> None:
     width = int(log10(len(fst_.root._lines) - 1 or 1)) + 1
-    lines = fst_._get_src(ln, col, end_ln, end_col, True)
 
-    if (l := lines[-1][:end_col]).endswith(' '):
-        l += '<'
+    if is_full_stmt:
+        lines = fst_._get_src(ln, col, end_ln, 0x7fffffffffffffff, True)
+
+        if not _re_stmt_tail.match(l := lines[-1], end_col):
+            l = l[:end_col]
+        elif l[-1:].isspace():
+            l += '<*END*'
+
+    else:
+        lines = fst_._get_src(ln, col, end_ln, end_col, True)
+
+        if (l := lines[-1])[-1:].isspace():
+            l += '<*END*'
 
     lines[-1] = l
+    l = lines[0]
 
-    if (l := lines[0]).startswith(' ') and col:
-        lines[0] = f'{" " * (col - 1)}>{l}'
-    else:
-        lines[0] = ' ' * col + l
+    if col:
+        if l[0].isspace():
+            lines[0] = f'{" " * (col - 1)}>{l}'
+        else:
+            lines[0] = ' ' * col + l
 
     for i, l in zip(range(ln, end_ln + 1), lines, strict=True):
         linefunc(f'{i:<{width}}: {l}{eol}')
@@ -103,11 +117,12 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
         pass
 
     elif isinstance(ast, (stmt, ExceptHandler, match_case)):  # src = 'stmt' or 'all'
-        if loc := self.bloc:
-            if isinstance(ast, ASTS_BLOCK):
-                _dump_lines(self, st.linefunc, loc.ln, loc.col, (c := loc_block_header_end(self))[0], c[1] + 1, st.eol)
-            else:
-                _dump_lines(self, st.linefunc, *loc, st.eol)
+        loc = self.bloc
+
+        if isinstance(ast, ASTS_BLOCK):
+            _dump_lines(self, st.linefunc, loc.ln, loc.col, (c := loc_block_header_end(self))[0], c[1] + 1, st.eol)
+        else:
+            _dump_lines(self, st.linefunc, *loc, st.eol, True)
 
     elif not isinstance(ast, mod):
         if st.src == 'all':
