@@ -2992,6 +2992,12 @@ c, # c
         f.put(FST('*', alias), 0, 'names')
         self.assertEqual('from a import *', f.src)
 
+        self.assertEqual('from time import *', (f := FST('from time import (time)')).put('*', 0).root.src)
+        f.verify()
+
+        self.assertEqual('from time import *', (f := FST('from time import(time)')).put('*', 0).root.src)
+        f.verify()
+
         if PYGE14:
             # parenthesize ExceptHandler.type Tuple if put Starred to it
 

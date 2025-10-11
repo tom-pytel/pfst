@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- fix put star `*` to parenthesized single element non-star `ImportFrom.names`
 - fix get slice from start of unparenthesized tuple in f-string expression
 - fix get format_spec escape sequences from `rf'{...:\xFF}'` string
 - statement-ish operations at end of source no longer add trailing newline

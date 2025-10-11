@@ -1454,7 +1454,7 @@ def _put_one_ImportFrom_names(self: fst.FST, code: _PutOneCode, idx: int | None,
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params)
 
-    if is_star := ('*' in code.a.name):
+    if is_star := ('*' in code.a.name):  # `in` just in case some whitespace got in there somehow
         if len(self.a.names) != 1:
             raise NodeError('cannot put star alias to ImportFrom.names containing multiple aliases', rawable=True)
 
@@ -1463,13 +1463,20 @@ def _put_one_ImportFrom_names(self: fst.FST, code: _PutOneCode, idx: int | None,
 
     if is_star:  # for star remove parentheses (including possible trailing comma) if there
         if pars.n:
-            self._put_src('*', *pars, False)
+            pars_ln, pars_col, pars_end_ln, pars_end_col = pars
+            star_ln, star_col, star_end_ln, star_end_col = self.a.names[0].f.loc
+            _, _, end_ln, end_col = self.loc
+
+            head = ' ' if pars_col and re_alnumdot.match(self.root._lines[pars_ln], pars_col - 1) else None  # make sure at least space between `from` and `*`
+
+            self._put_src(None, star_end_ln, star_end_col, end_ln, end_col, True)
+            self._put_src(head, pars_ln, pars_col, star_ln, star_col, False)
 
     elif not pars.n and not self._is_enclosed_or_line(pars=False):  # otherwise if need them then add
-        ln, col, end_ln, end_col = pars
+        pars_ln, pars_col, pars_end_ln, pars_end_col = pars
 
-        self._put_src(')', end_ln, end_col, end_ln, end_col, True, False, self)
-        self._put_src('(', ln, col, ln, col, False)
+        self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, True, False, self)
+        self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
 
     return ret
 
