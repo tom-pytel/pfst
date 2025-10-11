@@ -1,4 +1,4 @@
-"""Misc common `FST` class methods.
+"""Misc common `FST` class and standalone methods.
 
 This module contains functions which are imported as methods in the `FST` class (for now).
 """
@@ -50,6 +50,8 @@ from .common import (
 
 from .locations import loc_block_header_end
 
+__all__ = ['new_empty_tuple', 'new_empty_set_star', 'new_empty_set_call', 'new_empty_set_curlies', 'get_trivia_params']
+
 
 _re_stmt_tail          = re.compile(r'\s*(?:;\s*)?')
 _re_one_space_or_end   = re.compile(r'\s|$')
@@ -89,6 +91,116 @@ def _dump_lines(fst_: fst.FST, linefunc: Callable, ln: int, col: int, end_ln: in
 
     for i, l in zip(range(ln, end_ln + 1), lines, strict=True):
         linefunc(f'{i:<{width}}: {l}{eol}')
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+def new_empty_tuple(*, from_: fst.FST | None = None) -> fst.FST:
+    ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
+
+    return fst.FST(ast, ['()'], from_=from_)
+
+
+def new_empty_set_star(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None, as_fst: bool = True,
+                       ) -> fst.FST | AST:
+    src = ['{*()}']
+    ast = Set(elts=[Starred(value=Tuple(elts=[], ctx=Load(), lineno=lineno, col_offset=col_offset+2,
+                                        end_lineno=lineno, end_col_offset=col_offset+4),
+                            ctx=Load(),
+                            lineno=lineno, col_offset=col_offset+1, end_lineno=lineno, end_col_offset=col_offset+4)],
+              lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+5)
+
+    return fst.FST(ast, src, from_=from_) if as_fst else (ast, src)
+
+
+def new_empty_set_call(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None, as_fst: bool = True,
+                       ) -> fst.FST:
+    src = ['set()']
+    ast = Call(func=Name(id='set', ctx=Load(),
+                         lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+3),
+               args=[], keywords=[],
+               lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+5)
+
+    return fst.FST(ast, src, from_=from_) if as_fst else (ast, src)
+
+
+def new_empty_set_curlies(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None) -> fst.FST | AST:
+    ast = Set(elts=[], lineno=lineno, col_offset=col_offset, end_lineno=lineno,
+              end_col_offset=col_offset + 2)
+
+    return fst.FST(ast, ['{}'], from_=from_)
+
+
+def get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None = None,
+                      neg: bool = False,
+                      ) -> tuple[Literal['none', 'all', 'block'],
+                                 bool | int,
+                                 bool,
+                                 Literal['none', 'all', 'block', 'line'],
+                                 bool | int,
+                                 bool,
+                                 ]:
+    """Convert options compact human representation to parameters usable for `_leading/trailing_trivia()`.
+
+    This conversion is fairly loose and will accept shorthand '+/-#' for 'none+/-#'.
+
+    **Parameters:**
+    - `neg`: Whether to use `'-#'` suffix numbers or not (will still return `_neg` as `True` but `_space` will be 0).
+
+    **Returns:**
+    - (`lead_comments`, `lead_space`, `lead_neg`, `trail_comments`, `trail_space`, `trail_neg`): Two sets of parameters
+        for the trivia functions along with the `_neg` indicators of whether the `_space` params came from negative
+        space specifiers `'-#'` or not.
+    """
+
+    if isinstance(lead_comments := fst.FST.get_option('trivia'), tuple):
+        lead_comments, trail_comments = lead_comments
+    else:
+        trail_comments = True
+
+    if trivia is not None:
+        if not isinstance(trivia, tuple):
+            lead_comments = trivia
+
+        else:
+            if (t := trivia[0]) is not None:
+                lead_comments = t
+            if (t := trivia[1]) is not None:
+                trail_comments = t
+
+    lead_space = lead_neg = False
+
+    if isinstance(lead_comments, bool):
+        lead_comments = 'block' if lead_comments else 'none'
+
+    elif isinstance(lead_comments, str):
+        if (i := lead_comments.find('+')) != -1:
+            lead_space = int(n) if (n := lead_comments[i + 1:]) else True
+            lead_comments = lead_comments[:i] or 'none'
+
+        elif (i := lead_comments.find('-')) != -1:
+            lead_neg = True
+            lead_space = (int(n) if (n := lead_comments[i + 1:]) else True) if neg else 0
+            lead_comments = lead_comments[:i] or 'none'
+
+        assert lead_comments != 'line'
+
+    trail_space = trail_neg = False
+
+    if isinstance(trail_comments, bool):
+        trail_comments = 'line' if trail_comments else 'none'
+
+    elif isinstance(trail_comments, str):
+        if (i := trail_comments.find('+')) != -1:
+            trail_space = int(n) if (n := trail_comments[i + 1:]) else True
+            trail_comments = trail_comments[:i] or 'none'
+
+        elif (i := trail_comments.find('-')) != -1:
+            trail_neg = True
+            trail_space = (int(n) if (n := trail_comments[i + 1:]) else True) if neg else 0
+            trail_comments = trail_comments[:i] or 'none'
+
+    return lead_comments, lead_space, lead_neg, trail_comments, trail_space, trail_neg
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -205,46 +317,6 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
             child.f._dump(st, cind + sind * 2)
         else:
             st.linefunc(f'{cind}{sind}{sind}{child!r}{st.eol}')
-
-
-@staticmethod
-def _new_empty_tuple(*, from_: fst.FST | None = None) -> fst.FST:
-    ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
-
-    return fst.FST(ast, ['()'], from_=from_)
-
-
-@staticmethod
-def _new_empty_set_star(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None, as_fst: bool = True,
-                        ) -> fst.FST | AST:
-    src = ['{*()}']
-    ast = Set(elts=[Starred(value=Tuple(elts=[], ctx=Load(), lineno=lineno, col_offset=col_offset+2,
-                                        end_lineno=lineno, end_col_offset=col_offset+4),
-                            ctx=Load(),
-                            lineno=lineno, col_offset=col_offset+1, end_lineno=lineno, end_col_offset=col_offset+4)],
-              lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+5)
-
-    return fst.FST(ast, src, from_=from_) if as_fst else (ast, src)
-
-
-@staticmethod
-def _new_empty_set_call(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None, as_fst: bool = True,
-                        ) -> fst.FST:
-    src = ['set()']
-    ast = Call(func=Name(id='set', ctx=Load(),
-                         lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+3),
-               args=[], keywords=[],
-               lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+5)
-
-    return fst.FST(ast, src, from_=from_) if as_fst else (ast, src)
-
-
-@staticmethod
-def _new_empty_set_curlies(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None) -> fst.FST | AST:
-    ast = Set(elts=[], lineno=lineno, col_offset=col_offset, end_lineno=lineno,
-              end_col_offset=col_offset + 2)
-
-    return fst.FST(ast, ['{}'], from_=from_)
 
 
 def _is_parenthesized_tuple(self: fst.FST) -> bool | None:
@@ -1079,76 +1151,3 @@ def _undelimit_node(self: fst.FST, field: str = 'elts') -> bool:
         self._put_src(' ', ln, col, ln, col, False)
 
     return True
-
-
-@staticmethod
-def _get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None = None,
-                       neg: bool = False,
-                       ) -> tuple[Literal['none', 'all', 'block'],
-                                  bool | int,
-                                  bool,
-                                  Literal['none', 'all', 'block', 'line'],
-                                  bool | int,
-                                  bool,
-                                  ]:
-    """Convert options compact human representation to parameters usable for `_leading/trailing_trivia()`.
-
-    This conversion is fairly loose and will accept shorthand '+/-#' for 'none+/-#'.
-
-    **Parameters:**
-    - `neg`: Whether to use `'-#'` suffix numbers or not (will still return `_neg` as `True` but `_space` will be 0).
-
-    **Returns:**
-    - (`lead_comments`, `lead_space`, `lead_neg`, `trail_comments`, `trail_space`, `trail_neg`): Two sets of parameters
-        for the trivia functions along with the `_neg` indicators of whether the `_space` params came from negative
-        space specifiers `'-#'` or not.
-    """
-
-    if isinstance(lead_comments := fst.FST.get_option('trivia'), tuple):
-        lead_comments, trail_comments = lead_comments
-    else:
-        trail_comments = True
-
-    if trivia is not None:
-        if not isinstance(trivia, tuple):
-            lead_comments = trivia
-
-        else:
-            if (t := trivia[0]) is not None:
-                lead_comments = t
-            if (t := trivia[1]) is not None:
-                trail_comments = t
-
-    lead_space = lead_neg = False
-
-    if isinstance(lead_comments, bool):
-        lead_comments = 'block' if lead_comments else 'none'
-
-    elif isinstance(lead_comments, str):
-        if (i := lead_comments.find('+')) != -1:
-            lead_space = int(n) if (n := lead_comments[i + 1:]) else True
-            lead_comments = lead_comments[:i] or 'none'
-
-        elif (i := lead_comments.find('-')) != -1:
-            lead_neg = True
-            lead_space = (int(n) if (n := lead_comments[i + 1:]) else True) if neg else 0
-            lead_comments = lead_comments[:i] or 'none'
-
-        assert lead_comments != 'line'
-
-    trail_space = trail_neg = False
-
-    if isinstance(trail_comments, bool):
-        trail_comments = 'line' if trail_comments else 'none'
-
-    elif isinstance(trail_comments, str):
-        if (i := trail_comments.find('+')) != -1:
-            trail_space = int(n) if (n := trail_comments[i + 1:]) else True
-            trail_comments = trail_comments[:i] or 'none'
-
-        elif (i := trail_comments.find('-')) != -1:
-            trail_neg = True
-            trail_space = (int(n) if (n := trail_comments[i + 1:]) else True) if neg else 0
-            trail_comments = trail_comments[:i] or 'none'
-
-    return lead_comments, lead_space, lead_neg, trail_comments, trail_space, trail_neg

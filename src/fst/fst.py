@@ -4400,10 +4400,6 @@ class FST:
     from .fst_misc import (
         _repr_tail,
         _dump,
-        _new_empty_tuple,
-        _new_empty_set_star,
-        _new_empty_set_call,
-        _new_empty_set_curlies,
 
         _is_parenthesized_tuple,
         _is_delimited_matchseq,
@@ -4435,8 +4431,6 @@ class FST:
         _maybe_fix_tuple,
         _maybe_fix_arglike,
         _maybe_fix_arglikes,
-
-        _get_trivia_params,
     )
 
     from .fst_raw import (

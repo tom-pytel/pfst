@@ -9,6 +9,7 @@ from fst import *
 
 from fst.asttypes import ASTS_STMTISH
 from fst.common import PYLT11, PYLT12, PYGE11, PYGE12, PYGE14
+from fst.fst_misc import new_empty_set_curlies
 
 from support import GetSliceCases, PutSliceCases
 
@@ -2170,13 +2171,13 @@ c  # comment
 
         # put as one
 
-        self.assertEqual('[1, {*()}, 2]', (f := FST('[1, 2]')).put_slice(FST._new_empty_set_curlies(), 1, 1, one=True).src)
+        self.assertEqual('[1, {*()}, 2]', (f := FST('[1, 2]')).put_slice(new_empty_set_curlies(), 1, 1, one=True).src)
         f.verify()
 
-        self.assertEqual('[1, set(), 2]', (f := FST('[1, 2]')).put_slice(FST._new_empty_set_curlies(), 1, 1, one=True, fix_set_self='call').src)
+        self.assertEqual('[1, set(), 2]', (f := FST('[1, 2]')).put_slice(new_empty_set_curlies(), 1, 1, one=True, fix_set_self='call').src)
         f.verify()
 
-        self.assertEqual('[1, {}, 2]', (f := FST('[1, 2]')).put_slice(FST._new_empty_set_curlies(), 1, 1, one=True, fix_set_self=False).src)
+        self.assertEqual('[1, {}, 2]', (f := FST('[1, 2]')).put_slice(new_empty_set_curlies(), 1, 1, one=True, fix_set_self=False).src)
         self.assertIsNone(f.verify(raise_=False))
 
     def test_slice_matchor_empty_or_len1(self):

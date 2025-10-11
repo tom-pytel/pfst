@@ -105,8 +105,8 @@ from .locations import (
 )
 
 from .fst_core import _ParamsOffset
+from .fst_misc import new_empty_tuple, new_empty_set_star, new_empty_set_call, new_empty_set_curlies, get_trivia_params
 from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish
-
 
 _re_close_delim_or_space_or_end = re.compile(r'[)}\s\]:]|$')  # this is a very special set of terminations which are considered to not need a space before if a slice put ends with a non-space right before them
 
@@ -368,7 +368,7 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
     # if is_first and is_last:
     #     return ((l := fstloc(bound_ln, bound_col, bound_end_ln, bound_end_col)), l, None, sep_end_pos)  # case 0
 
-    ld_comms, ld_space, ld_neg, tr_comms, tr_space, tr_neg = fst.FST._get_trivia_params(trivia, neg)
+    ld_comms, ld_space, ld_neg, tr_comms, tr_space, tr_neg = get_trivia_params(trivia, neg)
 
     ld_text_pos, ld_space_pos, indent = leading_trivia(lines, bound_ln, bound_col,  # start of text / space
                                                        first_ln, first_col, ld_comms, ld_space)
@@ -587,9 +587,9 @@ def _maybe_fix_Set(self: fst.FST, empty: bool | Literal['star', 'call'] = True) 
 
     if empty and not (a := self.a).elts:
         if empty == 'call':
-            ast, src = fst.FST._new_empty_set_call(a.lineno, a.col_offset, as_fst=False)
+            ast, src = new_empty_set_call(a.lineno, a.col_offset, as_fst=False)
         else:  # True, 'star'
-            ast, src = fst.FST._new_empty_set_star(a.lineno, a.col_offset, as_fst=False)
+            ast, src = new_empty_set_star(a.lineno, a.col_offset, as_fst=False)
 
         ln, col, end_ln, end_col = self.loc
 
@@ -939,7 +939,7 @@ def _get_slice_Tuple_elts(self: fst.FST, start: int | Literal['end'] | None, sto
     start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
-        return fst.FST._new_empty_tuple(from_=self)
+        return new_empty_tuple(from_=self)
 
     is_par = self._is_delimited_seq()
     locs = _locs_and_bound_get(self, start, stop, body, body, is_par)
@@ -1003,10 +1003,10 @@ def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop:
 
     if start == stop:
         return (
-            fst.FST._new_empty_set_curlies(from_=self) if not (fix_set_get := self.get_option('fix_set_get', options)) else
-            fst.FST._new_empty_set_call(from_=self) if fix_set_get == 'call' else
-            fst.FST._new_empty_tuple(from_=self) if fix_set_get == 'tuple' else
-            fst.FST._new_empty_set_star(from_=self)  # True, 'star' default
+            new_empty_set_curlies(from_=self) if not (fix_set_get := self.get_option('fix_set_get', options)) else
+            new_empty_set_call(from_=self) if fix_set_get == 'call' else
+            new_empty_tuple(from_=self) if fix_set_get == 'tuple' else
+            new_empty_set_star(from_=self)  # True, 'star' default
         )
 
     locs = _locs_and_bound_get(self, start, stop, body, body, 1)
@@ -1032,7 +1032,7 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
     len_slice = stop - start
 
     if not len_slice:
-        return fst.FST._new_empty_tuple(from_=self)
+        return new_empty_tuple(from_=self)
 
     if cut and len_slice == len_body and self.get_option('fix_delete_self', options):
         raise ValueError("cannot cut all Delete.targets without fix_delete_self=False")
@@ -1236,7 +1236,7 @@ def _get_slice_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] 
     len_slice = stop - start
 
     if not len_slice:
-        return fst.FST._new_empty_tuple(from_=self)
+        return new_empty_tuple(from_=self)
 
     if cut and len_slice == len_body and self.get_option('fix_global_self', options):
         raise ValueError(f'cannot cut all {ast.__class__.__name__}.names without fix_global_self=False')
@@ -1305,7 +1305,7 @@ def _get_slice_ClassDef_bases(self: fst.FST, start: int | Literal['end'] | None,
     len_slice = stop - start
 
     if start == stop:
-        return fst.FST._new_empty_tuple(from_=self)
+        return new_empty_tuple(from_=self)
 
     if keywords := ast.keywords:
         if (kw0_pos := keywords[0].f.loc[:2]) < body[stop - 1].f.loc[2:]:
@@ -1358,7 +1358,7 @@ def _get_slice_Call_args(self: fst.FST, start: int | Literal['end'] | None, stop
     len_slice = stop - start
 
     if start == stop:
-        return fst.FST._new_empty_tuple(from_=self)
+        return new_empty_tuple(from_=self)
 
     if keywords := ast.keywords:
         if (kw0_pos := keywords[0].f.loc[:2]) < body[stop - 1].f.loc[2:]:
