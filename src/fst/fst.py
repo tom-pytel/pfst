@@ -752,7 +752,8 @@ class FST:
 
         self.parent = None
         self.root = self
-        self._lines = ([bistr(s) for s in mode_or_lines_or_parent] if kwargs.get('lcopy', True) else
+        self._lines = ([bistr(s) for s in mode_or_lines_or_parent]
+                       if kwargs.get('lcopy', True) else
                        mode_or_lines_or_parent)
 
         if from_ := kwargs.get('from_'):  # copy params from source tree
@@ -856,7 +857,7 @@ class FST:
         else:
             raise ValueError(f"invalid mode '{mode}' for blank FST")
 
-        return FST(ast, [bistr(src)], parse_params=parse_params, lcopy=False)
+        return FST(ast, [src], parse_params=parse_params)
 
     @staticmethod
     def fromsrc(src: builtins.str | list[builtins.str], mode: Mode = 'exec', *, filename: builtins.str = '<unknown>',

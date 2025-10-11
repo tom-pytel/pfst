@@ -331,7 +331,7 @@ def _get_one_stmtish(self: fst.FST, idx: int | None, field: str, cut: bool, opti
 def _get_one_ctx(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
 
-    return fst.FST(child.__class__(), [bistr('')], from_=self, lcopy=False)
+    return fst.FST(child.__class__(), [''], from_=self, lcopy=False)
 
 
 def _get_one_identifier(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any],
@@ -401,7 +401,7 @@ def _get_one_conversion(self: fst.FST, idx: int | None, field: str, cut: bool, o
 
     conv = chr(child)
 
-    return fst.FST(Constant(value=conv, lineno=1, col_offset=0, end_lineno=1, end_col_offset=3), [bistr(f"'{conv}'")],
+    return fst.FST(Constant(value=conv, lineno=1, col_offset=0, end_lineno=1, end_col_offset=3), [f"'{conv}'"],
                    from_=self, lcopy=False)
 
 
@@ -459,7 +459,7 @@ def _get_one_format_spec(self: fst.FST, idx: int | None, field: str, cut: bool, 
     reta = ret.a
 
     if len(quotes) == 1:
-        ls[0] = bistr(f"f{quotes}" + (ls := ret._lines)[0][2:])
+        ret_lines[0] = bistr(f"f{quotes}" + (ret_lines := ret._lines)[0][2:])
     else:
         ret._put_src([f'f{quotes}'], 0, 0, 0, 3, False)
 

@@ -157,7 +157,7 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any]
         if (src := code.src) != (expected := opcls2str[codea.__class__]):  # maybe someone did 'is # comment \n not' or something like this?
             try:
                 if parse(src).__class__ is codea.__class__:  # parses to same thing so just return the canonical str for the op, otherwise it gets complicated
-                    return code  # return fst.FST(codea, [bistr(expected)], from_=code, lcopy=False)
+                    return code  # return fst.FST(codea, [expected], from_=code, lcopy=False)
 
             except SyntaxError:  # mostly for mismatched augop / binop operator types
                 pass
