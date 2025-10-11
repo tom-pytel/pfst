@@ -28,7 +28,7 @@ from .astutil import bistr
 
 from .common import (
     fstloc,  # noqa: F811
-    re_empty_line_start, re_empty_line, re_comment_line_start, re_line_trailing_space,
+    re_empty_line_start, re_empty_line, re_comment_line_start, re_empty_space,
     re_empty_line_cont_or_comment,
     next_frag, prev_frag, next_find, prev_find,  # noqa: F811
 )
@@ -595,8 +595,7 @@ class SrcEdit:
 
                     else:
                         indent = bistr('')
-                        put_loc = fstloc(end_ln, re_line_trailing_space.match(lines[end_ln], col).start(1),
-                                         end_ln, end_col)
+                        put_loc = fstloc(end_ln, re_empty_space.search(lines[end_ln], col).start(), end_ln, end_col)
 
                     if (l := put_lines[-1]) and not re_empty_line.match(l):
                         put_lines.append(indent)
@@ -710,7 +709,7 @@ class SrcEdit:
                 del_lines = [block_indent]
 
             else:  # eat whitespace after trailing useless semicolon
-                put_col = re_line_trailing_space.match(lines[put_ln], 0, put_col).start(1)
+                put_col = re_empty_space.search(lines[put_ln], 0, put_col).start()
 
         if put_loc.col:
             if re_empty_line.match(l := lines[put_ln][:put_col]):

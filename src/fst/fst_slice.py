@@ -77,7 +77,7 @@ from .astutil import (
 from .common import (
     PYLT11, PYGE14,
     Self, NodeError, astfield, fstloc,
-    re_empty_line_start, re_empty_line, re_line_trailing_space, re_empty_space, re_line_end_cont_or_comment,
+    re_empty_line_start, re_empty_line, re_empty_space, re_line_end_cont_or_comment,
     next_frag, prev_find, next_find, next_find_re,
     leading_trivia, trailing_trivia,
 )
@@ -378,8 +378,7 @@ def _locs_slice_seq(self: fst.FST, is_first: bool, is_last: bool, loc_first: fst
     def calc_locs(ld_ln: int, ld_col: int, tr_ln: int, tr_col: int,
                   ) -> tuple[fstloc, fstloc, str | None, tuple[int, int] | None]:
         if indent is None:  # does not start line, no preceding trivia
-            del_col = re_line_trailing_space.match(lines[first_ln], 0 if first_ln > bound_ln else bound_col,
-                                                   first_col).start(1)
+            del_col = re_empty_space.search(lines[first_ln], 0 if first_ln > bound_ln else bound_col, first_col).start()
 
             if tr_ln == last_end_ln:  # does not extend past end of line (different from trailing_trivia() 'ends_line')
                 if not is_last or lines[last_end_ln].startswith('#', tr_col):  # if there is a next element or trailing line comment then don't delete space before this element
@@ -1863,8 +1862,7 @@ def _put_slice_seq_begin(self: fst.FST, start: int, stop: int, fst_: fst.FST | N
                 fst_._put_src(None, 0, 0, 1, 0, False)  # delete leading pure newline in slice being put
 
             else:  # does not start a new line
-                put_col = re_line_trailing_space.match(lines[put_ln], 0 if put_ln > bound_ln else bound_col,
-                                                       put_col).start(1)  # eat whitespace before put newline
+                put_col = re_empty_space.search(lines[put_ln], 0 if put_ln > bound_ln else bound_col, put_col).start()  # eat whitespace before put newline
 
         elif not put_col:
             if del_indent:

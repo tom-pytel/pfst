@@ -44,7 +44,7 @@ from .astutil import OPSTR2CLS_AUG, bistr, pat_alnum, re_alnumdot_alnum
 
 from .common import (
     NodeError, srcwpos, nspace,
-    re_line_trailing_space, re_line_end_cont_or_comment,
+    re_empty_space, re_line_end_cont_or_comment,
     next_frag, next_find, prev_find, next_delims,
 )
 
@@ -654,7 +654,7 @@ def _maybe_add_line_continuations(self: fst.FST, whole: bool = False, del_commen
 
             # maybe just delete line if contains only comment?
 
-            c = c + 1 if (c := re_line_trailing_space.match(l, 0, cc := m.start(1)).start(1)) else cc
+            c = c + 1 if (c := re_empty_space.search(l, 0, cc := m.start(1)).start()) else cc
             lines[ln] = bistr(l[:c] + '\\')
 
     return True
@@ -701,7 +701,7 @@ def _maybe_del_separator(self: fst.FST, ln: int, col: int, force: bool = False,
     elif not force:  # comment or line continuation follows, leave separator for aesthetic reasons if allowed
         return False
 
-    del_col = re_line_trailing_space.match(line_sep, col if sep_ln == ln else 0, sep_col).start(1)
+    del_col = re_empty_space.search(line_sep, col if sep_ln == ln else 0, sep_col).start()
 
     self._put_src(None, sep_ln, del_col or sep_col, sep_ln, sep_end_col, True)
 
