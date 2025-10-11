@@ -1272,7 +1272,7 @@ def _touchall(self: fst.FST, parents: bool = True, self_: bool = True, children:
             stack.extend(iter_child_nodes(child))
 
     elif self_:
-        self._touch()
+        self._cache.clear()  # self._touch()
 
     if parents:
         parent = self

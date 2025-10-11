@@ -295,21 +295,15 @@ def loc_operator(self: fst.FST) -> fstloc | None:
     return None
 
 
-def loc_block_header_end(self: fst.FST, ret_bound: bool = False) -> tuple[int, int, int, int] | tuple[int, int] | None:
-    """Return location of the end of the block header line(s) for block node, just BEFORE the ':', or None if `self`
-    is not a block header node.
-
-    **Parameters:**
-    - `ret_bound`: If `False` then just returns the end position. `True` means return the range used for the search,
-        which includes a start at the end of the last child node in the block header (without skipping any closing pars)
-        or beginning of the block node if no child nodes in header.
+def loc_block_header_end(self: fst.FST) -> tuple[int, int, int, int] | None:
+    """Return position of the end of the block header line(s) for block node (just BEFORE the ':') and the end position
+    of the last child, or None if `self` is not a block header node.
 
     **Returns:**
-    - `(colon ln, colon col)` or `(colon ln, colon col, last child end_ln, last child end_col)`: Returns the location
-        just BEFORE the ending colon `:` of the block header. If `ret_bound=True` then also returns two other elements
-        which are the end line and end column of the last child in the header or the start line and column of `self` if
-        there is not last child (`Try`, `TryStar`). End location of child does NOT include any possibly closing
-        parenthesis.
+    - `(colon ln, colon col, last child end_ln, last child end_col)`: Returns the position just BEFORE the ending colon
+        `:` of the block header and the end line and end column of the last child in the header or the start line and
+        column of `self` if there is not last child (`Try`, `TryStar`). End position of child does NOT include any
+        possibly closing parenthesis.
     """
 
     ln, col, end_ln, end_col = self.loc
@@ -333,7 +327,7 @@ def loc_block_header_end(self: fst.FST, ret_bound: bool = False) -> tuple[int, i
 
     ln, col = next_find(self.root._lines, cend_ln, cend_col, end_ln, end_col, ':')  # must be there
 
-    return (ln, col, cend_ln, cend_col) if ret_bound else (ln, col)
+    return ln, col, cend_ln, cend_col
 
 
 def loc_arguments_empty(self: fst.FST) -> fstloc:

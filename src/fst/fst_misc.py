@@ -232,8 +232,13 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
         loc = self.bloc
 
         if isinstance(ast, ASTS_BLOCK):
-            _dump_lines(self, st.linefunc, loc.ln, loc.col, (c := loc_block_header_end(self))[0], c[1] + 1, st.eol)
+            ln, col, _, _ = loc
+            end_ln, end_col, _, _ = loc_block_header_end(self)
+
+            _dump_lines(self, st.linefunc, ln, col, end_ln, end_col + 1, st.eol)
+
         else:
+
             _dump_lines(self, st.linefunc, *loc, st.eol, True)
 
     elif not isinstance(ast, mod):

@@ -88,7 +88,7 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
     stmtisha = stmtish.a
 
     if in_blkopen := (blkopen_end := loc_block_header_end(stmtish)) and (end_ln, end_col) <= blkopen_end:  # block statement with modification limited to block header
-        pend_ln, pend_col = blkopen_end
+        pend_ln, pend_col, _, _ = blkopen_end
         pend_col += 1
 
     elif stmtish is root:  # reparse may include trailing comments which would not otherwise be included
