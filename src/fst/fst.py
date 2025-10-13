@@ -635,12 +635,10 @@ class FST:
         `Tuple.elts` in py 3.11+) list, e.g. `*not a`, `*a or b`. Normal expressions and properly parenthesized
         `Starred` expressions return `False`."""
 
-        if not isinstance(ast := self.a, Starred):
+        if not isinstance(ast := self.a, Starred) or isinstance(child := ast.value, Tuple):  # we assume any Tuple child of a Starred is intrinsically parenthesized, otherwise it is invalid
             return False
 
-        child_type = (child.op.__class__
-                      if (child_cls := (child := ast.value).__class__) in (BoolOp, BinOp, UnaryOp) else
-                      child_cls)
+        child_type = (child.op.__class__ if (child_cls := child.__class__) in (BoolOp, BinOp, UnaryOp) else child_cls)
 
         if not precedence_require_parens_by_type(child_type, Starred, 'value'):
             return False

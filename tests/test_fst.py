@@ -7881,6 +7881,12 @@ if 1:
 
                     self.assertEqual(test, py_truth)
 
+    def test_is_expr_arglike(self):
+        self.assertFalse(FST('*a').is_expr_arglike)
+        self.assertTrue(FST('*a or b').is_expr_arglike)
+        self.assertFalse(FST('*(a or b)').is_expr_arglike)
+        self.assertFalse(FST('*(a, b)').is_expr_arglike)
+
 
 if __name__ == '__main__':
     import argparse
