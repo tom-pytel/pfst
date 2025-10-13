@@ -5550,7 +5550,7 @@ Dict - ROOT 0,0..0,5
   0] Name 'b' Load - 0,3..0,4
 '''),
 
-(68, 'body[0].cases[0].pattern', 0, 0, None, {'fix_matchor_get': False, '_verify': False}, ('exec', r'''
+(68, 'body[0].cases[0].pattern', 0, 0, None, {'norm_get': False, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), r'''
@@ -5575,7 +5575,7 @@ Module - ROOT 0,0..1,17
 r'''''',
 r'''MatchOr - ROOT 0,0..0,0'''),
 
-(69, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_get': False, 'fix_matchor_self': False, '_verify': False}, ('exec', r'''
+(69, 'body[0].cases[0].pattern', 0, 1, None, {'norm_get': False, 'norm_self': False, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), r'''
@@ -5602,7 +5602,7 @@ MatchOr - ROOT 0,0..0,1
     .name 'a'
 '''),
 
-(70, 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': False, '_verify': False}, ('exec', r'''
+(70, 'body[0].cases[0].pattern', 0, 2, None, {'norm_self': False, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), r'''
@@ -5628,7 +5628,7 @@ MatchOr - ROOT 0,0..0,5
     .name 'b'
 '''),
 
-(71, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_get': True, 'fix_matchor_self': True, '_verify': False}, ('exec', r'''
+(71, 'body[0].cases[0].pattern', 0, 1, None, {'norm_get': True, 'norm_self': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), r'''
@@ -6750,7 +6750,7 @@ Tuple - ROOT 0,0..0,2
 
 (8, '', 0, 3, None, {}, (None,
 r'''del a, b, c'''),
-r'''**ValueError('cannot cut all Delete.targets without fix_delete_self=False')**''',
+r'''**ValueError('cannot cut all Delete.targets without norm_self=False')**''',
 r'''a, b, c''', r'''
 Tuple - ROOT 0,0..0,7
   .elts[3]
@@ -6760,14 +6760,15 @@ Tuple - ROOT 0,0..0,7
   .ctx Load
 '''),
 
-(9, '', 0, 3, None, {'fix_import_self': False, '_verify_self': False}, (None, r'''
+(9, '', 0, 3, None, {'norm_self': False, '_verify_self': False}, (None, r'''
 del a \
 , \
 b \
 , \
 c  # comment
 '''),
-r'''**ValueError('cannot cut all Delete.targets without fix_delete_self=False')**''', r'''
+r'''del   # comment''',
+r'''Delete - ROOT 0,0..0,4''', r'''
 a \
 , \
 b \
@@ -7157,7 +7158,7 @@ r'''_slice_Assign_targets - ROOT 0,0..0,0'''),
 
 (15, '', 0, 3, 'targets', {}, (None,
 r'''a = b = c = z'''),
-r'''**ValueError('cannot cut all Assign.targets without fix_assign_self=False')**''',
+r'''**ValueError('cannot cut all Assign.targets without norm_self=False')**''',
 r'''a = b = c =''', r'''
 _slice_Assign_targets - ROOT 0,0..0,11
   .targets[3]
@@ -7166,7 +7167,7 @@ _slice_Assign_targets - ROOT 0,0..0,11
   2] Name 'c' Store - 0,8..0,9
 '''),
 
-(16, '', 0, 3, 'targets', {'fix_assign_self': False, '_verify_self': False}, (None,
+(16, '', 0, 3, 'targets', {'norm_self': False, '_verify_self': False}, (None,
 r'''a = b = c = z'''),
 r''' z''', r'''
 Assign - ROOT 0,0..0,2
@@ -7443,7 +7444,7 @@ _slice_withitems - ROOT 0,0..2,1
 
 (8, '', 0, 3, 'items', {}, (None,
 r'''with a, b, c: pass'''),
-r'''**ValueError('cannot cut all With.items without fix_with_self=False')**''',
+r'''**ValueError('cannot cut all With.items without norm_self=False')**''',
 r'''a, b, c''', r'''
 _slice_withitems - ROOT 0,0..0,7
   .items[3]
@@ -7455,7 +7456,7 @@ _slice_withitems - ROOT 0,0..0,7
     .context_expr Name 'c' Load - 0,6..0,7
 '''),
 
-(9, '', 0, 3, 'items', {'fix_with_self': False, '_verify_self': False}, (None, r'''
+(9, '', 0, 3, 'items', {'norm_self': False, '_verify_self': False}, (None, r'''
 with a \
 , \
 b \
@@ -7772,7 +7773,7 @@ _slice_withitems - ROOT 0,0..2,1
 
 (8, '', 0, 3, 'items', {}, (None,
 r'''with (a, b, c): pass'''),
-r'''**ValueError('cannot cut all With.items without fix_with_self=False')**''',
+r'''**ValueError('cannot cut all With.items without norm_self=False')**''',
 r'''a, b, c''', r'''
 _slice_withitems - ROOT 0,0..0,7
   .items[3]
@@ -7784,7 +7785,7 @@ _slice_withitems - ROOT 0,0..0,7
     .context_expr Name 'c' Load - 0,6..0,7
 '''),
 
-(9, '', 0, 3, 'items', {'fix_with_self': False, '_verify_self': False}, (None, r'''
+(9, '', 0, 3, 'items', {'norm_self': False, '_verify_self': False}, (None, r'''
 with (a
 ,
 b
@@ -8106,7 +8107,7 @@ _slice_withitems - ROOT 0,0..2,1
 
 (8, '', 0, 3, 'items', {}, (None,
 r'''async with a, b, c: pass'''),
-r'''**ValueError('cannot cut all AsyncWith.items without fix_with_self=False')**''',
+r'''**ValueError('cannot cut all AsyncWith.items without norm_self=False')**''',
 r'''a, b, c''', r'''
 _slice_withitems - ROOT 0,0..0,7
   .items[3]
@@ -8118,7 +8119,7 @@ _slice_withitems - ROOT 0,0..0,7
     .context_expr Name 'c' Load - 0,6..0,7
 '''),
 
-(9, '', 0, 3, 'items', {'fix_with_self': False, '_verify_self': False}, (None, r'''
+(9, '', 0, 3, 'items', {'norm_self': False, '_verify_self': False}, (None, r'''
 async with a \
 , \
 b \
@@ -8435,7 +8436,7 @@ _slice_withitems - ROOT 0,0..2,1
 
 (8, '', 0, 3, 'items', {}, (None,
 r'''async with (a, b, c): pass'''),
-r'''**ValueError('cannot cut all AsyncWith.items without fix_with_self=False')**''',
+r'''**ValueError('cannot cut all AsyncWith.items without norm_self=False')**''',
 r'''a, b, c''', r'''
 _slice_withitems - ROOT 0,0..0,7
   .items[3]
@@ -8447,7 +8448,7 @@ _slice_withitems - ROOT 0,0..0,7
     .context_expr Name 'c' Load - 0,6..0,7
 '''),
 
-(9, '', 0, 3, 'items', {'fix_with_self': False, '_verify_self': False}, (None, r'''
+(9, '', 0, 3, 'items', {'norm_self': False, '_verify_self': False}, (None, r'''
 async with (a
 ,
 b
@@ -8753,7 +8754,7 @@ _slice_aliases - ROOT 0,0..2,1
 
 (8, '', 0, 3, None, {}, (None,
 r'''import a, b, c'''),
-r'''**ValueError('cannot cut all Import.names without fix_import_self=False')**''',
+r'''**ValueError('cannot cut all Import.names without norm_self=False')**''',
 r'''a, b, c''', r'''
 _slice_aliases - ROOT 0,0..0,7
   .names[3]
@@ -8765,7 +8766,7 @@ _slice_aliases - ROOT 0,0..0,7
     .name 'c'
 '''),
 
-(9, '', 0, 3, None, {'fix_import_self': False, '_verify_self': False}, (None, r'''
+(9, '', 0, 3, None, {'norm_self': False, '_verify_self': False}, (None, r'''
 import a \
 , \
 b \
@@ -9080,7 +9081,7 @@ _slice_aliases - ROOT 0,0..2,1
 
 (8, '', 0, 3, None, {}, (None,
 r'''from mod import a, b, c'''),
-r'''**ValueError('cannot cut all ImportFrom.names without fix_import_self=False')**''',
+r'''**ValueError('cannot cut all ImportFrom.names without norm_self=False')**''',
 r'''a, b, c''', r'''
 _slice_aliases - ROOT 0,0..0,7
   .names[3]
@@ -9092,7 +9093,7 @@ _slice_aliases - ROOT 0,0..0,7
     .name 'c'
 '''),
 
-(9, '', 0, 3, None, {'fix_import_self': False, '_verify_self': False}, (None, r'''
+(9, '', 0, 3, None, {'norm_self': False, '_verify_self': False}, (None, r'''
 from mod import a \
 , \
 b \
@@ -9416,7 +9417,7 @@ _slice_aliases - ROOT 0,0..4,0
 
 (8, '', 0, 3, None, {}, (None,
 r'''from mod import a, b, c'''),
-r'''**ValueError('cannot cut all ImportFrom.names without fix_import_self=False')**''',
+r'''**ValueError('cannot cut all ImportFrom.names without norm_self=False')**''',
 r'''a, b, c''', r'''
 _slice_aliases - ROOT 0,0..0,7
   .names[3]
@@ -9428,7 +9429,7 @@ _slice_aliases - ROOT 0,0..0,7
     .name 'c'
 '''),
 
-(9, '', 0, 3, None, {'fix_import_self': False, '_verify_self': False}, (None, r'''
+(9, '', 0, 3, None, {'norm_self': False, '_verify_self': False}, (None, r'''
 from mod import (a
 ,
 b
@@ -9694,7 +9695,7 @@ Tuple - ROOT 0,0..1,3
 
 (8, 'body[0]', None, None, None, {}, ('exec',
 r'''global a, b, c  # comment'''),
-r'''**ValueError('cannot cut all Global.names without fix_global_self=False')**''',
+r'''**ValueError('cannot cut all Global.names without norm_self=False')**''',
 r'''a, b, c''', r'''
 Tuple - ROOT 0,0..0,7
   .elts[3]
@@ -9704,7 +9705,7 @@ Tuple - ROOT 0,0..0,7
   .ctx Load
 '''),
 
-(9, 'body[0]', None, None, None, {'fix_global_self': False, '_verify_self': False}, ('exec',
+(9, 'body[0]', None, None, None, {'norm_self': False, '_verify_self': False}, ('exec',
 r'''global a, b, c  # comment'''),
 r'''global   # comment''', r'''
 Module - ROOT 0,0..0,18
@@ -9946,7 +9947,7 @@ Tuple - ROOT 0,0..1,3
 
 (8, 'body[0]', None, None, None, {}, ('exec',
 r'''nonlocal a, b, c  # comment'''),
-r'''**ValueError('cannot cut all Nonlocal.names without fix_global_self=False')**''',
+r'''**ValueError('cannot cut all Nonlocal.names without norm_self=False')**''',
 r'''a, b, c''', r'''
 Tuple - ROOT 0,0..0,7
   .elts[3]
@@ -9956,7 +9957,7 @@ Tuple - ROOT 0,0..0,7
   .ctx Load
 '''),
 
-(9, 'body[0]', None, None, None, {'fix_global_self': False, '_verify_self': False}, ('exec',
+(9, 'body[0]', None, None, None, {'norm_self': False, '_verify_self': False}, ('exec',
 r'''nonlocal a, b, c  # comment'''),
 r'''nonlocal   # comment''', r'''
 Module - ROOT 0,0..0,20

@@ -50,7 +50,10 @@ from .common import (
 
 from .locations import loc_block_header_end
 
-__all__ = ['new_empty_tuple', 'new_empty_set_star', 'new_empty_set_call', 'new_empty_set_curlies', 'get_trivia_params']
+__all__ = [
+    'new_empty_tuple', 'new_empty_set_star', 'new_empty_set_call', 'new_empty_set_curlies', 'get_trivia_params',
+    'get_option_overridable',
+    ]
 
 
 _re_stmt_tail          = re.compile(r'\s*(?:;\s*)?')
@@ -201,6 +204,15 @@ def get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool |
             trail_comments = trail_comments[:i] or 'none'
 
     return lead_comments, lead_space, lead_neg, trail_comments, trail_space, trail_neg
+
+
+def get_option_overridable(overridable_option: str, override_option: str, options: Mapping[str, Any] = {}) -> object:
+    """Get an option value which can be overridden with another option (even global as long as it is not `None`)."""
+
+    if (o := fst.FST.get_option(override_option, options)) is not None:
+        return o
+
+    return fst.FST.get_option(overridable_option, options)
 
 
 # ----------------------------------------------------------------------------------------------------------------------

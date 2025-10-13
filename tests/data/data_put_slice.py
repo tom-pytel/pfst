@@ -14713,7 +14713,7 @@ Module - ROOT 0,0..4,11
         2] Name 'y' Load - 4,9..4,10
 '''),
 
-(87, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': False, '_verify': False}, ('exec', r'''
+(87, 'body[0].cases[0].pattern', 0, 1, None, {'norm_self': False, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), (None,
@@ -14735,7 +14735,7 @@ Module - ROOT 0,0..1,13
       0] Pass - 1,9..1,13
 '''),
 
-(88, 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': False, '_verify': False}, ('exec', r'''
+(88, 'body[0].cases[0].pattern', 0, 2, None, {'norm_self': False, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), (None,
@@ -14754,7 +14754,7 @@ Module - ROOT 0,0..1,12
       0] Pass - 1,8..1,12
 '''),
 
-(89, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': True, '_verify': False}, ('exec', r'''
+(89, 'body[0].cases[0].pattern', 0, 1, None, {'norm_self': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), (None,
@@ -14774,14 +14774,14 @@ Module - ROOT 0,0..1,13
       0] Pass - 1,9..1,13
 '''),
 
-(90, 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': True, '_verify': False}, ('exec', r'''
+(90, 'body[0].cases[0].pattern', 0, 2, None, {'norm_self': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), (None,
 r'''**DEL**'''),
-r'''**ValueError('cannot delete all MatchOr.patterns without fix_matchor_self=False')**'''),
+r'''**ValueError('cannot delete all MatchOr.patterns without norm_self=False')**'''),
 
-(91, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': False, '_verify': False}, ('exec', r'''
+(91, 'body[0].cases[0].pattern', 0, 1, None, {'norm_self': False, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
@@ -14805,7 +14805,7 @@ Module - ROOT 0,0..1,17
       0] Pass - 1,13..1,17
 '''),
 
-(92, 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': False, '_verify': False}, ('exec', r'''
+(92, 'body[0].cases[0].pattern', 0, 2, None, {'norm_self': False, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
@@ -14827,7 +14827,7 @@ Module - ROOT 0,0..1,13
       0] Pass - 1,9..1,13
 '''),
 
-(93, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': True, '_verify': False}, ('exec', r'''
+(93, 'body[0].cases[0].pattern', 0, 1, None, {'norm_self': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
@@ -14851,7 +14851,7 @@ Module - ROOT 0,0..1,17
       0] Pass - 1,13..1,17
 '''),
 
-(94, 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': True, '_verify': False}, ('exec', r'''
+(94, 'body[0].cases[0].pattern', 0, 2, None, {'norm_self': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
@@ -14871,7 +14871,7 @@ Module - ROOT 0,0..1,13
       0] Pass - 1,9..1,13
 '''),
 
-(95, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_self': 'strict', '_verify': False}, ('exec', r'''
+(95, 'body[0].cases[0].pattern', 0, 1, None, {'norm_self': 'strict', '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
@@ -14895,19 +14895,19 @@ Module - ROOT 0,0..1,17
       0] Pass - 1,13..1,17
 '''),
 
-(96, 'body[0].cases[0].pattern', 0, 1, None, {'fix_matchor_put': False, '_verify': False}, ('exec', r'''
+(96, 'body[0].cases[0].pattern', 0, 1, None, {'norm_put': False, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
 r'''z'''),
-r'''**NodeError('slice being assigned to a MatchOr must be a MatchOr with fix_matchor_put=False, not a MatchAs')**'''),
+r'''**NodeError('slice being assigned to a MatchOr must be a MatchOr with norm_put=False, not a MatchAs')**'''),
 
-(97, 'body[0].cases[0].pattern', 0, 2, None, {'fix_matchor_self': 'strict', '_verify': False}, ('exec', r'''
+(97, 'body[0].cases[0].pattern', 0, 2, None, {'norm_self': 'strict', '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
 r'''z'''),
-r'''**NodeError("cannot put MatchOr to length 1 with fix_matchor_self='strict'")**'''),
+r'''**NodeError("cannot put MatchOr to length 1 with matchor_norm='strict'")**'''),
 
 (98, 'body[0].body[0].value', 'end', None, None, {'one': True}, ('exec', r'''
 if 1:
@@ -16520,9 +16520,9 @@ Module - ROOT 0,0..1,2
 (6, '', None, None, 'targets', {}, (None,
 r'''a = b = c = d'''),
 r'''**DEL**''',
-r'''**ValueError('cannot cut all Assign.targets without fix_assign_self=False')**'''),
+r'''**ValueError('cannot cut all Assign.targets without norm_self=False')**'''),
 
-(7, '', None, None, 'targets', {'fix_assign_self': False, '_verify_self': False}, (None,
+(7, '', None, None, 'targets', {'norm_self': False, '_verify_self': False}, (None,
 r'''a = b = c = d'''),
 r'''**DEL**''',
 r''' d''', r'''
@@ -16873,9 +16873,9 @@ Module - ROOT 0,0..1,17
 (12, '', None, None, 'items', {}, (None,
 r'''with a, b, c: pass  # comment'''),
 r'''**DEL**''',
-r'''**ValueError('cannot delete all With.items without fix_with_self=False')**'''),
+r'''**ValueError('cannot delete all With.items without norm_self=False')**'''),
 
-(13, '', None, None, 'items', {'fix_with_self': False, '_verify_self': False}, (None,
+(13, '', None, None, 'items', {'norm_self': False, '_verify_self': False}, (None,
 r'''with a, b, c: pass  # comment'''),
 r'''**DEL**''',
 r'''with : pass  # comment''', r'''
@@ -17225,9 +17225,9 @@ Module - ROOT 0,0..1,18
 (12, '', None, None, 'items', {}, (None,
 r'''with (a, b, c): pass  # comment'''),
 r'''**DEL**''',
-r'''**ValueError('cannot delete all With.items without fix_with_self=False')**'''),
+r'''**ValueError('cannot delete all With.items without norm_self=False')**'''),
 
-(13, '', None, None, 'items', {'fix_with_self': False, '_verify_self': False}, (None,
+(13, '', None, None, 'items', {'norm_self': False, '_verify_self': False}, (None,
 r'''with (a, b, c): pass  # comment'''),
 r'''**DEL**''',
 r'''with (): pass  # comment''', r'''
@@ -17577,9 +17577,9 @@ Module - ROOT 0,0..1,17
 (12, '', None, None, 'items', {}, (None,
 r'''async with a, b, c: pass  # comment'''),
 r'''**DEL**''',
-r'''**ValueError('cannot delete all AsyncWith.items without fix_with_self=False')**'''),
+r'''**ValueError('cannot delete all AsyncWith.items without norm_self=False')**'''),
 
-(13, '', None, None, 'items', {'fix_with_self': False, '_verify_self': False}, (None,
+(13, '', None, None, 'items', {'norm_self': False, '_verify_self': False}, (None,
 r'''async with a, b, c: pass  # comment'''),
 r'''**DEL**''',
 r'''async with : pass  # comment''', r'''
@@ -17929,9 +17929,9 @@ Module - ROOT 0,0..1,18
 (12, '', None, None, 'items', {}, (None,
 r'''async with (a, b, c): pass  # comment'''),
 r'''**DEL**''',
-r'''**ValueError('cannot delete all AsyncWith.items without fix_with_self=False')**'''),
+r'''**ValueError('cannot delete all AsyncWith.items without norm_self=False')**'''),
 
-(13, '', None, None, 'items', {'fix_with_self': False, '_verify_self': False}, (None,
+(13, '', None, None, 'items', {'norm_self': False, '_verify_self': False}, (None,
 r'''async with (a, b, c): pass  # comment'''),
 r'''**DEL**''',
 r'''async with (): pass  # comment''', r'''
@@ -18254,9 +18254,9 @@ Module - ROOT 0,0..1,11
 (12, '', None, None, None, {}, (None,
 r'''import a, b, c  # comment'''),
 r'''**DEL**''',
-r'''**ValueError('cannot delete all Import.names without fix_import_self=False')**'''),
+r'''**ValueError('cannot delete all Import.names without norm_self=False')**'''),
 
-(13, '', None, None, None, {'fix_import_self': False, '_verify_self': False}, (None,
+(13, '', None, None, None, {'norm_self': False, '_verify_self': False}, (None,
 r'''import a, b, c  # comment'''),
 r'''**DEL**''',
 r'''import   # comment''',
@@ -18579,9 +18579,9 @@ Module - ROOT 0,0..1,11
 (12, '', None, None, None, {}, (None,
 r'''from mod import a, b, c  # comment'''),
 r'''**DEL**''',
-r'''**ValueError('cannot delete all ImportFrom.names without fix_import_self=False')**'''),
+r'''**ValueError('cannot delete all ImportFrom.names without norm_self=False')**'''),
 
-(13, '', None, None, None, {'fix_import_self': False, '_verify_self': False}, (None,
+(13, '', None, None, None, {'norm_self': False, '_verify_self': False}, (None,
 r'''from mod import a, b, c  # comment'''),
 r'''**DEL**''',
 r'''from mod import   # comment''', r'''
@@ -18921,9 +18921,9 @@ Module - ROOT 0,0..1,12
 (12, '', None, None, None, {}, (None,
 r'''from mod import (a, b, c)  # comment'''),
 r'''**DEL**''',
-r'''**ValueError('cannot delete all ImportFrom.names without fix_import_self=False')**'''),
+r'''**ValueError('cannot delete all ImportFrom.names without norm_self=False')**'''),
 
-(13, '', None, None, None, {'fix_import_self': False, '_verify_self': False}, (None,
+(13, '', None, None, None, {'norm_self': False, '_verify_self': False}, (None,
 r'''from mod import (a, b, c)  # comment'''),
 r'''**DEL**''',
 r'''from mod import ()  # comment''', r'''
@@ -19506,9 +19506,9 @@ Module - ROOT 0,0..1,11
 (23, 'body[0]', None, None, None, {}, ('exec',
 r'''global a, b, c  # comment'''),
 r'''**DEL**''',
-r'''**ValueError('cannot delete all Global.names without fix_global_self=False')**'''),
+r'''**ValueError('cannot delete all Global.names without norm_self=False')**'''),
 
-(24, 'body[0]', None, None, None, {'fix_global_self': False, '_verify_self': False}, ('exec',
+(24, 'body[0]', None, None, None, {'norm_self': False, '_verify_self': False}, ('exec',
 r'''global a, b, c  # comment'''),
 r'''**DEL**''',
 r'''global   # comment''', r'''
@@ -19931,9 +19931,9 @@ Module - ROOT 0,0..1,11
 (23, 'body[0]', None, None, None, {}, ('exec',
 r'''nonlocal a, b, c  # comment'''),
 r'''**DEL**''',
-r'''**ValueError('cannot delete all Nonlocal.names without fix_global_self=False')**'''),
+r'''**ValueError('cannot delete all Nonlocal.names without norm_self=False')**'''),
 
-(24, 'body[0]', None, None, None, {'fix_global_self': False, '_verify_self': False}, ('exec',
+(24, 'body[0]', None, None, None, {'norm_self': False, '_verify_self': False}, ('exec',
 r'''nonlocal a, b, c  # comment'''),
 r'''**DEL**''',
 r'''nonlocal   # comment''', r'''

@@ -130,25 +130,20 @@ __all__ = [
 class _ThreadLocal(threading.local):
     def __init__(self):
         self.options = {
-            'pars':             'auto', # True | False | 'auto'
-            'raw':              False,  # True | False | 'auto'
-            'trivia':           True,   # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line'), True means ('block', 'line')
-            'elif_':            True,   # True | False
-            'docstr':           True,   # True | False | 'strict'
-            'pars_walrus':      False,  # True | False
-            'pars_arglike':     True,   # True | False
-            'fix_set_get':      True,   # True | False | 'star' | 'call' | 'tuple'
-            'fix_set_put':      True,   # True | False | 'star' | 'call' | 'both'
-            'fix_set_self':     True,   # True | False | 'star' | 'call'
-            'fix_delete_self':  True,   # True | False
-            'fix_assign_self':  True,   # True | False
-            'fix_with_self':    True,   # True | False
-            'fix_import_self':  True,   # True | False
-            'fix_global_self':  True,   # True | False
-            'fix_matchor_get':  True,   # True | False | 'strict'
-            'fix_matchor_put':  True,   # True | False | 'strict'
-            'fix_matchor_self': True,   # True | False | 'strict'
-            'pep8space':        True,   # True | False | 1
+            'raw':              False,   # True | False | 'auto'
+            'trivia':           True,    # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line'), True means ('block', 'line')
+            'elif_':            True,    # True | False
+            'pep8space':        True,    # True | False | 1
+            'docstr':           True,    # True | False | 'strict'
+            'pars':             'auto',  # True | False | 'auto'
+            'pars_walrus':      True,    # True | False
+            'pars_arglike':     True,    # True | False
+            'norm':             True,    # True | False
+            'norm_self':        None,    # True | False | None
+            'norm_get':         None,    # True | False | None
+            'norm_put':         None,    # True | False | None
+            'set_norm':        'both',   # False | 'star' | 'call' | 'both'
+            'matchor_norm':    'value',  # False | 'value' | 'strict'
         }
 
 
@@ -1021,25 +1016,20 @@ class FST:
         >>> from pprint import pp
 
         >>> pp(FST.get_options())
-        {'pars': 'auto',
-         'raw': False,
+        {'raw': False,
          'trivia': True,
          'elif_': True,
+         'pep8space': True,
          'docstr': True,
-         'pars_walrus': False,
+         'pars': 'auto',
+         'pars_walrus': True,
          'pars_arglike': True,
-         'fix_set_get': True,
-         'fix_set_put': True,
-         'fix_set_self': True,
-         'fix_delete_self': True,
-         'fix_assign_self': True,
-         'fix_with_self': True,
-         'fix_import_self': True,
-         'fix_global_self': True,
-         'fix_matchor_get': True,
-         'fix_matchor_put': True,
-         'fix_matchor_self': True,
-         'pep8space': True}
+         'norm': True,
+         'norm_self': None,
+         'norm_get': None,
+         'norm_put': None,
+         'set_norm': 'both',
+         'matchor_norm': 'value'}
         ```
         """
 
@@ -1122,16 +1112,6 @@ class FST:
         when the context manager exits.
 
         **Options:**
-        - `pars`: How parentheses are handled, can be `False`, `True` or `'auto'`. This is for individual element
-            operations, slice operations ignore this as parentheses usually cannot be removed or may need to be added to
-            keep the slices usable. Raw puts generally do not have parentheses added or removed automatically, except
-            maybe removed according to this from the destination node if putting to a node instead of a pure location.
-            - `False`: Parentheses are not MODIFIED, doesn't mean remove all parentheses. Not copied with nodes or
-                removed on put from source or destination. Using incorrectly can result in invalid trees.
-            - `True`: Parentheses are copied with nodes, added to copies if needed and not present, removed from
-                destination on put if not needed there (but not source).
-            - `'auto'`: Same as `True` except they are not returned with a copy and possibly removed from source
-                on put if not needed (removed from destination first if needed and present on both).
         - `raw`: When to do raw source operations. This may result in more nodes changed than just the targeted one(s).
             - `False`: Do not do raw source operations.
             - `True`: Only do raw source operations.
@@ -1159,11 +1139,25 @@ class FST:
             - `False`: Always put as a standalone `If` statement.
             - `True`: If putting a single `If` statement to an `orelse` field of a parent `If` statement then
                 put it as an `elif`.
+        - `pep8space`: Preceding and trailing empty lines for function and class definitions.
+            - `False`: No empty lines.
+            - `True`: Two empty lines at module scope and one empty line in other scopes.
+            - `1`: One empty line in all scopes.
         - `docstr`: Which docstrings are indentable / dedentable.
             - `False`: None.
             - `True`: All `Expr` multiline strings (as they serve no coding purpose).
             - `'strict'`: Only multiline strings in expected docstring positions (functions and classes).
-        - `pars_walrus`: Whether to parenthesize top level cuy / copied `NamedExpr` nodes or not (only if `pars` is also
+        - `pars`: How parentheses are handled, can be `False`, `True` or `'auto'`. This is for individual element
+            operations, slice operations ignore this as parentheses usually cannot be removed or may need to be added to
+            keep the slices usable. Raw puts generally do not have parentheses added or removed automatically, except
+            maybe removed according to this from the destination node if putting to a node instead of a pure location.
+            - `False`: Parentheses are not MODIFIED, doesn't mean remove all parentheses. Not copied with nodes or
+                removed on put from source or destination. Using incorrectly can result in invalid trees.
+            - `True`: Parentheses are copied with nodes, added to copies if needed and not present, removed from
+                destination on put if not needed there (but not source).
+            - `'auto'`: Same as `True` except they are not returned with a copy and possibly removed from source
+                on put if not needed (removed from destination first if needed and present on both).
+        - `pars_walrus`: Whether to parenthesize top level cut / copied `NamedExpr` nodes or not (only if `pars` is also
             not `False`).
             - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions.
             - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions.
@@ -1171,60 +1165,42 @@ class FST:
             either as single element or as part of a slice (only if `pars` is also not `False`).
             - `False`: Do not parenthesize cut / copied argument-like expressions.
             - `True`: Parenthesize cut / copied argument-like expressions.
-        - `fix_set_get`: Empty set to return when getting an empty slice from a set.
-            - `False`: Return an invalid `Set` with zero elements and curlies as delimiters (would parse to a `Dict`).
-            - `True`: Same as `'star'`.
-            - `'star'`: Starred sequence `{*()}`.
-            - `'call'`: `set()` call.
-            - `'tuple'`: Empty tuple `()`.
-        - `fix_set_put`: What to consider an empty set that is being put (not the target of the put). This applies to
-            puts to any types which take a sequence as a source and not just puts to a `Set`, so puts to `Tuple` and
-            `List` as well.
-            - `False`: Nothing is considered an empty set, `set()` is not considered a sequence and a `{*()}` set is put
-                verbatim.
-            - `True`: Same a `'both'`.
-            - `'star'`: Only starred sequences `{*()}`, `{*[]}` and `{*{}}` are considered empty.
-            - `'call'`: Only `set()` call is considered empty.
-            - `'both'`: `set()` call and `{*()}`, `{*[]}` and `{*{}}` starred sequences are considered empty.
-        - `fix_set_self`: What to leave for an empty set if a `Set` gets everything cut or deleted from it. This is also
-            what gets put if you put an invalid empty set with `one=True`.
-            - `False`: Leave an invalid `Set` with zero elements and curlies as delimiters (would parse to a `Dict`).
-            - `True`: Same as `'star'`.
-            - `'star'`: Starred sequence `{*()}`.
-            - `'call'`: `set()` call.
-        - `fix_delete_self`: How to handle operations which would leave a `Delete` with zero `targets`.
-            - `False`: Allow, this will leave an invalid `Delete` which should have the `targets` replaced as soon as
-                possible.
-            - `True`: Don't allow, error.
-        - `fix_assign_self`: How to handle operations which would leave an `Assign` with zero `targets`.
-            - `False`: Allow, this will leave an invalid `Assign` which should have the `targets` replaced as soon as
-                possible.
-            - `True`: Don't allow, error.
-        - `fix_import_self`: How to handle operations which would leave an `Import` with zero `names`.
-            - `False`: Allow, this will leave an invalid `Import` which should have the `names` replaced as soon as
-                possible.
-            - `True`: Don't allow, error.
-        - `fix_global_self`: How to handle operations which would leave a `Global` or 'Nonlocal' with zero `names`.
-            - `False`: Allow, this will leave an invalid `Global` or `Nonlocal` which should have the `names` replaced
-                as soon as possible.
-            - `True`: Don't allow, error.
-        - `fix_matchor_get`: How to handle zero or length 1 slice gets from a `MatchOr`. Zero-length `MatchOr`s, or any
-            zero-length source spans really can be problematic, try not to hang on to them for too long.
-            - `False`: Return invalid one and zero-length `MatchOr`.
-            - `True`: Error on zero-length get, return single pattern element (not `MatchOr`) for length 1.
-            - `'strict'`: Only allow get length 2+ `MatchOr`, error otherwise.
-        - `fix_matchor_put`: How to handle slice puts to `MatchOr`
-            - `False`: Accept one or zero-length `MatchOr`, do not accept single element pattern as length 1.
-            - `True`: Accept one or zero-length `MatchOr` as well as single element pattern as length 1.
-        - `fix_matchor_self`: How to handle zero or length 1 `MatchOr` objects when a cut or del reduces them to this
-            length.
-            - `False`: Leave one or zero-length `MatchOr`.
-            - `True`: Error on zero-length, convert to single element if length 1.
-            - `'strict'`: Only allow length 2+ `MatchOr`, error otherwise.
-        - `pep8space`: Preceding and trailing empty lines for function and class definitions.
-            - `False`: No empty lines.
-            - `True`: Two empty lines at module scope and one empty line in other scopes.
-            - `1`: One empty line in all scopes.
+        - `norm`: Default normalize option for puts, gets and self target. Determines how `AST`s which would otherwise
+            be invalid because of an operation are handled. Mostly how zero or sometimes one-length elements which
+            normally cannot be zero or one length are left / put / returned, e.g. zero-length `Set`. This option can be
+            overridden individually for the three cases of `norm_self` (target), `norm_get` (return from a `get()`) and
+            `norm_put` (what is being put if it is invalid or an alternate representation).
+            - `False`: Allow the `AST` to go to an unsupported length or state and become invalid. A `Set` will result
+                in empty curlies which reparse to a `Dict`. A `MatchOr` can go to 1 or zero length. Other `AST` types
+                can also go to zero length. Useful for easier editing.
+            - `True`: Do not allow the `AST` to go to an unsupported length or state. Can result in an exception being
+                thrown no alternative exists or an alternate representation being used or accepted, e.g. A `Set` which
+                results in zero length gets converted to `{*()}`.
+            - `str`: In some cases an alternate representation can be specified instead of just `True`, e.g. `'call'`
+                for `Set` operations.
+        - `norm_self`: Override for `norm` which only applies to a target `self` on which an operation is being carried
+            out. If this is `None` then `norm` is used.
+        - `norm_get`: Override for `norm` which only applies to the return value from a `get()` operation. If this is
+            `None` then `norm` is used.
+        - `norm_put`: Override for `norm` which only applies to the value to put for a `put()` operation. If this is
+            `None` then `norm` is used.
+        - `set_norm`: The alternate representation for an empty `Set` normalization by `norm`. This can also be set to
+            `False` to disable normalization for all operations on a `Set` (unless one of the `norm` options is set to
+            one of these string modes).
+            - `'star'`: Starred sequence `{*()}` returned, this or other starred sequences `{*[]}` and `{*{}}` accepted
+                to mean empty set on put operations.
+            - `'call'`: `set()` call returned and recognized as empty.
+            - `'both'`: Both `'star'` and `'call'` recognized on put as empty, `'start'` used for return from get
+                operation and normalization of `self`.
+            - `False`: No `Set` normalization regardless of `norm` or `norm_*` options, just leave or return an invalid
+                `Set` object.
+        - `matchor_norm`: The possible alternate representation for `MatchOr` nodes with length 1. Length zero is always
+            error unless `False`. This can also be set to `False` to disable normalization for all operations on a
+            `MatchOr` (unless one of the `norm` options is set to one of these string modes).
+            - `value`: Convert to single element `pattern` if length 1.
+            - `strict`: Error on length 1 as well as length zero.
+            - `False`: No `MatchOr` normalization regardless of `norm` or `norm_*` options, just leave or return an
+                invalid `MatchOr` object.
 
         **Note:** `pars` behavior:
         ```
@@ -1237,10 +1213,10 @@ class FST:
         ```
 
         **Note:** `trivia` text suffix behavior:
-        - `'+[#]'` Copy and delete an extra number of lines after any comments specified by the `#`. If no number is
+        - `'+[#]'` On copy and delete an extra number of lines after any comments specified by the `#`. If no number is
             specified and just a `'+'` then all empty lines will be copied / deleted.
-        - `'-[#]'` Delete, but not copy, an extra number of lines after any comments specified by the `#`. If  no number
-            is specified and just a `'-'` then all empty lines will be deleted.
+        - `'-[#]'` On delete but not copy, an extra number of lines after any comments specified by the `#`. If no
+            number is specified and just a `'-'` then all empty lines will be deleted.
 
         **Examples:**
         ```py

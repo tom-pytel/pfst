@@ -665,10 +665,10 @@ def _is_special_slice(self: fst.FST) -> bool:
     >>> FST('{1}').get_slice(0, 1)._is_special_slice()
     False
 
-    >>> FST('{1}').get_slice(0, 0, fix_set_get=False)._is_special_slice()
+    >>> FST('{1}').get_slice(0, 0, norm_get=False)._is_special_slice()
     True
 
-    >>> FST('a | b | c', pattern).get_slice(0, 0, fix_matchor_get=False)._is_special_slice()
+    >>> FST('a | b | c', pattern).get_slice(0, 0, norm_get=False)._is_special_slice()
     True
 
     >>> FST('a = b = c').get_slice(0, 2, 'targets')._is_special_slice()
@@ -809,9 +809,9 @@ def _is_atom(self: fst.FST, *, pars: bool = True, always_enclosed: bool = False)
             return 'unenclosable' if isinstance(ast.value, (str, bytes)) else True
 
         elif isinstance(ast, (Call, JoinedStr, TemplateStr, Constant, Attribute, Subscript,
-                                MatchClass, MatchStar,
-                                cmpop, comprehension, arguments,
-                                arg, keyword, alias, withitem, type_param)):
+                              MatchClass, MatchStar,
+                              cmpop, comprehension, arguments,
+                              arg, keyword, alias, withitem, type_param)):
             return 'unenclosable'
 
     elif isinstance(ast, (comprehension, arguments, arg, keyword, alias, type_param)):  # can't be parenthesized

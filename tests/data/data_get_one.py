@@ -300,11 +300,11 @@ r'''Name 'ret' Load - ROOT 0,0..0,3'''),
 
 (26, '', 0, False, 'targets', {}, (Delete,
 r'''del var'''),
-r'''**ValueError('cannot delete all Delete.targets without fix_delete_self=False')**''',
+r'''**ValueError('cannot delete all Delete.targets without norm_self=False')**''',
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
-(27, '', 0, False, 'targets', {'_verify_self': False, 'fix_delete_self': False}, (Delete,
+(27, '', 0, False, 'targets', {'_verify_self': False, 'norm_self': False}, (Delete,
 r'''del var'''),
 r'''del ''',
 r'''Delete - ROOT 0,0..0,4''',
@@ -313,11 +313,11 @@ r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
 (28, '', 0, False, 'targets', {}, (Assign,
 r'''var = val'''),
-r'''**ValueError('cannot cut all Assign.targets without fix_assign_self=False')**''',
+r'''**ValueError('cannot cut all Assign.targets without norm_self=False')**''',
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
-(29, '', 0, False, 'targets', {'_verify_self': False, 'fix_assign_self': False}, (Assign,
+(29, '', 0, False, 'targets', {'_verify_self': False, 'norm_self': False}, (Assign,
 r'''var = val'''),
 r''' val''', r'''
 Assign - ROOT 0,0..0,4
@@ -541,7 +541,7 @@ r'''Continue - ROOT 0,0..0,8'''),
 
 (55, '', 0, False, 'items', {'_verify_self': False}, (With,
 r'''with var: pass'''),
-r'''**ValueError('cannot delete all With.items without fix_with_self=False')**''',
+r'''**ValueError('cannot delete all With.items without norm_self=False')**''',
 r'''var''', r'''
 withitem - ROOT 0,0..0,3
   .context_expr Name 'var' Load - 0,0..0,3
@@ -560,7 +560,7 @@ r'''Pass - ROOT 0,0..0,4'''),
 
 (57, '', 0, False, 'items', {'_verify_self': False}, (AsyncWith,
 r'''async with var: pass'''),
-r'''**ValueError('cannot delete all AsyncWith.items without fix_with_self=False')**''',
+r'''**ValueError('cannot delete all AsyncWith.items without norm_self=False')**''',
 r'''var''', r'''
 withitem - ROOT 0,0..0,3
   .context_expr Name 'var' Load - 0,0..0,3
@@ -802,13 +802,13 @@ r'''**None**'''),
 
 (76, '', 0, False, 'names', {}, (Import,
 r'''import mod'''),
-r'''**ValueError('cannot delete all Import.names without fix_import_self=False')**''',
+r'''**ValueError('cannot delete all Import.names without norm_self=False')**''',
 r'''mod''', r'''
 alias - ROOT 0,0..0,3
   .name 'mod'
 '''),
 
-(77, '', 0, False, 'names', {'_verify_self': False, 'fix_import_self': False}, (Import,
+(77, '', 0, False, 'names', {'_verify_self': False, 'norm_self': False}, (Import,
 r'''import mod'''),
 r'''import ''',
 r'''Import - ROOT 0,0..0,7''',
@@ -848,13 +848,13 @@ r'''<class 'str'>'''),
 
 (81, '', 0, False, 'names', {}, (ImportFrom,
 r'''from mod import name'''),
-r'''**ValueError('cannot delete all ImportFrom.names without fix_import_self=False')**''',
+r'''**ValueError('cannot delete all ImportFrom.names without norm_self=False')**''',
 r'''name''', r'''
 alias - ROOT 0,0..0,4
   .name 'name'
 '''),
 
-(82, '', 0, False, 'names', {'_verify_self': False, 'fix_import_self': False}, (ImportFrom,
+(82, '', 0, False, 'names', {'_verify_self': False, 'norm_self': False}, (ImportFrom,
 r'''from mod import name'''),
 r'''from mod import ''', r'''
 ImportFrom - ROOT 0,0..0,16
@@ -874,11 +874,11 @@ r'''<class 'int'>'''),
 
 (84, '', 0, False, 'names', {}, (Global,
 r'''global var'''),
-r'''**ValueError('cannot delete all Global.names without fix_global_self=False')**''',
+r'''**ValueError('cannot delete all Global.names without norm_self=False')**''',
 "\n'var'\n",
 r'''<class 'str'>'''),
 
-(85, '', 0, False, 'names', {'_verify_self': False, 'fix_global_self': False}, (Global,
+(85, '', 0, False, 'names', {'_verify_self': False, 'norm_self': False}, (Global,
 r'''global var'''),
 r'''global ''',
 r'''Global - ROOT 0,0..0,7''',
@@ -887,11 +887,11 @@ r'''<class 'str'>'''),
 
 (86, '', 0, False, 'names', {}, (Nonlocal,
 r'''nonlocal var'''),
-r'''**ValueError('cannot delete all Nonlocal.names without fix_global_self=False')**''',
+r'''**ValueError('cannot delete all Nonlocal.names without norm_self=False')**''',
 "\n'var'\n",
 r'''<class 'str'>'''),
 
-(87, '', 0, False, 'names', {'_verify_self': False, 'fix_global_self': False}, (Nonlocal,
+(87, '', 0, False, 'names', {'_verify_self': False, 'norm_self': False}, (Nonlocal,
 r'''nonlocal var'''),
 r'''nonlocal ''',
 r'''Nonlocal - ROOT 0,0..0,9''',

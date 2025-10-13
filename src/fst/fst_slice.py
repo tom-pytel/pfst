@@ -105,7 +105,12 @@ from .locations import (
 )
 
 from .fst_core import _ParamsOffset
-from .fst_misc import new_empty_tuple, new_empty_set_star, new_empty_set_call, new_empty_set_curlies, get_trivia_params
+
+from .fst_misc import (
+    new_empty_tuple, new_empty_set_star, new_empty_set_call, new_empty_set_curlies, get_trivia_params,
+    get_option_overridable,
+)
+
 from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish
 
 _re_close_delim_or_space_or_end = re.compile(r'[)}\s\]:]|$')  # this is a very special set of terminations which are considered to not need a space before if a slice put ends with a non-space right before them
@@ -513,6 +518,13 @@ def _shorter_str(a: str, b: str) -> str:
     return a if len(a) < len(b) else b
 
 
+def _get_norm_option(override_option: str, norm_option: str, options: Mapping[str, Any]) -> bool | str:
+    if (set_norm := get_option_overridable('norm', override_option, options)) is not True:
+        return set_norm
+
+    return fst.FST.get_option(norm_option, options)
+
+
 def _bound_Delete_targets(self: fst.FST, start: int = 0, loc_first: fst.FST | None = None) -> tuple[int, int, int, int]:
     body = self.a.targets
 
@@ -560,13 +572,13 @@ def _maybe_fix_Assign_target0(self: fst.FST) -> None:
             self._put_src(None, self_ln, self_col, t0_ln, t0_col, False)
 
 
-def _maybe_fix_Set(self: fst.FST, empty: bool | Literal['star', 'call'] = True) -> None:
+def _maybe_fix_Set(self: fst.FST, norm: bool | str = True) -> None:
     # assert isinstance(self.a, Set)
 
-    if empty and not (a := self.a).elts:
-        if empty == 'call':
+    if norm and not (a := self.a).elts:
+        if norm == 'call':
             ast, src = new_empty_set_call(a.lineno, a.col_offset, as_fst=False)
-        else:  # True, 'star'
+        else:  # True, 'star', 'both'
             ast, src = new_empty_set_star(a.lineno, a.col_offset, as_fst=False)
 
         ln, col, end_ln, end_col = self.loc
@@ -627,9 +639,9 @@ def _update_loc_up_parents(self: fst.FST, lineno: int, col_offset: int, end_line
         self._touchall(True, True, False)
 
 
-def _maybe_fix_MatchOr(self: fst.FST, fix1: bool = False) -> None:
+def _maybe_fix_MatchOr(self: fst.FST, norm: bool | str = False) -> None:
     """Maybe fix a `MatchOr` object that may have the wrong location. Will do nothing to a zero-length `MatchOr` and
-    will convert a length 1 `MatchOr` to just its single element if `fix1=True`.
+    will convert a length 1 `MatchOr` to just its single element if `norm` is true.
 
     **WARNING!** This is currently expecting to be called from slice operations with specific conditions, not guaranteed
     will work on any-old `MatchOr`.
@@ -649,7 +661,7 @@ def _maybe_fix_MatchOr(self: fst.FST, fix1: bool = False) -> None:
 
             did_par = True
 
-    if (len_patterns := len(patterns)) == 1 and fix1:
+    if (len_patterns := len(patterns)) == 1 and norm:
         pat0 = patterns[0]
 
         del patterns[0]
@@ -971,7 +983,7 @@ def _get_slice_List_elts(self: fst.FST, start: int | Literal['end'] | None, stop
 
 
 def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-                         options: Mapping[str, Any]) -> fst.FST:
+                        options: Mapping[str, Any]) -> fst.FST:
     """A `Set` slice is just a normal `Set` when it has elements. In the case of a zero-length `Set` it may be
     represented as `{*()}` or `set()` or as an invalid `AST` `Set` with curlies but no elements, according to
     options."""
@@ -980,11 +992,12 @@ def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop:
     start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
+        get_norm = _get_norm_option('norm_get', 'set_norm', options)
+
         return (
-            new_empty_set_curlies(from_=self) if not (fix_set_get := fst.FST.get_option('fix_set_get', options)) else
-            new_empty_set_call(from_=self) if fix_set_get == 'call' else
-            new_empty_tuple(from_=self) if fix_set_get == 'tuple' else
-            new_empty_set_star(from_=self)  # True, 'star' default
+            new_empty_set_curlies(from_=self) if not get_norm else
+            new_empty_set_call(from_=self) if get_norm == 'call' else
+            new_empty_set_star(from_=self)  # True, 'star', 'both'
         )
 
     locs = _locs_and_bound_get(self, start, stop, body, body, 1)
@@ -995,7 +1008,7 @@ def _get_slice_Set_elts(self: fst.FST, start: int | Literal['end'] | None, stop:
                           options, 'elts', '{', '}', ',', 0, 0)
 
     if cut:
-        _maybe_fix_Set(self, fst.FST.get_option('fix_set_self', options))
+        _maybe_fix_Set(self, _get_norm_option('norm_self', 'set_norm', options))
 
     return fst_
 
@@ -1012,8 +1025,8 @@ def _get_slice_Delete_targets(self: fst.FST, start: int | Literal['end'] | None,
     if not len_slice:
         return new_empty_tuple(from_=self)
 
-    if cut and len_slice == len_body and fst.FST.get_option('fix_delete_self', options):
-        raise ValueError("cannot cut all Delete.targets without fix_delete_self=False")
+    if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+        raise ValueError("cannot cut all Delete.targets without norm_self=False")
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
@@ -1053,8 +1066,8 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
         return fst.FST(_slice_Assign_targets(targets=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''],
                        from_=self)
 
-    if cut and len_slice == len_body and fst.FST.get_option('fix_assign_self', options):
-        raise ValueError("cannot cut all Assign.targets without fix_assign_self=False")
+    if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+        raise ValueError("cannot cut all Assign.targets without norm_self=False")
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
@@ -1084,8 +1097,8 @@ def _get_slice_With_AsyncWith_items(self: fst.FST, start: int | Literal['end'] |
         return fst.FST(_slice_withitems(items=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''],
                        from_=self)
 
-    if cut and len_slice == len_body and fst.FST.get_option('fix_with_self', options):
-        raise ValueError(f'cannot cut all {ast.__class__.__name__}.items without fix_with_self=False')
+    if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+        raise ValueError(f'cannot cut all {ast.__class__.__name__}.items without norm_self=False')
 
     loc_first = body[start].f.loc
     loc_last = loc_first if stop == start else body[stop - 1].f.loc
@@ -1132,8 +1145,8 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
         return fst.FST(_slice_aliases(names=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''],
                        from_=self)
 
-    if cut and len_slice == len_body and fst.FST.get_option('fix_import_self', options):
-        raise ValueError('cannot cut all Import.names without fix_import_self=False')
+    if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+        raise ValueError('cannot cut all Import.names without norm_self=False')
 
     loc_first = body[start].f.loc
     loc_last = loc_first if stop == start else body[stop - 1].f.loc
@@ -1171,8 +1184,8 @@ def _get_slice_ImportFrom_names(self: fst.FST, start: int | Literal['end'] | Non
         return fst.FST(_slice_aliases(names=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''],
                        from_=self)
 
-    if cut and len_slice == len_body and fst.FST.get_option('fix_import_self', options):
-        raise ValueError('cannot cut all ImportFrom.names without fix_import_self=False')
+    if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+        raise ValueError('cannot cut all ImportFrom.names without norm_self=False')
 
     loc_first = body[start].f.loc
     loc_last = loc_first if stop == start else body[stop - 1].f.loc
@@ -1216,8 +1229,8 @@ def _get_slice_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] 
     if not len_slice:
         return new_empty_tuple(from_=self)
 
-    if cut and len_slice == len_body and fst.FST.get_option('fix_global_self', options):
-        raise ValueError(f'cannot cut all {ast.__class__.__name__}.names without fix_global_self=False')
+    if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+        raise ValueError(f'cannot cut all {ast.__class__.__name__}.names without norm_self=False')
 
     ln, end_col, bound_end_ln, bound_end_col = self.loc
 
@@ -1449,26 +1462,26 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
     len_body = len(body := self.a.patterns)
     start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
-    fix_matchor_get = fst.FST.get_option('fix_matchor_get', options)
-    fix_matchor_self = fst.FST.get_option('fix_matchor_self', options)
+    get_norm = _get_norm_option('norm_get', 'matchor_norm', options)
+    self_norm = _get_norm_option('norm_self', 'matchor_norm', options)
 
     if not len_slice:
-        if fix_matchor_get:
-            raise ValueError("cannot get empty slice from MatchOr without fix_matchor_get=False")
+        if get_norm:
+            raise ValueError("cannot get empty slice from MatchOr without norm_get=False")
 
         return fst.FST(MatchOr(patterns=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
                        [''], from_=self)
 
-    if len_slice == 1 and fix_matchor_get == 'strict':
-        raise ValueError("cannot get length 1 slice from MatchOr with fix_matchor_get='strict'")
+    if len_slice == 1 and get_norm == 'strict':
+        raise ValueError("cannot get length 1 slice from MatchOr with norm_get='strict'")
 
     if cut:
         if not (len_left := len_body - len_slice):
-            if fix_matchor_self:
-                raise ValueError("cannot cut all MatchOr.patterns without fix_matchor_self=False")
+            if self_norm:
+                raise ValueError("cannot cut all MatchOr.patterns without norm_self=False")
 
-        elif len_left == 1 and fix_matchor_self == 'strict':
-            raise ValueError("cannot cut MatchOr to length 1 with fix_matchor_self='strict'")
+        elif len_left == 1 and self_norm == 'strict':
+            raise ValueError("cannot cut MatchOr to length 1 with norm_self='strict'")
 
     locs = _locs_and_bound_get(self, start, stop, body, body, 0)
     asts = _cut_or_copy_asts(start, stop, 'patterns', cut, body)
@@ -1477,10 +1490,10 @@ def _get_slice_MatchOr_patterns(self: fst.FST, start: int | Literal['end'] | Non
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
                           options, 'patterns', '', '', '|', False, False)
 
-    _maybe_fix_MatchOr(fst_, bool(fix_matchor_get))
+    _maybe_fix_MatchOr(fst_, bool(get_norm))
 
     if cut:
-        _maybe_fix_MatchOr(self, bool(fix_matchor_self))
+        _maybe_fix_MatchOr(self, bool(self_norm))
 
     return fst_
 
@@ -2199,6 +2212,8 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: Map
     if not one and non_seq_str_as_one and not isinstance(ast_, (Tuple, List, Set)) and isinstance(code, (str, list)):  # this exists as a convenience for allowing doing `Delete.targets = 'target'` (without trailing comma if string source)
         one = True
 
+    put_norm = _get_norm_option('norm_put', 'set_norm', options)
+
     if one:
         if (is_par := fst_._is_parenthesized_tuple()) is not None:
             fst_._maybe_add_singleton_tuple_comma(is_par)  # specifically for lone '*starred' without comma from slices, even though those can't be gotten alone organically
@@ -2207,8 +2222,7 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: Map
                 fst_._delimit_node()
 
         elif isinstance(ast_, Set):
-            if (empty := fst.FST.get_option('fix_set_self', options)):  # putting an invalid empty Set as one, make it valid according to options
-                _maybe_fix_Set(fst_, empty)
+            _maybe_fix_Set(fst_, put_norm)
 
         elif isinstance(ast_, NamedExpr):  # this needs to be parenthesized if being put to unparenthesized tuple
             if not fst_.pars().n and self._is_parenthesized_tuple() is False:
@@ -2223,9 +2237,9 @@ def _code_to_slice_seq(self: fst.FST, code: Code | None, one: bool, options: Map
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
-    if fix_set_put := fst.FST.get_option('fix_set_put', options):
-        if (fst_._is_empty_set_star() if fix_set_put == 'star' else
-            fst_._is_empty_set_call() if fix_set_put == 'call' else
+    if put_norm:
+        if (fst_._is_empty_set_star() if put_norm == 'star' else
+            fst_._is_empty_set_call() if put_norm == 'call' else
             fst_._is_empty_set_star() or fst_._is_empty_set_call()  # True or 'both'
         ):
             return None
@@ -2439,9 +2453,9 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
             fst_._parenthesize_grouping()
 
     else:
-        if not one and not fst.FST.get_option('fix_matchor_put', options):
+        if not one and not _get_norm_option('norm_put', 'matchor_norm', options):
             raise NodeError(f"slice being assigned to a MatchOr "
-                            f"must be a MatchOr with fix_matchor_put=False, not a {ast_.__class__.__name__}",
+                            f"must be a MatchOr with norm_put=False, not a {ast_.__class__.__name__}",
                             rawable=True)
 
         if isinstance(ast_, MatchAs):
@@ -2618,7 +2632,7 @@ def _put_slice_Set_elts(self: fst.FST, code: Code | None, start: int | Literal['
     _put_slice_seq_and_asts(self, start, stop, 'elts', body, fst_, 'elts', None,
                             bound_ln, bound_col, bound_end_ln, bound_end_col, ',', None, options)
 
-    _maybe_fix_Set(self, fst.FST.get_option('fix_set_self', options))
+    _maybe_fix_Set(self, _get_norm_option('norm_self', 'set_norm', options))
 
 
 def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
@@ -2637,8 +2651,8 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
         if not len_slice:
             return
 
-        if len_slice == len_body and fst.FST.get_option('fix_delete_self', options):
-            raise ValueError("cannot delete all Delete.targets without fix_delete_self=False")
+        if len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+            raise ValueError("cannot delete all Delete.targets without norm_self=False")
 
     _validate_put_seq(self, fst_, 'Delete', check_target=is_valid_del_target)
 
@@ -2670,8 +2684,8 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
         if not len_slice:
             return
 
-        if len_slice == len_body and fst.FST.get_option('fix_assign_self', options):
-            raise ValueError("cannot cut all Assign.targets without fix_assign_self=False")
+        if len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+            raise ValueError("cannot cut all Assign.targets without norm_self=False")
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bound_Assign_targets(self, start)
 
@@ -2693,8 +2707,8 @@ def _put_slice_With_AsyncWith_items(self: fst.FST, code: Code | None, start: int
         if not len_slice:
             return
 
-        if len_slice == len_body and fst.FST.get_option('fix_with_self', options):
-            raise ValueError(f'cannot delete all {ast.__class__.__name__}.items without fix_with_self=False')
+        if len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+            raise ValueError(f'cannot delete all {ast.__class__.__name__}.items without norm_self=False')
 
     pars = loc_With_items_pars(self)  # may be pars or may be where pars would go from just after `with` to end of block header `:`
     pars_ln, pars_col, pars_end_ln, pars_end_col = pars
@@ -2727,8 +2741,8 @@ def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Liter
         if not len_slice:
             return
 
-        if len_slice == len_body and fst.FST.get_option('fix_import_self', options):
-            raise ValueError('cannot delete all Import.names without fix_import_self=False')
+        if len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+            raise ValueError('cannot delete all Import.names without norm_self=False')
 
     _, _, bound_end_ln, bound_end_col = self.loc
 
@@ -2765,8 +2779,8 @@ def _put_slice_ImportFrom_names(self: fst.FST, code: Code | None, start: int | L
         if not len_slice:
             return
 
-        if len_slice == len_body and fst.FST.get_option('fix_import_self', options):
-            raise ValueError('cannot delete all ImportFrom.names without fix_import_self=False')
+        if len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+            raise ValueError('cannot delete all ImportFrom.names without norm_self=False')
 
     else:
         if put_star := fst_.a.names[0].name == '*':  # if putting star then it must overwrite everything
@@ -2823,8 +2837,8 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
         if not len_slice:
             return
 
-        if len_slice == len_body and fst.FST.get_option('fix_global_self', options):
-            raise ValueError(f'cannot delete all {ast.__class__.__name__}.names without fix_global_self=False')
+        if len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+            raise ValueError(f'cannot delete all {ast.__class__.__name__}.names without norm_self=False')
 
     else:
         n = 0
@@ -3077,18 +3091,18 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
     len_body = len(body := self.a.patterns)
     start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
-    fix_matchor_self = fst.FST.get_option('fix_matchor_self', options)
+    self_norm = _get_norm_option('norm_self', 'matchor_norm', options)
 
     if not fst_:
         if not len_slice:
             return
 
         if not (len_left := len_body - len_slice):
-            if fix_matchor_self:
-                raise ValueError("cannot delete all MatchOr.patterns without fix_matchor_self=False")
+            if self_norm:
+                raise ValueError("cannot delete all MatchOr.patterns without norm_self=False")
 
-        elif len_left == 1 and fix_matchor_self == 'strict':
-            raise ValueError("cannot del MatchOr to length 1 with fix_matchor_self='strict'")
+        elif len_left == 1 and self_norm == 'strict':
+            raise ValueError("cannot del MatchOr to length 1 with matchor_norm='strict'")
 
         end_params = _put_slice_seq_begin(self, start, stop, None, None, None, 0, *self.loc,
                                           options, 'patterns', None, '|', False)
@@ -3098,8 +3112,8 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
     else:
         len_fst_body = len(fst_body := fst_.a.patterns)
 
-        if (len_body - len_slice + len_fst_body) == 1 and fix_matchor_self == 'strict':
-            raise NodeError("cannot put MatchOr to length 1 with fix_matchor_self='strict'")
+        if (len_body - len_slice + len_fst_body) == 1 and self_norm == 'strict':
+            raise NodeError("cannot put MatchOr to length 1 with matchor_norm='strict'")
 
         end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body, *self.loc,
                                           options, 'patterns', None, '|', False)
@@ -3108,7 +3122,7 @@ def _put_slice_MatchOr_patterns(self: fst.FST, code: Code | None, start: int | L
 
     _put_slice_seq_end(self, end_params)
 
-    _maybe_fix_MatchOr(self, fix_matchor_self)
+    _maybe_fix_MatchOr(self, self_norm)
 
 
 def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,

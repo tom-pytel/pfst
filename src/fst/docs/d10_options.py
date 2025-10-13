@@ -78,10 +78,10 @@ def f():
 ```
 
 ```py
->>> print(FST('{a, b}').put_slice('{*()}', 1, 1, fix_set_put=False).src)
+>>> print(FST('{a, b}').put_slice('{*()}', 1, 1, norm_put=False).src)
 {a, *(), b}
 
->>> print(FST('{a, b}').put_slice('{*()}', 1, 1, fix_set_put=True).src)
+>>> print(FST('{a, b}').put_slice('{*()}', 1, 1, norm_put=True).src)
 {a, b}
 ```
 
@@ -137,25 +137,20 @@ Or get all global options.
 >>> from pprint import pp
 
 >>> pp(FST.get_options())
-{'pars': 'auto',
- 'raw': False,
+{'raw': False,
  'trivia': True,
  'elif_': True,
+ 'pep8space': True,
  'docstr': True,
- 'pars_walrus': False,
+ 'pars': 'auto',
+ 'pars_walrus': True,
  'pars_arglike': True,
- 'fix_set_get': True,
- 'fix_set_put': True,
- 'fix_set_self': True,
- 'fix_delete_self': True,
- 'fix_assign_self': True,
- 'fix_with_self': True,
- 'fix_import_self': True,
- 'fix_global_self': True,
- 'fix_matchor_get': True,
- 'fix_matchor_put': True,
- 'fix_matchor_self': True,
- 'pep8space': True}
+ 'norm': True,
+ 'norm_self': None,
+ 'norm_get': None,
+ 'norm_put': None,
+ 'set_norm': 'both',
+ 'matchor_norm': 'value'}
 ```
 
 ## Special

@@ -141,14 +141,14 @@ standalone by Python.
 >>> g = f.elts[1].copy()
 
 >>> print(g.src)
-b := c
+(b := c)
 
 >>> f = FST('a = (b := c)')
 
 >>> g = f.value.copy()
 
 >>> print(g.src)
-b := c
+(b := c)
 ```
 
 This can be changed with the `pars_walrus` option (which also needs `pars` to not be `False`).
@@ -156,10 +156,17 @@ This can be changed with the `pars_walrus` option (which also needs `pars` to no
 ```py
 >>> f = FST('a, b := c, d')
 
->>> g = f.elts[1].copy(pars_walrus=True)
+>>> g = f.elts[1].copy(pars_walrus=False)
 
 >>> print(g.src)
-(b := c)
+b := c
+
+>>> f = FST('a = (b := c)')
+
+>>> g = f.value.copy(pars_walrus=False)
+
+>>> print(g.src)
+b := c
 ```
 
 Argument-like expressions which may not be valid outside their normal context (`Call.args`, `ClassDef.bases` or a
