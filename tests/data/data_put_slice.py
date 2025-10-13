@@ -15972,6 +15972,167 @@ Module - ROOT 0,0..5,0
 '''),
 ],
 
+'stmtish_trailing_semicolon': [  # ................................................................................
+
+(0, '', 1, 2, None, {}, (None, r'''
+a = 1;
+b = 2;
+'''), (None,
+r'''c = 3;'''), r'''
+a = 1;
+c = 3;
+''', r'''
+a = 1;
+c = 3
+''', r'''
+Module - ROOT 0,0..1,6
+  .body[2]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'a' Store - 0,0..0,1
+    .value Constant 1 - 0,4..0,5
+  1] Assign - 1,0..1,5
+    .targets[1]
+    0] Name 'c' Store - 1,0..1,1
+    .value Constant 3 - 1,4..1,5
+'''),
+
+(1, '', 1, 2, None, {}, (None, r'''
+a = 1;
+b = 2
+'''), (None,
+r'''c = 3;'''), r'''
+a = 1;
+c = 3;
+''', r'''
+a = 1;
+c = 3
+''', r'''
+Module - ROOT 0,0..1,6
+  .body[2]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'a' Store - 0,0..0,1
+    .value Constant 1 - 0,4..0,5
+  1] Assign - 1,0..1,5
+    .targets[1]
+    0] Name 'c' Store - 1,0..1,1
+    .value Constant 3 - 1,4..1,5
+'''),
+
+(2, '', 1, 2, None, {}, (None, r'''
+if 1:
+    a = 1;
+    b = 2;
+'''), (None,
+r'''c = 3;'''), r'''
+if 1:
+    a = 1;
+    c = 3;
+''', r'''
+if 1:
+    a = 1;
+    c = 3
+''', r'''
+If - ROOT 0,0..2,10
+  .test Constant 1 - 0,3..0,4
+  .body[2]
+  0] Assign - 1,4..1,9
+    .targets[1]
+    0] Name 'a' Store - 1,4..1,5
+    .value Constant 1 - 1,8..1,9
+  1] Assign - 2,4..2,9
+    .targets[1]
+    0] Name 'c' Store - 2,4..2,5
+    .value Constant 3 - 2,8..2,9
+'''),
+
+(3, '', 1, 2, None, {}, (None, r'''
+if 1:
+    a = 1;
+    b = 2
+'''), (None,
+r'''c = 3;'''), r'''
+if 1:
+    a = 1;
+    c = 3;
+''', r'''
+if 1:
+    a = 1;
+    c = 3
+''', r'''
+If - ROOT 0,0..2,10
+  .test Constant 1 - 0,3..0,4
+  .body[2]
+  0] Assign - 1,4..1,9
+    .targets[1]
+    0] Name 'a' Store - 1,4..1,5
+    .value Constant 1 - 1,8..1,9
+  1] Assign - 2,4..2,9
+    .targets[1]
+    0] Name 'c' Store - 2,4..2,5
+    .value Constant 3 - 2,8..2,9
+'''),
+
+(4, 'body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+    a = 1;
+    b = 2;
+'''), (None,
+r'''c = 3;'''), r'''
+if 1:
+    a = 1;
+    c = 3;
+''', r'''
+if 1:
+    a = 1;
+    c = 3
+''', r'''
+Module - ROOT 0,0..2,10
+  .body[1]
+  0] If - 0,0..2,10
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Assign - 1,4..1,9
+      .targets[1]
+      0] Name 'a' Store - 1,4..1,5
+      .value Constant 1 - 1,8..1,9
+    1] Assign - 2,4..2,9
+      .targets[1]
+      0] Name 'c' Store - 2,4..2,5
+      .value Constant 3 - 2,8..2,9
+'''),
+
+(5, 'body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+    a = 1;
+    b = 2
+'''), (None,
+r'''c = 3;'''), r'''
+if 1:
+    a = 1;
+    c = 3;
+''', r'''
+if 1:
+    a = 1;
+    c = 3
+''', r'''
+Module - ROOT 0,0..2,10
+  .body[1]
+  0] If - 0,0..2,10
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Assign - 1,4..1,9
+      .targets[1]
+      0] Name 'a' Store - 1,4..1,5
+      .value Constant 1 - 1,8..1,9
+    1] Assign - 2,4..2,9
+      .targets[1]
+      0] Name 'c' Store - 2,4..2,5
+      .value Constant 3 - 2,8..2,9
+'''),
+],
+
 'Delete_targets': [  # ................................................................................
 
 (0, 'body[0]', None, None, None, {}, ('exec',

@@ -736,68 +736,43 @@ _src_edit = SrcEdit()
 # ----------------------------------------------------------------------------------------------------------------------
 # original slice_old
 
-def _set_end_pos(self: fst.FST, end_lineno: int, end_col_offset: int, self_: bool = True) -> None:
-    """Walk up parent chain (starting at `self`) setting `.end_lineno` and `.end_col_offset` to `end_lineno` and
-    `end_col_offset` if self is last child of parent. Initial `self` is corrected always. Used for correcting
-    parents after an `offset()` which removed or modified last child statements of block parents, or other nodes.
+def _set_end_pos_w_maybe_trailing_semicolon(self: fst.FST, end_ln: int, end_col: int) -> None:
+    """Set end position of last child `self` and parents after checking for trailing semicolon after given position."""
 
-    **Parameters:**
-    - `(end_lineno, end_col_offset)` - Position which should be the new end.
-    - `self_`: Whether to set for `self` or not, if not then will skip `self` and set for parents.
+    lines = self.root._lines
 
-    """
+    if (frag := next_frag(lines, end_ln, end_col, len(lines) - 1, 0x7fffffffffffffff)) and frag.src.startswith(';'):
+        end_ln, end_col, _ = frag
+        end_col += 1  # just past the semicolon
 
-    while True:
-        if not self_:
-            self_ = True
-
-        else:
-            if hasattr(a := self.a, 'end_lineno'):  # because of ASTs which locations
-                a.end_lineno = end_lineno
-                a.end_col_offset = end_col_offset
-
-            self._touch()  # even if AST doesn't have location, it may be calculated and needs to be cleared out anyway
-
-        if not (parent := self.parent) or self.next():  # self is not parent.last_child():
-            break
-
-        self = parent
+    self._set_end_pos(end_ln + 1, lines[end_ln].c2b(end_col))
 
 
-def _set_block_end_from_last_child(self: fst.FST, bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
-                                   ) -> None:
+def _set_end_pos_after_del(self: fst.FST, bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int) -> None:
     """Fix end location of a block statement after its last child (position-wise, not last existing child) has been
     cut or deleted. Will set end position of `self` and any parents who `self` is the last child of to the new last
-    child if it is past the block-open colon, otherwise set end at just past the block-open colon.
+    position if it is past the block-open colon, otherwise set end at just past the block-open colon.
 
     **Parameters:**
-    - `bound_ln`, `bound_col`: Position before block colon but after and pre-colon `AST` node.
-    - `bound_end_ln`, `bound_end_col`: Position after block colon, probably start of deleted region, only used if
+    - `(bound_ln, bound_col)`: Position before block colon but after and pre-colon `AST` node.
+    - `(bound_end_ln, bound_end_col)`: Position after block colon, probably start of deleted region, only used if
         new last child is before colon.
     """
 
-    end_lineno = None
+    if ((last_child := self.last_child()) and  # easy enough when we have a new last child
+        last_child.pfield.name in ('body', 'orelse', 'handlers', 'finalbody', 'cases')  # but make sure its past the block open colon
+    ):
+        _, _, end_ln, end_col = last_child.loc
 
-    if last_child := self.last_child():  # easy enough when we have a new last child
-        if last_child.pfield.name in ('body', 'orelse', 'handlers', 'finalbody', 'cases'):  # but make sure its past the block open colon
-            end_lineno = last_child.end_lineno
-            end_col_offset = last_child.end_col_offset
+    elif end := prev_find(self.root._lines, bound_ln, bound_col, bound_end_ln, bound_end_col, ':'):  # find first preceding block colon, its there unless first opened block in module
+        end_ln, end_col = end
+        end_col += 1  # just past the colon
 
-    if end_lineno is None:
-        lines = self.root._lines
+    else:
+        end_ln = bound_ln
+        end_col = bound_col
 
-        if end := prev_find(lines, bound_ln, bound_col, bound_end_ln, bound_end_col, ':'):  # find first preceding block colon, its there unless first opened block in module
-            end_ln, end_col = end
-            end_col += 1  # just past the colon
-
-        else:
-            end_ln = bound_ln
-            end_col = bound_col
-
-        end_lineno = end_ln + 1
-        end_col_offset = lines[end_ln].c2b(end_col)
-
-    _set_end_pos(self, end_lineno, end_col_offset)
+    _set_end_pos_w_maybe_trailing_semicolon(self, end_ln, end_col)
 
 
 def _maybe_fix_elif(self: fst.FST) -> None:
@@ -820,7 +795,7 @@ def _elif_to_else_if(self: fst.FST, docstr: bool | Literal['strict'] = True) -> 
     self._indent_lns(skip=0, docstr=docstr)
 
     if not self.next():  # last child?
-        _set_end_pos(self, (a := self.a).end_lineno, a.end_col_offset, False)
+        self.parent._set_end_pos((a := self.a).end_lineno, a.end_col_offset)  # we're an elif, there is definitely a parent
 
     ln, col, _, _ = self.loc
 
@@ -912,7 +887,7 @@ def _get_slice_stmtish_old(self: fst.FST, start: int | Literal['end'] | None, st
                                         docstr_strict_exclude=asts[0] if asts and start else None)  # if slice gotten doesn't start at 0 then first element cannot be a 'strict' docstr even though it is first in the new slice
 
     if cut and is_last_child:  # correct for removed last child nodes or last nodes past the block open colon
-        _set_block_end_from_last_child(self, block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
+        _set_end_pos_after_del(self, block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
 
     if len(asts) == 1 and isinstance(a := asts[0], If):
         _maybe_fix_elif(a.f)
@@ -1166,10 +1141,13 @@ def _put_slice_stmtish_old(self: fst.FST, code: Code | None, start: int | Litera
         body[i].f.pfield = astfield(field, i)
 
     if is_last_child:  # correct parent for modified / removed last child nodes
-        if not put_fst:
-            _set_block_end_from_last_child(self, block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
-        elif put_body:  # could be a slice put with no statements
-            _set_end_pos(self, (last_child := self.last_child()).end_lineno, last_child.end_col_offset)
+        if not put_fst or not put_body:  # could be a slice put with no statements
+            _set_end_pos_after_del(self, block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
+
+        else:
+            _, _, end_ln, end_col = put_body[-1].f.loc
+
+            _set_end_pos_w_maybe_trailing_semicolon(self, end_ln, end_col)
 
     return put_fst_end_nl
 

@@ -4371,6 +4371,7 @@ class FST:
         _unmake_fst_parents,
         _set_ast,
         _set_ctx,
+        _set_end_pos,
 
         _is_special_slice,
         _is_parenthesizable,

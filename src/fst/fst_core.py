@@ -629,6 +629,30 @@ def _set_ctx(self: fst.FST, ctx: type[expr_context]) -> None:
                 stack.append(a.value)
 
 
+def _set_end_pos(self: fst.FST, end_lineno: int, end_col_offset: int,
+                 old_end_lineno: int = -1, old_end_col_offset: int = -1) -> None:
+    """Wall up parent chain setting end position. If `old_end_lineno` and `old_end_col_offset` are provided then will
+    only set end position as long as it matches this old position. This is used in case a child has trailing trivia
+    which should be included in the parent, like a semicolon."""
+
+    check_old_pos = old_end_lineno != -1
+
+    while True:
+        if (eco := getattr(a := self.a, 'end_col_offset', None)) is not None:  # maybe an empty `arguments`,
+            if check_old_pos and (eco != old_end_col_offset or a.end_lineno != old_end_lineno):  # if doesn't end at expected location then we are done
+                break
+
+            a.end_lineno = end_lineno
+            a.end_col_offset = end_col_offset
+
+        self._touch()  # even if AST doesn't have location it may be calculated and needs to be cleared out anyway
+
+        if not (parent := self.parent) or self.next():
+            break
+
+        self = parent
+
+
 def _is_special_slice(self: fst.FST) -> bool:
     """Whether `self` is an instance of our own SPECIAL SLICE format and not a valid python structure. For example
     a `Set` or `MatchOr` with zero elements or our own `_special_slice_*` `AST` class.

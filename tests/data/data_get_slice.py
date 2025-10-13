@@ -6354,6 +6354,104 @@ Module - ROOT 0,0..0,5
 '''),
 ],
 
+'stmtish_trailing_semicolon': [  # ................................................................................
+
+(0, '', 1, 2, None, {}, (None, r'''
+a = 1;
+b = 2;
+'''),
+r'''a = 1;''', r'''
+Module - ROOT 0,0..0,6
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'a' Store - 0,0..0,1
+    .value Constant 1 - 0,4..0,5
+''',
+r'''b = 2''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'b' Store - 0,0..0,1
+    .value Constant 2 - 0,4..0,5
+'''),
+
+(1, '', 1, 2, None, {}, (None, r'''
+if 1:
+    a = 1;
+    b = 2;
+'''), r'''
+if 1:
+    a = 1;
+''', r'''
+If - ROOT 0,0..1,10
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+  0] Assign - 1,4..1,9
+    .targets[1]
+    0] Name 'a' Store - 1,4..1,5
+    .value Constant 1 - 1,8..1,9
+''',
+r'''b = 2''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'b' Store - 0,0..0,1
+    .value Constant 2 - 0,4..0,5
+'''),
+
+(2, 'body[0]', 1, 2, None, {}, ('exec', r'''
+if 1:
+    a = 1;
+    b = 2;
+'''), r'''
+if 1:
+    a = 1;
+''', r'''
+Module - ROOT 0,0..1,10
+  .body[1]
+  0] If - 0,0..1,10
+    .test Constant 1 - 0,3..0,4
+    .body[1]
+    0] Assign - 1,4..1,9
+      .targets[1]
+      0] Name 'a' Store - 1,4..1,5
+      .value Constant 1 - 1,8..1,9
+''',
+r'''b = 2''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'b' Store - 0,0..0,1
+    .value Constant 2 - 0,4..0,5
+'''),
+
+(3, 'body[0]', 1, 2, None, {}, ('exec',
+r'''if 1: a = 1; b = 2;'''),
+r'''if 1: a = 1''', r'''
+Module - ROOT 0,0..0,11
+  .body[1]
+  0] If - 0,0..0,11
+    .test Constant 1 - 0,3..0,4
+    .body[1]
+    0] Assign - 0,6..0,11
+      .targets[1]
+      0] Name 'a' Store - 0,6..0,7
+      .value Constant 1 - 0,10..0,11
+''',
+r'''b = 2''', r'''
+Module - ROOT 0,0..0,5
+  .body[1]
+  0] Assign - 0,0..0,5
+    .targets[1]
+    0] Name 'b' Store - 0,0..0,1
+    .value Constant 2 - 0,4..0,5
+'''),
+],
+
 'Tuple_elts': [  # ................................................................................
 
 (0, 'slice', None, None, None, {'_ver': 11}, (None,
