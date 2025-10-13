@@ -778,8 +778,6 @@ def code_as__expr_arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, 
     **WARNING!** The `Tuple` that is returned may be an invalid python `Tuple` as it may be an empty `Tuple` `AST` with
     source having no parentheses or an unparenthesized `Tuple` with incorrect start and stop locations. Meant as a
     convenience for putting slices.
-
-    **Note:** This parse mode is NOT included as a string parse `Mode`.
     """
 
     if isinstance(code, Tuple):  # strip parentheses

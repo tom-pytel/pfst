@@ -1168,7 +1168,7 @@ def _put_slice_stmtish_old(self: fst.FST, code: Code | None, start: int | Litera
     if is_last_child:  # correct parent for modified / removed last child nodes
         if not put_fst:
             _set_block_end_from_last_child(self, block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
-        elif put_body:
+        elif put_body:  # could be a slice put with no statements
             _set_end_pos(self, (last_child := self.last_child()).end_lineno, last_child.end_col_offset)
 
     return put_fst_end_nl

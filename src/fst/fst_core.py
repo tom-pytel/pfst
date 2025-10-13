@@ -629,51 +629,6 @@ def _set_ctx(self: fst.FST, ctx: type[expr_context]) -> None:
                 stack.append(a.value)
 
 
-def _get_parse_mode(self: fst.FST) -> str | type[AST] | None:
-    r"""Determine the parse mode for this node. This is the extended parse mode as per `Mode`, not the `ast.parse()`
-    mode. Returns a mode which is guaranteed to reparse this element (which may be a SPECIAL SLICE) to an exact copy
-    of itself. This mode is not guaranteed to be the same as was used to create the `FST`, just guaranteed to be
-    able to recreate it. Mostly it just returns the `AST` type, but in cases where that won't parse to this `FST` it
-    will return a string mode. This is a quick just a check, doesn't verify everything.
-
-    **Returns:**
-    - `str`: One of the special text specifiers. Will be returned for most slices and special cases like an `*a`
-        inside a `.slice` which is actually a `Tuple`, or a SPECIAL SLICE like `Assign.targets.copy()`.
-    - `type[AST]`: Will be returned for nodes which can be reparsed correctly using only the `AST` type.
-    - `None`: If invalid or cannot be determined.
-
-    **Examples:**
-    ```py
-    >>> FST('a | b')._get_parse_mode()
-    <class 'ast.BinOp'>
-
-    >>> FST('a | b', 'pattern')._get_parse_mode()
-    <class 'ast.MatchOr'>
-
-    >>> FST('except ValueError: pass\nexcept: pass', 'ExceptHandlers')._get_parse_mode()
-    'ExceptHandlers'
-    ```
-    """
-
-    ast = self.a
-
-    if mode := get_special_parse_mode(ast):
-        return mode
-
-    # now we check the cases that need source code
-
-    if isinstance(ast, Tuple) and (elts := ast.elts):
-        if isinstance(e0 := elts[0], Starred):
-            if len(elts) == 1:
-                _, _, ln, col = e0.f.loc
-                _, _, end_ln, end_col = self.loc
-
-                if not next_find(self.root._lines, ln, col, end_ln, end_col, ','):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
-                    return 'expr_slice'
-
-    return ast.__class__  # otherwise regular parse by AST type is valid
-
-
 def _is_special_slice(self: fst.FST) -> bool:
     """Whether `self` is an instance of our own SPECIAL SLICE format and not a valid python structure. For example
     a `Set` or `MatchOr` with zero elements or our own `_special_slice_*` `AST` class.
@@ -1202,11 +1157,11 @@ def _is_enclosed_in_parents(self: fst.FST, field: str | None = None) -> bool:
 
 def _loc_key(self: fst.FST, idx: int, pars: bool = False, body: list[AST] | None = None, body2: list[AST] | None = None,
              ) -> fstloc:
-    """Return location of dictionary key even if it is `**` specified by a `None`. Optionally return the location of the
-    grouping parentheses if key actually present. Can also be used to get the location (parenthesized or not) from any
-    list of `AST`s which is not a `Dict.keys` if an explicit `body` and / or `body2` is passed in, e.g. will safely get
-    location of `MatchMapping` keys. Will just return parenthesized or not location from any `body` assuming there are
-    no `None`s to force a check from `body2` and a search back from that for a `**`.
+    """Return location of node which may be a dictionary key even if it is `**` specified by a `None`. Optionally return
+    the location of the grouping parentheses if key actually present. Can also be used to get the location
+    (parenthesized or not) from any list of `AST`s which is not a `Dict.keys` if an explicit `body` and / or `body2` is
+    passed in, e.g. will safely get location of `MatchMapping` keys. Will just return parenthesized or not location from
+    any `body` assuming there are no `None`s to force a check from `body2` and a search back from that for a `**`.
 
     **WARNING:** `idx` must be positive.
     """
@@ -1227,6 +1182,192 @@ def _loc_key(self: fst.FST, idx: int, pars: bool = False, body: list[AST] | None
     ln, col = prev_find(self.root._lines, ln, col, val_ln, val_col, '**')  # '**' must be there
 
     return fstloc(ln, col, ln, col + 2)
+
+
+def _get_parse_mode(self: fst.FST) -> str | type[AST] | None:
+    r"""Determine the parse mode for this node. This is the extended parse mode as per `Mode`, not the `ast.parse()`
+    mode. Returns a mode which is guaranteed to reparse this element (which may be a SPECIAL SLICE) to an exact copy
+    of itself. This mode is not guaranteed to be the same as was used to create the `FST`, just guaranteed to be
+    able to recreate it. Mostly it just returns the `AST` type, but in cases where that won't parse to this `FST` it
+    will return a string mode. This is a quick just a check, doesn't verify everything.
+
+    **Returns:**
+    - `str`: One of the special text specifiers. Will be returned for most slices and special cases like an `*a`
+        inside a `.slice` which is actually a `Tuple`, or a SPECIAL SLICE like `Assign.targets.copy()`.
+    - `type[AST]`: Will be returned for nodes which can be reparsed correctly using only the `AST` type.
+    - `None`: If invalid or cannot be determined.
+
+    **Examples:**
+    ```py
+    >>> FST('a | b')._get_parse_mode()
+    <class 'ast.BinOp'>
+
+    >>> FST('a | b', 'pattern')._get_parse_mode()
+    <class 'ast.MatchOr'>
+
+    >>> FST('except ValueError: pass\nexcept: pass', 'ExceptHandlers')._get_parse_mode()
+    'ExceptHandlers'
+    ```
+    """
+
+    ast = self.a
+
+    if mode := get_special_parse_mode(ast):
+        return mode
+
+    # now we check the cases that need source code
+
+    if isinstance(ast, Tuple) and (elts := ast.elts):
+        if isinstance(e0 := elts[0], Starred):
+            if len(elts) == 1:
+                _, _, ln, col = e0.f.loc
+                _, _, end_ln, end_col = self.loc
+
+                if not next_find(self.root._lines, ln, col, end_ln, end_col, ','):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
+                    return 'expr_slice'
+
+    return ast.__class__  # otherwise regular parse by AST type is valid
+
+
+def _get_indent(self: fst.FST) -> str:
+    r"""Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
+    continuation or on same line as block header. If indentation is impossible to determine because is solo
+    statement on same line as parent block then the current tree default indentation is added to the parent block
+    indentation and returned.
+
+    **Returns:**
+    - `str`: Entire indentation string for the block this node lives in (not just a single level).
+
+    **Examples:**
+    ```py
+    >>> FST('i = 1')._get_indent()
+    ''
+
+    >>> FST('if 1:\n  i = 1').body[0]._get_indent()
+    '  '
+
+    >>> FST('if 1: i = 1').body[0]._get_indent()
+    '    '
+
+    >>> FST('if 1: i = 1; j = 2').body[1]._get_indent()
+    '    '
+
+    >>> FST('if 1:\n  i = 1\n  j = 2').body[1]._get_indent()
+    '  '
+
+    >>> FST('if 2:\n    if 1:\n      i = 1\n      j = 2').body[0].body[1]._get_indent()
+    '      '
+
+    >>> FST('if 1:\n\\\n  i = 1').body[0]._get_indent()
+    '  '
+
+    >>> FST('if 1:\n \\\n  i = 1').body[0]._get_indent()
+    ' '
+    ```
+    """
+
+    while (parent := self.parent) and not isinstance(self.a, ASTS_STMTISH):
+        self = parent
+
+    root = self.root
+    lines = root._lines
+    indent = ''
+
+    while parent:
+        f = getattr(parent.a, self.pfield.name)[0].f
+        ln, col, _, _ = f.loc
+        prev = f.prev(True)  # there may not be one ("try" at start of module)
+        prev_end_ln = prev.end_ln if prev else -2  # -2 so it never hits it
+        good_line = ''
+
+        while ln > prev_end_ln and re_empty_line.match(line_start := lines[ln], 0, col):
+            end_col = 0 if (preceding_ln := ln - 1) != prev_end_ln else prev.end_col
+
+            if not ln or not re_line_continuation.match((l := lines[preceding_ln]), end_col):
+                return (line_start[:col] if col else good_line) + indent
+
+            if col:  # we do this to skip backslashes at the start of line as those are just a noop
+                good_line = line_start[:col]
+
+            ln = preceding_ln
+            col = len(l) - 1  # was line continuation so last char is '\' and rest should be empty
+
+        indent += root.indent
+        self = parent
+        parent = self.parent
+
+    return indent
+
+
+def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal['strict'] = True,
+                        docstr_strict_exclude: AST | None = None) -> set[int]:
+    r"""Get set of indentable lines within this node.
+
+    **Parameters:**
+    - `skip`: The number of lines to skip from the start of this node. Useful for skipping the first line for edit
+        operations (since the first line is normally joined to an existing line on add or copied directly from start
+        on cut).
+    - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
+        multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
+        in standard docstring locations are indentable.
+    - `docstr_strict_exclude`: Special parameter for excluding non-first elements from `'strict'` `docstr` check even if
+        they come first in a slice. Should be the `Expr` of the docstring if excluding.
+
+    **Returns:**
+    - `set[int]`: Set of line numbers (zero based) which are sytactically indentable.
+
+    **Examples:**
+    ```py
+    >>> from fst import *
+
+    >>> FST("def f():\n    i = 1\n    j = 2")._get_indentable_lns()
+    {0, 1, 2}
+
+    >>> FST("def f():\n  '''docstr'''\n  i = 1\n  j = 2")._get_indentable_lns()
+    {0, 1, 2, 3}
+
+    >>> FST("def f():\n  '''doc\nstr'''\n  i = 1\n  j = 2")._get_indentable_lns()
+    {0, 1, 2, 3, 4}
+
+    >>> FST("def f():\n  '''doc\nstr'''\n  i = 1\n  j = 2")._get_indentable_lns(skip=2)
+    {2, 3, 4}
+
+    >>> FST("def f():\n  '''doc\nstr'''\n  i = 1\n  j = 2")._get_indentable_lns(docstr=False)
+    {0, 1, 3, 4}
+
+    >>> FST("def f():\n  '''doc\nstr'''\n  s = '''multi\nline\nstring'''\n  i = 1")._get_indentable_lns()
+    {0, 1, 2, 3, 6}
+    ```
+    """
+
+    strict = docstr == 'strict'
+    lines = self.root._lines
+    lns = set(range(skip, len(lines))) if self.is_root else set(range(self.bln + skip, self.bend_ln + 1))  # start with all lines indentable and remove multiline strings which are not docstrings
+
+    while (parent := self.parent) and not isinstance(self.a, ASTS_STMTISH):
+        self = parent
+
+    for f in (walking := self.walk(False)):  # find multiline strings and exclude their unindentable lines
+        if f.bend_ln == f.bln:  # everything on one line, don't need to recurse
+            walking.send(False)
+
+        elif isinstance(a := f.a, Constant):  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
+            if (not docstr or
+                not isinstance(a.value, str) or  # could be bytes
+                not ((parent := f.parent) and
+                     isinstance(parent.a, Expr) and
+                     (not strict or ((pparent := parent.parent) and
+                                     parent.pfield == ('body', 0) and
+                                     isinstance(pparent.a, ASTS_SCOPE_NAMED_OR_MOD) and
+                                     parent.a is not docstr_strict_exclude)))):
+                lns.difference_update(_multiline_str_continuation_lns(lines, *f.loc))
+
+        elif isinstance(a, (JoinedStr, TemplateStr)):
+            lns.difference_update(_multiline_ftstr_continuation_lns(lines, *f.loc))
+
+            walking.send(False)  # skip everything inside regardless, because it is evil
+
+    return lns
 
 
 def _modifying(self: fst.FST, field: str | Literal[False] = False, raw: bool = False) -> _Modifying:
@@ -1420,147 +1561,6 @@ def _offset(self: fst.FST, ln: int, col: int, dln: int, dcol_offset: int,
     self._touchall(True, False, False)
 
     return self
-
-
-def _get_indent(self: fst.FST) -> str:
-    r"""Determine proper indentation of node at `stmt` (or other similar) level at or above `self`. Even if it is a
-    continuation or on same line as block header. If indentation is impossible to determine because is solo
-    statement on same line as parent block then the current tree default indentation is added to the parent block
-    indentation and returned.
-
-    **Returns:**
-    - `str`: Entire indentation string for the block this node lives in (not just a single level).
-
-    **Examples:**
-    ```py
-    >>> FST('i = 1')._get_indent()
-    ''
-
-    >>> FST('if 1:\n  i = 1').body[0]._get_indent()
-    '  '
-
-    >>> FST('if 1: i = 1').body[0]._get_indent()
-    '    '
-
-    >>> FST('if 1: i = 1; j = 2').body[1]._get_indent()
-    '    '
-
-    >>> FST('if 1:\n  i = 1\n  j = 2').body[1]._get_indent()
-    '  '
-
-    >>> FST('if 2:\n    if 1:\n      i = 1\n      j = 2').body[0].body[1]._get_indent()
-    '      '
-
-    >>> FST('if 1:\n\\\n  i = 1').body[0]._get_indent()
-    '  '
-
-    >>> FST('if 1:\n \\\n  i = 1').body[0]._get_indent()
-    ' '
-    ```
-    """
-
-    while (parent := self.parent) and not isinstance(self.a, ASTS_STMTISH):
-        self = parent
-
-    root = self.root
-    lines = root._lines
-    indent = ''
-
-    while parent:
-        f = getattr(parent.a, self.pfield.name)[0].f
-        ln, col, _, _ = f.loc
-        prev = f.prev(True)  # there may not be one ("try" at start of module)
-        prev_end_ln = prev.end_ln if prev else -2  # -2 so it never hits it
-        good_line = ''
-
-        while ln > prev_end_ln and re_empty_line.match(line_start := lines[ln], 0, col):
-            end_col = 0 if (preceding_ln := ln - 1) != prev_end_ln else prev.end_col
-
-            if not ln or not re_line_continuation.match((l := lines[preceding_ln]), end_col):
-                return (line_start[:col] if col else good_line) + indent
-
-            if col:  # we do this to skip backslashes at the start of line as those are just a noop
-                good_line = line_start[:col]
-
-            ln = preceding_ln
-            col = len(l) - 1  # was line continuation so last char is '\' and rest should be empty
-
-        indent += root.indent
-        self = parent
-        parent = self.parent
-
-    return indent
-
-
-def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal['strict'] = True,
-                        docstr_strict_exclude: AST | None = None) -> set[int]:
-    r"""Get set of indentable lines within this node.
-
-    **Parameters:**
-    - `skip`: The number of lines to skip from the start of this node. Useful for skipping the first line for edit
-        operations (since the first line is normally joined to an existing line on add or copied directly from start
-        on cut).
-    - `docstr`: How to treat multiline string docstring lines. `False` means not indentable, `True` means all `Expr`
-        multiline strings are indentable (as they serve no coding purpose). `'strict'` means only multiline strings
-        in standard docstring locations are indentable.
-    - `docstr_strict_exclude`: Special parameter for excluding non-first elements from `'strict'` `docstr` check even if
-        they come first in a slice. Should be the `Expr` of the docstring if excluding.
-
-    **Returns:**
-    - `set[int]`: Set of line numbers (zero based) which are sytactically indentable.
-
-    **Examples:**
-    ```py
-    >>> from fst import *
-
-    >>> FST("def f():\n    i = 1\n    j = 2")._get_indentable_lns()
-    {0, 1, 2}
-
-    >>> FST("def f():\n  '''docstr'''\n  i = 1\n  j = 2")._get_indentable_lns()
-    {0, 1, 2, 3}
-
-    >>> FST("def f():\n  '''doc\nstr'''\n  i = 1\n  j = 2")._get_indentable_lns()
-    {0, 1, 2, 3, 4}
-
-    >>> FST("def f():\n  '''doc\nstr'''\n  i = 1\n  j = 2")._get_indentable_lns(skip=2)
-    {2, 3, 4}
-
-    >>> FST("def f():\n  '''doc\nstr'''\n  i = 1\n  j = 2")._get_indentable_lns(docstr=False)
-    {0, 1, 3, 4}
-
-    >>> FST("def f():\n  '''doc\nstr'''\n  s = '''multi\nline\nstring'''\n  i = 1")._get_indentable_lns()
-    {0, 1, 2, 3, 6}
-    ```
-    """
-
-    strict = docstr == 'strict'
-    lines = self.root._lines
-    lns = set(range(skip, len(lines))) if self.is_root else set(range(self.bln + skip, self.bend_ln + 1))  # start with all lines indentable and remove multiline strings which are not docstrings
-
-    while (parent := self.parent) and not isinstance(self.a, ASTS_STMTISH):
-        self = parent
-
-    for f in (walking := self.walk(False)):  # find multiline strings and exclude their unindentable lines
-        if f.bend_ln == f.bln:  # everything on one line, don't need to recurse
-            walking.send(False)
-
-        elif isinstance(a := f.a, Constant):  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
-            if (not docstr or
-                not isinstance(a.value, str) or  # could be bytes
-                not ((parent := f.parent) and
-                     isinstance(parent.a, Expr) and
-                     (not strict or ((pparent := parent.parent) and
-                                     parent.pfield == ('body', 0) and
-                                     isinstance(pparent.a, ASTS_SCOPE_NAMED_OR_MOD) and
-                                     parent.a is not docstr_strict_exclude)))):
-                lns.difference_update(_multiline_str_continuation_lns(lines, *f.loc))
-
-        elif isinstance(a, (JoinedStr, TemplateStr)):
-            lns.difference_update(_multiline_ftstr_continuation_lns(lines, *f.loc))
-
-            walking.send(False)  # skip everything inside regardless, because it is evil
-
-    return lns
 
 
 def _offset_lns(self: fst.FST, lns: set[int] | dict[int, int], dcol_offset: int | None = None) -> None:

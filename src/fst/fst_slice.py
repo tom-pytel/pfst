@@ -555,7 +555,7 @@ def _maybe_set_end_pos(self: fst.FST, end_lineno: int, end_col_offset: int,
     which might have been offset by trailing trivia."""
 
     while True:
-        if (co := getattr(a := self.a, 'end_col_offset', None)) is not None:  # because of ASTs which locations
+        if (co := getattr(a := self.a, 'end_col_offset', None)) is not None:  # maybe an empty `arguments`,
             if co != old_end_col_offset or a.end_lineno != old_end_lineno:  # if parent doesn't end at expected location then we are done
                 break
 
