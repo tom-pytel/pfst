@@ -283,7 +283,7 @@ class TestFSTPut(unittest.TestCase):
         from support import _unfmt_code, _make_fst
 
         for key, case, rest in DATA_PUT_ONE.iterate(True):
-            if case.options.get('raw') is False or rest[1].startswith('**'):
+            if case.options.get('raw') is False or case.options.get('raw') is not None or rest[1].startswith('**'):
                 continue
 
             options = {**case.options, 'raw': True}

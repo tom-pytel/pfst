@@ -51,11 +51,14 @@ def _fmt_code(code: str | tuple[ParseMode, str]) -> tuple[str, bool]:  # -> (src
         return f"r{q}{code}{q}", False
 
 
-def _make_fst(code: str | tuple[str, str], attr: str = '') -> FST:
+def _make_fst(code: str | tuple[str, str], attr: str = '', attr2: str | None = None) -> FST:
     mode, src = (None, code) if isinstance(code, str) else code
     root      = FST(src, mode)
 
-    return eval(f'f.{attr}', {'f': root}) if attr else root
+    if attr2 is None:
+        return eval(f'f{"." * bool(attr) + attr}', {'f': root})
+    else:
+        return eval(f'f{"." * bool(attr) + attr}, f{"." * bool(attr2) + attr2}', {'f': root})
 
 
 def _san_exc(exc: Exception) -> Exception:
@@ -201,7 +204,7 @@ class GetCases(BaseCases):
         if rest is None:
             rest = [f.root.src, f.root.dump(out=str)]
 
-        if g is exec:
+        if g is exec:  # exec is sentinel
             pass  # noop
         elif g is None:
             rest.append('**None**')
@@ -247,13 +250,18 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
         _, attr, start, stop, field, options, code, case_rest = case
 
         func     = self.func
-        f        = _make_fst(code, attr)
         is_raw   = options.get('raw', False)
         cmp_asts = options.get('_cmp_asts', True)
         rest0    = case_rest[0]
         rest     = [rest0]
         tail     = None
         src      = None if rest0 is None or rest0 == '**DEL**' else rest0 if isinstance(rest0, str) else None if ((rest01 := rest0[1]) == '**DEL**') else rest01
+
+        if (to_attr := options.get('to')) is None:
+            f = _make_fst(code, attr)
+        else:
+            f, to = _make_fst(code, attr, to_attr)
+            options = {**options, 'to': to}
 
         try:
             g = func(f, src, start, stop, field, **options)
@@ -274,7 +282,6 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
             f_dump = f.root.dump(out=str)
             tail   = [f_dump]
 
-            # if src is not None:
             if src is not None and not is_raw:  # TODO: can let this go through with raw, but do this when raw is solid
                 try:
                     h = _make_fst(rest0)

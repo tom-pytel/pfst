@@ -13402,4 +13402,47 @@ r'''V: list[int]'''),
 r'''**IndexError('index out of range')**'''),
 ],
 
+'raw': [  # ................................................................................
+
+(0, '', 1, False, None, {'raw': True, 'to': 'values[-1]'}, (None,
+r'''{1: 2, 3: 4, 5: 6}'''),
+r'''7: 8''',
+r'''{1: 2, 7: 8}''', r'''
+Dict - ROOT 0,0..0,12
+  .keys[2]
+  0] Constant 1 - 0,1..0,2
+  1] Constant 7 - 0,7..0,8
+  .values[2]
+  0] Constant 2 - 0,4..0,5
+  1] Constant 8 - 0,10..0,11
+'''),
+
+(1, '', 1, False, None, {'raw': True, 'to': 'patterns[-1]'}, ('pattern',
+r'''{1: 2, 3: 4, 5: 6}'''),
+r'''7: 8''',
+r'''{1: 2, 7: 8}''', r'''
+MatchMapping - ROOT 0,0..0,12
+  .keys[2]
+  0] Constant 1 - 0,1..0,2
+  1] Constant 7 - 0,7..0,8
+  .patterns[2]
+  0] MatchValue - 0,4..0,5
+    .value Constant 2 - 0,4..0,5
+  1] MatchValue - 0,10..0,11
+    .value Constant 8 - 0,10..0,11
+'''),
+
+(2, '', 0, False, None, {'raw': True, 'to': 'comparators[-1]'}, (None,
+r'''a < b < c'''),
+r'''>= z''',
+r'''a >= z''', r'''
+Compare - ROOT 0,0..0,6
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+  0] GtE - 0,2..0,4
+  .comparators[1]
+  0] Name 'z' Load - 0,5..0,6
+'''),
+],
+
 }
