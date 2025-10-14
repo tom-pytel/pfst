@@ -12741,22 +12741,10 @@ Module - ROOT 0,0..0,7
       1] Name 'z' Load - 0,6..0,7
 '''),
 
-(13, 'body[0].value', 1, 4, None, {'raw': True}, ('exec',
+(13, 'body[0].value', 0, 3, 'comparators', {'raw': True}, ('exec',
 r'''a < b < c < d'''), (None,
 r'''x < y'''),
-r'''a < x < y''', r'''
-Module - ROOT 0,0..0,9
-  .body[1]
-  0] Expr - 0,0..0,9
-    .value Compare - 0,0..0,9
-      .left Name 'a' Load - 0,0..0,1
-      .ops[2]
-      0] Lt - 0,2..0,3
-      1] Lt - 0,6..0,7
-      .comparators[2]
-      0] Name 'x' Load - 0,4..0,5
-      1] Name 'y' Load - 0,8..0,9
-'''),
+r'''**ValueError("cannot specify a field 'comparators' to assign slice to a Compare")**'''),
 
 (14, 'body[0].value', 1, 3, None, {'raw': True}, ('exec',
 r'''[a for a in a() for b in b() for c in c()]'''), (None,
@@ -12991,20 +12979,10 @@ Module - ROOT 0,0..0,11
       1] Name 'z' Load - 0,9..0,10
 '''),
 
-(26, 'body[0].value', 1, 3, None, {'raw': True}, ('exec',
+(26, 'body[0].value', 0, 2, 'comparators', {'raw': True}, ('exec',
 r'''((a) < (b) < (c))'''), (None,
 r'''z'''),
-r'''((a) < z)''', r'''
-Module - ROOT 0,0..0,9
-  .body[1]
-  0] Expr - 0,0..0,9
-    .value Compare - 0,1..0,8
-      .left Name 'a' Load - 0,2..0,3
-      .ops[1]
-      0] Lt - 0,5..0,6
-      .comparators[1]
-      0] Name 'z' Load - 0,7..0,8
-'''),
+r'''**ValueError("cannot specify a field 'comparators' to assign slice to a Compare")**'''),
 
 (27, 'body[0].value', 1, 3, None, {'raw': True}, ('exec',
 r'''(1, *(x), (3))'''), (None,

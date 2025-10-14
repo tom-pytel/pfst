@@ -24,6 +24,7 @@
 
 ### Updated
 
+- change `Compare` combined field indexing to not include `.left`, just `.ops` and `.comparators`
 - `dump()` indicates trailing whitespace after stmts, including with trailing `;`
 - recognize Devanagari and Hebrew for identifiers
 - adapt statement-ish operations to use new trivia parameters

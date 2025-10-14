@@ -187,7 +187,7 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 #   ! S    @       (ClassDef, 'decorator_list'):           # expr*            -> _slice_decorator_list      _parse_decorator_list
 #                                                                             .
 #                                                                             .
-#     N co         (Compare, 'ops':'comparators'):         # cmpop:expr*      -> expr or Compare            _parse_expr / restrict expr or Compare
+#     N    op      (Compare, 'ops':'comparators'):         # cmpop:expr*      -> _slice_ops_comparators     _parse_ops_comparators / restrict expr or Compare
 #                                                                             .
 #     N ao         (BoolOp, 'values'):                     # expr*            -> BoolOp                     _parse_expr / restrict BoolOp  - interchangeable between and / or
 #                                                                             .
@@ -3380,12 +3380,18 @@ def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: 
         if field:
             raise ValueError(f"cannot specify a field '{field}' to assign slice to a Compare")
 
-        comparators = ast.comparators  # virtual combined body of [Compare.left] + Compare.comparators
-        start, stop = fixup_slice_index_for_raw(len(comparators) + 1, start, stop)
-        stop -= 1
+        ops = ast.ops
+        start, stop = fixup_slice_index_for_raw(len(ops), start, stop)
 
-        return fstloc(*(comparators[start - 1] if start else ast.left).f.pars()[:2],
-                      *(comparators[stop - 1] if stop else ast.left).f.pars()[2:])
+        return fstloc(*ops[start].f.loc[:2], *ast.comparators[stop - 1].f.pars()[2:])
+
+    if field == 'decorator_list':
+        decos = ast.decorator_list
+        start, stop = fixup_slice_index_for_raw(len(decos), start, stop)
+        ffirst = decos[start].f
+        start_pos = prev_find(self.root._lines, 0, 0, ffirst.ln, ffirst.col, '@')  # we can use '0, 0' because we know "@" starts on a newline
+
+        return fstloc(*start_pos, *decos[stop - 1].f.pars()[2:])
 
     if isinstance(ast, MatchMapping):
         if field:
@@ -3409,14 +3415,6 @@ def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: 
         start_loc, stop_loc = loc_Global_Nonlocal_names(self, start, stop - 1)
 
         return fstloc(start_loc.ln, start_loc.col, stop_loc.end_ln, stop_loc.end_col)
-
-    if field == 'decorator_list':
-        decos = ast.decorator_list
-        start, stop = fixup_slice_index_for_raw(len(decos), start, stop)
-        ffirst = decos[start].f
-        start_pos = prev_find(self.root._lines, 0, 0, ffirst.ln, ffirst.col, '@')  # we can use '0, 0' because we know "@" starts on a newline
-
-        return fstloc(*start_pos, *decos[stop - 1].f.pars()[2:])
 
     body = getattr(ast, field)  # field must be valid by here
     start, stop = fixup_slice_index_for_raw(len(body), start, stop)

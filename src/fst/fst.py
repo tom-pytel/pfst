@@ -152,9 +152,10 @@ _TLOCAL = _ThreadLocal()
 _DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_version=None)
 _DEFAULT_INDENT = '    '
 
+# _DEFAULT_AST_FIELD builds to {Module: 'body', Interactive: 'body', ..., Match: 'cases', ..., MatchAs: 'pattern'}
 _DEFAULT_AST_FIELD = {cls: field for field, classes in [
-    ('body',         (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
-                      With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
+    ('body',         (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While,
+                      If, With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
     ('cases',        (Match,)),
 
     ('elts',         (Tuple, List, Set)),
@@ -169,9 +170,9 @@ _DEFAULT_AST_FIELD = {cls: field for field, classes in [
     ('args',         (Call,)),  # potential conflict of default body with put to empty 'set()'
 
     # special cases, field names here only for checks to succeed, otherwise all handled programatically
-    ('',             (Dict,)),
-    ('',             (MatchMapping,)),
-    ('',             (Compare,)),
+    ('',             (Dict,)),          # key:value
+    ('',             (MatchMapping,)),  # key:pattern
+    ('',             (Compare,)),       # ops:comparators
 
     # other single value fields
     ('value',        (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,

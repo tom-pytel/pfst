@@ -178,14 +178,6 @@ def _fixup_one_index(len_: int, idx: int) -> int:
     return idx
 
 
-def _params_Compare_combined(self: fst.FST, idx: int | None) -> tuple[int, str, AST | list[AST]]:
-    ast = self.a
-    comparators = ast.comparators
-    idx = _fixup_one_index(len(comparators) + 1, idx)
-
-    return (idx - 1, 'comparators', comparators) if idx else (None, 'left', ast.left)
-
-
 def _maybe_fix_With_items(self: fst.FST) -> None:
     """If `Tuple` only element in `items` then add appropriate parentheses."""
 
@@ -360,13 +352,6 @@ def _get_one_BoolOp_op(self: fst.FST, idx: int | None, field: str, cut: bool, op
     child, _ = _validate_get(self, idx, field)
 
     return fst.FST(And(), ['and'], from_=self) if isinstance(child, And) else fst.FST(Or(), ['or'], from_=self)  # just create new ones because they can be in multiple places
-
-
-def _get_one_Compare_(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any],
-                              ) -> _GetOneRet:
-    idx, field, _ = _params_Compare_combined(self, idx)
-
-    return _get_one_default(self, idx, field, cut, options)
 
 
 def _get_one_invalid_combined(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any],
@@ -667,7 +652,7 @@ _GET_ONE_HANDLERS = {
     (Compare, 'left'):                    _get_one_default,  # expr
     (Compare, 'ops'):                     _get_one_default,  # cmpop*
     (Compare, 'comparators'):             _get_one_default,  # expr*
-    (Compare, ''):                        _get_one_Compare_,  # expr*
+    (Compare, ''):                        _get_one_invalid_combined,  # expr*
     (Call, 'func'):                       _get_one_default,  # expr
     (Call, 'args'):                       _get_one_arglike,  # expr*
     (Call, 'keywords'):                   _get_one_default,  # keyword*
@@ -1543,15 +1528,6 @@ def _put_one_Lambda_arguments(self: fst.FST, code: _PutOneCode, idx: int | None,
     target = loc_Lambda_args_entire(self)
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 1, target, prefix)
-
-
-def _put_one_Compare_combined(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child,
-                              static: onestatic, options: Mapping[str, Any]) -> fst.FST:
-    """Put to combined [Compare.left, Compare.comparators] using this total indexing."""
-
-    idx, field, child = _params_Compare_combined(self, idx)
-
-    return _put_one_exprish_required(self, code, idx, field, child, static, options)
 
 
 def _put_one_Call_args(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: _Child, static: onestatic,
@@ -2555,12 +2531,9 @@ def _put_one(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, opti
     sliceable, handler, static = _PUT_ONE_HANDLERS.get((ast.__class__, field), (False, None, None))
 
     if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementishs and combined mapping fields
+        # we need to fixup index here explicitly to get an error if it is out of bounds because slice index fixups don't error but just limit it to [0..len(body))
+        idx = _fixup_one_index(len(child if field else ast.ops if isinstance(ast, Compare) else ast.keys), idx)  # field will be '' only for Dict, MatchMapping (which both have .keys), or Compare for .ops
 
-        if isinstance(ast, Compare) and not field:
-            raise NotImplementedError('still need to decide how to handle this case')
-
-        # we need to fixup index here explicitly to get an error if it is out of bounds because slice index fixups just limit it to [0..len(body))
-        idx = _fixup_one_index(len(child if field else ast.keys), idx)  # field will be '' only for Dict and MatchMapping which both have keys, Compare is not considered sliceable for single element deletions
         new_self = self._put_slice(code, idx, idx + 1, field, True, options)
 
         return None if code is None or not field else getattr(new_self.a, field)[idx].f  # guaranteed to be there if code is not None because was just replacement
@@ -2702,7 +2675,7 @@ _PUT_ONE_HANDLERS = {
     (Compare, 'left'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (Compare, 'ops'):                     (False, _put_one_op, onestatic(None, code_as=code_as_cmpop)),  # cmpop*
     (Compare, 'comparators'):             (False, _put_one_exprish_required, _onestatic_expr_required),  # expr*
-    (Compare, ''):                        (True,  _put_one_Compare_combined, _onestatic_expr_required),  # expr*
+    (Compare, ''):                        (True,  None, None),  # expr*
     (Call, 'func'):                       (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (Call, 'args'):                       (True,  _put_one_Call_args, onestatic(_one_info_exprish_required, _restrict_fmtval_slice, code_as=code_as_expr_arglike)),  # expr*
     (Call, 'keywords'):                   (True,  _put_one_Call_keywords, _onestatic_keyword_required),  # keyword*
@@ -2816,11 +2789,11 @@ _PUT_ONE_HANDLERS = {
 def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST | list[AST],
                  static: onestatic | None, options: Mapping[str, Any]) -> fst.FST | None:
     ast = self.a
-    to = options.get('to')
     root = self.root
+    to = options.get('to')
 
     if not field:  # special case field
-        if (is_dict := (cls := ast.__class__) is Dict) or cls is MatchMapping:
+        if (is_dict := issubclass(cls := ast.__class__, Dict)) or issubclass(cls, MatchMapping):
             static = _PUT_ONE_HANDLERS[(cls, 'keys')][-1]
             child = ast.keys
             field = 'keys'
@@ -2829,10 +2802,16 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
             if not to:
                 to = self.values[idx] if is_dict else self.patterns[idx]
 
-        elif cls is Compare:
-            idx, field, child = _params_Compare_combined(self, idx)
+        elif issubclass(cls, Compare):
+            child = ast.ops
+            field = 'ops'
+            idx = _fixup_one_index(len(child), idx)
+
+            if not to:
+                to = self.comparators[idx]
+
         else:
-            raise ValueError(f'cannot put single element to combined field of {ast.__class__.__name__}')
+            raise RuntimeError('should not get here')
 
     child, idx = _validate_put(self, code, idx, field, child, can_del=True)
     childf = child.f if isinstance(child, AST) else None
