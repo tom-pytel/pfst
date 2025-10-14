@@ -4,6 +4,7 @@ import os
 import re
 import unittest
 from ast import parse as ast_parse
+from random import seed, shuffle
 
 from fst import *
 
@@ -1583,6 +1584,11 @@ c  # comment
         (f := FST('async with(a),b: pass')).get_slice(0, 1, 'items', cut=True)
         self.assertEqual('async with b: pass', f.src)
 
+        # misc error found under py < 3.12
+
+        self.assertEqual('3,', (f := FST("f'{3,}'")).values[0].value.get_slice().src)
+        f.verify()
+
     def test_put_slice_special(self):
         if PYGE14:  # make sure parent Interpolation.str gets modified
             f = FST('t"{(1, 2)}"', 'exec').body[0].value.copy()
@@ -1845,6 +1851,136 @@ c  # comment
 
             self.assertRaises(NodeError, FST('call()').put_slice, FST('*not a, *b or c', Tuple), one=True)
 
+        # more unparenthesized tuple schenanigans
+
+        f = FST('a[:, b]')
+        f.slice.put_slice('[\n"foo"\n]', 1, 2, 'elts')
+        self.assertEqual('a[:,\n  "foo"\n]', f.src)
+
+        f = FST('a = b, c')
+        f.value.put_slice('[\n"foo"\n]', 1, 2, 'elts')
+        self.assertEqual('a = (b,\n    "foo"\n)', f.src)
+
+        f = FST('a = b, c')
+        f.value.put_slice('["foo"   ]', 1, 2, 'elts')
+        self.assertEqual('a = b, "foo"', f.src)
+
+        f = FST('for a, b in c: pass')
+        f.target.put_slice('[\nz\n]', 1, 2, 'elts')
+        self.assertEqual('for (a,\n    z\n) in c: pass', f.src)
+
+        f = FST('for a, b in c: pass')
+        f.target.put_slice('[z   ]', 1, 2, 'elts')
+        self.assertEqual('for a, z in c: pass', f.src)
+
+        f = FST('a[:, b]')
+        f.slice.put_slice('["foo"\\\n]', 1, 2, 'elts')
+        self.assertEqual('a[:, "foo"\\\n]', f.src)
+
+        f = FST('a = b, c')
+        f.value.put_slice('["foo"\\\n]', 1, 2, 'elts')
+        self.assertEqual('a = b, "foo"', f.src)
+
+        f = FST('for a, b in c: pass')
+        f.target.put_slice('[z\\\n]', 1, 2, 'elts')
+        self.assertEqual('for a, z in c: pass', f.src)
+
+        f = FST('a,')
+        f.put_slice('[ {z} ]', 0, 1)
+        self.assertEqual('{z},', f.src)
+
+        f = FST('a[:, b]')
+        f.slice.put_slice('[ {z} ]', 0, 1)
+        self.assertEqual('a[{z}, b]', f.src)
+
+    def test_unparenthesized_tuple_with_line_continuations(self):
+        # backslashes are annoying to include in the regenerable test cases
+
+        a = parse('1, \\\n2, \\\n3')
+        s = a.body[0].value.f.get_slice(0, 1, cut=True)
+        self.assertEqual(a.f.src, '2, \\\n3')
+        self.assertEqual(s.src, '1,')
+
+        a = parse('1, \\\n2, \\\n3')
+        s = a.body[0].value.f.get_slice(1, 2, cut=True)
+        self.assertEqual(a.f.src, '1, \\\n3')
+        self.assertEqual(s.src, '(\n2, \\\n)')
+
+        a = parse('1, \\\n2, \\\n3')
+        s = a.body[0].value.f.get_slice(2, 3, cut=True)
+        self.assertEqual(a.f.src, '1, \\\n2,')
+        self.assertEqual(s.src, '3,')
+
+        a = parse('1, \\\n2, \\\n3')
+        s = a.body[0].value.f.get_slice(0, 2, cut=True)
+        self.assertEqual(a.f.src, '3,')
+        self.assertEqual(s.src, '1, \\\n2,')
+
+        a = parse('1, \\\n2, \\\n3')
+        s = a.body[0].value.f.get_slice(1, 3, cut=True)
+        self.assertEqual(a.f.src, '1,')
+        self.assertEqual(s.src, '(\n2, \\\n3)')
+
+        a = parse('1, \\\n2, \\\n3')
+        s = a.body[0].value.f.get_slice(0, 3, cut=True)
+        self.assertEqual(a.f.src, '()')
+        self.assertEqual(s.src, '1, \\\n2, \\\n3')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 0, 0)
+        self.assertEqual(a.f.src, 'a, \\\n1, \\\n2, \\\n3')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 1, 1)
+        self.assertEqual(a.f.src, '1, \\\na, \\\n2, \\\n3')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 2, 2)
+        self.assertEqual(a.f.src, '1, \\\n2, \\\na, \\\n3')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 3, 3)
+        self.assertEqual(a.f.src, '1, \\\n2, \\\n3, a,')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 0, 1)
+        self.assertEqual(a.f.src, 'a, \\\n2, \\\n3')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 1, 2)
+        self.assertEqual(a.f.src, '1, \\\na, \\\n3')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 2, 3)
+        self.assertEqual(a.f.src, '1, \\\n2, \\\na,')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 0, 2)
+        self.assertEqual(a.f.src, 'a, \\\n3')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 1, 3)
+        self.assertEqual(a.f.src, '1, \\\na,')
+
+        a = parse('1, \\\n2, \\\n3')
+        a.body[0].value.f.put_slice('(a, \\\n)', 0, 3)
+        self.assertEqual(a.f.src, 'a,')
+
+    def test_line_continuation_issue_at_top_level(self):
+        a = parse('''
+i ; \\
+ j
+        '''.strip())
+        a.f.put_slice(None, 0, 1)
+        self.assertTrue(a.f.verify(raise_=False))
+
+        a = parse('''
+i ; \\
+ j
+        '''.strip())
+        a.f.put_slice('l', 0, 1)
+        self.assertTrue(a.f.verify(raise_=False))
+
     def test_put_slice_seq_namedexpr_and_yield(self):
         self.assertEqual('a, (x := y)', (f := FST('a, b')).put_slice('x := y', 1, 2, one=True).src)
         f.verify()
@@ -2100,6 +2236,65 @@ c  # comment
         self.assertEqual('[a, [x, y], c]', parse('[a, b, c]').body[0].value.f.put_slice(ast_parse('[x, y,]'), 1, 2, one=True, raw=True).root.src)
         self.assertEqual('[a, {x, y}, c]', parse('[a, b, c]').body[0].value.f.put_slice(ast_parse('{x, y,}'), 1, 2, one=True, raw=True).root.src)
         self.assertRaises(SyntaxError, parse('{a: a, b: b, c: c}').body[0].value.f.put_slice, ast_parse('{x: x, y: y,}'), 1, 2, one=True, raw=True)
+
+    def test_put_slice_raw_strip_delimiters(self):
+        # strip or add delimiters from/to different type of node to put as slice
+
+        f = parse('{a: b, c: d, e: f}').body[0].value.f
+        g = parse('match a:\n case {1: x}: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('{a: b, 1: x, e: f}', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('match a:\n case {1: x, 2: y, 3: z}: pass').body[0].cases[0].pattern.f
+        g = parse('{1: a}').body[0].value.f.copy()
+        self.assertEqual('match a:\n case {1: x, 1: a, 3: z}: pass', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('[1, a, b, 3]', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        g = parse('match a:\n case (a, b): pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('[1, a, b, 3]', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
+        g = parse('[a, b]').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1, a, b, 3: pass', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
+        g = parse('[a, b]').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1, [a, b], 3: pass', f.put_slice(g.a, 1, 2, raw=True, one=True).root.src)
+
+        f = parse('match a:\n case 1 | 2 | 3: pass').body[0].cases[0].pattern.f
+        g = parse('a | b').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1 | a | b | 3: pass', f.put_slice(g.a, 1, 2, raw=True).root.src)
+
+        f = parse('{a: b, c: d, e: f}').body[0].value.f
+        g = parse('match a:\n case {1: x}: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('{a: b, 1: x, e: f}', f.put_slice(g, 1, 2, raw=True).root.src)
+
+        f = parse('match a:\n case {1: x, 2: y, 3: z}: pass').body[0].cases[0].pattern.f
+        g = parse('{1: a}').body[0].value.f.copy()
+        self.assertEqual('match a:\n case {1: x, 1: a, 3: z}: pass', f.put_slice(g, 1, 2, raw=True).root.src)
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('[1, a, b, 3]', f.put_slice(g, 1, 2, raw=True).root.src)
+
+        f = parse('[1, 2, 3]').body[0].value.f
+        g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
+        self.assertEqual('[1, (a, b), 3]', f.put_slice(g, 1, 2, raw=True, one=True).root.src)
+
+        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
+        g = parse('[a, b]').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1, a, b, 3: pass', f.put_slice(g, 1, 2, raw=True).root.src)
+
+        f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
+        g = parse('[a, b]').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1, [a, b], 3: pass', f.put_slice(g, 1, 2, raw=True, one=True).root.src)
+
+        f = parse('match a:\n case 1 | 2 | 3: pass').body[0].cases[0].pattern.f
+        g = parse('a | b').body[0].value.f.copy()
+        self.assertEqual('match a:\n case 1 | a | b | 3: pass', f.put_slice(g, 1, 2, raw=True).root.src)
 
     def test_slice_set_empty(self):
         # put slice using norm_put=
@@ -2621,6 +2816,1031 @@ a | (
         f.verify()
         self.assertEqual('a, (\n# pre\n[c, # line\n]# post\n), b', (f := FST('a, b', pattern).put_slice('(\n# pre\n[c, # line\n]# post\n)', 1, 1, one=True)).src)
         f.verify()
+
+    def test_insert_into_empty_block(self):
+        a = parse('''
+if 1:
+    i \\
+
+'''.lstrip())
+        a.body[0].f.put_slice('j', field='orelse')
+        a.f.verify()
+        self.assertEqual(a.f.src, 'if 1:\n    i\nelse:\n    j\n\n')
+
+        a = parse('''
+def f():
+    pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        a.body[0].f.put_slice('i')
+        self.assertEqual(a.f.src, 'def f():\n    i')
+
+        a = parse('''
+def f(): pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        a.body[0].f.put_slice('i')
+        self.assertEqual(a.f.src, 'def f():\n    i')
+
+        a = parse('''
+def f():
+    pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        a.body[0].f.put_slice('# pre\ni  # post')
+        self.assertEqual(a.f.src, 'def f():\n    # pre\n    i  # post')
+
+        a = parse('''
+def f(): pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        a.body[0].f.put_slice('# pre\ni  # post')
+        self.assertEqual(a.f.src, 'def f():\n    # pre\n    i  # post')
+
+        a = parse('''
+match a:
+    case 1: pass
+        '''.strip())
+        a.body[0].cases[0].body[0].f.cut()
+        a.body[0].cases[0].f.put_slice('i')
+        self.assertEqual(a.f.src, 'match a:\n    case 1:\n        i')
+
+        a = parse('''
+match a:
+    case 1: pass
+        '''.strip())
+        a.body[0].cases[0].f.cut()
+        a.body[0].f.put_slice('case 2: return')
+        self.assertEqual(a.f.src, 'match a:\n    case 2: return')
+
+
+        a = parse('''
+if 1:
+    pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        a.body[0].f.put_slice('i')
+        self.assertEqual(a.f.src, 'if 1:\n    i')
+
+        a = parse('''
+if 1:
+    pass
+else: pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        a.body[0].f.put_slice('i')
+        self.assertEqual(a.f.src, 'if 1:\n    i\nelse: pass')
+
+        a = parse('''
+if 1:
+    pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        a.body[0].f.put_slice('i', field='orelse')
+        self.assertEqual(a.f.src, 'if 1:\nelse:\n    i')
+
+        a = parse('''
+if 1:
+    pass
+        '''.strip())
+        a.body[0].f.put_slice('i', field='orelse')
+        self.assertEqual(a.f.src, 'if 1:\n    pass\nelse:\n    i')
+
+
+        a = parse('''if 2:
+    def f():
+        pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].f.put_slice('i')
+        self.assertEqual(a.f.src, 'if 2:\n    def f():\n        i')
+
+        a = parse('''if 2:
+    def f(): pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].f.put_slice('i')
+        self.assertEqual(a.f.src, 'if 2:\n    def f():\n        i')
+
+        a = parse('''if 2:
+    def f():
+        pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].f.put_slice('# pre\ni  # post')
+        self.assertEqual(a.f.src, 'if 2:\n    def f():\n        # pre\n        i  # post')
+
+        a = parse('''if 2:
+    def f(): pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].f.put_slice('# pre\ni  # post')
+        self.assertEqual(a.f.src, 'if 2:\n    def f():\n        # pre\n        i  # post')
+
+        a = parse('''if 2:
+    match a:
+        case 1: pass
+        '''.strip())
+        a.body[0].body[0].cases[0].body[0].f.cut()
+        a.body[0].body[0].cases[0].f.put_slice('i')
+        self.assertEqual(a.f.src, 'if 2:\n    match a:\n        case 1:\n            i')
+
+        a = parse('''if 2:
+    match a:
+        case 1: pass
+        '''.strip())
+        a.body[0].body[0].cases[0].f.cut()
+        a.body[0].body[0].f.put_slice('case 3: return')
+        self.assertEqual(a.f.src, 'if 2:\n    match a:\n        case 3: return')
+
+
+        a = parse('''if 2:
+    if 1:
+        pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].f.put_slice('i')
+        self.assertEqual(a.f.src, 'if 2:\n    if 1:\n        i')
+
+        a = parse('''if 2:
+    if 1:
+        pass
+    else: pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].f.put_slice('i')
+        self.assertEqual(a.f.src, 'if 2:\n    if 1:\n        i\n    else: pass')
+
+        a = parse('''if 2:
+    if 1:
+        pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].f.put_slice('i', field='orelse')
+        self.assertEqual(a.f.src, 'if 2:\n    if 1:\n    else:\n        i')
+
+        a = parse('''if 2:
+    if 1:
+        pass
+        '''.strip())
+        a.body[0].body[0].f.put_slice('i', field='orelse')
+        self.assertEqual(a.f.src, 'if 2:\n    if 1:\n        pass\n    else:\n        i')
+
+
+        a = parse('''
+try: pass
+except: pass
+else: pass
+finally: pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        a.body[0].handlers[0].f.cut()
+        a.body[0].orelse[0].f.cut()
+        a.body[0].finalbody[0].f.cut()
+        a.body[0].f.put_slice('i', field='finalbody')
+        self.assertEqual(a.f.src, 'try:\nfinally:\n    i')
+
+        a = parse('''
+try: pass
+except: pass
+else: pass
+finally: pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        a.body[0].handlers[0].f.cut()
+        a.body[0].orelse[0].f.cut()
+        a.body[0].finalbody[0].f.cut()
+        a.body[0].f.put_slice('i', field='orelse')
+        self.assertEqual(a.f.src, 'try:\nelse:\n    i')
+
+        a = parse('''
+try: pass
+except: pass
+else: pass
+finally: pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        handler = a.body[0].handlers[0].f.cut()
+        a.body[0].orelse[0].f.cut()
+        a.body[0].finalbody[0].f.cut()
+        a.body[0].f.put_slice(handler, field='handlers')
+        self.assertEqual(a.f.src, 'try:\nexcept: pass')
+
+        a = parse('''
+try: pass
+except: pass
+else: pass
+finally: pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        a.body[0].handlers[0].f.cut()
+        a.body[0].orelse[0].f.cut()
+        a.body[0].finalbody[0].f.cut()
+        a.body[0].f.put_slice('i', field='body')
+        self.assertEqual(a.f.src, 'try:\n    i')
+
+        a = parse('''
+try: pass
+except: pass
+else: pass
+finally: pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        a.body[0].handlers[0].f.cut()
+        a.body[0].finalbody[0].f.cut()
+        a.body[0].f.put_slice('i', field='finalbody')
+        self.assertEqual(a.f.src, 'try:\nelse: pass\nfinally:\n    i')
+
+        a = parse('''
+try: pass
+except: pass
+else: pass
+finally: pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        a.body[0].orelse[0].f.cut()
+        a.body[0].finalbody[0].f.cut()
+        a.body[0].f.put_slice('i', field='finalbody')
+        self.assertEqual(a.f.src, 'try:\nexcept: pass\nfinally:\n    i')
+
+        a = parse('''
+try: pass
+except: pass
+else: pass
+finally: pass
+        '''.strip())
+        a.body[0].handlers[0].f.cut()
+        a.body[0].orelse[0].f.cut()
+        a.body[0].finalbody[0].f.cut()
+        a.body[0].f.put_slice('i', field='finalbody')
+        self.assertEqual(a.f.src, 'try: pass\nfinally:\n    i')
+
+        a = parse('''
+try: pass
+except: pass
+else: pass
+finally: pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        a.body[0].handlers[0].f.cut()
+        a.body[0].orelse[0].f.cut()
+        a.body[0].f.put_slice('i', field='orelse')
+        self.assertEqual(a.f.src, 'try:\nelse:\n    i\nfinally: pass')
+
+        a = parse('''
+try: pass
+except: pass
+else: pass
+finally: pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        a.body[0].orelse[0].f.cut()
+        a.body[0].finalbody[0].f.cut()
+        a.body[0].f.put_slice('i', field='orelse')
+        self.assertEqual(a.f.src, 'try:\nexcept: pass\nelse:\n    i')
+
+        a = parse('''
+try: pass
+except: pass
+else: pass
+finally: pass
+        '''.strip())
+        a.body[0].handlers[0].f.cut()
+        a.body[0].orelse[0].f.cut()
+        a.body[0].finalbody[0].f.cut()
+        a.body[0].f.put_slice('i', field='orelse')
+        self.assertEqual(a.f.src, 'try: pass\nelse:\n    i')
+
+        a = parse('''
+try: pass
+except: pass
+else: pass
+finally: pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        handler = a.body[0].handlers[0].f.cut()
+        a.body[0].orelse[0].f.cut()
+        a.body[0].f.put_slice(handler, field='handlers')
+        self.assertEqual(a.f.src, 'try:\nexcept: pass\nfinally: pass')
+
+        a = parse('''
+try: pass
+except: pass
+else: pass
+finally: pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        handler = a.body[0].handlers[0].f.cut()
+        a.body[0].finalbody[0].f.cut()
+        a.body[0].f.put_slice(handler, field='handlers')
+        self.assertEqual(a.f.src, 'try:\nexcept: pass\nelse: pass')
+
+        a = parse('''
+try: pass
+except: pass
+else: pass
+finally: pass
+        '''.strip())
+        handler = a.body[0].handlers[0].f.cut()
+        a.body[0].orelse[0].f.cut()
+        a.body[0].finalbody[0].f.cut()
+        a.body[0].f.put_slice(handler, field='handlers')
+        self.assertEqual(a.f.src, 'try: pass\nexcept: pass')
+
+        a = parse('''
+try: pass
+except: pass
+else: pass
+finally: pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        a.body[0].handlers[0].f.cut()
+        a.body[0].orelse[0].f.cut()
+        a.body[0].f.put_slice('i', field='body')
+        self.assertEqual(a.f.src, 'try:\n    i\nfinally: pass')
+
+        a = parse('''
+try: pass
+except: pass
+else: pass
+finally: pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        a.body[0].handlers[0].f.cut()
+        a.body[0].finalbody[0].f.cut()
+        a.body[0].f.put_slice('i', field='body')
+        self.assertEqual(a.f.src, 'try:\n    i\nelse: pass')
+
+        a = parse('''
+try: pass
+except: pass
+else: pass
+finally: pass
+        '''.strip())
+        a.body[0].body[0].f.cut()
+        a.body[0].orelse[0].f.cut()
+        a.body[0].finalbody[0].f.cut()
+        a.body[0].f.put_slice('i', field='body')
+        self.assertEqual(a.f.src, 'try:\n    i\nexcept: pass')
+
+
+        a = parse('''if 2:
+    try: pass
+    except: pass
+    else: pass
+    finally: pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].handlers[0].f.cut()
+        a.body[0].body[0].orelse[0].f.cut()
+        a.body[0].body[0].finalbody[0].f.cut()
+        a.body[0].body[0].f.put_slice('i', field='finalbody')
+        self.assertEqual(a.f.src, 'if 2:\n    try:\n    finally:\n        i')
+
+        a = parse('''if 2:
+    try: pass
+    except: pass
+    else: pass
+    finally: pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].handlers[0].f.cut()
+        a.body[0].body[0].orelse[0].f.cut()
+        a.body[0].body[0].finalbody[0].f.cut()
+        a.body[0].body[0].f.put_slice('i', field='orelse')
+        self.assertEqual(a.f.src, 'if 2:\n    try:\n    else:\n        i')
+
+        a = parse('''if 2:
+    try: pass
+    except: pass
+    else: pass
+    finally: pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        handler = a.body[0].body[0].handlers[0].f.cut()
+        a.body[0].body[0].orelse[0].f.cut()
+        a.body[0].body[0].finalbody[0].f.cut()
+        a.body[0].body[0].f.put_slice(handler, field='handlers')
+        self.assertEqual(a.f.src, 'if 2:\n    try:\n    except: pass')
+
+        a = parse('''if 2:
+    try: pass
+    except: pass
+    else: pass
+    finally: pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].handlers[0].f.cut()
+        a.body[0].body[0].orelse[0].f.cut()
+        a.body[0].body[0].finalbody[0].f.cut()
+        a.body[0].body[0].f.put_slice('i', field='body')
+        self.assertEqual(a.f.src, 'if 2:\n    try:\n        i')
+
+        a = parse('''if 2:
+    try: pass
+    except: pass
+    else: pass
+    finally: pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].handlers[0].f.cut()
+        a.body[0].body[0].finalbody[0].f.cut()
+        a.body[0].body[0].f.put_slice('i', field='finalbody')
+        self.assertEqual(a.f.src, 'if 2:\n    try:\n    else: pass\n    finally:\n        i')
+
+        a = parse('''if 2:
+    try: pass
+    except: pass
+    else: pass
+    finally: pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].orelse[0].f.cut()
+        a.body[0].body[0].finalbody[0].f.cut()
+        a.body[0].body[0].f.put_slice('i', field='finalbody')
+        self.assertEqual(a.f.src, 'if 2:\n    try:\n    except: pass\n    finally:\n        i')
+
+        a = parse('''if 2:
+    try: pass
+    except: pass
+    else: pass
+    finally: pass
+        '''.strip())
+        a.body[0].body[0].handlers[0].f.cut()
+        a.body[0].body[0].orelse[0].f.cut()
+        a.body[0].body[0].finalbody[0].f.cut()
+        a.body[0].body[0].f.put_slice('i', field='finalbody')
+        self.assertEqual(a.f.src, 'if 2:\n    try: pass\n    finally:\n        i')
+
+        a = parse('''if 2:
+    try: pass
+    except: pass
+    else: pass
+    finally: pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].handlers[0].f.cut()
+        a.body[0].body[0].orelse[0].f.cut()
+        a.body[0].body[0].f.put_slice('i', field='orelse')
+        self.assertEqual(a.f.src, 'if 2:\n    try:\n    else:\n        i\n    finally: pass')
+
+        a = parse('''if 2:
+    try: pass
+    except: pass
+    else: pass
+    finally: pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].orelse[0].f.cut()
+        a.body[0].body[0].finalbody[0].f.cut()
+        a.body[0].body[0].f.put_slice('i', field='orelse')
+        self.assertEqual(a.f.src, 'if 2:\n    try:\n    except: pass\n    else:\n        i')
+
+        a = parse('''if 2:
+    try: pass
+    except: pass
+    else: pass
+    finally: pass
+        '''.strip())
+        a.body[0].body[0].handlers[0].f.cut()
+        a.body[0].body[0].orelse[0].f.cut()
+        a.body[0].body[0].finalbody[0].f.cut()
+        a.body[0].body[0].f.put_slice('i', field='orelse')
+        self.assertEqual(a.f.src, 'if 2:\n    try: pass\n    else:\n        i')
+
+        a = parse('''if 2:
+    try: pass
+    except: pass
+    else: pass
+    finally: pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        handler = a.body[0].body[0].handlers[0].f.cut()
+        a.body[0].body[0].orelse[0].f.cut()
+        a.body[0].body[0].f.put_slice(handler, field='handlers')
+        self.assertEqual(a.f.src, 'if 2:\n    try:\n    except: pass\n    finally: pass')
+
+        a = parse('''if 2:
+    try: pass
+    except: pass
+    else: pass
+    finally: pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        handler = a.body[0].body[0].handlers[0].f.cut()
+        a.body[0].body[0].finalbody[0].f.cut()
+        a.body[0].body[0].f.put_slice(handler, field='handlers')
+        self.assertEqual(a.f.src, 'if 2:\n    try:\n    except: pass\n    else: pass')
+
+        a = parse('''if 2:
+    try: pass
+    except: pass
+    else: pass
+    finally: pass
+        '''.strip())
+        handler = a.body[0].body[0].handlers[0].f.cut()
+        a.body[0].body[0].orelse[0].f.cut()
+        a.body[0].body[0].finalbody[0].f.cut()
+        a.body[0].body[0].f.put_slice(handler, field='handlers')
+        self.assertEqual(a.f.src, 'if 2:\n    try: pass\n    except: pass')
+
+        a = parse('''if 2:
+    try: pass
+    except: pass
+    else: pass
+    finally: pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].handlers[0].f.cut()
+        a.body[0].body[0].orelse[0].f.cut()
+        a.body[0].body[0].f.put_slice('i', field='body')
+        self.assertEqual(a.f.src, 'if 2:\n    try:\n        i\n    finally: pass')
+
+        a = parse('''if 2:
+    try: pass
+    except: pass
+    else: pass
+    finally: pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].handlers[0].f.cut()
+        a.body[0].body[0].finalbody[0].f.cut()
+        a.body[0].body[0].f.put_slice('i', field='body')
+        self.assertEqual(a.f.src, 'if 2:\n    try:\n        i\n    else: pass')
+
+        a = parse('''if 2:
+    try: pass
+    except: pass
+    else: pass
+    finally: pass
+        '''.strip())
+        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].orelse[0].f.cut()
+        a.body[0].body[0].finalbody[0].f.cut()
+        a.body[0].body[0].f.put_slice('i', field='body')
+        self.assertEqual(a.f.src, 'if 2:\n    try:\n        i\n    except: pass')
+
+    def test_insert_into_empty_block_shuffle(self):  # TODO: legacy, do better when possible
+        fst = parse('''
+match a:
+    case 1:
+        i = 1
+
+match b:
+    case 2:
+        pass  # this is removed
+
+if 1:
+    j; k
+else:
+    l
+    m
+
+try:
+    # pre
+    n  # post
+except:
+    if 1: break
+else:
+    if 2: continue
+    elif 3: o
+    else: p
+finally:
+    @deco
+    def inner() -> list[int]:
+        q = 4  # post-inner-q
+
+for a in b:
+    # pre-classdeco
+    @classdeco
+    class cls:
+        @methdeco
+        def meth(self):
+            mvar = 5  # post-meth
+else:
+    """Multi
+    line
+    string."""
+
+async for a in b:
+    ("Multi"
+    "line"
+    "string")
+else:
+    r = [i for i in range(100)]  # post-list-comprehension
+
+while a in b:
+    global c
+else:
+    lambda x: x**2
+
+with a as b:
+    try: a ; #  post-try
+    except: b ; c  # post-except
+    else: return 5
+    finally: yield 6
+
+async with a as b:
+    del x, y, z
+
+def func():
+    assert s, t
+
+@asyncdeco
+async def func():
+    match z:
+        case 1: zz
+        case 2:
+            zzz
+
+class cls:
+    def docfunc(a, /, b=2, *c, d=3, **e):
+        """Doc
+        string."""
+
+        return -1
+
+if indented:
+    try:
+        try: raise
+        except Exception as exc:
+            raise exc from exc
+    except:
+        aa or bb or cc
+    else:
+        f'{i:2} plus 1'
+    finally:
+        j = (i := k)
+'''.lstrip()).f
+
+        # fst.a.body[1].cases[0].f.cut()
+        # fst.a.body[1].f.put_slice('pass', check_node_type=False)
+
+        points = [
+            (fst.a.body[0].cases[0].f, 'body'),
+            # (fst.a.body[1].f, 'cases'),
+            (fst.a.body[2].f, 'body'),
+            (fst.a.body[2].f, 'orelse'),
+            (fst.a.body[3].f, 'body'),
+            # (fst.a.body[3].f, 'handlers'),
+            (fst.a.body[3].f, 'orelse'),
+            (fst.a.body[3].f, 'finalbody'),
+            (fst.a.body[4].f, 'body'),
+            (fst.a.body[4].f, 'orelse'),
+            (fst.a.body[5].f, 'body'),
+            (fst.a.body[5].f, 'orelse'),
+            (fst.a.body[6].f, 'body'),
+            (fst.a.body[6].f, 'orelse'),
+            (fst.a.body[7].f, 'body'),
+            (fst.a.body[8].f, 'body'),
+            (fst.a.body[9].f, 'body'),
+            (fst.a.body[10].f, 'body'),
+            (fst.a.body[11].f, 'body'),
+            (fst.a.body[12].body[0].f, 'body'),
+            # (fst.a.body[12].body[0].f, 'handlers'),
+            (fst.a.body[12].body[0].f, 'orelse'),
+            (fst.a.body[12].body[0].f, 'finalbody'),
+        ]
+
+        seed(0)
+
+        bs = []
+        ps = points[:]
+
+        shuffle(ps)
+
+        while ps:
+            f, field = ps.pop()
+
+            bs.append(f.get_slice(field=field, cut=True))
+
+        ps = points[:]
+
+        shuffle(ps)
+        shuffle(bs)
+
+        while ps:
+            f, field = ps.pop()
+
+            f.put_slice(bs.pop(), 0, 0, field=field)#, check_node_type=False)
+
+        # print('...')
+        # print(fst.src)
+        # print('...')
+
+        self.assertEqual(fst.src, '''
+match a:
+    case 1:
+        if 2: continue
+        elif 3: o
+        else: p
+
+match b:
+    case 2:
+        pass  # this is removed
+
+if 1:
+    # pre
+    n  # post
+else:
+    try: a ; #  post-try
+    except: b ; c  # post-except
+    else: return 5
+    finally: yield 6
+
+try:
+    l
+    m
+except:
+    if 1: break
+else:
+    assert s, t
+finally:
+    # pre-classdeco
+    @classdeco
+    class cls:
+        @methdeco
+        def meth(self):
+            mvar = 5  # post-meth
+
+for a in b:
+    lambda x: x**2
+else:
+    """Multi
+    line
+    string."""
+
+async for a in b:
+    ("Multi"
+    "line"
+    "string")
+else:
+    j; k
+
+while a in b:
+    i = 1
+else:
+    global c
+
+with a as b:
+    del x, y, z
+
+async with a as b:
+    f'{i:2} plus 1'
+
+def func():
+    j = (i := k)
+
+@asyncdeco
+async def func():
+    r = [i for i in range(100)]  # post-list-comprehension
+
+class cls:
+    def docfunc(a, /, b=2, *c, d=3, **e):
+        """Doc
+        string."""
+
+        return -1
+
+if indented:
+    try:
+        match z:
+            case 1: zz
+            case 2:
+                zzz
+    except:
+        aa or bb or cc
+    else:
+        @deco
+        def inner() -> list[int]:
+            q = 4  # post-inner-q
+    finally:
+        try: raise
+        except Exception as exc:
+            raise exc from exc
+'''.lstrip())
+
+        for _ in range(25):  # now just fuzz it a bit, just in case
+            bs = []
+            ps = points[:]
+
+            shuffle(ps)
+
+            while ps:
+                f, field = ps.pop()
+
+                bs.append(f.get_slice(field=field, cut=True))
+
+            ps = points[:]
+
+            shuffle(ps)
+            shuffle(bs)
+
+            while ps:
+                f, field = ps.pop()
+
+                f.put_slice(bs.pop(), 0, 0, field=field)#, check_node_type=False)
+
+    def test_insert_comment_into_empty_field(self):  # TODO: legacy, do better when possible
+        fst = parse('''
+match a:
+    case 1:  # CASE
+        pass
+
+match b:  # MATCH
+    case 2:
+        pass
+
+if 1:  # IF
+    pass
+
+try:  # TRY
+    pass
+except:  # EXCEPT
+    pass
+
+for a in b:  # FOR
+    pass
+
+async for a in b:  # ASYNC FOR
+    pass
+
+while a in b:  # WHILE
+    pass
+
+with a as b:  # WITH
+    pass
+
+async with a as b:  # ASYNC WITH
+    pass
+
+def func(a = """ \\\\ not linecont
+         # comment
+         """, **e):
+    pass
+
+@asyncdeco
+async def func():  # ASYNC FUNC
+    pass
+
+class cls:  # CLASS
+    pass
+
+if clause:
+    while something:  # WHILE
+        pass
+
+if indented:
+    try:  # TRY
+        pass
+    except:  # EXCEPT
+        pass
+'''.lstrip()).f
+
+        # fst.a.body[1].cases[0].f.cut()
+        # fst.a.body[1].f.put_slice('pass', check_node_type=False)
+
+        points = [
+            (fst.a.body[0].cases[0].f, 'body'),
+            # (fst.a.body[1].f, 'cases'),
+            (fst.a.body[2].f, 'body'),
+
+            (fst.a.body[3].f, 'body'),
+            # (fst.a.body[3].f, 'handlers'),
+
+            (fst.a.body[4].f, 'body'),
+            (fst.a.body[5].f, 'body'),
+            (fst.a.body[6].f, 'body'),
+            (fst.a.body[7].f, 'body'),
+            (fst.a.body[8].f, 'body'),
+            (fst.a.body[9].f, 'body'),
+            (fst.a.body[10].f, 'body'),
+            (fst.a.body[11].f, 'body'),
+            (fst.a.body[12].body[0].f, 'body'),
+
+            (fst.a.body[13].body[0].f, 'body'),
+            # (fst.a.body[13].body[0].f, 'handlers'),
+        ]
+
+        for point, field in points:
+            point.get_slice(field=field, cut=True)
+
+        for i, (point, field) in enumerate(reversed(points)):
+            point.put_slice(f'# {i}', 0, 0, field)#, check_node_type=False)
+
+        # print('...')
+        # print('\n'.join(repr(l) for l in fst.lines))
+        # print('...')
+
+        self.assertEqual(fst.lines, [
+            'match a:',
+            '    case 1:  # CASE',
+            '        # 12',
+            '',
+            'match b:  # MATCH',
+            '    case 2:',
+            '        pass',
+            '',
+            'if 1:  # IF',
+            '    # 11',
+            '',
+            'try:  # TRY',
+            '    # 10',
+            'except:  # EXCEPT',
+            '    pass',
+            '',
+            'for a in b:  # FOR',
+            '    # 9',
+            '',
+            'async for a in b:  # ASYNC FOR',
+            '    # 8',
+            '',
+            'while a in b:  # WHILE',
+            '    # 7',
+            '',
+            'with a as b:  # WITH',
+            '    # 6',
+            '',
+            'async with a as b:  # ASYNC WITH',
+            '    # 5',
+            '',
+            'def func(a = """ \\\\ not linecont',
+            '         # comment',
+            '         """, **e):',
+            '    # 4',
+            '',
+            '@asyncdeco',
+            'async def func():  # ASYNC FUNC',
+            '    # 3',
+            '',
+            'class cls:  # CLASS',
+            '    # 2',
+            '',
+            'if clause:',
+            '    while something:  # WHILE',
+            '        # 1',
+            '',
+            'if indented:',
+            '    try:  # TRY',
+            '        # 0',
+            '    except:  # EXCEPT',
+            '        pass',
+            '',
+        ])
+
+    def test_insert_stmt_special(self):
+        a = parse('''
+pass
+
+try:
+    break
+except:
+    continue
+else:
+    @deco
+    def inner() -> list[int]:
+        q = 4  # post-inner-q
+finally:
+    pass
+        '''.strip())
+        a.body[1].body[0].f.cut()
+        a.body[1].handlers[0].f.cut()
+        a.body[1].f.put_slice('# pre\nexcept Exception as exc: n  # post', 0, 0, 'handlers')
+        a.body[1].f.put_slice('except ValueError as v: m', 0, 0, 'handlers')
+        self.assertEqual(a.f.src, '''
+pass
+
+try:
+except ValueError as v: m
+# pre
+except Exception as exc: n  # post
+else:
+    @deco
+    def inner() -> list[int]:
+        q = 4  # post-inner-q
+finally:
+    pass
+            '''.strip())
+
+    def test_replace_stmt_special(self):
+        a = parse('''
+if 1: pass
+elif 2:
+    pass
+        '''.strip())
+        a.body[0].orelse[0].f.put_slice(None, 0, 1)
+        a.body[0].f.put_slice('break', 0, 1, 'orelse')
+        self.assertEqual(a.f.src, 'if 1: pass\nelse:\n    break')
+
+        a = parse('''
+class cls:
+    if 1: pass
+    elif 2:
+        pass
+        '''.strip())
+        a.body[0].body[0].orelse[0].f.put_slice(None, 0, 1)
+        a.body[0].body[0].f.put_slice('break', 0, 1, 'orelse')
+        self.assertEqual(a.f.src, 'class cls:\n    if 1: pass\n    else:\n        break')
 
     def test_get_and_put_slice_from_to_slice(self):
         # stmts
