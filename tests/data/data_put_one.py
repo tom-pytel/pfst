@@ -10316,7 +10316,7 @@ r'''lambda a=1: None'''), ('arguments',
 r'''a, /, b=1, *c, d=100, **e'''),
 r'''**IndexError('Lambda.args does not take an index')**'''),
 
-(640, 'body[0].value', None, False, 'args', {}, ('exec',
+(640, 'body[0].value', None, False, 'args', {'raw': False}, ('exec',
 r'''lambda a=1: None'''), ('arguments',
 r''''''),
 r'''lambda: None''', r'''
@@ -13442,6 +13442,266 @@ Compare - ROOT 0,0..0,6
   0] GtE - 0,2..0,4
   .comparators[1]
   0] Name 'z' Load - 0,5..0,6
+'''),
+
+(3, '', None, False, 'args', {'raw': True}, (None,
+r'''lambda: None'''),
+r'''a''',
+r'''lambda a: None''', r'''
+Lambda - ROOT 0,0..0,14
+  .args arguments - 0,7..0,8
+    .args[1]
+    0] arg - 0,7..0,8
+      .arg 'a'
+  .body Constant None - 0,10..0,14
+'''),
+
+(4, '', None, False, 'args', {'raw': True}, (None,
+r'''lambda: None'''),
+r''' a''',
+r'''lambda a: None''', r'''
+Lambda - ROOT 0,0..0,14
+  .args arguments - 0,7..0,8
+    .args[1]
+    0] arg - 0,7..0,8
+      .arg 'a'
+  .body Constant None - 0,10..0,14
+'''),
+
+(5, '', None, False, 'args', {'raw': True}, (None,
+r'''lambda a: None'''),
+r'''''',
+r'''lambda : None''', r'''
+Lambda - ROOT 0,0..0,13
+  .body Constant None - 0,9..0,13
+'''),
+
+(6, '', 0, False, 'args', {'raw': True}, (None,
+r'''call(i for i in j)'''),
+r'''''',
+r'''call()''', r'''
+Call - ROOT 0,0..0,6
+  .func Name 'call' Load - 0,0..0,4
+'''),
+
+(7, '', 0, False, 'args', {'raw': True}, (None,
+r'''call(i for i in j)'''),
+r'''a''',
+r'''call(a)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+  0] Name 'a' Load - 0,5..0,6
+'''),
+
+(8, '', 0, False, 'args', {'raw': True}, (None,
+r'''call((i for i in j))'''),
+r'''a''',
+r'''call(a)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+  0] Name 'a' Load - 0,5..0,6
+'''),
+
+(9, '', 0, False, 'args', {'raw': True}, (None,
+r'''call(a)'''),
+r'''i for i in j''',
+r'''call(i for i in j)''', r'''
+Call - ROOT 0,0..0,18
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+  0] GeneratorExp - 0,4..0,18
+    .elt Name 'i' Load - 0,5..0,6
+    .generators[1]
+    0] comprehension - 0,7..0,17
+      .target Name 'i' Store - 0,11..0,12
+      .iter Name 'j' Load - 0,16..0,17
+      .is_async 0
+'''),
+
+(10, '', 1, False, None, {'raw': True, 'to': 'elts[2]'}, (None,
+r'''[(a), (b), (c), (d)]'''),
+r'''e''',
+r'''[(a), e, (d)]''', r'''
+List - ROOT 0,0..0,13
+  .elts[3]
+  0] Name 'a' Load - 0,2..0,3
+  1] Name 'e' Load - 0,6..0,7
+  2] Name 'd' Load - 0,10..0,11
+  .ctx Load
+'''),
+
+(11, '', 1, False, None, {'raw': True, 'to': 'elts[2]', 'pars': False}, (None,
+r'''[(a), (b), (c), (d)]'''),
+r'''e''',
+r'''[(a), (e), (d)]''', r'''
+List - ROOT 0,0..0,15
+  .elts[3]
+  0] Name 'a' Load - 0,2..0,3
+  1] Name 'e' Load - 0,7..0,8
+  2] Name 'd' Load - 0,12..0,13
+  .ctx Load
+'''),
+
+(12, '', 1, False, None, {'raw': True}, (None,
+r'''global a, b, c'''),
+r'''new''',
+r'''global a, new, c''', r'''
+Global - ROOT 0,0..0,16
+  .names[3]
+  0] 'a'
+  1] 'new'
+  2] 'c'
+'''),
+
+(13, '', 1, False, None, {'raw': True, 'to': 'elts[0]'}, (None,
+r'''[a, b]'''),
+r'''new''',
+r'''**ValueError("'to' node must follow self")**'''),
+
+(14, '', 1, False, None, {'raw': True, 'to': ''}, (None, r'''
+a
+b
+c
+'''),
+r'''new''', r'''
+a
+new
+''', r'''
+Module - ROOT 0,0..1,3
+  .body[2]
+  0] Expr - 0,0..0,1
+    .value Name 'a' Load - 0,0..0,1
+  1] Expr - 1,0..1,3
+    .value Name 'new' Load - 1,0..1,3
+'''),
+
+(15, 'body[1]', None, False, None, {'raw': True, 'to': ''}, (None, r'''
+if 1:
+    a
+    b
+    c
+'''),
+r'''new''', r'''
+if 1:
+    a
+    new
+''', r'''
+If - ROOT 0,0..2,7
+  .test Constant 1 - 0,3..0,4
+  .body[2]
+  0] Expr - 1,4..1,5
+    .value Name 'a' Load - 1,4..1,5
+  1] Expr - 2,4..2,7
+    .value Name 'new' Load - 2,4..2,7
+'''),
+
+(16, 'body[0]', 1, False, 'body', {'raw': True, 'to': 'body[0]'}, ('exec', r'''
+if 1:
+    a
+    b
+    c
+'''),
+r'''new''', r'''
+if 1:
+    a
+    new
+''', r'''
+Module - ROOT 0,0..2,7
+  .body[1]
+  0] If - 0,0..2,7
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Expr - 1,4..1,5
+      .value Name 'a' Load - 1,4..1,5
+    1] Expr - 2,4..2,7
+      .value Name 'new' Load - 2,4..2,7
+'''),
+
+(17, 'body[0].body[1]', None, False, None, {'raw': True, 'to': ''}, ('exec', r'''
+if 1:
+    a
+    b
+    c
+'''),
+r'''new''', r'''
+if 1:
+    a
+    new
+''', r'''
+Module - ROOT 0,0..2,7
+  .body[1]
+  0] If - 0,0..2,7
+    .test Constant 1 - 0,3..0,4
+    .body[2]
+    0] Expr - 1,4..1,5
+      .value Name 'a' Load - 1,4..1,5
+    1] Expr - 2,4..2,7
+      .value Name 'new' Load - 2,4..2,7
+'''),
+
+(18, '', 0, False, 'body', {'raw': True, 'to': 'body[0].body[1]'}, ('exec', r'''
+if 1:
+    a
+    b
+    c
+'''), r'''
+if 2:
+    new
+''', r'''
+if 2:
+    new
+    c
+''', r'''
+Module - ROOT 0,0..2,5
+  .body[1]
+  0] If - 0,0..2,5
+    .test Constant 2 - 0,3..0,4
+    .body[2]
+    0] Expr - 1,4..1,7
+      .value Name 'new' Load - 1,4..1,7
+    1] Expr - 2,4..2,5
+      .value Name 'c' Load - 2,4..2,5
+'''),
+
+(19, '', 1, False, None, {'raw': True, 'to': ''}, (None,
+r'''a, b, c'''),
+r'''new''',
+r'''a, new''', r'''
+Tuple - ROOT 0,0..0,6
+  .elts[2]
+  0] Name 'a' Load - 0,0..0,1
+  1] Name 'new' Load - 0,3..0,6
+  .ctx Load
+'''),
+
+(20, '', 0, False, 'body', {'raw': True, 'to': 'body[0].value.elts[1]'}, ('exec',
+r'''a, b, c'''),
+r'''new''',
+r'''new, c''', r'''
+Module - ROOT 0,0..0,6
+  .body[1]
+  0] Expr - 0,0..0,6
+    .value Tuple - 0,0..0,6
+      .elts[2]
+      0] Name 'new' Load - 0,0..0,3
+      1] Name 'c' Load - 0,5..0,6
+      .ctx Load
+'''),
+
+(21, 'body[0]', None, False, 'value', {'raw': True, 'to': 'body[0].value.elts[1]'}, ('exec',
+r'''a, b, c'''),
+r'''new''',
+r'''new, c''', r'''
+Module - ROOT 0,0..0,6
+  .body[1]
+  0] Expr - 0,0..0,6
+    .value Tuple - 0,0..0,6
+      .elts[2]
+      0] Name 'new' Load - 0,0..0,3
+      1] Name 'c' Load - 0,5..0,6
+      .ctx Load
 '''),
 ],
 

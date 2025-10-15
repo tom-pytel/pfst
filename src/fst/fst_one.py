@@ -2788,23 +2788,30 @@ _PUT_ONE_HANDLERS = {
 
 def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, child: AST | list[AST],
                  static: onestatic | None, options: Mapping[str, Any]) -> fst.FST | None:
+    if code is None:
+        raise ValueError('cannot delete in raw put')
+
     ast = self.a
     root = self.root
     to = options.get('to')
+    pars = bool(fst.FST.get_option('pars', options))
+    loc = None
 
     if not field:  # special case field
         if (is_dict := issubclass(cls := ast.__class__, Dict)) or issubclass(cls, MatchMapping):
             static = _PUT_ONE_HANDLERS[(cls, 'keys')][-1]
-            child = ast.keys
             field = 'keys'
+            child = ast.keys
+            body2 = ast.values if is_dict else ast.patterns
             idx = _fixup_one_index(len(child), idx)
+            loc = self._loc_key(idx, pars, child, body2)  # maybe the key is a '**'
 
             if not to:
-                to = self.values[idx] if is_dict else self.patterns[idx]
+                to = body2[idx].f
 
         elif issubclass(cls, Compare):
-            child = ast.ops
             field = 'ops'
+            child = ast.ops
             idx = _fixup_one_index(len(child), idx)
 
             if not to:
@@ -2813,84 +2820,53 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
         else:
             raise RuntimeError('should not get here')
 
-    child, idx = _validate_put(self, code, idx, field, child, can_del=True)
+    child, idx = _validate_put(self, code, idx, field, child)
+
+    if child is None and loc is None:
+        if field == 'keys':  # only Dict and MatchMapping have this, will not have been processed as a special field above
+            loc = self._loc_key(idx, pars, ast.keys, ast.values if isinstance(ast, Dict) else ast.patterns)
+        else:
+            raise ValueError('cannot insert in raw put')
+
     childf = child.f if isinstance(child, AST) else None
-    pars = bool(fst.FST.get_option('pars', options))
 
     if to is childf:
         to = None
 
     # code to appropriate lines
 
-    if is_del := code is None:
-        code = ''
-        is_empty = False
+    if isinstance(code, str):
+        code = code.split('\n')
+    elif isinstance(code, AST):
+        code = unparse(code).split('\n')
 
-    else:
-        if isinstance(code, str):
-            code = code.split('\n')
-        elif isinstance(code, AST):
-            code = unparse(code).split('\n')
+    elif isinstance(code, fst.FST):
+        if not code.is_root:
+            raise ValueError('expecting root node')
 
-        elif isinstance(code, fst.FST):
-            if not code.is_root:
-                raise ValueError('expecting root node')
+        code = code._lines
 
-            code = code._lines
-
-        is_empty = not next_frag(code, 0, 0, len(code) - 1, 0x7fffffffffffffff)  # if only comments and line continuations then is functionally empty
-
-    is_del_or_empty = is_del or is_empty
-
-    # from location, prefix and maybe suffix and delstr
-
-    info = static and (getinfo := static.getinfo) and getinfo(self, static, idx, field)
-    loc = None
-
-    if info:
-        if is_del_or_empty:
-            loc = info.loc_insdel or info.loc_ident
-
-            if is_del and info.delstr and not to:  # pure delete, plop in the delstr just to be nice :)
-                code = info.delstr
-
-        else:
-            loc = info.loc_ident
-
-            if child is None:  # pure insert, add the prefix, also the suffix if there is no 'to'
-                if info.prefix:
-                    code[0] = info.prefix + code[0]
-                if info.suffix and not to:
-                    code[-1] = code[-1] + info.suffix
-
-            elif field == 'conversion':  # another special case because f-string conversion may be implicit due to '=', the prefix is put conditionally in this case in the info() function
-                code[0] = info.prefix + code[0]
+    # from location (if not gotten already for Dict or MatchMapping key)
 
     if loc is None:
         if childf:
-            if isinstance(child, arguments):  # empty arguments do not have a location and lambda args need to add or remove a preceding space
-                if not (loc := childf.loc):
+            if (loc := childf.pars(shared=False) if pars else childf.bloc) is None:
+                if isinstance(child, arguments):  # empty arguments need special loc get
                     loc = loc_arguments_empty(childf)
 
-                    if not is_del_or_empty and isinstance(ast, Lambda):  # adding to nonexistent lambda pars, need to add space prefix
-                        code[0] = ' ' + code[0]
+                    if isinstance(ast, Lambda):  # SUPER SPECIAL CASE, adding arguments to lambda without them, may need to prepend a space to source being put
+                        if not code[0][:1].isspace():
+                            code[0] =  f' {code[0]}'
 
-                elif is_del_or_empty and isinstance(ast, Lambda):  # deleting existing lambda pars, need to eat space prefix
-                    loc = loc_Lambda_args_entire(self)
+            elif not pars and childf._is_solo_call_arg_genexp() and (non_shared_loc := childf.pars(shared=False)) > loc:  # if loc includes `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
+                loc = non_shared_loc
 
-            else:
-                loc = childf.pars(shared=False) if pars else childf.bloc
+        else:  # primitive, maybe its an identifier
+            info = static and (getinfo := static.getinfo) and getinfo(self, static, idx, field)
+            loc = info.loc_ident
 
-                if (loc and not pars and childf._is_solo_call_arg_genexp() and  # if loc includes `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
-                    (non_shared_loc := childf.pars(shared=False)) > loc
-                ):
-                    loc = non_shared_loc
-
-        if loc is None and info and not is_del_or_empty:  # identifier
-            loc = info.loc_insdel
-
-    if not loc:
-        raise ValueError('cannot determine location to put to')
+        if loc is None:
+            raise ValueError('cannot determine location to put to')
 
     # to location (if different) and appropriate parent
 
@@ -2899,32 +2875,22 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
         to_loc = loc
 
     else:
-        if not (to_parent := to.parent):
-            raise ValueError("'to' node cannot be root")
+        # if not to.parent:
+        #     raise ValueError("'to' node cannot be root")
 
         if root is not to.root:
             raise ValueError("'to' must be part of same tree")
 
-        to_loc = None
+        if (to_loc := to.pars(shared=False) if pars else to.bloc) is None:
+            if isinstance(to.a, arguments):  # empty arguments need special loc get
+                to_loc = loc_arguments_empty(to)
+            else:
+                raise ValueError("'to' node must have a location")
 
-        if is_del_or_empty:  # if deleting then see if there is a prescribed delete location
-            to_field, to_idx = to.pfield
-            to_static = _PUT_ONE_HANDLERS.get((to_parent.a.__class__, to_field), (None,))[-1]
+        if not pars and to._is_solo_call_arg_genexp() and (non_shared_loc := to.pars(shared=False)) > to_loc:  # solo GeneratorExp argument in Call which shares parentheses
+            to_loc = non_shared_loc
 
-            if to_static and (to_info := (getinfo := to_static.getinfo) and getinfo(self, to_static, to_idx, to_field)):
-                to_loc = to_info.loc_insdel
-
-        if to_loc is None:  # empty arguments get special handling
-            if not (to_loc := to.pars(shared=False) if pars else to.bloc):
-                if isinstance(to.a, arguments):
-                    to_loc = loc_arguments_empty(to)
-                else:
-                    raise ValueError("'to' node must have a location")
-
-            if not pars and to._is_solo_call_arg_genexp() and (non_shared_loc := to.pars(shared=False)) > to_loc:
-                to_loc = non_shared_loc
-
-        if to_loc[:2] < loc[:2]:
+        if to_loc[2:] < loc[:2]:  # if END of 'to' node comes before START of from node then can't do it
             raise ValueError("'to' node must follow self")
 
         self_path = root.child_path(self)  # technically should be root.child_path(childf)[:-1] but child may be identifier so get path directly to self which is parent and doesn't need the [:-1]
@@ -2935,9 +2901,8 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
     # do it
 
     ln, col, _, _ = loc
-    end_ln, end_col = parent._reparse_raw(code, ln, col, to_loc.end_ln, to_loc.end_col)
+    _, _, end_ln, end_col = to_loc
 
-    if is_del:
-        return None
+    end_ln, end_col = parent._reparse_raw(code, ln, col, end_ln, end_col)
 
     return root.find_in_loc(ln, col, end_ln, end_col)  # parent should stay same MOST of the time, `root` instead of `self` because some changes may propagate farther up the tree, like 'elif' -> 'else'

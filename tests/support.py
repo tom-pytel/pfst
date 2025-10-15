@@ -284,7 +284,7 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
             f_dump = f.root.dump(out=str)
             tail   = [f_dump]
 
-            if src is not None and not is_raw:  # TODO: can let this go through with raw, but do this when raw is solid
+            if src is not None and not is_raw:
                 try:
                     h = _make_fst(rest0)
                 except Exception as exc:

@@ -8,15 +8,21 @@ To be able to execute the examples, import this.
 
 ## Basics
 
-Raw put operations are different from the standard prescribed operations in that for the most part they do not take into
-account rules like precedence and indentation for the nodes being put and replaced and just try to put the source at the
-location and reparse. They exist because they allow things which are not covered or otherwise impossible with normal
-node operations.
+Raw put operations to nodes are different from the standard prescribed operations in that for the most part they do not
+take into account rules like precedence and indentation for the nodes being put and replaced and just try to put the
+source at the location and reparse. They exist because they allow things which are not covered or otherwise impossible
+with normal node operations.
 
 Raw mode puts can be executed on individual nodes or slices by specifying the option `raw=True`. `raw='auto'` can be
 used so that the prescribed operation with rules is tried first and if that fails a raw put is attempted as a fallback.
 Raw mode automatic fallback is turned off globally by default as the error messages can be confusing, but if you want
 this turned on for all operations without having to specify anything then do `FST.set_options(raw='auto')`.
+
+Raw put operations like this, whether explicit via `raw=True` or as a fallback via `raw='auto'` cannot insert or delete
+nodes, they can only change existing nodes. Existing parentheses in the target may be removed depending on the `pars`
+option.
+
+Raw node put operations can do things which are not normally possible with prescribed operations.
 
 ```py
 >>> f = FST('{a: b, c: d, e: f}')
@@ -87,12 +93,58 @@ And just like for individual nodes, this can completely change the structure.
    ], sub[0,8, 4, 5]
 ```
 
+## Locations
+
+Raw node operations use the location of the node (including grouping parentheses if `pars` is not `False`). There are
+two special-case locations which are automatically provided which are not normally available for a node. For a `Dict` or
+`MatchMapping` the location of a nonexistent key replaced with `**` is provided if operating on the `keys` field.
+
+```py
+>>> f = FST('{a: b, **c, d: e}')
+
+>>> f.put('z: ', 1, 'keys', raw=True)  # note the explicit trailing ': ' after the 'z'
+<Dict ROOT 0,0..0,18>
+
+>>> print(f.src)
+{a: b, z: c, d: e}
+```
+
+You cannot undo this with a raw put as the location of the key ends before the `:` and so that will not be overwritten
+if putting just to `keys`. If you wish to change a `a: b` key-value pair in a `Dict` or `MatchMapping` to a `**b` using
+raw operations then you must operate on the default `None` field.
+
+```py
+>>> f.put('**c', 1, raw=True)  # note we don't specify 'keys' field
+<Dict ROOT 0,0..0,17>
+
+>>> print(f.src)
+{a: b, **c, d: e}
+```
+
+Also the location of empty `arguments` for a `FunctionDef` or a `Lambda` are provided at the expected location of those
+`arguments` even though empty `arguments` don't normally have a `.loc`.
+
 ## Source and automatic modifications
 
-You can pass `AST` and `FST` nodes to raw mode operations, in which case the `AST` is unparsed and the `FST` just has
-its own source code used for the put. There may be some modifications when these are passed, like for example an `FST`
-passed as a slice source to a raw mode slice put operation may have its delimiters removed for the put (since we have
-the `FST` type information).
+The only single-element put special case modification which may be applied is if putting to empty `arguments` of a
+`Lambda` function. The location of these in a standard empty `Lambda` is normally right after the `lambda` keyword since
+the `:` normally follows right after. In order to stay consistent with puts to empty `FunctionDef` arguments always
+working, in this case if the source being put does not start with a space then a single space will be prepended.
+
+```py
+>>> f = FST('lambda: None')
+
+>>> f.put('a', 'args', raw=True)  # no leading space before the 'a'
+<Lambda ROOT 0,0..0,14>
+
+>>> print(f.src)  # one was automatically inserted
+lambda a: None
+```
+
+Other than this, if you pass `AST` and `FST` nodes to raw mode slice operations, the `AST` is unparsed and the `FST`
+just has its own source code used for the put. The only modification which may happen to this unparsed `AST` or existing
+`FST` source is that if a sequence with delimiters is passed to a slice put then the delimiters are stripped for
+`Tuple`, `List`, `Set`, `Dict`, `MatchSequence` and `MatchMapping`, otherwise the source is used as-is for the put.
 
 ```
 >>> f = FST('[1, 2, 3]')
@@ -102,19 +154,6 @@ the `FST` type information).
 
 >>> print(f.src)
 [1, 2, x, y]
-```
-
-The other kind of modification that can happen in node raw operations are prefixes and suffixes being added, just like
-for prescribed node operations as otherwise using raw might be more annoying.
-
-```py
->>> f = FST('def f(): pass')
-
->>> f.put('int', 'returns', raw=True)
-<FunctionDef ROOT 0,0..0,20>
-
->>> print(f.src)  # notice the ' -> ' added automatically
-def f() -> int: pass
 ```
 
 ## `to` parameter

@@ -283,15 +283,31 @@ class TestFSTPut(unittest.TestCase):
         from support import _unfmt_code, _make_fst
 
         for key, case, rest in DATA_PUT_ONE.iterate(True):
-            if case.options.get('raw') is False or case.options.get('raw') is not None or rest[1].startswith('**'):
+            if case.options.get('raw') is not None or rest[1].startswith('**'):
                 continue
 
             options = {**case.options, 'raw': True}
             f       = _make_fst(case.code, case.attr)
             src     = _unfmt_code(r0 if isinstance(r0 := rest[0], str) else r0[1])
 
+            if src == '**DEL**':
+                continue
+
             try:
-                f.put(None if src == '**DEL**' else src, case.start, case.stop, field=case.field, **options)
+                try:
+                    f.put(src, case.start, case.stop, field=case.field, **options)  # None if src == '**DEL**' else src
+
+                except ValueError as exc:
+                    if str(exc) != 'cannot insert in raw put':
+                        raise
+
+                    continue
+
+                except NodeError as exc:  # putting to empty arguments
+                    if str(exc) != 'cannot determine location to put to':
+                        raise
+
+                    continue
 
                 if options.get('_verify', True):
                     f.root.verify(raise_=True)
@@ -995,70 +1011,67 @@ if 1:
                 raise
 
     def test_put_special_fields(self):
-        old_options = FST.set_options(pars=False, raw=True)
+        with FST.options(pars=False, raw=True):
+            self.assertEqual('{a: b, **c, e: f}', parse('{a: b, **d, e: f}').body[0].value.f.put('c', 1, field='values').root.src)
+            self.assertEqual('{a: b, c: d, e: f}', parse('{a: b, **d, e: f}').body[0].value.f.put('c: ', 1, field='keys').root.src)
+            self.assertEqual('{a: b, **g, e: f}', parse('{a: b, c: d, e: f}').body[0].value.f.put('**g', 1).root.src)
+            self.assertEqual('{a: b, c: d, e: f}', parse('{a: b, **g, e: f}').body[0].value.f.put('c: d', 1).root.src)
+            self.assertEqual('{a: b, g: d, e: f}', parse('{a: b, c: d, e: f}').body[0].value.f.put('g', 1, field='keys').root.src)
+            self.assertEqual('{a: b, c: g, e: f}', parse('{a: b, c: d, e: f}').body[0].value.f.put('g', 1, field='values').root.src)
+            self.assertEqual('{a: b, **g, e: f}', parse('{a: b, c: d, e: f}').body[0].value.f.put_slice('**g', 1, 2).root.src)
 
-        self.assertEqual('{a: b, **c, e: f}', parse('{a: b, **d, e: f}').body[0].value.f.put('c', 1, field='values').root.src)
-        self.assertEqual('{a: b, c: d, e: f}', parse('{a: b, **d, e: f}').body[0].value.f.put('c', 1, field='keys').root.src)
-        self.assertEqual('{a: b, **g, e: f}', parse('{a: b, c: d, e: f}').body[0].value.f.put('**g', 1).root.src)
-        self.assertEqual('{a: b, c: d, e: f}', parse('{a: b, **g, e: f}').body[0].value.f.put('c: d', 1).root.src)
-        self.assertEqual('{a: b, g: d, e: f}', parse('{a: b, c: d, e: f}').body[0].value.f.put('g', 1, field='keys').root.src)
-        self.assertEqual('{a: b, c: g, e: f}', parse('{a: b, c: d, e: f}').body[0].value.f.put('g', 1, field='values').root.src)
-        self.assertEqual('{a: b, **g, e: f}', parse('{a: b, c: d, e: f}').body[0].value.f.put_slice('**g', 1, 2).root.src)
+            self.assertEqual('match a:\n case {4: d, 2: b, 3: c}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put('4: d', 0).root.src)
+            self.assertEqual('match a:\n case {4: a, 2: b, 3: c}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put('4', 0, field='keys').root.src)
+            self.assertEqual('match a:\n case {1: d, 2: b, 3: c}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put('d', 0, field='patterns').root.src)
+            self.assertEqual('match a:\n case {1: a, 2: b, **d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put('**d', 2).root.src)
+            self.assertEqual('match a:\n case {4: d, 2: b, 3: c}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 0, 1).root.src)
+            self.assertEqual('match a:\n case {1: a, 4: d, 3: c}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 1, 2).root.src)
+            self.assertEqual('match a:\n case {1: a, 2: b, 4: d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 2, 3).root.src)
+            self.assertEqual('match a:\n case {1: a, 4: d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 1, 3).root.src)
+            self.assertEqual('match a:\n case {4: d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 0, 3).root.src)
+            self.assertEqual('match a:\n case {4: d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d').root.src)
 
-        self.assertEqual('match a:\n case {4: d, 2: b, 3: c}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put('4: d', 0).root.src)
-        self.assertEqual('match a:\n case {4: a, 2: b, 3: c}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put('4', 0, field='keys').root.src)
-        self.assertEqual('match a:\n case {1: d, 2: b, 3: c}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put('d', 0, field='patterns').root.src)
-        self.assertEqual('match a:\n case {1: a, 2: b, **d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put('**d', 2).root.src)
-        self.assertEqual('match a:\n case {4: d, 2: b, 3: c}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 0, 1).root.src)
-        self.assertEqual('match a:\n case {1: a, 4: d, 3: c}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 1, 2).root.src)
-        self.assertEqual('match a:\n case {1: a, 2: b, 4: d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 2, 3).root.src)
-        self.assertEqual('match a:\n case {1: a, 4: d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 1, 3).root.src)
-        self.assertEqual('match a:\n case {4: d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 0, 3).root.src)
-        self.assertEqual('match a:\n case {4: d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d').root.src)
+            # old Compare all fields combined
+            # self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put('z', 0).root.src)
+            # self.assertEqual('a < z < c', parse('a < b < c').body[0].value.f.put('z', 1).root.src)
+            # self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put('z', 2).root.src)
+            # self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put('z', -1).root.src)
+            # self.assertEqual('a < z < c', parse('a < b < c').body[0].value.f.put('z', -2).root.src)
+            # self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put('z', -3).root.src)
+            # self.assertRaises(IndexError, parse('a < b < c').body[0].value.f.put, 'z', 4)
+            # self.assertRaises(IndexError, parse('a < b < c').body[0].value.f.put, 'z', -4)
+            # self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put('z', field='left').root.src)
+            # self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put('z', 1, field='comparators').root.src)
+            # self.assertEqual('a < b > c', parse('a < b < c').body[0].value.f.put('>', 1, field='ops').root.src)
+            # self.assertRaises(ValueError, parse('a < b < c').body[0].value.f.put_slice, 'z', 0, 0)
+            # self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put_slice('z', 0, 1).root.src)
+            # self.assertEqual('z < c', parse('a < b < c').body[0].value.f.put_slice('z', 0, 2).root.src)
+            # self.assertEqual('z', parse('a < b < c').body[0].value.f.put_slice('z', 0, 3).root.src)
+            # self.assertRaises(ValueError, parse('a < b < c').body[0].value.f.put_slice, 'z', 1, 1)
+            # self.assertEqual('a < z < c', parse('a < b < c').body[0].value.f.put_slice('z', 1, 2).root.src)
+            # self.assertEqual('a < z', parse('a < b < c').body[0].value.f.put_slice('z', 1, 3).root.src)
+            # self.assertRaises(ValueError, parse('a < b < c').body[0].value.f.put_slice, 'z', 2, 2)
+            # self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put_slice('z', 2, 3).root.src)
+            # self.assertRaises(ValueError, parse('a < b < c').body[0].value.f.put_slice, 'z', 3, 3)
 
-        # old Compare all fields combined
-        # self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put('z', 0).root.src)
-        # self.assertEqual('a < z < c', parse('a < b < c').body[0].value.f.put('z', 1).root.src)
-        # self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put('z', 2).root.src)
-        # self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put('z', -1).root.src)
-        # self.assertEqual('a < z < c', parse('a < b < c').body[0].value.f.put('z', -2).root.src)
-        # self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put('z', -3).root.src)
-        # self.assertRaises(IndexError, parse('a < b < c').body[0].value.f.put, 'z', 4)
-        # self.assertRaises(IndexError, parse('a < b < c').body[0].value.f.put, 'z', -4)
-        # self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put('z', field='left').root.src)
-        # self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put('z', 1, field='comparators').root.src)
-        # self.assertEqual('a < b > c', parse('a < b < c').body[0].value.f.put('>', 1, field='ops').root.src)
-        # self.assertRaises(ValueError, parse('a < b < c').body[0].value.f.put_slice, 'z', 0, 0)
-        # self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put_slice('z', 0, 1).root.src)
-        # self.assertEqual('z < c', parse('a < b < c').body[0].value.f.put_slice('z', 0, 2).root.src)
-        # self.assertEqual('z', parse('a < b < c').body[0].value.f.put_slice('z', 0, 3).root.src)
-        # self.assertRaises(ValueError, parse('a < b < c').body[0].value.f.put_slice, 'z', 1, 1)
-        # self.assertEqual('a < z < c', parse('a < b < c').body[0].value.f.put_slice('z', 1, 2).root.src)
-        # self.assertEqual('a < z', parse('a < b < c').body[0].value.f.put_slice('z', 1, 3).root.src)
-        # self.assertRaises(ValueError, parse('a < b < c').body[0].value.f.put_slice, 'z', 2, 2)
-        # self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put_slice('z', 2, 3).root.src)
-        # self.assertRaises(ValueError, parse('a < b < c').body[0].value.f.put_slice, 'z', 3, 3)
+            self.assertEqual('[i for i in j if a if z if c]', parse('[i for i in j if a if b if c]').body[0].value.generators[0].f.put('z', 1, field='ifs').root.src)
+            self.assertEqual('[i for i in j if a if z if c]', parse('[i for i in j if a if b if c]').body[0].value.generators[0].f.put_slice('if z', 1, 2, field='ifs').root.src)
+            self.assertEqual('[i for i in j if a if z]', parse('[i for i in j if a if b if c]').body[0].value.generators[0].f.put_slice('if z', 1, 3, field='ifs').root.src)
+            self.assertEqual('[i for i in j if z]', parse('[i for i in j if a if b if c]').body[0].value.generators[0].f.put_slice('if z', field='ifs').root.src)
+            self.assertEqual('[i for i in j if a if (z) if c]', parse('[i for i in j if a if (b) if c]').body[0].value.generators[0].f.put('z', 1, field='ifs').root.src)
+            self.assertEqual('[i for i in j if a if z if c]', parse('[i for i in j if a if (b) if c]').body[0].value.generators[0].f.put_slice('if z', 1, 2, field='ifs').root.src)
+            self.assertEqual('[i for i in j if a if z]', parse('[i for i in j if a if (b) if (c)]').body[0].value.generators[0].f.put_slice('if z', 1, 3, field='ifs').root.src)
 
-        self.assertEqual('[i for i in j if a if z if c]', parse('[i for i in j if a if b if c]').body[0].value.generators[0].f.put('z', 1, field='ifs').root.src)
-        self.assertEqual('[i for i in j if a if z if c]', parse('[i for i in j if a if b if c]').body[0].value.generators[0].f.put_slice('if z', 1, 2, field='ifs').root.src)
-        self.assertEqual('[i for i in j if a if z]', parse('[i for i in j if a if b if c]').body[0].value.generators[0].f.put_slice('if z', 1, 3, field='ifs').root.src)
-        self.assertEqual('[i for i in j if z]', parse('[i for i in j if a if b if c]').body[0].value.generators[0].f.put_slice('if z', field='ifs').root.src)
-        self.assertEqual('[i for i in j if a if (z) if c]', parse('[i for i in j if a if (b) if c]').body[0].value.generators[0].f.put('z', 1, field='ifs').root.src)
-        self.assertEqual('[i for i in j if a if z if c]', parse('[i for i in j if a if (b) if c]').body[0].value.generators[0].f.put_slice('if z', 1, 2, field='ifs').root.src)
-        self.assertEqual('[i for i in j if a if z]', parse('[i for i in j if a if (b) if (c)]').body[0].value.generators[0].f.put_slice('if z', 1, 3, field='ifs').root.src)
+            self.assertEqual('@a\n@z\n@c\nclass cls: pass', parse('@a\n@b\n@c\nclass cls: pass').body[0].f.put('z', 1, field='decorator_list').root.src)
+            self.assertEqual('@a\n@z\n@c\nclass cls: pass', parse('@a\n@b\n@c\nclass cls: pass').body[0].f.put_slice('@z', 1, 2, field='decorator_list').root.src)
+            self.assertEqual('@a\n@z\nclass cls: pass', parse('@a\n@b\n@c\nclass cls: pass').body[0].f.put_slice('@z', 1, 3, field='decorator_list').root.src)
+            self.assertEqual('@z\nclass cls: pass', parse('@a\n@b\n@c\nclass cls: pass').body[0].f.put_slice('@z', field='decorator_list').root.src)
+            self.assertEqual('@a\n@(z)\n@c\nclass cls: pass', parse('@a\n@(b)\n@c\nclass cls: pass').body[0].f.put('z', 1, field='decorator_list').root.src)
+            self.assertEqual('@a\n@z\n@c\nclass cls: pass', parse('@a\n@(b)\n@c\nclass cls: pass').body[0].f.put_slice('@z', 1, 2, field='decorator_list').root.src)
+            self.assertEqual('@a\n@z\nclass cls: pass', parse('@a\n@(b)\n@(c)\nclass cls: pass').body[0].f.put_slice('@z', 1, 3, field='decorator_list').root.src)
 
-        self.assertEqual('@a\n@z\n@c\nclass cls: pass', parse('@a\n@b\n@c\nclass cls: pass').body[0].f.put('z', 1, field='decorator_list').root.src)
-        self.assertEqual('@a\n@z\n@c\nclass cls: pass', parse('@a\n@b\n@c\nclass cls: pass').body[0].f.put_slice('@z', 1, 2, field='decorator_list').root.src)
-        self.assertEqual('@a\n@z\nclass cls: pass', parse('@a\n@b\n@c\nclass cls: pass').body[0].f.put_slice('@z', 1, 3, field='decorator_list').root.src)
-        self.assertEqual('@z\nclass cls: pass', parse('@a\n@b\n@c\nclass cls: pass').body[0].f.put_slice('@z', field='decorator_list').root.src)
-        self.assertEqual('@a\n@(z)\n@c\nclass cls: pass', parse('@a\n@(b)\n@c\nclass cls: pass').body[0].f.put('z', 1, field='decorator_list').root.src)
-        self.assertEqual('@a\n@z\n@c\nclass cls: pass', parse('@a\n@(b)\n@c\nclass cls: pass').body[0].f.put_slice('@z', 1, 2, field='decorator_list').root.src)
-        self.assertEqual('@a\n@z\nclass cls: pass', parse('@a\n@(b)\n@(c)\nclass cls: pass').body[0].f.put_slice('@z', 1, 3, field='decorator_list').root.src)
-
-        self.assertEqual('{a: b, e: f}', FST('{a: b, c: d, e: f}', 'exec').body[0].value.put(None, 1, raw='auto').root.src)
-        self.assertEqual('{a: b, e: f}', FST('{a: b, c: d, e: f}', 'exec').body[0].value.put(None, 1, raw=False).root.src)
-
-        FST.set_options(**old_options)
+            self.assertEqual('{a: b, e: f}', FST('{a: b, c: d, e: f}', 'exec').body[0].value.put(None, 1, raw='auto').root.src)
+            self.assertEqual('{a: b, e: f}', FST('{a: b, c: d, e: f}', 'exec').body[0].value.put(None, 1, raw=False).root.src)
 
     def test_put_one_constant(self):
         f = FST('None', Constant)
@@ -1491,152 +1504,152 @@ a
             self.assertRaises(NotImplementedError, FST('f"{a}"').values[0].put, 'f"0.5f"', 'format_spec', raw=False)  # not implemented yet
             self.assertRaises(NotImplementedError, FST('f"{a}"').put, '"s"', 0, 'values', raw=False)  # not implemented yet
 
-            f = FST('f"{a}"', stmt)
+            # f = FST('f"{a}"', stmt)
 
-            f.value.values[0].put('0.5f<8', 'format_spec', raw=True)
-            self.assertEqual('f"{a:0.5f<8}"', f.src)
-            f.verify()
+            # f.value.values[0].put('0.5f<8', 'format_spec', raw=True)
+            # self.assertEqual('f"{a:0.5f<8}"', f.src)
+            # f.verify()
 
-            f.value.values[0].put(None, 'format_spec', raw=True)
-            self.assertEqual('f"{a}"', f.src)
-            f.verify()
+            # # f.value.values[0].put(None, 'format_spec', raw=True)
+            # # self.assertEqual('f"{a}"', f.src)
+            # # f.verify()
 
-            f.value.values[0].put('r', 'conversion', raw=True)
-            self.assertEqual('f"{a!r}"', f.src)
-            f.verify()
+            # f.value.values[0].put('r', 'conversion', raw=True)
+            # self.assertEqual('f"{a!r}"', f.src)
+            # f.verify()
 
-            f.value.values[0].put(None, 'conversion', raw=True)
-            self.assertEqual('f"{a}"', f.src)
-            f.verify()
+            # # f.value.values[0].put(None, 'conversion', raw=True)
+            # # self.assertEqual('f"{a}"', f.src)
+            # # f.verify()
 
-            f.value.values[0].put('0.5f<8', 'format_spec', raw=True)
-            f.value.values[0].put('r', 'conversion', raw=True)
-            self.assertEqual('f"{a!r:0.5f<8}"', f.src)
-            f.verify()
+            # f.value.values[0].put('0.5f<8', 'format_spec', raw=True)
+            # f.value.values[0].put('r', 'conversion', raw=True)
+            # self.assertEqual('f"{a!r:0.5f<8}"', f.src)
+            # f.verify()
 
-            f.value.values[0].put(None, 'format_spec', raw=True)
-            self.assertEqual('f"{a!r}"', f.src)
-            f.verify()
+            # # f.value.values[0].put(None, 'format_spec', raw=True)
+            # # self.assertEqual('f"{a!r}"', f.src)
+            # # f.verify()
 
-            f.value.values[0].put(None, 'conversion', raw=True)
-            self.assertEqual('f"{a}"', f.src)
-            f.verify()
+            # # f.value.values[0].put(None, 'conversion', raw=True)
+            # # self.assertEqual('f"{a}"', f.src)
+            # # f.verify()
 
-            f.value.values[0].put('r', 'conversion', raw=True)
-            f.value.values[0].put('0.5f<8', 'format_spec', raw=True)
-            self.assertEqual('f"{a!r:0.5f<8}"', f.src)
-            f.verify()
+            # f.value.values[0].put('r', 'conversion', raw=True)
+            # f.value.values[0].put('0.5f<8', 'format_spec', raw=True)
+            # self.assertEqual('f"{a!r:0.5f<8}"', f.src)
+            # f.verify()
 
-            f.value.values[0].put(None, 'conversion', raw=True)
-            self.assertEqual('f"{a:0.5f<8}"', f.src)
-            f.verify()
+            # # f.value.values[0].put(None, 'conversion', raw=True)
+            # # self.assertEqual('f"{a:0.5f<8}"', f.src)
+            # # f.verify()
 
-            f.value.values[0].put(None, 'format_spec', raw=True)
-            self.assertEqual('f"{a}"', f.src)
-            f.verify()
+            # # f.value.values[0].put(None, 'format_spec', raw=True)
+            # # self.assertEqual('f"{a}"', f.src)
+            # # f.verify()
 
-            f.value.put('{z}', 0, 'values', raw=True)
-            self.assertEqual('f"{z}"', f.src)
-            f.verify()
+            # f.value.put('{z}', 0, 'values', raw=True)
+            # self.assertEqual('f"{z}"', f.src)
+            # f.verify()
 
-            f = FST('f"{a=}"', stmt)
+            # f = FST('f"{a=}"', stmt)
 
-            f.value.values[1].put('r', 'conversion', raw=True)
-            self.assertEqual('f"{a=!r}"', f.src)
-            f.verify()
+            # f.value.values[1].put('r', 'conversion', raw=True)
+            # self.assertEqual('f"{a=!r}"', f.src)
+            # f.verify()
 
-            f.value.values[1].put(None, 'conversion', raw=True)
-            self.assertEqual('f"{a=}"', f.src)
-            f.verify()
+            # # f.value.values[1].put(None, 'conversion', raw=True)
+            # # self.assertEqual('f"{a=}"', f.src)
+            # # f.verify()
 
-            f.value.values[1].put('0.5f<8', 'format_spec', raw=True)
-            f.value.values[1].put('r', 'conversion', raw=True)
-            self.assertEqual('f"{a=!r:0.5f<8}"', f.src)
-            f.verify()
+            # f.value.values[1].put('0.5f<8', 'format_spec', raw=True)
+            # f.value.values[1].put('r', 'conversion', raw=True)
+            # self.assertEqual('f"{a=!r:0.5f<8}"', f.src)
+            # f.verify()
 
-            f.value.values[1].put(None, 'conversion', raw=True)
-            self.assertEqual('f"{a=:0.5f<8}"', f.src)
-            f.verify()
+            # # f.value.values[1].put(None, 'conversion', raw=True)
+            # # self.assertEqual('f"{a=:0.5f<8}"', f.src)
+            # # f.verify()
 
-            f.value.values[1].put(None, 'format_spec', raw=True)
-            self.assertEqual('f"{a=}"', f.src)
-            f.verify()
+            # # f.value.values[1].put(None, 'format_spec', raw=True)
+            # # self.assertEqual('f"{a=}"', f.src)
+            # # f.verify()
 
         if PYGE14:
             self.assertRaises(NotImplementedError, FST('t"{a}"').values[0].put, '"s"', 'conversion', raw=False)  # not implemented yet
             self.assertRaises(NotImplementedError, FST('t"{a}"').values[0].put, 'f"0.5f"', 'format_spec', raw=False)  # not implemented yet
             self.assertRaises(NotImplementedError, FST('t"{a}"').put, '"s"', 0, 'values', raw=False)  # not implemented yet
 
-            f = FST('t"{a}"', stmt)
+            # f = FST('t"{a}"', stmt)
 
-            f.value.values[0].put('0.5f<8', 'format_spec', raw=True)
-            self.assertEqual('t"{a:0.5f<8}"', f.src)
-            f.verify()
+            # f.value.values[0].put('0.5f<8', 'format_spec', raw=True)
+            # self.assertEqual('t"{a:0.5f<8}"', f.src)
+            # f.verify()
 
-            f.value.values[0].put(None, 'format_spec', raw=True)
-            self.assertEqual('t"{a}"', f.src)
-            f.verify()
+            # # f.value.values[0].put(None, 'format_spec', raw=True)
+            # # self.assertEqual('t"{a}"', f.src)
+            # # f.verify()
 
-            f.value.values[0].put('r', 'conversion', raw=True)
-            self.assertEqual('t"{a!r}"', f.src)
-            f.verify()
+            # f.value.values[0].put('r', 'conversion', raw=True)
+            # self.assertEqual('t"{a!r}"', f.src)
+            # f.verify()
 
-            f.value.values[0].put(None, 'conversion', raw=True)
-            self.assertEqual('t"{a}"', f.src)
-            f.verify()
+            # # f.value.values[0].put(None, 'conversion', raw=True)
+            # # self.assertEqual('t"{a}"', f.src)
+            # # f.verify()
 
-            f.value.values[0].put('0.5f<8', 'format_spec', raw=True)
-            f.value.values[0].put('r', 'conversion', raw=True)
-            self.assertEqual('t"{a!r:0.5f<8}"', f.src)
-            f.verify()
+            # f.value.values[0].put('0.5f<8', 'format_spec', raw=True)
+            # f.value.values[0].put('r', 'conversion', raw=True)
+            # self.assertEqual('t"{a!r:0.5f<8}"', f.src)
+            # f.verify()
 
-            f.value.values[0].put(None, 'format_spec', raw=True)
-            self.assertEqual('t"{a!r}"', f.src)
-            f.verify()
+            # # f.value.values[0].put(None, 'format_spec', raw=True)
+            # # self.assertEqual('t"{a!r}"', f.src)
+            # # f.verify()
 
-            f.value.values[0].put(None, 'conversion', raw=True)
-            self.assertEqual('t"{a}"', f.src)
-            f.verify()
+            # # f.value.values[0].put(None, 'conversion', raw=True)
+            # # self.assertEqual('t"{a}"', f.src)
+            # # f.verify()
 
-            f.value.values[0].put('r', 'conversion', raw=True)
-            f.value.values[0].put('0.5f<8', 'format_spec', raw=True)
-            self.assertEqual('t"{a!r:0.5f<8}"', f.src)
-            f.verify()
+            # f.value.values[0].put('r', 'conversion', raw=True)
+            # f.value.values[0].put('0.5f<8', 'format_spec', raw=True)
+            # self.assertEqual('t"{a!r:0.5f<8}"', f.src)
+            # f.verify()
 
-            f.value.values[0].put(None, 'conversion', raw=True)
-            self.assertEqual('t"{a:0.5f<8}"', f.src)
-            f.verify()
+            # f.value.values[0].put(None, 'conversion', raw=True)
+            # self.assertEqual('t"{a:0.5f<8}"', f.src)
+            # f.verify()
 
-            f.value.values[0].put(None, 'format_spec', raw=True)
-            self.assertEqual('t"{a}"', f.src)
-            f.verify()
+            # # f.value.values[0].put(None, 'format_spec', raw=True)
+            # # self.assertEqual('t"{a}"', f.src)
+            # # f.verify()
 
-            f.value.put('{z}', 0, 'values', raw=True)
-            self.assertEqual('t"{z}"', f.src)
-            f.verify()
+            # f.value.put('{z}', 0, 'values', raw=True)
+            # self.assertEqual('t"{z}"', f.src)
+            # f.verify()
 
-            f = FST('t"{a=}"', stmt)
+            # f = FST('t"{a=}"', stmt)
 
-            f.value.values[1].put('r', 'conversion', raw=True)
-            self.assertEqual('t"{a=!r}"', f.src)
-            f.verify()
+            # f.value.values[1].put('r', 'conversion', raw=True)
+            # self.assertEqual('t"{a=!r}"', f.src)
+            # f.verify()
 
-            f.value.values[1].put(None, 'conversion', raw=True)
-            self.assertEqual('t"{a=}"', f.src)
-            f.verify()
+            # # f.value.values[1].put(None, 'conversion', raw=True)
+            # # self.assertEqual('t"{a=}"', f.src)
+            # # f.verify()
 
-            f.value.values[1].put('0.5f<8', 'format_spec', raw=True)
-            f.value.values[1].put('r', 'conversion', raw=True)
-            self.assertEqual('t"{a=!r:0.5f<8}"', f.src)
-            f.verify()
+            # f.value.values[1].put('0.5f<8', 'format_spec', raw=True)
+            # f.value.values[1].put('r', 'conversion', raw=True)
+            # self.assertEqual('t"{a=!r:0.5f<8}"', f.src)
+            # f.verify()
 
-            f.value.values[1].put(None, 'conversion', raw=True)
-            self.assertEqual('t"{a=:0.5f<8}"', f.src)
-            f.verify()
+            # # f.value.values[1].put(None, 'conversion', raw=True)
+            # # self.assertEqual('t"{a=:0.5f<8}"', f.src)
+            # # f.verify()
 
-            f.value.values[1].put(None, 'format_spec', raw=True)
-            self.assertEqual('t"{a=}"', f.src)
-            f.verify()
+            # # f.value.values[1].put(None, 'format_spec', raw=True)
+            # # self.assertEqual('t"{a=}"', f.src)
+            # # f.verify()
 
         # Starred has different behavior as a call arg
 
@@ -2916,9 +2929,9 @@ c, # c
         f = parse('a = b').body[0].f
         self.assertRaises(ValueError, f.value.replace, 'c', to=f.targets[0], raw=True)
 
-        # make sure replace returns appropriate node (especially replace with None)
+        # make sure replace returns appropriate node
 
-        self.assertIsNone(FST('def f() -> int: pass').returns.replace(None, raw=True))
+        # self.assertIsNone(FST('def f() -> int: pass').returns.replace(None, raw=True))
         self.assertEqual('str', FST('def f() -> int: pass').returns.replace('str', raw=True).src)
 
         # special None fields of Dict, MatchMapping and Compare
