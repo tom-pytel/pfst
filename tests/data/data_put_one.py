@@ -7,6 +7,8 @@
 # - OR
 # error)
 
+from fst.asttypes import *
+
 DATA_PUT_ONE = {
 'old': [  # ................................................................................
 
@@ -13702,6 +13704,82 @@ Module - ROOT 0,0..0,6
       0] Name 'new' Load - 0,0..0,3
       1] Name 'c' Load - 0,5..0,6
       .ctx Load
+'''),
+
+(22, '', None, False, 'value', {'raw': True}, (None,
+r'''123'''),
+r'''None''',
+r'''None''',
+r'''Constant None - ROOT 0,0..0,4'''),
+
+(23, '', None, False, 'value', {'raw': True}, (None,
+r'''123'''),
+r'''True''',
+r'''True''',
+r'''Constant True - ROOT 0,0..0,4'''),
+
+(24, '', None, False, 'value', {'raw': True}, (None,
+r'''123'''),
+r'''False''',
+r'''False''',
+r'''Constant False - ROOT 0,0..0,5'''),
+
+(25, '', None, False, 'value', {'raw': True}, (None,
+r'''123'''),
+r'''b"bytes"''',
+r'''b"bytes"''',
+r'''Constant b'bytes' - ROOT 0,0..0,8'''),
+
+(26, '', None, False, 'value', {'raw': True}, (None,
+r'''123'''),
+r'''"str"''',
+r'''"str"''',
+r'''Constant 'str' - ROOT 0,0..0,5'''),
+
+(27, '', None, False, 'value', {'raw': True}, (None,
+r'''123'''),
+r'''1''',
+r'''1''',
+r'''Constant 1 - ROOT 0,0..0,1'''),
+
+(28, '', None, False, 'value', {'raw': True}, (None,
+r'''123'''),
+r'''1.0''',
+r'''1.0''',
+r'''Constant 1.0 - ROOT 0,0..0,3'''),
+
+(29, '', None, False, 'value', {'raw': True}, (None,
+r'''123'''),
+r'''1j''',
+r'''1j''',
+r'''Constant 1j - ROOT 0,0..0,2'''),
+
+(30, '', None, False, 'value', {'raw': True}, (None,
+r'''123'''),
+r'''...''',
+r'''...''',
+r'''Constant Ellipsis - ROOT 0,0..0,3'''),
+
+(31, '', None, False, None, {'raw': True}, (pattern,
+r'''True'''),
+r'''None''',
+r'''None''',
+r'''MatchSingleton - ROOT 0,0..0,4'''),
+
+(32, '', None, False, None, {'raw': True}, (pattern,
+r'''None'''),
+r'''False''',
+r'''False''', r'''
+MatchSingleton - ROOT 0,0..0,5
+  .value False
+'''),
+
+(33, '', None, False, None, {'raw': True}, (pattern,
+r'''False'''),
+r'''True''',
+r'''True''', r'''
+MatchSingleton - ROOT 0,0..0,4
+  .value True
 '''),
 ],
 

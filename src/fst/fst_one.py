@@ -758,7 +758,6 @@ _GET_ONE_HANDLERS = {
     # (arg, 'type_comment'):                (),  # string?
 }
 
-
 # ----------------------------------------------------------------------------------------------------------------------
 # put
 
@@ -770,11 +769,11 @@ class onestatic(NamedTuple):
 
 
 class oneinfo(NamedTuple):
-    prefix:      str           = ''    # prefix to add on insert
-    loc_insdel:  fstloc | None = None  # only present if insert (put new to nonexistent) or delete is possible and is the location for the specific mutually-exclusive operation
-    loc_ident:   fstloc | None = None  # location of identifier
-    suffix:      str           = ''    # or ': ' for dict '**'
-    delstr:      str           = ''    # or '**'
+    prefix:     str           = ''    # prefix to add on insert
+    loc_insdel: fstloc | None = None  # only present if insert (put new to nonexistent) or delete is possible and is the location for the specific mutually-exclusive operation
+    loc_prim:   fstloc | None = None  # location of primitive, mostly identifier
+    suffix:     str           = ''    # or ': ' for dict '**'
+    delstr:     str           = ''    # or '**'
 
 
 def _validate_put(self: fst.FST, code: Code | None, idx: int | None, field: str,
@@ -884,6 +883,7 @@ def _maybe_par_above(above: fst.FST, below: fst.FST) -> bool:
             return True
 
     return False
+
 
 # ......................................................................................................................
 # other
@@ -1834,7 +1834,7 @@ def _put_one_identifier_required(self: fst.FST, code: _PutOneCode, idx: int | No
     code = static.code_as(code, self.root.parse_params)
     info = static.getinfo(self, static, idx, field)
 
-    self._put_src(code, *info.loc_ident, True)
+    self._put_src(code, *info.loc_prim, True)
     set_field(self.a, code, field, idx)
 
     return code
@@ -1864,7 +1864,7 @@ def _put_one_identifier_optional(self: fst.FST, code: _PutOneCode, idx: int | No
     code = static.code_as(code, self.root.parse_params)
 
     if child is not None:  # replace existing identifier
-        self._put_src(code, *info.loc_ident, True)
+        self._put_src(code, *info.loc_prim, True)
         set_field(self.a, code, field, idx)
 
     else: # put new identifier
@@ -2160,15 +2160,15 @@ def _one_info_ExceptHandler_name(self: fst.FST, static: onestatic, idx: int | No
     loc_insdel = fstloc(ln, col, end_ln, end_col)
 
     if (name := a.name) is None:
-        loc_ident = None
+        loc_prim = None
 
     else:
         lines = self.root._lines
         ln, col = next_find(lines, ln, col, end_ln, end_col, 'as')  # skip the 'as'
         ln, col = next_find(lines, ln, col + 2, end_ln, end_col, name)  # must be there
-        loc_ident = fstloc(ln, col, ln, col + len(name))
+        loc_prim = fstloc(ln, col, ln, col + len(name))
 
-    return oneinfo(' as ', loc_insdel, loc_ident)
+    return oneinfo(' as ', loc_insdel, loc_prim)
 
 def _one_info_arguments_vararg(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     if vararg := (a := self.a).vararg:  # delete location
@@ -2329,15 +2329,15 @@ def _one_info_alias_asname(self: fst.FST, static: onestatic, idx: int | None, fi
     loc_insdel = fstloc(ln, col + len((a := self.a).name), end_ln, end_col)
 
     if (asname := a.asname) is None:
-        loc_ident = None
+        loc_prim = None
 
     else:
         lines = self.root._lines
         ln, col = next_find(lines, ln, col, end_ln, end_col, 'as')  # skip the 'as'
         ln, col = next_find(lines, ln, col + 2, end_ln, end_col, asname)  # must be there
-        loc_ident = fstloc(ln, col, ln, col + len(asname))
+        loc_prim = fstloc(ln, col, ln, col + len(asname))
 
-    return oneinfo(' as ', loc_insdel, loc_ident)
+    return oneinfo(' as ', loc_insdel, loc_prim)
 
 def _one_info_withitem_optional_vars(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     _, _, ln, col = self.a.context_expr.f.pars()
@@ -2369,12 +2369,12 @@ def _one_info_MatchMapping_rest(self: fst.FST, static: onestatic, idx: int | Non
         prefix = '**'
 
     if (rest := a.rest) is None:
-        loc_ident = None
+        loc_prim = None
     else:
         rest_ln, rest_col = next_find(self.root._lines, ln, col, end_ln, end_col, rest)
-        loc_ident = fstloc(rest_ln, rest_col, rest_ln, rest_col + len(rest))
+        loc_prim = fstloc(rest_ln, rest_col, rest_ln, rest_col + len(rest))
 
-    return oneinfo(prefix, fstloc(ln, col, end_ln, end_col), loc_ident)
+    return oneinfo(prefix, fstloc(ln, col, end_ln, end_col), loc_prim)
 
 def _one_info_MatchClass_kwd_attrs(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     ast = self.a
@@ -2503,6 +2503,11 @@ def _one_info_conversion(self: fst.FST, static: onestatic, idx: int | None, fiel
     ln, col = prev
 
     return oneinfo('', fstloc(ln, col, end_ln, end_col))
+
+def _one_info_loc_prim_self(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
+    """This exists so that put raw can get location for put to `Constant.value` and `MatchSingleton.value`."""
+
+    return oneinfo('', None, self.loc)
 
 
 # ......................................................................................................................
@@ -2688,7 +2693,7 @@ _PUT_ONE_HANDLERS = {
     (Interpolation, 'format_spec'):       (False, _put_one_NOT_IMPLEMENTED_YET_14, onestatic(_one_info_format_spec, JoinedStr)),  # expr?  # onestatic only here for info for raw put
     (JoinedStr, 'values'):                (True,  _put_one_NOT_IMPLEMENTED_YET_12, None),  # expr*
     (TemplateStr, 'values'):              (True,  _put_one_NOT_IMPLEMENTED_YET_12, None),  # expr*
-    (Constant, 'value'):                  (False, _put_one_Constant_value, onestatic(None, constant)),  # constant
+    (Constant, 'value'):                  (False, _put_one_Constant_value, onestatic(_one_info_loc_prim_self, constant)),  # constant
     (Constant, 'kind'):                   (False, _put_one_Constant_kind, None),  # string?
     (Attribute, 'value'):                 (False, _put_one_Attribute_value, _onestatic_expr_required),  # expr
     (Attribute, 'attr'):                  (False, _put_one_identifier_required, onestatic(_one_info_Attribute_attr, _restrict_default, code_as=code_as_identifier)),  # identifier
@@ -2734,7 +2739,7 @@ _PUT_ONE_HANDLERS = {
     (match_case, 'body'):                 (True,  None, None),  # stmt*
     # (MatchValue, 'value'):                (False, _put_one_MatchValue_value, onestatic(_one_info_exprish_required, _is_valid_MatchValue_value)),  # expr
     (MatchValue, 'value'):                (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _is_valid_MatchValue_value)),  # expr
-    (MatchSingleton, 'value'):            (False, _put_one_constant, onestatic(None, (bool, NoneType))),  # constant
+    (MatchSingleton, 'value'):            (False, _put_one_constant, onestatic(_one_info_loc_prim_self, (bool, NoneType))),  # constant
     (MatchSequence, 'patterns'):          (True,  _put_one_pattern, _onestatic_pattern_required),  # pattern*
     (MatchMapping, 'keys'):               (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _is_valid_MatchMapping_key)),  # expr*  Ops for `-1` or `2+3j`
     (MatchMapping, 'patterns'):           (False, _put_one_pattern, _onestatic_pattern_required),  # pattern*
@@ -2782,7 +2787,6 @@ _PUT_ONE_HANDLERS = {
     # (arg, 'type_comment'):                (),  # string?
 }
 
-
 # ......................................................................................................................
 # put raw
 
@@ -2825,7 +2829,7 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
     if child is None and loc is None:
         if field == 'keys':  # only Dict and MatchMapping have this, will not have been processed as a special field above
             loc = self._loc_key(idx, pars, ast.keys, ast.values if isinstance(ast, Dict) else ast.patterns)
-        else:
+        elif not isinstance(ast, MatchSingleton):  # breaking convention as always, `None` in a MatchSingleton.value is a value, not the absence of a value
             raise ValueError('cannot insert in raw put')
 
     childf = child.f if isinstance(child, AST) else None
@@ -2861,9 +2865,8 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
             elif not pars and childf._is_solo_call_arg_genexp() and (non_shared_loc := childf.pars(shared=False)) > loc:  # if loc includes `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
                 loc = non_shared_loc
 
-        else:  # primitive, maybe its an identifier
-            info = static and (getinfo := static.getinfo) and getinfo(self, static, idx, field)
-            loc = info.loc_ident
+        elif info := static and (getinfo := static.getinfo) and getinfo(self, static, idx, field):  # primitive, maybe its an identifier
+            loc = info.loc_prim
 
         if loc is None:
             raise ValueError('cannot determine location to put to')

@@ -863,6 +863,7 @@ class Fuzzy:
 
 class VerifyCopy(Fuzzy):
     name = 'verify_copy'
+    forever = False
 
     def fuzz_one(self, fst, fnm) -> bool:
         for f in fst.walk('all'):
@@ -893,6 +894,7 @@ class VerifyCopy(Fuzzy):
 
 class SynOrder(Fuzzy):
     name = 'syn_order'
+    forever = False
 
     def fuzz_one(self, fst, fnm) -> bool:
         bln, bcol = 0, 0
@@ -1053,6 +1055,7 @@ class ReputOne(Fuzzy):
         _put_one_ExceptHandler_name, _put_one_keyword_arg, _put_one_NOT_IMPLEMENTED_YET,)
 
     name = 'reput_one'
+    forever = False
 
     DELETE = True  #False  #
     VERIFY = False  #True  #
