@@ -50,7 +50,7 @@ from fst.locations import (
 from fst import parsex as px, code
 from fst.fst_misc import get_trivia_params
 
-from support import ParseCases
+from support import BaseCases, ParseCases
 from data.data_other import PARS_DATA, PUT_SRC_REPARSE_DATA, PRECEDENCE_DATA
 
 
@@ -990,6 +990,31 @@ class TestFST(unittest.TestCase):
 
         self.assertRaises(SyntaxError, px.parse_withitem, 'i for i in j')
         self.assertRaises(SyntaxError, px.parse_withitem, '')
+
+    def test_parse_by_ast_name_from_get_one_data(self):
+        # make sure parsing by name of `AST` class is same as parsing by `AST` class
+
+        cases_found = False
+
+        for key, case in BaseCases(os.path.join(DIR_NAME, 'data/data_get_one.py')).iterate():
+            if key != 'all_basic':
+                break
+
+            cases_found = True
+
+            if isinstance(code := case.code, tuple) and isinstance(code[0], type) and issubclass(code[0], AST):
+                try:
+                    a = px.parse(code[1], code[0])
+                except Exception as exc:
+                    pass
+
+                else:
+                    b = px.parse(code[1], code[0].__name__)
+
+                    compare_asts(a, b, locs=True, raise_=True)
+
+        if not cases_found:
+            raise RuntimeError("'all_basic' cases not found at start of DATA_GET_ONE")
 
     def test_code_as_simple(self):
         # stmts

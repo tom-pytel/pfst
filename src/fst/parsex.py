@@ -90,7 +90,7 @@ from .asttypes import (
     _slice_type_params,
 )
 
-from .astutil import pat_alnum, bistr, walk, reduce_ast
+from .astutil import bistr, pat_alnum, FIELDS, walk, reduce_ast
 from .common import next_frag, shortstr
 
 __all__ = [
@@ -474,6 +474,7 @@ Mode = Literal[
     `AST` type `expr` is the same as passing `'expr'`. Not all string specified modes are can be matched, for example
     `'arguments_lambda'`. Likewise `'exec'` and `'stmts'` specify the same parse mode. `Tuple` parse also allows parsing
     `Slice`s in the `Tuple` as well as otherwise invalid star notation `*not a`.
+- `str(type[AST])`: Same as `type[AST]`.
 """
 
 
@@ -537,21 +538,18 @@ def parse(src: str, mode: Mode = 'all', parse_params: Mapping[str, Any] = {}) ->
     """
 
     if parse := _PARSE_MODE_FUNCS.get(mode):
-        return parse(src, parse_params)
+        ast = parse(src, parse_params)
+        mode_type = _AST_TYPE_BY_NAME_OR_TYPE.get(mode)  # `expr` or expr -> expr
+
+        if mode_type and not isinstance(ast, mode_type):
+            raise ParseError(f'could not parse to {mode_type.__name__}, got {ast.__class__.__name__}')
+
+        return ast
 
     if not isinstance(mode, type) or not issubclass(mode, AST):
         raise ValueError(f'invalid parse mode {mode!r}')
 
-    mode_ = mode
-
-    while (mode_ := mode_.__bases__[0]) is not AST:
-        if parse := _PARSE_MODE_FUNCS.get(mode_):
-            if isinstance(ast := parse(src, parse_params), mode):
-                return ast
-
-            raise ParseError(f'could not parse to {mode.__name__}, got {ast.__class__.__name__}')
-
-    raise ParseError(f'could not parse to {mode.__name__}')
+    raise ParseError(f'cannot parse to {mode.__name__}')
 
 
 def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
@@ -1403,6 +1401,8 @@ def parse__expr_arglikes(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 # ......................................................................................................................
 
+_AST_TYPE_BY_NAME_OR_TYPE = {}  # {Module: Module, 'Module': Module, ...}  - filled out below
+
 _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type but that will parse ALL of those types without error, not all parsed in desired but all desired in parsed
     'all':                    parse_all,
     'strict':                 parse_strict,
@@ -1478,3 +1478,20 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
 
 assert not set(get_args(get_args(Mode)[0])).symmetric_difference(k for k in _PARSE_MODE_FUNCS if isinstance(k, str)), \
     'Mode string modes do not match _PARSE_MODE_FUNCS table'
+
+for ast_type in FIELDS:  # fill out _PARSE_MODE_FUNCS with all supported AST types and their class names as parse modes
+    if not (ast_name := ast_type.__name__).startswith('_slice'):
+        _AST_TYPE_BY_NAME_OR_TYPE[ast_type] = _AST_TYPE_BY_NAME_OR_TYPE[ast_name] = ast_type
+
+        if parse_func := _PARSE_MODE_FUNCS.get(ast_type):
+            if ast_name not in _PARSE_MODE_FUNCS:  # for top level types already in table name is probably in table as well (and may be different in future?)
+                _PARSE_MODE_FUNCS[ast_name] = parse_func
+
+        else:
+            base = ast_type
+
+            while (base := base.__bases__[0]) is not AST:
+                if parse_func := _PARSE_MODE_FUNCS.get(base):
+                    _PARSE_MODE_FUNCS[ast_type] = _PARSE_MODE_FUNCS[ast_name] = parse_func  # base ASTs not in table will not have name in table either
+
+                    break

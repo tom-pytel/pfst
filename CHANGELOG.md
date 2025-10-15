@@ -15,6 +15,7 @@
 
 ### Added
 
+- parse `Mode` includes names of all `AST` classes as well as the classes themselves
 - `FST.is_expr_arglike` to determine if expression only valid in `Call.args` or `ClassDef.bases`
 - `put_src()` "offset" and "no AST change" modes
 - `find_loc()` simple find location in or containing given location

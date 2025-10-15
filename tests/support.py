@@ -1,6 +1,6 @@
 import re
 import sys
-from typing import Any, Literal, NamedTuple
+from typing import Any, Generator, Literal, NamedTuple
 
 from fst import FST
 from fst.astutil import copy_ast, compare_asts
@@ -79,7 +79,7 @@ class BaseCase(NamedTuple):
 
 
 class BaseCases(dict):
-    def __init__(self, fnm, func):
+    def __init__(self, fnm, func=None):
         self.fnm  = fnm
         self.func = func
 
@@ -135,7 +135,9 @@ class BaseCases(dict):
         with open(self.fnm, 'w') as f:
             f.write(''.join(out))
 
-    def iterate(self, gen=False):
+    def iterate(self, gen=False) -> Generator[tuple[str, BaseCase] |
+                                              tuple[str, BaseCase, list[str | tuple[str, str]]],
+                                              None, None]:
         key = case = None
 
         try:
