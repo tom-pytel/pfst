@@ -1904,7 +1904,7 @@ def _put_src(self: fst.FST, src: str | list[str] | None, ln: int, col: int, end_
 
     lines = self.root._lines
 
-    if is_del := src is None:
+    if is_del := not src:  # src is None or src == '' or src == [] (even though the last shouldn't be used)
         put_lines = ['']
     elif isinstance(src, str):
         put_lines = src.split('\n')
@@ -1922,33 +1922,23 @@ def _put_src(self: fst.FST, src: str | list[str] | None, ln: int, col: int, end_
     if is_del:  # delete lines
         if end_ln == ln:
             lines[ln] = bistr((l := lines[ln])[:col] + l[end_col:])
-
         else:
-            lines[end_ln] = bistr(lines[ln][:col] + lines[end_ln][end_col:])
-
-            del lines[ln : end_ln]
+            lines[ln : end_ln + 1] = (bistr(lines[ln][:col] + lines[end_ln][end_col:]),)
 
     else:  # put lines
-        dln = end_ln - ln
+        if (nnew_ln := len(put_lines)) == 1:
+            if end_ln == ln:  # replace in single line with single or empty line
+                lines[ln] = bistr(f'{(l := lines[ln])[:col]}{put_lines[0]}{l[end_col:]}')
+            else:  # replace in multiple lines with single or empty line
+                lines[ln : end_ln + 1] = (bistr(f'{lines[ln][:col]}{put_lines[0]}{lines[end_ln][end_col:]}'),)
 
-        if (nnew_ln := len(put_lines)) <= 1:
-            s = put_lines[0] if nnew_ln else ''
-
-            if not dln:  # replace single line with single or no line
-                lines[ln] = bistr(f'{(l := lines[ln])[:col]}{s}{l[end_col:]}')
-
-            else:  # replace multiple lines with single or no line
-                lines[ln] = bistr(f'{lines[ln][:col]}{s}{lines[end_ln][end_col:]}')
-
-                del lines[ln + 1 : end_ln + 1]
-
-        elif not dln:  # replace single line with multiple lines
+        elif end_ln == ln:  # replace in single line with multiple lines
             lend = bistr(put_lines[-1] + (l := lines[ln])[end_col:])
             lines[ln] = bistr(l[:col] + put_lines[0])
             lines[ln + 1 : ln + 1] = map(bistr, put_lines[1:])
             lines[ln + nnew_ln - 1] = lend
 
-        else:  # replace multiple put_lines with multiple lines
+        else:  # replace in multiple lines with multiple lines
             lines[ln] = bistr(lines[ln][:col] + put_lines[0])
             lines[end_ln] = bistr(put_lines[-1] + lines[end_ln][end_col:])
             lines[ln + 1 : end_ln] = map(bistr, put_lines[1:-1])

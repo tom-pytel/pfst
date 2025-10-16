@@ -12,8 +12,8 @@ from .astutil import bistr
 
 from .common import NodeError, astfield
 
-from .parsex import Mode, unparse
-from .code import Code
+from .parsex import Mode
+from .code import Code, code_to_lines
 from .locations import loc_block_header_end
 
 
@@ -197,18 +197,7 @@ def _reparse_raw(self: fst.FST, code: Code | None, ln: int, col: int, end_ln: in
     - `(end_ln, end_col)`: New end location of source put (all source after this was not modified).
     """
 
-    if isinstance(code, list):
-        new_lines = code
-    elif isinstance(code, str):
-        new_lines = code.split('\n')
-    elif isinstance(code, AST):
-        new_lines = unparse(code).split('\n')
-    elif code is None:
-        new_lines = ['']
-    elif not code.is_root:  # isinstance(code, fst.FST)
-        raise ValueError('expecting root node')
-    else:
-        new_lines = code._lines
+    new_lines = code_to_lines(code)
 
     if not _reparse_raw_stmtish(self, new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block header), if fails then no statement found above
         root = self.root

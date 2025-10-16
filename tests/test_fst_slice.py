@@ -2200,7 +2200,7 @@ i ; \\
         self.assertEqual('[a, x, y, c]', parse('[a, b, c]').body[0].value.f.put_slice(ast_parse('{x, y,}'), 1, 2, raw=True).root.src)
         self.assertEqual('{a: a, x: x, y: y, c: c}', parse('{a: a, b: b, c: c}').body[0].value.f.put_slice(ast_parse('{x: x, y: y,}'), 1, 2, raw=True).root.src)
 
-        # as one so dont strip delimiters or add to unparenthesized tuple
+        # as one so don't strip delimiters or add to unparenthesized tuple
         self.assertEqual('(a, (x, y), c)', parse('(a, b, c)').body[0].value.f.put_slice(ast_parse('x, y'), 1, 2, one=True, raw=True).root.src)
         self.assertEqual('(a, (x, y), c)', parse('(a, b, c)').body[0].value.f.put_slice(ast_parse('(x, y)'), 1, 2, one=True, raw=True).root.src)
         self.assertEqual('[a, [x, y], c]', parse('[a, b, c]').body[0].value.f.put_slice(ast_parse('[x, y]'), 1, 2, one=True, raw=True).root.src)
@@ -2282,7 +2282,7 @@ i ; \\
 
         f = parse('[1, 2, 3]').body[0].value.f
         g = parse('match a:\n case a, b: pass').body[0].cases[0].pattern.f.copy()
-        self.assertEqual('[1, (a, b), 3]', f.put_slice(g, 1, 2, raw=True, one=True).root.src)
+        self.assertEqual('[1, [a, b], 3]', f.put_slice(g, 1, 2, raw=True, one=True).root.src)
 
         f = parse('match a:\n case 1, 2, 3: pass').body[0].cases[0].pattern.f
         g = parse('[a, b]').body[0].value.f.copy()

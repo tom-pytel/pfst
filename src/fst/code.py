@@ -92,6 +92,7 @@ from .parsex import (
 
 __all__ = [
     'Code',
+    'code_to_lines',
     'code_as_all',
     'code_as_stmts',
     'code_as_ExceptHandlers',
@@ -221,6 +222,21 @@ def _code_as(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any],
     fst_ = fst.FST(ast, lines, parse_params=parse_params)
 
     return fst_._sanitize() if sanitize else fst_
+
+
+def code_to_lines(code: Code | None) -> list[str]:
+    if isinstance(code, str):
+        return code.split('\n')
+    elif code is None:
+        return ['']
+    elif isinstance(code, list):
+        return code
+    elif isinstance(code, AST):
+        return unparse(code).split('\n')
+    elif not code.is_root:  # isinstance(code, fst.FST)
+        raise ValueError('expecting root node')
+    else:
+        return code._lines
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -769,7 +785,6 @@ def code_as_constant(code: constant, parse_params: Mapping[str, Any] = {}) -> co
 
 
 # ......................................................................................................................
-# internal code_as stuff, not meant for user
 
 def code_as__expr_arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a `Tuple` contianing possibly arglike expressions. Meant for putting slices to `Call.args` and

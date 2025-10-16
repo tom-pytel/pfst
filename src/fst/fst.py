@@ -53,6 +53,7 @@ from .asttypes import (
     ListComp,
     Match,
     MatchAs,
+    MatchClass,
     MatchMapping,
     MatchOr,
     MatchSequence,
@@ -114,8 +115,8 @@ from .common import (
     next_delims, prev_delims,
 )
 
-from .parsex import Mode, unparse as parsex_unparse
-from .code import Code, code_as_all
+from .parsex import Mode
+from .code import Code, code_to_lines, code_as_all
 
 from .locations import loc_arguments, loc_comprehension, loc_withitem, loc_match_case, loc_operator
 from .traverse import AST_FIELDS_NEXT, AST_FIELDS_PREV, next_bound, prev_bound, check_with_loc
@@ -159,7 +160,7 @@ _DEFAULT_AST_FIELD = {cls: field for field, classes in [
     ('cases',        (Match,)),
 
     ('elts',         (Tuple, List, Set)),
-    ('patterns',     (MatchSequence, MatchOr)),
+    ('patterns',     (MatchSequence, MatchOr, MatchClass)),
     ('targets',      (Delete, _slice_Assign_targets)),
     ('type_params',  (TypeAlias, _slice_type_params)),
     ('names',        (Import, ImportFrom, Global, Nonlocal, _slice_aliases)),
@@ -2171,18 +2172,7 @@ class FST:
 
             return parent._reparse_raw(code, ln, col, end_ln, end_col)
 
-        if isinstance(code, list):
-            new_lines = code
-        elif isinstance(code, str):
-            new_lines = code = code.split('\n')
-        elif isinstance(code, AST):
-            new_lines = code = parsex_unparse(code).split('\n')
-        elif code is None:
-            new_lines = ['']  # minor opt, don't set `code` so _put_src() knows its a delete
-        elif not code.is_root:  # isinstance(code, fst.FST)
-            raise ValueError('expecting root node')
-        else:
-            new_lines = code = code._lines
+        put_lines = code_to_lines(code)
 
         if ast_op == 'offset':
             # TODO: there may be issues with certain zero-length trees but I can't think of any that might occur in normal usage
@@ -2197,19 +2187,19 @@ class FST:
             ):
                 raise ValueError("location with 'offset' must be at or inside location of node")
 
-            params_offset = root._put_src(code, ln, col, end_ln, end_col, True, False, self)
+            params_offset = root._put_src(put_lines, ln, col, end_ln, end_col, True, False, self)
 
             self._offset(*params_offset, False, True, self_=False)
 
         else:  # ast_op is None
             assert ast_op is None
 
-            root._put_src(code, ln, col, end_ln, end_col)
+            root._put_src(put_lines, ln, col, end_ln, end_col)
 
-        if len(new_lines) == 1:
-            return ln, col + len(new_lines[0])
+        if len(put_lines) == 1:
+            return ln, col + len(put_lines[0])
         else:
-            return ln + len(new_lines) - 1, len(new_lines[-1])
+            return ln + len(put_lines) - 1, len(put_lines[-1])
 
     def pars(self, *, shared: bool | None = True) -> fstloc | None:
         """Return the location of enclosing GROUPING parentheses if present. Will balance parentheses if `self` is an

@@ -223,33 +223,27 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 # ----------------------------------------------------------------------------------------------------------------------
 
 def _fixup_slice_indices(len_: int, start: int, stop: int) -> tuple[int, int]:
-    """@private"""
+    """Clip slice indices to slice range allowing first negative range to map into positive range. Greater negative
+    indices clip to 0."""
 
     if start is None:
         start = 0
-
     elif start == 'end':
         start = len_
-
     elif start < 0:
-        if (start := start + len_) < 0:
-            start = 0
-
+        start = max(0, start + len_)
     elif start > len_:
         start = len_
 
     if stop is None:
         stop = len_
-
     elif stop < 0:
-        if (stop := stop + len_) < 0:
-            stop = 0
-
+        stop = max(0, stop + len_)
     elif stop > len_:
         stop = len_
 
     if stop < start:
-        stop = start
+        raise ValueError('start index must precede stop index')
 
     return start, stop
 
@@ -1667,7 +1661,6 @@ _GET_SLICE_HANDLERS = {
     (_slice_withitems, 'items'):              _get_slice__slice,
     (_slice_type_params, 'type_params'):      _get_slice__slice,
 }
-
 
 # ----------------------------------------------------------------------------------------------------------------------
 # put
@@ -3227,6 +3220,23 @@ def _put_slice__slice(self: fst.FST, code: Code | None, start: int | Literal['en
 
 # ......................................................................................................................
 
+class slicestatic(NamedTuple):
+    field:         str
+    code_to:       Callable[[fst.FST, Code, bool, dict], fst.FST]
+    sep:           str
+    self_tail_sep: bool | Literal[0, 1] | None
+    ret_tail_sep:  bool | Literal[0, 1] | None
+
+
+_SLICE_STATICS = {
+    _slice_Assign_targets: slicestatic('targets', _code_to_slice_Assign_targets, '=', True, True),
+    _slice_aliases:        slicestatic('names', _code_to_slice_aliases, ',', False, False),
+    _slice_withitems:      slicestatic('items', _code_to_slice_withitems, ',', False, False),
+    _slice_type_params:    slicestatic('type_params', _code_to_slice_type_params, ',', False, False),
+}
+
+# ......................................................................................................................
+
 def _put_slice(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
                one: bool, options: Mapping[str, Any]) -> Union[Self, fst.FST, None]:  # -> Self or reparsed Self or could disappear due to raw
     """Put an a slice of child nodes to `self`."""
@@ -3350,7 +3360,6 @@ _PUT_SLICE_HANDLERS = {
     (_slice_type_params, 'type_params'):      _put_slice__slice,
 }
 
-
 # ----------------------------------------------------------------------------------------------------------------------
 # put raw
 
@@ -3427,7 +3436,7 @@ def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end']
     """Put a raw slice of child nodes to `self`."""
 
     if code is None:
-        raise NotImplementedError('raw slice delete not implemented yet')
+        raise ValueError('cannot delete in raw put')
 
     if isinstance(code, AST):
         if not one:
@@ -3446,20 +3455,17 @@ def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end']
         fst_ = ast.f
 
         if one:
-            if (is_par_tup := fst_._is_parenthesized_tuple()) is None:  # only need to parenthesize this, others are already enclosed
-                if isinstance(ast, MatchSequence) and not fst_._is_delimited_seq('patterns'):
-                    fst_._parenthesize_grouping()
-
-            elif is_par_tup is False:
+            if fst_._is_parenthesized_tuple() is False:  # only need to parenthesize Tuple or MatchMapping, everything else stays as-is
                 fst_._delimit_node()
+            elif isinstance(ast, MatchSequence) and not fst_._is_delimited_seq('patterns'):
+                fst_._delimit_node(delims='[]')
 
         elif ((is_dict := isinstance(ast, Dict)) or
               (is_match := isinstance(ast, (MatchSequence, MatchMapping))) or
               isinstance(ast, (Tuple, List, Set))
         ):
-            if not ((is_par_tup := fst_._is_parenthesized_tuple()) is False or  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence
-                    (is_par_tup is None and isinstance(ast, MatchSequence) and
-                     not fst_._is_delimited_seq('patterns'))
+            if not (fst_._is_parenthesized_tuple() is False or  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence
+                    (isinstance(ast, MatchSequence) and not fst_._is_delimited_seq('patterns'))
             ):
                 code._put_src(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)  # strip enclosing delimiters
                 code._put_src(None, ln := code.ln, col := code.col, ln, col + 1, False)
@@ -3474,24 +3480,6 @@ def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end']
     self._reparse_raw(code, *_loc_slice_raw_put(self, start, stop, field))
 
     return self if self.a else self.repath()
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-
-class slicestatic(NamedTuple):
-    field:         str
-    code_to:       Callable[[fst.FST, Code, bool, dict], fst.FST]
-    sep:           str
-    self_tail_sep: bool | Literal[0, 1] | None
-    ret_tail_sep:  bool | Literal[0, 1] | None
-
-
-_SLICE_STATICS = {
-    _slice_Assign_targets: slicestatic('targets', _code_to_slice_Assign_targets, '=', True, True),
-    _slice_aliases:        slicestatic('names', _code_to_slice_aliases, ',', False, False),
-    _slice_withitems:      slicestatic('items', _code_to_slice_withitems, ',', False, False),
-    _slice_type_params:    slicestatic('type_params', _code_to_slice_type_params, ',', False, False),
-}
 
 
 # ----------------------------------------------------------------------------------------------------------------------

@@ -130,6 +130,7 @@ from .parsex import unparse
 
 from .code import (
     Code,
+    code_to_lines,
     code_as_expr,
     code_as_expr_arglike,
     code_as_expr_slice,
@@ -2795,6 +2796,8 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
     if code is None:
         raise ValueError('cannot delete in raw put')
 
+    put_lines = code_to_lines(code)
+
     ast = self.a
     root = self.root
     to = options.get('to')
@@ -2837,19 +2840,6 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
     if to is childf:
         to = None
 
-    # code to appropriate lines
-
-    if isinstance(code, str):
-        code = code.split('\n')
-    elif isinstance(code, AST):
-        code = unparse(code).split('\n')
-
-    elif isinstance(code, fst.FST):
-        if not code.is_root:
-            raise ValueError('expecting root node')
-
-        code = code._lines
-
     # from location (if not gotten already for Dict or MatchMapping key)
 
     if loc is None:
@@ -2859,8 +2849,8 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
                     loc = loc_arguments_empty(childf)
 
                     if isinstance(ast, Lambda):  # SUPER SPECIAL CASE, adding arguments to lambda without them, may need to prepend a space to source being put
-                        if not code[0][:1].isspace():
-                            code[0] =  f' {code[0]}'
+                        if not put_lines[0][:1].isspace():
+                            put_lines[0] =  f' {put_lines[0]}'
 
             elif not pars and childf._is_solo_call_arg_genexp() and (non_shared_loc := childf.pars(shared=False)) > loc:  # if loc includes `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
                 loc = non_shared_loc
@@ -2906,6 +2896,6 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
     ln, col, _, _ = loc
     _, _, end_ln, end_col = to_loc
 
-    end_ln, end_col = parent._reparse_raw(code, ln, col, end_ln, end_col)
+    end_ln, end_col = parent._reparse_raw(put_lines, ln, col, end_ln, end_col)
 
     return root.find_in_loc(ln, col, end_ln, end_col)  # parent should stay same MOST of the time, `root` instead of `self` because some changes may propagate farther up the tree, like 'elif' -> 'else'
