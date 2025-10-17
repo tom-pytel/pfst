@@ -7,6 +7,39 @@
 # - OR
 # error)
 
+# TODO: raw
+#
+#   ! S ,          (ClassDef, 'keywords'):                 # keyword*         -> _slice_keywords            _parse_keywords  - keywords and Starred bases can mix
+#   ! S ,          (Call, 'keywords'):                     # keyword*         -> _slice_keywords            _parse_keywords  - keywords and Starred args can mix
+#                                                                             .
+# * ! S ,          (FunctionDef, 'type_params'):           # type_param*      -> _slice_type_params         _parse_type_params
+# * ! S ,          (AsyncFunctionDef, 'type_params'):      # type_param*      -> _slice_type_params         _parse_type_params
+# * ! S ,          (ClassDef, 'type_params'):              # type_param*      -> _slice_type_params         _parse_type_params
+# * ! S ,          (TypeAlias, 'type_params'):             # type_param*      -> _slice_type_params         _parse_type_params
+#                                                                             .
+# * ! S ,          (With, 'items'):                        # withitem*        -> _slice_withitems           _parse_withitems               - no trailing commas
+# * ! S ,          (AsyncWith, 'items'):                   # withitem*        -> _slice_withitems           _parse_withitems               - no trailing commas
+#                                                                             .
+# * ! S ,          (Import, 'names'):                      # alias*           -> _slice_aliases             _parse_aliases_dotted          - no trailing commas
+# * ! S ,          (ImportFrom, 'names'):                  # alias*           -> _slice_aliases             _parse_aliases_star            - no trailing commas
+#                                                                             .
+#                                                                             .
+#   ! S ' '        (ListComp, 'generators'):               # comprehension*   -> _slice_comprehensions      _parse_comprehensions
+#   ! S ' '        (SetComp, 'generators'):                # comprehension*   -> _slice_comprehensions      _parse_comprehensions
+#   ! S ' '        (DictComp, 'generators'):               # comprehension*   -> _slice_comprehensions      _parse_comprehensions
+#   ! S ' '        (GeneratorExp, 'generators'):           # comprehension*   -> _slice_comprehensions      _parse_comprehensions
+#                                                                             .
+#   ! S    if      (comprehension, 'ifs'):                 # expr*            -> _slice_comprehension_ifs   _parse_comprehension_ifs
+#                                                                             .
+#   ! S    @       (FunctionDef, 'decorator_list'):        # expr*            -> _slice_decorator_list      _parse_decorator_list
+#   ! S    @       (AsyncFunctionDef, 'decorator_list'):   # expr*            -> _slice_decorator_list      _parse_decorator_list
+#   ! S    @       (ClassDef, 'decorator_list'):           # expr*            -> _slice_decorator_list      _parse_decorator_list
+#                                                                             .
+#                                                                             .
+#     N    op      (Compare, 'ops':'comparators'):         # cmpop:expr*      -> _slice_ops_comparators     _parse_ops_comparators / restrict expr or Compare
+#                                                                             .
+#     N ao         (BoolOp, 'values'):                     # expr*            -> BoolOp                     _parse_expr / restrict BoolOp  - interchangeable between and / or
+
 DATA_PUT_SLICE = {
 'old_stmtish': [  # ................................................................................
 
@@ -12744,7 +12777,19 @@ Module - ROOT 0,0..0,7
 (13, 'body[0].value', 0, 3, 'comparators', {'raw': True}, ('exec',
 r'''a < b < c < d'''), (None,
 r'''x < y'''),
-r'''**ValueError("cannot specify a field 'comparators' to assign slice to a Compare")**'''),
+r'''a < x < y''', r'''
+Module - ROOT 0,0..0,9
+  .body[1]
+  0] Expr - 0,0..0,9
+    .value Compare - 0,0..0,9
+      .left Name 'a' Load - 0,0..0,1
+      .ops[2]
+      0] Lt - 0,2..0,3
+      1] Lt - 0,6..0,7
+      .comparators[2]
+      0] Name 'x' Load - 0,4..0,5
+      1] Name 'y' Load - 0,8..0,9
+'''),
 
 (14, 'body[0].value', 1, 3, None, {'raw': True}, ('exec',
 r'''[a for a in a() for b in b() for c in c()]'''), (None,
@@ -12982,7 +13027,17 @@ Module - ROOT 0,0..0,11
 (26, 'body[0].value', 0, 2, 'comparators', {'raw': True}, ('exec',
 r'''((a) < (b) < (c))'''), (None,
 r'''z'''),
-r'''**ValueError("cannot specify a field 'comparators' to assign slice to a Compare")**'''),
+r'''((a) < z)''', r'''
+Module - ROOT 0,0..0,9
+  .body[1]
+  0] Expr - 0,0..0,9
+    .value Compare - 0,1..0,8
+      .left Name 'a' Load - 0,2..0,3
+      .ops[1]
+      0] Lt - 0,5..0,6
+      .comparators[1]
+      0] Name 'z' Load - 0,7..0,8
+'''),
 
 (27, 'body[0].value', 1, 3, None, {'raw': True}, ('exec',
 r'''(1, *(x), (3))'''), (None,
@@ -23475,6 +23530,807 @@ _slice_type_params - ROOT 0,0..0,10
   2] ParamSpec - 0,7..0,10
     .name 'V'
 '''),
+],
+
+'raw': [  # ................................................................................
+
+(0, '', 0, 1, None, {'raw': True}, (None,
+r'''(a,)'''), (None,
+r'''x'''),
+r'''(x,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(1, '', 0, 1, None, {'raw': True}, (None,
+r'''(a,)'''), (None,
+r'''x,'''),
+r'''**ParseError('invalid syntax')**'''),
+
+(2, '', 0, 2, None, {'raw': True}, (None,
+r'''(a, b)'''), (None,
+r'''x'''),
+r'''(x)''',
+r'''Name 'x' Load - ROOT 0,1..0,2'''),
+
+(3, '', 0, 2, None, {'raw': True}, (None,
+r'''(a, b)'''), (None,
+r'''x,'''),
+r'''(x,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(4, '', 0, 1, None, {'raw': True}, (None,
+r'''[a]'''), (None,
+r'''x'''),
+r'''[x]''', r'''
+List - ROOT 0,0..0,3
+  .elts[1]
+  0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(5, '', 0, 1, None, {'raw': True}, (None,
+r'''[a]'''), (None,
+r'''x,'''),
+r'''[x,]''', r'''
+List - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(6, '', 0, 1, None, {'raw': True}, (None,
+r'''[a,]'''), (None,
+r'''x'''),
+r'''[x,]''', r'''
+List - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(7, '', 0, 1, None, {'raw': True}, (None,
+r'''[a,]'''), (None,
+r'''x,'''),
+r'''**ParseError('invalid syntax')**'''),
+
+(8, '', 0, 2, None, {'raw': True}, (None,
+r'''[a, b]'''), (None,
+r'''x'''),
+r'''[x]''', r'''
+List - ROOT 0,0..0,3
+  .elts[1]
+  0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(9, '', 0, 2, None, {'raw': True}, (None,
+r'''[a, b]'''), (None,
+r'''x,'''),
+r'''[x,]''', r'''
+List - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(10, '', 1, 2, None, {'raw': True}, (None,
+r'''(a, b, c)'''), (None,
+r'''x, y'''),
+r'''(a, x, y, c)''', r'''
+Tuple - ROOT 0,0..0,12
+  .elts[4]
+  0] Name 'a' Load - 0,1..0,2
+  1] Name 'x' Load - 0,4..0,5
+  2] Name 'y' Load - 0,7..0,8
+  3] Name 'c' Load - 0,10..0,11
+  .ctx Load
+'''),
+
+(11, '', 1, 2, None, {'raw': True}, (None,
+r'''(a, b, c)'''), (None,
+r'''x, y,'''),
+r'''**ParseError('invalid syntax')**'''),
+
+(12, '', 1, 2, None, {'raw': True}, (None,
+r'''(a, b, c)'''), (None,
+r'''[x, y]'''),
+r'''(a, [x, y], c)''', r'''
+Tuple - ROOT 0,0..0,14
+  .elts[3]
+  0] Name 'a' Load - 0,1..0,2
+  1] List - 0,4..0,10
+    .elts[2]
+    0] Name 'x' Load - 0,5..0,6
+    1] Name 'y' Load - 0,8..0,9
+    .ctx Load
+  2] Name 'c' Load - 0,12..0,13
+  .ctx Load
+'''),
+
+(13, '', 1, 2, None, {'raw': True}, (None,
+r'''(a, b, c)'''), (None,
+r'''[x, y,]'''),
+r'''(a, [x, y,], c)''', r'''
+Tuple - ROOT 0,0..0,15
+  .elts[3]
+  0] Name 'a' Load - 0,1..0,2
+  1] List - 0,4..0,11
+    .elts[2]
+    0] Name 'x' Load - 0,5..0,6
+    1] Name 'y' Load - 0,8..0,9
+    .ctx Load
+  2] Name 'c' Load - 0,13..0,14
+  .ctx Load
+'''),
+
+(14, '', 1, 2, None, {'raw': True}, (None,
+r'''(a, b, c)'''), (None,
+r'''{x, y}'''),
+r'''(a, {x, y}, c)''', r'''
+Tuple - ROOT 0,0..0,14
+  .elts[3]
+  0] Name 'a' Load - 0,1..0,2
+  1] Set - 0,4..0,10
+    .elts[2]
+    0] Name 'x' Load - 0,5..0,6
+    1] Name 'y' Load - 0,8..0,9
+  2] Name 'c' Load - 0,12..0,13
+  .ctx Load
+'''),
+
+(15, '', 1, 2, None, {'raw': True}, (None,
+r'''(a, b, c)'''), (None,
+r'''{x, y,}'''),
+r'''(a, {x, y,}, c)''', r'''
+Tuple - ROOT 0,0..0,15
+  .elts[3]
+  0] Name 'a' Load - 0,1..0,2
+  1] Set - 0,4..0,11
+    .elts[2]
+    0] Name 'x' Load - 0,5..0,6
+    1] Name 'y' Load - 0,8..0,9
+  2] Name 'c' Load - 0,13..0,14
+  .ctx Load
+'''),
+
+(16, '', None, None, None, {'raw': True}, (None,
+r'''(a, b, c)'''), (None,
+r'''x,'''),
+r'''(x,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(17, '', None, None, None, {'raw': True}, (None,
+r'''(a, b, c)'''), (None,
+r'''(x,)'''),
+r'''((x,))''', r'''
+Tuple - ROOT 0,1..0,5
+  .elts[1]
+  0] Name 'x' Load - 0,2..0,3
+  .ctx Load
+'''),
+
+(18, '', None, None, None, {'raw': True}, (None,
+r'''(a, b, c)'''), (None,
+r'''[x]'''),
+r'''([x])''', r'''
+List - ROOT 0,1..0,4
+  .elts[1]
+  0] Name 'x' Load - 0,2..0,3
+  .ctx Load
+'''),
+
+(19, '', None, None, None, {'raw': True}, (None,
+r'''(a, b, c)'''), (None,
+r'''[x,]'''),
+r'''([x,])''', r'''
+List - ROOT 0,1..0,5
+  .elts[1]
+  0] Name 'x' Load - 0,2..0,3
+  .ctx Load
+'''),
+
+(20, '', None, None, None, {'raw': True}, (None,
+r'''[a, b, c]'''), (None,
+r'''x,'''),
+r'''[x,]''', r'''
+List - ROOT 0,0..0,4
+  .elts[1]
+  0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+(21, '', None, None, None, {'raw': True}, (None,
+r'''[a, b, c]'''), (None,
+r'''(x,)'''),
+r'''[(x,)]''', r'''
+List - ROOT 0,0..0,6
+  .elts[1]
+  0] Tuple - 0,1..0,5
+    .elts[1]
+    0] Name 'x' Load - 0,2..0,3
+    .ctx Load
+  .ctx Load
+'''),
+
+(22, '', None, None, None, {'raw': True}, (None,
+r'''[a, b, c]'''), (None,
+r'''[x]'''),
+r'''[[x]]''', r'''
+List - ROOT 0,0..0,5
+  .elts[1]
+  0] List - 0,1..0,4
+    .elts[1]
+    0] Name 'x' Load - 0,2..0,3
+    .ctx Load
+  .ctx Load
+'''),
+
+(23, '', None, None, None, {'raw': True}, (None,
+r'''[a, b, c]'''), (None,
+r'''[x,]'''),
+r'''[[x,]]''', r'''
+List - ROOT 0,0..0,6
+  .elts[1]
+  0] List - 0,1..0,5
+    .elts[1]
+    0] Name 'x' Load - 0,2..0,3
+    .ctx Load
+  .ctx Load
+'''),
+
+(24, '', 1, 2, None, {'raw': True}, (None,
+r'''{a: b, c: d, e: f}'''), (None,
+r'''x: y'''),
+r'''{a: b, x: y, e: f}''', r'''
+Dict - ROOT 0,0..0,18
+  .keys[3]
+  0] Name 'a' Load - 0,1..0,2
+  1] Name 'x' Load - 0,7..0,8
+  2] Name 'e' Load - 0,13..0,14
+  .values[3]
+  0] Name 'b' Load - 0,4..0,5
+  1] Name 'y' Load - 0,10..0,11
+  2] Name 'f' Load - 0,16..0,17
+'''),
+
+(25, '', 1, 2, None, {'raw': True}, (None,
+r'''{a: b, c: d, e: f}'''), (None,
+r'''**z'''),
+r'''{a: b, **z, e: f}''', r'''
+Dict - ROOT 0,0..0,17
+  .keys[3]
+  0] Name 'a' Load - 0,1..0,2
+  1] None
+  2] Name 'e' Load - 0,12..0,13
+  .values[3]
+  0] Name 'b' Load - 0,4..0,5
+  1] Name 'z' Load - 0,9..0,10
+  2] Name 'f' Load - 0,15..0,16
+'''),
+
+(26, '', None, None, None, {'raw': True}, (None,
+r'''{a: b, c: d, e: f}'''), (None,
+r'''**z,'''),
+r'''{**z,}''', r'''
+Dict - ROOT 0,0..0,6
+  .keys[1]
+  0] None
+  .values[1]
+  0] Name 'z' Load - 0,3..0,4
+'''),
+
+(27, '', None, None, None, {'raw': True}, (None,
+r'''{a: b, c: d, e: f}'''), (None,
+r''''''),
+r'''{}''',
+r'''Dict - ROOT 0,0..0,2'''),
+
+(28, '', 1, 2, None, {'raw': True}, ('pattern',
+r'''{1: b, 3: d, 5: f}'''), (None,
+r'''7: y'''),
+r'''{1: b, 7: y, 5: f}''', r'''
+MatchMapping - ROOT 0,0..0,18
+  .keys[3]
+  0] Constant 1 - 0,1..0,2
+  1] Constant 7 - 0,7..0,8
+  2] Constant 5 - 0,13..0,14
+  .patterns[3]
+  0] MatchAs - 0,4..0,5
+    .name 'b'
+  1] MatchAs - 0,10..0,11
+    .name 'y'
+  2] MatchAs - 0,16..0,17
+    .name 'f'
+'''),
+
+(29, '', 1, 2, None, {'raw': True}, ('pattern',
+r'''{1: b, 3: d, 5: f}'''), (None,
+r'''**z'''),
+r'''{1: b, **z, 5: f}''', r'''
+Dict - ROOT 0,0..0,17
+  .keys[3]
+  0] Constant 1 - 0,1..0,2
+  1] None
+  2] Constant 5 - 0,12..0,13
+  .values[3]
+  0] Name 'b' Load - 0,4..0,5
+  1] Name 'z' Load - 0,9..0,10
+  2] Name 'f' Load - 0,15..0,16
+'''),
+
+(30, 'pattern', 1, 2, None, {'raw': True}, ('match_case',
+r'''case {1: b, 3: d, 5: f}: pass'''), (None,
+r'''**z'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+(31, '', 2, 3, None, {'raw': True}, ('pattern',
+r'''{1: b, 3: d, 5: f}'''), (None,
+r'''**z'''),
+r'''{1: b, 3: d, **z}''', r'''
+MatchMapping - ROOT 0,0..0,17
+  .keys[2]
+  0] Constant 1 - 0,1..0,2
+  1] Constant 3 - 0,7..0,8
+  .patterns[2]
+  0] MatchAs - 0,4..0,5
+    .name 'b'
+  1] MatchAs - 0,10..0,11
+    .name 'd'
+  .rest 'z'
+'''),
+
+(32, '', None, None, None, {'raw': True}, ('pattern',
+r'''{1: b, 3: d, 5: f}'''), (None,
+r'''**z'''),
+r'''{**z}''', r'''
+MatchMapping - ROOT 0,0..0,5
+  .rest 'z'
+'''),
+
+(33, '', None, None, None, {'raw': True}, ('pattern',
+r'''{1: b, 3: d, 5: f}'''), (None,
+r'''**z,'''),
+r'''{**z,}''', r'''
+MatchMapping - ROOT 0,0..0,6
+  .rest 'z'
+'''),
+
+(34, '', None, None, None, {'raw': True}, ('pattern',
+r'''{1: b, 3: d, 5: f}'''), (None,
+r''''''),
+r'''{}''',
+r'''MatchMapping - ROOT 0,0..0,2'''),
+
+(35, '', None, None, None, {'raw': True}, ('pattern',
+r'''{1: b, 3: d, **f}'''), (None,
+r'''7: y'''),
+r'''{7: y, **f}''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+  0] Constant 7 - 0,1..0,2
+  .patterns[1]
+  0] MatchAs - 0,4..0,5
+    .name 'y'
+  .rest 'f'
+'''),
+
+(36, '', 1, 2, None, {'raw': True}, ('pattern',
+r'''[a, b, c]'''), (None,
+r'''x, y'''),
+r'''[a, x, y, c]''', r'''
+MatchSequence - ROOT 0,0..0,12
+  .patterns[4]
+  0] MatchAs - 0,1..0,2
+    .name 'a'
+  1] MatchAs - 0,4..0,5
+    .name 'x'
+  2] MatchAs - 0,7..0,8
+    .name 'y'
+  3] MatchAs - 0,10..0,11
+    .name 'c'
+'''),
+
+(37, '', None, None, None, {'raw': True}, ('pattern',
+r'''[a, b, c]'''), (None,
+r'''z,'''),
+r'''[z,]''', r'''
+MatchSequence - ROOT 0,0..0,4
+  .patterns[1]
+  0] MatchAs - 0,1..0,2
+    .name 'z'
+'''),
+
+(38, '', None, None, None, {'raw': True}, ('pattern',
+r'''[a, b, c]'''), (None,
+r''''''),
+r'''[]''',
+r'''MatchSequence - ROOT 0,0..0,2'''),
+
+(39, '', 1, 2, None, {'raw': True}, ('pattern',
+r'''a | b | c'''), (None,
+r'''x | y'''),
+r'''a | x | y | c''', r'''
+MatchOr - ROOT 0,0..0,13
+  .patterns[4]
+  0] MatchAs - 0,0..0,1
+    .name 'a'
+  1] MatchAs - 0,4..0,5
+    .name 'x'
+  2] MatchAs - 0,8..0,9
+    .name 'y'
+  3] MatchAs - 0,12..0,13
+    .name 'c'
+'''),
+
+(40, '', None, None, None, {'raw': True}, ('pattern',
+r'''a | b | c'''), (None,
+r'''x | y'''),
+r'''x | y''', r'''
+MatchOr - ROOT 0,0..0,5
+  .patterns[2]
+  0] MatchAs - 0,0..0,1
+    .name 'x'
+  1] MatchAs - 0,4..0,5
+    .name 'y'
+'''),
+
+(41, '', None, None, None, {'raw': True}, ('pattern',
+r'''a | b | c'''), (None,
+r'''x'''),
+r'''x''', r'''
+MatchAs - ROOT 0,0..0,1
+  .name 'x'
+'''),
+
+(42, '', None, None, None, {'raw': True}, ('pattern',
+r'''a | b | c'''), (None,
+r''''''),
+r'''''',
+r'''Module - ROOT 0,0..0,0'''),
+
+(43, '', 1, 2, None, {'raw': True}, ('pattern',
+r'''cls(a, b, c)'''), (None,
+r'''x, y'''),
+r'''cls(a, x, y, c)''', r'''
+MatchClass - ROOT 0,0..0,15
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[4]
+  0] MatchAs - 0,4..0,5
+    .name 'a'
+  1] MatchAs - 0,7..0,8
+    .name 'x'
+  2] MatchAs - 0,10..0,11
+    .name 'y'
+  3] MatchAs - 0,13..0,14
+    .name 'c'
+'''),
+
+(44, '', 1, 2, None, {'raw': True}, ('pattern',
+r'''cls(a, b, c)'''), (None,
+r'''z=1'''),
+r'''**ParseError('invalid syntax')**'''),
+
+(45, '', 2, 3, None, {'raw': True}, ('pattern',
+r'''cls(a, b, c)'''), (None,
+r'''z=1'''),
+r'''cls(a, b, z=1)''', r'''
+MatchClass - ROOT 0,0..0,14
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+  0] MatchAs - 0,4..0,5
+    .name 'a'
+  1] MatchAs - 0,7..0,8
+    .name 'b'
+  .kwd_attrs[1]
+  0] 'z'
+  .kwd_patterns[1]
+  0] MatchValue - 0,12..0,13
+    .value Constant 1 - 0,12..0,13
+'''),
+
+(46, '', None, None, None, {'raw': True}, ('pattern',
+r'''cls(a, b, c)'''), (None,
+r'''x, y'''),
+r'''cls(x, y)''', r'''
+MatchClass - ROOT 0,0..0,9
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[2]
+  0] MatchAs - 0,4..0,5
+    .name 'x'
+  1] MatchAs - 0,7..0,8
+    .name 'y'
+'''),
+
+(47, '', None, None, None, {'raw': True}, ('pattern',
+r'''cls(a, b, c)'''), (None,
+r'''z,'''),
+r'''cls(z,)''', r'''
+MatchClass - ROOT 0,0..0,7
+  .cls Name 'cls' Load - 0,0..0,3
+  .patterns[1]
+  0] MatchAs - 0,4..0,5
+    .name 'z'
+'''),
+
+(48, '', None, None, None, {'raw': True}, ('pattern',
+r'''cls(a, b, c)'''), (None,
+r'''z=1'''),
+r'''cls(z=1)''', r'''
+MatchClass - ROOT 0,0..0,8
+  .cls Name 'cls' Load - 0,0..0,3
+  .kwd_attrs[1]
+  0] 'z'
+  .kwd_patterns[1]
+  0] MatchValue - 0,6..0,7
+    .value Constant 1 - 0,6..0,7
+'''),
+
+(49, '', None, None, None, {'raw': True}, ('pattern',
+r'''cls(a, b, c)'''), (None,
+r''''''),
+r'''cls()''', r'''
+MatchClass - ROOT 0,0..0,5
+  .cls Name 'cls' Load - 0,0..0,3
+'''),
+
+(50, '', 1, 2, 'bases', {'raw': True}, (None,
+r'''class cls(a, b, c): pass'''), (None,
+r'''x, y'''),
+r'''class cls(a, x, y, c): pass''', r'''
+ClassDef - ROOT 0,0..0,27
+  .name 'cls'
+  .bases[4]
+  0] Name 'a' Load - 0,10..0,11
+  1] Name 'x' Load - 0,13..0,14
+  2] Name 'y' Load - 0,16..0,17
+  3] Name 'c' Load - 0,19..0,20
+  .body[1]
+  0] Pass - 0,23..0,27
+'''),
+
+(51, '', 1, 2, 'bases', {'raw': True}, (None,
+r'''class cls(a, b, c): pass'''), (None,
+r'''**z'''),
+r'''**SyntaxError('positional argument follows keyword argument unpacking')**'''),
+
+(52, '', 1, 2, 'bases', {'raw': True}, (None,
+r'''class cls(a, b, *c): pass'''), (None,
+r'''**z'''),
+r'''**SyntaxError('iterable argument unpacking follows keyword argument unpacking')**'''),
+
+(53, '', 1, 2, 'bases', {'raw': True}, (None,
+r'''class cls(a, b, *c): pass'''), (None,
+r'''u=v'''),
+r'''class cls(a, u=v, *c): pass''', r'''
+ClassDef - ROOT 0,0..0,27
+  .name 'cls'
+  .bases[2]
+  0] Name 'a' Load - 0,10..0,11
+  1] Starred - 0,18..0,20
+    .value Name 'c' Load - 0,19..0,20
+    .ctx Load
+  .keywords[1]
+  0] keyword - 0,13..0,16
+    .arg 'u'
+    .value Name 'v' Load - 0,15..0,16
+  .body[1]
+  0] Pass - 0,23..0,27
+'''),
+
+(54, '', 2, 3, 'bases', {'raw': True}, (None,
+r'''class cls(a, b, c): pass'''), (None,
+r'''**z'''),
+r'''class cls(a, b, **z): pass''', r'''
+ClassDef - ROOT 0,0..0,26
+  .name 'cls'
+  .bases[2]
+  0] Name 'a' Load - 0,10..0,11
+  1] Name 'b' Load - 0,13..0,14
+  .keywords[1]
+  0] keyword - 0,16..0,19
+    .value Name 'z' Load - 0,18..0,19
+  .body[1]
+  0] Pass - 0,22..0,26
+'''),
+
+(55, '', None, None, 'bases', {'raw': True}, (None,
+r'''class cls(a, u=v, *b): pass'''), (None,
+r'''x, y'''),
+r'''class cls(x, y): pass''', r'''
+ClassDef - ROOT 0,0..0,21
+  .name 'cls'
+  .bases[2]
+  0] Name 'x' Load - 0,10..0,11
+  1] Name 'y' Load - 0,13..0,14
+  .body[1]
+  0] Pass - 0,17..0,21
+'''),
+
+(56, '', 1, 2, 'args', {'raw': True}, (None,
+r'''call(a, b, c)'''), (None,
+r'''x, y'''),
+r'''call(a, x, y, c)''', r'''
+Call - ROOT 0,0..0,16
+  .func Name 'call' Load - 0,0..0,4
+  .args[4]
+  0] Name 'a' Load - 0,5..0,6
+  1] Name 'x' Load - 0,8..0,9
+  2] Name 'y' Load - 0,11..0,12
+  3] Name 'c' Load - 0,14..0,15
+'''),
+
+(57, '', 1, 2, 'args', {'raw': True}, (None,
+r'''call(a, b, c)'''), (None,
+r'''**z'''),
+r'''**ParseError('invalid syntax')**'''),
+
+(58, '', 1, 2, 'args', {'raw': True}, (None,
+r'''call(a, b, *c)'''), (None,
+r'''**z'''),
+r'''**ParseError('invalid syntax')**'''),
+
+(59, '', 1, 2, 'args', {'raw': True}, (None,
+r'''call(a, b, *c)'''), (None,
+r'''u=v'''),
+r'''call(a, u=v, *c)''', r'''
+Call - ROOT 0,0..0,16
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+  0] Name 'a' Load - 0,5..0,6
+  1] Starred - 0,13..0,15
+    .value Name 'c' Load - 0,14..0,15
+    .ctx Load
+  .keywords[1]
+  0] keyword - 0,8..0,11
+    .arg 'u'
+    .value Name 'v' Load - 0,10..0,11
+'''),
+
+(60, '', 2, 3, 'args', {'raw': True}, (None,
+r'''call(a, b, c)'''), (None,
+r'''**z'''),
+r'''call(a, b, **z)''', r'''
+Call - ROOT 0,0..0,15
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+  0] Name 'a' Load - 0,5..0,6
+  1] Name 'b' Load - 0,8..0,9
+  .keywords[1]
+  0] keyword - 0,11..0,14
+    .value Name 'z' Load - 0,13..0,14
+'''),
+
+(61, '', None, None, 'args', {'raw': True}, (None,
+r'''call(a, u=v, *b)'''), (None,
+r'''x, y'''),
+r'''call(x, y)''', r'''
+Call - ROOT 0,0..0,10
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+  0] Name 'x' Load - 0,5..0,6
+  1] Name 'y' Load - 0,8..0,9
+'''),
+
+(62, '', 1, 2, None, {'raw': True}, (None,
+r'''del a, b, c'''), (None,
+r'''x, y'''),
+r'''del a, x, y, c''', r'''
+Delete - ROOT 0,0..0,14
+  .targets[4]
+  0] Name 'a' Del - 0,4..0,5
+  1] Name 'x' Del - 0,7..0,8
+  2] Name 'y' Del - 0,10..0,11
+  3] Name 'c' Del - 0,13..0,14
+'''),
+
+(63, '', None, None, None, {'raw': True}, (None,
+r'''del a, b, c'''), (None,
+r'''x, y'''),
+r'''del x, y''', r'''
+Delete - ROOT 0,0..0,8
+  .targets[2]
+  0] Name 'x' Del - 0,4..0,5
+  1] Name 'y' Del - 0,7..0,8
+'''),
+
+(64, '', None, None, None, {'raw': True}, (None,
+r'''del a, b, c'''), (None,
+r'''x, y,'''),
+r'''del x, y,''', r'''
+Delete - ROOT 0,0..0,9
+  .targets[2]
+  0] Name 'x' Del - 0,4..0,5
+  1] Name 'y' Del - 0,7..0,8
+'''),
+
+(65, '', 1, 2, 'targets', {'raw': True}, (None,
+r'''a = b = c = d'''), (None,
+r'''x = y'''),
+r'''a = x = y = c = d''', r'''
+Assign - ROOT 0,0..0,17
+  .targets[4]
+  0] Name 'a' Store - 0,0..0,1
+  1] Name 'x' Store - 0,4..0,5
+  2] Name 'y' Store - 0,8..0,9
+  3] Name 'c' Store - 0,12..0,13
+  .value Name 'd' Load - 0,16..0,17
+'''),
+
+(66, '', None, None, 'targets', {'raw': True}, (None,
+r'''a = b = c = d'''), (None,
+r'''x = y'''),
+r'''x = y = d''', r'''
+Assign - ROOT 0,0..0,9
+  .targets[2]
+  0] Name 'x' Store - 0,0..0,1
+  1] Name 'y' Store - 0,4..0,5
+  .value Name 'd' Load - 0,8..0,9
+'''),
+
+(67, '', 1, 2, None, {'raw': True}, (None,
+r'''global a, b, c'''), (None,
+r'''x, y'''),
+r'''global a, x, y, c''', r'''
+Global - ROOT 0,0..0,17
+  .names[4]
+  0] 'a'
+  1] 'x'
+  2] 'y'
+  3] 'c'
+'''),
+
+(68, '', None, None, None, {'raw': True}, (None,
+r'''global a, b, c'''), (None,
+r'''x, y'''),
+r'''global x, y''', r'''
+Global - ROOT 0,0..0,11
+  .names[2]
+  0] 'x'
+  1] 'y'
+'''),
+
+(69, '', None, None, None, {'raw': True}, (None,
+r'''global a, b, c'''), (None,
+r'''x, y,'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+(70, '', 1, 2, None, {'raw': True}, (None,
+r'''nonlocal a, b, c'''), (None,
+r'''x, y'''),
+r'''nonlocal a, x, y, c''', r'''
+Nonlocal - ROOT 0,0..0,19
+  .names[4]
+  0] 'a'
+  1] 'x'
+  2] 'y'
+  3] 'c'
+'''),
+
+(71, '', None, None, None, {'raw': True}, (None,
+r'''nonlocal a, b, c'''), (None,
+r'''x, y'''),
+r'''nonlocal x, y''', r'''
+Nonlocal - ROOT 0,0..0,13
+  .names[2]
+  0] 'x'
+  1] 'y'
+'''),
+
+(72, '', None, None, None, {'raw': True}, (None,
+r'''nonlocal a, b, c'''), (None,
+r'''x, y,'''),
+r'''**SyntaxError('invalid syntax')**'''),
 ],
 
 }

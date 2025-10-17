@@ -71,7 +71,7 @@ class TestFSTSlice(unittest.TestCase):
             for idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
                 self.assertEqual(c, r, f'{key = }, {case.idx = }, rest {idx = }')
 
-    def test_put_src_from_put_slice_data(self):  # this test will probably go away at some point
+    def test_put_src_from_put_slice_data(self):  # this test may go away at some point
         from fst.fst import _fixup_field_body
         from fst.fst_slice import _loc_slice_raw_put
         from support import _unfmt_code, _make_fst
@@ -82,7 +82,7 @@ class TestFSTSlice(unittest.TestCase):
 
             f        = _make_fst(case.code, case.attr)
             field, _ = _fixup_field_body(f.a, case.field)
-            loc      = _loc_slice_raw_put(f, case.start, case.stop, field)
+            loc      = _loc_slice_raw_put(f, case.start, case.stop, field)[:4]
             src      = _unfmt_code(r0 if isinstance(r0 := rest[0], str) else r0[1])
 
             f.put_src(None if src == '**DEL**' else src, *loc)
@@ -2164,6 +2164,7 @@ i ; \\
         self.assertRaises(SyntaxError, parse('{a: a, b: b, c: c}').body[0].value.f.put_slice, '{x: x, y: y}', 1, 2, raw=True)
 
         # strip delimiters if present
+
         self.assertEqual('(a, x, y, c)', parse('(a, b, c)').body[0].value.f.put_slice(ast_parse('x, y'), 1, 2, raw=True).root.src)
         self.assertEqual('(a, x, y, c)', parse('(a, b, c)').body[0].value.f.put_slice(ast_parse('(x, y)'), 1, 2, raw=True).root.src)
         self.assertEqual('[a, x, y, c]', parse('[a, b, c]').body[0].value.f.put_slice(ast_parse('[x, y]'), 1, 2, raw=True).root.src)
@@ -2201,6 +2202,7 @@ i ; \\
         self.assertEqual('{a: a, x: x, y: y, c: c}', parse('{a: a, b: b, c: c}').body[0].value.f.put_slice(ast_parse('{x: x, y: y,}'), 1, 2, raw=True).root.src)
 
         # as one so don't strip delimiters or add to unparenthesized tuple
+
         self.assertEqual('(a, (x, y), c)', parse('(a, b, c)').body[0].value.f.put_slice(ast_parse('x, y'), 1, 2, one=True, raw=True).root.src)
         self.assertEqual('(a, (x, y), c)', parse('(a, b, c)').body[0].value.f.put_slice(ast_parse('(x, y)'), 1, 2, one=True, raw=True).root.src)
         self.assertEqual('[a, [x, y], c]', parse('[a, b, c]').body[0].value.f.put_slice(ast_parse('[x, y]'), 1, 2, one=True, raw=True).root.src)
@@ -2295,6 +2297,546 @@ i ; \\
         f = parse('match a:\n case 1 | 2 | 3: pass').body[0].cases[0].pattern.f
         g = parse('a | b').body[0].value.f.copy()
         self.assertEqual('match a:\n case 1 | a | b | 3: pass', f.put_slice(g, 1, 2, raw=True).root.src)
+
+    def test_put_slice_raw_trailing_comma_ast(self):
+        self.assertEqual('[x]', FST('[a]').put_slice(FST('[x]').a, 0, 1, raw=True).src)
+        self.assertEqual('[x]', FST('[a]').put_slice(FST('(x,)').a, 0, 1, raw=True).src)
+        self.assertEqual('[x, y]', FST('[a]').put_slice(FST('[x, y]').a, 0, 1, raw=True).src)
+        self.assertEqual('[x, y]', FST('[a]').put_slice(FST('(x, y)').a, 0, 1, raw=True).src)
+
+        self.assertEqual('(x,)', FST('(a,)').put_slice(FST('[x]').a, 0, 1, raw=True).src)
+        self.assertEqual('(x,)', FST('(a,)').put_slice(FST('(x,)').a, 0, 1, raw=True).src)
+        self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('[x, y]').a, 0, 1, raw=True).src)
+        self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('(x, y)').a, 0, 1, raw=True).src)
+
+        self.assertEqual('[x  ,]', FST('[a  ,]').put_slice(FST('[x]').a, 0, 1, raw=True).src)
+        self.assertEqual('[x  ,]', FST('[a  ,]').put_slice(FST('(x,)').a, 0, 1, raw=True).src)
+        self.assertEqual('[x, y  ,]', FST('[a  ,]').put_slice(FST('[x, y]').a, 0, 1, raw=True).src)
+        self.assertEqual('[x, y  ,]', FST('[a  ,]').put_slice(FST('(x, y)').a, 0, 1, raw=True).src)
+
+        self.assertEqual('(x  ,)', FST('(a  ,)').put_slice(FST('[x]').a, 0, 1, raw=True).src)
+        self.assertEqual('(x  ,)', FST('(a  ,)').put_slice(FST('(x,)').a, 0, 1, raw=True).src)
+        self.assertEqual('(x, y  ,)', FST('(a  ,)').put_slice(FST('[x, y]').a, 0, 1, raw=True).src)
+        self.assertEqual('(x, y  ,)', FST('(a  ,)').put_slice(FST('(x, y)').a, 0, 1, raw=True).src)
+
+        self.assertEqual('[x, b]', FST('[a, b]').put_slice(FST('[x]').a, 0, 1, raw=True).src)
+        self.assertEqual('[x, b]', FST('[a, b]').put_slice(FST('(x,)').a, 0, 1, raw=True).src)
+        self.assertEqual('[x, y, b]', FST('[a, b]').put_slice(FST('[x, y]').a, 0, 1, raw=True).src)
+        self.assertEqual('[x, y, b]', FST('[a, b]').put_slice(FST('(x, y)').a, 0, 1, raw=True).src)
+
+        self.assertEqual('[x]', FST('[a, b]').put_slice(FST('[x]').a, 0, 2, raw=True).src)
+        self.assertEqual('[x]', FST('[a, b]').put_slice(FST('(x,)').a, 0, 2, raw=True).src)
+        self.assertEqual('[x, y]', FST('[a, b]').put_slice(FST('[x, y]').a, 0, 2, raw=True).src)
+        self.assertEqual('[x, y]', FST('[a, b]').put_slice(FST('(x, y)').a, 0, 2, raw=True).src)
+
+        self.assertEqual('[a, x]', FST('[a, b]').put_slice(FST('[x]').a, 1, 2, raw=True).src)
+        self.assertEqual('[a, x]', FST('[a, b]').put_slice(FST('(x,)').a, 1, 2, raw=True).src)
+        self.assertEqual('[a, x, y]', FST('[a, b]').put_slice(FST('[x, y]').a, 1, 2, raw=True).src)
+        self.assertEqual('[a, x, y]', FST('[a, b]').put_slice(FST('(x, y)').a, 1, 2, raw=True).src)
+
+        self.assertEqual('(x, b)', FST('(a, b)').put_slice(FST('[x]').a, 0, 1, raw=True).src)
+        self.assertEqual('(x, b)', FST('(a, b)').put_slice(FST('(x,)').a, 0, 1, raw=True).src)
+        self.assertEqual('(x, y, b)', FST('(a, b)').put_slice(FST('[x, y]').a, 0, 1, raw=True).src)
+        self.assertEqual('(x, y, b)', FST('(a, b)').put_slice(FST('(x, y)').a, 0, 1, raw=True).src)
+
+        self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('[x]').a, 0, 2, raw=True).src)
+        self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('(x,)').a, 0, 2, raw=True).src)
+        self.assertEqual('(x, y)', FST('(a, b)').put_slice(FST('[x, y]').a, 0, 2, raw=True).src)
+        self.assertEqual('(x, y)', FST('(a, b)').put_slice(FST('(x, y)').a, 0, 2, raw=True).src)
+
+        self.assertEqual('(a, x)', FST('(a, b)').put_slice(FST('[x]').a, 1, 2, raw=True).src)
+        self.assertEqual('(a, x)', FST('(a, b)').put_slice(FST('(x,)').a, 1, 2, raw=True).src)
+        self.assertEqual('(a, x, y)', FST('(a, b)').put_slice(FST('[x, y]').a, 1, 2, raw=True).src)
+        self.assertEqual('(a, x, y)', FST('(a, b)').put_slice(FST('(x, y)').a, 1, 2, raw=True).src)
+
+        self.assertEqual('[x, b  ,]', FST('[a, b  ,]').put_slice(FST('[x]').a, 0, 1, raw=True).src)
+        self.assertEqual('[x, b  ,]', FST('[a, b  ,]').put_slice(FST('(x,)').a, 0, 1, raw=True).src)
+        self.assertEqual('[x, y, b  ,]', FST('[a, b  ,]').put_slice(FST('[x, y]').a, 0, 1, raw=True).src)
+        self.assertEqual('[x, y, b  ,]', FST('[a, b  ,]').put_slice(FST('(x, y)').a, 0, 1, raw=True).src)
+
+        self.assertEqual('[x  ,]', FST('[a, b  ,]').put_slice(FST('[x]').a, 0, 2, raw=True).src)
+        self.assertEqual('[x  ,]', FST('[a, b  ,]').put_slice(FST('(x,)').a, 0, 2, raw=True).src)
+        self.assertEqual('[x, y  ,]', FST('[a, b  ,]').put_slice(FST('[x, y]').a, 0, 2, raw=True).src)
+        self.assertEqual('[x, y  ,]', FST('[a, b  ,]').put_slice(FST('(x, y)').a, 0, 2, raw=True).src)
+
+        self.assertEqual('[a, x  ,]', FST('[a, b  ,]').put_slice(FST('[x]').a, 1, 2, raw=True).src)
+        self.assertEqual('[a, x  ,]', FST('[a, b  ,]').put_slice(FST('(x,)').a, 1, 2, raw=True).src)
+        self.assertEqual('[a, x, y  ,]', FST('[a, b  ,]').put_slice(FST('[x, y]').a, 1, 2, raw=True).src)
+        self.assertEqual('[a, x, y  ,]', FST('[a, b  ,]').put_slice(FST('(x, y)').a, 1, 2, raw=True).src)
+
+        self.assertEqual('(x, b  ,)', FST('(a, b  ,)').put_slice(FST('[x]').a, 0, 1, raw=True).src)
+        self.assertEqual('(x, b  ,)', FST('(a, b  ,)').put_slice(FST('(x,)').a, 0, 1, raw=True).src)
+        self.assertEqual('(x, y, b  ,)', FST('(a, b  ,)').put_slice(FST('[x, y]').a, 0, 1, raw=True).src)
+        self.assertEqual('(x, y, b  ,)', FST('(a, b  ,)').put_slice(FST('(x, y)').a, 0, 1, raw=True).src)
+
+        self.assertEqual('(x  ,)', FST('(a, b  ,)').put_slice(FST('[x]').a, 0, 2, raw=True).src)
+        self.assertEqual('(x  ,)', FST('(a, b  ,)').put_slice(FST('(x,)').a, 0, 2, raw=True).src)
+        self.assertEqual('(x, y  ,)', FST('(a, b  ,)').put_slice(FST('[x, y]').a, 0, 2, raw=True).src)
+        self.assertEqual('(x, y  ,)', FST('(a, b  ,)').put_slice(FST('(x, y)').a, 0, 2, raw=True).src)
+
+        self.assertEqual('(a, x  ,)', FST('(a, b  ,)').put_slice(FST('[x]').a, 1, 2, raw=True).src)
+        self.assertEqual('(a, x  ,)', FST('(a, b  ,)').put_slice(FST('(x,)').a, 1, 2, raw=True).src)
+        self.assertEqual('(a, x, y  ,)', FST('(a, b  ,)').put_slice(FST('[x, y]').a, 1, 2, raw=True).src)
+        self.assertEqual('(a, x, y  ,)', FST('(a, b  ,)').put_slice(FST('(x, y)').a, 1, 2, raw=True).src)
+
+        # one
+
+        self.assertEqual('[[x]]', FST('[a]').put_slice(FST('[x]').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x,)]', FST('[a]').put_slice(FST('(x,)').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('[[x, y]]', FST('[a]').put_slice(FST('[x, y]').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x, y)]', FST('[a]').put_slice(FST('(x, y)').a, 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('([x],)', FST('(a,)').put_slice(FST('[x]').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x,),)', FST('(a,)').put_slice(FST('(x,)').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('([x, y],)', FST('(a,)').put_slice(FST('[x, y]').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x, y),)', FST('(a,)').put_slice(FST('(x, y)').a, 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('[[x]  ,]', FST('[a  ,]').put_slice(FST('[x]').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x,)  ,]', FST('[a  ,]').put_slice(FST('(x,)').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('[[x, y]  ,]', FST('[a  ,]').put_slice(FST('[x, y]').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x, y)  ,]', FST('[a  ,]').put_slice(FST('(x, y)').a, 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('([x]  ,)', FST('(a  ,)').put_slice(FST('[x]').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x,)  ,)', FST('(a  ,)').put_slice(FST('(x,)').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('([x, y]  ,)', FST('(a  ,)').put_slice(FST('[x, y]').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x, y)  ,)', FST('(a  ,)').put_slice(FST('(x, y)').a, 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('[[x], b]', FST('[a, b]').put_slice(FST('[x]').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x,), b]', FST('[a, b]').put_slice(FST('(x,)').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('[[x, y], b]', FST('[a, b]').put_slice(FST('[x, y]').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x, y), b]', FST('[a, b]').put_slice(FST('(x, y)').a, 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('[[x]]', FST('[a, b]').put_slice(FST('[x]').a, 0, 2, raw=True, one=True).src)
+        self.assertEqual('[(x,)]', FST('[a, b]').put_slice(FST('(x,)').a, 0, 2, raw=True, one=True).src)
+        self.assertEqual('[[x, y]]', FST('[a, b]').put_slice(FST('[x, y]').a, 0, 2, raw=True, one=True).src)
+        self.assertEqual('[(x, y)]', FST('[a, b]').put_slice(FST('(x, y)').a, 0, 2, raw=True, one=True).src)
+
+        self.assertEqual('[a, [x]]', FST('[a, b]').put_slice(FST('[x]').a, 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, (x,)]', FST('[a, b]').put_slice(FST('(x,)').a, 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, [x, y]]', FST('[a, b]').put_slice(FST('[x, y]').a, 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, (x, y)]', FST('[a, b]').put_slice(FST('(x, y)').a, 1, 2, raw=True, one=True).src)
+
+        self.assertEqual('([x], b)', FST('(a, b)').put_slice(FST('[x]').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x,), b)', FST('(a, b)').put_slice(FST('(x,)').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('([x, y], b)', FST('(a, b)').put_slice(FST('[x, y]').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x, y), b)', FST('(a, b)').put_slice(FST('(x, y)').a, 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('([x],)', FST('(a, b)').put_slice(FST('[x]').a, 0, 2, raw=True, one=True).src)
+        self.assertEqual('((x,),)', FST('(a, b)').put_slice(FST('(x,)').a, 0, 2, raw=True, one=True).src)
+        self.assertEqual('([x, y],)', FST('(a, b)').put_slice(FST('[x, y]').a, 0, 2, raw=True, one=True).src)
+        self.assertEqual('((x, y),)', FST('(a, b)').put_slice(FST('(x, y)').a, 0, 2, raw=True, one=True).src)
+
+        self.assertEqual('(a, [x])', FST('(a, b)').put_slice(FST('[x]').a, 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, (x,))', FST('(a, b)').put_slice(FST('(x,)').a, 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, [x, y])', FST('(a, b)').put_slice(FST('[x, y]').a, 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, (x, y))', FST('(a, b)').put_slice(FST('(x, y)').a, 1, 2, raw=True, one=True).src)
+
+        self.assertEqual('[[x], b  ,]', FST('[a, b  ,]').put_slice(FST('[x]').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x,), b  ,]', FST('[a, b  ,]').put_slice(FST('(x,)').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('[[x, y], b  ,]', FST('[a, b  ,]').put_slice(FST('[x, y]').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x, y), b  ,]', FST('[a, b  ,]').put_slice(FST('(x, y)').a, 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('[[x]  ,]', FST('[a, b  ,]').put_slice(FST('[x]').a, 0, 2, raw=True, one=True).src)
+        self.assertEqual('[(x,)  ,]', FST('[a, b  ,]').put_slice(FST('(x,)').a, 0, 2, raw=True, one=True).src)
+        self.assertEqual('[[x, y]  ,]', FST('[a, b  ,]').put_slice(FST('[x, y]').a, 0, 2, raw=True, one=True).src)
+        self.assertEqual('[(x, y)  ,]', FST('[a, b  ,]').put_slice(FST('(x, y)').a, 0, 2, raw=True, one=True).src)
+
+        self.assertEqual('[a, [x]  ,]', FST('[a, b  ,]').put_slice(FST('[x]').a, 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, (x,)  ,]', FST('[a, b  ,]').put_slice(FST('(x,)').a, 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, [x, y]  ,]', FST('[a, b  ,]').put_slice(FST('[x, y]').a, 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, (x, y)  ,]', FST('[a, b  ,]').put_slice(FST('(x, y)').a, 1, 2, raw=True, one=True).src)
+
+        self.assertEqual('([x], b  ,)', FST('(a, b  ,)').put_slice(FST('[x]').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x,), b  ,)', FST('(a, b  ,)').put_slice(FST('(x,)').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('([x, y], b  ,)', FST('(a, b  ,)').put_slice(FST('[x, y]').a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x, y), b  ,)', FST('(a, b  ,)').put_slice(FST('(x, y)').a, 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('([x]  ,)', FST('(a, b  ,)').put_slice(FST('[x]').a, 0, 2, raw=True, one=True).src)
+        self.assertEqual('((x,)  ,)', FST('(a, b  ,)').put_slice(FST('(x,)').a, 0, 2, raw=True, one=True).src)
+        self.assertEqual('([x, y]  ,)', FST('(a, b  ,)').put_slice(FST('[x, y]').a, 0, 2, raw=True, one=True).src)
+        self.assertEqual('((x, y)  ,)', FST('(a, b  ,)').put_slice(FST('(x, y)').a, 0, 2, raw=True, one=True).src)
+
+        self.assertEqual('(a, [x]  ,)', FST('(a, b  ,)').put_slice(FST('[x]').a, 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, (x,)  ,)', FST('(a, b  ,)').put_slice(FST('(x,)').a, 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, [x, y]  ,)', FST('(a, b  ,)').put_slice(FST('[x, y]').a, 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, (x, y)  ,)', FST('(a, b  ,)').put_slice(FST('(x, y)').a, 1, 2, raw=True, one=True).src)
+
+        # MatchSequence (sometimes needs traling comma on singleton and sometimes not, thank you structural pattern matching for all your wonderful contributions to python syntax)
+
+        self.assertEqual('[x]', FST('[a]', pattern).put_slice(FST('[x]', pattern).a, 0, 1, raw=True).src)
+        self.assertEqual('[x]', FST('[a]', pattern).put_slice(FST('(x,)', pattern).a, 0, 1, raw=True).src)
+
+        self.assertEqual('(x ,)', FST('(a ,)', pattern).put_slice(FST('[x]', pattern).a, 0, 1, raw=True).src)
+        self.assertEqual('(x ,)', FST('(a ,)', pattern).put_slice(FST('(x,)', pattern).a, 0, 1, raw=True).src)
+
+        self.assertEqual('(x,)', FST('(a, b)', pattern).put_slice(FST('[x]', pattern).a, 0, 2, raw=True).src)
+        self.assertEqual('(x,)', FST('(a, b)', pattern).put_slice(FST('(x,)', pattern).a, 0, 2, raw=True).src)
+
+        self.assertEqual('[[x]]', FST('[a]', pattern).put_slice(FST('[x]', pattern).a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('[[x]]', FST('[a]', pattern).put_slice(FST('(x,)', pattern).a, 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('([x] ,)', FST('(a ,)', pattern).put_slice(FST('[x]', pattern).a, 0, 1, raw=True, one=True).src)
+        self.assertEqual('([x] ,)', FST('(a ,)', pattern).put_slice(FST('(x,)', pattern).a, 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('([x],)', FST('(a, b)', pattern).put_slice(FST('[x]', pattern).a, 0, 2, raw=True, one=True).src)
+        self.assertEqual('([x],)', FST('(a, b)', pattern).put_slice(FST('(x,)', pattern).a, 0, 2, raw=True, one=True).src)
+
+        # non-sequence types with trailing commas
+
+        self.assertEqual('class cls(x ,): pass', FST('class cls(a, b ,): pass').put_slice(FST('[x]').a, 0, 2, 'bases', raw=True).src)
+        self.assertEqual('class cls(x ,): pass', FST('class cls(a, b ,): pass').put_slice(FST('(x,)').a, 0, 2, 'bases', raw=True).src)
+
+        self.assertEqual('call(x ,)', FST('call(a, b ,)').put_slice(FST('[x]').a, 0, 2, raw=True).src)
+        self.assertEqual('call(x ,)', FST('call(a, b ,)').put_slice(FST('(x,)').a, 0, 2, raw=True).src)
+
+        self.assertEqual('del x ,', FST('del a, b ,').put_slice(FST('[x]').a, 0, 2, raw=True).src)
+        self.assertEqual('del x ,', FST('del a, b ,').put_slice(FST('(x,)').a, 0, 2, raw=True).src)
+
+        self.assertEqual('class cls([x] ,): pass', FST('class cls(a, b ,): pass').put_slice(FST('[x]').a, 0, 2, 'bases', raw=True, one=True).src)
+        self.assertEqual('class cls((x,) ,): pass', FST('class cls(a, b ,): pass').put_slice(FST('(x,)').a, 0, 2, 'bases', raw=True, one=True).src)
+
+        self.assertEqual('call([x] ,)', FST('call(a, b ,)').put_slice(FST('[x]').a, 0, 2, raw=True, one=True).src)
+        self.assertEqual('call((x,) ,)', FST('call(a, b ,)').put_slice(FST('(x,)').a, 0, 2, raw=True, one=True).src)
+
+        self.assertEqual('del [x] ,', FST('del a, b ,').put_slice(FST('[x]').a, 0, 2, raw=True, one=True).src)
+        self.assertEqual('del (x,) ,', FST('del a, b ,').put_slice(FST('(x,)').a, 0, 2, raw=True, one=True).src)
+
+    def test_put_slice_raw_trailing_comma_fst(self):
+        self.assertEqual('[x]', FST('[a]').put_slice(FST('[x]'), 0, 1, raw=True).src)
+        self.assertEqual('[x]', FST('[a]').put_slice(FST('(x,)'), 0, 1, raw=True).src)
+        self.assertEqual('[x ,]', FST('[a]').put_slice(FST('[x ,]'), 0, 1, raw=True).src)
+        self.assertEqual('[x ,]', FST('[a]').put_slice(FST('(x ,)'), 0, 1, raw=True).src)
+        self.assertEqual('[x, y]', FST('[a]').put_slice(FST('[x, y]'), 0, 1, raw=True).src)
+        self.assertEqual('[x, y]', FST('[a]').put_slice(FST('(x, y)'), 0, 1, raw=True).src)
+        self.assertEqual('[x, y ,]', FST('[a]').put_slice(FST('[x, y ,]'), 0, 1, raw=True).src)
+        self.assertEqual('[x, y ,]', FST('[a]').put_slice(FST('(x, y ,)'), 0, 1, raw=True).src)
+
+        self.assertEqual('(x,)', FST('(a,)').put_slice(FST('[x]'), 0, 1, raw=True).src)
+        self.assertEqual('(x,)', FST('(a,)').put_slice(FST('(x,)'), 0, 1, raw=True).src)
+        self.assertEqual('(x ,)', FST('(a,)').put_slice(FST('[x ,]'), 0, 1, raw=True).src)
+        self.assertEqual('(x ,)', FST('(a,)').put_slice(FST('(x ,)'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('[x, y]'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('(x, y)'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y ,)', FST('(a,)').put_slice(FST('[x, y ,]'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y ,)', FST('(a,)').put_slice(FST('(x, y ,)'), 0, 1, raw=True).src)
+
+        self.assertEqual('[x  ,]', FST('[a  ,]').put_slice(FST('[x]'), 0, 1, raw=True).src)
+        self.assertEqual('[x  ,]', FST('[a  ,]').put_slice(FST('(x,)'), 0, 1, raw=True).src)
+        self.assertEqual('[x ,]', FST('[a  ,]').put_slice(FST('[x ,]'), 0, 1, raw=True).src)
+        self.assertEqual('[x ,]', FST('[a  ,]').put_slice(FST('(x ,)'), 0, 1, raw=True).src)
+        self.assertEqual('[x, y  ,]', FST('[a  ,]').put_slice(FST('[x, y]'), 0, 1, raw=True).src)
+        self.assertEqual('[x, y  ,]', FST('[a  ,]').put_slice(FST('(x, y)'), 0, 1, raw=True).src)
+        self.assertEqual('[x, y ,]', FST('[a  ,]').put_slice(FST('[x, y ,]'), 0, 1, raw=True).src)
+        self.assertEqual('[x, y ,]', FST('[a  ,]').put_slice(FST('(x, y ,)'), 0, 1, raw=True).src)
+
+        self.assertEqual('(x  ,)', FST('(a  ,)').put_slice(FST('[x]'), 0, 1, raw=True).src)
+        self.assertEqual('(x  ,)', FST('(a  ,)').put_slice(FST('(x,)'), 0, 1, raw=True).src)
+        self.assertEqual('(x ,)', FST('(a  ,)').put_slice(FST('[x ,]'), 0, 1, raw=True).src)
+        self.assertEqual('(x ,)', FST('(a  ,)').put_slice(FST('(x ,)'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y  ,)', FST('(a  ,)').put_slice(FST('[x, y]'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y  ,)', FST('(a  ,)').put_slice(FST('(x, y)'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y ,)', FST('(a  ,)').put_slice(FST('[x, y ,]'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y ,)', FST('(a  ,)').put_slice(FST('(x, y ,)'), 0, 1, raw=True).src)
+
+        self.assertEqual('[x, b]', FST('[a, b]').put_slice(FST('[x]'), 0, 1, raw=True).src)
+        self.assertEqual('[x, b]', FST('[a, b]').put_slice(FST('(x,)'), 0, 1, raw=True).src)
+        self.assertEqual('[x , b]', FST('[a, b]').put_slice(FST('[x ,]'), 0, 1, raw=True).src)
+        self.assertEqual('[x , b]', FST('[a, b]').put_slice(FST('(x ,)'), 0, 1, raw=True).src)
+        self.assertEqual('[x, y, b]', FST('[a, b]').put_slice(FST('[x, y]'), 0, 1, raw=True).src)
+        self.assertEqual('[x, y, b]', FST('[a, b]').put_slice(FST('(x, y)'), 0, 1, raw=True).src)
+        self.assertEqual('[x, y , b]', FST('[a, b]').put_slice(FST('[x, y ,]'), 0, 1, raw=True).src)
+        self.assertEqual('[x, y , b]', FST('[a, b]').put_slice(FST('(x, y ,)'), 0, 1, raw=True).src)
+
+        self.assertEqual('[x]', FST('[a, b]').put_slice(FST('[x]'), 0, 2, raw=True).src)
+        self.assertEqual('[x]', FST('[a, b]').put_slice(FST('(x,)'), 0, 2, raw=True).src)
+        self.assertEqual('[x ,]', FST('[a, b]').put_slice(FST('[x ,]'), 0, 2, raw=True).src)
+        self.assertEqual('[x ,]', FST('[a, b]').put_slice(FST('(x ,)'), 0, 2, raw=True).src)
+        self.assertEqual('[x, y]', FST('[a, b]').put_slice(FST('[x, y]'), 0, 2, raw=True).src)
+        self.assertEqual('[x, y]', FST('[a, b]').put_slice(FST('(x, y)'), 0, 2, raw=True).src)
+        self.assertEqual('[x, y ,]', FST('[a, b]').put_slice(FST('[x, y ,]'), 0, 2, raw=True).src)
+        self.assertEqual('[x, y ,]', FST('[a, b]').put_slice(FST('(x, y ,)'), 0, 2, raw=True).src)
+
+        self.assertEqual('[a, x]', FST('[a, b]').put_slice(FST('[x]'), 1, 2, raw=True).src)
+        self.assertEqual('[a, x]', FST('[a, b]').put_slice(FST('(x,)'), 1, 2, raw=True).src)
+        self.assertEqual('[a, x ,]', FST('[a, b]').put_slice(FST('[x ,]'), 1, 2, raw=True).src)
+        self.assertEqual('[a, x ,]', FST('[a, b]').put_slice(FST('(x ,)'), 1, 2, raw=True).src)
+        self.assertEqual('[a, x, y]', FST('[a, b]').put_slice(FST('[x, y]'), 1, 2, raw=True).src)
+        self.assertEqual('[a, x, y]', FST('[a, b]').put_slice(FST('(x, y)'), 1, 2, raw=True).src)
+        self.assertEqual('[a, x, y ,]', FST('[a, b]').put_slice(FST('[x, y ,]'), 1, 2, raw=True).src)
+        self.assertEqual('[a, x, y ,]', FST('[a, b]').put_slice(FST('(x, y ,)'), 1, 2, raw=True).src)
+
+        self.assertEqual('(x, b)', FST('(a, b)').put_slice(FST('[x]'), 0, 1, raw=True).src)
+        self.assertEqual('(x, b)', FST('(a, b)').put_slice(FST('(x,)'), 0, 1, raw=True).src)
+        self.assertEqual('(x , b)', FST('(a, b)').put_slice(FST('[x ,]'), 0, 1, raw=True).src)
+        self.assertEqual('(x , b)', FST('(a, b)').put_slice(FST('(x ,)'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y, b)', FST('(a, b)').put_slice(FST('[x, y]'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y, b)', FST('(a, b)').put_slice(FST('(x, y)'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y , b)', FST('(a, b)').put_slice(FST('[x, y ,]'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y , b)', FST('(a, b)').put_slice(FST('(x, y ,)'), 0, 1, raw=True).src)
+
+        self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('[x]'), 0, 2, raw=True).src)
+        self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('(x,)'), 0, 2, raw=True).src)
+        self.assertEqual('(x ,)', FST('(a, b)').put_slice(FST('[x ,]'), 0, 2, raw=True).src)
+        self.assertEqual('(x ,)', FST('(a, b)').put_slice(FST('(x ,)'), 0, 2, raw=True).src)
+        self.assertEqual('(x, y)', FST('(a, b)').put_slice(FST('[x, y]'), 0, 2, raw=True).src)
+        self.assertEqual('(x, y)', FST('(a, b)').put_slice(FST('(x, y)'), 0, 2, raw=True).src)
+        self.assertEqual('(x, y ,)', FST('(a, b)').put_slice(FST('[x, y ,]'), 0, 2, raw=True).src)
+        self.assertEqual('(x, y ,)', FST('(a, b)').put_slice(FST('(x, y ,)'), 0, 2, raw=True).src)
+
+        self.assertEqual('(a, x)', FST('(a, b)').put_slice(FST('[x]'), 1, 2, raw=True).src)
+        self.assertEqual('(a, x)', FST('(a, b)').put_slice(FST('(x,)'), 1, 2, raw=True).src)
+        self.assertEqual('(a, x ,)', FST('(a, b)').put_slice(FST('[x ,]'), 1, 2, raw=True).src)
+        self.assertEqual('(a, x ,)', FST('(a, b)').put_slice(FST('(x ,)'), 1, 2, raw=True).src)
+        self.assertEqual('(a, x, y)', FST('(a, b)').put_slice(FST('[x, y]'), 1, 2, raw=True).src)
+        self.assertEqual('(a, x, y)', FST('(a, b)').put_slice(FST('(x, y)'), 1, 2, raw=True).src)
+        self.assertEqual('(a, x, y ,)', FST('(a, b)').put_slice(FST('[x, y ,]'), 1, 2, raw=True).src)
+        self.assertEqual('(a, x, y ,)', FST('(a, b)').put_slice(FST('(x, y ,)'), 1, 2, raw=True).src)
+
+        self.assertEqual('[x, b  ,]', FST('[a, b  ,]').put_slice(FST('[x]'), 0, 1, raw=True).src)
+        self.assertEqual('[x, b  ,]', FST('[a, b  ,]').put_slice(FST('(x,)'), 0, 1, raw=True).src)
+        self.assertEqual('[x , b  ,]', FST('[a, b  ,]').put_slice(FST('[x ,]'), 0, 1, raw=True).src)
+        self.assertEqual('[x , b  ,]', FST('[a, b  ,]').put_slice(FST('(x ,)'), 0, 1, raw=True).src)
+        self.assertEqual('[x, y, b  ,]', FST('[a, b  ,]').put_slice(FST('[x, y]'), 0, 1, raw=True).src)
+        self.assertEqual('[x, y, b  ,]', FST('[a, b  ,]').put_slice(FST('(x, y)'), 0, 1, raw=True).src)
+        self.assertEqual('[x, y , b  ,]', FST('[a, b  ,]').put_slice(FST('[x, y ,]'), 0, 1, raw=True).src)
+        self.assertEqual('[x, y , b  ,]', FST('[a, b  ,]').put_slice(FST('(x, y ,)'), 0, 1, raw=True).src)
+
+        self.assertEqual('[x  ,]', FST('[a, b  ,]').put_slice(FST('[x]'), 0, 2, raw=True).src)
+        self.assertEqual('[x  ,]', FST('[a, b  ,]').put_slice(FST('(x,)'), 0, 2, raw=True).src)
+        self.assertEqual('[x ,]', FST('[a, b  ,]').put_slice(FST('[x ,]'), 0, 2, raw=True).src)
+        self.assertEqual('[x ,]', FST('[a, b  ,]').put_slice(FST('(x ,)'), 0, 2, raw=True).src)
+        self.assertEqual('[x, y  ,]', FST('[a, b  ,]').put_slice(FST('[x, y]'), 0, 2, raw=True).src)
+        self.assertEqual('[x, y  ,]', FST('[a, b  ,]').put_slice(FST('(x, y)'), 0, 2, raw=True).src)
+        self.assertEqual('[x, y ,]', FST('[a, b  ,]').put_slice(FST('[x, y ,]'), 0, 2, raw=True).src)
+        self.assertEqual('[x, y ,]', FST('[a, b  ,]').put_slice(FST('(x, y ,)'), 0, 2, raw=True).src)
+
+        self.assertEqual('[a, x  ,]', FST('[a, b  ,]').put_slice(FST('[x]'), 1, 2, raw=True).src)
+        self.assertEqual('[a, x  ,]', FST('[a, b  ,]').put_slice(FST('(x,)'), 1, 2, raw=True).src)
+        self.assertEqual('[a, x ,]', FST('[a, b  ,]').put_slice(FST('[x ,]'), 1, 2, raw=True).src)
+        self.assertEqual('[a, x ,]', FST('[a, b  ,]').put_slice(FST('(x ,)'), 1, 2, raw=True).src)
+        self.assertEqual('[a, x, y  ,]', FST('[a, b  ,]').put_slice(FST('[x, y]'), 1, 2, raw=True).src)
+        self.assertEqual('[a, x, y  ,]', FST('[a, b  ,]').put_slice(FST('(x, y)'), 1, 2, raw=True).src)
+        self.assertEqual('[a, x, y ,]', FST('[a, b  ,]').put_slice(FST('[x, y ,]'), 1, 2, raw=True).src)
+        self.assertEqual('[a, x, y ,]', FST('[a, b  ,]').put_slice(FST('(x, y ,)'), 1, 2, raw=True).src)
+
+        self.assertEqual('(x, b  ,)', FST('(a, b  ,)').put_slice(FST('[x]'), 0, 1, raw=True).src)
+        self.assertEqual('(x, b  ,)', FST('(a, b  ,)').put_slice(FST('(x,)'), 0, 1, raw=True).src)
+        self.assertEqual('(x , b  ,)', FST('(a, b  ,)').put_slice(FST('[x ,]'), 0, 1, raw=True).src)
+        self.assertEqual('(x , b  ,)', FST('(a, b  ,)').put_slice(FST('(x ,)'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y, b  ,)', FST('(a, b  ,)').put_slice(FST('[x, y]'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y, b  ,)', FST('(a, b  ,)').put_slice(FST('(x, y)'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y , b  ,)', FST('(a, b  ,)').put_slice(FST('[x, y ,]'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y , b  ,)', FST('(a, b  ,)').put_slice(FST('(x, y ,)'), 0, 1, raw=True).src)
+
+        self.assertEqual('(x  ,)', FST('(a, b  ,)').put_slice(FST('[x]'), 0, 2, raw=True).src)
+        self.assertEqual('(x  ,)', FST('(a, b  ,)').put_slice(FST('(x,)'), 0, 2, raw=True).src)
+        self.assertEqual('(x ,)', FST('(a, b  ,)').put_slice(FST('[x ,]'), 0, 2, raw=True).src)
+        self.assertEqual('(x ,)', FST('(a, b  ,)').put_slice(FST('(x ,)'), 0, 2, raw=True).src)
+        self.assertEqual('(x, y  ,)', FST('(a, b  ,)').put_slice(FST('[x, y]'), 0, 2, raw=True).src)
+        self.assertEqual('(x, y  ,)', FST('(a, b  ,)').put_slice(FST('(x, y)'), 0, 2, raw=True).src)
+        self.assertEqual('(x, y ,)', FST('(a, b  ,)').put_slice(FST('[x, y ,]'), 0, 2, raw=True).src)
+        self.assertEqual('(x, y ,)', FST('(a, b  ,)').put_slice(FST('(x, y ,)'), 0, 2, raw=True).src)
+
+        self.assertEqual('(a, x  ,)', FST('(a, b  ,)').put_slice(FST('[x]'), 1, 2, raw=True).src)
+        self.assertEqual('(a, x  ,)', FST('(a, b  ,)').put_slice(FST('(x,)'), 1, 2, raw=True).src)
+        self.assertEqual('(a, x ,)', FST('(a, b  ,)').put_slice(FST('[x ,]'), 1, 2, raw=True).src)
+        self.assertEqual('(a, x ,)', FST('(a, b  ,)').put_slice(FST('(x ,)'), 1, 2, raw=True).src)
+        self.assertEqual('(a, x, y  ,)', FST('(a, b  ,)').put_slice(FST('[x, y]'), 1, 2, raw=True).src)
+        self.assertEqual('(a, x, y  ,)', FST('(a, b  ,)').put_slice(FST('(x, y)'), 1, 2, raw=True).src)
+        self.assertEqual('(a, x, y ,)', FST('(a, b  ,)').put_slice(FST('[x, y ,]'), 1, 2, raw=True).src)
+        self.assertEqual('(a, x, y ,)', FST('(a, b  ,)').put_slice(FST('(x, y ,)'), 1, 2, raw=True).src)
+
+        # one
+
+        self.assertEqual('[[x]]', FST('[a]').put_slice(FST('[x]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x,)]', FST('[a]').put_slice(FST('(x,)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[[x ,]]', FST('[a]').put_slice(FST('[x ,]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x ,)]', FST('[a]').put_slice(FST('(x ,)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[[x, y]]', FST('[a]').put_slice(FST('[x, y]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x, y)]', FST('[a]').put_slice(FST('(x, y)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[[x, y ,]]', FST('[a]').put_slice(FST('[x, y ,]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x, y ,)]', FST('[a]').put_slice(FST('(x, y ,)'), 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('([x],)', FST('(a,)').put_slice(FST('[x]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x,),)', FST('(a,)').put_slice(FST('(x,)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('([x ,],)', FST('(a,)').put_slice(FST('[x ,]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x ,),)', FST('(a,)').put_slice(FST('(x ,)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('([x, y],)', FST('(a,)').put_slice(FST('[x, y]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x, y),)', FST('(a,)').put_slice(FST('(x, y)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('([x, y ,],)', FST('(a,)').put_slice(FST('[x, y ,]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x, y ,),)', FST('(a,)').put_slice(FST('(x, y ,)'), 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('[[x]  ,]', FST('[a  ,]').put_slice(FST('[x]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x,)  ,]', FST('[a  ,]').put_slice(FST('(x,)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[[x ,]  ,]', FST('[a  ,]').put_slice(FST('[x ,]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x ,)  ,]', FST('[a  ,]').put_slice(FST('(x ,)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[[x, y]  ,]', FST('[a  ,]').put_slice(FST('[x, y]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x, y)  ,]', FST('[a  ,]').put_slice(FST('(x, y)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[[x, y ,]  ,]', FST('[a  ,]').put_slice(FST('[x, y ,]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x, y ,)  ,]', FST('[a  ,]').put_slice(FST('(x, y ,)'), 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('([x]  ,)', FST('(a  ,)').put_slice(FST('[x]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x,)  ,)', FST('(a  ,)').put_slice(FST('(x,)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('([x ,]  ,)', FST('(a  ,)').put_slice(FST('[x ,]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x ,)  ,)', FST('(a  ,)').put_slice(FST('(x ,)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('([x, y]  ,)', FST('(a  ,)').put_slice(FST('[x, y]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x, y)  ,)', FST('(a  ,)').put_slice(FST('(x, y)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('([x, y ,]  ,)', FST('(a  ,)').put_slice(FST('[x, y ,]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x, y ,)  ,)', FST('(a  ,)').put_slice(FST('(x, y ,)'), 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('[[x], b]', FST('[a, b]').put_slice(FST('[x]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x,), b]', FST('[a, b]').put_slice(FST('(x,)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[[x ,], b]', FST('[a, b]').put_slice(FST('[x ,]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x ,), b]', FST('[a, b]').put_slice(FST('(x ,)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[[x, y], b]', FST('[a, b]').put_slice(FST('[x, y]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x, y), b]', FST('[a, b]').put_slice(FST('(x, y)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[[x, y ,], b]', FST('[a, b]').put_slice(FST('[x, y ,]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x, y ,), b]', FST('[a, b]').put_slice(FST('(x, y ,)'), 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('[[x]]', FST('[a, b]').put_slice(FST('[x]'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('[(x,)]', FST('[a, b]').put_slice(FST('(x,)'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('[[x ,]]', FST('[a, b]').put_slice(FST('[x ,]'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('[(x ,)]', FST('[a, b]').put_slice(FST('(x ,)'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('[[x, y]]', FST('[a, b]').put_slice(FST('[x, y]'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('[(x, y)]', FST('[a, b]').put_slice(FST('(x, y)'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('[[x, y ,]]', FST('[a, b]').put_slice(FST('[x, y ,]'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('[(x, y ,)]', FST('[a, b]').put_slice(FST('(x, y ,)'), 0, 2, raw=True, one=True).src)
+
+        self.assertEqual('[a, [x]]', FST('[a, b]').put_slice(FST('[x]'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, (x,)]', FST('[a, b]').put_slice(FST('(x,)'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, [x ,]]', FST('[a, b]').put_slice(FST('[x ,]'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, (x ,)]', FST('[a, b]').put_slice(FST('(x ,)'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, [x, y]]', FST('[a, b]').put_slice(FST('[x, y]'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, (x, y)]', FST('[a, b]').put_slice(FST('(x, y)'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, [x, y ,]]', FST('[a, b]').put_slice(FST('[x, y ,]'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, (x, y ,)]', FST('[a, b]').put_slice(FST('(x, y ,)'), 1, 2, raw=True, one=True).src)
+
+        self.assertEqual('([x], b)', FST('(a, b)').put_slice(FST('[x]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x,), b)', FST('(a, b)').put_slice(FST('(x,)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('([x ,], b)', FST('(a, b)').put_slice(FST('[x ,]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x ,), b)', FST('(a, b)').put_slice(FST('(x ,)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('([x, y], b)', FST('(a, b)').put_slice(FST('[x, y]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x, y), b)', FST('(a, b)').put_slice(FST('(x, y)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('([x, y ,], b)', FST('(a, b)').put_slice(FST('[x, y ,]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x, y ,), b)', FST('(a, b)').put_slice(FST('(x, y ,)'), 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('([x],)', FST('(a, b)').put_slice(FST('[x]'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('((x,),)', FST('(a, b)').put_slice(FST('(x,)'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('([x ,],)', FST('(a, b)').put_slice(FST('[x ,]'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('((x ,),)', FST('(a, b)').put_slice(FST('(x ,)'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('([x, y],)', FST('(a, b)').put_slice(FST('[x, y]'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('((x, y),)', FST('(a, b)').put_slice(FST('(x, y)'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('([x, y ,],)', FST('(a, b)').put_slice(FST('[x, y ,]'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('((x, y ,),)', FST('(a, b)').put_slice(FST('(x, y ,)'), 0, 2, raw=True, one=True).src)
+
+        self.assertEqual('(a, [x])', FST('(a, b)').put_slice(FST('[x]'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, (x,))', FST('(a, b)').put_slice(FST('(x,)'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, [x ,])', FST('(a, b)').put_slice(FST('[x ,]'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, (x ,))', FST('(a, b)').put_slice(FST('(x ,)'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, [x, y])', FST('(a, b)').put_slice(FST('[x, y]'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, (x, y))', FST('(a, b)').put_slice(FST('(x, y)'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, [x, y ,])', FST('(a, b)').put_slice(FST('[x, y ,]'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, (x, y ,))', FST('(a, b)').put_slice(FST('(x, y ,)'), 1, 2, raw=True, one=True).src)
+
+        self.assertEqual('[[x], b  ,]', FST('[a, b  ,]').put_slice(FST('[x]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x,), b  ,]', FST('[a, b  ,]').put_slice(FST('(x,)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[[x ,], b  ,]', FST('[a, b  ,]').put_slice(FST('[x ,]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x ,), b  ,]', FST('[a, b  ,]').put_slice(FST('(x ,)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[[x, y], b  ,]', FST('[a, b  ,]').put_slice(FST('[x, y]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x, y), b  ,]', FST('[a, b  ,]').put_slice(FST('(x, y)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[[x, y ,], b  ,]', FST('[a, b  ,]').put_slice(FST('[x, y ,]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x, y ,), b  ,]', FST('[a, b  ,]').put_slice(FST('(x, y ,)'), 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('[[x]  ,]', FST('[a, b  ,]').put_slice(FST('[x]'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('[(x,)  ,]', FST('[a, b  ,]').put_slice(FST('(x,)'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('[[x ,]  ,]', FST('[a, b  ,]').put_slice(FST('[x ,]'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('[(x ,)  ,]', FST('[a, b  ,]').put_slice(FST('(x ,)'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('[[x, y]  ,]', FST('[a, b  ,]').put_slice(FST('[x, y]'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('[(x, y)  ,]', FST('[a, b  ,]').put_slice(FST('(x, y)'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('[[x, y ,]  ,]', FST('[a, b  ,]').put_slice(FST('[x, y ,]'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('[(x, y ,)  ,]', FST('[a, b  ,]').put_slice(FST('(x, y ,)'), 0, 2, raw=True, one=True).src)
+
+        self.assertEqual('[a, [x]  ,]', FST('[a, b  ,]').put_slice(FST('[x]'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, (x,)  ,]', FST('[a, b  ,]').put_slice(FST('(x,)'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, [x ,]  ,]', FST('[a, b  ,]').put_slice(FST('[x ,]'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, (x ,)  ,]', FST('[a, b  ,]').put_slice(FST('(x ,)'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, [x, y]  ,]', FST('[a, b  ,]').put_slice(FST('[x, y]'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, (x, y)  ,]', FST('[a, b  ,]').put_slice(FST('(x, y)'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, [x, y ,]  ,]', FST('[a, b  ,]').put_slice(FST('[x, y ,]'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, (x, y ,)  ,]', FST('[a, b  ,]').put_slice(FST('(x, y ,)'), 1, 2, raw=True, one=True).src)
+
+        self.assertEqual('([x], b  ,)', FST('(a, b  ,)').put_slice(FST('[x]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x,), b  ,)', FST('(a, b  ,)').put_slice(FST('(x,)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('([x ,], b  ,)', FST('(a, b  ,)').put_slice(FST('[x ,]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x ,), b  ,)', FST('(a, b  ,)').put_slice(FST('(x ,)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('([x, y], b  ,)', FST('(a, b  ,)').put_slice(FST('[x, y]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x, y), b  ,)', FST('(a, b  ,)').put_slice(FST('(x, y)'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('([x, y ,], b  ,)', FST('(a, b  ,)').put_slice(FST('[x, y ,]'), 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x, y ,), b  ,)', FST('(a, b  ,)').put_slice(FST('(x, y ,)'), 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('([x]  ,)', FST('(a, b  ,)').put_slice(FST('[x]'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('((x,)  ,)', FST('(a, b  ,)').put_slice(FST('(x,)'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('([x ,]  ,)', FST('(a, b  ,)').put_slice(FST('[x ,]'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('((x ,)  ,)', FST('(a, b  ,)').put_slice(FST('(x ,)'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('([x, y]  ,)', FST('(a, b  ,)').put_slice(FST('[x, y]'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('((x, y)  ,)', FST('(a, b  ,)').put_slice(FST('(x, y)'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('([x, y ,]  ,)', FST('(a, b  ,)').put_slice(FST('[x, y ,]'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('((x, y ,)  ,)', FST('(a, b  ,)').put_slice(FST('(x, y ,)'), 0, 2, raw=True, one=True).src)
+
+        self.assertEqual('(a, [x]  ,)', FST('(a, b  ,)').put_slice(FST('[x]'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, (x,)  ,)', FST('(a, b  ,)').put_slice(FST('(x,)'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, [x ,]  ,)', FST('(a, b  ,)').put_slice(FST('[x ,]'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, (x ,)  ,)', FST('(a, b  ,)').put_slice(FST('(x ,)'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, [x, y]  ,)', FST('(a, b  ,)').put_slice(FST('[x, y]'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, (x, y)  ,)', FST('(a, b  ,)').put_slice(FST('(x, y)'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, [x, y ,]  ,)', FST('(a, b  ,)').put_slice(FST('[x, y ,]'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('(a, (x, y ,)  ,)', FST('(a, b  ,)').put_slice(FST('(x, y ,)'), 1, 2, raw=True, one=True).src)
+
+        self.assertEqual('[a, (x,), c]', FST('[a, b, c]').put_slice(FST('x,'), 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, (x, y), c]', FST('[a, b, c]').put_slice(FST('x, y'), 1, 2, raw=True, one=True).src)
+
+        # MatchSequence (sometimes needs traling comma on singleton and sometimes not, thank you structural pattern matching for all your wonderful contributions to python syntax)
+
+        self.assertEqual('[x]', FST('[a]', pattern).put_slice(FST('[x]', pattern), 0, 1, raw=True).src)
+        self.assertEqual('[x]', FST('[a]', pattern).put_slice(FST('(x,)', pattern), 0, 1, raw=True).src)
+
+        self.assertEqual('(x ,)', FST('(a ,)', pattern).put_slice(FST('[x]', pattern), 0, 1, raw=True).src)
+        self.assertEqual('(x ,)', FST('(a ,)', pattern).put_slice(FST('(x,)', pattern), 0, 1, raw=True).src)
+
+        self.assertEqual('(x,)', FST('(a, b)', pattern).put_slice(FST('[x]', pattern), 0, 2, raw=True).src)
+        self.assertEqual('(x,)', FST('(a, b)', pattern).put_slice(FST('(x,)', pattern), 0, 2, raw=True).src)
+
+        self.assertEqual('[[x]]', FST('[a]', pattern).put_slice(FST('[x]', pattern), 0, 1, raw=True, one=True).src)
+        self.assertEqual('[(x,)]', FST('[a]', pattern).put_slice(FST('(x,)', pattern), 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('([x] ,)', FST('(a ,)', pattern).put_slice(FST('[x]', pattern), 0, 1, raw=True, one=True).src)
+        self.assertEqual('((x,) ,)', FST('(a ,)', pattern).put_slice(FST('(x,)', pattern), 0, 1, raw=True, one=True).src)
+
+        self.assertEqual('([x],)', FST('(a, b)', pattern).put_slice(FST('[x]', pattern), 0, 2, raw=True, one=True).src)
+        self.assertEqual('((x,),)', FST('(a, b)', pattern).put_slice(FST('(x,)', pattern), 0, 2, raw=True, one=True).src)
+
+        self.assertEqual('[a, [x,], c]', FST('[a, b, c]', pattern).put_slice(FST('x,', pattern), 1, 2, raw=True, one=True).src)
+        self.assertEqual('[a, [x, y], c]', FST('[a, b, c]', pattern).put_slice(FST('x, y', pattern), 1, 2, raw=True, one=True).src)
+
+        # non-sequence types with trailing commas
+
+        self.assertEqual('class cls(x ,): pass', FST('class cls(a, b ,): pass').put_slice(FST('[x]'), 0, 2, 'bases', raw=True).src)
+        self.assertEqual('class cls(x ,): pass', FST('class cls(a, b ,): pass').put_slice(FST('(x,)'), 0, 2, 'bases', raw=True).src)
+
+        self.assertEqual('call(x ,)', FST('call(a, b ,)').put_slice(FST('[x]'), 0, 2, raw=True).src)
+        self.assertEqual('call(x ,)', FST('call(a, b ,)').put_slice(FST('(x,)'), 0, 2, raw=True).src)
+
+        self.assertEqual('del x ,', FST('del a, b ,').put_slice(FST('[x]'), 0, 2, raw=True).src)
+        self.assertEqual('del x ,', FST('del a, b ,').put_slice(FST('(x,)'), 0, 2, raw=True).src)
+
+        self.assertEqual('class cls([x] ,): pass', FST('class cls(a, b ,): pass').put_slice(FST('[x]'), 0, 2, 'bases', raw=True, one=True).src)
+        self.assertEqual('class cls((x,) ,): pass', FST('class cls(a, b ,): pass').put_slice(FST('(x,)'), 0, 2, 'bases', raw=True, one=True).src)
+
+        self.assertEqual('call([x] ,)', FST('call(a, b ,)').put_slice(FST('[x]'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('call((x,) ,)', FST('call(a, b ,)').put_slice(FST('(x,)'), 0, 2, raw=True, one=True).src)
+
+        self.assertEqual('del [x] ,', FST('del a, b ,').put_slice(FST('[x]'), 0, 2, raw=True, one=True).src)
+        self.assertEqual('del (x,) ,', FST('del a, b ,').put_slice(FST('(x,)'), 0, 2, raw=True, one=True).src)
 
     def test_slice_set_empty(self):
         # put slice using norm_put=

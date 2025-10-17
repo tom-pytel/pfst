@@ -126,8 +126,6 @@ from .common import (
     next_frag, prev_frag, next_find, prev_find, next_find_re, prev_delims,
 )
 
-from .parsex import unparse
-
 from .code import (
     Code,
     code_to_lines,

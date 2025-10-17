@@ -25,6 +25,7 @@ from .asttypes import (
     Dict,
     DictComp,
     ExceptHandler,
+    Expr,
     For,
     FunctionDef,
     GeneratorExp,
@@ -76,7 +77,7 @@ from .astutil import (
 
 from .common import (
     PYLT11, PYGE14,
-    Self, NodeError, astfield, fstloc,
+    Self, NodeError, astfield, fstloc, srcwpos,
     re_empty_line_start, re_empty_line, re_empty_space, re_line_end_cont_or_comment,
     next_frag, prev_find, next_find, next_find_re,
     leading_trivia, trailing_trivia,
@@ -3363,121 +3364,262 @@ _PUT_SLICE_HANDLERS = {
 # ----------------------------------------------------------------------------------------------------------------------
 # put raw
 
-def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str) -> fstloc:
-    """Get location of a raw slice. Sepcial cases for decorators, comprehension ifs and other weird nodes."""
+def _fixup_slice_index_for_raw(len_: int, start: int, stop: int) -> tuple[int, int]:
+    start, stop = _fixup_slice_indices(len_, start, stop)
 
-    def fixup_slice_index_for_raw(len_: int, start: int, stop: int) -> tuple[int, int]:
-        start, stop = _fixup_slice_indices(len_, start, stop)
+    if start == stop:
+        raise ValueError('cannot insert in raw slice put')
 
-        if start == stop:
-            raise ValueError("invalid slice for raw operation")
+    return start, stop
 
-        return start, stop
+
+def _loc_slice_raw_put_decorator_list(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                                      ) -> tuple[int, int, int, int, int, int, list[AST]]:
+    start, stop = _fixup_slice_index_for_raw(len(decos := self.a.decorator_list), start, stop)
+    ln, col, _, _ = decos[start].f.loc
+    ln, col = prev_find(self.root._lines, 0, 0, ln, col, '@')  # we can use '0, 0' because we know "@" starts on a newline
+    _, _, end_ln, end_col = decos[stop - 1].f.pars()
+
+    return ln, col, end_ln, end_col, start, stop, decos
+
+
+def _loc_slice_raw_put_Global_Nonlocal_names(self: fst.FST, start: int | Literal['end'] | None, stop: int | None,
+                                             field: str) -> tuple[int, int, int, int, int, int, list[AST]]:
+    start, stop = _fixup_slice_index_for_raw(len(names := self.a.names), start, stop)
+    (ln, col, _, _), (_, _, end_ln, end_col) = loc_Global_Nonlocal_names(self, start, stop - 1)
+
+    return ln, col, end_ln, end_col, start, stop, names
+
+
+def _loc_slice_raw_put_Dict(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                            ) -> tuple[int, int, int, int, int, int, list[AST]]:
+    start, stop = _fixup_slice_index_for_raw(len(values := self.a.values), start, stop)
+    ln, col, _, _ = self._loc_key(start, True)
+    _, _, end_ln, end_col = values[stop - 1].f.pars()
+
+    return ln, col, end_ln, end_col, start, stop, values
+
+
+def _loc_slice_raw_put_Compare(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                               ) -> tuple[int, int, int, int, int, int, list[AST]]:
+    start, stop = _fixup_slice_index_for_raw(len(ops := (ast := self.a).ops), start, stop)
+    ln, col, _, _ = ops[start].f.loc
+    _, _, end_ln, end_col = (comparators := ast.comparators)[stop - 1].f.pars()
+
+    return ln, col, end_ln, end_col, start, stop, comparators
+
+
+def _loc_slice_raw_put_comprehension_ifs(self: fst.FST, start: int | Literal['end'] | None, stop: int | None,
+                                         field: str) -> tuple[int, int, int, int, int, int, list[AST]]:
+    start, stop = _fixup_slice_index_for_raw(len(ifs := self.a.ifs), start, stop)
+    ln, col, _, _ = (ffirst := ifs[start].f).loc
+    end_ln, end_col = prev_bound(ffirst)
+    ln, col = prev_find(self.root._lines, end_ln, end_col, ln, col, 'if')
+    _, _, end_ln, end_col = ifs[stop - 1].f.pars()
+
+    return ln, col, end_ln, end_col, start, stop, ifs
+
+
+def _loc_slice_raw_put_MatchMapping(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                                    ) -> tuple[int, int, int, int, int, int, list[AST]]:
+    start, stop = _fixup_slice_index_for_raw(len(keys := (ast := self.a).keys), start, stop)
+    ln, col, _, _ = keys[start].f.loc
+    _, _, end_ln, end_col = (patterns := ast.patterns)[stop - 1].f.pars()
+
+    return ln, col, end_ln, end_col, start, stop, patterns
+
+
+def _loc_slice_raw_put_default(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                               ) -> tuple[int, int, int, int, int, int, list[AST]]:
+    if (body := getattr(self.a, field, None)) is None or not isinstance(body, list):
+        raise ValueError(f'cannot put raw slice to {self.a.__class__.__name__}.{field}')
+
+    start, stop = _fixup_slice_index_for_raw(len(body), start, stop)
+    ln, col, _, _ = body[start].f.pars(shared=False)
+    _, _, end_ln, end_col = body[stop - 1].f.pars(shared=False)
+
+    return ln, col, end_ln, end_col, start, stop, body
+
+
+def _loc_slice_raw_put(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
+                       ) -> tuple[int, int, int, int, int, int, list[AST]]:
+    """Get location of a raw slice. Sepcial cases for decorators, comprehension ifs and other nodes."""
+
+    return _LOC_SLICE_RAW_PUT_FUNCS.get((self.a.__class__, field), _loc_slice_raw_put_default)(self, start, stop, field)
+
+
+_LOC_SLICE_RAW_PUT_FUNCS = {
+    (FunctionDef, 'decorator_list'):      _loc_slice_raw_put_decorator_list,
+    (AsyncFunctionDef, 'decorator_list'): _loc_slice_raw_put_decorator_list,
+    (ClassDef, 'decorator_list'):         _loc_slice_raw_put_decorator_list,
+    (Global, 'names'):                    _loc_slice_raw_put_Global_Nonlocal_names,
+    (Nonlocal, 'names'):                  _loc_slice_raw_put_Global_Nonlocal_names,
+    (Dict, ''):                           _loc_slice_raw_put_Dict,
+    (Compare, ''):                        _loc_slice_raw_put_Compare,
+    (comprehension, 'ifs'):               _loc_slice_raw_put_comprehension_ifs,
+    (MatchMapping, ''):                   _loc_slice_raw_put_MatchMapping,
+}
+
+
+def _trailing_comma(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> srcwpos | None:
+    if (comma := next_frag(lines, ln, col, end_ln, end_col)) and comma.src.startswith(','):
+        return comma
+
+    return None
+
+
+def _singleton_needs_comma(fst_: fst.FST) -> bool:
+    return (isinstance(a := fst_.a, Tuple) or
+            (isinstance(a, MatchSequence) and not fst_._is_delimited_seq('patterns', '[]')))  # MatchSequence because it can be undelimited or delimited with parentheses and in that case a singleton needs a trailing comma
+
+
+def _adjust_slice_raw_ast(self: fst.FST, code: AST, field: str, one: bool, options: Mapping[str, Any],
+                          put_ln: int, put_col: int, put_end_ln: int, put_end_col: int, start: int, stop: int,
+                          body2: list[AST]) -> tuple[AST | list[str], int, int, int, int]:
+    """Adjust `code` and put location when putting raw from an `AST`. Currently just trailing comma stuff."""
 
     ast = self.a
+    lines = self.root._lines
 
-    if isinstance(ast, Dict):
-        if field:
-            raise ValueError(f"cannot specify a field '{field}' to assign slice to a Dict")
+    code = reduce_ast(code, True)
 
-        start, stop = fixup_slice_index_for_raw(len(values := ast.values), start, stop)
-        start_loc = self._loc_key(start, True)
+    if (code_is_tuple := isinstance(code, Tuple)) or isinstance(code, (List, Set, Dict, MatchSequence, MatchMapping)):
+        src = unparse(code)
 
-        return fstloc(start_loc.ln, start_loc.col, *values[stop - 1].f.pars()[2:])
+        if not one:  # strip delimiters and remove singleton Tuple trailing comma if present
+            src = src[1 : (-2 if code_is_tuple and len(code.elts) == 1 else -1)]
 
-    if isinstance(ast, Compare):
-        if field:
-            raise ValueError(f"cannot specify a field '{field}' to assign slice to a Compare")
+            len_code_body = len(getattr(code, 'elts', ()) or getattr(code, 'keys', ()) or getattr(code, 'patterns', ()))
 
-        ops = ast.ops
-        start, stop = fixup_slice_index_for_raw(len(ops), start, stop)
+            if not len_code_body:
+                raise NodeError('cannot put raw empty slice')
 
-        return fstloc(*ops[start].f.loc[:2], *ast.comparators[stop - 1].f.pars()[2:])
+        else:
+            len_code_body = 1
 
-    if field == 'decorator_list':
-        decos = ast.decorator_list
-        start, stop = fixup_slice_index_for_raw(len(decos), start, stop)
-        ffirst = decos[start].f
-        start_pos = prev_find(self.root._lines, 0, 0, ffirst.ln, ffirst.col, '@')  # we can use '0, 0' because we know "@" starts on a newline
+        if stop == len(body2) and _singleton_needs_comma(self):
+            comma = _trailing_comma(lines, put_end_ln, put_end_col, self.end_ln, self.end_col)
 
-        return fstloc(*start_pos, *decos[stop - 1].f.pars()[2:])
+            if len_code_body != 1:
+                if comma and comma.ln == put_end_ln and comma.col == put_end_col:
+                    put_end_col += 1  # overwrite trailing singleton tuple comma which follows immediately after single element
 
-    if isinstance(ast, MatchMapping):
-        if field:
-            raise ValueError(f"cannot specify a field '{field}' to assign slice to a MatchMapping")
+            elif not start and not comma:
+                src += ','  # add trailing comma to what will be singleton tuple
 
-        keys = ast.keys
-        start, stop = fixup_slice_index_for_raw(len(keys), start, stop)
+        code = src
 
-        return fstloc(*keys[start].f.loc[:2], *ast.patterns[stop - 1].f.pars()[2:])
+    return code, put_ln, put_col, put_end_ln, put_end_col
 
-    if isinstance(ast, comprehension):
-        ifs = ast.ifs
-        start, stop = fixup_slice_index_for_raw(len(ifs), start, stop)
-        ffirst = ifs[start].f
-        start_pos = prev_find(self.root._lines, *prev_bound(ffirst), ffirst.ln, ffirst.col, 'if')
 
-        return fstloc(*start_pos, *ifs[stop - 1].f.pars()[2:])
+def _adjust_slice_raw_fst(self: fst.FST, code: fst.FST, field: str, one: bool, options: Mapping[str, Any],
+                          put_ln: int, put_col: int, put_end_ln: int, put_end_col: int, start: int, stop: int,
+                          body2: list[AST]) -> tuple[fst.FST | list[str], int, int, int, int]:
+    """Adjust `code` and put location when putting raw from an `FST`."""
 
-    if isinstance(ast, (Global, Nonlocal)):
-        start, stop = fixup_slice_index_for_raw(len(ast.names), start, stop)
-        start_loc, stop_loc = loc_Global_Nonlocal_names(self, start, stop - 1)
+    ast = self.a
+    lines = self.root._lines
 
-        return fstloc(start_loc.ln, start_loc.col, stop_loc.end_ln, stop_loc.end_col)
+    if not code.is_root:
+        raise ValueError('expecting root node')
 
-    body = getattr(ast, field)  # field must be valid by here
-    start, stop = fixup_slice_index_for_raw(len(body), start, stop)
+    code_ast = reduce_ast(code.a, True)
 
-    return fstloc(*body[start].f.pars(shared=False)[:2], *body[stop - 1].f.pars(shared=False)[2:])
+    if isinstance(code_ast, (Tuple, List, Set, Dict, MatchSequence, MatchMapping)):
+        code_fst = code_ast.f
+        code_lines = code._lines
+
+        if not one:  # strip delimiters (if any) and everything before and after actual node
+            ln, col, end_ln, end_col = code_fst.loc
+
+            if not (code_fst._is_parenthesized_tuple() is False or code_fst._is_delimited_matchseq() == ''):  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence
+                col += 1
+                end_col -= 1
+                col_offset = code_ast.col_offset = code_ast.col_offset + 1
+                end_col_offset = code_ast.end_col_offset = code_ast.end_col_offset - 1
+
+                if parent := code_fst.parent:  # this will be an `Expr` if present
+                    parenta = parent.a
+                    parenta.col_offset = col_offset
+                    parenta.end_col_offset = end_col_offset
+
+                    assert isinstance(parenta, Expr)
+
+            code._put_src(None, end_ln, end_col, len(code_lines) - 1, len(code_lines[-1]))
+            code._put_src(None, 0, 0, ln, col, False)  # we are counting on this to _touch() everything because of possible assignments above to col_offset and end_col_offset
+
+            code_body2 = (getattr(code_ast, 'elts', ()) or
+                          getattr(code_ast, 'values', ()) or
+                          getattr(code_ast, 'patterns', ()))
+
+            if not (len_code_body2 := len(code_body2)):
+                raise NodeError('cannot put raw empty slice')
+
+            _, _, end_ln, end_col = code_body2[-1].f.pars()
+
+            code_comma = _trailing_comma(code_lines, end_ln, end_col, code_fst.end_ln, code_fst.end_col)
+
+            code_comma_is_explicit = code_comma and (  # explicit comma - not needed or not in normal position
+                (len_code_body2 >= 2) or
+                code_comma.col != end_col or code_comma.ln != end_ln or
+                not _singleton_needs_comma(code_fst)
+            )
+
+        else:
+            if code_fst._is_parenthesized_tuple() is False:  # only Tuple or MatchMapping could be naked and needs to be delimited, everything else stays as-is
+                code_fst._delimit_node()
+            elif code_fst._is_delimited_matchseq() == '':
+                code_fst._delimit_node(delims='[]')
+
+            code_body2 = [code_ast]
+            code_comma = code_comma_is_explicit = None
+            len_code_body2 = 1
+
+        if comma := _trailing_comma(lines, put_end_ln, put_end_col, self.end_ln, self.end_col):
+            if (code_comma_is_explicit or
+                (len_code_body2 > 1 and  # code has no comma because otherwise it would be explicit
+                 len(body2) == 1 and _singleton_needs_comma(self) and  # self is singleton and singleton needs comma
+                 comma.ln == put_end_ln and comma.col == put_end_col)  # that comma follows right after element and so is not explicit and can be deleted
+            ):
+                put_end_ln, put_end_col, _ = comma
+                put_end_col += 1
+
+            elif code_comma:  # otherwise if code has comma we remove it and keep the comma that is already in self
+                code._put_src(None, ln := code_comma.ln, col := code_comma.col, ln, col + 1, True)
+
+        elif code_comma_is_explicit:
+            pass  # noop
+
+        elif not start and stop == len(body2) and len_code_body2 == 1 and _singleton_needs_comma(self):  # will result in singleton which needs trailing comma
+            if not code_comma:
+                code_lines[-1] = bistr(code_lines[-1] + ',')
+
+        elif code_comma:
+            code._put_src(None, ln := code_comma.ln, col := code_comma.col, ln, col + 1, True)
+
+    return code, put_ln, put_col, put_end_ln, put_end_col
 
 
 def _put_slice_raw(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None, field: str,
                    one: bool, options: Mapping[str, Any]) -> Union[Self, fst.FST, None]:  # -> Self or reparsed Self
-    """Put a raw slice of child nodes to `self`."""
+    """Put a raw slice to `self`. Currently just trailing comma stuff."""
 
     if code is None:
-        raise ValueError('cannot delete in raw put')
+        raise ValueError('cannot delete in raw slice put')
+
+    put_ln, put_col, put_end_ln, put_end_col, start, stop, body2 = _loc_slice_raw_put(self, start, stop, field)
 
     if isinstance(code, AST):
-        if not one:
-            ast = reduce_ast(code, True)
-
-            if isinstance(ast, Tuple):  # strip delimiters because we want CONTENTS of slice for raw put, not the slice object itself
-                code = unparse(ast)[1 : (-2 if len(ast.elts) == 1 else -1)]  # also remove singleton Tuple trailing comma
-            elif isinstance(ast, (List, Dict, Set, MatchSequence, MatchMapping)):
-                code = unparse(ast)[1 : -1]
+        code, put_ln, put_col, put_end_ln, put_end_col = (
+            _adjust_slice_raw_ast(self, code, field, one, options,
+                                  put_ln, put_col, put_end_ln, put_end_col, start, stop, body2))
 
     elif isinstance(code, fst.FST):
-        if not code.is_root:
-            raise ValueError('expecting root node')
+        code, put_ln, put_col, put_end_ln, put_end_col = (
+            _adjust_slice_raw_fst(self, code, field, one, options,
+                                  put_ln, put_col, put_end_ln, put_end_col, start, stop, body2))
 
-        ast = reduce_ast(code.a, True)
-        fst_ = ast.f
-
-        if one:
-            if fst_._is_parenthesized_tuple() is False:  # only need to parenthesize Tuple or MatchMapping, everything else stays as-is
-                fst_._delimit_node()
-            elif isinstance(ast, MatchSequence) and not fst_._is_delimited_seq('patterns'):
-                fst_._delimit_node(delims='[]')
-
-        elif ((is_dict := isinstance(ast, Dict)) or
-              (is_match := isinstance(ast, (MatchSequence, MatchMapping))) or
-              isinstance(ast, (Tuple, List, Set))
-        ):
-            if not (fst_._is_parenthesized_tuple() is False or  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence
-                    (isinstance(ast, MatchSequence) and not fst_._is_delimited_seq('patterns'))
-            ):
-                code._put_src(None, end_ln := code.end_ln, (end_col := code.end_col) - 1, end_ln, end_col, True)  # strip enclosing delimiters
-                code._put_src(None, ln := code.ln, col := code.col, ln, col + 1, False)
-
-            if elts := ast.values if is_dict else ast.patterns if is_match else ast.elts:
-                if comma := next_find(code.root._lines, (l := elts[-1].f.loc).end_ln, l.end_col, code.end_ln,
-                                      code.end_col, ','):  # strip trailing comma
-                    ln, col = comma
-
-                    code._put_src(None, ln, col, ln, col + 1, False)
-
-    self._reparse_raw(code, *_loc_slice_raw_put(self, start, stop, field))
+    self._reparse_raw(code, put_ln, put_col, put_end_ln, put_end_col)
 
     return self if self.a else self.repath()
 

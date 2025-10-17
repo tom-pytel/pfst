@@ -668,7 +668,7 @@ def _is_arguments_empty(self: fst.FST) -> bool:
 
 
 def _is_delimited_seq(self: fst.FST, field: str = 'elts', delims: str | tuple[str, str] = '()') -> bool:
-    """Whether `self` is a delimited (parenthesized or bracketeed) sequence of `field` or not. Makes sure the entire
+    """Whether `self` is a delimited (parenthesized or bracketed) sequence of `field` or not. Makes sure the entire
     node is surrounded by a balanced pair of delimiters. Functions as `_is_parenthesized_tuple()` if already know is a
     Tuple. Other use is for `MatchSequence`, whether parenthesized or bracketed."""
 
