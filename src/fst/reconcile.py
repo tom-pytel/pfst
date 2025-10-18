@@ -249,7 +249,7 @@ class Reconcile:
                     outf.put(child, field=field, raw=False, **self.options)
 
             else:  # slice
-                if (field in ('body', 'orelse', 'handlers', 'finalbody', 'cases', 'elts') or
+                if (field in ('body', 'orelse', 'finalbody', 'handlers', 'cases', 'elts') or
                     field == 'names' and isinstance(node, (Global, Nonlocal))  # list of identifier names
                 ):
                     self.recurse_slice(node, outf, field, child)

@@ -322,7 +322,7 @@ def _get_one_stmtish(self: fst.FST, idx: int | None, field: str, cut: bool, opti
 def _get_one_ctx(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
 
-    return fst.FST(child.__class__(), [''], from_=self, lcopy=False)
+    return fst.FST(child.__class__(), [''], from_=self)
 
 
 def _get_one_identifier(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any],
@@ -386,7 +386,7 @@ def _get_one_conversion(self: fst.FST, idx: int | None, field: str, cut: bool, o
     conv = chr(child)
 
     return fst.FST(Constant(value=conv, lineno=1, col_offset=0, end_lineno=1, end_col_offset=3), [f"'{conv}'"],
-                   from_=self, lcopy=False)
+                   from_=self)
 
 
 @pyver(lt=12)

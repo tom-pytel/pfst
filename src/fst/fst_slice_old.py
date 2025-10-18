@@ -760,7 +760,7 @@ def _set_end_pos_after_del(self: fst.FST, bound_ln: int, bound_col: int, bound_e
     """
 
     if ((last_child := self.last_child()) and  # easy enough when we have a new last child
-        last_child.pfield.name in ('body', 'orelse', 'handlers', 'finalbody', 'cases')  # but make sure its past the block open colon
+        last_child.pfield.name in ('body', 'orelse', 'finalbody', 'handlers', 'cases')  # but make sure its past the block open colon
     ):
         _, _, end_ln, end_col = last_child.loc
 
@@ -846,7 +846,7 @@ def _get_slice_stmtish_old(self: fst.FST, start: int | Literal['end'] | None, st
     start, stop = fst_slice._fixup_slice_indices(len(body), start, stop)
 
     if start == stop:
-        return fst.FST(Module(body=[], type_ignores=[]), [''], from_=self, lcopy=False)
+        return fst.FST(Module(body=[], type_ignores=[]), [''], from_=self)
 
     ffirst = body[start].f
     flast = body[stop - 1].f
