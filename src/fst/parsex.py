@@ -198,21 +198,21 @@ def _unparse_Tuple(ast: AST) -> str:
     return src
 
 
-def _unparse__slice_Assign_targets(ast: AST) -> str:
+def _unparse__Assign_targets(ast: AST) -> str:
     return _fixing_unparse(Assign(targets=ast.targets, value=Name(id='', ctx=Load(), lineno=1, col_offset=0,
                                                                   end_lineno=1, end_col_offset=0),
                                   lineno=1, col_offset=0, end_lineno=1, end_col_offset=0)).rstrip()
 
 
-def _unparse__slice_aliases(ast: AST) -> str:
+def _unparse__aliases(ast: AST) -> str:
     return _fixing_unparse(List(elts=ast.names, lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[1:-1]
 
 
-def _unparse__slice_withitems(ast: AST) -> str:
+def _unparse__withitems(ast: AST) -> str:
     return _fixing_unparse(List(elts=ast.items, lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[1:-1]
 
 
-def _unparse__slice_type_params(ast: AST) -> str:
+def _unparse__type_params(ast: AST) -> str:
     return _fixing_unparse(List(elts=ast.type_params, lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[1:-1]
 
 
@@ -248,10 +248,10 @@ _UNPARSE_FUNCS = {
     And:             lambda ast: 'and',
     Or:              lambda ast: 'or',
     comprehension:   lambda ast: _fixing_unparse(ast).lstrip(),  # strip prefix space from this
-    _Assign_targets: _unparse__slice_Assign_targets,
-    _aliases:        _unparse__slice_aliases,
-    _withitems:      _unparse__slice_withitems,
-    _type_params:    _unparse__slice_type_params,
+    _Assign_targets: _unparse__Assign_targets,
+    _aliases:        _unparse__aliases,
+    _withitems:      _unparse__withitems,
+    _type_params:    _unparse__type_params,
 }
 
 
@@ -1468,7 +1468,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     _withitems:               parse__withitems,
     _type_params:             parse__type_params,
     '_expr_arglikes':         parse__expr_arglikes,
-}
+}  # automatically filled out with all AST types and their names derived from these
 
 assert not set(get_args(get_args(Mode)[0])).symmetric_difference(k for k in _PARSE_MODE_FUNCS if isinstance(k, str)), \
     'Mode string modes do not match _PARSE_MODE_FUNCS table'

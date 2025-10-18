@@ -9,36 +9,36 @@
 
 # TODO: raw
 #
-#   ! S ,          (ClassDef, 'keywords'):                 # keyword*         -> _slice_keywords            _parse_keywords  - keywords and Starred bases can mix
-#   ! S ,          (Call, 'keywords'):                     # keyword*         -> _slice_keywords            _parse_keywords  - keywords and Starred args can mix
+#   ! S ,          (ClassDef, 'keywords'):                 # keyword*         -> _keywords            _parse_keywords  - keywords and Starred bases can mix
+#   ! S ,          (Call, 'keywords'):                     # keyword*         -> _keywords            _parse_keywords  - keywords and Starred args can mix
 #                                                                             .
-# * ! S ,          (FunctionDef, 'type_params'):           # type_param*      -> _slice_type_params         _parse_type_params
-# * ! S ,          (AsyncFunctionDef, 'type_params'):      # type_param*      -> _slice_type_params         _parse_type_params
-# * ! S ,          (ClassDef, 'type_params'):              # type_param*      -> _slice_type_params         _parse_type_params
-# * ! S ,          (TypeAlias, 'type_params'):             # type_param*      -> _slice_type_params         _parse_type_params
+# * ! S ,          (FunctionDef, 'type_params'):           # type_param*      -> _type_params         _parse_type_params
+# * ! S ,          (AsyncFunctionDef, 'type_params'):      # type_param*      -> _type_params         _parse_type_params
+# * ! S ,          (ClassDef, 'type_params'):              # type_param*      -> _type_params         _parse_type_params
+# * ! S ,          (TypeAlias, 'type_params'):             # type_param*      -> _type_params         _parse_type_params
 #                                                                             .
-# * ! S ,          (With, 'items'):                        # withitem*        -> _slice_withitems           _parse_withitems               - no trailing commas
-# * ! S ,          (AsyncWith, 'items'):                   # withitem*        -> _slice_withitems           _parse_withitems               - no trailing commas
+# * ! S ,          (With, 'items'):                        # withitem*        -> _withitems           _parse_withitems               - no trailing commas
+# * ! S ,          (AsyncWith, 'items'):                   # withitem*        -> _withitems           _parse_withitems               - no trailing commas
 #                                                                             .
-# * ! S ,          (Import, 'names'):                      # alias*           -> _slice_aliases             _parse_aliases_dotted          - no trailing commas
-# * ! S ,          (ImportFrom, 'names'):                  # alias*           -> _slice_aliases             _parse_aliases_star            - no trailing commas
-#                                                                             .
-#                                                                             .
-#   ! S ' '        (ListComp, 'generators'):               # comprehension*   -> _slice_comprehensions      _parse_comprehensions
-#   ! S ' '        (SetComp, 'generators'):                # comprehension*   -> _slice_comprehensions      _parse_comprehensions
-#   ! S ' '        (DictComp, 'generators'):               # comprehension*   -> _slice_comprehensions      _parse_comprehensions
-#   ! S ' '        (GeneratorExp, 'generators'):           # comprehension*   -> _slice_comprehensions      _parse_comprehensions
-#                                                                             .
-#   ! S    if      (comprehension, 'ifs'):                 # expr*            -> _slice_comprehension_ifs   _parse_comprehension_ifs
-#                                                                             .
-#   ! S    @       (FunctionDef, 'decorator_list'):        # expr*            -> _slice_decorator_list      _parse_decorator_list
-#   ! S    @       (AsyncFunctionDef, 'decorator_list'):   # expr*            -> _slice_decorator_list      _parse_decorator_list
-#   ! S    @       (ClassDef, 'decorator_list'):           # expr*            -> _slice_decorator_list      _parse_decorator_list
+# * ! S ,          (Import, 'names'):                      # alias*           -> _aliases             _parse_aliases_dotted          - no trailing commas
+# * ! S ,          (ImportFrom, 'names'):                  # alias*           -> _aliases             _parse_aliases_star            - no trailing commas
 #                                                                             .
 #                                                                             .
-#     N    op      (Compare, 'ops':'comparators'):         # cmpop:expr*      -> _slice_ops_comparators     _parse_ops_comparators / restrict expr or Compare
+#   ! S ' '        (ListComp, 'generators'):               # comprehension*   -> _comprehensions      _parse_comprehensions
+#   ! S ' '        (SetComp, 'generators'):                # comprehension*   -> _comprehensions      _parse_comprehensions
+#   ! S ' '        (DictComp, 'generators'):               # comprehension*   -> _comprehensions      _parse_comprehensions
+#   ! S ' '        (GeneratorExp, 'generators'):           # comprehension*   -> _comprehensions      _parse_comprehensions
 #                                                                             .
-#     N ao         (BoolOp, 'values'):                     # expr*            -> BoolOp                     _parse_expr / restrict BoolOp  - interchangeable between and / or
+#   ! S    if      (comprehension, 'ifs'):                 # expr*            -> _comprehension_ifs   _parse_comprehension_ifs
+#                                                                             .
+#   ! S    @       (FunctionDef, 'decorator_list'):        # expr*            -> _decorator_list      _parse_decorator_list
+#   ! S    @       (AsyncFunctionDef, 'decorator_list'):   # expr*            -> _decorator_list      _parse_decorator_list
+#   ! S    @       (ClassDef, 'decorator_list'):           # expr*            -> _decorator_list      _parse_decorator_list
+#                                                                             .
+#                                                                             .
+#     N    op      (Compare, 'ops':'comparators'):         # cmpop:expr*      -> _ops_comparators     _parse_ops_comparators / restrict expr or Compare
+#                                                                             .
+#     N ao         (BoolOp, 'values'):                     # expr*            -> BoolOp               _parse_expr / restrict BoolOp  - interchangeable between and / or
 
 DATA_PUT_SLICE = {
 'old_stmtish': [  # ................................................................................

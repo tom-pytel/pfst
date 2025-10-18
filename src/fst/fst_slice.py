@@ -150,45 +150,45 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 #     S ,          (MatchClass, 'patterns'):               # pattern*         -> MatchSequence              _parse_pattern / restrict MatchSequence  - allow empty pattern?
 #                                                                             .
 #                                                                             .
-# *   S ,          (ClassDef, 'bases'):                    # expr*            -> Tuple[expr_arglike]        _parse_expr_arglikes  - keywords and Starred bases can mix
-# *   S ,          (Call, 'args'):                         # expr*            -> Tuple[expr_arglike]        _parse_expr_arglikes  - keywords and Starred args can mix
+# *   S ,          (ClassDef, 'bases'):                    # expr*            -> Tuple[expr_arglike]        _parse__expr_arglikes  - keywords and Starred bases can mix
+# *   S ,          (Call, 'args'):                         # expr*            -> Tuple[expr_arglike]        _parse__expr_arglikes  - keywords and Starred args can mix
 #                                                                             .
 # *   S ,          (Delete, 'targets'):                    # expr*            -> Tuple[target]              _parse_expr / restrict del_targets
-# * ! N =          (Assign, 'targets'):                    # expr*            -> _Assign_targets            _parse_Assign_targets
+# * ! N =          (Assign, 'targets'):                    # expr*            -> _Assign_targets            _parse__Assign_targets
 #                                                                             .
 #                                                                             .
 # *   S ,          (Global, 'names'):                      # identifier*,     -> Tuple[Name]                _parse_expr / restrict Names   - no trailing commas, unparenthesized
 # *   S ,          (Nonlocal, 'names'):                    # identifier*,     -> Tuple[Name]                _parse_expr / restrict Names   - no trailing commas, unparenthesized
 #                                                                             .
 #                                                                             .
-#   ! S ,          (ClassDef, 'keywords'):                 # keyword*         -> _keywords                  _parse_keywords  - keywords and Starred bases can mix
-#   ! S ,          (Call, 'keywords'):                     # keyword*         -> _keywords                  _parse_keywords  - keywords and Starred args can mix
+#   ! S ,          (ClassDef, 'keywords'):                 # keyword*         -> _keywords                  _parse__keywords  - keywords and Starred bases can mix
+#   ! S ,          (Call, 'keywords'):                     # keyword*         -> _keywords                  _parse__keywords  - keywords and Starred args can mix
 #                                                                             .
-# * ! S ,          (FunctionDef, 'type_params'):           # type_param*      -> _type_params               _parse_type_params
-# * ! S ,          (AsyncFunctionDef, 'type_params'):      # type_param*      -> _type_params               _parse_type_params
-# * ! S ,          (ClassDef, 'type_params'):              # type_param*      -> _type_params               _parse_type_params
-# * ! S ,          (TypeAlias, 'type_params'):             # type_param*      -> _type_params               _parse_type_params
+# * ! S ,          (FunctionDef, 'type_params'):           # type_param*      -> _type_params               _parse__type_params
+# * ! S ,          (AsyncFunctionDef, 'type_params'):      # type_param*      -> _type_params               _parse__type_params
+# * ! S ,          (ClassDef, 'type_params'):              # type_param*      -> _type_params               _parse__type_params
+# * ! S ,          (TypeAlias, 'type_params'):             # type_param*      -> _type_params               _parse__type_params
 #                                                                             .
-# * ! S ,          (With, 'items'):                        # withitem*        -> _withitems                 _parse_withitems               - no trailing commas
-# * ! S ,          (AsyncWith, 'items'):                   # withitem*        -> _withitems                 _parse_withitems               - no trailing commas
+# * ! S ,          (With, 'items'):                        # withitem*        -> _withitems                 _parse__withitems               - no trailing commas
+# * ! S ,          (AsyncWith, 'items'):                   # withitem*        -> _withitems                 _parse__withitems               - no trailing commas
 #                                                                             .
-# * ! S ,          (Import, 'names'):                      # alias*           -> _aliases                   _parse_aliases_dotted          - no trailing commas
-# * ! S ,          (ImportFrom, 'names'):                  # alias*           -> _aliases                   _parse_aliases_star            - no trailing commas
-#                                                                             .
-#                                                                             .
-#   ! S ' '        (ListComp, 'generators'):               # comprehension*   -> _comprehensions            _parse_comprehensions
-#   ! S ' '        (SetComp, 'generators'):                # comprehension*   -> _comprehensions            _parse_comprehensions
-#   ! S ' '        (DictComp, 'generators'):               # comprehension*   -> _comprehensions            _parse_comprehensions
-#   ! S ' '        (GeneratorExp, 'generators'):           # comprehension*   -> _comprehensions            _parse_comprehensions
-#                                                                             .
-#   ! S    if      (comprehension, 'ifs'):                 # expr*            -> _comprehension_ifs         _parse_comprehension_ifs
-#                                                                             .
-#   ! S    @       (FunctionDef, 'decorator_list'):        # expr*            -> _decorator_list            _parse_decorator_list
-#   ! S    @       (AsyncFunctionDef, 'decorator_list'):   # expr*            -> _decorator_list            _parse_decorator_list
-#   ! S    @       (ClassDef, 'decorator_list'):           # expr*            -> _decorator_list            _parse_decorator_list
+# * ! S ,          (Import, 'names'):                      # alias*           -> _aliases                   _parse__aliases_dotted          - no trailing commas
+# * ! S ,          (ImportFrom, 'names'):                  # alias*           -> _aliases                   _parse__aliases_star            - no trailing commas
 #                                                                             .
 #                                                                             .
-#     N    op      (Compare, 'ops':'comparators'):         # cmpop:expr*      -> _ops_comparators           _parse_ops_comparators / restrict expr or Compare
+#   ! S ' '        (ListComp, 'generators'):               # comprehension*   -> _comprehensions            _parse__comprehensions
+#   ! S ' '        (SetComp, 'generators'):                # comprehension*   -> _comprehensions            _parse__comprehensions
+#   ! S ' '        (DictComp, 'generators'):               # comprehension*   -> _comprehensions            _parse__comprehensions
+#   ! S ' '        (GeneratorExp, 'generators'):           # comprehension*   -> _comprehensions            _parse__comprehensions
+#                                                                             .
+#   ! S    if      (comprehension, 'ifs'):                 # expr*            -> _comprehension_ifs         _parse__comprehension_ifs
+#                                                                             .
+#   ! S    @       (FunctionDef, 'decorator_list'):        # expr*            -> _decorator_list            _parse__decorator_list
+#   ! S    @       (AsyncFunctionDef, 'decorator_list'):   # expr*            -> _decorator_list            _parse__decorator_list
+#   ! S    @       (ClassDef, 'decorator_list'):           # expr*            -> _decorator_list            _parse__decorator_list
+#                                                                             .
+#                                                                             .
+#     N    op      (Compare, 'ops':'comparators'):         # cmpop:expr*      -> _ops_comparators           _parse__ops_comparators / restrict expr or Compare
 #                                                                             .
 #     N ao         (BoolOp, 'values'):                     # expr*            -> BoolOp                     _parse_expr / restrict BoolOp  - interchangeable between and / or
 #                                                                             .
@@ -2272,7 +2272,7 @@ def _code_to_slice_seq2(self: fst.FST, code: Code | None, one: bool, options: Ma
     return fst_
 
 
-def _code_to_slice_Assign_targets(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
+def _code_to_slice__Assign_targets(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
                                   ) -> fst.FST | None:
     if code is None:
         return None
@@ -2300,7 +2300,7 @@ def _code_to_slice_Assign_targets(self: fst.FST, code: Code | None, one: bool, o
     return fst_
 
 
-def _code_to_slice_aliases(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
+def _code_to_slice__aliases(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
                            code_as_one: Callable = code_as_alias, code_as_slice: Callable = code_as_aliases,
                            ) -> fst.FST | None:
     if code is None:
@@ -2321,7 +2321,7 @@ def _code_to_slice_aliases(self: fst.FST, code: Code | None, one: bool, options:
     return fst_
 
 
-def _code_to_slice_withitems(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
+def _code_to_slice__withitems(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
                              ) -> fst.FST | None:
     if code is None:
         return None
@@ -2341,7 +2341,7 @@ def _code_to_slice_withitems(self: fst.FST, code: Code | None, one: bool, option
     return fst_
 
 
-def _code_to_slice_expr_arglikes(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
+def _code_to_slice__expr_arglikes(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
                                  ) -> fst.FST | None:
     if code is None:
         return None
@@ -2462,7 +2462,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
     return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
 
-def _code_to_slice_type_params(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
+def _code_to_slice__type_params(self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any],
                                ) -> fst.FST | None:
     if code is None:
         return None
@@ -2665,7 +2665,7 @@ def _put_slice_Delete_targets(self: fst.FST, code: Code | None, start: int | Lit
 
 def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                               field: str, one: bool, options: Mapping[str, Any]) -> None:
-    fst_ = _code_to_slice_Assign_targets(self, code, one, options)
+    fst_ = _code_to_slice__Assign_targets(self, code, one, options)
     len_body = len(body := self.a.targets)
     start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
@@ -2688,7 +2688,7 @@ def _put_slice_Assign_targets(self: fst.FST, code: Code | None, start: int | Lit
 
 def _put_slice_With_AsyncWith_items(self: fst.FST, code: Code | None, start: int | Literal['end'] | None,
                                     stop: int | None, field: str, one: bool, options: Mapping[str, Any]) -> None:
-    fst_ = _code_to_slice_withitems(self, code, one, options)
+    fst_ = _code_to_slice__withitems(self, code, one, options)
     len_body = len(body := (ast := self.a).items)
     start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
@@ -2722,7 +2722,7 @@ def _put_slice_With_AsyncWith_items(self: fst.FST, code: Code | None, start: int
 
 def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                             field: str, one: bool, options: Mapping[str, Any]) -> None:
-    fst_ = _code_to_slice_aliases(self, code, one, options, code_as_Import_name, code_as_Import_names)
+    fst_ = _code_to_slice__aliases(self, code, one, options, code_as_Import_name, code_as_Import_names)
     len_body = len(body := (ast := self.a).names)
     start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
@@ -2759,7 +2759,7 @@ def _put_slice_Import_names(self: fst.FST, code: Code | None, start: int | Liter
 
 def _put_slice_ImportFrom_names(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                                 field: str, one: bool, options: Mapping[str, Any]) -> None:
-    fst_ = _code_to_slice_aliases(self, code, one, options, code_as_ImportFrom_name, code_as_ImportFrom_names)
+    fst_ = _code_to_slice__aliases(self, code, one, options, code_as_ImportFrom_name, code_as_ImportFrom_names)
     len_body = len(body := (ast := self.a).names)
     start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
@@ -2917,7 +2917,7 @@ def _put_slice_Global_Nonlocal_names(self: fst.FST, code: Code | None, start: in
 
 def _put_slice_ClassDef_bases(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                               field: str, one: bool, options: Mapping[str, Any]) -> None:
-    fst_ = _code_to_slice_expr_arglikes(self, code, one, options)
+    fst_ = _code_to_slice__expr_arglikes(self, code, one, options)
     len_body = len(body := (ast := self.a).bases)
     start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
@@ -2980,7 +2980,7 @@ def _put_slice_ClassDef_bases(self: fst.FST, code: Code | None, start: int | Lit
 
 def _put_slice_Call_args(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
                          field: str, one: bool, options: Mapping[str, Any]) -> None:
-    fst_ = _code_to_slice_expr_arglikes(self, code, one, options)
+    fst_ = _code_to_slice__expr_arglikes(self, code, one, options)
     len_body = len(body := (ast := self.a).args)
     start, stop = _fixup_slice_indices(len_body, start, stop)
 
@@ -3119,7 +3119,7 @@ def _put_slice_type_params(self: fst.FST, code: Code | None, start: int | Litera
                            field: str, one: bool, options: Mapping[str, Any]) -> None:
     """An empty `Tuple` is accepted as a zero-element `type_params` slice."""
 
-    fst_ = _code_to_slice_type_params(self, code, one, options)
+    fst_ = _code_to_slice__type_params(self, code, one, options)
     len_body = len(body := (ast := self.a).type_params)
     start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
@@ -3226,10 +3226,10 @@ class slicestatic(NamedTuple):
 
 
 _SLICE_STATICS = {
-    _Assign_targets: slicestatic('targets', _code_to_slice_Assign_targets, '=', True, True),
-    _aliases:        slicestatic('names', _code_to_slice_aliases, ',', False, False),
-    _withitems:      slicestatic('items', _code_to_slice_withitems, ',', False, False),
-    _type_params:    slicestatic('type_params', _code_to_slice_type_params, ',', False, False),
+    _Assign_targets: slicestatic('targets', _code_to_slice__Assign_targets, '=', True, True),
+    _aliases:        slicestatic('names', _code_to_slice__aliases, ',', False, False),
+    _withitems:      slicestatic('items', _code_to_slice__withitems, ',', False, False),
+    _type_params:    slicestatic('type_params', _code_to_slice__type_params, ',', False, False),
 }
 
 # ......................................................................................................................
