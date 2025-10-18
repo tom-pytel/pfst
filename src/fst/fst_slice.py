@@ -76,8 +76,8 @@ from .astutil import (
 )
 
 from .common import (
+    Self, NodeError, astfield, fstloc,
     PYLT11, PYGE14,
-    Self, NodeError, astfield, fstloc, srcwpos,
     re_empty_line_start, re_empty_line, re_empty_space, re_line_end_cont_or_comment,
     next_frag, prev_find, next_find, next_find_re,
     leading_trivia, trailing_trivia,
@@ -3461,14 +3461,9 @@ _LOC_SLICE_RAW_PUT_FUNCS = {
 }
 
 
-def _trailing_comma(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> srcwpos | None:
-    if (comma := next_frag(lines, ln, col, end_ln, end_col)) and comma.src.startswith(','):
-        return comma
-
-    return None
-
-
 def _singleton_needs_comma(fst_: fst.FST) -> bool:
+    """Whether a singleton value in this container needs a trailing comma or not."""
+
     return (isinstance(a := fst_.a, Tuple) or
             (isinstance(a, MatchSequence) and not fst_._is_delimited_seq('patterns', '[]')))  # MatchSequence because it can be undelimited or delimited with parentheses and in that case a singleton needs a trailing comma
 
@@ -3478,7 +3473,6 @@ def _adjust_slice_raw_ast(self: fst.FST, code: AST, field: str, one: bool, optio
                           body2: list[AST]) -> tuple[AST | list[str], int, int, int, int]:
     """Adjust `code` and put location when putting raw from an `AST`. Currently just trailing comma stuff."""
 
-    ast = self.a
     lines = self.root._lines
 
     code = reduce_ast(code, True)
@@ -3498,10 +3492,10 @@ def _adjust_slice_raw_ast(self: fst.FST, code: AST, field: str, one: bool, optio
             len_code_body = 1
 
         if stop == len(body2) and _singleton_needs_comma(self):
-            comma = _trailing_comma(lines, put_end_ln, put_end_col, self.end_ln, self.end_col)
+            comma = next_find(lines, put_end_ln, put_end_col, self.end_ln, self.end_col, ',', True)  # trailing comma
 
             if len_code_body != 1:
-                if comma and comma.ln == put_end_ln and comma.col == put_end_col:
+                if comma and comma[1] == put_end_col and comma[0] == put_end_ln:
                     put_end_col += 1  # overwrite trailing singleton tuple comma which follows immediately after single element
 
             elif not start and not comma:
@@ -3517,7 +3511,6 @@ def _adjust_slice_raw_fst(self: fst.FST, code: fst.FST, field: str, one: bool, o
                           body2: list[AST]) -> tuple[fst.FST | list[str], int, int, int, int]:
     """Adjust `code` and put location when putting raw from an `FST`."""
 
-    ast = self.a
     lines = self.root._lines
 
     if not code.is_root:
@@ -3557,11 +3550,11 @@ def _adjust_slice_raw_fst(self: fst.FST, code: fst.FST, field: str, one: bool, o
 
             _, _, end_ln, end_col = code_body2[-1].f.pars()
 
-            code_comma = _trailing_comma(code_lines, end_ln, end_col, code_fst.end_ln, code_fst.end_col)
+            code_comma = next_find(code_lines, end_ln, end_col, code_fst.end_ln, code_fst.end_col, ',', True)  # trailing comma
 
             code_comma_is_explicit = code_comma and (  # explicit comma - not needed or not in normal position
                 (len_code_body2 >= 2) or
-                code_comma.col != end_col or code_comma.ln != end_ln or
+                code_comma[1] != end_col or code_comma[0] != end_ln or
                 not _singleton_needs_comma(code_fst)
             )
 
@@ -3575,17 +3568,17 @@ def _adjust_slice_raw_fst(self: fst.FST, code: fst.FST, field: str, one: bool, o
             code_comma = code_comma_is_explicit = None
             len_code_body2 = 1
 
-        if comma := _trailing_comma(lines, put_end_ln, put_end_col, self.end_ln, self.end_col):
+        if comma := next_find(lines, put_end_ln, put_end_col, self.end_ln, self.end_col, ',', True):  # trailing comma
             if (code_comma_is_explicit or
                 (len_code_body2 > 1 and  # code has no comma because otherwise it would be explicit
                  len(body2) == 1 and _singleton_needs_comma(self) and  # self is singleton and singleton needs comma
-                 comma.ln == put_end_ln and comma.col == put_end_col)  # that comma follows right after element and so is not explicit and can be deleted
+                 comma[1] == put_end_col and comma[0] == put_end_ln)  # that comma follows right after element and so is not explicit and can be deleted
             ):
-                put_end_ln, put_end_col, _ = comma
+                put_end_ln, put_end_col = comma
                 put_end_col += 1
 
             elif code_comma:  # otherwise if code has comma we remove it and keep the comma that is already in self
-                code._put_src(None, ln := code_comma.ln, col := code_comma.col, ln, col + 1, True)
+                code._put_src(None, ln := code_comma[0], col := code_comma[1], ln, col + 1, True)
 
         elif code_comma_is_explicit:
             pass  # noop
@@ -3595,7 +3588,7 @@ def _adjust_slice_raw_fst(self: fst.FST, code: fst.FST, field: str, one: bool, o
                 code_lines[-1] = bistr(code_lines[-1] + ',')
 
         elif code_comma:
-            code._put_src(None, ln := code_comma.ln, col := code_comma.col, ln, col + 1, True)
+            code._put_src(None, ln := code_comma[0], col := code_comma[1], ln, col + 1, True)
 
     return code, put_ln, put_col, put_end_ln, put_end_col
 
