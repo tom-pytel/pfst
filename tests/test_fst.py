@@ -2488,13 +2488,13 @@ t"c"]''').elts[0]._is_enclosed_or_line())
     a: """test
 two  # fake comment start""", **b
             }''').body[0].value
-        self.assertEqual((2, 30, 2, 32), a.f._loc_key(1))
+        self.assertEqual((2, 30, 2, 32), a.f._loc_maybe_key(1))
 
         a = parse('''{
     a: """test""", **  # comment
     b
             }''').body[0].value
-        self.assertEqual((1, 19, 1, 21), a.f._loc_key(1))
+        self.assertEqual((1, 19, 1, 21), a.f._loc_maybe_key(1))
 
     def test__touchall(self):
         a = parse('i = [1]').body[0]

@@ -4343,7 +4343,7 @@ class FST:
         _is_atom,
         _is_enclosed_or_line,
         _is_enclosed_in_parents,
-        _loc_key,
+        _loc_maybe_key,
         _get_parse_mode,
         _get_indent,
         _get_indentable_lns,

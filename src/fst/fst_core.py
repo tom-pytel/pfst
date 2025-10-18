@@ -1179,8 +1179,8 @@ def _is_enclosed_in_parents(self: fst.FST, field: str | None = None) -> bool:
     return False
 
 
-def _loc_key(self: fst.FST, idx: int, pars: bool = False, body: list[AST] | None = None, body2: list[AST] | None = None,
-             ) -> fstloc:
+def _loc_maybe_key(self: fst.FST, idx: int, pars: bool = False, body: list[AST] | None = None,
+                   body2: list[AST] | None = None) -> fstloc:
     """Return location of node which may be a dictionary key even if it is `**` specified by a `None`. Optionally return
     the location of the grouping parentheses if key actually present. Can also be used to get the location
     (parenthesized or not) from any list of `AST`s which is not a `Dict.keys` if an explicit `body` and / or `body2` is

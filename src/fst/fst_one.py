@@ -2073,7 +2073,7 @@ _onestatic_Global_Nonlocal_names = onestatic(_one_info_Global_Nonlocal_names, _r
 
 def _one_info_Dict_key(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     end_ln, end_col, _, _ = self.a.values[idx].f.pars()
-    ln, col, _, _ = self._loc_key(idx, True)
+    ln, col, _, _ = self._loc_maybe_key(idx, True)
 
     return oneinfo('', fstloc(ln, col, end_ln, end_col), None, ': ', '**')
 
@@ -2809,7 +2809,7 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
             child = ast.keys
             body2 = ast.values if is_dict else ast.patterns
             idx = _fixup_one_index(len(child), idx)
-            loc = self._loc_key(idx, pars, child, body2)  # maybe the key is a '**'
+            loc = self._loc_maybe_key(idx, pars, child, body2)  # maybe the key is a '**'
 
             if not to:
                 to = body2[idx].f
@@ -2829,7 +2829,7 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
 
     if child is None and loc is None:
         if field == 'keys':  # only Dict and MatchMapping have this, will not have been processed as a special field above
-            loc = self._loc_key(idx, pars, ast.keys, ast.values if isinstance(ast, Dict) else ast.patterns)
+            loc = self._loc_maybe_key(idx, pars, ast.keys, ast.values if isinstance(ast, Dict) else ast.patterns)
         elif not isinstance(ast, MatchSingleton):  # breaking convention as always, `None` in a MatchSingleton.value is a value, not the absence of a value
             raise ValueError('cannot insert in raw put')
 

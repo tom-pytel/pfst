@@ -478,7 +478,7 @@ def _locs_first_and_last(self: fst.FST, start: int, stop: int, body: list[AST], 
         loc_last = loc_first if start == stop_1 else body[stop_1].f.pars()
 
     else:
-        ln, col, _, _ = self._loc_key(start, True, body)
+        ln, col, _, _ = self._loc_maybe_key(start, True, body)
         _, _, end_ln, end_col = body2[start].f.pars()
         loc_first = fstloc(ln, col, end_ln, end_col)
 
@@ -486,7 +486,7 @@ def _locs_first_and_last(self: fst.FST, start: int, stop: int, body: list[AST], 
             loc_last = loc_first
 
         else:
-            ln, col, _, _ = self._loc_key(stop_1, True, body)
+            ln, col, _, _ = self._loc_maybe_key(stop_1, True, body)
             _, _, end_ln, end_col = body2[stop_1].f.pars()
             loc_last = fstloc(ln, col, end_ln, end_col)
 
@@ -1720,8 +1720,7 @@ def _put_slice_seq_begin(self: fst.FST, start: int, stop: int, fst_: fst.FST | N
         if (elts_indent_cached := _get_element_indent(self, body, body2, start)) is not None:
             pass  # noop
         elif body:  # match indentation of our own first element
-            elts_indent_cached = self_indent + ' ' * (self._loc_key(0, True, body).col -
-                                                      len(self_indent))
+            elts_indent_cached = self_indent + ' ' * (self._loc_maybe_key(0, True, body).col - len(self_indent))
         else:
             elts_indent_cached = self_indent + self.root.indent  # default
 
@@ -1768,7 +1767,7 @@ def _put_slice_seq_begin(self: fst.FST, start: int, stop: int, fst_: fst.FST | N
 
             else:
                 if not is_last:
-                    ln, col, _, _ = self._loc_key(stop, True, body)
+                    ln, col, _, _ = self._loc_maybe_key(stop, True, body)
 
                 else:
                     ln = bound_end_ln
@@ -1795,7 +1794,7 @@ def _put_slice_seq_begin(self: fst.FST, start: int, stop: int, fst_: fst.FST | N
                 is_ins_ln = not loc_first.col
 
         elif not is_last:  # just before next element
-            ln, col, _, _ = self._loc_key(stop, True, body)
+            ln, col, _, _ = self._loc_maybe_key(stop, True, body)
             loc_first = fstloc(ln, col, ln, col)
 
         else:  # just past previous element or at start of bound
@@ -1961,7 +1960,7 @@ def _put_slice_seq_end(self: fst.FST, params: tuple) -> None:
             put_last = body2[new_stop - 1].f
 
             _, _, put_last_end_ln, put_last_end_col = put_last.loc
-            new_stop_ln, new_stop_col, _, _ = self._loc_key(new_stop, True, body, body2).loc
+            new_stop_ln, new_stop_col, _, _ = self._loc_maybe_key(new_stop, True, body, body2).loc
 
             self._maybe_ins_separator(put_last_end_ln, put_last_end_col, True, new_stop_ln, new_stop_col, sep, put_last)
 
@@ -1969,7 +1968,7 @@ def _put_slice_seq_end(self: fst.FST, params: tuple) -> None:
             self_split = body2[start - 1].f
 
             _, _, self_split_end_ln, self_split_end_col = self_split.loc
-            put_first_ln, put_first_col, _, _ = self._loc_key(start, True, body, body2).loc
+            put_first_ln, put_first_col, _, _ = self._loc_maybe_key(start, True, body, body2).loc
 
             self._maybe_ins_separator(self_split_end_ln, self_split_end_col, True, put_first_ln, put_first_col, sep,
                                       self_split)
@@ -2121,11 +2120,11 @@ def _get_element_indent(self: fst.FST, body: list[AST], body2: list[AST], start:
     else:  # two-element sequence (Dict, MatchMapping)
         if start >= 1:  # first search backward for an element which starts its own line (if there are elements before)
             for i in range(start - 2, -1, -1):
-                if (loc := self._loc_key(i + 1, True, body)).ln != body2[i].f.pars().end_ln:  # only consider elements which start on a different line than the previous element ends on
+                if (loc := self._loc_maybe_key(i + 1, True, body)).ln != body2[i].f.pars().end_ln:  # only consider elements which start on a different line than the previous element ends on
                     if re_empty_line.match(l := lines[loc.ln], 0, loc.col):
                         return l[:loc.col]
 
-            if (loc := self._loc_key(0, True, body)).ln != self.ln:  # only consider element 0 if it is not on same line as self starts
+            if (loc := self._loc_maybe_key(0, True, body)).ln != self.ln:  # only consider element 0 if it is not on same line as self starts
                 if re_empty_line.match(l := lines[loc.ln], 0, loc.col):
                     return l[:loc.col]
 
@@ -2137,7 +2136,7 @@ def _get_element_indent(self: fst.FST, body: list[AST], body2: list[AST], start:
         for i in range(start, len(body)):  # now search forward
             prev_loc = loc
 
-            if (loc := self._loc_key(i, True, body)).ln != prev_loc.end_ln:  # only consider elements which start on a different line than the previous element ends on
+            if (loc := self._loc_maybe_key(i, True, body)).ln != prev_loc.end_ln:  # only consider elements which start on a different line than the previous element ends on
                 if re_empty_line.match(l := lines[loc.ln], 0, loc.col):
                     return l[:loc.col]
 
@@ -2517,7 +2516,7 @@ def _put_slice_Dict(self: fst.FST, code: Code | None, start: int | Literal['end'
         fst_body = ast_.keys
         fst_body2 = ast_.values
         len_fst_body = len(fst_body)
-        fst_first = a.f if (a := fst_body[0]) else fst_._loc_key(0)
+        fst_first = a.f if (a := fst_body[0]) else fst_._loc_maybe_key(0)
 
         end_params = _put_slice_seq_begin(self, start, stop, fst_, fst_first, fst_body2[-1].f, len_fst_body,
                                           bound_ln, bound_col, bound_end_ln, bound_end_col,
@@ -3390,7 +3389,7 @@ def _loc_slice_raw_put_Global_Nonlocal_names(self: fst.FST, start: int | Literal
 def _loc_slice_raw_put_Dict(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str,
                             ) -> tuple[int, int, int, int, int, int, list[AST]]:
     start, stop = _fixup_slice_index_for_raw(len(values := self.a.values), start, stop)
-    ln, col, _, _ = self._loc_key(start, True)
+    ln, col, _, _ = self._loc_maybe_key(start, True)
     _, _, end_ln, end_col = values[stop - 1].f.pars()
 
     return ln, col, end_ln, end_col, start, stop, values
