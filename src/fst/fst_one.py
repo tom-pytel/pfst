@@ -2848,7 +2848,7 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
 
                     if isinstance(ast, Lambda):  # SUPER SPECIAL CASE, adding arguments to lambda without them, may need to prepend a space to source being put
                         if not put_lines[0][:1].isspace():
-                            put_lines[0] =  f' {put_lines[0]}'
+                            put_lines[0] =  ' ' + put_lines[0]
 
             elif not pars and childf._is_solo_call_arg_genexp() and (non_shared_loc := childf.pars(shared=False)) > loc:  # if loc includes `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
                 loc = non_shared_loc
@@ -2866,9 +2866,6 @@ def _put_one_raw(self: fst.FST, code: _PutOneCode, idx: int | None, field: str, 
         to_loc = loc
 
     else:
-        # if not to.parent:
-        #     raise ValueError("'to' node cannot be root")
-
         if root is not to.root:
             raise ValueError("'to' must be part of same tree")
 

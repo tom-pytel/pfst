@@ -3477,17 +3477,33 @@ def _adjust_slice_raw_ast(self: fst.FST, code: AST, field: str, one: bool, optio
 
     code = reduce_ast(code, True)
 
-    if (code_is_tuple := isinstance(code, Tuple)) or isinstance(code, (List, Set, Dict, MatchSequence, MatchMapping)):
+    if ((code_is_tuple := isinstance(code, Tuple)) or
+        (code_is_normal := isinstance(code, (List, Set, Dict, MatchSequence, MatchMapping))) or
+        isinstance(code, (_slice_withitems, _slice_aliases, _slice_type_params))
+    ):  # all nodes which are separated by comma at top level
         src = unparse(code)
 
         if not one:  # strip delimiters and remove singleton Tuple trailing comma if present
-            src = src[1 : (-2 if code_is_tuple and len(code.elts) == 1 else -1)]
+            if code_is_tuple:
+                src = src[1 : (-2 if len(code.elts) == 1 else -1)]
 
-            len_code_body = len(getattr(code, 'elts', ()) or getattr(code, 'keys', ()) or getattr(code, 'patterns', ()))
+                len_code_body = len(getattr(code, 'elts', ()))
+
+            elif code_is_normal:
+                src = src[1 : -1]
+
+                len_code_body = len(getattr(code, 'elts', ()) or getattr(code, 'keys', ()) or
+                                    getattr(code, 'patterns', ()))
+
+            else:
+                len_code_body = len(getattr(code, 'items', ()) or getattr(code, 'names', ()) or
+                                    getattr(code, 'type_params', ()))
 
             if not len_code_body:
                 raise NodeError('cannot put raw empty slice')
 
+        elif not code_is_tuple and not code_is_normal:
+            raise NodeError('cannot put special slice as one')
         else:
             len_code_body = 1
 
@@ -3518,14 +3534,18 @@ def _adjust_slice_raw_fst(self: fst.FST, code: fst.FST, field: str, one: bool, o
 
     code_ast = reduce_ast(code.a, True)
 
-    if isinstance(code_ast, (Tuple, List, Set, Dict, MatchSequence, MatchMapping)):
+    if ((code_is_normal := isinstance(code_ast, (Tuple, List, Set, Dict, MatchSequence, MatchMapping))) or
+        isinstance(code_ast, (_slice_withitems, _slice_aliases, _slice_type_params))
+    ):  # all nodes which are separated by comma at top level
         code_fst = code_ast.f
         code_lines = code._lines
 
         if not one:  # strip delimiters (if any) and everything before and after actual node
             ln, col, end_ln, end_col = code_fst.loc
 
-            if not (code_fst._is_parenthesized_tuple() is False or code_fst._is_delimited_matchseq() == ''):  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence
+            if (code_is_normal and
+                not (code_fst._is_parenthesized_tuple() is False or code_fst._is_delimited_matchseq() == '')  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence or is a special slice
+            ):
                 col += 1
                 end_col -= 1
                 col_offset = code_ast.col_offset = code_ast.col_offset + 1
@@ -3541,9 +3561,12 @@ def _adjust_slice_raw_fst(self: fst.FST, code: fst.FST, field: str, one: bool, o
             code._put_src(None, end_ln, end_col, len(code_lines) - 1, len(code_lines[-1]))
             code._put_src(None, 0, 0, ln, col, False)  # we are counting on this to _touch() everything because of possible assignments above to col_offset and end_col_offset
 
-            code_body2 = (getattr(code_ast, 'elts', ()) or
-                          getattr(code_ast, 'values', ()) or
-                          getattr(code_ast, 'patterns', ()))
+            if code_is_normal:
+                code_body2 = (getattr(code_ast, 'elts', ()) or getattr(code_ast, 'values', ()) or
+                              getattr(code_ast, 'patterns', ()))
+            else:
+                code_body2 = (getattr(code_ast, 'items', ()) or getattr(code_ast, 'names', ()) or
+                              getattr(code_ast, 'type_params', ()))
 
             if not (len_code_body2 := len(code_body2)):
                 raise NodeError('cannot put raw empty slice')
@@ -3557,6 +3580,9 @@ def _adjust_slice_raw_fst(self: fst.FST, code: fst.FST, field: str, one: bool, o
                 code_comma[1] != end_col or code_comma[0] != end_ln or
                 not _singleton_needs_comma(code_fst)
             )
+
+        elif not code_is_normal:
+            raise NodeError('cannot put special slice as one')
 
         else:
             if code_fst._is_parenthesized_tuple() is False:  # only Tuple or MatchMapping could be naked and needs to be delimited, everything else stays as-is

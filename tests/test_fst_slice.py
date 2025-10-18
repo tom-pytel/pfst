@@ -2501,6 +2501,20 @@ i ; \\
         self.assertEqual('del [x] ,', FST('del a, b ,').put_slice(FST('[x]').a, 0, 2, raw=True, one=True).src)
         self.assertEqual('del (x,) ,', FST('del a, b ,').put_slice(FST('(x,)').a, 0, 2, raw=True, one=True).src)
 
+        # special slices
+
+        self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('x, y', 'withitems').a, 0, 1, raw=True).src)
+        self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('x, y', 'type_params').a, 0, 1, raw=True).src)
+        self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('x, y', 'aliases').a, 0, 1, raw=True).src)
+
+        self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', 'withitems').a, 0, 2, raw=True).src)
+        self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', 'type_params').a, 0, 2, raw=True).src)
+        self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', 'aliases').a, 0, 2, raw=True).src)
+
+        self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', 'withitems').a, 0, 1, raw=True, one=True)
+        self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', 'type_params').a, 0, 1, raw=True, one=True)
+        self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', 'aliases').a, 0, 1, raw=True, one=True)
+
     def test_put_slice_raw_trailing_comma_fst(self):
         self.assertEqual('[x]', FST('[a]').put_slice(FST('[x]'), 0, 1, raw=True).src)
         self.assertEqual('[x]', FST('[a]').put_slice(FST('(x,)'), 0, 1, raw=True).src)
@@ -2837,6 +2851,23 @@ i ; \\
 
         self.assertEqual('del [x] ,', FST('del a, b ,').put_slice(FST('[x]'), 0, 2, raw=True, one=True).src)
         self.assertEqual('del (x,) ,', FST('del a, b ,').put_slice(FST('(x,)'), 0, 2, raw=True, one=True).src)
+
+        # special slices
+
+        self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('x, y', 'withitems'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('x, y', 'type_params'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('x, y', 'aliases'), 0, 1, raw=True).src)
+
+        self.assertEqual('(x, y ,)', FST('(a,)').put_slice(FST('x, y ,', 'withitems'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y ,)', FST('(a,)').put_slice(FST('x, y ,', 'type_params'), 0, 1, raw=True).src)
+
+        self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', 'withitems'), 0, 2, raw=True).src)
+        self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', 'type_params'), 0, 2, raw=True).src)
+        self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', 'aliases'), 0, 2, raw=True).src)
+
+        self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', 'withitems'), 0, 1, raw=True, one=True)
+        self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', 'type_params'), 0, 1, raw=True, one=True)
+        self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', 'aliases'), 0, 1, raw=True, one=True)
 
     def test_slice_set_empty(self):
         # put slice using norm_put=
