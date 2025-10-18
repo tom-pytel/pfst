@@ -326,8 +326,9 @@ class _Assign_targets(_slice):
     _fields      = ('targets',)
     _field_types = {'targets': list[expr]}
 
-    def __init__(self, targets: list[expr], lineno: int = 1, col_offset: int = 0, end_lineno: int = 1,
-                 end_col_offset: int = 0):
+    def __init__(
+        self, targets: list[expr], lineno: int = 1, col_offset: int = 0, end_lineno: int = 1, end_col_offset: int = 0
+    ) -> None:
         self.targets = targets or []
         self.lineno = lineno
         self.col_offset = col_offset
@@ -369,8 +370,9 @@ class _aliases(_slice):
     _fields      = ('names',)
     _field_types = {'names': list[alias]}
 
-    def __init__(self, names: list[alias], lineno: int = 1, col_offset: int = 0, end_lineno: int = 1,
-                 end_col_offset: int = 0):
+    def __init__(
+        self, names: list[alias], lineno: int = 1, col_offset: int = 0, end_lineno: int = 1, end_col_offset: int = 0
+    ) -> None:
         self.names = names or []
         self.lineno = lineno
         self.col_offset = col_offset
@@ -386,8 +388,9 @@ class _withitems(_slice):
     _fields      = ('items',)
     _field_types = {'items': list[withitem]}
 
-    def __init__(self, items: list[withitem], lineno: int = 1, col_offset: int = 0, end_lineno: int = 1,
-                 end_col_offset: int = 0):
+    def __init__(
+        self, items: list[withitem], lineno: int = 1, col_offset: int = 0, end_lineno: int = 1, end_col_offset: int = 0
+    ) -> None:
         self.items = items or []
         self.lineno = lineno
         self.col_offset = col_offset
@@ -403,8 +406,14 @@ class _type_params(_slice):
     _fields      = ('type_params',)
     _field_types = {'type_params': list[type_param]}
 
-    def __init__(self, type_params: list[type_param], lineno: int = 1, col_offset: int = 0, end_lineno: int = 1,
-                 end_col_offset: int = 0):
+    def __init__(
+        self,
+        type_params: list[type_param],
+        lineno: int = 1,
+        col_offset: int = 0,
+        end_lineno: int = 1,
+        end_col_offset: int = 0,
+    ) -> None:
         self.type_params = type_params or []
         self.lineno = lineno
         self.col_offset = col_offset

@@ -440,7 +440,7 @@ class FSTParts:
     cats: dict   # {FST: ASTCat, ...}
     parts: dict  # {ASTCat: [FST, ...], ...}
 
-    def __init__(self, fst: FST, exclude: type[AST] | tuple[type[AST]] | None = None):
+    def __init__(self, fst: FST, exclude: type[AST] | tuple[type[AST]] | None = None) -> None:
         if isinstance(fst, FSTParts):
             self.cats = fst.cats.copy()
             self.parts = {c: fs.copy() for c, fs in fst.parts.items()}
@@ -657,7 +657,9 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
     return True
 
 
-def can_replace_ast(tgta: AST, tgt_parenta: AST, tgt_field: str, repla: AST, repl_parenta: AST, repl_field: str) -> bool:  # the best we can do for pure AST
+def can_replace_ast(
+    tgta: AST, tgt_parenta: AST, tgt_field: str, repla: AST, repl_parenta: AST, repl_field: str
+) -> bool:  # the best we can do for pure AST
     try:
         if PYLT12:
             # if any(isinstance(f.a, (JoinedStr, TemplateStr)) for f in tgt.parents()):
@@ -770,7 +772,7 @@ class Fuzzy:
     name = 'Fuzzy'
     forever = False
 
-    def __init__(self, args: dict[str, Any]):
+    def __init__(self, args: dict[str, Any]) -> None:
         self.args = args
         self.batch = args.get('batch')
         self.debug = args.get('debug')
@@ -1795,7 +1797,18 @@ class SliceExprish(Fuzzy):
             choice(('none', 'block', 'all', 'line')) + choice(('', '', '', '', '-', '+', '-', '+', '-1', '-2', '-3', '+1', '+2', '+3')),
         )
 
-    def transfer(self, dir: str, cat: str, field: str | None, slice_field: str | None, src: FST, dst: FST, min_src: int, min_dst: int, one: bool):
+    def transfer(
+        self,
+        dir: str,
+        cat: str,
+        field: str | None,
+        slice_field: str | None,
+        src: FST,
+        dst: FST,
+        min_src: int,
+        min_dst: int,
+        one: bool,
+    ):
         if slice_field is None:
             slice_field = field
 

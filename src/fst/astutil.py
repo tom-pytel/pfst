@@ -673,9 +673,16 @@ def get_parse_mode(ast: AST) -> Literal['exec', 'eval', 'single']:
 class WalkFail(Exception):
     """Raised in `walk2()`, `compare_asts()` and `copy_attributes()` on compare failure."""
 
-def walk2(ast1: AST, ast2: AST, cb_primitive: Callable[[Any, Any, str, int], bool] | None = None, *, ctx: bool = True,
-          recurse: bool = True, skip1: set | frozenset | None = None, skip2: set | frozenset | None = None,
-          ) -> Iterator[tuple[AST, AST]]:
+def walk2(
+    ast1: AST,
+    ast2: AST,
+    cb_primitive: Callable[[Any, Any, str, int], bool] | None = None,
+    *,
+    ctx: bool = True,
+    recurse: bool = True,
+    skip1: set | frozenset | None = None,
+    skip2: set | frozenset | None = None,
+) -> Iterator[tuple[AST, AST]]:
     """Walk two asts simultaneously comparing along the way to ensure they have the same structure.
 
     **Parameters:**
@@ -796,9 +803,19 @@ _compare_primitive_type_comments_func = (
     (lambda p1, p2, n, i: p1.__class__ is p2.__class__ and p1 == p2),
 )
 
-def compare_asts(ast1: AST, ast2: AST, *, locs: bool = False, ctx: bool = True, type_comments: bool = False,
-                 recurse: bool = True, skip1: set | frozenset | None = None, skip2: set | frozenset | None = None,
-                 cb_primitive: Callable[[Any, Any, str, int], bool] | None = None, raise_: bool = False) -> bool:
+def compare_asts(
+    ast1: AST,
+    ast2: AST,
+    *,
+    locs: bool = False,
+    ctx: bool = True,
+    type_comments: bool = False,
+    recurse: bool = True,
+    skip1: set | frozenset | None = None,
+    skip2: set | frozenset | None = None,
+    cb_primitive: Callable[[Any, Any, str, int], bool] | None = None,
+    raise_: bool = False,
+) -> bool:
     """Compare two trees including possibly locations and type comments using `walk2()`.
 
     **Parameters:**
@@ -842,9 +859,17 @@ def compare_asts(ast1: AST, ast2: AST, *, locs: bool = False, ctx: bool = True, 
     return True
 
 
-def copy_attributes(src: AST, dst: AST, *, compare: bool = True, type_comments: bool = False,
-                    recurse: bool = True, skip1: set | frozenset | None = None, skip2: set | frozenset | None = None,
-                    raise_: bool = True) -> bool:
+def copy_attributes(
+    src: AST,
+    dst: AST,
+    *,
+    compare: bool = True,
+    type_comments: bool = False,
+    recurse: bool = True,
+    skip1: set | frozenset | None = None,
+    skip2: set | frozenset | None = None,
+    raise_: bool = True,
+) -> bool:
     """Copy attributes from one tree to another using `walk2()` to walk them both simultaneously and this checking
     structure equality in the process. By "attributes" we mean everything specified in `src._attributes`.
 
@@ -998,8 +1023,13 @@ def last_block_header_child(ast: AST) -> AST | None:
     return None
 
 
-def is_atom(ast: AST, *, unparse_pars_as_atom: bool | None = None, tuple_as_atom: bool | None = True,
-            matchseq_as_atom: bool | None = True) -> bool | None:
+def is_atom(
+    ast: AST,
+    *,
+    unparse_pars_as_atom: bool | None = None,
+    tuple_as_atom: bool | None = True,
+    matchseq_as_atom: bool | None = True,
+) -> bool | None:
     """Whether `ast` is enclosed in some kind of delimiters `'()'`, `'[]'`, `'{}'` when `unparse()`d or otherwise atomic
     like `Name`, `Constant`, etc... Node types where this doesn't normally apply like `stmt` will return `True`. `Tuple`
     and `MatchSequence` which can otherwise be ambiguous will normally return `True` as they `unparse()` with
@@ -1405,8 +1435,9 @@ _PRECEDENCE_NODE_FIELDS = {  # default is _Precedence.TEST
 }
 
 
-def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[AST], field: str,
-                                      **flags: dict[str, bool]) -> bool:
+def precedence_require_parens_by_type(
+    child_type: type[AST], parent_type: type[AST], field: str, **flags: dict[str, bool]
+) -> bool:
     """Returns whether parentheses are required for the child for the given parent / child combination or not. Both
     parent and child `BoolOp`, `BinOp` and `UnaryOp` types should be passed as the type of the `op` field.
 
@@ -1468,8 +1499,9 @@ def precedence_require_parens_by_type(child_type: type[AST], parent_type: type[A
     return child_precedence < parent_precedence
 
 
-def precedence_require_parens(child: AST, parent: AST, field: str, idx: int | None = None, **flags: dict[str, bool],
-                              ) -> bool:
+def precedence_require_parens(
+    child: AST, parent: AST, field: str, idx: int | None = None, **flags: dict[str, bool]
+) -> bool:
     """Returns whether parentheses are required for the given parent / child combination or not. Unlike
     `precedence_require_parens_by_type()`, this takes the actual node instances and figures out the respective types
     and flags.

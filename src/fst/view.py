@@ -106,7 +106,7 @@ class fstview:
 
         return self.fst.root
 
-    def __init__(self, fst: fst.FST, field: str, start: int, stop: int):
+    def __init__(self, fst: fst.FST, field: str, start: int, stop: int) -> None:
         """@private"""
 
         self.fst = fst
@@ -338,7 +338,7 @@ class fstview:
 
         return f
 
-    def replace(self, code: Code | None, one: bool = True, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
+    def replace(self, code: Code | None, one: bool = True, **options ) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
         """Replace or delete (if `code=None`) this slice.
 
         **Returns:**
@@ -497,7 +497,7 @@ class fstview:
 
         return self
 
-    def prepend(self, code: Code, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
+    def prepend( self, code: Code, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
         """prepend `code` as a single element to the beginning of this slice.
 
         **Returns:**

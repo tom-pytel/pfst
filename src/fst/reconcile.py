@@ -24,7 +24,7 @@ class Reconcile:
     mark:    fst.FST            ; """The marked `FST` tree to use as reference."""
     out:     fst.FST            ; """The output `FST` tree to build up and return."""
 
-    def __init__(self, work: fst.FST, mark: fst.FST, options: Mapping[str, Any] = {}):
+    def __init__(self, work: fst.FST, mark: fst.FST, options: Mapping[str, Any] = {}) -> None:
         if 'raw' in options:
             raise ValueError("cannot use reconcile with 'raw' option")
 
@@ -290,8 +290,13 @@ class Reconcile:
                 for i, c in enumerate(child):
                     self.recurse_node(c, astfield(field, i), outf, nodef)
 
-    def recurse_node(self, node: AST, pfield: astfield | None = None,
-                     out_parent: fst.FST | None = None, node_parent: fst.FST | None | Literal[False] = None) -> None:
+    def recurse_node(
+        self,
+        node: AST,
+        pfield: astfield | None = None,
+        out_parent: fst.FST | None = None,
+        node_parent: fst.FST | None | Literal[False] = None,
+    ) -> None:
         """Recurse from either an in-tree known `FST` node or from a pure `AST` put somewhere above. The two situations
         are slightly different in the following ways:
 

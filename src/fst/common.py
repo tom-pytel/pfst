@@ -88,7 +88,7 @@ class NodeError(Exception):
 
     rawable: bool  ; """Whether the operation that caused this error can be retried in raw mode. @private"""
 
-    def __init__(self, *args: object, rawable: bool = False):
+    def __init__(self, *args: object, rawable: bool = False) -> None:
         """@private"""
 
         super().__init__(*args)
@@ -183,7 +183,7 @@ class nspace:
     @private
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         self.__dict__.update(kwargs)
 
 
@@ -192,8 +192,9 @@ assert sys.version_info[0] == 3, 'pyver() assumes python major version 3'
 _pyver_registry = {}  # {'__module__.__qualname__': [(func, (ge, lt) | unbound +ge | unbound -lt]), ...}
 _pyver = sys.version_info[1]  # just the minor version
 
-def pyver(func: Callable | None = None, *, ge: int | None = None, lt: int | None = None, else_: Callable | None = None,
-          ) -> Callable:
+def pyver(
+    func: Callable | None = None, *, ge: int | None = None, lt: int | None = None, else_: Callable | None = None
+) -> Callable:
     """Decorator to restrict to a range of python versions. If the version of python does not match the parameters
     passed then will return a previously registered function that does match or `None` if no matching function. Does not
     wrap the functions but rather returns the originals to not add unnecessary overhead.
@@ -294,8 +295,9 @@ def shortstr(s: str, maxlen: int = 64) -> str:
     return f'{s[:(t+1)//2]} .. [{l} chars] .. {s[-(t//2):]}'
 
 
-def next_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
-              comment: bool = False, lcont: bool | None = False) -> srcwpos | None:
+def next_frag(
+    lines: list[str], ln: int, col: int, end_ln: int, end_col: int, comment: bool = False, lcont: bool | None = False
+) -> srcwpos | None:
     """Get next fragment of source which may or may not include comments or line continuation backslashes. May be
     restricted to bound or further restricted to not exceed logical line. Assuming start pos not inside str or comment.
     The fragment is not necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Fragments can include
@@ -347,9 +349,17 @@ def next_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     return None
 
 
-def prev_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
-              comment: bool = False, lcont: bool | None = False, *,
-              state: list | None = None) -> srcwpos | None:
+def prev_frag(
+    lines: list[str],
+    ln: int,
+    col: int,
+    end_ln: int,
+    end_col: int,
+    comment: bool = False,
+    lcont: bool | None = False,
+    *,
+    state: list | None = None,
+) -> srcwpos | None:
     """Get prev fragment of source which may or may not include comments or line continuation backslashes. May be
     restricted to bound or further restricted to not exceed logical line. Assuming start pos not inside str or comment.
     The fragment is not necessarily AST stuff, it can be commas, colons, the 'try' keyword, etc... Fragments can include
@@ -443,8 +453,18 @@ def prev_frag(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     return None
 
 
-def next_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, src: str, first: bool = False, *,
-              comment: bool = False, lcont: bool | None = False) -> tuple[int, int] | None:
+def next_find(
+    lines: list[str],
+    ln: int,
+    col: int,
+    end_ln: int,
+    end_col: int,
+    src: str,
+    first: bool = False,
+    *,
+    comment: bool = False,
+    lcont: bool | None = False,
+) -> tuple[int, int] | None:
     """Find location of a string in the bound walking forward from the start. Returns `None` if string not found.
 
     **WARNING!** Make sure the search span does not include any AST strings as those can cause false positives for
@@ -481,8 +501,19 @@ def next_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, sr
     return None
 
 
-def prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, src: str, first: bool = False, *,
-              comment: bool = False, lcont: bool | None = False, state: list | None = None) -> tuple[int, int] | None:
+def prev_find(
+    lines: list[str],
+    ln: int,
+    col: int,
+    end_ln: int,
+    end_col: int,
+    src: str,
+    first: bool = False,
+    *,
+    comment: bool = False,
+    lcont: bool | None = False,
+    state: list | None = None,
+) -> tuple[int, int] | None:
     """Find location of a string in the bound walking backwards from the end. Returns `None` if string not found. If
     `comment` is `True` then `src` must match the START of the src comment found, not the tail like for non-comment
      strings found in order to be considered successful.
@@ -532,8 +563,18 @@ def prev_find(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, sr
     return None
 
 
-def next_find_re(lines: list[str], ln: int, col: int, end_ln: int, end_col: int, pat: re.Pattern, first: bool = False,
-                 *, comment: bool = False, lcont: bool | None = False) -> srcwpos | None:
+def next_find_re(
+    lines: list[str],
+    ln: int,
+    col: int,
+    end_ln: int,
+    end_col: int,
+    pat: re.Pattern,
+    first: bool = False,
+    *,
+    comment: bool = False,
+    lcont: bool | None = False,
+) -> srcwpos | None:
     """Find location of a regex pattern in the bound walking forward from the start. Returns `None` if string not found.
 
     **Parameters:**
@@ -568,8 +609,9 @@ def next_find_re(lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
     return None
 
 
-def next_delims(lines: list[str], end_ln: int, end_col: int, bound_end_ln: int, bound_end_col: int,
-                delim: str = ')') -> list[tuple[int, int]]:
+def next_delims(
+    lines: list[str], end_ln: int, end_col: int, bound_end_ln: int, bound_end_col: int, delim: str = ')'
+) -> list[tuple[int, int]]:
     """Return a list of the locations of closing parentheses (or any specified delimiter or character) starting at
     (`end_ln`, `end_col`) until the end of the bound. The locations of the delimiters will be AFTER the delimiter.
     The list includes (`end_ln`, `end_col`) as the first element. The list ends if a non `delim` character is
@@ -603,8 +645,9 @@ def next_delims(lines: list[str], end_ln: int, end_col: int, bound_end_ln: int, 
     return delims
 
 
-def prev_delims(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: int, delim: str = '(',
-                ) -> list[tuple[int, int]]:
+def prev_delims(
+    lines: list[str], bound_ln: int, bound_col: int, ln: int, col: int, delim: str = '('
+) -> list[tuple[int, int]]:
     """Return a list of the locations of opening parentheses (or any specified delimiter or character) starting at
     (`ln`, `col`) going backwards until the start of the bound. The list includes (`ln`, `col`) as the first
     element. The list ends if a non `par` character is encountered while searching backward.
@@ -639,9 +682,15 @@ def prev_delims(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: i
     return delims
 
 
-def leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col: int,
-                   comments: Literal['none', 'all', 'block'] | int, space: bool | int,
-                   ) -> tuple[tuple[int, int], tuple[int, int] | None, str | None]:
+def leading_trivia(
+    lines: list[str],
+    bound_ln: int,
+    bound_col: int,
+    ln: int,
+    col: int,
+    comments: Literal['none', 'all', 'block'] | int,
+    space: bool | int,
+) -> tuple[tuple[int, int], tuple[int, int] | None, str | None]:
     """Get locations of leading trivia starting at the given bound up to (`ln`, `col`) where the element starts. Can get
     location of a block of comments (no spaces between), all comments after start of bound (with spaces inside) and any
     leading empty lines. Also returns the indentation of the element line if it starts the line.
@@ -749,9 +798,15 @@ def leading_trivia(lines: list[str], bound_ln: int, bound_col: int, ln: int, col
     return (text_pos, (ln, 0), indent)
 
 
-def trailing_trivia(lines: list[str], bound_end_ln: int, bound_end_col: int, end_ln: int, end_col: int,
-                    comments: Literal['none', 'all', 'block', 'line'] | int, space: bool | int,
-                    ) -> tuple[tuple[int, int], tuple[int, int] | None, bool]:
+def trailing_trivia(
+    lines: list[str],
+    bound_end_ln: int,
+    bound_end_col: int,
+    end_ln: int,
+    end_col: int,
+    comments: Literal['none', 'all', 'block', 'line'] | int,
+    space: bool | int,
+) -> tuple[tuple[int, int], tuple[int, int] | None, bool]:
     """Get locations of trailing trivia starting at the element up to (`end_ln`, `end_col`) where the given bound ends.
     Can get location of a block of comments (no spaces between), all comments after start of bound (with spaces inside),
     a single comment on the ending line and any trailing empty lines. Also returns whether the element ends the line or

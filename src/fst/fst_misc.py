@@ -65,8 +65,16 @@ _re_delim_open_alnums  = re.compile(rf'[{pat_alnum}.][([][{pat_alnum}]')
 _re_delim_close_alnums = re.compile(rf'[{pat_alnum}.][)\]][{pat_alnum}]')
 
 
-def _dump_lines(fst_: fst.FST, linefunc: Callable, ln: int, col: int, end_ln: int, end_col: int, eol: str = '',
-                is_full_stmt: bool = False) -> None:
+def _dump_lines(
+    fst_: fst.FST,
+    linefunc: Callable,
+    ln: int,
+    col: int,
+    end_ln: int,
+    end_col: int,
+    eol: str = '',
+    is_full_stmt: bool = False,
+) -> None:
     width = int(log10(len(fst_.root._lines) - 1 or 1)) + 1
 
     if is_full_stmt:
@@ -104,8 +112,9 @@ def new_empty_tuple(*, from_: fst.FST | None = None) -> fst.FST:
     return fst.FST(ast, ['()'], from_=from_)
 
 
-def new_empty_set_star(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None, as_fst: bool = True,
-                       ) -> fst.FST | AST:
+def new_empty_set_star(
+    lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None, as_fst: bool = True
+) -> fst.FST | AST:
     src = ['{*()}']
     ast = Set(elts=[Starred(value=Tuple(elts=[], ctx=Load(), lineno=lineno, col_offset=col_offset+2,
                                         end_lineno=lineno, end_col_offset=col_offset+4),
@@ -116,8 +125,9 @@ def new_empty_set_star(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST |
     return fst.FST(ast, src, from_=from_) if as_fst else (ast, src)
 
 
-def new_empty_set_call(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None, as_fst: bool = True,
-                       ) -> fst.FST:
+def new_empty_set_call(
+    lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None, as_fst: bool = True
+) -> fst.FST:
     src = ['set()']
     ast = Call(func=Name(id='set', ctx=Load(),
                          lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+3),
@@ -134,15 +144,11 @@ def new_empty_set_curlies(lineno: int = 1, col_offset: int = 0, *, from_: fst.FS
     return fst.FST(ast, ['{}'], from_=from_)
 
 
-def get_trivia_params(trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None = None,
-                      neg: bool = False,
-                      ) -> tuple[Literal['none', 'all', 'block'],
-                                 bool | int,
-                                 bool,
-                                 Literal['none', 'all', 'block', 'line'],
-                                 bool | int,
-                                 bool,
-                                 ]:
+def get_trivia_params(
+    trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None = None, neg: bool = False
+) -> tuple[
+    Literal['none', 'all', 'block'], bool | int, bool, Literal['none', 'all', 'block', 'line'], bool | int, bool
+]:
     """Convert options compact human representation to parameters usable for `_leading/trailing_trivia()`.
 
     This conversion is fairly loose and will accept shorthand '+/-#' for 'none+/-#'.
@@ -749,8 +755,15 @@ def _maybe_add_line_continuations(self: fst.FST, whole: bool = False, del_commen
     return True
 
 
-def _maybe_del_separator(self: fst.FST, ln: int, col: int, force: bool = False,
-                         end_ln: int | None = None, end_col: int | None = None, sep: str = ',') -> bool:
+def _maybe_del_separator(
+    self: fst.FST,
+    ln: int,
+    col: int,
+    force: bool = False,
+    end_ln: int | None = None,
+    end_col: int | None = None,
+    sep: str = ',',
+) -> bool:
     """Maybe delete a separator if present. Can be always deleted or allow function to decide aeshtetically. We
     specifically don't use `pars()` here because is meant to be used where the element is being modified and may not be
     valid for that. This is meant to work with potential closing parentheses present after (`ln`, `col`) and expects
@@ -797,9 +810,16 @@ def _maybe_del_separator(self: fst.FST, ln: int, col: int, force: bool = False,
     return True
 
 
-def _maybe_ins_separator(self: fst.FST, ln: int, col: int, space: bool,
-                         end_ln: int | None = None, end_col: int | None = None, sep: str = ',',
-                         exclude: Literal[True] | fst.FST | None = True) -> srcwpos | None:
+def _maybe_ins_separator(
+    self: fst.FST,
+    ln: int,
+    col: int,
+    space: bool,
+    end_ln: int | None = None,
+    end_col: int | None = None,
+    sep: str = ',',
+    exclude: Literal[True] | fst.FST | None = True,
+) -> srcwpos | None:
     """Maybe insert separator at start of span if not already present as first code in span. Will skip any closing
     parentheses for check and add. We specifically don't use `pars()` here because is meant to be used where the element
     is being modified and may not be valid for that.
@@ -877,8 +897,9 @@ def _maybe_add_singleton_tuple_comma(self: fst.FST, is_par: bool | None = None) 
                                   self.end_col - (self._is_delimited_seq() if is_par is None else is_par))
 
 
-def _maybe_fix_joined_alnum(self: fst.FST, ln: int, col: int, end_ln: int | None = None, end_col: int | None = None,
-                            ) -> None:
+def _maybe_fix_joined_alnum(
+    self: fst.FST, ln: int, col: int, end_ln: int | None = None, end_col: int | None = None
+) -> None:
     """Check if location(s) `lines[ln][col-1 : col+1]` and optionally `lines[end_ln][end_col-1 : end_col+1] is / are
     alphanumeric and if so separate them with a space. This is for operations that may inadvertantly join two distinct
     elements into a single parsable alphanumeric, e.g. `for i inb, 2: pass`."""

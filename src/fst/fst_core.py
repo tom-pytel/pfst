@@ -295,8 +295,9 @@ class _Modifying:
     def __enter__(self) -> Self:
         return self.enter()
 
-    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None,
-                 exc_tb: TracebackType | None) -> bool:
+    def __exit__(
+        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None
+    ) -> bool:
         if exc_type is None:
             self.success()
 
@@ -357,7 +358,7 @@ class _Modifying:
 class _Modifying:
     """Dummy because py < 3.12 doesn't have f-string location information."""
 
-    def __init__(self, fst_: fst.FST, field: str | Literal[False] = False, raw: bool = False):
+    def __init__(self, fst_: fst.FST, field: str | Literal[False] = False, raw: bool = False) -> None:
         self.root = fst_.root
 
         if not raw:
@@ -371,8 +372,9 @@ class _Modifying:
     def __enter__(self) -> Self:
         return self.enter()
 
-    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None,
-                 exc_tb: TracebackType | None) -> bool:
+    def __exit__(
+        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None
+    ) -> bool:
         if exc_type is None:
             self.success()
 
@@ -395,8 +397,9 @@ class _ParamsOffset(NamedTuple):
     dcol_offset: int  # delta bytes
 
 
-def _params_offset(lines: list[str], put_lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
-                   ) -> _ParamsOffset:
+def _params_offset(
+    lines: list[str], put_lines: list[str], ln: int, col: int, end_ln: int, end_col: int
+) -> _ParamsOffset:
     """Calculate location and delta parameters for the `_offset()` function. The `col` parameter is calculated as a byte
     offset so that the `_offset()` function does not have to access the source at all. Explicit `.encode()` is used to
     get byte offsets instead of `bistr` functions so that this function works with lists of just `str`."""
@@ -469,8 +472,9 @@ def _multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln:
 _multiline_ftstr_continuation_lns = _multiline_str_continuation_lns
 
 
-def _continuation_to_uncontinued_lns(lns: Iterable[int], ln: int, col: int, end_ln: int, end_col: int, *,
-                                     include_last: bool = False) -> set[int]:
+def _continuation_to_uncontinued_lns(
+    lns: Iterable[int], ln: int, col: int, end_ln: int, end_col: int, *, include_last: bool = False
+) -> set[int]:
     """Convert `Iterable` of lines which are continued from the immediately previous line into a list of lines which are
     not themselves continued below. If `lns` comes from the `_multiline_?str_*` functions then it does not include line
     continuations outside of the string and those lines will be returned as uncontinued.
@@ -629,8 +633,9 @@ def _set_ctx(self: fst.FST, ctx: type[expr_context]) -> None:
                 stack.append(a.value)
 
 
-def _set_end_pos(self: fst.FST, end_lineno: int, end_col_offset: int,
-                 old_end_lineno: int = -1, old_end_col_offset: int = -1) -> None:
+def _set_end_pos(
+    self: fst.FST, end_lineno: int, end_col_offset: int, old_end_lineno: int = -1, old_end_col_offset: int = -1
+) -> None:
     """Wall up parent chain setting end position. If `old_end_lineno` and `old_end_col_offset` are provided then will
     only set end position as long as it matches this old position. This is used in case a child has trailing trivia
     which should be included in the parent, like a semicolon."""
@@ -738,7 +743,9 @@ def _is_parenthesizable(self: fst.FST) -> bool:
     return isinstance(a, pattern)
 
 
-def _is_atom(self: fst.FST, *, pars: bool = True, always_enclosed: bool = False) -> bool | Literal['unenclosable', 'pars']:
+def _is_atom(
+    self: fst.FST, *, pars: bool = True, always_enclosed: bool = False
+) -> bool | Literal['unenclosable', 'pars']:
     r"""Whether `self` is innately atomic precedence-wise like `Name`, `Constant`, `List`, etc... Or otherwise
     optionally enclosed in parentheses so that it functions as a parsable atom and cannot be split up by precedence
     rules when reparsed.
@@ -839,8 +846,9 @@ def _is_atom(self: fst.FST, *, pars: bool = True, always_enclosed: bool = False)
     return 'pars' if pars and self.pars().n else False
 
 
-def _is_enclosed_or_line(self: fst.FST, *, pars: bool = True, whole: bool = False, out_lns: set | None = None,
-                         ) -> bool | Literal['pars']:
+def _is_enclosed_or_line(
+    self: fst.FST, *, pars: bool = True, whole: bool = False, out_lns: set | None = None
+) -> bool | Literal['pars']:
     r"""Whether `self` lives on a single line or logical line (entirely terminated with line continuations) or is
     otherwise enclosed in some kind of delimiters `()`, `[]`, `{}` so that it can be parsed without error due to
     being spread across multiple lines. If logical line then internal enclosed elements spread over multiple lines
@@ -1179,8 +1187,9 @@ def _is_enclosed_in_parents(self: fst.FST, field: str | None = None) -> bool:
     return False
 
 
-def _loc_maybe_key(self: fst.FST, idx: int, pars: bool = False, body: list[AST] | None = None,
-                   body2: list[AST] | None = None) -> fstloc:
+def _loc_maybe_key(
+    self: fst.FST, idx: int, pars: bool = False, body: list[AST] | None = None, body2: list[AST] | None = None
+) -> fstloc:
     """Return location of node which may be a dictionary key even if it is `**` specified by a `None`. Optionally return
     the location of the grouping parentheses if key actually present. Can also be used to get the location
     (parenthesized or not) from any list of `AST`s which is not a `Dict.keys` if an explicit `body` and / or `body2` is
@@ -1323,8 +1332,9 @@ def _get_indent(self: fst.FST) -> str:
     return indent
 
 
-def _get_indentable_lns(self: fst.FST, skip: int = 0, *, docstr: bool | Literal['strict'] = True,
-                        docstr_strict_exclude: AST | None = None) -> set[int]:
+def _get_indentable_lns(
+    self: fst.FST, skip: int = 0, *, docstr: bool | Literal['strict'] = True, docstr_strict_exclude: AST | None = None
+) -> set[int]:
     r"""Get set of indentable lines within this node.
 
     **Parameters:**
@@ -1448,10 +1458,19 @@ def _touchall(self: fst.FST, parents: bool = True, self_: bool = True, children:
     return self
 
 
-def _offset(self: fst.FST, ln: int, col: int, dln: int, dcol_offset: int,
-            tail: bool | None = False, head: bool | None = True, exclude: fst.FST | None = None, *,
-            offset_excluded: bool = True, self_: bool = True,
-            ) -> Self:
+def _offset(
+    self: fst.FST,
+    ln: int,
+    col: int,
+    dln: int,
+    dcol_offset: int,
+    tail: bool | None = False,
+    head: bool | None = True,
+    exclude: fst.FST | None = None,
+    *,
+    offset_excluded: bool = True,
+    self_: bool = True,
+) -> Self:
     """Offset `AST` node positions in the tree on or after (ln, col) by (delta line, col_offset) (column byte
     offset).
 
@@ -1619,9 +1638,15 @@ def _offset_lns(self: fst.FST, lns: set[int] | dict[int, int], dcol_offset: int 
         self._touchall(True, False, False)
 
 
-def _indent_lns(self: fst.FST, indent: str | None = None, lns: set[int] | None = None, *,
-                skip: int = 1, docstr: bool | Literal['strict'] = True, docstr_strict_exclude: AST | None = None,
-                ) -> None:
+def _indent_lns(
+    self: fst.FST,
+    indent: str | None = None,
+    lns: set[int] | None = None,
+    *,
+    skip: int = 1,
+    docstr: bool | Literal['strict'] = True,
+    docstr_strict_exclude: AST | None = None,
+) -> None:
     """Indent all indentable lines specified in `lns` with `indent` and adjust node locations accordingly.
 
     **WARNING!** This does not offset parent nodes.
@@ -1666,9 +1691,15 @@ def _indent_lns(self: fst.FST, indent: str | None = None, lns: set[int] | None =
     _reparse_docstr_Constants(self, docstr)
 
 
-def _dedent_lns(self: fst.FST, dedent: str | None = None, lns: set[int] | None = None, *,
-                skip: int = 1, docstr: bool | Literal['strict'] = True, docstr_strict_exclude: AST | None = None,
-                ) -> None:
+def _dedent_lns(
+    self: fst.FST,
+    dedent: str | None = None,
+    lns: set[int] | None = None,
+    *,
+    skip: int = 1,
+    docstr: bool | Literal['strict'] = True,
+    docstr_strict_exclude: AST | None = None,
+) -> None:
     """Dedent all indentable lines specified in `lns` by removing `dedent` prefix and adjust node locations
     accordingly. If cannot dedent entire amount, will dedent as much as possible.
 
@@ -1744,9 +1775,16 @@ def _dedent_lns(self: fst.FST, dedent: str | None = None, lns: set[int] | None =
     _reparse_docstr_Constants(self, docstr)
 
 
-def _redent_lns(self: fst.FST, dedent: str | None = None, indent: str | None = None, lns: set[int] | None = None, *,
-                skip: int = 1, docstr: bool | Literal['strict'] = True, docstr_strict_exclude: AST | None = None,
-                ) -> None:
+def _redent_lns(
+    self: fst.FST,
+    dedent: str | None = None,
+    indent: str | None = None,
+    lns: set[int] | None = None,
+    *,
+    skip: int = 1,
+    docstr: bool | Literal['strict'] = True,
+    docstr_strict_exclude: AST | None = None,
+) -> None:
     """Redent all indentable lines specified in `lns` by removing `dedent` prefix then indenting by `indent` for each
     line and adjust node locations accordingly. The operation is carried out intelligently so that a dedent will not
     be truncated if the following indent would move it off the start of the line. It is also done in one pass so is more
@@ -1879,9 +1917,19 @@ def _get_src(self: fst.FST, ln: int, col: int, end_ln: int, end_col: int, as_lin
                 '\n'.join([lines[ln][col:]] + lines[ln + 1 : end_ln] + [lines[end_ln][:end_col]]))
 
 
-def _put_src(self: fst.FST, src: str | list[str] | None, ln: int, col: int, end_ln: int, end_col: int,
-             tail: bool | None | EllipsisType = ..., head: bool | None = True, exclude: fst.FST | None = None, *,
-             offset_excluded: bool = True) -> _ParamsOffset | None:
+def _put_src(
+    self: fst.FST,
+    src: str | list[str] | None,
+    ln: int,
+    col: int,
+    end_ln: int,
+    end_col: int,
+    tail: bool | None | EllipsisType = ...,
+    head: bool | None = True,
+    exclude: fst.FST | None = None,
+    *,
+    offset_excluded: bool = True,
+) -> _ParamsOffset | None:
     """Put or delete new source to currently stored source, optionally offsetting all nodes for the change. Must
     specify `tail` as `True`, `False` or `None` to enable offset of nodes according to source put. `...` ellipsis
     value is used as sentinel for `tail` to mean don't offset. Otherwise `tail` and params which followed are passed
@@ -1969,11 +2017,19 @@ def _sanitize(self: fst.FST) -> Self:
     return self
 
 
-def _make_fst_and_dedent(self: fst.FST, indent: fst.FST | str, ast: AST, copy_loc: fstloc,
-                         prefix: str = '', suffix: str = '',
-                         put_loc: fstloc | None = None, put_lines: list[str] | None = None, *,
-                         docstr: bool | Literal['strict'] = True, docstr_strict_exclude: AST | None = None,
-                         ) -> tuple[fst.FST, _ParamsOffset]:
+def _make_fst_and_dedent(
+    self: fst.FST,
+    indent: fst.FST | str,
+    ast: AST,
+    copy_loc: fstloc,
+    prefix: str = '',
+    suffix: str = '',
+    put_loc: fstloc | None = None,
+    put_lines: list[str] | None = None,
+    *,
+    docstr: bool | Literal['strict'] = True,
+    docstr_strict_exclude: AST | None = None,
+) -> tuple[fst.FST, _ParamsOffset]:
     """Make an `FST` from a prepared `AST` and a location in the source of `self` to copy (or cut) from. The copied
     source is dedented and if a cut is being done (`put_loc` is not None) then `put_lines` is put to the source of
     `self`.

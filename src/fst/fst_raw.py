@@ -28,9 +28,18 @@ _PATH_BODY2HANDLERS = [astfield('body', 0), astfield('body', 0), astfield('handl
 _PATH_BODYCASES     = [astfield('body', 0), astfield('cases', 0)]
 
 
-def _reparse_raw_base(self: fst.FST, new_lines: list[str], ln: int, col: int, end_ln: int, end_col: int,
-                      copy_lines: list[str], path: list[astfield] | str | None, set_ast: bool = True,
-                      mode: Mode | None = None) -> fst.FST:
+def _reparse_raw_base(
+    self: fst.FST,
+    new_lines: list[str],
+    ln: int,
+    col: int,
+    end_ln: int,
+    end_col: int,
+    copy_lines: list[str],
+    path: list[astfield] | str | None,
+    set_ast: bool = True,
+    mode: Mode | None = None,
+) -> fst.FST:
     """Actually do the reparse. If `mode` is `None` then will just try a normal `'exec'` parse and fail if that fails.
     Otherwise it will try this mode first, then all other parse modes as it is assumed to be a non-top level
     statementish thing being reparsed."""

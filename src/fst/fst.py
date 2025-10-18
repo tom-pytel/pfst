@@ -129,7 +129,7 @@ __all__ = [
 
 
 class _ThreadLocal(threading.local):
-    def __init__(self):
+    def __init__(self) -> None:
         self.options = {
             'raw':              False,   # True | False | 'auto'
             'trivia':           True,    # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line'), True means ('block', 'line')
@@ -242,9 +242,12 @@ def _fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True
     return field, body
 
 
-def _swizzle_getput_params(start: int | Literal['end'] | None, stop: int | None | Literal[False], field: str | None,
-                           default_stop: Literal[False] | None,
-                           ) -> tuple[int | Literal['end'] | None,int | None | Literal[False], str | None]:
+def _swizzle_getput_params(
+    start: int | Literal['end'] | None,
+    stop: int | None | Literal[False],
+    field: str | None,
+    default_stop: Literal[False] | None,
+) -> tuple[int | Literal['end'] | None, int | None | Literal[False], str | None]:
     """Allow passing `stop` and `field` for get/put() functions positionally. Will accept `get/put('field')`,
     `get/put(start, 'field')` and `get/put(start, stop, 'field')`."""
 
@@ -258,8 +261,15 @@ def _swizzle_getput_params(start: int | Literal['end'] | None, stop: int | None 
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def parse(source: builtins.str | bytes | AST, filename: str = '<unknown>', mode: str = 'exec', *,
-          type_comments: bool = False, feature_version: tuple[int, int] | None = None, **kwargs) -> AST:
+def parse(
+    source: builtins.str | bytes | AST,
+    filename: str = '<unknown>',
+    mode: str = 'exec',
+    *,
+    type_comments: bool = False,
+    feature_version: tuple[int, int] | None = None,
+    **kwargs,
+) -> AST:
     r"""Executes `ast.parse()` and then adds `FST` nodes to the parsed tree. Drop-in replacement for `ast.parse()`. For
     parameters, see `ast.parse()`. Returned `AST` tree has added `.f` attribute at each node which accesses the parallel
     `FST` tree.
@@ -371,8 +381,14 @@ def unparse(ast_obj: AST) -> str:
     return ast_unparse(ast_obj)
 
 
-def dump(node: AST, annotate_fields: bool = True, include_attributes: bool = False, *,
-         indent: int | str | None = None, show_empty: bool = True) -> str:
+def dump(
+    node: AST,
+    annotate_fields: bool = True,
+    include_attributes: bool = False,
+    *,
+    indent: int | str | None = None,
+    show_empty: bool = True,
+) -> str:
     """This function is a convenience function and only exists to make python version 3.13 and above `ast.dump()` output
     compatible on a default call with previous python versions (important for doctests). All arguments correspond to
     their respective `ast.dump()` arguments and `show_empty` is eaten on python versions below 3.13."""
@@ -655,11 +671,14 @@ class FST:
     def __repr__(self) -> builtins.str:
         return f'<{self.a.__class__.__name__}{self._repr_tail()}>'
 
-    def __new__(cls,
-                ast_or_src: AST | builtins.str | list[builtins.str] | None,
-                mode_or_lines_or_parent: FST | list[builtins.str] | Mode | None = None,
-                pfield: astfield | None = None,
-                /, **kwargs):
+    def __new__(
+        cls,
+        ast_or_src: AST | builtins.str | list[builtins.str] | None,
+        mode_or_lines_or_parent: FST | list[builtins.str] | Mode | None = None,
+        pfield: astfield | None = None,
+        /,
+        **kwargs,
+    ) -> Self:
         """Create a new individual `FST` node or full tree. The main way to use this constructor is as a shortcut for
         `FST.fromsrc()` or `FST.fromast()`, the usage is:
 
@@ -802,8 +821,13 @@ class FST:
         return self
 
     @staticmethod
-    def new(mode: Literal['exec', 'eval', 'single'] = 'exec', *, filename: builtins.str = '<unknown>',
-            type_comments: bool = False, feature_version: tuple[int, int] | None = None) -> FST:
+    def new(
+        mode: Literal['exec', 'eval', 'single'] = 'exec',
+        *,
+        filename: builtins.str = '<unknown>',
+        type_comments: bool = False,
+        feature_version: tuple[int, int] | None = None,
+    ) -> FST:
         """Create a new empty `FST` tree with the top level node dictated by the `mode` parameter.
 
         **Parameters:**
@@ -855,8 +879,14 @@ class FST:
         return FST(ast, [src], parse_params=parse_params)
 
     @staticmethod
-    def fromsrc(src: builtins.str | list[builtins.str], mode: Mode = 'exec', *, filename: builtins.str = '<unknown>',
-                type_comments: bool = False, feature_version: tuple[int, int] | None = None) -> FST:
+    def fromsrc(
+        src: builtins.str | list[builtins.str],
+        mode: Mode = 'exec',
+        *,
+        filename: builtins.str = '<unknown>',
+        type_comments: bool = False,
+        feature_version: tuple[int, int] | None = None,
+    ) -> FST:
         """Parse and create a new `FST` tree from source, preserving the original source and locations.
 
         **Parameters:**
@@ -922,9 +952,15 @@ class FST:
         return FST(ast, lines, parse_params=parse_params)
 
     @staticmethod
-    def fromast(ast: AST, mode: Mode | Literal[False] | None = None, *, filename: builtins.str = '<unknown>',
-                type_comments: bool | None = False, feature_version: tuple[int, int] | None = None, ctx: bool = False,
-                ) -> FST:
+    def fromast(
+        ast: AST,
+        mode: Mode | Literal[False] | None = None,
+        *,
+        filename: builtins.str = '<unknown>',
+        type_comments: bool | None = False,
+        feature_version: tuple[int, int] | None = None,
+        ctx: bool = False,
+    ) -> FST:
         r"""Unparse and reparse an `AST` for new `FST` (the reparse is necessary to make sure locations are correct).
 
         **Parameters:**
@@ -1241,9 +1277,18 @@ class FST:
         finally:
             FST.set_options(**old_options)
 
-    def dump(self, src: Literal['stmt', 'all'] | None = None, full: bool = False, expand: bool = False, *,
-             indent: int = 2, list_indent: int | bool = 0, loc: bool = True, out: Callable | TextIO = print,
-             eol: builtins.str | None = None) -> builtins.str | list[builtins.str] | None:
+    def dump(
+        self,
+        src: Literal['stmt', 'all'] | None = None,
+        full: bool = False,
+        expand: bool = False,
+        *,
+        indent: int = 2,
+        list_indent: int | bool = 0,
+        loc: bool = True,
+        out: Callable | TextIO = print,
+        eol: builtins.str | None = None,
+    ) -> builtins.str | list[builtins.str] | None:
         r"""Dump a representation of the tree to stdout or other `TextIO` or return as a `str` or `list` of lines, or
         call a provided function once with each line of the output.
 
@@ -1373,8 +1418,15 @@ class FST:
 
         return self._dump(st)
 
-    def verify(self, mode: Mode | None = None, reparse: bool = True, *, locs: bool = True, ctx: bool = True,
-               raise_: bool = True) -> Union[Self, None]:
+    def verify(
+        self,
+        mode: Mode | None = None,
+        reparse: bool = True,
+        *,
+        locs: bool = True,
+        ctx: bool = True,
+        raise_: bool = True,
+    ) -> Union[Self, None]:
         """Sanity check. Walk the tree and make sure all `AST`s have corresponding `FST` nodes with valid parent / child
         links, then (optionally) reparse source and make sure parsed tree matches currently stored tree (locations and
         everything). The reparse can only be carried out on root nodes but the link validation can be done on any level.
@@ -1677,8 +1729,15 @@ class FST:
 
         raise ValueError('cannot delete root node')
 
-    def get(self, idx: int | Literal['end'] | None = None, stop: int | None | Literal[False] = False,
-            field: builtins.str | None = None, *, cut: bool = False, **options) -> FST | None | builtins.str | constant:
+    def get(
+        self,
+        idx: int | Literal['end'] | None = None,
+        stop: int | None | Literal[False] = False,
+        field: builtins.str | None = None,
+        *,
+        cut: bool = False,
+        **options,
+    ) -> FST | None | builtins.str | constant:
         r"""Copy or cut an individual child node or a slice of child nodes from `self` if possible. This function can do
         everything that `get_slice()` can.
 
@@ -1768,9 +1827,16 @@ class FST:
 
         return self._get_one(idx, field_, cut, options)
 
-    def put(self, code: Code | builtins.str | constant | None, idx: int | Literal['end'] | None = None,
-            stop: int | None | Literal[False] = False, field: builtins.str | None = None, *, one: bool = True,
-            **options) -> Self | None:
+    def put(
+        self,
+        code: Code | builtins.str | constant | None,
+        idx: int | Literal['end'] | None = None,
+        stop: int | None | Literal[False] = False,
+        field: builtins.str | None = None,
+        *,
+        one: bool = True,
+        **options,
+    ) -> Self | None:
         r"""Put an individual node or a slice of nodes to `self` if possible. This function can do everything that
         `put_slice()` can. The node is passed as an existing top-level `FST`, `AST`, string or list of string lines. If
         passed as an `FST` then it should be considered "consumed" after this function returns and is no logner valid,
@@ -1877,8 +1943,15 @@ class FST:
 
         return self if self.a else self.repath()
 
-    def get_slice(self, start: int | Literal['end'] | None = None, stop: int | None = None,
-                  field: builtins.str | None = None, *, cut: bool = False, **options) -> FST:
+    def get_slice(
+        self,
+        start: int | Literal['end'] | None = None,
+        stop: int | None = None,
+        field: builtins.str | None = None,
+        *,
+        cut: bool = False,
+        **options,
+    ) -> FST:
         r"""Copy or cut a slice of child nodes from `self` if possible.
 
         **Parameters:**
@@ -1934,8 +2007,16 @@ class FST:
 
         return self._get_slice(start, stop, field_, cut, options)
 
-    def put_slice(self, code: Code | None, start: int | Literal['end'] | None = None, stop: int | None = None,
-                  field: builtins.str | None = None, *, one: bool = False, **options) -> Self | None:
+    def put_slice(
+        self,
+        code: Code | None,
+        start: int | Literal['end'] | None = None,
+        stop: int | None = None,
+        field: builtins.str | None = None,
+        *,
+        one: bool = False,
+        **options,
+    ) -> Self | None:
         r"""Put a slice of nodes to `self` if possible.  The node is passed as an existing top-level `FST`, `AST`, string
         or list of string lines. If passed as an `FST` then it should be considered "consumed" after this function
         returns and is no logner valid, even on failure. `AST` is copied.
@@ -2014,8 +2095,9 @@ class FST:
 
         return self._put_slice(code, start, stop, field_, one, options)
 
-    def get_src(self, ln: int, col: int, end_ln: int, end_col: int, as_lines: bool = False,
-                ) -> builtins.str | list[builtins.str]:
+    def get_src(
+        self, ln: int, col: int, end_ln: int, end_col: int, as_lines: bool = False
+    ) -> builtins.str | list[builtins.str]:
         r"""Get source at location, without dedenting or any other modification, returned as a string or individual
         lines. The first and last lines are cropped to start `col` and `end_col`.
 
@@ -2052,8 +2134,15 @@ class FST:
 
         return self._get_src(ln, col, end_ln, end_col, as_lines)
 
-    def put_src(self, code: Code | None, ln: int, col: int, end_ln: int, end_col: int,
-                ast_op: Literal['reparse', 'offset'] | None = 'reparse') -> FST | None:
+    def put_src(
+        self,
+        code: Code | None,
+        ln: int,
+        col: int,
+        end_ln: int,
+        end_col: int,
+        ast_op: Literal['reparse', 'offset'] | None = 'reparse',
+    ) -> FST | None:
         r"""Put source and maybe adjust `AST` tree for source modified. The adjustment may be a reparse of the area
         changed, an offset of nodes (assuming put source was just trivia and wouldn't affect the tree) or nothing at
         all. The `ast_op` options are:
@@ -3322,8 +3411,9 @@ class FST:
 
         return self.last_child(with_loc) if from_child is None else from_child.prev(with_loc)
 
-    def step_fwd(self, with_loc: bool | Literal['all', 'own', 'allown'] = True, *, recurse_self: bool = True,
-                 ) -> FST | None:
+    def step_fwd(
+        self, with_loc: bool | Literal['all', 'own', 'allown'] = True, *, recurse_self: bool = True
+    ) -> FST | None:
         """Step forward in the tree in syntactic order, as if `walk()`ing forward, NOT the inverse of `step_back()`. Will
         walk up parents and down children to get the next node, returning `None` only when we are at the end of the whole
         thing.
@@ -3394,8 +3484,9 @@ class FST:
 
         return fst_
 
-    def step_back(self, with_loc: bool | Literal['all', 'own', 'allown'] = True, *, recurse_self: bool = True,
-                  ) -> FST | None:
+    def step_back(
+        self, with_loc: bool | Literal['all', 'own', 'allown'] = True, *, recurse_self: bool = True
+    ) -> FST | None:
         """Step backward in the tree in syntactic order, as if `walk()`ing backward, NOT the inverse of `step_fwd()`.
         Will walk up parents and down children to get the next node, returning `None` only when we are at the beginning
         of the whole thing.
@@ -3468,8 +3559,15 @@ class FST:
 
         return fst_
 
-    def walk(self, with_loc: bool | Literal['all', 'own'] = False, *, self_: bool = True, recurse: bool = True,
-              scope: bool = False, back: bool = False) -> Generator[FST, bool, None]:
+    def walk(
+        self,
+        with_loc: bool | Literal['all', 'own'] = False,
+        *,
+        self_: bool = True,
+        recurse: bool = True,
+        scope: bool = False,
+        back: bool = False,
+    ) -> Generator[FST, bool, None]:
         r"""Walk `self` and descendants in syntactic order. When walking, you can `send(False)` to the generator to skip
         recursion into the current child. `send(True)` to allow recursion into child if called with `recurse=False` or
         `scope=True` would otherwise disallow it. Can send multiple times, last value sent takes effect.
@@ -4127,8 +4225,9 @@ class FST:
 
         return (root := self.root).child_from_path(root.child_path(self))
 
-    def find_loc_in(self, ln: int, col: int, end_ln: int, end_col: int, allow_exact: bool | Literal['top'] = True,
-                    ) -> FST | None:
+    def find_loc_in(
+        self, ln: int, col: int, end_ln: int, end_col: int, allow_exact: bool | Literal['top'] = True
+    ) -> FST | None:
         r"""Find the lowest level node which entirely contains location (starting search at `self`). The search will
         only find nodes at self or below, no parents.
 

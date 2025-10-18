@@ -137,10 +137,16 @@ __all__ = [
 Code = Union['fst.FST', AST, list[str], str]  ; """Code types accepted for put to `FST`."""
 
 
-def _code_as_op(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any],
-                parse: Callable[[fst.FST, Code], fst.FST],
-                opstr2cls: dict[str, type[AST]], opcls2str: dict[type[AST], str] = OPCLS2STR, *,
-                sanitize: bool = True) -> fst.FST:
+def _code_as_op(
+    code: Code,
+    ast_type: type[AST],
+    parse_params: Mapping[str, Any],
+    parse: Callable[[fst.FST, Code], fst.FST],
+    opstr2cls: dict[str, type[AST]],
+    opcls2str: dict[type[AST], str] = OPCLS2STR,
+    *,
+    sanitize: bool = True,
+) -> fst.FST:
     """Convert `code` to an operation `FST` if possible."""
 
     if isinstance(code, fst.FST):
@@ -187,8 +193,14 @@ def _code_as_op(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any]
         raise ParseError(f'expecting {ast_type.__name__}, got {shortstr(code)!r}') from None
 
 
-def _code_as(code: Code, ast_type: type[AST], parse_params: Mapping[str, Any],
-             parse: Callable[[fst.FST, Code], fst.FST], *, sanitize: bool = True) -> fst.FST:
+def _code_as(
+    code: Code,
+    ast_type: type[AST],
+    parse_params: Mapping[str, Any],
+    parse: Callable[[fst.FST, Code], fst.FST],
+    *,
+    sanitize: bool = True,
+) -> fst.FST:
     if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
@@ -401,8 +413,13 @@ def code_as_match_cases(code: Code, parse_params: Mapping[str, Any] = {}) -> fst
     return fst.FST(parse__match_cases(code, parse_params), lines, parse_params=parse_params)
 
 
-def code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *,
-                 parse: Callable[[Code, dict], fst.FST] = parse_expr, sanitize: bool = True) -> fst.FST:
+def code_as_expr(
+    code: Code,
+    parse_params: Mapping[str, Any] = {},
+    *,
+    parse: Callable[[Code, dict], fst.FST] = parse_expr,
+    sanitize: bool = True,
+) -> fst.FST:
     """Convert `code` to an `expr` or optionally `Slice` `FST` if possible."""
 
     def expecting() -> str:
@@ -639,8 +656,9 @@ def code_as_withitems(code: Code, parse_params: Mapping[str, Any] = {}, *, sanit
     return _code_as(code, _withitems, parse_params, parse__withitems, sanitize=sanitize)
 
 
-def code_as_pattern(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True,
-                    allow_invalid_matchor: bool = False) -> fst.FST:
+def code_as_pattern(
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True, allow_invalid_matchor: bool = False
+) -> fst.FST:
     """Convert `code` to a pattern `FST` if possible."""
 
     fst_ = _code_as(code, pattern, parse_params, parse_pattern, sanitize=sanitize)

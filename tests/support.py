@@ -79,7 +79,7 @@ class BaseCase(NamedTuple):
 
 
 class BaseCases(dict):
-    def __init__(self, fnm, func=None):
+    def __init__(self, fnm, func=None) -> None:
         self.fnm  = fnm
         self.func = func
 
@@ -160,7 +160,7 @@ class BaseCases(dict):
 
 
 class ParseCases(BaseCases):
-    def __init__(self, fnm):
+    def __init__(self, fnm) -> None:
         super().__init__(fnm, None)
 
     def exec(self, case) -> list[str | tuple[str, str]]:  # rest
@@ -182,7 +182,7 @@ class ParseCases(BaseCases):
 
 
 class GetCases(BaseCases):
-    def __init__(self, fnm, func=FST.get):
+    def __init__(self, fnm, func=FST.get) -> None:
         super().__init__(fnm, func)
 
     def exec(self, case) -> list[str | tuple[str, str]]:  # rest
@@ -240,12 +240,12 @@ class GetCases(BaseCases):
 
 
 class GetSliceCases(GetCases):
-    def __init__(self, fnm):
+    def __init__(self, fnm) -> None:
         super().__init__(fnm, FST.get_slice)
 
 
 class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
-    def __init__(self, fnm, func=FST.put):  # func = fst.put or fst.put_slice
+    def __init__(self, fnm, func=FST.put) -> None:  # func = fst.put or fst.put_slice
         super().__init__(fnm, func)
 
     def exec(self, case) -> list[str | tuple[str, str]]:  # rest
@@ -352,7 +352,7 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
 
 
 class PutSliceCases(PutCases):
-    def __init__(self, fnm):
+    def __init__(self, fnm) -> None:
         super().__init__(fnm, FST.put_slice)
 
 

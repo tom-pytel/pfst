@@ -36,8 +36,15 @@ from .common import (
 class SrcEdit:
     """This class controls most source editing behavior."""
 
-    def pre_comments(self, lines: list[bistr], bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
-                     precomms: bool | str | None = None) -> tuple[int, int] | None:
+    def pre_comments(
+        self,
+        lines: list[bistr],
+        bound_ln: int,
+        bound_col: int,
+        bound_end_ln: int,
+        bound_end_col: int,
+        precomms: bool | str | None = None,
+    ) -> tuple[int, int] | None:
         """Return the position of the start of any preceding comments to the element which is assumed to live just past
         (`bound_ln`, `bound_col`). Returns `None` if no preceding comment. If preceding entire line comments exist then
         the returned position column should be 0 (the start of the line) to indicate that it is a full line comment.
@@ -76,8 +83,15 @@ class SrcEdit:
 
         return None if pre_ln is None else (pre_ln, pre_col)
 
-    def post_comments(self, lines: list[bistr], bound_ln: int, bound_col: int, bound_end_ln: int, bound_end_col: int,
-                      postcomms: bool | str | None = None) -> tuple[int, int] | None:
+    def post_comments(
+        self,
+        lines: list[bistr],
+        bound_ln: int,
+        bound_col: int,
+        bound_end_ln: int,
+        bound_end_col: int,
+        postcomms: bool | str | None = None,
+    ) -> tuple[int, int] | None:
         """Return the position of the end of any trailing comments to the element which is assumed to live just before
         (`bound_end_ln`, `bound_end_col`). Returns `None` if no trailing comment. Should return the location at the
         start of the next line if comment present because a comment should never be on the last line, but if a comment
@@ -127,9 +141,20 @@ class SrcEdit:
 
         return (bound_ln, bound_end_col) if bound_ln == bound_end_ln else (bound_ln + 1, 0)
 
-    def get_slice_stmt(self, get_fst: fst.FST, field: str, cut: bool, block_loc: fstloc,  # TODO: clean this up
-                       ffirst: fst.FST, flast: fst.FST, fpre: fst.FST | None, fpost: fst.FST | None, *,
-                       del_else_and_fin: bool = True, ret_all: bool = False, **options,
+    def get_slice_stmt(
+        self,
+        get_fst: fst.FST,
+        field: str,
+        cut: bool,
+        block_loc: fstloc,  # TODO: clean this up
+        ffirst: fst.FST,
+        flast: fst.FST,
+        fpre: fst.FST | None,
+        fpost: fst.FST | None,
+        *,
+        del_else_and_fin: bool = True,
+        ret_all: bool = False,
+        **options,
     ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, del/put_loc, put_lines)
         """Copy or cut from block of statements. If cutting all elements from a deletable field like 'orelse' or
         'finalbody' then the corresponding 'else:' or 'finally:' will also be removed from the source (though not
@@ -399,9 +424,18 @@ class SrcEdit:
 
         return copy_loc, del_loc, put_lines
 
-    def _format_space(self, tgt_fst: fst.FST, put_fst: fst.FST,
-                      block_loc: fstloc, put_loc: fstloc, fpre: fst.FST | None, fpost: fst.FST | None,
-                      del_lines: list[str] | None, is_ins: bool, **options) -> None:
+    def _format_space(
+        self,
+        tgt_fst: fst.FST,
+        put_fst: fst.FST,
+        block_loc: fstloc,
+        put_loc: fstloc,
+        fpre: fst.FST | None,
+        fpost: fst.FST | None,
+        del_lines: list[str] | None,
+        is_ins: bool,
+        **options,
+    ) -> None:
         """Add preceding and trailing newlines as needed. We always insert statements (or blocks of them) as their own
         lines but may also add newlines according to PEP8."""
 
@@ -488,11 +522,21 @@ class SrcEdit:
 
         put_fst._touch()
 
-    def put_slice_stmt(self, tgt_fst: fst.FST, put_fst: fst.FST, field: str,
-                       block_loc: fstloc, opener_indent: str, block_indent: str,
-                       ffirst: fst.FST, flast: fst.FST, fpre: fst.FST | None, fpost: fst.FST | None, *,
-                       docstr_strict_exclude: AST | None = None,
-                       **options,
+    def put_slice_stmt(
+        self,
+        tgt_fst: fst.FST,
+        put_fst: fst.FST,
+        field: str,
+        block_loc: fstloc,
+        opener_indent: str,
+        block_indent: str,
+        ffirst: fst.FST,
+        flast: fst.FST,
+        fpre: fst.FST | None,
+        fpost: fst.FST | None,
+        *,
+        docstr_strict_exclude: AST | None = None,
+        **options,
     ) -> fstloc:  # put_loc
         """Put to block of statements(ish). Calculates put location and modifies `put_fst` as necessary to create proper
         frag. The "ish" in statemnents means this can be used to put `ExceptHandler`s to a 'handlers' field or
@@ -839,8 +883,16 @@ def _normalize_block(self: fst.FST, field: str = 'body', *, indent: str | None =
 
 # ......................................................................................................................
 
-def _get_slice_stmtish_old(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-                           options: Mapping[str, Any], *, one: bool = False) -> fst.FST:
+def _get_slice_stmtish_old(
+    self: fst.FST,
+    start: int | Literal['end'] | None,
+    stop: int | None,
+    field: str,
+    cut: bool,
+    options: Mapping[str, Any],
+    *,
+    one: bool = False,
+) -> fst.FST:
     ast = self.a
     body = getattr(ast, field)
     start, stop = fst_slice._fixup_slice_indices(len(body), start, stop)
@@ -898,8 +950,15 @@ def _get_slice_stmtish_old(self: fst.FST, start: int | Literal['end'] | None, st
     return fst_
 
 
-def _put_slice_stmtish_old(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                           field: str, one: bool, options: Mapping[str, Any]) -> bool:
+def _put_slice_stmtish_old(
+    self: fst.FST,
+    code: Code | None,
+    start: int | Literal['end'] | None,
+    stop: int | None,
+    field: str,
+    one: bool,
+    options: Mapping[str, Any],
+) -> bool:
     ast = self.a
     body = getattr(ast, field)
 
@@ -1193,8 +1252,16 @@ def _maybe_del_trailing_newline(self: fst.FST, old_last_line: str, put_fst_end_n
             root._touchall(True, True, False)
 
 
-def _get_slice_stmtish(self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str, cut: bool,
-                       options: Mapping[str, Any], *, one: bool = False) -> fst.FST:
+def _get_slice_stmtish(
+    self: fst.FST,
+    start: int | Literal['end'] | None,
+    stop: int | None,
+    field: str,
+    cut: bool,
+    options: Mapping[str, Any],
+    *,
+    one: bool = False,
+) -> fst.FST:
     old_last_line = self.root._lines[-1]
     ld_comms, ld_space, ld_neg, tr_comms, tr_space, tr_neg = get_trivia_params(options.get('trivia'), True)
     ld_or_tr_neg = ld_neg or tr_neg
@@ -1222,8 +1289,15 @@ def _get_slice_stmtish(self: fst.FST, start: int | Literal['end'] | None, stop: 
     return fst_
 
 
-def _put_slice_stmtish(self: fst.FST, code: Code | None, start: int | Literal['end'] | None, stop: int | None,
-                       field: str, one: bool, options: Mapping[str, Any]) -> None:
+def _put_slice_stmtish(
+    self: fst.FST,
+    code: Code | None,
+    start: int | Literal['end'] | None,
+    stop: int | None,
+    field: str,
+    one: bool,
+    options: Mapping[str, Any],
+) -> None:
     old_last_line = self.root._lines[-1]
     is_del = code is None
     ld_comms, ld_space, _, tr_comms, tr_space, _ = get_trivia_params(options.get('trivia'), is_del)
