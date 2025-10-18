@@ -7030,7 +7030,7 @@ Module - ROOT 0,0..4,1
 r'''''',
 r'''_Assign_targets - ROOT 0,0..0,0'''),
 
-(10, '', 0, 2, 'targets', {}, ('Assign_targets', r'''
+(10, '', 0, 2, 'targets', {}, ('_Assign_targets', r'''
 a = \
 b = \
 c \
@@ -7055,7 +7055,7 @@ _Assign_targets - ROOT 0,0..2,0
   1] Name 'b' Store - 1,0..1,1
 '''),
 
-(11, '', 1, 2, 'targets', {}, ('Assign_targets', r'''
+(11, '', 1, 2, 'targets', {}, ('_Assign_targets', r'''
 a = \
 b = \
 c \
@@ -7081,7 +7081,7 @@ _Assign_targets - ROOT 0,0..2,0
   0] Name 'b' Store - 1,0..1,1
 '''),
 
-(12, '', 1, 3, 'targets', {}, ('Assign_targets', r'''
+(12, '', 1, 3, 'targets', {}, ('_Assign_targets', r'''
 a = \
 b = \
 c \
@@ -7107,7 +7107,7 @@ _Assign_targets - ROOT 0,0..4,0
   1] Name 'c' Store - 2,0..2,1
 '''),
 
-(13, '', 2, 3, 'targets', {}, ('Assign_targets', r'''
+(13, '', 2, 3, 'targets', {}, ('_Assign_targets', r'''
 a = \
 b = \
 c \
@@ -7133,7 +7133,7 @@ _Assign_targets - ROOT 0,0..3,0
   0] Name 'c' Store - 1,0..1,1
 '''),
 
-(14, '', 3, 3, 'targets', {}, ('Assign_targets', r'''
+(14, '', 3, 3, 'targets', {}, ('_Assign_targets', r'''
 a = \
 b = \
 c \
@@ -12206,7 +12206,7 @@ _type_params - ROOT 0,0..0,10
     .name 'V'
 '''),
 
-(8, '', 1, 2, 'type_params', {'_ver': 12}, ('type_params',
+(8, '', 1, 2, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T, *U, **V'''),
 r'''T, **V''', r'''
 _type_params - ROOT 0,0..0,6
@@ -12223,7 +12223,7 @@ _type_params - ROOT 0,0..0,2
     .name 'U'
 '''),
 
-(9, '', 0, 3, 'type_params', {'_ver': 12}, ('type_params',
+(9, '', 0, 3, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T, *U, **V'''),
 r'''''',
 r'''_type_params - ROOT 0,0..0,0''',

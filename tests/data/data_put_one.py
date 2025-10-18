@@ -12184,7 +12184,7 @@ Assign - ROOT 0,0..4,1
   .value Name 'z' Load - 4,0..4,1
 '''),
 
-(10, '', 1, False, 'targets', {'raw': False}, ('Assign_targets', r'''
+(10, '', 1, False, 'targets', {'raw': False}, ('_Assign_targets', r'''
 a = \
 b = \
 c \
@@ -12207,7 +12207,7 @@ _Assign_targets - ROOT 0,0..4,0
   2] Name 'c' Store - 2,0..2,1
 '''),
 
-(11, '', 1, False, 'targets', {}, ('Assign_targets', r'''
+(11, '', 1, False, 'targets', {}, ('_Assign_targets', r'''
 a = \
 b = \
 c \
@@ -13319,7 +13319,7 @@ r'''type t[T: int, U: (str)] = ...'''), ('type_param',
 r'''V: list[int]'''),
 r'''**IndexError('index out of range')**'''),
 
-(24, '', 0, False, 'type_params', {'_ver': 12}, ('type_params',
+(24, '', 0, False, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T: int, U: (str)'''), (None,
 r'''**DEL**'''),
 r'''U: (str)''', r'''
@@ -13330,7 +13330,7 @@ _type_params - ROOT 0,0..0,8
     .bound Name 'str' Load - 0,4..0,7
 '''),
 
-(25, '', 0, False, 'type_params', {'_ver': 12}, ('type_params',
+(25, '', 0, False, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T: int, U: (str)'''), ('type_param',
 r'''V: list[int]'''),
 r'''V: list[int], U: (str)''', r'''
@@ -13347,7 +13347,7 @@ _type_params - ROOT 0,0..0,22
     .bound Name 'str' Load - 0,18..0,21
 '''),
 
-(26, '', 1, False, 'type_params', {'_ver': 12}, ('type_params',
+(26, '', 1, False, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T: int, U: (str)'''), ('type_param',
 r'''V: list[int]'''),
 r'''T: int, V: list[int]''', r'''
@@ -13364,7 +13364,7 @@ _type_params - ROOT 0,0..0,20
       .ctx Load
 '''),
 
-(27, '', -1, False, 'type_params', {'_ver': 12}, ('type_params',
+(27, '', -1, False, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T: int, U: (str)'''), ('type_param',
 r'''V: list[int]'''),
 r'''T: int, V: list[int]''', r'''
@@ -13381,7 +13381,7 @@ _type_params - ROOT 0,0..0,20
       .ctx Load
 '''),
 
-(28, '', -2, False, 'type_params', {'_ver': 12}, ('type_params',
+(28, '', -2, False, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T: int, U: (str)'''), ('type_param',
 r'''V: list[int]'''),
 r'''V: list[int], U: (str)''', r'''
@@ -13398,7 +13398,7 @@ _type_params - ROOT 0,0..0,22
     .bound Name 'str' Load - 0,18..0,21
 '''),
 
-(29, '', -4, False, 'type_params', {'_ver': 12}, ('type_params',
+(29, '', -4, False, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T: int, U: (str)'''), ('type_param',
 r'''V: list[int]'''),
 r'''**IndexError('index out of range')**'''),

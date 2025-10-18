@@ -57,15 +57,15 @@ from .parsex import (
     unparse,
     parse,
     parse_stmts,
-    parse_ExceptHandlers,
-    parse_match_cases,
+    parse__ExceptHandlers,
+    parse__match_cases,
     parse_expr,
     parse_expr_all,
     parse_expr_arglike,
     parse_expr_slice,
     parse_expr_sliceelt,
     parse_Tuple,
-    parse_Assign_targets,
+    parse__Assign_targets,
     parse_boolop,
     parse_binop,
     parse_augop,
@@ -77,16 +77,16 @@ from .parsex import (
     parse_arg,
     parse_keyword,
     parse_alias,
-    parse_aliases,
+    parse__aliases,
     parse_Import_name,
-    parse_Import_names,
+    parse__Import_names,
     parse_ImportFrom_name,
-    parse_ImportFrom_names,
+    parse__ImportFrom_names,
     parse_withitem,
-    parse_withitems,
+    parse__withitems,
     parse_pattern,
     parse_type_param,
-    parse_type_params,
+    parse__type_params,
     parse__expr_arglikes,
 )
 
@@ -362,7 +362,7 @@ def code_as_ExceptHandlers(code: Code, parse_params: Mapping[str, Any] = {}, *, 
     else:  # str
         lines = code.split('\n')
 
-    return fst.FST(parse_ExceptHandlers(code, parse_params), lines, parse_params=parse_params)
+    return fst.FST(parse__ExceptHandlers(code, parse_params), lines, parse_params=parse_params)
 
 
 def code_as_match_cases(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
@@ -398,7 +398,7 @@ def code_as_match_cases(code: Code, parse_params: Mapping[str, Any] = {}) -> fst
     else:  # str
         lines = code.split('\n')
 
-    return fst.FST(parse_match_cases(code, parse_params), lines, parse_params=parse_params)
+    return fst.FST(parse__match_cases(code, parse_params), lines, parse_params=parse_params)
 
 
 def code_as_expr(code: Code, parse_params: Mapping[str, Any] = {}, *,
@@ -496,7 +496,7 @@ def code_as_Tuple(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize:
 def code_as_Assign_targets(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to an `_Assign_targets` SPECIAL SLICE if possible."""
 
-    return _code_as(code, _Assign_targets, parse_params, parse_Assign_targets, sanitize=sanitize)
+    return _code_as(code, _Assign_targets, parse_params, parse__Assign_targets, sanitize=sanitize)
 
 
 def code_as_boolop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
@@ -568,7 +568,7 @@ def code_as_alias(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize:
 def code_as_aliases(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to an `_aliases` of `alias` SPECIAL SLICE if possible, star or dotted."""
 
-    return _code_as(code, _aliases, parse_params, parse_aliases, sanitize=sanitize)
+    return _code_as(code, _aliases, parse_params, parse__aliases, sanitize=sanitize)
 
 
 def code_as_Import_name(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
@@ -586,7 +586,7 @@ def code_as_Import_name(code: Code, parse_params: Mapping[str, Any] = {}, *, san
 def code_as_Import_names(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to an `_aliases` of `alias` SPECIAL SLICE if possible, dotted as in `alias` for `Import.names`."""
 
-    fst_ = _code_as(code, _aliases, parse_params, parse_Import_names, sanitize=sanitize)
+    fst_ = _code_as(code, _aliases, parse_params, parse__Import_names, sanitize=sanitize)
 
     if fst_ is code:  # validation if was passed in as FST
         if any(a.name == '*' for a in fst_.a.names):
@@ -611,7 +611,7 @@ def code_as_ImportFrom_names(code: Code, parse_params: Mapping[str, Any] = {}, *
     """Convert `code` to an `_aliases` of `alias` SPECIAL SLICE if possible, possibly star as in `alias` for
     `FromImport.names`."""
 
-    fst_ = _code_as(code, _aliases, parse_params, parse_ImportFrom_names, sanitize=sanitize)
+    fst_ = _code_as(code, _aliases, parse_params, parse__ImportFrom_names, sanitize=sanitize)
 
     if fst_ is code:  # validation if was passed in as FST
         for a in (names := fst_.a.names):
@@ -636,7 +636,7 @@ def code_as_withitem(code: Code, parse_params: Mapping[str, Any] = {}, *, saniti
 def code_as_withitems(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a `_withitems` of `withitem` SPECIAL SLICE if possible."""
 
-    return _code_as(code, _withitems, parse_params, parse_withitems, sanitize=sanitize)
+    return _code_as(code, _withitems, parse_params, parse__withitems, sanitize=sanitize)
 
 
 def code_as_pattern(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True,
@@ -665,7 +665,7 @@ def code_as_type_param(code: Code, parse_params: Mapping[str, Any] = {}, *, sani
 def code_as_type_params(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
     """Convert `code` to a `_type_params` of `type_param` SPECIAL SLICE if possible."""
 
-    return _code_as(code, _type_params, parse_params, parse_type_params, sanitize=sanitize)
+    return _code_as(code, _type_params, parse_params, parse__type_params, sanitize=sanitize)
 
 
 def code_as_identifier(code: Code, parse_params: Mapping[str, Any] = {}) -> str:

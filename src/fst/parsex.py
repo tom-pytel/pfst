@@ -1,4 +1,5 @@
-"""Extended AST parse.
+"""Extended `AST` parse. Allows parsing bits and pieces of valid python `AST` trees which are not normally parsable
+individually with `ast.parse()`.
 
 The parse functions in this module are oriented towards parsing all valid elements which they name which may include
 parsing things which are not those elements, common sense is applied liberally though. And just because an element is
@@ -107,16 +108,16 @@ __all__ = [
     'parse_stmt',
     'parse_stmts',
     'parse_ExceptHandler',
-    'parse_ExceptHandlers',
+    'parse__ExceptHandlers',
     'parse_match_case',
-    'parse_match_cases',
+    'parse__match_cases',
     'parse_expr',
     'parse_expr_all',
     'parse_expr_arglike',
     'parse_expr_slice',
     'parse_expr_sliceelt',
     'parse_Tuple',
-    'parse_Assign_targets',
+    'parse__Assign_targets',
     'parse_boolop',
     'parse_operator',
     'parse_binop',
@@ -129,23 +130,23 @@ __all__ = [
     'parse_arg',
     'parse_keyword',
     'parse_alias',
-    'parse_aliases',
+    'parse__aliases',
     'parse_Import_name',
-    'parse_Import_names',
+    'parse__Import_names',
     'parse_ImportFrom_name',
-    'parse_ImportFrom_names',
+    'parse__ImportFrom_names',
     'parse_withitem',
-    'parse_withitems',
+    'parse__withitems',
     'parse_pattern',
     'parse_type_param',
-    'parse_type_params',
+    'parse__type_params',
     'parse__expr_arglikes',
 ]
 
 
 _re_non_lcont_newline  = re.compile(r'(?<!\\)\n')
 _re_trailing_comma     = re.compile(r'(?: [)\s]* (?: (?: \\ | \#[^\n]* ) \n )? )* ,', re.VERBOSE)  # trailing comma search ignoring comments and line continuation backslashes
-_re_first_src          = re.compile(r'^([^\S\n]*)([^\s\\#]+)', re.MULTILINE)  # search for first non-comment non-linecont source code
+_re_first_src          = re.compile(r'^ ([^\S\n]*) ([^\s\\#]+)', re.VERBOSE | re.MULTILINE)  # search for first non-comment non-linecont source code
 _re_parse_all_category = re.compile(r'''
     (?P<stmt>                          (?: assert | break | class | continue | def | del | from | global | import | nonlocal | pass | raise | return | try | while | with ) \b ) |
     (?P<await_lambda_yield>            (?: await | lambda | yield ) \b ) |
@@ -361,16 +362,16 @@ Mode = Literal[
     'stmts',
     'stmt',
     'ExceptHandler',
-    'ExceptHandlers',
+    '_ExceptHandlers',
     'match_case',
-    'match_cases',
+    '_match_cases',
     'expr',
     'expr_all',
     'expr_arglike',
     'expr_slice',
     'expr_sliceelt',
     'Tuple',
-    'Assign_targets',
+    '_Assign_targets',
     'boolop',
     'operator',
     'binop',
@@ -383,16 +384,16 @@ Mode = Literal[
     'arg',
     'keyword',
     'alias',
-    'aliases',
+    '_aliases',
     'Import_name',
-    'Import_names',
+    '_Import_names',
     'ImportFrom_name',
-    'ImportFrom_names',
+    '_ImportFrom_names',
     'withitem',
-    'withitems',
+    '_withitems',
     'pattern',
     'type_param',
-    'type_params',
+    '_type_params',
     '_expr_arglikes',
 ] | type[AST]
 
@@ -411,9 +412,9 @@ Mode = Literal[
 - `'stmts'`: Parse zero or more `stmt`s returned in a `Module`. Same as passing `'exec'` or `Module`.
 - `'stmt'`: Parse a single `stmt` returned as itself. Same as passing `stmt` type.
 - `'ExceptHandler'`: Parse as a single `ExceptHandler` returned as itself. Same as passing `ExceptHandler` type.
-- `'ExceptHandlers'`: Parse zero or more `ExceptHandler`s returned in a `Module`.
+- `'_ExceptHandlers'`: Parse zero or more `ExceptHandler`s returned in a `Module`.
 - `'match_case'`: Parse a single `match_case` returned as itself. Same as passing `match_case` type.
-- `'match_cases'`: Parse zero or more `match_case`s returned in a `Module`.
+- `'_match_cases'`: Parse zero or more `match_case`s returned in a `Module`.
 - `'expr'`: "expression", parse a single `expr` returned as itself. This is differentiated from the following modes by
     the handling of slices and starred expressions. In this mode `a:b` and `*not v` are syntax errors. Same as passing
     `expr` type.
@@ -426,7 +427,7 @@ Mode = Literal[
 - `'expr_sliceelt'`: "slice tuple element expression", same as `'expr'` except that in this mode `a:b` parses to a
     `Slice` and `*not v` parses to a starred expression `*(not v)`. `Tuples` are parsed but cannot contain `Slice`s.
 - `'Tuple'`: Parse to a `Tuple` which may contain anything that a tuple can contain like multiple `Slice`s.
-- `'Assign_targets'`: Parse zero or more `Assign` targets returned in a `_Assign_targets` SPECIAL SLICE, with `=` as
+- `'_Assign_targets'`: Parse zero or more `Assign` targets returned in a `_Assign_targets` SPECIAL SLICE, with `=` as
 separators and an optional trailing `=`.
 - `'boolop'`: Parse to a `boolop` operator.
 - `'operator'`: Parse to an `operator` operator, either normal binary `'*'` or augmented `'*='`.
@@ -443,22 +444,22 @@ separators and an optional trailing `=`.
 - `'keyword'`: Parse as a single `keyword` returned as itself. Same as passing `keyword` type.
 - `'alias'`: Parse as a single `alias` returned as itself. Either starred or dotted versions are accepted. Same
     as passing `alias` type.
-- `'aliases'`: Parse zero or more `alias`es returned in a `_aliases` SPECIAL SLICE. Either starred or dotted versions
+- `'_aliases'`: Parse zero or more `alias`es returned in a `_aliases` SPECIAL SLICE. Either starred or dotted versions
     are accepted. Does not need trailing comma for a single element.
 - `'Import_name'`: Parse as a single `alias` returned as itself, with starred version being a syntax error. This is the
     `alias` used in `Import.names`.
-- `'Import_names'`: Parse zero or more `alias` returned in a `_aliases` SPECIAL SLICE, with starred version being a
+- `'_Import_names'`: Parse zero or more `alias` returned in a `_aliases` SPECIAL SLICE, with starred version being a
     syntax error. Does not need trailing comma for a single element. This is the `alias` used in `Import.names`.
 - `'ImportFrom_name'`: Parse as a single `alias` returned as itself, with dotted version being a syntax error. This is
     the `alias` used in `ImportFrom.names`.
-- `'ImportFrom_names'`: Parse zero or more `alias` returned in a `_aliases` SPECIAL SLICE, with dotted version being a
+- `'_ImportFrom_names'`: Parse zero or more `alias` returned in a `_aliases` SPECIAL SLICE, with dotted version being a
     syntax error. Does not need trailing comma for a single element. This is the `alias` used in `ImportFrom.names`.
 - `'withitem'`: Parse as a single `withitem` returned as itself. Same as passing `withitem` type.
-- `'withitems'`: Parse zero or more `withitem`s returned in a `_withitems` SPECIAL SLICE.
+- `'_withitems'`: Parse zero or more `withitem`s returned in a `_withitems` SPECIAL SLICE.
 - `'pattern'`: Parse as a a single `pattern` returned as itself. Same as passing `pattern` type.
 - `'type_param'`: Parse as a single `type_param` returned as itself, either `TypeVar`, `ParamSpec` or
     `TypeVarTuple`. Same as passing `type_param` type.
-- `'type_params'`: Parse zero or more `type_param`s returned in a `_type_params` SPECIAL SLICE. Does not need trailing
+- `'_type_params'`: Parse zero or more `type_param`s returned in a `_type_params` SPECIAL SLICE. Does not need trailing
     comma for a single element.
 - `type[AST]`: If an `AST` type is passed then will attempt to parse to this type. This can be used to narrow
     the scope of desired return, for example `Constant` will parse as an expression but fail if the expression
@@ -494,12 +495,12 @@ def get_special_parse_mode(ast: AST) -> str | None:
     if isinstance(ast, Module):
         if body := ast.body:
             if isinstance(b0 := body[0], ExceptHandler):
-                return 'ExceptHandlers'
+                return '_ExceptHandlers'
             elif isinstance(b0, match_case):
-                return 'match_cases'
+                return '_match_cases'
 
     elif isinstance(ast, _slice):
-        return ast.__class__.__name__[1:]
+        return ast.__class__.__name__
 
     return None
 
@@ -522,7 +523,7 @@ def parse(src: str, mode: Mode = 'all', parse_params: Mapping[str, Any] = {}) ->
     **Parameters**:
     - `src`: The source to parse.
     - `mode`: Either one of the standard `ast.parse()` modes `exec`, `eval` or `single` to parse to that type of module
-        or one of our specific strings like `'ExceptHandlers'` or an actual `AST` type to parse to. If the mode is
+        or one of our specific strings like `'_ExceptHandlers'` or an actual `AST` type to parse to. If the mode is
         provided and cannot parse to the specified target then an error is raised and no other parse types are tried.
         See `Mode`.
     - `parse_params`: Dictionary of optional parse parameters to pass to `ast.parse()`, can contain `filename`,
@@ -531,7 +532,8 @@ def parse(src: str, mode: Mode = 'all', parse_params: Mapping[str, Any] = {}) ->
 
     if parse := _PARSE_MODE_FUNCS.get(mode):
         ast = parse(src, parse_params)
-        mode_type = _AST_TYPE_BY_NAME_OR_TYPE.get(mode)  # `expr` or expr -> expr
+
+        mode_type = _AST_TYPE_BY_NAME_OR_TYPE.get(mode)  # `expr` or expr -> expr, etc...
 
         if mode_type and not isinstance(ast, mode_type):
             raise ParseError(f'could not parse to {mode_type.__name__}, got {ast.__class__.__name__}')
@@ -560,12 +562,12 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     if groupdict['stmt_or_expr_or_pat_or_witem']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (parse_expr_all, parse_pattern, parse_withitem, parse_Assign_targets))  # parse_expr_all because could be Slice
+                                   (parse_expr_all, parse_pattern, parse_withitem, parse__Assign_targets))  # parse_expr_all because could be Slice
 
     if groupdict['match_type_identifier']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
                                    (parse_expr_all, parse_pattern, parse_arguments, parse_arguments_lambda,
-                                    parse_withitem, parse_arg, _parse_all_type_params, parse_Assign_targets))
+                                    parse_withitem, parse_arg, _parse_all_type_params, parse__Assign_targets))
 
     if groupdict['stmt']:
         return reduce_ast(parse_stmts(src, parse_params), True)
@@ -584,17 +586,17 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         return reduce_ast(parse_stmts(src, parse_params), True)
 
     if groupdict['except']:
-        return reduce_ast(parse_ExceptHandlers(src, parse_params), True)
+        return reduce_ast(parse__ExceptHandlers(src, parse_params), True)
 
     if groupdict['case']:
         try:
-            return reduce_ast(parse_match_cases(src, parse_params), True)
+            return reduce_ast(parse__match_cases(src, parse_params), True)
         except SyntaxError:
             pass
 
         return _parse_all_multiple(src, parse_params, not first.group(1),
                                    (parse_expr_all, parse_pattern, parse_arguments, parse_arguments_lambda,
-                                    parse_withitem, parse_arg, _parse_all_type_params, parse_Assign_targets))
+                                    parse_withitem, parse_arg, _parse_all_type_params, parse__Assign_targets))
 
     if groupdict['at']:
         return reduce_ast(parse_stmts(src, parse_params), True)
@@ -602,7 +604,7 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if groupdict['star']:
         ast = _parse_all_multiple(src, parse_params, not first.group(1),
                                   (parse_expr_all, parse_pattern, parse_arguments, parse_arguments_lambda,
-                                   _parse_all_type_params, parse_operator, parse_Assign_targets))
+                                   _parse_all_type_params, parse_operator, parse__Assign_targets))
 
         if isinstance(ast, Assign) and len(targets := ast.targets) == 1 and isinstance(targets[0], Starred):  # '*T = ...' validly parses to Assign statement but is invalid compile, but valid type_param so reparse as that
             return _parse_all_type_params(src, parse_params)
@@ -702,7 +704,7 @@ def parse_stmt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 def parse_ExceptHandler(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse exactly one `ExceptHandler` and return as itself."""
 
-    mod = parse_ExceptHandlers(src, parse_params)
+    mod = parse__ExceptHandlers(src, parse_params)
 
     if len(body := mod.body) != 1:
         raise ParseError('expecting single ExceptHandler')
@@ -710,7 +712,7 @@ def parse_ExceptHandler(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return body[0]
 
 
-def parse_ExceptHandlers(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse__ExceptHandlers(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse zero or more `ExceptHandler`s and return them in a `Module` `body`."""
 
     try:
@@ -744,7 +746,7 @@ def parse_ExceptHandlers(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 def parse_match_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse exactly one `match_case` and return as itself."""
 
-    mod = parse_match_cases(src, parse_params)
+    mod = parse__match_cases(src, parse_params)
 
     if len(body := mod.body) != 1:
         raise ParseError('expecting single match_case')
@@ -752,7 +754,7 @@ def parse_match_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return body[0]
 
 
-def parse_match_cases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse__match_cases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse zero or more `match_case`s and return them in a `Module` `body`."""
 
     lines = [bistr('match x:'), bistr(' case None: pass')] + [bistr(' ' + l) for l in src.split('\n')]
@@ -957,7 +959,7 @@ def parse_Tuple(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return ast
 
 
-def parse_Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse__Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse zero or more `Assign` targets and return them in a `_Assign_targets` SPECIAL SLICE. Takes `=` as separators
     and accepts an optional trailing `=`."""
 
@@ -1145,16 +1147,16 @@ def parse_alias(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return parse_Import_name(src, parse_params)
 
 
-def parse_aliases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse__aliases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `_aliases` of `alias` SPECIAL SLICE, allowing star or dotted, e.g. "name as alias"."""
 
     if '*' in src:
         try:
-            return parse_ImportFrom_names(src, parse_params)
+            return parse__ImportFrom_names(src, parse_params)
         except SyntaxError:  # '*' could have been in a comment
             pass
 
-    return parse_Import_names(src, parse_params)
+    return parse__Import_names(src, parse_params)
 
 
 def parse_Import_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
@@ -1178,7 +1180,7 @@ def parse_Import_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(names[0], -1)
 
 
-def parse_Import_names(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse__Import_names(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `_aliases` of `alias` SPECIAL SLICE, allowing dotted notation but not star."""
 
     try:
@@ -1222,7 +1224,7 @@ def parse_ImportFrom_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST
     return _offset_linenos(names[0], -1)
 
 
-def parse_ImportFrom_names(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse__ImportFrom_names(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `_aliases` of `alias` SPECIAL SLICE, allowing star but not dotted."""
 
     try:
@@ -1276,7 +1278,7 @@ def parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(items[0], -1)
 
 
-def parse_withitems(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse__withitems(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to zero or more `withitem`s, returned as a `_withitems`."""
 
     items = _ast_parse1(f'with (\n{src}\n): pass', parse_params).items
@@ -1346,7 +1348,7 @@ def parse_type_param(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(ast, -1)
 
 
-def parse_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+def parse__type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse zero or more `type_param`s and return them in a `_type_params` SPECIAL SLICE."""
 
     try:
@@ -1365,7 +1367,7 @@ def parse_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 # ......................................................................................................................
-# internal parse stuff, not meant for user
+# internal parse stuff, not meant for direct user use
 
 def parse__expr_arglikes(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a `Tuple` of zero or more arglike expressions as would be seen as a sequence of `Call.args`. If there
@@ -1404,16 +1406,16 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'stmts':                  parse_stmts,
     'stmt':                   parse_stmt,
     'ExceptHandler':          parse_ExceptHandler,
-    'ExceptHandlers':         parse_ExceptHandlers,
+    '_ExceptHandlers':        parse__ExceptHandlers,
     'match_case':             parse_match_case,
-    'match_cases':            parse_match_cases,
+    '_match_cases':           parse__match_cases,
     'expr':                   parse_expr,
     'expr_all':               parse_expr_all,       # `a:b:c`, `*not c`, `*st`, `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`, `*not c`
     'expr_arglike':           parse_expr_arglike,   # `*a or b`, `*not c`
     'expr_slice':             parse_expr_slice,     # `a:b:c`, `*not c`, `a:b:c, x:y:z`, `*st` -> `*st,` (py 3.11+)
     'expr_sliceelt':          parse_expr_sliceelt,  # `a:b:c`, `*not c`, `*st`
     'Tuple':                  parse_Tuple,          # `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`, `*not a,` (py 3.11+)
-    'Assign_targets':         parse_Assign_targets,
+    '_Assign_targets':        parse__Assign_targets,
     'boolop':                 parse_boolop,
     'operator':               parse_operator,
     'binop':                  parse_binop,
@@ -1426,16 +1428,16 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'arg':                    parse_arg,
     'keyword':                parse_keyword,
     'alias':                  parse_alias,
-    'aliases':                parse_aliases,
+    '_aliases':               parse__aliases,
     'Import_name':            parse_Import_name,
-    'Import_names':           parse_Import_names,
+    '_Import_names':          parse__Import_names,
     'ImportFrom_name':        parse_ImportFrom_name,
-    'ImportFrom_names':       parse_ImportFrom_names,
+    '_ImportFrom_names':      parse__ImportFrom_names,
     'withitem':               parse_withitem,
-    'withitems':              parse_withitems,
+    '_withitems':             parse__withitems,
     'pattern':                parse_pattern,
     'type_param':             parse_type_param,
-    'type_params':            parse_type_params,
+    '_type_params':           parse__type_params,
     mod:                      parse_Module,    # parsing with an AST type doesn't mean it will be parsable by ast module
     Expression:               parse_Expression,
     Interactive:              parse_Interactive,
@@ -1461,10 +1463,10 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     Load:                     lambda src, parse_params = {}: Load(),  # HACKS for verify() and other similar stuff
     Store:                    lambda src, parse_params = {}: Store(),
     Del:                      lambda src, parse_params = {}: Del(),
-    _Assign_targets:          parse_Assign_targets,
-    _aliases:                 parse_aliases,
-    _withitems:               parse_withitems,
-    _type_params:             parse_type_params,
+    _Assign_targets:          parse__Assign_targets,
+    _aliases:                 parse__aliases,
+    _withitems:               parse__withitems,
+    _type_params:             parse__type_params,
     '_expr_arglikes':         parse__expr_arglikes,
 }
 
@@ -1472,18 +1474,19 @@ assert not set(get_args(get_args(Mode)[0])).symmetric_difference(k for k in _PAR
     'Mode string modes do not match _PARSE_MODE_FUNCS table'
 
 for ast_type in FIELDS:  # fill out _PARSE_MODE_FUNCS with all supported AST types and their class names as parse modes
-    if not (ast_name := ast_type.__name__).startswith('_'):
-        _AST_TYPE_BY_NAME_OR_TYPE[ast_type] = _AST_TYPE_BY_NAME_OR_TYPE[ast_name] = ast_type
+    ast_name = ast_type.__name__
 
-        if parse_func := _PARSE_MODE_FUNCS.get(ast_type):
-            if ast_name not in _PARSE_MODE_FUNCS:  # for top level types already in table name is probably in table as well (and may be different in future?)
-                _PARSE_MODE_FUNCS[ast_name] = parse_func
+    _AST_TYPE_BY_NAME_OR_TYPE[ast_type] = _AST_TYPE_BY_NAME_OR_TYPE[ast_name] = ast_type
 
-        else:
-            base = ast_type
+    if parse_func := _PARSE_MODE_FUNCS.get(ast_type):
+        if ast_name not in _PARSE_MODE_FUNCS:  # for top level types already in table name is probably in table as well (and may be different in future?)
+            _PARSE_MODE_FUNCS[ast_name] = parse_func
 
-            while (base := base.__bases__[0]) is not AST:
-                if parse_func := _PARSE_MODE_FUNCS.get(base):
-                    _PARSE_MODE_FUNCS[ast_type] = _PARSE_MODE_FUNCS[ast_name] = parse_func  # base ASTs not in table will not have name in table either
+    else:
+        base = ast_type
 
-                    break
+        while (base := base.__bases__[0]) is not AST:
+            if parse_func := _PARSE_MODE_FUNCS.get(base):
+                _PARSE_MODE_FUNCS[ast_type] = _PARSE_MODE_FUNCS[ast_name] = parse_func  # base ASTs not in table will not have name in table either
+
+                break

@@ -25,7 +25,7 @@ Module - ROOT 0,0..1,1
     .value Name 'j' Load - 1,0..1,1
 '''),
 
-(1, 'parse_ExceptHandlers', 0, 0, 'Module', {}, ('all', r'''
+(1, 'parse__ExceptHandlers', 0, 0, 'Module', {}, ('all', r'''
 except Exception: pass
 except: pass
 '''), r'''
@@ -40,7 +40,7 @@ Module - ROOT 0,0..1,12
     0] Pass - 1,8..1,12
 '''),
 
-(2, 'parse_match_cases', 0, 0, 'Module', {}, ('all', r'''
+(2, 'parse__match_cases', 0, 0, 'Module', {}, ('all', r'''
 case None: pass
 case 1: pass
 '''), r'''
@@ -105,7 +105,7 @@ AnnAssign - ROOT 0,0..0,10
   .simple 1
 '''),
 
-(8, 'parse_ExceptHandlers', 0, 0, 'Module', {}, ('all', r'''
+(8, 'parse__ExceptHandlers', 0, 0, 'Module', {}, ('all', r'''
 except Exception: pass
 except: pass
 '''), r'''
@@ -127,7 +127,7 @@ ExceptHandler - ROOT 0,0..0,12
   0] Pass - 0,8..0,12
 '''),
 
-(10, 'parse_match_cases', 0, 0, 'Module', {}, ('all', r'''
+(10, 'parse__match_cases', 0, 0, 'Module', {}, ('all', r'''
 case None: pass
 case 1: pass
 '''), r'''
@@ -322,13 +322,13 @@ Module - ROOT 0,0..1,1
     .value Name 'j' Load - 1,0..1,1
 '''),
 
-(30, 'parse_ExceptHandlers', 0, 0, 'SyntaxError', {}, ('strict', r'''
+(30, 'parse__ExceptHandlers', 0, 0, 'SyntaxError', {}, ('strict', r'''
 except Exception: pass
 except: pass
 '''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(31, 'parse_match_cases', 0, 0, 'SyntaxError', {}, ('strict', r'''
+(31, 'parse__match_cases', 0, 0, 'SyntaxError', {}, ('strict', r'''
 case None: pass
 case 1: pass
 '''),
@@ -375,7 +375,7 @@ AnnAssign - ROOT 0,0..0,10
   .simple 1
 '''),
 
-(37, 'parse_ExceptHandlers', 0, 0, 'SyntaxError', {}, ('strict', r'''
+(37, 'parse__ExceptHandlers', 0, 0, 'SyntaxError', {}, ('strict', r'''
 except Exception: pass
 except: pass
 '''),
@@ -385,7 +385,7 @@ r'''**SyntaxError('invalid syntax')**'''),
 r'''except: pass'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(39, 'parse_match_cases', 0, 0, 'SyntaxError', {}, ('strict', r'''
+(39, 'parse__match_cases', 0, 0, 'SyntaxError', {}, ('strict', r'''
 case None: pass
 case 1: pass
 '''),
@@ -540,7 +540,7 @@ r'''**ParseError('expecting single stmt')**'''),
 r'''except: pass'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(66, 'parse_ExceptHandlers', 0, 0, 'Module', {}, ('ExceptHandlers', r'''
+(66, 'parse__ExceptHandlers', 0, 0, 'Module', {}, ('_ExceptHandlers', r'''
 except Exception: pass
 except: pass
 '''), r'''
@@ -555,27 +555,27 @@ Module - ROOT 0,0..1,12
     0] Pass - 1,8..1,12
 '''),
 
-(67, 'parse_ExceptHandlers', 0, 0, 'IndentationError', {}, ('ExceptHandlers', r'''
+(67, 'parse__ExceptHandlers', 0, 0, 'IndentationError', {}, ('_ExceptHandlers', r'''
  except Exception: pass
 except: pass
 '''),
 r'''**IndentationError('unexpected indent')**'''),
 
-(68, 'parse_ExceptHandlers', 0, 0, 'ParseError', {}, ('ExceptHandlers', r'''
+(68, 'parse__ExceptHandlers', 0, 0, 'ParseError', {}, ('_ExceptHandlers', r'''
 except Exception: pass
 except: pass
 else: pass
 '''),
 r'''**ParseError("not expecting 'else' block")**'''),
 
-(69, 'parse_ExceptHandlers', 0, 0, 'ParseError', {}, ('ExceptHandlers', r'''
+(69, 'parse__ExceptHandlers', 0, 0, 'ParseError', {}, ('_ExceptHandlers', r'''
 except Exception: pass
 except: pass
 finally: pass
 '''),
 r'''**ParseError("not expecting 'finally' block")**'''),
 
-(70, 'parse_ExceptHandlers', 0, 0, 'SyntaxError', {}, ('ExceptHandlers', r'''
+(70, 'parse__ExceptHandlers', 0, 0, 'SyntaxError', {}, ('_ExceptHandlers', r'''
 i: int = 1
 j
 '''),
@@ -598,7 +598,7 @@ r'''**ParseError('expecting single ExceptHandler')**'''),
 r'''i: int = 1'''),
 r'''**SyntaxError("expected 'except' or 'finally' block")**'''),
 
-(74, 'parse_match_cases', 0, 0, 'Module', {}, ('match_cases', r'''
+(74, 'parse__match_cases', 0, 0, 'Module', {}, ('_match_cases', r'''
 case None: pass
 case 1: pass
 '''), r'''
@@ -615,13 +615,13 @@ Module - ROOT 0,0..1,12
     0] Pass - 1,8..1,12
 '''),
 
-(75, 'parse_match_cases', 0, 0, 'IndentationError', {}, ('match_cases', r'''
+(75, 'parse__match_cases', 0, 0, 'IndentationError', {}, ('_match_cases', r'''
  case None: pass
 case 1: pass
 '''),
 r'''**IndentationError('unexpected indent')**'''),
 
-(76, 'parse_match_cases', 0, 0, 'SyntaxError', {}, ('match_cases',
+(76, 'parse__match_cases', 0, 0, 'SyntaxError', {}, ('_match_cases',
 r'''i: int = 1'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
@@ -643,25 +643,25 @@ r'''**ParseError('expecting single match_case')**'''),
 r'''i: int = 1'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(80, 'parse_Assign_targets', 0, 0, '_Assign_targets', {}, ('Assign_targets',
+(80, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r''''''),
 r'''_Assign_targets - ROOT 0,0..0,0'''),
 
-(81, 'parse_Assign_targets', 0, 0, '_Assign_targets', {}, ('Assign_targets',
+(81, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r'''a'''), r'''
 _Assign_targets - ROOT 0,0..0,1
   .targets[1]
   0] Name 'a' Store - 0,0..0,1
 '''),
 
-(82, 'parse_Assign_targets', 0, 0, '_Assign_targets', {}, ('Assign_targets',
+(82, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r'''a ='''), r'''
 _Assign_targets - ROOT 0,0..0,3
   .targets[1]
   0] Name 'a' Store - 0,0..0,1
 '''),
 
-(83, 'parse_Assign_targets', 0, 0, '_Assign_targets', {}, ('Assign_targets',
+(83, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r'''a = b'''), r'''
 _Assign_targets - ROOT 0,0..0,5
   .targets[2]
@@ -669,7 +669,7 @@ _Assign_targets - ROOT 0,0..0,5
   1] Name 'b' Store - 0,4..0,5
 '''),
 
-(84, 'parse_Assign_targets', 0, 0, '_Assign_targets', {}, ('Assign_targets',
+(84, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r'''a = b ='''), r'''
 _Assign_targets - ROOT 0,0..0,7
   .targets[2]
@@ -677,7 +677,7 @@ _Assign_targets - ROOT 0,0..0,7
   1] Name 'b' Store - 0,4..0,5
 '''),
 
-(85, 'parse_Assign_targets', 0, 0, '_Assign_targets', {}, ('Assign_targets', r'''
+(85, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets', r'''
 \
 a\
  = \
@@ -688,14 +688,14 @@ _Assign_targets - ROOT 0,0..3,0
   0] Name 'a' Store - 1,0..1,1
 '''),
 
-(86, 'parse_Assign_targets', 0, 0, '_Assign_targets', {}, ('Assign_targets',
+(86, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r''' a'''), r'''
 _Assign_targets - ROOT 0,0..0,2
   .targets[1]
   0] Name 'a' Store - 0,1..0,2
 '''),
 
-(87, 'parse_Assign_targets', 0, 0, '_Assign_targets', {}, ('Assign_targets', r'''
+(87, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets', r'''
 
 a
 '''), r'''
@@ -704,30 +704,30 @@ _Assign_targets - ROOT 0,0..1,1
   0] Name 'a' Store - 1,0..1,1
 '''),
 
-(88, 'parse_Assign_targets', 0, 0, 'SyntaxError', {}, ('Assign_targets', r'''
+(88, 'parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets', r'''
 
 
 a
 '''),
 r'''**SyntaxError('invalid Assign targets slice')**'''),
 
-(89, 'parse_Assign_targets', 0, 0, 'SyntaxError', {}, ('Assign_targets', r'''
+(89, 'parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets', r'''
 a
 =
 '''),
 r'''**SyntaxError('invalid Assign targets slice')**'''),
 
-(90, 'parse_Assign_targets', 0, 0, 'SyntaxError', {}, ('Assign_targets',
+(90, 'parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets',
 r'''a =  # tail'''),
 r'''**SyntaxError('invalid Assign targets slice')**'''),
 
-(91, 'parse_Assign_targets', 0, 0, 'SyntaxError', {}, ('Assign_targets', r'''
+(91, 'parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets', r'''
 # head
 a =
 '''),
 r'''**SyntaxError('invalid Assign targets slice')**'''),
 
-(92, 'parse_Assign_targets', 0, 0, '_Assign_targets', {}, ('all',
+(92, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('all',
 r'''a = b ='''), r'''
 _Assign_targets - ROOT 0,0..0,7
   .targets[2]
@@ -1359,11 +1359,11 @@ r'''**ParseError('expecting single name')**'''),
 r'''a as x, a.b as y'''),
 r'''**ParseError('expecting single name')**'''),
 
-(183, 'parse_aliases', 0, 0, '_aliases', {}, ('aliases',
+(183, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r''''''),
 r'''_aliases - ROOT 0,0..0,0'''),
 
-(184, 'parse_aliases', 0, 0, '_aliases', {}, ('aliases',
+(184, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''a'''), r'''
 _aliases - ROOT 0,0..0,1
   .names[1]
@@ -1371,7 +1371,7 @@ _aliases - ROOT 0,0..0,1
     .name 'a'
 '''),
 
-(185, 'parse_aliases', 0, 0, '_aliases', {}, ('aliases',
+(185, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''a.b'''), r'''
 _aliases - ROOT 0,0..0,3
   .names[1]
@@ -1379,7 +1379,7 @@ _aliases - ROOT 0,0..0,3
     .name 'a.b'
 '''),
 
-(186, 'parse_aliases', 0, 0, '_aliases', {}, ('aliases',
+(186, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''*'''), r'''
 _aliases - ROOT 0,0..0,1
   .names[1]
@@ -1387,7 +1387,7 @@ _aliases - ROOT 0,0..0,1
     .name '*'
 '''),
 
-(187, 'parse_aliases', 0, 0, '_aliases', {}, ('aliases',
+(187, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''a, b'''), r'''
 _aliases - ROOT 0,0..0,4
   .names[2]
@@ -1397,7 +1397,7 @@ _aliases - ROOT 0,0..0,4
     .name 'b'
 '''),
 
-(188, 'parse_aliases', 0, 0, '_aliases', {}, ('aliases',
+(188, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''a as c'''), r'''
 _aliases - ROOT 0,0..0,6
   .names[1]
@@ -1406,7 +1406,7 @@ _aliases - ROOT 0,0..0,6
     .asname 'c'
 '''),
 
-(189, 'parse_aliases', 0, 0, '_aliases', {}, ('aliases',
+(189, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''a.b as c'''), r'''
 _aliases - ROOT 0,0..0,8
   .names[1]
@@ -1415,11 +1415,11 @@ _aliases - ROOT 0,0..0,8
     .asname 'c'
 '''),
 
-(190, 'parse_aliases', 0, 0, 'SyntaxError', {}, ('aliases',
+(190, 'parse__aliases', 0, 0, 'SyntaxError', {}, ('_aliases',
 r'''* as c'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(191, 'parse_aliases', 0, 0, '_aliases', {}, ('aliases',
+(191, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''a as x, b as y'''), r'''
 _aliases - ROOT 0,0..0,14
   .names[2]
@@ -1431,7 +1431,7 @@ _aliases - ROOT 0,0..0,14
     .asname 'y'
 '''),
 
-(192, 'parse_aliases', 0, 0, '_aliases', {}, ('aliases',
+(192, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''a as x, a.b as y'''), r'''
 _aliases - ROOT 0,0..0,16
   .names[2]
@@ -1493,11 +1493,11 @@ r'''**ParseError('expecting single name')**'''),
 r'''a as x, a.b as y'''),
 r'''**ParseError('expecting single name')**'''),
 
-(203, 'parse_Import_names', 0, 0, '_aliases', {}, ('Import_names',
+(203, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r''''''),
 r'''_aliases - ROOT 0,0..0,0'''),
 
-(204, 'parse_Import_names', 0, 0, '_aliases', {}, ('Import_names',
+(204, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r'''a'''), r'''
 _aliases - ROOT 0,0..0,1
   .names[1]
@@ -1505,7 +1505,7 @@ _aliases - ROOT 0,0..0,1
     .name 'a'
 '''),
 
-(205, 'parse_Import_names', 0, 0, '_aliases', {}, ('Import_names',
+(205, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r'''a.b'''), r'''
 _aliases - ROOT 0,0..0,3
   .names[1]
@@ -1513,11 +1513,11 @@ _aliases - ROOT 0,0..0,3
     .name 'a.b'
 '''),
 
-(206, 'parse_Import_names', 0, 0, 'SyntaxError', {}, ('Import_names',
+(206, 'parse__Import_names', 0, 0, 'SyntaxError', {}, ('_Import_names',
 r'''*'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(207, 'parse_Import_names', 0, 0, '_aliases', {}, ('Import_names',
+(207, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r'''a, b'''), r'''
 _aliases - ROOT 0,0..0,4
   .names[2]
@@ -1527,7 +1527,7 @@ _aliases - ROOT 0,0..0,4
     .name 'b'
 '''),
 
-(208, 'parse_Import_names', 0, 0, '_aliases', {}, ('Import_names',
+(208, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r'''a as c'''), r'''
 _aliases - ROOT 0,0..0,6
   .names[1]
@@ -1536,7 +1536,7 @@ _aliases - ROOT 0,0..0,6
     .asname 'c'
 '''),
 
-(209, 'parse_Import_names', 0, 0, '_aliases', {}, ('Import_names',
+(209, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r'''a.b as c'''), r'''
 _aliases - ROOT 0,0..0,8
   .names[1]
@@ -1545,11 +1545,11 @@ _aliases - ROOT 0,0..0,8
     .asname 'c'
 '''),
 
-(210, 'parse_Import_names', 0, 0, 'SyntaxError', {}, ('Import_names',
+(210, 'parse__Import_names', 0, 0, 'SyntaxError', {}, ('_Import_names',
 r'''* as c'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(211, 'parse_Import_names', 0, 0, '_aliases', {}, ('Import_names',
+(211, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r'''a as x, b as y'''), r'''
 _aliases - ROOT 0,0..0,14
   .names[2]
@@ -1561,7 +1561,7 @@ _aliases - ROOT 0,0..0,14
     .asname 'y'
 '''),
 
-(212, 'parse_Import_names', 0, 0, '_aliases', {}, ('Import_names',
+(212, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r'''a as x, a.b as y'''), r'''
 _aliases - ROOT 0,0..0,16
   .names[2]
@@ -1620,11 +1620,11 @@ r'''**ParseError('expecting single name')**'''),
 r'''a as x, a.b as y'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(223, 'parse_ImportFrom_names', 0, 0, '_aliases', {}, ('ImportFrom_names',
+(223, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
 r''''''),
 r'''_aliases - ROOT 0,0..0,0'''),
 
-(224, 'parse_ImportFrom_names', 0, 0, '_aliases', {}, ('ImportFrom_names',
+(224, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
 r'''a'''), r'''
 _aliases - ROOT 0,0..0,1
   .names[1]
@@ -1632,11 +1632,11 @@ _aliases - ROOT 0,0..0,1
     .name 'a'
 '''),
 
-(225, 'parse_ImportFrom_names', 0, 0, 'SyntaxError', {}, ('ImportFrom_names',
+(225, 'parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
 r'''a.b'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(226, 'parse_ImportFrom_names', 0, 0, '_aliases', {}, ('ImportFrom_names',
+(226, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
 r'''*'''), r'''
 _aliases - ROOT 0,0..0,1
   .names[1]
@@ -1644,7 +1644,7 @@ _aliases - ROOT 0,0..0,1
     .name '*'
 '''),
 
-(227, 'parse_ImportFrom_names', 0, 0, '_aliases', {}, ('ImportFrom_names',
+(227, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
 r'''a, b'''), r'''
 _aliases - ROOT 0,0..0,4
   .names[2]
@@ -1654,7 +1654,7 @@ _aliases - ROOT 0,0..0,4
     .name 'b'
 '''),
 
-(228, 'parse_ImportFrom_names', 0, 0, '_aliases', {}, ('ImportFrom_names',
+(228, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
 r'''a as c'''), r'''
 _aliases - ROOT 0,0..0,6
   .names[1]
@@ -1663,15 +1663,15 @@ _aliases - ROOT 0,0..0,6
     .asname 'c'
 '''),
 
-(229, 'parse_ImportFrom_names', 0, 0, 'SyntaxError', {}, ('ImportFrom_names',
+(229, 'parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
 r'''a.b as c'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(230, 'parse_ImportFrom_names', 0, 0, 'SyntaxError', {}, ('ImportFrom_names',
+(230, 'parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
 r'''* as c'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(231, 'parse_ImportFrom_names', 0, 0, '_aliases', {}, ('ImportFrom_names',
+(231, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
 r'''a as x, b as y'''), r'''
 _aliases - ROOT 0,0..0,14
   .names[2]
@@ -1683,7 +1683,7 @@ _aliases - ROOT 0,0..0,14
     .asname 'y'
 '''),
 
-(232, 'parse_ImportFrom_names', 0, 0, 'SyntaxError', {}, ('ImportFrom_names',
+(232, 'parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
 r'''a as x, a.b as y'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
@@ -1760,11 +1760,11 @@ r'''**SyntaxError('invalid syntax')**'''),
 r'''(a as b, x as y)'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(245, 'parse_withitems', 0, 0, '_withitems', {}, ('withitems',
+(245, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r''''''),
 r'''_withitems - ROOT 0,0..0,0'''),
 
-(246, 'parse_withitems', 0, 0, '_withitems', {}, ('withitems',
+(246, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''a'''), r'''
 _withitems - ROOT 0,0..0,1
   .items[1]
@@ -1772,7 +1772,7 @@ _withitems - ROOT 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
 '''),
 
-(247, 'parse_withitems', 0, 0, '_withitems', {}, ('withitems',
+(247, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''a, b'''), r'''
 _withitems - ROOT 0,0..0,4
   .items[2]
@@ -1782,7 +1782,7 @@ _withitems - ROOT 0,0..0,4
     .context_expr Name 'b' Load - 0,3..0,4
 '''),
 
-(248, 'parse_withitems', 0, 0, '_withitems', {}, ('withitems',
+(248, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''(a, b)'''), r'''
 _withitems - ROOT 0,0..0,6
   .items[1]
@@ -1794,7 +1794,7 @@ _withitems - ROOT 0,0..0,6
       .ctx Load
 '''),
 
-(249, 'parse_withitems', 0, 0, '_withitems', {}, ('withitems',
+(249, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''()'''), r'''
 _withitems - ROOT 0,0..0,2
   .items[1]
@@ -1803,7 +1803,7 @@ _withitems - ROOT 0,0..0,2
       .ctx Load
 '''),
 
-(250, 'parse_withitems', 0, 0, '_withitems', {}, ('withitems',
+(250, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''a as b'''), r'''
 _withitems - ROOT 0,0..0,6
   .items[1]
@@ -1812,7 +1812,7 @@ _withitems - ROOT 0,0..0,6
     .optional_vars Name 'b' Store - 0,5..0,6
 '''),
 
-(251, 'parse_withitems', 0, 0, '_withitems', {}, ('withitems',
+(251, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''(a) as (b)'''), r'''
 _withitems - ROOT 0,0..0,10
   .items[1]
@@ -1821,7 +1821,7 @@ _withitems - ROOT 0,0..0,10
     .optional_vars Name 'b' Store - 0,8..0,9
 '''),
 
-(252, 'parse_withitems', 0, 0, '_withitems', {}, ('withitems',
+(252, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''a, b as c'''), r'''
 _withitems - ROOT 0,0..0,9
   .items[2]
@@ -1832,7 +1832,7 @@ _withitems - ROOT 0,0..0,9
     .optional_vars Name 'c' Store - 0,8..0,9
 '''),
 
-(253, 'parse_withitems', 0, 0, '_withitems', {}, ('withitems',
+(253, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''a as b, x as y'''), r'''
 _withitems - ROOT 0,0..0,14
   .items[2]
@@ -1844,7 +1844,7 @@ _withitems - ROOT 0,0..0,14
     .optional_vars Name 'y' Store - 0,13..0,14
 '''),
 
-(254, 'parse_withitems', 0, 0, '_withitems', {}, ('withitems',
+(254, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''(a)'''), r'''
 _withitems - ROOT 0,0..0,3
   .items[1]
@@ -1852,11 +1852,11 @@ _withitems - ROOT 0,0..0,3
     .context_expr Name 'a' Load - 0,1..0,2
 '''),
 
-(255, 'parse_withitems', 0, 0, 'SyntaxError', {}, ('withitems',
+(255, 'parse__withitems', 0, 0, 'SyntaxError', {}, ('_withitems',
 r'''(a as b)'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(256, 'parse_withitems', 0, 0, 'SyntaxError', {}, ('withitems',
+(256, 'parse__withitems', 0, 0, 'SyntaxError', {}, ('_withitems',
 r'''(a as b, x as y)'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
@@ -3767,7 +3767,7 @@ arg - ROOT 0,1..0,6
     .ctx Load
 '''),
 
-(507, 'parse_type_params', 0, 0, '_type_params', {'_ver': 12}, ('all',
+(507, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('all',
 r'''*U, **V, **Z'''), r'''
 _type_params - ROOT 0,0..0,12
   .type_params[3]
@@ -3779,7 +3779,7 @@ _type_params - ROOT 0,0..0,12
     .name 'Z'
 '''),
 
-(508, 'parse_type_params', 0, 0, '_type_params', {'_ver': 12}, ('all',
+(508, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('all',
 r'''T: int, *U, **V, **Z'''), r'''
 _type_params - ROOT 0,0..0,20
   .type_params[4]
@@ -3817,11 +3817,11 @@ TypeVarTuple - ROOT 0,0..0,2
 r'''a: int,'''),
 r'''**ParseError('expecting single type_param, has trailing comma')**'''),
 
-(513, 'parse_type_params', 0, 0, '_type_params', {'_ver': 12}, ('type_params',
+(513, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
 r''''''),
 r'''_type_params - ROOT 0,0..0,0'''),
 
-(514, 'parse_type_params', 0, 0, '_type_params', {'_ver': 12}, ('type_params',
+(514, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
 r'''a: int'''), r'''
 _type_params - ROOT 0,0..0,6
   .type_params[1]
@@ -3830,7 +3830,7 @@ _type_params - ROOT 0,0..0,6
     .bound Name 'int' Load - 0,3..0,6
 '''),
 
-(515, 'parse_type_params', 0, 0, '_type_params', {'_ver': 12}, ('type_params',
+(515, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
 r'''a: int,'''), r'''
 _type_params - ROOT 0,0..0,7
   .type_params[1]
@@ -3839,7 +3839,7 @@ _type_params - ROOT 0,0..0,7
     .bound Name 'int' Load - 0,3..0,6
 '''),
 
-(516, 'parse_type_params', 0, 0, '_type_params', {'_ver': 12}, ('type_params',
+(516, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
 r'''a: int, *b, **c'''), r'''
 _type_params - ROOT 0,0..0,15
   .type_params[3]
@@ -3897,7 +3897,7 @@ TypeVar - ROOT 0,1..0,7
   .bound Name 'int' Load - 0,4..0,7
 '''),
 
-(524, 'parse_type_params', 0, 0, '_type_params', {'_ver': 12}, ('type_params',
+(524, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
 r''' a: int, *b, **c  # tail'''), r'''
 _type_params - ROOT 0,0..0,24
   .type_params[3]

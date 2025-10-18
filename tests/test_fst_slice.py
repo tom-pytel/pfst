@@ -1780,7 +1780,7 @@ c  # comment
         if PYGE12:
             # put single type_param as 'one' to tuple_params slice
 
-            self.assertEqual('Z, **V', (f := FST('T, *U, **V', 'type_params').put_slice('Z', 0, 2)).src)
+            self.assertEqual('Z, **V', (f := FST('T, *U, **V', '_type_params').put_slice('Z', 0, 2)).src)
             f.verify()
 
         # putting invalid MatchOr slice
@@ -1815,7 +1815,7 @@ c  # comment
 
         # make sure we can't put '* to Import.names
 
-        self.assertRaises(NodeError, FST('import a, b, c').put, FST('*', 'ImportFrom_names'), 1, 2)
+        self.assertRaises(NodeError, FST('import a, b, c').put, FST('*', '_ImportFrom_names'), 1, 2)
 
         # from import with import in modules
 
@@ -1843,7 +1843,7 @@ c  # comment
         self.assertEqual('with (z), (c): pass', (f := FST('with a, \\\nb, (c): pass')).put_slice('(z)', 0, 2, 'items').src)
         f.verify()
 
-        self.assertEqual('(z), (c)', (f := FST('a, \\\nb, (c)', 'withitems')).put_slice('(z)', 0, 2, 'items').src)
+        self.assertEqual('(z), (c)', (f := FST('a, \\\nb, (c)', '_withitems')).put_slice('(z)', 0, 2, 'items').src)
         f.verify()
 
         if PYGE11:
@@ -2503,19 +2503,19 @@ i ; \\
 
         # special slices
 
-        self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('x, y', 'withitems').a, 0, 1, raw=True).src)
-        self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('x, y', 'aliases').a, 0, 1, raw=True).src)
+        self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('x, y', '_withitems').a, 0, 1, raw=True).src)
+        self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('x, y', '_aliases').a, 0, 1, raw=True).src)
 
-        self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', 'withitems').a, 0, 2, raw=True).src)
-        self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', 'aliases').a, 0, 2, raw=True).src)
+        self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', '_withitems').a, 0, 2, raw=True).src)
+        self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', '_aliases').a, 0, 2, raw=True).src)
 
-        self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', 'withitems').a, 0, 1, raw=True, one=True)
-        self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', 'aliases').a, 0, 1, raw=True, one=True)
+        self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', '_withitems').a, 0, 1, raw=True, one=True)
+        self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', '_aliases').a, 0, 1, raw=True, one=True)
 
         if PYGE12:
-            self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('x, y', 'type_params').a, 0, 1, raw=True).src)
-            self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', 'type_params').a, 0, 2, raw=True).src)
-            self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', 'type_params').a, 0, 1, raw=True, one=True)
+            self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('x, y', '_type_params').a, 0, 1, raw=True).src)
+            self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', '_type_params').a, 0, 2, raw=True).src)
+            self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', '_type_params').a, 0, 1, raw=True, one=True)
 
     def test_put_slice_raw_trailing_comma_fst(self):
         self.assertEqual('[x]', FST('[a]').put_slice(FST('[x]'), 0, 1, raw=True).src)
@@ -2856,22 +2856,22 @@ i ; \\
 
         # special slices
 
-        self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('x, y', 'withitems'), 0, 1, raw=True).src)
-        self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('x, y', 'aliases'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('x, y', '_withitems'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('x, y', '_aliases'), 0, 1, raw=True).src)
 
-        self.assertEqual('(x, y ,)', FST('(a,)').put_slice(FST('x, y ,', 'withitems'), 0, 1, raw=True).src)
+        self.assertEqual('(x, y ,)', FST('(a,)').put_slice(FST('x, y ,', '_withitems'), 0, 1, raw=True).src)
 
-        self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', 'withitems'), 0, 2, raw=True).src)
-        self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', 'aliases'), 0, 2, raw=True).src)
+        self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', '_withitems'), 0, 2, raw=True).src)
+        self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', '_aliases'), 0, 2, raw=True).src)
 
-        self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', 'withitems'), 0, 1, raw=True, one=True)
-        self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', 'aliases'), 0, 1, raw=True, one=True)
+        self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', '_withitems'), 0, 1, raw=True, one=True)
+        self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', '_aliases'), 0, 1, raw=True, one=True)
 
         if PYGE12:
-            self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('x, y', 'type_params'), 0, 1, raw=True).src)
-            self.assertEqual('(x, y ,)', FST('(a,)').put_slice(FST('x, y ,', 'type_params'), 0, 1, raw=True).src)
-            self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', 'type_params'), 0, 2, raw=True).src)
-            self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', 'type_params'), 0, 1, raw=True, one=True)
+            self.assertEqual('(x, y)', FST('(a,)').put_slice(FST('x, y', '_type_params'), 0, 1, raw=True).src)
+            self.assertEqual('(x, y ,)', FST('(a,)').put_slice(FST('x, y ,', '_type_params'), 0, 1, raw=True).src)
+            self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', '_type_params'), 0, 2, raw=True).src)
+            self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', '_type_params'), 0, 1, raw=True, one=True)
 
     def test_slice_set_empty(self):
         # put slice using norm_put=
@@ -3192,7 +3192,7 @@ z''')
         self.assertEqual('a = b = \\\nz', f.src)
         f.verify()
 
-        s = FST('x =\\\ny', 'Assign_targets')
+        s = FST('x =\\\ny', '_Assign_targets')
         s._put_src(' ', 0, 3, 0, 4)
         self.assertEqual('x = \ny', s.src)
         self.assertEqual('a = x = \\\ny = c', (f := FST('a = b = c')).put_slice(s, 1, 2, 'targets').src)
@@ -4523,20 +4523,20 @@ class cls:
         # TODO: with other invalid slices, e.g. Tuple[withitem]
 
         if PYGE12:
-            self.assertRaises(NodeError, FST('a = b').put, FST('T, **U', 'type_params'), 'value')  # expr
-            self.assertRaises(NodeError, FST('a = b').put, FST('T, **U', 'type_params').a, 'value')
+            self.assertRaises(NodeError, FST('a = b').put, FST('T, **U', '_type_params'), 'value')  # expr
+            self.assertRaises(NodeError, FST('a = b').put, FST('T, **U', '_type_params').a, 'value')
 
-            self.assertRaises(NodeError, FST('f(a)').put, FST('T, **U', 'type_params'), 0, 'args')  # expr_arglike
-            self.assertRaises(NodeError, FST('f(a)').put, FST('T, **U', 'type_params').a, 0, 'args')
+            self.assertRaises(NodeError, FST('f(a)').put, FST('T, **U', '_type_params'), 0, 'args')  # expr_arglike
+            self.assertRaises(NodeError, FST('f(a)').put, FST('T, **U', '_type_params').a, 0, 'args')
 
-            self.assertRaises(NodeError, FST('a[b]').put, FST('T, **U', 'type_params'), 'slice')  # expr_slice
-            self.assertRaises(NodeError, FST('a[b]').put, FST('T, **U', 'type_params').a, 'slice')
+            self.assertRaises(NodeError, FST('a[b]').put, FST('T, **U', '_type_params'), 'slice')  # expr_slice
+            self.assertRaises(NodeError, FST('a[b]').put, FST('T, **U', '_type_params').a, 'slice')
 
-            self.assertRaises(NodeError, FST('a[b, c]').slice.put, FST('T, **U', 'type_params'), 0, 'elts')  # expr_sliceelt
-            self.assertRaises(NodeError, FST('a[b, c]').slice.put, FST('T, **U', 'type_params').a, 0, 'elts')
+            self.assertRaises(NodeError, FST('a[b, c]').slice.put, FST('T, **U', '_type_params'), 0, 'elts')  # expr_sliceelt
+            self.assertRaises(NodeError, FST('a[b, c]').slice.put, FST('T, **U', '_type_params').a, 0, 'elts')
 
-            self.assertRaises(NodeError, FST('(b, c)').put, FST('T, **U', 'type_params'), 0, 'elts')  # expr_sliceelt
-            self.assertRaises(NodeError, FST('(b, c)').put, FST('T, **U', 'type_params').a, 0, 'elts')
+            self.assertRaises(NodeError, FST('(b, c)').put, FST('T, **U', '_type_params'), 0, 'elts')  # expr_sliceelt
+            self.assertRaises(NodeError, FST('(b, c)').put, FST('T, **U', '_type_params').a, 0, 'elts')
 
 
 if __name__ == '__main__':

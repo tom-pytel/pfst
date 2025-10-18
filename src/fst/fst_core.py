@@ -1229,8 +1229,8 @@ def _get_parse_mode(self: fst.FST) -> str | type[AST] | None:
     >>> FST('a | b', 'pattern')._get_parse_mode()
     <class 'ast.MatchOr'>
 
-    >>> FST('except ValueError: pass\nexcept: pass', 'ExceptHandlers')._get_parse_mode()
-    'ExceptHandlers'
+    >>> FST('except ValueError: pass\nexcept: pass', '_ExceptHandlers')._get_parse_mode()
+    '_ExceptHandlers'
     ```
     """
 

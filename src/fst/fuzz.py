@@ -1924,11 +1924,11 @@ class SliceExprish(Fuzzy):
             'seq':            self.Bucket('elts', None, 1, 0, True, FST('()')),  # 1 because of Set
             Dict:             self.Bucket(None, None, 0, 0, False, FST('{}')),
             Delete:           self.Bucket('targets', 'elts', 1, 0, True, FST('del a')),
-            Assign:           self.Bucket('targets', None, 1, 0, False, FST('', 'Assign_targets')),
-            With:             (wbucket := self.Bucket('items', None, 1, 0, False, FST('', 'withitems'))),
+            Assign:           self.Bucket('targets', None, 1, 0, False, FST('', '_Assign_targets')),
+            With:             (wbucket := self.Bucket('items', None, 1, 0, False, FST('', '_withitems'))),
             AsyncWith:        wbucket,
-            Import:           self.Bucket('names', None, 1, 0, False, FST('', 'aliases')),
-            ImportFrom:       self.Bucket('names', None, 1, 0, False, FST('', 'aliases')),
+            Import:           self.Bucket('names', None, 1, 0, False, FST('', '_aliases')),
+            ImportFrom:       self.Bucket('names', None, 1, 0, False, FST('', '_aliases')),
             Global:           (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
             Nonlocal:         glbucket,
             'ClassDef_bases': self.Bucket('bases', 'elts', 0, 0, True, FST('class tmp(): pass')),
@@ -1940,7 +1940,7 @@ class SliceExprish(Fuzzy):
 
         if PYGE12:
             buckets.update({
-                'type_params': self.Bucket('type_params', None, 0, 0, False, FST('', 'type_params')),
+                'type_params': self.Bucket('type_params', None, 0, 0, False, FST('', '_type_params')),
             })
 
         exprishs = []  # [('cat', FST), ...]

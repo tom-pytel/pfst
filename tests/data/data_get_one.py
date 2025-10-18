@@ -2612,7 +2612,7 @@ Assign - ROOT 0,0..2,1
 r'''c''',
 r'''Name 'c' Load - ROOT 0,0..0,1'''),
 
-(7, '', 1, False, 'targets', {}, ('Assign_targets', r'''
+(7, '', 1, False, 'targets', {}, ('_Assign_targets', r'''
 a = \
 b = \
 c \
@@ -2632,7 +2632,7 @@ _Assign_targets - ROOT 0,0..3,0
 r'''b''',
 r'''Name 'b' Load - ROOT 0,0..0,1'''),
 
-(8, '', 2, False, 'targets', {}, ('Assign_targets', r'''
+(8, '', 2, False, 'targets', {}, ('_Assign_targets', r'''
 a = \
 b = \
 c \
@@ -2986,7 +2986,7 @@ TypeVar - ROOT 0,0..0,6
 r'''type t[T: int, U: (str)] = ...'''),
 r'''**IndexError('index out of range')**'''),
 
-(20, '', 0, False, 'type_params', {'_ver': 12}, ('type_params',
+(20, '', 0, False, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T: int, U: (str)'''),
 r'''U: (str)''', r'''
 _type_params - ROOT 0,0..0,8
@@ -3001,7 +3001,7 @@ TypeVar - ROOT 0,0..0,6
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-(21, '', 1, False, 'type_params', {'_ver': 12}, ('type_params',
+(21, '', 1, False, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T: int, U: (str)'''),
 r'''T: int''', r'''
 _type_params - ROOT 0,0..0,6
@@ -3016,7 +3016,7 @@ TypeVar - ROOT 0,0..0,8
   .bound Name 'str' Load - 0,4..0,7
 '''),
 
-(22, '', -1, False, 'type_params', {'_ver': 12}, ('type_params',
+(22, '', -1, False, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T: int, U: (str)'''),
 r'''T: int''', r'''
 _type_params - ROOT 0,0..0,6
@@ -3031,7 +3031,7 @@ TypeVar - ROOT 0,0..0,8
   .bound Name 'str' Load - 0,4..0,7
 '''),
 
-(23, '', -2, False, 'type_params', {'_ver': 12}, ('type_params',
+(23, '', -2, False, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T: int, U: (str)'''),
 r'''U: (str)''', r'''
 _type_params - ROOT 0,0..0,8
@@ -3046,7 +3046,7 @@ TypeVar - ROOT 0,0..0,6
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-(24, '', -4, False, 'type_params', {'_ver': 12}, ('type_params',
+(24, '', -4, False, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T: int, U: (str)'''),
 r'''**IndexError('index out of range')**'''),
 ],

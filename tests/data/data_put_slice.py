@@ -16454,7 +16454,7 @@ If - ROOT 0,0..1,11
 'Assign_targets': [  # ................................................................................
 
 (0, 'body[0]', None, None, 'targets', {}, ('exec',
-r'''a = b = c = d'''), ('Assign_targets',
+r'''a = b = c = d'''), ('_Assign_targets',
 r'''x'''),
 r'''x = d''', r'''
 Module - ROOT 0,0..0,5
@@ -16490,7 +16490,7 @@ Module - ROOT 0,0..0,5
 '''),
 
 (3, 'body[0]', 1, 2, 'targets', {}, ('exec',
-r'''a = b = c = d'''), ('Assign_targets', r'''
+r'''a = b = c = d'''), ('_Assign_targets', r'''
 x \
 . \
 y \
@@ -16518,7 +16518,7 @@ Module - ROOT 0,0..4,9
 '''),
 
 (4, 'body[0]', None, None, 'targets', {}, ('exec',
-r'''a = b = c = d'''), ('Assign_targets', r'''
+r'''a = b = c = d'''), ('_Assign_targets', r'''
 x \
 
 '''), r'''
@@ -16534,7 +16534,7 @@ Module - ROOT 0,0..1,2
 '''),
 
 (5, 'body[0]', None, None, 'targets', {}, ('exec',
-r'''a = b = c = d'''), ('Assign_targets', r'''
+r'''a = b = c = d'''), ('_Assign_targets', r'''
 
 x \
 
@@ -16563,8 +16563,8 @@ Assign - ROOT 0,0..0,2
   .value Name 'd' Load - 0,1..0,2
 '''),
 
-(8, '', None, None, 'targets', {}, ('Assign_targets',
-r'''a = b = c ='''), ('Assign_targets',
+(8, '', None, None, 'targets', {}, ('_Assign_targets',
+r'''a = b = c ='''), ('_Assign_targets',
 r'''x'''),
 r'''x =''', r'''
 _Assign_targets - ROOT 0,0..0,3
@@ -16572,7 +16572,7 @@ _Assign_targets - ROOT 0,0..0,3
   0] Name 'x' Store - 0,0..0,1
 '''),
 
-(9, '', None, None, 'targets', {'one': True}, ('Assign_targets',
+(9, '', None, None, 'targets', {'one': True}, ('_Assign_targets',
 r'''a = b = c ='''), (None,
 r'''x'''),
 r'''x =''', r'''
@@ -16581,7 +16581,7 @@ _Assign_targets - ROOT 0,0..0,3
   0] Name 'x' Store - 0,0..0,1
 '''),
 
-(10, '', None, None, 'targets', {}, ('Assign_targets',
+(10, '', None, None, 'targets', {}, ('_Assign_targets',
 r'''a = b = c ='''), (None,
 r'''x ='''),
 r'''x =''', r'''
@@ -16590,8 +16590,8 @@ _Assign_targets - ROOT 0,0..0,3
   0] Name 'x' Store - 0,0..0,1
 '''),
 
-(11, '', 1, 2, 'targets', {}, ('Assign_targets',
-r'''a = b = c ='''), ('Assign_targets', r'''
+(11, '', 1, 2, 'targets', {}, ('_Assign_targets',
+r'''a = b = c ='''), ('_Assign_targets', r'''
 x \
 . \
 y \
@@ -16615,8 +16615,8 @@ _Assign_targets - ROOT 0,0..4,7
   3] Name 'c' Store - 4,4..4,5
 '''),
 
-(12, '', None, None, 'targets', {}, ('Assign_targets',
-r'''a = b = c ='''), ('Assign_targets', r'''
+(12, '', None, None, 'targets', {}, ('_Assign_targets',
+r'''a = b = c ='''), ('_Assign_targets', r'''
 x \
 
 '''), r'''
@@ -16628,8 +16628,8 @@ _Assign_targets - ROOT 0,0..1,0
   0] Name 'x' Store - 0,0..0,1
 '''),
 
-(13, '', None, None, 'targets', {}, ('Assign_targets',
-r'''a = b = c ='''), ('Assign_targets', r'''
+(13, '', None, None, 'targets', {}, ('_Assign_targets',
+r'''a = b = c ='''), ('_Assign_targets', r'''
 
 x \
 
@@ -16815,7 +16815,7 @@ Module - ROOT 0,0..4,6
 if 1:
   with a: pass
   pass
-'''), ('withitems', r'''
+'''), ('_withitems', r'''
 x \
   , \
   y
@@ -16847,7 +16847,7 @@ Module - ROOT 0,0..5,6
 '''),
 
 (9, 'body[0]', 1, 2, 'items', {}, ('exec',
-r'''with a, b, c: pass  # comment'''), ('withitems',
+r'''with a, b, c: pass  # comment'''), ('_withitems',
 r'''x'''),
 r'''with a, x, c: pass  # comment''', r'''
 Module - ROOT 0,0..0,29
@@ -16865,7 +16865,7 @@ Module - ROOT 0,0..0,29
 '''),
 
 (10, 'body[0]', 1, 2, 'items', {}, ('exec',
-r'''with a, b, c: pass  # comment'''), ('withitems',
+r'''with a, b, c: pass  # comment'''), ('_withitems',
 r'''x.y'''),
 r'''with a, x.y, c: pass  # comment''', r'''
 Module - ROOT 0,0..0,31
@@ -16886,7 +16886,7 @@ Module - ROOT 0,0..0,31
 '''),
 
 (11, 'body[0]', None, None, 'items', {}, ('exec',
-r'''with a, b, c: pass  # comment'''), ('withitems', r'''
+r'''with a, b, c: pass  # comment'''), ('_withitems', r'''
 x \
 
 '''), r'''
@@ -16918,7 +16918,7 @@ With - ROOT 0,0..0,11
 '''),
 
 (14, 'body[0]', 1, 1, 'items', {}, ('exec',
-r'''with a: pass'''), ('withitems', r'''
+r'''with a: pass'''), ('_withitems', r'''
 b \
 , \
 c \
@@ -16944,7 +16944,7 @@ Module - ROOT 0,0..3,6
 '''),
 
 (15, 'body[0]', 1, 1, 'items', {}, ('exec',
-r'''with a: pass'''), ('withitems', r'''
+r'''with a: pass'''), ('_withitems', r'''
 \
 b \
 , \
@@ -16975,7 +16975,7 @@ Module - ROOT 0,0..4,6
 if 1:
   with x:
     pass;
-'''), ('withitems',
+'''), ('_withitems',
 r'''y'''), r'''
 if 1:
   with x, y:
@@ -17167,7 +17167,7 @@ Module - ROOT 0,0..4,6
 if 1:
   with (a): pass
   pass
-'''), ('withitems', r'''
+'''), ('_withitems', r'''
 x \
   , \
   y
@@ -17199,7 +17199,7 @@ Module - ROOT 0,0..5,6
 '''),
 
 (9, 'body[0]', 1, 2, 'items', {}, ('exec',
-r'''with (a, b, c): pass  # comment'''), ('withitems',
+r'''with (a, b, c): pass  # comment'''), ('_withitems',
 r'''x'''),
 r'''with (a, x, c): pass  # comment''', r'''
 Module - ROOT 0,0..0,31
@@ -17217,7 +17217,7 @@ Module - ROOT 0,0..0,31
 '''),
 
 (10, 'body[0]', 1, 2, 'items', {}, ('exec',
-r'''with (a, b, c): pass  # comment'''), ('withitems',
+r'''with (a, b, c): pass  # comment'''), ('_withitems',
 r'''x.y'''),
 r'''with (a, x.y, c): pass  # comment''', r'''
 Module - ROOT 0,0..0,33
@@ -17238,7 +17238,7 @@ Module - ROOT 0,0..0,33
 '''),
 
 (11, 'body[0]', None, None, 'items', {}, ('exec',
-r'''with (a, b, c): pass  # comment'''), ('withitems', r'''
+r'''with (a, b, c): pass  # comment'''), ('_withitems', r'''
 x \
 
 '''), r'''
@@ -17270,7 +17270,7 @@ With - ROOT 0,0..0,13
 '''),
 
 (14, 'body[0]', 1, 1, 'items', {}, ('exec',
-r'''with (a): pass'''), ('withitems', r'''
+r'''with (a): pass'''), ('_withitems', r'''
 b \
 , \
 c \
@@ -17296,7 +17296,7 @@ Module - ROOT 0,0..3,6
 '''),
 
 (15, 'body[0]', 1, 1, 'items', {}, ('exec',
-r'''with (a): pass'''), ('withitems', r'''
+r'''with (a): pass'''), ('_withitems', r'''
 \
 b \
 , \
@@ -17327,7 +17327,7 @@ Module - ROOT 0,0..4,6
 if 1:
   with (x):
     pass;
-'''), ('withitems',
+'''), ('_withitems',
 r'''y'''), r'''
 if 1:
   with (x), y:
@@ -17519,7 +17519,7 @@ Module - ROOT 0,0..4,6
 if 1:
   async with a: pass
   pass
-'''), ('withitems', r'''
+'''), ('_withitems', r'''
 x \
   , \
   y
@@ -17551,7 +17551,7 @@ Module - ROOT 0,0..5,6
 '''),
 
 (9, 'body[0]', 1, 2, 'items', {}, ('exec',
-r'''async with a, b, c: pass  # comment'''), ('withitems',
+r'''async with a, b, c: pass  # comment'''), ('_withitems',
 r'''x'''),
 r'''async with a, x, c: pass  # comment''', r'''
 Module - ROOT 0,0..0,35
@@ -17569,7 +17569,7 @@ Module - ROOT 0,0..0,35
 '''),
 
 (10, 'body[0]', 1, 2, 'items', {}, ('exec',
-r'''async with a, b, c: pass  # comment'''), ('withitems',
+r'''async with a, b, c: pass  # comment'''), ('_withitems',
 r'''x.y'''),
 r'''async with a, x.y, c: pass  # comment''', r'''
 Module - ROOT 0,0..0,37
@@ -17590,7 +17590,7 @@ Module - ROOT 0,0..0,37
 '''),
 
 (11, 'body[0]', None, None, 'items', {}, ('exec',
-r'''async with a, b, c: pass  # comment'''), ('withitems', r'''
+r'''async with a, b, c: pass  # comment'''), ('_withitems', r'''
 x \
 
 '''), r'''
@@ -17622,7 +17622,7 @@ AsyncWith - ROOT 0,0..0,17
 '''),
 
 (14, 'body[0]', 1, 1, 'items', {}, ('exec',
-r'''async with a: pass'''), ('withitems', r'''
+r'''async with a: pass'''), ('_withitems', r'''
 b \
 , \
 c \
@@ -17648,7 +17648,7 @@ Module - ROOT 0,0..3,6
 '''),
 
 (15, 'body[0]', 1, 1, 'items', {}, ('exec',
-r'''async with a: pass'''), ('withitems', r'''
+r'''async with a: pass'''), ('_withitems', r'''
 \
 b \
 , \
@@ -17679,7 +17679,7 @@ Module - ROOT 0,0..4,6
 if 1:
   async with x:
     pass;
-'''), ('withitems',
+'''), ('_withitems',
 r'''y'''), r'''
 if 1:
   async with x, y:
@@ -17871,7 +17871,7 @@ Module - ROOT 0,0..4,6
 if 1:
   async with (a): pass
   pass
-'''), ('withitems', r'''
+'''), ('_withitems', r'''
 x \
   , \
   y
@@ -17903,7 +17903,7 @@ Module - ROOT 0,0..5,6
 '''),
 
 (9, 'body[0]', 1, 2, 'items', {}, ('exec',
-r'''async with (a, b, c): pass  # comment'''), ('withitems',
+r'''async with (a, b, c): pass  # comment'''), ('_withitems',
 r'''x'''),
 r'''async with (a, x, c): pass  # comment''', r'''
 Module - ROOT 0,0..0,37
@@ -17921,7 +17921,7 @@ Module - ROOT 0,0..0,37
 '''),
 
 (10, 'body[0]', 1, 2, 'items', {}, ('exec',
-r'''async with (a, b, c): pass  # comment'''), ('withitems',
+r'''async with (a, b, c): pass  # comment'''), ('_withitems',
 r'''x.y'''),
 r'''async with (a, x.y, c): pass  # comment''', r'''
 Module - ROOT 0,0..0,39
@@ -17942,7 +17942,7 @@ Module - ROOT 0,0..0,39
 '''),
 
 (11, 'body[0]', None, None, 'items', {}, ('exec',
-r'''async with (a, b, c): pass  # comment'''), ('withitems', r'''
+r'''async with (a, b, c): pass  # comment'''), ('_withitems', r'''
 x \
 
 '''), r'''
@@ -17974,7 +17974,7 @@ AsyncWith - ROOT 0,0..0,19
 '''),
 
 (14, 'body[0]', 1, 1, 'items', {}, ('exec',
-r'''async with (a): pass'''), ('withitems', r'''
+r'''async with (a): pass'''), ('_withitems', r'''
 b \
 , \
 c \
@@ -18000,7 +18000,7 @@ Module - ROOT 0,0..3,6
 '''),
 
 (15, 'body[0]', 1, 1, 'items', {}, ('exec',
-r'''async with (a): pass'''), ('withitems', r'''
+r'''async with (a): pass'''), ('_withitems', r'''
 \
 b \
 , \
@@ -18031,7 +18031,7 @@ Module - ROOT 0,0..4,6
 if 1:
   async with (x):
     pass;
-'''), ('withitems',
+'''), ('_withitems',
 r'''y'''), r'''
 if 1:
   async with (x), y:
@@ -18207,7 +18207,7 @@ Module - ROOT 0,0..4,6
 if 1:
   import a
   pass
-'''), ('Import_names', r'''
+'''), ('_Import_names', r'''
 x \
   , \
   y
@@ -18237,7 +18237,7 @@ Module - ROOT 0,0..5,6
 '''),
 
 (9, 'body[0]', 1, 2, None, {}, ('exec',
-r'''import a, b, c  # comment'''), ('Import_names',
+r'''import a, b, c  # comment'''), ('_Import_names',
 r'''x'''),
 r'''import a, x, c  # comment''', r'''
 Module - ROOT 0,0..0,25
@@ -18253,7 +18253,7 @@ Module - ROOT 0,0..0,25
 '''),
 
 (10, 'body[0]', 1, 2, None, {}, ('exec',
-r'''import a, b, c  # comment'''), ('Import_names',
+r'''import a, b, c  # comment'''), ('_Import_names',
 r'''x.y'''),
 r'''import a, x.y, c  # comment''', r'''
 Module - ROOT 0,0..0,27
@@ -18269,7 +18269,7 @@ Module - ROOT 0,0..0,27
 '''),
 
 (11, 'body[0]', None, None, None, {}, ('exec',
-r'''import a, b, c  # comment'''), ('Import_names', r'''
+r'''import a, b, c  # comment'''), ('_Import_names', r'''
 x \
 
 '''), r'''
@@ -18296,7 +18296,7 @@ r'''import   # comment''',
 r'''Import - ROOT 0,0..0,7'''),
 
 (14, 'body[0]', 1, 1, None, {}, ('exec',
-r'''import a'''), ('Import_names', r'''
+r'''import a'''), ('_Import_names', r'''
 b \
 , \
 c \
@@ -18320,7 +18320,7 @@ Module - ROOT 0,0..3,0
 '''),
 
 (15, 'body[0]', 1, 1, None, {}, ('exec',
-r'''import a'''), ('Import_names', r'''
+r'''import a'''), ('_Import_names', r'''
 \
 b \
 , \
@@ -18348,7 +18348,7 @@ Module - ROOT 0,0..4,0
 (16, 'body[0]', 1, 1, None, {}, (None, r'''
 if 1:
   import x;
-'''), ('Import_names',
+'''), ('_Import_names',
 r'''y'''), r'''
 if 1:
   import x, y;
@@ -18537,7 +18537,7 @@ Module - ROOT 0,0..4,6
 if 1:
   from mod import a
   pass
-'''), ('Import_names', r'''
+'''), ('_Import_names', r'''
 x \
   , \
   y
@@ -18569,7 +18569,7 @@ Module - ROOT 0,0..5,6
 '''),
 
 (9, 'body[0]', 1, 2, None, {}, ('exec',
-r'''from mod import a, b, c  # comment'''), ('Import_names',
+r'''from mod import a, b, c  # comment'''), ('_Import_names',
 r'''x'''),
 r'''from mod import a, x, c  # comment''', r'''
 Module - ROOT 0,0..0,34
@@ -18587,12 +18587,12 @@ Module - ROOT 0,0..0,34
 '''),
 
 (10, 'body[0]', 1, 2, None, {}, ('exec',
-r'''from mod import a, b, c  # comment'''), ('Import_names',
+r'''from mod import a, b, c  # comment'''), ('_Import_names',
 r'''x.y'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
 (11, 'body[0]', None, None, None, {}, ('exec',
-r'''from mod import a, b, c  # comment'''), ('Import_names', r'''
+r'''from mod import a, b, c  # comment'''), ('_Import_names', r'''
 x \
 
 '''), r'''
@@ -18624,7 +18624,7 @@ ImportFrom - ROOT 0,0..0,16
 '''),
 
 (14, 'body[0]', 1, 1, None, {}, ('exec',
-r'''from mod import a'''), ('Import_names', r'''
+r'''from mod import a'''), ('_Import_names', r'''
 b \
 , \
 c \
@@ -18650,7 +18650,7 @@ Module - ROOT 0,0..3,0
 '''),
 
 (15, 'body[0]', 1, 1, None, {}, ('exec',
-r'''from mod import a'''), ('Import_names', r'''
+r'''from mod import a'''), ('_Import_names', r'''
 \
 b \
 , \
@@ -18680,7 +18680,7 @@ Module - ROOT 0,0..4,0
 (16, 'body[0]', 1, 1, None, {}, (None, r'''
 if 1:
   from mod import x;
-'''), ('Import_names',
+'''), ('_Import_names',
 r'''y'''), r'''
 if 1:
   from mod import x, y;
@@ -18879,7 +18879,7 @@ Module - ROOT 0,0..4,6
 if 1:
   from mod import (a)
   pass
-'''), ('Import_names', r'''
+'''), ('_Import_names', r'''
 x \
   , \
   y
@@ -18911,7 +18911,7 @@ Module - ROOT 0,0..5,6
 '''),
 
 (9, 'body[0]', 1, 2, None, {}, ('exec',
-r'''from mod import (a, b, c)  # comment'''), ('Import_names',
+r'''from mod import (a, b, c)  # comment'''), ('_Import_names',
 r'''x'''),
 r'''from mod import (a, x, c)  # comment''', r'''
 Module - ROOT 0,0..0,36
@@ -18929,12 +18929,12 @@ Module - ROOT 0,0..0,36
 '''),
 
 (10, 'body[0]', 1, 2, None, {}, ('exec',
-r'''from mod import (a, b, c)  # comment'''), ('Import_names',
+r'''from mod import (a, b, c)  # comment'''), ('_Import_names',
 r'''x.y'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
 (11, 'body[0]', None, None, None, {}, ('exec',
-r'''from mod import (a, b, c)  # comment'''), ('Import_names', r'''
+r'''from mod import (a, b, c)  # comment'''), ('_Import_names', r'''
 x \
 
 '''), r'''
@@ -18966,7 +18966,7 @@ ImportFrom - ROOT 0,0..0,18
 '''),
 
 (14, 'body[0]', 1, 1, None, {}, ('exec',
-r'''from mod import (a)'''), ('Import_names', r'''
+r'''from mod import (a)'''), ('_Import_names', r'''
 b \
 , \
 c \
@@ -18993,7 +18993,7 @@ Module - ROOT 0,0..4,1
 '''),
 
 (15, 'body[0]', 1, 1, None, {}, ('exec',
-r'''from mod import (a)'''), ('Import_names', r'''
+r'''from mod import (a)'''), ('_Import_names', r'''
 \
 b \
 , \
@@ -19024,7 +19024,7 @@ Module - ROOT 0,0..5,1
 (16, 'body[0]', 1, 1, None, {}, (None, r'''
 if 1:
   from mod import (x);
-'''), ('Import_names',
+'''), ('_Import_names',
 r'''y'''), r'''
 if 1:
   from mod import (x, y);
@@ -19046,7 +19046,7 @@ If - ROOT 0,0..1,25
 'ImportFrom_names_star': [  # ................................................................................
 
 (0, 'body[0]', 0, 1, None, {}, ('exec',
-r'''from mod import a'''), ('ImportFrom_names',
+r'''from mod import a'''), ('_ImportFrom_names',
 r'''*'''),
 r'''from mod import *''', r'''
 Module - ROOT 0,0..0,17
@@ -19060,17 +19060,17 @@ Module - ROOT 0,0..0,17
 '''),
 
 (1, 'body[0]', 0, 0, None, {}, ('exec',
-r'''from mod import a'''), ('ImportFrom_names',
+r'''from mod import a'''), ('_ImportFrom_names',
 r'''*'''),
 r'''**NodeError("if putting star '*' alias it must overwrite all other aliases")**'''),
 
 (2, 'body[0]', 1, 1, None, {}, ('exec',
-r'''from mod import a'''), ('ImportFrom_names',
+r'''from mod import a'''), ('_ImportFrom_names',
 r'''*'''),
 r'''**NodeError("if putting star '*' alias it must overwrite all other aliases")**'''),
 
 (3, 'body[0]', 0, 1, None, {}, ('exec',
-r'''from mod import *'''), ('ImportFrom_names',
+r'''from mod import *'''), ('_ImportFrom_names',
 r'''a'''),
 r'''from mod import a''', r'''
 Module - ROOT 0,0..0,17
@@ -19084,17 +19084,17 @@ Module - ROOT 0,0..0,17
 '''),
 
 (4, 'body[0]', 0, 0, None, {}, ('exec',
-r'''from mod import *'''), ('ImportFrom_names',
+r'''from mod import *'''), ('_ImportFrom_names',
 r'''a'''),
 r'''**NodeError("if putting over star '*' alias it must be overwritten")**'''),
 
 (5, 'body[0]', 1, 1, None, {}, ('exec',
-r'''from mod import *'''), ('ImportFrom_names',
+r'''from mod import *'''), ('_ImportFrom_names',
 r'''a'''),
 r'''**NodeError("if putting over star '*' alias it must be overwritten")**'''),
 
 (6, 'body[0]', None, None, None, {}, ('exec',
-r'''from mod import *'''), ('ImportFrom_names',
+r'''from mod import *'''), ('_ImportFrom_names',
 r'''*'''),
 r'''from mod import *''', r'''
 Module - ROOT 0,0..0,17
@@ -19108,7 +19108,7 @@ Module - ROOT 0,0..0,17
 '''),
 
 (7, 'body[0]', None, None, None, {}, ('exec',
-r'''from mod import a'''), ('ImportFrom_names', r'''
+r'''from mod import a'''), ('_ImportFrom_names', r'''
 * \
 # blah
 '''), r'''
@@ -19127,7 +19127,7 @@ Module - ROOT 0,0..2,0
 '''),
 
 (8, 'body[0]', None, None, None, {}, ('exec',
-r'''from mod import (a)'''), ('ImportFrom_names', r'''
+r'''from mod import (a)'''), ('_ImportFrom_names', r'''
 * \
 # blah
 '''),
@@ -23253,7 +23253,7 @@ MatchMapping - ROOT 0,0..0,9
 'type_params': [  # ................................................................................
 
 (0, 'body[0]', 0, 3, 'type_params', {'_ver': 13}, ('exec',
-r'''def f[T, *U, **V](): pass'''), ('type_params',
+r'''def f[T, *U, **V](): pass'''), ('_type_params',
 r'''**Z = ()'''),
 r'''def f[**Z = ()](): pass''', r'''
 Module - ROOT 0,0..0,23
@@ -23282,7 +23282,7 @@ Module - ROOT 0,0..0,13
 '''),
 
 (2, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
-r'''def f(): pass'''), ('type_params',
+r'''def f(): pass'''), ('_type_params',
 r'''T, *U, **V'''),
 r'''def f[T, *U, **V](): pass''', r'''
 Module - ROOT 0,0..0,25
@@ -23301,7 +23301,7 @@ Module - ROOT 0,0..0,25
 '''),
 
 (3, 'body[0]', 0, 3, 'type_params', {'_ver': 13}, ('exec',
-r'''async def f[T, *U, **V](): pass'''), ('type_params',
+r'''async def f[T, *U, **V](): pass'''), ('_type_params',
 r'''**Z = ()'''),
 r'''async def f[**Z = ()](): pass''', r'''
 Module - ROOT 0,0..0,29
@@ -23330,7 +23330,7 @@ Module - ROOT 0,0..0,19
 '''),
 
 (5, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
-r'''async def f(): pass'''), ('type_params',
+r'''async def f(): pass'''), ('_type_params',
 r'''T, *U, **V'''),
 r'''async def f[T, *U, **V](): pass''', r'''
 Module - ROOT 0,0..0,31
@@ -23349,7 +23349,7 @@ Module - ROOT 0,0..0,31
 '''),
 
 (6, 'body[0]', 0, 3, 'type_params', {'_ver': 13}, ('exec',
-r'''class cls[T, *U, **V]: pass'''), ('type_params',
+r'''class cls[T, *U, **V]: pass'''), ('_type_params',
 r'''**Z = ()'''),
 r'''class cls[**Z = ()]: pass''', r'''
 Module - ROOT 0,0..0,25
@@ -23378,7 +23378,7 @@ Module - ROOT 0,0..0,15
 '''),
 
 (8, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
-r'''class cls: pass'''), ('type_params',
+r'''class cls: pass'''), ('_type_params',
 r'''T, *U, **V'''),
 r'''class cls[T, *U, **V]: pass''', r'''
 Module - ROOT 0,0..0,27
@@ -23397,7 +23397,7 @@ Module - ROOT 0,0..0,27
 '''),
 
 (9, 'body[0]', 0, 3, 'type_params', {'_ver': 13}, ('exec',
-r'''type t[T, *U, **V] = ...'''), ('type_params',
+r'''type t[T, *U, **V] = ...'''), ('_type_params',
 r'''**Z = ()'''),
 r'''type t[**Z = ()] = ...''', r'''
 Module - ROOT 0,0..0,22
@@ -23424,7 +23424,7 @@ Module - ROOT 0,0..0,12
 '''),
 
 (11, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
-r'''type t = ...'''), ('type_params',
+r'''type t = ...'''), ('_type_params',
 r'''T, *U, **V'''),
 r'''type t[T, *U, **V] = ...''', r'''
 Module - ROOT 0,0..0,24
@@ -23442,7 +23442,7 @@ Module - ROOT 0,0..0,24
 '''),
 
 (12, 'body[0]', 0, 0, 'type_params', {'_ver': 12}, ('exec',
-r'''type t[**V]=...'''), ('type_params',
+r'''type t[**V]=...'''), ('_type_params',
 r'''T'''),
 r'''type t[T, **V]=...''', r'''
 Module - ROOT 0,0..0,18
@@ -23458,7 +23458,7 @@ Module - ROOT 0,0..0,18
 '''),
 
 (13, 'body[0]', 1, 1, 'type_params', {'_ver': 12}, ('exec',
-r'''type t[**V]=...'''), ('type_params',
+r'''type t[**V]=...'''), ('_type_params',
 r'''T'''),
 r'''type t[**V, T]=...''', r'''
 Module - ROOT 0,0..0,18
@@ -23499,8 +23499,8 @@ r'''type t[T, *U, **V] = ...'''), (None,
 r'''T,'''),
 r'''**ParseError('expecting single type_param, has trailing comma')**'''),
 
-(17, '', 0, 3, 'type_params', {'_ver': 13}, ('type_params',
-r'''T, *U, **V'''), ('type_params',
+(17, '', 0, 3, 'type_params', {'_ver': 13}, ('_type_params',
+r'''T, *U, **V'''), ('_type_params',
 r'''**Z = ()'''),
 r'''**Z = ()''', r'''
 _type_params - ROOT 0,0..0,8
@@ -23511,14 +23511,14 @@ _type_params - ROOT 0,0..0,8
       .ctx Load
 '''),
 
-(18, '', 0, 3, 'type_params', {'_ver': 12}, ('type_params',
+(18, '', 0, 3, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T, *U, **V'''), (None,
 r'''**DEL**'''),
 r'''''',
 r'''_type_params - ROOT 0,0..0,0'''),
 
-(19, '', 0, 3, 'type_params', {'_ver': 12}, ('type_params',
-r''''''), ('type_params',
+(19, '', 0, 3, 'type_params', {'_ver': 12}, ('_type_params',
+r''''''), ('_type_params',
 r'''T, *U, **V'''),
 r'''T, *U, **V''', r'''
 _type_params - ROOT 0,0..0,10
