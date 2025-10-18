@@ -129,7 +129,8 @@ Also the location of empty `arguments` for a `FunctionDef` or a `Lambda` are pro
 The only single-element put special case modification which may be applied is if putting to empty `arguments` of a
 `Lambda` function. The location of these in a standard empty `Lambda` is normally right after the `lambda` keyword since
 the `:` normally follows right after. In order to stay consistent with puts to empty `FunctionDef` arguments always
-working, in this case if the source being put does not start with a space then a single space will be prepended.
+working, in this case if the source being put does not start with a space (in any form, `AST`, `FST` or source string)
+then a single space will be prepended.
 
 ```py
 >>> f = FST('lambda: None')
@@ -141,12 +142,12 @@ working, in this case if the source being put does not start with a space then a
 lambda a: None
 ```
 
-Other than this, if you pass `AST` and `FST` nodes to raw mode slice operations, the `AST` is unparsed and the `FST`
-just has its own source code used for the put. The only modification which may happen to this unparsed `AST` or existing
-`FST` source is that if a sequence with delimiters is passed to a slice put then the delimiters are stripped for
-`Tuple`, `List`, `Set`, `Dict`, `MatchSequence` and `MatchMapping`, otherwise the source is used as-is for the put.
+Other than this, if you pass `AST` or `FST` nodes to raw mode slice operations, the `AST` is unparsed and the `FST`
+just has its own source code used for the put. One of the only two modifications which may happen to this unparsed `AST`
+or existing `FST` source is that if a sequence with delimiters is passed to a slice put then the delimiters are stripped
+for `Tuple`, `List`, `Set`, `Dict`, `MatchSequence` and `MatchMapping`, otherwise the source is used as-is for the put.
 
-```
+```py
 >>> f = FST('[1, 2, 3]')
 
 >>> f.put_slice(FST('{x, y}'), 2, None, raw=True)
@@ -154,6 +155,32 @@ just has its own source code used for the put. The only modification which may h
 
 >>> print(f.src)
 [1, 2, x, y]
+```
+
+The other modification that can happen is that locations are selected for the put in order that commas are not
+duplicated and that a resulting singleton `Tuple` or `MatchSequence` always has a trailing comma. If this is not
+possible by selecting copy locations then a comma is inserted where needed.
+
+```py
+>>> f = FST('(a, b)')
+
+>>> f.put_slice(FST('[x]'), 0, 2, raw=True)
+<Tuple ROOT 0,0..0,4>
+
+>>> print(f.src)
+(x,)
+```
+
+These modifications do not apply if putting source as a string directly.
+
+```py
+>>> f = FST('(a, b)')
+
+>>> f.put_slice('[x]', 0, 2, raw=True)
+<List ROOT 0,1..0,4>
+
+>>> print(f.src)
+([x])
 ```
 
 ## `to` parameter
