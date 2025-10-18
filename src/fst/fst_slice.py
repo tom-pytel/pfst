@@ -65,10 +65,10 @@ from .asttypes import (
     TypeAlias,
     TemplateStr,
     expr_context,
-    _slice_Assign_targets,
-    _slice_aliases,
-    _slice_withitems,
-    _slice_type_params,
+    _Assign_targets,
+    _aliases,
+    _withitems,
+    _type_params,
 )
 
 from .astutil import (
@@ -154,41 +154,41 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
 # *   S ,          (Call, 'args'):                         # expr*            -> Tuple[expr_arglike]        _parse_expr_arglikes  - keywords and Starred args can mix
 #                                                                             .
 # *   S ,          (Delete, 'targets'):                    # expr*            -> Tuple[target]              _parse_expr / restrict del_targets
-# * ! N =          (Assign, 'targets'):                    # expr*            -> _slice_Assign_targets      _parse_Assign_targets
+# * ! N =          (Assign, 'targets'):                    # expr*            -> _Assign_targets            _parse_Assign_targets
 #                                                                             .
 #                                                                             .
 # *   S ,          (Global, 'names'):                      # identifier*,     -> Tuple[Name]                _parse_expr / restrict Names   - no trailing commas, unparenthesized
 # *   S ,          (Nonlocal, 'names'):                    # identifier*,     -> Tuple[Name]                _parse_expr / restrict Names   - no trailing commas, unparenthesized
 #                                                                             .
 #                                                                             .
-#   ! S ,          (ClassDef, 'keywords'):                 # keyword*         -> _slice_keywords            _parse_keywords  - keywords and Starred bases can mix
-#   ! S ,          (Call, 'keywords'):                     # keyword*         -> _slice_keywords            _parse_keywords  - keywords and Starred args can mix
+#   ! S ,          (ClassDef, 'keywords'):                 # keyword*         -> _keywords                  _parse_keywords  - keywords and Starred bases can mix
+#   ! S ,          (Call, 'keywords'):                     # keyword*         -> _keywords                  _parse_keywords  - keywords and Starred args can mix
 #                                                                             .
-# * ! S ,          (FunctionDef, 'type_params'):           # type_param*      -> _slice_type_params         _parse_type_params
-# * ! S ,          (AsyncFunctionDef, 'type_params'):      # type_param*      -> _slice_type_params         _parse_type_params
-# * ! S ,          (ClassDef, 'type_params'):              # type_param*      -> _slice_type_params         _parse_type_params
-# * ! S ,          (TypeAlias, 'type_params'):             # type_param*      -> _slice_type_params         _parse_type_params
+# * ! S ,          (FunctionDef, 'type_params'):           # type_param*      -> _type_params               _parse_type_params
+# * ! S ,          (AsyncFunctionDef, 'type_params'):      # type_param*      -> _type_params               _parse_type_params
+# * ! S ,          (ClassDef, 'type_params'):              # type_param*      -> _type_params               _parse_type_params
+# * ! S ,          (TypeAlias, 'type_params'):             # type_param*      -> _type_params               _parse_type_params
 #                                                                             .
-# * ! S ,          (With, 'items'):                        # withitem*        -> _slice_withitems           _parse_withitems               - no trailing commas
-# * ! S ,          (AsyncWith, 'items'):                   # withitem*        -> _slice_withitems           _parse_withitems               - no trailing commas
+# * ! S ,          (With, 'items'):                        # withitem*        -> _withitems                 _parse_withitems               - no trailing commas
+# * ! S ,          (AsyncWith, 'items'):                   # withitem*        -> _withitems                 _parse_withitems               - no trailing commas
 #                                                                             .
-# * ! S ,          (Import, 'names'):                      # alias*           -> _slice_aliases             _parse_aliases_dotted          - no trailing commas
-# * ! S ,          (ImportFrom, 'names'):                  # alias*           -> _slice_aliases             _parse_aliases_star            - no trailing commas
-#                                                                             .
-#                                                                             .
-#   ! S ' '        (ListComp, 'generators'):               # comprehension*   -> _slice_comprehensions      _parse_comprehensions
-#   ! S ' '        (SetComp, 'generators'):                # comprehension*   -> _slice_comprehensions      _parse_comprehensions
-#   ! S ' '        (DictComp, 'generators'):               # comprehension*   -> _slice_comprehensions      _parse_comprehensions
-#   ! S ' '        (GeneratorExp, 'generators'):           # comprehension*   -> _slice_comprehensions      _parse_comprehensions
-#                                                                             .
-#   ! S    if      (comprehension, 'ifs'):                 # expr*            -> _slice_comprehension_ifs   _parse_comprehension_ifs
-#                                                                             .
-#   ! S    @       (FunctionDef, 'decorator_list'):        # expr*            -> _slice_decorator_list      _parse_decorator_list
-#   ! S    @       (AsyncFunctionDef, 'decorator_list'):   # expr*            -> _slice_decorator_list      _parse_decorator_list
-#   ! S    @       (ClassDef, 'decorator_list'):           # expr*            -> _slice_decorator_list      _parse_decorator_list
+# * ! S ,          (Import, 'names'):                      # alias*           -> _aliases                   _parse_aliases_dotted          - no trailing commas
+# * ! S ,          (ImportFrom, 'names'):                  # alias*           -> _aliases                   _parse_aliases_star            - no trailing commas
 #                                                                             .
 #                                                                             .
-#     N    op      (Compare, 'ops':'comparators'):         # cmpop:expr*      -> _slice_ops_comparators     _parse_ops_comparators / restrict expr or Compare
+#   ! S ' '        (ListComp, 'generators'):               # comprehension*   -> _comprehensions            _parse_comprehensions
+#   ! S ' '        (SetComp, 'generators'):                # comprehension*   -> _comprehensions            _parse_comprehensions
+#   ! S ' '        (DictComp, 'generators'):               # comprehension*   -> _comprehensions            _parse_comprehensions
+#   ! S ' '        (GeneratorExp, 'generators'):           # comprehension*   -> _comprehensions            _parse_comprehensions
+#                                                                             .
+#   ! S    if      (comprehension, 'ifs'):                 # expr*            -> _comprehension_ifs         _parse_comprehension_ifs
+#                                                                             .
+#   ! S    @       (FunctionDef, 'decorator_list'):        # expr*            -> _decorator_list            _parse_decorator_list
+#   ! S    @       (AsyncFunctionDef, 'decorator_list'):   # expr*            -> _decorator_list            _parse_decorator_list
+#   ! S    @       (ClassDef, 'decorator_list'):           # expr*            -> _decorator_list            _parse_decorator_list
+#                                                                             .
+#                                                                             .
+#     N    op      (Compare, 'ops':'comparators'):         # cmpop:expr*      -> _ops_comparators           _parse_ops_comparators / restrict expr or Compare
 #                                                                             .
 #     N ao         (BoolOp, 'values'):                     # expr*            -> BoolOp                     _parse_expr / restrict BoolOp  - interchangeable between and / or
 #                                                                             .
@@ -1058,7 +1058,7 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
     len_slice = stop - start
 
     if not len_slice:
-        return fst.FST(_slice_Assign_targets(targets=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''],
+        return fst.FST(_Assign_targets(targets=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''],
                        from_=self)
 
     if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
@@ -1069,7 +1069,7 @@ def _get_slice_Assign_targets(self: fst.FST, start: int | Literal['end'] | None,
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bound_Assign_targets(self, start, loc_first)
 
     asts = _cut_or_copy_asts(start, stop, 'targets', cut, body)
-    ret_ast = _slice_Assign_targets(targets=asts)
+    ret_ast = _Assign_targets(targets=asts)
 
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
@@ -1089,8 +1089,7 @@ def _get_slice_With_AsyncWith_items(self: fst.FST, start: int | Literal['end'] |
     len_slice = stop - start
 
     if not len_slice:
-        return fst.FST(_slice_withitems(items=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''],
-                       from_=self)
+        return fst.FST(_withitems(items=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], from_=self)
 
     if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
         raise ValueError(f'cannot cut all {ast.__class__.__name__}.items without norm_self=False')
@@ -1109,8 +1108,7 @@ def _get_slice_With_AsyncWith_items(self: fst.FST, start: int | Literal['end'] |
         bound_col = pars_col + pars_n
 
     asts = _cut_or_copy_asts(start, stop, 'items', cut, body)
-    ret_ast = _slice_withitems(items=asts)
-
+    ret_ast = _withitems(items=asts)
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
                           loc_first, loc_last, bound_ln, bound_col, pars_end_ln, pars_end_col - pars_n,
                           options, 'items', '', '', ',', False, False)
@@ -1137,8 +1135,7 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
     len_slice = stop - start
 
     if not len_slice:
-        return fst.FST(_slice_aliases(names=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''],
-                       from_=self)
+        return fst.FST(_aliases(names=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], from_=self)
 
     if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
         raise ValueError('cannot cut all Import.names without norm_self=False')
@@ -1154,7 +1151,7 @@ def _get_slice_Import_names(self: fst.FST, start: int | Literal['end'] | None, s
         bound_ln, bound_col, _, _ = loc_first
 
     asts = _cut_or_copy_asts(start, stop, 'names', cut, body)
-    ret_ast = _slice_aliases(names=asts)
+    ret_ast = _aliases(names=asts)
 
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
@@ -1176,8 +1173,7 @@ def _get_slice_ImportFrom_names(self: fst.FST, start: int | Literal['end'] | Non
     len_slice = stop - start
 
     if not len_slice:
-        return fst.FST(_slice_aliases(names=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''],
-                       from_=self)
+        return fst.FST(_aliases(names=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], from_=self)
 
     if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
         raise ValueError('cannot cut all ImportFrom.names without norm_self=False')
@@ -1196,7 +1192,7 @@ def _get_slice_ImportFrom_names(self: fst.FST, start: int | Literal['end'] | Non
         bound_col = pars_col + pars_n
 
     asts = _cut_or_copy_asts(start, stop, 'names', cut, body)
-    ret_ast = _slice_aliases(names=asts)
+    ret_ast = _aliases(names=asts)
 
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
                           loc_first, loc_last, bound_ln, bound_col, pars_end_ln, pars_end_col - pars_n,
@@ -1499,7 +1495,7 @@ def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, st
     start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
-        return fst.FST(_slice_type_params([], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], from_=self)
+        return fst.FST(_type_params([], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], from_=self)
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
@@ -1519,7 +1515,7 @@ def _get_slice_type_params(self: fst.FST, start: int | Literal['end'] | None, st
         bound_col += 1
 
     asts = _cut_or_copy_asts(start, stop, 'type_params', cut, body)
-    ret_ast = _slice_type_params(type_params=asts)
+    ret_ast = _type_params(type_params=asts)
 
     fst_ = _get_slice_seq(self, start, stop, len_body, cut, ret_ast, asts[-1],
                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
@@ -1656,11 +1652,11 @@ _GET_SLICE_HANDLERS = {
     (JoinedStr, 'values'):                    _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (TemplateStr, 'values'):                  _get_slice_NOT_IMPLEMENTED_YET,  # expr*
 
-    (_slice_Assign_targets, 'targets'):       _get_slice__slice,
-    # (_slice_Assign_comprehension_ifs, 'ifs'): _get_slice__slice,
-    (_slice_aliases, 'names'):                _get_slice__slice,
-    (_slice_withitems, 'items'):              _get_slice__slice,
-    (_slice_type_params, 'type_params'):      _get_slice__slice,
+    (_Assign_targets, 'targets'):             _get_slice__slice,
+    # (_Assign_comprehension_ifs, 'ifs'):       _get_slice__slice,
+    (_aliases, 'names'):                      _get_slice__slice,
+    (_withitems, 'items'):                    _get_slice__slice,
+    (_type_params, 'type_params'):            _get_slice__slice,
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -2290,8 +2286,8 @@ def _code_to_slice_Assign_targets(self: fst.FST, code: Code | None, one: bool, o
 
         set_ctx(ast_, Store)
 
-        ast_ = _slice_Assign_targets(targets=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                                     end_col_offset=ls[-1].lenbytes)
+        ast_ = _Assign_targets(targets=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                               end_col_offset=ls[-1].lenbytes)
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
@@ -2312,8 +2308,8 @@ def _code_to_slice_aliases(self: fst.FST, code: Code | None, one: bool, options:
 
     if one:
         fst_ = code_as_one(code, self.root.parse_params, sanitize=False)
-        ast_ = _slice_aliases(names=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                              end_col_offset=ls[-1].lenbytes)
+        ast_ = _aliases(names=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                        end_col_offset=ls[-1].lenbytes)
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
@@ -2332,8 +2328,8 @@ def _code_to_slice_withitems(self: fst.FST, code: Code | None, one: bool, option
 
     if one:
         fst_ = code_as_withitem(code, self.root.parse_params, sanitize=False)
-        ast_ = _slice_withitems(names=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                                end_col_offset=ls[-1].lenbytes)
+        ast_ = _withitems(names=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                          end_col_offset=ls[-1].lenbytes)
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
@@ -2473,8 +2469,8 @@ def _code_to_slice_type_params(self: fst.FST, code: Code | None, one: bool, opti
 
     if one:
         fst_ = code_as_type_param(code, self.root.parse_params, sanitize=False)
-        ast_ = _slice_type_params(type_params=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                                  end_col_offset=ls[-1].lenbytes)
+        ast_ = _type_params(type_params=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                            end_col_offset=ls[-1].lenbytes)
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
@@ -3230,10 +3226,10 @@ class slicestatic(NamedTuple):
 
 
 _SLICE_STATICS = {
-    _slice_Assign_targets: slicestatic('targets', _code_to_slice_Assign_targets, '=', True, True),
-    _slice_aliases:        slicestatic('names', _code_to_slice_aliases, ',', False, False),
-    _slice_withitems:      slicestatic('items', _code_to_slice_withitems, ',', False, False),
-    _slice_type_params:    slicestatic('type_params', _code_to_slice_type_params, ',', False, False),
+    _Assign_targets: slicestatic('targets', _code_to_slice_Assign_targets, '=', True, True),
+    _aliases:        slicestatic('names', _code_to_slice_aliases, ',', False, False),
+    _withitems:      slicestatic('items', _code_to_slice_withitems, ',', False, False),
+    _type_params:    slicestatic('type_params', _code_to_slice_type_params, ',', False, False),
 }
 
 # ......................................................................................................................
@@ -3354,11 +3350,11 @@ _PUT_SLICE_HANDLERS = {
     (JoinedStr, 'values'):                    _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (TemplateStr, 'values'):                  _put_slice_NOT_IMPLEMENTED_YET,  # expr*
 
-    (_slice_Assign_targets, 'targets'):       _put_slice__slice,
-    # (_slice_Assign_comprehension_ifs, 'ifs'): _put_slice__slice,
-    (_slice_aliases, 'names'):                _put_slice__slice,
-    (_slice_withitems, 'items'):              _put_slice__slice,
-    (_slice_type_params, 'type_params'):      _put_slice__slice,
+    (_Assign_targets, 'targets'):             _put_slice__slice,
+    # (_Assign_comprehension_ifs, 'ifs'):       _put_slice__slice,
+    (_aliases, 'names'):                      _put_slice__slice,
+    (_withitems, 'items'):                    _put_slice__slice,
+    (_type_params, 'type_params'):            _put_slice__slice,
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -3479,7 +3475,7 @@ def _adjust_slice_raw_ast(self: fst.FST, code: AST, field: str, one: bool, optio
 
     if ((code_is_tuple := isinstance(code, Tuple)) or
         (code_is_normal := isinstance(code, (List, Set, Dict, MatchSequence, MatchMapping))) or
-        isinstance(code, (_slice_withitems, _slice_aliases, _slice_type_params))
+        isinstance(code, (_withitems, _aliases, _type_params))
     ):  # all nodes which are separated by comma at top level
         src = unparse(code)
 
@@ -3535,7 +3531,7 @@ def _adjust_slice_raw_fst(self: fst.FST, code: fst.FST, field: str, one: bool, o
     code_ast = reduce_ast(code.a, True)
 
     if ((code_is_normal := isinstance(code_ast, (Tuple, List, Set, Dict, MatchSequence, MatchMapping))) or
-        isinstance(code_ast, (_slice_withitems, _slice_aliases, _slice_type_params))
+        isinstance(code_ast, (_withitems, _aliases, _type_params))
     ):  # all nodes which are separated by comma at top level
         code_fst = code_ast.f
         code_lines = code._lines

@@ -12200,7 +12200,7 @@ c \
 = \
 
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..4,0
+_Assign_targets - ROOT 0,0..4,0
   .targets[3]
   0] Name 'a' Store - 0,0..0,1
   1] Name 'x' Store - 1,0..1,1
@@ -12221,7 +12221,7 @@ c \
 = \
 
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..4,0
+_Assign_targets - ROOT 0,0..4,0
   .targets[3]
   0] Name 'a' Store - 0,0..0,1
   1] Name 'x' Store - 1,0..1,1
@@ -13323,7 +13323,7 @@ r'''**IndexError('index out of range')**'''),
 r'''T: int, U: (str)'''), (None,
 r'''**DEL**'''),
 r'''U: (str)''', r'''
-_slice_type_params - ROOT 0,0..0,8
+_type_params - ROOT 0,0..0,8
   .type_params[1]
   0] TypeVar - 0,0..0,8
     .name 'U'
@@ -13334,7 +13334,7 @@ _slice_type_params - ROOT 0,0..0,8
 r'''T: int, U: (str)'''), ('type_param',
 r'''V: list[int]'''),
 r'''V: list[int], U: (str)''', r'''
-_slice_type_params - ROOT 0,0..0,22
+_type_params - ROOT 0,0..0,22
   .type_params[2]
   0] TypeVar - 0,0..0,12
     .name 'V'
@@ -13351,7 +13351,7 @@ _slice_type_params - ROOT 0,0..0,22
 r'''T: int, U: (str)'''), ('type_param',
 r'''V: list[int]'''),
 r'''T: int, V: list[int]''', r'''
-_slice_type_params - ROOT 0,0..0,20
+_type_params - ROOT 0,0..0,20
   .type_params[2]
   0] TypeVar - 0,0..0,6
     .name 'T'
@@ -13368,7 +13368,7 @@ _slice_type_params - ROOT 0,0..0,20
 r'''T: int, U: (str)'''), ('type_param',
 r'''V: list[int]'''),
 r'''T: int, V: list[int]''', r'''
-_slice_type_params - ROOT 0,0..0,20
+_type_params - ROOT 0,0..0,20
   .type_params[2]
   0] TypeVar - 0,0..0,6
     .name 'T'
@@ -13385,7 +13385,7 @@ _slice_type_params - ROOT 0,0..0,20
 r'''T: int, U: (str)'''), ('type_param',
 r'''V: list[int]'''),
 r'''V: list[int], U: (str)''', r'''
-_slice_type_params - ROOT 0,0..0,22
+_type_params - ROOT 0,0..0,22
   .type_params[2]
   0] TypeVar - 0,0..0,12
     .name 'V'

@@ -2624,7 +2624,7 @@ c \
 = \
 
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..3,0
+_Assign_targets - ROOT 0,0..3,0
   .targets[2]
   0] Name 'a' Store - 0,0..0,1
   1] Name 'c' Store - 1,0..1,1
@@ -2643,7 +2643,7 @@ a = \
 b = \
 
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..2,0
+_Assign_targets - ROOT 0,0..2,0
   .targets[2]
   0] Name 'a' Store - 0,0..0,1
   1] Name 'b' Store - 1,0..1,1
@@ -2989,7 +2989,7 @@ r'''**IndexError('index out of range')**'''),
 (20, '', 0, False, 'type_params', {'_ver': 12}, ('type_params',
 r'''T: int, U: (str)'''),
 r'''U: (str)''', r'''
-_slice_type_params - ROOT 0,0..0,8
+_type_params - ROOT 0,0..0,8
   .type_params[1]
   0] TypeVar - 0,0..0,8
     .name 'U'
@@ -3004,7 +3004,7 @@ TypeVar - ROOT 0,0..0,6
 (21, '', 1, False, 'type_params', {'_ver': 12}, ('type_params',
 r'''T: int, U: (str)'''),
 r'''T: int''', r'''
-_slice_type_params - ROOT 0,0..0,6
+_type_params - ROOT 0,0..0,6
   .type_params[1]
   0] TypeVar - 0,0..0,6
     .name 'T'
@@ -3019,7 +3019,7 @@ TypeVar - ROOT 0,0..0,8
 (22, '', -1, False, 'type_params', {'_ver': 12}, ('type_params',
 r'''T: int, U: (str)'''),
 r'''T: int''', r'''
-_slice_type_params - ROOT 0,0..0,6
+_type_params - ROOT 0,0..0,6
   .type_params[1]
   0] TypeVar - 0,0..0,6
     .name 'T'
@@ -3034,7 +3034,7 @@ TypeVar - ROOT 0,0..0,8
 (23, '', -2, False, 'type_params', {'_ver': 12}, ('type_params',
 r'''T: int, U: (str)'''),
 r'''U: (str)''', r'''
-_slice_type_params - ROOT 0,0..0,8
+_type_params - ROOT 0,0..0,8
   .type_params[1]
   0] TypeVar - 0,0..0,8
     .name 'U'

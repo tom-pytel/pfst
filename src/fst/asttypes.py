@@ -274,17 +274,17 @@ __all__ = [
     'TemplateStr',
     'Interpolation',
 
-    # '_slice',
-    # # '_slice_ExceptHandlers',
-    # # '_slice_match_cases',
-    # '_slice_Assign_targets',
-    # # '_slice_decorator_list',
-    # # '_slice_comprehensions',
-    # # '_slice_comprehension_ifs',
-    # # '_slice_keywords',
-    # '_slice_aliases',
-    # '_slice_withitems',
-    # '_slice_type_params',
+    '_slice',
+    # '_ExceptHandlers',
+    # '_match_cases',
+    '_Assign_targets',
+    # '_decorator_list',
+    # '_comprehensions',
+    # '_comprehension_ifs',
+    # '_keywords',
+    '_aliases',
+    '_withitems',
+    '_type_params',
 ]
 
 
@@ -318,7 +318,7 @@ class _slice(AST):
     end_col_offset = None
 
 
-class _slice_Assign_targets(_slice):
+class _Assign_targets(_slice):
     """Slice of `Assign.targets`.
 
     This is a special slice because separator is `=`."""
@@ -335,33 +335,33 @@ class _slice_Assign_targets(_slice):
         self.end_col_offset = end_col_offset
 
 
-# class _slice_decorator_list(_slice):
+# class _decorator_list(_slice):
 #     """Slice of `FunctionDef/AsyncFunctionDef/ClassDef.decorator_list`.
 
 #     This is a special slice because there are no separators and instead each element is prefixed with `@` which must be
 #     at column 0 of its line."""
 
 
-# class _slice_comprehensions(_slice):
+# class _comprehensions(_slice):
 #     """Slice of `ListComp/SetComp/DictComp/GeneratorExp.generators`.
 
 #     This is a special slice because elements are `comprehension` and there are no separators and instead each
 #     `comprehension` is prefixed with `for` or `async for`."""
 
 
-# class _slice_comprehension_ifs(_slice):
+# class _comprehension_ifs(_slice):
 #     """Slice of `comprehension.ifs`.
 
 #     This is a special slice because there are no separators and instead each element is prefixed with `if`."""
 
 
-# class _slice_keywords(_slice):
+# class _keywords(_slice):
 #     """Slice of `ClassDef/Call.keywords`.
 
 #     This is a special slice because elements are `keyword`."""
 
 
-class _slice_aliases(_slice):
+class _aliases(_slice):
     """Slice of `Import/ImportFrom.names`.
 
     This is a special slice because elements are `alias`."""
@@ -378,7 +378,7 @@ class _slice_aliases(_slice):
         self.end_col_offset = end_col_offset
 
 
-class _slice_withitems(_slice):
+class _withitems(_slice):
     """Slice of `With/AsyncWith.items`.
 
     This is a special slice because elements are `withitem`."""
@@ -395,7 +395,7 @@ class _slice_withitems(_slice):
         self.end_col_offset = end_col_offset
 
 
-class _slice_type_params(_slice):
+class _type_params(_slice):
     """Slice of `FunctionDef/AsyncFunctionDef/ClassDef/TypeAlias.type_params`.
 
     This is a special slice because elements are `type_param`."""

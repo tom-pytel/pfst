@@ -655,7 +655,7 @@ def _set_end_pos(self: fst.FST, end_lineno: int, end_col_offset: int,
 
 def _is_special_slice(self: fst.FST) -> bool:
     """Whether `self` is an instance of our own SPECIAL SLICE format and not a valid python structure. For example
-    a `Set` or `MatchOr` with zero elements or our own `_special_slice_*` `AST` class.
+    a `Set` or `MatchOr` with zero elements or our own `_slice` `AST` subclass.
 
     **Returns:**
     - `bool`: Whether self is a recognized SPECIAL SLICE or not (if not it still doesn't mean its valid).

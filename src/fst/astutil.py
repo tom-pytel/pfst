@@ -132,10 +132,10 @@ from .asttypes import (
     TypeVarTuple,
     TemplateStr,
     Interpolation,
-    _slice_Assign_targets,
-    _slice_aliases,
-    _slice_withitems,
-    _slice_type_params,
+    _Assign_targets,
+    _aliases,
+    _withitems,
+    _type_params,
 )
 
 __all__ = [
@@ -302,11 +302,11 @@ FIELDS = dict([
     (ParamSpec,                (('name', 'identifier'), ('default_value', 'expr?'))),
     (TypeVarTuple,             (('name', 'identifier'), ('default_value', 'expr?'))),
 
-    (_slice_Assign_targets,    (('targets', 'expr*'),)),
-    # (_slice_comprehension_ifs, (('targets', 'expr*'),)),
-    (_slice_aliases,           (('names', 'alias*'),)),
-    (_slice_withitems,         (('items', 'withitem*'),)),
-    (_slice_type_params,       (('type_params', 'type_param*'),)),
+    (_Assign_targets,          (('targets', 'expr*'),)),
+    # (_comprehension_ifs,       (('targets', 'expr*'),)),
+    (_aliases,                 (('names', 'alias*'),)),
+    (_withitems,               (('items', 'withitem*'),)),
+    (_type_params,             (('type_params', 'type_param*'),)),
 
 ])  ; """List of all fields for AST classes: [(`AST` class, (('field name', 'type name'), ...)), ...]"""
 

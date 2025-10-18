@@ -96,10 +96,10 @@ from .asttypes import (
     TypeAlias,
     TemplateStr,
     Interpolation,
-    _slice_Assign_targets,
-    _slice_aliases,
-    _slice_withitems,
-    _slice_type_params,
+    _Assign_targets,
+    _aliases,
+    _withitems,
+    _type_params,
 )
 
 from .astutil import (
@@ -161,10 +161,10 @@ _DEFAULT_AST_FIELD = {cls: field for field, classes in [
 
     ('elts',         (Tuple, List, Set)),
     ('patterns',     (MatchSequence, MatchOr, MatchClass)),
-    ('targets',      (Delete, _slice_Assign_targets)),
-    ('type_params',  (TypeAlias, _slice_type_params)),
-    ('names',        (Import, ImportFrom, Global, Nonlocal, _slice_aliases)),
-    ('items',        (_slice_withitems,)),
+    ('targets',      (Delete, _Assign_targets)),
+    ('type_params',  (TypeAlias, _type_params)),
+    ('names',        (Import, ImportFrom, Global, Nonlocal, _aliases)),
+    ('items',        (_withitems,)),
     ('ifs',          (comprehension,)),
     ('values',       (BoolOp, JoinedStr, TemplateStr)),
     ('generators',   (ListComp, SetComp, DictComp, GeneratorExp)),

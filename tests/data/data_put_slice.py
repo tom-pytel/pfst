@@ -16567,7 +16567,7 @@ Assign - ROOT 0,0..0,2
 r'''a = b = c ='''), ('Assign_targets',
 r'''x'''),
 r'''x =''', r'''
-_slice_Assign_targets - ROOT 0,0..0,3
+_Assign_targets - ROOT 0,0..0,3
   .targets[1]
   0] Name 'x' Store - 0,0..0,1
 '''),
@@ -16576,7 +16576,7 @@ _slice_Assign_targets - ROOT 0,0..0,3
 r'''a = b = c ='''), (None,
 r'''x'''),
 r'''x =''', r'''
-_slice_Assign_targets - ROOT 0,0..0,3
+_Assign_targets - ROOT 0,0..0,3
   .targets[1]
   0] Name 'x' Store - 0,0..0,1
 '''),
@@ -16585,7 +16585,7 @@ _slice_Assign_targets - ROOT 0,0..0,3
 r'''a = b = c ='''), (None,
 r'''x ='''),
 r'''x =''', r'''
-_slice_Assign_targets - ROOT 0,0..0,3
+_Assign_targets - ROOT 0,0..0,3
   .targets[1]
   0] Name 'x' Store - 0,0..0,1
 '''),
@@ -16604,7 +16604,7 @@ y \
 = \
 z = c =
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..4,7
+_Assign_targets - ROOT 0,0..4,7
   .targets[4]
   0] Name 'a' Store - 0,0..0,1
   1] Attribute - 0,4..2,1
@@ -16623,7 +16623,7 @@ x \
 x = \
 
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..1,0
+_Assign_targets - ROOT 0,0..1,0
   .targets[1]
   0] Name 'x' Store - 0,0..0,1
 '''),
@@ -16637,7 +16637,7 @@ x \
 x = \
 
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..1,0
+_Assign_targets - ROOT 0,0..1,0
   .targets[1]
   0] Name 'x' Store - 0,0..0,1
 '''),
@@ -23503,7 +23503,7 @@ r'''**ParseError('expecting single type_param, has trailing comma')**'''),
 r'''T, *U, **V'''), ('type_params',
 r'''**Z = ()'''),
 r'''**Z = ()''', r'''
-_slice_type_params - ROOT 0,0..0,8
+_type_params - ROOT 0,0..0,8
   .type_params[1]
   0] ParamSpec - 0,0..0,8
     .name 'Z'
@@ -23515,13 +23515,13 @@ _slice_type_params - ROOT 0,0..0,8
 r'''T, *U, **V'''), (None,
 r'''**DEL**'''),
 r'''''',
-r'''_slice_type_params - ROOT 0,0..0,0'''),
+r'''_type_params - ROOT 0,0..0,0'''),
 
 (19, '', 0, 3, 'type_params', {'_ver': 12}, ('type_params',
 r''''''), ('type_params',
 r'''T, *U, **V'''),
 r'''T, *U, **V''', r'''
-_slice_type_params - ROOT 0,0..0,10
+_type_params - ROOT 0,0..0,10
   .type_params[3]
   0] TypeVar - 0,0..0,1
     .name 'T'

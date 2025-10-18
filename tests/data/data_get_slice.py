@@ -6818,7 +6818,7 @@ Module - ROOT 0,0..0,5
     .value Name 'z' Load - 0,4..0,5
 ''',
 r'''a = b =''', r'''
-_slice_Assign_targets - ROOT 0,0..0,7
+_Assign_targets - ROOT 0,0..0,7
   .targets[2]
   0] Name 'a' Store - 0,0..0,1
   1] Name 'b' Store - 0,4..0,5
@@ -6836,7 +6836,7 @@ Module - ROOT 0,0..0,9
     .value Name 'z' Load - 0,8..0,9
 ''',
 r'''b =''', r'''
-_slice_Assign_targets - ROOT 0,0..0,3
+_Assign_targets - ROOT 0,0..0,3
   .targets[1]
   0] Name 'b' Store - 0,0..0,1
 '''),
@@ -6852,7 +6852,7 @@ Module - ROOT 0,0..0,5
     .value Name 'z' Load - 0,4..0,5
 ''',
 r'''b = c =''', r'''
-_slice_Assign_targets - ROOT 0,0..0,7
+_Assign_targets - ROOT 0,0..0,7
   .targets[2]
   0] Name 'b' Store - 0,0..0,1
   1] Name 'c' Store - 0,4..0,5
@@ -6870,7 +6870,7 @@ Module - ROOT 0,0..0,9
     .value Name 'z' Load - 0,8..0,9
 ''',
 r'''c =''', r'''
-_slice_Assign_targets - ROOT 0,0..0,3
+_Assign_targets - ROOT 0,0..0,3
   .targets[1]
   0] Name 'c' Store - 0,0..0,1
 '''),
@@ -6888,7 +6888,7 @@ Module - ROOT 0,0..0,13
     .value Name 'z' Load - 0,12..0,13
 ''',
 r'''''',
-r'''_slice_Assign_targets - ROOT 0,0..0,0'''),
+r'''_Assign_targets - ROOT 0,0..0,0'''),
 
 (5, 'body[0]', 0, 2, 'targets', {}, ('exec', r'''
 a = \
@@ -6912,7 +6912,7 @@ a = \
 b = \
 
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..2,0
+_Assign_targets - ROOT 0,0..2,0
   .targets[2]
   0] Name 'a' Store - 0,0..0,1
   1] Name 'b' Store - 1,0..1,1
@@ -6942,7 +6942,7 @@ Module - ROOT 0,0..3,1
 b = \
 
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..2,0
+_Assign_targets - ROOT 0,0..2,0
   .targets[1]
   0] Name 'b' Store - 1,0..1,1
 '''),
@@ -6970,7 +6970,7 @@ c \
 = \
 
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..4,0
+_Assign_targets - ROOT 0,0..4,0
   .targets[2]
   0] Name 'b' Store - 1,0..1,1
   1] Name 'c' Store - 2,0..2,1
@@ -7000,7 +7000,7 @@ c \
 = \
 
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..3,0
+_Assign_targets - ROOT 0,0..3,0
   .targets[1]
   0] Name 'c' Store - 1,0..1,1
 '''),
@@ -7028,7 +7028,7 @@ Module - ROOT 0,0..4,1
     .value Name 'z' Load - 4,0..4,1
 ''',
 r'''''',
-r'''_slice_Assign_targets - ROOT 0,0..0,0'''),
+r'''_Assign_targets - ROOT 0,0..0,0'''),
 
 (10, '', 0, 2, 'targets', {}, ('Assign_targets', r'''
 a = \
@@ -7041,7 +7041,7 @@ c \
 = \
 
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..2,0
+_Assign_targets - ROOT 0,0..2,0
   .targets[1]
   0] Name 'c' Store - 0,0..0,1
 ''', r'''
@@ -7049,7 +7049,7 @@ a = \
 b = \
 
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..2,0
+_Assign_targets - ROOT 0,0..2,0
   .targets[2]
   0] Name 'a' Store - 0,0..0,1
   1] Name 'b' Store - 1,0..1,1
@@ -7067,7 +7067,7 @@ c \
 = \
 
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..3,0
+_Assign_targets - ROOT 0,0..3,0
   .targets[2]
   0] Name 'a' Store - 0,0..0,1
   1] Name 'c' Store - 1,0..1,1
@@ -7076,7 +7076,7 @@ _slice_Assign_targets - ROOT 0,0..3,0
 b = \
 
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..2,0
+_Assign_targets - ROOT 0,0..2,0
   .targets[1]
   0] Name 'b' Store - 1,0..1,1
 '''),
@@ -7091,7 +7091,7 @@ c \
 a = \
 
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..1,0
+_Assign_targets - ROOT 0,0..1,0
   .targets[1]
   0] Name 'a' Store - 0,0..0,1
 ''', r'''
@@ -7101,7 +7101,7 @@ c \
 = \
 
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..4,0
+_Assign_targets - ROOT 0,0..4,0
   .targets[2]
   0] Name 'b' Store - 1,0..1,1
   1] Name 'c' Store - 2,0..2,1
@@ -7118,7 +7118,7 @@ a = \
 b = \
 
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..2,0
+_Assign_targets - ROOT 0,0..2,0
   .targets[2]
   0] Name 'a' Store - 0,0..0,1
   1] Name 'b' Store - 1,0..1,1
@@ -7128,7 +7128,7 @@ c \
 = \
 
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..3,0
+_Assign_targets - ROOT 0,0..3,0
   .targets[1]
   0] Name 'c' Store - 1,0..1,1
 '''),
@@ -7146,7 +7146,7 @@ c \
 = \
 z
 ''', r'''
-_slice_Assign_targets - ROOT 0,0..4,1
+_Assign_targets - ROOT 0,0..4,1
   .targets[4]
   0] Name 'a' Store - 0,0..0,1
   1] Name 'b' Store - 1,0..1,1
@@ -7154,13 +7154,13 @@ _slice_Assign_targets - ROOT 0,0..4,1
   3] Name 'z' Store - 4,0..4,1
 ''',
 r'''''',
-r'''_slice_Assign_targets - ROOT 0,0..0,0'''),
+r'''_Assign_targets - ROOT 0,0..0,0'''),
 
 (15, '', 0, 3, 'targets', {}, (None,
 r'''a = b = c = z'''),
 r'''**ValueError('cannot cut all Assign.targets without norm_self=False')**''',
 r'''a = b = c =''', r'''
-_slice_Assign_targets - ROOT 0,0..0,11
+_Assign_targets - ROOT 0,0..0,11
   .targets[3]
   0] Name 'a' Store - 0,0..0,1
   1] Name 'b' Store - 0,4..0,5
@@ -7174,7 +7174,7 @@ Assign - ROOT 0,0..0,2
   .value Name 'z' Load - 0,1..0,2
 ''',
 r'''a = b = c =''', r'''
-_slice_Assign_targets - ROOT 0,0..0,11
+_Assign_targets - ROOT 0,0..0,11
   .targets[3]
   0] Name 'a' Store - 0,0..0,1
   1] Name 'b' Store - 0,4..0,5
@@ -7199,7 +7199,7 @@ Module - ROOT 0,0..0,26
     0] Pass - 0,11..0,15
 ''',
 r'''b as y''', r'''
-_slice_withitems - ROOT 0,0..0,6
+_withitems - ROOT 0,0..0,6
   .items[1]
   0] withitem - 0,0..0,6
     .context_expr Name 'b' Load - 0,0..0,1
@@ -7219,7 +7219,7 @@ Module - ROOT 0,0..0,23
     0] Pass - 0,8..0,12
 ''',
 r'''b as y, c''', r'''
-_slice_withitems - ROOT 0,0..0,9
+_withitems - ROOT 0,0..0,9
   .items[2]
   0] withitem - 0,0..0,6
     .context_expr Name 'b' Load - 0,0..0,1
@@ -7241,7 +7241,7 @@ Module - ROOT 0,0..0,23
     0] Pass - 0,8..0,12
 ''',
 r'''a, b as y''', r'''
-_slice_withitems - ROOT 0,0..0,9
+_withitems - ROOT 0,0..0,9
   .items[2]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -7281,7 +7281,7 @@ y \
  \
 
 ''', r'''
-_slice_withitems - ROOT 0,0..5,0
+_withitems - ROOT 0,0..5,0
   .items[1]
   0] withitem - 1,0..3,1
     .context_expr Name 'b' Load - 1,0..1,1
@@ -7317,7 +7317,7 @@ y \
  \
 
 ''', r'''
-_slice_withitems - ROOT 0,0..6,0
+_withitems - ROOT 0,0..6,0
   .items[2]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -7355,7 +7355,7 @@ y \
 , \
 c
 ''', r'''
-_slice_withitems - ROOT 0,0..5,1
+_withitems - ROOT 0,0..5,1
   .items[2]
   0] withitem - 1,0..3,1
     .context_expr Name 'b' Load - 1,0..1,1
@@ -7397,7 +7397,7 @@ Module - ROOT 0,0..5,6
 a \
 
 ''', r'''
-_slice_withitems - ROOT 0,0..1,0
+_withitems - ROOT 0,0..1,0
   .items[1]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -7435,7 +7435,7 @@ b \
 as \
 y
 ''', r'''
-_slice_withitems - ROOT 0,0..2,1
+_withitems - ROOT 0,0..2,1
   .items[1]
   0] withitem - 0,0..2,1
     .context_expr Name 'b' Load - 0,0..0,1
@@ -7446,7 +7446,7 @@ _slice_withitems - ROOT 0,0..2,1
 r'''with a, b, c: pass'''),
 r'''**ValueError('cannot cut all With.items without norm_self=False')**''',
 r'''a, b, c''', r'''
-_slice_withitems - ROOT 0,0..0,7
+_withitems - ROOT 0,0..0,7
   .items[3]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -7478,7 +7478,7 @@ y \
 , \
 c
 ''', r'''
-_slice_withitems - ROOT 0,0..6,1
+_withitems - ROOT 0,0..6,1
   .items[3]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -7509,7 +7509,7 @@ If - ROOT 0,0..2,9
     0] Pass - 2,4..2,8
 ''',
 r'''b''', r'''
-_slice_withitems - ROOT 0,0..0,1
+_withitems - ROOT 0,0..0,1
   .items[1]
   0] withitem - 0,0..0,1
     .context_expr Name 'b' Load - 0,0..0,1
@@ -7533,7 +7533,7 @@ Module - ROOT 0,0..0,28
     0] Pass - 0,13..0,17
 ''',
 r'''b as y''', r'''
-_slice_withitems - ROOT 0,0..0,6
+_withitems - ROOT 0,0..0,6
   .items[1]
   0] withitem - 0,0..0,6
     .context_expr Name 'b' Load - 0,0..0,1
@@ -7553,7 +7553,7 @@ Module - ROOT 0,0..0,25
     0] Pass - 0,10..0,14
 ''',
 r'''b as y, c''', r'''
-_slice_withitems - ROOT 0,0..0,9
+_withitems - ROOT 0,0..0,9
   .items[2]
   0] withitem - 0,0..0,6
     .context_expr Name 'b' Load - 0,0..0,1
@@ -7575,7 +7575,7 @@ Module - ROOT 0,0..0,25
     0] Pass - 0,10..0,14
 ''',
 r'''a, b as y''', r'''
-_slice_withitems - ROOT 0,0..0,9
+_withitems - ROOT 0,0..0,9
   .items[2]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -7615,7 +7615,7 @@ y
 
 
 ''', r'''
-_slice_withitems - ROOT 0,0..5,0
+_withitems - ROOT 0,0..5,0
   .items[1]
   0] withitem - 1,0..3,1
     .context_expr Name 'b' Load - 1,0..1,1
@@ -7651,7 +7651,7 @@ y
 
 
 ''', r'''
-_slice_withitems - ROOT 0,0..6,0
+_withitems - ROOT 0,0..6,0
   .items[2]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -7689,7 +7689,7 @@ y
 ,
 c
 ''', r'''
-_slice_withitems - ROOT 0,0..5,1
+_withitems - ROOT 0,0..5,1
   .items[2]
   0] withitem - 1,0..3,1
     .context_expr Name 'b' Load - 1,0..1,1
@@ -7731,7 +7731,7 @@ Module - ROOT 0,0..5,6
 a
 
 ''', r'''
-_slice_withitems - ROOT 0,0..1,0
+_withitems - ROOT 0,0..1,0
   .items[1]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -7764,7 +7764,7 @@ b
 as
 y
 ''', r'''
-_slice_withitems - ROOT 0,0..2,1
+_withitems - ROOT 0,0..2,1
   .items[1]
   0] withitem - 0,0..2,1
     .context_expr Name 'b' Load - 0,0..0,1
@@ -7775,7 +7775,7 @@ _slice_withitems - ROOT 0,0..2,1
 r'''with (a, b, c): pass'''),
 r'''**ValueError('cannot cut all With.items without norm_self=False')**''',
 r'''a, b, c''', r'''
-_slice_withitems - ROOT 0,0..0,7
+_withitems - ROOT 0,0..0,7
   .items[3]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -7807,7 +7807,7 @@ y
 ,
 c
 ''', r'''
-_slice_withitems - ROOT 0,0..6,1
+_withitems - ROOT 0,0..6,1
   .items[3]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -7838,7 +7838,7 @@ If - ROOT 0,0..2,9
     0] Pass - 2,4..2,8
 ''',
 r'''b''', r'''
-_slice_withitems - ROOT 0,0..0,1
+_withitems - ROOT 0,0..0,1
   .items[1]
   0] withitem - 0,0..0,1
     .context_expr Name 'b' Load - 0,0..0,1
@@ -7862,7 +7862,7 @@ Module - ROOT 0,0..0,32
     0] Pass - 0,17..0,21
 ''',
 r'''b as y''', r'''
-_slice_withitems - ROOT 0,0..0,6
+_withitems - ROOT 0,0..0,6
   .items[1]
   0] withitem - 0,0..0,6
     .context_expr Name 'b' Load - 0,0..0,1
@@ -7882,7 +7882,7 @@ Module - ROOT 0,0..0,29
     0] Pass - 0,14..0,18
 ''',
 r'''b as y, c''', r'''
-_slice_withitems - ROOT 0,0..0,9
+_withitems - ROOT 0,0..0,9
   .items[2]
   0] withitem - 0,0..0,6
     .context_expr Name 'b' Load - 0,0..0,1
@@ -7904,7 +7904,7 @@ Module - ROOT 0,0..0,29
     0] Pass - 0,14..0,18
 ''',
 r'''a, b as y''', r'''
-_slice_withitems - ROOT 0,0..0,9
+_withitems - ROOT 0,0..0,9
   .items[2]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -7944,7 +7944,7 @@ y \
  \
 
 ''', r'''
-_slice_withitems - ROOT 0,0..5,0
+_withitems - ROOT 0,0..5,0
   .items[1]
   0] withitem - 1,0..3,1
     .context_expr Name 'b' Load - 1,0..1,1
@@ -7980,7 +7980,7 @@ y \
  \
 
 ''', r'''
-_slice_withitems - ROOT 0,0..6,0
+_withitems - ROOT 0,0..6,0
   .items[2]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -8018,7 +8018,7 @@ y \
 , \
 c
 ''', r'''
-_slice_withitems - ROOT 0,0..5,1
+_withitems - ROOT 0,0..5,1
   .items[2]
   0] withitem - 1,0..3,1
     .context_expr Name 'b' Load - 1,0..1,1
@@ -8060,7 +8060,7 @@ Module - ROOT 0,0..5,6
 a \
 
 ''', r'''
-_slice_withitems - ROOT 0,0..1,0
+_withitems - ROOT 0,0..1,0
   .items[1]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -8098,7 +8098,7 @@ b \
 as \
 y
 ''', r'''
-_slice_withitems - ROOT 0,0..2,1
+_withitems - ROOT 0,0..2,1
   .items[1]
   0] withitem - 0,0..2,1
     .context_expr Name 'b' Load - 0,0..0,1
@@ -8109,7 +8109,7 @@ _slice_withitems - ROOT 0,0..2,1
 r'''async with a, b, c: pass'''),
 r'''**ValueError('cannot cut all AsyncWith.items without norm_self=False')**''',
 r'''a, b, c''', r'''
-_slice_withitems - ROOT 0,0..0,7
+_withitems - ROOT 0,0..0,7
   .items[3]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -8141,7 +8141,7 @@ y \
 , \
 c
 ''', r'''
-_slice_withitems - ROOT 0,0..6,1
+_withitems - ROOT 0,0..6,1
   .items[3]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -8172,7 +8172,7 @@ If - ROOT 0,0..2,9
     0] Pass - 2,4..2,8
 ''',
 r'''b''', r'''
-_slice_withitems - ROOT 0,0..0,1
+_withitems - ROOT 0,0..0,1
   .items[1]
   0] withitem - 0,0..0,1
     .context_expr Name 'b' Load - 0,0..0,1
@@ -8196,7 +8196,7 @@ Module - ROOT 0,0..0,34
     0] Pass - 0,19..0,23
 ''',
 r'''b as y''', r'''
-_slice_withitems - ROOT 0,0..0,6
+_withitems - ROOT 0,0..0,6
   .items[1]
   0] withitem - 0,0..0,6
     .context_expr Name 'b' Load - 0,0..0,1
@@ -8216,7 +8216,7 @@ Module - ROOT 0,0..0,31
     0] Pass - 0,16..0,20
 ''',
 r'''b as y, c''', r'''
-_slice_withitems - ROOT 0,0..0,9
+_withitems - ROOT 0,0..0,9
   .items[2]
   0] withitem - 0,0..0,6
     .context_expr Name 'b' Load - 0,0..0,1
@@ -8238,7 +8238,7 @@ Module - ROOT 0,0..0,31
     0] Pass - 0,16..0,20
 ''',
 r'''a, b as y''', r'''
-_slice_withitems - ROOT 0,0..0,9
+_withitems - ROOT 0,0..0,9
   .items[2]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -8278,7 +8278,7 @@ y
 
 
 ''', r'''
-_slice_withitems - ROOT 0,0..5,0
+_withitems - ROOT 0,0..5,0
   .items[1]
   0] withitem - 1,0..3,1
     .context_expr Name 'b' Load - 1,0..1,1
@@ -8314,7 +8314,7 @@ y
 
 
 ''', r'''
-_slice_withitems - ROOT 0,0..6,0
+_withitems - ROOT 0,0..6,0
   .items[2]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -8352,7 +8352,7 @@ y
 ,
 c
 ''', r'''
-_slice_withitems - ROOT 0,0..5,1
+_withitems - ROOT 0,0..5,1
   .items[2]
   0] withitem - 1,0..3,1
     .context_expr Name 'b' Load - 1,0..1,1
@@ -8394,7 +8394,7 @@ Module - ROOT 0,0..5,6
 a
 
 ''', r'''
-_slice_withitems - ROOT 0,0..1,0
+_withitems - ROOT 0,0..1,0
   .items[1]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -8427,7 +8427,7 @@ b
 as
 y
 ''', r'''
-_slice_withitems - ROOT 0,0..2,1
+_withitems - ROOT 0,0..2,1
   .items[1]
   0] withitem - 0,0..2,1
     .context_expr Name 'b' Load - 0,0..0,1
@@ -8438,7 +8438,7 @@ _slice_withitems - ROOT 0,0..2,1
 r'''async with (a, b, c): pass'''),
 r'''**ValueError('cannot cut all AsyncWith.items without norm_self=False')**''',
 r'''a, b, c''', r'''
-_slice_withitems - ROOT 0,0..0,7
+_withitems - ROOT 0,0..0,7
   .items[3]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -8470,7 +8470,7 @@ y
 ,
 c
 ''', r'''
-_slice_withitems - ROOT 0,0..6,1
+_withitems - ROOT 0,0..6,1
   .items[3]
   0] withitem - 0,0..0,1
     .context_expr Name 'a' Load - 0,0..0,1
@@ -8501,7 +8501,7 @@ If - ROOT 0,0..2,9
     0] Pass - 2,4..2,8
 ''',
 r'''b''', r'''
-_slice_withitems - ROOT 0,0..0,1
+_withitems - ROOT 0,0..0,1
   .items[1]
   0] withitem - 0,0..0,1
     .context_expr Name 'b' Load - 0,0..0,1
@@ -8523,7 +8523,7 @@ Module - ROOT 0,0..0,22
       .name 'c'
 ''',
 r'''b as y''', r'''
-_slice_aliases - ROOT 0,0..0,6
+_aliases - ROOT 0,0..0,6
   .names[1]
   0] alias - 0,0..0,6
     .name 'b'
@@ -8541,7 +8541,7 @@ Module - ROOT 0,0..0,19
       .name 'a'
 ''',
 r'''b as y, c''', r'''
-_slice_aliases - ROOT 0,0..0,9
+_aliases - ROOT 0,0..0,9
   .names[2]
   0] alias - 0,0..0,6
     .name 'b'
@@ -8561,7 +8561,7 @@ Module - ROOT 0,0..0,19
       .name 'c'
 ''',
 r'''a, b as y''', r'''
-_slice_aliases - ROOT 0,0..0,9
+_aliases - ROOT 0,0..0,9
   .names[2]
   0] alias - 0,0..0,1
     .name 'a'
@@ -8599,7 +8599,7 @@ y \
  \
 
 ''', r'''
-_slice_aliases - ROOT 0,0..5,0
+_aliases - ROOT 0,0..5,0
   .names[1]
   0] alias - 1,0..3,1
     .name 'b'
@@ -8633,7 +8633,7 @@ y \
  \
 
 ''', r'''
-_slice_aliases - ROOT 0,0..6,0
+_aliases - ROOT 0,0..6,0
   .names[2]
   0] alias - 0,0..0,1
     .name 'a'
@@ -8669,7 +8669,7 @@ y \
 , \
 c
 ''', r'''
-_slice_aliases - ROOT 0,0..5,1
+_aliases - ROOT 0,0..5,1
   .names[2]
   0] alias - 1,0..3,1
     .name 'b'
@@ -8709,7 +8709,7 @@ Module - ROOT 0,0..5,6
 a \
 
 ''', r'''
-_slice_aliases - ROOT 0,0..1,0
+_aliases - ROOT 0,0..1,0
   .names[1]
   0] alias - 0,0..0,1
     .name 'a'
@@ -8745,7 +8745,7 @@ b \
 as \
 y
 ''', r'''
-_slice_aliases - ROOT 0,0..2,1
+_aliases - ROOT 0,0..2,1
   .names[1]
   0] alias - 0,0..2,1
     .name 'b'
@@ -8756,7 +8756,7 @@ _slice_aliases - ROOT 0,0..2,1
 r'''import a, b, c'''),
 r'''**ValueError('cannot cut all Import.names without norm_self=False')**''',
 r'''a, b, c''', r'''
-_slice_aliases - ROOT 0,0..0,7
+_aliases - ROOT 0,0..0,7
   .names[3]
   0] alias - 0,0..0,1
     .name 'a'
@@ -8785,7 +8785,7 @@ y \
 , \
 c
 ''', r'''
-_slice_aliases - ROOT 0,0..6,1
+_aliases - ROOT 0,0..6,1
   .names[3]
   0] alias - 0,0..0,1
     .name 'a'
@@ -8812,7 +8812,7 @@ If - ROOT 0,0..1,11
       .name 'a'
 ''',
 r'''b''', r'''
-_slice_aliases - ROOT 0,0..0,1
+_aliases - ROOT 0,0..0,1
   .names[1]
   0] alias - 0,0..0,1
     .name 'b'
@@ -8836,7 +8836,7 @@ Module - ROOT 0,0..0,31
     .level 0
 ''',
 r'''b as y''', r'''
-_slice_aliases - ROOT 0,0..0,6
+_aliases - ROOT 0,0..0,6
   .names[1]
   0] alias - 0,0..0,6
     .name 'b'
@@ -8856,7 +8856,7 @@ Module - ROOT 0,0..0,28
     .level 0
 ''',
 r'''b as y, c''', r'''
-_slice_aliases - ROOT 0,0..0,9
+_aliases - ROOT 0,0..0,9
   .names[2]
   0] alias - 0,0..0,6
     .name 'b'
@@ -8878,7 +8878,7 @@ Module - ROOT 0,0..0,28
     .level 0
 ''',
 r'''a, b as y''', r'''
-_slice_aliases - ROOT 0,0..0,9
+_aliases - ROOT 0,0..0,9
   .names[2]
   0] alias - 0,0..0,1
     .name 'a'
@@ -8918,7 +8918,7 @@ y \
  \
 
 ''', r'''
-_slice_aliases - ROOT 0,0..5,0
+_aliases - ROOT 0,0..5,0
   .names[1]
   0] alias - 1,0..3,1
     .name 'b'
@@ -8954,7 +8954,7 @@ y \
  \
 
 ''', r'''
-_slice_aliases - ROOT 0,0..6,0
+_aliases - ROOT 0,0..6,0
   .names[2]
   0] alias - 0,0..0,1
     .name 'a'
@@ -8992,7 +8992,7 @@ y \
 , \
 c
 ''', r'''
-_slice_aliases - ROOT 0,0..5,1
+_aliases - ROOT 0,0..5,1
   .names[2]
   0] alias - 1,0..3,1
     .name 'b'
@@ -9034,7 +9034,7 @@ Module - ROOT 0,0..5,6
 a \
 
 ''', r'''
-_slice_aliases - ROOT 0,0..1,0
+_aliases - ROOT 0,0..1,0
   .names[1]
   0] alias - 0,0..0,1
     .name 'a'
@@ -9072,7 +9072,7 @@ b \
 as \
 y
 ''', r'''
-_slice_aliases - ROOT 0,0..2,1
+_aliases - ROOT 0,0..2,1
   .names[1]
   0] alias - 0,0..2,1
     .name 'b'
@@ -9083,7 +9083,7 @@ _slice_aliases - ROOT 0,0..2,1
 r'''from mod import a, b, c'''),
 r'''**ValueError('cannot cut all ImportFrom.names without norm_self=False')**''',
 r'''a, b, c''', r'''
-_slice_aliases - ROOT 0,0..0,7
+_aliases - ROOT 0,0..0,7
   .names[3]
   0] alias - 0,0..0,1
     .name 'a'
@@ -9115,7 +9115,7 @@ y \
 , \
 c
 ''', r'''
-_slice_aliases - ROOT 0,0..6,1
+_aliases - ROOT 0,0..6,1
   .names[3]
   0] alias - 0,0..0,1
     .name 'a'
@@ -9144,7 +9144,7 @@ If - ROOT 0,0..1,20
     .level 0
 ''',
 r'''b''', r'''
-_slice_aliases - ROOT 0,0..0,1
+_aliases - ROOT 0,0..0,1
   .names[1]
   0] alias - 0,0..0,1
     .name 'b'
@@ -9168,7 +9168,7 @@ Module - ROOT 0,0..0,33
     .level 0
 ''',
 r'''b as y''', r'''
-_slice_aliases - ROOT 0,0..0,6
+_aliases - ROOT 0,0..0,6
   .names[1]
   0] alias - 0,0..0,6
     .name 'b'
@@ -9188,7 +9188,7 @@ Module - ROOT 0,0..0,30
     .level 0
 ''',
 r'''b as y, c''', r'''
-_slice_aliases - ROOT 0,0..0,9
+_aliases - ROOT 0,0..0,9
   .names[2]
   0] alias - 0,0..0,6
     .name 'b'
@@ -9210,7 +9210,7 @@ Module - ROOT 0,0..0,30
     .level 0
 ''',
 r'''a, b as y''', r'''
-_slice_aliases - ROOT 0,0..0,9
+_aliases - ROOT 0,0..0,9
   .names[2]
   0] alias - 0,0..0,1
     .name 'a'
@@ -9252,7 +9252,7 @@ y
 
 
 ''', r'''
-_slice_aliases - ROOT 0,0..5,0
+_aliases - ROOT 0,0..5,0
   .names[1]
   0] alias - 1,0..3,1
     .name 'b'
@@ -9288,7 +9288,7 @@ y
   # blah
 
 ''', r'''
-_slice_aliases - ROOT 0,0..6,0
+_aliases - ROOT 0,0..6,0
   .names[2]
   0] alias - 0,0..0,1
     .name 'a'
@@ -9328,7 +9328,7 @@ y
 c  # blah
 
 ''', r'''
-_slice_aliases - ROOT 0,0..6,0
+_aliases - ROOT 0,0..6,0
   .names[2]
   0] alias - 1,0..3,1
     .name 'b'
@@ -9372,7 +9372,7 @@ Module - ROOT 0,0..6,6
 a
 
 ''', r'''
-_slice_aliases - ROOT 0,0..1,0
+_aliases - ROOT 0,0..1,0
   .names[1]
   0] alias - 0,0..0,1
     .name 'a'
@@ -9408,7 +9408,7 @@ as
 y  # blah
 
 ''', r'''
-_slice_aliases - ROOT 0,0..4,0
+_aliases - ROOT 0,0..4,0
   .names[1]
   0] alias - 1,0..3,1
     .name 'b'
@@ -9419,7 +9419,7 @@ _slice_aliases - ROOT 0,0..4,0
 r'''from mod import a, b, c'''),
 r'''**ValueError('cannot cut all ImportFrom.names without norm_self=False')**''',
 r'''a, b, c''', r'''
-_slice_aliases - ROOT 0,0..0,7
+_aliases - ROOT 0,0..0,7
   .names[3]
   0] alias - 0,0..0,1
     .name 'a'
@@ -9455,7 +9455,7 @@ y
 c  # blah
 
 ''', r'''
-_slice_aliases - ROOT 0,0..7,0
+_aliases - ROOT 0,0..7,0
   .names[3]
   0] alias - 0,0..0,1
     .name 'a'
@@ -9484,7 +9484,7 @@ If - ROOT 0,0..1,22
     .level 0
 ''',
 r'''b''', r'''
-_slice_aliases - ROOT 0,0..0,1
+_aliases - ROOT 0,0..0,1
   .names[1]
   0] alias - 0,0..0,1
     .name 'b'
@@ -12052,7 +12052,7 @@ Module - ROOT 0,0..0,21
       .name 'V'
 ''',
 r'''*U''', r'''
-_slice_type_params - ROOT 0,0..0,2
+_type_params - ROOT 0,0..0,2
   .type_params[1]
   0] TypeVarTuple - 0,0..0,2
     .name 'U'
@@ -12069,7 +12069,7 @@ Module - ROOT 0,0..0,13
     0] Pass - 0,9..0,13
 ''',
 r'''T, *U, **V''', r'''
-_slice_type_params - ROOT 0,0..0,10
+_type_params - ROOT 0,0..0,10
   .type_params[3]
   0] TypeVar - 0,0..0,1
     .name 'T'
@@ -12095,7 +12095,7 @@ Module - ROOT 0,0..0,27
       .name 'V'
 ''',
 r'''*U''', r'''
-_slice_type_params - ROOT 0,0..0,2
+_type_params - ROOT 0,0..0,2
   .type_params[1]
   0] TypeVarTuple - 0,0..0,2
     .name 'U'
@@ -12112,7 +12112,7 @@ Module - ROOT 0,0..0,19
     0] Pass - 0,15..0,19
 ''',
 r'''T, *U, **V''', r'''
-_slice_type_params - ROOT 0,0..0,10
+_type_params - ROOT 0,0..0,10
   .type_params[3]
   0] TypeVar - 0,0..0,1
     .name 'T'
@@ -12138,7 +12138,7 @@ Module - ROOT 0,0..0,23
       .name 'V'
 ''',
 r'''*U''', r'''
-_slice_type_params - ROOT 0,0..0,2
+_type_params - ROOT 0,0..0,2
   .type_params[1]
   0] TypeVarTuple - 0,0..0,2
     .name 'U'
@@ -12155,7 +12155,7 @@ Module - ROOT 0,0..0,15
     0] Pass - 0,11..0,15
 ''',
 r'''T, *U, **V''', r'''
-_slice_type_params - ROOT 0,0..0,10
+_type_params - ROOT 0,0..0,10
   .type_params[3]
   0] TypeVar - 0,0..0,1
     .name 'T'
@@ -12180,7 +12180,7 @@ Module - ROOT 0,0..0,20
     .value Constant Ellipsis - 0,17..0,20
 ''',
 r'''*U''', r'''
-_slice_type_params - ROOT 0,0..0,2
+_type_params - ROOT 0,0..0,2
   .type_params[1]
   0] TypeVarTuple - 0,0..0,2
     .name 'U'
@@ -12196,7 +12196,7 @@ Module - ROOT 0,0..0,12
     .value Constant Ellipsis - 0,9..0,12
 ''',
 r'''T, *U, **V''', r'''
-_slice_type_params - ROOT 0,0..0,10
+_type_params - ROOT 0,0..0,10
   .type_params[3]
   0] TypeVar - 0,0..0,1
     .name 'T'
@@ -12209,7 +12209,7 @@ _slice_type_params - ROOT 0,0..0,10
 (8, '', 1, 2, 'type_params', {'_ver': 12}, ('type_params',
 r'''T, *U, **V'''),
 r'''T, **V''', r'''
-_slice_type_params - ROOT 0,0..0,6
+_type_params - ROOT 0,0..0,6
   .type_params[2]
   0] TypeVar - 0,0..0,1
     .name 'T'
@@ -12217,7 +12217,7 @@ _slice_type_params - ROOT 0,0..0,6
     .name 'V'
 ''',
 r'''*U''', r'''
-_slice_type_params - ROOT 0,0..0,2
+_type_params - ROOT 0,0..0,2
   .type_params[1]
   0] TypeVarTuple - 0,0..0,2
     .name 'U'
@@ -12226,9 +12226,9 @@ _slice_type_params - ROOT 0,0..0,2
 (9, '', 0, 3, 'type_params', {'_ver': 12}, ('type_params',
 r'''T, *U, **V'''),
 r'''''',
-r'''_slice_type_params - ROOT 0,0..0,0''',
+r'''_type_params - ROOT 0,0..0,0''',
 r'''T, *U, **V''', r'''
-_slice_type_params - ROOT 0,0..0,10
+_type_params - ROOT 0,0..0,10
   .type_params[3]
   0] TypeVar - 0,0..0,1
     .name 'T'

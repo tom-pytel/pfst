@@ -109,10 +109,10 @@ from .asttypes import (
     TypeVarTuple,
     TemplateStr,
     Interpolation,
-    _slice_Assign_targets,
-    _slice_aliases,
-    _slice_withitems,
-    _slice_type_params,
+    _Assign_targets,
+    _aliases,
+    _withitems,
+    _type_params,
 )
 
 from .astutil import (
@@ -731,10 +731,10 @@ _GET_ONE_HANDLERS = {
     (TypeVarTuple, 'name'):               _get_one_identifier,  # identifier
     (TypeVarTuple, 'default_value'):      _get_one_default,  # expr?
 
-    (_slice_Assign_targets, 'targets'):   _get_one_default,  # expr*
-    (_slice_aliases, 'names'):            _get_one_default,  # alias*
-    (_slice_withitems, 'items'):          _get_one_default,  # withitem*
-    (_slice_type_params, 'type_params'):  _get_one_default,  # type_param*
+    (_Assign_targets, 'targets'):         _get_one_default,  # expr*
+    (_aliases, 'names'):                  _get_one_default,  # alias*
+    (_withitems, 'items'):                _get_one_default,  # withitem*
+    (_type_params, 'type_params'):        _get_one_default,  # type_param*
 
 
     # NOT DONE:
@@ -2760,10 +2760,10 @@ _PUT_ONE_HANDLERS = {
     (TypeVarTuple, 'name'):               (False, _put_one_identifier_required, onestatic(_one_info_TypeVarTuple_name, _restrict_default, code_as=code_as_identifier)),  # identifier
     (TypeVarTuple, 'default_value'):      (False, _put_one_exprish_optional, onestatic(_one_info_TypeVarTuple_default_value, _restrict_default)),  # expr?
 
-    (_slice_Assign_targets, 'targets'):   (True,  _put_one_exprish_required, _onestatic_target),  # expr*
-    (_slice_aliases, 'names'):            (True,  _put_one_exprish_required, _onestatic_alias_required),  # alias*
-    (_slice_withitems, 'items'):          (True,  _put_one_exprish_required, _onestatic_withitem_required),  # withitem*
-    (_slice_type_params, 'type_params'):  (True,  _put_one_exprish_required, _onestatic_type_param_required),  # type_param*
+    (_Assign_targets, 'targets'):         (True,  _put_one_exprish_required, _onestatic_target),  # expr*
+    (_aliases, 'names'):                  (True,  _put_one_exprish_required, _onestatic_alias_required),  # alias*
+    (_withitems, 'items'):                (True,  _put_one_exprish_required, _onestatic_withitem_required),  # withitem*
+    (_type_params, 'type_params'):        (True,  _put_one_exprish_required, _onestatic_type_param_required),  # type_param*
 
 
     # NOT DONE:
