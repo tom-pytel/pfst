@@ -7,7 +7,7 @@ from ast import parse as ast_parse, unparse as ast_unparse
 from random import randint, seed
 
 from fst import *
-from fst.asttypes import _Assign_targets, _aliases, _withitems, _type_params
+from fst.asttypes import _ExceptHandlers, _match_cases, _Assign_targets, _aliases, _withitems, _type_params
 from fst.astutil import OPCLS2STR, WalkFail, copy_ast, compare_asts
 from fst.common import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, astfield, fstloc
 from fst.view import fstview
@@ -116,16 +116,16 @@ PRECEDENCE_SRC_EXPRS = [
 
 PARSE_TESTS = [
     ('all',               px.parse_stmts,             Module,                   'i: int = 1\nj'),
-    ('all',               px.parse__ExceptHandlers,   Module,                   'except Exception: pass\nexcept: pass'),
-    ('all',               px.parse__match_cases,      Module,                   'case None: pass\ncase 1: pass'),
+    ('all',               px.parse__ExceptHandlers,   _ExceptHandlers,          'except Exception: pass\nexcept: pass'),
+    ('all',               px.parse__match_cases,      _match_cases,             'case None: pass\ncase 1: pass'),
     ('all',               px.parse_stmt,              AnnAssign,                'i: int = 1'),
     ('all',               px.parse_ExceptHandler,     ExceptHandler,            'except: pass'),
     ('all',               px.parse_match_case,        match_case,               'case None: pass'),
     ('all',               px.parse_stmts,             Module,                   'i: int = 1\nj'),
     ('all',               px.parse_stmt,              AnnAssign,                'i: int = 1'),
-    ('all',               px.parse__ExceptHandlers,   Module,                   'except Exception: pass\nexcept: pass'),
+    ('all',               px.parse__ExceptHandlers,   _ExceptHandlers,          'except Exception: pass\nexcept: pass'),
     ('all',               px.parse_ExceptHandler,     ExceptHandler,            'except: pass'),
-    ('all',               px.parse__match_cases,      Module,                   'case None: pass\ncase 1: pass'),
+    ('all',               px.parse__match_cases,      _match_cases,             'case None: pass\ncase 1: pass'),
     ('all',               px.parse_match_case,        match_case,               'case None: pass'),
     ('all',               px.parse_expr,              Name,                     'j'),
     ('all',               px.parse_expr,              Starred,                  '*s'),
@@ -185,7 +185,7 @@ PARSE_TESTS = [
     ('stmt',              px.parse_stmt,              ParseError,               'i: int = 1\nj'),
     ('stmt',              px.parse_stmt,              SyntaxError,              'except: pass'),
 
-    ('_ExceptHandlers',   px.parse__ExceptHandlers,   Module,                   'except Exception: pass\nexcept: pass'),
+    ('_ExceptHandlers',   px.parse__ExceptHandlers,   _ExceptHandlers,          'except Exception: pass\nexcept: pass'),
     ('_ExceptHandlers',   px.parse__ExceptHandlers,   IndentationError,         ' except Exception: pass\nexcept: pass'),
     ('_ExceptHandlers',   px.parse__ExceptHandlers,   ParseError,               'except Exception: pass\nexcept: pass\nelse: pass'),
     ('_ExceptHandlers',   px.parse__ExceptHandlers,   ParseError,               'except Exception: pass\nexcept: pass\nfinally: pass'),
@@ -194,7 +194,7 @@ PARSE_TESTS = [
     ('ExceptHandler',     px.parse_ExceptHandler,     ParseError,               'except Exception: pass\nexcept: pass'),
     ('ExceptHandler',     px.parse_ExceptHandler,     SyntaxError,              'i: int = 1'),
 
-    ('_match_cases',      px.parse__match_cases,      Module,                   'case None: pass\ncase 1: pass'),
+    ('_match_cases',      px.parse__match_cases,      _match_cases,             'case None: pass\ncase 1: pass'),
     ('_match_cases',      px.parse__match_cases,      IndentationError,         ' case None: pass\ncase 1: pass'),
     ('_match_cases',      px.parse__match_cases,      SyntaxError,              'i: int = 1'),
     ('match_case',        px.parse_match_case,        match_case,               'case None: pass'),
@@ -1138,19 +1138,19 @@ except Exception:
         h = code_as_ExceptHandlers(g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
-        g0 = g.body[0].copy()
+        g0 = g.handlers[0].copy()
         h = code_as_ExceptHandlers(g0.a)
         self.assertEqual(ast_unparse(g0.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
+        self.assertTrue(compare_asts(h.handlers[0].a, g0.a, locs=False, raise_=True))
 
-        g1 = g.body[1].copy()
+        g1 = g.handlers[1].copy()
         h = code_as_ExceptHandlers(g1.a)
         self.assertEqual(ast_unparse(g1.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
+        self.assertTrue(compare_asts(h.handlers[0].a, g1.a, locs=False, raise_=True))
 
         self.assertRaises(ValueError, code_as_ExceptHandlers, f.body[0].handlers[0])
 
-        self.assertEqual(0, len(code_as_ExceptHandlers('').body))  # make sure we can parse zero ExceptHandlers
+        self.assertEqual(0, len(code_as_ExceptHandlers('').handlers))  # make sure we can parse zero ExceptHandlers
 
         # match_cases
 
@@ -1184,19 +1184,19 @@ match a:
         h = code_as_match_cases(g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
-        g0 = g.body[0].copy()
+        g0 = g.cases[0].copy()
         h = code_as_match_cases(g0.a)
         self.assertEqual(ast_unparse(g0.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
+        self.assertTrue(compare_asts(h.cases[0].a, g0.a, locs=False, raise_=True))
 
-        g1 = g.body[1].copy()
+        g1 = g.cases[1].copy()
         h = code_as_match_cases(g1.a)
         self.assertEqual(ast_unparse(g1.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
+        self.assertTrue(compare_asts(h.cases[0].a, g1.a, locs=False, raise_=True))
 
         self.assertRaises(ValueError, code_as_match_cases, f.body[0].cases[0])
 
-        self.assertEqual(0, len(code_as_match_cases('').body))  # make sure we can parse zero match_cases
+        self.assertEqual(0, len(code_as_match_cases('').cases))  # make sure we can parse zero match_cases
 
         # boolop
 
@@ -1381,15 +1381,15 @@ except Exception:
         h = code_as_ExceptHandlers(g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
-        g0 = g.body[0].copy()
+        g0 = g.handlers[0].copy()
         h = code_as_ExceptHandlers(g0.a)
         self.assertEqual(ast_unparse(g0.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
+        self.assertTrue(compare_asts(h.handlers[0].a, g0.a, locs=False, raise_=True))
 
-        g1 = g.body[1].copy()
+        g1 = g.handlers[1].copy()
         h = code_as_ExceptHandlers(g1.a)
         self.assertEqual(ast_unparse(g1.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
+        self.assertTrue(compare_asts(h.handlers[0].a, g1.a, locs=False, raise_=True))
 
         self.assertRaises(ValueError, code_as_ExceptHandlers, f.body[0].handlers[0])
 
@@ -1424,21 +1424,21 @@ match a:
         h = code_as_match_cases(g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
-        g0 = g.body[0].copy()
+        g0 = g.cases[0].copy()
         h = code_as_match_cases(g0.a)
         self.assertEqual(ast_unparse(g0.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, g0.a, locs=False, raise_=True))
+        self.assertTrue(compare_asts(h.cases[0].a, g0.a, locs=False, raise_=True))
 
-        g1 = g.body[1].copy()
+        g1 = g.cases[1].copy()
         h = code_as_match_cases(g1.a)
         self.assertEqual(ast_unparse(g1.a), h.src)
-        self.assertTrue(compare_asts(h.body[0].a, g1.a, locs=False, raise_=True))
+        self.assertTrue(compare_asts(h.cases[0].a, g1.a, locs=False, raise_=True))
 
         self.assertRaises(ValueError, code_as_match_cases, f.body[0].cases[0])
 
         # special 'case' non-keyword
 
-        self.assertIsInstance(code_as_match_cases('case 1: pass').body[0].a, match_case)
+        self.assertIsInstance(code_as_match_cases('case 1: pass').cases[0].a, match_case)
         self.assertRaises(SyntaxError, code_as_match_cases, 'case = 1')
         self.assertRaises(SyntaxError, code_as_match_cases, 'case.b = 1')
 

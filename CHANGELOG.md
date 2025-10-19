@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- fix coerce `except*` `AST` slice to `FST`
 - fix incorrect block location on statementish op leaving trailing semicolon in last child
 - fix put star `*` to parenthesized single element non-star `ImportFrom.names`
 - fix get slice from start of unparenthesized tuple in f-string expression on py < 3.12
@@ -27,6 +28,7 @@
 
 ### Updated
 
+- change `ExceptHandler`s and `match_case`s to use explicit slice type instead of `Module`
 - restrict raw node puts to only modify existing, no delete or pure insert
 - change `Compare` combined field indexing to not include `.left`, just `.ops` and `.comparators`
 - `dump()` indicates trailing whitespace after stmts, including with trailing `;`

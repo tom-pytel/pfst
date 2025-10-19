@@ -109,6 +109,8 @@ from .asttypes import (
     TypeVarTuple,
     TemplateStr,
     Interpolation,
+    _ExceptHandlers,
+    _match_cases,
     _Assign_targets,
     _aliases,
     _withitems,
@@ -768,6 +770,8 @@ _GET_ONE_HANDLERS = {
     (TypeVarTuple, 'name'):               _get_one_identifier,  # identifier
     (TypeVarTuple, 'default_value'):      _get_one_default,  # expr?
 
+    (_ExceptHandlers, 'handlers'):        _get_one_stmtish,  # ExceptHandler*
+    (_match_cases, 'cases'):              _get_one_stmtish,  # match_case*
     (_Assign_targets, 'targets'):         _get_one_default,  # expr*
     (_aliases, 'names'):                  _get_one_default,  # alias*
     (_withitems, 'items'):                _get_one_default,  # withitem*

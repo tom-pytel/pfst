@@ -275,8 +275,8 @@ __all__ = [
     'Interpolation',
 
     '_slice',
-    # '_ExceptHandlers',
-    # '_match_cases',
+    '_ExceptHandlers',
+    '_match_cases',
     '_Assign_targets',
     # '_decorator_list',
     # '_comprehensions',
@@ -316,6 +316,52 @@ class _slice(AST):
     _attributes    = ('lineno', 'col_offset', 'end_lineno', 'end_col_offset')
     end_lineno     = None
     end_col_offset = None
+
+
+class _ExceptHandlers(_slice):
+    """Slice of `ExceptHandler`s.
+
+    This is a special slice because we just want the handlers and no `try`."""
+
+    _fields      = ('handlers',)
+    _field_types = {'handlers': list[ExceptHandler]}
+
+    def __init__(
+        self,
+        handlers: list[ExceptHandler],
+        lineno: int = 1,
+        col_offset: int = 0,
+        end_lineno: int = 1,
+        end_col_offset: int = 0,
+    ) -> None:
+        self.handlers = handlers or []
+        self.lineno = lineno
+        self.col_offset = col_offset
+        self.end_lineno = end_lineno
+        self.end_col_offset = end_col_offset
+
+
+class _match_cases(_slice):
+    """Slice of `match_case`s.
+
+    This is a special slice because we just want the cases and no `match`."""
+
+    _fields      = ('cases',)
+    _field_types = {'cases': list[match_case]}
+
+    def __init__(
+        self,
+        cases: list[match_case],
+        lineno: int = 1,
+        col_offset: int = 0,
+        end_lineno: int = 1,
+        end_col_offset: int = 0,
+    ) -> None:
+        self.cases = cases or []
+        self.lineno = lineno
+        self.col_offset = col_offset
+        self.end_lineno = end_lineno
+        self.end_col_offset = end_col_offset
 
 
 class _Assign_targets(_slice):

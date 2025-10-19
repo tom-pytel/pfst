@@ -104,6 +104,8 @@ from .asttypes import (
     TypeAlias,
     TemplateStr,
     Interpolation,
+    _ExceptHandlers,
+    _match_cases,
     _Assign_targets,
     _aliases,
     _withitems,
@@ -169,7 +171,8 @@ _DEFAULT_INDENT = '    '
 _DEFAULT_AST_FIELD = {cls: field for field, classes in [
     ('body',         (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While,
                       If, With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
-    ('cases',        (Match,)),
+    ('handlers',     (_ExceptHandlers,)),
+    ('cases',        (Match, _match_cases)),
 
     ('elts',         (Tuple, List, Set)),
     ('patterns',     (MatchSequence, MatchOr, MatchClass)),

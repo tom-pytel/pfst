@@ -14,8 +14,9 @@ from random import choice, randint, random, seed, shuffle
 from types import NoneType
 from typing import Any, Generator, Iterable, Literal, NamedTuple
 
+from .asttypes import TypeAlias, TemplateStr, Interpolation, _ExceptHandlers
 from .astutil import *
-from .astutil import re_alnumdot_alnum, TypeAlias, TemplateStr, Interpolation
+from .astutil import re_alnumdot_alnum
 from .common import PYLT11, PYLT12, PYLT14, PYGE12, astfield
 from .view import fstview
 from .parsex import parse, parse_expr_arglike
@@ -1678,8 +1679,9 @@ class SliceStmtish(Fuzzy):
 
             org_fsts = list(fs)
             cut = fs.cut()
+            cut_body = cut.body if isinstance(cut.a, Module) else cut.handlers if isinstance(cut.a, _ExceptHandlers) else cut.cases
 
-            assert all(f is g for f, g in zip(cut.body, org_fsts))
+            assert all(f is g for f, g in zip(cut_body, org_fsts))
 
             to_start_ = to_start if to_start >= len_dst or randint(0, 1) else to_start - len_dst  # randomly change index to negative (referring to same location)
             to_stop_ = to_stop if to_stop >= len_dst or randint(0, 1) else to_stop - len_dst

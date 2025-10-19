@@ -1,5 +1,7 @@
 """Convert `Code` to `FST`."""
 
+# TODO: more coercion, e.g. single `AST or `FST` `arg` or `keyword` to `arguments`
+
 from __future__ import annotations
 
 from typing import Any, Callable, Mapping, Union
@@ -32,8 +34,11 @@ from .asttypes import (
     stmt,
     unaryop,
     withitem,
+    Try,
     TryStar,
     type_param,
+    _ExceptHandlers,
+    _match_cases,
     _Assign_targets,
     _aliases,
     _withitems,
@@ -336,7 +341,7 @@ def code_as_stmts(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
 
 
 def code_as_ExceptHandlers(code: Code, parse_params: Mapping[str, Any] = {}, *, is_trystar: bool = False) -> fst.FST:
-    """Convert `code` to zero or more `ExceptHandler`s and return in the `body` of a `Module` `FST` if possible.
+    """Convert `code` to zero or more `ExceptHandler`s and return in an `_ExceptHandlers` SPECIAL SLICE if possible.
 
     **Parameters:**
     - `is_trystar`: Hint used when unparsing an `AST` `code` to get the correct `except` or `except*` source.
@@ -349,31 +354,25 @@ def code_as_ExceptHandlers(code: Code, parse_params: Mapping[str, Any] = {}, *, 
         codea = code.a
 
         if isinstance(codea, ExceptHandler):
-            return fst.FST(Module(body=[codea], type_ignores=[]), code._lines, from_=code, lcopy=False)
+            return fst.FST(_ExceptHandlers(handlers=[codea], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
+                                           end_col_offset=ls[-1].lenbytes), ls, from_=code, lcopy=False)
 
-        if isinstance(codea, Module):
-            if all(isinstance(a, ExceptHandler) for a in codea.body):
-                return code
+        if not isinstance(codea, _ExceptHandlers):
+            raise NodeError(f'expecting zero or more ExceptHandlers, got {codea.__class__.__name__}', rawable=True)
 
-            raise NodeError(f'expecting zero or more ExceptHandlers, got '
-                            f'[{shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]', rawable=True)
-
-        raise NodeError(f'expecting zero or more ExceptHandlers, got {codea.__class__.__name__}', rawable=True)
+        return code
 
     if isinstance(code, AST):
-        if isinstance(code, Module):  # may be slice of ExceptHandlers
-            code = _fixing_unparse(code)
-
+        if isinstance(code, ExceptHandler):
+            handlers = [code]
+        elif isinstance(code, _ExceptHandlers):
+            handlers = code.handlers
         else:
-            if not isinstance(code, ExceptHandler):
-                raise NodeError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}', rawable=True)
+            raise NodeError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}', rawable=True)
 
-            if is_trystar:
-                code = _fixing_unparse(TryStar(body=[Pass()], handlers=[code], orelse=[], finalbody=[]))
-                code = code[code.index('except'):]
-            else:
-                code = _fixing_unparse(code)
-
+        code = _fixing_unparse((TryStar if is_trystar else Try)(body=[Pass()],
+                                                                handlers=handlers, orelse=[], finalbody=[]))
+        code = code[code.index('except'):]
         lines = code.split('\n')
 
     elif isinstance(code, list):
@@ -385,7 +384,7 @@ def code_as_ExceptHandlers(code: Code, parse_params: Mapping[str, Any] = {}, *, 
 
 
 def code_as_match_cases(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
-    """Convert `code` to zero or more `match_case`s and return in the `body` of a `Module` `FST` if possible."""
+    """Convert `code` to zero or more `match_case`s and return in a `_match_cases` SPECIAL SLICE if possible."""
 
     if isinstance(code, fst.FST):
         if not code.is_root:
@@ -394,22 +393,19 @@ def code_as_match_cases(code: Code, parse_params: Mapping[str, Any] = {}) -> fst
         codea = code.a
 
         if isinstance(codea, match_case):
-            return fst.FST(Module(body=[codea], type_ignores=[]), code._lines, from_=code, lcopy=False)
+            return fst.FST(_match_cases(cases=[codea], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
+                                        end_col_offset=ls[-1].lenbytes), ls, from_=code, lcopy=False)
 
-        if isinstance(codea, Module):
-            if all(isinstance(a, match_case) for a in codea.body):
-                return code
+        if not isinstance(codea, _match_cases):
+            raise NodeError(f'expecting zero or more match_cases, got {codea.__class__.__name__}', rawable=True)
 
-            raise NodeError(f'expecting zero or more match_cases, got '
-                            f'[{shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]', rawable=True)
-
-        raise NodeError(f'expecting zero or more match_cases, got {codea.__class__.__name__}', rawable=True)
+        return code
 
     if isinstance(code, AST):
-        if not isinstance(code, (match_case, Module)):
+        if not isinstance(code, (match_case, _match_cases)):
             raise NodeError(f'expecting zero or more match_cases, got {code.__class__.__name__}', rawable=True)
 
-        code = _fixing_unparse(code)
+        code = unparse(code)
         lines = code.split('\n')
 
     elif isinstance(code, list):

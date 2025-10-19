@@ -24,7 +24,8 @@ from .asttypes import (
     TryStar,
     match_case,
     mod,
-    stmt,
+    _ExceptHandlers,
+    _match_cases,
 )
 
 from .astutil import copy_ast
@@ -449,6 +450,7 @@ class SrcEdit:
         self,
         tgt_fst: fst.FST,
         put_fst: fst.FST,
+        put_body: list[AST],
         block_loc: fstloc,
         put_loc: fstloc,
         fpre: fst.FST | None,
@@ -462,7 +464,6 @@ class SrcEdit:
 
         lines = tgt_fst.root._lines
         put_lines = put_fst._lines
-        put_body = put_fst.a.body
         put_col = put_loc.col
         pep8space = fst.FST.get_option('pep8space', options)
 
@@ -547,6 +548,7 @@ class SrcEdit:
         self,
         tgt_fst: fst.FST,
         put_fst: fst.FST,
+        put_body: list[AST],
         field: str,
         block_loc: fstloc,
         opener_indent: str,
@@ -584,7 +586,9 @@ class SrcEdit:
         **Parameters:**
         - `tgt_fst`: The destination `FST` container that is being put to.
         - `put_fst`: The block which is being put. Must be a `Module` with a `body` of one or multiple statmentish
-            nodes. Not indented, indent and mutate this object to set what will be put at `put_loc`.
+            nodes or a SPECIAL SLICE `_ExceptHandlers` or `_match_cases`. Not indented, indent and mutate this object to
+            set what will be put at `put_loc`.
+        - `put_body`: The list of `AST` nodes of `put_fst`.
         - `field`: The name of the field being gotten from, e.g. `'body'`, `'orelse'`, etc...
         - `cut`: If `False` the operation is a copy, `True` means cut.
         - `opener_indent`: The indent string of the block header being put to (`if`, `with`, `class`, etc...), not the
@@ -614,7 +618,6 @@ class SrcEdit:
         docstr = fst.FST.get_option('docstr', options)
         lines = tgt_fst.root._lines
         put_lines = put_fst._lines
-        put_body = put_fst.a.body
         is_handler = field == 'handlers'
         is_orelse = field == 'orelse'
 
@@ -727,7 +730,7 @@ class SrcEdit:
                 else:
                     put_loc = fstloc(ln, col, ln + 1, 0)
 
-            self._format_space(tgt_fst, put_fst, block_loc, put_loc, fpre, fpost, None, True, **options)
+            self._format_space(tgt_fst, put_fst, put_body, block_loc, put_loc, fpre, fpost, None, True, **options)
 
             return put_loc
 
@@ -737,7 +740,6 @@ class SrcEdit:
         indent = opener_indent if is_handler else block_indent
 
         if not fpre and not fpost and is_orelse and isinstance(tgt_fst.a, If):  # possible else <-> elif changes
-            put_body = put_fst.a.body
             orelse = tgt_fst.a.orelse
             opt_elif = fst.FST.get_option('elif_', options)
             is_old_elif = orelse[0].f._is_elif()
@@ -790,7 +792,7 @@ class SrcEdit:
 
         put_loc = fstloc(put_ln, put_col, put_end_ln, put_end_col)
 
-        self._format_space(tgt_fst, put_fst, block_loc, put_loc, fpre, fpost, del_lines, False, **options)
+        self._format_space(tgt_fst, put_fst, put_body, block_loc, put_loc, fpre, fpost, del_lines, False, **options)
 
         return put_loc
 
@@ -919,6 +921,11 @@ def _get_slice_stmtish_old(
     start, stop = fst_slice._fixup_slice_indices(len(body), start, stop)
 
     if start == stop:
+        if field == 'handlers':
+            return fst.FST(_ExceptHandlers([], 1, 0, 1, 0), [''], from_=self)
+        elif field == 'cases':
+            return fst.FST(_match_cases([], 1, 0, 1, 0), [''], from_=self)
+
         return fst.FST(Module(body=[], type_ignores=[]), [''], from_=self)
 
     ffirst = body[start].f
@@ -949,7 +956,23 @@ def _get_slice_stmtish_old(
             body[i].f.pfield = astfield(field, i)
 
     if not one:
-        get_ast = Module(body=asts, type_ignores=[])
+        if field == 'handlers':
+            lines = self.root._lines
+            copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
+
+            get_ast = _ExceptHandlers(handlers=asts, lineno=copy_ln + 1, col_offset=lines[copy_ln].c2b(copy_col),
+                                      end_lineno=copy_end_ln + 1, end_col_offset=lines[copy_end_ln].c2b(copy_end_col))
+
+        elif field == 'cases':
+            lines = self.root._lines
+            copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
+
+            get_ast = _match_cases(cases=asts, lineno=copy_ln + 1, col_offset=lines[copy_ln].c2b(copy_col),
+                                   end_lineno=copy_end_ln + 1, end_col_offset=lines[copy_end_ln].c2b(copy_end_col))
+
+        else:
+            get_ast = Module(body=asts, type_ignores=[])
+
     elif len(asts) == 1:
         get_ast = asts[0]
     else:
@@ -988,38 +1011,21 @@ def _put_slice_stmtish_old(
         put_fst_end_nl = False
 
     else:
-        # put_fst  = self._code_as_stmtishs(code, self.root.parse_params, is_trystar=isinstance(ast, TryStar))
-        # put_ast  = put_fst.a
-        # put_body = put_ast.body
+        if field == 'handlers':
+            is_trystar = isinstance(ast, TryStar) or (body and isinstance(ast, _ExceptHandlers) and
+                                                      body[0].f._is_except_star())
+            put_fst = code_as_ExceptHandlers(code, self.root.parse_params, is_trystar=is_trystar)
+            put_body = put_fst.a.handlers
 
-        # if one and len(put_body) != 1:
-        #     raise ValueError('expecting a single statement')
-
-        # node_type = ExceptHandler if field == 'handlers' else match_case if field == 'cases' else stmt
-
-        # if any(not isinstance(bad_node := n, node_type) for n in put_body) and options.get('check_node_type', True):  # TODO: `check_node_type` is for some previously written tests, but really should fix those tests instead
-        #     raise ValueError(f"cannot put {bad_node.__class__.__qualname__} node to '{field}' field")
-
-
-        if body and isinstance(ast, Module):  # check for slices
-            if isinstance(b0 := body[0], stmt):
-                put_fst = code_as_stmts(code, self.root.parse_params)
-            elif isinstance(b0, ExceptHandler):
-                put_fst = code_as_ExceptHandlers(code, self.root.parse_params,
-                                                 is_trystar=b0.f._is_except_star())
-            else:  # match_case
-                put_fst = code_as_match_cases(code, self.root.parse_params)
-
-        elif field == 'handlers':
-            put_fst = code_as_ExceptHandlers(code, self.root.parse_params, is_trystar=isinstance(ast, TryStar))
-        elif field != 'cases':  # 'body', 'orelse', 'finalbody'
-            put_fst = code_as_stmts(code, self.root.parse_params)
-        else:  # 'cases'
+        elif field == 'cases':
             put_fst = code_as_match_cases(code, self.root.parse_params)
+            put_body = put_fst.a.cases
+
+        else:  # 'body', 'orelse', 'finalbody'
+            put_fst = code_as_stmts(code, self.root.parse_params)
+            put_body = put_fst.a.body
 
         put_fst_end_nl = not put_fst._lines[-1]
-        put_ast = put_fst.a
-        put_body = put_ast.body
 
         if one and len(put_body) != 1:
             raise ValueError('expecting a single element')
@@ -1039,7 +1045,10 @@ def _put_slice_stmtish_old(
         opener_indent = self._get_indent()
 
         if not body:
-            block_indent = opener_indent if isinstance(self.a, mod) else opener_indent + root.indent
+            block_indent = (opener_indent
+                            if isinstance(self.a, (mod, _ExceptHandlers, _match_cases)) else
+                            opener_indent + root.indent)
+
         elif not (b0 := body[0]).f._is_elif():
             block_indent = b0.f._get_indent()
         elif (bb := b0.body) or (bb := b0.orelse):
@@ -1070,7 +1079,7 @@ def _put_slice_stmtish_old(
             is_last_child = not fpost and not fpre.next()
 
         elif fpost:
-            if isinstance(ast, mod):  # put after all header stuff in module
+            if isinstance(ast, (mod, _ExceptHandlers, _match_cases)):  # put after all header stuff in module
                 ln, col, _, _ = fpost.bloc
                 block_loc = fstloc(ln, col, ln, col)
 
@@ -1093,7 +1102,7 @@ def _put_slice_stmtish_old(
                 block_loc = fstloc(*self.bloc[2:], *next_bound_step(self))  # end of bloc will be just past ':'
                 is_last_child = True
 
-            elif isinstance(ast, mod):  # put after all header stuff in module
+            elif isinstance(ast, (mod, _ExceptHandlers, _match_cases)):  # put after all header stuff in module or top level ExceptHandler or match_case slice
                 _, _, end_ln, end_col = self.bloc
 
                 block_loc = fstloc(end_ln, end_col, end_ln, end_col)
@@ -1199,7 +1208,7 @@ def _put_slice_stmtish_old(
         put_len = 0
 
     else:
-        put_loc = _src_edit.put_slice_stmt(self, put_fst, field, block_loc, opener_indent, block_indent,
+        put_loc = _src_edit.put_slice_stmt(self, put_fst, put_body, field, block_loc, opener_indent, block_indent,
                                            ffirst, flast, fpre, fpost,
                                            docstr_strict_exclude = put_body[0] if put_body and start else None,
                                            **options)
@@ -1261,7 +1270,7 @@ def _maybe_del_trailing_newline(self: fst.FST, old_last_line: str, put_fst_end_n
     lines = (root := self.root)._lines
 
     if not put_fst_end_nl and old_last_line and not (new_last_line := lines[-1]) and new_last_line is not old_last_line:  # if self last line changed and was previously not a trailing newline and code put did not end in trailing newline then make sure it is not so now
-        if isinstance(root.a, mod) and not (root := root.last_child()):
+        if isinstance(root.a, (mod, _ExceptHandlers, _match_cases)) and not (root := root.last_child()):
             if len(lines) > 1:
                 del lines[-1]  # we specifically delete just one trailing newline because there may be multiple and we want to preserve the rest
 

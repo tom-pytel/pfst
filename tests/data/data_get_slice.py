@@ -3103,8 +3103,8 @@ Module - ROOT 0,0..2,13
 except:
     pass
 ''', r'''
-Module - ROOT 0,0..1,8
-  .body[1]
+_ExceptHandlers - ROOT 0,0..1,8
+  .handlers[1]
   0] ExceptHandler - 0,0..1,8
     .body[1]
     0] Pass - 1,4..1,8
@@ -3131,8 +3131,8 @@ Module - ROOT 0,0..2,13
     0] Pass - 2,9..2,13
 ''',
 r'''except: pass''', r'''
-Module - ROOT 0,0..0,12
-  .body[1]
+_ExceptHandlers - ROOT 0,0..0,12
+  .handlers[1]
   0] ExceptHandler - 0,0..0,12
     .body[1]
     0] Pass - 0,8..0,12
@@ -3160,8 +3160,8 @@ Module - ROOT 0,0..3,13
     0] Pass - 3,9..3,13
 ''',
 r'''except: pass''', r'''
-Module - ROOT 0,0..0,12
-  .body[1]
+_ExceptHandlers - ROOT 0,0..0,12
+  .handlers[1]
   0] ExceptHandler - 0,0..0,12
     .body[1]
     0] Pass - 0,8..0,12
@@ -3191,8 +3191,8 @@ Module - ROOT 0,0..4,13
     0] Pass - 4,9..4,13
 ''',
 r'''except: pass''', r'''
-Module - ROOT 0,0..0,12
-  .body[1]
+_ExceptHandlers - ROOT 0,0..0,12
+  .handlers[1]
   0] ExceptHandler - 0,0..0,12
     .body[1]
     0] Pass - 0,8..0,12

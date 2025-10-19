@@ -38,6 +38,8 @@ from .asttypes import (
     mod,
     operator,
     stmt,
+    _ExceptHandlers,
+    _match_cases,
 )
 
 from .astutil import OPSTR2CLS_AUG, bistr, pat_alnum, re_alnumdot_alnum
@@ -265,7 +267,7 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
 
             _dump_lines(self, st.linefunc, *loc, st.eol, True)
 
-    elif not isinstance(ast, mod):
+    elif not isinstance(ast, (mod, _ExceptHandlers, _match_cases)):
         if st.src == 'all':
             if not (parent := self.parent) or not isinstance(parent.a, Expr):
                 if loc := self.loc:

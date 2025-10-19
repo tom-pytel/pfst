@@ -132,6 +132,8 @@ from .asttypes import (
     TypeVarTuple,
     TemplateStr,
     Interpolation,
+    _ExceptHandlers,
+    _match_cases,
     _Assign_targets,
     _aliases,
     _withitems,
@@ -302,6 +304,8 @@ FIELDS = dict([
     (ParamSpec,                (('name', 'identifier'), ('default_value', 'expr?'))),
     (TypeVarTuple,             (('name', 'identifier'), ('default_value', 'expr?'))),
 
+    (_ExceptHandlers,          (('handlers', 'excepthandler*'),)),
+    (_match_cases,             (('cases', 'match_case*'),)),
     (_Assign_targets,          (('targets', 'expr*'),)),
     # (_comprehension_ifs,       (('targets', 'expr*'),)),
     (_aliases,                 (('names', 'alias*'),)),
@@ -577,7 +581,7 @@ def is_valid_del_target(asts: AST | list[AST]) -> bool:
 
 def reduce_ast(ast: AST, multi_mod: bool | type[Exception] = False, reduce_Expr: bool = True) -> AST | None:
     """Reduce a `mod` / `Expr` wrapped expression or single statement if possible, otherwise return original `AST`,
-    `None` or raise.
+    `None` or raise. Also reduces `_ExceptHandlers` and `_match_cases` if they are of length 1.
 
     **Parameters:**
     - `ast`: `AST` to reduce.
@@ -594,15 +598,26 @@ def reduce_ast(ast: AST, multi_mod: bool | type[Exception] = False, reduce_Expr:
 
             return ast.value if isinstance(ast, Expr) and reduce_Expr else ast
 
-        elif multi_mod is False:
-            return None
-        elif multi_mod is not True:
-            raise multi_mod('expecting single element')
+    elif isinstance(ast, _ExceptHandlers):
+        if len(body := ast.handlers) == 1:
+            return body[0]
 
-    elif isinstance(ast, Expression):
-        return ast.body
-    elif isinstance(ast, Expr) and reduce_Expr:
-        return ast.value
+    elif isinstance(ast, _match_cases):
+        if len(body := ast.cases) == 1:
+            return body[0]
+
+    else:
+        if isinstance(ast, Expr) and reduce_Expr:
+            return ast.value
+        elif isinstance(ast, Expression):
+            return ast.body
+
+        return ast
+
+    if multi_mod is False:
+        return None
+    elif multi_mod is not True:
+        raise multi_mod('expecting single element')
 
     return ast
 

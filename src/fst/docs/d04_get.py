@@ -274,8 +274,8 @@ except RuntimeError:
     j = 2
 
 >>> s.dump()
-Module - ROOT 0,0..3,9
-  .body[2]
+_ExceptHandlers - ROOT 0,0..3,9
+  .handlers[2]
   0] ExceptHandler - 0,0..1,9
     .type Name 'ValueError' Load - 0,7..0,17
     .body[1]

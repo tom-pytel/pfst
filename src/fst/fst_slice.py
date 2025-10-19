@@ -65,6 +65,8 @@ from .asttypes import (
     TypeAlias,
     TemplateStr,
     expr_context,
+    _ExceptHandlers,
+    _match_cases,
     _Assign_targets,
     _aliases,
     _withitems,
@@ -1821,11 +1823,13 @@ _GET_SLICE_HANDLERS = {
     (JoinedStr, 'values'):                    _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (TemplateStr, 'values'):                  _get_slice_NOT_IMPLEMENTED_YET,  # expr*
 
-    (_Assign_targets, 'targets'):             _get_slice__slice,
+    (_ExceptHandlers, 'handlers'):            _get_slice_stmtish,  # ExceptHandler*
+    (_match_cases, 'cases'):                  _get_slice_stmtish,  # match_case*
+    (_Assign_targets, 'targets'):             _get_slice__slice,  # expr*
     # (_Assign_comprehension_ifs, 'ifs'):       _get_slice__slice,
-    (_aliases, 'names'):                      _get_slice__slice,
-    (_withitems, 'items'):                    _get_slice__slice,
-    (_type_params, 'type_params'):            _get_slice__slice,
+    (_aliases, 'names'):                      _get_slice__slice,  # alias*
+    (_withitems, 'items'):                    _get_slice__slice,  # withitem*
+    (_type_params, 'type_params'):            _get_slice__slice,  # type_param*
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -3709,11 +3713,13 @@ _PUT_SLICE_HANDLERS = {
     (JoinedStr, 'values'):                    _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (TemplateStr, 'values'):                  _put_slice_NOT_IMPLEMENTED_YET,  # expr*
 
-    (_Assign_targets, 'targets'):             _put_slice__slice,
+    (_ExceptHandlers, 'handlers'):            _put_slice_stmtish,  # ExceptHandler*
+    (_match_cases, 'cases'):                  _put_slice_stmtish,  # match_case*
+    (_Assign_targets, 'targets'):             _put_slice__slice,  # expr*
     # (_Assign_comprehension_ifs, 'ifs'):       _put_slice__slice,
-    (_aliases, 'names'):                      _put_slice__slice,
-    (_withitems, 'items'):                    _put_slice__slice,
-    (_type_params, 'type_params'):            _put_slice__slice,
+    (_aliases, 'names'):                      _put_slice__slice,  # alias*
+    (_withitems, 'items'):                    _put_slice__slice,  # withitem*
+    (_type_params, 'type_params'):            _put_slice__slice,  # type_param*
 }
 
 # ----------------------------------------------------------------------------------------------------------------------

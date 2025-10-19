@@ -25,12 +25,12 @@ Module - ROOT 0,0..1,1
     .value Name 'j' Load - 1,0..1,1
 '''),
 
-(1, 'parse__ExceptHandlers', 0, 0, 'Module', {}, ('all', r'''
+(1, 'parse__ExceptHandlers', 0, 0, '_ExceptHandlers', {}, ('all', r'''
 except Exception: pass
 except: pass
 '''), r'''
-Module - ROOT 0,0..1,12
-  .body[2]
+_ExceptHandlers - ROOT 0,0..1,12
+  .handlers[2]
   0] ExceptHandler - 0,0..0,22
     .type Name 'Exception' Load - 0,7..0,16
     .body[1]
@@ -40,12 +40,12 @@ Module - ROOT 0,0..1,12
     0] Pass - 1,8..1,12
 '''),
 
-(2, 'parse__match_cases', 0, 0, 'Module', {}, ('all', r'''
+(2, 'parse__match_cases', 0, 0, '_match_cases', {}, ('all', r'''
 case None: pass
 case 1: pass
 '''), r'''
-Module - ROOT 0,0..1,12
-  .body[2]
+_match_cases - ROOT 0,0..1,12
+  .cases[2]
   0] match_case - 0,0..0,15
     .pattern MatchSingleton - 0,5..0,9
     .body[1]
@@ -105,12 +105,12 @@ AnnAssign - ROOT 0,0..0,10
   .simple 1
 '''),
 
-(8, 'parse__ExceptHandlers', 0, 0, 'Module', {}, ('all', r'''
+(8, 'parse__ExceptHandlers', 0, 0, '_ExceptHandlers', {}, ('all', r'''
 except Exception: pass
 except: pass
 '''), r'''
-Module - ROOT 0,0..1,12
-  .body[2]
+_ExceptHandlers - ROOT 0,0..1,12
+  .handlers[2]
   0] ExceptHandler - 0,0..0,22
     .type Name 'Exception' Load - 0,7..0,16
     .body[1]
@@ -127,12 +127,12 @@ ExceptHandler - ROOT 0,0..0,12
   0] Pass - 0,8..0,12
 '''),
 
-(10, 'parse__match_cases', 0, 0, 'Module', {}, ('all', r'''
+(10, 'parse__match_cases', 0, 0, '_match_cases', {}, ('all', r'''
 case None: pass
 case 1: pass
 '''), r'''
-Module - ROOT 0,0..1,12
-  .body[2]
+_match_cases - ROOT 0,0..1,12
+  .cases[2]
   0] match_case - 0,0..0,15
     .pattern MatchSingleton - 0,5..0,9
     .body[1]
@@ -540,12 +540,12 @@ r'''**ParseError('expecting single stmt')**'''),
 r'''except: pass'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(66, 'parse__ExceptHandlers', 0, 0, 'Module', {}, ('_ExceptHandlers', r'''
+(66, 'parse__ExceptHandlers', 0, 0, '_ExceptHandlers', {}, ('_ExceptHandlers', r'''
 except Exception: pass
 except: pass
 '''), r'''
-Module - ROOT 0,0..1,12
-  .body[2]
+_ExceptHandlers - ROOT 0,0..1,12
+  .handlers[2]
   0] ExceptHandler - 0,0..0,22
     .type Name 'Exception' Load - 0,7..0,16
     .body[1]
@@ -598,12 +598,12 @@ r'''**ParseError('expecting single ExceptHandler')**'''),
 r'''i: int = 1'''),
 r'''**SyntaxError("expected 'except' or 'finally' block")**'''),
 
-(74, 'parse__match_cases', 0, 0, 'Module', {}, ('_match_cases', r'''
+(74, 'parse__match_cases', 0, 0, '_match_cases', {}, ('_match_cases', r'''
 case None: pass
 case 1: pass
 '''), r'''
-Module - ROOT 0,0..1,12
-  .body[2]
+_match_cases - ROOT 0,0..1,12
+  .cases[2]
   0] match_case - 0,0..0,15
     .pattern MatchSingleton - 0,5..0,9
     .body[1]
