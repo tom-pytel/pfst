@@ -713,8 +713,8 @@ def _is_special_slice(self: fst.FST) -> bool:
 
 
 def _is_parenthesizable(self: fst.FST) -> bool:
-    """Whether `self` is parenthesizable with grouping parentheses or not. Essentially all `expr`s and `pattern`s
-    except for `Slice`, `FormattedValue` or `Interpolation`.
+    """Whether `self` is parenthesizable with grouping parentheses or not. All `pattern`s and almost all `expr`s which
+    are not themselves inside `pattern`s and are not themselves `Slice`, `FormattedValue` or `Interpolation`.
 
     **Note:** `Starred` returns `True` even though the `Starred` itself is not parenthesizable but rather its child.
 
@@ -752,10 +752,20 @@ def _is_parenthesizable(self: fst.FST) -> bool:
     ```
     """
 
-    if isinstance(a := self.a, expr):
-        return not isinstance(a, (Slice, FormattedValue, Interpolation))
+    if not isinstance(a := self.a, expr):
+        return isinstance(a, pattern)
 
-    return isinstance(a, pattern)
+    if isinstance(a, (Slice, FormattedValue, Interpolation)):
+        return False
+
+    while self := self.parent:
+        if not isinstance(a := self.a, expr):
+            if isinstance(a, pattern):
+                return False
+
+            break
+
+    return True
 
 
 def _is_atom(
