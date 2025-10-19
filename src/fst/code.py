@@ -42,14 +42,21 @@ from .asttypes import (
 
 from .astutil import (
     constant,
-    OPSTR2CLS_UNARY, OPSTR2CLS_BIN, OPSTR2CLS_CMP, OPSTR2CLS_BOOL, OPSTR2CLS_AUG, OPCLS2STR_AUG, OPCLS2STR,
-    is_valid_identifier, is_valid_identifier_dotted, is_valid_identifier_star, is_valid_identifier_alias,
+    OPSTR2CLS_UNARY,
+    OPSTR2CLS_BIN,
+    OPSTR2CLS_CMP,
+    OPSTR2CLS_BOOL,
+    OPSTR2CLS_AUG,
+    OPCLS2STR_AUG,
+    OPCLS2STR,
+    is_valid_identifier,
+    is_valid_identifier_dotted,
+    is_valid_identifier_star,
+    is_valid_identifier_alias,
     reduce_ast,
 )
 
-from .common import (
-    NodeError, shortstr
-)
+from .common import NodeError, shortstr
 
 from .parsex import (
     _fixing_unparse,

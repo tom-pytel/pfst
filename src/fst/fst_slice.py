@@ -71,44 +71,70 @@ from .asttypes import (
     _type_params,
 )
 
-from .astutil import (
-    re_identifier, bistr, is_valid_target, is_valid_del_target, reduce_ast, set_ctx, copy_ast,
-)
+from .astutil import re_identifier, bistr, is_valid_target, is_valid_del_target, reduce_ast, set_ctx, copy_ast
 
 from .common import (
-    Self, NodeError, astfield, fstloc,
-    PYLT11, PYGE14,
-    re_empty_line_start, re_empty_line, re_empty_space, re_line_end_cont_or_comment,
-    next_frag, prev_find, next_find, next_find_re,
-    leading_trivia, trailing_trivia,
+    PYLT11,
+    PYGE14,
+    re_empty_line_start,
+    re_empty_line,
+    re_empty_space,
+    re_line_end_cont_or_comment,
+    Self,
+    NodeError,
+    astfield,
+    fstloc,
+    next_frag,
+    prev_find,
+    next_find,
+    next_find_re,
+    leading_trivia,
+    trailing_trivia,
 )
 
 from .parsex import unparse
 
 from .code import (
     Code,
-    code_as_expr, code_as_expr_all, code_as_expr_arglike, code_as_Assign_targets,
-    code_as_alias, code_as_aliases,
-    code_as_Import_name, code_as_Import_names,
-    code_as_ImportFrom_name, code_as_ImportFrom_names,
-    code_as_withitem, code_as_withitems,
+    code_as_expr,
+    code_as_expr_all,
+    code_as_expr_arglike,
+    code_as_Assign_targets,
+    code_as_alias,
+    code_as_aliases,
+    code_as_Import_name,
+    code_as_Import_names,
+    code_as_ImportFrom_name,
+    code_as_ImportFrom_names,
+    code_as_withitem,
+    code_as_withitems,
     code_as_pattern,
-    code_as_type_param, code_as_type_params,
+    code_as_type_param,
+    code_as_type_params,
     code_as__expr_arglikes,
 )
 
 from .traverse import prev_bound
 
 from .locations import (
-    loc_With_items_pars, loc_ImportFrom_names_pars, loc_ClassDef_bases_pars, loc_Call_pars,
-    loc_TypeAlias_type_params_brackets, loc_ClassDef_type_params_brackets, loc_FunctionDef_type_params_brackets,
+    loc_With_items_pars,
+    loc_ImportFrom_names_pars,
+    loc_ClassDef_bases_pars,
+    loc_Call_pars,
+    loc_TypeAlias_type_params_brackets,
+    loc_ClassDef_type_params_brackets,
+    loc_FunctionDef_type_params_brackets,
     loc_Global_Nonlocal_names,
 )
 
 from .fst_core import _ParamsOffset
 
 from .fst_misc import (
-    new_empty_tuple, new_empty_set_star, new_empty_set_call, new_empty_set_curlies, get_trivia_params,
+    new_empty_tuple,
+    new_empty_set_star,
+    new_empty_set_call,
+    new_empty_set_curlies,
+    get_trivia_params,
     get_option_overridable,
 )
 

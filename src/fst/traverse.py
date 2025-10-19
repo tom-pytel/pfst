@@ -7,7 +7,18 @@ from typing import Literal
 from . import fst
 
 from .astutil import (
-    AST, Dict, Compare, MatchMapping, Call, arguments, expr_context, boolop, operator, unaryop, cmpop, AST_FIELDS
+    AST,
+    Dict,
+    Compare,
+    MatchMapping,
+    Call,
+    arguments,
+    expr_context,
+    boolop,
+    operator,
+    unaryop,
+    cmpop,
+    AST_FIELDS,
 )
 
 __all__ = [

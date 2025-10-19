@@ -14,8 +14,16 @@ from typing import Any, Callable, Generator, Iterator, Literal, Mapping, TextIO,
 from . import parsex
 
 from .asttypes import (
-    ASTS_EXPRISH_ALL, ASTS_STMTISH, ASTS_STMTISH_OR_MOD, ASTS_BLOCK, ASTS_BLOCK_OR_MOD, ASTS_SCOPE, ASTS_SCOPE_OR_MOD,
-    ASTS_SCOPE_NAMED, ASTS_SCOPE_NAMED_OR_MOD, ASTS_SCOPE_ANONYMOUS,
+    ASTS_EXPRISH_ALL,
+    ASTS_STMTISH,
+    ASTS_STMTISH_OR_MOD,
+    ASTS_BLOCK,
+    ASTS_BLOCK_OR_MOD,
+    ASTS_SCOPE,
+    ASTS_SCOPE_OR_MOD,
+    ASTS_SCOPE_NAMED,
+    ASTS_SCOPE_NAMED_OR_MOD,
+    ASTS_SCOPE_ANONYMOUS,
     AST,
     AnnAssign,
     Assert,
@@ -103,17 +111,21 @@ from .asttypes import (
 )
 
 from .astutil import (
-    constant, FIELDS, AST_FIELDS, OPCLS2STR, bistr, WalkFail,
-    has_type_comments, compare_asts, copy_ast, last_block_header_child, syntax_ordered_children,
+    constant,
+    FIELDS,
+    AST_FIELDS,
+    OPCLS2STR,
+    bistr,
+    WalkFail,
+    has_type_comments,
+    compare_asts,
+    copy_ast,
+    last_block_header_child,
+    syntax_ordered_children,
     precedence_require_parens_by_type,
 )
 
-from .common import (
-    PYLT13,
-    astfield, fstloc, fstlocn, nspace,
-    Self,
-    next_delims, prev_delims,
-)
+from .common import PYLT13, astfield, fstloc, fstlocn, nspace, Self, next_delims, prev_delims
 
 from .parsex import Mode
 from .code import Code, code_to_lines, code_as_all

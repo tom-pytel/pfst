@@ -43,9 +43,15 @@ from .asttypes import (
 from .astutil import OPSTR2CLS_AUG, bistr, pat_alnum, re_alnumdot_alnum
 
 from .common import (
-    NodeError, srcwpos, nspace,
-    re_empty_space, re_line_end_cont_or_comment,
-    next_frag, next_find, prev_find, next_delims,
+    NodeError,
+    srcwpos,
+    nspace,
+    re_empty_space,
+    re_line_end_cont_or_comment,
+    next_frag,
+    next_find,
+    prev_find,
+    next_delims,
 )
 
 from .locations import loc_block_header_end

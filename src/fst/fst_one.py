@@ -116,14 +116,40 @@ from .asttypes import (
 )
 
 from .astutil import (
-    constant, re_alnum, re_alnumdot, re_alnumdot_alnum, re_identifier, re_identifier_dotted, re_identifier_alias,
-    bistr, is_valid_target, is_valid_del_target, is_valid_MatchValue_value, is_valid_MatchMapping_key,
-    get_field, set_field, set_ctx, copy_ast, precedence_require_parens,
+    constant,
+    re_alnum,
+    re_alnumdot,
+    re_alnumdot_alnum,
+    re_identifier,
+    re_identifier_dotted,
+    re_identifier_alias,
+    bistr,
+    is_valid_target,
+    is_valid_del_target,
+    is_valid_MatchValue_value,
+    is_valid_MatchMapping_key,
+    get_field,
+    set_field,
+    set_ctx,
+    copy_ast,
+    precedence_require_parens,
 )
 
 from .common import (
-    FTSTRING_END_TOKENS, PYLT11, PYGE13, PYGE14, NodeError, astfield, fstloc, pyver,
-    next_frag, prev_frag, next_find, prev_find, next_find_re, prev_delims,
+    FTSTRING_END_TOKENS,
+    PYLT11,
+    PYGE13,
+    PYGE14,
+    NodeError,
+    astfield,
+    fstloc,
+    pyver,
+    next_frag,
+    prev_frag,
+    next_find,
+    prev_find,
+    next_find_re,
+    prev_delims,
 )
 
 from .code import (
@@ -156,7 +182,10 @@ from .code import (
 )
 
 from .locations import (
-    loc_arguments_empty, loc_ImportFrom_names_pars, loc_Lambda_args_entire, loc_block_header_end,
+    loc_arguments_empty,
+    loc_ImportFrom_names_pars,
+    loc_Lambda_args_entire,
+    loc_block_header_end,
     loc_Global_Nonlocal_names,
 )
 

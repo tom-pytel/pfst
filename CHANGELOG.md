@@ -15,6 +15,8 @@
 
 ### Added
 
+- put raw slice comma separated sequence to comma separated sequence handles trailing commas
+- put raw one to empty `Lambda.args` inserts space between `lambda` keyword and `args`
 - parse `Mode` includes names of all `AST` classes as well as the classes themselves
 - `FST.is_expr_arglike` to determine if expression only valid in `Call.args` or `ClassDef.bases`
 - `put_src()` "offset" and "no AST change" modes
@@ -25,6 +27,7 @@
 
 ### Updated
 
+- restrict raw node puts to only modify existing, no delete or pure insert
 - change `Compare` combined field indexing to not include `.left`, just `.ops` and `.comparators`
 - `dump()` indicates trailing whitespace after stmts, including with trailing `;`
 - recognize Devanagari and Hebrew for identifiers

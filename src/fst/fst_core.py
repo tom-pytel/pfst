@@ -15,7 +15,9 @@ from typing import Iterable, Literal, NamedTuple
 from . import fst
 
 from .asttypes import (
-    ASTS_EXPRISH, ASTS_STMTISH, ASTS_SCOPE_NAMED_OR_MOD,
+    ASTS_EXPRISH,
+    ASTS_STMTISH,
+    ASTS_SCOPE_NAMED_OR_MOD,
     AST,
     AsyncFor,
     AsyncFunctionDef,
@@ -85,16 +87,29 @@ from .asttypes import (
 from .astutil import bistr, syntax_ordered_children
 
 from .common import (
-    FTSTRING_START_TOKENS, FTSTRING_END_TOKENS,
-    Self, astfield, fstloc, nspace, pyver,
-    re_empty_line, re_empty_line_start, re_line_continuation, re_line_end_cont_or_comment,
-    next_find, prev_find,
+    FTSTRING_START_TOKENS,
+    FTSTRING_END_TOKENS,
+    Self,
+    astfield,
+    fstloc,
+    nspace,
+    pyver,
+    re_empty_line,
+    re_empty_line_start,
+    re_line_continuation,
+    re_line_end_cont_or_comment,
+    next_find,
+    prev_find,
 )
 
 from .parsex import get_special_parse_mode
 
 from .locations import (
-    loc_Call_pars, loc_Subscript_brackets, loc_ImportFrom_names_pars, loc_With_items_pars, loc_MatchClass_pars,
+    loc_Call_pars,
+    loc_Subscript_brackets,
+    loc_ImportFrom_names_pars,
+    loc_With_items_pars,
+    loc_MatchClass_pars,
 )
 
 

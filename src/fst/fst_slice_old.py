@@ -8,8 +8,23 @@ from . import fst
 from . import fst_slice
 
 from .asttypes import (
-    AsyncFor, AsyncFunctionDef, AsyncWith, ClassDef, ExceptHandler, For, FunctionDef, If, Match, Module, Try, While,
-    With, TryStar, match_case, mod, stmt,
+    AsyncFor,
+    AsyncFunctionDef,
+    AsyncWith,
+    ClassDef,
+    ExceptHandler,
+    For,
+    FunctionDef,
+    If,
+    Match,
+    Module,
+    Try,
+    While,
+    With,
+    TryStar,
+    match_case,
+    mod,
+    stmt,
 )
 
 from .astutil import copy_ast
@@ -28,9 +43,15 @@ from .astutil import bistr
 
 from .common import (
     fstloc,  # noqa: F811
-    re_empty_line_start, re_empty_line, re_comment_line_start, re_empty_space,
+    re_empty_line_start,
+    re_empty_line,
+    re_comment_line_start,
+    re_empty_space,
     re_empty_line_cont_or_comment,
-    next_frag, prev_frag, next_find, prev_find,  # noqa: F811
+    next_frag,
+    prev_frag,
+    next_find,  # noqa: F811
+    prev_find,  # noqa: F811
 )
 
 class SrcEdit:

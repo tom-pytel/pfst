@@ -1052,9 +1052,15 @@ class ReputSrc(Fuzzy):
 
 class ReputOne(Fuzzy):
     from fst.fst_one import (
-        _PUT_ONE_HANDLERS, _put_one_exprish_optional, _put_one_identifier_optional,
-        _put_one_Dict_keys, _put_one_withitem_optional_vars,
-        _put_one_ExceptHandler_name, _put_one_keyword_arg, _put_one_NOT_IMPLEMENTED_YET,)
+        _PUT_ONE_HANDLERS,
+        _put_one_exprish_optional,
+        _put_one_identifier_optional,
+        _put_one_Dict_keys,
+        _put_one_withitem_optional_vars,
+        _put_one_ExceptHandler_name,
+        _put_one_keyword_arg,
+        _put_one_NOT_IMPLEMENTED_YET,
+    )
 
     name = 'reput_one'
     forever = False
