@@ -792,16 +792,26 @@ class FST:
 
         else:
             self.parse_params = kwargs.get('parse_params', _DEFAULT_PARSE_PARAMS)
-            self.indent = (('?'
-                            if isinstance(ast_or_src, Module) else
-                            _DEFAULT_INDENT)
-                           if (indent := kwargs.get('indent')) is None else
-                           indent)
+
+            if (indent := kwargs.get('indent')) is not None:
+                self.indent = indent
+            elif ((is_modish := isinstance(ast_or_src, (Module, _ExceptHandlers, _match_cases))) or
+                  isinstance(ast_or_src, ASTS_BLOCK)):
+                self.indent = '?'
+            else:
+                self.indent = _DEFAULT_INDENT
 
         self._make_fst_tree()
 
-        if self.indent == '?':  # infer indentation from source, just use first indentation found for performance, don't try to find most common or anything like that
-            for a in ast_or_src.body:
+        if self.indent == '?':  # infer indentation from source, just use first indentation found for performance, don't try to find most common or anything like that, note that self.indent = '?' is used for checking
+            if is_modish:
+                asts = (getattr(ast_or_src, 'body', None) or
+                        getattr(ast_or_src, 'handlers', None) or
+                        getattr(ast_or_src, 'cases', None) or ())
+            else:
+                asts = (ast_or_src,)
+
+            for a in asts:
                 if isinstance(a, (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, ExceptHandler,
                                   match_case)):  # we check ExceptHandler and match_case because they may be supported as standalone parsed elements eventually
                     indent = a.body[0].f._get_indent()
