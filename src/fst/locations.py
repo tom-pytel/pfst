@@ -207,18 +207,20 @@ def loc_match_case(self: fst.FST) -> fstloc:
     # assert isinstance(self.a, match_case)
 
     ast = self.a
-    first = ast.pattern.f
-    last = self.last_child()
     lines = self.root._lines
+    ln, col, _, _ = ast.pattern.f.loc
+    _, _, end_ln, end_col = self.last_child().bloc
 
-    start = prev_find(lines, 0, 0, first.ln, first.col, 'case')  # we can use '0, 0' because we know "case" starts on a newline
+    ln, col = prev_find(lines, 0, 0, ln, col, 'case')  # we can use '0, 0' because we know "case" starts on a newline (internals of prev_find() go line by line)
 
-    if ast.body:
-        return fstloc(*start, last.bend_ln, last.bend_col)
+    if not ast.body:
+        end_ln, end_col = next_find(lines, end_ln, end_col, len(lines) - 1, len(lines[-1]), ':')  # special case, deleted whole body, end must be set to just past the colon (which MUST follow somewhere there)
+    elif semi := next_find(lines, end_ln, end_col, len(lines) - 1, len(lines[-1]), ';', True):  # if there is a trailing semicolon to last element then include it as part of case
+        end_ln, end_col = semi
+    else:
+        return fstloc(ln, col, end_ln, end_col)
 
-    end_ln, end_col = next_find(lines, last.bend_ln, last.bend_col, len(lines) - 1, len(lines[-1]), ':')  # special case, deleted whole body, end must be set to just past the colon (which MUST follow somewhere there)
-
-    return fstloc(*start, end_ln, end_col + 1)
+    return fstloc(ln, col, end_ln, end_col + 1)
 
 
 def loc_operator(self: fst.FST) -> fstloc | None:

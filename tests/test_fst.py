@@ -1591,6 +1591,11 @@ match a:
         self.assertRaises(ParseError, code_as_ImportFrom_names, FST('a', '_aliases').names.append('*').fst)
         self.assertEqual('*', code_as_ImportFrom_names(FST('*', '_aliases')).src)
 
+    def test_loc_match_case(self):
+        # make sure it includes trailing semicolon
+
+        self.assertEqual((0, 0, 0, 13), FST('case 1: pass;', match_case).loc)
+
     def test_loc_operator_no_parent(self):
         self.assertEqual((1, 0, 1, 1), FST(Invert(), ['# pre', '~ # post', '# next']).loc)
         self.assertEqual((1, 0, 1, 3), FST(Not(), ['# pre', 'not # post', '# next']).loc)
@@ -2483,7 +2488,7 @@ t"c"]''').elts[0]._is_enclosed_or_line())
             self.assertTrue(FST('t"1{2}"', 'exec').body[0].value._is_enclosed_in_parents('values'))
             self.assertTrue(FST('t"1{2}"', 'exec').body[0].value.values[1]._is_enclosed_in_parents('value'))
 
-    def test__loc_key(self):
+    def test__loc_maybe_key(self):
         a = parse('''{
     a: """test
 two  # fake comment start""", **b

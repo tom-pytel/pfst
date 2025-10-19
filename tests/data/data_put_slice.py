@@ -16003,6 +16003,314 @@ Module - ROOT 0,0..5,0
     0] Name 'k' Store - 3,0..3,1
     .value Constant 3 - 3,4..3,5
 '''),
+
+(17, '', 1, 1, None, {}, ('_ExceptHandlers',
+r'''except a: pass'''), ('ExceptHandler',
+r'''except: pass'''), r'''
+except a: pass
+except: pass
+''', r'''
+except a: pass
+except:
+    pass
+''', r'''
+_ExceptHandlers - ROOT 0,0..1,12
+  .handlers[2]
+  0] ExceptHandler - 0,0..0,14
+    .type Name 'a' Load - 0,7..0,8
+    .body[1]
+    0] Pass - 0,10..0,14
+  1] ExceptHandler - 1,0..1,12
+    .body[1]
+    0] Pass - 1,8..1,12
+'''),
+
+(18, '', 1, 1, None, {}, ('_ExceptHandlers',
+r'''except a: pass'''), ('ExceptHandler', r'''
+except: pass
+
+'''), r'''
+except a: pass
+except: pass
+
+''', r'''
+except a: pass
+except:
+    pass
+''', r'''
+_ExceptHandlers - ROOT 0,0..1,12
+  .handlers[2]
+  0] ExceptHandler - 0,0..0,14
+    .type Name 'a' Load - 0,7..0,8
+    .body[1]
+    0] Pass - 0,10..0,14
+  1] ExceptHandler - 1,0..1,12
+    .body[1]
+    0] Pass - 1,8..1,12
+'''),
+
+(19, '', 1, 1, None, {}, ('_ExceptHandlers',
+r'''except a: pass'''), ('ExceptHandler', r'''
+except: pass
+
+
+'''), r'''
+except a: pass
+except: pass
+
+
+''', r'''
+except a: pass
+except:
+    pass
+''', r'''
+_ExceptHandlers - ROOT 0,0..1,12
+  .handlers[2]
+  0] ExceptHandler - 0,0..0,14
+    .type Name 'a' Load - 0,7..0,8
+    .body[1]
+    0] Pass - 0,10..0,14
+  1] ExceptHandler - 1,0..1,12
+    .body[1]
+    0] Pass - 1,8..1,12
+'''),
+
+(20, '', 1, 1, None, {}, ('_ExceptHandlers',
+r'''except a: pass'''), ('ExceptHandler', r'''
+except:
+    pass
+'''), r'''
+except a: pass
+except:
+    pass
+''', r'''
+_ExceptHandlers - ROOT 0,0..2,8
+  .handlers[2]
+  0] ExceptHandler - 0,0..0,14
+    .type Name 'a' Load - 0,7..0,8
+    .body[1]
+    0] Pass - 0,10..0,14
+  1] ExceptHandler - 1,0..2,8
+    .body[1]
+    0] Pass - 2,4..2,8
+'''),
+
+(21, '', 1, 1, None, {}, ('_ExceptHandlers',
+r'''except a: pass'''), ('ExceptHandler', r'''
+except:
+    pass
+
+'''), r'''
+except a: pass
+except:
+    pass
+
+''', r'''
+except a: pass
+except:
+    pass
+''', r'''
+_ExceptHandlers - ROOT 0,0..2,8
+  .handlers[2]
+  0] ExceptHandler - 0,0..0,14
+    .type Name 'a' Load - 0,7..0,8
+    .body[1]
+    0] Pass - 0,10..0,14
+  1] ExceptHandler - 1,0..2,8
+    .body[1]
+    0] Pass - 2,4..2,8
+'''),
+
+(22, '', 1, 1, None, {}, ('_ExceptHandlers',
+r'''except a: pass'''), ('ExceptHandler', r'''
+except:
+    pass
+
+
+'''), r'''
+except a: pass
+except:
+    pass
+
+
+''', r'''
+except a: pass
+except:
+    pass
+''', r'''
+_ExceptHandlers - ROOT 0,0..2,8
+  .handlers[2]
+  0] ExceptHandler - 0,0..0,14
+    .type Name 'a' Load - 0,7..0,8
+    .body[1]
+    0] Pass - 0,10..0,14
+  1] ExceptHandler - 1,0..2,8
+    .body[1]
+    0] Pass - 2,4..2,8
+'''),
+
+(23, '', 1, 1, None, {}, ('_match_cases',
+r'''case 1: pass'''), ('match_case',
+r'''case 2: pass'''), r'''
+case 1: pass
+case 2: pass
+''', r'''
+case 1: pass
+case 2:
+    pass
+''', r'''
+_match_cases - ROOT 0,0..1,12
+  .cases[2]
+  0] match_case - 0,0..0,12
+    .pattern MatchValue - 0,5..0,6
+      .value Constant 1 - 0,5..0,6
+    .body[1]
+    0] Pass - 0,8..0,12
+  1] match_case - 1,0..1,12
+    .pattern MatchValue - 1,5..1,6
+      .value Constant 2 - 1,5..1,6
+    .body[1]
+    0] Pass - 1,8..1,12
+'''),
+
+(24, '', 1, 1, None, {}, ('_match_cases',
+r'''case 1: pass'''), ('match_case', r'''
+case 2: pass
+
+'''), r'''
+case 1: pass
+case 2: pass
+
+''', r'''
+case 1: pass
+case 2:
+    pass
+''', r'''
+_match_cases - ROOT 0,0..1,12
+  .cases[2]
+  0] match_case - 0,0..0,12
+    .pattern MatchValue - 0,5..0,6
+      .value Constant 1 - 0,5..0,6
+    .body[1]
+    0] Pass - 0,8..0,12
+  1] match_case - 1,0..1,12
+    .pattern MatchValue - 1,5..1,6
+      .value Constant 2 - 1,5..1,6
+    .body[1]
+    0] Pass - 1,8..1,12
+'''),
+
+(25, '', 1, 1, None, {}, ('_match_cases',
+r'''case 1: pass'''), ('match_case', r'''
+case 2: pass
+
+
+'''), r'''
+case 1: pass
+case 2: pass
+
+
+''', r'''
+case 1: pass
+case 2:
+    pass
+''', r'''
+_match_cases - ROOT 0,0..1,12
+  .cases[2]
+  0] match_case - 0,0..0,12
+    .pattern MatchValue - 0,5..0,6
+      .value Constant 1 - 0,5..0,6
+    .body[1]
+    0] Pass - 0,8..0,12
+  1] match_case - 1,0..1,12
+    .pattern MatchValue - 1,5..1,6
+      .value Constant 2 - 1,5..1,6
+    .body[1]
+    0] Pass - 1,8..1,12
+'''),
+
+(26, '', 1, 1, None, {}, ('_match_cases',
+r'''case 1: pass'''), ('match_case', r'''
+case 2:
+    pass
+'''), r'''
+case 1: pass
+case 2:
+    pass
+''', r'''
+_match_cases - ROOT 0,0..2,8
+  .cases[2]
+  0] match_case - 0,0..0,12
+    .pattern MatchValue - 0,5..0,6
+      .value Constant 1 - 0,5..0,6
+    .body[1]
+    0] Pass - 0,8..0,12
+  1] match_case - 1,0..2,8
+    .pattern MatchValue - 1,5..1,6
+      .value Constant 2 - 1,5..1,6
+    .body[1]
+    0] Pass - 2,4..2,8
+'''),
+
+(27, '', 1, 1, None, {}, ('_match_cases',
+r'''case 1: pass'''), ('match_case', r'''
+case 2:
+    pass
+
+'''), r'''
+case 1: pass
+case 2:
+    pass
+
+''', r'''
+case 1: pass
+case 2:
+    pass
+''', r'''
+_match_cases - ROOT 0,0..2,8
+  .cases[2]
+  0] match_case - 0,0..0,12
+    .pattern MatchValue - 0,5..0,6
+      .value Constant 1 - 0,5..0,6
+    .body[1]
+    0] Pass - 0,8..0,12
+  1] match_case - 1,0..2,8
+    .pattern MatchValue - 1,5..1,6
+      .value Constant 2 - 1,5..1,6
+    .body[1]
+    0] Pass - 2,4..2,8
+'''),
+
+(28, '', 1, 1, None, {}, ('_match_cases',
+r'''case 1: pass'''), ('match_case', r'''
+case 2:
+    pass
+
+
+'''), r'''
+case 1: pass
+case 2:
+    pass
+
+
+''', r'''
+case 1: pass
+case 2:
+    pass
+''', r'''
+_match_cases - ROOT 0,0..2,8
+  .cases[2]
+  0] match_case - 0,0..0,12
+    .pattern MatchValue - 0,5..0,6
+      .value Constant 1 - 0,5..0,6
+    .body[1]
+    0] Pass - 0,8..0,12
+  1] match_case - 1,0..2,8
+    .pattern MatchValue - 1,5..1,6
+      .value Constant 2 - 1,5..1,6
+    .body[1]
+    0] Pass - 2,4..2,8
+'''),
 ],
 
 'stmtish_trailing_semicolon': [  # ................................................................................
@@ -16163,6 +16471,51 @@ Module - ROOT 0,0..2,10
       .targets[1]
       0] Name 'c' Store - 2,4..2,5
       .value Constant 3 - 2,8..2,9
+'''),
+
+(6, '', 1, 1, None, {}, ('_ExceptHandlers',
+r'''except a: pass'''), ('ExceptHandler',
+r'''except: pass;'''), r'''
+except a: pass
+except: pass;
+''', r'''
+except a: pass
+except:
+    pass
+''', r'''
+_ExceptHandlers - ROOT 0,0..1,13
+  .handlers[2]
+  0] ExceptHandler - 0,0..0,14
+    .type Name 'a' Load - 0,7..0,8
+    .body[1]
+    0] Pass - 0,10..0,14
+  1] ExceptHandler - 1,0..1,13
+    .body[1]
+    0] Pass - 1,8..1,12
+'''),
+
+(7, '', 1, 1, None, {}, ('_match_cases',
+r'''case 1: pass'''), ('match_case',
+r'''case 2: pass;'''), r'''
+case 1: pass
+case 2: pass;
+''', r'''
+case 1: pass
+case 2:
+    pass
+''', r'''
+_match_cases - ROOT 0,0..1,13
+  .cases[2]
+  0] match_case - 0,0..0,12
+    .pattern MatchValue - 0,5..0,6
+      .value Constant 1 - 0,5..0,6
+    .body[1]
+    0] Pass - 0,8..0,12
+  1] match_case - 1,0..1,13
+    .pattern MatchValue - 1,5..1,6
+      .value Constant 2 - 1,5..1,6
+    .body[1]
+    0] Pass - 1,8..1,12
 '''),
 ],
 
