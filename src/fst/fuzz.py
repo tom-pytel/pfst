@@ -17,7 +17,7 @@ from typing import Any, Generator, Iterable, Literal, NamedTuple
 from .asttypes import TypeAlias, TemplateStr, Interpolation, _ExceptHandlers
 from .astutil import *
 from .astutil import re_alnumdot_alnum
-from .common import PYLT11, PYLT12, PYLT14, PYGE12, astfield
+from .common import PYLT11, PYLT12, PYLT14, PYGE12, astfield, next_frag
 from .view import fstview
 from .parsex import parse, parse_expr_arglike
 from .fst import FST
@@ -25,6 +25,25 @@ from . import NodeError
 
 
 PROGRAM = 'python -m fst.fuzz'
+
+ASTS_STMT_NONBLOCK = (
+    Return,
+    Delete,
+    Assign,
+    TypeAlias,
+    AugAssign,
+    AnnAssign,
+    Raise,
+    Assert,
+    Import,
+    ImportFrom,
+    Global,
+    Nonlocal,
+    Expr,
+    Pass,
+    Break,
+    Continue,
+)
 
 EXPRS = [
     'a or b',
@@ -247,6 +266,26 @@ def add_lineconts(fst: FST) -> None:
                 #     raise RuntimeError
 
         g = f
+
+
+def add_semicolons(fst: FST) -> None:
+    lines = fst._lines
+
+    for f in fst.walk(True, back=True):
+        if not isinstance(f.a, ASTS_STMT_NONBLOCK):
+            continue
+
+        if (r := randint(0, 3)) >= 2:
+            continue
+
+        if (r and (pfield := f.pfield) and pfield.idx and
+            isinstance((g := f.prev()).a, ASTS_STMT_NONBLOCK) and
+            (not (fr := next_frag(lines, g.end_ln, g.end_col, g.end_ln, 0x7fffffffffffffff)) or fr.src.startswith('#'))
+        ):
+            f.parent.put_src(choice((';', ' ;', '; ', ' ; ')), g.end_ln, g.end_col, f.ln, f.col, 'offset')
+
+        elif not (fr := next_frag(lines, f.end_ln, f.end_col, f.end_ln, 0x7fffffffffffffff)) or fr.src.startswith('#'):
+            f.parent.put_src(choice((';', ' ;')), f.end_ln, f.end_col, f.end_ln, f.end_col, 'offset')
 
 
 def find_pys(path) -> list[str]:
@@ -782,6 +821,8 @@ class Fuzzy:
         self.linecont_rnd = args.get('linecont_rnd')
         self.minify = args.get('minify')
         self.minify_rnd = args.get('minify_rnd')
+        self.semicolon = args.get('semicolon')
+        self.semicolon_rnd = args.get('semicolon_rnd')
         self.seed = args.get('seed')
         self.shuffle = args.get('shuffle')
         self.verbose = args.get('verbose')
@@ -810,6 +851,7 @@ class Fuzzy:
         for i, fnm in enumerate(fnms):
             self.minified = self.args['minify'] or (self.args['minify_rnd'] and randint(0, 1))
             self.lineconted = self.args['linecont'] or (self.args['linecont_rnd'] and randint(0, 1))
+            self.semicoloned = self.args['semicolon'] or (self.args['semicolon_rnd'] and randint(0, 1))
 
             head = f'{i:<{width}}: {fnm}'
 
@@ -821,6 +863,9 @@ class Fuzzy:
                     src = minify_src(src)
 
                 fst = FST.fromsrc(src)
+
+                if self.semicoloned:
+                    add_semicolons(fst)
 
                 if self.lineconted:
                     add_lineconts(fst)
@@ -851,7 +896,7 @@ class Fuzzy:
                 print('-'*80)
                 print('Command line:', ' '.join(sys.argv))
                 print('File:', fnm)
-                print(f'Preprocessing: {"" if self.minified else "NOT "}minified, {"" if self.lineconted else "NOT "}lineconted')
+                print(f'Preprocessing: {"" if self.minified else "NOT "}minified, {"" if self.lineconted else "NOT "}lineconted, {"" if self.semicoloned else "NOT "}semicoloned')
                 print('Random seed:', self.rnd_seed)
 
                 raise
@@ -863,6 +908,14 @@ class Fuzzy:
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+
+class Dump(Fuzzy):
+    name = 'dump'
+    forever = False
+
+    def fuzz_one(self, fst, fnm) -> bool:
+        print(fst.src)
+
 
 class VerifyCopy(Fuzzy):
     name = 'verify_copy'
@@ -2066,6 +2119,10 @@ def main():
                         help='add line continuations to source')
     parser.add_argument('-C', '--linecont-rnd', default=False, action='store_true',
                         help='randomly add line continuations to source')
+    parser.add_argument('-e', '--semicolon', default=False, action='store_true',
+                        help='add semicolons to source')
+    parser.add_argument('-E', '--semicolon-rnd', default=False, action='store_true',
+                        help='randomly add semicolons to source')
     parser.add_argument('-m', '--minify', default=False, action='store_true',
                         help='minify all source')
     parser.add_argument('-M', '--minify-rnd', default=False, action='store_true',
@@ -2087,7 +2144,7 @@ def main():
 
     fuzz = dict.fromkeys(sum((f.replace(',', ' ').split() for f in args.fuzz), start=[])
                          if args.fuzz or args.fuzz_rnd or args.fuzz_det else
-                         FUZZIES)
+                         (f for f in FUZZIES if f != 'dump'))
 
     if args.fuzz_rnd:
         for n, f in FUZZIES.items():
@@ -2096,7 +2153,7 @@ def main():
 
     if args.fuzz_det:
         for n, f in FUZZIES.items():
-            if not f.forever:
+            if not f.forever and f is not Dump:
                 fuzz[n] = f
 
     print(f'fuzz = {", ".join(fuzz)}')
