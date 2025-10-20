@@ -241,7 +241,7 @@ class SrcEdit:
                     del_loc = fstloc(ln, col, end_ln, frag.col)
 
                     if starts_line and fpost:
-                        put_lines = [re_empty_line_start.match(lines[copy_loc.ln]).group(0)]
+                        put_lines = [re_empty_line_start.match(lines[copy_loc.ln]).group(0)]  # can use copy_loc.ln because if got this line there are never any preceding comments
 
                 else:  # HACK FIX! TODO: do this properly, only here because '\\\n stmt' does not work at module level even though it works inside indented blocks, otherwise `del_loc` above would be sufficient unconditionally
                     del_loc = fstloc(ln, 0, bound_end_ln, bound_end_col)
@@ -296,7 +296,7 @@ class SrcEdit:
                     del_loc = fstloc(*pre_comms, bound_end_ln, bound_end_col)
 
                     if fpost:  # ends at next statement, otherwise if fpost doesn't exist then was empty line after a useless trailing ';'
-                        put_lines = [re_empty_line_start.match(lines[copy_loc.ln]).group(0)]  # we know it starts a line because pre_comms exists
+                        put_lines = [re_empty_line_start.match(lines[ffirst.bln]).group(0)]  # we know it starts a line because pre_comms exists, not copy_loc.ln because that is comment
 
         elif post_comms:
             if pre_semi:
