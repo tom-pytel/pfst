@@ -2,8 +2,9 @@
 
 ### Fixed
 
-- fix coerce `except*` `AST` slice to `FST`
+- fix put slice to end of specific statements with trialing semicolons
 - fix incorrect block location on statementish op leaving trailing semicolon in last child
+- fix coerce `except*` `AST` slice to `FST`
 - fix put star `*` to parenthesized single element non-star `ImportFrom.names`
 - fix get slice from start of unparenthesized tuple in f-string expression on py < 3.12
 - fix get format_spec escape sequences from `rf'{...:\xFF}'` string

@@ -725,6 +725,43 @@ def _maybe_fix_MatchOr(self: fst.FST, norm: bool | str = False) -> None:
         self._maybe_fix_joined_alnum(*self.loc)
 
 
+def _maybe_fix_stmt_end(
+    self: fst.FST, end_lineno: int, end_col_offset: int, old_end_lineno: int, old_end_col_offset: int
+) -> None:
+    """Fix end of statement that was modified. This sets new end position in self and parents if they originally ended
+    on this statement and deals with trailing semicolon issues."""
+
+    self._set_end_pos(end_lineno, end_col_offset, old_end_lineno, old_end_col_offset)
+
+    lines = self.root._lines
+
+    if not (parent := self.parent):  # end bound is end of source
+        bound_end_ln = len(lines) - 1
+        bound_end_col = len(lines[-1])
+
+    elif (next_idx := (pfield := self.pfield).idx + 1) < len(parent_body := getattr(parent.a, pfield.name)):  # end bound is beginning of next statement
+        bound_end_ln, bound_end_col, _, _ = parent_body[next_idx].f.bloc
+    else:  # end bound is end of parent
+        _, _, bound_end_ln, bound_end_col = parent.bloc
+
+    _, _, bound_ln, bound_col = self.bloc
+
+    if bound_end_ln == bound_ln:  # if bound ends on same line as starts then we are done because there can not be a trailing semicolon on a different line
+        return
+
+    if not (semi := next_find(lines, bound_ln + 1, 0, bound_end_ln, bound_end_col, ';', True)):
+        return
+
+    # found a trailing semicolon on a different line, can't let that stand, technically there could be line continuations between us and it that were already there before the operation, but whatever
+
+    # TODO: this is the quick and easy way, the better way to preserve possible comment would be to remove semicolon and adjust start position of any trailing statements, but that involves checking line continuations and possibly dealing with normalizing a block statement which is all semicoloned statements
+
+    semi_ln, semi_col = semi
+    semi_col = min(semi_col, len(self._get_indent()))  # try to preserve original space before semicolon, silly, yes
+
+    self._put_src(None, bound_ln, bound_col, semi_ln, semi_col, False)
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 # get
 
@@ -1133,8 +1170,8 @@ def _get_slice_Delete_targets(
 
     if cut:
         if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
-            self._set_end_pos(bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col),
-                              ast.end_lineno, ast.end_col_offset)
+            _maybe_fix_stmt_end(self, bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col),
+                                ast.end_lineno, ast.end_col_offset)
 
         ln, col, _, _ = self.loc
 
@@ -1270,7 +1307,8 @@ def _get_slice_Import_names(
 
     if cut:
         if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
-            self._set_end_pos((bn := body[-1]).end_lineno, bn.end_col_offset, ast.end_lineno, ast.end_col_offset)
+            _maybe_fix_stmt_end(self, (bn := body[-1]).end_lineno, bn.end_col_offset,
+                                ast.end_lineno, ast.end_col_offset)
 
         self._maybe_add_line_continuations()
 
@@ -1317,7 +1355,8 @@ def _get_slice_ImportFrom_names(
 
     if cut and not pars_n:  # only need to fix maybe if there are no parentheses
         if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
-            self._set_end_pos((bn := body[-1]).end_lineno, bn.end_col_offset, ast.end_lineno, ast.end_col_offset)
+            _maybe_fix_stmt_end(self, (bn := body[-1]).end_lineno, bn.end_col_offset,
+                                ast.end_lineno, ast.end_col_offset)
 
         if not self._is_enclosed_or_line(pars=False):  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
             pars_ln, pars_col, pars_end_ln, pars_end_col = loc_ImportFrom_names_pars(self)
@@ -1393,7 +1432,7 @@ def _get_slice_Global_Nonlocal_names(
 
     if cut:
         if start and stop == len_body:  # if cut till end and something left then may need to reset end position of self due to new trailing trivia
-            self._set_end_pos(bound_ln + 1, lines[bound_ln].c2b(bound_col), ast.end_lineno, ast.end_col_offset)
+            _maybe_fix_stmt_end(self, bound_ln + 1, lines[bound_ln].c2b(bound_col), ast.end_lineno, ast.end_col_offset)
 
         self._maybe_add_line_continuations()
 
@@ -2927,7 +2966,8 @@ def _put_slice_Delete_targets(
         if body:
             _, _, bound_ln, bound_col = body[-1].f.pars()
 
-        self._set_end_pos(bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col), ast.end_lineno, ast.end_col_offset)
+        _maybe_fix_stmt_end(self, bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col),
+                            ast.end_lineno, ast.end_col_offset)
 
     ln, col, _, _ = self.loc
 
@@ -3042,10 +3082,11 @@ def _put_slice_Import_names(
 
     if stop == len_body:  # if del till and something left then may need to reset end position of self due to new trailing trivia
         if body:
-            self._set_end_pos((bn := body[-1]).end_lineno, bn.end_col_offset, ast.end_lineno, ast.end_col_offset)
+            _maybe_fix_stmt_end(self, (bn := body[-1]).end_lineno, bn.end_col_offset,
+                                ast.end_lineno, ast.end_col_offset)
         else:
-            self._set_end_pos(bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col),
-                              ast.end_lineno, ast.end_col_offset)
+            _maybe_fix_stmt_end(self, bound_ln + 1, self.root._lines[bound_ln].c2b(bound_col),
+                                ast.end_lineno, ast.end_col_offset)
 
     self._maybe_add_line_continuations()  # THEORETICALLY could need to _maybe_fix_joined_alnum() but only if the user goes out of their way to F S up, so we don't bother with this
 
@@ -3091,10 +3132,11 @@ def _put_slice_ImportFrom_names(
     if not pars_n:  # only need to fix maybe if there are no parentheses
         if stop == len_body:  # if del till and something left then may need to reset end position of self due to new trailing trivia
             if body:
-                self._set_end_pos((bn := body[-1]).end_lineno, bn.end_col_offset, ast.end_lineno, ast.end_col_offset)
+                _maybe_fix_stmt_end(self, (bn := body[-1]).end_lineno, bn.end_col_offset,
+                                    ast.end_lineno, ast.end_col_offset)
             else:
-                self._set_end_pos(pars_ln + 1, self.root._lines[pars_ln].c2b(pars_col),
-                                  ast.end_lineno, ast.end_col_offset)
+                _maybe_fix_stmt_end(self, pars_ln + 1, self.root._lines[pars_ln].c2b(pars_col),
+                                    ast.end_lineno, ast.end_col_offset)
 
         if not self._is_enclosed_or_line(pars=False):  # if no parentheses and wound up not valid for parse then adding parentheses around names should fix
             pars_ln, pars_col, pars_end_ln, pars_end_col = loc_ImportFrom_names_pars(self)
@@ -3217,7 +3259,8 @@ def _put_slice_Global_Nonlocal_names(
         if fst_:
             _, _, last_end_ln, last_end_col = fst_last_loc
 
-        self._set_end_pos(last_end_ln + 1, lines[last_end_ln].c2b(last_end_col), ast.end_lineno, ast.end_col_offset)
+        _maybe_fix_stmt_end(self, last_end_ln + 1, lines[last_end_ln].c2b(last_end_col),
+                            ast.end_lineno, ast.end_col_offset)
 
     self._maybe_add_line_continuations()  # THEORETICALLY could need to _maybe_fix_joined_alnum() but only if the user goes out of their way to F S up, so we don't bother with this
 

@@ -16804,6 +16804,171 @@ If - ROOT 0,0..1,11
 '''),
 ],
 
+'Delete_targets_trailing_semicolon': [  # ................................................................................
+
+(0, 'body[0]', 2, 2, None, {}, ('exec',
+r'''del a, b ; del c'''), ('Tuple',
+r'''d,  # comment'''),
+r'''del a, b, d ; del c''', r'''
+Module - ROOT 0,0..0,19
+  .body[2]
+  0] Delete - 0,0..0,11
+    .targets[3]
+    0] Name 'a' Del - 0,4..0,5
+    1] Name 'b' Del - 0,7..0,8
+    2] Name 'd' Del - 0,10..0,11
+  1] Delete - 0,14..0,19
+    .targets[1]
+    0] Name 'c' Del - 0,18..0,19
+'''),
+
+(1, 'body[0]', 2, 2, None, {}, ('exec',
+r'''del a, b ; del c'''), ('Tuple', r'''
+d,
+e
+
+'''), r'''
+del a, b, d, \
+    e ; del c
+''',
+r'''del a, b, d, e ; del c''', r'''
+Module - ROOT 0,0..1,13
+  .body[2]
+  0] Delete - 0,0..1,5
+    .targets[4]
+    0] Name 'a' Del - 0,4..0,5
+    1] Name 'b' Del - 0,7..0,8
+    2] Name 'd' Del - 0,10..0,11
+    3] Name 'e' Del - 1,4..1,5
+  1] Delete - 1,8..1,13
+    .targets[1]
+    0] Name 'c' Del - 1,12..1,13
+'''),
+
+(2, 'body[0]', 2, 2, None, {}, ('exec',
+r'''del a, b ; del c'''), ('Tuple', r'''
+d,
+e  # comment
+
+'''), r'''
+del a, b, d, \
+    e ; del c
+''',
+r'''del a, b, d, e ; del c''', r'''
+Module - ROOT 0,0..1,13
+  .body[2]
+  0] Delete - 0,0..1,5
+    .targets[4]
+    0] Name 'a' Del - 0,4..0,5
+    1] Name 'b' Del - 0,7..0,8
+    2] Name 'd' Del - 0,10..0,11
+    3] Name 'e' Del - 1,4..1,5
+  1] Delete - 1,8..1,13
+    .targets[1]
+    0] Name 'c' Del - 1,12..1,13
+'''),
+
+(3, 'body[0]', 2, 2, None, {}, ('exec',
+r'''del a, b ;'''), ('Tuple',
+r'''d,  # comment'''),
+r'''del a, b, d ;''', r'''
+Module - ROOT 0,0..0,13
+  .body[1]
+  0] Delete - 0,0..0,11
+    .targets[3]
+    0] Name 'a' Del - 0,4..0,5
+    1] Name 'b' Del - 0,7..0,8
+    2] Name 'd' Del - 0,10..0,11
+'''),
+
+(4, 'body[0]', 2, 2, None, {}, ('exec',
+r'''del a, b ;'''), ('Tuple', r'''
+d,
+e
+
+'''), r'''
+del a, b, d, \
+    e ;
+''',
+r'''del a, b, d, e ;''', r'''
+Module - ROOT 0,0..1,7
+  .body[1]
+  0] Delete - 0,0..1,5
+    .targets[4]
+    0] Name 'a' Del - 0,4..0,5
+    1] Name 'b' Del - 0,7..0,8
+    2] Name 'd' Del - 0,10..0,11
+    3] Name 'e' Del - 1,4..1,5
+'''),
+
+(5, 'body[0]', 2, 2, None, {}, ('exec',
+r'''del a, b ;'''), ('Tuple', r'''
+d,
+e  # comment
+
+'''), r'''
+del a, b, d, \
+    e ;
+''',
+r'''del a, b, d, e ;''', r'''
+Module - ROOT 0,0..1,7
+  .body[1]
+  0] Delete - 0,0..1,5
+    .targets[4]
+    0] Name 'a' Del - 0,4..0,5
+    1] Name 'b' Del - 0,7..0,8
+    2] Name 'd' Del - 0,10..0,11
+    3] Name 'e' Del - 1,4..1,5
+'''),
+
+(6, '', 2, 2, None, {}, (None,
+r'''del a, b ;'''), ('Tuple',
+r'''d,  # comment'''),
+r'''del a, b, d ;''', r'''
+Delete - ROOT 0,0..0,11
+  .targets[3]
+  0] Name 'a' Del - 0,4..0,5
+  1] Name 'b' Del - 0,7..0,8
+  2] Name 'd' Del - 0,10..0,11
+'''),
+
+(7, '', 2, 2, None, {}, (None,
+r'''del a, b ;'''), ('Tuple', r'''
+d,
+e
+
+'''), r'''
+del a, b, d, \
+    e ;
+''',
+r'''del a, b, d, e ;''', r'''
+Delete - ROOT 0,0..1,5
+  .targets[4]
+  0] Name 'a' Del - 0,4..0,5
+  1] Name 'b' Del - 0,7..0,8
+  2] Name 'd' Del - 0,10..0,11
+  3] Name 'e' Del - 1,4..1,5
+'''),
+
+(8, '', 2, 2, None, {}, (None,
+r'''del a, b ;'''), ('Tuple', r'''
+d,
+e  # comment
+
+'''), r'''
+del a, b, d, \
+    e ;
+''',
+r'''del a, b, d, e ;''', r'''
+Delete - ROOT 0,0..1,5
+  .targets[4]
+  0] Name 'a' Del - 0,4..0,5
+  1] Name 'b' Del - 0,7..0,8
+  2] Name 'd' Del - 0,10..0,11
+  3] Name 'e' Del - 1,4..1,5
+'''),
+],
+
 'Assign_targets': [  # ................................................................................
 
 (0, 'body[0]', None, None, 'targets', {}, ('exec',
@@ -18718,6 +18883,201 @@ If - ROOT 0,0..1,14
 '''),
 ],
 
+'Import_names_trailing_semicolon': [  # ................................................................................
+
+(0, 'body[0]', 2, 2, None, {}, ('exec',
+r'''import a, b ; import c'''), ('_aliases',
+r'''d  # comment'''),
+r'''import a, b, d ; import c''', r'''
+Module - ROOT 0,0..0,25
+  .body[2]
+  0] Import - 0,0..0,14
+    .names[3]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 0,10..0,11
+      .name 'b'
+    2] alias - 0,13..0,14
+      .name 'd'
+  1] Import - 0,17..0,25
+    .names[1]
+    0] alias - 0,24..0,25
+      .name 'c'
+'''),
+
+(1, 'body[0]', 2, 2, None, {}, ('exec',
+r'''import a, b ; import c'''), ('_aliases', r'''
+d,
+e
+
+'''), r'''
+import a, b, d, \
+       e ; import c
+''', r'''
+Module - ROOT 0,0..1,19
+  .body[2]
+  0] Import - 0,0..1,8
+    .names[4]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 0,10..0,11
+      .name 'b'
+    2] alias - 0,13..0,14
+      .name 'd'
+    3] alias - 1,7..1,8
+      .name 'e'
+  1] Import - 1,11..1,19
+    .names[1]
+    0] alias - 1,18..1,19
+      .name 'c'
+'''),
+
+(2, 'body[0]', 2, 2, None, {}, ('exec',
+r'''import a, b ; import c'''), ('_aliases', r'''
+d,
+e  # comment
+
+'''), r'''
+import a, b, d, \
+       e ; import c
+''', r'''
+Module - ROOT 0,0..1,19
+  .body[2]
+  0] Import - 0,0..1,8
+    .names[4]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 0,10..0,11
+      .name 'b'
+    2] alias - 0,13..0,14
+      .name 'd'
+    3] alias - 1,7..1,8
+      .name 'e'
+  1] Import - 1,11..1,19
+    .names[1]
+    0] alias - 1,18..1,19
+      .name 'c'
+'''),
+
+(3, 'body[0]', 2, 2, None, {}, ('exec',
+r'''import a, b ;'''), ('_aliases',
+r'''d  # comment'''),
+r'''import a, b, d ;''', r'''
+Module - ROOT 0,0..0,16
+  .body[1]
+  0] Import - 0,0..0,14
+    .names[3]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 0,10..0,11
+      .name 'b'
+    2] alias - 0,13..0,14
+      .name 'd'
+'''),
+
+(4, 'body[0]', 2, 2, None, {}, ('exec',
+r'''import a, b ;'''), ('_aliases', r'''
+d,
+e
+
+'''), r'''
+import a, b, d, \
+       e ;
+''', r'''
+Module - ROOT 0,0..1,10
+  .body[1]
+  0] Import - 0,0..1,8
+    .names[4]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 0,10..0,11
+      .name 'b'
+    2] alias - 0,13..0,14
+      .name 'd'
+    3] alias - 1,7..1,8
+      .name 'e'
+'''),
+
+(5, 'body[0]', 2, 2, None, {}, ('exec',
+r'''import a, b ;'''), ('_aliases', r'''
+d,
+e  # comment
+
+'''), r'''
+import a, b, d, \
+       e ;
+''', r'''
+Module - ROOT 0,0..1,10
+  .body[1]
+  0] Import - 0,0..1,8
+    .names[4]
+    0] alias - 0,7..0,8
+      .name 'a'
+    1] alias - 0,10..0,11
+      .name 'b'
+    2] alias - 0,13..0,14
+      .name 'd'
+    3] alias - 1,7..1,8
+      .name 'e'
+'''),
+
+(6, '', 2, 2, None, {}, (None,
+r'''import a, b ;'''), ('_aliases',
+r'''d  # comment'''),
+r'''import a, b, d ;''', r'''
+Import - ROOT 0,0..0,14
+  .names[3]
+  0] alias - 0,7..0,8
+    .name 'a'
+  1] alias - 0,10..0,11
+    .name 'b'
+  2] alias - 0,13..0,14
+    .name 'd'
+'''),
+
+(7, '', 2, 2, None, {}, (None,
+r'''import a, b ;'''), ('_aliases', r'''
+d,
+e
+
+'''), r'''
+import a, b, d, \
+       e ;
+''', r'''
+Import - ROOT 0,0..1,8
+  .names[4]
+  0] alias - 0,7..0,8
+    .name 'a'
+  1] alias - 0,10..0,11
+    .name 'b'
+  2] alias - 0,13..0,14
+    .name 'd'
+  3] alias - 1,7..1,8
+    .name 'e'
+'''),
+
+(8, '', 2, 2, None, {}, (None,
+r'''import a, b ;'''), ('_aliases', r'''
+d,
+e  # comment
+
+'''), r'''
+import a, b, d, \
+       e ;
+''', r'''
+Import - ROOT 0,0..1,8
+  .names[4]
+  0] alias - 0,7..0,8
+    .name 'a'
+  1] alias - 0,10..0,11
+    .name 'b'
+  2] alias - 0,13..0,14
+    .name 'd'
+  3] alias - 1,7..1,8
+    .name 'e'
+'''),
+],
+
 'ImportFrom_names': [  # ................................................................................
 
 (0, 'body[0]', 1, 2, None, {}, ('exec',
@@ -19496,6 +19856,225 @@ Module - ROOT 0,0..0,17
 '''),
 ],
 
+'ImportFrom_names_trailing_semicolon': [  # ................................................................................
+
+(0, 'body[0]', 2, 2, None, {}, ('exec',
+r'''from z import a, b ; from z import c'''), ('_aliases',
+r'''d  # comment'''),
+r'''from z import a, b, d ; from z import c''', r'''
+Module - ROOT 0,0..0,39
+  .body[2]
+  0] ImportFrom - 0,0..0,21
+    .module 'z'
+    .names[3]
+    0] alias - 0,14..0,15
+      .name 'a'
+    1] alias - 0,17..0,18
+      .name 'b'
+    2] alias - 0,20..0,21
+      .name 'd'
+    .level 0
+  1] ImportFrom - 0,24..0,39
+    .module 'z'
+    .names[1]
+    0] alias - 0,38..0,39
+      .name 'c'
+    .level 0
+'''),
+
+(1, 'body[0]', 2, 2, None, {}, ('exec',
+r'''from z import a, b ; from z import c'''), ('_aliases', r'''
+d,
+e
+
+'''), r'''
+from z import (a, b, d,
+              e) ; from z import c
+''', r'''
+Module - ROOT 0,0..1,34
+  .body[2]
+  0] ImportFrom - 0,0..1,16
+    .module 'z'
+    .names[4]
+    0] alias - 0,15..0,16
+      .name 'a'
+    1] alias - 0,18..0,19
+      .name 'b'
+    2] alias - 0,21..0,22
+      .name 'd'
+    3] alias - 1,14..1,15
+      .name 'e'
+    .level 0
+  1] ImportFrom - 1,19..1,34
+    .module 'z'
+    .names[1]
+    0] alias - 1,33..1,34
+      .name 'c'
+    .level 0
+'''),
+
+(2, 'body[0]', 2, 2, None, {}, ('exec',
+r'''from z import a, b ; from z import c'''), ('_aliases', r'''
+d,
+e  # comment
+
+'''), r'''
+from z import (a, b, d,
+              e) ; from z import c
+''', r'''
+Module - ROOT 0,0..1,34
+  .body[2]
+  0] ImportFrom - 0,0..1,16
+    .module 'z'
+    .names[4]
+    0] alias - 0,15..0,16
+      .name 'a'
+    1] alias - 0,18..0,19
+      .name 'b'
+    2] alias - 0,21..0,22
+      .name 'd'
+    3] alias - 1,14..1,15
+      .name 'e'
+    .level 0
+  1] ImportFrom - 1,19..1,34
+    .module 'z'
+    .names[1]
+    0] alias - 1,33..1,34
+      .name 'c'
+    .level 0
+'''),
+
+(3, 'body[0]', 2, 2, None, {}, ('exec',
+r'''from z import a, b ;'''), ('_aliases',
+r'''d  # comment'''),
+r'''from z import a, b, d ;''', r'''
+Module - ROOT 0,0..0,23
+  .body[1]
+  0] ImportFrom - 0,0..0,21
+    .module 'z'
+    .names[3]
+    0] alias - 0,14..0,15
+      .name 'a'
+    1] alias - 0,17..0,18
+      .name 'b'
+    2] alias - 0,20..0,21
+      .name 'd'
+    .level 0
+'''),
+
+(4, 'body[0]', 2, 2, None, {}, ('exec',
+r'''from z import a, b ;'''), ('_aliases', r'''
+d,
+e
+
+'''), r'''
+from z import (a, b, d,
+              e) ;
+''', r'''
+Module - ROOT 0,0..1,18
+  .body[1]
+  0] ImportFrom - 0,0..1,16
+    .module 'z'
+    .names[4]
+    0] alias - 0,15..0,16
+      .name 'a'
+    1] alias - 0,18..0,19
+      .name 'b'
+    2] alias - 0,21..0,22
+      .name 'd'
+    3] alias - 1,14..1,15
+      .name 'e'
+    .level 0
+'''),
+
+(5, 'body[0]', 2, 2, None, {}, ('exec',
+r'''from z import a, b ;'''), ('_aliases', r'''
+d,
+e  # comment
+
+'''), r'''
+from z import (a, b, d,
+              e) ;
+''', r'''
+Module - ROOT 0,0..1,18
+  .body[1]
+  0] ImportFrom - 0,0..1,16
+    .module 'z'
+    .names[4]
+    0] alias - 0,15..0,16
+      .name 'a'
+    1] alias - 0,18..0,19
+      .name 'b'
+    2] alias - 0,21..0,22
+      .name 'd'
+    3] alias - 1,14..1,15
+      .name 'e'
+    .level 0
+'''),
+
+(6, '', 2, 2, None, {}, (None,
+r'''from z import a, b ;'''), ('_aliases',
+r'''d  # comment'''),
+r'''from z import a, b, d ;''', r'''
+ImportFrom - ROOT 0,0..0,21
+  .module 'z'
+  .names[3]
+  0] alias - 0,14..0,15
+    .name 'a'
+  1] alias - 0,17..0,18
+    .name 'b'
+  2] alias - 0,20..0,21
+    .name 'd'
+  .level 0
+'''),
+
+(7, '', 2, 2, None, {}, (None,
+r'''from z import a, b ;'''), ('_aliases', r'''
+d,
+e
+
+'''), r'''
+from z import (a, b, d,
+              e) ;
+''', r'''
+ImportFrom - ROOT 0,0..1,16
+  .module 'z'
+  .names[4]
+  0] alias - 0,15..0,16
+    .name 'a'
+  1] alias - 0,18..0,19
+    .name 'b'
+  2] alias - 0,21..0,22
+    .name 'd'
+  3] alias - 1,14..1,15
+    .name 'e'
+  .level 0
+'''),
+
+(8, '', 2, 2, None, {}, (None,
+r'''from z import a, b ;'''), ('_aliases', r'''
+d,
+e  # comment
+
+'''), r'''
+from z import (a, b, d,
+              e) ;
+''', r'''
+ImportFrom - ROOT 0,0..1,16
+  .module 'z'
+  .names[4]
+  0] alias - 0,15..0,16
+    .name 'a'
+  1] alias - 0,18..0,19
+    .name 'b'
+  2] alias - 0,21..0,22
+    .name 'd'
+  3] alias - 1,14..1,15
+    .name 'e'
+  .level 0
+'''),
+],
+
 'Global_names': [  # ................................................................................
 
 (0, 'body[0]', 0, 2, None, {'raw': True}, ('exec',
@@ -19921,6 +20500,171 @@ If - ROOT 0,0..1,14
 '''),
 ],
 
+'Global_names_trailing_semicolon': [  # ................................................................................
+
+(0, 'body[0]', 2, 2, None, {}, ('exec',
+r'''global a, b ; global c'''), ('Tuple',
+r'''d,  # comment'''),
+r'''global a, b, d ; global c''', r'''
+Module - ROOT 0,0..0,25
+  .body[2]
+  0] Global - 0,0..0,14
+    .names[3]
+    0] 'a'
+    1] 'b'
+    2] 'd'
+  1] Global - 0,17..0,25
+    .names[1]
+    0] 'c'
+'''),
+
+(1, 'body[0]', 2, 2, None, {}, ('exec',
+r'''global a, b ; global c'''), ('Tuple', r'''
+d,
+e
+
+'''), r'''
+global a, b, d, \
+       e ; global c
+''',
+r'''global a, b, d, e ; global c''', r'''
+Module - ROOT 0,0..1,19
+  .body[2]
+  0] Global - 0,0..1,8
+    .names[4]
+    0] 'a'
+    1] 'b'
+    2] 'd'
+    3] 'e'
+  1] Global - 1,11..1,19
+    .names[1]
+    0] 'c'
+'''),
+
+(2, 'body[0]', 2, 2, None, {}, ('exec',
+r'''global a, b ; global c'''), ('Tuple', r'''
+d,
+e  # comment
+
+'''), r'''
+global a, b, d, \
+       e ; global c
+''',
+r'''global a, b, d, e ; global c''', r'''
+Module - ROOT 0,0..1,19
+  .body[2]
+  0] Global - 0,0..1,8
+    .names[4]
+    0] 'a'
+    1] 'b'
+    2] 'd'
+    3] 'e'
+  1] Global - 1,11..1,19
+    .names[1]
+    0] 'c'
+'''),
+
+(3, 'body[0]', 2, 2, None, {}, ('exec',
+r'''global a, b ;'''), ('Tuple',
+r'''d,  # comment'''),
+r'''global a, b, d ;''', r'''
+Module - ROOT 0,0..0,16
+  .body[1]
+  0] Global - 0,0..0,14
+    .names[3]
+    0] 'a'
+    1] 'b'
+    2] 'd'
+'''),
+
+(4, 'body[0]', 2, 2, None, {}, ('exec',
+r'''global a, b ;'''), ('Tuple', r'''
+d,
+e
+
+'''), r'''
+global a, b, d, \
+       e ;
+''',
+r'''global a, b, d, e ;''', r'''
+Module - ROOT 0,0..1,10
+  .body[1]
+  0] Global - 0,0..1,8
+    .names[4]
+    0] 'a'
+    1] 'b'
+    2] 'd'
+    3] 'e'
+'''),
+
+(5, 'body[0]', 2, 2, None, {}, ('exec',
+r'''global a, b ;'''), ('Tuple', r'''
+d,
+e  # comment
+
+'''), r'''
+global a, b, d, \
+       e ;
+''',
+r'''global a, b, d, e ;''', r'''
+Module - ROOT 0,0..1,10
+  .body[1]
+  0] Global - 0,0..1,8
+    .names[4]
+    0] 'a'
+    1] 'b'
+    2] 'd'
+    3] 'e'
+'''),
+
+(6, '', 2, 2, None, {}, (None,
+r'''global a, b ;'''), ('Tuple',
+r'''d,  # comment'''),
+r'''global a, b, d ;''', r'''
+Global - ROOT 0,0..0,14
+  .names[3]
+  0] 'a'
+  1] 'b'
+  2] 'd'
+'''),
+
+(7, '', 2, 2, None, {}, (None,
+r'''global a, b ;'''), ('Tuple', r'''
+d,
+e
+
+'''), r'''
+global a, b, d, \
+       e ;
+''',
+r'''global a, b, d, e ;''', r'''
+Global - ROOT 0,0..1,8
+  .names[4]
+  0] 'a'
+  1] 'b'
+  2] 'd'
+  3] 'e'
+'''),
+
+(8, '', 2, 2, None, {}, (None,
+r'''global a, b ;'''), ('Tuple', r'''
+d,
+e  # comment
+
+'''), r'''
+global a, b, d, \
+       e ;
+''',
+r'''global a, b, d, e ;''', r'''
+Global - ROOT 0,0..1,8
+  .names[4]
+  0] 'a'
+  1] 'b'
+  2] 'd'
+  3] 'e'
+'''),
+],
+
 'Nonlocal_names': [  # ................................................................................
 
 (0, 'body[0]', 0, 2, None, {'raw': True}, ('exec',
@@ -20343,6 +21087,171 @@ If - ROOT 0,0..1,16
     .names[2]
     0] 'x'
     1] 'y'
+'''),
+],
+
+'Nonlocal_names_trailing_semicolon': [  # ................................................................................
+
+(0, 'body[0]', 2, 2, None, {}, ('exec',
+r'''nonlocal a, b ; nonlocal c'''), ('Tuple',
+r'''d,  # comment'''),
+r'''nonlocal a, b, d ; nonlocal c''', r'''
+Module - ROOT 0,0..0,29
+  .body[2]
+  0] Nonlocal - 0,0..0,16
+    .names[3]
+    0] 'a'
+    1] 'b'
+    2] 'd'
+  1] Nonlocal - 0,19..0,29
+    .names[1]
+    0] 'c'
+'''),
+
+(1, 'body[0]', 2, 2, None, {}, ('exec',
+r'''nonlocal a, b ; nonlocal c'''), ('Tuple', r'''
+d,
+e
+
+'''), r'''
+nonlocal a, b, d, \
+         e ; nonlocal c
+''',
+r'''nonlocal a, b, d, e ; nonlocal c''', r'''
+Module - ROOT 0,0..1,23
+  .body[2]
+  0] Nonlocal - 0,0..1,10
+    .names[4]
+    0] 'a'
+    1] 'b'
+    2] 'd'
+    3] 'e'
+  1] Nonlocal - 1,13..1,23
+    .names[1]
+    0] 'c'
+'''),
+
+(2, 'body[0]', 2, 2, None, {}, ('exec',
+r'''nonlocal a, b ; nonlocal c'''), ('Tuple', r'''
+d,
+e  # comment
+
+'''), r'''
+nonlocal a, b, d, \
+         e ; nonlocal c
+''',
+r'''nonlocal a, b, d, e ; nonlocal c''', r'''
+Module - ROOT 0,0..1,23
+  .body[2]
+  0] Nonlocal - 0,0..1,10
+    .names[4]
+    0] 'a'
+    1] 'b'
+    2] 'd'
+    3] 'e'
+  1] Nonlocal - 1,13..1,23
+    .names[1]
+    0] 'c'
+'''),
+
+(3, 'body[0]', 2, 2, None, {}, ('exec',
+r'''nonlocal a, b ;'''), ('Tuple',
+r'''d,  # comment'''),
+r'''nonlocal a, b, d ;''', r'''
+Module - ROOT 0,0..0,18
+  .body[1]
+  0] Nonlocal - 0,0..0,16
+    .names[3]
+    0] 'a'
+    1] 'b'
+    2] 'd'
+'''),
+
+(4, 'body[0]', 2, 2, None, {}, ('exec',
+r'''nonlocal a, b ;'''), ('Tuple', r'''
+d,
+e
+
+'''), r'''
+nonlocal a, b, d, \
+         e ;
+''',
+r'''nonlocal a, b, d, e ;''', r'''
+Module - ROOT 0,0..1,12
+  .body[1]
+  0] Nonlocal - 0,0..1,10
+    .names[4]
+    0] 'a'
+    1] 'b'
+    2] 'd'
+    3] 'e'
+'''),
+
+(5, 'body[0]', 2, 2, None, {}, ('exec',
+r'''nonlocal a, b ;'''), ('Tuple', r'''
+d,
+e  # comment
+
+'''), r'''
+nonlocal a, b, d, \
+         e ;
+''',
+r'''nonlocal a, b, d, e ;''', r'''
+Module - ROOT 0,0..1,12
+  .body[1]
+  0] Nonlocal - 0,0..1,10
+    .names[4]
+    0] 'a'
+    1] 'b'
+    2] 'd'
+    3] 'e'
+'''),
+
+(6, '', 2, 2, None, {}, (None,
+r'''nonlocal a, b ;'''), ('Tuple',
+r'''d,  # comment'''),
+r'''nonlocal a, b, d ;''', r'''
+Nonlocal - ROOT 0,0..0,16
+  .names[3]
+  0] 'a'
+  1] 'b'
+  2] 'd'
+'''),
+
+(7, '', 2, 2, None, {}, (None,
+r'''nonlocal a, b ;'''), ('Tuple', r'''
+d,
+e
+
+'''), r'''
+nonlocal a, b, d, \
+         e ;
+''',
+r'''nonlocal a, b, d, e ;''', r'''
+Nonlocal - ROOT 0,0..1,10
+  .names[4]
+  0] 'a'
+  1] 'b'
+  2] 'd'
+  3] 'e'
+'''),
+
+(8, '', 2, 2, None, {}, (None,
+r'''nonlocal a, b ;'''), ('Tuple', r'''
+d,
+e  # comment
+
+'''), r'''
+nonlocal a, b, d, \
+         e ;
+''',
+r'''nonlocal a, b, d, e ;''', r'''
+Nonlocal - ROOT 0,0..1,10
+  .names[4]
+  0] 'a'
+  1] 'b'
+  2] 'd'
+  3] 'e'
 '''),
 ],
 
