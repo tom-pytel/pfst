@@ -898,7 +898,7 @@ class Fuzzy:
 
                 self.fuzz_one(fst, fnm)
 
-        except Exception:
+        except:  # Exception:
             print('-'*80)
             print('Command line:', ' '.join(sys.argv))
             print('File:', fnm)
@@ -1598,15 +1598,27 @@ class ReconcileRnd(Fuzzy):
         # self.master_parts = FSTParts(fst)
         # master            = fst.copy()
 
+        global old_FST_put, old_FST_put_slice
+
+        old_FST_put = FST.put
+        old_FST_put_slice = FST.put_slice
+
         real_master = fst.copy()
 
+        if self.debug:
+            FST.put = self.__debug_put
+            FST.put_slice = self.__debug_put_slice
+
         try:
+            # print(fst.src)
+            # print('-'*120)
             for count in range(self.batch or 100):
                 self.master_parts = FSTParts(real_master)
                 master = real_master.copy()
 
-                if count:
-                    self.do_reseed()  # allow first one to be with specified seed, otherwise reseed to have seed to this round to be able to get back to it quicker
+                # if count:
+                #     self.do_reseed()  # allow first one to be with specified seed, otherwise reseed to have seed to this round to be able to get back to it quicker
+                self.do_reseed()  # always start with new seed so that can return to it immediately
 
                 try:
                     if not (count % 5):
@@ -1627,10 +1639,11 @@ class ReconcileRnd(Fuzzy):
                         fst.verify()
 
                     except SyntaxError:
-                        if not self.debug:
-                            raise
+                        # if not self.debug:
+                        #     raise
+                        raise
 
-                except Exception as exc:
+                except BaseException as exc:  # Exception as exc:
                     if not ignorable_exc(exc):
                         print()
 
@@ -1644,8 +1657,79 @@ class ReconcileRnd(Fuzzy):
         finally:
             print()
 
+            FST.put = old_FST_put
+            FST.put_slice = old_FST_put_slice
+
         if self.verbose:
             print(fst.src)
+
+    @staticmethod
+    def __debug_put(self, code, idx = None, stop = False, field = None, *, one = True, **options):
+        print(f'put({self=}, {idx=}, {stop=}, {field=}, {one=}, {options=})')
+        print(f'  {code=!r}')
+
+        if isinstance(code, AST):
+            print(' ', dump(code))
+
+        elif isinstance(code, FST):
+            for l in lines if len(lines := code.lines) <= 11 else lines[:5] + ['...'] + lines[-5:]:
+                print(' ', repr(l))
+
+        pre_lines = self.lines
+
+        ret = old_FST_put(self, code, idx, stop, field, one=one, **options)
+
+        verify = bool(self.root.verify(raise_=False))
+
+        print(f'  {verify=}')
+        print()
+
+        if not verify:
+            print('=== before put self lines ' + '='*80)
+            print('\n'.join(pre_lines))
+            print()
+            print('--- after put self lines ' + '-'*80)
+            print('\n'.join(self.lines))
+            # print('--- after put whole ' + '-'*80)
+            # print(self.root.src)
+
+            raise SystemExit(-1)
+
+        return ret
+
+    @staticmethod
+    def __debug_put_slice(self, code, start = None, stop = None, field = None, *, one = False, **options):
+        print(f'put_slice({self=}, {stop=}, {stop=}, {field=}, {one=}, {options=})')
+        print(f'  {code=!r}')
+
+        if isinstance(code, AST):
+            print(' ', dump(code))
+
+        elif isinstance(code, FST):
+            for l in lines if len(lines := code.lines) <= 11 else lines[:5] + ['...'] + lines[-5:]:
+                print(' ', repr(l))
+
+        pre_lines = self.lines
+
+        ret = old_FST_put_slice(self, code, start, stop, field, one=one, **options)
+
+        verify = bool(self.root.verify(raise_=False))
+
+        print(f'  {verify=}')
+        print()
+
+        if not verify:
+            print('=== before put self ' + '='*80)
+            print('\n'.join(pre_lines))
+            print()
+            print('--- after put self lines ' + '-'*80)
+            print('\n'.join(self.lines))
+            # print('--- after put whole ' + '-'*80)
+            # print(self.root.src)
+
+            raise SystemExit(-1)
+
+        return ret
 
 
 class ReconcileSame(Fuzzy):

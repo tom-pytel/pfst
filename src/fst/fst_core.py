@@ -1281,7 +1281,7 @@ def _get_parse_mode(self: fst.FST) -> str | type[AST] | None:
                 _, _, ln, col = e0.f.loc
                 _, _, end_ln, end_col = self.loc
 
-                if not next_find(self.root._lines, ln, col, end_ln, end_col, ','):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
+                if not next_find(self.root._lines, ln, col, end_ln, end_col, ',', True):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
                     return 'expr_slice'
 
     return ast.__class__  # otherwise regular parse by AST type is valid

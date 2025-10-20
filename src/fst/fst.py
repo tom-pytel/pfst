@@ -440,10 +440,13 @@ class FST:
     def lines(self) -> list[builtins.str] | None:
         """Whole lines which contain this node, may also contain parts of enclosing nodes. If gotten at root then the
         entire source is returned, which may extend beyond the location of the top level node (mostly for statements
-        which may have leading / trailing comments or empty lines)."""
+        which may have leading / trailing comments or empty lines).
+
+        **Note:** The lines list returned is always a copy so safe to modify.
+        """
 
         if self.is_root:
-            return self._lines
+            return self._lines[:]
         elif loc := self.bloc:
             return self.root._lines[loc.ln : loc.end_ln + 1]
         elif isinstance(a := self.a, arguments):  # arguments with no loc are empty arguments
