@@ -288,6 +288,18 @@ def add_semicolons(fst: FST) -> None:
             f.parent.put_src(choice((';', ' ;')), f.end_ln, f.end_col, f.end_ln, f.end_col, 'offset')
 
 
+def add_whitespace(src: str) -> str:
+    new_lines = []
+
+    for line in src.split('\n'):
+        if randint(0, 1):
+            line += '    \t \t \t\t  \t\t\t\t'[(i := randint(0, 15)) : randint(i, 16)]
+
+        new_lines.append(line)
+
+    return '\n'.join(new_lines)
+
+
 def find_pys(path) -> list[str]:
     if os.path.isfile(path):
         return [path] if path.endswith('.py') else []
@@ -823,6 +835,8 @@ class Fuzzy:
         self.minify_rnd = args.get('minify_rnd')
         self.semicolon = args.get('semicolon')
         self.semicolon_rnd = args.get('semicolon_rnd')
+        self.whitespace = args.get('whitespace')
+        self.whitespace_rnd = args.get('whitespace_rnd')
         self.seed = args.get('seed')
         self.reseed = args.get('reseed')
         self.shuffle = args.get('shuffle')
@@ -856,8 +870,9 @@ class Fuzzy:
             seed(self.rnd_seed)
 
             self.minified = (randint(0, 1) and self.args['minify_rnd']) or self.args['minify']  # randint() MUST be executed regardless to preserve deterministic randomness
-            self.lineconted = (randint(0, 1) and self.args['linecont_rnd']) or self.args['linecont']
+            self.whitespaced = (randint(0, 1) and self.args['whitespace_rnd']) or self.args['whitespace']
             self.semicoloned = (randint(0, 1) and self.args['semicolon_rnd']) or self.args['semicolon']
+            self.lineconted = (randint(0, 1) and self.args['linecont_rnd']) or self.args['linecont']
 
             head = f'{i:<{width}}: {fnm}'
 
@@ -867,6 +882,9 @@ class Fuzzy:
 
                 if self.minified:
                     src = minify_src(src)
+
+                if self.whitespaced:
+                    src = add_whitespace(src)
 
                 fst = FST.fromsrc(src)
 
@@ -902,7 +920,7 @@ class Fuzzy:
             print('-'*80)
             print('Command line:', ' '.join(sys.argv))
             print('File:', fnm)
-            print(f'Preprocessing: {"" if self.minified else "NOT "}minified, {"" if self.lineconted else "NOT "}lineconted, {"" if self.semicoloned else "NOT "}semicoloned')
+            print(f'Preprocessing: {"" if self.minified else "NOT "}minified, {"" if self.whitespaced else "NOT "}whitespaced, {"" if self.lineconted else "NOT "}lineconted, {"" if self.semicoloned else "NOT "}semicoloned')
             print(f'Random seed: {self.rnd_seed}, reseed: {self.rnd_reseed}')
 
             raise
@@ -2217,6 +2235,10 @@ def main():
                         help='minify all source')
     parser.add_argument('-M', '--minify-rnd', default=False, action='store_true',
                         help='randomly minify source')
+    parser.add_argument('-w', '--whitespace', default=False, action='store_true',
+                        help='add trailing whitespace to source')
+    parser.add_argument('-W', '--whitespace-rnd', default=False, action='store_true',
+                        help='randomly add trailing whitespace to source')
     parser.add_argument('-s', '--seed', type=int, default=None,
                         help='random seed (set once per file)')
     parser.add_argument('-S', '--reseed', type=int, default=None,
