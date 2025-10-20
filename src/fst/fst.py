@@ -4,6 +4,7 @@ their respective `ast` module counterparts."""
 from __future__ import annotations
 
 import builtins  # because of the unfortunate choice for the name of an Interpolation field, '.str', we have a '.str' property in FST which messes with the type annotations
+import sys
 import threading
 from ast import iter_fields
 from ast import dump as ast_dump, unparse as ast_unparse, mod as ast_mod
@@ -1314,6 +1315,7 @@ class FST:
         indent: int = 2,
         list_indent: int | bool = 0,
         loc: bool = True,
+        color: bool | None = None,
         out: Callable | TextIO = print,
         eol: builtins.str | None = None,
     ) -> builtins.str | list[builtins.str] | None:
@@ -1334,6 +1336,8 @@ class FST:
         - `list_indent`: Extra indentation for elements of lists as an integer or string (added to indent, normally 0).
             If `True` then will be same as `indent`.
         - `loc`: Whether to put location of node in source or not.
+        - `color`: `True` or `False` means whether to use ANSI color codes or not. If `None` then will only do so if
+            `out=print` and `sys.stdout.isatty()`.
         - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
             `TextIO` will cann the `write` method for each line of output. Otherwise a `Callable[[str], None]` which is
             called for each line of output individually.
@@ -1410,14 +1414,16 @@ class FST:
         """
 
         if isinstance(src, str):
-            if (src := src.lower()) not in ('stmt', 'all'):
-                if src.replace('f', '').replace('e', '').replace('a', '').replace('s', '').replace('l', ''):
-                    raise ValueError("invalid character(s) in 'src' string")
-
-                full = 'f' in src
-                expand = 'e' in src
-                loc = 'l' not in src
+            if src not in ('stmt', 'all'):
+                full = full or 'f' in src
+                expand = expand or 'e' in src
+                loc = loc and 'L' not in src
+                color = (True if 'c' in src else False if 'C' in src else None) if color is None else color
+                list_indent = 2 if 'i' in src and list_indent == 0 else list_indent
                 src = 'all' if 'a' in src else 'stmt' if 's' in src else None
+
+        if color is None and out is print and sys.stdout.isatty():
+            color = True
 
         if isinstance(out, TextIOBase):
             out = out.write
@@ -1433,6 +1439,17 @@ class FST:
                        list_indent if isinstance(list_indent, str) else
                        ' ' * list_indent)
         st = nspace(src=src, full=full, expand=expand, loc=loc, eol=eol, sind=sind, lind=lind)
+
+        if color:
+            st.clr_type = '\033[92m'  # '\033[96m'
+            st.clr_src = '\033[95m'  # '\033[32m'
+            st.clr_loc = '\033[33m'  # '\033[90m'
+            st.clr_field = '\033[94m'
+            st.rlc_type = st.rlc_src = st.rlc_loc = st.rlc_field = '\033[0m'
+
+        else:
+            st.clr_type = st.clr_src = st.clr_loc = st.clr_field = ''
+            st.rlc_type = st.rlc_src = st.rlc_loc = st.rlc_field = ''
 
         if out in (str, list):
             lines = []
