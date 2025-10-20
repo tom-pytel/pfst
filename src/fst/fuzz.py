@@ -824,6 +824,7 @@ class Fuzzy:
         self.semicolon = args.get('semicolon')
         self.semicolon_rnd = args.get('semicolon_rnd')
         self.seed = args.get('seed')
+        self.reseed = args.get('reseed')
         self.shuffle = args.get('shuffle')
         self.verbose = args.get('verbose')
         self.verify = args.get('verify')
@@ -849,9 +850,14 @@ class Fuzzy:
             shuffle(fnms)
 
         for i, fnm in enumerate(fnms):
-            self.minified = self.args['minify'] or (self.args['minify_rnd'] and randint(0, 1))
-            self.lineconted = self.args['linecont'] or (self.args['linecont_rnd'] and randint(0, 1))
-            self.semicoloned = self.args['semicolon'] or (self.args['semicolon_rnd'] and randint(0, 1))
+            self.rnd_seed = randint(0, 2**32-1) if self.seed is None else self.seed
+            self.rnd_reseed = None
+
+            seed(self.rnd_seed)
+
+            self.minified = (randint(0, 1) and self.args['minify_rnd']) or self.args['minify']  # randint() MUST be executed regardless to preserve deterministic randomness
+            self.lineconted = (randint(0, 1) and self.args['linecont_rnd']) or self.args['linecont']
+            self.semicoloned = (randint(0, 1) and self.args['semicolon_rnd']) or self.args['semicolon']
 
             head = f'{i:<{width}}: {fnm}'
 
@@ -878,28 +884,28 @@ class Fuzzy:
 
                 yield fnm, fst
 
-    def reseed(self):
-        self.rnd_seed = randint(0, 2**32-1)
+    def do_reseed(self):
+        self.rnd_reseed = randint(0, 2**32-1) if self.reseed is None else self.reseed
 
-        seed(self.rnd_seed)
+        seed(self.rnd_reseed)
 
     def fuzz(self) -> bool:
-        for fnm, fst in self.iter_pys():
-            self.rnd_seed = randint(0, 2**32-1) if self.seed is None else self.seed
+        fnm = None
 
-            seed(self.rnd_seed)
+        try:
+            for fnm, fst in self.iter_pys():
+                seed(self.rnd_seed)
 
-            try:
                 self.fuzz_one(fst, fnm)
 
-            except Exception:
-                print('-'*80)
-                print('Command line:', ' '.join(sys.argv))
-                print('File:', fnm)
-                print(f'Preprocessing: {"" if self.minified else "NOT "}minified, {"" if self.lineconted else "NOT "}lineconted, {"" if self.semicoloned else "NOT "}semicoloned')
-                print('Random seed:', self.rnd_seed)
+        except Exception:
+            print('-'*80)
+            print('Command line:', ' '.join(sys.argv))
+            print('File:', fnm)
+            print(f'Preprocessing: {"" if self.minified else "NOT "}minified, {"" if self.lineconted else "NOT "}lineconted, {"" if self.semicoloned else "NOT "}semicoloned')
+            print(f'Random seed: {self.rnd_seed}, reseed: {self.rnd_reseed}')
 
-                raise
+            raise
 
         return self.forever
 
@@ -1600,7 +1606,7 @@ class ReconcileRnd(Fuzzy):
                 master = real_master.copy()
 
                 if count:
-                    self.reseed()  # allow first one to be with specified seed, otherwise reseed to have seed to this round to be able to get back to it quicker
+                    self.do_reseed()  # allow first one to be with specified seed, otherwise reseed to have seed to this round to be able to get back to it quicker
 
                 try:
                     if not (count % 5):
@@ -2128,7 +2134,9 @@ def main():
     parser.add_argument('-M', '--minify-rnd', default=False, action='store_true',
                         help='randomly minify source')
     parser.add_argument('-s', '--seed', type=int, default=None,
-                        help='random seed (set per file)')
+                        help='random seed (set once per file)')
+    parser.add_argument('-S', '--reseed', type=int, default=None,
+                        help='random reseed (may be set multiple times per file)')
     parser.add_argument('-u', '--shuffle', default=False, action='store_true',
                         help='shuffle files on each loop')
     parser.add_argument('-U', '--shuffle-fuzz', default=False, action='store_true',
