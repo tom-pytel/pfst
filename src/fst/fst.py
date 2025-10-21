@@ -4,6 +4,7 @@ their respective `ast` module counterparts."""
 from __future__ import annotations
 
 import builtins  # because of the unfortunate choice for the name of an Interpolation field, '.str', we have a '.str' property in FST which messes with the type annotations
+import os
 import sys
 import threading
 from ast import iter_fields
@@ -137,6 +138,7 @@ from .locations import loc_arguments, loc_comprehension, loc_withitem, loc_match
 from .traverse import AST_FIELDS_NEXT, AST_FIELDS_PREV, next_bound, prev_bound, check_with_loc
 from .view import fstview
 from .reconcile import Reconcile
+from .fst_misc import DUMP_COLOR, DUMP_NO_COLOR
 
 __all__ = [
     'parse', 'unparse', 'dump', 'FST',
@@ -168,8 +170,7 @@ _TLOCAL = _ThreadLocal()
 _DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_version=None)
 _DEFAULT_INDENT = '    '
 
-# _DEFAULT_AST_FIELD builds to {Module: 'body', Interactive: 'body', ..., Match: 'cases', ..., MatchAs: 'pattern'}
-_DEFAULT_AST_FIELD = {cls: field for field, classes in [
+_DEFAULT_AST_FIELD = {cls: field for field, classes in [  # builds to {Module: 'body', Interactive: 'body', ..., Match: 'cases', ..., MatchAs: 'pattern'}
     ('body',         (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While,
                       If, With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
     ('handlers',     (_ExceptHandlers,)),
@@ -1422,8 +1423,11 @@ class FST:
                 list_indent = 2 if 'i' in src and list_indent == 0 else list_indent
                 src = 'all' if 'a' in src else 'stmt' if 's' in src else None
 
-        if color is None and out is print and sys.stdout.isatty():
-            color = True
+        if color is None and out is print and os.environ.get('TERM') not in ('', 'dumb'):
+            try:
+                color = sys.stdout.isatty()
+            except Exception:
+                color = False
 
         if isinstance(out, TextIOBase):
             out = out.write
@@ -1438,18 +1442,8 @@ class FST:
         lind = sind + (sind if list_indent is True else
                        list_indent if isinstance(list_indent, str) else
                        ' ' * list_indent)
-        st = nspace(src=src, full=full, expand=expand, loc=loc, eol=eol, sind=sind, lind=lind)
-
-        if color:
-            st.clr_type = '\033[92m'  # '\033[96m'
-            st.clr_src = '\033[95m'  # '\033[32m'
-            st.clr_loc = '\033[33m'  # '\033[90m'
-            st.clr_field = '\033[94m'
-            st.rlc_type = st.rlc_src = st.rlc_loc = st.rlc_field = '\033[0m'
-
-        else:
-            st.clr_type = st.clr_src = st.clr_loc = st.clr_field = ''
-            st.rlc_type = st.rlc_src = st.rlc_loc = st.rlc_field = ''
+        color = DUMP_COLOR if color else DUMP_NO_COLOR
+        st = nspace(src=src, full=full, expand=expand, loc=loc, eol=eol, sind=sind, lind=lind, color=color)
 
         if out in (str, list):
             lines = []

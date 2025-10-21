@@ -42,7 +42,7 @@ from .asttypes import (
     _match_cases,
 )
 
-from .astutil import OPSTR2CLS_AUG, bistr, pat_alnum, re_alnumdot_alnum
+from .astutil import OPSTR2CLS_AUG, constant, pat_alnum, re_alnumdot_alnum, bistr
 
 from .common import (
     NodeError,
@@ -64,6 +64,48 @@ __all__ = [
     ]
 
 
+DUMP_COLOR = nspace(
+    clr_field = '\033[95m',
+    clr_ast   = '\033[1;34m',
+    clr_loc   = '\033[90m',
+    clr_src   = '',
+    end_field = '\033[0m',
+    end_ast   = '\033[0m',
+    end_loc   = '\033[0m',
+    end_src   = '',
+    type      = {
+        type(...):  ('\033[1;36m', '\033[0m'),
+        type(None): ('\033[1;36m', '\033[0m'),
+        bool:       ('\033[1;36m', '\033[0m'),
+        int:        ('\033[33m', '\033[0m'),
+        float:      ('\033[33m', '\033[0m'),
+        complex:    ('\033[33m', '\033[0m'),
+        str:        ('\033[32m', '\033[0m'),
+        bytes:      ('\033[32m', '\033[0m'),
+    },
+)
+
+DUMP_NO_COLOR = nspace(
+    clr_field = '',
+    clr_ast   = '',
+    clr_loc   = '',
+    clr_src   = '',
+    end_field = '',
+    end_ast   = '',
+    end_loc   = '',
+    end_src   = '',
+    type      = {
+        type(...):  ('', ''),
+        type(None): ('', ''),
+        bool:       ('', ''),
+        int:        ('', ''),
+        float:      ('', ''),
+        complex:    ('', ''),
+        str:        ('', ''),
+        bytes:      ('', ''),
+    },
+)
+
 _re_stmt_tail          = re.compile(r'\s*(?:;\s*)?')
 _re_one_space_or_end   = re.compile(r'\s|$')
 
@@ -82,11 +124,10 @@ def _dump_lines(
     end_col: int,
     eol: str = '',
     is_full_stmt: bool = False,
-    clr_loc: str = '',
-    clr_src: str = '',
-    rlc_loc: str = '',
-    rlc_src: str = '',
+    c: nspace = DUMP_NO_COLOR,
 ) -> None:
+    """Dump one or more lines of source."""
+
     width = int(log10(len(fst_.root._lines) - 1 or 1)) + 1
 
     if not is_full_stmt:
@@ -98,24 +139,32 @@ def _dump_lines(
         if not _re_stmt_tail.match(l := lines[-1], end_col):
             lines[-1] = l[:end_col]
 
-    end = f'{clr_loc}<*END*{rlc_loc}'
+    end = f'{c.clr_loc}<*END*{c.end_loc}'
     iter_lines = iter(lines)
     l = next(iter_lines)
     e = end if l[-1:].isspace() else ''
 
     if not col:
-        l = f'{rlc_loc}{clr_src}{l}{rlc_src}'
+        l = f'{c.end_loc}{c.clr_src}{l}{c.end_src}'
     elif l[0].isspace():
-        l = f'{" " * (col - 1)}>{rlc_loc}{clr_src}{l}{rlc_src}'
+        l = f'{" " * (col - 1)}>{c.end_loc}{c.clr_src}{l}{c.end_src}'
     else:
-        l = f'{" " * col}{rlc_loc}{clr_src}{l}{rlc_src}'
+        l = f'{" " * col}{c.end_loc}{c.clr_src}{l}{c.end_src}'
 
-    linefunc(f'{clr_loc}{ln:<{width}}: {l}{e}{eol}')
+    linefunc(f'{c.clr_loc}{ln:<{width}}: {l}{e}{eol}')
 
     for cln, l in zip(range(ln + 1, end_ln + 1), iter_lines, strict=True):
         e = end if l[-1:].isspace() else ''
 
-        linefunc(f'{clr_loc}{cln:<{width}}:{rlc_loc} {clr_src}{l}{rlc_src}{e}{eol}')
+        linefunc(f'{c.clr_loc}{cln:<{width}}:{c.end_loc} {c.clr_src}{l}{c.end_src}{e}{eol}')
+
+
+def _dump_prim(prim: constant, c: nspace) -> str:
+    """Dump primitive."""
+
+    clr_type, end_type = c.type.get(prim.__class__, ('', ''))
+
+    return f'{clr_type}{prim!r}{end_type}'
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -238,7 +287,7 @@ def get_option_overridable(overridable_option: str, override_option: str, option
 # ----------------------------------------------------------------------------------------------------------------------
 # FST class methods
 
-def _repr_tail(self: fst.FST, loc: bool = True, clr_loc: str = '', rlc_loc: str = '') -> str:
+def _repr_tail(self: fst.FST, loc: bool = True) -> str:
     if loc:
         try:
             loc = self.loc
@@ -249,14 +298,15 @@ def _repr_tail(self: fst.FST, loc: bool = True, clr_loc: str = '', rlc_loc: str 
 
     tail = ' ROOT' if self.is_root else ''
 
-    return f'{tail} {clr_loc}{loc[0]},{loc[1]}..{loc[2]},{loc[3]}{rlc_loc}' if loc else tail
+    return f'{tail} {loc[0]},{loc[1]}..{loc[2]},{loc[3]}' if loc else tail
 
 
 def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
     ast = self.a
-    tail = self._repr_tail(st.loc, st.clr_loc, st.rlc_loc)
-    tail = f' -{tail}' if tail else tail
     sind = st.sind
+    c = st.color
+    tail = self._repr_tail(st.loc)
+    tail = f' {c.clr_loc}-{tail}{c.end_loc}' if tail else ''
 
     if not st.src:  # noop
         pass
@@ -268,42 +318,39 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
             ln, col, _, _ = loc
             end_ln, end_col, _, _ = loc_block_header_end(self)
 
-            _dump_lines(self, st.linefunc, ln, col, end_ln, end_col + 1, st.eol, False, st.clr_loc, st.clr_src,
-                        st.rlc_loc, st.rlc_src)
+            _dump_lines(self, st.linefunc, ln, col, end_ln, end_col + 1, st.eol, False, c)
 
         else:
 
-            _dump_lines(self, st.linefunc, *loc, st.eol, True, st.clr_loc, st.clr_src, st.rlc_loc, st.rlc_src)
+            _dump_lines(self, st.linefunc, *loc, st.eol, True, c)
 
     elif not isinstance(ast, (mod, _ExceptHandlers, _match_cases)):
         if st.src == 'all':
             if not (parent := self.parent) or not isinstance(parent.a, Expr):
                 if loc := self.loc:
-                    _dump_lines(self, st.linefunc, *loc, st.eol, False, st.clr_loc, st.clr_src, st.rlc_loc, st.rlc_src)
+                    _dump_lines(self, st.linefunc, *loc, st.eol, False, c)
 
         elif st.src == 'stmt' and not self.parent:  # if putting statements but root is not statement or mod then just put root src and no src below
             st.src = None
 
             if loc := self.loc:
-                _dump_lines(self, st.linefunc, *loc, st.eol, False, st.clr_loc, st.clr_src, st.rlc_loc, st.rlc_src)
+                _dump_lines(self, st.linefunc, *loc, st.eol, False, c)
 
     if not st.expand:
         if isinstance(ast, Name):
-            st.linefunc(f'{cind}{prefix}{st.clr_type}Name{st.rlc_type} {ast.id!r} '
-                        f'{st.clr_type}{ast.ctx.__class__.__name__}{st.rlc_type}{tail}{st.eol}')
+            st.linefunc(f'{cind}{prefix}{c.clr_ast}Name{c.end_ast} {_dump_prim(ast.id, c)} '
+                        f'{c.clr_ast}{ast.ctx.__class__.__name__}{c.end_ast}{tail}{st.eol}')
 
             return
 
         if isinstance(ast, Constant):
-            if ast.kind is None:
-                st.linefunc(f'{cind}{prefix}{st.clr_type}Constant{st.rlc_type} {ast.value!r}{tail}{st.eol}')
-            else:
-                st.linefunc(f'{cind}{prefix}{st.clr_type}Constant{st.rlc_type} '
-                            f'{ast.value!r} {st.clr_field}.kind{st.rlc_field}={ast.kind!r}{tail}{st.eol}')
+            kind = '' if ast.kind is None else f' {c.clr_field}.kind{c.end_field}={_dump_prim(ast.kind, c)}'
+
+            st.linefunc(f'{cind}{prefix}{c.clr_ast}Constant{c.end_ast} {_dump_prim(ast.value, c)}{kind}{tail}{st.eol}')
 
             return
 
-    st.linefunc(f'{cind}{prefix}{st.clr_type}{ast.__class__.__name__}{st.rlc_type}{tail}{st.eol}')
+    st.linefunc(f'{cind}{prefix}{c.clr_ast}{ast.__class__.__name__}{c.end_ast}{tail}{st.eol}')
 
     for name, child in iter_fields(ast):
         is_list = isinstance(child, list)
@@ -313,14 +360,14 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
                 continue
 
             if name == 'ctx':
-                st.linefunc(f'{cind}{sind}{st.clr_field}.{name}{st.rlc_field} '
-                            f'{st.clr_type}{child.__class__.__name__}{st.rlc_type}{st.eol}')
+                st.linefunc(f'{cind}{sind}{c.clr_field}.{name}{c.end_field} '
+                            f'{c.clr_ast}{child.__class__.__name__}{c.end_ast}{st.eol}')
 
                 continue
 
             if (name in ('type', 'id', 'attr', 'module', 'arg', 'vararg', 'kwarg', 'rest', 'format_spec',
                          'name', 'asname', 'value', 'left', 'right', 'operand', 'returns', 'target',
-                         'annotation', 'iter', 'test','exc', 'cause', 'msg', 'elt', 'key', 'func',
+                         'annotation', 'iter', 'test', 'exc', 'cause', 'msg', 'elt', 'key', 'func',
                          'slice', 'lower', 'upper', 'step', 'guard', 'context_expr', 'optional_vars',
                          'cls', 'bound', 'default_value', 'pattern', 'subject',
                          'type_comment', 'lineno', 'tag', 'op',
@@ -328,9 +375,9 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
                 (not is_list and name in ('body', 'orelse'))
             ):
                 if isinstance(child, AST):
-                    child.f._dump(st, cind + sind, f'{st.clr_field}.{name}{st.rlc_field} ')
+                    child.f._dump(st, cind + sind, f'{c.clr_field}.{name}{c.end_field} ')
                 else:
-                    st.linefunc(f'{cind}{sind}{st.clr_field}.{name}{st.rlc_field} {child!r}{st.eol}')
+                    st.linefunc(f'{cind}{sind}{c.clr_field}.{name}{c.end_field} {_dump_prim(child, c)}{st.eol}')
 
                 continue
 
@@ -345,21 +392,21 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
 
         if st.full or (child != []):
             if is_list:
-                st.linefunc(f'{cind}{sind}{st.clr_field}.{name}[{len(child)}]{st.rlc_field}{st.eol}')
+                st.linefunc(f'{cind}{sind}{c.clr_field}.{name}[{len(child)}]{c.end_field}{st.eol}')
             else:
-                st.linefunc(f'{cind}{sind}{st.clr_field}.{name}{st.rlc_field}{st.eol}')
+                st.linefunc(f'{cind}{sind}{c.clr_field}.{name}{c.end_field}{st.eol}')
 
         if is_list:
             for i, ast in enumerate(child):
                 if isinstance(ast, AST):
-                    ast.f._dump(st, cind + st.lind, f'{st.clr_field}{i}]{st.rlc_field} ')
+                    ast.f._dump(st, cind + st.lind, f'{c.clr_field}{i}]{c.end_field} ')
                 else:
-                    st.linefunc(f'{cind}{st.lind}{st.clr_field}{i}]{st.rlc_field} {ast!r}{st.eol}')
+                    st.linefunc(f'{cind}{st.lind}{c.clr_field}{i}]{c.end_field} {ast!r}{st.eol}')
 
         elif isinstance(child, AST):
             child.f._dump(st, cind + sind * 2)
         else:
-            st.linefunc(f'{cind}{sind}{sind}{child!r}{st.eol}')
+            st.linefunc(f'{cind}{sind}{sind}{_dump_prim(child, c)}{st.eol}')
 
 
 def _is_parenthesized_tuple(self: fst.FST) -> bool | None:
