@@ -703,10 +703,12 @@ def code_as_identifier(code: Code, parse_params: Mapping[str, Any] = {}) -> str:
     elif isinstance(code, list):
         code = '\n'.join(code)
 
+    code = normalize('NFKC', code)
+
     if not is_valid_identifier(code):
         raise ParseError(f'expecting identifier, got {shortstr(code)!r}')
 
-    return normalize('NFKC', code)
+    return code
 
 
 def code_as_identifier_dotted(code: Code, parse_params: Mapping[str, Any] = {}) -> str:
@@ -723,10 +725,12 @@ def code_as_identifier_dotted(code: Code, parse_params: Mapping[str, Any] = {}) 
     elif isinstance(code, list):
         code = '\n'.join(code)
 
+    code = normalize('NFKC', code)
+
     if not is_valid_identifier_dotted(code):
         raise ParseError(f'expecting dotted identifier, got {shortstr(code)!r}')
 
-    return normalize('NFKC', code)
+    return code
 
 
 def code_as_identifier_star(code: Code, parse_params: Mapping[str, Any] = {}) -> str:
@@ -743,10 +747,12 @@ def code_as_identifier_star(code: Code, parse_params: Mapping[str, Any] = {}) ->
     elif isinstance(code, list):
         code = '\n'.join(code)
 
+    code = normalize('NFKC', code)
+
     if not is_valid_identifier_star(code):
         raise ParseError(f"expecting identifier or '*', got {shortstr(code)!r}")
 
-    return normalize('NFKC', code)
+    return code
 
 
 def code_as_identifier_alias(code: Code, parse_params: Mapping[str, Any] = {}) -> str:
@@ -763,10 +769,12 @@ def code_as_identifier_alias(code: Code, parse_params: Mapping[str, Any] = {}) -
     elif isinstance(code, list):
         code = '\n'.join(code)
 
+    code = normalize('NFKC', code)
+
     if not is_valid_identifier_alias(code):
         raise ParseError(f"expecting dotted identifier or '*', got {shortstr(code)!r}")
 
-    return normalize('NFKC', code)
+    return code
 
 
 def code_as_constant(code: constant, parse_params: Mapping[str, Any] = {}) -> constant:

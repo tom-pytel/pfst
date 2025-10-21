@@ -166,7 +166,7 @@ re_alnumdot_alnum          = re.compile(rf'[{pat_alnum}.][{pat_alnum}]')
 
 re_identifier              = re.compile(rf'{pat_identifier}')  # some other weird unicode crap accepted by python but no, just no
 re_identifier_only         = re.compile(rf'^{pat_identifier}$')
-re_identifier_dotted       = re.compile(rf'{pat_identifier}(?:\.{pat_identifier})*')
+re_identifier_dotted       = re.compile(rf'{pat_identifier}(?:\.{pat_identifier})*')  # TODO: should accept whitespace and line continuations between elements since they are valid?
 re_identifier_dotted_only  = re.compile(rf'^{pat_identifier}(?:\.{pat_identifier})*$')
 re_identifier_or_star      = re.compile(rf'(?:\*|{pat_identifier})')
 re_identifier_or_star_only = re.compile(rf'^(?:\*|{pat_identifier})$')
@@ -478,7 +478,7 @@ class bistr(str):
 
 
 def is_valid_identifier(s: str) -> bool:
-    """Check if `s` is a valid python identifier."""
+    """Check if `s` is a valid python identifier. Should be normalized already."""
 
     return (re_identifier_only.match(s) or False) and not keyword_iskeyword(s)
 

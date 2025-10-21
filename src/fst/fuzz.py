@@ -9,11 +9,13 @@ from ast import *
 from collections import defaultdict
 from io import BytesIO
 from itertools import repeat
+from keyword import iskeyword as keyword_iskeyword
 from math import log10
 from pprint import pp
-from random import choice, randint, random, seed, shuffle
+from random import choice, randint, random, seed, shuffle, sample
 from types import NoneType
 from typing import Any, Generator, Iterable, Literal, NamedTuple
+from unicodedata import normalize
 
 from .asttypes import TypeAlias, TemplateStr, Interpolation, _ExceptHandlers
 from .astutil import *
@@ -26,6 +28,25 @@ from . import NodeError
 
 
 PROGRAM = 'python -m fst.fuzz'
+
+UNICODE = ''.join([
+    'ä',
+    'µ',          # normalization
+    '蟒',
+    # 'x󠄀',           # variation selector
+    '𝔘𝔫𝔦𝔠𝔬𝔡𝔢',      # normalization
+    'абвгд',
+    'Źdźbło',
+    'العربية',    # Arabic
+    '中文',        # Chinese
+    'кириллица',  # Cyrillic
+    'Ελληνικά',   # Greek
+    # 'עִברִית',       # Hebrew
+    '日本語',      # Japanese
+    '한국어',       # Korean
+    'ไทย',        # Thai
+    # 'देवनागरी',      # Devanagari
+])
 
 ASTS_STMT_NONBLOCK = (
     Return,
@@ -299,6 +320,30 @@ def add_whitespace(src: str) -> str:
         new_lines.append(line)
 
     return '\n'.join(new_lines)
+
+
+def add_unicode(fst: FST) -> None:
+    def ident() -> str:
+        while keyword_iskeyword(normalize('NFKC', i := ''.join(sample(UNICODE, randint(1, 12))))):
+            pass
+
+        return i
+
+    for f in (gen := fst.walk(True)):
+        a = f.a
+
+        if PYLT12 and isinstance(a, JoinedStr):
+            gen.send(False)
+
+            continue
+
+        if randint(0, 1):
+            continue
+
+        if isinstance(a, Name):
+            f.id = ident()
+        elif isinstance(a, Attribute):
+            f.attr = ident()
 
 
 def find_pys(path) -> list[str]:
@@ -838,6 +883,8 @@ class Fuzzy:
         self.semicolon_rnd = args.get('semicolon_rnd')
         self.whitespace = args.get('whitespace')
         self.whitespace_rnd = args.get('whitespace_rnd')
+        self.unicode = args.get('unicode')
+        self.unicode_rnd = args.get('unicode_rnd')
         self.seed = args.get('seed')
         self.reseed = args.get('reseed')
         self.shuffle = args.get('shuffle')
@@ -872,6 +919,7 @@ class Fuzzy:
 
             self.minified = (randint(0, 1) and self.args['minify_rnd']) or self.args['minify']  # randint() MUST be executed regardless to preserve deterministic randomness
             self.whitespaced = (randint(0, 1) and self.args['whitespace_rnd']) or self.args['whitespace']
+            self.unicoded = (randint(0, 1) and self.args['unicode_rnd']) or self.args['unicode']
             self.semicoloned = (randint(0, 1) and self.args['semicolon_rnd']) or self.args['semicolon']
             self.lineconted = (randint(0, 1) and self.args['linecont_rnd']) or self.args['linecont']
 
@@ -888,6 +936,9 @@ class Fuzzy:
                     src = add_whitespace(src)
 
                 fst = FST.fromsrc(src)
+
+                if self.unicoded:
+                    add_unicode(fst)
 
                 if self.semicoloned:
                     add_semicolons(fst)
@@ -921,7 +972,7 @@ class Fuzzy:
             print('-'*80)
             print('Command line:', ' '.join(sys.argv))
             print('File:', fnm)
-            print(f'Preprocessing: {"" if self.minified else "NOT "}minified, {"" if self.whitespaced else "NOT "}whitespaced, {"" if self.lineconted else "NOT "}lineconted, {"" if self.semicoloned else "NOT "}semicoloned')
+            print(f'Preprocessing: {"" if self.minified else "NOT "}minified (-mM), {"" if self.whitespaced else "NOT "}whitespaced (-wW), {"" if self.unicoded else "NOT "}unicoded (-nN), {"" if self.semicoloned else "NOT "}semicoloned (-eE), {"" if self.lineconted else "NOT "}lineconted (-cC)')
             print(f'Random seed: {self.rnd_seed}, reseed: {self.rnd_reseed}')
 
             raise
@@ -2246,6 +2297,10 @@ def main():
                         help='add trailing whitespace to source')
     parser.add_argument('-W', '--whitespace-rnd', default=False, action='store_true',
                         help='randomly add trailing whitespace to source')
+    parser.add_argument('-n', '--unicode', default=False, action='store_true',
+                        help='add unicode to source')
+    parser.add_argument('-N', '--unicode-rnd', default=False, action='store_true',
+                        help='randomly add unicode to source')
     parser.add_argument('-s', '--seed', type=int, default=None,
                         help='random seed (set once per file)')
     parser.add_argument('-S', '--reseed', type=int, default=None,
@@ -2305,6 +2360,9 @@ def main():
                 print(f'Was running: {f.name}')
 
                 raise
+
+            finally:
+                sys.stdout.flush()
 
         if not fuzzies:
             print('Done...')
