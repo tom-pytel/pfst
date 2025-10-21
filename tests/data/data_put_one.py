@@ -13764,23 +13764,19 @@ r'''Constant Ellipsis - ROOT 0,0..0,3'''),
 r'''True'''),
 r'''None''',
 r'''None''',
-r'''MatchSingleton - ROOT 0,0..0,4'''),
+r'''MatchSingleton None - ROOT 0,0..0,4'''),
 
 (32, '', None, False, None, {'raw': True}, (pattern,
 r'''None'''),
 r'''False''',
-r'''False''', r'''
-MatchSingleton - ROOT 0,0..0,5
-  .value False
-'''),
+r'''False''',
+r'''MatchSingleton False - ROOT 0,0..0,5'''),
 
 (33, '', None, False, None, {'raw': True}, (pattern,
 r'''False'''),
 r'''True''',
-r'''True''', r'''
-MatchSingleton - ROOT 0,0..0,4
-  .value True
-'''),
+r'''True''',
+r'''MatchSingleton True - ROOT 0,0..0,4'''),
 ],
 
 }

@@ -47,7 +47,7 @@ case 1: pass
 _match_cases - ROOT 0,0..1,12
   .cases[2]
   0] match_case - 0,0..0,15
-    .pattern MatchSingleton - 0,5..0,9
+    .pattern MatchSingleton None - 0,5..0,9
     .body[1]
     0] Pass - 0,11..0,15
   1] match_case - 1,0..1,12
@@ -76,7 +76,7 @@ ExceptHandler - ROOT 0,0..0,12
 (5, 'parse_match_case', 0, 0, 'match_case', {}, ('all',
 r'''case None: pass'''), r'''
 match_case - ROOT 0,0..0,15
-  .pattern MatchSingleton - 0,5..0,9
+  .pattern MatchSingleton None - 0,5..0,9
   .body[1]
   0] Pass - 0,11..0,15
 '''),
@@ -134,7 +134,7 @@ case 1: pass
 _match_cases - ROOT 0,0..1,12
   .cases[2]
   0] match_case - 0,0..0,15
-    .pattern MatchSingleton - 0,5..0,9
+    .pattern MatchSingleton None - 0,5..0,9
     .body[1]
     0] Pass - 0,11..0,15
   1] match_case - 1,0..1,12
@@ -147,7 +147,7 @@ _match_cases - ROOT 0,0..1,12
 (11, 'parse_match_case', 0, 0, 'match_case', {}, ('all',
 r'''case None: pass'''), r'''
 match_case - ROOT 0,0..0,15
-  .pattern MatchSingleton - 0,5..0,9
+  .pattern MatchSingleton None - 0,5..0,9
   .body[1]
   0] Pass - 0,11..0,15
 '''),
@@ -605,7 +605,7 @@ case 1: pass
 _match_cases - ROOT 0,0..1,12
   .cases[2]
   0] match_case - 0,0..0,15
-    .pattern MatchSingleton - 0,5..0,9
+    .pattern MatchSingleton None - 0,5..0,9
     .body[1]
     0] Pass - 0,11..0,15
   1] match_case - 1,0..1,12
@@ -628,7 +628,7 @@ r'''**SyntaxError('invalid syntax')**'''),
 (77, 'parse_match_case', 0, 0, 'match_case', {}, ('match_case',
 r'''case None: pass'''), r'''
 match_case - ROOT 0,0..0,15
-  .pattern MatchSingleton - 0,5..0,9
+  .pattern MatchSingleton None - 0,5..0,9
   .body[1]
   0] Pass - 0,11..0,15
 '''),
@@ -1868,7 +1868,7 @@ MatchValue - ROOT 0,0..0,2
 
 (258, 'parse_pattern', 0, 0, 'MatchSingleton', {}, ('pattern',
 r'''None'''),
-r'''MatchSingleton - ROOT 0,0..0,4'''),
+r'''MatchSingleton None - ROOT 0,0..0,4'''),
 
 (259, 'parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern',
 r'''[a, *_]'''), r'''
@@ -2411,7 +2411,7 @@ MatchValue - ROOT 0,0..0,2
 
 (318, 'parse_pattern', 0, 0, 'MatchSingleton', {}, ('pattern',
 r'''None'''),
-r'''MatchSingleton - ROOT 0,0..0,4'''),
+r'''MatchSingleton None - ROOT 0,0..0,4'''),
 
 (319, 'parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern', r'''
 [
@@ -2838,7 +2838,7 @@ MatchValue - ROOT 1,1..1,3
 
 (373, 'parse_pattern', 0, 0, 'MatchSingleton', {}, ('pattern',
 '\n None\n         '),
-r'''MatchSingleton - ROOT 1,1..1,5'''),
+r'''MatchSingleton None - ROOT 1,1..1,5'''),
 
 (374, 'parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern',
 '\n [\n a\n ,\n *\n b\n ]\n         '), r'''
@@ -2994,7 +2994,7 @@ r'''**SyntaxError("expected 'except' or 'finally' block")**'''),
 (394, 'parse_match_case', 0, 0, 'match_case', {}, (match_case,
 r'''case None: pass'''), r'''
 match_case - ROOT 0,0..0,15
-  .pattern MatchSingleton - 0,5..0,9
+  .pattern MatchSingleton None - 0,5..0,9
   .body[1]
   0] Pass - 0,11..0,15
 '''),
@@ -3367,7 +3367,7 @@ MatchValue - ROOT 0,0..0,2
 
 (454, 'parse_pattern', 0, 0, 'MatchSingleton', {}, (pattern,
 r'''None'''),
-r'''MatchSingleton - ROOT 0,0..0,4'''),
+r'''MatchSingleton None - ROOT 0,0..0,4'''),
 
 (455, 'parse_pattern', 0, 0, 'MatchSequence', {}, (pattern,
 r'''[a, *_]'''), r'''
@@ -3460,7 +3460,7 @@ MatchValue - ROOT 0,0..0,2
 
 (468, 'parse_pattern', 0, 0, 'MatchSingleton', {}, (MatchSingleton,
 r'''None'''),
-r'''MatchSingleton - ROOT 0,0..0,4'''),
+r'''MatchSingleton None - ROOT 0,0..0,4'''),
 
 (469, 'parse_pattern', 0, 0, 'MatchSequence', {}, (MatchSequence,
 r'''[a, *_]'''), r'''

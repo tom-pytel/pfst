@@ -26,6 +26,7 @@ from .asttypes import (
     Load,
     MatchClass,
     MatchSequence,
+    MatchSingleton,
     MatchValue,
     Name,
     NamedExpr,
@@ -350,13 +351,19 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
 
             return
 
+        if isinstance(ast, MatchSingleton):
+            st.linefunc(f'{cind}{prefix}{c.clr_ast}MatchSingleton{c.end_ast} {_dump_prim(ast.value, c)}'
+                        f'{tail}{st.eol}')
+
+            return
+
     st.linefunc(f'{cind}{prefix}{c.clr_ast}{ast.__class__.__name__}{c.end_ast}{tail}{st.eol}')
 
     for name, child in iter_fields(ast):
         is_list = isinstance(child, list)
 
         if not st.expand:
-            if child is None and not st.full:
+            if not st.full and child is None and not isinstance(ast, MatchSingleton):
                 continue
 
             if name == 'ctx':
@@ -383,18 +390,22 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
 
             if name == 'args' and isinstance(child, arguments):
                 if child.posonlyargs or child.args or child.vararg or child.kwonlyargs or child.kwarg:
-                    child.f._dump(st, cind + sind, '.args ')
+                    child.f._dump(st, cind + sind, f'{c.clr_field}.args{c.end_field} ')
 
                     continue
 
                 elif not st.full:
                     continue
 
-        if st.full or (child != []):
-            if is_list:
-                st.linefunc(f'{cind}{sind}{c.clr_field}.{name}[{len(child)}]{c.end_field}{st.eol}')
-            else:
-                st.linefunc(f'{cind}{sind}{c.clr_field}.{name}{c.end_field}{st.eol}')
+        if not st.full and (child == [] or
+                            (child is None and
+                             not ((name == 'value' and isinstance(ast, (Constant, MatchSingleton)))))):
+            continue
+
+        if is_list:
+            st.linefunc(f'{cind}{sind}{c.clr_field}.{name}[{len(child)}]{c.end_field}{st.eol}')
+        else:
+            st.linefunc(f'{cind}{sind}{c.clr_field}.{name}{c.end_field}{st.eol}')
 
         if is_list:
             for i, ast in enumerate(child):

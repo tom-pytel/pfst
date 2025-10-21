@@ -31,7 +31,7 @@
 
 ### Updated
 
-- `dump()` uses color when printing to a terminal
+- `dump()` uses color when printing to a terminal and formats a little better
 - improve indent infer to check solo block statements, `ExceptHandler`s and `match_case`s
 - change `ExceptHandler`s and `match_case`s to use explicit slice type instead of `Module`
 - restrict raw node puts to only modify existing, no delete or pure insert
