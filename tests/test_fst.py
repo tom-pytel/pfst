@@ -5516,6 +5516,14 @@ def func():
         self.assertEqual((0, 6, 0, 12), f.pattern.loc)
         self.assertEqual((0, 15, 0, 19), f.body[0].loc)
 
+        # location in Starred after
+
+        self.assertEqual('*((*a,))', (f := FST('*(*a,)')).par(force=True).root.src)
+        f.verify()
+
+        self.assertEqual('*((*ä,))', (f := FST('*(*ä,)')).par(force=True).root.src)
+        f.verify()
+
     def test_unpar(self):
         f = parse('((1,))').body[0].value.f.copy(pars=True)
         self.assertEqual('((1,))', f.src)

@@ -1166,7 +1166,7 @@ def _parenthesize_grouping(self: fst.FST, whole: bool = True, *, star_child: boo
 
     if is_star_child:  # because of maybe `whole`, otherwise could just do it using _put_src(..., offset_excluded=is_star_child) above
         ast.end_lineno = end_ln + 1
-        ast.end_col_offset = self.root._lines[end_ln].b2c(end_col) + 1
+        ast.end_col_offset = self.root._lines[end_ln].c2b(end_col) + 1
 
     self._offset(*self._put_src(['('], ln, col, ln, col, False, False, self, offset_excluded=False))
 
