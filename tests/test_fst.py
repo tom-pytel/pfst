@@ -5079,6 +5079,22 @@ elif 2:
             '''.strip(), f.src)
         f.verify()
 
+        # leading multibyte chars replaced with spaces during reparse
+
+        (f := FST('f(д);f(d)', 'exec')).put_src('g', 0, 5, 0, 6)
+        self.assertEqual('f(д);g(d)', f.root.src)
+        f.verify()
+
+        (f := FST(r'''
+if 1:
+    f(д);f(d)
+            '''.strip(), 'exec')).put_src("g", 1, 9, 1, 10)
+        self.assertEqual(r'''
+if 1:
+    f(д);g(d)
+            '''.strip(), f.root.src)
+        f.verify()
+
     def test_put_src_offset(self):
         f = FST('a, b, c')
         f.put_src(' ', 0, 0, 0, 0, 'offset')

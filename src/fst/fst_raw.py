@@ -5,6 +5,8 @@ This module contains functions which are imported as methods in the `FST` class 
 
 from __future__ import annotations
 
+from ast import walk
+
 from . import fst
 
 from .asttypes import AST, ExceptHandler, Match, Pass, Slice, Try, TryStar, match_case, mod
@@ -39,6 +41,8 @@ def _reparse_raw_base(
     path: list[astfield] | str | None,
     set_ast: bool = True,
     mode: Mode | None = None,
+    first_lineno: int = 0,  # should only be non-zero if we wish to apply column delta to it
+    first_line_col_delta: int = 0,
 ) -> fst.FST:
     """Actually do the reparse. If `mode` is `None` then will just try a normal `'exec'` parse and fail if that fails.
     Otherwise it will try this mode first, then all other parse modes as it is assumed to be a non-top level
@@ -77,6 +81,15 @@ def _reparse_raw_base(
         copy.pfield.set(copy.parent.a, None)  # remove from copy tree so that copy_root unmake doesn't zero out new node
         copy_root._unmake_fst_tree()
 
+    if first_lineno and first_line_col_delta:  # apply column delta to first line because probably we changed multi-byte characters to single-byte spaces
+        for a in walk(copy.a):
+            if (end_col_offset := getattr(a, 'end_col_offset', None)) is not None:
+                if a.end_lineno == first_lineno:
+                    a.end_col_offset = end_col_offset + first_line_col_delta
+
+                if a.lineno == first_lineno:
+                    a.col_offset += first_line_col_delta
+
     if set_ast:
         self._set_ast(copy.a)
         self._touchall(True, True, False)
@@ -95,6 +108,8 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
     root = self.root
     lines = root._lines
     stmtisha = stmtish.a
+    first_lineno = 0  # this indicates not to apply the first column delta, will only be set if we need that action because we possibly erased multi-byte characters on the first line before the reparse node
+    first_line_col_delta = lines[pln].c2b(pcol) - pcol
 
     if in_blkopen := (blkopen_end := loc_block_header_end(stmtish)) and (end_ln, end_col) <= blkopen_end:  # block statement with modification limited to block header
         pend_ln, pend_col, _, _ = blkopen_end
@@ -123,14 +138,16 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
                           [bistr('')] * (pln - 1) +
                           [bistr(f'{pcol_indent}{lines[pln][pcol:]}')] +
                           lines[pln + 1 : pend_ln + 1])
+            first_lineno = pln + 1
 
-        elif (off := pcol - 4) < 0:
+        elif (off_after_try := pcol - 4) < 0:
             raise NotImplementedError('degenerate statement starts at (0,1), (0,2) or (0,3)')
 
         else:
-            copy_lines = ([bistr(f"try:{' ' * off}{lines[pln][pcol:]}")] +
+            copy_lines = ([bistr(f"try:{' ' * off_after_try}{lines[pln][pcol:]}")] +
                           lines[pln + 1 : pend_ln + 1] +
                           [bistr('finally: pass')])
+            first_lineno = 1
 
         if isinstance(stmtisha, ExceptHandler):
             assert pln > bool(indent)
@@ -155,7 +172,8 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
     if not in_blkopen:  # non-block statement or modifications not limited to block header part
         copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col])
 
-        _reparse_raw_base(stmtish, new_lines, ln, col, end_ln, end_col, copy_lines, path)
+        _reparse_raw_base(stmtish, new_lines, ln, col, end_ln, end_col, copy_lines, path, True, None,
+                          first_lineno, first_line_col_delta)
 
         return True
 
@@ -176,7 +194,8 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
         elif isinstance(stmtisha, TryStar):  # ditto
             copy_lines.append(bistr(indent + 'except* Exception: pass'))
 
-    copy = _reparse_raw_base(stmtish, new_lines, ln, col, end_ln, end_col, copy_lines, path, False)
+    copy = _reparse_raw_base(stmtish, new_lines, ln, col, end_ln, end_col, copy_lines, path, False, None,
+                             first_lineno, first_line_col_delta)
     copya = copy.a
 
     if not isinstance(stmtisha, match_case):  # match_case doesn't have AST location

@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- fix put raw source to statement after semicolon with preceding multibyte chars on same line
 - fix incorrect indentation in put stmt slice to stmt with semicolon after comment
 - fix put slice to end of specific statements with trialing semicolons
 - fix incorrect block location on statementish op leaving trailing semicolon in last child

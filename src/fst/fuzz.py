@@ -10,6 +10,7 @@ from collections import defaultdict
 from io import BytesIO
 from itertools import repeat
 from math import log10
+from pprint import pp
 from random import choice, randint, random, seed, shuffle
 from types import NoneType
 from typing import Any, Generator, Iterable, Literal, NamedTuple
@@ -1111,13 +1112,19 @@ class ReputSrc(Fuzzy):
                 except Exception:
                     # print('\nRandom seed was:', rnd_seed)
                     print()
-                    print(count, ln, col, end_ln, end_col)
-                    print('.'*80)
-                    print(put_lines)
+                    print(f'{count=}, loc={(ln, col, end_ln, end_col)}')
+                    print('...', 'put_lines', '.'*80)
+                    pp(put_lines)
 
                     if self.debug:
-                        print('.'*80)
-                        print(old_lines)
+                        print()
+                        print('...', 'old_lines', '.'*80)
+                        pp(old_lines)
+
+                    if self.verbose:
+                        print()
+                        print('...', 'full_lines', '.'*80)
+                        pp(copy._lines)
 
                     # print('.'*80)
                     # print(copy.src)
