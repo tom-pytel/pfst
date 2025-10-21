@@ -8,6 +8,7 @@ from __future__ import annotations
 import re
 from ast import iter_fields, walk
 from math import log10
+from pprint import pformat
 from typing import Any, Callable, Literal, Mapping
 
 from . import fst
@@ -166,6 +167,25 @@ def _dump_prim(prim: constant, c: nspace) -> str:
     clr_type, end_type = c.type.get(prim.__class__, ('', ''))
 
     return f'{clr_type}{prim!r}{end_type}'
+
+
+def _dump_prim_long(prim: constant, st: nspace, cind: str = '') -> str:
+    """Dump primitive potentially long primitive (str or bytes)."""
+
+    prim_cls = prim.__class__
+    clr_type, end_type = st.color.type.get(prim_cls, ('', ''))
+
+    if ((prim_cls is not str and prim_cls is not bytes) or len(prim) < 120 or
+        not (fmt := pformat(prim, width=120)).startswith('(')
+    ):
+        return f'{clr_type}{prim!r}{end_type}'
+
+    if st.expand:
+        fmt = fmt.replace('\n', f'\n{cind}')
+    else:
+        fmt = f'(\n{cind}' + fmt[1:].replace('\n', f'\n{cind[1:]}')
+
+    return f'{clr_type}{fmt}{end_type}'
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -347,7 +367,8 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
         if isinstance(ast, Constant):
             kind = '' if ast.kind is None else f' {c.clr_field}.kind{c.end_field}={_dump_prim(ast.kind, c)}'
 
-            st.linefunc(f'{cind}{prefix}{c.clr_ast}Constant{c.end_ast} {_dump_prim(ast.value, c)}{kind}{tail}{st.eol}')
+            st.linefunc(f'{cind}{prefix}{c.clr_ast}Constant{c.end_ast} '
+                        f'{_dump_prim_long(ast.value, st, cind + sind)}{kind}{tail}{st.eol}')
 
             return
 
@@ -416,8 +437,11 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
 
         elif isinstance(child, AST):
             child.f._dump(st, cind + sind * 2)
+
         else:
-            st.linefunc(f'{cind}{sind}{sind}{_dump_prim(child, c)}{st.eol}')
+            ind = f'{cind}{sind}{sind}'
+
+            st.linefunc(f'{ind}{_dump_prim_long(child, st, ind)}{st.eol}')
 
 
 def _is_parenthesized_tuple(self: fst.FST) -> bool | None:
