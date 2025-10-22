@@ -414,7 +414,7 @@ def _locs_slice_seq(
 
     def calc_locs(
         ld_ln: int, ld_col: int, tr_ln: int, tr_col: int
-    ) -> tuple[fstloc, fstloc, str | None, tuple[int, int] | None]:
+    ) -> tuple[fstloc, fstloc, str | None, tuple[int, int] | None]:  # (copy_loc, del_loc, indent, sep_end_pos)
         if indent is None:  # does not start line, no preceding trivia
             del_col = re_empty_space.search(lines[first_ln], 0 if first_ln > bound_ln else bound_col, first_col).start()
 

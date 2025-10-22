@@ -948,7 +948,7 @@ Module - ROOT 0,0..3,15
       0] Pass - 2,8..2,12
 '''),
 
-(36, 'body[0].body[0].orelse[0]', 0, 1, 'orelse', {'trivia': ('all+', True), 'pep8space': False}, ('exec', r'''
+(36, 'body[0].body[0].orelse[0]', 0, 1, 'orelse', {'trivia': ('all-', True), 'pep8space': False}, ('exec', r'''
 def f():
     if 1:
         pass  # post-if
