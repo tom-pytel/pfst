@@ -13779,4 +13779,93 @@ r'''True''',
 r'''MatchSingleton True - ROOT 0,0..0,4'''),
 ],
 
+'f-string': [  # ................................................................................
+
+(0, 'values[1]', None, False, 'value', {'_ver': 12, 'raw': False}, (None,
+r'''f"a{Εаo:}"'''), (None,
+r'''99'''),
+r'''f"a{99:}"''', r'''
+JoinedStr - ROOT 0,0..0,9
+  .values[2]
+  0] Constant 'a' - 0,2..0,3
+  1] FormattedValue - 0,3..0,8
+    .value Constant 99 - 0,4..0,6
+    .conversion -1
+    .format_spec JoinedStr - 0,6..0,7
+'''),
+
+(1, 'values[1]', None, False, 'value', {'_ver': 12, 'raw': False}, (None,
+r'''f"a{Εаo=:}"'''), (None,
+r'''99'''),
+r'''f"a{99=:}"''', r'''
+JoinedStr - ROOT 0,0..0,10
+  .values[2]
+  0] Constant 'a99=' - 0,2..0,7
+  1] FormattedValue - 0,3..0,9
+    .value Constant 99 - 0,4..0,6
+    .conversion -1
+    .format_spec JoinedStr - 0,7..0,8
+'''),
+
+(2, 'values[1].value', None, False, 'func', {'_ver': 12, 'raw': False}, (None,
+r'''f"a{Εаo()=:}"'''), (None,
+r'''99'''),
+r'''f"a{99()=:}"''', r'''
+JoinedStr - ROOT 0,0..0,12
+  .values[2]
+  0] Constant 'a99()=' - 0,2..0,9
+  1] FormattedValue - 0,3..0,11
+    .value Call - 0,4..0,8
+      .func Constant 99 - 0,4..0,6
+    .conversion -1
+    .format_spec JoinedStr - 0,9..0,10
+'''),
+],
+
+'t-string': [  # ................................................................................
+
+(0, 'values[1]', None, False, 'value', {'_ver': 14, 'raw': False}, (None,
+r'''t"a{Εаo:}"'''), (None,
+r'''99'''),
+r'''t"a{99:}"''', r'''
+TemplateStr - ROOT 0,0..0,9
+  .values[2]
+  0] Constant 'a' - 0,2..0,3
+  1] Interpolation - 0,3..0,8
+    .value Constant 99 - 0,4..0,6
+    .str '99'
+    .conversion -1
+    .format_spec JoinedStr - 0,6..0,7
+'''),
+
+(1, 'values[1]', None, False, 'value', {'_ver': 14, 'raw': False}, (None,
+r'''t"a{Εаo=:}"'''), (None,
+r'''99'''),
+r'''t"a{99=:}"''', r'''
+TemplateStr - ROOT 0,0..0,10
+  .values[2]
+  0] Constant 'a99=' - 0,2..0,7
+  1] Interpolation - 0,3..0,9
+    .value Constant 99 - 0,4..0,6
+    .str '99'
+    .conversion -1
+    .format_spec JoinedStr - 0,7..0,8
+'''),
+
+(2, 'values[1].value', None, False, 'func', {'_ver': 14, 'raw': False}, (None,
+r'''t"a{Εаo()=:}"'''), (None,
+r'''99'''),
+r'''t"a{99()=:}"''', r'''
+TemplateStr - ROOT 0,0..0,12
+  .values[2]
+  0] Constant 'a99()=' - 0,2..0,9
+  1] Interpolation - 0,3..0,11
+    .value Call - 0,4..0,8
+      .func Constant 99 - 0,4..0,6
+    .str '99()'
+    .conversion -1
+    .format_spec JoinedStr - 0,9..0,10
+'''),
+],
+
 }

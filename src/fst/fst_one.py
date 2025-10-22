@@ -1413,9 +1413,23 @@ def _make_exprish_fst(
     dcol_offset = lines[ln].c2b(col) + merge_alnum_start
     end_col_offset = lines[end_ln].c2b(end_col)
 
+    adjacent_format_spec = None
+    f = self
+
+    while parent := f.parent:  # if there is a parent FormatSpec or Interpolation of which we are a child of .value then it may need its .format_spec fixed after the modifications if it follows immediately after modified value
+        if isinstance(parenta := parent.a, (FormattedValue, Interpolation)):
+            if (f.pfield.name == 'value' and (fs := parenta.format_spec) and
+                fs.col_offset == end_col_offset and fs.lineno == end_ln + 1
+            ):
+                adjacent_format_spec = fs
+
+            break
+
+        f = parent
+
     params_offset = self._put_src(put_lines, ln, col, end_ln, end_col, True, False, exclude=self)
 
-    self._offset(*params_offset, exclude=target, self_=False)  # excluding an fstloc instead of FST is harmless (if target is fstloc), will not exclude anything
+    self._offset(*params_offset, exclude=target, self_=False)  # excluding an fstloc instead of FST is harmless (if target is fstloc, will not exclude anything in that case)
     put_fst._offset(0, 0, ln, dcol_offset)
     set_ctx(put_ast, ctx)
 
@@ -1430,21 +1444,11 @@ def _make_exprish_fst(
     if merge_alnum_start:  # we put this after because otherwise would be included in any parents that start at element being put
         self._put_src([' '], ln, col, ln, col, False)
 
-    # possibly fix FormattedValue and Interpolation .format_spec location if present above self - because can follow IMMEDIATELY after modified value (which doesn't normally happen in py syntax) and thus would not have their start offset due to head=False in put_src() above
+    # possibly fix FormattedValue and Interpolation .format_spec location if present above self - because can follow IMMEDIATELY after modified value (which doesn't normally happen in py syntax) and thus would not have its start offset due to head=False in put_src() above (which is needed for other stuff)
 
-    cur = self
-
-    while parent := cur.parent:
-        if isinstance(parenta := parent.a, (FormattedValue, Interpolation)):
-            if (cur.pfield.name == 'value' and (fs := parenta.format_spec) and
-                fs.col_offset == end_col_offset and fs.lineno == end_ln + 1
-            ):
-                fs.lineno = (a := self.a).end_lineno
-                fs.col_offset = a.end_col_offset
-
-            break
-
-        cur = parent
+    if adjacent_format_spec:
+        adjacent_format_spec.lineno = (a := self.a).end_lineno  # only the start location needs to be set because the end will have been offset correctly
+        adjacent_format_spec.col_offset = a.end_col_offset
 
     return put_fst
 

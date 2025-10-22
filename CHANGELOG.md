@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- fix put to `FormattedValue/Interpolation.value` with multibyte chars which had format_spec not immediately adjacent
 - fix forced grouping parenthesize `Starred` child location
 - normalize identifier to put BEFORE checking against keyword *facepalm*
 - fix put raw source to statement after semicolon with preceding multibyte chars on same line
