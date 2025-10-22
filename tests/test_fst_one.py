@@ -321,7 +321,7 @@ class TestFSTPut(unittest.TestCase):
                 raise
 
             else:
-                if f.root.src.rstrip() != rest[1].rstrip():  # .rstrip() because of trailing newline added with statement ops, need to fix
+                if f.root.src != rest[1]:
                     raise RuntimeError(f'put raw and put FST src are not identical, {key = }, {case.idx = }\n{f.root.src}\n...\n{rest[1]}')
 
                 # if (root_dump := f.root.dump(out=str)) != rest[2]  # we don't do this because of trailing newline added with statement ops, need to fix
@@ -896,7 +896,7 @@ if 1:
                 f.root.verify(raise_=True)
 
                 self.assertEqual(g.src, put_ret)
-                self.assertEqual(tdst.rstrip(), put_src)  # rstrip() because at current time stmt operations can add trailing newline
+                self.assertEqual(tdst, put_src)
 
             except Exception:
                 print(i, attr, options, src)
@@ -966,7 +966,7 @@ if 1:
                 f.root.verify(raise_=True)
 
                 # self.assertEqual(g.src, put_ret)
-                self.assertEqual(tdst.rstrip(), put_src)  # rstrip() because at current time stmt operations can add trailing newline
+                self.assertEqual(tdst, put_src)
 
             except Exception:
                 print(i, attr, options, src)

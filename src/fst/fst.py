@@ -1940,13 +1940,13 @@ class FST:
             z = -1
         else: j = 2
 
-        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0, 'orelse').src.rstrip())
+        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0, 'orelse').src)
         if 1: i = 1
         else:
             z = -1
 
         >>> print(FST('if 1: i = 1\nelse: j = 2')
-        ...       .put('z = -1\ny = -2\nx = -3', 'orelse', one=False).src.rstrip())
+        ...       .put('z = -1\ny = -2\nx = -3', 'orelse', one=False).src)
         if 1: i = 1
         else:
             z = -1
@@ -2106,13 +2106,13 @@ class FST:
             z = -1
         else: j = 2
 
-        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0, 'orelse').src.rstrip())
+        >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0, 'orelse').src)
         if 1: i = 1
         else:
             z = -1
 
         >>> print(FST('if 1: i = 1\nelse: j = 2')
-        ...       .put('z = -1\ny = -2\nx = -3', 'orelse', one=False).src.rstrip())
+        ...       .put('z = -1\ny = -2\nx = -3', 'orelse', one=False).src)
         if 1: i = 1
         else:
             z = -1

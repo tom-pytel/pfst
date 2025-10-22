@@ -7472,7 +7472,7 @@ if 1:
         o.a.body[0].value.values[2] = o.a.body[0].value.values[4]
         o.a.body[0].value.values[3] = o.a.body[0].value.values[5]
         f = o.reconcile(m)
-        self.assertEqual("f'b{b}c{c}c{c}'", f.src.rstrip())
+        self.assertEqual("f'b{b}c{c}c{c}'", f.src)
         f.verify()
 
         if not PYLT12:
