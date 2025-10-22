@@ -5516,13 +5516,17 @@ def func():
         self.assertEqual((0, 6, 0, 12), f.pattern.loc)
         self.assertEqual((0, 15, 0, 19), f.body[0].loc)
 
-        # location in Starred after
+        # location in Starred after forced parenthesize
 
         self.assertEqual('*((*a,))', (f := FST('*(*a,)')).par(force=True).root.src)
         f.verify()
 
         self.assertEqual('*((*ä,))', (f := FST('*(*ä,)')).par(force=True).root.src)
         f.verify()
+
+        # very specific tricky case
+
+        self.assertEqual('f(*(*a,))', (f := FST('f(*(*a,))')).put(FST('*(*a,)'), 0, 'args').root.src)
 
     def test_unpar(self):
         f = parse('((1,))').body[0].value.f.copy(pars=True)

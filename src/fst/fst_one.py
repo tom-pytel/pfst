@@ -1309,14 +1309,21 @@ def _make_exprish_fst(
     del_tgt_pars = False
 
     def need_pars(adding: bool) -> bool:
+        """`adding` means looking to add pars to `put_fst`, otherwise it already has."""
+
         if not put_fst._is_atom(pars=False):
             if not put_is_star:
                 if precedence_require_parens(put_ast, self.a, field, idx):
                     return True
 
-            else:  # Starred gets checked against its child value in the context of being a call arg or not
-                if precedence_require_parens(put_ast.value, put_ast, 'value',
-                                             star_call_arg=field == 'args' and isinstance(self.a, Call)):
+            else:  # Starred gets checked against its child value because is complicated, could be a Call.args or ClassDef.bases '*a or b' or could have child already parenthesized
+                star_child = put_ast.value
+
+                if (not isinstance(star_child, Tuple) and  # if Tuple we assume it is parenthesized because otherwise it could not come into existence without schenanigans
+                    precedence_require_parens(star_child, put_ast, 'value', star_call_arg=
+                                              (field == 'bases' or (field == 'args' and isinstance(self.a, Call)))) and
+                    (not adding or not star_child.f.pars().n)  # `not adding` to make sure we don't remove existing needed pars
+                ):
                     return True
 
         elif (tgt_is_FST and field == 'value' and isinstance(put_ast, Constant) and isinstance(put_ast.value, int) and  # veeery special case "3.__abs__()" -> "(3).__abs__()"

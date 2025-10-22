@@ -840,10 +840,10 @@ def _is_atom(
         if isinstance(ast, Constant):
             return 'unenclosable' if isinstance(ast.value, (str, bytes)) else True
 
-        elif isinstance(ast, (Call, JoinedStr, TemplateStr, Constant, Attribute, Subscript,
-                              MatchClass, MatchStar,
-                              cmpop, comprehension, arguments,
-                              arg, keyword, alias, withitem, type_param)):
+        if isinstance(ast, (Call, JoinedStr, TemplateStr, Constant, Attribute, Subscript,
+                            MatchClass, MatchStar,
+                            cmpop, comprehension, arguments,
+                            arg, keyword, alias, withitem, type_param)):
             return 'unenclosable'
 
     elif isinstance(ast, (comprehension, arguments, arg, keyword, alias, type_param)):  # can't be parenthesized
