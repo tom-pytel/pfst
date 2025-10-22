@@ -1312,7 +1312,7 @@ def _get_slice_stmtish(
         if tr_neg:
             options['postspace'] = tr_space
 
-        _put_slice_stmtish_old(self, None, start, stop, field, options)
+        _put_slice_stmtish_old(self, None, start, stop, field, False, options)
 
     _maybe_del_trailing_newline(self, old_last_line, not cut)
 
