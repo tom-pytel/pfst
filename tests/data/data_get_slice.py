@@ -7949,11 +7949,9 @@ Module - ROOT 0,0..0,1
 a
 
 b
-'''), r'''
-a
-
-''', r'''
-Module - ROOT 0,0..1,0
+'''),
+r'''a''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
   0] Expr - 0,0..0,1
     .value Name 'a' Load - 0,0..0,1
@@ -7969,11 +7967,9 @@ Module - ROOT 0,0..0,1
 a
 \
 b
-'''), r'''
-a
-
-''', r'''
-Module - ROOT 0,0..1,0
+'''),
+r'''a''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
   0] Expr - 0,0..0,1
     .value Name 'a' Load - 0,0..0,1
@@ -8071,9 +8067,8 @@ b
 '''), r'''
 a
 
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,0
   .body[1]
   0] Expr - 0,0..0,1
     .value Name 'a' Load - 0,0..0,1
@@ -8096,9 +8091,8 @@ b
 '''), r'''
 a
 
-
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,0
   .body[1]
   0] Expr - 0,0..0,1
     .value Name 'a' Load - 0,0..0,1
@@ -8120,10 +8114,9 @@ a
 b
 '''), r'''
 a
-\
 
 ''', r'''
-Module - ROOT 0,0..2,0
+Module - ROOT 0,0..1,0
   .body[1]
   0] Expr - 0,0..0,1
     .value Name 'a' Load - 0,0..0,1
@@ -8215,12 +8208,9 @@ a
 
 # 1
 b
-'''), r'''
-a
-
-
-''', r'''
-Module - ROOT 0,0..2,0
+'''),
+r'''a''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
   0] Expr - 0,0..0,1
     .value Name 'a' Load - 0,0..0,1
@@ -8240,12 +8230,9 @@ a
 \
 # 1
 b
-'''), r'''
-a
-
-
-''', r'''
-Module - ROOT 0,0..2,0
+'''),
+r'''a''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
   0] Expr - 0,0..0,1
     .value Name 'a' Load - 0,0..0,1
@@ -8265,12 +8252,9 @@ a
 
 # 1
 b
-'''), r'''
-a
-\
-
-''', r'''
-Module - ROOT 0,0..2,0
+'''),
+r'''a''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
   0] Expr - 0,0..0,1
     .value Name 'a' Load - 0,0..0,1
@@ -8359,12 +8343,9 @@ a
 
 # 1
 b
-'''), r'''
-a
-
-
-''', r'''
-Module - ROOT 0,0..2,0
+'''),
+r'''a''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
   0] Expr - 0,0..0,1
     .value Name 'a' Load - 0,0..0,1
@@ -8390,12 +8371,9 @@ a
 \
 # 1
 b
-'''), r'''
-a
-
-
-''', r'''
-Module - ROOT 0,0..2,0
+'''),
+r'''a''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
   0] Expr - 0,0..0,1
     .value Name 'a' Load - 0,0..0,1
@@ -8421,12 +8399,9 @@ a
 
 # 1
 b
-'''), r'''
-a
-\
-
-''', r'''
-Module - ROOT 0,0..2,0
+'''),
+r'''a''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
   0] Expr - 0,0..0,1
     .value Name 'a' Load - 0,0..0,1
@@ -8646,14 +8621,12 @@ Module - ROOT 0,0..0,1
 a
 
 b
-'''), r'''
-
-b
-''', r'''
-Module - ROOT 0,0..1,1
+'''),
+r'''b''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
-  0] Expr - 1,0..1,1
-    .value Name 'b' Load - 1,0..1,1
+  0] Expr - 0,0..0,1
+    .value Name 'b' Load - 0,0..0,1
 ''',
 r'''a''', r'''
 Module - ROOT 0,0..0,1
@@ -8779,14 +8752,12 @@ Module - ROOT 0,0..0,1
 a
 
 b
-'''), r'''
-
-b
-''', r'''
-Module - ROOT 0,0..1,1
+'''),
+r'''b''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
-  0] Expr - 1,0..1,1
-    .value Name 'b' Load - 1,0..1,1
+  0] Expr - 0,0..0,1
+    .value Name 'b' Load - 0,0..0,1
 ''',
 r'''a''', r'''
 Module - ROOT 0,0..0,1
@@ -8818,14 +8789,12 @@ Module - ROOT 0,0..1,0
 a  # 1
 
 b
-'''), r'''
-
-b
-''', r'''
-Module - ROOT 0,0..1,1
+'''),
+r'''b''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
-  0] Expr - 1,0..1,1
-    .value Name 'b' Load - 1,0..1,1
+  0] Expr - 0,0..0,1
+    .value Name 'b' Load - 0,0..0,1
 ''', r'''
 a  # 1
 
@@ -9040,13 +9009,12 @@ a # 1
 b
 '''), r'''
 
-
 b
 ''', r'''
-Module - ROOT 0,0..2,1
+Module - ROOT 0,0..1,1
   .body[1]
-  0] Expr - 2,0..2,1
-    .value Name 'b' Load - 2,0..2,1
+  0] Expr - 1,0..1,1
+    .value Name 'b' Load - 1,0..1,1
 ''', r'''
 a # 1
 # 2
@@ -9091,14 +9059,13 @@ a # 1
 \
 b
 '''), r'''
-
 \
 b
 ''', r'''
-Module - ROOT 0,0..2,1
+Module - ROOT 0,0..1,1
   .body[1]
-  0] Expr - 2,0..2,1
-    .value Name 'b' Load - 2,0..2,1
+  0] Expr - 1,0..1,1
+    .value Name 'b' Load - 1,0..1,1
 ''', r'''
 a # 1
 # 2
@@ -9192,15 +9159,12 @@ a # 1
 
 
 b
-'''), r'''
-
-
-b
-''', r'''
-Module - ROOT 0,0..2,1
+'''),
+r'''b''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
-  0] Expr - 2,0..2,1
-    .value Name 'b' Load - 2,0..2,1
+  0] Expr - 0,0..0,1
+    .value Name 'b' Load - 0,0..0,1
 ''', r'''
 a # 1
 # 2
@@ -9245,14 +9209,13 @@ a # 1
 \
 b
 '''), r'''
-
 \
 b
 ''', r'''
-Module - ROOT 0,0..2,1
+Module - ROOT 0,0..1,1
   .body[1]
-  0] Expr - 2,0..2,1
-    .value Name 'b' Load - 2,0..2,1
+  0] Expr - 1,0..1,1
+    .value Name 'b' Load - 1,0..1,1
 ''', r'''
 a # 1
 # 2
@@ -9347,15 +9310,12 @@ a # 1
 
 
 b
-'''), r'''
-
-
-b
-''', r'''
-Module - ROOT 0,0..2,1
+'''),
+r'''b''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
-  0] Expr - 2,0..2,1
-    .value Name 'b' Load - 2,0..2,1
+  0] Expr - 0,0..0,1
+    .value Name 'b' Load - 0,0..0,1
 ''', r'''
 a # 1
 # 2
@@ -9412,14 +9372,13 @@ a # 1
 \
 b
 '''), r'''
-
 \
 b
 ''', r'''
-Module - ROOT 0,0..2,1
+Module - ROOT 0,0..1,1
   .body[1]
-  0] Expr - 2,0..2,1
-    .value Name 'b' Load - 2,0..2,1
+  0] Expr - 1,0..1,1
+    .value Name 'b' Load - 1,0..1,1
 ''', r'''
 a # 1
 # 2

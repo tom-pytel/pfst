@@ -1298,33 +1298,13 @@ def _get_slice_stmtish(
     options = dict(options,
         precomms = _trivia2precomms[ld_comms],
         postcomms = _trivia2postcomms[tr_comms],
-        prespace = ld_neg and ld_space,
-        postspace = tr_neg and tr_space,
+        prespace = ld_space,
+        postspace = tr_space,
     )
 
     fst_ = _get_slice_stmtish_old(self, start, stop, field, cut, options, one=one)
 
     _maybe_del_trailing_newline(self, old_last_line, not cut)
-
-    # options = dict(options,
-    #     precomms = _trivia2precomms[ld_comms],
-    #     postcomms = _trivia2postcomms[tr_comms],
-    #     prespace = False, # ld_neg and ld_space,
-    #     postspace = False, # tr_neg and tr_space,
-    # )
-
-    # fst_ = _get_slice_stmtish_old(self, start, stop, field, False, options, one=one)
-
-    # if cut:# and ((ld_neg and ld_space) or (tr_neg and tr_space)):
-    #     if ld_neg:
-    #         options['prespace'] = ld_space
-
-    #     if tr_neg:
-    #         options['postspace'] = tr_space
-
-    #     _put_slice_stmtish_old(self, None, start, stop, field, False, options)
-
-    # _maybe_del_trailing_newline(self, old_last_line, not cut)
 
     return fst_
 
@@ -1339,24 +1319,13 @@ def _put_slice_stmtish(
     options: Mapping[str, Any],
 ) -> None:
     old_last_line = self.root._lines[-1]
-    is_del = code is None
-    ld_comms, ld_space, ld_neg, tr_comms, tr_space, tr_neg = get_trivia_params(options.get('trivia'), is_del)
+    ld_comms, ld_space, ld_neg, tr_comms, tr_space, tr_neg = get_trivia_params(options.get('trivia'), True)
 
     options = dict(options,
         precomms=_trivia2precomms[ld_comms],
         postcomms=_trivia2postcomms[tr_comms],
-
-        # prespace=False if ld_neg or is_del else ld_space,
-        # postspace=False if tr_neg or is_del else tr_space,
-
-        # prespace=False if ld_neg and is_del else ld_space,
-        # postspace=False if tr_neg and is_del else tr_space,
-
-        # prespace=ld_space if not ld_neg or is_del else False,
-        # postspace=tr_space if not tr_neg or is_del else False,
-
-        prespace=False if not ld_neg and is_del else ld_space,
-        postspace=False if not tr_neg and is_del else tr_space,
+        prespace=ld_space,
+        postspace=tr_space,
     )
 
     put_fst_end_nl = _put_slice_stmtish_old(self, code, start, stop, field, one, options)

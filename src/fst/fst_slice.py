@@ -406,6 +406,8 @@ def _locs_slice_seq(
     #     return ((l := fstloc(bound_ln, bound_col, bound_end_ln, bound_end_col)), l, None, sep_end_pos)  # case 0
 
     ld_comms, ld_space, ld_neg, tr_comms, tr_space, tr_neg = get_trivia_params(trivia, neg)
+    # print('... ... ...', trivia, neg)
+    # print('           ', ld_comms, ld_space, ld_neg, tr_comms, tr_space, tr_neg)
 
     ld_text_pos, ld_space_pos, indent = leading_trivia(lines, bound_ln, bound_col,  # start of text / space
                                                        first_ln, first_col, ld_comms, ld_space)
@@ -463,6 +465,8 @@ def _locs_slice_seq(
     cut_locs = calc_locs(ld_ln, ld_col, tr_ln, tr_col)
 
     # here we could just return cut_locs, the rest of the code differentiates between '-#' and '+#' locations if neg is True
+
+    # print('           ', ld_text_pos, ld_space_pos, ld_neg, ld_space)
 
     if ld_different := ld_space_pos and ld_neg and ld_space:
         if ld_text_pos[0] == ld_ln:  # if on same line then space was at start of line and there should be no difference
@@ -2027,7 +2031,7 @@ def _put_slice_seq_begin(
 
     copy_loc, del_loc, del_indent, _ = _locs_slice_seq(self, is_first, is_last, loc_first, loc_last,
                                                        bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                                       trivia, sep, is_del)
+                                                       trivia, sep, True)  # is_del)
 
     put_ln, put_col, put_end_ln, put_end_col = del_loc
 
