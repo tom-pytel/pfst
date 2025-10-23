@@ -56,15 +56,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
-    2] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
+      2] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (1, 'body[0]', 1, 1, 'body', {}, ('exec', r'''
@@ -80,15 +80,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
-    2] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
+      2] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (2, 'body[0]', 1, 1, 'body', {}, ('exec', r'''
@@ -106,15 +106,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,5
   .body[1]
-  0] If - 0,0..4,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 3,4..3,5
-      .value Name 'k' Load - 3,4..3,5
-    2] Expr - 4,4..4,5
-      .value Name 'j' Load - 4,4..4,5
+   0] If - 0,0..4,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 3,4..3,5
+        .value Name 'k' Load - 3,4..3,5
+      2] Expr - 4,4..4,5
+        .value Name 'j' Load - 4,4..4,5
 '''),
 
 (3, 'body[0]', 1, 1, 'body', {}, ('exec', r'''
@@ -132,15 +132,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,5
   .body[1]
-  0] If - 0,0..4,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
-    2] Expr - 4,4..4,5
-      .value Name 'j' Load - 4,4..4,5
+   0] If - 0,0..4,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
+      2] Expr - 4,4..4,5
+        .value Name 'j' Load - 4,4..4,5
 '''),
 
 (4, 'body[0]', 1, 1, 'body', {}, ('exec', r'''
@@ -158,15 +158,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,5
   .body[1]
-  0] If - 0,0..4,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
-    2] Expr - 4,4..4,5
-      .value Name 'j' Load - 4,4..4,5
+   0] If - 0,0..4,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
+      2] Expr - 4,4..4,5
+        .value Name 'j' Load - 4,4..4,5
 '''),
 
 (5, 'body[0]', 1, 1, 'body', {}, ('exec', r'''
@@ -192,15 +192,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..8,5
   .body[1]
-  0] If - 0,0..8,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
-    2] Expr - 8,4..8,5
-      .value Name 'j' Load - 8,4..8,5
+   0] If - 0,0..8,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
+      2] Expr - 8,4..8,5
+        .value Name 'j' Load - 8,4..8,5
 '''),
 
 (6, 'body[0]', 1, 1, 'body', {}, ('exec', r'''
@@ -215,15 +215,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
-    2] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
+      2] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (7, 'body[0]', 1, 1, 'body', {}, ('exec', r'''
@@ -239,15 +239,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
-    2] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
+      2] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (8, 'body[0]', 1, 1, 'body', {}, ('exec', r'''
@@ -263,15 +263,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
-    2] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
+      2] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (9, 'body[0]', 1, 1, 'body', {}, ('exec', r'''
@@ -288,15 +288,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
-    2] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
+      2] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (10, 'body[0]', 1, 1, 'body', {}, ('exec',
@@ -309,15 +309,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
-    2] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
+      2] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (11, 'body[0]', 1, 1, 'body', {}, ('exec', r'''
@@ -334,15 +334,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
-    2] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
+      2] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (12, 'body[0]', 2, 2, 'body', {}, ('exec', r'''
@@ -357,19 +357,19 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,9
   .body[1]
-  0] If - 0,0..3,9
-    .test Constant 1 - 0,3..0,4
-    .body[5]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 1,8..1,9
-      .value Name 'j' Load - 1,8..1,9
-    2] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
-    3] Expr - 3,4..3,5
-      .value Name 'l' Load - 3,4..3,5
-    4] Expr - 3,8..3,9
-      .value Name 'm' Load - 3,8..3,9
+   0] If - 0,0..3,9
+     .test Constant 1 - 0,3..0,4
+     .body[5]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 1,8..1,9
+        .value Name 'j' Load - 1,8..1,9
+      2] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
+      3] Expr - 3,4..3,5
+        .value Name 'l' Load - 3,4..3,5
+      4] Expr - 3,8..3,9
+        .value Name 'm' Load - 3,8..3,9
 '''),
 
 (13, 'body[0]', 2, 2, 'body', {}, ('exec',
@@ -382,19 +382,19 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,9
   .body[1]
-  0] If - 0,0..3,9
-    .test Constant 1 - 0,3..0,4
-    .body[5]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 1,8..1,9
-      .value Name 'j' Load - 1,8..1,9
-    2] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
-    3] Expr - 3,4..3,5
-      .value Name 'l' Load - 3,4..3,5
-    4] Expr - 3,8..3,9
-      .value Name 'm' Load - 3,8..3,9
+   0] If - 0,0..3,9
+     .test Constant 1 - 0,3..0,4
+     .body[5]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 1,8..1,9
+        .value Name 'j' Load - 1,8..1,9
+      2] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
+      3] Expr - 3,4..3,5
+        .value Name 'l' Load - 3,4..3,5
+      4] Expr - 3,8..3,9
+        .value Name 'm' Load - 3,8..3,9
 '''),
 
 (14, 'body[0]', 1, 1, 'body', {}, ('exec', r'''
@@ -408,13 +408,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
 '''),
 
 (15, 'body[0]', 1, 1, 'body', {}, ('exec', r'''
@@ -428,13 +428,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
 '''),
 
 (16, 'body[0]', 1, 1, 'body', {}, ('exec', r'''
@@ -450,13 +450,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,9
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
 '''),
 
 (17, 'body[0]', 1, 1, 'body', {}, ('exec',
@@ -468,13 +468,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
 '''),
 
 (18, 'body[0]', 1, 1, 'body', {}, ('exec',
@@ -486,13 +486,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
 '''),
 
 (19, 'body[0]', 1, 1, 'body', {}, ('exec', r'''
@@ -507,13 +507,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,9
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
 '''),
 
 (20, 'body[0]', 1, 1, 'body', {}, ('exec', r'''
@@ -528,13 +528,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,9
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
 '''),
 
 (21, 'body[0]', 1, 1, 'body', {}, ('exec', r'''
@@ -549,13 +549,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,9
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
 '''),
 
 (22, 'body[0]', 0, 0, 'body', {}, ('exec', r'''
@@ -569,13 +569,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'k' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'i' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'k' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'i' Load - 2,4..2,5
 '''),
 
 (23, 'body[0]', 0, 0, 'body', {}, ('exec', r'''
@@ -589,13 +589,13 @@ if 1:  # post-block
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'k' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'i' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'k' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'i' Load - 2,4..2,5
 '''),
 
 (24, 'body[0]', 0, 0, 'body', {}, ('exec', r'''
@@ -611,13 +611,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'k' Load - 1,4..1,5
-    1] Expr - 3,4..3,5
-      .value Name 'i' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'k' Load - 1,4..1,5
+      1] Expr - 3,4..3,5
+        .value Name 'i' Load - 3,4..3,5
 '''),
 
 (25, 'body[0]', 0, 0, 'body', {}, ('exec', r'''
@@ -633,13 +633,13 @@ if 1:  # post-block
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'k' Load - 1,4..1,5
-    1] Expr - 3,4..3,5
-      .value Name 'i' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'k' Load - 1,4..1,5
+      1] Expr - 3,4..3,5
+        .value Name 'i' Load - 3,4..3,5
 '''),
 
 (26, 'body[0]', 0, 0, 'body', {}, ('exec', r'''
@@ -657,13 +657,13 @@ if 1: \
 ''', r'''
 Module - ROOT 0,0..4,5
   .body[1]
-  0] If - 0,0..4,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
-    1] Expr - 4,4..4,5
-      .value Name 'i' Load - 4,4..4,5
+   0] If - 0,0..4,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
+      1] Expr - 4,4..4,5
+        .value Name 'i' Load - 4,4..4,5
 '''),
 
 (27, 'body[0]', 0, 0, 'body', {}, ('exec',
@@ -675,15 +675,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,23
   .body[1]
-  0] If - 0,0..2,9
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'k' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'i' Load - 2,4..2,5
-    2] Expr - 2,8..2,9
-      .value Name 'j' Load - 2,8..2,9
+   0] If - 0,0..2,9
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'k' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'i' Load - 2,4..2,5
+      2] Expr - 2,8..2,9
+        .value Name 'j' Load - 2,8..2,9
 '''),
 
 (28, 'body[0]', 0, 0, 'body', {}, ('exec', r'''
@@ -697,15 +697,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,23
   .body[1]
-  0] If - 0,0..2,9
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'k' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'i' Load - 2,4..2,5
-    2] Expr - 2,8..2,9
-      .value Name 'j' Load - 2,8..2,9
+   0] If - 0,0..2,9
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'k' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'i' Load - 2,4..2,5
+      2] Expr - 2,8..2,9
+        .value Name 'j' Load - 2,8..2,9
 '''),
 
 (29, 'body[0].body[0]', 0, 0, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
@@ -727,18 +727,18 @@ def f():
 ''', r'''
 Module - ROOT 0,0..3,17
   .body[1]
-  0] FunctionDef - 0,0..3,17
-    .name 'f'
-    .body[1]
-    0] If - 1,4..3,17
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 2,8..2,12
-      .orelse[1]
-      0] If - 3,4..3,17
-        .test Constant 2 - 3,9..3,10
+   0] FunctionDef - 0,0..3,17
+     .name 'f'
+     .body[1]
+      0] If - 1,4..3,17
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Break - 3,12..3,17
+         0] Pass - 2,8..2,12
+        .orelse[1]
+         0] If - 3,4..3,17
+           .test Constant 2 - 3,9..3,10
+           .body[1]
+            0] Break - 3,12..3,17
 '''),
 
 (30, 'body[0].body[0]', 0, 0, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
@@ -766,18 +766,18 @@ def f():
 ''', r'''
 Module - ROOT 0,0..5,15
   .body[1]
-  0] FunctionDef - 0,0..4,17
-    .name 'f'
-    .body[1]
-    0] If - 1,4..4,17
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 2,8..2,12
-      .orelse[1]
-      0] If - 4,4..4,17
-        .test Constant 2 - 4,9..4,10
+   0] FunctionDef - 0,0..4,17
+     .name 'f'
+     .body[1]
+      0] If - 1,4..4,17
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Break - 4,12..4,17
+         0] Pass - 2,8..2,12
+        .orelse[1]
+         0] If - 4,4..4,17
+           .test Constant 2 - 4,9..4,10
+           .body[1]
+            0] Break - 4,12..4,17
 '''),
 
 (31, 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
@@ -813,23 +813,23 @@ def f():
 ''', r'''
 Module - ROOT 0,0..8,15
   .body[1]
-  0] FunctionDef - 0,0..7,16
-    .name 'f'
-    .body[1]
-    0] If - 1,4..7,16
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 2,8..2,12
-      .orelse[1]
-      0] If - 4,4..7,16
-        .test Constant 2 - 4,9..4,10
+   0] FunctionDef - 0,0..7,16
+     .name 'f'
+     .body[1]
+      0] If - 1,4..7,16
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Break - 4,12..4,17
+         0] Pass - 2,8..2,12
         .orelse[1]
-        0] If - 6,4..7,16
-          .test Constant 3 - 6,9..6,10
-          .body[1]
-          0] Continue - 7,8..7,16
+         0] If - 4,4..7,16
+           .test Constant 2 - 4,9..4,10
+           .body[1]
+            0] Break - 4,12..4,17
+           .orelse[1]
+            0] If - 6,4..7,16
+              .test Constant 3 - 6,9..6,10
+              .body[1]
+               0] Continue - 7,8..7,16
 '''),
 
 (32, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -853,13 +853,13 @@ def f():
 ''', r'''
 Module - ROOT 0,0..5,15
   .body[1]
-  0] FunctionDef - 0,0..2,12
-    .name 'f'
-    .body[1]
-    0] If - 1,4..2,12
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 2,8..2,12
+   0] FunctionDef - 0,0..2,12
+     .name 'f'
+     .body[1]
+      0] If - 1,4..2,12
+        .test Constant 1 - 1,7..1,8
+        .body[1]
+         0] Pass - 2,8..2,12
 '''),
 
 (33, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (True, False), 'pep8space': False}, ('exec', r'''
@@ -882,13 +882,13 @@ def f():
 ''', r'''
 Module - ROOT 0,0..4,15
   .body[1]
-  0] FunctionDef - 0,0..2,12
-    .name 'f'
-    .body[1]
-    0] If - 1,4..2,12
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 2,8..2,12
+   0] FunctionDef - 0,0..2,12
+     .name 'f'
+     .body[1]
+      0] If - 1,4..2,12
+        .test Constant 1 - 1,7..1,8
+        .body[1]
+         0] Pass - 2,8..2,12
 '''),
 
 (34, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (False, True), 'pep8space': False}, ('exec', r'''
@@ -911,13 +911,13 @@ def f():
 ''', r'''
 Module - ROOT 0,0..4,15
   .body[1]
-  0] FunctionDef - 0,0..2,12
-    .name 'f'
-    .body[1]
-    0] If - 1,4..2,12
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 2,8..2,12
+   0] FunctionDef - 0,0..2,12
+     .name 'f'
+     .body[1]
+      0] If - 1,4..2,12
+        .test Constant 1 - 1,7..1,8
+        .body[1]
+         0] Pass - 2,8..2,12
 '''),
 
 (35, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (True, True)}, ('exec', r'''
@@ -939,13 +939,13 @@ def f():
 ''', r'''
 Module - ROOT 0,0..3,15
   .body[1]
-  0] FunctionDef - 0,0..2,12
-    .name 'f'
-    .body[1]
-    0] If - 1,4..2,12
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 2,8..2,12
+   0] FunctionDef - 0,0..2,12
+     .name 'f'
+     .body[1]
+      0] If - 1,4..2,12
+        .test Constant 1 - 1,7..1,8
+        .body[1]
+         0] Pass - 2,8..2,12
 '''),
 
 (36, 'body[0].body[0].orelse[0]', 0, 1, 'orelse', {'trivia': ('all-', True), 'pep8space': False}, ('exec', r'''
@@ -974,18 +974,18 @@ def f():
 ''', r'''
 Module - ROOT 0,0..6,15
   .body[1]
-  0] FunctionDef - 0,0..4,17
-    .name 'f'
-    .body[1]
-    0] If - 1,4..4,17
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 2,8..2,12
-      .orelse[1]
-      0] If - 4,4..4,17
-        .test Constant 2 - 4,9..4,10
+   0] FunctionDef - 0,0..4,17
+     .name 'f'
+     .body[1]
+      0] If - 1,4..4,17
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Break - 4,12..4,17
+         0] Pass - 2,8..2,12
+        .orelse[1]
+         0] If - 4,4..4,17
+           .test Constant 2 - 4,9..4,10
+           .body[1]
+            0] Break - 4,12..4,17
 '''),
 
 (37, '', 0, 0, None, {}, ('exec',
@@ -996,8 +996,8 @@ i
 ''', r'''
 Module - ROOT 0,0..1,0
   .body[1]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
 '''),
 
 (38, '', 0, 0, None, {}, ('exec',
@@ -1008,8 +1008,8 @@ i
 ''', r'''
 Module - ROOT 0,0..1,0
   .body[1]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
 '''),
 
 (39, '', 0, 0, None, {}, ('exec',
@@ -1020,8 +1020,8 @@ i
 ''', r'''
 Module - ROOT 0,0..1,0
   .body[1]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
 '''),
 
 (40, '', 0, 0, None, {}, ('exec',
@@ -1032,8 +1032,8 @@ i
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[1]
-  0] Expr - 1,0..1,1
-    .value Name 'i' Load - 1,0..1,1
+   0] Expr - 1,0..1,1
+     .value Name 'i' Load - 1,0..1,1
 '''),
 
 (41, '', 0, 0, None, {}, ('exec', r'''
@@ -1049,8 +1049,8 @@ i
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 3,0..3,1
-    .value Name 'i' Load - 3,0..3,1
+   0] Expr - 3,0..3,1
+     .value Name 'i' Load - 3,0..3,1
 '''),
 
 (42, '', 0, 0, None, {}, ('exec', r'''
@@ -1068,10 +1068,10 @@ i
 ''', r'''
 Module - ROOT 0,0..4,1
   .body[2]
-  0] Expr - 3,0..3,1
-    .value Name 'h' Load - 3,0..3,1
-  1] Expr - 4,0..4,1
-    .value Name 'i' Load - 4,0..4,1
+   0] Expr - 3,0..3,1
+     .value Name 'h' Load - 3,0..3,1
+   1] Expr - 4,0..4,1
+     .value Name 'i' Load - 4,0..4,1
 '''),
 
 (43, '', 1, 1, None, {}, ('exec', r'''
@@ -1089,10 +1089,10 @@ j
 ''', r'''
 Module - ROOT 0,0..4,1
   .body[2]
-  0] Expr - 3,0..3,1
-    .value Name 'i' Load - 3,0..3,1
-  1] Expr - 4,0..4,1
-    .value Name 'j' Load - 4,0..4,1
+   0] Expr - 3,0..3,1
+     .value Name 'i' Load - 3,0..3,1
+   1] Expr - 4,0..4,1
+     .value Name 'j' Load - 4,0..4,1
 '''),
 
 (44, 'body[0].body[0]', 0, 0, 'orelse', {}, ('exec', r'''
@@ -1109,19 +1109,19 @@ def f():
 ''', r'''
 Module - ROOT 0,0..4,18
   .body[1]
-  0] FunctionDef - 0,0..4,18
-    .name 'f'
-    .body[1]
-    0] If - 1,4..4,18
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 1,10..1,14
-      .orelse[2]
-      0] Break - 3,8..3,13
-      1] If - 4,8..4,18
-        .test Constant 2 - 4,11..4,12
+   0] FunctionDef - 0,0..4,18
+     .name 'f'
+     .body[1]
+      0] If - 1,4..4,18
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Pass - 4,14..4,18
+         0] Pass - 1,10..1,14
+        .orelse[2]
+         0] Break - 3,8..3,13
+         1] If - 4,8..4,18
+           .test Constant 2 - 4,11..4,12
+           .body[1]
+            0] Pass - 4,14..4,18
 '''),
 
 (45, 'body[0].body[0]', 1, 1, 'orelse', {}, ('exec', r'''
@@ -1138,19 +1138,19 @@ def f():
 ''', r'''
 Module - ROOT 0,0..4,13
   .body[1]
-  0] FunctionDef - 0,0..4,13
-    .name 'f'
-    .body[1]
-    0] If - 1,4..4,13
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 1,10..1,14
-      .orelse[2]
-      0] If - 3,8..3,18
-        .test Constant 2 - 3,11..3,12
+   0] FunctionDef - 0,0..4,13
+     .name 'f'
+     .body[1]
+      0] If - 1,4..4,13
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Pass - 3,14..3,18
-      1] Break - 4,8..4,13
+         0] Pass - 1,10..1,14
+        .orelse[2]
+         0] If - 3,8..3,18
+           .test Constant 2 - 3,11..3,12
+           .body[1]
+            0] Pass - 3,14..3,18
+         1] Break - 4,8..4,13
 '''),
 
 (46, 'body[0].body[0]', 0, 0, 'orelse', {}, ('exec', r'''
@@ -1169,19 +1169,19 @@ def f():
 ''', r'''
 Module - ROOT 0,0..5,16
   .body[1]
-  0] FunctionDef - 0,0..5,16
-    .name 'f'
-    .body[1]
-    0] If - 1,4..5,16
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 1,10..1,14
-      .orelse[2]
-      0] Break - 3,8..3,13
-      1] If - 4,8..5,16
-        .test Constant 2 - 4,11..4,12
+   0] FunctionDef - 0,0..5,16
+     .name 'f'
+     .body[1]
+      0] If - 1,4..5,16
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Pass - 5,12..5,16
+         0] Pass - 1,10..1,14
+        .orelse[2]
+         0] Break - 3,8..3,13
+         1] If - 4,8..5,16
+           .test Constant 2 - 4,11..4,12
+           .body[1]
+            0] Pass - 5,12..5,16
 '''),
 
 (47, 'body[0].body[0]', 1, 1, 'orelse', {}, ('exec', r'''
@@ -1200,19 +1200,19 @@ def f():
 ''', r'''
 Module - ROOT 0,0..5,13
   .body[1]
-  0] FunctionDef - 0,0..5,13
-    .name 'f'
-    .body[1]
-    0] If - 1,4..5,13
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 1,10..1,14
-      .orelse[2]
-      0] If - 3,8..4,16
-        .test Constant 2 - 3,11..3,12
+   0] FunctionDef - 0,0..5,13
+     .name 'f'
+     .body[1]
+      0] If - 1,4..5,13
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Pass - 4,12..4,16
-      1] Break - 5,8..5,13
+         0] Pass - 1,10..1,14
+        .orelse[2]
+         0] If - 3,8..4,16
+           .test Constant 2 - 3,11..3,12
+           .body[1]
+            0] Pass - 4,12..4,16
+         1] Break - 5,8..5,13
 '''),
 
 (48, 'body[0].body[0]', 0, 0, 'orelse', {}, ('exec', r'''
@@ -1231,24 +1231,24 @@ def f():
 ''', r'''
 Module - ROOT 0,0..5,21
   .body[1]
-  0] FunctionDef - 0,0..5,21
-    .name 'f'
-    .body[1]
-    0] If - 1,4..5,21
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 1,10..1,14
-      .orelse[2]
-      0] Break - 3,8..3,13
-      1] If - 4,8..5,21
-        .test Constant 2 - 4,11..4,12
+   0] FunctionDef - 0,0..5,21
+     .name 'f'
+     .body[1]
+      0] If - 1,4..5,21
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Continue - 4,14..4,22
-        .orelse[1]
-        0] If - 5,8..5,21
-          .test Constant 3 - 5,13..5,14
-          .body[1]
-          0] Raise - 5,16..5,21
+         0] Pass - 1,10..1,14
+        .orelse[2]
+         0] Break - 3,8..3,13
+         1] If - 4,8..5,21
+           .test Constant 2 - 4,11..4,12
+           .body[1]
+            0] Continue - 4,14..4,22
+           .orelse[1]
+            0] If - 5,8..5,21
+              .test Constant 3 - 5,13..5,14
+              .body[1]
+               0] Raise - 5,16..5,21
 '''),
 
 (49, 'body[0].body[0]', 1, 1, 'orelse', {}, ('exec', r'''
@@ -1267,24 +1267,24 @@ def f():
 ''', r'''
 Module - ROOT 0,0..5,13
   .body[1]
-  0] FunctionDef - 0,0..5,13
-    .name 'f'
-    .body[1]
-    0] If - 1,4..5,13
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 1,10..1,14
-      .orelse[2]
-      0] If - 3,8..4,21
-        .test Constant 2 - 3,11..3,12
+   0] FunctionDef - 0,0..5,13
+     .name 'f'
+     .body[1]
+      0] If - 1,4..5,13
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Continue - 3,14..3,22
-        .orelse[1]
-        0] If - 4,8..4,21
-          .test Constant 3 - 4,13..4,14
-          .body[1]
-          0] Raise - 4,16..4,21
-      1] Break - 5,8..5,13
+         0] Pass - 1,10..1,14
+        .orelse[2]
+         0] If - 3,8..4,21
+           .test Constant 2 - 3,11..3,12
+           .body[1]
+            0] Continue - 3,14..3,22
+           .orelse[1]
+            0] If - 4,8..4,21
+              .test Constant 3 - 4,13..4,14
+              .body[1]
+               0] Raise - 4,16..4,21
+         1] Break - 5,8..5,13
 '''),
 
 (50, 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {}, ('exec', r'''
@@ -1303,24 +1303,24 @@ def f():
 ''', r'''
 Module - ROOT 0,0..5,19
   .body[1]
-  0] FunctionDef - 0,0..5,19
-    .name 'f'
-    .body[1]
-    0] If - 1,4..5,19
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 1,10..1,14
-      .orelse[1]
-      0] If - 2,4..5,19
-        .test Constant 2 - 2,9..2,10
+   0] FunctionDef - 0,0..5,19
+     .name 'f'
+     .body[1]
+      0] If - 1,4..5,19
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Continue - 2,12..2,20
-        .orelse[2]
-        0] Break - 4,8..4,13
-        1] If - 5,8..5,19
-          .test Constant 3 - 5,11..5,12
-          .body[1]
-          0] Raise - 5,14..5,19
+         0] Pass - 1,10..1,14
+        .orelse[1]
+         0] If - 2,4..5,19
+           .test Constant 2 - 2,9..2,10
+           .body[1]
+            0] Continue - 2,12..2,20
+           .orelse[2]
+            0] Break - 4,8..4,13
+            1] If - 5,8..5,19
+              .test Constant 3 - 5,11..5,12
+              .body[1]
+               0] Raise - 5,14..5,19
 '''),
 
 (51, 'body[0].body[0].orelse[0]', 1, 1, 'orelse', {}, ('exec', r'''
@@ -1339,24 +1339,24 @@ def f():
 ''', r'''
 Module - ROOT 0,0..5,13
   .body[1]
-  0] FunctionDef - 0,0..5,13
-    .name 'f'
-    .body[1]
-    0] If - 1,4..5,13
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 1,10..1,14
-      .orelse[1]
-      0] If - 2,4..5,13
-        .test Constant 2 - 2,9..2,10
+   0] FunctionDef - 0,0..5,13
+     .name 'f'
+     .body[1]
+      0] If - 1,4..5,13
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Continue - 2,12..2,20
-        .orelse[2]
-        0] If - 4,8..4,19
-          .test Constant 3 - 4,11..4,12
-          .body[1]
-          0] Raise - 4,14..4,19
-        1] Break - 5,8..5,13
+         0] Pass - 1,10..1,14
+        .orelse[1]
+         0] If - 2,4..5,13
+           .test Constant 2 - 2,9..2,10
+           .body[1]
+            0] Continue - 2,12..2,20
+           .orelse[2]
+            0] If - 4,8..4,19
+              .test Constant 3 - 4,11..4,12
+              .body[1]
+               0] Raise - 4,14..4,19
+            1] Break - 5,8..5,13
 '''),
 
 (52, 'body[0]', 0, 0, None, {}, ('exec', r'''
@@ -1373,11 +1373,11 @@ def f():
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] FunctionDef - 0,0..2,5
-    .name 'f'
-    .body[1]
-    0] Expr - 2,4..2,5
-      .value Name 'i' Load - 2,4..2,5
+   0] FunctionDef - 0,0..2,5
+     .name 'f'
+     .body[1]
+      0] Expr - 2,4..2,5
+        .value Name 'i' Load - 2,4..2,5
 '''),
 
 (53, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -1394,11 +1394,11 @@ def f():
 ''', r'''
 Module - ROOT 0,0..2,13
   .body[1]
-  0] FunctionDef - 0,0..1,5
-    .name 'f'
-    .body[1]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
+   0] FunctionDef - 0,0..1,5
+     .name 'f'
+     .body[1]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
 '''),
 
 (54, 'body[0]', 0, 0, None, {}, ('exec', r'''
@@ -1415,13 +1415,13 @@ def f():
 ''', r'''
 Module - ROOT 0,0..2,9
   .body[1]
-  0] FunctionDef - 0,0..2,9
-    .name 'f'
-    .body[2]
-    0] Expr - 2,4..2,5
-      .value Name 'i' Load - 2,4..2,5
-    1] Expr - 2,8..2,9
-      .value Name 'j' Load - 2,8..2,9
+   0] FunctionDef - 0,0..2,9
+     .name 'f'
+     .body[2]
+      0] Expr - 2,4..2,5
+        .value Name 'i' Load - 2,4..2,5
+      1] Expr - 2,8..2,9
+        .value Name 'j' Load - 2,8..2,9
 '''),
 
 (55, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -1439,13 +1439,13 @@ def f():
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] FunctionDef - 0,0..3,5
-    .name 'f'
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] FunctionDef - 0,0..3,5
+     .name 'f'
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (56, 'body[0]', 2, 2, None, {}, ('exec', r'''
@@ -1462,13 +1462,13 @@ def f():
 ''', r'''
 Module - ROOT 0,0..2,13
   .body[1]
-  0] FunctionDef - 0,0..1,9
-    .name 'f'
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 1,8..1,9
-      .value Name 'j' Load - 1,8..1,9
+   0] FunctionDef - 0,0..1,9
+     .name 'f'
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 1,8..1,9
+        .value Name 'j' Load - 1,8..1,9
 '''),
 
 (57, 'body[0]', 0, 0, None, {}, ('exec', r'''
@@ -1494,13 +1494,13 @@ def f():
 ''', r'''
 Module - ROOT 0,0..5,3
   .body[1]
-  0] FunctionDef - 0,0..5,3
-    .name 'f'
-    .body[2]
-    0] Expr - 2,4..2,5
-      .value Name 'i' Load - 2,4..2,5
-    1] Expr - 5,2..5,3
-      .value Name 'j' Load - 5,2..5,3
+   0] FunctionDef - 0,0..5,3
+     .name 'f'
+     .body[2]
+      0] Expr - 2,4..2,5
+        .value Name 'i' Load - 2,4..2,5
+      1] Expr - 5,2..5,3
+        .value Name 'j' Load - 5,2..5,3
 '''),
 
 (58, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -1524,13 +1524,13 @@ def f():
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] FunctionDef - 0,0..3,5
-    .name 'f'
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] FunctionDef - 0,0..3,5
+     .name 'f'
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (59, 'body[0]', 2, 2, None, {}, ('exec', r'''
@@ -1556,13 +1556,13 @@ def f():
 ''', r'''
 Module - ROOT 0,0..5,13
   .body[1]
-  0] FunctionDef - 0,0..4,3
-    .name 'f'
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 4,2..4,3
-      .value Name 'j' Load - 4,2..4,3
+   0] FunctionDef - 0,0..4,3
+     .name 'f'
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 4,2..4,3
+        .value Name 'j' Load - 4,2..4,3
 '''),
 
 (60, '', 0, 0, None, {'pep8space': True}, ('exec',
@@ -1577,10 +1577,10 @@ def func():
 ''', r'''
 Module - ROOT 0,0..1,0
   .body[1]
-  0] FunctionDef - 0,0..0,16
-    .name 'func'
-    .body[1]
-    0] Pass - 0,12..0,16
+   0] FunctionDef - 0,0..0,16
+     .name 'func'
+     .body[1]
+      0] Pass - 0,12..0,16
 '''),
 
 (61, '', 0, 0, None, {'pep8space': True}, ('exec',
@@ -1598,10 +1598,10 @@ def func():
 ''', r'''
 Module - ROOT 0,0..2,0
   .body[1]
-  0] FunctionDef - 1,0..1,16
-    .name 'func'
-    .body[1]
-    0] Pass - 1,12..1,16
+   0] FunctionDef - 1,0..1,16
+     .name 'func'
+     .body[1]
+      0] Pass - 1,12..1,16
 '''),
 
 (62, '', 1, 1, None, {'pep8space': True}, ('exec', r'''
@@ -1622,12 +1622,12 @@ def func():
 ''', r'''
 Module - ROOT 0,0..3,16
   .body[2]
-  0] Expr - 0,0..1,15
-    .value Constant 'Module\n   docstring' - 0,0..1,15
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
+   0] Expr - 0,0..1,15
+     .value Constant 'Module\n   docstring' - 0,0..1,15
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
 '''),
 
 (63, '', 1, 1, None, {'pep8space': True}, ('exec', r'''
@@ -1648,12 +1648,12 @@ def func():
 ''', r'''
 Module - ROOT 0,0..3,16
   .body[2]
-  0] Expr - 0,0..1,15
-    .value Constant 'Module\n   docstring' - 0,0..1,15
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
+   0] Expr - 0,0..1,15
+     .value Constant 'Module\n   docstring' - 0,0..1,15
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
 '''),
 
 (64, '', 1, 1, None, {'pep8space': True}, ('exec', r'''
@@ -1676,12 +1676,12 @@ def func():
 ''', r'''
 Module - ROOT 0,0..3,16
   .body[2]
-  0] Expr - 0,0..1,15
-    .value Constant 'Module\n   docstring' - 0,0..1,15
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
+   0] Expr - 0,0..1,15
+     .value Constant 'Module\n   docstring' - 0,0..1,15
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
 '''),
 
 (65, '', 1, 1, None, {'pep8space': True}, ('exec', r'''
@@ -1706,12 +1706,12 @@ def func():
 ''', r'''
 Module - ROOT 0,0..4,16
   .body[2]
-  0] Expr - 0,0..1,15
-    .value Constant 'Module\n   docstring' - 0,0..1,15
-  1] FunctionDef - 4,0..4,16
-    .name 'func'
-    .body[1]
-    0] Pass - 4,12..4,16
+   0] Expr - 0,0..1,15
+     .value Constant 'Module\n   docstring' - 0,0..1,15
+   1] FunctionDef - 4,0..4,16
+     .name 'func'
+     .body[1]
+      0] Pass - 4,12..4,16
 '''),
 
 (66, '', 1, 1, None, {'pep8space': True}, ('exec',
@@ -1730,14 +1730,14 @@ def func():
 ''', r'''
 Module - ROOT 0,0..3,16
   .body[2]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
 '''),
 
 (67, '', 1, 1, None, {'pep8space': 1}, ('exec',
@@ -1754,14 +1754,14 @@ def func():
 ''', r'''
 Module - ROOT 0,0..2,16
   .body[2]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 2,0..2,16
-    .name 'func'
-    .body[1]
-    0] Pass - 2,12..2,16
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 2,0..2,16
+     .name 'func'
+     .body[1]
+      0] Pass - 2,12..2,16
 '''),
 
 (68, '', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec',
@@ -1776,14 +1776,14 @@ def func():
 ''', r'''
 Module - ROOT 0,0..1,16
   .body[2]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 1,0..1,16
-    .name 'func'
-    .body[1]
-    0] Pass - 1,12..1,16
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 1,0..1,16
+     .name 'func'
+     .body[1]
+      0] Pass - 1,12..1,16
 '''),
 
 (69, '', 1, 1, None, {'pep8space': True}, ('exec',
@@ -1804,14 +1804,14 @@ def func():
 ''', r'''
 Module - ROOT 0,0..3,16
   .body[2]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
 '''),
 
 (70, '', 1, 1, None, {'pep8space': 1}, ('exec',
@@ -1830,14 +1830,14 @@ def func():
 ''', r'''
 Module - ROOT 0,0..2,16
   .body[2]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 2,0..2,16
-    .name 'func'
-    .body[1]
-    0] Pass - 2,12..2,16
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 2,0..2,16
+     .name 'func'
+     .body[1]
+      0] Pass - 2,12..2,16
 '''),
 
 (71, '', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec',
@@ -1852,14 +1852,14 @@ def func():
 ''', r'''
 Module - ROOT 0,0..1,16
   .body[2]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 1,0..1,16
-    .name 'func'
-    .body[1]
-    0] Pass - 1,12..1,16
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 1,0..1,16
+     .name 'func'
+     .body[1]
+      0] Pass - 1,12..1,16
 '''),
 
 (72, '', 1, 1, None, {'pep8space': True}, ('exec',
@@ -1881,14 +1881,14 @@ def func():
 ''', r'''
 Module - ROOT 0,0..3,16
   .body[2]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
 '''),
 
 (73, '', 1, 1, None, {'pep8space': 1}, ('exec',
@@ -1909,14 +1909,14 @@ def func():
 ''', r'''
 Module - ROOT 0,0..3,16
   .body[2]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
 '''),
 
 (74, '', 1, 1, None, {'pep8space': True}, ('exec',
@@ -1940,14 +1940,14 @@ def func():
 ''', r'''
 Module - ROOT 0,0..4,16
   .body[2]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 4,0..4,16
-    .name 'func'
-    .body[1]
-    0] Pass - 4,12..4,16
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 4,0..4,16
+     .name 'func'
+     .body[1]
+      0] Pass - 4,12..4,16
 '''),
 
 (75, '', 1, 1, None, {'pep8space': True}, ('exec',
@@ -1966,14 +1966,14 @@ def func():
 ''', r'''
 Module - ROOT 0,0..3,16
   .body[2]
-  0] Import - 0,0..0,12
-    .names[1]
-    0] alias - 0,7..0,12
-      .name 'stuff'
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
+   0] Import - 0,0..0,12
+     .names[1]
+      0] alias - 0,7..0,12
+        .name 'stuff'
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
 '''),
 
 (76, '', 1, 1, None, {'pep8space': True}, ('exec',
@@ -1994,14 +1994,14 @@ def func():
 ''', r'''
 Module - ROOT 0,0..3,16
   .body[2]
-  0] Import - 0,0..0,12
-    .names[1]
-    0] alias - 0,7..0,12
-      .name 'stuff'
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
+   0] Import - 0,0..0,12
+     .names[1]
+      0] alias - 0,7..0,12
+        .name 'stuff'
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
 '''),
 
 (77, '', 1, 1, None, {'pep8space': True}, ('exec',
@@ -2023,14 +2023,14 @@ def func():
 ''', r'''
 Module - ROOT 0,0..3,16
   .body[2]
-  0] Import - 0,0..0,12
-    .names[1]
-    0] alias - 0,7..0,12
-      .name 'stuff'
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
+   0] Import - 0,0..0,12
+     .names[1]
+      0] alias - 0,7..0,12
+        .name 'stuff'
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
 '''),
 
 (78, '', 1, 1, None, {'pep8space': True}, ('exec',
@@ -2052,14 +2052,14 @@ def func():
 ''', r'''
 Module - ROOT 0,0..3,16
   .body[2]
-  0] Import - 0,0..0,12
-    .names[1]
-    0] alias - 0,7..0,12
-      .name 'stuff'
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
+   0] Import - 0,0..0,12
+     .names[1]
+      0] alias - 0,7..0,12
+        .name 'stuff'
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
 '''),
 
 (79, '', 0, 0, None, {}, ('exec',
@@ -2078,14 +2078,14 @@ def prefunc(): pass
 ''', r'''
 Module - ROOT 0,0..3,19
   .body[2]
-  0] FunctionDef - 0,0..0,16
-    .name 'func'
-    .body[1]
-    0] Pass - 0,12..0,16
-  1] FunctionDef - 3,0..3,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 3,15..3,19
+   0] FunctionDef - 0,0..0,16
+     .name 'func'
+     .body[1]
+      0] Pass - 0,12..0,16
+   1] FunctionDef - 3,0..3,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 3,15..3,19
 '''),
 
 (80, '', 0, 0, None, {'pep8space': 1}, ('exec',
@@ -2102,14 +2102,14 @@ def prefunc(): pass
 ''', r'''
 Module - ROOT 0,0..2,19
   .body[2]
-  0] FunctionDef - 0,0..0,16
-    .name 'func'
-    .body[1]
-    0] Pass - 0,12..0,16
-  1] FunctionDef - 2,0..2,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 2,15..2,19
+   0] FunctionDef - 0,0..0,16
+     .name 'func'
+     .body[1]
+      0] Pass - 0,12..0,16
+   1] FunctionDef - 2,0..2,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 2,15..2,19
 '''),
 
 (81, '', 0, 0, None, {'trivia': (False, False), 'pep8space': False}, ('exec',
@@ -2124,14 +2124,14 @@ def prefunc(): pass
 ''', r'''
 Module - ROOT 0,0..1,19
   .body[2]
-  0] FunctionDef - 0,0..0,16
-    .name 'func'
-    .body[1]
-    0] Pass - 0,12..0,16
-  1] FunctionDef - 1,0..1,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 1,15..1,19
+   0] FunctionDef - 0,0..0,16
+     .name 'func'
+     .body[1]
+      0] Pass - 0,12..0,16
+   1] FunctionDef - 1,0..1,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 1,15..1,19
 '''),
 
 (82, '', 0, 0, None, {}, ('exec',
@@ -2152,14 +2152,14 @@ def prefunc(): pass
 ''', r'''
 Module - ROOT 0,0..3,19
   .body[2]
-  0] FunctionDef - 0,0..0,16
-    .name 'func'
-    .body[1]
-    0] Pass - 0,12..0,16
-  1] FunctionDef - 3,0..3,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 3,15..3,19
+   0] FunctionDef - 0,0..0,16
+     .name 'func'
+     .body[1]
+      0] Pass - 0,12..0,16
+   1] FunctionDef - 3,0..3,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 3,15..3,19
 '''),
 
 (83, '', 0, 0, None, {}, ('exec',
@@ -2181,14 +2181,14 @@ def prefunc(): pass
 ''', r'''
 Module - ROOT 0,0..3,19
   .body[2]
-  0] FunctionDef - 0,0..0,16
-    .name 'func'
-    .body[1]
-    0] Pass - 0,12..0,16
-  1] FunctionDef - 3,0..3,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 3,15..3,19
+   0] FunctionDef - 0,0..0,16
+     .name 'func'
+     .body[1]
+      0] Pass - 0,12..0,16
+   1] FunctionDef - 3,0..3,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 3,15..3,19
 '''),
 
 (84, '', 0, 0, None, {}, ('exec',
@@ -2211,14 +2211,14 @@ def prefunc(): pass
 ''', r'''
 Module - ROOT 0,0..3,19
   .body[2]
-  0] FunctionDef - 0,0..0,16
-    .name 'func'
-    .body[1]
-    0] Pass - 0,12..0,16
-  1] FunctionDef - 3,0..3,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 3,15..3,19
+   0] FunctionDef - 0,0..0,16
+     .name 'func'
+     .body[1]
+      0] Pass - 0,12..0,16
+   1] FunctionDef - 3,0..3,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 3,15..3,19
 '''),
 
 (85, '', 0, 0, None, {}, ('exec',
@@ -2243,14 +2243,14 @@ def prefunc(): pass
 ''', r'''
 Module - ROOT 0,0..4,19
   .body[2]
-  0] FunctionDef - 0,0..0,16
-    .name 'func'
-    .body[1]
-    0] Pass - 0,12..0,16
-  1] FunctionDef - 4,0..4,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 4,15..4,19
+   0] FunctionDef - 0,0..0,16
+     .name 'func'
+     .body[1]
+      0] Pass - 0,12..0,16
+   1] FunctionDef - 4,0..4,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 4,15..4,19
 '''),
 
 (86, '', 1, 1, None, {}, ('exec', r'''
@@ -2277,18 +2277,18 @@ def postfunc(): pass
 ''', r'''
 Module - ROOT 0,0..6,20
   .body[3]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
-  2] FunctionDef - 6,0..6,20
-    .name 'postfunc'
-    .body[1]
-    0] Pass - 6,16..6,20
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
+   2] FunctionDef - 6,0..6,20
+     .name 'postfunc'
+     .body[1]
+      0] Pass - 6,16..6,20
 '''),
 
 (87, '', 1, 1, None, {}, ('exec', r'''
@@ -2316,18 +2316,18 @@ def postfunc(): pass
 ''', r'''
 Module - ROOT 0,0..6,20
   .body[3]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
-  2] FunctionDef - 6,0..6,20
-    .name 'postfunc'
-    .body[1]
-    0] Pass - 6,16..6,20
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
+   2] FunctionDef - 6,0..6,20
+     .name 'postfunc'
+     .body[1]
+      0] Pass - 6,16..6,20
 '''),
 
 (88, '', 1, 1, None, {}, ('exec', r'''
@@ -2356,18 +2356,18 @@ def postfunc(): pass
 ''', r'''
 Module - ROOT 0,0..6,20
   .body[3]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
-  2] FunctionDef - 6,0..6,20
-    .name 'postfunc'
-    .body[1]
-    0] Pass - 6,16..6,20
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
+   2] FunctionDef - 6,0..6,20
+     .name 'postfunc'
+     .body[1]
+      0] Pass - 6,16..6,20
 '''),
 
 (89, '', 1, 1, None, {}, ('exec', r'''
@@ -2399,18 +2399,18 @@ def postfunc(): pass
 ''', r'''
 Module - ROOT 0,0..7,20
   .body[3]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
-  2] FunctionDef - 7,0..7,20
-    .name 'postfunc'
-    .body[1]
-    0] Pass - 7,16..7,20
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
+   2] FunctionDef - 7,0..7,20
+     .name 'postfunc'
+     .body[1]
+      0] Pass - 7,16..7,20
 '''),
 
 (90, '', 1, 1, None, {}, ('exec', r'''
@@ -2445,18 +2445,18 @@ def postfunc(): pass
 ''', r'''
 Module - ROOT 0,0..8,20
   .body[3]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
-  2] FunctionDef - 8,0..8,20
-    .name 'postfunc'
-    .body[1]
-    0] Pass - 8,16..8,20
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
+   2] FunctionDef - 8,0..8,20
+     .name 'postfunc'
+     .body[1]
+      0] Pass - 8,16..8,20
 '''),
 
 (91, '', 1, 1, None, {'pep8space': 1}, ('exec', r'''
@@ -2479,18 +2479,18 @@ def postfunc(): pass
 ''', r'''
 Module - ROOT 0,0..4,20
   .body[3]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 2,0..2,16
-    .name 'func'
-    .body[1]
-    0] Pass - 2,12..2,16
-  2] FunctionDef - 4,0..4,20
-    .name 'postfunc'
-    .body[1]
-    0] Pass - 4,16..4,20
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 2,0..2,16
+     .name 'func'
+     .body[1]
+      0] Pass - 2,12..2,16
+   2] FunctionDef - 4,0..4,20
+     .name 'postfunc'
+     .body[1]
+      0] Pass - 4,16..4,20
 '''),
 
 (92, '', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -2509,18 +2509,18 @@ def postfunc(): pass
 ''', r'''
 Module - ROOT 0,0..2,20
   .body[3]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 1,0..1,16
-    .name 'func'
-    .body[1]
-    0] Pass - 1,12..1,16
-  2] FunctionDef - 2,0..2,20
-    .name 'postfunc'
-    .body[1]
-    0] Pass - 2,16..2,20
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 1,0..1,16
+     .name 'func'
+     .body[1]
+      0] Pass - 1,12..1,16
+   2] FunctionDef - 2,0..2,20
+     .name 'postfunc'
+     .body[1]
+      0] Pass - 2,16..2,20
 '''),
 
 (93, '', 1, 1, None, {}, ('exec', r'''
@@ -2550,18 +2550,18 @@ def postfunc(): pass
 ''', r'''
 Module - ROOT 0,0..6,20
   .body[3]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
-  2] FunctionDef - 6,0..6,20
-    .name 'postfunc'
-    .body[1]
-    0] Pass - 6,16..6,20
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
+   2] FunctionDef - 6,0..6,20
+     .name 'postfunc'
+     .body[1]
+      0] Pass - 6,16..6,20
 '''),
 
 (94, '', 1, 1, None, {}, ('exec', r'''
@@ -2593,18 +2593,18 @@ def postfunc(): pass
 ''', r'''
 Module - ROOT 0,0..7,20
   .body[3]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
-  2] FunctionDef - 7,0..7,20
-    .name 'postfunc'
-    .body[1]
-    0] Pass - 7,16..7,20
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
+   2] FunctionDef - 7,0..7,20
+     .name 'postfunc'
+     .body[1]
+      0] Pass - 7,16..7,20
 '''),
 
 (95, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -2628,15 +2628,15 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..4,20
   .body[1]
-  0] ClassDef - 0,0..4,20
-    .name 'cls'
-    .body[2]
-    0] Expr - 1,4..2,19
-      .value Constant 'Class\n       docstring' - 1,4..2,19
-    1] FunctionDef - 4,4..4,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 4,16..4,20
+   0] ClassDef - 0,0..4,20
+     .name 'cls'
+     .body[2]
+      0] Expr - 1,4..2,19
+        .value Constant 'Class\n       docstring' - 1,4..2,19
+      1] FunctionDef - 4,4..4,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 4,16..4,20
 '''),
 
 (96, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -2662,15 +2662,15 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..4,20
   .body[1]
-  0] ClassDef - 0,0..4,20
-    .name 'cls'
-    .body[2]
-    0] Expr - 1,4..2,19
-      .value Constant 'Class\n       docstring' - 1,4..2,19
-    1] FunctionDef - 4,4..4,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 4,16..4,20
+   0] ClassDef - 0,0..4,20
+     .name 'cls'
+     .body[2]
+      0] Expr - 1,4..2,19
+        .value Constant 'Class\n       docstring' - 1,4..2,19
+      1] FunctionDef - 4,4..4,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 4,16..4,20
 '''),
 
 (97, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -2698,15 +2698,15 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..5,20
   .body[1]
-  0] ClassDef - 0,0..5,20
-    .name 'cls'
-    .body[2]
-    0] Expr - 1,4..2,19
-      .value Constant 'Class\n       docstring' - 1,4..2,19
-    1] FunctionDef - 5,4..5,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 5,16..5,20
+   0] ClassDef - 0,0..5,20
+     .name 'cls'
+     .body[2]
+      0] Expr - 1,4..2,19
+        .value Constant 'Class\n       docstring' - 1,4..2,19
+      1] FunctionDef - 5,4..5,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 5,16..5,20
 '''),
 
 (98, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -2727,17 +2727,17 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..3,20
   .body[1]
-  0] ClassDef - 0,0..3,20
-    .name 'cls'
-    .body[2]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] FunctionDef - 3,4..3,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 3,16..3,20
+   0] ClassDef - 0,0..3,20
+     .name 'cls'
+     .body[2]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] FunctionDef - 3,4..3,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 3,16..3,20
 '''),
 
 (99, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -2760,17 +2760,17 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..3,20
   .body[1]
-  0] ClassDef - 0,0..3,20
-    .name 'cls'
-    .body[2]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] FunctionDef - 3,4..3,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 3,16..3,20
+   0] ClassDef - 0,0..3,20
+     .name 'cls'
+     .body[2]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] FunctionDef - 3,4..3,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 3,16..3,20
 '''),
 
 (100, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -2795,17 +2795,17 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..4,20
   .body[1]
-  0] ClassDef - 0,0..4,20
-    .name 'cls'
-    .body[2]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] FunctionDef - 4,4..4,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 4,16..4,20
+   0] ClassDef - 0,0..4,20
+     .name 'cls'
+     .body[2]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] FunctionDef - 4,4..4,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 4,16..4,20
 '''),
 
 (101, 'body[0]', 0, 0, None, {}, ('exec', r'''
@@ -2826,17 +2826,17 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..3,24
   .body[1]
-  0] ClassDef - 0,0..3,24
-    .name 'cls'
-    .body[2]
-    0] FunctionDef - 1,4..1,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 1,16..1,20
-    1] FunctionDef - 3,4..3,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 3,20..3,24
+   0] ClassDef - 0,0..3,24
+     .name 'cls'
+     .body[2]
+      0] FunctionDef - 1,4..1,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 1,16..1,20
+      1] FunctionDef - 3,4..3,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 3,20..3,24
 '''),
 
 (102, 'body[0]', 0, 0, None, {}, ('exec', r'''
@@ -2859,17 +2859,17 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..3,24
   .body[1]
-  0] ClassDef - 0,0..3,24
-    .name 'cls'
-    .body[2]
-    0] FunctionDef - 1,4..1,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 1,16..1,20
-    1] FunctionDef - 3,4..3,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 3,20..3,24
+   0] ClassDef - 0,0..3,24
+     .name 'cls'
+     .body[2]
+      0] FunctionDef - 1,4..1,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 1,16..1,20
+      1] FunctionDef - 3,4..3,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 3,20..3,24
 '''),
 
 (103, 'body[0]', 0, 0, None, {}, ('exec', r'''
@@ -2893,17 +2893,17 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..3,24
   .body[1]
-  0] ClassDef - 0,0..3,24
-    .name 'cls'
-    .body[2]
-    0] FunctionDef - 1,4..1,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 1,16..1,20
-    1] FunctionDef - 3,4..3,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 3,20..3,24
+   0] ClassDef - 0,0..3,24
+     .name 'cls'
+     .body[2]
+      0] FunctionDef - 1,4..1,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 1,16..1,20
+      1] FunctionDef - 3,4..3,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 3,20..3,24
 '''),
 
 (104, 'body[0]', 0, 0, None, {}, ('exec', r'''
@@ -2929,17 +2929,17 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..4,24
   .body[1]
-  0] ClassDef - 0,0..4,24
-    .name 'cls'
-    .body[2]
-    0] FunctionDef - 1,4..1,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 1,16..1,20
-    1] FunctionDef - 4,4..4,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 4,20..4,24
+   0] ClassDef - 0,0..4,24
+     .name 'cls'
+     .body[2]
+      0] FunctionDef - 1,4..1,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 1,16..1,20
+      1] FunctionDef - 4,4..4,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 4,20..4,24
 '''),
 
 (105, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -2965,21 +2965,21 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..5,24
   .body[1]
-  0] ClassDef - 0,0..5,24
-    .name 'cls'
-    .body[3]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] FunctionDef - 3,4..3,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 3,16..3,20
-    2] FunctionDef - 5,4..5,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 5,20..5,24
+   0] ClassDef - 0,0..5,24
+     .name 'cls'
+     .body[3]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] FunctionDef - 3,4..3,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 3,16..3,20
+      2] FunctionDef - 5,4..5,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 5,20..5,24
 '''),
 
 (106, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -3006,21 +3006,21 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..5,24
   .body[1]
-  0] ClassDef - 0,0..5,24
-    .name 'cls'
-    .body[3]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] FunctionDef - 3,4..3,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 3,16..3,20
-    2] FunctionDef - 5,4..5,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 5,20..5,24
+   0] ClassDef - 0,0..5,24
+     .name 'cls'
+     .body[3]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] FunctionDef - 3,4..3,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 3,16..3,20
+      2] FunctionDef - 5,4..5,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 5,20..5,24
 '''),
 
 (107, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -3050,21 +3050,21 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..6,24
   .body[1]
-  0] ClassDef - 0,0..6,24
-    .name 'cls'
-    .body[3]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] FunctionDef - 3,4..3,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 3,16..3,20
-    2] FunctionDef - 6,4..6,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 6,20..6,24
+   0] ClassDef - 0,0..6,24
+     .name 'cls'
+     .body[3]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] FunctionDef - 3,4..3,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 3,16..3,20
+      2] FunctionDef - 6,4..6,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 6,20..6,24
 '''),
 
 (108, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -3097,21 +3097,21 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..7,24
   .body[1]
-  0] ClassDef - 0,0..7,24
-    .name 'cls'
-    .body[3]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] FunctionDef - 3,4..3,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 3,16..3,20
-    2] FunctionDef - 7,4..7,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 7,20..7,24
+   0] ClassDef - 0,0..7,24
+     .name 'cls'
+     .body[3]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] FunctionDef - 3,4..3,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 3,16..3,20
+      2] FunctionDef - 7,4..7,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 7,20..7,24
 '''),
 
 (109, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -3133,21 +3133,21 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..3,24
   .body[1]
-  0] ClassDef - 0,0..3,24
-    .name 'cls'
-    .body[3]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] FunctionDef - 2,4..2,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 2,16..2,20
-    2] FunctionDef - 3,4..3,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 3,20..3,24
+   0] ClassDef - 0,0..3,24
+     .name 'cls'
+     .body[3]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] FunctionDef - 2,4..2,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 2,16..2,20
+      2] FunctionDef - 3,4..3,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 3,20..3,24
 '''),
 
 (110, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -3176,21 +3176,21 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..6,24
   .body[1]
-  0] ClassDef - 0,0..6,24
-    .name 'cls'
-    .body[3]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] FunctionDef - 3,4..3,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 3,16..3,20
-    2] FunctionDef - 6,4..6,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 6,20..6,24
+   0] ClassDef - 0,0..6,24
+     .name 'cls'
+     .body[3]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] FunctionDef - 3,4..3,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 3,16..3,20
+      2] FunctionDef - 6,4..6,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 6,20..6,24
 '''),
 
 (111, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -3222,21 +3222,21 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..7,24
   .body[1]
-  0] ClassDef - 0,0..7,24
-    .name 'cls'
-    .body[3]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] FunctionDef - 4,4..4,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 4,16..4,20
-    2] FunctionDef - 7,4..7,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 7,20..7,24
+   0] ClassDef - 0,0..7,24
+     .name 'cls'
+     .body[3]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] FunctionDef - 4,4..4,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 4,16..4,20
+      2] FunctionDef - 7,4..7,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 7,20..7,24
 '''),
 
 (112, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -3271,21 +3271,21 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..8,24
   .body[1]
-  0] ClassDef - 0,0..8,24
-    .name 'cls'
-    .body[3]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] FunctionDef - 3,4..3,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 3,16..3,20
-    2] FunctionDef - 8,4..8,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 8,20..8,24
+   0] ClassDef - 0,0..8,24
+     .name 'cls'
+     .body[3]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] FunctionDef - 3,4..3,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 3,16..3,20
+      2] FunctionDef - 8,4..8,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 8,20..8,24
 '''),
 
 (113, 'body[0]', 1, 2, None, {'trivia': False}, ('exec', r'''
@@ -3317,21 +3317,21 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..6,24
   .body[1]
-  0] ClassDef - 0,0..6,24
-    .name 'cls'
-    .body[3]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] FunctionDef - 4,4..4,23
-      .name 'newmeth'
-      .body[1]
-      0] Pass - 4,19..4,23
-    2] FunctionDef - 6,4..6,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 6,20..6,24
+   0] ClassDef - 0,0..6,24
+     .name 'cls'
+     .body[3]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] FunctionDef - 4,4..4,23
+        .name 'newmeth'
+        .body[1]
+         0] Pass - 4,19..4,23
+      2] FunctionDef - 6,4..6,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 6,20..6,24
 '''),
 
 (114, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -3349,21 +3349,21 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..5,24
   .body[1]
-  0] ClassDef - 0,0..5,24
-    .name 'cls'
-    .body[3]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] Assign - 3,4..3,9
-      .targets[1]
-      0] Name 'i' Store - 3,4..3,5
-      .value Constant 1 - 3,8..3,9
-    2] FunctionDef - 5,4..5,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 5,20..5,24
+   0] ClassDef - 0,0..5,24
+     .name 'cls'
+     .body[3]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] Assign - 3,4..3,9
+        .targets[1]
+         0] Name 'i' Store - 3,4..3,5
+        .value Constant 1 - 3,8..3,9
+      2] FunctionDef - 5,4..5,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 5,20..5,24
 '''),
 
 (115, '', 1, 1, None, {}, ('exec', r'''
@@ -3381,18 +3381,18 @@ def postfunc(): pass
 ''', r'''
 Module - ROOT 0,0..6,20
   .body[3]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] Assign - 3,0..3,5
-    .targets[1]
-    0] Name 'i' Store - 3,0..3,1
-    .value Constant 1 - 3,4..3,5
-  2] FunctionDef - 6,0..6,20
-    .name 'postfunc'
-    .body[1]
-    0] Pass - 6,16..6,20
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] Assign - 3,0..3,5
+     .targets[1]
+      0] Name 'i' Store - 3,0..3,1
+     .value Constant 1 - 3,4..3,5
+   2] FunctionDef - 6,0..6,20
+     .name 'postfunc'
+     .body[1]
+      0] Pass - 6,16..6,20
 '''),
 
 (116, '', 1, 2, None, {}, ('exec', r'''
@@ -3407,12 +3407,12 @@ k
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'l' Load - 1,0..1,1
-  2] Expr - 2,0..2,1
-    .value Name 'k' Load - 2,0..2,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'l' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'k' Load - 2,0..2,1
 '''),
 
 (117, '', 1, 2, None, {}, ('exec', r'''
@@ -3428,12 +3428,12 @@ k
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'l' Load - 1,0..1,1
-  2] Expr - 2,0..2,1
-    .value Name 'k' Load - 2,0..2,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'l' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'k' Load - 2,0..2,1
 '''),
 
 (118, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -3451,12 +3451,12 @@ k
 ''', r'''
 Module - ROOT 0,0..4,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 2,0..2,1
-    .value Name 'l' Load - 2,0..2,1
-  2] Expr - 4,0..4,1
-    .value Name 'k' Load - 4,0..4,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 2,0..2,1
+     .value Name 'l' Load - 2,0..2,1
+   2] Expr - 4,0..4,1
+     .value Name 'k' Load - 4,0..4,1
 '''),
 
 (119, '', 1, 2, None, {}, ('exec', r'''
@@ -3479,12 +3479,12 @@ k
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 2,0..2,1
-    .value Name 'l' Load - 2,0..2,1
-  2] Expr - 3,0..3,1
-    .value Name 'k' Load - 3,0..3,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 2,0..2,1
+     .value Name 'l' Load - 2,0..2,1
+   2] Expr - 3,0..3,1
+     .value Name 'k' Load - 3,0..3,1
 '''),
 
 (120, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -3511,12 +3511,12 @@ k
 ''', r'''
 Module - ROOT 0,0..5,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 3,0..3,1
-    .value Name 'l' Load - 3,0..3,1
-  2] Expr - 5,0..5,1
-    .value Name 'k' Load - 5,0..5,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 3,0..3,1
+     .value Name 'l' Load - 3,0..3,1
+   2] Expr - 5,0..5,1
+     .value Name 'k' Load - 5,0..5,1
 '''),
 
 (121, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -3533,15 +3533,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'l' Load - 2,4..2,5
-    2] Expr - 3,4..3,5
-      .value Name 'k' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'l' Load - 2,4..2,5
+      2] Expr - 3,4..3,5
+        .value Name 'k' Load - 3,4..3,5
 '''),
 
 (122, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -3559,15 +3559,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'l' Load - 2,4..2,5
-    2] Expr - 3,4..3,5
-      .value Name 'k' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'l' Load - 2,4..2,5
+      2] Expr - 3,4..3,5
+        .value Name 'k' Load - 3,4..3,5
 '''),
 
 (123, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -3587,15 +3587,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..5,5
   .body[1]
-  0] If - 0,0..5,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 3,4..3,5
-      .value Name 'l' Load - 3,4..3,5
-    2] Expr - 5,4..5,5
-      .value Name 'k' Load - 5,4..5,5
+   0] If - 0,0..5,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 3,4..3,5
+        .value Name 'l' Load - 3,4..3,5
+      2] Expr - 5,4..5,5
+        .value Name 'k' Load - 5,4..5,5
 '''),
 
 (124, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -3621,15 +3621,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,5
   .body[1]
-  0] If - 0,0..4,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 3,4..3,5
-      .value Name 'l' Load - 3,4..3,5
-    2] Expr - 4,4..4,5
-      .value Name 'k' Load - 4,4..4,5
+   0] If - 0,0..4,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 3,4..3,5
+        .value Name 'l' Load - 3,4..3,5
+      2] Expr - 4,4..4,5
+        .value Name 'k' Load - 4,4..4,5
 '''),
 
 (125, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -3659,15 +3659,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..6,5
   .body[1]
-  0] If - 0,0..6,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 4,4..4,5
-      .value Name 'l' Load - 4,4..4,5
-    2] Expr - 6,4..6,5
-      .value Name 'k' Load - 6,4..6,5
+   0] If - 0,0..6,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 4,4..4,5
+        .value Name 'l' Load - 4,4..4,5
+      2] Expr - 6,4..6,5
+        .value Name 'k' Load - 6,4..6,5
 '''),
 
 (126, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -3685,12 +3685,12 @@ k
 ''', r'''
 Module - ROOT 0,0..4,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 2,0..2,1
-    .value Name 'l' Load - 2,0..2,1
-  2] Expr - 4,0..4,1
-    .value Name 'k' Load - 4,0..4,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 2,0..2,1
+     .value Name 'l' Load - 2,0..2,1
+   2] Expr - 4,0..4,1
+     .value Name 'k' Load - 4,0..4,1
 '''),
 
 (127, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -3710,12 +3710,12 @@ k
 ''', r'''
 Module - ROOT 0,0..5,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 2,0..2,1
-    .value Name 'l' Load - 2,0..2,1
-  2] Expr - 5,0..5,1
-    .value Name 'k' Load - 5,0..5,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 2,0..2,1
+     .value Name 'l' Load - 2,0..2,1
+   2] Expr - 5,0..5,1
+     .value Name 'k' Load - 5,0..5,1
 '''),
 
 (128, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -3735,12 +3735,12 @@ k
 ''', r'''
 Module - ROOT 0,0..5,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 2,0..2,1
-    .value Name 'l' Load - 2,0..2,1
-  2] Expr - 5,0..5,1
-    .value Name 'k' Load - 5,0..5,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 2,0..2,1
+     .value Name 'l' Load - 2,0..2,1
+   2] Expr - 5,0..5,1
+     .value Name 'k' Load - 5,0..5,1
 '''),
 
 (129, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -3760,12 +3760,12 @@ k
 ''', r'''
 Module - ROOT 0,0..5,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 2,0..2,1
-    .value Name 'l' Load - 2,0..2,1
-  2] Expr - 5,0..5,1
-    .value Name 'k' Load - 5,0..5,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 2,0..2,1
+     .value Name 'l' Load - 2,0..2,1
+   2] Expr - 5,0..5,1
+     .value Name 'k' Load - 5,0..5,1
 '''),
 
 (130, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -3792,12 +3792,12 @@ k
 ''', r'''
 Module - ROOT 0,0..5,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 3,0..3,1
-    .value Name 'l' Load - 3,0..3,1
-  2] Expr - 5,0..5,1
-    .value Name 'k' Load - 5,0..5,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 3,0..3,1
+     .value Name 'l' Load - 3,0..3,1
+   2] Expr - 5,0..5,1
+     .value Name 'k' Load - 5,0..5,1
 '''),
 
 (131, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -3827,12 +3827,12 @@ k
 ''', r'''
 Module - ROOT 0,0..6,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 3,0..3,1
-    .value Name 'l' Load - 3,0..3,1
-  2] Expr - 6,0..6,1
-    .value Name 'k' Load - 6,0..6,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 3,0..3,1
+     .value Name 'l' Load - 3,0..3,1
+   2] Expr - 6,0..6,1
+     .value Name 'k' Load - 6,0..6,1
 '''),
 
 (132, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -3862,12 +3862,12 @@ k
 ''', r'''
 Module - ROOT 0,0..6,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 3,0..3,1
-    .value Name 'l' Load - 3,0..3,1
-  2] Expr - 6,0..6,1
-    .value Name 'k' Load - 6,0..6,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 3,0..3,1
+     .value Name 'l' Load - 3,0..3,1
+   2] Expr - 6,0..6,1
+     .value Name 'k' Load - 6,0..6,1
 '''),
 
 (133, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -3897,12 +3897,12 @@ k
 ''', r'''
 Module - ROOT 0,0..6,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 3,0..3,1
-    .value Name 'l' Load - 3,0..3,1
-  2] Expr - 6,0..6,1
-    .value Name 'k' Load - 6,0..6,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 3,0..3,1
+     .value Name 'l' Load - 3,0..3,1
+   2] Expr - 6,0..6,1
+     .value Name 'k' Load - 6,0..6,1
 '''),
 
 (134, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -3922,15 +3922,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..5,5
   .body[1]
-  0] If - 0,0..5,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 3,4..3,5
-      .value Name 'l' Load - 3,4..3,5
-    2] Expr - 5,4..5,5
-      .value Name 'k' Load - 5,4..5,5
+   0] If - 0,0..5,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 3,4..3,5
+        .value Name 'l' Load - 3,4..3,5
+      2] Expr - 5,4..5,5
+        .value Name 'k' Load - 5,4..5,5
 '''),
 
 (135, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -3952,15 +3952,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..6,5
   .body[1]
-  0] If - 0,0..6,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 3,4..3,5
-      .value Name 'l' Load - 3,4..3,5
-    2] Expr - 6,4..6,5
-      .value Name 'k' Load - 6,4..6,5
+   0] If - 0,0..6,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 3,4..3,5
+        .value Name 'l' Load - 3,4..3,5
+      2] Expr - 6,4..6,5
+        .value Name 'k' Load - 6,4..6,5
 '''),
 
 (136, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -3982,15 +3982,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..6,5
   .body[1]
-  0] If - 0,0..6,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 3,4..3,5
-      .value Name 'l' Load - 3,4..3,5
-    2] Expr - 6,4..6,5
-      .value Name 'k' Load - 6,4..6,5
+   0] If - 0,0..6,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 3,4..3,5
+        .value Name 'l' Load - 3,4..3,5
+      2] Expr - 6,4..6,5
+        .value Name 'k' Load - 6,4..6,5
 '''),
 
 (137, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -4012,15 +4012,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..6,5
   .body[1]
-  0] If - 0,0..6,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 3,4..3,5
-      .value Name 'l' Load - 3,4..3,5
-    2] Expr - 6,4..6,5
-      .value Name 'k' Load - 6,4..6,5
+   0] If - 0,0..6,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 3,4..3,5
+        .value Name 'l' Load - 3,4..3,5
+      2] Expr - 6,4..6,5
+        .value Name 'k' Load - 6,4..6,5
 '''),
 
 (138, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -4050,15 +4050,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..6,5
   .body[1]
-  0] If - 0,0..6,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 4,4..4,5
-      .value Name 'l' Load - 4,4..4,5
-    2] Expr - 6,4..6,5
-      .value Name 'k' Load - 6,4..6,5
+   0] If - 0,0..6,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 4,4..4,5
+        .value Name 'l' Load - 4,4..4,5
+      2] Expr - 6,4..6,5
+        .value Name 'k' Load - 6,4..6,5
 '''),
 
 (139, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -4091,15 +4091,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..7,5
   .body[1]
-  0] If - 0,0..7,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 4,4..4,5
-      .value Name 'l' Load - 4,4..4,5
-    2] Expr - 7,4..7,5
-      .value Name 'k' Load - 7,4..7,5
+   0] If - 0,0..7,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 4,4..4,5
+        .value Name 'l' Load - 4,4..4,5
+      2] Expr - 7,4..7,5
+        .value Name 'k' Load - 7,4..7,5
 '''),
 
 (140, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -4132,15 +4132,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..7,5
   .body[1]
-  0] If - 0,0..7,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 4,4..4,5
-      .value Name 'l' Load - 4,4..4,5
-    2] Expr - 7,4..7,5
-      .value Name 'k' Load - 7,4..7,5
+   0] If - 0,0..7,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 4,4..4,5
+        .value Name 'l' Load - 4,4..4,5
+      2] Expr - 7,4..7,5
+        .value Name 'k' Load - 7,4..7,5
 '''),
 
 (141, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -4173,15 +4173,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..7,5
   .body[1]
-  0] If - 0,0..7,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 4,4..4,5
-      .value Name 'l' Load - 4,4..4,5
-    2] Expr - 7,4..7,5
-      .value Name 'k' Load - 7,4..7,5
+   0] If - 0,0..7,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 4,4..4,5
+        .value Name 'l' Load - 4,4..4,5
+      2] Expr - 7,4..7,5
+        .value Name 'k' Load - 7,4..7,5
 '''),
 
 (142, '', 0, 1, None, {}, ('exec',
@@ -4190,8 +4190,8 @@ r'''l'''),
 r'''l''', r'''
 Module - ROOT 0,0..0,1
   .body[1]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
 '''),
 
 (143, '', 0, 1, None, {}, ('exec', r'''
@@ -4204,10 +4204,10 @@ j
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'j' Load - 1,0..1,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
 '''),
 
 (144, '', 1, 2, None, {}, ('exec', r'''
@@ -4220,10 +4220,10 @@ l
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'l' Load - 1,0..1,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'l' Load - 1,0..1,1
 '''),
 
 (145, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -4236,11 +4236,11 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..1,5
   .body[1]
-  0] If - 0,0..1,5
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
+   0] If - 0,0..1,5
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
 '''),
 
 (146, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -4255,13 +4255,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'j' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
 '''),
 
 (147, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -4276,13 +4276,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'l' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'l' Load - 2,4..2,5
 '''),
 
 (148, '', 1, 2, None, {}, ('exec', r'''
@@ -4300,14 +4300,14 @@ k
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] If - 1,0..2,8
-    .test Constant 1 - 1,3..1,4
-    .body[1]
-    0] Pass - 2,4..2,8
-  2] Expr - 3,0..3,1
-    .value Name 'k' Load - 3,0..3,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] If - 1,0..2,8
+     .test Constant 1 - 1,3..1,4
+     .body[1]
+      0] Pass - 2,4..2,8
+   2] Expr - 3,0..3,1
+     .value Name 'k' Load - 3,0..3,1
 '''),
 
 (149, '', 1, 2, None, {}, ('exec', r'''
@@ -4322,12 +4322,12 @@ k
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'l' Load - 1,0..1,1
-  2] Expr - 2,0..2,1
-    .value Name 'k' Load - 2,0..2,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'l' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'k' Load - 2,0..2,1
 '''),
 
 (150, '', 1, 2, None, {}, ('exec', r'''
@@ -4343,12 +4343,12 @@ k
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'l' Load - 1,0..1,1
-  2] Expr - 2,0..2,1
-    .value Name 'k' Load - 2,0..2,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'l' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'k' Load - 2,0..2,1
 '''),
 
 (151, '', 1, 2, None, {}, ('exec', r'''
@@ -4369,14 +4369,14 @@ k
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] If - 1,0..1,11
-    .test Constant 2 - 1,3..1,4
-    .body[1]
-    0] Break - 1,6..1,11
-  2] Expr - 2,0..2,1
-    .value Name 'k' Load - 2,0..2,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] If - 1,0..1,11
+     .test Constant 2 - 1,3..1,4
+     .body[1]
+      0] Break - 1,6..1,11
+   2] Expr - 2,0..2,1
+     .value Name 'k' Load - 2,0..2,1
 '''),
 
 (152, '', 1, 2, None, {}, ('exec', r'''
@@ -4398,18 +4398,18 @@ k
 ''', r'''
 Module - ROOT 0,0..5,1
   .body[5]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'x' Load - 1,0..1,1
-  2] If - 2,0..3,8
-    .test Constant 1 - 2,3..2,4
-    .body[1]
-    0] Pass - 3,4..3,8
-  3] Expr - 4,0..4,1
-    .value Name 'z' Load - 4,0..4,1
-  4] Expr - 5,0..5,1
-    .value Name 'k' Load - 5,0..5,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'x' Load - 1,0..1,1
+   2] If - 2,0..3,8
+     .test Constant 1 - 2,3..2,4
+     .body[1]
+      0] Pass - 3,4..3,8
+   3] Expr - 4,0..4,1
+     .value Name 'z' Load - 4,0..4,1
+   4] Expr - 5,0..5,1
+     .value Name 'k' Load - 5,0..5,1
 '''),
 
 (153, '', 1, 2, None, {}, ('exec', r'''
@@ -4429,16 +4429,16 @@ k
 ''', r'''
 Module - ROOT 0,0..4,1
   .body[5]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'x' Load - 1,0..1,1
-  2] Expr - 2,0..2,1
-    .value Name 'l' Load - 2,0..2,1
-  3] Expr - 3,0..3,1
-    .value Name 'z' Load - 3,0..3,1
-  4] Expr - 4,0..4,1
-    .value Name 'k' Load - 4,0..4,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'x' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'l' Load - 2,0..2,1
+   3] Expr - 3,0..3,1
+     .value Name 'z' Load - 3,0..3,1
+   4] Expr - 4,0..4,1
+     .value Name 'k' Load - 4,0..4,1
 '''),
 
 (154, '', 1, 2, None, {}, ('exec', r'''
@@ -4459,16 +4459,16 @@ k
 ''', r'''
 Module - ROOT 0,0..4,1
   .body[5]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'x' Load - 1,0..1,1
-  2] Expr - 2,0..2,1
-    .value Name 'l' Load - 2,0..2,1
-  3] Expr - 3,0..3,1
-    .value Name 'z' Load - 3,0..3,1
-  4] Expr - 4,0..4,1
-    .value Name 'k' Load - 4,0..4,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'x' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'l' Load - 2,0..2,1
+   3] Expr - 3,0..3,1
+     .value Name 'z' Load - 3,0..3,1
+   4] Expr - 4,0..4,1
+     .value Name 'k' Load - 4,0..4,1
 '''),
 
 (155, '', 1, 2, None, {}, ('exec', r'''
@@ -4496,18 +4496,18 @@ k
 ''', r'''
 Module - ROOT 0,0..4,1
   .body[5]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'x' Load - 1,0..1,1
-  2] If - 2,0..2,11
-    .test Constant 2 - 2,3..2,4
-    .body[1]
-    0] Break - 2,6..2,11
-  3] Expr - 3,0..3,1
-    .value Name 'z' Load - 3,0..3,1
-  4] Expr - 4,0..4,1
-    .value Name 'k' Load - 4,0..4,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'x' Load - 1,0..1,1
+   2] If - 2,0..2,11
+     .test Constant 2 - 2,3..2,4
+     .body[1]
+      0] Break - 2,6..2,11
+   3] Expr - 3,0..3,1
+     .value Name 'z' Load - 3,0..3,1
+   4] Expr - 4,0..4,1
+     .value Name 'k' Load - 4,0..4,1
 '''),
 
 (156, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -4527,17 +4527,17 @@ if 2:
 ''', r'''
 Module - ROOT 0,0..4,5
   .body[1]
-  0] If - 0,0..4,5
-    .test Constant 2 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] If - 2,4..3,12
-      .test Constant 1 - 2,7..2,8
-      .body[1]
-      0] Pass - 3,8..3,12
-    2] Expr - 4,4..4,5
-      .value Name 'k' Load - 4,4..4,5
+   0] If - 0,0..4,5
+     .test Constant 2 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] If - 2,4..3,12
+        .test Constant 1 - 2,7..2,8
+        .body[1]
+         0] Pass - 3,8..3,12
+      2] Expr - 4,4..4,5
+        .value Name 'k' Load - 4,4..4,5
 '''),
 
 (157, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -4554,15 +4554,15 @@ if 2:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 2 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'l' Load - 2,4..2,5
-    2] Expr - 3,4..3,5
-      .value Name 'k' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 2 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'l' Load - 2,4..2,5
+      2] Expr - 3,4..3,5
+        .value Name 'k' Load - 3,4..3,5
 '''),
 
 (158, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -4580,15 +4580,15 @@ if 2:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 2 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'l' Load - 2,4..2,5
-    2] Expr - 3,4..3,5
-      .value Name 'k' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 2 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'l' Load - 2,4..2,5
+      2] Expr - 3,4..3,5
+        .value Name 'k' Load - 3,4..3,5
 '''),
 
 (159, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -4612,17 +4612,17 @@ if 2:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 2 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] If - 2,4..2,15
-      .test Constant 2 - 2,7..2,8
-      .body[1]
-      0] Break - 2,10..2,15
-    2] Expr - 3,4..3,5
-      .value Name 'k' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 2 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] If - 2,4..2,15
+        .test Constant 2 - 2,7..2,8
+        .body[1]
+         0] Break - 2,10..2,15
+      2] Expr - 3,4..3,5
+        .value Name 'k' Load - 3,4..3,5
 '''),
 
 (160, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -4646,21 +4646,21 @@ if 2:
 ''', r'''
 Module - ROOT 0,0..6,5
   .body[1]
-  0] If - 0,0..6,5
-    .test Constant 2 - 0,3..0,4
-    .body[5]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'x' Load - 2,4..2,5
-    2] If - 3,4..4,12
-      .test Constant 1 - 3,7..3,8
-      .body[1]
-      0] Pass - 4,8..4,12
-    3] Expr - 5,4..5,5
-      .value Name 'z' Load - 5,4..5,5
-    4] Expr - 6,4..6,5
-      .value Name 'k' Load - 6,4..6,5
+   0] If - 0,0..6,5
+     .test Constant 2 - 0,3..0,4
+     .body[5]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'x' Load - 2,4..2,5
+      2] If - 3,4..4,12
+        .test Constant 1 - 3,7..3,8
+        .body[1]
+         0] Pass - 4,8..4,12
+      3] Expr - 5,4..5,5
+        .value Name 'z' Load - 5,4..5,5
+      4] Expr - 6,4..6,5
+        .value Name 'k' Load - 6,4..6,5
 '''),
 
 (161, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -4682,19 +4682,19 @@ if 2:
 ''', r'''
 Module - ROOT 0,0..5,5
   .body[1]
-  0] If - 0,0..5,5
-    .test Constant 2 - 0,3..0,4
-    .body[5]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'x' Load - 2,4..2,5
-    2] Expr - 3,4..3,5
-      .value Name 'l' Load - 3,4..3,5
-    3] Expr - 4,4..4,5
-      .value Name 'z' Load - 4,4..4,5
-    4] Expr - 5,4..5,5
-      .value Name 'k' Load - 5,4..5,5
+   0] If - 0,0..5,5
+     .test Constant 2 - 0,3..0,4
+     .body[5]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'x' Load - 2,4..2,5
+      2] Expr - 3,4..3,5
+        .value Name 'l' Load - 3,4..3,5
+      3] Expr - 4,4..4,5
+        .value Name 'z' Load - 4,4..4,5
+      4] Expr - 5,4..5,5
+        .value Name 'k' Load - 5,4..5,5
 '''),
 
 (162, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -4717,19 +4717,19 @@ if 2:
 ''', r'''
 Module - ROOT 0,0..5,5
   .body[1]
-  0] If - 0,0..5,5
-    .test Constant 2 - 0,3..0,4
-    .body[5]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'x' Load - 2,4..2,5
-    2] Expr - 3,4..3,5
-      .value Name 'l' Load - 3,4..3,5
-    3] Expr - 4,4..4,5
-      .value Name 'z' Load - 4,4..4,5
-    4] Expr - 5,4..5,5
-      .value Name 'k' Load - 5,4..5,5
+   0] If - 0,0..5,5
+     .test Constant 2 - 0,3..0,4
+     .body[5]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'x' Load - 2,4..2,5
+      2] Expr - 3,4..3,5
+        .value Name 'l' Load - 3,4..3,5
+      3] Expr - 4,4..4,5
+        .value Name 'z' Load - 4,4..4,5
+      4] Expr - 5,4..5,5
+        .value Name 'k' Load - 5,4..5,5
 '''),
 
 (163, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -4760,21 +4760,21 @@ if 2:
 ''', r'''
 Module - ROOT 0,0..5,5
   .body[1]
-  0] If - 0,0..5,5
-    .test Constant 2 - 0,3..0,4
-    .body[5]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'x' Load - 2,4..2,5
-    2] If - 3,4..3,15
-      .test Constant 2 - 3,7..3,8
-      .body[1]
-      0] Break - 3,10..3,15
-    3] Expr - 4,4..4,5
-      .value Name 'z' Load - 4,4..4,5
-    4] Expr - 5,4..5,5
-      .value Name 'k' Load - 5,4..5,5
+   0] If - 0,0..5,5
+     .test Constant 2 - 0,3..0,4
+     .body[5]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'x' Load - 2,4..2,5
+      2] If - 3,4..3,15
+        .test Constant 2 - 3,7..3,8
+        .body[1]
+         0] Break - 3,10..3,15
+      3] Expr - 4,4..4,5
+        .value Name 'z' Load - 4,4..4,5
+      4] Expr - 5,4..5,5
+        .value Name 'k' Load - 5,4..5,5
 '''),
 
 (164, '', 1, 2, None, {}, ('exec',
@@ -4785,10 +4785,10 @@ l
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'l' Load - 1,0..1,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'l' Load - 1,0..1,1
 '''),
 
 (165, '', 1, 2, None, {}, ('exec', r'''
@@ -4801,10 +4801,10 @@ l
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'l' Load - 1,0..1,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'l' Load - 1,0..1,1
 '''),
 
 (166, '', 1, 2, None, {}, ('exec', r'''
@@ -4817,10 +4817,10 @@ l
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'l' Load - 1,0..1,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'l' Load - 1,0..1,1
 '''),
 
 (167, '', 1, 2, None, {}, ('exec', r'''
@@ -4834,10 +4834,10 @@ l
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'l' Load - 1,0..1,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'l' Load - 1,0..1,1
 '''),
 
 (168, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -4851,13 +4851,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'l' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'l' Load - 2,4..2,5
 '''),
 
 (169, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -4872,13 +4872,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'l' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'l' Load - 2,4..2,5
 '''),
 
 (170, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -4893,13 +4893,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'l' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'l' Load - 2,4..2,5
 '''),
 
 (171, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -4915,13 +4915,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'l' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'l' Load - 2,4..2,5
 '''),
 
 (172, '', 0, 1, None, {}, ('exec',
@@ -4932,10 +4932,10 @@ j
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'j' Load - 1,0..1,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
 '''),
 
 (173, '', 0, 1, None, {}, ('exec', r'''
@@ -4948,10 +4948,10 @@ j
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'j' Load - 1,0..1,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
 '''),
 
 (174, '', 0, 1, None, {}, ('exec', r'''
@@ -4964,10 +4964,10 @@ j
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'j' Load - 1,0..1,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
 '''),
 
 (175, '', 0, 1, None, {}, ('exec', r'''
@@ -4981,10 +4981,10 @@ j
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'j' Load - 1,0..1,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
 '''),
 
 (176, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -4998,13 +4998,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'j' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
 '''),
 
 (177, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5019,13 +5019,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'j' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
 '''),
 
 (178, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5040,13 +5040,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'j' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
 '''),
 
 (179, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5062,13 +5062,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'j' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
 '''),
 
 (180, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5082,13 +5082,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'j' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
 '''),
 
 (181, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5103,13 +5103,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'j' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
 '''),
 
 (182, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5124,13 +5124,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'j' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
 '''),
 
 (183, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5146,13 +5146,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'j' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
 '''),
 
 (184, '', 0, 1, None, {}, ('exec',
@@ -5161,8 +5161,8 @@ r'''l'''),
 r'''l''', r'''
 Module - ROOT 0,0..0,1
   .body[1]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
 '''),
 
 (185, '', 0, 1, None, {}, ('exec',
@@ -5173,8 +5173,8 @@ l
 ''', r'''
 Module - ROOT 0,0..1,6
   .body[1]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
 '''),
 
 (186, '', 0, 1, None, {}, ('exec', r'''
@@ -5185,8 +5185,8 @@ r'''l'''),
 r'''l''', r'''
 Module - ROOT 0,0..0,1
   .body[1]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
 '''),
 
 (187, '', 0, 1, None, {}, ('exec', r'''
@@ -5198,8 +5198,8 @@ r'''l'''),
 r'''l''', r'''
 Module - ROOT 0,0..0,1
   .body[1]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
 '''),
 
 (188, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5212,11 +5212,11 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..1,5
   .body[1]
-  0] If - 0,0..1,5
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
+   0] If - 0,0..1,5
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
 '''),
 
 (189, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5230,11 +5230,11 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,10
   .body[1]
-  0] If - 0,0..1,5
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
+   0] If - 0,0..1,5
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
 '''),
 
 (190, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5248,11 +5248,11 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..1,5
   .body[1]
-  0] If - 0,0..1,5
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
+   0] If - 0,0..1,5
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
 '''),
 
 (191, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5267,11 +5267,11 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..1,5
   .body[1]
-  0] If - 0,0..1,5
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
+   0] If - 0,0..1,5
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
 '''),
 
 (192, '', 0, 1, None, {}, ('exec', r'''
@@ -5283,8 +5283,8 @@ r'''**DEL**'''),
 r'''j''', r'''
 Module - ROOT 0,0..0,1
   .body[1]
-  0] Expr - 0,0..0,1
-    .value Name 'j' Load - 0,0..0,1
+   0] Expr - 0,0..0,1
+     .value Name 'j' Load - 0,0..0,1
 '''),
 
 (193, '', 0, 1, None, {}, ('exec', r'''
@@ -5298,10 +5298,10 @@ j
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'j' Load - 1,0..1,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
 '''),
 
 (194, 'body[0]', 0, 1, 'orelse', {}, ('exec', r'''
@@ -5318,13 +5318,13 @@ else:
 ''', r'''
 Module - ROOT 0,0..2,3
   .body[1]
-  0] If - 0,0..2,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Pass - 0,6..0,10
-    .orelse[1]
-    0] Expr - 2,2..2,3
-      .value Name 'j' Load - 2,2..2,3
+   0] If - 0,0..2,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Pass - 0,6..0,10
+     .orelse[1]
+      0] Expr - 2,2..2,3
+        .value Name 'j' Load - 2,2..2,3
 '''),
 
 (195, 'body[0]', 0, 1, 'orelse', {}, ('exec', r'''
@@ -5345,15 +5345,15 @@ else:
 ''', r'''
 Module - ROOT 0,0..4,3
   .body[1]
-  0] If - 0,0..4,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Pass - 0,6..0,10
-    .orelse[2]
-    0] Expr - 3,2..3,3
-      .value Name 'j' Load - 3,2..3,3
-    1] Expr - 4,2..4,3
-      .value Name 'k' Load - 4,2..4,3
+   0] If - 0,0..4,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Pass - 0,6..0,10
+     .orelse[2]
+      0] Expr - 3,2..3,3
+        .value Name 'j' Load - 3,2..3,3
+      1] Expr - 4,2..4,3
+        .value Name 'k' Load - 4,2..4,3
 '''),
 
 (196, 'body[0]', 1, 2, 'orelse', {}, ('exec', r'''
@@ -5374,15 +5374,15 @@ else:
 ''', r'''
 Module - ROOT 0,0..4,5
   .body[1]
-  0] If - 0,0..4,5
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Pass - 0,6..0,10
-    .orelse[2]
-    0] Expr - 2,4..2,5
-      .value Name 'k' Load - 2,4..2,5
-    1] Expr - 4,4..4,5
-      .value Name 'j' Load - 4,4..4,5
+   0] If - 0,0..4,5
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Pass - 0,6..0,10
+     .orelse[2]
+      0] Expr - 2,4..2,5
+        .value Name 'k' Load - 2,4..2,5
+      1] Expr - 4,4..4,5
+        .value Name 'j' Load - 4,4..4,5
 '''),
 
 (197, 'body[0]', 0, 1, 'orelse', {}, ('exec', r'''
@@ -5400,13 +5400,13 @@ else:
 ''', r'''
 Module - ROOT 0,0..2,3
   .body[1]
-  0] If - 0,0..2,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Pass - 0,6..0,10
-    .orelse[1]
-    0] Expr - 2,2..2,3
-      .value Name 'j' Load - 2,2..2,3
+   0] If - 0,0..2,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Pass - 0,6..0,10
+     .orelse[1]
+      0] Expr - 2,2..2,3
+        .value Name 'j' Load - 2,2..2,3
 '''),
 
 (198, '', 0, 1, None, {}, ('exec', r'''
@@ -5419,10 +5419,10 @@ j
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'j' Load - 1,0..1,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
 '''),
 
 (199, '', 0, 1, None, {}, ('exec', r'''
@@ -5436,10 +5436,10 @@ j
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'j' Load - 1,0..1,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
 '''),
 
 (200, '', 0, 1, None, {}, ('exec', r'''
@@ -5453,10 +5453,10 @@ j
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'j' Load - 1,0..1,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
 '''),
 
 (201, '', 0, 1, None, {}, ('exec', r'''
@@ -5471,10 +5471,10 @@ j
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'j' Load - 1,0..1,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
 '''),
 
 (202, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5489,13 +5489,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'j' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
 '''),
 
 (203, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5511,13 +5511,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'j' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
 '''),
 
 (204, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5533,13 +5533,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'j' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
 '''),
 
 (205, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5556,13 +5556,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'j' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
 '''),
 
 (206, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5577,13 +5577,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'j' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
 '''),
 
 (207, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5599,13 +5599,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'j' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
 '''),
 
 (208, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5621,13 +5621,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'j' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
 '''),
 
 (209, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5644,13 +5644,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,5
   .body[1]
-  0] If - 0,0..2,5
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'j' Load - 2,4..2,5
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
 '''),
 
 (210, '', 0, 1, None, {}, ('exec', r'''
@@ -5661,8 +5661,8 @@ r'''l'''),
 r'''l''', r'''
 Module - ROOT 0,0..0,1
   .body[1]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
 '''),
 
 (211, '', 0, 1, None, {}, ('exec', r'''
@@ -5675,8 +5675,8 @@ l
 ''', r'''
 Module - ROOT 0,0..1,6
   .body[1]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
 '''),
 
 (212, '', 0, 1, None, {}, ('exec', r'''
@@ -5688,8 +5688,8 @@ r'''l'''),
 r'''l''', r'''
 Module - ROOT 0,0..0,1
   .body[1]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
 '''),
 
 (213, '', 0, 1, None, {}, ('exec', r'''
@@ -5702,8 +5702,8 @@ r'''l'''),
 r'''l''', r'''
 Module - ROOT 0,0..0,1
   .body[1]
-  0] Expr - 0,0..0,1
-    .value Name 'l' Load - 0,0..0,1
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
 '''),
 
 (214, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5717,11 +5717,11 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..1,5
   .body[1]
-  0] If - 0,0..1,5
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
+   0] If - 0,0..1,5
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
 '''),
 
 (215, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5736,11 +5736,11 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,6
   .body[1]
-  0] If - 0,0..1,5
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
+   0] If - 0,0..1,5
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
 '''),
 
 (216, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5755,11 +5755,11 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..1,5
   .body[1]
-  0] If - 0,0..1,5
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
+   0] If - 0,0..1,5
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
 '''),
 
 (217, 'body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5775,11 +5775,11 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..1,5
   .body[1]
-  0] If - 0,0..1,5
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,4..1,5
-      .value Name 'l' Load - 1,4..1,5
+   0] If - 0,0..1,5
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
 '''),
 
 (218, '', 1, 2, None, {}, ('exec', r'''
@@ -5807,18 +5807,18 @@ def postfunc(): pass
 ''', r'''
 Module - ROOT 0,0..6,20
   .body[3]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
-  2] FunctionDef - 6,0..6,20
-    .name 'postfunc'
-    .body[1]
-    0] Pass - 6,16..6,20
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
+   2] FunctionDef - 6,0..6,20
+     .name 'postfunc'
+     .body[1]
+      0] Pass - 6,16..6,20
 '''),
 
 (219, '', 1, 2, None, {}, ('exec', r'''
@@ -5847,18 +5847,18 @@ def postfunc(): pass
 ''', r'''
 Module - ROOT 0,0..6,20
   .body[3]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
-  2] FunctionDef - 6,0..6,20
-    .name 'postfunc'
-    .body[1]
-    0] Pass - 6,16..6,20
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
+   2] FunctionDef - 6,0..6,20
+     .name 'postfunc'
+     .body[1]
+      0] Pass - 6,16..6,20
 '''),
 
 (220, '', 1, 2, None, {}, ('exec', r'''
@@ -5888,20 +5888,20 @@ def postfunc(): pass
 ''', r'''
 Module - ROOT 0,0..7,20
   .body[4]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
-  2] Expr - 6,0..6,1
-    .value Name 'j' Load - 6,0..6,1
-  3] FunctionDef - 7,0..7,20
-    .name 'postfunc'
-    .body[1]
-    0] Pass - 7,16..7,20
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
+   2] Expr - 6,0..6,1
+     .value Name 'j' Load - 6,0..6,1
+   3] FunctionDef - 7,0..7,20
+     .name 'postfunc'
+     .body[1]
+      0] Pass - 7,16..7,20
 '''),
 
 (221, '', 2, 3, None, {}, ('exec', r'''
@@ -5931,20 +5931,20 @@ def postfunc(): pass
 ''', r'''
 Module - ROOT 0,0..7,20
   .body[4]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] Expr - 1,0..1,1
-    .value Name 'i' Load - 1,0..1,1
-  2] FunctionDef - 4,0..4,16
-    .name 'func'
-    .body[1]
-    0] Pass - 4,12..4,16
-  3] FunctionDef - 7,0..7,20
-    .name 'postfunc'
-    .body[1]
-    0] Pass - 7,16..7,20
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] Expr - 1,0..1,1
+     .value Name 'i' Load - 1,0..1,1
+   2] FunctionDef - 4,0..4,16
+     .name 'func'
+     .body[1]
+      0] Pass - 4,12..4,16
+   3] FunctionDef - 7,0..7,20
+     .name 'postfunc'
+     .body[1]
+      0] Pass - 7,16..7,20
 '''),
 
 (222, '', 1, 2, None, {}, ('exec', r'''
@@ -5975,20 +5975,20 @@ def postfunc(): pass
 ''', r'''
 Module - ROOT 0,0..7,20
   .body[4]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
-  2] Expr - 6,0..6,1
-    .value Name 'j' Load - 6,0..6,1
-  3] FunctionDef - 7,0..7,20
-    .name 'postfunc'
-    .body[1]
-    0] Pass - 7,16..7,20
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
+   2] Expr - 6,0..6,1
+     .value Name 'j' Load - 6,0..6,1
+   3] FunctionDef - 7,0..7,20
+     .name 'postfunc'
+     .body[1]
+      0] Pass - 7,16..7,20
 '''),
 
 (223, '', 2, 3, None, {}, ('exec', r'''
@@ -6021,20 +6021,20 @@ def postfunc(): pass
 ''', r'''
 Module - ROOT 0,0..8,20
   .body[4]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] Expr - 2,0..2,1
-    .value Name 'i' Load - 2,0..2,1
-  2] FunctionDef - 5,0..5,16
-    .name 'func'
-    .body[1]
-    0] Pass - 5,12..5,16
-  3] FunctionDef - 8,0..8,20
-    .name 'postfunc'
-    .body[1]
-    0] Pass - 8,16..8,20
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] Expr - 2,0..2,1
+     .value Name 'i' Load - 2,0..2,1
+   2] FunctionDef - 5,0..5,16
+     .name 'func'
+     .body[1]
+      0] Pass - 5,12..5,16
+   3] FunctionDef - 8,0..8,20
+     .name 'postfunc'
+     .body[1]
+      0] Pass - 8,16..8,20
 '''),
 
 (224, '', 1, 1, None, {}, ('exec',
@@ -6053,14 +6053,14 @@ def func():
 ''', r'''
 Module - ROOT 0,0..3,16
   .body[2]
-  0] FunctionDef - 0,0..0,19
-    .name 'prefunc'
-    .body[1]
-    0] Pass - 0,15..0,19
-  1] FunctionDef - 3,0..3,16
-    .name 'func'
-    .body[1]
-    0] Pass - 3,12..3,16
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
 '''),
 
 (225, '', 0, 0, None, {}, ('exec',
@@ -6079,14 +6079,14 @@ def postfunc(): pass
 ''', r'''
 Module - ROOT 0,0..3,20
   .body[2]
-  0] FunctionDef - 0,0..0,16
-    .name 'func'
-    .body[1]
-    0] Pass - 0,12..0,16
-  1] FunctionDef - 3,0..3,20
-    .name 'postfunc'
-    .body[1]
-    0] Pass - 3,16..3,20
+   0] FunctionDef - 0,0..0,16
+     .name 'func'
+     .body[1]
+      0] Pass - 0,12..0,16
+   1] FunctionDef - 3,0..3,20
+     .name 'postfunc'
+     .body[1]
+      0] Pass - 3,16..3,20
 '''),
 
 (226, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -6113,21 +6113,21 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..5,24
   .body[1]
-  0] ClassDef - 0,0..5,24
-    .name 'cls'
-    .body[3]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] FunctionDef - 3,4..3,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 3,16..3,20
-    2] FunctionDef - 5,4..5,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 5,20..5,24
+   0] ClassDef - 0,0..5,24
+     .name 'cls'
+     .body[3]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] FunctionDef - 3,4..3,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 3,16..3,20
+      2] FunctionDef - 5,4..5,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 5,20..5,24
 '''),
 
 (227, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -6155,21 +6155,21 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..5,24
   .body[1]
-  0] ClassDef - 0,0..5,24
-    .name 'cls'
-    .body[3]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] FunctionDef - 3,4..3,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 3,16..3,20
-    2] FunctionDef - 5,4..5,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 5,20..5,24
+   0] ClassDef - 0,0..5,24
+     .name 'cls'
+     .body[3]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] FunctionDef - 3,4..3,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 3,16..3,20
+      2] FunctionDef - 5,4..5,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 5,20..5,24
 '''),
 
 (228, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -6198,23 +6198,23 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..6,24
   .body[1]
-  0] ClassDef - 0,0..6,24
-    .name 'cls'
-    .body[4]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] FunctionDef - 3,4..3,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 3,16..3,20
-    2] Expr - 5,4..5,5
-      .value Name 'j' Load - 5,4..5,5
-    3] FunctionDef - 6,4..6,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 6,20..6,24
+   0] ClassDef - 0,0..6,24
+     .name 'cls'
+     .body[4]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] FunctionDef - 3,4..3,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 3,16..3,20
+      2] Expr - 5,4..5,5
+        .value Name 'j' Load - 5,4..5,5
+      3] FunctionDef - 6,4..6,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 6,20..6,24
 '''),
 
 (229, 'body[0]', 2, 3, None, {}, ('exec', r'''
@@ -6243,23 +6243,23 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..6,24
   .body[1]
-  0] ClassDef - 0,0..6,24
-    .name 'cls'
-    .body[4]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] Expr - 2,4..2,5
-      .value Name 'i' Load - 2,4..2,5
-    2] FunctionDef - 4,4..4,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 4,16..4,20
-    3] FunctionDef - 6,4..6,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 6,20..6,24
+   0] ClassDef - 0,0..6,24
+     .name 'cls'
+     .body[4]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] Expr - 2,4..2,5
+        .value Name 'i' Load - 2,4..2,5
+      2] FunctionDef - 4,4..4,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 4,16..4,20
+      3] FunctionDef - 6,4..6,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 6,20..6,24
 '''),
 
 (230, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -6289,23 +6289,23 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..6,24
   .body[1]
-  0] ClassDef - 0,0..6,24
-    .name 'cls'
-    .body[4]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] FunctionDef - 3,4..3,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 3,16..3,20
-    2] Expr - 5,4..5,5
-      .value Name 'j' Load - 5,4..5,5
-    3] FunctionDef - 6,4..6,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 6,20..6,24
+   0] ClassDef - 0,0..6,24
+     .name 'cls'
+     .body[4]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] FunctionDef - 3,4..3,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 3,16..3,20
+      2] Expr - 5,4..5,5
+        .value Name 'j' Load - 5,4..5,5
+      3] FunctionDef - 6,4..6,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 6,20..6,24
 '''),
 
 (231, 'body[0]', 2, 3, None, {}, ('exec', r'''
@@ -6337,23 +6337,23 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..7,24
   .body[1]
-  0] ClassDef - 0,0..7,24
-    .name 'cls'
-    .body[4]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] Expr - 3,4..3,5
-      .value Name 'i' Load - 3,4..3,5
-    2] FunctionDef - 5,4..5,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 5,16..5,20
-    3] FunctionDef - 7,4..7,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 7,20..7,24
+   0] ClassDef - 0,0..7,24
+     .name 'cls'
+     .body[4]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] Expr - 3,4..3,5
+        .value Name 'i' Load - 3,4..3,5
+      2] FunctionDef - 5,4..5,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 5,16..5,20
+      3] FunctionDef - 7,4..7,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 7,20..7,24
 '''),
 
 (232, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -6376,17 +6376,17 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,20
   .body[1]
-  0] If - 0,0..4,20
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] FunctionDef - 1,4..1,23
-      .name 'premeth'
-      .body[1]
-      0] Pass - 1,19..1,23
-    1] FunctionDef - 4,4..4,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 4,16..4,20
+   0] If - 0,0..4,20
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] FunctionDef - 4,4..4,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 4,16..4,20
 '''),
 
 (233, 'body[0]', 0, 0, None, {}, ('exec', r'''
@@ -6409,17 +6409,17 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,24
   .body[1]
-  0] If - 0,0..4,24
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] FunctionDef - 1,4..1,20
-      .name 'meth'
-      .body[1]
-      0] Pass - 1,16..1,20
-    1] FunctionDef - 4,4..4,24
-      .name 'postmeth'
-      .body[1]
-      0] Pass - 4,20..4,24
+   0] If - 0,0..4,24
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] FunctionDef - 1,4..1,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 1,16..1,20
+      1] FunctionDef - 4,4..4,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 4,20..4,24
 '''),
 
 (234, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -6445,17 +6445,17 @@ def f():
 ''', r'''
 Module - ROOT 0,0..5,5
   .body[1]
-  0] FunctionDef - 0,0..5,5
-    .name 'f'
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 3,4..3,17
-      .name 'g'
-      .body[1]
-      0] Pass - 3,13..3,17
-    2] Expr - 5,4..5,5
-      .value Name 'j' Load - 5,4..5,5
+   0] FunctionDef - 0,0..5,5
+     .name 'f'
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 3,4..3,17
+        .name 'g'
+        .body[1]
+         0] Pass - 3,13..3,17
+      2] Expr - 5,4..5,5
+        .value Name 'j' Load - 5,4..5,5
 '''),
 
 (235, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -6481,17 +6481,17 @@ async def f():
 ''', r'''
 Module - ROOT 0,0..5,5
   .body[1]
-  0] AsyncFunctionDef - 0,0..5,5
-    .name 'f'
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 3,4..3,17
-      .name 'g'
-      .body[1]
-      0] Pass - 3,13..3,17
-    2] Expr - 5,4..5,5
-      .value Name 'j' Load - 5,4..5,5
+   0] AsyncFunctionDef - 0,0..5,5
+     .name 'f'
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 3,4..3,17
+        .name 'g'
+        .body[1]
+         0] Pass - 3,13..3,17
+      2] Expr - 5,4..5,5
+        .value Name 'j' Load - 5,4..5,5
 '''),
 
 (236, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -6517,17 +6517,17 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..5,5
   .body[1]
-  0] ClassDef - 0,0..5,5
-    .name 'cls'
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 3,4..3,17
-      .name 'g'
-      .body[1]
-      0] Pass - 3,13..3,17
-    2] Expr - 5,4..5,5
-      .value Name 'j' Load - 5,4..5,5
+   0] ClassDef - 0,0..5,5
+     .name 'cls'
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 3,4..3,17
+        .name 'g'
+        .body[1]
+         0] Pass - 3,13..3,17
+      2] Expr - 5,4..5,5
+        .value Name 'j' Load - 5,4..5,5
 '''),
 
 (237, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -6557,18 +6557,18 @@ for a in b:
 ''', r'''
 Module - ROOT 0,0..7,5
   .body[1]
-  0] For - 0,0..7,5
-    .target Name 'a' Store - 0,4..0,5
-    .iter Name 'b' Load - 0,9..0,10
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 4,4..4,17
-      .name 'g'
-      .body[1]
-      0] Pass - 4,13..4,17
-    2] Expr - 7,4..7,5
-      .value Name 'j' Load - 7,4..7,5
+   0] For - 0,0..7,5
+     .target Name 'a' Store - 0,4..0,5
+     .iter Name 'b' Load - 0,9..0,10
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 4,4..4,17
+        .name 'g'
+        .body[1]
+         0] Pass - 4,13..4,17
+      2] Expr - 7,4..7,5
+        .value Name 'j' Load - 7,4..7,5
 '''),
 
 (238, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -6598,18 +6598,18 @@ async for a in b:
 ''', r'''
 Module - ROOT 0,0..7,5
   .body[1]
-  0] AsyncFor - 0,0..7,5
-    .target Name 'a' Store - 0,10..0,11
-    .iter Name 'b' Load - 0,15..0,16
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 4,4..4,17
-      .name 'g'
-      .body[1]
-      0] Pass - 4,13..4,17
-    2] Expr - 7,4..7,5
-      .value Name 'j' Load - 7,4..7,5
+   0] AsyncFor - 0,0..7,5
+     .target Name 'a' Store - 0,10..0,11
+     .iter Name 'b' Load - 0,15..0,16
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 4,4..4,17
+        .name 'g'
+        .body[1]
+         0] Pass - 4,13..4,17
+      2] Expr - 7,4..7,5
+        .value Name 'j' Load - 7,4..7,5
 '''),
 
 (239, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -6639,17 +6639,17 @@ while a:
 ''', r'''
 Module - ROOT 0,0..7,5
   .body[1]
-  0] While - 0,0..7,5
-    .test Name 'a' Load - 0,6..0,7
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 4,4..4,17
-      .name 'g'
-      .body[1]
-      0] Pass - 4,13..4,17
-    2] Expr - 7,4..7,5
-      .value Name 'j' Load - 7,4..7,5
+   0] While - 0,0..7,5
+     .test Name 'a' Load - 0,6..0,7
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 4,4..4,17
+        .name 'g'
+        .body[1]
+         0] Pass - 4,13..4,17
+      2] Expr - 7,4..7,5
+        .value Name 'j' Load - 7,4..7,5
 '''),
 
 (240, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -6679,17 +6679,17 @@ if a:
 ''', r'''
 Module - ROOT 0,0..7,5
   .body[1]
-  0] If - 0,0..7,5
-    .test Name 'a' Load - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 4,4..4,17
-      .name 'g'
-      .body[1]
-      0] Pass - 4,13..4,17
-    2] Expr - 7,4..7,5
-      .value Name 'j' Load - 7,4..7,5
+   0] If - 0,0..7,5
+     .test Name 'a' Load - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 4,4..4,17
+        .name 'g'
+        .body[1]
+         0] Pass - 4,13..4,17
+      2] Expr - 7,4..7,5
+        .value Name 'j' Load - 7,4..7,5
 '''),
 
 (241, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -6719,19 +6719,19 @@ with a:
 ''', r'''
 Module - ROOT 0,0..7,5
   .body[1]
-  0] With - 0,0..7,5
-    .items[1]
-    0] withitem - 0,5..0,6
-      .context_expr Name 'a' Load - 0,5..0,6
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 4,4..4,17
-      .name 'g'
-      .body[1]
-      0] Pass - 4,13..4,17
-    2] Expr - 7,4..7,5
-      .value Name 'j' Load - 7,4..7,5
+   0] With - 0,0..7,5
+     .items[1]
+      0] withitem - 0,5..0,6
+        .context_expr Name 'a' Load - 0,5..0,6
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 4,4..4,17
+        .name 'g'
+        .body[1]
+         0] Pass - 4,13..4,17
+      2] Expr - 7,4..7,5
+        .value Name 'j' Load - 7,4..7,5
 '''),
 
 (242, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -6761,19 +6761,19 @@ async with a:
 ''', r'''
 Module - ROOT 0,0..7,5
   .body[1]
-  0] AsyncWith - 0,0..7,5
-    .items[1]
-    0] withitem - 0,11..0,12
-      .context_expr Name 'a' Load - 0,11..0,12
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 4,4..4,17
-      .name 'g'
-      .body[1]
-      0] Pass - 4,13..4,17
-    2] Expr - 7,4..7,5
-      .value Name 'j' Load - 7,4..7,5
+   0] AsyncWith - 0,0..7,5
+     .items[1]
+      0] withitem - 0,11..0,12
+        .context_expr Name 'a' Load - 0,11..0,12
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 4,4..4,17
+        .name 'g'
+        .body[1]
+         0] Pass - 4,13..4,17
+      2] Expr - 7,4..7,5
+        .value Name 'j' Load - 7,4..7,5
 '''),
 
 (243, 'body[0].cases[0]', 1, 1, None, {}, ('exec', r'''
@@ -6806,21 +6806,21 @@ match a:
 ''', r'''
 Module - ROOT 0,0..8,9
   .body[1]
-  0] Match - 0,0..8,9
-    .subject Name 'a' Load - 0,6..0,7
-    .cases[1]
-    0] match_case - 1,4..8,9
-      .pattern MatchAs - 1,9..1,10
-        .name 'b'
-      .body[3]
-      0] Expr - 2,8..2,9
-        .value Name 'i' Load - 2,8..2,9
-      1] FunctionDef - 5,8..5,21
-        .name 'g'
-        .body[1]
-        0] Pass - 5,17..5,21
-      2] Expr - 8,8..8,9
-        .value Name 'j' Load - 8,8..8,9
+   0] Match - 0,0..8,9
+     .subject Name 'a' Load - 0,6..0,7
+     .cases[1]
+      0] match_case - 1,4..8,9
+        .pattern MatchAs - 1,9..1,10
+          .name 'b'
+        .body[3]
+         0] Expr - 2,8..2,9
+           .value Name 'i' Load - 2,8..2,9
+         1] FunctionDef - 5,8..5,21
+           .name 'g'
+           .body[1]
+            0] Pass - 5,17..5,21
+         2] Expr - 8,8..8,9
+           .value Name 'j' Load - 8,8..8,9
 '''),
 
 (244, 'body[0]', 1, 1, None, {}, ('exec', r'''
@@ -6856,18 +6856,18 @@ finally:
 ''', r'''
 Module - ROOT 0,0..9,8
   .body[1]
-  0] Try - 0,0..9,8
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 4,4..4,17
-      .name 'g'
-      .body[1]
-      0] Pass - 4,13..4,17
-    2] Expr - 7,4..7,5
-      .value Name 'j' Load - 7,4..7,5
-    .finalbody[1]
-    0] Pass - 9,4..9,8
+   0] Try - 0,0..9,8
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 4,4..4,17
+        .name 'g'
+        .body[1]
+         0] Pass - 4,13..4,17
+      2] Expr - 7,4..7,5
+        .value Name 'j' Load - 7,4..7,5
+     .finalbody[1]
+      0] Pass - 9,4..9,8
 '''),
 
 (245, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -6889,17 +6889,17 @@ def f():
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] FunctionDef - 0,0..3,5
-    .name 'f'
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 2,4..2,17
-      .name 'g'
-      .body[1]
-      0] Pass - 2,13..2,17
-    2] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] FunctionDef - 0,0..3,5
+     .name 'f'
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 2,4..2,17
+        .name 'g'
+        .body[1]
+         0] Pass - 2,13..2,17
+      2] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (246, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -6921,17 +6921,17 @@ async def f():
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] AsyncFunctionDef - 0,0..3,5
-    .name 'f'
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 2,4..2,17
-      .name 'g'
-      .body[1]
-      0] Pass - 2,13..2,17
-    2] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] AsyncFunctionDef - 0,0..3,5
+     .name 'f'
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 2,4..2,17
+        .name 'g'
+        .body[1]
+         0] Pass - 2,13..2,17
+      2] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (247, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -6953,17 +6953,17 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] ClassDef - 0,0..3,5
-    .name 'cls'
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 2,4..2,17
-      .name 'g'
-      .body[1]
-      0] Pass - 2,13..2,17
-    2] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] ClassDef - 0,0..3,5
+     .name 'cls'
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 2,4..2,17
+        .name 'g'
+        .body[1]
+         0] Pass - 2,13..2,17
+      2] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (248, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -6985,18 +6985,18 @@ for a in b:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] For - 0,0..3,5
-    .target Name 'a' Store - 0,4..0,5
-    .iter Name 'b' Load - 0,9..0,10
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 2,4..2,17
-      .name 'g'
-      .body[1]
-      0] Pass - 2,13..2,17
-    2] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] For - 0,0..3,5
+     .target Name 'a' Store - 0,4..0,5
+     .iter Name 'b' Load - 0,9..0,10
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 2,4..2,17
+        .name 'g'
+        .body[1]
+         0] Pass - 2,13..2,17
+      2] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (249, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -7018,18 +7018,18 @@ async for a in b:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] AsyncFor - 0,0..3,5
-    .target Name 'a' Store - 0,10..0,11
-    .iter Name 'b' Load - 0,15..0,16
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 2,4..2,17
-      .name 'g'
-      .body[1]
-      0] Pass - 2,13..2,17
-    2] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] AsyncFor - 0,0..3,5
+     .target Name 'a' Store - 0,10..0,11
+     .iter Name 'b' Load - 0,15..0,16
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 2,4..2,17
+        .name 'g'
+        .body[1]
+         0] Pass - 2,13..2,17
+      2] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (250, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -7051,17 +7051,17 @@ while a:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] While - 0,0..3,5
-    .test Name 'a' Load - 0,6..0,7
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 2,4..2,17
-      .name 'g'
-      .body[1]
-      0] Pass - 2,13..2,17
-    2] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] While - 0,0..3,5
+     .test Name 'a' Load - 0,6..0,7
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 2,4..2,17
+        .name 'g'
+        .body[1]
+         0] Pass - 2,13..2,17
+      2] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (251, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -7083,17 +7083,17 @@ if a:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Name 'a' Load - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 2,4..2,17
-      .name 'g'
-      .body[1]
-      0] Pass - 2,13..2,17
-    2] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Name 'a' Load - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 2,4..2,17
+        .name 'g'
+        .body[1]
+         0] Pass - 2,13..2,17
+      2] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (252, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -7115,19 +7115,19 @@ with a:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] With - 0,0..3,5
-    .items[1]
-    0] withitem - 0,5..0,6
-      .context_expr Name 'a' Load - 0,5..0,6
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 2,4..2,17
-      .name 'g'
-      .body[1]
-      0] Pass - 2,13..2,17
-    2] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] With - 0,0..3,5
+     .items[1]
+      0] withitem - 0,5..0,6
+        .context_expr Name 'a' Load - 0,5..0,6
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 2,4..2,17
+        .name 'g'
+        .body[1]
+         0] Pass - 2,13..2,17
+      2] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (253, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -7149,19 +7149,19 @@ async with a:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] AsyncWith - 0,0..3,5
-    .items[1]
-    0] withitem - 0,11..0,12
-      .context_expr Name 'a' Load - 0,11..0,12
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 2,4..2,17
-      .name 'g'
-      .body[1]
-      0] Pass - 2,13..2,17
-    2] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
+   0] AsyncWith - 0,0..3,5
+     .items[1]
+      0] withitem - 0,11..0,12
+        .context_expr Name 'a' Load - 0,11..0,12
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 2,4..2,17
+        .name 'g'
+        .body[1]
+         0] Pass - 2,13..2,17
+      2] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
 '''),
 
 (254, 'body[0].cases[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -7186,21 +7186,21 @@ match a:
 ''', r'''
 Module - ROOT 0,0..4,9
   .body[1]
-  0] Match - 0,0..4,9
-    .subject Name 'a' Load - 0,6..0,7
-    .cases[1]
-    0] match_case - 1,4..4,9
-      .pattern MatchAs - 1,9..1,10
-        .name 'b'
-      .body[3]
-      0] Expr - 2,8..2,9
-        .value Name 'i' Load - 2,8..2,9
-      1] FunctionDef - 3,8..3,21
-        .name 'g'
-        .body[1]
-        0] Pass - 3,17..3,21
-      2] Expr - 4,8..4,9
-        .value Name 'j' Load - 4,8..4,9
+   0] Match - 0,0..4,9
+     .subject Name 'a' Load - 0,6..0,7
+     .cases[1]
+      0] match_case - 1,4..4,9
+        .pattern MatchAs - 1,9..1,10
+          .name 'b'
+        .body[3]
+         0] Expr - 2,8..2,9
+           .value Name 'i' Load - 2,8..2,9
+         1] FunctionDef - 3,8..3,21
+           .name 'g'
+           .body[1]
+            0] Pass - 3,17..3,21
+         2] Expr - 4,8..4,9
+           .value Name 'j' Load - 4,8..4,9
 '''),
 
 (255, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
@@ -7228,18 +7228,18 @@ finally:
 ''', r'''
 Module - ROOT 0,0..5,8
   .body[1]
-  0] Try - 0,0..5,8
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 2,4..2,17
-      .name 'g'
-      .body[1]
-      0] Pass - 2,13..2,17
-    2] Expr - 3,4..3,5
-      .value Name 'j' Load - 3,4..3,5
-    .finalbody[1]
-    0] Pass - 5,4..5,8
+   0] Try - 0,0..5,8
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 2,4..2,17
+        .name 'g'
+        .body[1]
+         0] Pass - 2,13..2,17
+      2] Expr - 3,4..3,5
+        .value Name 'j' Load - 3,4..3,5
+     .finalbody[1]
+      0] Pass - 5,4..5,8
 '''),
 
 (256, 'body[0]', 1, 1, None, {'pep8space': 1}, ('exec', r'''
@@ -7265,17 +7265,17 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..5,5
   .body[1]
-  0] If - 0,0..5,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 3,4..3,17
-      .name 'g'
-      .body[1]
-      0] Pass - 3,13..3,17
-    2] Expr - 5,4..5,5
-      .value Name 'j' Load - 5,4..5,5
+   0] If - 0,0..5,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 3,4..3,17
+        .name 'g'
+        .body[1]
+         0] Pass - 3,13..3,17
+      2] Expr - 5,4..5,5
+        .value Name 'j' Load - 5,4..5,5
 '''),
 
 (257, '', 1, 2, None, {}, ('exec',
@@ -7287,12 +7287,12 @@ k
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'l' Load - 1,0..1,1
-  2] Expr - 2,0..2,1
-    .value Name 'k' Load - 2,0..2,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'l' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'k' Load - 2,0..2,1
 '''),
 
 (258, '', 1, 2, None, {}, ('exec', r'''
@@ -7307,12 +7307,12 @@ k
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'l' Load - 1,0..1,1
-  2] Expr - 2,0..2,1
-    .value Name 'k' Load - 2,0..2,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'l' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'k' Load - 2,0..2,1
 '''),
 
 (259, '', 1, 2, None, {}, ('exec', r'''
@@ -7327,12 +7327,12 @@ k
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'l' Load - 1,0..1,1
-  2] Expr - 2,0..2,1
-    .value Name 'k' Load - 2,0..2,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'l' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'k' Load - 2,0..2,1
 '''),
 
 (260, '', 1, 2, None, {}, ('exec', r'''
@@ -7349,12 +7349,12 @@ k
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 'l' Load - 1,0..1,1
-  2] Expr - 2,0..2,1
-    .value Name 'k' Load - 2,0..2,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'l' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'k' Load - 2,0..2,1
 '''),
 
 (261, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -7369,15 +7369,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'l' Load - 2,4..2,5
-    2] Expr - 3,4..3,5
-      .value Name 'k' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'l' Load - 2,4..2,5
+      2] Expr - 3,4..3,5
+        .value Name 'k' Load - 3,4..3,5
 '''),
 
 (262, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -7394,15 +7394,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'l' Load - 2,4..2,5
-    2] Expr - 3,4..3,5
-      .value Name 'k' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'l' Load - 2,4..2,5
+      2] Expr - 3,4..3,5
+        .value Name 'k' Load - 3,4..3,5
 '''),
 
 (263, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -7419,15 +7419,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'l' Load - 2,4..2,5
-    2] Expr - 3,4..3,5
-      .value Name 'k' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'l' Load - 2,4..2,5
+      2] Expr - 3,4..3,5
+        .value Name 'k' Load - 3,4..3,5
 '''),
 
 (264, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -7446,15 +7446,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] Expr - 2,4..2,5
-      .value Name 'l' Load - 2,4..2,5
-    2] Expr - 3,4..3,5
-      .value Name 'k' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'l' Load - 2,4..2,5
+      2] Expr - 3,4..3,5
+        .value Name 'k' Load - 3,4..3,5
 '''),
 
 (265, '', 1, 2, None, {}, ('exec',
@@ -7479,14 +7479,14 @@ k
 ''', r'''
 Module - ROOT 0,0..6,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] FunctionDef - 3,0..3,13
-    .name 'f'
-    .body[1]
-    0] Pass - 3,9..3,13
-  2] Expr - 6,0..6,1
-    .value Name 'k' Load - 6,0..6,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] FunctionDef - 3,0..3,13
+     .name 'f'
+     .body[1]
+      0] Pass - 3,9..3,13
+   2] Expr - 6,0..6,1
+     .value Name 'k' Load - 6,0..6,1
 '''),
 
 (266, '', 1, 2, None, {}, ('exec', r'''
@@ -7514,14 +7514,14 @@ k
 ''', r'''
 Module - ROOT 0,0..6,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] FunctionDef - 3,0..3,13
-    .name 'f'
-    .body[1]
-    0] Pass - 3,9..3,13
-  2] Expr - 6,0..6,1
-    .value Name 'k' Load - 6,0..6,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] FunctionDef - 3,0..3,13
+     .name 'f'
+     .body[1]
+      0] Pass - 3,9..3,13
+   2] Expr - 6,0..6,1
+     .value Name 'k' Load - 6,0..6,1
 '''),
 
 (267, '', 1, 2, None, {}, ('exec', r'''
@@ -7549,14 +7549,14 @@ k
 ''', r'''
 Module - ROOT 0,0..6,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] FunctionDef - 3,0..3,13
-    .name 'f'
-    .body[1]
-    0] Pass - 3,9..3,13
-  2] Expr - 6,0..6,1
-    .value Name 'k' Load - 6,0..6,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] FunctionDef - 3,0..3,13
+     .name 'f'
+     .body[1]
+      0] Pass - 3,9..3,13
+   2] Expr - 6,0..6,1
+     .value Name 'k' Load - 6,0..6,1
 '''),
 
 (268, '', 1, 2, None, {}, ('exec', r'''
@@ -7586,14 +7586,14 @@ k
 ''', r'''
 Module - ROOT 0,0..6,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] FunctionDef - 3,0..3,13
-    .name 'f'
-    .body[1]
-    0] Pass - 3,9..3,13
-  2] Expr - 6,0..6,1
-    .value Name 'k' Load - 6,0..6,1
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] FunctionDef - 3,0..3,13
+     .name 'f'
+     .body[1]
+      0] Pass - 3,9..3,13
+   2] Expr - 6,0..6,1
+     .value Name 'k' Load - 6,0..6,1
 '''),
 
 (269, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -7618,17 +7618,17 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..5,5
   .body[1]
-  0] ClassDef - 0,0..5,5
-    .name 'cls'
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 3,4..3,17
-      .name 'f'
-      .body[1]
-      0] Pass - 3,13..3,17
-    2] Expr - 5,4..5,5
-      .value Name 'k' Load - 5,4..5,5
+   0] ClassDef - 0,0..5,5
+     .name 'cls'
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 3,4..3,17
+        .name 'f'
+        .body[1]
+         0] Pass - 3,13..3,17
+      2] Expr - 5,4..5,5
+        .value Name 'k' Load - 5,4..5,5
 '''),
 
 (270, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -7655,17 +7655,17 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..5,5
   .body[1]
-  0] ClassDef - 0,0..5,5
-    .name 'cls'
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 3,4..3,17
-      .name 'f'
-      .body[1]
-      0] Pass - 3,13..3,17
-    2] Expr - 5,4..5,5
-      .value Name 'k' Load - 5,4..5,5
+   0] ClassDef - 0,0..5,5
+     .name 'cls'
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 3,4..3,17
+        .name 'f'
+        .body[1]
+         0] Pass - 3,13..3,17
+      2] Expr - 5,4..5,5
+        .value Name 'k' Load - 5,4..5,5
 '''),
 
 (271, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -7692,17 +7692,17 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..5,5
   .body[1]
-  0] ClassDef - 0,0..5,5
-    .name 'cls'
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 3,4..3,17
-      .name 'f'
-      .body[1]
-      0] Pass - 3,13..3,17
-    2] Expr - 5,4..5,5
-      .value Name 'k' Load - 5,4..5,5
+   0] ClassDef - 0,0..5,5
+     .name 'cls'
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 3,4..3,17
+        .name 'f'
+        .body[1]
+         0] Pass - 3,13..3,17
+      2] Expr - 5,4..5,5
+        .value Name 'k' Load - 5,4..5,5
 '''),
 
 (272, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -7731,17 +7731,17 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..5,5
   .body[1]
-  0] ClassDef - 0,0..5,5
-    .name 'cls'
-    .body[3]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 3,4..3,17
-      .name 'f'
-      .body[1]
-      0] Pass - 3,13..3,17
-    2] Expr - 5,4..5,5
-      .value Name 'k' Load - 5,4..5,5
+   0] ClassDef - 0,0..5,5
+     .name 'cls'
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 3,4..3,17
+        .name 'f'
+        .body[1]
+         0] Pass - 3,13..3,17
+      2] Expr - 5,4..5,5
+        .value Name 'k' Load - 5,4..5,5
 '''),
 
 (273, '', 1, 2, None, {}, ('exec',
@@ -7760,12 +7760,12 @@ def f():
 ''', r'''
 Module - ROOT 0,0..3,13
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] FunctionDef - 3,0..3,13
-    .name 'f'
-    .body[1]
-    0] Pass - 3,9..3,13
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] FunctionDef - 3,0..3,13
+     .name 'f'
+     .body[1]
+      0] Pass - 3,9..3,13
 '''),
 
 (274, '', 1, 2, None, {}, ('exec', r'''
@@ -7787,12 +7787,12 @@ def f():
 ''', r'''
 Module - ROOT 0,0..3,13
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] FunctionDef - 3,0..3,13
-    .name 'f'
-    .body[1]
-    0] Pass - 3,9..3,13
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] FunctionDef - 3,0..3,13
+     .name 'f'
+     .body[1]
+      0] Pass - 3,9..3,13
 '''),
 
 (275, '', 1, 2, None, {}, ('exec', r'''
@@ -7813,12 +7813,12 @@ def f():
 ''', r'''
 Module - ROOT 0,0..3,13
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] FunctionDef - 3,0..3,13
-    .name 'f'
-    .body[1]
-    0] Pass - 3,9..3,13
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] FunctionDef - 3,0..3,13
+     .name 'f'
+     .body[1]
+      0] Pass - 3,9..3,13
 '''),
 
 (276, '', 1, 2, None, {}, ('exec', r'''
@@ -7843,12 +7843,12 @@ def f():
 ''', r'''
 Module - ROOT 0,0..4,13
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] FunctionDef - 4,0..4,13
-    .name 'f'
-    .body[1]
-    0] Pass - 4,9..4,13
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] FunctionDef - 4,0..4,13
+     .name 'f'
+     .body[1]
+      0] Pass - 4,9..4,13
 '''),
 
 (277, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -7869,15 +7869,15 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..3,17
   .body[1]
-  0] ClassDef - 0,0..3,17
-    .name 'cls'
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 3,4..3,17
-      .name 'f'
-      .body[1]
-      0] Pass - 3,13..3,17
+   0] ClassDef - 0,0..3,17
+     .name 'cls'
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 3,4..3,17
+        .name 'f'
+        .body[1]
+         0] Pass - 3,13..3,17
 '''),
 
 (278, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -7899,15 +7899,15 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..3,17
   .body[1]
-  0] ClassDef - 0,0..3,17
-    .name 'cls'
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 3,4..3,17
-      .name 'f'
-      .body[1]
-      0] Pass - 3,13..3,17
+   0] ClassDef - 0,0..3,17
+     .name 'cls'
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 3,4..3,17
+        .name 'f'
+        .body[1]
+         0] Pass - 3,13..3,17
 '''),
 
 (279, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -7929,15 +7929,15 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..3,17
   .body[1]
-  0] ClassDef - 0,0..3,17
-    .name 'cls'
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 3,4..3,17
-      .name 'f'
-      .body[1]
-      0] Pass - 3,13..3,17
+   0] ClassDef - 0,0..3,17
+     .name 'cls'
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 3,4..3,17
+        .name 'f'
+        .body[1]
+         0] Pass - 3,13..3,17
 '''),
 
 (280, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -7963,15 +7963,15 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..4,17
   .body[1]
-  0] ClassDef - 0,0..4,17
-    .name 'cls'
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 4,4..4,17
-      .name 'f'
-      .body[1]
-      0] Pass - 4,13..4,17
+   0] ClassDef - 0,0..4,17
+     .name 'cls'
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 4,4..4,17
+        .name 'f'
+        .body[1]
+         0] Pass - 4,13..4,17
 '''),
 
 (281, '', 1, 2, None, {}, ('exec',
@@ -7992,12 +7992,12 @@ def f():
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] FunctionDef - 3,0..3,13
-    .name 'f'
-    .body[1]
-    0] Pass - 3,9..3,13
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] FunctionDef - 3,0..3,13
+     .name 'f'
+     .body[1]
+      0] Pass - 3,9..3,13
 '''),
 
 (282, '', 1, 2, None, {}, ('exec', r'''
@@ -8021,12 +8021,12 @@ def f():
 ''', r'''
 Module - ROOT 0,0..4,7
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] FunctionDef - 3,0..3,13
-    .name 'f'
-    .body[1]
-    0] Pass - 3,9..3,13
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] FunctionDef - 3,0..3,13
+     .name 'f'
+     .body[1]
+      0] Pass - 3,9..3,13
 '''),
 
 (283, '', 1, 2, None, {}, ('exec', r'''
@@ -8051,12 +8051,12 @@ def f():
 ''', r'''
 Module - ROOT 0,0..5,6
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] FunctionDef - 4,0..4,13
-    .name 'f'
-    .body[1]
-    0] Pass - 4,9..4,13
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] FunctionDef - 4,0..4,13
+     .name 'f'
+     .body[1]
+      0] Pass - 4,9..4,13
 '''),
 
 (284, '', 1, 2, None, {}, ('exec', r'''
@@ -8083,12 +8083,12 @@ def f():
 ''', r'''
 Module - ROOT 0,0..5,7
   .body[2]
-  0] Expr - 0,0..0,1
-    .value Name 'i' Load - 0,0..0,1
-  1] FunctionDef - 4,0..4,13
-    .name 'f'
-    .body[1]
-    0] Pass - 4,9..4,13
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] FunctionDef - 4,0..4,13
+     .name 'f'
+     .body[1]
+      0] Pass - 4,9..4,13
 '''),
 
 (285, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -8111,15 +8111,15 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] ClassDef - 0,0..3,17
-    .name 'cls'
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 3,4..3,17
-      .name 'f'
-      .body[1]
-      0] Pass - 3,13..3,17
+   0] ClassDef - 0,0..3,17
+     .name 'cls'
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 3,4..3,17
+        .name 'f'
+        .body[1]
+         0] Pass - 3,13..3,17
 '''),
 
 (286, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -8143,15 +8143,15 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..4,7
   .body[1]
-  0] ClassDef - 0,0..3,17
-    .name 'cls'
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 3,4..3,17
-      .name 'f'
-      .body[1]
-      0] Pass - 3,13..3,17
+   0] ClassDef - 0,0..3,17
+     .name 'cls'
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 3,4..3,17
+        .name 'f'
+        .body[1]
+         0] Pass - 3,13..3,17
 '''),
 
 (287, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -8177,15 +8177,15 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
-  0] ClassDef - 0,0..4,17
-    .name 'cls'
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 4,4..4,17
-      .name 'f'
-      .body[1]
-      0] Pass - 4,13..4,17
+   0] ClassDef - 0,0..4,17
+     .name 'cls'
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 4,4..4,17
+        .name 'f'
+        .body[1]
+         0] Pass - 4,13..4,17
 '''),
 
 (288, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -8213,15 +8213,15 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..5,7
   .body[1]
-  0] ClassDef - 0,0..4,17
-    .name 'cls'
-    .body[2]
-    0] Expr - 1,4..1,5
-      .value Name 'i' Load - 1,4..1,5
-    1] FunctionDef - 4,4..4,17
-      .name 'f'
-      .body[1]
-      0] Pass - 4,13..4,17
+   0] ClassDef - 0,0..4,17
+     .name 'cls'
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 4,4..4,17
+        .name 'f'
+        .body[1]
+         0] Pass - 4,13..4,17
 '''),
 
 (289, 'body[0]', 0, 1, 'orelse', {}, ('exec', r'''
@@ -8236,12 +8236,12 @@ else:
 ''', r'''
 Module - ROOT 0,0..2,9
   .body[1]
-  0] If - 0,0..2,9
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Pass - 0,6..0,10
-    .orelse[1]
-    0] Break - 2,4..2,9
+   0] If - 0,0..2,9
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Pass - 0,6..0,10
+     .orelse[1]
+      0] Break - 2,4..2,9
 '''),
 
 (290, 'body[0]', 0, 1, 'orelse', {'elif_': False}, ('exec', r'''
@@ -8261,15 +8261,15 @@ else:
 ''', r'''
 Module - ROOT 0,0..2,15
   .body[1]
-  0] If - 0,0..2,15
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Pass - 0,6..0,10
-    .orelse[1]
-    0] If - 2,4..2,15
-      .test Constant 3 - 2,7..2,8
-      .body[1]
-      0] Break - 2,10..2,15
+   0] If - 0,0..2,15
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Pass - 0,6..0,10
+     .orelse[1]
+      0] If - 2,4..2,15
+        .test Constant 3 - 2,7..2,8
+        .body[1]
+         0] Break - 2,10..2,15
 '''),
 
 (291, 'body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
@@ -8287,15 +8287,15 @@ elif 3:
 ''', r'''
 Module - ROOT 0,0..1,13
   .body[1]
-  0] If - 0,0..1,13
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Pass - 0,6..0,10
-    .orelse[1]
-    0] If - 1,0..1,13
-      .test Constant 3 - 1,5..1,6
-      .body[1]
-      0] Break - 1,8..1,13
+   0] If - 0,0..1,13
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Pass - 0,6..0,10
+     .orelse[1]
+      0] If - 1,0..1,13
+        .test Constant 3 - 1,5..1,6
+        .body[1]
+         0] Break - 1,8..1,13
 '''),
 
 (292, 'body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
@@ -8313,15 +8313,15 @@ elif 3:
 ''', r'''
 Module - ROOT 0,0..1,13
   .body[1]
-  0] If - 0,0..1,13
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Pass - 0,6..0,10
-    .orelse[1]
-    0] If - 1,0..1,13
-      .test Constant 3 - 1,5..1,6
-      .body[1]
-      0] Break - 1,8..1,13
+   0] If - 0,0..1,13
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Pass - 0,6..0,10
+     .orelse[1]
+      0] If - 1,0..1,13
+        .test Constant 3 - 1,5..1,6
+        .body[1]
+         0] Break - 1,8..1,13
 '''),
 
 (293, 'body[0].body[0]', 0, 1, 'orelse', {}, ('exec', r'''
@@ -8338,15 +8338,15 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..3,13
   .body[1]
-  0] ClassDef - 0,0..3,13
-    .name 'cls'
-    .body[1]
-    0] If - 1,4..3,13
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 1,10..1,14
-      .orelse[1]
-      0] Break - 3,8..3,13
+   0] ClassDef - 0,0..3,13
+     .name 'cls'
+     .body[1]
+      0] If - 1,4..3,13
+        .test Constant 1 - 1,7..1,8
+        .body[1]
+         0] Pass - 1,10..1,14
+        .orelse[1]
+         0] Break - 3,8..3,13
 '''),
 
 (294, 'body[0].body[0]', 0, 1, 'orelse', {'elif_': False}, ('exec', r'''
@@ -8369,18 +8369,18 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..3,19
   .body[1]
-  0] ClassDef - 0,0..3,19
-    .name 'cls'
-    .body[1]
-    0] If - 1,4..3,19
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 1,10..1,14
-      .orelse[1]
-      0] If - 3,8..3,19
-        .test Constant 3 - 3,11..3,12
+   0] ClassDef - 0,0..3,19
+     .name 'cls'
+     .body[1]
+      0] If - 1,4..3,19
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Break - 3,14..3,19
+         0] Pass - 1,10..1,14
+        .orelse[1]
+         0] If - 3,8..3,19
+           .test Constant 3 - 3,11..3,12
+           .body[1]
+            0] Break - 3,14..3,19
 '''),
 
 (295, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
@@ -8401,18 +8401,18 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..2,17
   .body[1]
-  0] ClassDef - 0,0..2,17
-    .name 'cls'
-    .body[1]
-    0] If - 1,4..2,17
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 1,10..1,14
-      .orelse[1]
-      0] If - 2,4..2,17
-        .test Constant 3 - 2,9..2,10
+   0] ClassDef - 0,0..2,17
+     .name 'cls'
+     .body[1]
+      0] If - 1,4..2,17
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Break - 2,12..2,17
+         0] Pass - 1,10..1,14
+        .orelse[1]
+         0] If - 2,4..2,17
+           .test Constant 3 - 2,9..2,10
+           .body[1]
+            0] Break - 2,12..2,17
 '''),
 
 (296, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
@@ -8433,18 +8433,18 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..2,17
   .body[1]
-  0] ClassDef - 0,0..2,17
-    .name 'cls'
-    .body[1]
-    0] If - 1,4..2,17
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 1,10..1,14
-      .orelse[1]
-      0] If - 2,4..2,17
-        .test Constant 3 - 2,9..2,10
+   0] ClassDef - 0,0..2,17
+     .name 'cls'
+     .body[1]
+      0] If - 1,4..2,17
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Break - 2,12..2,17
+         0] Pass - 1,10..1,14
+        .orelse[1]
+         0] If - 2,4..2,17
+           .test Constant 3 - 2,9..2,10
+           .body[1]
+            0] Break - 2,12..2,17
 '''),
 
 (297, 'body[0]', 0, 1, 'orelse', {'elif_': False}, ('exec', r'''
@@ -8471,17 +8471,17 @@ else:
 ''', r'''
 Module - ROOT 0,0..4,16
   .body[1]
-  0] If - 0,0..4,16
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Pass - 0,6..0,10
-    .orelse[1]
-    0] If - 2,4..4,16
-      .test Constant 3 - 2,7..2,8
-      .body[1]
-      0] Break - 2,10..2,15
-      .orelse[1]
-      0] Continue - 4,8..4,16
+   0] If - 0,0..4,16
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Pass - 0,6..0,10
+     .orelse[1]
+      0] If - 2,4..4,16
+        .test Constant 3 - 2,7..2,8
+        .body[1]
+         0] Break - 2,10..2,15
+        .orelse[1]
+         0] Continue - 4,8..4,16
 '''),
 
 (298, 'body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
@@ -8506,17 +8506,17 @@ else:
 ''', r'''
 Module - ROOT 0,0..3,12
   .body[1]
-  0] If - 0,0..3,12
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Pass - 0,6..0,10
-    .orelse[1]
-    0] If - 1,0..3,12
-      .test Constant 3 - 1,5..1,6
-      .body[1]
-      0] Break - 1,8..1,13
-      .orelse[1]
-      0] Continue - 3,4..3,12
+   0] If - 0,0..3,12
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Pass - 0,6..0,10
+     .orelse[1]
+      0] If - 1,0..3,12
+        .test Constant 3 - 1,5..1,6
+        .body[1]
+         0] Break - 1,8..1,13
+        .orelse[1]
+         0] Continue - 3,4..3,12
 '''),
 
 (299, 'body[0].orelse[0]', 0, 0, 'orelse', {'elif_': False}, ('exec', r'''
@@ -8547,22 +8547,22 @@ else:
 ''', r'''
 Module - ROOT 0,0..6,16
   .body[1]
-  0] If - 0,0..6,16
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Pass - 0,6..0,10
-    .orelse[1]
-    0] If - 1,0..6,16
-      .test Constant 2 - 1,5..1,6
-      .body[1]
-      0] Pass - 2,4..2,8
-      .orelse[1]
-      0] If - 4,4..6,16
-        .test Constant 3 - 4,7..4,8
+   0] If - 0,0..6,16
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Pass - 0,6..0,10
+     .orelse[1]
+      0] If - 1,0..6,16
+        .test Constant 2 - 1,5..1,6
         .body[1]
-        0] Break - 4,10..4,15
+         0] Pass - 2,4..2,8
         .orelse[1]
-        0] Continue - 6,8..6,16
+         0] If - 4,4..6,16
+           .test Constant 3 - 4,7..4,8
+           .body[1]
+            0] Break - 4,10..4,15
+           .orelse[1]
+            0] Continue - 6,8..6,16
 '''),
 
 (300, 'body[0].orelse[0]', 0, 0, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
@@ -8591,22 +8591,22 @@ else:
 ''', r'''
 Module - ROOT 0,0..5,12
   .body[1]
-  0] If - 0,0..5,12
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Pass - 0,6..0,10
-    .orelse[1]
-    0] If - 1,0..5,12
-      .test Constant 2 - 1,5..1,6
-      .body[1]
-      0] Pass - 2,4..2,8
-      .orelse[1]
-      0] If - 3,0..5,12
-        .test Constant 3 - 3,5..3,6
+   0] If - 0,0..5,12
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Pass - 0,6..0,10
+     .orelse[1]
+      0] If - 1,0..5,12
+        .test Constant 2 - 1,5..1,6
         .body[1]
-        0] Break - 3,8..3,13
+         0] Pass - 2,4..2,8
         .orelse[1]
-        0] Continue - 5,4..5,12
+         0] If - 3,0..5,12
+           .test Constant 3 - 3,5..3,6
+           .body[1]
+            0] Break - 3,8..3,13
+           .orelse[1]
+            0] Continue - 5,4..5,12
 '''),
 
 (301, 'body[0].body[0]', 0, 1, 'orelse', {'elif_': False}, ('exec', r'''
@@ -8636,20 +8636,20 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..5,20
   .body[1]
-  0] ClassDef - 0,0..5,20
-    .name 'cls'
-    .body[1]
-    0] If - 1,4..5,20
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 1,10..1,14
-      .orelse[1]
-      0] If - 3,8..5,20
-        .test Constant 3 - 3,11..3,12
+   0] ClassDef - 0,0..5,20
+     .name 'cls'
+     .body[1]
+      0] If - 1,4..5,20
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Break - 3,14..3,19
+         0] Pass - 1,10..1,14
         .orelse[1]
-        0] Continue - 5,12..5,20
+         0] If - 3,8..5,20
+           .test Constant 3 - 3,11..3,12
+           .body[1]
+            0] Break - 3,14..3,19
+           .orelse[1]
+            0] Continue - 5,12..5,20
 '''),
 
 (302, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
@@ -8677,20 +8677,20 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..4,16
   .body[1]
-  0] ClassDef - 0,0..4,16
-    .name 'cls'
-    .body[1]
-    0] If - 1,4..4,16
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 1,10..1,14
-      .orelse[1]
-      0] If - 2,4..4,16
-        .test Constant 3 - 2,9..2,10
+   0] ClassDef - 0,0..4,16
+     .name 'cls'
+     .body[1]
+      0] If - 1,4..4,16
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Break - 2,12..2,17
+         0] Pass - 1,10..1,14
         .orelse[1]
-        0] Continue - 4,8..4,16
+         0] If - 2,4..4,16
+           .test Constant 3 - 2,9..2,10
+           .body[1]
+            0] Break - 2,12..2,17
+           .orelse[1]
+            0] Continue - 4,8..4,16
 '''),
 
 (303, 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {'elif_': False}, ('exec', r'''
@@ -8724,25 +8724,25 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..7,20
   .body[1]
-  0] ClassDef - 0,0..7,20
-    .name 'cls'
-    .body[1]
-    0] If - 1,4..7,20
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 1,10..1,14
-      .orelse[1]
-      0] If - 2,4..7,20
-        .test Constant 2 - 2,9..2,10
+   0] ClassDef - 0,0..7,20
+     .name 'cls'
+     .body[1]
+      0] If - 1,4..7,20
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Pass - 3,8..3,12
+         0] Pass - 1,10..1,14
         .orelse[1]
-        0] If - 5,8..7,20
-          .test Constant 3 - 5,11..5,12
-          .body[1]
-          0] Break - 5,14..5,19
-          .orelse[1]
-          0] Continue - 7,12..7,20
+         0] If - 2,4..7,20
+           .test Constant 2 - 2,9..2,10
+           .body[1]
+            0] Pass - 3,8..3,12
+           .orelse[1]
+            0] If - 5,8..7,20
+              .test Constant 3 - 5,11..5,12
+              .body[1]
+               0] Break - 5,14..5,19
+              .orelse[1]
+               0] Continue - 7,12..7,20
 '''),
 
 (304, 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
@@ -8774,25 +8774,25 @@ class cls:
 ''', r'''
 Module - ROOT 0,0..6,16
   .body[1]
-  0] ClassDef - 0,0..6,16
-    .name 'cls'
-    .body[1]
-    0] If - 1,4..6,16
-      .test Constant 1 - 1,7..1,8
-      .body[1]
-      0] Pass - 1,10..1,14
-      .orelse[1]
-      0] If - 2,4..6,16
-        .test Constant 2 - 2,9..2,10
+   0] ClassDef - 0,0..6,16
+     .name 'cls'
+     .body[1]
+      0] If - 1,4..6,16
+        .test Constant 1 - 1,7..1,8
         .body[1]
-        0] Pass - 3,8..3,12
+         0] Pass - 1,10..1,14
         .orelse[1]
-        0] If - 4,4..6,16
-          .test Constant 3 - 4,9..4,10
-          .body[1]
-          0] Break - 4,12..4,17
-          .orelse[1]
-          0] Continue - 6,8..6,16
+         0] If - 2,4..6,16
+           .test Constant 2 - 2,9..2,10
+           .body[1]
+            0] Pass - 3,8..3,12
+           .orelse[1]
+            0] If - 4,4..6,16
+              .test Constant 3 - 4,9..4,10
+              .body[1]
+               0] Break - 4,12..4,17
+              .orelse[1]
+               0] Continue - 6,8..6,16
 '''),
 
 (305, 'body[0]', 0, 0, 'orelse', {}, ('exec', r'''
@@ -8807,13 +8807,13 @@ else:
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[1]
-  0] If - 0,0..3,5
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Pass - 1,4..1,8
-    .orelse[1]
-    0] Expr - 3,4..3,5
-      .value Name 'i' Load - 3,4..3,5
+   0] If - 0,0..3,5
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Pass - 1,4..1,8
+     .orelse[1]
+      0] Expr - 3,4..3,5
+        .value Name 'i' Load - 3,4..3,5
 '''),
 
 (306, 'body[0]', 0, 0, 'orelse', {}, ('exec', r'''
@@ -8836,18 +8836,18 @@ finally:
 ''', r'''
 Module - ROOT 0,0..7,8
   .body[1]
-  0] Try - 0,0..7,8
-    .body[1]
-    0] Continue - 1,4..1,12
-    .handlers[1]
-    0] ExceptHandler - 2,0..3,9
-      .body[1]
-      0] Pass - 3,4..3,8
-    .orelse[1]
-    0] Expr - 5,4..5,5
-      .value Name 'i' Load - 5,4..5,5
-    .finalbody[1]
-    0] Pass - 7,4..7,8
+   0] Try - 0,0..7,8
+     .body[1]
+      0] Continue - 1,4..1,12
+     .handlers[1]
+      0] ExceptHandler - 2,0..3,9
+        .body[1]
+         0] Pass - 3,4..3,8
+     .orelse[1]
+      0] Expr - 5,4..5,5
+        .value Name 'i' Load - 5,4..5,5
+     .finalbody[1]
+      0] Pass - 7,4..7,8
 '''),
 ],
 
@@ -8864,8 +8864,8 @@ r'''{}'''), r'''
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[1]
-  0] Expr - 0,0..1,1
-    .value Dict - 0,0..1,1
+   0] Expr - 0,0..1,1
+     .value Dict - 0,0..1,1
 '''),
 
 (1, 'body[0].value', 0, 2, None, {}, ('exec',
@@ -8877,9 +8877,9 @@ r'''1, 2'''), (None, r'''
 r'''()''', r'''
 Module - ROOT 0,0..0,2
   .body[1]
-  0] Expr - 0,0..0,2
-    .value Tuple - 0,0..0,2
-      .ctx Load
+   0] Expr - 0,0..0,2
+     .value Tuple - 0,0..0,2
+       .ctx Load
 '''),
 
 (2, 'body[0].body[0].value', 0, 2, None, {}, ('exec', r'''
@@ -8895,16 +8895,16 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..1,7
   .body[1]
-  0] If - 0,0..1,7
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,2..1,7
-      .value Set - 1,2..1,7
-        .elts[1]
-        0] Starred - 1,3..1,6
-          .value Tuple - 1,4..1,6
-            .ctx Load
-          .ctx Load
+   0] If - 0,0..1,7
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,2..1,7
+        .value Set - 1,2..1,7
+          .elts[1]
+           0] Starred - 1,3..1,6
+             .value Tuple - 1,4..1,6
+               .ctx Load
+             .ctx Load
 '''),
 
 (3, 'body[0].value', 0, 1, None, {}, ('exec', r'''
@@ -8920,8 +8920,8 @@ Module - ROOT 0,0..1,7
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[1]
-  0] Expr - 0,0..1,1
-    .value Dict - 0,0..1,1
+   0] Expr - 0,0..1,1
+     .value Dict - 0,0..1,1
 '''),
 
 (4, 'body[0].value', 0, 1, None, {}, ('exec',
@@ -8930,8 +8930,8 @@ r'''{}'''),
 r'''{}''', r'''
 Module - ROOT 0,0..0,2
   .body[1]
-  0] Expr - 0,0..0,2
-    .value Dict - 0,0..0,2
+   0] Expr - 0,0..0,2
+     .value Dict - 0,0..0,2
 '''),
 
 (5, 'body[0].value', 0, 1, None, {}, ('exec',
@@ -8942,8 +8942,8 @@ r'''{a: 1}'''), (None, r'''
 r'''{}''', r'''
 Module - ROOT 0,0..0,2
   .body[1]
-  0] Expr - 0,0..0,2
-    .value Dict - 0,0..0,2
+   0] Expr - 0,0..0,2
+     .value Dict - 0,0..0,2
 '''),
 
 (6, 'body[0].value', 1, 2, None, {}, ('exec',
@@ -8952,11 +8952,11 @@ r'''()'''),
 r'''(1,)''', r'''
 Module - ROOT 0,0..0,4
   .body[1]
-  0] Expr - 0,0..0,4
-    .value Tuple - 0,0..0,4
-      .elts[1]
-      0] Constant 1 - 0,1..0,2
-      .ctx Load
+   0] Expr - 0,0..0,4
+     .value Tuple - 0,0..0,4
+       .elts[1]
+        0] Constant 1 - 0,1..0,2
+       .ctx Load
 '''),
 
 (7, 'body[0].value', 1, 2, None, {}, ('exec',
@@ -8965,11 +8965,11 @@ r'''()'''),
 r'''1,''', r'''
 Module - ROOT 0,0..0,2
   .body[1]
-  0] Expr - 0,0..0,2
-    .value Tuple - 0,0..0,2
-      .elts[1]
-      0] Constant 1 - 0,0..0,1
-      .ctx Load
+   0] Expr - 0,0..0,2
+     .value Tuple - 0,0..0,2
+       .elts[1]
+        0] Constant 1 - 0,0..0,1
+       .ctx Load
 '''),
 
 (8, 'body[0].value', 0, 2, None, {}, ('exec',
@@ -8978,9 +8978,9 @@ r'''()'''),
 r'''()''', r'''
 Module - ROOT 0,0..0,2
   .body[1]
-  0] Expr - 0,0..0,2
-    .value Tuple - 0,0..0,2
-      .ctx Load
+   0] Expr - 0,0..0,2
+     .value Tuple - 0,0..0,2
+       .ctx Load
 '''),
 
 (9, 'body[0].value', 1, 2, None, {}, ('exec',
@@ -8989,11 +8989,11 @@ r'''{*()}'''),
 r'''(1,)''', r'''
 Module - ROOT 0,0..0,4
   .body[1]
-  0] Expr - 0,0..0,4
-    .value Tuple - 0,0..0,4
-      .elts[1]
-      0] Constant 1 - 0,1..0,2
-      .ctx Load
+   0] Expr - 0,0..0,4
+     .value Tuple - 0,0..0,4
+       .elts[1]
+        0] Constant 1 - 0,1..0,2
+       .ctx Load
 '''),
 
 (10, 'body[0].value', 1, 2, None, {}, ('exec',
@@ -9002,11 +9002,11 @@ r'''{*()}'''),
 r'''1,''', r'''
 Module - ROOT 0,0..0,2
   .body[1]
-  0] Expr - 0,0..0,2
-    .value Tuple - 0,0..0,2
-      .elts[1]
-      0] Constant 1 - 0,0..0,1
-      .ctx Load
+   0] Expr - 0,0..0,2
+     .value Tuple - 0,0..0,2
+       .elts[1]
+        0] Constant 1 - 0,0..0,1
+       .ctx Load
 '''),
 
 (11, 'body[0].value', 0, 2, None, {}, ('exec',
@@ -9015,9 +9015,9 @@ r'''{*()}'''),
 r'''()''', r'''
 Module - ROOT 0,0..0,2
   .body[1]
-  0] Expr - 0,0..0,2
-    .value Tuple - 0,0..0,2
-      .ctx Load
+   0] Expr - 0,0..0,2
+     .value Tuple - 0,0..0,2
+       .ctx Load
 '''),
 
 (12, 'body[0].value', 0, 2, None, {}, ('exec', r'''
@@ -9032,11 +9032,11 @@ r'''()'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[1]
-      0] Constant 3 - 1,4..1,5
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[1]
+        0] Constant 3 - 1,4..1,5
+       .ctx Load
 '''),
 
 (13, 'body[0].value', 0, 1, None, {}, ('exec', r'''
@@ -9053,13 +9053,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Constant 1 - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Name 'c' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Constant 1 - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Name 'c' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (14, 'body[0].value', 1, 2, None, {}, ('exec', r'''
@@ -9081,13 +9081,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 1 - 2,4..2,5
-      2] Name 'c' Load - 2,7..2,8
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 1 - 2,4..2,5
+        2] Name 'c' Load - 2,7..2,8
+       .ctx Load
 '''),
 
 (15, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -9109,13 +9109,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 1 - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 1 - 2,4..2,5
+       .ctx Load
 '''),
 
 (16, 'body[0].value', 0, 1, None, {}, ('exec', r'''
@@ -9130,13 +9130,13 @@ r'''[2]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Constant 2 - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Name 'c' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Constant 2 - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Name 'c' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (17, 'body[0].value', 1, 2, None, {}, ('exec', r'''
@@ -9151,13 +9151,13 @@ r'''[2]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 2 - 1,7..1,8
-      2] Name 'c' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 2 - 1,7..1,8
+        2] Name 'c' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (18, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -9172,13 +9172,13 @@ r'''[2]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 2 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 2 - 1,10..1,11
+       .ctx Load
 '''),
 
 (19, 'body[0].value', 0, 1, None, {}, ('exec', r'''
@@ -9200,13 +9200,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Constant 3 - 1,4..1,5
-      1] Name 'b' Load - 2,4..2,5
-      2] Name 'c' Load - 2,7..2,8
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Constant 3 - 1,4..1,5
+        1] Name 'b' Load - 2,4..2,5
+        2] Name 'c' Load - 2,7..2,8
+       .ctx Load
 '''),
 
 (20, 'body[0].value', 1, 2, None, {}, ('exec', r'''
@@ -9228,13 +9228,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 3 - 1,7..1,8
-      2] Name 'c' Load - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 3 - 1,7..1,8
+        2] Name 'c' Load - 2,4..2,5
+       .ctx Load
 '''),
 
 (21, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -9251,13 +9251,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 3 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 3 - 1,10..1,11
+       .ctx Load
 '''),
 
 (22, 'body[0].value', 0, 1, None, {}, ('exec', r'''
@@ -9274,13 +9274,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Constant 1 - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Name 'c' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Constant 1 - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Name 'c' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (23, 'body[0].value', 1, 2, None, {}, ('exec', r'''
@@ -9302,13 +9302,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 1 - 2,4..2,5
-      2] Name 'c' Load - 2,7..2,8
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 1 - 2,4..2,5
+        2] Name 'c' Load - 2,7..2,8
+       .ctx Load
 '''),
 
 (24, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -9330,13 +9330,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 1 - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 1 - 2,4..2,5
+       .ctx Load
 '''),
 
 (25, 'body[0].value', 0, 1, None, {}, ('exec', r'''
@@ -9351,13 +9351,13 @@ r'''[2]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Constant 2 - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Name 'c' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Constant 2 - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Name 'c' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (26, 'body[0].value', 1, 2, None, {}, ('exec', r'''
@@ -9372,13 +9372,13 @@ r'''[2]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 2 - 1,7..1,8
-      2] Name 'c' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 2 - 1,7..1,8
+        2] Name 'c' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (27, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -9393,13 +9393,13 @@ r'''[2]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 2 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 2 - 1,10..1,11
+       .ctx Load
 '''),
 
 (28, 'body[0].value', 0, 1, None, {}, ('exec', r'''
@@ -9421,13 +9421,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Constant 3 - 1,4..1,5
-      1] Name 'b' Load - 2,4..2,5
-      2] Name 'c' Load - 2,7..2,8
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Constant 3 - 1,4..1,5
+        1] Name 'b' Load - 2,4..2,5
+        2] Name 'c' Load - 2,7..2,8
+       .ctx Load
 '''),
 
 (29, 'body[0].value', 1, 2, None, {}, ('exec', r'''
@@ -9449,13 +9449,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 3 - 1,7..1,8
-      2] Name 'c' Load - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 3 - 1,7..1,8
+        2] Name 'c' Load - 2,4..2,5
+       .ctx Load
 '''),
 
 (30, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -9472,13 +9472,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 3 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 3 - 1,10..1,11
+       .ctx Load
 '''),
 
 (31, 'body[0].value', 0, 1, None, {}, ('exec', r'''
@@ -9495,13 +9495,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Constant 1 - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Name 'c' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Constant 1 - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Name 'c' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (32, 'body[0].value', 1, 2, None, {}, ('exec', r'''
@@ -9523,13 +9523,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 1 - 2,4..2,5
-      2] Name 'c' Load - 2,7..2,8
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 1 - 2,4..2,5
+        2] Name 'c' Load - 2,7..2,8
+       .ctx Load
 '''),
 
 (33, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -9551,13 +9551,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 1 - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 1 - 2,4..2,5
+       .ctx Load
 '''),
 
 (34, 'body[0].value', 0, 1, None, {}, ('exec', r'''
@@ -9572,13 +9572,13 @@ r'''[2,]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Constant 2 - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Name 'c' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Constant 2 - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Name 'c' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (35, 'body[0].value', 1, 2, None, {}, ('exec', r'''
@@ -9593,13 +9593,13 @@ r'''[2,]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 2 - 1,7..1,8
-      2] Name 'c' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 2 - 1,7..1,8
+        2] Name 'c' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (36, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -9614,13 +9614,13 @@ r'''[2,]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 2 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 2 - 1,10..1,11
+       .ctx Load
 '''),
 
 (37, 'body[0].value', 0, 1, None, {}, ('exec', r'''
@@ -9642,13 +9642,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Constant 3 - 1,4..1,5
-      1] Name 'b' Load - 2,4..2,5
-      2] Name 'c' Load - 2,7..2,8
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Constant 3 - 1,4..1,5
+        1] Name 'b' Load - 2,4..2,5
+        2] Name 'c' Load - 2,7..2,8
+       .ctx Load
 '''),
 
 (38, 'body[0].value', 1, 2, None, {}, ('exec', r'''
@@ -9670,13 +9670,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 3 - 1,7..1,8
-      2] Name 'c' Load - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 3 - 1,7..1,8
+        2] Name 'c' Load - 2,4..2,5
+       .ctx Load
 '''),
 
 (39, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -9693,13 +9693,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 3 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 3 - 1,10..1,11
+       .ctx Load
 '''),
 
 (40, 'body[0].value', 0, 1, None, {}, ('exec', r'''
@@ -9716,13 +9716,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Constant 1 - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Name 'c' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Constant 1 - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Name 'c' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (41, 'body[0].value', 1, 2, None, {}, ('exec', r'''
@@ -9744,13 +9744,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 1 - 2,4..2,5
-      2] Name 'c' Load - 2,7..2,8
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 1 - 2,4..2,5
+        2] Name 'c' Load - 2,7..2,8
+       .ctx Load
 '''),
 
 (42, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -9772,13 +9772,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 1 - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 1 - 2,4..2,5
+       .ctx Load
 '''),
 
 (43, 'body[0].value', 0, 1, None, {}, ('exec', r'''
@@ -9793,13 +9793,13 @@ r'''[2,]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Constant 2 - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Name 'c' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Constant 2 - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Name 'c' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (44, 'body[0].value', 1, 2, None, {}, ('exec', r'''
@@ -9814,13 +9814,13 @@ r'''[2,]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 2 - 1,7..1,8
-      2] Name 'c' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 2 - 1,7..1,8
+        2] Name 'c' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (45, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -9835,13 +9835,13 @@ r'''[2,]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 2 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 2 - 1,10..1,11
+       .ctx Load
 '''),
 
 (46, 'body[0].value', 0, 1, None, {}, ('exec', r'''
@@ -9863,13 +9863,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Constant 3 - 1,4..1,5
-      1] Name 'b' Load - 2,4..2,5
-      2] Name 'c' Load - 2,7..2,8
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Constant 3 - 1,4..1,5
+        1] Name 'b' Load - 2,4..2,5
+        2] Name 'c' Load - 2,7..2,8
+       .ctx Load
 '''),
 
 (47, 'body[0].value', 1, 2, None, {}, ('exec', r'''
@@ -9891,13 +9891,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 3 - 1,7..1,8
-      2] Name 'c' Load - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 3 - 1,7..1,8
+        2] Name 'c' Load - 2,4..2,5
+       .ctx Load
 '''),
 
 (48, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -9914,13 +9914,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 3 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 3 - 1,10..1,11
+       .ctx Load
 '''),
 
 (49, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -9942,13 +9942,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 1 - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 1 - 2,4..2,5
+       .ctx Load
 '''),
 
 (50, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -9963,13 +9963,13 @@ r'''[2]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 2 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 2 - 1,10..1,11
+       .ctx Load
 '''),
 
 (51, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -9986,13 +9986,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 3 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 3 - 1,10..1,11
+       .ctx Load
 '''),
 
 (52, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -10014,13 +10014,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 1 - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 1 - 2,4..2,5
+       .ctx Load
 '''),
 
 (53, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -10035,13 +10035,13 @@ r'''[2,]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 2 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 2 - 1,10..1,11
+       .ctx Load
 '''),
 
 (54, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -10058,13 +10058,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 3 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 3 - 1,10..1,11
+       .ctx Load
 '''),
 
 (55, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -10087,13 +10087,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 1 - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 1 - 2,4..2,5
+       .ctx Load
 '''),
 
 (56, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -10114,13 +10114,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 2 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 2 - 1,10..1,11
+       .ctx Load
 '''),
 
 (57, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -10141,13 +10141,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 3 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 3 - 1,10..1,11
+       .ctx Load
 '''),
 
 (58, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -10170,13 +10170,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 1 - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 1 - 2,4..2,5
+       .ctx Load
 '''),
 
 (59, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -10197,13 +10197,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 2 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 2 - 1,10..1,11
+       .ctx Load
 '''),
 
 (60, 'body[0].value', 2, 3, None, {}, ('exec', r'''
@@ -10224,13 +10224,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 3 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 3 - 1,10..1,11
+       .ctx Load
 '''),
 
 (61, 'body[0].value', 0, 0, None, {}, ('exec', r'''
@@ -10247,13 +10247,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Constant 1 - 1,4..1,5
-      1] Name 'a' Load - 1,7..1,8
-      2] Name 'b' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Constant 1 - 1,4..1,5
+        1] Name 'a' Load - 1,7..1,8
+        2] Name 'b' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (62, 'body[0].value', 1, 1, None, {}, ('exec', r'''
@@ -10275,13 +10275,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 1 - 2,4..2,5
-      2] Name 'b' Load - 2,7..2,8
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 1 - 2,4..2,5
+        2] Name 'b' Load - 2,7..2,8
+       .ctx Load
 '''),
 
 (63, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -10303,13 +10303,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 1 - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 1 - 2,4..2,5
+       .ctx Load
 '''),
 
 (64, 'body[0].value', 0, 0, None, {}, ('exec', r'''
@@ -10324,13 +10324,13 @@ r'''[2]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Constant 2 - 1,4..1,5
-      1] Name 'a' Load - 1,7..1,8
-      2] Name 'b' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Constant 2 - 1,4..1,5
+        1] Name 'a' Load - 1,7..1,8
+        2] Name 'b' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (65, 'body[0].value', 1, 1, None, {}, ('exec', r'''
@@ -10345,13 +10345,13 @@ r'''[2]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 2 - 1,7..1,8
-      2] Name 'b' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 2 - 1,7..1,8
+        2] Name 'b' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (66, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -10366,13 +10366,13 @@ r'''[2]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 2 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 2 - 1,10..1,11
+       .ctx Load
 '''),
 
 (67, 'body[0].value', 0, 0, None, {}, ('exec', r'''
@@ -10394,13 +10394,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Constant 3 - 1,4..1,5
-      1] Name 'a' Load - 2,4..2,5
-      2] Name 'b' Load - 2,7..2,8
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Constant 3 - 1,4..1,5
+        1] Name 'a' Load - 2,4..2,5
+        2] Name 'b' Load - 2,7..2,8
+       .ctx Load
 '''),
 
 (68, 'body[0].value', 1, 1, None, {}, ('exec', r'''
@@ -10422,13 +10422,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 3 - 1,7..1,8
-      2] Name 'b' Load - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 3 - 1,7..1,8
+        2] Name 'b' Load - 2,4..2,5
+       .ctx Load
 '''),
 
 (69, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -10445,13 +10445,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 3 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 3 - 1,10..1,11
+       .ctx Load
 '''),
 
 (70, 'body[0].value', 0, 0, None, {}, ('exec', r'''
@@ -10468,13 +10468,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Constant 1 - 1,4..1,5
-      1] Name 'a' Load - 1,7..1,8
-      2] Name 'b' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Constant 1 - 1,4..1,5
+        1] Name 'a' Load - 1,7..1,8
+        2] Name 'b' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (71, 'body[0].value', 1, 1, None, {}, ('exec', r'''
@@ -10496,13 +10496,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 1 - 2,4..2,5
-      2] Name 'b' Load - 2,7..2,8
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 1 - 2,4..2,5
+        2] Name 'b' Load - 2,7..2,8
+       .ctx Load
 '''),
 
 (72, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -10524,13 +10524,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 1 - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 1 - 2,4..2,5
+       .ctx Load
 '''),
 
 (73, 'body[0].value', 0, 0, None, {}, ('exec', r'''
@@ -10545,13 +10545,13 @@ r'''[2]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Constant 2 - 1,4..1,5
-      1] Name 'a' Load - 1,7..1,8
-      2] Name 'b' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Constant 2 - 1,4..1,5
+        1] Name 'a' Load - 1,7..1,8
+        2] Name 'b' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (74, 'body[0].value', 1, 1, None, {}, ('exec', r'''
@@ -10566,13 +10566,13 @@ r'''[2]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 2 - 1,7..1,8
-      2] Name 'b' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 2 - 1,7..1,8
+        2] Name 'b' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (75, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -10587,13 +10587,13 @@ r'''[2]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 2 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 2 - 1,10..1,11
+       .ctx Load
 '''),
 
 (76, 'body[0].value', 0, 0, None, {}, ('exec', r'''
@@ -10615,13 +10615,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Constant 3 - 1,4..1,5
-      1] Name 'a' Load - 2,4..2,5
-      2] Name 'b' Load - 2,7..2,8
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Constant 3 - 1,4..1,5
+        1] Name 'a' Load - 2,4..2,5
+        2] Name 'b' Load - 2,7..2,8
+       .ctx Load
 '''),
 
 (77, 'body[0].value', 1, 1, None, {}, ('exec', r'''
@@ -10643,13 +10643,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 3 - 1,7..1,8
-      2] Name 'b' Load - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 3 - 1,7..1,8
+        2] Name 'b' Load - 2,4..2,5
+       .ctx Load
 '''),
 
 (78, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -10666,13 +10666,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 3 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 3 - 1,10..1,11
+       .ctx Load
 '''),
 
 (79, 'body[0].value', 0, 0, None, {}, ('exec', r'''
@@ -10689,13 +10689,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Constant 1 - 1,4..1,5
-      1] Name 'a' Load - 1,7..1,8
-      2] Name 'b' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Constant 1 - 1,4..1,5
+        1] Name 'a' Load - 1,7..1,8
+        2] Name 'b' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (80, 'body[0].value', 1, 1, None, {}, ('exec', r'''
@@ -10717,13 +10717,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 1 - 2,4..2,5
-      2] Name 'b' Load - 2,7..2,8
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 1 - 2,4..2,5
+        2] Name 'b' Load - 2,7..2,8
+       .ctx Load
 '''),
 
 (81, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -10745,13 +10745,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 1 - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 1 - 2,4..2,5
+       .ctx Load
 '''),
 
 (82, 'body[0].value', 0, 0, None, {}, ('exec', r'''
@@ -10766,13 +10766,13 @@ r'''[2,]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Constant 2 - 1,4..1,5
-      1] Name 'a' Load - 1,7..1,8
-      2] Name 'b' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Constant 2 - 1,4..1,5
+        1] Name 'a' Load - 1,7..1,8
+        2] Name 'b' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (83, 'body[0].value', 1, 1, None, {}, ('exec', r'''
@@ -10787,13 +10787,13 @@ r'''[2,]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 2 - 1,7..1,8
-      2] Name 'b' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 2 - 1,7..1,8
+        2] Name 'b' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (84, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -10808,13 +10808,13 @@ r'''[2,]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 2 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 2 - 1,10..1,11
+       .ctx Load
 '''),
 
 (85, 'body[0].value', 0, 0, None, {}, ('exec', r'''
@@ -10836,13 +10836,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Constant 3 - 1,4..1,5
-      1] Name 'a' Load - 2,4..2,5
-      2] Name 'b' Load - 2,7..2,8
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Constant 3 - 1,4..1,5
+        1] Name 'a' Load - 2,4..2,5
+        2] Name 'b' Load - 2,7..2,8
+       .ctx Load
 '''),
 
 (86, 'body[0].value', 1, 1, None, {}, ('exec', r'''
@@ -10864,13 +10864,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 3 - 1,7..1,8
-      2] Name 'b' Load - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 3 - 1,7..1,8
+        2] Name 'b' Load - 2,4..2,5
+       .ctx Load
 '''),
 
 (87, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -10887,13 +10887,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 3 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 3 - 1,10..1,11
+       .ctx Load
 '''),
 
 (88, 'body[0].value', 0, 0, None, {}, ('exec', r'''
@@ -10910,13 +10910,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Constant 1 - 1,4..1,5
-      1] Name 'a' Load - 1,7..1,8
-      2] Name 'b' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Constant 1 - 1,4..1,5
+        1] Name 'a' Load - 1,7..1,8
+        2] Name 'b' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (89, 'body[0].value', 1, 1, None, {}, ('exec', r'''
@@ -10938,13 +10938,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 1 - 2,4..2,5
-      2] Name 'b' Load - 2,7..2,8
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 1 - 2,4..2,5
+        2] Name 'b' Load - 2,7..2,8
+       .ctx Load
 '''),
 
 (90, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -10966,13 +10966,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 1 - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 1 - 2,4..2,5
+       .ctx Load
 '''),
 
 (91, 'body[0].value', 0, 0, None, {}, ('exec', r'''
@@ -10987,13 +10987,13 @@ r'''[2,]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Constant 2 - 1,4..1,5
-      1] Name 'a' Load - 1,7..1,8
-      2] Name 'b' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Constant 2 - 1,4..1,5
+        1] Name 'a' Load - 1,7..1,8
+        2] Name 'b' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (92, 'body[0].value', 1, 1, None, {}, ('exec', r'''
@@ -11008,13 +11008,13 @@ r'''[2,]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 2 - 1,7..1,8
-      2] Name 'b' Load - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 2 - 1,7..1,8
+        2] Name 'b' Load - 1,10..1,11
+       .ctx Load
 '''),
 
 (93, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -11029,13 +11029,13 @@ r'''[2,]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 2 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 2 - 1,10..1,11
+       .ctx Load
 '''),
 
 (94, 'body[0].value', 0, 0, None, {}, ('exec', r'''
@@ -11057,13 +11057,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Constant 3 - 1,4..1,5
-      1] Name 'a' Load - 2,4..2,5
-      2] Name 'b' Load - 2,7..2,8
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Constant 3 - 1,4..1,5
+        1] Name 'a' Load - 2,4..2,5
+        2] Name 'b' Load - 2,7..2,8
+       .ctx Load
 '''),
 
 (95, 'body[0].value', 1, 1, None, {}, ('exec', r'''
@@ -11085,13 +11085,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Constant 3 - 1,7..1,8
-      2] Name 'b' Load - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Constant 3 - 1,7..1,8
+        2] Name 'b' Load - 2,4..2,5
+       .ctx Load
 '''),
 
 (96, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -11108,13 +11108,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 3 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 3 - 1,10..1,11
+       .ctx Load
 '''),
 
 (97, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -11136,13 +11136,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 1 - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 1 - 2,4..2,5
+       .ctx Load
 '''),
 
 (98, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -11157,13 +11157,13 @@ r'''[2]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 2 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 2 - 1,10..1,11
+       .ctx Load
 '''),
 
 (99, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -11180,13 +11180,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 3 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 3 - 1,10..1,11
+       .ctx Load
 '''),
 
 (100, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -11208,13 +11208,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 1 - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 1 - 2,4..2,5
+       .ctx Load
 '''),
 
 (101, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -11229,13 +11229,13 @@ r'''[2,]'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 2 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 2 - 1,10..1,11
+       .ctx Load
 '''),
 
 (102, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -11252,13 +11252,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 3 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 3 - 1,10..1,11
+       .ctx Load
 '''),
 
 (103, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -11281,13 +11281,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 1 - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 1 - 2,4..2,5
+       .ctx Load
 '''),
 
 (104, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -11308,13 +11308,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 2 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 2 - 1,10..1,11
+       .ctx Load
 '''),
 
 (105, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -11335,13 +11335,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 3 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 3 - 1,10..1,11
+       .ctx Load
 '''),
 
 (106, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -11364,13 +11364,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 1 - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 1 - 2,4..2,5
+       .ctx Load
 '''),
 
 (107, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -11391,13 +11391,13 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 2 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 2 - 1,10..1,11
+       .ctx Load
 '''),
 
 (108, 'body[0].value', 2, 2, None, {}, ('exec', r'''
@@ -11418,13 +11418,13 @@ Module - ROOT 0,0..2,1
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[3]
-      0] Name 'a' Load - 1,4..1,5
-      1] Name 'b' Load - 1,7..1,8
-      2] Constant 3 - 1,10..1,11
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 3 - 1,10..1,11
+       .ctx Load
 '''),
 
 (109, 'body[0].value', 1, 1, None, {}, ('exec', r'''
@@ -11443,14 +11443,14 @@ r'''{i: j}'''), r'''
 ''', r'''
 Module - ROOT 0,0..4,1
   .body[1]
-  0] Expr - 0,0..4,1
-    .value Dict - 0,0..4,1
-      .keys[2]
-      0] Constant 'message' - 1,4..1,13
-      1] Name 'i' Load - 3,54..3,55
-      .values[2]
-      0] Constant 'An open stream was garbage collected prior to establishing network connection; call "stream.close()" explicitly.' - 1,16..3,51
-      1] Name 'j' Load - 3,57..3,58
+   0] Expr - 0,0..4,1
+     .value Dict - 0,0..4,1
+       .keys[2]
+        0] Constant 'message' - 1,4..1,13
+        1] Name 'i' Load - 3,54..3,55
+       .values[2]
+        0] Constant 'An open stream was garbage collected prior to establishing network connection; call "stream.close()" explicitly.' - 1,16..3,51
+        1] Name 'j' Load - 3,57..3,58
 '''),
 
 (110, 'body[0].value', 1, 1, None, {}, ('exec', r'''
@@ -11472,16 +11472,16 @@ r'''{3: ("4")}'''), r'''
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value Dict - 0,0..3,1
-      .keys[3]
-      0] Constant 1 - 1,4..1,5
-      1] Constant 3 - 2,4..2,5
-      2] Constant 5 - 2,14..2,15
-      .values[3]
-      0] Constant 2 - 1,7..1,8
-      1] Constant '4' - 2,8..2,11
-      2] Constant 6 - 2,17..2,18
+   0] Expr - 0,0..3,1
+     .value Dict - 0,0..3,1
+       .keys[3]
+        0] Constant 1 - 1,4..1,5
+        1] Constant 3 - 2,4..2,5
+        2] Constant 5 - 2,14..2,15
+       .values[3]
+        0] Constant 2 - 1,7..1,8
+        1] Constant '4' - 2,8..2,11
+        2] Constant 6 - 2,17..2,18
 '''),
 
 (111, 'body[0].value', 1, 1, None, {}, ('exec', r'''
@@ -11500,14 +11500,14 @@ r'''(1, 2)'''), r'''
 ''', r'''
 Module - ROOT 0,0..4,1
   .body[1]
-  0] Expr - 0,0..4,1
-    .value List - 0,0..4,1
-      .elts[4]
-      0] Constant 'file, line (\\\\d+)' - 2,4..2,24
-      1] Constant 1 - 3,4..3,5
-      2] Constant 2 - 3,7..3,8
-      3] Constant 3 - 3,10..3,11
-      .ctx Load
+   0] Expr - 0,0..4,1
+     .value List - 0,0..4,1
+       .elts[4]
+        0] Constant 'file, line (\\\\d+)' - 2,4..2,24
+        1] Constant 1 - 3,4..3,5
+        2] Constant 2 - 3,7..3,8
+        3] Constant 3 - 3,10..3,11
+       .ctx Load
 '''),
 
 (112, 'body[0].value', 2, 3, None, {}, ('exec',
@@ -11516,12 +11516,12 @@ r'''()'''),
 r'''(IndexError, KeyError)''', r'''
 Module - ROOT 0,0..0,22
   .body[1]
-  0] Expr - 0,0..0,22
-    .value Tuple - 0,0..0,22
-      .elts[2]
-      0] Name 'IndexError' Load - 0,1..0,11
-      1] Name 'KeyError' Load - 0,13..0,21
-      .ctx Load
+   0] Expr - 0,0..0,22
+     .value Tuple - 0,0..0,22
+       .elts[2]
+        0] Name 'IndexError' Load - 0,1..0,11
+        1] Name 'KeyError' Load - 0,13..0,21
+       .ctx Load
 '''),
 
 (113, 'body[0].targets[0]', 2, 2, None, {}, ('exec',
@@ -11530,15 +11530,15 @@ r'''(d,)'''),
 r'''[a, b, d] = c''', r'''
 Module - ROOT 0,0..0,13
   .body[1]
-  0] Assign - 0,0..0,13
-    .targets[1]
-    0] List - 0,0..0,9
-      .elts[3]
-      0] Name 'a' Store - 0,1..0,2
-      1] Name 'b' Store - 0,4..0,5
-      2] Name 'd' Store - 0,7..0,8
-      .ctx Store
-    .value Name 'c' Load - 0,12..0,13
+   0] Assign - 0,0..0,13
+     .targets[1]
+      0] List - 0,0..0,9
+        .elts[3]
+         0] Name 'a' Store - 0,1..0,2
+         1] Name 'b' Store - 0,4..0,5
+         2] Name 'd' Store - 0,7..0,8
+        .ctx Store
+     .value Name 'c' Load - 0,12..0,13
 '''),
 
 (114, 'body[0].value', 0, 1, None, {}, ('exec',
@@ -11552,25 +11552,25 @@ r'''stat_list,'''), (None, r'''
 r'''{-1: 'stdname', 2: 'cumulative'}[field[0]],''', r'''
 Module - ROOT 0,0..1,46
   .body[1]
-  0] Expr - 0,0..1,46
-    .value Tuple - 0,0..1,46
-      .elts[1]
-      0] Subscript - 0,0..1,45
-        .value Dict - 0,0..1,35
-          .keys[2]
-          0] UnaryOp - 0,1..0,3
-            .op USub - 0,1..0,2
-            .operand Constant 1 - 0,2..0,3
-          1] Constant 2 - 1,19..1,20
-          .values[2]
-          0] Constant 'stdname' - 0,5..0,14
-          1] Constant 'cumulative' - 1,22..1,34
-        .slice Subscript - 1,36..1,44
-          .value Name 'field' Load - 1,36..1,41
-          .slice Constant 0 - 1,42..1,43
+   0] Expr - 0,0..1,46
+     .value Tuple - 0,0..1,46
+       .elts[1]
+        0] Subscript - 0,0..1,45
+          .value Dict - 0,0..1,35
+            .keys[2]
+             0] UnaryOp - 0,1..0,3
+               .op USub - 0,1..0,2
+               .operand Constant 1 - 0,2..0,3
+             1] Constant 2 - 1,19..1,20
+            .values[2]
+             0] Constant 'stdname' - 0,5..0,14
+             1] Constant 'cumulative' - 1,22..1,34
+          .slice Subscript - 1,36..1,44
+            .value Name 'field' Load - 1,36..1,41
+            .slice Constant 0 - 1,42..1,43
+            .ctx Load
           .ctx Load
-        .ctx Load
-      .ctx Load
+       .ctx Load
 '''),
 
 (115, 'body[0].iter', 1, 2, None, {}, ('exec', r'''
@@ -11589,15 +11589,15 @@ for a in a, c:
 ''', r'''
 Module - ROOT 0,0..2,8
   .body[1]
-  0] For - 0,0..2,8
-    .target Name 'a' Store - 0,4..0,5
-    .iter Tuple - 0,9..1,11
-      .elts[2]
-      0] Name 'a' Load - 0,10..0,11
-      1] Name 'c' Load - 1,9..1,10
-      .ctx Load
-    .body[1]
-    0] Pass - 2,4..2,8
+   0] For - 0,0..2,8
+     .target Name 'a' Store - 0,4..0,5
+     .iter Tuple - 0,9..1,11
+       .elts[2]
+        0] Name 'a' Load - 0,10..0,11
+        1] Name 'c' Load - 1,9..1,10
+       .ctx Load
+     .body[1]
+      0] Pass - 2,4..2,8
 '''),
 
 (116, 'body[0].value', 0, 0, None, {}, ('exec',
@@ -11611,15 +11611,15 @@ result = (
 r'''result = c, filename, headers''', r'''
 Module - ROOT 0,0..1,30
   .body[1]
-  0] Assign - 0,0..1,30
-    .targets[1]
-    0] Name 'result' Store - 0,0..0,6
-    .value Tuple - 0,9..1,30
-      .elts[3]
-      0] Name 'c' Load - 1,9..1,10
-      1] Name 'filename' Load - 1,12..1,20
-      2] Name 'headers' Load - 1,22..1,29
-      .ctx Load
+   0] Assign - 0,0..1,30
+     .targets[1]
+      0] Name 'result' Store - 0,0..0,6
+     .value Tuple - 0,9..1,30
+       .elts[3]
+        0] Name 'c' Load - 1,9..1,10
+        1] Name 'filename' Load - 1,12..1,20
+        2] Name 'headers' Load - 1,22..1,29
+       .ctx Load
 '''),
 
 (117, 'body[0].value', 0, 2, None, {}, ('exec',
@@ -11628,9 +11628,9 @@ r'''()'''),
 r'''return ()''', r'''
 Module - ROOT 0,0..0,9
   .body[1]
-  0] Return - 0,0..0,9
-    .value Tuple - 0,7..0,9
-      .ctx Load
+   0] Return - 0,0..0,9
+     .value Tuple - 0,7..0,9
+       .ctx Load
 '''),
 
 (118, 'body[0].value', 0, 2, None, {}, ('exec',
@@ -11639,13 +11639,13 @@ r'''()'''),
 r'''{*()}''', r'''
 Module - ROOT 0,0..0,5
   .body[1]
-  0] Expr - 0,0..0,5
-    .value Set - 0,0..0,5
-      .elts[1]
-      0] Starred - 0,1..0,4
-        .value Tuple - 0,2..0,4
+   0] Expr - 0,0..0,5
+     .value Set - 0,0..0,5
+       .elts[1]
+        0] Starred - 0,1..0,4
+          .value Tuple - 0,2..0,4
+            .ctx Load
           .ctx Load
-        .ctx Load
 '''),
 
 (119, 'body[0].value', 0, 0, None, {}, ('exec',
@@ -11654,13 +11654,13 @@ r'''()'''),
 r'''{*()}''', r'''
 Module - ROOT 0,0..0,5
   .body[1]
-  0] Expr - 0,0..0,5
-    .value Set - 0,0..0,5
-      .elts[1]
-      0] Starred - 0,1..0,4
-        .value Tuple - 0,2..0,4
+   0] Expr - 0,0..0,5
+     .value Set - 0,0..0,5
+       .elts[1]
+        0] Starred - 0,1..0,4
+          .value Tuple - 0,2..0,4
+            .ctx Load
           .ctx Load
-        .ctx Load
 '''),
 
 (120, 'body[0].value', 0, 0, None, {}, ('exec',
@@ -11669,15 +11669,15 @@ r'''(1, 2)'''),
 r'''{1, 2, *()}''', r'''
 Module - ROOT 0,0..0,11
   .body[1]
-  0] Expr - 0,0..0,11
-    .value Set - 0,0..0,11
-      .elts[3]
-      0] Constant 1 - 0,1..0,2
-      1] Constant 2 - 0,4..0,5
-      2] Starred - 0,7..0,10
-        .value Tuple - 0,8..0,10
+   0] Expr - 0,0..0,11
+     .value Set - 0,0..0,11
+       .elts[3]
+        0] Constant 1 - 0,1..0,2
+        1] Constant 2 - 0,4..0,5
+        2] Starred - 0,7..0,10
+          .value Tuple - 0,8..0,10
+            .ctx Load
           .ctx Load
-        .ctx Load
 '''),
 
 (121, 'body[0].value', 0, 0, None, {}, ('exec',
@@ -11686,14 +11686,14 @@ r'''a,'''),
 r'''a, 1, 2, 3,''', r'''
 Module - ROOT 0,0..0,11
   .body[1]
-  0] Expr - 0,0..0,11
-    .value Tuple - 0,0..0,11
-      .elts[4]
-      0] Name 'a' Load - 0,0..0,1
-      1] Constant 1 - 0,3..0,4
-      2] Constant 2 - 0,6..0,7
-      3] Constant 3 - 0,9..0,10
-      .ctx Load
+   0] Expr - 0,0..0,11
+     .value Tuple - 0,0..0,11
+       .elts[4]
+        0] Name 'a' Load - 0,0..0,1
+        1] Constant 1 - 0,3..0,4
+        2] Constant 2 - 0,6..0,7
+        3] Constant 3 - 0,9..0,10
+       .ctx Load
 '''),
 
 (122, 'body[0].value', 1, 1, None, {}, ('exec',
@@ -11702,14 +11702,14 @@ r'''a,'''),
 r'''1, a, 2, 3,''', r'''
 Module - ROOT 0,0..0,11
   .body[1]
-  0] Expr - 0,0..0,11
-    .value Tuple - 0,0..0,11
-      .elts[4]
-      0] Constant 1 - 0,0..0,1
-      1] Name 'a' Load - 0,3..0,4
-      2] Constant 2 - 0,6..0,7
-      3] Constant 3 - 0,9..0,10
-      .ctx Load
+   0] Expr - 0,0..0,11
+     .value Tuple - 0,0..0,11
+       .elts[4]
+        0] Constant 1 - 0,0..0,1
+        1] Name 'a' Load - 0,3..0,4
+        2] Constant 2 - 0,6..0,7
+        3] Constant 3 - 0,9..0,10
+       .ctx Load
 '''),
 
 (123, 'body[0].value', 2, 2, None, {}, ('exec',
@@ -11718,14 +11718,14 @@ r'''a,'''),
 r'''1, 2, a, 3,''', r'''
 Module - ROOT 0,0..0,11
   .body[1]
-  0] Expr - 0,0..0,11
-    .value Tuple - 0,0..0,11
-      .elts[4]
-      0] Constant 1 - 0,0..0,1
-      1] Constant 2 - 0,3..0,4
-      2] Name 'a' Load - 0,6..0,7
-      3] Constant 3 - 0,9..0,10
-      .ctx Load
+   0] Expr - 0,0..0,11
+     .value Tuple - 0,0..0,11
+       .elts[4]
+        0] Constant 1 - 0,0..0,1
+        1] Constant 2 - 0,3..0,4
+        2] Name 'a' Load - 0,6..0,7
+        3] Constant 3 - 0,9..0,10
+       .ctx Load
 '''),
 
 (124, 'body[0].value', 3, 3, None, {}, ('exec',
@@ -11734,14 +11734,14 @@ r'''a,'''),
 r'''1, 2, 3, a''', r'''
 Module - ROOT 0,0..0,10
   .body[1]
-  0] Expr - 0,0..0,10
-    .value Tuple - 0,0..0,10
-      .elts[4]
-      0] Constant 1 - 0,0..0,1
-      1] Constant 2 - 0,3..0,4
-      2] Constant 3 - 0,6..0,7
-      3] Name 'a' Load - 0,9..0,10
-      .ctx Load
+   0] Expr - 0,0..0,10
+     .value Tuple - 0,0..0,10
+       .elts[4]
+        0] Constant 1 - 0,0..0,1
+        1] Constant 2 - 0,3..0,4
+        2] Constant 3 - 0,6..0,7
+        3] Name 'a' Load - 0,9..0,10
+       .ctx Load
 '''),
 
 (125, 'body[0].value', 0, 1, None, {}, ('exec',
@@ -11750,13 +11750,13 @@ r'''a,'''),
 r'''a, 2, 3,''', r'''
 Module - ROOT 0,0..0,8
   .body[1]
-  0] Expr - 0,0..0,8
-    .value Tuple - 0,0..0,8
-      .elts[3]
-      0] Name 'a' Load - 0,0..0,1
-      1] Constant 2 - 0,3..0,4
-      2] Constant 3 - 0,6..0,7
-      .ctx Load
+   0] Expr - 0,0..0,8
+     .value Tuple - 0,0..0,8
+       .elts[3]
+        0] Name 'a' Load - 0,0..0,1
+        1] Constant 2 - 0,3..0,4
+        2] Constant 3 - 0,6..0,7
+       .ctx Load
 '''),
 
 (126, 'body[0].value', 1, 2, None, {}, ('exec',
@@ -11765,13 +11765,13 @@ r'''a,'''),
 r'''1, a, 3,''', r'''
 Module - ROOT 0,0..0,8
   .body[1]
-  0] Expr - 0,0..0,8
-    .value Tuple - 0,0..0,8
-      .elts[3]
-      0] Constant 1 - 0,0..0,1
-      1] Name 'a' Load - 0,3..0,4
-      2] Constant 3 - 0,6..0,7
-      .ctx Load
+   0] Expr - 0,0..0,8
+     .value Tuple - 0,0..0,8
+       .elts[3]
+        0] Constant 1 - 0,0..0,1
+        1] Name 'a' Load - 0,3..0,4
+        2] Constant 3 - 0,6..0,7
+       .ctx Load
 '''),
 
 (127, 'body[0].value', 2, 3, None, {}, ('exec',
@@ -11780,13 +11780,13 @@ r'''a,'''),
 r'''1, 2, a''', r'''
 Module - ROOT 0,0..0,7
   .body[1]
-  0] Expr - 0,0..0,7
-    .value Tuple - 0,0..0,7
-      .elts[3]
-      0] Constant 1 - 0,0..0,1
-      1] Constant 2 - 0,3..0,4
-      2] Name 'a' Load - 0,6..0,7
-      .ctx Load
+   0] Expr - 0,0..0,7
+     .value Tuple - 0,0..0,7
+       .elts[3]
+        0] Constant 1 - 0,0..0,1
+        1] Constant 2 - 0,3..0,4
+        2] Name 'a' Load - 0,6..0,7
+       .ctx Load
 '''),
 
 (128, 'body[0].value', 0, 2, None, {}, ('exec',
@@ -11795,12 +11795,12 @@ r'''a,'''),
 r'''a, 3,''', r'''
 Module - ROOT 0,0..0,5
   .body[1]
-  0] Expr - 0,0..0,5
-    .value Tuple - 0,0..0,5
-      .elts[2]
-      0] Name 'a' Load - 0,0..0,1
-      1] Constant 3 - 0,3..0,4
-      .ctx Load
+   0] Expr - 0,0..0,5
+     .value Tuple - 0,0..0,5
+       .elts[2]
+        0] Name 'a' Load - 0,0..0,1
+        1] Constant 3 - 0,3..0,4
+       .ctx Load
 '''),
 
 (129, 'body[0].value', 1, 3, None, {}, ('exec',
@@ -11809,12 +11809,12 @@ r'''a,'''),
 r'''1, a''', r'''
 Module - ROOT 0,0..0,4
   .body[1]
-  0] Expr - 0,0..0,4
-    .value Tuple - 0,0..0,4
-      .elts[2]
-      0] Constant 1 - 0,0..0,1
-      1] Name 'a' Load - 0,3..0,4
-      .ctx Load
+   0] Expr - 0,0..0,4
+     .value Tuple - 0,0..0,4
+       .elts[2]
+        0] Constant 1 - 0,0..0,1
+        1] Name 'a' Load - 0,3..0,4
+       .ctx Load
 '''),
 
 (130, 'body[0].value', 0, 3, None, {}, ('exec',
@@ -11823,11 +11823,11 @@ r'''a,'''),
 r'''a,''', r'''
 Module - ROOT 0,0..0,2
   .body[1]
-  0] Expr - 0,0..0,2
-    .value Tuple - 0,0..0,2
-      .elts[1]
-      0] Name 'a' Load - 0,0..0,1
-      .ctx Load
+   0] Expr - 0,0..0,2
+     .value Tuple - 0,0..0,2
+       .elts[1]
+        0] Name 'a' Load - 0,0..0,1
+       .ctx Load
 '''),
 
 (131, 'body[0].value', 0, 2, None, {}, ('exec', r'''
@@ -11842,11 +11842,11 @@ r'''**DEL**'''), r'''
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[1]
-  0] Expr - 0,0..2,1
-    .value List - 0,0..2,1
-      .elts[1]
-      0] Constant 3 - 1,4..1,5
-      .ctx Load
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[1]
+        0] Constant 3 - 1,4..1,5
+       .ctx Load
 '''),
 
 (132, 'body[0].value', 0, 0, None, {}, ('exec',
@@ -11855,13 +11855,13 @@ r'''**DEL**'''),
 r'''1, 2, 3,''', r'''
 Module - ROOT 0,0..0,8
   .body[1]
-  0] Expr - 0,0..0,8
-    .value Tuple - 0,0..0,8
-      .elts[3]
-      0] Constant 1 - 0,0..0,1
-      1] Constant 2 - 0,3..0,4
-      2] Constant 3 - 0,6..0,7
-      .ctx Load
+   0] Expr - 0,0..0,8
+     .value Tuple - 0,0..0,8
+       .elts[3]
+        0] Constant 1 - 0,0..0,1
+        1] Constant 2 - 0,3..0,4
+        2] Constant 3 - 0,6..0,7
+       .ctx Load
 '''),
 
 (133, 'body[0].value', 1, 1, None, {}, ('exec',
@@ -11870,13 +11870,13 @@ r'''**DEL**'''),
 r'''1, 2, 3,''', r'''
 Module - ROOT 0,0..0,8
   .body[1]
-  0] Expr - 0,0..0,8
-    .value Tuple - 0,0..0,8
-      .elts[3]
-      0] Constant 1 - 0,0..0,1
-      1] Constant 2 - 0,3..0,4
-      2] Constant 3 - 0,6..0,7
-      .ctx Load
+   0] Expr - 0,0..0,8
+     .value Tuple - 0,0..0,8
+       .elts[3]
+        0] Constant 1 - 0,0..0,1
+        1] Constant 2 - 0,3..0,4
+        2] Constant 3 - 0,6..0,7
+       .ctx Load
 '''),
 
 (134, 'body[0].value', 2, 2, None, {}, ('exec',
@@ -11885,13 +11885,13 @@ r'''**DEL**'''),
 r'''1, 2, 3,''', r'''
 Module - ROOT 0,0..0,8
   .body[1]
-  0] Expr - 0,0..0,8
-    .value Tuple - 0,0..0,8
-      .elts[3]
-      0] Constant 1 - 0,0..0,1
-      1] Constant 2 - 0,3..0,4
-      2] Constant 3 - 0,6..0,7
-      .ctx Load
+   0] Expr - 0,0..0,8
+     .value Tuple - 0,0..0,8
+       .elts[3]
+        0] Constant 1 - 0,0..0,1
+        1] Constant 2 - 0,3..0,4
+        2] Constant 3 - 0,6..0,7
+       .ctx Load
 '''),
 
 (135, 'body[0].value', 3, 3, None, {}, ('exec',
@@ -11900,13 +11900,13 @@ r'''**DEL**'''),
 r'''1, 2, 3,''', r'''
 Module - ROOT 0,0..0,8
   .body[1]
-  0] Expr - 0,0..0,8
-    .value Tuple - 0,0..0,8
-      .elts[3]
-      0] Constant 1 - 0,0..0,1
-      1] Constant 2 - 0,3..0,4
-      2] Constant 3 - 0,6..0,7
-      .ctx Load
+   0] Expr - 0,0..0,8
+     .value Tuple - 0,0..0,8
+       .elts[3]
+        0] Constant 1 - 0,0..0,1
+        1] Constant 2 - 0,3..0,4
+        2] Constant 3 - 0,6..0,7
+       .ctx Load
 '''),
 
 (136, 'body[0].value', 0, 1, None, {}, ('exec',
@@ -11915,12 +11915,12 @@ r'''**DEL**'''),
 r'''2, 3,''', r'''
 Module - ROOT 0,0..0,5
   .body[1]
-  0] Expr - 0,0..0,5
-    .value Tuple - 0,0..0,5
-      .elts[2]
-      0] Constant 2 - 0,0..0,1
-      1] Constant 3 - 0,3..0,4
-      .ctx Load
+   0] Expr - 0,0..0,5
+     .value Tuple - 0,0..0,5
+       .elts[2]
+        0] Constant 2 - 0,0..0,1
+        1] Constant 3 - 0,3..0,4
+       .ctx Load
 '''),
 
 (137, 'body[0].value', 1, 2, None, {}, ('exec',
@@ -11929,12 +11929,12 @@ r'''**DEL**'''),
 r'''1, 3,''', r'''
 Module - ROOT 0,0..0,5
   .body[1]
-  0] Expr - 0,0..0,5
-    .value Tuple - 0,0..0,5
-      .elts[2]
-      0] Constant 1 - 0,0..0,1
-      1] Constant 3 - 0,3..0,4
-      .ctx Load
+   0] Expr - 0,0..0,5
+     .value Tuple - 0,0..0,5
+       .elts[2]
+        0] Constant 1 - 0,0..0,1
+        1] Constant 3 - 0,3..0,4
+       .ctx Load
 '''),
 
 (138, 'body[0].value', 2, 3, None, {}, ('exec',
@@ -11943,12 +11943,12 @@ r'''**DEL**'''),
 r'''1, 2''', r'''
 Module - ROOT 0,0..0,4
   .body[1]
-  0] Expr - 0,0..0,4
-    .value Tuple - 0,0..0,4
-      .elts[2]
-      0] Constant 1 - 0,0..0,1
-      1] Constant 2 - 0,3..0,4
-      .ctx Load
+   0] Expr - 0,0..0,4
+     .value Tuple - 0,0..0,4
+       .elts[2]
+        0] Constant 1 - 0,0..0,1
+        1] Constant 2 - 0,3..0,4
+       .ctx Load
 '''),
 
 (139, 'body[0].value', 0, 2, None, {}, ('exec',
@@ -11957,11 +11957,11 @@ r'''**DEL**'''),
 r'''3,''', r'''
 Module - ROOT 0,0..0,2
   .body[1]
-  0] Expr - 0,0..0,2
-    .value Tuple - 0,0..0,2
-      .elts[1]
-      0] Constant 3 - 0,0..0,1
-      .ctx Load
+   0] Expr - 0,0..0,2
+     .value Tuple - 0,0..0,2
+       .elts[1]
+        0] Constant 3 - 0,0..0,1
+       .ctx Load
 '''),
 
 (140, 'body[0].value', 1, 3, None, {}, ('exec',
@@ -11970,11 +11970,11 @@ r'''**DEL**'''),
 r'''1,''', r'''
 Module - ROOT 0,0..0,2
   .body[1]
-  0] Expr - 0,0..0,2
-    .value Tuple - 0,0..0,2
-      .elts[1]
-      0] Constant 1 - 0,0..0,1
-      .ctx Load
+   0] Expr - 0,0..0,2
+     .value Tuple - 0,0..0,2
+       .elts[1]
+        0] Constant 1 - 0,0..0,1
+       .ctx Load
 '''),
 
 (141, 'body[0].value', 0, 3, None, {}, ('exec',
@@ -11983,9 +11983,9 @@ r'''**DEL**'''),
 r'''()''', r'''
 Module - ROOT 0,0..0,2
   .body[1]
-  0] Expr - 0,0..0,2
-    .value Tuple - 0,0..0,2
-      .ctx Load
+   0] Expr - 0,0..0,2
+     .value Tuple - 0,0..0,2
+       .ctx Load
 '''),
 
 (142, 'body[0].body[0].value.elts[1]', 1, 2, None, {}, ('exec', r'''
@@ -12007,20 +12007,20 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,11
   .body[1]
-  0] If - 0,0..3,11
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,2..3,11
-      .value List - 1,2..3,11
-        .elts[2]
-        0] Constant 1 - 1,3..1,4
-        1] List - 1,7..3,10
-          .elts[3]
-          0] Constant 2 - 2,8..2,9
-          1] Constant 5 - 2,11..2,12
-          2] Constant 4 - 3,8..3,9
+   0] If - 0,0..3,11
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,2..3,11
+        .value List - 1,2..3,11
+          .elts[2]
+           0] Constant 1 - 1,3..1,4
+           1] List - 1,7..3,10
+             .elts[3]
+              0] Constant 2 - 2,8..2,9
+              1] Constant 5 - 2,11..2,12
+              2] Constant 4 - 3,8..3,9
+             .ctx Load
           .ctx Load
-        .ctx Load
 '''),
 
 (143, 'body[0].body[0].value.elts[1]', 2, 3, None, {}, ('exec', r'''
@@ -12045,20 +12045,20 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,9
   .body[1]
-  0] If - 0,0..4,9
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,2..4,9
-      .value List - 1,2..4,9
-        .elts[2]
-        0] Constant 1 - 1,3..1,4
-        1] List - 1,7..4,8
-          .elts[3]
-          0] Constant 2 - 2,8..2,9
-          1] Constant 3 - 3,8..3,9
-          2] Constant 5 - 3,11..3,12
+   0] If - 0,0..4,9
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,2..4,9
+        .value List - 1,2..4,9
+          .elts[2]
+           0] Constant 1 - 1,3..1,4
+           1] List - 1,7..4,8
+             .elts[3]
+              0] Constant 2 - 2,8..2,9
+              1] Constant 3 - 3,8..3,9
+              2] Constant 5 - 3,11..3,12
+             .ctx Load
           .ctx Load
-        .ctx Load
 '''),
 
 (144, 'body[0].body[0].value.elts[1]', 0, 2, None, {}, ('exec', r'''
@@ -12080,19 +12080,19 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,11
   .body[1]
-  0] If - 0,0..3,11
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,2..3,11
-      .value List - 1,2..3,11
-        .elts[2]
-        0] Constant 1 - 1,3..1,4
-        1] List - 1,7..3,10
+   0] If - 0,0..3,11
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,2..3,11
+        .value List - 1,2..3,11
           .elts[2]
-          0] Constant 5 - 2,8..2,9
-          1] Constant 4 - 3,8..3,9
+           0] Constant 1 - 1,3..1,4
+           1] List - 1,7..3,10
+             .elts[2]
+              0] Constant 5 - 2,8..2,9
+              1] Constant 4 - 3,8..3,9
+             .ctx Load
           .ctx Load
-        .ctx Load
 '''),
 
 (145, 'body[0].body[0].value.elts[1]', 0, 3, None, {}, ('exec', r'''
@@ -12115,18 +12115,18 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,9
   .body[1]
-  0] If - 0,0..3,9
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,2..3,9
-      .value List - 1,2..3,9
-        .elts[2]
-        0] Constant 1 - 1,3..1,4
-        1] List - 1,7..3,8
-          .elts[1]
-          0] Constant 5 - 2,8..2,9
+   0] If - 0,0..3,9
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,2..3,9
+        .value List - 1,2..3,9
+          .elts[2]
+           0] Constant 1 - 1,3..1,4
+           1] List - 1,7..3,8
+             .elts[1]
+              0] Constant 5 - 2,8..2,9
+             .ctx Load
           .ctx Load
-        .ctx Load
 '''),
 
 (146, 'body[0].body[0].value.elts[1]', 0, 3, None, {}, ('exec', r'''
@@ -12152,19 +12152,19 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,5
   .body[1]
-  0] If - 0,0..4,5
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,2..4,5
-      .value List - 1,2..4,5
-        .elts[3]
-        0] Constant 1 - 1,3..1,4
-        1] List - 1,7..3,8
-          .elts[1]
-          0] Constant 5 - 2,8..2,9
+   0] If - 0,0..4,5
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,2..4,5
+        .value List - 1,2..4,5
+          .elts[3]
+           0] Constant 1 - 1,3..1,4
+           1] List - 1,7..3,8
+             .elts[1]
+              0] Constant 5 - 2,8..2,9
+             .ctx Load
+           2] Constant 6 - 4,3..4,4
           .ctx Load
-        2] Constant 6 - 4,3..4,4
-        .ctx Load
 '''),
 
 (147, 'body[0].body[0].value.elts[1]', 1, 3, None, {}, ('exec', r'''
@@ -12192,20 +12192,20 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..5,5
   .body[1]
-  0] If - 0,0..5,5
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,2..5,5
-      .value List - 1,2..5,5
-        .elts[3]
-        0] Constant 1 - 1,3..1,4
-        1] List - 1,7..4,5
-          .elts[2]
-          0] Constant 2 - 2,4..2,5
-          1] Constant 5 - 3,4..3,5
+   0] If - 0,0..5,5
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,2..5,5
+        .value List - 1,2..5,5
+          .elts[3]
+           0] Constant 1 - 1,3..1,4
+           1] List - 1,7..4,5
+             .elts[2]
+              0] Constant 2 - 2,4..2,5
+              1] Constant 5 - 3,4..3,5
+             .ctx Load
+           2] Constant 6 - 5,3..5,4
           .ctx Load
-        2] Constant 6 - 5,3..5,4
-        .ctx Load
 '''),
 
 (148, 'body[0].body[0].value.elts[1]', 1, 2, None, {}, ('exec', r'''
@@ -12227,23 +12227,23 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,13
   .body[1]
-  0] If - 0,0..3,13
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,2..3,13
-      .value List - 1,2..3,13
-        .elts[2]
-        0] Constant 1 - 1,3..1,4
-        1] Dict - 1,7..3,12
-          .keys[3]
-          0] Constant 2 - 2,8..2,9
-          1] Constant 5 - 2,13..2,14
-          2] Constant 4 - 3,8..3,9
-          .values[3]
-          0] Constant 2 - 2,10..2,11
-          1] Constant 5 - 2,15..2,16
-          2] Constant 4 - 3,10..3,11
-        .ctx Load
+   0] If - 0,0..3,13
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,2..3,13
+        .value List - 1,2..3,13
+          .elts[2]
+           0] Constant 1 - 1,3..1,4
+           1] Dict - 1,7..3,12
+             .keys[3]
+              0] Constant 2 - 2,8..2,9
+              1] Constant 5 - 2,13..2,14
+              2] Constant 4 - 3,8..3,9
+             .values[3]
+              0] Constant 2 - 2,10..2,11
+              1] Constant 5 - 2,15..2,16
+              2] Constant 4 - 3,10..3,11
+          .ctx Load
 '''),
 
 (149, 'body[0].body[0].value.elts[1]', 2, 3, None, {}, ('exec', r'''
@@ -12268,23 +12268,23 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,9
   .body[1]
-  0] If - 0,0..4,9
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,2..4,9
-      .value List - 1,2..4,9
-        .elts[2]
-        0] Constant 1 - 1,3..1,4
-        1] Dict - 1,7..4,8
-          .keys[3]
-          0] Constant 2 - 2,8..2,9
-          1] Constant 3 - 3,8..3,9
-          2] Constant 5 - 3,13..3,14
-          .values[3]
-          0] Constant 2 - 2,10..2,11
-          1] Constant 3 - 3,10..3,11
-          2] Constant 5 - 3,15..3,16
-        .ctx Load
+   0] If - 0,0..4,9
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,2..4,9
+        .value List - 1,2..4,9
+          .elts[2]
+           0] Constant 1 - 1,3..1,4
+           1] Dict - 1,7..4,8
+             .keys[3]
+              0] Constant 2 - 2,8..2,9
+              1] Constant 3 - 3,8..3,9
+              2] Constant 5 - 3,13..3,14
+             .values[3]
+              0] Constant 2 - 2,10..2,11
+              1] Constant 3 - 3,10..3,11
+              2] Constant 5 - 3,15..3,16
+          .ctx Load
 '''),
 
 (150, 'body[0].body[0].value.elts[1]', 0, 2, None, {}, ('exec', r'''
@@ -12306,21 +12306,21 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,13
   .body[1]
-  0] If - 0,0..3,13
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,2..3,13
-      .value List - 1,2..3,13
-        .elts[2]
-        0] Constant 1 - 1,3..1,4
-        1] Dict - 1,7..3,12
-          .keys[2]
-          0] Constant 5 - 2,8..2,9
-          1] Constant 4 - 3,8..3,9
-          .values[2]
-          0] Constant 5 - 2,10..2,11
-          1] Constant 4 - 3,10..3,11
-        .ctx Load
+   0] If - 0,0..3,13
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,2..3,13
+        .value List - 1,2..3,13
+          .elts[2]
+           0] Constant 1 - 1,3..1,4
+           1] Dict - 1,7..3,12
+             .keys[2]
+              0] Constant 5 - 2,8..2,9
+              1] Constant 4 - 3,8..3,9
+             .values[2]
+              0] Constant 5 - 2,10..2,11
+              1] Constant 4 - 3,10..3,11
+          .ctx Load
 '''),
 
 (151, 'body[0].body[0].value.elts[1]', 0, 3, None, {}, ('exec', r'''
@@ -12343,19 +12343,19 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,9
   .body[1]
-  0] If - 0,0..3,9
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,2..3,9
-      .value List - 1,2..3,9
-        .elts[2]
-        0] Constant 1 - 1,3..1,4
-        1] Dict - 1,7..3,8
-          .keys[1]
-          0] Constant 5 - 2,8..2,9
-          .values[1]
-          0] Constant 5 - 2,10..2,11
-        .ctx Load
+   0] If - 0,0..3,9
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,2..3,9
+        .value List - 1,2..3,9
+          .elts[2]
+           0] Constant 1 - 1,3..1,4
+           1] Dict - 1,7..3,8
+             .keys[1]
+              0] Constant 5 - 2,8..2,9
+             .values[1]
+              0] Constant 5 - 2,10..2,11
+          .ctx Load
 '''),
 
 (152, 'body[0].body[0].value.elts[1]', 0, 3, None, {}, ('exec', r'''
@@ -12381,20 +12381,20 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,5
   .body[1]
-  0] If - 0,0..4,5
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,2..4,5
-      .value List - 1,2..4,5
-        .elts[3]
-        0] Constant 1 - 1,3..1,4
-        1] Dict - 1,7..3,8
-          .keys[1]
-          0] Constant 5 - 2,8..2,9
-          .values[1]
-          0] Constant 5 - 2,10..2,11
-        2] Constant 6 - 4,3..4,4
-        .ctx Load
+   0] If - 0,0..4,5
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,2..4,5
+        .value List - 1,2..4,5
+          .elts[3]
+           0] Constant 1 - 1,3..1,4
+           1] Dict - 1,7..3,8
+             .keys[1]
+              0] Constant 5 - 2,8..2,9
+             .values[1]
+              0] Constant 5 - 2,10..2,11
+           2] Constant 6 - 4,3..4,4
+          .ctx Load
 '''),
 
 (153, 'body[0].body[0].value.elts[1]', 1, 3, None, {}, ('exec', r'''
@@ -12422,22 +12422,22 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..5,5
   .body[1]
-  0] If - 0,0..5,5
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,2..5,5
-      .value List - 1,2..5,5
-        .elts[3]
-        0] Constant 1 - 1,3..1,4
-        1] Dict - 1,7..4,5
-          .keys[2]
-          0] Constant 2 - 2,4..2,5
-          1] Constant 5 - 3,4..3,5
-          .values[2]
-          0] Constant 2 - 2,6..2,7
-          1] Constant 5 - 3,6..3,7
-        2] Constant 6 - 5,3..5,4
-        .ctx Load
+   0] If - 0,0..5,5
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,2..5,5
+        .value List - 1,2..5,5
+          .elts[3]
+           0] Constant 1 - 1,3..1,4
+           1] Dict - 1,7..4,5
+             .keys[2]
+              0] Constant 2 - 2,4..2,5
+              1] Constant 5 - 3,4..3,5
+             .values[2]
+              0] Constant 2 - 2,6..2,7
+              1] Constant 5 - 3,6..3,7
+           2] Constant 6 - 5,3..5,4
+          .ctx Load
 '''),
 
 (154, 'body[0].value', 1, 2, None, {}, ('exec', r'''
@@ -12455,12 +12455,12 @@ r'''**DEL**'''), r'''
 ''', r'''
 Module - ROOT 0,0..3,1
   .body[1]
-  0] Expr - 0,0..3,1
-    .value List - 0,0..3,1
-      .elts[2]
-      0] Constant 1 - 1,4..1,5
-      1] Constant 3 - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..3,1
+     .value List - 0,0..3,1
+       .elts[2]
+        0] Constant 1 - 1,4..1,5
+        1] Constant 3 - 2,4..2,5
+       .ctx Load
 '''),
 
 (155, 'body[0].value', 1, 2, None, {}, ('exec', r'''
@@ -12488,14 +12488,14 @@ Module - ROOT 0,0..3,1
 ''', r'''
 Module - ROOT 0,0..5,1
   .body[1]
-  0] Expr - 0,0..5,1
-    .value List - 0,0..5,1
-      .elts[4]
-      0] Constant 1 - 1,4..1,5
-      1] Name 'e' Load - 2,4..2,5
-      2] Constant None - 3,4..3,8
-      3] Constant 3 - 4,4..4,5
-      .ctx Load
+   0] Expr - 0,0..5,1
+     .value List - 0,0..5,1
+       .elts[4]
+        0] Constant 1 - 1,4..1,5
+        1] Name 'e' Load - 2,4..2,5
+        2] Constant None - 3,4..3,8
+        3] Constant 3 - 4,4..4,5
+       .ctx Load
 '''),
 
 (156, 'body[0].value.slice', 1, 2, None, {}, ('exec',
@@ -12504,23 +12504,23 @@ r'''()'''),
 r'''Tuple[(r & ((1 << 32) - 1)),]''', r'''
 Module - ROOT 0,0..0,29
   .body[1]
-  0] Expr - 0,0..0,29
-    .value Subscript - 0,0..0,29
-      .value Name 'Tuple' Load - 0,0..0,5
-      .slice Tuple - 0,6..0,28
-        .elts[1]
-        0] BinOp - 0,7..0,26
-          .left Name 'r' Load - 0,7..0,8
-          .op BitAnd - 0,9..0,10
-          .right BinOp - 0,12..0,25
-            .left BinOp - 0,13..0,20
-              .left Constant 1 - 0,13..0,14
-              .op LShift - 0,15..0,17
-              .right Constant 32 - 0,18..0,20
-            .op Sub - 0,22..0,23
-            .right Constant 1 - 0,24..0,25
-        .ctx Load
-      .ctx Load
+   0] Expr - 0,0..0,29
+     .value Subscript - 0,0..0,29
+       .value Name 'Tuple' Load - 0,0..0,5
+       .slice Tuple - 0,6..0,28
+         .elts[1]
+          0] BinOp - 0,7..0,26
+            .left Name 'r' Load - 0,7..0,8
+            .op BitAnd - 0,9..0,10
+            .right BinOp - 0,12..0,25
+              .left BinOp - 0,13..0,20
+                .left Constant 1 - 0,13..0,14
+                .op LShift - 0,15..0,17
+                .right Constant 32 - 0,18..0,20
+              .op Sub - 0,22..0,23
+              .right Constant 1 - 0,24..0,25
+         .ctx Load
+       .ctx Load
 '''),
 
 (157, 'body[0].cases[0].pattern.patterns[0].patterns[0].patterns[0].patterns[0].pattern', 0, 2, None, {}, ('exec', r'''
@@ -12532,40 +12532,40 @@ r'''**DEL**'''),
 'match a:\n    case list([({-0-0j: \n                  (g, b) | (1) as z},)]): pass', r'''
 Module - ROOT 0,0..2,46
   .body[1]
-  0] Match - 0,0..2,46
-    .subject Name 'a' Load - 0,6..0,7
-    .cases[1]
-    0] match_case - 1,4..2,46
-      .pattern MatchClass - 1,9..2,40
-        .cls Name 'list' Load - 1,9..1,13
-        .patterns[1]
-        0] MatchSequence - 1,14..2,39
+   0] Match - 0,0..2,46
+     .subject Name 'a' Load - 0,6..0,7
+     .cases[1]
+      0] match_case - 1,4..2,46
+        .pattern MatchClass - 1,9..2,40
+          .cls Name 'list' Load - 1,9..1,13
           .patterns[1]
-          0] MatchSequence - 1,15..2,38
-            .patterns[1]
-            0] MatchMapping - 1,16..2,36
-              .keys[1]
-              0] BinOp - 1,17..1,22
-                .left UnaryOp - 1,17..1,19
-                  .op USub - 1,17..1,18
-                  .operand Constant 0 - 1,18..1,19
-                .op Sub - 1,19..1,20
-                .right Constant 0j - 1,20..1,22
-              .patterns[1]
-              0] MatchAs - 2,18..2,35
-                .pattern MatchOr - 2,18..2,30
-                  .patterns[2]
-                  0] MatchSequence - 2,18..2,24
-                    .patterns[2]
-                    0] MatchAs - 2,19..2,20
-                      .name 'g'
-                    1] MatchAs - 2,22..2,23
-                      .name 'b'
-                  1] MatchValue - 2,28..2,29
-                    .value Constant 1 - 2,28..2,29
-                .name 'z'
-      .body[1]
-      0] Pass - 2,42..2,46
+           0] MatchSequence - 1,14..2,39
+             .patterns[1]
+              0] MatchSequence - 1,15..2,38
+                .patterns[1]
+                 0] MatchMapping - 1,16..2,36
+                   .keys[1]
+                    0] BinOp - 1,17..1,22
+                      .left UnaryOp - 1,17..1,19
+                        .op USub - 1,17..1,18
+                        .operand Constant 0 - 1,18..1,19
+                      .op Sub - 1,19..1,20
+                      .right Constant 0j - 1,20..1,22
+                   .patterns[1]
+                    0] MatchAs - 2,18..2,35
+                      .pattern MatchOr - 2,18..2,30
+                        .patterns[2]
+                         0] MatchSequence - 2,18..2,24
+                           .patterns[2]
+                            0] MatchAs - 2,19..2,20
+                              .name 'g'
+                            1] MatchAs - 2,22..2,23
+                              .name 'b'
+                         1] MatchValue - 2,28..2,29
+                           .value Constant 1 - 2,28..2,29
+                      .name 'z'
+        .body[1]
+         0] Pass - 2,42..2,46
 '''),
 ],
 
@@ -12577,15 +12577,15 @@ r'''*z'''),
 r'''(1, *z, 3)''', r'''
 Module - ROOT 0,0..0,10
   .body[1]
-  0] Expr - 0,0..0,10
-    .value Tuple - 0,0..0,10
-      .elts[3]
-      0] Constant 1 - 0,1..0,2
-      1] Starred - 0,4..0,6
-        .value Name 'z' Load - 0,5..0,6
-        .ctx Load
-      2] Constant 3 - 0,8..0,9
-      .ctx Load
+   0] Expr - 0,0..0,10
+     .value Tuple - 0,0..0,10
+       .elts[3]
+        0] Constant 1 - 0,1..0,2
+        1] Starred - 0,4..0,6
+          .value Name 'z' Load - 0,5..0,6
+          .ctx Load
+        2] Constant 3 - 0,8..0,9
+       .ctx Load
 '''),
 
 (1, 'body[0].value', 0, 3, None, {'raw': True}, ('exec',
@@ -12594,13 +12594,13 @@ r'''*z,'''),
 r'''(*z,)''', r'''
 Module - ROOT 0,0..0,5
   .body[1]
-  0] Expr - 0,0..0,5
-    .value Tuple - 0,0..0,5
-      .elts[1]
-      0] Starred - 0,1..0,3
-        .value Name 'z' Load - 0,2..0,3
-        .ctx Load
-      .ctx Load
+   0] Expr - 0,0..0,5
+     .value Tuple - 0,0..0,5
+       .elts[1]
+        0] Starred - 0,1..0,3
+          .value Name 'z' Load - 0,2..0,3
+          .ctx Load
+       .ctx Load
 '''),
 
 (2, 'body[0].value', 1, 2, None, {'raw': True}, ('exec',
@@ -12609,15 +12609,15 @@ r'''*z'''),
 r'''1, *z, 3''', r'''
 Module - ROOT 0,0..0,8
   .body[1]
-  0] Expr - 0,0..0,8
-    .value Tuple - 0,0..0,8
-      .elts[3]
-      0] Constant 1 - 0,0..0,1
-      1] Starred - 0,3..0,5
-        .value Name 'z' Load - 0,4..0,5
-        .ctx Load
-      2] Constant 3 - 0,7..0,8
-      .ctx Load
+   0] Expr - 0,0..0,8
+     .value Tuple - 0,0..0,8
+       .elts[3]
+        0] Constant 1 - 0,0..0,1
+        1] Starred - 0,3..0,5
+          .value Name 'z' Load - 0,4..0,5
+          .ctx Load
+        2] Constant 3 - 0,7..0,8
+       .ctx Load
 '''),
 
 (3, 'body[0].value', 0, 3, None, {'raw': True}, ('exec',
@@ -12626,13 +12626,13 @@ r'''*z,'''),
 r'''*z,''', r'''
 Module - ROOT 0,0..0,3
   .body[1]
-  0] Expr - 0,0..0,3
-    .value Tuple - 0,0..0,3
-      .elts[1]
-      0] Starred - 0,0..0,2
-        .value Name 'z' Load - 0,1..0,2
-        .ctx Load
-      .ctx Load
+   0] Expr - 0,0..0,3
+     .value Tuple - 0,0..0,3
+       .elts[1]
+        0] Starred - 0,0..0,2
+          .value Name 'z' Load - 0,1..0,2
+          .ctx Load
+       .ctx Load
 '''),
 
 (4, 'body[0].value', 1, 2, None, {'raw': True}, ('exec',
@@ -12641,16 +12641,16 @@ r'''**z'''),
 r'''{a: b, **z, e: f}''', r'''
 Module - ROOT 0,0..0,17
   .body[1]
-  0] Expr - 0,0..0,17
-    .value Dict - 0,0..0,17
-      .keys[3]
-      0] Name 'a' Load - 0,1..0,2
-      1] None
-      2] Name 'e' Load - 0,12..0,13
-      .values[3]
-      0] Name 'b' Load - 0,4..0,5
-      1] Name 'z' Load - 0,9..0,10
-      2] Name 'f' Load - 0,15..0,16
+   0] Expr - 0,0..0,17
+     .value Dict - 0,0..0,17
+       .keys[3]
+        0] Name 'a' Load - 0,1..0,2
+        1] None
+        2] Name 'e' Load - 0,12..0,13
+       .values[3]
+        0] Name 'b' Load - 0,4..0,5
+        1] Name 'z' Load - 0,9..0,10
+        2] Name 'f' Load - 0,15..0,16
 '''),
 
 (5, 'body[0].value', 0, 3, None, {'raw': True}, ('exec',
@@ -12659,12 +12659,12 @@ r'''**z'''),
 r'''{**z}''', r'''
 Module - ROOT 0,0..0,5
   .body[1]
-  0] Expr - 0,0..0,5
-    .value Dict - 0,0..0,5
-      .keys[1]
-      0] None
-      .values[1]
-      0] Name 'z' Load - 0,3..0,4
+   0] Expr - 0,0..0,5
+     .value Dict - 0,0..0,5
+       .keys[1]
+        0] None
+       .values[1]
+        0] Name 'z' Load - 0,3..0,4
 '''),
 
 (6, 'body[0].value', 1, 3, None, {'raw': True}, ('exec',
@@ -12673,16 +12673,16 @@ r'''f: g'''),
 r'''{a: b, f: g, **e}''', r'''
 Module - ROOT 0,0..0,17
   .body[1]
-  0] Expr - 0,0..0,17
-    .value Dict - 0,0..0,17
-      .keys[3]
-      0] Name 'a' Load - 0,1..0,2
-      1] Name 'f' Load - 0,7..0,8
-      2] None
-      .values[3]
-      0] Name 'b' Load - 0,4..0,5
-      1] Name 'g' Load - 0,10..0,11
-      2] Name 'e' Load - 0,15..0,16
+   0] Expr - 0,0..0,17
+     .value Dict - 0,0..0,17
+       .keys[3]
+        0] Name 'a' Load - 0,1..0,2
+        1] Name 'f' Load - 0,7..0,8
+        2] None
+       .values[3]
+        0] Name 'b' Load - 0,4..0,5
+        1] Name 'g' Load - 0,10..0,11
+        2] Name 'e' Load - 0,15..0,16
 '''),
 
 (7, 'body[0]', 1, 3, None, {'raw': True}, ('exec',
@@ -12691,10 +12691,10 @@ r'''z'''),
 r'''del a, z''', r'''
 Module - ROOT 0,0..0,8
   .body[1]
-  0] Delete - 0,0..0,8
-    .targets[2]
-    0] Name 'a' Del - 0,4..0,5
-    1] Name 'z' Del - 0,7..0,8
+   0] Delete - 0,0..0,8
+     .targets[2]
+      0] Name 'a' Del - 0,4..0,5
+      1] Name 'z' Del - 0,7..0,8
 '''),
 
 (8, 'body[0]', 1, 3, 'targets', {'raw': True}, ('exec',
@@ -12703,11 +12703,11 @@ r'''z'''),
 r'''a = z = d''', r'''
 Module - ROOT 0,0..0,9
   .body[1]
-  0] Assign - 0,0..0,9
-    .targets[2]
-    0] Name 'a' Store - 0,0..0,1
-    1] Name 'z' Store - 0,4..0,5
-    .value Name 'd' Load - 0,8..0,9
+   0] Assign - 0,0..0,9
+     .targets[2]
+      0] Name 'a' Store - 0,0..0,1
+      1] Name 'z' Store - 0,4..0,5
+     .value Name 'd' Load - 0,8..0,9
 '''),
 
 (9, 'body[0]', 1, 3, None, {'raw': True}, ('exec',
@@ -12716,13 +12716,13 @@ r'''z as xyz'''),
 r'''import a, z as xyz''', r'''
 Module - ROOT 0,0..0,18
   .body[1]
-  0] Import - 0,0..0,18
-    .names[2]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 0,10..0,18
-      .name 'z'
-      .asname 'xyz'
+   0] Import - 0,0..0,18
+     .names[2]
+      0] alias - 0,7..0,8
+        .name 'a'
+      1] alias - 0,10..0,18
+        .name 'z'
+        .asname 'xyz'
 '''),
 
 (10, 'body[0]', 1, 3, None, {'raw': True}, ('exec',
@@ -12731,15 +12731,15 @@ r'''z as xyz'''),
 r'''from mod import a, z as xyz''', r'''
 Module - ROOT 0,0..0,27
   .body[1]
-  0] ImportFrom - 0,0..0,27
-    .module 'mod'
-    .names[2]
-    0] alias - 0,16..0,17
-      .name 'a'
-    1] alias - 0,19..0,27
-      .name 'z'
-      .asname 'xyz'
-    .level 0
+   0] ImportFrom - 0,0..0,27
+     .module 'mod'
+     .names[2]
+      0] alias - 0,16..0,17
+        .name 'a'
+      1] alias - 0,19..0,27
+        .name 'z'
+        .asname 'xyz'
+     .level 0
 '''),
 
 (11, 'body[0]', 1, 3, 'items', {'raw': True}, ('exec',
@@ -12748,16 +12748,16 @@ r'''z as xyz'''),
 r'''with a as a, z as xyz: pass''', r'''
 Module - ROOT 0,0..0,27
   .body[1]
-  0] With - 0,0..0,27
-    .items[2]
-    0] withitem - 0,5..0,11
-      .context_expr Name 'a' Load - 0,5..0,6
-      .optional_vars Name 'a' Store - 0,10..0,11
-    1] withitem - 0,13..0,21
-      .context_expr Name 'z' Load - 0,13..0,14
-      .optional_vars Name 'xyz' Store - 0,18..0,21
-    .body[1]
-    0] Pass - 0,23..0,27
+   0] With - 0,0..0,27
+     .items[2]
+      0] withitem - 0,5..0,11
+        .context_expr Name 'a' Load - 0,5..0,6
+        .optional_vars Name 'a' Store - 0,10..0,11
+      1] withitem - 0,13..0,21
+        .context_expr Name 'z' Load - 0,13..0,14
+        .optional_vars Name 'xyz' Store - 0,18..0,21
+     .body[1]
+      0] Pass - 0,23..0,27
 '''),
 
 (12, 'body[0].value', 1, 3, None, {'raw': True}, ('exec',
@@ -12766,12 +12766,12 @@ r'''z'''),
 r'''a and z''', r'''
 Module - ROOT 0,0..0,7
   .body[1]
-  0] Expr - 0,0..0,7
-    .value BoolOp - 0,0..0,7
-      .op And
-      .values[2]
-      0] Name 'a' Load - 0,0..0,1
-      1] Name 'z' Load - 0,6..0,7
+   0] Expr - 0,0..0,7
+     .value BoolOp - 0,0..0,7
+       .op And
+       .values[2]
+        0] Name 'a' Load - 0,0..0,1
+        1] Name 'z' Load - 0,6..0,7
 '''),
 
 (13, 'body[0].value', 0, 3, 'comparators', {'raw': True}, ('exec',
@@ -12780,15 +12780,15 @@ r'''x < y'''),
 r'''a < x < y''', r'''
 Module - ROOT 0,0..0,9
   .body[1]
-  0] Expr - 0,0..0,9
-    .value Compare - 0,0..0,9
-      .left Name 'a' Load - 0,0..0,1
-      .ops[2]
-      0] Lt - 0,2..0,3
-      1] Lt - 0,6..0,7
-      .comparators[2]
-      0] Name 'x' Load - 0,4..0,5
-      1] Name 'y' Load - 0,8..0,9
+   0] Expr - 0,0..0,9
+     .value Compare - 0,0..0,9
+       .left Name 'a' Load - 0,0..0,1
+       .ops[2]
+        0] Lt - 0,2..0,3
+        1] Lt - 0,6..0,7
+       .comparators[2]
+        0] Name 'x' Load - 0,4..0,5
+        1] Name 'y' Load - 0,8..0,9
 '''),
 
 (14, 'body[0].value', 1, 3, None, {'raw': True}, ('exec',
@@ -12797,20 +12797,20 @@ r'''for z in z()'''),
 r'''[a for a in a() for z in z()]''', r'''
 Module - ROOT 0,0..0,29
   .body[1]
-  0] Expr - 0,0..0,29
-    .value ListComp - 0,0..0,29
-      .elt Name 'a' Load - 0,1..0,2
-      .generators[2]
-      0] comprehension - 0,3..0,15
-        .target Name 'a' Store - 0,7..0,8
-        .iter Call - 0,12..0,15
-          .func Name 'a' Load - 0,12..0,13
-        .is_async 0
-      1] comprehension - 0,16..0,28
-        .target Name 'z' Store - 0,20..0,21
-        .iter Call - 0,25..0,28
-          .func Name 'z' Load - 0,25..0,26
-        .is_async 0
+   0] Expr - 0,0..0,29
+     .value ListComp - 0,0..0,29
+       .elt Name 'a' Load - 0,1..0,2
+       .generators[2]
+        0] comprehension - 0,3..0,15
+          .target Name 'a' Store - 0,7..0,8
+          .iter Call - 0,12..0,15
+            .func Name 'a' Load - 0,12..0,13
+          .is_async 0
+        1] comprehension - 0,16..0,28
+          .target Name 'z' Store - 0,20..0,21
+          .iter Call - 0,25..0,28
+            .func Name 'z' Load - 0,25..0,26
+          .is_async 0
 '''),
 
 (15, 'body[0].value.generators[0]', 1, 3, None, {'raw': True}, ('exec',
@@ -12819,18 +12819,18 @@ r'''if z'''),
 r'''[a for a in a() if a if z]''', r'''
 Module - ROOT 0,0..0,26
   .body[1]
-  0] Expr - 0,0..0,26
-    .value ListComp - 0,0..0,26
-      .elt Name 'a' Load - 0,1..0,2
-      .generators[1]
-      0] comprehension - 0,3..0,25
-        .target Name 'a' Store - 0,7..0,8
-        .iter Call - 0,12..0,15
-          .func Name 'a' Load - 0,12..0,13
-        .ifs[2]
-        0] Name 'a' Load - 0,19..0,20
-        1] Name 'z' Load - 0,24..0,25
-        .is_async 0
+   0] Expr - 0,0..0,26
+     .value ListComp - 0,0..0,26
+       .elt Name 'a' Load - 0,1..0,2
+       .generators[1]
+        0] comprehension - 0,3..0,25
+          .target Name 'a' Store - 0,7..0,8
+          .iter Call - 0,12..0,15
+            .func Name 'a' Load - 0,12..0,13
+          .ifs[2]
+           0] Name 'a' Load - 0,19..0,20
+           1] Name 'z' Load - 0,24..0,25
+          .is_async 0
 '''),
 
 (16, 'body[0].value', 1, 3, None, {'raw': True}, ('exec',
@@ -12839,12 +12839,12 @@ r'''z'''),
 r'''f(a, z)''', r'''
 Module - ROOT 0,0..0,7
   .body[1]
-  0] Expr - 0,0..0,7
-    .value Call - 0,0..0,7
-      .func Name 'f' Load - 0,0..0,1
-      .args[2]
-      0] Name 'a' Load - 0,2..0,3
-      1] Name 'z' Load - 0,5..0,6
+   0] Expr - 0,0..0,7
+     .value Call - 0,0..0,7
+       .func Name 'f' Load - 0,0..0,1
+       .args[2]
+        0] Name 'a' Load - 0,2..0,3
+        1] Name 'z' Load - 0,5..0,6
 '''),
 
 (17, 'body[0].value', 1, 3, None, {'raw': True}, ('exec',
@@ -12853,14 +12853,14 @@ r'''**z'''),
 r'''f(a, **z)''', r'''
 Module - ROOT 0,0..0,9
   .body[1]
-  0] Expr - 0,0..0,9
-    .value Call - 0,0..0,9
-      .func Name 'f' Load - 0,0..0,1
-      .args[1]
-      0] Name 'a' Load - 0,2..0,3
-      .keywords[1]
-      0] keyword - 0,5..0,8
-        .value Name 'z' Load - 0,7..0,8
+   0] Expr - 0,0..0,9
+     .value Call - 0,0..0,9
+       .func Name 'f' Load - 0,0..0,1
+       .args[1]
+        0] Name 'a' Load - 0,2..0,3
+       .keywords[1]
+        0] keyword - 0,5..0,8
+          .value Name 'z' Load - 0,7..0,8
 '''),
 
 (18, 'body[0]', 1, 3, 'decorator_list', {'raw': True}, ('exec', r'''
@@ -12876,13 +12876,13 @@ def f(): pass
 ''', r'''
 Module - ROOT 0,0..2,13
   .body[1]
-  0] FunctionDef - 2,0..2,13
-    .name 'f'
-    .body[1]
-    0] Pass - 2,9..2,13
-    .decorator_list[2]
-    0] Name 'a' Load - 0,1..0,2
-    1] Name 'z' Load - 1,1..1,2
+   0] FunctionDef - 2,0..2,13
+     .name 'f'
+     .body[1]
+      0] Pass - 2,9..2,13
+     .decorator_list[2]
+      0] Name 'a' Load - 0,1..0,2
+      1] Name 'z' Load - 1,1..1,2
 '''),
 
 (19, 'body[0].cases[0].pattern', 1, 3, None, {'raw': True}, ('exec', r'''
@@ -12895,18 +12895,18 @@ match a:
 ''', r'''
 Module - ROOT 0,0..1,20
   .body[1]
-  0] Match - 0,0..1,20
-    .subject Name 'a' Load - 0,6..0,7
-    .cases[1]
-    0] match_case - 1,2..1,20
-      .pattern MatchSequence - 1,7..1,14
-        .patterns[2]
-        0] MatchAs - 1,8..1,9
-          .name 'a'
-        1] MatchStar - 1,11..1,13
-          .name 'z'
-      .body[1]
-      0] Pass - 1,16..1,20
+   0] Match - 0,0..1,20
+     .subject Name 'a' Load - 0,6..0,7
+     .cases[1]
+      0] match_case - 1,2..1,20
+        .pattern MatchSequence - 1,7..1,14
+          .patterns[2]
+           0] MatchAs - 1,8..1,9
+             .name 'a'
+           1] MatchStar - 1,11..1,13
+             .name 'z'
+        .body[1]
+         0] Pass - 1,16..1,20
 '''),
 
 (20, 'body[0].cases[0].pattern', 1, 3, None, {'raw': True}, ('exec', r'''
@@ -12919,18 +12919,18 @@ match a:
 ''', r'''
 Module - ROOT 0,0..1,18
   .body[1]
-  0] Match - 0,0..1,18
-    .subject Name 'a' Load - 0,6..0,7
-    .cases[1]
-    0] match_case - 1,2..1,18
-      .pattern MatchOr - 1,7..1,12
-        .patterns[2]
-        0] MatchAs - 1,7..1,8
-          .name 'a'
-        1] MatchAs - 1,11..1,12
-          .name 'z'
-      .body[1]
-      0] Pass - 1,14..1,18
+   0] Match - 0,0..1,18
+     .subject Name 'a' Load - 0,6..0,7
+     .cases[1]
+      0] match_case - 1,2..1,18
+        .pattern MatchOr - 1,7..1,12
+          .patterns[2]
+           0] MatchAs - 1,7..1,8
+             .name 'a'
+           1] MatchAs - 1,11..1,12
+             .name 'z'
+        .body[1]
+         0] Pass - 1,14..1,18
 '''),
 
 (21, 'body[0].cases[0].pattern', 1, 3, None, {'raw': True}, ('exec', r'''
@@ -12943,19 +12943,19 @@ match a:
 ''', r'''
 Module - ROOT 0,0..1,26
   .body[1]
-  0] Match - 0,0..1,26
-    .subject Name 'a' Load - 0,6..0,7
-    .cases[1]
-    0] match_case - 1,2..1,26
-      .pattern MatchMapping - 1,7..1,20
-        .keys[1]
-        0] Constant 'a' - 1,8..1,11
-        .patterns[1]
-        0] MatchAs - 1,13..1,14
-          .name 'a'
-        .rest 'z'
-      .body[1]
-      0] Pass - 1,22..1,26
+   0] Match - 0,0..1,26
+     .subject Name 'a' Load - 0,6..0,7
+     .cases[1]
+      0] match_case - 1,2..1,26
+        .pattern MatchMapping - 1,7..1,20
+          .keys[1]
+           0] Constant 'a' - 1,8..1,11
+          .patterns[1]
+           0] MatchAs - 1,13..1,14
+             .name 'a'
+          .rest 'z'
+        .body[1]
+         0] Pass - 1,22..1,26
 '''),
 
 (22, 'body[0].args', 0, 1, 'args', {'raw': True}, ('exec',
@@ -12964,14 +12964,14 @@ r'''b'''),
 r'''def f(b): pass''', r'''
 Module - ROOT 0,0..0,14
   .body[1]
-  0] FunctionDef - 0,0..0,14
-    .name 'f'
-    .args arguments - 0,6..0,7
-      .args[1]
-      0] arg - 0,6..0,7
-        .arg 'b'
-    .body[1]
-    0] Pass - 0,10..0,14
+   0] FunctionDef - 0,0..0,14
+     .name 'f'
+     .args arguments - 0,6..0,7
+       .args[1]
+        0] arg - 0,6..0,7
+          .arg 'b'
+     .body[1]
+      0] Pass - 0,10..0,14
 '''),
 
 (23, 'body[0].args', 0, 1, 'args', {'raw': True}, ('exec',
@@ -12980,10 +12980,10 @@ r''''''),
 r'''def f(): pass''', r'''
 Module - ROOT 0,0..0,13
   .body[1]
-  0] FunctionDef - 0,0..0,13
-    .name 'f'
-    .body[1]
-    0] Pass - 0,9..0,13
+   0] FunctionDef - 0,0..0,13
+     .name 'f'
+     .body[1]
+      0] Pass - 0,9..0,13
 '''),
 
 (24, 'body[0].value', 0, 1, 'args', {'raw': True}, ('exec',
@@ -12992,20 +12992,20 @@ r'''(i for i in range(5))'''),
 r'''f((i for i in range(5)))''', r'''
 Module - ROOT 0,0..0,24
   .body[1]
-  0] Expr - 0,0..0,24
-    .value Call - 0,0..0,24
-      .func Name 'f' Load - 0,0..0,1
-      .args[1]
-      0] GeneratorExp - 0,2..0,23
-        .elt Name 'i' Load - 0,3..0,4
-        .generators[1]
-        0] comprehension - 0,5..0,22
-          .target Name 'i' Store - 0,9..0,10
-          .iter Call - 0,14..0,22
-            .func Name 'range' Load - 0,14..0,19
-            .args[1]
-            0] Constant 5 - 0,20..0,21
-          .is_async 0
+   0] Expr - 0,0..0,24
+     .value Call - 0,0..0,24
+       .func Name 'f' Load - 0,0..0,1
+       .args[1]
+        0] GeneratorExp - 0,2..0,23
+          .elt Name 'i' Load - 0,3..0,4
+          .generators[1]
+           0] comprehension - 0,5..0,22
+             .target Name 'i' Store - 0,9..0,10
+             .iter Call - 0,14..0,22
+               .func Name 'range' Load - 0,14..0,19
+               .args[1]
+                0] Constant 5 - 0,20..0,21
+             .is_async 0
 '''),
 
 (25, 'body[0].value', 1, 3, None, {'raw': True}, ('exec',
@@ -13014,14 +13014,14 @@ r'''**z'''),
 r'''{1: 2, **z}''', r'''
 Module - ROOT 0,0..0,11
   .body[1]
-  0] Expr - 0,0..0,11
-    .value Dict - 0,0..0,11
-      .keys[2]
-      0] Constant 1 - 0,1..0,2
-      1] None
-      .values[2]
-      0] Constant 2 - 0,4..0,5
-      1] Name 'z' Load - 0,9..0,10
+   0] Expr - 0,0..0,11
+     .value Dict - 0,0..0,11
+       .keys[2]
+        0] Constant 1 - 0,1..0,2
+        1] None
+       .values[2]
+        0] Constant 2 - 0,4..0,5
+        1] Name 'z' Load - 0,9..0,10
 '''),
 
 (26, 'body[0].value', 0, 2, 'comparators', {'raw': True}, ('exec',
@@ -13030,13 +13030,13 @@ r'''z'''),
 r'''((a) < z)''', r'''
 Module - ROOT 0,0..0,9
   .body[1]
-  0] Expr - 0,0..0,9
-    .value Compare - 0,1..0,8
-      .left Name 'a' Load - 0,2..0,3
-      .ops[1]
-      0] Lt - 0,5..0,6
-      .comparators[1]
-      0] Name 'z' Load - 0,7..0,8
+   0] Expr - 0,0..0,9
+     .value Compare - 0,1..0,8
+       .left Name 'a' Load - 0,2..0,3
+       .ops[1]
+        0] Lt - 0,5..0,6
+       .comparators[1]
+        0] Name 'z' Load - 0,7..0,8
 '''),
 
 (27, 'body[0].value', 1, 3, None, {'raw': True}, ('exec',
@@ -13045,14 +13045,14 @@ r'''*z'''),
 r'''(1, *z)''', r'''
 Module - ROOT 0,0..0,7
   .body[1]
-  0] Expr - 0,0..0,7
-    .value Tuple - 0,0..0,7
-      .elts[2]
-      0] Constant 1 - 0,1..0,2
-      1] Starred - 0,4..0,6
-        .value Name 'z' Load - 0,5..0,6
-        .ctx Load
-      .ctx Load
+   0] Expr - 0,0..0,7
+     .value Tuple - 0,0..0,7
+       .elts[2]
+        0] Constant 1 - 0,1..0,2
+        1] Starred - 0,4..0,6
+          .value Name 'z' Load - 0,5..0,6
+          .ctx Load
+       .ctx Load
 '''),
 
 (28, 'body[0].cases[0].pattern', 1, 3, None, {'raw': True}, ('exec', r'''
@@ -13065,19 +13065,19 @@ match a:
 ''', r'''
 Module - ROOT 0,0..1,28
   .body[1]
-  0] Match - 0,0..1,28
-    .subject Name 'a' Load - 0,6..0,7
-    .cases[1]
-    0] match_case - 1,2..1,28
-      .pattern MatchMapping - 1,7..1,22
-        .keys[1]
-        0] Constant 'a' - 1,8..1,11
-        .patterns[1]
-        0] MatchAs - 1,14..1,15
-          .name 'a'
-        .rest 'z'
-      .body[1]
-      0] Pass - 1,24..1,28
+   0] Match - 0,0..1,28
+     .subject Name 'a' Load - 0,6..0,7
+     .cases[1]
+      0] match_case - 1,2..1,28
+        .pattern MatchMapping - 1,7..1,22
+          .keys[1]
+           0] Constant 'a' - 1,8..1,11
+          .patterns[1]
+           0] MatchAs - 1,14..1,15
+             .name 'a'
+          .rest 'z'
+        .body[1]
+         0] Pass - 1,24..1,28
 '''),
 
 (29, 'body[0].value.generators[0]', 1, 3, None, {'raw': True}, ('exec',
@@ -13086,18 +13086,18 @@ r'''if z'''),
 r'''[a for a in a() if (a) if z]''', r'''
 Module - ROOT 0,0..0,28
   .body[1]
-  0] Expr - 0,0..0,28
-    .value ListComp - 0,0..0,28
-      .elt Name 'a' Load - 0,1..0,2
-      .generators[1]
-      0] comprehension - 0,3..0,27
-        .target Name 'a' Store - 0,7..0,8
-        .iter Call - 0,12..0,15
-          .func Name 'a' Load - 0,12..0,13
-        .ifs[2]
-        0] Name 'a' Load - 0,20..0,21
-        1] Name 'z' Load - 0,26..0,27
-        .is_async 0
+   0] Expr - 0,0..0,28
+     .value ListComp - 0,0..0,28
+       .elt Name 'a' Load - 0,1..0,2
+       .generators[1]
+        0] comprehension - 0,3..0,27
+          .target Name 'a' Store - 0,7..0,8
+          .iter Call - 0,12..0,15
+            .func Name 'a' Load - 0,12..0,13
+          .ifs[2]
+           0] Name 'a' Load - 0,20..0,21
+           1] Name 'z' Load - 0,26..0,27
+          .is_async 0
 '''),
 
 (30, 'body[0]', 1, 3, 'decorator_list', {'raw': True}, ('exec', r'''
@@ -13113,13 +13113,13 @@ def f(): pass
 ''', r'''
 Module - ROOT 0,0..2,13
   .body[1]
-  0] FunctionDef - 2,0..2,13
-    .name 'f'
-    .body[1]
-    0] Pass - 2,9..2,13
-    .decorator_list[2]
-    0] Name 'a' Load - 0,2..0,3
-    1] Name 'z' Load - 1,1..1,2
+   0] FunctionDef - 2,0..2,13
+     .name 'f'
+     .body[1]
+      0] Pass - 2,9..2,13
+     .decorator_list[2]
+      0] Name 'a' Load - 0,2..0,3
+      1] Name 'z' Load - 1,1..1,2
 '''),
 
 (31, 'body[0].value', 1, 3, None, {'raw': True}, ('exec',
@@ -13128,14 +13128,14 @@ r'''*z'''),
 r'''((1), *z)''', r'''
 Module - ROOT 0,0..0,9
   .body[1]
-  0] Expr - 0,0..0,9
-    .value Tuple - 0,0..0,9
-      .elts[2]
-      0] Constant 1 - 0,2..0,3
-      1] Starred - 0,6..0,8
-        .value Name 'z' Load - 0,7..0,8
-        .ctx Load
-      .ctx Load
+   0] Expr - 0,0..0,9
+     .value Tuple - 0,0..0,9
+       .elts[2]
+        0] Constant 1 - 0,2..0,3
+        1] Starred - 0,6..0,8
+          .value Name 'z' Load - 0,7..0,8
+          .ctx Load
+       .ctx Load
 '''),
 
 (32, 'body[0].value', 0, 1, 'args', {'raw': True}, ('exec',
@@ -13144,11 +13144,11 @@ r'''a'''),
 r'''f(a)''', r'''
 Module - ROOT 0,0..0,4
   .body[1]
-  0] Expr - 0,0..0,4
-    .value Call - 0,0..0,4
-      .func Name 'f' Load - 0,0..0,1
-      .args[1]
-      0] Name 'a' Load - 0,2..0,3
+   0] Expr - 0,0..0,4
+     .value Call - 0,0..0,4
+       .func Name 'f' Load - 0,0..0,1
+       .args[1]
+        0] Name 'a' Load - 0,2..0,3
 '''),
 
 (33, 'body[0].value', 0, 1, 'args', {'raw': True}, ('exec',
@@ -13157,11 +13157,11 @@ r'''a'''),
 r'''f(a)''', r'''
 Module - ROOT 0,0..0,4
   .body[1]
-  0] Expr - 0,0..0,4
-    .value Call - 0,0..0,4
-      .func Name 'f' Load - 0,0..0,1
-      .args[1]
-      0] Name 'a' Load - 0,2..0,3
+   0] Expr - 0,0..0,4
+     .value Call - 0,0..0,4
+       .func Name 'f' Load - 0,0..0,1
+       .args[1]
+        0] Name 'a' Load - 0,2..0,3
 '''),
 
 (34, 'body[0].value', 0, 1, 'args', {'raw': True}, ('exec',
@@ -13170,11 +13170,11 @@ r'''a'''),
 r'''f(a)''', r'''
 Module - ROOT 0,0..0,4
   .body[1]
-  0] Expr - 0,0..0,4
-    .value Call - 0,0..0,4
-      .func Name 'f' Load - 0,0..0,1
-      .args[1]
-      0] Name 'a' Load - 0,2..0,3
+   0] Expr - 0,0..0,4
+     .value Call - 0,0..0,4
+       .func Name 'f' Load - 0,0..0,1
+       .args[1]
+        0] Name 'a' Load - 0,2..0,3
 '''),
 
 (35, 'body[0].value', 0, 1, 'args', {'raw': True}, ('exec',
@@ -13183,12 +13183,12 @@ r'''a'''),
 r'''f(a, b)''', r'''
 Module - ROOT 0,0..0,7
   .body[1]
-  0] Expr - 0,0..0,7
-    .value Call - 0,0..0,7
-      .func Name 'f' Load - 0,0..0,1
-      .args[2]
-      0] Name 'a' Load - 0,2..0,3
-      1] Name 'b' Load - 0,5..0,6
+   0] Expr - 0,0..0,7
+     .value Call - 0,0..0,7
+       .func Name 'f' Load - 0,0..0,1
+       .args[2]
+        0] Name 'a' Load - 0,2..0,3
+        1] Name 'b' Load - 0,5..0,6
 '''),
 
 (36, 'body[0].value', 0, 2, 'args', {'raw': True}, ('exec',
@@ -13197,11 +13197,11 @@ r'''a'''),
 r'''f(a)''', r'''
 Module - ROOT 0,0..0,4
   .body[1]
-  0] Expr - 0,0..0,4
-    .value Call - 0,0..0,4
-      .func Name 'f' Load - 0,0..0,1
-      .args[1]
-      0] Name 'a' Load - 0,2..0,3
+   0] Expr - 0,0..0,4
+     .value Call - 0,0..0,4
+       .func Name 'f' Load - 0,0..0,1
+       .args[1]
+        0] Name 'a' Load - 0,2..0,3
 '''),
 
 (37, 'body[0].value', 1, 1, None, {'trivia': (None, False)}, ('exec', r'''
@@ -13214,12 +13214,12 @@ r'''b,'''), r'''
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[1]
-  0] Expr - 0,0..1,1
-    .value List - 0,0..1,1
-      .elts[2]
-      0] Name 'a' Load - 0,1..0,2
-      1] Name 'b' Load - 0,4..0,5
-      .ctx Load
+   0] Expr - 0,0..1,1
+     .value List - 0,0..1,1
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Name 'b' Load - 0,4..0,5
+       .ctx Load
 '''),
 
 (38, 'body[0].value', 1, 1, None, {'trivia': (None, False)}, ('exec', r'''
@@ -13232,12 +13232,12 @@ r'''[b]'''), r'''
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[1]
-  0] Expr - 0,0..1,1
-    .value List - 0,0..1,1
-      .elts[2]
-      0] Name 'a' Load - 0,1..0,2
-      1] Name 'b' Load - 0,4..0,5
-      .ctx Load
+   0] Expr - 0,0..1,1
+     .value List - 0,0..1,1
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Name 'b' Load - 0,4..0,5
+       .ctx Load
 '''),
 
 (39, 'body[0].value', 1, 1, None, {'trivia': (None, False)}, ('exec', r'''
@@ -13250,12 +13250,12 @@ r'''b,'''), r'''
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[1]
-  0] Expr - 0,0..1,1
-    .value List - 0,0..1,1
-      .elts[2]
-      0] Name 'a' Load - 0,1..0,2
-      1] Name 'b' Load - 0,4..0,5
-      .ctx Load
+   0] Expr - 0,0..1,1
+     .value List - 0,0..1,1
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Name 'b' Load - 0,4..0,5
+       .ctx Load
 '''),
 
 (40, 'body[0].value', 1, 1, None, {'trivia': (None, False)}, ('exec', r'''
@@ -13268,12 +13268,12 @@ r'''[b]'''), r'''
 ''', r'''
 Module - ROOT 0,0..1,1
   .body[1]
-  0] Expr - 0,0..1,1
-    .value List - 0,0..1,1
-      .elts[2]
-      0] Name 'a' Load - 0,1..0,2
-      1] Name 'b' Load - 0,4..0,5
-      .ctx Load
+   0] Expr - 0,0..1,1
+     .value List - 0,0..1,1
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Name 'b' Load - 0,4..0,5
+       .ctx Load
 '''),
 
 (41, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
@@ -13292,11 +13292,11 @@ r'''[a]'''), r'''
 ''', r'''
 Module - ROOT 0,0..4,1
   .body[1]
-  0] Expr - 0,0..4,1
-    .value List - 0,0..4,1
-      .elts[1]
-      0] Name 'a' Load - 0,1..0,2
-      .ctx Load
+   0] Expr - 0,0..4,1
+     .value List - 0,0..4,1
+       .elts[1]
+        0] Name 'a' Load - 0,1..0,2
+       .ctx Load
 '''),
 
 (42, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
@@ -13315,11 +13315,11 @@ a # c0
 ''', r'''
 Module - ROOT 0,0..4,1
   .body[1]
-  0] Expr - 0,0..4,1
-    .value List - 0,0..4,1
-      .elts[1]
-      0] Name 'a' Load - 1,0..1,1
-      .ctx Load
+   0] Expr - 0,0..4,1
+     .value List - 0,0..4,1
+       .elts[1]
+        0] Name 'a' Load - 1,0..1,1
+       .ctx Load
 '''),
 
 (43, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
@@ -13338,11 +13338,11 @@ a
 ''', r'''
 Module - ROOT 0,0..4,1
   .body[1]
-  0] Expr - 0,0..4,1
-    .value List - 0,0..4,1
-      .elts[1]
-      0] Name 'a' Load - 2,0..2,1
-      .ctx Load
+   0] Expr - 0,0..4,1
+     .value List - 0,0..4,1
+       .elts[1]
+        0] Name 'a' Load - 2,0..2,1
+       .ctx Load
 '''),
 
 (44, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
@@ -13361,11 +13361,11 @@ a # c2
 ''', r'''
 Module - ROOT 0,0..4,1
   .body[1]
-  0] Expr - 0,0..4,1
-    .value List - 0,0..4,1
-      .elts[1]
-      0] Name 'a' Load - 3,0..3,1
-      .ctx Load
+   0] Expr - 0,0..4,1
+     .value List - 0,0..4,1
+       .elts[1]
+        0] Name 'a' Load - 3,0..3,1
+       .ctx Load
 '''),
 
 (45, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
@@ -13384,11 +13384,11 @@ a]
 ''', r'''
 Module - ROOT 0,0..4,2
   .body[1]
-  0] Expr - 0,0..4,2
-    .value List - 0,0..4,2
-      .elts[1]
-      0] Name 'a' Load - 4,0..4,1
-      .ctx Load
+   0] Expr - 0,0..4,2
+     .value List - 0,0..4,2
+       .elts[1]
+        0] Name 'a' Load - 4,0..4,1
+       .ctx Load
 '''),
 
 (46, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
@@ -13417,11 +13417,11 @@ a
 ''', r'''
 Module - ROOT 0,0..5,1
   .body[1]
-  0] Expr - 0,0..5,1
-    .value List - 0,0..5,1
-      .elts[1]
-      0] Name 'a' Load - 1,4..1,5
-      .ctx Load
+   0] Expr - 0,0..5,1
+     .value List - 0,0..5,1
+       .elts[1]
+        0] Name 'a' Load - 1,4..1,5
+       .ctx Load
 '''),
 
 (47, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
@@ -13450,11 +13450,11 @@ a # c0
 ''', r'''
 Module - ROOT 0,0..5,1
   .body[1]
-  0] Expr - 0,0..5,1
-    .value List - 0,0..5,1
-      .elts[1]
-      0] Name 'a' Load - 1,4..1,5
-      .ctx Load
+   0] Expr - 0,0..5,1
+     .value List - 0,0..5,1
+       .elts[1]
+        0] Name 'a' Load - 1,4..1,5
+       .ctx Load
 '''),
 
 (48, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
@@ -13482,11 +13482,11 @@ a
 ''', r'''
 Module - ROOT 0,0..4,1
   .body[1]
-  0] Expr - 0,0..4,1
-    .value List - 0,0..4,1
-      .elts[1]
-      0] Name 'a' Load - 2,4..2,5
-      .ctx Load
+   0] Expr - 0,0..4,1
+     .value List - 0,0..4,1
+       .elts[1]
+        0] Name 'a' Load - 2,4..2,5
+       .ctx Load
 '''),
 
 (49, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
@@ -13515,11 +13515,11 @@ a # c2
 ''', r'''
 Module - ROOT 0,0..5,1
   .body[1]
-  0] Expr - 0,0..5,1
-    .value List - 0,0..5,1
-      .elts[1]
-      0] Name 'a' Load - 3,4..3,5
-      .ctx Load
+   0] Expr - 0,0..5,1
+     .value List - 0,0..5,1
+       .elts[1]
+        0] Name 'a' Load - 3,4..3,5
+       .ctx Load
 '''),
 
 (50, 'body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
@@ -13548,11 +13548,11 @@ a]
 ''', r'''
 Module - ROOT 0,0..5,1
   .body[1]
-  0] Expr - 0,0..5,1
-    .value List - 0,0..5,1
-      .elts[1]
-      0] Name 'a' Load - 4,4..4,5
-      .ctx Load
+   0] Expr - 0,0..5,1
+     .value List - 0,0..5,1
+       .elts[1]
+        0] Name 'a' Load - 4,4..4,5
+       .ctx Load
 '''),
 
 (51, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
@@ -13571,14 +13571,14 @@ if 1: [a
 ''', r'''
 Module - ROOT 0,0..4,3
   .body[1]
-  0] If - 0,0..4,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,3
-      .value List - 0,6..4,3
-        .elts[1]
-        0] Name 'a' Load - 0,7..0,8
-        .ctx Load
+   0] If - 0,0..4,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,3
+        .value List - 0,6..4,3
+          .elts[1]
+           0] Name 'a' Load - 0,7..0,8
+          .ctx Load
 '''),
 
 (52, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
@@ -13597,14 +13597,14 @@ if 1: [
 ''', r'''
 Module - ROOT 0,0..4,3
   .body[1]
-  0] If - 0,0..4,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,3
-      .value List - 0,6..4,3
-        .elts[1]
-        0] Name 'a' Load - 1,4..1,5
-        .ctx Load
+   0] If - 0,0..4,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,3
+        .value List - 0,6..4,3
+          .elts[1]
+           0] Name 'a' Load - 1,4..1,5
+          .ctx Load
 '''),
 
 (53, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
@@ -13623,14 +13623,14 @@ if 1: [
 ''', r'''
 Module - ROOT 0,0..4,3
   .body[1]
-  0] If - 0,0..4,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,3
-      .value List - 0,6..4,3
-        .elts[1]
-        0] Name 'a' Load - 2,4..2,5
-        .ctx Load
+   0] If - 0,0..4,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,3
+        .value List - 0,6..4,3
+          .elts[1]
+           0] Name 'a' Load - 2,4..2,5
+          .ctx Load
 '''),
 
 (54, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
@@ -13649,14 +13649,14 @@ if 1: [
 ''', r'''
 Module - ROOT 0,0..4,3
   .body[1]
-  0] If - 0,0..4,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,3
-      .value List - 0,6..4,3
-        .elts[1]
-        0] Name 'a' Load - 3,4..3,5
-        .ctx Load
+   0] If - 0,0..4,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,3
+        .value List - 0,6..4,3
+          .elts[1]
+           0] Name 'a' Load - 3,4..3,5
+          .ctx Load
 '''),
 
 (55, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
@@ -13675,14 +13675,14 @@ if 1: [
 ''', r'''
 Module - ROOT 0,0..4,4
   .body[1]
-  0] If - 0,0..4,4
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,4
-      .value List - 0,6..4,4
-        .elts[1]
-        0] Name 'a' Load - 4,2..4,3
-        .ctx Load
+   0] If - 0,0..4,4
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,4
+        .value List - 0,6..4,4
+          .elts[1]
+           0] Name 'a' Load - 4,2..4,3
+          .ctx Load
 '''),
 
 (56, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
@@ -13710,14 +13710,14 @@ if 1: [a
 ''', r'''
 Module - ROOT 0,0..5,3
   .body[1]
-  0] If - 0,0..5,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..5,3
-      .value List - 0,6..5,3
-        .elts[1]
-        0] Name 'a' Load - 1,8..1,9
-        .ctx Load
+   0] If - 0,0..5,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..5,3
+        .value List - 0,6..5,3
+          .elts[1]
+           0] Name 'a' Load - 1,8..1,9
+          .ctx Load
 '''),
 
 (57, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
@@ -13744,14 +13744,14 @@ if 1: [
 ''', r'''
 Module - ROOT 0,0..4,3
   .body[1]
-  0] If - 0,0..4,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,3
-      .value List - 0,6..4,3
-        .elts[1]
-        0] Name 'a' Load - 1,8..1,9
-        .ctx Load
+   0] If - 0,0..4,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,3
+        .value List - 0,6..4,3
+          .elts[1]
+           0] Name 'a' Load - 1,8..1,9
+          .ctx Load
 '''),
 
 (58, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
@@ -13778,14 +13778,14 @@ if 1: [
 ''', r'''
 Module - ROOT 0,0..4,3
   .body[1]
-  0] If - 0,0..4,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,3
-      .value List - 0,6..4,3
-        .elts[1]
-        0] Name 'a' Load - 2,8..2,9
-        .ctx Load
+   0] If - 0,0..4,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,3
+        .value List - 0,6..4,3
+          .elts[1]
+           0] Name 'a' Load - 2,8..2,9
+          .ctx Load
 '''),
 
 (59, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
@@ -13812,14 +13812,14 @@ if 1: [
 ''', r'''
 Module - ROOT 0,0..4,3
   .body[1]
-  0] If - 0,0..4,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,3
-      .value List - 0,6..4,3
-        .elts[1]
-        0] Name 'a' Load - 3,8..3,9
-        .ctx Load
+   0] If - 0,0..4,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,3
+        .value List - 0,6..4,3
+          .elts[1]
+           0] Name 'a' Load - 3,8..3,9
+          .ctx Load
 '''),
 
 (60, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
@@ -13846,14 +13846,14 @@ if 1: [
 ''', r'''
 Module - ROOT 0,0..4,10
   .body[1]
-  0] If - 0,0..4,10
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,10
-      .value List - 0,6..4,10
-        .elts[1]
-        0] Name 'a' Load - 4,8..4,9
-        .ctx Load
+   0] If - 0,0..4,10
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,10
+        .value List - 0,6..4,10
+          .elts[1]
+           0] Name 'a' Load - 4,8..4,9
+          .ctx Load
 '''),
 
 (61, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
@@ -13874,14 +13874,14 @@ if 1: [a
 ''', r'''
 Module - ROOT 0,0..4,3
   .body[1]
-  0] If - 0,0..4,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,3
-      .value List - 0,6..4,3
-        .elts[1]
-        0] Name 'a' Load - 0,7..0,8
-        .ctx Load
+   0] If - 0,0..4,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,3
+        .value List - 0,6..4,3
+          .elts[1]
+           0] Name 'a' Load - 0,7..0,8
+          .ctx Load
 '''),
 
 (62, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
@@ -13909,14 +13909,14 @@ if 1: [
 ''', r'''
 Module - ROOT 0,0..5,3
   .body[1]
-  0] If - 0,0..5,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..5,3
-      .value List - 0,6..5,3
-        .elts[1]
-        0] Name 'a' Load - 1,4..1,5
-        .ctx Load
+   0] If - 0,0..5,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..5,3
+        .value List - 0,6..5,3
+          .elts[1]
+           0] Name 'a' Load - 1,4..1,5
+          .ctx Load
 '''),
 
 (63, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
@@ -13937,14 +13937,14 @@ if 1: [
 ''', r'''
 Module - ROOT 0,0..4,3
   .body[1]
-  0] If - 0,0..4,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,3
-      .value List - 0,6..4,3
-        .elts[1]
-        0] Name 'a' Load - 2,4..2,5
-        .ctx Load
+   0] If - 0,0..4,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,3
+        .value List - 0,6..4,3
+          .elts[1]
+           0] Name 'a' Load - 2,4..2,5
+          .ctx Load
 '''),
 
 (64, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
@@ -13972,14 +13972,14 @@ if 1: [
 ''', r'''
 Module - ROOT 0,0..5,3
   .body[1]
-  0] If - 0,0..5,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..5,3
-      .value List - 0,6..5,3
-        .elts[1]
-        0] Name 'a' Load - 3,4..3,5
-        .ctx Load
+   0] If - 0,0..5,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..5,3
+        .value List - 0,6..5,3
+          .elts[1]
+           0] Name 'a' Load - 3,4..3,5
+          .ctx Load
 '''),
 
 (65, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
@@ -14007,14 +14007,14 @@ if 1: [
 ''', r'''
 Module - ROOT 0,0..5,3
   .body[1]
-  0] If - 0,0..5,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..5,3
-      .value List - 0,6..5,3
-        .elts[1]
-        0] Name 'a' Load - 4,2..4,3
-        .ctx Load
+   0] If - 0,0..5,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..5,3
+        .value List - 0,6..5,3
+          .elts[1]
+           0] Name 'a' Load - 4,2..4,3
+          .ctx Load
 '''),
 
 (66, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
@@ -14043,14 +14043,14 @@ if 1: [a
 ''', r'''
 Module - ROOT 0,0..5,3
   .body[1]
-  0] If - 0,0..5,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..5,3
-      .value List - 0,6..5,3
-        .elts[1]
-        0] Name 'a' Load - 1,8..1,9
-        .ctx Load
+   0] If - 0,0..5,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..5,3
+        .value List - 0,6..5,3
+          .elts[1]
+           0] Name 'a' Load - 1,8..1,9
+          .ctx Load
 '''),
 
 (67, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
@@ -14079,14 +14079,14 @@ if 1: [
 ''', r'''
 Module - ROOT 0,0..5,3
   .body[1]
-  0] If - 0,0..5,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..5,3
-      .value List - 0,6..5,3
-        .elts[1]
-        0] Name 'a' Load - 1,8..1,9
-        .ctx Load
+   0] If - 0,0..5,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..5,3
+        .value List - 0,6..5,3
+          .elts[1]
+           0] Name 'a' Load - 1,8..1,9
+          .ctx Load
 '''),
 
 (68, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
@@ -14114,14 +14114,14 @@ if 1: [
 ''', r'''
 Module - ROOT 0,0..4,3
   .body[1]
-  0] If - 0,0..4,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,3
-      .value List - 0,6..4,3
-        .elts[1]
-        0] Name 'a' Load - 2,8..2,9
-        .ctx Load
+   0] If - 0,0..4,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,3
+        .value List - 0,6..4,3
+          .elts[1]
+           0] Name 'a' Load - 2,8..2,9
+          .ctx Load
 '''),
 
 (69, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
@@ -14150,14 +14150,14 @@ if 1: [
 ''', r'''
 Module - ROOT 0,0..5,3
   .body[1]
-  0] If - 0,0..5,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..5,3
-      .value List - 0,6..5,3
-        .elts[1]
-        0] Name 'a' Load - 3,8..3,9
-        .ctx Load
+   0] If - 0,0..5,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..5,3
+        .value List - 0,6..5,3
+          .elts[1]
+           0] Name 'a' Load - 3,8..3,9
+          .ctx Load
 '''),
 
 (70, 'body[0].body[0].value', 0, 0, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
@@ -14186,14 +14186,14 @@ if 1: [
 ''', r'''
 Module - ROOT 0,0..5,3
   .body[1]
-  0] If - 0,0..5,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..5,3
-      .value List - 0,6..5,3
-        .elts[1]
-        0] Name 'a' Load - 4,8..4,9
-        .ctx Load
+   0] If - 0,0..5,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..5,3
+        .value List - 0,6..5,3
+          .elts[1]
+           0] Name 'a' Load - 4,8..4,9
+          .ctx Load
 '''),
 
 (71, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
@@ -14212,16 +14212,16 @@ if 1: [x, a,
 ''', r'''
 Module - ROOT 0,0..4,4
   .body[1]
-  0] If - 0,0..4,4
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,4
-      .value List - 0,6..4,4
-        .elts[3]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'a' Load - 0,10..0,11
-        2] Name 'y' Load - 4,2..4,3
-        .ctx Load
+   0] If - 0,0..4,4
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,4
+        .value List - 0,6..4,4
+          .elts[3]
+           0] Name 'x' Load - 0,7..0,8
+           1] Name 'a' Load - 0,10..0,11
+           2] Name 'y' Load - 4,2..4,3
+          .ctx Load
 '''),
 
 (72, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
@@ -14240,16 +14240,16 @@ if 1: [x,
 ''', r'''
 Module - ROOT 0,0..4,4
   .body[1]
-  0] If - 0,0..4,4
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,4
-      .value List - 0,6..4,4
-        .elts[3]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'a' Load - 1,4..1,5
-        2] Name 'y' Load - 4,2..4,3
-        .ctx Load
+   0] If - 0,0..4,4
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,4
+        .value List - 0,6..4,4
+          .elts[3]
+           0] Name 'x' Load - 0,7..0,8
+           1] Name 'a' Load - 1,4..1,5
+           2] Name 'y' Load - 4,2..4,3
+          .ctx Load
 '''),
 
 (73, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
@@ -14268,16 +14268,16 @@ if 1: [x,
 ''', r'''
 Module - ROOT 0,0..4,4
   .body[1]
-  0] If - 0,0..4,4
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,4
-      .value List - 0,6..4,4
-        .elts[3]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'a' Load - 2,4..2,5
-        2] Name 'y' Load - 4,2..4,3
-        .ctx Load
+   0] If - 0,0..4,4
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,4
+        .value List - 0,6..4,4
+          .elts[3]
+           0] Name 'x' Load - 0,7..0,8
+           1] Name 'a' Load - 2,4..2,5
+           2] Name 'y' Load - 4,2..4,3
+          .ctx Load
 '''),
 
 (74, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
@@ -14296,16 +14296,16 @@ if 1: [x,
 ''', r'''
 Module - ROOT 0,0..4,4
   .body[1]
-  0] If - 0,0..4,4
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,4
-      .value List - 0,6..4,4
-        .elts[3]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'a' Load - 3,4..3,5
-        2] Name 'y' Load - 4,2..4,3
-        .ctx Load
+   0] If - 0,0..4,4
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,4
+        .value List - 0,6..4,4
+          .elts[3]
+           0] Name 'x' Load - 0,7..0,8
+           1] Name 'a' Load - 3,4..3,5
+           2] Name 'y' Load - 4,2..4,3
+          .ctx Load
 '''),
 
 (75, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
@@ -14324,16 +14324,16 @@ if 1: [x,
 ''', r'''
 Module - ROOT 0,0..4,7
   .body[1]
-  0] If - 0,0..4,7
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,7
-      .value List - 0,6..4,7
-        .elts[3]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'a' Load - 4,2..4,3
-        2] Name 'y' Load - 4,5..4,6
-        .ctx Load
+   0] If - 0,0..4,7
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,7
+        .value List - 0,6..4,7
+          .elts[3]
+           0] Name 'x' Load - 0,7..0,8
+           1] Name 'a' Load - 4,2..4,3
+           2] Name 'y' Load - 4,5..4,6
+          .ctx Load
 '''),
 
 (76, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
@@ -14362,16 +14362,16 @@ if 1: [x, a,
 ''', r'''
 Module - ROOT 0,0..5,4
   .body[1]
-  0] If - 0,0..5,4
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..5,4
-      .value List - 0,6..5,4
-        .elts[3]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'a' Load - 1,4..1,5
-        2] Name 'y' Load - 5,2..5,3
-        .ctx Load
+   0] If - 0,0..5,4
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..5,4
+        .value List - 0,6..5,4
+          .elts[3]
+           0] Name 'x' Load - 0,7..0,8
+           1] Name 'a' Load - 1,4..1,5
+           2] Name 'y' Load - 5,2..5,3
+          .ctx Load
 '''),
 
 (77, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
@@ -14400,16 +14400,16 @@ if 1: [x,
 ''', r'''
 Module - ROOT 0,0..5,4
   .body[1]
-  0] If - 0,0..5,4
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..5,4
-      .value List - 0,6..5,4
-        .elts[3]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'a' Load - 1,4..1,5
-        2] Name 'y' Load - 5,2..5,3
-        .ctx Load
+   0] If - 0,0..5,4
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..5,4
+        .value List - 0,6..5,4
+          .elts[3]
+           0] Name 'x' Load - 0,7..0,8
+           1] Name 'a' Load - 1,4..1,5
+           2] Name 'y' Load - 5,2..5,3
+          .ctx Load
 '''),
 
 (78, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
@@ -14431,16 +14431,16 @@ if 1: [x,
 ''', r'''
 Module - ROOT 0,0..4,4
   .body[1]
-  0] If - 0,0..4,4
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,4
-      .value List - 0,6..4,4
-        .elts[3]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'a' Load - 2,4..2,5
-        2] Name 'y' Load - 4,2..4,3
-        .ctx Load
+   0] If - 0,0..4,4
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,4
+        .value List - 0,6..4,4
+          .elts[3]
+           0] Name 'x' Load - 0,7..0,8
+           1] Name 'a' Load - 2,4..2,5
+           2] Name 'y' Load - 4,2..4,3
+          .ctx Load
 '''),
 
 (79, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
@@ -14469,16 +14469,16 @@ if 1: [x,
 ''', r'''
 Module - ROOT 0,0..5,4
   .body[1]
-  0] If - 0,0..5,4
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..5,4
-      .value List - 0,6..5,4
-        .elts[3]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'a' Load - 3,4..3,5
-        2] Name 'y' Load - 5,2..5,3
-        .ctx Load
+   0] If - 0,0..5,4
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..5,4
+        .value List - 0,6..5,4
+          .elts[3]
+           0] Name 'x' Load - 0,7..0,8
+           1] Name 'a' Load - 3,4..3,5
+           2] Name 'y' Load - 5,2..5,3
+          .ctx Load
 '''),
 
 (80, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
@@ -14507,16 +14507,16 @@ if 1: [x,
 ''', r'''
 Module - ROOT 0,0..5,4
   .body[1]
-  0] If - 0,0..5,4
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..5,4
-      .value List - 0,6..5,4
-        .elts[3]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'a' Load - 4,4..4,5
-        2] Name 'y' Load - 5,2..5,3
-        .ctx Load
+   0] If - 0,0..5,4
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..5,4
+        .value List - 0,6..5,4
+          .elts[3]
+           0] Name 'x' Load - 0,7..0,8
+           1] Name 'a' Load - 4,4..4,5
+           2] Name 'y' Load - 5,2..5,3
+          .ctx Load
 '''),
 
 (81, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 0}, ('exec', r'''
@@ -14546,17 +14546,17 @@ if 1: [x, a, b,
 ''', r'''
 Module - ROOT 0,0..6,4
   .body[1]
-  0] If - 0,0..6,4
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..6,4
-      .value List - 0,6..6,4
-        .elts[4]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'a' Load - 1,4..1,5
-        2] Name 'b' Load - 2,5..2,6
-        3] Name 'y' Load - 6,2..6,3
-        .ctx Load
+   0] If - 0,0..6,4
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..6,4
+        .value List - 0,6..6,4
+          .elts[4]
+           0] Name 'x' Load - 0,7..0,8
+           1] Name 'a' Load - 1,4..1,5
+           2] Name 'b' Load - 2,5..2,6
+           3] Name 'y' Load - 6,2..6,3
+          .ctx Load
 '''),
 
 (82, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 1}, ('exec', r'''
@@ -14585,17 +14585,17 @@ if 1: [x,
 ''', r'''
 Module - ROOT 0,0..5,4
   .body[1]
-  0] If - 0,0..5,4
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..5,4
-      .value List - 0,6..5,4
-        .elts[4]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'a' Load - 1,4..1,5
-        2] Name 'b' Load - 2,5..2,6
-        3] Name 'y' Load - 5,2..5,3
-        .ctx Load
+   0] If - 0,0..5,4
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..5,4
+        .value List - 0,6..5,4
+          .elts[4]
+           0] Name 'x' Load - 0,7..0,8
+           1] Name 'a' Load - 1,4..1,5
+           2] Name 'b' Load - 2,5..2,6
+           3] Name 'y' Load - 5,2..5,3
+          .ctx Load
 '''),
 
 (83, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 2}, ('exec', r'''
@@ -14624,17 +14624,17 @@ if 1: [x,
 ''', r'''
 Module - ROOT 0,0..5,4
   .body[1]
-  0] If - 0,0..5,4
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..5,4
-      .value List - 0,6..5,4
-        .elts[4]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'a' Load - 2,4..2,5
-        2] Name 'b' Load - 3,5..3,6
-        3] Name 'y' Load - 5,2..5,3
-        .ctx Load
+   0] If - 0,0..5,4
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..5,4
+        .value List - 0,6..5,4
+          .elts[4]
+           0] Name 'x' Load - 0,7..0,8
+           1] Name 'a' Load - 2,4..2,5
+           2] Name 'b' Load - 3,5..3,6
+           3] Name 'y' Load - 5,2..5,3
+          .ctx Load
 '''),
 
 (84, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 3}, ('exec', r'''
@@ -14663,17 +14663,17 @@ if 1: [x,
 ''', r'''
 Module - ROOT 0,0..5,4
   .body[1]
-  0] If - 0,0..5,4
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..5,4
-      .value List - 0,6..5,4
-        .elts[4]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'a' Load - 3,4..3,5
-        2] Name 'b' Load - 4,5..4,6
-        3] Name 'y' Load - 5,2..5,3
-        .ctx Load
+   0] If - 0,0..5,4
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..5,4
+        .value List - 0,6..5,4
+          .elts[4]
+           0] Name 'x' Load - 0,7..0,8
+           1] Name 'a' Load - 3,4..3,5
+           2] Name 'b' Load - 4,5..4,6
+           3] Name 'y' Load - 5,2..5,3
+          .ctx Load
 '''),
 
 (85, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
@@ -14702,17 +14702,17 @@ if 1: [x,
 ''', r'''
 Module - ROOT 0,0..5,10
   .body[1]
-  0] If - 0,0..5,10
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..5,10
-      .value List - 0,6..5,10
-        .elts[4]
-        0] Name 'x' Load - 0,7..0,8
-        1] Name 'a' Load - 4,4..4,5
-        2] Name 'b' Load - 5,5..5,6
-        3] Name 'y' Load - 5,8..5,9
-        .ctx Load
+   0] If - 0,0..5,10
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..5,10
+        .value List - 0,6..5,10
+          .elts[4]
+           0] Name 'x' Load - 0,7..0,8
+           1] Name 'a' Load - 4,4..4,5
+           2] Name 'b' Load - 5,5..5,6
+           3] Name 'y' Load - 5,8..5,9
+          .ctx Load
 '''),
 
 (86, 'body[0].body[0].value', 1, 1, None, {'trivia': (False, False), 'ins_ln': 4}, ('exec', r'''
@@ -14731,19 +14731,19 @@ if 1: {**x,
 ''', r'''
 Module - ROOT 0,0..4,11
   .body[1]
-  0] If - 0,0..4,11
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 0,6..4,11
-      .value Dict - 0,6..4,11
-        .keys[3]
-        0] None
-        1] None
-        2] None
-        .values[3]
-        0] Name 'x' Load - 0,9..0,10
-        1] Name 'a' Load - 4,4..4,5
-        2] Name 'y' Load - 4,9..4,10
+   0] If - 0,0..4,11
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 0,6..4,11
+        .value Dict - 0,6..4,11
+          .keys[3]
+           0] None
+           1] None
+           2] None
+          .values[3]
+           0] Name 'x' Load - 0,9..0,10
+           1] Name 'a' Load - 4,4..4,5
+           2] Name 'y' Load - 4,9..4,10
 '''),
 
 (87, 'body[0].cases[0].pattern', 0, 1, None, {'norm_self': False, '_verify': False}, ('exec', r'''
@@ -14756,16 +14756,16 @@ match a:
 ''', r'''
 Module - ROOT 0,0..1,13
   .body[1]
-  0] Match - 0,0..1,13
-    .subject Name 'a' Load - 0,6..0,7
-    .cases[1]
-    0] match_case - 1,1..1,13
-      .pattern MatchOr - 1,6..1,7
-        .patterns[1]
-        0] MatchAs - 1,6..1,7
-          .name 'b'
-      .body[1]
-      0] Pass - 1,9..1,13
+   0] Match - 0,0..1,13
+     .subject Name 'a' Load - 0,6..0,7
+     .cases[1]
+      0] match_case - 1,1..1,13
+        .pattern MatchOr - 1,6..1,7
+          .patterns[1]
+           0] MatchAs - 1,6..1,7
+             .name 'b'
+        .body[1]
+         0] Pass - 1,9..1,13
 '''),
 
 (88, 'body[0].cases[0].pattern', 0, 2, None, {'norm_self': False, '_verify': False}, ('exec', r'''
@@ -14778,13 +14778,13 @@ match a:
 ''', r'''
 Module - ROOT 0,0..1,12
   .body[1]
-  0] Match - 0,0..1,12
-    .subject Name 'a' Load - 0,6..0,7
-    .cases[1]
-    0] match_case - 1,1..1,12
-      .pattern MatchOr - 1,6..1,6
-      .body[1]
-      0] Pass - 1,8..1,12
+   0] Match - 0,0..1,12
+     .subject Name 'a' Load - 0,6..0,7
+     .cases[1]
+      0] match_case - 1,1..1,12
+        .pattern MatchOr - 1,6..1,6
+        .body[1]
+         0] Pass - 1,8..1,12
 '''),
 
 (89, 'body[0].cases[0].pattern', 0, 1, None, {'norm_self': True, '_verify': False}, ('exec', r'''
@@ -14797,14 +14797,14 @@ match a:
 ''', r'''
 Module - ROOT 0,0..1,13
   .body[1]
-  0] Match - 0,0..1,13
-    .subject Name 'a' Load - 0,6..0,7
-    .cases[1]
-    0] match_case - 1,1..1,13
-      .pattern MatchAs - 1,6..1,7
-        .name 'b'
-      .body[1]
-      0] Pass - 1,9..1,13
+   0] Match - 0,0..1,13
+     .subject Name 'a' Load - 0,6..0,7
+     .cases[1]
+      0] match_case - 1,1..1,13
+        .pattern MatchAs - 1,6..1,7
+          .name 'b'
+        .body[1]
+         0] Pass - 1,9..1,13
 '''),
 
 (90, 'body[0].cases[0].pattern', 0, 2, None, {'norm_self': True, '_verify': False}, ('exec', r'''
@@ -14824,18 +14824,18 @@ match a:
 ''', r'''
 Module - ROOT 0,0..1,17
   .body[1]
-  0] Match - 0,0..1,17
-    .subject Name 'a' Load - 0,6..0,7
-    .cases[1]
-    0] match_case - 1,1..1,17
-      .pattern MatchOr - 1,6..1,11
-        .patterns[2]
-        0] MatchAs - 1,6..1,7
-          .name 'z'
-        1] MatchAs - 1,10..1,11
-          .name 'b'
-      .body[1]
-      0] Pass - 1,13..1,17
+   0] Match - 0,0..1,17
+     .subject Name 'a' Load - 0,6..0,7
+     .cases[1]
+      0] match_case - 1,1..1,17
+        .pattern MatchOr - 1,6..1,11
+          .patterns[2]
+           0] MatchAs - 1,6..1,7
+             .name 'z'
+           1] MatchAs - 1,10..1,11
+             .name 'b'
+        .body[1]
+         0] Pass - 1,13..1,17
 '''),
 
 (92, 'body[0].cases[0].pattern', 0, 2, None, {'norm_self': False, '_verify': False}, ('exec', r'''
@@ -14848,16 +14848,16 @@ match a:
 ''', r'''
 Module - ROOT 0,0..1,13
   .body[1]
-  0] Match - 0,0..1,13
-    .subject Name 'a' Load - 0,6..0,7
-    .cases[1]
-    0] match_case - 1,1..1,13
-      .pattern MatchOr - 1,6..1,7
-        .patterns[1]
-        0] MatchAs - 1,6..1,7
-          .name 'z'
-      .body[1]
-      0] Pass - 1,9..1,13
+   0] Match - 0,0..1,13
+     .subject Name 'a' Load - 0,6..0,7
+     .cases[1]
+      0] match_case - 1,1..1,13
+        .pattern MatchOr - 1,6..1,7
+          .patterns[1]
+           0] MatchAs - 1,6..1,7
+             .name 'z'
+        .body[1]
+         0] Pass - 1,9..1,13
 '''),
 
 (93, 'body[0].cases[0].pattern', 0, 1, None, {'norm_self': True, '_verify': False}, ('exec', r'''
@@ -14870,18 +14870,18 @@ match a:
 ''', r'''
 Module - ROOT 0,0..1,17
   .body[1]
-  0] Match - 0,0..1,17
-    .subject Name 'a' Load - 0,6..0,7
-    .cases[1]
-    0] match_case - 1,1..1,17
-      .pattern MatchOr - 1,6..1,11
-        .patterns[2]
-        0] MatchAs - 1,6..1,7
-          .name 'z'
-        1] MatchAs - 1,10..1,11
-          .name 'b'
-      .body[1]
-      0] Pass - 1,13..1,17
+   0] Match - 0,0..1,17
+     .subject Name 'a' Load - 0,6..0,7
+     .cases[1]
+      0] match_case - 1,1..1,17
+        .pattern MatchOr - 1,6..1,11
+          .patterns[2]
+           0] MatchAs - 1,6..1,7
+             .name 'z'
+           1] MatchAs - 1,10..1,11
+             .name 'b'
+        .body[1]
+         0] Pass - 1,13..1,17
 '''),
 
 (94, 'body[0].cases[0].pattern', 0, 2, None, {'norm_self': True, '_verify': False}, ('exec', r'''
@@ -14894,14 +14894,14 @@ match a:
 ''', r'''
 Module - ROOT 0,0..1,13
   .body[1]
-  0] Match - 0,0..1,13
-    .subject Name 'a' Load - 0,6..0,7
-    .cases[1]
-    0] match_case - 1,1..1,13
-      .pattern MatchAs - 1,6..1,7
-        .name 'z'
-      .body[1]
-      0] Pass - 1,9..1,13
+   0] Match - 0,0..1,13
+     .subject Name 'a' Load - 0,6..0,7
+     .cases[1]
+      0] match_case - 1,1..1,13
+        .pattern MatchAs - 1,6..1,7
+          .name 'z'
+        .body[1]
+         0] Pass - 1,9..1,13
 '''),
 
 (95, 'body[0].cases[0].pattern', 0, 1, None, {'norm_self': 'strict', '_verify': False}, ('exec', r'''
@@ -14914,18 +14914,18 @@ match a:
 ''', r'''
 Module - ROOT 0,0..1,17
   .body[1]
-  0] Match - 0,0..1,17
-    .subject Name 'a' Load - 0,6..0,7
-    .cases[1]
-    0] match_case - 1,1..1,17
-      .pattern MatchOr - 1,6..1,11
-        .patterns[2]
-        0] MatchAs - 1,6..1,7
-          .name 'z'
-        1] MatchAs - 1,10..1,11
-          .name 'b'
-      .body[1]
-      0] Pass - 1,13..1,17
+   0] Match - 0,0..1,17
+     .subject Name 'a' Load - 0,6..0,7
+     .cases[1]
+      0] match_case - 1,1..1,17
+        .pattern MatchOr - 1,6..1,11
+          .patterns[2]
+           0] MatchAs - 1,6..1,7
+             .name 'z'
+           1] MatchAs - 1,10..1,11
+             .name 'b'
+        .body[1]
+         0] Pass - 1,13..1,17
 '''),
 
 (96, 'body[0].cases[0].pattern', 0, 1, None, {'norm_put': False, '_verify': False}, ('exec', r'''
@@ -14972,20 +14972,20 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..7,3
   .body[1]
-  0] If - 0,0..7,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,2..7,3
-      .value List - 1,2..7,3
-        .elts[4]
-        0] Name 'a' Load - 2,4..2,5
-        1] Name 'b' Load - 3,4..3,5
-        2] Name 'c' Load - 4,4..4,5
-        3] List - 4,7..6,5
-          .elts[1]
-          0] Name 'd' Load - 5,6..5,7
+   0] If - 0,0..7,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,2..7,3
+        .value List - 1,2..7,3
+          .elts[4]
+           0] Name 'a' Load - 2,4..2,5
+           1] Name 'b' Load - 3,4..3,5
+           2] Name 'c' Load - 4,4..4,5
+           3] List - 4,7..6,5
+             .elts[1]
+              0] Name 'd' Load - 5,6..5,7
+             .ctx Load
           .ctx Load
-        .ctx Load
 '''),
 
 (99, 'body[0].body[0].value', 1, 1, None, {'one': True}, ('exec', r'''
@@ -15018,20 +15018,20 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..7,3
   .body[1]
-  0] If - 0,0..7,3
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Expr - 1,2..7,3
-      .value List - 1,2..7,3
-        .elts[4]
-        0] Name 'a' Load - 2,4..2,5
-        1] List - 3,4..5,5
-          .elts[1]
-          0] Name 'd' Load - 4,6..4,7
+   0] If - 0,0..7,3
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,2..7,3
+        .value List - 1,2..7,3
+          .elts[4]
+           0] Name 'a' Load - 2,4..2,5
+           1] List - 3,4..5,5
+             .elts[1]
+              0] Name 'd' Load - 4,6..4,7
+             .ctx Load
+           2] Name 'b' Load - 5,7..5,8
+           3] Name 'c' Load - 6,4..6,5
           .ctx Load
-        2] Name 'b' Load - 5,7..5,8
-        3] Name 'c' Load - 6,4..6,5
-        .ctx Load
 '''),
 
 (100, 'body[0].value.slice', 2, 2, None, {}, ('exec',
@@ -15040,25 +15040,25 @@ r'''x:y:z,'''),
 r'''a[b:c:d, e:f:g, x:y:z]''', r'''
 Module - ROOT 0,0..0,22
   .body[1]
-  0] Expr - 0,0..0,22
-    .value Subscript - 0,0..0,22
-      .value Name 'a' Load - 0,0..0,1
-      .slice Tuple - 0,2..0,21
-        .elts[3]
-        0] Slice - 0,2..0,7
-          .lower Name 'b' Load - 0,2..0,3
-          .upper Name 'c' Load - 0,4..0,5
-          .step Name 'd' Load - 0,6..0,7
-        1] Slice - 0,9..0,14
-          .lower Name 'e' Load - 0,9..0,10
-          .upper Name 'f' Load - 0,11..0,12
-          .step Name 'g' Load - 0,13..0,14
-        2] Slice - 0,16..0,21
-          .lower Name 'x' Load - 0,16..0,17
-          .upper Name 'y' Load - 0,18..0,19
-          .step Name 'z' Load - 0,20..0,21
-        .ctx Load
-      .ctx Load
+   0] Expr - 0,0..0,22
+     .value Subscript - 0,0..0,22
+       .value Name 'a' Load - 0,0..0,1
+       .slice Tuple - 0,2..0,21
+         .elts[3]
+          0] Slice - 0,2..0,7
+            .lower Name 'b' Load - 0,2..0,3
+            .upper Name 'c' Load - 0,4..0,5
+            .step Name 'd' Load - 0,6..0,7
+          1] Slice - 0,9..0,14
+            .lower Name 'e' Load - 0,9..0,10
+            .upper Name 'f' Load - 0,11..0,12
+            .step Name 'g' Load - 0,13..0,14
+          2] Slice - 0,16..0,21
+            .lower Name 'x' Load - 0,16..0,17
+            .upper Name 'y' Load - 0,18..0,19
+            .step Name 'z' Load - 0,20..0,21
+         .ctx Load
+       .ctx Load
 '''),
 
 (101, 'body[0].value.slice', 2, 2, None, {'one': True}, ('exec',
@@ -15095,15 +15095,15 @@ pass
 ''', r'''
 Module - ROOT 0,0..6,4
   .body[5]
-  0] Expr - 0,0..1,8
-    .value Constant 'One\n  Two' - 0,0..1,8
-  1] Expr - 2,0..3,9
-    .value Constant 'Three\n  Four' - 2,0..3,9
-  2] Expr - 4,0..4,1
-    .value Name 'i' Load - 4,0..4,1
-  3] Expr - 4,4..5,8
-    .value Constant 'Five\n  Six' - 4,4..5,8
-  4] Pass - 6,0..6,4
+   0] Expr - 0,0..1,8
+     .value Constant 'One\n  Two' - 0,0..1,8
+   1] Expr - 2,0..3,9
+     .value Constant 'Three\n  Four' - 2,0..3,9
+   2] Expr - 4,0..4,1
+     .value Name 'i' Load - 4,0..4,1
+   3] Expr - 4,4..5,8
+     .value Constant 'Five\n  Six' - 4,4..5,8
+   4] Pass - 6,0..6,4
 '''),
 
 (1, 'body[0]', 0, 0, None, {'_cmp_asts': False}, ('exec', r'''
@@ -15136,18 +15136,18 @@ def f():
 ''', r'''
 Module - ROOT 0,0..7,8
   .body[1]
-  0] FunctionDef - 0,0..7,8
-    .name 'f'
-    .body[5]
-    0] Expr - 1,4..2,12
-      .value Constant 'One\n      Two' - 1,4..2,12
-    1] Expr - 3,4..4,13
-      .value Constant 'Three\n      Four' - 3,4..4,13
-    2] Expr - 5,4..5,5
-      .value Name 'i' Load - 5,4..5,5
-    3] Expr - 5,8..6,12
-      .value Constant 'Five\n      Six' - 5,8..6,12
-    4] Pass - 7,4..7,8
+   0] FunctionDef - 0,0..7,8
+     .name 'f'
+     .body[5]
+      0] Expr - 1,4..2,12
+        .value Constant 'One\n      Two' - 1,4..2,12
+      1] Expr - 3,4..4,13
+        .value Constant 'Three\n      Four' - 3,4..4,13
+      2] Expr - 5,4..5,5
+        .value Name 'i' Load - 5,4..5,5
+      3] Expr - 5,8..6,12
+        .value Constant 'Five\n      Six' - 5,8..6,12
+      4] Pass - 7,4..7,8
 '''),
 
 (2, 'body[0]', 0, 0, None, {'_cmp_asts': False, 'docstr': 'strict'}, ('exec', r'''
@@ -15180,18 +15180,18 @@ def f():
 ''', r'''
 Module - ROOT 0,0..7,8
   .body[1]
-  0] FunctionDef - 0,0..7,8
-    .name 'f'
-    .body[5]
-    0] Expr - 1,4..2,12
-      .value Constant 'One\n      Two' - 1,4..2,12
-    1] Expr - 3,4..4,9
-      .value Constant 'Three\n  Four' - 3,4..4,9
-    2] Expr - 5,4..5,5
-      .value Name 'i' Load - 5,4..5,5
-    3] Expr - 5,8..6,8
-      .value Constant 'Five\n  Six' - 5,8..6,8
-    4] Pass - 7,4..7,8
+   0] FunctionDef - 0,0..7,8
+     .name 'f'
+     .body[5]
+      0] Expr - 1,4..2,12
+        .value Constant 'One\n      Two' - 1,4..2,12
+      1] Expr - 3,4..4,9
+        .value Constant 'Three\n  Four' - 3,4..4,9
+      2] Expr - 5,4..5,5
+        .value Name 'i' Load - 5,4..5,5
+      3] Expr - 5,8..6,8
+        .value Constant 'Five\n  Six' - 5,8..6,8
+      4] Pass - 7,4..7,8
 '''),
 
 (3, 'body[0]', 0, 0, None, {'_cmp_asts': False, 'docstr': False}, ('exec', r'''
@@ -15224,18 +15224,18 @@ def f():
 ''', r'''
 Module - ROOT 0,0..7,8
   .body[1]
-  0] FunctionDef - 0,0..7,8
-    .name 'f'
-    .body[5]
-    0] Expr - 1,4..2,8
-      .value Constant 'One\n  Two' - 1,4..2,8
-    1] Expr - 3,4..4,9
-      .value Constant 'Three\n  Four' - 3,4..4,9
-    2] Expr - 5,4..5,5
-      .value Name 'i' Load - 5,4..5,5
-    3] Expr - 5,8..6,8
-      .value Constant 'Five\n  Six' - 5,8..6,8
-    4] Pass - 7,4..7,8
+   0] FunctionDef - 0,0..7,8
+     .name 'f'
+     .body[5]
+      0] Expr - 1,4..2,8
+        .value Constant 'One\n  Two' - 1,4..2,8
+      1] Expr - 3,4..4,9
+        .value Constant 'Three\n  Four' - 3,4..4,9
+      2] Expr - 5,4..5,5
+        .value Name 'i' Load - 5,4..5,5
+      3] Expr - 5,8..6,8
+        .value Constant 'Five\n  Six' - 5,8..6,8
+      4] Pass - 7,4..7,8
 '''),
 
 (4, 'body[0]', 0, 1, None, {'_cmp_asts': False}, ('exec', r'''
@@ -15266,17 +15266,17 @@ def f():
 ''', r'''
 Module - ROOT 0,0..6,12
   .body[1]
-  0] FunctionDef - 0,0..6,12
-    .name 'f'
-    .body[4]
-    0] Expr - 1,4..2,12
-      .value Constant 'One\n      Two' - 1,4..2,12
-    1] Expr - 3,4..4,13
-      .value Constant 'Three\n      Four' - 3,4..4,13
-    2] Expr - 5,4..5,5
-      .value Name 'i' Load - 5,4..5,5
-    3] Expr - 5,8..6,12
-      .value Constant 'Five\n      Six' - 5,8..6,12
+   0] FunctionDef - 0,0..6,12
+     .name 'f'
+     .body[4]
+      0] Expr - 1,4..2,12
+        .value Constant 'One\n      Two' - 1,4..2,12
+      1] Expr - 3,4..4,13
+        .value Constant 'Three\n      Four' - 3,4..4,13
+      2] Expr - 5,4..5,5
+        .value Name 'i' Load - 5,4..5,5
+      3] Expr - 5,8..6,12
+        .value Constant 'Five\n      Six' - 5,8..6,12
 '''),
 
 (5, 'body[0]', 0, 1, None, {'_cmp_asts': False, 'docstr': 'strict'}, ('exec', r'''
@@ -15307,17 +15307,17 @@ def f():
 ''', r'''
 Module - ROOT 0,0..6,8
   .body[1]
-  0] FunctionDef - 0,0..6,8
-    .name 'f'
-    .body[4]
-    0] Expr - 1,4..2,12
-      .value Constant 'One\n      Two' - 1,4..2,12
-    1] Expr - 3,4..4,9
-      .value Constant 'Three\n  Four' - 3,4..4,9
-    2] Expr - 5,4..5,5
-      .value Name 'i' Load - 5,4..5,5
-    3] Expr - 5,8..6,8
-      .value Constant 'Five\n  Six' - 5,8..6,8
+   0] FunctionDef - 0,0..6,8
+     .name 'f'
+     .body[4]
+      0] Expr - 1,4..2,12
+        .value Constant 'One\n      Two' - 1,4..2,12
+      1] Expr - 3,4..4,9
+        .value Constant 'Three\n  Four' - 3,4..4,9
+      2] Expr - 5,4..5,5
+        .value Name 'i' Load - 5,4..5,5
+      3] Expr - 5,8..6,8
+        .value Constant 'Five\n  Six' - 5,8..6,8
 '''),
 
 (6, 'body[0]', 0, 1, None, {'_cmp_asts': False, 'docstr': False}, ('exec', r'''
@@ -15348,17 +15348,17 @@ def f():
 ''', r'''
 Module - ROOT 0,0..6,8
   .body[1]
-  0] FunctionDef - 0,0..6,8
-    .name 'f'
-    .body[4]
-    0] Expr - 1,4..2,8
-      .value Constant 'One\n  Two' - 1,4..2,8
-    1] Expr - 3,4..4,9
-      .value Constant 'Three\n  Four' - 3,4..4,9
-    2] Expr - 5,4..5,5
-      .value Name 'i' Load - 5,4..5,5
-    3] Expr - 5,8..6,8
-      .value Constant 'Five\n  Six' - 5,8..6,8
+   0] FunctionDef - 0,0..6,8
+     .name 'f'
+     .body[4]
+      0] Expr - 1,4..2,8
+        .value Constant 'One\n  Two' - 1,4..2,8
+      1] Expr - 3,4..4,9
+        .value Constant 'Three\n  Four' - 3,4..4,9
+      2] Expr - 5,4..5,5
+        .value Name 'i' Load - 5,4..5,5
+      3] Expr - 5,8..6,8
+        .value Constant 'Five\n  Six' - 5,8..6,8
 '''),
 
 (7, 'body[0]', 1, 1, None, {'_cmp_asts': False}, ('exec', r'''
@@ -15391,18 +15391,18 @@ def f():
 ''', r'''
 Module - ROOT 0,0..7,12
   .body[1]
-  0] FunctionDef - 0,0..7,12
-    .name 'f'
-    .body[5]
-    0] Pass - 1,4..1,8
-    1] Expr - 2,4..3,12
-      .value Constant 'One\n      Two' - 2,4..3,12
-    2] Expr - 4,4..5,13
-      .value Constant 'Three\n      Four' - 4,4..5,13
-    3] Expr - 6,4..6,5
-      .value Name 'i' Load - 6,4..6,5
-    4] Expr - 6,8..7,12
-      .value Constant 'Five\n      Six' - 6,8..7,12
+   0] FunctionDef - 0,0..7,12
+     .name 'f'
+     .body[5]
+      0] Pass - 1,4..1,8
+      1] Expr - 2,4..3,12
+        .value Constant 'One\n      Two' - 2,4..3,12
+      2] Expr - 4,4..5,13
+        .value Constant 'Three\n      Four' - 4,4..5,13
+      3] Expr - 6,4..6,5
+        .value Name 'i' Load - 6,4..6,5
+      4] Expr - 6,8..7,12
+        .value Constant 'Five\n      Six' - 6,8..7,12
 '''),
 
 (8, 'body[0]', 1, 1, None, {'_cmp_asts': False, 'docstr': 'strict'}, ('exec', r'''
@@ -15435,18 +15435,18 @@ def f():
 ''', r'''
 Module - ROOT 0,0..7,8
   .body[1]
-  0] FunctionDef - 0,0..7,8
-    .name 'f'
-    .body[5]
-    0] Pass - 1,4..1,8
-    1] Expr - 2,4..3,8
-      .value Constant 'One\n  Two' - 2,4..3,8
-    2] Expr - 4,4..5,9
-      .value Constant 'Three\n  Four' - 4,4..5,9
-    3] Expr - 6,4..6,5
-      .value Name 'i' Load - 6,4..6,5
-    4] Expr - 6,8..7,8
-      .value Constant 'Five\n  Six' - 6,8..7,8
+   0] FunctionDef - 0,0..7,8
+     .name 'f'
+     .body[5]
+      0] Pass - 1,4..1,8
+      1] Expr - 2,4..3,8
+        .value Constant 'One\n  Two' - 2,4..3,8
+      2] Expr - 4,4..5,9
+        .value Constant 'Three\n  Four' - 4,4..5,9
+      3] Expr - 6,4..6,5
+        .value Name 'i' Load - 6,4..6,5
+      4] Expr - 6,8..7,8
+        .value Constant 'Five\n  Six' - 6,8..7,8
 '''),
 
 (9, 'body[0]', 1, 1, None, {'_cmp_asts': False, 'docstr': False}, ('exec', r'''
@@ -15479,18 +15479,18 @@ def f():
 ''', r'''
 Module - ROOT 0,0..7,8
   .body[1]
-  0] FunctionDef - 0,0..7,8
-    .name 'f'
-    .body[5]
-    0] Pass - 1,4..1,8
-    1] Expr - 2,4..3,8
-      .value Constant 'One\n  Two' - 2,4..3,8
-    2] Expr - 4,4..5,9
-      .value Constant 'Three\n  Four' - 4,4..5,9
-    3] Expr - 6,4..6,5
-      .value Name 'i' Load - 6,4..6,5
-    4] Expr - 6,8..7,8
-      .value Constant 'Five\n  Six' - 6,8..7,8
+   0] FunctionDef - 0,0..7,8
+     .name 'f'
+     .body[5]
+      0] Pass - 1,4..1,8
+      1] Expr - 2,4..3,8
+        .value Constant 'One\n  Two' - 2,4..3,8
+      2] Expr - 4,4..5,9
+        .value Constant 'Three\n  Four' - 4,4..5,9
+      3] Expr - 6,4..6,5
+        .value Name 'i' Load - 6,4..6,5
+      4] Expr - 6,8..7,8
+        .value Constant 'Five\n  Six' - 6,8..7,8
 '''),
 ],
 
@@ -15509,14 +15509,14 @@ if 1:
 If - ROOT 0,0..2,9
   .test Constant 1 - 0,3..0,4
   .body[2]
-  0] Assign - 1,4..1,9
-    .targets[1]
-    0] Name 'i' Store - 1,4..1,5
-    .value Constant 1 - 1,8..1,9
-  1] Assign - 2,4..2,9
-    .targets[1]
-    0] Name 'k' Store - 2,4..2,5
-    .value Constant 3 - 2,8..2,9
+   0] Assign - 1,4..1,9
+     .targets[1]
+      0] Name 'i' Store - 1,4..1,5
+     .value Constant 1 - 1,8..1,9
+   1] Assign - 2,4..2,9
+     .targets[1]
+      0] Name 'k' Store - 2,4..2,5
+     .value Constant 3 - 2,8..2,9
 '''),
 
 (1, '', 1, 2, None, {}, (None, r'''
@@ -15539,14 +15539,14 @@ if 1:
 If - ROOT 0,0..2,9
   .test Constant 1 - 0,3..0,4
   .body[2]
-  0] Assign - 1,4..1,9
-    .targets[1]
-    0] Name 'i' Store - 1,4..1,5
-    .value Constant 1 - 1,8..1,9
-  1] Assign - 2,4..2,9
-    .targets[1]
-    0] Name 'k' Store - 2,4..2,5
-    .value Constant 3 - 2,8..2,9
+   0] Assign - 1,4..1,9
+     .targets[1]
+      0] Name 'i' Store - 1,4..1,5
+     .value Constant 1 - 1,8..1,9
+   1] Assign - 2,4..2,9
+     .targets[1]
+      0] Name 'k' Store - 2,4..2,5
+     .value Constant 3 - 2,8..2,9
 '''),
 
 (2, '', 2, 2, None, {}, (None, r'''
@@ -15563,18 +15563,18 @@ if 1:
 If - ROOT 0,0..3,9
   .test Constant 1 - 0,3..0,4
   .body[3]
-  0] Assign - 1,4..1,9
-    .targets[1]
-    0] Name 'i' Store - 1,4..1,5
-    .value Constant 1 - 1,8..1,9
-  1] Assign - 2,4..2,9
-    .targets[1]
-    0] Name 'j' Store - 2,4..2,5
-    .value Constant 2 - 2,8..2,9
-  2] Assign - 3,4..3,9
-    .targets[1]
-    0] Name 'k' Store - 3,4..3,5
-    .value Constant 3 - 3,8..3,9
+   0] Assign - 1,4..1,9
+     .targets[1]
+      0] Name 'i' Store - 1,4..1,5
+     .value Constant 1 - 1,8..1,9
+   1] Assign - 2,4..2,9
+     .targets[1]
+      0] Name 'j' Store - 2,4..2,5
+     .value Constant 2 - 2,8..2,9
+   2] Assign - 3,4..3,9
+     .targets[1]
+      0] Name 'k' Store - 3,4..3,5
+     .value Constant 3 - 3,8..3,9
 '''),
 
 (3, '', 2, 2, None, {}, (None, r'''
@@ -15599,18 +15599,18 @@ if 1:
 If - ROOT 0,0..3,9
   .test Constant 1 - 0,3..0,4
   .body[3]
-  0] Assign - 1,4..1,9
-    .targets[1]
-    0] Name 'i' Store - 1,4..1,5
-    .value Constant 1 - 1,8..1,9
-  1] Assign - 2,4..2,9
-    .targets[1]
-    0] Name 'j' Store - 2,4..2,5
-    .value Constant 2 - 2,8..2,9
-  2] Assign - 3,4..3,9
-    .targets[1]
-    0] Name 'k' Store - 3,4..3,5
-    .value Constant 3 - 3,8..3,9
+   0] Assign - 1,4..1,9
+     .targets[1]
+      0] Name 'i' Store - 1,4..1,5
+     .value Constant 1 - 1,8..1,9
+   1] Assign - 2,4..2,9
+     .targets[1]
+      0] Name 'j' Store - 2,4..2,5
+     .value Constant 2 - 2,8..2,9
+   2] Assign - 3,4..3,9
+     .targets[1]
+      0] Name 'k' Store - 3,4..3,5
+     .value Constant 3 - 3,8..3,9
 '''),
 
 (4, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -15625,17 +15625,17 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,9
   .body[1]
-  0] If - 0,0..2,9
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Assign - 1,4..1,9
-      .targets[1]
-      0] Name 'i' Store - 1,4..1,5
-      .value Constant 1 - 1,8..1,9
-    1] Assign - 2,4..2,9
-      .targets[1]
-      0] Name 'k' Store - 2,4..2,5
-      .value Constant 3 - 2,8..2,9
+   0] If - 0,0..2,9
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Assign - 1,4..1,9
+        .targets[1]
+         0] Name 'i' Store - 1,4..1,5
+        .value Constant 1 - 1,8..1,9
+      1] Assign - 2,4..2,9
+        .targets[1]
+         0] Name 'k' Store - 2,4..2,5
+        .value Constant 3 - 2,8..2,9
 '''),
 
 (5, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -15657,17 +15657,17 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,0
   .body[1]
-  0] If - 0,0..2,9
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Assign - 1,4..1,9
-      .targets[1]
-      0] Name 'i' Store - 1,4..1,5
-      .value Constant 1 - 1,8..1,9
-    1] Assign - 2,4..2,9
-      .targets[1]
-      0] Name 'k' Store - 2,4..2,5
-      .value Constant 3 - 2,8..2,9
+   0] If - 0,0..2,9
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Assign - 1,4..1,9
+        .targets[1]
+         0] Name 'i' Store - 1,4..1,5
+        .value Constant 1 - 1,8..1,9
+      1] Assign - 2,4..2,9
+        .targets[1]
+         0] Name 'k' Store - 2,4..2,5
+        .value Constant 3 - 2,8..2,9
 '''),
 
 (6, 'body[0]', 2, 2, None, {}, ('exec', r'''
@@ -15683,21 +15683,21 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,9
   .body[1]
-  0] If - 0,0..3,9
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Assign - 1,4..1,9
-      .targets[1]
-      0] Name 'i' Store - 1,4..1,5
-      .value Constant 1 - 1,8..1,9
-    1] Assign - 2,4..2,9
-      .targets[1]
-      0] Name 'j' Store - 2,4..2,5
-      .value Constant 2 - 2,8..2,9
-    2] Assign - 3,4..3,9
-      .targets[1]
-      0] Name 'k' Store - 3,4..3,5
-      .value Constant 3 - 3,8..3,9
+   0] If - 0,0..3,9
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Assign - 1,4..1,9
+        .targets[1]
+         0] Name 'i' Store - 1,4..1,5
+        .value Constant 1 - 1,8..1,9
+      1] Assign - 2,4..2,9
+        .targets[1]
+         0] Name 'j' Store - 2,4..2,5
+        .value Constant 2 - 2,8..2,9
+      2] Assign - 3,4..3,9
+        .targets[1]
+         0] Name 'k' Store - 3,4..3,5
+        .value Constant 3 - 3,8..3,9
 '''),
 
 (7, 'body[0]', 2, 2, None, {}, ('exec', r'''
@@ -15721,21 +15721,21 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,0
   .body[1]
-  0] If - 0,0..3,9
-    .test Constant 1 - 0,3..0,4
-    .body[3]
-    0] Assign - 1,4..1,9
-      .targets[1]
-      0] Name 'i' Store - 1,4..1,5
-      .value Constant 1 - 1,8..1,9
-    1] Assign - 2,4..2,9
-      .targets[1]
-      0] Name 'j' Store - 2,4..2,5
-      .value Constant 2 - 2,8..2,9
-    2] Assign - 3,4..3,9
-      .targets[1]
-      0] Name 'k' Store - 3,4..3,5
-      .value Constant 3 - 3,8..3,9
+   0] If - 0,0..3,9
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Assign - 1,4..1,9
+        .targets[1]
+         0] Name 'i' Store - 1,4..1,5
+        .value Constant 1 - 1,8..1,9
+      1] Assign - 2,4..2,9
+        .targets[1]
+         0] Name 'j' Store - 2,4..2,5
+        .value Constant 2 - 2,8..2,9
+      2] Assign - 3,4..3,9
+        .targets[1]
+         0] Name 'k' Store - 3,4..3,5
+        .value Constant 3 - 3,8..3,9
 '''),
 
 (8, '', 0, 0, None, {}, ('exec', r'''
@@ -15751,21 +15751,21 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,9
   .body[2]
-  0] Assign - 0,0..0,5
-    .targets[1]
-    0] Name 'k' Store - 0,0..0,1
-    .value Constant 3 - 0,4..0,5
-  1] If - 1,0..3,9
-    .test Constant 1 - 1,3..1,4
-    .body[2]
-    0] Assign - 2,4..2,9
-      .targets[1]
-      0] Name 'i' Store - 2,4..2,5
-      .value Constant 1 - 2,8..2,9
-    1] Assign - 3,4..3,9
-      .targets[1]
-      0] Name 'j' Store - 3,4..3,5
-      .value Constant 2 - 3,8..3,9
+   0] Assign - 0,0..0,5
+     .targets[1]
+      0] Name 'k' Store - 0,0..0,1
+     .value Constant 3 - 0,4..0,5
+   1] If - 1,0..3,9
+     .test Constant 1 - 1,3..1,4
+     .body[2]
+      0] Assign - 2,4..2,9
+        .targets[1]
+         0] Name 'i' Store - 2,4..2,5
+        .value Constant 1 - 2,8..2,9
+      1] Assign - 3,4..3,9
+        .targets[1]
+         0] Name 'j' Store - 3,4..3,5
+        .value Constant 2 - 3,8..3,9
 '''),
 
 (9, '', 0, 0, None, {}, ('exec', r'''
@@ -15783,21 +15783,21 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,9
   .body[2]
-  0] Assign - 0,0..0,5
-    .targets[1]
-    0] Name 'k' Store - 0,0..0,1
-    .value Constant 3 - 0,4..0,5
-  1] If - 1,0..3,9
-    .test Constant 1 - 1,3..1,4
-    .body[2]
-    0] Assign - 2,4..2,9
-      .targets[1]
-      0] Name 'i' Store - 2,4..2,5
-      .value Constant 1 - 2,8..2,9
-    1] Assign - 3,4..3,9
-      .targets[1]
-      0] Name 'j' Store - 3,4..3,5
-      .value Constant 2 - 3,8..3,9
+   0] Assign - 0,0..0,5
+     .targets[1]
+      0] Name 'k' Store - 0,0..0,1
+     .value Constant 3 - 0,4..0,5
+   1] If - 1,0..3,9
+     .test Constant 1 - 1,3..1,4
+     .body[2]
+      0] Assign - 2,4..2,9
+        .targets[1]
+         0] Name 'i' Store - 2,4..2,5
+        .value Constant 1 - 2,8..2,9
+      1] Assign - 3,4..3,9
+        .targets[1]
+         0] Name 'j' Store - 3,4..3,5
+        .value Constant 2 - 3,8..3,9
 '''),
 
 (10, '', 0, 0, None, {}, ('exec', r'''
@@ -15822,21 +15822,21 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,9
   .body[2]
-  0] Assign - 0,0..0,5
-    .targets[1]
-    0] Name 'k' Store - 0,0..0,1
-    .value Constant 3 - 0,4..0,5
-  1] If - 2,0..4,9
-    .test Constant 1 - 2,3..2,4
-    .body[2]
-    0] Assign - 3,4..3,9
-      .targets[1]
-      0] Name 'i' Store - 3,4..3,5
-      .value Constant 1 - 3,8..3,9
-    1] Assign - 4,4..4,9
-      .targets[1]
-      0] Name 'j' Store - 4,4..4,5
-      .value Constant 2 - 4,8..4,9
+   0] Assign - 0,0..0,5
+     .targets[1]
+      0] Name 'k' Store - 0,0..0,1
+     .value Constant 3 - 0,4..0,5
+   1] If - 2,0..4,9
+     .test Constant 1 - 2,3..2,4
+     .body[2]
+      0] Assign - 3,4..3,9
+        .targets[1]
+         0] Name 'i' Store - 3,4..3,5
+        .value Constant 1 - 3,8..3,9
+      1] Assign - 4,4..4,9
+        .targets[1]
+         0] Name 'j' Store - 4,4..4,5
+        .value Constant 2 - 4,8..4,9
 '''),
 
 (11, '', 0, 1, None, {}, ('exec', r'''
@@ -15848,10 +15848,10 @@ r'''k = 3'''),
 r'''k = 3''', r'''
 Module - ROOT 0,0..0,5
   .body[1]
-  0] Assign - 0,0..0,5
-    .targets[1]
-    0] Name 'k' Store - 0,0..0,1
-    .value Constant 3 - 0,4..0,5
+   0] Assign - 0,0..0,5
+     .targets[1]
+      0] Name 'k' Store - 0,0..0,1
+     .value Constant 3 - 0,4..0,5
 '''),
 
 (12, '', 0, 1, None, {}, ('exec', r'''
@@ -15868,10 +15868,10 @@ k = 3
 r'''k = 3''', r'''
 Module - ROOT 0,0..1,0
   .body[1]
-  0] Assign - 0,0..0,5
-    .targets[1]
-    0] Name 'k' Store - 0,0..0,1
-    .value Constant 3 - 0,4..0,5
+   0] Assign - 0,0..0,5
+     .targets[1]
+      0] Name 'k' Store - 0,0..0,1
+     .value Constant 3 - 0,4..0,5
 '''),
 
 (13, '', 0, 1, None, {}, ('exec', r'''
@@ -15890,10 +15890,10 @@ k = 3
 r'''k = 3''', r'''
 Module - ROOT 0,0..2,0
   .body[1]
-  0] Assign - 0,0..0,5
-    .targets[1]
-    0] Name 'k' Store - 0,0..0,1
-    .value Constant 3 - 0,4..0,5
+   0] Assign - 0,0..0,5
+     .targets[1]
+      0] Name 'k' Store - 0,0..0,1
+     .value Constant 3 - 0,4..0,5
 '''),
 
 (14, '', 1, 1, None, {}, ('exec', r'''
@@ -15909,21 +15909,21 @@ k = 3
 ''', r'''
 Module - ROOT 0,0..3,5
   .body[2]
-  0] If - 0,0..2,9
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Assign - 1,4..1,9
-      .targets[1]
-      0] Name 'i' Store - 1,4..1,5
-      .value Constant 1 - 1,8..1,9
-    1] Assign - 2,4..2,9
-      .targets[1]
-      0] Name 'j' Store - 2,4..2,5
-      .value Constant 2 - 2,8..2,9
-  1] Assign - 3,0..3,5
-    .targets[1]
-    0] Name 'k' Store - 3,0..3,1
-    .value Constant 3 - 3,4..3,5
+   0] If - 0,0..2,9
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Assign - 1,4..1,9
+        .targets[1]
+         0] Name 'i' Store - 1,4..1,5
+        .value Constant 1 - 1,8..1,9
+      1] Assign - 2,4..2,9
+        .targets[1]
+         0] Name 'j' Store - 2,4..2,5
+        .value Constant 2 - 2,8..2,9
+   1] Assign - 3,0..3,5
+     .targets[1]
+      0] Name 'k' Store - 3,0..3,1
+     .value Constant 3 - 3,4..3,5
 '''),
 
 (15, '', 1, 1, None, {}, ('exec', r'''
@@ -15947,21 +15947,21 @@ k = 3
 ''', r'''
 Module - ROOT 0,0..4,0
   .body[2]
-  0] If - 0,0..2,9
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Assign - 1,4..1,9
-      .targets[1]
-      0] Name 'i' Store - 1,4..1,5
-      .value Constant 1 - 1,8..1,9
-    1] Assign - 2,4..2,9
-      .targets[1]
-      0] Name 'j' Store - 2,4..2,5
-      .value Constant 2 - 2,8..2,9
-  1] Assign - 3,0..3,5
-    .targets[1]
-    0] Name 'k' Store - 3,0..3,1
-    .value Constant 3 - 3,4..3,5
+   0] If - 0,0..2,9
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Assign - 1,4..1,9
+        .targets[1]
+         0] Name 'i' Store - 1,4..1,5
+        .value Constant 1 - 1,8..1,9
+      1] Assign - 2,4..2,9
+        .targets[1]
+         0] Name 'j' Store - 2,4..2,5
+        .value Constant 2 - 2,8..2,9
+   1] Assign - 3,0..3,5
+     .targets[1]
+      0] Name 'k' Store - 3,0..3,1
+     .value Constant 3 - 3,4..3,5
 '''),
 
 (16, '', 1, 1, None, {}, ('exec', r'''
@@ -15987,21 +15987,21 @@ k = 3
 ''', r'''
 Module - ROOT 0,0..5,0
   .body[2]
-  0] If - 0,0..2,9
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Assign - 1,4..1,9
-      .targets[1]
-      0] Name 'i' Store - 1,4..1,5
-      .value Constant 1 - 1,8..1,9
-    1] Assign - 2,4..2,9
-      .targets[1]
-      0] Name 'j' Store - 2,4..2,5
-      .value Constant 2 - 2,8..2,9
-  1] Assign - 3,0..3,5
-    .targets[1]
-    0] Name 'k' Store - 3,0..3,1
-    .value Constant 3 - 3,4..3,5
+   0] If - 0,0..2,9
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Assign - 1,4..1,9
+        .targets[1]
+         0] Name 'i' Store - 1,4..1,5
+        .value Constant 1 - 1,8..1,9
+      1] Assign - 2,4..2,9
+        .targets[1]
+         0] Name 'j' Store - 2,4..2,5
+        .value Constant 2 - 2,8..2,9
+   1] Assign - 3,0..3,5
+     .targets[1]
+      0] Name 'k' Store - 3,0..3,1
+     .value Constant 3 - 3,4..3,5
 '''),
 
 (17, '', 1, 1, None, {}, ('_ExceptHandlers',
@@ -16016,13 +16016,13 @@ except:
 ''', r'''
 _ExceptHandlers - ROOT 0,0..1,12
   .handlers[2]
-  0] ExceptHandler - 0,0..0,14
-    .type Name 'a' Load - 0,7..0,8
-    .body[1]
-    0] Pass - 0,10..0,14
-  1] ExceptHandler - 1,0..1,12
-    .body[1]
-    0] Pass - 1,8..1,12
+   0] ExceptHandler - 0,0..0,14
+     .type Name 'a' Load - 0,7..0,8
+     .body[1]
+      0] Pass - 0,10..0,14
+   1] ExceptHandler - 1,0..1,12
+     .body[1]
+      0] Pass - 1,8..1,12
 '''),
 
 (18, '', 1, 1, None, {}, ('_ExceptHandlers',
@@ -16040,13 +16040,13 @@ except:
 ''', r'''
 _ExceptHandlers - ROOT 0,0..1,12
   .handlers[2]
-  0] ExceptHandler - 0,0..0,14
-    .type Name 'a' Load - 0,7..0,8
-    .body[1]
-    0] Pass - 0,10..0,14
-  1] ExceptHandler - 1,0..1,12
-    .body[1]
-    0] Pass - 1,8..1,12
+   0] ExceptHandler - 0,0..0,14
+     .type Name 'a' Load - 0,7..0,8
+     .body[1]
+      0] Pass - 0,10..0,14
+   1] ExceptHandler - 1,0..1,12
+     .body[1]
+      0] Pass - 1,8..1,12
 '''),
 
 (19, '', 1, 1, None, {}, ('_ExceptHandlers',
@@ -16066,13 +16066,13 @@ except:
 ''', r'''
 _ExceptHandlers - ROOT 0,0..1,12
   .handlers[2]
-  0] ExceptHandler - 0,0..0,14
-    .type Name 'a' Load - 0,7..0,8
-    .body[1]
-    0] Pass - 0,10..0,14
-  1] ExceptHandler - 1,0..1,12
-    .body[1]
-    0] Pass - 1,8..1,12
+   0] ExceptHandler - 0,0..0,14
+     .type Name 'a' Load - 0,7..0,8
+     .body[1]
+      0] Pass - 0,10..0,14
+   1] ExceptHandler - 1,0..1,12
+     .body[1]
+      0] Pass - 1,8..1,12
 '''),
 
 (20, '', 1, 1, None, {}, ('_ExceptHandlers',
@@ -16086,13 +16086,13 @@ except:
 ''', r'''
 _ExceptHandlers - ROOT 0,0..2,8
   .handlers[2]
-  0] ExceptHandler - 0,0..0,14
-    .type Name 'a' Load - 0,7..0,8
-    .body[1]
-    0] Pass - 0,10..0,14
-  1] ExceptHandler - 1,0..2,8
-    .body[1]
-    0] Pass - 2,4..2,8
+   0] ExceptHandler - 0,0..0,14
+     .type Name 'a' Load - 0,7..0,8
+     .body[1]
+      0] Pass - 0,10..0,14
+   1] ExceptHandler - 1,0..2,8
+     .body[1]
+      0] Pass - 2,4..2,8
 '''),
 
 (21, '', 1, 1, None, {}, ('_ExceptHandlers',
@@ -16112,13 +16112,13 @@ except:
 ''', r'''
 _ExceptHandlers - ROOT 0,0..2,8
   .handlers[2]
-  0] ExceptHandler - 0,0..0,14
-    .type Name 'a' Load - 0,7..0,8
-    .body[1]
-    0] Pass - 0,10..0,14
-  1] ExceptHandler - 1,0..2,8
-    .body[1]
-    0] Pass - 2,4..2,8
+   0] ExceptHandler - 0,0..0,14
+     .type Name 'a' Load - 0,7..0,8
+     .body[1]
+      0] Pass - 0,10..0,14
+   1] ExceptHandler - 1,0..2,8
+     .body[1]
+      0] Pass - 2,4..2,8
 '''),
 
 (22, '', 1, 1, None, {}, ('_ExceptHandlers',
@@ -16140,13 +16140,13 @@ except:
 ''', r'''
 _ExceptHandlers - ROOT 0,0..2,8
   .handlers[2]
-  0] ExceptHandler - 0,0..0,14
-    .type Name 'a' Load - 0,7..0,8
-    .body[1]
-    0] Pass - 0,10..0,14
-  1] ExceptHandler - 1,0..2,8
-    .body[1]
-    0] Pass - 2,4..2,8
+   0] ExceptHandler - 0,0..0,14
+     .type Name 'a' Load - 0,7..0,8
+     .body[1]
+      0] Pass - 0,10..0,14
+   1] ExceptHandler - 1,0..2,8
+     .body[1]
+      0] Pass - 2,4..2,8
 '''),
 
 (23, '', 1, 1, None, {}, ('_match_cases',
@@ -16161,16 +16161,16 @@ case 2:
 ''', r'''
 _match_cases - ROOT 0,0..1,12
   .cases[2]
-  0] match_case - 0,0..0,12
-    .pattern MatchValue - 0,5..0,6
-      .value Constant 1 - 0,5..0,6
-    .body[1]
-    0] Pass - 0,8..0,12
-  1] match_case - 1,0..1,12
-    .pattern MatchValue - 1,5..1,6
-      .value Constant 2 - 1,5..1,6
-    .body[1]
-    0] Pass - 1,8..1,12
+   0] match_case - 0,0..0,12
+     .pattern MatchValue - 0,5..0,6
+       .value Constant 1 - 0,5..0,6
+     .body[1]
+      0] Pass - 0,8..0,12
+   1] match_case - 1,0..1,12
+     .pattern MatchValue - 1,5..1,6
+       .value Constant 2 - 1,5..1,6
+     .body[1]
+      0] Pass - 1,8..1,12
 '''),
 
 (24, '', 1, 1, None, {}, ('_match_cases',
@@ -16188,16 +16188,16 @@ case 2:
 ''', r'''
 _match_cases - ROOT 0,0..1,12
   .cases[2]
-  0] match_case - 0,0..0,12
-    .pattern MatchValue - 0,5..0,6
-      .value Constant 1 - 0,5..0,6
-    .body[1]
-    0] Pass - 0,8..0,12
-  1] match_case - 1,0..1,12
-    .pattern MatchValue - 1,5..1,6
-      .value Constant 2 - 1,5..1,6
-    .body[1]
-    0] Pass - 1,8..1,12
+   0] match_case - 0,0..0,12
+     .pattern MatchValue - 0,5..0,6
+       .value Constant 1 - 0,5..0,6
+     .body[1]
+      0] Pass - 0,8..0,12
+   1] match_case - 1,0..1,12
+     .pattern MatchValue - 1,5..1,6
+       .value Constant 2 - 1,5..1,6
+     .body[1]
+      0] Pass - 1,8..1,12
 '''),
 
 (25, '', 1, 1, None, {}, ('_match_cases',
@@ -16217,16 +16217,16 @@ case 2:
 ''', r'''
 _match_cases - ROOT 0,0..1,12
   .cases[2]
-  0] match_case - 0,0..0,12
-    .pattern MatchValue - 0,5..0,6
-      .value Constant 1 - 0,5..0,6
-    .body[1]
-    0] Pass - 0,8..0,12
-  1] match_case - 1,0..1,12
-    .pattern MatchValue - 1,5..1,6
-      .value Constant 2 - 1,5..1,6
-    .body[1]
-    0] Pass - 1,8..1,12
+   0] match_case - 0,0..0,12
+     .pattern MatchValue - 0,5..0,6
+       .value Constant 1 - 0,5..0,6
+     .body[1]
+      0] Pass - 0,8..0,12
+   1] match_case - 1,0..1,12
+     .pattern MatchValue - 1,5..1,6
+       .value Constant 2 - 1,5..1,6
+     .body[1]
+      0] Pass - 1,8..1,12
 '''),
 
 (26, '', 1, 1, None, {}, ('_match_cases',
@@ -16240,16 +16240,16 @@ case 2:
 ''', r'''
 _match_cases - ROOT 0,0..2,8
   .cases[2]
-  0] match_case - 0,0..0,12
-    .pattern MatchValue - 0,5..0,6
-      .value Constant 1 - 0,5..0,6
-    .body[1]
-    0] Pass - 0,8..0,12
-  1] match_case - 1,0..2,8
-    .pattern MatchValue - 1,5..1,6
-      .value Constant 2 - 1,5..1,6
-    .body[1]
-    0] Pass - 2,4..2,8
+   0] match_case - 0,0..0,12
+     .pattern MatchValue - 0,5..0,6
+       .value Constant 1 - 0,5..0,6
+     .body[1]
+      0] Pass - 0,8..0,12
+   1] match_case - 1,0..2,8
+     .pattern MatchValue - 1,5..1,6
+       .value Constant 2 - 1,5..1,6
+     .body[1]
+      0] Pass - 2,4..2,8
 '''),
 
 (27, '', 1, 1, None, {}, ('_match_cases',
@@ -16269,16 +16269,16 @@ case 2:
 ''', r'''
 _match_cases - ROOT 0,0..2,8
   .cases[2]
-  0] match_case - 0,0..0,12
-    .pattern MatchValue - 0,5..0,6
-      .value Constant 1 - 0,5..0,6
-    .body[1]
-    0] Pass - 0,8..0,12
-  1] match_case - 1,0..2,8
-    .pattern MatchValue - 1,5..1,6
-      .value Constant 2 - 1,5..1,6
-    .body[1]
-    0] Pass - 2,4..2,8
+   0] match_case - 0,0..0,12
+     .pattern MatchValue - 0,5..0,6
+       .value Constant 1 - 0,5..0,6
+     .body[1]
+      0] Pass - 0,8..0,12
+   1] match_case - 1,0..2,8
+     .pattern MatchValue - 1,5..1,6
+       .value Constant 2 - 1,5..1,6
+     .body[1]
+      0] Pass - 2,4..2,8
 '''),
 
 (28, '', 1, 1, None, {}, ('_match_cases',
@@ -16300,16 +16300,16 @@ case 2:
 ''', r'''
 _match_cases - ROOT 0,0..2,8
   .cases[2]
-  0] match_case - 0,0..0,12
-    .pattern MatchValue - 0,5..0,6
-      .value Constant 1 - 0,5..0,6
-    .body[1]
-    0] Pass - 0,8..0,12
-  1] match_case - 1,0..2,8
-    .pattern MatchValue - 1,5..1,6
-      .value Constant 2 - 1,5..1,6
-    .body[1]
-    0] Pass - 2,4..2,8
+   0] match_case - 0,0..0,12
+     .pattern MatchValue - 0,5..0,6
+       .value Constant 1 - 0,5..0,6
+     .body[1]
+      0] Pass - 0,8..0,12
+   1] match_case - 1,0..2,8
+     .pattern MatchValue - 1,5..1,6
+       .value Constant 2 - 1,5..1,6
+     .body[1]
+      0] Pass - 2,4..2,8
 '''),
 ],
 
@@ -16328,14 +16328,14 @@ c = 3
 ''', r'''
 Module - ROOT 0,0..1,6
   .body[2]
-  0] Assign - 0,0..0,5
-    .targets[1]
-    0] Name 'a' Store - 0,0..0,1
-    .value Constant 1 - 0,4..0,5
-  1] Assign - 1,0..1,5
-    .targets[1]
-    0] Name 'c' Store - 1,0..1,1
-    .value Constant 3 - 1,4..1,5
+   0] Assign - 0,0..0,5
+     .targets[1]
+      0] Name 'a' Store - 0,0..0,1
+     .value Constant 1 - 0,4..0,5
+   1] Assign - 1,0..1,5
+     .targets[1]
+      0] Name 'c' Store - 1,0..1,1
+     .value Constant 3 - 1,4..1,5
 '''),
 
 (1, '', 1, 2, None, {}, (None, r'''
@@ -16351,14 +16351,14 @@ c = 3
 ''', r'''
 Module - ROOT 0,0..1,6
   .body[2]
-  0] Assign - 0,0..0,5
-    .targets[1]
-    0] Name 'a' Store - 0,0..0,1
-    .value Constant 1 - 0,4..0,5
-  1] Assign - 1,0..1,5
-    .targets[1]
-    0] Name 'c' Store - 1,0..1,1
-    .value Constant 3 - 1,4..1,5
+   0] Assign - 0,0..0,5
+     .targets[1]
+      0] Name 'a' Store - 0,0..0,1
+     .value Constant 1 - 0,4..0,5
+   1] Assign - 1,0..1,5
+     .targets[1]
+      0] Name 'c' Store - 1,0..1,1
+     .value Constant 3 - 1,4..1,5
 '''),
 
 (2, '', 1, 2, None, {}, (None, r'''
@@ -16378,14 +16378,14 @@ if 1:
 If - ROOT 0,0..2,10
   .test Constant 1 - 0,3..0,4
   .body[2]
-  0] Assign - 1,4..1,9
-    .targets[1]
-    0] Name 'a' Store - 1,4..1,5
-    .value Constant 1 - 1,8..1,9
-  1] Assign - 2,4..2,9
-    .targets[1]
-    0] Name 'c' Store - 2,4..2,5
-    .value Constant 3 - 2,8..2,9
+   0] Assign - 1,4..1,9
+     .targets[1]
+      0] Name 'a' Store - 1,4..1,5
+     .value Constant 1 - 1,8..1,9
+   1] Assign - 2,4..2,9
+     .targets[1]
+      0] Name 'c' Store - 2,4..2,5
+     .value Constant 3 - 2,8..2,9
 '''),
 
 (3, '', 1, 2, None, {}, (None, r'''
@@ -16405,14 +16405,14 @@ if 1:
 If - ROOT 0,0..2,10
   .test Constant 1 - 0,3..0,4
   .body[2]
-  0] Assign - 1,4..1,9
-    .targets[1]
-    0] Name 'a' Store - 1,4..1,5
-    .value Constant 1 - 1,8..1,9
-  1] Assign - 2,4..2,9
-    .targets[1]
-    0] Name 'c' Store - 2,4..2,5
-    .value Constant 3 - 2,8..2,9
+   0] Assign - 1,4..1,9
+     .targets[1]
+      0] Name 'a' Store - 1,4..1,5
+     .value Constant 1 - 1,8..1,9
+   1] Assign - 2,4..2,9
+     .targets[1]
+      0] Name 'c' Store - 2,4..2,5
+     .value Constant 3 - 2,8..2,9
 '''),
 
 (4, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -16431,17 +16431,17 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,10
   .body[1]
-  0] If - 0,0..2,10
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Assign - 1,4..1,9
-      .targets[1]
-      0] Name 'a' Store - 1,4..1,5
-      .value Constant 1 - 1,8..1,9
-    1] Assign - 2,4..2,9
-      .targets[1]
-      0] Name 'c' Store - 2,4..2,5
-      .value Constant 3 - 2,8..2,9
+   0] If - 0,0..2,10
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Assign - 1,4..1,9
+        .targets[1]
+         0] Name 'a' Store - 1,4..1,5
+        .value Constant 1 - 1,8..1,9
+      1] Assign - 2,4..2,9
+        .targets[1]
+         0] Name 'c' Store - 2,4..2,5
+        .value Constant 3 - 2,8..2,9
 '''),
 
 (5, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -16460,17 +16460,17 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..2,10
   .body[1]
-  0] If - 0,0..2,10
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Assign - 1,4..1,9
-      .targets[1]
-      0] Name 'a' Store - 1,4..1,5
-      .value Constant 1 - 1,8..1,9
-    1] Assign - 2,4..2,9
-      .targets[1]
-      0] Name 'c' Store - 2,4..2,5
-      .value Constant 3 - 2,8..2,9
+   0] If - 0,0..2,10
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Assign - 1,4..1,9
+        .targets[1]
+         0] Name 'a' Store - 1,4..1,5
+        .value Constant 1 - 1,8..1,9
+      1] Assign - 2,4..2,9
+        .targets[1]
+         0] Name 'c' Store - 2,4..2,5
+        .value Constant 3 - 2,8..2,9
 '''),
 
 (6, '', 1, 1, None, {}, ('_ExceptHandlers',
@@ -16485,13 +16485,13 @@ except:
 ''', r'''
 _ExceptHandlers - ROOT 0,0..1,13
   .handlers[2]
-  0] ExceptHandler - 0,0..0,14
-    .type Name 'a' Load - 0,7..0,8
-    .body[1]
-    0] Pass - 0,10..0,14
-  1] ExceptHandler - 1,0..1,13
-    .body[1]
-    0] Pass - 1,8..1,12
+   0] ExceptHandler - 0,0..0,14
+     .type Name 'a' Load - 0,7..0,8
+     .body[1]
+      0] Pass - 0,10..0,14
+   1] ExceptHandler - 1,0..1,13
+     .body[1]
+      0] Pass - 1,8..1,12
 '''),
 
 (7, '', 1, 1, None, {}, ('_match_cases',
@@ -16506,16 +16506,16 @@ case 2:
 ''', r'''
 _match_cases - ROOT 0,0..1,13
   .cases[2]
-  0] match_case - 0,0..0,12
-    .pattern MatchValue - 0,5..0,6
-      .value Constant 1 - 0,5..0,6
-    .body[1]
-    0] Pass - 0,8..0,12
-  1] match_case - 1,0..1,13
-    .pattern MatchValue - 1,5..1,6
-      .value Constant 2 - 1,5..1,6
-    .body[1]
-    0] Pass - 1,8..1,12
+   0] match_case - 0,0..0,12
+     .pattern MatchValue - 0,5..0,6
+       .value Constant 1 - 0,5..0,6
+     .body[1]
+      0] Pass - 0,8..0,12
+   1] match_case - 1,0..1,13
+     .pattern MatchValue - 1,5..1,6
+       .value Constant 2 - 1,5..1,6
+     .body[1]
+      0] Pass - 1,8..1,12
 '''),
 ],
 
@@ -16533,12 +16533,12 @@ y
 ''', r'''
 Module - ROOT 0,0..2,1
   .body[3]
-  0] Expr - 0,0..0,1
-    .value Name 'a' Load - 0,0..0,1
-  1] Expr - 1,0..1,1
-    .value Name 't' Load - 1,0..1,1
-  2] Expr - 2,0..2,1
-    .value Name 'y' Load - 2,0..2,1
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 't' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'y' Load - 2,0..2,1
 '''),
 ],
 
@@ -16550,9 +16550,9 @@ r'''x,'''),
 r'''del x''', r'''
 Module - ROOT 0,0..0,5
   .body[1]
-  0] Delete - 0,0..0,5
-    .targets[1]
-    0] Name 'x' Del - 0,4..0,5
+   0] Delete - 0,0..0,5
+     .targets[1]
+      0] Name 'x' Del - 0,4..0,5
 '''),
 
 (1, 'body[0]', None, None, None, {}, ('exec',
@@ -16562,9 +16562,9 @@ r'''del x''',
 r'''**NodeError('slice being assigned to a Delete must be a Tuple, List or Set, not a Name')**''', r'''
 Module - ROOT 0,0..0,5
   .body[1]
-  0] Delete - 0,0..0,5
-    .targets[1]
-    0] Name 'x' Del - 0,4..0,5
+   0] Delete - 0,0..0,5
+     .targets[1]
+      0] Name 'x' Del - 0,4..0,5
 '''),
 
 (2, 'body[0]', None, None, None, {'one': True}, ('exec',
@@ -16573,9 +16573,9 @@ r'''x'''),
 r'''del x''', r'''
 Module - ROOT 0,0..0,5
   .body[1]
-  0] Delete - 0,0..0,5
-    .targets[1]
-    0] Name 'x' Del - 0,4..0,5
+   0] Delete - 0,0..0,5
+     .targets[1]
+      0] Name 'x' Del - 0,4..0,5
 '''),
 
 (3, 'body[0]', 1, 2, None, {}, ('exec',
@@ -16584,10 +16584,10 @@ r'''()'''),
 r'''del a, c''', r'''
 Module - ROOT 0,0..0,8
   .body[1]
-  0] Delete - 0,0..0,8
-    .targets[2]
-    0] Name 'a' Del - 0,4..0,5
-    1] Name 'c' Del - 0,7..0,8
+   0] Delete - 0,0..0,8
+     .targets[2]
+      0] Name 'a' Del - 0,4..0,5
+      1] Name 'c' Del - 0,7..0,8
 '''),
 
 (4, 'body[0]', 1, 2, None, {}, ('exec',
@@ -16596,12 +16596,12 @@ r'''(),'''),
 r'''del a, (), c''', r'''
 Module - ROOT 0,0..0,12
   .body[1]
-  0] Delete - 0,0..0,12
-    .targets[3]
-    0] Name 'a' Del - 0,4..0,5
-    1] Tuple - 0,7..0,9
-      .ctx Del
-    2] Name 'c' Del - 0,11..0,12
+   0] Delete - 0,0..0,12
+     .targets[3]
+      0] Name 'a' Del - 0,4..0,5
+      1] Tuple - 0,7..0,9
+        .ctx Del
+      2] Name 'c' Del - 0,11..0,12
 '''),
 
 (5, 'body[0]', 1, 2, None, {'one': True}, ('exec',
@@ -16610,12 +16610,12 @@ r'''()'''),
 r'''del a, (), c''', r'''
 Module - ROOT 0,0..0,12
   .body[1]
-  0] Delete - 0,0..0,12
-    .targets[3]
-    0] Name 'a' Del - 0,4..0,5
-    1] Tuple - 0,7..0,9
-      .ctx Del
-    2] Name 'c' Del - 0,11..0,12
+   0] Delete - 0,0..0,12
+     .targets[3]
+      0] Name 'a' Del - 0,4..0,5
+      1] Tuple - 0,7..0,9
+        .ctx Del
+      2] Name 'c' Del - 0,11..0,12
 '''),
 
 (6, 'body[0]', 1, 2, None, {'one': True}, ('exec',
@@ -16624,15 +16624,15 @@ r'''(),'''),
 r'''del a, ((),), c''', r'''
 Module - ROOT 0,0..0,15
   .body[1]
-  0] Delete - 0,0..0,15
-    .targets[3]
-    0] Name 'a' Del - 0,4..0,5
-    1] Tuple - 0,7..0,12
-      .elts[1]
-      0] Tuple - 0,8..0,10
+   0] Delete - 0,0..0,15
+     .targets[3]
+      0] Name 'a' Del - 0,4..0,5
+      1] Tuple - 0,7..0,12
+        .elts[1]
+         0] Tuple - 0,8..0,10
+           .ctx Del
         .ctx Del
-      .ctx Del
-    2] Name 'c' Del - 0,14..0,15
+      2] Name 'c' Del - 0,14..0,15
 '''),
 
 (7, 'body[0]', 1, 2, None, {}, ('exec',
@@ -16648,14 +16648,14 @@ del a, x \
 r'''**NodeError('slice being assigned to a Delete must be a Tuple, List or Set, not a Attribute')**''', r'''
 Module - ROOT 0,0..2,8
   .body[1]
-  0] Delete - 0,0..2,8
-    .targets[3]
-    0] Name 'a' Del - 0,4..0,5
-    1] Attribute - 0,7..2,5
-      .value Name 'x' Load - 0,7..0,8
-      .attr 'y'
-      .ctx Del
-    2] Name 'c' Del - 2,7..2,8
+   0] Delete - 0,0..2,8
+     .targets[3]
+      0] Name 'a' Del - 0,4..0,5
+      1] Attribute - 0,7..2,5
+        .value Name 'x' Load - 0,7..0,8
+        .attr 'y'
+        .ctx Del
+      2] Name 'c' Del - 2,7..2,8
 '''),
 
 (8, 'body[0]', 1, 2, None, {}, ('exec',
@@ -16669,11 +16669,11 @@ del a, x \
 r'''del a, x, c''', r'''
 Module - ROOT 0,0..1,7
   .body[1]
-  0] Delete - 0,0..1,7
-    .targets[3]
-    0] Name 'a' Del - 0,4..0,5
-    1] Name 'x' Del - 0,7..0,8
-    2] Name 'c' Del - 1,6..1,7
+   0] Delete - 0,0..1,7
+     .targets[3]
+      0] Name 'a' Del - 0,4..0,5
+      1] Name 'x' Del - 0,7..0,8
+      2] Name 'c' Del - 1,6..1,7
 '''),
 
 (9, 'body[0]', None, None, None, {}, ('exec',
@@ -16687,9 +16687,9 @@ del x \
 r'''**NodeError('slice being assigned to a Delete must be a Tuple, List or Set, not a Name')**''', r'''
 Module - ROOT 0,0..1,0
   .body[1]
-  0] Delete - 0,0..0,5
-    .targets[1]
-    0] Name 'x' Del - 0,4..0,5
+   0] Delete - 0,0..0,5
+     .targets[1]
+      0] Name 'x' Del - 0,4..0,5
 '''),
 
 (10, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
@@ -16707,13 +16707,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,4
   .body[1]
-  0] If - 0,0..2,7
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Delete - 1,2..2,7
-      .targets[2]
-      0] Name 'a' Del - 1,6..1,7
-      1] Name 'b' Del - 2,6..2,7
+   0] If - 0,0..2,7
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Delete - 1,2..2,7
+        .targets[2]
+         0] Name 'a' Del - 1,6..1,7
+         1] Name 'b' Del - 2,6..2,7
 '''),
 
 (11, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
@@ -16734,13 +16734,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,0
   .body[1]
-  0] If - 0,0..2,7
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Delete - 1,2..2,7
-      .targets[2]
-      0] Name 'a' Del - 1,6..1,7
-      1] Name 'b' Del - 2,6..2,7
+   0] If - 0,0..2,7
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Delete - 1,2..2,7
+        .targets[2]
+         0] Name 'a' Del - 1,6..1,7
+         1] Name 'b' Del - 2,6..2,7
 '''),
 
 (12, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
@@ -16761,13 +16761,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,0
   .body[1]
-  0] If - 0,0..2,7
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Delete - 1,2..2,7
-      .targets[2]
-      0] Name 'a' Del - 1,6..1,7
-      1] Name 'b' Del - 2,6..2,7
+   0] If - 0,0..2,7
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Delete - 1,2..2,7
+        .targets[2]
+         0] Name 'a' Del - 1,6..1,7
+         1] Name 'b' Del - 2,6..2,7
 '''),
 
 (13, '', 1, 2, None, {}, (None,
@@ -16783,9 +16783,9 @@ del a, x, \
 r'''del a, x, c''', r'''
 Delete - ROOT 0,0..2,5
   .targets[3]
-  0] Name 'a' Del - 0,4..0,5
-  1] Name 'x' Del - 0,7..0,8
-  2] Name 'c' Del - 2,4..2,5
+   0] Name 'a' Del - 0,4..0,5
+   1] Name 'x' Del - 0,7..0,8
+   2] Name 'c' Del - 2,4..2,5
 '''),
 
 (14, '', 1, 2, None, {}, (None,
@@ -16802,10 +16802,10 @@ del a, x, \
 r'''**NodeError('expecting expression (standard), got multiple statements')**''', r'''
 Delete - ROOT 0,0..3,5
   .targets[4]
-  0] Name 'a' Del - 0,4..0,5
-  1] Name 'x' Del - 0,7..0,8
-  2] Name 'y' Del - 2,4..2,5
-  3] Name 'c' Del - 3,4..3,5
+   0] Name 'a' Del - 0,4..0,5
+   1] Name 'x' Del - 0,7..0,8
+   2] Name 'y' Del - 2,4..2,5
+   3] Name 'c' Del - 3,4..3,5
 '''),
 
 (15, 'body[0]', 1, 1, None, {}, (None, r'''
@@ -16820,10 +16820,10 @@ r'''**NodeError('slice being assigned to a Delete must be a Tuple, List or Set, 
 If - ROOT 0,0..1,11
   .test Constant 1 - 0,3..0,4
   .body[1]
-  0] Delete - 1,2..1,10
-    .targets[2]
-    0] Name 'x' Del - 1,6..1,7
-    1] Name 'y' Del - 1,9..1,10
+   0] Delete - 1,2..1,10
+     .targets[2]
+      0] Name 'x' Del - 1,6..1,7
+      1] Name 'y' Del - 1,9..1,10
 '''),
 ],
 
@@ -16835,14 +16835,14 @@ r'''d,  # comment'''),
 r'''del a, b, d ; del c''', r'''
 Module - ROOT 0,0..0,19
   .body[2]
-  0] Delete - 0,0..0,11
-    .targets[3]
-    0] Name 'a' Del - 0,4..0,5
-    1] Name 'b' Del - 0,7..0,8
-    2] Name 'd' Del - 0,10..0,11
-  1] Delete - 0,14..0,19
-    .targets[1]
-    0] Name 'c' Del - 0,18..0,19
+   0] Delete - 0,0..0,11
+     .targets[3]
+      0] Name 'a' Del - 0,4..0,5
+      1] Name 'b' Del - 0,7..0,8
+      2] Name 'd' Del - 0,10..0,11
+   1] Delete - 0,14..0,19
+     .targets[1]
+      0] Name 'c' Del - 0,18..0,19
 '''),
 
 (1, 'body[0]', 2, 2, None, {}, ('exec',
@@ -16857,15 +16857,15 @@ del a, b, d, \
 r'''del a, b, d, e ; del c''', r'''
 Module - ROOT 0,0..1,13
   .body[2]
-  0] Delete - 0,0..1,5
-    .targets[4]
-    0] Name 'a' Del - 0,4..0,5
-    1] Name 'b' Del - 0,7..0,8
-    2] Name 'd' Del - 0,10..0,11
-    3] Name 'e' Del - 1,4..1,5
-  1] Delete - 1,8..1,13
-    .targets[1]
-    0] Name 'c' Del - 1,12..1,13
+   0] Delete - 0,0..1,5
+     .targets[4]
+      0] Name 'a' Del - 0,4..0,5
+      1] Name 'b' Del - 0,7..0,8
+      2] Name 'd' Del - 0,10..0,11
+      3] Name 'e' Del - 1,4..1,5
+   1] Delete - 1,8..1,13
+     .targets[1]
+      0] Name 'c' Del - 1,12..1,13
 '''),
 
 (2, 'body[0]', 2, 2, None, {}, ('exec',
@@ -16880,15 +16880,15 @@ del a, b, d, \
 r'''del a, b, d, e ; del c''', r'''
 Module - ROOT 0,0..1,13
   .body[2]
-  0] Delete - 0,0..1,5
-    .targets[4]
-    0] Name 'a' Del - 0,4..0,5
-    1] Name 'b' Del - 0,7..0,8
-    2] Name 'd' Del - 0,10..0,11
-    3] Name 'e' Del - 1,4..1,5
-  1] Delete - 1,8..1,13
-    .targets[1]
-    0] Name 'c' Del - 1,12..1,13
+   0] Delete - 0,0..1,5
+     .targets[4]
+      0] Name 'a' Del - 0,4..0,5
+      1] Name 'b' Del - 0,7..0,8
+      2] Name 'd' Del - 0,10..0,11
+      3] Name 'e' Del - 1,4..1,5
+   1] Delete - 1,8..1,13
+     .targets[1]
+      0] Name 'c' Del - 1,12..1,13
 '''),
 
 (3, 'body[0]', 2, 2, None, {}, ('exec',
@@ -16897,11 +16897,11 @@ r'''d,  # comment'''),
 r'''del a, b, d ;''', r'''
 Module - ROOT 0,0..0,13
   .body[1]
-  0] Delete - 0,0..0,11
-    .targets[3]
-    0] Name 'a' Del - 0,4..0,5
-    1] Name 'b' Del - 0,7..0,8
-    2] Name 'd' Del - 0,10..0,11
+   0] Delete - 0,0..0,11
+     .targets[3]
+      0] Name 'a' Del - 0,4..0,5
+      1] Name 'b' Del - 0,7..0,8
+      2] Name 'd' Del - 0,10..0,11
 '''),
 
 (4, 'body[0]', 2, 2, None, {}, ('exec',
@@ -16916,12 +16916,12 @@ del a, b, d, \
 r'''del a, b, d, e ;''', r'''
 Module - ROOT 0,0..1,7
   .body[1]
-  0] Delete - 0,0..1,5
-    .targets[4]
-    0] Name 'a' Del - 0,4..0,5
-    1] Name 'b' Del - 0,7..0,8
-    2] Name 'd' Del - 0,10..0,11
-    3] Name 'e' Del - 1,4..1,5
+   0] Delete - 0,0..1,5
+     .targets[4]
+      0] Name 'a' Del - 0,4..0,5
+      1] Name 'b' Del - 0,7..0,8
+      2] Name 'd' Del - 0,10..0,11
+      3] Name 'e' Del - 1,4..1,5
 '''),
 
 (5, 'body[0]', 2, 2, None, {}, ('exec',
@@ -16936,12 +16936,12 @@ del a, b, d, \
 r'''del a, b, d, e ;''', r'''
 Module - ROOT 0,0..1,7
   .body[1]
-  0] Delete - 0,0..1,5
-    .targets[4]
-    0] Name 'a' Del - 0,4..0,5
-    1] Name 'b' Del - 0,7..0,8
-    2] Name 'd' Del - 0,10..0,11
-    3] Name 'e' Del - 1,4..1,5
+   0] Delete - 0,0..1,5
+     .targets[4]
+      0] Name 'a' Del - 0,4..0,5
+      1] Name 'b' Del - 0,7..0,8
+      2] Name 'd' Del - 0,10..0,11
+      3] Name 'e' Del - 1,4..1,5
 '''),
 
 (6, '', 2, 2, None, {}, (None,
@@ -16950,9 +16950,9 @@ r'''d,  # comment'''),
 r'''del a, b, d ;''', r'''
 Delete - ROOT 0,0..0,11
   .targets[3]
-  0] Name 'a' Del - 0,4..0,5
-  1] Name 'b' Del - 0,7..0,8
-  2] Name 'd' Del - 0,10..0,11
+   0] Name 'a' Del - 0,4..0,5
+   1] Name 'b' Del - 0,7..0,8
+   2] Name 'd' Del - 0,10..0,11
 '''),
 
 (7, '', 2, 2, None, {}, (None,
@@ -16967,10 +16967,10 @@ del a, b, d, \
 r'''del a, b, d, e ;''', r'''
 Delete - ROOT 0,0..1,5
   .targets[4]
-  0] Name 'a' Del - 0,4..0,5
-  1] Name 'b' Del - 0,7..0,8
-  2] Name 'd' Del - 0,10..0,11
-  3] Name 'e' Del - 1,4..1,5
+   0] Name 'a' Del - 0,4..0,5
+   1] Name 'b' Del - 0,7..0,8
+   2] Name 'd' Del - 0,10..0,11
+   3] Name 'e' Del - 1,4..1,5
 '''),
 
 (8, '', 2, 2, None, {}, (None,
@@ -16985,10 +16985,10 @@ del a, b, d, \
 r'''del a, b, d, e ;''', r'''
 Delete - ROOT 0,0..1,5
   .targets[4]
-  0] Name 'a' Del - 0,4..0,5
-  1] Name 'b' Del - 0,7..0,8
-  2] Name 'd' Del - 0,10..0,11
-  3] Name 'e' Del - 1,4..1,5
+   0] Name 'a' Del - 0,4..0,5
+   1] Name 'b' Del - 0,7..0,8
+   2] Name 'd' Del - 0,10..0,11
+   3] Name 'e' Del - 1,4..1,5
 '''),
 ],
 
@@ -17000,10 +17000,10 @@ r'''x'''),
 r'''x = d''', r'''
 Module - ROOT 0,0..0,5
   .body[1]
-  0] Assign - 0,0..0,5
-    .targets[1]
-    0] Name 'x' Store - 0,0..0,1
-    .value Name 'd' Load - 0,4..0,5
+   0] Assign - 0,0..0,5
+     .targets[1]
+      0] Name 'x' Store - 0,0..0,1
+     .value Name 'd' Load - 0,4..0,5
 '''),
 
 (1, 'body[0]', None, None, 'targets', {'one': True}, ('exec',
@@ -17012,10 +17012,10 @@ r'''x'''),
 r'''x = d''', r'''
 Module - ROOT 0,0..0,5
   .body[1]
-  0] Assign - 0,0..0,5
-    .targets[1]
-    0] Name 'x' Store - 0,0..0,1
-    .value Name 'd' Load - 0,4..0,5
+   0] Assign - 0,0..0,5
+     .targets[1]
+      0] Name 'x' Store - 0,0..0,1
+     .value Name 'd' Load - 0,4..0,5
 '''),
 
 (2, 'body[0]', None, None, 'targets', {}, ('exec',
@@ -17024,10 +17024,10 @@ r'''x ='''),
 r'''x = d''', r'''
 Module - ROOT 0,0..0,5
   .body[1]
-  0] Assign - 0,0..0,5
-    .targets[1]
-    0] Name 'x' Store - 0,0..0,1
-    .value Name 'd' Load - 0,4..0,5
+   0] Assign - 0,0..0,5
+     .targets[1]
+      0] Name 'x' Store - 0,0..0,1
+     .value Name 'd' Load - 0,4..0,5
 '''),
 
 (3, 'body[0]', 1, 2, 'targets', {}, ('exec',
@@ -17046,16 +17046,16 @@ z = c = d
 ''', r'''
 Module - ROOT 0,0..4,9
   .body[1]
-  0] Assign - 0,0..4,9
-    .targets[4]
-    0] Name 'a' Store - 0,0..0,1
-    1] Attribute - 0,4..2,1
-      .value Name 'x' Load - 0,4..0,5
-      .attr 'y'
-      .ctx Store
-    2] Name 'z' Store - 4,0..4,1
-    3] Name 'c' Store - 4,4..4,5
-    .value Name 'd' Load - 4,8..4,9
+   0] Assign - 0,0..4,9
+     .targets[4]
+      0] Name 'a' Store - 0,0..0,1
+      1] Attribute - 0,4..2,1
+        .value Name 'x' Load - 0,4..0,5
+        .attr 'y'
+        .ctx Store
+      2] Name 'z' Store - 4,0..4,1
+      3] Name 'c' Store - 4,4..4,5
+     .value Name 'd' Load - 4,8..4,9
 '''),
 
 (4, 'body[0]', None, None, 'targets', {}, ('exec',
@@ -17068,10 +17068,10 @@ x = \
 ''', r'''
 Module - ROOT 0,0..1,2
   .body[1]
-  0] Assign - 0,0..1,2
-    .targets[1]
-    0] Name 'x' Store - 0,0..0,1
-    .value Name 'd' Load - 1,1..1,2
+   0] Assign - 0,0..1,2
+     .targets[1]
+      0] Name 'x' Store - 0,0..0,1
+     .value Name 'd' Load - 1,1..1,2
 '''),
 
 (5, 'body[0]', None, None, 'targets', {}, ('exec',
@@ -17085,10 +17085,10 @@ x = \
 ''', r'''
 Module - ROOT 0,0..1,2
   .body[1]
-  0] Assign - 0,0..1,2
-    .targets[1]
-    0] Name 'x' Store - 0,0..0,1
-    .value Name 'd' Load - 1,1..1,2
+   0] Assign - 0,0..1,2
+     .targets[1]
+      0] Name 'x' Store - 0,0..0,1
+     .value Name 'd' Load - 1,1..1,2
 '''),
 
 (6, '', None, None, 'targets', {}, (None,
@@ -17110,7 +17110,7 @@ r'''x'''),
 r'''x =''', r'''
 _Assign_targets - ROOT 0,0..0,3
   .targets[1]
-  0] Name 'x' Store - 0,0..0,1
+   0] Name 'x' Store - 0,0..0,1
 '''),
 
 (9, '', None, None, 'targets', {'one': True}, ('_Assign_targets',
@@ -17119,7 +17119,7 @@ r'''x'''),
 r'''x =''', r'''
 _Assign_targets - ROOT 0,0..0,3
   .targets[1]
-  0] Name 'x' Store - 0,0..0,1
+   0] Name 'x' Store - 0,0..0,1
 '''),
 
 (10, '', None, None, 'targets', {}, ('_Assign_targets',
@@ -17128,7 +17128,7 @@ r'''x ='''),
 r'''x =''', r'''
 _Assign_targets - ROOT 0,0..0,3
   .targets[1]
-  0] Name 'x' Store - 0,0..0,1
+   0] Name 'x' Store - 0,0..0,1
 '''),
 
 (11, '', 1, 2, 'targets', {}, ('_Assign_targets',
@@ -17147,13 +17147,13 @@ z = c =
 ''', r'''
 _Assign_targets - ROOT 0,0..4,7
   .targets[4]
-  0] Name 'a' Store - 0,0..0,1
-  1] Attribute - 0,4..2,1
-    .value Name 'x' Load - 0,4..0,5
-    .attr 'y'
-    .ctx Store
-  2] Name 'z' Store - 4,0..4,1
-  3] Name 'c' Store - 4,4..4,5
+   0] Name 'a' Store - 0,0..0,1
+   1] Attribute - 0,4..2,1
+     .value Name 'x' Load - 0,4..0,5
+     .attr 'y'
+     .ctx Store
+   2] Name 'z' Store - 4,0..4,1
+   3] Name 'c' Store - 4,4..4,5
 '''),
 
 (12, '', None, None, 'targets', {}, ('_Assign_targets',
@@ -17166,7 +17166,7 @@ x = \
 ''', r'''
 _Assign_targets - ROOT 0,0..1,0
   .targets[1]
-  0] Name 'x' Store - 0,0..0,1
+   0] Name 'x' Store - 0,0..0,1
 '''),
 
 (13, '', None, None, 'targets', {}, ('_Assign_targets',
@@ -17180,7 +17180,7 @@ x = \
 ''', r'''
 _Assign_targets - ROOT 0,0..1,0
   .targets[1]
-  0] Name 'x' Store - 0,0..0,1
+   0] Name 'x' Store - 0,0..0,1
 '''),
 ],
 
@@ -17192,14 +17192,14 @@ r'''**DEL**'''),
 r'''with a, c: pass  # comment''', r'''
 Module - ROOT 0,0..0,26
   .body[1]
-  0] With - 0,0..0,15
-    .items[2]
-    0] withitem - 0,5..0,6
-      .context_expr Name 'a' Load - 0,5..0,6
-    1] withitem - 0,8..0,9
-      .context_expr Name 'c' Load - 0,8..0,9
-    .body[1]
-    0] Pass - 0,11..0,15
+   0] With - 0,0..0,15
+     .items[2]
+      0] withitem - 0,5..0,6
+        .context_expr Name 'a' Load - 0,5..0,6
+      1] withitem - 0,8..0,9
+        .context_expr Name 'c' Load - 0,8..0,9
+     .body[1]
+      0] Pass - 0,11..0,15
 '''),
 
 (1, 'body[0]', 1, 3, 'items', {}, ('exec',
@@ -17208,12 +17208,12 @@ r'''**DEL**'''),
 r'''with a: pass  # comment''', r'''
 Module - ROOT 0,0..0,23
   .body[1]
-  0] With - 0,0..0,12
-    .items[1]
-    0] withitem - 0,5..0,6
-      .context_expr Name 'a' Load - 0,5..0,6
-    .body[1]
-    0] Pass - 0,8..0,12
+   0] With - 0,0..0,12
+     .items[1]
+      0] withitem - 0,5..0,6
+        .context_expr Name 'a' Load - 0,5..0,6
+     .body[1]
+      0] Pass - 0,8..0,12
 '''),
 
 (2, 'body[0]', 0, 2, 'items', {}, ('exec',
@@ -17222,12 +17222,12 @@ r'''**DEL**'''),
 r'''with c: pass  # comment''', r'''
 Module - ROOT 0,0..0,23
   .body[1]
-  0] With - 0,0..0,12
-    .items[1]
-    0] withitem - 0,5..0,6
-      .context_expr Name 'c' Load - 0,5..0,6
-    .body[1]
-    0] Pass - 0,8..0,12
+   0] With - 0,0..0,12
+     .items[1]
+      0] withitem - 0,5..0,6
+        .context_expr Name 'c' Load - 0,5..0,6
+     .body[1]
+      0] Pass - 0,8..0,12
 '''),
 
 (3, 'body[0]', 1, 2, 'items', {}, ('exec', r'''
@@ -17244,14 +17244,14 @@ c: pass  # comment
 ''', r'''
 Module - ROOT 0,0..2,18
   .body[1]
-  0] With - 0,0..2,7
-    .items[2]
-    0] withitem - 0,5..0,6
-      .context_expr Name 'a' Load - 0,5..0,6
-    1] withitem - 2,0..2,1
-      .context_expr Name 'c' Load - 2,0..2,1
-    .body[1]
-    0] Pass - 2,3..2,7
+   0] With - 0,0..2,7
+     .items[2]
+      0] withitem - 0,5..0,6
+        .context_expr Name 'a' Load - 0,5..0,6
+      1] withitem - 2,0..2,1
+        .context_expr Name 'c' Load - 2,0..2,1
+     .body[1]
+      0] Pass - 2,3..2,7
 '''),
 
 (4, 'body[0]', 0, 2, 'items', {}, ('exec', r'''
@@ -17267,12 +17267,12 @@ c): pass  # comment
 ''', r'''
 Module - ROOT 0,0..1,19
   .body[1]
-  0] With - 0,0..1,8
-    .items[1]
-    0] withitem - 0,5..1,2
-      .context_expr Name 'c' Load - 1,0..1,1
-    .body[1]
-    0] Pass - 1,4..1,8
+   0] With - 0,0..1,8
+     .items[1]
+      0] withitem - 0,5..1,2
+        .context_expr Name 'c' Load - 1,0..1,1
+     .body[1]
+      0] Pass - 1,4..1,8
 '''),
 
 (5, 'body[0]', 1, 3, 'items', {}, ('exec', r'''
@@ -17289,12 +17289,12 @@ with a \
 ''', r'''
 Module - ROOT 0,0..2,17
   .body[1]
-  0] With - 0,0..2,6
-    .items[1]
-    0] withitem - 0,5..0,6
-      .context_expr Name 'a' Load - 0,5..0,6
-    .body[1]
-    0] Pass - 2,2..2,6
+   0] With - 0,0..2,6
+     .items[1]
+      0] withitem - 0,5..0,6
+        .context_expr Name 'a' Load - 0,5..0,6
+     .body[1]
+      0] Pass - 2,2..2,6
 '''),
 
 (6, 'body[0].body[0]', 0, 1, 'items', {}, ('exec', r'''
@@ -17312,16 +17312,16 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,6
   .body[1]
-  0] If - 0,0..3,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] With - 1,2..2,9
-      .items[1]
-      0] withitem - 2,2..2,3
-        .context_expr Name 'b' Load - 2,2..2,3
-      .body[1]
-      0] Pass - 2,5..2,9
-    1] Pass - 3,2..3,6
+   0] If - 0,0..3,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] With - 1,2..2,9
+        .items[1]
+         0] withitem - 2,2..2,3
+           .context_expr Name 'b' Load - 2,2..2,3
+        .body[1]
+         0] Pass - 2,5..2,9
+      1] Pass - 3,2..3,6
 '''),
 
 (7, 'body[0].body[0]', 1, 2, 'items', {}, ('exec', r'''
@@ -17340,16 +17340,16 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] If - 0,0..4,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] With - 1,2..3,8
-      .items[1]
-      0] withitem - 1,7..1,8
-        .context_expr Name 'a' Load - 1,7..1,8
-      .body[1]
-      0] Pass - 3,4..3,8
-    1] Pass - 4,2..4,6
+   0] If - 0,0..4,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] With - 1,2..3,8
+        .items[1]
+         0] withitem - 1,7..1,8
+           .context_expr Name 'a' Load - 1,7..1,8
+        .body[1]
+         0] Pass - 3,4..3,8
+      1] Pass - 4,2..4,6
 '''),
 
 (8, 'body[0].body[0]', 0, 0, 'items', {}, ('exec', r'''
@@ -17371,20 +17371,20 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
-  0] If - 0,0..5,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] With - 1,2..4,15
-      .items[3]
-      0] withitem - 1,8..1,9
-        .context_expr Name 'x' Load - 1,8..1,9
-      1] withitem - 3,7..3,8
-        .context_expr Name 'y' Load - 3,7..3,8
-      2] withitem - 4,7..4,8
-        .context_expr Name 'a' Load - 4,7..4,8
-      .body[1]
-      0] Pass - 4,11..4,15
-    1] Pass - 5,2..5,6
+   0] If - 0,0..5,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] With - 1,2..4,15
+        .items[3]
+         0] withitem - 1,8..1,9
+           .context_expr Name 'x' Load - 1,8..1,9
+         1] withitem - 3,7..3,8
+           .context_expr Name 'y' Load - 3,7..3,8
+         2] withitem - 4,7..4,8
+           .context_expr Name 'a' Load - 4,7..4,8
+        .body[1]
+         0] Pass - 4,11..4,15
+      1] Pass - 5,2..5,6
 '''),
 
 (9, 'body[0]', 1, 2, 'items', {}, ('exec',
@@ -17393,16 +17393,16 @@ r'''x'''),
 r'''with a, x, c: pass  # comment''', r'''
 Module - ROOT 0,0..0,29
   .body[1]
-  0] With - 0,0..0,18
-    .items[3]
-    0] withitem - 0,5..0,6
-      .context_expr Name 'a' Load - 0,5..0,6
-    1] withitem - 0,8..0,9
-      .context_expr Name 'x' Load - 0,8..0,9
-    2] withitem - 0,11..0,12
-      .context_expr Name 'c' Load - 0,11..0,12
-    .body[1]
-    0] Pass - 0,14..0,18
+   0] With - 0,0..0,18
+     .items[3]
+      0] withitem - 0,5..0,6
+        .context_expr Name 'a' Load - 0,5..0,6
+      1] withitem - 0,8..0,9
+        .context_expr Name 'x' Load - 0,8..0,9
+      2] withitem - 0,11..0,12
+        .context_expr Name 'c' Load - 0,11..0,12
+     .body[1]
+      0] Pass - 0,14..0,18
 '''),
 
 (10, 'body[0]', 1, 2, 'items', {}, ('exec',
@@ -17411,19 +17411,19 @@ r'''x.y'''),
 r'''with a, x.y, c: pass  # comment''', r'''
 Module - ROOT 0,0..0,31
   .body[1]
-  0] With - 0,0..0,20
-    .items[3]
-    0] withitem - 0,5..0,6
-      .context_expr Name 'a' Load - 0,5..0,6
-    1] withitem - 0,8..0,11
-      .context_expr Attribute - 0,8..0,11
-        .value Name 'x' Load - 0,8..0,9
-        .attr 'y'
-        .ctx Load
-    2] withitem - 0,13..0,14
-      .context_expr Name 'c' Load - 0,13..0,14
-    .body[1]
-    0] Pass - 0,16..0,20
+   0] With - 0,0..0,20
+     .items[3]
+      0] withitem - 0,5..0,6
+        .context_expr Name 'a' Load - 0,5..0,6
+      1] withitem - 0,8..0,11
+        .context_expr Attribute - 0,8..0,11
+          .value Name 'x' Load - 0,8..0,9
+          .attr 'y'
+          .ctx Load
+      2] withitem - 0,13..0,14
+        .context_expr Name 'c' Load - 0,13..0,14
+     .body[1]
+      0] Pass - 0,16..0,20
 '''),
 
 (11, 'body[0]', None, None, 'items', {}, ('exec',
@@ -17436,12 +17436,12 @@ with x \
 ''', r'''
 Module - ROOT 0,0..1,17
   .body[1]
-  0] With - 0,0..1,6
-    .items[1]
-    0] withitem - 0,5..0,6
-      .context_expr Name 'x' Load - 0,5..0,6
-    .body[1]
-    0] Pass - 1,2..1,6
+   0] With - 0,0..1,6
+     .items[1]
+      0] withitem - 0,5..0,6
+        .context_expr Name 'x' Load - 0,5..0,6
+     .body[1]
+      0] Pass - 1,2..1,6
 '''),
 
 (12, '', None, None, 'items', {}, (None,
@@ -17455,7 +17455,7 @@ r'''**DEL**''',
 r'''with : pass  # comment''', r'''
 With - ROOT 0,0..0,11
   .body[1]
-  0] Pass - 0,7..0,11
+   0] Pass - 0,7..0,11
 '''),
 
 (14, 'body[0]', 1, 1, 'items', {}, ('exec',
@@ -17472,16 +17472,16 @@ with a, b \
 ''', r'''
 Module - ROOT 0,0..3,6
   .body[1]
-  0] With - 0,0..3,6
-    .items[3]
-    0] withitem - 0,5..0,6
-      .context_expr Name 'a' Load - 0,5..0,6
-    1] withitem - 0,8..0,9
-      .context_expr Name 'b' Load - 0,8..0,9
-    2] withitem - 2,5..2,6
-      .context_expr Name 'c' Load - 2,5..2,6
-    .body[1]
-    0] Pass - 3,2..3,6
+   0] With - 0,0..3,6
+     .items[3]
+      0] withitem - 0,5..0,6
+        .context_expr Name 'a' Load - 0,5..0,6
+      1] withitem - 0,8..0,9
+        .context_expr Name 'b' Load - 0,8..0,9
+      2] withitem - 2,5..2,6
+        .context_expr Name 'c' Load - 2,5..2,6
+     .body[1]
+      0] Pass - 3,2..3,6
 '''),
 
 (15, 'body[0]', 1, 1, 'items', {}, ('exec',
@@ -17500,16 +17500,16 @@ with a, \
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] With - 0,0..4,6
-    .items[3]
-    0] withitem - 0,5..0,6
-      .context_expr Name 'a' Load - 0,5..0,6
-    1] withitem - 1,5..1,6
-      .context_expr Name 'b' Load - 1,5..1,6
-    2] withitem - 3,5..3,6
-      .context_expr Name 'c' Load - 3,5..3,6
-    .body[1]
-    0] Pass - 4,2..4,6
+   0] With - 0,0..4,6
+     .items[3]
+      0] withitem - 0,5..0,6
+        .context_expr Name 'a' Load - 0,5..0,6
+      1] withitem - 1,5..1,6
+        .context_expr Name 'b' Load - 1,5..1,6
+      2] withitem - 3,5..3,6
+        .context_expr Name 'c' Load - 3,5..3,6
+     .body[1]
+      0] Pass - 4,2..4,6
 '''),
 
 (16, 'body[0]', 1, 1, 'items', {}, (None, r'''
@@ -17525,14 +17525,14 @@ if 1:
 If - ROOT 0,0..2,9
   .test Constant 1 - 0,3..0,4
   .body[1]
-  0] With - 1,2..2,9
-    .items[2]
-    0] withitem - 1,7..1,8
-      .context_expr Name 'x' Load - 1,7..1,8
-    1] withitem - 1,10..1,11
-      .context_expr Name 'y' Load - 1,10..1,11
-    .body[1]
-    0] Pass - 2,4..2,8
+   0] With - 1,2..2,9
+     .items[2]
+      0] withitem - 1,7..1,8
+        .context_expr Name 'x' Load - 1,7..1,8
+      1] withitem - 1,10..1,11
+        .context_expr Name 'y' Load - 1,10..1,11
+     .body[1]
+      0] Pass - 2,4..2,8
 '''),
 ],
 
@@ -17544,14 +17544,14 @@ r'''**DEL**'''),
 r'''with (a, c): pass  # comment''', r'''
 Module - ROOT 0,0..0,28
   .body[1]
-  0] With - 0,0..0,17
-    .items[2]
-    0] withitem - 0,6..0,7
-      .context_expr Name 'a' Load - 0,6..0,7
-    1] withitem - 0,9..0,10
-      .context_expr Name 'c' Load - 0,9..0,10
-    .body[1]
-    0] Pass - 0,13..0,17
+   0] With - 0,0..0,17
+     .items[2]
+      0] withitem - 0,6..0,7
+        .context_expr Name 'a' Load - 0,6..0,7
+      1] withitem - 0,9..0,10
+        .context_expr Name 'c' Load - 0,9..0,10
+     .body[1]
+      0] Pass - 0,13..0,17
 '''),
 
 (1, 'body[0]', 1, 3, 'items', {}, ('exec',
@@ -17560,12 +17560,12 @@ r'''**DEL**'''),
 r'''with (a): pass  # comment''', r'''
 Module - ROOT 0,0..0,25
   .body[1]
-  0] With - 0,0..0,14
-    .items[1]
-    0] withitem - 0,5..0,8
-      .context_expr Name 'a' Load - 0,6..0,7
-    .body[1]
-    0] Pass - 0,10..0,14
+   0] With - 0,0..0,14
+     .items[1]
+      0] withitem - 0,5..0,8
+        .context_expr Name 'a' Load - 0,6..0,7
+     .body[1]
+      0] Pass - 0,10..0,14
 '''),
 
 (2, 'body[0]', 0, 2, 'items', {}, ('exec',
@@ -17574,12 +17574,12 @@ r'''**DEL**'''),
 r'''with (c): pass  # comment''', r'''
 Module - ROOT 0,0..0,25
   .body[1]
-  0] With - 0,0..0,14
-    .items[1]
-    0] withitem - 0,5..0,8
-      .context_expr Name 'c' Load - 0,6..0,7
-    .body[1]
-    0] Pass - 0,10..0,14
+   0] With - 0,0..0,14
+     .items[1]
+      0] withitem - 0,5..0,8
+        .context_expr Name 'c' Load - 0,6..0,7
+     .body[1]
+      0] Pass - 0,10..0,14
 '''),
 
 (3, 'body[0]', 1, 2, 'items', {}, ('exec', r'''
@@ -17596,14 +17596,14 @@ c): pass  # comment
 ''', r'''
 Module - ROOT 0,0..2,19
   .body[1]
-  0] With - 0,0..2,8
-    .items[2]
-    0] withitem - 0,6..0,7
-      .context_expr Name 'a' Load - 0,6..0,7
-    1] withitem - 2,0..2,1
-      .context_expr Name 'c' Load - 2,0..2,1
-    .body[1]
-    0] Pass - 2,4..2,8
+   0] With - 0,0..2,8
+     .items[2]
+      0] withitem - 0,6..0,7
+        .context_expr Name 'a' Load - 0,6..0,7
+      1] withitem - 2,0..2,1
+        .context_expr Name 'c' Load - 2,0..2,1
+     .body[1]
+      0] Pass - 2,4..2,8
 '''),
 
 (4, 'body[0]', 0, 2, 'items', {}, ('exec', r'''
@@ -17619,12 +17619,12 @@ c): pass  # comment
 ''', r'''
 Module - ROOT 0,0..1,19
   .body[1]
-  0] With - 0,0..1,8
-    .items[1]
-    0] withitem - 0,5..1,2
-      .context_expr Name 'c' Load - 1,0..1,1
-    .body[1]
-    0] Pass - 1,4..1,8
+   0] With - 0,0..1,8
+     .items[1]
+      0] withitem - 0,5..1,2
+        .context_expr Name 'c' Load - 1,0..1,1
+     .body[1]
+      0] Pass - 1,4..1,8
 '''),
 
 (5, 'body[0]', 1, 3, 'items', {}, ('exec', r'''
@@ -17641,12 +17641,12 @@ with (a \
 ''', r'''
 Module - ROOT 0,0..2,18
   .body[1]
-  0] With - 0,0..2,7
-    .items[1]
-    0] withitem - 0,5..2,1
-      .context_expr Name 'a' Load - 0,6..0,7
-    .body[1]
-    0] Pass - 2,3..2,7
+   0] With - 0,0..2,7
+     .items[1]
+      0] withitem - 0,5..2,1
+        .context_expr Name 'a' Load - 0,6..0,7
+     .body[1]
+      0] Pass - 2,3..2,7
 '''),
 
 (6, 'body[0].body[0]', 0, 1, 'items', {}, ('exec', r'''
@@ -17664,16 +17664,16 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,6
   .body[1]
-  0] If - 0,0..3,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] With - 1,2..2,10
-      .items[1]
-      0] withitem - 1,7..2,4
-        .context_expr Name 'b' Load - 2,2..2,3
-      .body[1]
-      0] Pass - 2,6..2,10
-    1] Pass - 3,2..3,6
+   0] If - 0,0..3,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] With - 1,2..2,10
+        .items[1]
+         0] withitem - 1,7..2,4
+           .context_expr Name 'b' Load - 2,2..2,3
+        .body[1]
+         0] Pass - 2,6..2,10
+      1] Pass - 3,2..3,6
 '''),
 
 (7, 'body[0].body[0]', 1, 2, 'items', {}, ('exec', r'''
@@ -17692,16 +17692,16 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] If - 0,0..4,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] With - 1,2..3,9
-      .items[1]
-      0] withitem - 1,7..3,3
-        .context_expr Name 'a' Load - 1,8..1,9
-      .body[1]
-      0] Pass - 3,5..3,9
-    1] Pass - 4,2..4,6
+   0] If - 0,0..4,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] With - 1,2..3,9
+        .items[1]
+         0] withitem - 1,7..3,3
+           .context_expr Name 'a' Load - 1,8..1,9
+        .body[1]
+         0] Pass - 3,5..3,9
+      1] Pass - 4,2..4,6
 '''),
 
 (8, 'body[0].body[0]', 0, 0, 'items', {}, ('exec', r'''
@@ -17723,20 +17723,20 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
-  0] If - 0,0..5,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] With - 1,2..4,17
-      .items[3]
-      0] withitem - 1,8..1,9
-        .context_expr Name 'x' Load - 1,8..1,9
-      1] withitem - 3,7..3,8
-        .context_expr Name 'y' Load - 3,7..3,8
-      2] withitem - 4,7..4,10
-        .context_expr Name 'a' Load - 4,8..4,9
-      .body[1]
-      0] Pass - 4,13..4,17
-    1] Pass - 5,2..5,6
+   0] If - 0,0..5,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] With - 1,2..4,17
+        .items[3]
+         0] withitem - 1,8..1,9
+           .context_expr Name 'x' Load - 1,8..1,9
+         1] withitem - 3,7..3,8
+           .context_expr Name 'y' Load - 3,7..3,8
+         2] withitem - 4,7..4,10
+           .context_expr Name 'a' Load - 4,8..4,9
+        .body[1]
+         0] Pass - 4,13..4,17
+      1] Pass - 5,2..5,6
 '''),
 
 (9, 'body[0]', 1, 2, 'items', {}, ('exec',
@@ -17745,16 +17745,16 @@ r'''x'''),
 r'''with (a, x, c): pass  # comment''', r'''
 Module - ROOT 0,0..0,31
   .body[1]
-  0] With - 0,0..0,20
-    .items[3]
-    0] withitem - 0,6..0,7
-      .context_expr Name 'a' Load - 0,6..0,7
-    1] withitem - 0,9..0,10
-      .context_expr Name 'x' Load - 0,9..0,10
-    2] withitem - 0,12..0,13
-      .context_expr Name 'c' Load - 0,12..0,13
-    .body[1]
-    0] Pass - 0,16..0,20
+   0] With - 0,0..0,20
+     .items[3]
+      0] withitem - 0,6..0,7
+        .context_expr Name 'a' Load - 0,6..0,7
+      1] withitem - 0,9..0,10
+        .context_expr Name 'x' Load - 0,9..0,10
+      2] withitem - 0,12..0,13
+        .context_expr Name 'c' Load - 0,12..0,13
+     .body[1]
+      0] Pass - 0,16..0,20
 '''),
 
 (10, 'body[0]', 1, 2, 'items', {}, ('exec',
@@ -17763,19 +17763,19 @@ r'''x.y'''),
 r'''with (a, x.y, c): pass  # comment''', r'''
 Module - ROOT 0,0..0,33
   .body[1]
-  0] With - 0,0..0,22
-    .items[3]
-    0] withitem - 0,6..0,7
-      .context_expr Name 'a' Load - 0,6..0,7
-    1] withitem - 0,9..0,12
-      .context_expr Attribute - 0,9..0,12
-        .value Name 'x' Load - 0,9..0,10
-        .attr 'y'
-        .ctx Load
-    2] withitem - 0,14..0,15
-      .context_expr Name 'c' Load - 0,14..0,15
-    .body[1]
-    0] Pass - 0,18..0,22
+   0] With - 0,0..0,22
+     .items[3]
+      0] withitem - 0,6..0,7
+        .context_expr Name 'a' Load - 0,6..0,7
+      1] withitem - 0,9..0,12
+        .context_expr Attribute - 0,9..0,12
+          .value Name 'x' Load - 0,9..0,10
+          .attr 'y'
+          .ctx Load
+      2] withitem - 0,14..0,15
+        .context_expr Name 'c' Load - 0,14..0,15
+     .body[1]
+      0] Pass - 0,18..0,22
 '''),
 
 (11, 'body[0]', None, None, 'items', {}, ('exec',
@@ -17788,12 +17788,12 @@ with (x \
 ''', r'''
 Module - ROOT 0,0..1,18
   .body[1]
-  0] With - 0,0..1,7
-    .items[1]
-    0] withitem - 0,5..1,1
-      .context_expr Name 'x' Load - 0,6..0,7
-    .body[1]
-    0] Pass - 1,3..1,7
+   0] With - 0,0..1,7
+     .items[1]
+      0] withitem - 0,5..1,1
+        .context_expr Name 'x' Load - 0,6..0,7
+     .body[1]
+      0] Pass - 1,3..1,7
 '''),
 
 (12, '', None, None, 'items', {}, (None,
@@ -17807,7 +17807,7 @@ r'''**DEL**''',
 r'''with (): pass  # comment''', r'''
 With - ROOT 0,0..0,13
   .body[1]
-  0] Pass - 0,9..0,13
+   0] Pass - 0,9..0,13
 '''),
 
 (14, 'body[0]', 1, 1, 'items', {}, ('exec',
@@ -17824,16 +17824,16 @@ with (a), b \
 ''', r'''
 Module - ROOT 0,0..3,6
   .body[1]
-  0] With - 0,0..3,6
-    .items[3]
-    0] withitem - 0,5..0,8
-      .context_expr Name 'a' Load - 0,6..0,7
-    1] withitem - 0,10..0,11
-      .context_expr Name 'b' Load - 0,10..0,11
-    2] withitem - 2,5..2,6
-      .context_expr Name 'c' Load - 2,5..2,6
-    .body[1]
-    0] Pass - 3,2..3,6
+   0] With - 0,0..3,6
+     .items[3]
+      0] withitem - 0,5..0,8
+        .context_expr Name 'a' Load - 0,6..0,7
+      1] withitem - 0,10..0,11
+        .context_expr Name 'b' Load - 0,10..0,11
+      2] withitem - 2,5..2,6
+        .context_expr Name 'c' Load - 2,5..2,6
+     .body[1]
+      0] Pass - 3,2..3,6
 '''),
 
 (15, 'body[0]', 1, 1, 'items', {}, ('exec',
@@ -17852,16 +17852,16 @@ with (a), \
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] With - 0,0..4,6
-    .items[3]
-    0] withitem - 0,5..0,8
-      .context_expr Name 'a' Load - 0,6..0,7
-    1] withitem - 1,5..1,6
-      .context_expr Name 'b' Load - 1,5..1,6
-    2] withitem - 3,5..3,6
-      .context_expr Name 'c' Load - 3,5..3,6
-    .body[1]
-    0] Pass - 4,2..4,6
+   0] With - 0,0..4,6
+     .items[3]
+      0] withitem - 0,5..0,8
+        .context_expr Name 'a' Load - 0,6..0,7
+      1] withitem - 1,5..1,6
+        .context_expr Name 'b' Load - 1,5..1,6
+      2] withitem - 3,5..3,6
+        .context_expr Name 'c' Load - 3,5..3,6
+     .body[1]
+      0] Pass - 4,2..4,6
 '''),
 
 (16, 'body[0]', 1, 1, 'items', {}, (None, r'''
@@ -17877,14 +17877,14 @@ if 1:
 If - ROOT 0,0..2,9
   .test Constant 1 - 0,3..0,4
   .body[1]
-  0] With - 1,2..2,9
-    .items[2]
-    0] withitem - 1,7..1,10
-      .context_expr Name 'x' Load - 1,8..1,9
-    1] withitem - 1,12..1,13
-      .context_expr Name 'y' Load - 1,12..1,13
-    .body[1]
-    0] Pass - 2,4..2,8
+   0] With - 1,2..2,9
+     .items[2]
+      0] withitem - 1,7..1,10
+        .context_expr Name 'x' Load - 1,8..1,9
+      1] withitem - 1,12..1,13
+        .context_expr Name 'y' Load - 1,12..1,13
+     .body[1]
+      0] Pass - 2,4..2,8
 '''),
 ],
 
@@ -17896,14 +17896,14 @@ r'''**DEL**'''),
 r'''async with a, c: pass  # comment''', r'''
 Module - ROOT 0,0..0,32
   .body[1]
-  0] AsyncWith - 0,0..0,21
-    .items[2]
-    0] withitem - 0,11..0,12
-      .context_expr Name 'a' Load - 0,11..0,12
-    1] withitem - 0,14..0,15
-      .context_expr Name 'c' Load - 0,14..0,15
-    .body[1]
-    0] Pass - 0,17..0,21
+   0] AsyncWith - 0,0..0,21
+     .items[2]
+      0] withitem - 0,11..0,12
+        .context_expr Name 'a' Load - 0,11..0,12
+      1] withitem - 0,14..0,15
+        .context_expr Name 'c' Load - 0,14..0,15
+     .body[1]
+      0] Pass - 0,17..0,21
 '''),
 
 (1, 'body[0]', 1, 3, 'items', {}, ('exec',
@@ -17912,12 +17912,12 @@ r'''**DEL**'''),
 r'''async with a: pass  # comment''', r'''
 Module - ROOT 0,0..0,29
   .body[1]
-  0] AsyncWith - 0,0..0,18
-    .items[1]
-    0] withitem - 0,11..0,12
-      .context_expr Name 'a' Load - 0,11..0,12
-    .body[1]
-    0] Pass - 0,14..0,18
+   0] AsyncWith - 0,0..0,18
+     .items[1]
+      0] withitem - 0,11..0,12
+        .context_expr Name 'a' Load - 0,11..0,12
+     .body[1]
+      0] Pass - 0,14..0,18
 '''),
 
 (2, 'body[0]', 0, 2, 'items', {}, ('exec',
@@ -17926,12 +17926,12 @@ r'''**DEL**'''),
 r'''async with c: pass  # comment''', r'''
 Module - ROOT 0,0..0,29
   .body[1]
-  0] AsyncWith - 0,0..0,18
-    .items[1]
-    0] withitem - 0,11..0,12
-      .context_expr Name 'c' Load - 0,11..0,12
-    .body[1]
-    0] Pass - 0,14..0,18
+   0] AsyncWith - 0,0..0,18
+     .items[1]
+      0] withitem - 0,11..0,12
+        .context_expr Name 'c' Load - 0,11..0,12
+     .body[1]
+      0] Pass - 0,14..0,18
 '''),
 
 (3, 'body[0]', 1, 2, 'items', {}, ('exec', r'''
@@ -17948,14 +17948,14 @@ c: pass  # comment
 ''', r'''
 Module - ROOT 0,0..2,18
   .body[1]
-  0] AsyncWith - 0,0..2,7
-    .items[2]
-    0] withitem - 0,11..0,12
-      .context_expr Name 'a' Load - 0,11..0,12
-    1] withitem - 2,0..2,1
-      .context_expr Name 'c' Load - 2,0..2,1
-    .body[1]
-    0] Pass - 2,3..2,7
+   0] AsyncWith - 0,0..2,7
+     .items[2]
+      0] withitem - 0,11..0,12
+        .context_expr Name 'a' Load - 0,11..0,12
+      1] withitem - 2,0..2,1
+        .context_expr Name 'c' Load - 2,0..2,1
+     .body[1]
+      0] Pass - 2,3..2,7
 '''),
 
 (4, 'body[0]', 0, 2, 'items', {}, ('exec', r'''
@@ -17971,12 +17971,12 @@ c): pass  # comment
 ''', r'''
 Module - ROOT 0,0..1,19
   .body[1]
-  0] AsyncWith - 0,0..1,8
-    .items[1]
-    0] withitem - 0,11..1,2
-      .context_expr Name 'c' Load - 1,0..1,1
-    .body[1]
-    0] Pass - 1,4..1,8
+   0] AsyncWith - 0,0..1,8
+     .items[1]
+      0] withitem - 0,11..1,2
+        .context_expr Name 'c' Load - 1,0..1,1
+     .body[1]
+      0] Pass - 1,4..1,8
 '''),
 
 (5, 'body[0]', 1, 3, 'items', {}, ('exec', r'''
@@ -17993,12 +17993,12 @@ async with a \
 ''', r'''
 Module - ROOT 0,0..2,17
   .body[1]
-  0] AsyncWith - 0,0..2,6
-    .items[1]
-    0] withitem - 0,11..0,12
-      .context_expr Name 'a' Load - 0,11..0,12
-    .body[1]
-    0] Pass - 2,2..2,6
+   0] AsyncWith - 0,0..2,6
+     .items[1]
+      0] withitem - 0,11..0,12
+        .context_expr Name 'a' Load - 0,11..0,12
+     .body[1]
+      0] Pass - 2,2..2,6
 '''),
 
 (6, 'body[0].body[0]', 0, 1, 'items', {}, ('exec', r'''
@@ -18016,16 +18016,16 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,6
   .body[1]
-  0] If - 0,0..3,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] AsyncWith - 1,2..2,9
-      .items[1]
-      0] withitem - 2,2..2,3
-        .context_expr Name 'b' Load - 2,2..2,3
-      .body[1]
-      0] Pass - 2,5..2,9
-    1] Pass - 3,2..3,6
+   0] If - 0,0..3,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] AsyncWith - 1,2..2,9
+        .items[1]
+         0] withitem - 2,2..2,3
+           .context_expr Name 'b' Load - 2,2..2,3
+        .body[1]
+         0] Pass - 2,5..2,9
+      1] Pass - 3,2..3,6
 '''),
 
 (7, 'body[0].body[0]', 1, 2, 'items', {}, ('exec', r'''
@@ -18044,16 +18044,16 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] If - 0,0..4,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] AsyncWith - 1,2..3,8
-      .items[1]
-      0] withitem - 1,13..1,14
-        .context_expr Name 'a' Load - 1,13..1,14
-      .body[1]
-      0] Pass - 3,4..3,8
-    1] Pass - 4,2..4,6
+   0] If - 0,0..4,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] AsyncWith - 1,2..3,8
+        .items[1]
+         0] withitem - 1,13..1,14
+           .context_expr Name 'a' Load - 1,13..1,14
+        .body[1]
+         0] Pass - 3,4..3,8
+      1] Pass - 4,2..4,6
 '''),
 
 (8, 'body[0].body[0]', 0, 0, 'items', {}, ('exec', r'''
@@ -18075,20 +18075,20 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
-  0] If - 0,0..5,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] AsyncWith - 1,2..4,21
-      .items[3]
-      0] withitem - 1,14..1,15
-        .context_expr Name 'x' Load - 1,14..1,15
-      1] withitem - 3,13..3,14
-        .context_expr Name 'y' Load - 3,13..3,14
-      2] withitem - 4,13..4,14
-        .context_expr Name 'a' Load - 4,13..4,14
-      .body[1]
-      0] Pass - 4,17..4,21
-    1] Pass - 5,2..5,6
+   0] If - 0,0..5,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] AsyncWith - 1,2..4,21
+        .items[3]
+         0] withitem - 1,14..1,15
+           .context_expr Name 'x' Load - 1,14..1,15
+         1] withitem - 3,13..3,14
+           .context_expr Name 'y' Load - 3,13..3,14
+         2] withitem - 4,13..4,14
+           .context_expr Name 'a' Load - 4,13..4,14
+        .body[1]
+         0] Pass - 4,17..4,21
+      1] Pass - 5,2..5,6
 '''),
 
 (9, 'body[0]', 1, 2, 'items', {}, ('exec',
@@ -18097,16 +18097,16 @@ r'''x'''),
 r'''async with a, x, c: pass  # comment''', r'''
 Module - ROOT 0,0..0,35
   .body[1]
-  0] AsyncWith - 0,0..0,24
-    .items[3]
-    0] withitem - 0,11..0,12
-      .context_expr Name 'a' Load - 0,11..0,12
-    1] withitem - 0,14..0,15
-      .context_expr Name 'x' Load - 0,14..0,15
-    2] withitem - 0,17..0,18
-      .context_expr Name 'c' Load - 0,17..0,18
-    .body[1]
-    0] Pass - 0,20..0,24
+   0] AsyncWith - 0,0..0,24
+     .items[3]
+      0] withitem - 0,11..0,12
+        .context_expr Name 'a' Load - 0,11..0,12
+      1] withitem - 0,14..0,15
+        .context_expr Name 'x' Load - 0,14..0,15
+      2] withitem - 0,17..0,18
+        .context_expr Name 'c' Load - 0,17..0,18
+     .body[1]
+      0] Pass - 0,20..0,24
 '''),
 
 (10, 'body[0]', 1, 2, 'items', {}, ('exec',
@@ -18115,19 +18115,19 @@ r'''x.y'''),
 r'''async with a, x.y, c: pass  # comment''', r'''
 Module - ROOT 0,0..0,37
   .body[1]
-  0] AsyncWith - 0,0..0,26
-    .items[3]
-    0] withitem - 0,11..0,12
-      .context_expr Name 'a' Load - 0,11..0,12
-    1] withitem - 0,14..0,17
-      .context_expr Attribute - 0,14..0,17
-        .value Name 'x' Load - 0,14..0,15
-        .attr 'y'
-        .ctx Load
-    2] withitem - 0,19..0,20
-      .context_expr Name 'c' Load - 0,19..0,20
-    .body[1]
-    0] Pass - 0,22..0,26
+   0] AsyncWith - 0,0..0,26
+     .items[3]
+      0] withitem - 0,11..0,12
+        .context_expr Name 'a' Load - 0,11..0,12
+      1] withitem - 0,14..0,17
+        .context_expr Attribute - 0,14..0,17
+          .value Name 'x' Load - 0,14..0,15
+          .attr 'y'
+          .ctx Load
+      2] withitem - 0,19..0,20
+        .context_expr Name 'c' Load - 0,19..0,20
+     .body[1]
+      0] Pass - 0,22..0,26
 '''),
 
 (11, 'body[0]', None, None, 'items', {}, ('exec',
@@ -18140,12 +18140,12 @@ async with x \
 ''', r'''
 Module - ROOT 0,0..1,17
   .body[1]
-  0] AsyncWith - 0,0..1,6
-    .items[1]
-    0] withitem - 0,11..0,12
-      .context_expr Name 'x' Load - 0,11..0,12
-    .body[1]
-    0] Pass - 1,2..1,6
+   0] AsyncWith - 0,0..1,6
+     .items[1]
+      0] withitem - 0,11..0,12
+        .context_expr Name 'x' Load - 0,11..0,12
+     .body[1]
+      0] Pass - 1,2..1,6
 '''),
 
 (12, '', None, None, 'items', {}, (None,
@@ -18159,7 +18159,7 @@ r'''**DEL**''',
 r'''async with : pass  # comment''', r'''
 AsyncWith - ROOT 0,0..0,17
   .body[1]
-  0] Pass - 0,13..0,17
+   0] Pass - 0,13..0,17
 '''),
 
 (14, 'body[0]', 1, 1, 'items', {}, ('exec',
@@ -18176,16 +18176,16 @@ async with a, b \
 ''', r'''
 Module - ROOT 0,0..3,6
   .body[1]
-  0] AsyncWith - 0,0..3,6
-    .items[3]
-    0] withitem - 0,11..0,12
-      .context_expr Name 'a' Load - 0,11..0,12
-    1] withitem - 0,14..0,15
-      .context_expr Name 'b' Load - 0,14..0,15
-    2] withitem - 2,11..2,12
-      .context_expr Name 'c' Load - 2,11..2,12
-    .body[1]
-    0] Pass - 3,2..3,6
+   0] AsyncWith - 0,0..3,6
+     .items[3]
+      0] withitem - 0,11..0,12
+        .context_expr Name 'a' Load - 0,11..0,12
+      1] withitem - 0,14..0,15
+        .context_expr Name 'b' Load - 0,14..0,15
+      2] withitem - 2,11..2,12
+        .context_expr Name 'c' Load - 2,11..2,12
+     .body[1]
+      0] Pass - 3,2..3,6
 '''),
 
 (15, 'body[0]', 1, 1, 'items', {}, ('exec',
@@ -18204,16 +18204,16 @@ async with a, \
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] AsyncWith - 0,0..4,6
-    .items[3]
-    0] withitem - 0,11..0,12
-      .context_expr Name 'a' Load - 0,11..0,12
-    1] withitem - 1,11..1,12
-      .context_expr Name 'b' Load - 1,11..1,12
-    2] withitem - 3,11..3,12
-      .context_expr Name 'c' Load - 3,11..3,12
-    .body[1]
-    0] Pass - 4,2..4,6
+   0] AsyncWith - 0,0..4,6
+     .items[3]
+      0] withitem - 0,11..0,12
+        .context_expr Name 'a' Load - 0,11..0,12
+      1] withitem - 1,11..1,12
+        .context_expr Name 'b' Load - 1,11..1,12
+      2] withitem - 3,11..3,12
+        .context_expr Name 'c' Load - 3,11..3,12
+     .body[1]
+      0] Pass - 4,2..4,6
 '''),
 
 (16, 'body[0]', 1, 1, 'items', {}, (None, r'''
@@ -18229,14 +18229,14 @@ if 1:
 If - ROOT 0,0..2,9
   .test Constant 1 - 0,3..0,4
   .body[1]
-  0] AsyncWith - 1,2..2,9
-    .items[2]
-    0] withitem - 1,13..1,14
-      .context_expr Name 'x' Load - 1,13..1,14
-    1] withitem - 1,16..1,17
-      .context_expr Name 'y' Load - 1,16..1,17
-    .body[1]
-    0] Pass - 2,4..2,8
+   0] AsyncWith - 1,2..2,9
+     .items[2]
+      0] withitem - 1,13..1,14
+        .context_expr Name 'x' Load - 1,13..1,14
+      1] withitem - 1,16..1,17
+        .context_expr Name 'y' Load - 1,16..1,17
+     .body[1]
+      0] Pass - 2,4..2,8
 '''),
 ],
 
@@ -18248,14 +18248,14 @@ r'''**DEL**'''),
 r'''async with (a, c): pass  # comment''', r'''
 Module - ROOT 0,0..0,34
   .body[1]
-  0] AsyncWith - 0,0..0,23
-    .items[2]
-    0] withitem - 0,12..0,13
-      .context_expr Name 'a' Load - 0,12..0,13
-    1] withitem - 0,15..0,16
-      .context_expr Name 'c' Load - 0,15..0,16
-    .body[1]
-    0] Pass - 0,19..0,23
+   0] AsyncWith - 0,0..0,23
+     .items[2]
+      0] withitem - 0,12..0,13
+        .context_expr Name 'a' Load - 0,12..0,13
+      1] withitem - 0,15..0,16
+        .context_expr Name 'c' Load - 0,15..0,16
+     .body[1]
+      0] Pass - 0,19..0,23
 '''),
 
 (1, 'body[0]', 1, 3, 'items', {}, ('exec',
@@ -18264,12 +18264,12 @@ r'''**DEL**'''),
 r'''async with (a): pass  # comment''', r'''
 Module - ROOT 0,0..0,31
   .body[1]
-  0] AsyncWith - 0,0..0,20
-    .items[1]
-    0] withitem - 0,11..0,14
-      .context_expr Name 'a' Load - 0,12..0,13
-    .body[1]
-    0] Pass - 0,16..0,20
+   0] AsyncWith - 0,0..0,20
+     .items[1]
+      0] withitem - 0,11..0,14
+        .context_expr Name 'a' Load - 0,12..0,13
+     .body[1]
+      0] Pass - 0,16..0,20
 '''),
 
 (2, 'body[0]', 0, 2, 'items', {}, ('exec',
@@ -18278,12 +18278,12 @@ r'''**DEL**'''),
 r'''async with (c): pass  # comment''', r'''
 Module - ROOT 0,0..0,31
   .body[1]
-  0] AsyncWith - 0,0..0,20
-    .items[1]
-    0] withitem - 0,11..0,14
-      .context_expr Name 'c' Load - 0,12..0,13
-    .body[1]
-    0] Pass - 0,16..0,20
+   0] AsyncWith - 0,0..0,20
+     .items[1]
+      0] withitem - 0,11..0,14
+        .context_expr Name 'c' Load - 0,12..0,13
+     .body[1]
+      0] Pass - 0,16..0,20
 '''),
 
 (3, 'body[0]', 1, 2, 'items', {}, ('exec', r'''
@@ -18300,14 +18300,14 @@ c): pass  # comment
 ''', r'''
 Module - ROOT 0,0..2,19
   .body[1]
-  0] AsyncWith - 0,0..2,8
-    .items[2]
-    0] withitem - 0,12..0,13
-      .context_expr Name 'a' Load - 0,12..0,13
-    1] withitem - 2,0..2,1
-      .context_expr Name 'c' Load - 2,0..2,1
-    .body[1]
-    0] Pass - 2,4..2,8
+   0] AsyncWith - 0,0..2,8
+     .items[2]
+      0] withitem - 0,12..0,13
+        .context_expr Name 'a' Load - 0,12..0,13
+      1] withitem - 2,0..2,1
+        .context_expr Name 'c' Load - 2,0..2,1
+     .body[1]
+      0] Pass - 2,4..2,8
 '''),
 
 (4, 'body[0]', 0, 2, 'items', {}, ('exec', r'''
@@ -18323,12 +18323,12 @@ c): pass  # comment
 ''', r'''
 Module - ROOT 0,0..1,19
   .body[1]
-  0] AsyncWith - 0,0..1,8
-    .items[1]
-    0] withitem - 0,11..1,2
-      .context_expr Name 'c' Load - 1,0..1,1
-    .body[1]
-    0] Pass - 1,4..1,8
+   0] AsyncWith - 0,0..1,8
+     .items[1]
+      0] withitem - 0,11..1,2
+        .context_expr Name 'c' Load - 1,0..1,1
+     .body[1]
+      0] Pass - 1,4..1,8
 '''),
 
 (5, 'body[0]', 1, 3, 'items', {}, ('exec', r'''
@@ -18345,12 +18345,12 @@ async with (a \
 ''', r'''
 Module - ROOT 0,0..2,18
   .body[1]
-  0] AsyncWith - 0,0..2,7
-    .items[1]
-    0] withitem - 0,11..2,1
-      .context_expr Name 'a' Load - 0,12..0,13
-    .body[1]
-    0] Pass - 2,3..2,7
+   0] AsyncWith - 0,0..2,7
+     .items[1]
+      0] withitem - 0,11..2,1
+        .context_expr Name 'a' Load - 0,12..0,13
+     .body[1]
+      0] Pass - 2,3..2,7
 '''),
 
 (6, 'body[0].body[0]', 0, 1, 'items', {}, ('exec', r'''
@@ -18368,16 +18368,16 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,6
   .body[1]
-  0] If - 0,0..3,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] AsyncWith - 1,2..2,10
-      .items[1]
-      0] withitem - 1,13..2,4
-        .context_expr Name 'b' Load - 2,2..2,3
-      .body[1]
-      0] Pass - 2,6..2,10
-    1] Pass - 3,2..3,6
+   0] If - 0,0..3,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] AsyncWith - 1,2..2,10
+        .items[1]
+         0] withitem - 1,13..2,4
+           .context_expr Name 'b' Load - 2,2..2,3
+        .body[1]
+         0] Pass - 2,6..2,10
+      1] Pass - 3,2..3,6
 '''),
 
 (7, 'body[0].body[0]', 1, 2, 'items', {}, ('exec', r'''
@@ -18396,16 +18396,16 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] If - 0,0..4,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] AsyncWith - 1,2..3,9
-      .items[1]
-      0] withitem - 1,13..3,3
-        .context_expr Name 'a' Load - 1,14..1,15
-      .body[1]
-      0] Pass - 3,5..3,9
-    1] Pass - 4,2..4,6
+   0] If - 0,0..4,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] AsyncWith - 1,2..3,9
+        .items[1]
+         0] withitem - 1,13..3,3
+           .context_expr Name 'a' Load - 1,14..1,15
+        .body[1]
+         0] Pass - 3,5..3,9
+      1] Pass - 4,2..4,6
 '''),
 
 (8, 'body[0].body[0]', 0, 0, 'items', {}, ('exec', r'''
@@ -18427,20 +18427,20 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
-  0] If - 0,0..5,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] AsyncWith - 1,2..4,23
-      .items[3]
-      0] withitem - 1,14..1,15
-        .context_expr Name 'x' Load - 1,14..1,15
-      1] withitem - 3,13..3,14
-        .context_expr Name 'y' Load - 3,13..3,14
-      2] withitem - 4,13..4,16
-        .context_expr Name 'a' Load - 4,14..4,15
-      .body[1]
-      0] Pass - 4,19..4,23
-    1] Pass - 5,2..5,6
+   0] If - 0,0..5,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] AsyncWith - 1,2..4,23
+        .items[3]
+         0] withitem - 1,14..1,15
+           .context_expr Name 'x' Load - 1,14..1,15
+         1] withitem - 3,13..3,14
+           .context_expr Name 'y' Load - 3,13..3,14
+         2] withitem - 4,13..4,16
+           .context_expr Name 'a' Load - 4,14..4,15
+        .body[1]
+         0] Pass - 4,19..4,23
+      1] Pass - 5,2..5,6
 '''),
 
 (9, 'body[0]', 1, 2, 'items', {}, ('exec',
@@ -18449,16 +18449,16 @@ r'''x'''),
 r'''async with (a, x, c): pass  # comment''', r'''
 Module - ROOT 0,0..0,37
   .body[1]
-  0] AsyncWith - 0,0..0,26
-    .items[3]
-    0] withitem - 0,12..0,13
-      .context_expr Name 'a' Load - 0,12..0,13
-    1] withitem - 0,15..0,16
-      .context_expr Name 'x' Load - 0,15..0,16
-    2] withitem - 0,18..0,19
-      .context_expr Name 'c' Load - 0,18..0,19
-    .body[1]
-    0] Pass - 0,22..0,26
+   0] AsyncWith - 0,0..0,26
+     .items[3]
+      0] withitem - 0,12..0,13
+        .context_expr Name 'a' Load - 0,12..0,13
+      1] withitem - 0,15..0,16
+        .context_expr Name 'x' Load - 0,15..0,16
+      2] withitem - 0,18..0,19
+        .context_expr Name 'c' Load - 0,18..0,19
+     .body[1]
+      0] Pass - 0,22..0,26
 '''),
 
 (10, 'body[0]', 1, 2, 'items', {}, ('exec',
@@ -18467,19 +18467,19 @@ r'''x.y'''),
 r'''async with (a, x.y, c): pass  # comment''', r'''
 Module - ROOT 0,0..0,39
   .body[1]
-  0] AsyncWith - 0,0..0,28
-    .items[3]
-    0] withitem - 0,12..0,13
-      .context_expr Name 'a' Load - 0,12..0,13
-    1] withitem - 0,15..0,18
-      .context_expr Attribute - 0,15..0,18
-        .value Name 'x' Load - 0,15..0,16
-        .attr 'y'
-        .ctx Load
-    2] withitem - 0,20..0,21
-      .context_expr Name 'c' Load - 0,20..0,21
-    .body[1]
-    0] Pass - 0,24..0,28
+   0] AsyncWith - 0,0..0,28
+     .items[3]
+      0] withitem - 0,12..0,13
+        .context_expr Name 'a' Load - 0,12..0,13
+      1] withitem - 0,15..0,18
+        .context_expr Attribute - 0,15..0,18
+          .value Name 'x' Load - 0,15..0,16
+          .attr 'y'
+          .ctx Load
+      2] withitem - 0,20..0,21
+        .context_expr Name 'c' Load - 0,20..0,21
+     .body[1]
+      0] Pass - 0,24..0,28
 '''),
 
 (11, 'body[0]', None, None, 'items', {}, ('exec',
@@ -18492,12 +18492,12 @@ async with (x \
 ''', r'''
 Module - ROOT 0,0..1,18
   .body[1]
-  0] AsyncWith - 0,0..1,7
-    .items[1]
-    0] withitem - 0,11..1,1
-      .context_expr Name 'x' Load - 0,12..0,13
-    .body[1]
-    0] Pass - 1,3..1,7
+   0] AsyncWith - 0,0..1,7
+     .items[1]
+      0] withitem - 0,11..1,1
+        .context_expr Name 'x' Load - 0,12..0,13
+     .body[1]
+      0] Pass - 1,3..1,7
 '''),
 
 (12, '', None, None, 'items', {}, (None,
@@ -18511,7 +18511,7 @@ r'''**DEL**''',
 r'''async with (): pass  # comment''', r'''
 AsyncWith - ROOT 0,0..0,19
   .body[1]
-  0] Pass - 0,15..0,19
+   0] Pass - 0,15..0,19
 '''),
 
 (14, 'body[0]', 1, 1, 'items', {}, ('exec',
@@ -18528,16 +18528,16 @@ async with (a), b \
 ''', r'''
 Module - ROOT 0,0..3,6
   .body[1]
-  0] AsyncWith - 0,0..3,6
-    .items[3]
-    0] withitem - 0,11..0,14
-      .context_expr Name 'a' Load - 0,12..0,13
-    1] withitem - 0,16..0,17
-      .context_expr Name 'b' Load - 0,16..0,17
-    2] withitem - 2,11..2,12
-      .context_expr Name 'c' Load - 2,11..2,12
-    .body[1]
-    0] Pass - 3,2..3,6
+   0] AsyncWith - 0,0..3,6
+     .items[3]
+      0] withitem - 0,11..0,14
+        .context_expr Name 'a' Load - 0,12..0,13
+      1] withitem - 0,16..0,17
+        .context_expr Name 'b' Load - 0,16..0,17
+      2] withitem - 2,11..2,12
+        .context_expr Name 'c' Load - 2,11..2,12
+     .body[1]
+      0] Pass - 3,2..3,6
 '''),
 
 (15, 'body[0]', 1, 1, 'items', {}, ('exec',
@@ -18556,16 +18556,16 @@ async with (a), \
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] AsyncWith - 0,0..4,6
-    .items[3]
-    0] withitem - 0,11..0,14
-      .context_expr Name 'a' Load - 0,12..0,13
-    1] withitem - 1,11..1,12
-      .context_expr Name 'b' Load - 1,11..1,12
-    2] withitem - 3,11..3,12
-      .context_expr Name 'c' Load - 3,11..3,12
-    .body[1]
-    0] Pass - 4,2..4,6
+   0] AsyncWith - 0,0..4,6
+     .items[3]
+      0] withitem - 0,11..0,14
+        .context_expr Name 'a' Load - 0,12..0,13
+      1] withitem - 1,11..1,12
+        .context_expr Name 'b' Load - 1,11..1,12
+      2] withitem - 3,11..3,12
+        .context_expr Name 'c' Load - 3,11..3,12
+     .body[1]
+      0] Pass - 4,2..4,6
 '''),
 
 (16, 'body[0]', 1, 1, 'items', {}, (None, r'''
@@ -18581,14 +18581,14 @@ if 1:
 If - ROOT 0,0..2,9
   .test Constant 1 - 0,3..0,4
   .body[1]
-  0] AsyncWith - 1,2..2,9
-    .items[2]
-    0] withitem - 1,13..1,16
-      .context_expr Name 'x' Load - 1,14..1,15
-    1] withitem - 1,18..1,19
-      .context_expr Name 'y' Load - 1,18..1,19
-    .body[1]
-    0] Pass - 2,4..2,8
+   0] AsyncWith - 1,2..2,9
+     .items[2]
+      0] withitem - 1,13..1,16
+        .context_expr Name 'x' Load - 1,14..1,15
+      1] withitem - 1,18..1,19
+        .context_expr Name 'y' Load - 1,18..1,19
+     .body[1]
+      0] Pass - 2,4..2,8
 '''),
 ],
 
@@ -18600,12 +18600,12 @@ r'''**DEL**'''),
 r'''import a, c  # comment''', r'''
 Module - ROOT 0,0..0,22
   .body[1]
-  0] Import - 0,0..0,11
-    .names[2]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 0,10..0,11
-      .name 'c'
+   0] Import - 0,0..0,11
+     .names[2]
+      0] alias - 0,7..0,8
+        .name 'a'
+      1] alias - 0,10..0,11
+        .name 'c'
 '''),
 
 (1, 'body[0]', 1, 3, None, {}, ('exec',
@@ -18614,10 +18614,10 @@ r'''**DEL**'''),
 r'''import a  # comment''', r'''
 Module - ROOT 0,0..0,19
   .body[1]
-  0] Import - 0,0..0,8
-    .names[1]
-    0] alias - 0,7..0,8
-      .name 'a'
+   0] Import - 0,0..0,8
+     .names[1]
+      0] alias - 0,7..0,8
+        .name 'a'
 '''),
 
 (2, 'body[0]', 0, 2, None, {}, ('exec',
@@ -18626,10 +18626,10 @@ r'''**DEL**'''),
 r'''import c  # comment''', r'''
 Module - ROOT 0,0..0,19
   .body[1]
-  0] Import - 0,0..0,8
-    .names[1]
-    0] alias - 0,7..0,8
-      .name 'c'
+   0] Import - 0,0..0,8
+     .names[1]
+      0] alias - 0,7..0,8
+        .name 'c'
 '''),
 
 (3, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -18646,12 +18646,12 @@ c  # comment
 ''', r'''
 Module - ROOT 0,0..2,12
   .body[1]
-  0] Import - 0,0..2,1
-    .names[2]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 2,0..2,1
-      .name 'c'
+   0] Import - 0,0..2,1
+     .names[2]
+      0] alias - 0,7..0,8
+        .name 'a'
+      1] alias - 2,0..2,1
+        .name 'c'
 '''),
 
 (4, 'body[0]', 0, 2, None, {}, ('exec', r'''
@@ -18667,10 +18667,10 @@ c  # comment
 ''', r'''
 Module - ROOT 0,0..1,12
   .body[1]
-  0] Import - 0,0..1,1
-    .names[1]
-    0] alias - 1,0..1,1
-      .name 'c'
+   0] Import - 0,0..1,1
+     .names[1]
+      0] alias - 1,0..1,1
+        .name 'c'
 '''),
 
 (5, 'body[0]', 1, 3, None, {}, ('exec', r'''
@@ -18687,10 +18687,10 @@ import a \
 ''', r'''
 Module - ROOT 0,0..2,11
   .body[1]
-  0] Import - 0,0..0,8
-    .names[1]
-    0] alias - 0,7..0,8
-      .name 'a'
+   0] Import - 0,0..0,8
+     .names[1]
+      0] alias - 0,7..0,8
+        .name 'a'
 '''),
 
 (6, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
@@ -18708,14 +18708,14 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,6
   .body[1]
-  0] If - 0,0..3,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Import - 1,2..2,3
-      .names[1]
-      0] alias - 2,2..2,3
-        .name 'b'
-    1] Pass - 3,2..3,6
+   0] If - 0,0..3,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Import - 1,2..2,3
+        .names[1]
+         0] alias - 2,2..2,3
+           .name 'b'
+      1] Pass - 3,2..3,6
 '''),
 
 (7, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
@@ -18734,14 +18734,14 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] If - 0,0..4,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Import - 1,2..1,10
-      .names[1]
-      0] alias - 1,9..1,10
-        .name 'a'
-    1] Pass - 4,2..4,6
+   0] If - 0,0..4,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Import - 1,2..1,10
+        .names[1]
+         0] alias - 1,9..1,10
+           .name 'a'
+      1] Pass - 4,2..4,6
 '''),
 
 (8, 'body[0].body[0]', 0, 0, None, {}, ('exec', r'''
@@ -18763,18 +18763,18 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
-  0] If - 0,0..5,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Import - 1,2..4,10
-      .names[3]
-      0] alias - 1,9..1,10
-        .name 'x'
-      1] alias - 3,9..3,10
-        .name 'y'
-      2] alias - 4,9..4,10
-        .name 'a'
-    1] Pass - 5,2..5,6
+   0] If - 0,0..5,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Import - 1,2..4,10
+        .names[3]
+         0] alias - 1,9..1,10
+           .name 'x'
+         1] alias - 3,9..3,10
+           .name 'y'
+         2] alias - 4,9..4,10
+           .name 'a'
+      1] Pass - 5,2..5,6
 '''),
 
 (9, 'body[0]', 1, 2, None, {}, ('exec',
@@ -18783,14 +18783,14 @@ r'''x'''),
 r'''import a, x, c  # comment''', r'''
 Module - ROOT 0,0..0,25
   .body[1]
-  0] Import - 0,0..0,14
-    .names[3]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 0,10..0,11
-      .name 'x'
-    2] alias - 0,13..0,14
-      .name 'c'
+   0] Import - 0,0..0,14
+     .names[3]
+      0] alias - 0,7..0,8
+        .name 'a'
+      1] alias - 0,10..0,11
+        .name 'x'
+      2] alias - 0,13..0,14
+        .name 'c'
 '''),
 
 (10, 'body[0]', 1, 2, None, {}, ('exec',
@@ -18799,14 +18799,14 @@ r'''x.y'''),
 r'''import a, x.y, c  # comment''', r'''
 Module - ROOT 0,0..0,27
   .body[1]
-  0] Import - 0,0..0,16
-    .names[3]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 0,10..0,13
-      .name 'x.y'
-    2] alias - 0,15..0,16
-      .name 'c'
+   0] Import - 0,0..0,16
+     .names[3]
+      0] alias - 0,7..0,8
+        .name 'a'
+      1] alias - 0,10..0,13
+        .name 'x.y'
+      2] alias - 0,15..0,16
+        .name 'c'
 '''),
 
 (11, 'body[0]', None, None, None, {}, ('exec',
@@ -18819,10 +18819,10 @@ import x \
 ''', r'''
 Module - ROOT 0,0..1,11
   .body[1]
-  0] Import - 0,0..0,8
-    .names[1]
-    0] alias - 0,7..0,8
-      .name 'x'
+   0] Import - 0,0..0,8
+     .names[1]
+      0] alias - 0,7..0,8
+        .name 'x'
 '''),
 
 (12, '', None, None, None, {}, (None,
@@ -18850,14 +18850,14 @@ import a, b \
 ''', r'''
 Module - ROOT 0,0..3,0
   .body[1]
-  0] Import - 0,0..2,8
-    .names[3]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 0,10..0,11
-      .name 'b'
-    2] alias - 2,7..2,8
-      .name 'c'
+   0] Import - 0,0..2,8
+     .names[3]
+      0] alias - 0,7..0,8
+        .name 'a'
+      1] alias - 0,10..0,11
+        .name 'b'
+      2] alias - 2,7..2,8
+        .name 'c'
 '''),
 
 (15, 'body[0]', 1, 1, None, {}, ('exec',
@@ -18876,14 +18876,14 @@ import a, \
 ''', r'''
 Module - ROOT 0,0..4,0
   .body[1]
-  0] Import - 0,0..3,8
-    .names[3]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 1,7..1,8
-      .name 'b'
-    2] alias - 3,7..3,8
-      .name 'c'
+   0] Import - 0,0..3,8
+     .names[3]
+      0] alias - 0,7..0,8
+        .name 'a'
+      1] alias - 1,7..1,8
+        .name 'b'
+      2] alias - 3,7..3,8
+        .name 'c'
 '''),
 
 (16, 'body[0]', 1, 1, None, {}, (None, r'''
@@ -18897,12 +18897,12 @@ if 1:
 If - ROOT 0,0..1,14
   .test Constant 1 - 0,3..0,4
   .body[1]
-  0] Import - 1,2..1,13
-    .names[2]
-    0] alias - 1,9..1,10
-      .name 'x'
-    1] alias - 1,12..1,13
-      .name 'y'
+   0] Import - 1,2..1,13
+     .names[2]
+      0] alias - 1,9..1,10
+        .name 'x'
+      1] alias - 1,12..1,13
+        .name 'y'
 '''),
 ],
 
@@ -18914,18 +18914,18 @@ r'''d  # comment'''),
 r'''import a, b, d ; import c''', r'''
 Module - ROOT 0,0..0,25
   .body[2]
-  0] Import - 0,0..0,14
-    .names[3]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 0,10..0,11
-      .name 'b'
-    2] alias - 0,13..0,14
-      .name 'd'
-  1] Import - 0,17..0,25
-    .names[1]
-    0] alias - 0,24..0,25
-      .name 'c'
+   0] Import - 0,0..0,14
+     .names[3]
+      0] alias - 0,7..0,8
+        .name 'a'
+      1] alias - 0,10..0,11
+        .name 'b'
+      2] alias - 0,13..0,14
+        .name 'd'
+   1] Import - 0,17..0,25
+     .names[1]
+      0] alias - 0,24..0,25
+        .name 'c'
 '''),
 
 (1, 'body[0]', 2, 2, None, {}, ('exec',
@@ -18939,20 +18939,20 @@ import a, b, d, \
 ''', r'''
 Module - ROOT 0,0..1,19
   .body[2]
-  0] Import - 0,0..1,8
-    .names[4]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 0,10..0,11
-      .name 'b'
-    2] alias - 0,13..0,14
-      .name 'd'
-    3] alias - 1,7..1,8
-      .name 'e'
-  1] Import - 1,11..1,19
-    .names[1]
-    0] alias - 1,18..1,19
-      .name 'c'
+   0] Import - 0,0..1,8
+     .names[4]
+      0] alias - 0,7..0,8
+        .name 'a'
+      1] alias - 0,10..0,11
+        .name 'b'
+      2] alias - 0,13..0,14
+        .name 'd'
+      3] alias - 1,7..1,8
+        .name 'e'
+   1] Import - 1,11..1,19
+     .names[1]
+      0] alias - 1,18..1,19
+        .name 'c'
 '''),
 
 (2, 'body[0]', 2, 2, None, {}, ('exec',
@@ -18966,20 +18966,20 @@ import a, b, d, \
 ''', r'''
 Module - ROOT 0,0..1,19
   .body[2]
-  0] Import - 0,0..1,8
-    .names[4]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 0,10..0,11
-      .name 'b'
-    2] alias - 0,13..0,14
-      .name 'd'
-    3] alias - 1,7..1,8
-      .name 'e'
-  1] Import - 1,11..1,19
-    .names[1]
-    0] alias - 1,18..1,19
-      .name 'c'
+   0] Import - 0,0..1,8
+     .names[4]
+      0] alias - 0,7..0,8
+        .name 'a'
+      1] alias - 0,10..0,11
+        .name 'b'
+      2] alias - 0,13..0,14
+        .name 'd'
+      3] alias - 1,7..1,8
+        .name 'e'
+   1] Import - 1,11..1,19
+     .names[1]
+      0] alias - 1,18..1,19
+        .name 'c'
 '''),
 
 (3, 'body[0]', 2, 2, None, {}, ('exec',
@@ -18988,14 +18988,14 @@ r'''d  # comment'''),
 r'''import a, b, d ;''', r'''
 Module - ROOT 0,0..0,16
   .body[1]
-  0] Import - 0,0..0,14
-    .names[3]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 0,10..0,11
-      .name 'b'
-    2] alias - 0,13..0,14
-      .name 'd'
+   0] Import - 0,0..0,14
+     .names[3]
+      0] alias - 0,7..0,8
+        .name 'a'
+      1] alias - 0,10..0,11
+        .name 'b'
+      2] alias - 0,13..0,14
+        .name 'd'
 '''),
 
 (4, 'body[0]', 2, 2, None, {}, ('exec',
@@ -19009,16 +19009,16 @@ import a, b, d, \
 ''', r'''
 Module - ROOT 0,0..1,10
   .body[1]
-  0] Import - 0,0..1,8
-    .names[4]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 0,10..0,11
-      .name 'b'
-    2] alias - 0,13..0,14
-      .name 'd'
-    3] alias - 1,7..1,8
-      .name 'e'
+   0] Import - 0,0..1,8
+     .names[4]
+      0] alias - 0,7..0,8
+        .name 'a'
+      1] alias - 0,10..0,11
+        .name 'b'
+      2] alias - 0,13..0,14
+        .name 'd'
+      3] alias - 1,7..1,8
+        .name 'e'
 '''),
 
 (5, 'body[0]', 2, 2, None, {}, ('exec',
@@ -19032,16 +19032,16 @@ import a, b, d, \
 ''', r'''
 Module - ROOT 0,0..1,10
   .body[1]
-  0] Import - 0,0..1,8
-    .names[4]
-    0] alias - 0,7..0,8
-      .name 'a'
-    1] alias - 0,10..0,11
-      .name 'b'
-    2] alias - 0,13..0,14
-      .name 'd'
-    3] alias - 1,7..1,8
-      .name 'e'
+   0] Import - 0,0..1,8
+     .names[4]
+      0] alias - 0,7..0,8
+        .name 'a'
+      1] alias - 0,10..0,11
+        .name 'b'
+      2] alias - 0,13..0,14
+        .name 'd'
+      3] alias - 1,7..1,8
+        .name 'e'
 '''),
 
 (6, '', 2, 2, None, {}, (None,
@@ -19050,12 +19050,12 @@ r'''d  # comment'''),
 r'''import a, b, d ;''', r'''
 Import - ROOT 0,0..0,14
   .names[3]
-  0] alias - 0,7..0,8
-    .name 'a'
-  1] alias - 0,10..0,11
-    .name 'b'
-  2] alias - 0,13..0,14
-    .name 'd'
+   0] alias - 0,7..0,8
+     .name 'a'
+   1] alias - 0,10..0,11
+     .name 'b'
+   2] alias - 0,13..0,14
+     .name 'd'
 '''),
 
 (7, '', 2, 2, None, {}, (None,
@@ -19069,14 +19069,14 @@ import a, b, d, \
 ''', r'''
 Import - ROOT 0,0..1,8
   .names[4]
-  0] alias - 0,7..0,8
-    .name 'a'
-  1] alias - 0,10..0,11
-    .name 'b'
-  2] alias - 0,13..0,14
-    .name 'd'
-  3] alias - 1,7..1,8
-    .name 'e'
+   0] alias - 0,7..0,8
+     .name 'a'
+   1] alias - 0,10..0,11
+     .name 'b'
+   2] alias - 0,13..0,14
+     .name 'd'
+   3] alias - 1,7..1,8
+     .name 'e'
 '''),
 
 (8, '', 2, 2, None, {}, (None,
@@ -19090,14 +19090,14 @@ import a, b, d, \
 ''', r'''
 Import - ROOT 0,0..1,8
   .names[4]
-  0] alias - 0,7..0,8
-    .name 'a'
-  1] alias - 0,10..0,11
-    .name 'b'
-  2] alias - 0,13..0,14
-    .name 'd'
-  3] alias - 1,7..1,8
-    .name 'e'
+   0] alias - 0,7..0,8
+     .name 'a'
+   1] alias - 0,10..0,11
+     .name 'b'
+   2] alias - 0,13..0,14
+     .name 'd'
+   3] alias - 1,7..1,8
+     .name 'e'
 '''),
 ],
 
@@ -19109,14 +19109,14 @@ r'''**DEL**'''),
 r'''from mod import a, c  # comment''', r'''
 Module - ROOT 0,0..0,31
   .body[1]
-  0] ImportFrom - 0,0..0,20
-    .module 'mod'
-    .names[2]
-    0] alias - 0,16..0,17
-      .name 'a'
-    1] alias - 0,19..0,20
-      .name 'c'
-    .level 0
+   0] ImportFrom - 0,0..0,20
+     .module 'mod'
+     .names[2]
+      0] alias - 0,16..0,17
+        .name 'a'
+      1] alias - 0,19..0,20
+        .name 'c'
+     .level 0
 '''),
 
 (1, 'body[0]', 1, 3, None, {}, ('exec',
@@ -19125,12 +19125,12 @@ r'''**DEL**'''),
 r'''from mod import a  # comment''', r'''
 Module - ROOT 0,0..0,28
   .body[1]
-  0] ImportFrom - 0,0..0,17
-    .module 'mod'
-    .names[1]
-    0] alias - 0,16..0,17
-      .name 'a'
-    .level 0
+   0] ImportFrom - 0,0..0,17
+     .module 'mod'
+     .names[1]
+      0] alias - 0,16..0,17
+        .name 'a'
+     .level 0
 '''),
 
 (2, 'body[0]', 0, 2, None, {}, ('exec',
@@ -19139,12 +19139,12 @@ r'''**DEL**'''),
 r'''from mod import c  # comment''', r'''
 Module - ROOT 0,0..0,28
   .body[1]
-  0] ImportFrom - 0,0..0,17
-    .module 'mod'
-    .names[1]
-    0] alias - 0,16..0,17
-      .name 'c'
-    .level 0
+   0] ImportFrom - 0,0..0,17
+     .module 'mod'
+     .names[1]
+      0] alias - 0,16..0,17
+        .name 'c'
+     .level 0
 '''),
 
 (3, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -19161,14 +19161,14 @@ c  # comment
 ''', r'''
 Module - ROOT 0,0..2,12
   .body[1]
-  0] ImportFrom - 0,0..2,1
-    .module 'mod'
-    .names[2]
-    0] alias - 0,16..0,17
-      .name 'a'
-    1] alias - 2,0..2,1
-      .name 'c'
-    .level 0
+   0] ImportFrom - 0,0..2,1
+     .module 'mod'
+     .names[2]
+      0] alias - 0,16..0,17
+        .name 'a'
+      1] alias - 2,0..2,1
+        .name 'c'
+     .level 0
 '''),
 
 (4, 'body[0]', 0, 2, None, {}, ('exec', r'''
@@ -19184,12 +19184,12 @@ c)  # comment
 ''', r'''
 Module - ROOT 0,0..1,13
   .body[1]
-  0] ImportFrom - 0,0..1,2
-    .module 'mod'
-    .names[1]
-    0] alias - 1,0..1,1
-      .name 'c'
-    .level 0
+   0] ImportFrom - 0,0..1,2
+     .module 'mod'
+     .names[1]
+      0] alias - 1,0..1,1
+        .name 'c'
+     .level 0
 '''),
 
 (5, 'body[0]', 1, 3, None, {}, ('exec', r'''
@@ -19206,12 +19206,12 @@ from mod import a \
 ''', r'''
 Module - ROOT 0,0..2,11
   .body[1]
-  0] ImportFrom - 0,0..0,17
-    .module 'mod'
-    .names[1]
-    0] alias - 0,16..0,17
-      .name 'a'
-    .level 0
+   0] ImportFrom - 0,0..0,17
+     .module 'mod'
+     .names[1]
+      0] alias - 0,16..0,17
+        .name 'a'
+     .level 0
 '''),
 
 (6, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
@@ -19229,16 +19229,16 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,6
   .body[1]
-  0] If - 0,0..3,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] ImportFrom - 1,2..2,3
-      .module 'mod'
-      .names[1]
-      0] alias - 2,2..2,3
-        .name 'b'
-      .level 0
-    1] Pass - 3,2..3,6
+   0] If - 0,0..3,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] ImportFrom - 1,2..2,3
+        .module 'mod'
+        .names[1]
+         0] alias - 2,2..2,3
+           .name 'b'
+        .level 0
+      1] Pass - 3,2..3,6
 '''),
 
 (7, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
@@ -19257,16 +19257,16 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] If - 0,0..4,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] ImportFrom - 1,2..1,19
-      .module 'mod'
-      .names[1]
-      0] alias - 1,18..1,19
-        .name 'a'
-      .level 0
-    1] Pass - 4,2..4,6
+   0] If - 0,0..4,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] ImportFrom - 1,2..1,19
+        .module 'mod'
+        .names[1]
+         0] alias - 1,18..1,19
+           .name 'a'
+        .level 0
+      1] Pass - 4,2..4,6
 '''),
 
 (8, 'body[0].body[0]', 0, 0, None, {}, ('exec', r'''
@@ -19288,20 +19288,20 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
-  0] If - 0,0..5,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] ImportFrom - 1,2..4,20
-      .module 'mod'
-      .names[3]
-      0] alias - 1,19..1,20
-        .name 'x'
-      1] alias - 3,18..3,19
-        .name 'y'
-      2] alias - 4,18..4,19
-        .name 'a'
-      .level 0
-    1] Pass - 5,2..5,6
+   0] If - 0,0..5,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] ImportFrom - 1,2..4,20
+        .module 'mod'
+        .names[3]
+         0] alias - 1,19..1,20
+           .name 'x'
+         1] alias - 3,18..3,19
+           .name 'y'
+         2] alias - 4,18..4,19
+           .name 'a'
+        .level 0
+      1] Pass - 5,2..5,6
 '''),
 
 (9, 'body[0]', 1, 2, None, {}, ('exec',
@@ -19310,16 +19310,16 @@ r'''x'''),
 r'''from mod import a, x, c  # comment''', r'''
 Module - ROOT 0,0..0,34
   .body[1]
-  0] ImportFrom - 0,0..0,23
-    .module 'mod'
-    .names[3]
-    0] alias - 0,16..0,17
-      .name 'a'
-    1] alias - 0,19..0,20
-      .name 'x'
-    2] alias - 0,22..0,23
-      .name 'c'
-    .level 0
+   0] ImportFrom - 0,0..0,23
+     .module 'mod'
+     .names[3]
+      0] alias - 0,16..0,17
+        .name 'a'
+      1] alias - 0,19..0,20
+        .name 'x'
+      2] alias - 0,22..0,23
+        .name 'c'
+     .level 0
 '''),
 
 (10, 'body[0]', 1, 2, None, {}, ('exec',
@@ -19337,12 +19337,12 @@ from mod import x \
 ''', r'''
 Module - ROOT 0,0..1,11
   .body[1]
-  0] ImportFrom - 0,0..0,17
-    .module 'mod'
-    .names[1]
-    0] alias - 0,16..0,17
-      .name 'x'
-    .level 0
+   0] ImportFrom - 0,0..0,17
+     .module 'mod'
+     .names[1]
+      0] alias - 0,16..0,17
+        .name 'x'
+     .level 0
 '''),
 
 (12, '', None, None, None, {}, (None,
@@ -19373,16 +19373,16 @@ from mod import a, b \
 ''', r'''
 Module - ROOT 0,0..3,0
   .body[1]
-  0] ImportFrom - 0,0..2,17
-    .module 'mod'
-    .names[3]
-    0] alias - 0,16..0,17
-      .name 'a'
-    1] alias - 0,19..0,20
-      .name 'b'
-    2] alias - 2,16..2,17
-      .name 'c'
-    .level 0
+   0] ImportFrom - 0,0..2,17
+     .module 'mod'
+     .names[3]
+      0] alias - 0,16..0,17
+        .name 'a'
+      1] alias - 0,19..0,20
+        .name 'b'
+      2] alias - 2,16..2,17
+        .name 'c'
+     .level 0
 '''),
 
 (15, 'body[0]', 1, 1, None, {}, ('exec',
@@ -19401,16 +19401,16 @@ from mod import a, \
 ''', r'''
 Module - ROOT 0,0..4,0
   .body[1]
-  0] ImportFrom - 0,0..3,17
-    .module 'mod'
-    .names[3]
-    0] alias - 0,16..0,17
-      .name 'a'
-    1] alias - 1,16..1,17
-      .name 'b'
-    2] alias - 3,16..3,17
-      .name 'c'
-    .level 0
+   0] ImportFrom - 0,0..3,17
+     .module 'mod'
+     .names[3]
+      0] alias - 0,16..0,17
+        .name 'a'
+      1] alias - 1,16..1,17
+        .name 'b'
+      2] alias - 3,16..3,17
+        .name 'c'
+     .level 0
 '''),
 
 (16, 'body[0]', 1, 1, None, {}, (None, r'''
@@ -19424,14 +19424,14 @@ if 1:
 If - ROOT 0,0..1,23
   .test Constant 1 - 0,3..0,4
   .body[1]
-  0] ImportFrom - 1,2..1,22
-    .module 'mod'
-    .names[2]
-    0] alias - 1,18..1,19
-      .name 'x'
-    1] alias - 1,21..1,22
-      .name 'y'
-    .level 0
+   0] ImportFrom - 1,2..1,22
+     .module 'mod'
+     .names[2]
+      0] alias - 1,18..1,19
+        .name 'x'
+      1] alias - 1,21..1,22
+        .name 'y'
+     .level 0
 '''),
 ],
 
@@ -19443,14 +19443,14 @@ r'''**DEL**'''),
 r'''from mod import (a, c)  # comment''', r'''
 Module - ROOT 0,0..0,33
   .body[1]
-  0] ImportFrom - 0,0..0,22
-    .module 'mod'
-    .names[2]
-    0] alias - 0,17..0,18
-      .name 'a'
-    1] alias - 0,20..0,21
-      .name 'c'
-    .level 0
+   0] ImportFrom - 0,0..0,22
+     .module 'mod'
+     .names[2]
+      0] alias - 0,17..0,18
+        .name 'a'
+      1] alias - 0,20..0,21
+        .name 'c'
+     .level 0
 '''),
 
 (1, 'body[0]', 1, 3, None, {}, ('exec',
@@ -19459,12 +19459,12 @@ r'''**DEL**'''),
 r'''from mod import (a)  # comment''', r'''
 Module - ROOT 0,0..0,30
   .body[1]
-  0] ImportFrom - 0,0..0,19
-    .module 'mod'
-    .names[1]
-    0] alias - 0,17..0,18
-      .name 'a'
-    .level 0
+   0] ImportFrom - 0,0..0,19
+     .module 'mod'
+     .names[1]
+      0] alias - 0,17..0,18
+        .name 'a'
+     .level 0
 '''),
 
 (2, 'body[0]', 0, 2, None, {}, ('exec',
@@ -19473,12 +19473,12 @@ r'''**DEL**'''),
 r'''from mod import (c)  # comment''', r'''
 Module - ROOT 0,0..0,30
   .body[1]
-  0] ImportFrom - 0,0..0,19
-    .module 'mod'
-    .names[1]
-    0] alias - 0,17..0,18
-      .name 'c'
-    .level 0
+   0] ImportFrom - 0,0..0,19
+     .module 'mod'
+     .names[1]
+      0] alias - 0,17..0,18
+        .name 'c'
+     .level 0
 '''),
 
 (3, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -19497,14 +19497,14 @@ c  # blah
 ''', r'''
 Module - ROOT 0,0..3,12
   .body[1]
-  0] ImportFrom - 0,0..3,1
-    .module 'mod'
-    .names[2]
-    0] alias - 0,17..0,18
-      .name 'a'
-    1] alias - 2,0..2,1
-      .name 'c'
-    .level 0
+   0] ImportFrom - 0,0..3,1
+     .module 'mod'
+     .names[2]
+      0] alias - 0,17..0,18
+        .name 'a'
+      1] alias - 2,0..2,1
+        .name 'c'
+     .level 0
 '''),
 
 (4, 'body[0]', 0, 2, None, {}, ('exec', r'''
@@ -19522,12 +19522,12 @@ c  # blah
 ''', r'''
 Module - ROOT 0,0..2,12
   .body[1]
-  0] ImportFrom - 0,0..2,1
-    .module 'mod'
-    .names[1]
-    0] alias - 1,0..1,1
-      .name 'c'
-    .level 0
+   0] ImportFrom - 0,0..2,1
+     .module 'mod'
+     .names[1]
+      0] alias - 1,0..1,1
+        .name 'c'
+     .level 0
 '''),
 
 (5, 'body[0]', 1, 3, None, {}, ('exec', r'''
@@ -19545,12 +19545,12 @@ from mod import (a \
 ''', r'''
 Module - ROOT 0,0..2,12
   .body[1]
-  0] ImportFrom - 0,0..2,1
-    .module 'mod'
-    .names[1]
-    0] alias - 0,17..0,18
-      .name 'a'
-    .level 0
+   0] ImportFrom - 0,0..2,1
+     .module 'mod'
+     .names[1]
+      0] alias - 0,17..0,18
+        .name 'a'
+     .level 0
 '''),
 
 (6, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
@@ -19570,16 +19570,16 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] If - 0,0..4,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] ImportFrom - 1,2..3,3
-      .module 'mod'
-      .names[1]
-      0] alias - 2,2..2,3
-        .name 'b'
-      .level 0
-    1] Pass - 4,2..4,6
+   0] If - 0,0..4,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] ImportFrom - 1,2..3,3
+        .module 'mod'
+        .names[1]
+         0] alias - 2,2..2,3
+           .name 'b'
+        .level 0
+      1] Pass - 4,2..4,6
 '''),
 
 (7, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
@@ -19599,16 +19599,16 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] If - 0,0..4,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] ImportFrom - 1,2..3,3
-      .module 'mod'
-      .names[1]
-      0] alias - 1,19..1,20
-        .name 'a'
-      .level 0
-    1] Pass - 4,2..4,6
+   0] If - 0,0..4,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] ImportFrom - 1,2..3,3
+        .module 'mod'
+        .names[1]
+         0] alias - 1,19..1,20
+           .name 'a'
+        .level 0
+      1] Pass - 4,2..4,6
 '''),
 
 (8, 'body[0].body[0]', 0, 0, None, {}, ('exec', r'''
@@ -19630,20 +19630,20 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
-  0] If - 0,0..5,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] ImportFrom - 1,2..4,21
-      .module 'mod'
-      .names[3]
-      0] alias - 1,19..1,20
-        .name 'x'
-      1] alias - 3,19..3,20
-        .name 'y'
-      2] alias - 4,19..4,20
-        .name 'a'
-      .level 0
-    1] Pass - 5,2..5,6
+   0] If - 0,0..5,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] ImportFrom - 1,2..4,21
+        .module 'mod'
+        .names[3]
+         0] alias - 1,19..1,20
+           .name 'x'
+         1] alias - 3,19..3,20
+           .name 'y'
+         2] alias - 4,19..4,20
+           .name 'a'
+        .level 0
+      1] Pass - 5,2..5,6
 '''),
 
 (9, 'body[0]', 1, 2, None, {}, ('exec',
@@ -19652,16 +19652,16 @@ r'''x'''),
 r'''from mod import (a, x, c)  # comment''', r'''
 Module - ROOT 0,0..0,36
   .body[1]
-  0] ImportFrom - 0,0..0,25
-    .module 'mod'
-    .names[3]
-    0] alias - 0,17..0,18
-      .name 'a'
-    1] alias - 0,20..0,21
-      .name 'x'
-    2] alias - 0,23..0,24
-      .name 'c'
-    .level 0
+   0] ImportFrom - 0,0..0,25
+     .module 'mod'
+     .names[3]
+      0] alias - 0,17..0,18
+        .name 'a'
+      1] alias - 0,20..0,21
+        .name 'x'
+      2] alias - 0,23..0,24
+        .name 'c'
+     .level 0
 '''),
 
 (10, 'body[0]', 1, 2, None, {}, ('exec',
@@ -19679,12 +19679,12 @@ from mod import (x \
 ''', r'''
 Module - ROOT 0,0..1,12
   .body[1]
-  0] ImportFrom - 0,0..1,1
-    .module 'mod'
-    .names[1]
-    0] alias - 0,17..0,18
-      .name 'x'
-    .level 0
+   0] ImportFrom - 0,0..1,1
+     .module 'mod'
+     .names[1]
+      0] alias - 0,17..0,18
+        .name 'x'
+     .level 0
 '''),
 
 (12, '', None, None, None, {}, (None,
@@ -19716,16 +19716,16 @@ from mod import (a, b \
 ''', r'''
 Module - ROOT 0,0..4,1
   .body[1]
-  0] ImportFrom - 0,0..4,1
-    .module 'mod'
-    .names[3]
-    0] alias - 0,17..0,18
-      .name 'a'
-    1] alias - 0,20..0,21
-      .name 'b'
-    2] alias - 2,17..2,18
-      .name 'c'
-    .level 0
+   0] ImportFrom - 0,0..4,1
+     .module 'mod'
+     .names[3]
+      0] alias - 0,17..0,18
+        .name 'a'
+      1] alias - 0,20..0,21
+        .name 'b'
+      2] alias - 2,17..2,18
+        .name 'c'
+     .level 0
 '''),
 
 (15, 'body[0]', 1, 1, None, {}, ('exec',
@@ -19745,16 +19745,16 @@ from mod import (a, \
 ''', r'''
 Module - ROOT 0,0..5,1
   .body[1]
-  0] ImportFrom - 0,0..5,1
-    .module 'mod'
-    .names[3]
-    0] alias - 0,17..0,18
-      .name 'a'
-    1] alias - 1,17..1,18
-      .name 'b'
-    2] alias - 3,17..3,18
-      .name 'c'
-    .level 0
+   0] ImportFrom - 0,0..5,1
+     .module 'mod'
+     .names[3]
+      0] alias - 0,17..0,18
+        .name 'a'
+      1] alias - 1,17..1,18
+        .name 'b'
+      2] alias - 3,17..3,18
+        .name 'c'
+     .level 0
 '''),
 
 (16, 'body[0]', 1, 1, None, {}, (None, r'''
@@ -19768,14 +19768,14 @@ if 1:
 If - ROOT 0,0..1,25
   .test Constant 1 - 0,3..0,4
   .body[1]
-  0] ImportFrom - 1,2..1,24
-    .module 'mod'
-    .names[2]
-    0] alias - 1,19..1,20
-      .name 'x'
-    1] alias - 1,22..1,23
-      .name 'y'
-    .level 0
+   0] ImportFrom - 1,2..1,24
+     .module 'mod'
+     .names[2]
+      0] alias - 1,19..1,20
+        .name 'x'
+      1] alias - 1,22..1,23
+        .name 'y'
+     .level 0
 '''),
 ],
 
@@ -19787,12 +19787,12 @@ r'''*'''),
 r'''from mod import *''', r'''
 Module - ROOT 0,0..0,17
   .body[1]
-  0] ImportFrom - 0,0..0,17
-    .module 'mod'
-    .names[1]
-    0] alias - 0,16..0,17
-      .name '*'
-    .level 0
+   0] ImportFrom - 0,0..0,17
+     .module 'mod'
+     .names[1]
+      0] alias - 0,16..0,17
+        .name '*'
+     .level 0
 '''),
 
 (1, 'body[0]', 0, 0, None, {}, ('exec',
@@ -19811,12 +19811,12 @@ r'''a'''),
 r'''from mod import a''', r'''
 Module - ROOT 0,0..0,17
   .body[1]
-  0] ImportFrom - 0,0..0,17
-    .module 'mod'
-    .names[1]
-    0] alias - 0,16..0,17
-      .name 'a'
-    .level 0
+   0] ImportFrom - 0,0..0,17
+     .module 'mod'
+     .names[1]
+      0] alias - 0,16..0,17
+        .name 'a'
+     .level 0
 '''),
 
 (4, 'body[0]', 0, 0, None, {}, ('exec',
@@ -19835,12 +19835,12 @@ r'''*'''),
 r'''from mod import *''', r'''
 Module - ROOT 0,0..0,17
   .body[1]
-  0] ImportFrom - 0,0..0,17
-    .module 'mod'
-    .names[1]
-    0] alias - 0,16..0,17
-      .name '*'
-    .level 0
+   0] ImportFrom - 0,0..0,17
+     .module 'mod'
+     .names[1]
+      0] alias - 0,16..0,17
+        .name '*'
+     .level 0
 '''),
 
 (7, 'body[0]', None, None, None, {}, ('exec',
@@ -19854,12 +19854,12 @@ from mod import * \
 ''', r'''
 Module - ROOT 0,0..2,0
   .body[1]
-  0] ImportFrom - 0,0..0,17
-    .module 'mod'
-    .names[1]
-    0] alias - 0,16..0,17
-      .name '*'
-    .level 0
+   0] ImportFrom - 0,0..0,17
+     .module 'mod'
+     .names[1]
+      0] alias - 0,16..0,17
+        .name '*'
+     .level 0
 '''),
 
 (8, 'body[0]', None, None, None, {}, ('exec',
@@ -19870,12 +19870,12 @@ r'''from mod import (a)'''), ('_ImportFrom_names', r'''
 r'''from mod import *''', r'''
 Module - ROOT 0,0..0,17
   .body[1]
-  0] ImportFrom - 0,0..0,17
-    .module 'mod'
-    .names[1]
-    0] alias - 0,16..0,17
-      .name '*'
-    .level 0
+   0] ImportFrom - 0,0..0,17
+     .module 'mod'
+     .names[1]
+      0] alias - 0,16..0,17
+        .name '*'
+     .level 0
 '''),
 ],
 
@@ -19887,22 +19887,22 @@ r'''d  # comment'''),
 r'''from z import a, b, d ; from z import c''', r'''
 Module - ROOT 0,0..0,39
   .body[2]
-  0] ImportFrom - 0,0..0,21
-    .module 'z'
-    .names[3]
-    0] alias - 0,14..0,15
-      .name 'a'
-    1] alias - 0,17..0,18
-      .name 'b'
-    2] alias - 0,20..0,21
-      .name 'd'
-    .level 0
-  1] ImportFrom - 0,24..0,39
-    .module 'z'
-    .names[1]
-    0] alias - 0,38..0,39
-      .name 'c'
-    .level 0
+   0] ImportFrom - 0,0..0,21
+     .module 'z'
+     .names[3]
+      0] alias - 0,14..0,15
+        .name 'a'
+      1] alias - 0,17..0,18
+        .name 'b'
+      2] alias - 0,20..0,21
+        .name 'd'
+     .level 0
+   1] ImportFrom - 0,24..0,39
+     .module 'z'
+     .names[1]
+      0] alias - 0,38..0,39
+        .name 'c'
+     .level 0
 '''),
 
 (1, 'body[0]', 2, 2, None, {}, ('exec',
@@ -19916,24 +19916,24 @@ from z import (a, b, d,
 ''', r'''
 Module - ROOT 0,0..1,34
   .body[2]
-  0] ImportFrom - 0,0..1,16
-    .module 'z'
-    .names[4]
-    0] alias - 0,15..0,16
-      .name 'a'
-    1] alias - 0,18..0,19
-      .name 'b'
-    2] alias - 0,21..0,22
-      .name 'd'
-    3] alias - 1,14..1,15
-      .name 'e'
-    .level 0
-  1] ImportFrom - 1,19..1,34
-    .module 'z'
-    .names[1]
-    0] alias - 1,33..1,34
-      .name 'c'
-    .level 0
+   0] ImportFrom - 0,0..1,16
+     .module 'z'
+     .names[4]
+      0] alias - 0,15..0,16
+        .name 'a'
+      1] alias - 0,18..0,19
+        .name 'b'
+      2] alias - 0,21..0,22
+        .name 'd'
+      3] alias - 1,14..1,15
+        .name 'e'
+     .level 0
+   1] ImportFrom - 1,19..1,34
+     .module 'z'
+     .names[1]
+      0] alias - 1,33..1,34
+        .name 'c'
+     .level 0
 '''),
 
 (2, 'body[0]', 2, 2, None, {}, ('exec',
@@ -19947,24 +19947,24 @@ from z import (a, b, d,
 ''', r'''
 Module - ROOT 0,0..1,34
   .body[2]
-  0] ImportFrom - 0,0..1,16
-    .module 'z'
-    .names[4]
-    0] alias - 0,15..0,16
-      .name 'a'
-    1] alias - 0,18..0,19
-      .name 'b'
-    2] alias - 0,21..0,22
-      .name 'd'
-    3] alias - 1,14..1,15
-      .name 'e'
-    .level 0
-  1] ImportFrom - 1,19..1,34
-    .module 'z'
-    .names[1]
-    0] alias - 1,33..1,34
-      .name 'c'
-    .level 0
+   0] ImportFrom - 0,0..1,16
+     .module 'z'
+     .names[4]
+      0] alias - 0,15..0,16
+        .name 'a'
+      1] alias - 0,18..0,19
+        .name 'b'
+      2] alias - 0,21..0,22
+        .name 'd'
+      3] alias - 1,14..1,15
+        .name 'e'
+     .level 0
+   1] ImportFrom - 1,19..1,34
+     .module 'z'
+     .names[1]
+      0] alias - 1,33..1,34
+        .name 'c'
+     .level 0
 '''),
 
 (3, 'body[0]', 2, 2, None, {}, ('exec',
@@ -19973,16 +19973,16 @@ r'''d  # comment'''),
 r'''from z import a, b, d ;''', r'''
 Module - ROOT 0,0..0,23
   .body[1]
-  0] ImportFrom - 0,0..0,21
-    .module 'z'
-    .names[3]
-    0] alias - 0,14..0,15
-      .name 'a'
-    1] alias - 0,17..0,18
-      .name 'b'
-    2] alias - 0,20..0,21
-      .name 'd'
-    .level 0
+   0] ImportFrom - 0,0..0,21
+     .module 'z'
+     .names[3]
+      0] alias - 0,14..0,15
+        .name 'a'
+      1] alias - 0,17..0,18
+        .name 'b'
+      2] alias - 0,20..0,21
+        .name 'd'
+     .level 0
 '''),
 
 (4, 'body[0]', 2, 2, None, {}, ('exec',
@@ -19996,18 +19996,18 @@ from z import (a, b, d,
 ''', r'''
 Module - ROOT 0,0..1,18
   .body[1]
-  0] ImportFrom - 0,0..1,16
-    .module 'z'
-    .names[4]
-    0] alias - 0,15..0,16
-      .name 'a'
-    1] alias - 0,18..0,19
-      .name 'b'
-    2] alias - 0,21..0,22
-      .name 'd'
-    3] alias - 1,14..1,15
-      .name 'e'
-    .level 0
+   0] ImportFrom - 0,0..1,16
+     .module 'z'
+     .names[4]
+      0] alias - 0,15..0,16
+        .name 'a'
+      1] alias - 0,18..0,19
+        .name 'b'
+      2] alias - 0,21..0,22
+        .name 'd'
+      3] alias - 1,14..1,15
+        .name 'e'
+     .level 0
 '''),
 
 (5, 'body[0]', 2, 2, None, {}, ('exec',
@@ -20021,18 +20021,18 @@ from z import (a, b, d,
 ''', r'''
 Module - ROOT 0,0..1,18
   .body[1]
-  0] ImportFrom - 0,0..1,16
-    .module 'z'
-    .names[4]
-    0] alias - 0,15..0,16
-      .name 'a'
-    1] alias - 0,18..0,19
-      .name 'b'
-    2] alias - 0,21..0,22
-      .name 'd'
-    3] alias - 1,14..1,15
-      .name 'e'
-    .level 0
+   0] ImportFrom - 0,0..1,16
+     .module 'z'
+     .names[4]
+      0] alias - 0,15..0,16
+        .name 'a'
+      1] alias - 0,18..0,19
+        .name 'b'
+      2] alias - 0,21..0,22
+        .name 'd'
+      3] alias - 1,14..1,15
+        .name 'e'
+     .level 0
 '''),
 
 (6, '', 2, 2, None, {}, (None,
@@ -20042,12 +20042,12 @@ r'''from z import a, b, d ;''', r'''
 ImportFrom - ROOT 0,0..0,21
   .module 'z'
   .names[3]
-  0] alias - 0,14..0,15
-    .name 'a'
-  1] alias - 0,17..0,18
-    .name 'b'
-  2] alias - 0,20..0,21
-    .name 'd'
+   0] alias - 0,14..0,15
+     .name 'a'
+   1] alias - 0,17..0,18
+     .name 'b'
+   2] alias - 0,20..0,21
+     .name 'd'
   .level 0
 '''),
 
@@ -20063,14 +20063,14 @@ from z import (a, b, d,
 ImportFrom - ROOT 0,0..1,16
   .module 'z'
   .names[4]
-  0] alias - 0,15..0,16
-    .name 'a'
-  1] alias - 0,18..0,19
-    .name 'b'
-  2] alias - 0,21..0,22
-    .name 'd'
-  3] alias - 1,14..1,15
-    .name 'e'
+   0] alias - 0,15..0,16
+     .name 'a'
+   1] alias - 0,18..0,19
+     .name 'b'
+   2] alias - 0,21..0,22
+     .name 'd'
+   3] alias - 1,14..1,15
+     .name 'e'
   .level 0
 '''),
 
@@ -20086,14 +20086,14 @@ from z import (a, b, d,
 ImportFrom - ROOT 0,0..1,16
   .module 'z'
   .names[4]
-  0] alias - 0,15..0,16
-    .name 'a'
-  1] alias - 0,18..0,19
-    .name 'b'
-  2] alias - 0,21..0,22
-    .name 'd'
-  3] alias - 1,14..1,15
-    .name 'e'
+   0] alias - 0,15..0,16
+     .name 'a'
+   1] alias - 0,18..0,19
+     .name 'b'
+   2] alias - 0,21..0,22
+     .name 'd'
+   3] alias - 1,14..1,15
+     .name 'e'
   .level 0
 '''),
 ],
@@ -20106,10 +20106,10 @@ r'''x'''),
 r'''global x, c''', r'''
 Module - ROOT 0,0..0,11
   .body[1]
-  0] Global - 0,0..0,11
-    .names[2]
-    0] 'x'
-    1] 'c'
+   0] Global - 0,0..0,11
+     .names[2]
+      0] 'x'
+      1] 'c'
 '''),
 
 (1, 'body[0]', None, None, None, {'raw': True}, ('exec',
@@ -20118,9 +20118,9 @@ r'''x'''),
 r'''global x''', r'''
 Module - ROOT 0,0..0,8
   .body[1]
-  0] Global - 0,0..0,8
-    .names[1]
-    0] 'x'
+   0] Global - 0,0..0,8
+     .names[1]
+      0] 'x'
 '''),
 
 (2, 'body[0]', 1, 2, None, {'raw': True}, ('exec',
@@ -20129,12 +20129,12 @@ r'''x, y'''),
 r'''global a, x, y, c''', r'''
 Module - ROOT 0,0..0,17
   .body[1]
-  0] Global - 0,0..0,17
-    .names[4]
-    0] 'a'
-    1] 'x'
-    2] 'y'
-    3] 'c'
+   0] Global - 0,0..0,17
+     .names[4]
+      0] 'a'
+      1] 'x'
+      2] 'y'
+      3] 'c'
 '''),
 
 (3, 'body[0]', 1, 2, None, {}, ('exec',
@@ -20143,10 +20143,10 @@ r'''**DEL**'''),
 r'''global a, c  # comment''', r'''
 Module - ROOT 0,0..0,22
   .body[1]
-  0] Global - 0,0..0,11
-    .names[2]
-    0] 'a'
-    1] 'c'
+   0] Global - 0,0..0,11
+     .names[2]
+      0] 'a'
+      1] 'c'
 '''),
 
 (4, 'body[0]', 1, 3, None, {}, ('exec',
@@ -20155,9 +20155,9 @@ r'''**DEL**'''),
 r'''global a  # comment''', r'''
 Module - ROOT 0,0..0,19
   .body[1]
-  0] Global - 0,0..0,8
-    .names[1]
-    0] 'a'
+   0] Global - 0,0..0,8
+     .names[1]
+      0] 'a'
 '''),
 
 (5, 'body[0]', 0, 2, None, {}, ('exec',
@@ -20166,9 +20166,9 @@ r'''**DEL**'''),
 r'''global c  # comment''', r'''
 Module - ROOT 0,0..0,19
   .body[1]
-  0] Global - 0,0..0,8
-    .names[1]
-    0] 'c'
+   0] Global - 0,0..0,8
+     .names[1]
+      0] 'c'
 '''),
 
 (6, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -20185,10 +20185,10 @@ c  # comment
 ''', r'''
 Module - ROOT 0,0..2,12
   .body[1]
-  0] Global - 0,0..2,1
-    .names[2]
-    0] 'a'
-    1] 'c'
+   0] Global - 0,0..2,1
+     .names[2]
+      0] 'a'
+      1] 'c'
 '''),
 
 (7, 'body[0]', 0, 2, None, {}, ('exec', r'''
@@ -20204,9 +20204,9 @@ c  # comment
 ''', r'''
 Module - ROOT 0,0..1,12
   .body[1]
-  0] Global - 0,0..1,1
-    .names[1]
-    0] 'c'
+   0] Global - 0,0..1,1
+     .names[1]
+      0] 'c'
 '''),
 
 (8, 'body[0]', 1, 3, None, {}, ('exec', r'''
@@ -20223,9 +20223,9 @@ global a \
 ''', r'''
 Module - ROOT 0,0..2,11
   .body[1]
-  0] Global - 0,0..0,8
-    .names[1]
-    0] 'a'
+   0] Global - 0,0..0,8
+     .names[1]
+      0] 'a'
 '''),
 
 (9, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
@@ -20243,13 +20243,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,6
   .body[1]
-  0] If - 0,0..3,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Global - 1,2..2,3
-      .names[1]
-      0] 'b'
-    1] Pass - 3,2..3,6
+   0] If - 0,0..3,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Global - 1,2..2,3
+        .names[1]
+         0] 'b'
+      1] Pass - 3,2..3,6
 '''),
 
 (10, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
@@ -20268,13 +20268,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] If - 0,0..4,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Global - 1,2..1,10
-      .names[1]
-      0] 'a'
-    1] Pass - 4,2..4,6
+   0] If - 0,0..4,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Global - 1,2..1,10
+        .names[1]
+         0] 'a'
+      1] Pass - 4,2..4,6
 '''),
 
 (11, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
@@ -20294,14 +20294,14 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
-  0] If - 0,0..5,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Global - 1,2..2,10
-      .names[2]
-      0] 'a'
-      1] 'b'
-    1] Pass - 5,2..5,6
+   0] If - 0,0..5,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Global - 1,2..2,10
+        .names[2]
+         0] 'a'
+         1] 'b'
+      1] Pass - 5,2..5,6
 '''),
 
 (12, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
@@ -20325,14 +20325,14 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] If - 0,0..4,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Global - 1,2..2,10
-      .names[2]
-      0] 'a'
-      1] 'b'
-    1] Pass - 4,2..4,6
+   0] If - 0,0..4,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Global - 1,2..2,10
+        .names[2]
+         0] 'a'
+         1] 'b'
+      1] Pass - 4,2..4,6
 '''),
 
 (13, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
@@ -20356,14 +20356,14 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] If - 0,0..4,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Global - 1,2..2,10
-      .names[2]
-      0] 'a'
-      1] 'b'
-    1] Pass - 4,2..4,6
+   0] If - 0,0..4,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Global - 1,2..2,10
+        .names[2]
+         0] 'a'
+         1] 'b'
+      1] Pass - 4,2..4,6
 '''),
 
 (14, 'body[0].body[0]', 0, 0, None, {}, ('exec', r'''
@@ -20389,15 +20389,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
-  0] If - 0,0..5,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Global - 1,2..4,12
-      .names[3]
-      0] 'x'
-      1] 'y'
-      2] 'a'
-    1] Pass - 5,2..5,6
+   0] If - 0,0..5,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Global - 1,2..4,12
+        .names[3]
+         0] 'x'
+         1] 'y'
+         2] 'a'
+      1] Pass - 5,2..5,6
 '''),
 
 (15, 'body[0]', 1, 2, None, {}, ('exec',
@@ -20407,11 +20407,11 @@ r'''global a, x, c  # comment''',
 r'''**NodeError('slice being assigned to a Global must be a Tuple, List or Set, not a Name')**''', r'''
 Module - ROOT 0,0..0,25
   .body[1]
-  0] Global - 0,0..0,14
-    .names[3]
-    0] 'a'
-    1] 'x'
-    2] 'c'
+   0] Global - 0,0..0,14
+     .names[3]
+      0] 'a'
+      1] 'x'
+      2] 'c'
 '''),
 
 (16, 'body[0]', 1, 2, None, {}, ('exec',
@@ -20420,11 +20420,11 @@ r'''[x]'''),
 r'''global a, x, c  # comment''', r'''
 Module - ROOT 0,0..0,25
   .body[1]
-  0] Global - 0,0..0,14
-    .names[3]
-    0] 'a'
-    1] 'x'
-    2] 'c'
+   0] Global - 0,0..0,14
+     .names[3]
+      0] 'a'
+      1] 'x'
+      2] 'c'
 '''),
 
 (17, 'body[0]', 1, 2, None, {}, ('exec',
@@ -20433,11 +20433,11 @@ r'''{x}'''),
 r'''global a, x, c  # comment''', r'''
 Module - ROOT 0,0..0,25
   .body[1]
-  0] Global - 0,0..0,14
-    .names[3]
-    0] 'a'
-    1] 'x'
-    2] 'c'
+   0] Global - 0,0..0,14
+     .names[3]
+      0] 'a'
+      1] 'x'
+      2] 'c'
 '''),
 
 (18, 'body[0]', 1, 2, None, {}, ('exec',
@@ -20446,10 +20446,10 @@ r'''{*()}'''),
 r'''global a, c  # comment''', r'''
 Module - ROOT 0,0..0,22
   .body[1]
-  0] Global - 0,0..0,11
-    .names[2]
-    0] 'a'
-    1] 'c'
+   0] Global - 0,0..0,11
+     .names[2]
+      0] 'a'
+      1] 'c'
 '''),
 
 (19, 'body[0]', 1, 2, None, {}, ('exec',
@@ -20458,11 +20458,11 @@ r'''x,'''),
 r'''global a, x, c  # comment''', r'''
 Module - ROOT 0,0..0,25
   .body[1]
-  0] Global - 0,0..0,14
-    .names[3]
-    0] 'a'
-    1] 'x'
-    2] 'c'
+   0] Global - 0,0..0,14
+     .names[3]
+      0] 'a'
+      1] 'x'
+      2] 'c'
 '''),
 
 (20, 'body[0]', 1, 2, None, {}, ('exec',
@@ -20486,9 +20486,9 @@ global x \
 r'''**NodeError('slice being assigned to a Global must be a Tuple, List or Set, not a Name')**''', r'''
 Module - ROOT 0,0..1,11
   .body[1]
-  0] Global - 0,0..0,8
-    .names[1]
-    0] 'x'
+   0] Global - 0,0..0,8
+     .names[1]
+      0] 'x'
 '''),
 
 (23, 'body[0]', None, None, None, {}, ('exec',
@@ -20502,7 +20502,7 @@ r'''**DEL**''',
 r'''global   # comment''', r'''
 Module - ROOT 0,0..0,18
   .body[1]
-  0] Global - 0,0..0,7
+   0] Global - 0,0..0,7
 '''),
 
 (25, 'body[0]', 1, 1, None, {}, (None, r'''
@@ -20516,10 +20516,10 @@ if 1:
 If - ROOT 0,0..1,14
   .test Constant 1 - 0,3..0,4
   .body[1]
-  0] Global - 1,2..1,13
-    .names[2]
-    0] 'x'
-    1] 'y'
+   0] Global - 1,2..1,13
+     .names[2]
+      0] 'x'
+      1] 'y'
 '''),
 ],
 
@@ -20531,14 +20531,14 @@ r'''d,  # comment'''),
 r'''global a, b, d ; global c''', r'''
 Module - ROOT 0,0..0,25
   .body[2]
-  0] Global - 0,0..0,14
-    .names[3]
-    0] 'a'
-    1] 'b'
-    2] 'd'
-  1] Global - 0,17..0,25
-    .names[1]
-    0] 'c'
+   0] Global - 0,0..0,14
+     .names[3]
+      0] 'a'
+      1] 'b'
+      2] 'd'
+   1] Global - 0,17..0,25
+     .names[1]
+      0] 'c'
 '''),
 
 (1, 'body[0]', 2, 2, None, {}, ('exec',
@@ -20553,15 +20553,15 @@ global a, b, d, \
 r'''global a, b, d, e ; global c''', r'''
 Module - ROOT 0,0..1,19
   .body[2]
-  0] Global - 0,0..1,8
-    .names[4]
-    0] 'a'
-    1] 'b'
-    2] 'd'
-    3] 'e'
-  1] Global - 1,11..1,19
-    .names[1]
-    0] 'c'
+   0] Global - 0,0..1,8
+     .names[4]
+      0] 'a'
+      1] 'b'
+      2] 'd'
+      3] 'e'
+   1] Global - 1,11..1,19
+     .names[1]
+      0] 'c'
 '''),
 
 (2, 'body[0]', 2, 2, None, {}, ('exec',
@@ -20576,15 +20576,15 @@ global a, b, d, \
 r'''global a, b, d, e ; global c''', r'''
 Module - ROOT 0,0..1,19
   .body[2]
-  0] Global - 0,0..1,8
-    .names[4]
-    0] 'a'
-    1] 'b'
-    2] 'd'
-    3] 'e'
-  1] Global - 1,11..1,19
-    .names[1]
-    0] 'c'
+   0] Global - 0,0..1,8
+     .names[4]
+      0] 'a'
+      1] 'b'
+      2] 'd'
+      3] 'e'
+   1] Global - 1,11..1,19
+     .names[1]
+      0] 'c'
 '''),
 
 (3, 'body[0]', 2, 2, None, {}, ('exec',
@@ -20593,11 +20593,11 @@ r'''d,  # comment'''),
 r'''global a, b, d ;''', r'''
 Module - ROOT 0,0..0,16
   .body[1]
-  0] Global - 0,0..0,14
-    .names[3]
-    0] 'a'
-    1] 'b'
-    2] 'd'
+   0] Global - 0,0..0,14
+     .names[3]
+      0] 'a'
+      1] 'b'
+      2] 'd'
 '''),
 
 (4, 'body[0]', 2, 2, None, {}, ('exec',
@@ -20612,12 +20612,12 @@ global a, b, d, \
 r'''global a, b, d, e ;''', r'''
 Module - ROOT 0,0..1,10
   .body[1]
-  0] Global - 0,0..1,8
-    .names[4]
-    0] 'a'
-    1] 'b'
-    2] 'd'
-    3] 'e'
+   0] Global - 0,0..1,8
+     .names[4]
+      0] 'a'
+      1] 'b'
+      2] 'd'
+      3] 'e'
 '''),
 
 (5, 'body[0]', 2, 2, None, {}, ('exec',
@@ -20632,12 +20632,12 @@ global a, b, d, \
 r'''global a, b, d, e ;''', r'''
 Module - ROOT 0,0..1,10
   .body[1]
-  0] Global - 0,0..1,8
-    .names[4]
-    0] 'a'
-    1] 'b'
-    2] 'd'
-    3] 'e'
+   0] Global - 0,0..1,8
+     .names[4]
+      0] 'a'
+      1] 'b'
+      2] 'd'
+      3] 'e'
 '''),
 
 (6, '', 2, 2, None, {}, (None,
@@ -20646,9 +20646,9 @@ r'''d,  # comment'''),
 r'''global a, b, d ;''', r'''
 Global - ROOT 0,0..0,14
   .names[3]
-  0] 'a'
-  1] 'b'
-  2] 'd'
+   0] 'a'
+   1] 'b'
+   2] 'd'
 '''),
 
 (7, '', 2, 2, None, {}, (None,
@@ -20663,10 +20663,10 @@ global a, b, d, \
 r'''global a, b, d, e ;''', r'''
 Global - ROOT 0,0..1,8
   .names[4]
-  0] 'a'
-  1] 'b'
-  2] 'd'
-  3] 'e'
+   0] 'a'
+   1] 'b'
+   2] 'd'
+   3] 'e'
 '''),
 
 (8, '', 2, 2, None, {}, (None,
@@ -20681,10 +20681,10 @@ global a, b, d, \
 r'''global a, b, d, e ;''', r'''
 Global - ROOT 0,0..1,8
   .names[4]
-  0] 'a'
-  1] 'b'
-  2] 'd'
-  3] 'e'
+   0] 'a'
+   1] 'b'
+   2] 'd'
+   3] 'e'
 '''),
 ],
 
@@ -20696,10 +20696,10 @@ r'''x'''),
 r'''nonlocal x, c''', r'''
 Module - ROOT 0,0..0,13
   .body[1]
-  0] Nonlocal - 0,0..0,13
-    .names[2]
-    0] 'x'
-    1] 'c'
+   0] Nonlocal - 0,0..0,13
+     .names[2]
+      0] 'x'
+      1] 'c'
 '''),
 
 (1, 'body[0]', None, None, None, {'raw': True}, ('exec',
@@ -20708,9 +20708,9 @@ r'''x'''),
 r'''nonlocal x''', r'''
 Module - ROOT 0,0..0,10
   .body[1]
-  0] Nonlocal - 0,0..0,10
-    .names[1]
-    0] 'x'
+   0] Nonlocal - 0,0..0,10
+     .names[1]
+      0] 'x'
 '''),
 
 (2, 'body[0]', 1, 2, None, {'raw': True}, ('exec',
@@ -20719,12 +20719,12 @@ r'''x, y'''),
 r'''nonlocal a, x, y, c''', r'''
 Module - ROOT 0,0..0,19
   .body[1]
-  0] Nonlocal - 0,0..0,19
-    .names[4]
-    0] 'a'
-    1] 'x'
-    2] 'y'
-    3] 'c'
+   0] Nonlocal - 0,0..0,19
+     .names[4]
+      0] 'a'
+      1] 'x'
+      2] 'y'
+      3] 'c'
 '''),
 
 (3, 'body[0]', 1, 2, None, {}, ('exec',
@@ -20733,10 +20733,10 @@ r'''**DEL**'''),
 r'''nonlocal a, c  # comment''', r'''
 Module - ROOT 0,0..0,24
   .body[1]
-  0] Nonlocal - 0,0..0,13
-    .names[2]
-    0] 'a'
-    1] 'c'
+   0] Nonlocal - 0,0..0,13
+     .names[2]
+      0] 'a'
+      1] 'c'
 '''),
 
 (4, 'body[0]', 1, 3, None, {}, ('exec',
@@ -20745,9 +20745,9 @@ r'''**DEL**'''),
 r'''nonlocal a  # comment''', r'''
 Module - ROOT 0,0..0,21
   .body[1]
-  0] Nonlocal - 0,0..0,10
-    .names[1]
-    0] 'a'
+   0] Nonlocal - 0,0..0,10
+     .names[1]
+      0] 'a'
 '''),
 
 (5, 'body[0]', 0, 2, None, {}, ('exec',
@@ -20756,9 +20756,9 @@ r'''**DEL**'''),
 r'''nonlocal c  # comment''', r'''
 Module - ROOT 0,0..0,21
   .body[1]
-  0] Nonlocal - 0,0..0,10
-    .names[1]
-    0] 'c'
+   0] Nonlocal - 0,0..0,10
+     .names[1]
+      0] 'c'
 '''),
 
 (6, 'body[0]', 1, 2, None, {}, ('exec', r'''
@@ -20775,10 +20775,10 @@ c  # comment
 ''', r'''
 Module - ROOT 0,0..2,12
   .body[1]
-  0] Nonlocal - 0,0..2,1
-    .names[2]
-    0] 'a'
-    1] 'c'
+   0] Nonlocal - 0,0..2,1
+     .names[2]
+      0] 'a'
+      1] 'c'
 '''),
 
 (7, 'body[0]', 0, 2, None, {}, ('exec', r'''
@@ -20794,9 +20794,9 @@ c  # comment
 ''', r'''
 Module - ROOT 0,0..1,12
   .body[1]
-  0] Nonlocal - 0,0..1,1
-    .names[1]
-    0] 'c'
+   0] Nonlocal - 0,0..1,1
+     .names[1]
+      0] 'c'
 '''),
 
 (8, 'body[0]', 1, 3, None, {}, ('exec', r'''
@@ -20813,9 +20813,9 @@ nonlocal a \
 ''', r'''
 Module - ROOT 0,0..2,11
   .body[1]
-  0] Nonlocal - 0,0..0,10
-    .names[1]
-    0] 'a'
+   0] Nonlocal - 0,0..0,10
+     .names[1]
+      0] 'a'
 '''),
 
 (9, 'body[0].body[0]', 0, 1, None, {}, ('exec', r'''
@@ -20833,13 +20833,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..3,6
   .body[1]
-  0] If - 0,0..3,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Nonlocal - 1,2..2,3
-      .names[1]
-      0] 'b'
-    1] Pass - 3,2..3,6
+   0] If - 0,0..3,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Nonlocal - 1,2..2,3
+        .names[1]
+         0] 'b'
+      1] Pass - 3,2..3,6
 '''),
 
 (10, 'body[0].body[0]', 1, 2, None, {}, ('exec', r'''
@@ -20858,13 +20858,13 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] If - 0,0..4,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Nonlocal - 1,2..1,12
-      .names[1]
-      0] 'a'
-    1] Pass - 4,2..4,6
+   0] If - 0,0..4,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Nonlocal - 1,2..1,12
+        .names[1]
+         0] 'a'
+      1] Pass - 4,2..4,6
 '''),
 
 (11, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
@@ -20884,14 +20884,14 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
-  0] If - 0,0..5,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Nonlocal - 1,2..2,12
-      .names[2]
-      0] 'a'
-      1] 'b'
-    1] Pass - 5,2..5,6
+   0] If - 0,0..5,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Nonlocal - 1,2..2,12
+        .names[2]
+         0] 'a'
+         1] 'b'
+      1] Pass - 5,2..5,6
 '''),
 
 (12, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
@@ -20915,14 +20915,14 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] If - 0,0..4,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Nonlocal - 1,2..2,12
-      .names[2]
-      0] 'a'
-      1] 'b'
-    1] Pass - 4,2..4,6
+   0] If - 0,0..4,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Nonlocal - 1,2..2,12
+        .names[2]
+         0] 'a'
+         1] 'b'
+      1] Pass - 4,2..4,6
 '''),
 
 (13, 'body[0].body[0]', 1, 1, None, {}, ('exec', r'''
@@ -20946,14 +20946,14 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
-  0] If - 0,0..4,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Nonlocal - 1,2..2,12
-      .names[2]
-      0] 'a'
-      1] 'b'
-    1] Pass - 4,2..4,6
+   0] If - 0,0..4,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Nonlocal - 1,2..2,12
+        .names[2]
+         0] 'a'
+         1] 'b'
+      1] Pass - 4,2..4,6
 '''),
 
 (14, 'body[0].body[0]', 0, 0, None, {}, ('exec', r'''
@@ -20979,15 +20979,15 @@ if 1:
 ''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
-  0] If - 0,0..5,6
-    .test Constant 1 - 0,3..0,4
-    .body[2]
-    0] Nonlocal - 1,2..4,14
-      .names[3]
-      0] 'x'
-      1] 'y'
-      2] 'a'
-    1] Pass - 5,2..5,6
+   0] If - 0,0..5,6
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Nonlocal - 1,2..4,14
+        .names[3]
+         0] 'x'
+         1] 'y'
+         2] 'a'
+      1] Pass - 5,2..5,6
 '''),
 
 (15, 'body[0]', 1, 2, None, {}, ('exec',
@@ -20997,11 +20997,11 @@ r'''nonlocal a, x, c  # comment''',
 r'''**NodeError('slice being assigned to a Nonlocal must be a Tuple, List or Set, not a Name')**''', r'''
 Module - ROOT 0,0..0,27
   .body[1]
-  0] Nonlocal - 0,0..0,16
-    .names[3]
-    0] 'a'
-    1] 'x'
-    2] 'c'
+   0] Nonlocal - 0,0..0,16
+     .names[3]
+      0] 'a'
+      1] 'x'
+      2] 'c'
 '''),
 
 (16, 'body[0]', 1, 2, None, {}, ('exec',
@@ -21010,11 +21010,11 @@ r'''[x]'''),
 r'''nonlocal a, x, c  # comment''', r'''
 Module - ROOT 0,0..0,27
   .body[1]
-  0] Nonlocal - 0,0..0,16
-    .names[3]
-    0] 'a'
-    1] 'x'
-    2] 'c'
+   0] Nonlocal - 0,0..0,16
+     .names[3]
+      0] 'a'
+      1] 'x'
+      2] 'c'
 '''),
 
 (17, 'body[0]', 1, 2, None, {}, ('exec',
@@ -21023,11 +21023,11 @@ r'''{x}'''),
 r'''nonlocal a, x, c  # comment''', r'''
 Module - ROOT 0,0..0,27
   .body[1]
-  0] Nonlocal - 0,0..0,16
-    .names[3]
-    0] 'a'
-    1] 'x'
-    2] 'c'
+   0] Nonlocal - 0,0..0,16
+     .names[3]
+      0] 'a'
+      1] 'x'
+      2] 'c'
 '''),
 
 (18, 'body[0]', 1, 2, None, {}, ('exec',
@@ -21036,10 +21036,10 @@ r'''{*()}'''),
 r'''nonlocal a, c  # comment''', r'''
 Module - ROOT 0,0..0,24
   .body[1]
-  0] Nonlocal - 0,0..0,13
-    .names[2]
-    0] 'a'
-    1] 'c'
+   0] Nonlocal - 0,0..0,13
+     .names[2]
+      0] 'a'
+      1] 'c'
 '''),
 
 (19, 'body[0]', 1, 2, None, {}, ('exec',
@@ -21048,11 +21048,11 @@ r'''x,'''),
 r'''nonlocal a, x, c  # comment''', r'''
 Module - ROOT 0,0..0,27
   .body[1]
-  0] Nonlocal - 0,0..0,16
-    .names[3]
-    0] 'a'
-    1] 'x'
-    2] 'c'
+   0] Nonlocal - 0,0..0,16
+     .names[3]
+      0] 'a'
+      1] 'x'
+      2] 'c'
 '''),
 
 (20, 'body[0]', 1, 2, None, {}, ('exec',
@@ -21076,9 +21076,9 @@ nonlocal x \
 r'''**NodeError('slice being assigned to a Nonlocal must be a Tuple, List or Set, not a Name')**''', r'''
 Module - ROOT 0,0..1,11
   .body[1]
-  0] Nonlocal - 0,0..0,10
-    .names[1]
-    0] 'x'
+   0] Nonlocal - 0,0..0,10
+     .names[1]
+      0] 'x'
 '''),
 
 (23, 'body[0]', None, None, None, {}, ('exec',
@@ -21092,7 +21092,7 @@ r'''**DEL**''',
 r'''nonlocal   # comment''', r'''
 Module - ROOT 0,0..0,20
   .body[1]
-  0] Nonlocal - 0,0..0,9
+   0] Nonlocal - 0,0..0,9
 '''),
 
 (25, 'body[0]', 1, 1, None, {}, (None, r'''
@@ -21106,10 +21106,10 @@ if 1:
 If - ROOT 0,0..1,16
   .test Constant 1 - 0,3..0,4
   .body[1]
-  0] Nonlocal - 1,2..1,15
-    .names[2]
-    0] 'x'
-    1] 'y'
+   0] Nonlocal - 1,2..1,15
+     .names[2]
+      0] 'x'
+      1] 'y'
 '''),
 ],
 
@@ -21121,14 +21121,14 @@ r'''d,  # comment'''),
 r'''nonlocal a, b, d ; nonlocal c''', r'''
 Module - ROOT 0,0..0,29
   .body[2]
-  0] Nonlocal - 0,0..0,16
-    .names[3]
-    0] 'a'
-    1] 'b'
-    2] 'd'
-  1] Nonlocal - 0,19..0,29
-    .names[1]
-    0] 'c'
+   0] Nonlocal - 0,0..0,16
+     .names[3]
+      0] 'a'
+      1] 'b'
+      2] 'd'
+   1] Nonlocal - 0,19..0,29
+     .names[1]
+      0] 'c'
 '''),
 
 (1, 'body[0]', 2, 2, None, {}, ('exec',
@@ -21143,15 +21143,15 @@ nonlocal a, b, d, \
 r'''nonlocal a, b, d, e ; nonlocal c''', r'''
 Module - ROOT 0,0..1,23
   .body[2]
-  0] Nonlocal - 0,0..1,10
-    .names[4]
-    0] 'a'
-    1] 'b'
-    2] 'd'
-    3] 'e'
-  1] Nonlocal - 1,13..1,23
-    .names[1]
-    0] 'c'
+   0] Nonlocal - 0,0..1,10
+     .names[4]
+      0] 'a'
+      1] 'b'
+      2] 'd'
+      3] 'e'
+   1] Nonlocal - 1,13..1,23
+     .names[1]
+      0] 'c'
 '''),
 
 (2, 'body[0]', 2, 2, None, {}, ('exec',
@@ -21166,15 +21166,15 @@ nonlocal a, b, d, \
 r'''nonlocal a, b, d, e ; nonlocal c''', r'''
 Module - ROOT 0,0..1,23
   .body[2]
-  0] Nonlocal - 0,0..1,10
-    .names[4]
-    0] 'a'
-    1] 'b'
-    2] 'd'
-    3] 'e'
-  1] Nonlocal - 1,13..1,23
-    .names[1]
-    0] 'c'
+   0] Nonlocal - 0,0..1,10
+     .names[4]
+      0] 'a'
+      1] 'b'
+      2] 'd'
+      3] 'e'
+   1] Nonlocal - 1,13..1,23
+     .names[1]
+      0] 'c'
 '''),
 
 (3, 'body[0]', 2, 2, None, {}, ('exec',
@@ -21183,11 +21183,11 @@ r'''d,  # comment'''),
 r'''nonlocal a, b, d ;''', r'''
 Module - ROOT 0,0..0,18
   .body[1]
-  0] Nonlocal - 0,0..0,16
-    .names[3]
-    0] 'a'
-    1] 'b'
-    2] 'd'
+   0] Nonlocal - 0,0..0,16
+     .names[3]
+      0] 'a'
+      1] 'b'
+      2] 'd'
 '''),
 
 (4, 'body[0]', 2, 2, None, {}, ('exec',
@@ -21202,12 +21202,12 @@ nonlocal a, b, d, \
 r'''nonlocal a, b, d, e ;''', r'''
 Module - ROOT 0,0..1,12
   .body[1]
-  0] Nonlocal - 0,0..1,10
-    .names[4]
-    0] 'a'
-    1] 'b'
-    2] 'd'
-    3] 'e'
+   0] Nonlocal - 0,0..1,10
+     .names[4]
+      0] 'a'
+      1] 'b'
+      2] 'd'
+      3] 'e'
 '''),
 
 (5, 'body[0]', 2, 2, None, {}, ('exec',
@@ -21222,12 +21222,12 @@ nonlocal a, b, d, \
 r'''nonlocal a, b, d, e ;''', r'''
 Module - ROOT 0,0..1,12
   .body[1]
-  0] Nonlocal - 0,0..1,10
-    .names[4]
-    0] 'a'
-    1] 'b'
-    2] 'd'
-    3] 'e'
+   0] Nonlocal - 0,0..1,10
+     .names[4]
+      0] 'a'
+      1] 'b'
+      2] 'd'
+      3] 'e'
 '''),
 
 (6, '', 2, 2, None, {}, (None,
@@ -21236,9 +21236,9 @@ r'''d,  # comment'''),
 r'''nonlocal a, b, d ;''', r'''
 Nonlocal - ROOT 0,0..0,16
   .names[3]
-  0] 'a'
-  1] 'b'
-  2] 'd'
+   0] 'a'
+   1] 'b'
+   2] 'd'
 '''),
 
 (7, '', 2, 2, None, {}, (None,
@@ -21253,10 +21253,10 @@ nonlocal a, b, d, \
 r'''nonlocal a, b, d, e ;''', r'''
 Nonlocal - ROOT 0,0..1,10
   .names[4]
-  0] 'a'
-  1] 'b'
-  2] 'd'
-  3] 'e'
+   0] 'a'
+   1] 'b'
+   2] 'd'
+   3] 'e'
 '''),
 
 (8, '', 2, 2, None, {}, (None,
@@ -21271,10 +21271,10 @@ nonlocal a, b, d, \
 r'''nonlocal a, b, d, e ;''', r'''
 Nonlocal - ROOT 0,0..1,10
   .names[4]
-  0] 'a'
-  1] 'b'
-  2] 'd'
-  3] 'e'
+   0] 'a'
+   1] 'b'
+   2] 'd'
+   3] 'e'
 '''),
 ],
 
@@ -21308,16 +21308,16 @@ d \
 ClassDef - ROOT 0,0..9,7
   .name 'cls'
   .bases[3]
-  0] Name 'x' Load - 1,0..1,1
-  1] Starred - 2,0..3,1
-    .value Name 'b' Load - 3,0..3,1
-    .ctx Load
-  2] Name 'c' Load - 5,0..5,1
+   0] Name 'x' Load - 1,0..1,1
+   1] Starred - 2,0..3,1
+     .value Name 'b' Load - 3,0..3,1
+     .ctx Load
+   2] Name 'c' Load - 5,0..5,1
   .keywords[1]
-  0] keyword - 7,0..8,1
-    .value Name 'd' Load - 8,0..8,1
+   0] keyword - 7,0..8,1
+     .value Name 'd' Load - 8,0..8,1
   .body[1]
-  0] Pass - 9,3..9,7
+   0] Pass - 9,3..9,7
 '''),
 
 (1, '', 1, 2, 'bases', {}, (None, r'''
@@ -21347,14 +21347,14 @@ d \
 ClassDef - ROOT 0,0..8,7
   .name 'cls'
   .bases[3]
-  0] Name 'a' Load - 1,0..1,1
-  1] Name 'x' Load - 3,0..3,1
-  2] Name 'c' Load - 4,0..4,1
+   0] Name 'a' Load - 1,0..1,1
+   1] Name 'x' Load - 3,0..3,1
+   2] Name 'c' Load - 4,0..4,1
   .keywords[1]
-  0] keyword - 6,0..7,1
-    .value Name 'd' Load - 7,0..7,1
+   0] keyword - 6,0..7,1
+     .value Name 'd' Load - 7,0..7,1
   .body[1]
-  0] Pass - 8,3..8,7
+   0] Pass - 8,3..8,7
 '''),
 
 (2, '', 2, 3, 'bases', {}, (None, r'''
@@ -21385,16 +21385,16 @@ d \
 ClassDef - ROOT 0,0..9,7
   .name 'cls'
   .bases[3]
-  0] Name 'a' Load - 1,0..1,1
-  1] Starred - 3,0..4,1
-    .value Name 'b' Load - 4,0..4,1
-    .ctx Load
-  2] Name 'x' Load - 6,0..6,1
+   0] Name 'a' Load - 1,0..1,1
+   1] Starred - 3,0..4,1
+     .value Name 'b' Load - 4,0..4,1
+     .ctx Load
+   2] Name 'x' Load - 6,0..6,1
   .keywords[1]
-  0] keyword - 7,0..8,1
-    .value Name 'd' Load - 8,0..8,1
+   0] keyword - 7,0..8,1
+     .value Name 'd' Load - 8,0..8,1
   .body[1]
-  0] Pass - 9,3..9,7
+   0] Pass - 9,3..9,7
 '''),
 
 (3, '', 0, 3, 'bases', {}, (None, r'''
@@ -21420,12 +21420,12 @@ d \
 ClassDef - ROOT 0,0..4,7
   .name 'cls'
   .bases[1]
-  0] Name 'x' Load - 1,0..1,1
+   0] Name 'x' Load - 1,0..1,1
   .keywords[1]
-  0] keyword - 2,0..3,1
-    .value Name 'd' Load - 3,0..3,1
+   0] keyword - 2,0..3,1
+     .value Name 'd' Load - 3,0..3,1
   .body[1]
-  0] Pass - 4,3..4,7
+   0] Pass - 4,3..4,7
 '''),
 
 (4, '', 0, 3, 'bases', {}, (None, r'''
@@ -21450,10 +21450,10 @@ d \
 ClassDef - ROOT 0,0..3,7
   .name 'cls'
   .keywords[1]
-  0] keyword - 1,0..2,1
-    .value Name 'd' Load - 2,0..2,1
+   0] keyword - 1,0..2,1
+     .value Name 'd' Load - 2,0..2,1
   .body[1]
-  0] Pass - 3,3..3,7
+   0] Pass - 3,3..3,7
 '''),
 
 (5, '', 0, 1, 'bases', {}, (None, r'''
@@ -21484,16 +21484,16 @@ d
 ClassDef - ROOT 0,0..9,7
   .name 'cls'
   .bases[3]
-  0] Name 'x' Load - 1,0..1,1
-  1] Starred - 2,0..3,1
-    .value Name 'b' Load - 3,0..3,1
-    .ctx Load
-  2] Name 'c' Load - 5,0..5,1
+   0] Name 'x' Load - 1,0..1,1
+   1] Starred - 2,0..3,1
+     .value Name 'b' Load - 3,0..3,1
+     .ctx Load
+   2] Name 'c' Load - 5,0..5,1
   .keywords[1]
-  0] keyword - 7,0..8,1
-    .value Name 'd' Load - 8,0..8,1
+   0] keyword - 7,0..8,1
+     .value Name 'd' Load - 8,0..8,1
   .body[1]
-  0] Pass - 9,3..9,7
+   0] Pass - 9,3..9,7
 '''),
 
 (6, '', 1, 2, 'bases', {}, (None, r'''
@@ -21523,14 +21523,14 @@ d
 ClassDef - ROOT 0,0..8,7
   .name 'cls'
   .bases[3]
-  0] Name 'a' Load - 1,0..1,1
-  1] Name 'x' Load - 3,0..3,1
-  2] Name 'c' Load - 4,0..4,1
+   0] Name 'a' Load - 1,0..1,1
+   1] Name 'x' Load - 3,0..3,1
+   2] Name 'c' Load - 4,0..4,1
   .keywords[1]
-  0] keyword - 6,0..7,1
-    .value Name 'd' Load - 7,0..7,1
+   0] keyword - 6,0..7,1
+     .value Name 'd' Load - 7,0..7,1
   .body[1]
-  0] Pass - 8,3..8,7
+   0] Pass - 8,3..8,7
 '''),
 
 (7, '', 2, 3, 'bases', {}, (None, r'''
@@ -21561,16 +21561,16 @@ d
 ClassDef - ROOT 0,0..9,7
   .name 'cls'
   .bases[3]
-  0] Name 'a' Load - 1,0..1,1
-  1] Starred - 3,0..4,1
-    .value Name 'b' Load - 4,0..4,1
-    .ctx Load
-  2] Name 'x' Load - 6,0..6,1
+   0] Name 'a' Load - 1,0..1,1
+   1] Starred - 3,0..4,1
+     .value Name 'b' Load - 4,0..4,1
+     .ctx Load
+   2] Name 'x' Load - 6,0..6,1
   .keywords[1]
-  0] keyword - 7,0..8,1
-    .value Name 'd' Load - 8,0..8,1
+   0] keyword - 7,0..8,1
+     .value Name 'd' Load - 8,0..8,1
   .body[1]
-  0] Pass - 9,3..9,7
+   0] Pass - 9,3..9,7
 '''),
 
 (8, '', 0, 3, 'bases', {}, (None, r'''
@@ -21596,12 +21596,12 @@ d
 ClassDef - ROOT 0,0..4,7
   .name 'cls'
   .bases[1]
-  0] Name 'x' Load - 1,0..1,1
+   0] Name 'x' Load - 1,0..1,1
   .keywords[1]
-  0] keyword - 2,0..3,1
-    .value Name 'd' Load - 3,0..3,1
+   0] keyword - 2,0..3,1
+     .value Name 'd' Load - 3,0..3,1
   .body[1]
-  0] Pass - 4,3..4,7
+   0] Pass - 4,3..4,7
 '''),
 
 (9, '', 0, 3, 'bases', {}, (None, r'''
@@ -21626,10 +21626,10 @@ d
 ClassDef - ROOT 0,0..3,7
   .name 'cls'
   .keywords[1]
-  0] keyword - 1,0..2,1
-    .value Name 'd' Load - 2,0..2,1
+   0] keyword - 1,0..2,1
+     .value Name 'd' Load - 2,0..2,1
   .body[1]
-  0] Pass - 3,3..3,7
+   0] Pass - 3,3..3,7
 '''),
 
 (10, '', 0, 2, 'bases', {}, (None,
@@ -21649,16 +21649,16 @@ r'''class cls(x, b=c, *d): pass''', r'''
 ClassDef - ROOT 0,0..0,27
   .name 'cls'
   .bases[2]
-  0] Name 'x' Load - 0,10..0,11
-  1] Starred - 0,18..0,20
-    .value Name 'd' Load - 0,19..0,20
-    .ctx Load
+   0] Name 'x' Load - 0,10..0,11
+   1] Starred - 0,18..0,20
+     .value Name 'd' Load - 0,19..0,20
+     .ctx Load
   .keywords[1]
-  0] keyword - 0,13..0,16
-    .arg 'b'
-    .value Name 'c' Load - 0,15..0,16
+   0] keyword - 0,13..0,16
+     .arg 'b'
+     .value Name 'c' Load - 0,15..0,16
   .body[1]
-  0] Pass - 0,23..0,27
+   0] Pass - 0,23..0,27
 '''),
 
 (13, '', 0, 1, 'bases', {}, (None,
@@ -21668,16 +21668,16 @@ r'''class cls(x, b=c, *d,): pass''', r'''
 ClassDef - ROOT 0,0..0,28
   .name 'cls'
   .bases[2]
-  0] Name 'x' Load - 0,10..0,11
-  1] Starred - 0,18..0,20
-    .value Name 'd' Load - 0,19..0,20
-    .ctx Load
+   0] Name 'x' Load - 0,10..0,11
+   1] Starred - 0,18..0,20
+     .value Name 'd' Load - 0,19..0,20
+     .ctx Load
   .keywords[1]
-  0] keyword - 0,13..0,16
-    .arg 'b'
-    .value Name 'c' Load - 0,15..0,16
+   0] keyword - 0,13..0,16
+     .arg 'b'
+     .value Name 'c' Load - 0,15..0,16
   .body[1]
-  0] Pass - 0,24..0,28
+   0] Pass - 0,24..0,28
 '''),
 
 (14, '', 0, 1, 'bases', {}, (None,
@@ -21687,17 +21687,17 @@ r'''class cls(x, b, c=d, *e): pass''', r'''
 ClassDef - ROOT 0,0..0,30
   .name 'cls'
   .bases[3]
-  0] Name 'x' Load - 0,10..0,11
-  1] Name 'b' Load - 0,13..0,14
-  2] Starred - 0,21..0,23
-    .value Name 'e' Load - 0,22..0,23
-    .ctx Load
+   0] Name 'x' Load - 0,10..0,11
+   1] Name 'b' Load - 0,13..0,14
+   2] Starred - 0,21..0,23
+     .value Name 'e' Load - 0,22..0,23
+     .ctx Load
   .keywords[1]
-  0] keyword - 0,16..0,19
-    .arg 'c'
-    .value Name 'd' Load - 0,18..0,19
+   0] keyword - 0,16..0,19
+     .arg 'c'
+     .value Name 'd' Load - 0,18..0,19
   .body[1]
-  0] Pass - 0,26..0,30
+   0] Pass - 0,26..0,30
 '''),
 
 (15, '', 1, 2, 'bases', {}, (None,
@@ -21707,17 +21707,17 @@ r'''class cls(a, x, c=d, *e): pass''', r'''
 ClassDef - ROOT 0,0..0,30
   .name 'cls'
   .bases[3]
-  0] Name 'a' Load - 0,10..0,11
-  1] Name 'x' Load - 0,13..0,14
-  2] Starred - 0,21..0,23
-    .value Name 'e' Load - 0,22..0,23
-    .ctx Load
+   0] Name 'a' Load - 0,10..0,11
+   1] Name 'x' Load - 0,13..0,14
+   2] Starred - 0,21..0,23
+     .value Name 'e' Load - 0,22..0,23
+     .ctx Load
   .keywords[1]
-  0] keyword - 0,16..0,19
-    .arg 'c'
-    .value Name 'd' Load - 0,18..0,19
+   0] keyword - 0,16..0,19
+     .arg 'c'
+     .value Name 'd' Load - 0,18..0,19
   .body[1]
-  0] Pass - 0,26..0,30
+   0] Pass - 0,26..0,30
 '''),
 
 (16, '', 0, 2, 'bases', {}, (None,
@@ -21727,16 +21727,16 @@ r'''class cls(x, c=d, *e): pass''', r'''
 ClassDef - ROOT 0,0..0,27
   .name 'cls'
   .bases[2]
-  0] Name 'x' Load - 0,10..0,11
-  1] Starred - 0,18..0,20
-    .value Name 'e' Load - 0,19..0,20
-    .ctx Load
+   0] Name 'x' Load - 0,10..0,11
+   1] Starred - 0,18..0,20
+     .value Name 'e' Load - 0,19..0,20
+     .ctx Load
   .keywords[1]
-  0] keyword - 0,13..0,16
-    .arg 'c'
-    .value Name 'd' Load - 0,15..0,16
+   0] keyword - 0,13..0,16
+     .arg 'c'
+     .value Name 'd' Load - 0,15..0,16
   .body[1]
-  0] Pass - 0,23..0,27
+   0] Pass - 0,23..0,27
 '''),
 
 (17, '', 0, 2, 'bases', {}, (None,
@@ -21746,16 +21746,16 @@ r'''class cls(x, c=d, *e,): pass''', r'''
 ClassDef - ROOT 0,0..0,28
   .name 'cls'
   .bases[2]
-  0] Name 'x' Load - 0,10..0,11
-  1] Starred - 0,18..0,20
-    .value Name 'e' Load - 0,19..0,20
-    .ctx Load
+   0] Name 'x' Load - 0,10..0,11
+   1] Starred - 0,18..0,20
+     .value Name 'e' Load - 0,19..0,20
+     .ctx Load
   .keywords[1]
-  0] keyword - 0,13..0,16
-    .arg 'c'
-    .value Name 'd' Load - 0,15..0,16
+   0] keyword - 0,13..0,16
+     .arg 'c'
+     .value Name 'd' Load - 0,15..0,16
   .body[1]
-  0] Pass - 0,24..0,28
+   0] Pass - 0,24..0,28
 '''),
 
 (18, '', 0, 0, 'bases', {}, (None,
@@ -21765,9 +21765,9 @@ r'''class cls(x): pass''', r'''
 ClassDef - ROOT 0,0..0,18
   .name 'cls'
   .bases[1]
-  0] Name 'x' Load - 0,10..0,11
+   0] Name 'x' Load - 0,10..0,11
   .body[1]
-  0] Pass - 0,14..0,18
+   0] Pass - 0,14..0,18
 '''),
 
 (19, '', 0, 0, 'bases', {}, (None,
@@ -21777,9 +21777,9 @@ r'''class cls(x): pass''', r'''
 ClassDef - ROOT 0,0..0,18
   .name 'cls'
   .bases[1]
-  0] Name 'x' Load - 0,10..0,11
+   0] Name 'x' Load - 0,10..0,11
   .body[1]
-  0] Pass - 0,14..0,18
+   0] Pass - 0,14..0,18
 '''),
 
 (20, '', 0, 0, 'bases', {}, (None,
@@ -21789,10 +21789,10 @@ r'''class cls(x, y): pass''', r'''
 ClassDef - ROOT 0,0..0,21
   .name 'cls'
   .bases[2]
-  0] Name 'x' Load - 0,10..0,11
-  1] Name 'y' Load - 0,13..0,14
+   0] Name 'x' Load - 0,10..0,11
+   1] Name 'y' Load - 0,13..0,14
   .body[1]
-  0] Pass - 0,17..0,21
+   0] Pass - 0,17..0,21
 '''),
 
 (21, '', 0, 0, 'bases', {}, (None,
@@ -21802,13 +21802,13 @@ r'''class cls(x, a=b): pass''', r'''
 ClassDef - ROOT 0,0..0,23
   .name 'cls'
   .bases[1]
-  0] Name 'x' Load - 0,10..0,11
+   0] Name 'x' Load - 0,10..0,11
   .keywords[1]
-  0] keyword - 0,13..0,16
-    .arg 'a'
-    .value Name 'b' Load - 0,15..0,16
+   0] keyword - 0,13..0,16
+     .arg 'a'
+     .value Name 'b' Load - 0,15..0,16
   .body[1]
-  0] Pass - 0,19..0,23
+   0] Pass - 0,19..0,23
 '''),
 
 (22, '', 0, 0, 'bases', {}, (None,
@@ -21818,13 +21818,13 @@ r'''class cls(x, a=b,): pass''', r'''
 ClassDef - ROOT 0,0..0,24
   .name 'cls'
   .bases[1]
-  0] Name 'x' Load - 0,10..0,11
+   0] Name 'x' Load - 0,10..0,11
   .keywords[1]
-  0] keyword - 0,13..0,16
-    .arg 'a'
-    .value Name 'b' Load - 0,15..0,16
+   0] keyword - 0,13..0,16
+     .arg 'a'
+     .value Name 'b' Load - 0,15..0,16
   .body[1]
-  0] Pass - 0,20..0,24
+   0] Pass - 0,20..0,24
 '''),
 
 (23, '', 0, 1, 'bases', {}, (None,
@@ -21834,9 +21834,9 @@ r'''class cls(b): pass''', r'''
 ClassDef - ROOT 0,0..0,18
   .name 'cls'
   .bases[1]
-  0] Name 'b' Load - 0,10..0,11
+   0] Name 'b' Load - 0,10..0,11
   .body[1]
-  0] Pass - 0,14..0,18
+   0] Pass - 0,14..0,18
 '''),
 
 (24, '', 1, 2, 'bases', {}, (None,
@@ -21846,9 +21846,9 @@ r'''class cls(a): pass''', r'''
 ClassDef - ROOT 0,0..0,18
   .name 'cls'
   .bases[1]
-  0] Name 'a' Load - 0,10..0,11
+   0] Name 'a' Load - 0,10..0,11
   .body[1]
-  0] Pass - 0,14..0,18
+   0] Pass - 0,14..0,18
 '''),
 
 (25, '', 0, 2, 'bases', {}, (None,
@@ -21858,7 +21858,7 @@ r'''class cls: pass''', r'''
 ClassDef - ROOT 0,0..0,15
   .name 'cls'
   .body[1]
-  0] Pass - 0,11..0,15
+   0] Pass - 0,11..0,15
 '''),
 
 (26, '', 1, 2, 'bases', {}, (None,
@@ -21868,12 +21868,12 @@ r'''class cls(a, **c): pass''', r'''
 ClassDef - ROOT 0,0..0,23
   .name 'cls'
   .bases[1]
-  0] Name 'a' Load - 0,10..0,11
+   0] Name 'a' Load - 0,10..0,11
   .keywords[1]
-  0] keyword - 0,13..0,16
-    .value Name 'c' Load - 0,15..0,16
+   0] keyword - 0,13..0,16
+     .value Name 'c' Load - 0,15..0,16
   .body[1]
-  0] Pass - 0,19..0,23
+   0] Pass - 0,19..0,23
 '''),
 
 (27, '', 0, 2, 'bases', {}, (None,
@@ -21883,10 +21883,10 @@ r'''class cls(**c): pass''', r'''
 ClassDef - ROOT 0,0..0,20
   .name 'cls'
   .keywords[1]
-  0] keyword - 0,10..0,13
-    .value Name 'c' Load - 0,12..0,13
+   0] keyword - 0,10..0,13
+     .value Name 'c' Load - 0,12..0,13
   .body[1]
-  0] Pass - 0,16..0,20
+   0] Pass - 0,16..0,20
 '''),
 
 (28, '', 1, 2, 'bases', {}, (None,
@@ -21896,12 +21896,12 @@ r'''class cls(a, **c,): pass''', r'''
 ClassDef - ROOT 0,0..0,24
   .name 'cls'
   .bases[1]
-  0] Name 'a' Load - 0,10..0,11
+   0] Name 'a' Load - 0,10..0,11
   .keywords[1]
-  0] keyword - 0,13..0,16
-    .value Name 'c' Load - 0,15..0,16
+   0] keyword - 0,13..0,16
+     .value Name 'c' Load - 0,15..0,16
   .body[1]
-  0] Pass - 0,20..0,24
+   0] Pass - 0,20..0,24
 '''),
 
 (29, '', 0, 2, 'bases', {}, (None,
@@ -21911,10 +21911,10 @@ r'''class cls(**c,): pass''', r'''
 ClassDef - ROOT 0,0..0,21
   .name 'cls'
   .keywords[1]
-  0] keyword - 0,10..0,13
-    .value Name 'c' Load - 0,12..0,13
+   0] keyword - 0,10..0,13
+     .value Name 'c' Load - 0,12..0,13
   .body[1]
-  0] Pass - 0,17..0,21
+   0] Pass - 0,17..0,21
 '''),
 
 (30, '', 0, 0, 'bases', {'one': True}, (None,
@@ -21924,9 +21924,9 @@ r'''class cls(x): pass''', r'''
 ClassDef - ROOT 0,0..0,18
   .name 'cls'
   .bases[1]
-  0] Name 'x' Load - 0,10..0,11
+   0] Name 'x' Load - 0,10..0,11
   .body[1]
-  0] Pass - 0,14..0,18
+   0] Pass - 0,14..0,18
 '''),
 
 (31, '', 0, 0, 'bases', {'one': True}, (None,
@@ -21936,12 +21936,12 @@ r'''class cls((x,)): pass''', r'''
 ClassDef - ROOT 0,0..0,21
   .name 'cls'
   .bases[1]
-  0] Tuple - 0,10..0,14
-    .elts[1]
-    0] Name 'x' Load - 0,11..0,12
-    .ctx Load
+   0] Tuple - 0,10..0,14
+     .elts[1]
+      0] Name 'x' Load - 0,11..0,12
+     .ctx Load
   .body[1]
-  0] Pass - 0,17..0,21
+   0] Pass - 0,17..0,21
 '''),
 
 (32, '', 0, 0, 'bases', {'one': True}, (None,
@@ -21952,13 +21952,13 @@ r'''class cls((x, y)): pass''', r'''
 ClassDef - ROOT 0,0..0,24
   .name 'cls'
   .bases[1]
-  0] Tuple - 0,10..0,17
-    .elts[2]
-    0] Name 'x' Load - 0,11..0,12
-    1] Name 'y' Load - 0,14..0,15
-    .ctx Load
+   0] Tuple - 0,10..0,17
+     .elts[2]
+      0] Name 'x' Load - 0,11..0,12
+      1] Name 'y' Load - 0,14..0,15
+     .ctx Load
   .body[1]
-  0] Pass - 0,20..0,24
+   0] Pass - 0,20..0,24
 '''),
 
 (33, '', 0, 2, 'bases', {'one': True}, (None,
@@ -21968,10 +21968,10 @@ r'''class cls(x, c): pass''', r'''
 ClassDef - ROOT 0,0..0,21
   .name 'cls'
   .bases[2]
-  0] Name 'x' Load - 0,10..0,11
-  1] Name 'c' Load - 0,13..0,14
+   0] Name 'x' Load - 0,10..0,11
+   1] Name 'c' Load - 0,13..0,14
   .body[1]
-  0] Pass - 0,17..0,21
+   0] Pass - 0,17..0,21
 '''),
 
 (34, '', 1, 3, 'bases', {'one': True}, (None,
@@ -21981,10 +21981,10 @@ r'''class cls(a, x): pass''', r'''
 ClassDef - ROOT 0,0..0,21
   .name 'cls'
   .bases[2]
-  0] Name 'a' Load - 0,10..0,11
-  1] Name 'x' Load - 0,13..0,14
+   0] Name 'a' Load - 0,10..0,11
+   1] Name 'x' Load - 0,13..0,14
   .body[1]
-  0] Pass - 0,17..0,21
+   0] Pass - 0,17..0,21
 '''),
 
 (35, '', 0, 3, 'bases', {'one': True}, (None,
@@ -21994,9 +21994,9 @@ r'''class cls(x): pass''', r'''
 ClassDef - ROOT 0,0..0,18
   .name 'cls'
   .bases[1]
-  0] Name 'x' Load - 0,10..0,11
+   0] Name 'x' Load - 0,10..0,11
   .body[1]
-  0] Pass - 0,14..0,18
+   0] Pass - 0,14..0,18
 '''),
 
 (36, '', 0, 2, 'bases', {'one': True}, (None,
@@ -22007,14 +22007,14 @@ r'''class cls(*(not a), c): pass''', r'''
 ClassDef - ROOT 0,0..0,26
   .name 'cls'
   .bases[2]
-  0] Starred - 0,10..0,16
-    .value UnaryOp - 0,11..0,16
-      .op Not - 0,11..0,14
-      .operand Name 'a' Load - 0,15..0,16
-    .ctx Load
-  1] Name 'c' Load - 0,18..0,19
+   0] Starred - 0,10..0,16
+     .value UnaryOp - 0,11..0,16
+       .op Not - 0,11..0,14
+       .operand Name 'a' Load - 0,15..0,16
+     .ctx Load
+   1] Name 'c' Load - 0,18..0,19
   .body[1]
-  0] Pass - 0,22..0,26
+   0] Pass - 0,22..0,26
 '''),
 
 (37, '', 1, 3, 'bases', {'one': True}, (None,
@@ -22025,14 +22025,14 @@ r'''class cls(a, *(not a)): pass''', r'''
 ClassDef - ROOT 0,0..0,26
   .name 'cls'
   .bases[2]
-  0] Name 'a' Load - 0,10..0,11
-  1] Starred - 0,13..0,19
-    .value UnaryOp - 0,14..0,19
-      .op Not - 0,14..0,17
-      .operand Name 'a' Load - 0,18..0,19
-    .ctx Load
+   0] Name 'a' Load - 0,10..0,11
+   1] Starred - 0,13..0,19
+     .value UnaryOp - 0,14..0,19
+       .op Not - 0,14..0,17
+       .operand Name 'a' Load - 0,18..0,19
+     .ctx Load
   .body[1]
-  0] Pass - 0,22..0,26
+   0] Pass - 0,22..0,26
 '''),
 
 (38, '', 0, 3, 'bases', {'one': True}, (None,
@@ -22043,13 +22043,13 @@ r'''class cls(*(not a)): pass''', r'''
 ClassDef - ROOT 0,0..0,23
   .name 'cls'
   .bases[1]
-  0] Starred - 0,10..0,16
-    .value UnaryOp - 0,11..0,16
-      .op Not - 0,11..0,14
-      .operand Name 'a' Load - 0,15..0,16
-    .ctx Load
+   0] Starred - 0,10..0,16
+     .value UnaryOp - 0,11..0,16
+       .op Not - 0,11..0,14
+       .operand Name 'a' Load - 0,15..0,16
+     .ctx Load
   .body[1]
-  0] Pass - 0,19..0,23
+   0] Pass - 0,19..0,23
 '''),
 
 (39, '', 0, 2, 'bases', {'_ver': 11}, (None,
@@ -22060,14 +22060,14 @@ r'''class cls(*(not a), c): pass''', r'''
 ClassDef - ROOT 0,0..0,26
   .name 'cls'
   .bases[2]
-  0] Starred - 0,10..0,16
-    .value UnaryOp - 0,11..0,16
-      .op Not - 0,11..0,14
-      .operand Name 'a' Load - 0,15..0,16
-    .ctx Load
-  1] Name 'c' Load - 0,18..0,19
+   0] Starred - 0,10..0,16
+     .value UnaryOp - 0,11..0,16
+       .op Not - 0,11..0,14
+       .operand Name 'a' Load - 0,15..0,16
+     .ctx Load
+   1] Name 'c' Load - 0,18..0,19
   .body[1]
-  0] Pass - 0,22..0,26
+   0] Pass - 0,22..0,26
 '''),
 
 (40, '', 1, 3, 'bases', {'_ver': 11}, (None,
@@ -22078,14 +22078,14 @@ r'''class cls(a, *(not a)): pass''', r'''
 ClassDef - ROOT 0,0..0,26
   .name 'cls'
   .bases[2]
-  0] Name 'a' Load - 0,10..0,11
-  1] Starred - 0,13..0,19
-    .value UnaryOp - 0,14..0,19
-      .op Not - 0,14..0,17
-      .operand Name 'a' Load - 0,18..0,19
-    .ctx Load
+   0] Name 'a' Load - 0,10..0,11
+   1] Starred - 0,13..0,19
+     .value UnaryOp - 0,14..0,19
+       .op Not - 0,14..0,17
+       .operand Name 'a' Load - 0,18..0,19
+     .ctx Load
   .body[1]
-  0] Pass - 0,22..0,26
+   0] Pass - 0,22..0,26
 '''),
 
 (41, '', 0, 3, 'bases', {'_ver': 11}, (None,
@@ -22096,13 +22096,13 @@ r'''class cls(*(not a)): pass''', r'''
 ClassDef - ROOT 0,0..0,23
   .name 'cls'
   .bases[1]
-  0] Starred - 0,10..0,16
-    .value UnaryOp - 0,11..0,16
-      .op Not - 0,11..0,14
-      .operand Name 'a' Load - 0,15..0,16
-    .ctx Load
+   0] Starred - 0,10..0,16
+     .value UnaryOp - 0,11..0,16
+       .op Not - 0,11..0,14
+       .operand Name 'a' Load - 0,15..0,16
+     .ctx Load
   .body[1]
-  0] Pass - 0,19..0,23
+   0] Pass - 0,19..0,23
 '''),
 
 (42, '', 1, 2, 'bases', {}, (None,
@@ -22112,15 +22112,15 @@ r'''class cls(a, *(not a), c): pass''', r'''
 ClassDef - ROOT 0,0..0,31
   .name 'cls'
   .bases[3]
-  0] Name 'a' Load - 0,10..0,11
-  1] Starred - 0,13..0,21
-    .value UnaryOp - 0,15..0,20
-      .op Not - 0,15..0,18
-      .operand Name 'a' Load - 0,19..0,20
-    .ctx Load
-  2] Name 'c' Load - 0,23..0,24
+   0] Name 'a' Load - 0,10..0,11
+   1] Starred - 0,13..0,21
+     .value UnaryOp - 0,15..0,20
+       .op Not - 0,15..0,18
+       .operand Name 'a' Load - 0,19..0,20
+     .ctx Load
+   2] Name 'c' Load - 0,23..0,24
   .body[1]
-  0] Pass - 0,27..0,31
+   0] Pass - 0,27..0,31
 '''),
 
 (43, '', 0, 2, 'bases', {'one': True}, (None,
@@ -22131,16 +22131,16 @@ r'''class cls(*(not a), **c,): pass''', r'''
 ClassDef - ROOT 0,0..0,29
   .name 'cls'
   .bases[1]
-  0] Starred - 0,10..0,16
-    .value UnaryOp - 0,11..0,16
-      .op Not - 0,11..0,14
-      .operand Name 'a' Load - 0,15..0,16
-    .ctx Load
+   0] Starred - 0,10..0,16
+     .value UnaryOp - 0,11..0,16
+       .op Not - 0,11..0,14
+       .operand Name 'a' Load - 0,15..0,16
+     .ctx Load
   .keywords[1]
-  0] keyword - 0,18..0,21
-    .value Name 'c' Load - 0,20..0,21
+   0] keyword - 0,18..0,21
+     .value Name 'c' Load - 0,20..0,21
   .body[1]
-  0] Pass - 0,25..0,29
+   0] Pass - 0,25..0,29
 '''),
 
 (44, '', None, None, 'bases', {'_ver': 11}, (None,
@@ -22151,20 +22151,20 @@ r'''class cls(*(not a), *(b or c)): pass''', r'''
 ClassDef - ROOT 0,0..0,32
   .name 'cls'
   .bases[2]
-  0] Starred - 0,10..0,16
-    .value UnaryOp - 0,11..0,16
-      .op Not - 0,11..0,14
-      .operand Name 'a' Load - 0,15..0,16
-    .ctx Load
-  1] Starred - 0,18..0,25
-    .value BoolOp - 0,19..0,25
-      .op Or
-      .values[2]
-      0] Name 'b' Load - 0,19..0,20
-      1] Name 'c' Load - 0,24..0,25
-    .ctx Load
+   0] Starred - 0,10..0,16
+     .value UnaryOp - 0,11..0,16
+       .op Not - 0,11..0,14
+       .operand Name 'a' Load - 0,15..0,16
+     .ctx Load
+   1] Starred - 0,18..0,25
+     .value BoolOp - 0,19..0,25
+       .op Or
+       .values[2]
+        0] Name 'b' Load - 0,19..0,20
+        1] Name 'c' Load - 0,24..0,25
+     .ctx Load
   .body[1]
-  0] Pass - 0,28..0,32
+   0] Pass - 0,28..0,32
 '''),
 
 (45, '', None, None, 'bases', {'one': True}, (None,
@@ -22180,14 +22180,14 @@ r'''**NodeError('expecting Tuple, got Starred')**''', r'''
 ClassDef - ROOT 0,0..0,26
   .name 'cls'
   .bases[2]
-  0] Starred - 0,10..0,16
-    .value UnaryOp - 0,11..0,16
-      .op Not - 0,11..0,14
-      .operand Name 'a' Load - 0,15..0,16
-    .ctx Load
-  1] Name 'c' Load - 0,18..0,19
+   0] Starred - 0,10..0,16
+     .value UnaryOp - 0,11..0,16
+       .op Not - 0,11..0,14
+       .operand Name 'a' Load - 0,15..0,16
+     .ctx Load
+   1] Name 'c' Load - 0,18..0,19
   .body[1]
-  0] Pass - 0,22..0,26
+   0] Pass - 0,22..0,26
 '''),
 ],
 
@@ -22221,19 +22221,19 @@ d \
 ClassDef - ROOT 0,0..9,7
   .name 'cls'
   .bases[3]
-  0] Name 'x' Load - 1,0..1,1
-  1] Starred - 2,0..3,1
-    .value Name 'b' Load - 3,0..3,1
-    .ctx Load
-  2] Name 'c' Load - 5,0..5,1
+   0] Name 'x' Load - 1,0..1,1
+   1] Starred - 2,0..3,1
+     .value Name 'b' Load - 3,0..3,1
+     .ctx Load
+   2] Name 'c' Load - 5,0..5,1
   .keywords[1]
-  0] keyword - 7,0..8,1
-    .value Name 'd' Load - 8,0..8,1
+   0] keyword - 7,0..8,1
+     .value Name 'd' Load - 8,0..8,1
   .body[1]
-  0] Pass - 9,3..9,7
+   0] Pass - 9,3..9,7
   .type_params[1]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
 '''),
 
 (1, '', 1, 2, 'bases', {'_ver': 12}, (None, r'''
@@ -22263,19 +22263,19 @@ d \
 ClassDef - ROOT 0,0..8,7
   .name 'cls'
   .bases[3]
-  0] Name 'a' Load - 1,0..1,1
-  1] Name 'x' Load - 3,0..3,1
-  2] Name 'c' Load - 4,0..4,1
+   0] Name 'a' Load - 1,0..1,1
+   1] Name 'x' Load - 3,0..3,1
+   2] Name 'c' Load - 4,0..4,1
   .keywords[1]
-  0] keyword - 6,0..7,1
-    .value Name 'd' Load - 7,0..7,1
+   0] keyword - 6,0..7,1
+     .value Name 'd' Load - 7,0..7,1
   .body[1]
-  0] Pass - 8,3..8,7
+   0] Pass - 8,3..8,7
   .type_params[2]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,13..0,15
-    .name 'U'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,13..0,15
+     .name 'U'
 '''),
 
 (2, '', 2, 3, 'bases', {'_ver': 12}, (None, r'''
@@ -22308,21 +22308,21 @@ d \
 ClassDef - ROOT 0,0..10,7
   .name 'cls'
   .bases[3]
-  0] Name 'a' Load - 2,0..2,1
-  1] Starred - 4,0..5,1
-    .value Name 'b' Load - 5,0..5,1
-    .ctx Load
-  2] Name 'x' Load - 7,0..7,1
+   0] Name 'a' Load - 2,0..2,1
+   1] Starred - 4,0..5,1
+     .value Name 'b' Load - 5,0..5,1
+     .ctx Load
+   2] Name 'x' Load - 7,0..7,1
   .keywords[1]
-  0] keyword - 8,0..9,1
-    .value Name 'd' Load - 9,0..9,1
+   0] keyword - 8,0..9,1
+     .value Name 'd' Load - 9,0..9,1
   .body[1]
-  0] Pass - 10,3..10,7
+   0] Pass - 10,3..10,7
   .type_params[2]
-  0] TypeVar - 0,11..0,12
-    .name 'T'
-  1] TypeVarTuple - 1,0..1,2
-    .name 'U'
+   0] TypeVar - 0,11..0,12
+     .name 'T'
+   1] TypeVarTuple - 1,0..1,2
+     .name 'U'
 '''),
 
 (3, '', 0, 3, 'bases', {'_ver': 12}, (None, r'''
@@ -22354,15 +22354,15 @@ d \
 ClassDef - ROOT 0,0..7,7
   .name 'cls'
   .bases[1]
-  0] Name 'x' Load - 4,0..4,1
+   0] Name 'x' Load - 4,0..4,1
   .keywords[1]
-  0] keyword - 5,0..6,1
-    .value Name 'd' Load - 6,0..6,1
+   0] keyword - 5,0..6,1
+     .value Name 'd' Load - 6,0..6,1
   .body[1]
-  0] Pass - 7,3..7,7
+   0] Pass - 7,3..7,7
   .type_params[1]
-  0] TypeVar - 1,0..1,1
-    .name 'T'
+   0] TypeVar - 1,0..1,1
+     .name 'T'
 '''),
 
 (4, '', 0, 3, 'bases', {'_ver': 12}, (None, r'''
@@ -22391,13 +22391,13 @@ d \
 ClassDef - ROOT 0,0..5,7
   .name 'cls'
   .keywords[1]
-  0] keyword - 3,0..4,1
-    .value Name 'd' Load - 4,0..4,1
+   0] keyword - 3,0..4,1
+     .value Name 'd' Load - 4,0..4,1
   .body[1]
-  0] Pass - 5,3..5,7
+   0] Pass - 5,3..5,7
   .type_params[1]
-  0] TypeVar - 1,1..1,2
-    .name 'T'
+   0] TypeVar - 1,1..1,2
+     .name 'T'
 '''),
 
 (5, '', 0, 1, 'bases', {'_ver': 12}, (None, r'''
@@ -22430,21 +22430,21 @@ d
 ClassDef - ROOT 0,0..10,7
   .name 'cls'
   .bases[3]
-  0] Name 'x' Load - 2,0..2,1
-  1] Starred - 3,0..4,1
-    .value Name 'b' Load - 4,0..4,1
-    .ctx Load
-  2] Name 'c' Load - 6,0..6,1
+   0] Name 'x' Load - 2,0..2,1
+   1] Starred - 3,0..4,1
+     .value Name 'b' Load - 4,0..4,1
+     .ctx Load
+   2] Name 'c' Load - 6,0..6,1
   .keywords[1]
-  0] keyword - 8,0..9,1
-    .value Name 'd' Load - 9,0..9,1
+   0] keyword - 8,0..9,1
+     .value Name 'd' Load - 9,0..9,1
   .body[1]
-  0] Pass - 10,3..10,7
+   0] Pass - 10,3..10,7
   .type_params[2]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,13..0,15
-    .name 'U'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,13..0,15
+     .name 'U'
 '''),
 
 (6, '', 1, 2, 'bases', {'_ver': 12}, (None, r'''
@@ -22482,19 +22482,19 @@ d
 ClassDef - ROOT 0,0..12,7
   .name 'cls'
   .bases[3]
-  0] Name 'a' Load - 5,0..5,1
-  1] Name 'x' Load - 7,0..7,1
-  2] Name 'c' Load - 8,0..8,1
+   0] Name 'a' Load - 5,0..5,1
+   1] Name 'x' Load - 7,0..7,1
+   2] Name 'c' Load - 8,0..8,1
   .keywords[1]
-  0] keyword - 10,0..11,1
-    .value Name 'd' Load - 11,0..11,1
+   0] keyword - 10,0..11,1
+     .value Name 'd' Load - 11,0..11,1
   .body[1]
-  0] Pass - 12,3..12,7
+   0] Pass - 12,3..12,7
   .type_params[2]
-  0] TypeVar - 2,0..2,1
-    .name 'T'
-  1] TypeVarTuple - 2,3..2,5
-    .name 'U'
+   0] TypeVar - 2,0..2,1
+     .name 'T'
+   1] TypeVarTuple - 2,3..2,5
+     .name 'U'
 '''),
 
 (7, '', 2, 3, 'bases', {'_ver': 12}, (None, r'''
@@ -22525,23 +22525,23 @@ d
 ClassDef - ROOT 0,0..9,7
   .name 'cls'
   .bases[3]
-  0] Name 'a' Load - 1,0..1,1
-  1] Starred - 3,0..4,1
-    .value Name 'b' Load - 4,0..4,1
-    .ctx Load
-  2] Name 'x' Load - 6,0..6,1
+   0] Name 'a' Load - 1,0..1,1
+   1] Starred - 3,0..4,1
+     .value Name 'b' Load - 4,0..4,1
+     .ctx Load
+   2] Name 'x' Load - 6,0..6,1
   .keywords[1]
-  0] keyword - 7,0..8,1
-    .value Name 'd' Load - 8,0..8,1
+   0] keyword - 7,0..8,1
+     .value Name 'd' Load - 8,0..8,1
   .body[1]
-  0] Pass - 9,3..9,7
+   0] Pass - 9,3..9,7
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,13..0,15
-    .name 'U'
-  2] ParamSpec - 0,17..0,20
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,13..0,15
+     .name 'U'
+   2] ParamSpec - 0,17..0,20
+     .name 'V'
 '''),
 
 (8, '', 0, 3, 'bases', {'_ver': 12}, (None, r'''
@@ -22573,19 +22573,19 @@ d
 ClassDef - ROOT 0,0..7,7
   .name 'cls'
   .bases[1]
-  0] Name 'x' Load - 4,0..4,1
+   0] Name 'x' Load - 4,0..4,1
   .keywords[1]
-  0] keyword - 5,0..6,1
-    .value Name 'd' Load - 6,0..6,1
+   0] keyword - 5,0..6,1
+     .value Name 'd' Load - 6,0..6,1
   .body[1]
-  0] Pass - 7,3..7,7
+   0] Pass - 7,3..7,7
   .type_params[3]
-  0] TypeVar - 1,1..1,2
-    .name 'T'
-  1] TypeVarTuple - 1,4..1,6
-    .name 'U'
-  2] ParamSpec - 2,0..2,3
-    .name 'V'
+   0] TypeVar - 1,1..1,2
+     .name 'T'
+   1] TypeVarTuple - 1,4..1,6
+     .name 'U'
+   2] ParamSpec - 2,0..2,3
+     .name 'V'
 '''),
 
 (9, '', 0, 3, 'bases', {'_ver': 12}, (None, r'''
@@ -22614,17 +22614,17 @@ d
 ClassDef - ROOT 0,0..5,7
   .name 'cls'
   .keywords[1]
-  0] keyword - 3,0..4,1
-    .value Name 'd' Load - 4,0..4,1
+   0] keyword - 3,0..4,1
+     .value Name 'd' Load - 4,0..4,1
   .body[1]
-  0] Pass - 5,3..5,7
+   0] Pass - 5,3..5,7
   .type_params[3]
-  0] TypeVar - 1,0..1,1
-    .name 'T'
-  1] TypeVarTuple - 1,3..1,5
-    .name 'U'
-  2] ParamSpec - 1,7..1,10
-    .name 'V'
+   0] TypeVar - 1,0..1,1
+     .name 'T'
+   1] TypeVarTuple - 1,3..1,5
+     .name 'U'
+   2] ParamSpec - 1,7..1,10
+     .name 'V'
 '''),
 
 (10, '', 0, 2, 'bases', {'_ver': 12}, (None,
@@ -22648,19 +22648,19 @@ r'''class cls[T,](x, b=c, *d): pass''', r'''
 ClassDef - ROOT 0,0..0,31
   .name 'cls'
   .bases[2]
-  0] Name 'x' Load - 0,14..0,15
-  1] Starred - 0,22..0,24
-    .value Name 'd' Load - 0,23..0,24
-    .ctx Load
+   0] Name 'x' Load - 0,14..0,15
+   1] Starred - 0,22..0,24
+     .value Name 'd' Load - 0,23..0,24
+     .ctx Load
   .keywords[1]
-  0] keyword - 0,17..0,20
-    .arg 'b'
-    .value Name 'c' Load - 0,19..0,20
+   0] keyword - 0,17..0,20
+     .arg 'b'
+     .value Name 'c' Load - 0,19..0,20
   .body[1]
-  0] Pass - 0,27..0,31
+   0] Pass - 0,27..0,31
   .type_params[1]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
 '''),
 
 (13, '', 0, 1, 'bases', {'_ver': 12}, (None, r'''
@@ -22690,23 +22690,23 @@ V \
 ClassDef - ROOT 0,0..9,20
   .name 'cls'
   .bases[2]
-  0] Name 'x' Load - 9,2..9,3
-  1] Starred - 9,10..9,12
-    .value Name 'd' Load - 9,11..9,12
-    .ctx Load
+   0] Name 'x' Load - 9,2..9,3
+   1] Starred - 9,10..9,12
+     .value Name 'd' Load - 9,11..9,12
+     .ctx Load
   .keywords[1]
-  0] keyword - 9,5..9,8
-    .arg 'b'
-    .value Name 'c' Load - 9,7..9,8
+   0] keyword - 9,5..9,8
+     .arg 'b'
+     .value Name 'c' Load - 9,7..9,8
   .body[1]
-  0] Pass - 9,16..9,20
+   0] Pass - 9,16..9,20
   .type_params[3]
-  0] TypeVar - 1,0..1,1
-    .name 'T'
-  1] TypeVarTuple - 3,0..4,1
-    .name 'U'
-  2] ParamSpec - 6,0..7,1
-    .name 'V'
+   0] TypeVar - 1,0..1,1
+     .name 'T'
+   1] TypeVarTuple - 3,0..4,1
+     .name 'U'
+   2] ParamSpec - 6,0..7,1
+     .name 'V'
 '''),
 
 (14, '', 0, 1, 'bases', {'_ver': 12}, (None, r'''
@@ -22740,24 +22740,24 @@ V \
 ClassDef - ROOT 0,0..11,21
   .name 'cls'
   .bases[3]
-  0] Name 'x' Load - 11,1..11,2
-  1] Name 'b' Load - 11,4..11,5
-  2] Starred - 11,12..11,14
-    .value Name 'e' Load - 11,13..11,14
-    .ctx Load
+   0] Name 'x' Load - 11,1..11,2
+   1] Name 'b' Load - 11,4..11,5
+   2] Starred - 11,12..11,14
+     .value Name 'e' Load - 11,13..11,14
+     .ctx Load
   .keywords[1]
-  0] keyword - 11,7..11,10
-    .arg 'c'
-    .value Name 'd' Load - 11,9..11,10
+   0] keyword - 11,7..11,10
+     .arg 'c'
+     .value Name 'd' Load - 11,9..11,10
   .body[1]
-  0] Pass - 11,17..11,21
+   0] Pass - 11,17..11,21
   .type_params[3]
-  0] TypeVar - 2,0..2,1
-    .name 'T'
-  1] TypeVarTuple - 4,0..5,1
-    .name 'U'
-  2] ParamSpec - 7,0..8,1
-    .name 'V'
+   0] TypeVar - 2,0..2,1
+     .name 'T'
+   1] TypeVarTuple - 4,0..5,1
+     .name 'U'
+   2] ParamSpec - 7,0..8,1
+     .name 'V'
 '''),
 
 (15, '', 1, 2, 'bases', {'_ver': 12}, (None, r'''
@@ -22773,20 +22773,20 @@ T] \
 ClassDef - ROOT 0,0..2,21
   .name 'cls'
   .bases[3]
-  0] Name 'a' Load - 2,1..2,2
-  1] Name 'x' Load - 2,4..2,5
-  2] Starred - 2,12..2,14
-    .value Name 'e' Load - 2,13..2,14
-    .ctx Load
+   0] Name 'a' Load - 2,1..2,2
+   1] Name 'x' Load - 2,4..2,5
+   2] Starred - 2,12..2,14
+     .value Name 'e' Load - 2,13..2,14
+     .ctx Load
   .keywords[1]
-  0] keyword - 2,7..2,10
-    .arg 'c'
-    .value Name 'd' Load - 2,9..2,10
+   0] keyword - 2,7..2,10
+     .arg 'c'
+     .value Name 'd' Load - 2,9..2,10
   .body[1]
-  0] Pass - 2,17..2,21
+   0] Pass - 2,17..2,21
   .type_params[1]
-  0] TypeVar - 1,0..1,1
-    .name 'T'
+   0] TypeVar - 1,0..1,1
+     .name 'T'
 '''),
 
 (16, '', 0, 2, 'bases', {'_ver': 12}, (None, r'''
@@ -22816,23 +22816,23 @@ V
 ClassDef - ROOT 0,0..9,19
   .name 'cls'
   .bases[2]
-  0] Name 'x' Load - 9,2..9,3
-  1] Starred - 9,10..9,12
-    .value Name 'e' Load - 9,11..9,12
-    .ctx Load
+   0] Name 'x' Load - 9,2..9,3
+   1] Starred - 9,10..9,12
+     .value Name 'e' Load - 9,11..9,12
+     .ctx Load
   .keywords[1]
-  0] keyword - 9,5..9,8
-    .arg 'c'
-    .value Name 'd' Load - 9,7..9,8
+   0] keyword - 9,5..9,8
+     .arg 'c'
+     .value Name 'd' Load - 9,7..9,8
   .body[1]
-  0] Pass - 9,15..9,19
+   0] Pass - 9,15..9,19
   .type_params[3]
-  0] TypeVar - 1,0..1,1
-    .name 'T'
-  1] TypeVarTuple - 3,0..4,1
-    .name 'U'
-  2] ParamSpec - 6,0..7,1
-    .name 'V'
+   0] TypeVar - 1,0..1,1
+     .name 'T'
+   1] TypeVarTuple - 3,0..4,1
+     .name 'U'
+   2] ParamSpec - 6,0..7,1
+     .name 'V'
 '''),
 
 (17, '', 0, 2, 'bases', {'_ver': 12}, (None, r'''
@@ -22862,23 +22862,23 @@ V
 ClassDef - ROOT 0,0..9,19
   .name 'cls'
   .bases[2]
-  0] Name 'x' Load - 9,1..9,2
-  1] Starred - 9,9..9,11
-    .value Name 'e' Load - 9,10..9,11
-    .ctx Load
+   0] Name 'x' Load - 9,1..9,2
+   1] Starred - 9,9..9,11
+     .value Name 'e' Load - 9,10..9,11
+     .ctx Load
   .keywords[1]
-  0] keyword - 9,4..9,7
-    .arg 'c'
-    .value Name 'd' Load - 9,6..9,7
+   0] keyword - 9,4..9,7
+     .arg 'c'
+     .value Name 'd' Load - 9,6..9,7
   .body[1]
-  0] Pass - 9,15..9,19
+   0] Pass - 9,15..9,19
   .type_params[3]
-  0] TypeVar - 1,0..1,1
-    .name 'T'
-  1] TypeVarTuple - 3,0..4,1
-    .name 'U'
-  2] ParamSpec - 6,0..7,1
-    .name 'V'
+   0] TypeVar - 1,0..1,1
+     .name 'T'
+   1] TypeVarTuple - 3,0..4,1
+     .name 'U'
+   2] ParamSpec - 6,0..7,1
+     .name 'V'
 '''),
 
 (18, '', 0, 0, 'bases', {'_ver': 12}, (None,
@@ -22888,14 +22888,14 @@ r'''class cls[ T, *U ](x): pass''', r'''
 ClassDef - ROOT 0,0..0,27
   .name 'cls'
   .bases[1]
-  0] Name 'x' Load - 0,19..0,20
+   0] Name 'x' Load - 0,19..0,20
   .body[1]
-  0] Pass - 0,23..0,27
+   0] Pass - 0,23..0,27
   .type_params[2]
-  0] TypeVar - 0,11..0,12
-    .name 'T'
-  1] TypeVarTuple - 0,14..0,16
-    .name 'U'
+   0] TypeVar - 0,11..0,12
+     .name 'T'
+   1] TypeVarTuple - 0,14..0,16
+     .name 'U'
 '''),
 
 (19, '', 0, 0, 'bases', {'_ver': 12}, (None,
@@ -22905,12 +22905,12 @@ r'''class cls[T](x): pass''', r'''
 ClassDef - ROOT 0,0..0,21
   .name 'cls'
   .bases[1]
-  0] Name 'x' Load - 0,13..0,14
+   0] Name 'x' Load - 0,13..0,14
   .body[1]
-  0] Pass - 0,17..0,21
+   0] Pass - 0,17..0,21
   .type_params[1]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
 '''),
 
 (20, '', 0, 0, 'bases', {'_ver': 12}, (None,
@@ -22920,15 +22920,15 @@ r'''class cls[T,*U](x, y): pass''', r'''
 ClassDef - ROOT 0,0..0,27
   .name 'cls'
   .bases[2]
-  0] Name 'x' Load - 0,16..0,17
-  1] Name 'y' Load - 0,19..0,20
+   0] Name 'x' Load - 0,16..0,17
+   1] Name 'y' Load - 0,19..0,20
   .body[1]
-  0] Pass - 0,23..0,27
+   0] Pass - 0,23..0,27
   .type_params[2]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
 '''),
 
 (21, '', 0, 0, 'bases', {'_ver': 12}, (None,
@@ -22938,20 +22938,20 @@ r'''class cls[T,*U,**V](x, a=b): pass''', r'''
 ClassDef - ROOT 0,0..0,33
   .name 'cls'
   .bases[1]
-  0] Name 'x' Load - 0,20..0,21
+   0] Name 'x' Load - 0,20..0,21
   .keywords[1]
-  0] keyword - 0,23..0,26
-    .arg 'a'
-    .value Name 'b' Load - 0,25..0,26
+   0] keyword - 0,23..0,26
+     .arg 'a'
+     .value Name 'b' Load - 0,25..0,26
   .body[1]
-  0] Pass - 0,29..0,33
+   0] Pass - 0,29..0,33
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 
 (22, '', 0, 0, 'bases', {'_ver': 12}, (None, r'''
@@ -22969,16 +22969,16 @@ T
 ClassDef - ROOT 0,0..3,16
   .name 'cls'
   .bases[1]
-  0] Name 'x' Load - 3,2..3,3
+   0] Name 'x' Load - 3,2..3,3
   .keywords[1]
-  0] keyword - 3,5..3,8
-    .arg 'a'
-    .value Name 'b' Load - 3,7..3,8
+   0] keyword - 3,5..3,8
+     .arg 'a'
+     .value Name 'b' Load - 3,7..3,8
   .body[1]
-  0] Pass - 3,12..3,16
+   0] Pass - 3,12..3,16
   .type_params[1]
-  0] TypeVar - 1,0..1,1
-    .name 'T'
+   0] TypeVar - 1,0..1,1
+     .name 'T'
 '''),
 
 (23, '', 0, 1, 'bases', {'_ver': 12}, (None, r'''
@@ -22994,12 +22994,12 @@ class cls\
 ClassDef - ROOT 0,0..2,9
   .name 'cls'
   .bases[1]
-  0] Name 'b' Load - 2,1..2,2
+   0] Name 'b' Load - 2,1..2,2
   .body[1]
-  0] Pass - 2,5..2,9
+   0] Pass - 2,5..2,9
   .type_params[1]
-  0] TypeVar - 1,1..1,2
-    .name 'T'
+   0] TypeVar - 1,1..1,2
+     .name 'T'
 '''),
 
 (24, '', 1, 2, 'bases', {'_ver': 12}, (None, r'''
@@ -23017,12 +23017,12 @@ class cls \
 ClassDef - ROOT 0,0..3,10
   .name 'cls'
   .bases[1]
-  0] Name 'a' Load - 3,2..3,3
+   0] Name 'a' Load - 3,2..3,3
   .body[1]
-  0] Pass - 3,6..3,10
+   0] Pass - 3,6..3,10
   .type_params[1]
-  0] TypeVar - 1,2..1,3
-    .name 'T'
+   0] TypeVar - 1,2..1,3
+     .name 'T'
 '''),
 
 (25, '', 0, 2, 'bases', {'_ver': 12}, (None,
@@ -23032,12 +23032,12 @@ r'''class cls[T,*U]: pass''', r'''
 ClassDef - ROOT 0,0..0,21
   .name 'cls'
   .body[1]
-  0] Pass - 0,17..0,21
+   0] Pass - 0,17..0,21
   .type_params[2]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
 '''),
 
 (26, '', 1, 2, 'bases', {'_ver': 12}, (None,
@@ -23047,19 +23047,19 @@ r'''class cls[T,*U,**V](a, **c): pass''', r'''
 ClassDef - ROOT 0,0..0,33
   .name 'cls'
   .bases[1]
-  0] Name 'a' Load - 0,20..0,21
+   0] Name 'a' Load - 0,20..0,21
   .keywords[1]
-  0] keyword - 0,23..0,26
-    .value Name 'c' Load - 0,25..0,26
+   0] keyword - 0,23..0,26
+     .value Name 'c' Load - 0,25..0,26
   .body[1]
-  0] Pass - 0,29..0,33
+   0] Pass - 0,29..0,33
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 
 (27, '', 0, 2, 'bases', {'_ver': 12}, (None,
@@ -23069,17 +23069,17 @@ r'''class cls[T,*U,**V](**c): pass''', r'''
 ClassDef - ROOT 0,0..0,30
   .name 'cls'
   .keywords[1]
-  0] keyword - 0,20..0,23
-    .value Name 'c' Load - 0,22..0,23
+   0] keyword - 0,20..0,23
+     .value Name 'c' Load - 0,22..0,23
   .body[1]
-  0] Pass - 0,26..0,30
+   0] Pass - 0,26..0,30
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 
 (28, '', 1, 2, 'bases', {'_ver': 12}, (None,
@@ -23089,19 +23089,19 @@ r'''class cls[T,*U,**V](a, **c,): pass''', r'''
 ClassDef - ROOT 0,0..0,34
   .name 'cls'
   .bases[1]
-  0] Name 'a' Load - 0,20..0,21
+   0] Name 'a' Load - 0,20..0,21
   .keywords[1]
-  0] keyword - 0,23..0,26
-    .value Name 'c' Load - 0,25..0,26
+   0] keyword - 0,23..0,26
+     .value Name 'c' Load - 0,25..0,26
   .body[1]
-  0] Pass - 0,30..0,34
+   0] Pass - 0,30..0,34
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 
 (29, '', 0, 2, 'bases', {'_ver': 12}, (None,
@@ -23111,17 +23111,17 @@ r'''class cls[T,*U,**V](**c,): pass''', r'''
 ClassDef - ROOT 0,0..0,31
   .name 'cls'
   .keywords[1]
-  0] keyword - 0,20..0,23
-    .value Name 'c' Load - 0,22..0,23
+   0] keyword - 0,20..0,23
+     .value Name 'c' Load - 0,22..0,23
   .body[1]
-  0] Pass - 0,27..0,31
+   0] Pass - 0,27..0,31
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 
 (30, '', 0, 0, 'bases', {'_ver': 12, 'one': True}, (None,
@@ -23131,16 +23131,16 @@ r'''class cls[T,*U,**V](x): pass''', r'''
 ClassDef - ROOT 0,0..0,28
   .name 'cls'
   .bases[1]
-  0] Name 'x' Load - 0,20..0,21
+   0] Name 'x' Load - 0,20..0,21
   .body[1]
-  0] Pass - 0,24..0,28
+   0] Pass - 0,24..0,28
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 
 (31, '', 0, 0, 'bases', {'_ver': 12, 'one': True}, (None,
@@ -23150,19 +23150,19 @@ r'''class cls[T,*U,**V]((x,)): pass''', r'''
 ClassDef - ROOT 0,0..0,31
   .name 'cls'
   .bases[1]
-  0] Tuple - 0,20..0,24
-    .elts[1]
-    0] Name 'x' Load - 0,21..0,22
-    .ctx Load
+   0] Tuple - 0,20..0,24
+     .elts[1]
+      0] Name 'x' Load - 0,21..0,22
+     .ctx Load
   .body[1]
-  0] Pass - 0,27..0,31
+   0] Pass - 0,27..0,31
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 
 (32, '', 0, 0, 'bases', {'_ver': 12, 'one': True}, (None,
@@ -23173,20 +23173,20 @@ r'''class cls[T,*U,**V]((x, y)): pass''', r'''
 ClassDef - ROOT 0,0..0,34
   .name 'cls'
   .bases[1]
-  0] Tuple - 0,20..0,27
-    .elts[2]
-    0] Name 'x' Load - 0,21..0,22
-    1] Name 'y' Load - 0,24..0,25
-    .ctx Load
+   0] Tuple - 0,20..0,27
+     .elts[2]
+      0] Name 'x' Load - 0,21..0,22
+      1] Name 'y' Load - 0,24..0,25
+     .ctx Load
   .body[1]
-  0] Pass - 0,30..0,34
+   0] Pass - 0,30..0,34
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 
 (33, '', 0, 2, 'bases', {'_ver': 12, 'one': True}, (None,
@@ -23196,17 +23196,17 @@ r'''class cls[T,*U,**V](x, c): pass''', r'''
 ClassDef - ROOT 0,0..0,31
   .name 'cls'
   .bases[2]
-  0] Name 'x' Load - 0,20..0,21
-  1] Name 'c' Load - 0,23..0,24
+   0] Name 'x' Load - 0,20..0,21
+   1] Name 'c' Load - 0,23..0,24
   .body[1]
-  0] Pass - 0,27..0,31
+   0] Pass - 0,27..0,31
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 
 (34, '', 1, 3, 'bases', {'_ver': 12, 'one': True}, (None,
@@ -23216,17 +23216,17 @@ r'''class cls[T,*U,**V](a, x): pass''', r'''
 ClassDef - ROOT 0,0..0,31
   .name 'cls'
   .bases[2]
-  0] Name 'a' Load - 0,20..0,21
-  1] Name 'x' Load - 0,23..0,24
+   0] Name 'a' Load - 0,20..0,21
+   1] Name 'x' Load - 0,23..0,24
   .body[1]
-  0] Pass - 0,27..0,31
+   0] Pass - 0,27..0,31
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 
 (35, '', 0, 3, 'bases', {'_ver': 12, 'one': True}, (None,
@@ -23236,16 +23236,16 @@ r'''class cls[T,*U,**V](x): pass''', r'''
 ClassDef - ROOT 0,0..0,28
   .name 'cls'
   .bases[1]
-  0] Name 'x' Load - 0,20..0,21
+   0] Name 'x' Load - 0,20..0,21
   .body[1]
-  0] Pass - 0,24..0,28
+   0] Pass - 0,24..0,28
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 
 (36, '', 0, 2, 'bases', {'_ver': 12, 'one': True}, (None,
@@ -23256,21 +23256,21 @@ r'''class cls[T,*U,**V](*(not a), c): pass''', r'''
 ClassDef - ROOT 0,0..0,36
   .name 'cls'
   .bases[2]
-  0] Starred - 0,20..0,26
-    .value UnaryOp - 0,21..0,26
-      .op Not - 0,21..0,24
-      .operand Name 'a' Load - 0,25..0,26
-    .ctx Load
-  1] Name 'c' Load - 0,28..0,29
+   0] Starred - 0,20..0,26
+     .value UnaryOp - 0,21..0,26
+       .op Not - 0,21..0,24
+       .operand Name 'a' Load - 0,25..0,26
+     .ctx Load
+   1] Name 'c' Load - 0,28..0,29
   .body[1]
-  0] Pass - 0,32..0,36
+   0] Pass - 0,32..0,36
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 
 (37, '', 1, 3, 'bases', {'_ver': 12, 'one': True}, (None,
@@ -23281,21 +23281,21 @@ r'''class cls[T,*U,**V](a, *(not a)): pass''', r'''
 ClassDef - ROOT 0,0..0,36
   .name 'cls'
   .bases[2]
-  0] Name 'a' Load - 0,20..0,21
-  1] Starred - 0,23..0,29
-    .value UnaryOp - 0,24..0,29
-      .op Not - 0,24..0,27
-      .operand Name 'a' Load - 0,28..0,29
-    .ctx Load
+   0] Name 'a' Load - 0,20..0,21
+   1] Starred - 0,23..0,29
+     .value UnaryOp - 0,24..0,29
+       .op Not - 0,24..0,27
+       .operand Name 'a' Load - 0,28..0,29
+     .ctx Load
   .body[1]
-  0] Pass - 0,32..0,36
+   0] Pass - 0,32..0,36
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 
 (38, '', 0, 3, 'bases', {'_ver': 12, 'one': True}, (None,
@@ -23306,20 +23306,20 @@ r'''class cls[T,*U,**V](*(not a)): pass''', r'''
 ClassDef - ROOT 0,0..0,33
   .name 'cls'
   .bases[1]
-  0] Starred - 0,20..0,26
-    .value UnaryOp - 0,21..0,26
-      .op Not - 0,21..0,24
-      .operand Name 'a' Load - 0,25..0,26
-    .ctx Load
+   0] Starred - 0,20..0,26
+     .value UnaryOp - 0,21..0,26
+       .op Not - 0,21..0,24
+       .operand Name 'a' Load - 0,25..0,26
+     .ctx Load
   .body[1]
-  0] Pass - 0,29..0,33
+   0] Pass - 0,29..0,33
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 
 (39, '', 0, 2, 'bases', {'_ver': 12}, (None,
@@ -23330,21 +23330,21 @@ r'''class cls[T,*U,**V](*(not a), c): pass''', r'''
 ClassDef - ROOT 0,0..0,36
   .name 'cls'
   .bases[2]
-  0] Starred - 0,20..0,26
-    .value UnaryOp - 0,21..0,26
-      .op Not - 0,21..0,24
-      .operand Name 'a' Load - 0,25..0,26
-    .ctx Load
-  1] Name 'c' Load - 0,28..0,29
+   0] Starred - 0,20..0,26
+     .value UnaryOp - 0,21..0,26
+       .op Not - 0,21..0,24
+       .operand Name 'a' Load - 0,25..0,26
+     .ctx Load
+   1] Name 'c' Load - 0,28..0,29
   .body[1]
-  0] Pass - 0,32..0,36
+   0] Pass - 0,32..0,36
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 
 (40, '', 1, 3, 'bases', {'_ver': 12}, (None,
@@ -23355,21 +23355,21 @@ r'''class cls[T,*U,**V](a, *(not a)): pass''', r'''
 ClassDef - ROOT 0,0..0,36
   .name 'cls'
   .bases[2]
-  0] Name 'a' Load - 0,20..0,21
-  1] Starred - 0,23..0,29
-    .value UnaryOp - 0,24..0,29
-      .op Not - 0,24..0,27
-      .operand Name 'a' Load - 0,28..0,29
-    .ctx Load
+   0] Name 'a' Load - 0,20..0,21
+   1] Starred - 0,23..0,29
+     .value UnaryOp - 0,24..0,29
+       .op Not - 0,24..0,27
+       .operand Name 'a' Load - 0,28..0,29
+     .ctx Load
   .body[1]
-  0] Pass - 0,32..0,36
+   0] Pass - 0,32..0,36
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 
 (41, '', 0, 3, 'bases', {'_ver': 12}, (None,
@@ -23380,20 +23380,20 @@ r'''class cls[T,*U,**V](*(not a)): pass''', r'''
 ClassDef - ROOT 0,0..0,33
   .name 'cls'
   .bases[1]
-  0] Starred - 0,20..0,26
-    .value UnaryOp - 0,21..0,26
-      .op Not - 0,21..0,24
-      .operand Name 'a' Load - 0,25..0,26
-    .ctx Load
+   0] Starred - 0,20..0,26
+     .value UnaryOp - 0,21..0,26
+       .op Not - 0,21..0,24
+       .operand Name 'a' Load - 0,25..0,26
+     .ctx Load
   .body[1]
-  0] Pass - 0,29..0,33
+   0] Pass - 0,29..0,33
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 
 (42, '', 1, 2, 'bases', {'_ver': 12}, (None,
@@ -23403,22 +23403,22 @@ r'''class cls[T,*U,**V](a, *(not a), c): pass''', r'''
 ClassDef - ROOT 0,0..0,41
   .name 'cls'
   .bases[3]
-  0] Name 'a' Load - 0,20..0,21
-  1] Starred - 0,23..0,31
-    .value UnaryOp - 0,25..0,30
-      .op Not - 0,25..0,28
-      .operand Name 'a' Load - 0,29..0,30
-    .ctx Load
-  2] Name 'c' Load - 0,33..0,34
+   0] Name 'a' Load - 0,20..0,21
+   1] Starred - 0,23..0,31
+     .value UnaryOp - 0,25..0,30
+       .op Not - 0,25..0,28
+       .operand Name 'a' Load - 0,29..0,30
+     .ctx Load
+   2] Name 'c' Load - 0,33..0,34
   .body[1]
-  0] Pass - 0,37..0,41
+   0] Pass - 0,37..0,41
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 
 (43, '', 0, 2, 'bases', {'_ver': 12, 'one': True}, (None,
@@ -23429,23 +23429,23 @@ r'''class cls[T,*U,**V](*(not a), **c,): pass''', r'''
 ClassDef - ROOT 0,0..0,39
   .name 'cls'
   .bases[1]
-  0] Starred - 0,20..0,26
-    .value UnaryOp - 0,21..0,26
-      .op Not - 0,21..0,24
-      .operand Name 'a' Load - 0,25..0,26
-    .ctx Load
+   0] Starred - 0,20..0,26
+     .value UnaryOp - 0,21..0,26
+       .op Not - 0,21..0,24
+       .operand Name 'a' Load - 0,25..0,26
+     .ctx Load
   .keywords[1]
-  0] keyword - 0,28..0,31
-    .value Name 'c' Load - 0,30..0,31
+   0] keyword - 0,28..0,31
+     .value Name 'c' Load - 0,30..0,31
   .body[1]
-  0] Pass - 0,35..0,39
+   0] Pass - 0,35..0,39
   .type_params[3]
-  0] TypeVar - 0,10..0,11
-    .name 'T'
-  1] TypeVarTuple - 0,12..0,14
-    .name 'U'
-  2] ParamSpec - 0,15..0,18
-    .name 'V'
+   0] TypeVar - 0,10..0,11
+     .name 'T'
+   1] TypeVarTuple - 0,12..0,14
+     .name 'U'
+   2] ParamSpec - 0,15..0,18
+     .name 'V'
 '''),
 ],
 
@@ -23479,14 +23479,14 @@ d \
 Call - ROOT 0,0..9,1
   .func Name 'call' Load - 0,0..0,4
   .args[3]
-  0] Name 'x' Load - 1,0..1,1
-  1] Starred - 2,0..3,1
-    .value Name 'b' Load - 3,0..3,1
-    .ctx Load
-  2] Name 'c' Load - 5,0..5,1
+   0] Name 'x' Load - 1,0..1,1
+   1] Starred - 2,0..3,1
+     .value Name 'b' Load - 3,0..3,1
+     .ctx Load
+   2] Name 'c' Load - 5,0..5,1
   .keywords[1]
-  0] keyword - 7,0..8,1
-    .value Name 'd' Load - 8,0..8,1
+   0] keyword - 7,0..8,1
+     .value Name 'd' Load - 8,0..8,1
 '''),
 
 (1, '', 1, 2, None, {}, (None, r'''
@@ -23516,12 +23516,12 @@ d \
 Call - ROOT 0,0..8,1
   .func Name 'call' Load - 0,0..0,4
   .args[3]
-  0] Name 'a' Load - 1,0..1,1
-  1] Name 'x' Load - 3,0..3,1
-  2] Name 'c' Load - 4,0..4,1
+   0] Name 'a' Load - 1,0..1,1
+   1] Name 'x' Load - 3,0..3,1
+   2] Name 'c' Load - 4,0..4,1
   .keywords[1]
-  0] keyword - 6,0..7,1
-    .value Name 'd' Load - 7,0..7,1
+   0] keyword - 6,0..7,1
+     .value Name 'd' Load - 7,0..7,1
 '''),
 
 (2, '', 2, 3, None, {}, (None, r'''
@@ -23552,14 +23552,14 @@ d \
 Call - ROOT 0,0..9,1
   .func Name 'call' Load - 0,0..0,4
   .args[3]
-  0] Name 'a' Load - 1,0..1,1
-  1] Starred - 3,0..4,1
-    .value Name 'b' Load - 4,0..4,1
-    .ctx Load
-  2] Name 'x' Load - 6,0..6,1
+   0] Name 'a' Load - 1,0..1,1
+   1] Starred - 3,0..4,1
+     .value Name 'b' Load - 4,0..4,1
+     .ctx Load
+   2] Name 'x' Load - 6,0..6,1
   .keywords[1]
-  0] keyword - 7,0..8,1
-    .value Name 'd' Load - 8,0..8,1
+   0] keyword - 7,0..8,1
+     .value Name 'd' Load - 8,0..8,1
 '''),
 
 (3, '', 0, 3, None, {}, (None, r'''
@@ -23585,10 +23585,10 @@ d \
 Call - ROOT 0,0..4,1
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-  0] Name 'x' Load - 1,0..1,1
+   0] Name 'x' Load - 1,0..1,1
   .keywords[1]
-  0] keyword - 2,0..3,1
-    .value Name 'd' Load - 3,0..3,1
+   0] keyword - 2,0..3,1
+     .value Name 'd' Load - 3,0..3,1
 '''),
 
 (4, '', 0, 3, None, {}, (None, r'''
@@ -23613,8 +23613,8 @@ d \
 Call - ROOT 0,0..3,1
   .func Name 'call' Load - 0,0..0,4
   .keywords[1]
-  0] keyword - 1,0..2,1
-    .value Name 'd' Load - 2,0..2,1
+   0] keyword - 1,0..2,1
+     .value Name 'd' Load - 2,0..2,1
 '''),
 
 (5, '', 0, 1, None, {}, (None, r'''
@@ -23645,14 +23645,14 @@ d
 Call - ROOT 0,0..9,1
   .func Name 'call' Load - 0,0..0,4
   .args[3]
-  0] Name 'x' Load - 1,0..1,1
-  1] Starred - 2,0..3,1
-    .value Name 'b' Load - 3,0..3,1
-    .ctx Load
-  2] Name 'c' Load - 5,0..5,1
+   0] Name 'x' Load - 1,0..1,1
+   1] Starred - 2,0..3,1
+     .value Name 'b' Load - 3,0..3,1
+     .ctx Load
+   2] Name 'c' Load - 5,0..5,1
   .keywords[1]
-  0] keyword - 7,0..8,1
-    .value Name 'd' Load - 8,0..8,1
+   0] keyword - 7,0..8,1
+     .value Name 'd' Load - 8,0..8,1
 '''),
 
 (6, '', 1, 2, None, {}, (None, r'''
@@ -23682,12 +23682,12 @@ d
 Call - ROOT 0,0..8,1
   .func Name 'call' Load - 0,0..0,4
   .args[3]
-  0] Name 'a' Load - 1,0..1,1
-  1] Name 'x' Load - 3,0..3,1
-  2] Name 'c' Load - 4,0..4,1
+   0] Name 'a' Load - 1,0..1,1
+   1] Name 'x' Load - 3,0..3,1
+   2] Name 'c' Load - 4,0..4,1
   .keywords[1]
-  0] keyword - 6,0..7,1
-    .value Name 'd' Load - 7,0..7,1
+   0] keyword - 6,0..7,1
+     .value Name 'd' Load - 7,0..7,1
 '''),
 
 (7, '', 2, 3, None, {}, (None, r'''
@@ -23718,14 +23718,14 @@ d
 Call - ROOT 0,0..9,1
   .func Name 'call' Load - 0,0..0,4
   .args[3]
-  0] Name 'a' Load - 1,0..1,1
-  1] Starred - 3,0..4,1
-    .value Name 'b' Load - 4,0..4,1
-    .ctx Load
-  2] Name 'x' Load - 6,0..6,1
+   0] Name 'a' Load - 1,0..1,1
+   1] Starred - 3,0..4,1
+     .value Name 'b' Load - 4,0..4,1
+     .ctx Load
+   2] Name 'x' Load - 6,0..6,1
   .keywords[1]
-  0] keyword - 7,0..8,1
-    .value Name 'd' Load - 8,0..8,1
+   0] keyword - 7,0..8,1
+     .value Name 'd' Load - 8,0..8,1
 '''),
 
 (8, '', 0, 3, None, {}, (None, r'''
@@ -23751,10 +23751,10 @@ d
 Call - ROOT 0,0..4,1
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-  0] Name 'x' Load - 1,0..1,1
+   0] Name 'x' Load - 1,0..1,1
   .keywords[1]
-  0] keyword - 2,0..3,1
-    .value Name 'd' Load - 3,0..3,1
+   0] keyword - 2,0..3,1
+     .value Name 'd' Load - 3,0..3,1
 '''),
 
 (9, '', 0, 3, None, {}, (None, r'''
@@ -23779,8 +23779,8 @@ d
 Call - ROOT 0,0..3,1
   .func Name 'call' Load - 0,0..0,4
   .keywords[1]
-  0] keyword - 1,0..2,1
-    .value Name 'd' Load - 2,0..2,1
+   0] keyword - 1,0..2,1
+     .value Name 'd' Load - 2,0..2,1
 '''),
 
 (10, '', 0, 2, None, {}, (None,
@@ -23800,14 +23800,14 @@ r'''call(x, b=c, *d)''', r'''
 Call - ROOT 0,0..0,16
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-  0] Name 'x' Load - 0,5..0,6
-  1] Starred - 0,13..0,15
-    .value Name 'd' Load - 0,14..0,15
-    .ctx Load
+   0] Name 'x' Load - 0,5..0,6
+   1] Starred - 0,13..0,15
+     .value Name 'd' Load - 0,14..0,15
+     .ctx Load
   .keywords[1]
-  0] keyword - 0,8..0,11
-    .arg 'b'
-    .value Name 'c' Load - 0,10..0,11
+   0] keyword - 0,8..0,11
+     .arg 'b'
+     .value Name 'c' Load - 0,10..0,11
 '''),
 
 (13, '', 0, 1, None, {}, (None,
@@ -23817,14 +23817,14 @@ r'''call(x, b=c, *d,)''', r'''
 Call - ROOT 0,0..0,17
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-  0] Name 'x' Load - 0,5..0,6
-  1] Starred - 0,13..0,15
-    .value Name 'd' Load - 0,14..0,15
-    .ctx Load
+   0] Name 'x' Load - 0,5..0,6
+   1] Starred - 0,13..0,15
+     .value Name 'd' Load - 0,14..0,15
+     .ctx Load
   .keywords[1]
-  0] keyword - 0,8..0,11
-    .arg 'b'
-    .value Name 'c' Load - 0,10..0,11
+   0] keyword - 0,8..0,11
+     .arg 'b'
+     .value Name 'c' Load - 0,10..0,11
 '''),
 
 (14, '', 0, 1, None, {}, (None,
@@ -23834,15 +23834,15 @@ r'''call(x, b, c=d, *e)''', r'''
 Call - ROOT 0,0..0,19
   .func Name 'call' Load - 0,0..0,4
   .args[3]
-  0] Name 'x' Load - 0,5..0,6
-  1] Name 'b' Load - 0,8..0,9
-  2] Starred - 0,16..0,18
-    .value Name 'e' Load - 0,17..0,18
-    .ctx Load
+   0] Name 'x' Load - 0,5..0,6
+   1] Name 'b' Load - 0,8..0,9
+   2] Starred - 0,16..0,18
+     .value Name 'e' Load - 0,17..0,18
+     .ctx Load
   .keywords[1]
-  0] keyword - 0,11..0,14
-    .arg 'c'
-    .value Name 'd' Load - 0,13..0,14
+   0] keyword - 0,11..0,14
+     .arg 'c'
+     .value Name 'd' Load - 0,13..0,14
 '''),
 
 (15, '', 1, 2, None, {}, (None,
@@ -23852,15 +23852,15 @@ r'''call(a, x, c=d, *e)''', r'''
 Call - ROOT 0,0..0,19
   .func Name 'call' Load - 0,0..0,4
   .args[3]
-  0] Name 'a' Load - 0,5..0,6
-  1] Name 'x' Load - 0,8..0,9
-  2] Starred - 0,16..0,18
-    .value Name 'e' Load - 0,17..0,18
-    .ctx Load
+   0] Name 'a' Load - 0,5..0,6
+   1] Name 'x' Load - 0,8..0,9
+   2] Starred - 0,16..0,18
+     .value Name 'e' Load - 0,17..0,18
+     .ctx Load
   .keywords[1]
-  0] keyword - 0,11..0,14
-    .arg 'c'
-    .value Name 'd' Load - 0,13..0,14
+   0] keyword - 0,11..0,14
+     .arg 'c'
+     .value Name 'd' Load - 0,13..0,14
 '''),
 
 (16, '', 0, 2, None, {}, (None,
@@ -23870,14 +23870,14 @@ r'''call(x, c=d, *e)''', r'''
 Call - ROOT 0,0..0,16
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-  0] Name 'x' Load - 0,5..0,6
-  1] Starred - 0,13..0,15
-    .value Name 'e' Load - 0,14..0,15
-    .ctx Load
+   0] Name 'x' Load - 0,5..0,6
+   1] Starred - 0,13..0,15
+     .value Name 'e' Load - 0,14..0,15
+     .ctx Load
   .keywords[1]
-  0] keyword - 0,8..0,11
-    .arg 'c'
-    .value Name 'd' Load - 0,10..0,11
+   0] keyword - 0,8..0,11
+     .arg 'c'
+     .value Name 'd' Load - 0,10..0,11
 '''),
 
 (17, '', 0, 2, None, {}, (None,
@@ -23887,14 +23887,14 @@ r'''call(x, c=d, *e,)''', r'''
 Call - ROOT 0,0..0,17
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-  0] Name 'x' Load - 0,5..0,6
-  1] Starred - 0,13..0,15
-    .value Name 'e' Load - 0,14..0,15
-    .ctx Load
+   0] Name 'x' Load - 0,5..0,6
+   1] Starred - 0,13..0,15
+     .value Name 'e' Load - 0,14..0,15
+     .ctx Load
   .keywords[1]
-  0] keyword - 0,8..0,11
-    .arg 'c'
-    .value Name 'd' Load - 0,10..0,11
+   0] keyword - 0,8..0,11
+     .arg 'c'
+     .value Name 'd' Load - 0,10..0,11
 '''),
 
 (18, '', 0, 0, None, {}, (None,
@@ -23904,7 +23904,7 @@ r'''call(x)''', r'''
 Call - ROOT 0,0..0,7
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-  0] Name 'x' Load - 0,5..0,6
+   0] Name 'x' Load - 0,5..0,6
 '''),
 
 (19, '', 0, 0, None, {}, (None,
@@ -23914,8 +23914,8 @@ r'''call(x, y)''', r'''
 Call - ROOT 0,0..0,10
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-  0] Name 'x' Load - 0,5..0,6
-  1] Name 'y' Load - 0,8..0,9
+   0] Name 'x' Load - 0,5..0,6
+   1] Name 'y' Load - 0,8..0,9
 '''),
 
 (20, '', 0, 0, None, {}, (None,
@@ -23925,11 +23925,11 @@ r'''call(x, a=b)''', r'''
 Call - ROOT 0,0..0,12
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-  0] Name 'x' Load - 0,5..0,6
+   0] Name 'x' Load - 0,5..0,6
   .keywords[1]
-  0] keyword - 0,8..0,11
-    .arg 'a'
-    .value Name 'b' Load - 0,10..0,11
+   0] keyword - 0,8..0,11
+     .arg 'a'
+     .value Name 'b' Load - 0,10..0,11
 '''),
 
 (21, '', 0, 0, None, {}, (None,
@@ -23939,11 +23939,11 @@ r'''call(x, a=b,)''', r'''
 Call - ROOT 0,0..0,13
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-  0] Name 'x' Load - 0,5..0,6
+   0] Name 'x' Load - 0,5..0,6
   .keywords[1]
-  0] keyword - 0,8..0,11
-    .arg 'a'
-    .value Name 'b' Load - 0,10..0,11
+   0] keyword - 0,8..0,11
+     .arg 'a'
+     .value Name 'b' Load - 0,10..0,11
 '''),
 
 (22, '', 0, 1, None, {}, (None,
@@ -23953,7 +23953,7 @@ r'''call(b)''', r'''
 Call - ROOT 0,0..0,7
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-  0] Name 'b' Load - 0,5..0,6
+   0] Name 'b' Load - 0,5..0,6
 '''),
 
 (23, '', 1, 2, None, {}, (None,
@@ -23963,7 +23963,7 @@ r'''call(a)''', r'''
 Call - ROOT 0,0..0,7
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-  0] Name 'a' Load - 0,5..0,6
+   0] Name 'a' Load - 0,5..0,6
 '''),
 
 (24, '', 0, 2, None, {}, (None,
@@ -23981,10 +23981,10 @@ r'''call(a, **c)''', r'''
 Call - ROOT 0,0..0,12
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-  0] Name 'a' Load - 0,5..0,6
+   0] Name 'a' Load - 0,5..0,6
   .keywords[1]
-  0] keyword - 0,8..0,11
-    .value Name 'c' Load - 0,10..0,11
+   0] keyword - 0,8..0,11
+     .value Name 'c' Load - 0,10..0,11
 '''),
 
 (26, '', 0, 2, None, {}, (None,
@@ -23994,8 +23994,8 @@ r'''call(**c)''', r'''
 Call - ROOT 0,0..0,9
   .func Name 'call' Load - 0,0..0,4
   .keywords[1]
-  0] keyword - 0,5..0,8
-    .value Name 'c' Load - 0,7..0,8
+   0] keyword - 0,5..0,8
+     .value Name 'c' Load - 0,7..0,8
 '''),
 
 (27, '', 1, 2, None, {}, (None,
@@ -24005,10 +24005,10 @@ r'''call(a, **c,)''', r'''
 Call - ROOT 0,0..0,13
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-  0] Name 'a' Load - 0,5..0,6
+   0] Name 'a' Load - 0,5..0,6
   .keywords[1]
-  0] keyword - 0,8..0,11
-    .value Name 'c' Load - 0,10..0,11
+   0] keyword - 0,8..0,11
+     .value Name 'c' Load - 0,10..0,11
 '''),
 
 (28, '', 0, 2, None, {}, (None,
@@ -24018,8 +24018,8 @@ r'''call(**c,)''', r'''
 Call - ROOT 0,0..0,10
   .func Name 'call' Load - 0,0..0,4
   .keywords[1]
-  0] keyword - 0,5..0,8
-    .value Name 'c' Load - 0,7..0,8
+   0] keyword - 0,5..0,8
+     .value Name 'c' Load - 0,7..0,8
 '''),
 
 (29, '', 0, 1, None, {}, (None,
@@ -24029,7 +24029,7 @@ r'''call(x)''', r'''
 Call - ROOT 0,0..0,7
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-  0] Name 'x' Load - 0,5..0,6
+   0] Name 'x' Load - 0,5..0,6
 '''),
 
 (30, '', 0, 1, None, {}, (None,
@@ -24039,13 +24039,13 @@ r'''call((x for x in y))''', r'''
 Call - ROOT 0,0..0,20
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-  0] GeneratorExp - 0,5..0,19
-    .elt Name 'x' Load - 0,6..0,7
-    .generators[1]
-    0] comprehension - 0,8..0,18
-      .target Name 'x' Store - 0,12..0,13
-      .iter Name 'y' Load - 0,17..0,18
-      .is_async 0
+   0] GeneratorExp - 0,5..0,19
+     .elt Name 'x' Load - 0,6..0,7
+     .generators[1]
+      0] comprehension - 0,8..0,18
+        .target Name 'x' Store - 0,12..0,13
+        .iter Name 'y' Load - 0,17..0,18
+        .is_async 0
 '''),
 
 (31, '', 0, 1, None, {}, (None,
@@ -24063,14 +24063,14 @@ r'''call((i for i in j), a)''', r'''
 Call - ROOT 0,0..0,23
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-  0] GeneratorExp - 0,5..0,19
-    .elt Name 'i' Load - 0,6..0,7
-    .generators[1]
-    0] comprehension - 0,8..0,18
-      .target Name 'i' Store - 0,12..0,13
-      .iter Name 'j' Load - 0,17..0,18
-      .is_async 0
-  1] Name 'a' Load - 0,21..0,22
+   0] GeneratorExp - 0,5..0,19
+     .elt Name 'i' Load - 0,6..0,7
+     .generators[1]
+      0] comprehension - 0,8..0,18
+        .target Name 'i' Store - 0,12..0,13
+        .iter Name 'j' Load - 0,17..0,18
+        .is_async 0
+   1] Name 'a' Load - 0,21..0,22
 '''),
 
 (33, '', 1, 2, None, {}, (None,
@@ -24080,15 +24080,15 @@ r'''call((i for i in j), a, b)''', r'''
 Call - ROOT 0,0..0,26
   .func Name 'call' Load - 0,0..0,4
   .args[3]
-  0] GeneratorExp - 0,5..0,19
-    .elt Name 'i' Load - 0,6..0,7
-    .generators[1]
-    0] comprehension - 0,8..0,18
-      .target Name 'i' Store - 0,12..0,13
-      .iter Name 'j' Load - 0,17..0,18
-      .is_async 0
-  1] Name 'a' Load - 0,21..0,22
-  2] Name 'b' Load - 0,24..0,25
+   0] GeneratorExp - 0,5..0,19
+     .elt Name 'i' Load - 0,6..0,7
+     .generators[1]
+      0] comprehension - 0,8..0,18
+        .target Name 'i' Store - 0,12..0,13
+        .iter Name 'j' Load - 0,17..0,18
+        .is_async 0
+   1] Name 'a' Load - 0,21..0,22
+   2] Name 'b' Load - 0,24..0,25
 '''),
 
 (34, '', 1, 2, None, {'one': True}, (None,
@@ -24098,18 +24098,18 @@ r'''call((i for i in j), (a, b))''', r'''
 Call - ROOT 0,0..0,28
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-  0] GeneratorExp - 0,5..0,19
-    .elt Name 'i' Load - 0,6..0,7
-    .generators[1]
-    0] comprehension - 0,8..0,18
-      .target Name 'i' Store - 0,12..0,13
-      .iter Name 'j' Load - 0,17..0,18
-      .is_async 0
-  1] Tuple - 0,21..0,27
-    .elts[2]
-    0] Name 'a' Load - 0,22..0,23
-    1] Name 'b' Load - 0,25..0,26
-    .ctx Load
+   0] GeneratorExp - 0,5..0,19
+     .elt Name 'i' Load - 0,6..0,7
+     .generators[1]
+      0] comprehension - 0,8..0,18
+        .target Name 'i' Store - 0,12..0,13
+        .iter Name 'j' Load - 0,17..0,18
+        .is_async 0
+   1] Tuple - 0,21..0,27
+     .elts[2]
+      0] Name 'a' Load - 0,22..0,23
+      1] Name 'b' Load - 0,25..0,26
+     .ctx Load
 '''),
 
 (35, '', 0, 0, None, {'one': True}, (None,
@@ -24119,7 +24119,7 @@ r'''call(x)''', r'''
 Call - ROOT 0,0..0,7
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-  0] Name 'x' Load - 0,5..0,6
+   0] Name 'x' Load - 0,5..0,6
 '''),
 
 (36, '', 0, 0, None, {'one': True}, (None,
@@ -24129,10 +24129,10 @@ r'''call((x,))''', r'''
 Call - ROOT 0,0..0,10
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-  0] Tuple - 0,5..0,9
-    .elts[1]
-    0] Name 'x' Load - 0,6..0,7
-    .ctx Load
+   0] Tuple - 0,5..0,9
+     .elts[1]
+      0] Name 'x' Load - 0,6..0,7
+     .ctx Load
 '''),
 
 (37, '', 0, 0, None, {'one': True}, (None,
@@ -24143,11 +24143,11 @@ r'''call((x, y))''', r'''
 Call - ROOT 0,0..0,13
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-  0] Tuple - 0,5..0,12
-    .elts[2]
-    0] Name 'x' Load - 0,6..0,7
-    1] Name 'y' Load - 0,9..0,10
-    .ctx Load
+   0] Tuple - 0,5..0,12
+     .elts[2]
+      0] Name 'x' Load - 0,6..0,7
+      1] Name 'y' Load - 0,9..0,10
+     .ctx Load
 '''),
 
 (38, '', 0, 2, None, {'one': True}, (None,
@@ -24157,8 +24157,8 @@ r'''call(x, c)''', r'''
 Call - ROOT 0,0..0,10
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-  0] Name 'x' Load - 0,5..0,6
-  1] Name 'c' Load - 0,8..0,9
+   0] Name 'x' Load - 0,5..0,6
+   1] Name 'c' Load - 0,8..0,9
 '''),
 
 (39, '', 1, 3, None, {'one': True}, (None,
@@ -24168,8 +24168,8 @@ r'''call(a, x)''', r'''
 Call - ROOT 0,0..0,10
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-  0] Name 'a' Load - 0,5..0,6
-  1] Name 'x' Load - 0,8..0,9
+   0] Name 'a' Load - 0,5..0,6
+   1] Name 'x' Load - 0,8..0,9
 '''),
 
 (40, '', 0, 3, None, {'one': True}, (None,
@@ -24179,7 +24179,7 @@ r'''call(x)''', r'''
 Call - ROOT 0,0..0,7
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-  0] Name 'x' Load - 0,5..0,6
+   0] Name 'x' Load - 0,5..0,6
 '''),
 
 (41, '', 0, 2, None, {'one': True}, (None,
@@ -24190,12 +24190,12 @@ r'''call(*(not a), c)''', r'''
 Call - ROOT 0,0..0,15
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-  0] Starred - 0,5..0,11
-    .value UnaryOp - 0,6..0,11
-      .op Not - 0,6..0,9
-      .operand Name 'a' Load - 0,10..0,11
-    .ctx Load
-  1] Name 'c' Load - 0,13..0,14
+   0] Starred - 0,5..0,11
+     .value UnaryOp - 0,6..0,11
+       .op Not - 0,6..0,9
+       .operand Name 'a' Load - 0,10..0,11
+     .ctx Load
+   1] Name 'c' Load - 0,13..0,14
 '''),
 
 (42, '', 1, 3, None, {'one': True}, (None,
@@ -24206,12 +24206,12 @@ r'''call(a, *(not a))''', r'''
 Call - ROOT 0,0..0,15
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-  0] Name 'a' Load - 0,5..0,6
-  1] Starred - 0,8..0,14
-    .value UnaryOp - 0,9..0,14
-      .op Not - 0,9..0,12
-      .operand Name 'a' Load - 0,13..0,14
-    .ctx Load
+   0] Name 'a' Load - 0,5..0,6
+   1] Starred - 0,8..0,14
+     .value UnaryOp - 0,9..0,14
+       .op Not - 0,9..0,12
+       .operand Name 'a' Load - 0,13..0,14
+     .ctx Load
 '''),
 
 (43, '', 0, 3, None, {'one': True}, (None,
@@ -24222,11 +24222,11 @@ r'''call(*(not a))''', r'''
 Call - ROOT 0,0..0,12
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-  0] Starred - 0,5..0,11
-    .value UnaryOp - 0,6..0,11
-      .op Not - 0,6..0,9
-      .operand Name 'a' Load - 0,10..0,11
-    .ctx Load
+   0] Starred - 0,5..0,11
+     .value UnaryOp - 0,6..0,11
+       .op Not - 0,6..0,9
+       .operand Name 'a' Load - 0,10..0,11
+     .ctx Load
 '''),
 
 (44, '', 0, 2, None, {'_ver': 11}, (None,
@@ -24237,12 +24237,12 @@ r'''call(*(not a), c)''', r'''
 Call - ROOT 0,0..0,15
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-  0] Starred - 0,5..0,11
-    .value UnaryOp - 0,6..0,11
-      .op Not - 0,6..0,9
-      .operand Name 'a' Load - 0,10..0,11
-    .ctx Load
-  1] Name 'c' Load - 0,13..0,14
+   0] Starred - 0,5..0,11
+     .value UnaryOp - 0,6..0,11
+       .op Not - 0,6..0,9
+       .operand Name 'a' Load - 0,10..0,11
+     .ctx Load
+   1] Name 'c' Load - 0,13..0,14
 '''),
 
 (45, '', 1, 3, None, {'_ver': 11}, (None,
@@ -24253,12 +24253,12 @@ r'''call(a, *(not a))''', r'''
 Call - ROOT 0,0..0,15
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-  0] Name 'a' Load - 0,5..0,6
-  1] Starred - 0,8..0,14
-    .value UnaryOp - 0,9..0,14
-      .op Not - 0,9..0,12
-      .operand Name 'a' Load - 0,13..0,14
-    .ctx Load
+   0] Name 'a' Load - 0,5..0,6
+   1] Starred - 0,8..0,14
+     .value UnaryOp - 0,9..0,14
+       .op Not - 0,9..0,12
+       .operand Name 'a' Load - 0,13..0,14
+     .ctx Load
 '''),
 
 (46, '', 0, 3, None, {'_ver': 11}, (None,
@@ -24269,11 +24269,11 @@ r'''call(*(not a))''', r'''
 Call - ROOT 0,0..0,12
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-  0] Starred - 0,5..0,11
-    .value UnaryOp - 0,6..0,11
-      .op Not - 0,6..0,9
-      .operand Name 'a' Load - 0,10..0,11
-    .ctx Load
+   0] Starred - 0,5..0,11
+     .value UnaryOp - 0,6..0,11
+       .op Not - 0,6..0,9
+       .operand Name 'a' Load - 0,10..0,11
+     .ctx Load
 '''),
 
 (47, '', 1, 2, None, {}, (None,
@@ -24283,13 +24283,13 @@ r'''call(a, *(not a), c)''', r'''
 Call - ROOT 0,0..0,20
   .func Name 'call' Load - 0,0..0,4
   .args[3]
-  0] Name 'a' Load - 0,5..0,6
-  1] Starred - 0,8..0,16
-    .value UnaryOp - 0,10..0,15
-      .op Not - 0,10..0,13
-      .operand Name 'a' Load - 0,14..0,15
-    .ctx Load
-  2] Name 'c' Load - 0,18..0,19
+   0] Name 'a' Load - 0,5..0,6
+   1] Starred - 0,8..0,16
+     .value UnaryOp - 0,10..0,15
+       .op Not - 0,10..0,13
+       .operand Name 'a' Load - 0,14..0,15
+     .ctx Load
+   2] Name 'c' Load - 0,18..0,19
 '''),
 
 (48, '', 0, 2, None, {'one': True}, (None,
@@ -24300,14 +24300,14 @@ r'''call(*(not a), **c,)''', r'''
 Call - ROOT 0,0..0,18
   .func Name 'call' Load - 0,0..0,4
   .args[1]
-  0] Starred - 0,5..0,11
-    .value UnaryOp - 0,6..0,11
-      .op Not - 0,6..0,9
-      .operand Name 'a' Load - 0,10..0,11
-    .ctx Load
+   0] Starred - 0,5..0,11
+     .value UnaryOp - 0,6..0,11
+       .op Not - 0,6..0,9
+       .operand Name 'a' Load - 0,10..0,11
+     .ctx Load
   .keywords[1]
-  0] keyword - 0,13..0,16
-    .value Name 'c' Load - 0,15..0,16
+   0] keyword - 0,13..0,16
+     .value Name 'c' Load - 0,15..0,16
 '''),
 
 (49, '', 0, 2, None, {'_ver': 11}, (None,
@@ -24318,18 +24318,18 @@ r'''call(*(not a), *(b or c))''', r'''
 Call - ROOT 0,0..0,21
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-  0] Starred - 0,5..0,11
-    .value UnaryOp - 0,6..0,11
-      .op Not - 0,6..0,9
-      .operand Name 'a' Load - 0,10..0,11
-    .ctx Load
-  1] Starred - 0,13..0,20
-    .value BoolOp - 0,14..0,20
-      .op Or
-      .values[2]
-      0] Name 'b' Load - 0,14..0,15
-      1] Name 'c' Load - 0,19..0,20
-    .ctx Load
+   0] Starred - 0,5..0,11
+     .value UnaryOp - 0,6..0,11
+       .op Not - 0,6..0,9
+       .operand Name 'a' Load - 0,10..0,11
+     .ctx Load
+   1] Starred - 0,13..0,20
+     .value BoolOp - 0,14..0,20
+       .op Or
+       .values[2]
+        0] Name 'b' Load - 0,14..0,15
+        1] Name 'c' Load - 0,19..0,20
+     .ctx Load
 '''),
 
 (50, '', 0, 2, None, {'one': True}, (None,
@@ -24345,12 +24345,12 @@ r'''**NodeError('expecting Tuple, got Starred')**''', r'''
 Call - ROOT 0,0..0,15
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-  0] Starred - 0,5..0,11
-    .value UnaryOp - 0,6..0,11
-      .op Not - 0,6..0,9
-      .operand Name 'a' Load - 0,10..0,11
-    .ctx Load
-  1] Name 'c' Load - 0,13..0,14
+   0] Starred - 0,5..0,11
+     .value UnaryOp - 0,6..0,11
+       .op Not - 0,6..0,9
+       .operand Name 'a' Load - 0,10..0,11
+     .ctx Load
+   1] Name 'c' Load - 0,13..0,14
 '''),
 ],
 
@@ -24362,10 +24362,10 @@ r'''{0: x}'''),
 r'''{0: x}''', r'''
 MatchMapping - ROOT 0,0..0,6
   .keys[1]
-  0] Constant 0 - 0,1..0,2
+   0] Constant 0 - 0,1..0,2
   .patterns[1]
-  0] MatchAs - 0,4..0,5
-    .name 'x'
+   0] MatchAs - 0,4..0,5
+     .name 'x'
 '''),
 
 (1, '', 0, 0, None, {}, ('pattern',
@@ -24374,10 +24374,10 @@ r'''{0: x,}'''),
 r'''{0: x}''', r'''
 MatchMapping - ROOT 0,0..0,6
   .keys[1]
-  0] Constant 0 - 0,1..0,2
+   0] Constant 0 - 0,1..0,2
   .patterns[1]
-  0] MatchAs - 0,4..0,5
-    .name 'x'
+   0] MatchAs - 0,4..0,5
+     .name 'x'
 '''),
 
 (2, '', 0, 0, None, {}, ('pattern',
@@ -24386,13 +24386,13 @@ r'''{0: x, 1: y}'''),
 r'''{0: x, 1: y}''', r'''
 MatchMapping - ROOT 0,0..0,12
   .keys[2]
-  0] Constant 0 - 0,1..0,2
-  1] Constant 1 - 0,7..0,8
+   0] Constant 0 - 0,1..0,2
+   1] Constant 1 - 0,7..0,8
   .patterns[2]
-  0] MatchAs - 0,4..0,5
-    .name 'x'
-  1] MatchAs - 0,10..0,11
-    .name 'y'
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+   1] MatchAs - 0,10..0,11
+     .name 'y'
 '''),
 
 (3, '', 0, 0, None, {}, ('pattern',
@@ -24401,13 +24401,13 @@ r'''{0: x, 1: y,}'''),
 r'''{0: x, 1: y}''', r'''
 MatchMapping - ROOT 0,0..0,12
   .keys[2]
-  0] Constant 0 - 0,1..0,2
-  1] Constant 1 - 0,7..0,8
+   0] Constant 0 - 0,1..0,2
+   1] Constant 1 - 0,7..0,8
   .patterns[2]
-  0] MatchAs - 0,4..0,5
-    .name 'x'
-  1] MatchAs - 0,10..0,11
-    .name 'y'
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+   1] MatchAs - 0,10..0,11
+     .name 'y'
 '''),
 
 (4, '', 0, 0, None, {}, ('pattern',
@@ -24416,10 +24416,10 @@ r'''{0: x}'''),
 r'''{0: x, **rest}''', r'''
 MatchMapping - ROOT 0,0..0,14
   .keys[1]
-  0] Constant 0 - 0,1..0,2
+   0] Constant 0 - 0,1..0,2
   .patterns[1]
-  0] MatchAs - 0,4..0,5
-    .name 'x'
+   0] MatchAs - 0,4..0,5
+     .name 'x'
   .rest 'rest'
 '''),
 
@@ -24429,10 +24429,10 @@ r'''{0: x,}'''),
 r'''{0: x, **rest}''', r'''
 MatchMapping - ROOT 0,0..0,14
   .keys[1]
-  0] Constant 0 - 0,1..0,2
+   0] Constant 0 - 0,1..0,2
   .patterns[1]
-  0] MatchAs - 0,4..0,5
-    .name 'x'
+   0] MatchAs - 0,4..0,5
+     .name 'x'
   .rest 'rest'
 '''),
 
@@ -24442,10 +24442,10 @@ r'''{0: x}'''),
 r'''{0: x, **rest,}''', r'''
 MatchMapping - ROOT 0,0..0,15
   .keys[1]
-  0] Constant 0 - 0,1..0,2
+   0] Constant 0 - 0,1..0,2
   .patterns[1]
-  0] MatchAs - 0,4..0,5
-    .name 'x'
+   0] MatchAs - 0,4..0,5
+     .name 'x'
   .rest 'rest'
 '''),
 
@@ -24455,10 +24455,10 @@ r'''{0: x,}'''),
 r'''{0: x, **rest,}''', r'''
 MatchMapping - ROOT 0,0..0,15
   .keys[1]
-  0] Constant 0 - 0,1..0,2
+   0] Constant 0 - 0,1..0,2
   .patterns[1]
-  0] MatchAs - 0,4..0,5
-    .name 'x'
+   0] MatchAs - 0,4..0,5
+     .name 'x'
   .rest 'rest'
 '''),
 
@@ -24468,10 +24468,10 @@ r'''**DEL**'''),
 r'''{1: y}''', r'''
 MatchMapping - ROOT 0,0..0,6
   .keys[1]
-  0] Constant 1 - 0,1..0,2
+   0] Constant 1 - 0,1..0,2
   .patterns[1]
-  0] MatchAs - 0,4..0,5
-    .name 'y'
+   0] MatchAs - 0,4..0,5
+     .name 'y'
 '''),
 
 (9, '', 1, 2, None, {}, ('pattern',
@@ -24480,10 +24480,10 @@ r'''**DEL**'''),
 r'''{0: x}''', r'''
 MatchMapping - ROOT 0,0..0,6
   .keys[1]
-  0] Constant 0 - 0,1..0,2
+   0] Constant 0 - 0,1..0,2
   .patterns[1]
-  0] MatchAs - 0,4..0,5
-    .name 'x'
+   0] MatchAs - 0,4..0,5
+     .name 'x'
 '''),
 
 (10, '', 0, 2, None, {}, ('pattern',
@@ -24498,10 +24498,10 @@ r'''**DEL**'''),
 r'''{0: x, **rest}''', r'''
 MatchMapping - ROOT 0,0..0,14
   .keys[1]
-  0] Constant 0 - 0,1..0,2
+   0] Constant 0 - 0,1..0,2
   .patterns[1]
-  0] MatchAs - 0,4..0,5
-    .name 'x'
+   0] MatchAs - 0,4..0,5
+     .name 'x'
   .rest 'rest'
 '''),
 
@@ -24519,10 +24519,10 @@ r'''**DEL**'''),
 r'''{0: x, **rest,}''', r'''
 MatchMapping - ROOT 0,0..0,15
   .keys[1]
-  0] Constant 0 - 0,1..0,2
+   0] Constant 0 - 0,1..0,2
   .patterns[1]
-  0] MatchAs - 0,4..0,5
-    .name 'x'
+   0] MatchAs - 0,4..0,5
+     .name 'x'
   .rest 'rest'
 '''),
 
@@ -24543,15 +24543,15 @@ r'''**Z = ()'''),
 r'''def f[**Z = ()](): pass''', r'''
 Module - ROOT 0,0..0,23
   .body[1]
-  0] FunctionDef - 0,0..0,23
-    .name 'f'
-    .body[1]
-    0] Pass - 0,19..0,23
-    .type_params[1]
-    0] ParamSpec - 0,6..0,14
-      .name 'Z'
-      .default_value Tuple - 0,12..0,14
-        .ctx Load
+   0] FunctionDef - 0,0..0,23
+     .name 'f'
+     .body[1]
+      0] Pass - 0,19..0,23
+     .type_params[1]
+      0] ParamSpec - 0,6..0,14
+        .name 'Z'
+        .default_value Tuple - 0,12..0,14
+          .ctx Load
 '''),
 
 (1, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
@@ -24560,10 +24560,10 @@ r'''**DEL**'''),
 r'''def f(): pass''', r'''
 Module - ROOT 0,0..0,13
   .body[1]
-  0] FunctionDef - 0,0..0,13
-    .name 'f'
-    .body[1]
-    0] Pass - 0,9..0,13
+   0] FunctionDef - 0,0..0,13
+     .name 'f'
+     .body[1]
+      0] Pass - 0,9..0,13
 '''),
 
 (2, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
@@ -24572,17 +24572,17 @@ r'''T, *U, **V'''),
 r'''def f[T, *U, **V](): pass''', r'''
 Module - ROOT 0,0..0,25
   .body[1]
-  0] FunctionDef - 0,0..0,25
-    .name 'f'
-    .body[1]
-    0] Pass - 0,21..0,25
-    .type_params[3]
-    0] TypeVar - 0,6..0,7
-      .name 'T'
-    1] TypeVarTuple - 0,9..0,11
-      .name 'U'
-    2] ParamSpec - 0,13..0,16
-      .name 'V'
+   0] FunctionDef - 0,0..0,25
+     .name 'f'
+     .body[1]
+      0] Pass - 0,21..0,25
+     .type_params[3]
+      0] TypeVar - 0,6..0,7
+        .name 'T'
+      1] TypeVarTuple - 0,9..0,11
+        .name 'U'
+      2] ParamSpec - 0,13..0,16
+        .name 'V'
 '''),
 
 (3, 'body[0]', 0, 3, 'type_params', {'_ver': 13}, ('exec',
@@ -24591,15 +24591,15 @@ r'''**Z = ()'''),
 r'''async def f[**Z = ()](): pass''', r'''
 Module - ROOT 0,0..0,29
   .body[1]
-  0] AsyncFunctionDef - 0,0..0,29
-    .name 'f'
-    .body[1]
-    0] Pass - 0,25..0,29
-    .type_params[1]
-    0] ParamSpec - 0,12..0,20
-      .name 'Z'
-      .default_value Tuple - 0,18..0,20
-        .ctx Load
+   0] AsyncFunctionDef - 0,0..0,29
+     .name 'f'
+     .body[1]
+      0] Pass - 0,25..0,29
+     .type_params[1]
+      0] ParamSpec - 0,12..0,20
+        .name 'Z'
+        .default_value Tuple - 0,18..0,20
+          .ctx Load
 '''),
 
 (4, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
@@ -24608,10 +24608,10 @@ r'''**DEL**'''),
 r'''async def f(): pass''', r'''
 Module - ROOT 0,0..0,19
   .body[1]
-  0] AsyncFunctionDef - 0,0..0,19
-    .name 'f'
-    .body[1]
-    0] Pass - 0,15..0,19
+   0] AsyncFunctionDef - 0,0..0,19
+     .name 'f'
+     .body[1]
+      0] Pass - 0,15..0,19
 '''),
 
 (5, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
@@ -24620,17 +24620,17 @@ r'''T, *U, **V'''),
 r'''async def f[T, *U, **V](): pass''', r'''
 Module - ROOT 0,0..0,31
   .body[1]
-  0] AsyncFunctionDef - 0,0..0,31
-    .name 'f'
-    .body[1]
-    0] Pass - 0,27..0,31
-    .type_params[3]
-    0] TypeVar - 0,12..0,13
-      .name 'T'
-    1] TypeVarTuple - 0,15..0,17
-      .name 'U'
-    2] ParamSpec - 0,19..0,22
-      .name 'V'
+   0] AsyncFunctionDef - 0,0..0,31
+     .name 'f'
+     .body[1]
+      0] Pass - 0,27..0,31
+     .type_params[3]
+      0] TypeVar - 0,12..0,13
+        .name 'T'
+      1] TypeVarTuple - 0,15..0,17
+        .name 'U'
+      2] ParamSpec - 0,19..0,22
+        .name 'V'
 '''),
 
 (6, 'body[0]', 0, 3, 'type_params', {'_ver': 13}, ('exec',
@@ -24639,15 +24639,15 @@ r'''**Z = ()'''),
 r'''class cls[**Z = ()]: pass''', r'''
 Module - ROOT 0,0..0,25
   .body[1]
-  0] ClassDef - 0,0..0,25
-    .name 'cls'
-    .body[1]
-    0] Pass - 0,21..0,25
-    .type_params[1]
-    0] ParamSpec - 0,10..0,18
-      .name 'Z'
-      .default_value Tuple - 0,16..0,18
-        .ctx Load
+   0] ClassDef - 0,0..0,25
+     .name 'cls'
+     .body[1]
+      0] Pass - 0,21..0,25
+     .type_params[1]
+      0] ParamSpec - 0,10..0,18
+        .name 'Z'
+        .default_value Tuple - 0,16..0,18
+          .ctx Load
 '''),
 
 (7, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
@@ -24656,10 +24656,10 @@ r'''**DEL**'''),
 r'''class cls: pass''', r'''
 Module - ROOT 0,0..0,15
   .body[1]
-  0] ClassDef - 0,0..0,15
-    .name 'cls'
-    .body[1]
-    0] Pass - 0,11..0,15
+   0] ClassDef - 0,0..0,15
+     .name 'cls'
+     .body[1]
+      0] Pass - 0,11..0,15
 '''),
 
 (8, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
@@ -24668,17 +24668,17 @@ r'''T, *U, **V'''),
 r'''class cls[T, *U, **V]: pass''', r'''
 Module - ROOT 0,0..0,27
   .body[1]
-  0] ClassDef - 0,0..0,27
-    .name 'cls'
-    .body[1]
-    0] Pass - 0,23..0,27
-    .type_params[3]
-    0] TypeVar - 0,10..0,11
-      .name 'T'
-    1] TypeVarTuple - 0,13..0,15
-      .name 'U'
-    2] ParamSpec - 0,17..0,20
-      .name 'V'
+   0] ClassDef - 0,0..0,27
+     .name 'cls'
+     .body[1]
+      0] Pass - 0,23..0,27
+     .type_params[3]
+      0] TypeVar - 0,10..0,11
+        .name 'T'
+      1] TypeVarTuple - 0,13..0,15
+        .name 'U'
+      2] ParamSpec - 0,17..0,20
+        .name 'V'
 '''),
 
 (9, 'body[0]', 0, 3, 'type_params', {'_ver': 13}, ('exec',
@@ -24687,14 +24687,14 @@ r'''**Z = ()'''),
 r'''type t[**Z = ()] = ...''', r'''
 Module - ROOT 0,0..0,22
   .body[1]
-  0] TypeAlias - 0,0..0,22
-    .name Name 't' Store - 0,5..0,6
-    .type_params[1]
-    0] ParamSpec - 0,7..0,15
-      .name 'Z'
-      .default_value Tuple - 0,13..0,15
-        .ctx Load
-    .value Constant Ellipsis - 0,19..0,22
+   0] TypeAlias - 0,0..0,22
+     .name Name 't' Store - 0,5..0,6
+     .type_params[1]
+      0] ParamSpec - 0,7..0,15
+        .name 'Z'
+        .default_value Tuple - 0,13..0,15
+          .ctx Load
+     .value Constant Ellipsis - 0,19..0,22
 '''),
 
 (10, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
@@ -24703,9 +24703,9 @@ r'''**DEL**'''),
 r'''type t = ...''', r'''
 Module - ROOT 0,0..0,12
   .body[1]
-  0] TypeAlias - 0,0..0,12
-    .name Name 't' Store - 0,5..0,6
-    .value Constant Ellipsis - 0,9..0,12
+   0] TypeAlias - 0,0..0,12
+     .name Name 't' Store - 0,5..0,6
+     .value Constant Ellipsis - 0,9..0,12
 '''),
 
 (11, 'body[0]', 0, 3, 'type_params', {'_ver': 12}, ('exec',
@@ -24714,16 +24714,16 @@ r'''T, *U, **V'''),
 r'''type t[T, *U, **V] = ...''', r'''
 Module - ROOT 0,0..0,24
   .body[1]
-  0] TypeAlias - 0,0..0,24
-    .name Name 't' Store - 0,5..0,6
-    .type_params[3]
-    0] TypeVar - 0,7..0,8
-      .name 'T'
-    1] TypeVarTuple - 0,10..0,12
-      .name 'U'
-    2] ParamSpec - 0,14..0,17
-      .name 'V'
-    .value Constant Ellipsis - 0,21..0,24
+   0] TypeAlias - 0,0..0,24
+     .name Name 't' Store - 0,5..0,6
+     .type_params[3]
+      0] TypeVar - 0,7..0,8
+        .name 'T'
+      1] TypeVarTuple - 0,10..0,12
+        .name 'U'
+      2] ParamSpec - 0,14..0,17
+        .name 'V'
+     .value Constant Ellipsis - 0,21..0,24
 '''),
 
 (12, 'body[0]', 0, 0, 'type_params', {'_ver': 12}, ('exec',
@@ -24732,14 +24732,14 @@ r'''T'''),
 r'''type t[T, **V]=...''', r'''
 Module - ROOT 0,0..0,18
   .body[1]
-  0] TypeAlias - 0,0..0,18
-    .name Name 't' Store - 0,5..0,6
-    .type_params[2]
-    0] TypeVar - 0,7..0,8
-      .name 'T'
-    1] ParamSpec - 0,10..0,13
-      .name 'V'
-    .value Constant Ellipsis - 0,15..0,18
+   0] TypeAlias - 0,0..0,18
+     .name Name 't' Store - 0,5..0,6
+     .type_params[2]
+      0] TypeVar - 0,7..0,8
+        .name 'T'
+      1] ParamSpec - 0,10..0,13
+        .name 'V'
+     .value Constant Ellipsis - 0,15..0,18
 '''),
 
 (13, 'body[0]', 1, 1, 'type_params', {'_ver': 12}, ('exec',
@@ -24748,14 +24748,14 @@ r'''T'''),
 r'''type t[**V, T]=...''', r'''
 Module - ROOT 0,0..0,18
   .body[1]
-  0] TypeAlias - 0,0..0,18
-    .name Name 't' Store - 0,5..0,6
-    .type_params[2]
-    0] ParamSpec - 0,7..0,10
-      .name 'V'
-    1] TypeVar - 0,12..0,13
-      .name 'T'
-    .value Constant Ellipsis - 0,15..0,18
+   0] TypeAlias - 0,0..0,18
+     .name Name 't' Store - 0,5..0,6
+     .type_params[2]
+      0] ParamSpec - 0,7..0,10
+        .name 'V'
+      1] TypeVar - 0,12..0,13
+        .name 'T'
+     .value Constant Ellipsis - 0,15..0,18
 '''),
 
 (14, 'body[0]', 0, 3, 'type_params', {'_ver': 13, 'one': True}, ('exec',
@@ -24764,14 +24764,14 @@ r'''*Z = ()'''),
 r'''type t[*Z = ()] = ...''', r'''
 Module - ROOT 0,0..0,21
   .body[1]
-  0] TypeAlias - 0,0..0,21
-    .name Name 't' Store - 0,5..0,6
-    .type_params[1]
-    0] TypeVarTuple - 0,7..0,14
-      .name 'Z'
-      .default_value Tuple - 0,12..0,14
-        .ctx Load
-    .value Constant Ellipsis - 0,18..0,21
+   0] TypeAlias - 0,0..0,21
+     .name Name 't' Store - 0,5..0,6
+     .type_params[1]
+      0] TypeVarTuple - 0,7..0,14
+        .name 'Z'
+        .default_value Tuple - 0,12..0,14
+          .ctx Load
+     .value Constant Ellipsis - 0,18..0,21
 '''),
 
 (15, 'body[0]', 0, 3, 'type_params', {'_ver': 12, 'one': True}, ('exec',
@@ -24790,10 +24790,10 @@ r'''**Z = ()'''),
 r'''**Z = ()''', r'''
 _type_params - ROOT 0,0..0,8
   .type_params[1]
-  0] ParamSpec - 0,0..0,8
-    .name 'Z'
-    .default_value Tuple - 0,6..0,8
-      .ctx Load
+   0] ParamSpec - 0,0..0,8
+     .name 'Z'
+     .default_value Tuple - 0,6..0,8
+       .ctx Load
 '''),
 
 (18, '', 0, 3, 'type_params', {'_ver': 12}, ('_type_params',
@@ -24808,12 +24808,12 @@ r'''T, *U, **V'''),
 r'''T, *U, **V''', r'''
 _type_params - ROOT 0,0..0,10
   .type_params[3]
-  0] TypeVar - 0,0..0,1
-    .name 'T'
-  1] TypeVarTuple - 0,3..0,5
-    .name 'U'
-  2] ParamSpec - 0,7..0,10
-    .name 'V'
+   0] TypeVar - 0,0..0,1
+     .name 'T'
+   1] TypeVarTuple - 0,3..0,5
+     .name 'U'
+   2] ParamSpec - 0,7..0,10
+     .name 'V'
 '''),
 ],
 
@@ -24825,7 +24825,7 @@ r'''x'''),
 r'''(x,)''', r'''
 Tuple - ROOT 0,0..0,4
   .elts[1]
-  0] Name 'x' Load - 0,1..0,2
+   0] Name 'x' Load - 0,1..0,2
   .ctx Load
 '''),
 
@@ -24846,7 +24846,7 @@ r'''x,'''),
 r'''(x,)''', r'''
 Tuple - ROOT 0,0..0,4
   .elts[1]
-  0] Name 'x' Load - 0,1..0,2
+   0] Name 'x' Load - 0,1..0,2
   .ctx Load
 '''),
 
@@ -24856,7 +24856,7 @@ r'''x'''),
 r'''[x]''', r'''
 List - ROOT 0,0..0,3
   .elts[1]
-  0] Name 'x' Load - 0,1..0,2
+   0] Name 'x' Load - 0,1..0,2
   .ctx Load
 '''),
 
@@ -24866,7 +24866,7 @@ r'''x,'''),
 r'''[x,]''', r'''
 List - ROOT 0,0..0,4
   .elts[1]
-  0] Name 'x' Load - 0,1..0,2
+   0] Name 'x' Load - 0,1..0,2
   .ctx Load
 '''),
 
@@ -24876,7 +24876,7 @@ r'''x'''),
 r'''[x,]''', r'''
 List - ROOT 0,0..0,4
   .elts[1]
-  0] Name 'x' Load - 0,1..0,2
+   0] Name 'x' Load - 0,1..0,2
   .ctx Load
 '''),
 
@@ -24891,7 +24891,7 @@ r'''x'''),
 r'''[x]''', r'''
 List - ROOT 0,0..0,3
   .elts[1]
-  0] Name 'x' Load - 0,1..0,2
+   0] Name 'x' Load - 0,1..0,2
   .ctx Load
 '''),
 
@@ -24901,7 +24901,7 @@ r'''x,'''),
 r'''[x,]''', r'''
 List - ROOT 0,0..0,4
   .elts[1]
-  0] Name 'x' Load - 0,1..0,2
+   0] Name 'x' Load - 0,1..0,2
   .ctx Load
 '''),
 
@@ -24911,10 +24911,10 @@ r'''x, y'''),
 r'''(a, x, y, c)''', r'''
 Tuple - ROOT 0,0..0,12
   .elts[4]
-  0] Name 'a' Load - 0,1..0,2
-  1] Name 'x' Load - 0,4..0,5
-  2] Name 'y' Load - 0,7..0,8
-  3] Name 'c' Load - 0,10..0,11
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'x' Load - 0,4..0,5
+   2] Name 'y' Load - 0,7..0,8
+   3] Name 'c' Load - 0,10..0,11
   .ctx Load
 '''),
 
@@ -24929,13 +24929,13 @@ r'''[x, y]'''),
 r'''(a, [x, y], c)''', r'''
 Tuple - ROOT 0,0..0,14
   .elts[3]
-  0] Name 'a' Load - 0,1..0,2
-  1] List - 0,4..0,10
-    .elts[2]
-    0] Name 'x' Load - 0,5..0,6
-    1] Name 'y' Load - 0,8..0,9
-    .ctx Load
-  2] Name 'c' Load - 0,12..0,13
+   0] Name 'a' Load - 0,1..0,2
+   1] List - 0,4..0,10
+     .elts[2]
+      0] Name 'x' Load - 0,5..0,6
+      1] Name 'y' Load - 0,8..0,9
+     .ctx Load
+   2] Name 'c' Load - 0,12..0,13
   .ctx Load
 '''),
 
@@ -24945,13 +24945,13 @@ r'''[x, y,]'''),
 r'''(a, [x, y,], c)''', r'''
 Tuple - ROOT 0,0..0,15
   .elts[3]
-  0] Name 'a' Load - 0,1..0,2
-  1] List - 0,4..0,11
-    .elts[2]
-    0] Name 'x' Load - 0,5..0,6
-    1] Name 'y' Load - 0,8..0,9
-    .ctx Load
-  2] Name 'c' Load - 0,13..0,14
+   0] Name 'a' Load - 0,1..0,2
+   1] List - 0,4..0,11
+     .elts[2]
+      0] Name 'x' Load - 0,5..0,6
+      1] Name 'y' Load - 0,8..0,9
+     .ctx Load
+   2] Name 'c' Load - 0,13..0,14
   .ctx Load
 '''),
 
@@ -24961,12 +24961,12 @@ r'''{x, y}'''),
 r'''(a, {x, y}, c)''', r'''
 Tuple - ROOT 0,0..0,14
   .elts[3]
-  0] Name 'a' Load - 0,1..0,2
-  1] Set - 0,4..0,10
-    .elts[2]
-    0] Name 'x' Load - 0,5..0,6
-    1] Name 'y' Load - 0,8..0,9
-  2] Name 'c' Load - 0,12..0,13
+   0] Name 'a' Load - 0,1..0,2
+   1] Set - 0,4..0,10
+     .elts[2]
+      0] Name 'x' Load - 0,5..0,6
+      1] Name 'y' Load - 0,8..0,9
+   2] Name 'c' Load - 0,12..0,13
   .ctx Load
 '''),
 
@@ -24976,12 +24976,12 @@ r'''{x, y,}'''),
 r'''(a, {x, y,}, c)''', r'''
 Tuple - ROOT 0,0..0,15
   .elts[3]
-  0] Name 'a' Load - 0,1..0,2
-  1] Set - 0,4..0,11
-    .elts[2]
-    0] Name 'x' Load - 0,5..0,6
-    1] Name 'y' Load - 0,8..0,9
-  2] Name 'c' Load - 0,13..0,14
+   0] Name 'a' Load - 0,1..0,2
+   1] Set - 0,4..0,11
+     .elts[2]
+      0] Name 'x' Load - 0,5..0,6
+      1] Name 'y' Load - 0,8..0,9
+   2] Name 'c' Load - 0,13..0,14
   .ctx Load
 '''),
 
@@ -24991,7 +24991,7 @@ r'''x,'''),
 r'''(x,)''', r'''
 Tuple - ROOT 0,0..0,4
   .elts[1]
-  0] Name 'x' Load - 0,1..0,2
+   0] Name 'x' Load - 0,1..0,2
   .ctx Load
 '''),
 
@@ -25001,7 +25001,7 @@ r'''(x,)'''),
 r'''((x,))''', r'''
 Tuple - ROOT 0,1..0,5
   .elts[1]
-  0] Name 'x' Load - 0,2..0,3
+   0] Name 'x' Load - 0,2..0,3
   .ctx Load
 '''),
 
@@ -25011,7 +25011,7 @@ r'''[x]'''),
 r'''([x])''', r'''
 List - ROOT 0,1..0,4
   .elts[1]
-  0] Name 'x' Load - 0,2..0,3
+   0] Name 'x' Load - 0,2..0,3
   .ctx Load
 '''),
 
@@ -25021,7 +25021,7 @@ r'''[x,]'''),
 r'''([x,])''', r'''
 List - ROOT 0,1..0,5
   .elts[1]
-  0] Name 'x' Load - 0,2..0,3
+   0] Name 'x' Load - 0,2..0,3
   .ctx Load
 '''),
 
@@ -25031,7 +25031,7 @@ r'''x,'''),
 r'''[x,]''', r'''
 List - ROOT 0,0..0,4
   .elts[1]
-  0] Name 'x' Load - 0,1..0,2
+   0] Name 'x' Load - 0,1..0,2
   .ctx Load
 '''),
 
@@ -25041,10 +25041,10 @@ r'''(x,)'''),
 r'''[(x,)]''', r'''
 List - ROOT 0,0..0,6
   .elts[1]
-  0] Tuple - 0,1..0,5
-    .elts[1]
-    0] Name 'x' Load - 0,2..0,3
-    .ctx Load
+   0] Tuple - 0,1..0,5
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+     .ctx Load
   .ctx Load
 '''),
 
@@ -25054,10 +25054,10 @@ r'''[x]'''),
 r'''[[x]]''', r'''
 List - ROOT 0,0..0,5
   .elts[1]
-  0] List - 0,1..0,4
-    .elts[1]
-    0] Name 'x' Load - 0,2..0,3
-    .ctx Load
+   0] List - 0,1..0,4
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+     .ctx Load
   .ctx Load
 '''),
 
@@ -25067,10 +25067,10 @@ r'''[x,]'''),
 r'''[[x,]]''', r'''
 List - ROOT 0,0..0,6
   .elts[1]
-  0] List - 0,1..0,5
-    .elts[1]
-    0] Name 'x' Load - 0,2..0,3
-    .ctx Load
+   0] List - 0,1..0,5
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+     .ctx Load
   .ctx Load
 '''),
 
@@ -25080,13 +25080,13 @@ r'''x: y'''),
 r'''{a: b, x: y, e: f}''', r'''
 Dict - ROOT 0,0..0,18
   .keys[3]
-  0] Name 'a' Load - 0,1..0,2
-  1] Name 'x' Load - 0,7..0,8
-  2] Name 'e' Load - 0,13..0,14
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'x' Load - 0,7..0,8
+   2] Name 'e' Load - 0,13..0,14
   .values[3]
-  0] Name 'b' Load - 0,4..0,5
-  1] Name 'y' Load - 0,10..0,11
-  2] Name 'f' Load - 0,16..0,17
+   0] Name 'b' Load - 0,4..0,5
+   1] Name 'y' Load - 0,10..0,11
+   2] Name 'f' Load - 0,16..0,17
 '''),
 
 (25, '', 1, 2, None, {'raw': True}, (None,
@@ -25095,13 +25095,13 @@ r'''**z'''),
 r'''{a: b, **z, e: f}''', r'''
 Dict - ROOT 0,0..0,17
   .keys[3]
-  0] Name 'a' Load - 0,1..0,2
-  1] None
-  2] Name 'e' Load - 0,12..0,13
+   0] Name 'a' Load - 0,1..0,2
+   1] None
+   2] Name 'e' Load - 0,12..0,13
   .values[3]
-  0] Name 'b' Load - 0,4..0,5
-  1] Name 'z' Load - 0,9..0,10
-  2] Name 'f' Load - 0,15..0,16
+   0] Name 'b' Load - 0,4..0,5
+   1] Name 'z' Load - 0,9..0,10
+   2] Name 'f' Load - 0,15..0,16
 '''),
 
 (26, '', None, None, None, {'raw': True}, (None,
@@ -25110,9 +25110,9 @@ r'''**z,'''),
 r'''{**z,}''', r'''
 Dict - ROOT 0,0..0,6
   .keys[1]
-  0] None
+   0] None
   .values[1]
-  0] Name 'z' Load - 0,3..0,4
+   0] Name 'z' Load - 0,3..0,4
 '''),
 
 (27, '', None, None, None, {'raw': True}, (None,
@@ -25127,16 +25127,16 @@ r'''7: y'''),
 r'''{1: b, 7: y, 5: f}''', r'''
 MatchMapping - ROOT 0,0..0,18
   .keys[3]
-  0] Constant 1 - 0,1..0,2
-  1] Constant 7 - 0,7..0,8
-  2] Constant 5 - 0,13..0,14
+   0] Constant 1 - 0,1..0,2
+   1] Constant 7 - 0,7..0,8
+   2] Constant 5 - 0,13..0,14
   .patterns[3]
-  0] MatchAs - 0,4..0,5
-    .name 'b'
-  1] MatchAs - 0,10..0,11
-    .name 'y'
-  2] MatchAs - 0,16..0,17
-    .name 'f'
+   0] MatchAs - 0,4..0,5
+     .name 'b'
+   1] MatchAs - 0,10..0,11
+     .name 'y'
+   2] MatchAs - 0,16..0,17
+     .name 'f'
 '''),
 
 (29, '', 1, 2, None, {'raw': True}, ('pattern',
@@ -25145,13 +25145,13 @@ r'''**z'''),
 r'''{1: b, **z, 5: f}''', r'''
 Dict - ROOT 0,0..0,17
   .keys[3]
-  0] Constant 1 - 0,1..0,2
-  1] None
-  2] Constant 5 - 0,12..0,13
+   0] Constant 1 - 0,1..0,2
+   1] None
+   2] Constant 5 - 0,12..0,13
   .values[3]
-  0] Name 'b' Load - 0,4..0,5
-  1] Name 'z' Load - 0,9..0,10
-  2] Name 'f' Load - 0,15..0,16
+   0] Name 'b' Load - 0,4..0,5
+   1] Name 'z' Load - 0,9..0,10
+   2] Name 'f' Load - 0,15..0,16
 '''),
 
 (30, 'pattern', 1, 2, None, {'raw': True}, ('match_case',
@@ -25165,13 +25165,13 @@ r'''**z'''),
 r'''{1: b, 3: d, **z}''', r'''
 MatchMapping - ROOT 0,0..0,17
   .keys[2]
-  0] Constant 1 - 0,1..0,2
-  1] Constant 3 - 0,7..0,8
+   0] Constant 1 - 0,1..0,2
+   1] Constant 3 - 0,7..0,8
   .patterns[2]
-  0] MatchAs - 0,4..0,5
-    .name 'b'
-  1] MatchAs - 0,10..0,11
-    .name 'd'
+   0] MatchAs - 0,4..0,5
+     .name 'b'
+   1] MatchAs - 0,10..0,11
+     .name 'd'
   .rest 'z'
 '''),
 
@@ -25203,10 +25203,10 @@ r'''7: y'''),
 r'''{7: y, **f}''', r'''
 MatchMapping - ROOT 0,0..0,11
   .keys[1]
-  0] Constant 7 - 0,1..0,2
+   0] Constant 7 - 0,1..0,2
   .patterns[1]
-  0] MatchAs - 0,4..0,5
-    .name 'y'
+   0] MatchAs - 0,4..0,5
+     .name 'y'
   .rest 'f'
 '''),
 
@@ -25216,14 +25216,14 @@ r'''x, y'''),
 r'''[a, x, y, c]''', r'''
 MatchSequence - ROOT 0,0..0,12
   .patterns[4]
-  0] MatchAs - 0,1..0,2
-    .name 'a'
-  1] MatchAs - 0,4..0,5
-    .name 'x'
-  2] MatchAs - 0,7..0,8
-    .name 'y'
-  3] MatchAs - 0,10..0,11
-    .name 'c'
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'x'
+   2] MatchAs - 0,7..0,8
+     .name 'y'
+   3] MatchAs - 0,10..0,11
+     .name 'c'
 '''),
 
 (37, '', None, None, None, {'raw': True}, ('pattern',
@@ -25232,8 +25232,8 @@ r'''z,'''),
 r'''[z,]''', r'''
 MatchSequence - ROOT 0,0..0,4
   .patterns[1]
-  0] MatchAs - 0,1..0,2
-    .name 'z'
+   0] MatchAs - 0,1..0,2
+     .name 'z'
 '''),
 
 (38, '', None, None, None, {'raw': True}, ('pattern',
@@ -25248,14 +25248,14 @@ r'''x | y'''),
 r'''a | x | y | c''', r'''
 MatchOr - ROOT 0,0..0,13
   .patterns[4]
-  0] MatchAs - 0,0..0,1
-    .name 'a'
-  1] MatchAs - 0,4..0,5
-    .name 'x'
-  2] MatchAs - 0,8..0,9
-    .name 'y'
-  3] MatchAs - 0,12..0,13
-    .name 'c'
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'x'
+   2] MatchAs - 0,8..0,9
+     .name 'y'
+   3] MatchAs - 0,12..0,13
+     .name 'c'
 '''),
 
 (40, '', None, None, None, {'raw': True}, ('pattern',
@@ -25264,10 +25264,10 @@ r'''x | y'''),
 r'''x | y''', r'''
 MatchOr - ROOT 0,0..0,5
   .patterns[2]
-  0] MatchAs - 0,0..0,1
-    .name 'x'
-  1] MatchAs - 0,4..0,5
-    .name 'y'
+   0] MatchAs - 0,0..0,1
+     .name 'x'
+   1] MatchAs - 0,4..0,5
+     .name 'y'
 '''),
 
 (41, '', None, None, None, {'raw': True}, ('pattern',
@@ -25291,14 +25291,14 @@ r'''cls(a, x, y, c)''', r'''
 MatchClass - ROOT 0,0..0,15
   .cls Name 'cls' Load - 0,0..0,3
   .patterns[4]
-  0] MatchAs - 0,4..0,5
-    .name 'a'
-  1] MatchAs - 0,7..0,8
-    .name 'x'
-  2] MatchAs - 0,10..0,11
-    .name 'y'
-  3] MatchAs - 0,13..0,14
-    .name 'c'
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'x'
+   2] MatchAs - 0,10..0,11
+     .name 'y'
+   3] MatchAs - 0,13..0,14
+     .name 'c'
 '''),
 
 (44, '', 1, 2, None, {'raw': True}, ('pattern',
@@ -25313,15 +25313,15 @@ r'''cls(a, b, z=1)''', r'''
 MatchClass - ROOT 0,0..0,14
   .cls Name 'cls' Load - 0,0..0,3
   .patterns[2]
-  0] MatchAs - 0,4..0,5
-    .name 'a'
-  1] MatchAs - 0,7..0,8
-    .name 'b'
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,7..0,8
+     .name 'b'
   .kwd_attrs[1]
-  0] 'z'
+   0] 'z'
   .kwd_patterns[1]
-  0] MatchValue - 0,12..0,13
-    .value Constant 1 - 0,12..0,13
+   0] MatchValue - 0,12..0,13
+     .value Constant 1 - 0,12..0,13
 '''),
 
 (46, '', None, None, None, {'raw': True}, ('pattern',
@@ -25331,10 +25331,10 @@ r'''cls(x, y)''', r'''
 MatchClass - ROOT 0,0..0,9
   .cls Name 'cls' Load - 0,0..0,3
   .patterns[2]
-  0] MatchAs - 0,4..0,5
-    .name 'x'
-  1] MatchAs - 0,7..0,8
-    .name 'y'
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+   1] MatchAs - 0,7..0,8
+     .name 'y'
 '''),
 
 (47, '', None, None, None, {'raw': True}, ('pattern',
@@ -25344,8 +25344,8 @@ r'''cls(z,)''', r'''
 MatchClass - ROOT 0,0..0,7
   .cls Name 'cls' Load - 0,0..0,3
   .patterns[1]
-  0] MatchAs - 0,4..0,5
-    .name 'z'
+   0] MatchAs - 0,4..0,5
+     .name 'z'
 '''),
 
 (48, '', None, None, None, {'raw': True}, ('pattern',
@@ -25355,10 +25355,10 @@ r'''cls(z=1)''', r'''
 MatchClass - ROOT 0,0..0,8
   .cls Name 'cls' Load - 0,0..0,3
   .kwd_attrs[1]
-  0] 'z'
+   0] 'z'
   .kwd_patterns[1]
-  0] MatchValue - 0,6..0,7
-    .value Constant 1 - 0,6..0,7
+   0] MatchValue - 0,6..0,7
+     .value Constant 1 - 0,6..0,7
 '''),
 
 (49, '', None, None, None, {'raw': True}, ('pattern',
@@ -25376,12 +25376,12 @@ r'''class cls(a, x, y, c): pass''', r'''
 ClassDef - ROOT 0,0..0,27
   .name 'cls'
   .bases[4]
-  0] Name 'a' Load - 0,10..0,11
-  1] Name 'x' Load - 0,13..0,14
-  2] Name 'y' Load - 0,16..0,17
-  3] Name 'c' Load - 0,19..0,20
+   0] Name 'a' Load - 0,10..0,11
+   1] Name 'x' Load - 0,13..0,14
+   2] Name 'y' Load - 0,16..0,17
+   3] Name 'c' Load - 0,19..0,20
   .body[1]
-  0] Pass - 0,23..0,27
+   0] Pass - 0,23..0,27
 '''),
 
 (51, '', 1, 2, 'bases', {'raw': True}, (None,
@@ -25401,16 +25401,16 @@ r'''class cls(a, u=v, *c): pass''', r'''
 ClassDef - ROOT 0,0..0,27
   .name 'cls'
   .bases[2]
-  0] Name 'a' Load - 0,10..0,11
-  1] Starred - 0,18..0,20
-    .value Name 'c' Load - 0,19..0,20
-    .ctx Load
+   0] Name 'a' Load - 0,10..0,11
+   1] Starred - 0,18..0,20
+     .value Name 'c' Load - 0,19..0,20
+     .ctx Load
   .keywords[1]
-  0] keyword - 0,13..0,16
-    .arg 'u'
-    .value Name 'v' Load - 0,15..0,16
+   0] keyword - 0,13..0,16
+     .arg 'u'
+     .value Name 'v' Load - 0,15..0,16
   .body[1]
-  0] Pass - 0,23..0,27
+   0] Pass - 0,23..0,27
 '''),
 
 (54, '', 2, 3, 'bases', {'raw': True}, (None,
@@ -25420,13 +25420,13 @@ r'''class cls(a, b, **z): pass''', r'''
 ClassDef - ROOT 0,0..0,26
   .name 'cls'
   .bases[2]
-  0] Name 'a' Load - 0,10..0,11
-  1] Name 'b' Load - 0,13..0,14
+   0] Name 'a' Load - 0,10..0,11
+   1] Name 'b' Load - 0,13..0,14
   .keywords[1]
-  0] keyword - 0,16..0,19
-    .value Name 'z' Load - 0,18..0,19
+   0] keyword - 0,16..0,19
+     .value Name 'z' Load - 0,18..0,19
   .body[1]
-  0] Pass - 0,22..0,26
+   0] Pass - 0,22..0,26
 '''),
 
 (55, '', None, None, 'bases', {'raw': True}, (None,
@@ -25436,10 +25436,10 @@ r'''class cls(x, y): pass''', r'''
 ClassDef - ROOT 0,0..0,21
   .name 'cls'
   .bases[2]
-  0] Name 'x' Load - 0,10..0,11
-  1] Name 'y' Load - 0,13..0,14
+   0] Name 'x' Load - 0,10..0,11
+   1] Name 'y' Load - 0,13..0,14
   .body[1]
-  0] Pass - 0,17..0,21
+   0] Pass - 0,17..0,21
 '''),
 
 (56, '', 1, 2, 'args', {'raw': True}, (None,
@@ -25449,10 +25449,10 @@ r'''call(a, x, y, c)''', r'''
 Call - ROOT 0,0..0,16
   .func Name 'call' Load - 0,0..0,4
   .args[4]
-  0] Name 'a' Load - 0,5..0,6
-  1] Name 'x' Load - 0,8..0,9
-  2] Name 'y' Load - 0,11..0,12
-  3] Name 'c' Load - 0,14..0,15
+   0] Name 'a' Load - 0,5..0,6
+   1] Name 'x' Load - 0,8..0,9
+   2] Name 'y' Load - 0,11..0,12
+   3] Name 'c' Load - 0,14..0,15
 '''),
 
 (57, '', 1, 2, 'args', {'raw': True}, (None,
@@ -25472,14 +25472,14 @@ r'''call(a, u=v, *c)''', r'''
 Call - ROOT 0,0..0,16
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-  0] Name 'a' Load - 0,5..0,6
-  1] Starred - 0,13..0,15
-    .value Name 'c' Load - 0,14..0,15
-    .ctx Load
+   0] Name 'a' Load - 0,5..0,6
+   1] Starred - 0,13..0,15
+     .value Name 'c' Load - 0,14..0,15
+     .ctx Load
   .keywords[1]
-  0] keyword - 0,8..0,11
-    .arg 'u'
-    .value Name 'v' Load - 0,10..0,11
+   0] keyword - 0,8..0,11
+     .arg 'u'
+     .value Name 'v' Load - 0,10..0,11
 '''),
 
 (60, '', 2, 3, 'args', {'raw': True}, (None,
@@ -25489,11 +25489,11 @@ r'''call(a, b, **z)''', r'''
 Call - ROOT 0,0..0,15
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-  0] Name 'a' Load - 0,5..0,6
-  1] Name 'b' Load - 0,8..0,9
+   0] Name 'a' Load - 0,5..0,6
+   1] Name 'b' Load - 0,8..0,9
   .keywords[1]
-  0] keyword - 0,11..0,14
-    .value Name 'z' Load - 0,13..0,14
+   0] keyword - 0,11..0,14
+     .value Name 'z' Load - 0,13..0,14
 '''),
 
 (61, '', None, None, 'args', {'raw': True}, (None,
@@ -25503,8 +25503,8 @@ r'''call(x, y)''', r'''
 Call - ROOT 0,0..0,10
   .func Name 'call' Load - 0,0..0,4
   .args[2]
-  0] Name 'x' Load - 0,5..0,6
-  1] Name 'y' Load - 0,8..0,9
+   0] Name 'x' Load - 0,5..0,6
+   1] Name 'y' Load - 0,8..0,9
 '''),
 
 (62, '', 1, 2, None, {'raw': True}, (None,
@@ -25513,10 +25513,10 @@ r'''x, y'''),
 r'''del a, x, y, c''', r'''
 Delete - ROOT 0,0..0,14
   .targets[4]
-  0] Name 'a' Del - 0,4..0,5
-  1] Name 'x' Del - 0,7..0,8
-  2] Name 'y' Del - 0,10..0,11
-  3] Name 'c' Del - 0,13..0,14
+   0] Name 'a' Del - 0,4..0,5
+   1] Name 'x' Del - 0,7..0,8
+   2] Name 'y' Del - 0,10..0,11
+   3] Name 'c' Del - 0,13..0,14
 '''),
 
 (63, '', None, None, None, {'raw': True}, (None,
@@ -25525,8 +25525,8 @@ r'''x, y'''),
 r'''del x, y''', r'''
 Delete - ROOT 0,0..0,8
   .targets[2]
-  0] Name 'x' Del - 0,4..0,5
-  1] Name 'y' Del - 0,7..0,8
+   0] Name 'x' Del - 0,4..0,5
+   1] Name 'y' Del - 0,7..0,8
 '''),
 
 (64, '', None, None, None, {'raw': True}, (None,
@@ -25535,8 +25535,8 @@ r'''x, y,'''),
 r'''del x, y,''', r'''
 Delete - ROOT 0,0..0,9
   .targets[2]
-  0] Name 'x' Del - 0,4..0,5
-  1] Name 'y' Del - 0,7..0,8
+   0] Name 'x' Del - 0,4..0,5
+   1] Name 'y' Del - 0,7..0,8
 '''),
 
 (65, '', 1, 2, 'targets', {'raw': True}, (None,
@@ -25545,10 +25545,10 @@ r'''x = y'''),
 r'''a = x = y = c = d''', r'''
 Assign - ROOT 0,0..0,17
   .targets[4]
-  0] Name 'a' Store - 0,0..0,1
-  1] Name 'x' Store - 0,4..0,5
-  2] Name 'y' Store - 0,8..0,9
-  3] Name 'c' Store - 0,12..0,13
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'x' Store - 0,4..0,5
+   2] Name 'y' Store - 0,8..0,9
+   3] Name 'c' Store - 0,12..0,13
   .value Name 'd' Load - 0,16..0,17
 '''),
 
@@ -25558,8 +25558,8 @@ r'''x = y'''),
 r'''x = y = d''', r'''
 Assign - ROOT 0,0..0,9
   .targets[2]
-  0] Name 'x' Store - 0,0..0,1
-  1] Name 'y' Store - 0,4..0,5
+   0] Name 'x' Store - 0,0..0,1
+   1] Name 'y' Store - 0,4..0,5
   .value Name 'd' Load - 0,8..0,9
 '''),
 
@@ -25569,10 +25569,10 @@ r'''x, y'''),
 r'''global a, x, y, c''', r'''
 Global - ROOT 0,0..0,17
   .names[4]
-  0] 'a'
-  1] 'x'
-  2] 'y'
-  3] 'c'
+   0] 'a'
+   1] 'x'
+   2] 'y'
+   3] 'c'
 '''),
 
 (68, '', None, None, None, {'raw': True}, (None,
@@ -25581,8 +25581,8 @@ r'''x, y'''),
 r'''global x, y''', r'''
 Global - ROOT 0,0..0,11
   .names[2]
-  0] 'x'
-  1] 'y'
+   0] 'x'
+   1] 'y'
 '''),
 
 (69, '', None, None, None, {'raw': True}, (None,
@@ -25596,10 +25596,10 @@ r'''x, y'''),
 r'''nonlocal a, x, y, c''', r'''
 Nonlocal - ROOT 0,0..0,19
   .names[4]
-  0] 'a'
-  1] 'x'
-  2] 'y'
-  3] 'c'
+   0] 'a'
+   1] 'x'
+   2] 'y'
+   3] 'c'
 '''),
 
 (71, '', None, None, None, {'raw': True}, (None,
@@ -25608,8 +25608,8 @@ r'''x, y'''),
 r'''nonlocal x, y''', r'''
 Nonlocal - ROOT 0,0..0,13
   .names[2]
-  0] 'x'
-  1] 'y'
+   0] 'x'
+   1] 'y'
 '''),
 
 (72, '', None, None, None, {'raw': True}, (None,

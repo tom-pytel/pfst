@@ -4236,10 +4236,10 @@ def f():
             'Module - ROOT',
             '  .body[1]',
             '0: call() ;',
-            '  0] Expr',
-            '    .value Call',
+            '   0] Expr',
+            '     .value Call',
             '0: call',
-            "      .func Name 'call' Load",
+            "       .func Name 'call' Load",
         ])
 
     def test_verify(self):

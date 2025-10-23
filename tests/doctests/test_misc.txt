@@ -97,7 +97,7 @@ class cls:
 >>> _.dump()
 Delete - ROOT 0,0..0,6
   .targets[1]
-  0] Name 'z' Del - 0,4..0,5
+   0] Name 'z' Del - 0,4..0,5
 >>> f.src
 'class a(base): pass'
 >>> g.src
@@ -105,15 +105,15 @@ Delete - ROOT 0,0..0,6
 >>> g.dump()
 Delete - ROOT 0,0..0,5
   .targets[1]
-  0] Name 'c' Del - 0,4..0,5
+   0] Name 'c' Del - 0,4..0,5
 >>> FST('del z,').dump()
 Delete - ROOT 0,0..0,6
   .targets[1]
-  0] Name 'z' Del - 0,4..0,5
+   0] Name 'z' Del - 0,4..0,5
 >>> FST('del z,', 'stmt').dump()
 Delete - ROOT 0,0..0,6
   .targets[1]
-  0] Name 'z' Del - 0,4..0,5
+   0] Name 'z' Del - 0,4..0,5
 >>> h = FST('del z,')
 >>> h.targets = 'x'
 >>> h.src
@@ -131,11 +131,11 @@ Delete - ROOT 0,0..0,6
 0: del (a, b),
 Delete - ROOT 0,0..0,11
   .targets[1]
-  0] Tuple - 0,4..0,10
-    .elts[2]
-    0] Name 'a' Del - 0,5..0,6
-    1] Name 'b' Del - 0,8..0,9
-    .ctx Del
+   0] Tuple - 0,4..0,10
+     .elts[2]
+      0] Name 'a' Del - 0,5..0,6
+      1] Name 'b' Del - 0,8..0,9
+     .ctx Del
 >>> FST('class cls(b,): pass')
 <ClassDef ROOT 0,0..0,19>
 >>> f = _
@@ -143,9 +143,9 @@ Delete - ROOT 0,0..0,11
 ClassDef - ROOT 0,0..0,19
   .name 'cls'
   .bases[1]
-  0] Name 'b' Load - 0,10..0,11
+   0] Name 'b' Load - 0,10..0,11
   .body[1]
-  0] Pass - 0,15..0,19
+   0] Pass - 0,15..0,19
 >>> f.src
 'class cls(b,): pass'
 >>> f.bases = 'z,'
@@ -155,9 +155,9 @@ ClassDef - ROOT 0,0..0,19
 ClassDef - ROOT 0,0..0,18
   .name 'cls'
   .bases[1]
-  0] Name 'z' Load - 0,10..0,11
+   0] Name 'z' Load - 0,10..0,11
   .body[1]
-  0] Pass - 0,14..0,18
+   0] Pass - 0,14..0,18
 
 
 ........................................................................................................................
@@ -168,20 +168,20 @@ ClassDef - ROOT 0,0..0,18
 >>> g.dump()
 Tuple - ROOT 0,0..0,19
   .elts[2]
-  0] Starred - 0,1..0,7
-    .value UnaryOp - 0,2..0,7
-      .op Not - 0,2..0,5
-      .operand Name 'a' Load - 0,6..0,7
-    .ctx Load
-  1] Starred - 0,9..0,18
-    .value BoolOp - 0,10..0,18
-      .op Or
-      .values[2]
-      0] List - 0,10..0,12
-        .ctx Load
-      1] Tuple - 0,16..0,18
-        .ctx Load
-    .ctx Load
+   0] Starred - 0,1..0,7
+     .value UnaryOp - 0,2..0,7
+       .op Not - 0,2..0,5
+       .operand Name 'a' Load - 0,6..0,7
+     .ctx Load
+   1] Starred - 0,9..0,18
+     .value BoolOp - 0,10..0,18
+       .op Or
+       .values[2]
+        0] List - 0,10..0,12
+          .ctx Load
+        1] Tuple - 0,16..0,18
+          .ctx Load
+     .ctx Load
   .ctx Load
 >>> f.args = None
 >>> f.src

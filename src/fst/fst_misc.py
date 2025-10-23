@@ -410,7 +410,7 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
                 continue
 
             if name == 'args' and isinstance(child, arguments):
-                if child.posonlyargs or child.args or child.vararg or child.kwonlyargs or child.kwarg:
+                if child.posonlyargs or child.args or child.vararg or child.kwonlyargs or child.kwarg or st.full:
                     child.f._dump(st, cind + sind, f'{c.clr_field}.args{c.end_field} ')
 
                     continue
@@ -423,25 +423,31 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
                              not ((name == 'value' and isinstance(ast, (Constant, MatchSingleton)))))):
             continue
 
-        if is_list:
-            st.linefunc(f'{cind}{sind}{c.clr_field}.{name}[{len(child)}]{c.end_field}{st.eol}')
-        else:
+        if not is_list:
             st.linefunc(f'{cind}{sind}{c.clr_field}.{name}{c.end_field}{st.eol}')
 
-        if is_list:
+            if isinstance(child, AST):
+                child.f._dump(st, cind + sind * 2)
+
+            else:
+                ind = f'{cind}{sind}{sind}'
+
+                st.linefunc(f'{ind}{_dump_prim_long(child, st, ind)}{st.eol}')
+
+        # elif len(child) == 1:
+        #     if isinstance(ast := child[0], AST):
+        #         ast.f._dump(st, cind + sind, f'{c.clr_field}.{name}[1]{c.end_field} ')
+        #     else:
+        #         st.linefunc(f'{cind}{c.clr_field}.{name}[1]{c.end_field} {ast!r}{st.eol}')
+
+        else:
+            st.linefunc(f'{cind}{sind}{c.clr_field}.{name}[{len(child)}]{c.end_field}{st.eol}')
+
             for i, ast in enumerate(child):
                 if isinstance(ast, AST):
                     ast.f._dump(st, cind + st.lind, f'{c.clr_field}{i}]{c.end_field} ')
                 else:
                     st.linefunc(f'{cind}{st.lind}{c.clr_field}{i}]{c.end_field} {ast!r}{st.eol}')
-
-        elif isinstance(child, AST):
-            child.f._dump(st, cind + sind * 2)
-
-        else:
-            ind = f'{cind}{sind}{sind}'
-
-            st.linefunc(f'{ind}{_dump_prim_long(child, st, ind)}{st.eol}')
 
 
 def _is_parenthesized_tuple(self: fst.FST) -> bool | None:

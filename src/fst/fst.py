@@ -327,13 +327,13 @@ def parse(
     >>> a.f.dump()
     Module - ROOT 0,0..1,7
       .body[1]
-      0] If - 0,0..1,7
-        .test Constant 1 - 0,3..0,4
-        .body[1]
-        0] Assign - 1,2..1,7
-          .targets[1]
-          0] Name 'i' Store - 1,2..1,3
-          .value Constant 2 - 1,6..1,7
+       0] If - 0,0..1,7
+         .test Constant 1 - 0,3..0,4
+         .body[1]
+          0] Assign - 1,2..1,7
+            .targets[1]
+             0] Name 'i' Store - 1,2..1,3
+            .value Constant 2 - 1,6..1,7
     ```
     """
 
@@ -934,8 +934,8 @@ class FST:
         >>> FST.fromsrc('var').dump()
         Module - ROOT 0,0..0,3
           .body[1]
-          0] Expr - 0,0..0,3
-            .value Name 'var' Load - 0,0..0,3
+           0] Expr - 0,0..0,3
+             .value Name 'var' Load - 0,0..0,3
 
         >>> FST.fromsrc('var', mode='stmt').dump()
         Expr - ROOT 0,0..0,3
@@ -948,19 +948,19 @@ class FST:
         ExceptHandler - ROOT 0,0..0,22
           .type Name 'Exception' Load - 0,7..0,16
           .body[1]
-          0] Pass - 0,18..0,22
+           0] Pass - 0,18..0,22
 
         >>> FST.fromsrc('case f(a=1): pass', 'match_case').dump()
         match_case - ROOT 0,0..0,17
           .pattern MatchClass - 0,5..0,11
             .cls Name 'f' Load - 0,5..0,6
             .kwd_attrs[1]
-            0] 'a'
+             0] 'a'
             .kwd_patterns[1]
-            0] MatchValue - 0,9..0,10
-              .value Constant 1 - 0,9..0,10
+             0] MatchValue - 0,9..0,10
+               .value Constant 1 - 0,9..0,10
           .body[1]
-          0] Pass - 0,13..0,17
+           0] Pass - 0,13..0,17
 
         >>> import ast
         >>> FST.fromsrc('a:b', ast.Slice).dump()
@@ -1020,21 +1020,21 @@ class FST:
         0: var = 123
         Assign - ROOT 0,0..0,9
           .targets[1]
-          0] Name 'var' Store - 0,0..0,3
+           0] Name 'var' Store - 0,0..0,3
           .value Constant 123 - 0,6..0,9
 
         >>> FST.fromast(ast.parse('if 1:\n    j = 5')).dump('stmt')
         Module - ROOT 0,0..1,9
           .body[1]
         0: if 1:
-          0] If - 0,0..1,9
-            .test Constant 1 - 0,3..0,4
-            .body[1]
+           0] If - 0,0..1,9
+             .test Constant 1 - 0,3..0,4
+             .body[1]
         1:     j = 5
-            0] Assign - 1,4..1,9
-              .targets[1]
-              0] Name 'j' Store - 1,4..1,5
-              .value Constant 5 - 1,8..1,9
+              0] Assign - 1,4..1,9
+                .targets[1]
+                 0] Name 'j' Store - 1,4..1,5
+                .value Constant 5 - 1,8..1,9
 
         >>> FST.fromast(Slice(lower=Constant(value=1), step=Name(id='step'))).dump('all')
         0: 1::step
@@ -1314,7 +1314,7 @@ class FST:
         expand: bool = False,
         *,
         indent: int = 2,
-        list_indent: int | bool = 0,
+        list_indent: int | bool = 1,
         loc: bool = True,
         color: bool | None = None,
         out: Callable | TextIO = print,
@@ -1360,15 +1360,15 @@ class FST:
         If - ROOT 0,0..1,18
           .test Constant 1 - 0,3..0,4
           .body[1]
-          0] Expr - 1,4..1,18
-            .value Call - 1,4..1,18
-              .func Name 'call' Load - 1,4..1,8
-              .keywords[2]
-              0] keyword - 1,9..1,12
-                .arg 'a'
-                .value Name 'b' Load - 1,11..1,12
-              1] keyword - 1,14..1,17
-                .value Name 'c' Load - 1,16..1,17
+           0] Expr - 1,4..1,18
+             .value Call - 1,4..1,18
+               .func Name 'call' Load - 1,4..1,8
+               .keywords[2]
+                0] keyword - 1,9..1,12
+                  .arg 'a'
+                  .value Name 'b' Load - 1,11..1,12
+                1] keyword - 1,14..1,17
+                  .value Name 'c' Load - 1,16..1,17
 
         >>> f.dump(src='all', indent=3, list_indent=True)
         0: if 1:
@@ -1393,7 +1393,7 @@ class FST:
                           .value Name 'c' Load - 1,16..1,17
 
         >>> f.dump(out=str)[:64]
-        'If - ROOT 0,0..1,18\n  .test Constant 1 - 0,3..0,4\n  .body[1]\n  0'
+        'If - ROOT 0,0..1,18\n  .test Constant 1 - 0,3..0,4\n  .body[1]\n   '
 
         >>> from pprint import pp
         >>> pp(f.dump('stmt', loc=False, out=list))
@@ -1402,15 +1402,15 @@ class FST:
          '  .test Constant 1',
          '  .body[1]',
          '1:     call(a=b, **c)',
-         '  0] Expr',
-         '    .value Call',
-         "      .func Name 'call' Load",
-         '      .keywords[2]',
-         '      0] keyword',
-         "        .arg 'a'",
-         "        .value Name 'b' Load",
-         '      1] keyword',
-         "        .value Name 'c' Load"]
+         '   0] Expr',
+         '     .value Call',
+         "       .func Name 'call' Load",
+         '       .keywords[2]',
+         '        0] keyword',
+         "          .arg 'a'",
+         "          .value Name 'b' Load",
+         '        1] keyword',
+         "          .value Name 'c' Load"]
         ```
         """
 

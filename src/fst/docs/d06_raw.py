@@ -61,7 +61,7 @@ i = 1
 >>> f.dump()
 Assign - ROOT 0,0..0,5
   .targets[1]
-  0] Name 'i' Store - 0,0..0,1
+   0] Name 'i' Store - 0,0..0,1
   .value Constant 1 - 0,4..0,5
 ```
 

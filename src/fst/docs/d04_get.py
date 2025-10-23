@@ -276,36 +276,27 @@ except RuntimeError:
 >>> s.dump()
 _ExceptHandlers - ROOT 0,0..3,9
   .handlers[2]
-  0] ExceptHandler - 0,0..1,9
-    .type Name 'ValueError' Load - 0,7..0,17
-    .body[1]
-    0] Assign - 1,4..1,9
-      .targets[1]
-      0] Name 'i' Store - 1,4..1,5
-      .value Constant 1 - 1,8..1,9
-  1] ExceptHandler - 2,0..3,9
-    .type Name 'RuntimeError' Load - 2,7..2,19
-    .body[1]
-    0] Assign - 3,4..3,9
-      .targets[1]
-      0] Name 'j' Store - 3,4..3,5
-      .value Constant 2 - 3,8..3,9
+   0] ExceptHandler - 0,0..1,9
+     .type Name 'ValueError' Load - 0,7..0,17
+     .body[1]
+      0] Assign - 1,4..1,9
+        .targets[1]
+         0] Name 'i' Store - 1,4..1,5
+        .value Constant 1 - 1,8..1,9
+   1] ExceptHandler - 2,0..3,9
+     .type Name 'RuntimeError' Load - 2,7..2,19
+     .body[1]
+      0] Assign - 3,4..3,9
+        .targets[1]
+         0] Name 'j' Store - 3,4..3,5
+        .value Constant 2 - 3,8..3,9
 ```
-
-TODO: Prescribed slice operations are implemented for all `stmt` containers, `Tuple`, `List`, `Set`, `Dict`, exception
-handler bodies containing `ExceptHandler` and match statement cases containing `match_case`. All other slice operations
-must currently be carried out using raw operations which, are not as robust.
-
-TODO: `MatchMapping` and `Compare` will also support special slicing behavior but slice operations for them are not
-implemented yet (other than raw).
 
 ## Non-AST values
 
 Using `get()` (and eventually `get_slice()`, not implemented yet) you can get non-AST primitive values from nodes. This
 exists mostly to accomondate `MatchSingleton`, as it just has a primitive value instead of an expression (it is also
 set this way, via primitive).
-
-TODO: Implement `get_slice()` on `Global` and `Nonlocal` `names`.
 
 ```py
 >>> f = FST('case True: pass')

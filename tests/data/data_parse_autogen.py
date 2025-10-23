@@ -16,13 +16,13 @@ j
 '''), r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] AnnAssign - 0,0..0,10
-    .target Name 'i' Store - 0,0..0,1
-    .annotation Name 'int' Load - 0,3..0,6
-    .value Constant 1 - 0,9..0,10
-    .simple 1
-  1] Expr - 1,0..1,1
-    .value Name 'j' Load - 1,0..1,1
+   0] AnnAssign - 0,0..0,10
+     .target Name 'i' Store - 0,0..0,1
+     .annotation Name 'int' Load - 0,3..0,6
+     .value Constant 1 - 0,9..0,10
+     .simple 1
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
 '''),
 
 (1, 'parse__ExceptHandlers', 0, 0, '_ExceptHandlers', {}, ('all', r'''
@@ -31,13 +31,13 @@ except: pass
 '''), r'''
 _ExceptHandlers - ROOT 0,0..1,12
   .handlers[2]
-  0] ExceptHandler - 0,0..0,22
-    .type Name 'Exception' Load - 0,7..0,16
-    .body[1]
-    0] Pass - 0,18..0,22
-  1] ExceptHandler - 1,0..1,12
-    .body[1]
-    0] Pass - 1,8..1,12
+   0] ExceptHandler - 0,0..0,22
+     .type Name 'Exception' Load - 0,7..0,16
+     .body[1]
+      0] Pass - 0,18..0,22
+   1] ExceptHandler - 1,0..1,12
+     .body[1]
+      0] Pass - 1,8..1,12
 '''),
 
 (2, 'parse__match_cases', 0, 0, '_match_cases', {}, ('all', r'''
@@ -46,15 +46,15 @@ case 1: pass
 '''), r'''
 _match_cases - ROOT 0,0..1,12
   .cases[2]
-  0] match_case - 0,0..0,15
-    .pattern MatchSingleton None - 0,5..0,9
-    .body[1]
-    0] Pass - 0,11..0,15
-  1] match_case - 1,0..1,12
-    .pattern MatchValue - 1,5..1,6
-      .value Constant 1 - 1,5..1,6
-    .body[1]
-    0] Pass - 1,8..1,12
+   0] match_case - 0,0..0,15
+     .pattern MatchSingleton None - 0,5..0,9
+     .body[1]
+      0] Pass - 0,11..0,15
+   1] match_case - 1,0..1,12
+     .pattern MatchValue - 1,5..1,6
+       .value Constant 1 - 1,5..1,6
+     .body[1]
+      0] Pass - 1,8..1,12
 '''),
 
 (3, 'parse_stmt', 0, 0, 'AnnAssign', {}, ('all',
@@ -70,7 +70,7 @@ AnnAssign - ROOT 0,0..0,10
 r'''except: pass'''), r'''
 ExceptHandler - ROOT 0,0..0,12
   .body[1]
-  0] Pass - 0,8..0,12
+   0] Pass - 0,8..0,12
 '''),
 
 (5, 'parse_match_case', 0, 0, 'match_case', {}, ('all',
@@ -78,7 +78,7 @@ r'''case None: pass'''), r'''
 match_case - ROOT 0,0..0,15
   .pattern MatchSingleton None - 0,5..0,9
   .body[1]
-  0] Pass - 0,11..0,15
+   0] Pass - 0,11..0,15
 '''),
 
 (6, 'parse_stmts', 0, 0, 'Module', {}, ('all', r'''
@@ -87,13 +87,13 @@ j
 '''), r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] AnnAssign - 0,0..0,10
-    .target Name 'i' Store - 0,0..0,1
-    .annotation Name 'int' Load - 0,3..0,6
-    .value Constant 1 - 0,9..0,10
-    .simple 1
-  1] Expr - 1,0..1,1
-    .value Name 'j' Load - 1,0..1,1
+   0] AnnAssign - 0,0..0,10
+     .target Name 'i' Store - 0,0..0,1
+     .annotation Name 'int' Load - 0,3..0,6
+     .value Constant 1 - 0,9..0,10
+     .simple 1
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
 '''),
 
 (7, 'parse_stmt', 0, 0, 'AnnAssign', {}, ('all',
@@ -111,20 +111,20 @@ except: pass
 '''), r'''
 _ExceptHandlers - ROOT 0,0..1,12
   .handlers[2]
-  0] ExceptHandler - 0,0..0,22
-    .type Name 'Exception' Load - 0,7..0,16
-    .body[1]
-    0] Pass - 0,18..0,22
-  1] ExceptHandler - 1,0..1,12
-    .body[1]
-    0] Pass - 1,8..1,12
+   0] ExceptHandler - 0,0..0,22
+     .type Name 'Exception' Load - 0,7..0,16
+     .body[1]
+      0] Pass - 0,18..0,22
+   1] ExceptHandler - 1,0..1,12
+     .body[1]
+      0] Pass - 1,8..1,12
 '''),
 
 (9, 'parse_ExceptHandler', 0, 0, 'ExceptHandler', {}, ('all',
 r'''except: pass'''), r'''
 ExceptHandler - ROOT 0,0..0,12
   .body[1]
-  0] Pass - 0,8..0,12
+   0] Pass - 0,8..0,12
 '''),
 
 (10, 'parse__match_cases', 0, 0, '_match_cases', {}, ('all', r'''
@@ -133,15 +133,15 @@ case 1: pass
 '''), r'''
 _match_cases - ROOT 0,0..1,12
   .cases[2]
-  0] match_case - 0,0..0,15
-    .pattern MatchSingleton None - 0,5..0,9
-    .body[1]
-    0] Pass - 0,11..0,15
-  1] match_case - 1,0..1,12
-    .pattern MatchValue - 1,5..1,6
-      .value Constant 1 - 1,5..1,6
-    .body[1]
-    0] Pass - 1,8..1,12
+   0] match_case - 0,0..0,15
+     .pattern MatchSingleton None - 0,5..0,9
+     .body[1]
+      0] Pass - 0,11..0,15
+   1] match_case - 1,0..1,12
+     .pattern MatchValue - 1,5..1,6
+       .value Constant 1 - 1,5..1,6
+     .body[1]
+      0] Pass - 1,8..1,12
 '''),
 
 (11, 'parse_match_case', 0, 0, 'match_case', {}, ('all',
@@ -149,7 +149,7 @@ r'''case None: pass'''), r'''
 match_case - ROOT 0,0..0,15
   .pattern MatchSingleton None - 0,5..0,9
   .body[1]
-  0] Pass - 0,11..0,15
+   0] Pass - 0,11..0,15
 '''),
 
 (12, 'parse_expr', 0, 0, 'Name', {}, ('all',
@@ -200,45 +200,45 @@ MatchAs - ROOT 0,0..0,6
 r'''a: list[str], /, b: int = 1, *c, d=100, **e'''), r'''
 arguments - ROOT 0,0..0,43
   .posonlyargs[1]
-  0] arg - 0,0..0,12
-    .arg 'a'
-    .annotation Subscript - 0,3..0,12
-      .value Name 'list' Load - 0,3..0,7
-      .slice Name 'str' Load - 0,8..0,11
-      .ctx Load
+   0] arg - 0,0..0,12
+     .arg 'a'
+     .annotation Subscript - 0,3..0,12
+       .value Name 'list' Load - 0,3..0,7
+       .slice Name 'str' Load - 0,8..0,11
+       .ctx Load
   .args[1]
-  0] arg - 0,17..0,23
-    .arg 'b'
-    .annotation Name 'int' Load - 0,20..0,23
+   0] arg - 0,17..0,23
+     .arg 'b'
+     .annotation Name 'int' Load - 0,20..0,23
   .vararg arg - 0,30..0,31
     .arg 'c'
   .kwonlyargs[1]
-  0] arg - 0,33..0,34
-    .arg 'd'
+   0] arg - 0,33..0,34
+     .arg 'd'
   .kw_defaults[1]
-  0] Constant 100 - 0,35..0,38
+   0] Constant 100 - 0,35..0,38
   .kwarg arg - 0,42..0,43
     .arg 'e'
   .defaults[1]
-  0] Constant 1 - 0,26..0,27
+   0] Constant 1 - 0,26..0,27
 '''),
 
 (19, 'parse_arguments_lambda', 0, 0, 'arguments', {}, ('all',
 r'''a, /, b, *c, d=100, **e'''), r'''
 arguments - ROOT 0,0..0,23
   .posonlyargs[1]
-  0] arg - 0,0..0,1
-    .arg 'a'
+   0] arg - 0,0..0,1
+     .arg 'a'
   .args[1]
-  0] arg - 0,6..0,7
-    .arg 'b'
+   0] arg - 0,6..0,7
+     .arg 'b'
   .vararg arg - 0,10..0,11
     .arg 'c'
   .kwonlyargs[1]
-  0] arg - 0,13..0,14
-    .arg 'd'
+   0] arg - 0,13..0,14
+     .arg 'd'
   .kw_defaults[1]
-  0] Constant 100 - 0,15..0,18
+   0] Constant 100 - 0,15..0,18
   .kwarg arg - 0,22..0,23
     .arg 'e'
 '''),
@@ -255,12 +255,12 @@ arguments - ROOT 0,0..0,9
 r'''*a, b as c'''), r'''
 MatchSequence - ROOT 0,0..0,10
   .patterns[2]
-  0] MatchStar - 0,0..0,2
-    .name 'a'
-  1] MatchAs - 0,4..0,10
-    .pattern MatchAs - 0,4..0,5
-      .name 'b'
-    .name 'c'
+   0] MatchStar - 0,0..0,2
+     .name 'a'
+   1] MatchAs - 0,4..0,10
+     .pattern MatchAs - 0,4..0,5
+       .name 'b'
+     .name 'c'
 '''),
 
 (22, 'parse_comprehension', 0, 0, 'comprehension', {}, ('all',
@@ -270,9 +270,9 @@ comprehension - ROOT 0,0..0,22
   .iter Call - 0,9..0,17
     .func Name 'range' Load - 0,9..0,14
     .args[1]
-    0] Constant 5 - 0,15..0,16
+     0] Constant 5 - 0,15..0,16
   .ifs[1]
-  0] Name 'i' Load - 0,21..0,22
+   0] Name 'i' Load - 0,21..0,22
   .is_async 0
 '''),
 
@@ -282,8 +282,8 @@ withitem - ROOT 0,0..0,11
   .context_expr Call - 0,0..0,6
     .func Name 'f' Load - 0,0..0,1
     .keywords[1]
-    0] keyword - 0,2..0,5
-      .value Name 'a' Load - 0,4..0,5
+     0] keyword - 0,2..0,5
+       .value Name 'a' Load - 0,4..0,5
   .optional_vars Name 'b' Store - 0,10..0,11
 '''),
 
@@ -313,13 +313,13 @@ j
 '''), r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] AnnAssign - 0,0..0,10
-    .target Name 'i' Store - 0,0..0,1
-    .annotation Name 'int' Load - 0,3..0,6
-    .value Constant 1 - 0,9..0,10
-    .simple 1
-  1] Expr - 1,0..1,1
-    .value Name 'j' Load - 1,0..1,1
+   0] AnnAssign - 0,0..0,10
+     .target Name 'i' Store - 0,0..0,1
+     .annotation Name 'int' Load - 0,3..0,6
+     .value Constant 1 - 0,9..0,10
+     .simple 1
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
 '''),
 
 (30, 'parse__ExceptHandlers', 0, 0, 'SyntaxError', {}, ('strict', r'''
@@ -357,13 +357,13 @@ j
 '''), r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] AnnAssign - 0,0..0,10
-    .target Name 'i' Store - 0,0..0,1
-    .annotation Name 'int' Load - 0,3..0,6
-    .value Constant 1 - 0,9..0,10
-    .simple 1
-  1] Expr - 1,0..1,1
-    .value Name 'j' Load - 1,0..1,1
+   0] AnnAssign - 0,0..0,10
+     .target Name 'i' Store - 0,0..0,1
+     .annotation Name 'int' Load - 0,3..0,6
+     .value Constant 1 - 0,9..0,10
+     .simple 1
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
 '''),
 
 (36, 'parse_stmt', 0, 0, 'AnnAssign', {}, ('strict',
@@ -470,11 +470,11 @@ r'''**SyntaxError('invalid syntax')**'''),
 r'''i: int = 1'''), r'''
 Module - ROOT 0,0..0,10
   .body[1]
-  0] AnnAssign - 0,0..0,10
-    .target Name 'i' Store - 0,0..0,1
-    .annotation Name 'int' Load - 0,3..0,6
-    .value Constant 1 - 0,9..0,10
-    .simple 1
+   0] AnnAssign - 0,0..0,10
+     .target Name 'i' Store - 0,0..0,1
+     .annotation Name 'int' Load - 0,3..0,6
+     .value Constant 1 - 0,9..0,10
+     .simple 1
 '''),
 
 (58, 'parse_Expression', 0, 0, 'Expression', {}, ('eval',
@@ -487,11 +487,11 @@ Expression - ROOT 0,0..0,4
 r'''i: int = 1'''), r'''
 Interactive - ROOT 0,0..0,10
   .body[1]
-  0] AnnAssign - 0,0..0,10
-    .target Name 'i' Store - 0,0..0,1
-    .annotation Name 'int' Load - 0,3..0,6
-    .value Constant 1 - 0,9..0,10
-    .simple 1
+   0] AnnAssign - 0,0..0,10
+     .target Name 'i' Store - 0,0..0,1
+     .annotation Name 'int' Load - 0,3..0,6
+     .value Constant 1 - 0,9..0,10
+     .simple 1
 '''),
 
 (60, 'parse_stmts', 0, 0, 'Module', {}, ('stmts', r'''
@@ -500,13 +500,13 @@ j
 '''), r'''
 Module - ROOT 0,0..1,1
   .body[2]
-  0] AnnAssign - 0,0..0,10
-    .target Name 'i' Store - 0,0..0,1
-    .annotation Name 'int' Load - 0,3..0,6
-    .value Constant 1 - 0,9..0,10
-    .simple 1
-  1] Expr - 1,0..1,1
-    .value Name 'j' Load - 1,0..1,1
+   0] AnnAssign - 0,0..0,10
+     .target Name 'i' Store - 0,0..0,1
+     .annotation Name 'int' Load - 0,3..0,6
+     .value Constant 1 - 0,9..0,10
+     .simple 1
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
 '''),
 
 (61, 'parse_stmts', 0, 0, 'SyntaxError', {}, ('stmts', r'''
@@ -546,13 +546,13 @@ except: pass
 '''), r'''
 _ExceptHandlers - ROOT 0,0..1,12
   .handlers[2]
-  0] ExceptHandler - 0,0..0,22
-    .type Name 'Exception' Load - 0,7..0,16
-    .body[1]
-    0] Pass - 0,18..0,22
-  1] ExceptHandler - 1,0..1,12
-    .body[1]
-    0] Pass - 1,8..1,12
+   0] ExceptHandler - 0,0..0,22
+     .type Name 'Exception' Load - 0,7..0,16
+     .body[1]
+      0] Pass - 0,18..0,22
+   1] ExceptHandler - 1,0..1,12
+     .body[1]
+      0] Pass - 1,8..1,12
 '''),
 
 (67, 'parse__ExceptHandlers', 0, 0, 'IndentationError', {}, ('_ExceptHandlers', r'''
@@ -585,7 +585,7 @@ r'''**SyntaxError("expected 'except' or 'finally' block")**'''),
 r'''except: pass'''), r'''
 ExceptHandler - ROOT 0,0..0,12
   .body[1]
-  0] Pass - 0,8..0,12
+   0] Pass - 0,8..0,12
 '''),
 
 (72, 'parse_ExceptHandler', 0, 0, 'ParseError', {}, ('ExceptHandler', r'''
@@ -604,15 +604,15 @@ case 1: pass
 '''), r'''
 _match_cases - ROOT 0,0..1,12
   .cases[2]
-  0] match_case - 0,0..0,15
-    .pattern MatchSingleton None - 0,5..0,9
-    .body[1]
-    0] Pass - 0,11..0,15
-  1] match_case - 1,0..1,12
-    .pattern MatchValue - 1,5..1,6
-      .value Constant 1 - 1,5..1,6
-    .body[1]
-    0] Pass - 1,8..1,12
+   0] match_case - 0,0..0,15
+     .pattern MatchSingleton None - 0,5..0,9
+     .body[1]
+      0] Pass - 0,11..0,15
+   1] match_case - 1,0..1,12
+     .pattern MatchValue - 1,5..1,6
+       .value Constant 1 - 1,5..1,6
+     .body[1]
+      0] Pass - 1,8..1,12
 '''),
 
 (75, 'parse__match_cases', 0, 0, 'IndentationError', {}, ('_match_cases', r'''
@@ -630,7 +630,7 @@ r'''case None: pass'''), r'''
 match_case - ROOT 0,0..0,15
   .pattern MatchSingleton None - 0,5..0,9
   .body[1]
-  0] Pass - 0,11..0,15
+   0] Pass - 0,11..0,15
 '''),
 
 (78, 'parse_match_case', 0, 0, 'ParseError', {}, ('match_case', r'''
@@ -651,30 +651,30 @@ r'''_Assign_targets - ROOT 0,0..0,0'''),
 r'''a'''), r'''
 _Assign_targets - ROOT 0,0..0,1
   .targets[1]
-  0] Name 'a' Store - 0,0..0,1
+   0] Name 'a' Store - 0,0..0,1
 '''),
 
 (82, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r'''a ='''), r'''
 _Assign_targets - ROOT 0,0..0,3
   .targets[1]
-  0] Name 'a' Store - 0,0..0,1
+   0] Name 'a' Store - 0,0..0,1
 '''),
 
 (83, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r'''a = b'''), r'''
 _Assign_targets - ROOT 0,0..0,5
   .targets[2]
-  0] Name 'a' Store - 0,0..0,1
-  1] Name 'b' Store - 0,4..0,5
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 0,4..0,5
 '''),
 
 (84, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r'''a = b ='''), r'''
 _Assign_targets - ROOT 0,0..0,7
   .targets[2]
-  0] Name 'a' Store - 0,0..0,1
-  1] Name 'b' Store - 0,4..0,5
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 0,4..0,5
 '''),
 
 (85, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets', r'''
@@ -685,14 +685,14 @@ a\
 '''), r'''
 _Assign_targets - ROOT 0,0..3,0
   .targets[1]
-  0] Name 'a' Store - 1,0..1,1
+   0] Name 'a' Store - 1,0..1,1
 '''),
 
 (86, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r''' a'''), r'''
 _Assign_targets - ROOT 0,0..0,2
   .targets[1]
-  0] Name 'a' Store - 0,1..0,2
+   0] Name 'a' Store - 0,1..0,2
 '''),
 
 (87, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets', r'''
@@ -701,7 +701,7 @@ a
 '''), r'''
 _Assign_targets - ROOT 0,0..1,1
   .targets[1]
-  0] Name 'a' Store - 1,0..1,1
+   0] Name 'a' Store - 1,0..1,1
 '''),
 
 (88, 'parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets', r'''
@@ -731,8 +731,8 @@ r'''**SyntaxError('invalid Assign targets slice')**'''),
 r'''a = b ='''), r'''
 _Assign_targets - ROOT 0,0..0,7
   .targets[2]
-  0] Name 'a' Store - 0,0..0,1
-  1] Name 'b' Store - 0,4..0,5
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 0,4..0,5
 '''),
 
 (93, 'parse_expr', 0, 0, 'Name', {}, ('expr',
@@ -761,9 +761,9 @@ s,
 '''), r'''
 Tuple - ROOT 0,0..1,2
   .elts[1]
-  0] Starred - 0,0..1,1
-    .value Name 's' Load - 1,0..1,1
-    .ctx Load
+   0] Starred - 0,0..1,1
+     .value Name 's' Load - 1,0..1,1
+     .ctx Load
   .ctx Load
 '''),
 
@@ -775,8 +775,8 @@ Tuple - ROOT 0,0..1,2
 '''), r'''
 Tuple - ROOT 0,0..3,1
   .elts[2]
-  0] Constant 1 - 0,0..0,1
-  1] Constant 2 - 2,0..2,1
+   0] Constant 1 - 0,0..0,1
+   1] Constant 2 - 2,0..2,1
   .ctx Load
 '''),
 
@@ -818,9 +818,9 @@ s,
 '''), r'''
 Tuple - ROOT 0,0..1,2
   .elts[1]
-  0] Starred - 0,0..1,1
-    .value Name 's' Load - 1,0..1,1
-    .ctx Load
+   0] Starred - 0,0..1,1
+     .value Name 's' Load - 1,0..1,1
+     .ctx Load
   .ctx Load
 '''),
 
@@ -832,8 +832,8 @@ Tuple - ROOT 0,0..1,2
 '''), r'''
 Tuple - ROOT 0,0..3,1
   .elts[2]
-  0] Constant 1 - 0,0..0,1
-  1] Constant 2 - 2,0..2,1
+   0] Constant 1 - 0,0..0,1
+   1] Constant 2 - 2,0..2,1
   .ctx Load
 '''),
 
@@ -856,8 +856,8 @@ Slice - ROOT 0,0..0,5
 r'''j, k'''), r'''
 Tuple - ROOT 0,0..0,4
   .elts[2]
-  0] Name 'j' Load - 0,0..0,1
-  1] Name 'k' Load - 0,3..0,4
+   0] Name 'j' Load - 0,0..0,1
+   1] Name 'k' Load - 0,3..0,4
   .ctx Load
 '''),
 
@@ -865,14 +865,14 @@ Tuple - ROOT 0,0..0,4
 r'''a:b:c, x:y:z'''), r'''
 Tuple - ROOT 0,0..0,12
   .elts[2]
-  0] Slice - 0,0..0,5
-    .lower Name 'a' Load - 0,0..0,1
-    .upper Name 'b' Load - 0,2..0,3
-    .step Name 'c' Load - 0,4..0,5
-  1] Slice - 0,7..0,12
-    .lower Name 'x' Load - 0,7..0,8
-    .upper Name 'y' Load - 0,9..0,10
-    .step Name 'z' Load - 0,11..0,12
+   0] Slice - 0,0..0,5
+     .lower Name 'a' Load - 0,0..0,1
+     .upper Name 'b' Load - 0,2..0,3
+     .step Name 'c' Load - 0,4..0,5
+   1] Slice - 0,7..0,12
+     .lower Name 'x' Load - 0,7..0,8
+     .upper Name 'y' Load - 0,9..0,10
+     .step Name 'z' Load - 0,11..0,12
   .ctx Load
 '''),
 
@@ -891,9 +891,9 @@ Starred - ROOT 0,0..0,2
 r'''*s,'''), r'''
 Tuple - ROOT 0,0..0,3
   .elts[1]
-  0] Starred - 0,0..0,2
-    .value Name 's' Load - 0,1..0,2
-    .ctx Load
+   0] Starred - 0,0..0,2
+     .value Name 's' Load - 0,1..0,2
+     .ctx Load
   .ctx Load
 '''),
 
@@ -914,8 +914,8 @@ r'''**SyntaxError('invalid argument-like expression')**'''),
 r'''j, k'''), r'''
 Tuple - ROOT 0,0..0,4
   .elts[2]
-  0] Name 'j' Load - 0,0..0,1
-  1] Name 'k' Load - 0,3..0,4
+   0] Name 'j' Load - 0,0..0,1
+   1] Name 'k' Load - 0,3..0,4
   .ctx Load
 '''),
 
@@ -935,7 +935,7 @@ r'''**SyntaxError('invalid argument-like expression')**'''),
 r'''j'''), r'''
 Tuple - ROOT 0,0..0,1
   .elts[1]
-  0] Name 'j' Load - 0,0..0,1
+   0] Name 'j' Load - 0,0..0,1
   .ctx Load
 '''),
 
@@ -943,9 +943,9 @@ Tuple - ROOT 0,0..0,1
 r'''*s'''), r'''
 Tuple - ROOT 0,0..0,2
   .elts[1]
-  0] Starred - 0,0..0,2
-    .value Name 's' Load - 0,1..0,2
-    .ctx Load
+   0] Starred - 0,0..0,2
+     .value Name 's' Load - 0,1..0,2
+     .ctx Load
   .ctx Load
 '''),
 
@@ -953,9 +953,9 @@ Tuple - ROOT 0,0..0,2
 r'''*s,'''), r'''
 Tuple - ROOT 0,0..0,3
   .elts[1]
-  0] Starred - 0,0..0,2
-    .value Name 's' Load - 0,1..0,2
-    .ctx Load
+   0] Starred - 0,0..0,2
+     .value Name 's' Load - 0,1..0,2
+     .ctx Load
   .ctx Load
 '''),
 
@@ -963,11 +963,11 @@ Tuple - ROOT 0,0..0,3
 r'''*not a'''), r'''
 Tuple - ROOT 0,0..0,6
   .elts[1]
-  0] Starred - 0,0..0,6
-    .value UnaryOp - 0,1..0,6
-      .op Not - 0,1..0,4
-      .operand Name 'a' Load - 0,5..0,6
-    .ctx Load
+   0] Starred - 0,0..0,6
+     .value UnaryOp - 0,1..0,6
+       .op Not - 0,1..0,4
+       .operand Name 'a' Load - 0,5..0,6
+     .ctx Load
   .ctx Load
 '''),
 
@@ -975,11 +975,11 @@ Tuple - ROOT 0,0..0,6
 r'''*not a,'''), r'''
 Tuple - ROOT 0,0..0,7
   .elts[1]
-  0] Starred - 0,0..0,6
-    .value UnaryOp - 0,1..0,6
-      .op Not - 0,1..0,4
-      .operand Name 'a' Load - 0,5..0,6
-    .ctx Load
+   0] Starred - 0,0..0,6
+     .value UnaryOp - 0,1..0,6
+       .op Not - 0,1..0,4
+       .operand Name 'a' Load - 0,5..0,6
+     .ctx Load
   .ctx Load
 '''),
 
@@ -987,18 +987,18 @@ Tuple - ROOT 0,0..0,7
 r'''*not a, *b or c'''), r'''
 Tuple - ROOT 0,0..0,15
   .elts[2]
-  0] Starred - 0,0..0,6
-    .value UnaryOp - 0,1..0,6
-      .op Not - 0,1..0,4
-      .operand Name 'a' Load - 0,5..0,6
-    .ctx Load
-  1] Starred - 0,8..0,15
-    .value BoolOp - 0,9..0,15
-      .op Or
-      .values[2]
-      0] Name 'b' Load - 0,9..0,10
-      1] Name 'c' Load - 0,14..0,15
-    .ctx Load
+   0] Starred - 0,0..0,6
+     .value UnaryOp - 0,1..0,6
+       .op Not - 0,1..0,4
+       .operand Name 'a' Load - 0,5..0,6
+     .ctx Load
+   1] Starred - 0,8..0,15
+     .value BoolOp - 0,9..0,15
+       .op Or
+       .values[2]
+        0] Name 'b' Load - 0,9..0,10
+        1] Name 'c' Load - 0,14..0,15
+     .ctx Load
   .ctx Load
 '''),
 
@@ -1006,8 +1006,8 @@ Tuple - ROOT 0,0..0,15
 r'''j, k'''), r'''
 Tuple - ROOT 0,0..0,4
   .elts[2]
-  0] Name 'j' Load - 0,0..0,1
-  1] Name 'k' Load - 0,3..0,4
+   0] Name 'j' Load - 0,0..0,1
+   1] Name 'k' Load - 0,3..0,4
   .ctx Load
 '''),
 
@@ -1038,8 +1038,8 @@ Slice - ROOT 0,0..0,3
 r'''j, k'''), r'''
 Tuple - ROOT 0,0..0,4
   .elts[2]
-  0] Name 'j' Load - 0,0..0,1
-  1] Name 'k' Load - 0,3..0,4
+   0] Name 'j' Load - 0,0..0,1
+   1] Name 'k' Load - 0,3..0,4
   .ctx Load
 '''),
 
@@ -1047,14 +1047,14 @@ Tuple - ROOT 0,0..0,4
 r'''a:b:c, x:y:z'''), r'''
 Tuple - ROOT 0,0..0,12
   .elts[2]
-  0] Slice - 0,0..0,5
-    .lower Name 'a' Load - 0,0..0,1
-    .upper Name 'b' Load - 0,2..0,3
-    .step Name 'c' Load - 0,4..0,5
-  1] Slice - 0,7..0,12
-    .lower Name 'x' Load - 0,7..0,8
-    .upper Name 'y' Load - 0,9..0,10
-    .step Name 'z' Load - 0,11..0,12
+   0] Slice - 0,0..0,5
+     .lower Name 'a' Load - 0,0..0,1
+     .upper Name 'b' Load - 0,2..0,3
+     .step Name 'c' Load - 0,4..0,5
+   1] Slice - 0,7..0,12
+     .lower Name 'x' Load - 0,7..0,8
+     .upper Name 'y' Load - 0,9..0,10
+     .step Name 'z' Load - 0,11..0,12
   .ctx Load
 '''),
 
@@ -1073,8 +1073,8 @@ Slice - ROOT 0,0..0,3
 r'''j, k'''), r'''
 Tuple - ROOT 0,0..0,4
   .elts[2]
-  0] Name 'j' Load - 0,0..0,1
-  1] Name 'k' Load - 0,3..0,4
+   0] Name 'j' Load - 0,0..0,1
+   1] Name 'k' Load - 0,3..0,4
   .ctx Load
 '''),
 
@@ -1158,7 +1158,7 @@ comprehension - ROOT 0,0..0,15
   .target Name 'u' Store - 0,4..0,5
   .iter Name 'v' Load - 0,9..0,10
   .ifs[1]
-  0] Name 'w' Load - 0,14..0,15
+   0] Name 'w' Load - 0,14..0,15
   .is_async 0
 '''),
 
@@ -1174,27 +1174,27 @@ r'''arguments - ROOT'''),
 r'''a: list[str], /, b: int = 1, *c, d=100, **e'''), r'''
 arguments - ROOT 0,0..0,43
   .posonlyargs[1]
-  0] arg - 0,0..0,12
-    .arg 'a'
-    .annotation Subscript - 0,3..0,12
-      .value Name 'list' Load - 0,3..0,7
-      .slice Name 'str' Load - 0,8..0,11
-      .ctx Load
+   0] arg - 0,0..0,12
+     .arg 'a'
+     .annotation Subscript - 0,3..0,12
+       .value Name 'list' Load - 0,3..0,7
+       .slice Name 'str' Load - 0,8..0,11
+       .ctx Load
   .args[1]
-  0] arg - 0,17..0,23
-    .arg 'b'
-    .annotation Name 'int' Load - 0,20..0,23
+   0] arg - 0,17..0,23
+     .arg 'b'
+     .annotation Name 'int' Load - 0,20..0,23
   .vararg arg - 0,30..0,31
     .arg 'c'
   .kwonlyargs[1]
-  0] arg - 0,33..0,34
-    .arg 'd'
+   0] arg - 0,33..0,34
+     .arg 'd'
   .kw_defaults[1]
-  0] Constant 100 - 0,35..0,38
+   0] Constant 100 - 0,35..0,38
   .kwarg arg - 0,42..0,43
     .arg 'e'
   .defaults[1]
-  0] Constant 1 - 0,26..0,27
+   0] Constant 1 - 0,26..0,27
 '''),
 
 (157, 'parse_arguments_lambda', 0, 0, 'arguments', {}, ('arguments_lambda',
@@ -1205,18 +1205,18 @@ r'''arguments - ROOT'''),
 r'''a, /, b, *c, d=100, **e'''), r'''
 arguments - ROOT 0,0..0,23
   .posonlyargs[1]
-  0] arg - 0,0..0,1
-    .arg 'a'
+   0] arg - 0,0..0,1
+     .arg 'a'
   .args[1]
-  0] arg - 0,6..0,7
-    .arg 'b'
+   0] arg - 0,6..0,7
+     .arg 'b'
   .vararg arg - 0,10..0,11
     .arg 'c'
   .kwonlyargs[1]
-  0] arg - 0,13..0,14
-    .arg 'd'
+   0] arg - 0,13..0,14
+     .arg 'd'
   .kw_defaults[1]
-  0] Constant 100 - 0,15..0,18
+   0] Constant 100 - 0,15..0,18
   .kwarg arg - 0,22..0,23
     .arg 'e'
 '''),
@@ -1231,18 +1231,18 @@ d=100,
 '''), r'''
 arguments - ROOT 0,0..5,3
   .posonlyargs[1]
-  0] arg - 0,0..0,1
-    .arg 'a'
+   0] arg - 0,0..0,1
+     .arg 'a'
   .args[1]
-  0] arg - 2,0..2,1
-    .arg 'b'
+   0] arg - 2,0..2,1
+     .arg 'b'
   .vararg arg - 3,1..3,2
     .arg 'c'
   .kwonlyargs[1]
-  0] arg - 4,0..4,1
-    .arg 'd'
+   0] arg - 4,0..4,1
+     .arg 'd'
   .kw_defaults[1]
-  0] Constant 100 - 4,2..4,5
+   0] Constant 100 - 4,2..4,5
   .kwarg arg - 5,2..5,3
     .arg 'e'
 '''),
@@ -1367,52 +1367,52 @@ r'''_aliases - ROOT 0,0..0,0'''),
 r'''a'''), r'''
 _aliases - ROOT 0,0..0,1
   .names[1]
-  0] alias - 0,0..0,1
-    .name 'a'
+   0] alias - 0,0..0,1
+     .name 'a'
 '''),
 
 (185, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''a.b'''), r'''
 _aliases - ROOT 0,0..0,3
   .names[1]
-  0] alias - 0,0..0,3
-    .name 'a.b'
+   0] alias - 0,0..0,3
+     .name 'a.b'
 '''),
 
 (186, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''*'''), r'''
 _aliases - ROOT 0,0..0,1
   .names[1]
-  0] alias - 0,0..0,1
-    .name '*'
+   0] alias - 0,0..0,1
+     .name '*'
 '''),
 
 (187, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''a, b'''), r'''
 _aliases - ROOT 0,0..0,4
   .names[2]
-  0] alias - 0,0..0,1
-    .name 'a'
-  1] alias - 0,3..0,4
-    .name 'b'
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
 '''),
 
 (188, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''a as c'''), r'''
 _aliases - ROOT 0,0..0,6
   .names[1]
-  0] alias - 0,0..0,6
-    .name 'a'
-    .asname 'c'
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'c'
 '''),
 
 (189, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''a.b as c'''), r'''
 _aliases - ROOT 0,0..0,8
   .names[1]
-  0] alias - 0,0..0,8
-    .name 'a.b'
-    .asname 'c'
+   0] alias - 0,0..0,8
+     .name 'a.b'
+     .asname 'c'
 '''),
 
 (190, 'parse__aliases', 0, 0, 'SyntaxError', {}, ('_aliases',
@@ -1423,24 +1423,24 @@ r'''**SyntaxError('invalid syntax')**'''),
 r'''a as x, b as y'''), r'''
 _aliases - ROOT 0,0..0,14
   .names[2]
-  0] alias - 0,0..0,6
-    .name 'a'
-    .asname 'x'
-  1] alias - 0,8..0,14
-    .name 'b'
-    .asname 'y'
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'x'
+   1] alias - 0,8..0,14
+     .name 'b'
+     .asname 'y'
 '''),
 
 (192, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''a as x, a.b as y'''), r'''
 _aliases - ROOT 0,0..0,16
   .names[2]
-  0] alias - 0,0..0,6
-    .name 'a'
-    .asname 'x'
-  1] alias - 0,8..0,16
-    .name 'a.b'
-    .asname 'y'
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'x'
+   1] alias - 0,8..0,16
+     .name 'a.b'
+     .asname 'y'
 '''),
 
 (193, 'parse_Import_name', 0, 0, 'SyntaxError', {}, ('Import_name',
@@ -1501,16 +1501,16 @@ r'''_aliases - ROOT 0,0..0,0'''),
 r'''a'''), r'''
 _aliases - ROOT 0,0..0,1
   .names[1]
-  0] alias - 0,0..0,1
-    .name 'a'
+   0] alias - 0,0..0,1
+     .name 'a'
 '''),
 
 (205, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r'''a.b'''), r'''
 _aliases - ROOT 0,0..0,3
   .names[1]
-  0] alias - 0,0..0,3
-    .name 'a.b'
+   0] alias - 0,0..0,3
+     .name 'a.b'
 '''),
 
 (206, 'parse__Import_names', 0, 0, 'SyntaxError', {}, ('_Import_names',
@@ -1521,28 +1521,28 @@ r'''**SyntaxError('invalid syntax')**'''),
 r'''a, b'''), r'''
 _aliases - ROOT 0,0..0,4
   .names[2]
-  0] alias - 0,0..0,1
-    .name 'a'
-  1] alias - 0,3..0,4
-    .name 'b'
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
 '''),
 
 (208, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r'''a as c'''), r'''
 _aliases - ROOT 0,0..0,6
   .names[1]
-  0] alias - 0,0..0,6
-    .name 'a'
-    .asname 'c'
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'c'
 '''),
 
 (209, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r'''a.b as c'''), r'''
 _aliases - ROOT 0,0..0,8
   .names[1]
-  0] alias - 0,0..0,8
-    .name 'a.b'
-    .asname 'c'
+   0] alias - 0,0..0,8
+     .name 'a.b'
+     .asname 'c'
 '''),
 
 (210, 'parse__Import_names', 0, 0, 'SyntaxError', {}, ('_Import_names',
@@ -1553,24 +1553,24 @@ r'''**SyntaxError('invalid syntax')**'''),
 r'''a as x, b as y'''), r'''
 _aliases - ROOT 0,0..0,14
   .names[2]
-  0] alias - 0,0..0,6
-    .name 'a'
-    .asname 'x'
-  1] alias - 0,8..0,14
-    .name 'b'
-    .asname 'y'
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'x'
+   1] alias - 0,8..0,14
+     .name 'b'
+     .asname 'y'
 '''),
 
 (212, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r'''a as x, a.b as y'''), r'''
 _aliases - ROOT 0,0..0,16
   .names[2]
-  0] alias - 0,0..0,6
-    .name 'a'
-    .asname 'x'
-  1] alias - 0,8..0,16
-    .name 'a.b'
-    .asname 'y'
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'x'
+   1] alias - 0,8..0,16
+     .name 'a.b'
+     .asname 'y'
 '''),
 
 (213, 'parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
@@ -1628,8 +1628,8 @@ r'''_aliases - ROOT 0,0..0,0'''),
 r'''a'''), r'''
 _aliases - ROOT 0,0..0,1
   .names[1]
-  0] alias - 0,0..0,1
-    .name 'a'
+   0] alias - 0,0..0,1
+     .name 'a'
 '''),
 
 (225, 'parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
@@ -1640,27 +1640,27 @@ r'''**SyntaxError('invalid syntax')**'''),
 r'''*'''), r'''
 _aliases - ROOT 0,0..0,1
   .names[1]
-  0] alias - 0,0..0,1
-    .name '*'
+   0] alias - 0,0..0,1
+     .name '*'
 '''),
 
 (227, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
 r'''a, b'''), r'''
 _aliases - ROOT 0,0..0,4
   .names[2]
-  0] alias - 0,0..0,1
-    .name 'a'
-  1] alias - 0,3..0,4
-    .name 'b'
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
 '''),
 
 (228, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
 r'''a as c'''), r'''
 _aliases - ROOT 0,0..0,6
   .names[1]
-  0] alias - 0,0..0,6
-    .name 'a'
-    .asname 'c'
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'c'
 '''),
 
 (229, 'parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
@@ -1675,12 +1675,12 @@ r'''**SyntaxError('invalid syntax')**'''),
 r'''a as x, b as y'''), r'''
 _aliases - ROOT 0,0..0,14
   .names[2]
-  0] alias - 0,0..0,6
-    .name 'a'
-    .asname 'x'
-  1] alias - 0,8..0,14
-    .name 'b'
-    .asname 'y'
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'x'
+   1] alias - 0,8..0,14
+     .name 'b'
+     .asname 'y'
 '''),
 
 (232, 'parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
@@ -1702,8 +1702,8 @@ r'''a, b'''), r'''
 withitem - ROOT 0,0..0,4
   .context_expr Tuple - 0,0..0,4
     .elts[2]
-    0] Name 'a' Load - 0,0..0,1
-    1] Name 'b' Load - 0,3..0,4
+     0] Name 'a' Load - 0,0..0,1
+     1] Name 'b' Load - 0,3..0,4
     .ctx Load
 '''),
 
@@ -1712,8 +1712,8 @@ r'''(a, b)'''), r'''
 withitem - ROOT 0,0..0,6
   .context_expr Tuple - 0,0..0,6
     .elts[2]
-    0] Name 'a' Load - 0,1..0,2
-    1] Name 'b' Load - 0,4..0,5
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
     .ctx Load
 '''),
 
@@ -1768,88 +1768,88 @@ r'''_withitems - ROOT 0,0..0,0'''),
 r'''a'''), r'''
 _withitems - ROOT 0,0..0,1
   .items[1]
-  0] withitem - 0,0..0,1
-    .context_expr Name 'a' Load - 0,0..0,1
+   0] withitem - 0,0..0,1
+     .context_expr Name 'a' Load - 0,0..0,1
 '''),
 
 (247, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''a, b'''), r'''
 _withitems - ROOT 0,0..0,4
   .items[2]
-  0] withitem - 0,0..0,1
-    .context_expr Name 'a' Load - 0,0..0,1
-  1] withitem - 0,3..0,4
-    .context_expr Name 'b' Load - 0,3..0,4
+   0] withitem - 0,0..0,1
+     .context_expr Name 'a' Load - 0,0..0,1
+   1] withitem - 0,3..0,4
+     .context_expr Name 'b' Load - 0,3..0,4
 '''),
 
 (248, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''(a, b)'''), r'''
 _withitems - ROOT 0,0..0,6
   .items[1]
-  0] withitem - 0,0..0,6
-    .context_expr Tuple - 0,0..0,6
-      .elts[2]
-      0] Name 'a' Load - 0,1..0,2
-      1] Name 'b' Load - 0,4..0,5
-      .ctx Load
+   0] withitem - 0,0..0,6
+     .context_expr Tuple - 0,0..0,6
+       .elts[2]
+        0] Name 'a' Load - 0,1..0,2
+        1] Name 'b' Load - 0,4..0,5
+       .ctx Load
 '''),
 
 (249, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''()'''), r'''
 _withitems - ROOT 0,0..0,2
   .items[1]
-  0] withitem - 0,0..0,2
-    .context_expr Tuple - 0,0..0,2
-      .ctx Load
+   0] withitem - 0,0..0,2
+     .context_expr Tuple - 0,0..0,2
+       .ctx Load
 '''),
 
 (250, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''a as b'''), r'''
 _withitems - ROOT 0,0..0,6
   .items[1]
-  0] withitem - 0,0..0,6
-    .context_expr Name 'a' Load - 0,0..0,1
-    .optional_vars Name 'b' Store - 0,5..0,6
+   0] withitem - 0,0..0,6
+     .context_expr Name 'a' Load - 0,0..0,1
+     .optional_vars Name 'b' Store - 0,5..0,6
 '''),
 
 (251, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''(a) as (b)'''), r'''
 _withitems - ROOT 0,0..0,10
   .items[1]
-  0] withitem - 0,0..0,10
-    .context_expr Name 'a' Load - 0,1..0,2
-    .optional_vars Name 'b' Store - 0,8..0,9
+   0] withitem - 0,0..0,10
+     .context_expr Name 'a' Load - 0,1..0,2
+     .optional_vars Name 'b' Store - 0,8..0,9
 '''),
 
 (252, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''a, b as c'''), r'''
 _withitems - ROOT 0,0..0,9
   .items[2]
-  0] withitem - 0,0..0,1
-    .context_expr Name 'a' Load - 0,0..0,1
-  1] withitem - 0,3..0,9
-    .context_expr Name 'b' Load - 0,3..0,4
-    .optional_vars Name 'c' Store - 0,8..0,9
+   0] withitem - 0,0..0,1
+     .context_expr Name 'a' Load - 0,0..0,1
+   1] withitem - 0,3..0,9
+     .context_expr Name 'b' Load - 0,3..0,4
+     .optional_vars Name 'c' Store - 0,8..0,9
 '''),
 
 (253, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''a as b, x as y'''), r'''
 _withitems - ROOT 0,0..0,14
   .items[2]
-  0] withitem - 0,0..0,6
-    .context_expr Name 'a' Load - 0,0..0,1
-    .optional_vars Name 'b' Store - 0,5..0,6
-  1] withitem - 0,8..0,14
-    .context_expr Name 'x' Load - 0,8..0,9
-    .optional_vars Name 'y' Store - 0,13..0,14
+   0] withitem - 0,0..0,6
+     .context_expr Name 'a' Load - 0,0..0,1
+     .optional_vars Name 'b' Store - 0,5..0,6
+   1] withitem - 0,8..0,14
+     .context_expr Name 'x' Load - 0,8..0,9
+     .optional_vars Name 'y' Store - 0,13..0,14
 '''),
 
 (254, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''(a)'''), r'''
 _withitems - ROOT 0,0..0,3
   .items[1]
-  0] withitem - 0,0..0,3
-    .context_expr Name 'a' Load - 0,1..0,2
+   0] withitem - 0,0..0,3
+     .context_expr Name 'a' Load - 0,1..0,2
 '''),
 
 (255, 'parse__withitems', 0, 0, 'SyntaxError', {}, ('_withitems',
@@ -1874,9 +1874,9 @@ r'''MatchSingleton None - ROOT 0,0..0,4'''),
 r'''[a, *_]'''), r'''
 MatchSequence - ROOT 0,0..0,7
   .patterns[2]
-  0] MatchAs - 0,1..0,2
-    .name 'a'
-  1] MatchStar - 0,4..0,6
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchStar - 0,4..0,6
 '''),
 
 (260, 'parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern',
@@ -1887,9 +1887,9 @@ r'''MatchSequence - ROOT 0,0..0,2'''),
 r'''{"key": _}'''), r'''
 MatchMapping - ROOT 0,0..0,10
   .keys[1]
-  0] Constant 'key' - 0,1..0,6
+   0] Constant 'key' - 0,1..0,6
   .patterns[1]
-  0] MatchAs - 0,8..0,9
+   0] MatchAs - 0,8..0,9
 '''),
 
 (262, 'parse_pattern', 0, 0, 'MatchMapping', {}, ('pattern',
@@ -1907,10 +1907,10 @@ r'''SomeClass(attr=val)'''), r'''
 MatchClass - ROOT 0,0..0,19
   .cls Name 'SomeClass' Load - 0,0..0,9
   .kwd_attrs[1]
-  0] 'attr'
+   0] 'attr'
   .kwd_patterns[1]
-  0] MatchAs - 0,15..0,18
-    .name 'val'
+   0] MatchAs - 0,15..0,18
+     .name 'val'
 '''),
 
 (265, 'parse_pattern', 0, 0, 'MatchAs', {}, ('pattern',
@@ -1931,12 +1931,12 @@ MatchAs - ROOT 0,0..0,11
 r'''1 | 2 | 3'''), r'''
 MatchOr - ROOT 0,0..0,9
   .patterns[3]
-  0] MatchValue - 0,0..0,1
-    .value Constant 1 - 0,0..0,1
-  1] MatchValue - 0,4..0,5
-    .value Constant 2 - 0,4..0,5
-  2] MatchValue - 0,8..0,9
-    .value Constant 3 - 0,8..0,9
+   0] MatchValue - 0,0..0,1
+     .value Constant 1 - 0,0..0,1
+   1] MatchValue - 0,4..0,5
+     .value Constant 2 - 0,4..0,5
+   2] MatchValue - 0,8..0,9
+     .value Constant 3 - 0,8..0,9
 '''),
 
 (268, 'parse_pattern', 0, 0, 'MatchAs', {}, ('pattern',
@@ -1961,8 +1961,8 @@ b
 BoolOp - ROOT 0,0..2,1
   .op Or
   .values[2]
-  0] Name 'a' Load - 0,0..0,1
-  1] Name 'b' Load - 2,0..2,1
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 2,0..2,1
 '''),
 
 (272, 'parse_expr', 0, 0, 'NamedExpr', {}, ('expr', r'''
@@ -2046,9 +2046,9 @@ b
 '''), r'''
 Dict - ROOT 0,0..4,1
   .keys[1]
-  0] Name 'a' Load - 1,0..1,1
+   0] Name 'a' Load - 1,0..1,1
   .values[1]
-  0] Name 'b' Load - 3,0..3,1
+   0] Name 'b' Load - 3,0..3,1
 '''),
 
 (280, 'parse_expr', 0, 0, 'Set', {}, ('expr', r'''
@@ -2060,8 +2060,8 @@ b
 '''), r'''
 Set - ROOT 0,0..4,1
   .elts[2]
-  0] Name 'a' Load - 1,0..1,1
-  1] Name 'b' Load - 3,0..3,1
+   0] Name 'a' Load - 1,0..1,1
+   1] Name 'b' Load - 3,0..3,1
 '''),
 
 (281, 'parse_expr', 0, 0, 'ListComp', {}, ('expr', r'''
@@ -2076,10 +2076,10 @@ b
 ListComp - ROOT 0,0..6,1
   .elt Name 'a' Load - 1,0..1,1
   .generators[1]
-  0] comprehension - 2,0..5,1
-    .target Name 'a' Store - 3,0..3,1
-    .iter Name 'b' Load - 5,0..5,1
-    .is_async 0
+   0] comprehension - 2,0..5,1
+     .target Name 'a' Store - 3,0..3,1
+     .iter Name 'b' Load - 5,0..5,1
+     .is_async 0
 '''),
 
 (282, 'parse_expr', 0, 0, 'SetComp', {}, ('expr', r'''
@@ -2094,10 +2094,10 @@ b
 SetComp - ROOT 0,0..6,1
   .elt Name 'a' Load - 1,0..1,1
   .generators[1]
-  0] comprehension - 2,0..5,1
-    .target Name 'a' Store - 3,0..3,1
-    .iter Name 'b' Load - 5,0..5,1
-    .is_async 0
+   0] comprehension - 2,0..5,1
+     .target Name 'a' Store - 3,0..3,1
+     .iter Name 'b' Load - 5,0..5,1
+     .is_async 0
 '''),
 
 (283, 'parse_expr', 0, 0, 'DictComp', {}, ('expr', r'''
@@ -2117,14 +2117,14 @@ DictComp - ROOT 0,0..10,1
   .key Name 'a' Load - 1,0..1,1
   .value Name 'c' Load - 3,0..3,1
   .generators[1]
-  0] comprehension - 4,0..9,1
-    .target Tuple - 5,0..7,1
-      .elts[2]
-      0] Name 'a' Store - 5,0..5,1
-      1] Name 'c' Store - 7,0..7,1
-      .ctx Store
-    .iter Name 'b' Load - 9,0..9,1
-    .is_async 0
+   0] comprehension - 4,0..9,1
+     .target Tuple - 5,0..7,1
+       .elts[2]
+        0] Name 'a' Store - 5,0..5,1
+        1] Name 'c' Store - 7,0..7,1
+       .ctx Store
+     .iter Name 'b' Load - 9,0..9,1
+     .is_async 0
 '''),
 
 (284, 'parse_expr', 0, 0, 'GeneratorExp', {}, ('expr', r'''
@@ -2139,10 +2139,10 @@ b
 GeneratorExp - ROOT 0,0..6,1
   .elt Name 'a' Load - 1,0..1,1
   .generators[1]
-  0] comprehension - 2,0..5,1
-    .target Name 'a' Store - 3,0..3,1
-    .iter Name 'b' Load - 5,0..5,1
-    .is_async 0
+   0] comprehension - 2,0..5,1
+     .target Name 'a' Store - 3,0..3,1
+     .iter Name 'b' Load - 5,0..5,1
+     .is_async 0
 '''),
 
 (285, 'parse_expr', 0, 0, 'Await', {}, ('expr', r'''
@@ -2182,9 +2182,9 @@ b
 Compare - ROOT 0,0..2,1
   .left Name 'a' Load - 0,0..0,1
   .ops[1]
-  0] Lt - 1,0..1,1
+   0] Lt - 1,0..1,1
   .comparators[1]
-  0] Name 'b' Load - 2,0..2,1
+   0] Name 'b' Load - 2,0..2,1
 '''),
 
 (290, 'parse_expr', 0, 0, 'Call', {}, ('expr', r'''
@@ -2196,25 +2196,25 @@ a
 Call - ROOT 0,0..3,1
   .func Name 'f' Load - 0,0..0,1
   .args[1]
-  0] Name 'a' Load - 2,0..2,1
+   0] Name 'a' Load - 2,0..2,1
 '''),
 
 (291, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
 "\nf'{a}'\n"), r'''
 JoinedStr - ROOT
   .values[1]
-  0] FormattedValue
-    .value Name 'a' Load
-    .conversion -1
+   0] FormattedValue
+     .value Name 'a' Load
+     .conversion -1
 '''),
 
 (292, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
 r'''f"{a}"'''), r'''
 JoinedStr - ROOT
   .values[1]
-  0] FormattedValue
-    .value Name 'a' Load
-    .conversion -1
+   0] FormattedValue
+     .value Name 'a' Load
+     .conversion -1
 '''),
 
 (293, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr', r"""
@@ -2226,11 +2226,11 @@ a
 """), r'''
 JoinedStr - ROOT
   .values[3]
-  0] Constant '\n'
-  1] FormattedValue
-    .value Name 'a' Load
-    .conversion -1
-  2] Constant '\n'
+   0] Constant '\n'
+   1] FormattedValue
+     .value Name 'a' Load
+     .conversion -1
+   2] Constant '\n'
 '''),
 
 (294, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr', r'''
@@ -2242,11 +2242,11 @@ a
 '''), r'''
 JoinedStr - ROOT
   .values[3]
-  0] Constant '\n'
-  1] FormattedValue
-    .value Name 'a' Load
-    .conversion -1
-  2] Constant '\n'
+   0] Constant '\n'
+   1] FormattedValue
+     .value Name 'a' Load
+     .conversion -1
+   2] Constant '\n'
 '''),
 
 (295, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
@@ -2362,8 +2362,8 @@ b
 '''), r'''
 List - ROOT 0,0..4,1
   .elts[2]
-  0] Name 'a' Load - 1,0..1,1
-  1] Name 'b' Load - 3,0..3,1
+   0] Name 'a' Load - 1,0..1,1
+   1] Name 'b' Load - 3,0..3,1
   .ctx Load
 '''),
 
@@ -2376,8 +2376,8 @@ b
 '''), r'''
 Tuple - ROOT 0,0..4,1
   .elts[2]
-  0] Name 'a' Load - 1,0..1,1
-  1] Name 'b' Load - 3,0..3,1
+   0] Name 'a' Load - 1,0..1,1
+   1] Name 'b' Load - 3,0..3,1
   .ctx Load
 '''),
 
@@ -2387,7 +2387,7 @@ a
 '''), r'''
 Tuple - ROOT 0,0..1,1
   .elts[1]
-  0] Name 'a' Load - 0,0..0,1
+   0] Name 'a' Load - 0,0..0,1
   .ctx Load
 '''),
 
@@ -2398,8 +2398,8 @@ b
 '''), r'''
 Tuple - ROOT 0,0..2,1
   .elts[2]
-  0] Name 'a' Load - 0,0..0,1
-  1] Name 'b' Load - 2,0..2,1
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 2,0..2,1
   .ctx Load
 '''),
 
@@ -2423,10 +2423,10 @@ b
 '''), r'''
 MatchSequence - ROOT 0,0..5,1
   .patterns[2]
-  0] MatchAs - 1,0..1,1
-    .name 'a'
-  1] MatchStar - 3,0..4,1
-    .name 'b'
+   0] MatchAs - 1,0..1,1
+     .name 'a'
+   1] MatchStar - 3,0..4,1
+     .name 'b'
 '''),
 
 (320, 'parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern', r'''
@@ -2439,10 +2439,10 @@ b
 '''), r'''
 MatchSequence - ROOT 0,0..4,1
   .patterns[2]
-  0] MatchAs - 1,0..1,1
-    .name 'a'
-  1] MatchStar - 3,0..4,1
-    .name 'b'
+   0] MatchAs - 1,0..1,1
+     .name 'a'
+   1] MatchStar - 3,0..4,1
+     .name 'b'
 '''),
 
 (321, 'parse_pattern', 0, 0, 'MatchMapping', {}, ('pattern', r'''
@@ -2454,9 +2454,9 @@ _
 '''), r'''
 MatchMapping - ROOT 0,0..4,1
   .keys[1]
-  0] Constant 'key' - 1,0..1,5
+   0] Constant 'key' - 1,0..1,5
   .patterns[1]
-  0] MatchAs - 3,0..3,1
+   0] MatchAs - 3,0..3,1
 '''),
 
 (322, 'parse_pattern', 0, 0, 'MatchClass', {}, ('pattern', r'''
@@ -2470,10 +2470,10 @@ val
 MatchClass - ROOT 0,0..5,1
   .cls Name 'SomeClass' Load - 0,0..0,9
   .kwd_attrs[1]
-  0] 'attr'
+   0] 'attr'
   .kwd_patterns[1]
-  0] MatchAs - 4,0..4,3
-    .name 'val'
+   0] MatchAs - 4,0..4,3
+     .name 'val'
 '''),
 
 (323, 'parse_pattern', 0, 0, 'MatchAs', {}, ('pattern',
@@ -2500,10 +2500,10 @@ MatchAs - ROOT 0,0..2,6
 '''), r'''
 MatchOr - ROOT 0,0..2,1
   .patterns[2]
-  0] MatchValue - 0,0..0,1
-    .value Constant 1 - 0,0..0,1
-  1] MatchValue - 2,0..2,1
-    .value Constant 2 - 2,0..2,1
+   0] MatchValue - 0,0..0,1
+     .value Constant 1 - 0,0..0,1
+   1] MatchValue - 2,0..2,1
+     .value Constant 2 - 2,0..2,1
 '''),
 
 (326, 'parse_expr', 0, 0, 'BoolOp', {}, ('expr',
@@ -2511,8 +2511,8 @@ MatchOr - ROOT 0,0..2,1
 BoolOp - ROOT 1,1..3,2
   .op Or
   .values[2]
-  0] Name 'a' Load - 1,1..1,2
-  1] Name 'b' Load - 3,1..3,2
+   0] Name 'a' Load - 1,1..1,2
+   1] Name 'b' Load - 3,1..3,2
 '''),
 
 (327, 'parse_expr', 0, 0, 'NamedExpr', {}, ('expr',
@@ -2570,17 +2570,17 @@ IfExp - ROOT 1,1..5,2
 '\n {\n a\n :\n b\n }\n         '), r'''
 Dict - ROOT 1,1..5,2
   .keys[1]
-  0] Name 'a' Load - 2,1..2,2
+   0] Name 'a' Load - 2,1..2,2
   .values[1]
-  0] Name 'b' Load - 4,1..4,2
+   0] Name 'b' Load - 4,1..4,2
 '''),
 
 (335, 'parse_expr', 0, 0, 'Set', {}, ('expr',
 '\n {\n a\n ,\n b\n }\n         '), r'''
 Set - ROOT 1,1..5,2
   .elts[2]
-  0] Name 'a' Load - 2,1..2,2
-  1] Name 'b' Load - 4,1..4,2
+   0] Name 'a' Load - 2,1..2,2
+   1] Name 'b' Load - 4,1..4,2
 '''),
 
 (336, 'parse_expr', 0, 0, 'ListComp', {}, ('expr',
@@ -2588,10 +2588,10 @@ Set - ROOT 1,1..5,2
 ListComp - ROOT 1,1..7,2
   .elt Name 'a' Load - 2,1..2,2
   .generators[1]
-  0] comprehension - 3,1..6,2
-    .target Name 'a' Store - 4,1..4,2
-    .iter Name 'b' Load - 6,1..6,2
-    .is_async 0
+   0] comprehension - 3,1..6,2
+     .target Name 'a' Store - 4,1..4,2
+     .iter Name 'b' Load - 6,1..6,2
+     .is_async 0
 '''),
 
 (337, 'parse_expr', 0, 0, 'SetComp', {}, ('expr',
@@ -2599,10 +2599,10 @@ ListComp - ROOT 1,1..7,2
 SetComp - ROOT 1,1..7,2
   .elt Name 'a' Load - 2,1..2,2
   .generators[1]
-  0] comprehension - 3,1..6,2
-    .target Name 'a' Store - 4,1..4,2
-    .iter Name 'b' Load - 6,1..6,2
-    .is_async 0
+   0] comprehension - 3,1..6,2
+     .target Name 'a' Store - 4,1..4,2
+     .iter Name 'b' Load - 6,1..6,2
+     .is_async 0
 '''),
 
 (338, 'parse_expr', 0, 0, 'DictComp', {}, ('expr',
@@ -2611,14 +2611,14 @@ DictComp - ROOT 1,1..11,2
   .key Name 'a' Load - 2,1..2,2
   .value Name 'c' Load - 4,1..4,2
   .generators[1]
-  0] comprehension - 5,1..10,2
-    .target Tuple - 6,1..8,2
-      .elts[2]
-      0] Name 'a' Store - 6,1..6,2
-      1] Name 'c' Store - 8,1..8,2
-      .ctx Store
-    .iter Name 'b' Load - 10,1..10,2
-    .is_async 0
+   0] comprehension - 5,1..10,2
+     .target Tuple - 6,1..8,2
+       .elts[2]
+        0] Name 'a' Store - 6,1..6,2
+        1] Name 'c' Store - 8,1..8,2
+       .ctx Store
+     .iter Name 'b' Load - 10,1..10,2
+     .is_async 0
 '''),
 
 (339, 'parse_expr', 0, 0, 'GeneratorExp', {}, ('expr',
@@ -2626,10 +2626,10 @@ DictComp - ROOT 1,1..11,2
 GeneratorExp - ROOT 1,1..7,2
   .elt Name 'a' Load - 2,1..2,2
   .generators[1]
-  0] comprehension - 3,1..6,2
-    .target Name 'a' Store - 4,1..4,2
-    .iter Name 'b' Load - 6,1..6,2
-    .is_async 0
+   0] comprehension - 3,1..6,2
+     .target Name 'a' Store - 4,1..4,2
+     .iter Name 'b' Load - 6,1..6,2
+     .is_async 0
 '''),
 
 (340, 'parse_expr', 0, 0, 'Await', {}, ('expr',
@@ -2659,9 +2659,9 @@ YieldFrom - ROOT 1,1..3,2
 Compare - ROOT 1,1..3,2
   .left Name 'a' Load - 1,1..1,2
   .ops[1]
-  0] Lt - 2,1..2,2
+   0] Lt - 2,1..2,2
   .comparators[1]
-  0] Name 'b' Load - 3,1..3,2
+   0] Name 'b' Load - 3,1..3,2
 '''),
 
 (345, 'parse_expr', 0, 0, 'Call', {}, ('expr',
@@ -2669,47 +2669,47 @@ Compare - ROOT 1,1..3,2
 Call - ROOT 1,1..4,2
   .func Name 'f' Load - 1,1..1,2
   .args[1]
-  0] Name 'a' Load - 3,1..3,2
+   0] Name 'a' Load - 3,1..3,2
 '''),
 
 (346, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
 "\n f'{a}'\n "), r'''
 JoinedStr - ROOT
   .values[1]
-  0] FormattedValue
-    .value Name 'a' Load
-    .conversion -1
+   0] FormattedValue
+     .value Name 'a' Load
+     .conversion -1
 '''),
 
 (347, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
 '\n f"{a}"\n         '), r'''
 JoinedStr - ROOT
   .values[1]
-  0] FormattedValue
-    .value Name 'a' Load
-    .conversion -1
+   0] FormattedValue
+     .value Name 'a' Load
+     .conversion -1
 '''),
 
 (348, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
 "\n f'''\n {\n a\n }\n         '''\n "), r'''
 JoinedStr - ROOT
   .values[3]
-  0] Constant '\n '
-  1] FormattedValue
-    .value Name 'a' Load
-    .conversion -1
-  2] Constant '\n         '
+   0] Constant '\n '
+   1] FormattedValue
+     .value Name 'a' Load
+     .conversion -1
+   2] Constant '\n         '
 '''),
 
 (349, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
 '\n f"""\n {\n a\n }\n """\n         '), r'''
 JoinedStr - ROOT
   .values[3]
-  0] Constant '\n '
-  1] FormattedValue
-    .value Name 'a' Load
-    .conversion -1
-  2] Constant '\n '
+   0] Constant '\n '
+   1] FormattedValue
+     .value Name 'a' Load
+     .conversion -1
+   2] Constant '\n '
 '''),
 
 (350, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
@@ -2799,8 +2799,8 @@ Starred - ROOT 1,1..2,2
 '\n [\n a\n ,\n b\n ]\n         '), r'''
 List - ROOT 1,1..5,2
   .elts[2]
-  0] Name 'a' Load - 2,1..2,2
-  1] Name 'b' Load - 4,1..4,2
+   0] Name 'a' Load - 2,1..2,2
+   1] Name 'b' Load - 4,1..4,2
   .ctx Load
 '''),
 
@@ -2808,8 +2808,8 @@ List - ROOT 1,1..5,2
 '\n (\n a\n ,\n b\n )\n         '), r'''
 Tuple - ROOT 1,1..5,2
   .elts[2]
-  0] Name 'a' Load - 2,1..2,2
-  1] Name 'b' Load - 4,1..4,2
+   0] Name 'a' Load - 2,1..2,2
+   1] Name 'b' Load - 4,1..4,2
   .ctx Load
 '''),
 
@@ -2817,7 +2817,7 @@ Tuple - ROOT 1,1..5,2
 '\n a\n ,\n         '), r'''
 Tuple - ROOT 1,1..2,2
   .elts[1]
-  0] Name 'a' Load - 1,1..1,2
+   0] Name 'a' Load - 1,1..1,2
   .ctx Load
 '''),
 
@@ -2825,8 +2825,8 @@ Tuple - ROOT 1,1..2,2
 '\n a\n ,\n b\n         '), r'''
 Tuple - ROOT 1,1..3,2
   .elts[2]
-  0] Name 'a' Load - 1,1..1,2
-  1] Name 'b' Load - 3,1..3,2
+   0] Name 'a' Load - 1,1..1,2
+   1] Name 'b' Load - 3,1..3,2
   .ctx Load
 '''),
 
@@ -2844,29 +2844,29 @@ r'''MatchSingleton None - ROOT 1,1..1,5'''),
 '\n [\n a\n ,\n *\n b\n ]\n         '), r'''
 MatchSequence - ROOT 1,1..6,2
   .patterns[2]
-  0] MatchAs - 2,1..2,2
-    .name 'a'
-  1] MatchStar - 4,1..5,2
-    .name 'b'
+   0] MatchAs - 2,1..2,2
+     .name 'a'
+   1] MatchStar - 4,1..5,2
+     .name 'b'
 '''),
 
 (375, 'parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern',
 '\n \n a\n ,\n *\n b\n \n         '), r'''
 MatchSequence - ROOT 0,0..5,2
   .patterns[2]
-  0] MatchAs - 2,1..2,2
-    .name 'a'
-  1] MatchStar - 4,1..5,2
-    .name 'b'
+   0] MatchAs - 2,1..2,2
+     .name 'a'
+   1] MatchStar - 4,1..5,2
+     .name 'b'
 '''),
 
 (376, 'parse_pattern', 0, 0, 'MatchMapping', {}, ('pattern',
 '\n {\n "key"\n :\n _\n }\n         '), r'''
 MatchMapping - ROOT 1,1..5,2
   .keys[1]
-  0] Constant 'key' - 2,1..2,6
+   0] Constant 'key' - 2,1..2,6
   .patterns[1]
-  0] MatchAs - 4,1..4,2
+   0] MatchAs - 4,1..4,2
 '''),
 
 (377, 'parse_pattern', 0, 0, 'MatchClass', {}, ('pattern',
@@ -2874,10 +2874,10 @@ MatchMapping - ROOT 1,1..5,2
 MatchClass - ROOT 1,1..6,2
   .cls Name 'SomeClass' Load - 1,1..1,10
   .kwd_attrs[1]
-  0] 'attr'
+   0] 'attr'
   .kwd_patterns[1]
-  0] MatchAs - 5,1..5,4
-    .name 'val'
+   0] MatchAs - 5,1..5,4
+     .name 'val'
 '''),
 
 (378, 'parse_pattern', 0, 0, 'MatchAs', {}, ('pattern',
@@ -2898,26 +2898,26 @@ MatchAs - ROOT 1,1..3,7
 '\n 1\n |\n 2\n         '), r'''
 MatchOr - ROOT 1,1..3,2
   .patterns[2]
-  0] MatchValue - 1,1..1,2
-    .value Constant 1 - 1,1..1,2
-  1] MatchValue - 3,1..3,2
-    .value Constant 2 - 3,1..3,2
+   0] MatchValue - 1,1..1,2
+     .value Constant 1 - 1,1..1,2
+   1] MatchValue - 3,1..3,2
+     .value Constant 2 - 3,1..3,2
 '''),
 
 (381, 'parse_Module', 0, 0, 'Module', {}, (mod,
 r'''j'''), r'''
 Module - ROOT 0,0..0,1
   .body[1]
-  0] Expr - 0,0..0,1
-    .value Name 'j' Load - 0,0..0,1
+   0] Expr - 0,0..0,1
+     .value Name 'j' Load - 0,0..0,1
 '''),
 
 (382, 'parse_Module', 0, 0, 'Module', {}, (Module,
 r'''j'''), r'''
 Module - ROOT 0,0..0,1
   .body[1]
-  0] Expr - 0,0..0,1
-    .value Name 'j' Load - 0,0..0,1
+   0] Expr - 0,0..0,1
+     .value Name 'j' Load - 0,0..0,1
 '''),
 
 (383, 'parse_Expression', 0, 0, 'Expression', {}, (Expression,
@@ -2930,8 +2930,8 @@ Expression - ROOT 0,0..0,4
 r'''j'''), r'''
 Interactive - ROOT 0,0..0,1
   .body[1]
-  0] Expr - 0,0..0,1
-    .value Name 'j' Load - 0,0..0,1
+   0] Expr - 0,0..0,1
+     .value Name 'j' Load - 0,0..0,1
 '''),
 
 (385, 'parse_stmt', 0, 0, 'AnnAssign', {}, (stmt,
@@ -2978,7 +2978,7 @@ Expr - ROOT 0,0..0,1
 r'''except: pass'''), r'''
 ExceptHandler - ROOT 0,0..0,12
   .body[1]
-  0] Pass - 0,8..0,12
+   0] Pass - 0,8..0,12
 '''),
 
 (392, 'parse_ExceptHandler', 0, 0, 'ParseError', {}, (ExceptHandler, r'''
@@ -2996,7 +2996,7 @@ r'''case None: pass'''), r'''
 match_case - ROOT 0,0..0,15
   .pattern MatchSingleton None - 0,5..0,9
   .body[1]
-  0] Pass - 0,11..0,15
+   0] Pass - 0,11..0,15
 '''),
 
 (395, 'parse_match_case', 0, 0, 'ParseError', {}, (match_case, r'''
@@ -3035,9 +3035,9 @@ s,
 '''), r'''
 Tuple - ROOT 0,0..1,2
   .elts[1]
-  0] Starred - 0,0..1,1
-    .value Name 's' Load - 1,0..1,1
-    .ctx Load
+   0] Starred - 0,0..1,1
+     .value Name 's' Load - 1,0..1,1
+     .ctx Load
   .ctx Load
 '''),
 
@@ -3049,8 +3049,8 @@ Tuple - ROOT 0,0..1,2
 '''), r'''
 Tuple - ROOT 0,0..3,1
   .elts[2]
-  0] Constant 1 - 0,0..0,1
-  1] Constant 2 - 2,0..2,1
+   0] Constant 1 - 0,0..0,1
+   1] Constant 2 - 2,0..2,1
   .ctx Load
 '''),
 
@@ -3153,7 +3153,7 @@ comprehension - ROOT 0,0..0,15
   .target Name 'u' Store - 0,4..0,5
   .iter Name 'v' Load - 0,9..0,10
   .ifs[1]
-  0] Name 'w' Load - 0,14..0,15
+   0] Name 'w' Load - 0,14..0,15
   .is_async 0
 '''),
 
@@ -3169,45 +3169,45 @@ r'''arguments - ROOT'''),
 r'''a: list[str], /, b: int = 1, *c, d=100, **e'''), r'''
 arguments - ROOT 0,0..0,43
   .posonlyargs[1]
-  0] arg - 0,0..0,12
-    .arg 'a'
-    .annotation Subscript - 0,3..0,12
-      .value Name 'list' Load - 0,3..0,7
-      .slice Name 'str' Load - 0,8..0,11
-      .ctx Load
+   0] arg - 0,0..0,12
+     .arg 'a'
+     .annotation Subscript - 0,3..0,12
+       .value Name 'list' Load - 0,3..0,7
+       .slice Name 'str' Load - 0,8..0,11
+       .ctx Load
   .args[1]
-  0] arg - 0,17..0,23
-    .arg 'b'
-    .annotation Name 'int' Load - 0,20..0,23
+   0] arg - 0,17..0,23
+     .arg 'b'
+     .annotation Name 'int' Load - 0,20..0,23
   .vararg arg - 0,30..0,31
     .arg 'c'
   .kwonlyargs[1]
-  0] arg - 0,33..0,34
-    .arg 'd'
+   0] arg - 0,33..0,34
+     .arg 'd'
   .kw_defaults[1]
-  0] Constant 100 - 0,35..0,38
+   0] Constant 100 - 0,35..0,38
   .kwarg arg - 0,42..0,43
     .arg 'e'
   .defaults[1]
-  0] Constant 1 - 0,26..0,27
+   0] Constant 1 - 0,26..0,27
 '''),
 
 (425, 'parse_arguments_lambda', 0, 0, 'arguments', {}, (arguments,
 r'''a, /, b, *c, d=100, **e'''), r'''
 arguments - ROOT 0,0..0,23
   .posonlyargs[1]
-  0] arg - 0,0..0,1
-    .arg 'a'
+   0] arg - 0,0..0,1
+     .arg 'a'
   .args[1]
-  0] arg - 0,6..0,7
-    .arg 'b'
+   0] arg - 0,6..0,7
+     .arg 'b'
   .vararg arg - 0,10..0,11
     .arg 'c'
   .kwonlyargs[1]
-  0] arg - 0,13..0,14
-    .arg 'd'
+   0] arg - 0,13..0,14
+     .arg 'd'
   .kw_defaults[1]
-  0] Constant 100 - 0,15..0,18
+   0] Constant 100 - 0,15..0,18
   .kwarg arg - 0,22..0,23
     .arg 'e'
 '''),
@@ -3319,8 +3319,8 @@ r'''a, b'''), r'''
 withitem - ROOT 0,0..0,4
   .context_expr Tuple - 0,0..0,4
     .elts[2]
-    0] Name 'a' Load - 0,0..0,1
-    1] Name 'b' Load - 0,3..0,4
+     0] Name 'a' Load - 0,0..0,1
+     1] Name 'b' Load - 0,3..0,4
     .ctx Load
 '''),
 
@@ -3329,8 +3329,8 @@ r'''(a, b)'''), r'''
 withitem - ROOT 0,0..0,6
   .context_expr Tuple - 0,0..0,6
     .elts[2]
-    0] Name 'a' Load - 0,1..0,2
-    1] Name 'b' Load - 0,4..0,5
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,4..0,5
     .ctx Load
 '''),
 
@@ -3373,9 +3373,9 @@ r'''MatchSingleton None - ROOT 0,0..0,4'''),
 r'''[a, *_]'''), r'''
 MatchSequence - ROOT 0,0..0,7
   .patterns[2]
-  0] MatchAs - 0,1..0,2
-    .name 'a'
-  1] MatchStar - 0,4..0,6
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchStar - 0,4..0,6
 '''),
 
 (456, 'parse_pattern', 0, 0, 'MatchSequence', {}, (pattern,
@@ -3386,9 +3386,9 @@ r'''MatchSequence - ROOT 0,0..0,2'''),
 r'''{"key": _}'''), r'''
 MatchMapping - ROOT 0,0..0,10
   .keys[1]
-  0] Constant 'key' - 0,1..0,6
+   0] Constant 'key' - 0,1..0,6
   .patterns[1]
-  0] MatchAs - 0,8..0,9
+   0] MatchAs - 0,8..0,9
 '''),
 
 (458, 'parse_pattern', 0, 0, 'MatchMapping', {}, (pattern,
@@ -3406,10 +3406,10 @@ r'''SomeClass(attr=val)'''), r'''
 MatchClass - ROOT 0,0..0,19
   .cls Name 'SomeClass' Load - 0,0..0,9
   .kwd_attrs[1]
-  0] 'attr'
+   0] 'attr'
   .kwd_patterns[1]
-  0] MatchAs - 0,15..0,18
-    .name 'val'
+   0] MatchAs - 0,15..0,18
+     .name 'val'
 '''),
 
 (461, 'parse_pattern', 0, 0, 'MatchAs', {}, (pattern,
@@ -3430,12 +3430,12 @@ MatchAs - ROOT 0,0..0,11
 r'''1 | 2 | 3'''), r'''
 MatchOr - ROOT 0,0..0,9
   .patterns[3]
-  0] MatchValue - 0,0..0,1
-    .value Constant 1 - 0,0..0,1
-  1] MatchValue - 0,4..0,5
-    .value Constant 2 - 0,4..0,5
-  2] MatchValue - 0,8..0,9
-    .value Constant 3 - 0,8..0,9
+   0] MatchValue - 0,0..0,1
+     .value Constant 1 - 0,0..0,1
+   1] MatchValue - 0,4..0,5
+     .value Constant 2 - 0,4..0,5
+   2] MatchValue - 0,8..0,9
+     .value Constant 3 - 0,8..0,9
 '''),
 
 (464, 'parse_pattern', 0, 0, 'MatchAs', {}, (pattern,
@@ -3466,9 +3466,9 @@ r'''MatchSingleton None - ROOT 0,0..0,4'''),
 r'''[a, *_]'''), r'''
 MatchSequence - ROOT 0,0..0,7
   .patterns[2]
-  0] MatchAs - 0,1..0,2
-    .name 'a'
-  1] MatchStar - 0,4..0,6
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchStar - 0,4..0,6
 '''),
 
 (470, 'parse_pattern', 0, 0, 'MatchSequence', {}, (MatchSequence,
@@ -3479,9 +3479,9 @@ r'''MatchSequence - ROOT 0,0..0,2'''),
 r'''{"key": _}'''), r'''
 MatchMapping - ROOT 0,0..0,10
   .keys[1]
-  0] Constant 'key' - 0,1..0,6
+   0] Constant 'key' - 0,1..0,6
   .patterns[1]
-  0] MatchAs - 0,8..0,9
+   0] MatchAs - 0,8..0,9
 '''),
 
 (472, 'parse_pattern', 0, 0, 'MatchMapping', {}, (MatchMapping,
@@ -3499,10 +3499,10 @@ r'''SomeClass(attr=val)'''), r'''
 MatchClass - ROOT 0,0..0,19
   .cls Name 'SomeClass' Load - 0,0..0,9
   .kwd_attrs[1]
-  0] 'attr'
+   0] 'attr'
   .kwd_patterns[1]
-  0] MatchAs - 0,15..0,18
-    .name 'val'
+   0] MatchAs - 0,15..0,18
+     .name 'val'
 '''),
 
 (475, 'parse_pattern', 0, 0, 'MatchAs', {}, (MatchAs,
@@ -3523,12 +3523,12 @@ MatchAs - ROOT 0,0..0,11
 r'''1 | 2 | 3'''), r'''
 MatchOr - ROOT 0,0..0,9
   .patterns[3]
-  0] MatchValue - 0,0..0,1
-    .value Constant 1 - 0,0..0,1
-  1] MatchValue - 0,4..0,5
-    .value Constant 2 - 0,4..0,5
-  2] MatchValue - 0,8..0,9
-    .value Constant 3 - 0,8..0,9
+   0] MatchValue - 0,0..0,1
+     .value Constant 1 - 0,0..0,1
+   1] MatchValue - 0,4..0,5
+     .value Constant 2 - 0,4..0,5
+   2] MatchValue - 0,8..0,9
+     .value Constant 3 - 0,8..0,9
 '''),
 
 (478, 'parse_pattern', 0, 0, 'MatchAs', {}, (MatchAs,
@@ -3545,9 +3545,9 @@ MatchStar - ROOT 0,0..0,2
 r''' *a,  # tail'''), r'''
 Tuple - ROOT 0,1..0,4
   .elts[1]
-  0] Starred - 0,1..0,3
-    .value Name 'a' Load - 0,2..0,3
-    .ctx Load
+   0] Starred - 0,1..0,3
+     .value Name 'a' Load - 0,2..0,3
+     .ctx Load
   .ctx Load
 '''),
 
@@ -3604,45 +3604,45 @@ comprehension - ROOT 0,1..0,11
 r''' a: list[str], /, b: int = 1, *c, d=100, **e  # tail'''), r'''
 arguments - ROOT 0,1..0,44
   .posonlyargs[1]
-  0] arg - 0,1..0,13
-    .arg 'a'
-    .annotation Subscript - 0,4..0,13
-      .value Name 'list' Load - 0,4..0,8
-      .slice Name 'str' Load - 0,9..0,12
-      .ctx Load
+   0] arg - 0,1..0,13
+     .arg 'a'
+     .annotation Subscript - 0,4..0,13
+       .value Name 'list' Load - 0,4..0,8
+       .slice Name 'str' Load - 0,9..0,12
+       .ctx Load
   .args[1]
-  0] arg - 0,18..0,24
-    .arg 'b'
-    .annotation Name 'int' Load - 0,21..0,24
+   0] arg - 0,18..0,24
+     .arg 'b'
+     .annotation Name 'int' Load - 0,21..0,24
   .vararg arg - 0,31..0,32
     .arg 'c'
   .kwonlyargs[1]
-  0] arg - 0,34..0,35
-    .arg 'd'
+   0] arg - 0,34..0,35
+     .arg 'd'
   .kw_defaults[1]
-  0] Constant 100 - 0,36..0,39
+   0] Constant 100 - 0,36..0,39
   .kwarg arg - 0,43..0,44
     .arg 'e'
   .defaults[1]
-  0] Constant 1 - 0,27..0,28
+   0] Constant 1 - 0,27..0,28
 '''),
 
 (491, 'parse_arguments_lambda', 0, 0, 'arguments', {}, ('arguments_lambda',
 r''' a, /, b, *c, d=100, **e  # tail'''), r'''
 arguments - ROOT 0,1..0,24
   .posonlyargs[1]
-  0] arg - 0,1..0,2
-    .arg 'a'
+   0] arg - 0,1..0,2
+     .arg 'a'
   .args[1]
-  0] arg - 0,7..0,8
-    .arg 'b'
+   0] arg - 0,7..0,8
+     .arg 'b'
   .vararg arg - 0,11..0,12
     .arg 'c'
   .kwonlyargs[1]
-  0] arg - 0,14..0,15
-    .arg 'd'
+   0] arg - 0,14..0,15
+     .arg 'd'
   .kw_defaults[1]
-  0] Constant 100 - 0,16..0,19
+   0] Constant 100 - 0,16..0,19
   .kwarg arg - 0,23..0,24
     .arg 'e'
 '''),
@@ -3684,12 +3684,12 @@ withitem - ROOT 0,1..0,7
 r''' 1 | 2 | 3  # tail'''), r'''
 MatchOr - ROOT 0,1..0,10
   .patterns[3]
-  0] MatchValue - 0,1..0,2
-    .value Constant 1 - 0,1..0,2
-  1] MatchValue - 0,5..0,6
-    .value Constant 2 - 0,5..0,6
-  2] MatchValue - 0,9..0,10
-    .value Constant 3 - 0,9..0,10
+   0] MatchValue - 0,1..0,2
+     .value Constant 1 - 0,1..0,2
+   1] MatchValue - 0,5..0,6
+     .value Constant 2 - 0,5..0,6
+   2] MatchValue - 0,9..0,10
+     .value Constant 3 - 0,9..0,10
 '''),
 
 (498, 'parse_pattern', 0, 0, 'MatchStar', {}, ('pattern',
@@ -3703,7 +3703,7 @@ r'''except* Exception: pass'''), r'''
 ExceptHandler - ROOT 0,0..0,23
   .type Name 'Exception' Load - 0,8..0,17
   .body[1]
-  0] Pass - 0,19..0,23
+   0] Pass - 0,19..0,23
 '''),
 
 (500, 'parse_expr_all', 0, 0, 'Starred', {'_ver': 11}, ('expr_all',
@@ -3719,9 +3719,9 @@ Starred - ROOT 0,0..0,6
 r'''*s'''), r'''
 Tuple - ROOT 0,0..0,2
   .elts[1]
-  0] Starred - 0,0..0,2
-    .value Name 's' Load - 0,1..0,2
-    .ctx Load
+   0] Starred - 0,0..0,2
+     .value Name 's' Load - 0,1..0,2
+     .ctx Load
   .ctx Load
 '''),
 
@@ -3729,11 +3729,11 @@ Tuple - ROOT 0,0..0,2
 r'''*not a'''), r'''
 Tuple - ROOT 0,0..0,6
   .elts[1]
-  0] Starred - 0,0..0,6
-    .value UnaryOp - 0,1..0,6
-      .op Not - 0,1..0,4
-      .operand Name 'a' Load - 0,5..0,6
-    .ctx Load
+   0] Starred - 0,0..0,6
+     .value UnaryOp - 0,1..0,6
+       .op Not - 0,1..0,4
+       .operand Name 'a' Load - 0,5..0,6
+     .ctx Load
   .ctx Load
 '''),
 
@@ -3755,7 +3755,7 @@ r'''except* Exception: pass'''), r'''
 ExceptHandler - ROOT 0,0..0,23
   .type Name 'Exception' Load - 0,8..0,17
   .body[1]
-  0] Pass - 0,19..0,23
+   0] Pass - 0,19..0,23
 '''),
 
 (506, 'parse_arg', 0, 0, 'arg', {'_ver': 11}, ('arg',
@@ -3771,27 +3771,27 @@ arg - ROOT 0,1..0,6
 r'''*U, **V, **Z'''), r'''
 _type_params - ROOT 0,0..0,12
   .type_params[3]
-  0] TypeVarTuple - 0,0..0,2
-    .name 'U'
-  1] ParamSpec - 0,4..0,7
-    .name 'V'
-  2] ParamSpec - 0,9..0,12
-    .name 'Z'
+   0] TypeVarTuple - 0,0..0,2
+     .name 'U'
+   1] ParamSpec - 0,4..0,7
+     .name 'V'
+   2] ParamSpec - 0,9..0,12
+     .name 'Z'
 '''),
 
 (508, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('all',
 r'''T: int, *U, **V, **Z'''), r'''
 _type_params - ROOT 0,0..0,20
   .type_params[4]
-  0] TypeVar - 0,0..0,6
-    .name 'T'
-    .bound Name 'int' Load - 0,3..0,6
-  1] TypeVarTuple - 0,8..0,10
-    .name 'U'
-  2] ParamSpec - 0,12..0,15
-    .name 'V'
-  3] ParamSpec - 0,17..0,20
-    .name 'Z'
+   0] TypeVar - 0,0..0,6
+     .name 'T'
+     .bound Name 'int' Load - 0,3..0,6
+   1] TypeVarTuple - 0,8..0,10
+     .name 'U'
+   2] ParamSpec - 0,12..0,15
+     .name 'V'
+   3] ParamSpec - 0,17..0,20
+     .name 'Z'
 '''),
 
 (509, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 12}, ('type_param',
@@ -3825,31 +3825,31 @@ r'''_type_params - ROOT 0,0..0,0'''),
 r'''a: int'''), r'''
 _type_params - ROOT 0,0..0,6
   .type_params[1]
-  0] TypeVar - 0,0..0,6
-    .name 'a'
-    .bound Name 'int' Load - 0,3..0,6
+   0] TypeVar - 0,0..0,6
+     .name 'a'
+     .bound Name 'int' Load - 0,3..0,6
 '''),
 
 (515, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
 r'''a: int,'''), r'''
 _type_params - ROOT 0,0..0,7
   .type_params[1]
-  0] TypeVar - 0,0..0,6
-    .name 'a'
-    .bound Name 'int' Load - 0,3..0,6
+   0] TypeVar - 0,0..0,6
+     .name 'a'
+     .bound Name 'int' Load - 0,3..0,6
 '''),
 
 (516, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
 r'''a: int, *b, **c'''), r'''
 _type_params - ROOT 0,0..0,15
   .type_params[3]
-  0] TypeVar - 0,0..0,6
-    .name 'a'
-    .bound Name 'int' Load - 0,3..0,6
-  1] TypeVarTuple - 0,8..0,10
-    .name 'b'
-  2] ParamSpec - 0,12..0,15
-    .name 'c'
+   0] TypeVar - 0,0..0,6
+     .name 'a'
+     .bound Name 'int' Load - 0,3..0,6
+   1] TypeVarTuple - 0,8..0,10
+     .name 'b'
+   2] ParamSpec - 0,12..0,15
+     .name 'c'
 '''),
 
 (517, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 12}, (type_param,
@@ -3901,13 +3901,13 @@ TypeVar - ROOT 0,1..0,7
 r''' a: int, *b, **c  # tail'''), r'''
 _type_params - ROOT 0,0..0,24
   .type_params[3]
-  0] TypeVar - 0,1..0,7
-    .name 'a'
-    .bound Name 'int' Load - 0,4..0,7
-  1] TypeVarTuple - 0,9..0,11
-    .name 'b'
-  2] ParamSpec - 0,13..0,16
-    .name 'c'
+   0] TypeVar - 0,1..0,7
+     .name 'a'
+     .bound Name 'int' Load - 0,4..0,7
+   1] TypeVarTuple - 0,9..0,11
+     .name 'b'
+   2] ParamSpec - 0,13..0,16
+     .name 'c'
 '''),
 
 (525, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 13}, ('all',
@@ -3916,11 +3916,11 @@ ParamSpec - ROOT 0,0..0,22
   .name 'a'
   .default_value Dict - 0,6..0,22
     .keys[2]
-    0] Name 'T' Load - 0,7..0,8
-    1] Name 'U' Load - 0,15..0,16
+     0] Name 'T' Load - 0,7..0,8
+     1] Name 'U' Load - 0,15..0,16
     .values[2]
-    0] Name 'int' Load - 0,10..0,13
-    1] Name 'str' Load - 0,18..0,21
+     0] Name 'int' Load - 0,10..0,13
+     1] Name 'str' Load - 0,18..0,21
 '''),
 
 (526, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, ('all',
@@ -3929,8 +3929,8 @@ TypeVarTuple - ROOT 0,0..0,15
   .name 'a'
   .default_value Tuple - 0,5..0,15
     .elts[2]
-    0] Name 'int' Load - 0,6..0,9
-    1] Name 'str' Load - 0,11..0,14
+     0] Name 'int' Load - 0,6..0,9
+     1] Name 'str' Load - 0,11..0,14
     .ctx Load
 '''),
 
@@ -3948,11 +3948,11 @@ ParamSpec - ROOT 0,0..0,22
   .name 'a'
   .default_value Dict - 0,6..0,22
     .keys[2]
-    0] Name 'T' Load - 0,7..0,8
-    1] Name 'U' Load - 0,15..0,16
+     0] Name 'T' Load - 0,7..0,8
+     1] Name 'U' Load - 0,15..0,16
     .values[2]
-    0] Name 'int' Load - 0,10..0,13
-    1] Name 'str' Load - 0,18..0,21
+     0] Name 'int' Load - 0,10..0,13
+     1] Name 'str' Load - 0,18..0,21
 '''),
 
 (529, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, ('type_param',
@@ -3961,8 +3961,8 @@ TypeVarTuple - ROOT 0,0..0,15
   .name 'a'
   .default_value Tuple - 0,5..0,15
     .elts[2]
-    0] Name 'int' Load - 0,6..0,9
-    1] Name 'str' Load - 0,11..0,14
+     0] Name 'int' Load - 0,6..0,9
+     1] Name 'str' Load - 0,11..0,14
     .ctx Load
 '''),
 
@@ -3988,11 +3988,11 @@ ParamSpec - ROOT 0,0..0,22
   .name 'a'
   .default_value Dict - 0,6..0,22
     .keys[2]
-    0] Name 'T' Load - 0,7..0,8
-    1] Name 'U' Load - 0,15..0,16
+     0] Name 'T' Load - 0,7..0,8
+     1] Name 'U' Load - 0,15..0,16
     .values[2]
-    0] Name 'int' Load - 0,10..0,13
-    1] Name 'str' Load - 0,18..0,21
+     0] Name 'int' Load - 0,10..0,13
+     1] Name 'str' Load - 0,18..0,21
 '''),
 
 (533, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 13}, (ParamSpec,
@@ -4001,11 +4001,11 @@ ParamSpec - ROOT 0,0..0,22
   .name 'a'
   .default_value Dict - 0,6..0,22
     .keys[2]
-    0] Name 'T' Load - 0,7..0,8
-    1] Name 'U' Load - 0,15..0,16
+     0] Name 'T' Load - 0,7..0,8
+     1] Name 'U' Load - 0,15..0,16
     .values[2]
-    0] Name 'int' Load - 0,10..0,13
-    1] Name 'str' Load - 0,18..0,21
+     0] Name 'int' Load - 0,10..0,13
+     1] Name 'str' Load - 0,18..0,21
 '''),
 
 (534, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, (type_param,
@@ -4014,8 +4014,8 @@ TypeVarTuple - ROOT 0,0..0,15
   .name 'a'
   .default_value Tuple - 0,5..0,15
     .elts[2]
-    0] Name 'int' Load - 0,6..0,9
-    1] Name 'str' Load - 0,11..0,14
+     0] Name 'int' Load - 0,6..0,9
+     1] Name 'str' Load - 0,11..0,14
     .ctx Load
 '''),
 
@@ -4025,8 +4025,8 @@ TypeVarTuple - ROOT 0,0..0,15
   .name 'a'
   .default_value Tuple - 0,5..0,15
     .elts[2]
-    0] Name 'int' Load - 0,6..0,9
-    1] Name 'str' Load - 0,11..0,14
+     0] Name 'int' Load - 0,6..0,9
+     1] Name 'str' Load - 0,11..0,14
     .ctx Load
 '''),
 ],

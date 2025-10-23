@@ -33,13 +33,13 @@ But it has an `FST` node at `.f`, we can `dump()` it to stdout.
 >>> a.f.dump()
 Module - ROOT 0,0..0,22
   .body[1]
-  0] If - 0,0..0,11
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Assign - 0,6..0,11
-      .targets[1]
-      0] Name 'i' Store - 0,6..0,7
-      .value Constant 2 - 0,10..0,11
+   0] If - 0,0..0,11
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Assign - 0,6..0,11
+        .targets[1]
+         0] Name 'i' Store - 0,6..0,7
+        .value Constant 2 - 0,10..0,11
 ```
 
 ## Basic structure
@@ -51,7 +51,7 @@ Before anything else, some needed structure information. Every `AST` node in the
 >>> a.body[0].body[0].f.dump()
 Assign - 0,6..0,11
   .targets[1]
-  0] Name 'i' Store - 0,6..0,7
+   0] Name 'i' Store - 0,6..0,7
   .value Constant 2 - 0,10..0,11
 ```
 
@@ -108,13 +108,13 @@ Quicker way to parse which gives the same thing but returns the `FST` node.
 >>> FST('if 1: i = 2', 'exec').dump()
 Module - ROOT 0,0..0,11
   .body[1]
-  0] If - 0,0..0,11
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Assign - 0,6..0,11
-      .targets[1]
-      0] Name 'i' Store - 0,6..0,7
-      .value Constant 2 - 0,10..0,11
+   0] If - 0,0..0,11
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Assign - 0,6..0,11
+        .targets[1]
+         0] Name 'i' Store - 0,6..0,7
+        .value Constant 2 - 0,10..0,11
 ```
 
 Note the `'exec'` mode specifier above, it can be one of the other `ast.parse()` mode specifiers.
@@ -123,13 +123,13 @@ Note the `'exec'` mode specifier above, it can be one of the other `ast.parse()`
 >>> FST('if 1: i = 2', 'single').dump()
 Interactive - ROOT 0,0..0,11
   .body[1]
-  0] If - 0,0..0,11
-    .test Constant 1 - 0,3..0,4
-    .body[1]
-    0] Assign - 0,6..0,11
-      .targets[1]
-      0] Name 'i' Store - 0,6..0,7
-      .value Constant 2 - 0,10..0,11
+   0] If - 0,0..0,11
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Assign - 0,6..0,11
+        .targets[1]
+         0] Name 'i' Store - 0,6..0,7
+        .value Constant 2 - 0,10..0,11
 ```
 
 Or `'eval'`.
@@ -205,8 +205,8 @@ Starred - ROOT 0,0..0,7
   .value BoolOp - 0,1..0,7
     .op Or
     .values[2]
-    0] Name 'a' Load - 0,1..0,2
-    1] Name 'b' Load - 0,6..0,7
+     0] Name 'a' Load - 0,1..0,2
+     1] Name 'b' Load - 0,6..0,7
   .ctx Load
 ```
 
@@ -239,10 +239,10 @@ The `FST(...)` syntax used in the above examples is just a shortcut for the func
 >>> FST.fromsrc('i = 1').dump()
 Module - ROOT 0,0..0,5
   .body[1]
-  0] Assign - 0,0..0,5
-    .targets[1]
-    0] Name 'i' Store - 0,0..0,1
-    .value Constant 1 - 0,4..0,5
+   0] Assign - 0,0..0,5
+     .targets[1]
+      0] Name 'i' Store - 0,0..0,1
+     .value Constant 1 - 0,4..0,5
 ```
 
 Except that `fromsrc()` defaults to `mode='exec'` instead of minimal node.
@@ -251,7 +251,7 @@ Except that `fromsrc()` defaults to `mode='exec'` instead of minimal node.
 >>> FST.fromsrc('i = 1', 'strict').dump()
 Assign - ROOT 0,0..0,5
   .targets[1]
-  0] Name 'i' Store - 0,0..0,1
+   0] Name 'i' Store - 0,0..0,1
   .value Constant 1 - 0,4..0,5
 ```
 
@@ -313,28 +313,28 @@ FunctionDef - ROOT 0,0..4,17
   .name 'f'
   .args arguments - 0,6..0,7
     .args[1]
-    0] arg - 0,6..0,7
-      .arg 'a'
+     0] arg - 0,6..0,7
+       .arg 'a'
   .body[1]
 1:     if a:
-  0] If - 1,4..4,17
-    .test Name 'a' Load - 1,7..1,8
-    .body[1]
+   0] If - 1,4..4,17
+     .test Name 'a' Load - 1,7..1,8
+     .body[1]
 2:         print(a)
-    0] Expr - 2,8..2,16
-      .value Call - 2,8..2,16
-        .func Name 'print' Load - 2,8..2,13
-        .args[1]
-        0] Name 'a' Load - 2,14..2,15
-    .orelse[1]
+      0] Expr - 2,8..2,16
+        .value Call - 2,8..2,16
+          .func Name 'print' Load - 2,8..2,13
+          .args[1]
+           0] Name 'a' Load - 2,14..2,15
+     .orelse[1]
 4:         print(-a)
-    0] Expr - 4,8..4,17
-      .value Call - 4,8..4,17
-        .func Name 'print' Load - 4,8..4,13
-        .args[1]
-        0] UnaryOp - 4,14..4,16
-          .op USub - 4,14..4,15
-          .operand Name 'a' Load - 4,15..4,16
+      0] Expr - 4,8..4,17
+        .value Call - 4,8..4,17
+          .func Name 'print' Load - 4,8..4,13
+          .args[1]
+           0] UnaryOp - 4,14..4,16
+             .op USub - 4,14..4,15
+             .operand Name 'a' Load - 4,15..4,16
 ```
 
 """

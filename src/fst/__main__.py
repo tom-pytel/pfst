@@ -27,7 +27,7 @@ def main() -> None:
                         help="add information about type comments")
     parser.add_argument('-i', '--indent', type=int, default=2,
                         help='indentation of nodes (number of spaces)')
-    parser.add_argument('-l', '--list-indent', default=False, action='store_true',
+    parser.add_argument('-l', '--list-indent', default=1, action='store_true',
                         help="indent list elements")
     parser.add_argument('--no-verify', default=False, action='store_true',
                         help="don't verify parsed AST")

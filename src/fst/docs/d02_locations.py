@@ -22,16 +22,16 @@ FunctionDef - ROOT 1,0..2,16
   .name 'func'
   .args arguments - 1,9..1,10
     .args[1]
-    0] arg - 1,9..1,10
-      .arg 'x'
+     0] arg - 1,9..1,10
+       .arg 'x'
   .body[1]
-  0] Return - 2,4..2,16
-    .value BinOp - 2,11..2,16
-      .left Name 'x' Load - 2,11..2,12
-      .op Add - 2,13..2,14
-      .right Constant 1 - 2,15..2,16
+   0] Return - 2,4..2,16
+     .value BinOp - 2,11..2,16
+       .left Name 'x' Load - 2,11..2,12
+       .op Add - 2,13..2,14
+       .right Constant 1 - 2,15..2,16
   .decorator_list[1]
-  0] Name 'decorator' Load - 0,1..0,10
+   0] Name 'decorator' Load - 0,1..0,10
 ```
 
 These are accessed via the `.loc` attribute.

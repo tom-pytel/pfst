@@ -17,7 +17,7 @@ r'''Module - ROOT 0,0..0,0''',
 r'''a = 1''', r'''
 Assign - ROOT 0,0..0,5
   .targets[1]
-  0] Name 'a' Store - 0,0..0,1
+   0] Name 'a' Store - 0,0..0,1
   .value Constant 1 - 0,4..0,5
 '''),
 
@@ -28,7 +28,7 @@ r'''Interactive - ROOT 0,0..0,0''',
 r'''a = 1''', r'''
 Assign - ROOT 0,0..0,5
   .targets[1]
-  0] Name 'a' Store - 0,0..0,1
+   0] Name 'a' Store - 0,0..0,1
   .value Constant 1 - 0,4..0,5
 '''),
 
@@ -57,7 +57,7 @@ r'''def func(): pass''', r'''
 FunctionDef - ROOT 0,0..0,16
   .name 'func'
   .body[1]
-  0] Pass - 0,12..0,16
+   0] Pass - 0,12..0,16
 ''',
 r'''T''', r'''
 TypeVar - ROOT 0,0..0,1
@@ -70,28 +70,28 @@ r'''def func(): pass''', r'''
 FunctionDef - ROOT 0,0..0,16
   .name 'func'
   .body[1]
-  0] Pass - 0,12..0,16
+   0] Pass - 0,12..0,16
 ''',
 r'''a, /, b: int = 1, *c, d=2, **e''', r'''
 arguments - ROOT 0,0..0,30
   .posonlyargs[1]
-  0] arg - 0,0..0,1
-    .arg 'a'
+   0] arg - 0,0..0,1
+     .arg 'a'
   .args[1]
-  0] arg - 0,6..0,12
-    .arg 'b'
-    .annotation Name 'int' Load - 0,9..0,12
+   0] arg - 0,6..0,12
+     .arg 'b'
+     .annotation Name 'int' Load - 0,9..0,12
   .vararg arg - 0,19..0,20
     .arg 'c'
   .kwonlyargs[1]
-  0] arg - 0,22..0,23
-    .arg 'd'
+   0] arg - 0,22..0,23
+     .arg 'd'
   .kw_defaults[1]
-  0] Constant 2 - 0,24..0,25
+   0] Constant 2 - 0,24..0,25
   .kwarg arg - 0,29..0,30
     .arg 'e'
   .defaults[1]
-  0] Constant 1 - 0,15..0,16
+   0] Constant 1 - 0,15..0,16
 '''),
 
 (7, '', None, False, 'args', {}, (FunctionDef,
@@ -100,7 +100,7 @@ r'''def func(): pass''', r'''
 FunctionDef - ROOT 0,0..0,16
   .name 'func'
   .body[1]
-  0] Pass - 0,12..0,16
+   0] Pass - 0,12..0,16
 ''',
 r'''''',
 r'''arguments - ROOT'''),
@@ -111,7 +111,7 @@ r'''def func(): pass''', r'''
 FunctionDef - ROOT 0,0..0,16
   .name 'func'
   .body[1]
-  0] Pass - 0,12..0,16
+   0] Pass - 0,12..0,16
 ''',
 r'''int''',
 r'''Name 'int' Load - ROOT 0,0..0,3'''),
@@ -122,7 +122,7 @@ r'''def func(): pass''', r'''
 FunctionDef - ROOT 0,0..0,16
   .name 'func'
   .body[1]
-  0] Pass - 0,12..0,16
+   0] Pass - 0,12..0,16
 ''',
 r'''**None**'''),
 
@@ -156,7 +156,7 @@ r'''async def func(): pass''', r'''
 AsyncFunctionDef - ROOT 0,0..0,22
   .name 'func'
   .body[1]
-  0] Pass - 0,18..0,22
+   0] Pass - 0,18..0,22
 ''',
 r'''T''', r'''
 TypeVar - ROOT 0,0..0,1
@@ -169,28 +169,28 @@ r'''async def func(): pass''', r'''
 AsyncFunctionDef - ROOT 0,0..0,22
   .name 'func'
   .body[1]
-  0] Pass - 0,18..0,22
+   0] Pass - 0,18..0,22
 ''',
 r'''a, /, b: int = 1, *c, d=2, **e''', r'''
 arguments - ROOT 0,0..0,30
   .posonlyargs[1]
-  0] arg - 0,0..0,1
-    .arg 'a'
+   0] arg - 0,0..0,1
+     .arg 'a'
   .args[1]
-  0] arg - 0,6..0,12
-    .arg 'b'
-    .annotation Name 'int' Load - 0,9..0,12
+   0] arg - 0,6..0,12
+     .arg 'b'
+     .annotation Name 'int' Load - 0,9..0,12
   .vararg arg - 0,19..0,20
     .arg 'c'
   .kwonlyargs[1]
-  0] arg - 0,22..0,23
-    .arg 'd'
+   0] arg - 0,22..0,23
+     .arg 'd'
   .kw_defaults[1]
-  0] Constant 2 - 0,24..0,25
+   0] Constant 2 - 0,24..0,25
   .kwarg arg - 0,29..0,30
     .arg 'e'
   .defaults[1]
-  0] Constant 1 - 0,15..0,16
+   0] Constant 1 - 0,15..0,16
 '''),
 
 (15, '', None, False, 'args', {}, (AsyncFunctionDef,
@@ -199,7 +199,7 @@ r'''async def func(): pass''', r'''
 AsyncFunctionDef - ROOT 0,0..0,22
   .name 'func'
   .body[1]
-  0] Pass - 0,18..0,22
+   0] Pass - 0,18..0,22
 ''',
 r'''''',
 r'''arguments - ROOT'''),
@@ -210,7 +210,7 @@ r'''async def func(): pass''', r'''
 AsyncFunctionDef - ROOT 0,0..0,22
   .name 'func'
   .body[1]
-  0] Pass - 0,18..0,22
+   0] Pass - 0,18..0,22
 ''',
 r'''int''',
 r'''Name 'int' Load - ROOT 0,0..0,3'''),
@@ -221,7 +221,7 @@ r'''async def func(): pass''', r'''
 AsyncFunctionDef - ROOT 0,0..0,22
   .name 'func'
   .body[1]
-  0] Pass - 0,18..0,22
+   0] Pass - 0,18..0,22
 ''',
 r'''**None**'''),
 
@@ -255,7 +255,7 @@ r'''class cls(): pass''', r'''
 ClassDef - ROOT 0,0..0,17
   .name 'cls'
   .body[1]
-  0] Pass - 0,13..0,17
+   0] Pass - 0,13..0,17
 ''',
 r'''T''', r'''
 TypeVar - ROOT 0,0..0,1
@@ -268,7 +268,7 @@ r'''class cls: pass''', r'''
 ClassDef - ROOT 0,0..0,15
   .name 'cls'
   .body[1]
-  0] Pass - 0,11..0,15
+   0] Pass - 0,11..0,15
 ''',
 r'''base''',
 r'''Name 'base' Load - ROOT 0,0..0,4'''),
@@ -438,7 +438,7 @@ For - ROOT 0,0..0,23
   .iter Call - 0,11..0,17
     .func Name 'iter' Load - 0,11..0,15
   .body[1]
-  0] Pass - 0,19..0,23
+   0] Pass - 0,19..0,23
 ''',
 r'''continue''',
 r'''Continue - ROOT 0,0..0,8'''),
@@ -478,7 +478,7 @@ AsyncFor - ROOT 0,0..0,29
   .iter Call - 0,17..0,23
     .func Name 'iter' Load - 0,17..0,21
   .body[1]
-  0] Pass - 0,25..0,29
+   0] Pass - 0,25..0,29
 ''',
 r'''continue''',
 r'''Continue - ROOT 0,0..0,8'''),
@@ -506,7 +506,7 @@ r'''while var: pass''', r'''
 While - ROOT 0,0..0,15
   .test Name 'var' Load - 0,6..0,9
   .body[1]
-  0] Pass - 0,11..0,15
+   0] Pass - 0,11..0,15
 ''',
 r'''continue''',
 r'''Continue - ROOT 0,0..0,8'''),
@@ -534,7 +534,7 @@ r'''if var: pass''', r'''
 If - ROOT 0,0..0,12
   .test Name 'var' Load - 0,3..0,6
   .body[1]
-  0] Pass - 0,8..0,12
+   0] Pass - 0,8..0,12
 ''',
 r'''continue''',
 r'''Continue - ROOT 0,0..0,8'''),
@@ -552,8 +552,8 @@ r'''with var: pass'''),
 r'''with var:''', r'''
 With - ROOT 0,0..0,9
   .items[1]
-  0] withitem - 0,5..0,8
-    .context_expr Name 'var' Load - 0,5..0,8
+   0] withitem - 0,5..0,8
+     .context_expr Name 'var' Load - 0,5..0,8
 ''',
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
@@ -571,8 +571,8 @@ r'''async with var: pass'''),
 r'''async with var:''', r'''
 AsyncWith - ROOT 0,0..0,15
   .items[1]
-  0] withitem - 0,11..0,14
-    .context_expr Name 'var' Load - 0,11..0,14
+   0] withitem - 0,11..0,14
+     .context_expr Name 'var' Load - 0,11..0,14
 ''',
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
@@ -598,7 +598,7 @@ match_case - ROOT 0,0..0,12
   .pattern MatchValue - 0,5..0,6
     .value Constant 1 - 0,5..0,6
   .body[1]
-  0] Pass - 0,8..0,12
+   0] Pass - 0,8..0,12
 '''),
 
 (61, '', None, False, 'exc', {}, (Raise,
@@ -638,10 +638,10 @@ except Exception: continue
 r'''try:except Exception: continue''', r'''
 Try - ROOT 0,0..0,30
   .handlers[1]
-  0] ExceptHandler - 0,4..0,30
-    .type Name 'Exception' Load - 0,11..0,20
-    .body[1]
-    0] Continue - 0,22..0,30
+   0] ExceptHandler - 0,4..0,30
+     .type Name 'Exception' Load - 0,11..0,20
+     .body[1]
+      0] Continue - 0,22..0,30
 ''',
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
@@ -653,13 +653,13 @@ except Exception: continue
 r'''try: pass''', r'''
 Try - ROOT 0,0..0,9
   .body[1]
-  0] Pass - 0,5..0,9
+   0] Pass - 0,5..0,9
 ''',
 r'''except Exception: continue''', r'''
 ExceptHandler - ROOT 0,0..0,26
   .type Name 'Exception' Load - 0,7..0,16
   .body[1]
-  0] Continue - 0,18..0,26
+   0] Continue - 0,18..0,26
 '''),
 
 (67, '', 0, False, 'orelse', {}, (Try, r'''
@@ -672,12 +672,12 @@ except Exception: continue
 ''', r'''
 Try - ROOT 0,0..1,26
   .body[1]
-  0] Pass - 0,5..0,9
+   0] Pass - 0,5..0,9
   .handlers[1]
-  0] ExceptHandler - 1,0..1,26
-    .type Name 'Exception' Load - 1,7..1,16
-    .body[1]
-    0] Continue - 1,18..1,26
+   0] ExceptHandler - 1,0..1,26
+     .type Name 'Exception' Load - 1,7..1,16
+     .body[1]
+      0] Continue - 1,18..1,26
 ''',
 r'''break''',
 r'''Break - ROOT 0,0..0,5'''),
@@ -692,12 +692,12 @@ except Exception: continue
 ''', r'''
 Try - ROOT 0,0..1,26
   .body[1]
-  0] Pass - 0,5..0,9
+   0] Pass - 0,5..0,9
   .handlers[1]
-  0] ExceptHandler - 1,0..1,26
-    .type Name 'Exception' Load - 1,7..1,16
-    .body[1]
-    0] Continue - 1,18..1,26
+   0] ExceptHandler - 1,0..1,26
+     .type Name 'Exception' Load - 1,7..1,16
+     .body[1]
+      0] Continue - 1,18..1,26
 ''',
 r'''...''', r'''
 Expr - ROOT 0,0..0,3
@@ -711,10 +711,10 @@ except* Exception: continue
 r'''try:except* Exception: continue''', r'''
 TryStar - ROOT 0,0..0,31
   .handlers[1]
-  0] ExceptHandler - 0,4..0,31
-    .type Name 'Exception' Load - 0,12..0,21
-    .body[1]
-    0] Continue - 0,23..0,31
+   0] ExceptHandler - 0,4..0,31
+     .type Name 'Exception' Load - 0,12..0,21
+     .body[1]
+      0] Continue - 0,23..0,31
 ''',
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
@@ -726,13 +726,13 @@ except* Exception: continue
 r'''try: pass''', r'''
 TryStar - ROOT 0,0..0,9
   .body[1]
-  0] Pass - 0,5..0,9
+   0] Pass - 0,5..0,9
 ''',
 r'''except* Exception: continue''', r'''
 ExceptHandler - ROOT 0,0..0,27
   .type Name 'Exception' Load - 0,8..0,17
   .body[1]
-  0] Continue - 0,19..0,27
+   0] Continue - 0,19..0,27
 '''),
 
 (71, '', 0, False, 'orelse', {'_ver': 11}, (TryStar, r'''
@@ -745,12 +745,12 @@ except* Exception: continue
 ''', r'''
 TryStar - ROOT 0,0..1,27
   .body[1]
-  0] Pass - 0,5..0,9
+   0] Pass - 0,5..0,9
   .handlers[1]
-  0] ExceptHandler - 1,0..1,27
-    .type Name 'Exception' Load - 1,8..1,17
-    .body[1]
-    0] Continue - 1,19..1,27
+   0] ExceptHandler - 1,0..1,27
+     .type Name 'Exception' Load - 1,8..1,17
+     .body[1]
+      0] Continue - 1,19..1,27
 ''',
 r'''break''',
 r'''Break - ROOT 0,0..0,5'''),
@@ -765,12 +765,12 @@ except* Exception: continue
 ''', r'''
 TryStar - ROOT 0,0..1,27
   .body[1]
-  0] Pass - 0,5..0,9
+   0] Pass - 0,5..0,9
   .handlers[1]
-  0] ExceptHandler - 1,0..1,27
-    .type Name 'Exception' Load - 1,8..1,17
-    .body[1]
-    0] Continue - 1,19..1,27
+   0] ExceptHandler - 1,0..1,27
+     .type Name 'Exception' Load - 1,8..1,17
+     .body[1]
+      0] Continue - 1,19..1,27
 ''',
 r'''...''', r'''
 Expr - ROOT 0,0..0,3
@@ -828,8 +828,8 @@ r'''from . import name'''),
 r'''from . import name''', r'''
 ImportFrom - ROOT 0,0..0,18
   .names[1]
-  0] alias - 0,14..0,18
-    .name 'name'
+   0] alias - 0,14..0,18
+     .name 'name'
   .level 1
 ''',
 r'''**None**'''),
@@ -839,8 +839,8 @@ r'''from .mod import name'''),
 r'''from . import name''', r'''
 ImportFrom - ROOT 0,0..0,18
   .names[1]
-  0] alias - 0,14..0,18
-    .name 'name'
+   0] alias - 0,14..0,18
+     .name 'name'
   .level 1
 ''',
 "\n'mod'\n",
@@ -967,22 +967,22 @@ Lambda - ROOT 0,0..0,12
 r'''a, /, b=1, *c, d=2, **e''', r'''
 arguments - ROOT 0,0..0,23
   .posonlyargs[1]
-  0] arg - 0,0..0,1
-    .arg 'a'
+   0] arg - 0,0..0,1
+     .arg 'a'
   .args[1]
-  0] arg - 0,6..0,7
-    .arg 'b'
+   0] arg - 0,6..0,7
+     .arg 'b'
   .vararg arg - 0,12..0,13
     .arg 'c'
   .kwonlyargs[1]
-  0] arg - 0,15..0,16
-    .arg 'd'
+   0] arg - 0,15..0,16
+     .arg 'd'
   .kw_defaults[1]
-  0] Constant 2 - 0,17..0,18
+   0] Constant 2 - 0,17..0,18
   .kwarg arg - 0,22..0,23
     .arg 'e'
   .defaults[1]
-  0] Constant 1 - 0,8..0,9
+   0] Constant 1 - 0,8..0,9
 '''),
 
 (99, '', None, False, 'args', {}, (Lambda,
@@ -1023,9 +1023,9 @@ r'''{key: val}'''),
 r'''{**val}''', r'''
 Dict - ROOT 0,0..0,7
   .keys[1]
-  0] None
+   0] None
   .values[1]
-  0] Name 'val' Load - 0,3..0,6
+   0] Name 'val' Load - 0,3..0,6
 ''',
 r'''key''',
 r'''Name 'key' Load - ROOT 0,0..0,3'''),
@@ -1035,9 +1035,9 @@ r'''{**val}'''),
 r'''{**val}''', r'''
 Dict - ROOT 0,0..0,7
   .keys[1]
-  0] None
+   0] None
   .values[1]
-  0] Name 'val' Load - 0,3..0,6
+   0] Name 'val' Load - 0,3..0,6
 ''',
 r'''**None**'''),
 
@@ -1056,7 +1056,7 @@ r'''{elt0, elt1}'''),
 r'''{elt1}''', r'''
 Set - ROOT 0,0..0,6
   .elts[1]
-  0] Name 'elt1' Load - 0,1..0,5
+   0] Name 'elt1' Load - 0,1..0,5
 ''',
 r'''elt0''',
 r'''Name 'elt0' Load - ROOT 0,0..0,4'''),
@@ -1066,10 +1066,10 @@ r'''{elt}'''),
 r'''{*()}''', r'''
 Set - ROOT 0,0..0,5
   .elts[1]
-  0] Starred - 0,1..0,4
-    .value Tuple - 0,2..0,4
-      .ctx Load
-    .ctx Load
+   0] Starred - 0,1..0,4
+     .value Tuple - 0,2..0,4
+       .ctx Load
+     .ctx Load
 ''',
 r'''elt''',
 r'''Name 'elt' Load - ROOT 0,0..0,3'''),
@@ -1125,8 +1125,8 @@ r'''for key, val in iter''', r'''
 comprehension - ROOT 0,0..0,20
   .target Tuple - 0,4..0,12
     .elts[2]
-    0] Name 'key' Store - 0,4..0,7
-    1] Name 'val' Store - 0,9..0,12
+     0] Name 'key' Store - 0,4..0,7
+     1] Name 'val' Store - 0,9..0,12
     .ctx Store
   .iter Name 'iter' Load - 0,16..0,20
   .is_async 0
@@ -1232,7 +1232,7 @@ r'''**NotImplementedError('this is not implemented yet')**''',
 "\nf'<16!r'\n", r'''
 JoinedStr - ROOT 0,0..0,8
   .values[1]
-  0] Constant '<16!r' - 0,2..0,7
+   0] Constant '<16!r' - 0,2..0,7
 '''),
 
 (132, '', 0, False, 'values', {'_ver': 12}, (JoinedStr,
@@ -1247,12 +1247,12 @@ r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''
 r'''f"{val:<16!r}"''', r'''
 JoinedStr - ROOT 0,0..0,14
   .values[1]
-  0] FormattedValue - 0,2..0,13
-    .value Name 'val' Load - 0,3..0,6
-    .conversion -1
-    .format_spec JoinedStr - 0,6..0,12
-      .values[1]
-      0] Constant '<16!r' - 0,7..0,12
+   0] FormattedValue - 0,2..0,13
+     .value Name 'val' Load - 0,3..0,6
+     .conversion -1
+     .format_spec JoinedStr - 0,6..0,12
+       .values[1]
+        0] Constant '<16!r' - 0,7..0,12
 '''),
 
 (134, 'values[1]', None, False, 'value', {'_ver': 14}, (None,
@@ -1278,7 +1278,7 @@ r'''**NotImplementedError('this is not implemented yet')**''',
 "\nf'<16!r'\n", r'''
 JoinedStr - ROOT 0,0..0,8
   .values[1]
-  0] Constant '<16!r' - 0,2..0,7
+   0] Constant '<16!r' - 0,2..0,7
 '''),
 
 (138, '', 0, False, 'values', {'_ver': 14}, (TemplateStr,
@@ -1293,13 +1293,13 @@ r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''
 r'''t"{val:<16!r}"''', r'''
 TemplateStr - ROOT 0,0..0,14
   .values[1]
-  0] Interpolation - 0,2..0,13
-    .value Name 'val' Load - 0,3..0,6
-    .str 'val'
-    .conversion -1
-    .format_spec JoinedStr - 0,6..0,12
-      .values[1]
-      0] Constant '<16!r' - 0,7..0,12
+   0] Interpolation - 0,2..0,13
+     .value Name 'val' Load - 0,3..0,6
+     .str 'val'
+     .conversion -1
+     .format_spec JoinedStr - 0,6..0,12
+       .values[1]
+        0] Constant '<16!r' - 0,7..0,12
 '''),
 
 (140, '', None, False, 'value', {}, (Constant,
@@ -1493,7 +1493,7 @@ List - ROOT 0,0..0,2
 r'''[val]''', r'''
 List - ROOT 0,0..0,5
   .elts[1]
-  0] Name 'val' Load - 0,1..0,4
+   0] Name 'val' Load - 0,1..0,4
   .ctx Load
 '''),
 
@@ -1524,7 +1524,7 @@ Tuple - ROOT 0,0..0,2
 r'''(val,)''', r'''
 Tuple - ROOT 0,0..0,6
   .elts[1]
-  0] Name 'val' Load - 0,1..0,4
+   0] Name 'val' Load - 0,1..0,4
   .ctx Load
 '''),
 
@@ -1543,7 +1543,7 @@ Tuple - ROOT 0,0..0,2
 r'''val,''', r'''
 Tuple - ROOT 0,0..0,4
   .elts[1]
-  0] Name 'val' Load - 0,0..0,3
+   0] Name 'val' Load - 0,0..0,3
   .ctx Load
 '''),
 
@@ -1651,7 +1651,7 @@ r'''except Exception: pass'''),
 r'''except: pass''', r'''
 ExceptHandler - ROOT 0,0..0,12
   .body[1]
-  0] Pass - 0,8..0,12
+   0] Pass - 0,8..0,12
 ''',
 r'''Exception''',
 r'''Name 'Exception' Load - ROOT 0,0..0,9'''),
@@ -1668,7 +1668,7 @@ r'''except Exception: pass''', r'''
 ExceptHandler - ROOT 0,0..0,22
   .type Name 'Exception' Load - 0,7..0,16
   .body[1]
-  0] Pass - 0,18..0,22
+   0] Pass - 0,18..0,22
 ''',
 "\n'exc'\n",
 r'''<class 'str'>'''),
@@ -1679,7 +1679,7 @@ r'''except Exception: pass''', r'''
 ExceptHandler - ROOT 0,0..0,22
   .type Name 'Exception' Load - 0,7..0,16
   .body[1]
-  0] Pass - 0,18..0,22
+   0] Pass - 0,18..0,22
 ''',
 r'''**None**'''),
 
@@ -1711,7 +1711,7 @@ r'''except* Exception: pass''', r'''
 ExceptHandler - ROOT 0,0..0,23
   .type Name 'Exception' Load - 0,8..0,17
   .body[1]
-  0] Pass - 0,19..0,23
+   0] Pass - 0,19..0,23
 ''',
 "\n'exc'\n",
 r'''<class 'str'>'''),
@@ -1722,7 +1722,7 @@ r'''except* Exception: pass''', r'''
 ExceptHandler - ROOT 0,0..0,23
   .type Name 'Exception' Load - 0,8..0,17
   .body[1]
-  0] Pass - 0,19..0,23
+   0] Pass - 0,19..0,23
 ''',
 r'''**None**'''),
 
@@ -1764,21 +1764,21 @@ r'''a, /, b: int = 1, *c, d=2, **e'''),
 r'''a, /, b: int = 1, *, d=2, **e''', r'''
 arguments - ROOT 0,0..0,29
   .posonlyargs[1]
-  0] arg - 0,0..0,1
-    .arg 'a'
+   0] arg - 0,0..0,1
+     .arg 'a'
   .args[1]
-  0] arg - 0,6..0,12
-    .arg 'b'
-    .annotation Name 'int' Load - 0,9..0,12
+   0] arg - 0,6..0,12
+     .arg 'b'
+     .annotation Name 'int' Load - 0,9..0,12
   .kwonlyargs[1]
-  0] arg - 0,21..0,22
-    .arg 'd'
+   0] arg - 0,21..0,22
+     .arg 'd'
   .kw_defaults[1]
-  0] Constant 2 - 0,23..0,24
+   0] Constant 2 - 0,23..0,24
   .kwarg arg - 0,28..0,29
     .arg 'e'
   .defaults[1]
-  0] Constant 1 - 0,15..0,16
+   0] Constant 1 - 0,15..0,16
 ''',
 r'''c''', r'''
 arg - ROOT 0,0..0,1
@@ -1790,19 +1790,19 @@ r'''a, /, b: int = 1, d=2, **e'''),
 r'''a, /, b: int = 1, d=2, **e''', r'''
 arguments - ROOT 0,0..0,26
   .posonlyargs[1]
-  0] arg - 0,0..0,1
-    .arg 'a'
+   0] arg - 0,0..0,1
+     .arg 'a'
   .args[2]
-  0] arg - 0,6..0,12
-    .arg 'b'
-    .annotation Name 'int' Load - 0,9..0,12
-  1] arg - 0,18..0,19
-    .arg 'd'
+   0] arg - 0,6..0,12
+     .arg 'b'
+     .annotation Name 'int' Load - 0,9..0,12
+   1] arg - 0,18..0,19
+     .arg 'd'
   .kwarg arg - 0,25..0,26
     .arg 'e'
   .defaults[2]
-  0] Constant 1 - 0,15..0,16
-  1] Constant 2 - 0,20..0,21
+   0] Constant 1 - 0,15..0,16
+   1] Constant 2 - 0,20..0,21
 ''',
 r'''**None**'''),
 
@@ -1819,23 +1819,23 @@ r'''a, /, b: int = 1, *c, d=2, **e'''),
 r'''a, /, b: int = 1, *c, d, **e''', r'''
 arguments - ROOT 0,0..0,28
   .posonlyargs[1]
-  0] arg - 0,0..0,1
-    .arg 'a'
+   0] arg - 0,0..0,1
+     .arg 'a'
   .args[1]
-  0] arg - 0,6..0,12
-    .arg 'b'
-    .annotation Name 'int' Load - 0,9..0,12
+   0] arg - 0,6..0,12
+     .arg 'b'
+     .annotation Name 'int' Load - 0,9..0,12
   .vararg arg - 0,19..0,20
     .arg 'c'
   .kwonlyargs[1]
-  0] arg - 0,22..0,23
-    .arg 'd'
+   0] arg - 0,22..0,23
+     .arg 'd'
   .kw_defaults[1]
-  0] None
+   0] None
   .kwarg arg - 0,27..0,28
     .arg 'e'
   .defaults[1]
-  0] Constant 1 - 0,15..0,16
+   0] Constant 1 - 0,15..0,16
 ''',
 r'''2''',
 r'''Constant 2 - ROOT 0,0..0,1'''),
@@ -1845,21 +1845,21 @@ r'''a, /, b: int = 1, *c, d=2, **e'''),
 r'''a, /, b: int = 1, *c, d=2''', r'''
 arguments - ROOT 0,0..0,25
   .posonlyargs[1]
-  0] arg - 0,0..0,1
-    .arg 'a'
+   0] arg - 0,0..0,1
+     .arg 'a'
   .args[1]
-  0] arg - 0,6..0,12
-    .arg 'b'
-    .annotation Name 'int' Load - 0,9..0,12
+   0] arg - 0,6..0,12
+     .arg 'b'
+     .annotation Name 'int' Load - 0,9..0,12
   .vararg arg - 0,19..0,20
     .arg 'c'
   .kwonlyargs[1]
-  0] arg - 0,22..0,23
-    .arg 'd'
+   0] arg - 0,22..0,23
+     .arg 'd'
   .kw_defaults[1]
-  0] Constant 2 - 0,24..0,25
+   0] Constant 2 - 0,24..0,25
   .defaults[1]
-  0] Constant 1 - 0,15..0,16
+   0] Constant 1 - 0,15..0,16
 ''',
 r'''e''', r'''
 arg - ROOT 0,0..0,1
@@ -1871,21 +1871,21 @@ r'''a, /, b: int = 1, *c, d=2'''),
 r'''a, /, b: int = 1, *c, d=2''', r'''
 arguments - ROOT 0,0..0,25
   .posonlyargs[1]
-  0] arg - 0,0..0,1
-    .arg 'a'
+   0] arg - 0,0..0,1
+     .arg 'a'
   .args[1]
-  0] arg - 0,6..0,12
-    .arg 'b'
-    .annotation Name 'int' Load - 0,9..0,12
+   0] arg - 0,6..0,12
+     .arg 'b'
+     .annotation Name 'int' Load - 0,9..0,12
   .vararg arg - 0,19..0,20
     .arg 'c'
   .kwonlyargs[1]
-  0] arg - 0,22..0,23
-    .arg 'd'
+   0] arg - 0,22..0,23
+     .arg 'd'
   .kw_defaults[1]
-  0] Constant 2 - 0,24..0,25
+   0] Constant 2 - 0,24..0,25
   .defaults[1]
-  0] Constant 1 - 0,15..0,16
+   0] Constant 1 - 0,15..0,16
 ''',
 r'''**None**'''),
 
@@ -1992,7 +1992,7 @@ match_case - ROOT 0,0..0,17
       .value Constant 1 - 0,5..0,6
     .name 'a'
   .body[1]
-  0] Pass - 0,13..0,17
+   0] Pass - 0,13..0,17
 ''',
 r'''not a''', r'''
 UnaryOp - ROOT 0,0..0,5
@@ -2009,7 +2009,7 @@ match_case - ROOT 0,0..0,17
       .value Constant 1 - 0,5..0,6
     .name 'a'
   .body[1]
-  0] Pass - 0,13..0,17
+   0] Pass - 0,13..0,17
 ''',
 r'''**None**'''),
 
@@ -2082,10 +2082,10 @@ r'''{1: a, **rest}'''),
 r'''{1: a}''', r'''
 MatchMapping - ROOT 0,0..0,6
   .keys[1]
-  0] Constant 1 - 0,1..0,2
+   0] Constant 1 - 0,1..0,2
   .patterns[1]
-  0] MatchAs - 0,4..0,5
-    .name 'a'
+   0] MatchAs - 0,4..0,5
+     .name 'a'
 ''',
 "\n'rest'\n",
 r'''<class 'str'>'''),
@@ -2095,10 +2095,10 @@ r'''{1: a}'''),
 r'''{1: a}''', r'''
 MatchMapping - ROOT 0,0..0,6
   .keys[1]
-  0] Constant 1 - 0,1..0,2
+   0] Constant 1 - 0,1..0,2
   .patterns[1]
-  0] MatchAs - 0,4..0,5
-    .name 'a'
+   0] MatchAs - 0,4..0,5
+     .name 'a'
 ''',
 r'''**None**'''),
 
@@ -2177,10 +2177,10 @@ r'''a | b | c'''),
 r'''b | c''', r'''
 MatchOr - ROOT 0,0..0,5
   .patterns[2]
-  0] MatchAs - 0,0..0,1
-    .name 'b'
-  1] MatchAs - 0,4..0,5
-    .name 'c'
+   0] MatchAs - 0,0..0,1
+     .name 'b'
+   1] MatchAs - 0,4..0,5
+     .name 'c'
 ''',
 r'''a''', r'''
 MatchAs - ROOT 0,0..0,1
@@ -2296,7 +2296,7 @@ r'''class cls: pass''', r'''
 ClassDef - ROOT 0,0..0,15
   .name 'cls'
   .body[1]
-  0] Pass - 0,11..0,15
+   0] Pass - 0,11..0,15
 ''',
 r'''*a''', r'''
 Starred - ROOT 0,0..0,2
@@ -2310,7 +2310,7 @@ r'''class cls: pass''', r'''
 ClassDef - ROOT 0,0..0,15
   .name 'cls'
   .body[1]
-  0] Pass - 0,11..0,15
+   0] Pass - 0,11..0,15
 ''',
 r'''*(not a)''', r'''
 Starred - ROOT 0,0..0,8
@@ -2326,7 +2326,7 @@ r'''class cls: pass''', r'''
 ClassDef - ROOT 0,0..0,15
   .name 'cls'
   .body[1]
-  0] Pass - 0,11..0,15
+   0] Pass - 0,11..0,15
 ''',
 r'''*not a''', r'''
 Starred - ROOT 0,0..0,6
@@ -2342,7 +2342,7 @@ r'''class cls: pass''', r'''
 ClassDef - ROOT 0,0..0,15
   .name 'cls'
   .body[1]
-  0] Pass - 0,11..0,15
+   0] Pass - 0,11..0,15
 ''',
 r'''*not a''', r'''
 Starred - ROOT 0,0..0,6
@@ -2447,22 +2447,22 @@ r'''**ValueError('cannot delete Subscript.slice')**''',
 r'''*(not a), b, *(c or d), *e''', r'''
 Tuple - ROOT 0,0..0,26
   .elts[4]
-  0] Starred - 0,0..0,8
-    .value UnaryOp - 0,2..0,7
-      .op Not - 0,2..0,5
-      .operand Name 'a' Load - 0,6..0,7
-    .ctx Load
-  1] Name 'b' Load - 0,10..0,11
-  2] Starred - 0,13..0,22
-    .value BoolOp - 0,15..0,21
-      .op Or
-      .values[2]
-      0] Name 'c' Load - 0,15..0,16
-      1] Name 'd' Load - 0,20..0,21
-    .ctx Load
-  3] Starred - 0,24..0,26
-    .value Name 'e' Load - 0,25..0,26
-    .ctx Load
+   0] Starred - 0,0..0,8
+     .value UnaryOp - 0,2..0,7
+       .op Not - 0,2..0,5
+       .operand Name 'a' Load - 0,6..0,7
+     .ctx Load
+   1] Name 'b' Load - 0,10..0,11
+   2] Starred - 0,13..0,22
+     .value BoolOp - 0,15..0,21
+       .op Or
+       .values[2]
+        0] Name 'c' Load - 0,15..0,16
+        1] Name 'd' Load - 0,20..0,21
+     .ctx Load
+   3] Starred - 0,24..0,26
+     .value Name 'e' Load - 0,25..0,26
+     .ctx Load
   .ctx Load
 '''),
 
@@ -2472,22 +2472,22 @@ r'''**ValueError('cannot delete Subscript.slice')**''',
 r'''*not a, b, *c or d, *e''', r'''
 Tuple - ROOT 0,0..0,22
   .elts[4]
-  0] Starred - 0,0..0,6
-    .value UnaryOp - 0,1..0,6
-      .op Not - 0,1..0,4
-      .operand Name 'a' Load - 0,5..0,6
-    .ctx Load
-  1] Name 'b' Load - 0,8..0,9
-  2] Starred - 0,11..0,18
-    .value BoolOp - 0,12..0,18
-      .op Or
-      .values[2]
-      0] Name 'c' Load - 0,12..0,13
-      1] Name 'd' Load - 0,17..0,18
-    .ctx Load
-  3] Starred - 0,20..0,22
-    .value Name 'e' Load - 0,21..0,22
-    .ctx Load
+   0] Starred - 0,0..0,6
+     .value UnaryOp - 0,1..0,6
+       .op Not - 0,1..0,4
+       .operand Name 'a' Load - 0,5..0,6
+     .ctx Load
+   1] Name 'b' Load - 0,8..0,9
+   2] Starred - 0,11..0,18
+     .value BoolOp - 0,12..0,18
+       .op Or
+       .values[2]
+        0] Name 'c' Load - 0,12..0,13
+        1] Name 'd' Load - 0,17..0,18
+     .ctx Load
+   3] Starred - 0,20..0,22
+     .value Name 'e' Load - 0,21..0,22
+     .ctx Load
   .ctx Load
 '''),
 ],
@@ -2499,15 +2499,15 @@ r'''a = (b, c) = d = z'''),
 r'''(b, c) = d = z''', r'''
 Module - ROOT 0,0..0,14
   .body[1]
-  0] Assign - 0,0..0,14
-    .targets[2]
-    0] Tuple - 0,0..0,6
-      .elts[2]
-      0] Name 'b' Store - 0,1..0,2
-      1] Name 'c' Store - 0,4..0,5
-      .ctx Store
-    1] Name 'd' Store - 0,9..0,10
-    .value Name 'z' Load - 0,13..0,14
+   0] Assign - 0,0..0,14
+     .targets[2]
+      0] Tuple - 0,0..0,6
+        .elts[2]
+         0] Name 'b' Store - 0,1..0,2
+         1] Name 'c' Store - 0,4..0,5
+        .ctx Store
+      1] Name 'd' Store - 0,9..0,10
+     .value Name 'z' Load - 0,13..0,14
 ''',
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
@@ -2517,17 +2517,17 @@ r'''a = (b, c) = d = z'''),
 r'''a = d = z''', r'''
 Module - ROOT 0,0..0,9
   .body[1]
-  0] Assign - 0,0..0,9
-    .targets[2]
-    0] Name 'a' Store - 0,0..0,1
-    1] Name 'd' Store - 0,4..0,5
-    .value Name 'z' Load - 0,8..0,9
+   0] Assign - 0,0..0,9
+     .targets[2]
+      0] Name 'a' Store - 0,0..0,1
+      1] Name 'd' Store - 0,4..0,5
+     .value Name 'z' Load - 0,8..0,9
 ''',
 r'''(b, c)''', r'''
 Tuple - ROOT 0,0..0,6
   .elts[2]
-  0] Name 'b' Load - 0,1..0,2
-  1] Name 'c' Load - 0,4..0,5
+   0] Name 'b' Load - 0,1..0,2
+   1] Name 'c' Load - 0,4..0,5
   .ctx Load
 '''),
 
@@ -2536,15 +2536,15 @@ r'''a = (b, c) = d = z'''),
 r'''a = (b, c) = z''', r'''
 Module - ROOT 0,0..0,14
   .body[1]
-  0] Assign - 0,0..0,14
-    .targets[2]
-    0] Name 'a' Store - 0,0..0,1
-    1] Tuple - 0,4..0,10
-      .elts[2]
-      0] Name 'b' Store - 0,5..0,6
-      1] Name 'c' Store - 0,8..0,9
-      .ctx Store
-    .value Name 'z' Load - 0,13..0,14
+   0] Assign - 0,0..0,14
+     .targets[2]
+      0] Name 'a' Store - 0,0..0,1
+      1] Tuple - 0,4..0,10
+        .elts[2]
+         0] Name 'b' Store - 0,5..0,6
+         1] Name 'c' Store - 0,8..0,9
+        .ctx Store
+     .value Name 'z' Load - 0,13..0,14
 ''',
 r'''d''',
 r'''Name 'd' Load - ROOT 0,0..0,1'''),
@@ -2554,15 +2554,15 @@ r'''a = (b, c) = d = z'''),
 r'''a = (b, c) = z''', r'''
 Module - ROOT 0,0..0,14
   .body[1]
-  0] Assign - 0,0..0,14
-    .targets[2]
-    0] Name 'a' Store - 0,0..0,1
-    1] Tuple - 0,4..0,10
-      .elts[2]
-      0] Name 'b' Store - 0,5..0,6
-      1] Name 'c' Store - 0,8..0,9
-      .ctx Store
-    .value Name 'z' Load - 0,13..0,14
+   0] Assign - 0,0..0,14
+     .targets[2]
+      0] Name 'a' Store - 0,0..0,1
+      1] Tuple - 0,4..0,10
+        .elts[2]
+         0] Name 'b' Store - 0,5..0,6
+         1] Name 'c' Store - 0,8..0,9
+        .ctx Store
+     .value Name 'z' Load - 0,13..0,14
 ''',
 r'''d''',
 r'''Name 'd' Load - ROOT 0,0..0,1'''),
@@ -2585,8 +2585,8 @@ z
 ''', r'''
 Assign - ROOT 0,0..3,1
   .targets[2]
-  0] Name 'a' Store - 0,0..0,1
-  1] Name 'c' Store - 1,0..1,1
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'c' Store - 1,0..1,1
   .value Name 'z' Load - 3,0..3,1
 ''',
 r'''b''',
@@ -2605,8 +2605,8 @@ z
 ''', r'''
 Assign - ROOT 0,0..2,1
   .targets[2]
-  0] Name 'a' Store - 0,0..0,1
-  1] Name 'b' Store - 1,0..1,1
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 1,0..1,1
   .value Name 'z' Load - 2,0..2,1
 ''',
 r'''c''',
@@ -2626,8 +2626,8 @@ c \
 ''', r'''
 _Assign_targets - ROOT 0,0..3,0
   .targets[2]
-  0] Name 'a' Store - 0,0..0,1
-  1] Name 'c' Store - 1,0..1,1
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'c' Store - 1,0..1,1
 ''',
 r'''b''',
 r'''Name 'b' Load - ROOT 0,0..0,1'''),
@@ -2645,8 +2645,8 @@ b = \
 ''', r'''
 _Assign_targets - ROOT 0,0..2,0
   .targets[2]
-  0] Name 'a' Store - 0,0..0,1
-  1] Name 'b' Store - 1,0..1,1
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 1,0..1,1
 ''',
 r'''c''',
 r'''Name 'c' Load - ROOT 0,0..0,1'''),
@@ -2659,14 +2659,14 @@ r'''def f[T: int, U: (str)](): pass'''),
 r'''def f[U: (str)](): pass''', r'''
 Module - ROOT 0,0..0,23
   .body[1]
-  0] FunctionDef - 0,0..0,23
-    .name 'f'
-    .body[1]
-    0] Pass - 0,19..0,23
-    .type_params[1]
-    0] TypeVar - 0,6..0,14
-      .name 'U'
-      .bound Name 'str' Load - 0,10..0,13
+   0] FunctionDef - 0,0..0,23
+     .name 'f'
+     .body[1]
+      0] Pass - 0,19..0,23
+     .type_params[1]
+      0] TypeVar - 0,6..0,14
+        .name 'U'
+        .bound Name 'str' Load - 0,10..0,13
 ''',
 r'''T: int''', r'''
 TypeVar - ROOT 0,0..0,6
@@ -2679,14 +2679,14 @@ r'''def f[T: int, U: (str)](): pass'''),
 r'''def f[T: int](): pass''', r'''
 Module - ROOT 0,0..0,21
   .body[1]
-  0] FunctionDef - 0,0..0,21
-    .name 'f'
-    .body[1]
-    0] Pass - 0,17..0,21
-    .type_params[1]
-    0] TypeVar - 0,6..0,12
-      .name 'T'
-      .bound Name 'int' Load - 0,9..0,12
+   0] FunctionDef - 0,0..0,21
+     .name 'f'
+     .body[1]
+      0] Pass - 0,17..0,21
+     .type_params[1]
+      0] TypeVar - 0,6..0,12
+        .name 'T'
+        .bound Name 'int' Load - 0,9..0,12
 ''',
 r'''U: (str)''', r'''
 TypeVar - ROOT 0,0..0,8
@@ -2699,14 +2699,14 @@ r'''def f[T: int, U: (str)](): pass'''),
 r'''def f[T: int](): pass''', r'''
 Module - ROOT 0,0..0,21
   .body[1]
-  0] FunctionDef - 0,0..0,21
-    .name 'f'
-    .body[1]
-    0] Pass - 0,17..0,21
-    .type_params[1]
-    0] TypeVar - 0,6..0,12
-      .name 'T'
-      .bound Name 'int' Load - 0,9..0,12
+   0] FunctionDef - 0,0..0,21
+     .name 'f'
+     .body[1]
+      0] Pass - 0,17..0,21
+     .type_params[1]
+      0] TypeVar - 0,6..0,12
+        .name 'T'
+        .bound Name 'int' Load - 0,9..0,12
 ''',
 r'''U: (str)''', r'''
 TypeVar - ROOT 0,0..0,8
@@ -2719,14 +2719,14 @@ r'''def f[T: int, U: (str)](): pass'''),
 r'''def f[U: (str)](): pass''', r'''
 Module - ROOT 0,0..0,23
   .body[1]
-  0] FunctionDef - 0,0..0,23
-    .name 'f'
-    .body[1]
-    0] Pass - 0,19..0,23
-    .type_params[1]
-    0] TypeVar - 0,6..0,14
-      .name 'U'
-      .bound Name 'str' Load - 0,10..0,13
+   0] FunctionDef - 0,0..0,23
+     .name 'f'
+     .body[1]
+      0] Pass - 0,19..0,23
+     .type_params[1]
+      0] TypeVar - 0,6..0,14
+        .name 'U'
+        .bound Name 'str' Load - 0,10..0,13
 ''',
 r'''T: int''', r'''
 TypeVar - ROOT 0,0..0,6
@@ -2743,14 +2743,14 @@ r'''async def f[T: int, U: (str)](): pass'''),
 r'''async def f[U: (str)](): pass''', r'''
 Module - ROOT 0,0..0,29
   .body[1]
-  0] AsyncFunctionDef - 0,0..0,29
-    .name 'f'
-    .body[1]
-    0] Pass - 0,25..0,29
-    .type_params[1]
-    0] TypeVar - 0,12..0,20
-      .name 'U'
-      .bound Name 'str' Load - 0,16..0,19
+   0] AsyncFunctionDef - 0,0..0,29
+     .name 'f'
+     .body[1]
+      0] Pass - 0,25..0,29
+     .type_params[1]
+      0] TypeVar - 0,12..0,20
+        .name 'U'
+        .bound Name 'str' Load - 0,16..0,19
 ''',
 r'''T: int''', r'''
 TypeVar - ROOT 0,0..0,6
@@ -2763,14 +2763,14 @@ r'''async def f[T: int, U: (str)](): pass'''),
 r'''async def f[T: int](): pass''', r'''
 Module - ROOT 0,0..0,27
   .body[1]
-  0] AsyncFunctionDef - 0,0..0,27
-    .name 'f'
-    .body[1]
-    0] Pass - 0,23..0,27
-    .type_params[1]
-    0] TypeVar - 0,12..0,18
-      .name 'T'
-      .bound Name 'int' Load - 0,15..0,18
+   0] AsyncFunctionDef - 0,0..0,27
+     .name 'f'
+     .body[1]
+      0] Pass - 0,23..0,27
+     .type_params[1]
+      0] TypeVar - 0,12..0,18
+        .name 'T'
+        .bound Name 'int' Load - 0,15..0,18
 ''',
 r'''U: (str)''', r'''
 TypeVar - ROOT 0,0..0,8
@@ -2783,14 +2783,14 @@ r'''async def f[T: int, U: (str)](): pass'''),
 r'''async def f[T: int](): pass''', r'''
 Module - ROOT 0,0..0,27
   .body[1]
-  0] AsyncFunctionDef - 0,0..0,27
-    .name 'f'
-    .body[1]
-    0] Pass - 0,23..0,27
-    .type_params[1]
-    0] TypeVar - 0,12..0,18
-      .name 'T'
-      .bound Name 'int' Load - 0,15..0,18
+   0] AsyncFunctionDef - 0,0..0,27
+     .name 'f'
+     .body[1]
+      0] Pass - 0,23..0,27
+     .type_params[1]
+      0] TypeVar - 0,12..0,18
+        .name 'T'
+        .bound Name 'int' Load - 0,15..0,18
 ''',
 r'''U: (str)''', r'''
 TypeVar - ROOT 0,0..0,8
@@ -2803,14 +2803,14 @@ r'''async def f[T: int, U: (str)](): pass'''),
 r'''async def f[U: (str)](): pass''', r'''
 Module - ROOT 0,0..0,29
   .body[1]
-  0] AsyncFunctionDef - 0,0..0,29
-    .name 'f'
-    .body[1]
-    0] Pass - 0,25..0,29
-    .type_params[1]
-    0] TypeVar - 0,12..0,20
-      .name 'U'
-      .bound Name 'str' Load - 0,16..0,19
+   0] AsyncFunctionDef - 0,0..0,29
+     .name 'f'
+     .body[1]
+      0] Pass - 0,25..0,29
+     .type_params[1]
+      0] TypeVar - 0,12..0,20
+        .name 'U'
+        .bound Name 'str' Load - 0,16..0,19
 ''',
 r'''T: int''', r'''
 TypeVar - ROOT 0,0..0,6
@@ -2827,14 +2827,14 @@ r'''class c[T: int, U: (str)]: pass'''),
 r'''class c[U: (str)]: pass''', r'''
 Module - ROOT 0,0..0,23
   .body[1]
-  0] ClassDef - 0,0..0,23
-    .name 'c'
-    .body[1]
-    0] Pass - 0,19..0,23
-    .type_params[1]
-    0] TypeVar - 0,8..0,16
-      .name 'U'
-      .bound Name 'str' Load - 0,12..0,15
+   0] ClassDef - 0,0..0,23
+     .name 'c'
+     .body[1]
+      0] Pass - 0,19..0,23
+     .type_params[1]
+      0] TypeVar - 0,8..0,16
+        .name 'U'
+        .bound Name 'str' Load - 0,12..0,15
 ''',
 r'''T: int''', r'''
 TypeVar - ROOT 0,0..0,6
@@ -2847,14 +2847,14 @@ r'''class c[T: int, U: (str)]: pass'''),
 r'''class c[T: int]: pass''', r'''
 Module - ROOT 0,0..0,21
   .body[1]
-  0] ClassDef - 0,0..0,21
-    .name 'c'
-    .body[1]
-    0] Pass - 0,17..0,21
-    .type_params[1]
-    0] TypeVar - 0,8..0,14
-      .name 'T'
-      .bound Name 'int' Load - 0,11..0,14
+   0] ClassDef - 0,0..0,21
+     .name 'c'
+     .body[1]
+      0] Pass - 0,17..0,21
+     .type_params[1]
+      0] TypeVar - 0,8..0,14
+        .name 'T'
+        .bound Name 'int' Load - 0,11..0,14
 ''',
 r'''U: (str)''', r'''
 TypeVar - ROOT 0,0..0,8
@@ -2867,14 +2867,14 @@ r'''class c[T: int, U: (str)]: pass'''),
 r'''class c[T: int]: pass''', r'''
 Module - ROOT 0,0..0,21
   .body[1]
-  0] ClassDef - 0,0..0,21
-    .name 'c'
-    .body[1]
-    0] Pass - 0,17..0,21
-    .type_params[1]
-    0] TypeVar - 0,8..0,14
-      .name 'T'
-      .bound Name 'int' Load - 0,11..0,14
+   0] ClassDef - 0,0..0,21
+     .name 'c'
+     .body[1]
+      0] Pass - 0,17..0,21
+     .type_params[1]
+      0] TypeVar - 0,8..0,14
+        .name 'T'
+        .bound Name 'int' Load - 0,11..0,14
 ''',
 r'''U: (str)''', r'''
 TypeVar - ROOT 0,0..0,8
@@ -2887,14 +2887,14 @@ r'''class c[T: int, U: (str)]: pass'''),
 r'''class c[U: (str)]: pass''', r'''
 Module - ROOT 0,0..0,23
   .body[1]
-  0] ClassDef - 0,0..0,23
-    .name 'c'
-    .body[1]
-    0] Pass - 0,19..0,23
-    .type_params[1]
-    0] TypeVar - 0,8..0,16
-      .name 'U'
-      .bound Name 'str' Load - 0,12..0,15
+   0] ClassDef - 0,0..0,23
+     .name 'c'
+     .body[1]
+      0] Pass - 0,19..0,23
+     .type_params[1]
+      0] TypeVar - 0,8..0,16
+        .name 'U'
+        .bound Name 'str' Load - 0,12..0,15
 ''',
 r'''T: int''', r'''
 TypeVar - ROOT 0,0..0,6
@@ -2911,13 +2911,13 @@ r'''type t[T: int, U: (str)] = ...'''),
 r'''type t[U: (str)] = ...''', r'''
 Module - ROOT 0,0..0,22
   .body[1]
-  0] TypeAlias - 0,0..0,22
-    .name Name 't' Store - 0,5..0,6
-    .type_params[1]
-    0] TypeVar - 0,7..0,15
-      .name 'U'
-      .bound Name 'str' Load - 0,11..0,14
-    .value Constant Ellipsis - 0,19..0,22
+   0] TypeAlias - 0,0..0,22
+     .name Name 't' Store - 0,5..0,6
+     .type_params[1]
+      0] TypeVar - 0,7..0,15
+        .name 'U'
+        .bound Name 'str' Load - 0,11..0,14
+     .value Constant Ellipsis - 0,19..0,22
 ''',
 r'''T: int''', r'''
 TypeVar - ROOT 0,0..0,6
@@ -2930,13 +2930,13 @@ r'''type t[T: int, U: (str)] = ...'''),
 r'''type t[T: int] = ...''', r'''
 Module - ROOT 0,0..0,20
   .body[1]
-  0] TypeAlias - 0,0..0,20
-    .name Name 't' Store - 0,5..0,6
-    .type_params[1]
-    0] TypeVar - 0,7..0,13
-      .name 'T'
-      .bound Name 'int' Load - 0,10..0,13
-    .value Constant Ellipsis - 0,17..0,20
+   0] TypeAlias - 0,0..0,20
+     .name Name 't' Store - 0,5..0,6
+     .type_params[1]
+      0] TypeVar - 0,7..0,13
+        .name 'T'
+        .bound Name 'int' Load - 0,10..0,13
+     .value Constant Ellipsis - 0,17..0,20
 ''',
 r'''U: (str)''', r'''
 TypeVar - ROOT 0,0..0,8
@@ -2949,13 +2949,13 @@ r'''type t[T: int, U: (str)] = ...'''),
 r'''type t[T: int] = ...''', r'''
 Module - ROOT 0,0..0,20
   .body[1]
-  0] TypeAlias - 0,0..0,20
-    .name Name 't' Store - 0,5..0,6
-    .type_params[1]
-    0] TypeVar - 0,7..0,13
-      .name 'T'
-      .bound Name 'int' Load - 0,10..0,13
-    .value Constant Ellipsis - 0,17..0,20
+   0] TypeAlias - 0,0..0,20
+     .name Name 't' Store - 0,5..0,6
+     .type_params[1]
+      0] TypeVar - 0,7..0,13
+        .name 'T'
+        .bound Name 'int' Load - 0,10..0,13
+     .value Constant Ellipsis - 0,17..0,20
 ''',
 r'''U: (str)''', r'''
 TypeVar - ROOT 0,0..0,8
@@ -2968,13 +2968,13 @@ r'''type t[T: int, U: (str)] = ...'''),
 r'''type t[U: (str)] = ...''', r'''
 Module - ROOT 0,0..0,22
   .body[1]
-  0] TypeAlias - 0,0..0,22
-    .name Name 't' Store - 0,5..0,6
-    .type_params[1]
-    0] TypeVar - 0,7..0,15
-      .name 'U'
-      .bound Name 'str' Load - 0,11..0,14
-    .value Constant Ellipsis - 0,19..0,22
+   0] TypeAlias - 0,0..0,22
+     .name Name 't' Store - 0,5..0,6
+     .type_params[1]
+      0] TypeVar - 0,7..0,15
+        .name 'U'
+        .bound Name 'str' Load - 0,11..0,14
+     .value Constant Ellipsis - 0,19..0,22
 ''',
 r'''T: int''', r'''
 TypeVar - ROOT 0,0..0,6
@@ -2991,9 +2991,9 @@ r'''T: int, U: (str)'''),
 r'''U: (str)''', r'''
 _type_params - ROOT 0,0..0,8
   .type_params[1]
-  0] TypeVar - 0,0..0,8
-    .name 'U'
-    .bound Name 'str' Load - 0,4..0,7
+   0] TypeVar - 0,0..0,8
+     .name 'U'
+     .bound Name 'str' Load - 0,4..0,7
 ''',
 r'''T: int''', r'''
 TypeVar - ROOT 0,0..0,6
@@ -3006,9 +3006,9 @@ r'''T: int, U: (str)'''),
 r'''T: int''', r'''
 _type_params - ROOT 0,0..0,6
   .type_params[1]
-  0] TypeVar - 0,0..0,6
-    .name 'T'
-    .bound Name 'int' Load - 0,3..0,6
+   0] TypeVar - 0,0..0,6
+     .name 'T'
+     .bound Name 'int' Load - 0,3..0,6
 ''',
 r'''U: (str)''', r'''
 TypeVar - ROOT 0,0..0,8
@@ -3021,9 +3021,9 @@ r'''T: int, U: (str)'''),
 r'''T: int''', r'''
 _type_params - ROOT 0,0..0,6
   .type_params[1]
-  0] TypeVar - 0,0..0,6
-    .name 'T'
-    .bound Name 'int' Load - 0,3..0,6
+   0] TypeVar - 0,0..0,6
+     .name 'T'
+     .bound Name 'int' Load - 0,3..0,6
 ''',
 r'''U: (str)''', r'''
 TypeVar - ROOT 0,0..0,8
@@ -3036,9 +3036,9 @@ r'''T: int, U: (str)'''),
 r'''U: (str)''', r'''
 _type_params - ROOT 0,0..0,8
   .type_params[1]
-  0] TypeVar - 0,0..0,8
-    .name 'U'
-    .bound Name 'str' Load - 0,4..0,7
+   0] TypeVar - 0,0..0,8
+     .name 'U'
+     .bound Name 'str' Load - 0,4..0,7
 ''',
 r'''T: int''', r'''
 TypeVar - ROOT 0,0..0,6

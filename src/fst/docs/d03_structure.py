@@ -18,7 +18,7 @@ parent.
 >>> f.dump()
 Assign - ROOT 0,0..0,5
   .targets[1]
-  0] Name 'i' Store - 0,0..0,1
+   0] Name 'i' Store - 0,0..0,1
   .value Constant 1 - 0,4..0,5
 
 >>> f
@@ -345,16 +345,16 @@ You can get a path from any given node to any of its children.
 >>> f.dump()
 Assign - ROOT 0,0..0,17
   .targets[1]
-  0] Name 'i' Store - 0,0..0,1
+   0] Name 'i' Store - 0,0..0,1
   .value List - 0,4..0,17
     .elts[1]
-    0] BinOp - 0,5..0,16
-      .left Name 'a' Load - 0,5..0,6
-      .op Mult - 0,7..0,8
-      .right BinOp - 0,10..0,15
-        .left Name 'b' Load - 0,10..0,11
-        .op Add - 0,12..0,13
-        .right Name 'c' Load - 0,14..0,15
+     0] BinOp - 0,5..0,16
+       .left Name 'a' Load - 0,5..0,6
+       .op Mult - 0,7..0,8
+       .right BinOp - 0,10..0,15
+         .left Name 'b' Load - 0,10..0,11
+         .op Add - 0,12..0,13
+         .right Name 'c' Load - 0,14..0,15
     .ctx Load
 
 >>> f.child_path(f.value.elts[0].right.left)
