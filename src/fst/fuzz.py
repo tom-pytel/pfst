@@ -230,6 +230,76 @@ PATS = [
 PATS = [FST(e, 'pattern') for e in PATS]
 
 
+old_FST_put = FST.put
+old_FST_put_slice = FST.put_slice
+
+def debug_put(self, code, idx = None, stop = False, field = None, *, one = True, **options):
+    print(f'put({self=}, {idx=}, {stop=}, {field=}, {one=}, {options=})')
+    print(f'  {code=!r}')
+
+    if isinstance(code, AST):
+        print(' ', dump(code))
+
+    elif isinstance(code, FST):
+        for l in lines if len(lines := code.lines) <= 11 else lines[:5] + ['...'] + lines[-5:]:
+            print(' ', repr(l))
+
+    pre_lines = self.lines
+
+    ret = old_FST_put(self, code, idx, stop, field, one=one, **options)
+
+    verify = bool(self.root.verify(raise_=False))
+
+    print(f'  {verify=}')
+    print()
+
+    if not verify:
+        print('=== before put self lines ' + '='*80)
+        print('\n'.join(pre_lines))
+        print()
+        print('--- after put self lines ' + '-'*80)
+        print('\n'.join(self.lines))
+        # print('--- after put whole ' + '-'*80)
+        # print(self.root.src)
+
+        raise SystemExit(-1)
+
+    return ret
+
+def debug_put_slice(self, code, start = None, stop = None, field = None, *, one = False, **options):
+    print(f'put_slice({self=}, {stop=}, {stop=}, {field=}, {one=}, {options=})')
+    print(f'  {code=!r}')
+
+    if isinstance(code, AST):
+        print(' ', dump(code))
+
+    elif isinstance(code, FST):
+        for l in lines if len(lines := code.lines) <= 11 else lines[:5] + ['... ... ...'] + lines[-5:]:
+            print(' ', repr(l))
+
+    pre_lines = self.lines
+
+    ret = old_FST_put_slice(self, code, start, stop, field, one=one, **options)
+
+    verify = bool(self.root.verify(raise_=False))
+
+    print(f'  {verify=}')
+    print()
+
+    if not verify:
+        print('=== before put self ' + '='*80)
+        print('\n'.join(pre_lines))
+        print()
+        print('--- after put self lines ' + '-'*80)
+        print('\n'.join(self.lines))
+        # print('--- after put whole ' + '-'*80)
+        # print(self.root.src)
+
+        raise SystemExit(-1)
+
+    return ret
+
+
 def minify_src(source_code):
     tokens = tokenize.tokenize(BytesIO(source_code.encode()).readline)
     result = []
@@ -1674,16 +1744,11 @@ class ReconcileRnd(Fuzzy):
         # self.master_parts = FSTParts(fst)
         # master            = fst.copy()
 
-        global old_FST_put, old_FST_put_slice
-
-        old_FST_put = FST.put
-        old_FST_put_slice = FST.put_slice
-
         real_master = fst.copy()
 
         if self.debug:
-            FST.put = self.__debug_put
-            FST.put_slice = self.__debug_put_slice
+            FST.put = debug_put
+            FST.put_slice = debug_put_slice
 
         try:
             # print(fst.src)
@@ -1738,74 +1803,6 @@ class ReconcileRnd(Fuzzy):
 
         if self.verbose:
             print(fst.src)
-
-    @staticmethod
-    def __debug_put(self, code, idx = None, stop = False, field = None, *, one = True, **options):
-        print(f'put({self=}, {idx=}, {stop=}, {field=}, {one=}, {options=})')
-        print(f'  {code=!r}')
-
-        if isinstance(code, AST):
-            print(' ', dump(code))
-
-        elif isinstance(code, FST):
-            for l in lines if len(lines := code.lines) <= 11 else lines[:5] + ['...'] + lines[-5:]:
-                print(' ', repr(l))
-
-        pre_lines = self.lines
-
-        ret = old_FST_put(self, code, idx, stop, field, one=one, **options)
-
-        verify = bool(self.root.verify(raise_=False))
-
-        print(f'  {verify=}')
-        print()
-
-        if not verify:
-            print('=== before put self lines ' + '='*80)
-            print('\n'.join(pre_lines))
-            print()
-            print('--- after put self lines ' + '-'*80)
-            print('\n'.join(self.lines))
-            # print('--- after put whole ' + '-'*80)
-            # print(self.root.src)
-
-            raise SystemExit(-1)
-
-        return ret
-
-    @staticmethod
-    def __debug_put_slice(self, code, start = None, stop = None, field = None, *, one = False, **options):
-        print(f'put_slice({self=}, {stop=}, {stop=}, {field=}, {one=}, {options=})')
-        print(f'  {code=!r}')
-
-        if isinstance(code, AST):
-            print(' ', dump(code))
-
-        elif isinstance(code, FST):
-            for l in lines if len(lines := code.lines) <= 11 else lines[:5] + ['...'] + lines[-5:]:
-                print(' ', repr(l))
-
-        pre_lines = self.lines
-
-        ret = old_FST_put_slice(self, code, start, stop, field, one=one, **options)
-
-        verify = bool(self.root.verify(raise_=False))
-
-        print(f'  {verify=}')
-        print()
-
-        if not verify:
-            print('=== before put self ' + '='*80)
-            print('\n'.join(pre_lines))
-            print()
-            print('--- after put self lines ' + '-'*80)
-            print('\n'.join(self.lines))
-            # print('--- after put whole ' + '-'*80)
-            # print(self.root.src)
-
-            raise SystemExit(-1)
-
-        return ret
 
 
 class ReconcileSame(Fuzzy):
@@ -1941,6 +1938,10 @@ class SliceStmtish(Fuzzy):
         if not stmtishs:
             return
 
+        if self.debug:
+            FST.put = debug_put
+            FST.put_slice = debug_put_slice
+
         try:
             for count in range(self.batch or 1000):
                 try:
@@ -1998,6 +1999,9 @@ class SliceStmtish(Fuzzy):
 
         finally:
             print()
+
+            FST.put = old_FST_put
+            FST.put_slice = old_FST_put_slice
 
             if self.verbose:
                 print(fst.src)

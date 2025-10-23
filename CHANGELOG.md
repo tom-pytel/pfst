@@ -2,13 +2,9 @@
 
 ### Fixed
 
-- fix put to `FormattedValue/Interpolation.value` with multibyte chars which had format_spec not immediately adjacent
+- fix several semicolon and unicode character position issues
 - fix forced grouping parenthesize `Starred` child location
 - normalize identifier to put BEFORE checking against keyword *facepalm*
-- fix put raw source to statement after semicolon with preceding multibyte chars on same line
-- fix incorrect indentation in put stmt slice to stmt with semicolon after comment
-- fix put slice to end of specific statements with trialing semicolons
-- fix incorrect block location on statementish op leaving trailing semicolon in last child
 - fix coerce `except*` `AST` slice to `FST`
 - fix put star `*` to parenthesized single element non-star `ImportFrom.names`
 - fix get slice from start of unparenthesized tuple in f-string expression on py < 3.12

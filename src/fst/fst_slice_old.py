@@ -535,7 +535,10 @@ class SrcEdit:
             put_fst._put_src([''] * prepend, 0, 0, 0, 0, False)
 
         if postpend:
-            put_lines.extend([bistr('')] * postpend)
+            if put_lines[-1].isspace():  # if last line is a pure indent then insert new lines before it
+                put_lines[-1:-1] = [bistr('')] * postpend
+            else:
+                put_lines.extend([bistr('')] * postpend)
 
         if del_lines:
             put_lines[-1] = bistr(put_lines[-1] + del_lines[0])

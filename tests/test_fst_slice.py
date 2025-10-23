@@ -1893,6 +1893,25 @@ c  # comment
         f.slice.put_slice('[ {z} ]', 0, 1)
         self.assertEqual('a[{z}, b]', f.src)
 
+        # make sure indent preserved on ins pep8space to semicoloned stmts
+
+        f = FST(r'''
+class cls:
+    a; b
+    end
+            '''.strip())
+
+        self.assertEqual(r'''
+class cls:
+    a
+
+    def f(): g
+
+    b
+    end
+            '''.strip(), f.put_slice('def f(): g', 1, 1).root.src)
+        f.verify()
+
     def test_unparenthesized_tuple_with_line_continuations(self):
         # backslashes are annoying to include in the regenerable test cases
 
