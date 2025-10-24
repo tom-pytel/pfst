@@ -30,7 +30,7 @@ if a:
     b = (c, u, v, d)
 ```
 
-`fst` grew out of a frustration of not being able to just edit python source to change some bit of functionality without having to deal with the miniutae of indentation, parentheses, commas, comments, docstrings, semicolons, line continuations, precedence, else vs. elif, etc... `fst` deals with all of these for you and especially the many, many niche special cases of Python syntax.
+`fst` grew out of a frustration of not being able to just edit python source to change some bit of functionality without having to deal with the miniutae of precedence, indentation, parentheses, commas, comments, docstrings, semicolons, line continuations, else vs. elif, etc... `fst` deals with all of these for you and especially the many, many niche special cases of Python syntax.
 
 `fst` works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute which keep extra structure information, the original source, and provide the interface to format-preserving operations. Each operation through `fst` is a simultaneous edit of the `AST` tree and the source code and those are kept synchronized so that the current source will always parse to the current tree.
 

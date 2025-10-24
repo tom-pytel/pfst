@@ -165,6 +165,12 @@ class _ThreadLocal(threading.local):
         }
 
 
+try:
+    from IPython import get_ipython
+    _IPYTHON_COLOR = getattr(get_ipython(), 'colors', 'NoColor') != 'NoColor'
+except Exception:
+    _IPYTHON_COLOR = False
+
 _TLOCAL = _ThreadLocal()
 
 _DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_version=None)
@@ -1425,7 +1431,7 @@ class FST:
 
         if color is None and out is print and os.environ.get('TERM') not in ('', 'dumb'):
             try:
-                color = sys.stdout.isatty()
+                color = sys.stdout.isatty() or _IPYTHON_COLOR
             except Exception:
                 color = False
 

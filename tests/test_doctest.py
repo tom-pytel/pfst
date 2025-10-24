@@ -85,8 +85,7 @@ class TestDocTest(unittest.TestCase):
     def test_docs(self):
         from fst import docs
 
-        mods    = list(sorted((m for m in docs.__dict__.values() if isinstance(m, ModuleType)),
-                              key=lambda m: m.__name__))
+        mods = list(sorted((m for m in docs.__dict__.values() if isinstance(m, ModuleType)), key=lambda m: m.__name__))
         options = fst.FST.get_options()
 
         try:

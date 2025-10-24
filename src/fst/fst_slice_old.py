@@ -55,6 +55,7 @@ from .common import (
     prev_find,  # noqa: F811
 )
 
+
 class SrcEdit:
     """This class controls most source editing behavior."""
 
@@ -801,7 +802,6 @@ class SrcEdit:
 
 
 _src_edit = SrcEdit()
-
 
 # ----------------------------------------------------------------------------------------------------------------------
 # original slice_old
