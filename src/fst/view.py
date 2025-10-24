@@ -497,7 +497,7 @@ class fstview:
 
         return self
 
-    def prepend( self, code: Code, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
+    def prepend(self, code: Code, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
         """prepend `code` as a single element to the beginning of this slice.
 
         **Returns:**

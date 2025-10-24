@@ -6145,7 +6145,7 @@ i # post
             ''')
         self.assertEqual('i', a.body[0].f.copy(trivia=(False, False)).src)  # , precomms=False, postcomms=False
         self.assertEqual('# pre\ni', a.body[0].f.copy(trivia=(True, False)).src)  # , precomms=True, postcomms=False
-        self.assertEqual('# pre\ni # post\n', a.body[0].f.copy(trivia=(True, True)).src)  # , precomms=True, postcomms=True
+        self.assertEqual('# pre\ni # post', a.body[0].f.copy(trivia=(True, True)).src)  # , precomms=True, postcomms=True
         self.assertEqual('# prepre\n\n# pre\ni', a.body[0].f.copy(trivia=('all', False)).src)  # , precomms='all', postcomms=False
 
         a = parse('( i )')

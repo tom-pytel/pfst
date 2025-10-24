@@ -191,7 +191,7 @@ i # post
 i # post
 # postpost
             '''.strip())
-        self.assertEqual('# pre\ni # post\n', a.body[0].f.cut(trivia=(True, True)).src)  # , precomms=True, postcomms=True
+        self.assertEqual('# pre\ni # post', a.body[0].f.cut(trivia=(True, True)).src)  # , precomms=True, postcomms=True
         self.assertEqual('# prepre\n\n# postpost', a.f.src)
 
         a = parse('''
@@ -628,7 +628,6 @@ if indented:
             '...',
             'case 2:',
             '    pass  # this is removed',
-            '',
             '...',
             'j; k',
             '...',
@@ -637,7 +636,6 @@ if indented:
             '...',
             '# pre',
             'n  # post',
-            '',
             '...',
             'except:  # EXCEPT',
             '    if 1: break',
@@ -649,7 +647,6 @@ if indented:
             '@deco',
             'def inner() -> list[int]:',
             '    q = 4  # post-inner-q',
-            '',
             '...',
             '# pre-classdeco',
             '@classdeco',
@@ -657,7 +654,6 @@ if indented:
             '    @methdeco',
             '    def meth(self):',
             '        mvar = 5  # post-meth',
-            '',
             '...',
             '"""Multi',
             'line # notcomment',
@@ -668,7 +664,6 @@ if indented:
             ' "string \\\\ not linecont")',
             '...',
             'r = [i for i in range(100)]  # post-list-comprehension',
-            '',
             '...',
             '# pre-global',
             'global c',
@@ -1027,7 +1022,6 @@ if indented:
             '# TRY',
             '# pre',
             'n  # post',
-            '',
             '...',
             '# delelse',
             'if 2: continue',
@@ -1038,7 +1032,6 @@ if indented:
             '@deco',
             'def inner() -> list[int]:',
             '    q = 4  # post-inner-q',
-            '',
             '...',
             '# FOR',
             '# pre-classdeco',
@@ -1047,7 +1040,6 @@ if indented:
             '    @methdeco',
             '    def meth(self):',
             '        mvar = 5  # post-meth',
-            '',
             '...',
             '# delelse',
             '"""Multi',
@@ -1061,7 +1053,6 @@ if indented:
             '...',
             '# delelse',
             'r = [i for i in range(100)]  # post-list-comprehension',
-            '',
             '...',
             '# WHILE',
             '# pre-global',

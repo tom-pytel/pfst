@@ -1626,7 +1626,6 @@ class FST:
         .
         def last_function(a, b):
             return a+b  # return this
-        .
 
         >>> m = f.mark()
 
@@ -1644,7 +1643,6 @@ class FST:
         .
         def last_function(a, b):
             return a+b  # return this
-        .
         ```
         """
 

@@ -217,7 +217,15 @@ class SrcEdit:
                                                True, comment=True, lcont=None)
         post_semi = not post_comms and next_find(lines, flast.end_ln, flast.end_col, bound_end_ln, bound_end_col, ';',
                                                  True, comment=True, lcont=None)
-        copy_loc = fstloc(*(pre_comms or ffirst.bloc[:2]), *(post_comms or flast.bloc[2:]))
+
+        copy_start = pre_comms or ffirst.bloc[:2]
+
+        if not post_comms:
+            copy_loc = fstloc(*copy_start, *flast.bloc[2:])
+        elif post_comms[1]:  # comment does not end with newline
+            copy_loc = fstloc(*copy_start, *post_comms)
+        else:  # comment ends with newline but we don't want the copy to include it
+            copy_loc = fstloc(*copy_start, post_comms[0] - 1, len(lines[post_comms[0] - 1]))
 
         if fpre:  # set block start to just past prev statement or block open (colon)
             block_ln, block_col = fpre.bloc[2:]
@@ -277,7 +285,7 @@ class SrcEdit:
 
         if pre_comms:
             if post_comms:
-                del_loc = copy_loc
+                del_loc = fstloc(*pre_comms, *post_comms)
 
             else:
                 if not post_semi:
