@@ -5,12 +5,12 @@ This module exists in order to facilitate quick and easy high level editing of P
 ```py
 >>> import ast, fst
 
->>> a = fst.parse('if a: b = c, d  # comment')
+>>> ext_ast = fst.parse('if a: b = c, d  # comment')
 
->>> print(fst.unparse(a))  # formatting is preserved
+>>> print(fst.unparse(ext_ast))  # formatting is preserved
 if a: b = c, d  # comment
 
->>> print(ast.unparse(a))  # just a normal AST with metadata
+>>> print(ast.unparse(ext_ast))  # just a normal AST with metadata
 if a:
     b = (c, d)
 ```
@@ -18,19 +18,19 @@ if a:
 Operations on the tree preserve formatting.
 
 ```py
->>> a.f.body[0].value.elts[1:1] = 'u,\nv  # blah'
+>>> ext_ast.f.body[0].body[0].value.elts[1:1] = 'u,\nv  # blah'
 
->>> print(fst.unparse(a))
+>>> print(fst.unparse(ext_ast))
 if a: b = (c, u,
           v,  # blah
           d)  # comment
 
->>> print(ast.unparse(a))  # AST is kept up to date
+>>> print(ast.unparse(ext_ast))  # AST is kept up to date
 if a:
     b = (c, u, v, d)
 ```
 
-`fst` grew out of a frustration of not being able to just edit python source to change some bit of functionality without having to deal with the miniutae of precedence, indentation, parentheses, commas, comments, docstrings, semicolons, line continuations, else vs. elif, etc... `fst` deals with all of these for you and especially the many, many niche special cases of Python syntax.
+`fst` grew out of a frustration of not being able to just edit python source to change some bit of functionality without having to deal with the miniutae of precedence, indentation, parentheses, commas, comments, docstrings, semicolons, line continuations, else vs. elif, etc... `fst` deals with all of these automatically and especially the many, many niche special cases of Python syntax.
 
 `fst` works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute which keep extra structure information, the original source, and provide the interface to format-preserving operations. Each operation through `fst` is a simultaneous edit of the `AST` tree and the source code and those are kept synchronized so that the current source will always parse to the current tree.
 
@@ -56,140 +56,212 @@ From GitHub, after cloning for development:
 
 # Examples
 
-Basic operations:
+Indentation is automatic.
 
 ```py
->>> a = fst.parse('if a: b = c, d  # comment')
+>>> from fst import *
 
->>> a.f.body[0].body.append('x = b')  # '.f' accesses FST functionality
-... <<If 0,0..2,9>.body[0:2] [<Assign 1,4..1,12>, <Assign 2,4..2,9>]>
+>>> cls = FST('''
+... class cls:
+...     def func(self):  # comment
+...         """doc
+...         string"""
+... '''.strip())
 
->>> print(a.f.src)  # source is always available
-if a:
-    b = c, d  # comment
-    x = b
+>>> func = cls.body['func'].copy()
+
+>>> print(func.src)
+def func(self):  # comment
+    """doc
+    string"""
 ```
 
-```py
->>> a.body[0].body[0].value.f.elts[1:1] = 'u,\nv'
->>> a.f.body[0].orelse = a.f.body[0].body.copy()
->>> a.f.body[0].body = 'x = a  # blah'
+Don't need docstring.
 
->>> print(a.f.src)
-if a:
-    x = a  # blah
-else:
-    b = (c, x,
-        y, d)  # comment
-    x = b
+```py
+>>> del func.body  # can zero out bodies temporarily
+
+>>> print(func.src)
+def func(self):  # comment
 ```
 
-```py
->>> del a.f.body[0].orelse[0]
+Simple edit.
 
->>> print(a.f.src)
-if a:
-    x = a  # blah
-else:
-    x = b
+```py
+>>> func.args = 'a, b'
+>>> func.body.append('return a * b  # blah')
+<<FunctionDef ROOT 0,0..1,16>.body[0:1] [<Return 1,4..1,16>]>
+
+>>> print(func.src)
+def func(a, b):  # comment
+    return a * b  # blah
 ```
 
+Precedence.
+
 ```py
->>> print(ast.dump(a, indent=2))  # AST always matches the source
-Module(
+>>> func.body[0].value.right = 'x + y'
+
+>>> print(func.src)
+def func(a, b):  # comment
+    return a * (x + y)  # blah
+```
+
+Use native AST.
+
+```py
+>>> func.body[0:0] = ast.Assign([ast.Name('a')], func.body[-1].value.a)
+>>> func.body[-1].value = ast.Name('a')
+
+>>> print(func.src)
+def func(a, b):  # comment
+    a = a * (x + y)
+    return a  # blah
+```
+
+Edit partial source by location.
+
+```py
+>>> func.body[0]
+<Assign 1,4..1,19>
+
+>>> func.put_src('a *=', 1, 4, 1, 11)
+(1, 8)
+
+>>> print(func.src)
+def func(a, b):  # comment
+    a *= (x + y)
+    return a  # blah
+```
+
+The tree is kept synchronized.
+
+```py
+>>> func.dump()
+FunctionDef - ROOT 0,0..2,12
+  .name 'func'
+  .args arguments - 0,9..0,13
+    .args[2]
+     0] arg - 0,9..0,10
+       .arg 'a'
+     1] arg - 0,12..0,13
+       .arg 'b'
+  .body[2]
+   0] AugAssign - 1,4..1,16
+     .target Name 'a' Store - 1,4..1,5
+     .op Mult - 1,6..1,8
+     .value BinOp - 1,10..1,15
+       .left Name 'x' Load - 1,10..1,11
+       .op Add - 1,12..1,13
+       .right Name 'y' Load - 1,14..1,15
+   1] Return - 2,4..2,12
+     .value Name 'a' Load - 2,11..2,12
+```
+
+Its just a normal AST.
+
+```py
+>>> print(ast.dump(func.a, indent=2))
+FunctionDef(
+  name='func',
+  args=arguments(
+    args=[
+      arg(arg='a'),
+      arg(arg='b')]),
   body=[
-    If(
-      test=Name(id='a', ctx=Load()),
-      body=[
-        Assign(
-          targets=[
-            Name(id='x', ctx=Store())],
-          value=Name(id='a', ctx=Load()))],
-      orelse=[
-        Assign(
-          targets=[
-            Name(id='x', ctx=Store())],
-          value=Name(id='b', ctx=Load()))])])
+    AugAssign(
+      target=Name(id='a', ctx=Store()),
+      op=Mult(),
+      value=BinOp(
+        left=Name(id='x', ctx=Load()),
+        op=Add(),
+        right=Name(id='y', ctx=Load()))),
+    Return(
+      value=Name(id='a', ctx=Load()))])
 ```
 
-Apart from its own format-preserving operations, `fst` also allows the `AST` tree to be changed by anything else outside of its control and can then reconcile the changes with what it knows to preserve formatting where possible. The degree to which formatting is preserved depends on how many operations are executed natively through `fst` mechanisms and how well `FST.reconcile()` works for those operations which are not.
+# Reconcile
+
+This is intended to allow something which is not aware of `fst` to edit the `AST` tree while allowing `fst` to preserve
+formatting where it can.
 
 ```py
->>> a = fst.parse('''
-... def compute(x, y):
+>>> def pure_ast_operation(node: AST):
+...    class Transform(ast.NodeTransformer):
+...        def visit_arg(self, node):
+...            return ast.arg('NEW_' + node.arg.upper(), node.annotation)
+...
+...        def visit_Name(self, node):
+...            if node.id in 'xy':
+...                return ast.Name('NEW_' + node.id.upper())
+...
+...            return node
+...
+...        def visit_Constant(self, node):
+...            return Name('X_SCALE' if node.value > 0.5 else 'Y_SCALE')
+...
+...    Transform().visit(node)
+
+>>> f = FST('''
+... def compute(x: float,  # x position
+...             y: float,  # y position
+... ) -> float:
+...
 ...     # Compute the weighted sum
-...     result = (
-...         x * 0.6  # x gets 60%
-...         + y * 0.4  # y gets 40%
+...     return (
+...         x * 0.6  # scale width
+...         + y * 0.4  # scale height
 ...     )
 ... '''.strip())
 
->>> m = a.f.mark()
+>>> marked = f.mark()
 
->>> # pure AST manipulation
->>> a.body[0].body[0].value.left.right = Name(id='scalar1')
->>> a.body[0].body[0].value.right.right = Name(id='scalar2')
+>>> pure_ast_operation(f.a)
 
->>> print(a.f.reconcile(m).src)
-def compute(x, y):
+>>> reconciled = f.reconcile(marked)
+
+>>> print(reconciled.src)
+def compute(NEW_X: float,  # x position
+            NEW_Y: float,  # y position
+) -> float:
+
     # Compute the weighted sum
-    result = (
-        x * scalar1  # x gets 60%
-        + y * scalar2  # y gets 40%
+    return (
+        NEW_X * X_SCALE  # scale width
+        + NEW_Y * Y_SCALE  # scale height
     )
 ```
 
+# Misc
+
+Locations are zero based in character units, not bytes.
+
 ```py
->>> a = fst.parse('''
-... def compute(x, y):
-...     # Apply thresholding
-...     if (
-...         result > 10  # cap high values
-...     ):
-...         return result
-...     else:
-...         return 0
-... '''.strip())
-
->>> m = a.f.mark()
-
->>> a.body[0].body[-1].orelse[0] = (
-...     If(test=Compare(left=Name(id='result'),
-...                     ops=[Gt()],
-...                     comparators=[Constant(value=1)]),
-...        body=[a.body[0].body[-1].orelse[0]],
-...        orelse=[Return(value=UnaryOp(op=USub(), operand=Constant(value=1)))]
-...     )
-... )
-
->>> print(a.f.reconcile(m).src)
-def compute(x, y):
-    # Apply thresholding
-    if (
-        result > 10  # cap high values
-    ):
-        return result
-    elif result > 1:
-        return 0
-    else:
-        return -1
+>>> FST('蟒=Æ+д').dump()
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name '蟒' Store - 0,0..0,1
+  .value BinOp - 0,2..0,5
+    .left Name 'Æ' Load - 0,2..0,3
+    .op Add - 0,3..0,4
+    .right Name 'д' Load - 0,4..0,5
 ```
 
 For more examples see the documentation in `docs/`, or if you're feeling particularly masochistic have a look at the
-`fst` tests in the `tests/` directory.
+tests in the `tests/` directory.
 
 ## TODO
 
 This package is not finished but functional enough that it can be useful.
 
-* Put one (non-raw) to:
+* Put one to:
   * `FormattedValue.conversion`
   * `FormattedValue.format_spec`
   * `Interpolation.str`
   * `Interpolation.conversion`
   * `Interpolation.format_spec`
 
-* Prescribed (non-raw) get / put slice from / to:
+* Prescribed get / put slice from / to:
   * `FunctionDef.decorator_list`
   * `AsyncFunctionDef.decorator_list`
   * `ClassDef.decorator_list`
@@ -206,9 +278,7 @@ This package is not finished but functional enough that it can be useful.
   * `JoinedStr.values`
   * `TemplateStr.values`
 
-* Improve comment handling.
-
-* Preserve comments if requested in single element non-statement operations.
+* Improve comment and whitespace handling.
 
 * Lots of code cleanup.
 
