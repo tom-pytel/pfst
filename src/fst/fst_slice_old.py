@@ -8,6 +8,7 @@ from . import fst
 from . import fst_slice
 
 from .asttypes import (
+    ASTS_BLOCK,
     AsyncFor,
     AsyncFunctionDef,
     AsyncWith,
@@ -607,7 +608,7 @@ class SrcEdit:
             statements in the block.
         - `block_indent`: The indent string to be applied to `put_fst` statements in the block, which is the total
             indentation (including `opener_indent`) of the statements in the block.
-        - `block_loc`: A rough location ancompassing the block part being edited outside of ASTS, used mostly if `fpre`
+        - `block_loc`: A rough location encompassing the block part being edited outside of ASTS, used mostly if `fpre`
             / `fpost` not available. Always after `fpre` if present and before `fpost` if present. May include comments,
             line continuation backslashes and non-AST coding source like 'else:', but NO PARTS OF ASTS. May start before
             start or just past the block open colon.
@@ -685,10 +686,15 @@ class SrcEdit:
                     put_fst._touch()
 
             elif fpost:  # no preceding statement, only trailing
-                if is_handler or tgt_fst.is_root:  # special case, start will be after last statement or just after 'try:' colon or if is mod then there is no colon
-                    ln, col = block_loc[:2]
+                if is_handler or tgt_fst.is_root:
+                    if not is_handler and isinstance(tgt_fst.a, ASTS_BLOCK):  # in this case start will be before block header colon
+                        ln, col = next_find(lines, *block_loc, ':')
+                        col += 1
 
-                else:
+                    else:  # special case, start will be after last statement or just after 'try:' colon or if is mod then there is no colon
+                        ln, col = block_loc[:2]
+
+                else:  # start is after block header open colon, search back to it
                     ln, col = prev_find(lines, *block_loc, ':', True)
                     col += 1
 

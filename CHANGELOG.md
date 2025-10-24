@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- fix insert at `body[0]` after block header with comment deleting comment
 - fix several semicolon and unicode character position issues
 - fix forced grouping parenthesize `Starred` child location
 - normalize identifier to put BEFORE checking against keyword *facepalm*

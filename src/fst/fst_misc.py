@@ -365,7 +365,7 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
             return
 
         if isinstance(ast, Constant):
-            kind = '' if ast.kind is None else f' {c.clr_field}.kind{c.end_field}={_dump_prim(ast.kind, c)}'
+            kind = '' if ast.kind is None else f' {c.clr_field}.kind{c.end_field} {_dump_prim(ast.kind, c)}'
 
             st.linefunc(f'{cind}{prefix}{c.clr_ast}Constant{c.end_ast} '
                         f'{_dump_prim_long(ast.value, st, cind + sind)}{kind}{tail}{st.eol}')

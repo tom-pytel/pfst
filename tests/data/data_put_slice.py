@@ -25618,4 +25618,29 @@ r'''x, y,'''),
 r'''**SyntaxError('invalid syntax')**'''),
 ],
 
+'misc': [  # ................................................................................
+
+(0, '', 0, 0, None, {}, (None, r'''
+def f():  # comment
+    a  # blah
+'''), (None,
+r'''b  # bloh'''), r'''
+def f():  # comment
+    b  # bloh
+    a  # blah
+''', r'''
+def f():  # comment
+    b
+    a  # blah
+''', r'''
+FunctionDef - ROOT 0,0..2,5
+  .name 'f'
+  .body[2]
+   0] Expr - 1,4..1,5
+     .value Name 'b' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'a' Load - 2,4..2,5
+'''),
+],
+
 }
