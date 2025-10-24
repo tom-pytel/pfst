@@ -125,14 +125,14 @@ def _dump_lines(
     end_ln: int,
     end_col: int,
     eol: str = '',
-    is_full_stmt: bool = False,
+    is_stmt: bool = False,
     c: nspace = DUMP_NO_COLOR,
 ) -> None:
     """Dump one or more lines of source."""
 
     width = int(log10(len(fst_.root._lines) - 1 or 1)) + 1
 
-    if not is_full_stmt:
+    if not is_stmt:
         lines = fst_._get_src(ln, col, end_ln, end_col, True)
 
     else:
@@ -339,7 +339,7 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
             ln, col, _, _ = loc
             end_ln, end_col, _, _ = loc_block_header_end(self)
 
-            _dump_lines(self, st.linefunc, ln, col, end_ln, end_col + 1, st.eol, False, c)
+            _dump_lines(self, st.linefunc, ln, col, end_ln, end_col + 1, st.eol, True, c)
 
         else:
 
