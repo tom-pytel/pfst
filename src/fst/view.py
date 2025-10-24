@@ -184,7 +184,7 @@ class fstview:
 
         return fstview(self.fst, self.field, start + idx_start, start + idx_stop)
 
-    def __setitem__(self, idx: int | slice, code: Code | None) -> None:
+    def __setitem__(self, idx: int | slice | str, code: Code | None) -> None:
         """Set a single item or a slice view in this slice view. All indices (including negative) are relative to the
         bounds of this view. This is not just with a set, it is a full `FST` operation.
 
@@ -223,6 +223,12 @@ class fstview:
         @public
         """
 
+        if isinstance(idx, str):
+            if not (a := get_func_class_or_ass_by_name(getattr(self.fst.a, self.field)[self.start : self.stop], idx)):
+                raise IndexError(f"function, class or variable '{idx}' not found")
+
+            idx = a.f.pfield.idx
+
         if isinstance(idx, int):
             idx = _fixup_one_index(self.stop - (start := self.start), idx)
             len_before = len(asts := getattr(self.fst.a, self.field))
@@ -242,7 +248,7 @@ class fstview:
 
             self.stop += len(asts) - len_before
 
-    def __delitem__(self, idx: int | slice) -> None:
+    def __delitem__(self, idx: int | slice | str) -> None:
         """Delete a single item or a slice from this slice view. All indices (including negative) are relative to the
         bounds of this view.
 
@@ -272,6 +278,12 @@ class fstview:
         ```
         @public
         """
+
+        if isinstance(idx, str):
+            if not (a := get_func_class_or_ass_by_name(getattr(self.fst.a, self.field)[self.start : self.stop], idx)):
+                raise IndexError(f"function, class or variable '{idx}' not found")
+
+            idx = a.f.pfield.idx
 
         if isinstance(idx, int):
             idx = _fixup_one_index((stop := self.stop) - (start := self.start), idx)
