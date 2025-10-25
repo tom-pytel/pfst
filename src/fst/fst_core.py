@@ -2047,8 +2047,8 @@ def _make_fst_and_dedent(
     indent: fst.FST | str,
     ast: AST,
     copy_loc: fstloc,
-    prefix: str = '',
-    suffix: str = '',
+    prefix: str | list[str] | None = None,
+    suffix: str | list[str] | None = None,
     put_loc: fstloc | None = None,
     put_lines: list[str] | None = None,
     *,
@@ -2066,21 +2066,39 @@ def _make_fst_and_dedent(
     if not isinstance(indent, str):
         indent = indent._get_indent()
 
+    if suffix and isinstance(prefix, str):
+        suffix = suffix.split('\n')
+
+    if not prefix:
+        prefix_extra_lns = prefix_col_offset = 0
+
+    else:
+        if isinstance(prefix, str):
+            prefix = prefix.split('\n')
+
+        prefix_extra_lns = len(prefix) - 1
+        prefix_col_offset = len(prefix[-1].encode())
+
     lines = self.root._lines
     fst_ = fst.FST(ast, lines, from_=self, lcopy=False)  # we use original lines for nodes offset calc before putting new lines
 
-    fst_._offset(copy_loc.ln, copy_loc.col, -copy_loc.ln, len(prefix.encode()) - lines[copy_loc.ln].c2b(copy_loc.col))
+    fst_._offset(copy_loc.ln, copy_loc.col,
+                 prefix_extra_lns - copy_loc.ln,
+                 prefix_col_offset - lines[copy_loc.ln].c2b(copy_loc.col))
 
-    fst_._lines = fst_lines = self._get_src(*copy_loc, True)
+    fst_._lines = fst_lines = self._get_src(*copy_loc, True)  # the full source from self has served its purpose, now replace with just the source which is to be returned in the new FST
 
     if suffix:
-        fst_lines[-1] = bistr(fst_lines[-1] + suffix)
+        suffix[0] = fst_lines[-1] + suffix[0]
+        fst_lines[-1:] = [bistr(l) for l in suffix]
 
     if prefix:
-        fst_lines[0] = bistr(prefix + fst_lines[0])
+        prefix[-1] += fst_lines[0]
+        fst_lines[:1] = [bistr(l) for l in prefix]
 
     if indent:
-        fst_._dedent_lns(indent, skip=bool(copy_loc.col), docstr=docstr, docstr_strict_exclude=docstr_strict_exclude)  # if copy location starts at column 0 then we apply dedent to it as well (preceding comment or something)
+        fst_._dedent_lns(indent, skip=bool(copy_loc.col) + prefix_extra_lns, docstr=docstr,
+                         docstr_strict_exclude=docstr_strict_exclude)  # if copy location starts at column 0 then we apply dedent to it as well (preceding comment above or something)
 
     if put_loc:
         params_offset = self._put_src(put_lines, *put_loc, True)  # True because we may have an unparenthesized tuple that shrinks to a span length of 0

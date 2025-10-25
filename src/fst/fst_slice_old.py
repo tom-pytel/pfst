@@ -177,7 +177,6 @@ class SrcEdit:
         fpost: fst.FST | None,
         *,
         del_else_and_fin: bool = True,
-        ret_all: bool = False,
         **options,
     ) -> tuple[fstloc, fstloc | None, list[str] | None]:  # (copy_loc, del/put_loc, put_lines)
         """Copy or cut from block of statements. If cutting all elements from a deletable field like 'orelse' or
@@ -380,8 +379,8 @@ class SrcEdit:
 
         # delete preceding and trailing empty lines according to 'pep8' and 'space' format flags
 
-        prespace = (float('inf') if (o := fst.FST.get_option('prespace', options)) is True else int(o))
-        postspace = (float('inf') if (o := fst.FST.get_option('postspace', options)) is True else int(o))
+        prespace = o_prespace = (float('inf') if (o := fst.FST.get_option('prespace', options)) is True else int(o))
+        postspace = o_postspace = (float('inf') if (o := fst.FST.get_option('postspace', options)) is True else int(o))
         pep8space = fst.FST.get_option('pep8space', options)
 
         if pep8space:
@@ -428,6 +427,8 @@ class SrcEdit:
                               new_del_end_ln - 1)
                 del_end_col = len(lines[del_end_ln])
 
+        del_pre_post_space = (min(o_prespace, del_loc.ln - del_ln),
+                              min(o_postspace, del_end_ln - del_loc.end_ln))  # how many deleted empty leading and trailing lines (minimized to original requested value because may have been increased to pep8space)
         del_loc = fstloc(del_ln, del_col, del_end_ln, del_end_col)
 
         # remove possible line continuation preceding delete start position because could link to invalid following block statement
@@ -450,11 +451,7 @@ class SrcEdit:
 
         # finally done
 
-        if ret_all:
-            return (copy_loc, del_loc, put_lines, fstloc(bound_ln, bound_col, bound_end_ln, bound_end_col),
-                    pre_comms, post_comms, pre_semi, post_semi, (block_ln, block_col))
-
-        return copy_loc, del_loc, put_lines
+        return copy_loc, del_loc, put_lines, del_pre_post_space, (pre_semi, post_semi)
 
     def _format_space(
         self,
@@ -779,9 +776,9 @@ class SrcEdit:
         if indent is not None:
             put_fst._indent_lns(indent, skip=0, docstr=docstr, docstr_strict_exclude=docstr_strict_exclude)
 
-        copy_loc, put_loc, del_lines, bound, pre_comms, post_comms, pre_semi, post_semi, block_start = (
+        _, put_loc, del_lines, _, (pre_semi, post_semi) = (
             self.get_slice_stmt(tgt_fst, field, True, block_loc, ffirst, flast, fpre, fpost,
-                                del_else_and_fin=del_else_and_fin, ret_all=True, **options))
+                                del_else_and_fin=del_else_and_fin, **options))
 
         put_ln, put_col, put_end_ln, put_end_col = put_loc
 
@@ -929,9 +926,10 @@ def _get_slice_stmtish_old(
     stop: int | None,
     field: str,
     cut: bool,
+    one: bool,
     options: Mapping[str, Any],
-    *,
-    one: bool = False,
+    ld_neg: bool,
+    tr_neg: bool,
 ) -> fst.FST:
     ast = self.a
     body = getattr(ast, field)
@@ -954,7 +952,7 @@ def _get_slice_stmtish_old(
     block_loc = fstloc(*(fpre.bloc[2:] if fpre else prev_bound_step(ffirst)),
                        *(fpost.bloc[:2] if fpost else next_bound_step(flast)))
 
-    copy_loc, put_loc, put_lines = (
+    copy_loc, put_loc, put_lines, (del_prespace, del_postspace), _ = (
         _src_edit.get_slice_stmt(self, field, cut, block_loc, ffirst, flast, fpre, fpost, **options))
 
     if not cut:
@@ -995,7 +993,10 @@ def _get_slice_stmtish_old(
     else:
         raise ValueError('cannot specify `one=True` if getting multiple statements')
 
-    fst_, _ = self._make_fst_and_dedent(indent, get_ast, copy_loc, '', '', put_loc, put_lines,
+    prefix = [''] * (del_prespace + 1) if del_prespace and not ld_neg else None  # if maybe requested leading space returned (ld_neg=False) and there was leading space deleted then add this many leading empty lines, this is a HACK because old stmtishg slicing did not support this, need to redo
+    suffix = [''] * (del_postspace + 1) if del_postspace and not tr_neg else None  # same for trailing space
+
+    fst_, _ = self._make_fst_and_dedent(indent, get_ast, copy_loc, prefix, suffix, put_loc, put_lines,
                                         docstr=fst.FST.get_option('docstr', options),
                                         docstr_strict_exclude=asts[0] if asts and start else None)  # if slice gotten doesn't start at 0 then first element cannot be a 'strict' docstr even though it is first in the new slice
 
@@ -1212,7 +1213,7 @@ def _put_slice_stmtish_old(
                     block_loc = fstloc(ln, col + 1, end_ln, end_col)
 
     if not put_fst:
-        _, put_loc, put_lines = (
+        _, put_loc, put_lines, _, _ = (
             _src_edit.get_slice_stmt(self, field, True, block_loc, ffirst, flast, fpre, fpost, **options))
 
         if put_loc:
@@ -1262,22 +1263,22 @@ def _put_slice_stmtish_old(
 # Hack adapt new trivia params to old and fix for introduced trailing newline on put or cut
 
 # Old trivia parameters for code above:
-# - `precomms`: Preceding comments.  - DEPRECATED, STILL USED FOR STMTS, WILL BE REPLACED WITH `trivia`!
+# - `precomms`: Preceding comments.  - DEPRECATED, STILL USED FOR STMTS, REPLACED WITH `trivia`!
 #     - `False`: No preceding comments.
 #     - `True`: Single contiguous comment block immediately preceding position.
 #     - `'all'`: Comment blocks (possibly separated by empty lines) preceding position.
-# - `postcomms`: Trailing comments.  - DEPRECATED, STILL USED FOR STMTS, WILL BE REPLACED WITH `trivia`!
+# - `postcomms`: Trailing comments.  - DEPRECATED, STILL USED FOR STMTS, REPLACED WITH `trivia`!
 #     - `False`: No trailing comments.
 #     - `True`: Only comment trailing on line of position, nothing past that on its own lines.
 #     - `'block'`: Single contiguous comment block following position.
 #     - `'all'`: Comment blocks (possibly separated by empty lines) following position.
-# - `prespace`: Preceding empty lines (max of this and `pep8space` used).  - DEPRECATED, STILL USED FOR STMTS,
-#     WILL BE REPLACED WITH `trivia`!
+# - `prespace`: Preceding empty lines (max of this and `pep8space` used).  - DEPRECATED, STILL USED FOR STMTS, REPLACED
+#     WITH `trivia`!
 #     - `False`: No empty lines.
 #     - `True`: All empty lines.
 #     - `int`: A maximum number of empty lines.
-# - `postspace`: Same as `prespace` except for trailing empty lines.  - DEPRECATED, STILL USED FOR STMTS, WILL BE
-#     REPLACED WITH `trivia`!
+# - `postspace`: Same as `prespace` except for trailing empty lines.  - DEPRECATED, STILL USED FOR STMTS, REPLACED
+#     WITH `trivia`!
 
 _trivia2precomms  = {False: False, 'none': False, 'block': True, 'all': 'all', True: True}
 _trivia2postcomms = {False: False, 'none': False, 'line': True, 'block': 'block', 'all': 'all', True: True}
@@ -1319,7 +1320,7 @@ def _get_slice_stmtish(
         postspace = tr_space,
     )
 
-    fst_ = _get_slice_stmtish_old(self, start, stop, field, cut, options, one=one)
+    fst_ = _get_slice_stmtish_old(self, start, stop, field, cut, one, options, ld_neg, tr_neg)
 
     _maybe_del_trailing_newline(self, old_last_line, not cut)
 

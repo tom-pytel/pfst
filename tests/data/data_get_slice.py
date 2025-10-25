@@ -1999,7 +1999,7 @@ Module - ROOT 0,0..0,1
      .value Name 'j' Load - 0,0..0,1
 '''),
 
-(67, 'body[0]', 1, 2, None, {'trivia': (None, 'line-')}, ('exec', r'''
+(67, 'body[0]', 1, 2, None, {'trivia': (None, 'line-2')}, ('exec', r'''
 if 1:
     i ; j
 
@@ -2025,7 +2025,59 @@ Module - ROOT 0,0..0,1
      .value Name 'j' Load - 0,0..0,1
 '''),
 
-(68, 'body[0]', 0, 1, None, {'trivia': (None, 'line-')}, ('exec', r'''
+(68, 'body[0]', 1, 2, None, {'trivia': (None, 'line-3')}, ('exec', r'''
+if 1:
+    i ; j
+
+
+
+'''), r'''
+if 1:
+    i
+
+''', r'''
+Module - ROOT 0,0..2,0
+  .body[1]
+   0] If - 0,0..1,5
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+''',
+r'''j''', r'''
+Module - ROOT 0,0..0,1
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'j' Load - 0,0..0,1
+'''),
+
+(69, 'body[0]', 1, 2, None, {'trivia': (None, 'line-')}, ('exec', r'''
+if 1:
+    i ; j
+
+
+
+'''), r'''
+if 1:
+    i
+
+''', r'''
+Module - ROOT 0,0..2,0
+  .body[1]
+   0] If - 0,0..1,5
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+''',
+r'''j''', r'''
+Module - ROOT 0,0..0,1
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'j' Load - 0,0..0,1
+'''),
+
+(70, 'body[0]', 0, 1, None, {'trivia': (None, 'line-')}, ('exec', r'''
 if 1:
     i ; j
 
@@ -2053,7 +2105,7 @@ Module - ROOT 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
 '''),
 
-(69, '', 0, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(71, '', 0, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 def f():
     i ; j
 
@@ -2079,7 +2131,7 @@ Module - ROOT 0,0..1,9
         .value Name 'j' Load - 1,8..1,9
 '''),
 
-(70, '', 0, 1, None, {'trivia': (None, 'line-')}, ('exec', r'''
+(72, '', 0, 1, None, {'trivia': (None, 'line-')}, ('exec', r'''
 def f():
     i ; j
 
@@ -2102,63 +2154,9 @@ Module - ROOT 0,0..1,9
         .value Name 'j' Load - 1,8..1,9
 '''),
 
-(71, 'body[0]', 0, 1, None, {'trivia': (None, 'line-')}, ('exec', r'''
-def f():
-    i
-    \
-  k
-'''), r'''
-def f():
-    \
-  k
-''', r'''
-Module - ROOT 0,0..2,3
-  .body[1]
-   0] FunctionDef - 0,0..2,3
-     .name 'f'
-     .body[1]
-      0] Expr - 2,2..2,3
-        .value Name 'k' Load - 2,2..2,3
-''',
-r'''i''', r'''
-Module - ROOT 0,0..0,1
-  .body[1]
-   0] Expr - 0,0..0,1
-     .value Name 'i' Load - 0,0..0,1
-'''),
-
-(72, 'body[0]', 1, 2, None, {'trivia': (None, 'line-')}, ('exec', r'''
-def f():
-    i; j
-    \
-  k
-'''), r'''
-def f():
-    i
-    \
-  k
-''', r'''
-Module - ROOT 0,0..3,3
-  .body[1]
-   0] FunctionDef - 0,0..3,3
-     .name 'f'
-     .body[2]
-      0] Expr - 1,4..1,5
-        .value Name 'i' Load - 1,4..1,5
-      1] Expr - 3,2..3,3
-        .value Name 'k' Load - 3,2..3,3
-''',
-r'''j''', r'''
-Module - ROOT 0,0..0,1
-  .body[1]
-   0] Expr - 0,0..0,1
-     .value Name 'j' Load - 0,0..0,1
-'''),
-
 (73, 'body[0]', 0, 1, None, {'trivia': (None, 'line-')}, ('exec', r'''
 def f():
     i
-
     \
   k
 '''), r'''
@@ -2184,7 +2182,6 @@ Module - ROOT 0,0..0,1
 (74, 'body[0]', 1, 2, None, {'trivia': (None, 'line-')}, ('exec', r'''
 def f():
     i; j
-
     \
   k
 '''), r'''
@@ -2213,6 +2210,61 @@ Module - ROOT 0,0..0,1
 (75, 'body[0]', 0, 1, None, {'trivia': (None, 'line-')}, ('exec', r'''
 def f():
     i
+
+    \
+  k
+'''), r'''
+def f():
+    \
+  k
+''', r'''
+Module - ROOT 0,0..2,3
+  .body[1]
+   0] FunctionDef - 0,0..2,3
+     .name 'f'
+     .body[1]
+      0] Expr - 2,2..2,3
+        .value Name 'k' Load - 2,2..2,3
+''',
+r'''i''', r'''
+Module - ROOT 0,0..0,1
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+'''),
+
+(76, 'body[0]', 1, 2, None, {'trivia': (None, 'line-')}, ('exec', r'''
+def f():
+    i; j
+
+    \
+  k
+'''), r'''
+def f():
+    i
+    \
+  k
+''', r'''
+Module - ROOT 0,0..3,3
+  .body[1]
+   0] FunctionDef - 0,0..3,3
+     .name 'f'
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 3,2..3,3
+        .value Name 'k' Load - 3,2..3,3
+''',
+r'''j''', r'''
+Module - ROOT 0,0..0,1
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'j' Load - 0,0..0,1
+'''),
+
+(77, 'body[0]', 0, 1, None, {'trivia': (None, 'line-')}, ('exec', r'''
+def f():
+    i
     \
 
     k
@@ -2237,7 +2289,7 @@ Module - ROOT 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
 '''),
 
-(76, 'body[0]', 1, 2, None, {'trivia': (None, 'line-')}, ('exec', r'''
+(78, 'body[0]', 1, 2, None, {'trivia': (None, 'line-')}, ('exec', r'''
 def f():
     i; j
     \
@@ -2267,7 +2319,7 @@ Module - ROOT 0,0..0,1
      .value Name 'j' Load - 0,0..0,1
 '''),
 
-(77, '', 0, 1, None, {'trivia': (True, True)}, ('exec', r'''
+(79, '', 0, 1, None, {'trivia': (True, True)}, ('exec', r'''
 i ; \
  j
 '''),
@@ -2284,7 +2336,7 @@ Module - ROOT 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
 '''),
 
-(78, 'body[0]', 2, 3, None, {}, ('exec', r'''
+(80, 'body[0]', 2, 3, None, {}, ('exec', r'''
 def foo():
     # verify statements that end with semi-colons
     x = 1; pass; del x;
@@ -2317,7 +2369,7 @@ Module - ROOT 0,0..0,5
       0] Name 'x' Del - 0,4..0,5
 '''),
 
-(79, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec',
+(81, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec',
 r'''if 1: i'''),
 r'''if 1:''', r'''
 Module - ROOT 0,0..0,5
@@ -2332,7 +2384,7 @@ Module - ROOT 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
 '''),
 
-(80, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
+(82, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
 
 if 1: i
 '''), r'''
@@ -2351,7 +2403,7 @@ Module - ROOT 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
 '''),
 
-(81, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec',
+(83, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec',
 r'''if 1: i  # post'''),
 r'''if 1:''', r'''
 Module - ROOT 0,0..0,5
@@ -2366,7 +2418,7 @@ Module - ROOT 0,0..0,9
      .value Name 'i' Load - 0,0..0,1
 '''),
 
-(82, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
+(84, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
 
 if 1: i  # post
 '''), r'''
@@ -2385,7 +2437,7 @@ Module - ROOT 0,0..0,9
      .value Name 'i' Load - 0,0..0,1
 '''),
 
-(83, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec',
+(85, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec',
 r'''if 1: i  # post'''),
 r'''if 1: # post''', r'''
 Module - ROOT 0,0..0,12
@@ -2400,7 +2452,7 @@ Module - ROOT 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
 '''),
 
-(84, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(86, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 
 if 1: i  # post
 '''), r'''
@@ -2419,7 +2471,7 @@ Module - ROOT 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
 '''),
 
-(85, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec',
+(87, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec',
 r'''if 1: i ;'''),
 r'''if 1:''', r'''
 Module - ROOT 0,0..0,5
@@ -2434,7 +2486,7 @@ Module - ROOT 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
 '''),
 
-(86, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
+(88, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
 
 if 1: i ;
 '''), r'''
@@ -2453,7 +2505,7 @@ Module - ROOT 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
 '''),
 
-(87, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec',
+(89, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec',
 r'''if 1: i ;  # post'''),
 r'''if 1: # post''', r'''
 Module - ROOT 0,0..0,12
@@ -2468,7 +2520,7 @@ Module - ROOT 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
 '''),
 
-(88, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
+(90, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
 
 if 1: i ;  # post
 '''), r'''
@@ -2487,7 +2539,7 @@ Module - ROOT 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
 '''),
 
-(89, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec',
+(91, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec',
 r'''if 1: i ;  # post'''),
 r'''if 1: # post''', r'''
 Module - ROOT 0,0..0,12
@@ -2502,7 +2554,7 @@ Module - ROOT 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
 '''),
 
-(90, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(92, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 
 if 1: i ;  # post
 '''), r'''
@@ -2521,7 +2573,7 @@ Module - ROOT 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
 '''),
 
-(91, 'body[0]', 0, 1, 'orelse', {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(93, 'body[0]', 0, 1, 'orelse', {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1: pass
 
 # pre
@@ -2548,7 +2600,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-(92, 'body[0]', 0, 1, 'orelse', {'_verify': False, 'trivia': (True, False), 'pep8space': False}, ('exec', r'''
+(94, 'body[0]', 0, 1, 'orelse', {'_verify': False, 'trivia': (True, False), 'pep8space': False}, ('exec', r'''
 if 1: pass
 
 # pre
@@ -2567,58 +2619,6 @@ Module - ROOT 0,0..2,1
       0] Pass - 0,6..0,10
    1] Expr - 2,0..2,1
      .value Name 'j' Load - 2,0..2,1
-''',
-r'''pass''', r'''
-Module - ROOT 0,0..0,4
-  .body[1]
-   0] Pass - 0,0..0,4
-'''),
-
-(93, 'body[0]', 0, 1, 'orelse', {'_verify': False, 'trivia': ('block-', False), 'pep8space': False}, ('exec', r'''
-if 1: pass
-
-# pre
-else: pass
-j
-'''), r'''
-if 1: pass
-j
-''', r'''
-Module - ROOT 0,0..1,1
-  .body[2]
-   0] If - 0,0..0,10
-     .test Constant 1 - 0,3..0,4
-     .body[1]
-      0] Pass - 0,6..0,10
-   1] Expr - 1,0..1,1
-     .value Name 'j' Load - 1,0..1,1
-''',
-r'''pass''', r'''
-Module - ROOT 0,0..0,4
-  .body[1]
-   0] Pass - 0,0..0,4
-'''),
-
-(94, 'body[0]', 0, 1, 'orelse', {'_verify': False, 'trivia': ('none-', False), 'pep8space': False}, ('exec', r'''
-if 1: pass
-
-# pre
-else: pass
-j
-'''), r'''
-if 1: pass
-
-# pre
-j
-''', r'''
-Module - ROOT 0,0..3,1
-  .body[2]
-   0] If - 0,0..0,10
-     .test Constant 1 - 0,3..0,4
-     .body[1]
-      0] Pass - 0,6..0,10
-   1] Expr - 3,0..3,1
-     .value Name 'j' Load - 3,0..3,1
 ''',
 r'''pass''', r'''
 Module - ROOT 0,0..0,4
@@ -2630,6 +2630,58 @@ Module - ROOT 0,0..0,4
 if 1: pass
 
 # pre
+else: pass
+j
+'''), r'''
+if 1: pass
+j
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] If - 0,0..0,10
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Pass - 0,6..0,10
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
+''',
+r'''pass''', r'''
+Module - ROOT 0,0..0,4
+  .body[1]
+   0] Pass - 0,0..0,4
+'''),
+
+(96, 'body[0]', 0, 1, 'orelse', {'_verify': False, 'trivia': ('none-', False), 'pep8space': False}, ('exec', r'''
+if 1: pass
+
+# pre
+else: pass
+j
+'''), r'''
+if 1: pass
+
+# pre
+j
+''', r'''
+Module - ROOT 0,0..3,1
+  .body[2]
+   0] If - 0,0..0,10
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Pass - 0,6..0,10
+   1] Expr - 3,0..3,1
+     .value Name 'j' Load - 3,0..3,1
+''',
+r'''pass''', r'''
+Module - ROOT 0,0..0,4
+  .body[1]
+   0] Pass - 0,0..0,4
+'''),
+
+(97, 'body[0]', 0, 1, 'orelse', {'_verify': False, 'trivia': ('block-', False), 'pep8space': False}, ('exec', r'''
+if 1: pass
+
+# pre
 else: pass  # post
 j
 '''), r'''
@@ -2652,7 +2704,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-(96, 'body[0]', 0, 1, 'orelse', {'_verify': False, 'trivia': ('block-', True), 'pep8space': False}, ('exec', r'''
+(98, 'body[0]', 0, 1, 'orelse', {'_verify': False, 'trivia': ('block-', True), 'pep8space': False}, ('exec', r'''
 if 1: pass
 
 # pre
@@ -2677,7 +2729,7 @@ Module - ROOT 0,0..0,12
    0] Pass - 0,0..0,4
 '''),
 
-(97, 'body[0]', 0, 1, 'finalbody', {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(99, 'body[0]', 0, 1, 'finalbody', {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 try: pass
 
 # pre
@@ -2703,7 +2755,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-(98, 'body[0]', 0, 1, 'finalbody', {'_verify': False, 'trivia': (True, False), 'pep8space': False}, ('exec', r'''
+(100, 'body[0]', 0, 1, 'finalbody', {'_verify': False, 'trivia': (True, False), 'pep8space': False}, ('exec', r'''
 try: pass
 
 # pre
@@ -2721,56 +2773,6 @@ Module - ROOT 0,0..2,1
       0] Pass - 0,5..0,9
    1] Expr - 2,0..2,1
      .value Name 'j' Load - 2,0..2,1
-''',
-r'''pass''', r'''
-Module - ROOT 0,0..0,4
-  .body[1]
-   0] Pass - 0,0..0,4
-'''),
-
-(99, 'body[0]', 0, 1, 'finalbody', {'_verify': False, 'trivia': ('block-', False), 'pep8space': False}, ('exec', r'''
-try: pass
-
-# pre
-finally: pass
-j
-'''), r'''
-try: pass
-j
-''', r'''
-Module - ROOT 0,0..1,1
-  .body[2]
-   0] Try - 0,0..0,9
-     .body[1]
-      0] Pass - 0,5..0,9
-   1] Expr - 1,0..1,1
-     .value Name 'j' Load - 1,0..1,1
-''',
-r'''pass''', r'''
-Module - ROOT 0,0..0,4
-  .body[1]
-   0] Pass - 0,0..0,4
-'''),
-
-(100, 'body[0]', 0, 1, 'finalbody', {'_verify': False, 'trivia': ('none-', False), 'pep8space': False}, ('exec', r'''
-try: pass
-
-# pre
-finally: pass
-j
-'''), r'''
-try: pass
-
-# pre
-j
-''', r'''
-Module - ROOT 0,0..3,1
-  .body[2]
-   0] Try - 0,0..0,9
-     .body[1]
-      0] Pass - 0,5..0,9
-   1] Expr - 3,0..3,1
-     .value Name 'j' Load - 3,0..3,1
 ''',
 r'''pass''', r'''
 Module - ROOT 0,0..0,4
@@ -2782,6 +2784,56 @@ Module - ROOT 0,0..0,4
 try: pass
 
 # pre
+finally: pass
+j
+'''), r'''
+try: pass
+j
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Try - 0,0..0,9
+     .body[1]
+      0] Pass - 0,5..0,9
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
+''',
+r'''pass''', r'''
+Module - ROOT 0,0..0,4
+  .body[1]
+   0] Pass - 0,0..0,4
+'''),
+
+(102, 'body[0]', 0, 1, 'finalbody', {'_verify': False, 'trivia': ('none-', False), 'pep8space': False}, ('exec', r'''
+try: pass
+
+# pre
+finally: pass
+j
+'''), r'''
+try: pass
+
+# pre
+j
+''', r'''
+Module - ROOT 0,0..3,1
+  .body[2]
+   0] Try - 0,0..0,9
+     .body[1]
+      0] Pass - 0,5..0,9
+   1] Expr - 3,0..3,1
+     .value Name 'j' Load - 3,0..3,1
+''',
+r'''pass''', r'''
+Module - ROOT 0,0..0,4
+  .body[1]
+   0] Pass - 0,0..0,4
+'''),
+
+(103, 'body[0]', 0, 1, 'finalbody', {'_verify': False, 'trivia': ('block-', False), 'pep8space': False}, ('exec', r'''
+try: pass
+
+# pre
 finally: pass  # post
 j
 '''), r'''
@@ -2803,7 +2855,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-(102, 'body[0]', 0, 1, 'finalbody', {'_verify': False, 'trivia': ('block-', True), 'pep8space': False}, ('exec', r'''
+(104, 'body[0]', 0, 1, 'finalbody', {'_verify': False, 'trivia': ('block-', True), 'pep8space': False}, ('exec', r'''
 try: pass
 
 # pre
@@ -2827,7 +2879,7 @@ Module - ROOT 0,0..0,12
    0] Pass - 0,0..0,4
 '''),
 
-(103, 'body[0]', 0, 1, 'orelse', {'_verify': False, 'trivia': ('all', False), 'pep8space': False}, ('exec', r'''
+(105, 'body[0]', 0, 1, 'orelse', {'_verify': False, 'trivia': ('all', False), 'pep8space': False}, ('exec', r'''
 if 1: i
 
 # pre-else 1
@@ -2862,7 +2914,7 @@ Module - ROOT 0,0..3,1
      .value Name 'j' Load - 3,0..3,1
 '''),
 
-(104, 'body[0]', 0, 1, 'orelse', {'_verify': False, 'trivia': ('all-', False), 'pep8space': False}, ('exec', r'''
+(106, 'body[0]', 0, 1, 'orelse', {'_verify': False, 'trivia': ('all-', False), 'pep8space': False}, ('exec', r'''
 if 1: i
 
 # pre-else 1
@@ -2895,7 +2947,7 @@ Module - ROOT 0,0..3,1
      .value Name 'j' Load - 3,0..3,1
 '''),
 
-(105, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
+(107, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
 try:
     pass
 finally: pass
@@ -2915,7 +2967,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-(106, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
+(108, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
 try: pass
 finally: pass
 '''), r'''
@@ -2934,7 +2986,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-(107, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
+(109, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
 try: i = \
   2
 finally: pass
@@ -2959,7 +3011,7 @@ Module - ROOT 0,0..1,1
      .value Constant 2 - 1,0..1,1
 '''),
 
-(108, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
+(110, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
 try: pass  # post
 finally: pass
 '''), r'''
@@ -2978,7 +3030,7 @@ Module - ROOT 0,0..0,12
    0] Pass - 0,0..0,4
 '''),
 
-(109, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(111, 'body[0]', 0, 1, None, {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 try: pass  # post
 finally: pass
 '''), r'''
@@ -2997,7 +3049,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-(110, 'body[0]', 0, 1, 'orelse', {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
+(112, 'body[0]', 0, 1, 'orelse', {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
 try: pass
 except: pass
 else:
@@ -3026,7 +3078,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-(111, 'body[0]', 0, 1, 'orelse', {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
+(113, 'body[0]', 0, 1, 'orelse', {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
 try: pass
 except: pass
 else: pass
@@ -3054,7 +3106,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-(112, 'body[0]', 0, 1, 'handlers', {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
+(114, 'body[0]', 0, 1, 'handlers', {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
 try: pass
 except:
     pass
@@ -3085,7 +3137,7 @@ _ExceptHandlers - ROOT 0,0..1,8
       0] Pass - 1,4..1,8
 '''),
 
-(113, 'body[0]', 0, 1, 'handlers', {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
+(115, 'body[0]', 0, 1, 'handlers', {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
 try: pass
 except: pass
 else: pass
@@ -3113,7 +3165,7 @@ _ExceptHandlers - ROOT 0,0..0,12
       0] Pass - 0,8..0,12
 '''),
 
-(114, 'body[0]', 0, 1, 'handlers', {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(116, 'body[0]', 0, 1, 'handlers', {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 try: pass
 except: pass  # post
 else: pass
@@ -3142,7 +3194,7 @@ _ExceptHandlers - ROOT 0,0..0,12
       0] Pass - 0,8..0,12
 '''),
 
-(115, 'body[0]', 0, 1, 'handlers', {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(117, 'body[0]', 0, 1, 'handlers', {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 try: pass
 except: pass  \
 
@@ -3173,7 +3225,7 @@ _ExceptHandlers - ROOT 0,0..0,12
       0] Pass - 0,8..0,12
 '''),
 
-(116, 'body[0].handlers[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
+(118, 'body[0].handlers[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
 try: pass
 except:
     pass
@@ -3203,7 +3255,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-(117, 'body[0].handlers[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
+(119, 'body[0].handlers[0]', 0, 1, None, {'_verify': False, 'trivia': (True, True)}, ('exec', r'''
 try: pass
 except: pass
 else: pass
@@ -3232,7 +3284,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-(118, 'body[0].handlers[0]', 0, 1, None, {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(120, 'body[0].handlers[0]', 0, 1, None, {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 try: pass
 except: pass  # post
 else: pass
@@ -3261,7 +3313,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-(119, 'body[0].handlers[0]', 0, 1, None, {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(121, 'body[0].handlers[0]', 0, 1, None, {'_verify': False, 'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 try: pass
 except: pass \
 
@@ -3292,7 +3344,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-(120, 'body[0]', 0, 2, None, {'_verify': False}, ('exec', r'''
+(122, 'body[0]', 0, 2, None, {'_verify': False}, ('exec', r'''
 if type in ('d', 'D'): cmd = 'TYPE A'; isdir = 1
 else: cmd = 'TYPE ' + type; isdir = 0
 '''), r'''
@@ -3338,7 +3390,7 @@ Module - ROOT 0,0..0,25
      .value Constant 1 - 0,24..0,25
 '''),
 
-(121, 'body[0]', 0, 2, None, {'_verify': False}, ('exec', r'''
+(123, 'body[0]', 0, 2, None, {'_verify': False}, ('exec', r'''
 if type in ('d', 'D'): cmd = 'TYPE A'
 else: cmd = 'TYPE ' + type; isdir = 0
 '''), r'''
@@ -3380,7 +3432,7 @@ Module - ROOT 0,0..0,14
      .value Constant 'TYPE A' - 0,6..0,14
 '''),
 
-(122, 'body[0].value', 1, 3, None, {}, ('exec', r'''
+(124, 'body[0].value', 1, 3, None, {}, ('exec', r'''
 [
     a, b,
     c
@@ -3409,7 +3461,7 @@ List - ROOT 0,0..2,1
   .ctx Load
 '''),
 
-(123, 'body[0].value', 0, 2, None, {}, ('exec', r'''
+(125, 'body[0].value', 0, 2, None, {}, ('exec', r'''
 [
     a,
     b, c
@@ -7930,12 +7982,14 @@ Module - ROOT 0,0..0,1
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
-''',
-r'''b''', r'''
-Module - ROOT 0,0..0,1
+''', r'''
+
+b
+''', r'''
+Module - ROOT 0,0..1,1
   .body[1]
-   0] Expr - 0,0..0,1
-     .value Name 'b' Load - 0,0..0,1
+   0] Expr - 1,0..1,1
+     .value Name 'b' Load - 1,0..1,1
 '''),
 
 (7, '', 1, 2, None, {'trivia': ('+1', False)}, (None, r'''
@@ -7948,12 +8002,14 @@ Module - ROOT 0,0..0,1
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
-''',
-r'''b''', r'''
-Module - ROOT 0,0..0,1
+''', r'''
+
+b
+''', r'''
+Module - ROOT 0,0..1,1
   .body[1]
-   0] Expr - 0,0..0,1
-     .value Name 'b' Load - 0,0..0,1
+   0] Expr - 1,0..1,1
+     .value Name 'b' Load - 1,0..1,1
 '''),
 
 (8, '', 1, 2, None, {'trivia': ('block', False)}, (None, r'''
@@ -8048,13 +8104,14 @@ Module - ROOT 0,0..1,0
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
 ''', r'''
+
 # 1
 b
 ''', r'''
-Module - ROOT 0,0..1,1
+Module - ROOT 0,0..2,1
   .body[1]
-   0] Expr - 1,0..1,1
-     .value Name 'b' Load - 1,0..1,1
+   0] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
 '''),
 
 (13, '', 1, 2, None, {'trivia': ('block+1', False)}, (None, r'''
@@ -8072,13 +8129,14 @@ Module - ROOT 0,0..1,0
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
 ''', r'''
+
 # 1
 b
 ''', r'''
-Module - ROOT 0,0..1,1
+Module - ROOT 0,0..2,1
   .body[1]
-   0] Expr - 1,0..1,1
-     .value Name 'b' Load - 1,0..1,1
+   0] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
 '''),
 
 (14, '', 1, 2, None, {'trivia': ('block+1', False)}, (None, r'''
@@ -8096,13 +8154,14 @@ Module - ROOT 0,0..1,0
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
 ''', r'''
+
 # 1
 b
 ''', r'''
-Module - ROOT 0,0..1,1
+Module - ROOT 0,0..2,1
   .body[1]
-   0] Expr - 1,0..1,1
-     .value Name 'b' Load - 1,0..1,1
+   0] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
 '''),
 
 (15, '', 1, 2, None, {'trivia': ('block-1', False)}, (None, r'''
@@ -8190,13 +8249,15 @@ Module - ROOT 0,0..0,1
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
 ''', r'''
+
+
 # 1
 b
 ''', r'''
-Module - ROOT 0,0..1,1
+Module - ROOT 0,0..3,1
   .body[1]
-   0] Expr - 1,0..1,1
-     .value Name 'b' Load - 1,0..1,1
+   0] Expr - 3,0..3,1
+     .value Name 'b' Load - 3,0..3,1
 '''),
 
 (19, '', 1, 2, None, {'trivia': ('block+', False)}, (None, r'''
@@ -8212,13 +8273,15 @@ Module - ROOT 0,0..0,1
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
 ''', r'''
+
+
 # 1
 b
 ''', r'''
-Module - ROOT 0,0..1,1
+Module - ROOT 0,0..3,1
   .body[1]
-   0] Expr - 1,0..1,1
-     .value Name 'b' Load - 1,0..1,1
+   0] Expr - 3,0..3,1
+     .value Name 'b' Load - 3,0..3,1
 '''),
 
 (20, '', 1, 2, None, {'trivia': ('block+', False)}, (None, r'''
@@ -8234,13 +8297,15 @@ Module - ROOT 0,0..0,1
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
 ''', r'''
+
+
 # 1
 b
 ''', r'''
-Module - ROOT 0,0..1,1
+Module - ROOT 0,0..3,1
   .body[1]
-   0] Expr - 1,0..1,1
-     .value Name 'b' Load - 1,0..1,1
+   0] Expr - 3,0..3,1
+     .value Name 'b' Load - 3,0..3,1
 '''),
 
 (21, '', 1, 2, None, {'trivia': ('block-', False)}, (None, r'''
@@ -8325,16 +8390,18 @@ Module - ROOT 0,0..0,1
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
 ''', r'''
+
+
 # 2
 
 
 # 1
 b
 ''', r'''
-Module - ROOT 0,0..4,1
+Module - ROOT 0,0..6,1
   .body[1]
-   0] Expr - 4,0..4,1
-     .value Name 'b' Load - 4,0..4,1
+   0] Expr - 6,0..6,1
+     .value Name 'b' Load - 6,0..6,1
 '''),
 
 (25, '', 1, 2, None, {'trivia': ('all+', False)}, (None, r'''
@@ -8353,16 +8420,18 @@ Module - ROOT 0,0..0,1
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
 ''', r'''
+
+
 # 2
 
 \
 # 1
 b
 ''', r'''
-Module - ROOT 0,0..4,1
+Module - ROOT 0,0..6,1
   .body[1]
-   0] Expr - 4,0..4,1
-     .value Name 'b' Load - 4,0..4,1
+   0] Expr - 6,0..6,1
+     .value Name 'b' Load - 6,0..6,1
 '''),
 
 (26, '', 1, 2, None, {'trivia': ('all+', False)}, (None, r'''
@@ -8381,16 +8450,18 @@ Module - ROOT 0,0..0,1
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
 ''', r'''
+
+
 # 2
 \
 
 # 1
 b
 ''', r'''
-Module - ROOT 0,0..4,1
+Module - ROOT 0,0..6,1
   .body[1]
-   0] Expr - 4,0..4,1
-     .value Name 'b' Load - 4,0..4,1
+   0] Expr - 6,0..6,1
+     .value Name 'b' Load - 6,0..6,1
 '''),
 
 (27, '', 1, 2, None, {'trivia': ('all-', False)}, (None, r'''
@@ -8602,9 +8673,11 @@ Module - ROOT 0,0..0,1
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'b' Load - 0,0..0,1
-''',
-r'''a''', r'''
-Module - ROOT 0,0..0,1
+''', r'''
+a
+
+''', r'''
+Module - ROOT 0,0..1,0
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
@@ -8731,9 +8804,11 @@ Module - ROOT 0,0..0,1
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'b' Load - 0,0..0,1
-''',
-r'''a''', r'''
-Module - ROOT 0,0..0,1
+''', r'''
+a
+
+''', r'''
+Module - ROOT 0,0..1,0
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
@@ -8766,9 +8841,11 @@ Module - ROOT 0,0..0,1
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'b' Load - 0,0..0,1
-''',
-r'''a  # 1''', r'''
-Module - ROOT 0,0..0,6
+''', r'''
+a  # 1
+
+''', r'''
+Module - ROOT 0,0..1,0
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
@@ -8976,8 +9053,9 @@ Module - ROOT 0,0..1,1
 ''', r'''
 a # 1
 # 2
+
 ''', r'''
-Module - ROOT 0,0..1,3
+Module - ROOT 0,0..2,0
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
@@ -9025,8 +9103,9 @@ Module - ROOT 0,0..1,1
 ''', r'''
 a # 1
 # 2
+
 ''', r'''
-Module - ROOT 0,0..1,3
+Module - ROOT 0,0..2,0
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
@@ -9120,8 +9199,10 @@ Module - ROOT 0,0..0,1
 ''', r'''
 a # 1
 # 2
+
+
 ''', r'''
-Module - ROOT 0,0..1,3
+Module - ROOT 0,0..3,0
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
@@ -9169,8 +9250,9 @@ Module - ROOT 0,0..1,1
 ''', r'''
 a # 1
 # 2
+
 ''', r'''
-Module - ROOT 0,0..1,3
+Module - ROOT 0,0..2,0
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
@@ -9268,8 +9350,10 @@ a # 1
 
 
 # 3
+
+
 ''', r'''
-Module - ROOT 0,0..4,3
+Module - ROOT 0,0..6,0
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
@@ -9329,8 +9413,9 @@ a # 1
 
 \
 # 3
+
 ''', r'''
-Module - ROOT 0,0..4,3
+Module - ROOT 0,0..5,0
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'a' Load - 0,0..0,1
