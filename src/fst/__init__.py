@@ -78,10 +78,10 @@ parsed `AST`s. `fst.docs.d01_parse`.
 `fst` validates for parsability, not compilability. This means that for `fst`, `*a, *b = c` and `def f(a, a): pass` are
 both valid even though they are uncompilable.
 
-Format preserving native operations exist in two flavors (see the documentation on how to use either):
+Format preserving native modification operations exist in two flavors (see the documentation on how to use either):
 
-* Prescribed put operations which do specific things for each type of node being put, including precedence and syntax
-parenthesization. `fst.docs.d05_put`.
+* Prescribed put operations which do specific things for each type of node being put, including indentation, precedence
+and syntax parenthesization, etc... `fst.docs.d05_put`.
 
 * Raw mode put operations which just put the raw source you want to replace and then attempt to reparse a small part of
 the full source around the changes (at least statement level). `fst.docs.d06_raw`, `fst.fst.FST.put_src()`.

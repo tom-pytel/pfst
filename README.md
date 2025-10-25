@@ -54,7 +54,7 @@ From GitHub, after cloning for development:
 
     pip install -e .[dev]
 
-# Examples
+# More Examples
 
 Indentation is automatic.
 
