@@ -119,13 +119,13 @@
                     <a class="function" href="#get_func_class_or_ass_by_name">get_func_class_or_ass_by_name</a>
             </li>
             <li>
-                    <a class="function" href="#syntax_ordered_children">syntax_ordered_children</a>
-            </li>
-            <li>
                     <a class="function" href="#last_block_header_child">last_block_header_child</a>
             </li>
             <li>
                     <a class="function" href="#is_atom">is_atom</a>
+            </li>
+            <li>
+                    <a class="function" href="#syntax_ordered_children">syntax_ordered_children</a>
             </li>
             <li>
                     <a class="function" href="#precedence_require_parens_by_type">precedence_require_parens_by_type</a>
@@ -253,7 +253,7 @@ mapped to the beginning of the character.</p>
     </div>
     <a class="headerlink" href="#is_valid_identifier"></a>
     
-            <div class="docstring"><p>Check if <code>s</code> is a valid python identifier.</p>
+            <div class="docstring"><p>Check if <code>s</code> is a valid python identifier. Should be normalized already.</p>
 </div>
 
 
@@ -391,7 +391,7 @@ possibly nested <code>Tuple</code> and <code>List</code>.</p>
     <a class="headerlink" href="#reduce_ast"></a>
     
             <div class="docstring"><p>Reduce a <code>mod</code> / <code>Expr</code> wrapped expression or single statement if possible, otherwise return original <code>AST</code>,
-<code>None</code> or raise.</p>
+<code>None</code> or raise. Also reduces <code>_ExceptHandlers</code> and <code>_match_cases</code> if they are of length 1.</p>
 
 <p><strong>Parameters:</strong></p>
 
@@ -686,23 +686,6 @@ optionally <code>Assign</code> or <code>AnnAssign</code> which has a <code>name<
 
 
                 </section>
-                <section id="syntax_ordered_children">
-                    <div class="attr function">
-            
-        <span class="def">def</span>
-        <span class="name">syntax_ordered_children</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">ast</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span></span><span class="return-annotation">) -> <span class="nb">list</span>:</span></span>
-
-        
-    </div>
-    <a class="headerlink" href="#syntax_ordered_children"></a>
-    
-            <div class="docstring"><p>Get list of all <code>AST</code> children in syntax order. This will include individual fields and aggregate fields like
-<code>body</code> all smushed up together into a single flat list. The list may contain <code>None</code> values for example from a <code>Dict</code>
-<code>keys</code> field which has <code>**</code> elements.</p>
-</div>
-
-
-                </section>
                 <section id="last_block_header_child">
                     <div class="attr function">
             
@@ -753,6 +736,23 @@ strictly required for a <code>MatchSequence</code>.</li>
 <code>unparse_pars_as_atom</code> value for <code>NamedExpr</code>, <code>Yield</code> and <code>YieldFrom</code>, <code>tuple_as_atom</code> value for <code>Tuple</code> and
 <code>matchseq_as_atom</code> for <code>MatchSequence</code> as those all are special cases.</li>
 </ul>
+</div>
+
+
+                </section>
+                <section id="syntax_ordered_children">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">syntax_ordered_children</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">ast</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span></span><span class="return-annotation">) -> <span class="nb">list</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#syntax_ordered_children"></a>
+    
+            <div class="docstring"><p>Get list of all <code>AST</code> children in syntax order. This will include individual fields and aggregate fields like
+<code>body</code> all smushed up together into a single flat list. The list may contain <code>None</code> values for example from a <code>Dict</code>
+<code>keys</code> field which has <code>**</code> elements.</p>
 </div>
 
 

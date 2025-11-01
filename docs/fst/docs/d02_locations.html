@@ -75,16 +75,16 @@
   <span class="o">.</span><span class="n">name</span> <span class="s1">&#39;func&#39;</span>
   <span class="o">.</span><span class="n">args</span> <span class="n">arguments</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span><span class="mf">9..1</span><span class="p">,</span><span class="mi">10</span>
     <span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="mi">0</span><span class="p">]</span> <span class="n">arg</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span><span class="mf">9..1</span><span class="p">,</span><span class="mi">10</span>
-      <span class="o">.</span><span class="n">arg</span> <span class="s1">&#39;x&#39;</span>
+     <span class="mi">0</span><span class="p">]</span> <span class="n">arg</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span><span class="mf">9..1</span><span class="p">,</span><span class="mi">10</span>
+       <span class="o">.</span><span class="n">arg</span> <span class="s1">&#39;x&#39;</span>
   <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-  <span class="mi">0</span><span class="p">]</span> <span class="n">Return</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">4..2</span><span class="p">,</span><span class="mi">16</span>
-    <span class="o">.</span><span class="n">value</span> <span class="n">BinOp</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">11..2</span><span class="p">,</span><span class="mi">16</span>
-      <span class="o">.</span><span class="n">left</span> <span class="n">Name</span> <span class="s1">&#39;x&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">11..2</span><span class="p">,</span><span class="mi">12</span>
-      <span class="o">.</span><span class="n">op</span> <span class="n">Add</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">13..2</span><span class="p">,</span><span class="mi">14</span>
-      <span class="o">.</span><span class="n">right</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">15..2</span><span class="p">,</span><span class="mi">16</span>
+   <span class="mi">0</span><span class="p">]</span> <span class="n">Return</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">4..2</span><span class="p">,</span><span class="mi">16</span>
+     <span class="o">.</span><span class="n">value</span> <span class="n">BinOp</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">11..2</span><span class="p">,</span><span class="mi">16</span>
+       <span class="o">.</span><span class="n">left</span> <span class="n">Name</span> <span class="s1">&#39;x&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">11..2</span><span class="p">,</span><span class="mi">12</span>
+       <span class="o">.</span><span class="n">op</span> <span class="n">Add</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">13..2</span><span class="p">,</span><span class="mi">14</span>
+       <span class="o">.</span><span class="n">right</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">15..2</span><span class="p">,</span><span class="mi">16</span>
   <span class="o">.</span><span class="n">decorator_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-  <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;decorator&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">1..0</span><span class="p">,</span><span class="mi">10</span>
+   <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;decorator&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">1..0</span><span class="p">,</span><span class="mi">10</span>
 </code></pre>
 </div>
 
@@ -290,15 +290,15 @@ the source code.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="c1"># or you can search for a node entirely CONTAINING THE LOCATION</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">find_loc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">find_loc_in</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;a &lt; b&#39;</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="c1"># will return nodes matching the location EXACTLY by default</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">find_loc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">find_loc_in</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;a &lt; b&#39;</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="c1"># but that can be disabled</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">find_loc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">find_loc_in</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">allow_exact</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
 <span class="s1">&#39;if a &lt; b:</span><span class="se">\n</span><span class="s1">    print(a)&#39;</span>
 </code></pre>
 </div>

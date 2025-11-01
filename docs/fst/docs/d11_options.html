@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="generator" content="pdoc 15.0.1"/>
-    <title>fst API documentation</title>
+    <title>fst.docs.d11_options API documentation</title>
 
     <style>/*! * Bootstrap Reboot v5.0.0 (https://getbootstrap.com/) * Copyright 2011-2021 The Bootstrap Authors * Copyright 2011-2021 Twitter, Inc. * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE) * Forked from Normalize.css, licensed MIT (https://github.com/necolas/normalize.css/blob/master/LICENSE.md) */*,::after,::before{box-sizing:border-box}@media (prefers-reduced-motion:no-preference){:root{scroll-behavior:smooth}}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#fff;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}hr{margin:1rem 0;color:inherit;background-color:currentColor;border:0;opacity:.25}hr:not([size]){height:1px}h1,h2,h3,h4,h5,h6{margin-top:0;margin-bottom:.5rem;font-weight:500;line-height:1.2}h1{font-size:calc(1.375rem + 1.5vw)}@media (min-width:1200px){h1{font-size:2.5rem}}h2{font-size:calc(1.325rem + .9vw)}@media (min-width:1200px){h2{font-size:2rem}}h3{font-size:calc(1.3rem + .6vw)}@media (min-width:1200px){h3{font-size:1.75rem}}h4{font-size:calc(1.275rem + .3vw)}@media (min-width:1200px){h4{font-size:1.5rem}}h5{font-size:1.25rem}h6{font-size:1rem}p{margin-top:0;margin-bottom:1rem}abbr[data-bs-original-title],abbr[title]{-webkit-text-decoration:underline dotted;text-decoration:underline dotted;cursor:help;-webkit-text-decoration-skip-ink:none;text-decoration-skip-ink:none}address{margin-bottom:1rem;font-style:normal;line-height:inherit}ol,ul{padding-left:2rem}dl,ol,ul{margin-top:0;margin-bottom:1rem}ol ol,ol ul,ul ol,ul ul{margin-bottom:0}dt{font-weight:700}dd{margin-bottom:.5rem;margin-left:0}blockquote{margin:0 0 1rem}b,strong{font-weight:bolder}small{font-size:.875em}mark{padding:.2em;background-color:#fcf8e3}sub,sup{position:relative;font-size:.75em;line-height:0;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}a{color:#0d6efd;text-decoration:underline}a:hover{color:#0a58ca}a:not([href]):not([class]),a:not([href]):not([class]):hover{color:inherit;text-decoration:none}code,kbd,pre,samp{font-family:SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:1em;direction:ltr;unicode-bidi:bidi-override}pre{display:block;margin-top:0;margin-bottom:1rem;overflow:auto;font-size:.875em}pre code{font-size:inherit;color:inherit;word-break:normal}code{font-size:.875em;color:#d63384;word-wrap:break-word}a>code{color:inherit}kbd{padding:.2rem .4rem;font-size:.875em;color:#fff;background-color:#212529;border-radius:.2rem}kbd kbd{padding:0;font-size:1em;font-weight:700}figure{margin:0 0 1rem}img,svg{vertical-align:middle}table{caption-side:bottom;border-collapse:collapse}caption{padding-top:.5rem;padding-bottom:.5rem;color:#6c757d;text-align:left}th{text-align:inherit;text-align:-webkit-match-parent}tbody,td,tfoot,th,thead,tr{border-color:inherit;border-style:solid;border-width:0}label{display:inline-block}button{border-radius:0}button:focus:not(:focus-visible){outline:0}button,input,optgroup,select,textarea{margin:0;font-family:inherit;font-size:inherit;line-height:inherit}button,select{text-transform:none}[role=button]{cursor:pointer}select{word-wrap:normal}select:disabled{opacity:1}[list]::-webkit-calendar-picker-indicator{display:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button}[type=button]:not(:disabled),[type=reset]:not(:disabled),[type=submit]:not(:disabled),button:not(:disabled){cursor:pointer}::-moz-focus-inner{padding:0;border-style:none}textarea{resize:vertical}fieldset{min-width:0;padding:0;margin:0;border:0}legend{float:left;width:100%;padding:0;margin-bottom:.5rem;font-size:calc(1.275rem + .3vw);line-height:inherit}@media (min-width:1200px){legend{font-size:1.5rem}}legend+*{clear:left}::-webkit-datetime-edit-day-field,::-webkit-datetime-edit-fields-wrapper,::-webkit-datetime-edit-hour-field,::-webkit-datetime-edit-minute,::-webkit-datetime-edit-month-field,::-webkit-datetime-edit-text,::-webkit-datetime-edit-year-field{padding:0}::-webkit-inner-spin-button{height:auto}[type=search]{outline-offset:-2px;-webkit-appearance:textfield}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-color-swatch-wrapper{padding:0}::file-selector-button{font:inherit}::-webkit-file-upload-button{font:inherit;-webkit-appearance:button}output{display:inline-block}iframe{border:0}summary{display:list-item;cursor:pointer}progress{vertical-align:baseline}[hidden]{display:none!important}</style>
     <style>/*! syntax-highlighting.css */pre{line-height:125%;}span.linenos{color:inherit; background-color:transparent; padding-left:5px; padding-right:20px;}.pdoc-code .hll{background-color:#ffffcc}.pdoc-code{background:#f8f8f8;}.pdoc-code .c{color:#3D7B7B; font-style:italic}.pdoc-code .err{border:1px solid #FF0000}.pdoc-code .k{color:#008000; font-weight:bold}.pdoc-code .o{color:#666666}.pdoc-code .ch{color:#3D7B7B; font-style:italic}.pdoc-code .cm{color:#3D7B7B; font-style:italic}.pdoc-code .cp{color:#9C6500}.pdoc-code .cpf{color:#3D7B7B; font-style:italic}.pdoc-code .c1{color:#3D7B7B; font-style:italic}.pdoc-code .cs{color:#3D7B7B; font-style:italic}.pdoc-code .gd{color:#A00000}.pdoc-code .ge{font-style:italic}.pdoc-code .gr{color:#E40000}.pdoc-code .gh{color:#000080; font-weight:bold}.pdoc-code .gi{color:#008400}.pdoc-code .go{color:#717171}.pdoc-code .gp{color:#000080; font-weight:bold}.pdoc-code .gs{font-weight:bold}.pdoc-code .gu{color:#800080; font-weight:bold}.pdoc-code .gt{color:#0044DD}.pdoc-code .kc{color:#008000; font-weight:bold}.pdoc-code .kd{color:#008000; font-weight:bold}.pdoc-code .kn{color:#008000; font-weight:bold}.pdoc-code .kp{color:#008000}.pdoc-code .kr{color:#008000; font-weight:bold}.pdoc-code .kt{color:#B00040}.pdoc-code .m{color:#666666}.pdoc-code .s{color:#BA2121}.pdoc-code .na{color:#687822}.pdoc-code .nb{color:#008000}.pdoc-code .nc{color:#0000FF; font-weight:bold}.pdoc-code .no{color:#880000}.pdoc-code .nd{color:#AA22FF}.pdoc-code .ni{color:#717171; font-weight:bold}.pdoc-code .ne{color:#CB3F38; font-weight:bold}.pdoc-code .nf{color:#0000FF}.pdoc-code .nl{color:#767600}.pdoc-code .nn{color:#0000FF; font-weight:bold}.pdoc-code .nt{color:#008000; font-weight:bold}.pdoc-code .nv{color:#19177C}.pdoc-code .ow{color:#AA22FF; font-weight:bold}.pdoc-code .w{color:#bbbbbb}.pdoc-code .mb{color:#666666}.pdoc-code .mf{color:#666666}.pdoc-code .mh{color:#666666}.pdoc-code .mi{color:#666666}.pdoc-code .mo{color:#666666}.pdoc-code .sa{color:#BA2121}.pdoc-code .sb{color:#BA2121}.pdoc-code .sc{color:#BA2121}.pdoc-code .dl{color:#BA2121}.pdoc-code .sd{color:#BA2121; font-style:italic}.pdoc-code .s2{color:#BA2121}.pdoc-code .se{color:#AA5D1F; font-weight:bold}.pdoc-code .sh{color:#BA2121}.pdoc-code .si{color:#A45A77; font-weight:bold}.pdoc-code .sx{color:#008000}.pdoc-code .sr{color:#A45A77}.pdoc-code .s1{color:#BA2121}.pdoc-code .ss{color:#19177C}.pdoc-code .bp{color:#008000}.pdoc-code .fm{color:#0000FF}.pdoc-code .vc{color:#19177C}.pdoc-code .vg{color:#19177C}.pdoc-code .vi{color:#19177C}.pdoc-code .vm{color:#19177C}.pdoc-code .il{color:#666666}</style>
@@ -16,27 +16,25 @@
     <nav class="pdoc">
         <label id="navtoggle" for="togglestate" class="pdoc-button"><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'><path stroke-linecap='round' stroke="currentColor" stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/></svg></label>
         <input id="togglestate" type="checkbox" aria-hidden="true" tabindex="-1">
-        <div>
+        <div>            <a class="pdoc-button module-list-button" href="../docs.html">
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-in-left" viewBox="0 0 16 16">
+  <path fill-rule="evenodd" d="M10 3.5a.5.5 0 0 0-.5-.5h-8a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 1 1 0v2A1.5 1.5 0 0 1 9.5 14h-8A1.5 1.5 0 0 1 0 12.5v-9A1.5 1.5 0 0 1 1.5 2h8A1.5 1.5 0 0 1 11 3.5v2a.5.5 0 0 1-1 0v-2z"/>
+  <path fill-rule="evenodd" d="M4.146 8.354a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H14.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3z"/>
+</svg>                &nbsp;fst.docs</a>
+
 
 
             <h2>Contents</h2>
             <ul>
-  <li><a href="#overview">Overview</a></li>
-  <li><a href="#index">Index</a></li>
-  <li><a href="#links">Links</a></li>
-  <li><a href="#details">Details</a></li>
+  <li><a href="#options-verify-and-dump">Options, <code>verify()</code> and <code>dump()</code></a>
+  <ul>
+    <li><a href="#individual-functions">Individual functions</a></li>
+    <li><a href="#global-defaults">Global defaults</a></li>
+    <li><a href="#special">Special</a></li>
+  </ul></li>
 </ul>
 
 
-            <h2>Submodules</h2>
-            <ul>
-                    <li><a href="fst/docs.html">docs</a></li>
-                    <li><a href="fst/fst.html">fst</a></li>
-                    <li><a href="fst/view.html">view</a></li>
-                    <li><a href="fst/common.html">common</a></li>
-                    <li><a href="fst/parsex.html">parsex</a></li>
-                    <li><a href="fst/astutil.html">astutil</a></li>
-            </ul>
 
 
 
@@ -50,107 +48,191 @@
     <main class="pdoc">
             <section class="module-info">
                     <h1 class="modulename">
-fst    </h1>
+<a href="./../../fst.html">fst</a><wbr>.<a href="./../docs.html">docs</a><wbr>.d11_options    </h1>
 
-                        <div class="docstring"><p>Version 0.2.3</p>
+                        <div class="docstring"><h1 id="options-verify-and-dump">Options, <code>verify()</code> and <code>dump()</code></h1>
 
-<h1 id="overview">Overview</h1>
-
-<p>This module exists in order to facilitate quick and easy high level editing of Python source while preserving
-formatting. E.g:</p>
+<p>To be able to execute the examples, import this.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span><span class="w"> </span><span class="nn">ast</span><span class="o">,</span><span class="w"> </span><span class="nn">fst</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="n">fst</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;if a: b = c, d  # comment&#39;</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">fst</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>  <span class="c1"># formatting is preserved</span>
-<span class="k">if</span> <span class="n">a</span><span class="p">:</span> <span class="n">b</span> <span class="o">=</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span>  <span class="c1"># comment</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>  <span class="c1"># just a normal AST with metadata</span>
-<span class="k">if</span> <span class="n">a</span><span class="p">:</span>
-    <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 </code></pre>
 </div>
 
-<p>Operations on the tree preserve formatting.</p>
+<h2 id="individual-functions">Individual functions</h2>
+
+<p>For a full list of global options see <code><a href="../fst.html#FST.get_options">fst.fst.FST.get_options()</a></code>.</p>
+
+<p>Many of the <code>FST</code> functions have an <code>**options</code> kwarg which indicates they can take one or more keyword-only parameters
+to control how the operation proceeds. Most of these options also have global defaults which can be set and which will
+be used if a specific value for that option is not passed to the function.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;u,</span>
-<span class="n">v</span>  <span class="c1"># blah&#39;</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="n">b</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">fst</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
-<span class="k">if</span> <span class="n">a</span><span class="p">:</span> <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span>
-          <span class="n">v</span><span class="p">,</span>  <span class="c1"># blah</span>
-          <span class="n">d</span><span class="p">)</span>  <span class="c1"># comment</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>  <span class="c1"># AST is kept up to date</span>
-<span class="k">if</span> <span class="n">a</span><span class="p">:</span>
-    <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="p">(</span><span class="n">b</span><span class="p">)</span>
 </code></pre>
 </div>
 
-<p><code><a href="">fst</a></code> grew out of a frustration of not being able to just edit python source to change some bit of functionality without
-having to deal with the miniutae of precedence, indentation, parentheses, commas, comments, docstrings, semicolons, line
-continuations, else vs. elif, etc... <code><a href="">fst</a></code> deals with all of these for you and especially the many, many niche special
-cases of Python syntax.</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{a: b}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;**c&#39;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="p">{</span><span class="o">**</span><span class="n">c</span><span class="p">}</span>
 
-<p><code><a href="">fst</a></code> works by adding <code>FST</code> nodes to existing <code>AST</code> nodes as an <code>.f</code> attribute which keep extra structure information,
-the original source, and provide the interface to format-preserving operations. Each operation through <code><a href="">fst</a></code> is a
-simultaneous edit of the <code>AST</code> tree and the source code and those are kept synchronized so that the current source will
-always parse to the current tree.</p>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">try</span><span class="p">:</span>
+<span class="o">...</span>     <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{a: b}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;**c&#39;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="o">...</span> <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+<span class="n">cannot</span> <span class="n">put</span> <span class="k">as</span> <span class="s1">&#39;one&#39;</span> <span class="n">item</span> <span class="n">to</span> <span class="n">a</span> <span class="n">Dict</span> <span class="nb">slice</span>
+</code></pre>
+</div>
 
-<h1 id="index">Index</h1>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">src</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">... if a:</span>
+<span class="s1">...     pass</span>
+<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
 
-<ul>
-<li><code><a href="fst/docs.html">fst.docs</a></code>: Documentation and examples.</li>
-<li><code><a href="fst/fst.html">fst.fst</a></code>: API reference.</li>
-</ul>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">add</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">... if b:</span>
+<span class="s1">...     return -1</span>
+<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
 
-<h1 id="links">Links</h1>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">orelse</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">add</span><span class="p">,</span> <span class="n">elif_</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
+<span class="k">if</span> <span class="n">a</span><span class="p">:</span>
+    <span class="k">pass</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">b</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
 
-<ul>
-<li><a href="https://github.com/tom-pytel/pfst">Repository</a></li>
-<li><a href="https://tom-pytel.github.io/pfst/">Documentation</a></li>
-<li><a href="https://pypi.org/project/pfst/">PyPI</a></li>
-</ul>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">orelse</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">add</span><span class="p">,</span> <span class="n">elif_</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
+<span class="k">if</span> <span class="n">a</span><span class="p">:</span>
+    <span class="k">pass</span>
+<span class="k">elif</span> <span class="n">b</span><span class="p">:</span>
+    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+</code></pre>
+</div>
 
-<h1 id="details">Details</h1>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">src</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>  <span class="c1"># because this example lives in a docstring already</span>
+<span class="o">...</span> <span class="s2">&quot;class cls:&quot;</span><span class="p">,</span>
+<span class="o">...</span> <span class="s2">&quot;    def f():&quot;</span><span class="p">,</span>
+<span class="o">...</span> <span class="s2">&quot;        &#39;&#39;&#39;doc&quot;</span><span class="p">,</span>
+<span class="o">...</span> <span class="s2">&quot;        str&#39;&#39;&#39;&quot;</span><span class="p">,</span>
+<span class="o">...</span> <span class="p">])</span>
 
-<p>Disclaimer: The intended use of this module is if you want to change code functionality without having to deal with
-syntax details, not lint or format, there are better options for that. The main focus of <code><a href="">fst</a></code> is not necessarily to be
-fast but rather to handle all the weird cases of python syntax so that functional code always results, use a formatter
-afterwards as needed.</p>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">docstr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;doc</span>
+<span class="sd">        str&#39;&#39;&#39;</span>
 
-<p><code><a href="">fst</a></code> was written and tested on Python versions 3.10 through 3.14.</p>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">docstr</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;doc</span>
+<span class="sd">    str&#39;&#39;&#39;</span>
+</code></pre>
+</div>
 
-<p><code><a href="">fst</a></code> works by keeping a copy of the entire source at the root <code>FST</code> node of a tree and modifying this source alongside
-the node tree anytime an operation is performed natively.</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm_put</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="p">{</span><span class="n">a</span><span class="p">,</span> <span class="o">*</span><span class="p">(),</span> <span class="n">b</span><span class="p">}</span>
 
-<p><code><a href="">fst</a></code> does not do any parsing of its own but rather relies on the builtin Python parser and unparser. This means you
-get perfect parsing but also that it is limited to the syntax of the running Python version (many options exist for
-running any specific verison of Python).</p>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm_put</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="p">{</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">}</span>
+</code></pre>
+</div>
 
-<p><code><a href="">fst</a></code> does use standard Python parsing to parse things that can not normally be parsed, like individual exception
-handlers or match cases, by wrapping them in corresponding code then pulling out and adjusting the locations of the
-parsed <code>AST</code>s. <code><a href="fst/docs/d01_parse.html">fst.docs.d01_parse</a></code>.</p>
+<h2 id="global-defaults">Global defaults</h2>
 
-<p><code><a href="">fst</a></code> validates for parsability, not compilability. This means that for <code><a href="">fst</a></code>, <code>*a, *b = c</code> and <code>def f(a, a): pass</code> are
-both valid even though they are uncompilable.</p>
+<p>These options can be set globally with the <code>set_options()</code> function, which returns the previous value.</p>
 
-<p>Format preserving native modification operations exist in two flavors (see the documentation on how to use either):</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="p">{</span><span class="s1">&#39;pars&#39;</span><span class="p">:</span> <span class="s1">&#39;auto&#39;</span><span class="p">}</span>
 
-<ul>
-<li><p>Prescribed put operations which do specific things for each type of node being put, including indentation, precedence
-and syntax parenthesization, etc... <code><a href="fst/docs/d05_put.html">fst.docs.d05_put</a></code>.</p></li>
-<li><p>Raw mode put operations which just put the raw source you want to replace and then attempt to reparse a small part of
-the full source around the changes (at least statement level). <code><a href="fst/docs/d07_raw.html">fst.docs.d07_raw</a></code>, <code><a href="fst/fst.html#FST.put_src">fst.fst.FST.put_src()</a></code>.</p></li>
-</ul>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="n">b</span>
 
-<p>There is also a mechanism for allowing outside editing of the <code>AST</code> tree and then reconciling with a marked snapshot
-to preserve formatting where possible. This is intended for existing code or third-party libraries which don't know
-anything about <code><a href="">fst</a></code> to maybe gain the ability to preserve some existing formatting when editing a tree.
-<code><a href="fst/docs/d10_reconcile.html">fst.docs.d10_reconcile</a></code>.</p>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="p">{</span><span class="s1">&#39;pars&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="p">(</span><span class="n">b</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>But then you have to remember to set them back, otherwise all your other examples which expect options to be in their
+default state will fail.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
+<span class="p">{</span><span class="s1">&#39;pars&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+</code></pre>
+</div>
+
+<p>For this reason there is also a context manager.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">with</span> <span class="n">FST</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="n">b</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">with</span> <span class="n">FST</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="p">(</span><span class="n">b</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>Any given option default can also be queried.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s1">&#39;pars&#39;</span><span class="p">)</span>
+<span class="s1">&#39;auto&#39;</span>
+</code></pre>
+</div>
+
+<p>Or get all global options.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">pprint</span><span class="w"> </span><span class="kn">import</span> <span class="n">pp</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">FST</span><span class="o">.</span><span class="n">get_options</span><span class="p">())</span>
+<span class="p">{</span><span class="s1">&#39;raw&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+ <span class="s1">&#39;trivia&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;elif_&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;pep8space&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;docstr&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;pars&#39;</span><span class="p">:</span> <span class="s1">&#39;auto&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;pars_walrus&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;pars_arglike&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;norm&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+ <span class="s1">&#39;norm_self&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+ <span class="s1">&#39;norm_get&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+ <span class="s1">&#39;norm_put&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+ <span class="s1">&#39;set_norm&#39;</span><span class="p">:</span> <span class="s1">&#39;both&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;matchor_norm&#39;</span><span class="p">:</span> <span class="s1">&#39;value&#39;</span><span class="p">}</span>
+</code></pre>
+</div>
+
+<h2 id="special">Special</h2>
+
+<p>There are some options which can be passed to certain functions which are contextual and don't have global defaults,
+such as the <code>'to'</code> option when putting a single element in raw mode.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="s1">&#39;to&#39;</span> <span class="ow">in</span> <span class="n">FST</span><span class="o">.</span><span class="n">get_options</span><span class="p">()</span>
+<span class="kc">False</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c, d, e, f]&#39;</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;zzz&#39;</span><span class="p">,</span> <span class="n">to</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="o">&lt;</span><span class="n">Name</span> <span class="mi">0</span><span class="p">,</span><span class="mf">4..0</span><span class="p">,</span><span class="mi">7</span><span class="o">&gt;</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">zzz</span><span class="p">,</span> <span class="n">f</span><span class="p">]</span>
+</code></pre>
+</div>
 </div>
 
                 

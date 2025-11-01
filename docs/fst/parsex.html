@@ -37,6 +37,138 @@
                 </ul>
 
             </li>
+            <li>
+                    <a class="function" href="#get_special_parse_mode">get_special_parse_mode</a>
+            </li>
+            <li>
+                    <a class="function" href="#unparse">unparse</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse">parse</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_all">parse_all</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_strict">parse_strict</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_Module">parse_Module</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_Expression">parse_Expression</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_Interactive">parse_Interactive</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_stmt">parse_stmt</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_stmts">parse_stmts</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_ExceptHandler">parse_ExceptHandler</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse__ExceptHandlers">parse__ExceptHandlers</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_match_case">parse_match_case</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse__match_cases">parse__match_cases</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_expr">parse_expr</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_expr_all">parse_expr_all</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_expr_arglike">parse_expr_arglike</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_expr_slice">parse_expr_slice</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_expr_sliceelt">parse_expr_sliceelt</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_Tuple">parse_Tuple</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse__Assign_targets">parse__Assign_targets</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_boolop">parse_boolop</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_operator">parse_operator</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_binop">parse_binop</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_augop">parse_augop</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_unaryop">parse_unaryop</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_cmpop">parse_cmpop</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_comprehension">parse_comprehension</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_arguments">parse_arguments</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_arguments_lambda">parse_arguments_lambda</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_arg">parse_arg</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_keyword">parse_keyword</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_alias">parse_alias</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse__aliases">parse__aliases</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_Import_name">parse_Import_name</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse__Import_names">parse__Import_names</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_ImportFrom_name">parse_ImportFrom_name</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse__ImportFrom_names">parse__ImportFrom_names</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_withitem">parse_withitem</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse__withitems">parse__withitems</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_pattern">parse_pattern</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_type_param">parse_type_param</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse__type_params">parse__type_params</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse__expr_arglikes">parse__expr_arglikes</a>
+            </li>
     </ul>
 
 
@@ -53,7 +185,8 @@
                     <h1 class="modulename">
 <a href="./../fst.html">fst</a><wbr>.parsex    </h1>
 
-                        <div class="docstring"><p>Extended AST parse.</p>
+                        <div class="docstring"><p>Extended <code>AST</code> parse. Allows parsing bits and pieces of valid python <code>AST</code> trees which are not normally parsable
+individually with <code>ast.parse()</code>.</p>
 
 <p>The parse functions in this module are oriented towards parsing all valid elements which they name which may include
 parsing things which are not those elements, common sense is applied liberally though. And just because an element is
@@ -69,7 +202,7 @@ newline due to comment ending without an explicit trailing newline.</p>
                     <div class="attr variable">
             <span class="name">Mode</span>        =
 <input id="Mode-view-value" class="view-value-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
-            <label class="view-value-button pdoc-button" for="Mode-view-value"></label><span class="default_value">typing.Union[typing.Literal[&#39;all&#39;, &#39;strict&#39;, &#39;exec&#39;, &#39;eval&#39;, &#39;single&#39;, &#39;stmts&#39;, &#39;stmt&#39;, &#39;ExceptHandler&#39;, &#39;ExceptHandlers&#39;, &#39;match_case&#39;, &#39;match_cases&#39;, &#39;expr&#39;, &#39;expr_all&#39;, &#39;expr_arglike&#39;, &#39;expr_slice&#39;, &#39;expr_sliceelt&#39;, &#39;Tuple&#39;, &#39;Assign_targets&#39;, &#39;boolop&#39;, &#39;operator&#39;, &#39;binop&#39;, &#39;augop&#39;, &#39;unaryop&#39;, &#39;cmpop&#39;, &#39;comprehension&#39;, &#39;arguments&#39;, &#39;arguments_lambda&#39;, &#39;arg&#39;, &#39;keyword&#39;, &#39;alias&#39;, &#39;aliases&#39;, &#39;Import_name&#39;, &#39;Import_names&#39;, &#39;ImportFrom_name&#39;, &#39;ImportFrom_names&#39;, &#39;withitem&#39;, &#39;withitems&#39;, &#39;pattern&#39;, &#39;type_param&#39;, &#39;type_params&#39;], type[ast.AST]]</span>
+            <label class="view-value-button pdoc-button" for="Mode-view-value"></label><span class="default_value">typing.Union[typing.Literal[&#39;all&#39;, &#39;strict&#39;, &#39;exec&#39;, &#39;eval&#39;, &#39;single&#39;, &#39;stmts&#39;, &#39;stmt&#39;, &#39;ExceptHandler&#39;, &#39;_ExceptHandlers&#39;, &#39;match_case&#39;, &#39;_match_cases&#39;, &#39;expr&#39;, &#39;expr_all&#39;, &#39;expr_arglike&#39;, &#39;expr_slice&#39;, &#39;expr_sliceelt&#39;, &#39;Tuple&#39;, &#39;_Assign_targets&#39;, &#39;boolop&#39;, &#39;operator&#39;, &#39;binop&#39;, &#39;augop&#39;, &#39;unaryop&#39;, &#39;cmpop&#39;, &#39;comprehension&#39;, &#39;arguments&#39;, &#39;arguments_lambda&#39;, &#39;arg&#39;, &#39;keyword&#39;, &#39;alias&#39;, &#39;_aliases&#39;, &#39;Import_name&#39;, &#39;_Import_names&#39;, &#39;ImportFrom_name&#39;, &#39;_ImportFrom_names&#39;, &#39;withitem&#39;, &#39;_withitems&#39;, &#39;pattern&#39;, &#39;type_param&#39;, &#39;_type_params&#39;, &#39;_expr_arglikes&#39;], type[ast.AST]]</span>
 
         
     </div>
@@ -92,9 +225,9 @@ parsable by python, just anything that can be parsed natively by <code>ast.parse
 <li><code>'stmts'</code>: Parse zero or more <code>stmt</code>s returned in a <code>Module</code>. Same as passing <code>'exec'</code> or <code>Module</code>.</li>
 <li><code>'stmt'</code>: Parse a single <code>stmt</code> returned as itself. Same as passing <code>stmt</code> type.</li>
 <li><code>'ExceptHandler'</code>: Parse as a single <code>ExceptHandler</code> returned as itself. Same as passing <code>ExceptHandler</code> type.</li>
-<li><code>'ExceptHandlers'</code>: Parse zero or more <code>ExceptHandler</code>s returned in a <code>Module</code>.</li>
+<li><code>'_ExceptHandlers'</code>: Parse zero or more <code>ExceptHandler</code>s returned in an <code>_ExceptHandlers</code> SPECIAL SLICE.</li>
 <li><code>'match_case'</code>: Parse a single <code>match_case</code> returned as itself. Same as passing <code>match_case</code> type.</li>
-<li><code>'match_cases'</code>: Parse zero or more <code>match_case</code>s returned in a <code>Module</code>.</li>
+<li><code>'_match_cases'</code>: Parse zero or more <code>match_case</code>s returned in a <code>_match_cases</code> SPECIAL SLICE.</li>
 <li><code>'expr'</code>: "expression", parse a single <code>expr</code> returned as itself. This is differentiated from the following modes by
 the handling of slices and starred expressions. In this mode <code>a:b</code> and <code>*not v</code> are syntax errors. Same as passing
 <code>expr</code> type.</li>
@@ -107,8 +240,8 @@ parses to a single element tuple containing a starred expression <code>(*(not v)
 <li><code>'expr_sliceelt'</code>: "slice tuple element expression", same as <code>'expr'</code> except that in this mode <code>a:b</code> parses to a
 <code>Slice</code> and <code>*not v</code> parses to a starred expression <code>*(not v)</code>. <code>Tuples</code> are parsed but cannot contain <code>Slice</code>s.</li>
 <li><code>'Tuple'</code>: Parse to a <code>Tuple</code> which may contain anything that a tuple can contain like multiple <code>Slice</code>s.</li>
-<li><code>'Assign_targets'</code>: Parse zero or more <code>Assign</code> targets returned in a <code>_slice_Assign_targets</code> SPECIAL SLICE, with <code>=</code>
-as separators and an optional trailing <code>=</code>.</li>
+<li><code>'_Assign_targets'</code>: Parse zero or more <code>Assign</code> targets returned in a <code>_Assign_targets</code> SPECIAL SLICE, with <code>=</code> as
+separators and an optional trailing <code>=</code>.</li>
 <li><code>'boolop'</code>: Parse to a <code>boolop</code> operator.</li>
 <li><code>'operator'</code>: Parse to an <code>operator</code> operator, either normal binary <code>'*'</code> or augmented <code>'*='</code>.</li>
 <li><code>'binop'</code>: Parse to an <code>operator</code> only binary <code>'*'</code>, <code>'+'</code>, <code>'&gt;&gt;'</code>, etc...</li>
@@ -124,30 +257,30 @@ are not allowed for the arguments.</li>
 <li><code>'keyword'</code>: Parse as a single <code>keyword</code> returned as itself. Same as passing <code>keyword</code> type.</li>
 <li><code>'alias'</code>: Parse as a single <code>alias</code> returned as itself. Either starred or dotted versions are accepted. Same
 as passing <code>alias</code> type.</li>
-<li><code>'aliases'</code>: Parse zero or more <code>alias</code>es returned in a <code>_slice_aliases</code> SPECIAL SLICE. Either starred or dotted
-versions are accepted. Does not need trailing comma for a single element.</li>
+<li><code>'_aliases'</code>: Parse zero or more <code>alias</code>es returned in a <code>_aliases</code> SPECIAL SLICE. Either starred or dotted versions
+are accepted. Does not need trailing comma for a single element.</li>
 <li><code>'Import_name'</code>: Parse as a single <code>alias</code> returned as itself, with starred version being a syntax error. This is the
 <code>alias</code> used in <code>Import.names</code>.</li>
-<li><code>'Import_names'</code>: Parse zero or more <code>alias</code> returned in a <code>_slice_aliases</code> SPECIAL SLICE, with starred version being
-a syntax error. Does not need trailing comma for a single element. This is the <code>alias</code> used in <code>Import.names</code>.</li>
+<li><code>'_Import_names'</code>: Parse zero or more <code>alias</code> returned in a <code>_aliases</code> SPECIAL SLICE, with starred version being a
+syntax error. Does not need trailing comma for a single element. This is the <code>alias</code> used in <code>Import.names</code>.</li>
 <li><code>'ImportFrom_name'</code>: Parse as a single <code>alias</code> returned as itself, with dotted version being a syntax error. This is
 the <code>alias</code> used in <code>ImportFrom.names</code>.</li>
-<li><code>'ImportFrom_names'</code>: Parse zero or more <code>alias</code> returned in a <code>_slice_aliases</code> SPECIAL SLICE, with dotted version
-being a syntax error. Does not need trailing comma for a single element. This is the <code>alias</code> used in
-<code>ImportFrom.names</code>.</li>
+<li><code>'_ImportFrom_names'</code>: Parse zero or more <code>alias</code> returned in a <code>_aliases</code> SPECIAL SLICE, with dotted version being a
+syntax error. Does not need trailing comma for a single element. This is the <code>alias</code> used in <code>ImportFrom.names</code>.</li>
 <li><code>'withitem'</code>: Parse as a single <code>withitem</code> returned as itself. Same as passing <code>withitem</code> type.</li>
-<li><code>'withitems'</code>: Parse zero or more <code>withitem</code>s returned in a <code>_slice_withitems</code> SPECIAL SLICE.</li>
+<li><code>'_withitems'</code>: Parse zero or more <code>withitem</code>s returned in a <code>_withitems</code> SPECIAL SLICE.</li>
 <li><code>'pattern'</code>: Parse as a a single <code>pattern</code> returned as itself. Same as passing <code>pattern</code> type.</li>
 <li><code>'type_param'</code>: Parse as a single <code>type_param</code> returned as itself, either <code>TypeVar</code>, <code>ParamSpec</code> or
 <code>TypeVarTuple</code>. Same as passing <code>type_param</code> type.</li>
-<li><code>'type_params'</code>: Parse zero or more <code>type_param</code>s returned in a <code>_slice_type_params</code> SPECIAL SLICE. Does not need
-trailing comma for a single element.</li>
+<li><code>'_type_params'</code>: Parse zero or more <code>type_param</code>s returned in a <code>_type_params</code> SPECIAL SLICE. Does not need trailing
+comma for a single element.</li>
 <li><code>type[AST]</code>: If an <code>AST</code> type is passed then will attempt to parse to this type. This can be used to narrow
 the scope of desired return, for example <code>Constant</code> will parse as an expression but fail if the expression
 is not a <code>Constant</code>. These overlap with the string specifiers to an extent but not all of them. For example
 <code>AST</code> type <code>expr</code> is the same as passing <code>'expr'</code>. Not all string specified modes are can be matched, for example
 <code>'arguments_lambda'</code>. Likewise <code>'exec'</code> and <code>'stmts'</code> specify the same parse mode. <code>Tuple</code> parse also allows parsing
 <code>Slice</code>s in the <code>Tuple</code> as well as otherwise invalid star notation <code>*not a</code>.</li>
+<li><code>str(type[AST])</code>: Same as <code>type[AST]</code>.</li>
 </ul>
 </div>
 
@@ -164,6 +297,717 @@ is not a <code>Constant</code>. These overlap with the string specifiers to an e
     <a class="headerlink" href="#ParseError"></a>
     
             <div class="docstring"><p>Not technically a syntax error but mostly not the code we were expecting.</p>
+</div>
+
+
+                </section>
+                <section id="get_special_parse_mode">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">get_special_parse_mode</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">ast</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span></span><span class="return-annotation">) -> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#get_special_parse_mode"></a>
+    
+            <div class="docstring"><p>Quick determination to the best of ability if a special parse mode is needed for this <code>AST</code>. This is the
+extended parse mode as per <code><a href="#Mode">Mode</a></code>, not the <code>ast.parse()</code> mode. If a special mode applies it is returned which should
+parse the source of this <code>AST</code> back to itself. Otherwise <code>None</code> is returned. This is a just quick a check, doesn't
+verify everything.</p>
+
+<p><strong>WARNING!</strong> This only gets special parse modes for where it can be inferred from the <code>AST</code> alone. This will not
+return the special parse mode of <code>'expr_slice'</code> for example for <code>a[*st]</code> single-<code>Starred</code> <code>Tuple</code> which is
+represented by the source <code>*st</code> from inside a <code>Subscript.slice</code>. That must be handled at a higher level.</p>
+
+<p><strong>Returns:</strong></p>
+
+<ul>
+<li><code>str</code>: One of the special parse modes.</li>
+<li><code>None</code>: If no special parse mode applies or can be determined.</li>
+</ul>
+</div>
+
+
+                </section>
+                <section id="unparse">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">unparse</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">ast</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span></span><span class="return-annotation">) -> <span class="nb">str</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#unparse"></a>
+    
+            <div class="docstring"><p>AST unparse that handles misc case of comprehension starting with a single space by stripping it as well as
+removing parentheses from <code>Tuple</code>s with <code>Slice</code>s.</p>
+</div>
+
+
+                </section>
+                <section id="parse">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">src</span><span class="p">:</span> <span class="nb">str</span>,</span><span class="param">	<span class="n">mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="s1">&#39;stmts&#39;</span><span class="p">,</span> <span class="s1">&#39;stmt&#39;</span><span class="p">,</span> <span class="s1">&#39;ExceptHandler&#39;</span><span class="p">,</span> <span class="s1">&#39;_ExceptHandlers&#39;</span><span class="p">,</span> <span class="s1">&#39;match_case&#39;</span><span class="p">,</span> <span class="s1">&#39;_match_cases&#39;</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_all&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_slice&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_sliceelt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tuple&#39;</span><span class="p">,</span> <span class="s1">&#39;_Assign_targets&#39;</span><span class="p">,</span> <span class="s1">&#39;boolop&#39;</span><span class="p">,</span> <span class="s1">&#39;operator&#39;</span><span class="p">,</span> <span class="s1">&#39;binop&#39;</span><span class="p">,</span> <span class="s1">&#39;augop&#39;</span><span class="p">,</span> <span class="s1">&#39;unaryop&#39;</span><span class="p">,</span> <span class="s1">&#39;cmpop&#39;</span><span class="p">,</span> <span class="s1">&#39;comprehension&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments&#39;</span><span class="p">,</span> <span class="s1">&#39;arguments_lambda&#39;</span><span class="p">,</span> <span class="s1">&#39;arg&#39;</span><span class="p">,</span> <span class="s1">&#39;keyword&#39;</span><span class="p">,</span> <span class="s1">&#39;alias&#39;</span><span class="p">,</span> <span class="s1">&#39;_aliases&#39;</span><span class="p">,</span> <span class="s1">&#39;Import_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_Import_names&#39;</span><span class="p">,</span> <span class="s1">&#39;ImportFrom_name&#39;</span><span class="p">,</span> <span class="s1">&#39;_ImportFrom_names&#39;</span><span class="p">,</span> <span class="s1">&#39;withitem&#39;</span><span class="p">,</span> <span class="s1">&#39;_withitems&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,</span> <span class="s1">&#39;type_param&#39;</span><span class="p">,</span> <span class="s1">&#39;_type_params&#39;</span><span class="p">,</span> <span class="s1">&#39;_expr_arglikes&#39;</span><span class="p">],</span> <span class="nb">type</span><span class="p">[</span><span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">]]</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span>,</span><span class="param">	<span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse"></a>
+    
+            <div class="docstring"><p>Parse any source to an AST, including things which normal <code>ast.parse()</code> doesn't handle, like individual
+<code>comprehension</code>s. Can be given a target type to parse or else will try to various parse methods until it finds one
+that succeeds (if any).</p>
+
+<p><strong>WARNING!</strong> Does not guarantee <code>src</code> can be plugged directly into a node of the type it is being parsed for without
+parentheses (especially for <code>Tuple</code>s).</p>
+
+<p><strong>Parameters</strong>:</p>
+
+<ul>
+<li><code>src</code>: The source to parse.</li>
+<li><code>mode</code>: Either one of the standard <code>ast.parse()</code> modes <code>exec</code>, <code>eval</code> or <code>single</code> to parse to that type of module
+or one of our specific strings like <code>'_ExceptHandlers'</code> or an actual <code>AST</code> type to parse to. If the mode is
+provided and cannot parse to the specified target then an error is raised and no other parse types are tried.
+See <code><a href="#Mode">Mode</a></code>.</li>
+<li><code>parse_params</code>: Dictionary of optional parse parameters to pass to <code>ast.parse()</code>, can contain <code>filename</code>,
+<code>type_comments</code> and <code>feature_version</code>.</li>
+</ul>
+</div>
+
+
+                </section>
+                <section id="parse_all">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_all</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_all"></a>
+    
+            <div class="docstring"><p>All parse modes. Get a hint from starting source and attempt parse according to that from most probable to least
+of what it could be.</p>
+</div>
+
+
+                </section>
+                <section id="parse_strict">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_strict</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_strict"></a>
+    
+            <div class="docstring"><p>Attempt to parse valid parsable statements and then reduce to a single statement or expressing if possible. Only
+parses what <code>ast.parse()</code> can, no funny stuff.</p>
+</div>
+
+
+                </section>
+                <section id="parse_Module">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_Module</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_Module"></a>
+    
+            <div class="docstring"><p>Parse <code>Module</code>, ast.parse(mode='exec')'.</p>
+</div>
+
+
+                </section>
+                <section id="parse_Expression">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_Expression</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_Expression"></a>
+    
+            <div class="docstring"><p>Parse <code>Expression</code>, `ast.parse(mode='eval').</p>
+</div>
+
+
+                </section>
+                <section id="parse_Interactive">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_Interactive</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_Interactive"></a>
+    
+            <div class="docstring"><p>Parse <code>Interactive</code>.</p>
+</div>
+
+
+                </section>
+                <section id="parse_stmt">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_stmt</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_stmt"></a>
+    
+            <div class="docstring"><p>Parse exactly one <code>stmt</code> and return as itself.</p>
+</div>
+
+
+                </section>
+                <section id="parse_stmts">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_stmts</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_stmts"></a>
+    
+            <div class="docstring"><p>Parse zero or more <code>stmt</code>s and return them in a <code>Module</code> <code>body</code> (just <code>ast.parse()</code> basically).</p>
+</div>
+
+
+                </section>
+                <section id="parse_ExceptHandler">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_ExceptHandler</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_ExceptHandler"></a>
+    
+            <div class="docstring"><p>Parse exactly one <code>ExceptHandler</code> and return as itself.</p>
+</div>
+
+
+                </section>
+                <section id="parse__ExceptHandlers">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse__ExceptHandlers</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse__ExceptHandlers"></a>
+    
+            <div class="docstring"><p>Parse zero or more <code>ExceptHandler</code>s and return them in an <code>_ExceptHandlers</code> SPECIAL SLICE.</p>
+</div>
+
+
+                </section>
+                <section id="parse_match_case">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_match_case</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_match_case"></a>
+    
+            <div class="docstring"><p>Parse exactly one <code>match_case</code> and return as itself.</p>
+</div>
+
+
+                </section>
+                <section id="parse__match_cases">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse__match_cases</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse__match_cases"></a>
+    
+            <div class="docstring"><p>Parse zero or more <code>match_case</code>s and return them in a <code>_match_cases</code> SPECIAL SLICE.</p>
+</div>
+
+
+                </section>
+                <section id="parse_expr">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_expr</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_expr"></a>
+    
+            <div class="docstring"><p>Parse to a "standard" <code>expr</code>, only things which are normally valid in an <code>expr</code> location, no <code>Slices</code> or
+<code>Starred</code> expressions which are only valid as a <code>Call</code> arg (<code>*not a</code>).</p>
+</div>
+
+
+                </section>
+                <section id="parse_expr_all">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_expr_all</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_expr_all"></a>
+    
+            <div class="docstring"><p>Parse to any kind of expression including <code>Slice</code>, <code>*not a</code> or <code>Tuple</code> of any of those combined. Lone <code>*a</code>
+<code>Starred</code> is returned as a <code>Starred</code> and not <code>Tuple</code> as would be in a slice.</p>
+</div>
+
+
+                </section>
+                <section id="parse_expr_arglike">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_expr_arglike</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_expr_arglike"></a>
+    
+            <div class="docstring"><p>Parse to an <code>expr</code> in the context of a <code>Call.args</code> which treats <code>Starred</code> differently.</p>
+</div>
+
+
+                </section>
+                <section id="parse_expr_slice">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_expr_slice</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_expr_slice"></a>
+    
+            <div class="docstring"><p>Parse to a <code>Slice</code> or anything else that can go into <code>Subscript.slice</code> (<code>expr</code>), e.g. "start:stop:step" or "name"
+or even "a:b, c:d:e, g". Using this, naked <code>Starred</code> expressions parse to single element <code>Tuple</code> with the <code>Starred</code>
+as the only element.</p>
+</div>
+
+
+                </section>
+                <section id="parse_expr_sliceelt">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_expr_sliceelt</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_expr_sliceelt"></a>
+    
+            <div class="docstring"><p>Parse to an element of a slice <code>Tuple</code>, an <code>expr</code> or <code>Slice</code>. This exists because otherwise a naked <code>Starred</code>
+expression parses to an implicit single element <code>Tuple</code> and the caller of this function does not want that behavior.
+Using this, naked <code>Starred</code> expressions parse to just the <code>Starred</code> and not a <code>Tuple</code> like in <code><a href="#parse_expr_slice">parse_expr_slice()</a></code>.
+Does not allow a <code>Tuple</code> with <code>Slice</code> in it as it is expected that this expression is already in a slice <code>Tuple</code> and
+that is not allowed in python.</p>
+</div>
+
+
+                </section>
+                <section id="parse_Tuple">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_Tuple</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_Tuple"></a>
+    
+            <div class="docstring"><p>Parse to a <code>Tuple</code> which may or may not contain <code>Slice</code>s and otherwise invalid syntax in normal <code>Tuple</code>s like
+<code>*not a</code> (if not parenthesized).</p>
+</div>
+
+
+                </section>
+                <section id="parse__Assign_targets">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse__Assign_targets</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse__Assign_targets"></a>
+    
+            <div class="docstring"><p>Parse zero or more <code>Assign</code> targets and return them in a <code>_Assign_targets</code> SPECIAL SLICE. Takes <code>=</code> as separators
+and accepts an optional trailing <code>=</code>.</p>
+</div>
+
+
+                </section>
+                <section id="parse_boolop">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_boolop</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_boolop"></a>
+    
+            <div class="docstring"><p>Parse to a <code>boolop</code>.</p>
+</div>
+
+
+                </section>
+                <section id="parse_operator">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_operator</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_operator"></a>
+    
+            <div class="docstring"><p>Parse to an <code>operator</code>.</p>
+</div>
+
+
+                </section>
+                <section id="parse_binop">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_binop</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_binop"></a>
+    
+            <div class="docstring"><p>Parse to an <code>operator</code> in the context of a <code>BinOp</code>.</p>
+</div>
+
+
+                </section>
+                <section id="parse_augop">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_augop</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_augop"></a>
+    
+            <div class="docstring"><p>Parse to an augmented <code>operator</code> in the context of a <code>AugAssign</code>.</p>
+</div>
+
+
+                </section>
+                <section id="parse_unaryop">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_unaryop</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_unaryop"></a>
+    
+            <div class="docstring"><p>Parse to a <code>unaryop</code>.</p>
+</div>
+
+
+                </section>
+                <section id="parse_cmpop">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_cmpop</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_cmpop"></a>
+    
+            <div class="docstring"><p>Parse to a <code>cmpop</code>.</p>
+</div>
+
+
+                </section>
+                <section id="parse_comprehension">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_comprehension</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_comprehension"></a>
+    
+            <div class="docstring"><p>Parse to a <code>comprehension</code>, e.g. "async for i in something() if i".</p>
+</div>
+
+
+                </section>
+                <section id="parse_arguments">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_arguments</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_arguments"></a>
+    
+            <div class="docstring"><p>Parse to an <code>arguments</code>, e.g. "a: list[str], /, b: int = 1, <em>c, d=100, *</em>e".</p>
+</div>
+
+
+                </section>
+                <section id="parse_arguments_lambda">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_arguments_lambda</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_arguments_lambda"></a>
+    
+            <div class="docstring"><p>Parse to an <code>arguments</code> for a <code>Lambda</code>, e.g. "a, /, b, <em>c, d=100, *</em>e".</p>
+</div>
+
+
+                </section>
+                <section id="parse_arg">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_arg</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_arg"></a>
+    
+            <div class="docstring"><p>Parse to an <code>arg</code>, e.g. "var: list[int]".</p>
+</div>
+
+
+                </section>
+                <section id="parse_keyword">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_keyword</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_keyword"></a>
+    
+            <div class="docstring"><p>Parse to a <code>keyword</code>, e.g. "var=val".</p>
+</div>
+
+
+                </section>
+                <section id="parse_alias">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_alias</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_alias"></a>
+    
+            <div class="docstring"><p>Parse to an <code>alias</code>, allowing star or dotted notation or star, e.g. "name as alias".</p>
+</div>
+
+
+                </section>
+                <section id="parse__aliases">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse__aliases</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse__aliases"></a>
+    
+            <div class="docstring"><p>Parse to an <code>_aliases</code> of <code>alias</code> SPECIAL SLICE, allowing star or dotted, e.g. "name as alias".</p>
+</div>
+
+
+                </section>
+                <section id="parse_Import_name">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_Import_name</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_Import_name"></a>
+    
+            <div class="docstring"><p>Parse to an <code>alias</code>, allowing dotted notation but not star (not all aliases are created equal), e.g.
+"name as alias".</p>
+</div>
+
+
+                </section>
+                <section id="parse__Import_names">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse__Import_names</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse__Import_names"></a>
+    
+            <div class="docstring"><p>Parse to an <code>_aliases</code> of <code>alias</code> SPECIAL SLICE, allowing dotted notation but not star.</p>
+</div>
+
+
+                </section>
+                <section id="parse_ImportFrom_name">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_ImportFrom_name</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_ImportFrom_name"></a>
+    
+            <div class="docstring"><p>Parse to an <code>alias</code>, allowing star but not dotted.</p>
+</div>
+
+
+                </section>
+                <section id="parse__ImportFrom_names">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse__ImportFrom_names</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse__ImportFrom_names"></a>
+    
+            <div class="docstring"><p>Parse to an <code>_aliases</code> of <code>alias</code> SPECIAL SLICE, allowing star but not dotted.</p>
+</div>
+
+
+                </section>
+                <section id="parse_withitem">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_withitem</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_withitem"></a>
+    
+            <div class="docstring"><p>Parse to a <code>withitem</code>, e.g. "something() as var".</p>
+</div>
+
+
+                </section>
+                <section id="parse__withitems">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse__withitems</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse__withitems"></a>
+    
+            <div class="docstring"><p>Parse to zero or more <code>withitem</code>s, returned as a <code>_withitems</code>.</p>
+</div>
+
+
+                </section>
+                <section id="parse_pattern">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_pattern</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_pattern"></a>
+    
+            <div class="docstring"><p>Parse to a <code>pattern</code>, e.g. "{a.b: i, **rest}".</p>
+</div>
+
+
+                </section>
+                <section id="parse_type_param">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_type_param</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse_type_param"></a>
+    
+            <div class="docstring"><p>Parse to a <code>type_param</code>, e.g. "t: Base = Subclass".</p>
+</div>
+
+
+                </section>
+                <section id="parse__type_params">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse__type_params</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse__type_params"></a>
+    
+            <div class="docstring"><p>Parse zero or more <code>type_param</code>s and return them in a <code>_type_params</code> SPECIAL SLICE.</p>
+</div>
+
+
+                </section>
+                <section id="parse__expr_arglikes">
+                    <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse__expr_arglikes</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">src</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">parse_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#parse__expr_arglikes"></a>
+    
+            <div class="docstring"><p>Parse to a <code>Tuple</code> of zero or more arglike expressions as would be seen as a sequence of <code>Call.args</code>. If there
+are parentheses then they belong to the elements as the <code>Tuple</code> itself cannot have any. If there is a single element
+it does not need to have a trailing comma.</p>
+
+<p><strong>WARNING!</strong> The <code>Tuple</code> that is returned may be an invalid python <code>Tuple</code> as it may be an empty <code>Tuple</code> <code>AST</code> with
+source having no parentheses or an unparenthesized <code>Tuple</code> with incorrect start and stop locations. Intended as a
+convenience for putting slices.</p>
 </div>
 
 

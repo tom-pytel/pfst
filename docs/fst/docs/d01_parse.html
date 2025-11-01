@@ -91,13 +91,13 @@
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="n">Module</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">22</span>
   <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-  <span class="mi">0</span><span class="p">]</span> <span class="n">If</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">11</span>
-    <span class="o">.</span><span class="n">test</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">3..0</span><span class="p">,</span><span class="mi">4</span>
-    <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="mi">0</span><span class="p">]</span> <span class="n">Assign</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">11</span>
-      <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-      <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
-      <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">10..0</span><span class="p">,</span><span class="mi">11</span>
+   <span class="mi">0</span><span class="p">]</span> <span class="n">If</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">11</span>
+     <span class="o">.</span><span class="n">test</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">3..0</span><span class="p">,</span><span class="mi">4</span>
+     <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+      <span class="mi">0</span><span class="p">]</span> <span class="n">Assign</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">11</span>
+        <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+         <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
+        <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">10..0</span><span class="p">,</span><span class="mi">11</span>
 </code></pre>
 </div>
 
@@ -110,7 +110,7 @@
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="n">Assign</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">11</span>
   <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-  <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
+   <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
   <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">10..0</span><span class="p">,</span><span class="mi">11</span>
 </code></pre>
 </div>
@@ -172,13 +172,13 @@
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if 1: i = 2&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="n">Module</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">11</span>
   <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-  <span class="mi">0</span><span class="p">]</span> <span class="n">If</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">11</span>
-    <span class="o">.</span><span class="n">test</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">3..0</span><span class="p">,</span><span class="mi">4</span>
-    <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="mi">0</span><span class="p">]</span> <span class="n">Assign</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">11</span>
-      <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-      <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
-      <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">10..0</span><span class="p">,</span><span class="mi">11</span>
+   <span class="mi">0</span><span class="p">]</span> <span class="n">If</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">11</span>
+     <span class="o">.</span><span class="n">test</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">3..0</span><span class="p">,</span><span class="mi">4</span>
+     <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+      <span class="mi">0</span><span class="p">]</span> <span class="n">Assign</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">11</span>
+        <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+         <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
+        <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">10..0</span><span class="p">,</span><span class="mi">11</span>
 </code></pre>
 </div>
 
@@ -188,13 +188,13 @@
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if 1: i = 2&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="n">Interactive</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">11</span>
   <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-  <span class="mi">0</span><span class="p">]</span> <span class="n">If</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">11</span>
-    <span class="o">.</span><span class="n">test</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">3..0</span><span class="p">,</span><span class="mi">4</span>
-    <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="mi">0</span><span class="p">]</span> <span class="n">Assign</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">11</span>
-      <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-      <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
-      <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">10..0</span><span class="p">,</span><span class="mi">11</span>
+   <span class="mi">0</span><span class="p">]</span> <span class="n">If</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">11</span>
+     <span class="o">.</span><span class="n">test</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">3..0</span><span class="p">,</span><span class="mi">4</span>
+     <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+      <span class="mi">0</span><span class="p">]</span> <span class="n">Assign</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">11</span>
+        <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+         <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
+        <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">10..0</span><span class="p">,</span><span class="mi">11</span>
 </code></pre>
 </div>
 
@@ -280,8 +280,8 @@ starred arguments. For a full list of parse modes see <code><a href="../parsex.h
   <span class="o">.</span><span class="n">value</span> <span class="n">BoolOp</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">1..0</span><span class="p">,</span><span class="mi">7</span>
     <span class="o">.</span><span class="n">op</span> <span class="n">Or</span>
     <span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-    <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;a&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">1..0</span><span class="p">,</span><span class="mi">2</span>
-    <span class="mi">1</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;b&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
+     <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;a&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">1..0</span><span class="p">,</span><span class="mi">2</span>
+     <span class="mi">1</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;b&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
   <span class="o">.</span><span class="n">ctx</span> <span class="n">Load</span>
 </code></pre>
 </div>
@@ -317,10 +317,10 @@ information in them). When used like this, the <code>AST</code> nodes are not co
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="o">.</span><span class="n">fromsrc</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="n">Module</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span>
   <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-  <span class="mi">0</span><span class="p">]</span> <span class="n">Assign</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span>
-    <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">1</span>
-    <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">4..0</span><span class="p">,</span><span class="mi">5</span>
+   <span class="mi">0</span><span class="p">]</span> <span class="n">Assign</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span>
+     <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+      <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">1</span>
+     <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">4..0</span><span class="p">,</span><span class="mi">5</span>
 </code></pre>
 </div>
 
@@ -330,7 +330,7 @@ information in them). When used like this, the <code>AST</code> nodes are not co
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="o">.</span><span class="n">fromsrc</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
 <span class="n">Assign</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span>
   <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-  <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">1</span>
+   <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">1</span>
   <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">4..0</span><span class="p">,</span><span class="mi">5</span>
 </code></pre>
 </div>
@@ -395,28 +395,28 @@ that node and get the source of that. E.g.</p>
   <span class="o">.</span><span class="n">name</span> <span class="s1">&#39;f&#39;</span>
   <span class="o">.</span><span class="n">args</span> <span class="n">arguments</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
     <span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="mi">0</span><span class="p">]</span> <span class="n">arg</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
-      <span class="o">.</span><span class="n">arg</span> <span class="s1">&#39;a&#39;</span>
+     <span class="mi">0</span><span class="p">]</span> <span class="n">arg</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
+       <span class="o">.</span><span class="n">arg</span> <span class="s1">&#39;a&#39;</span>
   <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 <span class="mi">1</span><span class="p">:</span>     <span class="k">if</span> <span class="n">a</span><span class="p">:</span>
-  <span class="mi">0</span><span class="p">]</span> <span class="n">If</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span><span class="mf">4..4</span><span class="p">,</span><span class="mi">17</span>
-    <span class="o">.</span><span class="n">test</span> <span class="n">Name</span> <span class="s1">&#39;a&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span><span class="mf">7..1</span><span class="p">,</span><span class="mi">8</span>
-    <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+   <span class="mi">0</span><span class="p">]</span> <span class="n">If</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span><span class="mf">4..4</span><span class="p">,</span><span class="mi">17</span>
+     <span class="o">.</span><span class="n">test</span> <span class="n">Name</span> <span class="s1">&#39;a&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span><span class="mf">7..1</span><span class="p">,</span><span class="mi">8</span>
+     <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 <span class="mi">2</span><span class="p">:</span>         <span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
-    <span class="mi">0</span><span class="p">]</span> <span class="n">Expr</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">8..2</span><span class="p">,</span><span class="mi">16</span>
-      <span class="o">.</span><span class="n">value</span> <span class="n">Call</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">8..2</span><span class="p">,</span><span class="mi">16</span>
-        <span class="o">.</span><span class="n">func</span> <span class="n">Name</span> <span class="s1">&#39;print&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">8..2</span><span class="p">,</span><span class="mi">13</span>
-        <span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;a&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">14..2</span><span class="p">,</span><span class="mi">15</span>
-    <span class="o">.</span><span class="n">orelse</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+      <span class="mi">0</span><span class="p">]</span> <span class="n">Expr</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">8..2</span><span class="p">,</span><span class="mi">16</span>
+        <span class="o">.</span><span class="n">value</span> <span class="n">Call</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">8..2</span><span class="p">,</span><span class="mi">16</span>
+          <span class="o">.</span><span class="n">func</span> <span class="n">Name</span> <span class="s1">&#39;print&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">8..2</span><span class="p">,</span><span class="mi">13</span>
+          <span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+           <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;a&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">14..2</span><span class="p">,</span><span class="mi">15</span>
+     <span class="o">.</span><span class="n">orelse</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 <span class="mi">4</span><span class="p">:</span>         <span class="nb">print</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="p">)</span>
-    <span class="mi">0</span><span class="p">]</span> <span class="n">Expr</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">8..4</span><span class="p">,</span><span class="mi">17</span>
-      <span class="o">.</span><span class="n">value</span> <span class="n">Call</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">8..4</span><span class="p">,</span><span class="mi">17</span>
-        <span class="o">.</span><span class="n">func</span> <span class="n">Name</span> <span class="s1">&#39;print&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">8..4</span><span class="p">,</span><span class="mi">13</span>
-        <span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="mi">0</span><span class="p">]</span> <span class="n">UnaryOp</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">14..4</span><span class="p">,</span><span class="mi">16</span>
-          <span class="o">.</span><span class="n">op</span> <span class="n">USub</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">14..4</span><span class="p">,</span><span class="mi">15</span>
-          <span class="o">.</span><span class="n">operand</span> <span class="n">Name</span> <span class="s1">&#39;a&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">15..4</span><span class="p">,</span><span class="mi">16</span>
+      <span class="mi">0</span><span class="p">]</span> <span class="n">Expr</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">8..4</span><span class="p">,</span><span class="mi">17</span>
+        <span class="o">.</span><span class="n">value</span> <span class="n">Call</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">8..4</span><span class="p">,</span><span class="mi">17</span>
+          <span class="o">.</span><span class="n">func</span> <span class="n">Name</span> <span class="s1">&#39;print&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">8..4</span><span class="p">,</span><span class="mi">13</span>
+          <span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+           <span class="mi">0</span><span class="p">]</span> <span class="n">UnaryOp</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">14..4</span><span class="p">,</span><span class="mi">16</span>
+             <span class="o">.</span><span class="n">op</span> <span class="n">USub</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">14..4</span><span class="p">,</span><span class="mi">15</span>
+             <span class="o">.</span><span class="n">operand</span> <span class="n">Name</span> <span class="s1">&#39;a&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">15..4</span><span class="p">,</span><span class="mi">16</span>
 </code></pre>
 </div>
 </div>

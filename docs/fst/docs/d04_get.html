@@ -345,39 +345,30 @@ valid <code>AST</code> object of course, but works for moving stuff around.</p>
     <span class="n">j</span> <span class="o">=</span> <span class="mi">2</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">s</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
-<span class="n">Module</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..3</span><span class="p">,</span><span class="mi">9</span>
-  <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-  <span class="mi">0</span><span class="p">]</span> <span class="n">ExceptHandler</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..1</span><span class="p">,</span><span class="mi">9</span>
-    <span class="o">.</span><span class="n">type</span> <span class="n">Name</span> <span class="s1">&#39;ValueError&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">7..0</span><span class="p">,</span><span class="mi">17</span>
-    <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="mi">0</span><span class="p">]</span> <span class="n">Assign</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span><span class="mf">4..1</span><span class="p">,</span><span class="mi">9</span>
-      <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-      <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span><span class="mf">4..1</span><span class="p">,</span><span class="mi">5</span>
-      <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span><span class="mf">8..1</span><span class="p">,</span><span class="mi">9</span>
-  <span class="mi">1</span><span class="p">]</span> <span class="n">ExceptHandler</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">0..3</span><span class="p">,</span><span class="mi">9</span>
-    <span class="o">.</span><span class="n">type</span> <span class="n">Name</span> <span class="s1">&#39;RuntimeError&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">7..2</span><span class="p">,</span><span class="mi">19</span>
-    <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="mi">0</span><span class="p">]</span> <span class="n">Assign</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span><span class="mf">4..3</span><span class="p">,</span><span class="mi">9</span>
-      <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-      <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;j&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span><span class="mf">4..3</span><span class="p">,</span><span class="mi">5</span>
-      <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span><span class="mf">8..3</span><span class="p">,</span><span class="mi">9</span>
+<span class="n">_ExceptHandlers</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..3</span><span class="p">,</span><span class="mi">9</span>
+  <span class="o">.</span><span class="n">handlers</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+   <span class="mi">0</span><span class="p">]</span> <span class="n">ExceptHandler</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..1</span><span class="p">,</span><span class="mi">9</span>
+     <span class="o">.</span><span class="n">type</span> <span class="n">Name</span> <span class="s1">&#39;ValueError&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">7..0</span><span class="p">,</span><span class="mi">17</span>
+     <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+      <span class="mi">0</span><span class="p">]</span> <span class="n">Assign</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span><span class="mf">4..1</span><span class="p">,</span><span class="mi">9</span>
+        <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+         <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span><span class="mf">4..1</span><span class="p">,</span><span class="mi">5</span>
+        <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span><span class="mf">8..1</span><span class="p">,</span><span class="mi">9</span>
+   <span class="mi">1</span><span class="p">]</span> <span class="n">ExceptHandler</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">0..3</span><span class="p">,</span><span class="mi">9</span>
+     <span class="o">.</span><span class="n">type</span> <span class="n">Name</span> <span class="s1">&#39;RuntimeError&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">7..2</span><span class="p">,</span><span class="mi">19</span>
+     <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+      <span class="mi">0</span><span class="p">]</span> <span class="n">Assign</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span><span class="mf">4..3</span><span class="p">,</span><span class="mi">9</span>
+        <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+         <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;j&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span><span class="mf">4..3</span><span class="p">,</span><span class="mi">5</span>
+        <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span><span class="mf">8..3</span><span class="p">,</span><span class="mi">9</span>
 </code></pre>
 </div>
-
-<p>TODO: Prescribed slice operations are implemented for all <code>stmt</code> containers, <code>Tuple</code>, <code>List</code>, <code>Set</code>, <code>Dict</code>, exception
-handler bodies containing <code>ExceptHandler</code> and match statement cases containing <code>match_case</code>. All other slice operations
-must currently be carried out using raw operations which, are not as robust.</p>
-
-<p>TODO: <code>MatchMapping</code> and <code>Compare</code> will also support special slicing behavior but slice operations for them are not
-implemented yet (other than raw).</p>
 
 <h2 id="non-ast-values">Non-AST values</h2>
 
 <p>Using <code>get()</code> (and eventually <code>get_slice()</code>, not implemented yet) you can get non-AST primitive values from nodes. This
 exists mostly to accomondate <code>MatchSingleton</code>, as it just has a primitive value instead of an expression (it is also
 set this way, via primitive).</p>
-
-<p>TODO: Implement <code>get_slice()</code> on <code>Global</code> and <code>Nonlocal</code> <code>names</code>.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case True: pass&#39;</span><span class="p">)</span>

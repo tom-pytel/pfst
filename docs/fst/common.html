@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="generator" content="pdoc 15.0.1"/>
-    <title>fst API documentation</title>
+    <title>fst.common API documentation</title>
 
     <style>/*! * Bootstrap Reboot v5.0.0 (https://getbootstrap.com/) * Copyright 2011-2021 The Bootstrap Authors * Copyright 2011-2021 Twitter, Inc. * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE) * Forked from Normalize.css, licensed MIT (https://github.com/necolas/normalize.css/blob/master/LICENSE.md) */*,::after,::before{box-sizing:border-box}@media (prefers-reduced-motion:no-preference){:root{scroll-behavior:smooth}}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#fff;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}hr{margin:1rem 0;color:inherit;background-color:currentColor;border:0;opacity:.25}hr:not([size]){height:1px}h1,h2,h3,h4,h5,h6{margin-top:0;margin-bottom:.5rem;font-weight:500;line-height:1.2}h1{font-size:calc(1.375rem + 1.5vw)}@media (min-width:1200px){h1{font-size:2.5rem}}h2{font-size:calc(1.325rem + .9vw)}@media (min-width:1200px){h2{font-size:2rem}}h3{font-size:calc(1.3rem + .6vw)}@media (min-width:1200px){h3{font-size:1.75rem}}h4{font-size:calc(1.275rem + .3vw)}@media (min-width:1200px){h4{font-size:1.5rem}}h5{font-size:1.25rem}h6{font-size:1rem}p{margin-top:0;margin-bottom:1rem}abbr[data-bs-original-title],abbr[title]{-webkit-text-decoration:underline dotted;text-decoration:underline dotted;cursor:help;-webkit-text-decoration-skip-ink:none;text-decoration-skip-ink:none}address{margin-bottom:1rem;font-style:normal;line-height:inherit}ol,ul{padding-left:2rem}dl,ol,ul{margin-top:0;margin-bottom:1rem}ol ol,ol ul,ul ol,ul ul{margin-bottom:0}dt{font-weight:700}dd{margin-bottom:.5rem;margin-left:0}blockquote{margin:0 0 1rem}b,strong{font-weight:bolder}small{font-size:.875em}mark{padding:.2em;background-color:#fcf8e3}sub,sup{position:relative;font-size:.75em;line-height:0;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}a{color:#0d6efd;text-decoration:underline}a:hover{color:#0a58ca}a:not([href]):not([class]),a:not([href]):not([class]):hover{color:inherit;text-decoration:none}code,kbd,pre,samp{font-family:SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:1em;direction:ltr;unicode-bidi:bidi-override}pre{display:block;margin-top:0;margin-bottom:1rem;overflow:auto;font-size:.875em}pre code{font-size:inherit;color:inherit;word-break:normal}code{font-size:.875em;color:#d63384;word-wrap:break-word}a>code{color:inherit}kbd{padding:.2rem .4rem;font-size:.875em;color:#fff;background-color:#212529;border-radius:.2rem}kbd kbd{padding:0;font-size:1em;font-weight:700}figure{margin:0 0 1rem}img,svg{vertical-align:middle}table{caption-side:bottom;border-collapse:collapse}caption{padding-top:.5rem;padding-bottom:.5rem;color:#6c757d;text-align:left}th{text-align:inherit;text-align:-webkit-match-parent}tbody,td,tfoot,th,thead,tr{border-color:inherit;border-style:solid;border-width:0}label{display:inline-block}button{border-radius:0}button:focus:not(:focus-visible){outline:0}button,input,optgroup,select,textarea{margin:0;font-family:inherit;font-size:inherit;line-height:inherit}button,select{text-transform:none}[role=button]{cursor:pointer}select{word-wrap:normal}select:disabled{opacity:1}[list]::-webkit-calendar-picker-indicator{display:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button}[type=button]:not(:disabled),[type=reset]:not(:disabled),[type=submit]:not(:disabled),button:not(:disabled){cursor:pointer}::-moz-focus-inner{padding:0;border-style:none}textarea{resize:vertical}fieldset{min-width:0;padding:0;margin:0;border:0}legend{float:left;width:100%;padding:0;margin-bottom:.5rem;font-size:calc(1.275rem + .3vw);line-height:inherit}@media (min-width:1200px){legend{font-size:1.5rem}}legend+*{clear:left}::-webkit-datetime-edit-day-field,::-webkit-datetime-edit-fields-wrapper,::-webkit-datetime-edit-hour-field,::-webkit-datetime-edit-minute,::-webkit-datetime-edit-month-field,::-webkit-datetime-edit-text,::-webkit-datetime-edit-year-field{padding:0}::-webkit-inner-spin-button{height:auto}[type=search]{outline-offset:-2px;-webkit-appearance:textfield}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-color-swatch-wrapper{padding:0}::file-selector-button{font:inherit}::-webkit-file-upload-button{font:inherit;-webkit-appearance:button}output{display:inline-block}iframe{border:0}summary{display:list-item;cursor:pointer}progress{vertical-align:baseline}[hidden]{display:none!important}</style>
     <style>/*! syntax-highlighting.css */pre{line-height:125%;}span.linenos{color:inherit; background-color:transparent; padding-left:5px; padding-right:20px;}.pdoc-code .hll{background-color:#ffffcc}.pdoc-code{background:#f8f8f8;}.pdoc-code .c{color:#3D7B7B; font-style:italic}.pdoc-code .err{border:1px solid #FF0000}.pdoc-code .k{color:#008000; font-weight:bold}.pdoc-code .o{color:#666666}.pdoc-code .ch{color:#3D7B7B; font-style:italic}.pdoc-code .cm{color:#3D7B7B; font-style:italic}.pdoc-code .cp{color:#9C6500}.pdoc-code .cpf{color:#3D7B7B; font-style:italic}.pdoc-code .c1{color:#3D7B7B; font-style:italic}.pdoc-code .cs{color:#3D7B7B; font-style:italic}.pdoc-code .gd{color:#A00000}.pdoc-code .ge{font-style:italic}.pdoc-code .gr{color:#E40000}.pdoc-code .gh{color:#000080; font-weight:bold}.pdoc-code .gi{color:#008400}.pdoc-code .go{color:#717171}.pdoc-code .gp{color:#000080; font-weight:bold}.pdoc-code .gs{font-weight:bold}.pdoc-code .gu{color:#800080; font-weight:bold}.pdoc-code .gt{color:#0044DD}.pdoc-code .kc{color:#008000; font-weight:bold}.pdoc-code .kd{color:#008000; font-weight:bold}.pdoc-code .kn{color:#008000; font-weight:bold}.pdoc-code .kp{color:#008000}.pdoc-code .kr{color:#008000; font-weight:bold}.pdoc-code .kt{color:#B00040}.pdoc-code .m{color:#666666}.pdoc-code .s{color:#BA2121}.pdoc-code .na{color:#687822}.pdoc-code .nb{color:#008000}.pdoc-code .nc{color:#0000FF; font-weight:bold}.pdoc-code .no{color:#880000}.pdoc-code .nd{color:#AA22FF}.pdoc-code .ni{color:#717171; font-weight:bold}.pdoc-code .ne{color:#CB3F38; font-weight:bold}.pdoc-code .nf{color:#0000FF}.pdoc-code .nl{color:#767600}.pdoc-code .nn{color:#0000FF; font-weight:bold}.pdoc-code .nt{color:#008000; font-weight:bold}.pdoc-code .nv{color:#19177C}.pdoc-code .ow{color:#AA22FF; font-weight:bold}.pdoc-code .w{color:#bbbbbb}.pdoc-code .mb{color:#666666}.pdoc-code .mf{color:#666666}.pdoc-code .mh{color:#666666}.pdoc-code .mi{color:#666666}.pdoc-code .mo{color:#666666}.pdoc-code .sa{color:#BA2121}.pdoc-code .sb{color:#BA2121}.pdoc-code .sc{color:#BA2121}.pdoc-code .dl{color:#BA2121}.pdoc-code .sd{color:#BA2121; font-style:italic}.pdoc-code .s2{color:#BA2121}.pdoc-code .se{color:#AA5D1F; font-weight:bold}.pdoc-code .sh{color:#BA2121}.pdoc-code .si{color:#A45A77; font-weight:bold}.pdoc-code .sx{color:#008000}.pdoc-code .sr{color:#A45A77}.pdoc-code .s1{color:#BA2121}.pdoc-code .ss{color:#19177C}.pdoc-code .bp{color:#008000}.pdoc-code .fm{color:#0000FF}.pdoc-code .vc{color:#19177C}.pdoc-code .vg{color:#19177C}.pdoc-code .vi{color:#19177C}.pdoc-code .vm{color:#19177C}.pdoc-code .il{color:#666666}</style>
@@ -16,27 +16,115 @@
     <nav class="pdoc">
         <label id="navtoggle" for="togglestate" class="pdoc-button"><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'><path stroke-linecap='round' stroke="currentColor" stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/></svg></label>
         <input id="togglestate" type="checkbox" aria-hidden="true" tabindex="-1">
-        <div>
+        <div>            <a class="pdoc-button module-list-button" href="../fst.html">
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-in-left" viewBox="0 0 16 16">
+  <path fill-rule="evenodd" d="M10 3.5a.5.5 0 0 0-.5-.5h-8a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 1 1 0v2A1.5 1.5 0 0 1 9.5 14h-8A1.5 1.5 0 0 1 0 12.5v-9A1.5 1.5 0 0 1 1.5 2h8A1.5 1.5 0 0 1 11 3.5v2a.5.5 0 0 1-1 0v-2z"/>
+  <path fill-rule="evenodd" d="M4.146 8.354a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H14.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3z"/>
+</svg>                &nbsp;fst</a>
 
 
-            <h2>Contents</h2>
-            <ul>
-  <li><a href="#overview">Overview</a></li>
-  <li><a href="#index">Index</a></li>
-  <li><a href="#links">Links</a></li>
-  <li><a href="#details">Details</a></li>
-</ul>
 
 
-            <h2>Submodules</h2>
-            <ul>
-                    <li><a href="fst/docs.html">docs</a></li>
-                    <li><a href="fst/fst.html">fst</a></li>
-                    <li><a href="fst/view.html">view</a></li>
-                    <li><a href="fst/common.html">common</a></li>
-                    <li><a href="fst/parsex.html">parsex</a></li>
-                    <li><a href="fst/astutil.html">astutil</a></li>
-            </ul>
+
+            <h2>API Documentation</h2>
+                <ul class="memberlist">
+            <li>
+                    <a class="variable" href="#Self">Self</a>
+            </li>
+            <li>
+                    <a class="variable" href="#FSTRING_START">FSTRING_START</a>
+            </li>
+            <li>
+                    <a class="variable" href="#FSTRING_END">FSTRING_END</a>
+            </li>
+            <li>
+                    <a class="variable" href="#TSTRING_START">TSTRING_START</a>
+            </li>
+            <li>
+                    <a class="variable" href="#TSTRING_END">TSTRING_END</a>
+            </li>
+            <li>
+                    <a class="variable" href="#FTSTRING_START_TOKENS">FTSTRING_START_TOKENS</a>
+            </li>
+            <li>
+                    <a class="variable" href="#FTSTRING_END_TOKENS">FTSTRING_END_TOKENS</a>
+            </li>
+            <li>
+                    <a class="class" href="#NodeError">NodeError</a>
+                            <ul class="memberlist">
+                </ul>
+
+            </li>
+            <li>
+                    <a class="class" href="#astfield">astfield</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#astfield.__init__">astfield</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#astfield.name">name</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#astfield.idx">idx</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#astfield.get">get</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#astfield.get_no_raise">get_no_raise</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#astfield.set">set</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
+                    <a class="class" href="#fstloc">fstloc</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#fstloc.__init__">fstloc</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#fstloc.ln">ln</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#fstloc.col">col</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#fstloc.end_ln">end_ln</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#fstloc.end_col">end_col</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#fstloc.bln">bln</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#fstloc.bcol">bcol</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#fstloc.bend_ln">bend_ln</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#fstloc.bend_col">bend_col</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#fstloc.loc">loc</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#fstloc.bloc">bloc</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
+                    <a class="class" href="#fstlocn">fstlocn</a>
+                            <ul class="memberlist">
+                </ul>
+
+            </li>
+    </ul>
 
 
 
@@ -50,113 +138,408 @@
     <main class="pdoc">
             <section class="module-info">
                     <h1 class="modulename">
-fst    </h1>
+<a href="./../fst.html">fst</a><wbr>.common    </h1>
 
-                        <div class="docstring"><p>Version 0.2.3</p>
-
-<h1 id="overview">Overview</h1>
-
-<p>This module exists in order to facilitate quick and easy high level editing of Python source while preserving
-formatting. E.g:</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span><span class="w"> </span><span class="nn">ast</span><span class="o">,</span><span class="w"> </span><span class="nn">fst</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="n">fst</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;if a: b = c, d  # comment&#39;</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">fst</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>  <span class="c1"># formatting is preserved</span>
-<span class="k">if</span> <span class="n">a</span><span class="p">:</span> <span class="n">b</span> <span class="o">=</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span>  <span class="c1"># comment</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>  <span class="c1"># just a normal AST with metadata</span>
-<span class="k">if</span> <span class="n">a</span><span class="p">:</span>
-    <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
-</code></pre>
-</div>
-
-<p>Operations on the tree preserve formatting.</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;u,</span>
-<span class="n">v</span>  <span class="c1"># blah&#39;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">fst</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
-<span class="k">if</span> <span class="n">a</span><span class="p">:</span> <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span>
-          <span class="n">v</span><span class="p">,</span>  <span class="c1"># blah</span>
-          <span class="n">d</span><span class="p">)</span>  <span class="c1"># comment</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>  <span class="c1"># AST is kept up to date</span>
-<span class="k">if</span> <span class="n">a</span><span class="p">:</span>
-    <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
-</code></pre>
-</div>
-
-<p><code><a href="">fst</a></code> grew out of a frustration of not being able to just edit python source to change some bit of functionality without
-having to deal with the miniutae of precedence, indentation, parentheses, commas, comments, docstrings, semicolons, line
-continuations, else vs. elif, etc... <code><a href="">fst</a></code> deals with all of these for you and especially the many, many niche special
-cases of Python syntax.</p>
-
-<p><code><a href="">fst</a></code> works by adding <code>FST</code> nodes to existing <code>AST</code> nodes as an <code>.f</code> attribute which keep extra structure information,
-the original source, and provide the interface to format-preserving operations. Each operation through <code><a href="">fst</a></code> is a
-simultaneous edit of the <code>AST</code> tree and the source code and those are kept synchronized so that the current source will
-always parse to the current tree.</p>
-
-<h1 id="index">Index</h1>
-
-<ul>
-<li><code><a href="fst/docs.html">fst.docs</a></code>: Documentation and examples.</li>
-<li><code><a href="fst/fst.html">fst.fst</a></code>: API reference.</li>
-</ul>
-
-<h1 id="links">Links</h1>
-
-<ul>
-<li><a href="https://github.com/tom-pytel/pfst">Repository</a></li>
-<li><a href="https://tom-pytel.github.io/pfst/">Documentation</a></li>
-<li><a href="https://pypi.org/project/pfst/">PyPI</a></li>
-</ul>
-
-<h1 id="details">Details</h1>
-
-<p>Disclaimer: The intended use of this module is if you want to change code functionality without having to deal with
-syntax details, not lint or format, there are better options for that. The main focus of <code><a href="">fst</a></code> is not necessarily to be
-fast but rather to handle all the weird cases of python syntax so that functional code always results, use a formatter
-afterwards as needed.</p>
-
-<p><code><a href="">fst</a></code> was written and tested on Python versions 3.10 through 3.14.</p>
-
-<p><code><a href="">fst</a></code> works by keeping a copy of the entire source at the root <code>FST</code> node of a tree and modifying this source alongside
-the node tree anytime an operation is performed natively.</p>
-
-<p><code><a href="">fst</a></code> does not do any parsing of its own but rather relies on the builtin Python parser and unparser. This means you
-get perfect parsing but also that it is limited to the syntax of the running Python version (many options exist for
-running any specific verison of Python).</p>
-
-<p><code><a href="">fst</a></code> does use standard Python parsing to parse things that can not normally be parsed, like individual exception
-handlers or match cases, by wrapping them in corresponding code then pulling out and adjusting the locations of the
-parsed <code>AST</code>s. <code><a href="fst/docs/d01_parse.html">fst.docs.d01_parse</a></code>.</p>
-
-<p><code><a href="">fst</a></code> validates for parsability, not compilability. This means that for <code><a href="">fst</a></code>, <code>*a, *b = c</code> and <code>def f(a, a): pass</code> are
-both valid even though they are uncompilable.</p>
-
-<p>Format preserving native modification operations exist in two flavors (see the documentation on how to use either):</p>
-
-<ul>
-<li><p>Prescribed put operations which do specific things for each type of node being put, including indentation, precedence
-and syntax parenthesization, etc... <code><a href="fst/docs/d05_put.html">fst.docs.d05_put</a></code>.</p></li>
-<li><p>Raw mode put operations which just put the raw source you want to replace and then attempt to reparse a small part of
-the full source around the changes (at least statement level). <code><a href="fst/docs/d07_raw.html">fst.docs.d07_raw</a></code>, <code><a href="fst/fst.html#FST.put_src">fst.fst.FST.put_src()</a></code>.</p></li>
-</ul>
-
-<p>There is also a mechanism for allowing outside editing of the <code>AST</code> tree and then reconciling with a marked snapshot
-to preserve formatting where possible. This is intended for existing code or third-party libraries which don't know
-anything about <code><a href="">fst</a></code> to maybe gain the ability to preserve some existing formatting when editing a tree.
-<code><a href="fst/docs/d10_reconcile.html">fst.docs.d10_reconcile</a></code>.</p>
+                        <div class="docstring"><p>Low level common data and functions that are not part of or aware of the FST class.</p>
 </div>
 
                 
                 
                 
             </section>
+                <section id="Self">
+                    <div class="attr variable">
+            <span class="name">Self</span>        =
+<span class="default_value">typing.Self</span>
+
+        
+    </div>
+    <a class="headerlink" href="#Self"></a>
+    
+    
+
+                </section>
+                <section id="FSTRING_START">
+                    <div class="attr variable">
+            <span class="name">FSTRING_START</span>        =
+<span class="default_value">59</span>
+
+        
+    </div>
+    <a class="headerlink" href="#FSTRING_START"></a>
+    
+    
+
+                </section>
+                <section id="FSTRING_END">
+                    <div class="attr variable">
+            <span class="name">FSTRING_END</span>        =
+<span class="default_value">61</span>
+
+        
+    </div>
+    <a class="headerlink" href="#FSTRING_END"></a>
+    
+    
+
+                </section>
+                <section id="TSTRING_START">
+                    <div class="attr variable">
+            <span class="name">TSTRING_START</span>        =
+<span class="default_value">None</span>
+
+        
+    </div>
+    <a class="headerlink" href="#TSTRING_START"></a>
+    
+    
+
+                </section>
+                <section id="TSTRING_END">
+                    <div class="attr variable">
+            <span class="name">TSTRING_END</span>        =
+<span class="default_value">None</span>
+
+        
+    </div>
+    <a class="headerlink" href="#TSTRING_END"></a>
+    
+    
+
+                </section>
+                <section id="FTSTRING_START_TOKENS">
+                    <div class="attr variable">
+            <span class="name">FTSTRING_START_TOKENS</span>        =
+<span class="default_value">(59,)</span>
+
+        
+    </div>
+    <a class="headerlink" href="#FTSTRING_START_TOKENS"></a>
+    
+    
+
+                </section>
+                <section id="FTSTRING_END_TOKENS">
+                    <div class="attr variable">
+            <span class="name">FTSTRING_END_TOKENS</span>        =
+<span class="default_value">(61,)</span>
+
+        
+    </div>
+    <a class="headerlink" href="#FTSTRING_END_TOKENS"></a>
+    
+    
+
+                </section>
+                <section id="NodeError">
+                    <div class="attr class">
+            
+    <span class="def">class</span>
+    <span class="name">NodeError</span><wbr>(<span class="base">builtins.Exception</span>):
+
+        
+    </div>
+    <a class="headerlink" href="#NodeError"></a>
+    
+            <div class="docstring"><p>General FST node error.</p>
+</div>
+
+
+                </section>
+                <section id="astfield">
+                    <div class="attr class">
+            
+    <span class="def">class</span>
+    <span class="name">astfield</span><wbr>(<span class="base">typing.NamedTuple</span>):
+
+        
+    </div>
+    <a class="headerlink" href="#astfield"></a>
+    
+            <div class="docstring"><p>Name and optional index indicating a field location in an <code>AST</code> (or <code>FST</code>) node.</p>
+</div>
+
+
+                            <div id="astfield.__init__" class="classattr">
+                                <div class="attr function">
+            
+        <span class="name">astfield</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">name</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></span>)</span>
+
+        
+    </div>
+    <a class="headerlink" href="#astfield.__init__"></a>
+    
+            <div class="docstring"><p>Create new instance of astfield(name, idx)</p>
+</div>
+
+
+                            </div>
+                            <div id="astfield.name" class="classattr">
+                                <div class="attr variable">
+            <span class="name">name</span><span class="annotation">: str</span>
+
+        
+    </div>
+    <a class="headerlink" href="#astfield.name"></a>
+    
+            <div class="docstring"><p>The actual field name, a la "body", "value", "orelse", etc...</p>
+</div>
+
+
+                            </div>
+                            <div id="astfield.idx" class="classattr">
+                                <div class="attr variable">
+            <span class="name">idx</span><span class="annotation">: int | None</span>
+
+        
+    </div>
+    <a class="headerlink" href="#astfield.idx"></a>
+    
+            <div class="docstring"><p>The index if the field is a list, else <code>None</code>.</p>
+</div>
+
+
+                            </div>
+                            <div id="astfield.get" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">get</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">parent</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="n">ellipsis</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">complex</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#astfield.get"></a>
+    
+            <div class="docstring"><p>Get child node at this field in the given <code>parent</code>.</p>
+</div>
+
+
+                            </div>
+                            <div id="astfield.get_no_raise" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">get_no_raise</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">parent</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>,</span><span class="param">	<span class="n">default</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="n">ellipsis</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">complex</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">False</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="n">ellipsis</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">complex</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#astfield.get_no_raise"></a>
+    
+            <div class="docstring"><p>Get child node at this field in the given <code>parent</code>. Return <code>default</code> if not found instead of raising
+<code>AttributError</code> or <code>IndexError</code>, <code>False</code> works well because not normally found locations where <code>AST</code> nodes can
+ reside in <code>AST</code> trees.</p>
+</div>
+
+
+                            </div>
+                            <div id="astfield.set" class="classattr">
+                                <div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">set</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">parent</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>, </span><span class="param"><span class="n">child</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
+
+        
+    </div>
+    <a class="headerlink" href="#astfield.set"></a>
+    
+            <div class="docstring"><p>Set <code>child</code> node at this field in the given <code>parent</code>.</p>
+</div>
+
+
+                            </div>
+                </section>
+                <section id="fstloc">
+                    <div class="attr class">
+            
+    <span class="def">class</span>
+    <span class="name">fstloc</span><wbr>(<span class="base">typing.NamedTuple</span>):
+
+        
+    </div>
+    <a class="headerlink" href="#fstloc"></a>
+    
+            <div class="docstring"><p>Full location span.</p>
+</div>
+
+
+                            <div id="fstloc.__init__" class="classattr">
+                                <div class="attr function">
+            
+        <span class="name">fstloc</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">ln</span><span class="p">:</span> <span class="nb">int</span>, </span><span class="param"><span class="n">col</span><span class="p">:</span> <span class="nb">int</span>, </span><span class="param"><span class="n">end_ln</span><span class="p">:</span> <span class="nb">int</span>, </span><span class="param"><span class="n">end_col</span><span class="p">:</span> <span class="nb">int</span></span>)</span>
+
+        
+    </div>
+    <a class="headerlink" href="#fstloc.__init__"></a>
+    
+            <div class="docstring"><p>Create new instance of fstloc(ln, col, end_ln, end_col)</p>
+</div>
+
+
+                            </div>
+                            <div id="fstloc.ln" class="classattr">
+                                <div class="attr variable">
+            <span class="name">ln</span><span class="annotation">: int</span>
+
+        
+    </div>
+    <a class="headerlink" href="#fstloc.ln"></a>
+    
+            <div class="docstring"><p>Start line number.</p>
+</div>
+
+
+                            </div>
+                            <div id="fstloc.col" class="classattr">
+                                <div class="attr variable">
+            <span class="name">col</span><span class="annotation">: int</span>
+
+        
+    </div>
+    <a class="headerlink" href="#fstloc.col"></a>
+    
+            <div class="docstring"><p>Start column.</p>
+</div>
+
+
+                            </div>
+                            <div id="fstloc.end_ln" class="classattr">
+                                <div class="attr variable">
+            <span class="name">end_ln</span><span class="annotation">: int</span>
+
+        
+    </div>
+    <a class="headerlink" href="#fstloc.end_ln"></a>
+    
+            <div class="docstring"><p>End line number (inclusive).</p>
+</div>
+
+
+                            </div>
+                            <div id="fstloc.end_col" class="classattr">
+                                <div class="attr variable">
+            <span class="name">end_col</span><span class="annotation">: int</span>
+
+        
+    </div>
+    <a class="headerlink" href="#fstloc.end_col"></a>
+    
+            <div class="docstring"><p>End column (exclusive).</p>
+</div>
+
+
+                            </div>
+                            <div id="fstloc.bln" class="classattr">
+                                <div class="attr variable">
+            <span class="name">bln</span>
+
+        
+    </div>
+    <a class="headerlink" href="#fstloc.bln"></a>
+    
+            <div class="docstring"><p>Alias for <code><a href="#fstloc.ln">ln</a></code>.</p>
+</div>
+
+
+                            </div>
+                            <div id="fstloc.bcol" class="classattr">
+                                <div class="attr variable">
+            <span class="name">bcol</span>
+
+        
+    </div>
+    <a class="headerlink" href="#fstloc.bcol"></a>
+    
+            <div class="docstring"><p>Alias for <code><a href="#fstloc.col">col</a></code>.</p>
+</div>
+
+
+                            </div>
+                            <div id="fstloc.bend_ln" class="classattr">
+                                <div class="attr variable">
+            <span class="name">bend_ln</span>
+
+        
+    </div>
+    <a class="headerlink" href="#fstloc.bend_ln"></a>
+    
+            <div class="docstring"><p>Alias for <code><a href="#fstloc.end_ln">end_ln</a></code>.</p>
+</div>
+
+
+                            </div>
+                            <div id="fstloc.bend_col" class="classattr">
+                                <div class="attr variable">
+            <span class="name">bend_col</span>
+
+        
+    </div>
+    <a class="headerlink" href="#fstloc.bend_col"></a>
+    
+            <div class="docstring"><p>Alias for <code><a href="#fstloc.end_col">end_col</a></code>.</p>
+</div>
+
+
+                            </div>
+                            <div id="fstloc.loc" class="classattr">
+                                <div class="attr variable">
+            <span class="name">loc</span>
+
+        
+    </div>
+    <a class="headerlink" href="#fstloc.loc"></a>
+    
+            <div class="docstring"><p>To be able to use as <code>FST.loc</code>.</p>
+</div>
+
+
+                            </div>
+                            <div id="fstloc.bloc" class="classattr">
+                                <div class="attr variable">
+            <span class="name">bloc</span>
+
+        
+    </div>
+    <a class="headerlink" href="#fstloc.bloc"></a>
+    
+            <div class="docstring"><p>Alias for <code><a href="#fstloc.loc">loc</a></code>.</p>
+</div>
+
+
+                            </div>
+                </section>
+                <section id="fstlocn">
+                    <div class="attr class">
+            
+    <span class="def">class</span>
+    <span class="name">fstlocn</span><wbr>(<span class="base">typing.NamedTuple</span>):
+
+        
+    </div>
+    <a class="headerlink" href="#fstlocn"></a>
+    
+            <div class="docstring"><p>Version of <code><a href="#fstloc">fstloc</a></code> with a namespace, used for <code>pars().n</code>.</p>
+</div>
+
+
+                            <div class="inherited">
+                                <h5>Inherited Members</h5>
+                                <dl>
+                                    <div><dt><a href="#fstloc">fstloc</a></dt>
+                                <dd id="fstlocn.ln" class="variable"><a href="#fstloc.ln">ln</a></dd>
+                <dd id="fstlocn.col" class="variable"><a href="#fstloc.col">col</a></dd>
+                <dd id="fstlocn.end_ln" class="variable"><a href="#fstloc.end_ln">end_ln</a></dd>
+                <dd id="fstlocn.end_col" class="variable"><a href="#fstloc.end_col">end_col</a></dd>
+                <dd id="fstlocn.bln" class="variable"><a href="#fstloc.bln">bln</a></dd>
+                <dd id="fstlocn.bcol" class="variable"><a href="#fstloc.bcol">bcol</a></dd>
+                <dd id="fstlocn.bend_ln" class="variable"><a href="#fstloc.bend_ln">bend_ln</a></dd>
+                <dd id="fstlocn.bend_col" class="variable"><a href="#fstloc.bend_col">bend_col</a></dd>
+                <dd id="fstlocn.loc" class="variable"><a href="#fstloc.loc">loc</a></dd>
+                <dd id="fstlocn.bloc" class="variable"><a href="#fstloc.bloc">bloc</a></dd>
+
+            </div>
+                                </dl>
+                            </div>
+                </section>
     </main>
 </body>
 </html>

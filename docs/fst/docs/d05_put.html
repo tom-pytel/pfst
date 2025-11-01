@@ -32,7 +32,7 @@
     <li><a href="#replace-and-remove"><code>replace()</code> and <code>remove()</code></a></li>
     <li><a href="#put-and-put_slice"><code>put()</code> and <code>put_slice()</code></a></li>
     <li><a href="#by-attribute">By attribute</a></li>
-    <li><a href="#put_src"><code>put_src()</code></a></li>
+    <li><a href="#put_src-deprecated"><code>put_src()</code> <strong>DEPRECATED!!!</strong></a></li>
   </ul></li>
 </ul>
 
@@ -67,8 +67,6 @@
 <code>AST</code> node or an <code>FST</code> root node. If an <code>FST</code> node is used then it should be considered consumed on use, whether the
 modification succeeds or not. <code>AST</code> nodes are not consumed as they are unparsed and then reparsed in order to make sure
 their locations are correct. Source code in the form of a string or a list of lines is also not consumed.</p>
-
-<p>TODO: Fix trailing newlines, will also remove need for <code>rstrip()</code> in other parts of this documentation.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="c1"># the trailing newline is annoying and will eventually be fixed</span>
@@ -214,10 +212,10 @@ In this case, <code>None</code> is returned as the new node.</p>
 
 <h2 id="put-and-put_slice"><code>put()</code> and <code>put_slice()</code></h2>
 
-<p>Just like with <code>copy()</code> and <code>cut()</code>, <code>put()</code> is the undelying function used by <code>replace()</code> and <code>remove()</code>. <code>put()</code> can
-replace a node or delete it if <code>None</code> is passed as the replacement. It cannot put anything to a root node as it requires
-a parent to operate on a node, so if you want to replace a root node you must use <code>replace()</code>. The parameters are
-similar to the <code>get()</code> function except that the first parameter is always the <code>Code</code> to put or <code>None</code>.</p>
+<p>Just like with <code>copy()</code> and <code>cut()</code> using <code>get()</code>, <code>put()</code> is the undelying function used by <code>replace()</code> and <code>remove()</code>.
+<code>put()</code> can replace a node or delete it if <code>None</code> is passed as the replacement. It cannot put anything to a root node as
+it requires a parent to operate on a node, so if you want to replace a root node you must use <code>replace()</code>. The
+parameters are similar to the <code>get()</code> function except that the first parameter is always the <code>Code</code> to put or <code>None</code>.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span>
@@ -444,7 +442,7 @@ movements and <code>AST</code> setting will be done automatically. Under the hoo
 </code></pre>
 </div>
 
-<h2 id="put_src"><code>put_src()</code></h2>
+<h2 id="put_src-deprecated"><code>put_src()</code> <strong>DEPRECATED!!!</strong></h2>
 
 <p>Unlike <code>get_src()</code> which is a very simple function, <code>put_src()</code> doesn't just put text to the source code and leave it at
 that. <code>put_src()</code> attempts to reparse the part of the source code which is modified in order to update the node tree for
@@ -474,7 +472,7 @@ is called on, the domain is always over the entire tree.</p>
 <span class="s1">... = x:</span>
 <span class="s1">...     if y !=</span>
 <span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Name</span> <span class="mi">0</span><span class="p">,</span><span class="mf">8..0</span><span class="p">,</span><span class="mi">9</span><span class="o">&gt;</span>
+<span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="k">if</span> <span class="n">a</span> <span class="o">&lt;=</span> <span class="n">x</span><span class="p">:</span>
@@ -492,8 +490,8 @@ which is <code>True</code> by default. If <code>exact=None</code> and no node is
 <code>None</code> is returned.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">put_src</span><span class="p">(</span><span class="s1">&#39; &gt;&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
-<span class="s1">&#39;a &gt;= x&#39;</span>
+<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">put_src</span><span class="p">(</span><span class="s1">&#39; &gt;&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="k">if</span> <span class="n">a</span> <span class="o">&gt;=</span> <span class="n">x</span><span class="p">:</span>
@@ -502,8 +500,8 @@ which is <code>True</code> by default. If <code>exact=None</code> and no node is
     <span class="k">else</span><span class="p">:</span>
         <span class="n">t</span><span class="p">()</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">put_src</span><span class="p">(</span><span class="s1">&#39; &lt;&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
-<span class="kc">True</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">put_src</span><span class="p">(</span><span class="s1">&#39; &lt;&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="k">if</span> <span class="n">a</span> <span class="o">&lt;=</span> <span class="n">x</span><span class="p">:</span>
@@ -512,8 +510,8 @@ which is <code>True</code> by default. If <code>exact=None</code> and no node is
     <span class="k">else</span><span class="p">:</span>
         <span class="n">t</span><span class="p">()</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">put_src</span><span class="p">(</span><span class="s1">&#39; ==&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
-<span class="s1">&#39;==&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">put_src</span><span class="p">(</span><span class="s1">&#39; ==&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+<span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="n">x</span><span class="p">:</span>
@@ -532,7 +530,7 @@ everything is correct with respect to this and parentheses and everything else.<
 <span class="s1">... elif z != e:</span>
 <span class="s1">...         pass</span>
 <span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">If</span> <span class="mi">3</span><span class="p">,</span><span class="mf">4..4</span><span class="p">,</span><span class="mi">12</span><span class="o">&gt;</span>
+<span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
 <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="n">x</span><span class="p">:</span>
