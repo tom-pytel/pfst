@@ -1,3 +1,12 @@
+## 0.2.4 - alpha - ????-??-??
+
+### Fixed
+
+### Added
+
+### Updated
+
+
 ## 0.2.3 - alpha - 2025-11-01
 
 ### Fixed
