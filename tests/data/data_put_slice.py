@@ -990,41 +990,15 @@ Module - ROOT 0,0..6,15
 
 (37, '', 0, 0, None, {}, ('exec',
 r''''''), (None,
-r'''i'''), r'''
-i
-
-''', r'''
-Module - ROOT 0,0..1,0
+r'''i'''),
+r'''i''', r'''
+Module - ROOT 0,0..0,1
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'i' Load - 0,0..0,1
 '''),
 
 (38, '', 0, 0, None, {}, ('exec',
-r''''''), (None,
-r'''i'''), r'''
-i
-
-''', r'''
-Module - ROOT 0,0..1,0
-  .body[1]
-   0] Expr - 0,0..0,1
-     .value Name 'i' Load - 0,0..0,1
-'''),
-
-(39, '', 0, 0, None, {}, ('exec',
-r''''''), (None,
-r'''i'''), r'''
-i
-
-''', r'''
-Module - ROOT 0,0..1,0
-  .body[1]
-   0] Expr - 0,0..0,1
-     .value Name 'i' Load - 0,0..0,1
-'''),
-
-(40, '', 0, 0, None, {}, ('exec',
 r'''# comment'''), (None,
 r'''i'''), r'''
 # comment
@@ -1036,7 +1010,7 @@ Module - ROOT 0,0..1,1
      .value Name 'i' Load - 1,0..1,1
 '''),
 
-(41, '', 0, 0, None, {}, ('exec', r'''
+(39, '', 0, 0, None, {}, ('exec', r'''
 # comment
 
 # another comment
@@ -1053,7 +1027,7 @@ Module - ROOT 0,0..3,1
      .value Name 'i' Load - 3,0..3,1
 '''),
 
-(42, '', 0, 0, None, {}, ('exec', r'''
+(40, '', 0, 0, None, {}, ('exec', r'''
 # comment
 
 # another comment
@@ -1074,7 +1048,7 @@ Module - ROOT 0,0..4,1
      .value Name 'i' Load - 4,0..4,1
 '''),
 
-(43, '', 1, 1, None, {}, ('exec', r'''
+(41, '', 1, 1, None, {}, ('exec', r'''
 # comment
 
 # another comment
@@ -1095,7 +1069,7 @@ Module - ROOT 0,0..4,1
      .value Name 'j' Load - 4,0..4,1
 '''),
 
-(44, 'body[0].body[0]', 0, 0, 'orelse', {}, ('exec', r'''
+(42, 'body[0].body[0]', 0, 0, 'orelse', {}, ('exec', r'''
 def f():
     if 1: pass
     elif 2: pass
@@ -1124,7 +1098,7 @@ Module - ROOT 0,0..4,18
             0] Pass - 4,14..4,18
 '''),
 
-(45, 'body[0].body[0]', 1, 1, 'orelse', {}, ('exec', r'''
+(43, 'body[0].body[0]', 1, 1, 'orelse', {}, ('exec', r'''
 def f():
     if 1: pass
     elif 2: pass
@@ -1153,7 +1127,7 @@ Module - ROOT 0,0..4,13
          1] Break - 4,8..4,13
 '''),
 
-(46, 'body[0].body[0]', 0, 0, 'orelse', {}, ('exec', r'''
+(44, 'body[0].body[0]', 0, 0, 'orelse', {}, ('exec', r'''
 def f():
     if 1: pass
     elif 2:
@@ -1184,7 +1158,7 @@ Module - ROOT 0,0..5,16
             0] Pass - 5,12..5,16
 '''),
 
-(47, 'body[0].body[0]', 1, 1, 'orelse', {}, ('exec', r'''
+(45, 'body[0].body[0]', 1, 1, 'orelse', {}, ('exec', r'''
 def f():
     if 1: pass
     elif 2:
@@ -1215,7 +1189,7 @@ Module - ROOT 0,0..5,13
          1] Break - 5,8..5,13
 '''),
 
-(48, 'body[0].body[0]', 0, 0, 'orelse', {}, ('exec', r'''
+(46, 'body[0].body[0]', 0, 0, 'orelse', {}, ('exec', r'''
 def f():
     if 1: pass
     elif 2: continue
@@ -1251,7 +1225,7 @@ Module - ROOT 0,0..5,21
                0] Raise - 5,16..5,21
 '''),
 
-(49, 'body[0].body[0]', 1, 1, 'orelse', {}, ('exec', r'''
+(47, 'body[0].body[0]', 1, 1, 'orelse', {}, ('exec', r'''
 def f():
     if 1: pass
     elif 2: continue
@@ -1287,7 +1261,7 @@ Module - ROOT 0,0..5,13
          1] Break - 5,8..5,13
 '''),
 
-(50, 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {}, ('exec', r'''
+(48, 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {}, ('exec', r'''
 def f():
     if 1: pass
     elif 2: continue
@@ -1323,7 +1297,7 @@ Module - ROOT 0,0..5,19
                0] Raise - 5,14..5,19
 '''),
 
-(51, 'body[0].body[0].orelse[0]', 1, 1, 'orelse', {}, ('exec', r'''
+(49, 'body[0].body[0].orelse[0]', 1, 1, 'orelse', {}, ('exec', r'''
 def f():
     if 1: pass
     elif 2: continue
@@ -1359,7 +1333,7 @@ Module - ROOT 0,0..5,13
             1] Break - 5,8..5,13
 '''),
 
-(52, 'body[0]', 0, 0, None, {}, ('exec', r'''
+(50, 'body[0]', 0, 0, None, {}, ('exec', r'''
 def f():
     i
 '''), (None,
@@ -1380,7 +1354,7 @@ Module - ROOT 0,0..2,5
         .value Name 'i' Load - 2,4..2,5
 '''),
 
-(53, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(51, 'body[0]', 1, 1, None, {}, ('exec', r'''
 def f():
     i
 '''), (None,
@@ -1401,7 +1375,7 @@ Module - ROOT 0,0..2,13
         .value Name 'i' Load - 1,4..1,5
 '''),
 
-(54, 'body[0]', 0, 0, None, {}, ('exec', r'''
+(52, 'body[0]', 0, 0, None, {}, ('exec', r'''
 def f():
     i ; j
 '''), (None,
@@ -1424,7 +1398,7 @@ Module - ROOT 0,0..2,9
         .value Name 'j' Load - 2,8..2,9
 '''),
 
-(55, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(53, 'body[0]', 1, 1, None, {}, ('exec', r'''
 def f():
     i ; j
 '''), (None,
@@ -1448,7 +1422,7 @@ Module - ROOT 0,0..3,5
         .value Name 'j' Load - 3,4..3,5
 '''),
 
-(56, 'body[0]', 2, 2, None, {}, ('exec', r'''
+(54, 'body[0]', 2, 2, None, {}, ('exec', r'''
 def f():
     i ; j
 '''), (None,
@@ -1471,7 +1445,7 @@ Module - ROOT 0,0..2,13
         .value Name 'j' Load - 1,8..1,9
 '''),
 
-(57, 'body[0]', 0, 0, None, {}, ('exec', r'''
+(55, 'body[0]', 0, 0, None, {}, ('exec', r'''
 def f():
     i \
   \
@@ -1503,7 +1477,7 @@ Module - ROOT 0,0..5,3
         .value Name 'j' Load - 5,2..5,3
 '''),
 
-(58, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(56, 'body[0]', 1, 1, None, {}, ('exec', r'''
 def f():
     i \
   \
@@ -1533,7 +1507,7 @@ Module - ROOT 0,0..3,5
         .value Name 'j' Load - 3,4..3,5
 '''),
 
-(59, 'body[0]', 2, 2, None, {}, ('exec', r'''
+(57, 'body[0]', 2, 2, None, {}, ('exec', r'''
 def f():
     i \
   \
@@ -1565,17 +1539,14 @@ Module - ROOT 0,0..5,13
         .value Name 'j' Load - 4,2..4,3
 '''),
 
-(60, '', 0, 0, None, {'pep8space': True}, ('exec',
+(58, '', 0, 0, None, {'pep8space': True}, ('exec',
 r''''''), (None,
-r'''def func(): pass'''), r'''
-def func(): pass
-
-''', r'''
+r'''def func(): pass'''),
+r'''def func(): pass''', r'''
 def func():
     pass
-
 ''', r'''
-Module - ROOT 0,0..1,0
+Module - ROOT 0,0..0,16
   .body[1]
    0] FunctionDef - 0,0..0,16
      .name 'func'
@@ -1583,10 +1554,30 @@ Module - ROOT 0,0..1,0
       0] Pass - 0,12..0,16
 '''),
 
-(61, '', 0, 0, None, {'pep8space': True}, ('exec',
+(59, '', 0, 0, None, {'pep8space': True}, ('exec',
 r''''''), (None, r'''
 
 def func(): pass
+'''), r'''
+
+def func(): pass
+''', r'''
+def func():
+    pass
+''', r'''
+Module - ROOT 0,0..1,16
+  .body[1]
+   0] FunctionDef - 1,0..1,16
+     .name 'func'
+     .body[1]
+      0] Pass - 1,12..1,16
+'''),
+
+(60, '', 0, 0, None, {'pep8space': True}, ('exec',
+r''''''), (None, r'''
+
+def func(): pass
+
 '''), r'''
 
 def func(): pass
@@ -1594,7 +1585,6 @@ def func(): pass
 ''', r'''
 def func():
     pass
-
 ''', r'''
 Module - ROOT 0,0..2,0
   .body[1]
@@ -1602,6 +1592,32 @@ Module - ROOT 0,0..2,0
      .name 'func'
      .body[1]
       0] Pass - 1,12..1,16
+'''),
+
+(61, '', 1, 1, None, {'pep8space': True}, ('exec', r'''
+"""Module
+   docstring"""
+'''), (None,
+r'''def func(): pass'''), r'''
+"""Module
+   docstring"""
+
+def func(): pass
+''', r'''
+"""Module
+   docstring"""
+
+def func():
+    pass
+''', r'''
+Module - ROOT 0,0..3,16
+  .body[2]
+   0] Expr - 0,0..1,15
+     .value Constant 'Module\n   docstring' - 0,0..1,15
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
 '''),
 
 (62, '', 1, 1, None, {'pep8space': True}, ('exec', r'''
@@ -1633,8 +1649,10 @@ Module - ROOT 0,0..3,16
 (63, '', 1, 1, None, {'pep8space': True}, ('exec', r'''
 """Module
    docstring"""
-'''), (None,
-r'''def func(): pass'''), r'''
+'''), (None, r'''
+
+def func(): pass
+'''), r'''
 """Module
    docstring"""
 
@@ -1661,34 +1679,6 @@ Module - ROOT 0,0..3,16
    docstring"""
 '''), (None, r'''
 
-def func(): pass
-'''), r'''
-"""Module
-   docstring"""
-
-def func(): pass
-''', r'''
-"""Module
-   docstring"""
-
-def func():
-    pass
-''', r'''
-Module - ROOT 0,0..3,16
-  .body[2]
-   0] Expr - 0,0..1,15
-     .value Constant 'Module\n   docstring' - 0,0..1,15
-   1] FunctionDef - 3,0..3,16
-     .name 'func'
-     .body[1]
-      0] Pass - 3,12..3,16
-'''),
-
-(65, '', 1, 1, None, {'pep8space': True}, ('exec', r'''
-"""Module
-   docstring"""
-'''), (None, r'''
-
 
 def func(): pass
 '''), r'''
@@ -1714,7 +1704,7 @@ Module - ROOT 0,0..4,16
       0] Pass - 4,12..4,16
 '''),
 
-(66, '', 1, 1, None, {'pep8space': True}, ('exec',
+(65, '', 1, 1, None, {'pep8space': True}, ('exec',
 r'''def prefunc(): pass'''), (None,
 r'''def func(): pass'''), r'''
 def prefunc(): pass
@@ -1740,7 +1730,7 @@ Module - ROOT 0,0..3,16
       0] Pass - 3,12..3,16
 '''),
 
-(67, '', 1, 1, None, {'pep8space': 1}, ('exec',
+(66, '', 1, 1, None, {'pep8space': 1}, ('exec',
 r'''def prefunc(): pass'''), (None,
 r'''def func(): pass'''), r'''
 def prefunc(): pass
@@ -1764,7 +1754,7 @@ Module - ROOT 0,0..2,16
       0] Pass - 2,12..2,16
 '''),
 
-(68, '', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec',
+(67, '', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec',
 r'''def prefunc(): pass'''), (None,
 r'''def func(): pass'''), r'''
 def prefunc(): pass
@@ -1786,7 +1776,7 @@ Module - ROOT 0,0..1,16
       0] Pass - 1,12..1,16
 '''),
 
-(69, '', 1, 1, None, {'pep8space': True}, ('exec',
+(68, '', 1, 1, None, {'pep8space': True}, ('exec',
 r'''def prefunc(): pass'''), (None, r'''
 
 def func(): pass
@@ -1814,7 +1804,7 @@ Module - ROOT 0,0..3,16
       0] Pass - 3,12..3,16
 '''),
 
-(70, '', 1, 1, None, {'pep8space': 1}, ('exec',
+(69, '', 1, 1, None, {'pep8space': 1}, ('exec',
 r'''def prefunc(): pass'''), (None, r'''
 
 def func(): pass
@@ -1840,7 +1830,7 @@ Module - ROOT 0,0..2,16
       0] Pass - 2,12..2,16
 '''),
 
-(71, '', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec',
+(70, '', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec',
 r'''def prefunc(): pass'''), (None,
 r'''def func(): pass'''), r'''
 def prefunc(): pass
@@ -1862,7 +1852,7 @@ Module - ROOT 0,0..1,16
       0] Pass - 1,12..1,16
 '''),
 
-(72, '', 1, 1, None, {'pep8space': True}, ('exec',
+(71, '', 1, 1, None, {'pep8space': True}, ('exec',
 r'''def prefunc(): pass'''), (None, r'''
 
 
@@ -1891,7 +1881,7 @@ Module - ROOT 0,0..3,16
       0] Pass - 3,12..3,16
 '''),
 
-(73, '', 1, 1, None, {'pep8space': 1}, ('exec',
+(72, '', 1, 1, None, {'pep8space': 1}, ('exec',
 r'''def prefunc(): pass'''), (None, r'''
 
 
@@ -1917,40 +1907,40 @@ Module - ROOT 0,0..3,16
      .name 'func'
      .body[1]
       0] Pass - 3,12..3,16
+'''),
+
+(73, '', 1, 1, None, {'pep8space': True}, ('exec',
+r'''def prefunc(): pass'''), (None, r'''
+
+
+
+def func(): pass
+'''), r'''
+def prefunc(): pass
+
+
+
+def func(): pass
+''', r'''
+def prefunc(): pass
+
+
+def func():
+    pass
+''', r'''
+Module - ROOT 0,0..4,16
+  .body[2]
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 4,0..4,16
+     .name 'func'
+     .body[1]
+      0] Pass - 4,12..4,16
 '''),
 
 (74, '', 1, 1, None, {'pep8space': True}, ('exec',
-r'''def prefunc(): pass'''), (None, r'''
-
-
-
-def func(): pass
-'''), r'''
-def prefunc(): pass
-
-
-
-def func(): pass
-''', r'''
-def prefunc(): pass
-
-
-def func():
-    pass
-''', r'''
-Module - ROOT 0,0..4,16
-  .body[2]
-   0] FunctionDef - 0,0..0,19
-     .name 'prefunc'
-     .body[1]
-      0] Pass - 0,15..0,19
-   1] FunctionDef - 4,0..4,16
-     .name 'func'
-     .body[1]
-      0] Pass - 4,12..4,16
-'''),
-
-(75, '', 1, 1, None, {'pep8space': True}, ('exec',
 r'''import stuff'''), (None,
 r'''def func(): pass'''), r'''
 import stuff
@@ -1976,8 +1966,37 @@ Module - ROOT 0,0..3,16
       0] Pass - 3,12..3,16
 '''),
 
+(75, '', 1, 1, None, {'pep8space': True}, ('exec',
+r'''import stuff'''), (None, r'''
+
+def func(): pass
+'''), r'''
+import stuff
+
+
+def func(): pass
+''', r'''
+import stuff
+
+
+def func():
+    pass
+''', r'''
+Module - ROOT 0,0..3,16
+  .body[2]
+   0] Import - 0,0..0,12
+     .names[1]
+      0] alias - 0,7..0,12
+        .name 'stuff'
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
+'''),
+
 (76, '', 1, 1, None, {'pep8space': True}, ('exec',
 r'''import stuff'''), (None, r'''
+
 
 def func(): pass
 '''), r'''
@@ -2033,36 +2052,7 @@ Module - ROOT 0,0..3,16
       0] Pass - 3,12..3,16
 '''),
 
-(78, '', 1, 1, None, {'pep8space': True}, ('exec',
-r'''import stuff'''), (None, r'''
-
-
-def func(): pass
-'''), r'''
-import stuff
-
-
-def func(): pass
-''', r'''
-import stuff
-
-
-def func():
-    pass
-''', r'''
-Module - ROOT 0,0..3,16
-  .body[2]
-   0] Import - 0,0..0,12
-     .names[1]
-      0] alias - 0,7..0,12
-        .name 'stuff'
-   1] FunctionDef - 3,0..3,16
-     .name 'func'
-     .body[1]
-      0] Pass - 3,12..3,16
-'''),
-
-(79, '', 0, 0, None, {}, ('exec',
+(78, '', 0, 0, None, {}, ('exec',
 r'''def prefunc(): pass'''), (None,
 r'''def func(): pass'''), r'''
 def func(): pass
@@ -2088,7 +2078,7 @@ Module - ROOT 0,0..3,19
       0] Pass - 3,15..3,19
 '''),
 
-(80, '', 0, 0, None, {'pep8space': 1}, ('exec',
+(79, '', 0, 0, None, {'pep8space': 1}, ('exec',
 r'''def prefunc(): pass'''), (None,
 r'''def func(): pass'''), r'''
 def func(): pass
@@ -2112,7 +2102,7 @@ Module - ROOT 0,0..2,19
       0] Pass - 2,15..2,19
 '''),
 
-(81, '', 0, 0, None, {'trivia': (False, False), 'pep8space': False}, ('exec',
+(80, '', 0, 0, None, {'trivia': (False, False), 'pep8space': False}, ('exec',
 r'''def prefunc(): pass'''), (None,
 r'''def func(): pass'''), r'''
 def func(): pass
@@ -2134,9 +2124,38 @@ Module - ROOT 0,0..1,19
       0] Pass - 1,15..1,19
 '''),
 
+(81, '', 0, 0, None, {}, ('exec',
+r'''def prefunc(): pass'''), (None, r'''
+def func(): pass
+
+'''), r'''
+def func(): pass
+
+
+def prefunc(): pass
+''', r'''
+def func():
+    pass
+
+
+def prefunc(): pass
+''', r'''
+Module - ROOT 0,0..3,19
+  .body[2]
+   0] FunctionDef - 0,0..0,16
+     .name 'func'
+     .body[1]
+      0] Pass - 0,12..0,16
+   1] FunctionDef - 3,0..3,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 3,15..3,19
+'''),
+
 (82, '', 0, 0, None, {}, ('exec',
 r'''def prefunc(): pass'''), (None, r'''
 def func(): pass
+
 
 '''), r'''
 def func(): pass
@@ -2165,6 +2184,7 @@ Module - ROOT 0,0..3,19
 (83, '', 0, 0, None, {}, ('exec',
 r'''def prefunc(): pass'''), (None, r'''
 def func(): pass
+
 
 
 '''), r'''
@@ -2197,36 +2217,6 @@ def func(): pass
 
 
 
-'''), r'''
-def func(): pass
-
-
-def prefunc(): pass
-''', r'''
-def func():
-    pass
-
-
-def prefunc(): pass
-''', r'''
-Module - ROOT 0,0..3,19
-  .body[2]
-   0] FunctionDef - 0,0..0,16
-     .name 'func'
-     .body[1]
-      0] Pass - 0,12..0,16
-   1] FunctionDef - 3,0..3,19
-     .name 'prefunc'
-     .body[1]
-      0] Pass - 3,15..3,19
-'''),
-
-(85, '', 0, 0, None, {}, ('exec',
-r'''def prefunc(): pass'''), (None, r'''
-def func(): pass
-
-
-
 
 '''), r'''
 def func(): pass
@@ -2253,8 +2243,47 @@ Module - ROOT 0,0..4,19
       0] Pass - 4,15..4,19
 '''),
 
+(85, '', 1, 1, None, {}, ('exec', r'''
+def prefunc(): pass
+def postfunc(): pass
+'''), (None,
+r'''def func(): pass'''), r'''
+def prefunc(): pass
+
+
+def func(): pass
+
+
+def postfunc(): pass
+''', r'''
+def prefunc(): pass
+
+
+def func():
+    pass
+
+
+def postfunc(): pass
+''', r'''
+Module - ROOT 0,0..6,20
+  .body[3]
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 3,0..3,16
+     .name 'func'
+     .body[1]
+      0] Pass - 3,12..3,16
+   2] FunctionDef - 6,0..6,20
+     .name 'postfunc'
+     .body[1]
+      0] Pass - 6,16..6,20
+'''),
+
 (86, '', 1, 1, None, {}, ('exec', r'''
 def prefunc(): pass
+
 def postfunc(): pass
 '''), (None,
 r'''def func(): pass'''), r'''
@@ -2294,6 +2323,7 @@ Module - ROOT 0,0..6,20
 (87, '', 1, 1, None, {}, ('exec', r'''
 def prefunc(): pass
 
+
 def postfunc(): pass
 '''), (None,
 r'''def func(): pass'''), r'''
@@ -2331,46 +2361,6 @@ Module - ROOT 0,0..6,20
 '''),
 
 (88, '', 1, 1, None, {}, ('exec', r'''
-def prefunc(): pass
-
-
-def postfunc(): pass
-'''), (None,
-r'''def func(): pass'''), r'''
-def prefunc(): pass
-
-
-def func(): pass
-
-
-def postfunc(): pass
-''', r'''
-def prefunc(): pass
-
-
-def func():
-    pass
-
-
-def postfunc(): pass
-''', r'''
-Module - ROOT 0,0..6,20
-  .body[3]
-   0] FunctionDef - 0,0..0,19
-     .name 'prefunc'
-     .body[1]
-      0] Pass - 0,15..0,19
-   1] FunctionDef - 3,0..3,16
-     .name 'func'
-     .body[1]
-      0] Pass - 3,12..3,16
-   2] FunctionDef - 6,0..6,20
-     .name 'postfunc'
-     .body[1]
-      0] Pass - 6,16..6,20
-'''),
-
-(89, '', 1, 1, None, {}, ('exec', r'''
 def prefunc(): pass
 
 
@@ -2413,7 +2403,7 @@ Module - ROOT 0,0..7,20
       0] Pass - 7,16..7,20
 '''),
 
-(90, '', 1, 1, None, {}, ('exec', r'''
+(89, '', 1, 1, None, {}, ('exec', r'''
 def prefunc(): pass
 
 
@@ -2459,7 +2449,7 @@ Module - ROOT 0,0..8,20
       0] Pass - 8,16..8,20
 '''),
 
-(91, '', 1, 1, None, {'pep8space': 1}, ('exec', r'''
+(90, '', 1, 1, None, {'pep8space': 1}, ('exec', r'''
 def prefunc(): pass
 def postfunc(): pass
 '''), (None,
@@ -2493,7 +2483,7 @@ Module - ROOT 0,0..4,20
       0] Pass - 4,16..4,20
 '''),
 
-(92, '', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(91, '', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 def prefunc(): pass
 def postfunc(): pass
 '''), (None,
@@ -2523,7 +2513,7 @@ Module - ROOT 0,0..2,20
       0] Pass - 2,16..2,20
 '''),
 
-(93, '', 1, 1, None, {}, ('exec', r'''
+(92, '', 1, 1, None, {}, ('exec', r'''
 def prefunc(): pass
 
 def postfunc(): pass
@@ -2564,7 +2554,7 @@ Module - ROOT 0,0..6,20
       0] Pass - 6,16..6,20
 '''),
 
-(94, '', 1, 1, None, {}, ('exec', r'''
+(93, '', 1, 1, None, {}, ('exec', r'''
 def prefunc(): pass
 
 def postfunc(): pass
@@ -2607,7 +2597,7 @@ Module - ROOT 0,0..7,20
       0] Pass - 7,16..7,20
 '''),
 
-(95, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(94, 'body[0]', 1, 1, None, {}, ('exec', r'''
 class cls:
     """Class
        docstring"""
@@ -2639,7 +2629,7 @@ Module - ROOT 0,0..4,20
          0] Pass - 4,16..4,20
 '''),
 
-(96, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(95, 'body[0]', 1, 1, None, {}, ('exec', r'''
 class cls:
     """Class
        docstring"""
@@ -2673,7 +2663,7 @@ Module - ROOT 0,0..4,20
          0] Pass - 4,16..4,20
 '''),
 
-(97, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(96, 'body[0]', 1, 1, None, {}, ('exec', r'''
 class cls:
     """Class
        docstring"""
@@ -2709,7 +2699,7 @@ Module - ROOT 0,0..5,20
          0] Pass - 5,16..5,20
 '''),
 
-(98, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(97, 'body[0]', 1, 1, None, {}, ('exec', r'''
 class cls:
     def premeth(): pass
 '''), (None,
@@ -2740,7 +2730,7 @@ Module - ROOT 0,0..3,20
          0] Pass - 3,16..3,20
 '''),
 
-(99, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(98, 'body[0]', 1, 1, None, {}, ('exec', r'''
 class cls:
     def premeth(): pass
 '''), (None, r'''
@@ -2773,7 +2763,7 @@ Module - ROOT 0,0..3,20
          0] Pass - 3,16..3,20
 '''),
 
-(100, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(99, 'body[0]', 1, 1, None, {}, ('exec', r'''
 class cls:
     def premeth(): pass
 '''), (None, r'''
@@ -2808,11 +2798,44 @@ Module - ROOT 0,0..4,20
          0] Pass - 4,16..4,20
 '''),
 
-(101, 'body[0]', 0, 0, None, {}, ('exec', r'''
+(100, 'body[0]', 0, 0, None, {}, ('exec', r'''
 class cls:
     def postmeth(): pass
 '''), (None,
 r'''def meth(): pass'''), r'''
+class cls:
+    def meth(): pass
+
+    def postmeth(): pass
+''', r'''
+class cls:
+    def meth():
+        pass
+
+    def postmeth(): pass
+''', r'''
+Module - ROOT 0,0..3,24
+  .body[1]
+   0] ClassDef - 0,0..3,24
+     .name 'cls'
+     .body[2]
+      0] FunctionDef - 1,4..1,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 1,16..1,20
+      1] FunctionDef - 3,4..3,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 3,20..3,24
+'''),
+
+(101, 'body[0]', 0, 0, None, {}, ('exec', r'''
+class cls:
+    def postmeth(): pass
+'''), (None, r'''
+def meth(): pass
+
+'''), r'''
 class cls:
     def meth(): pass
 
@@ -2844,6 +2867,7 @@ class cls:
     def postmeth(): pass
 '''), (None, r'''
 def meth(): pass
+
 
 '''), r'''
 class cls:
@@ -2879,40 +2903,6 @@ class cls:
 def meth(): pass
 
 
-'''), r'''
-class cls:
-    def meth(): pass
-
-    def postmeth(): pass
-''', r'''
-class cls:
-    def meth():
-        pass
-
-    def postmeth(): pass
-''', r'''
-Module - ROOT 0,0..3,24
-  .body[1]
-   0] ClassDef - 0,0..3,24
-     .name 'cls'
-     .body[2]
-      0] FunctionDef - 1,4..1,20
-        .name 'meth'
-        .body[1]
-         0] Pass - 1,16..1,20
-      1] FunctionDef - 3,4..3,24
-        .name 'postmeth'
-        .body[1]
-         0] Pass - 3,20..3,24
-'''),
-
-(104, 'body[0]', 0, 0, None, {}, ('exec', r'''
-class cls:
-    def postmeth(): pass
-'''), (None, r'''
-def meth(): pass
-
-
 
 '''), r'''
 class cls:
@@ -2942,9 +2932,50 @@ Module - ROOT 0,0..4,24
          0] Pass - 4,20..4,24
 '''),
 
+(104, 'body[0]', 1, 1, None, {}, ('exec', r'''
+class cls:
+    def premeth(): pass
+    def postmeth(): pass
+'''), (None,
+r'''def meth(): pass'''), r'''
+class cls:
+    def premeth(): pass
+
+    def meth(): pass
+
+    def postmeth(): pass
+''', r'''
+class cls:
+    def premeth(): pass
+
+    def meth():
+        pass
+
+    def postmeth(): pass
+''', r'''
+Module - ROOT 0,0..5,24
+  .body[1]
+   0] ClassDef - 0,0..5,24
+     .name 'cls'
+     .body[3]
+      0] FunctionDef - 1,4..1,23
+        .name 'premeth'
+        .body[1]
+         0] Pass - 1,19..1,23
+      1] FunctionDef - 3,4..3,20
+        .name 'meth'
+        .body[1]
+         0] Pass - 3,16..3,20
+      2] FunctionDef - 5,4..5,24
+        .name 'postmeth'
+        .body[1]
+         0] Pass - 5,20..5,24
+'''),
+
 (105, 'body[0]', 1, 1, None, {}, ('exec', r'''
 class cls:
     def premeth(): pass
+
     def postmeth(): pass
 '''), (None,
 r'''def meth(): pass'''), r'''
@@ -2986,47 +3017,6 @@ Module - ROOT 0,0..5,24
 class cls:
     def premeth(): pass
 
-    def postmeth(): pass
-'''), (None,
-r'''def meth(): pass'''), r'''
-class cls:
-    def premeth(): pass
-
-    def meth(): pass
-
-    def postmeth(): pass
-''', r'''
-class cls:
-    def premeth(): pass
-
-    def meth():
-        pass
-
-    def postmeth(): pass
-''', r'''
-Module - ROOT 0,0..5,24
-  .body[1]
-   0] ClassDef - 0,0..5,24
-     .name 'cls'
-     .body[3]
-      0] FunctionDef - 1,4..1,23
-        .name 'premeth'
-        .body[1]
-         0] Pass - 1,19..1,23
-      1] FunctionDef - 3,4..3,20
-        .name 'meth'
-        .body[1]
-         0] Pass - 3,16..3,20
-      2] FunctionDef - 5,4..5,24
-        .name 'postmeth'
-        .body[1]
-         0] Pass - 5,20..5,24
-'''),
-
-(107, 'body[0]', 1, 1, None, {}, ('exec', r'''
-class cls:
-    def premeth(): pass
-
 
     def postmeth(): pass
 '''), (None,
@@ -3067,7 +3057,7 @@ Module - ROOT 0,0..6,24
          0] Pass - 6,20..6,24
 '''),
 
-(108, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(107, 'body[0]', 1, 1, None, {}, ('exec', r'''
 class cls:
     def premeth(): pass
 
@@ -3114,7 +3104,7 @@ Module - ROOT 0,0..7,24
          0] Pass - 7,20..7,24
 '''),
 
-(109, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(108, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 class cls:
     def premeth(): pass
     def postmeth(): pass
@@ -3150,7 +3140,7 @@ Module - ROOT 0,0..3,24
          0] Pass - 3,20..3,24
 '''),
 
-(110, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(109, 'body[0]', 1, 1, None, {}, ('exec', r'''
 class cls:
     def premeth(): pass  # post
     # pre
@@ -3193,7 +3183,7 @@ Module - ROOT 0,0..6,24
          0] Pass - 6,20..6,24
 '''),
 
-(111, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(110, 'body[0]', 1, 1, None, {}, ('exec', r'''
 class cls:
     def premeth(): pass  \
     # post
@@ -3239,7 +3229,7 @@ Module - ROOT 0,0..7,24
          0] Pass - 7,20..7,24
 '''),
 
-(112, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(111, 'body[0]', 1, 1, None, {}, ('exec', r'''
 class cls:
     def premeth(): pass
     \
@@ -3288,7 +3278,7 @@ Module - ROOT 0,0..8,24
          0] Pass - 8,20..8,24
 '''),
 
-(113, 'body[0]', 1, 2, None, {'trivia': False}, ('exec', r'''
+(112, 'body[0]', 1, 2, None, {'trivia': False}, ('exec', r'''
 class cls:
     def premeth(): pass
 
@@ -3334,7 +3324,7 @@ Module - ROOT 0,0..6,24
          0] Pass - 6,20..6,24
 '''),
 
-(114, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(113, 'body[0]', 1, 1, None, {}, ('exec', r'''
 class cls:
     def premeth(): pass
     def postmeth(): pass
@@ -3366,7 +3356,7 @@ Module - ROOT 0,0..5,24
          0] Pass - 5,20..5,24
 '''),
 
-(115, '', 1, 1, None, {}, ('exec', r'''
+(114, '', 1, 1, None, {}, ('exec', r'''
 def prefunc(): pass
 def postfunc(): pass
 '''), (None,
@@ -3395,7 +3385,7 @@ Module - ROOT 0,0..6,20
       0] Pass - 6,16..6,20
 '''),
 
-(116, '', 1, 2, None, {}, ('exec', r'''
+(115, '', 1, 2, None, {}, ('exec', r'''
 i
 j
 k
@@ -3415,7 +3405,7 @@ Module - ROOT 0,0..2,1
      .value Name 'k' Load - 2,0..2,1
 '''),
 
-(117, '', 1, 2, None, {}, ('exec', r'''
+(116, '', 1, 2, None, {}, ('exec', r'''
 i
 # pre
 j  # post
@@ -3436,7 +3426,7 @@ Module - ROOT 0,0..2,1
      .value Name 'k' Load - 2,0..2,1
 '''),
 
-(118, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(117, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 i
 # pre
 j  # post
@@ -3459,7 +3449,7 @@ Module - ROOT 0,0..4,1
      .value Name 'k' Load - 4,0..4,1
 '''),
 
-(119, '', 1, 2, None, {}, ('exec', r'''
+(118, '', 1, 2, None, {}, ('exec', r'''
 i
 # pre
 j  # post
@@ -3487,7 +3477,7 @@ Module - ROOT 0,0..3,1
      .value Name 'k' Load - 3,0..3,1
 '''),
 
-(120, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(119, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 i
 # pre
 j  # post
@@ -3519,7 +3509,7 @@ Module - ROOT 0,0..5,1
      .value Name 'k' Load - 5,0..5,1
 '''),
 
-(121, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(120, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 1:
     i
     j
@@ -3544,7 +3534,7 @@ Module - ROOT 0,0..3,5
         .value Name 'k' Load - 3,4..3,5
 '''),
 
-(122, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(121, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 1:
     i
     # pre
@@ -3570,7 +3560,7 @@ Module - ROOT 0,0..3,5
         .value Name 'k' Load - 3,4..3,5
 '''),
 
-(123, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(122, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1:
     i
     # pre
@@ -3598,7 +3588,7 @@ Module - ROOT 0,0..5,5
         .value Name 'k' Load - 5,4..5,5
 '''),
 
-(124, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(123, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 1:
     i
     # pre
@@ -3632,7 +3622,7 @@ Module - ROOT 0,0..4,5
         .value Name 'k' Load - 4,4..4,5
 '''),
 
-(125, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(124, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1:
     i
     # pre
@@ -3670,7 +3660,7 @@ Module - ROOT 0,0..6,5
         .value Name 'k' Load - 6,4..6,5
 '''),
 
-(126, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(125, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 i \
 # pre-before
 j  # post-before
@@ -3693,7 +3683,7 @@ Module - ROOT 0,0..4,1
      .value Name 'k' Load - 4,0..4,1
 '''),
 
-(127, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(126, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 i \
 # pre-before
 j \
@@ -3702,6 +3692,31 @@ k
 '''), (None,
 r'''l'''), r'''
 i \
+# pre-before
+l
+\
+# post-line
+k
+''', r'''
+Module - ROOT 0,0..5,1
+  .body[3]
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 2,0..2,1
+     .value Name 'l' Load - 2,0..2,1
+   2] Expr - 5,0..5,1
+     .value Name 'k' Load - 5,0..5,1
+'''),
+
+(127, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+i
+# pre-before
+j \
+# post-line
+k
+'''), (None,
+r'''l'''), r'''
+i
 # pre-before
 l
 \
@@ -3719,15 +3734,15 @@ Module - ROOT 0,0..5,1
 '''),
 
 (128, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
-i
-# pre-before
+i \
+
 j \
 # post-line
 k
 '''), (None,
 r'''l'''), r'''
-i
-# pre-before
+i \
+
 l
 \
 # post-line
@@ -3744,31 +3759,6 @@ Module - ROOT 0,0..5,1
 '''),
 
 (129, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
-i \
-
-j \
-# post-line
-k
-'''), (None,
-r'''l'''), r'''
-i \
-
-l
-\
-# post-line
-k
-''', r'''
-Module - ROOT 0,0..5,1
-  .body[3]
-   0] Expr - 0,0..0,1
-     .value Name 'i' Load - 0,0..0,1
-   1] Expr - 2,0..2,1
-     .value Name 'l' Load - 2,0..2,1
-   2] Expr - 5,0..5,1
-     .value Name 'k' Load - 5,0..5,1
-'''),
-
-(130, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 i \
 # pre-before
 j  # post-before
@@ -3800,7 +3790,7 @@ Module - ROOT 0,0..5,1
      .value Name 'k' Load - 5,0..5,1
 '''),
 
-(131, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(130, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 i \
 # pre-before
 j \
@@ -3819,6 +3809,41 @@ l  # post
 k
 ''', r'''
 i \
+# pre-before
+l
+\
+# post-line
+k
+''', r'''
+Module - ROOT 0,0..6,1
+  .body[3]
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] Expr - 3,0..3,1
+     .value Name 'l' Load - 3,0..3,1
+   2] Expr - 6,0..6,1
+     .value Name 'k' Load - 6,0..6,1
+'''),
+
+(131, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+i
+# pre-before
+j \
+# post-line
+k
+'''), (None, r'''
+# pre
+l  # post
+'''), r'''
+i
+# pre-before
+# pre
+l  # post
+\
+# post-line
+k
+''', r'''
+i
 # pre-before
 l
 \
@@ -3836,41 +3861,6 @@ Module - ROOT 0,0..6,1
 '''),
 
 (132, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
-i
-# pre-before
-j \
-# post-line
-k
-'''), (None, r'''
-# pre
-l  # post
-'''), r'''
-i
-# pre-before
-# pre
-l  # post
-\
-# post-line
-k
-''', r'''
-i
-# pre-before
-l
-\
-# post-line
-k
-''', r'''
-Module - ROOT 0,0..6,1
-  .body[3]
-   0] Expr - 0,0..0,1
-     .value Name 'i' Load - 0,0..0,1
-   1] Expr - 3,0..3,1
-     .value Name 'l' Load - 3,0..3,1
-   2] Expr - 6,0..6,1
-     .value Name 'k' Load - 6,0..6,1
-'''),
-
-(133, '', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 i \
 
 j \
@@ -3905,7 +3895,7 @@ Module - ROOT 0,0..6,1
      .value Name 'k' Load - 6,0..6,1
 '''),
 
-(134, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(133, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1:
     i \
     # pre-before
@@ -3933,7 +3923,7 @@ Module - ROOT 0,0..5,5
         .value Name 'k' Load - 5,4..5,5
 '''),
 
-(135, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(134, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1:
     i \
     # pre-before
@@ -3944,6 +3934,36 @@ if 1:
 r'''l'''), r'''
 if 1:
     i \
+    # pre-before
+    l
+    \
+    # post-line
+    k
+''', r'''
+Module - ROOT 0,0..6,5
+  .body[1]
+   0] If - 0,0..6,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 3,4..3,5
+        .value Name 'l' Load - 3,4..3,5
+      2] Expr - 6,4..6,5
+        .value Name 'k' Load - 6,4..6,5
+'''),
+
+(135, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+if 1:
+    i
+    # pre-before
+    j \
+    # post-line
+    k
+'''), (None,
+r'''l'''), r'''
+if 1:
+    i
     # pre-before
     l
     \
@@ -3965,16 +3985,16 @@ Module - ROOT 0,0..6,5
 
 (136, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1:
-    i
-    # pre-before
+    i \
+
     j \
     # post-line
     k
 '''), (None,
 r'''l'''), r'''
 if 1:
-    i
-    # pre-before
+    i \
+
     l
     \
     # post-line
@@ -3994,36 +4014,6 @@ Module - ROOT 0,0..6,5
 '''),
 
 (137, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
-if 1:
-    i \
-
-    j \
-    # post-line
-    k
-'''), (None,
-r'''l'''), r'''
-if 1:
-    i \
-
-    l
-    \
-    # post-line
-    k
-''', r'''
-Module - ROOT 0,0..6,5
-  .body[1]
-   0] If - 0,0..6,5
-     .test Constant 1 - 0,3..0,4
-     .body[3]
-      0] Expr - 1,4..1,5
-        .value Name 'i' Load - 1,4..1,5
-      1] Expr - 3,4..3,5
-        .value Name 'l' Load - 3,4..3,5
-      2] Expr - 6,4..6,5
-        .value Name 'k' Load - 6,4..6,5
-'''),
-
-(138, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1:
     i \
     # pre-before
@@ -4061,7 +4051,7 @@ Module - ROOT 0,0..6,5
         .value Name 'k' Load - 6,4..6,5
 '''),
 
-(139, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(138, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1:
     i \
     # pre-before
@@ -4083,6 +4073,47 @@ if 1:
 ''', r'''
 if 1:
     i \
+    # pre-before
+    l
+    \
+    # post-line
+    k
+''', r'''
+Module - ROOT 0,0..7,5
+  .body[1]
+   0] If - 0,0..7,5
+     .test Constant 1 - 0,3..0,4
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] Expr - 4,4..4,5
+        .value Name 'l' Load - 4,4..4,5
+      2] Expr - 7,4..7,5
+        .value Name 'k' Load - 7,4..7,5
+'''),
+
+(139, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+if 1:
+    i
+    # pre-before
+    j \
+    # post-line
+    k
+'''), (None, r'''
+# pre
+l  # post
+'''), r'''
+if 1:
+    i
+    # pre-before
+    # pre
+    l  # post
+    \
+    # post-line
+    k
+''', r'''
+if 1:
+    i
     # pre-before
     l
     \
@@ -4104,47 +4135,6 @@ Module - ROOT 0,0..7,5
 
 (140, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if 1:
-    i
-    # pre-before
-    j \
-    # post-line
-    k
-'''), (None, r'''
-# pre
-l  # post
-'''), r'''
-if 1:
-    i
-    # pre-before
-    # pre
-    l  # post
-    \
-    # post-line
-    k
-''', r'''
-if 1:
-    i
-    # pre-before
-    l
-    \
-    # post-line
-    k
-''', r'''
-Module - ROOT 0,0..7,5
-  .body[1]
-   0] If - 0,0..7,5
-     .test Constant 1 - 0,3..0,4
-     .body[3]
-      0] Expr - 1,4..1,5
-        .value Name 'i' Load - 1,4..1,5
-      1] Expr - 4,4..4,5
-        .value Name 'l' Load - 4,4..4,5
-      2] Expr - 7,4..7,5
-        .value Name 'k' Load - 7,4..7,5
-'''),
-
-(141, 'body[0]', 1, 2, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
-if 1:
     i \
 
     j \
@@ -4184,7 +4174,7 @@ Module - ROOT 0,0..7,5
         .value Name 'k' Load - 7,4..7,5
 '''),
 
-(142, '', 0, 1, None, {}, ('exec',
+(141, '', 0, 1, None, {}, ('exec',
 r'''i'''), (None,
 r'''l'''),
 r'''l''', r'''
@@ -4194,7 +4184,7 @@ Module - ROOT 0,0..0,1
      .value Name 'l' Load - 0,0..0,1
 '''),
 
-(143, '', 0, 1, None, {}, ('exec', r'''
+(142, '', 0, 1, None, {}, ('exec', r'''
 i
 j
 '''), (None,
@@ -4210,7 +4200,7 @@ Module - ROOT 0,0..1,1
      .value Name 'j' Load - 1,0..1,1
 '''),
 
-(144, '', 1, 2, None, {}, ('exec', r'''
+(143, '', 1, 2, None, {}, ('exec', r'''
 i
 j
 '''), (None,
@@ -4226,7 +4216,7 @@ Module - ROOT 0,0..1,1
      .value Name 'l' Load - 1,0..1,1
 '''),
 
-(145, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(144, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
     i
 '''), (None,
@@ -4243,7 +4233,7 @@ Module - ROOT 0,0..1,5
         .value Name 'l' Load - 1,4..1,5
 '''),
 
-(146, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(145, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
     i
     j
@@ -4264,7 +4254,7 @@ Module - ROOT 0,0..2,5
         .value Name 'j' Load - 2,4..2,5
 '''),
 
-(147, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(146, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 1:
     i
     j
@@ -4285,7 +4275,7 @@ Module - ROOT 0,0..2,5
         .value Name 'l' Load - 2,4..2,5
 '''),
 
-(148, '', 1, 2, None, {}, ('exec', r'''
+(147, '', 1, 2, None, {}, ('exec', r'''
 i
 j
 k
@@ -4310,7 +4300,7 @@ Module - ROOT 0,0..3,1
      .value Name 'k' Load - 3,0..3,1
 '''),
 
-(149, '', 1, 2, None, {}, ('exec', r'''
+(148, '', 1, 2, None, {}, ('exec', r'''
 i
 if 1: pass
 k
@@ -4330,7 +4320,7 @@ Module - ROOT 0,0..2,1
      .value Name 'k' Load - 2,0..2,1
 '''),
 
-(150, '', 1, 2, None, {}, ('exec', r'''
+(149, '', 1, 2, None, {}, ('exec', r'''
 i
 if 1:
     pass
@@ -4351,7 +4341,7 @@ Module - ROOT 0,0..2,1
      .value Name 'k' Load - 2,0..2,1
 '''),
 
-(151, '', 1, 2, None, {}, ('exec', r'''
+(150, '', 1, 2, None, {}, ('exec', r'''
 i
 if 1:
     pass
@@ -4379,7 +4369,7 @@ Module - ROOT 0,0..2,1
      .value Name 'k' Load - 2,0..2,1
 '''),
 
-(152, '', 1, 2, None, {}, ('exec', r'''
+(151, '', 1, 2, None, {}, ('exec', r'''
 i
 j
 k
@@ -4412,7 +4402,7 @@ Module - ROOT 0,0..5,1
      .value Name 'k' Load - 5,0..5,1
 '''),
 
-(153, '', 1, 2, None, {}, ('exec', r'''
+(152, '', 1, 2, None, {}, ('exec', r'''
 i
 if 1: pass
 k
@@ -4441,7 +4431,7 @@ Module - ROOT 0,0..4,1
      .value Name 'k' Load - 4,0..4,1
 '''),
 
-(154, '', 1, 2, None, {}, ('exec', r'''
+(153, '', 1, 2, None, {}, ('exec', r'''
 i
 if 1:
     pass
@@ -4471,7 +4461,7 @@ Module - ROOT 0,0..4,1
      .value Name 'k' Load - 4,0..4,1
 '''),
 
-(155, '', 1, 2, None, {}, ('exec', r'''
+(154, '', 1, 2, None, {}, ('exec', r'''
 i
 if 1:
     pass
@@ -4510,7 +4500,7 @@ Module - ROOT 0,0..4,1
      .value Name 'k' Load - 4,0..4,1
 '''),
 
-(156, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(155, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 2:
     i
     j
@@ -4540,7 +4530,7 @@ Module - ROOT 0,0..4,5
         .value Name 'k' Load - 4,4..4,5
 '''),
 
-(157, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(156, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 2:
     i
     if 1: pass
@@ -4565,7 +4555,7 @@ Module - ROOT 0,0..3,5
         .value Name 'k' Load - 3,4..3,5
 '''),
 
-(158, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(157, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 2:
     i
     if 1:
@@ -4591,7 +4581,7 @@ Module - ROOT 0,0..3,5
         .value Name 'k' Load - 3,4..3,5
 '''),
 
-(159, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(158, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 2:
     i
     if 1:
@@ -4625,7 +4615,7 @@ Module - ROOT 0,0..3,5
         .value Name 'k' Load - 3,4..3,5
 '''),
 
-(160, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(159, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 2:
     i
     j
@@ -4663,7 +4653,7 @@ Module - ROOT 0,0..6,5
         .value Name 'k' Load - 6,4..6,5
 '''),
 
-(161, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(160, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 2:
     i
     if 1: pass
@@ -4697,7 +4687,7 @@ Module - ROOT 0,0..5,5
         .value Name 'k' Load - 5,4..5,5
 '''),
 
-(162, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(161, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 2:
     i
     if 1:
@@ -4732,7 +4722,7 @@ Module - ROOT 0,0..5,5
         .value Name 'k' Load - 5,4..5,5
 '''),
 
-(163, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(162, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 2:
     i
     if 1:
@@ -4777,7 +4767,7 @@ Module - ROOT 0,0..5,5
         .value Name 'k' Load - 5,4..5,5
 '''),
 
-(164, '', 1, 2, None, {}, ('exec',
+(163, '', 1, 2, None, {}, ('exec',
 r'''i ; j'''), (None,
 r'''l'''), r'''
 i
@@ -4791,7 +4781,7 @@ Module - ROOT 0,0..1,1
      .value Name 'l' Load - 1,0..1,1
 '''),
 
-(165, '', 1, 2, None, {}, ('exec', r'''
+(164, '', 1, 2, None, {}, ('exec', r'''
 i \
  ; j
 '''), (None,
@@ -4807,7 +4797,7 @@ Module - ROOT 0,0..1,1
      .value Name 'l' Load - 1,0..1,1
 '''),
 
-(166, '', 1, 2, None, {}, ('exec', r'''
+(165, '', 1, 2, None, {}, ('exec', r'''
 i ; \
  j
 '''), (None,
@@ -4823,7 +4813,7 @@ Module - ROOT 0,0..1,1
      .value Name 'l' Load - 1,0..1,1
 '''),
 
-(167, '', 1, 2, None, {}, ('exec', r'''
+(166, '', 1, 2, None, {}, ('exec', r'''
 i \
 ; \
 j
@@ -4840,7 +4830,7 @@ Module - ROOT 0,0..1,1
      .value Name 'l' Load - 1,0..1,1
 '''),
 
-(168, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(167, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 1:
     i ; j
 '''), (None,
@@ -4860,7 +4850,7 @@ Module - ROOT 0,0..2,5
         .value Name 'l' Load - 2,4..2,5
 '''),
 
-(169, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(168, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 1:
     i \
     ; j
@@ -4881,7 +4871,7 @@ Module - ROOT 0,0..2,5
         .value Name 'l' Load - 2,4..2,5
 '''),
 
-(170, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(169, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 1:
     i ; \
     j
@@ -4902,7 +4892,7 @@ Module - ROOT 0,0..2,5
         .value Name 'l' Load - 2,4..2,5
 '''),
 
-(171, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(170, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 1:
     i \
     ; \
@@ -4924,7 +4914,7 @@ Module - ROOT 0,0..2,5
         .value Name 'l' Load - 2,4..2,5
 '''),
 
-(172, '', 0, 1, None, {}, ('exec',
+(171, '', 0, 1, None, {}, ('exec',
 r'''i ; j'''), (None,
 r'''l'''), r'''
 l
@@ -4938,7 +4928,7 @@ Module - ROOT 0,0..1,1
      .value Name 'j' Load - 1,0..1,1
 '''),
 
-(173, '', 0, 1, None, {}, ('exec', r'''
+(172, '', 0, 1, None, {}, ('exec', r'''
 i \
  ; j
 '''), (None,
@@ -4954,7 +4944,7 @@ Module - ROOT 0,0..1,1
      .value Name 'j' Load - 1,0..1,1
 '''),
 
-(174, '', 0, 1, None, {}, ('exec', r'''
+(173, '', 0, 1, None, {}, ('exec', r'''
 i ; \
  j
 '''), (None,
@@ -4970,7 +4960,7 @@ Module - ROOT 0,0..1,1
      .value Name 'j' Load - 1,0..1,1
 '''),
 
-(175, '', 0, 1, None, {}, ('exec', r'''
+(174, '', 0, 1, None, {}, ('exec', r'''
 i \
 ; \
 j
@@ -4987,9 +4977,30 @@ Module - ROOT 0,0..1,1
      .value Name 'j' Load - 1,0..1,1
 '''),
 
-(176, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(175, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
     i ; j
+'''), (None,
+r'''l'''), r'''
+if 1:
+    l
+    j
+''', r'''
+Module - ROOT 0,0..2,5
+  .body[1]
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
+'''),
+
+(176, 'body[0]', 0, 1, None, {}, ('exec', r'''
+if 1:
+    i \
+     ; j
 '''), (None,
 r'''l'''), r'''
 if 1:
@@ -5009,8 +5020,8 @@ Module - ROOT 0,0..2,5
 
 (177, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
-    i \
-     ; j
+    i ; \
+     j
 '''), (None,
 r'''l'''), r'''
 if 1:
@@ -5030,27 +5041,6 @@ Module - ROOT 0,0..2,5
 
 (178, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
-    i ; \
-     j
-'''), (None,
-r'''l'''), r'''
-if 1:
-    l
-    j
-''', r'''
-Module - ROOT 0,0..2,5
-  .body[1]
-   0] If - 0,0..2,5
-     .test Constant 1 - 0,3..0,4
-     .body[2]
-      0] Expr - 1,4..1,5
-        .value Name 'l' Load - 1,4..1,5
-      1] Expr - 2,4..2,5
-        .value Name 'j' Load - 2,4..2,5
-'''),
-
-(179, 'body[0]', 0, 1, None, {}, ('exec', r'''
-if 1:
     i \
      ; \
      j
@@ -5071,7 +5061,7 @@ Module - ROOT 0,0..2,5
         .value Name 'j' Load - 2,4..2,5
 '''),
 
-(180, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(179, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1: \
     i ; j
 '''), (None,
@@ -5091,7 +5081,7 @@ Module - ROOT 0,0..2,5
         .value Name 'j' Load - 2,4..2,5
 '''),
 
-(181, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(180, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1: \
     i \
      ; j
@@ -5112,7 +5102,7 @@ Module - ROOT 0,0..2,5
         .value Name 'j' Load - 2,4..2,5
 '''),
 
-(182, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(181, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1: \
     i ; \
      j
@@ -5133,7 +5123,7 @@ Module - ROOT 0,0..2,5
         .value Name 'j' Load - 2,4..2,5
 '''),
 
-(183, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(182, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1: \
     i \
      ; \
@@ -5155,7 +5145,7 @@ Module - ROOT 0,0..2,5
         .value Name 'j' Load - 2,4..2,5
 '''),
 
-(184, '', 0, 1, None, {}, ('exec',
+(183, '', 0, 1, None, {}, ('exec',
 r'''i ;'''), (None,
 r'''l'''),
 r'''l''', r'''
@@ -5165,7 +5155,7 @@ Module - ROOT 0,0..0,1
      .value Name 'l' Load - 0,0..0,1
 '''),
 
-(185, '', 0, 1, None, {}, ('exec',
+(184, '', 0, 1, None, {}, ('exec',
 r'''i ;  # post'''), (None,
 r'''l'''), r'''
 l
@@ -5177,7 +5167,7 @@ Module - ROOT 0,0..1,6
      .value Name 'l' Load - 0,0..0,1
 '''),
 
-(186, '', 0, 1, None, {}, ('exec', r'''
+(185, '', 0, 1, None, {}, ('exec', r'''
 i ; \
  # post
 '''), (None,
@@ -5189,7 +5179,7 @@ Module - ROOT 0,0..0,1
      .value Name 'l' Load - 0,0..0,1
 '''),
 
-(187, '', 0, 1, None, {}, ('exec', r'''
+(186, '', 0, 1, None, {}, ('exec', r'''
 i \
  ; \
  # post
@@ -5202,7 +5192,7 @@ Module - ROOT 0,0..0,1
      .value Name 'l' Load - 0,0..0,1
 '''),
 
-(188, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(187, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
     i ;
 '''), (None,
@@ -5219,7 +5209,7 @@ Module - ROOT 0,0..1,5
         .value Name 'l' Load - 1,4..1,5
 '''),
 
-(189, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(188, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
     i ;  # post
 '''), (None,
@@ -5237,7 +5227,7 @@ Module - ROOT 0,0..2,10
         .value Name 'l' Load - 1,4..1,5
 '''),
 
-(190, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(189, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
     i ; \
  # post
@@ -5255,7 +5245,7 @@ Module - ROOT 0,0..1,5
         .value Name 'l' Load - 1,4..1,5
 '''),
 
-(191, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(190, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
     i \
  ; \
@@ -5274,7 +5264,7 @@ Module - ROOT 0,0..1,5
         .value Name 'l' Load - 1,4..1,5
 '''),
 
-(192, '', 0, 1, None, {}, ('exec', r'''
+(191, '', 0, 1, None, {}, ('exec', r'''
 # pre
 i ; \
  j
@@ -5287,7 +5277,7 @@ Module - ROOT 0,0..0,1
      .value Name 'j' Load - 0,0..0,1
 '''),
 
-(193, '', 0, 1, None, {}, ('exec', r'''
+(192, '', 0, 1, None, {}, ('exec', r'''
 # pre
 i ; \
  j
@@ -5304,7 +5294,7 @@ Module - ROOT 0,0..1,1
      .value Name 'j' Load - 1,0..1,1
 '''),
 
-(194, 'body[0]', 0, 1, 'orelse', {}, ('exec', r'''
+(193, 'body[0]', 0, 1, 'orelse', {}, ('exec', r'''
 if 1: pass
 else: \
   # pre
@@ -5327,7 +5317,7 @@ Module - ROOT 0,0..2,3
         .value Name 'j' Load - 2,2..2,3
 '''),
 
-(195, 'body[0]', 0, 1, 'orelse', {}, ('exec', r'''
+(194, 'body[0]', 0, 1, 'orelse', {}, ('exec', r'''
 if 1: pass
 else:
   \
@@ -5356,7 +5346,7 @@ Module - ROOT 0,0..4,3
         .value Name 'k' Load - 4,2..4,3
 '''),
 
-(196, 'body[0]', 1, 2, 'orelse', {}, ('exec', r'''
+(195, 'body[0]', 1, 2, 'orelse', {}, ('exec', r'''
 if 1: pass
 else:
     k
@@ -5385,7 +5375,7 @@ Module - ROOT 0,0..4,5
         .value Name 'j' Load - 4,4..4,5
 '''),
 
-(197, 'body[0]', 0, 1, 'orelse', {}, ('exec', r'''
+(196, 'body[0]', 0, 1, 'orelse', {}, ('exec', r'''
 if 1: pass
 else:
   # pre
@@ -5409,7 +5399,7 @@ Module - ROOT 0,0..2,3
         .value Name 'j' Load - 2,2..2,3
 '''),
 
-(198, '', 0, 1, None, {}, ('exec', r'''
+(197, '', 0, 1, None, {}, ('exec', r'''
 # pre
 i ; j
 '''), (None,
@@ -5425,7 +5415,7 @@ Module - ROOT 0,0..1,1
      .value Name 'j' Load - 1,0..1,1
 '''),
 
-(199, '', 0, 1, None, {}, ('exec', r'''
+(198, '', 0, 1, None, {}, ('exec', r'''
 # pre
 i \
  ; j
@@ -5442,7 +5432,7 @@ Module - ROOT 0,0..1,1
      .value Name 'j' Load - 1,0..1,1
 '''),
 
-(200, '', 0, 1, None, {}, ('exec', r'''
+(199, '', 0, 1, None, {}, ('exec', r'''
 # pre
 i ; \
  j
@@ -5459,7 +5449,7 @@ Module - ROOT 0,0..1,1
      .value Name 'j' Load - 1,0..1,1
 '''),
 
-(201, '', 0, 1, None, {}, ('exec', r'''
+(200, '', 0, 1, None, {}, ('exec', r'''
 # pre
 i \
 ; \
@@ -5477,10 +5467,32 @@ Module - ROOT 0,0..1,1
      .value Name 'j' Load - 1,0..1,1
 '''),
 
-(202, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(201, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
     # pre
     i ; j
+'''), (None,
+r'''l'''), r'''
+if 1:
+    l
+    j
+''', r'''
+Module - ROOT 0,0..2,5
+  .body[1]
+   0] If - 0,0..2,5
+     .test Constant 1 - 0,3..0,4
+     .body[2]
+      0] Expr - 1,4..1,5
+        .value Name 'l' Load - 1,4..1,5
+      1] Expr - 2,4..2,5
+        .value Name 'j' Load - 2,4..2,5
+'''),
+
+(202, 'body[0]', 0, 1, None, {}, ('exec', r'''
+if 1:
+    # pre
+    i \
+     ; j
 '''), (None,
 r'''l'''), r'''
 if 1:
@@ -5501,8 +5513,8 @@ Module - ROOT 0,0..2,5
 (203, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
     # pre
-    i \
-     ; j
+    i ; \
+     j
 '''), (None,
 r'''l'''), r'''
 if 1:
@@ -5523,28 +5535,6 @@ Module - ROOT 0,0..2,5
 (204, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
     # pre
-    i ; \
-     j
-'''), (None,
-r'''l'''), r'''
-if 1:
-    l
-    j
-''', r'''
-Module - ROOT 0,0..2,5
-  .body[1]
-   0] If - 0,0..2,5
-     .test Constant 1 - 0,3..0,4
-     .body[2]
-      0] Expr - 1,4..1,5
-        .value Name 'l' Load - 1,4..1,5
-      1] Expr - 2,4..2,5
-        .value Name 'j' Load - 2,4..2,5
-'''),
-
-(205, 'body[0]', 0, 1, None, {}, ('exec', r'''
-if 1:
-    # pre
     i \
      ; \
      j
@@ -5565,7 +5555,7 @@ Module - ROOT 0,0..2,5
         .value Name 'j' Load - 2,4..2,5
 '''),
 
-(206, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(205, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1: \
     # pre
     i ; j
@@ -5586,7 +5576,7 @@ Module - ROOT 0,0..2,5
         .value Name 'j' Load - 2,4..2,5
 '''),
 
-(207, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(206, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1: \
     # pre
     i \
@@ -5608,7 +5598,7 @@ Module - ROOT 0,0..2,5
         .value Name 'j' Load - 2,4..2,5
 '''),
 
-(208, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(207, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1: \
     # pre
     i ; \
@@ -5630,7 +5620,7 @@ Module - ROOT 0,0..2,5
         .value Name 'j' Load - 2,4..2,5
 '''),
 
-(209, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(208, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1: \
     # pre
     i \
@@ -5653,7 +5643,7 @@ Module - ROOT 0,0..2,5
         .value Name 'j' Load - 2,4..2,5
 '''),
 
-(210, '', 0, 1, None, {}, ('exec', r'''
+(209, '', 0, 1, None, {}, ('exec', r'''
 # pre
 i ;
 '''), (None,
@@ -5665,7 +5655,7 @@ Module - ROOT 0,0..0,1
      .value Name 'l' Load - 0,0..0,1
 '''),
 
-(211, '', 0, 1, None, {}, ('exec', r'''
+(210, '', 0, 1, None, {}, ('exec', r'''
 # pre
 i ;  # post
 '''), (None,
@@ -5679,7 +5669,7 @@ Module - ROOT 0,0..1,6
      .value Name 'l' Load - 0,0..0,1
 '''),
 
-(212, '', 0, 1, None, {}, ('exec', r'''
+(211, '', 0, 1, None, {}, ('exec', r'''
 # pre
 i ; \
  # post
@@ -5692,7 +5682,7 @@ Module - ROOT 0,0..0,1
      .value Name 'l' Load - 0,0..0,1
 '''),
 
-(213, '', 0, 1, None, {}, ('exec', r'''
+(212, '', 0, 1, None, {}, ('exec', r'''
 # pre
 i \
  ; \
@@ -5706,7 +5696,7 @@ Module - ROOT 0,0..0,1
      .value Name 'l' Load - 0,0..0,1
 '''),
 
-(214, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(213, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
     # pre
     i ;
@@ -5724,7 +5714,7 @@ Module - ROOT 0,0..1,5
         .value Name 'l' Load - 1,4..1,5
 '''),
 
-(215, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(214, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
     # pre
     i ;  # post
@@ -5743,7 +5733,7 @@ Module - ROOT 0,0..2,6
         .value Name 'l' Load - 1,4..1,5
 '''),
 
-(216, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(215, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
     # pre
     i ; \
@@ -5762,7 +5752,7 @@ Module - ROOT 0,0..1,5
         .value Name 'l' Load - 1,4..1,5
 '''),
 
-(217, 'body[0]', 0, 1, None, {}, ('exec', r'''
+(216, 'body[0]', 0, 1, None, {}, ('exec', r'''
 if 1:
     # pre
     i \
@@ -5782,7 +5772,7 @@ Module - ROOT 0,0..1,5
         .value Name 'l' Load - 1,4..1,5
 '''),
 
-(218, '', 1, 2, None, {}, ('exec', r'''
+(217, '', 1, 2, None, {}, ('exec', r'''
 def prefunc(): pass
 pass
 def postfunc(): pass
@@ -5821,7 +5811,7 @@ Module - ROOT 0,0..6,20
       0] Pass - 6,16..6,20
 '''),
 
-(219, '', 1, 2, None, {}, ('exec', r'''
+(218, '', 1, 2, None, {}, ('exec', r'''
 def prefunc(): pass
 # pre
 pass  # post
@@ -5861,7 +5851,7 @@ Module - ROOT 0,0..6,20
       0] Pass - 6,16..6,20
 '''),
 
-(220, '', 1, 2, None, {}, ('exec', r'''
+(219, '', 1, 2, None, {}, ('exec', r'''
 def prefunc(): pass
 i ; j
 def postfunc(): pass
@@ -5904,7 +5894,7 @@ Module - ROOT 0,0..7,20
       0] Pass - 7,16..7,20
 '''),
 
-(221, '', 2, 3, None, {}, ('exec', r'''
+(220, '', 2, 3, None, {}, ('exec', r'''
 def prefunc(): pass
 i ; j
 def postfunc(): pass
@@ -5947,7 +5937,7 @@ Module - ROOT 0,0..7,20
       0] Pass - 7,16..7,20
 '''),
 
-(222, '', 1, 2, None, {}, ('exec', r'''
+(221, '', 1, 2, None, {}, ('exec', r'''
 def prefunc(): pass
 # pre
 i ; j # post
@@ -5991,7 +5981,7 @@ Module - ROOT 0,0..7,20
       0] Pass - 7,16..7,20
 '''),
 
-(223, '', 2, 3, None, {}, ('exec', r'''
+(222, '', 2, 3, None, {}, ('exec', r'''
 def prefunc(): pass
 # pre
 i ; j # post
@@ -6037,7 +6027,7 @@ Module - ROOT 0,0..8,20
       0] Pass - 8,16..8,20
 '''),
 
-(224, '', 1, 1, None, {}, ('exec',
+(223, '', 1, 1, None, {}, ('exec',
 r'''def prefunc(): pass'''), (None,
 r'''def func(): pass'''), r'''
 def prefunc(): pass
@@ -6063,7 +6053,7 @@ Module - ROOT 0,0..3,16
       0] Pass - 3,12..3,16
 '''),
 
-(225, '', 0, 0, None, {}, ('exec',
+(224, '', 0, 0, None, {}, ('exec',
 r'''def postfunc(): pass'''), (None,
 r'''def func(): pass'''), r'''
 def func(): pass
@@ -6089,7 +6079,7 @@ Module - ROOT 0,0..3,20
       0] Pass - 3,16..3,20
 '''),
 
-(226, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(225, 'body[0]', 1, 2, None, {}, ('exec', r'''
 class cls:
     def premeth(): pass
     pass
@@ -6130,7 +6120,7 @@ Module - ROOT 0,0..5,24
          0] Pass - 5,20..5,24
 '''),
 
-(227, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(226, 'body[0]', 1, 2, None, {}, ('exec', r'''
 class cls:
     def premeth(): pass
     # pre
@@ -6172,7 +6162,7 @@ Module - ROOT 0,0..5,24
          0] Pass - 5,20..5,24
 '''),
 
-(228, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(227, 'body[0]', 1, 2, None, {}, ('exec', r'''
 class cls:
     def premeth(): pass
     i ; j
@@ -6217,7 +6207,7 @@ Module - ROOT 0,0..6,24
          0] Pass - 6,20..6,24
 '''),
 
-(229, 'body[0]', 2, 3, None, {}, ('exec', r'''
+(228, 'body[0]', 2, 3, None, {}, ('exec', r'''
 class cls:
     def premeth(): pass
     i ; j
@@ -6262,7 +6252,7 @@ Module - ROOT 0,0..6,24
          0] Pass - 6,20..6,24
 '''),
 
-(230, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(229, 'body[0]', 1, 2, None, {}, ('exec', r'''
 class cls:
     def premeth(): pass
     # pre
@@ -6308,7 +6298,7 @@ Module - ROOT 0,0..6,24
          0] Pass - 6,20..6,24
 '''),
 
-(231, 'body[0]', 2, 3, None, {}, ('exec', r'''
+(230, 'body[0]', 2, 3, None, {}, ('exec', r'''
 class cls:
     def premeth(): pass
     # pre
@@ -6356,7 +6346,7 @@ Module - ROOT 0,0..7,24
          0] Pass - 7,20..7,24
 '''),
 
-(232, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(231, 'body[0]', 1, 1, None, {}, ('exec', r'''
 if 1:
     def premeth(): pass
 '''), (None,
@@ -6389,7 +6379,7 @@ Module - ROOT 0,0..4,20
          0] Pass - 4,16..4,20
 '''),
 
-(233, 'body[0]', 0, 0, None, {}, ('exec', r'''
+(232, 'body[0]', 0, 0, None, {}, ('exec', r'''
 if 1:
     def postmeth(): pass
 '''), (None,
@@ -6422,7 +6412,7 @@ Module - ROOT 0,0..4,24
          0] Pass - 4,20..4,24
 '''),
 
-(234, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(233, 'body[0]', 1, 1, None, {}, ('exec', r'''
 def f():
     i
     j
@@ -6458,7 +6448,7 @@ Module - ROOT 0,0..5,5
         .value Name 'j' Load - 5,4..5,5
 '''),
 
-(235, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(234, 'body[0]', 1, 1, None, {}, ('exec', r'''
 async def f():
     i
     j
@@ -6494,7 +6484,7 @@ Module - ROOT 0,0..5,5
         .value Name 'j' Load - 5,4..5,5
 '''),
 
-(236, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(235, 'body[0]', 1, 1, None, {}, ('exec', r'''
 class cls:
     i
     j
@@ -6530,7 +6520,7 @@ Module - ROOT 0,0..5,5
         .value Name 'j' Load - 5,4..5,5
 '''),
 
-(237, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(236, 'body[0]', 1, 1, None, {}, ('exec', r'''
 for a in b:
     i
     j
@@ -6571,7 +6561,7 @@ Module - ROOT 0,0..7,5
         .value Name 'j' Load - 7,4..7,5
 '''),
 
-(238, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(237, 'body[0]', 1, 1, None, {}, ('exec', r'''
 async for a in b:
     i
     j
@@ -6612,7 +6602,7 @@ Module - ROOT 0,0..7,5
         .value Name 'j' Load - 7,4..7,5
 '''),
 
-(239, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(238, 'body[0]', 1, 1, None, {}, ('exec', r'''
 while a:
     i
     j
@@ -6652,7 +6642,7 @@ Module - ROOT 0,0..7,5
         .value Name 'j' Load - 7,4..7,5
 '''),
 
-(240, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(239, 'body[0]', 1, 1, None, {}, ('exec', r'''
 if a:
     i
     j
@@ -6692,7 +6682,7 @@ Module - ROOT 0,0..7,5
         .value Name 'j' Load - 7,4..7,5
 '''),
 
-(241, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(240, 'body[0]', 1, 1, None, {}, ('exec', r'''
 with a:
     i
     j
@@ -6734,7 +6724,7 @@ Module - ROOT 0,0..7,5
         .value Name 'j' Load - 7,4..7,5
 '''),
 
-(242, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(241, 'body[0]', 1, 1, None, {}, ('exec', r'''
 async with a:
     i
     j
@@ -6776,7 +6766,7 @@ Module - ROOT 0,0..7,5
         .value Name 'j' Load - 7,4..7,5
 '''),
 
-(243, 'body[0].cases[0]', 1, 1, None, {}, ('exec', r'''
+(242, 'body[0].cases[0]', 1, 1, None, {}, ('exec', r'''
 match a:
     case b:
         i
@@ -6823,7 +6813,7 @@ Module - ROOT 0,0..8,9
            .value Name 'j' Load - 8,8..8,9
 '''),
 
-(244, 'body[0]', 1, 1, None, {}, ('exec', r'''
+(243, 'body[0]', 1, 1, None, {}, ('exec', r'''
 try:
     i
     j
@@ -6870,7 +6860,7 @@ Module - ROOT 0,0..9,8
       0] Pass - 9,4..9,8
 '''),
 
-(245, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(244, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 def f():
     i
     j
@@ -6902,7 +6892,7 @@ Module - ROOT 0,0..3,5
         .value Name 'j' Load - 3,4..3,5
 '''),
 
-(246, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(245, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 async def f():
     i
     j
@@ -6934,7 +6924,7 @@ Module - ROOT 0,0..3,5
         .value Name 'j' Load - 3,4..3,5
 '''),
 
-(247, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(246, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 class cls:
     i
     j
@@ -6966,7 +6956,7 @@ Module - ROOT 0,0..3,5
         .value Name 'j' Load - 3,4..3,5
 '''),
 
-(248, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(247, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 for a in b:
     i
     j
@@ -6999,7 +6989,7 @@ Module - ROOT 0,0..3,5
         .value Name 'j' Load - 3,4..3,5
 '''),
 
-(249, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(248, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 async for a in b:
     i
     j
@@ -7032,7 +7022,7 @@ Module - ROOT 0,0..3,5
         .value Name 'j' Load - 3,4..3,5
 '''),
 
-(250, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(249, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 while a:
     i
     j
@@ -7064,7 +7054,7 @@ Module - ROOT 0,0..3,5
         .value Name 'j' Load - 3,4..3,5
 '''),
 
-(251, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(250, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 if a:
     i
     j
@@ -7096,7 +7086,7 @@ Module - ROOT 0,0..3,5
         .value Name 'j' Load - 3,4..3,5
 '''),
 
-(252, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(251, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 with a:
     i
     j
@@ -7130,7 +7120,7 @@ Module - ROOT 0,0..3,5
         .value Name 'j' Load - 3,4..3,5
 '''),
 
-(253, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(252, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 async with a:
     i
     j
@@ -7164,7 +7154,7 @@ Module - ROOT 0,0..3,5
         .value Name 'j' Load - 3,4..3,5
 '''),
 
-(254, 'body[0].cases[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(253, 'body[0].cases[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 match a:
     case b:
         i
@@ -7203,7 +7193,7 @@ Module - ROOT 0,0..4,9
            .value Name 'j' Load - 4,8..4,9
 '''),
 
-(255, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
+(254, 'body[0]', 1, 1, None, {'trivia': (False, False), 'pep8space': False}, ('exec', r'''
 try:
     i
     j
@@ -7242,7 +7232,7 @@ Module - ROOT 0,0..5,8
       0] Pass - 5,4..5,8
 '''),
 
-(256, 'body[0]', 1, 1, None, {'pep8space': 1}, ('exec', r'''
+(255, 'body[0]', 1, 1, None, {'pep8space': 1}, ('exec', r'''
 if 1:
     i
     j
@@ -7278,7 +7268,7 @@ Module - ROOT 0,0..5,5
         .value Name 'j' Load - 5,4..5,5
 '''),
 
-(257, '', 1, 2, None, {}, ('exec',
+(256, '', 1, 2, None, {}, ('exec',
 r'''i ; j ; k'''), (None,
 r'''l'''), r'''
 i
@@ -7295,7 +7285,7 @@ Module - ROOT 0,0..2,1
      .value Name 'k' Load - 2,0..2,1
 '''),
 
-(258, '', 1, 2, None, {}, ('exec', r'''
+(257, '', 1, 2, None, {}, ('exec', r'''
 i ; \
  j \
  ; k
@@ -7315,7 +7305,7 @@ Module - ROOT 0,0..2,1
      .value Name 'k' Load - 2,0..2,1
 '''),
 
-(259, '', 1, 2, None, {}, ('exec', r'''
+(258, '', 1, 2, None, {}, ('exec', r'''
 i \
  ; j ; \
  k
@@ -7335,7 +7325,7 @@ Module - ROOT 0,0..2,1
      .value Name 'k' Load - 2,0..2,1
 '''),
 
-(260, '', 1, 2, None, {}, ('exec', r'''
+(259, '', 1, 2, None, {}, ('exec', r'''
 i \
  ; \
  j \
@@ -7357,7 +7347,7 @@ Module - ROOT 0,0..2,1
      .value Name 'k' Load - 2,0..2,1
 '''),
 
-(261, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(260, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 1:
     i ; j ; k
 '''), (None,
@@ -7380,7 +7370,7 @@ Module - ROOT 0,0..3,5
         .value Name 'k' Load - 3,4..3,5
 '''),
 
-(262, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(261, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 1:
     i ; \
  j ; \
@@ -7405,7 +7395,7 @@ Module - ROOT 0,0..3,5
         .value Name 'k' Load - 3,4..3,5
 '''),
 
-(263, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(262, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 1:
     i \
  ; j ; \
@@ -7430,7 +7420,7 @@ Module - ROOT 0,0..3,5
         .value Name 'k' Load - 3,4..3,5
 '''),
 
-(264, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(263, 'body[0]', 1, 2, None, {}, ('exec', r'''
 if 1:
     i \
  ; \
@@ -7457,7 +7447,7 @@ Module - ROOT 0,0..3,5
         .value Name 'k' Load - 3,4..3,5
 '''),
 
-(265, '', 1, 2, None, {}, ('exec',
+(264, '', 1, 2, None, {}, ('exec',
 r'''i ; j ; k'''), (None,
 r'''def f(): pass'''), r'''
 i
@@ -7489,10 +7479,45 @@ Module - ROOT 0,0..6,1
      .value Name 'k' Load - 6,0..6,1
 '''),
 
-(266, '', 1, 2, None, {}, ('exec', r'''
+(265, '', 1, 2, None, {}, ('exec', r'''
 i ; \
  j \
  ; k
+'''), (None,
+r'''def f(): pass'''), r'''
+i
+
+
+def f(): pass
+
+
+k
+''', r'''
+i
+
+
+def f():
+    pass
+
+
+k
+''', r'''
+Module - ROOT 0,0..6,1
+  .body[3]
+   0] Expr - 0,0..0,1
+     .value Name 'i' Load - 0,0..0,1
+   1] FunctionDef - 3,0..3,13
+     .name 'f'
+     .body[1]
+      0] Pass - 3,9..3,13
+   2] Expr - 6,0..6,1
+     .value Name 'k' Load - 6,0..6,1
+'''),
+
+(266, '', 1, 2, None, {}, ('exec', r'''
+i \
+ ; j ; \
+ k
 '''), (None,
 r'''def f(): pass'''), r'''
 i
@@ -7526,41 +7551,6 @@ Module - ROOT 0,0..6,1
 
 (267, '', 1, 2, None, {}, ('exec', r'''
 i \
- ; j ; \
- k
-'''), (None,
-r'''def f(): pass'''), r'''
-i
-
-
-def f(): pass
-
-
-k
-''', r'''
-i
-
-
-def f():
-    pass
-
-
-k
-''', r'''
-Module - ROOT 0,0..6,1
-  .body[3]
-   0] Expr - 0,0..0,1
-     .value Name 'i' Load - 0,0..0,1
-   1] FunctionDef - 3,0..3,13
-     .name 'f'
-     .body[1]
-      0] Pass - 3,9..3,13
-   2] Expr - 6,0..6,1
-     .value Name 'k' Load - 6,0..6,1
-'''),
-
-(268, '', 1, 2, None, {}, ('exec', r'''
-i \
  ; \
  j \
  ; \
@@ -7596,7 +7586,7 @@ Module - ROOT 0,0..6,1
      .value Name 'k' Load - 6,0..6,1
 '''),
 
-(269, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(268, 'body[0]', 1, 2, None, {}, ('exec', r'''
 class cls:
     i ; j ; k
 '''), (None,
@@ -7631,10 +7621,47 @@ Module - ROOT 0,0..5,5
         .value Name 'k' Load - 5,4..5,5
 '''),
 
-(270, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(269, 'body[0]', 1, 2, None, {}, ('exec', r'''
 class cls:
     i ; \
  j ; \
+ k
+'''), (None,
+r'''def f(): pass'''), r'''
+class cls:
+    i
+
+    def f(): pass
+
+    k
+''', r'''
+class cls:
+    i
+
+    def f():
+        pass
+
+    k
+''', r'''
+Module - ROOT 0,0..5,5
+  .body[1]
+   0] ClassDef - 0,0..5,5
+     .name 'cls'
+     .body[3]
+      0] Expr - 1,4..1,5
+        .value Name 'i' Load - 1,4..1,5
+      1] FunctionDef - 3,4..3,17
+        .name 'f'
+        .body[1]
+         0] Pass - 3,13..3,17
+      2] Expr - 5,4..5,5
+        .value Name 'k' Load - 5,4..5,5
+'''),
+
+(270, 'body[0]', 1, 2, None, {}, ('exec', r'''
+class cls:
+    i \
+ ; j ; \
  k
 '''), (None,
 r'''def f(): pass'''), r'''
@@ -7671,43 +7698,6 @@ Module - ROOT 0,0..5,5
 (271, 'body[0]', 1, 2, None, {}, ('exec', r'''
 class cls:
     i \
- ; j ; \
- k
-'''), (None,
-r'''def f(): pass'''), r'''
-class cls:
-    i
-
-    def f(): pass
-
-    k
-''', r'''
-class cls:
-    i
-
-    def f():
-        pass
-
-    k
-''', r'''
-Module - ROOT 0,0..5,5
-  .body[1]
-   0] ClassDef - 0,0..5,5
-     .name 'cls'
-     .body[3]
-      0] Expr - 1,4..1,5
-        .value Name 'i' Load - 1,4..1,5
-      1] FunctionDef - 3,4..3,17
-        .name 'f'
-        .body[1]
-         0] Pass - 3,13..3,17
-      2] Expr - 5,4..5,5
-        .value Name 'k' Load - 5,4..5,5
-'''),
-
-(272, 'body[0]', 1, 2, None, {}, ('exec', r'''
-class cls:
-    i \
  ; \
  j \
  ; \
@@ -7744,7 +7734,7 @@ Module - ROOT 0,0..5,5
         .value Name 'k' Load - 5,4..5,5
 '''),
 
-(273, '', 1, 2, None, {}, ('exec',
+(272, '', 1, 2, None, {}, ('exec',
 r'''i ; j ;'''), (None,
 r'''def f(): pass'''), r'''
 i
@@ -7768,7 +7758,7 @@ Module - ROOT 0,0..3,13
       0] Pass - 3,9..3,13
 '''),
 
-(274, '', 1, 2, None, {}, ('exec', r'''
+(273, '', 1, 2, None, {}, ('exec', r'''
 i ; \
  j \
  ;
@@ -7795,7 +7785,7 @@ Module - ROOT 0,0..3,13
       0] Pass - 3,9..3,13
 '''),
 
-(275, '', 1, 2, None, {}, ('exec', r'''
+(274, '', 1, 2, None, {}, ('exec', r'''
 i \
  ; j ;
 '''), (None,
@@ -7821,7 +7811,7 @@ Module - ROOT 0,0..3,13
       0] Pass - 3,9..3,13
 '''),
 
-(276, '', 1, 2, None, {}, ('exec', r'''
+(275, '', 1, 2, None, {}, ('exec', r'''
 i \
  ; \
  j \
@@ -7851,7 +7841,7 @@ Module - ROOT 0,0..4,13
       0] Pass - 4,9..4,13
 '''),
 
-(277, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(276, 'body[0]', 1, 2, None, {}, ('exec', r'''
 class cls:
     i ; j ;
 '''), (None,
@@ -7880,7 +7870,7 @@ Module - ROOT 0,0..3,17
          0] Pass - 3,13..3,17
 '''),
 
-(278, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(277, 'body[0]', 1, 2, None, {}, ('exec', r'''
 class cls:
     i ; \
  j ;
@@ -7910,7 +7900,7 @@ Module - ROOT 0,0..3,17
          0] Pass - 3,13..3,17
 '''),
 
-(279, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(278, 'body[0]', 1, 2, None, {}, ('exec', r'''
 class cls:
     i \
  ; j ;
@@ -7940,7 +7930,7 @@ Module - ROOT 0,0..3,17
          0] Pass - 3,13..3,17
 '''),
 
-(280, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(279, 'body[0]', 1, 2, None, {}, ('exec', r'''
 class cls:
     i \
  ; \
@@ -7974,7 +7964,7 @@ Module - ROOT 0,0..4,17
          0] Pass - 4,13..4,17
 '''),
 
-(281, '', 1, 2, None, {}, ('exec',
+(280, '', 1, 2, None, {}, ('exec',
 r'''i ; j ;  # post'''), (None,
 r'''def f(): pass'''), r'''
 i ;
@@ -8000,7 +7990,7 @@ Module - ROOT 0,0..4,6
       0] Pass - 3,9..3,13
 '''),
 
-(282, '', 1, 2, None, {}, ('exec', r'''
+(281, '', 1, 2, None, {}, ('exec', r'''
 i ; \
  j \
  ;  # post
@@ -8029,7 +8019,7 @@ Module - ROOT 0,0..4,7
       0] Pass - 3,9..3,13
 '''),
 
-(283, '', 1, 2, None, {}, ('exec', r'''
+(282, '', 1, 2, None, {}, ('exec', r'''
 i \
  ; j ;  # post
 '''), (None,
@@ -8059,7 +8049,7 @@ Module - ROOT 0,0..5,6
       0] Pass - 4,9..4,13
 '''),
 
-(284, '', 1, 2, None, {}, ('exec', r'''
+(283, '', 1, 2, None, {}, ('exec', r'''
 i \
  ; \
  j \
@@ -8091,7 +8081,7 @@ Module - ROOT 0,0..5,7
       0] Pass - 4,9..4,13
 '''),
 
-(285, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(284, 'body[0]', 1, 2, None, {}, ('exec', r'''
 class cls:
     i ; j ;  # post
 '''), (None,
@@ -8122,7 +8112,7 @@ Module - ROOT 0,0..4,6
          0] Pass - 3,13..3,17
 '''),
 
-(286, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(285, 'body[0]', 1, 2, None, {}, ('exec', r'''
 class cls:
     i ; \
  j ;  # post
@@ -8154,7 +8144,7 @@ Module - ROOT 0,0..4,7
          0] Pass - 3,13..3,17
 '''),
 
-(287, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(286, 'body[0]', 1, 2, None, {}, ('exec', r'''
 class cls:
     i \
  ; j ;  # post
@@ -8188,7 +8178,7 @@ Module - ROOT 0,0..5,6
          0] Pass - 4,13..4,17
 '''),
 
-(288, 'body[0]', 1, 2, None, {}, ('exec', r'''
+(287, 'body[0]', 1, 2, None, {}, ('exec', r'''
 class cls:
     i \
  ; \
@@ -8224,7 +8214,7 @@ Module - ROOT 0,0..5,7
          0] Pass - 4,13..4,17
 '''),
 
-(289, 'body[0]', 0, 1, 'orelse', {}, ('exec', r'''
+(288, 'body[0]', 0, 1, 'orelse', {}, ('exec', r'''
 if 1: pass
 elif 2:
     pass
@@ -8244,7 +8234,7 @@ Module - ROOT 0,0..2,9
       0] Break - 2,4..2,9
 '''),
 
-(290, 'body[0]', 0, 1, 'orelse', {'elif_': False}, ('exec', r'''
+(289, 'body[0]', 0, 1, 'orelse', {'elif_': False}, ('exec', r'''
 if 1: pass
 elif 2:
     pass
@@ -8272,7 +8262,7 @@ Module - ROOT 0,0..2,15
          0] Break - 2,10..2,15
 '''),
 
-(291, 'body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
+(290, 'body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 if 1: pass
 elif 2:
     pass
@@ -8298,7 +8288,7 @@ Module - ROOT 0,0..1,13
          0] Break - 1,8..1,13
 '''),
 
-(292, 'body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
+(291, 'body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 if 1: pass
 else:
     pass
@@ -8324,7 +8314,7 @@ Module - ROOT 0,0..1,13
          0] Break - 1,8..1,13
 '''),
 
-(293, 'body[0].body[0]', 0, 1, 'orelse', {}, ('exec', r'''
+(292, 'body[0].body[0]', 0, 1, 'orelse', {}, ('exec', r'''
 class cls:
     if 1: pass
     elif 2:
@@ -8349,7 +8339,7 @@ Module - ROOT 0,0..3,13
          0] Break - 3,8..3,13
 '''),
 
-(294, 'body[0].body[0]', 0, 1, 'orelse', {'elif_': False}, ('exec', r'''
+(293, 'body[0].body[0]', 0, 1, 'orelse', {'elif_': False}, ('exec', r'''
 class cls:
     if 1: pass
     elif 2:
@@ -8383,7 +8373,7 @@ Module - ROOT 0,0..3,19
             0] Break - 3,14..3,19
 '''),
 
-(295, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
+(294, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 class cls:
     if 1: pass
     elif 2:
@@ -8415,7 +8405,7 @@ Module - ROOT 0,0..2,17
             0] Break - 2,12..2,17
 '''),
 
-(296, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
+(295, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 class cls:
     if 1: pass
     else:
@@ -8447,7 +8437,7 @@ Module - ROOT 0,0..2,17
             0] Break - 2,12..2,17
 '''),
 
-(297, 'body[0]', 0, 1, 'orelse', {'elif_': False}, ('exec', r'''
+(296, 'body[0]', 0, 1, 'orelse', {'elif_': False}, ('exec', r'''
 if 1: pass
 elif 2:
     pass
@@ -8484,7 +8474,7 @@ Module - ROOT 0,0..4,16
          0] Continue - 4,8..4,16
 '''),
 
-(298, 'body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
+(297, 'body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 if 1: pass
 elif 2:
     pass
@@ -8519,7 +8509,7 @@ Module - ROOT 0,0..3,12
          0] Continue - 3,4..3,12
 '''),
 
-(299, 'body[0].orelse[0]', 0, 0, 'orelse', {'elif_': False}, ('exec', r'''
+(298, 'body[0].orelse[0]', 0, 0, 'orelse', {'elif_': False}, ('exec', r'''
 if 1: pass
 elif 2:
     pass
@@ -8565,7 +8555,7 @@ Module - ROOT 0,0..6,16
             0] Continue - 6,8..6,16
 '''),
 
-(300, 'body[0].orelse[0]', 0, 0, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
+(299, 'body[0].orelse[0]', 0, 0, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 if 1: pass
 elif 2:
     pass
@@ -8609,7 +8599,7 @@ Module - ROOT 0,0..5,12
             0] Continue - 5,4..5,12
 '''),
 
-(301, 'body[0].body[0]', 0, 1, 'orelse', {'elif_': False}, ('exec', r'''
+(300, 'body[0].body[0]', 0, 1, 'orelse', {'elif_': False}, ('exec', r'''
 class cls:
     if 1: pass
     elif 2:
@@ -8652,7 +8642,7 @@ Module - ROOT 0,0..5,20
             0] Continue - 5,12..5,20
 '''),
 
-(302, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
+(301, 'body[0].body[0]', 0, 1, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 class cls:
     if 1: pass
     elif 2:
@@ -8693,7 +8683,7 @@ Module - ROOT 0,0..4,16
             0] Continue - 4,8..4,16
 '''),
 
-(303, 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {'elif_': False}, ('exec', r'''
+(302, 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {'elif_': False}, ('exec', r'''
 class cls:
     if 1: pass
     elif 2:
@@ -8745,7 +8735,7 @@ Module - ROOT 0,0..7,20
                0] Continue - 7,12..7,20
 '''),
 
-(304, 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
+(303, 'body[0].body[0].orelse[0]', 0, 0, 'orelse', {'trivia': (False, False), 'pep8space': False, 'elif_': True}, ('exec', r'''
 class cls:
     if 1: pass
     elif 2:
@@ -8795,7 +8785,7 @@ Module - ROOT 0,0..6,16
                0] Continue - 6,8..6,16
 '''),
 
-(305, 'body[0]', 0, 0, 'orelse', {}, ('exec', r'''
+(304, 'body[0]', 0, 0, 'orelse', {}, ('exec', r'''
 if 1:
     pass;
 '''), (None,
@@ -8816,7 +8806,7 @@ Module - ROOT 0,0..3,5
         .value Name 'i' Load - 3,4..3,5
 '''),
 
-(306, 'body[0]', 0, 0, 'orelse', {}, ('exec', r'''
+(305, 'body[0]', 0, 0, 'orelse', {}, ('exec', r'''
 try:
     continue
 except:

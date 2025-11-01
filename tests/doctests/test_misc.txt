@@ -50,7 +50,6 @@ class cls:
 <BLANKLINE>
     def meth(self, a):
         return a
-<BLANKLINE>
 >>> f.body[-1]
 <FunctionDef 8,4..9,16>
 >>> f.body[-1].name = 'blahblahblah'
@@ -65,7 +64,6 @@ class cls:
 <BLANKLINE>
     def blahblahblah(self, a):
         return a
-<BLANKLINE>
 
 
 ........................................................................................................................

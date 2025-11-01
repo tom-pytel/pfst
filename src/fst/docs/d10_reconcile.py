@@ -29,7 +29,7 @@ can.
 
 >>> f = f.reconcile(m)
 
->>> print(f.src.rstrip())
+>>> print(f.src)
 if i:  # 1
   j = [pure_ast, # 2
        g() # 3
@@ -50,7 +50,7 @@ True
 
 >>> f = f.reconcile(m)
 
->>> print(f.src.rstrip())
+>>> print(f.src)
 if i:  # 1
   j = [pure_ast, # 2
        g(), 'pure_ast'
@@ -77,7 +77,7 @@ original tree that was marked, for now.
 
 >>> f = f.reconcile(m)
 
->>> print(f.src.rstrip())
+>>> print(f.src)
 if i:  # 1
   j = [pure_ast, # 2
        g(), 'pure_ast'

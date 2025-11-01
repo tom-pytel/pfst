@@ -482,7 +482,9 @@ class SrcEdit:
 
         prepend = 2 if put_col else 0  # don't put initial empty line if putting on a first AST line at root
 
-        if is_pep8 and fpre and ((put_ns := isinstance(put_body[0], ASTS_SCOPE_NAMED)) or isinstance(fpre.a, ASTS_SCOPE_NAMED)):  # preceding space
+        if is_pep8 and fpre and (
+            (put_ns := isinstance(put_body[0], ASTS_SCOPE_NAMED)) or isinstance(fpre.a, ASTS_SCOPE_NAMED)
+        ):  # preceding space
             if pep8space == 1 or (not fpre.pfield.idx and isinstance(a := fpre.a, Expr) and   # docstring
                                   isinstance(v := a.value, Constant) and isinstance(v.value, str)):
                 want = 1
@@ -509,8 +511,12 @@ class SrcEdit:
 
                 prepend += need
 
-        if not (is_pep8 and fpost and (isinstance(put_body[-1], ASTS_SCOPE_NAMED) or isinstance(fpost.a, ASTS_SCOPE_NAMED))):  # trailing space
-            postpend = bool((l := put_lines[-1]) and not re_empty_line.match(l))
+        if not (is_pep8 and fpost and
+                (isinstance(put_body[-1], ASTS_SCOPE_NAMED) or isinstance(fpost.a, ASTS_SCOPE_NAMED))):  # if don't need pep8space then maybe just need trailing newline
+            if put_loc.end_col == len(lines[-1]) and put_loc.end_ln == len(lines) - 1:  # if putting to very end of source then don't add newlines
+                postpend = 0
+            else:  # otherwise if last line of put contains something then append a newline
+                postpend = bool((l := put_lines[-1]) and not re_empty_line.match(l))
 
         else:
             postpend = pep8space + 1
@@ -993,7 +999,7 @@ def _get_slice_stmtish_old(
     else:
         raise ValueError('cannot specify `one=True` if getting multiple statements')
 
-    prefix = [''] * (del_prespace + 1) if del_prespace and not ld_neg else None  # if maybe requested leading space returned (ld_neg=False) and there was leading space deleted then add this many leading empty lines, this is a HACK because old stmtishg slicing did not support this, need to redo
+    prefix = [''] * (del_prespace + 1) if del_prespace and not ld_neg else None  # if maybe requested leading space returned (ld_neg=False) and there was leading space deleted then add this many leading empty lines, this is a HACK because old stmtish slicing did not support this, need to redo
     suffix = [''] * (del_postspace + 1) if del_postspace and not tr_neg else None  # same for trailing space
 
     fst_, _ = self._make_fst_and_dedent(indent, get_ast, copy_loc, prefix, suffix, put_loc, put_lines,
@@ -1260,7 +1266,7 @@ def _put_slice_stmtish_old(
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# Hack adapt new trivia params to old and fix for introduced trailing newline on put or cut
+# HACK adapt new trivia params to old and fix for introduced trailing newline on put or cut
 
 # Old trivia parameters for code above:
 # - `precomms`: Preceding comments.  - DEPRECATED, STILL USED FOR STMTS, REPLACED WITH `trivia`!

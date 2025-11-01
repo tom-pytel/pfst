@@ -14,19 +14,18 @@ modification succeeds or not. `AST` nodes are not consumed as they are unparsed 
 their locations are correct. Source code in the form of a string or a list of lines is also not consumed.
 
 ```py
->>> # the trailing newline is annoying and will eventually be fixed
 >>> FST.new().body.append('i = 1').root.src
-'i = 1\n'
+'i = 1'
 
 >>> FST.new().body.append(['i = 1']).root.src
-'i = 1\n'
+'i = 1'
 
 >>> FST.new().body.append(Assign(targets=[Name(id='i')],
 ...                              value=Constant(value=1))).root.src
-'i = 1\n'
+'i = 1'
 
 >>> FST.new().body.append(FST('i = 1')).root.src
-'i = 1\n'
+'i = 1'
 ```
 
 ## `replace()` and `remove()`
@@ -255,7 +254,7 @@ Just like with `get()`, a field can be specified.
 >>> f.put('k = 3', 'end', None, 'orelse')
 <If ROOT 0,0..4,9>
 
->>> print(f.src.rstrip())
+>>> print(f.src)
 if 1:
     i = 1
 else:

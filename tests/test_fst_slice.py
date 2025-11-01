@@ -4205,7 +4205,7 @@ if indented:
         try: raise
         except Exception as exc:
             raise exc from exc
-'''.lstrip())
+'''.strip())
 
         for _ in range(25):  # now just fuzz it a bit, just in case
             bs = []
