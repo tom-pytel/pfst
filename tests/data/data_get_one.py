@@ -313,7 +313,7 @@ r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
 (28, '', 0, False, 'targets', {}, (Assign,
 r'''var = val'''),
-r'''**ValueError('cannot cut all Assign.targets without norm_self=False')**''',
+r'''**ValueError('cannot delete all Assign.targets without norm_self=False')**''',
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 

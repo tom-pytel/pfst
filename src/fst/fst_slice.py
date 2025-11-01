@@ -2994,7 +2994,7 @@ def _put_slice_Assign_targets(
             return
 
         if len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
-            raise ValueError("cannot cut all Assign.targets without norm_self=False")
+            raise ValueError("cannot delete all Assign.targets without norm_self=False")
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bound_Assign_targets(self, start)
 

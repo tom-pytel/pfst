@@ -11,15 +11,17 @@ This is rather crude documentation that hopefully can show usage through many sm
 
 `fst.docs.d05_put`: Modifying nodes
 
-`fst.docs.d06_raw`: Raw reparse operations
+`fst.docs.d06_slices`: Slices and trivia
 
-`fst.docs.d07_views`: `FST` slice indexing
+`fst.docs.d07_raw`: Raw reparse operations
 
-`fst.docs.d08_parentheses`: Parentheses handling
+`fst.docs.d08_views`: `FST` slice indexing
 
-`fst.docs.d09_reconcile`: Edit pure AST while preserving formatting
+`fst.docs.d09_parentheses`: Parentheses handling
 
-`fst.docs.d10_options`: Options
+`fst.docs.d10_reconcile`: Edit pure AST while preserving formatting
+
+`fst.docs.d11_options`: Options
 """
 
 from . import (
@@ -28,11 +30,12 @@ from . import (
     d03_structure,
     d04_get,
     d05_put,
-    d06_raw,
-    d07_views,
-    d08_parentheses,
-    d09_reconcile,
-    d10_options,
+    d06_slices,
+    d07_raw,
+    d08_views,
+    d09_parentheses,
+    d10_reconcile,
+    d11_options,
 )
 
 __all__ = [
@@ -41,9 +44,10 @@ __all__ = [
     'd03_structure',
     'd04_get',
     'd05_put',
-    'd06_raw',
-    'd07_views',
-    'd08_parentheses',
-    'd09_reconcile',
-    'd10_options',
+    'd06_slices',
+    'd07_raw',
+    'd08_views',
+    'd09_parentheses',
+    'd10_reconcile',
+    'd11_options',
 ]

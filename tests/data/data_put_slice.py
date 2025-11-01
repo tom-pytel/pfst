@@ -17094,7 +17094,7 @@ Module - ROOT 0,0..1,2
 (6, '', None, None, 'targets', {}, (None,
 r'''a = b = c = d'''),
 r'''**DEL**''',
-r'''**ValueError('cannot cut all Assign.targets without norm_self=False')**'''),
+r'''**ValueError('cannot delete all Assign.targets without norm_self=False')**'''),
 
 (7, '', None, None, 'targets', {'norm_self': False, '_verify_self': False}, (None,
 r'''a = b = c = d'''),

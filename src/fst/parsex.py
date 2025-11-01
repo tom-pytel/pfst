@@ -250,7 +250,7 @@ Mode = Literal[
     `Slice` and `*not v` parses to a starred expression `*(not v)`. `Tuples` are parsed but cannot contain `Slice`s.
 - `'Tuple'`: Parse to a `Tuple` which may contain anything that a tuple can contain like multiple `Slice`s.
 - `'_Assign_targets'`: Parse zero or more `Assign` targets returned in a `_Assign_targets` SPECIAL SLICE, with `=` as
-separators and an optional trailing `=`.
+    separators and an optional trailing `=`.
 - `'boolop'`: Parse to a `boolop` operator.
 - `'operator'`: Parse to an `operator` operator, either normal binary `'*'` or augmented `'*='`.
 - `'binop'`: Parse to an `operator` only binary `'*'`, `'+'`, `'>>'`, etc...

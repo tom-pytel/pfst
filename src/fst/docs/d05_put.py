@@ -13,8 +13,6 @@ When modifying a node, you specify what to replace the node `AST` with. You can 
 modification succeeds or not. `AST` nodes are not consumed as they are unparsed and then reparsed in order to make sure
 their locations are correct. Source code in the form of a string or a list of lines is also not consumed.
 
-TODO: Fix trailing newlines, will also remove need for `rstrip()` in other parts of this documentation.
-
 ```py
 >>> # the trailing newline is annoying and will eventually be fixed
 >>> FST.new().body.append('i = 1').root.src
@@ -152,10 +150,10 @@ Constant 'ab' - ROOT 0,0..1,4
 
 ## `put()` and `put_slice()`
 
-Just like with `copy()` and `cut()`, `put()` is the undelying function used by `replace()` and `remove()`. `put()` can
-replace a node or delete it if `None` is passed as the replacement. It cannot put anything to a root node as it requires
-a parent to operate on a node, so if you want to replace a root node you must use `replace()`. The parameters are
-similar to the `get()` function except that the first parameter is always the `Code` to put or `None`.
+Just like with `copy()` and `cut()` using `get()`, `put()` is the undelying function used by `replace()` and `remove()`.
+`put()` can replace a node or delete it if `None` is passed as the replacement. It cannot put anything to a root node as
+it requires a parent to operate on a node, so if you want to replace a root node you must use `replace()`. The
+parameters are similar to the `get()` function except that the first parameter is always the `Code` to put or `None`.
 
 ```py
 >>> f = FST('[1, 2, 3]')
