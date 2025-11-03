@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import builtins  # because of the unfortunate choice for the name of an Interpolation field, '.str', we have a '.str' property in FST which messes with the type annotations
 import os
+import re
 import sys
 import threading
 from ast import iter_fields
@@ -129,7 +130,7 @@ from .astutil import (
     precedence_require_parens_by_type,
 )
 
-from .common import PYLT13, astfield, fstloc, fstlocn, nspace, Self, next_delims, prev_delims
+from .common import PYLT13, astfield, fstloc, fstlocn, nspace, Self, prev_find, next_delims, prev_delims
 
 from .parsex import Mode
 from .code import Code, code_to_lines, code_as_all
@@ -211,6 +212,8 @@ _DEFAULT_AST_FIELD = {cls: field for field, classes in [  # builds to {Module: '
     ('context_expr', (withitem,)),
     ('pattern',      (MatchAs,)),
 ] for cls in classes}
+
+_re_deco_start = re.compile(r'[ \t]*@')
 
 
 def _clip_src_loc(self: FST, ln: int, col: int, end_ln: int, end_col: int) -> tuple[int, int, int, int]:
@@ -557,7 +560,16 @@ class FST:
             pass
 
         if (bloc := self.loc) and (decos := getattr(self.a, 'decorator_list', None)):
-            bloc = fstloc(decos[0].f.ln, bloc[1], bloc[2], bloc[3])  # column of deco '@' will be same as our column
+            lines = self.root._lines
+            _, col, end_ln, end_col = bloc
+            deco0_ln, deco0_col, _, _ = decos[0].f.loc
+
+            if m := _re_deco_start.match(lines[deco0_ln]):  # if '@' is on the line expected with preceded by only space then we are done, use column of '@'
+                bloc = fstloc(deco0_ln, m.end() - 1, end_ln, end_col)  # m.end() instead of col because could come from a line continuation and '@' not be at same column as self
+
+            else:  # degenerate case of first decorator coming from a line continuation, ignore the line continuation and just start at deco col
+                ln, col = prev_find(lines, 0, 0, deco0_ln, deco0_col, '@')  # we can use start at (0, 0) because we know '@' must start a line
+                bloc = fstloc(ln, col, end_ln, end_col)
 
         self._cache['bloc'] = bloc
 

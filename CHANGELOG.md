@@ -2,7 +2,11 @@
 
 ### Fixed
 
+- account for degenerate case of first decorator following line continuation in `.bloc`
+
 ### Added
+
+- option `norm_self` controls whether statementish bodies can be zeroed out or not
 
 ### Updated
 

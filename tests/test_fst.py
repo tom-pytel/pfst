@@ -4213,6 +4213,20 @@ def f():
         self.assertEqual((5, 2, 5, 18), ast.body[0].body[0].body[0].f.loc)
         self.assertEqual((4, 2, 5, 18), ast.body[0].body[0].body[0].f.bloc)
 
+        self.assertEqual((2, 1, 3, 15), FST(r'''
+if 1:
+  \
+ @deco
+  def f(): pass
+'''.strip()).body[0].bloc)
+
+        self.assertEqual((2, 0, 3, 19), FST(r'''
+if 1:
+      \
+@real#@fake
+      def f(): pass
+'''.strip()).body[0].bloc)
+
     def test_fromast_special(self):
         f = FST.fromast(ast_parse('*t').body[0].value)
         self.assertEqual('*t', f.src)
