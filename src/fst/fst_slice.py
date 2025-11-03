@@ -142,6 +142,7 @@ from .fst_misc import (
 
 from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish
 
+
 _re_close_delim_or_space_or_end = re.compile(r'[)}\s\]:]|$')  # this is a very special set of terminations which are considered to not need a space before if a slice put ends with a non-space right before them
 
 _re_sep_line_nonexpr_end = {  # empty line with optional separator and line continuation or a pure comment line

@@ -171,7 +171,7 @@ class TestFSTSlice(unittest.TestCase):
 i # post
 # postpost
             '''.strip())
-        self.assertEqual('i', a.body[0].f.cut(trivia=(False, False)).src)  # , precomms=False, postcomms=False
+        self.assertEqual('i', a.body[0].f.cut(trivia=(False, False), norm=False).src)  # , precomms=False, postcomms=False
         self.assertEqual('# prepre\n\n# pre\n# post\n# postpost', a.f.src)
 
         a = parse('''
@@ -181,7 +181,7 @@ i # post
 i # post
 # postpost
             '''.strip())
-        self.assertEqual('# pre\ni', a.body[0].f.cut(trivia=(True, False)).src)  # , precomms=True, postcomms=False
+        self.assertEqual('# pre\ni', a.body[0].f.cut(trivia=(True, False), norm=False).src)  # , precomms=True, postcomms=False
         self.assertEqual('# prepre\n\n# post\n# postpost', a.f.src)
 
         a = parse('''
@@ -191,7 +191,7 @@ i # post
 i # post
 # postpost
             '''.strip())
-        self.assertEqual('# pre\ni # post', a.body[0].f.cut(trivia=(True, True)).src)  # , precomms=True, postcomms=True
+        self.assertEqual('# pre\ni # post', a.body[0].f.cut(trivia=(True, True), norm=False).src)  # , precomms=True, postcomms=True
         self.assertEqual('# prepre\n\n# postpost', a.f.src)
 
         a = parse('''
@@ -201,7 +201,7 @@ i # post
 i # post
 # postpost
             '''.strip())
-        self.assertEqual('# prepre\n\n# pre\ni', a.body[0].f.cut(trivia=('all', False)).src)  # , precomms='all', postcomms=False
+        self.assertEqual('# prepre\n\n# pre\ni', a.body[0].f.cut(trivia=('all', False), norm=False).src)  # , precomms='all', postcomms=False
         self.assertEqual('# post\n# postpost', a.f.src)
 
         a = parse('( ( i ), )')
@@ -261,23 +261,24 @@ match a:
     class cls:
       pass
             '''.strip())
-        a.body[0].cases[0].body[0].body[0].f.cut()
-        a.body[0].cases[0].body[0].orelse[0].f.cut()
-        a.body[0].cases[1].body[0].body[0].f.cut()
-        a.body[0].cases[1].body[0].handlers[0].f.cut()
-        a.body[0].cases[1].body[0].orelse[0].f.cut()
-        a.body[0].cases[1].body[0].finalbody[0].f.cut()
-        a.body[0].cases[2].body[0].body[0].f.cut()
-        a.body[0].cases[2].body[0].orelse[0].f.cut()
-        a.body[0].cases[3].body[0].body[0].f.cut()
-        a.body[0].cases[3].body[0].orelse[0].f.cut()
-        a.body[0].cases[4].body[0].body[0].f.cut()
-        a.body[0].cases[4].body[0].orelse[0].f.cut()
-        a.body[0].cases[5].body[0].body[0].f.cut()
-        a.body[0].cases[6].body[0].body[0].f.cut()
-        a.body[0].cases[7].body[0].body[0].f.cut()
-        a.body[0].cases[8].body[0].body[0].f.cut()
-        a.body[0].cases[9].body[0].body[0].f.cut()
+        with FST.options(norm=False):
+            a.body[0].cases[0].body[0].body[0].f.cut()
+            a.body[0].cases[0].body[0].orelse[0].f.cut()
+            a.body[0].cases[1].body[0].body[0].f.cut()
+            a.body[0].cases[1].body[0].handlers[0].f.cut()
+            a.body[0].cases[1].body[0].orelse[0].f.cut()
+            a.body[0].cases[1].body[0].finalbody[0].f.cut()
+            a.body[0].cases[2].body[0].body[0].f.cut()
+            a.body[0].cases[2].body[0].orelse[0].f.cut()
+            a.body[0].cases[3].body[0].body[0].f.cut()
+            a.body[0].cases[3].body[0].orelse[0].f.cut()
+            a.body[0].cases[4].body[0].body[0].f.cut()
+            a.body[0].cases[4].body[0].orelse[0].f.cut()
+            a.body[0].cases[5].body[0].body[0].f.cut()
+            a.body[0].cases[6].body[0].body[0].f.cut()
+            a.body[0].cases[7].body[0].body[0].f.cut()
+            a.body[0].cases[8].body[0].body[0].f.cut()
+            a.body[0].cases[9].body[0].body[0].f.cut()
 
         self.assertEqual(a.f.src, '''
 match a:
@@ -303,16 +304,17 @@ match a:
     class cls:
 '''.strip())
 
-        a.body[0].cases[0].body[0].f.cut()
-        a.body[0].cases[1].body[0].f.cut()
-        a.body[0].cases[2].body[0].f.cut()
-        a.body[0].cases[3].body[0].f.cut()
-        a.body[0].cases[4].body[0].f.cut()
-        a.body[0].cases[5].body[0].f.cut()
-        a.body[0].cases[6].body[0].f.cut()
-        a.body[0].cases[7].body[0].f.cut()
-        a.body[0].cases[8].body[0].f.cut()
-        a.body[0].cases[9].body[0].f.cut()
+        with FST.options(norm=False):
+            a.body[0].cases[0].body[0].f.cut()
+            a.body[0].cases[1].body[0].f.cut()
+            a.body[0].cases[2].body[0].f.cut()
+            a.body[0].cases[3].body[0].f.cut()
+            a.body[0].cases[4].body[0].f.cut()
+            a.body[0].cases[5].body[0].f.cut()
+            a.body[0].cases[6].body[0].f.cut()
+            a.body[0].cases[7].body[0].f.cut()
+            a.body[0].cases[8].body[0].f.cut()
+            a.body[0].cases[9].body[0].f.cut()
 
         self.assertEqual(a.f.src, '''
 match a:
@@ -328,16 +330,17 @@ match a:
   case 9:
 '''.strip())
 
-        a.body[0].cases[0].f.cut()
-        a.body[0].cases[0].f.cut()
-        a.body[0].cases[0].f.cut()
-        a.body[0].cases[0].f.cut()
-        a.body[0].cases[0].f.cut()
-        a.body[0].cases[0].f.cut()
-        a.body[0].cases[0].f.cut()
-        a.body[0].cases[0].f.cut()
-        a.body[0].cases[0].f.cut()
-        a.body[0].cases[0].f.cut()
+        with FST.options(norm=False):
+            a.body[0].cases[0].f.cut()
+            a.body[0].cases[0].f.cut()
+            a.body[0].cases[0].f.cut()
+            a.body[0].cases[0].f.cut()
+            a.body[0].cases[0].f.cut()
+            a.body[0].cases[0].f.cut()
+            a.body[0].cases[0].f.cut()
+            a.body[0].cases[0].f.cut()
+            a.body[0].cases[0].f.cut()
+            a.body[0].cases[0].f.cut()
 
         self.assertEqual(a.f.src, '''match a:''')
 
@@ -388,23 +391,24 @@ match a:
     class cls:
       pass
             '''.strip())
-        a.body[0].cases[9].body[0].body[0].f.cut()
-        a.body[0].cases[8].body[0].body[0].f.cut()
-        a.body[0].cases[7].body[0].body[0].f.cut()
-        a.body[0].cases[6].body[0].body[0].f.cut()
-        a.body[0].cases[5].body[0].body[0].f.cut()
-        a.body[0].cases[4].body[0].orelse[0].f.cut()
-        a.body[0].cases[4].body[0].body[0].f.cut()
-        a.body[0].cases[3].body[0].orelse[0].f.cut()
-        a.body[0].cases[3].body[0].body[0].f.cut()
-        a.body[0].cases[2].body[0].orelse[0].f.cut()
-        a.body[0].cases[2].body[0].body[0].f.cut()
-        a.body[0].cases[1].body[0].finalbody[0].f.cut()
-        a.body[0].cases[1].body[0].orelse[0].f.cut()
-        a.body[0].cases[1].body[0].handlers[0].f.cut()
-        a.body[0].cases[1].body[0].body[0].f.cut()
-        a.body[0].cases[0].body[0].orelse[0].f.cut()
-        a.body[0].cases[0].body[0].body[0].f.cut()
+        with FST.options(norm=False):
+            a.body[0].cases[9].body[0].body[0].f.cut()
+            a.body[0].cases[8].body[0].body[0].f.cut()
+            a.body[0].cases[7].body[0].body[0].f.cut()
+            a.body[0].cases[6].body[0].body[0].f.cut()
+            a.body[0].cases[5].body[0].body[0].f.cut()
+            a.body[0].cases[4].body[0].orelse[0].f.cut()
+            a.body[0].cases[4].body[0].body[0].f.cut()
+            a.body[0].cases[3].body[0].orelse[0].f.cut()
+            a.body[0].cases[3].body[0].body[0].f.cut()
+            a.body[0].cases[2].body[0].orelse[0].f.cut()
+            a.body[0].cases[2].body[0].body[0].f.cut()
+            a.body[0].cases[1].body[0].finalbody[0].f.cut()
+            a.body[0].cases[1].body[0].orelse[0].f.cut()
+            a.body[0].cases[1].body[0].handlers[0].f.cut()
+            a.body[0].cases[1].body[0].body[0].f.cut()
+            a.body[0].cases[0].body[0].orelse[0].f.cut()
+            a.body[0].cases[0].body[0].body[0].f.cut()
 
         self.assertEqual(a.f.src, '''
 match a:
@@ -430,16 +434,17 @@ match a:
     class cls:
 '''.strip())
 
-        a.body[0].cases[9].body[0].f.cut()
-        a.body[0].cases[8].body[0].f.cut()
-        a.body[0].cases[7].body[0].f.cut()
-        a.body[0].cases[6].body[0].f.cut()
-        a.body[0].cases[5].body[0].f.cut()
-        a.body[0].cases[4].body[0].f.cut()
-        a.body[0].cases[3].body[0].f.cut()
-        a.body[0].cases[2].body[0].f.cut()
-        a.body[0].cases[1].body[0].f.cut()
-        a.body[0].cases[0].body[0].f.cut()
+        with FST.options(norm=False):
+            a.body[0].cases[9].body[0].f.cut()
+            a.body[0].cases[8].body[0].f.cut()
+            a.body[0].cases[7].body[0].f.cut()
+            a.body[0].cases[6].body[0].f.cut()
+            a.body[0].cases[5].body[0].f.cut()
+            a.body[0].cases[4].body[0].f.cut()
+            a.body[0].cases[3].body[0].f.cut()
+            a.body[0].cases[2].body[0].f.cut()
+            a.body[0].cases[1].body[0].f.cut()
+            a.body[0].cases[0].body[0].f.cut()
 
         self.assertEqual(a.f.src, '''
 match a:
@@ -455,16 +460,17 @@ match a:
   case 9:
 '''.strip())
 
-        a.body[0].cases[9].f.cut()
-        a.body[0].cases[8].f.cut()
-        a.body[0].cases[7].f.cut()
-        a.body[0].cases[6].f.cut()
-        a.body[0].cases[5].f.cut()
-        a.body[0].cases[4].f.cut()
-        a.body[0].cases[3].f.cut()
-        a.body[0].cases[2].f.cut()
-        a.body[0].cases[1].f.cut()
-        a.body[0].cases[0].f.cut()
+        with FST.options(norm=False):
+            a.body[0].cases[9].f.cut()
+            a.body[0].cases[8].f.cut()
+            a.body[0].cases[7].f.cut()
+            a.body[0].cases[6].f.cut()
+            a.body[0].cases[5].f.cut()
+            a.body[0].cases[4].f.cut()
+            a.body[0].cases[3].f.cut()
+            a.body[0].cases[2].f.cut()
+            a.body[0].cases[1].f.cut()
+            a.body[0].cases[0].f.cut()
 
         self.assertEqual(a.f.src, '''match a:''')
 
@@ -612,7 +618,7 @@ if indented:
         lines = []
 
         for point, field in points:
-            f = point.get_slice(field=field, cut=True)
+            f = point.get_slice(field=field, cut=True, norm=False)
 
             lines.extend(f.lines)
             lines.append('...')
@@ -781,7 +787,7 @@ if indented:
         ]
 
         for point, field in points:
-            point.put_slice(None, field=field)#, check_node_type=False)
+            point.put_slice(None, field=field, norm=False)#, check_node_type=False)
 
         # print('...')
         # print('\n'.join(repr(l) for l in fst.lines))
@@ -997,7 +1003,7 @@ if indented:
         lines = []
 
         for point, field in points:
-            f = point.get_slice(field=field, cut=True)
+            f = point.get_slice(field=field, cut=True, norm=False)
 
             lines.extend(f.lines)
             lines.append('...')
@@ -1188,7 +1194,7 @@ if indented:
         ]
 
         for point, field in points:
-            point.put_slice(None, field=field)
+            point.put_slice(None, field=field, norm=False)
 
         # print('...')
         # print('\n'.join(repr(l) for l in fst.lines))
@@ -1272,7 +1278,7 @@ def func():
             asts = [a for a in walk(ast) if isinstance(a, ASTS_STMTISH)]
 
             for a in asts[::-1]:
-                a.f.cut()
+                a.f.cut(norm=False)
 
             ast  = parse(src.strip())
             asts = [a for a in walk(ast) if isinstance(a, ASTS_STMTISH)]
@@ -1280,7 +1286,7 @@ def func():
             for a in asts[::-1]:
                 field, idx = a.f.pfield
 
-                a.f.parent.put_slice(None, idx, idx + 1, field)
+                a.f.parent.put_slice(None, idx, idx + 1, field, norm=False)
 
     def test_cut_and_del_slice_matchseq(self):
         f = FST('[a, b, c]', pattern)
@@ -3418,14 +3424,14 @@ if 1:
 def f():
     pass
         '''.strip())
-        a.body[0].body[0].f.cut()
+        a.body[0].body[0].f.cut(norm=False)
         a.body[0].f.put_slice('i')
         self.assertEqual(a.f.src, 'def f():\n    i')
 
         a = parse('''
 def f(): pass
         '''.strip())
-        a.body[0].body[0].f.cut()
+        a.body[0].body[0].f.cut(norm=False)
         a.body[0].f.put_slice('i')
         self.assertEqual(a.f.src, 'def f():\n    i')
 
@@ -3433,14 +3439,14 @@ def f(): pass
 def f():
     pass
         '''.strip())
-        a.body[0].body[0].f.cut()
+        a.body[0].body[0].f.cut(norm=False)
         a.body[0].f.put_slice('# pre\ni  # post')
         self.assertEqual(a.f.src, 'def f():\n    # pre\n    i  # post')
 
         a = parse('''
 def f(): pass
         '''.strip())
-        a.body[0].body[0].f.cut()
+        a.body[0].body[0].f.cut(norm=False)
         a.body[0].f.put_slice('# pre\ni  # post')
         self.assertEqual(a.f.src, 'def f():\n    # pre\n    i  # post')
 
@@ -3448,7 +3454,7 @@ def f(): pass
 match a:
     case 1: pass
         '''.strip())
-        a.body[0].cases[0].body[0].f.cut()
+        a.body[0].cases[0].body[0].f.cut(norm=False)
         a.body[0].cases[0].f.put_slice('i')
         self.assertEqual(a.f.src, 'match a:\n    case 1:\n        i')
 
@@ -3456,7 +3462,7 @@ match a:
 match a:
     case 1: pass
         '''.strip())
-        a.body[0].cases[0].f.cut()
+        a.body[0].cases[0].f.cut(norm=False)
         a.body[0].f.put_slice('case 2: return')
         self.assertEqual(a.f.src, 'match a:\n    case 2: return')
 
@@ -3465,7 +3471,7 @@ match a:
 if 1:
     pass
         '''.strip())
-        a.body[0].body[0].f.cut()
+        a.body[0].body[0].f.cut(norm=False)
         a.body[0].f.put_slice('i')
         self.assertEqual(a.f.src, 'if 1:\n    i')
 
@@ -3474,7 +3480,7 @@ if 1:
     pass
 else: pass
         '''.strip())
-        a.body[0].body[0].f.cut()
+        a.body[0].body[0].f.cut(norm=False)
         a.body[0].f.put_slice('i')
         self.assertEqual(a.f.src, 'if 1:\n    i\nelse: pass')
 
@@ -3482,7 +3488,7 @@ else: pass
 if 1:
     pass
         '''.strip())
-        a.body[0].body[0].f.cut()
+        a.body[0].body[0].f.cut(norm=False)
         a.body[0].f.put_slice('i', field='orelse')
         self.assertEqual(a.f.src, 'if 1:\nelse:\n    i')
 
@@ -3498,14 +3504,14 @@ if 1:
     def f():
         pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].body[0].f.cut(norm=False)
         a.body[0].body[0].f.put_slice('i')
         self.assertEqual(a.f.src, 'if 2:\n    def f():\n        i')
 
         a = parse('''if 2:
     def f(): pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].body[0].f.cut(norm=False)
         a.body[0].body[0].f.put_slice('i')
         self.assertEqual(a.f.src, 'if 2:\n    def f():\n        i')
 
@@ -3513,14 +3519,14 @@ if 1:
     def f():
         pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].body[0].f.cut(norm=False)
         a.body[0].body[0].f.put_slice('# pre\ni  # post')
         self.assertEqual(a.f.src, 'if 2:\n    def f():\n        # pre\n        i  # post')
 
         a = parse('''if 2:
     def f(): pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].body[0].f.cut(norm=False)
         a.body[0].body[0].f.put_slice('# pre\ni  # post')
         self.assertEqual(a.f.src, 'if 2:\n    def f():\n        # pre\n        i  # post')
 
@@ -3528,7 +3534,7 @@ if 1:
     match a:
         case 1: pass
         '''.strip())
-        a.body[0].body[0].cases[0].body[0].f.cut()
+        a.body[0].body[0].cases[0].body[0].f.cut(norm=False)
         a.body[0].body[0].cases[0].f.put_slice('i')
         self.assertEqual(a.f.src, 'if 2:\n    match a:\n        case 1:\n            i')
 
@@ -3536,7 +3542,7 @@ if 1:
     match a:
         case 1: pass
         '''.strip())
-        a.body[0].body[0].cases[0].f.cut()
+        a.body[0].body[0].cases[0].f.cut(norm=False)
         a.body[0].body[0].f.put_slice('case 3: return')
         self.assertEqual(a.f.src, 'if 2:\n    match a:\n        case 3: return')
 
@@ -3545,7 +3551,7 @@ if 1:
     if 1:
         pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].body[0].f.cut(norm=False)
         a.body[0].body[0].f.put_slice('i')
         self.assertEqual(a.f.src, 'if 2:\n    if 1:\n        i')
 
@@ -3554,7 +3560,7 @@ if 1:
         pass
     else: pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].body[0].f.cut(norm=False)
         a.body[0].body[0].f.put_slice('i')
         self.assertEqual(a.f.src, 'if 2:\n    if 1:\n        i\n    else: pass')
 
@@ -3562,7 +3568,7 @@ if 1:
     if 1:
         pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
+        a.body[0].body[0].body[0].f.cut(norm=False)
         a.body[0].body[0].f.put_slice('i', field='orelse')
         self.assertEqual(a.f.src, 'if 2:\n    if 1:\n    else:\n        i')
 
@@ -3580,12 +3586,13 @@ except: pass
 else: pass
 finally: pass
         '''.strip())
-        a.body[0].body[0].f.cut()
-        a.body[0].handlers[0].f.cut()
-        a.body[0].orelse[0].f.cut()
-        a.body[0].finalbody[0].f.cut()
-        a.body[0].f.put_slice('i', field='finalbody')
-        self.assertEqual(a.f.src, 'try:\nfinally:\n    i')
+        with FST.options(norm=False):
+            a.body[0].body[0].f.cut()
+            a.body[0].handlers[0].f.cut()
+            a.body[0].orelse[0].f.cut()
+            a.body[0].finalbody[0].f.cut()
+            a.body[0].f.put_slice('i', field='finalbody')
+            self.assertEqual(a.f.src, 'try:\nfinally:\n    i')
 
         a = parse('''
 try: pass
@@ -3593,12 +3600,13 @@ except: pass
 else: pass
 finally: pass
         '''.strip())
-        a.body[0].body[0].f.cut()
-        a.body[0].handlers[0].f.cut()
-        a.body[0].orelse[0].f.cut()
-        a.body[0].finalbody[0].f.cut()
-        a.body[0].f.put_slice('i', field='orelse')
-        self.assertEqual(a.f.src, 'try:\nelse:\n    i')
+        with FST.options(norm=False):
+            a.body[0].body[0].f.cut()
+            a.body[0].handlers[0].f.cut()
+            a.body[0].orelse[0].f.cut()
+            a.body[0].finalbody[0].f.cut()
+            a.body[0].f.put_slice('i', field='orelse')
+            self.assertEqual(a.f.src, 'try:\nelse:\n    i')
 
         a = parse('''
 try: pass
@@ -3606,12 +3614,13 @@ except: pass
 else: pass
 finally: pass
         '''.strip())
-        a.body[0].body[0].f.cut()
-        handler = a.body[0].handlers[0].f.cut()
-        a.body[0].orelse[0].f.cut()
-        a.body[0].finalbody[0].f.cut()
-        a.body[0].f.put_slice(handler, field='handlers')
-        self.assertEqual(a.f.src, 'try:\nexcept: pass')
+        with FST.options(norm=False):
+            a.body[0].body[0].f.cut()
+            handler = a.body[0].handlers[0].f.cut()
+            a.body[0].orelse[0].f.cut()
+            a.body[0].finalbody[0].f.cut()
+            a.body[0].f.put_slice(handler, field='handlers')
+            self.assertEqual(a.f.src, 'try:\nexcept: pass')
 
         a = parse('''
 try: pass
@@ -3619,12 +3628,13 @@ except: pass
 else: pass
 finally: pass
         '''.strip())
-        a.body[0].body[0].f.cut()
-        a.body[0].handlers[0].f.cut()
-        a.body[0].orelse[0].f.cut()
-        a.body[0].finalbody[0].f.cut()
-        a.body[0].f.put_slice('i', field='body')
-        self.assertEqual(a.f.src, 'try:\n    i')
+        with FST.options(norm=False):
+            a.body[0].body[0].f.cut()
+            a.body[0].handlers[0].f.cut()
+            a.body[0].orelse[0].f.cut()
+            a.body[0].finalbody[0].f.cut()
+            a.body[0].f.put_slice('i', field='body')
+            self.assertEqual(a.f.src, 'try:\n    i')
 
         a = parse('''
 try: pass
@@ -3632,11 +3642,12 @@ except: pass
 else: pass
 finally: pass
         '''.strip())
-        a.body[0].body[0].f.cut()
-        a.body[0].handlers[0].f.cut()
-        a.body[0].finalbody[0].f.cut()
-        a.body[0].f.put_slice('i', field='finalbody')
-        self.assertEqual(a.f.src, 'try:\nelse: pass\nfinally:\n    i')
+        with FST.options(norm=False):
+            a.body[0].body[0].f.cut()
+            a.body[0].handlers[0].f.cut()
+            a.body[0].finalbody[0].f.cut()
+            a.body[0].f.put_slice('i', field='finalbody')
+            self.assertEqual(a.f.src, 'try:\nelse: pass\nfinally:\n    i')
 
         a = parse('''
 try: pass
@@ -3644,11 +3655,12 @@ except: pass
 else: pass
 finally: pass
         '''.strip())
-        a.body[0].body[0].f.cut()
-        a.body[0].orelse[0].f.cut()
-        a.body[0].finalbody[0].f.cut()
-        a.body[0].f.put_slice('i', field='finalbody')
-        self.assertEqual(a.f.src, 'try:\nexcept: pass\nfinally:\n    i')
+        with FST.options(norm=False):
+            a.body[0].body[0].f.cut()
+            a.body[0].orelse[0].f.cut()
+            a.body[0].finalbody[0].f.cut()
+            a.body[0].f.put_slice('i', field='finalbody')
+            self.assertEqual(a.f.src, 'try:\nexcept: pass\nfinally:\n    i')
 
         a = parse('''
 try: pass
@@ -3656,11 +3668,12 @@ except: pass
 else: pass
 finally: pass
         '''.strip())
-        a.body[0].handlers[0].f.cut()
-        a.body[0].orelse[0].f.cut()
-        a.body[0].finalbody[0].f.cut()
-        a.body[0].f.put_slice('i', field='finalbody')
-        self.assertEqual(a.f.src, 'try: pass\nfinally:\n    i')
+        with FST.options(norm=False):
+            a.body[0].handlers[0].f.cut()
+            a.body[0].orelse[0].f.cut()
+            a.body[0].finalbody[0].f.cut()
+            a.body[0].f.put_slice('i', field='finalbody')
+            self.assertEqual(a.f.src, 'try: pass\nfinally:\n    i')
 
         a = parse('''
 try: pass
@@ -3668,11 +3681,12 @@ except: pass
 else: pass
 finally: pass
         '''.strip())
-        a.body[0].body[0].f.cut()
-        a.body[0].handlers[0].f.cut()
-        a.body[0].orelse[0].f.cut()
-        a.body[0].f.put_slice('i', field='orelse')
-        self.assertEqual(a.f.src, 'try:\nelse:\n    i\nfinally: pass')
+        with FST.options(norm=False):
+            a.body[0].body[0].f.cut()
+            a.body[0].handlers[0].f.cut()
+            a.body[0].orelse[0].f.cut()
+            a.body[0].f.put_slice('i', field='orelse')
+            self.assertEqual(a.f.src, 'try:\nelse:\n    i\nfinally: pass')
 
         a = parse('''
 try: pass
@@ -3680,11 +3694,12 @@ except: pass
 else: pass
 finally: pass
         '''.strip())
-        a.body[0].body[0].f.cut()
-        a.body[0].orelse[0].f.cut()
-        a.body[0].finalbody[0].f.cut()
-        a.body[0].f.put_slice('i', field='orelse')
-        self.assertEqual(a.f.src, 'try:\nexcept: pass\nelse:\n    i')
+        with FST.options(norm=False):
+            a.body[0].body[0].f.cut()
+            a.body[0].orelse[0].f.cut()
+            a.body[0].finalbody[0].f.cut()
+            a.body[0].f.put_slice('i', field='orelse')
+            self.assertEqual(a.f.src, 'try:\nexcept: pass\nelse:\n    i')
 
         a = parse('''
 try: pass
@@ -3692,11 +3707,12 @@ except: pass
 else: pass
 finally: pass
         '''.strip())
-        a.body[0].handlers[0].f.cut()
-        a.body[0].orelse[0].f.cut()
-        a.body[0].finalbody[0].f.cut()
-        a.body[0].f.put_slice('i', field='orelse')
-        self.assertEqual(a.f.src, 'try: pass\nelse:\n    i')
+        with FST.options(norm=False):
+            a.body[0].handlers[0].f.cut()
+            a.body[0].orelse[0].f.cut()
+            a.body[0].finalbody[0].f.cut()
+            a.body[0].f.put_slice('i', field='orelse')
+            self.assertEqual(a.f.src, 'try: pass\nelse:\n    i')
 
         a = parse('''
 try: pass
@@ -3704,11 +3720,12 @@ except: pass
 else: pass
 finally: pass
         '''.strip())
-        a.body[0].body[0].f.cut()
-        handler = a.body[0].handlers[0].f.cut()
-        a.body[0].orelse[0].f.cut()
-        a.body[0].f.put_slice(handler, field='handlers')
-        self.assertEqual(a.f.src, 'try:\nexcept: pass\nfinally: pass')
+        with FST.options(norm=False):
+            a.body[0].body[0].f.cut()
+            handler = a.body[0].handlers[0].f.cut()
+            a.body[0].orelse[0].f.cut()
+            a.body[0].f.put_slice(handler, field='handlers')
+            self.assertEqual(a.f.src, 'try:\nexcept: pass\nfinally: pass')
 
         a = parse('''
 try: pass
@@ -3716,11 +3733,12 @@ except: pass
 else: pass
 finally: pass
         '''.strip())
-        a.body[0].body[0].f.cut()
-        handler = a.body[0].handlers[0].f.cut()
-        a.body[0].finalbody[0].f.cut()
-        a.body[0].f.put_slice(handler, field='handlers')
-        self.assertEqual(a.f.src, 'try:\nexcept: pass\nelse: pass')
+        with FST.options(norm=False):
+            a.body[0].body[0].f.cut()
+            handler = a.body[0].handlers[0].f.cut()
+            a.body[0].finalbody[0].f.cut()
+            a.body[0].f.put_slice(handler, field='handlers')
+            self.assertEqual(a.f.src, 'try:\nexcept: pass\nelse: pass')
 
         a = parse('''
 try: pass
@@ -3728,11 +3746,12 @@ except: pass
 else: pass
 finally: pass
         '''.strip())
-        handler = a.body[0].handlers[0].f.cut()
-        a.body[0].orelse[0].f.cut()
-        a.body[0].finalbody[0].f.cut()
-        a.body[0].f.put_slice(handler, field='handlers')
-        self.assertEqual(a.f.src, 'try: pass\nexcept: pass')
+        with FST.options(norm=False):
+            handler = a.body[0].handlers[0].f.cut()
+            a.body[0].orelse[0].f.cut()
+            a.body[0].finalbody[0].f.cut()
+            a.body[0].f.put_slice(handler, field='handlers')
+            self.assertEqual(a.f.src, 'try: pass\nexcept: pass')
 
         a = parse('''
 try: pass
@@ -3740,11 +3759,12 @@ except: pass
 else: pass
 finally: pass
         '''.strip())
-        a.body[0].body[0].f.cut()
-        a.body[0].handlers[0].f.cut()
-        a.body[0].orelse[0].f.cut()
-        a.body[0].f.put_slice('i', field='body')
-        self.assertEqual(a.f.src, 'try:\n    i\nfinally: pass')
+        with FST.options(norm=False):
+            a.body[0].body[0].f.cut()
+            a.body[0].handlers[0].f.cut()
+            a.body[0].orelse[0].f.cut()
+            a.body[0].f.put_slice('i', field='body')
+            self.assertEqual(a.f.src, 'try:\n    i\nfinally: pass')
 
         a = parse('''
 try: pass
@@ -3752,11 +3772,12 @@ except: pass
 else: pass
 finally: pass
         '''.strip())
-        a.body[0].body[0].f.cut()
-        a.body[0].handlers[0].f.cut()
-        a.body[0].finalbody[0].f.cut()
-        a.body[0].f.put_slice('i', field='body')
-        self.assertEqual(a.f.src, 'try:\n    i\nelse: pass')
+        with FST.options(norm=False):
+            a.body[0].body[0].f.cut()
+            a.body[0].handlers[0].f.cut()
+            a.body[0].finalbody[0].f.cut()
+            a.body[0].f.put_slice('i', field='body')
+            self.assertEqual(a.f.src, 'try:\n    i\nelse: pass')
 
         a = parse('''
 try: pass
@@ -3764,11 +3785,12 @@ except: pass
 else: pass
 finally: pass
         '''.strip())
-        a.body[0].body[0].f.cut()
-        a.body[0].orelse[0].f.cut()
-        a.body[0].finalbody[0].f.cut()
-        a.body[0].f.put_slice('i', field='body')
-        self.assertEqual(a.f.src, 'try:\n    i\nexcept: pass')
+        with FST.options(norm=False):
+            a.body[0].body[0].f.cut()
+            a.body[0].orelse[0].f.cut()
+            a.body[0].finalbody[0].f.cut()
+            a.body[0].f.put_slice('i', field='body')
+            self.assertEqual(a.f.src, 'try:\n    i\nexcept: pass')
 
 
         a = parse('''if 2:
@@ -3777,12 +3799,13 @@ finally: pass
     else: pass
     finally: pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
-        a.body[0].body[0].handlers[0].f.cut()
-        a.body[0].body[0].orelse[0].f.cut()
-        a.body[0].body[0].finalbody[0].f.cut()
-        a.body[0].body[0].f.put_slice('i', field='finalbody')
-        self.assertEqual(a.f.src, 'if 2:\n    try:\n    finally:\n        i')
+        with FST.options(norm=False):
+            a.body[0].body[0].body[0].f.cut()
+            a.body[0].body[0].handlers[0].f.cut()
+            a.body[0].body[0].orelse[0].f.cut()
+            a.body[0].body[0].finalbody[0].f.cut()
+            a.body[0].body[0].f.put_slice('i', field='finalbody')
+            self.assertEqual(a.f.src, 'if 2:\n    try:\n    finally:\n        i')
 
         a = parse('''if 2:
     try: pass
@@ -3790,12 +3813,13 @@ finally: pass
     else: pass
     finally: pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
-        a.body[0].body[0].handlers[0].f.cut()
-        a.body[0].body[0].orelse[0].f.cut()
-        a.body[0].body[0].finalbody[0].f.cut()
-        a.body[0].body[0].f.put_slice('i', field='orelse')
-        self.assertEqual(a.f.src, 'if 2:\n    try:\n    else:\n        i')
+        with FST.options(norm=False):
+            a.body[0].body[0].body[0].f.cut()
+            a.body[0].body[0].handlers[0].f.cut()
+            a.body[0].body[0].orelse[0].f.cut()
+            a.body[0].body[0].finalbody[0].f.cut()
+            a.body[0].body[0].f.put_slice('i', field='orelse')
+            self.assertEqual(a.f.src, 'if 2:\n    try:\n    else:\n        i')
 
         a = parse('''if 2:
     try: pass
@@ -3803,12 +3827,13 @@ finally: pass
     else: pass
     finally: pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
-        handler = a.body[0].body[0].handlers[0].f.cut()
-        a.body[0].body[0].orelse[0].f.cut()
-        a.body[0].body[0].finalbody[0].f.cut()
-        a.body[0].body[0].f.put_slice(handler, field='handlers')
-        self.assertEqual(a.f.src, 'if 2:\n    try:\n    except: pass')
+        with FST.options(norm=False):
+            a.body[0].body[0].body[0].f.cut()
+            handler = a.body[0].body[0].handlers[0].f.cut()
+            a.body[0].body[0].orelse[0].f.cut()
+            a.body[0].body[0].finalbody[0].f.cut()
+            a.body[0].body[0].f.put_slice(handler, field='handlers')
+            self.assertEqual(a.f.src, 'if 2:\n    try:\n    except: pass')
 
         a = parse('''if 2:
     try: pass
@@ -3816,12 +3841,13 @@ finally: pass
     else: pass
     finally: pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
-        a.body[0].body[0].handlers[0].f.cut()
-        a.body[0].body[0].orelse[0].f.cut()
-        a.body[0].body[0].finalbody[0].f.cut()
-        a.body[0].body[0].f.put_slice('i', field='body')
-        self.assertEqual(a.f.src, 'if 2:\n    try:\n        i')
+        with FST.options(norm=False):
+            a.body[0].body[0].body[0].f.cut()
+            a.body[0].body[0].handlers[0].f.cut()
+            a.body[0].body[0].orelse[0].f.cut()
+            a.body[0].body[0].finalbody[0].f.cut()
+            a.body[0].body[0].f.put_slice('i', field='body')
+            self.assertEqual(a.f.src, 'if 2:\n    try:\n        i')
 
         a = parse('''if 2:
     try: pass
@@ -3829,11 +3855,12 @@ finally: pass
     else: pass
     finally: pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
-        a.body[0].body[0].handlers[0].f.cut()
-        a.body[0].body[0].finalbody[0].f.cut()
-        a.body[0].body[0].f.put_slice('i', field='finalbody')
-        self.assertEqual(a.f.src, 'if 2:\n    try:\n    else: pass\n    finally:\n        i')
+        with FST.options(norm=False):
+            a.body[0].body[0].body[0].f.cut()
+            a.body[0].body[0].handlers[0].f.cut()
+            a.body[0].body[0].finalbody[0].f.cut()
+            a.body[0].body[0].f.put_slice('i', field='finalbody')
+            self.assertEqual(a.f.src, 'if 2:\n    try:\n    else: pass\n    finally:\n        i')
 
         a = parse('''if 2:
     try: pass
@@ -3841,11 +3868,12 @@ finally: pass
     else: pass
     finally: pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
-        a.body[0].body[0].orelse[0].f.cut()
-        a.body[0].body[0].finalbody[0].f.cut()
-        a.body[0].body[0].f.put_slice('i', field='finalbody')
-        self.assertEqual(a.f.src, 'if 2:\n    try:\n    except: pass\n    finally:\n        i')
+        with FST.options(norm=False):
+            a.body[0].body[0].body[0].f.cut()
+            a.body[0].body[0].orelse[0].f.cut()
+            a.body[0].body[0].finalbody[0].f.cut()
+            a.body[0].body[0].f.put_slice('i', field='finalbody')
+            self.assertEqual(a.f.src, 'if 2:\n    try:\n    except: pass\n    finally:\n        i')
 
         a = parse('''if 2:
     try: pass
@@ -3853,11 +3881,12 @@ finally: pass
     else: pass
     finally: pass
         '''.strip())
-        a.body[0].body[0].handlers[0].f.cut()
-        a.body[0].body[0].orelse[0].f.cut()
-        a.body[0].body[0].finalbody[0].f.cut()
-        a.body[0].body[0].f.put_slice('i', field='finalbody')
-        self.assertEqual(a.f.src, 'if 2:\n    try: pass\n    finally:\n        i')
+        with FST.options(norm=False):
+            a.body[0].body[0].handlers[0].f.cut()
+            a.body[0].body[0].orelse[0].f.cut()
+            a.body[0].body[0].finalbody[0].f.cut()
+            a.body[0].body[0].f.put_slice('i', field='finalbody')
+            self.assertEqual(a.f.src, 'if 2:\n    try: pass\n    finally:\n        i')
 
         a = parse('''if 2:
     try: pass
@@ -3865,11 +3894,12 @@ finally: pass
     else: pass
     finally: pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
-        a.body[0].body[0].handlers[0].f.cut()
-        a.body[0].body[0].orelse[0].f.cut()
-        a.body[0].body[0].f.put_slice('i', field='orelse')
-        self.assertEqual(a.f.src, 'if 2:\n    try:\n    else:\n        i\n    finally: pass')
+        with FST.options(norm=False):
+            a.body[0].body[0].body[0].f.cut()
+            a.body[0].body[0].handlers[0].f.cut()
+            a.body[0].body[0].orelse[0].f.cut()
+            a.body[0].body[0].f.put_slice('i', field='orelse')
+            self.assertEqual(a.f.src, 'if 2:\n    try:\n    else:\n        i\n    finally: pass')
 
         a = parse('''if 2:
     try: pass
@@ -3877,11 +3907,12 @@ finally: pass
     else: pass
     finally: pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
-        a.body[0].body[0].orelse[0].f.cut()
-        a.body[0].body[0].finalbody[0].f.cut()
-        a.body[0].body[0].f.put_slice('i', field='orelse')
-        self.assertEqual(a.f.src, 'if 2:\n    try:\n    except: pass\n    else:\n        i')
+        with FST.options(norm=False):
+            a.body[0].body[0].body[0].f.cut()
+            a.body[0].body[0].orelse[0].f.cut()
+            a.body[0].body[0].finalbody[0].f.cut()
+            a.body[0].body[0].f.put_slice('i', field='orelse')
+            self.assertEqual(a.f.src, 'if 2:\n    try:\n    except: pass\n    else:\n        i')
 
         a = parse('''if 2:
     try: pass
@@ -3889,11 +3920,12 @@ finally: pass
     else: pass
     finally: pass
         '''.strip())
-        a.body[0].body[0].handlers[0].f.cut()
-        a.body[0].body[0].orelse[0].f.cut()
-        a.body[0].body[0].finalbody[0].f.cut()
-        a.body[0].body[0].f.put_slice('i', field='orelse')
-        self.assertEqual(a.f.src, 'if 2:\n    try: pass\n    else:\n        i')
+        with FST.options(norm=False):
+            a.body[0].body[0].handlers[0].f.cut()
+            a.body[0].body[0].orelse[0].f.cut()
+            a.body[0].body[0].finalbody[0].f.cut()
+            a.body[0].body[0].f.put_slice('i', field='orelse')
+            self.assertEqual(a.f.src, 'if 2:\n    try: pass\n    else:\n        i')
 
         a = parse('''if 2:
     try: pass
@@ -3901,11 +3933,12 @@ finally: pass
     else: pass
     finally: pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
-        handler = a.body[0].body[0].handlers[0].f.cut()
-        a.body[0].body[0].orelse[0].f.cut()
-        a.body[0].body[0].f.put_slice(handler, field='handlers')
-        self.assertEqual(a.f.src, 'if 2:\n    try:\n    except: pass\n    finally: pass')
+        with FST.options(norm=False):
+            a.body[0].body[0].body[0].f.cut()
+            handler = a.body[0].body[0].handlers[0].f.cut()
+            a.body[0].body[0].orelse[0].f.cut()
+            a.body[0].body[0].f.put_slice(handler, field='handlers')
+            self.assertEqual(a.f.src, 'if 2:\n    try:\n    except: pass\n    finally: pass')
 
         a = parse('''if 2:
     try: pass
@@ -3913,11 +3946,12 @@ finally: pass
     else: pass
     finally: pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
-        handler = a.body[0].body[0].handlers[0].f.cut()
-        a.body[0].body[0].finalbody[0].f.cut()
-        a.body[0].body[0].f.put_slice(handler, field='handlers')
-        self.assertEqual(a.f.src, 'if 2:\n    try:\n    except: pass\n    else: pass')
+        with FST.options(norm=False):
+            a.body[0].body[0].body[0].f.cut()
+            handler = a.body[0].body[0].handlers[0].f.cut()
+            a.body[0].body[0].finalbody[0].f.cut()
+            a.body[0].body[0].f.put_slice(handler, field='handlers')
+            self.assertEqual(a.f.src, 'if 2:\n    try:\n    except: pass\n    else: pass')
 
         a = parse('''if 2:
     try: pass
@@ -3925,11 +3959,12 @@ finally: pass
     else: pass
     finally: pass
         '''.strip())
-        handler = a.body[0].body[0].handlers[0].f.cut()
-        a.body[0].body[0].orelse[0].f.cut()
-        a.body[0].body[0].finalbody[0].f.cut()
-        a.body[0].body[0].f.put_slice(handler, field='handlers')
-        self.assertEqual(a.f.src, 'if 2:\n    try: pass\n    except: pass')
+        with FST.options(norm=False):
+            handler = a.body[0].body[0].handlers[0].f.cut()
+            a.body[0].body[0].orelse[0].f.cut()
+            a.body[0].body[0].finalbody[0].f.cut()
+            a.body[0].body[0].f.put_slice(handler, field='handlers')
+            self.assertEqual(a.f.src, 'if 2:\n    try: pass\n    except: pass')
 
         a = parse('''if 2:
     try: pass
@@ -3937,11 +3972,12 @@ finally: pass
     else: pass
     finally: pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
-        a.body[0].body[0].handlers[0].f.cut()
-        a.body[0].body[0].orelse[0].f.cut()
-        a.body[0].body[0].f.put_slice('i', field='body')
-        self.assertEqual(a.f.src, 'if 2:\n    try:\n        i\n    finally: pass')
+        with FST.options(norm=False):
+            a.body[0].body[0].body[0].f.cut()
+            a.body[0].body[0].handlers[0].f.cut()
+            a.body[0].body[0].orelse[0].f.cut()
+            a.body[0].body[0].f.put_slice('i', field='body')
+            self.assertEqual(a.f.src, 'if 2:\n    try:\n        i\n    finally: pass')
 
         a = parse('''if 2:
     try: pass
@@ -3949,11 +3985,12 @@ finally: pass
     else: pass
     finally: pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
-        a.body[0].body[0].handlers[0].f.cut()
-        a.body[0].body[0].finalbody[0].f.cut()
-        a.body[0].body[0].f.put_slice('i', field='body')
-        self.assertEqual(a.f.src, 'if 2:\n    try:\n        i\n    else: pass')
+        with FST.options(norm=False):
+            a.body[0].body[0].body[0].f.cut()
+            a.body[0].body[0].handlers[0].f.cut()
+            a.body[0].body[0].finalbody[0].f.cut()
+            a.body[0].body[0].f.put_slice('i', field='body')
+            self.assertEqual(a.f.src, 'if 2:\n    try:\n        i\n    else: pass')
 
         a = parse('''if 2:
     try: pass
@@ -3961,11 +3998,12 @@ finally: pass
     else: pass
     finally: pass
         '''.strip())
-        a.body[0].body[0].body[0].f.cut()
-        a.body[0].body[0].orelse[0].f.cut()
-        a.body[0].body[0].finalbody[0].f.cut()
-        a.body[0].body[0].f.put_slice('i', field='body')
-        self.assertEqual(a.f.src, 'if 2:\n    try:\n        i\n    except: pass')
+        with FST.options(norm=False):
+            a.body[0].body[0].body[0].f.cut()
+            a.body[0].body[0].orelse[0].f.cut()
+            a.body[0].body[0].finalbody[0].f.cut()
+            a.body[0].body[0].f.put_slice('i', field='body')
+            self.assertEqual(a.f.src, 'if 2:\n    try:\n        i\n    except: pass')
 
     def test_insert_into_empty_block_shuffle(self):  # TODO: legacy, do better when possible
         fst = parse('''
@@ -4099,7 +4137,7 @@ if indented:
         while ps:
             f, field = ps.pop()
 
-            bs.append(f.get_slice(field=field, cut=True))
+            bs.append(f.get_slice(field=field, cut=True, norm=False))
 
         ps = points[:]
 
@@ -4216,7 +4254,7 @@ if indented:
             while ps:
                 f, field = ps.pop()
 
-                bs.append(f.get_slice(field=field, cut=True))
+                bs.append(f.get_slice(field=field, cut=True, norm=False))
 
             ps = points[:]
 
@@ -4310,10 +4348,10 @@ if indented:
         ]
 
         for point, field in points:
-            point.get_slice(field=field, cut=True)
+            point.get_slice(field=field, cut=True, norm=False)
 
         for i, (point, field) in enumerate(reversed(points)):
-            point.put_slice(f'# {i}', 0, 0, field)#, check_node_type=False)
+            point.put_slice(f'# {i}', 0, 0, field, norm=False)#, check_node_type=False)
 
         # print('...')
         # print('\n'.join(repr(l) for l in fst.lines))
@@ -4390,7 +4428,7 @@ else:
 finally:
     pass
         '''.strip())
-        a.body[1].body[0].f.cut()
+        a.body[1].body[0].f.cut(norm=False)
         a.body[1].handlers[0].f.cut()
         a.body[1].f.put_slice('# pre\nexcept Exception as exc: n  # post', 0, 0, 'handlers')
         a.body[1].f.put_slice('except ValueError as v: m', 0, 0, 'handlers')
@@ -4415,7 +4453,7 @@ if 1: pass
 elif 2:
     pass
         '''.strip())
-        a.body[0].orelse[0].f.put_slice(None, 0, 1)
+        a.body[0].orelse[0].f.put_slice(None, 0, 1, norm=False)
         a.body[0].f.put_slice('break', 0, 1, 'orelse')
         self.assertEqual(a.f.src, 'if 1: pass\nelse:\n    break')
 
@@ -4425,7 +4463,7 @@ class cls:
     elif 2:
         pass
         '''.strip())
-        a.body[0].body[0].orelse[0].f.put_slice(None, 0, 1)
+        a.body[0].body[0].orelse[0].f.put_slice(None, 0, 1, norm=False)
         a.body[0].body[0].f.put_slice('break', 0, 1, 'orelse')
         self.assertEqual(a.f.src, 'class cls:\n    if 1: pass\n    else:\n        break')
 

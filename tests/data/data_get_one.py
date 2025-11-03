@@ -21,7 +21,7 @@ Assign - ROOT 0,0..0,5
   .value Constant 1 - 0,4..0,5
 '''),
 
-(1, '', 0, False, 'body', {'_verify_self': False}, (Interactive,
+(1, '', 0, False, 'body', {'_verify_self': False, 'norm': False}, (Interactive,
 r'''a = 1'''),
 r'''''',
 r'''Interactive - ROOT 0,0..0,0''',
@@ -126,7 +126,7 @@ FunctionDef - ROOT 0,0..0,16
 ''',
 r'''**None**'''),
 
-(10, '', 0, False, 'body', {'_verify_self': False}, (FunctionDef,
+(10, '', 0, False, 'body', {'_verify_self': False, 'norm': False}, (FunctionDef,
 r'''def func(): pass'''),
 r'''def func():''', r'''
 FunctionDef - ROOT 0,0..0,11
@@ -225,7 +225,7 @@ AsyncFunctionDef - ROOT 0,0..0,22
 ''',
 r'''**None**'''),
 
-(18, '', 0, False, 'body', {'_verify_self': False}, (AsyncFunctionDef,
+(18, '', 0, False, 'body', {'_verify_self': False, 'norm': False}, (AsyncFunctionDef,
 r'''async def func(): pass'''),
 r'''async def func():''', r'''
 AsyncFunctionDef - ROOT 0,0..0,17
@@ -282,7 +282,7 @@ keyword - ROOT 0,0..0,7
   .value Name 'val' Load - 0,4..0,7
 '''),
 
-(24, '', 0, False, 'body', {'_verify_self': False}, (ClassDef,
+(24, '', 0, False, 'body', {'_verify_self': False, 'norm': False}, (ClassDef,
 r'''class cls(): pass'''),
 r'''class cls():''', r'''
 ClassDef - ROOT 0,0..0,12
@@ -417,7 +417,7 @@ Call - ROOT 0,0..0,6
   .func Name 'iter' Load - 0,0..0,4
 '''),
 
-(43, '', 0, False, 'body', {'_verify_self': False}, (For,
+(43, '', 0, False, 'body', {'_verify_self': False, 'norm': False}, (For,
 r'''for var in iter(): pass'''),
 r'''for var in iter():''', r'''
 For - ROOT 0,0..0,18
@@ -457,7 +457,7 @@ Call - ROOT 0,0..0,6
   .func Name 'iter' Load - 0,0..0,4
 '''),
 
-(47, '', 0, False, 'body', {'_verify_self': False}, (AsyncFor,
+(47, '', 0, False, 'body', {'_verify_self': False, 'norm': False}, (AsyncFor,
 r'''async for var in iter(): pass'''),
 r'''async for var in iter():''', r'''
 AsyncFor - ROOT 0,0..0,24
@@ -489,7 +489,7 @@ r'''**ValueError('cannot delete While.test')**''',
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
-(50, '', 0, False, 'body', {'_verify_self': False}, (While,
+(50, '', 0, False, 'body', {'_verify_self': False, 'norm': False}, (While,
 r'''while var: pass'''),
 r'''while var:''', r'''
 While - ROOT 0,0..0,10
@@ -517,7 +517,7 @@ r'''**ValueError('cannot delete If.test')**''',
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
-(53, '', 0, False, 'body', {'_verify_self': False}, (If,
+(53, '', 0, False, 'body', {'_verify_self': False, 'norm': False}, (If,
 r'''if var: pass'''),
 r'''if var:''', r'''
 If - ROOT 0,0..0,7
@@ -547,7 +547,7 @@ withitem - ROOT 0,0..0,3
   .context_expr Name 'var' Load - 0,0..0,3
 '''),
 
-(56, '', 0, False, 'body', {'_verify_self': False}, (With,
+(56, '', 0, False, 'body', {'_verify_self': False, 'norm': False}, (With,
 r'''with var: pass'''),
 r'''with var:''', r'''
 With - ROOT 0,0..0,9
@@ -566,7 +566,7 @@ withitem - ROOT 0,0..0,3
   .context_expr Name 'var' Load - 0,0..0,3
 '''),
 
-(58, '', 0, False, 'body', {'_verify_self': False}, (AsyncWith,
+(58, '', 0, False, 'body', {'_verify_self': False, 'norm': False}, (AsyncWith,
 r'''async with var: pass'''),
 r'''async with var:''', r'''
 AsyncWith - ROOT 0,0..0,15
@@ -585,7 +585,7 @@ r'''**ValueError('cannot delete Match.subject')**''',
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
-(60, '', 0, False, 'cases', {'_verify_self': False}, (Match, r'''
+(60, '', 0, False, 'cases', {'_verify_self': False, 'norm': False}, (Match, r'''
 match var:
   case 1: pass
 '''),
@@ -631,7 +631,7 @@ Raise - ROOT 0,0..0,9
 ''',
 r'''**None**'''),
 
-(65, '', 0, False, 'body', {'_verify_self': False}, (Try, r'''
+(65, '', 0, False, 'body', {'_verify_self': False, 'norm': False}, (Try, r'''
 try: pass
 except Exception: continue
 '''),
@@ -646,7 +646,7 @@ Try - ROOT 0,0..0,30
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
 
-(66, '', 0, False, 'handlers', {'_verify_self': False}, (Try, r'''
+(66, '', 0, False, 'handlers', {'_verify_self': False, 'norm': False}, (Try, r'''
 try: pass
 except Exception: continue
 '''),
@@ -704,7 +704,7 @@ Expr - ROOT 0,0..0,3
   .value Constant Ellipsis - 0,0..0,3
 '''),
 
-(69, '', 0, False, 'body', {'_ver': 11, '_verify_self': False}, (TryStar, r'''
+(69, '', 0, False, 'body', {'_ver': 11, '_verify_self': False, 'norm': False}, (TryStar, r'''
 try: pass
 except* Exception: continue
 '''),
@@ -719,7 +719,7 @@ TryStar - ROOT 0,0..0,31
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
 
-(70, '', 0, False, 'handlers', {'_ver': 11, '_verify_self': False}, (TryStar, r'''
+(70, '', 0, False, 'handlers', {'_ver': 11, '_verify_self': False, 'norm': False}, (TryStar, r'''
 try: pass
 except* Exception: continue
 '''),
@@ -1683,7 +1683,7 @@ ExceptHandler - ROOT 0,0..0,22
 ''',
 r'''**None**'''),
 
-(194, '', 0, False, 'body', {'_verify_self': False}, (ExceptHandler,
+(194, '', 0, False, 'body', {'_verify_self': False, 'norm': False}, (ExceptHandler,
 r'''except Exception as exc: pass'''),
 r'''except Exception as exc:''', r'''
 ExceptHandler - ROOT 0,0..0,24
@@ -1726,7 +1726,7 @@ ExceptHandler - ROOT 0,0..0,23
 ''',
 r'''**None**'''),
 
-(199, '', 0, False, 'body', {'_ver': 11, '_verify_self': False}, (ExceptHandler,
+(199, '', 0, False, 'body', {'_ver': 11, '_verify_self': False, 'norm': False}, (ExceptHandler,
 r'''except* Exception as exc: pass'''),
 r'''except* Exception as exc:''', r'''
 ExceptHandler - ROOT 0,0..0,25
@@ -2013,7 +2013,7 @@ match_case - ROOT 0,0..0,17
 ''',
 r'''**None**'''),
 
-(223, '', 0, False, 'body', {'_verify_self': False}, (match_case,
+(223, '', 0, False, 'body', {'_verify_self': False, 'norm': False}, (match_case,
 r'''case 1 as a if not a: pass'''),
 r'''case 1 as a if not a:''', r'''
 match_case - ROOT 0,0..0,21

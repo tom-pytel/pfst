@@ -33,7 +33,7 @@ from .astutil import copy_ast
 from .common import astfield, fstloc, next_find, prev_find
 from .code import Code, code_as_stmts, code_as_ExceptHandlers, code_as_match_cases
 from .traverse import prev_bound, next_bound_step, prev_bound_step
-from .fst_misc import get_trivia_params
+from .fst_misc import get_trivia_params, get_option_overridable
 
 # ----------------------------------------------------------------------------------------------------------------------
 # srcedit_old.py
@@ -821,7 +821,6 @@ class SrcEdit:
 _src_edit = SrcEdit()
 
 # ----------------------------------------------------------------------------------------------------------------------
-# original slice_old
 
 def _set_end_pos_w_maybe_trailing_semicolon(self: fst.FST, end_ln: int, end_col: int) -> None:
     """Set end position of last child `self` and parents after checking for trailing semicolon after given position."""
@@ -924,6 +923,21 @@ def _normalize_block(self: fst.FST, field: str = 'body', *, indent: str | None =
     self._put_src(['', indent], ln, col + 1, b0_ln, b0_col, False)
 
 
+def _can_del_all(self: fst.FST, field: str, options: Mapping[str, Any]) -> bool:
+    if field == 'orelse' or not get_option_overridable('norm', 'norm_self', options):
+        return True
+
+    if field == 'body':
+        return isinstance(self.a, Module)
+
+    if field == 'cases':
+        return isinstance(self.a, _match_cases)
+
+    if field == 'finalbody':
+        return bool(self.a.handlers)
+
+    return isinstance(a := self.a, _ExceptHandlers) or bool(a.finalbody)  # field == 'handlers'
+
 # ......................................................................................................................
 
 def _get_slice_stmtish_old(
@@ -948,6 +962,9 @@ def _get_slice_stmtish_old(
             return fst.FST(_match_cases([], 1, 0, 1, 0), [''], from_=self)
 
         return fst.FST(Module(body=[], type_ignores=[]), [''], from_=self)
+
+    if cut and not start and stop == len(body) and not _can_del_all(self, field, options):
+        raise ValueError(f'cannot cut all elements from {ast.__class__.__name__}.{field} without norm_self=False')
 
     ffirst = body[start].f
     flast = body[stop - 1].f
@@ -1049,6 +1066,8 @@ def _put_slice_stmtish_old(
             put_fst = code_as_stmts(code, self.root.parse_params)
             put_body = put_fst.a.body
 
+        # NOTE: we do not convert an empty put_body to put_fst=None because we may be putting just comments and/or empty space
+
         put_fst_end_nl = not put_fst._lines[-1]
 
         if one and len(put_body) != 1:
@@ -1059,6 +1078,9 @@ def _put_slice_stmtish_old(
 
     if not slice_len and (not put_fst or (not put_body and len(ls := put_fst._lines) == 1 and not ls[0])):  # deleting empty slice or assigning empty fst to empty slice, noop
         return True
+
+    if (not put_fst or not put_body) and not start and stop == len(body) and not _can_del_all(self, field, options):
+        raise ValueError(f'cannot delete all elements from {ast.__class__.__name__}.{field} without norm_self=False')
 
     root = self.root
     lines = root._lines

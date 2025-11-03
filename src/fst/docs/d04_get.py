@@ -88,11 +88,12 @@ if i:
         k = 0
 ```
 
-When dealing with statements you can temporarily cut out the last statement in a body, but make sure to put something
-back as soon as possible because most operations will fail with a tree in this state.
+When dealing with statements you can temporarily cut out the last statement in a body if you pass either `norm=False` or
+`norm_self=False`, but make sure to put something back as soon as possible because most operations will fail with a tree
+in this state.
 
 ```py
->>> g = f.body[0].body[0].cut()
+>>> g = f.body[0].body[0].cut(norm=False)
 
 >>> print(f.src)
 if i:

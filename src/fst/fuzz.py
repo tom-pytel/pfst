@@ -1907,104 +1907,105 @@ class SliceStmtish(Fuzzy):
             assert all(f is g for f, g in zip(dst_container[to_start : to_start + (from_stop - from_start)], org_fsts))
 
     def fuzz_one(self, fst, fnm) -> bool:
-        containers = {
-            stmt:          FST.new().body,
-            ExceptHandler: FST('try: pass\nfinally: pass').handlers,
-            match_case:    FST('match _:\n  case _: pass').cases,
-        }
+        with FST.options(norm_self=False):  # so we can cut bodies down to empty
+            containers = {
+                stmt:          FST.new().body,
+                ExceptHandler: FST('try: pass\nfinally: pass').handlers,
+                match_case:    FST('match _:\n  case _: pass').cases,
+            }
 
-        del containers[match_case][0]
+            del containers[match_case][0]
 
-        if not PYLT11:
-            containers[excepthandler] = c = FST('try: pass\nexcept* Exception: pass').handlers
+            if not PYLT11:
+                containers[excepthandler] = c = FST('try: pass\nexcept* Exception: pass').handlers
 
-            del c[0]
+                del c[0]
 
-        # containers = {
-        #     stmt:          FST('i', 'exec').body,
-        #     ExceptHandler: FST('try: pass\nexcept Exception: pass\nfinally: pass').handlers,
-        #     match_case:    FST('match _:\n  case _: pass').cases,
-        # }
+            # containers = {
+            #     stmt:          FST('i', 'exec').body,
+            #     ExceptHandler: FST('try: pass\nexcept Exception: pass\nfinally: pass').handlers,
+            #     match_case:    FST('match _:\n  case _: pass').cases,
+            # }
 
-        # if not PYLT11:
-        #     containers[excepthandler] = c = FST('try: pass\nexcept* Exception: pass').handlers
+            # if not PYLT11:
+            #     containers[excepthandler] = c = FST('try: pass\nexcept* Exception: pass').handlers
 
-        stmtishs = []
+            stmtishs = []
 
-        for f in fst.walk(True):
-            if fstcat(f) in containers:
-                stmtishs.append(f)
+            for f in fst.walk(True):
+                if fstcat(f) in containers:
+                    stmtishs.append(f)
 
-        if not stmtishs:
-            return
+            if not stmtishs:
+                return
 
-        if self.debug:
-            FST.put = debug_put
-            FST.put_slice = debug_put_slice
+            if self.debug:
+                FST.put = debug_put
+                FST.put_slice = debug_put_slice
 
-        try:
-            for count in range(self.batch or 1000):
-                try:
-                    if not (count % 20):
-                        sys.stdout.write('.'); sys.stdout.flush()
+            try:
+                for count in range(self.batch or 1000):
+                    try:
+                        if not (count % 20):
+                            sys.stdout.write('.'); sys.stdout.flush()
 
-                    for _ in range(10):
-                        while stmtishs:
-                            if (stmtish := stmtishs[i := randint(0, len(stmtishs) - 1)]).a is None:  # if removed completely then forget about it
-                                del stmtishs[i]
+                        for _ in range(10):
+                            while stmtishs:
+                                if (stmtish := stmtishs[i := randint(0, len(stmtishs) - 1)]).a is None:  # if removed completely then forget about it
+                                    del stmtishs[i]
+                                else:
+                                    break
+
                             else:
-                                break
+                                raise RuntimeError('this should not happen')
+
+                            container = containers[cat := fstcat(stmtish)]
+                            container = containers[cat] = getattr(container.fst, container.field)  # remake the container because its size can be wrong
+
+                            if any(p is container.fst for p in stmtish.parents()):
+                                continue
+
+                            break
 
                         else:
-                            raise RuntimeError('this should not happen')
-
-                        container = containers[cat := fstcat(stmtish)]
-                        container = containers[cat] = getattr(container.fst, container.field)  # remake the container because its size can be wrong
-
-                        if any(p is container.fst for p in stmtish.parents()):
                             continue
 
-                        break
+                        stmtish_container = getattr(stmtish.parent, stmtish.pfield.name)
 
-                    else:
-                        continue
+                        # from source to temporary container
 
-                    stmtish_container = getattr(stmtish.parent, stmtish.pfield.name)
+                        self.do_move(stmtish, stmtish_container, container)
 
-                    # from source to temporary container
+                        # refresh containers because of node operations
 
-                    self.do_move(stmtish, stmtish_container, container)
+                        stmtish_container = getattr(stmtish_container.fst, stmtish_container.field)
+                        container = getattr(container.fst, container.field)
 
-                    # refresh containers because of node operations
+                        # from temporary container to source
 
-                    stmtish_container = getattr(stmtish_container.fst, stmtish_container.field)
-                    container = getattr(container.fst, container.field)
+                        self.do_move(choice(container), container, stmtish_container)
 
-                    # from temporary container to source
+                        if self.verify:
+                            fst.verify()
 
-                    self.do_move(choice(container), container, stmtish_container)
+                    except Exception:
+                        print()
 
-                    if self.verify:
-                        fst.verify()
+                        if self.verbose:
+                            print(fst.src)
 
-                except Exception:
-                    print()
+                        raise
 
-                    if self.verbose:
-                        print(fst.src)
+                fst.verify()
 
-                    raise
+            finally:
+                print()
 
-            fst.verify()
+                FST.put = old_FST_put
+                FST.put_slice = old_FST_put_slice
 
-        finally:
-            print()
-
-            FST.put = old_FST_put
-            FST.put_slice = old_FST_put_slice
-
-            if self.verbose:
-                print(fst.src)
+                if self.verbose:
+                    print(fst.src)
 
 
 class SliceExprish(Fuzzy):

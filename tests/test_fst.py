@@ -6320,7 +6320,7 @@ opts.ignore_module = [mod.strip()
         self.assertEqual('a\nb\nc', parse('a\nb\nc').f.body.copy().src)
 
         f = parse('a\nb\nc').f
-        g = f.body.cut()
+        g = f.body.cut(norm=False)
         self.assertEqual('', f.src)
         self.assertEqual('a\nb\nc', g.src)
 
@@ -6397,7 +6397,7 @@ opts.ignore_module = [mod.strip()
 
         f = parse('a\nb\nc').f
         g = f.body
-        g.cut()
+        g.cut(norm=False)
         self.assertEqual(0, len(g))
         self.assertEqual('', f.src)
         g.append('d')
@@ -6524,7 +6524,7 @@ class cls:
             '''.strip())
         self.assertIsInstance(a.f.body, fstview)
         self.assertIsInstance(a.body[0].f.body, fstview)
-        a.body[0].f.body.cut()
+        a.body[0].f.body.cut(norm=False)
         self.assertIsInstance(a.body[0].f.body, fstview)
 
         a = parse('a\nb\nc\nd\ne')
