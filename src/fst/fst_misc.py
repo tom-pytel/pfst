@@ -315,7 +315,7 @@ def _repr_tail(self: fst.FST, loc: bool = True) -> str:
         except Exception:  # maybe in middle of operation changing locations and lines
             loc = '????'
 
-    self._touchall(False, True, True)  # for debugging because we may have cached locs which would not have otherwise been cached during execution
+        # self._touchall(False, True, True)  # for debugging because we may have cached locs which would not have otherwise been cached during execution
 
     tail = ' ROOT' if self.is_root else ''
 
