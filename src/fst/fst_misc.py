@@ -108,7 +108,8 @@ DUMP_NO_COLOR = nspace(
     },
 )
 
-_re_stmt_tail          = re.compile(r'\s*(?:;\s*)?')
+# _re_stmt_tail          = re.compile(r'\s*(?:;\s*)?')
+_re_stmt_tail          = re.compile(r'\s*(;(?:\s*#.*)?|#.*)')
 _re_one_space_or_end   = re.compile(r'\s|$')
 
 _re_par_open_alnums    = re.compile(rf'[{pat_alnum}.][(][{pat_alnum}]')
@@ -138,8 +139,12 @@ def _dump_lines(
     else:
         lines = fst_._get_src(ln, col, end_ln, 0x7fffffffffffffff, True)
 
-        if not _re_stmt_tail.match(l := lines[-1], end_col):
-            lines[-1] = l[:end_col]
+        ec = end_col if end_ln != ln else end_col - col
+
+        if m := _re_stmt_tail.match(l := lines[-1], ec):
+            lines[-1] = l[:m.end(1)]
+        else:
+            lines[-1] = l[:ec]
 
     end = f'{c.clr_loc}<*END*{c.end_loc}'
     iter_lines = iter(lines)

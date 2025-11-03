@@ -4222,7 +4222,7 @@ def f():
         f = FST('a = b ; ')
         f.value.put_src(' b ', 0, 4, 0, 5, 'offset')
         self.assertEqual(f.dump('all', list_indent=2, out=list), [
-            '0: a =  b  ; <*END*',
+            '0: a =  b  ;',
             'Assign - ROOT 0,0..0,7',
             '  .targets[1]',
             '0: a',
@@ -4240,6 +4240,28 @@ def f():
             '     .value Call',
             '0: call',
             "       .func Name 'call' Load",
+        ])
+
+        f = FST('''
+if 1:  # 1
+  a  # 2
+  b ;
+  c ;  # 3
+            '''.strip())
+        self.assertEqual(f.dump('stmt', out=list), [
+            "0: if 1:  # 1",
+            "If - ROOT 0,0..3,5",
+            "  .test Constant 1 - 0,3..0,4",
+            "  .body[3]",
+            "1:   a  # 2",
+            "   0] Expr - 1,2..1,3",
+            "     .value Name 'a' Load - 1,2..1,3",
+            "2:   b ;",
+            "   1] Expr - 2,2..2,3",
+            "     .value Name 'b' Load - 2,2..2,3",
+            "3:   c ;  # 3",
+            "   2] Expr - 3,2..3,3",
+            "     .value Name 'c' Load - 3,2..3,3",
         ])
 
     def test_verify(self):
