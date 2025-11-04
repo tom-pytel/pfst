@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- leave leading '\' above statement being deletet if trailing semicolon is left in place on stmt line
 - account for degenerate case of first decorator following line continuation in `.bloc`
 
 ### Added

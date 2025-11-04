@@ -431,12 +431,14 @@ class SrcEdit:
                               min(o_postspace, del_end_ln - del_loc.end_ln))  # how many deleted empty leading and trailing lines (minimized to original requested value because may have been increased to pep8space)
         del_loc = fstloc(del_ln, del_col, del_end_ln, del_end_col)
 
-        # remove possible line continuation preceding delete start position because could link to invalid following block statement
+        # remove possible line continuation preceding delete start position because could link to invalid following block statement, but only if there is not a post_semi which is not being deleted
 
         del_ln, del_col, del_end_ln, del_end_col = del_loc
 
-        if (del_ln > bound_ln and (not del_col or re_empty_line.match(lines[del_ln], 0, del_col)) and
-            lines[del_ln - 1].endswith('\\')  # the endswith() is not definitive because of comments
+        if (del_ln > bound_ln and
+            (not del_col or re_empty_line.match(lines[del_ln], 0, del_col)) and
+            lines[del_ln - 1].endswith('\\') and  # the endswith() is not definitive because a comment may end with it
+            (not post_semi or (post_semi < (del_end_ln, del_end_col)))  # very special case of leaving trailing semicolon on next line, which absolutely needs the line continuation above
         ):
             new_del_ln = del_ln - 1
             new_del_col = 0 if new_del_ln != bound_ln else bound_col
@@ -924,6 +926,8 @@ def _normalize_block(self: fst.FST, field: str = 'body', *, indent: str | None =
 
 
 def _can_del_all(self: fst.FST, field: str, options: Mapping[str, Any]) -> bool:
+    """Whether can delete all elements of af a body list of children according to options or not."""
+
     if field == 'orelse' or not get_option_overridable('norm', 'norm_self', options):
         return True
 
