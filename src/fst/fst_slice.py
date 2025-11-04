@@ -1629,7 +1629,7 @@ def _code_to_slice__withitems(
 
     if one:
         fst_ = code_as_withitem(code, self.root.parse_params, sanitize=False)
-        ast_ = _withitems(names=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+        ast_ = _withitems(items=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                           end_col_offset=ls[-1].lenbytes)
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
