@@ -1,0 +1,423 @@
+>>> from fst import *
+>>> from fst.common import fstloc, next_find
+>>> from fst.slice import get_slice_nosep
+
+
+>>> def test_cut_gens(fst_, start, stop, trivia=None, fmt=True):
+...     generators = fst_.a.generators
+...
+...     _, _, bound_ln, bound_col = generators[start - 1].f.loc if start else fst_.elt.pars()
+...
+...     if stop < len(generators):
+...         bound_end_ln, bound_end_col, _, _ = generators[stop].f.loc
+...     else:
+...         _, _, bound_end_ln, bound_end_col = fst_.loc
+...         bound_end_col -= 1
+...
+...     ret = get_slice_nosep(fst_, start, stop, len(generators), True, Tuple(elts=generators[start : stop]),
+...         generators[start].f.loc, generators[stop - 1].f.loc,
+...         bound_ln, bound_col, bound_end_ln, bound_end_col, {'trivia': trivia})
+...
+...     return f'[{ret.src}]' if fmt else ret
+
+
+basic
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_ for _ in GET]
+... """.strip()), 0, 1, (False, False)), f.src)
+[for _ in GET] [_]
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_  for _ in GET  ]
+... """.strip()), 0, 1, (False, False)), f.src)
+[for _ in GET] [_]
+
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_ for _ in GET for _ in POST]
+... """.strip()), 0, 1, (False, False)), f.src)
+[for _ in GET] [_ for _ in POST]
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_  for _ in GET    for _ in POST   ]
+... """.strip()), 0, 1, (False, False)), f.src)
+[for _ in GET] [_  for _ in POST   ]
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_ for _ in PRE for _ in GET]
+... """.strip()), 1, 2, (False, False)), f.src)
+[for _ in GET] [_ for _ in PRE]
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_  for _ in PRE    for _ in GET   ]
+... """.strip()), 1, 2, (False, False)), f.src)
+[for _ in GET] [_  for _ in PRE]
+
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_ for _ in GET for _ in POST0 for _ in POST1]
+... """.strip()), 0, 1, (False, False)), f.src)
+[for _ in GET] [_ for _ in POST0 for _ in POST1]
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_  for _ in GET    for _ in POST0   for _ in POST1 ]
+... """.strip()), 0, 1, (False, False)), f.src)
+[for _ in GET] [_  for _ in POST0   for _ in POST1 ]
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_ for _ in PRE for _ in GET for _ in POST]
+... """.strip()), 1, 2, (False, False)), f.src)
+[for _ in GET] [_ for _ in PRE for _ in POST]
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_  for _ in PRE  for _ in GET    for _ in POST  ]
+... """.strip()), 1, 2, (False, False)), f.src)
+[for _ in GET] [_  for _ in PRE  for _ in POST  ]
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_ for _ in PRE0 for _ in PRE1 for _ in GET]
+... """.strip()), 2, 3, (False, False)), f.src)
+[for _ in GET] [_ for _ in PRE0 for _ in PRE1]
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_   for _ in PRE0  for _ in PRE1    for _ in GET   ]
+... """.strip()), 2, 3, (False, False)), f.src)
+[for _ in GET] [_   for _ in PRE0  for _ in PRE1]
+
+
+# multiline and trivia
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_ for _ in PRE for _ in GET
+...  for _ in POST]
+... """.strip()), 1, 2, (False, False)), f.src)
+[for _ in GET] [_ for _ in PRE
+ for _ in POST]
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_ for _ in PRE for _ in GET0 for _ in GET1
+...  for _ in POST]
+... """.strip()), 1, 3, (False, False)), f.src)
+[for _ in GET0 for _ in GET1] [_ for _ in PRE
+ for _ in POST]
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_ for _ in PRE for _ in GET \
+...  for _ in POST]
+... """.strip()), 1, 2, (False, False)), f.src)
+[for _ in GET] [_ for _ in PRE \
+ for _ in POST]
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_ for _ in PRE for _ in GET0 for _ in GET1 \
+...  for _ in POST]
+... """.strip()), 1, 3, (False, False)), f.src)
+[for _ in GET0 for _ in GET1] [_ for _ in PRE \
+ for _ in POST]
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_ for _ in PRE for _ in GET  # trivia
+...  for _ in POST]
+... """.strip()), 1, 2, (False, False)), f.src)
+[for _ in GET] [_ for _ in PRE # trivia
+ for _ in POST]
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_ for _ in PRE for _ in GET  # trivia
+...  for _ in POST]
+... """.strip()), 1, 2, (False, 'line')), f.src)
+[for _ in GET  # trivia
+] [_ for _ in PRE
+ for _ in POST]
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_ for _ in PRE for _ in GET0 for _ in GET1  # trivia
+...  for _ in POST]
+... """.strip()), 1, 3, (False, 'line')), f.src)
+[for _ in GET0 for _ in GET1  # trivia
+] [_ for _ in PRE
+ for _ in POST]
+
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_ for _ in PRE for _ in GET0 for _ in GET1  for _ in POST]
+... """.strip()), 0, 3, (False, False)), f.src)
+[for _ in PRE for _ in GET0 for _ in GET1] [_ for _ in POST]
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_ for _ in PRE for _ in GET \
+...  for _ in POST]
+... """.strip()), 0, 2, (False, False)), f.src)
+[for _ in PRE for _ in GET] [_ \
+ for _ in POST]
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_ for _ in PRE for _ in GET0 for _ in GET1]
+... """.strip()), 0, 3, (False, False)), f.src)
+[for _ in PRE for _ in GET0 for _ in GET1] [_]
+
+>>> print(test_cut_gens(f := FST(r"""
+... [_ for _ in PRE for _ in GET \
+...  ]
+... """.strip()), 0, 2, (False, False)), f.src)
+[for _ in PRE for _ in GET] [_ \
+ ]
+
+
+
+>>> def test_cut_ifs(fst_, start, stop, trivia=None, fmt=True):
+...     lines = fst_.root._lines
+...     ast = fst_.a
+...     ifs = ast.ifs
+...
+...     def loc_if(idx):
+...         f = ifs[idx].f
+...         prev = f.prev()
+...         ln, col, end_ln, end_col = f.pars()
+...         _, _, prev_end_ln, prev_end_col = prev.loc
+...         ln, col = next_find(lines, prev_end_ln, prev_end_col, ln, col, 'if')  # must be there
+...
+...         return fstloc(ln, col, end_ln, end_col)
+...
+...     _, _, bound_ln, bound_col = (ifs[start - 1] if start else ast.iter).f.pars()
+...
+...     if stop < len(ifs):
+...         bound_end_ln, bound_end_col, _, _ = loc_if(stop)  # ifs[stop].f.pars()
+...     elif fst_.next():
+...         _, _, bound_end_ln, bound_end_col = ifs[stop - 1].f.pars()
+...
+...     elif parent := fst_.parent:
+...         _, _, bound_end_ln, bound_end_col = parent.loc
+...         bound_end_col -= 1
+...
+...     else:
+...         bound_end_ln = len(lines) - 1
+...         bound_end_col = len(lines[-1])
+...
+...     ret = get_slice_nosep(fst_, start, stop, len(ifs), True, Tuple(elts=ifs[start : stop]),
+...         loc_if(start), loc_if(stop - 1),  # ifs[start].f.pars(), ifs[stop - 1].f.pars(),
+...         bound_ln, bound_col, bound_end_ln, bound_end_col, {'trivia': trivia})
+...
+...     return f'[{ret.src}]' if fmt else ret
+
+
+basic
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if GET]
+... """.strip())).generators[0], 0, 1, (False, False)), f.src)
+[if GET] [_ for _ in _]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _  if GET  ]
+... """.strip())).generators[0], 0, 1, (False, False)), f.src)
+[if GET] [_ for _ in _]
+
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if GET if POST]
+... """.strip())).generators[0], 0, 1, (False, False)), f.src)
+[if GET] [_ for _ in _ if POST]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _  if GET    if POST   ]
+... """.strip())).generators[0], 0, 1, (False, False)), f.src)
+[if GET] [_ for _ in _  if POST   ]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if PRE if GET]
+... """.strip())).generators[0], 1, 2, (False, False)), f.src)
+[if GET] [_ for _ in _ if PRE]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _  if PRE    if GET   ]
+... """.strip())).generators[0], 1, 2, (False, False)), f.src)
+[if GET] [_ for _ in _  if PRE]
+
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if GET if POST0 if POST1]
+... """.strip())).generators[0], 0, 1, (False, False)), f.src)
+[if GET] [_ for _ in _ if POST0 if POST1]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _  if GET    if POST0   if POST1 ]
+... """.strip())).generators[0], 0, 1, (False, False)), f.src)
+[if GET] [_ for _ in _  if POST0   if POST1 ]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if PRE if GET if POST]
+... """.strip())).generators[0], 1, 2, (False, False)), f.src)
+[if GET] [_ for _ in _ if PRE if POST]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _  if PRE  if GET     if POST  ]
+... """.strip())).generators[0], 1, 2, (False, False)), f.src)
+[if GET] [_ for _ in _  if PRE  if POST  ]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if PRE0 if PRE1 if GET]
+... """.strip())).generators[0], 2, 3, (False, False)), f.src)
+[if GET] [_ for _ in _ if PRE0 if PRE1]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _   if PRE0  if PRE1    if GET   ]
+... """.strip())).generators[0], 2, 3, (False, False)), f.src)
+[if GET] [_ for _ in _   if PRE0  if PRE1]
+
+
+trailing comprehension
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if GET for _ in _]
+... """.strip())).generators[0], 0, 1, (False, False)), f.src)
+[if GET] [_ for _ in _ for _ in _]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _  if GET   for _ in _]
+... """.strip())).generators[0], 0, 1, (False, False)), f.src)
+[if GET] [_ for _ in _   for _ in _]
+
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if PRE if GET for _ in _]
+... """.strip())).generators[0], 1, 2, (False, False)), f.src)
+[if GET] [_ for _ in _ if PRE for _ in _]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _  if PRE    if GET    for _ in _]
+... """.strip())).generators[0], 1, 2, (False, False)), f.src)
+[if GET] [_ for _ in _  if PRE    for _ in _]
+
+
+# multiline and trivia
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if PRE if GET
+...  if POST]
+... """.strip())).generators[0], 1, 2, (False, False)), f.src)
+[if GET] [_ for _ in _ if PRE
+ if POST]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if PRE if GET0 if GET1
+...  if POST]
+... """.strip())).generators[0], 1, 3, (False, False)), f.src)
+[if GET0 if GET1] [_ for _ in _ if PRE
+ if POST]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if PRE if GET \
+...  if POST]
+... """.strip())).generators[0], 1, 2, (False, False)), f.src)
+[if GET] [_ for _ in _ if PRE \
+ if POST]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if PRE if GET0 if GET1 \
+...  if POST]
+... """.strip())).generators[0], 1, 3, (False, False)), f.src)
+[if GET0 if GET1] [_ for _ in _ if PRE \
+ if POST]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if PRE if GET  # trivia
+...  if POST]
+... """.strip())).generators[0], 1, 2, (False, False)), f.src)
+[if GET] [_ for _ in _ if PRE # trivia
+ if POST]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if PRE if GET  # trivia
+...  if POST]
+... """.strip())).generators[0], 1, 2, (False, 'line')), f.src)
+[if GET  # trivia
+] [_ for _ in _ if PRE
+ if POST]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if PRE if GET0 if GET1  # trivia
+...  if POST]
+... """.strip())).generators[0], 1, 3, (False, 'line')), f.src)
+[if GET0 if GET1  # trivia
+] [_ for _ in _ if PRE
+ if POST]
+
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if PRE if GET0 if GET1  if POST]
+... """.strip())).generators[0], 0, 3, (False, False)), f.src)
+[if PRE if GET0 if GET1] [_ for _ in _ if POST]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if PRE if GET \
+...  if POST]
+... """.strip())).generators[0], 0, 2, (False, False)), f.src)
+[if PRE if GET] [_ for _ in _ \
+ if POST]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if PRE if GET0 if GET1]
+... """.strip())).generators[0], 0, 3, (False, False)), f.src)
+[if PRE if GET0 if GET1] [_ for _ in _]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... [_ for _ in _ if PRE if GET \
+...  ]
+... """.strip())).generators[0], 0, 2, (False, False)), f.src)
+[if PRE if GET] [_ for _ in _ \
+ ]
+
+
+pure comprehension
+
+>>> print(test_cut_ifs((f := FST(r"""
+... for _ in _ if GET""".lstrip(), comprehension)), 0, 1, (False, False)), f'[{f.src}]')
+[if GET] [for _ in _]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... for _ in _  if GET  """.lstrip(), comprehension)), 0, 1, (False, False)), f'[{f.src}]')
+[if GET] [for _ in _]
+
+
+>>> print(test_cut_ifs((f := FST(r"""
+... for _ in _ if GET if POST""".lstrip(), comprehension)), 0, 1, (False, False)), f'[{f.src}]')
+[if GET] [for _ in _ if POST]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... for _ in _  if GET    if POST   """.lstrip(), comprehension)), 0, 1, (False, False)), f'[{f.src}]')
+[if GET] [for _ in _  if POST   ]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... for _ in _ if PRE if GET""".lstrip(), comprehension)), 1, 2, (False, False)), f'[{f.src}]')
+[if GET] [for _ in _ if PRE]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... for _ in _  if PRE    if GET   """.lstrip(), comprehension)), 1, 2, (False, False)), f'[{f.src}]')
+[if GET] [for _ in _  if PRE]
+
+
+>>> print(test_cut_ifs((f := FST(r"""
+... for _ in _ if GET if POST0 if POST1""".lstrip(), comprehension)), 0, 1, (False, False)), f'[{f.src}]')
+[if GET] [for _ in _ if POST0 if POST1]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... for _ in _  if GET    if POST0   if POST1 """.lstrip(), comprehension)), 0, 1, (False, False)), f'[{f.src}]')
+[if GET] [for _ in _  if POST0   if POST1 ]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... for _ in _ if PRE if GET if POST""".lstrip(), comprehension)), 1, 2, (False, False)), f'[{f.src}]')
+[if GET] [for _ in _ if PRE if POST]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... for _ in _  if PRE  if GET     if POST  """.lstrip(), comprehension)), 1, 2, (False, False)), f'[{f.src}]')
+[if GET] [for _ in _  if PRE  if POST  ]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... for _ in _ if PRE0 if PRE1 if GET""".lstrip(), comprehension)), 2, 3, (False, False)), f'[{f.src}]')
+[if GET] [for _ in _ if PRE0 if PRE1]
+
+>>> print(test_cut_ifs((f := FST(r"""
+... for _ in _   if PRE0  if PRE1    if GET   """.lstrip(), comprehension)), 2, 3, (False, False)), f'[{f.src}]')
+[if GET] [for _ in _   if PRE0  if PRE1]

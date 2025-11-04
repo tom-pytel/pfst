@@ -1,4 +1,4 @@
-"""Low level get and put slice with separator (comma, `MatchOr` `|` and `Assign` `=`)."""
+"""Low level get and put slice."""
 
 from __future__ import annotations
 
@@ -27,7 +27,10 @@ from .fst_core import _ParamsOffset
 
 from .fst_misc import get_trivia_params
 
-__all__ = ['get_slice_sep', 'put_slice_sep_begin', 'put_slice_sep_end']
+__all__ = [
+    'get_slice_sep', 'put_slice_sep_begin', 'put_slice_sep_end',
+    'get_slice_nosep', # 'put_slice_nosep_begin', 'put_slice_nosep_end',
+]
 
 
 _re_close_delim_or_space_or_end = re.compile(r'[)}\s\]:]|$')  # this is a very special set of terminations which are considered to not need a space before if a slice put ends with a non-space right before them
@@ -393,7 +396,7 @@ def _locs_slice(
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# get
+# get and put with separator (most slices)
 
 def get_slice_sep(
     self: fst.FST,
@@ -431,7 +434,7 @@ def get_slice_sep(
 
     **Parameters:**
     - `start`, `stop`, `len_body`: Slice parameters, `len_body` being current length of field.
-    - `ast`: The already build new `AST` that is being gotten. The elements being gotten must be in this with their
+    - `ast`: The already built new `AST` that is being gotten. The elements being gotten must be in this with their
         current locations in the `self`.
     - `ast_last`: The `AST` of the last element copied or cut, not assumend to have `.f` `FST` attribute to begin with.
     - `loc_first`: The full location of the first element copied or cut, parentheses included.
@@ -548,9 +551,6 @@ def get_slice_sep(
 
     return fst_
 
-
-# ----------------------------------------------------------------------------------------------------------------------
-# put
 
 def put_slice_sep_begin(
     self: fst.FST,
@@ -875,3 +875,67 @@ def put_slice_sep_end(self: fst.FST, params: tuple) -> None:
                                       self_split)
 
             return self
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# get and put without separator (comprehension and comprehension.ifs)
+
+def get_slice_nosep(
+    self: fst.FST,
+    start: int,
+    stop: int,
+    len_body: int,
+    cut: bool,
+    ast: AST,
+    loc_first: fstloc,
+    loc_last: fstloc,
+    bound_ln: int,
+    bound_col: int,
+    bound_end_ln: int,
+    bound_end_col: int,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """Copy slice sequence source, dedent it, and create a new `FST` from that source and the new `AST` already made
+    with the old locations (which will be updated). If the operation is a cut then the source in `self` will also be
+    deleted.
+
+    **WARNING!** (`bound_ln`, `bound_col`) is expected to be exactly the end of the previous element (past any closing
+    pars), "previous element" including element which is not part of this entire slice (`ListComp.elt`,
+    `comprehension.iter`). (`bound_end_ln`, `bound_end_col`) must be end of container just before closing delimiters or
+    end of last element of this possible slice area if there is another non-slice element following (before the space).
+
+    **Parameters:**
+    - `start`, `stop`, `len_body`: Slice parameters, `len_body` being current length of field.
+    - `ast`: The already built new `AST` that is being gotten. The elements being gotten must be in this with their
+        current locations in the `self`.
+    - `loc_first`: The full location of the first element copied or cut, parentheses and lead included.
+    - `loc_last`: The full location of the last element copied or cut, parentheses and lead included.
+    - (`bound_ln`, `bound_col`): End of previous element (past pars, even if not part of this sequence).
+    - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters) or just before space before next
+        element which is not part of this sequence.
+    - `options`: The dictionary of options passed to the put function. Options used are `trivia`.
+    """
+
+    lines = self.root._lines
+
+    copy_loc, del_loc, del_indent, _ = _locs_slice(lines, not start, stop == len_body, loc_first, loc_last,
+                                                   bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                                   options.get('trivia'), '', cut)
+
+    copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
+
+    ast.lineno = copy_ln + 1
+    ast.col_offset = lines[copy_ln].c2b(copy_col)
+    ast.end_lineno = copy_end_ln + 1
+    ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
+
+    fst_, _ = self._make_fst_and_dedent(self, ast, copy_loc, None, None, del_loc if cut else None,
+                                        [del_indent] if del_indent and del_loc.end_col else None,
+                                        docstr=False)  # docstr False because none of the things handled by this function can have any form of docstring
+
+    ast.col_offset = 0
+    ast.end_col_offset = fst_._lines[-1].lenbytes
+
+    fst_._touch()
+
+    return fst_
