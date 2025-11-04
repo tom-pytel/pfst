@@ -131,7 +131,7 @@ from .fst_misc import (
 )
 
 from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish
-from .slice_sep import get_slice_sep, put_slice_sep_begin, put_slice_sep_end, _locs_first_and_last
+from .slice import get_slice_sep, put_slice_sep_begin, put_slice_sep_end, _locs_first_and_last
 
 __all__ = ['_get_slice', '_put_slice', 'is_slice_compatible']
 

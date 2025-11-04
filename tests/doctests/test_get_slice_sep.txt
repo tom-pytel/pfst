@@ -1,5 +1,5 @@
 >>> from fst import *
->>> from fst.slice_sep import get_slice_sep
+>>> from fst.slice import get_slice_sep
 
 
 >>> def test_cut(fst_, start, stop, trivia=None, self_tail_sep=None, ret_tail_sep=None):

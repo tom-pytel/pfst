@@ -1,0 +1,342 @@
+>>> from fst.common import fstloc
+>>> from fst.slice import _locs_slice
+
+>>> LINES = lambda src: src.split('\n')
+
+
+>>> _locs_slice(LINES("""
+... [i for i in j  if GET  ]
+... """.strip()), True, True, (l := fstloc(0, 15, 0, 21)), l, 0, 13, 0, 23, (False, False), '')
+(fstloc(0, 15, 0, 21), fstloc(0, 13, 0, 23), None, None)
+
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE if GET if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 0, 35, (False, False), '')
+(fstloc(0, 21, 0, 27), fstloc(0, 21, 0, 28), None, None)
+
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE if GET
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 1, 8, (False, False), '')
+(fstloc(0, 21, 0, 27), fstloc(0, 20, 0, 27), None, None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE if GET  # trivia
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 1, 8, (False, False), '')
+(fstloc(0, 21, 0, 27), fstloc(0, 21, 0, 29), None, None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE if GET  # trivia
+...  ]
+... """.strip()), False, True, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 1, 1, (False, False), '')
+(fstloc(0, 21, 0, 27), fstloc(0, 21, 0, 29), None, None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE if GET
+...
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 2, 8, (False, False), '')
+(fstloc(0, 21, 0, 27), fstloc(0, 20, 0, 27), None, None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE if GET
+...
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 2, 8, (False, 'none+1'), '')
+(fstloc(0, 21, 2, 0), fstloc(0, 20, 1, 0), None, None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE if GET  # trivia
+...
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 2, 8, (False, 'line'), '')
+(fstloc(0, 21, 1, 0), fstloc(0, 20, 0, 37), None, None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE if GET  # trivia
+...
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 2, 8, (False, 'line+1'), '')
+(fstloc(0, 21, 2, 0), fstloc(0, 20, 1, 0), None, None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE if GET
+...  # trivia
+...
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 3, 8, (False, 'line'), '')
+(fstloc(0, 21, 0, 27), fstloc(0, 20, 0, 27), None, None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE if GET
+...  # trivia
+...
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 3, 8, (False, 'line+1'), '')
+(fstloc(0, 21, 0, 27), fstloc(0, 20, 0, 27), None, None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE if GET
+...  # trivia
+...
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 3, 8, (False, 'block'), '')
+(fstloc(0, 21, 2, 0), fstloc(0, 20, 1, 9), None, None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE if GET
+...  # trivia
+...
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 3, 8, (False, 'block+1'), '')
+(fstloc(0, 21, 3, 0), fstloc(0, 20, 2, 0), None, None)
+
+
+>>> _locs_slice(LINES(r"""
+... [i for i in j if PRE if GET \
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 1, 8, (False, False), '')
+(fstloc(0, 21, 0, 27), fstloc(0, 20, 0, 27), None, None)
+
+>>> _locs_slice(LINES(r"""
+... [i for i in j if PRE if GET \
+...
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 2, 8, (False, False), '')
+(fstloc(0, 21, 0, 27), fstloc(0, 20, 0, 27), None, None)
+
+>>> _locs_slice(LINES(r"""
+... [i for i in j if PRE if GET \
+...
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 2, 8, (False, 'none+1'), '')
+(fstloc(0, 21, 2, 0), fstloc(0, 20, 1, 0), None, None)
+
+>>> _locs_slice(LINES(r"""
+... [i for i in j if PRE if GET \
+...  \
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 2, 8, (False, 'none+1'), '')
+(fstloc(0, 21, 2, 0), fstloc(0, 20, 1, 2), None, None)
+
+>>> _locs_slice(LINES(r"""
+... [i for i in j if PRE if GET \
+...  # trivia
+...
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 3, 8, (False, 'line'), '')
+(fstloc(0, 21, 0, 27), fstloc(0, 20, 0, 27), None, None)
+
+>>> _locs_slice(LINES(r"""
+... [i for i in j if PRE if GET \
+...  # trivia
+...
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 3, 8, (False, 'line+1'), '')
+(fstloc(0, 21, 0, 27), fstloc(0, 20, 0, 27), None, None)
+
+>>> _locs_slice(LINES(r"""
+... [i for i in j if PRE if GET \
+...  # trivia
+...
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 3, 8, (False, 'block'), '')
+(fstloc(0, 21, 2, 0), fstloc(0, 20, 1, 9), None, None)
+
+>>> _locs_slice(LINES(r"""
+... [i for i in j if PRE if GET \
+...  # trivia
+...  \
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 3, 8, (False, 'block'), '')
+(fstloc(0, 21, 2, 0), fstloc(0, 20, 1, 9), None, None)
+
+>>> _locs_slice(LINES(r"""
+... [i for i in j if PRE if GET \
+...  # trivia
+...
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 3, 8, (False, 'block+1'), '')
+(fstloc(0, 21, 3, 0), fstloc(0, 20, 2, 0), None, None)
+
+>>> _locs_slice(LINES(r"""
+... [i for i in j if PRE if GET \
+...  # trivia
+...  \
+...  if POST]
+... """.strip()), False, False, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 3, 8, (False, 'block+1'), '')
+(fstloc(0, 21, 3, 0), fstloc(0, 20, 2, 2), None, None)
+
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE if GET]
+... """.strip()), False, True, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 0, 27, (False, 'block+1'), '')
+(fstloc(0, 21, 0, 27), fstloc(0, 20, 0, 27), None, None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE if GET]
+... """.strip()), False, True, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 0, 27, (False, 'block+1'), '')
+(fstloc(0, 21, 0, 27), fstloc(0, 20, 0, 27), None, None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE if GET ]
+... """.strip()), False, True, (l := fstloc(0, 21, 0, 27)), l, 0, 13, 0, 28, (False, 'block+1'), '')
+(fstloc(0, 21, 0, 27), fstloc(0, 20, 0, 28), None, None)
+
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE
+...  if GET if POST]
+... """.strip()), False, False, (l := fstloc(1, 1, 1, 7)), l, 0, 13, 1, 15, (False, False), '')
+(fstloc(1, 1, 1, 7), fstloc(1, 0, 1, 8), ' ', None)
+
+`>>> _locs_slice(LINES("""
+... [i for i in j if PRE
+...  if GET]
+... """.strip()), False, False, (l := fstloc(1, 1, 1, 7)), l, 0, 13, 1, 7, (False, False), '')
+(fstloc(1, 1, 1, 7), fstloc(1, 0, 1, 7), ' ', None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE
+...  if GET]
+... """.strip()), False, False, (l := fstloc(1, 1, 1, 7)), l, 0, 13, 1, 7, (False, False), '')
+(fstloc(1, 1, 1, 7), fstloc(1, 0, 1, 7), ' ', None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE
+...  if GET ]
+... """.strip()), False, False, (l := fstloc(1, 1, 1, 7)), l, 0, 13, 1, 8, (False, False), '')
+(fstloc(1, 1, 1, 7), fstloc(1, 0, 1, 8), ' ', None)
+
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE
+...  # trivia
+...  if GET if POST]
+... """.strip()), False, False, (l := fstloc(2, 1, 2, 7)), l, 0, 13, 2, 15, (False, False), '')
+(fstloc(2, 1, 2, 7), fstloc(2, 0, 2, 8), ' ', None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE
+...  # trivia
+...  if GET]
+... """.strip()), False, False, (l := fstloc(2, 1, 2, 7)), l, 0, 13, 2, 7, (False, False), '')
+(fstloc(2, 1, 2, 7), fstloc(2, 0, 2, 7), ' ', None)
+
+# >>> _locs_slice(LINES("""
+# ... [i for i in j if PRE
+# ...  # trivia
+# ...  if GET]
+# ... """.strip()), False, False, (l := fstloc(2, 1, 2, 7)), l, 0, 13, 2, 7, (False, False), '')  # same as previous
+# (fstloc(2, 1, 2, 7), fstloc(2, 0, 2, 7), ' ', None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE
+...  # trivia
+...  if GET ]
+... """.strip()), False, False, (l := fstloc(2, 1, 2, 7)), l, 0, 13, 2, 8, (False, False), '')
+(fstloc(2, 1, 2, 7), fstloc(2, 0, 2, 8), ' ', None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE
+...  # trivia
+...  if GET if POST]
+... """.strip()), False, False, (l := fstloc(2, 1, 2, 7)), l, 0, 13, 2, 15, ('block', False), '')
+(fstloc(0, 20, 2, 7), fstloc(1, 0, 2, 8), ' ', None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE
+...  # trivia
+...  if GET]
+... """.strip()), False, False, (l := fstloc(2, 1, 2, 7)), l, 0, 13, 2, 7, ('block', False), '')
+(fstloc(0, 20, 2, 7), fstloc(1, 0, 2, 7), ' ', None)
+
+# >>> _locs_slice(LINES("""
+# ... [i for i in j if PRE
+# ...  # trivia
+# ...  if GET]
+# ... """.strip()), False, False, (l := fstloc(2, 1, 2, 7)), l, 0, 13, 2, 7, ('block', False), '')  # same as previous
+# (fstloc(0, 20, 2, 7), fstloc(1, 0, 2, 7), ' ', None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE
+...  # trivia
+...  if GET ]
+... """.strip()), False, False, (l := fstloc(2, 1, 2, 7)), l, 0, 13, 2, 8, ('block', False), '')
+(fstloc(0, 20, 2, 7), fstloc(1, 0, 2, 8), ' ', None)
+
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE
+...  # pre
+...  if GET # line
+...  # post
+...  if POST]
+... """.strip()), False, False, (l := fstloc(2, 1, 2, 7)), l, 0, 13, 4, 8, (False, 'line'), '')
+(fstloc(1, 6, 3, 0), fstloc(2, 0, 3, 0), ' ', None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE
+...  # pre
+...  if GET # line
+...  # post
+...  if POST]
+... """.strip()), False, False, (l := fstloc(2, 1, 2, 7)), l, 0, 13, 4, 8, (False, 'block'), '')
+(fstloc(1, 6, 4, 0), fstloc(2, 0, 4, 0), ' ', None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE
+...  # pre
+...  if GET # line
+...  # post
+...  if POST]
+... """.strip()), False, False, (l := fstloc(2, 1, 2, 7)), l, 0, 13, 4, 8, ('block', 'line'), '')
+(fstloc(0, 20, 3, 0), fstloc(1, 0, 3, 0), ' ', None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE
+...  # pre
+...  if GET # line
+...  # post
+...  if POST]
+... """.strip()), False, False, (l := fstloc(2, 1, 2, 7)), l, 0, 13, 4, 8, ('block', 'block'), '')
+(fstloc(0, 20, 4, 0), fstloc(1, 0, 4, 0), ' ', None)
+
+
+>>> _locs_slice(LINES(r"""
+... [i for i in j
+... if GET \
+... if POST
+... ]
+... """.strip()), True, False, (l := fstloc(1, 0, 1, 6)), l, 0, 13, 3, 0, (False, False), '')
+(fstloc(0, 13, 2, 0), fstloc(1, 0, 2, 0), '', None)
+
+>>> _locs_slice(LINES(r"""
+... [i for i in j if GET
+... if POST]
+... """.strip()), True, False, (l := fstloc(0, 14, 0, 20)), l, 0, 13, 1, 7, (False, False), '')
+(fstloc(0, 14, 0, 20), fstloc(0, 13, 0, 20), None, None)
+
+>>> _locs_slice(LINES(r"""
+... [i for i in j if GET # trivia
+... if POST]
+... """.strip()), True, False, (l := fstloc(0, 14, 0, 20)), l, 0, 13, 1, 7, (False, 'line'), '')
+(fstloc(0, 14, 1, 0), fstloc(0, 13, 0, 29), None, None)
+
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE if FIRST
+...  if LAST
+...  if POST]
+... """.strip()), False, False, fstloc(0, 21, 0, 29), fstloc(1, 1, 1, 8), 0, 13, 2, 8, (False, False), '')
+(fstloc(0, 21, 2, 0), fstloc(0, 20, 1, 8), None, None)
+
+>>> _locs_slice(LINES("""
+... [i for i in j if PRE
+...  if FIRST
+...  if LAST if POST]
+... """.strip()), False, False, fstloc(1, 1, 1, 9), fstloc(2, 1, 2, 8), 0, 13, 2, 16, (False, False), '')
+(fstloc(0, 20, 2, 8), fstloc(1, 0, 2, 9), ' ', None)

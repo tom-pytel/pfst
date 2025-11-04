@@ -36,6 +36,7 @@ _re_sep_line_nonexpr_end = {  # empty line with optional separator and line cont
     ',': re.compile(r'\s*(?:,\s*)?(?:\\|#.*)?$'),
     '|': re.compile(r'\s*(?:\|\s*)?(?:\\|#.*)?$'),
     '=': re.compile(r'\s*(?:=\s*)?(?:\\|#.*)?$'),
+    '': re.compile(r'\s*(?:\\|#.*)?$'),
 }
 
 
@@ -177,8 +178,8 @@ def _offset_pos_by_params(
     return ln, col
 
 
-def _locs_slice_sep(
-    self: fst.FST,
+def _locs_slice(
+    lines: list[str],
     is_first: bool,
     is_last: bool,
     loc_first: fstloc,
@@ -199,10 +200,11 @@ def _locs_slice_sep(
     In the returned copy location, a leading newline means the slice wants to start on its own line and a trailing
     newline means the slice wants to end its own line. Both mean it wants to live on its own line.
 
-    **Notes:** If `neg` is `True` (used for cut and del) and there was negative space found then the delete location
-    will include the space but the copy location will not.
+    **Notes:** If `neg` is `True` and there was negative space found then the delete location will include the space but
+    the copy location will not.
 
     **Parameters:**
+    - `lines`: Lines of source (e.g. `f.root._lines`).
     - `is_first`: Whether starts on first element.
     - `is_last`: Whether ends on last element.
     - `loc_first`: The full location of the first element, parentheses included.
@@ -285,7 +287,6 @@ def _locs_slice_sep(
     ```
     """
 
-    lines = self.root._lines
     single = loc_last is loc_first
 
     first_ln, first_col, last_end_ln, last_end_col = loc_first
@@ -475,9 +476,9 @@ def get_slice_sep(
 
     # get locations and adjust for trailing separator keep or delete if possible to optimize
 
-    copy_loc, del_loc, del_indent, sep_end_pos = _locs_slice_sep(self, is_first, is_last, loc_first, loc_last,
-                                                                 bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                                                 options.get('trivia'), sep, cut)
+    copy_loc, del_loc, del_indent, sep_end_pos = _locs_slice(lines, is_first, is_last, loc_first, loc_last,
+                                                             bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                                             options.get('trivia'), sep, cut)
 
     copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
 
@@ -702,9 +703,9 @@ def put_slice_sep_begin(
 
         loc_last = loc_first
 
-    copy_loc, del_loc, del_indent, _ = _locs_slice_sep(self, is_first, is_last, loc_first, loc_last,
-                                                       bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                                       trivia, sep, True)  # is_del)
+    copy_loc, del_loc, del_indent, _ = _locs_slice(lines, is_first, is_last, loc_first, loc_last,
+                                                   bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                                   trivia, sep, True)  # is_del)
 
     put_ln, put_col, put_end_ln, put_end_col = del_loc
 
