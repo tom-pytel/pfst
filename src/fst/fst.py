@@ -131,10 +131,8 @@ from .astutil import (
 )
 
 from .common import PYLT13, astfield, fstloc, fstlocn, nspace, Self, prev_find, next_delims, prev_delims
-
 from .parsex import Mode
 from .code import Code, code_to_lines, code_as_all
-
 from .locations import loc_arguments, loc_comprehension, loc_withitem, loc_match_case, loc_operator
 from .traverse import AST_FIELDS_NEXT, AST_FIELDS_PREV, next_bound, prev_bound, check_with_loc
 from .view import fstview

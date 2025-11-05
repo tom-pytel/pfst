@@ -8,7 +8,6 @@ from typing import Any, Literal, Mapping
 from . import fst
 
 from .asttypes import AST
-
 from .astutil import bistr
 
 from .common import (
@@ -908,9 +907,10 @@ def get_slice_nosep(
     - `start`, `stop`, `len_body`: Slice parameters, `len_body` being current length of field.
     - `ast`: The already built new `AST` that is being gotten. The elements being gotten must be in this with their
         current locations in the `self`.
-    - `loc_first`: The full location of the first element copied or cut, parentheses and lead included.
-    - `loc_last`: The full location of the last element copied or cut, parentheses and lead included.
-    - (`bound_ln`, `bound_col`): End of previous element (past pars, even if not part of this sequence).
+    - `loc_first`: The full location of the first element copied or cut, parentheses and possible prefix included.
+    - `loc_last`: The full location of the last element copied or cut, parentheses and possible prefix included.
+    - (`bound_ln`, `bound_col`): End of previous element (past pars, even if not part of this sequence, e.g.
+        `comprehension.iter` for `comprehension.ifs` sequence).
     - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters) or just before space before next
         element which is not part of this sequence.
     - `options`: The dictionary of options passed to the put function. Options used are `trivia`.

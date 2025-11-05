@@ -1,4 +1,5 @@
-"""Get and put slice. Some slices can use normal AST types and others need special custom fst AST container classes.
+"""Get and put slice. Some slices can use normal `AST` types and others need special custom `fst` `AST` container
+classes.
 
 This module contains functions which are imported as methods in the `FST` class (for now).
 """
@@ -225,6 +226,7 @@ __all__ = ['_get_slice', '_put_slice', 'is_slice_compatible']
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+# common
 
 def _fixup_slice_indices(len_: int, start: int, stop: int) -> tuple[int, int]:
     """Clip slice indices to slice range allowing first negative range to map into positive range. Greater negative
@@ -1308,129 +1310,14 @@ def _get_slice__slice(
 # ----------------------------------------------------------------------------------------------------------------------
 # put
 
-def _put_slice_asts(
-    self: fst.FST,
-    start: int,
-    stop: int,
-    field: str,
-    body: list[AST],
-    fst_: fst.FST | None,
-    asts: list[AST] | None,
-    ctx: type[expr_context] | None = None,
-) -> None:
-    """Put or delete the actual `AST` nodes to `self` body and create `FST` nodes for them."""
+def _set_loc_whole(self: fst.FST) -> None:
+    ast = self.a
+    ast.lineno = 1
+    ast.col_offset = 0
+    ast.end_lineno = len(ls := self._lines)
+    ast.end_col_offset = ls[-1].lenbytes
 
-    self._unmake_fst_tree(body[start : stop])
-
-    if not asts:
-        len_asts = 0
-
-        del body[start : stop]
-
-    else:
-        len_asts = len(asts)
-
-        fst_._unmake_fst_parents(True)
-
-        body[start : stop] = asts
-
-        FST = fst.FST
-        new_fsts = [FST(body[i], self, astfield(field, i)) for i in range(start, start + len_asts)]
-
-        if new_fsts and ctx:
-            set_ctx([f.a for f in new_fsts], ctx)
-
-        self._make_fst_tree(new_fsts)
-
-    for i in range(start + len_asts, len(body)):
-        body[i].f.pfield = astfield(field, i)
-
-
-def _put_slice_seq_and_asts(
-    self: fst.FST,
-    start: int,
-    stop: int,
-    field: str,
-    body: list[AST],
-    fst_: fst.FST | None,
-    fst_field: str,
-    ctx: type[expr_context] | None,
-    bound_ln: int,
-    bound_col: int,
-    bound_end_ln: int,
-    bound_end_col: int,
-    sep: str,
-    self_tail_sep: bool | Literal[0, 1] | None,
-    options: Mapping[str, Any],
-) -> None:
-
-    if not fst_:
-        end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0,
-                                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, field, None, sep, self_tail_sep)
-
-        _put_slice_asts(self, start, stop, field, body, None, None)
-
-    else:
-        fst_body = getattr(fst_.a, fst_field)
-
-        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len(fst_body),
-                                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, field, None, sep, self_tail_sep)
-
-        _put_slice_asts(self, start, stop, field, body, fst_, fst_body, ctx)
-
-    put_slice_sep_end(self, end_params)
-
-
-def _put_slice_asts2(
-    self: fst.FST,
-    start: int,
-    stop: int,
-    field2: str,
-    body: list[AST],
-    body2: list[AST],
-    fst_: fst.FST | None,
-    asts: list[AST] | None,
-    asts2: list[AST] | None,
-) -> None:
-    """Put or delete the actual `AST` nodes to `self` body and create `FST` nodes for them. This is the two element
-    version for Dict and MatchMapping."""
-
-    self._unmake_fst_tree(body[start : stop] + body2[start : stop])
-
-    if not asts:
-        len_asts = 0
-
-        del body[start : stop]
-        del body2[start : stop]
-
-    else:
-        len_asts = len(asts)
-
-        fst_._unmake_fst_parents(True)
-
-        body[start : stop] = asts
-        body2[start : stop] = asts2
-
-        FST = fst.FST
-        new_fsts = []
-
-        for i in range(len_asts):
-            startplusi = start + i
-
-            new_fsts.append(FST(body2[startplusi], self, astfield(field2, startplusi)))
-
-            if key := body[startplusi]:
-                new_fsts.append(FST(key, self, astfield('keys', startplusi)))
-
-        self._make_fst_tree(new_fsts)
-
-    for i in range(start + len_asts, len(body)):
-        body2[i].f.pfield = astfield(field2, i)
-
-        if key := body[i]:  # could be None from ** in Dict
-            key.f.pfield = astfield('keys', i)
+    self._touch()
 
 
 def _trim_delimiters(self: fst.FST) -> None:
@@ -1448,33 +1335,6 @@ def _trim_delimiters(self: fst.FST) -> None:
     lines[ln] = bistr(lines[ln][col:])
 
     del lines[end_ln + 1:], lines[:ln]
-
-
-def _set_loc_whole(self: fst.FST) -> None:
-    ast = self.a
-    ast.lineno = 1
-    ast.col_offset = 0
-    ast.end_lineno = len(ls := self._lines)
-    ast.end_col_offset = ls[-1].lenbytes
-
-    self._touch()
-
-
-def _validate_put_seq(
-    self: fst.FST, fst_: fst.FST, non_slice: str, *, check_target: Literal[False] | Callable = False
-) -> None:  # check_target like is_valid_target()
-    if not fst_:
-        return
-
-    ast = self.a
-    ast_ = fst_.a
-
-    if non_slice and isinstance(ast_, Tuple) and any(isinstance(e, Slice) for e in ast_.elts):
-        raise NodeError(f'cannot put Slice into {non_slice}')
-
-    if check_target and not isinstance(ctx := getattr(ast, 'ctx', None), Load) and not check_target(ast_.elts):
-        raise NodeError(f'invalid slice for {ast.__class__.__name__}'
-                        f'{f" {ctx.__class__.__name__}" if ctx else ""} target')
 
 
 def _code_to_slice_seq(
@@ -1784,6 +1644,151 @@ def _code_to_slice__type_params(
         return None
 
     return fst_
+
+
+# ......................................................................................................................
+
+def _put_slice_asts(
+    self: fst.FST,
+    start: int,
+    stop: int,
+    field: str,
+    body: list[AST],
+    fst_: fst.FST | None,
+    asts: list[AST] | None,
+    ctx: type[expr_context] | None = None,
+) -> None:
+    """Put or delete the actual `AST` nodes to `self` body and create `FST` nodes for them."""
+
+    self._unmake_fst_tree(body[start : stop])
+
+    if not asts:
+        len_asts = 0
+
+        del body[start : stop]
+
+    else:
+        len_asts = len(asts)
+
+        fst_._unmake_fst_parents(True)
+
+        body[start : stop] = asts
+
+        FST = fst.FST
+        new_fsts = [FST(body[i], self, astfield(field, i)) for i in range(start, start + len_asts)]
+
+        if new_fsts and ctx:
+            set_ctx([f.a for f in new_fsts], ctx)
+
+        self._make_fst_tree(new_fsts)
+
+    for i in range(start + len_asts, len(body)):
+        body[i].f.pfield = astfield(field, i)
+
+
+def _put_slice_asts2(
+    self: fst.FST,
+    start: int,
+    stop: int,
+    field2: str,
+    body: list[AST],
+    body2: list[AST],
+    fst_: fst.FST | None,
+    asts: list[AST] | None,
+    asts2: list[AST] | None,
+) -> None:
+    """Put or delete the actual `AST` nodes to `self` body and create `FST` nodes for them. This is the two element
+    version for Dict and MatchMapping."""
+
+    self._unmake_fst_tree(body[start : stop] + body2[start : stop])
+
+    if not asts:
+        len_asts = 0
+
+        del body[start : stop]
+        del body2[start : stop]
+
+    else:
+        len_asts = len(asts)
+
+        fst_._unmake_fst_parents(True)
+
+        body[start : stop] = asts
+        body2[start : stop] = asts2
+
+        FST = fst.FST
+        new_fsts = []
+
+        for i in range(len_asts):
+            startplusi = start + i
+
+            new_fsts.append(FST(body2[startplusi], self, astfield(field2, startplusi)))
+
+            if key := body[startplusi]:
+                new_fsts.append(FST(key, self, astfield('keys', startplusi)))
+
+        self._make_fst_tree(new_fsts)
+
+    for i in range(start + len_asts, len(body)):
+        body2[i].f.pfield = astfield(field2, i)
+
+        if key := body[i]:  # could be None from ** in Dict
+            key.f.pfield = astfield('keys', i)
+
+
+def _validate_put_seq(
+    self: fst.FST, fst_: fst.FST, non_slice: str, *, check_target: Literal[False] | Callable = False
+) -> None:  # check_target like is_valid_target()
+    if not fst_:
+        return
+
+    ast = self.a
+    ast_ = fst_.a
+
+    if non_slice and isinstance(ast_, Tuple) and any(isinstance(e, Slice) for e in ast_.elts):
+        raise NodeError(f'cannot put Slice into {non_slice}')
+
+    if check_target and not isinstance(ctx := getattr(ast, 'ctx', None), Load) and not check_target(ast_.elts):
+        raise NodeError(f'invalid slice for {ast.__class__.__name__}'
+                        f'{f" {ctx.__class__.__name__}" if ctx else ""} target')
+
+
+def _put_slice_seq_and_asts(
+    self: fst.FST,
+    start: int,
+    stop: int,
+    field: str,
+    body: list[AST],
+    fst_: fst.FST | None,
+    fst_field: str,
+    ctx: type[expr_context] | None,
+    bound_ln: int,
+    bound_col: int,
+    bound_end_ln: int,
+    bound_end_col: int,
+    sep: str,
+    self_tail_sep: bool | Literal[0, 1] | None,
+    options: Mapping[str, Any],
+) -> None:
+    """Helper for most slice put operations."""
+
+    if not fst_:
+        end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0,
+                                         bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                         options, field, None, sep, self_tail_sep)
+
+        _put_slice_asts(self, start, stop, field, body, None, None)
+
+    else:
+        fst_body = getattr(fst_.a, fst_field)
+
+        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len(fst_body),
+                                         bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                         options, field, None, sep, self_tail_sep)
+
+        _put_slice_asts(self, start, stop, field, body, fst_, fst_body, ctx)
+
+    put_slice_sep_end(self, end_params)
 
 
 # ......................................................................................................................
