@@ -79,7 +79,8 @@ def func(self):  # comment
 Don't need docstring.
 
 ```py
->>> func.put_slice(None, norm=False)  # can zero out bodies temporarily
+>>> with FST.options(norm=False):  # this allows zero out bodies
+...     del func.body
 
 >>> print(func.src)
 def func(self):  # comment

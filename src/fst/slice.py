@@ -18,12 +18,10 @@ from .common import (
     fstloc,
     next_frag,
     next_find,
-    leading_trivia,
-    trailing_trivia,
 )
 
 from .fst_core import _ParamsOffset
-from .fst_misc import get_trivia_params
+from .fst_misc import leading_trivia, trailing_trivia, get_trivia_params
 
 __all__ = [
     'get_slice_sep', 'put_slice_sep_begin', 'put_slice_sep_end',
