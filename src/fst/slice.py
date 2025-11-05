@@ -23,12 +23,11 @@ from .common import (
 )
 
 from .fst_core import _ParamsOffset
-
 from .fst_misc import get_trivia_params
 
 __all__ = [
     'get_slice_sep', 'put_slice_sep_begin', 'put_slice_sep_end',
-    'get_slice_nosep', # 'put_slice_nosep_begin', 'put_slice_nosep_end',
+    'get_slice_nosep', 'put_slice_nosep',
 ]
 
 
@@ -421,8 +420,10 @@ def get_slice_sep(
 ) -> fst.FST:
     """Copy slice sequence source, dedent it, and create a new `FST` from that source and the new `AST` already made
     with the old locations (which will be updated). If the operation is a cut then the source in `self` will also be
-    deleted. Trailing separators will be added / removed as needed and according to if they are in normal positions. If
-    cut from `self` leaves an empty unparenthesized tuple then parentheses will NOT be added here.
+    deleted.
+
+    If doing with separators then trailing separators will be added / removed as needed and according to if they are in
+    normal positions. If cut from `self` leaves an empty unparenthesized tuple then parentheses will NOT be added here.
 
     **Note:** Will NOT remove existing trailing separator from `self` sequence if it is not touched even if
     `self_tail_sep=False`.
@@ -439,7 +440,7 @@ def get_slice_sep(
     - `loc_first`: The full location of the first element copied or cut, parentheses included.
     - `loc_last`: The full location of the last element copied or cut, parentheses included.
     - (`bound_ln`, `bound_col`): End of previous element (past pars) or start of container (just past
-        delimiters) if no previous element. DIFFERENT FROM _put_slice_seq_begin()!!!
+        delimiters) if no previous element. DIFFERENT FROM put_slice_sep_begin()!!!
     - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters). This can be past last element of
         sequence if there are other things which follow and look like part of the sequence (like a `rest` in a
         `MatchMapping`).
@@ -447,7 +448,9 @@ def get_slice_sep(
     - `field`: Which field of is being gotten from. In the case of two-field sequences like `Dict` this should be the
         last field syntactically, `value` in the case of `Dict` and should always have valid entries and not `None`.
     - `prefix`, `suffix`: What delimiters to add to copied / cut span of elements (pars, brackets, curlies).
-    - `sep`: The separator to use and check, comma for everything except maybe `'|'` for MatchOr.
+    - `sep`: The separator to use and check, comma for everything except maybe `'|'` for MatchOr. If this is false
+        (empty string) then no separator stuff is done and `ast_last`, `field`, `self_tail_sep` and `ret_tail_sep` are
+        not used.
     - `self_tail_sep`: Whether self needs a trailing separator after cut or no (including if end was not cut).
         - `None`: Leave it up to function (tuple singleton check or aesthetic decision).
         - `True`: Always add if not present.
@@ -468,13 +471,14 @@ def get_slice_sep(
 
     bound_end_col_offset = lines[bound_end_ln].c2b(bound_end_col)
 
-    if ret_tail_sep and ret_tail_sep is not True and (stop - start) != 1:  # if ret_tail_sel == 1 and length will not be 1 then remove
-        ret_tail_sep = 0
+    if sep:
+        if ret_tail_sep and ret_tail_sep is not True and (stop - start) != 1:  # if ret_tail_sel == 1 and length will not be 1 then remove
+            ret_tail_sep = 0
 
-    if not cut:
-        self_tail_sep = None
-    else:
-        self_tail_sep = _fixup_self_tail_sep_del(self, self_tail_sep, start, stop, len_body)
+        if not cut:
+            self_tail_sep = None
+        else:
+            self_tail_sep = _fixup_self_tail_sep_del(self, self_tail_sep, start, stop, len_body)
 
     # get locations and adjust for trailing separator keep or delete if possible to optimize
 
@@ -484,20 +488,21 @@ def get_slice_sep(
 
     copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
 
-    if not ret_tail_sep and sep_end_pos:
-        if is_last and ret_tail_sep is not False:  # if is last element and already had trailing separator then keep it but not if explicitly forcing no tail sep
-            ret_tail_sep = True  # this along with sep_end_pos != None will turn the ret_tail_sep checks below into noop
+    if sep:
+        if not ret_tail_sep and sep_end_pos:
+            if is_last and ret_tail_sep is not False:  # if is last element and already had trailing separator then keep it but not if explicitly forcing no tail sep
+                ret_tail_sep = True  # this along with sep_end_pos != None will turn the ret_tail_sep checks below into noop
 
-        elif sep_end_pos[0] == copy_end_ln == loc_last.end_ln and sep_end_pos[1] == copy_end_col:  # optimization common case, we can get rid of unneeded trailing separator in copy by just not copying it if it is at end of copy range on same line as end of element
-            copy_loc = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col := loc_last.end_col)
-            ret_tail_sep = True
+            elif sep_end_pos[0] == copy_end_ln == loc_last.end_ln and sep_end_pos[1] == copy_end_col:  # optimization common case, we can get rid of unneeded trailing separator in copy by just not copying it if it is at end of copy range on same line as end of element
+                copy_loc = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col := loc_last.end_col)
+                ret_tail_sep = True
 
-    if self_tail_sep == 0:  # (or False), optimization common case, we can get rid of unneeded trailing separator in self by adding it to the delete block if del block starts on same line as previous element ends and there is not a comment on the line
-        del_ln, _, del_end_ln, del_end_col = del_loc
+        if self_tail_sep == 0:  # (or False), optimization common case, we can get rid of unneeded trailing separator in self by adding it to the delete block if del block starts on same line as previous element ends and there is not a comment on the line
+            del_ln, _, del_end_ln, del_end_col = del_loc
 
-        if del_ln == bound_ln and (del_end_ln != bound_ln or not lines[bound_ln].startswith('#', del_end_col)):
-            del_loc = fstloc(bound_ln, bound_col, del_end_ln, del_end_col)  # there can be nothing but a separator and whitespace between these locations
-            self_tail_sep = None
+            if del_ln == bound_ln and (del_end_ln != bound_ln or not lines[bound_ln].startswith('#', del_end_col)):
+                del_loc = fstloc(bound_ln, bound_col, del_end_ln, del_end_col)  # there can be nothing but a separator and whitespace between these locations
+                self_tail_sep = None
 
     # set location of root node and make the actual FST
 
@@ -518,35 +523,36 @@ def get_slice_sep(
 
     # add / remove trailing separators as needed
 
-    if not ret_tail_sep:  # don't need or want return trailing separator
-        if sep_end_pos:  # but have it
-            _, _, last_end_ln, last_end_col = ast_last.f.loc  # this will now definitely have the .f attribute and FST, we don't use _poss_end() because field may not be the same
+    if sep:
+        if not ret_tail_sep:  # don't need or want return trailing separator
+            if sep_end_pos:  # but have it
+                _, _, last_end_ln, last_end_col = ast_last.f.loc  # this will now definitely have the .f attribute and FST, we don't use _poss_end() because field may not be the same
+                _, _, fst_end_ln, fst_end_col = fst_.loc
+
+                fst_._maybe_del_separator(last_end_ln, last_end_col, ret_tail_sep is False,
+                                        fst_end_ln, fst_end_col - len(suffix), sep)
+
+        elif not sep_end_pos:  # need return trailing separator and don't have it
+            _, _, last_end_ln, last_end_col = ast_last.f.loc
             _, _, fst_end_ln, fst_end_col = fst_.loc
 
-            fst_._maybe_del_separator(last_end_ln, last_end_col, ret_tail_sep is False,
-                                      fst_end_ln, fst_end_col - len(suffix), sep)
+            fst_._maybe_ins_separator(last_end_ln, last_end_col, False, fst_end_ln, fst_end_col - len(suffix), sep)
 
-    elif not sep_end_pos:  # need return trailing separator and don't have it
-        _, _, last_end_ln, last_end_col = ast_last.f.loc
-        _, _, fst_end_ln, fst_end_col = fst_.loc
+        if self_tail_sep is not None:
+            bound_end_ln, bound_end_col = _offset_pos_by_params(self, bound_end_ln, bound_end_col, bound_end_col_offset,
+                                                                params_offset)
 
-        fst_._maybe_ins_separator(last_end_ln, last_end_col, False, fst_end_ln, fst_end_col - len(suffix), sep)
+            if isinstance(last := getattr(self.a, field)[-1], AST):
+                _, _, last_end_ln, last_end_col = last.f.loc
 
-    if self_tail_sep is not None:
-        bound_end_ln, bound_end_col = _offset_pos_by_params(self, bound_end_ln, bound_end_col, bound_end_col_offset,
-                                                            params_offset)
+            else:  # Globals or Locals names, no last element with location so we use start of bound which is just past last untouched element which is now the last element
+                last_end_ln = bound_ln
+                last_end_col = bound_col
 
-        if isinstance(last := getattr(self.a, field)[-1], AST):
-            _, _, last_end_ln, last_end_col = last.f.loc
-
-        else:  # Globals or Locals names, no last element with location so we use start of bound which is just past last untouched element which is now the last element
-            last_end_ln = bound_ln
-            last_end_col = bound_col
-
-        if self_tail_sep:  # last element needs a trailing separator (singleton tuple maybe, requested by user)
-            self._maybe_ins_separator(last_end_ln, last_end_col, False, bound_end_ln, bound_end_col, sep)
-        else:  # removed tail element(s) and what is left doesn't need its trailing separator
-            self._maybe_del_separator(last_end_ln, last_end_col, self_tail_sep is False, bound_end_ln, bound_end_col, sep)
+            if self_tail_sep:  # last element needs a trailing separator (singleton tuple maybe, requested by user)
+                self._maybe_ins_separator(last_end_ln, last_end_col, False, bound_end_ln, bound_end_col, sep)
+            else:  # removed tail element(s) and what is left doesn't need its trailing separator
+                self._maybe_del_separator(last_end_ln, last_end_col, self_tail_sep is False, bound_end_ln, bound_end_col, sep)
 
     return fst_
 
@@ -570,17 +576,20 @@ def put_slice_sep_begin(
     self_tail_sep: bool | Literal[0, 1] | None = None,
 ) -> tuple:
     r"""Indent a sequence source and put it to a location in existing sequence `self`. If `fst_` is `None` then will
-    just delete in the same way that a cut operation would. Trailing separators will be added / removed as needed and
-    according to if they are in normal positions, but not in this function, in `_put_slice_seq_end()`. If delete from
-    `self` leaves an empty unparenthesized tuple then parentheses will NOT be added here.
+    just delete in the same way that a cut operation would.
+
+    If doing with separators then trailing separators will be added / removed as needed and according to if they are in
+    normal positions, but not in this function, in `put_slice_sep_end()`. If delete from `self` leaves an empty
+    unparenthesized tuple then parentheses will NOT be added here.
 
     If an empty slice was going to be put we expect that it will be converted to a put `None` delete of existing
     elements. If an `fst_` is provided then it is assumed it has at least one element. No empty put to empty location,
     likewise no delete from empty location.
 
-    This is the first in a two function sequence. After a call to this the source will be mostly put (except for maybe
-    tail separator changes). The `AST` nodes being modified should be modified between this call and a call to
-    `_put_slice_seq_end()`.
+    This is the first in a two function sequence if doing with separators. After a call to this the source will be
+    mostly put (except for maybe tail separator changes). The `AST` nodes being modified should be modified between this
+    call and a call to `put_slice_sep_end()`. If not doing separators then the `put_slice_sep_end()` should not be
+    called.
 
     **WARNING!** Here there be dragons!
 
@@ -599,7 +608,8 @@ def put_slice_sep_begin(
     - `field`: Which field of `self` is being deleted / replaced / inserted to.
     - `field2`: If `self` is a two element sequence like `Dict` or `MatchMapping` then this should be the second field
         of each element, `values` or `patterns`.
-    - `sep`: The separator to use and check, comma for everything except maybe `'|'` for MatchOr.
+    - `sep`: The separator to use and check, comma for everything except maybe `'|'` for MatchOr. If this is false
+        (empty string) then no separator stuff is done and `len_fst` and `self_tail_sep` are not used.
     - `self_tail_sep`: Whether self needs a trailing separator or no.
         - `None`: Leave it up to function (tuple singleton check or aesthetic decision).
         - `True`: Always add if not present.
@@ -608,7 +618,7 @@ def put_slice_sep_begin(
         - `0`: Remove if not aesthetically significant (present on same line as end of element), otherwise leave.
 
     **Returns:**
-    - `param`: A parameter to be passed to `_put_slice_seq_end(param)` to finish the put.
+    - `param`: A parameter to be passed to `put_slice_sep_end(param)` to finish the put.
     """
 
     def get_indent_elts() -> str:
@@ -712,13 +722,15 @@ def put_slice_sep_begin(
 
     if is_del:
         put_lines = [del_indent] if del_indent and put_end_col else None
-        self_tail_sep = _fixup_self_tail_sep_del(self, self_tail_sep, start, stop, len_body)
 
-        if self_tail_sep == 0:  # (or False), optimization, we can get rid of unneeded trailing separator in self by adding it to the delete block if del block starts on same line as previous element ends and there is not a comment on the line
-            if put_ln == bound_ln and (put_end_ln != bound_ln or not lines[bound_ln].startswith('#', put_end_col)):
-                put_ln = bound_ln  # there can be nothing but a separator and whitespace between these locations
-                put_col = bound_col
-                self_tail_sep = None
+        if sep:
+            self_tail_sep = _fixup_self_tail_sep_del(self, self_tail_sep, start, stop, len_body)
+
+            if self_tail_sep == 0:  # (or False), optimization, we can get rid of unneeded trailing separator in self by adding it to the delete block if del block starts on same line as previous element ends and there is not a comment on the line
+                if put_ln == bound_ln and (put_end_ln != bound_ln or not lines[bound_ln].startswith('#', put_end_col)):
+                    put_ln = bound_ln  # there can be nothing but a separator and whitespace between these locations
+                    put_col = bound_col
+                    self_tail_sep = None
 
     # insert or replace
 
@@ -744,14 +756,17 @@ def put_slice_sep_begin(
             else:  # does not start a new line
                 put_col = re_empty_space.search(lines[put_ln], 0 if put_ln > bound_ln else bound_col, put_col).start()  # eat whitespace before put newline
 
-        elif not put_col:
+        elif not put_col:  # slice being put to start of new line
             if del_indent:
                 fst_._put_src(del_indent, 0, 0, 0, 0, False)  # add indent to start of first put line, this del_indent will not be indented by self_indent because of skip == 1
 
-        else:  # leave the space between previous separator and self intact
+        else:
             assert put_ln == copy_ln
 
-            put_col = copy_col
+            put_col = copy_col  # maybe leave the space between previous separator or element and self intact
+
+            if not sep and not lines[put_ln][put_col - 1].isspace():  # if not doing separator there will be no end pass to separate these if there is no space between these so we need to insert space here
+                fst_._put_src(' ', 0, 0, 0, 0, False)
 
         if not put_lines[-1]:  # slice put ends with pure newline?
             if not re_empty_space.match(lines[put_end_ln], put_end_col):  # something at end of put end line?
@@ -787,20 +802,21 @@ def put_slice_sep_begin(
 
         # trailing separator
 
-        if is_last:
-            if self_tail_sep is None:
-                if pos := next_find(put_lines, fst_last.end_ln, fst_last.end_col, fst_.end_ln, fst_.end_col, sep):  # only remove if slice being put actually has trailing separator
-                    if re_empty_space.match(put_lines[pos[0]], pos[1] + len(sep)):  # which doesn't have stuff following it
-                        self_tail_sep = 0
+        if sep:
+            if is_last:
+                if self_tail_sep is None:
+                    if pos := next_find(put_lines, fst_last.end_ln, fst_last.end_col, fst_.end_ln, fst_.end_col, sep):  # only remove if slice being put actually has trailing separator
+                        if re_empty_space.match(put_lines[pos[0]], pos[1] + len(sep)):  # which doesn't have stuff following it
+                            self_tail_sep = 0
 
-            elif self_tail_sep == 1 and self_tail_sep is not True and (start or len_fst > 1):  # if 1 and length will not be 1 then remove
-                self_tail_sep = 0
+                elif self_tail_sep == 1 and self_tail_sep is not True and (start or len_fst > 1):  # if 1 and length will not be 1 then remove
+                    self_tail_sep = 0
 
-        elif self_tail_sep == 0:  # don't remove from tail if tail not touched
-            self_tail_sep = None
+            elif self_tail_sep == 0:  # don't remove from tail if tail not touched
+                self_tail_sep = None
 
-        if self_tail_sep and self_tail_sep is not True and not (is_first and is_last and len_fst == 1):  # if want to add separator if only one element is left and not only one element is left then do nothing
-            self_tail_sep = None
+            if self_tail_sep and self_tail_sep is not True and not (is_first and is_last and len_fst == 1):  # if want to add separator if only one element is left and not only one element is left then do nothing
+                self_tail_sep = None
 
         # indent and offset source and FST to put
 
@@ -835,7 +851,8 @@ def put_slice_sep_begin(
 
 def put_slice_sep_end(self: fst.FST, params: tuple) -> None:
     """Finish up sequence slice put with separators. `AST` nodes are assumed to have been modified by here and general
-    structure of `self` is correct, even if it is not parsable due to separators in source not being correct yet."""
+    structure of `self` is correct, even if it is not parsable due to separators in source not being correct yet. Should
+    not be called for slices which do not use separators."""
 
     (start, len_fst, body, body2, sep, self_tail_sep, bound_end_ln, bound_end_col, bound_end_col_offset, params_offset,
      is_last, is_del, is_ins) = params
@@ -894,9 +911,9 @@ def get_slice_nosep(
     bound_end_col: int,
     options: Mapping[str, Any],
 ) -> fst.FST:
-    """Copy slice sequence source, dedent it, and create a new `FST` from that source and the new `AST` already made
-    with the old locations (which will be updated). If the operation is a cut then the source in `self` will also be
-    deleted.
+    """Copy slice sequence source without separators, dedent it, and create a new `FST` from that source and the new
+    `AST` already made with the old locations (which will be updated). If the operation is a cut then the source in
+    `self` will also be deleted.
 
     **WARNING!** (`bound_ln`, `bound_col`) is expected to be exactly the end of the previous element (past any closing
     pars), "previous element" including element which is not part of this entire slice (`ListComp.elt`,
@@ -916,26 +933,42 @@ def get_slice_nosep(
     - `options`: The dictionary of options passed to the put function. Options used are `trivia`.
     """
 
-    lines = self.root._lines
+    return get_slice_sep(self, start, stop, len_body, cut, ast, None, loc_first, loc_last,
+                         bound_ln, bound_col, bound_end_ln, bound_end_col, options, '', '', '', '')
 
-    copy_loc, del_loc, del_indent, _ = _locs_slice(lines, not start, stop == len_body, loc_first, loc_last,
-                                                   bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                                   options.get('trivia'), '', cut)
 
-    copy_ln, copy_col, copy_end_ln, copy_end_col = copy_loc
+def put_slice_nosep(
+    self: fst.FST,
+    start: int,
+    stop: int,
+    fst_: fst.FST | None,
+    fst_first: fst.FST | fstloc | None,
+    fst_last: fst.FST | None,
+    bound_ln: int,
+    bound_col: int,
+    bound_end_ln: int,
+    bound_end_col: int,
+    options: Mapping[str, Any],
+    field: str,
+) -> None:
+    r"""Indent a sequence source without separators and put it to a location in existing sequence `self`. If `fst_` is
+    `None` then will just delete in the same way that a cut operation would.
 
-    ast.lineno = copy_ln + 1
-    ast.col_offset = lines[copy_ln].c2b(copy_col)
-    ast.end_lineno = copy_end_ln + 1
-    ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
+    If an empty slice was going to be put we expect that it will be converted to a put `None` delete of existing
+    elements. If an `fst_` is provided then it is assumed it has at least one element. No empty put to empty location,
+    likewise no delete from empty location.
 
-    fst_, _ = self._make_fst_and_dedent(self, ast, copy_loc, None, None, del_loc if cut else None,
-                                        [del_indent] if del_indent and del_loc.end_col else None,
-                                        docstr=False)  # docstr False because none of the things handled by this function can have any form of docstring
+    **Parameters:**
+    - `start`, `stop`: Slice parameters.
+    - `fst_`: The slice being put to `self` with delimiters stripped, or `None` for delete.
+    - `fst_first`: The first element of the slice `FST` being put, or `None` if delete. Must be an `fstloc` for `Dict`
+        key which is `None`.
+    - `fst_last`: The last element of the slice `FST` being put, or `None` if delete.
+    - (`bound_ln`, `bound_col`): Start of container (just past delimiters). DIFFERENT FROM _get_slice_seq()!!!
+    - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters).
+    - `options`: The dictionary of options passed to the put function. Options used are `trivia` and `ins_ln`.
+    - `field`: Which field of `self` is being deleted / replaced / inserted to.
+    """
 
-    ast.col_offset = 0
-    ast.end_col_offset = fst_._lines[-1].lenbytes
-
-    fst_._touch()
-
-    return fst_
+    put_slice_sep_begin(self, start, stop, fst_, fst_first, fst_last, -1,
+                        bound_ln, bound_col, bound_end_ln, bound_end_col, options, field, None, '')

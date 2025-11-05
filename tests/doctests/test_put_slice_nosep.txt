@@ -1,0 +1,379 @@
+>>> from pprint import pp
+>>> from fst import *
+>>> from fst.common import astfield
+>>> from fst.slice import put_slice_nosep
+
+
+delete
+
+>>> def test_del_gens(fst_, start, stop, trivia=None):
+...     generators = fst_.a.generators
+...
+...     _, _, bound_ln, bound_col = fst_.elt.pars()
+...     _, _, bound_end_ln, bound_end_col = fst_.loc
+...     bound_end_col -= 1
+...
+...     put_slice_nosep(fst_, start, stop, None, None, None,
+...                     bound_ln, bound_col, bound_end_ln, bound_end_col,
+...                     {'trivia': trivia}, 'generators')
+...
+...     del generators[start : stop]
+...
+...     return fst_
+
+>>> print('\n'.join(repr(l) for l in test_del_gens(FST('[_ for a in a for b in b for c in c]'), 0, 1).lines))
+'[_ for b in b for c in c]'
+
+>>> print('\n'.join(repr(l) for l in test_del_gens(FST('[_ for a in a for b in b for c in c]'), 1, 2).lines))
+'[_ for a in a for c in c]'
+
+>>> print('\n'.join(repr(l) for l in test_del_gens(FST('[_ for a in a for b in b for c in c]'), 2, 3).lines))
+'[_ for a in a for b in b]'
+
+>>> print('\n'.join(repr(l) for l in test_del_gens(FST('[_ for a in a for b in b for c in c]'), 0, 2).lines))
+'[_ for c in c]'
+
+>>> print('\n'.join(repr(l) for l in test_del_gens(FST('[_ for a in a for b in b for c in c]'), 1, 3).lines))
+'[_ for a in a]'
+
+>>> print('\n'.join(repr(l) for l in test_del_gens(FST('[_ for a in a for b in b for c in c]'), 0, 3).lines))
+'[_]'
+
+>>> print('\n'.join(repr(l) for l in test_del_gens(FST('''
+... [_ for a in a
+...  for b in b]
+... '''.strip()), 1, 2).lines))
+'[_ for a in a'
+' ]'
+
+>>> print('\n'.join(repr(l) for l in test_del_gens(FST('''
+... [_ for a in a  # trivia
+...  for b in b]
+... '''.strip()), 1, 2).lines))
+'[_ for a in a  # trivia'
+' ]'
+
+>>> print('\n'.join(repr(l) for l in test_del_gens(FST('''
+... [_
+...  for a in a
+...  for b in b
+...  for c in c
+... ]
+... '''.strip()), 0, 1).lines))
+'[_'
+' for b in b'
+' for c in c'
+']'
+
+>>> print('\n'.join(repr(l) for l in test_del_gens(FST('''
+... [_
+...  for a in a
+...  for b in b
+...  for c in c
+... ]
+... '''.strip()), 0, 2).lines))
+'[_'
+' for c in c'
+']'
+
+>>> print('\n'.join(repr(l) for l in test_del_gens(FST('''
+... [_
+...  for a in a
+...  for b in b
+...  for c in c
+... ]
+... '''.strip()), 0, 3).lines))
+'[_'
+']'
+
+>>> print('\n'.join(repr(l) for l in test_del_gens(FST('''
+... [_
+...  for a in a
+...  for b in b
+...  for c in c
+... ]
+... '''.strip()), 1, 2).lines))
+'[_'
+' for a in a'
+' for c in c'
+']'
+
+>>> print('\n'.join(repr(l) for l in test_del_gens(FST('''
+... [_
+...  for a in a
+...  for b in b
+...  for c in c
+... ]
+... '''.strip()), 1, 3).lines))
+'[_'
+' for a in a'
+']'
+
+>>> print('\n'.join(repr(l) for l in test_del_gens(FST('''
+... [_
+...  for a in a
+...  for b in b
+...  for c in c
+... ]
+... '''.strip()), 2, 3).lines))
+'[_'
+' for a in a'
+' for b in b'
+']'
+
+
+
+replace
+
+>>> def make_comprehensions(src: str) -> FST:
+...     """Fake `_comprehensions` container for now."""
+...
+...     f = FST(f'[_\n{src}\n]')
+...
+...     f._put_src(None, 0, 0, 1, 0, False)
+...
+...     ls = f._lines[:-1]
+...
+...     return FST(Tuple(elts=f.a.generators, ctx=Load(), lineno=1, col_offset=0, \
+...                      end_lineno=len(ls), end_col_offset=len(ls[-1])),
+...                ls, lcopy=False)
+
+>>> def test_rep_gens(fst_, start, stop, new, trivia=None):
+...     body = fst_.a.generators
+...     new_body = new.a.elts
+...
+...     _, _, bound_ln, bound_col = fst_.elt.pars()
+...     _, _, bound_end_ln, bound_end_col = fst_.loc
+...     bound_end_col -= 1
+...
+...     put_slice_nosep(fst_, start, stop, new, new_body[0].f, new_body[-1].f,
+...                     bound_ln, bound_col, bound_end_ln, bound_end_col,
+...                     {'trivia': trivia}, 'generators')
+...
+...     fst_._unmake_fst_tree(body[start : stop])
+...     new._unmake_fst_parents(True)
+...
+...     body[start : stop] = new_body
+...
+...     stack = [FST(body[i], fst_, astfield('generators', i)) for i in range(start, start + len(new_body))]
+...
+...     fst_._make_fst_tree(stack)
+...
+...     return fst_
+
+>>> new00 = make_comprehensions('for NEW in NEW')
+>>> new01 = make_comprehensions('for NEW in NEW\n')
+>>> new10 = make_comprehensions('\nfor NEW in NEW')
+>>> new11 = make_comprehensions('\nfor NEW in NEW\n')
+
+
+leading newlines
+
+>>> print('\n'.join(repr(l) for l in test_rep_gens(FST('''
+... [_ for a in a
+...  for b in b]
+... '''.strip()), 1, 2, new10.copy()).lines))
+'[_ for a in a'
+' for NEW in NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_rep_gens(FST('''
+... [_ for a in a for b in b]
+... '''.strip()), 1, 2, new10.copy()).lines))
+'[_ for a in a'
+'   for NEW in NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_rep_gens(FST('''
+... [_ for a in a for b in b for c in c]
+... '''.strip()), 1, 2, new10.copy()).lines))
+'[_ for a in a'
+'   for NEW in NEW for c in c]'
+
+>>> print('\n'.join(repr(l) for l in test_rep_gens(FST('''
+... [_ for a in a for b in b for c in c]
+... '''.strip()), 1, 2, new11.copy()).lines))
+'[_ for a in a'
+'   for NEW in NEW'
+'   for c in c]'
+
+>>> print('\n'.join(repr(l) for l in test_rep_gens(FST('''
+... [_ for a in a
+...    for b in b]
+... '''.strip()), 1, 2, new00.copy()).lines))
+'[_ for a in a'
+'   for NEW in NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_rep_gens(FST('''
+... [_ for a in a for b in b for c in c]
+... '''.strip()), 1, 2, new00.copy()).lines))
+'[_ for a in a for NEW in NEW for c in c]'
+
+
+trailing newlines
+
+# >>> print('\n'.join(repr(l) for l in test_rep_gens(FST('''
+# ... [_ for a in a, for b in b]
+# ... '''.strip()), 1, 2, new01.copy()).lines))
+'[for a in a, for NEW in NEW'
+']'
+
+>>> print('\n'.join(repr(l) for l in test_rep_gens(FST('''
+... [_ for a in a for b in b for c in c]
+... '''.strip()), 1, 2, new01.copy()).lines))
+'[_ for a in a for NEW in NEW'
+'   for c in c]'
+
+>>> print('\n'.join(repr(l) for l in test_rep_gens(FST('''
+... [_ for a in a for b in b
+...  ]
+... '''.strip()), 1, 2, new01.copy()).lines))
+'[_ for a in a for NEW in NEW'
+' ]'
+
+>>> print('\n'.join(repr(l) for l in test_rep_gens(FST('''
+... [_ for a in a for b in b
+...  for c in c]
+... '''.strip()), 1, 2, new01.copy()).lines))
+'[_ for a in a for NEW in NEW'
+' for c in c]'
+
+>>> print('\n'.join(repr(l) for l in test_rep_gens(FST('''
+... [_ for a in a for b in b for c in c]
+... '''.strip()), 1, 2, new11.copy()).lines))
+'[_ for a in a'
+'   for NEW in NEW'
+'   for c in c]'
+
+>>> print('\n'.join(repr(l) for l in test_rep_gens(FST('''
+... [_ for a in a for b in b
+...  for c in c]
+... '''.strip()), 1, 2, new11.copy()).lines))
+'[_ for a in a'
+' for NEW in NEW'
+' for c in c]'
+
+>>> print('\n'.join(repr(l) for l in test_rep_gens(FST('''
+... [_ for a in a
+...  for b in b
+...  for c in c]
+... '''.strip()), 1, 2, new11.copy()).lines))
+'[_ for a in a'
+' for NEW in NEW'
+' for c in c]'
+
+
+
+replace
+
+>>> def test_ins_gens(fst_, idx, new, trivia=None, off=1, field='elts', sep=',', self_tail_sep=None):
+...     body = fst_.a.generators
+...     new_body = new.a.elts
+...
+...     _, _, bound_ln, bound_col = fst_.elt.pars()
+...     _, _, bound_end_ln, bound_end_col = fst_.loc
+...     bound_end_col -= 1
+...
+...     put_slice_nosep(fst_, idx, idx, new, new_body[0].f, new_body[-1].f,
+...                     bound_ln, bound_col, bound_end_ln, bound_end_col,
+...                     {'trivia': trivia}, 'generators')
+...
+...     new._unmake_fst_parents(True)
+...
+...     body[idx : idx] = new_body
+...
+...     stack = [FST(body[i], fst_, astfield('generators', i)) for i in range(idx, idx + len(new_body))]
+...
+...     fst_._make_fst_tree(stack)
+...
+...     return fst_
+
+
+>>> print('\n'.join(repr(l) for l in test_ins_gens(FST('''
+... [_ for a in a for b in b]
+... '''.strip()), 0, new00.copy()).lines))
+'[_ for NEW in NEW for a in a for b in b]'
+
+>>> print('\n'.join(repr(l) for l in test_ins_gens(FST('''
+... [_ for a in a for b in b]
+... '''.strip()), 1, new00.copy()).lines))
+'[_ for a in a for NEW in NEW for b in b]'
+
+>>> print('\n'.join(repr(l) for l in test_ins_gens(FST('''
+... [_ for a in a for b in b]
+... '''.strip()), 2, new00.copy()).lines))
+'[_ for a in a for b in b for NEW in NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_ins_gens(FST('''
+... [_ for a in a for b in b]
+... '''.strip()), 0, new01.copy()).lines))
+'[_ for NEW in NEW'
+'   for a in a for b in b]'
+
+>>> print('\n'.join(repr(l) for l in test_ins_gens(FST('''
+... [_ for a in a for b in b]
+... '''.strip()), 1, new01.copy()).lines))
+'[_ for a in a for NEW in NEW'
+'   for b in b]'
+
+>>> print('\n'.join(repr(l) for l in test_ins_gens(FST('''
+... [_ for a in a for b in b]
+... '''.strip()), 2, new01.copy()).lines))
+'[_ for a in a for b in b for NEW in NEW'
+']'
+
+>>> print('\n'.join(repr(l) for l in test_ins_gens(FST('''
+... [_ for a in a for b in b]
+... '''.strip()), 0, new10.copy()).lines))
+'[_'
+'   for NEW in NEW for a in a for b in b]'
+
+>>> print('\n'.join(repr(l) for l in test_ins_gens(FST('''
+... [_ for a in a for b in b]
+... '''.strip()), 1, new10.copy()).lines))
+'[_ for a in a'
+'   for NEW in NEW for b in b]'
+
+>>> print('\n'.join(repr(l) for l in test_ins_gens(FST('''
+... [_ for a in a for b in b]
+... '''.strip()), 2, new10.copy()).lines))
+'[_ for a in a for b in b'
+'   for NEW in NEW]'
+
+>>> print('\n'.join(repr(l) for l in test_ins_gens(FST('''
+... [_ for a in a for b in b]
+... '''.strip()), 0, new11.copy()).lines))
+'[_'
+'   for NEW in NEW'
+'   for a in a for b in b]'
+
+>>> print('\n'.join(repr(l) for l in test_ins_gens(FST('''
+... [_ for a in a for b in b]
+... '''.strip()), 1, new11.copy()).lines))
+'[_ for a in a'
+'   for NEW in NEW'
+'   for b in b]'
+
+>>> print('\n'.join(repr(l) for l in test_ins_gens(FST('''
+... [_ for a in a for b in b]
+... '''.strip()), 2, new11.copy()).lines))
+'[_ for a in a for b in b'
+'   for NEW in NEW'
+']'
+
+
+fix comment or line continuation backslash without trailing newline
+
+>>> new = make_comprehensions('for NEW in NEW#')
+
+>>> print('\n'.join(repr(l) for l in test_rep_gens(FST('''
+... [_ for a in a for b in b for c in c]
+... '''.strip()), 1, 2, new.copy()).lines))
+'[_ for a in a for NEW in NEW#'
+'   for c in c]'
+
+>>> new = make_comprehensions('for NEW in NEW\\')
+
+>>> print('\n'.join(repr(l) for l in test_rep_gens(FST('''
+... [_ for a in a for b in b for c in c]
+... '''.strip()), 1, 2, new.copy()).lines))
+'[_ for a in a for NEW in NEW\\'
+'   for c in c]'

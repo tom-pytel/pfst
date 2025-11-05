@@ -7,12 +7,8 @@
 ...     generators = fst_.a.generators
 ...
 ...     _, _, bound_ln, bound_col = generators[start - 1].f.loc if start else fst_.elt.pars()
-...
-...     if stop < len(generators):
-...         bound_end_ln, bound_end_col, _, _ = generators[stop].f.loc
-...     else:
-...         _, _, bound_end_ln, bound_end_col = fst_.loc
-...         bound_end_col -= 1
+...     _, _, bound_end_ln, bound_end_col = fst_.loc
+...     bound_end_col -= 1
 ...
 ...     ret = get_slice_nosep(fst_, start, stop, len(generators), True, Tuple(elts=generators[start : stop]),
 ...         generators[start].f.loc, generators[stop - 1].f.loc,
@@ -182,11 +178,8 @@ basic
 ...
 ...     _, _, bound_ln, bound_col = (ifs[start - 1] if start else ast.iter).f.pars()
 ...
-...     if stop < len(ifs):
-...         bound_end_ln, bound_end_col, _, _ = loc_if(stop)  # ifs[stop].f.pars()
-...     elif fst_.next():
+...     if fst_.next():
 ...         _, _, bound_end_ln, bound_end_col = ifs[stop - 1].f.pars()
-...
 ...     elif parent := fst_.parent:
 ...         _, _, bound_end_ln, bound_end_col = parent.loc
 ...         bound_end_col -= 1
