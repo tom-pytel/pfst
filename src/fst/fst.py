@@ -4,6 +4,7 @@ their respective `ast` module counterparts."""
 from __future__ import annotations
 
 import builtins  # because of the unfortunate choice for the name of an Interpolation field, '.str', we have a '.str' property in FST which messes with the type annotations
+import io
 import os
 import re
 import sys
@@ -164,13 +165,20 @@ class _ThreadLocal(threading.local):
         }
 
 
+_TLOCAL = _ThreadLocal()
+
 try:
     from IPython import get_ipython
     _IPYTHON_COLOR = getattr(get_ipython(), 'colors', 'NoColor') != 'NoColor'
 except Exception:
     _IPYTHON_COLOR = False
 
-_TLOCAL = _ThreadLocal()
+_DEFAULT_COLOR = (
+    False if os.environ.get("NO_COLOR") else
+    True if os.environ.get("FORCE_COLOR") else
+    False if (os.environ.get("TERM") == "dumb" or sys.platform == "win32") else
+    None
+)
 
 _DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_version=None)
 _DEFAULT_INDENT = '    '
@@ -1439,11 +1447,13 @@ class FST:
                 list_indent = 2 if 'i' in src and list_indent == 0 else list_indent
                 src = 'all' if 'a' in src else 'stmt' if 's' in src else None
 
-        if color is None and out is print and os.environ.get('TERM') not in ('', 'dumb'):
-            try:
-                color = sys.stdout.isatty() or _IPYTHON_COLOR
-            except Exception:
+        if color is None and out is print and (color := _DEFAULT_COLOR) is None:
+            if not hasattr(sys.stdout, 'fileno'):
                 color = False
+            try:
+                color = os.isatty(sys.stdout.fileno()) or _IPYTHON_COLOR
+            except io.UnsupportedOperation:
+                color = hasattr(sys.stdout, 'isatty') and (sys.stdout.isatty() or _IPYTHON_COLOR)
 
         if isinstance(out, TextIOBase):
             out = out.write

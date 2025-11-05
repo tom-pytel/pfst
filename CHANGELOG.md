@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- correct `.bloc` location if decorator `@` is on a different line with line continuations
 - leave leading '\' above statement being deletet if trailing semicolon is left in place on stmt line
 - account for degenerate case of first decorator following line continuation in `.bloc`
 
@@ -10,6 +11,8 @@
 - option `norm_self` controls whether statementish bodies can be zeroed out or not
 
 ### Updated
+
+- default disable dump() color on win32
 
 
 ## 0.2.3 - alpha - 2025-11-01
