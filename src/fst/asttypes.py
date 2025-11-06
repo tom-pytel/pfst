@@ -279,7 +279,7 @@ __all__ = [
     '_match_cases',
     '_Assign_targets',
     # '_decorator_list',
-    # '_comprehensions',
+    '_comprehensions',
     # '_comprehension_ifs',
     # '_keywords',
     '_aliases',
@@ -334,7 +334,7 @@ class _ExceptHandlers(_slice):
         end_lineno: int = 1,
         end_col_offset: int = 0,
     ) -> None:
-        self.handlers = handlers or []
+        self.handlers = handlers
         self.lineno = lineno
         self.col_offset = col_offset
         self.end_lineno = end_lineno
@@ -357,7 +357,7 @@ class _match_cases(_slice):
         end_lineno: int = 1,
         end_col_offset: int = 0,
     ) -> None:
-        self.cases = cases or []
+        self.cases = cases
         self.lineno = lineno
         self.col_offset = col_offset
         self.end_lineno = end_lineno
@@ -375,7 +375,7 @@ class _Assign_targets(_slice):
     def __init__(
         self, targets: list[expr], lineno: int = 1, col_offset: int = 0, end_lineno: int = 1, end_col_offset: int = 0
     ) -> None:
-        self.targets = targets or []
+        self.targets = targets
         self.lineno = lineno
         self.col_offset = col_offset
         self.end_lineno = end_lineno
@@ -389,11 +389,28 @@ class _Assign_targets(_slice):
 #     at column 0 of its line."""
 
 
-# class _comprehensions(_slice):
-#     """Slice of `ListComp/SetComp/DictComp/GeneratorExp.generators`.
+class _comprehensions(_slice):
+    """Slice of `ListComp/SetComp/DictComp/GeneratorExp.generators`.
 
-#     This is a special slice because elements are `comprehension` and there are no separators and instead each
-#     `comprehension` is prefixed with `for` or `async for`."""
+    This is a special slice because elements are `comprehension` and there are no separators and instead each
+    `comprehension` is prefixed with `for` or `async for`."""
+
+    _fields      = ('generators',)
+    _field_types = {'generators': list[comprehension]}
+
+    def __init__(
+        self,
+        generators: list[comprehension],
+        lineno: int = 1,
+        col_offset: int = 0,
+        end_lineno: int = 1,
+        end_col_offset: int = 0,
+    ) -> None:
+        self.generators = generators
+        self.lineno = lineno
+        self.col_offset = col_offset
+        self.end_lineno = end_lineno
+        self.end_col_offset = end_col_offset
 
 
 # class _comprehension_ifs(_slice):
@@ -419,7 +436,7 @@ class _aliases(_slice):
     def __init__(
         self, names: list[alias], lineno: int = 1, col_offset: int = 0, end_lineno: int = 1, end_col_offset: int = 0
     ) -> None:
-        self.names = names or []
+        self.names = names
         self.lineno = lineno
         self.col_offset = col_offset
         self.end_lineno = end_lineno
@@ -437,7 +454,7 @@ class _withitems(_slice):
     def __init__(
         self, items: list[withitem], lineno: int = 1, col_offset: int = 0, end_lineno: int = 1, end_col_offset: int = 0
     ) -> None:
-        self.items = items or []
+        self.items = items
         self.lineno = lineno
         self.col_offset = col_offset
         self.end_lineno = end_lineno
@@ -460,7 +477,7 @@ class _type_params(_slice):
         end_lineno: int = 1,
         end_col_offset: int = 0,
     ) -> None:
-        self.type_params = type_params or []
+        self.type_params = type_params
         self.lineno = lineno
         self.col_offset = col_offset
         self.end_lineno = end_lineno

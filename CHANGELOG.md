@@ -8,6 +8,10 @@
 
 ### Added
 
+- prescribed slicing for `ListComp.generators`
+- prescribed slicing for `SetComp.generators`
+- prescribed slicing for `DictComp.generators`
+- prescribed slicing for `GeneratorExp.generators`
 - option `norm_self` controls whether statementish bodies can be zeroed out or not
 
 ### Updated

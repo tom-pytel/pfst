@@ -2132,16 +2132,16 @@ class SliceExprish(Fuzzy):
         if isinstance(ast, Tuple):
             return ('slice' if fst._has_Slice() else 'seq'),
         if isinstance(ast, (List, Set)):
-            return 'seq',
+            return ('seq',)
 
         if isinstance(ast, (Delete, Assign, Import, Global, Nonlocal,
                             Dict, MatchSequence, MatchMapping, MatchOr,
                             With, AsyncWith,
                             )):
-            return ast.__class__,
+            return (ast.__class__,)
 
         if isinstance(ast, (FunctionDef, AsyncFunctionDef, TypeAlias)):
-            return 'type_params'
+            return ('type_params',)
 
         if isinstance(ast, ClassDef):
             if not ast.keywords:
@@ -2149,11 +2149,14 @@ class SliceExprish(Fuzzy):
             else:
                 return ('type_params',)
 
+        if isinstance(ast, (ListComp, SetComp, DictComp, GeneratorExp)):
+            return ('generators',)
+
         if isinstance(ast, Call):
             if ((ast.keywords or len(ast.args) != 1 or not isinstance(ast.args[0], GeneratorExp)) and  # safe `GeneratorExp`, two possible slices - `args` and `keywords`?
                 not ast.keywords
             ):
-                return 'Call_args',
+                return ('Call_args',)
             else:
                 return ()
 
@@ -2177,6 +2180,7 @@ class SliceExprish(Fuzzy):
             Global:           (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
             Nonlocal:         glbucket,
             'ClassDef_bases': self.Bucket('bases', 'elts', 0, 0, True, FST('class tmp(): pass')),
+            'generators':     self.Bucket('generators', None, 1, 0, False, FST('', '_comprehensions')),
             'Call_args':      self.Bucket('args', 'elts', 0, 0, True, FST('call()')),
             MatchSequence:    self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
             MatchMapping:     self.Bucket(None, None, 0, 0, False, FST('{}', pattern)),

@@ -600,7 +600,7 @@ def put_slice_sep_begin(
         key which is `None`.
     - `fst_last`: The last element of the slice `FST` being put, or `None` if delete.
     - `len_fst`: Number of elements in `FST` being put, or 0 if delete.
-    - (`bound_ln`, `bound_col`): Start of container (just past delimiters). DIFFERENT FROM _get_slice_seq()!!!
+    - (`bound_ln`, `bound_col`): Start of container (just past delimiters). DIFFERENT FROM get_slice_sep()!!!
     - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters).
     - `options`: The dictionary of options passed to the put function. Options used are `trivia` and `ins_ln`.
     - `field`: Which field of `self` is being deleted / replaced / inserted to.
@@ -925,7 +925,7 @@ def get_slice_nosep(
     - `loc_first`: The full location of the first element copied or cut, parentheses and possible prefix included.
     - `loc_last`: The full location of the last element copied or cut, parentheses and possible prefix included.
     - (`bound_ln`, `bound_col`): End of previous element (past pars, even if not part of this sequence, e.g.
-        `comprehension.iter` for `comprehension.ifs` sequence).
+        `ListComp.elt`, `comprehension.iter` for `comprehension.ifs` sequence). DIFFERENT FROM put_slice_nosep()!!!
     - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters) or just before space before next
         element which is not part of this sequence.
     - `options`: The dictionary of options passed to the put function. Options used are `trivia`.
@@ -962,7 +962,9 @@ def put_slice_nosep(
     - `fst_first`: The first element of the slice `FST` being put, or `None` if delete. Must be an `fstloc` for `Dict`
         key which is `None`.
     - `fst_last`: The last element of the slice `FST` being put, or `None` if delete.
-    - (`bound_ln`, `bound_col`): Start of container (just past delimiters). DIFFERENT FROM _get_slice_seq()!!!
+    - (`bound_ln`, `bound_col`): End of previous element which is not part of this sequence (past pars, e.g.
+        `ListComp.elt` for `comprehension` sequence, `comprehension.iter` for `comprehension.ifs`). DIFFERENT FROM
+        get_slice_nosep()!!!
     - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters).
     - `options`: The dictionary of options passed to the put function. Options used are `trivia` and `ins_ln`.
     - `field`: Which field of `self` is being deleted / replaced / inserted to.

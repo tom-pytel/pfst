@@ -68,6 +68,7 @@ from .asttypes import (
     _ExceptHandlers,
     _match_cases,
     _Assign_targets,
+    _comprehensions,
     _aliases,
     _withitems,
     _type_params,
@@ -96,6 +97,8 @@ from .code import (
     code_as_expr_all,
     code_as_expr_arglike,
     code_as_Assign_targets,
+    code_as_comprehension,
+    code_as_comprehensions,
     code_as_alias,
     code_as_aliases,
     code_as_Import_name,
@@ -132,7 +135,15 @@ from .fst_misc import (
 )
 
 from .fst_slice_old import _get_slice_stmtish, _put_slice_stmtish
-from .slice import get_slice_sep, put_slice_sep_begin, put_slice_sep_end, _locs_first_and_last
+
+from .slice import (
+    _locs_first_and_last,
+    get_slice_sep,
+    put_slice_sep_begin,
+    put_slice_sep_end,
+    get_slice_nosep,
+    put_slice_nosep,
+)
 
 __all__ = ['_get_slice', '_put_slice', 'is_slice_compatible']
 
@@ -190,10 +201,10 @@ __all__ = ['_get_slice', '_put_slice', 'is_slice_compatible']
 # * ! S ,          (ImportFrom, 'names'):                  # alias*           -> _aliases                   _parse__aliases_star            - no trailing commas
 #                                                                             .
 #                                                                             .
-#   ! S ' '        (ListComp, 'generators'):               # comprehension*   -> _comprehensions            _parse__comprehensions
-#   ! S ' '        (SetComp, 'generators'):                # comprehension*   -> _comprehensions            _parse__comprehensions
-#   ! S ' '        (DictComp, 'generators'):               # comprehension*   -> _comprehensions            _parse__comprehensions
-#   ! S ' '        (GeneratorExp, 'generators'):           # comprehension*   -> _comprehensions            _parse__comprehensions
+# * ! S ' '        (ListComp, 'generators'):               # comprehension*   -> _comprehensions            _parse__comprehensions
+# * ! S ' '        (SetComp, 'generators'):                # comprehension*   -> _comprehensions            _parse__comprehensions
+# * ! S ' '        (DictComp, 'generators'):               # comprehension*   -> _comprehensions            _parse__comprehensions
+# * ! S ' '        (GeneratorExp, 'generators'):           # comprehension*   -> _comprehensions            _parse__comprehensions
 #                                                                             .
 #   ! S    if      (comprehension, 'ifs'):                 # expr*            -> _comprehension_ifs         _parse__comprehension_ifs
 #                                                                             .
@@ -1044,6 +1055,53 @@ def _get_slice_ClassDef_bases(
     return fst_
 
 
+def _get_slice_generators(
+    self: fst.FST,
+    start: int | Literal['end'] | None,
+    stop: int | None,
+    field: str,
+    cut: bool,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """This handles `ListComp`, `SetComp`, `DictComp`, `GeneratorExp` and the `_comprehensions` SPECIAL SLICE."""
+
+    len_body = len(body := (ast := self.a).generators)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
+
+    if not len_slice:
+        return fst.FST(_comprehensions(generators=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
+                       [''], from_=self)
+
+    is_comprehensions = isinstance(ast, _comprehensions)
+
+    if not is_comprehensions and cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+        raise ValueError(f'cannot cut all {ast.__class__.__name__}.generators without norm_self=False')
+
+    loc_first = body[start].f.loc
+    loc_last = loc_first if stop == start else body[stop - 1].f.loc
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+
+    if not is_comprehensions:
+        bound_end_col -= 1
+
+    if start:
+        _, _, bound_ln, bound_col = body[start - 1].f.loc
+    elif isinstance(ast, DictComp):
+        _, _, bound_ln, bound_col = ast.value.f.pars()
+    elif not is_comprehensions:  # ListComp, SetComp, GeneratorExp
+        _, _, bound_ln, bound_col = ast.elt.f.pars()
+
+    asts = _cut_or_copy_asts(start, stop, 'generators', cut, body)
+    ret_ast = _comprehensions(generators=asts)
+
+    fst_ = get_slice_nosep(self, start, stop, len_body, cut, ret_ast,
+                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col, options)
+
+    return fst_
+
+
 def _get_slice_Call_args(
     self: fst.FST,
     start: int | Literal['end'] | None,
@@ -1451,6 +1509,27 @@ def _code_to_slice__Assign_targets(
 
         if not fst_.a.targets:  # put empty sequence is same as delete
             return None
+
+    return fst_
+
+
+def _code_to_slice__comprehensions(
+    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
+) -> fst.FST | None:
+    if code is None:
+        return None
+
+    if one:
+        fst_ = code_as_comprehension(code, self.root.parse_params, sanitize=False)
+        ast_ = _comprehensions(generators=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                               end_col_offset=ls[-1].lenbytes)
+
+        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+
+    fst_ = code_as_comprehensions(code, self.root.parse_params, sanitize=False)
+
+    if not fst_.a.generators:  # put empty sequence is same as delete
+        return None
 
     return fst_
 
@@ -2374,6 +2453,57 @@ def _put_slice_ClassDef_bases(
             self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
 
 
+def _put_slice_generators(
+    self: fst.FST,
+    code: Code | None,
+    start: int | Literal['end'] | None,
+    stop: int | None,
+    field: str,
+    one: bool,
+    options: Mapping[str, Any],
+) -> None:
+    """This handles `ListComp`, `SetComp`, `DictComp`, `GeneratorExp` and the `_comprehensions` SPECIAL SLICE."""
+
+    fst_ = _code_to_slice__comprehensions(self, code, one, options)
+    len_body = len(body := (ast := self.a).generators)
+    start, stop = _fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
+    is_comprehensions = isinstance(ast, _comprehensions)
+
+    if not fst_:
+        if not len_slice:
+            return
+
+        if not is_comprehensions and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
+            raise ValueError(f'cannot delete all {ast.__class__.__name__}.generators without norm_self=False')
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+
+    if not is_comprehensions:
+        bound_end_col -= 1
+
+    if isinstance(ast, DictComp):
+        _, _, bound_ln, bound_col = ast.value.f.pars()
+    elif not is_comprehensions:  # ListComp, SetComp, GeneratorExp
+        _, _, bound_ln, bound_col = ast.elt.f.pars()
+
+    if not fst_:
+        put_slice_nosep(self, start, stop, None, None, None,
+                        bound_ln, bound_col, bound_end_ln, bound_end_col,
+                        options, 'generators')
+
+        _put_slice_asts(self, start, stop, field, body, None, None)
+
+    else:
+        fst_body = fst_.a.generators
+
+        put_slice_nosep(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f,
+                        bound_ln, bound_col, bound_end_ln, bound_end_col,
+                        options, 'generators')
+
+        _put_slice_asts(self, start, stop, 'generators', body, fst_, fst_body)
+
+
 def _put_slice_Call_args(
     self: fst.FST,
     code: Code | None,
@@ -3063,10 +3193,10 @@ _GET_SLICE_HANDLERS = {
     (Call, 'args'):                           _get_slice_Call_args,  # expr*
     (comprehension, 'ifs'):                   _get_slice_NOT_IMPLEMENTED_YET,  # expr*
 
-    (ListComp, 'generators'):                 _get_slice_NOT_IMPLEMENTED_YET,  # comprehension*
-    (SetComp, 'generators'):                  _get_slice_NOT_IMPLEMENTED_YET,  # comprehension*
-    (DictComp, 'generators'):                 _get_slice_NOT_IMPLEMENTED_YET,  # comprehension*
-    (GeneratorExp, 'generators'):             _get_slice_NOT_IMPLEMENTED_YET,  # comprehension*
+    (ListComp, 'generators'):                 _get_slice_generators,  # comprehension*
+    (SetComp, 'generators'):                  _get_slice_generators,  # comprehension*
+    (DictComp, 'generators'):                 _get_slice_generators,  # comprehension*
+    (GeneratorExp, 'generators'):             _get_slice_generators,  # comprehension*
 
     (ClassDef, 'keywords'):                   _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
     (Call, 'keywords'):                       _get_slice_NOT_IMPLEMENTED_YET,  # keyword*
@@ -3097,6 +3227,7 @@ _GET_SLICE_HANDLERS = {
     (_match_cases, 'cases'):                  _get_slice_stmtish,  # match_case*
     (_Assign_targets, 'targets'):             _get_slice__slice,  # expr*
     # (_Assign_comprehension_ifs, 'ifs'):       _get_slice__slice,
+    (_comprehensions, 'generators'):          _get_slice_generators,  # comprehensions*
     (_aliases, 'names'):                      _get_slice__slice,  # alias*
     (_withitems, 'items'):                    _get_slice__slice,  # withitem*
     (_type_params, 'type_params'):            _get_slice__slice,  # type_param*
@@ -3196,10 +3327,10 @@ _PUT_SLICE_HANDLERS = {
     (Call, 'args'):                           _put_slice_Call_args,  # expr*
     (comprehension, 'ifs'):                   _put_slice_NOT_IMPLEMENTED_YET,  # expr*
 
-    (ListComp, 'generators'):                 _put_slice_NOT_IMPLEMENTED_YET,  # comprehension*
-    (SetComp, 'generators'):                  _put_slice_NOT_IMPLEMENTED_YET,  # comprehension*
-    (DictComp, 'generators'):                 _put_slice_NOT_IMPLEMENTED_YET,  # comprehension*
-    (GeneratorExp, 'generators'):             _put_slice_NOT_IMPLEMENTED_YET,  # comprehension*
+    (ListComp, 'generators'):                 _put_slice_generators,  # comprehension*
+    (SetComp, 'generators'):                  _put_slice_generators,  # comprehension*
+    (DictComp, 'generators'):                 _put_slice_generators,  # comprehension*
+    (GeneratorExp, 'generators'):             _put_slice_generators,  # comprehension*
 
     (ClassDef, 'keywords'):                   _put_slice_NOT_IMPLEMENTED_YET,  # keyword*
     (Call, 'keywords'):                       _put_slice_NOT_IMPLEMENTED_YET,  # keyword*
@@ -3230,6 +3361,7 @@ _PUT_SLICE_HANDLERS = {
     (_match_cases, 'cases'):                  _put_slice_stmtish,  # match_case*
     (_Assign_targets, 'targets'):             _put_slice__slice,  # expr*
     # (_Assign_comprehension_ifs, 'ifs'):       _put_slice__slice,
+    (_comprehensions, 'generators'):           _put_slice_generators,  # comprehensions*
     (_aliases, 'names'):                      _put_slice__slice,  # alias*
     (_withitems, 'items'):                    _put_slice__slice,  # withitem*
     (_type_params, 'type_params'):            _put_slice__slice,  # type_param*

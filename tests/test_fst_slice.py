@@ -2156,7 +2156,7 @@ i ; \\
 
     def test_put_slice_raw(self):
         f = parse('[a for c in d for b in c for a in b]').body[0].value.f
-        g = f.put_slice('for x in y', 1, 2, raw=True)
+        g = f.put_slice('for x in y', 1, 2, 'generators', raw=True)
         self.assertIsNot(g, f)
         self.assertEqual(g.src, '[a for c in d for x in y for a in b]')
         f = g
@@ -4526,6 +4526,24 @@ class cls:
 
         self.assertEqual('{1:a}', g := (f := FST('{1:a, 2:b, 3:c}').get_slice(0, 2)).get_slice(0, 1).src)
         self.assertEqual('{1:a, 2:b, 1:a}', f.put_slice(g, 'end').src)
+        f.verify()
+
+        # comprehensions
+
+        self.assertEqual('for i in i', g := (f := FST('[_ for i in i for j in j for k in k]').get_slice(0, 2, 'generators')).get_slice(0, 1, 'generators').src)
+        self.assertEqual('for i in i for j in j for i in i', f.put_slice(g, 'end', 'generators').src)
+        f.verify()
+
+        # aliases
+
+        self.assertEqual('a.a', g := (f := FST('import a.a, b.b, c.c').get_slice(0, 2)).get_slice(0, 1).src)
+        self.assertEqual('a.a, b.b, a.a', f.put_slice(g, 'end').src)
+        f.verify()
+
+        # withitems
+
+        self.assertEqual('a as a', g := (f := FST('with a as a, b as b, c as c: pass').get_slice(0, 2, 'items')).get_slice(0, 1).src)
+        self.assertEqual('a as a, b as b, a as a', f.put_slice(g, 'end').src)
         f.verify()
 
         # MatchSequence

@@ -7,7 +7,17 @@ from ast import parse as ast_parse, unparse as ast_unparse
 from random import randint, seed
 
 from fst import *
-from fst.asttypes import _ExceptHandlers, _match_cases, _Assign_targets, _aliases, _withitems, _type_params
+
+from fst.asttypes import (
+    _ExceptHandlers,
+    _match_cases,
+    _Assign_targets,
+    _comprehensions,
+    _aliases,
+    _withitems,
+    _type_params,
+)
+
 from fst.astutil import OPCLS2STR, WalkFail, copy_ast, compare_asts
 from fst.common import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, astfield, fstloc
 from fst.view import fstview
@@ -43,8 +53,13 @@ from fst.code import (
 )
 
 from fst.locations import (
-    loc_ClassDef_bases_pars, loc_ImportFrom_names_pars, loc_With_items_pars, loc_block_header_end, loc_Call_pars,
-    loc_Subscript_brackets, loc_MatchClass_pars,
+    loc_ClassDef_bases_pars,
+    loc_ImportFrom_names_pars,
+    loc_With_items_pars,
+    loc_block_header_end,
+    loc_Call_pars,
+    loc_Subscript_brackets,
+    loc_MatchClass_pars,
 )
 
 from fst import parsex as px, code
@@ -282,8 +297,14 @@ PARSE_TESTS = [
     ('cmpop',             px.parse_cmpop,             ParseError,               'and'),
 
     ('comprehension',     px.parse_comprehension,     comprehension,            'for u in v'),
+    ('comprehension',     px.parse_comprehension,     comprehension,            'async for u in v'),
     ('comprehension',     px.parse_comprehension,     comprehension,            'for u in v if w'),
-    ('comprehension',     px.parse_comprehension,     ParseError,               'for u in v for s in t'),
+    ('comprehension',     px.parse_comprehension,     ParseError,               'for u in v async for s in t'),
+
+    ('_comprehensions',   px.parse__comprehensions,   _comprehensions,          ''),
+    ('_comprehensions',   px.parse__comprehensions,   _comprehensions,          'for u in v'),
+    ('_comprehensions',   px.parse__comprehensions,   _comprehensions,          'async for u in v'),
+    ('_comprehensions',   px.parse__comprehensions,   _comprehensions,          'for u in v if w async for s in t'),
 
     ('arguments',         px.parse_arguments,         arguments,                ''),
     ('arguments',         px.parse_arguments,         arguments,                'a: list[str], /, b: int = 1, *c, d=100, **e'),
@@ -7765,23 +7786,23 @@ if 1:
         f = FST('[i for i in j if i]')
         self.assertEqual('[new for i in j if i]', test(f, 'elt', 'new', FST, 'i').src)
         self.assertEqual('[new async for dog in dogs]', test(f, 'generators', 'async for dog in dogs', fstview,
-                                                             '<<ListComp ROOT 0,0..0,21>.generators[0:1] [<comprehension 0,5..0,20>]>').src)
+                                                             'for i in j if i').src)
 
         f = FST('{i for i in j if i}')
         self.assertEqual('{new for i in j if i}', test(f, 'elt', 'new', FST, 'i').src)
         self.assertEqual('{new async for dog in dogs}', test(f, 'generators', 'async for dog in dogs', fstview,
-                                                             '<<SetComp ROOT 0,0..0,21>.generators[0:1] [<comprehension 0,5..0,20>]>').src)
+                                                             'for i in j if i').src)
 
         f = FST('{i: i for i in j if i}')
         self.assertEqual('{new: i for i in j if i}', test(f, 'key', 'new', FST, 'i').src)
         self.assertEqual('{new: old for i in j if i}', test(f, 'value', 'old', FST, 'i').src)
         self.assertEqual('{new: old async for dog in dogs}', test(f, 'generators', 'async for dog in dogs', fstview,
-                                                             '<<DictComp ROOT 0,0..0,26>.generators[0:1] [<comprehension 0,10..0,25>]>').src)
+                                                             'for i in j if i').src)
 
         f = FST('(i for i in j if i)')
         self.assertEqual('(new for i in j if i)', test(f, 'elt', 'new', FST, 'i').src)
         self.assertEqual('(new async for dog in dogs)', test(f, 'generators', 'async for dog in dogs', fstview,
-                                                             '<<GeneratorExp ROOT 0,0..0,21>.generators[0:1] [<comprehension 0,5..0,20>]>').src)
+                                                             'for i in j if i').src)
 
         self.assertEqual('await yup', test(FST('await yes'), 'value', 'yup', FST, 'yes').src)
 

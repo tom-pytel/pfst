@@ -281,7 +281,7 @@ This package is not finished but functional enough that it can be useful.
 
 * Improve comment and whitespace handling.
 
-* Lots of code cleanup.
+* LOTS of cleaning up.
 
 
 ## Trivia

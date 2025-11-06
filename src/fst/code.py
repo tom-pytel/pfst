@@ -40,6 +40,7 @@ from .asttypes import (
     _ExceptHandlers,
     _match_cases,
     _Assign_targets,
+    _comprehensions,
     _aliases,
     _withitems,
     _type_params,
@@ -84,6 +85,7 @@ from .parsex import (
     parse_unaryop,
     parse_cmpop,
     parse_comprehension,
+    parse__comprehensions,
     parse_arguments,
     parse_arguments_lambda,
     parse_arg,
@@ -122,6 +124,7 @@ __all__ = [
     'code_as_unaryop',
     'code_as_cmpop',
     'code_as_comprehension',
+    'code_as_comprehensions',
     'code_as_arguments',
     'code_as_arguments_lambda',
     'code_as_arg',
@@ -553,6 +556,12 @@ def code_as_comprehension(code: Code, parse_params: Mapping[str, Any] = {}, *, s
     """Convert `code` to a comprehension `FST` if possible."""
 
     return _code_as(code, comprehension, parse_params, parse_comprehension, sanitize=sanitize)
+
+
+def code_as_comprehensions(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+    """Convert `code` to a `_comprehensions` of `comprehensions` SPECIAL SLICE if possible."""
+
+    return _code_as(code, _comprehensions, parse_params, parse__comprehensions, sanitize=sanitize)
 
 
 def code_as_arguments(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:

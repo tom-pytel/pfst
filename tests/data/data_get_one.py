@@ -1082,7 +1082,7 @@ r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
 (111, '', 0, False, 'generators', {}, (ListComp,
 r'''[val for val in iter]'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
+r'''**ValueError('cannot delete all ListComp.generators without norm_self=False')**''',
 r'''for val in iter''', r'''
 comprehension - ROOT 0,0..0,15
   .target Name 'val' Store - 0,4..0,7
@@ -1098,7 +1098,7 @@ r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
 (113, '', 0, False, 'generators', {}, (SetComp,
 r'''{val for val in iter}'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
+r'''**ValueError('cannot delete all SetComp.generators without norm_self=False')**''',
 r'''for val in iter''', r'''
 comprehension - ROOT 0,0..0,15
   .target Name 'val' Store - 0,4..0,7
@@ -1120,7 +1120,7 @@ r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
 (116, '', 0, False, 'generators', {}, (DictComp,
 r'''{key: val for key, val in iter}'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
+r'''**ValueError('cannot delete all DictComp.generators without norm_self=False')**''',
 r'''for key, val in iter''', r'''
 comprehension - ROOT 0,0..0,20
   .target Tuple - 0,4..0,12
@@ -1140,7 +1140,7 @@ r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
 (118, '', 0, False, 'generators', {}, (GeneratorExp,
 r'''(val for val in iter)'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
+r'''**ValueError('cannot delete all GeneratorExp.generators without norm_self=False')**''',
 r'''for val in iter''', r'''
 comprehension - ROOT 0,0..0,15
   .target Name 'val' Store - 0,4..0,7

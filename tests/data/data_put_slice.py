@@ -12781,7 +12781,7 @@ Module - ROOT 0,0..0,9
         1] Name 'y' Load - 0,8..0,9
 '''),
 
-(14, 'body[0].value', 1, 3, None, {'raw': True}, ('exec',
+(14, 'body[0].value', 1, 3, 'generators', {'raw': True}, ('exec',
 r'''[a for a in a() for b in b() for c in c()]'''), (None,
 r'''for z in z()'''),
 r'''[a for a in a() for z in z()]''', r'''
@@ -12803,7 +12803,7 @@ Module - ROOT 0,0..0,29
           .is_async 0
 '''),
 
-(15, 'body[0].value.generators[0]', 1, 3, None, {'raw': True}, ('exec',
+(15, 'body[0].value.generators[0]', 1, 3, 'ifs', {'raw': True}, ('exec',
 r'''[a for a in a() if a if b if c]'''), (None,
 r'''if z'''),
 r'''[a for a in a() if a if z]''', r'''
@@ -13070,7 +13070,7 @@ Module - ROOT 0,0..1,28
          0] Pass - 1,24..1,28
 '''),
 
-(29, 'body[0].value.generators[0]', 1, 3, None, {'raw': True}, ('exec',
+(29, 'body[0].value.generators[0]', 1, 3, 'ifs', {'raw': True}, ('exec',
 r'''[a for a in a() if (a) if (b) if (c)]'''), (None,
 r'''if z'''),
 r'''[a for a in a() if (a) if z]''', r'''

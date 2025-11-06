@@ -2885,7 +2885,7 @@ c, # c
 
     def test_put_one_raw(self):
         f = parse('[a for c in d for b in c for a in b]').body[0].value.f
-        g = f.put('for x in y', 1, raw=True)
+        g = f.put('for x in y', 1, 'generators', raw=True)
         self.assertIsNot(g, f)
         self.assertEqual(g.src, '[a for c in d for x in y for a in b]')
         f = g

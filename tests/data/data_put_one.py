@@ -8827,7 +8827,18 @@ r'''**ValueError('cannot create MatchAs.pattern in this state')**'''),
 (550, 'body[0].value', 0, False, 'generators', {'raw': False}, ('exec',
 r'''[i for j in k async for (i) in j]'''), (None,
 r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''[i async for (i) in j]''', r'''
+Module - ROOT 0,0..0,22
+  .body[1]
+   0] Expr - 0,0..0,22
+     .value ListComp - 0,0..0,22
+       .elt Name 'i' Load - 0,1..0,2
+       .generators[1]
+        0] comprehension - 0,3..0,21
+          .target Name 'i' Store - 0,14..0,15
+          .iter Name 'j' Load - 0,20..0,21
+          .is_async 1
+'''),
 
 (551, 'body[0].value', 0, False, 'generators', {}, ('exec',
 r'''[i for j in k async for (i) in j]'''), (None,
@@ -8917,7 +8928,18 @@ r'''**IndexError('index out of range')**'''),
 (556, 'body[0].value', 0, False, 'generators', {'raw': False}, ('exec',
 r'''{i for j in k async for (i) in j}'''), (None,
 r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''{i async for (i) in j}''', r'''
+Module - ROOT 0,0..0,22
+  .body[1]
+   0] Expr - 0,0..0,22
+     .value SetComp - 0,0..0,22
+       .elt Name 'i' Load - 0,1..0,2
+       .generators[1]
+        0] comprehension - 0,3..0,21
+          .target Name 'i' Store - 0,14..0,15
+          .iter Name 'j' Load - 0,20..0,21
+          .is_async 1
+'''),
 
 (557, 'body[0].value', 0, False, 'generators', {}, ('exec',
 r'''{i for j in k async for (i) in j}'''), (None,
@@ -9007,7 +9029,19 @@ r'''**IndexError('index out of range')**'''),
 (562, 'body[0].value', 0, False, 'generators', {'raw': False}, ('exec',
 r'''{i: i for j in k async for (i) in j}'''), (None,
 r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''{i: i async for (i) in j}''', r'''
+Module - ROOT 0,0..0,25
+  .body[1]
+   0] Expr - 0,0..0,25
+     .value DictComp - 0,0..0,25
+       .key Name 'i' Load - 0,1..0,2
+       .value Name 'i' Load - 0,4..0,5
+       .generators[1]
+        0] comprehension - 0,6..0,24
+          .target Name 'i' Store - 0,17..0,18
+          .iter Name 'j' Load - 0,23..0,24
+          .is_async 1
+'''),
 
 (563, 'body[0].value', 0, False, 'generators', {}, ('exec',
 r'''{i: i for j in k async for (i) in j}'''), (None,
@@ -9101,7 +9135,18 @@ r'''**IndexError('index out of range')**'''),
 (568, 'body[0].value', 0, False, 'generators', {'raw': False}, ('exec',
 r'''(i for j in k async for (i) in j)'''), (None,
 r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''(i async for (i) in j)''', r'''
+Module - ROOT 0,0..0,22
+  .body[1]
+   0] Expr - 0,0..0,22
+     .value GeneratorExp - 0,0..0,22
+       .elt Name 'i' Load - 0,1..0,2
+       .generators[1]
+        0] comprehension - 0,3..0,21
+          .target Name 'i' Store - 0,14..0,15
+          .iter Name 'j' Load - 0,20..0,21
+          .is_async 1
+'''),
 
 (569, 'body[0].value', 0, False, 'generators', {}, ('exec',
 r'''(i for j in k async for (i) in j)'''), (None,

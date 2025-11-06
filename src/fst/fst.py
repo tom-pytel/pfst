@@ -111,6 +111,7 @@ from .asttypes import (
     _ExceptHandlers,
     _match_cases,
     _Assign_targets,
+    _comprehensions,
     _aliases,
     _withitems,
     _type_params,
@@ -190,14 +191,15 @@ _DEFAULT_AST_FIELD = {cls: field for field, classes in [  # builds to {Module: '
     ('cases',        (Match, _match_cases)),
 
     ('elts',         (Tuple, List, Set)),
-    ('patterns',     (MatchSequence, MatchOr, MatchClass)),
+    ('elt',          (GeneratorExp, ListComp, SetComp)),
     ('targets',      (Delete, _Assign_targets)),
+    ('target',       (comprehension,)),
+    ('patterns',     (MatchSequence, MatchOr, MatchClass)),
     ('type_params',  (TypeAlias, _type_params)),
     ('names',        (Import, ImportFrom, Global, Nonlocal, _aliases)),
     ('items',        (_withitems,)),
-    ('ifs',          (comprehension,)),
     ('values',       (BoolOp, JoinedStr, TemplateStr)),
-    ('generators',   (ListComp, SetComp, DictComp, GeneratorExp)),
+    ('generators',   (_comprehensions,)),
     ('args',         (Call,)),  # potential conflict of default body with put to empty 'set()'
 
     # special cases, field names here only for checks to succeed, otherwise all handled programatically

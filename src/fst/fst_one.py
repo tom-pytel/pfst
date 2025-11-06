@@ -112,6 +112,7 @@ from .asttypes import (
     _ExceptHandlers,
     _match_cases,
     _Assign_targets,
+    _comprehensions,
     _aliases,
     _withitems,
     _type_params,
@@ -771,6 +772,7 @@ _GET_ONE_HANDLERS = {
     (_ExceptHandlers, 'handlers'):        _get_one_stmtish,  # ExceptHandler*
     (_match_cases, 'cases'):              _get_one_stmtish,  # match_case*
     (_Assign_targets, 'targets'):         _get_one_default,  # expr*
+    (_comprehensions, 'generators'):      _get_one_default,  # comprehension*
     (_aliases, 'names'):                  _get_one_default,  # alias*
     (_withitems, 'items'):                _get_one_default,  # withitem*
     (_type_params, 'type_params'):        _get_one_default,  # type_param*
@@ -3136,6 +3138,7 @@ _PUT_ONE_HANDLERS = {
     (TypeVarTuple, 'default_value'):      (False, _put_one_exprish_optional, onestatic(_one_info_TypeVarTuple_default_value, _restrict_default)),  # expr?
 
     (_Assign_targets, 'targets'):         (True,  _put_one_exprish_required, _onestatic_target),  # expr*
+    (_comprehensions, 'generators'):      (True,  _put_one_exprish_required, _onestatic_comprehension_required),  # comprehension*
     (_aliases, 'names'):                  (True,  _put_one_exprish_required, _onestatic_alias_required),  # alias*
     (_withitems, 'items'):                (True,  _put_one_exprish_required, _onestatic_withitem_required),  # withitem*
     (_type_params, 'type_params'):        (True,  _put_one_exprish_required, _onestatic_type_param_required),  # type_param*

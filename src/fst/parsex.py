@@ -88,6 +88,7 @@ from .asttypes import (
     _ExceptHandlers,
     _match_cases,
     _Assign_targets,
+    _comprehensions,
     _aliases,
     _withitems,
     _type_params,
@@ -127,6 +128,7 @@ __all__ = [
     'parse_unaryop',
     'parse_cmpop',
     'parse_comprehension',
+    'parse__comprehensions',
     'parse_arguments',
     'parse_arguments_lambda',
     'parse_arg',
@@ -201,6 +203,7 @@ Mode = Literal[
     'unaryop',
     'cmpop',
     'comprehension',
+    '_comprehensions',
     'arguments',
     'arguments_lambda',
     'arg',
@@ -258,6 +261,7 @@ Mode = Literal[
 - `'unaryop'`: Parse to a `unaryop` operator.
 - `'cmpop'`: Parse to a `cmpop` compare operator.
 - `'comprehension'`: Parse a single `comprehension` returned as itself. Same as passing `comprehension` type.
+- `'_comprehensions'`: Parse zero or more `comprehension`s returned in a `_comprehensions` SPECIAL SLICE.
 - `'arguments'`: Parse as `arguments` for a `FunctionDef` or `AsyncFunctionDef` returned as itself. In this mode
     type annotations are allowed for the arguments. Same as passing `arguments` type.
 - `'arguments_lambda'`: Parse as `arguments` for a `Lambda` returned as itself. In this mode type annotations
@@ -331,6 +335,13 @@ def _unparse__Assign_targets(ast: AST) -> str:
                                   lineno=1, col_offset=0, end_lineno=1, end_col_offset=0)).rstrip()
 
 
+def _unparse__comprehensions(ast: AST) -> str:
+    return _fixing_unparse(ListComp(elt=Name(id='_', ctx=Load(), lineno=1, col_offset=0,
+                                             end_lineno=1, end_col_offset=0),
+                                    generators=ast.generators, lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
+                           )[3:-1]
+
+
 def _unparse__aliases(ast: AST) -> str:
     return _fixing_unparse(List(elts=ast.names, lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[1:-1]
 
@@ -378,6 +389,7 @@ _UNPARSE_FUNCS = {
     _ExceptHandlers: _unparse__ExceptHandlers,
     _match_cases:    _unparse__match_cases,
     _Assign_targets: _unparse__Assign_targets,
+    _comprehensions: _unparse__comprehensions,
     _aliases:        _unparse__aliases,
     _withitems:      _unparse__withitems,
     _type_params:    _unparse__type_params,
@@ -407,7 +419,8 @@ def _ast_parse1_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def _astloc_from_src(src: str, lineno: int = 1) -> dict[str, int]:
-    """Get whole `AST` location from whole source string, starting at `lineno`."""
+    """Get whole `AST` location from whole source string, starting at `lineno`. Used to get location for SPECIAL SLICE
+    custom `AST` containers."""
 
     return dict(lineno=lineno, col_offset=0, end_lineno=lineno + src.count('\n'),
                 end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
@@ -584,7 +597,7 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
                                    (parse_expr_all, parse_pattern, parse_withitem))
 
     if groupdict['async_or_for']:
-        return _parse_all_multiple(src, parse_params, not first.group(1), (parse_comprehension,))
+        return _parse_all_multiple(src, parse_params, not first.group(1), (parse_comprehension, parse__comprehensions))
 
     if groupdict['await_lambda_yield']:
         return _parse_all_multiple(src, parse_params, not first.group(1), (parse_expr_all,))
@@ -1099,6 +1112,19 @@ def parse_comprehension(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(gens[0], -1)
 
 
+def parse__comprehensions(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse to a `comprehension`, e.g. "async for i in something() if i"."""
+
+    ast = _ast_parse1(f'[_ for _ in _\n{src}\n]', parse_params).value
+
+    if not isinstance(ast, ListComp):
+        raise ParseError('expecting comprehension')
+
+    ast = _comprehensions(generators=ast.generators[1:], **_astloc_from_src(src, 2))
+
+    return _offset_linenos(ast, -1)
+
+
 def parse_arguments(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `arguments`, e.g. "a: list[str], /, b: int = 1, *c, d=100, **e"."""
 
@@ -1440,6 +1466,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'unaryop':                parse_unaryop,
     'cmpop':                  parse_cmpop,
     'comprehension':          parse_comprehension,
+    '_comprehensions':        parse__comprehensions,
     'arguments':              parse_arguments,
     'arguments_lambda':       parse_arguments_lambda,
     'arg':                    parse_arg,
@@ -1483,6 +1510,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     _ExceptHandlers:          parse__ExceptHandlers,
     _match_cases:             parse__match_cases,
     _Assign_targets:          parse__Assign_targets,
+    _comprehensions:          parse__comprehensions,
     _aliases:                 parse__aliases,
     _withitems:               parse__withitems,
     _type_params:             parse__type_params,
