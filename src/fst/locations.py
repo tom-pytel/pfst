@@ -19,7 +19,9 @@ from .asttypes import (
     Lambda,
     NotIn,
     UnaryOp,
+    comprehension,
     operator,
+    _comprehension_ifs,
 )
 
 from .astutil import re_identifier, OPCLS2STR, last_block_header_child
@@ -31,6 +33,7 @@ from .traverse import next_bound, prev_bound, next_bound_step, prev_bound_step
 __all__ = [
     'loc_arguments',
     'loc_comprehension',
+    'loc_comprehension_if',
     'loc_withitem',
     'loc_match_case',
     'loc_operator',
@@ -148,6 +151,32 @@ def loc_comprehension(self: fst.FST) -> fstloc:
             end_ln, end_col = rpars[len(prev_delims(lines, *prev_bound(last), last.ln, last.col)) - 1]  # get rpar according to how many pars on left
 
     return fstloc(start_ln, start_col, end_ln, end_col)
+
+
+def loc_comprehension_if(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
+    """Location `comprehension` or `_comprehension_ifs` expression including the `if` (which is not included in the
+    location of the expression itself).
+
+    **WARNING:** `idx` must be positive.
+    """
+
+    # assert isinstance(self.a, (comprehension, _comprehension_ifs))
+
+    ast = self.a
+    ifs = ast.ifs
+
+    ln, col, end_ln, end_col = ifs[idx].f.pars() if pars else ifs[idx].f.loc
+
+    if idx:
+        _, _, prev_ln, prev_col = ifs[idx - 1].f.loc
+    elif isinstance(ast, comprehension):
+        _, _, prev_ln, prev_col = ast.iter.f.loc
+    else:  # isinstance(ast, _comprehension_ifs)
+        prev_ln, prev_col, _, _ = self.loc  # should be 0, 0 but in case someone inserts some garbage before
+
+    ln, col = next_find(self.root._lines, prev_ln, prev_col, ln, col, 'if')  # must be there
+
+    return fstloc(ln, col, end_ln, end_col)
 
 
 def loc_withitem(self: fst.FST) -> fstloc:

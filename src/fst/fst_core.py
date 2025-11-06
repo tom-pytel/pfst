@@ -1212,36 +1212,6 @@ def _is_enclosed_in_parents(self: fst.FST, field: str | None = None) -> bool:
     return False
 
 
-def _loc_maybe_key(
-    self: fst.FST, idx: int, pars: bool = False, body: list[AST] | None = None, body2: list[AST] | None = None
-) -> fstloc:
-    """Return location of node which may be a dictionary key even if it is `**` specified by a `None`. Optionally return
-    the location of the grouping parentheses if key actually present. Can also be used to get the location
-    (parenthesized or not) from any list of `AST`s which is not a `Dict.keys` if an explicit `body` and / or `body2` is
-    passed in, e.g. will safely get location of `MatchMapping` keys. Will just return parenthesized or not location from
-    any `body` assuming there are no `None`s to force a check from `body2` and a search back from that for a `**`.
-
-    **WARNING:** `idx` must be positive.
-    """
-
-    if key := (body or self.a.keys)[idx]:
-        return key.f.pars() if pars else key.f.loc
-
-    if body2 is None:
-        body2 = self.a.values
-
-    val_ln, val_col, _, _ = body2[idx].f.loc
-
-    if idx:
-        _, _, ln, col = body2[idx - 1].f.loc
-    else:
-        ln, col, _, _ = self.loc
-
-    ln, col = prev_find(self.root._lines, ln, col, val_ln, val_col, '**')  # '**' must be there
-
-    return fstloc(ln, col, ln, col + 2)
-
-
 def _get_parse_mode(self: fst.FST) -> str | type[AST] | None:
     r"""Determine the parse mode for this node. This is the extended parse mode as per `Mode`, not the `ast.parse()`
     mode. Returns a mode which is guaranteed to reparse this element (which may be a SPECIAL SLICE) to an exact copy

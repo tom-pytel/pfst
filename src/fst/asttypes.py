@@ -280,7 +280,7 @@ __all__ = [
     '_Assign_targets',
     # '_decorator_list',
     '_comprehensions',
-    # '_comprehension_ifs',
+    '_comprehension_ifs',
     # '_keywords',
     '_aliases',
     '_withitems',
@@ -413,10 +413,28 @@ class _comprehensions(_slice):
         self.end_col_offset = end_col_offset
 
 
-# class _comprehension_ifs(_slice):
-#     """Slice of `comprehension.ifs`.
+class _comprehension_ifs(_slice):
+    """Slice of `comprehension.ifs`.
 
-#     This is a special slice because there are no separators and instead each element is prefixed with `if`."""
+    This is a special slice because there are no separators and instead each element is prefixed with `if` which is not
+    included in each expression's location so needs special treatment."""
+
+    _fields      = ('ifs',)
+    _field_types = {'ifs': list[expr]}
+
+    def __init__(
+        self,
+        ifs: list[expr],
+        lineno: int = 1,
+        col_offset: int = 0,
+        end_lineno: int = 1,
+        end_col_offset: int = 0,
+    ) -> None:
+        self.ifs = ifs
+        self.lineno = lineno
+        self.col_offset = col_offset
+        self.end_lineno = end_lineno
+        self.end_col_offset = end_col_offset
 
 
 # class _keywords(_slice):

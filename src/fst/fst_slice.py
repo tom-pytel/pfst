@@ -69,6 +69,7 @@ from .asttypes import (
     _match_cases,
     _Assign_targets,
     _comprehensions,
+    _comprehension_ifs,
     _aliases,
     _withitems,
     _type_params,

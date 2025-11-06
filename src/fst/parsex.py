@@ -89,6 +89,7 @@ from .asttypes import (
     _match_cases,
     _Assign_targets,
     _comprehensions,
+    _comprehension_ifs,
     _aliases,
     _withitems,
     _type_params,
@@ -129,6 +130,7 @@ __all__ = [
     'parse_cmpop',
     'parse_comprehension',
     'parse__comprehensions',
+    # 'parse__comprehension_ifs',
     'parse_arguments',
     'parse_arguments_lambda',
     'parse_arg',
@@ -468,19 +470,36 @@ def _has_trailing_comma(src: str, end_lineno: int, end_col_offset: int) -> bool:
     return bool(_re_trailing_comma.match(src, pos))
 
 
-def _parse_all_type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse either a single `type_param` preferentially or multiple `type_param`s returned in `Tuple`. Called from
-    `parse_all()` on finding a leading identifier character or star so that is assumed to be there, which will generate
-    at least one `type_param`."""
+def _parse_all__comprehensions(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse either a single `comprehension` preferentially or multiple `comprehensions`s returned in `_comprehensions`.
+    Called from `parse_all()` on finding source which may parse to a `comprehension` so there may be at least one."""
 
-    type_params = _ast_parse1(f'type t[\n{src}\n] = None', parse_params).type_params
+    ast = parse__comprehensions(src, parse_params)
 
-    ast = type_params[0]
+    return ast if len(ast.generators) != 1 else ast.generators[0]
 
-    if len(type_params) > 1 or _has_trailing_comma(src, ast.end_lineno - 1, ast.end_col_offset):
-        ast = _type_params(type_params=type_params, **_astloc_from_src(src, 2))
 
-    return _offset_linenos(ast, -1)
+def _parse_all__withitems(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse either a single `withitem` preferentially or multiple `withitems`s returned in `_withitems`.
+    Called from `parse_all()` on finding source which may parse to a `withitem` so there may be at least one."""
+
+    ast = parse__withitems(src, parse_params)
+
+    return (ast if len(ast.items) != 1 or
+                   _has_trailing_comma(src, (i0 := (i0 := ast.items[0]).optional_vars or i0.context_expr).end_lineno,
+                                       i0.end_col_offset) else
+            ast.items[0])
+
+
+def _parse_all__type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse either a single `type_param` preferentially or multiple `type_param`s returned in `_type_params`. Called
+    from `parse_all()` on finding source which may parse to a `type_param` so there may be at least one."""
+
+    ast = parse__type_params(src, parse_params)
+
+    return (ast if len(ast.type_params) != 1 or
+                   _has_trailing_comma(src, (tp0 := ast.type_params[0]).end_lineno, tp0.end_col_offset) else
+            ast.type_params[0])
 
 
 def _parse_all_multiple(src: str, parse_params: Mapping[str, Any], stmt: bool, rest: list[Callable]) -> AST:
@@ -582,22 +601,22 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     if groupdict['stmt_or_expr_or_pat_or_witem']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (parse_expr_all, parse_pattern, parse_withitem, parse__Assign_targets))  # parse_expr_all because could be Slice
+                                   (parse_expr_all, parse_pattern, _parse_all__withitems, parse__Assign_targets))  # parse_expr_all because could be Slice
 
     if groupdict['match_type_identifier']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
                                    (parse_expr_all, parse_pattern, parse_arguments, parse_arguments_lambda,
-                                    parse_withitem, parse_arg, _parse_all_type_params, parse__Assign_targets))
+                                    _parse_all__withitems, parse_arg, _parse_all__type_params, parse__Assign_targets))
 
     if groupdict['stmt']:
         return reduce_ast(parse_stmts(src, parse_params), True)
 
     if groupdict['True_False_None']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (parse_expr_all, parse_pattern, parse_withitem))
+                                   (parse_expr_all, parse_pattern, _parse_all__withitems))
 
     if groupdict['async_or_for']:
-        return _parse_all_multiple(src, parse_params, not first.group(1), (parse_comprehension, parse__comprehensions))
+        return _parse_all_multiple(src, parse_params, not first.group(1), (_parse_all__comprehensions,))
 
     if groupdict['await_lambda_yield']:
         return _parse_all_multiple(src, parse_params, not first.group(1), (parse_expr_all,))
@@ -616,7 +635,7 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
         return _parse_all_multiple(src, parse_params, not first.group(1),
                                    (parse_expr_all, parse_pattern, parse_arguments, parse_arguments_lambda,
-                                    parse_withitem, parse_arg, _parse_all_type_params, parse__Assign_targets))
+                                    _parse_all__withitems, parse_arg, _parse_all__type_params, parse__Assign_targets))
 
     if groupdict['at']:
         return reduce_ast(parse_stmts(src, parse_params), True)
@@ -624,35 +643,35 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if groupdict['star']:
         ast = _parse_all_multiple(src, parse_params, not first.group(1),
                                   (parse_expr_all, parse_pattern, parse_arguments, parse_arguments_lambda,
-                                   _parse_all_type_params, parse_operator, parse__Assign_targets))
+                                   _parse_all__type_params, parse_operator, parse__Assign_targets))
 
         if isinstance(ast, Assign) and len(targets := ast.targets) == 1 and isinstance(targets[0], Starred):  # '*T = ...' validly parses to Assign statement but is invalid compile, but valid type_param so reparse as that
-            return _parse_all_type_params(src, parse_params)
+            return _parse_all__type_params(src, parse_params)
 
         return ast
 
     if groupdict['minus']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (parse_expr_all, parse_pattern, parse_withitem, parse_binop))
+                                   (parse_expr_all, parse_pattern, _parse_all__withitems, parse_binop))
 
     if groupdict['not']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (parse_expr_all, parse_withitem, parse_unaryop, parse_cmpop))
+                                   (parse_expr_all, _parse_all__withitems, parse_unaryop, parse_cmpop))
 
     if groupdict['tilde']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (parse_expr_all, parse_withitem, parse_unaryop))
+                                   (parse_expr_all, _parse_all__withitems, parse_unaryop))
 
     if groupdict['colon']:
         return _parse_all_multiple(src, parse_params, False, (parse_expr_all,))
 
     if groupdict['starstar']:
         return _parse_all_multiple(src, parse_params, False, (parse_arguments, parse_arguments_lambda,
-                                                              _parse_all_type_params, parse_operator))
+                                                              _parse_all__type_params, parse_operator))
 
     if groupdict['plus']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (parse_expr_all, parse_withitem, parse_binop))
+                                   (parse_expr_all, _parse_all__withitems, parse_binop))
 
     if groupdict['cmpop_w']:
         return parse_cmpop(src, parse_params)

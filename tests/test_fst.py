@@ -153,7 +153,10 @@ PARSE_TESTS = [
     ('all',               px.parse_arguments,         arguments,                '**a: dict'),
     ('all',               px.parse_pattern,           MatchSequence,            '*a, b as c'),
     ('all',               px.parse_comprehension,     comprehension,            'for i in range(5) if i'),
+    ('all',               px.parse__comprehensions,   _comprehensions,          'for j in k if j async for i in j if i'),
     ('all',               px.parse_withitem,          withitem,                 'f(**a) as b'),
+    ('all',               px.parse__withitems,        _withitems,               'f(**a) as b,'),
+    ('all',               px.parse__withitems,        _withitems,               'f(**a) as b, c as d'),
     ('all',               px.parse_operator,          Mult,                     '*'),
     ('all',               px.parse_augop,             Mult,                     '*='),
     ('all',               px.parse_cmpop,             Gt,                       '>'),
@@ -734,6 +737,8 @@ if PYGE13:
     PARSE_TESTS.extend(PARSE_TESTS_13 := [
         ('all',               px.parse_type_param,        ParamSpec,              '**a = {T: int, U: str}'),
         ('all',               px.parse_type_param,        TypeVarTuple,           '*a = (int, str)'),
+        ('all',               px.parse__type_params,      _type_params,           '**a = {T: int, U: str},'),
+        ('all',               px.parse__type_params,      _type_params,           '**a = {T: int, U: str}, *b'),
 
         ('type_param',        px.parse_type_param,        TypeVar,                'a: int = int'),
         ('type_param',        px.parse_type_param,        ParamSpec,              '**a = {T: int, U: str}'),
@@ -965,7 +970,8 @@ class TestFST(unittest.TestCase):
                 # reparse
 
                 if (src != '*=' and  # augassign is ambiguous for unparse
-                    (src or func not in (px.parse__aliases, px.parse__Import_names, px.parse__ImportFrom_names))  # these unparse to '()' which can't be reparsed as these
+                    (src or func not in (px.parse__aliases, px.parse__Import_names, px.parse__ImportFrom_names)) and  # these unparse to '()' which can't be reparsed as these
+                    not (src.endswith(',') and func in (px.parse__withitems, px.parse__type_params))  # special case of singletons list containers that can with a trailing comma, which unparse from AST without the comma so reparse to a single element of the type
                 ):
                     test = 'reparse'
                     unp  = ((s := px.unparse(ast)) and s.lstrip()) or src  # 'lstrip' because comprehension has leading space, 'or src' because unparse of operators gives nothing

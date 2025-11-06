@@ -112,6 +112,7 @@ from .asttypes import (
     _match_cases,
     _Assign_targets,
     _comprehensions,
+    _comprehension_ifs,
     _aliases,
     _withitems,
     _type_params,
@@ -200,6 +201,7 @@ _DEFAULT_AST_FIELD = {cls: field for field, classes in [  # builds to {Module: '
     ('items',        (_withitems,)),
     ('values',       (BoolOp, JoinedStr, TemplateStr)),
     ('generators',   (_comprehensions,)),
+    ('ifs',          (_comprehension_ifs,)),
     ('args',         (Call,)),  # potential conflict of default body with put to empty 'set()'
 
     # special cases, field names here only for checks to succeed, otherwise all handled programatically
@@ -4507,7 +4509,6 @@ class FST:
         _is_atom,
         _is_enclosed_or_line,
         _is_enclosed_in_parents,
-        _loc_maybe_key,
         _get_parse_mode,
         _get_indent,
         _get_indentable_lns,
@@ -4530,6 +4531,7 @@ class FST:
     from .fst_misc import (
         _repr_tail,
         _dump,
+        _loc_maybe_key,
 
         _is_parenthesized_tuple,
         _is_delimited_matchseq,
