@@ -87,6 +87,7 @@ from .parsex import (
     parse_cmpop,
     parse_comprehension,
     parse__comprehensions,
+    parse__comprehension_ifs,
     parse_arguments,
     parse_arguments_lambda,
     parse_arg,
@@ -126,6 +127,7 @@ __all__ = [
     'code_as_cmpop',
     'code_as_comprehension',
     'code_as__comprehensions',
+    'code_as__comprehension_ifs',
     'code_as_arguments',
     'code_as_arguments_lambda',
     'code_as_arg',
@@ -563,6 +565,12 @@ def code_as__comprehensions(code: Code, parse_params: Mapping[str, Any] = {}, *,
     """Convert `code` to a `_comprehensions` of `comprehensions` SPECIAL SLICE if possible."""
 
     return _code_as(code, _comprehensions, parse_params, parse__comprehensions, sanitize=sanitize)
+
+
+def code_as__comprehension_ifs(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+    """Convert `code` to a `_comprehension_ifs` of `if` prepended `expr`s SPECIAL SLICE if possible."""
+
+    return _code_as(code, _comprehension_ifs, parse_params, parse__comprehension_ifs, sanitize=sanitize)
 
 
 def code_as_arguments(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:

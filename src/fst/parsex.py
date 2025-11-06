@@ -130,7 +130,7 @@ __all__ = [
     'parse_cmpop',
     'parse_comprehension',
     'parse__comprehensions',
-    # 'parse__comprehension_ifs',
+    'parse__comprehension_ifs',
     'parse_arguments',
     'parse_arguments_lambda',
     'parse_arg',
@@ -206,6 +206,7 @@ Mode = Literal[
     'cmpop',
     'comprehension',
     '_comprehensions',
+    '_comprehension_ifs',
     'arguments',
     'arguments_lambda',
     'arg',
@@ -264,6 +265,7 @@ Mode = Literal[
 - `'cmpop'`: Parse to a `cmpop` compare operator.
 - `'comprehension'`: Parse a single `comprehension` returned as itself. Same as passing `comprehension` type.
 - `'_comprehensions'`: Parse zero or more `comprehension`s returned in a `_comprehensions` SPECIAL SLICE.
+- `'_comprehension_ifs'`: Parse zero or more `comprehension` `ifs` returned in a `_comprehension_ifs` SPECIAL SLICE.
 - `'arguments'`: Parse as `arguments` for a `FunctionDef` or `AsyncFunctionDef` returned as itself. In this mode
     type annotations are allowed for the arguments. Same as passing `arguments` type.
 - `'arguments_lambda'`: Parse as `arguments` for a `Lambda` returned as itself. In this mode type annotations
@@ -344,6 +346,17 @@ def _unparse__comprehensions(ast: AST) -> str:
                            )[3:-1]
 
 
+def _unparse__comprehension_ifs(ast: AST) -> str:
+    return _fixing_unparse(ListComp(elt=Name(id='_', ctx=Load(), lineno=1, col_offset=0,
+                                             end_lineno=1, end_col_offset=0),
+                                    generators=[comprehension(target=Name(id='_', ctx=Store(), lineno=1, col_offset=0,
+                                                                          end_lineno=1, end_col_offset=0),
+                                                              iter=Name(id='_', ctx=Load(), lineno=1, col_offset=0,
+                                                                        end_lineno=1, end_col_offset=0),
+                                                              ifs=ast.ifs, is_async=0)]),
+                           )[14:-1]
+
+
 def _unparse__aliases(ast: AST) -> str:
     return _fixing_unparse(List(elts=ast.names, lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[1:-1]
 
@@ -357,44 +370,45 @@ def _unparse__type_params(ast: AST) -> str:
 
 
 _UNPARSE_FUNCS = {
-    Tuple:           _unparse_Tuple,
-    Invert:          lambda ast: '~',
-    Not:             lambda ast: 'not',
-    UAdd:            lambda ast: '+',
-    USub:            lambda ast: '-',
-    Add:             lambda ast: '+',
-    Sub:             lambda ast: '-',
-    Mult:            lambda ast: '*',
-    MatMult:         lambda ast: '@',
-    Div:             lambda ast: '/',
-    Mod:             lambda ast: '%',
-    LShift:          lambda ast: '<<',
-    RShift:          lambda ast: '>>',
-    BitOr:           lambda ast: '|',
-    BitXor:          lambda ast: '^',
-    BitAnd:          lambda ast: '&',
-    FloorDiv:        lambda ast: '//',
-    Pow:             lambda ast: '**',
-    Eq:              lambda ast: '==',
-    NotEq:           lambda ast: '!=',
-    Lt:              lambda ast: '<',
-    LtE:             lambda ast: '<=',
-    Gt:              lambda ast: '>',
-    GtE:             lambda ast: '>=',
-    Is:              lambda ast: 'is',
-    IsNot:           lambda ast: 'is not',
-    In:              lambda ast: 'in',
-    NotIn:           lambda ast: 'not in',
-    And:             lambda ast: 'and',
-    Or:              lambda ast: 'or',
-    comprehension:   lambda ast: _fixing_unparse(ast).lstrip(),  # strip prefix space from this
-    _ExceptHandlers: _unparse__ExceptHandlers,
-    _match_cases:    _unparse__match_cases,
-    _Assign_targets: _unparse__Assign_targets,
-    _comprehensions: _unparse__comprehensions,
-    _aliases:        _unparse__aliases,
-    _withitems:      _unparse__withitems,
-    _type_params:    _unparse__type_params,
+    Tuple:              _unparse_Tuple,
+    Invert:             lambda ast: '~',
+    Not:                lambda ast: 'not',
+    UAdd:               lambda ast: '+',
+    USub:               lambda ast: '-',
+    Add:                lambda ast: '+',
+    Sub:                lambda ast: '-',
+    Mult:               lambda ast: '*',
+    MatMult:            lambda ast: '@',
+    Div:                lambda ast: '/',
+    Mod:                lambda ast: '%',
+    LShift:             lambda ast: '<<',
+    RShift:             lambda ast: '>>',
+    BitOr:              lambda ast: '|',
+    BitXor:             lambda ast: '^',
+    BitAnd:             lambda ast: '&',
+    FloorDiv:           lambda ast: '//',
+    Pow:                lambda ast: '**',
+    Eq:                 lambda ast: '==',
+    NotEq:              lambda ast: '!=',
+    Lt:                 lambda ast: '<',
+    LtE:                lambda ast: '<=',
+    Gt:                 lambda ast: '>',
+    GtE:                lambda ast: '>=',
+    Is:                 lambda ast: 'is',
+    IsNot:              lambda ast: 'is not',
+    In:                 lambda ast: 'in',
+    NotIn:              lambda ast: 'not in',
+    And:                lambda ast: 'and',
+    Or:                 lambda ast: 'or',
+    comprehension:      lambda ast: _fixing_unparse(ast).lstrip(),  # strip prefix space from this
+    _ExceptHandlers:    _unparse__ExceptHandlers,
+    _match_cases:       _unparse__match_cases,
+    _Assign_targets:    _unparse__Assign_targets,
+    _comprehensions:    _unparse__comprehensions,
+    _comprehension_ifs: _unparse__comprehension_ifs,
+    _aliases:           _unparse__aliases,
+    _withitems:         _unparse__withitems,
+    _type_params:       _unparse__type_params,
 }
 
 
@@ -622,7 +636,7 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         return _parse_all_multiple(src, parse_params, not first.group(1), (parse_expr_all,))
 
     if groupdict['if']:
-        return reduce_ast(parse_stmts(src, parse_params), True)
+        return _parse_all_multiple(src, parse_params, True, (parse__comprehension_ifs,))
 
     if groupdict['except']:
         return reduce_ast(parse__ExceptHandlers(src, parse_params), True)
@@ -1132,14 +1146,31 @@ def parse_comprehension(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse__comprehensions(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to a `comprehension`, e.g. "async for i in something() if i"."""
+    """Parse zero or more `comprehension`s, returned as a `_comprehensions` SPECIAL SLICE."""
 
     ast = _ast_parse1(f'[_ for _ in _\n{src}\n]', parse_params).value
 
     if not isinstance(ast, ListComp):
-        raise ParseError('expecting comprehension')
+        raise ParseError('expecting comprehensions')
+
+    if ast.generators[0].ifs:
+        raise ParseError('expecting comprehensions, got comprehension ifs')
 
     ast = _comprehensions(generators=ast.generators[1:], **_astloc_from_src(src, 2))
+
+    return _offset_linenos(ast, -1)
+
+
+def parse__comprehension_ifs(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse zero or more `comprehension` `if`s (including the `if`), returned as a `_comprehension_ifs` SPECIAL
+    SLICE."""
+
+    ast = _ast_parse1(f'[_ for _ in _\n{src}\n]', parse_params).value
+
+    if not isinstance(ast, ListComp) or len(ast.generators) != 1:
+        raise ParseError('expecting comprehension ifs')
+
+    ast = _comprehension_ifs(ifs=ast.generators[0].ifs, **_astloc_from_src(src, 2))
 
     return _offset_linenos(ast, -1)
 
@@ -1344,7 +1375,7 @@ def parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse__withitems(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to zero or more `withitem`s, returned as a `_withitems`."""
+    """Parse to zero or more `withitem`s, returned as a `_withitems` SPECIAL SLICE."""
 
     items = _ast_parse1(f'with (\n{src}\n): pass', parse_params).items
 
@@ -1486,6 +1517,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'cmpop':                  parse_cmpop,
     'comprehension':          parse_comprehension,
     '_comprehensions':        parse__comprehensions,
+    '_comprehension_ifs':     parse__comprehension_ifs,
     'arguments':              parse_arguments,
     'arguments_lambda':       parse_arguments_lambda,
     'arg':                    parse_arg,
@@ -1530,6 +1562,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     _match_cases:             parse__match_cases,
     _Assign_targets:          parse__Assign_targets,
     _comprehensions:          parse__comprehensions,
+    _comprehension_ifs:       parse__comprehension_ifs,
     _aliases:                 parse__aliases,
     _withitems:               parse__withitems,
     _type_params:             parse__type_params,
