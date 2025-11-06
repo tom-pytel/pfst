@@ -25,8 +25,8 @@ from fst.view import fstview
 from fst.code import (
     code_as_all,
     code_as_stmts,
-    code_as_ExceptHandlers,
-    code_as_match_cases,
+    code_as__ExceptHandlers,
+    code_as__match_cases,
     code_as_expr,
     code_as_expr_slice,
     code_as_boolop,
@@ -42,7 +42,7 @@ from fst.code import (
     code_as_alias,
     code_as_Import_name,
     code_as_ImportFrom_name,
-    code_as_ImportFrom_names,
+    code_as__ImportFrom_names,
     code_as_withitem,
     code_as_pattern,
     code_as_type_param,
@@ -1152,26 +1152,26 @@ except Exception:
 
         g = f.body[0].get_slice(field='handlers')
 
-        h = code_as_ExceptHandlers(g.copy())
+        h = code_as__ExceptHandlers(g.copy())
         self.assertEqual(h.src, g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
-        h = code_as_ExceptHandlers(g.src)
+        h = code_as__ExceptHandlers(g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
         g0 = g.handlers[0].copy()
-        h = code_as_ExceptHandlers(g0.a)
+        h = code_as__ExceptHandlers(g0.a)
         self.assertEqual(ast_unparse(g0.a), h.src)
         self.assertTrue(compare_asts(h.handlers[0].a, g0.a, locs=False, raise_=True))
 
         g1 = g.handlers[1].copy()
-        h = code_as_ExceptHandlers(g1.a)
+        h = code_as__ExceptHandlers(g1.a)
         self.assertEqual(ast_unparse(g1.a), h.src)
         self.assertTrue(compare_asts(h.handlers[0].a, g1.a, locs=False, raise_=True))
 
-        self.assertRaises(ValueError, code_as_ExceptHandlers, f.body[0].handlers[0])
+        self.assertRaises(ValueError, code_as__ExceptHandlers, f.body[0].handlers[0])
 
-        self.assertEqual(0, len(code_as_ExceptHandlers('').handlers))  # make sure we can parse zero ExceptHandlers
+        self.assertEqual(0, len(code_as__ExceptHandlers('').handlers))  # make sure we can parse zero ExceptHandlers
 
         # match_cases
 
@@ -1198,26 +1198,26 @@ match a:
 
         g = f.body[0].get_slice(field='cases')
 
-        h = code_as_match_cases(g.copy())
+        h = code_as__match_cases(g.copy())
         self.assertEqual(h.src, g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
-        h = code_as_match_cases(g.src)
+        h = code_as__match_cases(g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
         g0 = g.cases[0].copy()
-        h = code_as_match_cases(g0.a)
+        h = code_as__match_cases(g0.a)
         self.assertEqual(ast_unparse(g0.a), h.src)
         self.assertTrue(compare_asts(h.cases[0].a, g0.a, locs=False, raise_=True))
 
         g1 = g.cases[1].copy()
-        h = code_as_match_cases(g1.a)
+        h = code_as__match_cases(g1.a)
         self.assertEqual(ast_unparse(g1.a), h.src)
         self.assertTrue(compare_asts(h.cases[0].a, g1.a, locs=False, raise_=True))
 
-        self.assertRaises(ValueError, code_as_match_cases, f.body[0].cases[0])
+        self.assertRaises(ValueError, code_as__match_cases, f.body[0].cases[0])
 
-        self.assertEqual(0, len(code_as_match_cases('').cases))  # make sure we can parse zero match_cases
+        self.assertEqual(0, len(code_as__match_cases('').cases))  # make sure we can parse zero match_cases
 
         # boolop
 
@@ -1395,24 +1395,24 @@ except Exception:
 
         g = f.body[0].get_slice(field='handlers')
 
-        h = code_as_ExceptHandlers(g.copy())
+        h = code_as__ExceptHandlers(g.copy())
         self.assertEqual(h.src, g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
-        h = code_as_ExceptHandlers(g.src)
+        h = code_as__ExceptHandlers(g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
         g0 = g.handlers[0].copy()
-        h = code_as_ExceptHandlers(g0.a)
+        h = code_as__ExceptHandlers(g0.a)
         self.assertEqual(ast_unparse(g0.a), h.src)
         self.assertTrue(compare_asts(h.handlers[0].a, g0.a, locs=False, raise_=True))
 
         g1 = g.handlers[1].copy()
-        h = code_as_ExceptHandlers(g1.a)
+        h = code_as__ExceptHandlers(g1.a)
         self.assertEqual(ast_unparse(g1.a), h.src)
         self.assertTrue(compare_asts(h.handlers[0].a, g1.a, locs=False, raise_=True))
 
-        self.assertRaises(ValueError, code_as_ExceptHandlers, f.body[0].handlers[0])
+        self.assertRaises(ValueError, code_as__ExceptHandlers, f.body[0].handlers[0])
 
     def test_code_as_match_cases(self):
         f = FST(r'''
@@ -1438,30 +1438,30 @@ match a:
 
         g = f.body[0].get_slice(field='cases')
 
-        h = code_as_match_cases(g.copy())
+        h = code_as__match_cases(g.copy())
         self.assertEqual(h.src, g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
-        h = code_as_match_cases(g.src)
+        h = code_as__match_cases(g.src)
         self.assertTrue(compare_asts(h.a, g.a, locs=True, raise_=True))
 
         g0 = g.cases[0].copy()
-        h = code_as_match_cases(g0.a)
+        h = code_as__match_cases(g0.a)
         self.assertEqual(ast_unparse(g0.a), h.src)
         self.assertTrue(compare_asts(h.cases[0].a, g0.a, locs=False, raise_=True))
 
         g1 = g.cases[1].copy()
-        h = code_as_match_cases(g1.a)
+        h = code_as__match_cases(g1.a)
         self.assertEqual(ast_unparse(g1.a), h.src)
         self.assertTrue(compare_asts(h.cases[0].a, g1.a, locs=False, raise_=True))
 
-        self.assertRaises(ValueError, code_as_match_cases, f.body[0].cases[0])
+        self.assertRaises(ValueError, code_as__match_cases, f.body[0].cases[0])
 
         # special 'case' non-keyword
 
-        self.assertIsInstance(code_as_match_cases('case 1: pass').cases[0].a, match_case)
-        self.assertRaises(SyntaxError, code_as_match_cases, 'case = 1')
-        self.assertRaises(SyntaxError, code_as_match_cases, 'case.b = 1')
+        self.assertIsInstance(code_as__match_cases('case 1: pass').cases[0].a, match_case)
+        self.assertRaises(SyntaxError, code_as__match_cases, 'case = 1')
+        self.assertRaises(SyntaxError, code_as__match_cases, 'case.b = 1')
 
     def test_code_as_sanitize(self):
         CODE_ASES = [
@@ -1608,9 +1608,9 @@ match a:
     def test_code_as_special(self):
         # aliases slice multiple stars
 
-        self.assertRaises(ParseError, code_as_ImportFrom_names, FST('*', '_aliases').names.append('*').fst)
-        self.assertRaises(ParseError, code_as_ImportFrom_names, FST('a', '_aliases').names.append('*').fst)
-        self.assertEqual('*', code_as_ImportFrom_names(FST('*', '_aliases')).src)
+        self.assertRaises(ParseError, code_as__ImportFrom_names, FST('*', '_aliases').names.append('*').fst)
+        self.assertRaises(ParseError, code_as__ImportFrom_names, FST('a', '_aliases').names.append('*').fst)
+        self.assertEqual('*', code_as__ImportFrom_names(FST('*', '_aliases')).src)
 
     def test_loc_match_case(self):
         # make sure it includes trailing semicolon

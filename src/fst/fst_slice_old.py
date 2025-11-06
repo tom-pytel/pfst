@@ -31,7 +31,7 @@ from .asttypes import (
 
 from .astutil import copy_ast
 from .common import astfield, fstloc, next_find, prev_find
-from .code import Code, code_as_stmts, code_as_ExceptHandlers, code_as_match_cases
+from .code import Code, code_as_stmts, code_as__ExceptHandlers, code_as__match_cases
 from .traverse import prev_bound, next_bound_step, prev_bound_step
 from .fst_misc import get_trivia_params, get_option_overridable
 
@@ -1059,11 +1059,11 @@ def _put_slice_stmtish_old(
         if field == 'handlers':
             is_trystar = isinstance(ast, TryStar) or (body and isinstance(ast, _ExceptHandlers) and
                                                       body[0].f._is_except_star())
-            put_fst = code_as_ExceptHandlers(code, self.root.parse_params, is_trystar=is_trystar)
+            put_fst = code_as__ExceptHandlers(code, self.root.parse_params, is_trystar=is_trystar)
             put_body = put_fst.a.handlers
 
         elif field == 'cases':
-            put_fst = code_as_match_cases(code, self.root.parse_params)
+            put_fst = code_as__match_cases(code, self.root.parse_params)
             put_body = put_fst.a.cases
 
         else:  # 'body', 'orelse', 'finalbody'

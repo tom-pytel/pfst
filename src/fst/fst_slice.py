@@ -96,20 +96,20 @@ from .code import (
     code_as_expr,
     code_as_expr_all,
     code_as_expr_arglike,
-    code_as_Assign_targets,
+    code_as__Assign_targets,
     code_as_comprehension,
-    code_as_comprehensions,
+    code_as__comprehensions,
     code_as_alias,
-    code_as_aliases,
+    code_as__aliases,
     code_as_Import_name,
-    code_as_Import_names,
+    code_as__Import_names,
     code_as_ImportFrom_name,
-    code_as_ImportFrom_names,
+    code_as__ImportFrom_names,
     code_as_withitem,
-    code_as_withitems,
+    code_as__withitems,
     code_as_pattern,
     code_as_type_param,
-    code_as_type_params,
+    code_as__type_params,
     code_as__expr_arglikes,
 )
 
@@ -1505,7 +1505,7 @@ def _code_to_slice__Assign_targets(
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
     else:
-        fst_ = code_as_Assign_targets(code, self.root.parse_params, sanitize=False)
+        fst_ = code_as__Assign_targets(code, self.root.parse_params, sanitize=False)
 
         if not fst_.a.targets:  # put empty sequence is same as delete
             return None
@@ -1526,7 +1526,7 @@ def _code_to_slice__comprehensions(
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
-    fst_ = code_as_comprehensions(code, self.root.parse_params, sanitize=False)
+    fst_ = code_as__comprehensions(code, self.root.parse_params, sanitize=False)
 
     if not fst_.a.generators:  # put empty sequence is same as delete
         return None
@@ -1540,7 +1540,7 @@ def _code_to_slice__aliases(
     one: bool,
     options: Mapping[str, Any],
     code_as_one: Callable = code_as_alias,
-    code_as_slice: Callable = code_as_aliases,
+    code_as_slice: Callable = code_as__aliases,
 ) -> fst.FST | None:
     if code is None:
         return None
@@ -1573,7 +1573,7 @@ def _code_to_slice__withitems(
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
-    fst_ = code_as_withitems(code, self.root.parse_params, sanitize=False)
+    fst_ = code_as__withitems(code, self.root.parse_params, sanitize=False)
 
     if not fst_.a.items:  # put empty sequence is same as delete
         return None
@@ -1717,7 +1717,7 @@ def _code_to_slice__type_params(
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
-    fst_ = code_as_type_params(code, self.root.parse_params, sanitize=False)
+    fst_ = code_as__type_params(code, self.root.parse_params, sanitize=False)
 
     if not fst_.a.type_params:  # put empty sequence is same as delete
         return None
@@ -2173,7 +2173,7 @@ def _put_slice_Import_names(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice__aliases(self, code, one, options, code_as_Import_name, code_as_Import_names)
+    fst_ = _code_to_slice__aliases(self, code, one, options, code_as_Import_name, code_as__Import_names)
     len_body = len(body := (ast := self.a).names)
     start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
@@ -2218,7 +2218,7 @@ def _put_slice_ImportFrom_names(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice__aliases(self, code, one, options, code_as_ImportFrom_name, code_as_ImportFrom_names)
+    fst_ = _code_to_slice__aliases(self, code, one, options, code_as_ImportFrom_name, code_as__ImportFrom_names)
     len_body = len(body := (ast := self.a).names)
     start, stop = _fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
