@@ -1627,7 +1627,12 @@ r'''Name 'iter' Load - ROOT 0,0..0,4'''),
 
 (187, '', 0, False, 'ifs', {}, (comprehension,
 r'''for val in iter if not val'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
+r'''for val in iter''', r'''
+comprehension - ROOT 0,0..0,15
+  .target Name 'val' Store - 0,4..0,7
+  .iter Name 'iter' Load - 0,11..0,15
+  .is_async 0
+''',
 r'''not val''', r'''
 UnaryOp - ROOT 0,0..0,7
   .op Not - 0,0..0,3

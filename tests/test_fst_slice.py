@@ -1909,6 +1909,17 @@ class cls:
             '''.strip(), f.put_slice('def f(): g', 1, 1).root.src)
         f.verify()
 
+        # last comprehension joining alnums
+
+        self.assertEqual('[_ for _ in "a" if x for _ in _]', (f := FST('[_ for _ in "a"for _ in _]')).generators[0].put_slice('if x', 'ifs').root.src)
+        f.verify()
+
+        self.assertEqual('[_ for _ in _ if x for _ in _]', (f := FST('[_ for _ in _ if "a"for _ in _]')).generators[0].put_slice('if x', 'ifs').root.src)
+        f.verify()
+
+        self.assertEqual('[_ for _ in _ if "a" if x for _ in _]', (f := FST('[_ for _ in _ if "a"for _ in _]')).generators[0].put_slice('if x', 1, 1, 'ifs').root.src)
+        f.verify()
+
     def test_unparenthesized_tuple_with_line_continuations(self):
         # backslashes are annoying to include in the regenerable test cases
 
@@ -4530,8 +4541,14 @@ class cls:
 
         # comprehensions
 
-        self.assertEqual('for i in i', g := (f := FST('[_ for i in i for j in j for k in k]').get_slice(0, 2, 'generators')).get_slice(0, 1, 'generators').src)
+        self.assertEqual('for i in i', g := (f := FST('[_ for i in i for j in j for k in k]').get_slice(0, 2, 'generators')).get_slice(0, 1).src)
         self.assertEqual('for i in i for j in j for i in i', f.put_slice(g, 'end', 'generators').src)
+        f.verify()
+
+        # comprehension_ifs
+
+        self.assertEqual('if i', g := (f := FST('for _ in _ if i if j if k').get_slice(0, 2, 'ifs')).get_slice(0, 1).src)
+        self.assertEqual('if i if j if i', f.put_slice(g, 'end', 'ifs').src)
         f.verify()
 
         # aliases

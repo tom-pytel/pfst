@@ -294,7 +294,22 @@ _comprehensions - ROOT 0,0..0,37
      .is_async 1
 '''),
 
-(24, 'parse_withitem', 0, 0, 'withitem', {}, ('all',
+(24, 'parse__comprehension_ifs', 0, 0, '_comprehension_ifs', {}, ('all',
+r'''if u'''), r'''
+_comprehension_ifs - ROOT 0,0..0,4
+  .ifs[1]
+   0] Name 'u' Load - 0,3..0,4
+'''),
+
+(25, 'parse__comprehension_ifs', 0, 0, '_comprehension_ifs', {}, ('all',
+r'''if u if v'''), r'''
+_comprehension_ifs - ROOT 0,0..0,9
+  .ifs[2]
+   0] Name 'u' Load - 0,3..0,4
+   1] Name 'v' Load - 0,8..0,9
+'''),
+
+(26, 'parse_withitem', 0, 0, 'withitem', {}, ('all',
 r'''f(**a) as b'''), r'''
 withitem - ROOT 0,0..0,11
   .context_expr Call - 0,0..0,6
@@ -305,7 +320,7 @@ withitem - ROOT 0,0..0,11
   .optional_vars Name 'b' Store - 0,10..0,11
 '''),
 
-(25, 'parse__withitems', 0, 0, '_withitems', {}, ('all',
+(27, 'parse__withitems', 0, 0, '_withitems', {}, ('all',
 r'''f(**a) as b,'''), r'''
 _withitems - ROOT 0,0..0,12
   .items[1]
@@ -318,7 +333,7 @@ _withitems - ROOT 0,0..0,12
      .optional_vars Name 'b' Store - 0,10..0,11
 '''),
 
-(26, 'parse__withitems', 0, 0, '_withitems', {}, ('all',
+(28, 'parse__withitems', 0, 0, '_withitems', {}, ('all',
 r'''f(**a) as b, c as d'''), r'''
 _withitems - ROOT 0,0..0,19
   .items[2]
@@ -334,27 +349,27 @@ _withitems - ROOT 0,0..0,19
      .optional_vars Name 'd' Store - 0,18..0,19
 '''),
 
-(27, 'parse_operator', 0, 0, 'Mult', {}, ('all',
+(29, 'parse_operator', 0, 0, 'Mult', {}, ('all',
 r'''*'''),
 r'''Mult - ROOT 0,0..0,1'''),
 
-(28, 'parse_augop', 0, 0, 'Mult', {}, ('all',
+(30, 'parse_augop', 0, 0, 'Mult', {}, ('all',
 r'''*='''),
 r'''Mult - ROOT 0,0..0,2'''),
 
-(29, 'parse_cmpop', 0, 0, 'Gt', {}, ('all',
+(31, 'parse_cmpop', 0, 0, 'Gt', {}, ('all',
 r'''>'''),
 r'''Gt - ROOT 0,0..0,1'''),
 
-(30, 'parse_boolop', 0, 0, 'And', {}, ('all',
+(32, 'parse_boolop', 0, 0, 'And', {}, ('all',
 r'''and'''),
 r'''And - ROOT 0,0..0,3'''),
 
-(31, 'parse_unaryop', 0, 0, 'Invert', {}, ('all',
+(33, 'parse_unaryop', 0, 0, 'Invert', {}, ('all',
 r'''~'''),
 r'''Invert - ROOT 0,0..0,1'''),
 
-(32, 'parse_stmts', 0, 0, 'Module', {}, ('strict', r'''
+(34, 'parse_stmts', 0, 0, 'Module', {}, ('strict', r'''
 i: int = 1
 j
 '''), r'''
@@ -369,19 +384,19 @@ Module - ROOT 0,0..1,1
      .value Name 'j' Load - 1,0..1,1
 '''),
 
-(33, 'parse__ExceptHandlers', 0, 0, 'SyntaxError', {}, ('strict', r'''
+(35, 'parse__ExceptHandlers', 0, 0, 'SyntaxError', {}, ('strict', r'''
 except Exception: pass
 except: pass
 '''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(34, 'parse__match_cases', 0, 0, 'SyntaxError', {}, ('strict', r'''
+(36, 'parse__match_cases', 0, 0, 'SyntaxError', {}, ('strict', r'''
 case None: pass
 case 1: pass
 '''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(35, 'parse_stmt', 0, 0, 'AnnAssign', {}, ('strict',
+(37, 'parse_stmt', 0, 0, 'AnnAssign', {}, ('strict',
 r'''i: int = 1'''), r'''
 AnnAssign - ROOT 0,0..0,10
   .target Name 'i' Store - 0,0..0,1
@@ -390,15 +405,15 @@ AnnAssign - ROOT 0,0..0,10
   .simple 1
 '''),
 
-(36, 'parse_ExceptHandler', 0, 0, 'SyntaxError', {}, ('strict',
+(38, 'parse_ExceptHandler', 0, 0, 'SyntaxError', {}, ('strict',
 r'''except: pass'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(37, 'parse_match_case', 0, 0, 'SyntaxError', {}, ('strict',
+(39, 'parse_match_case', 0, 0, 'SyntaxError', {}, ('strict',
 r'''case None: pass'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(38, 'parse_stmts', 0, 0, 'Module', {}, ('strict', r'''
+(40, 'parse_stmts', 0, 0, 'Module', {}, ('strict', r'''
 i: int = 1
 j
 '''), r'''
@@ -413,7 +428,7 @@ Module - ROOT 0,0..1,1
      .value Name 'j' Load - 1,0..1,1
 '''),
 
-(39, 'parse_stmt', 0, 0, 'AnnAssign', {}, ('strict',
+(41, 'parse_stmt', 0, 0, 'AnnAssign', {}, ('strict',
 r'''i: int = 1'''), r'''
 AnnAssign - ROOT 0,0..0,10
   .target Name 'i' Store - 0,0..0,1
@@ -422,42 +437,42 @@ AnnAssign - ROOT 0,0..0,10
   .simple 1
 '''),
 
-(40, 'parse__ExceptHandlers', 0, 0, 'SyntaxError', {}, ('strict', r'''
+(42, 'parse__ExceptHandlers', 0, 0, 'SyntaxError', {}, ('strict', r'''
 except Exception: pass
 except: pass
 '''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(41, 'parse_ExceptHandler', 0, 0, 'SyntaxError', {}, ('strict',
+(43, 'parse_ExceptHandler', 0, 0, 'SyntaxError', {}, ('strict',
 r'''except: pass'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(42, 'parse__match_cases', 0, 0, 'SyntaxError', {}, ('strict', r'''
+(44, 'parse__match_cases', 0, 0, 'SyntaxError', {}, ('strict', r'''
 case None: pass
 case 1: pass
 '''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(43, 'parse_match_case', 0, 0, 'SyntaxError', {}, ('strict',
+(45, 'parse_match_case', 0, 0, 'SyntaxError', {}, ('strict',
 r'''case None: pass'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(44, 'parse_expr', 0, 0, 'Name', {}, ('strict',
+(46, 'parse_expr', 0, 0, 'Name', {}, ('strict',
 r'''j'''),
 r'''Name 'j' Load - ROOT 0,0..0,1'''),
 
-(45, 'parse_expr', 0, 0, 'Starred', {}, ('strict',
+(47, 'parse_expr', 0, 0, 'Starred', {}, ('strict',
 r'''*s'''), r'''
 Starred - ROOT 0,0..0,2
   .value Name 's' Load - 0,1..0,2
   .ctx Load
 '''),
 
-(46, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
+(48, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
 r'''*not a'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(47, 'parse_stmt', 0, 0, 'AnnAssign', {}, ('strict',
+(49, 'parse_stmt', 0, 0, 'AnnAssign', {}, ('strict',
 r'''a:b'''), r'''
 AnnAssign - ROOT 0,0..0,3
   .target Name 'a' Store - 0,0..0,1
@@ -465,55 +480,55 @@ AnnAssign - ROOT 0,0..0,3
   .simple 1
 '''),
 
-(48, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
+(50, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
 r'''a:b:c'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(49, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
+(51, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
 r'''1 as a'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(50, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
+(52, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
 r'''a: list[str], /, b: int = 1, *c, d=100, **e'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(51, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
+(53, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
 r'''a, /, b, *c, d=100, **e'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(52, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
+(54, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
 r'''*not a'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(53, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
+(55, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
 r'''for i in range(5) if i'''),
 r'''**SyntaxError("expected 'else' after 'if' expression")**'''),
 
-(54, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
+(56, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
 r'''f(**a) as b'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(55, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
+(57, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
 r'''*'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(56, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
+(58, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
 r'''*='''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(57, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
+(59, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
 r'''>'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(58, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
+(60, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
 r'''and'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(59, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
+(61, 'parse_all', 0, 0, 'SyntaxError', {}, ('strict',
 r'''~'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(60, 'parse_Module', 0, 0, 'Module', {}, ('exec',
+(62, 'parse_Module', 0, 0, 'Module', {}, ('exec',
 r'''i: int = 1'''), r'''
 Module - ROOT 0,0..0,10
   .body[1]
@@ -524,13 +539,13 @@ Module - ROOT 0,0..0,10
      .simple 1
 '''),
 
-(61, 'parse_Expression', 0, 0, 'Expression', {}, ('eval',
+(63, 'parse_Expression', 0, 0, 'Expression', {}, ('eval',
 r'''None'''), r'''
 Expression - ROOT 0,0..0,4
   .body Constant None - 0,0..0,4
 '''),
 
-(62, 'parse_Interactive', 0, 0, 'Interactive', {}, ('single',
+(64, 'parse_Interactive', 0, 0, 'Interactive', {}, ('single',
 r'''i: int = 1'''), r'''
 Interactive - ROOT 0,0..0,10
   .body[1]
@@ -541,7 +556,7 @@ Interactive - ROOT 0,0..0,10
      .simple 1
 '''),
 
-(63, 'parse_stmts', 0, 0, 'Module', {}, ('stmts', r'''
+(65, 'parse_stmts', 0, 0, 'Module', {}, ('stmts', r'''
 i: int = 1
 j
 '''), r'''
@@ -556,13 +571,13 @@ Module - ROOT 0,0..1,1
      .value Name 'j' Load - 1,0..1,1
 '''),
 
-(64, 'parse_stmts', 0, 0, 'SyntaxError', {}, ('stmts', r'''
+(66, 'parse_stmts', 0, 0, 'SyntaxError', {}, ('stmts', r'''
 except Exception: pass
 except: pass
 '''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(65, 'parse_stmt', 0, 0, 'AnnAssign', {}, ('stmt',
+(67, 'parse_stmt', 0, 0, 'AnnAssign', {}, ('stmt',
 r'''i: int = 1'''), r'''
 AnnAssign - ROOT 0,0..0,10
   .target Name 'i' Store - 0,0..0,1
@@ -571,23 +586,23 @@ AnnAssign - ROOT 0,0..0,10
   .simple 1
 '''),
 
-(66, 'parse_stmt', 0, 0, 'Expr', {}, ('stmt',
+(68, 'parse_stmt', 0, 0, 'Expr', {}, ('stmt',
 r'''j'''), r'''
 Expr - ROOT 0,0..0,1
   .value Name 'j' Load - 0,0..0,1
 '''),
 
-(67, 'parse_stmt', 0, 0, 'ParseError', {}, ('stmt', r'''
+(69, 'parse_stmt', 0, 0, 'ParseError', {}, ('stmt', r'''
 i: int = 1
 j
 '''),
 r'''**ParseError('expecting single stmt')**'''),
 
-(68, 'parse_stmt', 0, 0, 'SyntaxError', {}, ('stmt',
+(70, 'parse_stmt', 0, 0, 'SyntaxError', {}, ('stmt',
 r'''except: pass'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(69, 'parse__ExceptHandlers', 0, 0, '_ExceptHandlers', {}, ('_ExceptHandlers', r'''
+(71, 'parse__ExceptHandlers', 0, 0, '_ExceptHandlers', {}, ('_ExceptHandlers', r'''
 except Exception: pass
 except: pass
 '''), r'''
@@ -602,50 +617,50 @@ _ExceptHandlers - ROOT 0,0..1,12
       0] Pass - 1,8..1,12
 '''),
 
-(70, 'parse__ExceptHandlers', 0, 0, 'IndentationError', {}, ('_ExceptHandlers', r'''
+(72, 'parse__ExceptHandlers', 0, 0, 'IndentationError', {}, ('_ExceptHandlers', r'''
  except Exception: pass
 except: pass
 '''),
 r'''**IndentationError('unexpected indent')**'''),
 
-(71, 'parse__ExceptHandlers', 0, 0, 'ParseError', {}, ('_ExceptHandlers', r'''
+(73, 'parse__ExceptHandlers', 0, 0, 'ParseError', {}, ('_ExceptHandlers', r'''
 except Exception: pass
 except: pass
 else: pass
 '''),
 r'''**ParseError("not expecting 'else' block")**'''),
 
-(72, 'parse__ExceptHandlers', 0, 0, 'ParseError', {}, ('_ExceptHandlers', r'''
+(74, 'parse__ExceptHandlers', 0, 0, 'ParseError', {}, ('_ExceptHandlers', r'''
 except Exception: pass
 except: pass
 finally: pass
 '''),
 r'''**ParseError("not expecting 'finally' block")**'''),
 
-(73, 'parse__ExceptHandlers', 0, 0, 'SyntaxError', {}, ('_ExceptHandlers', r'''
+(75, 'parse__ExceptHandlers', 0, 0, 'SyntaxError', {}, ('_ExceptHandlers', r'''
 i: int = 1
 j
 '''),
 r'''**SyntaxError("expected 'except' or 'finally' block")**'''),
 
-(74, 'parse_ExceptHandler', 0, 0, 'ExceptHandler', {}, ('ExceptHandler',
+(76, 'parse_ExceptHandler', 0, 0, 'ExceptHandler', {}, ('ExceptHandler',
 r'''except: pass'''), r'''
 ExceptHandler - ROOT 0,0..0,12
   .body[1]
    0] Pass - 0,8..0,12
 '''),
 
-(75, 'parse_ExceptHandler', 0, 0, 'ParseError', {}, ('ExceptHandler', r'''
+(77, 'parse_ExceptHandler', 0, 0, 'ParseError', {}, ('ExceptHandler', r'''
 except Exception: pass
 except: pass
 '''),
 r'''**ParseError('expecting single ExceptHandler')**'''),
 
-(76, 'parse_ExceptHandler', 0, 0, 'SyntaxError', {}, ('ExceptHandler',
+(78, 'parse_ExceptHandler', 0, 0, 'SyntaxError', {}, ('ExceptHandler',
 r'''i: int = 1'''),
 r'''**SyntaxError("expected 'except' or 'finally' block")**'''),
 
-(77, 'parse__match_cases', 0, 0, '_match_cases', {}, ('_match_cases', r'''
+(79, 'parse__match_cases', 0, 0, '_match_cases', {}, ('_match_cases', r'''
 case None: pass
 case 1: pass
 '''), r'''
@@ -662,17 +677,17 @@ _match_cases - ROOT 0,0..1,12
       0] Pass - 1,8..1,12
 '''),
 
-(78, 'parse__match_cases', 0, 0, 'IndentationError', {}, ('_match_cases', r'''
+(80, 'parse__match_cases', 0, 0, 'IndentationError', {}, ('_match_cases', r'''
  case None: pass
 case 1: pass
 '''),
 r'''**IndentationError('unexpected indent')**'''),
 
-(79, 'parse__match_cases', 0, 0, 'SyntaxError', {}, ('_match_cases',
+(81, 'parse__match_cases', 0, 0, 'SyntaxError', {}, ('_match_cases',
 r'''i: int = 1'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(80, 'parse_match_case', 0, 0, 'match_case', {}, ('match_case',
+(82, 'parse_match_case', 0, 0, 'match_case', {}, ('match_case',
 r'''case None: pass'''), r'''
 match_case - ROOT 0,0..0,15
   .pattern MatchSingleton None - 0,5..0,9
@@ -680,35 +695,35 @@ match_case - ROOT 0,0..0,15
    0] Pass - 0,11..0,15
 '''),
 
-(81, 'parse_match_case', 0, 0, 'ParseError', {}, ('match_case', r'''
+(83, 'parse_match_case', 0, 0, 'ParseError', {}, ('match_case', r'''
 case None: pass
 case 1: pass
 '''),
 r'''**ParseError('expecting single match_case')**'''),
 
-(82, 'parse_match_case', 0, 0, 'SyntaxError', {}, ('match_case',
+(84, 'parse_match_case', 0, 0, 'SyntaxError', {}, ('match_case',
 r'''i: int = 1'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(83, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
+(85, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r''''''),
 r'''_Assign_targets - ROOT 0,0..0,0'''),
 
-(84, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
+(86, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r'''a'''), r'''
 _Assign_targets - ROOT 0,0..0,1
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
 
-(85, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
+(87, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r'''a ='''), r'''
 _Assign_targets - ROOT 0,0..0,3
   .targets[1]
    0] Name 'a' Store - 0,0..0,1
 '''),
 
-(86, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
+(88, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r'''a = b'''), r'''
 _Assign_targets - ROOT 0,0..0,5
   .targets[2]
@@ -716,7 +731,7 @@ _Assign_targets - ROOT 0,0..0,5
    1] Name 'b' Store - 0,4..0,5
 '''),
 
-(87, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
+(89, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r'''a = b ='''), r'''
 _Assign_targets - ROOT 0,0..0,7
   .targets[2]
@@ -724,7 +739,7 @@ _Assign_targets - ROOT 0,0..0,7
    1] Name 'b' Store - 0,4..0,5
 '''),
 
-(88, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets', r'''
+(90, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets', r'''
 \
 a\
  = \
@@ -735,14 +750,14 @@ _Assign_targets - ROOT 0,0..3,0
    0] Name 'a' Store - 1,0..1,1
 '''),
 
-(89, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
+(91, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
 r''' a'''), r'''
 _Assign_targets - ROOT 0,0..0,2
   .targets[1]
    0] Name 'a' Store - 0,1..0,2
 '''),
 
-(90, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets', r'''
+(92, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets', r'''
 
 a
 '''), r'''
@@ -751,30 +766,30 @@ _Assign_targets - ROOT 0,0..1,1
    0] Name 'a' Store - 1,0..1,1
 '''),
 
-(91, 'parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets', r'''
+(93, 'parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets', r'''
 
 
 a
 '''),
 r'''**SyntaxError('invalid Assign targets slice')**'''),
 
-(92, 'parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets', r'''
+(94, 'parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets', r'''
 a
 =
 '''),
 r'''**SyntaxError('invalid Assign targets slice')**'''),
 
-(93, 'parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets',
+(95, 'parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets',
 r'''a =  # tail'''),
 r'''**SyntaxError('invalid Assign targets slice')**'''),
 
-(94, 'parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets', r'''
+(96, 'parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets', r'''
 # head
 a =
 '''),
 r'''**SyntaxError('invalid Assign targets slice')**'''),
 
-(95, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('all',
+(97, 'parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('all',
 r'''a = b ='''), r'''
 _Assign_targets - ROOT 0,0..0,7
   .targets[2]
@@ -782,18 +797,18 @@ _Assign_targets - ROOT 0,0..0,7
    1] Name 'b' Store - 0,4..0,5
 '''),
 
-(96, 'parse_expr', 0, 0, 'Name', {}, ('expr',
+(98, 'parse_expr', 0, 0, 'Name', {}, ('expr',
 r'''j'''),
 r'''Name 'j' Load - ROOT 0,0..0,1'''),
 
-(97, 'parse_expr', 0, 0, 'Starred', {}, ('expr',
+(99, 'parse_expr', 0, 0, 'Starred', {}, ('expr',
 r'''*s'''), r'''
 Starred - ROOT 0,0..0,2
   .value Name 's' Load - 0,1..0,2
   .ctx Load
 '''),
 
-(98, 'parse_expr', 0, 0, 'Starred', {}, ('expr', r'''
+(100, 'parse_expr', 0, 0, 'Starred', {}, ('expr', r'''
 *
 s
 '''), r'''
@@ -802,7 +817,7 @@ Starred - ROOT 0,0..1,1
   .ctx Load
 '''),
 
-(99, 'parse_expr', 0, 0, 'Tuple', {}, ('expr', r'''
+(101, 'parse_expr', 0, 0, 'Tuple', {}, ('expr', r'''
 *
 s,
 '''), r'''
@@ -814,7 +829,7 @@ Tuple - ROOT 0,0..1,2
   .ctx Load
 '''),
 
-(100, 'parse_expr', 0, 0, 'Tuple', {}, ('expr', r'''
+(102, 'parse_expr', 0, 0, 'Tuple', {}, ('expr', r'''
 1
 ,
 2
@@ -827,30 +842,30 @@ Tuple - ROOT 0,0..3,1
   .ctx Load
 '''),
 
-(101, 'parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
+(103, 'parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
 r'''*not a'''),
 r'''**SyntaxError('invalid expression')**'''),
 
-(102, 'parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
+(104, 'parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
 r'''a:b'''),
 r'''**SyntaxError('invalid expression')**'''),
 
-(103, 'parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
+(105, 'parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
 r'''a:b:c'''),
 r'''**SyntaxError('invalid expression')**'''),
 
-(104, 'parse_expr_all', 0, 0, 'Name', {}, ('expr_all',
+(106, 'parse_expr_all', 0, 0, 'Name', {}, ('expr_all',
 r'''j'''),
 r'''Name 'j' Load - ROOT 0,0..0,1'''),
 
-(105, 'parse_expr_all', 0, 0, 'Starred', {}, ('expr_all',
+(107, 'parse_expr_all', 0, 0, 'Starred', {}, ('expr_all',
 r'''*s'''), r'''
 Starred - ROOT 0,0..0,2
   .value Name 's' Load - 0,1..0,2
   .ctx Load
 '''),
 
-(106, 'parse_expr_all', 0, 0, 'Starred', {}, ('expr_all', r'''
+(108, 'parse_expr_all', 0, 0, 'Starred', {}, ('expr_all', r'''
 *
 s
 '''), r'''
@@ -859,7 +874,7 @@ Starred - ROOT 0,0..1,1
   .ctx Load
 '''),
 
-(107, 'parse_expr_all', 0, 0, 'Tuple', {}, ('expr_all', r'''
+(109, 'parse_expr_all', 0, 0, 'Tuple', {}, ('expr_all', r'''
 *
 s,
 '''), r'''
@@ -871,7 +886,7 @@ Tuple - ROOT 0,0..1,2
   .ctx Load
 '''),
 
-(108, 'parse_expr_all', 0, 0, 'Tuple', {}, ('expr_all', r'''
+(110, 'parse_expr_all', 0, 0, 'Tuple', {}, ('expr_all', r'''
 1
 ,
 2
@@ -884,14 +899,14 @@ Tuple - ROOT 0,0..3,1
   .ctx Load
 '''),
 
-(109, 'parse_expr_all', 0, 0, 'Slice', {}, ('expr_all',
+(111, 'parse_expr_all', 0, 0, 'Slice', {}, ('expr_all',
 r'''a:b'''), r'''
 Slice - ROOT 0,0..0,3
   .lower Name 'a' Load - 0,0..0,1
   .upper Name 'b' Load - 0,2..0,3
 '''),
 
-(110, 'parse_expr_all', 0, 0, 'Slice', {}, ('expr_all',
+(112, 'parse_expr_all', 0, 0, 'Slice', {}, ('expr_all',
 r'''a:b:c'''), r'''
 Slice - ROOT 0,0..0,5
   .lower Name 'a' Load - 0,0..0,1
@@ -899,7 +914,7 @@ Slice - ROOT 0,0..0,5
   .step Name 'c' Load - 0,4..0,5
 '''),
 
-(111, 'parse_expr_all', 0, 0, 'Tuple', {}, ('expr_all',
+(113, 'parse_expr_all', 0, 0, 'Tuple', {}, ('expr_all',
 r'''j, k'''), r'''
 Tuple - ROOT 0,0..0,4
   .elts[2]
@@ -908,7 +923,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-(112, 'parse_expr_all', 0, 0, 'Tuple', {}, ('expr_all',
+(114, 'parse_expr_all', 0, 0, 'Tuple', {}, ('expr_all',
 r'''a:b:c, x:y:z'''), r'''
 Tuple - ROOT 0,0..0,12
   .elts[2]
@@ -923,18 +938,18 @@ Tuple - ROOT 0,0..0,12
   .ctx Load
 '''),
 
-(113, 'parse_expr_arglike', 0, 0, 'Name', {}, ('expr_arglike',
+(115, 'parse_expr_arglike', 0, 0, 'Name', {}, ('expr_arglike',
 r'''j'''),
 r'''Name 'j' Load - ROOT 0,0..0,1'''),
 
-(114, 'parse_expr_arglike', 0, 0, 'Starred', {}, ('expr_arglike',
+(116, 'parse_expr_arglike', 0, 0, 'Starred', {}, ('expr_arglike',
 r'''*s'''), r'''
 Starred - ROOT 0,0..0,2
   .value Name 's' Load - 0,1..0,2
   .ctx Load
 '''),
 
-(115, 'parse_expr_arglike', 0, 0, 'Tuple', {}, ('expr_arglike',
+(117, 'parse_expr_arglike', 0, 0, 'Tuple', {}, ('expr_arglike',
 r'''*s,'''), r'''
 Tuple - ROOT 0,0..0,3
   .elts[1]
@@ -944,7 +959,7 @@ Tuple - ROOT 0,0..0,3
   .ctx Load
 '''),
 
-(116, 'parse_expr_arglike', 0, 0, 'Starred', {}, ('expr_arglike',
+(118, 'parse_expr_arglike', 0, 0, 'Starred', {}, ('expr_arglike',
 r'''*not a'''), r'''
 Starred - ROOT 0,0..0,6
   .value UnaryOp - 0,1..0,6
@@ -953,11 +968,11 @@ Starred - ROOT 0,0..0,6
   .ctx Load
 '''),
 
-(117, 'parse_expr_arglike', 0, 0, 'SyntaxError', {}, ('expr_arglike',
+(119, 'parse_expr_arglike', 0, 0, 'SyntaxError', {}, ('expr_arglike',
 r'''*not a,'''),
 r'''**SyntaxError('invalid argument-like expression')**'''),
 
-(118, 'parse_expr_arglike', 0, 0, 'Tuple', {}, ('expr_arglike',
+(120, 'parse_expr_arglike', 0, 0, 'Tuple', {}, ('expr_arglike',
 r'''j, k'''), r'''
 Tuple - ROOT 0,0..0,4
   .elts[2]
@@ -966,19 +981,19 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-(119, 'parse_expr_arglike', 0, 0, 'ParseError', {}, ('expr_arglike',
+(121, 'parse_expr_arglike', 0, 0, 'ParseError', {}, ('expr_arglike',
 r'''i=1'''),
 r'''**ParseError('expecting single argumnent-like expression')**'''),
 
-(120, 'parse_expr_arglike', 0, 0, 'SyntaxError', {}, ('expr_arglike',
+(122, 'parse_expr_arglike', 0, 0, 'SyntaxError', {}, ('expr_arglike',
 r'''a:b'''),
 r'''**SyntaxError('invalid argument-like expression')**'''),
 
-(121, 'parse_expr_arglike', 0, 0, 'SyntaxError', {}, ('expr_arglike',
+(123, 'parse_expr_arglike', 0, 0, 'SyntaxError', {}, ('expr_arglike',
 r'''a:b:c'''),
 r'''**SyntaxError('invalid argument-like expression')**'''),
 
-(122, 'parse__expr_arglikes', 0, 0, 'Tuple', {}, ('_expr_arglikes',
+(124, 'parse__expr_arglikes', 0, 0, 'Tuple', {}, ('_expr_arglikes',
 r'''j'''), r'''
 Tuple - ROOT 0,0..0,1
   .elts[1]
@@ -986,7 +1001,7 @@ Tuple - ROOT 0,0..0,1
   .ctx Load
 '''),
 
-(123, 'parse__expr_arglikes', 0, 0, 'Tuple', {}, ('_expr_arglikes',
+(125, 'parse__expr_arglikes', 0, 0, 'Tuple', {}, ('_expr_arglikes',
 r'''*s'''), r'''
 Tuple - ROOT 0,0..0,2
   .elts[1]
@@ -996,7 +1011,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-(124, 'parse__expr_arglikes', 0, 0, 'Tuple', {}, ('_expr_arglikes',
+(126, 'parse__expr_arglikes', 0, 0, 'Tuple', {}, ('_expr_arglikes',
 r'''*s,'''), r'''
 Tuple - ROOT 0,0..0,3
   .elts[1]
@@ -1006,7 +1021,7 @@ Tuple - ROOT 0,0..0,3
   .ctx Load
 '''),
 
-(125, 'parse__expr_arglikes', 0, 0, 'Tuple', {}, ('_expr_arglikes',
+(127, 'parse__expr_arglikes', 0, 0, 'Tuple', {}, ('_expr_arglikes',
 r'''*not a'''), r'''
 Tuple - ROOT 0,0..0,6
   .elts[1]
@@ -1018,7 +1033,7 @@ Tuple - ROOT 0,0..0,6
   .ctx Load
 '''),
 
-(126, 'parse__expr_arglikes', 0, 0, 'Tuple', {}, ('_expr_arglikes',
+(128, 'parse__expr_arglikes', 0, 0, 'Tuple', {}, ('_expr_arglikes',
 r'''*not a,'''), r'''
 Tuple - ROOT 0,0..0,7
   .elts[1]
@@ -1030,7 +1045,7 @@ Tuple - ROOT 0,0..0,7
   .ctx Load
 '''),
 
-(127, 'parse__expr_arglikes', 0, 0, 'Tuple', {}, ('_expr_arglikes',
+(129, 'parse__expr_arglikes', 0, 0, 'Tuple', {}, ('_expr_arglikes',
 r'''*not a, *b or c'''), r'''
 Tuple - ROOT 0,0..0,15
   .elts[2]
@@ -1049,7 +1064,7 @@ Tuple - ROOT 0,0..0,15
   .ctx Load
 '''),
 
-(128, 'parse__expr_arglikes', 0, 0, 'Tuple', {}, ('_expr_arglikes',
+(130, 'parse__expr_arglikes', 0, 0, 'Tuple', {}, ('_expr_arglikes',
 r'''j, k'''), r'''
 Tuple - ROOT 0,0..0,4
   .elts[2]
@@ -1058,30 +1073,30 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-(129, 'parse__expr_arglikes', 0, 0, 'ParseError', {}, ('_expr_arglikes',
+(131, 'parse__expr_arglikes', 0, 0, 'ParseError', {}, ('_expr_arglikes',
 r'''i=1'''),
 r'''**ParseError('expecting only argumnent-like expression(s), got keyword')**'''),
 
-(130, 'parse__expr_arglikes', 0, 0, 'SyntaxError', {}, ('_expr_arglikes',
+(132, 'parse__expr_arglikes', 0, 0, 'SyntaxError', {}, ('_expr_arglikes',
 r'''a:b'''),
 r'''**SyntaxError('invalid argument-like expression(s)')**'''),
 
-(131, 'parse__expr_arglikes', 0, 0, 'SyntaxError', {}, ('_expr_arglikes',
+(133, 'parse__expr_arglikes', 0, 0, 'SyntaxError', {}, ('_expr_arglikes',
 r'''a:b:c'''),
 r'''**SyntaxError('invalid argument-like expression(s)')**'''),
 
-(132, 'parse_expr_slice', 0, 0, 'Name', {}, ('expr_slice',
+(134, 'parse_expr_slice', 0, 0, 'Name', {}, ('expr_slice',
 r'''j'''),
 r'''Name 'j' Load - ROOT 0,0..0,1'''),
 
-(133, 'parse_expr_slice', 0, 0, 'Slice', {}, ('expr_slice',
+(135, 'parse_expr_slice', 0, 0, 'Slice', {}, ('expr_slice',
 r'''a:b'''), r'''
 Slice - ROOT 0,0..0,3
   .lower Name 'a' Load - 0,0..0,1
   .upper Name 'b' Load - 0,2..0,3
 '''),
 
-(134, 'parse_expr_slice', 0, 0, 'Tuple', {}, ('expr_slice',
+(136, 'parse_expr_slice', 0, 0, 'Tuple', {}, ('expr_slice',
 r'''j, k'''), r'''
 Tuple - ROOT 0,0..0,4
   .elts[2]
@@ -1090,7 +1105,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-(135, 'parse_expr_slice', 0, 0, 'Tuple', {}, ('expr_slice',
+(137, 'parse_expr_slice', 0, 0, 'Tuple', {}, ('expr_slice',
 r'''a:b:c, x:y:z'''), r'''
 Tuple - ROOT 0,0..0,12
   .elts[2]
@@ -1105,18 +1120,18 @@ Tuple - ROOT 0,0..0,12
   .ctx Load
 '''),
 
-(136, 'parse_expr_sliceelt', 0, 0, 'Name', {}, ('expr_sliceelt',
+(138, 'parse_expr_sliceelt', 0, 0, 'Name', {}, ('expr_sliceelt',
 r'''j'''),
 r'''Name 'j' Load - ROOT 0,0..0,1'''),
 
-(137, 'parse_expr_sliceelt', 0, 0, 'Slice', {}, ('expr_sliceelt',
+(139, 'parse_expr_sliceelt', 0, 0, 'Slice', {}, ('expr_sliceelt',
 r'''a:b'''), r'''
 Slice - ROOT 0,0..0,3
   .lower Name 'a' Load - 0,0..0,1
   .upper Name 'b' Load - 0,2..0,3
 '''),
 
-(138, 'parse_expr_sliceelt', 0, 0, 'Tuple', {}, ('expr_sliceelt',
+(140, 'parse_expr_sliceelt', 0, 0, 'Tuple', {}, ('expr_sliceelt',
 r'''j, k'''), r'''
 Tuple - ROOT 0,0..0,4
   .elts[2]
@@ -1125,73 +1140,73 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-(139, 'parse_expr_sliceelt', 0, 0, 'SyntaxError', {}, ('expr_sliceelt',
+(141, 'parse_expr_sliceelt', 0, 0, 'SyntaxError', {}, ('expr_sliceelt',
 r'''a:b:c, x:y:z'''),
 r'''**SyntaxError('invalid expression')**'''),
 
-(140, 'parse_boolop', 0, 0, 'And', {}, ('boolop',
+(142, 'parse_boolop', 0, 0, 'And', {}, ('boolop',
 r'''and'''),
 r'''And - ROOT 0,0..0,3'''),
 
-(141, 'parse_boolop', 0, 0, 'ParseError', {}, ('boolop',
+(143, 'parse_boolop', 0, 0, 'ParseError', {}, ('boolop',
 r'''*'''),
 r'''**ParseError("expecting boolop, got '*'")**'''),
 
-(142, 'parse_operator', 0, 0, 'Mult', {}, ('operator',
+(144, 'parse_operator', 0, 0, 'Mult', {}, ('operator',
 r'''*'''),
 r'''Mult - ROOT 0,0..0,1'''),
 
-(143, 'parse_operator', 0, 0, 'Mult', {}, ('operator',
+(145, 'parse_operator', 0, 0, 'Mult', {}, ('operator',
 r'''*='''),
 r'''Mult - ROOT 0,0..0,2'''),
 
-(144, 'parse_operator', 0, 0, 'ParseError', {}, ('operator',
+(146, 'parse_operator', 0, 0, 'ParseError', {}, ('operator',
 r'''and'''),
 r'''**ParseError("expecting operator, got 'and'")**'''),
 
-(145, 'parse_binop', 0, 0, 'Mult', {}, ('binop',
+(147, 'parse_binop', 0, 0, 'Mult', {}, ('binop',
 r'''*'''),
 r'''Mult - ROOT 0,0..0,1'''),
 
-(146, 'parse_binop', 0, 0, 'SyntaxError', {}, ('binop',
+(148, 'parse_binop', 0, 0, 'SyntaxError', {}, ('binop',
 r'''*='''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(147, 'parse_augop', 0, 0, 'ParseError', {}, ('augop',
+(149, 'parse_augop', 0, 0, 'ParseError', {}, ('augop',
 r'''*'''),
 r'''**ParseError("expecting augmented operator, got '*'")**'''),
 
-(148, 'parse_augop', 0, 0, 'Mult', {}, ('augop',
+(150, 'parse_augop', 0, 0, 'Mult', {}, ('augop',
 r'''*='''),
 r'''Mult - ROOT 0,0..0,2'''),
 
-(149, 'parse_unaryop', 0, 0, 'UAdd', {}, ('unaryop',
+(151, 'parse_unaryop', 0, 0, 'UAdd', {}, ('unaryop',
 r'''+'''),
 r'''UAdd - ROOT 0,0..0,1'''),
 
-(150, 'parse_unaryop', 0, 0, 'SyntaxError', {}, ('unaryop',
+(152, 'parse_unaryop', 0, 0, 'SyntaxError', {}, ('unaryop',
 r'''and'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(151, 'parse_cmpop', 0, 0, 'GtE', {}, ('cmpop',
+(153, 'parse_cmpop', 0, 0, 'GtE', {}, ('cmpop',
 r'''>='''),
 r'''GtE - ROOT 0,0..0,2'''),
 
-(152, 'parse_cmpop', 0, 0, 'IsNot', {}, ('cmpop', r'''
+(154, 'parse_cmpop', 0, 0, 'IsNot', {}, ('cmpop', r'''
 is
 not
 '''),
 r'''IsNot - ROOT 0,0..1,3'''),
 
-(153, 'parse_cmpop', 0, 0, 'ParseError', {}, ('cmpop',
+(155, 'parse_cmpop', 0, 0, 'ParseError', {}, ('cmpop',
 r'''>= a >='''),
 r'''**ParseError('expecting single cmpop')**'''),
 
-(154, 'parse_cmpop', 0, 0, 'ParseError', {}, ('cmpop',
+(156, 'parse_cmpop', 0, 0, 'ParseError', {}, ('cmpop',
 r'''and'''),
 r'''**ParseError("expecting cmpop, got 'and'")**'''),
 
-(155, 'parse_comprehension', 0, 0, 'comprehension', {}, ('comprehension',
+(157, 'parse_comprehension', 0, 0, 'comprehension', {}, ('comprehension',
 r'''for u in v'''), r'''
 comprehension - ROOT 0,0..0,10
   .target Name 'u' Store - 0,4..0,5
@@ -1199,7 +1214,7 @@ comprehension - ROOT 0,0..0,10
   .is_async 0
 '''),
 
-(156, 'parse_comprehension', 0, 0, 'comprehension', {}, ('comprehension',
+(158, 'parse_comprehension', 0, 0, 'comprehension', {}, ('comprehension',
 r'''async for u in v'''), r'''
 comprehension - ROOT 0,0..0,16
   .target Name 'u' Store - 0,10..0,11
@@ -1207,7 +1222,7 @@ comprehension - ROOT 0,0..0,16
   .is_async 1
 '''),
 
-(157, 'parse_comprehension', 0, 0, 'comprehension', {}, ('comprehension',
+(159, 'parse_comprehension', 0, 0, 'comprehension', {}, ('comprehension',
 r'''for u in v if w'''), r'''
 comprehension - ROOT 0,0..0,15
   .target Name 'u' Store - 0,4..0,5
@@ -1217,15 +1232,15 @@ comprehension - ROOT 0,0..0,15
   .is_async 0
 '''),
 
-(158, 'parse_comprehension', 0, 0, 'ParseError', {}, ('comprehension',
+(160, 'parse_comprehension', 0, 0, 'ParseError', {}, ('comprehension',
 r'''for u in v async for s in t'''),
 r'''**ParseError('expecting single comprehension')**'''),
 
-(159, 'parse__comprehensions', 0, 0, '_comprehensions', {}, ('_comprehensions',
+(161, 'parse__comprehensions', 0, 0, '_comprehensions', {}, ('_comprehensions',
 r''''''),
 r'''_comprehensions - ROOT 0,0..0,0'''),
 
-(160, 'parse__comprehensions', 0, 0, '_comprehensions', {}, ('_comprehensions',
+(162, 'parse__comprehensions', 0, 0, '_comprehensions', {}, ('_comprehensions',
 r'''for u in v'''), r'''
 _comprehensions - ROOT 0,0..0,10
   .generators[1]
@@ -1235,7 +1250,7 @@ _comprehensions - ROOT 0,0..0,10
      .is_async 0
 '''),
 
-(161, 'parse__comprehensions', 0, 0, '_comprehensions', {}, ('_comprehensions',
+(163, 'parse__comprehensions', 0, 0, '_comprehensions', {}, ('_comprehensions',
 r'''async for u in v'''), r'''
 _comprehensions - ROOT 0,0..0,16
   .generators[1]
@@ -1245,7 +1260,7 @@ _comprehensions - ROOT 0,0..0,16
      .is_async 1
 '''),
 
-(162, 'parse__comprehensions', 0, 0, '_comprehensions', {}, ('_comprehensions',
+(164, 'parse__comprehensions', 0, 0, '_comprehensions', {}, ('_comprehensions',
 r'''for u in v if w async for s in t'''), r'''
 _comprehensions - ROOT 0,0..0,32
   .generators[2]
@@ -1261,11 +1276,30 @@ _comprehensions - ROOT 0,0..0,32
      .is_async 1
 '''),
 
-(163, 'parse_arguments', 0, 0, 'arguments', {}, ('arguments',
+(165, 'parse__comprehension_ifs', 0, 0, '_comprehension_ifs', {}, ('_comprehension_ifs',
+r''''''),
+r'''_comprehension_ifs - ROOT 0,0..0,0'''),
+
+(166, 'parse__comprehension_ifs', 0, 0, '_comprehension_ifs', {}, ('_comprehension_ifs',
+r'''if u'''), r'''
+_comprehension_ifs - ROOT 0,0..0,4
+  .ifs[1]
+   0] Name 'u' Load - 0,3..0,4
+'''),
+
+(167, 'parse__comprehension_ifs', 0, 0, '_comprehension_ifs', {}, ('_comprehension_ifs',
+r'''if u if v'''), r'''
+_comprehension_ifs - ROOT 0,0..0,9
+  .ifs[2]
+   0] Name 'u' Load - 0,3..0,4
+   1] Name 'v' Load - 0,8..0,9
+'''),
+
+(168, 'parse_arguments', 0, 0, 'arguments', {}, ('arguments',
 r''''''),
 r'''arguments - ROOT'''),
 
-(164, 'parse_arguments', 0, 0, 'arguments', {}, ('arguments',
+(169, 'parse_arguments', 0, 0, 'arguments', {}, ('arguments',
 r'''a: list[str], /, b: int = 1, *c, d=100, **e'''), r'''
 arguments - ROOT 0,0..0,43
   .posonlyargs[1]
@@ -1292,11 +1326,11 @@ arguments - ROOT 0,0..0,43
    0] Constant 1 - 0,26..0,27
 '''),
 
-(165, 'parse_arguments_lambda', 0, 0, 'arguments', {}, ('arguments_lambda',
+(170, 'parse_arguments_lambda', 0, 0, 'arguments', {}, ('arguments_lambda',
 r''''''),
 r'''arguments - ROOT'''),
 
-(166, 'parse_arguments_lambda', 0, 0, 'arguments', {}, ('arguments_lambda',
+(171, 'parse_arguments_lambda', 0, 0, 'arguments', {}, ('arguments_lambda',
 r'''a, /, b, *c, d=100, **e'''), r'''
 arguments - ROOT 0,0..0,23
   .posonlyargs[1]
@@ -1316,7 +1350,7 @@ arguments - ROOT 0,0..0,23
     .arg 'e'
 '''),
 
-(167, 'parse_arguments_lambda', 0, 0, 'arguments', {}, ('arguments_lambda', r'''
+(172, 'parse_arguments_lambda', 0, 0, 'arguments', {}, ('arguments_lambda', r'''
 a,
 /,
 b,
@@ -1342,123 +1376,123 @@ arguments - ROOT 0,0..5,3
     .arg 'e'
 '''),
 
-(168, 'parse_arguments_lambda', 0, 0, 'SyntaxError', {}, ('arguments_lambda',
+(173, 'parse_arguments_lambda', 0, 0, 'SyntaxError', {}, ('arguments_lambda',
 r'''a: list[str], /, b: int = 1, *c, d=100, **e'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(169, 'parse_arg', 0, 0, 'arg', {}, ('arg',
+(174, 'parse_arg', 0, 0, 'arg', {}, ('arg',
 r'''a: b'''), r'''
 arg - ROOT 0,0..0,4
   .arg 'a'
   .annotation Name 'b' Load - 0,3..0,4
 '''),
 
-(170, 'parse_arg', 0, 0, 'ParseError', {}, ('arg',
+(175, 'parse_arg', 0, 0, 'ParseError', {}, ('arg',
 r'''a: b = c'''),
 r'''**ParseError('expecting single argument without default')**'''),
 
-(171, 'parse_arg', 0, 0, 'ParseError', {}, ('arg',
+(176, 'parse_arg', 0, 0, 'ParseError', {}, ('arg',
 r'''a, b'''),
 r'''**ParseError('expecting single argument without default')**'''),
 
-(172, 'parse_arg', 0, 0, 'ParseError', {}, ('arg',
+(177, 'parse_arg', 0, 0, 'ParseError', {}, ('arg',
 r'''a, /'''),
 r'''**ParseError('expecting single argument without default')**'''),
 
-(173, 'parse_arg', 0, 0, 'ParseError', {}, ('arg',
+(178, 'parse_arg', 0, 0, 'ParseError', {}, ('arg',
 r'''*, a'''),
 r'''**ParseError('expecting single argument without default')**'''),
 
-(174, 'parse_arg', 0, 0, 'ParseError', {}, ('arg',
+(179, 'parse_arg', 0, 0, 'ParseError', {}, ('arg',
 r'''*a'''),
 r'''**ParseError('expecting single argument without default')**'''),
 
-(175, 'parse_arg', 0, 0, 'ParseError', {}, ('arg',
+(180, 'parse_arg', 0, 0, 'ParseError', {}, ('arg',
 r'''**a'''),
 r'''**ParseError('expecting single argument without default')**'''),
 
-(176, 'parse_keyword', 0, 0, 'keyword', {}, ('keyword',
+(181, 'parse_keyword', 0, 0, 'keyword', {}, ('keyword',
 r'''a=1'''), r'''
 keyword - ROOT 0,0..0,3
   .arg 'a'
   .value Constant 1 - 0,2..0,3
 '''),
 
-(177, 'parse_keyword', 0, 0, 'keyword', {}, ('keyword',
+(182, 'parse_keyword', 0, 0, 'keyword', {}, ('keyword',
 r'''**a'''), r'''
 keyword - ROOT 0,0..0,3
   .value Name 'a' Load - 0,2..0,3
 '''),
 
-(178, 'parse_keyword', 0, 0, 'ParseError', {}, ('keyword',
+(183, 'parse_keyword', 0, 0, 'ParseError', {}, ('keyword',
 r'''1'''),
 r'''**ParseError('expecting single keyword')**'''),
 
-(179, 'parse_keyword', 0, 0, 'ParseError', {}, ('keyword',
+(184, 'parse_keyword', 0, 0, 'ParseError', {}, ('keyword',
 r'''a'''),
 r'''**ParseError('expecting single keyword')**'''),
 
-(180, 'parse_keyword', 0, 0, 'ParseError', {}, ('keyword',
+(185, 'parse_keyword', 0, 0, 'ParseError', {}, ('keyword',
 r'''a=1, b=2'''),
 r'''**ParseError('expecting single keyword')**'''),
 
-(181, 'parse_alias', 0, 0, 'SyntaxError', {}, ('alias',
+(186, 'parse_alias', 0, 0, 'SyntaxError', {}, ('alias',
 r''''''),
 r'''**SyntaxError("Expected one or more names after 'import'")**'''),
 
-(182, 'parse_alias', 0, 0, 'alias', {}, ('alias',
+(187, 'parse_alias', 0, 0, 'alias', {}, ('alias',
 r'''a'''), r'''
 alias - ROOT 0,0..0,1
   .name 'a'
 '''),
 
-(183, 'parse_alias', 0, 0, 'alias', {}, ('alias',
+(188, 'parse_alias', 0, 0, 'alias', {}, ('alias',
 r'''a.b'''), r'''
 alias - ROOT 0,0..0,3
   .name 'a.b'
 '''),
 
-(184, 'parse_alias', 0, 0, 'alias', {}, ('alias',
+(189, 'parse_alias', 0, 0, 'alias', {}, ('alias',
 r'''*'''), r'''
 alias - ROOT 0,0..0,1
   .name '*'
 '''),
 
-(185, 'parse_alias', 0, 0, 'ParseError', {}, ('alias',
+(190, 'parse_alias', 0, 0, 'ParseError', {}, ('alias',
 r'''a, b'''),
 r'''**ParseError('expecting single name')**'''),
 
-(186, 'parse_alias', 0, 0, 'alias', {}, ('alias',
+(191, 'parse_alias', 0, 0, 'alias', {}, ('alias',
 r'''a as c'''), r'''
 alias - ROOT 0,0..0,6
   .name 'a'
   .asname 'c'
 '''),
 
-(187, 'parse_alias', 0, 0, 'alias', {}, ('alias',
+(192, 'parse_alias', 0, 0, 'alias', {}, ('alias',
 r'''a.b as c'''), r'''
 alias - ROOT 0,0..0,8
   .name 'a.b'
   .asname 'c'
 '''),
 
-(188, 'parse_alias', 0, 0, 'SyntaxError', {}, ('alias',
+(193, 'parse_alias', 0, 0, 'SyntaxError', {}, ('alias',
 r'''* as c'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(189, 'parse_alias', 0, 0, 'ParseError', {}, ('alias',
+(194, 'parse_alias', 0, 0, 'ParseError', {}, ('alias',
 r'''a as x, b as y'''),
 r'''**ParseError('expecting single name')**'''),
 
-(190, 'parse_alias', 0, 0, 'ParseError', {}, ('alias',
+(195, 'parse_alias', 0, 0, 'ParseError', {}, ('alias',
 r'''a as x, a.b as y'''),
 r'''**ParseError('expecting single name')**'''),
 
-(191, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
+(196, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r''''''),
 r'''_aliases - ROOT 0,0..0,0'''),
 
-(192, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
+(197, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''a'''), r'''
 _aliases - ROOT 0,0..0,1
   .names[1]
@@ -1466,7 +1500,7 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
-(193, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
+(198, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''a.b'''), r'''
 _aliases - ROOT 0,0..0,3
   .names[1]
@@ -1474,145 +1508,15 @@ _aliases - ROOT 0,0..0,3
      .name 'a.b'
 '''),
 
-(194, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
+(199, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''*'''), r'''
 _aliases - ROOT 0,0..0,1
   .names[1]
    0] alias - 0,0..0,1
      .name '*'
-'''),
-
-(195, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
-r'''a, b'''), r'''
-_aliases - ROOT 0,0..0,4
-  .names[2]
-   0] alias - 0,0..0,1
-     .name 'a'
-   1] alias - 0,3..0,4
-     .name 'b'
-'''),
-
-(196, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
-r'''a as c'''), r'''
-_aliases - ROOT 0,0..0,6
-  .names[1]
-   0] alias - 0,0..0,6
-     .name 'a'
-     .asname 'c'
-'''),
-
-(197, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
-r'''a.b as c'''), r'''
-_aliases - ROOT 0,0..0,8
-  .names[1]
-   0] alias - 0,0..0,8
-     .name 'a.b'
-     .asname 'c'
-'''),
-
-(198, 'parse__aliases', 0, 0, 'SyntaxError', {}, ('_aliases',
-r'''* as c'''),
-r'''**SyntaxError('invalid syntax')**'''),
-
-(199, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
-r'''a as x, b as y'''), r'''
-_aliases - ROOT 0,0..0,14
-  .names[2]
-   0] alias - 0,0..0,6
-     .name 'a'
-     .asname 'x'
-   1] alias - 0,8..0,14
-     .name 'b'
-     .asname 'y'
 '''),
 
 (200, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
-r'''a as x, a.b as y'''), r'''
-_aliases - ROOT 0,0..0,16
-  .names[2]
-   0] alias - 0,0..0,6
-     .name 'a'
-     .asname 'x'
-   1] alias - 0,8..0,16
-     .name 'a.b'
-     .asname 'y'
-'''),
-
-(201, 'parse_Import_name', 0, 0, 'SyntaxError', {}, ('Import_name',
-r''''''),
-r'''**SyntaxError("Expected one or more names after 'import'")**'''),
-
-(202, 'parse_Import_name', 0, 0, 'alias', {}, ('Import_name',
-r'''a'''), r'''
-alias - ROOT 0,0..0,1
-  .name 'a'
-'''),
-
-(203, 'parse_Import_name', 0, 0, 'alias', {}, ('Import_name',
-r'''a.b'''), r'''
-alias - ROOT 0,0..0,3
-  .name 'a.b'
-'''),
-
-(204, 'parse_Import_name', 0, 0, 'SyntaxError', {}, ('Import_name',
-r'''*'''),
-r'''**SyntaxError('invalid syntax')**'''),
-
-(205, 'parse_Import_name', 0, 0, 'ParseError', {}, ('Import_name',
-r'''a, b'''),
-r'''**ParseError('expecting single name')**'''),
-
-(206, 'parse_Import_name', 0, 0, 'alias', {}, ('Import_name',
-r'''a as c'''), r'''
-alias - ROOT 0,0..0,6
-  .name 'a'
-  .asname 'c'
-'''),
-
-(207, 'parse_Import_name', 0, 0, 'alias', {}, ('Import_name',
-r'''a.b as c'''), r'''
-alias - ROOT 0,0..0,8
-  .name 'a.b'
-  .asname 'c'
-'''),
-
-(208, 'parse_Import_name', 0, 0, 'SyntaxError', {}, ('Import_name',
-r'''* as c'''),
-r'''**SyntaxError('invalid syntax')**'''),
-
-(209, 'parse_Import_name', 0, 0, 'ParseError', {}, ('Import_name',
-r'''a as x, b as y'''),
-r'''**ParseError('expecting single name')**'''),
-
-(210, 'parse_Import_name', 0, 0, 'ParseError', {}, ('Import_name',
-r'''a as x, a.b as y'''),
-r'''**ParseError('expecting single name')**'''),
-
-(211, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
-r''''''),
-r'''_aliases - ROOT 0,0..0,0'''),
-
-(212, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
-r'''a'''), r'''
-_aliases - ROOT 0,0..0,1
-  .names[1]
-   0] alias - 0,0..0,1
-     .name 'a'
-'''),
-
-(213, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
-r'''a.b'''), r'''
-_aliases - ROOT 0,0..0,3
-  .names[1]
-   0] alias - 0,0..0,3
-     .name 'a.b'
-'''),
-
-(214, 'parse__Import_names', 0, 0, 'SyntaxError', {}, ('_Import_names',
-r'''*'''),
-r'''**SyntaxError('invalid syntax')**'''),
-
-(215, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r'''a, b'''), r'''
 _aliases - ROOT 0,0..0,4
   .names[2]
@@ -1622,7 +1526,7 @@ _aliases - ROOT 0,0..0,4
      .name 'b'
 '''),
 
-(216, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
+(201, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''a as c'''), r'''
 _aliases - ROOT 0,0..0,6
   .names[1]
@@ -1631,7 +1535,7 @@ _aliases - ROOT 0,0..0,6
      .asname 'c'
 '''),
 
-(217, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
+(202, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''a.b as c'''), r'''
 _aliases - ROOT 0,0..0,8
   .names[1]
@@ -1640,11 +1544,11 @@ _aliases - ROOT 0,0..0,8
      .asname 'c'
 '''),
 
-(218, 'parse__Import_names', 0, 0, 'SyntaxError', {}, ('_Import_names',
+(203, 'parse__aliases', 0, 0, 'SyntaxError', {}, ('_aliases',
 r'''* as c'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(219, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
+(204, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''a as x, b as y'''), r'''
 _aliases - ROOT 0,0..0,14
   .names[2]
@@ -1656,7 +1560,7 @@ _aliases - ROOT 0,0..0,14
      .asname 'y'
 '''),
 
-(220, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
+(205, 'parse__aliases', 0, 0, '_aliases', {}, ('_aliases',
 r'''a as x, a.b as y'''), r'''
 _aliases - ROOT 0,0..0,16
   .names[2]
@@ -1668,58 +1572,61 @@ _aliases - ROOT 0,0..0,16
      .asname 'y'
 '''),
 
-(221, 'parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
+(206, 'parse_Import_name', 0, 0, 'SyntaxError', {}, ('Import_name',
 r''''''),
 r'''**SyntaxError("Expected one or more names after 'import'")**'''),
 
-(222, 'parse_ImportFrom_name', 0, 0, 'alias', {}, ('ImportFrom_name',
+(207, 'parse_Import_name', 0, 0, 'alias', {}, ('Import_name',
 r'''a'''), r'''
 alias - ROOT 0,0..0,1
   .name 'a'
 '''),
 
-(223, 'parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
-r'''a.b'''),
-r'''**SyntaxError('invalid syntax')**'''),
-
-(224, 'parse_ImportFrom_name', 0, 0, 'alias', {}, ('ImportFrom_name',
-r'''*'''), r'''
-alias - ROOT 0,0..0,1
-  .name '*'
+(208, 'parse_Import_name', 0, 0, 'alias', {}, ('Import_name',
+r'''a.b'''), r'''
+alias - ROOT 0,0..0,3
+  .name 'a.b'
 '''),
 
-(225, 'parse_ImportFrom_name', 0, 0, 'ParseError', {}, ('ImportFrom_name',
+(209, 'parse_Import_name', 0, 0, 'SyntaxError', {}, ('Import_name',
+r'''*'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+(210, 'parse_Import_name', 0, 0, 'ParseError', {}, ('Import_name',
 r'''a, b'''),
 r'''**ParseError('expecting single name')**'''),
 
-(226, 'parse_ImportFrom_name', 0, 0, 'alias', {}, ('ImportFrom_name',
+(211, 'parse_Import_name', 0, 0, 'alias', {}, ('Import_name',
 r'''a as c'''), r'''
 alias - ROOT 0,0..0,6
   .name 'a'
   .asname 'c'
 '''),
 
-(227, 'parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
-r'''a.b as c'''),
-r'''**SyntaxError('invalid syntax')**'''),
+(212, 'parse_Import_name', 0, 0, 'alias', {}, ('Import_name',
+r'''a.b as c'''), r'''
+alias - ROOT 0,0..0,8
+  .name 'a.b'
+  .asname 'c'
+'''),
 
-(228, 'parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
+(213, 'parse_Import_name', 0, 0, 'SyntaxError', {}, ('Import_name',
 r'''* as c'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(229, 'parse_ImportFrom_name', 0, 0, 'ParseError', {}, ('ImportFrom_name',
+(214, 'parse_Import_name', 0, 0, 'ParseError', {}, ('Import_name',
 r'''a as x, b as y'''),
 r'''**ParseError('expecting single name')**'''),
 
-(230, 'parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
+(215, 'parse_Import_name', 0, 0, 'ParseError', {}, ('Import_name',
 r'''a as x, a.b as y'''),
-r'''**SyntaxError('invalid syntax')**'''),
+r'''**ParseError('expecting single name')**'''),
 
-(231, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
+(216, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r''''''),
 r'''_aliases - ROOT 0,0..0,0'''),
 
-(232, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
+(217, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r'''a'''), r'''
 _aliases - ROOT 0,0..0,1
   .names[1]
@@ -1727,19 +1634,19 @@ _aliases - ROOT 0,0..0,1
      .name 'a'
 '''),
 
-(233, 'parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
-r'''a.b'''),
-r'''**SyntaxError('invalid syntax')**'''),
-
-(234, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
-r'''*'''), r'''
-_aliases - ROOT 0,0..0,1
+(218, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
+r'''a.b'''), r'''
+_aliases - ROOT 0,0..0,3
   .names[1]
-   0] alias - 0,0..0,1
-     .name '*'
+   0] alias - 0,0..0,3
+     .name 'a.b'
 '''),
 
-(235, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
+(219, 'parse__Import_names', 0, 0, 'SyntaxError', {}, ('_Import_names',
+r'''*'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+(220, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r'''a, b'''), r'''
 _aliases - ROOT 0,0..0,4
   .names[2]
@@ -1749,7 +1656,7 @@ _aliases - ROOT 0,0..0,4
      .name 'b'
 '''),
 
-(236, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
+(221, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r'''a as c'''), r'''
 _aliases - ROOT 0,0..0,6
   .names[1]
@@ -1758,15 +1665,20 @@ _aliases - ROOT 0,0..0,6
      .asname 'c'
 '''),
 
-(237, 'parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
-r'''a.b as c'''),
-r'''**SyntaxError('invalid syntax')**'''),
+(222, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
+r'''a.b as c'''), r'''
+_aliases - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,0..0,8
+     .name 'a.b'
+     .asname 'c'
+'''),
 
-(238, 'parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
+(223, 'parse__Import_names', 0, 0, 'SyntaxError', {}, ('_Import_names',
 r'''* as c'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(239, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
+(224, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r'''a as x, b as y'''), r'''
 _aliases - ROOT 0,0..0,14
   .names[2]
@@ -1778,21 +1690,143 @@ _aliases - ROOT 0,0..0,14
      .asname 'y'
 '''),
 
-(240, 'parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
+(225, 'parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
+r'''a as x, a.b as y'''), r'''
+_aliases - ROOT 0,0..0,16
+  .names[2]
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'x'
+   1] alias - 0,8..0,16
+     .name 'a.b'
+     .asname 'y'
+'''),
+
+(226, 'parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
+r''''''),
+r'''**SyntaxError("Expected one or more names after 'import'")**'''),
+
+(227, 'parse_ImportFrom_name', 0, 0, 'alias', {}, ('ImportFrom_name',
+r'''a'''), r'''
+alias - ROOT 0,0..0,1
+  .name 'a'
+'''),
+
+(228, 'parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
+r'''a.b'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+(229, 'parse_ImportFrom_name', 0, 0, 'alias', {}, ('ImportFrom_name',
+r'''*'''), r'''
+alias - ROOT 0,0..0,1
+  .name '*'
+'''),
+
+(230, 'parse_ImportFrom_name', 0, 0, 'ParseError', {}, ('ImportFrom_name',
+r'''a, b'''),
+r'''**ParseError('expecting single name')**'''),
+
+(231, 'parse_ImportFrom_name', 0, 0, 'alias', {}, ('ImportFrom_name',
+r'''a as c'''), r'''
+alias - ROOT 0,0..0,6
+  .name 'a'
+  .asname 'c'
+'''),
+
+(232, 'parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
+r'''a.b as c'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+(233, 'parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
+r'''* as c'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+(234, 'parse_ImportFrom_name', 0, 0, 'ParseError', {}, ('ImportFrom_name',
+r'''a as x, b as y'''),
+r'''**ParseError('expecting single name')**'''),
+
+(235, 'parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
 r'''a as x, a.b as y'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(241, 'parse_withitem', 0, 0, 'SyntaxError', {}, ('withitem',
+(236, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
+r''''''),
+r'''_aliases - ROOT 0,0..0,0'''),
+
+(237, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
+r'''a'''), r'''
+_aliases - ROOT 0,0..0,1
+  .names[1]
+   0] alias - 0,0..0,1
+     .name 'a'
+'''),
+
+(238, 'parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
+r'''a.b'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+(239, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
+r'''*'''), r'''
+_aliases - ROOT 0,0..0,1
+  .names[1]
+   0] alias - 0,0..0,1
+     .name '*'
+'''),
+
+(240, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
+r'''a, b'''), r'''
+_aliases - ROOT 0,0..0,4
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 0,3..0,4
+     .name 'b'
+'''),
+
+(241, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
+r'''a as c'''), r'''
+_aliases - ROOT 0,0..0,6
+  .names[1]
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'c'
+'''),
+
+(242, 'parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
+r'''a.b as c'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+(243, 'parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
+r'''* as c'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+(244, 'parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
+r'''a as x, b as y'''), r'''
+_aliases - ROOT 0,0..0,14
+  .names[2]
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'x'
+   1] alias - 0,8..0,14
+     .name 'b'
+     .asname 'y'
+'''),
+
+(245, 'parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
+r'''a as x, a.b as y'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+(246, 'parse_withitem', 0, 0, 'SyntaxError', {}, ('withitem',
 r''''''),
 r'''**SyntaxError('expecting withitem')**'''),
 
-(242, 'parse_withitem', 0, 0, 'withitem', {}, ('withitem',
+(247, 'parse_withitem', 0, 0, 'withitem', {}, ('withitem',
 r'''a'''), r'''
 withitem - ROOT 0,0..0,1
   .context_expr Name 'a' Load - 0,0..0,1
 '''),
 
-(243, 'parse_withitem', 0, 0, 'withitem', {}, ('withitem',
+(248, 'parse_withitem', 0, 0, 'withitem', {}, ('withitem',
 r'''a, b'''), r'''
 withitem - ROOT 0,0..0,4
   .context_expr Tuple - 0,0..0,4
@@ -1802,7 +1836,7 @@ withitem - ROOT 0,0..0,4
     .ctx Load
 '''),
 
-(244, 'parse_withitem', 0, 0, 'withitem', {}, ('withitem',
+(249, 'parse_withitem', 0, 0, 'withitem', {}, ('withitem',
 r'''(a, b)'''), r'''
 withitem - ROOT 0,0..0,6
   .context_expr Tuple - 0,0..0,6
@@ -1812,54 +1846,54 @@ withitem - ROOT 0,0..0,6
     .ctx Load
 '''),
 
-(245, 'parse_withitem', 0, 0, 'withitem', {}, ('withitem',
+(250, 'parse_withitem', 0, 0, 'withitem', {}, ('withitem',
 r'''()'''), r'''
 withitem - ROOT 0,0..0,2
   .context_expr Tuple - 0,0..0,2
     .ctx Load
 '''),
 
-(246, 'parse_withitem', 0, 0, 'withitem', {}, ('withitem',
+(251, 'parse_withitem', 0, 0, 'withitem', {}, ('withitem',
 r'''a as b'''), r'''
 withitem - ROOT 0,0..0,6
   .context_expr Name 'a' Load - 0,0..0,1
   .optional_vars Name 'b' Store - 0,5..0,6
 '''),
 
-(247, 'parse_withitem', 0, 0, 'withitem', {}, ('withitem',
+(252, 'parse_withitem', 0, 0, 'withitem', {}, ('withitem',
 r'''(a) as (b)'''), r'''
 withitem - ROOT 0,0..0,10
   .context_expr Name 'a' Load - 0,1..0,2
   .optional_vars Name 'b' Store - 0,8..0,9
 '''),
 
-(248, 'parse_withitem', 0, 0, 'ParseError', {}, ('withitem',
+(253, 'parse_withitem', 0, 0, 'ParseError', {}, ('withitem',
 r'''a, b as c'''),
 r'''**ParseError('expecting single withitem')**'''),
 
-(249, 'parse_withitem', 0, 0, 'ParseError', {}, ('withitem',
+(254, 'parse_withitem', 0, 0, 'ParseError', {}, ('withitem',
 r'''a as b, x as y'''),
 r'''**ParseError('expecting single withitem')**'''),
 
-(250, 'parse_withitem', 0, 0, 'withitem', {}, ('withitem',
+(255, 'parse_withitem', 0, 0, 'withitem', {}, ('withitem',
 r'''(a)'''), r'''
 withitem - ROOT 0,0..0,3
   .context_expr Name 'a' Load - 0,1..0,2
 '''),
 
-(251, 'parse_withitem', 0, 0, 'SyntaxError', {}, ('withitem',
+(256, 'parse_withitem', 0, 0, 'SyntaxError', {}, ('withitem',
 r'''(a as b)'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(252, 'parse_withitem', 0, 0, 'SyntaxError', {}, ('withitem',
+(257, 'parse_withitem', 0, 0, 'SyntaxError', {}, ('withitem',
 r'''(a as b, x as y)'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(253, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
+(258, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r''''''),
 r'''_withitems - ROOT 0,0..0,0'''),
 
-(254, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
+(259, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''a'''), r'''
 _withitems - ROOT 0,0..0,1
   .items[1]
@@ -1867,7 +1901,7 @@ _withitems - ROOT 0,0..0,1
      .context_expr Name 'a' Load - 0,0..0,1
 '''),
 
-(255, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
+(260, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''a, b'''), r'''
 _withitems - ROOT 0,0..0,4
   .items[2]
@@ -1877,7 +1911,7 @@ _withitems - ROOT 0,0..0,4
      .context_expr Name 'b' Load - 0,3..0,4
 '''),
 
-(256, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
+(261, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''(a, b)'''), r'''
 _withitems - ROOT 0,0..0,6
   .items[1]
@@ -1889,7 +1923,7 @@ _withitems - ROOT 0,0..0,6
        .ctx Load
 '''),
 
-(257, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
+(262, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''()'''), r'''
 _withitems - ROOT 0,0..0,2
   .items[1]
@@ -1898,7 +1932,7 @@ _withitems - ROOT 0,0..0,2
        .ctx Load
 '''),
 
-(258, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
+(263, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''a as b'''), r'''
 _withitems - ROOT 0,0..0,6
   .items[1]
@@ -1907,7 +1941,7 @@ _withitems - ROOT 0,0..0,6
      .optional_vars Name 'b' Store - 0,5..0,6
 '''),
 
-(259, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
+(264, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''(a) as (b)'''), r'''
 _withitems - ROOT 0,0..0,10
   .items[1]
@@ -1916,7 +1950,7 @@ _withitems - ROOT 0,0..0,10
      .optional_vars Name 'b' Store - 0,8..0,9
 '''),
 
-(260, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
+(265, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''a, b as c'''), r'''
 _withitems - ROOT 0,0..0,9
   .items[2]
@@ -1927,7 +1961,7 @@ _withitems - ROOT 0,0..0,9
      .optional_vars Name 'c' Store - 0,8..0,9
 '''),
 
-(261, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
+(266, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''a as b, x as y'''), r'''
 _withitems - ROOT 0,0..0,14
   .items[2]
@@ -1939,7 +1973,7 @@ _withitems - ROOT 0,0..0,14
      .optional_vars Name 'y' Store - 0,13..0,14
 '''),
 
-(262, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
+(267, 'parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
 r'''(a)'''), r'''
 _withitems - ROOT 0,0..0,3
   .items[1]
@@ -1947,25 +1981,25 @@ _withitems - ROOT 0,0..0,3
      .context_expr Name 'a' Load - 0,1..0,2
 '''),
 
-(263, 'parse__withitems', 0, 0, 'SyntaxError', {}, ('_withitems',
+(268, 'parse__withitems', 0, 0, 'SyntaxError', {}, ('_withitems',
 r'''(a as b)'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(264, 'parse__withitems', 0, 0, 'SyntaxError', {}, ('_withitems',
+(269, 'parse__withitems', 0, 0, 'SyntaxError', {}, ('_withitems',
 r'''(a as b, x as y)'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(265, 'parse_pattern', 0, 0, 'MatchValue', {}, ('pattern',
+(270, 'parse_pattern', 0, 0, 'MatchValue', {}, ('pattern',
 r'''42'''), r'''
 MatchValue - ROOT 0,0..0,2
   .value Constant 42 - 0,0..0,2
 '''),
 
-(266, 'parse_pattern', 0, 0, 'MatchSingleton', {}, ('pattern',
+(271, 'parse_pattern', 0, 0, 'MatchSingleton', {}, ('pattern',
 r'''None'''),
 r'''MatchSingleton None - ROOT 0,0..0,4'''),
 
-(267, 'parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern',
+(272, 'parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern',
 r'''[a, *_]'''), r'''
 MatchSequence - ROOT 0,0..0,7
   .patterns[2]
@@ -1974,11 +2008,11 @@ MatchSequence - ROOT 0,0..0,7
    1] MatchStar - 0,4..0,6
 '''),
 
-(268, 'parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern',
+(273, 'parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern',
 r'''[]'''),
 r'''MatchSequence - ROOT 0,0..0,2'''),
 
-(269, 'parse_pattern', 0, 0, 'MatchMapping', {}, ('pattern',
+(274, 'parse_pattern', 0, 0, 'MatchMapping', {}, ('pattern',
 r'''{"key": _}'''), r'''
 MatchMapping - ROOT 0,0..0,10
   .keys[1]
@@ -1987,17 +2021,17 @@ MatchMapping - ROOT 0,0..0,10
    0] MatchAs - 0,8..0,9
 '''),
 
-(270, 'parse_pattern', 0, 0, 'MatchMapping', {}, ('pattern',
+(275, 'parse_pattern', 0, 0, 'MatchMapping', {}, ('pattern',
 r'''{}'''),
 r'''MatchMapping - ROOT 0,0..0,2'''),
 
-(271, 'parse_pattern', 0, 0, 'MatchClass', {}, ('pattern',
+(276, 'parse_pattern', 0, 0, 'MatchClass', {}, ('pattern',
 r'''SomeClass()'''), r'''
 MatchClass - ROOT 0,0..0,11
   .cls Name 'SomeClass' Load - 0,0..0,9
 '''),
 
-(272, 'parse_pattern', 0, 0, 'MatchClass', {}, ('pattern',
+(277, 'parse_pattern', 0, 0, 'MatchClass', {}, ('pattern',
 r'''SomeClass(attr=val)'''), r'''
 MatchClass - ROOT 0,0..0,19
   .cls Name 'SomeClass' Load - 0,0..0,9
@@ -2008,13 +2042,13 @@ MatchClass - ROOT 0,0..0,19
      .name 'val'
 '''),
 
-(273, 'parse_pattern', 0, 0, 'MatchAs', {}, ('pattern',
+(278, 'parse_pattern', 0, 0, 'MatchAs', {}, ('pattern',
 r'''as_var'''), r'''
 MatchAs - ROOT 0,0..0,6
   .name 'as_var'
 '''),
 
-(274, 'parse_pattern', 0, 0, 'MatchAs', {}, ('pattern',
+(279, 'parse_pattern', 0, 0, 'MatchAs', {}, ('pattern',
 r'''1 as as_var'''), r'''
 MatchAs - ROOT 0,0..0,11
   .pattern MatchValue - 0,0..0,1
@@ -2022,7 +2056,7 @@ MatchAs - ROOT 0,0..0,11
   .name 'as_var'
 '''),
 
-(275, 'parse_pattern', 0, 0, 'MatchOr', {}, ('pattern',
+(280, 'parse_pattern', 0, 0, 'MatchOr', {}, ('pattern',
 r'''1 | 2 | 3'''), r'''
 MatchOr - ROOT 0,0..0,9
   .patterns[3]
@@ -2034,21 +2068,21 @@ MatchOr - ROOT 0,0..0,9
      .value Constant 3 - 0,8..0,9
 '''),
 
-(276, 'parse_pattern', 0, 0, 'MatchAs', {}, ('pattern',
+(281, 'parse_pattern', 0, 0, 'MatchAs', {}, ('pattern',
 r'''_'''),
 r'''MatchAs - ROOT 0,0..0,1'''),
 
-(277, 'parse_pattern', 0, 0, 'MatchStar', {}, ('pattern',
+(282, 'parse_pattern', 0, 0, 'MatchStar', {}, ('pattern',
 r'''*a'''), r'''
 MatchStar - ROOT 0,0..0,2
   .name 'a'
 '''),
 
-(278, 'parse_pattern', 0, 0, 'SyntaxError', {}, ('pattern',
+(283, 'parse_pattern', 0, 0, 'SyntaxError', {}, ('pattern',
 r''''''),
 r'''**SyntaxError('empty pattern')**'''),
 
-(279, 'parse_expr', 0, 0, 'BoolOp', {}, ('expr', r'''
+(284, 'parse_expr', 0, 0, 'BoolOp', {}, ('expr', r'''
 a
 or
 b
@@ -2060,7 +2094,7 @@ BoolOp - ROOT 0,0..2,1
    1] Name 'b' Load - 2,0..2,1
 '''),
 
-(280, 'parse_expr', 0, 0, 'NamedExpr', {}, ('expr', r'''
+(285, 'parse_expr', 0, 0, 'NamedExpr', {}, ('expr', r'''
 a
 :=
 b
@@ -2070,7 +2104,7 @@ NamedExpr - ROOT 0,0..2,1
   .value Name 'b' Load - 2,0..2,1
 '''),
 
-(281, 'parse_expr', 0, 0, 'BinOp', {}, ('expr', r'''
+(286, 'parse_expr', 0, 0, 'BinOp', {}, ('expr', r'''
 a
 |
 b
@@ -2081,7 +2115,7 @@ BinOp - ROOT 0,0..2,1
   .right Name 'b' Load - 2,0..2,1
 '''),
 
-(282, 'parse_expr', 0, 0, 'BinOp', {}, ('expr', r'''
+(287, 'parse_expr', 0, 0, 'BinOp', {}, ('expr', r'''
 a
 **
 b
@@ -2092,7 +2126,7 @@ BinOp - ROOT 0,0..2,1
   .right Name 'b' Load - 2,0..2,1
 '''),
 
-(283, 'parse_expr', 0, 0, 'UnaryOp', {}, ('expr', r'''
+(288, 'parse_expr', 0, 0, 'UnaryOp', {}, ('expr', r'''
 not
 a
 '''), r'''
@@ -2101,7 +2135,7 @@ UnaryOp - ROOT 0,0..1,1
   .operand Name 'a' Load - 1,0..1,1
 '''),
 
-(284, 'parse_expr', 0, 0, 'UnaryOp', {}, ('expr', r'''
+(289, 'parse_expr', 0, 0, 'UnaryOp', {}, ('expr', r'''
 ~
 a
 '''), r'''
@@ -2110,7 +2144,7 @@ UnaryOp - ROOT 0,0..1,1
   .operand Name 'a' Load - 1,0..1,1
 '''),
 
-(285, 'parse_expr', 0, 0, 'Lambda', {}, ('expr', r'''
+(290, 'parse_expr', 0, 0, 'Lambda', {}, ('expr', r'''
 lambda
 :
 None
@@ -2119,7 +2153,7 @@ Lambda - ROOT 0,0..2,4
   .body Constant None - 2,0..2,4
 '''),
 
-(286, 'parse_expr', 0, 0, 'IfExp', {}, ('expr', r'''
+(291, 'parse_expr', 0, 0, 'IfExp', {}, ('expr', r'''
 a
 if
 b
@@ -2132,7 +2166,7 @@ IfExp - ROOT 0,0..4,1
   .orelse Name 'c' Load - 4,0..4,1
 '''),
 
-(287, 'parse_expr', 0, 0, 'Dict', {}, ('expr', r'''
+(292, 'parse_expr', 0, 0, 'Dict', {}, ('expr', r'''
 {
 a
 :
@@ -2146,7 +2180,7 @@ Dict - ROOT 0,0..4,1
    0] Name 'b' Load - 3,0..3,1
 '''),
 
-(288, 'parse_expr', 0, 0, 'Set', {}, ('expr', r'''
+(293, 'parse_expr', 0, 0, 'Set', {}, ('expr', r'''
 {
 a
 ,
@@ -2159,7 +2193,7 @@ Set - ROOT 0,0..4,1
    1] Name 'b' Load - 3,0..3,1
 '''),
 
-(289, 'parse_expr', 0, 0, 'ListComp', {}, ('expr', r'''
+(294, 'parse_expr', 0, 0, 'ListComp', {}, ('expr', r'''
 [
 a
 for
@@ -2177,7 +2211,7 @@ ListComp - ROOT 0,0..6,1
      .is_async 0
 '''),
 
-(290, 'parse_expr', 0, 0, 'SetComp', {}, ('expr', r'''
+(295, 'parse_expr', 0, 0, 'SetComp', {}, ('expr', r'''
 {
 a
 for
@@ -2195,7 +2229,7 @@ SetComp - ROOT 0,0..6,1
      .is_async 0
 '''),
 
-(291, 'parse_expr', 0, 0, 'DictComp', {}, ('expr', r'''
+(296, 'parse_expr', 0, 0, 'DictComp', {}, ('expr', r'''
 {
 a
 :
@@ -2222,7 +2256,7 @@ DictComp - ROOT 0,0..10,1
      .is_async 0
 '''),
 
-(292, 'parse_expr', 0, 0, 'GeneratorExp', {}, ('expr', r'''
+(297, 'parse_expr', 0, 0, 'GeneratorExp', {}, ('expr', r'''
 (
 a
 for
@@ -2240,7 +2274,7 @@ GeneratorExp - ROOT 0,0..6,1
      .is_async 0
 '''),
 
-(293, 'parse_expr', 0, 0, 'Await', {}, ('expr', r'''
+(298, 'parse_expr', 0, 0, 'Await', {}, ('expr', r'''
 await
 a
 '''), r'''
@@ -2248,11 +2282,11 @@ Await - ROOT 0,0..1,1
   .value Name 'a' Load - 1,0..1,1
 '''),
 
-(294, 'parse_expr', 0, 0, 'Yield', {}, ('expr',
+(299, 'parse_expr', 0, 0, 'Yield', {}, ('expr',
 r'''yield'''),
 r'''Yield - ROOT 0,0..0,5'''),
 
-(295, 'parse_expr', 0, 0, 'Yield', {}, ('expr', r'''
+(300, 'parse_expr', 0, 0, 'Yield', {}, ('expr', r'''
 yield
 a
 '''), r'''
@@ -2260,7 +2294,7 @@ Yield - ROOT 0,0..1,1
   .value Name 'a' Load - 1,0..1,1
 '''),
 
-(296, 'parse_expr', 0, 0, 'YieldFrom', {}, ('expr', r'''
+(301, 'parse_expr', 0, 0, 'YieldFrom', {}, ('expr', r'''
 yield
 from
 a
@@ -2269,7 +2303,7 @@ YieldFrom - ROOT 0,0..2,1
   .value Name 'a' Load - 2,0..2,1
 '''),
 
-(297, 'parse_expr', 0, 0, 'Compare', {}, ('expr', r'''
+(302, 'parse_expr', 0, 0, 'Compare', {}, ('expr', r'''
 a
 <
 b
@@ -2282,7 +2316,7 @@ Compare - ROOT 0,0..2,1
    0] Name 'b' Load - 2,0..2,1
 '''),
 
-(298, 'parse_expr', 0, 0, 'Call', {}, ('expr', r'''
+(303, 'parse_expr', 0, 0, 'Call', {}, ('expr', r'''
 f
 (
 a
@@ -2294,7 +2328,7 @@ Call - ROOT 0,0..3,1
    0] Name 'a' Load - 2,0..2,1
 '''),
 
-(299, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
+(304, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
 "\nf'{a}'\n"), r'''
 JoinedStr - ROOT
   .values[1]
@@ -2303,7 +2337,7 @@ JoinedStr - ROOT
      .conversion -1
 '''),
 
-(300, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
+(305, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
 r'''f"{a}"'''), r'''
 JoinedStr - ROOT
   .values[1]
@@ -2312,7 +2346,7 @@ JoinedStr - ROOT
      .conversion -1
 '''),
 
-(301, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr', r"""
+(306, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr', r"""
 f'''
 {
 a
@@ -2328,7 +2362,7 @@ JoinedStr - ROOT
    2] Constant '\n'
 '''),
 
-(302, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr', r'''
+(307, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr', r'''
 f"""
 {
 a
@@ -2344,79 +2378,79 @@ JoinedStr - ROOT
    2] Constant '\n'
 '''),
 
-(303, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(308, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 r'''...'''),
 r'''Constant Ellipsis - ROOT 0,0..0,3'''),
 
-(304, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(309, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 r'''None'''),
 r'''Constant None - ROOT 0,0..0,4'''),
 
-(305, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(310, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 r'''True'''),
 r'''Constant True - ROOT 0,0..0,4'''),
 
-(306, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(311, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 r'''False'''),
 r'''Constant False - ROOT 0,0..0,5'''),
 
-(307, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(312, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 r'''1'''),
 r'''Constant 1 - ROOT 0,0..0,1'''),
 
-(308, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(313, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 r'''1.0'''),
 r'''Constant 1.0 - ROOT 0,0..0,3'''),
 
-(309, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(314, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 r'''1j'''),
 r'''Constant 1j - ROOT 0,0..0,2'''),
 
-(310, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(315, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 "\n'a'\n"),
 r'''Constant 'a' - ROOT 0,0..0,3'''),
 
-(311, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(316, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 r'''"a"'''),
 r'''Constant 'a' - ROOT 0,0..0,3'''),
 
-(312, 'parse_expr', 0, 0, 'Constant', {}, ('expr', r"""
+(317, 'parse_expr', 0, 0, 'Constant', {}, ('expr', r"""
 '''
 a
 '''
 """),
 r'''Constant '\na\n' - ROOT 0,0..2,3'''),
 
-(313, 'parse_expr', 0, 0, 'Constant', {}, ('expr', r'''
+(318, 'parse_expr', 0, 0, 'Constant', {}, ('expr', r'''
 """
 a
 """
 '''),
 r'''Constant '\na\n' - ROOT 0,0..2,3'''),
 
-(314, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(319, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 "\nb'a'\n"),
 r'''Constant b'a' - ROOT 0,0..0,4'''),
 
-(315, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(320, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 r'''b"a"'''),
 r'''Constant b'a' - ROOT 0,0..0,4'''),
 
-(316, 'parse_expr', 0, 0, 'Constant', {}, ('expr', r"""
+(321, 'parse_expr', 0, 0, 'Constant', {}, ('expr', r"""
 b'''
 a
 '''
 """),
 r'''Constant b'\na\n' - ROOT 0,0..2,3'''),
 
-(317, 'parse_expr', 0, 0, 'Constant', {}, ('expr', r'''
+(322, 'parse_expr', 0, 0, 'Constant', {}, ('expr', r'''
 b"""
 a
 """
 '''),
 r'''Constant b'\na\n' - ROOT 0,0..2,3'''),
 
-(318, 'parse_expr', 0, 0, 'Attribute', {}, ('expr', r'''
+(323, 'parse_expr', 0, 0, 'Attribute', {}, ('expr', r'''
 a
 .
 b
@@ -2427,7 +2461,7 @@ Attribute - ROOT 0,0..2,1
   .ctx Load
 '''),
 
-(319, 'parse_expr', 0, 0, 'Subscript', {}, ('expr', r'''
+(324, 'parse_expr', 0, 0, 'Subscript', {}, ('expr', r'''
 a
 [
 b
@@ -2439,7 +2473,7 @@ Subscript - ROOT 0,0..3,1
   .ctx Load
 '''),
 
-(320, 'parse_expr', 0, 0, 'Starred', {}, ('expr', r'''
+(325, 'parse_expr', 0, 0, 'Starred', {}, ('expr', r'''
 *
 a
 '''), r'''
@@ -2448,7 +2482,7 @@ Starred - ROOT 0,0..1,1
   .ctx Load
 '''),
 
-(321, 'parse_expr', 0, 0, 'List', {}, ('expr', r'''
+(326, 'parse_expr', 0, 0, 'List', {}, ('expr', r'''
 [
 a
 ,
@@ -2462,7 +2496,7 @@ List - ROOT 0,0..4,1
   .ctx Load
 '''),
 
-(322, 'parse_expr', 0, 0, 'Tuple', {}, ('expr', r'''
+(327, 'parse_expr', 0, 0, 'Tuple', {}, ('expr', r'''
 (
 a
 ,
@@ -2476,7 +2510,7 @@ Tuple - ROOT 0,0..4,1
   .ctx Load
 '''),
 
-(323, 'parse_expr', 0, 0, 'Tuple', {}, ('expr', r'''
+(328, 'parse_expr', 0, 0, 'Tuple', {}, ('expr', r'''
 a
 ,
 '''), r'''
@@ -2486,7 +2520,7 @@ Tuple - ROOT 0,0..1,1
   .ctx Load
 '''),
 
-(324, 'parse_expr', 0, 0, 'Tuple', {}, ('expr', r'''
+(329, 'parse_expr', 0, 0, 'Tuple', {}, ('expr', r'''
 a
 ,
 b
@@ -2498,17 +2532,17 @@ Tuple - ROOT 0,0..2,1
   .ctx Load
 '''),
 
-(325, 'parse_pattern', 0, 0, 'MatchValue', {}, ('pattern',
+(330, 'parse_pattern', 0, 0, 'MatchValue', {}, ('pattern',
 r'''42'''), r'''
 MatchValue - ROOT 0,0..0,2
   .value Constant 42 - 0,0..0,2
 '''),
 
-(326, 'parse_pattern', 0, 0, 'MatchSingleton', {}, ('pattern',
+(331, 'parse_pattern', 0, 0, 'MatchSingleton', {}, ('pattern',
 r'''None'''),
 r'''MatchSingleton None - ROOT 0,0..0,4'''),
 
-(327, 'parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern', r'''
+(332, 'parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern', r'''
 [
 a
 ,
@@ -2524,7 +2558,7 @@ MatchSequence - ROOT 0,0..5,1
      .name 'b'
 '''),
 
-(328, 'parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern', r'''
+(333, 'parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern', r'''
 
 a
 ,
@@ -2540,7 +2574,7 @@ MatchSequence - ROOT 0,0..4,1
      .name 'b'
 '''),
 
-(329, 'parse_pattern', 0, 0, 'MatchMapping', {}, ('pattern', r'''
+(334, 'parse_pattern', 0, 0, 'MatchMapping', {}, ('pattern', r'''
 {
 "key"
 :
@@ -2554,7 +2588,7 @@ MatchMapping - ROOT 0,0..4,1
    0] MatchAs - 3,0..3,1
 '''),
 
-(330, 'parse_pattern', 0, 0, 'MatchClass', {}, ('pattern', r'''
+(335, 'parse_pattern', 0, 0, 'MatchClass', {}, ('pattern', r'''
 SomeClass
 (
 attr
@@ -2571,13 +2605,13 @@ MatchClass - ROOT 0,0..5,1
      .name 'val'
 '''),
 
-(331, 'parse_pattern', 0, 0, 'MatchAs', {}, ('pattern',
+(336, 'parse_pattern', 0, 0, 'MatchAs', {}, ('pattern',
 r'''as_var'''), r'''
 MatchAs - ROOT 0,0..0,6
   .name 'as_var'
 '''),
 
-(332, 'parse_pattern', 0, 0, 'MatchAs', {}, ('pattern', r'''
+(337, 'parse_pattern', 0, 0, 'MatchAs', {}, ('pattern', r'''
 1
 as
 as_var
@@ -2588,7 +2622,7 @@ MatchAs - ROOT 0,0..2,6
   .name 'as_var'
 '''),
 
-(333, 'parse_pattern', 0, 0, 'MatchOr', {}, ('pattern', r'''
+(338, 'parse_pattern', 0, 0, 'MatchOr', {}, ('pattern', r'''
 1
 |
 2
@@ -2601,7 +2635,7 @@ MatchOr - ROOT 0,0..2,1
      .value Constant 2 - 2,0..2,1
 '''),
 
-(334, 'parse_expr', 0, 0, 'BoolOp', {}, ('expr',
+(339, 'parse_expr', 0, 0, 'BoolOp', {}, ('expr',
 '\n a\n or\n b\n         '), r'''
 BoolOp - ROOT 1,1..3,2
   .op Or
@@ -2610,14 +2644,14 @@ BoolOp - ROOT 1,1..3,2
    1] Name 'b' Load - 3,1..3,2
 '''),
 
-(335, 'parse_expr', 0, 0, 'NamedExpr', {}, ('expr',
+(340, 'parse_expr', 0, 0, 'NamedExpr', {}, ('expr',
 '\n a\n :=\n b\n         '), r'''
 NamedExpr - ROOT 1,1..3,2
   .target Name 'a' Store - 1,1..1,2
   .value Name 'b' Load - 3,1..3,2
 '''),
 
-(336, 'parse_expr', 0, 0, 'BinOp', {}, ('expr',
+(341, 'parse_expr', 0, 0, 'BinOp', {}, ('expr',
 '\n a\n |\n b\n         '), r'''
 BinOp - ROOT 1,1..3,2
   .left Name 'a' Load - 1,1..1,2
@@ -2625,7 +2659,7 @@ BinOp - ROOT 1,1..3,2
   .right Name 'b' Load - 3,1..3,2
 '''),
 
-(337, 'parse_expr', 0, 0, 'BinOp', {}, ('expr',
+(342, 'parse_expr', 0, 0, 'BinOp', {}, ('expr',
 '\n a\n **\n b\n         '), r'''
 BinOp - ROOT 1,1..3,2
   .left Name 'a' Load - 1,1..1,2
@@ -2633,27 +2667,27 @@ BinOp - ROOT 1,1..3,2
   .right Name 'b' Load - 3,1..3,2
 '''),
 
-(338, 'parse_expr', 0, 0, 'UnaryOp', {}, ('expr',
+(343, 'parse_expr', 0, 0, 'UnaryOp', {}, ('expr',
 '\n not\n a\n         '), r'''
 UnaryOp - ROOT 1,1..2,2
   .op Not - 1,1..1,4
   .operand Name 'a' Load - 2,1..2,2
 '''),
 
-(339, 'parse_expr', 0, 0, 'UnaryOp', {}, ('expr',
+(344, 'parse_expr', 0, 0, 'UnaryOp', {}, ('expr',
 '\n ~\n a\n         '), r'''
 UnaryOp - ROOT 1,1..2,2
   .op Invert - 1,1..1,2
   .operand Name 'a' Load - 2,1..2,2
 '''),
 
-(340, 'parse_expr', 0, 0, 'Lambda', {}, ('expr',
+(345, 'parse_expr', 0, 0, 'Lambda', {}, ('expr',
 '\n lambda\n :\n None\n         '), r'''
 Lambda - ROOT 1,1..3,5
   .body Constant None - 3,1..3,5
 '''),
 
-(341, 'parse_expr', 0, 0, 'IfExp', {}, ('expr',
+(346, 'parse_expr', 0, 0, 'IfExp', {}, ('expr',
 '\n a\n if\n b\n else\n c\n         '), r'''
 IfExp - ROOT 1,1..5,2
   .test Name 'b' Load - 3,1..3,2
@@ -2661,7 +2695,7 @@ IfExp - ROOT 1,1..5,2
   .orelse Name 'c' Load - 5,1..5,2
 '''),
 
-(342, 'parse_expr', 0, 0, 'Dict', {}, ('expr',
+(347, 'parse_expr', 0, 0, 'Dict', {}, ('expr',
 '\n {\n a\n :\n b\n }\n         '), r'''
 Dict - ROOT 1,1..5,2
   .keys[1]
@@ -2670,7 +2704,7 @@ Dict - ROOT 1,1..5,2
    0] Name 'b' Load - 4,1..4,2
 '''),
 
-(343, 'parse_expr', 0, 0, 'Set', {}, ('expr',
+(348, 'parse_expr', 0, 0, 'Set', {}, ('expr',
 '\n {\n a\n ,\n b\n }\n         '), r'''
 Set - ROOT 1,1..5,2
   .elts[2]
@@ -2678,7 +2712,7 @@ Set - ROOT 1,1..5,2
    1] Name 'b' Load - 4,1..4,2
 '''),
 
-(344, 'parse_expr', 0, 0, 'ListComp', {}, ('expr',
+(349, 'parse_expr', 0, 0, 'ListComp', {}, ('expr',
 '\n [\n a\n for\n a\n in\n b\n ]\n         '), r'''
 ListComp - ROOT 1,1..7,2
   .elt Name 'a' Load - 2,1..2,2
@@ -2689,7 +2723,7 @@ ListComp - ROOT 1,1..7,2
      .is_async 0
 '''),
 
-(345, 'parse_expr', 0, 0, 'SetComp', {}, ('expr',
+(350, 'parse_expr', 0, 0, 'SetComp', {}, ('expr',
 '\n {\n a\n for\n a\n in\n b\n }\n         '), r'''
 SetComp - ROOT 1,1..7,2
   .elt Name 'a' Load - 2,1..2,2
@@ -2700,7 +2734,7 @@ SetComp - ROOT 1,1..7,2
      .is_async 0
 '''),
 
-(346, 'parse_expr', 0, 0, 'DictComp', {}, ('expr',
+(351, 'parse_expr', 0, 0, 'DictComp', {}, ('expr',
 '\n {\n a\n :\n c\n for\n a\n ,\n c\n in\n b\n }\n         '), r'''
 DictComp - ROOT 1,1..11,2
   .key Name 'a' Load - 2,1..2,2
@@ -2716,7 +2750,7 @@ DictComp - ROOT 1,1..11,2
      .is_async 0
 '''),
 
-(347, 'parse_expr', 0, 0, 'GeneratorExp', {}, ('expr',
+(352, 'parse_expr', 0, 0, 'GeneratorExp', {}, ('expr',
 '\n (\n a\n for\n a\n in\n b\n )\n         '), r'''
 GeneratorExp - ROOT 1,1..7,2
   .elt Name 'a' Load - 2,1..2,2
@@ -2727,29 +2761,29 @@ GeneratorExp - ROOT 1,1..7,2
      .is_async 0
 '''),
 
-(348, 'parse_expr', 0, 0, 'Await', {}, ('expr',
+(353, 'parse_expr', 0, 0, 'Await', {}, ('expr',
 '\n await\n a\n         '), r'''
 Await - ROOT 1,1..2,2
   .value Name 'a' Load - 2,1..2,2
 '''),
 
-(349, 'parse_expr', 0, 0, 'Yield', {}, ('expr',
+(354, 'parse_expr', 0, 0, 'Yield', {}, ('expr',
 '\n yield\n         '),
 r'''Yield - ROOT 1,1..1,6'''),
 
-(350, 'parse_expr', 0, 0, 'Yield', {}, ('expr',
+(355, 'parse_expr', 0, 0, 'Yield', {}, ('expr',
 '\n yield\n a\n         '), r'''
 Yield - ROOT 1,1..2,2
   .value Name 'a' Load - 2,1..2,2
 '''),
 
-(351, 'parse_expr', 0, 0, 'YieldFrom', {}, ('expr',
+(356, 'parse_expr', 0, 0, 'YieldFrom', {}, ('expr',
 '\n yield\n from\n a\n         '), r'''
 YieldFrom - ROOT 1,1..3,2
   .value Name 'a' Load - 3,1..3,2
 '''),
 
-(352, 'parse_expr', 0, 0, 'Compare', {}, ('expr',
+(357, 'parse_expr', 0, 0, 'Compare', {}, ('expr',
 '\n a\n <\n b\n         '), r'''
 Compare - ROOT 1,1..3,2
   .left Name 'a' Load - 1,1..1,2
@@ -2759,7 +2793,7 @@ Compare - ROOT 1,1..3,2
    0] Name 'b' Load - 3,1..3,2
 '''),
 
-(353, 'parse_expr', 0, 0, 'Call', {}, ('expr',
+(358, 'parse_expr', 0, 0, 'Call', {}, ('expr',
 '\n f\n (\n a\n )\n         '), r'''
 Call - ROOT 1,1..4,2
   .func Name 'f' Load - 1,1..1,2
@@ -2767,7 +2801,7 @@ Call - ROOT 1,1..4,2
    0] Name 'a' Load - 3,1..3,2
 '''),
 
-(354, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
+(359, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
 "\n f'{a}'\n "), r'''
 JoinedStr - ROOT
   .values[1]
@@ -2776,7 +2810,7 @@ JoinedStr - ROOT
      .conversion -1
 '''),
 
-(355, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
+(360, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
 '\n f"{a}"\n         '), r'''
 JoinedStr - ROOT
   .values[1]
@@ -2785,7 +2819,7 @@ JoinedStr - ROOT
      .conversion -1
 '''),
 
-(356, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
+(361, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
 "\n f'''\n {\n a\n }\n         '''\n "), r'''
 JoinedStr - ROOT
   .values[3]
@@ -2796,7 +2830,7 @@ JoinedStr - ROOT
    2] Constant '\n         '
 '''),
 
-(357, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
+(362, 'parse_expr', 0, 0, 'JoinedStr', {}, ('expr',
 '\n f"""\n {\n a\n }\n """\n         '), r'''
 JoinedStr - ROOT
   .values[3]
@@ -2807,67 +2841,67 @@ JoinedStr - ROOT
    2] Constant '\n '
 '''),
 
-(358, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(363, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 '\n ...\n         '),
 r'''Constant Ellipsis - ROOT 1,1..1,4'''),
 
-(359, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(364, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 '\n None\n         '),
 r'''Constant None - ROOT 1,1..1,5'''),
 
-(360, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(365, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 '\n True\n         '),
 r'''Constant True - ROOT 1,1..1,5'''),
 
-(361, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(366, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 '\n False\n         '),
 r'''Constant False - ROOT 1,1..1,6'''),
 
-(362, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(367, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 '\n 1\n         '),
 r'''Constant 1 - ROOT 1,1..1,2'''),
 
-(363, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(368, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 '\n 1.0\n         '),
 r'''Constant 1.0 - ROOT 1,1..1,4'''),
 
-(364, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(369, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 '\n 1j\n         '),
 r'''Constant 1j - ROOT 1,1..1,3'''),
 
-(365, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(370, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 "\n         'a'\n "),
 r'''Constant 'a' - ROOT 1,9..1,12'''),
 
-(366, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(371, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 '\n "a"\n         '),
 r'''Constant 'a' - ROOT 1,1..1,4'''),
 
-(367, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(372, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 "\n         '''\n a\n         '''\n "),
 r'''Constant '\n a\n         ' - ROOT 1,9..3,12'''),
 
-(368, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(373, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 '\n """\n a\n """\n         '),
 r'''Constant '\n a\n ' - ROOT 1,1..3,4'''),
 
-(369, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(374, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 "\n b'a'\n "),
 r'''Constant b'a' - ROOT 1,1..1,5'''),
 
-(370, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(375, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 '\n b"a"\n         '),
 r'''Constant b'a' - ROOT 1,1..1,5'''),
 
-(371, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(376, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 "\n b'''\n a\n         '''\n "),
 r'''Constant b'\n a\n         ' - ROOT 1,1..3,12'''),
 
-(372, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
+(377, 'parse_expr', 0, 0, 'Constant', {}, ('expr',
 '\n b"""\n a\n """\n         '),
 r'''Constant b'\n a\n ' - ROOT 1,1..3,4'''),
 
-(373, 'parse_expr', 0, 0, 'Attribute', {}, ('expr',
+(378, 'parse_expr', 0, 0, 'Attribute', {}, ('expr',
 '\n a\n .\n b\n         '), r'''
 Attribute - ROOT 1,1..3,2
   .value Name 'a' Load - 1,1..1,2
@@ -2875,7 +2909,7 @@ Attribute - ROOT 1,1..3,2
   .ctx Load
 '''),
 
-(374, 'parse_expr', 0, 0, 'Subscript', {}, ('expr',
+(379, 'parse_expr', 0, 0, 'Subscript', {}, ('expr',
 '\n a\n [\n b\n ]\n         '), r'''
 Subscript - ROOT 1,1..4,2
   .value Name 'a' Load - 1,1..1,2
@@ -2883,14 +2917,14 @@ Subscript - ROOT 1,1..4,2
   .ctx Load
 '''),
 
-(375, 'parse_expr', 0, 0, 'Starred', {}, ('expr',
+(380, 'parse_expr', 0, 0, 'Starred', {}, ('expr',
 '\n *\n a\n         '), r'''
 Starred - ROOT 1,1..2,2
   .value Name 'a' Load - 2,1..2,2
   .ctx Load
 '''),
 
-(376, 'parse_expr', 0, 0, 'List', {}, ('expr',
+(381, 'parse_expr', 0, 0, 'List', {}, ('expr',
 '\n [\n a\n ,\n b\n ]\n         '), r'''
 List - ROOT 1,1..5,2
   .elts[2]
@@ -2899,7 +2933,7 @@ List - ROOT 1,1..5,2
   .ctx Load
 '''),
 
-(377, 'parse_expr', 0, 0, 'Tuple', {}, ('expr',
+(382, 'parse_expr', 0, 0, 'Tuple', {}, ('expr',
 '\n (\n a\n ,\n b\n )\n         '), r'''
 Tuple - ROOT 1,1..5,2
   .elts[2]
@@ -2908,7 +2942,7 @@ Tuple - ROOT 1,1..5,2
   .ctx Load
 '''),
 
-(378, 'parse_expr', 0, 0, 'Tuple', {}, ('expr',
+(383, 'parse_expr', 0, 0, 'Tuple', {}, ('expr',
 '\n a\n ,\n         '), r'''
 Tuple - ROOT 1,1..2,2
   .elts[1]
@@ -2916,7 +2950,7 @@ Tuple - ROOT 1,1..2,2
   .ctx Load
 '''),
 
-(379, 'parse_expr', 0, 0, 'Tuple', {}, ('expr',
+(384, 'parse_expr', 0, 0, 'Tuple', {}, ('expr',
 '\n a\n ,\n b\n         '), r'''
 Tuple - ROOT 1,1..3,2
   .elts[2]
@@ -2925,17 +2959,17 @@ Tuple - ROOT 1,1..3,2
   .ctx Load
 '''),
 
-(380, 'parse_pattern', 0, 0, 'MatchValue', {}, ('pattern',
+(385, 'parse_pattern', 0, 0, 'MatchValue', {}, ('pattern',
 '\n 42\n         '), r'''
 MatchValue - ROOT 1,1..1,3
   .value Constant 42 - 1,1..1,3
 '''),
 
-(381, 'parse_pattern', 0, 0, 'MatchSingleton', {}, ('pattern',
+(386, 'parse_pattern', 0, 0, 'MatchSingleton', {}, ('pattern',
 '\n None\n         '),
 r'''MatchSingleton None - ROOT 1,1..1,5'''),
 
-(382, 'parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern',
+(387, 'parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern',
 '\n [\n a\n ,\n *\n b\n ]\n         '), r'''
 MatchSequence - ROOT 1,1..6,2
   .patterns[2]
@@ -2945,7 +2979,7 @@ MatchSequence - ROOT 1,1..6,2
      .name 'b'
 '''),
 
-(383, 'parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern',
+(388, 'parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern',
 '\n \n a\n ,\n *\n b\n \n         '), r'''
 MatchSequence - ROOT 0,0..5,2
   .patterns[2]
@@ -2955,7 +2989,7 @@ MatchSequence - ROOT 0,0..5,2
      .name 'b'
 '''),
 
-(384, 'parse_pattern', 0, 0, 'MatchMapping', {}, ('pattern',
+(389, 'parse_pattern', 0, 0, 'MatchMapping', {}, ('pattern',
 '\n {\n "key"\n :\n _\n }\n         '), r'''
 MatchMapping - ROOT 1,1..5,2
   .keys[1]
@@ -2964,7 +2998,7 @@ MatchMapping - ROOT 1,1..5,2
    0] MatchAs - 4,1..4,2
 '''),
 
-(385, 'parse_pattern', 0, 0, 'MatchClass', {}, ('pattern',
+(390, 'parse_pattern', 0, 0, 'MatchClass', {}, ('pattern',
 '\n SomeClass\n (\n attr\n =\n val\n )\n         '), r'''
 MatchClass - ROOT 1,1..6,2
   .cls Name 'SomeClass' Load - 1,1..1,10
@@ -2975,13 +3009,13 @@ MatchClass - ROOT 1,1..6,2
      .name 'val'
 '''),
 
-(386, 'parse_pattern', 0, 0, 'MatchAs', {}, ('pattern',
+(391, 'parse_pattern', 0, 0, 'MatchAs', {}, ('pattern',
 '\n as_var\n         '), r'''
 MatchAs - ROOT 1,1..1,7
   .name 'as_var'
 '''),
 
-(387, 'parse_pattern', 0, 0, 'MatchAs', {}, ('pattern',
+(392, 'parse_pattern', 0, 0, 'MatchAs', {}, ('pattern',
 '\n 1\n as\n as_var\n         '), r'''
 MatchAs - ROOT 1,1..3,7
   .pattern MatchValue - 1,1..1,2
@@ -2989,7 +3023,7 @@ MatchAs - ROOT 1,1..3,7
   .name 'as_var'
 '''),
 
-(388, 'parse_pattern', 0, 0, 'MatchOr', {}, ('pattern',
+(393, 'parse_pattern', 0, 0, 'MatchOr', {}, ('pattern',
 '\n 1\n |\n 2\n         '), r'''
 MatchOr - ROOT 1,1..3,2
   .patterns[2]
@@ -2999,7 +3033,7 @@ MatchOr - ROOT 1,1..3,2
      .value Constant 2 - 3,1..3,2
 '''),
 
-(389, 'parse_Module', 0, 0, 'Module', {}, (mod,
+(394, 'parse_Module', 0, 0, 'Module', {}, (mod,
 r'''j'''), r'''
 Module - ROOT 0,0..0,1
   .body[1]
@@ -3007,7 +3041,7 @@ Module - ROOT 0,0..0,1
      .value Name 'j' Load - 0,0..0,1
 '''),
 
-(390, 'parse_Module', 0, 0, 'Module', {}, (Module,
+(395, 'parse_Module', 0, 0, 'Module', {}, (Module,
 r'''j'''), r'''
 Module - ROOT 0,0..0,1
   .body[1]
@@ -3015,13 +3049,13 @@ Module - ROOT 0,0..0,1
      .value Name 'j' Load - 0,0..0,1
 '''),
 
-(391, 'parse_Expression', 0, 0, 'Expression', {}, (Expression,
+(396, 'parse_Expression', 0, 0, 'Expression', {}, (Expression,
 r'''None'''), r'''
 Expression - ROOT 0,0..0,4
   .body Constant None - 0,0..0,4
 '''),
 
-(392, 'parse_Interactive', 0, 0, 'Interactive', {}, (Interactive,
+(397, 'parse_Interactive', 0, 0, 'Interactive', {}, (Interactive,
 r'''j'''), r'''
 Interactive - ROOT 0,0..0,1
   .body[1]
@@ -3029,7 +3063,7 @@ Interactive - ROOT 0,0..0,1
      .value Name 'j' Load - 0,0..0,1
 '''),
 
-(393, 'parse_stmt', 0, 0, 'AnnAssign', {}, (stmt,
+(398, 'parse_stmt', 0, 0, 'AnnAssign', {}, (stmt,
 r'''i: int = 1'''), r'''
 AnnAssign - ROOT 0,0..0,10
   .target Name 'i' Store - 0,0..0,1
@@ -3038,23 +3072,23 @@ AnnAssign - ROOT 0,0..0,10
   .simple 1
 '''),
 
-(394, 'parse_stmt', 0, 0, 'Expr', {}, (stmt,
+(399, 'parse_stmt', 0, 0, 'Expr', {}, (stmt,
 r'''j'''), r'''
 Expr - ROOT 0,0..0,1
   .value Name 'j' Load - 0,0..0,1
 '''),
 
-(395, 'parse_stmt', 0, 0, 'ParseError', {}, (stmt, r'''
+(400, 'parse_stmt', 0, 0, 'ParseError', {}, (stmt, r'''
 i: int = 1
 j
 '''),
 r'''**ParseError('expecting single stmt')**'''),
 
-(396, 'parse_stmt', 0, 0, 'SyntaxError', {}, (stmt,
+(401, 'parse_stmt', 0, 0, 'SyntaxError', {}, (stmt,
 r'''except: pass'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(397, 'parse_stmt', 0, 0, 'AnnAssign', {}, (AnnAssign,
+(402, 'parse_stmt', 0, 0, 'AnnAssign', {}, (AnnAssign,
 r'''i: int = 1'''), r'''
 AnnAssign - ROOT 0,0..0,10
   .target Name 'i' Store - 0,0..0,1
@@ -3063,30 +3097,30 @@ AnnAssign - ROOT 0,0..0,10
   .simple 1
 '''),
 
-(398, 'parse_stmt', 0, 0, 'Expr', {}, (Expr,
+(403, 'parse_stmt', 0, 0, 'Expr', {}, (Expr,
 r'''j'''), r'''
 Expr - ROOT 0,0..0,1
   .value Name 'j' Load - 0,0..0,1
 '''),
 
-(399, 'parse_ExceptHandler', 0, 0, 'ExceptHandler', {}, (ExceptHandler,
+(404, 'parse_ExceptHandler', 0, 0, 'ExceptHandler', {}, (ExceptHandler,
 r'''except: pass'''), r'''
 ExceptHandler - ROOT 0,0..0,12
   .body[1]
    0] Pass - 0,8..0,12
 '''),
 
-(400, 'parse_ExceptHandler', 0, 0, 'ParseError', {}, (ExceptHandler, r'''
+(405, 'parse_ExceptHandler', 0, 0, 'ParseError', {}, (ExceptHandler, r'''
 except Exception: pass
 except: pass
 '''),
 r'''**ParseError('expecting single ExceptHandler')**'''),
 
-(401, 'parse_ExceptHandler', 0, 0, 'SyntaxError', {}, (ExceptHandler,
+(406, 'parse_ExceptHandler', 0, 0, 'SyntaxError', {}, (ExceptHandler,
 r'''i: int = 1'''),
 r'''**SyntaxError("expected 'except' or 'finally' block")**'''),
 
-(402, 'parse_match_case', 0, 0, 'match_case', {}, (match_case,
+(407, 'parse_match_case', 0, 0, 'match_case', {}, (match_case,
 r'''case None: pass'''), r'''
 match_case - ROOT 0,0..0,15
   .pattern MatchSingleton None - 0,5..0,9
@@ -3094,28 +3128,28 @@ match_case - ROOT 0,0..0,15
    0] Pass - 0,11..0,15
 '''),
 
-(403, 'parse_match_case', 0, 0, 'ParseError', {}, (match_case, r'''
+(408, 'parse_match_case', 0, 0, 'ParseError', {}, (match_case, r'''
 case None: pass
 case 1: pass
 '''),
 r'''**ParseError('expecting single match_case')**'''),
 
-(404, 'parse_match_case', 0, 0, 'SyntaxError', {}, (match_case,
+(409, 'parse_match_case', 0, 0, 'SyntaxError', {}, (match_case,
 r'''i: int = 1'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(405, 'parse_expr', 0, 0, 'Name', {}, (expr,
+(410, 'parse_expr', 0, 0, 'Name', {}, (expr,
 r'''j'''),
 r'''Name 'j' Load - ROOT 0,0..0,1'''),
 
-(406, 'parse_expr', 0, 0, 'Starred', {}, (expr,
+(411, 'parse_expr', 0, 0, 'Starred', {}, (expr,
 r'''*s'''), r'''
 Starred - ROOT 0,0..0,2
   .value Name 's' Load - 0,1..0,2
   .ctx Load
 '''),
 
-(407, 'parse_expr', 0, 0, 'Starred', {}, (expr, r'''
+(412, 'parse_expr', 0, 0, 'Starred', {}, (expr, r'''
 *
 s
 '''), r'''
@@ -3124,7 +3158,7 @@ Starred - ROOT 0,0..1,1
   .ctx Load
 '''),
 
-(408, 'parse_expr', 0, 0, 'Tuple', {}, (expr, r'''
+(413, 'parse_expr', 0, 0, 'Tuple', {}, (expr, r'''
 *
 s,
 '''), r'''
@@ -3136,7 +3170,7 @@ Tuple - ROOT 0,0..1,2
   .ctx Load
 '''),
 
-(409, 'parse_expr', 0, 0, 'Tuple', {}, (expr, r'''
+(414, 'parse_expr', 0, 0, 'Tuple', {}, (expr, r'''
 1
 ,
 2
@@ -3149,30 +3183,30 @@ Tuple - ROOT 0,0..3,1
   .ctx Load
 '''),
 
-(410, 'parse_expr', 0, 0, 'SyntaxError', {}, (expr,
+(415, 'parse_expr', 0, 0, 'SyntaxError', {}, (expr,
 r'''*not a'''),
 r'''**SyntaxError('invalid expression')**'''),
 
-(411, 'parse_expr', 0, 0, 'SyntaxError', {}, (expr,
+(416, 'parse_expr', 0, 0, 'SyntaxError', {}, (expr,
 r'''a:b'''),
 r'''**SyntaxError('invalid expression')**'''),
 
-(412, 'parse_expr', 0, 0, 'SyntaxError', {}, (expr,
+(417, 'parse_expr', 0, 0, 'SyntaxError', {}, (expr,
 r'''a:b:c'''),
 r'''**SyntaxError('invalid expression')**'''),
 
-(413, 'parse_expr', 0, 0, 'Name', {}, (Name,
+(418, 'parse_expr', 0, 0, 'Name', {}, (Name,
 r'''j'''),
 r'''Name 'j' Load - ROOT 0,0..0,1'''),
 
-(414, 'parse_expr', 0, 0, 'Starred', {}, (Starred,
+(419, 'parse_expr', 0, 0, 'Starred', {}, (Starred,
 r'''*s'''), r'''
 Starred - ROOT 0,0..0,2
   .value Name 's' Load - 0,1..0,2
   .ctx Load
 '''),
 
-(415, 'parse_expr_arglike', 0, 0, 'Starred', {}, (Starred,
+(420, 'parse_expr_arglike', 0, 0, 'Starred', {}, (Starred,
 r'''*not a'''), r'''
 Starred - ROOT 0,0..0,6
   .value UnaryOp - 0,1..0,6
@@ -3181,60 +3215,60 @@ Starred - ROOT 0,0..0,6
   .ctx Load
 '''),
 
-(416, 'parse_expr_slice', 0, 0, 'Slice', {}, (Slice,
+(421, 'parse_expr_slice', 0, 0, 'Slice', {}, (Slice,
 r'''a:b'''), r'''
 Slice - ROOT 0,0..0,3
   .lower Name 'a' Load - 0,0..0,1
   .upper Name 'b' Load - 0,2..0,3
 '''),
 
-(417, 'parse_boolop', 0, 0, 'And', {}, (boolop,
+(422, 'parse_boolop', 0, 0, 'And', {}, (boolop,
 r'''and'''),
 r'''And - ROOT 0,0..0,3'''),
 
-(418, 'parse_boolop', 0, 0, 'ParseError', {}, (boolop,
+(423, 'parse_boolop', 0, 0, 'ParseError', {}, (boolop,
 r'''*'''),
 r'''**ParseError("expecting boolop, got '*'")**'''),
 
-(419, 'parse_operator', 0, 0, 'Mult', {}, (operator,
+(424, 'parse_operator', 0, 0, 'Mult', {}, (operator,
 r'''*'''),
 r'''Mult - ROOT 0,0..0,1'''),
 
-(420, 'parse_operator', 0, 0, 'Mult', {}, (operator,
+(425, 'parse_operator', 0, 0, 'Mult', {}, (operator,
 r'''*='''),
 r'''Mult - ROOT 0,0..0,2'''),
 
-(421, 'parse_operator', 0, 0, 'ParseError', {}, (operator,
+(426, 'parse_operator', 0, 0, 'ParseError', {}, (operator,
 r'''and'''),
 r'''**ParseError("expecting operator, got 'and'")**'''),
 
-(422, 'parse_unaryop', 0, 0, 'UAdd', {}, (unaryop,
+(427, 'parse_unaryop', 0, 0, 'UAdd', {}, (unaryop,
 r'''+'''),
 r'''UAdd - ROOT 0,0..0,1'''),
 
-(423, 'parse_unaryop', 0, 0, 'SyntaxError', {}, (unaryop,
+(428, 'parse_unaryop', 0, 0, 'SyntaxError', {}, (unaryop,
 r'''and'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(424, 'parse_cmpop', 0, 0, 'GtE', {}, (cmpop,
+(429, 'parse_cmpop', 0, 0, 'GtE', {}, (cmpop,
 r'''>='''),
 r'''GtE - ROOT 0,0..0,2'''),
 
-(425, 'parse_cmpop', 0, 0, 'IsNot', {}, (cmpop, r'''
+(430, 'parse_cmpop', 0, 0, 'IsNot', {}, (cmpop, r'''
 is
 not
 '''),
 r'''IsNot - ROOT 0,0..1,3'''),
 
-(426, 'parse_cmpop', 0, 0, 'ParseError', {}, (cmpop,
+(431, 'parse_cmpop', 0, 0, 'ParseError', {}, (cmpop,
 r'''>= a >='''),
 r'''**ParseError('expecting single cmpop')**'''),
 
-(427, 'parse_cmpop', 0, 0, 'ParseError', {}, (cmpop,
+(432, 'parse_cmpop', 0, 0, 'ParseError', {}, (cmpop,
 r'''and'''),
 r'''**ParseError("expecting cmpop, got 'and'")**'''),
 
-(428, 'parse_comprehension', 0, 0, 'comprehension', {}, (comprehension,
+(433, 'parse_comprehension', 0, 0, 'comprehension', {}, (comprehension,
 r'''for u in v'''), r'''
 comprehension - ROOT 0,0..0,10
   .target Name 'u' Store - 0,4..0,5
@@ -3242,7 +3276,7 @@ comprehension - ROOT 0,0..0,10
   .is_async 0
 '''),
 
-(429, 'parse_comprehension', 0, 0, 'comprehension', {}, (comprehension,
+(434, 'parse_comprehension', 0, 0, 'comprehension', {}, (comprehension,
 r'''for u in v if w'''), r'''
 comprehension - ROOT 0,0..0,15
   .target Name 'u' Store - 0,4..0,5
@@ -3252,15 +3286,15 @@ comprehension - ROOT 0,0..0,15
   .is_async 0
 '''),
 
-(430, 'parse_comprehension', 0, 0, 'ParseError', {}, (comprehension,
+(435, 'parse_comprehension', 0, 0, 'ParseError', {}, (comprehension,
 r'''()'''),
 r'''**ParseError('expecting comprehension')**'''),
 
-(431, 'parse_arguments', 0, 0, 'arguments', {}, (arguments,
+(436, 'parse_arguments', 0, 0, 'arguments', {}, (arguments,
 r''''''),
 r'''arguments - ROOT'''),
 
-(432, 'parse_arguments', 0, 0, 'arguments', {}, (arguments,
+(437, 'parse_arguments', 0, 0, 'arguments', {}, (arguments,
 r'''a: list[str], /, b: int = 1, *c, d=100, **e'''), r'''
 arguments - ROOT 0,0..0,43
   .posonlyargs[1]
@@ -3287,7 +3321,7 @@ arguments - ROOT 0,0..0,43
    0] Constant 1 - 0,26..0,27
 '''),
 
-(433, 'parse_arguments_lambda', 0, 0, 'arguments', {}, (arguments,
+(438, 'parse_arguments_lambda', 0, 0, 'arguments', {}, (arguments,
 r'''a, /, b, *c, d=100, **e'''), r'''
 arguments - ROOT 0,0..0,23
   .posonlyargs[1]
@@ -3307,109 +3341,109 @@ arguments - ROOT 0,0..0,23
     .arg 'e'
 '''),
 
-(434, 'parse_arg', 0, 0, 'arg', {}, (arg,
+(439, 'parse_arg', 0, 0, 'arg', {}, (arg,
 r'''a: b'''), r'''
 arg - ROOT 0,0..0,4
   .arg 'a'
   .annotation Name 'b' Load - 0,3..0,4
 '''),
 
-(435, 'parse_arg', 0, 0, 'ParseError', {}, (arg,
+(440, 'parse_arg', 0, 0, 'ParseError', {}, (arg,
 r'''a: b = c'''),
 r'''**ParseError('expecting single argument without default')**'''),
 
-(436, 'parse_arg', 0, 0, 'ParseError', {}, (arg,
+(441, 'parse_arg', 0, 0, 'ParseError', {}, (arg,
 r'''a, b'''),
 r'''**ParseError('expecting single argument without default')**'''),
 
-(437, 'parse_arg', 0, 0, 'ParseError', {}, (arg,
+(442, 'parse_arg', 0, 0, 'ParseError', {}, (arg,
 r'''a, /'''),
 r'''**ParseError('expecting single argument without default')**'''),
 
-(438, 'parse_arg', 0, 0, 'ParseError', {}, (arg,
+(443, 'parse_arg', 0, 0, 'ParseError', {}, (arg,
 r'''*, a'''),
 r'''**ParseError('expecting single argument without default')**'''),
 
-(439, 'parse_arg', 0, 0, 'ParseError', {}, (arg,
+(444, 'parse_arg', 0, 0, 'ParseError', {}, (arg,
 r'''*a'''),
 r'''**ParseError('expecting single argument without default')**'''),
 
-(440, 'parse_arg', 0, 0, 'ParseError', {}, (arg,
+(445, 'parse_arg', 0, 0, 'ParseError', {}, (arg,
 r'''**a'''),
 r'''**ParseError('expecting single argument without default')**'''),
 
-(441, 'parse_keyword', 0, 0, 'keyword', {}, (keyword,
+(446, 'parse_keyword', 0, 0, 'keyword', {}, (keyword,
 r'''a=1'''), r'''
 keyword - ROOT 0,0..0,3
   .arg 'a'
   .value Constant 1 - 0,2..0,3
 '''),
 
-(442, 'parse_keyword', 0, 0, 'keyword', {}, (keyword,
+(447, 'parse_keyword', 0, 0, 'keyword', {}, (keyword,
 r'''**a'''), r'''
 keyword - ROOT 0,0..0,3
   .value Name 'a' Load - 0,2..0,3
 '''),
 
-(443, 'parse_keyword', 0, 0, 'ParseError', {}, (keyword,
+(448, 'parse_keyword', 0, 0, 'ParseError', {}, (keyword,
 r'''1'''),
 r'''**ParseError('expecting single keyword')**'''),
 
-(444, 'parse_keyword', 0, 0, 'ParseError', {}, (keyword,
+(449, 'parse_keyword', 0, 0, 'ParseError', {}, (keyword,
 r'''a'''),
 r'''**ParseError('expecting single keyword')**'''),
 
-(445, 'parse_keyword', 0, 0, 'ParseError', {}, (keyword,
+(450, 'parse_keyword', 0, 0, 'ParseError', {}, (keyword,
 r'''a=1, b=2'''),
 r'''**ParseError('expecting single keyword')**'''),
 
-(446, 'parse_alias', 0, 0, 'alias', {}, (alias,
+(451, 'parse_alias', 0, 0, 'alias', {}, (alias,
 r'''a'''), r'''
 alias - ROOT 0,0..0,1
   .name 'a'
 '''),
 
-(447, 'parse_alias', 0, 0, 'alias', {}, (alias,
+(452, 'parse_alias', 0, 0, 'alias', {}, (alias,
 r'''a.b'''), r'''
 alias - ROOT 0,0..0,3
   .name 'a.b'
 '''),
 
-(448, 'parse_alias', 0, 0, 'alias', {}, (alias,
+(453, 'parse_alias', 0, 0, 'alias', {}, (alias,
 r'''*'''), r'''
 alias - ROOT 0,0..0,1
   .name '*'
 '''),
 
-(449, 'parse_alias', 0, 0, 'ParseError', {}, (alias,
+(454, 'parse_alias', 0, 0, 'ParseError', {}, (alias,
 r'''a, b'''),
 r'''**ParseError('expecting single name')**'''),
 
-(450, 'parse_alias', 0, 0, 'alias', {}, (alias,
+(455, 'parse_alias', 0, 0, 'alias', {}, (alias,
 r'''a as c'''), r'''
 alias - ROOT 0,0..0,6
   .name 'a'
   .asname 'c'
 '''),
 
-(451, 'parse_alias', 0, 0, 'alias', {}, (alias,
+(456, 'parse_alias', 0, 0, 'alias', {}, (alias,
 r'''a.b as c'''), r'''
 alias - ROOT 0,0..0,8
   .name 'a.b'
   .asname 'c'
 '''),
 
-(452, 'parse_alias', 0, 0, 'SyntaxError', {}, (alias,
+(457, 'parse_alias', 0, 0, 'SyntaxError', {}, (alias,
 r'''* as c'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(453, 'parse_withitem', 0, 0, 'withitem', {}, (withitem,
+(458, 'parse_withitem', 0, 0, 'withitem', {}, (withitem,
 r'''a'''), r'''
 withitem - ROOT 0,0..0,1
   .context_expr Name 'a' Load - 0,0..0,1
 '''),
 
-(454, 'parse_withitem', 0, 0, 'withitem', {}, (withitem,
+(459, 'parse_withitem', 0, 0, 'withitem', {}, (withitem,
 r'''a, b'''), r'''
 withitem - ROOT 0,0..0,4
   .context_expr Tuple - 0,0..0,4
@@ -3419,7 +3453,7 @@ withitem - ROOT 0,0..0,4
     .ctx Load
 '''),
 
-(455, 'parse_withitem', 0, 0, 'withitem', {}, (withitem,
+(460, 'parse_withitem', 0, 0, 'withitem', {}, (withitem,
 r'''(a, b)'''), r'''
 withitem - ROOT 0,0..0,6
   .context_expr Tuple - 0,0..0,6
@@ -3429,42 +3463,42 @@ withitem - ROOT 0,0..0,6
     .ctx Load
 '''),
 
-(456, 'parse_withitem', 0, 0, 'withitem', {}, (withitem,
+(461, 'parse_withitem', 0, 0, 'withitem', {}, (withitem,
 r'''a as b'''), r'''
 withitem - ROOT 0,0..0,6
   .context_expr Name 'a' Load - 0,0..0,1
   .optional_vars Name 'b' Store - 0,5..0,6
 '''),
 
-(457, 'parse_withitem', 0, 0, 'ParseError', {}, (withitem,
+(462, 'parse_withitem', 0, 0, 'ParseError', {}, (withitem,
 r'''a as b, x as y'''),
 r'''**ParseError('expecting single withitem')**'''),
 
-(458, 'parse_withitem', 0, 0, 'withitem', {}, (withitem,
+(463, 'parse_withitem', 0, 0, 'withitem', {}, (withitem,
 r'''(a)'''), r'''
 withitem - ROOT 0,0..0,3
   .context_expr Name 'a' Load - 0,1..0,2
 '''),
 
-(459, 'parse_withitem', 0, 0, 'SyntaxError', {}, (withitem,
+(464, 'parse_withitem', 0, 0, 'SyntaxError', {}, (withitem,
 r'''(a as b)'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(460, 'parse_withitem', 0, 0, 'SyntaxError', {}, (withitem,
+(465, 'parse_withitem', 0, 0, 'SyntaxError', {}, (withitem,
 r'''(a as b, x as y)'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(461, 'parse_pattern', 0, 0, 'MatchValue', {}, (pattern,
+(466, 'parse_pattern', 0, 0, 'MatchValue', {}, (pattern,
 r'''42'''), r'''
 MatchValue - ROOT 0,0..0,2
   .value Constant 42 - 0,0..0,2
 '''),
 
-(462, 'parse_pattern', 0, 0, 'MatchSingleton', {}, (pattern,
+(467, 'parse_pattern', 0, 0, 'MatchSingleton', {}, (pattern,
 r'''None'''),
 r'''MatchSingleton None - ROOT 0,0..0,4'''),
 
-(463, 'parse_pattern', 0, 0, 'MatchSequence', {}, (pattern,
+(468, 'parse_pattern', 0, 0, 'MatchSequence', {}, (pattern,
 r'''[a, *_]'''), r'''
 MatchSequence - ROOT 0,0..0,7
   .patterns[2]
@@ -3473,11 +3507,11 @@ MatchSequence - ROOT 0,0..0,7
    1] MatchStar - 0,4..0,6
 '''),
 
-(464, 'parse_pattern', 0, 0, 'MatchSequence', {}, (pattern,
+(469, 'parse_pattern', 0, 0, 'MatchSequence', {}, (pattern,
 r'''[]'''),
 r'''MatchSequence - ROOT 0,0..0,2'''),
 
-(465, 'parse_pattern', 0, 0, 'MatchMapping', {}, (pattern,
+(470, 'parse_pattern', 0, 0, 'MatchMapping', {}, (pattern,
 r'''{"key": _}'''), r'''
 MatchMapping - ROOT 0,0..0,10
   .keys[1]
@@ -3486,17 +3520,17 @@ MatchMapping - ROOT 0,0..0,10
    0] MatchAs - 0,8..0,9
 '''),
 
-(466, 'parse_pattern', 0, 0, 'MatchMapping', {}, (pattern,
+(471, 'parse_pattern', 0, 0, 'MatchMapping', {}, (pattern,
 r'''{}'''),
 r'''MatchMapping - ROOT 0,0..0,2'''),
 
-(467, 'parse_pattern', 0, 0, 'MatchClass', {}, (pattern,
+(472, 'parse_pattern', 0, 0, 'MatchClass', {}, (pattern,
 r'''SomeClass()'''), r'''
 MatchClass - ROOT 0,0..0,11
   .cls Name 'SomeClass' Load - 0,0..0,9
 '''),
 
-(468, 'parse_pattern', 0, 0, 'MatchClass', {}, (pattern,
+(473, 'parse_pattern', 0, 0, 'MatchClass', {}, (pattern,
 r'''SomeClass(attr=val)'''), r'''
 MatchClass - ROOT 0,0..0,19
   .cls Name 'SomeClass' Load - 0,0..0,9
@@ -3507,13 +3541,13 @@ MatchClass - ROOT 0,0..0,19
      .name 'val'
 '''),
 
-(469, 'parse_pattern', 0, 0, 'MatchAs', {}, (pattern,
+(474, 'parse_pattern', 0, 0, 'MatchAs', {}, (pattern,
 r'''as_var'''), r'''
 MatchAs - ROOT 0,0..0,6
   .name 'as_var'
 '''),
 
-(470, 'parse_pattern', 0, 0, 'MatchAs', {}, (pattern,
+(475, 'parse_pattern', 0, 0, 'MatchAs', {}, (pattern,
 r'''1 as as_var'''), r'''
 MatchAs - ROOT 0,0..0,11
   .pattern MatchValue - 0,0..0,1
@@ -3521,7 +3555,7 @@ MatchAs - ROOT 0,0..0,11
   .name 'as_var'
 '''),
 
-(471, 'parse_pattern', 0, 0, 'MatchOr', {}, (pattern,
+(476, 'parse_pattern', 0, 0, 'MatchOr', {}, (pattern,
 r'''1 | 2 | 3'''), r'''
 MatchOr - ROOT 0,0..0,9
   .patterns[3]
@@ -3533,31 +3567,31 @@ MatchOr - ROOT 0,0..0,9
      .value Constant 3 - 0,8..0,9
 '''),
 
-(472, 'parse_pattern', 0, 0, 'MatchAs', {}, (pattern,
+(477, 'parse_pattern', 0, 0, 'MatchAs', {}, (pattern,
 r'''_'''),
 r'''MatchAs - ROOT 0,0..0,1'''),
 
-(473, 'parse_pattern', 0, 0, 'MatchStar', {}, (pattern,
+(478, 'parse_pattern', 0, 0, 'MatchStar', {}, (pattern,
 r'''*a'''), r'''
 MatchStar - ROOT 0,0..0,2
   .name 'a'
 '''),
 
-(474, 'parse_pattern', 0, 0, 'SyntaxError', {}, (pattern,
+(479, 'parse_pattern', 0, 0, 'SyntaxError', {}, (pattern,
 r''''''),
 r'''**SyntaxError('empty pattern')**'''),
 
-(475, 'parse_pattern', 0, 0, 'MatchValue', {}, (MatchValue,
+(480, 'parse_pattern', 0, 0, 'MatchValue', {}, (MatchValue,
 r'''42'''), r'''
 MatchValue - ROOT 0,0..0,2
   .value Constant 42 - 0,0..0,2
 '''),
 
-(476, 'parse_pattern', 0, 0, 'MatchSingleton', {}, (MatchSingleton,
+(481, 'parse_pattern', 0, 0, 'MatchSingleton', {}, (MatchSingleton,
 r'''None'''),
 r'''MatchSingleton None - ROOT 0,0..0,4'''),
 
-(477, 'parse_pattern', 0, 0, 'MatchSequence', {}, (MatchSequence,
+(482, 'parse_pattern', 0, 0, 'MatchSequence', {}, (MatchSequence,
 r'''[a, *_]'''), r'''
 MatchSequence - ROOT 0,0..0,7
   .patterns[2]
@@ -3566,11 +3600,11 @@ MatchSequence - ROOT 0,0..0,7
    1] MatchStar - 0,4..0,6
 '''),
 
-(478, 'parse_pattern', 0, 0, 'MatchSequence', {}, (MatchSequence,
+(483, 'parse_pattern', 0, 0, 'MatchSequence', {}, (MatchSequence,
 r'''[]'''),
 r'''MatchSequence - ROOT 0,0..0,2'''),
 
-(479, 'parse_pattern', 0, 0, 'MatchMapping', {}, (MatchMapping,
+(484, 'parse_pattern', 0, 0, 'MatchMapping', {}, (MatchMapping,
 r'''{"key": _}'''), r'''
 MatchMapping - ROOT 0,0..0,10
   .keys[1]
@@ -3579,17 +3613,17 @@ MatchMapping - ROOT 0,0..0,10
    0] MatchAs - 0,8..0,9
 '''),
 
-(480, 'parse_pattern', 0, 0, 'MatchMapping', {}, (MatchMapping,
+(485, 'parse_pattern', 0, 0, 'MatchMapping', {}, (MatchMapping,
 r'''{}'''),
 r'''MatchMapping - ROOT 0,0..0,2'''),
 
-(481, 'parse_pattern', 0, 0, 'MatchClass', {}, (MatchClass,
+(486, 'parse_pattern', 0, 0, 'MatchClass', {}, (MatchClass,
 r'''SomeClass()'''), r'''
 MatchClass - ROOT 0,0..0,11
   .cls Name 'SomeClass' Load - 0,0..0,9
 '''),
 
-(482, 'parse_pattern', 0, 0, 'MatchClass', {}, (MatchClass,
+(487, 'parse_pattern', 0, 0, 'MatchClass', {}, (MatchClass,
 r'''SomeClass(attr=val)'''), r'''
 MatchClass - ROOT 0,0..0,19
   .cls Name 'SomeClass' Load - 0,0..0,9
@@ -3600,13 +3634,13 @@ MatchClass - ROOT 0,0..0,19
      .name 'val'
 '''),
 
-(483, 'parse_pattern', 0, 0, 'MatchAs', {}, (MatchAs,
+(488, 'parse_pattern', 0, 0, 'MatchAs', {}, (MatchAs,
 r'''as_var'''), r'''
 MatchAs - ROOT 0,0..0,6
   .name 'as_var'
 '''),
 
-(484, 'parse_pattern', 0, 0, 'MatchAs', {}, (MatchAs,
+(489, 'parse_pattern', 0, 0, 'MatchAs', {}, (MatchAs,
 r'''1 as as_var'''), r'''
 MatchAs - ROOT 0,0..0,11
   .pattern MatchValue - 0,0..0,1
@@ -3614,7 +3648,7 @@ MatchAs - ROOT 0,0..0,11
   .name 'as_var'
 '''),
 
-(485, 'parse_pattern', 0, 0, 'MatchOr', {}, (MatchOr,
+(490, 'parse_pattern', 0, 0, 'MatchOr', {}, (MatchOr,
 r'''1 | 2 | 3'''), r'''
 MatchOr - ROOT 0,0..0,9
   .patterns[3]
@@ -3626,17 +3660,17 @@ MatchOr - ROOT 0,0..0,9
      .value Constant 3 - 0,8..0,9
 '''),
 
-(486, 'parse_pattern', 0, 0, 'MatchAs', {}, (MatchAs,
+(491, 'parse_pattern', 0, 0, 'MatchAs', {}, (MatchAs,
 r'''_'''),
 r'''MatchAs - ROOT 0,0..0,1'''),
 
-(487, 'parse_pattern', 0, 0, 'MatchStar', {}, (MatchStar,
+(492, 'parse_pattern', 0, 0, 'MatchStar', {}, (MatchStar,
 r'''*a'''), r'''
 MatchStar - ROOT 0,0..0,2
   .name 'a'
 '''),
 
-(488, 'parse_expr', 0, 0, 'Tuple', {}, ('expr',
+(493, 'parse_expr', 0, 0, 'Tuple', {}, ('expr',
 r''' *a,  # tail'''), r'''
 Tuple - ROOT 0,1..0,4
   .elts[1]
@@ -3646,7 +3680,7 @@ Tuple - ROOT 0,1..0,4
   .ctx Load
 '''),
 
-(489, 'parse_expr_arglike', 0, 0, 'Starred', {}, ('expr_arglike',
+(494, 'parse_expr_arglike', 0, 0, 'Starred', {}, ('expr_arglike',
 r''' *not a  # tail'''), r'''
 Starred - ROOT 0,1..0,7
   .value UnaryOp - 0,2..0,7
@@ -3655,7 +3689,7 @@ Starred - ROOT 0,1..0,7
   .ctx Load
 '''),
 
-(490, 'parse_expr_slice', 0, 0, 'Slice', {}, ('expr_slice',
+(495, 'parse_expr_slice', 0, 0, 'Slice', {}, ('expr_slice',
 r''' a:b:c  # tail'''), r'''
 Slice - ROOT 0,1..0,6
   .lower Name 'a' Load - 0,1..0,2
@@ -3663,31 +3697,31 @@ Slice - ROOT 0,1..0,6
   .step Name 'c' Load - 0,5..0,6
 '''),
 
-(491, 'parse_expr_slice', 0, 0, 'Yield', {}, ('expr_slice',
+(496, 'parse_expr_slice', 0, 0, 'Yield', {}, ('expr_slice',
 r''' yield  # tail'''),
 r'''Yield - ROOT 0,1..0,6'''),
 
-(492, 'parse_boolop', 0, 0, 'And', {}, ('boolop',
+(497, 'parse_boolop', 0, 0, 'And', {}, ('boolop',
 r''' and  # tail'''),
 r'''And - ROOT 0,1..0,4'''),
 
-(493, 'parse_binop', 0, 0, 'RShift', {}, ('binop',
+(498, 'parse_binop', 0, 0, 'RShift', {}, ('binop',
 r''' >>  # tail'''),
 r'''RShift - ROOT 0,1..0,3'''),
 
-(494, 'parse_augop', 0, 0, 'SyntaxError', {}, ('augop',
+(499, 'parse_augop', 0, 0, 'SyntaxError', {}, ('augop',
 r''' >>=  # tail'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
-(495, 'parse_unaryop', 0, 0, 'Invert', {}, ('unaryop',
+(500, 'parse_unaryop', 0, 0, 'Invert', {}, ('unaryop',
 r''' ~  # tail'''),
 r'''Invert - ROOT 0,1..0,2'''),
 
-(496, 'parse_cmpop', 0, 0, 'GtE', {}, ('cmpop',
+(501, 'parse_cmpop', 0, 0, 'GtE', {}, ('cmpop',
 r''' >=  # tail'''),
 r'''GtE - ROOT 0,1..0,3'''),
 
-(497, 'parse_comprehension', 0, 0, 'comprehension', {}, ('comprehension',
+(502, 'parse_comprehension', 0, 0, 'comprehension', {}, ('comprehension',
 r''' for i in j  # tail'''), r'''
 comprehension - ROOT 0,1..0,11
   .target Name 'i' Store - 0,5..0,6
@@ -3695,7 +3729,7 @@ comprehension - ROOT 0,1..0,11
   .is_async 0
 '''),
 
-(498, 'parse_arguments', 0, 0, 'arguments', {}, ('arguments',
+(503, 'parse_arguments', 0, 0, 'arguments', {}, ('arguments',
 r''' a: list[str], /, b: int = 1, *c, d=100, **e  # tail'''), r'''
 arguments - ROOT 0,1..0,44
   .posonlyargs[1]
@@ -3722,7 +3756,7 @@ arguments - ROOT 0,1..0,44
    0] Constant 1 - 0,27..0,28
 '''),
 
-(499, 'parse_arguments_lambda', 0, 0, 'arguments', {}, ('arguments_lambda',
+(504, 'parse_arguments_lambda', 0, 0, 'arguments', {}, ('arguments_lambda',
 r''' a, /, b, *c, d=100, **e  # tail'''), r'''
 arguments - ROOT 0,1..0,24
   .posonlyargs[1]
@@ -3742,40 +3776,40 @@ arguments - ROOT 0,1..0,24
     .arg 'e'
 '''),
 
-(500, 'parse_arg', 0, 0, 'arg', {}, ('arg',
+(505, 'parse_arg', 0, 0, 'arg', {}, ('arg',
 r''' a: b  # tail'''), r'''
 arg - ROOT 0,1..0,5
   .arg 'a'
   .annotation Name 'b' Load - 0,4..0,5
 '''),
 
-(501, 'parse_keyword', 0, 0, 'keyword', {}, ('keyword',
+(506, 'parse_keyword', 0, 0, 'keyword', {}, ('keyword',
 r''' a=1  # tail'''), r'''
 keyword - ROOT 0,1..0,4
   .arg 'a'
   .value Constant 1 - 0,3..0,4
 '''),
 
-(502, 'parse_Import_name', 0, 0, 'alias', {}, ('Import_name',
+(507, 'parse_Import_name', 0, 0, 'alias', {}, ('Import_name',
 r''' a.b  # tail'''), r'''
 alias - ROOT 0,1..0,4
   .name 'a.b'
 '''),
 
-(503, 'parse_ImportFrom_name', 0, 0, 'alias', {}, ('ImportFrom_name',
+(508, 'parse_ImportFrom_name', 0, 0, 'alias', {}, ('ImportFrom_name',
 r''' *  # tail'''), r'''
 alias - ROOT 0,1..0,2
   .name '*'
 '''),
 
-(504, 'parse_withitem', 0, 0, 'withitem', {}, ('withitem',
+(509, 'parse_withitem', 0, 0, 'withitem', {}, ('withitem',
 r''' a as b,  # tail'''), r'''
 withitem - ROOT 0,1..0,7
   .context_expr Name 'a' Load - 0,1..0,2
   .optional_vars Name 'b' Store - 0,6..0,7
 '''),
 
-(505, 'parse_pattern', 0, 0, 'MatchOr', {}, ('pattern',
+(510, 'parse_pattern', 0, 0, 'MatchOr', {}, ('pattern',
 r''' 1 | 2 | 3  # tail'''), r'''
 MatchOr - ROOT 0,1..0,10
   .patterns[3]
@@ -3787,13 +3821,13 @@ MatchOr - ROOT 0,1..0,10
      .value Constant 3 - 0,9..0,10
 '''),
 
-(506, 'parse_pattern', 0, 0, 'MatchStar', {}, ('pattern',
+(511, 'parse_pattern', 0, 0, 'MatchStar', {}, ('pattern',
 r''' *a  # tail'''), r'''
 MatchStar - ROOT 0,1..0,3
   .name 'a'
 '''),
 
-(507, 'parse_ExceptHandler', 0, 0, 'ExceptHandler', {'_ver': 11}, ('ExceptHandler',
+(512, 'parse_ExceptHandler', 0, 0, 'ExceptHandler', {'_ver': 11}, ('ExceptHandler',
 r'''except* Exception: pass'''), r'''
 ExceptHandler - ROOT 0,0..0,23
   .type Name 'Exception' Load - 0,8..0,17
@@ -3801,7 +3835,7 @@ ExceptHandler - ROOT 0,0..0,23
    0] Pass - 0,19..0,23
 '''),
 
-(508, 'parse_expr_all', 0, 0, 'Starred', {'_ver': 11}, ('expr_all',
+(513, 'parse_expr_all', 0, 0, 'Starred', {'_ver': 11}, ('expr_all',
 r'''*not a'''), r'''
 Starred - ROOT 0,0..0,6
   .value UnaryOp - 0,1..0,6
@@ -3810,7 +3844,7 @@ Starred - ROOT 0,0..0,6
   .ctx Load
 '''),
 
-(509, 'parse_expr_slice', 0, 0, 'Tuple', {'_ver': 11}, ('expr_slice',
+(514, 'parse_expr_slice', 0, 0, 'Tuple', {'_ver': 11}, ('expr_slice',
 r'''*s'''), r'''
 Tuple - ROOT 0,0..0,2
   .elts[1]
@@ -3820,7 +3854,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-(510, 'parse_expr_slice', 0, 0, 'Tuple', {'_ver': 11}, ('expr_slice',
+(515, 'parse_expr_slice', 0, 0, 'Tuple', {'_ver': 11}, ('expr_slice',
 r'''*not a'''), r'''
 Tuple - ROOT 0,0..0,6
   .elts[1]
@@ -3832,7 +3866,7 @@ Tuple - ROOT 0,0..0,6
   .ctx Load
 '''),
 
-(511, 'parse_expr_sliceelt', 0, 0, 'Starred', {'_ver': 11}, ('expr_sliceelt',
+(516, 'parse_expr_sliceelt', 0, 0, 'Starred', {'_ver': 11}, ('expr_sliceelt',
 r'''*not a'''), r'''
 Starred - ROOT 0,0..0,6
   .value UnaryOp - 0,1..0,6
@@ -3841,11 +3875,11 @@ Starred - ROOT 0,0..0,6
   .ctx Load
 '''),
 
-(512, 'parse_expr_sliceelt', 0, 0, 'SyntaxError', {'_ver': 11}, ('expr_sliceelt',
+(517, 'parse_expr_sliceelt', 0, 0, 'SyntaxError', {'_ver': 11}, ('expr_sliceelt',
 r'''*not a, *b or c'''),
 r'''**SyntaxError('invalid expression')**'''),
 
-(513, 'parse_ExceptHandler', 0, 0, 'ExceptHandler', {'_ver': 11}, (ExceptHandler,
+(518, 'parse_ExceptHandler', 0, 0, 'ExceptHandler', {'_ver': 11}, (ExceptHandler,
 r'''except* Exception: pass'''), r'''
 ExceptHandler - ROOT 0,0..0,23
   .type Name 'Exception' Load - 0,8..0,17
@@ -3853,7 +3887,7 @@ ExceptHandler - ROOT 0,0..0,23
    0] Pass - 0,19..0,23
 '''),
 
-(514, 'parse_arg', 0, 0, 'arg', {'_ver': 11}, ('arg',
+(519, 'parse_arg', 0, 0, 'arg', {'_ver': 11}, ('arg',
 r''' a: *b  # tail'''), r'''
 arg - ROOT 0,1..0,6
   .arg 'a'
@@ -3862,7 +3896,7 @@ arg - ROOT 0,1..0,6
     .ctx Load
 '''),
 
-(515, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('all',
+(520, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('all',
 r'''*U, **V, **Z'''), r'''
 _type_params - ROOT 0,0..0,12
   .type_params[3]
@@ -3874,7 +3908,7 @@ _type_params - ROOT 0,0..0,12
      .name 'Z'
 '''),
 
-(516, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('all',
+(521, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('all',
 r'''T: int, *U, **V, **Z'''), r'''
 _type_params - ROOT 0,0..0,20
   .type_params[4]
@@ -3889,34 +3923,34 @@ _type_params - ROOT 0,0..0,20
      .name 'Z'
 '''),
 
-(517, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 12}, ('type_param',
+(522, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 12}, ('type_param',
 r'''a: int'''), r'''
 TypeVar - ROOT 0,0..0,6
   .name 'a'
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-(518, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 12}, ('type_param',
+(523, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 12}, ('type_param',
 r'''**a'''), r'''
 ParamSpec - ROOT 0,0..0,3
   .name 'a'
 '''),
 
-(519, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 12}, ('type_param',
+(524, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 12}, ('type_param',
 r'''*a'''), r'''
 TypeVarTuple - ROOT 0,0..0,2
   .name 'a'
 '''),
 
-(520, 'parse_type_param', 0, 0, 'ParseError', {'_ver': 12}, ('type_param',
+(525, 'parse_type_param', 0, 0, 'ParseError', {'_ver': 12}, ('type_param',
 r'''a: int,'''),
 r'''**ParseError('expecting single type_param, has trailing comma')**'''),
 
-(521, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
+(526, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
 r''''''),
 r'''_type_params - ROOT 0,0..0,0'''),
 
-(522, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
+(527, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
 r'''a: int'''), r'''
 _type_params - ROOT 0,0..0,6
   .type_params[1]
@@ -3925,7 +3959,7 @@ _type_params - ROOT 0,0..0,6
      .bound Name 'int' Load - 0,3..0,6
 '''),
 
-(523, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
+(528, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
 r'''a: int,'''), r'''
 _type_params - ROOT 0,0..0,7
   .type_params[1]
@@ -3934,7 +3968,7 @@ _type_params - ROOT 0,0..0,7
      .bound Name 'int' Load - 0,3..0,6
 '''),
 
-(524, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
+(529, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
 r'''a: int, *b, **c'''), r'''
 _type_params - ROOT 0,0..0,15
   .type_params[3]
@@ -3947,52 +3981,52 @@ _type_params - ROOT 0,0..0,15
      .name 'c'
 '''),
 
-(525, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 12}, (type_param,
+(530, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 12}, (type_param,
 r'''a: int'''), r'''
 TypeVar - ROOT 0,0..0,6
   .name 'a'
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-(526, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 12}, (TypeVar,
+(531, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 12}, (TypeVar,
 r'''a: int'''), r'''
 TypeVar - ROOT 0,0..0,6
   .name 'a'
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-(527, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 12}, (type_param,
+(532, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 12}, (type_param,
 r'''**a'''), r'''
 ParamSpec - ROOT 0,0..0,3
   .name 'a'
 '''),
 
-(528, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 12}, (ParamSpec,
+(533, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 12}, (ParamSpec,
 r'''**a'''), r'''
 ParamSpec - ROOT 0,0..0,3
   .name 'a'
 '''),
 
-(529, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 12}, (type_param,
+(534, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 12}, (type_param,
 r'''*a'''), r'''
 TypeVarTuple - ROOT 0,0..0,2
   .name 'a'
 '''),
 
-(530, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 12}, (TypeVarTuple,
+(535, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 12}, (TypeVarTuple,
 r'''*a'''), r'''
 TypeVarTuple - ROOT 0,0..0,2
   .name 'a'
 '''),
 
-(531, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 12}, ('type_param',
+(536, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 12}, ('type_param',
 r''' a: int  # tail'''), r'''
 TypeVar - ROOT 0,1..0,7
   .name 'a'
   .bound Name 'int' Load - 0,4..0,7
 '''),
 
-(532, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
+(537, 'parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
 r''' a: int, *b, **c  # tail'''), r'''
 _type_params - ROOT 0,0..0,24
   .type_params[3]
@@ -4005,7 +4039,7 @@ _type_params - ROOT 0,0..0,24
      .name 'c'
 '''),
 
-(533, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 13}, ('all',
+(538, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 13}, ('all',
 r'''**a = {T: int, U: str}'''), r'''
 ParamSpec - ROOT 0,0..0,22
   .name 'a'
@@ -4018,7 +4052,7 @@ ParamSpec - ROOT 0,0..0,22
      1] Name 'str' Load - 0,18..0,21
 '''),
 
-(534, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, ('all',
+(539, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, ('all',
 r'''*a = (int, str)'''), r'''
 TypeVarTuple - ROOT 0,0..0,15
   .name 'a'
@@ -4029,7 +4063,7 @@ TypeVarTuple - ROOT 0,0..0,15
     .ctx Load
 '''),
 
-(535, 'parse__type_params', 0, 0, '_type_params', {'_ver': 13}, ('all',
+(540, 'parse__type_params', 0, 0, '_type_params', {'_ver': 13}, ('all',
 r'''**a = {T: int, U: str},'''), r'''
 _type_params - ROOT 0,0..0,23
   .type_params[1]
@@ -4044,7 +4078,7 @@ _type_params - ROOT 0,0..0,23
         1] Name 'str' Load - 0,18..0,21
 '''),
 
-(536, 'parse__type_params', 0, 0, '_type_params', {'_ver': 13}, ('all',
+(541, 'parse__type_params', 0, 0, '_type_params', {'_ver': 13}, ('all',
 r'''**a = {T: int, U: str}, *b'''), r'''
 _type_params - ROOT 0,0..0,26
   .type_params[2]
@@ -4061,7 +4095,7 @@ _type_params - ROOT 0,0..0,26
      .name 'b'
 '''),
 
-(537, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 13}, ('type_param',
+(542, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 13}, ('type_param',
 r'''a: int = int'''), r'''
 TypeVar - ROOT 0,0..0,12
   .name 'a'
@@ -4069,7 +4103,7 @@ TypeVar - ROOT 0,0..0,12
   .default_value Name 'int' Load - 0,9..0,12
 '''),
 
-(538, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 13}, ('type_param',
+(543, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 13}, ('type_param',
 r'''**a = {T: int, U: str}'''), r'''
 ParamSpec - ROOT 0,0..0,22
   .name 'a'
@@ -4082,7 +4116,7 @@ ParamSpec - ROOT 0,0..0,22
      1] Name 'str' Load - 0,18..0,21
 '''),
 
-(539, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, ('type_param',
+(544, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, ('type_param',
 r'''*a = (int, str)'''), r'''
 TypeVarTuple - ROOT 0,0..0,15
   .name 'a'
@@ -4093,7 +4127,7 @@ TypeVarTuple - ROOT 0,0..0,15
     .ctx Load
 '''),
 
-(540, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 13}, (type_param,
+(545, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 13}, (type_param,
 r'''a: int = int'''), r'''
 TypeVar - ROOT 0,0..0,12
   .name 'a'
@@ -4101,7 +4135,7 @@ TypeVar - ROOT 0,0..0,12
   .default_value Name 'int' Load - 0,9..0,12
 '''),
 
-(541, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 13}, (TypeVar,
+(546, 'parse_type_param', 0, 0, 'TypeVar', {'_ver': 13}, (TypeVar,
 r'''a: int = int'''), r'''
 TypeVar - ROOT 0,0..0,12
   .name 'a'
@@ -4109,7 +4143,7 @@ TypeVar - ROOT 0,0..0,12
   .default_value Name 'int' Load - 0,9..0,12
 '''),
 
-(542, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 13}, (type_param,
+(547, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 13}, (type_param,
 r'''**a = {T: int, U: str}'''), r'''
 ParamSpec - ROOT 0,0..0,22
   .name 'a'
@@ -4122,7 +4156,7 @@ ParamSpec - ROOT 0,0..0,22
      1] Name 'str' Load - 0,18..0,21
 '''),
 
-(543, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 13}, (ParamSpec,
+(548, 'parse_type_param', 0, 0, 'ParamSpec', {'_ver': 13}, (ParamSpec,
 r'''**a = {T: int, U: str}'''), r'''
 ParamSpec - ROOT 0,0..0,22
   .name 'a'
@@ -4135,7 +4169,7 @@ ParamSpec - ROOT 0,0..0,22
      1] Name 'str' Load - 0,18..0,21
 '''),
 
-(544, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, (type_param,
+(549, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, (type_param,
 r'''*a = (int, str)'''), r'''
 TypeVarTuple - ROOT 0,0..0,15
   .name 'a'
@@ -4146,7 +4180,7 @@ TypeVarTuple - ROOT 0,0..0,15
     .ctx Load
 '''),
 
-(545, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, (TypeVarTuple,
+(550, 'parse_type_param', 0, 0, 'TypeVarTuple', {'_ver': 13}, (TypeVarTuple,
 r'''*a = (int, str)'''), r'''
 TypeVarTuple - ROOT 0,0..0,15
   .name 'a'

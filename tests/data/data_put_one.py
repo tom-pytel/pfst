@@ -7627,7 +7627,20 @@ r'''**IndexError('index out of range')**'''),
 (489, 'body[0].value.generators[0]', 0, False, 'ifs', {'raw': False}, ('exec',
 r'''[i for i in j if a if (b)]'''), (None,
 r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''[i for i in j if (b)]''', r'''
+Module - ROOT 0,0..0,21
+  .body[1]
+   0] Expr - 0,0..0,21
+     .value ListComp - 0,0..0,21
+       .elt Name 'i' Load - 0,1..0,2
+       .generators[1]
+        0] comprehension - 0,3..0,20
+          .target Name 'i' Store - 0,7..0,8
+          .iter Name 'j' Load - 0,12..0,13
+          .ifs[1]
+           0] Name 'b' Load - 0,18..0,19
+          .is_async 0
+'''),
 
 (490, 'body[0].value.generators[0]', 0, False, 'ifs', {}, ('exec',
 r'''[i for i in j if a if (b)]'''), (None,

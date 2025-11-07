@@ -753,7 +753,7 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
 
 
 def _loc_maybe_key(
-    self: fst.FST, idx: int, pars: bool = False, body: list[AST] | None = None, body2: list[AST] | None = None
+    self: fst.FST, idx: int, pars: bool = True, body: list[AST] | None = None, body2: list[AST] | None = None
 ) -> fstloc:
     """Return location of node which may be a dictionary key even if it is `**` specified by a `None`. Optionally return
     the location of the grouping parentheses if key actually present. Can also be used to get the location
@@ -761,7 +761,13 @@ def _loc_maybe_key(
     passed in, e.g. will safely get location of `MatchMapping` keys. Will just return parenthesized or not location from
     any `body` assuming there are no `None`s to force a check from `body2` and a search back from that for a `**`.
 
-    **WARNING:** `idx` must be positive.
+    **WARNING:** `idx` must be non-negative.
+
+    **Parameters:**
+    - `idx`: Non-negative index of child to get location in `self` container.
+    - `pars`: Whether to return location from `.pars()` if is not `**` key or not.
+    - `body`: Override for `.keys` in case this is not being used on a `Dict`.
+    - `body2`: Override for `.values` in case this is being used on a `MatchMapping`.
     """
 
     if key := (body or self.a.keys)[idx]:
@@ -1342,7 +1348,10 @@ def _maybe_fix_joined_alnum(
 ) -> None:
     """Check if location(s) `lines[ln][col-1 : col+1]` and optionally `lines[end_ln][end_col-1 : end_col+1] is / are
     alphanumeric and if so separate them with a space. This is for operations that may inadvertantly join two distinct
-    elements into a single parsable alphanumeric, e.g. `for i inb, 2: pass`."""
+    elements into a single parsable alphanumeric, e.g. `for i inb, 2: pass`.
+
+    `self` doesn't matter, call on any node in tree.
+    """
 
     lines = self.root._lines
 

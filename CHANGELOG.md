@@ -8,6 +8,7 @@
 
 ### Added
 
+- prescribed slicing for `comprehension.ifs`
 - prescribed slicing for `ListComp.generators`
 - prescribed slicing for `SetComp.generators`
 - prescribed slicing for `DictComp.generators`

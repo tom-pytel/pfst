@@ -7873,7 +7873,7 @@ if 1:
         self.assertEqual('for new in j if i', test(f, 'target', 'new', FST, 'i').src)
         self.assertEqual('for new in blah if i', test(f, 'iter', 'blah', FST, 'j').src)
         self.assertEqual('for new in blah if new', test(f, 'ifs', 'if new', fstview,
-                                                        '<<comprehension ROOT 0,0..0,20>.ifs[0:1] [<Name 0,19..0,20>]>').src)
+                                                        'if i').src)
         self.assertEqual('async for new in blah if new', test(f, 'is_async', 1, None, 0).src)
 
         f = FST('except Exception as exc: pass')

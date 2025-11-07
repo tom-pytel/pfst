@@ -21,7 +21,6 @@ from .asttypes import (
     UnaryOp,
     comprehension,
     operator,
-    _comprehension_ifs,
 )
 
 from .astutil import re_identifier, OPCLS2STR, last_block_header_child
@@ -157,7 +156,7 @@ def loc_comprehension_if(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
     """Location `comprehension` or `_comprehension_ifs` expression including the `if` (which is not included in the
     location of the expression itself).
 
-    **WARNING:** `idx` must be positive.
+    **WARNING:** `idx` must be non-negative.
     """
 
     # assert isinstance(self.a, (comprehension, _comprehension_ifs))

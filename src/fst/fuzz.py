@@ -2163,6 +2163,9 @@ class SliceExprish(Fuzzy):
         if isinstance(ast, ImportFrom):
             return (ImportFrom,) if ast.module != '__future__' and ast.names[0].name != '*' else ()
 
+        if isinstance(ast, comprehension):
+            return (comprehension,)
+
         return ()
 
     def fuzz_one(self, fst, fnm) -> bool:
@@ -2180,8 +2183,9 @@ class SliceExprish(Fuzzy):
             Global:           (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
             Nonlocal:         glbucket,
             'ClassDef_bases': self.Bucket('bases', 'elts', 0, 0, True, FST('class tmp(): pass')),
-            'generators':     self.Bucket('generators', None, 1, 0, False, FST('', '_comprehensions')),
             'Call_args':      self.Bucket('args', 'elts', 0, 0, True, FST('call()')),
+            'generators':     self.Bucket('generators', None, 1, 0, False, FST('', '_comprehensions')),
+            comprehension:    self.Bucket('ifs', None, 0, 0, False, FST('', '_comprehension_ifs')),
             MatchSequence:    self.Bucket('patterns', None, 0, 0, True, FST('[]', pattern)),
             MatchMapping:     self.Bucket(None, None, 0, 0, False, FST('{}', pattern)),
             MatchOr:          self.Bucket('patterns', None, 2, 2, True, FST('(a | b)', pattern)),

@@ -774,6 +774,7 @@ _GET_ONE_HANDLERS = {
     (_match_cases, 'cases'):              _get_one_stmtish,  # match_case*
     (_Assign_targets, 'targets'):         _get_one_default,  # expr*
     (_comprehensions, 'generators'):      _get_one_default,  # comprehension*
+    (_comprehension_ifs, 'ifs'):          _get_one_default,  # expr*
     (_aliases, 'names'):                  _get_one_default,  # alias*
     (_withitems, 'items'):                _get_one_default,  # withitem*
     (_type_params, 'type_params'):        _get_one_default,  # type_param*
@@ -2449,7 +2450,7 @@ _onestatic_Global_Nonlocal_names = onestatic(_one_info_Global_Nonlocal_names, _r
 
 def _one_info_Dict_key(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     end_ln, end_col, _, _ = self.a.values[idx].f.pars()
-    ln, col, _, _ = self._loc_maybe_key(idx, True)
+    ln, col, _, _ = self._loc_maybe_key(idx)
 
     return oneinfo('', fstloc(ln, col, end_ln, end_col), None, ': ', '**')
 
@@ -3140,6 +3141,7 @@ _PUT_ONE_HANDLERS = {
 
     (_Assign_targets, 'targets'):         (True,  _put_one_exprish_required, _onestatic_target),  # expr*
     (_comprehensions, 'generators'):      (True,  _put_one_exprish_required, _onestatic_comprehension_required),  # comprehension*
+    (_comprehension_ifs, 'ifs'):          (True,  _put_one_exprish_required, _onestatic_expr_required),  # expr*
     (_aliases, 'names'):                  (True,  _put_one_exprish_required, _onestatic_alias_required),  # alias*
     (_withitems, 'items'):                (True,  _put_one_exprish_required, _onestatic_withitem_required),  # withitem*
     (_type_params, 'type_params'):        (True,  _put_one_exprish_required, _onestatic_type_param_required),  # type_param*

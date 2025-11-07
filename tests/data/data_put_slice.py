@@ -24,12 +24,12 @@
 # * ! S ,          (ImportFrom, 'names'):                  # alias*           -> _aliases             _parse_aliases_star            - no trailing commas
 #                                                                             .
 #                                                                             .
-#   ! S ' '        (ListComp, 'generators'):               # comprehension*   -> _comprehensions      _parse_comprehensions
-#   ! S ' '        (SetComp, 'generators'):                # comprehension*   -> _comprehensions      _parse_comprehensions
-#   ! S ' '        (DictComp, 'generators'):               # comprehension*   -> _comprehensions      _parse_comprehensions
-#   ! S ' '        (GeneratorExp, 'generators'):           # comprehension*   -> _comprehensions      _parse_comprehensions
+# * ! S ' '        (ListComp, 'generators'):               # comprehension*   -> _comprehensions      _parse_comprehensions
+# * ! S ' '        (SetComp, 'generators'):                # comprehension*   -> _comprehensions      _parse_comprehensions
+# * ! S ' '        (DictComp, 'generators'):               # comprehension*   -> _comprehensions      _parse_comprehensions
+# * ! S ' '        (GeneratorExp, 'generators'):           # comprehension*   -> _comprehensions      _parse_comprehensions
 #                                                                             .
-#   ! S    if      (comprehension, 'ifs'):                 # expr*            -> _comprehension_ifs   _parse_comprehension_ifs
+# * ! S    if      (comprehension, 'ifs'):                 # expr*            -> _comprehension_ifs   _parse_comprehension_ifs
 #                                                                             .
 #   ! S    @       (FunctionDef, 'decorator_list'):        # expr*            -> _decorator_list      _parse_decorator_list
 #   ! S    @       (AsyncFunctionDef, 'decorator_list'):   # expr*            -> _decorator_list      _parse_decorator_list
@@ -23458,6 +23458,593 @@ ClassDef - ROOT 0,0..0,39
      .name 'U'
    2] ParamSpec - 0,15..0,18
      .name 'V'
+'''),
+],
+
+'generators': [  # ................................................................................
+
+(0, '', None, None, 'generators', {}, (None,
+r'''[_ for a in a for b in b for c in c]'''), ('_comprehensions',
+r'''for x in x'''),
+r'''[_ for x in x]''', r'''
+ListComp - ROOT 0,0..0,14
+  .elt Name '_' Load - 0,1..0,2
+  .generators[1]
+   0] comprehension - 0,3..0,13
+     .target Name 'x' Store - 0,7..0,8
+     .iter Name 'x' Load - 0,12..0,13
+     .is_async 0
+'''),
+
+(1, '', None, None, 'generators', {'one': True}, (None,
+r'''[_ for a in a for b in b for c in c]'''), (None,
+r'''for x in x'''),
+r'''[_ for x in x]''', r'''
+ListComp - ROOT 0,0..0,14
+  .elt Name '_' Load - 0,1..0,2
+  .generators[1]
+   0] comprehension - 0,3..0,13
+     .target Name 'x' Store - 0,7..0,8
+     .iter Name 'x' Load - 0,12..0,13
+     .is_async 0
+'''),
+
+(2, '', None, None, 'generators', {}, (None,
+r'''[_ for a in a for b in b for c in c]'''), ('_comprehensions',
+r''' for x in x '''),
+r'''[_  for x in x ]''', r'''
+ListComp - ROOT 0,0..0,16
+  .elt Name '_' Load - 0,1..0,2
+  .generators[1]
+   0] comprehension - 0,4..0,14
+     .target Name 'x' Store - 0,8..0,9
+     .iter Name 'x' Load - 0,13..0,14
+     .is_async 0
+'''),
+
+(3, '', 1, 2, 'generators', {}, (None,
+r'''[_ for a in a for b in b for c in c]'''), ('_comprehensions', r'''
+for \
+x \
+in \
+x
+'''), r'''
+[_ for a in a for \
+   x \
+   in \
+   x for c in c]
+''', r'''
+ListComp - ROOT 0,0..3,16
+  .elt Name '_' Load - 0,1..0,2
+  .generators[3]
+   0] comprehension - 0,3..0,13
+     .target Name 'a' Store - 0,7..0,8
+     .iter Name 'a' Load - 0,12..0,13
+     .is_async 0
+   1] comprehension - 0,14..3,4
+     .target Name 'x' Store - 1,3..1,4
+     .iter Name 'x' Load - 3,3..3,4
+     .is_async 0
+   2] comprehension - 3,5..3,15
+     .target Name 'c' Store - 3,9..3,10
+     .iter Name 'c' Load - 3,14..3,15
+     .is_async 0
+'''),
+
+(4, '', None, None, 'generators', {}, (None,
+r'''[_ for a in a for b in b for c in c]'''), ('_comprehensions', r'''
+for \
+x \
+in \
+x \
+
+'''), r'''
+[_ for \
+   x \
+   in \
+   x \
+]
+''', r'''
+ListComp - ROOT 0,0..4,1
+  .elt Name '_' Load - 0,1..0,2
+  .generators[1]
+   0] comprehension - 0,3..3,4
+     .target Name 'x' Store - 1,3..1,4
+     .iter Name 'x' Load - 3,3..3,4
+     .is_async 0
+'''),
+
+(5, '', None, None, 'generators', {}, (None,
+r'''[_ for a in a for b in b for c in c]'''), ('_comprehensions', r'''
+
+for \
+x \
+in \
+x \
+
+'''), r'''
+[_
+   for \
+   x \
+   in \
+   x \
+]
+''', r'''
+ListComp - ROOT 0,0..5,1
+  .elt Name '_' Load - 0,1..0,2
+  .generators[1]
+   0] comprehension - 1,3..4,4
+     .target Name 'x' Store - 2,3..2,4
+     .iter Name 'x' Load - 4,3..4,4
+     .is_async 0
+'''),
+
+(6, '', None, None, 'generators', {}, (None,
+r'''[_ for a in a for b in b for c in c]'''),
+r'''**DEL**''',
+r'''**ValueError('cannot delete all ListComp.generators without norm_self=False')**'''),
+
+(7, '', None, None, 'generators', {'norm_self': False, '_verify_self': False}, (None,
+r'''[_ for a in a for b in b for c in c]'''),
+r'''**DEL**''',
+r'''[_]''', r'''
+ListComp - ROOT 0,0..0,3
+  .elt Name '_' Load - 0,1..0,2
+'''),
+
+(8, '', None, None, 'generators', {}, ('_comprehensions',
+r'''for a in a for b in b for c in c'''), ('_comprehensions',
+r'''for x in x'''),
+r'''for x in x''', r'''
+_comprehensions - ROOT 0,0..0,10
+  .generators[1]
+   0] comprehension - 0,0..0,10
+     .target Name 'x' Store - 0,4..0,5
+     .iter Name 'x' Load - 0,9..0,10
+     .is_async 0
+'''),
+
+(9, '', None, None, 'generators', {'one': True}, ('_comprehensions',
+r'''for a in a for b in b for c in c'''), (None,
+r'''for x in x'''),
+r'''for x in x''', r'''
+_comprehensions - ROOT 0,0..0,10
+  .generators[1]
+   0] comprehension - 0,0..0,10
+     .target Name 'x' Store - 0,4..0,5
+     .iter Name 'x' Load - 0,9..0,10
+     .is_async 0
+'''),
+
+(10, '', None, None, 'generators', {}, ('_comprehensions',
+r'''for a in a for b in b for c in c'''), ('_comprehensions',
+r''' for x in x '''),
+r''' for x in x ''', r'''
+_comprehensions - ROOT 0,0..0,12
+  .generators[1]
+   0] comprehension - 0,1..0,11
+     .target Name 'x' Store - 0,5..0,6
+     .iter Name 'x' Load - 0,10..0,11
+     .is_async 0
+'''),
+
+(11, '', 1, 2, 'generators', {}, ('_comprehensions',
+r'''for a in a for b in b for c in c'''), ('_comprehensions', r'''
+for \
+x \
+in \
+x
+'''), r'''
+for a in a for \
+x \
+in \
+x for c in c
+''', r'''
+_comprehensions - ROOT 0,0..3,12
+  .generators[3]
+   0] comprehension - 0,0..0,10
+     .target Name 'a' Store - 0,4..0,5
+     .iter Name 'a' Load - 0,9..0,10
+     .is_async 0
+   1] comprehension - 0,11..3,1
+     .target Name 'x' Store - 1,0..1,1
+     .iter Name 'x' Load - 3,0..3,1
+     .is_async 0
+   2] comprehension - 3,2..3,12
+     .target Name 'c' Store - 3,6..3,7
+     .iter Name 'c' Load - 3,11..3,12
+     .is_async 0
+'''),
+
+(12, '', None, None, 'generators', {}, ('_comprehensions',
+r'''for a in a for b in b for c in c'''), ('_comprehensions', r'''
+for \
+x \
+in \
+x \
+
+'''), r'''
+for \
+x \
+in \
+x \
+
+''', r'''
+_comprehensions - ROOT 0,0..4,0
+  .generators[1]
+   0] comprehension - 0,0..3,1
+     .target Name 'x' Store - 1,0..1,1
+     .iter Name 'x' Load - 3,0..3,1
+     .is_async 0
+'''),
+
+(13, '', None, None, 'generators', {}, ('_comprehensions',
+r'''for a in a for b in b for c in c'''), ('_comprehensions', r'''
+
+for \
+x \
+in \
+x \
+
+'''), r'''
+for \
+x \
+in \
+x \
+
+''', r'''
+_comprehensions - ROOT 0,0..4,0
+  .generators[1]
+   0] comprehension - 0,0..3,1
+     .target Name 'x' Store - 1,0..1,1
+     .iter Name 'x' Load - 3,0..3,1
+     .is_async 0
+'''),
+],
+
+'comprehension_ifs': [  # ................................................................................
+
+(0, 'generators[0]', None, None, 'ifs', {}, (None,
+r'''[_ for _ in _ if a if b if c]'''), ('_comprehension_ifs',
+r'''if x'''),
+r'''[_ for _ in _ if x]''', r'''
+ListComp - ROOT 0,0..0,19
+  .elt Name '_' Load - 0,1..0,2
+  .generators[1]
+   0] comprehension - 0,3..0,18
+     .target Name '_' Store - 0,7..0,8
+     .iter Name '_' Load - 0,12..0,13
+     .ifs[1]
+      0] Name 'x' Load - 0,17..0,18
+     .is_async 0
+'''),
+
+(1, 'generators[0]', None, None, 'ifs', {'one': True}, (None,
+r'''[_ for _ in _ if a if b if c]'''), (None,
+r'''x'''),
+r'''[_ for _ in _ if x]''', r'''
+ListComp - ROOT 0,0..0,19
+  .elt Name '_' Load - 0,1..0,2
+  .generators[1]
+   0] comprehension - 0,3..0,18
+     .target Name '_' Store - 0,7..0,8
+     .iter Name '_' Load - 0,12..0,13
+     .ifs[1]
+      0] Name 'x' Load - 0,17..0,18
+     .is_async 0
+'''),
+
+(2, 'generators[0]', None, None, 'ifs', {}, (None,
+r'''[_ for _ in _ if a if b if c]'''), ('_comprehension_ifs',
+r''' if x '''),
+r'''[_ for _ in _  if x ]''', r'''
+ListComp - ROOT 0,0..0,21
+  .elt Name '_' Load - 0,1..0,2
+  .generators[1]
+   0] comprehension - 0,3..0,19
+     .target Name '_' Store - 0,7..0,8
+     .iter Name '_' Load - 0,12..0,13
+     .ifs[1]
+      0] Name 'x' Load - 0,18..0,19
+     .is_async 0
+'''),
+
+(3, 'generators[0]', 1, 2, 'ifs', {}, (None,
+r'''[_ for _ in _ if a if b if c]'''), ('_comprehension_ifs', r'''
+if \
+x
+'''), r'''
+[_ for _ in _ if a if \
+              x if c]
+''', r'''
+ListComp - ROOT 0,0..1,21
+  .elt Name '_' Load - 0,1..0,2
+  .generators[1]
+   0] comprehension - 0,3..1,20
+     .target Name '_' Store - 0,7..0,8
+     .iter Name '_' Load - 0,12..0,13
+     .ifs[3]
+      0] Name 'a' Load - 0,17..0,18
+      1] Name 'x' Load - 1,14..1,15
+      2] Name 'c' Load - 1,19..1,20
+     .is_async 0
+'''),
+
+(4, 'generators[0]', None, None, 'ifs', {}, (None,
+r'''[_ for _ in _ if a if b if c]'''), ('_comprehension_ifs', r'''
+if \
+x \
+
+'''), r'''
+[_ for _ in _ if \
+              x \
+]
+''', r'''
+ListComp - ROOT 0,0..2,1
+  .elt Name '_' Load - 0,1..0,2
+  .generators[1]
+   0] comprehension - 0,3..1,15
+     .target Name '_' Store - 0,7..0,8
+     .iter Name '_' Load - 0,12..0,13
+     .ifs[1]
+      0] Name 'x' Load - 1,14..1,15
+     .is_async 0
+'''),
+
+(5, 'generators[0]', None, None, 'ifs', {}, (None,
+r'''[_ for _ in _ if a if b if c]'''), ('_comprehension_ifs', r'''
+
+if \
+x \
+
+'''), r'''
+[_ for _ in _
+              if \
+              x \
+]
+''', r'''
+ListComp - ROOT 0,0..3,1
+  .elt Name '_' Load - 0,1..0,2
+  .generators[1]
+   0] comprehension - 0,3..2,15
+     .target Name '_' Store - 0,7..0,8
+     .iter Name '_' Load - 0,12..0,13
+     .ifs[1]
+      0] Name 'x' Load - 2,14..2,15
+     .is_async 0
+'''),
+
+(6, 'generators[0]', None, None, 'ifs', {}, (None,
+r'''[_ for _ in _ if a if b if c]'''),
+r'''**DEL**''',
+r'''[_ for _ in _]''', r'''
+ListComp - ROOT 0,0..0,14
+  .elt Name '_' Load - 0,1..0,2
+  .generators[1]
+   0] comprehension - 0,3..0,13
+     .target Name '_' Store - 0,7..0,8
+     .iter Name '_' Load - 0,12..0,13
+     .is_async 0
+'''),
+
+(7, 'generators[0]', None, None, 'ifs', {}, ('_comprehensions',
+r'''for _ in _ if a if b if c for _ in _'''), ('_comprehension_ifs',
+r'''if x'''),
+r'''for _ in _ if x for _ in _''', r'''
+_comprehensions - ROOT 0,0..0,26
+  .generators[2]
+   0] comprehension - 0,0..0,15
+     .target Name '_' Store - 0,4..0,5
+     .iter Name '_' Load - 0,9..0,10
+     .ifs[1]
+      0] Name 'x' Load - 0,14..0,15
+     .is_async 0
+   1] comprehension - 0,16..0,26
+     .target Name '_' Store - 0,20..0,21
+     .iter Name '_' Load - 0,25..0,26
+     .is_async 0
+'''),
+
+(8, 'generators[0]', None, None, 'ifs', {'one': True}, ('_comprehensions',
+r'''for _ in _ if a if b if c for _ in _'''), (None,
+r'''x'''),
+r'''for _ in _ if x for _ in _''', r'''
+_comprehensions - ROOT 0,0..0,26
+  .generators[2]
+   0] comprehension - 0,0..0,15
+     .target Name '_' Store - 0,4..0,5
+     .iter Name '_' Load - 0,9..0,10
+     .ifs[1]
+      0] Name 'x' Load - 0,14..0,15
+     .is_async 0
+   1] comprehension - 0,16..0,26
+     .target Name '_' Store - 0,20..0,21
+     .iter Name '_' Load - 0,25..0,26
+     .is_async 0
+'''),
+
+(9, 'generators[0]', None, None, 'ifs', {}, ('_comprehensions',
+r'''for _ in _ if a if b if c for _ in _'''), ('_comprehension_ifs',
+r''' if x '''),
+r'''for _ in _  if x  for _ in _''', r'''
+_comprehensions - ROOT 0,0..0,28
+  .generators[2]
+   0] comprehension - 0,0..0,16
+     .target Name '_' Store - 0,4..0,5
+     .iter Name '_' Load - 0,9..0,10
+     .ifs[1]
+      0] Name 'x' Load - 0,15..0,16
+     .is_async 0
+   1] comprehension - 0,18..0,28
+     .target Name '_' Store - 0,22..0,23
+     .iter Name '_' Load - 0,27..0,28
+     .is_async 0
+'''),
+
+(10, 'generators[0]', 1, 2, 'ifs', {}, ('_comprehensions',
+r'''for _ in _ if a if b if c for _ in _'''), ('_comprehension_ifs', r'''
+if \
+x
+'''), r'''
+for _ in _ if a if \
+           x if c for _ in _
+''', r'''
+_comprehensions - ROOT 0,0..1,28
+  .generators[2]
+   0] comprehension - 0,0..1,17
+     .target Name '_' Store - 0,4..0,5
+     .iter Name '_' Load - 0,9..0,10
+     .ifs[3]
+      0] Name 'a' Load - 0,14..0,15
+      1] Name 'x' Load - 1,11..1,12
+      2] Name 'c' Load - 1,16..1,17
+     .is_async 0
+   1] comprehension - 1,18..1,28
+     .target Name '_' Store - 1,22..1,23
+     .iter Name '_' Load - 1,27..1,28
+     .is_async 0
+'''),
+
+(11, 'generators[0]', None, None, 'ifs', {}, ('_comprehensions',
+r'''for _ in _ if a if b if c for _ in _'''), ('_comprehension_ifs', r'''
+if \
+x \
+
+'''), r'''
+for _ in _ if \
+           x \
+ for _ in _
+''', r'''
+_comprehensions - ROOT 0,0..2,11
+  .generators[2]
+   0] comprehension - 0,0..1,12
+     .target Name '_' Store - 0,4..0,5
+     .iter Name '_' Load - 0,9..0,10
+     .ifs[1]
+      0] Name 'x' Load - 1,11..1,12
+     .is_async 0
+   1] comprehension - 2,1..2,11
+     .target Name '_' Store - 2,5..2,6
+     .iter Name '_' Load - 2,10..2,11
+     .is_async 0
+'''),
+
+(12, 'generators[0]', None, None, 'ifs', {}, ('_comprehensions',
+r'''for _ in _ if a if b if c for _ in _'''), ('_comprehension_ifs', r'''
+
+if \
+x \
+
+'''), r'''
+for _ in _
+           if \
+           x \
+ for _ in _
+''', r'''
+_comprehensions - ROOT 0,0..3,11
+  .generators[2]
+   0] comprehension - 0,0..2,12
+     .target Name '_' Store - 0,4..0,5
+     .iter Name '_' Load - 0,9..0,10
+     .ifs[1]
+      0] Name 'x' Load - 2,11..2,12
+     .is_async 0
+   1] comprehension - 3,1..3,11
+     .target Name '_' Store - 3,5..3,6
+     .iter Name '_' Load - 3,10..3,11
+     .is_async 0
+'''),
+
+(13, '', None, None, 'ifs', {}, ('comprehension',
+r'''for _ in _ if a if b if c'''), ('_comprehension_ifs',
+r'''if x'''),
+r'''for _ in _ if x''', r'''
+comprehension - ROOT 0,0..0,15
+  .target Name '_' Store - 0,4..0,5
+  .iter Name '_' Load - 0,9..0,10
+  .ifs[1]
+   0] Name 'x' Load - 0,14..0,15
+  .is_async 0
+'''),
+
+(14, '', None, None, 'ifs', {'one': True}, ('comprehension',
+r'''for _ in _ if a if b if c'''), (None,
+r'''x'''),
+r'''for _ in _ if x''', r'''
+comprehension - ROOT 0,0..0,15
+  .target Name '_' Store - 0,4..0,5
+  .iter Name '_' Load - 0,9..0,10
+  .ifs[1]
+   0] Name 'x' Load - 0,14..0,15
+  .is_async 0
+'''),
+
+(15, '', None, None, 'ifs', {}, ('comprehension',
+r'''for _ in _ if a if b if c'''), ('_comprehension_ifs',
+r''' if x '''),
+r'''for _ in _  if x ''', r'''
+comprehension - ROOT 0,0..0,16
+  .target Name '_' Store - 0,4..0,5
+  .iter Name '_' Load - 0,9..0,10
+  .ifs[1]
+   0] Name 'x' Load - 0,15..0,16
+  .is_async 0
+'''),
+
+(16, '', 1, 2, 'ifs', {}, ('comprehension',
+r'''for _ in _ if a if b if c'''), ('_comprehension_ifs', r'''
+if \
+x
+'''), r'''
+for _ in _ if a if \
+           x if c
+''', r'''
+comprehension - ROOT 0,0..1,17
+  .target Name '_' Store - 0,4..0,5
+  .iter Name '_' Load - 0,9..0,10
+  .ifs[3]
+   0] Name 'a' Load - 0,14..0,15
+   1] Name 'x' Load - 1,11..1,12
+   2] Name 'c' Load - 1,16..1,17
+  .is_async 0
+'''),
+
+(17, '', None, None, 'ifs', {}, ('comprehension',
+r'''for _ in _ if a if b if c'''), ('_comprehension_ifs', r'''
+if \
+x \
+
+'''), r'''
+for _ in _ if \
+           x \
+
+''', r'''
+comprehension - ROOT 0,0..1,12
+  .target Name '_' Store - 0,4..0,5
+  .iter Name '_' Load - 0,9..0,10
+  .ifs[1]
+   0] Name 'x' Load - 1,11..1,12
+  .is_async 0
+'''),
+
+(18, '', None, None, 'ifs', {}, ('comprehension',
+r'''for _ in _ if a if b if c'''), ('_comprehension_ifs', r'''
+
+if \
+x \
+
+'''), r'''
+for _ in _
+           if \
+           x \
+
+''', r'''
+comprehension - ROOT 0,0..2,12
+  .target Name '_' Store - 0,4..0,5
+  .iter Name '_' Load - 0,9..0,10
+  .ifs[1]
+   0] Name 'x' Load - 2,11..2,12
+  .is_async 0
 '''),
 ],
 
