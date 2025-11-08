@@ -42,14 +42,14 @@ def regen_put_slice():
 
 class TestFSTSlice(unittest.TestCase):
     def test_get_slice_from_data(self):
-        for key, case, rest in DATA_GET_SLICE.iterate(True):
-            for idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
-                self.assertEqual(c, r, f'{key = }, {case.idx = }, rest {idx = }')
+        for case, rest in DATA_GET_SLICE.iterate(True):
+            for rest_idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
+                self.assertEqual(c, r, f'{case.id()}, rest idx = {rest_idx}')
 
     def test_del_slice_from_get_slice_data(self):
         from support import _make_fst
 
-        for key, case, rest in DATA_GET_SLICE.iterate(True):
+        for case, rest in DATA_GET_SLICE.iterate(True):
             f = _make_fst(case.code, case.attr)
 
             try:
@@ -57,26 +57,26 @@ class TestFSTSlice(unittest.TestCase):
 
             except Exception:
                 if not ((r0 := rest[0]).startswith('**') and r0.endswith('**')):
-                    raise RuntimeError(f'del raises while cut did not, {key = }, {case.idx = }')
+                    raise RuntimeError(f'del raises while cut did not, {case.id()}')
 
             else:
                 if f.root.src != rest[0]:
-                    raise RuntimeError(f'del and cut FST src are not identical, {key = }, {case.idx = }\n{f.root.src}\n...\n{rest[0]}')
+                    raise RuntimeError(f'del and cut FST src are not identical, {case.id()}\n{f.root.src}\n...\n{rest[0]}')
 
                 if (root_dump := f.root.dump(out=str)) != rest[1]:
-                    raise RuntimeError(f'del and cut FST dump are not identical, {key = }, {case.idx = }\n{root_dump}\n...\n{rest[1]}')
+                    raise RuntimeError(f'del and cut FST dump are not identical, {case.id()}\n{root_dump}\n...\n{rest[1]}')
 
     def test_put_slice_from_data(self):
-        for key, case, rest in DATA_PUT_SLICE.iterate(True):
-            for idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
-                self.assertEqual(c, r, f'{key = }, {case.idx = }, rest {idx = }')
+        for case, rest in DATA_PUT_SLICE.iterate(True):
+            for rest_idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
+                self.assertEqual(c, r, f'{case.id()}, rest idx = {rest_idx}')
 
     def test_put_src_from_put_slice_data(self):  # this test may go away at some point
         from fst.fst import _fixup_field_body
         from fst.fst_slice import _loc_slice_raw_put
         from support import _unfmt_code, _make_fst
 
-        for key, case, rest in DATA_PUT_SLICE.iterate(True):
+        for case, rest in DATA_PUT_SLICE.iterate(True):
             if not case.options.get('raw') or rest[1].startswith('**'):
                 continue
 
@@ -89,10 +89,10 @@ class TestFSTSlice(unittest.TestCase):
             f.root.verify(raise_=True)
 
             if f.root.src != rest[1]:
-                raise RuntimeError(f'put_src and put raw FST src are not identical, {key = }, {case.idx = }\n{f.root.src}\n...\n{rest[1]}')
+                raise RuntimeError(f'put_src and put raw FST src are not identical, {case.id()}\n{f.root.src}\n...\n{rest[1]}')
 
             if (root_dump := f.root.dump(out=str)) != rest[2]:
-                raise RuntimeError(f'put_src and put raw FST dump are not identical, {key = }, {case.idx = }\n{root_dump}\n...\n{rest[2]}')
+                raise RuntimeError(f'put_src and put raw FST dump are not identical, {case.id()}\n{root_dump}\n...\n{rest[2]}')
 
     def test_cut_slice_neg_space(self):
         f = FST('''[

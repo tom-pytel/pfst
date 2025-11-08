@@ -270,19 +270,19 @@ def regen_put_one():
 
 class TestFSTPut(unittest.TestCase):
     def test_get_one_from_data(self):
-        for key, case, rest in DATA_GET_ONE.iterate(True):
-            for idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
-                self.assertEqual(c, r, f'{key = }, {case.idx = }, rest {idx = }')
+        for case, rest in DATA_GET_ONE.iterate(True):
+            for rest_idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
+                self.assertEqual(c, r, f'{case.id()}, rest idx = {rest_idx}')
 
     def test_put_one_from_data(self):
-        for key, case, rest in DATA_PUT_ONE.iterate(True):
-            for idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
-                self.assertEqual(c, r, f'{key = }, {case.idx = }, rest {idx = }')
+        for case, rest in DATA_PUT_ONE.iterate(True):
+            for rest_idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
+                self.assertEqual(c, r, f'{case.id()}, rest idx = {rest_idx}')
 
     def test_put_one_raw_from_put_one_data(self):
         from support import _unfmt_code, _make_fst
 
-        for key, case, rest in DATA_PUT_ONE.iterate(True):
+        for case, rest in DATA_PUT_ONE.iterate(True):
             if case.options.get('raw') is not None or rest[1].startswith('**'):
                 continue
 
@@ -316,16 +316,16 @@ class TestFSTPut(unittest.TestCase):
                 continue
 
             except Exception:
-                print(f'{key = }, {case.idx = }')
+                print(f'{case.id()}')
 
                 raise
 
             else:
                 if f.root.src != rest[1]:
-                    raise RuntimeError(f'put raw and put FST src are not identical, {key = }, {case.idx = }\n{f.root.src}\n...\n{rest[1]}')
+                    raise RuntimeError(f'put raw and put FST src are not identical, {case.id()}\n{f.root.src}\n...\n{rest[1]}')
 
                 # if (root_dump := f.root.dump(out=str)) != rest[2]  # we don't do this because of trailing newline added with statement ops, need to fix
-                #     raise RuntimeError(f'put raw and put FST dump are not identical, {key = }, {case.idx = }\n{root_dump}\n...\n{rest[2]}')
+                #     raise RuntimeError(f'put raw and put FST dump are not identical, {key = }, {idx = }\n{root_dump}\n...\n{rest[2]}')
 
     def test_get_one_constant(self):
         for v in (True, False, None):

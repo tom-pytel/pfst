@@ -911,7 +911,7 @@ def regen_parse_autogen_data():
             mode_str = repr(mode) if isinstance(mode, str) else mode.__name__
             options = '{}' if _ver < 11 else "{'_ver': 11}" if _ver == 11 else "{'_ver': 12}" if _ver == 12 else "{'_ver': 13}"
 
-            lines.append(f'(-1, {func.__name__!r}, 0, 0, {res.__name__!r}, {options}, ({mode_str}, {src!r})),\n')
+            lines.append(f'({func.__name__!r}, 0, 0, {res.__name__!r}, {options}, ({mode_str}, {src!r})),\n')
 
     lines.append(']}\n')
 
@@ -928,10 +928,10 @@ class TestFST(unittest.TestCase):
     def test_parse_autogen(self):
         DATA_PARSE_AUTOGEN = ParseCases(FNM_PARSE_AUTOGEN)
 
-        for key, case, rest in DATA_PARSE_AUTOGEN.iterate(True):
-            for idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
+        for case, rest in DATA_PARSE_AUTOGEN.iterate(True):
+            for rest_idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
                 if not (c.startswith('**SyntaxError(') and r.startswith('**SyntaxError(')):  # because we will get different texts for different py versions
-                    self.assertEqual(c, r, f'{key = }, {case.idx = }, rest {idx = }')
+                    self.assertEqual(c, r, f'{case.id()}, rest idx = {rest_idx}')
 
     def test_unparse(self):
         self.assertEqual('for i in j', px.unparse(FST('[i for i in j]').generators[0].a))
@@ -1030,8 +1030,8 @@ class TestFST(unittest.TestCase):
 
         cases_found = False
 
-        for key, case in BaseCases(os.path.join(DIR_NAME, 'data/data_get_one.py')).iterate():
-            if key != 'all_basic':
+        for case in BaseCases(os.path.join(DIR_NAME, 'data/data_get_one.py')).iterate():
+            if case.key != 'all_basic':
                 break
 
             cases_found = True

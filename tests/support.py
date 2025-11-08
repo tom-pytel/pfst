@@ -68,14 +68,19 @@ def _san_exc(exc: Exception) -> Exception:
 
 
 class BaseCase(NamedTuple):
+    lineno:  int
+    key:     str
     idx:     int
-    attr:    str
+    attr:    str  # the previous are runtime generated, this one and the following are stored
     start:   int | Literal['end'] | None
     stop:    int | Literal[False] | None
     field:   str | None
     options: dict[str, Any]
     code:    str | tuple[str, str]
     rest:    list[str | tuple[str, str]]
+
+    def id(self) -> str:
+        return f'lineno = {self.lineno}, key = {self.key!r}, idx = {self.idx}'
 
 
 class BaseCases(dict):
@@ -98,16 +103,28 @@ class BaseCases(dict):
 
         assert isinstance(cases, dict) and self.var == self.var.upper(), 'last element of cases data file must be the dictionary of cases'
 
-        for key, file_cases in cases.items():  # next(iter(globs.values())).items():
+        case_src_idx = 0
+        lineno = 1
+
+        def next_case_lineno() -> int:
+            nonlocal case_src_idx, lineno
+
+            prev_case_src_idx = case_src_idx
+            case_src_idx = src.index('\n(', prev_case_src_idx) + 1
+            lineno += src.count('\n', prev_case_src_idx, case_src_idx)
+
+            return lineno
+
+        for key, file_cases in cases.items():
             self[key] = self_cases = []
 
-            for j, (_, attr, start, stop, field, options, code, *rest) in enumerate(file_cases):
+            for idx, (attr, start, stop, field, options, code, *rest) in enumerate(file_cases):
                 code = _unfmt_code(code)
 
                 for i, r in enumerate(rest):
                     rest[i] = _unfmt_code(r)
 
-                self_cases.append(BaseCase(j, attr, start, stop, field, options, code, rest))
+                self_cases.append(BaseCase(next_case_lineno(), key, idx, attr, start, stop, field, options, code, rest))
 
     def write(self):
         out = [self.head]
@@ -117,8 +134,8 @@ class BaseCases(dict):
         for key, cases in self.items():
             out.append(f'{key!r}: [  # ................................................................................\n')
 
-            for idx, attr, start, stop, field, options, code, rest in cases:
-                out.append(f'\n({idx}, {attr!r}, {start!r}, {stop!r}, {field!r}, {options}')
+            for _, _, _, attr, start, stop, field, options, code, rest in cases:
+                out.append(f'\n({attr!r}, {start!r}, {stop!r}, {field!r}, {options}')
 
                 for s in [code] + rest:
                     src, is_multiline = _fmt_code(s)
@@ -135,25 +152,25 @@ class BaseCases(dict):
         with open(self.fnm, 'w') as f:
             f.write(''.join(out))
 
-    def iterate(self, gen=False) -> Generator[tuple[str, BaseCase] |
-                                              tuple[str, BaseCase, list[str | tuple[str, str]]],
+    def iterate(self, gen=False) -> Generator[BaseCase |
+                                              tuple[BaseCase, list[str | tuple[str, str]]],
                                               None, None]:
-        key = case = None
+        case = None
 
         try:
-            for key, cases in self.items():
+            for cases in self.values():
                 for case in cases:
                     if not (v := case.options.get('_ver')) or v <= _PYVER:
-                        yield (key, case, self.exec(case)) if gen else (key, case)
+                        yield (case, self.exec(case)) if gen else case
 
         except Exception:
-            print(f'key = {key}, idx = {case and case.idx}, fnm = {self.fnm}')
+            print(f'{case.id()}, fnm = {self.fnm}')
 
             raise
 
     def generate(self):
-        for key, case, rest in self.iterate(True):
-            self[key][case.idx] = BaseCase(*case[:-1], rest)
+        for case, rest in self.iterate(True):
+            self[case.key][case.idx] = BaseCase(*case[:-1], rest)
 
     def exec(self, case) -> list[str | tuple[str, str]]:  # rest
         raise NotImplementedError('this must be implemented in a subclass')
@@ -249,7 +266,7 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
         super().__init__(fnm, func)
 
     def exec(self, case) -> list[str | tuple[str, str]]:  # rest
-        _, attr, start, stop, field, options, code, case_rest = case
+        _, _, _, attr, start, stop, field, options, code, case_rest = case
 
         func     = self.func
         is_raw   = options.get('raw', False)
