@@ -29,9 +29,9 @@ __all__ = [
 
 AST_FIELDS_NEXT: dict[tuple[type[AST], str], str | None] = dict(sum((  # next field name from AST class and current field name
     [] if not fields else
-    [((cls, fields[0]), None)] if len(fields) == 1 else
-    [((cls, fields[i]), fields[i + 1]) for i in range(len(fields) - 1)] + [((cls, fields[-1]), None)]
-    for cls, fields in AST_FIELDS.items()), start=[])
+    [((kls, fields[0]), None)] if len(fields) == 1 else
+    [((kls, fields[i]), fields[i + 1]) for i in range(len(fields) - 1)] + [((kls, fields[-1]), None)]
+    for kls, fields in AST_FIELDS.items()), start=[])
 )
 
 AST_FIELDS_NEXT[(Dict, 'keys')]             = 0  # special cases
@@ -52,9 +52,9 @@ AST_FIELDS_NEXT[(arguments, 'kw_defaults')] = 7
 
 AST_FIELDS_PREV: dict[tuple[type[AST], str], str | None] = dict(sum((  # previous field name from AST class and current field name
     [] if not fields else
-    [((cls, fields[0]), None)] if len(fields) == 1 else
-    [((cls, fields[i + 1]), fields[i]) for i in range(len(fields) - 1)] + [((cls, fields[0]), None)]
-    for cls, fields in AST_FIELDS.items()), start=[])
+    [((kls, fields[0]), None)] if len(fields) == 1 else
+    [((kls, fields[i + 1]), fields[i]) for i in range(len(fields) - 1)] + [((kls, fields[0]), None)]
+    for kls, fields in AST_FIELDS.items()), start=[])
 )
 
 AST_FIELDS_PREV[(Dict, 'keys')]             = 0  # special cases

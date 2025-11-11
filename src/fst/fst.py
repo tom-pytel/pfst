@@ -185,7 +185,7 @@ _DEFAULT_COLOR = (
 _DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_version=None)
 _DEFAULT_INDENT = '    '
 
-_DEFAULT_AST_FIELD = {cls: field for field, classes in [  # builds to {Module: 'body', Interactive: 'body', ..., Match: 'cases', ..., MatchAs: 'pattern'}
+_DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: 'body', Interactive: 'body', ..., Match: 'cases', ..., MatchAs: 'pattern'}
     ('body',         (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While,
                       If, With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
     ('handlers',     (_ExceptHandlers,)),
@@ -221,7 +221,7 @@ _DEFAULT_AST_FIELD = {cls: field for field, classes in [  # builds to {Module: '
     ('name',         (alias,)),
     ('context_expr', (withitem,)),
     ('pattern',      (MatchAs,)),
-] for cls in classes}
+] for kls in classes}
 
 _re_deco_start = re.compile(r'[ \t]*@')
 

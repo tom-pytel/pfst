@@ -372,30 +372,28 @@ def _update_loc_up_parents(self: fst.FST, lineno: int, col_offset: int, end_line
 
     self._touch()
 
-    cur = self
+    while self := self.parent:
+        ast = self.a
+        self_end_col_offset = getattr(ast, 'end_col_offset', None)
 
-    while cur := cur.parent:
-        cura = cur.a
-        cur_end_col_offset = getattr(cura, 'end_col_offset', None)
-
-        if cur_end_col_offset is None:
+        if self_end_col_offset is None:
             break
 
-        if at_old_end := (cur_end_col_offset == old_end_col_offset and cura.end_lineno == old_end_lineno):  # only change if matches old location
-            cura.end_lineno = end_lineno
-            cura.end_col_offset = end_col_offset
+        if at_old_end := (self_end_col_offset == old_end_col_offset and ast.end_lineno == old_end_lineno):  # only change if matches old location
+            ast.end_lineno = end_lineno
+            ast.end_col_offset = end_col_offset
 
-        if cura.col_offset == old_col_offset and cura.lineno == old_lineno:
-            cura.lineno = lineno
-            cura.col_offset = col_offset
+        if ast.col_offset == old_col_offset and ast.lineno == old_lineno:
+            ast.lineno = lineno
+            ast.col_offset = col_offset
 
         elif not at_old_end:
             break
 
-        cur._touch()
+        self._touch()
 
-    if cur:
-        cur._touchall(True, True, False)
+    if self:
+        self._touchall(True, True, False)
 
 
 def _maybe_fix_MatchOr(self: fst.FST, norm: bool | str = False) -> None:
@@ -1433,14 +1431,14 @@ def _get_slice__slice(
     """Our own general non-AST-compatible slice of some `type[AST]` list field."""
 
     ast = self.a
-    cls = ast.__class__
-    static = _SLICE_STATICS[cls]
+    kls = ast.__class__
+    static = _SLICE_STATICS[kls]
     body = getattr(ast, field)
     len_body = len(body)
     start, stop = _fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
-        return fst.FST(cls([], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], from_=self)
+        return fst.FST(kls([], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], from_=self)
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
@@ -1450,7 +1448,7 @@ def _get_slice__slice(
         _, _, bound_ln, bound_col = body[start - 1].f.pars()
 
     asts = _cut_or_copy_asts(start, stop, field, cut, body)
-    ret_ast = cls(asts)
+    ret_ast = kls(asts)
 
     fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1],
                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
@@ -1511,9 +1509,7 @@ def _code_to_slice_seq(
     put_norm = _get_norm_option('norm_put', 'set_norm', options)
 
     if one:
-        is_par = fst_._is_parenthesized_tuple()
-
-        if is_par is not None:
+        if (is_par := fst_._is_parenthesized_tuple()) is not None:
             fst_._maybe_add_singleton_tuple_comma(is_par)  # specifically for lone '*starred' without comma from slices, even though those can't be gotten alone organically
 
             if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
@@ -1715,9 +1711,8 @@ def _code_to_slice__expr_arglikes(
     if one:
         fst_ = code_as_expr_arglike(code, self.root.parse_params, sanitize=False)
         ast_ = fst_.a
-        is_par = fst_._is_parenthesized_tuple()
 
-        if is_par is not None:
+        if (is_par := fst_._is_parenthesized_tuple()) is not None:
             if fst_ is code and any(e.f.is_expr_arglike for e in ast_.elts):
                 raise NodeError("cannot put argument-like expression(s) in a Tuple as 'one'")
 
@@ -2050,10 +2045,9 @@ def _put_slice_Dict(
         ast_ = fst_.a
         fst_body = ast_.keys
         fst_body2 = ast_.values
-        len_fst_body = len(fst_body)
         fst_first = a.f if (a := fst_body[0]) else None
 
-        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_first, fst_body2[-1].f, len_fst_body,
+        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_first, fst_body2[-1].f, len(fst_body),
                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
                                          options, 'keys', 'values')
 
@@ -2090,13 +2084,9 @@ def _put_slice_Tuple_elts(
 
     if fst_:
         fst_body = fst_.a.elts
-        len_fst_body = len(fst_body)
 
-        if len_fst_body == 1:
-            b0 = fst_body[0]
-
-            if isinstance(b0, Tuple) and any(isinstance(e, Slice) for e in b0.elts):  # putting a tuple with Slices as one
-                raise NodeError('cannot put tuple with Slices to tuple')
+        if len(fst_body) == 1 and isinstance(b0 := fst_body[0], Tuple) and any(isinstance(e, Slice) for e in b0.elts):  # putting a tuple with Slices as one
+            raise NodeError('cannot put tuple with Slices to tuple')
 
         if PYLT11:
             if is_slice and not is_par and any(isinstance(e, Starred) for e in fst_body):
@@ -2472,11 +2462,8 @@ def _put_slice_Global_Nonlocal_names(
                              end_col_offset=l.c2b(end_col)))
 
     if tmp_elts:
-        e0 = tmp_elts[0]
-        en = tmp_elts[-1]
-
-        tmp_ast = Tuple(elts=tmp_elts, ctx=Load(), lineno=e0.lineno, col_offset=e0.col_offset,
-                        end_lineno=en.end_lineno, end_col_offset=en.end_col_offset)
+        tmp_ast = Tuple(elts=tmp_elts, ctx=Load(), lineno=(e0 := tmp_elts[0]).lineno, col_offset=e0.col_offset,
+                        end_lineno=(en := tmp_elts[-1]).end_lineno, end_col_offset=en.end_col_offset)
     else:
         tmp_ast = Tuple(elts=tmp_elts, ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=0)
 
@@ -2507,10 +2494,9 @@ def _put_slice_Global_Nonlocal_names(
 
     else:
         fst_body = fst_.a.elts
-        len_fst_body = len(fst_body)
         fst_last = fst_body[-1].f
 
-        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_last, len_fst_body,
+        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_last, len(fst_body),
                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
                                          options, 'elts', None, ',', False)
 
@@ -2596,9 +2582,8 @@ def _put_slice_ClassDef_bases(
 
         self_tail_sep = (keywords and stop == len_body) or None
         fst_body = fst_.a.elts
-        len_fst_body = len(fst_body)
 
-        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
+        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len(fst_body),
                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
                                          options, 'bases', None, ',', self_tail_sep)
 
@@ -2825,10 +2810,9 @@ def _put_slice_MatchMapping(
         ast_ = fst_.a
         fst_body = ast_.keys
         fst_body2 = ast_.patterns
-        len_fst_body = len(fst_body)
         self_tail_sep = (ast.rest and stop == len_body) or None
 
-        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body2[-1].f, len_fst_body,
+        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body2[-1].f, len(fst_body),
                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
                                          options, 'keys', 'patterns', ',', self_tail_sep)
 
@@ -2879,8 +2863,8 @@ def _put_slice_MatchOr_patterns(
         if (len_body - len_slice + len_fst_body) == 1 and self_norm == 'strict':
             raise NodeError("cannot put MatchOr to length 1 with matchor_norm='strict'")
 
-        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body, *self.loc,
-                                         options, 'patterns', None, '|', False)
+        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
+                                         *self.loc, options, 'patterns', None, '|', False)
 
         _put_slice_asts(self, start, stop, 'patterns', body, fst_, fst_body)
 
@@ -2938,9 +2922,8 @@ def _put_slice_type_params(
             bound_col = bound_end_col = name_col + 1
 
         fst_body = fst_.a.type_params
-        len_fst_body = len(fst_body)
 
-        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
+        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len(fst_body),
                                          bound_ln, bound_col, bound_end_ln, bound_end_col,
                                          options, 'type_params')
 
@@ -3168,12 +3151,12 @@ def _adjust_slice_raw_ast(
 ) -> tuple[AST | list[str], int, int, int, int]:
     """Adjust `code` and put location when putting raw from an `AST`. Currently just trailing comma stuff."""
 
-    lines = self.root._lines
     code = reduce_ast(code, True)
-    code_is_tuple = isinstance(code, Tuple)
-    code_is_normal = not code_is_tuple and isinstance(code, (List, Set, Dict, MatchSequence, MatchMapping))
 
-    if code_is_tuple or code_is_normal or isinstance(code, (_withitems, _aliases, _type_params)):  # all nodes which are separated by comma at top level
+    if ((code_is_tuple := isinstance(code, Tuple)) or
+        (code_is_normal := isinstance(code, (List, Set, Dict, MatchSequence, MatchMapping))) or
+        isinstance(code, (_withitems, _aliases, _type_params))
+    ):  # all nodes which are separated by comma at top level
         src = unparse(code)
 
         if not one:  # strip delimiters and remove singleton Tuple trailing comma if present
@@ -3201,7 +3184,7 @@ def _adjust_slice_raw_ast(
             len_code_body = 1
 
         if stop == len(body2) and _singleton_needs_comma(self):
-            comma = next_find(lines, put_end_ln, put_end_col, self.end_ln, self.end_col, ',', True)  # trailing comma
+            comma = next_find(self.root._lines, put_end_ln, put_end_col, self.end_ln, self.end_col, ',', True)  # trailing comma
 
             if len_code_body != 1:
                 if comma and comma[1] == put_end_col and comma[0] == put_end_ln:
@@ -3234,11 +3217,11 @@ def _adjust_slice_raw_fst(
     if not code.is_root:
         raise ValueError('expecting root node')
 
-    lines = self.root._lines
     code_ast = reduce_ast(code.a, True)
-    code_is_normal = isinstance(code_ast, (Tuple, List, Set, Dict, MatchSequence, MatchMapping))
 
-    if code_is_normal or isinstance(code_ast, (_withitems, _aliases, _type_params)):  # all nodes which are separated by comma at top level
+    if ((code_is_normal := isinstance(code_ast, (Tuple, List, Set, Dict, MatchSequence, MatchMapping))) or
+        isinstance(code_ast, (_withitems, _aliases, _type_params))
+    ):  # all nodes which are separated by comma at top level
         code_fst = code_ast.f
         code_lines = code._lines
 
@@ -3296,7 +3279,7 @@ def _adjust_slice_raw_fst(
             code_comma = code_comma_is_explicit = None
             len_code_body2 = 1
 
-        if comma := next_find(lines, put_end_ln, put_end_col, self.end_ln, self.end_col, ',', True):  # trailing comma
+        if comma := next_find(self.root._lines, put_end_ln, put_end_col, self.end_ln, self.end_col, ',', True):  # trailing comma
             if (code_comma_is_explicit or
                 (len_code_body2 > 1 and  # code has no comma because otherwise it would be explicit
                  len(body2) == 1 and _singleton_needs_comma(self) and  # self is singleton and singleton needs comma

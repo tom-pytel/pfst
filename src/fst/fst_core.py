@@ -1385,9 +1385,9 @@ def _get_indentable_lns(
                 not isinstance(a.value, str) or  # could be bytes
                 not ((parent := f.parent) and
                      isinstance(parent.a, Expr) and
-                     (not strict or ((pparent := parent.parent) and
+                     (not strict or ((grandparent := parent.parent) and
                                      parent.pfield == ('body', 0) and
-                                     isinstance(pparent.a, ASTS_SCOPE_NAMED_OR_MOD) and
+                                     isinstance(grandparent.a, ASTS_SCOPE_NAMED_OR_MOD) and
                                      parent.a is not docstr_strict_exclude)))):
                 lns.difference_update(_multiline_str_continuation_lns(lines, *f.loc))
 

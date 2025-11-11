@@ -560,11 +560,11 @@ def ignorable_exc(exc: Exception, putsrc: str | Literal[False] | None = None):
     return ignorable
 
 
-def astbase(cls: type[AST]) -> type[AST]:  # ast base class just above AST
-    while (c := cls.__bases__[0]) is not AST:
-        cls = c
+def astbase(kls: type[AST]) -> type[AST]:  # ast base class just above AST
+    while (c := kls.__bases__[0]) is not AST:
+        kls = c
 
-    return cls
+    return kls
 
 
 ASTCat = type[AST]  # mod, stmt, expr, Slice, slice, expr_context, boolop, operator, unaryop, cmpop, comprehension, excepthandler, ExceptHandler, arguments, arg, keyword, alias, withitem, match_case, pattern

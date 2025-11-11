@@ -167,7 +167,8 @@ class fstview:
         """
 
         if isinstance(idx, int):
-            idx = _fixup_one_index(self.stop - (start := self.start), idx)
+            start = self.start
+            idx = _fixup_one_index(self.stop - start, idx)
 
             return a.f if isinstance(a := getattr(self.fst.a, self.field)[start + idx], AST) else a
 
@@ -180,7 +181,8 @@ class fstview:
         if idx.step is not None:
             raise IndexError('step slicing not supported')
 
-        idx_start, idx_stop = _fixup_slice_indices(self.stop - (start := self.start), idx.start, idx.stop)
+        start = self.start
+        idx_start, idx_stop = _fixup_slice_indices(self.stop - start, idx.start, idx.stop)
 
         return fstview(self.fst, self.field, start + idx_start, start + idx_stop)
 
@@ -230,8 +232,10 @@ class fstview:
             idx = a.f.pfield.idx
 
         if isinstance(idx, int):
-            idx = _fixup_one_index(self.stop - (start := self.start), idx)
-            len_before = len(asts := getattr(self.fst.a, self.field))
+            start = self.start
+            idx = _fixup_one_index(self.stop - start, idx)
+            asts = getattr(self.fst.a, self.field)
+            len_before = len(asts)
 
             self.fst = self.fst.put(code, start + idx, field=self.field) or self.fst
 
@@ -241,8 +245,10 @@ class fstview:
             raise IndexError('step slicing not supported')
 
         else:
-            idx_start, idx_stop = _fixup_slice_indices(self.stop - (start := self.start), idx.start, idx.stop)
-            len_before = len(asts := getattr(self.fst.a, self.field))
+            start = self.start
+            idx_start, idx_stop = _fixup_slice_indices(self.stop - start, idx.start, idx.stop)
+            asts = getattr(self.fst.a, self.field)
+            len_before = len(asts)
 
             self.fst = self.fst.put_slice(code, start + idx_start, start + idx_stop, self.field)
 
@@ -286,7 +292,9 @@ class fstview:
             idx = a.f.pfield.idx
 
         if isinstance(idx, int):
-            idx = _fixup_one_index((stop := self.stop) - (start := self.start), idx)
+            start = self.start
+            stop = self.stop
+            idx = _fixup_one_index(stop - start, idx)
 
             self.fst = self.fst.put_slice(None, start + idx, start + idx + 1, field=self.field)
 
@@ -296,7 +304,9 @@ class fstview:
             raise IndexError('step slicing not supported')
 
         else:
-            idx_start, idx_stop = _fixup_slice_indices((stop := self.stop) - (start := self.start), idx.start, idx.stop)
+            start = self.start
+            stop = self.stop
+            idx_start, idx_stop = _fixup_slice_indices(stop - start, idx.start, idx.stop)
 
             self.fst = self.fst.put_slice(None, start + idx_start, start + idx_stop, self.field)
 
@@ -344,7 +354,9 @@ class fstview:
         ```
         """
 
-        f = self.fst.get_slice(start := self.start, self.stop, self.field, cut=True, **options)
+        start = self.start
+
+        f = self.fst.get_slice(start, self.stop, self.field, cut=True, **options)
 
         self.stop = start
 
@@ -374,7 +386,8 @@ class fstview:
         ```
         """
 
-        len_before = len(asts := getattr(self.fst.a, self.field))
+        asts = getattr(self.fst.a, self.field)
+        len_before = len(asts)
 
         self.fst = self.fst.put_slice(code, self.start, self.stop, self.field, one=one, **options)
 
@@ -400,7 +413,8 @@ class fstview:
         ```
         """
 
-        len_before = len(asts := getattr(self.fst.a, self.field))
+        asts = getattr(self.fst.a, self.field)
+        len_before = len(asts)
 
         self.fst = self.fst.put_slice(None, self.start, self.stop, self.field, one=True, **options)
 
@@ -440,10 +454,16 @@ class fstview:
         ```
         """
 
-        len_before = len(asts := getattr(self.fst.a, self.field))
-        idx = (self.stop if idx == 'end' else
-               stop if idx > (l := (stop := self.stop) - (start := self.start)) else
-               start + (idx if idx >= 0 else max(0, idx + l)))
+        asts = getattr(self.fst.a, self.field)
+        len_before = len(asts)
+        start = self.start
+        stop = self.stop
+        len_view = stop - start
+
+        if idx == 'end' or idx > len_view:
+            idx = stop
+        else:
+            idx = start + (idx if idx >= 0 else max(0, idx + len_view))
 
         self.fst = self.fst.put_slice(code, idx, idx, self.field, one=one, **options)
 
@@ -473,7 +493,9 @@ class fstview:
         ```
         """
 
-        self.fst = self.fst.put_slice(code, stop := self.stop, stop, self.field, one=True, **options)
+        stop = self.stop
+
+        self.fst = self.fst.put_slice(code, stop, stop, self.field, one=True, **options)
 
         self.stop = stop + 1
 
@@ -501,9 +523,11 @@ class fstview:
         ```
         """
 
-        len_before = len(asts := getattr(self.fst.a, self.field))
+        asts = getattr(self.fst.a, self.field)
+        len_before = len(asts)
+        stop = self.stop
 
-        self.fst = self.fst.put_slice(code, stop := self.stop, stop, self.field, one=False, **options)
+        self.fst = self.fst.put_slice(code, stop, stop, self.field, one=False, **options)
 
         self.stop = stop + (len(asts) - len_before)
 
@@ -531,7 +555,9 @@ class fstview:
         ```
         """
 
-        self.fst = self.fst.put_slice(code, start := self.start, start, self.field, one=True, **options)
+        start = self.start
+
+        self.fst = self.fst.put_slice(code, start, start, self.field, one=True, **options)
 
         self.stop += 1
 
@@ -559,9 +585,11 @@ class fstview:
         ```
         """
 
-        len_before = len(asts := getattr(self.fst.a, self.field))
+        asts = getattr(self.fst.a, self.field)
+        len_before = len(asts)
+        start = self.start
 
-        self.fst = self.fst.put_slice(code, start := self.start, start, self.field, one=False, **options)
+        self.fst = self.fst.put_slice(code, start, start, self.field, one=False, **options)
 
         self.stop += len(asts) - len_before
 

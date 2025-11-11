@@ -631,7 +631,7 @@ def next_delims(
                 break
 
             end_ln = ln
-            end_col = (col := col + 1)
+            end_col = col = col + 1
 
             delims.append((end_ln, end_col))
 
@@ -668,7 +668,7 @@ def prev_delims(
                 break
 
             ln = ln
-            col = (col := col - 1)
+            col -= 1
 
             delims.append((ln, col))
 

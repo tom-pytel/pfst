@@ -318,11 +318,11 @@ FIELDS = dict([
 ])  ; """List of all fields for AST classes: [(`AST` class, (('field name', 'type name'), ...)), ...]"""
 
 # only fields which can contain an AST, {cls: ('field1', 'field2', ...), ...}
-AST_FIELDS = {cls: tuple(f for f, t in fields
+AST_FIELDS = {kls: tuple(f for f, t in fields
                          if not t.startswith('int') and not t.startswith('string') and
                          not t.startswith('identifier') and not t.startswith('constant') and
                          not t.startswith('type_ignore'))
-              for cls, fields in FIELDS.items()}  ; """Mapping of `AST` class to tuple of fields which may contain an `AST` node or `list` of `AST` nodes or `None` if optional `AST` node."""
+              for kls, fields in FIELDS.items()}  ; """Mapping of `AST` class to tuple of fields which may contain an `AST` node or `list` of `AST` nodes or `None` if optional `AST` node."""
 
 OPSTR2CLS_UNARY = {
     '~':      Invert,
@@ -973,8 +973,10 @@ def set_ctx(asts: AST | list[AST], ctx: type[expr_context], *, doit: bool = True
 
     while stack:
         if a := stack.pop():  # might be `None`s in there
-            if (((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
-                isinstance(a, (Name, Subscript, Attribute))) and not isinstance(a.ctx, ctx)
+            if (((is_seq := isinstance(a, (Tuple, List))) or
+                 (is_starred := isinstance(a, Starred)) or
+                 isinstance(a, (Name, Subscript, Attribute))) and
+                not isinstance(a.ctx, ctx)
             ):
                 change = True
 

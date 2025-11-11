@@ -179,15 +179,15 @@ def _code_as_op(
         if sanitize:
             code._sanitize()
 
-        if (src := code.src) != (expected := opcls2str[codea.__class__]):  # maybe someone did 'is # comment \n not' or something like this?
+        if (expected := opcls2str[codea.__class__]) != code.src:  # maybe someone did 'is # comment \n not' or something like this?
             try:
-                if parse(src).__class__ is codea.__class__:  # parses to same thing so just return the canonical str for the op, otherwise it gets complicated
+                if parse(code.src).__class__ is codea.__class__:  # parses to same thing so just return the canonical str for the op, otherwise it gets complicated
                     return code  # return fst.FST(codea, [expected], from_=code)
 
             except SyntaxError:  # mostly for mismatched augop / binop operator types
                 pass
 
-            raise NodeError(f'expecting {expected!r}, got {shortstr(src)!r}', rawable=True)
+            raise NodeError(f'expecting {expected!r}, got {shortstr(code.src)!r}', rawable=True)
 
         return code
 
@@ -202,8 +202,8 @@ def _code_as_op(
 
     lines = (code := code.strip()).split('\n')
 
-    if cls := opstr2cls.get(code):
-        return fst.FST(cls(), lines, parse_params=parse_params)
+    if kls := opstr2cls.get(code):
+        return fst.FST(kls(), lines, parse_params=parse_params)
 
     try:
         return fst.FST(parse(code, parse_params), lines, parse_params=parse_params)  # fall back to actually trying to parse the thing
@@ -447,7 +447,9 @@ def code_as_expr(
         if not code.is_root:
             raise ValueError('expecting root node')
 
-        if not (ast := reduce_ast(codea := code.a)):
+        codea = code.a
+
+        if not (ast := reduce_ast(codea)):
             raise NodeError(f'{expecting()}, got multiple statements', rawable=True)
 
         validate(ast)

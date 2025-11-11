@@ -117,7 +117,7 @@ def _get_element_indent(self: fst.FST, body: list[AST], body2: list[AST], start:
             loc = start_prev_loc = locfunc(body, start - 1)
 
             for i in range(start - 2, -1, -1):
-                if loc.ln != (prev_loc := locfunc(body, i)).end_ln:  # only consider elements which start on a different line than the previous element ends on
+                if (prev_loc := locfunc(body, i)).end_ln != loc.ln:  # only consider elements which start on a different line than the previous element ends on
                     if re_empty_line.match(l := lines[loc.ln], 0, loc.col):  # need to check regardless of different line because there may be stray separator
                         return l[:loc.col]
 
@@ -303,7 +303,9 @@ def _locs_slice(
     if (sep and (frag := next_frag(lines, last_end_ln, last_end_col, bound_end_ln, bound_end_col)) and
         frag.src.startswith(sep)
     ):  # if separator present then set end of element to just past it
-        sep_end_pos = end_pos = (last_end_ln := frag.ln, last_end_col := frag.col + len(sep))
+        last_end_ln = frag.ln
+        last_end_col = frag.col + len(sep)
+        sep_end_pos = end_pos = (last_end_ln, last_end_col)
 
     else:
         sep_end_pos = None
@@ -371,7 +373,7 @@ def _locs_slice(
 
     # here we could just return cut_locs, the rest of the code differentiates between '-#' and '+#' locations if neg is True
 
-    if ld_different := ld_space_pos and ld_neg and ld_space:
+    if ld_different := (ld_space_pos and ld_neg and ld_space):
         if ld_text_pos[0] == ld_ln:  # if on same line then space was at start of line and there should be no difference
             ld_different = False
 
@@ -379,7 +381,7 @@ def _locs_slice(
             ld_ln = ld_text_pos[0]  # this is where space would have been without negative
             ld_col = 0
 
-    if tr_different := tr_space_pos and tr_neg and tr_space:
+    if tr_different := (tr_space_pos and tr_neg and tr_space):
         if tr_text_pos[0] == tr_ln:  # if on same line then space was on line of element and there should be no difference
             tr_different = False
 
@@ -499,7 +501,8 @@ def get_slice_sep(
                 ret_tail_sep = True  # this along with sep_end_pos != None will turn the ret_tail_sep checks below into noop
 
             elif sep_end_pos[0] == copy_end_ln == loc_last.end_ln and sep_end_pos[1] == copy_end_col:  # optimization common case, we can get rid of unneeded trailing separator in copy by just not copying it if it is at end of copy range on same line as end of element
-                copy_loc = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col := loc_last.end_col)
+                copy_end_col = loc_last.end_col
+                copy_loc = fstloc(copy_ln, copy_col, copy_end_ln, copy_end_col)
                 ret_tail_sep = True
 
         if self_tail_sep == 0:  # (or False), optimization common case, we can get rid of unneeded trailing separator in self by adding it to the delete block if del block starts on same line as previous element ends and there is not a comment on the line
@@ -801,7 +804,9 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
 
         elif not put_end_col and (put_col or put_end_ln != put_ln):  # we are putting slice before an element which starts a newline and slice doesn't have trailing newline (but not insert to zero-length location at exact start of line)
             if put_end_ln != put_ln:  # change put end to not delete last newline if possible
-                put_end_col = len(lines[put_end_ln := put_end_ln - 1])
+                put_end_ln = put_end_ln - 1
+                put_end_col = len(lines[put_end_ln])
+
             else:  # otherwise add newline to slice
                 put_lines.append(bistr(''))  # this doesn't need to be post_indent-ed because its just a newline, doesn't do indentation of following text
 

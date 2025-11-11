@@ -419,16 +419,18 @@ def _ast_parse(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def _ast_parse1(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    if len(body := ast_parse(src + '\n' if src.endswith('\\\n') else src, **parse_params).body) != 1:
+    body = ast_parse(src + '\n' if src.endswith('\\\n') else src, **parse_params).body
+
+    if len(body) != 1:
         raise SyntaxError('unexpected multiple statements')
 
     return body[0]
 
 
 def _ast_parse1_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    if (len(body := ast_parse(src + '\n' if src.endswith('\\\n') else src, **parse_params).body) != 1 or
-        len(cases := body[0].cases) != 1
-    ):
+    body = ast_parse(src + '\n' if src.endswith('\\\n') else src, **parse_params).body
+
+    if len(body) != 1 or len(cases := body[0].cases) != 1:
         raise SyntaxError('expecting single element')
 
     return cases[0]
@@ -454,18 +456,20 @@ def _offset_linenos(ast: AST, delta: int) -> AST:
 
 
 def _fix_unparenthesized_tuple_parsed_parenthesized(src: str, ast: AST) -> None:
-    elts = ast.elts
-    ast.lineno = (e0 := elts[0]).lineno
-    ast.col_offset = e0.col_offset
     lines = src.split('\n')
-    end_ln = (e_1 := elts[-1]).end_lineno - 2  # -2 because of extra line introduced in parse
-    end_col = len(lines[end_ln].encode()[:e_1.end_col_offset].decode())  # bistr(lines[end_ln]).b2c(e_1.end_col_offset)
+    elts = ast.elts
+    e0 = elts[0]
+    en = elts[-1]
+    ast.lineno = e0.lineno
+    ast.col_offset = e0.col_offset
+    end_ln = en.end_lineno - 2  # -2 because of extra line introduced in parse
+    end_col = len(lines[end_ln].encode()[:en.end_col_offset].decode())  # bistr(lines[end_ln]).b2c(en.end_col_offset)
 
     if (not (frag := next_frag(lines, end_ln, end_col, ast.end_lineno - 3, 0x7fffffffffffffff)) or  # if nothing following then last element is ast end, -3 because end also had \n tacked on
         not frag.src.startswith(',')  # if no comma then last element is ast end
     ):
-        ast.end_lineno = e_1.end_lineno
-        ast.end_col_offset = e_1.end_col_offset
+        ast.end_lineno = en.end_lineno
+        ast.end_col_offset = en.end_col_offset
 
     else:
         end_ln, end_col, _ = frag
@@ -746,9 +750,9 @@ def parse_stmts(src: str, parse_params: Mapping[str, Any] = {}) -> AST:  # same 
 def parse_stmt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse exactly one `stmt` and return as itself."""
 
-    mod = _ast_parse(src, parse_params)
+    body = _ast_parse(src, parse_params).body
 
-    if len(body := mod.body) != 1:
+    if len(body) != 1:
         raise ParseError('expecting single stmt')
 
     return body[0]
@@ -757,9 +761,9 @@ def parse_stmt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 def parse_ExceptHandler(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse exactly one `ExceptHandler` and return as itself."""
 
-    except_handlers = parse__ExceptHandlers(src, parse_params)
+    handlers = parse__ExceptHandlers(src, parse_params).handlers
 
-    if len(handlers := except_handlers.handlers) != 1:
+    if len(handlers) != 1:
         raise ParseError('expecting single ExceptHandler')
 
     return handlers[0]
@@ -805,9 +809,9 @@ def parse__ExceptHandlers(src: str, parse_params: Mapping[str, Any] = {}) -> AST
 def parse_match_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse exactly one `match_case` and return as itself."""
 
-    match_cases = parse__match_cases(src, parse_params)
+    cases = parse__match_cases(src, parse_params).cases
 
-    if len(cases := match_cases.cases) != 1:
+    if len(cases) != 1:
         raise ParseError('expecting single match_case')
 
     return cases[0]
@@ -836,10 +840,14 @@ def parse__match_cases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         ast = _ast_parse1('\n'.join(lines), parse_params)
         fst_ = fst.FST(ast, lines, parse_params=parse_params, lcopy=False)
 
-    cases_lineno = (lno := (a0 := cases[0]).f.lineno) - 2
-    cases_col_offset = a0.f.col_offset - (lno - 1 in lns)  # `lno - 1` is ln - inserted two lines (-2) + ln conversion to lineno (+1)
-    cases_end_lineno = (elno := (an := cases[-1]).f.end_lineno) - 2
-    cases_end_col_offset = an.f.end_col_offset - (elno - 1 in lns)
+    a0 = cases[0]
+    an = cases[-1]
+    lineno = a0.f.lineno
+    end_lineno = an.f.end_lineno
+    cases_lineno = lineno - 2
+    cases_col_offset = a0.f.col_offset - (lineno - 1 in lns)  # `lineno - 1` is ln - inserted two lines (-2) + ln conversion to lineno (+1)
+    cases_end_lineno = end_lineno - 2
+    cases_end_col_offset = an.f.end_col_offset - (end_lineno - 1 in lns)
 
     lns_ = set()
 
@@ -874,8 +882,8 @@ def parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     except SyntaxError:
         pass
     else:
-        if len(body) == 1 and isinstance(ast := body[0], Expr):  # if parsed to single expression then done
-            return ast.value
+        if len(body) == 1 and isinstance(b0 := body[0], Expr):  # if parsed to single expression then done
+            return b0.value
 
     try:
         ast = _ast_parse1(f'(\n{src}\n)', parse_params).value  # has newlines or indentation
@@ -1046,12 +1054,16 @@ def parse__Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST
     if not isinstance(ast, Assign):
         raise ParseError(f'expecting Assign targets, got {ast.__class__.__name__}')
 
-    if not isinstance(name := ast.value, Name):
+    name = ast.value
+
+    if not isinstance(name, Name):
         raise ParseError(f'unexpected value type parsing Assign targets, {name.__class__.__name__}')
     elif name.id != '_':
         raise ParseError(f'unexpected value id parsing Assign targets, {name.value!r}')
 
-    del (targets := ast.targets)[0]  # remove syntax check dummy target `_`
+    targets = ast.targets
+
+    del targets[0]  # remove syntax check dummy target `_`
 
     # if targets and targets[0].col_offset:
     #     raise IndentationError('unexpected indent')
@@ -1125,7 +1137,9 @@ def parse_cmpop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if not isinstance(ast, Compare):
         raise ParseError(f'expecting cmpop, got {shortstr(src)!r}')
 
-    if len(ops := ast.ops) != 1:
+    ops = ast.ops
+
+    if len(ops) != 1:
         raise ParseError('expecting single cmpop')
 
     return ops[0].__class__()  # parse() returns the same identical object for all instances of the same operator
@@ -1139,10 +1153,12 @@ def parse_comprehension(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if not isinstance(ast, ListComp):
         raise ParseError('expecting comprehension')
 
-    if len(gens := ast.generators) != 1:
+    generators = ast.generators
+
+    if len(generators) != 1:
         raise ParseError('expecting single comprehension')
 
-    return _offset_linenos(gens[0], -1)
+    return _offset_linenos(generators[0], -1)
 
 
 def parse__comprehensions(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
@@ -1153,10 +1169,12 @@ def parse__comprehensions(src: str, parse_params: Mapping[str, Any] = {}) -> AST
     if not isinstance(ast, ListComp):
         raise ParseError('expecting comprehensions')
 
-    if ast.generators[0].ifs:
+    generators = ast.generators
+
+    if generators[0].ifs:
         raise ParseError('expecting comprehensions, got comprehension ifs')
 
-    ast = _comprehensions(generators=ast.generators[1:], **_astloc_from_src(src, 2))
+    ast = _comprehensions(generators=generators[1:], **_astloc_from_src(src, 2))
 
     return _offset_linenos(ast, -1)
 

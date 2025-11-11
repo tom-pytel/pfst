@@ -70,7 +70,7 @@ def loc_arguments(self: fst.FST) -> fstloc | None:
     ast = self.a
     last = self.last_child()
     lines = self.root._lines
-    end_lines = len(lines) - 1
+    last_ln = len(lines) - 1
     rpars = next_delims(lines, last.end_ln, last.end_col, *next_bound(self))
 
     end_ln, end_col = rpars[-1]
@@ -90,7 +90,7 @@ def loc_arguments(self: fst.FST) -> fstloc | None:
         elif ast.kwarg:
             leading_stars = '**'  # leading double star just before varname
 
-    if (frag := next_frag(lines, end_ln, end_col, end_lines, 0x7fffffffffffffff)) and frag.src.startswith(','):  # trailing comma
+    if (frag := next_frag(lines, end_ln, end_col, last_ln, 0x7fffffffffffffff)) and frag.src.startswith(','):  # trailing comma
         end_ln, end_col, _ = frag
         end_col += 1
 
@@ -101,10 +101,10 @@ def loc_arguments(self: fst.FST) -> fstloc | None:
         start_ln, start_col = prev_find(lines, *prev_bound(self), start_ln, start_col, leading_stars)
 
     if trailing_slash:
-        end_ln, end_col = next_find(lines, end_ln, end_col, end_lines, 0x7fffffffffffffff, '/')  # must be there
+        end_ln, end_col = next_find(lines, end_ln, end_col, last_ln, 0x7fffffffffffffff, '/')  # must be there
         end_col += 1
 
-        if (frag := next_frag(lines, end_ln, end_col, end_lines, 0x7fffffffffffffff)) and frag.src.startswith(','):  # silly, but, trailing comma trailing slash
+        if (frag := next_frag(lines, end_ln, end_col, last_ln, 0x7fffffffffffffff)) and frag.src.startswith(','):  # silly, but, trailing comma trailing slash
             end_ln, end_col, _ = frag
             end_col += 1
 
@@ -302,22 +302,30 @@ def loc_operator(self: fst.FST) -> fstloc | None:
         if has_space := isinstance(ast, (NotIn, IsNot)):  # stupid two-element operators, can be anything like "not    \\\n     in"
             op, op2 = op.split(' ')
 
-        if pos := next_find(lines, end_ln, end_col, end_lines := len(lines) - 1, len(lines[-1]), op):
+        last_ln = len(lines) - 1
+        last_col = len(lines[-1])
+
+        if pos := next_find(lines, end_ln, end_col, last_ln, last_col, op):
             ln, col = pos
 
             if not has_space:
                 return fstloc(ln, col, ln, col + len(op))
 
-            if pos := next_find(lines, ln, col + len(op), end_lines, len(lines[-1]), op2):
+            if pos := next_find(lines, ln, col + len(op), last_ln, last_col, op2):
                 ln2, col2 = pos
 
                 return fstloc(ln, col, ln2, col2 + len(op2))
 
-    elif (prev := (is_binop := getattr(parenta, 'left', None))) or (prev := getattr(parenta, 'target', None)):
-        if pos := next_find(lines, (loc := prev.f.loc).end_ln, loc.end_col, len(lines) - 1, len(lines[-1]), op):
-            ln, col = pos
+    else:
+        is_binop = getattr(parenta, 'left', None)
 
-            return fstloc(ln, col, ln, col + len(op) + (not is_binop))  # 'not is_binop' adds AugAssign '=' len
+        if (prev := is_binop) or (prev := getattr(parenta, 'target', None)):
+            _, _, prev_end_ln, prev_end_col = prev.f.loc
+
+            if pos := next_find(lines, prev_end_ln, prev_end_col, len(lines) - 1, len(lines[-1]), op):
+                ln, col = pos
+
+                return fstloc(ln, col, ln, col + len(op) + (not is_binop))  # 'not is_binop' adds AugAssign '=' len
 
     return None
 
@@ -439,7 +447,7 @@ def loc_ClassDef_bases_pars(self: fst.FST) -> fstlocn:
 
         return fstlocn(ln, col, lpln, lpcol, n=0)
 
-    if last := last[-1].value if (last := ast.keywords) else last[-1] if (last := ast.bases) else None:
+    if last := (last[-1].value if (last := ast.keywords) else last[-1] if (last := ast.bases) else None):
         _, _, ln, col = last.f.pars()
     else:
         ln = lpln
@@ -599,9 +607,8 @@ def loc_FunctionDef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, 
 
     ln, col, end_ln, end_col = self.loc
 
-    if ((after := args.posonlyargs) or (after := args.args) or (after := args.vararg) or (after := args.kwonlyargs) or
-        (after := args.kwarg) or (after := ast.returns) or (after := ast.body)
-    ):
+    if after := (args.posonlyargs or args.args or args.vararg or args.kwonlyargs or args.kwarg or ast.returns or
+                 ast.body):
         after_ln, after_col, _, _ = (after[0] if isinstance(after, list) else after).f.loc
     else:  # accomodate temporarily empty bodies
         after_ln = end_ln
@@ -645,7 +652,7 @@ def loc_ClassDef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tup
 
     ln, col, end_ln, end_col = self.loc
 
-    if (after := ast.bases) or (after := ast.keywords) or (after := ast.body):
+    if after := (ast.bases or ast.keywords or ast.body):
         after_ln, after_col, _, _ = after[0].f.bloc  # .bloc because body[0] might start with a decorator
     else:  # accomodate temporarily empty bodies
         after_ln = end_ln

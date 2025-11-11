@@ -111,7 +111,9 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
     first_lineno = 0  # this indicates not to apply the first column delta, will only be set if we need that action because we possibly erased multi-byte characters on the first line before the reparse node
     first_line_col_delta = lines[pln].c2b(pcol) - pcol
 
-    if in_blkopen := (blkopen_end := loc_block_header_end(stmtish)) and (end_ln, end_col) <= blkopen_end:  # block statement with modification limited to block header
+    blkopen_end = loc_block_header_end(stmtish)
+
+    if in_blkopen := (blkopen_end and (end_ln, end_col) <= blkopen_end):  # block statement with modification limited to block header, yes comparing 2-tuple with 4-tuple
         pend_ln, pend_col, _, _ = blkopen_end
         pend_col += 1
 

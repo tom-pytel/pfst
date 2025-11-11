@@ -204,7 +204,10 @@ _Child      = AST | list[AST] | constant | None
 def _fixup_one_index(len_: int, idx: int) -> int:
     """Negative to positive indices."""
 
-    if not (0 <= ((idx := idx + len_) if idx < 0 else idx) < len_):
+    if idx < 0:
+        idx += len_
+
+    if not (0 <= idx < len_):
         raise IndexError('index out of range')
 
     return idx
@@ -215,22 +218,29 @@ def _maybe_fix_With_items(self: fst.FST) -> None:
 
     # assert isinstance(self.a, (With, AsyncWith))
 
-    if (len(items := self.items) == 1 and
-        not (i0a := items[0].a).optional_vars and
-        (is_par := (cef := i0a.context_expr.f)._is_parenthesized_tuple()) is not None
-    ):
-        if not is_par:
-            cef._delimit_node()
+    if len(items := self.items) != 1:
+        return
 
-        if len(prev_delims(self.root._lines, self.ln, self.col, cef.ln, cef.col)) == 1:  # no pars between start of `with` and start of tuple?
-            cef._parenthesize_grouping()  # these will wind up belonging to outer With
+    if (i0a := items[0].a).optional_vars:
+        return
+
+    cef = i0a.context_expr.f
+
+    if (is_par := cef._is_parenthesized_tuple()) is None:
+        return
+
+    if not is_par:
+        cef._delimit_node()
+
+    if len(prev_delims(self.root._lines, self.ln, self.col, cef.ln, cef.col)) == 1:  # no pars between start of `with` and start of tuple?
+        cef._parenthesize_grouping()  # these will wind up belonging to outer With
 
 
 def _maybe_fix_elif(self: fst.FST) -> None:
     # assert isinstance(self.a, If)
 
-    ln, col, _, _ = self.loc
     lines = self.root._lines
+    ln, col, _, _ = self.loc
 
     if lines[ln].startswith('elif', col):
         self._put_src(None, ln, col, ln, col + 2, False)
@@ -481,7 +491,8 @@ def _get_one_format_spec(
     reta = ret.a
 
     if len(quotes) == 1:
-        ret_lines[0] = bistr(f"f{quotes}" + (ret_lines := ret._lines)[0][2:])
+        ret_lines = ret._lines
+        ret_lines[0] = bistr(f"f{quotes}" + ret_lines[0][2:])
     else:
         ret._put_src([f'f{quotes}'], 0, 0, 0, 3, False)
 
@@ -1142,13 +1153,14 @@ def _put_one_BoolOp_op(
 ) -> fst.FST:  # child: type[boolop]
     """Put BoolOp op to potentially multiple places."""
 
+    lines = self.root._lines
     child, idx = _validate_put(self, code, idx, field, child)
-    code = code_as_boolop(code, self.root.parse_params)
     childf = child.f
-    src = 'and' if isinstance(codea := code.a, And) else 'or'
+    code = code_as_boolop(code, self.root.parse_params)
+    codea = code.a
+    src = 'and' if isinstance(codea, And) else 'or'
     tgt = 'and' if isinstance(child, And) else 'or'
     ltgt = len(tgt)
-    lines = self.root._lines
 
     _, _, end_ln, end_col = self.loc
 
@@ -1466,7 +1478,8 @@ def _put_one_exprish_required(
             raise ValueError(f'cannot replace nonexistent {self.a.__class__.__name__}.{field}')
 
     childf = child.f
-    ctx = ((ctx := getattr(child, 'ctx', None)) and ctx.__class__) or Load
+    ctx = ctx.__class__ if (ctx := getattr(child, 'ctx', None)) else Load
+
     put_fst = _make_exprish_fst(self, code, idx, field, static, options, target or childf, ctx, prefix, '', validated)
 
     childf._set_ast(put_fst.a)
@@ -1948,6 +1961,7 @@ def _put_one_Tuple_elts(
     is_slice = pfield == ('slice', None)
     is_par = None
 
+
     if (pfield and not is_slice) or (is_par := self._is_delimited_seq()):  # only allow slice in unparenthesized tuple, in slice or at root
         static = _onestatic_expr_required_starred  # default static allows slices, this disallows them
 
@@ -1956,7 +1970,7 @@ def _put_one_Tuple_elts(
             raise NodeError(f"invalid expression for Tuple {ctx.__class__.__name__} target")
 
     if PYLT11:
-        if (put_star_to_unpar_slice := is_slice and isinstance(code.a, Starred) and
+        if put_star_to_unpar_slice := (is_slice and isinstance(code.a, Starred) and
             (is_par is False or (is_par is None and not self._is_delimited_seq()))
         ):
             r = (elts := ast.elts)[idx]
@@ -2382,8 +2396,9 @@ def _one_info_FunctionDef_returns(self: fst.FST, static: onestatic, idx: int | N
     ret_end_col = end_col
 
     if returns := self.a.returns:
-        ln, col = prev.loc[2:] if (prev := (retf := returns.f).prev()) else self.loc[:2]
-        end_ln, end_col, _, _ = retf.pars()
+        returnsf = returns.f
+        ln, col = prev.loc[2:] if (prev := returnsf.prev()) else self.loc[:2]
+        end_ln, end_col, _, _ = returnsf.pars()
 
     args_end_ln, args_end_col = prev_find(self.root._lines, ln, col, end_ln, end_col, ')')  # must be there
 
@@ -2479,9 +2494,9 @@ def _one_info_Slice_lower(self: fst.FST, static: onestatic, idx: int | None, fie
 _onestatic_Slice_lower = onestatic(_one_info_Slice_lower, _restrict_default)
 
 def _one_info_Slice_upper(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-    ln = (lloc := _one_info_Slice_lower(self, _onestatic_Slice_lower, idx, field).loc_insdel).end_ln
-    col = lloc.end_col + 1
     _, _, end_ln, end_col = self.loc
+    _, _, ln, col = _one_info_Slice_lower(self, _onestatic_Slice_lower, idx, field).loc_insdel
+    col += 1
 
     if upper := self.a.upper:
         end = next_find(self.root._lines, (loc := upper.f.loc).end_ln, loc.end_col, end_ln, end_col, ':')  # may or may not be there
@@ -2496,8 +2511,7 @@ def _one_info_Slice_upper(self: fst.FST, static: onestatic, idx: int | None, fie
 _onestatic_Slice_upper = onestatic(_one_info_Slice_upper, _restrict_default)
 
 def _one_info_Slice_step(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-    ln = (uloc := _one_info_Slice_upper(self, _onestatic_Slice_upper, idx, field).loc_insdel).end_ln
-    col = uloc.end_col
+    _, _, ln, col = _one_info_Slice_upper(self, _onestatic_Slice_upper, idx, field).loc_insdel
 
     if self.root._lines[ln].startswith(':', col):
         col += 1
@@ -2510,10 +2524,12 @@ def _one_info_Slice_step(self: fst.FST, static: onestatic, idx: int | None, fiel
 _onestatic_Slice_step = onestatic(_one_info_Slice_step, _restrict_default)
 
 def _one_info_ExceptHandler_type(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-    if (a := self.a).name:
+    ast = self.a
+
+    if ast.name:
         return _oneinfo_default  # can not del (and exists, so can't put new)
 
-    if type_ := a.type:
+    if type_ := ast.type:
         _, _, end_ln, end_col = type_.f.pars()
     else:
         end_ln, end_col, _, _ = loc_block_header_end(self)  # because 'name' can not be there
@@ -2528,14 +2544,16 @@ def _one_info_ExceptHandler_type(self: fst.FST, static: onestatic, idx: int | No
     return oneinfo(' ', fstloc(ln, col, end_ln, end_col))
 
 def _one_info_ExceptHandler_name(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-    if not (type_ := (a := self.a).type):
+    ast = self.a
+
+    if not (type_ := ast.type):
         return _oneinfo_default  # can not put new and does not exist
 
     _, _, ln, col = type_.f.pars()
     end_ln, end_col, _, _ = loc_block_header_end(self)
     loc_insdel = fstloc(ln, col, end_ln, end_col)
 
-    if (name := a.name) is None:
+    if (name := ast.name) is None:
         loc_prim = None
 
     else:
@@ -2547,18 +2565,22 @@ def _one_info_ExceptHandler_name(self: fst.FST, static: onestatic, idx: int | No
     return oneinfo(' as ', loc_insdel, loc_prim)
 
 def _one_info_arguments_vararg(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-    if vararg := (a := self.a).vararg:  # delete location
-        if next := (varargf := vararg.f).next():
+    ast = self.a
+
+    if vararg := ast.vararg:  # delete location
+        varargf = vararg.f
+
+        if next := varargf.next():
             _, _, end_ln, end_col = varargf.pars()
         else:
             _, _, end_ln, end_col = self.loc  # there may be a trailing comma
 
         if prev := varargf.prev():
-            delstr = ', *' if a.kwonlyargs else ''
+            delstr = ', *' if ast.kwonlyargs else ''
 
-            if not (a.posonlyargs and ((field := prev.pfield.name) == 'posonlyargs' or
-                (field == 'defaults' and prev.prev().pfield.name == 'posonlyargs'))
-            ):
+            if not (ast.posonlyargs and
+                    ((n := prev.pfield.name) == 'posonlyargs' or
+                     (n == 'defaults' and prev.prev().pfield.name == 'posonlyargs'))):
                 _, _, ln, col = prev.pars()
 
                 return oneinfo('', fstloc(ln, col, end_ln, end_col), delstr=delstr)
@@ -2568,7 +2590,7 @@ def _one_info_arguments_vararg(self: fst.FST, static: onestatic, idx: int | None
             return oneinfo('', fstloc(ln, col + 1, end_ln, end_col), delstr=delstr)
 
         if next:
-            if a.kwonlyargs and next.pfield.name == 'kwonlyargs':
+            if ast.kwonlyargs and next.pfield.name == 'kwonlyargs':
                 next_ln, next_col, _, _ = next.pars()
 
                 return oneinfo('', fstloc(self.ln, self.col, next_ln, next_col), delstr='*, ')
@@ -2586,20 +2608,23 @@ def _one_info_arguments_vararg(self: fst.FST, static: onestatic, idx: int | None
 
     # insert location
 
-    if kwonlyargs := a.kwonlyargs:
-        end_ln, end_col, _, _ = (kwonlyarg := kwonlyargs[0].f).loc
+    if kwonlyargs := ast.kwonlyargs:
+        kwonlyargf = kwonlyargs[0].f
+        end_ln, end_col, _, _ = kwonlyargf.loc
 
-        if prev := kwonlyarg.prev():
+        if prev := kwonlyargf.prev():
             _, _, ln, col = prev.loc
         else:
             ln, col, _, _ = self.loc
 
         ln, col = next_find(self.root._lines, ln, col, end_ln, end_col, '*')  # must be there
+        col += 1
 
-        return oneinfo('', fstloc(ln, (col := col + 1), ln, col))
+        return oneinfo('', fstloc(ln, col, ln, col))
 
-    if kwarg := a.kwarg:
-        end_ln, end_col, _, _ = (kwargf := kwarg.f).loc
+    if kwarg := ast.kwarg:
+        kwargf = kwarg.f
+        end_ln, end_col, _, _ = kwargf.loc
 
         if prev := kwargf.prev():
             _, _, ln, col = prev.loc
@@ -2610,17 +2635,18 @@ def _one_info_arguments_vararg(self: fst.FST, static: onestatic, idx: int | None
 
         return oneinfo('*', fstloc(ln, col, ln, col), None, ', ')
 
-    if a.args:
+    if ast.args:
         _, _, ln, col = self.last_child().pars()
 
         return oneinfo(', *', fstloc(ln, col, ln, col))
 
-    if a.posonlyargs:
+    if ast.posonlyargs:
         _, _, ln, col = self.last_child().loc
 
         ln, col = next_find(self.root._lines, ln, col, self.end_ln, self.end_col, '/')  # must be there
+        col += 1
 
-        return oneinfo(', *', fstloc(ln, (col := col + 1), ln, col))
+        return oneinfo(', *', fstloc(ln, col, ln, col))
 
     loc = loc_arguments_empty(self)
     prefix = ' *' if (parent := self.parent) and isinstance(parent.a, Lambda) else '*'
@@ -2628,13 +2654,15 @@ def _one_info_arguments_vararg(self: fst.FST, static: onestatic, idx: int | None
     return oneinfo(prefix, loc)
 
 def _one_info_arguments_kw_defaults(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-    if ann := (arg := self.a.kwonlyargs[idx]).annotation:
+    arg = self.a.kwonlyargs[idx]
+
+    if ann := arg.annotation:
         _, _, ln, col = ann.f.pars()
         prefix = ' = '
 
     else:
-        ln = (loc := arg.f.loc).ln
-        col = loc.col + len(arg.arg)
+        ln, col, _, _ = arg.f.loc
+        col += len(arg.arg)
         prefix = '='
 
     if default := self.a.kw_defaults[idx]:
@@ -2647,8 +2675,12 @@ def _one_info_arguments_kw_defaults(self: fst.FST, static: onestatic, idx: int |
     return oneinfo(prefix, fstloc(ln, col, end_ln, end_col))
 
 def _one_info_arguments_kwarg(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-    if kwarg := (a := self.a).kwarg:  # delete location
-        if not (prev := (kwargf := kwarg.f).prev()):
+    ast = self.a
+
+    if kwarg := ast.kwarg:  # delete location
+        kwargf = kwarg.f
+
+        if not (prev := kwargf.prev()):
             if not (parent := self.parent) or not isinstance(parent.a, Lambda):
                 return oneinfo('', self.loc)
 
@@ -2656,9 +2688,9 @@ def _one_info_arguments_kwarg(self: fst.FST, static: onestatic, idx: int | None,
 
             return oneinfo('', fstloc(ln, col + 6, self.end_ln, self.end_col))
 
-        if not (a.posonlyargs and ((field := prev.pfield.name) == 'posonlyargs' or
-            (field == 'defaults' and prev.prev().pfield.name == 'posonlyargs'))
-        ):
+        if not (ast.posonlyargs and
+                ((n := prev.pfield.name) == 'posonlyargs' or
+                 (n == 'defaults' and prev.prev().pfield.name == 'posonlyargs'))):
             _, _, ln, col = prev.pars()
 
         else:
@@ -2679,9 +2711,9 @@ def _one_info_arguments_kwarg(self: fst.FST, static: onestatic, idx: int | None,
 
     last = self.last_child()
 
-    if not (a.posonlyargs and ((field := last.pfield.name) == 'posonlyargs' or
-        (field == 'defaults' and last.prev().pfield.name == 'posonlyargs'))
-    ):
+    if not (ast.posonlyargs and
+            ((n := last.pfield.name) == 'posonlyargs' or
+             (n == 'defaults' and last.prev().pfield.name == 'posonlyargs'))):
         _, _, ln, col = last.pars()
 
     else:
@@ -2694,17 +2726,19 @@ def _one_info_arg_annotation(self: fst.FST, static: onestatic, idx: int | None, 
     return oneinfo(': ', fstloc((loc := self.loc).ln, loc.col + len(self.a.arg), self.end_ln, self.end_col))
 
 def _one_info_keyword_arg(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-    end_ln, end_col, _, _ = (a := self.a).value.f.pars()
+    ast = self.a
+    end_ln, end_col, _, _ = ast.value.f.pars()
     ln, col, _, _ = self.loc
-    arg_end_col = col + 2 if a.arg is None else re_identifier.match(self.root._lines[ln], col).end() # must be there
+    arg_end_col = col + 2 if ast.arg is None else re_identifier.match(self.root._lines[ln], col).end() # must be there
 
     return oneinfo('', fstloc(ln, col, end_ln, end_col), fstloc(ln, col, ln, arg_end_col), '=', '**')
 
 def _one_info_alias_asname(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
+    ast = self.a
     ln, col, end_ln, end_col = self.loc
-    loc_insdel = fstloc(ln, col + len((a := self.a).name), end_ln, end_col)
+    loc_insdel = fstloc(ln, col + len(ast.name), end_ln, end_col)
 
-    if (asname := a.asname) is None:
+    if (asname := ast.asname) is None:
         loc_prim = None
 
     else:
@@ -2733,10 +2767,11 @@ def _one_info_match_case_guard(self: fst.FST, static: onestatic, idx: int | None
     return oneinfo(' if ', fstloc(ln, col, end_ln, end_col))
 
 def _one_info_MatchMapping_rest(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
+    ast = self.a
     ln, col, end_ln, end_col = self.loc
     end_col -= 1
 
-    if patterns := (a := self.a).patterns:
+    if patterns := ast.patterns:
         _, _, ln, col = patterns[-1].f.pars()
         prefix = ', **'
 
@@ -2744,7 +2779,7 @@ def _one_info_MatchMapping_rest(self: fst.FST, static: onestatic, idx: int | Non
         col += 1
         prefix = '**'
 
-    if (rest := a.rest) is None:
+    if (rest := ast.rest) is None:
         loc_prim = None
     else:
         rest_ln, rest_col = next_find(self.root._lines, ln, col, end_ln, end_col, rest)
@@ -2775,12 +2810,14 @@ def _one_info_MatchStar_name(self: fst.FST, static: onestatic, idx: int | None, 
     return _one_info_identifier_required(self, static, idx, field, '*')
 
 def _one_info_MatchAs_pattern(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-    if (name := (a := self.a).name) is None:
+    ast = self.a
+
+    if (name := ast.name) is None:
         return _oneinfo_default  # cannot insert or delete because is wildcard '_'
 
     ln, col, end_ln, end_col = self.loc
 
-    if (pattern := a.pattern) is None:
+    if (pattern := ast.pattern) is None:
         return oneinfo('', fstloc(ln, col, ln, col), None, ' as ')
 
     lines = self.root._lines
@@ -2790,16 +2827,17 @@ def _one_info_MatchAs_pattern(self: fst.FST, static: onestatic, idx: int | None,
     return oneinfo('', fstloc(ln, col, end_ln, end_col))
 
 def _one_info_MatchAs_name(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
+    ast = self.a
     ln, col, end_ln, end_col = self.loc
 
-    if (pattern := (a := self.a).pattern) is None:
+    if (pattern := ast.pattern) is None:
         prefix = ''
 
     else:
         prefix = 'as'
         lines = self.root._lines
         ln, col = next_find(lines, *pattern.f.pars()[2:], end_ln, end_col, 'as')  # skip the 'as'
-        ln, col = next_find(lines, ln, col + 2, end_ln, end_col, a.name or '_')
+        ln, col = next_find(lines, ln, col + 2, end_ln, end_col, ast.name or '_')
 
     return oneinfo(prefix, None, fstloc(ln, col, ln, end_col))
 
@@ -2862,16 +2900,18 @@ def _one_info_conversion(self: fst.FST, static: onestatic, idx: int | None, fiel
 
 @pyver(ge=12)
 def _one_info_conversion(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
-    if fspec := (a := self.a).format_spec:
+    ast = self.a
+
+    if fspec := ast.format_spec:
         end_ln, end_col, _, _ = fspec.f.loc
     else:
         _, _, end_ln, end_col = self.loc
         end_col -= 1
 
-    if a.conversion == -1:
+    if ast.conversion == -1:
         return oneinfo('!', fstloc(end_ln, end_col, end_ln, end_col))
 
-    _, _, ln, col = a.value.f.loc
+    _, _, ln, col = ast.value.f.loc
 
     if not (prev := prev_find(self.root._lines, ln, col, end_ln, end_col, '!')):  # may not be there if conversion is implicit due to =
         return oneinfo('!', fstloc(end_ln, end_col, end_ln, end_col))
@@ -3191,8 +3231,10 @@ def _put_one_raw(
     loc = None
 
     if not field:  # special case field
-        if (is_dict := issubclass(cls := ast.__class__, Dict)) or issubclass(cls, MatchMapping):
-            static = _PUT_ONE_HANDLERS[(cls, 'keys')][-1]
+        kls = ast.__class__
+
+        if (is_dict := issubclass(kls, Dict)) or issubclass(kls, MatchMapping):
+            static = _PUT_ONE_HANDLERS[(kls, 'keys')][-1]
             field = 'keys'
             child = ast.keys
             body2 = ast.values if is_dict else ast.patterns
@@ -3202,7 +3244,7 @@ def _put_one_raw(
             if not to:
                 to = body2[idx].f
 
-        elif issubclass(cls, Compare):
+        elif issubclass(kls, Compare):
             field = 'ops'
             child = ast.ops
             idx = _fixup_one_index(len(child), idx)

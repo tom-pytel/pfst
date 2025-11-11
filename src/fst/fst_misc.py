@@ -736,7 +736,7 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
 
                 st.linefunc(f'{ind}{_dump_prim_long(child, st, ind)}{st.eol}')
 
-        # elif len(child) == 1:
+        # elif len(child) == 1:  # length 1 lists show element on single line
         #     if isinstance(ast := child[0], AST):
         #         ast.f._dump(st, cind + sind, f'{c.clr_field}.{name}[1]{c.end_field} ')
         #     else:
@@ -1171,7 +1171,9 @@ def _maybe_add_line_continuations(self: fst.FST, whole: bool = False, del_commen
     - `bool`: Whether modification was made or not.
     """
 
-    if self._is_enclosed_or_line(whole=whole, out_lns=(lns := set())):
+    lns = set()
+
+    if self._is_enclosed_or_line(whole=whole, out_lns=lns):
         return False
 
     lines = self.root._lines
@@ -1290,7 +1292,7 @@ def _maybe_ins_separator(
     if end_ln is None:
         _, _, end_ln, end_col = self.loc
 
-    if offset_excluded := exclude is True:
+    if offset_excluded := (exclude is True):
         exclude = self
 
     lines = self.root._lines
@@ -1391,7 +1393,7 @@ def _maybe_fix_undelimited_seq(self: fst.FST, body: list[AST], delims: str = '()
         return True
 
     ln, col, end_ln, end_col = self.loc
-    encpar = None
+    encpar = None  # cached call to self._is_enclosed_in_parents()
 
     if ((end_ln != ln and not self._is_enclosed_or_line(pars=False) and
          not (encpar := self._is_enclosed_in_parents())) or  # could have line continuations
@@ -1617,13 +1619,13 @@ def _undelimit_node(self: fst.FST, field: str = 'elts') -> bool:
     if not (body := getattr(self.a, field, None)):
         return False
 
-    ln, col, end_ln, end_col = self.loc
     lines = self.root._lines
+    ln, col, end_ln, end_col = self.loc
+    _, _, bn_end_ln, bn_end_col = body[-1].f.loc
 
-    if comma := next_find(self.root._lines, en_end_ln := (en := body[-1].f).end_ln, en_end_col := en.end_col,
-                          end_ln, end_col, ','):  # need to leave trailing comma if its there
-        en_end_ln, en_end_col = comma
-        en_end_col += 1
+    if comma := next_find(self.root._lines, bn_end_ln, bn_end_col, end_ln, end_col, ','):  # need to leave trailing comma if its there
+        bn_end_ln, bn_end_col = comma
+        bn_end_col += 1
 
     else:  # when no trailing comma need to make sure par is not separating us from an alphanumeric on either side, and if so then insert a space at the end before deleting the right par
         if end_col >= 2 and _re_delim_close_alnums.match(lines[end_ln], end_col - 2):
@@ -1631,7 +1633,7 @@ def _undelimit_node(self: fst.FST, field: str = 'elts') -> bool:
 
     head_alnums = col and _re_delim_open_alnums.match(lines[ln], col - 1)  # if open has alnumns on both sides then insert space there too
 
-    self._put_src(None, en_end_ln, en_end_col, end_ln, end_col, True, self)
+    self._put_src(None, bn_end_ln, bn_end_col, end_ln, end_col, True, self)
     self._put_src(None, ln, col, (e0 := body[0].f).ln, e0.col, False)
 
     if head_alnums:  # but put after delete par to keep locations same
