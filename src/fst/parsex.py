@@ -26,6 +26,7 @@ from .asttypes import (
     BitXor,
     BitAnd,
     BoolOp,
+    ClassDef,
     Compare,
     Del,
     Div,
@@ -58,6 +59,7 @@ from .asttypes import (
     NotEq,
     NotIn,
     Or,
+    Pass,
     Pow,
     RShift,
     Slice,
@@ -88,6 +90,7 @@ from .asttypes import (
     _ExceptHandlers,
     _match_cases,
     _Assign_targets,
+    _decorator_list,
     _comprehensions,
     _comprehension_ifs,
     _aliases,
@@ -198,6 +201,7 @@ Mode = Literal[
     'expr_sliceelt',
     'Tuple',
     '_Assign_targets',
+    '_decorator_list',
     'boolop',
     'operator',
     'binop',
@@ -257,6 +261,8 @@ Mode = Literal[
 - `'Tuple'`: Parse to a `Tuple` which may contain anything that a tuple can contain like multiple `Slice`s.
 - `'_Assign_targets'`: Parse zero or more `Assign` targets returned in a `_Assign_targets` SPECIAL SLICE, with `=` as
     separators and an optional trailing `=`.
+- `'_decorator_list'`: Parse zero or more decorators returned in a `_decorator_list` SPECIAL SLICE. Each decorator must
+    have a leading `@`.
 - `'boolop'`: Parse to a `boolop` operator.
 - `'operator'`: Parse to an `operator` operator, either normal binary `'*'` or augmented `'*='`.
 - `'binop'`: Parse to an `operator` only binary `'*'`, `'+'`, `'>>'`, etc...
@@ -339,6 +345,13 @@ def _unparse__Assign_targets(ast: AST) -> str:
                                   lineno=1, col_offset=0, end_lineno=1, end_col_offset=0)).rstrip()
 
 
+def _unparse__decorator_list(ast: AST) -> str:
+    return _fixing_unparse(ClassDef(name='c', bases=[], keywords=[],
+                                    body=[Pass(lineno=1, col_offset=0, end_lineno=1, end_col_offset=0)],
+                                    decorator_list=ast.decorator_list,
+                                    lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))[:-18]  # [:.rindex('\nclass c:\n    pass')]
+
+
 def _unparse__comprehensions(ast: AST) -> str:
     return _fixing_unparse(ListComp(elt=Name(id='_', ctx=Load(), lineno=1, col_offset=0,
                                              end_lineno=1, end_col_offset=0),
@@ -404,6 +417,7 @@ _UNPARSE_FUNCS = {
     _ExceptHandlers:    _unparse__ExceptHandlers,
     _match_cases:       _unparse__match_cases,
     _Assign_targets:    _unparse__Assign_targets,
+    _decorator_list:    _unparse__decorator_list,
     _comprehensions:    _unparse__comprehensions,
     _comprehension_ifs: _unparse__comprehension_ifs,
     _aliases:           _unparse__aliases,
@@ -413,13 +427,19 @@ _UNPARSE_FUNCS = {
 
 
 def _ast_parse(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Python craps out with unexpected EOF if you only have a single newline after a line continuation backslash."""
+    if src.endswith('\\\n'):  # python doesn't like trailing line continuation (which we may actually want to parse like this)
+        src += '\n'
 
-    return ast_parse(src + '\n' if src.endswith('\\\n') else src, **parse_params)
+    return ast_parse(src, **parse_params)
 
 
 def _ast_parse1(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    body = ast_parse(src + '\n' if src.endswith('\\\n') else src, **parse_params).body
+    """Parse a single statment."""
+
+    if src.endswith('\\\n'):  # python doesn't like trailing line continuation (which we may actually want to parse like this)
+        src += '\n'
+
+    body = ast_parse(src, **parse_params).body
 
     if len(body) != 1:
         raise SyntaxError('unexpected multiple statements')
@@ -428,7 +448,12 @@ def _ast_parse1(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def _ast_parse1_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    body = ast_parse(src + '\n' if src.endswith('\\\n') else src, **parse_params).body
+    """Parse a single `match_case`."""
+
+    if src.endswith('\\\n'):  # python doesn't like trailing line continuation (which we may actually want to parse like this)
+        src += '\n'
+
+    body = ast_parse(src, **parse_params).body
 
     if len(body) != 1 or len(cases := body[0].cases) != 1:
         raise SyntaxError('expecting single element')
@@ -440,8 +465,14 @@ def _astloc_from_src(src: str, lineno: int = 1) -> dict[str, int]:
     """Get whole `AST` location from whole source string, starting at `lineno`. Used to get location for SPECIAL SLICE
     custom `AST` containers."""
 
-    return dict(lineno=lineno, col_offset=0, end_lineno=lineno + src.count('\n'),
-                end_col_offset=len((src if (i := src.rfind('\n')) == -1 else src[i + 1:]).encode()))
+    last_line = src if (i := src.rfind('\n')) == -1 else src[i + 1:]
+
+    return {
+        'lineno': lineno,
+        'col_offset': 0,
+        'end_lineno': lineno + src.count('\n'),
+        'end_col_offset': len(last_line.encode())
+    }
 
 
 def _offset_linenos(ast: AST, delta: int) -> AST:
@@ -456,6 +487,9 @@ def _offset_linenos(ast: AST, delta: int) -> AST:
 
 
 def _fix_unparenthesized_tuple_parsed_parenthesized(src: str, ast: AST) -> None:
+    """Fix a parsed `Tuple` locations which had original source unparenthesized but which was parenthesized for the
+    parse."""
+
     lines = src.split('\n')
     elts = ast.elts
     e0 = elts[0]
@@ -478,9 +512,11 @@ def _fix_unparenthesized_tuple_parsed_parenthesized(src: str, ast: AST) -> None:
 
 
 def _has_trailing_comma(src: str, end_lineno: int, end_col_offset: int) -> bool:
+    """See if there is a trailing comma after `(end_lineno, end_col_offset)`."""
+
     pos = 0
 
-    for _ in range(end_lineno - 1):
+    for _ in range(end_lineno - 1):  # skip leading lines
         pos = src.find('\n', pos) + 1  # assumed to all be there
 
     pos += len(src[pos : pos + end_col_offset].encode()[:end_col_offset].decode())
@@ -656,7 +692,7 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
                                     _parse_all__withitems, parse_arg, _parse_all__type_params, parse__Assign_targets))
 
     if groupdict['at']:
-        return reduce_ast(parse_stmts(src, parse_params), True)
+        return _parse_all_multiple(src, parse_params, True, (parse__decorator_list,))
 
     if groupdict['star']:
         ast = _parse_all_multiple(src, parse_params, not first.group(1),
@@ -723,7 +759,7 @@ def parse_strict(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 def parse_Module(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse `Module`, ast.parse(mode='exec')'."""
 
-    return _ast_parse(src, parse_params)
+    return _ast_parse(src, {**parse_params, 'mode': 'exec'})
 
 
 def parse_Expression(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
@@ -735,7 +771,7 @@ def parse_Expression(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 def parse_Interactive(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse `Interactive`."""
 
-    if not src.endswith('\n'):  # because otherwise error maybe
+    if not src.endswith('\n'):  # because otherwise error for block statement on single line like `if a: b`
         src = src + '\n'
 
     return _ast_parse(src, {**parse_params, 'mode': 'single'})
@@ -1071,6 +1107,15 @@ def parse__Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST
     ast = _Assign_targets(targets=targets, **_astloc_from_src(src, 2))
 
     return _offset_linenos(ast, -1)
+
+
+def parse__decorator_list(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse zero or more decorators and return them in a `_decorator_list` SPECIAL SLICE. Each decorator must have a
+    leading `@`."""
+
+    ast = _ast_parse1(f'{src}\nclass c: pass', parse_params)
+
+    return _decorator_list(decorator_list=ast.decorator_list, **_astloc_from_src(src, 1))
 
 
 def parse_boolop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
@@ -1527,6 +1572,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'expr_sliceelt':          parse_expr_sliceelt,  # `a:b:c`, `*not c`, `*st`
     'Tuple':                  parse_Tuple,          # `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`, `*not a,` (py 3.11+)
     '_Assign_targets':        parse__Assign_targets,
+    '_decorator_list':        parse__decorator_list,
     'boolop':                 parse_boolop,
     'operator':               parse_operator,
     'binop':                  parse_binop,
@@ -1579,6 +1625,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     _ExceptHandlers:          parse__ExceptHandlers,
     _match_cases:             parse__match_cases,
     _Assign_targets:          parse__Assign_targets,
+    _decorator_list:          parse__decorator_list,
     _comprehensions:          parse__comprehensions,
     _comprehension_ifs:       parse__comprehension_ifs,
     _aliases:                 parse__aliases,

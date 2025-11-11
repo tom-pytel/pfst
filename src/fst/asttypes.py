@@ -278,7 +278,7 @@ __all__ = [
     '_ExceptHandlers',
     '_match_cases',
     '_Assign_targets',
-    # '_decorator_list',
+    '_decorator_list',
     '_comprehensions',
     '_comprehension_ifs',
     # '_keywords',
@@ -382,11 +382,28 @@ class _Assign_targets(_slice):
         self.end_col_offset = end_col_offset
 
 
-# class _decorator_list(_slice):
-#     """Slice of `FunctionDef/AsyncFunctionDef/ClassDef.decorator_list`.
+class _decorator_list(_slice):
+    """Slice of `FunctionDef/AsyncFunctionDef/ClassDef.decorator_list`.
 
-#     This is a special slice because there are no separators and instead each element is prefixed with `@` which must be
-#     at column 0 of its line."""
+    This is a special slice because there are no separators and instead each element is prefixed with `@` which must be
+    at column 0 of its line."""
+
+    _fields      = ('decorator_list',)
+    _field_types = {'decorator_list': list[expr]}
+
+    def __init__(
+        self,
+        decorator_list: list[expr],
+        lineno: int = 1,
+        col_offset: int = 0,
+        end_lineno: int = 1,
+        end_col_offset: int = 0
+    ) -> None:
+        self.decorator_list = decorator_list
+        self.lineno = lineno
+        self.col_offset = col_offset
+        self.end_lineno = end_lineno
+        self.end_col_offset = end_col_offset
 
 
 class _comprehensions(_slice):

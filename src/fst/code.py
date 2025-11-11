@@ -40,6 +40,7 @@ from .asttypes import (
     _ExceptHandlers,
     _match_cases,
     _Assign_targets,
+    _decorator_list,
     _comprehensions,
     _comprehension_ifs,
     _aliases,
@@ -80,6 +81,7 @@ from .parsex import (
     parse_expr_sliceelt,
     parse_Tuple,
     parse__Assign_targets,
+    parse__decorator_list,
     parse_boolop,
     parse_binop,
     parse_augop,
@@ -120,6 +122,7 @@ __all__ = [
     'code_as_expr_sliceelt',
     'code_as_Tuple',
     'code_as__Assign_targets',
+    'code_as__decorator_list',
     'code_as_boolop',
     'code_as_binop',
     'code_as_augop',
@@ -525,6 +528,12 @@ def code_as__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {}, *,
     """Convert `code` to an `_Assign_targets` SPECIAL SLICE if possible."""
 
     return _code_as(code, _Assign_targets, parse_params, parse__Assign_targets, sanitize=sanitize)
+
+
+def code_as__decorator_list(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+    """Convert `code` to an `_decorator_list` SPECIAL SLICE if possible."""
+
+    return _code_as(code, _decorator_list, parse_params, parse__decorator_list, sanitize=sanitize)
 
 
 def code_as_boolop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:

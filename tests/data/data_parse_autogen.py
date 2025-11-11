@@ -369,6 +369,38 @@ r'''And - ROOT 0,0..0,3'''),
 r'''~'''),
 r'''Invert - ROOT 0,0..0,1'''),
 
+('parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('all',
+r'''a = '''), r'''
+_Assign_targets - ROOT 0,0..0,4
+  .targets[1]
+   0] Name 'a' Store - 0,0..0,1
+'''),
+
+('parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('all',
+r'''a = b ='''), r'''
+_Assign_targets - ROOT 0,0..0,7
+  .targets[2]
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'b' Store - 0,4..0,5
+'''),
+
+('parse__decorator_list', 0, 0, '_decorator_list', {}, ('all',
+r'''@a'''), r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('parse__decorator_list', 0, 0, '_decorator_list', {}, ('all', r'''
+@a
+@b
+'''), r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
+'''),
+
 ('parse_stmts', 0, 0, 'Module', {}, ('strict', r'''
 i: int = 1
 j
@@ -789,12 +821,25 @@ a =
 '''),
 r'''**SyntaxError('invalid Assign targets slice')**'''),
 
-('parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('all',
-r'''a = b ='''), r'''
-_Assign_targets - ROOT 0,0..0,7
-  .targets[2]
-   0] Name 'a' Store - 0,0..0,1
-   1] Name 'b' Store - 0,4..0,5
+('parse__decorator_list', 0, 0, '_decorator_list', {}, ('_decorator_list',
+r''''''),
+r'''_decorator_list - ROOT 0,0..0,0'''),
+
+('parse__decorator_list', 0, 0, '_decorator_list', {}, ('_decorator_list',
+r'''@a'''), r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('parse__decorator_list', 0, 0, '_decorator_list', {}, ('_decorator_list', r'''
+@a
+@b
+'''), r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
 '''),
 
 ('parse_expr', 0, 0, 'Name', {}, ('expr',

@@ -12,6 +12,7 @@ from fst.asttypes import (
     _ExceptHandlers,
     _match_cases,
     _Assign_targets,
+    _decorator_list,
     _comprehensions,
     _comprehension_ifs,
     _aliases,
@@ -165,6 +166,10 @@ PARSE_TESTS = [
     ('all',                px.parse_cmpop,              Gt,                       '>'),
     ('all',                px.parse_boolop,             And,                      'and'),
     ('all',                px.parse_unaryop,            Invert,                   '~'),
+    ('all',                px.parse__Assign_targets,    _Assign_targets,          'a = '),
+    ('all',                px.parse__Assign_targets,    _Assign_targets,          'a = b ='),
+    ('all',                px.parse__decorator_list,    _decorator_list,          '@a'),
+    ('all',                px.parse__decorator_list,    _decorator_list,          '@a\n@b'),
 
     ('strict',             px.parse_stmts,              Module,                   'i: int = 1\nj'),
     ('strict',             px.parse__ExceptHandlers,    SyntaxError,              'except Exception: pass\nexcept: pass'),
@@ -234,7 +239,10 @@ PARSE_TESTS = [
     ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              'a\n='),
     ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              'a =  # tail'),
     ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              '# head\na ='),
-    ('all',                px.parse__Assign_targets,    _Assign_targets,          'a = b ='),
+
+    ('_decorator_list',    px.parse__decorator_list,    _decorator_list,          ''),
+    ('_decorator_list',    px.parse__decorator_list,    _decorator_list,          '@a'),
+    ('_decorator_list',    px.parse__decorator_list,    _decorator_list,          '@a\n@b'),
 
     ('expr',               px.parse_expr,               Name,                     'j'),
     ('expr',               px.parse_expr,               Starred,                  '*s'),
