@@ -919,7 +919,7 @@ def regen_parse_autogen_data():
             mode_str = repr(mode) if isinstance(mode, str) else mode.__name__
             options = '{}' if _ver < 11 else "{'_ver': 11}" if _ver == 11 else "{'_ver': 12}" if _ver == 12 else "{'_ver': 13}"
 
-            lines.append(f'({func.__name__!r}, 0, 0, {res.__name__!r}, {options}, ({mode_str}, {src!r})),\n')
+            lines.extend(('\n', f'({func.__name__!r}, 0, 0, {res.__name__!r}, {options}, ({mode_str}, {src!r})),\n'))  # need the extra leading newline for lineno counting in support.py
 
     lines.append(']}\n')
 
@@ -7670,7 +7670,7 @@ if 1:
 
         f = FST('@deco\ndef func(args) -> ret: pass')
         self.assertEqual('@deco\ndef func(args) -> ret: pass', test(f, 'decorator_list', '@deco', fstview,
-                                                                    '<<FunctionDef ROOT 1,0..1,27>.decorator_list[0:1] [<Name 0,1..0,5>]>').src)
+                                                                    '@deco').src)
         self.assertEqual('@deco\ndef new(args) -> ret: pass', test(f, 'name', 'new', None, 'func').src)
         self.assertEqual('@deco\ndef new(nargs) -> ret: pass', test(f, 'args', 'nargs', FST, 'args').src)
         self.assertEqual('@deco\ndef new(nargs) -> int: pass', test(f, 'returns', 'int', FST, 'ret').src)
@@ -7678,7 +7678,7 @@ if 1:
 
         f = FST('@deco\nasync def func(args) -> ret: pass')
         self.assertEqual('@deco\nasync def func(args) -> ret: pass', test(f, 'decorator_list', '@deco', fstview,
-                                                                          '<<AsyncFunctionDef ROOT 1,0..1,33>.decorator_list[0:1] [<Name 0,1..0,5>]>').src)
+                                                                          '@deco').src)
         self.assertEqual('@deco\nasync def new(args) -> ret: pass', test(f, 'name', 'new', None, 'func').src)
         self.assertEqual('@deco\nasync def new(nargs) -> ret: pass', test(f, 'args', 'nargs', FST, 'args').src)
         self.assertEqual('@deco\nasync def new(nargs) -> int: pass', test(f, 'returns', 'int', FST, 'ret').src)
@@ -7686,7 +7686,7 @@ if 1:
 
         f = FST('@deco\nclass cls(base, meta=other): pass')
         self.assertEqual('@deco\nclass cls(base, meta=other): pass', test(f, 'decorator_list', '@deco', fstview,
-                                                                          '<<ClassDef ROOT 1,0..1,33>.decorator_list[0:1] [<Name 0,1..0,5>]>').src)
+                                                                          '@deco').src)
         self.assertEqual('@deco\nclass new(base, meta=other): pass', test(f, 'name', 'new', None, 'cls').src)
         self.assertEqual('@deco\nclass new(bass, meta=other): pass', test(f, 'bases', 'bass,', fstview, '(base,)').src)
         self.assertEqual('@deco\nclass new(bass, moto=some): pass', test(f, 'keywords', 'moto=some', fstview,

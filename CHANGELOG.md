@@ -8,6 +8,9 @@
 
 ### Added
 
+- prescribed slicing for `FunctionDef.decorator_list`
+- prescribed slicing for `AsyncFunctionDef.decorator_list`
+- prescribed slicing for `ClassDef.decorator_list`
 - prescribed slicing for `comprehension.ifs`
 - prescribed slicing for `ListComp.generators`
 - prescribed slicing for `SetComp.generators`
@@ -18,6 +21,7 @@
 ### Updated
 
 - default disable dump() color on win32
+- code cleanups
 
 
 ## 0.2.3 - alpha - 2025-11-01

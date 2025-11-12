@@ -39,7 +39,7 @@ class Reconcile:
         else:  # because can replace AST at root node which has out_parent=None
             self.out.replace(code, raw=False, **self.options)
 
-    def recurse_slice_dict(self, node: AST, outf: fst.FST | None) -> None:
+    def recurse_slice_dict(self, node: AST, outf: fst.FST | None) -> None:  # TODO: refactor!
         """Recurse into a combined slice of a Dict's keys and values using slice operations to copy over formatting
         where possible (if not already there). Can be recursing an in-tree FST parent or a pure AST parent."""
 
@@ -148,7 +148,7 @@ class Reconcile:
         if start < len(outa_keys):  # delete tail in output, doesn't happen if coming from AST
             outf.put_slice(None, start, None, None, raw=False, **self.options)
 
-    def recurse_slice(self, node: AST, outf: fst.FST | None, field: str, body: list[AST]) -> None:
+    def recurse_slice(self, node: AST, outf: fst.FST | None, field: str, body: list[AST]) -> None:  # TODO: refactor!
         """Recurse into a slice of children using slice operations to copy over formatting where possible (if not
         already there). Can be recursing an in-tree FST parent or a pure AST parent."""
 

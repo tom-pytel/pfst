@@ -6,7 +6,6 @@ from __future__ import annotations
 import builtins  # because of the unfortunate choice for the name of an Interpolation field, '.str', we have a '.str' property in FST which messes with the type annotations
 import io
 import os
-import re
 import sys
 import threading
 from ast import iter_fields
@@ -29,6 +28,8 @@ from .asttypes import (
     ASTS_SCOPE_NAMED_OR_MOD,
     ASTS_SCOPE_ANONYMOUS,
     AST,
+    Add,
+    And,
     AnnAssign,
     Assert,
     Assign,
@@ -39,6 +40,9 @@ from .asttypes import (
     AugAssign,
     Await,
     BinOp,
+    BitAnd,
+    BitOr,
+    BitXor,
     BoolOp,
     Call,
     ClassDef,
@@ -47,22 +51,35 @@ from .asttypes import (
     Delete,
     Dict,
     DictComp,
+    Div,
+    Eq,
     ExceptHandler,
     Expr,
     Expression,
+    FloorDiv,
     For,
     FormattedValue,
     FunctionDef,
     GeneratorExp,
     Global,
+    Gt,
+    GtE,
     If,
     Import,
     ImportFrom,
+    In,
     Interactive,
+    Invert,
+    Is,
+    IsNot,
     JoinedStr,
+    LShift,
     Lambda,
     List,
     ListComp,
+    Lt,
+    LtE,
+    MatMult,
     Match,
     MatchAs,
     MatchClass,
@@ -71,19 +88,30 @@ from .asttypes import (
     MatchSequence,
     MatchSingleton,
     MatchValue,
+    Mod,
     Module,
+    Mult,
     Name,
     NamedExpr,
     Nonlocal,
+    Not,
+    NotEq,
+    NotIn,
+    Or,
     Pass,
+    Pow,
+    RShift,
     Raise,
     Return,
     Set,
     SetComp,
     Starred,
+    Sub,
     Subscript,
     Try,
     Tuple,
+    UAdd,
+    USub,
     UnaryOp,
     While,
     With,
@@ -92,17 +120,13 @@ from .asttypes import (
     alias,
     arg,
     arguments,
-    boolop,
-    cmpop,
     comprehension,
     expr,
     keyword,
     match_case,
     mod,
-    operator,
     pattern,
     stmt,
-    unaryop,
     withitem,
     TryStar,
     TypeAlias,
@@ -111,6 +135,7 @@ from .asttypes import (
     _ExceptHandlers,
     _match_cases,
     _Assign_targets,
+    _decorator_list,
     _comprehensions,
     _comprehension_ifs,
     _aliases,
@@ -133,10 +158,10 @@ from .astutil import (
     precedence_require_parens_by_type,
 )
 
-from .common import PYLT13, astfield, fstloc, fstlocn, nspace, Self, prev_find, next_delims, prev_delims
+from .common import PYLT13, astfield, fstloc, fstlocn, nspace, Self, next_delims, prev_delims
 from .parsex import Mode
 from .code import Code, code_to_lines, code_as_all
-from .locations import loc_arguments, loc_comprehension, loc_withitem, loc_match_case, loc_operator
+from .locations import loc_arguments, loc_comprehension, loc_withitem, loc_match_case, loc_decorator, loc_operator
 from .traverse import AST_FIELDS_NEXT, AST_FIELDS_PREV, next_bound, prev_bound, check_with_loc
 from .view import fstview
 from .reconcile import Reconcile
@@ -150,20 +175,20 @@ __all__ = [
 class _ThreadLocal(threading.local):
     def __init__(self) -> None:
         self.options = {
-            'raw':              False,   # True | False | 'auto'
-            'trivia':           True,    # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line'), True means ('block', 'line')
-            'elif_':            True,    # True | False
-            'pep8space':        True,    # True | False | 1
-            'docstr':           True,    # True | False | 'strict'
-            'pars':             'auto',  # True | False | 'auto'
-            'pars_walrus':      True,    # True | False
-            'pars_arglike':     True,    # True | False
-            'norm':             True,    # True | False
-            'norm_self':        None,    # True | False | None
-            'norm_get':         None,    # True | False | None
-            'norm_put':         None,    # True | False | None
-            'set_norm':        'both',   # False | 'star' | 'call' | 'both'
-            'matchor_norm':    'value',  # False | 'value' | 'strict'
+            'raw':           False,   # True | False | 'auto'
+            'trivia':        True,    # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line'), True means ('block', 'line')
+            'elif_':         True,    # True | False
+            'pep8space':     True,    # True | False | 1
+            'docstr':        True,    # True | False | 'strict'
+            'pars':          'auto',  # True | False | 'auto'
+            'pars_walrus':   True,    # True | False
+            'pars_arglike':  True,    # True | False
+            'norm':          True,    # True | False
+            'norm_self':     None,    # True | False | None
+            'norm_get':      None,    # True | False | None
+            'norm_put':      None,    # True | False | None
+            'set_norm':     'both',   # False | 'star' | 'call' | 'both'
+            'matchor_norm': 'value',  # False | 'value' | 'strict'
         }
 
 
@@ -186,44 +211,79 @@ _DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_
 _DEFAULT_INDENT = '    '
 
 _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: 'body', Interactive: 'body', ..., Match: 'cases', ..., MatchAs: 'pattern'}
-    ('body',         (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While,
-                      If, With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
-    ('handlers',     (_ExceptHandlers,)),
-    ('cases',        (Match, _match_cases)),
+    ('body',           (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While,
+                        If, With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
+    ('handlers',       (_ExceptHandlers,)),
+    ('cases',          (Match, _match_cases)),
 
-    ('elts',         (Tuple, List, Set)),
-    ('elt',          (GeneratorExp, ListComp, SetComp)),
-    ('targets',      (Delete, _Assign_targets)),
-    ('target',       (comprehension,)),
-    ('patterns',     (MatchSequence, MatchOr, MatchClass)),
-    ('type_params',  (TypeAlias, _type_params)),
-    ('names',        (Import, ImportFrom, Global, Nonlocal, _aliases)),
-    ('items',        (_withitems,)),
-    ('values',       (BoolOp, JoinedStr, TemplateStr)),
-    ('generators',   (_comprehensions,)),
-    ('ifs',          (_comprehension_ifs,)),
-    ('args',         (Call,)),  # potential conflict of default body with put to empty 'set()'
+    ('elts',           (Tuple, List, Set)),
+    ('elt',            (GeneratorExp, ListComp, SetComp)),
+    ('targets',        (Delete, _Assign_targets)),
+    ('target',         (comprehension,)),
+    ('decorator_list', (_decorator_list,)),
+    ('patterns',       (MatchSequence, MatchOr, MatchClass)),
+    ('type_params',    (TypeAlias, _type_params)),
+    ('names',          (Import, ImportFrom, Global, Nonlocal, _aliases)),
+    ('items',          (_withitems,)),
+    ('values',         (BoolOp, JoinedStr, TemplateStr)),
+    ('generators',     (_comprehensions,)),
+    ('ifs',            (_comprehension_ifs,)),
+    ('args',           (Call,)),  # potential conflict of default body with put to empty 'set()'
 
     # special cases, field names here only for checks to succeed, otherwise all handled programatically
-    ('',             (Dict,)),          # key:value
-    ('',             (MatchMapping,)),  # key:pattern
-    ('',             (Compare,)),       # ops:comparators
+    ('',               (Dict,)),          # key:value
+    ('',               (MatchMapping,)),  # key:pattern
+    ('',               (Compare,)),       # ops:comparators
 
     # other single value fields
-    ('value',        (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,
-                      FormattedValue, Interpolation, Constant, Attribute, Subscript, Starred, keyword, MatchValue,
-                      MatchSingleton)),
-    ('exc',          (Raise,)),
-    ('test',         (Assert,)),
-    ('operand',      (UnaryOp,)),
-    ('id',           (Name,)),
-    ('arg',          (arg,)),
-    ('name',         (alias,)),
-    ('context_expr', (withitem,)),
-    ('pattern',      (MatchAs,)),
+    ('value',          (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,
+                        FormattedValue, Interpolation, Constant, Attribute, Subscript, Starred, keyword, MatchValue,
+                        MatchSingleton)),
+    ('exc',            (Raise,)),
+    ('test',           (Assert,)),
+    ('operand',        (UnaryOp,)),
+    ('id',             (Name,)),
+    ('arg',            (arg,)),
+    ('name',           (alias,)),
+    ('context_expr',   (withitem,)),
+    ('pattern',        (MatchAs,)),
 ] for kls in classes}
 
-_re_deco_start = re.compile(r'[ \t]*@')
+_LOC_FUNCS = {  # quick lookup table for FST.loc
+    arguments:     loc_arguments,
+    comprehension: loc_comprehension,
+    withitem:      loc_withitem,
+    match_case:    loc_match_case,
+    And:           loc_operator,
+    Or:            loc_operator,
+    Add:           loc_operator,
+    Sub:           loc_operator,
+    Mult:          loc_operator,
+    MatMult:       loc_operator,
+    Div:           loc_operator,
+    Mod:           loc_operator,
+    Pow:           loc_operator,
+    LShift:        loc_operator,
+    RShift:        loc_operator,
+    BitOr:         loc_operator,
+    BitXor:        loc_operator,
+    BitAnd:        loc_operator,
+    FloorDiv:      loc_operator,
+    Invert:        loc_operator,
+    Not:           loc_operator,
+    UAdd:          loc_operator,
+    USub:          loc_operator,
+    Eq:            loc_operator,
+    NotEq:         loc_operator,
+    Lt:            loc_operator,
+    LtE:           loc_operator,
+    Gt:            loc_operator,
+    GtE:           loc_operator,
+    Is:            loc_operator,
+    IsNot:         loc_operator,
+    In:            loc_operator,
+    NotIn:         loc_operator,
+}
 
 
 def _clip_src_loc(self: FST, ln: int, col: int, end_ln: int, end_col: int) -> tuple[int, int, int, int]:
@@ -530,16 +590,8 @@ class FST:
             end_col_offset = ast.end_col_offset
 
         except AttributeError:
-            if isinstance(ast, arguments):
-                loc = loc_arguments(self)
-            elif isinstance(ast, comprehension):
-                loc = loc_comprehension(self)
-            elif isinstance(ast, withitem):
-                loc = loc_withitem(self)
-            elif isinstance(ast, match_case):
-                loc = loc_match_case(self)
-            elif isinstance(ast, (boolop, operator, unaryop, cmpop)):
-                loc = loc_operator(self)
+            if loc_func := _LOC_FUNCS.get(ast.__class__):
+                loc = loc_func(self)
             elif not self.parent:
                 loc = fstloc(0, 0, len(ls := self._lines) - 1, len(ls[-1]))
             else:
@@ -569,17 +621,10 @@ class FST:
         except KeyError:
             pass
 
-        if (bloc := self.loc) and (decos := getattr(self.a, 'decorator_list', None)):
-            lines = self.root._lines
-            _, col, end_ln, end_col = bloc
-            deco0_ln, deco0_col, _, _ = decos[0].f.loc
-
-            if m := _re_deco_start.match(lines[deco0_ln]):  # if '@' is on the line expected with preceded by only space then we are done, use column of '@'
-                bloc = fstloc(deco0_ln, m.end() - 1, end_ln, end_col)  # m.end() instead of col because could come from a line continuation and '@' not be at same column as self
-
-            else:  # degenerate case of first decorator coming from a line continuation, ignore the line continuation and just start at deco col
-                ln, col = prev_find(lines, 0, 0, deco0_ln, deco0_col, '@')  # we can use start at (0, 0) because we know '@' must start a line
-                bloc = fstloc(ln, col, end_ln, end_col)
+        if (bloc := self.loc) and getattr(self.a, 'decorator_list', None):  # only do if has decorator_list and IT IS NOT EMPTY
+            ln, col, _, _ = loc_decorator(self, 0, False)
+            _, _, end_ln, end_col = bloc
+            bloc = fstloc(ln, col, end_ln, end_col)
 
         self._cache['bloc'] = bloc
 

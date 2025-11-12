@@ -42,8 +42,20 @@ r'''Name 'a' Load - ROOT 0,0..0,1'''),
 @deco
 def func(): pass
 
+'''), r'''
+def func(): pass
+
+''', r'''
+FunctionDef - ROOT 0,0..0,16
+  .name 'func'
+  .body[1]
+   0] Pass - 0,12..0,16
+''',
+r'''@deco''', r'''
+_decorator_list - ROOT 0,0..0,5
+  .decorator_list[1]
+   0] Name 'deco' Load - 0,1..0,5
 '''),
-r'''**NotImplementedError('this is not implemented yet')**'''),
 
 ('', None, False, 'name', {}, (FunctionDef,
 r'''def func(): pass'''),
@@ -139,8 +151,15 @@ r'''Pass - ROOT 0,0..0,4'''),
 @deco
 async def func(): pass
 
-'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
+'''), r'''
+async def func(): pass
+
+''', r'''
+AsyncFunctionDef - ROOT 0,0..0,22
+  .name 'func'
+  .body[1]
+   0] Pass - 0,18..0,22
+''',
 r'''deco''',
 r'''Name 'deco' Load - ROOT 0,0..0,4'''),
 
@@ -238,8 +257,15 @@ r'''Pass - ROOT 0,0..0,4'''),
 @deco
 class cls: pass
 
-'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
+'''), r'''
+class cls: pass
+
+''', r'''
+ClassDef - ROOT 0,0..0,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 0,11..0,15
+''',
 r'''deco''',
 r'''Name 'deco' Load - ROOT 0,0..0,4'''),
 

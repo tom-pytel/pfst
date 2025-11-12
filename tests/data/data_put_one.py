@@ -7095,8 +7095,19 @@ r'''**IndexError('index out of range')**'''),
 @(b)
 def c(): pass
 '''), (None,
-r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''**DEL**'''), r'''
+@(b)
+def c(): pass
+''', r'''
+Module - ROOT 0,0..1,13
+  .body[1]
+   0] FunctionDef - 1,0..1,13
+     .name 'c'
+     .body[1]
+      0] Pass - 1,9..1,13
+     .decorator_list[1]
+      0] Name 'b' Load - 0,2..0,3
+'''),
 
 ('body[0]', 0, False, 'decorator_list', {}, ('exec', r'''
 @a
@@ -7196,8 +7207,19 @@ r'''**IndexError('index out of range')**'''),
 @(b)
 async def c(): pass
 '''), (None,
-r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''**DEL**'''), r'''
+@(b)
+async def c(): pass
+''', r'''
+Module - ROOT 0,0..1,19
+  .body[1]
+   0] AsyncFunctionDef - 1,0..1,19
+     .name 'c'
+     .body[1]
+      0] Pass - 1,15..1,19
+     .decorator_list[1]
+      0] Name 'b' Load - 0,2..0,3
+'''),
 
 ('body[0]', 0, False, 'decorator_list', {}, ('exec', r'''
 @a
@@ -7297,8 +7319,19 @@ r'''**IndexError('index out of range')**'''),
 @(b)
 class c: pass
 '''), (None,
-r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''**DEL**'''), r'''
+@(b)
+class c: pass
+''', r'''
+Module - ROOT 0,0..1,13
+  .body[1]
+   0] ClassDef - 1,0..1,13
+     .name 'c'
+     .body[1]
+      0] Pass - 1,9..1,13
+     .decorator_list[1]
+      0] Name 'b' Load - 0,2..0,3
+'''),
 
 ('body[0]', 0, False, 'decorator_list', {}, ('exec', r'''
 @a

@@ -2140,14 +2140,17 @@ class SliceExprish(Fuzzy):
                             )):
             return (ast.__class__,)
 
-        if isinstance(ast, (FunctionDef, AsyncFunctionDef, TypeAlias)):
+        if isinstance(ast, TypeAlias):
             return ('type_params',)
+
+        if isinstance(ast, (FunctionDef, AsyncFunctionDef)):
+            return ('type_params', 'decorator_list')
 
         if isinstance(ast, ClassDef):
             if not ast.keywords:
-                return ('type_params', 'ClassDef_bases')
+                return ('type_params', 'decorator_list', 'ClassDef_bases')
             else:
-                return ('type_params',)
+                return ('type_params', 'decorator_list')
 
         if isinstance(ast, (ListComp, SetComp, DictComp, GeneratorExp)):
             return ('generators',)
@@ -2176,6 +2179,7 @@ class SliceExprish(Fuzzy):
             Dict:             self.Bucket(None, None, 0, 0, False, FST('{}')),
             Delete:           self.Bucket('targets', 'elts', 1, 0, True, FST('del a')),
             Assign:           self.Bucket('targets', None, 1, 0, False, FST('', '_Assign_targets')),
+            'decorator_list': self.Bucket('decorator_list', None, 0, 0, False, FST('', '_decorator_list')),
             With:             (wbucket := self.Bucket('items', None, 1, 0, False, FST('', '_withitems'))),
             AsyncWith:        wbucket,
             Import:           self.Bucket('names', None, 1, 0, False, FST('', '_aliases')),

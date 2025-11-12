@@ -10854,6 +10854,913 @@ _Assign_targets - ROOT 0,0..0,11
 '''),
 ],
 
+'decorator_list': [  # ................................................................................
+
+('', 0, 1, 'decorator_list', {}, (None, r'''
+@a
+@ ( b )
+@c()
+class cls: pass
+'''), r'''
+@ ( b )
+@c()
+class cls: pass
+''', r'''
+ClassDef - ROOT 2,0..2,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 2,11..2,15
+  .decorator_list[2]
+   0] Name 'b' Load - 0,4..0,5
+   1] Call - 1,1..1,4
+     .func Name 'c' Load - 1,1..1,2
+''',
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('', 1, 2, 'decorator_list', {}, (None, r'''
+@a
+@ ( b )
+@c()
+class cls: pass
+'''), r'''
+@a
+@c()
+class cls: pass
+''', r'''
+ClassDef - ROOT 2,0..2,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 2,11..2,15
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Call - 1,1..1,4
+     .func Name 'c' Load - 1,1..1,2
+''',
+r'''@ ( b )''', r'''
+_decorator_list - ROOT 0,0..0,7
+  .decorator_list[1]
+   0] Name 'b' Load - 0,4..0,5
+'''),
+
+('', 2, 3, 'decorator_list', {}, (None, r'''
+@a
+@ ( b )
+@c()
+class cls: pass
+'''), r'''
+@a
+@ ( b )
+class cls: pass
+''', r'''
+ClassDef - ROOT 2,0..2,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 2,11..2,15
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,4..1,5
+''',
+r'''@c()''', r'''
+_decorator_list - ROOT 0,0..0,4
+  .decorator_list[1]
+   0] Call - 0,1..0,4
+     .func Name 'c' Load - 0,1..0,2
+'''),
+
+('', 0, 2, 'decorator_list', {}, (None, r'''
+@a
+@ ( b )
+@c()
+class cls: pass
+'''), r'''
+@c()
+class cls: pass
+''', r'''
+ClassDef - ROOT 1,0..1,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 1,11..1,15
+  .decorator_list[1]
+   0] Call - 0,1..0,4
+     .func Name 'c' Load - 0,1..0,2
+''', r'''
+@a
+@ ( b )
+''', r'''
+_decorator_list - ROOT 0,0..1,7
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,4..1,5
+'''),
+
+('', 1, 3, 'decorator_list', {}, (None, r'''
+@a
+@ ( b )
+@c()
+class cls: pass
+'''), r'''
+@a
+class cls: pass
+''', r'''
+ClassDef - ROOT 1,0..1,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 1,11..1,15
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+''', r'''
+@ ( b )
+@c()
+''', r'''
+_decorator_list - ROOT 0,0..1,4
+  .decorator_list[2]
+   0] Name 'b' Load - 0,4..0,5
+   1] Call - 1,1..1,4
+     .func Name 'c' Load - 1,1..1,2
+'''),
+
+('', 0, 3, 'decorator_list', {}, (None, r'''
+@a
+@ ( b )
+@c()
+class cls: pass
+'''),
+r'''class cls: pass''', r'''
+ClassDef - ROOT 0,0..0,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 0,11..0,15
+''', r'''
+@a
+@ ( b )
+@c()
+''', r'''
+_decorator_list - ROOT 0,0..2,4
+  .decorator_list[3]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,4..1,5
+   2] Call - 2,1..2,4
+     .func Name 'c' Load - 2,1..2,2
+'''),
+
+('', 1, 2, 'decorator_list', {'trivia': ('all+', 'all+')}, (None, r'''
+@a
+
+# pre
+@ ( b )  # line
+# post
+
+@c()
+class cls: pass
+'''), r'''
+@a
+@c()
+class cls: pass
+''', r'''
+ClassDef - ROOT 2,0..2,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 2,11..2,15
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Call - 1,1..1,4
+     .func Name 'c' Load - 1,1..1,2
+''', r'''
+
+# pre
+@ ( b )  # line
+# post
+
+''', r'''
+_decorator_list - ROOT 0,0..4,0
+  .decorator_list[1]
+   0] Name 'b' Load - 2,4..2,5
+'''),
+
+('', 1, 2, 'decorator_list', {'trivia': ('all+', 'all+')}, (None, r'''
+@a
+
+
+# pre
+@ ( b )  # line
+# post
+
+
+@c()
+class cls: pass
+'''), r'''
+@a
+@c()
+class cls: pass
+''', r'''
+ClassDef - ROOT 2,0..2,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 2,11..2,15
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Call - 1,1..1,4
+     .func Name 'c' Load - 1,1..1,2
+''', r'''
+
+
+# pre
+@ ( b )  # line
+# post
+
+
+''', r'''
+_decorator_list - ROOT 0,0..6,0
+  .decorator_list[1]
+   0] Name 'b' Load - 3,4..3,5
+'''),
+
+('', 0, 2, 'decorator_list', {}, (None, r'''
+\
+@a
+\
+@ ( b )
+\
+@c()
+\
+class cls: pass
+'''), r'''
+\
+\
+@c()
+\
+class cls: pass
+''', r'''
+ClassDef - ROOT 4,0..4,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 4,11..4,15
+  .decorator_list[1]
+   0] Call - 2,1..2,4
+     .func Name 'c' Load - 2,1..2,2
+''', r'''
+@a
+\
+@ ( b )
+''', r'''
+_decorator_list - ROOT 0,0..2,7
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 2,4..2,5
+'''),
+
+('body[0]', 0, 1, 'decorator_list', {}, (None, r'''
+if 1:
+  @a
+  @ ( b )
+  @c()
+  class cls: pass
+'''), r'''
+if 1:
+  @ ( b )
+  @c()
+  class cls: pass
+''', r'''
+If - ROOT 0,0..3,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 3,2..3,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 3,13..3,17
+     .decorator_list[2]
+      0] Name 'b' Load - 1,6..1,7
+      1] Call - 2,3..2,6
+        .func Name 'c' Load - 2,3..2,4
+''',
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('body[0]', 1, 2, 'decorator_list', {}, (None, r'''
+if 1:
+  @a
+  @ ( b )
+  @c()
+  class cls: pass
+'''), r'''
+if 1:
+  @a
+  @c()
+  class cls: pass
+''', r'''
+If - ROOT 0,0..3,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 3,2..3,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 3,13..3,17
+     .decorator_list[2]
+      0] Name 'a' Load - 1,3..1,4
+      1] Call - 2,3..2,6
+        .func Name 'c' Load - 2,3..2,4
+''',
+r'''@ ( b )''', r'''
+_decorator_list - ROOT 0,0..0,7
+  .decorator_list[1]
+   0] Name 'b' Load - 0,4..0,5
+'''),
+
+('body[0]', 2, 3, 'decorator_list', {}, (None, r'''
+if 1:
+  @a
+  @ ( b )
+  @c()
+  class cls: pass
+'''), r'''
+if 1:
+  @a
+  @ ( b )
+  class cls: pass
+''', r'''
+If - ROOT 0,0..3,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 3,2..3,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 3,13..3,17
+     .decorator_list[2]
+      0] Name 'a' Load - 1,3..1,4
+      1] Name 'b' Load - 2,6..2,7
+''',
+r'''@c()''', r'''
+_decorator_list - ROOT 0,0..0,4
+  .decorator_list[1]
+   0] Call - 0,1..0,4
+     .func Name 'c' Load - 0,1..0,2
+'''),
+
+('body[0]', 0, 2, 'decorator_list', {}, (None, r'''
+if 1:
+  @a
+  @ ( b )
+  @c()
+  class cls: pass
+'''), r'''
+if 1:
+  @c()
+  class cls: pass
+''', r'''
+If - ROOT 0,0..2,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 2,2..2,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 2,13..2,17
+     .decorator_list[1]
+      0] Call - 1,3..1,6
+        .func Name 'c' Load - 1,3..1,4
+''', r'''
+@a
+@ ( b )
+''', r'''
+_decorator_list - ROOT 0,0..1,7
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,4..1,5
+'''),
+
+('body[0]', 1, 3, 'decorator_list', {}, (None, r'''
+if 1:
+  @a
+  @ ( b )
+  @c()
+  class cls: pass
+'''), r'''
+if 1:
+  @a
+  class cls: pass
+''', r'''
+If - ROOT 0,0..2,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 2,2..2,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 2,13..2,17
+     .decorator_list[1]
+      0] Name 'a' Load - 1,3..1,4
+''', r'''
+@ ( b )
+@c()
+''', r'''
+_decorator_list - ROOT 0,0..1,4
+  .decorator_list[2]
+   0] Name 'b' Load - 0,4..0,5
+   1] Call - 1,1..1,4
+     .func Name 'c' Load - 1,1..1,2
+'''),
+
+('body[0]', 0, 3, 'decorator_list', {}, (None, r'''
+if 1:
+  @a
+  @ ( b )
+  @c()
+  class cls: pass
+'''), r'''
+if 1:
+  class cls: pass
+''', r'''
+If - ROOT 0,0..1,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 1,2..1,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 1,13..1,17
+''', r'''
+@a
+@ ( b )
+@c()
+''', r'''
+_decorator_list - ROOT 0,0..2,4
+  .decorator_list[3]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,4..1,5
+   2] Call - 2,1..2,4
+     .func Name 'c' Load - 2,1..2,2
+'''),
+
+('body[0]', 1, 2, 'decorator_list', {'trivia': ('all+', 'all+')}, (None, r'''
+if 1:
+  @a
+
+  # pre
+  @ ( b )  # line
+  # post
+
+  @c()
+  class cls: pass
+'''), r'''
+if 1:
+  @a
+  @c()
+  class cls: pass
+''', r'''
+If - ROOT 0,0..3,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 3,2..3,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 3,13..3,17
+     .decorator_list[2]
+      0] Name 'a' Load - 1,3..1,4
+      1] Call - 2,3..2,6
+        .func Name 'c' Load - 2,3..2,4
+''', r'''
+
+# pre
+@ ( b )  # line
+# post
+
+''', r'''
+_decorator_list - ROOT 0,0..4,0
+  .decorator_list[1]
+   0] Name 'b' Load - 2,4..2,5
+'''),
+
+('body[0]', 1, 2, 'decorator_list', {'trivia': ('all+', 'all+')}, (None, r'''
+if 1:
+  @a
+
+
+  # pre
+  @ ( b )  # line
+  # post
+
+
+  @c()
+  class cls: pass
+'''), r'''
+if 1:
+  @a
+  @c()
+  class cls: pass
+''', r'''
+If - ROOT 0,0..3,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 3,2..3,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 3,13..3,17
+     .decorator_list[2]
+      0] Name 'a' Load - 1,3..1,4
+      1] Call - 2,3..2,6
+        .func Name 'c' Load - 2,3..2,4
+''', r'''
+
+
+# pre
+@ ( b )  # line
+# post
+
+
+''', r'''
+_decorator_list - ROOT 0,0..6,0
+  .decorator_list[1]
+   0] Name 'b' Load - 3,4..3,5
+'''),
+
+('body[0]', 0, 2, 'decorator_list', {}, (None, r'''
+if 1:
+\
+  @a
+\
+  @ ( b )
+\
+  @c()
+\
+  class cls: pass
+'''), r'''
+if 1:
+\
+\
+  @c()
+\
+  class cls: pass
+''', r'''
+If - ROOT 0,0..5,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 5,2..5,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 5,13..5,17
+     .decorator_list[1]
+      0] Call - 3,3..3,6
+        .func Name 'c' Load - 3,3..3,4
+''', r'''
+@a
+\
+@ ( b )
+''', r'''
+_decorator_list - ROOT 0,0..2,7
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 2,4..2,5
+'''),
+
+('body[0]', 0, 2, 'decorator_list', {}, (None, r'''
+if 1:
+  \
+@a
+  \
+@ ( b )
+  \
+@c()
+  \
+class cls: pass
+'''), r'''
+if 1:
+  \
+  \
+@c()
+  \
+class cls: pass
+''', r'''
+If - ROOT 0,0..5,15
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 5,0..5,15
+     .name 'cls'
+     .body[1]
+      0] Pass - 5,11..5,15
+     .decorator_list[1]
+      0] Call - 3,1..3,4
+        .func Name 'c' Load - 3,1..3,2
+''', r'''
+@a
+\
+@ ( b )
+''', r'''
+_decorator_list - ROOT 0,0..2,7
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 2,4..2,5
+'''),
+],
+
+'decorator_list_newlines': [  # ................................................................................
+
+('', None, None, None, {}, ('_decorator_list',
+r'''@a'''),
+r'''''',
+r'''_decorator_list - ROOT 0,0..0,0''',
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('', 0, 2, None, {}, ('_decorator_list', r'''
+@a
+@b
+'''),
+r'''''',
+r'''_decorator_list - ROOT 0,0..0,0''', r'''
+@a
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
+'''),
+
+('', 1, 2, None, {}, ('_decorator_list', r'''
+@a
+@b
+'''),
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+''',
+r'''@b''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'b' Load - 0,1..0,2
+'''),
+
+('', 1, 2, None, {}, ('_decorator_list', r'''
+@a
+
+@b
+'''), r'''
+@a
+
+''', r'''
+_decorator_list - ROOT 0,0..1,0
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+''',
+r'''@b''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'b' Load - 0,1..0,2
+'''),
+
+('', 1, 2, None, {'trivia': '-'}, ('_decorator_list', r'''
+@a
+
+@b
+'''),
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+''',
+r'''@b''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'b' Load - 0,1..0,2
+'''),
+
+('', 1, 2, None, {}, ('_decorator_list', r'''
+@a
+# comment
+@b
+'''),
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+''', r'''
+# comment
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[1]
+   0] Name 'b' Load - 1,1..1,2
+'''),
+
+('', 1, 2, None, {'trivia': False}, ('_decorator_list', r'''
+@a
+# comment
+@b
+'''), r'''
+@a
+# comment
+''', r'''
+_decorator_list - ROOT 0,0..1,9
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+''',
+r'''@b''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'b' Load - 0,1..0,2
+'''),
+
+('', 1, 2, None, {}, ('_decorator_list', r'''
+@a
+# comment
+
+@b
+'''), r'''
+@a
+# comment
+
+''', r'''
+_decorator_list - ROOT 0,0..2,0
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+''',
+r'''@b''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'b' Load - 0,1..0,2
+'''),
+
+('', 1, 2, None, {'trivia': '-'}, ('_decorator_list', r'''
+@a
+# comment
+
+@b
+'''), r'''
+@a
+# comment
+''', r'''
+_decorator_list - ROOT 0,0..1,9
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+''',
+r'''@b''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'b' Load - 0,1..0,2
+'''),
+
+('body[1]', 0, 1, 'decorator_list', {'trivia': '-'}, (None, r'''
+pass
+
+@a
+class cls: pass
+'''), r'''
+pass
+
+class cls: pass
+''', r'''
+Module - ROOT 0,0..2,15
+  .body[2]
+   0] Pass - 0,0..0,4
+   1] ClassDef - 2,0..2,15
+     .name 'cls'
+     .body[1]
+      0] Pass - 2,11..2,15
+''',
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('body[1]', 0, 1, 'decorator_list', {'trivia': '-'}, (None, r'''
+if 1:
+  pass
+
+  @a
+  class cls: pass
+'''), r'''
+if 1:
+  pass
+
+  class cls: pass
+''', r'''
+If - ROOT 0,0..3,17
+  .test Constant 1 - 0,3..0,4
+  .body[2]
+   0] Pass - 1,2..1,6
+   1] ClassDef - 3,2..3,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 3,13..3,17
+''',
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('', 0, 1, 'decorator_list', {}, (None, r'''
+
+@a
+@b
+class cls: pass
+'''), r'''
+
+@b
+class cls: pass
+''', r'''
+ClassDef - ROOT 2,0..2,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 2,11..2,15
+  .decorator_list[1]
+   0] Name 'b' Load - 1,1..1,2
+''',
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('', 0, 2, 'decorator_list', {}, (None, r'''
+
+@a
+@b
+class cls: pass
+'''), r'''
+
+class cls: pass
+''', r'''
+ClassDef - ROOT 1,0..1,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 1,11..1,15
+''', r'''
+@a
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
+'''),
+
+('body[0]', 0, 1, 'decorator_list', {}, (None, r'''
+if 1:
+
+  @a
+  @b
+  class cls: pass
+'''), r'''
+if 1:
+
+  @b
+  class cls: pass
+''', r'''
+If - ROOT 0,0..3,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 3,2..3,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 3,13..3,17
+     .decorator_list[1]
+      0] Name 'b' Load - 2,3..2,4
+''',
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('body[0]', 0, 2, 'decorator_list', {}, (None, r'''
+if 1:
+
+  @a
+  @b
+  class cls: pass
+'''), r'''
+if 1:
+
+  class cls: pass
+''', r'''
+If - ROOT 0,0..2,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 2,2..2,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 2,13..2,17
+''', r'''
+@a
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
+'''),
+],
+
 'With_items': [  # ................................................................................
 
 ('body[0]', 1, 2, 'items', {}, ('exec',

@@ -32,12 +32,13 @@ from .traverse import next_bound, prev_bound, next_bound_step, prev_bound_step
 __all__ = [
     'loc_arguments',
     'loc_comprehension',
-    'loc_comprehension_if',
     'loc_withitem',
     'loc_match_case',
     'loc_operator',
     'loc_block_header_end',
     'loc_arguments_empty',
+    'loc_comprehension_if',
+    'loc_decorator',
     'loc_Lambda_args_entire',
     'loc_ClassDef_bases_pars',
     'loc_ImportFrom_names_pars',
@@ -51,6 +52,8 @@ __all__ = [
     'loc_Global_Nonlocal_names',
 ]
 
+
+_re_deco_start         = re.compile(r'[ \t]*@')
 
 _re_keyword_import     = re.compile(r'\bimport\b')  # we end with a '\b' because we need exactly this word and there may be other similar ones between `from` and `import`
 _re_keyword_with_start = re.compile(r'\bwith')  # we do not end with '\b' because the search using this may be checking source where the `with` is joined with a following `withitem` and there are no other words between `async` and `with`
@@ -150,32 +153,6 @@ def loc_comprehension(self: fst.FST) -> fstloc:
             end_ln, end_col = rpars[len(prev_delims(lines, *prev_bound(last), last.ln, last.col)) - 1]  # get rpar according to how many pars on left
 
     return fstloc(start_ln, start_col, end_ln, end_col)
-
-
-def loc_comprehension_if(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
-    """Location `comprehension` or `_comprehension_ifs` expression including the `if` (which is not included in the
-    location of the expression itself).
-
-    **WARNING:** `idx` must be non-negative.
-    """
-
-    # assert isinstance(self.a, (comprehension, _comprehension_ifs))
-
-    ast = self.a
-    ifs = ast.ifs
-
-    ln, col, end_ln, end_col = ifs[idx].f.pars() if pars else ifs[idx].f.loc
-
-    if idx:
-        _, _, prev_ln, prev_col = ifs[idx - 1].f.loc
-    elif isinstance(ast, comprehension):
-        _, _, prev_ln, prev_col = ast.iter.f.loc
-    else:  # isinstance(ast, _comprehension_ifs)
-        prev_ln, prev_col, _, _ = self.loc  # should be 0, 0 but in case someone inserts some garbage before
-
-    ln, col = next_find(self.root._lines, prev_ln, prev_col, ln, col, 'if')  # must be there
-
-    return fstloc(ln, col, end_ln, end_col)
 
 
 def loc_withitem(self: fst.FST) -> fstloc:
@@ -387,6 +364,58 @@ def loc_arguments_empty(self: fst.FST) -> fstloc:
         ln, col = next_find(lines, ln, col, end_ln, end_col, '(')
         col += 1
         end_ln, end_col = next_find(lines, ln, col, end_ln, end_col, ')')
+
+    return fstloc(ln, col, end_ln, end_col)
+
+
+def loc_comprehension_if(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
+    """Location `comprehension` or `_comprehension_ifs` expression including the leading `if` (which is not included in
+    the location of the expression itself).
+
+    **WARNING:** `idx` must be non-negative.
+    """
+
+    # assert isinstance(self.a, (comprehension, _comprehension_ifs))
+
+    ast = self.a
+    ifs = ast.ifs
+
+    ln, col, end_ln, end_col = ifs[idx].f.pars() if pars else ifs[idx].f.loc
+
+    if idx:
+        _, _, prev_ln, prev_col = ifs[idx - 1].f.loc
+    elif isinstance(ast, comprehension):
+        _, _, prev_ln, prev_col = ast.iter.f.loc
+    else:  # isinstance(ast, _comprehension_ifs)
+        prev_ln, prev_col, _, _ = self.loc  # should be 0, 0 but in case someone inserts some garbage before
+
+    ln, col = next_find(self.root._lines, prev_ln, prev_col, ln, col, 'if')  # must be there
+
+    return fstloc(ln, col, end_ln, end_col)
+
+
+def loc_decorator(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
+    """Location `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `_decorator_list` decorator expression including the
+    leading `@` (which is not included in the location of the expression itself). We have a whole function for this
+    because the `@` may not be on the same line as the decorator expression.
+
+    **Note:** This function is explicitly safe to use from `FST.bloc` only with `pars=False`.
+
+    **WARNING:** `idx` must be non-negative.
+    """
+
+    # assert isinstance(self.a, (FunctionDef, AsyncFunctionDef, ClassDef, _decorator_list))
+
+    ast = self.a
+    lines = self.root._lines
+    decorator_list = ast.decorator_list
+
+    ln, col, end_ln, end_col = decorator_list[idx].f.pars() if pars else decorator_list[idx].f.loc
+
+    if m := _re_deco_start.match(lines[ln]):  # if '@' is on the line expected preceded by only space then we are done, use column of '@'
+        return fstloc(ln, m.end() - 1, end_ln, end_col)  # m.end() instead of col because could come from a line continuation and '@' not be at same column as self
+
+    ln, col = prev_find(lines, 0, 0, ln, col, '@')  # we can use start at (0, 0) because we know '@' must start a line
 
     return fstloc(ln, col, end_ln, end_col)
 

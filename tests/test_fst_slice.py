@@ -4539,6 +4539,12 @@ class cls:
         self.assertEqual('{1:a, 2:b, 1:a}', f.put_slice(g, 'end').src)
         f.verify()
 
+        # decorators
+
+
+        # TODO: THIS!
+
+
         # comprehensions
 
         self.assertEqual('for i in i', g := (f := FST('[_ for i in i for j in j for k in k]').get_slice(0, 2, 'generators')).get_slice(0, 1).src)

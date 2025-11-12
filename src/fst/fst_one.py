@@ -112,6 +112,7 @@ from .asttypes import (
     _ExceptHandlers,
     _match_cases,
     _Assign_targets,
+    _decorator_list,
     _comprehensions,
     _comprehension_ifs,
     _aliases,
@@ -570,29 +571,6 @@ def _get_one_JoinedStr_TemplateStr_values(
     return ret
 
 
-# ......................................................................................................................
-
-def _get_one(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
-    """Copy or cut (if possible) a node or non-node from a field of `self`."""
-
-    if not (handler := _GET_ONE_HANDLERS.get((self.a.__class__, field))):
-        raise NodeError(f"cannot get from {self.a.__class__.__name__}{f'.{field}' if field else ''}")
-
-    ret = handler(self, idx, field, cut, options)
-
-    if handler is _get_one_stmtish:  # this one does its own cut (because of evil semicolons)
-        return ret
-
-    if cut:
-        options = options.copy()
-        options['raw'] = False
-        options['to'] = None
-
-        self._put_one(None, idx, field, options)
-
-    return ret
-
-
 _GET_ONE_HANDLERS = {
     (Module, 'body'):                     _get_one_stmtish,  # stmt*
     (Interactive, 'body'):                _get_one_stmtish,  # stmt*
@@ -784,6 +762,7 @@ _GET_ONE_HANDLERS = {
     (_ExceptHandlers, 'handlers'):        _get_one_stmtish,  # ExceptHandler*
     (_match_cases, 'cases'):              _get_one_stmtish,  # match_case*
     (_Assign_targets, 'targets'):         _get_one_default,  # expr*
+    (_decorator_list, 'decorator_list'):  _get_one_default,  # expr*
     (_comprehensions, 'generators'):      _get_one_default,  # comprehension*
     (_comprehension_ifs, 'ifs'):          _get_one_default,  # expr*
     (_aliases, 'names'):                  _get_one_default,  # alias*
@@ -810,6 +789,7 @@ _GET_ONE_HANDLERS = {
     # (AsyncWith, 'type_comment'):          (),  # string?
     # (arg, 'type_comment'):                (),  # string?
 }
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # put
@@ -2926,70 +2906,6 @@ def _one_info_loc_prim_self(self: fst.FST, static: onestatic, idx: int | None, f
     return oneinfo('', None, self.loc)
 
 
-# ......................................................................................................................
-
-def _put_one(
-    self: fst.FST, code: _PutOneCode, idx: int | None, field: str, options: Mapping[str, Any]
-) -> fst.FST | None:  # -> Self or reparsed Self or could disappear due to raw
-    """Put new, replace or delete a node (or limited non-node) to a field of `self`.
-
-    **Parameters:**
-    - `code`: The code to put in the form of an `FST`, an `AST`, a string of source or a list of lines of source. If
-        is `None` then will attempt to remove optional field or delete node from a mutable body list of nodes using
-        slice operations.
-    - `idx`: The index in the body list of the field to put, or `None` if is a standalone node.
-    - `field`: The `AST` field to modify.
-    - `options`: See `FST.options()`.
-    """
-
-    if code is self.root:  # don't allow own root to be put to self
-        raise ValueError('circular put detected')
-
-    ast = self.a
-    child = getattr(self.a, field) if field else None
-    raw = fst.FST.get_option('raw', options)
-    to = options.get('to')
-    nonraw_exc = None
-
-    sliceable, handler, static = _PUT_ONE_HANDLERS.get((ast.__class__, field), (False, None, None))
-
-    if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementishs and combined mapping fields
-        # we need to fixup index here explicitly to get an error if it is out of bounds because slice index fixups don't error but just limit it to [0..len(body))
-        idx = _fixup_one_index(len(child if field else ast.ops if isinstance(ast, Compare) else ast.keys), idx)  # field will be '' only for Dict, MatchMapping (which both have .keys), or Compare for .ops
-
-        new_self = self._put_slice(code, idx, idx + 1, field, True, options)
-
-        return None if code is None or not field else getattr(new_self.a, field)[idx].f  # guaranteed to be there if code is not None because was just replacement
-
-    if raw is not True:
-        try:
-            if to:
-                raise NodeError(f"cannot put with 'to' to {self.a.__class__.__name__}"
-                                f"{f'.{field}' if field else ''} without 'raw'", rawable=True)
-
-            if not handler:
-                raise NodeError(f"cannot {'delete' if code is None else 'replace'} {ast.__class__.__name__}"
-                                f"{f'.{field}' if field else ' combined fields'}", rawable=True)
-
-            with self._modifying(field):
-                return handler(self, code, idx, field, child, static, options)
-
-        except (NodeError, SyntaxError, NotImplementedError) as exc:
-            if not raw or (isinstance(exc, NodeError) and not exc.rawable):
-                raise
-
-            nonraw_exc = exc
-
-    with self._modifying(field, True):
-        try:
-            return _put_one_raw(self, code, idx, field, child, static, options)
-
-        except Exception as raw_exc:
-            raw_exc.__context__ = nonraw_exc
-
-            raise raw_exc
-
-
 _PUT_ONE_HANDLERS = {
     (Module, 'body'):                     (True,  None, None),  # stmt*  - all stmtishs have sliceable True and handler None to force always use slice operation (because of evil semicolons handled there)
     (Interactive, 'body'):                (True,  None, None),  # stmt*
@@ -3179,7 +3095,10 @@ _PUT_ONE_HANDLERS = {
     (TypeVarTuple, 'name'):               (False, _put_one_identifier_required, onestatic(_one_info_TypeVarTuple_name, _restrict_default, code_as=code_as_identifier)),  # identifier
     (TypeVarTuple, 'default_value'):      (False, _put_one_exprish_optional, onestatic(_one_info_TypeVarTuple_default_value, _restrict_default)),  # expr?
 
+    (_ExceptHandlers, 'handlers'):        (True,  None, None),  # stmt*,  # ExceptHandler*
+    (_match_cases, 'cases'):              (True,  None, None),  # stmt*,  # match_case*
     (_Assign_targets, 'targets'):         (True,  _put_one_exprish_required, _onestatic_target),  # expr*
+    (_decorator_list, 'decorator_list'):  (True,  _put_one_exprish_required, _onestatic_expr_required),  # expr*
     (_comprehensions, 'generators'):      (True,  _put_one_exprish_required, _onestatic_comprehension_required),  # comprehension*
     (_comprehension_ifs, 'ifs'):          (True,  _put_one_exprish_required, _onestatic_expr_required),  # expr*
     (_aliases, 'names'):                  (True,  _put_one_exprish_required, _onestatic_alias_required),  # alias*
@@ -3207,7 +3126,8 @@ _PUT_ONE_HANDLERS = {
     # (arg, 'type_comment'):                (),  # string?
 }
 
-# ......................................................................................................................
+
+# ----------------------------------------------------------------------------------------------------------------------
 # put raw
 
 def _put_one_raw(
@@ -3324,3 +3244,89 @@ def _put_one_raw(
     end_ln, end_col = parent._reparse_raw(put_lines, ln, col, end_ln, end_col)
 
     return root.find_in_loc(ln, col, end_ln, end_col)  # parent should stay same MOST of the time, `root` instead of `self` because some changes may propagate farther up the tree, like 'elif' -> 'else'
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# "public"
+
+def _get_one(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
+    """Copy or cut (if possible) a node or non-node from a field of `self`."""
+
+    if not (handler := _GET_ONE_HANDLERS.get((self.a.__class__, field))):
+        raise NodeError(f"cannot get from {self.a.__class__.__name__}{f'.{field}' if field else ''}")
+
+    ret = handler(self, idx, field, cut, options)
+
+    if handler is _get_one_stmtish:  # this one does its own cut (because of evil semicolons)
+        return ret
+
+    if cut:
+        options = options.copy()
+        options['raw'] = False
+        options['to'] = None
+
+        self._put_one(None, idx, field, options)
+
+    return ret
+
+
+def _put_one(
+    self: fst.FST, code: _PutOneCode, idx: int | None, field: str, options: Mapping[str, Any]
+) -> fst.FST | None:  # -> Self or reparsed Self or could disappear due to raw
+    """Put new, replace or delete a node (or limited non-node) to a field of `self`.
+
+    **Parameters:**
+    - `code`: The code to put in the form of an `FST`, an `AST`, a string of source or a list of lines of source. If
+        is `None` then will attempt to remove optional field or delete node from a mutable body list of nodes using
+        slice operations.
+    - `idx`: The index in the body list of the field to put, or `None` if is a standalone node.
+    - `field`: The `AST` field to modify.
+    - `options`: See `FST.options()`.
+    """
+
+    if code is self.root:  # don't allow own root to be put to self
+        raise ValueError('circular put detected')
+
+    ast = self.a
+    child = getattr(self.a, field) if field else None
+    raw = fst.FST.get_option('raw', options)
+    to = options.get('to')
+    nonraw_exc = None
+
+    sliceable, handler, static = _PUT_ONE_HANDLERS.get((ast.__class__, field), (False, None, None))
+
+    if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementishs and combined mapping fields
+        # we need to fixup index here explicitly to get an error if it is out of bounds because slice index fixups don't error but just limit it to [0..len(body))
+        idx = _fixup_one_index(len(child if field else ast.ops if isinstance(ast, Compare) else ast.keys), idx)  # field will be '' only for Dict, MatchMapping (which both have .keys), or Compare for .ops
+
+        new_self = self._put_slice(code, idx, idx + 1, field, True, options)
+
+        return None if code is None or not field else getattr(new_self.a, field)[idx].f  # guaranteed to be there if code is not None because was just replacement
+
+    if raw is not True:
+        try:
+            if to:
+                raise NodeError(f"cannot put with 'to' to {self.a.__class__.__name__}"
+                                f"{f'.{field}' if field else ''} without 'raw'", rawable=True)
+
+            if not handler:
+                raise NodeError(f"cannot {'delete' if code is None else 'replace'} {ast.__class__.__name__}"
+                                f"{f'.{field}' if field else ' combined fields'}", rawable=True)
+
+            with self._modifying(field):
+                return handler(self, code, idx, field, child, static, options)
+
+        except (NodeError, SyntaxError, NotImplementedError) as exc:
+            if not raw or (isinstance(exc, NodeError) and not exc.rawable):
+                raise
+
+            nonraw_exc = exc
+
+    with self._modifying(field, True):
+        try:
+            return _put_one_raw(self, code, idx, field, child, static, options)
+
+        except Exception as raw_exc:
+            raw_exc.__context__ = nonraw_exc
+
+            raise raw_exc

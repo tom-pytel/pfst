@@ -110,7 +110,7 @@ class BaseCases(dict):
             nonlocal case_src_idx, lineno
 
             prev_case_src_idx = case_src_idx
-            case_src_idx = src.index('\n(', prev_case_src_idx) + 1
+            case_src_idx = src.index("\n\n('", prev_case_src_idx) + 2  # WARNING! this special string may need to be checked better as test case source may eventually contain something that looks like it1
             lineno += src.count('\n', prev_case_src_idx, case_src_idx)
 
             return lineno

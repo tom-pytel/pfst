@@ -583,6 +583,7 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
     sep: str = ',',
     self_tail_sep: bool | Literal[0, 1] | None = None,
     locfunc: _LocFunc | None = None,
+    allow_redent: bool = True,
 ) -> tuple:
     r"""Indent a sequence source and put it to a location in existing sequence `self`. If `fst_` is `None` then will
     just delete in the same way that a cut operation would.
@@ -624,6 +625,8 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
     - `locfunc`: Location function ONLY for single-element non-`sep` sequence. Used to provide full location for
         elements of `comprehension.ifs` to include the leading `if` which is not part of the expression location. If
         `None` then standard location is used.
+    - `allow_redent`: Whether to allow re-indentation of multiline elements to current indentation of multiline elements
+        or another indentation level if that cannot be determined. Meant to allow avoid redent for decorators.
     **Returns:**
     - `param`: A parameter to be passed to `put_slice_sep_end(param)` to finish the put.
     """
@@ -666,7 +669,7 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
 
     # maybe redent fst_ elements to match self element indentation
 
-    if not is_del and len(fst_._lines) > 1:
+    if not is_del and len(fst_._lines) > 1 and allow_redent:
         if (elts_indent := get_indent_elts()) is not None:  # we only do this if we have concrete indentation for elements of self
             ast_ = fst_.a
             fst_indent = _get_element_indent(fst_,
@@ -970,6 +973,7 @@ def put_slice_nosep(
     options: Mapping[str, Any],
     field: str,
     locfunc: _LocFunc | None = None,
+    allow_redent: bool = True,
 ) -> None:
     r"""Indent a sequence source without separators and put it to a location in existing sequence `self`. If `fst_` is
     `None` then will just delete in the same way that a cut operation would.
@@ -992,7 +996,10 @@ def put_slice_nosep(
     - `locfunc`: Location function ONLY for single-element non-`sep` sequence. Used to provide full location for
         elements of `comprehension.ifs` to include the leading `if` which is not part of the expression location. If
         `None` then standard location is used.
+    - `allow_redent`: Whether to allow re-indentation of multiline elements to current indentation of multiline elements
+        or another indentation level if that cannot be determined. Meant to allow avoid redent for decorators.
     """
 
     put_slice_sep_begin(self, start, stop, fst_, fst_first, fst_last, -1,
-                        bound_ln, bound_col, bound_end_ln, bound_end_col, options, field, None, '', None, locfunc)
+                        bound_ln, bound_col, bound_end_ln, bound_end_col, options, field, None, '', None,
+                        locfunc, allow_redent)
