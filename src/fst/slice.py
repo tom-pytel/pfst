@@ -687,7 +687,7 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
     if not is_ins:  # replace or delete, location is element span
         loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body2, locfunc)
 
-    else:  # insert, figure out location
+    else:  # insert, figure out location, TODO: the `ins_ln` part is still under constrnction
         if ins_ln is not None:  # if an explicit insert line is passed then set insert location according to that
             if ins_ln <= bound_ln:
                 loc_first = fstloc(bound_ln, bound_col, bound_ln, bound_col)
@@ -749,7 +749,7 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
                     put_col = bound_col
                     self_tail_sep = None
 
-    # insert or replace
+    # insert or replace, this is the bit that deals with tricky leading and trailing newlines and indentation
 
     else:
         copy_ln, copy_col, _, _ = copy_loc
@@ -786,10 +786,12 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
                 fst_._put_src(' ', 0, 0, 0, 0, False)
 
         if not put_lines[-1]:  # slice put ends with pure newline?
-            if not re_empty_space.match(lines[put_end_ln], put_end_col):  # something at end of put end line?
+            line_put_end = lines[put_end_ln]
+
+            if not re_empty_space.match(line_put_end, put_end_col):  # something at end of put end line?
                 if put_end_col:  # put doesn't end exactly on a brand new line so there is stuff to indent on line that's going to the next line
                     if is_last and put_end_ln == self.end_ln:  # just the end of the container, smaller of start of its line or open indent
-                        post_indent = _shorter(re_empty_line_start.match(lines[put_end_ln]).group(0),
+                        post_indent = _shorter(re_empty_line_start.match(line_put_end).group(0),
                                                self_indent + ' ' * (self.col - len(self_indent)))
                     elif is_ins_ln and not (put_col or put_end_ln != put_ln):  # don't insert to zero-length location at exact start of line
                         put_end_col = copy_loc.end_col
@@ -798,11 +800,11 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
                     else:
                         post_indent = get_indent_elts()
 
-            else:  # nothing (or whitespace) at end of put end line
-                if put_end_ln < bound_end_ln:  # only do this if we are not at end of container
+            elif put_end_ln < bound_end_ln:  # nothing (or whitespace) at end of put end line, only do this if we are not at end line of container
+                if put_end_col or not re_empty_space.match(line_put_end):  # end of put not start of next line or next line not empty
                     fst_._put_src(None, l := len(put_lines) - 2, len(put_lines[l]), l + 1, 0, True)  # remove fst_ trailing newline to not duplicate and remove trailing space from self if present
 
-                    if put_end_col != (ec := len(lines[put_end_ln])):
+                    if put_end_col != (ec := len(line_put_end)):
                         self._put_src(None, put_end_ln, put_end_col, put_end_ln, ec, True)
 
         elif not put_end_col and (put_col or put_end_ln != put_ln):  # we are putting slice before an element which starts a newline and slice doesn't have trailing newline (but not insert to zero-length location at exact start of line)

@@ -11454,6 +11454,281 @@ _decorator_list - ROOT 0,0..2,7
    0] Name 'a' Load - 0,1..0,2
    1] Name 'b' Load - 2,4..2,5
 '''),
+
+('', None, None, 'decorator_list', {}, (None, r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+@c
+def f(): pass
+'''),
+r'''def f(): pass''', r'''
+FunctionDef - ROOT 0,0..0,13
+  .name 'f'
+  .body[1]
+   0] Pass - 0,9..0,13
+''', r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+@c
+''', r'''
+_decorator_list - ROOT 0,0..7,2
+  .decorator_list[3]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 3,1..3,2
+   2] Name 'c' Load - 7,1..7,2
+'''),
+
+('', 0, 1, 'decorator_list', {}, (None, r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+@c
+def f(): pass
+'''), r'''
+
+# pre
+@b  # line
+
+# post
+
+@c
+def f(): pass
+''', r'''
+FunctionDef - ROOT 7,0..7,13
+  .name 'f'
+  .body[1]
+   0] Pass - 7,9..7,13
+  .decorator_list[2]
+   0] Name 'b' Load - 2,1..2,2
+   1] Name 'c' Load - 6,1..6,2
+''',
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('', 1, 2, 'decorator_list', {}, (None, r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+@c
+def f(): pass
+'''), r'''
+@a
+
+
+# post
+
+@c
+def f(): pass
+''', r'''
+FunctionDef - ROOT 6,0..6,13
+  .name 'f'
+  .body[1]
+   0] Pass - 6,9..6,13
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'c' Load - 5,1..5,2
+''', r'''
+# pre
+@b  # line
+''', r'''
+_decorator_list - ROOT 0,0..1,10
+  .decorator_list[1]
+   0] Name 'b' Load - 1,1..1,2
+'''),
+
+('', 1, 2, 'decorator_list', {'trivia': ('all+', 'all+')}, (None, r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+@c
+def f(): pass
+'''), r'''
+@a
+@c
+def f(): pass
+''', r'''
+FunctionDef - ROOT 2,0..2,13
+  .name 'f'
+  .body[1]
+   0] Pass - 2,9..2,13
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'c' Load - 1,1..1,2
+''', r'''
+
+# pre
+@b  # line
+
+# post
+
+''', r'''
+_decorator_list - ROOT 0,0..5,0
+  .decorator_list[1]
+   0] Name 'b' Load - 2,1..2,2
+'''),
+
+('', 2, 3, 'decorator_list', {}, (None, r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+@c
+def f(): pass
+'''), r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+def f(): pass
+''', r'''
+FunctionDef - ROOT 7,0..7,13
+  .name 'f'
+  .body[1]
+   0] Pass - 7,9..7,13
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 3,1..3,2
+''',
+r'''@c''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'c' Load - 0,1..0,2
+'''),
+
+('', 2, 3, 'decorator_list', {'trivia': False}, (None, r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+@c
+def f(): pass
+'''), r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+def f(): pass
+''', r'''
+FunctionDef - ROOT 7,0..7,13
+  .name 'f'
+  .body[1]
+   0] Pass - 7,9..7,13
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 3,1..3,2
+''',
+r'''@c''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'c' Load - 0,1..0,2
+'''),
+
+('', 0, 2, 'decorator_list', {'trivia': (None, 'all+')}, (None, r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+@c
+def f(): pass
+'''), r'''
+@c
+def f(): pass
+''', r'''
+FunctionDef - ROOT 1,0..1,13
+  .name 'f'
+  .body[1]
+   0] Pass - 1,9..1,13
+  .decorator_list[1]
+   0] Name 'c' Load - 0,1..0,2
+''', r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+''', r'''
+_decorator_list - ROOT 0,0..6,0
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 3,1..3,2
+'''),
+
+('', 1, 3, 'decorator_list', {'trivia': 'all+'}, (None, r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+@c
+def f(): pass
+'''), r'''
+@a
+def f(): pass
+''', r'''
+FunctionDef - ROOT 1,0..1,13
+  .name 'f'
+  .body[1]
+   0] Pass - 1,9..1,13
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+''', r'''
+
+# pre
+@b  # line
+
+# post
+
+@c
+''', r'''
+_decorator_list - ROOT 0,0..6,2
+  .decorator_list[2]
+   0] Name 'b' Load - 2,1..2,2
+   1] Name 'c' Load - 6,1..6,2
+'''),
 ],
 
 'decorator_list_newlines': [  # ................................................................................

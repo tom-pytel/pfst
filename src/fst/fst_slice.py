@@ -422,14 +422,16 @@ def _maybe_fix_decorator_list_trailing_newline(self: fst.FST, old_last_line: str
     that wasn't there before, and if so then remove it.
 
     **Returns:**
-    - `bool`: `True` if self is `_decorator_list` SPECIAL SLICE, otherwise `False`.
+    - `bool`: `True` if self is `_decorator_list` SPECIAL SLICE, otherwise `False`. NOT whether a fix was applied or
+        not.
     """
 
     ast = self.a
-    lines = self.root._lines
 
     if not isinstance(ast, _decorator_list):
         return False
+
+    lines = self.root._lines
 
     if not (l := lines[-1]) and l is not old_last_line and len(lines) > 1:  # VERY HACKY check to see if last newline is original, is a bistr so will not be interned empty string, old_last_line must be EXACTLY previous last line and not a copy
         del lines[-1]
@@ -2924,16 +2926,15 @@ def _put_slice_decorator_list(
         if _maybe_fix_decorator_list_trailing_newline(self, old_last_line):
             pass  # noop
 
-        elif old_body_empty:  # inserting new decorators to previously nonexistent ones needs fixing
-            if bound_ln == old_loc.ln:  # if inserted right at start of node then it will not have been offset correctly because hierarchically the decorators are INSIDE this node even though syntactically they preced it completely
-                ast.lineno += self.end_ln - old_loc.end_ln  # the end will have been offset correctly so we use that as the delta that we need to apply to start
+        elif old_body_empty and bound_ln == old_loc.ln:  # if inserted to nonexistent decorators right at start of node line then the node will not have been offset correctly because hierarchically the decorators are INSIDE this node even though syntactically they precede it
+            ast.lineno += self.end_ln - old_loc.end_ln  # the end will have been offset correctly so we use that as the delta that we need to apply to start
 
-                self._touch()
+            self._touch()
 
-            elif not old_first_line:  # bound was at end of previous line and if that line was empty string then it will have been eaten and we need to put it back (whitespace string will have been handled correctly)
-                lines.insert(bound_ln, bistr(''))
+        elif not old_first_line and lines[bound_ln] is not old_first_line:  # bound was at end of previous line and if that line was empty string then it will been eaten and we need to put it back (whitespace string will have been handled correctly)
+            lines.insert(bound_ln, bistr(''))
 
-                self.root._offset(bound_ln, 0, 1, 0)
+            self.root._offset(bound_ln, 0, 1, 0)
 
 
 def _put_slice_generators(
@@ -3444,8 +3445,7 @@ def _loc_slice_raw_put_decorator_list(
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
     decorator_list = self.a.decorator_list
     start, stop = _fixup_slice_index_for_raw(len(decorator_list), start, stop)
-    ln, col, _, _ = decorator_list[start].f.loc
-    ln, col = prev_find(self.root._lines, 0, 0, ln, col, '@')  # we can use '0, 0' because we know "@" starts on a newline
+    ln, col, _, _ = loc_decorator(self, start, False)
     _, _, end_ln, end_col = decorator_list[stop - 1].f.pars()
 
     return ln, col, end_ln, end_col, start, stop, decorator_list

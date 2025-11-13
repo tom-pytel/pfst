@@ -4541,9 +4541,9 @@ class cls:
 
         # decorators
 
-
-        # TODO: THIS!
-
+        self.assertEqual('@a', g := (f := FST('@a\n@b\n@c\nclass cls: pass').get_slice(0, 2, 'decorator_list')).get_slice(0, 1).src)
+        self.assertEqual('@a\n@b\n@a', f.put_slice(g, 'end').src)
+        f.verify()
 
         # comprehensions
 
