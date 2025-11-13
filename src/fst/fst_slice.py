@@ -86,7 +86,6 @@ from .common import (
     astfield,
     fstloc,
     next_frag,
-    prev_find,
     next_find,
     next_find_re,
 )
@@ -149,7 +148,7 @@ from .slice import (
     put_slice_nosep,
 )
 
-__all__ = ['_get_slice', '_put_slice', 'is_slice_compatible']
+__all__ = ['_get_slice', '_put_slice']
 
 
 # * Keep src same.
@@ -3832,89 +3831,3 @@ def _put_slice(
             raw_exc.__context__ = nonraw_exc
 
             raise raw_exc
-
-
-def is_slice_compatible(sig1: tuple[type[AST], str], sig2: tuple[type[AST], str]) -> bool:  # sig = (AST type, field)
-    """Whether slices are compatible between these type / fields."""
-
-    type_contents = _SLICE_COMAPTIBILITY.get(sig1)
-
-    return type_contents is not None and type_contents == _SLICE_COMAPTIBILITY.get(sig2)
-
-
-_SLICE_COMAPTIBILITY = {
-    (Module, 'body'):                     'stmt*',
-    (Interactive, 'body'):                'stmt*',
-    (FunctionDef, 'body'):                'stmt*',
-    (AsyncFunctionDef, 'body'):           'stmt*',
-    (ClassDef, 'body'):                   'stmt*',
-    (For, 'body'):                        'stmt*',
-    (For, 'orelse'):                      'stmt*',
-    (AsyncFor, 'body'):                   'stmt*',
-    (AsyncFor, 'orelse'):                 'stmt*',
-    (While, 'body'):                      'stmt*',
-    (While, 'orelse'):                    'stmt*',
-    (If, 'body'):                         'stmt*',
-    (If, 'orelse'):                       'stmt*',
-    (With, 'body'):                       'stmt*',
-    (AsyncWith, 'body'):                  'stmt*',
-    (Try, 'body'):                        'stmt*',
-    (Try, 'orelse'):                      'stmt*',
-    (Try, 'finalbody'):                   'stmt*',
-    (TryStar, 'body'):                    'stmt*',
-    (TryStar, 'orelse'):                  'stmt*',
-    (TryStar, 'finalbody'):               'stmt*',
-    (ExceptHandler, 'body'):              'stmt*',
-    (match_case, 'body'):                 'stmt*',
-
-    (Match, 'cases'):                     'match_case*',
-    (Try, 'handlers'):                    'excepthandler*',
-    (TryStar, 'handlers'):                'excepthandlerstar*',
-
-    (Dict, ''):                           'expr:expr*',
-
-    (Set, 'elts'):                        'expr*',
-    (List, 'elts'):                       'expr*',
-    (Tuple, 'elts'):                      'expr*',
-
-    # (FunctionDef, 'decorator_list'):      'expr*',
-    # (AsyncFunctionDef, 'decorator_list'): 'expr*',
-    # (ClassDef, 'decorator_list'):         'expr*',
-    # (ClassDef, 'bases'):                  'expr*',
-    # (Delete, 'targets'):                  'expr*',
-    # (Assign, 'targets'):                  'expr*',
-    # (BoolOp, 'values'):                   'expr*',
-    # (Compare, ''):                        'expr*',
-    # (Call, 'args'):                       'expr*',
-    # (comprehension, 'ifs'):               'expr*',
-
-    # (ListComp, 'generators'):             'comprehension*',
-    # (SetComp, 'generators'):              'comprehension*',
-    # (DictComp, 'generators'):             'comprehension*',
-    # (GeneratorExp, 'generators'):         'comprehension*',
-
-    # (ClassDef, 'keywords'):               'keyword*',
-    # (Call, 'keywords'):                   'keyword*',
-
-    # (Import, 'names'):                    'alias*',
-    # (ImportFrom, 'names'):                'alias*',
-
-    # (With, 'items'):                      'withitem*',
-    # (AsyncWith, 'items'):                 'withitem*',
-
-    # (MatchSequence, 'patterns'):          'pattern*',
-    # (MatchMapping, ''):                   'expr:pattern*',
-    # (MatchOr, 'patterns'):                'patternor*',
-    # (MatchClass, 'patterns'):             'pattern*',
-
-    # (FunctionDef, 'type_params'):         'type_param*',
-    # (AsyncFunctionDef, 'type_params'):    'type_param*',
-    # (ClassDef, 'type_params'):            'type_param*',
-    # (TypeAlias, 'type_params'):           'type_param*',
-
-    # (Global, 'names'):                    'identifier*',
-    # (Nonlocal, 'names'):                  'identifier*',
-
-    # (JoinedStr, 'values'):                'expr*',
-    # (TemplateStr, 'values'):              'expr*',
-}
