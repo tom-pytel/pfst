@@ -1257,7 +1257,7 @@ class ReputSrc(Fuzzy):
 
 
 class ReputOne(Fuzzy):
-    from fst.fst_one import (
+    from fst.fst_one_put import (
         _PUT_ONE_HANDLERS,
         _put_one_exprish_optional,
         _put_one_identifier_optional,

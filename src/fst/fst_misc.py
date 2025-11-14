@@ -1489,6 +1489,18 @@ def _maybe_fix_arglikes(self: fst.FST, options: Mapping[str, Any]) -> None:
                 f.value.par()  # will be a Starred so we just go for .value
 
 
+def _maybe_fix_elif(self: fst.FST) -> None:
+    """If source at self is an `elif` instead of an `if` then convert it to `if`."""
+
+    # assert isinstance(self.a, If)
+
+    lines = self.root._lines
+    ln, col, _, _ = self.loc
+
+    if lines[ln].startswith('elif', col):
+        self._put_src(None, ln, col, ln, col + 2, False)
+
+
 def _parenthesize_grouping(self: fst.FST, whole: bool = True, *, star_child: bool = True) -> None:
     """Parenthesize anything with non-node grouping parentheses. Just adds text parens around node adjusting parent
     locations but not the node itself.

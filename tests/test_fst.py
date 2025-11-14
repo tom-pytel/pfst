@@ -3307,7 +3307,7 @@ d  # comment3''', f.src)
         f.verify()
 
     def test__maybe_fix_copy(self):
-        from fst.fst_one import _maybe_fix_copy
+        from fst.fst_one_get import _maybe_fix_copy
 
         f = FST.fromsrc('if 1:\n a\nelif 2:\n b')
         fc = f.a.body[0].orelse[0].f.copy()

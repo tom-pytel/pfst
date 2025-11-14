@@ -863,16 +863,6 @@ def _set_end_pos_after_del(self: fst.FST, bound_ln: int, bound_col: int, bound_e
     _set_end_pos_w_maybe_trailing_semicolon(self, end_ln, end_col)
 
 
-def _maybe_fix_elif(self: fst.FST) -> None:
-    # assert isinstance(self.a, If)
-
-    ln, col, _, _ = self.loc
-    lines = self.root._lines
-
-    if lines[ln].startswith('elif', col):
-        self._put_src(None, ln, col, ln, col + 2, False)
-
-
 def _elif_to_else_if(self: fst.FST, docstr: bool | Literal['strict'] = True) -> None:
     """Convert an 'elif something:\\n  ...' to 'else:\\n  if something:\\n    ...'. Make sure to only call on an
     actual `elif`, meaning the lone `If` statement in the parent's `orelse` block which is an actual `elif` and not
@@ -1031,7 +1021,7 @@ def _get_slice_stmtish_old(
         _set_end_pos_after_del(self, block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
 
     if len(asts) == 1 and isinstance(a := asts[0], If):
-        _maybe_fix_elif(a.f)
+        a.f._maybe_fix_elif()
 
     if modifying:
         modifying.success()
