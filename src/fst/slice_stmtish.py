@@ -7,7 +7,6 @@ from __future__ import annotations
 from typing import Any, Literal, Mapping
 
 from . import fst
-from . import fst_slice_get
 
 from .asttypes import (
     ASTS_BLOCK,
@@ -35,7 +34,7 @@ from .astutil import copy_ast
 from .common import astfield, fstloc, next_find, prev_find
 from .code import Code, code_as_stmts, code_as__ExceptHandlers, code_as__match_cases
 from .traverse import prev_bound, next_bound_step, prev_bound_step
-from .fst_misc import get_trivia_params, get_option_overridable
+from .fst_misc import get_trivia_params, get_option_overridable, fixup_slice_indices
 
 # ----------------------------------------------------------------------------------------------------------------------
 # srcedit_old.py
@@ -57,6 +56,8 @@ from .common import (
     next_find,  # noqa: F811
     prev_find,  # noqa: F811
 )
+
+__all__ = ['get_slice_stmtish', 'put_slice_stmtish']
 
 
 class SrcEdit:
@@ -950,7 +951,7 @@ def _get_slice_stmtish_old(
 ) -> fst.FST:
     ast = self.a
     body = getattr(ast, field)
-    start, stop = fst_slice_get._fixup_slice_indices(len(body), start, stop)
+    start, stop = fixup_slice_indices(len(body), start, stop)
 
     if start == stop:
         if field == 'handlers':
@@ -1070,7 +1071,7 @@ def _put_slice_stmtish_old(
         if one and len(put_body) != 1:
             raise ValueError('expecting a single element')
 
-    start, stop = fst_slice_get._fixup_slice_indices(len(body), start, stop)
+    start, stop = fixup_slice_indices(len(body), start, stop)
     slice_len = stop - start
 
     if not slice_len and (not put_fst or (not put_body and len(ls := put_fst._lines) == 1 and not ls[0])):  # deleting empty slice or assigning empty fst to empty slice, noop
@@ -1325,7 +1326,7 @@ def _maybe_del_trailing_newline(self: fst.FST, old_last_line: str, put_fst_end_n
             root._touchall(True, True, False)
 
 
-def _get_slice_stmtish(
+def get_slice_stmtish(
     self: fst.FST,
     start: int | Literal['end'] | None,
     stop: int | None,
@@ -1352,7 +1353,7 @@ def _get_slice_stmtish(
     return fst_
 
 
-def _put_slice_stmtish(
+def put_slice_stmtish(
     self: fst.FST,
     code: Code | None,
     start: int | Literal['end'] | None,

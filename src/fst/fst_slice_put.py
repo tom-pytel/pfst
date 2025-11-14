@@ -127,15 +127,11 @@ from .locations import (
     loc_Global_Nonlocal_names,
 )
 
-from .fst_misc import (
-    get_option_overridable,
-)
-
-from .slice_stmtish import _put_slice_stmtish
+from .fst_misc import get_option_overridable, fixup_slice_indices
+from .slice_stmtish import put_slice_stmtish
 from .slice_exprish import put_slice_sep_begin, put_slice_sep_end, put_slice_nosep
 
 from .fst_slice_get import (
-    _fixup_slice_indices,
     _get_norm_option,
     _bounds_Delete_targets,
     _bounds_Assign_targets,
@@ -842,7 +838,7 @@ def _put_slice_Dict(
     ast = self.a
     body = ast.keys
     body2 = ast.values
-    start, stop = _fixup_slice_indices(len(body), start, stop)
+    start, stop = fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
         return
@@ -888,7 +884,7 @@ def _put_slice_Tuple_elts(
     fst_ = _code_to_slice_seq(self, code, one, options, code_as=code_as_expr_all)
     ast = self.a
     body = ast.elts
-    start, stop = _fixup_slice_indices(len(body), start, stop)
+    start, stop = fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
         return
@@ -950,7 +946,7 @@ def _put_slice_List_elts(
     fst_ = _code_to_slice_seq(self, code, one, options)
     ast = self.a
     body = ast.elts
-    start, stop = _fixup_slice_indices(len(body), start, stop)
+    start, stop = fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
         return
@@ -977,7 +973,7 @@ def _put_slice_Set_elts(
 ) -> None:
     fst_ = _code_to_slice_seq(self, code, one, options)
     body = self.a.elts
-    start, stop = _fixup_slice_indices(len(body), start, stop)
+    start, stop = fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
         return
@@ -1013,7 +1009,7 @@ def _put_slice_Delete_targets(
     ast = self.a
     body = ast.targets
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not fst_:
@@ -1055,7 +1051,7 @@ def _put_slice_Assign_targets(
     fst_ = _code_to_slice__Assign_targets(self, code, one, options)
     body = self.a.targets
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not fst_:
@@ -1087,7 +1083,7 @@ def _put_slice_With_AsyncWith_items(
     ast = self.a
     body = ast.items
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not fst_:
@@ -1130,7 +1126,7 @@ def _put_slice_Import_names(
     ast = self.a
     body = ast.names
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not fst_:
@@ -1177,7 +1173,7 @@ def _put_slice_ImportFrom_names(
     ast = self.a
     body = ast.names
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
     put_star = False
 
@@ -1246,7 +1242,7 @@ def _put_slice_Global_Nonlocal_names(
     ast = self.a
     body = ast.names
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not fst_:
@@ -1355,7 +1351,7 @@ def _put_slice_ClassDef_bases(
     ast = self.a
     body = ast.bases
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not fst_ and not len_slice:
@@ -1430,7 +1426,7 @@ def _put_slice_decorator_list(
     ast = self.a
     body = ast.decorator_list
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not fst_:
@@ -1507,7 +1503,7 @@ def _put_slice_generators(
     ast = self.a
     body = ast.generators
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not fst_:
@@ -1552,7 +1548,7 @@ def _put_slice_comprehension_ifs(
     ast = self.a
     body = ast.ifs
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not fst_ and not len_slice:
@@ -1605,7 +1601,7 @@ def _put_slice_Call_args(
     ast = self.a
     body = ast.args
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if not fst_ and start == stop:
         return
@@ -1645,7 +1641,7 @@ def _put_slice_MatchSequence_patterns(
     # NOTE: we allow multiple MatchStars to be put to the same MatchSequence
     fst_ = _code_to_slice_MatchSequence(self, code, one, options)
     body = self.a.patterns
-    start, stop = _fixup_slice_indices(len(body), start, stop)
+    start, stop = fixup_slice_indices(len(body), start, stop)
 
     if not fst_ and start == stop:
         return
@@ -1676,7 +1672,7 @@ def _put_slice_MatchMapping(
     body = ast.keys
     len_body = len(body)
     body2 = ast.patterns
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if not fst_ and start == stop:
         return
@@ -1725,7 +1721,7 @@ def _put_slice_MatchOr_patterns(
     fst_ = _code_to_slice_MatchOr(self, code, one, options)
     body = self.a.patterns
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
     self_norm = _get_norm_option('norm_self', 'matchor_norm', options)
 
@@ -1775,7 +1771,7 @@ def _put_slice_type_params(
 
     fst_ = _code_to_slice__type_params(self, code, one, options)
     len_body = len(body := (ast := self.a).type_params)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     bound, (name_ln, name_col) = (
@@ -1834,7 +1830,7 @@ def _put_slice__slice(
     static = _SLICE_STATICS[(ast := self.a).__class__]
     fst_ = static.code_to(self, code, one, options)
     len_body = len(body := getattr(ast, field))
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not fst_ and not len_slice:
@@ -1878,33 +1874,33 @@ def _put_slice__slice(
 
 
 _PUT_SLICE_HANDLERS = {
-    (Module, 'body'):                         _put_slice_stmtish,  # stmt*
-    (Interactive, 'body'):                    _put_slice_stmtish,  # stmt*
-    (FunctionDef, 'body'):                    _put_slice_stmtish,  # stmt*
-    (AsyncFunctionDef, 'body'):               _put_slice_stmtish,  # stmt*
-    (ClassDef, 'body'):                       _put_slice_stmtish,  # stmt*
-    (For, 'body'):                            _put_slice_stmtish,  # stmt*
-    (For, 'orelse'):                          _put_slice_stmtish,  # stmt*
-    (AsyncFor, 'body'):                       _put_slice_stmtish,  # stmt*
-    (AsyncFor, 'orelse'):                     _put_slice_stmtish,  # stmt*
-    (While, 'body'):                          _put_slice_stmtish,  # stmt*
-    (While, 'orelse'):                        _put_slice_stmtish,  # stmt*
-    (If, 'body'):                             _put_slice_stmtish,  # stmt*
-    (If, 'orelse'):                           _put_slice_stmtish,  # stmt*
-    (With, 'body'):                           _put_slice_stmtish,  # stmt*
-    (AsyncWith, 'body'):                      _put_slice_stmtish,  # stmt*
-    (Try, 'body'):                            _put_slice_stmtish,  # stmt*
-    (Try, 'orelse'):                          _put_slice_stmtish,  # stmt*
-    (Try, 'finalbody'):                       _put_slice_stmtish,  # stmt*
-    (TryStar, 'body'):                        _put_slice_stmtish,  # stmt*
-    (TryStar, 'orelse'):                      _put_slice_stmtish,  # stmt*
-    (TryStar, 'finalbody'):                   _put_slice_stmtish,  # stmt*
-    (ExceptHandler, 'body'):                  _put_slice_stmtish,  # stmt*
-    (match_case, 'body'):                     _put_slice_stmtish,  # stmt*
+    (Module, 'body'):                         put_slice_stmtish,  # stmt*
+    (Interactive, 'body'):                    put_slice_stmtish,  # stmt*
+    (FunctionDef, 'body'):                    put_slice_stmtish,  # stmt*
+    (AsyncFunctionDef, 'body'):               put_slice_stmtish,  # stmt*
+    (ClassDef, 'body'):                       put_slice_stmtish,  # stmt*
+    (For, 'body'):                            put_slice_stmtish,  # stmt*
+    (For, 'orelse'):                          put_slice_stmtish,  # stmt*
+    (AsyncFor, 'body'):                       put_slice_stmtish,  # stmt*
+    (AsyncFor, 'orelse'):                     put_slice_stmtish,  # stmt*
+    (While, 'body'):                          put_slice_stmtish,  # stmt*
+    (While, 'orelse'):                        put_slice_stmtish,  # stmt*
+    (If, 'body'):                             put_slice_stmtish,  # stmt*
+    (If, 'orelse'):                           put_slice_stmtish,  # stmt*
+    (With, 'body'):                           put_slice_stmtish,  # stmt*
+    (AsyncWith, 'body'):                      put_slice_stmtish,  # stmt*
+    (Try, 'body'):                            put_slice_stmtish,  # stmt*
+    (Try, 'orelse'):                          put_slice_stmtish,  # stmt*
+    (Try, 'finalbody'):                       put_slice_stmtish,  # stmt*
+    (TryStar, 'body'):                        put_slice_stmtish,  # stmt*
+    (TryStar, 'orelse'):                      put_slice_stmtish,  # stmt*
+    (TryStar, 'finalbody'):                   put_slice_stmtish,  # stmt*
+    (ExceptHandler, 'body'):                  put_slice_stmtish,  # stmt*
+    (match_case, 'body'):                     put_slice_stmtish,  # stmt*
 
-    (Match, 'cases'):                         _put_slice_stmtish,  # match_case*
-    (Try, 'handlers'):                        _put_slice_stmtish,  # excepthandler*
-    (TryStar, 'handlers'):                    _put_slice_stmtish,  # excepthandlerstar*
+    (Match, 'cases'):                         put_slice_stmtish,  # match_case*
+    (Try, 'handlers'):                        put_slice_stmtish,  # excepthandler*
+    (TryStar, 'handlers'):                    put_slice_stmtish,  # excepthandlerstar*
 
     (Dict, ''):                               _put_slice_Dict,  # key:value*
 
@@ -1953,8 +1949,8 @@ _PUT_SLICE_HANDLERS = {
     (JoinedStr, 'values'):                    _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (TemplateStr, 'values'):                  _put_slice_NOT_IMPLEMENTED_YET,  # expr*
 
-    (_ExceptHandlers, 'handlers'):            _put_slice_stmtish,  # ExceptHandler*
-    (_match_cases, 'cases'):                  _put_slice_stmtish,  # match_case*
+    (_ExceptHandlers, 'handlers'):            put_slice_stmtish,  # ExceptHandler*
+    (_match_cases, 'cases'):                  put_slice_stmtish,  # match_case*
     (_Assign_targets, 'targets'):             _put_slice__slice,  # expr*
     (_decorator_list, 'decorator_list'):      _put_slice_decorator_list,  # expr*
     (_comprehensions, 'generators'):          _put_slice_generators,  # comprehensions*
@@ -2070,7 +2066,7 @@ _LOC_SLICE_RAW_PUT_FUNCS = {
 
 
 def _fixup_slice_index_for_raw(len_: int, start: int, stop: int) -> tuple[int, int]:
-    start, stop = _fixup_slice_indices(len_, start, stop)
+    start, stop = fixup_slice_indices(len_, start, stop)
 
     if start == stop:
         raise ValueError('cannot insert in raw slice put')

@@ -1540,11 +1540,7 @@ match a:
             ast = None
 
             try:
-                ast = px.parse(src, mode)
-
-                if px.get_special_parse_mode(ast):  # this tells us if it is a SPECIAL SLICE, which are not handled as input to `code_as_all()`  TODO: remove this check once ExceptHandler and match_case special slices moved from Module to their own _slice AST classes
-                    continue
-
+                ast  = px.parse(src, mode)
                 astc = copy_ast(ast)
                 fst  = code_as_all(ast)
 

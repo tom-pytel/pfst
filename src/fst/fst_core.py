@@ -82,6 +82,7 @@ from .asttypes import (
     type_param,
     TemplateStr,
     Interpolation,
+    _slice,
 )
 
 from .astutil import bistr, syntax_ordered_children
@@ -101,8 +102,6 @@ from .common import (
     next_find,
     prev_find,
 )
-
-from .parsex import get_special_parse_mode
 
 from .locations import (
     loc_Call_pars,
@@ -698,10 +697,10 @@ def _is_special_slice(self: fst.FST) -> bool:
 
     ast = self.a
 
-    if get_special_parse_mode(ast):
+    if isinstance(ast, _slice):
         return True
 
-    if isinstance(ast, Set):
+    elif isinstance(ast, Set):
         if not ast.elts:
             return True
 
@@ -1240,10 +1239,7 @@ def _get_parse_mode(self: fst.FST) -> str | type[AST] | None:
 
     ast = self.a
 
-    if mode := get_special_parse_mode(ast):
-        return mode
-
-    # now we check the cases that need source code
+    # check the cases that need source code
 
     if isinstance(ast, Tuple) and (elts := ast.elts):
         if isinstance(e0 := elts[0], Starred):

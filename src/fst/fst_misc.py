@@ -16,35 +16,91 @@ from . import fst
 from .asttypes import (
     ASTS_BLOCK,
     AST,
+    AnnAssign,
+    Assert,
+    Assign,
+    AsyncFor,
+    AsyncFunctionDef,
+    AsyncWith,
+    Attribute,
+    AugAssign,
+    Await,
+    BoolOp,
     Call,
+    ClassDef,
+    Compare,
     Constant,
+    Delete,
     Dict,
     ExceptHandler,
     Expr,
+    Expression,
+    For,
+    FormattedValue,
+    FunctionDef,
     GeneratorExp,
+    Global,
     If,
+    Import,
+    ImportFrom,
+    Interactive,
+    JoinedStr,
+    Lambda,
     List,
+    ListComp,
     Load,
+    Match,
+    MatchAs,
     MatchClass,
+    MatchMapping,
+    MatchOr,
     MatchSequence,
     MatchSingleton,
     MatchValue,
+    Module,
     Name,
     NamedExpr,
+    Nonlocal,
+    Raise,
+    Return,
     Set,
+    SetComp,
     Slice,
     Starred,
+    Subscript,
+    Try,
     Tuple,
+    UnaryOp,
+    While,
+    With,
+    Yield,
+    YieldFrom,
+    alias,
+    arg,
     arguments,
+    comprehension,
+    keyword,
     match_case,
     mod,
     operator,
     stmt,
+    withitem,
+    TryStar,
+    TypeAlias,
+    TemplateStr,
+    Interpolation,
     _ExceptHandlers,
     _match_cases,
+    _Assign_targets,
+    _decorator_list,
+    _comprehensions,
+    _comprehension_ifs,
+    _aliases,
+    _withitems,
+    _type_params,
 )
 
-from .astutil import OPSTR2CLS_AUG, constant, pat_alnum, re_alnumdot_alnum, bistr
+from .astutil import pat_alnum, OPSTR2CLS_AUG, constant, re_alnumdot_alnum, bistr
 
 from .common import (
     NodeError,
@@ -74,7 +130,11 @@ __all__ = [
     'trailing_trivia',
     'get_trivia_params',
     'get_option_overridable',
-    ]
+    'clip_src_loc',
+    'fixup_one_index',
+    'fixup_slice_indices',
+    'fixup_field_body',
+]
 
 
 DUMP_COLOR = nspace(
@@ -118,6 +178,45 @@ DUMP_NO_COLOR = nspace(
         bytes:      ('', ''),
     },
 )
+
+_DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: 'body', Interactive: 'body', ..., Match: 'cases', ..., MatchAs: 'pattern'}
+    ('body',           (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While,
+                        If, With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
+    ('handlers',       (_ExceptHandlers,)),
+    ('cases',          (Match, _match_cases)),
+
+    ('elts',           (Tuple, List, Set)),
+    ('elt',            (GeneratorExp, ListComp, SetComp)),
+    ('targets',        (Delete, _Assign_targets)),
+    ('target',         (comprehension,)),
+    ('decorator_list', (_decorator_list,)),
+    ('patterns',       (MatchSequence, MatchOr, MatchClass)),
+    ('type_params',    (TypeAlias, _type_params)),
+    ('names',          (Import, ImportFrom, Global, Nonlocal, _aliases)),
+    ('items',          (_withitems,)),
+    ('values',         (BoolOp, JoinedStr, TemplateStr)),
+    ('generators',     (_comprehensions,)),
+    ('ifs',            (_comprehension_ifs,)),
+    ('args',           (Call,)),  # potential conflict of default body with put to empty 'set()'
+
+    # special cases, field names here only for checks to succeed, otherwise all handled programatically
+    ('',               (Dict,)),          # key:value
+    ('',               (MatchMapping,)),  # key:pattern
+    ('',               (Compare,)),       # ops:comparators
+
+    # other single value fields
+    ('value',          (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,
+                        FormattedValue, Interpolation, Constant, Attribute, Subscript, Starred, keyword, MatchValue,
+                        MatchSingleton)),
+    ('exc',            (Raise,)),
+    ('test',           (Assert,)),
+    ('operand',        (UnaryOp,)),
+    ('id',             (Name,)),
+    ('arg',            (arg,)),
+    ('name',           (alias,)),
+    ('context_expr',   (withitem,)),
+    ('pattern',        (MatchAs,)),
+] for kls in classes}
 
 _re_stmt_tail          = re.compile(r'\s*(;(?:\s*#.*)?|#.*)')
 _re_one_space_or_end   = re.compile(r'\s|$')
@@ -605,6 +704,91 @@ def get_option_overridable(overridable_option: str, override_option: str, option
         return o
 
     return fst.FST.get_option(overridable_option, options)
+
+
+def clip_src_loc(self: fst.FST, ln: int, col: int, end_ln: int, end_col: int) -> tuple[int, int, int, int]:
+    """Clip location to valid source coordinates and verify that the end does not precede the start."""
+
+    lines = self.root._lines
+    last_ln = len(lines) - 1
+
+    if ln > end_ln or ((end_ln == ln) and col > end_col):  # we do this before clip so that out-of-bounds coordinates are still validated wrt common sense as wrong order may indicate other bugs
+        raise ValueError('end location cannot precede start location')
+
+    if ln < 0:
+        ln = 0
+    elif ln > last_ln:
+        ln = last_ln
+
+    if col < 0:
+        col = 0
+    elif col > (len_line := len(lines[ln])):
+        col = len_line
+
+    if end_ln < 0:
+        end_ln = 0
+    elif end_ln > last_ln:
+        end_ln = last_ln
+
+    if end_col < 0:
+        end_col = 0
+    elif end_col > (len_line := len(lines[end_ln])):
+        end_col = len_line
+
+    return ln, col, end_ln, end_col
+
+
+def fixup_one_index(len_: int, idx: int) -> int:
+    """Convert negative indices in range to len()+idx and verify index in range."""
+
+    if idx < 0:
+        idx += len_
+
+    if not (0 <= idx < len_):
+        raise IndexError('index out of range')
+
+    return idx
+
+
+def fixup_slice_indices(len_: int, start: int | Literal['end'] | None, stop: int | None) -> tuple[int, int]:
+    """Clip slice indices to slice range allowing first negative range to map into positive range. Greater negative
+    indices clip to 0."""
+
+    if start is None:
+        start = 0
+    elif start == 'end' or start > len_:
+        start = len_
+    elif start < 0:
+        start = max(0, start + len_)
+
+    if stop is None or stop > len_:
+        stop = len_
+    elif stop < 0:
+        stop = max(0, stop + len_)
+
+    if stop < start:
+        raise ValueError('start index must precede stop index')
+
+    return start, stop
+
+
+def fixup_field_body(ast: AST, field: str | None, only_list: bool) -> tuple[str, 'AST']:
+    """Get `AST` member list for specified `field` or default if `field=None`."""
+
+    if not field:
+        if (field := _DEFAULT_AST_FIELD.get(ast.__class__, fixup_field_body)) is fixup_field_body:  # fixup_field_body serves as sentinel
+            raise ValueError(f"{ast.__class__.__name__} has no default body field")
+
+        if not field:  # special case ''
+            return '', []
+
+    if (body := getattr(ast, field, fixup_field_body)) is fixup_field_body:
+        raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
+
+    if only_list and not isinstance(body, list):
+        raise ValueError(f"expecting a list field {ast.__class__.__name__}{f'.{field}' if field else ''}")
+
+    return field, body
 
 
 # ----------------------------------------------------------------------------------------------------------------------

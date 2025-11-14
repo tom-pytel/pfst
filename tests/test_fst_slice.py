@@ -72,7 +72,7 @@ class TestFSTSlice(unittest.TestCase):
                 self.assertEqual(c, r, f'{case.id()}, rest idx = {rest_idx}')
 
     def test_put_src_from_put_slice_data(self):  # this test may go away at some point
-        from fst.fst import _fixup_field_body
+        from fst.fst_misc import fixup_field_body
         from fst.fst_slice_put import _loc_slice_raw_put
         from support import _unfmt_code, _make_fst
 
@@ -81,7 +81,7 @@ class TestFSTSlice(unittest.TestCase):
                 continue
 
             f        = _make_fst(case.code, case.attr)
-            field, _ = _fixup_field_body(f.a, case.field)
+            field, _ = fixup_field_body(f.a, case.field, True)
             loc      = _loc_slice_raw_put(f, case.start, case.stop, field)[:4]
             src      = _unfmt_code(r0 if isinstance(r0 := rest[0], str) else r0[1])
 

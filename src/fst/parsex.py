@@ -104,7 +104,6 @@ from .common import next_frag, shortstr
 __all__ = [
     'Mode',
     'ParseError',
-    'get_special_parse_mode',
     'unparse',
     'parse',
     'parse_all',
@@ -578,24 +577,6 @@ def _parse_all_multiple(src: str, parse_params: Mapping[str, Any], stmt: bool, r
 
 class ParseError(SyntaxError):
     """Not technically a syntax error but mostly not the code we were expecting."""
-
-
-def get_special_parse_mode(ast: AST) -> str | None:
-    """Quick determination to the best of ability if a special parse mode is needed for this `AST`. This is the
-    extended parse mode as per `Mode`, not the `ast.parse()` mode. If a special mode applies it is returned which should
-    parse the source of this `AST` back to itself. Otherwise `None` is returned. This is a just quick a check, doesn't
-    verify everything.
-
-    **WARNING!** This only gets special parse modes for where it can be inferred from the `AST` alone. This will not
-    return the special parse mode of `'expr_slice'` for example for `a[*st]` single-`Starred` `Tuple` which is
-    represented by the source `*st` from inside a `Subscript.slice`. That must be handled at a higher level.
-
-    **Returns:**
-    - `str`: One of the special parse modes.
-    - `None`: If no special parse mode applies or can be determined.
-    """
-
-    return ast.__class__.__name__ if isinstance(ast, _slice) else None
 
 
 def unparse(ast: AST) -> str:

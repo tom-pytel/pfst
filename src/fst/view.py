@@ -7,8 +7,7 @@ from . import fst
 
 from .astutil import AST, get_func_class_or_ass_by_name
 from .code import Code
-from .fst_slice_get import _fixup_slice_indices
-from .fst_one_get import _fixup_one_index
+from .fst_misc import fixup_one_index, fixup_slice_indices
 
 __all__ = ['fstview']
 
@@ -168,7 +167,7 @@ class fstview:
 
         if isinstance(idx, int):
             start = self.start
-            idx = _fixup_one_index(self.stop - start, idx)
+            idx = fixup_one_index(self.stop - start, idx)
 
             return a.f if isinstance(a := getattr(self.fst.a, self.field)[start + idx], AST) else a
 
@@ -182,7 +181,7 @@ class fstview:
             raise IndexError('step slicing not supported')
 
         start = self.start
-        idx_start, idx_stop = _fixup_slice_indices(self.stop - start, idx.start, idx.stop)
+        idx_start, idx_stop = fixup_slice_indices(self.stop - start, idx.start, idx.stop)
 
         return fstview(self.fst, self.field, start + idx_start, start + idx_stop)
 
@@ -233,7 +232,7 @@ class fstview:
 
         if isinstance(idx, int):
             start = self.start
-            idx = _fixup_one_index(self.stop - start, idx)
+            idx = fixup_one_index(self.stop - start, idx)
             asts = getattr(self.fst.a, self.field)
             len_before = len(asts)
 
@@ -246,7 +245,7 @@ class fstview:
 
         else:
             start = self.start
-            idx_start, idx_stop = _fixup_slice_indices(self.stop - start, idx.start, idx.stop)
+            idx_start, idx_stop = fixup_slice_indices(self.stop - start, idx.start, idx.stop)
             asts = getattr(self.fst.a, self.field)
             len_before = len(asts)
 
@@ -294,7 +293,7 @@ class fstview:
         if isinstance(idx, int):
             start = self.start
             stop = self.stop
-            idx = _fixup_one_index(stop - start, idx)
+            idx = fixup_one_index(stop - start, idx)
 
             self.fst = self.fst.put_slice(None, start + idx, start + idx + 1, field=self.field)
 
@@ -306,7 +305,7 @@ class fstview:
         else:
             start = self.start
             stop = self.stop
-            idx_start, idx_stop = _fixup_slice_indices(stop - start, idx.start, idx.stop)
+            idx_start, idx_stop = fixup_slice_indices(stop - start, idx.start, idx.stop)
 
             self.fst = self.fst.put_slice(None, start + idx_start, start + idx_stop, self.field)
 

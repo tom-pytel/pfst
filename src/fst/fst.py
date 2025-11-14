@@ -30,15 +30,9 @@ from .asttypes import (
     AST,
     Add,
     And,
-    AnnAssign,
-    Assert,
-    Assign,
     AsyncFor,
     AsyncFunctionDef,
     AsyncWith,
-    Attribute,
-    AugAssign,
-    Await,
     BinOp,
     BitAnd,
     BitOr,
@@ -46,54 +40,37 @@ from .asttypes import (
     BoolOp,
     Call,
     ClassDef,
-    Compare,
     Constant,
-    Delete,
-    Dict,
     DictComp,
     Div,
     Eq,
     ExceptHandler,
-    Expr,
     Expression,
     FloorDiv,
     For,
-    FormattedValue,
     FunctionDef,
     GeneratorExp,
-    Global,
     Gt,
     GtE,
     If,
-    Import,
-    ImportFrom,
     In,
     Interactive,
     Invert,
     Is,
     IsNot,
-    JoinedStr,
     LShift,
     Lambda,
-    List,
     ListComp,
     Lt,
     LtE,
     MatMult,
     Match,
-    MatchAs,
-    MatchClass,
-    MatchMapping,
-    MatchOr,
     MatchSequence,
-    MatchSingleton,
-    MatchValue,
     Mod,
     Module,
     Mult,
     Name,
     NamedExpr,
-    Nonlocal,
     Not,
     NotEq,
     NotIn,
@@ -101,13 +78,9 @@ from .asttypes import (
     Pass,
     Pow,
     RShift,
-    Raise,
-    Return,
-    Set,
     SetComp,
     Starred,
     Sub,
-    Subscript,
     Try,
     Tuple,
     UAdd,
@@ -115,32 +88,17 @@ from .asttypes import (
     UnaryOp,
     While,
     With,
-    Yield,
-    YieldFrom,
-    alias,
-    arg,
     arguments,
     comprehension,
     expr,
-    keyword,
     match_case,
     mod,
     pattern,
     stmt,
     withitem,
     TryStar,
-    TypeAlias,
-    TemplateStr,
-    Interpolation,
     _ExceptHandlers,
     _match_cases,
-    _Assign_targets,
-    _decorator_list,
-    _comprehensions,
-    _comprehension_ifs,
-    _aliases,
-    _withitems,
-    _type_params,
 )
 
 from .astutil import (
@@ -165,7 +123,7 @@ from .locations import loc_arguments, loc_comprehension, loc_withitem, loc_match
 from .traverse import AST_FIELDS_NEXT, AST_FIELDS_PREV, next_bound, prev_bound, check_with_loc
 from .view import fstview
 from .reconcile import Reconcile
-from .fst_misc import DUMP_COLOR, DUMP_NO_COLOR
+from .fst_misc import DUMP_COLOR, DUMP_NO_COLOR, clip_src_loc, fixup_field_body
 
 __all__ = [
     'parse', 'unparse', 'dump', 'FST',
@@ -210,45 +168,6 @@ _DEFAULT_COLOR = (
 _DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_version=None)
 _DEFAULT_INDENT = '    '
 
-_DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: 'body', Interactive: 'body', ..., Match: 'cases', ..., MatchAs: 'pattern'}
-    ('body',           (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While,
-                        If, With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
-    ('handlers',       (_ExceptHandlers,)),
-    ('cases',          (Match, _match_cases)),
-
-    ('elts',           (Tuple, List, Set)),
-    ('elt',            (GeneratorExp, ListComp, SetComp)),
-    ('targets',        (Delete, _Assign_targets)),
-    ('target',         (comprehension,)),
-    ('decorator_list', (_decorator_list,)),
-    ('patterns',       (MatchSequence, MatchOr, MatchClass)),
-    ('type_params',    (TypeAlias, _type_params)),
-    ('names',          (Import, ImportFrom, Global, Nonlocal, _aliases)),
-    ('items',          (_withitems,)),
-    ('values',         (BoolOp, JoinedStr, TemplateStr)),
-    ('generators',     (_comprehensions,)),
-    ('ifs',            (_comprehension_ifs,)),
-    ('args',           (Call,)),  # potential conflict of default body with put to empty 'set()'
-
-    # special cases, field names here only for checks to succeed, otherwise all handled programatically
-    ('',               (Dict,)),          # key:value
-    ('',               (MatchMapping,)),  # key:pattern
-    ('',               (Compare,)),       # ops:comparators
-
-    # other single value fields
-    ('value',          (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,
-                        FormattedValue, Interpolation, Constant, Attribute, Subscript, Starred, keyword, MatchValue,
-                        MatchSingleton)),
-    ('exc',            (Raise,)),
-    ('test',           (Assert,)),
-    ('operand',        (UnaryOp,)),
-    ('id',             (Name,)),
-    ('arg',            (arg,)),
-    ('name',           (alias,)),
-    ('context_expr',   (withitem,)),
-    ('pattern',        (MatchAs,)),
-] for kls in classes}
-
 _LOC_FUNCS = {  # quick lookup table for FST.loc
     arguments:     loc_arguments,
     comprehension: loc_comprehension,
@@ -284,58 +203,6 @@ _LOC_FUNCS = {  # quick lookup table for FST.loc
     In:            loc_operator,
     NotIn:         loc_operator,
 }
-
-
-def _clip_src_loc(self: FST, ln: int, col: int, end_ln: int, end_col: int) -> tuple[int, int, int, int]:
-    """Clip location to valid source coordinates and verify that the end does not precede the start."""
-
-    lines = self.root._lines
-    last_ln = len(lines) - 1
-
-    if ln > end_ln or ((end_ln == ln) and col > end_col):  # we do this before so that out-of-bounds coordinates are still validated wrt common sense as wrong order may indicate other bugs
-        raise ValueError('end location cannot precede start location')
-
-    if ln < 0:
-        ln = 0
-    elif ln > last_ln:
-        ln = last_ln
-
-    if col < 0:
-        col = 0
-    elif col > (len_line := len(lines[ln])):
-        col = len_line
-
-    if end_ln < 0:
-        end_ln = 0
-    elif end_ln > last_ln:
-        end_ln = last_ln
-
-    if end_col < 0:
-        end_col = 0
-    elif end_col > (len_line := len(lines[end_ln])):
-        end_col = len_line
-
-    return ln, col, end_ln, end_col
-
-
-def _fixup_field_body(ast: AST, field: str | None = None, only_list: bool = True) -> tuple[str, 'AST']:
-    """Get `AST` member list for specified `field` or default if `field=None`."""
-
-    if not field:
-        if (field := _DEFAULT_AST_FIELD.get(ast.__class__, _fixup_field_body)) is _fixup_field_body:  # _fixup_field_body serves as sentinel
-            raise ValueError(f"{ast.__class__.__name__} has no default body field")
-
-        if not field:  # special case ''
-            return '', []
-
-    if (body := getattr(ast, field, _fixup_field_body)) is _fixup_field_body:
-        raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
-
-    if only_list and not isinstance(body, list):
-        raise ValueError(f"cannot perform slice operations non-list field "
-                         f"{ast.__class__.__name__}{f'.{field}' if field else ''}")
-
-    return field, body
 
 
 def _swizzle_getput_params(
@@ -1924,7 +1791,7 @@ class FST:
 
         ast = self.a
         idx, stop, field = _swizzle_getput_params(idx, stop, field, False)
-        field_, body = _fixup_field_body(ast, field, False)
+        field_, body = fixup_field_body(ast, field, False)
 
         if isinstance(body, list):
             if stop is not False:
@@ -2035,7 +1902,7 @@ class FST:
 
         ast = self.a
         idx, stop, field = _swizzle_getput_params(idx, stop, field, False)
-        field_, body = _fixup_field_body(ast, field, False)
+        field_, body = fixup_field_body(ast, field, False)
 
         if isinstance(body, list):
             if stop is not False:
@@ -2113,7 +1980,7 @@ class FST:
 
         ast = self.a
         start, stop, field = _swizzle_getput_params(start, stop, field, None)
-        field_, body = _fixup_field_body(ast, field)
+        field_, body = fixup_field_body(ast, field, True)
 
         if not isinstance(body, list):
             raise ValueError(f'cannot get slice from non-list field {ast.__class__.__name__}.{field_}')
@@ -2201,7 +2068,7 @@ class FST:
 
         ast = self.a
         start, stop, field = _swizzle_getput_params(start, stop, field, None)
-        field_, body = _fixup_field_body(ast, field)
+        field_, body = fixup_field_body(ast, field, True)
 
         if not isinstance(body, list):
             raise ValueError(f'cannot put slice to non-list field {ast.__class__.__name__}.{field_}')
@@ -2243,7 +2110,7 @@ class FST:
         ```
         """
 
-        ln, col, end_ln, end_col = _clip_src_loc(self, ln, col, end_ln, end_col)
+        ln, col, end_ln, end_col = clip_src_loc(self, ln, col, end_ln, end_col)
 
         return self._get_src(ln, col, end_ln, end_col, as_lines)
 
@@ -2367,7 +2234,7 @@ class FST:
         """
 
         root = self.root
-        ln, col, end_ln, end_col = _clip_src_loc(self, ln, col, end_ln, end_col)
+        ln, col, end_ln, end_col = clip_src_loc(self, ln, col, end_ln, end_col)
 
         if ast_op == 'reparse':
             parent = root.find_loc_in(ln, col, end_ln, end_col, False) or root
@@ -4595,11 +4462,6 @@ class FST:
         _has_Slice,
         _has_Starred,
 
-        _parenthesize_grouping,
-        _unparenthesize_grouping,
-        _delimit_node,
-        _undelimit_node,
-
         _maybe_add_line_continuations,
         _maybe_del_separator,
         _maybe_ins_separator,
@@ -4610,12 +4472,14 @@ class FST:
         _maybe_fix_arglike,
         _maybe_fix_arglikes,
         _maybe_fix_elif,
+
+        _parenthesize_grouping,
+        _unparenthesize_grouping,
+        _delimit_node,
+        _undelimit_node,
     )
 
-    from .fst_raw import (
-        _reparse_raw,
-    )
-
+    from .fst_raw import _reparse_raw
     from .fst_slice_get import _get_slice
     from .fst_slice_put import _put_slice
     from .fst_one_get import _get_one

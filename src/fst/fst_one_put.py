@@ -187,7 +187,7 @@ from .locations import (
     loc_Global_Nonlocal_names,
 )
 
-from .fst_one_get import _fixup_one_index
+from .fst_misc import fixup_one_index
 
 
 _PutOneCode = Code | str | constant | None  # yes, None is already in constant, but just to make this explicit that None may be in place of an expected AST where a constant is not expected
@@ -224,7 +224,7 @@ def _validate_put(
         if idx is None:
             raise IndexError(f'{self.a.__class__.__name__}.{field} needs an index')
 
-        idx = _fixup_one_index(len(child), idx)
+        idx = fixup_one_index(len(child), idx)
         child = child[idx]  # this will always be a required child, variable size lists will have been passed on to slice processing before getting here
 
     elif idx is not None:
@@ -1860,7 +1860,7 @@ def _one_info_ImportFrom_module(self: fst.FST, static: onestatic, idx: int | Non
 
 def _one_info_Global_Nonlocal_names(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
 
-    idx = _fixup_one_index(len(self.a.names), idx)
+    idx = fixup_one_index(len(self.a.names), idx)
 
     return oneinfo('', None, loc_Global_Nonlocal_names(self, idx))
 
@@ -2581,7 +2581,7 @@ def _put_one_raw(
             field = 'keys'
             child = ast.keys
             body2 = ast.values if is_dict else ast.patterns
-            idx = _fixup_one_index(len(child), idx)
+            idx = fixup_one_index(len(child), idx)
             loc = self._loc_maybe_key(idx, pars, child, body2)  # maybe the key is a '**'
 
             if not to:
@@ -2590,7 +2590,7 @@ def _put_one_raw(
         elif issubclass(kls, Compare):
             field = 'ops'
             child = ast.ops
-            idx = _fixup_one_index(len(child), idx)
+            idx = fixup_one_index(len(child), idx)
 
             if not to:
                 to = self.comparators[idx]
@@ -2699,7 +2699,7 @@ def _put_one(
 
     if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementishs and combined mapping fields
         # we need to fixup index here explicitly to get an error if it is out of bounds because slice index fixups don't error but just limit it to [0..len(body))
-        idx = _fixup_one_index(len(child if field else ast.ops if isinstance(ast, Compare) else ast.keys), idx)  # field will be '' only for Dict, MatchMapping (which both have .keys), or Compare for .ops
+        idx = fixup_one_index(len(child if field else ast.ops if isinstance(ast, Compare) else ast.keys), idx)  # field will be '' only for Dict, MatchMapping (which both have .keys), or Compare for .ops
 
         new_self = self._put_slice(code, idx, idx + 1, field, True, options)
 

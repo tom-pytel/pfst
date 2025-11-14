@@ -107,22 +107,11 @@ from .asttypes import (
 
 from .astutil import constant, bistr, copy_ast
 from .common import FTSTRING_END_TOKENS, PYGE13, NodeError, pyver
-from .slice_stmtish import _get_slice_stmtish
+from .fst_misc import fixup_one_index
+from .slice_stmtish import get_slice_stmtish
 
 
 _GetOneRet = Union['fst.FST', None, str, constant]
-
-
-def _fixup_one_index(len_: int, idx: int) -> int:
-    """Negative to positive indices."""
-
-    if idx < 0:
-        idx += len_
-
-    if not (0 <= idx < len_):
-        raise IndexError('index out of range')
-
-    return idx
 
 
 def _validate_get(self: fst.FST, idx: int | None, field: str) -> tuple[AST | None, int]:
@@ -134,7 +123,7 @@ def _validate_get(self: fst.FST, idx: int | None, field: str) -> tuple[AST | Non
         if idx is None:
             raise IndexError(f'{self.a.__class__.__name__}.{field} needs an index')
 
-        _fixup_one_index(len(child), idx)
+        fixup_one_index(len(child), idx)
 
         child = child[idx]
 
@@ -235,7 +224,7 @@ def _get_one_arglikes(self: fst.FST, idx: int | None, field: str, cut: bool, opt
 def _get_one_stmtish(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     _, idx = _validate_get(self, idx, field)
 
-    return _get_slice_stmtish(self, idx, idx + 1, field, cut, options, one=True)
+    return get_slice_stmtish(self, idx, idx + 1, field, cut, options, one=True)
 
 
 def _get_one_ctx(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:

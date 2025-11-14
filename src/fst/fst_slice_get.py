@@ -89,40 +89,15 @@ from .fst_misc import (
     new_empty_set_call,
     new_empty_set_curlies,
     get_option_overridable,
+    fixup_slice_indices,
 )
 
-from .slice_stmtish import _get_slice_stmtish
+from .slice_stmtish import get_slice_stmtish
 from .slice_exprish import _locs_first_and_last, get_slice_sep, get_slice_nosep
 
 
 # ......................................................................................................................
 # shared with fst_slice_put
-
-def _fixup_slice_indices(len_: int, start: int, stop: int) -> tuple[int, int]:
-    """Clip slice indices to slice range allowing first negative range to map into positive range. Greater negative
-    indices clip to 0."""
-
-    if start is None:
-        start = 0
-    elif start == 'end':
-        start = len_
-    elif start < 0:
-        start = max(0, start + len_)
-    elif start > len_:
-        start = len_
-
-    if stop is None:
-        stop = len_
-    elif stop < 0:
-        stop = max(0, stop + len_)
-    elif stop > len_:
-        stop = len_
-
-    if stop < start:
-        raise ValueError('start index must precede stop index')
-
-    return start, stop
-
 
 def _get_norm_option(override_option: str, norm_option: str, options: Mapping[str, Any]) -> bool | str:
     set_norm = get_option_overridable('norm', override_option, options)
@@ -538,7 +513,7 @@ def _get_slice_Dict(
     body = ast.keys
     len_body = len(body)
     body2 = ast.values
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST(Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
@@ -566,7 +541,7 @@ def _get_slice_Tuple_elts(
     ast = self.a
     body = ast.elts
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return new_empty_tuple(from_=self)
@@ -612,7 +587,7 @@ def _get_slice_List_elts(
     ast = self.a
     body = ast.elts
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST(List(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
@@ -644,7 +619,7 @@ def _get_slice_Set_elts(
 
     body = self.a.elts
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         get_norm = _get_norm_option('norm_get', 'set_norm', options)
@@ -682,7 +657,7 @@ def _get_slice_Delete_targets(
     ast = self.a
     body = ast.targets
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not len_slice:
@@ -729,7 +704,7 @@ def _get_slice_Assign_targets(
 ) -> fst.FST:
     body = self.a.targets
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not len_slice:
@@ -768,7 +743,7 @@ def _get_slice_With_AsyncWith_items(
     ast = self.a
     body = ast.items
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not len_slice:
@@ -822,7 +797,7 @@ def _get_slice_Import_names(
     ast = self.a
     body = ast.names
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not len_slice:
@@ -869,7 +844,7 @@ def _get_slice_ImportFrom_names(
     ast = self.a
     body = ast.names
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not len_slice:
@@ -922,7 +897,7 @@ def _get_slice_Global_Nonlocal_names(
 ) -> fst.FST:
     ast = self.a
     len_body = len(ast.names)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not len_slice:
@@ -999,7 +974,7 @@ def _get_slice_ClassDef_bases(
     ast = self.a
     body = ast.bases
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if start == stop:
@@ -1062,7 +1037,7 @@ def _get_slice_decorator_list(
     ast = self.a
     body = ast.decorator_list
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not len_slice:
@@ -1120,7 +1095,7 @@ def _get_slice_generators(
     ast = self.a
     body = ast.generators
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not len_slice:
@@ -1158,7 +1133,7 @@ def _get_slice_comprehension_ifs(
     ast = self.a
     body = ast.ifs
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if not len_slice:
@@ -1198,7 +1173,7 @@ def _get_slice_Call_args(
     ast = self.a
     body = ast.args
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     if start == stop:
@@ -1256,7 +1231,7 @@ def _get_slice_MatchSequence_patterns(
 
     body = self.a.patterns
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST(MatchSequence(patterns=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
@@ -1301,7 +1276,7 @@ def _get_slice_MatchMapping(
     body = ast.keys
     len_body = len(body)
     body2 = ast.patterns
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST(MatchMapping(keys=[], patterns=[], rest=None, lineno=1, col_offset=0, end_lineno=1,
@@ -1338,7 +1313,7 @@ def _get_slice_MatchOr_patterns(
 
     body = self.a.patterns
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
     get_norm = _get_norm_option('norm_get', 'matchor_norm', options)
     self_norm = _get_norm_option('norm_self', 'matchor_norm', options)
@@ -1387,7 +1362,7 @@ def _get_slice_type_params(
     ast = self.a
     body = ast.type_params
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST(_type_params([], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], from_=self)
@@ -1439,7 +1414,7 @@ def _get_slice__slice(
     static = fst_top_level.fst_slice_put._SLICE_STATICS[kls]
     body = getattr(ast, field)
     len_body = len(body)
-    start, stop = _fixup_slice_indices(len_body, start, stop)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST(kls([], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], from_=self)
@@ -1462,33 +1437,33 @@ def _get_slice__slice(
 
 
 _GET_SLICE_HANDLERS = {
-    (Module, 'body'):                         _get_slice_stmtish,  # stmt*
-    (Interactive, 'body'):                    _get_slice_stmtish,  # stmt*
-    (FunctionDef, 'body'):                    _get_slice_stmtish,  # stmt*
-    (AsyncFunctionDef, 'body'):               _get_slice_stmtish,  # stmt*
-    (ClassDef, 'body'):                       _get_slice_stmtish,  # stmt*
-    (For, 'body'):                            _get_slice_stmtish,  # stmt*
-    (For, 'orelse'):                          _get_slice_stmtish,  # stmt*
-    (AsyncFor, 'body'):                       _get_slice_stmtish,  # stmt*
-    (AsyncFor, 'orelse'):                     _get_slice_stmtish,  # stmt*
-    (While, 'body'):                          _get_slice_stmtish,  # stmt*
-    (While, 'orelse'):                        _get_slice_stmtish,  # stmt*
-    (If, 'body'):                             _get_slice_stmtish,  # stmt*
-    (If, 'orelse'):                           _get_slice_stmtish,  # stmt*
-    (With, 'body'):                           _get_slice_stmtish,  # stmt*
-    (AsyncWith, 'body'):                      _get_slice_stmtish,  # stmt*
-    (Try, 'body'):                            _get_slice_stmtish,  # stmt*
-    (Try, 'orelse'):                          _get_slice_stmtish,  # stmt*
-    (Try, 'finalbody'):                       _get_slice_stmtish,  # stmt*
-    (TryStar, 'body'):                        _get_slice_stmtish,  # stmt*
-    (TryStar, 'orelse'):                      _get_slice_stmtish,  # stmt*
-    (TryStar, 'finalbody'):                   _get_slice_stmtish,  # stmt*
-    (ExceptHandler, 'body'):                  _get_slice_stmtish,  # stmt*
-    (match_case, 'body'):                     _get_slice_stmtish,  # stmt*
+    (Module, 'body'):                         get_slice_stmtish,  # stmt*
+    (Interactive, 'body'):                    get_slice_stmtish,  # stmt*
+    (FunctionDef, 'body'):                    get_slice_stmtish,  # stmt*
+    (AsyncFunctionDef, 'body'):               get_slice_stmtish,  # stmt*
+    (ClassDef, 'body'):                       get_slice_stmtish,  # stmt*
+    (For, 'body'):                            get_slice_stmtish,  # stmt*
+    (For, 'orelse'):                          get_slice_stmtish,  # stmt*
+    (AsyncFor, 'body'):                       get_slice_stmtish,  # stmt*
+    (AsyncFor, 'orelse'):                     get_slice_stmtish,  # stmt*
+    (While, 'body'):                          get_slice_stmtish,  # stmt*
+    (While, 'orelse'):                        get_slice_stmtish,  # stmt*
+    (If, 'body'):                             get_slice_stmtish,  # stmt*
+    (If, 'orelse'):                           get_slice_stmtish,  # stmt*
+    (With, 'body'):                           get_slice_stmtish,  # stmt*
+    (AsyncWith, 'body'):                      get_slice_stmtish,  # stmt*
+    (Try, 'body'):                            get_slice_stmtish,  # stmt*
+    (Try, 'orelse'):                          get_slice_stmtish,  # stmt*
+    (Try, 'finalbody'):                       get_slice_stmtish,  # stmt*
+    (TryStar, 'body'):                        get_slice_stmtish,  # stmt*
+    (TryStar, 'orelse'):                      get_slice_stmtish,  # stmt*
+    (TryStar, 'finalbody'):                   get_slice_stmtish,  # stmt*
+    (ExceptHandler, 'body'):                  get_slice_stmtish,  # stmt*
+    (match_case, 'body'):                     get_slice_stmtish,  # stmt*
 
-    (Match, 'cases'):                         _get_slice_stmtish,  # match_case*
-    (Try, 'handlers'):                        _get_slice_stmtish,  # excepthandler*
-    (TryStar, 'handlers'):                    _get_slice_stmtish,  # excepthandlerstar*
+    (Match, 'cases'):                         get_slice_stmtish,  # match_case*
+    (Try, 'handlers'):                        get_slice_stmtish,  # excepthandler*
+    (TryStar, 'handlers'):                    get_slice_stmtish,  # excepthandlerstar*
 
     (Dict, ''):                               _get_slice_Dict,  # key:value*
 
@@ -1537,8 +1512,8 @@ _GET_SLICE_HANDLERS = {
     (JoinedStr, 'values'):                    _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (TemplateStr, 'values'):                  _get_slice_NOT_IMPLEMENTED_YET,  # expr*
 
-    (_ExceptHandlers, 'handlers'):            _get_slice_stmtish,  # ExceptHandler*
-    (_match_cases, 'cases'):                  _get_slice_stmtish,  # match_case*
+    (_ExceptHandlers, 'handlers'):            get_slice_stmtish,  # ExceptHandler*
+    (_match_cases, 'cases'):                  get_slice_stmtish,  # match_case*
     (_Assign_targets, 'targets'):             _get_slice__slice,  # expr*
     (_decorator_list, 'decorator_list'):      _get_slice_decorator_list,  # expr*
     (_comprehensions, 'generators'):          _get_slice_generators,  # comprehensions*

@@ -17,14 +17,18 @@ except ImportError:  # for py 3.10
 
 try:
     from tokenize import FSTRING_START, FSTRING_END
+
     try:
         from tokenize import TSTRING_START, TSTRING_END
+
         FTSTRING_START_TOKENS = (FSTRING_START, TSTRING_START)
         FTSTRING_END_TOKENS = (FSTRING_END, TSTRING_END)
+
     except ImportError:
         TSTRING_START = TSTRING_END = None
         FTSTRING_START_TOKENS = (FSTRING_START,)
         FTSTRING_END_TOKENS = (FSTRING_END,)
+
 except ImportError:
     FSTRING_START = FSTRING_END = TSTRING_START = TSTRING_END = None
     FTSTRING_START_TOKENS = FTSTRING_END_TOKENS = ()
@@ -43,7 +47,6 @@ __all__ = [
     'fstlocn',
     'srcwpos',
     'nspace',
-    'shortstr',
     'pyver',
     'shortstr',
     'next_frag',
