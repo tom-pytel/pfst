@@ -4174,10 +4174,10 @@ class FST:
                     for p in path.split('.')] if path else []
 
         for p in path:
-            if (next := p.get_no_raise(self)) is False:
+            if (next := p.get_no_raise(self.a)) is False:
                 return self if last_valid else False
 
-            self = next
+            self = next.f
 
         return self
 

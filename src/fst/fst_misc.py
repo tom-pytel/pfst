@@ -1670,7 +1670,7 @@ def _maybe_fix_arglikes(self: fst.FST, options: Mapping[str, Any]) -> None:
     if fst.FST.get_option('pars', options) and fst.FST.get_option('pars_arglike', options):
         for e in self.a.elts:
             if (f := e.f).is_expr_arglike:
-                f.value.par()  # will be a Starred so we just go for .value
+                f.a.value.f.par()  # will be a Starred so we just go for .value
 
 
 def _maybe_fix_elif(self: fst.FST) -> None:
@@ -1732,7 +1732,7 @@ def _unparenthesize_grouping(self: fst.FST, shared: bool | None = True, *, star_
     """
 
     if isinstance(self.a, Starred) and star_child:
-        self = self.value
+        self = self.a.value.f
 
     pars_loc = self.pars(shared=None if shared is None else True)
 
@@ -1747,7 +1747,7 @@ def _unparenthesize_grouping(self: fst.FST, shared: bool | None = True, *, star_
 
     if shared:  # special case merge solo argument GeneratorExp parentheses with call argument parens
         lines = self.root._lines
-        _, _, cend_ln, cend_col = self.parent.func.loc
+        _, _, cend_ln, cend_col = self.parent.a.func.f.loc
         pln, pcol = prev_find(lines, cend_ln, cend_col, pln, pcol, '(')  # must be there
         pend_ln, pend_col = next_find(lines, pend_ln, pend_col, len(lines) - 1, len(lines[-1]), ')')  # ditto
         pend_col += 1

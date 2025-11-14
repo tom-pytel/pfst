@@ -329,10 +329,10 @@ def _maybe_fix_With_items(self: fst.FST) -> None:
 
     # assert isinstance(self.a, (With, AsyncWith))
 
-    if len(items := self.items) != 1:
+    if len(items := self.a.items) != 1:
         return
 
-    if (i0a := items[0].a).optional_vars:
+    if (i0a := items[0]).optional_vars:
         return
 
     cef = i0a.context_expr.f
@@ -597,10 +597,11 @@ def _put_one_Constant_kind(
 ) -> fst.FST:  # child: str | None
     """Set a Constant string kind to 'u' or None, this is truly unnecessary."""
 
+    ast = self.a
     child, idx = _validate_put(self, code, idx, field, child, can_del=True)
     value = code_as_constant(code, self.root.parse_params)
 
-    if not isinstance(self.value, str):
+    if not isinstance(ast.value, str):
         raise ValueError('cannot set kind of non-str Constant')
 
     ln, col, _, _ = self.loc
@@ -618,7 +619,7 @@ def _put_one_Constant_kind(
         else:
             raise ValueError(f"expecting 'u' or None, got {value!r}")
 
-        self.a.kind = value
+        ast.kind = value
 
     return self  # cannot return primitive
 
@@ -989,10 +990,11 @@ def _put_one_ClassDef_keywords(
 ) -> fst.FST:
     """Don't allow put of `**keyword` before `*arg`."""
 
+    ast = self.a
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params, sanitize=True)
 
-    if code.a.arg is None and (bases := self.a.bases) and bases[-1].f.loc > self.keywords[idx].loc:
+    if code.a.arg is None and (bases := ast.bases) and bases[-1].f.loc > ast.keywords[idx].f.loc:
         raise ValueError("cannot put '**' ClassDef.keywords element at this location (non-keywords follow)")
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
@@ -1202,10 +1204,11 @@ def _put_one_Call_keywords(
 ) -> fst.FST:
     """Don't allow put of `**keyword` before `*arg`."""
 
+    ast = self.a
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params, sanitize=True)
 
-    if code.a.arg is None and (args := self.a.args) and args[-1].f.loc > self.keywords[idx].loc:
+    if code.a.arg is None and (args := ast.args) and args[-1].f.loc > ast.keywords[idx].f.loc:
         raise ValueError("cannot put '**' Call.keywords element at this location (non-keywords follow)")
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)

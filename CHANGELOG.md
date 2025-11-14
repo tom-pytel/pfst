@@ -3,7 +3,7 @@
 ### Fixed
 
 - correct `.bloc` location if decorator `@` is on a different line with line continuations
-- leave leading '\' above statement being deletet if trailing semicolon is left in place on stmt line
+- leave leading `\` above statement being deleted if trailing semicolon is left in place on stmt line
 - account for degenerate case of first decorator following line continuation in `.bloc`
 
 ### Added
