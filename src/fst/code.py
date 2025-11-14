@@ -166,7 +166,7 @@ def _code_as_op(
     opstr2cls: dict[str, type[AST]],
     opcls2str: dict[type[AST], str] = OPCLS2STR,
     *,
-    sanitize: bool = True,
+    sanitize: bool = False,
 ) -> fst.FST:
     """Convert `code` to an operation `FST` if possible."""
 
@@ -220,7 +220,7 @@ def _code_as(
     parse_params: Mapping[str, Any],
     parse: Callable[[fst.FST, Code], fst.FST],
     *,
-    sanitize: bool = True,
+    sanitize: bool = False,
 ) -> fst.FST:
     if isinstance(code, fst.FST):
         if not code.is_root:
@@ -229,32 +229,31 @@ def _code_as(
         if not isinstance(code.a, ast_type):
             raise NodeError(f'expecting {ast_type.__name__}, got {code.a.__class__.__name__}', rawable=True)
 
-        return code._sanitize() if sanitize else code
+    else:
+        if is_ast := isinstance(code, AST):
+            if not isinstance(code, ast_type):
+                raise NodeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}', rawable=True)
 
-    if is_ast := isinstance(code, AST):
-        if not isinstance(code, ast_type):
-            raise NodeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}', rawable=True)
+            src = unparse(code)
+            lines = src.split('\n')
 
-        src = unparse(code)
-        lines = src.split('\n')
+        elif isinstance(code, list):
+            src = '\n'.join(lines := code)
+        else:  # str
+            lines = (src := code).split('\n')
 
-    elif isinstance(code, list):
-        src = '\n'.join(lines := code)
-    else:  # str
-        lines = (src := code).split('\n')
+        ast = parse(src, parse_params)
 
-    ast = parse(src, parse_params)
+        if is_ast:
+            if ast.__class__ is not code.__class__:
+                raise ParseError(f'could not reparse AST to {code.__class__.__name__}, got {ast.__class__.__name__}')
 
-    if is_ast:
-        if ast.__class__ is not code.__class__:
-            raise ParseError(f'could not reparse AST to {code.__class__.__name__}, got {ast.__class__.__name__}')
+        elif not isinstance(ast, ast_type):  # sanity check, parse func should guarantee what we want but maybe in future is used to get a specific subset of what parse func returns
+            raise ParseError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
 
-    elif not isinstance(ast, ast_type):  # sanity check, parse func should guarantee what we want but maybe in future is used to get a specific subset of what parse func returns
-        raise ParseError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
+        code = fst.FST(ast, lines, parse_params=parse_params)
 
-    fst_ = fst.FST(ast, lines, parse_params=parse_params)
-
-    return fst_._sanitize() if sanitize else fst_
+    return code._sanitize() if sanitize else code
 
 
 def code_to_lines(code: Code | None) -> list[str]:
@@ -274,33 +273,37 @@ def code_to_lines(code: Code | None) -> list[str]:
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-def code_as_all(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
+def code_as_all(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to any parsable `FST` if possible. If `FST` passed then it is returned as itself."""
 
     if isinstance(code, fst.FST):
         if not code.is_root:
             raise ValueError('expecting root node')
 
-        return code
-
-    if isinstance(code, AST):
-        mode = code.__class__
-        code = unparse(code)
-        lines = code.split('\n')
-
     else:
-        mode = 'all'
-
-        if isinstance(code, list):
-            code = '\n'.join(lines := code)
-        else:  # str
+        if isinstance(code, AST):
+            mode = code.__class__
+            code = unparse(code)
             lines = code.split('\n')
 
-    return fst.FST(parse(code, mode), lines, parse_params=parse_params)
+        else:
+            mode = 'all'
+
+            if isinstance(code, list):
+                code = '\n'.join(lines := code)
+            else:  # str
+                lines = code.split('\n')
+
+        code = fst.FST(parse(code, mode), lines, parse_params=parse_params)
+
+    return code._sanitize() if sanitize else code
 
 
-def code_as_stmts(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
-    """Convert `code` to zero or more `stmt`s and return in the `body` of a `Module` `FST` if possible."""
+def code_as_stmts(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+    """Convert `code` to zero or more `stmt`s and return in the `body` of a `Module` `FST` if possible.
+
+    **Note:** `sanitize` does nothing since the return is a `Module` which always includes the whole source.
+    """
 
     if isinstance(code, fst.FST):
         if not code.is_root:
@@ -349,8 +352,12 @@ def code_as_stmts(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
     return fst.FST(parse_stmts(code, parse_params), lines, parse_params=parse_params)
 
 
-def code_as__ExceptHandlers(code: Code, parse_params: Mapping[str, Any] = {}, *, is_trystar: bool = False) -> fst.FST:
+def code_as__ExceptHandlers(
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, is_trystar: bool = False
+) -> fst.FST:
     """Convert `code` to zero or more `ExceptHandler`s and return in an `_ExceptHandlers` SPECIAL SLICE if possible.
+
+    **Note:** `sanitize` does nothing since the return is an `_ExceptHandlers` which always includes the whole source.
 
     **Parameters:**
     - `is_trystar`: Hint used when unparsing an `AST` `code` to get the correct `except` or `except*` source.
@@ -392,8 +399,11 @@ def code_as__ExceptHandlers(code: Code, parse_params: Mapping[str, Any] = {}, *,
     return fst.FST(parse__ExceptHandlers(code, parse_params), lines, parse_params=parse_params)
 
 
-def code_as__match_cases(code: Code, parse_params: Mapping[str, Any] = {}) -> fst.FST:
-    """Convert `code` to zero or more `match_case`s and return in a `_match_cases` SPECIAL SLICE if possible."""
+def code_as__match_cases(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+    """Convert `code` to zero or more `match_case`s and return in a `_match_cases` SPECIAL SLICE if possible.
+
+    **Note:** `sanitize` does nothing since the return is a `_match_cases` which always includes the whole source.
+    """
 
     if isinstance(code, fst.FST):
         if not code.is_root:
@@ -430,7 +440,7 @@ def code_as_expr(
     parse_params: Mapping[str, Any] = {},
     *,
     parse: Callable[[Code, dict], fst.FST] = parse_expr,
-    sanitize: bool = True,
+    sanitize: bool = False,
 ) -> fst.FST:
     """Convert `code` to an `expr` or optionally `Slice` `FST` if possible."""
 
@@ -457,63 +467,60 @@ def code_as_expr(
 
         validate(ast)
 
-        if ast is codea:
-            return code._sanitize() if sanitize else code
+        if ast is not codea:
+            ast.f._unmake_fst_parents()
 
-        ast.f._unmake_fst_parents()
+            code = fst.FST(ast, code._lines, from_=code, lcopy=False)
 
-        code = fst.FST(ast, code._lines, from_=code, lcopy=False)
+    else:
+        if is_ast := isinstance(code, AST):
+            validate(code)
 
-        return code._sanitize() if sanitize else code
+            src = unparse(code)
+            lines = src.split('\n')
 
-    if is_ast := isinstance(code, AST):
-        validate(code)
+        elif isinstance(code, list):
+            src = '\n'.join(lines := code)
+        else:  # str
+            lines = (src := code).split('\n')
 
-        src = unparse(code)
-        lines = src.split('\n')
+        ast = parse(src, parse_params)
 
-    elif isinstance(code, list):
-        src = '\n'.join(lines := code)
-    else:  # str
-        lines = (src := code).split('\n')
+        if is_ast and ast.__class__ is not code.__class__:
+            raise ParseError(f'could not reparse AST to {code.__class__.__name__}, got {ast.__class__.__name__}')
 
-    ast = parse(src, parse_params)
+        code = fst.FST(ast, lines, parse_params=parse_params)
 
-    if is_ast and ast.__class__ is not code.__class__:
-        raise ParseError(f'could not reparse AST to {code.__class__.__name__}, got {ast.__class__.__name__}')
-
-    fst_ = fst.FST(ast, lines, parse_params=parse_params)
-
-    return fst_._sanitize() if sanitize else fst_
+    return code._sanitize() if sanitize else code
 
 
-def code_as_expr_all(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_expr_all(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to an `expr` using `parse_expr_all()`."""
 
     return code_as_expr(code, parse_params, parse=parse_expr_all, sanitize=sanitize)
 
 
-def code_as_expr_arglike(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_expr_arglike(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to an `expr` in the context of a `Call.args` which has special parse rules for `Starred`."""
 
     return code_as_expr(code, parse_params, parse=parse_expr_arglike, sanitize=sanitize)
 
 
-def code_as_expr_slice(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_expr_slice(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a Slice `FST` if possible (or anthing else that can serve in `Subscript.slice`, like any old
     generic `expr`)."""
 
     return code_as_expr(code, parse_params, parse=parse_expr_slice, sanitize=sanitize)
 
 
-def code_as_expr_sliceelt(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_expr_sliceelt(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to an `expr` or `Slice` `FST` if possible. This exists because of the behavior of naked `Starred`
     expressions in a `Subscript` `slice` field."""
 
     return code_as_expr(code, parse_params, parse=parse_expr_sliceelt, sanitize=sanitize)
 
 
-def code_as_Tuple(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_Tuple(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a `Tuple` using `parse_Tuple()`."""
 
     fst_ = code_as_expr(code, parse_params, parse=parse_Tuple, sanitize=sanitize)
@@ -524,103 +531,103 @@ def code_as_Tuple(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize:
     return fst_
 
 
-def code_as__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as__Assign_targets(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to an `_Assign_targets` SPECIAL SLICE if possible."""
 
     return _code_as(code, _Assign_targets, parse_params, parse__Assign_targets, sanitize=sanitize)
 
 
-def code_as__decorator_list(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as__decorator_list(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to an `_decorator_list` SPECIAL SLICE if possible."""
 
     return _code_as(code, _decorator_list, parse_params, parse__decorator_list, sanitize=sanitize)
 
 
-def code_as_boolop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_boolop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a `boolop` `FST` if possible."""
 
     return _code_as_op(code, boolop, parse_params, parse_boolop, OPSTR2CLS_BOOL, sanitize=sanitize)
 
 
-def code_as_binop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_binop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a `operator` `FST` if possible."""
 
     return _code_as_op(code, operator, parse_params, parse_binop, OPSTR2CLS_BIN, sanitize=sanitize)
 
 
-def code_as_augop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_augop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to an augmented `operator` `FST` if possible, e.g. "+="."""
 
     return _code_as_op(code, operator, parse_params, parse_augop, OPSTR2CLS_AUG, OPCLS2STR_AUG, sanitize=sanitize)
 
 
-def code_as_unaryop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_unaryop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a `unaryop` `FST` if possible."""
 
     return _code_as_op(code, unaryop, parse_params, parse_unaryop, OPSTR2CLS_UNARY, sanitize=sanitize)
 
 
-def code_as_cmpop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_cmpop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a `cmpop` `FST` if possible."""
 
     return _code_as_op(code, cmpop, parse_params, parse_cmpop, OPSTR2CLS_CMP, sanitize=sanitize)
 
 
-def code_as_comprehension(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_comprehension(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a comprehension `FST` if possible."""
 
     return _code_as(code, comprehension, parse_params, parse_comprehension, sanitize=sanitize)
 
 
-def code_as__comprehensions(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as__comprehensions(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a `_comprehensions` of `comprehensions` SPECIAL SLICE if possible."""
 
     return _code_as(code, _comprehensions, parse_params, parse__comprehensions, sanitize=sanitize)
 
 
-def code_as__comprehension_ifs(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as__comprehension_ifs(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a `_comprehension_ifs` of `if` prepended `expr`s SPECIAL SLICE if possible."""
 
     return _code_as(code, _comprehension_ifs, parse_params, parse__comprehension_ifs, sanitize=sanitize)
 
 
-def code_as_arguments(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_arguments(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a arguments `FST` if possible."""
 
     return _code_as(code, arguments, parse_params, parse_arguments, sanitize=sanitize)
 
 
-def code_as_arguments_lambda(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_arguments_lambda(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a lambda arguments `FST` if possible (no annotations allowed)."""
 
     return _code_as(code, arguments, parse_params, parse_arguments_lambda, sanitize=sanitize)
 
 
-def code_as_arg(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_arg(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to an arg `FST` if possible."""
 
     return _code_as(code, arg, parse_params, parse_arg, sanitize=sanitize)
 
 
-def code_as_keyword(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_keyword(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a keyword `FST` if possible."""
 
     return _code_as(code, keyword, parse_params, parse_keyword, sanitize=sanitize)
 
 
-def code_as_alias(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_alias(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to an `alias` `FST` if possible, star or dotted."""
 
     return _code_as(code, alias, parse_params, parse_alias, sanitize=sanitize)
 
 
-def code_as__aliases(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as__aliases(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to an `_aliases` of `alias` SPECIAL SLICE if possible, star or dotted."""
 
     return _code_as(code, _aliases, parse_params, parse__aliases, sanitize=sanitize)
 
 
-def code_as_Import_name(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_Import_name(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to an `alias` `FST` if possible, dotted as in `alias` for `Import.names`."""
 
     fst_ = _code_as(code, alias, parse_params, parse_Import_name, sanitize=sanitize)
@@ -632,7 +639,7 @@ def code_as_Import_name(code: Code, parse_params: Mapping[str, Any] = {}, *, san
     return fst_
 
 
-def code_as__Import_names(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as__Import_names(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to an `_aliases` of `alias` SPECIAL SLICE if possible, dotted as in `alias` for `Import.names`."""
 
     fst_ = _code_as(code, _aliases, parse_params, parse__Import_names, sanitize=sanitize)
@@ -644,7 +651,7 @@ def code_as__Import_names(code: Code, parse_params: Mapping[str, Any] = {}, *, s
     return fst_
 
 
-def code_as_ImportFrom_name(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_ImportFrom_name(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to an `alias` `FST` if possible, possibly star as in `alias` for `FromImport.names`."""
 
     fst_ = _code_as(code, alias, parse_params, parse_ImportFrom_name, sanitize=sanitize)
@@ -656,7 +663,7 @@ def code_as_ImportFrom_name(code: Code, parse_params: Mapping[str, Any] = {}, *,
     return fst_
 
 
-def code_as__ImportFrom_names(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as__ImportFrom_names(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to an `_aliases` of `alias` SPECIAL SLICE if possible, possibly star as in `alias` for
     `FromImport.names`."""
 
@@ -676,20 +683,20 @@ def code_as__ImportFrom_names(code: Code, parse_params: Mapping[str, Any] = {}, 
     return fst_
 
 
-def code_as_withitem(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_withitem(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a withitem `FST` if possible."""
 
     return _code_as(code, withitem, parse_params, parse_withitem, sanitize=sanitize)
 
 
-def code_as__withitems(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as__withitems(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a `_withitems` of `withitem` SPECIAL SLICE if possible."""
 
     return _code_as(code, _withitems, parse_params, parse__withitems, sanitize=sanitize)
 
 
 def code_as_pattern(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True, allow_invalid_matchor: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, allow_invalid_matchor: bool = False
 ) -> fst.FST:
     """Convert `code` to a pattern `FST` if possible."""
 
@@ -706,20 +713,23 @@ def code_as_pattern(
     return fst_
 
 
-def code_as_type_param(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as_type_param(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a type_param `FST` if possible."""
 
     return _code_as(code, type_param, parse_params, parse_type_param, sanitize=sanitize)
 
 
-def code_as__type_params(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as__type_params(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a `_type_params` of `type_param` SPECIAL SLICE if possible."""
 
     return _code_as(code, _type_params, parse_params, parse__type_params, sanitize=sanitize)
 
 
-def code_as_identifier(code: Code, parse_params: Mapping[str, Any] = {}) -> str:
-    """Convert `code` to valid identifier string if possible."""
+def code_as_identifier(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> str:
+    """Convert `code` to valid identifier string if possible.
+
+    **Note:** `sanitize` does nothing.
+    """
 
     if isinstance(code, fst.FST):
         if not code.is_root:
@@ -740,8 +750,11 @@ def code_as_identifier(code: Code, parse_params: Mapping[str, Any] = {}) -> str:
     return code
 
 
-def code_as_identifier_dotted(code: Code, parse_params: Mapping[str, Any] = {}) -> str:
-    """Convert `code` to valid dotted identifier string if possible (for Import module)."""
+def code_as_identifier_dotted(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> str:
+    """Convert `code` to valid dotted identifier string if possible (for Import module).
+
+    **Note:** `sanitize` does nothing.
+    """
 
     if isinstance(code, fst.FST):
         if not code.is_root:
@@ -762,8 +775,11 @@ def code_as_identifier_dotted(code: Code, parse_params: Mapping[str, Any] = {}) 
     return code
 
 
-def code_as_identifier_star(code: Code, parse_params: Mapping[str, Any] = {}) -> str:
-    """Convert `code` to valid identifier string or star '*' if possible (for ImportFrom names)."""
+def code_as_identifier_star(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> str:
+    """Convert `code` to valid identifier string or star '*' if possible (for ImportFrom names).
+
+    **Note:** `sanitize` does nothing.
+    """
 
     if isinstance(code, fst.FST):
         if not code.is_root:
@@ -784,8 +800,11 @@ def code_as_identifier_star(code: Code, parse_params: Mapping[str, Any] = {}) ->
     return code
 
 
-def code_as_identifier_alias(code: Code, parse_params: Mapping[str, Any] = {}) -> str:
-    """Convert `code` to valid dotted identifier string or star '*' if possible (for any alias)."""
+def code_as_identifier_alias(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> str:
+    """Convert `code` to valid dotted identifier string or star '*' if possible (for any alias).
+
+    **Note:** `sanitize` does nothing.
+    """
 
     if isinstance(code, fst.FST):
         if not code.is_root:
@@ -806,10 +825,13 @@ def code_as_identifier_alias(code: Code, parse_params: Mapping[str, Any] = {}) -
     return code
 
 
-def code_as_constant(code: constant, parse_params: Mapping[str, Any] = {}) -> constant:
+def code_as_constant(code: constant, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> constant:
     """Convert `code` to valid constant if possible. If `code` is a `str` then it is treated as the constant value and
     not as the python representation of the constant. The only `FST` or `AST` accepted is a `Constant`, whose `value` is
-    returned."""
+    returned.
+
+    **Note:** `sanitize` does nothing.
+    """
 
     if isinstance(code, fst.FST):
         if not code.is_root:
@@ -843,7 +865,7 @@ def code_as_constant(code: constant, parse_params: Mapping[str, Any] = {}) -> co
 
 # ......................................................................................................................
 
-def code_as__expr_arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = True) -> fst.FST:
+def code_as__expr_arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a `Tuple` contianing possibly arglike expressions. Meant for putting slices to `Call.args` and
     `ClassDef.bases`.
 

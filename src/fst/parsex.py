@@ -816,10 +816,14 @@ def parse__ExceptHandlers(src: str, parse_params: Mapping[str, Any] = {}) -> AST
     if not (handlers := ast.handlers):
         return _ExceptHandlers(handlers, 1, 0, 1, 0)
 
-    _offset_linenos(ast, -1)
+    # _offset_linenos(ast, -1)
 
-    return _ExceptHandlers(handlers=handlers, lineno=(h0 := handlers[0]).lineno, col_offset=h0.col_offset,
-                           end_lineno=(hn := handlers[-1]).end_lineno, end_col_offset=hn.end_col_offset)
+    # return _ExceptHandlers(handlers=handlers, lineno=(h0 := handlers[0]).lineno, col_offset=h0.col_offset,
+    #                        end_lineno=(hn := handlers[-1]).end_lineno, end_col_offset=hn.end_col_offset)
+
+    ast = _ExceptHandlers(handlers=handlers, **_astloc_from_src(src, 2))
+
+    return _offset_linenos(ast, -1)
 
 
 def parse_match_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
@@ -860,10 +864,10 @@ def parse__match_cases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     an = cases[-1]
     lineno = a0.f.lineno
     end_lineno = an.f.end_lineno
-    cases_lineno = lineno - 2
-    cases_col_offset = a0.f.col_offset - (lineno - 1 in lns)  # `lineno - 1` is ln - inserted two lines (-2) + ln conversion to lineno (+1)
-    cases_end_lineno = end_lineno - 2
-    cases_end_col_offset = an.f.end_col_offset - (end_lineno - 1 in lns)
+    # cases_lineno = lineno - 2
+    # cases_col_offset = a0.f.col_offset - (lineno - 1 in lns)  # `lineno - 1` is ln - inserted two lines (-2) + ln conversion to lineno (+1)
+    # cases_end_lineno = end_lineno - 2
+    # cases_end_col_offset = an.f.end_col_offset - (end_lineno - 1 in lns)
 
     lns_ = set()
 
@@ -885,8 +889,10 @@ def parse__match_cases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             if end_lineno in lns_:
                 a.end_col_offset = end_col_offset - 1
 
-    return _match_cases(cases=ast.cases[1:], lineno=cases_lineno, col_offset=cases_col_offset,
-                        end_lineno=cases_end_lineno, end_col_offset=cases_end_col_offset)
+    # return _match_cases(cases=ast.cases[1:], lineno=cases_lineno, col_offset=cases_col_offset,
+    #                     end_lineno=cases_end_lineno, end_col_offset=cases_end_col_offset)
+
+    return _match_cases(cases=ast.cases[1:], **_astloc_from_src(src, 1))
 
 
 def parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:

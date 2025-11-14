@@ -1945,9 +1945,7 @@ def _put_src(
 
 
 def _sanitize(self: fst.FST) -> Self:
-    """Quick check to make sure that nodes which are not `stmt`, `ExceptHandler`, `match_case` or `mod` don't have any
-    extra junk in the source and that the parenthesized location matches the whole location of the source. If not then
-    fix by removing the junk."""
+    """Remove any leading or trailing junk which is not part of the location or parenthesized location of the node."""
 
     assert self.is_root
 
@@ -1957,12 +1955,16 @@ def _sanitize(self: fst.FST) -> Self:
     ln, col, end_ln, end_col = loc
     lines = self._lines
 
-    self._offset(ln, col, -ln, -lines[ln].c2b(col))
-
     lines[end_ln] = bistr(lines[end_ln][:end_col])
-    lines[ln] = bistr(lines[ln][col:])
 
-    del lines[end_ln + 1:], lines[:ln]
+    del lines[end_ln + 1:]
+
+    if ln or col:
+        self._offset(0, 0, -ln, -lines[ln].c2b(col))  # can do at 0, 0 because it doesn't really matter, we are offsetting everything anyway
+
+        lines[ln] = bistr(lines[ln][col:])
+
+        del lines[:ln]
 
     return self
 

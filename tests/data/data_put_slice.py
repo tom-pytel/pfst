@@ -16028,7 +16028,7 @@ except a: pass
 except:
     pass
 ''', r'''
-_ExceptHandlers - ROOT 0,0..1,12
+_ExceptHandlers - ROOT 0,0..2,0
   .handlers[2]
    0] ExceptHandler - 0,0..0,14
      .type Name 'a' Load - 0,7..0,8
@@ -16054,7 +16054,7 @@ except a: pass
 except:
     pass
 ''', r'''
-_ExceptHandlers - ROOT 0,0..1,12
+_ExceptHandlers - ROOT 0,0..3,0
   .handlers[2]
    0] ExceptHandler - 0,0..0,14
      .type Name 'a' Load - 0,7..0,8
@@ -16100,7 +16100,7 @@ except a: pass
 except:
     pass
 ''', r'''
-_ExceptHandlers - ROOT 0,0..2,8
+_ExceptHandlers - ROOT 0,0..3,0
   .handlers[2]
    0] ExceptHandler - 0,0..0,14
      .type Name 'a' Load - 0,7..0,8
@@ -16128,7 +16128,7 @@ except a: pass
 except:
     pass
 ''', r'''
-_ExceptHandlers - ROOT 0,0..2,8
+_ExceptHandlers - ROOT 0,0..4,0
   .handlers[2]
    0] ExceptHandler - 0,0..0,14
      .type Name 'a' Load - 0,7..0,8
@@ -16176,7 +16176,7 @@ case 1: pass
 case 2:
     pass
 ''', r'''
-_match_cases - ROOT 0,0..1,12
+_match_cases - ROOT 0,0..2,0
   .cases[2]
    0] match_case - 0,0..0,12
      .pattern MatchValue - 0,5..0,6
@@ -16205,7 +16205,7 @@ case 1: pass
 case 2:
     pass
 ''', r'''
-_match_cases - ROOT 0,0..1,12
+_match_cases - ROOT 0,0..3,0
   .cases[2]
    0] match_case - 0,0..0,12
      .pattern MatchValue - 0,5..0,6
@@ -16257,7 +16257,7 @@ case 1: pass
 case 2:
     pass
 ''', r'''
-_match_cases - ROOT 0,0..2,8
+_match_cases - ROOT 0,0..3,0
   .cases[2]
    0] match_case - 0,0..0,12
      .pattern MatchValue - 0,5..0,6
@@ -16288,7 +16288,7 @@ case 1: pass
 case 2:
     pass
 ''', r'''
-_match_cases - ROOT 0,0..2,8
+_match_cases - ROOT 0,0..4,0
   .cases[2]
    0] match_case - 0,0..0,12
      .pattern MatchValue - 0,5..0,6

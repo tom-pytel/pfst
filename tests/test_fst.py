@@ -31,6 +31,7 @@ from fst.code import (
     code_as__match_cases,
     code_as_expr,
     code_as_expr_slice,
+    code_as_Tuple,
     code_as_boolop,
     code_as_binop,
     code_as_augop,
@@ -1484,11 +1485,12 @@ match a:
         self.assertRaises(SyntaxError, code_as__match_cases, 'case = 1')
         self.assertRaises(SyntaxError, code_as__match_cases, 'case.b = 1')
 
-    def test_code_as_sanitize(self):
+    def test_code_as_sanitize_exprish(self):
         CODE_ASES = [
             (code_as_expr, 'f(a)'),
             (code_as_expr_slice, 'b:c:d'),
             (code_as_expr_slice, 'b:c:d, e:f'),
+            (code_as_Tuple, '1, 2, 3'),
             (code_as_binop, '+'),
             (code_as_augop, '+='),
             (code_as_unaryop, '~'),
@@ -1522,15 +1524,26 @@ match a:
 
         for code_as, src in CODE_ASES:
             self.assertEqual(src, code_as(src).src)
-            self.assertEqual(src, code_as(f'{src}  ').src)
+            self.assertEqual(src, code_as(f'  {src}  ', sanitize=True).src)
 
             if code_as in (code_as_expr, code_as_pattern):  # parenthesizable things so lets abuse
                 srcp = f'(\n# pre\n{src} # post\n# post2\n)'
 
                 self.assertEqual(srcp, code_as(srcp).src)
+                self.assertEqual(src, code_as(srcp[1:-1], sanitize=True).src)
 
-                if code_as is code_as_expr:
-                    self.assertEqual(src, code_as(srcp[1:-1]).src)
+    def test_sanitize_stmtish(self):
+        f = FST('# pre\ni = j  # line\n# post', 'stmt')
+        self.assertEqual('# pre\ni = j  # line\n# post', f.src)
+        self.assertEqual('i = j', f._sanitize().src)
+
+        f = FST('# pre\nexcept: pass  # line\n# post', 'ExceptHandler')
+        self.assertEqual('# pre\nexcept: pass  # line\n# post', f.src)
+        self.assertEqual('except: pass', f._sanitize().src)
+
+        f = FST('# pre\ncase None: pass  # line\n# post', 'match_case')
+        self.assertEqual('# pre\ncase None: pass  # line\n# post', f.src)
+        self.assertEqual('case None: pass', f._sanitize().src)
 
     def test_code_as_all_from_ast(self):
         for mode, func, res, src in PARSE_TESTS:
@@ -1579,33 +1592,20 @@ match a:
 
                     test    = 'parse'
                     ref_ast = px.parse(src, mode)
-
-                    test = 'src'
-
-                    try:
-                        fst = code_as(src, sanitize=False)
-                    except TypeError:
-                        fst = code_as(src)
+                    test    = 'src'
+                    fst     = code_as(src, sanitize=False)
 
                     compare_asts(ref_ast, fst.a, locs=True, raise_=True)
 
                     if fst._get_parse_mode() not in ('_ExceptHandlers', '_match_cases'):  # this tells us if it is a SPECIAL SLICE, which can not be unparsed  TODO: remove this check once ExceptHandler and match_case special slices moved from Module to their own _slice AST classes
-                        test = 'ast'
-
-                        try:
-                            ast_fst = code_as(fst.a, sanitize=False)
-                        except TypeError:
-                            ast_fst = code_as(fst.a)
+                        test    = 'ast'
+                        ast_fst = code_as(fst.a, sanitize=False)
 
                         compare_asts(ref_ast, ast_fst.a, locs=False, raise_=True)
 
                     test    = 'fst'
                     fst_src = fst.src
-
-                    try:
-                        fst_fst = code_as(fst, sanitize=False)
-                    except TypeError:
-                        fst_fst = code_as(fst)
+                    fst_fst = code_as(fst, sanitize=False)
 
                     compare_asts(ref_ast, fst_fst.a, locs=False, raise_=True)
 

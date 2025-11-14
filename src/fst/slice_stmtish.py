@@ -1311,10 +1311,17 @@ _trivia2postcomms = {False: False, 'none': False, 'line': True, 'block': 'block'
 
 
 def _maybe_del_trailing_newline(self: fst.FST, old_last_line: str, put_fst_end_nl: bool) -> None:
-    lines = (root := self.root)._lines
+    """Cut or del or put operation may leave a trailing newline at end of source. If that happens and there was not a
+    traling newline before then remove it. Also update end location of `_ExceptHandlesr` or `_match_cases` SPECIAL SLICE
+    since those always need to end at end of source."""
+
+    root = self.root
+    roota = root.a
+    is_special = isinstance(roota, (_ExceptHandlers, _match_cases))
+    lines = root._lines
 
     if not put_fst_end_nl and old_last_line and not (new_last_line := lines[-1]) and new_last_line is not old_last_line:  # if self last line changed and was previously not a trailing newline and code put did not end in trailing newline then make sure it is not so now
-        if isinstance(root.a, (mod, _ExceptHandlers, _match_cases)) and not (root := root.last_child()):
+        if (is_special or isinstance(roota, mod)) and not (root := root.last_child()):
             if len(lines) > 1:
                 del lines[-1]  # we specifically delete just one trailing newline because there may be multiple and we want to preserve the rest
 
@@ -1324,6 +1331,12 @@ def _maybe_del_trailing_newline(self: fst.FST, old_last_line: str, put_fst_end_n
             del lines[-1]
 
             root._touchall(True, True, False)
+
+    if is_special:  # if a special _ExceptHandler or _match_cases slice then end needs to be set to end of source
+        roota.end_lineno = len(lines)
+        roota.end_col_offset = lines[-1].lenbytes
+
+        self.root._touch()
 
 
 def get_slice_stmtish(
