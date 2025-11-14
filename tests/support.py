@@ -3,6 +3,7 @@ import sys
 from typing import Any, Generator, Literal, NamedTuple
 
 from fst import FST
+from fst.asttypes import _slice
 from fst.astutil import copy_ast, compare_asts
 
 from ast import AST
@@ -308,7 +309,7 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
                     rest.append(f'**{_san_exc(exc)!r}**')
 
                 else:
-                    is_special_slice = h._is_special_slice()
+                    is_special_slice = isinstance(h.a, _slice)  # h._is_special_slice()
 
                     a = copy_ast(h.a)
                     k = _make_fst(code, attr)

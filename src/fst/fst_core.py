@@ -44,7 +44,6 @@ from .asttypes import (
     Match,
     MatchClass,
     MatchMapping,
-    MatchOr,
     MatchSingleton,
     MatchStar,
     MatchValue,
@@ -82,7 +81,6 @@ from .asttypes import (
     type_param,
     TemplateStr,
     Interpolation,
-    _slice,
 )
 
 from .astutil import bistr, syntax_ordered_children
@@ -670,45 +668,6 @@ def _set_end_pos(
             break
 
         self = parent
-
-
-def _is_special_slice(self: fst.FST) -> bool:
-    """Whether `self` is an instance of our own SPECIAL SLICE format and not a valid python structure. For example
-    a `Set` or `MatchOr` with zero elements or our own `_slice` `AST` subclass.
-
-    **Returns:**
-    - `bool`: Whether self is a recognized SPECIAL SLICE or not (if not it still doesn't mean its valid).
-
-    **Examples:**
-    ```py
-    >>> FST('{1}').get_slice(0, 1)._is_special_slice()
-    False
-
-    >>> FST('{1}').get_slice(0, 0, norm_get=False)._is_special_slice()
-    True
-
-    >>> FST('a | b | c', pattern).get_slice(0, 0, norm_get=False)._is_special_slice()
-    True
-
-    >>> FST('a = b = c').get_slice(0, 2, 'targets')._is_special_slice()
-    True
-    ```
-    """
-
-    ast = self.a
-
-    if isinstance(ast, _slice):
-        return True
-
-    elif isinstance(ast, Set):
-        if not ast.elts:
-            return True
-
-    elif isinstance(ast, MatchOr):
-        if len(ast.patterns) < 2:
-            return True
-
-    return False
 
 
 def _is_parenthesizable(self: fst.FST) -> bool:

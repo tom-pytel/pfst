@@ -1437,6 +1437,12 @@ class FST:
 
         >>> bool(FST('a:b:c').verify('exec', raise_=False))
         False
+
+        >>> FST('if a if b').verify()
+        <_comprehension_ifs ROOT 0,0..0,9>
+
+        >>> bool(FST('if a if b').verify('strict', raise_=False))
+        False
         ```
         """
 
@@ -4417,7 +4423,6 @@ class FST:
         _set_ctx,
         _set_end_pos,
 
-        _is_special_slice,
         _is_parenthesizable,
         _is_atom,
         _is_enclosed_or_line,

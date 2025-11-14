@@ -86,7 +86,6 @@ from .asttypes import (
     unaryop,
     withitem,
     type_param,
-    _slice,
     _ExceptHandlers,
     _match_cases,
     _Assign_targets,
