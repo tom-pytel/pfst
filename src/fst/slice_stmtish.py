@@ -1044,15 +1044,25 @@ def _put_slice_stmtish_old(
 ) -> bool:
     ast = self.a
     body = getattr(ast, field)
+    len_body = len(body)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
 
     if code is None:
         put_fst = None
         put_fst_end_nl = False
 
     else:
-        if field == 'handlers':
-            is_trystar = isinstance(ast, TryStar) or (body and isinstance(ast, _ExceptHandlers) and
-                                                      body[0].f._is_except_star())
+        if is_handlers := (field == 'handlers'):
+            if len_slice == len_body and not isinstance(code, AST):  # if replacing all handlers then can change Try <-> TryStar according to what is being put (if we know, we don't know if code is AST)
+                is_trystar = None
+            elif isinstance(ast, Try):
+                is_trystar = False
+            elif isinstance(ast, TryStar):
+                is_trystar = True
+            else:  # isinstance(ast, _ExceptHandlers)
+                is_trystar = body[0].f._is_except_star() if body else None
+
             put_fst = code_as__ExceptHandlers(code, self.root.parse_params, is_trystar=is_trystar)
             put_body = put_fst.a.handlers
 
@@ -1066,24 +1076,22 @@ def _put_slice_stmtish_old(
 
         # NOTE: we do not convert an empty put_body to put_fst=None because we may be putting just comments and/or empty space
 
-        put_fst_end_nl = not put_fst._lines[-1]
+        put_fst_lines = put_fst._lines
+        put_fst_end_nl = not put_fst_lines[-1]
 
         if one and len(put_body) != 1:
             raise ValueError('expecting a single element')
 
-    start, stop = fixup_slice_indices(len(body), start, stop)
-    slice_len = stop - start
-
-    if not slice_len and (not put_fst or (not put_body and len(ls := put_fst._lines) == 1 and not ls[0])):  # deleting empty slice or assigning empty fst to empty slice, noop
+    if not len_slice and (not put_fst or (not put_body and len(put_fst_lines) == 1 and not put_fst_lines[0])):  # deleting empty slice or assigning empty fst to empty slice, noop
         return True
 
-    if (not put_fst or not put_body) and not start and stop == len(body) and not _can_del_all(self, field, options):
+    if (not put_fst or not put_body) and len_slice == len_body and not _can_del_all(self, field, options):
         raise ValueError(f'cannot delete all elements from {ast.__class__.__name__}.{field} without norm_self=False')
 
     root = self.root
     lines = root._lines
     fpre = body[start - 1].f if start else None
-    fpost = body[stop].f if stop < len(body) else None
+    fpost = body[stop].f if stop < len_body else None
 
     if put_fst:
         opener_indent = self._get_indent()
@@ -1103,7 +1111,7 @@ def _put_slice_stmtish_old(
         if fpre or fpost:
             _normalize_block(self, field, indent=block_indent)  # don't want to bother figuring out if valid to insert to statements on single block logical line
 
-    if slice_len:  # replacement
+    if len_slice:  # replacement
         ffirst = body[start].f
         flast = body[stop - 1].f
 
@@ -1115,7 +1123,7 @@ def _put_slice_stmtish_old(
     else:  # insertion
         ffirst = flast = None
 
-        if field == 'orelse' and len(body) == 1 and (f := body[0].f)._is_elif():
+        if field == 'orelse' and len_body == 1 and (f := body[0].f)._is_elif():
             _elif_to_else_if(f, fst.FST.get_option('docstr', options))
 
         if fpre:
@@ -1258,7 +1266,7 @@ def _put_slice_stmtish_old(
                                            **options)
 
         put_fst._offset(0, 0, put_loc.ln, 0 if put_fst.bln or put_fst.bcol else lines[put_loc.ln].c2b(put_loc.col))
-        self._put_src(put_fst._lines, *put_loc, False)
+        self._put_src(put_fst_lines, *put_loc, False)
         self._unmake_fst_tree(body[start : stop])
         put_fst._unmake_fst_parents(True)
 
@@ -1269,6 +1277,21 @@ def _put_slice_stmtish_old(
         stack = [FST(body[i], self, astfield(field, i)) for i in range(start, start + put_len)]
 
         self._make_fst_tree(stack)
+
+        if is_handlers and is_trystar is None and not isinstance(ast, _ExceptHandlers):  # we may have to change Try <-> TryStar if put ExceptHandlers and all handlers replaced
+            is_except_star = body[0].f._is_except_star()
+
+            if is_except_star != isinstance(ast, TryStar):  # need to swap?
+                new_type = TryStar if is_except_star else Try
+                new_ast = new_type(body=ast.body, handlers=body, orelse=ast.orelse, finalbody=ast.finalbody,
+                                   lineno=ast.lineno, col_offset=ast.col_offset,
+                                   end_lineno=ast.end_lineno, end_col_offset=ast.end_col_offset)
+                new_ast.f = self  # FST remains same
+                self.a = new_ast  # point to new AST
+                ast.f = None  # clean up old AST
+
+                if pfield := self.pfield:  # if there is a parent then set new AST as the child replacing current child
+                    pfield.set(self.parent.a, new_ast)
 
     for i in range(start + put_len, len(body)):
         body[i].f.pfield = astfield(field, i)

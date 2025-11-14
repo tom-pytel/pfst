@@ -309,7 +309,7 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
                     rest.append(f'**{_san_exc(exc)!r}**')
 
                 else:
-                    is_special_slice = isinstance(h.a, _slice)  # h._is_special_slice()
+                    # is_special_slice = isinstance(h.a, _slice)
 
                     a = copy_ast(h.a)
                     k = _make_fst(code, attr)
@@ -341,7 +341,7 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
                             else:
                                 raise exc
 
-                        if not is_special_slice:
+                        if options.get('_ast', True):  # and not is_special_slice:
                             l = _make_fst(code, attr)
 
                             try:

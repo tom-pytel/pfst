@@ -579,7 +579,8 @@ def _set_ast(self: fst.FST, ast: AST, valid_fst: bool = False, unmake: bool = Tr
 
     **Parameters:**
     - `valid_fst`: Indicates that the `AST` node is a part of a valid `FST` tree already so that less processing needs
-        to be done to integrate it into `self`.
+        to be done to integrate it into `self`. Specifically we just set `.root` for all `ast` child nodes and the `ast`
+        node's own parent.
     - `unmake`: Whether to unmake the FST tree being replaced or not. Should really always unmake.
     """
 

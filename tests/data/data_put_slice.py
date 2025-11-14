@@ -16554,6 +16554,195 @@ Module - ROOT 0,0..3,1
 '''),
 ],
 
+'except_vs_except_star': [  # ................................................................................
+
+('', 1, 1, 'handlers', {'_ver': 11}, (None, r'''
+try: pass
+except Exception: pass
+'''), (None,
+r'''except* Exception: pass'''),
+r'''**ParseError("expecting plain 'except' handler, got star 'except*'")**'''),
+
+('', 1, 1, 'handlers', {'_ver': 11}, (None, r'''
+try: pass
+except Exception: pass
+'''), (None,
+r'''except Exception: pass'''), r'''
+try: pass
+except Exception: pass
+except Exception: pass
+''', r'''
+try: pass
+except Exception: pass
+except Exception:
+    pass
+''', r'''
+Try - ROOT 0,0..2,22
+  .body[1]
+   0] Pass - 0,5..0,9
+  .handlers[2]
+   0] ExceptHandler - 1,0..1,22
+     .type Name 'Exception' Load - 1,7..1,16
+     .body[1]
+      0] Pass - 1,18..1,22
+   1] ExceptHandler - 2,0..2,22
+     .type Name 'Exception' Load - 2,7..2,16
+     .body[1]
+      0] Pass - 2,18..2,22
+'''),
+
+('', 0, 1, 'handlers', {'_ver': 11, '_ast': False}, (None, r'''
+try: pass
+except Exception: pass
+'''), (None,
+r'''except* Exception: pass'''), r'''
+try: pass
+except* Exception: pass
+''', r'''
+TryStar - ROOT 0,0..1,23
+  .body[1]
+   0] Pass - 0,5..0,9
+  .handlers[1]
+   0] ExceptHandler - 1,0..1,23
+     .type Name 'Exception' Load - 1,8..1,17
+     .body[1]
+      0] Pass - 1,19..1,23
+'''),
+
+('body[0]', 0, 1, 'handlers', {'_ver': 11, '_ast': False}, ('exec', r'''
+try: pass
+except Exception: pass
+'''), (None,
+r'''except* Exception: pass'''), r'''
+try: pass
+except* Exception: pass
+''', r'''
+Module - ROOT 0,0..1,23
+  .body[1]
+   0] TryStar - 0,0..1,23
+     .body[1]
+      0] Pass - 0,5..0,9
+     .handlers[1]
+      0] ExceptHandler - 1,0..1,23
+        .type Name 'Exception' Load - 1,8..1,17
+        .body[1]
+         0] Pass - 1,19..1,23
+'''),
+
+('', 1, 1, 'handlers', {'_ver': 11}, (None, r'''
+try: pass
+except* Exception: pass
+'''), (None,
+r'''except Exception: pass'''),
+r'''**ParseError("expecting star 'except*' handler, got plain 'except'")**'''),
+
+('', 1, 1, 'handlers', {'_ver': 11}, (None, r'''
+try: pass
+except* Exception: pass
+'''), (None,
+r'''except* Exception: pass'''), r'''
+try: pass
+except* Exception: pass
+except* Exception: pass
+''', r'''
+try: pass
+except* Exception: pass
+except* Exception:
+    pass
+''', r'''
+TryStar - ROOT 0,0..2,23
+  .body[1]
+   0] Pass - 0,5..0,9
+  .handlers[2]
+   0] ExceptHandler - 1,0..1,23
+     .type Name 'Exception' Load - 1,8..1,17
+     .body[1]
+      0] Pass - 1,19..1,23
+   1] ExceptHandler - 2,0..2,23
+     .type Name 'Exception' Load - 2,8..2,17
+     .body[1]
+      0] Pass - 2,19..2,23
+'''),
+
+('', 0, 1, 'handlers', {'_ver': 11, '_ast': False}, (None, r'''
+try: pass
+except* Exception: pass
+'''), (None,
+r'''except Exception: pass'''), r'''
+try: pass
+except Exception: pass
+''', r'''
+Try - ROOT 0,0..1,22
+  .body[1]
+   0] Pass - 0,5..0,9
+  .handlers[1]
+   0] ExceptHandler - 1,0..1,22
+     .type Name 'Exception' Load - 1,7..1,16
+     .body[1]
+      0] Pass - 1,18..1,22
+'''),
+
+('body[0]', 0, 1, 'handlers', {'_ver': 11, '_ast': False}, ('exec', r'''
+try: pass
+except* Exception: pass
+'''), (None,
+r'''except Exception: pass'''), r'''
+try: pass
+except Exception: pass
+''', r'''
+Module - ROOT 0,0..1,22
+  .body[1]
+   0] Try - 0,0..1,22
+     .body[1]
+      0] Pass - 0,5..0,9
+     .handlers[1]
+      0] ExceptHandler - 1,0..1,22
+        .type Name 'Exception' Load - 1,7..1,16
+        .body[1]
+         0] Pass - 1,18..1,22
+'''),
+
+('', 1, 1, None, {'_ver': 11}, ('_ExceptHandlers',
+r'''except Exception: pass'''), (None,
+r'''except* Exception: pass'''),
+r'''**ParseError("expecting plain 'except' handler, got star 'except*'")**'''),
+
+('', 0, 1, None, {'_ver': 11}, ('_ExceptHandlers',
+r'''except Exception: pass'''), (None,
+r'''except* Exception: pass'''),
+r'''except* Exception: pass''', r'''
+except Exception:
+    pass
+''', r'''
+_ExceptHandlers - ROOT 0,0..0,23
+  .handlers[1]
+   0] ExceptHandler - 0,0..0,23
+     .type Name 'Exception' Load - 0,8..0,17
+     .body[1]
+      0] Pass - 0,19..0,23
+'''),
+
+('', 1, 1, None, {'_ver': 11}, ('_ExceptHandlers',
+r'''except* Exception: pass'''), (None,
+r'''except Exception: pass'''),
+r'''**ParseError("expecting star 'except*' handler, got plain 'except'")**'''),
+
+('', 0, 1, None, {'_ver': 11}, ('_ExceptHandlers',
+r'''except* Exception: pass'''), (None,
+r'''except Exception: pass'''),
+r'''except Exception: pass''', r'''
+except* Exception:
+    pass
+''', r'''
+_ExceptHandlers - ROOT 0,0..0,22
+  .handlers[1]
+   0] ExceptHandler - 0,0..0,22
+     .type Name 'Exception' Load - 0,7..0,16
+     .body[1]
+      0] Pass - 0,18..0,22
+'''),
+],
+
 'Delete_targets': [  # ................................................................................
 
 ('body[0]', None, None, None, {}, ('exec',
@@ -17055,7 +17244,8 @@ a = x \
 y \
 = \
 z = c = d
-''', r'''
+''',
+r'''a = x.y = z = c = d''', r'''
 Module - ROOT 0,0..4,9
   .body[1]
    0] Assign - 0,0..4,9
@@ -17077,7 +17267,8 @@ x \
 '''), r'''
 x = \
  d
-''', r'''
+''',
+r'''x = d''', r'''
 Module - ROOT 0,0..1,2
   .body[1]
    0] Assign - 0,0..1,2
@@ -17094,7 +17285,8 @@ x \
 '''), r'''
 x = \
  d
-''', r'''
+''',
+r'''x = d''', r'''
 Module - ROOT 0,0..1,2
   .body[1]
    0] Assign - 0,0..1,2
@@ -17156,7 +17348,8 @@ a = x \
 y \
 = \
 z = c =
-''', r'''
+''',
+r'''a = x.y = z = c =''', r'''
 _Assign_targets - ROOT 0,0..4,7
   .targets[4]
    0] Name 'a' Store - 0,0..0,1
@@ -17175,7 +17368,8 @@ x \
 '''), r'''
 x = \
 
-''', r'''
+''',
+r'''x =''', r'''
 _Assign_targets - ROOT 0,0..1,0
   .targets[1]
    0] Name 'x' Store - 0,0..0,1
@@ -17189,7 +17383,8 @@ x \
 '''), r'''
 x = \
 
-''', r'''
+''',
+r'''x =''', r'''
 _Assign_targets - ROOT 0,0..1,0
   .targets[1]
    0] Name 'x' Store - 0,0..0,1
@@ -18620,6 +18815,10 @@ if 1:
        a): pass
   pass
 ''', r'''
+if 1:
+  with x, y, a: pass
+  pass
+''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
    0] If - 0,0..5,6
@@ -18684,7 +18883,8 @@ x \
 '''), r'''
 with x \
 : pass  # comment
-''', r'''
+''',
+r'''with x: pass  # comment''', r'''
 Module - ROOT 0,0..1,17
   .body[1]
    0] With - 0,0..1,6
@@ -18720,7 +18920,8 @@ with a, b \
      , \
      c \
 : pass
-''', r'''
+''',
+r'''with a, b, c: pass''', r'''
 Module - ROOT 0,0..3,6
   .body[1]
    0] With - 0,0..3,6
@@ -18748,7 +18949,8 @@ with a, \
      , \
      c \
 : pass
-''', r'''
+''',
+r'''with a, b, c: pass''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
    0] With - 0,0..4,6
@@ -18972,6 +19174,10 @@ if 1:
        (a)): pass
   pass
 ''', r'''
+if 1:
+  with x, y, (a): pass
+  pass
+''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
    0] If - 0,0..5,6
@@ -19036,7 +19242,8 @@ x \
 '''), r'''
 with (x \
 ): pass  # comment
-''', r'''
+''',
+r'''with (x): pass  # comment''', r'''
 Module - ROOT 0,0..1,18
   .body[1]
    0] With - 0,0..1,7
@@ -19072,7 +19279,8 @@ with (a), b \
      , \
      c \
 : pass
-''', r'''
+''',
+r'''with (a), b, c: pass''', r'''
 Module - ROOT 0,0..3,6
   .body[1]
    0] With - 0,0..3,6
@@ -19100,7 +19308,8 @@ with (a), \
      , \
      c \
 : pass
-''', r'''
+''',
+r'''with (a), b, c: pass''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
    0] With - 0,0..4,6
@@ -19324,6 +19533,10 @@ if 1:
              a): pass
   pass
 ''', r'''
+if 1:
+  async with x, y, a: pass
+  pass
+''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
    0] If - 0,0..5,6
@@ -19388,7 +19601,8 @@ x \
 '''), r'''
 async with x \
 : pass  # comment
-''', r'''
+''',
+r'''async with x: pass  # comment''', r'''
 Module - ROOT 0,0..1,17
   .body[1]
    0] AsyncWith - 0,0..1,6
@@ -19424,7 +19638,8 @@ async with a, b \
            , \
            c \
 : pass
-''', r'''
+''',
+r'''async with a, b, c: pass''', r'''
 Module - ROOT 0,0..3,6
   .body[1]
    0] AsyncWith - 0,0..3,6
@@ -19452,7 +19667,8 @@ async with a, \
            , \
            c \
 : pass
-''', r'''
+''',
+r'''async with a, b, c: pass''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
    0] AsyncWith - 0,0..4,6
@@ -19676,6 +19892,10 @@ if 1:
              (a)): pass
   pass
 ''', r'''
+if 1:
+  async with x, y, (a): pass
+  pass
+''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
    0] If - 0,0..5,6
@@ -19740,7 +19960,8 @@ x \
 '''), r'''
 async with (x \
 ): pass  # comment
-''', r'''
+''',
+r'''async with (x): pass  # comment''', r'''
 Module - ROOT 0,0..1,18
   .body[1]
    0] AsyncWith - 0,0..1,7
@@ -19776,7 +19997,8 @@ async with (a), b \
            , \
            c \
 : pass
-''', r'''
+''',
+r'''async with (a), b, c: pass''', r'''
 Module - ROOT 0,0..3,6
   .body[1]
    0] AsyncWith - 0,0..3,6
@@ -19804,7 +20026,8 @@ async with (a), \
            , \
            c \
 : pass
-''', r'''
+''',
+r'''async with (a), b, c: pass''', r'''
 Module - ROOT 0,0..4,6
   .body[1]
    0] AsyncWith - 0,0..4,6
@@ -20012,6 +20235,10 @@ if 1:
          a
   pass
 ''', r'''
+if 1:
+  import x, y, a
+  pass
+''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
    0] If - 0,0..5,6
@@ -20067,7 +20294,8 @@ x \
 '''), r'''
 import x \
   # comment
-''', r'''
+''',
+r'''import x  # comment''', r'''
 Module - ROOT 0,0..1,11
   .body[1]
    0] Import - 0,0..0,8
@@ -20098,7 +20326,8 @@ import a, b \
        , \
        c \
 
-''', r'''
+''',
+r'''import a, b, c''', r'''
 Module - ROOT 0,0..3,0
   .body[1]
    0] Import - 0,0..2,8
@@ -20124,7 +20353,8 @@ import a, \
        , \
        c \
 
-''', r'''
+''',
+r'''import a, b, c''', r'''
 Module - ROOT 0,0..4,0
   .body[1]
    0] Import - 0,0..3,8
@@ -20187,7 +20417,8 @@ e
 '''), r'''
 import a, b, d, \
        e ; import c
-''', r'''
+''',
+r'''import a, b, d, e ; import c''', r'''
 Module - ROOT 0,0..1,19
   .body[2]
    0] Import - 0,0..1,8
@@ -20214,7 +20445,8 @@ e  # comment
 '''), r'''
 import a, b, d, \
        e ; import c
-''', r'''
+''',
+r'''import a, b, d, e ; import c''', r'''
 Module - ROOT 0,0..1,19
   .body[2]
    0] Import - 0,0..1,8
@@ -20257,7 +20489,8 @@ e
 '''), r'''
 import a, b, d, \
        e ;
-''', r'''
+''',
+r'''import a, b, d, e ;''', r'''
 Module - ROOT 0,0..1,10
   .body[1]
    0] Import - 0,0..1,8
@@ -20280,7 +20513,8 @@ e  # comment
 '''), r'''
 import a, b, d, \
        e ;
-''', r'''
+''',
+r'''import a, b, d, e ;''', r'''
 Module - ROOT 0,0..1,10
   .body[1]
    0] Import - 0,0..1,8
@@ -20317,7 +20551,8 @@ e
 '''), r'''
 import a, b, d, \
        e ;
-''', r'''
+''',
+r'''import a, b, d, e ;''', r'''
 Import - ROOT 0,0..1,8
   .names[4]
    0] alias - 0,7..0,8
@@ -20338,7 +20573,8 @@ e  # comment
 '''), r'''
 import a, b, d, \
        e ;
-''', r'''
+''',
+r'''import a, b, d, e ;''', r'''
 Import - ROOT 0,0..1,8
   .names[4]
    0] alias - 0,7..0,8
@@ -20537,6 +20773,10 @@ if 1:
                   a)
   pass
 ''', r'''
+if 1:
+  from mod import x, y, a
+  pass
+''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
    0] If - 0,0..5,6
@@ -20585,7 +20825,8 @@ x \
 '''), r'''
 from mod import x \
   # comment
-''', r'''
+''',
+r'''from mod import x  # comment''', r'''
 Module - ROOT 0,0..1,11
   .body[1]
    0] ImportFrom - 0,0..0,17
@@ -20621,7 +20862,8 @@ from mod import a, b \
                 , \
                 c \
 
-''', r'''
+''',
+r'''from mod import a, b, c''', r'''
 Module - ROOT 0,0..3,0
   .body[1]
    0] ImportFrom - 0,0..2,17
@@ -20649,7 +20891,8 @@ from mod import a, \
                 , \
                 c \
 
-''', r'''
+''',
+r'''from mod import a, b, c''', r'''
 Module - ROOT 0,0..4,0
   .body[1]
    0] ImportFrom - 0,0..3,17
@@ -20879,6 +21122,10 @@ if 1:
                    a)
   pass
 ''', r'''
+if 1:
+  from mod import (x, y, a)
+  pass
+''', r'''
 Module - ROOT 0,0..5,6
   .body[1]
    0] If - 0,0..5,6
@@ -20927,7 +21174,8 @@ x \
 '''), r'''
 from mod import (x \
 )  # comment
-''', r'''
+''',
+r'''from mod import (x)  # comment''', r'''
 Module - ROOT 0,0..1,12
   .body[1]
    0] ImportFrom - 0,0..1,1
@@ -20964,7 +21212,8 @@ from mod import (a, b \
                  c \
                    # blah
 )
-''', r'''
+''',
+r'''from mod import (a, b, c)''', r'''
 Module - ROOT 0,0..4,1
   .body[1]
    0] ImportFrom - 0,0..4,1
@@ -20993,7 +21242,8 @@ from mod import (a, \
                  c \
                    # blah
 )
-''', r'''
+''',
+r'''from mod import (a, b, c)''', r'''
 Module - ROOT 0,0..5,1
   .body[1]
    0] ImportFrom - 0,0..5,1
@@ -21102,7 +21352,8 @@ r'''from mod import a'''), ('_ImportFrom_names', r'''
 from mod import * \
                 # blah
 
-''', r'''
+''',
+r'''from mod import *''', r'''
 Module - ROOT 0,0..2,0
   .body[1]
    0] ImportFrom - 0,0..0,17
@@ -21164,7 +21415,8 @@ e
 '''), r'''
 from z import (a, b, d,
               e) ; from z import c
-''', r'''
+''',
+r'''from z import a, b, d, e ; from z import c''', r'''
 Module - ROOT 0,0..1,34
   .body[2]
    0] ImportFrom - 0,0..1,16
@@ -21195,7 +21447,8 @@ e  # comment
 '''), r'''
 from z import (a, b, d,
               e) ; from z import c
-''', r'''
+''',
+r'''from z import a, b, d, e ; from z import c''', r'''
 Module - ROOT 0,0..1,34
   .body[2]
    0] ImportFrom - 0,0..1,16
@@ -21244,7 +21497,8 @@ e
 '''), r'''
 from z import (a, b, d,
               e) ;
-''', r'''
+''',
+r'''from z import a, b, d, e ;''', r'''
 Module - ROOT 0,0..1,18
   .body[1]
    0] ImportFrom - 0,0..1,16
@@ -21269,7 +21523,8 @@ e  # comment
 '''), r'''
 from z import (a, b, d,
               e) ;
-''', r'''
+''',
+r'''from z import a, b, d, e ;''', r'''
 Module - ROOT 0,0..1,18
   .body[1]
    0] ImportFrom - 0,0..1,16
@@ -21310,7 +21565,8 @@ e
 '''), r'''
 from z import (a, b, d,
               e) ;
-''', r'''
+''',
+r'''from z import a, b, d, e ;''', r'''
 ImportFrom - ROOT 0,0..1,16
   .module 'z'
   .names[4]
@@ -21333,7 +21589,8 @@ e  # comment
 '''), r'''
 from z import (a, b, d,
               e) ;
-''', r'''
+''',
+r'''from z import a, b, d, e ;''', r'''
 ImportFrom - ROOT 0,0..1,16
   .module 'z'
   .names[4]
@@ -24731,7 +24988,8 @@ ListComp - ROOT 0,0..0,14
 ('', None, None, 'generators', {}, (None,
 r'''[_ for a in a for b in b for c in c]'''), ('_comprehensions',
 r''' for x in x '''),
-r'''[_  for x in x ]''', r'''
+r'''[_  for x in x ]''',
+r'''[_ for x in x]''', r'''
 ListComp - ROOT 0,0..0,16
   .elt Name '_' Load - 0,1..0,2
   .generators[1]
@@ -24752,7 +25010,8 @@ x
    x \
    in \
    x for c in c]
-''', r'''
+''',
+r'''[_ for a in a for x in x for c in c]''', r'''
 ListComp - ROOT 0,0..3,16
   .elt Name '_' Load - 0,1..0,2
   .generators[3]
@@ -24783,7 +25042,8 @@ x \
    in \
    x \
 ]
-''', r'''
+''',
+r'''[_ for x in x]''', r'''
 ListComp - ROOT 0,0..4,1
   .elt Name '_' Load - 0,1..0,2
   .generators[1]
@@ -24808,7 +25068,8 @@ x \
    in \
    x \
 ]
-''', r'''
+''',
+r'''[_ for x in x]''', r'''
 ListComp - ROOT 0,0..5,1
   .elt Name '_' Load - 0,1..0,2
   .generators[1]
@@ -24858,7 +25119,8 @@ _comprehensions - ROOT 0,0..0,10
 ('', None, None, 'generators', {}, ('_comprehensions',
 r'''for a in a for b in b for c in c'''), ('_comprehensions',
 r''' for x in x '''),
-r''' for x in x ''', r'''
+r''' for x in x ''',
+r'''for x in x''', r'''
 _comprehensions - ROOT 0,0..0,12
   .generators[1]
    0] comprehension - 0,1..0,11
@@ -24878,7 +25140,8 @@ for a in a for \
 x \
 in \
 x for c in c
-''', r'''
+''',
+r'''for a in a for x in x for c in c''', r'''
 _comprehensions - ROOT 0,0..3,12
   .generators[3]
    0] comprehension - 0,0..0,10
@@ -24908,7 +25171,8 @@ x \
 in \
 x \
 
-''', r'''
+''',
+r'''for x in x''', r'''
 _comprehensions - ROOT 0,0..4,0
   .generators[1]
    0] comprehension - 0,0..3,1
@@ -24931,7 +25195,8 @@ x \
 in \
 x \
 
-''', r'''
+''',
+r'''for x in x''', r'''
 _comprehensions - ROOT 0,0..4,0
   .generators[1]
    0] comprehension - 0,0..3,1
@@ -24976,7 +25241,8 @@ ListComp - ROOT 0,0..0,19
 ('generators[0]', None, None, 'ifs', {}, (None,
 r'''[_ for _ in _ if a if b if c]'''), ('_comprehension_ifs',
 r''' if x '''),
-r'''[_ for _ in _  if x ]''', r'''
+r'''[_ for _ in _  if x ]''',
+r'''[_ for _ in _ if x]''', r'''
 ListComp - ROOT 0,0..0,21
   .elt Name '_' Load - 0,1..0,2
   .generators[1]
@@ -24995,7 +25261,8 @@ x
 '''), r'''
 [_ for _ in _ if a if \
               x if c]
-''', r'''
+''',
+r'''[_ for _ in _ if a if x if c]''', r'''
 ListComp - ROOT 0,0..1,21
   .elt Name '_' Load - 0,1..0,2
   .generators[1]
@@ -25018,7 +25285,8 @@ x \
 [_ for _ in _ if \
               x \
 ]
-''', r'''
+''',
+r'''[_ for _ in _ if x]''', r'''
 ListComp - ROOT 0,0..2,1
   .elt Name '_' Load - 0,1..0,2
   .generators[1]
@@ -25041,7 +25309,8 @@ x \
               if \
               x \
 ]
-''', r'''
+''',
+r'''[_ for _ in _ if x]''', r'''
 ListComp - ROOT 0,0..3,1
   .elt Name '_' Load - 0,1..0,2
   .generators[1]
@@ -25105,7 +25374,8 @@ _comprehensions - ROOT 0,0..0,26
 ('generators[0]', None, None, 'ifs', {}, ('_comprehensions',
 r'''for _ in _ if a if b if c for _ in _'''), ('_comprehension_ifs',
 r''' if x '''),
-r'''for _ in _  if x  for _ in _''', r'''
+r'''for _ in _  if x  for _ in _''',
+r'''for _ in _ if x for _ in _''', r'''
 _comprehensions - ROOT 0,0..0,28
   .generators[2]
    0] comprehension - 0,0..0,16
@@ -25127,7 +25397,8 @@ x
 '''), r'''
 for _ in _ if a if \
            x if c for _ in _
-''', r'''
+''',
+r'''for _ in _ if a if x if c for _ in _''', r'''
 _comprehensions - ROOT 0,0..1,28
   .generators[2]
    0] comprehension - 0,0..1,17
@@ -25153,7 +25424,8 @@ x \
 for _ in _ if \
            x \
  for _ in _
-''', r'''
+''',
+r'''for _ in _ if x for _ in _''', r'''
 _comprehensions - ROOT 0,0..2,11
   .generators[2]
    0] comprehension - 0,0..1,12
@@ -25179,7 +25451,8 @@ for _ in _
            if \
            x \
  for _ in _
-''', r'''
+''',
+r'''for _ in _ if x for _ in _''', r'''
 _comprehensions - ROOT 0,0..3,11
   .generators[2]
    0] comprehension - 0,0..2,12
@@ -25221,7 +25494,8 @@ comprehension - ROOT 0,0..0,15
 ('', None, None, 'ifs', {}, ('comprehension',
 r'''for _ in _ if a if b if c'''), ('_comprehension_ifs',
 r''' if x '''),
-r'''for _ in _  if x ''', r'''
+r'''for _ in _  if x ''',
+r'''for _ in _ if x''', r'''
 comprehension - ROOT 0,0..0,16
   .target Name '_' Store - 0,4..0,5
   .iter Name '_' Load - 0,9..0,10
@@ -25237,7 +25511,8 @@ x
 '''), r'''
 for _ in _ if a if \
            x if c
-''', r'''
+''',
+r'''for _ in _ if a if x if c''', r'''
 comprehension - ROOT 0,0..1,17
   .target Name '_' Store - 0,4..0,5
   .iter Name '_' Load - 0,9..0,10
@@ -25257,7 +25532,8 @@ x \
 for _ in _ if \
            x \
 
-''', r'''
+''',
+r'''for _ in _ if x''', r'''
 comprehension - ROOT 0,0..1,12
   .target Name '_' Store - 0,4..0,5
   .iter Name '_' Load - 0,9..0,10
@@ -25277,7 +25553,8 @@ for _ in _
            if \
            x \
 
-''', r'''
+''',
+r'''for _ in _ if x''', r'''
 comprehension - ROOT 0,0..2,12
   .target Name '_' Store - 0,4..0,5
   .iter Name '_' Load - 0,9..0,10

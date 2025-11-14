@@ -263,16 +263,8 @@ This package is not finished but functional enough that it can be useful.
   * `Interpolation.format_spec`
 
 * Prescribed get / put slice from / to:
-  * `FunctionDef.decorator_list`
-  * `AsyncFunctionDef.decorator_list`
-  * `ClassDef.decorator_list`
   * `BoolOp.values`
   * `Compare`
-  * `comprehension.ifs`
-  * `ListComp.generators`
-  * `SetComp.generators`
-  * `DictComp.generators`
-  * `GeneratorExp.generators`
   * `ClassDef.keywords`
   * `Call.keywords`
   * `MatchClass.patterns`

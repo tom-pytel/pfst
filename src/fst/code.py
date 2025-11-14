@@ -353,14 +353,17 @@ def code_as_stmts(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize:
 
 
 def code_as__ExceptHandlers(
-    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, is_trystar: bool = False
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, is_trystar: bool | None = None
 ) -> fst.FST:
     """Convert `code` to zero or more `ExceptHandler`s and return in an `_ExceptHandlers` SPECIAL SLICE if possible.
 
     **Note:** `sanitize` does nothing since the return is an `_ExceptHandlers` which always includes the whole source.
 
     **Parameters:**
-    - `is_trystar`: Hint used when unparsing an `AST` `code` to get the correct `except` or `except*` source.
+    - `is_trystar`: What kind of except handler to accept:
+        - `False`: Plain only, no `except*`.
+        - `True`: Star only, no plain.
+        - `None`: Accept either as `FST` or source, if `AST` passed then default to plain.
     """
 
     if isinstance(code, fst.FST):
@@ -370,33 +373,44 @@ def code_as__ExceptHandlers(
         codea = code.a
 
         if isinstance(codea, ExceptHandler):
-            return fst.FST(_ExceptHandlers(handlers=[codea], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
+            code = fst.FST(_ExceptHandlers(handlers=[codea], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                                            end_col_offset=ls[-1].lenbytes), ls, from_=code, lcopy=False)
 
-        if not isinstance(codea, _ExceptHandlers):
-            raise NodeError(f'expecting zero or more ExceptHandlers, got {codea.__class__.__name__}', rawable=True)
+        elif not isinstance(codea, _ExceptHandlers):
+            raise NodeError(f'expecting zero or more ExceptHandlers, got {codea.__class__.__name__}')#, rawable=True)
 
-        return code
+        error = NodeError
 
-    if isinstance(code, AST):
-        if isinstance(code, ExceptHandler):
-            handlers = [code]
-        elif isinstance(code, _ExceptHandlers):
-            handlers = code.handlers
-        else:
-            raise NodeError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}', rawable=True)
+    else:
+        error = ParseError
 
-        code = _fixing_unparse((TryStar if is_trystar else Try)(body=[Pass()],
-                                                                handlers=handlers, orelse=[], finalbody=[]))
-        code = code[code.index('except'):]
-        lines = code.split('\n')
+        if isinstance(code, AST):
+            if isinstance(code, ExceptHandler):
+                handlers = [code]
+            elif isinstance(code, _ExceptHandlers):
+                handlers = code.handlers
+            else:
+                raise NodeError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}')#, rawable=True)
 
-    elif isinstance(code, list):
-        code = '\n'.join(lines := code)
-    else:  # str
-        lines = code.split('\n')
+            code = _fixing_unparse((TryStar if is_trystar else Try)(body=[Pass()],
+                                                                    handlers=handlers, orelse=[], finalbody=[]))
+            code = code[code.index('except'):]
+            lines = code.split('\n')
+            is_trystar = None  # so that unnecessary check is not done below
 
-    return fst.FST(parse__ExceptHandlers(code, parse_params), lines, parse_params=parse_params)
+        elif isinstance(code, list):
+            code = '\n'.join(lines := code)
+        else:  # str
+            lines = code.split('\n')
+
+        code = fst.FST(parse__ExceptHandlers(code, parse_params), lines, parse_params=parse_params)
+
+    if (handlers := code.a.handlers) and is_trystar is not None:
+        if is_trystar != handlers[0].f._is_except_star():
+            raise error("expecting star 'except*' handler, got plain 'except'" if is_trystar else
+                        "expecting plain 'except' handler, got star 'except*'")
+
+    return code
 
 
 def code_as__match_cases(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
