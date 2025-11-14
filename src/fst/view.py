@@ -7,7 +7,7 @@ from . import fst
 
 from .astutil import AST, get_func_class_or_ass_by_name
 from .code import Code
-from .fst_slice import _fixup_slice_indices
+from .fst_slice_get import _fixup_slice_indices
 from .fst_one_get import _fixup_one_index
 
 __all__ = ['fstview']

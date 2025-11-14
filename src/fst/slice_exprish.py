@@ -1,4 +1,4 @@
-"""Low level get and put slice."""
+"""Low level get and put slice expression-ish slices."""
 
 from __future__ import annotations
 

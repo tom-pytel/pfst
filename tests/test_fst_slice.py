@@ -73,7 +73,7 @@ class TestFSTSlice(unittest.TestCase):
 
     def test_put_src_from_put_slice_data(self):  # this test may go away at some point
         from fst.fst import _fixup_field_body
-        from fst.fst_slice import _loc_slice_raw_put
+        from fst.fst_slice_put import _loc_slice_raw_put
         from support import _unfmt_code, _make_fst
 
         for case, rest in DATA_PUT_SLICE.iterate(True):

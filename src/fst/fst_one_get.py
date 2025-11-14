@@ -107,7 +107,7 @@ from .asttypes import (
 
 from .astutil import constant, bistr, copy_ast
 from .common import FTSTRING_END_TOKENS, PYGE13, NodeError, pyver
-from .fst_slice_old import _get_slice_stmtish
+from .slice_stmtish import _get_slice_stmtish
 
 
 _GetOneRet = Union['fst.FST', None, str, constant]
@@ -667,7 +667,7 @@ _GET_ONE_HANDLERS = {
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# "public"
+# FST class methods
 
 def _get_one(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     """Copy or cut (if possible) a node or non-node from a field of `self`."""

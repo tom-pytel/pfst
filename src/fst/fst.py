@@ -4616,11 +4616,8 @@ class FST:
         _reparse_raw,
     )
 
-    from .fst_slice import (
-        _get_slice,
-        _put_slice,
-    )
-
+    from .fst_slice_get import _get_slice
+    from .fst_slice_put import _put_slice
     from .fst_one_get import _get_one
     from .fst_one_put import _put_one
 

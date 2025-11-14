@@ -215,7 +215,7 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# FST class private methods
+# FST class methods
 
 def _reparse_raw(self: fst.FST, code: Code | None, ln: int, col: int, end_ln: int, end_col: int) -> tuple[int, int]:
     """Reparse this node which entirely contatins the span which is to be replaced with `code` source. `self` must

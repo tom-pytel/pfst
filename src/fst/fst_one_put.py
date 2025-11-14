@@ -2670,7 +2670,7 @@ def _put_one_raw(
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# "public"
+# FST class methods
 
 def _put_one(
     self: fst.FST, code: _PutOneCode, idx: int | None, field: str, options: Mapping[str, Any]

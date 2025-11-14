@@ -1,11 +1,13 @@
-"""Old slice FST methods, need to redo."""
+"""Low level get and put statement-ish slices (including single which is treated as a slice of one).
+
+TODO: THIS NEEDS A REWRITE!"""
 
 from __future__ import annotations
 
 from typing import Any, Literal, Mapping
 
 from . import fst
-from . import fst_slice
+from . import fst_slice_get
 
 from .asttypes import (
     ASTS_BLOCK,
@@ -932,6 +934,7 @@ def _can_del_all(self: fst.FST, field: str, options: Mapping[str, Any]) -> bool:
 
     return isinstance(a := self.a, _ExceptHandlers) or bool(a.finalbody)  # field == 'handlers'
 
+
 # ......................................................................................................................
 
 def _get_slice_stmtish_old(
@@ -947,7 +950,7 @@ def _get_slice_stmtish_old(
 ) -> fst.FST:
     ast = self.a
     body = getattr(ast, field)
-    start, stop = fst_slice._fixup_slice_indices(len(body), start, stop)
+    start, stop = fst_slice_get._fixup_slice_indices(len(body), start, stop)
 
     if start == stop:
         if field == 'handlers':
@@ -1067,7 +1070,7 @@ def _put_slice_stmtish_old(
         if one and len(put_body) != 1:
             raise ValueError('expecting a single element')
 
-    start, stop = fst_slice._fixup_slice_indices(len(body), start, stop)
+    start, stop = fst_slice_get._fixup_slice_indices(len(body), start, stop)
     slice_len = stop - start
 
     if not slice_len and (not put_fst or (not put_body and len(ls := put_fst._lines) == 1 and not ls[0])):  # deleting empty slice or assigning empty fst to empty slice, noop

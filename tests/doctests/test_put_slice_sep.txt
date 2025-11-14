@@ -1,7 +1,7 @@
 >>> from pprint import pp
 >>> from fst import *
 >>> from fst.common import astfield
->>> from fst.slice import put_slice_sep_begin, put_slice_sep_end
+>>> from fst.slice_exprish import put_slice_sep_begin, put_slice_sep_end
 
 
 delete

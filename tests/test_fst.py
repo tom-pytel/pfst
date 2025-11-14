@@ -3818,7 +3818,7 @@ d  # comment3''', f.src)
             self.assertEqual((2, False, False, 3, False, False), get_trivia_params(trivia=(2, 3), neg=False))
 
     def test__normalize_block(self):
-        from fst.fst_slice_old import _normalize_block
+        from fst.slice_stmtish import _normalize_block
 
         a = parse('''
 if 1: i ; j ; l ; m
@@ -3843,7 +3843,7 @@ def f() -> int: \\
         self.assertEqual(a.f.src, 'def f(a = """ a\n...   # something """):\n    i = 2')
 
     def test__elif_to_else_if(self):
-        from fst.fst_slice_old import _elif_to_else_if
+        from fst.slice_stmtish import _elif_to_else_if
 
         a = parse('''
 if 1: pass
