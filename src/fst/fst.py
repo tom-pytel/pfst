@@ -1146,12 +1146,14 @@ class FST:
                 destination on put if not needed there (but not source).
             - `'auto'`: Same as `True` except they are not returned with a copy and possibly removed from source
                 on put if not needed (removed from destination first if needed and present on both).
-        - `pars_walrus`: Whether to parenthesize top level cut / copied `NamedExpr` nodes or not (only if `pars` is also
-            not `False`).
-            - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions.
+        - `pars_walrus`: Whether to ADD parentheses to top level cut / copied `NamedExpr` nodes or not. If parentheses
+            were already copied due to `pars=True` then setting this to `False` will not remove them.
             - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions.
-        - `pars_arglike`: Whether to parenthesize argument-like expressions (`*not a`, `*b or c`) when cut / copied
-            either as single element or as part of a slice.
+            - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions.
+            - `None`: Parenthesize according to the `pars` option.
+        - `pars_arglike`: Whether to ADD parentheses to argument-like expressions (`*not a`, `*b or c`) when cut /
+            copied either as single element or as part of a slice. If parentheses were already present then setting this
+            to `False` will not remove them.
             - `True`: Parenthesize cut / copied argument-like expressions.
             - `False`: Do not parenthesize cut / copied argument-like expressions.
             - `None`: Parenthesize according to the `pars` option.

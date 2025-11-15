@@ -3313,7 +3313,7 @@ d  # comment3''', f.src)
         f = FST.fromsrc('(1 +\n2)')
         fc = f.a.body[0].value.f.copy(pars=False)
         self.assertEqual(fc.src, '1 +\n2')
-        _maybe_fix_copy(fc, pars=True)
+        _maybe_fix_copy(fc, dict(pars=True))
         self.assertEqual(fc.src, '(1 +\n2)')
         fc.verify(raise_=True)
 
@@ -3328,24 +3328,24 @@ d  # comment3''', f.src)
 
         f = FST.fromsrc('i, j = 1, 2').a.body[0].targets[0].f.copy(pars=False)
         self.assertEqual('i, j', f.src)
-        _maybe_fix_copy(fc, pars=True)
+        _maybe_fix_copy(fc, dict(pars=True))
         self.assertEqual('i, j', f.src)  # because doesn't NEED them
 
         f = FST.fromsrc('match w := x,:\n case 0: pass').a.body[0].subject.f.copy(pars=False)
         self.assertEqual('w := x,', f.src)
-        _maybe_fix_copy(f, pars=True)
+        _maybe_fix_copy(f, dict(pars=True))
         self.assertEqual('(w := x,)', f.src)
 
         f = FST.fromsrc('yield a1, a2')
         fc = f.a.body[0].value.f.copy(pars=False)
         self.assertEqual('yield a1, a2', fc.src)
-        _maybe_fix_copy(fc, pars=True)
+        _maybe_fix_copy(fc, dict(pars=True))
         self.assertEqual('yield a1, a2', fc.src)
 
         f = FST.fromsrc('yield from a')
         fc = f.a.body[0].value.f.copy()
         self.assertEqual('yield from a', fc.src)
-        _maybe_fix_copy(fc, pars=True)
+        _maybe_fix_copy(fc, dict(pars=True))
         self.assertEqual('yield from a', fc.src)
 
         f = FST.fromsrc("""[
@@ -3358,7 +3358,7 @@ d  # comment3''', f.src)
 "Bad value substitution: option {!r} in section {!r} contains "
                "an interpolation key {!r} which is not a valid option name. "
                "Raw value: {!r}".format""".strip(), fc.src)
-        _maybe_fix_copy(fc, pars=True)
+        _maybe_fix_copy(fc, dict(pars=True))
         self.assertEqual("""
 ("Bad value substitution: option {!r} in section {!r} contains "
                "an interpolation key {!r} which is not a valid option name. "
@@ -3372,7 +3372,7 @@ d  # comment3''', f.src)
         self.assertEqual("""
 (is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
             isinstance(a, (Name, Subscript, Attribute))""".strip(), fc.src)
-        _maybe_fix_copy(fc, pars=True)
+        _maybe_fix_copy(fc, dict(pars=True))
         self.assertEqual("""
 ((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
             isinstance(a, (Name, Subscript, Attribute)))""".strip(), fc.src)
@@ -3380,7 +3380,7 @@ d  # comment3''', f.src)
         if PYGE12:
             fc = FST.fromsrc('tuple[*tuple[int, ...]]').a.body[0].value.slice.f.copy(pars=False)
             self.assertEqual('*tuple[int, ...]', fc.src)
-            _maybe_fix_copy(fc, pars=True)
+            _maybe_fix_copy(fc, dict(pars=True))
             self.assertEqual('*tuple[int, ...],', fc.src)
 
         # don't parenthesize copied Slice even if it looks like it needs it
@@ -6028,7 +6028,108 @@ def func():
         self.assertEqual('(b := c)', FST('a, b := c, d').elts[1].copy(pars_walrus=True).src)
         self.assertEqual('(b := c)', FST('a = (b := c)').value.copy(pars_walrus=True).src)
 
+    def test_pars_walrus(self):
+        # not already parenthesized
+
+        self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars=True, pars_walrus=True).src)
+        self.assertEqual('i := j', FST('k, i := j').get(1, 'elts', pars=True, pars_walrus=False).src)
+        self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars=True, pars_walrus=None).src)
+        self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars=True).src)
+
+        self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars='auto', pars_walrus=True).src)
+        self.assertEqual('i := j', FST('k, i := j').get(1, 'elts', pars='auto', pars_walrus=False).src)
+        self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars='auto', pars_walrus=None).src)
+        self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars='auto').src)
+
+        self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars=False, pars_walrus=True).src)
+        self.assertEqual('i := j', FST('k, i := j').get(1, 'elts', pars=False, pars_walrus=False).src)
+        self.assertEqual('i := j', FST('k, i := j').get(1, 'elts', pars=False, pars_walrus=None).src)
+        self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars=False).src)
+
+        with FST.options(pars_walrus=False):
+            self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars=True, pars_walrus=True).src)
+            self.assertEqual('i := j', FST('k, i := j').get(1, 'elts', pars=True, pars_walrus=False).src)
+            self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars=True, pars_walrus=None).src)
+            self.assertEqual('i := j', FST('k, i := j').get(1, 'elts', pars=True).src)
+
+            self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars='auto', pars_walrus=True).src)
+            self.assertEqual('i := j', FST('k, i := j').get(1, 'elts', pars='auto', pars_walrus=False).src)
+            self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars='auto', pars_walrus=None).src)
+            self.assertEqual('i := j', FST('k, i := j').get(1, 'elts', pars='auto').src)
+
+            self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars=False, pars_walrus=True).src)
+            self.assertEqual('i := j', FST('k, i := j').get(1, 'elts', pars=False, pars_walrus=False).src)
+            self.assertEqual('i := j', FST('k, i := j').get(1, 'elts', pars=False, pars_walrus=None).src)
+            self.assertEqual('i := j', FST('k, i := j').get(1, 'elts', pars=False).src)
+
+        with FST.options(pars_walrus=None):
+            self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars=True, pars_walrus=True).src)
+            self.assertEqual('i := j', FST('k, i := j').get(1, 'elts', pars=True, pars_walrus=False).src)
+            self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars=True, pars_walrus=None).src)
+            self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars=True).src)
+
+            self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars='auto', pars_walrus=True).src)
+            self.assertEqual('i := j', FST('k, i := j').get(1, 'elts', pars='auto', pars_walrus=False).src)
+            self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars='auto', pars_walrus=None).src)
+            self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars='auto').src)
+
+            self.assertEqual('(i := j)', FST('k, i := j').get(1, 'elts', pars=False, pars_walrus=True).src)
+            self.assertEqual('i := j', FST('k, i := j').get(1, 'elts', pars=False, pars_walrus=False).src)
+            self.assertEqual('i := j', FST('k, i := j').get(1, 'elts', pars=False, pars_walrus=None).src)
+            self.assertEqual('i := j', FST('k, i := j').get(1, 'elts', pars=False).src)
+
+        # already parenthesized
+
+        self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars=True, pars_walrus=True).src)
+        self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars=True, pars_walrus=False).src)
+        self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars=True, pars_walrus=None).src)
+        self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars=True).src)
+
+        self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars='auto', pars_walrus=True).src)
+        self.assertEqual('i := j', FST('k, (i := j)').get(1, 'elts', pars='auto', pars_walrus=False).src)
+        self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars='auto', pars_walrus=None).src)
+        self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars='auto').src)
+
+        self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars=False, pars_walrus=True).src)
+        self.assertEqual('i := j', FST('k, (i := j)').get(1, 'elts', pars=False, pars_walrus=False).src)
+        self.assertEqual('i := j', FST('k, (i := j)').get(1, 'elts', pars=False, pars_walrus=None).src)
+        self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars=False).src)
+
+        with FST.options(pars_walrus=False):
+            self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars=True, pars_walrus=True).src)
+            self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars=True, pars_walrus=False).src)
+            self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars=True, pars_walrus=None).src)
+            self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars=True).src)
+
+            self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars='auto', pars_walrus=True).src)
+            self.assertEqual('i := j', FST('k, (i := j)').get(1, 'elts', pars='auto', pars_walrus=False).src)
+            self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars='auto', pars_walrus=None).src)
+            self.assertEqual('i := j', FST('k, (i := j)').get(1, 'elts', pars='auto').src)
+
+            self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars=False, pars_walrus=True).src)
+            self.assertEqual('i := j', FST('k, (i := j)').get(1, 'elts', pars=False, pars_walrus=False).src)
+            self.assertEqual('i := j', FST('k, (i := j)').get(1, 'elts', pars=False, pars_walrus=None).src)
+            self.assertEqual('i := j', FST('k, (i := j)').get(1, 'elts', pars=False).src)
+
+        with FST.options(pars_walrus=None):
+            self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars=True, pars_walrus=True).src)
+            self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars=True, pars_walrus=False).src)
+            self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars=True, pars_walrus=None).src)
+            self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars=True).src)
+
+            self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars='auto', pars_walrus=True).src)
+            self.assertEqual('i := j', FST('k, (i := j)').get(1, 'elts', pars='auto', pars_walrus=False).src)
+            self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars='auto', pars_walrus=None).src)
+            self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars='auto').src)
+
+            self.assertEqual('(i := j)', FST('k, (i := j)').get(1, 'elts', pars=False, pars_walrus=True).src)
+            self.assertEqual('i := j', FST('k, (i := j)').get(1, 'elts', pars=False, pars_walrus=False).src)
+            self.assertEqual('i := j', FST('k, (i := j)').get(1, 'elts', pars=False, pars_walrus=None).src)
+            self.assertEqual('i := j', FST('k, (i := j)').get(1, 'elts', pars=False).src)
+
     def test_pars_arglike(self):
+        # not already parenthesized
+
         self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars=True, pars_arglike=True).src)
         self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars=True, pars_arglike=False).src)
         self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars=True, pars_arglike=None).src)
@@ -6075,6 +6176,55 @@ def func():
             self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars=False, pars_arglike=False).src)
             self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars=False, pars_arglike=None).src)
             self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars=False).src)
+
+        # already parenthesized
+
+        self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=True, pars_arglike=True).src)
+        self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=True, pars_arglike=False).src)
+        self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=True, pars_arglike=None).src)
+        self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=True).src)
+
+        self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars='auto', pars_arglike=True).src)
+        self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars='auto', pars_arglike=False).src)
+        self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars='auto', pars_arglike=None).src)
+        self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars='auto').src)
+
+        self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=False, pars_arglike=True).src)
+        self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=False, pars_arglike=False).src)
+        self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=False, pars_arglike=None).src)
+        self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=False).src)
+
+        with FST.options(pars_arglike=False):
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=True, pars_arglike=True).src)
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=True, pars_arglike=False).src)
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=True, pars_arglike=None).src)
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=True).src)
+
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars='auto', pars_arglike=True).src)
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars='auto', pars_arglike=False).src)
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars='auto', pars_arglike=None).src)
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars='auto').src)
+
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=False, pars_arglike=True).src)
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=False, pars_arglike=False).src)
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=False, pars_arglike=None).src)
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=False).src)
+
+        with FST.options(pars_arglike=None):
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=True, pars_arglike=True).src)
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=True, pars_arglike=False).src)
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=True, pars_arglike=None).src)
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=True).src)
+
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars='auto', pars_arglike=True).src)
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars='auto', pars_arglike=False).src)
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars='auto', pars_arglike=None).src)
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars='auto').src)
+
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=False, pars_arglike=True).src)
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=False, pars_arglike=False).src)
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=False, pars_arglike=None).src)
+            self.assertEqual('*(not a)', FST('call(*(not a))').get(0, 'args', pars=False).src)
 
     def test_pars_n(self):
         self.assertEqual(1, FST('(a)', 'exec').body[0].value.pars().n)

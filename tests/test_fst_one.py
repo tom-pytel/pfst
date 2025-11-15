@@ -2506,7 +2506,7 @@ c, # c
 
     def test_put_one_pars(self):
         f = FST('a = b', 'exec').body[0]
-        g = FST('(i := j)', 'exec').body[0].value.copy(pars=False)
+        g = FST('(i := j)', 'exec').body[0].value.copy(pars_walrus=False)
         self.assertEqual('i := j', g.src)
         f.put(g.copy(), field='value', raw=False, pars=False)
         self.assertEqual(f.src, 'a = i := j')

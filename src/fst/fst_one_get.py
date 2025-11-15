@@ -107,7 +107,7 @@ from .asttypes import (
 
 from .astutil import constant, bistr, copy_ast
 from .common import FTSTRING_END_TOKENS, PYGE13, NodeError, pyver
-from .fst_misc import fixup_one_index
+from .fst_misc import get_option_overridable, fixup_one_index
 from .slice_stmtish import get_slice_stmtish
 
 
@@ -133,7 +133,7 @@ def _validate_get(self: fst.FST, idx: int | None, field: str) -> tuple[AST | Non
     return child, idx
 
 
-def _maybe_fix_copy(self: fst.FST, pars: bool = True, pars_walrus: bool | None = True) -> None:
+def _maybe_fix_copy(self: fst.FST, options: Mapping[str, Any]) -> None:
     """Maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the source is not after
     the operation). If cannot fix or ast is not parsable by itself then ast will be unchanged. Is meant to be a quick
     fix after a cut or copy operation, not full check, for that use `verify()`.
@@ -152,6 +152,11 @@ def _maybe_fix_copy(self: fst.FST, pars: bool = True, pars_walrus: bool | None =
 
         self._set_ctx(Load)  # anything that is excluded by is_parsable() above (or does not have .loc) does not need this
 
+        if is_walrus := isinstance(ast, NamedExpr):
+            pars = get_option_overridable('pars', 'pars_walrus', options)
+        else:
+            pars = fst.FST.get_option('pars', options)
+
         if not pars:
             return
 
@@ -165,8 +170,8 @@ def _maybe_fix_copy(self: fst.FST, pars: bool = True, pars_walrus: bool | None =
 
             self._maybe_add_singleton_tuple_comma(is_par)  # this exists because of copy lone Starred out of a Subscript.slice
 
-        elif isinstance(ast, NamedExpr):  # naked walrus
-            need_pars = pars_walrus
+        elif is_walrus and not self.pars().n:
+            need_pars = True
 
         if need_pars is None:
             need_pars = not self._is_enclosed_or_line()
@@ -194,7 +199,7 @@ def _get_one_default(self: fst.FST, idx: int | None, field: str, cut: bool, opti
 
     ret, _ = childf._make_fst_and_dedent(childf, copy_ast(child), loc, docstr=False)
 
-    _maybe_fix_copy(ret, bool(fst.FST.get_option('pars', options)), fst.FST.get_option('pars_walrus', options))
+    _maybe_fix_copy(ret, options)
 
     return ret
 
