@@ -324,7 +324,7 @@ r'''Return - ROOT 0,0..0,6''',
 r'''ret''',
 r'''Name 'ret' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'targets', {}, (Delete,
+('', 0, False, 'targets', {'norm': True}, (Delete,
 r'''del var'''),
 r'''**ValueError('cannot delete all Delete.targets without norm_self=False')**''',
 r'''var''',
@@ -337,7 +337,7 @@ r'''Delete - ROOT 0,0..0,4''',
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'targets', {}, (Assign,
+('', 0, False, 'targets', {'norm': True}, (Assign,
 r'''var = val'''),
 r'''**ValueError('cannot delete all Assign.targets without norm_self=False')**''',
 r'''var''',
@@ -565,7 +565,7 @@ If - ROOT 0,0..0,12
 r'''continue''',
 r'''Continue - ROOT 0,0..0,8'''),
 
-('', 0, False, 'items', {'_verify_self': False}, (With,
+('', 0, False, 'items', {'_verify_self': False, 'norm': True}, (With,
 r'''with var: pass'''),
 r'''**ValueError('cannot delete all With.items without norm_self=False')**''',
 r'''var''', r'''
@@ -584,7 +584,7 @@ With - ROOT 0,0..0,9
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
 
-('', 0, False, 'items', {'_verify_self': False}, (AsyncWith,
+('', 0, False, 'items', {'_verify_self': False, 'norm': True}, (AsyncWith,
 r'''async with var: pass'''),
 r'''**ValueError('cannot delete all AsyncWith.items without norm_self=False')**''',
 r'''var''', r'''
@@ -826,7 +826,7 @@ Assert - ROOT 0,0..0,16
 ''',
 r'''**None**'''),
 
-('', 0, False, 'names', {}, (Import,
+('', 0, False, 'names', {'norm': True}, (Import,
 r'''import mod'''),
 r'''**ValueError('cannot delete all Import.names without norm_self=False')**''',
 r'''mod''', r'''
@@ -872,7 +872,7 @@ ImportFrom - ROOT 0,0..0,18
 "\n'mod'\n",
 r'''<class 'str'>'''),
 
-('', 0, False, 'names', {}, (ImportFrom,
+('', 0, False, 'names', {'norm': True}, (ImportFrom,
 r'''from mod import name'''),
 r'''**ValueError('cannot delete all ImportFrom.names without norm_self=False')**''',
 r'''name''', r'''
@@ -898,7 +898,7 @@ r'''**ValueError('cannot delete ImportFrom.level')**''',
 r'''0''',
 r'''<class 'int'>'''),
 
-('', 0, False, 'names', {}, (Global,
+('', 0, False, 'names', {'norm': True}, (Global,
 r'''global var'''),
 r'''**ValueError('cannot delete all Global.names without norm_self=False')**''',
 "\n'var'\n",
@@ -911,7 +911,7 @@ r'''Global - ROOT 0,0..0,7''',
 "\n'var'\n",
 r'''<class 'str'>'''),
 
-('', 0, False, 'names', {}, (Nonlocal,
+('', 0, False, 'names', {'norm': True}, (Nonlocal,
 r'''nonlocal var'''),
 r'''**ValueError('cannot delete all Nonlocal.names without norm_self=False')**''',
 "\n'var'\n",
@@ -1087,7 +1087,7 @@ Set - ROOT 0,0..0,6
 r'''elt0''',
 r'''Name 'elt0' Load - ROOT 0,0..0,4'''),
 
-('', 0, False, 'elts', {}, (Set,
+('', 0, False, 'elts', {'norm': True}, (Set,
 r'''{elt}'''),
 r'''{*()}''', r'''
 Set - ROOT 0,0..0,5
@@ -1106,7 +1106,7 @@ r'''**ValueError('cannot delete ListComp.elt')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'generators', {}, (ListComp,
+('', 0, False, 'generators', {'norm': True}, (ListComp,
 r'''[val for val in iter]'''),
 r'''**ValueError('cannot delete all ListComp.generators without norm_self=False')**''',
 r'''for val in iter''', r'''
@@ -1122,7 +1122,7 @@ r'''**ValueError('cannot delete SetComp.elt')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'generators', {}, (SetComp,
+('', 0, False, 'generators', {'norm': True}, (SetComp,
 r'''{val for val in iter}'''),
 r'''**ValueError('cannot delete all SetComp.generators without norm_self=False')**''',
 r'''for val in iter''', r'''
@@ -1144,7 +1144,7 @@ r'''**ValueError('cannot delete DictComp.value')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'generators', {}, (DictComp,
+('', 0, False, 'generators', {'norm': True}, (DictComp,
 r'''{key: val for key, val in iter}'''),
 r'''**ValueError('cannot delete all DictComp.generators without norm_self=False')**''',
 r'''for key, val in iter''', r'''
@@ -1164,7 +1164,7 @@ r'''**ValueError('cannot delete GeneratorExp.elt')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'generators', {}, (GeneratorExp,
+('', 0, False, 'generators', {'norm': True}, (GeneratorExp,
 r'''(val for val in iter)'''),
 r'''**ValueError('cannot delete all GeneratorExp.generators without norm_self=False')**''',
 r'''for val in iter''', r'''
@@ -2218,7 +2218,7 @@ MatchAs - ROOT 0,0..0,1
   .name 'a'
 '''),
 
-('', 0, False, 'patterns', {}, (MatchOr,
+('', 0, False, 'patterns', {'norm': True}, (MatchOr,
 r'''a | b'''),
 r'''b''', r'''
 MatchAs - ROOT 0,0..0,1

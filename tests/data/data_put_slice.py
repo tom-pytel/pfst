@@ -8872,7 +8872,7 @@ Module - ROOT 0,0..0,2
        .ctx Load
 '''),
 
-('body[0].body[0].value', 0, 2, None, {}, ('exec', r'''
+('body[0].body[0].value', 0, 2, None, {'norm': True}, ('exec', r'''
 if 1:
   {1, 2}
 '''), (None, r'''
@@ -8973,7 +8973,7 @@ Module - ROOT 0,0..0,2
        .ctx Load
 '''),
 
-('body[0].value', 1, 2, None, {}, ('exec',
+('body[0].value', 1, 2, None, {'norm': True}, ('exec',
 r'''(1, 2)'''), (None,
 r'''{*()}'''),
 r'''(1,)''', r'''
@@ -8986,7 +8986,7 @@ Module - ROOT 0,0..0,4
        .ctx Load
 '''),
 
-('body[0].value', 1, 2, None, {}, ('exec',
+('body[0].value', 1, 2, None, {'norm': True}, ('exec',
 r'''1, 2'''), (None,
 r'''{*()}'''),
 r'''1,''', r'''
@@ -8999,7 +8999,7 @@ Module - ROOT 0,0..0,2
        .ctx Load
 '''),
 
-('body[0].value', 0, 2, None, {}, ('exec',
+('body[0].value', 0, 2, None, {'norm': True}, ('exec',
 r'''1, 2'''), (None,
 r'''{*()}'''),
 r'''()''', r'''
@@ -11623,7 +11623,7 @@ Module - ROOT 0,0..0,9
        .ctx Load
 '''),
 
-('body[0].value', 0, 2, None, {}, ('exec',
+('body[0].value', 0, 2, None, {'norm': True}, ('exec',
 r'''{1, 2}'''), (None,
 r'''()'''),
 r'''{*()}''', r'''
@@ -14736,7 +14736,7 @@ Module - ROOT 0,0..4,11
            2] Name 'y' Load - 4,9..4,10
 '''),
 
-('body[0].cases[0].pattern', 0, 1, None, {'norm_self': False, '_verify': False}, ('exec', r'''
+('body[0].cases[0].pattern', 0, 1, None, {'norm_self': False, 'norm': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), (None,
@@ -14758,7 +14758,7 @@ Module - ROOT 0,0..1,13
          0] Pass - 1,9..1,13
 '''),
 
-('body[0].cases[0].pattern', 0, 2, None, {'norm_self': False, '_verify': False}, ('exec', r'''
+('body[0].cases[0].pattern', 0, 2, None, {'norm_self': False, 'norm': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), (None,
@@ -14777,7 +14777,7 @@ Module - ROOT 0,0..1,12
          0] Pass - 1,8..1,12
 '''),
 
-('body[0].cases[0].pattern', 0, 1, None, {'norm_self': True, '_verify': False}, ('exec', r'''
+('body[0].cases[0].pattern', 0, 1, None, {'norm_self': True, 'norm': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), (None,
@@ -14797,14 +14797,14 @@ Module - ROOT 0,0..1,13
          0] Pass - 1,9..1,13
 '''),
 
-('body[0].cases[0].pattern', 0, 2, None, {'norm_self': True, '_verify': False}, ('exec', r'''
+('body[0].cases[0].pattern', 0, 2, None, {'norm_self': True, 'norm': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), (None,
 r'''**DEL**'''),
 r'''**ValueError('cannot delete all MatchOr.patterns without norm_self=False')**'''),
 
-('body[0].cases[0].pattern', 0, 1, None, {'norm_self': False, '_verify': False}, ('exec', r'''
+('body[0].cases[0].pattern', 0, 1, None, {'norm_self': False, 'norm': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
@@ -14828,7 +14828,7 @@ Module - ROOT 0,0..1,17
          0] Pass - 1,13..1,17
 '''),
 
-('body[0].cases[0].pattern', 0, 2, None, {'norm_self': False, '_verify': False}, ('exec', r'''
+('body[0].cases[0].pattern', 0, 2, None, {'norm_self': False, 'norm': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
@@ -14850,7 +14850,7 @@ Module - ROOT 0,0..1,13
          0] Pass - 1,9..1,13
 '''),
 
-('body[0].cases[0].pattern', 0, 1, None, {'norm_self': True, '_verify': False}, ('exec', r'''
+('body[0].cases[0].pattern', 0, 1, None, {'norm_self': True, 'norm': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
@@ -14874,7 +14874,7 @@ Module - ROOT 0,0..1,17
          0] Pass - 1,13..1,17
 '''),
 
-('body[0].cases[0].pattern', 0, 2, None, {'norm_self': True, '_verify': False}, ('exec', r'''
+('body[0].cases[0].pattern', 0, 2, None, {'norm_self': True, 'norm': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
@@ -14894,7 +14894,7 @@ Module - ROOT 0,0..1,13
          0] Pass - 1,9..1,13
 '''),
 
-('body[0].cases[0].pattern', 0, 1, None, {'norm_self': 'strict', '_verify': False}, ('exec', r'''
+('body[0].cases[0].pattern', 0, 1, None, {'norm_self': 'strict', 'norm': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
@@ -14918,14 +14918,14 @@ Module - ROOT 0,0..1,17
          0] Pass - 1,13..1,17
 '''),
 
-('body[0].cases[0].pattern', 0, 1, None, {'norm_put': False, '_verify': False}, ('exec', r'''
+('body[0].cases[0].pattern', 0, 1, None, {'norm_put': False, 'norm': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
 r'''z'''),
 r'''**NodeError('slice being assigned to a MatchOr must be a MatchOr with norm_put=False, not a MatchAs')**'''),
 
-('body[0].cases[0].pattern', 0, 2, None, {'norm_self': 'strict', '_verify': False}, ('exec', r'''
+('body[0].cases[0].pattern', 0, 2, None, {'norm_self': 'strict', 'norm': True, '_verify': False}, ('exec', r'''
 match a:
  case a | b: pass
 '''), ('pattern',
@@ -17295,7 +17295,7 @@ Module - ROOT 0,0..1,2
      .value Name 'd' Load - 1,1..1,2
 '''),
 
-('', None, None, 'targets', {}, (None,
+('', None, None, 'targets', {'norm': True}, (None,
 r'''a = b = c = d'''),
 r'''**DEL**''',
 r'''**ValueError('cannot delete all Assign.targets without norm_self=False')**'''),
@@ -18895,7 +18895,7 @@ Module - ROOT 0,0..1,17
       0] Pass - 1,2..1,6
 '''),
 
-('', None, None, 'items', {}, (None,
+('', None, None, 'items', {'norm': True}, (None,
 r'''with a, b, c: pass  # comment'''),
 r'''**DEL**''',
 r'''**ValueError('cannot delete all With.items without norm_self=False')**'''),
@@ -19254,7 +19254,7 @@ Module - ROOT 0,0..1,18
       0] Pass - 1,3..1,7
 '''),
 
-('', None, None, 'items', {}, (None,
+('', None, None, 'items', {'norm': True}, (None,
 r'''with (a, b, c): pass  # comment'''),
 r'''**DEL**''',
 r'''**ValueError('cannot delete all With.items without norm_self=False')**'''),
@@ -19613,7 +19613,7 @@ Module - ROOT 0,0..1,17
       0] Pass - 1,2..1,6
 '''),
 
-('', None, None, 'items', {}, (None,
+('', None, None, 'items', {'norm': True}, (None,
 r'''async with a, b, c: pass  # comment'''),
 r'''**DEL**''',
 r'''**ValueError('cannot delete all AsyncWith.items without norm_self=False')**'''),
@@ -19972,7 +19972,7 @@ Module - ROOT 0,0..1,18
       0] Pass - 1,3..1,7
 '''),
 
-('', None, None, 'items', {}, (None,
+('', None, None, 'items', {'norm': True}, (None,
 r'''async with (a, b, c): pass  # comment'''),
 r'''**DEL**''',
 r'''**ValueError('cannot delete all AsyncWith.items without norm_self=False')**'''),
@@ -20304,7 +20304,7 @@ Module - ROOT 0,0..1,11
         .name 'x'
 '''),
 
-('', None, None, None, {}, (None,
+('', None, None, None, {'norm': True}, (None,
 r'''import a, b, c  # comment'''),
 r'''**DEL**''',
 r'''**ValueError('cannot delete all Import.names without norm_self=False')**'''),
@@ -20837,7 +20837,7 @@ Module - ROOT 0,0..1,11
      .level 0
 '''),
 
-('', None, None, None, {}, (None,
+('', None, None, None, {'norm': True}, (None,
 r'''from mod import a, b, c  # comment'''),
 r'''**DEL**''',
 r'''**ValueError('cannot delete all ImportFrom.names without norm_self=False')**'''),
@@ -21186,7 +21186,7 @@ Module - ROOT 0,0..1,12
      .level 0
 '''),
 
-('', None, None, None, {}, (None,
+('', None, None, None, {'norm': True}, (None,
 r'''from mod import (a, b, c)  # comment'''),
 r'''**DEL**''',
 r'''**ValueError('cannot delete all ImportFrom.names without norm_self=False')**'''),
@@ -21948,7 +21948,7 @@ Module - ROOT 0,0..0,25
       2] 'c'
 '''),
 
-('body[0]', 1, 2, None, {}, ('exec',
+('body[0]', 1, 2, None, {'norm': True}, ('exec',
 r'''global a, b, c  # comment'''), (None,
 r'''{*()}'''),
 r'''global a, c  # comment''', r'''
@@ -21999,7 +21999,7 @@ Module - ROOT 0,0..1,11
       0] 'x'
 '''),
 
-('body[0]', None, None, None, {}, ('exec',
+('body[0]', None, None, None, {'norm': True}, ('exec',
 r'''global a, b, c  # comment'''),
 r'''**DEL**''',
 r'''**ValueError('cannot delete all Global.names without norm_self=False')**'''),
@@ -22538,7 +22538,7 @@ Module - ROOT 0,0..0,27
       2] 'c'
 '''),
 
-('body[0]', 1, 2, None, {}, ('exec',
+('body[0]', 1, 2, None, {'norm': True}, ('exec',
 r'''nonlocal a, b, c  # comment'''), (None,
 r'''{*()}'''),
 r'''nonlocal a, c  # comment''', r'''
@@ -22589,7 +22589,7 @@ Module - ROOT 0,0..1,11
       0] 'x'
 '''),
 
-('body[0]', None, None, None, {}, ('exec',
+('body[0]', None, None, None, {'norm': True}, ('exec',
 r'''nonlocal a, b, c  # comment'''),
 r'''**DEL**''',
 r'''**ValueError('cannot delete all Nonlocal.names without norm_self=False')**'''),
@@ -25079,7 +25079,7 @@ ListComp - ROOT 0,0..5,1
      .is_async 0
 '''),
 
-('', None, None, 'generators', {}, (None,
+('', None, None, 'generators', {'norm': True}, (None,
 r'''[_ for a in a for b in b for c in c]'''),
 r'''**DEL**''',
 r'''**ValueError('cannot delete all ListComp.generators without norm_self=False')**'''),

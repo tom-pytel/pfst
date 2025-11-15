@@ -192,13 +192,13 @@ Note how for the unparenthesized `Tuple` parentheses were added for the empty `T
 something is needed on a slice operation (or single operation for that matter) in order to result in a valid `AST` then
 it is done. This can include adding delimiters, grouping parentheses, line continuations, etc...
 
-In extreme cases, like deleting all elements from a `Set`, an element may be added to the `Set` node as a child to
-maintain its parsability and validity as a `AST`.
+In extreme cases, like deleting all elements from a `Set`, you can use the `norm=True` option to add an `Set` node as a
+child to maintain its parsability and validity as a `AST`.
 
 ```py
 >>> node = FST('{a, b, c}')
 
->>> node.put_slice(None, 0, 3)
+>>> node.put_slice(None, 0, 3, norm=True)
 <Set ROOT 0,0..0,5>
 
 >>> print(node.src)
@@ -211,7 +211,7 @@ Likewise getting an empty slice from a `Set` will also give you a "normalized" s
 >>> print(FST('[a, b, c]').get_slice(0, 0).src)  # empty slice form a list
 []
 
->>> print(FST('{a, b, c}').get_slice(0, 0).src)  # empty slice from a set
+>>> print(FST('{a, b, c}').get_slice(0, 0, norm=True).src)  # empty slice from a set
 {*()}
 ```
 
@@ -241,15 +241,15 @@ put, but there may be cases where you need to specify whether the special rules 
 putting an "empty" `Set` of the form `{*()}`, it will be treated as empty with normalization on.
 
 ```py
->>> print(FST('[a, b, c]').put_slice('{*()}', 1, 1).src)
+>>> print(FST('[a, b, c]').put_slice('{*()}', 1, 1, norm=True).src)
 [a, b, c]
 ```
 
 If you want it to be treated literally and not interpreted as an empty `Set` then pass either `norm=False` or
-`norm_put=False`.
+`norm_put=False` (`norm=False` is the default if not passing `norm` at all).
 
 ```py
->>> print(FST('[a, b, c]').put_slice('{*()}', 1, 1, norm_put=False).src)
+>>> print(FST('[a, b, c]').put_slice('{*()}', 1, 1).src)
 [a, *(), b, c]
 ```
 
@@ -266,7 +266,7 @@ allowed to delete all the children of that node even if it is not valid to do so
 >>> node = FST('a = b = val')
 
 >>> try:
-...     node.put_slice(None, 'targets')  # try to delete everything
+...     node.put_slice(None, 'targets', norm=True)  # try to delete everything
 ... except Exception as exc:
 ...     print(exc)
 cannot delete all Assign.targets without norm_self=False

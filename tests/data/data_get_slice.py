@@ -3493,7 +3493,7 @@ List - ROOT 0,0..2,6
 
 'old_exprish': [  # ................................................................................
 
-('body[0].value', 0, 0, None, {}, ('exec',
+('body[0].value', 0, 0, None, {'norm': True}, ('exec',
 r'''{1, 2}'''),
 r'''{1, 2}''', r'''
 Module - ROOT 0,0..0,6
@@ -4934,7 +4934,7 @@ Tuple - ROOT 0,0..0,3
   .ctx Load
 '''),
 
-('body[0].value', 0, 2, None, {}, ('exec',
+('body[0].value', 0, 2, None, {'norm': True}, ('exec',
 r'''{1, 2}'''),
 r'''{*()}''', r'''
 Module - ROOT 0,0..0,5
@@ -4954,7 +4954,7 @@ Set - ROOT 0,0..0,6
    1] Constant 2 - 0,4..0,5
 '''),
 
-('body[0].value', 0, 0, None, {}, ('exec',
+('body[0].value', 0, 0, None, {'norm': True}, ('exec',
 r'''{1, 2}'''),
 r'''{1, 2}''', r'''
 Module - ROOT 0,0..0,6
@@ -5678,7 +5678,7 @@ MatchAs - ROOT 0,0..0,1
   .name 'a'
 '''),
 
-('body[0].cases[0].pattern', 1, 2, None, {}, ('exec', r'''
+('body[0].cases[0].pattern', 1, 2, None, {'norm': True}, ('exec', r'''
 match a:
  case (a |
 # pre
@@ -9932,7 +9932,7 @@ Module - ROOT 0,0..0,4
      .value Name 'stmt' Load - 0,0..0,4
 '''),
 
-('', None, None, 'body', {}, ('single',
+('', None, None, 'body', {'norm': True}, ('single',
 r'''stmt'''),
 r'''**ValueError('cannot cut all elements from Interactive.body without norm_self=False')**''',
 r'''stmt''', r'''
@@ -9953,7 +9953,7 @@ Module - ROOT 0,0..0,4
      .value Name 'stmt' Load - 0,0..0,4
 '''),
 
-('', None, None, 'body', {}, (None,
+('', None, None, 'body', {'norm': True}, (None,
 r'''if 1: pass'''),
 r'''**ValueError('cannot cut all elements from If.body without norm_self=False')**''',
 r'''pass''', r'''
@@ -9990,7 +9990,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-('', None, None, 'cases', {}, (None, r'''
+('', None, None, 'cases', {'norm': True}, (None, r'''
 match a:
   case 1: pass
 '''),
@@ -10023,7 +10023,7 @@ _match_cases - ROOT 0,0..0,12
       0] Pass - 0,8..0,12
 '''),
 
-('', None, None, 'handlers', {}, (None, r'''
+('', None, None, 'handlers', {'norm': True}, (None, r'''
 try: pass
 except: pass
 '''),
@@ -10075,7 +10075,7 @@ _ExceptHandlers - ROOT 0,0..0,12
       0] Pass - 0,8..0,12
 '''),
 
-('', None, None, 'finalbody', {}, (None, r'''
+('', None, None, 'finalbody', {'norm': True}, (None, r'''
 try: pass
 finally: pass
 '''),
@@ -10451,7 +10451,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-('', 0, 3, None, {}, (None,
+('', 0, 3, None, {'norm': True}, (None,
 r'''del a, b, c'''),
 r'''**ValueError('cannot cut all Delete.targets without norm_self=False')**''',
 r'''a, b, c''', r'''
@@ -10859,7 +10859,7 @@ _Assign_targets - ROOT 0,0..4,1
 r'''''',
 r'''_Assign_targets - ROOT 0,0..0,0'''),
 
-('', 0, 3, 'targets', {}, (None,
+('', 0, 3, 'targets', {'norm': True}, (None,
 r'''a = b = c = z'''),
 r'''**ValueError('cannot cut all Assign.targets without norm_self=False')**''',
 r'''a = b = c =''', r'''
@@ -12327,7 +12327,7 @@ _withitems - ROOT 0,0..2,1
      .optional_vars Name 'y' Store - 2,0..2,1
 '''),
 
-('', 0, 3, 'items', {}, (None,
+('', 0, 3, 'items', {'norm': True}, (None,
 r'''with a, b, c: pass'''),
 r'''**ValueError('cannot cut all With.items without norm_self=False')**''',
 r'''a, b, c''', r'''
@@ -12656,7 +12656,7 @@ _withitems - ROOT 0,0..2,1
      .optional_vars Name 'y' Store - 2,0..2,1
 '''),
 
-('', 0, 3, 'items', {}, (None,
+('', 0, 3, 'items', {'norm': True}, (None,
 r'''with (a, b, c): pass'''),
 r'''**ValueError('cannot cut all With.items without norm_self=False')**''',
 r'''a, b, c''', r'''
@@ -12990,7 +12990,7 @@ _withitems - ROOT 0,0..2,1
      .optional_vars Name 'y' Store - 2,0..2,1
 '''),
 
-('', 0, 3, 'items', {}, (None,
+('', 0, 3, 'items', {'norm': True}, (None,
 r'''async with a, b, c: pass'''),
 r'''**ValueError('cannot cut all AsyncWith.items without norm_self=False')**''',
 r'''a, b, c''', r'''
@@ -13319,7 +13319,7 @@ _withitems - ROOT 0,0..2,1
      .optional_vars Name 'y' Store - 2,0..2,1
 '''),
 
-('', 0, 3, 'items', {}, (None,
+('', 0, 3, 'items', {'norm': True}, (None,
 r'''async with (a, b, c): pass'''),
 r'''**ValueError('cannot cut all AsyncWith.items without norm_self=False')**''',
 r'''a, b, c''', r'''
@@ -13637,7 +13637,7 @@ _aliases - ROOT 0,0..2,1
      .asname 'y'
 '''),
 
-('', 0, 3, None, {}, (None,
+('', 0, 3, None, {'norm': True}, (None,
 r'''import a, b, c'''),
 r'''**ValueError('cannot cut all Import.names without norm_self=False')**''',
 r'''a, b, c''', r'''
@@ -13964,7 +13964,7 @@ _aliases - ROOT 0,0..2,1
      .asname 'y'
 '''),
 
-('', 0, 3, None, {}, (None,
+('', 0, 3, None, {'norm': True}, (None,
 r'''from mod import a, b, c'''),
 r'''**ValueError('cannot cut all ImportFrom.names without norm_self=False')**''',
 r'''a, b, c''', r'''
@@ -14300,7 +14300,7 @@ _aliases - ROOT 0,0..4,0
      .asname 'y'
 '''),
 
-('', 0, 3, None, {}, (None,
+('', 0, 3, None, {'norm': True}, (None,
 r'''from mod import a, b, c'''),
 r'''**ValueError('cannot cut all ImportFrom.names without norm_self=False')**''',
 r'''a, b, c''', r'''
@@ -14578,7 +14578,7 @@ Tuple - ROOT 0,0..1,3
   .ctx Load
 '''),
 
-('body[0]', None, None, None, {}, ('exec',
+('body[0]', None, None, None, {'norm': True}, ('exec',
 r'''global a, b, c  # comment'''),
 r'''**ValueError('cannot cut all Global.names without norm_self=False')**''',
 r'''a, b, c''', r'''
@@ -14830,7 +14830,7 @@ Tuple - ROOT 0,0..1,3
   .ctx Load
 '''),
 
-('body[0]', None, None, None, {}, ('exec',
+('body[0]', None, None, None, {'norm': True}, ('exec',
 r'''nonlocal a, b, c  # comment'''),
 r'''**ValueError('cannot cut all Nonlocal.names without norm_self=False')**''',
 r'''a, b, c''', r'''
@@ -17375,7 +17375,7 @@ _comprehensions - ROOT 0,0..3,0
 r'''''',
 r'''_comprehensions - ROOT 0,0..0,0'''),
 
-('', 0, 3, 'generators', {}, (None,
+('', 0, 3, 'generators', {'norm': True}, (None,
 r'''[_ for a in a for b in b for c in c]'''),
 r'''**ValueError('cannot cut all ListComp.generators without norm_self=False')**''',
 r'''for a in a for b in b for c in c''', r'''

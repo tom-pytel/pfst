@@ -145,7 +145,7 @@ Or get all global options.
  'pars': 'auto',
  'pars_walrus': True,
  'pars_arglike': True,
- 'norm': True,
+ 'norm': False,
  'norm_self': None,
  'norm_get': None,
  'norm_put': None,

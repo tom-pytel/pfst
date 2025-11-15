@@ -131,14 +131,14 @@ class _ThreadLocal(threading.local):
     def __init__(self) -> None:
         self.options = {
             'raw':           False,   # True | False | 'auto'
-            'trivia':        True,    # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line'), True means ('block', 'line')
+            'trivia':        True,    # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line')
             'elif_':         True,    # True | False
             'pep8space':     True,    # True | False | 1
             'docstr':        True,    # True | False | 'strict'
             'pars':          'auto',  # True | False | 'auto'
             'pars_walrus':   True,    # True | False | None
             'pars_arglike':  True,    # True | False | None
-            'norm':          True,    # True | False
+            'norm':          False,   # True | False
             'norm_self':     None,    # True | False | None
             'norm_get':      None,    # True | False | None
             'norm_put':      None,    # True | False | None
@@ -1013,7 +1013,7 @@ class FST:
          'pars': 'auto',
          'pars_walrus': True,
          'pars_arglike': True,
-         'norm': True,
+         'norm': False,
          'norm_self': None,
          'norm_get': None,
          'norm_put': None,

@@ -1,6 +1,6 @@
 # Overview
 
-This module exists in order to facilitate quick and easy high level editing of Python source while preserving formatting. E.g:
+This module exists in order to facilitate quick and easy high level editing of Python source in the form of an AST tree while preserving formatting. E.g:
 
 ```py
 >>> import ast, fst
@@ -79,8 +79,7 @@ def func(self):  # comment
 Don't need docstring.
 
 ```py
->>> with FST.options(norm=False):  # this allows zero out bodies
-...     del func.body
+>>> del func.body  # can zero out bodies
 
 >>> print(func.src)
 def func(self):  # comment
@@ -91,7 +90,6 @@ Simple edit.
 ```py
 >>> func.args = 'a, b'
 >>> func.body.append('return a * b  # blah')
-<<FunctionDef ROOT 0,0..1,16>.body[0:1] [<Return 1,4..1,16>]>
 
 >>> print(func.src)
 def func(a, b):  # comment
@@ -123,11 +121,10 @@ def func(a, b):  # comment
 Edit partial source by location.
 
 ```py
->>> func.body[0]
+>>> print(func.body[0])
 <Assign 1,4..1,19>
 
 >>> func.put_src('a *=', 1, 4, 1, 11)
-(1, 8)
 
 >>> print(func.src)
 def func(a, b):  # comment

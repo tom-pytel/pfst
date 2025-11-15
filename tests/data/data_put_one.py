@@ -8463,7 +8463,7 @@ match a:
 r'''new'''),
 r'''**IndexError('index out of range')**'''),
 
-('body[0].cases[0].pattern', 0, False, None, {}, ('exec', r'''
+('body[0].cases[0].pattern', 0, False, None, {'norm': True}, ('exec', r'''
 match a:
  case {1: c} | (d()): pass
 '''), (None,
