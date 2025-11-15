@@ -6028,6 +6028,54 @@ def func():
         self.assertEqual('(b := c)', FST('a, b := c, d').elts[1].copy(pars_walrus=True).src)
         self.assertEqual('(b := c)', FST('a = (b := c)').value.copy(pars_walrus=True).src)
 
+    def test_pars_arglike(self):
+        self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars=True, pars_arglike=True).src)
+        self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars=True, pars_arglike=False).src)
+        self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars=True, pars_arglike=None).src)
+        self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars=True).src)
+
+        self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars='auto', pars_arglike=True).src)
+        self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars='auto', pars_arglike=False).src)
+        self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars='auto', pars_arglike=None).src)
+        self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars='auto').src)
+
+        self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars=False, pars_arglike=True).src)
+        self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars=False, pars_arglike=False).src)
+        self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars=False, pars_arglike=None).src)
+        self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars=False).src)
+
+        with FST.options(pars_arglike=False):
+            self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars=True, pars_arglike=True).src)
+            self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars=True, pars_arglike=False).src)
+            self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars=True, pars_arglike=None).src)
+            self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars=True).src)
+
+            self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars='auto', pars_arglike=True).src)
+            self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars='auto', pars_arglike=False).src)
+            self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars='auto', pars_arglike=None).src)
+            self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars='auto').src)
+
+            self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars=False, pars_arglike=True).src)
+            self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars=False, pars_arglike=False).src)
+            self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars=False, pars_arglike=None).src)
+            self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars=False).src)
+
+        with FST.options(pars_arglike=None):
+            self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars=True, pars_arglike=True).src)
+            self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars=True, pars_arglike=False).src)
+            self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars=True, pars_arglike=None).src)
+            self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars=True).src)
+
+            self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars='auto', pars_arglike=True).src)
+            self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars='auto', pars_arglike=False).src)
+            self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars='auto', pars_arglike=None).src)
+            self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars='auto').src)
+
+            self.assertEqual('*(not a)', FST('call(*not a)').get(0, 'args', pars=False, pars_arglike=True).src)
+            self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars=False, pars_arglike=False).src)
+            self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars=False, pars_arglike=None).src)
+            self.assertEqual('*not a', FST('call(*not a)').get(0, 'args', pars=False).src)
+
     def test_pars_n(self):
         self.assertEqual(1, FST('(a)', 'exec').body[0].value.pars().n)
         self.assertEqual(0, FST('(a, b)', 'exec').body[0].value.elts[0].pars().n)
@@ -8064,11 +8112,11 @@ if 1:
 
                     self.assertEqual(test, py_truth)
 
-    def test_is_expr_arglike(self):
-        self.assertFalse(FST('*a').is_expr_arglike)
-        self.assertTrue(FST('*a or b').is_expr_arglike)
-        self.assertFalse(FST('*(a or b)').is_expr_arglike)
-        self.assertFalse(FST('*(a, b)').is_expr_arglike)
+    def test__is_expr_arglike(self):
+        self.assertFalse(FST('*a')._is_expr_arglike())
+        self.assertTrue(FST('*a or b')._is_expr_arglike())
+        self.assertFalse(FST('*(a or b)')._is_expr_arglike())
+        self.assertFalse(FST('*(a, b)')._is_expr_arglike())
 
 
 if __name__ == '__main__':

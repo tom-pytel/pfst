@@ -33,11 +33,9 @@ from .asttypes import (
     AsyncFor,
     AsyncFunctionDef,
     AsyncWith,
-    BinOp,
     BitAnd,
     BitOr,
     BitXor,
-    BoolOp,
     Call,
     ClassDef,
     Constant,
@@ -113,7 +111,6 @@ from .astutil import (
     copy_ast,
     last_block_header_child,
     syntax_ordered_children,
-    precedence_require_parens_by_type,
 )
 
 from .common import PYLT13, astfield, fstloc, fstlocn, nspace, Self, next_delims, prev_delims
@@ -139,8 +136,8 @@ class _ThreadLocal(threading.local):
             'pep8space':     True,    # True | False | 1
             'docstr':        True,    # True | False | 'strict'
             'pars':          'auto',  # True | False | 'auto'
-            'pars_walrus':   True,    # True | False
-            'pars_arglike':  True,    # True | False
+            'pars_walrus':   True,    # True | False | None
+            'pars_arglike':  True,    # True | False | None
             'norm':          True,    # True | False
             'norm_self':     None,    # True | False | None
             'norm_get':      None,    # True | False | None
@@ -601,22 +598,6 @@ class FST:
         `GeneratorExp`."""
 
         return isinstance(self.a, ASTS_SCOPE_ANONYMOUS)
-
-    @property
-    def is_expr_arglike(self) -> bool:
-        """Is an argument-like expression which can only appear in a `Call.args` or `ClassDef.bases` (or a `.slice`
-        `Tuple.elts` in py 3.11+) list, e.g. `*not a`, `*a or b`. Normal expressions and properly parenthesized
-        `Starred` expressions return `False`."""
-
-        if not isinstance(ast := self.a, Starred) or isinstance(child := ast.value, Tuple):  # we assume any Tuple child of a Starred is intrinsically parenthesized, otherwise it is invalid
-            return False
-
-        child_type = (child.op.__class__ if (child_cls := child.__class__) in (BoolOp, BinOp, UnaryOp) else child_cls)
-
-        if not precedence_require_parens_by_type(child_type, Starred, 'value'):
-            return False
-
-        return not child.f.pars().n
 
     @property
     def f(self) -> None:
@@ -1170,9 +1151,10 @@ class FST:
             - `False`: Do not parenthesize cut / copied `NamedExpr` walrus expressions.
             - `True`: Parenthesize cut / copied `NamedExpr` walrus expressions.
         - `pars_arglike`: Whether to parenthesize argument-like expressions (`*not a`, `*b or c`) when cut / copied
-            either as single element or as part of a slice (only if `pars` is also not `False`).
-            - `False`: Do not parenthesize cut / copied argument-like expressions.
+            either as single element or as part of a slice.
             - `True`: Parenthesize cut / copied argument-like expressions.
+            - `False`: Do not parenthesize cut / copied argument-like expressions.
+            - `None`: Parenthesize according to the `pars` option.
         - `norm`: Default normalize option for puts, gets and self target. Determines how `AST`s which would otherwise
             be invalid because of an operation are handled. Mostly how zero or sometimes one-length elements which
             normally cannot be zero or one length are left / put / returned, e.g. zero-length `Set`. This option can be
@@ -4423,7 +4405,6 @@ class FST:
         _set_ctx,
         _set_end_pos,
 
-        _is_parenthesizable,
         _is_atom,
         _is_enclosed_or_line,
         _is_enclosed_in_parents,
@@ -4451,9 +4432,11 @@ class FST:
         _dump,
         _loc_maybe_key,
 
+        _is_parenthesizable,
         _is_parenthesized_tuple,
         _is_delimited_matchseq,
         _is_except_star,
+        _is_expr_arglike,
         _is_empty_set_call,
         _is_empty_set_star,
         _is_elif,

@@ -521,7 +521,7 @@ def _code_to_slice__expr_arglikes(
         ast_ = fst_.a
 
         if (is_par := fst_._is_parenthesized_tuple()) is not None:
-            if fst_ is code and any(e.f.is_expr_arglike for e in ast_.elts):
+            if fst_ is code and any(e.f._is_expr_arglike() for e in ast_.elts):
                 raise NodeError("cannot put argument-like expression(s) in a Tuple as 'one'")
 
             if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence

@@ -25,6 +25,7 @@ from .asttypes import (
     Attribute,
     AugAssign,
     Await,
+    BinOp,
     BoolOp,
     Call,
     ClassDef,
@@ -79,10 +80,12 @@ from .asttypes import (
     arg,
     arguments,
     comprehension,
+    expr,
     keyword,
     match_case,
     mod,
     operator,
+    pattern,
     stmt,
     withitem,
     TryStar,
@@ -100,7 +103,7 @@ from .asttypes import (
     _type_params,
 )
 
-from .astutil import pat_alnum, OPSTR2CLS_AUG, constant, re_alnumdot_alnum, bistr
+from .astutil import pat_alnum, OPSTR2CLS_AUG, constant, re_alnumdot_alnum, bistr, precedence_require_parens_by_type
 
 from .common import (
     NodeError,
@@ -698,10 +701,20 @@ def get_trivia_params(
 
 
 def get_option_overridable(overridable_option: str, override_option: str, options: Mapping[str, Any] = {}) -> object:
-    """Get an option value which can be overridden with another option (even global as long as it is not `None`)."""
+    """Get an option value which can be overridden with another option, unless that option is `None`.
 
-    if (o := fst.FST.get_option(override_option, options)) is not None:
-        return o
+    This is a bit tricky because in this case if `override_option` is explicitly passed in `options` with a value of
+    `None` then its value will NOT be gotten from the globals options and instead `overridable_option` will be returned
+    from `options` or global. If it is not present but `None` in global options then `overridable_option` is returned
+    again.
+    """
+
+    if (o := options.get(override_option, get_option_overridable)) is not None:  # get_option_overridable is sentinel
+        if o is not get_option_overridable:
+            return o
+
+        if (o := fst.FST.get_option(override_option)) is not None:
+            return o
 
     return fst.FST.get_option(overridable_option, options)
 
@@ -776,7 +789,7 @@ def fixup_field_body(ast: AST, field: str | None, only_list: bool) -> tuple[str,
     """Get `AST` member list for specified `field` or default if `field=None`."""
 
     if not field:
-        if (field := _DEFAULT_AST_FIELD.get(ast.__class__, fixup_field_body)) is fixup_field_body:  # fixup_field_body serves as sentinel
+        if (field := _DEFAULT_AST_FIELD.get(ast.__class__, fixup_field_body)) is fixup_field_body:
             raise ValueError(f"{ast.__class__.__name__} has no default body field")
 
         if not field:  # special case ''
@@ -972,6 +985,62 @@ def _loc_maybe_key(
     return fstloc(ln, col, ln, col + 2)
 
 
+def _is_parenthesizable(self: fst.FST) -> bool:
+    """Whether `self` is parenthesizable with grouping parentheses or not. All `pattern`s and almost all `expr`s which
+    are not themselves inside `pattern`s and are not themselves `Slice`, `FormattedValue` or `Interpolation`.
+
+    **Note:** `Starred` returns `True` even though the `Starred` itself is not parenthesizable but rather its child.
+
+    **Returns:**
+    - `bool`: Whether is syntactically legal to add grouping parentheses or not. Can always be forced.
+
+    **Examples:**
+    ```py
+    >>> FST('i + j')._is_parenthesizable()  # expr
+    True
+
+    >>> FST('{a.b: c, **d}', 'pattern')._is_parenthesizable()
+    True
+
+    >>> FST('a:b:c')._is_parenthesizable()  # Slice
+    False
+
+    >>> FST('for i in j')._is_parenthesizable()  # comprehension
+    False
+
+    >>> FST('a: int, b=2')._is_parenthesizable()  # arguments
+    False
+
+    >>> FST('a: int', 'arg')._is_parenthesizable()
+    False
+
+    >>> FST('key="word"', 'keyword')._is_parenthesizable()
+    False
+
+    >>> FST('a as b', 'alias')._is_parenthesizable()
+    False
+
+    >>> FST('a as b', 'withitem')._is_parenthesizable()
+    False
+    ```
+    """
+
+    if not isinstance(a := self.a, expr):
+        return isinstance(a, pattern)
+
+    if isinstance(a, (Slice, FormattedValue, Interpolation)):
+        return False
+
+    while self := self.parent:
+        if not isinstance(a := self.a, expr):
+            if isinstance(a, pattern):
+                return False
+
+            break
+
+    return True
+
+
 def _is_parenthesized_tuple(self: fst.FST) -> bool | None:
     """Whether `self` is a parenthesized `Tuple` or not, or not a `Tuple` at all.
 
@@ -1068,6 +1137,22 @@ def _is_except_star(self: fst.FST) -> bool | None:
     ln, col, end_ln, end_col = self.loc
 
     return next_frag(self.root._lines, ln, col + 6, end_ln, end_col).src.startswith('*')  # something must be there
+
+
+def _is_expr_arglike(self) -> bool:
+    """Is an argument-like expression which can only appear in a `Call.args` or `ClassDef.bases` (or a `.slice`
+    `Tuple.elts` in py 3.11+) list, e.g. `*not a`, `*a or b`. Normal expressions and properly parenthesized
+    `Starred` expressions return `False`."""
+
+    if not isinstance(ast := self.a, Starred) or isinstance(child := ast.value, Tuple):  # we assume any Tuple child of a Starred is intrinsically parenthesized, otherwise it is invalid
+        return False
+
+    child_type = child.op.__class__ if (child_cls := child.__class__) in (BoolOp, BinOp, UnaryOp) else child_cls
+
+    if not precedence_require_parens_by_type(child_type, Starred, 'value'):
+        return False
+
+    return not child.f.pars().n
 
 
 def _is_empty_set_call(self: fst.FST) -> bool:
@@ -1657,9 +1742,8 @@ def _maybe_fix_tuple(self: fst.FST, is_par: bool | None = None) -> bool:
 def _maybe_fix_arglike(self: fst.FST, options: Mapping[str, Any]) -> None:
     """Parenthesize `self` if is arglike expression according to `options`."""
 
-    if fst.FST.get_option('pars', options) and fst.FST.get_option('pars_arglike', options):
-        if self.is_expr_arglike:
-            self.par()
+    if get_option_overridable('pars', 'pars_arglike', options) and self._is_expr_arglike():
+        self.par()
 
 
 def _maybe_fix_arglikes(self: fst.FST, options: Mapping[str, Any]) -> None:
@@ -1667,9 +1751,9 @@ def _maybe_fix_arglikes(self: fst.FST, options: Mapping[str, Any]) -> None:
 
     # assert isinstance(self.a, Tuple)
 
-    if fst.FST.get_option('pars', options) and fst.FST.get_option('pars_arglike', options):
+    if get_option_overridable('pars', 'pars_arglike', options):
         for e in self.a.elts:
-            if (f := e.f).is_expr_arglike:
+            if (f := e.f)._is_expr_arglike():
                 f.a.value.f.par()  # will be a Starred so we just go for .value
 
 

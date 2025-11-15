@@ -133,7 +133,7 @@ def _validate_get(self: fst.FST, idx: int | None, field: str) -> tuple[AST | Non
     return child, idx
 
 
-def _maybe_fix_copy(self: fst.FST, pars: bool = True, pars_walrus: bool = False) -> None:
+def _maybe_fix_copy(self: fst.FST, pars: bool = True, pars_walrus: bool | None = True) -> None:
     """Maybe fix source and `ctx` values for cut or copied nodes (to make subtrees parsable if the source is not after
     the operation). If cannot fix or ast is not parsable by itself then ast will be unchanged. Is meant to be a quick
     fix after a cut or copy operation, not full check, for that use `verify()`.
@@ -194,7 +194,7 @@ def _get_one_default(self: fst.FST, idx: int | None, field: str, cut: bool, opti
 
     ret, _ = childf._make_fst_and_dedent(childf, copy_ast(child), loc, docstr=False)
 
-    _maybe_fix_copy(ret, fst.FST.get_option('pars', options), fst.FST.get_option('pars_walrus', options))
+    _maybe_fix_copy(ret, bool(fst.FST.get_option('pars', options)), fst.FST.get_option('pars_walrus', options))
 
     return ret
 

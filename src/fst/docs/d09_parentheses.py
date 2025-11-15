@@ -175,26 +175,22 @@ Argument-like expressions which may not be valid outside their normal context (`
 ```py
 >>> f = FST('call(*a or b)')
 
->>> g = f.args[0].copy()
-
->>> print(g.src)
+>>> print(f.args[0].copy().src)
 *(a or b)
 
->>> g = f.args[0].copy(pars_arglike=False)
-
->>> print(g.src)
+>>> print(f.args[0].copy(pars_arglike=False).src)
 *a or b
 ```
 
-They are also not parenthesized if `pars=False`.
+If `pars_arglike=None` then they are parenthesized according to `pars`.
 
 ```py
 >>> f = FST('class cls(*not a, *b, *c or d): pass')
 
->>> print(f.get_slice('bases').src)
+>>> print(f.get_slice('bases', pars_arglike=None, pars=True).src)
 (*(not a), *b, *(c or d))
 
->>> print(f.get_slice('bases', pars=False).src)
+>>> print(f.get_slice('bases', pars_arglike=None, pars=False).src)
 (*not a, *b, *c or d)
 ```
 
