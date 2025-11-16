@@ -126,7 +126,9 @@ b | c
 
 Nodes which have list children which do not match tuple comma-separated syntax or `expr` child type may be returned in
 custom `AST` node container. These custom types are meant to allow slice operations while preserving source format
-(since we will not be adding or removing commas or other separators in order to preserve format). For example:
+(since we will not be adding or removing commas or other separators in order to preserve format).
+
+For example, `Assign.targets`:
 
 ```py
 >>> slice = FST('a = b = c = d = e').get_slice(1, 3, 'targets')
@@ -138,9 +140,52 @@ custom `AST` node container. These custom types are meant to allow slice operati
 b = c =
 ```
 
-Or for example the `Import` and `ImportFrom` `names` field. It is a comma separated list of what look like expressions
-but they are actually aliases which may have an `asname`, which is not allowed in standard `Tuples`, so they are
-returned in their own slice type.
+`ListComp.generators` (and others):
+
+```py
+>>> slice = FST('[i for k in l for j in k for i in j]').get_slice('generators')
+
+>>> print(slice)
+<_comprehensions ROOT 0,0..0,32>
+
+>>> print(slice.src)
+for k in l for j in k for i in j
+```
+
+`comprehension.ifs`:
+
+```py
+>>> slice = FST('[i for a, b, c in j if a if b if c]').generators[0].get_slice('ifs')
+
+>>> print(slice)
+<_comprehension_ifs ROOT 0,0..0,14>
+
+>>> print(slice.src)
+if a if b if c
+```
+
+`FunctionDef.decorator_list` (and others):
+
+```py
+>>> slice = FST('''
+... @deco_a
+... @deco_b()
+... @deco_c  # comment
+... def f(): pass
+... '''.strip()).get_slice('decorator_list')
+
+>>> print(slice)
+<_decorator_list ROOT 0,0..2,18>
+
+>>> print(slice.src)
+@deco_a
+@deco_b()
+@deco_c  # comment
+```
+
+The `Import` and `ImportFrom` `names` field is a comma separated list of what look like expressions but they are
+actually aliases. They have an `asname`, which is not allowed in standard `Tuples`, so they are returned in their own
+slice type `_aliases`.
 
 ```py
 >>> slice = FST('import a, b as c, d').get_slice()
@@ -170,7 +215,7 @@ a, b as c, u as v, x as y
 b as c, u as v
 ```
 
-## Normalization of `Set`
+## Normalization
 
 For some types of `AST` nodes it is permissible to remove all children and still remain valid, for example `Tuple` or
 `List`.
@@ -188,12 +233,70 @@ For some types of `AST` nodes it is permissible to remove all children and still
 []
 ```
 
-Note how for the unparenthesized `Tuple` parentheses were added for the empty `Tuple` to be valid. In general if
-something is needed on a slice operation (or single operation for that matter) in order to result in a valid `AST` then
-it is done. This can include adding delimiters, grouping parentheses, line continuations, etc...
+Note how for the unparenthesized `Tuple` parentheses were added for the empty `Tuple` to be valid. However deleting all
+field elements from a node does not always result in a valid `AST`. `fst` allows you to delete all the elements in these
+cases for editing purposes and it is on you to ensure that something is put there before writing the code out for use.
 
-In extreme cases, like deleting all elements from a `Set`, you can use the `norm=True` option to add an `Set` node as a
-child to maintain its parsability and validity as a `AST`.
+You can delete all the statements from bodies (or `orelse` or `handlers` or `finalbody` or `Match.cases`).
+
+```py
+>>> node = FST('''
+... if 1:
+...     pass
+... '''.strip())
+
+>>> del node.body[0]
+
+>>> print(node.src)
+if 1:
+```
+
+Or from individual statements which normally can't have empty child lists.
+
+```py
+>>> node = FST('del a, b, c')
+
+>>> node.put_slice(None, 0, 3)
+<Delete ROOT 0,0..0,4>
+
+>>> print(repr(node.src))
+'del '
+```
+
+```py
+>>> node = FST('a = b = c = val')
+
+>>> node.put_slice(None, 'targets')
+<Assign ROOT 0,0..0,4>
+
+>>> print(repr(node.src))
+' val'
+```
+
+Doing this with a `Set` winds up with empty curlies which look like a `Dict` (but can still be used normally for editing
+as a `Set`).
+
+```py
+>>> node = FST('{a, b, c}')
+
+>>> node.put_slice(None, 0, 3)
+<Set ROOT 0,0..0,2>
+
+>>> print(node.src)
+{}
+```
+
+In all cases these result in invalid `AST` nodes but is allowed with the understanding that valid data will be replaced
+eventually, preferably sooner rather than later as not all operations are valid on invalid `AST` nodes.
+
+If you wish to avoid invalid `AST` nodes completely then you can pass the `norm=True` option. For most nodes this will
+simply disallow operations which would leave an invalid node. However there are some `AST` types which have special
+handling.
+
+## Normalization of `Set`
+
+In extreme cases, like deleting all elements from a `Set`, you can use the `norm=True` option to maintain its
+parsability and validity as a `AST`.
 
 ```py
 >>> node = FST('{a, b, c}')
@@ -215,30 +318,14 @@ Likewise getting an empty slice from a `Set` will also give you a "normalized" s
 {*()}
 ```
 
-This may not be desirable and you may wish to use an actual empty `Set` for a bit. You can do this by passing the option
-`norm=False`.
-
-```py
->>> slice = FST('{a, b, c}').get_slice(0, 0, norm=False)
-
->>> print(slice)
-<Set ROOT 0,0..0,2>
-
->>> print(slice.src)
-{}
-```
-
-Note that a `Set` was returned but with zero children. This is not a valid `AST` node and if you attempt to reparse this
-it will parse as an empty `Dict`. For this reason normalization should be used for intermediate objects which you may
-want to operate on without having to deal with special rules and not for source code you are writing out.
-
 The standard `norm` option applies to three cases of normalization. The normalization of the target object (what you are
 putting to or cutting from), the returned object and a possible object which may be being put. The `norm` option sets
 all of these to the same value, but you can set them individually as `norm_self`, `norm_get` or `norm_put`.
 
-In general, invalid `AST` slices like the above empty `Set` are accepted and processed correctly as sources to a slice
-put, but there may be cases where you need to specify whether the special rules should apply or not. For example when
-putting an "empty" `Set` of the form `{*()}`, it will be treated as empty with normalization on.
+In general, invalid `AST` slices like an empty `Set` from `norm=False` are accepted and processed correctly as sources
+to a slice put. But for "normalized" slices there may be cases where you need to specify whether the special rules
+should apply or not. When putting an "empty" `Set` of the form `{*()}`, it will be treated as empty with normalization
+on.
 
 ```py
 >>> print(FST('[a, b, c]').put_slice('{*()}', 1, 1, norm=True).src)
@@ -274,8 +361,8 @@ cannot delete all Assign.targets without norm_self=False
 >>> node.put_slice(None, 'targets', norm=False)
 <Assign ROOT 0,0..0,4>
 
->>> print(node.src)
- val
+>>> print(repr(node.src))
+' val'
 ```
 
 Note that `node` wound up as an invalid `Assign` with the source being literally `' val'`. This is not valid as it is
@@ -299,8 +386,8 @@ and the elements specified from `start` to `stop` will be replaced with the elem
 [a, x, y, c]
 ```
 
-In this case the elements `x, y` replaced the element `b` in the target. If instead of replacing with the elements of the
-node being put you wish to just put the node itself then specify `one=True`.
+In this case the elements `x, y` replaced the element `b` in the target. If instead of replacing with the elements of
+the node being put you wish to just put the node itself then specify `one=True`.
 
 ```py
 >>> print(FST('[a, b, c]').put_slice('[x, y]', 1, 2, one=True).src)
@@ -308,24 +395,24 @@ node being put you wish to just put the node itself then specify `one=True`.
 ```
 
 The same thing could have been accomplished just by putting the node with a normal `put()` to the second element of the
-target. The reason the `one` option exists is when you want to replace or delete multiple elements with a single "one".
+target. The reason the `one` option exists is when you want to replace multiple elements with a single "one" instead of
+using that one as a slice.
 
 ```py
 >>> print(FST('[a, b, c]').put_slice('[x, y]', 1, 3, one=True).src)
 [a, [x, y]]
 ```
 
-```py
->>> print(FST('[a, b, c]').put_slice(None, 0, 2, one=True).src)
-[c]
-```
-
-This is allowed anywhere where the single element being put would be allowed to replace multiple elements. For example:
+This is allowed anywhere where the single element being put would be allowed to replace multiple elements.
 
 ```py
 >>> print(FST('del a, b, c, d').put_slice('x, y', 1, 3, one=True).src)
 del a, (x, y), d
+```
 
+It also allows putting things which are not slices of the given type to a slice range withing the target.
+
+```py
 >>> print(FST('case a | b | c | d: pass').pattern.put_slice('x as y', 1, 3, one=True).src)
 a | (x as y) | d
 ```
