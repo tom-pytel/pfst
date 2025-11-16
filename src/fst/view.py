@@ -361,7 +361,7 @@ class fstview:
 
         return f
 
-    def replace(self, code: Code | None, one: bool = True, **options ) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
+    def replace(self, code: Code | None, one: bool = True, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
         """Replace or delete (if `code=None`) this slice.
 
         **Returns:**

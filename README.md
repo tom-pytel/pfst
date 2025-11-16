@@ -1,6 +1,6 @@
 # Overview
 
-This module exists in order to facilitate quick and easy high level editing of Python source in the form of an AST tree while preserving formatting. E.g:
+This module exists in order to facilitate quick and easy high level editing of Python source in the form of an `AST` tree while preserving formatting. E.g:
 
 ```py
 >>> import ast, fst
@@ -199,7 +199,9 @@ formatting where it can.
 ...            return Name('X_SCALE' if node.value > 0.5 else 'Y_SCALE')
 ...
 ...    Transform().visit(node)
+```
 
+```py
 >>> f = FST('''
 ... def compute(x: float,  # x position
 ...             y: float,  # y position
@@ -211,13 +213,17 @@ formatting where it can.
 ...         + y * 0.4  # scale height
 ...     )
 ... '''.strip())
+```
 
+```py
 >>> marked = f.mark()
 
 >>> pure_ast_operation(f.a)
 
 >>> reconciled = f.reconcile(marked)
+```
 
+```py
 >>> print(reconciled.src)
 def compute(NEW_X: float,  # x position
             NEW_Y: float,  # y position

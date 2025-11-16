@@ -288,8 +288,6 @@ def _code_to_slice_seq(
     if not one and non_seq_str_as_one and not isinstance(ast_, (Tuple, List, Set)) and isinstance(code, (str, list)):  # this exists as a convenience for allowing doing `Delete.targets = 'target'` (without trailing comma if string source)
         one = True
 
-    put_norm = _get_norm_option('norm_put', 'set_norm', options)
-
     if one:
         if (is_par := fst_._is_parenthesized_tuple()) is not None:
             fst_._maybe_add_singleton_tuple_comma(is_par)  # specifically for lone '*starred' without comma from slices, even though those can't be gotten alone organically
@@ -298,7 +296,7 @@ def _code_to_slice_seq(
                 fst_._delimit_node()
 
         elif isinstance(ast_, Set):
-            _maybe_fix_Set(fst_, put_norm)
+            _maybe_fix_Set(fst_, _get_norm_option('norm_put', 'set_norm', options))
 
         elif isinstance(ast_, NamedExpr):  # this needs to be parenthesized if being put to unparenthesized tuple
             if not fst_.pars().n and self._is_parenthesized_tuple() is False:
@@ -313,7 +311,7 @@ def _code_to_slice_seq(
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
-    if put_norm:
+    if put_norm := _get_norm_option('norm_put', 'set_norm', options):
         if (fst_._is_empty_set_star() if put_norm == 'star' else
             fst_._is_empty_set_call() if put_norm == 'call' else
             fst_._is_empty_set_star() or fst_._is_empty_set_call()  # True or 'both'
@@ -379,11 +377,10 @@ def _code_to_slice__Assign_targets(
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
-    else:
-        fst_ = code_as__Assign_targets(code, self.root.parse_params, sanitize=False)
+    fst_ = code_as__Assign_targets(code, self.root.parse_params, sanitize=False)
 
-        if not fst_.a.targets:  # put empty sequence is same as delete
-            return None
+    if not fst_.a.targets:  # put empty sequence is same as delete
+        return None
 
     return fst_
 
@@ -401,9 +398,8 @@ def _code_to_slice__decorator_list(
 
         ast_ = _decorator_list(decorator_list=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                                end_col_offset=ls[-1].lenbytes)
-        fst_ = fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
-        return fst_
+        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
     fst_ = code_as__decorator_list(code, self.root.parse_params, sanitize=False)
 
@@ -450,9 +446,8 @@ def _code_to_slice__comprehensions_ifs(
 
         ast_ = _comprehension_ifs(ifs=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls),
                                   end_col_offset=ls[-1].lenbytes)
-        fst_ = fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
-        return fst_
+        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
     fst_ = code_as__comprehension_ifs(code, self.root.parse_params, sanitize=False)
 
