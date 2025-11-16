@@ -13525,7 +13525,7 @@ MatchMapping - ROOT 0,0..0,12
      .value Constant 8 - 0,10..0,11
 '''),
 
-('', 0, False, None, {'raw': True, 'to': 'comparators[-1]'}, (None,
+('', 0, False, 'ops', {'raw': True, 'to': 'comparators[-1]'}, (None,
 r'''a < b < c'''),
 r'''>= z''',
 r'''a >= z''', r'''

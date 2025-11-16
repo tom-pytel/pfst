@@ -1902,7 +1902,7 @@ _PUT_SLICE_HANDLERS = {
     (Try, 'handlers'):                        put_slice_stmtish,  # excepthandler*
     (TryStar, 'handlers'):                    put_slice_stmtish,  # excepthandlerstar*
 
-    (Dict, ''):                               _put_slice_Dict,  # key:value*
+    (Dict, '_keys_values'):                   _put_slice_Dict,  # key:value*
 
     (Set, 'elts'):                            _put_slice_Set_elts,  # expr*
     (List, 'elts'):                           _put_slice_List_elts,  # expr*
@@ -1915,7 +1915,7 @@ _PUT_SLICE_HANDLERS = {
     (Delete, 'targets'):                      _put_slice_Delete_targets,  # expr*
     (Assign, 'targets'):                      _put_slice_Assign_targets,  # expr*
     (BoolOp, 'values'):                       _put_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (Compare, ''):                            _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    # (Compare, ''):                            _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (Call, 'args'):                           _put_slice_Call_args,  # expr*
     (comprehension, 'ifs'):                   _put_slice_comprehension_ifs,  # expr*
 
@@ -1934,7 +1934,7 @@ _PUT_SLICE_HANDLERS = {
     (AsyncWith, 'items'):                     _put_slice_With_AsyncWith_items,  # withitem*
 
     (MatchSequence, 'patterns'):              _put_slice_MatchSequence_patterns,  # pattern*
-    (MatchMapping, ''):                       _put_slice_MatchMapping,  # key:pattern*
+    (MatchMapping, '_keys_patterns'):         _put_slice_MatchMapping,  # key:pattern*
     (MatchClass, 'patterns'):                 _put_slice_NOT_IMPLEMENTED_YET,  # pattern*
     (MatchOr, 'patterns'):                    _put_slice_MatchOr_patterns,  # pattern*
 
@@ -1993,17 +1993,17 @@ def _loc_slice_raw_put_Dict(
 
     return ln, col, end_ln, end_col, start, stop, values
 
-def _loc_slice_raw_put_Compare(
-    self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
-) -> tuple[int, int, int, int, int, int, list[AST]]:
-    ast = self.a
-    ops = ast.ops
-    comparators = ast.comparators
-    start, stop = _fixup_slice_index_for_raw(len(ops), start, stop)
-    ln, col, _, _ = ops[start].f.loc
-    _, _, end_ln, end_col = comparators[stop - 1].f.pars()
+# def _loc_slice_raw_put_Compare(
+#     self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
+# ) -> tuple[int, int, int, int, int, int, list[AST]]:
+#     ast = self.a
+#     ops = ast.ops
+#     comparators = ast.comparators
+#     start, stop = _fixup_slice_index_for_raw(len(ops), start, stop)
+#     ln, col, _, _ = ops[start].f.loc
+#     _, _, end_ln, end_col = comparators[stop - 1].f.pars()
 
-    return ln, col, end_ln, end_col, start, stop, comparators
+#     return ln, col, end_ln, end_col, start, stop, comparators
 
 def _loc_slice_raw_put_comprehension_ifs(
     self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
@@ -2058,10 +2058,10 @@ _LOC_SLICE_RAW_PUT_FUNCS = {
     (ClassDef, 'decorator_list'):         _loc_slice_raw_put_decorator_list,
     (Global, 'names'):                    _loc_slice_raw_put_Global_Nonlocal_names,
     (Nonlocal, 'names'):                  _loc_slice_raw_put_Global_Nonlocal_names,
-    (Dict, ''):                           _loc_slice_raw_put_Dict,
-    (Compare, ''):                        _loc_slice_raw_put_Compare,
+    (Dict, '_keys_values'):               _loc_slice_raw_put_Dict,
+    # (Compare, ''):                        _loc_slice_raw_put_Compare,
     (comprehension, 'ifs'):               _loc_slice_raw_put_comprehension_ifs,
-    (MatchMapping, ''):                   _loc_slice_raw_put_MatchMapping,
+    (MatchMapping, '_keys_patterns'):     _loc_slice_raw_put_MatchMapping,
 }
 
 
@@ -2311,8 +2311,7 @@ def _put_slice(
     if raw is not True:
         try:
             if not (handler := _PUT_SLICE_HANDLERS.get((self.a.__class__, field))):  # allow raw to handle some non-contiguous list fields
-                raise NodeError(f"cannot put slice to {self.a.__class__.__name__}{f'.{field}' if field else ''}",
-                                rawable=True)
+                raise NodeError(f'cannot put slice to {self.a.__class__.__name__}.{field}', rawable=True)
 
             with self._modifying(field):
                 handler(self, code, start, stop, field, one, options)

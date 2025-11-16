@@ -1465,7 +1465,7 @@ _GET_SLICE_HANDLERS = {
     (Try, 'handlers'):                        get_slice_stmtish,  # excepthandler*
     (TryStar, 'handlers'):                    get_slice_stmtish,  # excepthandlerstar*
 
-    (Dict, ''):                               _get_slice_Dict,  # key:value*
+    (Dict, '_keys_values'):                   _get_slice_Dict,  # key:value*
 
     (Set, 'elts'):                            _get_slice_Set_elts,  # expr*
     (List, 'elts'):                           _get_slice_List_elts,  # expr*
@@ -1478,7 +1478,7 @@ _GET_SLICE_HANDLERS = {
     (Delete, 'targets'):                      _get_slice_Delete_targets,  # expr*
     (Assign, 'targets'):                      _get_slice_Assign_targets,  # expr*
     (BoolOp, 'values'):                       _get_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (Compare, ''):                            _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    # (Compare, ''):                            _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (Call, 'args'):                           _get_slice_Call_args,  # expr*
     (comprehension, 'ifs'):                   _get_slice_comprehension_ifs,  # expr*
 
@@ -1497,7 +1497,7 @@ _GET_SLICE_HANDLERS = {
     (AsyncWith, 'items'):                     _get_slice_With_AsyncWith_items,  # withitem*
 
     (MatchSequence, 'patterns'):              _get_slice_MatchSequence_patterns,  # pattern*
-    (MatchMapping, ''):                       _get_slice_MatchMapping,  # key:pattern*
+    (MatchMapping, '_keys_patterns'):         _get_slice_MatchMapping,  # key:pattern*
     (MatchClass, 'patterns'):                 _get_slice_NOT_IMPLEMENTED_YET,  # pattern*
     (MatchOr, 'patterns'):                    _get_slice_MatchOr_patterns,  # pattern*
 
@@ -1538,7 +1538,7 @@ def _get_slice(
     """Get a slice of child nodes from `self`."""
 
     if not (handler := _GET_SLICE_HANDLERS.get((self.a.__class__, field))):
-        raise ValueError(f"cannot get slice from {self.a.__class__.__name__}{f'.{field}' if field else ''}")
+        raise ValueError(f'cannot get slice from {self.a.__class__.__name__}.{field}')
 
     if cut:
         modifying = self._modifying(field).enter()

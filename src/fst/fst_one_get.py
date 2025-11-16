@@ -270,7 +270,7 @@ def _get_one_BoolOp_op(self: fst.FST, idx: int | None, field: str, cut: bool, op
 def _get_one_invalid_combined(
     self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]
 ) -> _GetOneRet:
-    raise ValueError(f'cannot get single element from combined field of {self.a.__class__.__name__}')
+    raise ValueError(f'cannot get single element from {self.a.__class__.__name__}.{field}')
 
 
 @pyver(lt=12, else_=_get_one_default)
@@ -531,7 +531,7 @@ _GET_ONE_HANDLERS = {
     (IfExp, 'orelse'):                    _get_one_default,  # expr
     (Dict, 'keys'):                       _get_one_default,  # expr*
     (Dict, 'values'):                     _get_one_default,  # expr*
-    (Dict, ''):                           _get_one_invalid_combined,  # expr*
+    (Dict, '_keys_values'):               _get_one_invalid_combined,  # expr*
     (Set, 'elts'):                        _get_one_default,  # expr*
     (ListComp, 'elt'):                    _get_one_default,  # expr
     (ListComp, 'generators'):             _get_one_default,  # comprehension*
@@ -548,7 +548,7 @@ _GET_ONE_HANDLERS = {
     (Compare, 'left'):                    _get_one_default,  # expr
     (Compare, 'ops'):                     _get_one_default,  # cmpop*
     (Compare, 'comparators'):             _get_one_default,  # expr*
-    (Compare, ''):                        _get_one_invalid_combined,  # expr*
+    # (Compare, ''):                        _get_one_invalid_combined,  # expr*
     (Call, 'func'):                       _get_one_default,  # expr
     (Call, 'args'):                       _get_one_arglike,  # expr*
     (Call, 'keywords'):                   _get_one_default,  # keyword*
@@ -611,7 +611,7 @@ _GET_ONE_HANDLERS = {
     (MatchMapping, 'keys'):               _get_one_default,  # expr*
     (MatchMapping, 'patterns'):           _get_one_default,  # pattern*
     (MatchMapping, 'rest'):               _get_one_identifier,  # identifier?
-    (MatchMapping, ''):                   _get_one_invalid_combined,  # expr*
+    (MatchMapping, '_keys_patterns'):     _get_one_invalid_combined,  # expr*
     (MatchClass, 'cls'):                  _get_one_default,  # expr
     (MatchClass, 'patterns'):             _get_one_default,  # pattern*
     (MatchClass, 'kwd_attrs'):            _get_one_identifier,  # identifier*
@@ -667,7 +667,7 @@ def _get_one(self: fst.FST, idx: int | None, field: str, cut: bool, options: Map
     """Copy or cut (if possible) a node or non-node from a field of `self`."""
 
     if not (handler := _GET_ONE_HANDLERS.get((self.a.__class__, field))):
-        raise NodeError(f"cannot get from {self.a.__class__.__name__}{f'.{field}' if field else ''}")
+        raise NodeError(f'cannot get from {self.a.__class__.__name__}.{field}')
 
     ret = handler(self, idx, field, cut, options)
 

@@ -2423,7 +2423,7 @@ _PUT_ONE_HANDLERS = {
     (IfExp, 'orelse'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (Dict, 'keys'):                       (False, _put_one_Dict_keys, onestatic(_one_info_Dict_key, _restrict_default)),  # expr*
     (Dict, 'values'):                     (False, _put_one_exprish_required, _onestatic_expr_required),  # expr*
-    (Dict, ''):                           (True,  None, None),  # expr*
+    (Dict, '_keys_values'):               (True,  None, None),  # expr*
     (Set, 'elts'):                        (True,  _put_one_exprish_required, _onestatic_expr_required_starred),  # expr*
     (ListComp, 'elt'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (ListComp, 'generators'):             (True,  _put_one_exprish_required, _onestatic_comprehension_required),  # comprehension*
@@ -2440,7 +2440,7 @@ _PUT_ONE_HANDLERS = {
     (Compare, 'left'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (Compare, 'ops'):                     (False, _put_one_op, onestatic(None, code_as=code_as_cmpop)),  # cmpop*
     (Compare, 'comparators'):             (False, _put_one_exprish_required, _onestatic_expr_required),  # expr*
-    (Compare, ''):                        (True,  None, None),  # expr*
+    # (Compare, ''):                        (True,  None, None),  # expr*
     (Call, 'func'):                       (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (Call, 'args'):                       (True,  _put_one_Call_args, onestatic(_one_info_exprish_required, _restrict_fmtval_slice, code_as=code_as_expr_arglike)),  # expr*
     (Call, 'keywords'):                   (True,  _put_one_Call_keywords, _onestatic_keyword_required),  # keyword*
@@ -2504,7 +2504,7 @@ _PUT_ONE_HANDLERS = {
     (MatchMapping, 'keys'):               (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _is_valid_MatchMapping_key)),  # expr*  Ops for `-1` or `2+3j`
     (MatchMapping, 'patterns'):           (False, _put_one_pattern, _onestatic_pattern_required),  # pattern*
     (MatchMapping, 'rest'):               (False, _put_one_identifier_optional, onestatic(_one_info_MatchMapping_rest, _restrict_default, code_as=code_as_identifier)),  # identifier?
-    (MatchMapping, ''):                   (True,  None, None),  # expr*
+    (MatchMapping, '_keys_patterns'):     (True,  None, None),  # expr*
     (MatchClass, 'cls'):                  (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _is_valid_MatchClass_cls)),  # expr
     (MatchClass, 'patterns'):             (True,  _put_one_pattern, _onestatic_pattern_required),  # pattern*
     (MatchClass, 'kwd_attrs'):            (False, _put_one_identifier_required, onestatic(_one_info_MatchClass_kwd_attrs, _restrict_default, code_as=code_as_identifier)),  # identifier*
@@ -2576,7 +2576,7 @@ def _put_one_raw(
     pars = bool(fst.FST.get_option('pars', options))
     loc = None
 
-    if not field:  # special case field
+    if field.startswith('_'):  # special case field
         kls = ast.__class__
 
         if (is_dict := issubclass(kls, Dict)) or issubclass(kls, MatchMapping):
@@ -2693,20 +2693,22 @@ def _put_one(
         raise ValueError('circular put detected')
 
     ast = self.a
-    child = getattr(self.a, field) if field else None
-    raw = fst.FST.get_option('raw', options)
+    child = getattr(self.a, field, None)
     to = options.get('to')
-    nonraw_exc = None
 
     sliceable, handler, static = _PUT_ONE_HANDLERS.get((ast.__class__, field), (False, None, None))
 
     if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementishs and combined mapping fields
-        # we need to fixup index here explicitly to get an error if it is out of bounds because slice index fixups don't error but just limit it to [0..len(body))
-        idx = fixup_one_index(len(child if field else ast.ops if isinstance(ast, Compare) else ast.keys), idx)  # field will be '' only for Dict, MatchMapping (which both have .keys), or Compare for .ops
+        if is_virtual_field := field.startswith('_'):
+            child = ast.keys  # ast.ops if isinstance(ast, Compare) else ast.keys
 
+        idx = fixup_one_index(len(child), idx)  # we need to fixup index here explicitly to get an error if it is out of bounds because slice index fixups don't error but just limit it to [0..len(body))
         new_self = self._put_slice(code, idx, idx + 1, field, True, options)
 
-        return None if code is None or not field else getattr(new_self.a, field)[idx].f  # guaranteed to be there if code is not None because was just replacement
+        return None if code is None or is_virtual_field else getattr(new_self.a, field)[idx].f  # guaranteed to be there if code is not None because was just replacement
+
+    raw = fst.FST.get_option('raw', options)
+    nonraw_exc = None
 
     if raw is not True:
         try:

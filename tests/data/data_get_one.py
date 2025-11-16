@@ -1075,7 +1075,7 @@ r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
 ('', 0, False, None, {}, (Dict,
 r'''{key: val}'''),
-r'''**ValueError('cannot get single element from combined field of Dict')**'''),
+r'''**ValueError('cannot get single element from Dict._keys_values')**'''),
 
 ('', 0, False, 'elts', {}, (Set,
 r'''{elt0, elt1}'''),
@@ -2135,7 +2135,7 @@ r'''**None**'''),
 
 ('', 0, False, None, {}, (MatchMapping,
 r'''{1: a, **rest}'''),
-r'''**ValueError('cannot get single element from combined field of MatchMapping')**'''),
+r'''**ValueError('cannot get single element from MatchMapping._keys_patterns')**'''),
 
 ('', None, False, 'cls', {}, (MatchClass,
 r'''cls(a, b=c)'''),

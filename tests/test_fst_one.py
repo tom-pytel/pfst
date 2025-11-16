@@ -410,7 +410,7 @@ class TestFSTPut(unittest.TestCase):
         # self.assertEqual('a', f.get(0).src)
         # self.assertEqual('b', f.get(1).src)
         # self.assertEqual('c', f.get(2).src)
-        self.assertRaises(ValueError, f.get, 0)
+        # self.assertRaises(ValueError, f.get, 0)
         self.assertEqual('a', f.get('left').src)
         self.assertEqual('b', f.get(0, 'comparators').src)
         self.assertEqual('c', f.get(1, 'comparators').src)
@@ -2938,7 +2938,7 @@ c, # c
 
         self.assertEqual('{1: 2, 7: 8}', (f := FST('{1: 2, 3: 4, 5: 6}')).put('7: 8', 1, raw=True, to=f.values[-1]).root.src)
         self.assertEqual('{1: 2, 7: 8}', (f := FST('{1: 2, 3: 4, 5: 6}', pattern)).put('7: 8', 1, raw=True, to=f.patterns[-1]).root.src)
-        self.assertEqual('a > z', (f := FST('a < b < c')).put('> z', 0, raw=True, to=f.comparators[-1]).root.src)
+        self.assertEqual('a > z', (f := FST('a < b < c')).put('> z', 0, 'ops', raw=True, to=f.comparators[-1]).root.src)
 
     def test_replace_raw_non_mod_stmt_root(self):
         f = FST('call(a, *b, **c)')

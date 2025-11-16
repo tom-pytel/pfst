@@ -183,42 +183,43 @@ DUMP_NO_COLOR = nspace(
 )
 
 _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: 'body', Interactive: 'body', ..., Match: 'cases', ..., MatchAs: 'pattern'}
-    ('body',           (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While,
-                        If, With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
-    ('handlers',       (_ExceptHandlers,)),
-    ('cases',          (Match, _match_cases)),
+    # list fields of multiple children
+    ('body',             (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While,
+                          If, With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
+    ('handlers',         (_ExceptHandlers,)),
+    ('cases',            (Match, _match_cases)),
 
-    ('elts',           (Tuple, List, Set)),
-    ('elt',            (GeneratorExp, ListComp, SetComp)),
-    ('targets',        (Delete, _Assign_targets)),
-    ('target',         (comprehension,)),
-    ('decorator_list', (_decorator_list,)),
-    ('patterns',       (MatchSequence, MatchOr, MatchClass)),
-    ('type_params',    (TypeAlias, _type_params)),
-    ('names',          (Import, ImportFrom, Global, Nonlocal, _aliases)),
-    ('items',          (_withitems,)),
-    ('values',         (BoolOp, JoinedStr, TemplateStr)),
-    ('generators',     (_comprehensions,)),
-    ('ifs',            (_comprehension_ifs,)),
-    ('args',           (Call,)),  # potential conflict of default body with put to empty 'set()'
+    ('elts',             (Tuple, List, Set)),
+    ('targets',          (Delete, _Assign_targets)),
+    ('decorator_list',   (_decorator_list,)),
+    ('patterns',         (MatchSequence, MatchOr, MatchClass)),
+    ('type_params',      (TypeAlias, _type_params)),
+    ('names',            (Import, ImportFrom, Global, Nonlocal, _aliases)),
+    ('items',            (_withitems,)),
+    ('values',           (BoolOp, JoinedStr, TemplateStr)),
+    ('generators',       (_comprehensions,)),
+    ('ifs',              (_comprehension_ifs,)),
+    ('args',             (Call,)),  # potential conflict of default body with put to empty 'set()'
 
-    # special cases, field names here only for checks to succeed, otherwise all handled programatically
-    ('',               (Dict,)),          # key:value
-    ('',               (MatchMapping,)),  # key:pattern
-    ('',               (Compare,)),       # ops:comparators
+    # special case fields
+    ('_keys_values',     (Dict,)),
+    ('_keys_patterns',   (MatchMapping,)),
+    # ('_ops_comparators', (Compare,)),       # ops:comparators? left:ops_comparators / all?
 
-    # other single value fields
-    ('value',          (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,
-                        FormattedValue, Interpolation, Constant, Attribute, Subscript, Starred, keyword, MatchValue,
-                        MatchSingleton)),
-    ('exc',            (Raise,)),
-    ('test',           (Assert,)),
-    ('operand',        (UnaryOp,)),
-    ('id',             (Name,)),
-    ('arg',            (arg,)),
-    ('name',           (alias,)),
-    ('context_expr',   (withitem,)),
-    ('pattern',        (MatchAs,)),
+    # single value fields
+    ('value',            (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,
+                          FormattedValue, Interpolation, Constant, Attribute, Subscript, Starred, keyword, MatchValue,
+                          MatchSingleton)),
+    ('elt',              (GeneratorExp, ListComp, SetComp)),
+    ('target',           (comprehension,)),
+    ('exc',              (Raise,)),
+    ('test',             (Assert,)),
+    ('operand',          (UnaryOp,)),
+    ('id',               (Name,)),
+    ('arg',              (arg,)),
+    ('name',             (alias,)),
+    ('context_expr',     (withitem,)),
+    ('pattern',          (MatchAs,)),
 ] for kls in classes}
 
 _re_stmt_tail          = re.compile(r'\s*(;(?:\s*#.*)?|#.*)')
@@ -788,18 +789,18 @@ def fixup_slice_indices(len_: int, start: int | Literal['end'] | None, stop: int
 def fixup_field_body(ast: AST, field: str | None, only_list: bool) -> tuple[str, 'AST']:
     """Get `AST` member list for specified `field` or default if `field=None`."""
 
-    if not field:
-        if (field := _DEFAULT_AST_FIELD.get(ast.__class__, fixup_field_body)) is fixup_field_body:
+    if field is None:
+        if (field := _DEFAULT_AST_FIELD.get(ast.__class__, fixup_field_body)) is fixup_field_body:  # fixup_field_body is sentinel
             raise ValueError(f"{ast.__class__.__name__} has no default body field")
 
-        if not field:  # special case ''
-            return '', []
+        if field.startswith('_'):  # virtual field like Dict._keys_values
+            return field, []
 
     if (body := getattr(ast, field, fixup_field_body)) is fixup_field_body:
         raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
 
     if only_list and not isinstance(body, list):
-        raise ValueError(f"expecting a list field {ast.__class__.__name__}{f'.{field}' if field else ''}")
+        raise ValueError(f'expecting a list field {ast.__class__.__name__}.{field}')
 
     return field, body
 
