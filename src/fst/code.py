@@ -749,7 +749,7 @@ def code_as_identifier(code: Code, parse_params: Mapping[str, Any] = {}, *, sani
         if not code.is_root:
             raise ValueError('expecting root node')
 
-        code = code.src
+        code = code._get_src(*loc) if (loc := code.loc) else code.src  # just in case strip junk
 
     elif isinstance(code, AST):
         code = _fixing_unparse(code)
@@ -774,7 +774,7 @@ def code_as_identifier_dotted(code: Code, parse_params: Mapping[str, Any] = {}, 
         if not code.is_root:
             raise ValueError('expecting root node')
 
-        code = code.src
+        code = code._get_src(*loc) if (loc := code.loc) else code.src  # just in case strip junk
 
     elif isinstance(code, AST):
         code = _fixing_unparse(code)
@@ -799,7 +799,7 @@ def code_as_identifier_star(code: Code, parse_params: Mapping[str, Any] = {}, *,
         if not code.is_root:
             raise ValueError('expecting root node')
 
-        code = code.src
+        code = code._get_src(*loc) if (loc := code.loc) else code.src  # just in case strip junk
 
     elif isinstance(code, AST):
         code = _fixing_unparse(code)
@@ -824,7 +824,7 @@ def code_as_identifier_alias(code: Code, parse_params: Mapping[str, Any] = {}, *
         if not code.is_root:
             raise ValueError('expecting root node')
 
-        code = code.src
+        code = code._get_src(*loc) if (loc := code.loc) else code.src  # just in case strip junk
 
     elif isinstance(code, AST):
         code = _fixing_unparse(code)

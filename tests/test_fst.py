@@ -4,6 +4,7 @@ import os
 import threading
 import unittest
 from ast import parse as ast_parse, unparse as ast_unparse
+from keyword import kwlist as keyword_kwlist
 from random import randint, seed
 
 from fst import *
@@ -1485,6 +1486,88 @@ match a:
         self.assertRaises(SyntaxError, code_as__match_cases, 'case = 1')
         self.assertRaises(SyntaxError, code_as__match_cases, 'case.b = 1')
 
+    def test_code_as_identifier(self):
+        self.assertEqual('name', code_as_identifier('name'))
+        self.assertEqual('name', code_as_identifier(['name']))
+        self.assertEqual('name', code_as_identifier(FST('name', 'Name')))
+        self.assertEqual('name', code_as_identifier(FST('name', 'Expr')))
+        self.assertEqual('name', code_as_identifier(FST('name', 'exec')))
+        self.assertEqual('name', code_as_identifier(FST('# pre\nname # line\n# post', 'Name')))
+        self.assertEqual('name', code_as_identifier(Name('name')))
+        self.assertEqual('name', code_as_identifier(Expr(Name('name'))))
+        self.assertEqual('name', code_as_identifier(Module([Expr(Name('name'))], [])))
+
+        self.assertRaises(ParseError, code_as_identifier, 'a.b')
+        self.assertRaises(ParseError, code_as_identifier, '*')
+
+        self.assertEqual('a.b', code_as_identifier_dotted('a.b'))
+        self.assertEqual('a.b', code_as_identifier_dotted(['a.b']))
+        self.assertEqual('a.b', code_as_identifier_dotted(FST('a.b', 'Attribute')))
+        self.assertEqual('a.b', code_as_identifier_dotted(FST('a.b', 'Expr')))
+        self.assertEqual('a.b', code_as_identifier_dotted(FST('a.b', 'exec')))
+        self.assertEqual('a.b', code_as_identifier_dotted(FST('# pre\na.b # line\n# post', 'Attribute')))
+        self.assertEqual('a.b', code_as_identifier_dotted(Attribute(Name('a'), 'b')))
+        self.assertEqual('a.b', code_as_identifier_dotted(Expr(Attribute(Name('a'), 'b'))))
+        self.assertEqual('a.b', code_as_identifier_dotted(Module([Expr(Attribute(Name('a'), 'b'))], [])))
+        self.assertEqual('name', code_as_identifier_dotted('name'))
+        self.assertEqual('name', code_as_identifier_dotted(['name']))
+        self.assertEqual('name', code_as_identifier_dotted(FST('name', 'Name')))
+        self.assertEqual('name', code_as_identifier_dotted(FST('name', 'Expr')))
+        self.assertEqual('name', code_as_identifier_dotted(FST('name', 'exec')))
+        self.assertEqual('name', code_as_identifier_dotted(FST('# pre\nname # line\n# post', 'Name')))
+        self.assertEqual('name', code_as_identifier_dotted(Name('name')))
+        self.assertEqual('name', code_as_identifier_dotted(Expr(Name('name'))))
+        self.assertEqual('name', code_as_identifier_dotted(Module([Expr(Name('name'))], [])))
+
+        self.assertRaises(ParseError, code_as_identifier_dotted, '*')
+
+        self.assertEqual('*', code_as_identifier_star('*'))
+        self.assertEqual('*', code_as_identifier_star(['*']))
+        self.assertEqual('*', code_as_identifier_star(FST('*', 'alias')))
+        self.assertEqual('*', code_as_identifier_star(FST('* # line', 'alias')))
+        self.assertEqual('*', code_as_identifier_star(alias('*')))
+        self.assertEqual('name', code_as_identifier_star('name'))
+        self.assertEqual('name', code_as_identifier_star(['name']))
+        self.assertEqual('name', code_as_identifier_star(FST('name', 'Name')))
+        self.assertEqual('name', code_as_identifier_star(FST('name', 'Expr')))
+        self.assertEqual('name', code_as_identifier_star(FST('name', 'exec')))
+        self.assertEqual('name', code_as_identifier_star(FST('# pre\nname # line\n# post', 'Name')))
+        self.assertEqual('name', code_as_identifier_star(Name('name')))
+        self.assertEqual('name', code_as_identifier_star(Expr(Name('name'))))
+        self.assertEqual('name', code_as_identifier_star(Module([Expr(Name('name'))], [])))
+
+        self.assertRaises(ParseError, code_as_identifier_star, 'a.b')
+
+        self.assertEqual('*', code_as_identifier_alias('*'))
+        self.assertEqual('*', code_as_identifier_alias(['*']))
+        self.assertEqual('*', code_as_identifier_alias(FST('*', 'alias')))
+        self.assertEqual('*', code_as_identifier_alias(FST('* # line', 'alias')))
+        self.assertEqual('*', code_as_identifier_alias(alias('*')))
+        self.assertEqual('name', code_as_identifier_alias('name'))
+        self.assertEqual('name', code_as_identifier_alias(['name']))
+        self.assertEqual('name', code_as_identifier_alias(FST('name', 'Name')))
+        self.assertEqual('name', code_as_identifier_alias(FST('name', 'Expr')))
+        self.assertEqual('name', code_as_identifier_alias(FST('name', 'exec')))
+        self.assertEqual('name', code_as_identifier_alias(FST('# pre\nname # line\n# post', 'Name')))
+        self.assertEqual('name', code_as_identifier_alias(Name('name')))
+        self.assertEqual('name', code_as_identifier_alias(Expr(Name('name'))))
+        self.assertEqual('name', code_as_identifier_alias(Module([Expr(Name('name'))], [])))
+        self.assertEqual('a.b', code_as_identifier_alias('a.b'))
+        self.assertEqual('a.b', code_as_identifier_alias(['a.b']))
+        self.assertEqual('a.b', code_as_identifier_alias(FST('a.b', 'Attribute')))
+        self.assertEqual('a.b', code_as_identifier_alias(FST('a.b', 'Expr')))
+        self.assertEqual('a.b', code_as_identifier_alias(FST('a.b', 'exec')))
+        self.assertEqual('a.b', code_as_identifier_alias(FST('# pre\na.b # line\n# post', 'Attribute')))
+        self.assertEqual('a.b', code_as_identifier_alias(Attribute(Name('a'), 'b')))
+        self.assertEqual('a.b', code_as_identifier_alias(Expr(Attribute(Name('a'), 'b'))))
+        self.assertEqual('a.b', code_as_identifier_alias(Module([Expr(Attribute(Name('a'), 'b'))], [])))
+
+        for keyword in keyword_kwlist:
+            self.assertRaises(ParseError, code_as_identifier, keyword)
+            self.assertRaises(ParseError, code_as_identifier_dotted, keyword)
+            self.assertRaises(ParseError, code_as_identifier_star, keyword)
+            self.assertRaises(ParseError, code_as_identifier_alias, keyword)
+
     def test_code_as_sanitize_exprish(self):
         CODE_ASES = [
             (code_as_expr, 'f(a)'),
@@ -1531,27 +1614,6 @@ match a:
 
                 self.assertEqual(srcp, code_as(srcp).src)
                 self.assertEqual(src, code_as(srcp[1:-1], sanitize=True).src)
-
-    def test_sanitize_stmtish(self):
-        f = FST('# pre\ni = j  # line\n# post', 'stmt')
-        self.assertEqual('# pre\ni = j  # line\n# post', f.src)
-        self.assertEqual('i = j', f._sanitize().src)
-
-        f = FST('# pre\nexcept:\n  pass  # line\n# post', 'ExceptHandler')
-        self.assertEqual('# pre\nexcept:\n  pass  # line\n# post', f.src)
-        self.assertEqual('except:\n  pass  # line', f._sanitize().src)
-
-        f = FST('# pre\nexcept: pass  # line\n# post', 'ExceptHandler')
-        self.assertEqual('# pre\nexcept: pass  # line\n# post', f.src)
-        self.assertEqual('except: pass  # line', f._sanitize().src)
-
-        f = FST('# pre\ncase None:\n  pass  # line\n# post', 'match_case')
-        self.assertEqual('# pre\ncase None:\n  pass  # line\n# post', f.src)
-        self.assertEqual('case None:\n  pass  # line', f._sanitize().src)
-
-        f = FST('# pre\ncase None: pass  # line\n# post', 'match_case')
-        self.assertEqual('# pre\ncase None: pass  # line\n# post', f.src)
-        self.assertEqual('case None: pass  # line', f._sanitize().src)
 
     def test_code_as_all_from_ast(self):
         for mode, func, res, src in PARSE_TESTS:
@@ -1636,6 +1698,27 @@ match a:
         self.assertRaises(ParseError, code_as__ImportFrom_names, FST('*', '_aliases').names.append('*').fst)
         self.assertRaises(ParseError, code_as__ImportFrom_names, FST('a', '_aliases').names.append('*').fst)
         self.assertEqual('*', code_as__ImportFrom_names(FST('*', '_aliases')).src)
+
+    def test_sanitize_stmtish(self):
+        f = FST('# pre\ni = j  # line\n# post', 'stmt')
+        self.assertEqual('# pre\ni = j  # line\n# post', f.src)
+        self.assertEqual('i = j', f._sanitize().src)
+
+        f = FST('# pre\nexcept:\n  pass  # line\n# post', 'ExceptHandler')
+        self.assertEqual('# pre\nexcept:\n  pass  # line\n# post', f.src)
+        self.assertEqual('except:\n  pass  # line', f._sanitize().src)
+
+        f = FST('# pre\nexcept: pass  # line\n# post', 'ExceptHandler')
+        self.assertEqual('# pre\nexcept: pass  # line\n# post', f.src)
+        self.assertEqual('except: pass  # line', f._sanitize().src)
+
+        f = FST('# pre\ncase None:\n  pass  # line\n# post', 'match_case')
+        self.assertEqual('# pre\ncase None:\n  pass  # line\n# post', f.src)
+        self.assertEqual('case None:\n  pass  # line', f._sanitize().src)
+
+        f = FST('# pre\ncase None: pass  # line\n# post', 'match_case')
+        self.assertEqual('# pre\ncase None: pass  # line\n# post', f.src)
+        self.assertEqual('case None: pass  # line', f._sanitize().src)
 
     def test_loc_match_case(self):
         # make sure it includes trailing semicolon
