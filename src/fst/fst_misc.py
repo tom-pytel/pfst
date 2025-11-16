@@ -1511,7 +1511,7 @@ def _maybe_del_separator(
     line_sep = lines[sep_ln]
 
     if not (frag := next_frag(lines, sep_ln, sep_end_col, sep_ln, end_col if sep_on_end_ln else 0x7fffffffffffffff,
-                             True, True)):  # nothing on rest of line after separator?
+                              True, True)):  # nothing on rest of line after separator?
         sep_end_col = end_col if sep_on_end_ln else len(line_sep)
 
     elif frag.src[0] not in '#\\':  # not a comment or line continuation, closing delimiter or next element if being used that way

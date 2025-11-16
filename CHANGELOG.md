@@ -21,6 +21,7 @@
 
 ### Updated
 
+- `.bloc` block statement last child line trailing comment
 - change `pars_walrus` and `pars_arglike` to pure overrides
 - default disable dump() color on win32
 - code cleanups

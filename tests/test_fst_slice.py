@@ -4485,132 +4485,270 @@ class cls:
         self.assertEqual(a.f.src, 'class cls:\n    if 1: pass\n    else:\n        break')
 
     def test_get_and_put_slice_from_to_slice(self):
-        with FST.options(norm=True):
-            # stmts
+        # stmts
 
-            self.assertEqual('a', g := (f := FST('a\nb\nc').get_slice(0, 2)).get_slice(0, 1).src)
+        with FST.options(norm=True):
+            self.assertEqual('a', (g := (f := FST('a\nb\nc').get_slice(0, 2)).get_slice(0, 1)).src)
             self.assertEqual('a\nb\na', f.put_slice(g, 'end').src)
             f.verify()
 
-            # ExceptHandlers
+        with FST.options(norm=False):
+            self.assertEqual('', (g := (f := FST('a\nb\nc').get_slice(0, 0)).get_slice(0, 0)).src)
+            self.assertEqual('', f.put_slice(g, 'end').src)
+            f.verify()
 
-            self.assertEqual('except a: pass', g := (f := FST('except a: pass\nexcept b: pass\nexcept c: pass').get_slice(0, 2)).get_slice(0, 1).src)
+        # ExceptHandlers
+
+        with FST.options(norm=True):
+            self.assertEqual('except a: pass', (g := (f := FST('except a: pass\nexcept b: pass\nexcept c: pass').get_slice(0, 2)).get_slice(0, 1)).src)
             self.assertEqual('except a: pass\nexcept b: pass\nexcept a: pass', f.put_slice(g, 'end').src)
             f.verify()
 
-            # match_cases
+        with FST.options(norm=False):
+            self.assertEqual('', (g := (f := FST('except a: pass\nexcept b: pass\nexcept c: pass').get_slice(0, 0)).get_slice(0, 0)).src)
+            self.assertEqual('', f.put_slice(g, 'end').src)
+            f.verify()
 
-            self.assertEqual('case a: pass', g := (f := FST('case a: pass\ncase b: pass\ncase c: pass').get_slice(0, 2)).get_slice(0, 1).src)
+        # match_cases
+
+        with FST.options(norm=True):
+            self.assertEqual('case a: pass', (g := (f := FST('case a: pass\ncase b: pass\ncase c: pass').get_slice(0, 2)).get_slice(0, 1)).src)
             self.assertEqual('case a: pass\ncase b: pass\ncase a: pass', f.put_slice(g, 'end').src)
             f.verify()
 
-            # Assign
+        with FST.options(norm=False):
+            self.assertEqual('', (g := (f := FST('case a: pass\ncase b: pass\ncase c: pass').get_slice(0, 0)).get_slice(0, 0)).src)
+            self.assertEqual('', f.put_slice(g, 'end').src)
+            f.verify()
 
-            self.assertEqual('a =', g := (f := FST('a = b = c = z').get_slice(0, 2, 'targets')).get_slice(0, 1).src)
+        # Assign
+
+        with FST.options(norm=True):
+            self.assertEqual('a =', (g := (f := FST('a = b = c = z').get_slice(0, 2, 'targets')).get_slice(0, 1)).src)
             self.assertEqual('a = b = a =', f.put_slice(g, 'end', 'targets').src)
             f.verify()
 
-            # Import
+        with FST.options(norm=False):
+            self.assertEqual('', (g := (f := FST('a = b = c = z').get_slice(0, 0, 'targets')).get_slice(0, 0)).src)
+            self.assertEqual('', f.put_slice(g, 'end', 'targets').src)
+            f.verify()
 
-            self.assertEqual('a', g := (f := FST('import a, b, c').get_slice(0, 2)).get_slice(0, 1).src)
+        # Import
+
+        with FST.options(norm=True):
+            self.assertEqual('a', (g := (f := FST('import a, b, c').get_slice(0, 2)).get_slice(0, 1)).src)
             self.assertEqual('a, b, a', f.put_slice(g, 'end').src)
             f.verify()
 
-            # Tuple (unparenthesized)
+        with FST.options(norm=False):
+            self.assertEqual('', (g := (f := FST('import a, b, c').get_slice(0, 0)).get_slice(0, 0)).src)
+            self.assertEqual('', f.put_slice(g, 'end').src)
+            f.verify()
 
-            self.assertEqual('a,', g := (f := FST('a, b, c').get_slice(0, 2)).get_slice(0, 1).src)
+        # Tuple (unparenthesized)
+
+        with FST.options(norm=True):
+            self.assertEqual('a,', (g := (f := FST('a, b, c').get_slice(0, 2)).get_slice(0, 1)).src)
             self.assertEqual('a, b, a', f.put_slice(g, 'end').src)
             f.verify()
 
-            # Tuple (parenthesized)
+        with FST.options(norm=False):
+            self.assertEqual('()', (g := (f := FST('a, b, c').get_slice(0, 0)).get_slice(0, 0)).src)
+            self.assertEqual('()', f.put_slice(g, 'end').src)
+            f.verify()
 
-            self.assertEqual('(a,)', g := (f := FST('(a, b, c)').get_slice(0, 2)).get_slice(0, 1).src)
+        # Tuple (parenthesized)
+
+        with FST.options(norm=True):
+            self.assertEqual('(a,)', (g := (f := FST('(a, b, c)').get_slice(0, 2)).get_slice(0, 1)).src)
             self.assertEqual('(a, b, a)', f.put_slice(g, 'end').src)
             f.verify()
 
-            # List
+        with FST.options(norm=False):
+            self.assertEqual('()', (g := (f := FST('(a, b, c)').get_slice(0, 0)).get_slice(0, 0)).src)
+            self.assertEqual('()', f.put_slice(g, 'end').src)
+            f.verify()
 
-            self.assertEqual('[a]', g := (f := FST('[a, b, c]').get_slice(0, 2)).get_slice(0, 1).src)
+        # List
+
+        with FST.options(norm=True):
+            self.assertEqual('[a]', (g := (f := FST('[a, b, c]').get_slice(0, 2)).get_slice(0, 1)).src)
             self.assertEqual('[a, b, a]', f.put_slice(g, 'end').src)
             f.verify()
 
-            # Set
+        with FST.options(norm=False):
+            self.assertEqual('[]', (g := (f := FST('[a, b, c]').get_slice(0, 0)).get_slice(0, 0)).src)
+            self.assertEqual('[]', f.put_slice(g, 'end').src)
+            f.verify()
 
-            self.assertEqual('{a}', g := (f := FST('{a, b, c}').get_slice(0, 2)).get_slice(0, 1).src)
+        # Set
+
+        with FST.options(norm=True):
+            self.assertEqual('{a}', (g := (f := FST('{a, b, c}').get_slice(0, 2)).get_slice(0, 1)).src)
             self.assertEqual('{a, b, a}', f.put_slice(g, 'end').src)
             f.verify()
 
-            # Dict
+        with FST.options(norm=False):
+            self.assertEqual('{}', (g := (f := FST('{a, b, c}').get_slice(0, 0)).get_slice(0, 0)).src)
+            self.assertEqual('{}', f.put_slice(g, 'end').src)
+            # f.verify()  # empty invalid
 
-            self.assertEqual('{1:a}', g := (f := FST('{1:a, 2:b, 3:c}').get_slice(0, 2)).get_slice(0, 1).src)
+        # Dict
+
+        with FST.options(norm=True):
+            self.assertEqual('{1:a}', (g := (f := FST('{1:a, 2:b, 3:c}').get_slice(0, 2)).get_slice(0, 1)).src)
             self.assertEqual('{1:a, 2:b, 1:a}', f.put_slice(g, 'end').src)
             f.verify()
 
-            # decorators
+        with FST.options(norm=False):
+            self.assertEqual('{}', (g := (f := FST('{1:a, 2:b, 3:c}').get_slice(0, 0)).get_slice(0, 0)).src)
+            self.assertEqual('{}', f.put_slice(g, 'end').src)
+            f.verify()
 
-            self.assertEqual('@a', g := (f := FST('@a\n@b\n@c\nclass cls: pass').get_slice(0, 2, 'decorator_list')).get_slice(0, 1).src)
+        # decorators
+
+        with FST.options(norm=True):
+            self.assertEqual('@a', (g := (f := FST('@a\n@b\n@c\nclass cls: pass').get_slice(0, 2, 'decorator_list')).get_slice(0, 1)).src)
             self.assertEqual('@a\n@b\n@a', f.put_slice(g, 'end').src)
             f.verify()
 
-            # comprehensions
+        with FST.options(norm=False):
+            self.assertEqual('', (g := (f := FST('@a\n@b\n@c\nclass cls: pass').get_slice(0, 0, 'decorator_list')).get_slice(0, 0)).src)
+            self.assertEqual('', f.put_slice(g, 'end').src)
+            f.verify()
 
-            self.assertEqual('for i in i', g := (f := FST('[_ for i in i for j in j for k in k]').get_slice(0, 2, 'generators')).get_slice(0, 1).src)
+        # comprehensions
+
+        with FST.options(norm=True):
+            self.assertEqual('for i in i', (g := (f := FST('[_ for i in i for j in j for k in k]').get_slice(0, 2, 'generators')).get_slice(0, 1)).src)
             self.assertEqual('for i in i for j in j for i in i', f.put_slice(g, 'end', 'generators').src)
             f.verify()
 
-            # comprehension_ifs
+        with FST.options(norm=False):
+            self.assertEqual('', (g := (f := FST('[_ for i in i for j in j for k in k]').get_slice(0, 0, 'generators')).get_slice(0, 0)).src)
+            self.assertEqual('', f.put_slice(g, 'end', 'generators').src)
+            f.verify()
 
-            self.assertEqual('if i', g := (f := FST('for _ in _ if i if j if k').get_slice(0, 2, 'ifs')).get_slice(0, 1).src)
+        # comprehension_ifs
+
+        with FST.options(norm=True):
+            self.assertEqual('if i', (g := (f := FST('for _ in _ if i if j if k').get_slice(0, 2, 'ifs')).get_slice(0, 1)).src)
             self.assertEqual('if i if j if i', f.put_slice(g, 'end', 'ifs').src)
             f.verify()
 
-            # aliases
+        with FST.options(norm=False):
+            self.assertEqual('', (g := (f := FST('for _ in _ if i if j if k').get_slice(0, 0, 'ifs')).get_slice(0, 0)).src)
+            self.assertEqual('', f.put_slice(g, 'end', 'ifs').src)
+            f.verify()
 
-            self.assertEqual('a.a', g := (f := FST('import a.a, b.b, c.c').get_slice(0, 2)).get_slice(0, 1).src)
+        # aliases
+
+        with FST.options(norm=True):
+            self.assertEqual('a.a', (g := (f := FST('import a.a, b.b, c.c').get_slice(0, 2)).get_slice(0, 1)).src)
             self.assertEqual('a.a, b.b, a.a', f.put_slice(g, 'end').src)
             f.verify()
 
-            # withitems
+        with FST.options(norm=False):
+            self.assertEqual('', (g := (f := FST('import a.a, b.b, c.c').get_slice(0, 0)).get_slice(0, 0)).src)
+            self.assertEqual('', f.put_slice(g, 'end').src)
+            f.verify()
 
-            self.assertEqual('a as a', g := (f := FST('with a as a, b as b, c as c: pass').get_slice(0, 2, 'items')).get_slice(0, 1).src)
+        # withitems
+
+        with FST.options(norm=True):
+            self.assertEqual('a as a', (g := (f := FST('with a as a, b as b, c as c: pass').get_slice(0, 2, 'items')).get_slice(0, 1)).src)
             self.assertEqual('a as a, b as b, a as a', f.put_slice(g, 'end').src)
             f.verify()
 
-            # MatchSequence
+            self.assertEqual('', (g := (f := FST('with a as a, b as b, c as c: pass').get_slice(0, 0, 'items')).get_slice(0, 0)).src)
+            self.assertEqual('', f.put_slice(g, 'end').src)
+            f.verify()
 
-            self.assertEqual('[a]', g := (f := FST('[a, b, c]', pattern).get_slice(0, 2)).get_slice(0, 1).src)
+        # MatchSequence
+
+        with FST.options(norm=True):
+            self.assertEqual('[a]', (g := (f := FST('[a, b, c]', pattern).get_slice(0, 2)).get_slice(0, 1)).src)
             self.assertEqual('[a, b, a]', f.put_slice(g, 'end').src)
             f.verify()
 
-            # MatchMapping
+        with FST.options(norm=False):
+            self.assertEqual('[]', (g := (f := FST('[a, b, c]', pattern).get_slice(0, 0)).get_slice(0, 0)).src)
+            self.assertEqual('[]', f.put_slice(g, 'end').src)
+            f.verify()
 
-            self.assertEqual('{1:a}', g := (f := FST('{1:a, 2:b, 3:c}', pattern).get_slice(0, 2)).get_slice(0, 1).src)
+        # MatchMapping
+
+        with FST.options(norm=True):
+            self.assertEqual('{1:a}', (g := (f := FST('{1:a, 2:b, 3:c}', pattern).get_slice(0, 2)).get_slice(0, 1)).src)
             self.assertEqual('{1:a, 2:b, 1:a}', f.put_slice(g, 'end').src)
             f.verify()
 
-            # MatchOr
+        with FST.options(norm=False):
+            self.assertEqual('{}', (g := (f := FST('{1:a, 2:b, 3:c}', pattern).get_slice(0, 0)).get_slice(0, 0)).src)
+            self.assertEqual('{}', f.put_slice(g, 'end').src)
+            f.verify()
 
-            self.assertEqual('a', g := (f := FST('a | b | c', pattern).get_slice(0, 2)).get_slice(0, 1).src)
+        # MatchOr
+
+        with FST.options(norm=True):
+            self.assertEqual('a', (g := (f := FST('a | b | c', pattern).get_slice(0, 2)).get_slice(0, 1)).src)
             self.assertEqual('a | b | a', f.put_slice(g, 'end').src)
             f.verify()
 
-            if PYGE12:
-                # type_params
+        with FST.options(norm=False):
+            self.assertEqual('', (g := (f := FST('a | b | c', pattern).get_slice(0, 0)).get_slice(0, 0)).src)
+            self.assertEqual('', f.put_slice(g, 'end').src)
+            # f.verify()  # empty invalid
 
-                self.assertEqual('T', g := (f := FST('def f[T, *U, **V](): pass').get_slice(0, 2, 'type_params')).get_slice(0, 1).src)
+        # type_params
+
+        if PYGE12:
+            # FunctionDef
+
+            with FST.options(norm=True):
+                self.assertEqual('T', (g := (f := FST('def f[T, *U, **V](): pass').get_slice(0, 2, 'type_params')).get_slice(0, 1)).src)
                 self.assertEqual('T, *U, T', f.put_slice(g, 'end').src)
                 f.verify()
 
-                self.assertEqual('T', g := (f := FST('async def f[T, *U, **V](): pass').get_slice(0, 2, 'type_params')).get_slice(0, 1).src)
+            with FST.options(norm=False):
+                self.assertEqual('', (g := (f := FST('def f[T, *U, **V](): pass').get_slice(0, 0, 'type_params')).get_slice(0, 0)).src)
+                self.assertEqual('', f.put_slice(g, 'end').src)
+                f.verify()
+
+            # AsyncFunctionDef
+
+            with FST.options(norm=True):
+                self.assertEqual('T', (g := (f := FST('async def f[T, *U, **V](): pass').get_slice(0, 2, 'type_params')).get_slice(0, 1)).src)
                 self.assertEqual('T, *U, T', f.put_slice(g, 'end').src)
                 f.verify()
 
-                self.assertEqual('T', g := (f := FST('class cls[T, *U, **V]: pass').get_slice(0, 2, 'type_params')).get_slice(0, 1).src)
+            with FST.options(norm=False):
+                self.assertEqual('', (g := (f := FST('async def f[T, *U, **V](): pass').get_slice(0, 0, 'type_params')).get_slice(0, 0)).src)
+                self.assertEqual('', f.put_slice(g, 'end').src)
+                f.verify()
+
+            # ClassDef
+
+            with FST.options(norm=True):
+                self.assertEqual('T', (g := (f := FST('class cls[T, *U, **V]: pass').get_slice(0, 2, 'type_params')).get_slice(0, 1)).src)
                 self.assertEqual('T, *U, T', f.put_slice(g, 'end').src)
                 f.verify()
 
-                self.assertEqual('T', g := (f := FST('type t[T, *U, **V] = ...').get_slice(0, 2, 'type_params')).get_slice(0, 1).src)
+            with FST.options(norm=False):
+                self.assertEqual('', (g := (f := FST('class cls[T, *U, **V]: pass').get_slice(0, 0, 'type_params')).get_slice(0, 0)).src)
+                self.assertEqual('', f.put_slice(g, 'end').src)
+                f.verify()
+
+            # TypeAlias
+
+            with FST.options(norm=True):
+                self.assertEqual('T', (g := (f := FST('type t[T, *U, **V] = ...').get_slice(0, 2, 'type_params')).get_slice(0, 1)).src)
                 self.assertEqual('T, *U, T', f.put_slice(g, 'end').src)
+                f.verify()
+
+            with FST.options(norm=False):
+                self.assertEqual('', (g := (f := FST('type t[T, *U, **V] = ...').get_slice(0, 0, 'type_params')).get_slice(0, 0)).src)
+                self.assertEqual('', f.put_slice(g, 'end').src)
                 f.verify()
 
     def test_invalid_AST_slice_usage_errors(self):
