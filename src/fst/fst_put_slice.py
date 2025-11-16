@@ -131,7 +131,7 @@ from .fst_misc import get_option_overridable, fixup_slice_indices
 from .slice_stmtish import put_slice_stmtish
 from .slice_exprish import put_slice_sep_begin, put_slice_sep_end, put_slice_nosep
 
-from .fst_slice_get import (
+from .fst_get_slice import (
     _get_norm_option,
     _bounds_Delete_targets,
     _bounds_Assign_targets,

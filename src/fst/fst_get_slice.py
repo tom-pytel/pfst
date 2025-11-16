@@ -1411,7 +1411,7 @@ def _get_slice__slice(
 
     ast = self.a
     kls = ast.__class__
-    static = fst_top_level.fst_slice_put._SLICE_STATICS[kls]
+    static = fst_top_level.fst_put_slice._SLICE_STATICS[kls]
     body = getattr(ast, field)
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)

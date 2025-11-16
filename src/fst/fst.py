@@ -4470,10 +4470,10 @@ class FST:
     )
 
     from .fst_raw import _reparse_raw
-    from .fst_slice_get import _get_slice
-    from .fst_slice_put import _put_slice
-    from .fst_one_get import _get_one
-    from .fst_one_put import _put_one
+    from .fst_get_slice import _get_slice
+    from .fst_put_slice import _put_slice
+    from .fst_get_one import _get_one
+    from .fst_put_one import _put_one
 
 
 # ----------------------------------------------------------------------------------------------------------------------
