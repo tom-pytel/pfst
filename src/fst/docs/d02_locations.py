@@ -6,7 +6,7 @@ To be able to execute the examples, import this.
 >>> from fst import *
 ```
 
-## `loc` and `bloc`
+## `.loc`
 
 Almost all `FST` nodes have a location attribute pointing to where they exist in the source code.
 
@@ -110,34 +110,42 @@ fstloc(1, 3, 2, 11)
 fstloc(0, 2, 0, 4)
 ```
 
-There is also a `bloc` location attribute, which is equal to the `loc` location in all cases except when there are
-preceding decorators, in which case the location starts at the first decorator. There are corresponding `bln`, `bcol`,
-`bend_ln` and `bend_col` attributes, though the last three currently just equal the normal `loc` elements. This may
-change in the future (include trailing comments maybe).
+## `.bloc`
+
+There is also a `.bloc` bounding location attribute. This is equal to the `loc` location in all cases except when there
+are preceding decorators or a trailing line comment on the last child of a block statement, in which case those are
+included in the bounding location. There are corresponding `bln`, `bcol`, `bend_ln` and `bend_col` attributes.
 
 ```py
 >>> f = FST('''
 ... @decorator
 ... def func(x):
-...     return x + 1
+...     return x + 1  # comment
 ... '''.strip())
 
 >>> print(f.src)
 @decorator
 def func(x):
-    return x + 1
+    return x + 1  # comment
 
 >>> f.loc
 fstloc(1, 0, 2, 16)
 
 >>> f.bloc
-fstloc(0, 0, 2, 16)
+fstloc(0, 0, 2, 27)
 
 >>> f.ln, f.col, f.end_ln, f.end_col
 (1, 0, 2, 16)
 
 >>> f.bln, f.bcol, f.bend_ln, f.bend_col
-(0, 0, 2, 16)
+(0, 0, 2, 27)
+```
+
+Note that the trailing comment of a non-block statement is not included in the `.bloc`.
+
+```py
+>>> FST('i = j  # comment', 'exec').body[0].bloc
+fstloc(0, 0, 0, 5)
 ```
 
 ## Line and column coordinates

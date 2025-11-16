@@ -848,10 +848,9 @@ def f():
     if 1:
         pass  # post-if
     # pre
-    # post-elif-continue-3
     # post-line
 ''', r'''
-Module - ROOT 0,0..5,15
+Module - ROOT 0,0..4,15
   .body[1]
    0] FunctionDef - 0,0..2,12
      .name 'f'
@@ -877,10 +876,9 @@ r'''**DEL**'''), r'''
 def f():
     if 1:
         pass  # post-if
-# post-elif-continue-3
     # post-line
 ''', r'''
-Module - ROOT 0,0..4,15
+Module - ROOT 0,0..3,15
   .body[1]
    0] FunctionDef - 0,0..2,12
      .name 'f'

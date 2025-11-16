@@ -20,7 +20,6 @@ from .asttypes import (
     BoolOp,
     Call,
     ClassDef,
-    Compare,
     Del,
     Delete,
     Dict,

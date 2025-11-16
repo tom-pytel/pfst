@@ -29,7 +29,6 @@ from .asttypes import (
     BoolOp,
     Call,
     ClassDef,
-    Compare,
     Constant,
     Delete,
     Dict,
@@ -1140,7 +1139,7 @@ def _is_except_star(self: fst.FST) -> bool | None:
     return next_frag(self.root._lines, ln, col + 6, end_ln, end_col).src.startswith('*')  # something must be there
 
 
-def _is_expr_arglike(self) -> bool:
+def _is_expr_arglike(self: fst.FST) -> bool:
     """Is an argument-like expression which can only appear in a `Call.args` or `ClassDef.bases` (or a `.slice`
     `Tuple.elts` in py 3.11+) list, e.g. `*not a`, `*a or b`. Normal expressions and properly parenthesized
     `Starred` expressions return `False`."""

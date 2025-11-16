@@ -1537,13 +1537,21 @@ match a:
         self.assertEqual('# pre\ni = j  # line\n# post', f.src)
         self.assertEqual('i = j', f._sanitize().src)
 
+        f = FST('# pre\nexcept:\n  pass  # line\n# post', 'ExceptHandler')
+        self.assertEqual('# pre\nexcept:\n  pass  # line\n# post', f.src)
+        self.assertEqual('except:\n  pass  # line', f._sanitize().src)
+
         f = FST('# pre\nexcept: pass  # line\n# post', 'ExceptHandler')
         self.assertEqual('# pre\nexcept: pass  # line\n# post', f.src)
-        self.assertEqual('except: pass', f._sanitize().src)
+        self.assertEqual('except: pass  # line', f._sanitize().src)
+
+        f = FST('# pre\ncase None:\n  pass  # line\n# post', 'match_case')
+        self.assertEqual('# pre\ncase None:\n  pass  # line\n# post', f.src)
+        self.assertEqual('case None:\n  pass  # line', f._sanitize().src)
 
         f = FST('# pre\ncase None: pass  # line\n# post', 'match_case')
         self.assertEqual('# pre\ncase None: pass  # line\n# post', f.src)
-        self.assertEqual('case None: pass', f._sanitize().src)
+        self.assertEqual('case None: pass  # line', f._sanitize().src)
 
     def test_code_as_all_from_ast(self):
         for mode, func, res, src in PARSE_TESTS:
@@ -4240,6 +4248,8 @@ def f():
         self.assertEqual((0, 12, 0, 14), FST('f"a{(lambda *a: b)}"', 'exec').body[0].value.values[1].value.args.loc)
 
     def test_bloc(self):
+        # decorators
+
         ast = parse('@deco\nclass cls:\n @deco\n def meth():\n  @deco\n  class fcls: pass')
 
         self.assertEqual((0, 0, 5, 18), ast.f.loc)
@@ -4251,19 +4261,43 @@ def f():
         self.assertEqual((5, 2, 5, 18), ast.body[0].body[0].body[0].f.loc)
         self.assertEqual((4, 2, 5, 18), ast.body[0].body[0].body[0].f.bloc)
 
-        self.assertEqual((2, 1, 3, 15), FST(r'''
+        self.assertEqual((2, 1, 3, 15), f := FST(r'''
 if 1:
   \
  @deco
   def f(): pass
 '''.strip()).body[0].bloc)
+        self.assertEqual(2, f.bln)
+        self.assertEqual(1, f.bcol)
+        self.assertEqual(3, f.bend_ln)
+        self.assertEqual(15, f.bend_col)
 
-        self.assertEqual((2, 0, 3, 19), FST(r'''
+        self.assertEqual((2, 0, 3, 19), f := FST(r'''
 if 1:
       \
 @real#@fake
       def f(): pass
 '''.strip()).body[0].bloc)
+        self.assertEqual(2, f.bln)
+        self.assertEqual(0, f.bcol)
+        self.assertEqual(3, f.bend_ln)
+        self.assertEqual(19, f.bend_col)
+
+        # trailing comment
+
+        f = FST('if 1:\n  pass  # line', 'exec').body[0]
+        self.assertEqual((0, 0, 1, 6), f.loc)
+        self.assertEqual((0, 0, 1, 14), f.bloc)
+
+        f = FST('if 1: pass  # line', 'exec').body[0]
+        self.assertEqual((0, 0, 0, 10), f.loc)
+        self.assertEqual((0, 0, 0, 18), f.bloc)
+
+        f = FST('if 1:  # line\n  pass', 'exec').body[0]
+        del f.body[0]
+        self.assertEqual('if 1:  # line', f.src)
+        self.assertEqual((0, 0, 0, 5), f.loc)
+        self.assertEqual((0, 0, 0, 13), f.bloc)
 
     def test_fromast_special(self):
         f = FST.fromast(ast_parse('*t').body[0].value)

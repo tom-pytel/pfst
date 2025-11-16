@@ -83,7 +83,6 @@ from .asttypes import (
     Tuple,
     UAdd,
     USub,
-    UnaryOp,
     While,
     With,
     arguments,
@@ -472,12 +471,28 @@ class FST:
 
     @property
     def bloc(self) -> fstloc | None:
-        """Bounding location of node, including any preceding decorators. Not all nodes have locations but any node
-        which has a `loc` will have a `bloc`. Will be same as `loc` for all nodes except those that have decorators, in
-        which case it will start at the first decorator.
+        """Bounding location of node. For non-statements or non-block statements is same as `loc`. For block statements
+        will include any leading decorators and a trailing line comment on the last child (or self if no children).
 
-        **Note:** This may be changed in the future to include trailing comments belonging to last elements of block
-        statements.
+        **Examples:**
+        ```py
+        >>> f = FST('''
+        ... @decorator
+        ... def func():
+        ...     pass  # comment
+        ... '''.strip(), 'exec')
+
+        >>> f.body[0].bloc
+        fstloc(0, 0, 2, 19)
+
+        >>> f.body[0].loc
+        fstloc(1, 0, 2, 8)
+
+        >>> f = FST('stmt  # comment', 'exec')
+
+        >>> f.body[0].bloc  # non-block statement doesn't include comment
+        fstloc(0, 0, 0, 4)
+        ```
         """
 
         try:
@@ -485,9 +500,16 @@ class FST:
         except KeyError:
             pass
 
-        if (bloc := self.loc) and getattr(self.a, 'decorator_list', None):  # only do if has decorator_list and IT IS NOT EMPTY
-            ln, col, _, _ = loc_decorator(self, 0, False)
-            _, _, end_ln, end_col = bloc
+        if (bloc := self.loc) and isinstance(self.a, ASTS_BLOCK):  # bloc can only be different for block-type ASTs
+            ln, col, end_ln, end_col = bloc
+            last_line = self.root._lines[end_ln]
+
+            if last_line.find('#', end_col) != -1:  # if comment present on last line then set end to end of line to include the comment
+                end_col = len(last_line)
+
+            if getattr(self.a, 'decorator_list', None):  # if has any decorators then start at first one
+                ln, col, _, _ = loc_decorator(self, 0, False)
+
             bloc = fstloc(ln, col, end_ln, end_col)
 
         self._cache['bloc'] = bloc
@@ -519,15 +541,29 @@ class FST:
         return (l := self.loc) and l[3]
 
     @property
-    def bln(self) -> int:  # bounding location including @decorators
-        """Line number of the first line of this node or the first decorator if present (0 based). The corresponding
-        `bcol`, `bend_ln` and `bend_col` are just aliases for the normal values."""
+    def bln(self) -> int:
+        """Line number of the first line of this node or the first decorator if present (0 based)."""
 
         return (l := self.bloc) and l[0]
 
-    bcol = col  # for symmetry
-    bend_ln = end_ln
-    bend_col = end_col
+    @property
+    def bcol(self) -> int:
+        """CHARACTER column of this node or the first decorator if present (0 based)."""
+
+        return (l := self.bloc) and l[1]
+
+    @property
+    def bend_ln(self) -> int:
+        """Line number of the last line of this node."""
+
+        return (l := self.bloc) and l[2]
+
+    @property
+    def bend_col(self) -> int:
+        """CHARACTER column of the end of the last line of this node, past a trailing line comment on last child if
+        `self` is a block statement."""
+
+        return (l := self.bloc) and l[3]
 
     @property
     def lineno(self) -> int:  # 1 based
