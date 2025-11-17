@@ -50,10 +50,6 @@ from .asttypes import (
 
 from .astutil import (
     constant,
-    OPSTR2CLS_UNARY,
-    OPSTR2CLS_BIN,
-    OPSTR2CLS_CMP,
-    OPSTR2CLS_BOOL,
     OPCLS2STR,
     is_valid_identifier,
     is_valid_identifier_dotted,

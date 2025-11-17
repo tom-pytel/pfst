@@ -4468,7 +4468,6 @@ class FST:
     from .fst_misc import (
         _repr_tail,
         _dump,
-        _loc_maybe_key,
 
         _is_parenthesizable,
         _is_parenthesized_tuple,
@@ -4505,6 +4504,7 @@ class FST:
     )
 
     from .fst_locs import (
+        _loc_maybe_key,
         _loc_arguments,
         _loc_comprehension,
         _loc_withitem,

@@ -12,6 +12,7 @@ from . import fst
 
 from .asttypes import (
     ASTS_BLOCK,
+    AST,
     AsyncFunctionDef,
     AsyncWith,
     Compare,
@@ -31,34 +32,47 @@ from .common import fstloc, fstlocn, next_frag, prev_frag, next_find, prev_find,
 
 from .traverse import next_bound, prev_bound, next_bound_step, prev_bound_step
 
-__all__ = [
-    '_loc_arguments',
-    '_loc_comprehension',
-    '_loc_withitem',
-    '_loc_match_case',
-    '_loc_op',
-    '_loc_block_header_end',
-    '_loc_arguments_empty',
-    '_loc_comprehension_if',
-    '_loc_decorator',
-    '_loc_Lambda_args_entire',
-    '_loc_ClassDef_bases_pars',
-    '_loc_ImportFrom_names_pars',
-    '_loc_With_items_pars',
-    '_loc_Call_pars',
-    '_loc_Subscript_brackets',
-    '_loc_MatchClass_pars',
-    '_loc_FunctionDef_type_params_brackets',
-    '_loc_ClassDef_type_params_brackets',
-    '_loc_TypeAlias_type_params_brackets',
-    '_loc_Global_Nonlocal_names',
-]
-
 
 _re_deco_start         = re.compile(r'[ \t]*@')
 
 _re_keyword_import     = re.compile(r'\bimport\b')  # we end with a '\b' because we need exactly this word and there may be other similar ones between `from` and `import`
 _re_keyword_with_start = re.compile(r'\bwith')  # we do not end with '\b' because the search using this may be checking source where the `with` is joined with a following `withitem` and there are no other words between `async` and `with`
+
+
+def _loc_maybe_key(
+    self: fst.FST, idx: int, pars: bool = True, body: list[AST] | None = None, body2: list[AST] | None = None
+) -> fstloc:
+    """Return location of node which may be a dictionary key even if it is `**` specified by a `None`. Optionally return
+    the location of the grouping parentheses if key actually present. Can also be used to get the location
+    (parenthesized or not) from any list of `AST`s which is not a `Dict.keys` if an explicit `body` and / or `body2` is
+    passed in, e.g. will safely get location of `MatchMapping` keys. Will just return parenthesized or not location from
+    any `body` assuming there are no `None`s to force a check from `body2` and a search back from that for a `**`.
+
+    **WARNING:** `idx` must be non-negative.
+
+    **Parameters:**
+    - `idx`: Non-negative index of child to get location in `self` container.
+    - `pars`: Whether to return location from `.pars()` if is not `**` key or not.
+    - `body`: Override for `.keys` in case this is not being used on a `Dict`.
+    - `body2`: Override for `.values` in case this is being used on a `MatchMapping`.
+    """
+
+    if key := (body or self.a.keys)[idx]:
+        return key.f.pars() if pars else key.f.loc
+
+    if body2 is None:
+        body2 = self.a.values
+
+    val_ln, val_col, _, _ = body2[idx].f.loc
+
+    if idx:
+        _, _, ln, col = body2[idx - 1].f.loc
+    else:
+        ln, col, _, _ = self.loc
+
+    ln, col = prev_find(self.root._lines, ln, col, val_ln, val_col, '**')  # '**' must be there
+
+    return fstloc(ln, col, ln, col + 2)
 
 
 def _loc_arguments(self: fst.FST) -> fstloc | None:

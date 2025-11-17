@@ -105,7 +105,6 @@ from .astutil import pat_alnum, constant, re_alnumdot_alnum, bistr, precedence_r
 
 from .common import (
     NodeError,
-    fstloc,
     srcwpos,
     nspace,
     re_empty_line,
@@ -944,42 +943,6 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
                     ast.f._dump(st, cind + st.lind, f'{c.clr_field}{i}]{c.end_field} ')
                 else:
                     st.linefunc(f'{cind}{st.lind}{c.clr_field}{i}]{c.end_field} {ast!r}{st.eol}')
-
-
-def _loc_maybe_key(
-    self: fst.FST, idx: int, pars: bool = True, body: list[AST] | None = None, body2: list[AST] | None = None
-) -> fstloc:
-    """Return location of node which may be a dictionary key even if it is `**` specified by a `None`. Optionally return
-    the location of the grouping parentheses if key actually present. Can also be used to get the location
-    (parenthesized or not) from any list of `AST`s which is not a `Dict.keys` if an explicit `body` and / or `body2` is
-    passed in, e.g. will safely get location of `MatchMapping` keys. Will just return parenthesized or not location from
-    any `body` assuming there are no `None`s to force a check from `body2` and a search back from that for a `**`.
-
-    **WARNING:** `idx` must be non-negative.
-
-    **Parameters:**
-    - `idx`: Non-negative index of child to get location in `self` container.
-    - `pars`: Whether to return location from `.pars()` if is not `**` key or not.
-    - `body`: Override for `.keys` in case this is not being used on a `Dict`.
-    - `body2`: Override for `.values` in case this is being used on a `MatchMapping`.
-    """
-
-    if key := (body or self.a.keys)[idx]:
-        return key.f.pars() if pars else key.f.loc
-
-    if body2 is None:
-        body2 = self.a.values
-
-    val_ln, val_col, _, _ = body2[idx].f.loc
-
-    if idx:
-        _, _, ln, col = body2[idx - 1].f.loc
-    else:
-        ln, col, _, _ = self.loc
-
-    ln, col = prev_find(self.root._lines, ln, col, val_ln, val_col, '**')  # '**' must be there
-
-    return fstloc(ln, col, ln, col + 2)
 
 
 def _is_parenthesizable(self: fst.FST) -> bool:
