@@ -29,6 +29,7 @@ from .asttypes import (
     BoolOp,
     Call,
     ClassDef,
+    Compare,
     Constant,
     Delete,
     Dict,
@@ -179,42 +180,42 @@ DUMP_NO_COLOR = nspace(
 
 _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: 'body', Interactive: 'body', ..., Match: 'cases', ..., MatchAs: 'pattern'}
     # list fields of multiple children
-    ('body',             (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While,
-                          If, With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
-    ('handlers',         (_ExceptHandlers,)),
-    ('cases',            (Match, _match_cases)),
+    ('body',                  (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While,
+                               If, With, AsyncWith, Try, TryStar, ExceptHandler, Lambda, match_case),),
+    ('handlers',              (_ExceptHandlers,)),
+    ('cases',                 (Match, _match_cases)),
 
-    ('elts',             (Tuple, List, Set)),
-    ('targets',          (Delete, _Assign_targets)),
-    ('decorator_list',   (_decorator_list,)),
-    ('patterns',         (MatchSequence, MatchOr, MatchClass)),
-    ('type_params',      (TypeAlias, _type_params)),
-    ('names',            (Import, ImportFrom, Global, Nonlocal, _aliases)),
-    ('items',            (_withitems,)),
-    ('values',           (BoolOp, JoinedStr, TemplateStr)),
-    ('generators',       (_comprehensions,)),
-    ('ifs',              (_comprehension_ifs,)),
-    ('args',             (Call,)),  # potential conflict of default body with put to empty 'set()'
+    ('elts',                  (Tuple, List, Set)),
+    ('targets',               (Delete, _Assign_targets)),
+    ('decorator_list',        (_decorator_list,)),
+    ('patterns',              (MatchSequence, MatchOr, MatchClass)),
+    ('type_params',           (TypeAlias, _type_params)),
+    ('names',                 (Import, ImportFrom, Global, Nonlocal, _aliases)),
+    ('items',                 (_withitems,)),
+    ('values',                (BoolOp, JoinedStr, TemplateStr)),
+    ('generators',            (_comprehensions,)),
+    ('ifs',                   (_comprehension_ifs,)),
+    ('args',                  (Call,)),  # potential conflict of default body with put to empty 'set()'
 
     # special case fields
-    ('_keys_values',     (Dict,)),
-    ('_keys_patterns',   (MatchMapping,)),
-    # ('_ops_comparators', (Compare,)),       # ops:comparators? left:ops_comparators / all?
+    ('_keys_values',          (Dict,)),
+    ('_keys_patterns',        (MatchMapping,)),
+    ('_left_ops_comparators', (Compare,)),
 
     # single value fields
-    ('value',            (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,
-                          FormattedValue, Interpolation, Constant, Attribute, Subscript, Starred, keyword, MatchValue,
-                          MatchSingleton)),
-    ('elt',              (GeneratorExp, ListComp, SetComp)),
-    ('target',           (comprehension,)),
-    ('exc',              (Raise,)),
-    ('test',             (Assert,)),
-    ('operand',          (UnaryOp,)),
-    ('id',               (Name,)),
-    ('arg',              (arg,)),
-    ('name',             (alias,)),
-    ('context_expr',     (withitem,)),
-    ('pattern',          (MatchAs,)),
+    ('value',                 (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,
+                               FormattedValue, Interpolation, Constant, Attribute, Subscript, Starred, keyword, MatchValue,
+                               MatchSingleton)),
+    ('elt',                   (GeneratorExp, ListComp, SetComp)),
+    ('target',                (comprehension,)),
+    ('exc',                   (Raise,)),
+    ('test',                  (Assert,)),
+    ('operand',               (UnaryOp,)),
+    ('id',                    (Name,)),
+    ('arg',                   (arg,)),
+    ('name',                  (alias,)),
+    ('context_expr',          (withitem,)),
+    ('pattern',               (MatchAs,)),
 ] for kls in classes}
 
 _re_stmt_tail          = re.compile(r'\s*(;(?:\s*#.*)?|#.*)')

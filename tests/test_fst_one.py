@@ -406,10 +406,9 @@ class TestFSTPut(unittest.TestCase):
         self.assertRaises(ValueError, f.get, 0)  # cannot get single element from combined field of MatchMapping
 
         f = FST('a < b < c', 'exec').body[0].value
-        # old Compare all fields combined
-        # self.assertEqual('a', f.get(0).src)
-        # self.assertEqual('b', f.get(1).src)
-        # self.assertEqual('c', f.get(2).src)
+        self.assertEqual('a', f.get(0).src)
+        self.assertEqual('b', f.get(1).src)
+        self.assertEqual('c', f.get(2).src)
         # self.assertRaises(ValueError, f.get, 0)
         self.assertEqual('a', f.get('left').src)
         self.assertEqual('b', f.get(0, 'comparators').src)
@@ -453,11 +452,10 @@ class TestFSTPut(unittest.TestCase):
         self.assertRaises(ValueError, FST('{a: b}').get, 0)
         self.assertRaises(ValueError, FST('match a:\n case {1: b}: pass').cases[0].pattern.get, 0)
 
-        # old Compare all fields combined
-        # f = FST('a < b < c')
-        # self.assertEqual('a', f.get(0).src)
-        # self.assertEqual('b', f.get(1).src)
-        # self.assertEqual('c', f.get(2).src)
+        f = FST('a < b < c')
+        self.assertEqual('a', f.get(0).src)
+        self.assertEqual('b', f.get(1).src)
+        self.assertEqual('c', f.get(2).src)
 
         f = FST('def f(): pass').get('args')
         self.assertIsInstance(f.a, arguments)
@@ -1010,7 +1008,7 @@ if 1:
 
                 raise
 
-    def test_put_special_fields(self):
+    def test_put_special_fields_raw(self):
         with FST.options(pars=False, raw=True):
             self.assertEqual('{a: b, **c, e: f}', parse('{a: b, **d, e: f}').body[0].value.f.put('c', 1, field='values').root.src)
             self.assertEqual('{a: b, c: d, e: f}', parse('{a: b, **d, e: f}').body[0].value.f.put('c: ', 1, field='keys').root.src)
@@ -1030,29 +1028,29 @@ if 1:
             self.assertEqual('match a:\n case {1: a, 4: d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 1, 3).root.src)
             self.assertEqual('match a:\n case {4: d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 0, 3).root.src)
             self.assertEqual('match a:\n case {4: d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d').root.src)
+ 
+            self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put('z', 0).root.src)
+            self.assertEqual('a < z < c', parse('a < b < c').body[0].value.f.put('z', 1).root.src)
+            self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put('z', 2).root.src)
+            self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put('z', -1).root.src)
+            self.assertEqual('a < z < c', parse('a < b < c').body[0].value.f.put('z', -2).root.src)
+            self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put('z', -3).root.src)
+            self.assertRaises(IndexError, parse('a < b < c').body[0].value.f.put, 'z', 4)
+            self.assertRaises(IndexError, parse('a < b < c').body[0].value.f.put, 'z', -4)
+            self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put('z', field='left').root.src)
+            self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put('z', 1, field='comparators').root.src)
+            self.assertEqual('a < b > c', parse('a < b < c').body[0].value.f.put('>', 1, field='ops').root.src)
 
-            # old Compare all fields combined
-            # self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put('z', 0).root.src)
-            # self.assertEqual('a < z < c', parse('a < b < c').body[0].value.f.put('z', 1).root.src)
-            # self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put('z', 2).root.src)
-            # self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put('z', -1).root.src)
-            # self.assertEqual('a < z < c', parse('a < b < c').body[0].value.f.put('z', -2).root.src)
-            # self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put('z', -3).root.src)
-            # self.assertRaises(IndexError, parse('a < b < c').body[0].value.f.put, 'z', 4)
-            # self.assertRaises(IndexError, parse('a < b < c').body[0].value.f.put, 'z', -4)
-            # self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put('z', field='left').root.src)
-            # self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put('z', 1, field='comparators').root.src)
-            # self.assertEqual('a < b > c', parse('a < b < c').body[0].value.f.put('>', 1, field='ops').root.src)
-            # self.assertRaises(ValueError, parse('a < b < c').body[0].value.f.put_slice, 'z', 0, 0)
-            # self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put_slice('z', 0, 1).root.src)
-            # self.assertEqual('z < c', parse('a < b < c').body[0].value.f.put_slice('z', 0, 2).root.src)
-            # self.assertEqual('z', parse('a < b < c').body[0].value.f.put_slice('z', 0, 3).root.src)
-            # self.assertRaises(ValueError, parse('a < b < c').body[0].value.f.put_slice, 'z', 1, 1)
-            # self.assertEqual('a < z < c', parse('a < b < c').body[0].value.f.put_slice('z', 1, 2).root.src)
-            # self.assertEqual('a < z', parse('a < b < c').body[0].value.f.put_slice('z', 1, 3).root.src)
-            # self.assertRaises(ValueError, parse('a < b < c').body[0].value.f.put_slice, 'z', 2, 2)
-            # self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put_slice('z', 2, 3).root.src)
-            # self.assertRaises(ValueError, parse('a < b < c').body[0].value.f.put_slice, 'z', 3, 3)
+            self.assertRaises(ValueError, parse('a < b < c').body[0].value.f.put_slice, 'z', 0, 0)
+            self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put_slice('z', 0, 1).root.src)
+            self.assertEqual('z < c', parse('a < b < c').body[0].value.f.put_slice('z', 0, 2).root.src)
+            self.assertEqual('z', parse('a < b < c').body[0].value.f.put_slice('z', 0, 3).root.src)
+            self.assertRaises(ValueError, parse('a < b < c').body[0].value.f.put_slice, 'z', 1, 1)
+            self.assertEqual('a < z < c', parse('a < b < c').body[0].value.f.put_slice('z', 1, 2).root.src)
+            self.assertEqual('a < z', parse('a < b < c').body[0].value.f.put_slice('z', 1, 3).root.src)
+            self.assertRaises(ValueError, parse('a < b < c').body[0].value.f.put_slice, 'z', 2, 2)
+            self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put_slice('z', 2, 3).root.src)
+            self.assertRaises(ValueError, parse('a < b < c').body[0].value.f.put_slice, 'z', 3, 3)
 
             self.assertEqual('[i for i in j if a if z if c]', parse('[i for i in j if a if b if c]').body[0].value.generators[0].f.put('z', 1, field='ifs').root.src)
             self.assertEqual('[i for i in j if a if z if c]', parse('[i for i in j if a if b if c]').body[0].value.generators[0].f.put_slice('if z', 1, 2, field='ifs').root.src)
@@ -2938,7 +2936,7 @@ c, # c
 
         self.assertEqual('{1: 2, 7: 8}', (f := FST('{1: 2, 3: 4, 5: 6}')).put('7: 8', 1, raw=True, to=f.values[-1]).root.src)
         self.assertEqual('{1: 2, 7: 8}', (f := FST('{1: 2, 3: 4, 5: 6}', pattern)).put('7: 8', 1, raw=True, to=f.patterns[-1]).root.src)
-        self.assertEqual('a > z', (f := FST('a < b < c')).put('> z', 0, 'ops', raw=True, to=f.comparators[-1]).root.src)
+        self.assertEqual('a < x > z', (f := FST('a < b < c')).put('x > z', 1, raw=True, to=f.comparators[-1]).root.src)
 
     def test_replace_raw_non_mod_stmt_root(self):
         f = FST('call(a, *b, **c)')

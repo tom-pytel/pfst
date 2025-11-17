@@ -114,6 +114,20 @@ from .slice_stmtish import get_slice_stmtish
 _GetOneRet = Union['fst.FST', None, str, constant]
 
 
+def _params_Compare(self: fst.FST, idx: int | None) -> tuple[int, str, AST | list[AST]]:
+    """Convert `idx` of combined Compare `left`, `ops` and `comparators` fields into parameters which access the actual
+    field."""
+
+    ast         = self.a
+    comparators = ast.comparators
+    idx         = fixup_one_index(len(comparators) + 1, idx)
+
+    if idx:
+        return idx - 1, 'comparators', comparators
+    else:
+        return None, 'left', ast.left
+
+
 def _validate_get(self: fst.FST, idx: int | None, field: str) -> tuple[AST | None, int]:
     """Check that `idx` was passed (or not) as needed."""
 
@@ -230,6 +244,12 @@ def _get_one_stmtish(self: fst.FST, idx: int | None, field: str, cut: bool, opti
     _, idx = _validate_get(self, idx, field)
 
     return get_slice_stmtish(self, idx, idx + 1, field, cut, options, one=True)
+
+
+def _get_one_Compare(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
+    idx, field, _ = _params_Compare(self, idx)
+
+    return _get_one_default(self, idx, field, cut, options)
 
 
 def _get_one_ctx(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
@@ -548,7 +568,7 @@ _GET_ONE_HANDLERS = {
     (Compare, 'left'):                    _get_one_default,  # expr
     (Compare, 'ops'):                     _get_one_default,  # cmpop*
     (Compare, 'comparators'):             _get_one_default,  # expr*
-    # (Compare, ''):                        _get_one_invalid_combined,  # expr*
+    (Compare, '_left_ops_comparators'):   _get_one_Compare,  # expr*
     (Call, 'func'):                       _get_one_default,  # expr
     (Call, 'args'):                       _get_one_arglike,  # expr*
     (Call, 'keywords'):                   _get_one_default,  # keyword*

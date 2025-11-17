@@ -20,6 +20,7 @@ from .asttypes import (
     BoolOp,
     Call,
     ClassDef,
+    Compare,
     Del,
     Delete,
     Dict,
@@ -1465,7 +1466,7 @@ _GET_SLICE_HANDLERS = {
     (Delete, 'targets'):                      _get_slice_Delete_targets,  # expr*
     (Assign, 'targets'):                      _get_slice_Assign_targets,  # expr*
     (BoolOp, 'values'):                       _get_slice_NOT_IMPLEMENTED_YET,  # expr*
-    # (Compare, ''):                            _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Compare, '_left_ops_comparators'):       _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (Call, 'args'):                           _get_slice_Call_args,  # expr*
     (comprehension, 'ifs'):                   _get_slice_comprehension_ifs,  # expr*
 

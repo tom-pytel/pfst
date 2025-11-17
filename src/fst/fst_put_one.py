@@ -179,6 +179,7 @@ from .code import (
 )
 
 from .fst_misc import fixup_one_index
+from .fst_get_one import _params_Compare
 
 
 _PutOneCode = Code | str | constant | None  # yes, None is already in constant, but just to make this explicit that None may be in place of an expected AST where a constant is not expected
@@ -1159,6 +1160,22 @@ def _put_one_Lambda_arguments(
     target = self._loc_Lambda_args_entire()
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 1, target, prefix)
+
+
+def _put_one_Compare(
+    self: fst.FST,
+    code: _PutOneCode,
+    idx: int | None,
+    field: str,
+    child: _Child,
+    static: onestatic,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """Put to combined [Compare.left, Compare.comparators] using this total indexing."""
+
+    idx, field, child = _params_Compare(self, idx)
+
+    return _put_one_exprish_required(self, code, idx, field, child, static, options)
 
 
 def _put_one_Call_args(
@@ -2431,7 +2448,7 @@ _PUT_ONE_HANDLERS = {
     (Compare, 'left'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (Compare, 'ops'):                     (False, _put_one_op, onestatic(None, code_as=code_as_cmpop)),  # cmpop*
     (Compare, 'comparators'):             (False, _put_one_exprish_required, _onestatic_expr_required),  # expr*
-    # (Compare, ''):                        (True,  None, None),  # expr*
+    (Compare, '_left_ops_comparators'):   (True,  _put_one_Compare, _onestatic_expr_required),  # expr*
     (Call, 'func'):                       (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (Call, 'args'):                       (True,  _put_one_Call_args, onestatic(_one_info_exprish_required, _restrict_fmtval_slice, code_as=code_as_expr_arglike)),  # expr*
     (Call, 'keywords'):                   (True,  _put_one_Call_keywords, _onestatic_keyword_required),  # keyword*
@@ -2582,12 +2599,10 @@ def _put_one_raw(
                 to = body2[idx].f
 
         elif issubclass(kls, Compare):
-            field = 'ops'
-            child = ast.ops
-            idx = fixup_one_index(len(child), idx)
+            idx, field, child = _params_Compare(self, idx)
 
             if not to:
-                to = self.comparators[idx]
+                to = (child if idx is None else child[idx]).f
 
         else:
             raise RuntimeError('should not get here')
@@ -2690,10 +2705,14 @@ def _put_one(
     sliceable, handler, static = _PUT_ONE_HANDLERS.get((ast.__class__, field), (False, None, None))
 
     if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementishs and combined mapping fields
-        if is_virtual_field := field.startswith('_'):
-            child = ast.keys  # ast.ops if isinstance(ast, Compare) else ast.keys
+        if not (is_virtual_field := field.startswith('_')):
+            len_ = len(child)
+        elif (keys := getattr(ast, 'keys', None)) is not None:
+            len_ = len(keys)
+        else:
+            len_ = len(ast.comparators) + 1
 
-        idx = fixup_one_index(len(child), idx)  # we need to fixup index here explicitly to get an error if it is out of bounds because slice index fixups don't error but just limit it to [0..len(body))
+        idx = fixup_one_index(len_, idx)  # we need to fixup index here explicitly to get an error if it is out of bounds because slice index fixups don't error but just clip to [0..len(body))
         new_self = self._put_slice(code, idx, idx + 1, field, True, options)
 
         return None if code is None or is_virtual_field else getattr(new_self.a, field)[idx].f  # guaranteed to be there if code is not None because was just replacement
