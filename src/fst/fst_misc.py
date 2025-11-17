@@ -1099,10 +1099,15 @@ def _is_except_star(self: fst.FST) -> bool | None:
     return next_frag(self.root._lines, ln, col + 6, end_ln, end_col).src.startswith('*')  # something must be there
 
 
-def _is_expr_arglike(self: fst.FST) -> bool:
+def _is_expr_arglike(self: fst.FST) -> bool | None:
     """Is an argument-like expression which can only appear in a `Call.args` or `ClassDef.bases` (or a `.slice`
-    `Tuple.elts` in py 3.11+) list, e.g. `*not a`, `*a or b`. Normal expressions and properly parenthesized
-    `Starred` expressions return `False`."""
+    `Tuple.elts` in py 3.11+) list, e.g. `*not a`, `*a or b`.
+
+    **Returns:**
+    - `True`: Is an unparenthesized arglike expression, `*not a`, `*a or b`.
+    - `None`: Is a parenthesized arglike expression, `*(not a)`, `*(a or b)`.
+    - `False`: Is a not an arglike expression, `*x`, `y`, `i = 1`, etc...
+    """
 
     if not isinstance(ast := self.a, Starred) or isinstance(child := ast.value, Tuple):  # we assume any Tuple child of a Starred is intrinsically parenthesized, otherwise it is invalid
         return False
@@ -1112,7 +1117,7 @@ def _is_expr_arglike(self: fst.FST) -> bool:
     if not precedence_require_parens_by_type(child_type, Starred, 'value'):
         return False
 
-    return not child.f.pars().n
+    return None if child.f.pars().n else True
 
 
 def _is_empty_set_call(self: fst.FST) -> bool:
