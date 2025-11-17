@@ -101,14 +101,6 @@ from .common import (
     prev_find,
 )
 
-from .locations import (
-    loc_Call_pars,
-    loc_Subscript_brackets,
-    loc_ImportFrom_names_pars,
-    loc_With_items_pars,
-    loc_MatchClass_pars,
-)
-
 
 _HAS_FSTR_COMMENT_BUG = f'{"a#b"=}' != '"a#b"=\'a#b\''  # gh-135148
 
@@ -928,22 +920,22 @@ def _is_enclosed_or_line(
 
         if isinstance(ast, Call):  # these will replace any fields which we know to be enclosed with mock FST nodes which just say the location is enclosed
             children = [ast.func,
-                        nspace(f=nspace(pars=lambda: loc_Call_pars(self),
+                        nspace(f=nspace(pars=lambda: self._loc_Call_pars(),
                                         _is_enclosed_or_line=lambda **kw: True))]
 
         elif isinstance(ast, Subscript):
             children = [ast.value,
-                        nspace(f=nspace(pars=lambda: loc_Subscript_brackets(self),
+                        nspace(f=nspace(pars=lambda: self._loc_Subscript_brackets(),
                                         _is_enclosed_or_line=lambda **kw: True))]
 
         elif isinstance(ast, ImportFrom):
-            pars_names = loc_ImportFrom_names_pars(self)
+            pars_names = self._loc_ImportFrom_names_pars()
             children = ([nspace(f=nspace(pars=lambda: pars_names, _is_enclosed_or_line=lambda **kw: True))]
                         if pars_names.n else
                         ast.names)
 
         elif isinstance(ast, (With, AsyncWith)):
-            pars_items = loc_With_items_pars(self)
+            pars_items = self._loc_With_items_pars()
             end_ln = pars_items.bound.end_ln
             children = ([nspace(f=nspace(pars=lambda: pars_items, _is_enclosed_or_line=lambda **kw: True))]
                         if pars_items.n else
@@ -951,7 +943,7 @@ def _is_enclosed_or_line(
 
         elif isinstance(ast, MatchClass):
             children = [ast.cls,
-                        nspace(f=nspace(pars=lambda: loc_MatchClass_pars(self),
+                        nspace(f=nspace(pars=lambda: self._loc_MatchClass_pars(),
                                         _is_enclosed_or_line=lambda **kw: True))]
 
         else:  # we don't check always-enclosed statement fields here because statements will never get here
@@ -1079,10 +1071,10 @@ def _is_enclosed_in_parents(self: fst.FST, field: str | None = None) -> bool:
             return self.pfield.name == 'type_params'
 
         if isinstance(parenta, ImportFrom):
-            return bool(loc_ImportFrom_names_pars(parent).n)  # we know we are in `names`
+            return bool(parent._loc_ImportFrom_names_pars().n)  # we know we are in `names`
 
         if isinstance(parenta, (With, AsyncWith)):
-            return bool(loc_With_items_pars(parent).n)  # we know we are in `items`
+            return bool(parent._loc_With_items_pars().n)  # we know we are in `items`
 
         if isinstance(parenta, (stmt, ExceptHandler, match_case, mod, type_ignore)):
             return False

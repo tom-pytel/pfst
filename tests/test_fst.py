@@ -65,16 +65,6 @@ from fst.code import (
     code_as_identifier_alias,
 )
 
-from fst.locations import (
-    loc_ClassDef_bases_pars,
-    loc_ImportFrom_names_pars,
-    loc_With_items_pars,
-    loc_block_header_end,
-    loc_Call_pars,
-    loc_Subscript_brackets,
-    loc_MatchClass_pars,
-)
-
 from fst import parsex as px, code
 from fst.fst_misc import get_trivia_params
 
@@ -1743,12 +1733,12 @@ match a:
         self.assertEqual('# pre\ncase None: pass  # line\n# post', f.src)
         self.assertEqual('case None: pass  # line', f._sanitize().src)
 
-    def test_loc_match_case(self):
+    def test__loc_match_case(self):
         # make sure it includes trailing semicolon
 
         self.assertEqual((0, 0, 0, 13), FST('case 1: pass;', match_case).loc)
 
-    def test_loc_operator_no_parent(self):
+    def test__loc_operator_no_parent(self):
         self.assertEqual((1, 0, 1, 1), FST(Invert(), ['# pre', '~ # post', '# next']).loc)
         self.assertEqual((1, 0, 1, 3), FST(Not(), ['# pre', 'not # post', '# next']).loc)
         self.assertEqual((1, 0, 1, 1), FST(UAdd(), ['# pre', '+ # post', '# next']).loc)
@@ -1792,191 +1782,205 @@ match a:
         # self.assertEqual((1, 0, 1, 3), FST(FloorDiv(), ['# pre', '//= # post', '# next']).loc)
         # self.assertEqual((1, 0, 1, 3), FST(Pow(), ['# pre', '**= # post', '# next']).loc)
 
-    def test_loc_block_header_end(self):
-        self.assertEqual((0, 15, 0, 15), loc_block_header_end(parse('def f(a) -> int: pass').body[0].f))
-        self.assertEqual((0, 8, 0, 7),  loc_block_header_end(parse('def f(a): pass').body[0].f))
-        self.assertEqual((0, 7, 0, 0),  loc_block_header_end(parse('def f(): pass').body[0].f))
-        self.assertEqual((0, 21, 0, 21), loc_block_header_end(parse('async def f(a) -> int: pass').body[0].f))
-        self.assertEqual((0, 14, 0, 13), loc_block_header_end(parse('async def f(a): pass').body[0].f))
-        self.assertEqual((0, 13, 0, 0), loc_block_header_end(parse('async def f(): pass').body[0].f))
-        self.assertEqual((0, 26, 0, 25), loc_block_header_end(parse('class cls(base, keyword=1): pass').body[0].f))
-        self.assertEqual((0, 15, 0, 14), loc_block_header_end(parse('class cls(base): pass').body[0].f))
-        self.assertEqual((0, 10, 0, 10), loc_block_header_end(parse('for a in b: pass\nelse: pass').body[0].f))
-        self.assertEqual((0, 16, 0, 16), loc_block_header_end(parse('async for a in b: pass\nelse: pass').body[0].f))
-        self.assertEqual((0, 7, 0, 7),  loc_block_header_end(parse('while a: pass\nelse: pass').body[0].f))
-        self.assertEqual((0, 4, 0, 4),  loc_block_header_end(parse('if a: pass\nelse: pass').body[0].f))
-        self.assertEqual((0, 8, 0, 8),  loc_block_header_end(parse('with f(): pass').body[0].f))
-        self.assertEqual((0, 13, 0, 13), loc_block_header_end(parse('with f() as v: pass').body[0].f))
-        self.assertEqual((0, 14, 0, 14), loc_block_header_end(parse('async with f(): pass').body[0].f))
-        self.assertEqual((0, 19, 0, 19), loc_block_header_end(parse('async with f() as v: pass').body[0].f))
-        self.assertEqual((0, 7, 0, 7),  loc_block_header_end(parse('match a:\n case 2: pass').body[0].f))
-        self.assertEqual((1, 7, 1, 7),  loc_block_header_end(parse('match a:\n case 2: pass').body[0].cases[0].f))
-        self.assertEqual((1, 15, 1, 15), loc_block_header_end(parse('match a:\n case 2 if True: pass').body[0].cases[0].f))
-        self.assertEqual((0, 3, 0, 0),  loc_block_header_end(parse('try: pass\nexcept: pass\nelse: pass\nfinally: pass').body[0].f))
-        self.assertEqual((1, 6, 1, 0),  loc_block_header_end(parse('try: pass\nexcept: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
-        self.assertEqual((1, 16, 1, 16), loc_block_header_end(parse('try: pass\nexcept Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
-        self.assertEqual((1, 33, 1, 33), loc_block_header_end(parse('try: pass\nexcept (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
-        self.assertEqual((1, 38, 1, 33), loc_block_header_end(parse('try: pass\nexcept (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
+    def test__loc_block_header_end(self):
+        from fst.fst_locs import _loc_block_header_end
+
+        self.assertEqual((0, 15, 0, 15), _loc_block_header_end(parse('def f(a) -> int: pass').body[0].f))
+        self.assertEqual((0, 8, 0, 7),  _loc_block_header_end(parse('def f(a): pass').body[0].f))
+        self.assertEqual((0, 7, 0, 0),  _loc_block_header_end(parse('def f(): pass').body[0].f))
+        self.assertEqual((0, 21, 0, 21), _loc_block_header_end(parse('async def f(a) -> int: pass').body[0].f))
+        self.assertEqual((0, 14, 0, 13), _loc_block_header_end(parse('async def f(a): pass').body[0].f))
+        self.assertEqual((0, 13, 0, 0), _loc_block_header_end(parse('async def f(): pass').body[0].f))
+        self.assertEqual((0, 26, 0, 25), _loc_block_header_end(parse('class cls(base, keyword=1): pass').body[0].f))
+        self.assertEqual((0, 15, 0, 14), _loc_block_header_end(parse('class cls(base): pass').body[0].f))
+        self.assertEqual((0, 10, 0, 10), _loc_block_header_end(parse('for a in b: pass\nelse: pass').body[0].f))
+        self.assertEqual((0, 16, 0, 16), _loc_block_header_end(parse('async for a in b: pass\nelse: pass').body[0].f))
+        self.assertEqual((0, 7, 0, 7),  _loc_block_header_end(parse('while a: pass\nelse: pass').body[0].f))
+        self.assertEqual((0, 4, 0, 4),  _loc_block_header_end(parse('if a: pass\nelse: pass').body[0].f))
+        self.assertEqual((0, 8, 0, 8),  _loc_block_header_end(parse('with f(): pass').body[0].f))
+        self.assertEqual((0, 13, 0, 13), _loc_block_header_end(parse('with f() as v: pass').body[0].f))
+        self.assertEqual((0, 14, 0, 14), _loc_block_header_end(parse('async with f(): pass').body[0].f))
+        self.assertEqual((0, 19, 0, 19), _loc_block_header_end(parse('async with f() as v: pass').body[0].f))
+        self.assertEqual((0, 7, 0, 7),  _loc_block_header_end(parse('match a:\n case 2: pass').body[0].f))
+        self.assertEqual((1, 7, 1, 7),  _loc_block_header_end(parse('match a:\n case 2: pass').body[0].cases[0].f))
+        self.assertEqual((1, 15, 1, 15), _loc_block_header_end(parse('match a:\n case 2 if True: pass').body[0].cases[0].f))
+        self.assertEqual((0, 3, 0, 0),  _loc_block_header_end(parse('try: pass\nexcept: pass\nelse: pass\nfinally: pass').body[0].f))
+        self.assertEqual((1, 6, 1, 0),  _loc_block_header_end(parse('try: pass\nexcept: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
+        self.assertEqual((1, 16, 1, 16), _loc_block_header_end(parse('try: pass\nexcept Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
+        self.assertEqual((1, 33, 1, 33), _loc_block_header_end(parse('try: pass\nexcept (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
+        self.assertEqual((1, 38, 1, 33), _loc_block_header_end(parse('try: pass\nexcept (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
 
         if PYGE12:
-            self.assertEqual((0, 3, 0, 0),  loc_block_header_end(parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].f))
-            self.assertEqual((1, 17, 1, 17), loc_block_header_end(parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
-            self.assertEqual((1, 34, 1, 34), loc_block_header_end(parse('try: pass\nexcept* (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
-            self.assertEqual((1, 39, 1, 34), loc_block_header_end(parse('try: pass\nexcept* (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
-            self.assertEqual((0, 12, 0, 11), loc_block_header_end(parse('class cls[T]: pass').body[0].f))
+            self.assertEqual((0, 3, 0, 0),  _loc_block_header_end(parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].f))
+            self.assertEqual((1, 17, 1, 17), _loc_block_header_end(parse('try: pass\nexcept* Exception: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
+            self.assertEqual((1, 34, 1, 34), _loc_block_header_end(parse('try: pass\nexcept* (Exception, BaseException): pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
+            self.assertEqual((1, 39, 1, 34), _loc_block_header_end(parse('try: pass\nexcept* (Exception, BaseException) as e: pass\nelse: pass\nfinally: pass').body[0].handlers[0].f))
+            self.assertEqual((0, 12, 0, 11), _loc_block_header_end(parse('class cls[T]: pass').body[0].f))
 
-        self.assertEqual((0, 17, 0, 16), loc_block_header_end(parse('def f(a) -> (int): pass').body[0].f))
-        self.assertEqual((0, 28, 0, 27), loc_block_header_end(parse('class cls(base, keyword=(1)): pass').body[0].f))
-        self.assertEqual((0, 17, 0, 15), loc_block_header_end(parse('class cls((base)): pass').body[0].f))
-        self.assertEqual((0, 12, 0, 11), loc_block_header_end(parse('for a in (b): pass\nelse: pass').body[0].f))
+        self.assertEqual((0, 17, 0, 16), _loc_block_header_end(parse('def f(a) -> (int): pass').body[0].f))
+        self.assertEqual((0, 28, 0, 27), _loc_block_header_end(parse('class cls(base, keyword=(1)): pass').body[0].f))
+        self.assertEqual((0, 17, 0, 15), _loc_block_header_end(parse('class cls((base)): pass').body[0].f))
+        self.assertEqual((0, 12, 0, 11), _loc_block_header_end(parse('for a in (b): pass\nelse: pass').body[0].f))
 
-    def test_loc_ClassDef_bases_pars(self):
-        self.assertEqual('fstlocn(0, 9, 0, 9, n=0)', str(loc_ClassDef_bases_pars(FST('class cls: pass'))))
-        self.assertEqual('fstlocn(0, 9, 0, 10, n=0)', str(loc_ClassDef_bases_pars(FST('class cls : pass'))))
-        self.assertEqual('fstlocn(1, 3, 1, 4, n=0)', str(loc_ClassDef_bases_pars(FST('class \\\ncls : pass'))))
-        self.assertEqual('fstlocn(0, 9, 1, 0, n=0)', str(loc_ClassDef_bases_pars(FST('class cls \\\n: pass'))))
-        self.assertEqual('fstlocn(0, 9, 0, 11, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(): pass'))))
-        self.assertEqual('fstlocn(1, 0, 1, 2, n=1)', str(loc_ClassDef_bases_pars(FST('class cls\\\n(): pass'))))
-        self.assertEqual('fstlocn(0, 9, 1, 1, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(\n): pass'))))
-        self.assertEqual('fstlocn(1, 0, 2, 1, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n(\n): pass'))))
+    def test__loc_ClassDef_bases_pars(self):
+        from fst.fst_locs import _loc_ClassDef_bases_pars
 
-        self.assertEqual('fstlocn(0, 9, 0, 12, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(b): pass'))))
-        self.assertEqual('fstlocn(0, 9, 0, 14, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(k=v): pass'))))
-        self.assertEqual('fstlocn(0, 9, 0, 14, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(**v): pass'))))
-        self.assertEqual('fstlocn(0, 9, 0, 17, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(b, k=v): pass'))))
-        self.assertEqual('fstlocn(0, 9, 0, 17, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(b, **v): pass'))))
-        self.assertEqual('fstlocn(0, 9, 2, 1, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(\nb\n): pass'))))
-        self.assertEqual('fstlocn(1, 1, 3, 1, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n (\nb\n) \\\n: pass'))))
+        self.assertEqual('fstlocn(0, 9, 0, 9, n=0)', str(_loc_ClassDef_bases_pars(FST('class cls: pass'))))
+        self.assertEqual('fstlocn(0, 9, 0, 10, n=0)', str(_loc_ClassDef_bases_pars(FST('class cls : pass'))))
+        self.assertEqual('fstlocn(1, 3, 1, 4, n=0)', str(_loc_ClassDef_bases_pars(FST('class \\\ncls : pass'))))
+        self.assertEqual('fstlocn(0, 9, 1, 0, n=0)', str(_loc_ClassDef_bases_pars(FST('class cls \\\n: pass'))))
+        self.assertEqual('fstlocn(0, 9, 0, 11, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls(): pass'))))
+        self.assertEqual('fstlocn(1, 0, 1, 2, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls\\\n(): pass'))))
+        self.assertEqual('fstlocn(0, 9, 1, 1, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls(\n): pass'))))
+        self.assertEqual('fstlocn(1, 0, 2, 1, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls \\\n(\n): pass'))))
 
-        self.assertEqual('fstlocn(0, 9, 0, 13, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(b,): pass'))))
-        self.assertEqual('fstlocn(0, 9, 0, 15, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(k=v,): pass'))))
-        self.assertEqual('fstlocn(0, 9, 0, 15, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(**v,): pass'))))
-        self.assertEqual('fstlocn(0, 9, 0, 18, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(b, k=v,): pass'))))
-        self.assertEqual('fstlocn(0, 9, 0, 18, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(b, **v,): pass'))))
-        self.assertEqual('fstlocn(0, 9, 3, 1, n=1)', str(loc_ClassDef_bases_pars(FST('class cls(\nb\n,\n): pass'))))
-        self.assertEqual('fstlocn(1, 1, 4, 1, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n (\nb\n,\n) \\\n: pass'))))
+        self.assertEqual('fstlocn(0, 9, 0, 12, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls(b): pass'))))
+        self.assertEqual('fstlocn(0, 9, 0, 14, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls(k=v): pass'))))
+        self.assertEqual('fstlocn(0, 9, 0, 14, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls(**v): pass'))))
+        self.assertEqual('fstlocn(0, 9, 0, 17, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls(b, k=v): pass'))))
+        self.assertEqual('fstlocn(0, 9, 0, 17, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls(b, **v): pass'))))
+        self.assertEqual('fstlocn(0, 9, 2, 1, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls(\nb\n): pass'))))
+        self.assertEqual('fstlocn(1, 1, 3, 1, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls \\\n (\nb\n) \\\n: pass'))))
+
+        self.assertEqual('fstlocn(0, 9, 0, 13, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls(b,): pass'))))
+        self.assertEqual('fstlocn(0, 9, 0, 15, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls(k=v,): pass'))))
+        self.assertEqual('fstlocn(0, 9, 0, 15, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls(**v,): pass'))))
+        self.assertEqual('fstlocn(0, 9, 0, 18, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls(b, k=v,): pass'))))
+        self.assertEqual('fstlocn(0, 9, 0, 18, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls(b, **v,): pass'))))
+        self.assertEqual('fstlocn(0, 9, 3, 1, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls(\nb\n,\n): pass'))))
+        self.assertEqual('fstlocn(1, 1, 4, 1, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls \\\n (\nb\n,\n) \\\n: pass'))))
 
         if PYGE12:
-            self.assertEqual('fstlocn(0, 12, 0, 12, n=0)', str(loc_ClassDef_bases_pars(FST('class cls[T]: pass'))))
-            self.assertEqual('fstlocn(0, 12, 0, 13, n=0)', str(loc_ClassDef_bases_pars(FST('class cls[T] : pass'))))
-            self.assertEqual('fstlocn(0, 13, 0, 13, n=0)', str(loc_ClassDef_bases_pars(FST('class cls[T,]: pass'))))
-            self.assertEqual('fstlocn(0, 12, 0, 14, n=1)', str(loc_ClassDef_bases_pars(FST('class cls[T](): pass'))))
-            self.assertEqual('fstlocn(0, 13, 0, 15, n=1)', str(loc_ClassDef_bases_pars(FST('class cls[T,](): pass'))))
-            self.assertEqual('fstlocn(0, 15, 0, 17, n=1)', str(loc_ClassDef_bases_pars(FST('class cls[T, U](): pass'))))
-            self.assertEqual('fstlocn(1, 3, 1, 5, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n[T](): pass'))))
-            self.assertEqual('fstlocn(2, 1, 2, 3, n=1)', str(loc_ClassDef_bases_pars(FST('class cls[\nT\n](): pass'))))
-            self.assertEqual('fstlocn(3, 1, 3, 3, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n[\nT\n](): pass'))))
-            self.assertEqual('fstlocn(4, 0, 5, 1, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n[\nT\n]\\\n(\n): pass'))))
-            self.assertEqual('fstlocn(6, 0, 7, 1, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n[\nT\n,\nU\n]\\\n( \\\n): pass'))))
+            self.assertEqual('fstlocn(0, 12, 0, 12, n=0)', str(_loc_ClassDef_bases_pars(FST('class cls[T]: pass'))))
+            self.assertEqual('fstlocn(0, 12, 0, 13, n=0)', str(_loc_ClassDef_bases_pars(FST('class cls[T] : pass'))))
+            self.assertEqual('fstlocn(0, 13, 0, 13, n=0)', str(_loc_ClassDef_bases_pars(FST('class cls[T,]: pass'))))
+            self.assertEqual('fstlocn(0, 12, 0, 14, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls[T](): pass'))))
+            self.assertEqual('fstlocn(0, 13, 0, 15, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls[T,](): pass'))))
+            self.assertEqual('fstlocn(0, 15, 0, 17, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls[T, U](): pass'))))
+            self.assertEqual('fstlocn(1, 3, 1, 5, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls \\\n[T](): pass'))))
+            self.assertEqual('fstlocn(2, 1, 2, 3, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls[\nT\n](): pass'))))
+            self.assertEqual('fstlocn(3, 1, 3, 3, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls \\\n[\nT\n](): pass'))))
+            self.assertEqual('fstlocn(4, 0, 5, 1, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls \\\n[\nT\n]\\\n(\n): pass'))))
+            self.assertEqual('fstlocn(6, 0, 7, 1, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls \\\n[\nT\n,\nU\n]\\\n( \\\n): pass'))))
 
-            self.assertEqual('fstlocn(0, 12, 0, 15, n=1)', str(loc_ClassDef_bases_pars(FST('class cls[T](b): pass'))))
-            self.assertEqual('fstlocn(0, 18, 0, 25, n=1)', str(loc_ClassDef_bases_pars(FST('class cls[T, **U,]( b , ): pass'))))
-            self.assertEqual('fstlocn(1, 3, 1, 6, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n[T](b): pass'))))
-            self.assertEqual('fstlocn(2, 1, 2, 4, n=1)', str(loc_ClassDef_bases_pars(FST('class cls[\nT\n](b): pass'))))
-            self.assertEqual('fstlocn(3, 1, 3, 4, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n[\nT\n](b): pass'))))
+            self.assertEqual('fstlocn(0, 12, 0, 15, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls[T](b): pass'))))
+            self.assertEqual('fstlocn(0, 18, 0, 25, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls[T, **U,]( b , ): pass'))))
+            self.assertEqual('fstlocn(1, 3, 1, 6, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls \\\n[T](b): pass'))))
+            self.assertEqual('fstlocn(2, 1, 2, 4, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls[\nT\n](b): pass'))))
+            self.assertEqual('fstlocn(3, 1, 3, 4, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls \\\n[\nT\n](b): pass'))))
 
-            self.assertEqual('fstlocn(4, 0, 7, 1, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n[\nT\n]\\\n(\nb\n,\n): pass'))))
-            self.assertEqual('fstlocn(6, 0, 7, 3, n=1)', str(loc_ClassDef_bases_pars(FST('class cls \\\n[\nT\n,\nU\n]\\\n( \\\nb,): pass'))))
+            self.assertEqual('fstlocn(4, 0, 7, 1, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls \\\n[\nT\n]\\\n(\nb\n,\n): pass'))))
+            self.assertEqual('fstlocn(6, 0, 7, 3, n=1)', str(_loc_ClassDef_bases_pars(FST('class cls \\\n[\nT\n,\nU\n]\\\n( \\\nb,): pass'))))
 
-    def test_loc_ImportFrom_names_pars(self):
-        self.assertEqual('fstlocn(0, 14, 0, 15, n=0)', str(loc_ImportFrom_names_pars(FST('from . import a'))))
-        self.assertEqual('fstlocn(0, 14, 0, 17, n=1)', str(loc_ImportFrom_names_pars(FST('from . import (a)'))))
-        self.assertEqual('fstlocn(0, 14, 2, 1, n=1)', str(loc_ImportFrom_names_pars(FST('from . import (\na\n)'))))
-        self.assertEqual('fstlocn(1, 0, 3, 1, n=1)', str(loc_ImportFrom_names_pars(FST('from . import \\\n(\na\n)'))))
-        self.assertEqual('fstlocn(0, 14, 1, 1, n=0)', str(loc_ImportFrom_names_pars(FST('from . import \\\na'))))
-        self.assertEqual('fstlocn(0, 13, 1, 1, n=0)', str(loc_ImportFrom_names_pars(FST('from . import\\\na'))))
+    def test__loc_ImportFrom_names_pars(self):
+        from fst.fst_locs import _loc_ImportFrom_names_pars
 
-        self.assertEqual('fstlocn(0, 22, 0, 23, n=0)', str(loc_ImportFrom_names_pars(FST('from importlib import b'))))
-        self.assertEqual('fstlocn(0, 22, 1, 1, n=0)', str(loc_ImportFrom_names_pars(FST('from importlib import \\\nb'))))
-        self.assertEqual('fstlocn(0, 22, 0, 25, n=1)', str(loc_ImportFrom_names_pars(FST('from importlib import (b)'))))
-        self.assertEqual('fstlocn(0, 22, 2, 1, n=1)', str(loc_ImportFrom_names_pars(FST('from importlib import (\nb\n)'))))
+        self.assertEqual('fstlocn(0, 14, 0, 15, n=0)', str(_loc_ImportFrom_names_pars(FST('from . import a'))))
+        self.assertEqual('fstlocn(0, 14, 0, 17, n=1)', str(_loc_ImportFrom_names_pars(FST('from . import (a)'))))
+        self.assertEqual('fstlocn(0, 14, 2, 1, n=1)', str(_loc_ImportFrom_names_pars(FST('from . import (\na\n)'))))
+        self.assertEqual('fstlocn(1, 0, 3, 1, n=1)', str(_loc_ImportFrom_names_pars(FST('from . import \\\n(\na\n)'))))
+        self.assertEqual('fstlocn(0, 14, 1, 1, n=0)', str(_loc_ImportFrom_names_pars(FST('from . import \\\na'))))
+        self.assertEqual('fstlocn(0, 13, 1, 1, n=0)', str(_loc_ImportFrom_names_pars(FST('from . import\\\na'))))
+
+        self.assertEqual('fstlocn(0, 22, 0, 23, n=0)', str(_loc_ImportFrom_names_pars(FST('from importlib import b'))))
+        self.assertEqual('fstlocn(0, 22, 1, 1, n=0)', str(_loc_ImportFrom_names_pars(FST('from importlib import \\\nb'))))
+        self.assertEqual('fstlocn(0, 22, 0, 25, n=1)', str(_loc_ImportFrom_names_pars(FST('from importlib import (b)'))))
+        self.assertEqual('fstlocn(0, 22, 2, 1, n=1)', str(_loc_ImportFrom_names_pars(FST('from importlib import (\nb\n)'))))
 
         f = FST('from . import a')
         f._put_src(None, 0, 14, 0, 15, True)
         del f.a.names[:]
-        self.assertEqual('fstlocn(0, 14, 0, 14, n=0)', str(loc_ImportFrom_names_pars(f)))
+        self.assertEqual('fstlocn(0, 14, 0, 14, n=0)', str(_loc_ImportFrom_names_pars(f)))
         f._put_src(None, 0, 13, 0, 14, True)
-        self.assertEqual('fstlocn(0, 13, 0, 13, n=0)', str(loc_ImportFrom_names_pars(f)))
+        self.assertEqual('fstlocn(0, 13, 0, 13, n=0)', str(_loc_ImportFrom_names_pars(f)))
         f._put_src('\n', 0, 13, 0, 13, True)
-        self.assertEqual('fstlocn(0, 13, 1, 0, n=0)', str(loc_ImportFrom_names_pars(f)))
+        self.assertEqual('fstlocn(0, 13, 1, 0, n=0)', str(_loc_ImportFrom_names_pars(f)))
 
-    def test_loc_With_items_pars(self):
+    def test__loc_With_items_pars(self):
+        from fst.fst_locs import _loc_With_items_pars
+
         def str_(loc_ret):
             del loc_ret.bound
 
             return str(loc_ret)
 
-        self.assertEqual('fstlocn(0, 5, 0, 6, n=0)', str_(loc_With_items_pars(FST('with a: pass'))))
-        self.assertEqual('fstlocn(0, 5, 0, 8, n=0)', str_(loc_With_items_pars(FST('with (a): pass'))))
-        self.assertEqual('fstlocn(0, 5, 0, 13, n=1)', str_(loc_With_items_pars(FST('with (a as b): pass'))))
-        self.assertEqual('fstlocn(0, 5, 2, 1, n=1)', str_(loc_With_items_pars(FST('with (\na as b\n): pass'))))
-        self.assertEqual('fstlocn(1, 0, 3, 1, n=1)', str_(loc_With_items_pars(FST('with \\\n(\na as b\n): pass'))))
-        self.assertEqual('fstlocn(0, 5, 1, 1, n=0)', str_(loc_With_items_pars(FST('with \\\na: pass'))))
-        self.assertEqual('fstlocn(0, 4, 1, 1, n=0)', str_(loc_With_items_pars(FST('with\\\na: pass'))))
-        self.assertEqual('fstlocn(0, 4, 3, 0, n=0)', str_(loc_With_items_pars(FST('with\\\n\\\na\\\n: pass'))))
-        self.assertEqual('fstlocn(0, 5, 0, 8, n=0)', str_(loc_With_items_pars(FST('with  a : pass'))))
-        self.assertEqual('fstlocn(0, 6, 0, 14, n=1)', str_(loc_With_items_pars(FST('with  (a as b)  : pass'))))
+        self.assertEqual('fstlocn(0, 5, 0, 6, n=0)', str_(_loc_With_items_pars(FST('with a: pass'))))
+        self.assertEqual('fstlocn(0, 5, 0, 8, n=0)', str_(_loc_With_items_pars(FST('with (a): pass'))))
+        self.assertEqual('fstlocn(0, 5, 0, 13, n=1)', str_(_loc_With_items_pars(FST('with (a as b): pass'))))
+        self.assertEqual('fstlocn(0, 5, 2, 1, n=1)', str_(_loc_With_items_pars(FST('with (\na as b\n): pass'))))
+        self.assertEqual('fstlocn(1, 0, 3, 1, n=1)', str_(_loc_With_items_pars(FST('with \\\n(\na as b\n): pass'))))
+        self.assertEqual('fstlocn(0, 5, 1, 1, n=0)', str_(_loc_With_items_pars(FST('with \\\na: pass'))))
+        self.assertEqual('fstlocn(0, 4, 1, 1, n=0)', str_(_loc_With_items_pars(FST('with\\\na: pass'))))
+        self.assertEqual('fstlocn(0, 4, 3, 0, n=0)', str_(_loc_With_items_pars(FST('with\\\n\\\na\\\n: pass'))))
+        self.assertEqual('fstlocn(0, 5, 0, 8, n=0)', str_(_loc_With_items_pars(FST('with  a : pass'))))
+        self.assertEqual('fstlocn(0, 6, 0, 14, n=1)', str_(_loc_With_items_pars(FST('with  (a as b)  : pass'))))
 
-        self.assertEqual('fstlocn(0, 11, 0, 12, n=0)', str_(loc_With_items_pars(FST('async with a: pass'))))
-        self.assertEqual('fstlocn(0, 11, 0, 14, n=0)', str_(loc_With_items_pars(FST('async with (a): pass'))))
-        self.assertEqual('fstlocn(0, 11, 0, 19, n=1)', str_(loc_With_items_pars(FST('async with (a as b): pass'))))
-        self.assertEqual('fstlocn(0, 11, 2, 1, n=1)', str_(loc_With_items_pars(FST('async with (\na as b\n): pass'))))
-        self.assertEqual('fstlocn(1, 0, 3, 1, n=1)', str_(loc_With_items_pars(FST('async with \\\n(\na as b\n): pass'))))
-        self.assertEqual('fstlocn(0, 11, 1, 1, n=0)', str_(loc_With_items_pars(FST('async with \\\na: pass'))))
-        self.assertEqual('fstlocn(0, 10, 1, 1, n=0)', str_(loc_With_items_pars(FST('async with\\\na: pass'))))
-        self.assertEqual('fstlocn(0, 10, 3, 0, n=0)', str_(loc_With_items_pars(FST('async with\\\n\\\na\\\n: pass'))))
-        self.assertEqual('fstlocn(0, 11, 0, 14, n=0)', str_(loc_With_items_pars(FST('async with  a : pass'))))
-        self.assertEqual('fstlocn(0, 12, 0, 20, n=1)', str_(loc_With_items_pars(FST('async with  (a as b)  : pass'))))
+        self.assertEqual('fstlocn(0, 11, 0, 12, n=0)', str_(_loc_With_items_pars(FST('async with a: pass'))))
+        self.assertEqual('fstlocn(0, 11, 0, 14, n=0)', str_(_loc_With_items_pars(FST('async with (a): pass'))))
+        self.assertEqual('fstlocn(0, 11, 0, 19, n=1)', str_(_loc_With_items_pars(FST('async with (a as b): pass'))))
+        self.assertEqual('fstlocn(0, 11, 2, 1, n=1)', str_(_loc_With_items_pars(FST('async with (\na as b\n): pass'))))
+        self.assertEqual('fstlocn(1, 0, 3, 1, n=1)', str_(_loc_With_items_pars(FST('async with \\\n(\na as b\n): pass'))))
+        self.assertEqual('fstlocn(0, 11, 1, 1, n=0)', str_(_loc_With_items_pars(FST('async with \\\na: pass'))))
+        self.assertEqual('fstlocn(0, 10, 1, 1, n=0)', str_(_loc_With_items_pars(FST('async with\\\na: pass'))))
+        self.assertEqual('fstlocn(0, 10, 3, 0, n=0)', str_(_loc_With_items_pars(FST('async with\\\n\\\na\\\n: pass'))))
+        self.assertEqual('fstlocn(0, 11, 0, 14, n=0)', str_(_loc_With_items_pars(FST('async with  a : pass'))))
+        self.assertEqual('fstlocn(0, 12, 0, 20, n=1)', str_(_loc_With_items_pars(FST('async with  (a as b)  : pass'))))
 
-        self.assertEqual('fstlocn(1, 6, 1, 7, n=0)', str_(loc_With_items_pars(FST('async \\\n with a: pass'))))
-        self.assertEqual('fstlocn(1, 6, 1, 9, n=0)', str_(loc_With_items_pars(FST('async \\\n with (a): pass'))))
-        self.assertEqual('fstlocn(1, 6, 1, 14, n=1)', str_(loc_With_items_pars(FST('async \\\n with (a as b): pass'))))
-        self.assertEqual('fstlocn(1, 6, 3, 1, n=1)', str_(loc_With_items_pars(FST('async \\\n with (\na as b\n): pass'))))
-        self.assertEqual('fstlocn(2, 0, 4, 1, n=1)', str_(loc_With_items_pars(FST('async \\\n with \\\n(\na as b\n): pass'))))
-        self.assertEqual('fstlocn(1, 6, 2, 1, n=0)', str_(loc_With_items_pars(FST('async \\\n with \\\na: pass'))))
-        self.assertEqual('fstlocn(1, 5, 2, 1, n=0)', str_(loc_With_items_pars(FST('async \\\n with\\\na: pass'))))
-        self.assertEqual('fstlocn(1, 5, 4, 0, n=0)', str_(loc_With_items_pars(FST('async \\\n with\\\n\\\na\\\n: pass'))))
-        self.assertEqual('fstlocn(1, 6, 1, 9, n=0)', str_(loc_With_items_pars(FST('async \\\n with  a : pass'))))
-        self.assertEqual('fstlocn(1, 7, 1, 15, n=1)', str_(loc_With_items_pars(FST('async \\\n with  (a as b)  : pass'))))
+        self.assertEqual('fstlocn(1, 6, 1, 7, n=0)', str_(_loc_With_items_pars(FST('async \\\n with a: pass'))))
+        self.assertEqual('fstlocn(1, 6, 1, 9, n=0)', str_(_loc_With_items_pars(FST('async \\\n with (a): pass'))))
+        self.assertEqual('fstlocn(1, 6, 1, 14, n=1)', str_(_loc_With_items_pars(FST('async \\\n with (a as b): pass'))))
+        self.assertEqual('fstlocn(1, 6, 3, 1, n=1)', str_(_loc_With_items_pars(FST('async \\\n with (\na as b\n): pass'))))
+        self.assertEqual('fstlocn(2, 0, 4, 1, n=1)', str_(_loc_With_items_pars(FST('async \\\n with \\\n(\na as b\n): pass'))))
+        self.assertEqual('fstlocn(1, 6, 2, 1, n=0)', str_(_loc_With_items_pars(FST('async \\\n with \\\na: pass'))))
+        self.assertEqual('fstlocn(1, 5, 2, 1, n=0)', str_(_loc_With_items_pars(FST('async \\\n with\\\na: pass'))))
+        self.assertEqual('fstlocn(1, 5, 4, 0, n=0)', str_(_loc_With_items_pars(FST('async \\\n with\\\n\\\na\\\n: pass'))))
+        self.assertEqual('fstlocn(1, 6, 1, 9, n=0)', str_(_loc_With_items_pars(FST('async \\\n with  a : pass'))))
+        self.assertEqual('fstlocn(1, 7, 1, 15, n=1)', str_(_loc_With_items_pars(FST('async \\\n with  (a as b)  : pass'))))
 
         f = FST('with a: pass')
         f._put_src(None, 0, 5, 0, 6, True)
         del f.a.items[:]
-        self.assertEqual('fstlocn(0, 5, 0, 5, n=0)', str_(loc_With_items_pars(f)))
+        self.assertEqual('fstlocn(0, 5, 0, 5, n=0)', str_(_loc_With_items_pars(f)))
         f._put_src(None, 0, 4, 0, 5, True)
-        self.assertEqual('fstlocn(0, 4, 0, 4, n=0)', str_(loc_With_items_pars(f)))
+        self.assertEqual('fstlocn(0, 4, 0, 4, n=0)', str_(_loc_With_items_pars(f)))
         f._put_src('\n', 0, 4, 0, 4, True)
-        self.assertEqual('fstlocn(0, 4, 1, 0, n=0)', str_(loc_With_items_pars(f)))
+        self.assertEqual('fstlocn(0, 4, 1, 0, n=0)', str_(_loc_With_items_pars(f)))
 
-        self.assertEqual('fstlocn(0, 5, 0, 8, n=0)', str_(loc_With_items_pars(FST('with (a): pass'))))
-        self.assertEqual('fstlocn(0, 5, 0, 13, n=0)', str_(loc_With_items_pars(FST('with (a) as b: pass'))))
-        self.assertEqual('fstlocn(0, 5, 0, 15, n=1)', str_(loc_With_items_pars(FST('with ((a) as b): pass'))))
-        self.assertEqual('fstlocn(0, 5, 0, 15, n=0)', str_(loc_With_items_pars(FST('with (a) as (b): pass'))))
-        self.assertEqual('fstlocn(0, 5, 0, 17, n=1)', str_(loc_With_items_pars(FST('with ((a) as (b)): pass'))))
+        self.assertEqual('fstlocn(0, 5, 0, 8, n=0)', str_(_loc_With_items_pars(FST('with (a): pass'))))
+        self.assertEqual('fstlocn(0, 5, 0, 13, n=0)', str_(_loc_With_items_pars(FST('with (a) as b: pass'))))
+        self.assertEqual('fstlocn(0, 5, 0, 15, n=1)', str_(_loc_With_items_pars(FST('with ((a) as b): pass'))))
+        self.assertEqual('fstlocn(0, 5, 0, 15, n=0)', str_(_loc_With_items_pars(FST('with (a) as (b): pass'))))
+        self.assertEqual('fstlocn(0, 5, 0, 17, n=1)', str_(_loc_With_items_pars(FST('with ((a) as (b)): pass'))))
 
-    def test_loc_Call_pars(self):
-        self.assertEqual((0, 4, 0, 6), loc_Call_pars(FST('call()', 'exec').body[0].value))
-        self.assertEqual((0, 4, 0, 7), loc_Call_pars(FST('call(a)', 'exec').body[0].value))
-        self.assertEqual((0, 4, 2, 1), loc_Call_pars(FST('call(\na\n)', 'exec').body[0].value))
-        self.assertEqual((0, 4, 2, 1), loc_Call_pars(FST('call(\na, b=2\n)', 'exec').body[0].value))
-        self.assertEqual((0, 4, 0, 12), loc_Call_pars(FST('call(c="()")', 'exec').body[0].value))
-        self.assertEqual((1, 0, 8, 1), loc_Call_pars(FST('call\\\n(\nc\n=\n"\\\n(\\\n)\\\n"\n)', 'exec').body[0].value))
-        self.assertEqual((1, 0, 8, 1), loc_Call_pars(FST('"()("\\\n(\nc\n=\n"\\\n(\\\n)\\\n"\n)', 'exec').body[0].value))
+    def test__loc_Call_pars(self):
+        from fst.fst_locs import _loc_Call_pars
 
-    def test_loc_Subscript_brackets(self):
-        self.assertEqual((0, 1, 0, 4), loc_Subscript_brackets(FST('a[b]', 'exec').body[0].value))
-        self.assertEqual((0, 1, 0, 8), loc_Subscript_brackets(FST('a[b:c:d]', 'exec').body[0].value))
-        self.assertEqual((0, 1, 0, 7), loc_Subscript_brackets(FST('a["[]"]', 'exec').body[0].value))
-        self.assertEqual((1, 0, 7, 1), loc_Subscript_brackets(FST('a\\\n[\nb\n:\nc\n:\nd\n]', 'exec').body[0].value))
-        self.assertEqual((1, 0, 7, 1), loc_Subscript_brackets(FST('"[]["\\\n[\nb\n:\nc\n:\nd\n]', 'exec').body[0].value))
+        self.assertEqual((0, 4, 0, 6), _loc_Call_pars(FST('call()', 'exec').body[0].value))
+        self.assertEqual((0, 4, 0, 7), _loc_Call_pars(FST('call(a)', 'exec').body[0].value))
+        self.assertEqual((0, 4, 2, 1), _loc_Call_pars(FST('call(\na\n)', 'exec').body[0].value))
+        self.assertEqual((0, 4, 2, 1), _loc_Call_pars(FST('call(\na, b=2\n)', 'exec').body[0].value))
+        self.assertEqual((0, 4, 0, 12), _loc_Call_pars(FST('call(c="()")', 'exec').body[0].value))
+        self.assertEqual((1, 0, 8, 1), _loc_Call_pars(FST('call\\\n(\nc\n=\n"\\\n(\\\n)\\\n"\n)', 'exec').body[0].value))
+        self.assertEqual((1, 0, 8, 1), _loc_Call_pars(FST('"()("\\\n(\nc\n=\n"\\\n(\\\n)\\\n"\n)', 'exec').body[0].value))
+
+    def test__loc_Subscript_brackets(self):
+        from fst.fst_locs import _loc_Subscript_brackets
+
+        self.assertEqual((0, 1, 0, 4), _loc_Subscript_brackets(FST('a[b]', 'exec').body[0].value))
+        self.assertEqual((0, 1, 0, 8), _loc_Subscript_brackets(FST('a[b:c:d]', 'exec').body[0].value))
+        self.assertEqual((0, 1, 0, 7), _loc_Subscript_brackets(FST('a["[]"]', 'exec').body[0].value))
+        self.assertEqual((1, 0, 7, 1), _loc_Subscript_brackets(FST('a\\\n[\nb\n:\nc\n:\nd\n]', 'exec').body[0].value))
+        self.assertEqual((1, 0, 7, 1), _loc_Subscript_brackets(FST('"[]["\\\n[\nb\n:\nc\n:\nd\n]', 'exec').body[0].value))
 
     def test_loc_MatchClass_pars(self):
-        self.assertEqual((1, 9, 1, 11), loc_MatchClass_pars(FST('match a:\n case cls(): pass', 'exec').body[0].cases[0].pattern))
-        self.assertEqual((1, 9, 1, 12), loc_MatchClass_pars(FST('match a:\n case cls(a): pass', 'exec').body[0].cases[0].pattern))
-        self.assertEqual((1, 9, 3, 1), loc_MatchClass_pars(FST('match a:\n case cls(\na\n): pass', 'exec').body[0].cases[0].pattern))
-        self.assertEqual((1, 9, 3, 1), loc_MatchClass_pars(FST('match a:\n case cls(\na, b=2\n): pass', 'exec').body[0].cases[0].pattern))
-        self.assertEqual((1, 9, 1, 17), loc_MatchClass_pars(FST('match a:\n case cls(c="()"): pass', 'exec').body[0].cases[0].pattern))
-        self.assertEqual((2, 0, 9, 1), loc_MatchClass_pars(FST('match a:\n case cls\\\n(\nc\n=\n"\\\n(\\\n)\\\n"\n): pass', 'exec').body[0].cases[0].pattern))
+        from fst.fst_locs import _loc_MatchClass_pars
+
+        self.assertEqual((1, 9, 1, 11), _loc_MatchClass_pars(FST('match a:\n case cls(): pass', 'exec').body[0].cases[0].pattern))
+        self.assertEqual((1, 9, 1, 12), _loc_MatchClass_pars(FST('match a:\n case cls(a): pass', 'exec').body[0].cases[0].pattern))
+        self.assertEqual((1, 9, 3, 1), _loc_MatchClass_pars(FST('match a:\n case cls(\na\n): pass', 'exec').body[0].cases[0].pattern))
+        self.assertEqual((1, 9, 3, 1), _loc_MatchClass_pars(FST('match a:\n case cls(\na, b=2\n): pass', 'exec').body[0].cases[0].pattern))
+        self.assertEqual((1, 9, 1, 17), _loc_MatchClass_pars(FST('match a:\n case cls(c="()"): pass', 'exec').body[0].cases[0].pattern))
+        self.assertEqual((2, 0, 9, 1), _loc_MatchClass_pars(FST('match a:\n case cls\\\n(\nc\n=\n"\\\n(\\\n)\\\n"\n): pass', 'exec').body[0].cases[0].pattern))
 
     def test__is_atom(self):
         self.assertIs(False, parse('1 + 2').body[0].value.f._is_atom())

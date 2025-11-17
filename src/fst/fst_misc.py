@@ -120,8 +120,6 @@ from .common import (
     next_delims,
 )
 
-from .locations import loc_block_header_end
-
 __all__ = [
     'new_empty_tuple',
     'new_empty_set_star',
@@ -835,7 +833,7 @@ def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
 
         if isinstance(ast, ASTS_BLOCK):
             ln, col, _, _ = loc
-            end_ln, end_col, _, _ = loc_block_header_end(self)
+            end_ln, end_col, _, _ = self._loc_block_header_end()
 
             _dump_lines(self, st.linefunc, ln, col, end_ln, end_col + 1, st.eol, True, c)
 

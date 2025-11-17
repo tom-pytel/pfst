@@ -113,19 +113,6 @@ from .code import (
     code_as__expr_arglikes,
 )
 
-from .locations import (
-    loc_comprehension_if,
-    loc_decorator,
-    loc_With_items_pars,
-    loc_ImportFrom_names_pars,
-    loc_ClassDef_bases_pars,
-    loc_Call_pars,
-    loc_TypeAlias_type_params_brackets,
-    loc_ClassDef_type_params_brackets,
-    loc_FunctionDef_type_params_brackets,
-    loc_Global_Nonlocal_names,
-)
-
 from .fst_misc import get_option_overridable, fixup_slice_indices
 from .slice_stmtish import put_slice_stmtish
 from .slice_exprish import put_slice_sep_begin, put_slice_sep_end, put_slice_nosep
@@ -1087,7 +1074,7 @@ def _put_slice_With_AsyncWith_items(
         if len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
             raise ValueError(f'cannot delete all {ast.__class__.__name__}.items without norm_self=False')
 
-    pars = loc_With_items_pars(self)  # may be pars or may be where pars would go from just after `with` to end of block header `:`
+    pars = self._loc_With_items_pars()  # may be pars or may be where pars would go from just after `with` to end of block header `:`
     pars_ln, pars_col, pars_end_ln, pars_end_col = pars
     pars_n = pars.n
 
@@ -1096,7 +1083,7 @@ def _put_slice_With_AsyncWith_items(
 
     if not pars_n:  # only need to fix maybe if there are no parentheses
         if not self._is_enclosed_or_line(pars=False):  # if no parentheses and wound up not valid for parse then adding parentheses around items should fix
-            pars_ln, pars_col, pars_end_ln, pars_end_col = loc_With_items_pars(self)
+            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_With_items_pars()
 
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, False)
             self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
@@ -1187,7 +1174,7 @@ def _put_slice_ImportFrom_names(
             if start > 0 or stop < 1:
                 raise NodeError("if putting over star '*' alias it must be overwritten")
 
-    pars = loc_ImportFrom_names_pars(self)  # may be pars or may be where pars would go from just after `import` to end of node
+    pars = self._loc_ImportFrom_names_pars()  # may be pars or may be where pars would go from just after `import` to end of node
     pars_ln, pars_col, pars_end_ln, pars_end_col = pars
     pars_n = pars.n
 
@@ -1204,7 +1191,7 @@ def _put_slice_ImportFrom_names(
                                     ast.end_lineno, ast.end_col_offset)
 
         if not self._is_enclosed_or_line(pars=False):  # if no parentheses and wound up not valid for parse then adding parentheses around names should fix
-            pars_ln, pars_col, pars_end_ln, pars_end_col = loc_ImportFrom_names_pars(self)
+            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()
 
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, True, False, self)
             self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
@@ -1212,7 +1199,7 @@ def _put_slice_ImportFrom_names(
         # THEORETICALLY could need to _maybe_fix_joined_alnum() but only if the user goes out of their way to F S up, so we don't bother with this
 
     elif put_star:  # if put star then must remove parentheses (including any trivia inside them)
-        pars_ln, pars_col, pars_end_ln, pars_end_col = loc_ImportFrom_names_pars(self)
+        pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()
         star_ln, star_col, star_end_ln, star_end_col = body[0].f.loc
 
         self._put_src(None, star_end_ln, star_end_col, pars_end_ln, pars_end_col, True)
@@ -1357,7 +1344,7 @@ def _put_slice_ClassDef_bases(
         if body and keywords[0].f.loc[:2] < body[stop - 1].f.loc[2:] and stop:
             raise NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')
 
-    bound_ln, bound_col, bound_end_ln, bound_end_col = bases_pars = loc_ClassDef_bases_pars(self)
+    bound_ln, bound_col, bound_end_ln, bound_end_col = bases_pars = self._loc_ClassDef_bases_pars()
 
     if not fst_:
         if not keywords and len_slice == len_body:  # deleting everything so remove pars
@@ -1441,7 +1428,7 @@ def _put_slice_decorator_list(
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bounds_decorator_list(self)
 
-    locfunc = lambda body, idx: loc_decorator(body[idx].f.parent, idx)
+    locfunc = lambda body, idx: body[idx].f.parent._loc_decorator(idx)
 
     lines = self.root._lines  # for fixes after put or del
     old_last_line = lines[-1]
@@ -1550,7 +1537,7 @@ def _put_slice_comprehension_ifs(
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    locfunc = lambda body, idx: loc_comprehension_if(body[idx].f.parent, idx)
+    locfunc = lambda body, idx: body[idx].f.parent._loc_comprehension_if(idx)
 
     if isinstance(ast, comprehension):
         _, _, bound_ln, bound_col = ast.iter.f.pars()
@@ -1610,7 +1597,7 @@ def _put_slice_Call_args(
         if body and (f0 := body[0].f)._is_solo_call_arg_genexp() and f0.pars(shared=False).n == -1:  # single call argument GeneratorExp shares parentheses with Call?
             f0._parenthesize_grouping()
 
-    bound_ln, bound_col, bound_end_ln, bound_end_col = loc_Call_pars(self)
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_Call_pars()
     bound_col += 1
     bound_end_col -= 1
 
@@ -1769,9 +1756,9 @@ def _put_slice_type_params(
     len_slice = stop - start
 
     bound, (name_ln, name_col) = (
-        (loc_TypeAlias_type_params_brackets if isinstance(ast, TypeAlias) else
-         loc_ClassDef_type_params_brackets if isinstance(ast, ClassDef) else
-         loc_FunctionDef_type_params_brackets)  # FunctionDef, AsyncFunctionDef
+        (fst.FST._loc_TypeAlias_type_params_brackets if isinstance(ast, TypeAlias) else
+         fst.FST._loc_ClassDef_type_params_brackets if isinstance(ast, ClassDef) else
+         fst.FST._loc_FunctionDef_type_params_brackets)  # FunctionDef, AsyncFunctionDef
     )(self)
 
     if bound:
@@ -1963,7 +1950,7 @@ def _loc_slice_raw_put_decorator_list(
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
     decorator_list = self.a.decorator_list
     start, stop = _fixup_slice_index_for_raw(len(decorator_list), start, stop)
-    ln, col, _, _ = loc_decorator(self, start, False)
+    ln, col, _, _ = self._loc_decorator(start, False)
     _, _, end_ln, end_col = decorator_list[stop - 1].f.pars()
 
     return ln, col, end_ln, end_col, start, stop, decorator_list
@@ -1973,7 +1960,7 @@ def _loc_slice_raw_put_Global_Nonlocal_names(
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
     names = self.a.names
     start, stop = _fixup_slice_index_for_raw(len(names), start, stop)
-    (ln, col, _, _), (_, _, end_ln, end_col) = loc_Global_Nonlocal_names(self, start, stop - 1)
+    (ln, col, _, _), (_, _, end_ln, end_col) = self._loc_Global_Nonlocal_names(start, stop - 1)
 
     return ln, col, end_ln, end_col, start, stop, names
 
@@ -2006,7 +1993,7 @@ def _loc_slice_raw_put_comprehension_ifs(
     start, stop = _fixup_slice_index_for_raw(len(ifs), start, stop)
     start_eq_stop = start == stop
 
-    ln, col, end_ln, end_col = loc_comprehension_if(self, start, start_eq_stop)  # if start != stop then we don't need pars here because we will only use the start which will be the `if`
+    ln, col, end_ln, end_col = self._loc_comprehension_if(start, start_eq_stop)  # if start != stop then we don't need pars here because we will only use the start which will be the `if`
 
     if not start_eq_stop:
         _, _, end_ln, end_col = ifs[stop - 1].f.pars()

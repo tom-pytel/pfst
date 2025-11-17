@@ -70,18 +70,6 @@ from .asttypes import (
 from .astutil import re_identifier, bistr, set_ctx, copy_ast
 from .common import NodeError, astfield, fstloc, next_find, next_find_re
 
-from .locations import (
-    loc_comprehension_if,
-    loc_decorator,
-    loc_With_items_pars,
-    loc_ImportFrom_names_pars,
-    loc_ClassDef_bases_pars,
-    loc_Call_pars,
-    loc_TypeAlias_type_params_brackets,
-    loc_ClassDef_type_params_brackets,
-    loc_FunctionDef_type_params_brackets,
-)
-
 from .fst_misc import (
     new_empty_tuple,
     new_empty_set_star,
@@ -166,7 +154,7 @@ def _bounds_decorator_list(self: fst.FST, start: int = 0) -> tuple[int, int, int
             bound_col = bound_end_col
 
         else:
-            bound_ln, bound_col, _, _ = loc_decorator(self, 0, False)
+            bound_ln, bound_col, _, _ = self._loc_decorator(0, False)
 
         if bound_ln:  # if not starting at line 0 then bound needs to start at end of line above in order for the get_slice_nosep() machinery to remove first line correctly on cut
             bound_ln -= 1
@@ -754,7 +742,7 @@ def _get_slice_With_AsyncWith_items(
     loc_first = body[start].f.loc
     loc_last = loc_first if stop == start else body[stop - 1].f.loc
 
-    pars = loc_With_items_pars(self)  # may be pars or may be where pars would go from just after `with` to end of block header
+    pars = self._loc_With_items_pars()  # may be pars or may be where pars would go from just after `with` to end of block header
     pars_ln, pars_col, pars_end_ln, pars_end_col = pars
     pars_n = pars.n
 
@@ -772,7 +760,7 @@ def _get_slice_With_AsyncWith_items(
 
     if cut and not pars_n:  # only need to fix maybe if there are no parentheses
         if not self._is_enclosed_or_line(pars=False):  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
-            pars_ln, pars_col, pars_end_ln, pars_end_col = loc_With_items_pars(self)  # will just give where pars should go (because maybe something like `async \\\n\\\n   with ...`)
+            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_With_items_pars()  # will just give where pars should go (because maybe something like `async \\\n\\\n   with ...`)
 
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, False)
             self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
@@ -855,7 +843,7 @@ def _get_slice_ImportFrom_names(
     loc_first = body[start].f.loc
     loc_last = loc_first if stop == start else body[stop - 1].f.loc
 
-    pars = loc_ImportFrom_names_pars(self)  # may be pars or may be where pars would go from just after `import` to end of node
+    pars = self._loc_ImportFrom_names_pars()  # may be pars or may be where pars would go from just after `import` to end of node
     pars_ln, pars_col, pars_end_ln, pars_end_col = pars
     pars_n = pars.n
 
@@ -878,7 +866,7 @@ def _get_slice_ImportFrom_names(
                                 ast.end_lineno, ast.end_col_offset)
 
         if not self._is_enclosed_or_line(pars=False):  # if cut and no parentheses and wound up not valid for parse then adding parentheses around names should fix
-            pars_ln, pars_col, pars_end_ln, pars_end_col = loc_ImportFrom_names_pars(self)
+            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ImportFrom_names_pars()
 
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, True, False, self)
             self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
@@ -990,7 +978,7 @@ def _get_slice_ClassDef_bases(
     else:
         self_tail_sep = None
 
-    bound_ln, bound_col, bound_end_ln, bound_end_col = loc_ClassDef_bases_pars(self)  # definitely exist
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_ClassDef_bases_pars()  # definitely exist
     bound_end_col -= 1
 
     if start:
@@ -1015,7 +1003,7 @@ def _get_slice_ClassDef_bases(
                 self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
 
         elif not body:  # everything was cut and no keywords, remove parentheses
-            pars_ln, pars_col, pars_end_ln, pars_end_col = loc_ClassDef_bases_pars(self)  # definitely exist
+            pars_ln, pars_col, pars_end_ln, pars_end_col = self._loc_ClassDef_bases_pars()  # definitely exist
 
             self._put_src(None, pars_ln, pars_col, pars_end_ln, pars_end_col, False)
 
@@ -1043,8 +1031,8 @@ def _get_slice_decorator_list(
         return fst.FST(_decorator_list(decorator_list=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
                        [''], from_=self)
 
-    loc_first = loc_decorator(self, start)
-    loc_last = loc_first if stop == start else loc_decorator(self, stop - 1)
+    loc_first = self._loc_decorator(start)
+    loc_last = loc_first if stop == start else self._loc_decorator(stop - 1)
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bounds_decorator_list(self, start)
 
@@ -1139,13 +1127,13 @@ def _get_slice_comprehension_ifs(
         return fst.FST(_comprehension_ifs(ifs=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
                        [''], from_=self)
 
-    loc_first = loc_comprehension_if(self, start)
-    loc_last = loc_first if stop == start else loc_comprehension_if(self, stop - 1)
+    loc_first = self._loc_comprehension_if(start)
+    loc_last = loc_first if stop == start else self._loc_comprehension_if(stop - 1)
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
     if start:
-        _, _, bound_ln, bound_col = loc_comprehension_if(self, start - 1)
+        _, _, bound_ln, bound_col = self._loc_comprehension_if(start - 1)
     elif isinstance(ast, comprehension):
         _, _, bound_ln, bound_col = ast.iter.f.pars()
 
@@ -1192,7 +1180,7 @@ def _get_slice_Call_args(
         if body and (f0 := body[0].f)._is_solo_call_arg_genexp() and f0.pars(shared=False).n == -1:  # single call argument GeneratorExp shares parentheses with Call?
             f0._parenthesize_grouping()
 
-    bound_ln, bound_col, bound_end_ln, bound_end_col = loc_Call_pars(self)
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_Call_pars()
     bound_end_col -= 1
 
     if start:
@@ -1369,9 +1357,9 @@ def _get_slice_type_params(
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
     bound_func = (
-        loc_TypeAlias_type_params_brackets if isinstance(ast, TypeAlias) else
-        loc_ClassDef_type_params_brackets if isinstance(ast, ClassDef) else
-        loc_FunctionDef_type_params_brackets  # FunctionDef, AsyncFunctionDef
+        fst.FST._loc_TypeAlias_type_params_brackets if isinstance(ast, TypeAlias) else
+        fst.FST._loc_ClassDef_type_params_brackets if isinstance(ast, ClassDef) else
+        fst.FST._loc_FunctionDef_type_params_brackets  # FunctionDef, AsyncFunctionDef
     )
 
     (bound_ln, bound_col, bound_end_ln, bound_end_col), _ = bound_func(self)

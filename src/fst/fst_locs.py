@@ -1,5 +1,8 @@
 """Functions which compute the locations of various node elements which don't have stored locations, or entire nodes
-themselves for those which don't normally have a location."""
+themselves for those which don't normally have a location.
+
+This module contains functions which are imported as methods in the `FST` class (for now).
+"""
 
 from __future__ import annotations
 
@@ -29,26 +32,26 @@ from .common import fstloc, fstlocn, next_frag, prev_frag, next_find, prev_find,
 from .traverse import next_bound, prev_bound, next_bound_step, prev_bound_step
 
 __all__ = [
-    'loc_arguments',
-    'loc_comprehension',
-    'loc_withitem',
-    'loc_match_case',
-    'loc_op',
-    'loc_block_header_end',
-    'loc_arguments_empty',
-    'loc_comprehension_if',
-    'loc_decorator',
-    'loc_Lambda_args_entire',
-    'loc_ClassDef_bases_pars',
-    'loc_ImportFrom_names_pars',
-    'loc_With_items_pars',
-    'loc_Call_pars',
-    'loc_Subscript_brackets',
-    'loc_MatchClass_pars',
-    'loc_FunctionDef_type_params_brackets',
-    'loc_ClassDef_type_params_brackets',
-    'loc_TypeAlias_type_params_brackets',
-    'loc_Global_Nonlocal_names',
+    '_loc_arguments',
+    '_loc_comprehension',
+    '_loc_withitem',
+    '_loc_match_case',
+    '_loc_op',
+    '_loc_block_header_end',
+    '_loc_arguments_empty',
+    '_loc_comprehension_if',
+    '_loc_decorator',
+    '_loc_Lambda_args_entire',
+    '_loc_ClassDef_bases_pars',
+    '_loc_ImportFrom_names_pars',
+    '_loc_With_items_pars',
+    '_loc_Call_pars',
+    '_loc_Subscript_brackets',
+    '_loc_MatchClass_pars',
+    '_loc_FunctionDef_type_params_brackets',
+    '_loc_ClassDef_type_params_brackets',
+    '_loc_TypeAlias_type_params_brackets',
+    '_loc_Global_Nonlocal_names',
 ]
 
 
@@ -58,7 +61,7 @@ _re_keyword_import     = re.compile(r'\bimport\b')  # we end with a '\b' because
 _re_keyword_with_start = re.compile(r'\bwith')  # we do not end with '\b' because the search using this may be checking source where the `with` is joined with a following `withitem` and there are no other words between `async` and `with`
 
 
-def loc_arguments(self: fst.FST) -> fstloc | None:
+def _loc_arguments(self: fst.FST) -> fstloc | None:
     """`arguments` location from children. Called from `.loc`. Returns `None` when there are no arguments.
 
     **Note:** This function is explicitly safe to use from `FST.loc`.
@@ -113,7 +116,7 @@ def loc_arguments(self: fst.FST) -> fstloc | None:
     return fstloc(start_ln, start_col, end_ln, end_col)
 
 
-def loc_comprehension(self: fst.FST) -> fstloc:
+def _loc_comprehension(self: fst.FST) -> fstloc:
     """`comprehension` location from children.
 
     **Note:** This function is explicitly safe to use from `FST.loc`.
@@ -154,7 +157,7 @@ def loc_comprehension(self: fst.FST) -> fstloc:
     return fstloc(start_ln, start_col, end_ln, end_col)
 
 
-def loc_withitem(self: fst.FST) -> fstloc:
+def _loc_withitem(self: fst.FST) -> fstloc:
     """`withitem` location from children.
 
     **Note:** This function is explicitly safe to use from `FST.loc`.
@@ -202,7 +205,7 @@ def loc_withitem(self: fst.FST) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def loc_match_case(self: fst.FST) -> fstloc:
+def _loc_match_case(self: fst.FST) -> fstloc:
     """`match_case` location from children.
 
     **Note:** This function is explicitly safe to use from `FST.loc`.
@@ -227,7 +230,7 @@ def loc_match_case(self: fst.FST) -> fstloc:
     return fstloc(ln, col, end_ln, end_col + 1)
 
 
-def loc_op(self: fst.FST) -> fstloc | None:
+def _loc_op(self: fst.FST) -> fstloc | None:
     """Get location of `operator`, `unaryop`, `cmpop` or if is standalone `boolop` from source if possible. `boolop` has
     no location if it has a parent because in this case it can be in multiple location in a `BoolOp`. We want to be
     consistent so we don't even give it a location if there is only one.
@@ -304,7 +307,7 @@ def loc_op(self: fst.FST) -> fstloc | None:
     return None
 
 
-def loc_block_header_end(self: fst.FST) -> tuple[int, int, int, int] | None:
+def _loc_block_header_end(self: fst.FST) -> tuple[int, int, int, int] | None:
     """Return position of the end of the block header line(s) for block node (just BEFORE the ':') and the end position
     of the last child, or None if `self` is not a block header node.
 
@@ -339,7 +342,7 @@ def loc_block_header_end(self: fst.FST) -> tuple[int, int, int, int] | None:
     return ln, col, cend_ln, cend_col
 
 
-def loc_arguments_empty(self: fst.FST) -> fstloc:
+def _loc_arguments_empty(self: fst.FST) -> fstloc:
     """`arguments` location for empty arguments ONLY! DO NOT CALL FOR NONEMPTY ARGUMENTS!"""
 
     # assert isinstance(self.a, arguments)
@@ -365,7 +368,7 @@ def loc_arguments_empty(self: fst.FST) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def loc_comprehension_if(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
+def _loc_comprehension_if(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
     """Location `comprehension` or `_comprehension_ifs` expression including the leading `if` (which is not included in
     the location of the expression itself).
 
@@ -391,7 +394,7 @@ def loc_comprehension_if(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def loc_decorator(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
+def _loc_decorator(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
     """Location `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `_decorator_list` decorator expression including the
     leading `@` (which is not included in the location of the expression itself). We have a whole function for this
     because the `@` may not be on the same line as the decorator expression.
@@ -417,7 +420,7 @@ def loc_decorator(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def loc_Lambda_args_entire(self: fst.FST) -> fstloc:
+def _loc_Lambda_args_entire(self: fst.FST) -> fstloc:
     """`Lambda` `args` entire location from just past `lambda` keyword to ':', empty or not. `self` is the `Lambda`, not
     the `arguments`."""
 
@@ -437,7 +440,7 @@ def loc_Lambda_args_entire(self: fst.FST) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def loc_ClassDef_bases_pars(self: fst.FST) -> fstlocn:
+def _loc_ClassDef_bases_pars(self: fst.FST) -> fstlocn:
     """Location of `class cls(...)` bases AND keywords fields-enclosing parentheses, or location where they should be
     put if not present currently (from end of `name` or `type_params` to just before `:`).
 
@@ -484,7 +487,7 @@ def loc_ClassDef_bases_pars(self: fst.FST) -> fstlocn:
     return fstlocn(lpln, lpcol, rpln, rpcol + 1, n=1)
 
 
-def loc_ImportFrom_names_pars(self: fst.FST) -> fstlocn:
+def _loc_ImportFrom_names_pars(self: fst.FST) -> fstlocn:
     """Location of `from ? import (...)` whole names field-enclosing parentheses, or location where they should be put
     if not present currently.
 
@@ -517,7 +520,7 @@ def loc_ImportFrom_names_pars(self: fst.FST) -> fstlocn:
     return fstlocn(ln, col, end_ln, end_col, n=n)
 
 
-def loc_With_items_pars(self: fst.FST) -> fstlocn:
+def _loc_With_items_pars(self: fst.FST) -> fstlocn:
     """Location of `with (...)` whole items field-enclosing parentheses, or location where they should be put if not
     present currently.
 
@@ -555,7 +558,7 @@ def loc_With_items_pars(self: fst.FST) -> fstlocn:
     bound = fstloc(ln, col, end_ln, end_col)
 
     if ((lpar := next_frag(lines, ln, col, end_ln, end_col)) and lpar.src.startswith('(') and  # does opening par follow 'with'
-        not (items and ((loc_i0 := items[0].f.loc).col == lpar.col and loc_i0.ln == lpar.ln))  # if there are items and first `withitem` starts at lpar found then we know that lpar belongs to it and whole `items` field doesn't have pars
+        not (items and ((_loc_i0 := items[0].f.loc).col == lpar.col and _loc_i0.ln == lpar.ln))  # if there are items and first `withitem` starts at lpar found then we know that lpar belongs to it and whole `items` field doesn't have pars
     ):
         ln, col, _ = lpar
 
@@ -579,7 +582,7 @@ def loc_With_items_pars(self: fst.FST) -> fstlocn:
     return fstlocn(ln, col, end_ln, end_col, n=n, bound=bound)
 
 
-def loc_Call_pars(self: fst.FST) -> fstloc:
+def _loc_Call_pars(self: fst.FST) -> fstloc:
     """Location is from just before opening par to just past closing par."""
 
     # assert isinstance(self.a, Call)
@@ -593,7 +596,7 @@ def loc_Call_pars(self: fst.FST) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def loc_Subscript_brackets(self: fst.FST) -> fstloc:
+def _loc_Subscript_brackets(self: fst.FST) -> fstloc:
     # assert isinstance(self.a, Subscript)
 
     ast = self.a
@@ -605,7 +608,7 @@ def loc_Subscript_brackets(self: fst.FST) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def loc_MatchClass_pars(self: fst.FST) -> fstloc:
+def _loc_MatchClass_pars(self: fst.FST) -> fstloc:
     # assert isinstance(self.a, MatchClass)
 
     ast = self.a
@@ -617,7 +620,7 @@ def loc_MatchClass_pars(self: fst.FST) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
-def loc_FunctionDef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tuple[int, int]]:
+def _loc_FunctionDef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tuple[int, int]]:
     """Get location of brackets (if present) and end of name where brackets would / do NORMALLY start. This may return
     a location for brackets if they are there even if there are no type_params (for editing purposes).
 
@@ -663,7 +666,7 @@ def loc_FunctionDef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, 
     return fstloc(ln, col, end_ln, end_col + 1), (name_end_ln, name_end_col)
 
 
-def loc_ClassDef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tuple[int, int]]:
+def _loc_ClassDef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tuple[int, int]]:
     """Get location of brackets (if present) and end of name where brackets would / do NORMALLY start. This may return
     a location for brackets if they are there even if there are no type_params (for editing purposes).
 
@@ -704,7 +707,7 @@ def loc_ClassDef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tup
     return fstloc(ln, col, end_ln, end_col + 1), (name_end_ln, name_end_col)
 
 
-def loc_TypeAlias_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tuple[int, int]]:
+def _loc_TypeAlias_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tuple[int, int]]:
     """Get location of brackets (if present) and end of name where brackets would / do NORMALLY start. This may return
     a location for brackets if they are there even if there are no type_params (for editing purposes).
 
@@ -736,7 +739,7 @@ def loc_TypeAlias_type_params_brackets(self: fst.FST) -> tuple[fstloc | None, tu
     return fstloc(ln, col, end_ln, end_col + 1), (name_end_ln, name_end_col)
 
 
-def loc_Global_Nonlocal_names(self: fst.FST, first: int, last: int | None = None) -> fstloc | tuple[fstloc, fstloc]:
+def _loc_Global_Nonlocal_names(self: fst.FST, first: int, last: int | None = None) -> fstloc | tuple[fstloc, fstloc]:
     """We assume `first` and optionally `last` are in [0..len(names)), no negative or out-of-bounds and `last` follows
     or equals `first` if present."""
 

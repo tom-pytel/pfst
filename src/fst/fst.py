@@ -115,11 +115,11 @@ from .astutil import (
 from .common import PYLT13, astfield, fstloc, fstlocn, nspace, Self, next_delims, prev_delims
 from .parsex import Mode
 from .code import Code, code_to_lines, code_as_all
-from .locations import loc_arguments, loc_comprehension, loc_withitem, loc_match_case, loc_decorator, loc_op
 from .traverse import AST_FIELDS_NEXT, AST_FIELDS_PREV, next_bound, prev_bound, check_with_loc
 from .view import fstview
 from .reconcile import Reconcile
 from .fst_misc import DUMP_COLOR, DUMP_NO_COLOR, clip_src_loc, fixup_field_body
+from .fst_locs import _loc_arguments, _loc_comprehension, _loc_withitem, _loc_match_case, _loc_op
 
 __all__ = [
     'parse', 'unparse', 'dump', 'FST',
@@ -165,39 +165,39 @@ _DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_
 _DEFAULT_INDENT = '    '
 
 _LOC_FUNCS = {  # quick lookup table for FST.loc
-    arguments:     loc_arguments,
-    comprehension: loc_comprehension,
-    withitem:      loc_withitem,
-    match_case:    loc_match_case,
-    And:           loc_op,
-    Or:            loc_op,
-    Add:           loc_op,
-    Sub:           loc_op,
-    Mult:          loc_op,
-    MatMult:       loc_op,
-    Div:           loc_op,
-    Mod:           loc_op,
-    Pow:           loc_op,
-    LShift:        loc_op,
-    RShift:        loc_op,
-    BitOr:         loc_op,
-    BitXor:        loc_op,
-    BitAnd:        loc_op,
-    FloorDiv:      loc_op,
-    Invert:        loc_op,
-    Not:           loc_op,
-    UAdd:          loc_op,
-    USub:          loc_op,
-    Eq:            loc_op,
-    NotEq:         loc_op,
-    Lt:            loc_op,
-    LtE:           loc_op,
-    Gt:            loc_op,
-    GtE:           loc_op,
-    Is:            loc_op,
-    IsNot:         loc_op,
-    In:            loc_op,
-    NotIn:         loc_op,
+    arguments:     _loc_arguments,
+    comprehension: _loc_comprehension,
+    withitem:      _loc_withitem,
+    match_case:    _loc_match_case,
+    And:           _loc_op,
+    Or:            _loc_op,
+    Add:           _loc_op,
+    Sub:           _loc_op,
+    Mult:          _loc_op,
+    MatMult:       _loc_op,
+    Div:           _loc_op,
+    Mod:           _loc_op,
+    Pow:           _loc_op,
+    LShift:        _loc_op,
+    RShift:        _loc_op,
+    BitOr:         _loc_op,
+    BitXor:        _loc_op,
+    BitAnd:        _loc_op,
+    FloorDiv:      _loc_op,
+    Invert:        _loc_op,
+    Not:           _loc_op,
+    UAdd:          _loc_op,
+    USub:          _loc_op,
+    Eq:            _loc_op,
+    NotEq:         _loc_op,
+    Lt:            _loc_op,
+    LtE:           _loc_op,
+    Gt:            _loc_op,
+    GtE:           _loc_op,
+    Is:            _loc_op,
+    IsNot:         _loc_op,
+    In:            _loc_op,
+    NotIn:         _loc_op,
 }
 
 
@@ -508,7 +508,7 @@ class FST:
                 end_col = len(last_line)
 
             if getattr(self.a, 'decorator_list', None):  # if has any decorators then start at first one
-                ln, col, _, _ = loc_decorator(self, 0, False)
+                ln, col, _, _ = self._loc_decorator(0, False)
 
             bloc = fstloc(ln, col, end_ln, end_col)
 
@@ -4502,6 +4502,29 @@ class FST:
         _unparenthesize_grouping,
         _delimit_node,
         _undelimit_node,
+    )
+
+    from .fst_locs import (
+        _loc_arguments,
+        _loc_comprehension,
+        _loc_withitem,
+        _loc_match_case,
+        _loc_op,
+        _loc_block_header_end,
+        _loc_arguments_empty,
+        _loc_comprehension_if,
+        _loc_decorator,
+        _loc_Lambda_args_entire,
+        _loc_ClassDef_bases_pars,
+        _loc_ImportFrom_names_pars,
+        _loc_With_items_pars,
+        _loc_Call_pars,
+        _loc_Subscript_brackets,
+        _loc_MatchClass_pars,
+        _loc_FunctionDef_type_params_brackets,
+        _loc_ClassDef_type_params_brackets,
+        _loc_TypeAlias_type_params_brackets,
+        _loc_Global_Nonlocal_names,
     )
 
     from .fst_raw import _reparse_raw
