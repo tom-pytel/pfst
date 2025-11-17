@@ -1712,6 +1712,17 @@ match a:
         self.assertRaises(ParseError, code_as__ImportFrom_names, FST('a', '_aliases').names.append('*').fst)
         self.assertEqual('*', code_as__ImportFrom_names(FST('*', '_aliases')).src)
 
+        # lambda arguments from FST
+
+        args = FST('a=1, /, b=2, *c, d=3, **e', 'arguments')
+        self.assertIs(args, code_as_arguments_lambda(args))
+
+        self.assertRaises(NodeError, code_as_arguments_lambda, FST('a: int = 1, /, b=2, *c, d=3, **e', 'arguments'))
+        self.assertRaises(NodeError, code_as_arguments_lambda, FST('a=1, /, b: int = 2, *c, d=3, **e', 'arguments'))
+        self.assertRaises(NodeError, code_as_arguments_lambda, FST('a=1, /, b=2, *c: tuple, d=3, **e', 'arguments'))
+        self.assertRaises(NodeError, code_as_arguments_lambda, FST('a=1, /, b=2, *c, d: int = 3, **e', 'arguments'))
+        self.assertRaises(NodeError, code_as_arguments_lambda, FST('a=1, /, b=2, *c, d=3, **e: dict', 'arguments'))
+
     def test_sanitize_stmtish(self):
         f = FST('# pre\ni = j  # line\n# post', 'stmt')
         self.assertEqual('# pre\ni = j  # line\n# post', f.src)

@@ -578,7 +578,20 @@ def code_as_arguments(code: Code, parse_params: Mapping[str, Any] = {}, *, sanit
 def code_as_arguments_lambda(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a lambda arguments `FST` if possible (no annotations allowed)."""
 
-    return _code_as(code, parse_params, arguments, parse_arguments_lambda, sanitize=sanitize)
+    fst_ = _code_as(code, parse_params, arguments, parse_arguments_lambda, sanitize=sanitize)
+
+    if fst_ is code:  # validation if was passed in as FST
+        ast = fst_.a
+
+        if (((args := ast.args) and any(a.annotation for a in args)) or
+            ((args := ast.kwonlyargs) and any(a.annotation for a in args)) or
+            ((arg := ast.vararg) and arg.annotation) or
+            ((arg := ast.kwarg) and arg.annotation) or
+            ((args := ast.posonlyargs) and any(a.annotation for a in args))
+        ):
+            raise NodeError('lambda arguments cannot have annotations')
+
+    return fst_
 
 
 def code_as_arg(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
