@@ -295,14 +295,18 @@ PARSE_TESTS = [
     ('expr_sliceelt',      px.parse_expr_sliceelt,      SyntaxError,              'a:b:c, x:y:z'),
 
     ('boolop',             px.parse_boolop,             And,                      'and'),
+    ('boolop',             px.parse_boolop,             SyntaxError,              'and 1'),
     ('boolop',             px.parse_boolop,             SyntaxError,              '*'),
     ('operator',           px.parse_operator,           Mult,                     '*'),
+    ('operator',           px.parse_operator,           SyntaxError,              '* 1'),
     ('operator',           px.parse_operator,           SyntaxError,              '*='),
     ('operator',           px.parse_operator,           SyntaxError,              'and'),
     ('unaryop',            px.parse_unaryop,            UAdd,                     '+'),
+    ('unaryop',            px.parse_unaryop,            SyntaxError,              '+ 1'),
     ('unaryop',            px.parse_unaryop,            SyntaxError,              'and'),
     ('cmpop',              px.parse_cmpop,              GtE,                      '>='),
     ('cmpop',              px.parse_cmpop,              IsNot,                    'is\nnot'),
+    ('cmpop',              px.parse_cmpop,              SyntaxError,              '+='),
     ('cmpop',              px.parse_cmpop,              SyntaxError,              '>= a >='),
     ('cmpop',              px.parse_cmpop,              SyntaxError,              'and'),
 
@@ -1383,7 +1387,7 @@ call(a)
         self.assertEqual(h.src, f.src)
         self.assertTrue(compare_asts(h.a, f.a, locs=True, raise_=True))
 
-    def test_code_as_ExceptHandlers(self):
+    def test_code_as__ExceptHandlers(self):
         f = FST(r'''
 try: pass
 except (ValueError, RuntimeError) as exc:
@@ -1426,7 +1430,7 @@ except Exception:
 
         self.assertRaises(ValueError, code_as__ExceptHandlers, f.body[0].handlers[0])
 
-    def test_code_as_match_cases(self):
+    def test_code_as__match_cases(self):
         f = FST(r'''
 match a:
     case 1:

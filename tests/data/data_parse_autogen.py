@@ -1190,12 +1190,20 @@ r'''and'''),
 r'''And - ROOT 0,0..0,3'''),
 
 ('parse_boolop', 0, 0, 'SyntaxError', {}, ('boolop',
+r'''and 1'''),
+r'''**SyntaxError("unexpected code after boolop, '1'")**'''),
+
+('parse_boolop', 0, 0, 'SyntaxError', {}, ('boolop',
 r'''*'''),
 r'''**SyntaxError("expecting boolop, got '*'")**'''),
 
 ('parse_operator', 0, 0, 'Mult', {}, ('operator',
 r'''*'''),
 r'''Mult - ROOT 0,0..0,1'''),
+
+('parse_operator', 0, 0, 'SyntaxError', {}, ('operator',
+r'''* 1'''),
+r'''**SyntaxError("unexpected code after operator, '1'")**'''),
 
 ('parse_operator', 0, 0, 'SyntaxError', {}, ('operator',
 r'''*='''),
@@ -1210,6 +1218,10 @@ r'''+'''),
 r'''UAdd - ROOT 0,0..0,1'''),
 
 ('parse_unaryop', 0, 0, 'SyntaxError', {}, ('unaryop',
+r'''+ 1'''),
+r'''**SyntaxError("unexpected code after unaryop, '1'")**'''),
+
+('parse_unaryop', 0, 0, 'SyntaxError', {}, ('unaryop',
 r'''and'''),
 r'''**SyntaxError("expecting unaryop, got 'and'")**'''),
 
@@ -1222,6 +1234,10 @@ is
 not
 '''),
 r'''IsNot - ROOT 0,0..1,3'''),
+
+('parse_cmpop', 0, 0, 'SyntaxError', {}, ('cmpop',
+r'''+='''),
+r'''**SyntaxError("expecting cmpop, got '+='")**'''),
 
 ('parse_cmpop', 0, 0, 'SyntaxError', {}, ('cmpop',
 r'''>= a >='''),
