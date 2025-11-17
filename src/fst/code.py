@@ -104,7 +104,8 @@ from .parsex import (
 
 __all__ = [
     'Code',
-    'code_to_lines',
+    'code_as_lines',
+    'code_as__expr_arglikes',
     'code_as_all',
     'code_as_stmts',
     'code_as__ExceptHandlers',
@@ -144,7 +145,6 @@ __all__ = [
     'code_as_identifier_star',
     'code_as_identifier_alias',
     'code_as_constant',
-    'code_as__expr_arglikes',
 ]
 
 
@@ -294,7 +294,12 @@ def _code_as_op(
     return code._sanitize() if sanitize else code
 
 
-def code_to_lines(code: Code | None) -> list[str]:
+# ......................................................................................................................
+
+def code_as_lines(code: Code | None) -> list[str]:
+    """Get list of lines of `code` if is `FST`, unparse `AST`, split `str` or just return `list[str]` if is that.
+    `code=None` is returned as `['']`."""
+
     if isinstance(code, str):
         return code.split('\n')
     elif code is None:
@@ -307,6 +312,21 @@ def code_to_lines(code: Code | None) -> list[str]:
         raise ValueError('expecting root node')
     else:
         return code._lines
+
+
+def code_as__expr_arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+    """Convert `code` to a `Tuple` contianing possibly arglike expressions. Meant for putting slices to `Call.args` and
+    `ClassDef.bases`.
+
+    **WARNING!** The `Tuple` that is returned may be an invalid python `Tuple` as it may be an empty `Tuple` `AST` with
+    source having no parentheses or an unparenthesized `Tuple` with incorrect start and stop locations. Meant as a
+    convenience for putting slices.
+    """
+
+    if isinstance(code, Tuple):  # strip parentheses
+        code = _fixing_unparse(code)[1:-1]
+
+    return _code_as(code, parse_params, parse__expr_arglikes, Tuple, sanitize)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -868,20 +888,3 @@ def code_as_constant(code: constant, parse_params: Mapping[str, Any] = {}, *, sa
         raise NodeError('expecting constant', rawable=True)
 
     return code
-
-
-# ......................................................................................................................
-
-def code_as__expr_arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
-    """Convert `code` to a `Tuple` contianing possibly arglike expressions. Meant for putting slices to `Call.args` and
-    `ClassDef.bases`.
-
-    **WARNING!** The `Tuple` that is returned may be an invalid python `Tuple` as it may be an empty `Tuple` `AST` with
-    source having no parentheses or an unparenthesized `Tuple` with incorrect start and stop locations. Meant as a
-    convenience for putting slices.
-    """
-
-    if isinstance(code, Tuple):  # strip parentheses
-        code = _fixing_unparse(code)[1:-1]
-
-    return _code_as(code, parse_params, parse__expr_arglikes, Tuple, sanitize)

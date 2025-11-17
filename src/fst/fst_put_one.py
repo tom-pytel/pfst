@@ -152,7 +152,7 @@ from .common import (
 
 from .code import (
     Code,
-    code_to_lines,
+    code_as_lines,
     code_as_expr,
     code_as_expr_arglike,
     code_as_expr_slice,
@@ -2559,7 +2559,7 @@ def _put_one_raw(
     if code is None:
         raise ValueError('cannot delete in raw put')
 
-    put_lines = code_to_lines(code)
+    put_lines = code_as_lines(code)
 
     ast = self.a
     root = self.root

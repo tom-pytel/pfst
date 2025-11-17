@@ -114,7 +114,7 @@ from .astutil import (
 
 from .common import PYLT13, astfield, fstloc, fstlocn, nspace, Self, next_delims, prev_delims
 from .parsex import Mode
-from .code import Code, code_to_lines, code_as_all
+from .code import Code, code_as_lines, code_as_all
 from .traverse import AST_FIELDS_NEXT, AST_FIELDS_PREV, next_bound, prev_bound, check_with_loc
 from .view import fstview
 from .reconcile import Reconcile
@@ -2267,7 +2267,7 @@ class FST:
 
             return parent._reparse_raw(code, ln, col, end_ln, end_col)
 
-        put_lines = code_to_lines(code)
+        put_lines = code_as_lines(code)
 
         if ast_op == 'offset':
             # TODO: there may be issues with certain zero-length trees but I can't think of any that might occur in normal usage

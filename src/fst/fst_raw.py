@@ -15,7 +15,7 @@ from .astutil import bistr
 from .common import NodeError, astfield
 
 from .parsex import Mode
-from .code import Code, code_to_lines
+from .code import Code, code_as_lines
 
 
 _STMTISH_FIELDS     = frozenset(('body', 'orelse', 'finalbody', 'handlers', 'cases'))
@@ -226,7 +226,7 @@ def _reparse_raw(self: fst.FST, code: Code | None, ln: int, col: int, end_ln: in
     - `(end_ln, end_col)`: New end location of source put (all source after this was not modified).
     """
 
-    new_lines = code_to_lines(code)
+    new_lines = code_as_lines(code)
 
     if not _reparse_raw_stmtish(self, new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block header), if fails then no statement found above
         root = self.root
