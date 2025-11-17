@@ -3589,27 +3589,27 @@ Module - ROOT 0,0..0,29
 ('body[0]', None, False, 'op', {}, ('exec',
 r'''a += b'''), (None,
 r'''new'''),
-r'''**ParseError("expecting operator, got 'new'")**'''),
+r'''**SyntaxError("expecting operator, got 'new'")**'''),
 
 ('body[0].value', None, False, 'op', {}, ('exec',
 r'''a and b'''), (None,
 r'''new'''),
-r'''**ParseError("expecting boolop, got 'new'")**'''),
+r'''**SyntaxError("expecting boolop, got 'new'")**'''),
 
 ('body[0].value', None, False, 'op', {}, ('exec',
 r'''a + b'''), (None,
 r'''new'''),
-r'''**ParseError("expecting operator, got 'new'")**'''),
+r'''**SyntaxError("expecting operator, got 'new'")**'''),
 
 ('body[0].value', None, False, 'op', {'raw': False}, ('exec',
 r'''-a'''), (None,
 r'''new'''),
-r'''**ParseError("expecting unaryop, got 'new'")**'''),
+r'''**SyntaxError("expecting unaryop, got 'new'")**'''),
 
 ('body[0].value', 0, False, 'ops', {}, ('exec',
 r'''a < b'''), (None,
 r'''new'''),
-r'''**ParseError("expecting cmpop, got 'new'")**'''),
+r'''**SyntaxError("expecting cmpop, got 'new'")**'''),
 
 ('body[0].args', 0, False, 'kw_defaults', {}, ('exec',
 r'''def f(*, a=b): pass'''), (None,
@@ -10437,7 +10437,7 @@ Module - ROOT 0,0..0,6
 ('body[0].value', None, False, 'op', {}, ('exec',
 r'''a and b'''), (None,
 r'''+'''),
-r'''**ParseError("expecting boolop, got '+'")**'''),
+r'''**SyntaxError("expecting boolop, got '+'")**'''),
 
 ('body[0].value', None, False, 'op', {'raw': False}, ('exec',
 r'''a and b and c'''), (None,

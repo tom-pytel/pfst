@@ -573,13 +573,28 @@ def _parse_all_multiple(src: str, parse_params: Mapping[str, Any], stmt: bool, r
     raise ParseError('invalid syntax')
 
 
-def _parse_simple_op(src: str, type_name: str, opstr2cls: dict[str, type[AST]]) -> AST:
-    """Parse to a simple operator (not compound like 'is not' or 'not in')."""
+def _parse_op(src: str, type_name: str, opstr2cls: dict[str, type[AST]]) -> AST:
+    '''"Parse" an operator, either simple or compound like 'is not' or 'not in'.'''
 
     if not (m := _re_first_src.search(src)):
         raise SyntaxError(f'expecting {type_name}, got nothing')
 
     op = m.group(2)
+
+    if opstr2cls is OPSTR2CLS_CMP:  # this may be compound two-word operator
+        if op == 'is':  # check for 'is not'
+            end = m.end()
+
+            if (n := (_re_next_src.match(src, end)) or _re_first_src.search(src, end)) and n.group(2) == 'not':
+                op = 'is not'
+                m = n
+
+        elif op == 'not':  # check for 'not in'
+            end = m.end()
+
+            if (n := (_re_next_src.match(src, end)) or _re_first_src.search(src, end)) and n.group(2) == 'in':
+                op = 'not in'
+                m = n
 
     if not (kls := opstr2cls.get(op)):
         raise SyntaxError(f'expecting {type_name}, got {shortstr(op)!r}')
@@ -1112,52 +1127,25 @@ def parse__decorator_list(src: str, parse_params: Mapping[str, Any] = {}) -> AST
 def parse_boolop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a `boolop`. We do it manually. We refuse to do equivalent of `ast.parse('or')` on principle."""
 
-    return _parse_simple_op(src, 'boolop', OPSTR2CLS_BOOL)
+    return _parse_op(src, 'boolop', OPSTR2CLS_BOOL)
 
 
 def parse_operator(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `operator`. We do it manually. We refuse to do equivalent of `ast.parse('+')` on principle."""
 
-    return _parse_simple_op(src, 'operator', OPSTR2CLS_BIN)
+    return _parse_op(src, 'operator', OPSTR2CLS_BIN)
 
 
 def parse_unaryop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `unaryop`. We do it manually. We refuse to do equivalent of `ast.parse('~')` on principle."""
 
-    return _parse_simple_op(src, 'unaryop', OPSTR2CLS_UNARY)
+    return _parse_op(src, 'unaryop', OPSTR2CLS_UNARY)
 
 
 def parse_cmpop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a `cmpop`. We do it manually. We refuse to do equivalent of `ast.parse('==')` on principle."""
 
-    if not (m := _re_first_src.search(src)):
-        raise SyntaxError('expecting cmpop, got nothing')
-
-    op = m.group(2)
-
-    if op == 'is':  # check for 'is not'
-        end = m.end()
-
-        if (n := (_re_next_src.match(src, end)) or _re_first_src.search(src, end)) and n.group(2) == 'not':
-            op = 'is not'
-            m = n
-
-    elif op == 'not':  # check for 'not in'
-        end = m.end()
-
-        if (n := (_re_next_src.match(src, end)) or _re_first_src.search(src, end)) and n.group(2) == 'in':
-            op = 'not in'
-            m = n
-
-    if not (kls := OPSTR2CLS_CMP.get(op)):
-        raise SyntaxError(f'expecting cmpop, got {shortstr(op)!r}')
-
-    end = m.end()
-
-    if m := (_re_next_src.match(src, end) or _re_first_src.search(src, end)):
-        raise SyntaxError(f'unexpected code after cmpop, {shortstr(m.group(2))!r}')
-
-    return kls()
+    return _parse_op(src, 'cmpop', OPSTR2CLS_CMP)
 
 
 def parse_comprehension(src: str, parse_params: Mapping[str, Any] = {}) -> AST:

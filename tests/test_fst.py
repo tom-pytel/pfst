@@ -21,7 +21,17 @@ from fst.asttypes import (
     _type_params,
 )
 
-from fst.astutil import OPCLS2STR, WalkFail, copy_ast, compare_asts
+from fst.astutil import (
+    OPSTR2CLS_UNARY,
+    OPSTR2CLS_BIN,
+    OPSTR2CLS_CMP,
+    OPSTR2CLS_BOOL,
+    OPCLS2STR,
+    WalkFail,
+    copy_ast,
+    compare_asts,
+)
+
 from fst.common import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, astfield, fstloc
 from fst.view import fstview
 
@@ -1478,6 +1488,26 @@ match a:
         self.assertIsInstance(code_as__match_cases('case 1: pass').cases[0].a, match_case)
         self.assertRaises(SyntaxError, code_as__match_cases, 'case = 1')
         self.assertRaises(SyntaxError, code_as__match_cases, 'case.b = 1')
+
+    def test_code_as_op(self):
+        for code_as, opstr2cls in [
+            (code_as_unaryop, OPSTR2CLS_UNARY),
+            (code_as_operator, OPSTR2CLS_BIN),
+            (code_as_cmpop, OPSTR2CLS_CMP),
+            (code_as_boolop, OPSTR2CLS_BOOL)
+        ]:
+            for op, kls in opstr2cls.items():
+                self.assertEqual(op, code_as(op).src)
+                self.assertEqual(f'# pre\n{op} # line\n# post', code_as(f'# pre\n{op} # line\n# post').src)
+                self.assertEqual(op, code_as(f'# pre\n{op} # line\n# post', sanitize=True).src)
+                self.assertEqual(op, code_as([op]).src)
+                self.assertEqual(f'# pre\n{op} # line\n# post', code_as(['# pre', f'{op} # line', '# post']).src)
+                self.assertEqual(op, code_as(['# pre', f'{op} # line', '# post'], sanitize=True).src)
+                self.assertEqual(op, code_as(FST(op, kls)).src)
+                self.assertEqual(f'# pre\n{op} # line\n# post', code_as(FST(f'# pre\n{op} # line\n# post', kls)).src)
+                self.assertEqual(op, code_as(FST(f'# pre\n{op} # line\n# post', kls), sanitize=True).src)
+                self.assertEqual(op, code_as(kls()).src)
+                self.assertEqual(op, code_as(kls(), sanitize=True).src)
 
     def test_code_as_identifier(self):
         self.assertEqual('name', code_as_identifier('name'))
