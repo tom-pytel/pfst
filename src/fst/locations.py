@@ -20,7 +20,6 @@ from .asttypes import (
     NotIn,
     UnaryOp,
     comprehension,
-    operator,
 )
 
 from .astutil import re_identifier, OPCLS2STR, last_block_header_child
@@ -34,7 +33,7 @@ __all__ = [
     'loc_comprehension',
     'loc_withitem',
     'loc_match_case',
-    'loc_operator',
+    'loc_op',
     'loc_block_header_end',
     'loc_arguments_empty',
     'loc_comprehension_if',
@@ -228,9 +227,10 @@ def loc_match_case(self: fst.FST) -> fstloc:
     return fstloc(ln, col, end_ln, end_col + 1)
 
 
-def loc_operator(self: fst.FST) -> fstloc | None:
-    """Get location of `operator`, `unaryop` or `cmpop` from source if possible. `boolop` has no location if it has a
-    parent because in this case it can be in multiple location in a `BoolOp` and we want to be consistent.
+def loc_op(self: fst.FST) -> fstloc | None:
+    """Get location of `operator`, `unaryop`, `cmpop` or if is standalone `boolop` from source if possible. `boolop` has
+    no location if it has a parent because in this case it can be in multiple location in a `BoolOp`. We want to be
+    consistent so we don't even give it a location if there is only one.
 
     **Note:** This function is explicitly safe to call from `FST.loc`.
     """
@@ -248,7 +248,7 @@ def loc_operator(self: fst.FST) -> fstloc | None:
         ln, col, src = next_frag(lines, 0, 0, len(lines) - 1, 0x7fffffffffffffff)  # must be there
 
         if not isinstance(ast, (NotIn, IsNot)):  # simple one element operator means we are done
-            assert src == op or (isinstance(ast, operator) and src == op + '=')
+            assert src == op
 
             return fstloc(ln, col, ln, col + len(src))
 
@@ -293,16 +293,13 @@ def loc_operator(self: fst.FST) -> fstloc | None:
 
                 return fstloc(ln, col, ln2, col2 + len(op2))
 
-    else:
-        is_binop = getattr(parenta, 'left', None)
+    elif prev := (getattr(parenta, 'left', None) or getattr(parenta, 'target', None)):
+        _, _, prev_end_ln, prev_end_col = prev.f.loc
 
-        if (prev := is_binop) or (prev := getattr(parenta, 'target', None)):
-            _, _, prev_end_ln, prev_end_col = prev.f.loc
+        if pos := next_find(lines, prev_end_ln, prev_end_col, len(lines) - 1, len(lines[-1]), op):
+            ln, col = pos
 
-            if pos := next_find(lines, prev_end_ln, prev_end_col, len(lines) - 1, len(lines[-1]), op):
-                ln, col = pos
-
-                return fstloc(ln, col, ln, col + len(op) + (not is_binop))  # 'not is_binop' adds AugAssign '=' len
+            return fstloc(ln, col, ln, col + len(op))
 
     return None
 

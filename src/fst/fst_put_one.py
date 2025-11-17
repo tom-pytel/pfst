@@ -158,8 +158,7 @@ from .code import (
     code_as_expr_slice,
     code_as_expr_sliceelt,
     code_as_boolop,
-    code_as_binop,
-    code_as_augop,
+    code_as_operator,
     code_as_unaryop,
     code_as_cmpop,
     code_as_comprehension,
@@ -393,7 +392,7 @@ def _put_one_op(
     static: None,
     options: Mapping[str, Any],
 ) -> fst.FST:  # child: type[boolop | operator | unaryop | cmpop]
-    """Put a single operator, with or without '=' for AugAssign, lots of rules to check."""
+    """Put a single operator, lots of rules to check."""
 
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params, sanitize=True)
@@ -415,11 +414,11 @@ def _put_one_op(
 
     ast = self.a
 
-    if (is_bin := isinstance(ast, BinOp)) or isinstance(ast, UnaryOp):  # parenthesize if precedence requires according to new operator
+    if (is_binop := isinstance(ast, BinOp)) or isinstance(ast, UnaryOp):  # parenthesize if precedence requires according to new operator
         if (parent := self.parent) and precedence_require_parens(ast, parent.a, *self.pfield) and not self.pars().n:
             self._parenthesize_grouping()
 
-        if not is_bin:
+        if not is_binop:
             if precedence_require_parens(operand := ast.operand, ast, 'operand') and not (f := operand.f).pars().n:
                 f._parenthesize_grouping()
 
@@ -2362,7 +2361,7 @@ _PUT_ONE_HANDLERS = {
     (TypeAlias, 'type_params'):           (True,  _put_one_exprish_required, _onestatic_type_param_required),  # type_param*
     (TypeAlias, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (AugAssign, 'target'):                (False, _put_one_exprish_required, _onestatic_target_single),  # expr
-    (AugAssign, 'op'):                    (False, _put_one_op, onestatic(None, code_as=code_as_augop)),  # operator
+    (AugAssign, 'op'):                    (False, _put_one_op, onestatic(None, code_as=code_as_operator)),  # operator
     (AugAssign, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (AnnAssign, 'target'):                (False, _put_one_AnnAssign_target, _onestatic_target_single),  # expr
     (AnnAssign, 'annotation'):            (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _restrict_default)),  # expr  - exclude [Lambda, Yield, YieldFrom, Await, NamedExpr]?
@@ -2412,7 +2411,7 @@ _PUT_ONE_HANDLERS = {
     (NamedExpr, 'target'):                (False, _put_one_exprish_required, _onestatic_target_Name),  # expr
     (NamedExpr, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (BinOp, 'left'):                      (False, _put_one_BinOp_left_right, _onestatic_expr_required),  # expr
-    (BinOp, 'op'):                        (False, _put_one_op, onestatic(None, code_as=code_as_binop)),  # operator
+    (BinOp, 'op'):                        (False, _put_one_op, onestatic(None, code_as=code_as_operator)),  # operator
     (BinOp, 'right'):                     (False, _put_one_BinOp_left_right, _onestatic_expr_required),  # expr
     (UnaryOp, 'op'):                      (False, _put_one_op, onestatic(None, code_as=code_as_unaryop)),  # unaryop
     (UnaryOp, 'operand'):                 (False, _put_one_UnaryOp_operand, _onestatic_expr_required),  # expr

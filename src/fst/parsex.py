@@ -10,7 +10,7 @@ newline due to comment ending without an explicit trailing newline.
 from __future__ import annotations
 
 import re
-from ast import parse as ast_parse, unparse as ast_unparse, fix_missing_locations as ast_fix_missing_locations
+from ast import parse as ast_parse, unparse as ast_unparse, fix_missing_locations
 from typing import Any, Callable, Literal, Mapping, get_args
 
 from . import fst
@@ -20,14 +20,10 @@ from .asttypes import (
     Add,
     And,
     Assign,
-    AugAssign,
-    BinOp,
     BitOr,
     BitXor,
     BitAnd,
-    BoolOp,
     ClassDef,
-    Compare,
     Del,
     Div,
     Eq,
@@ -69,7 +65,6 @@ from .asttypes import (
     Tuple,
     UAdd,
     USub,
-    UnaryOp,
     alias,
     arg,
     arguments,
@@ -97,7 +92,18 @@ from .asttypes import (
     _type_params,
 )
 
-from .astutil import bistr, pat_alnum, FIELDS, walk, reduce_ast
+from .astutil import (
+    pat_alnum,
+    FIELDS,
+    OPSTR2CLS_UNARY,
+    OPSTR2CLS_BIN,
+    OPSTR2CLS_CMP,
+    OPSTR2CLS_BOOL,
+    bistr,
+    walk,
+    reduce_ast,
+)
+
 from .common import next_frag, shortstr
 
 __all__ = [
@@ -125,8 +131,6 @@ __all__ = [
     'parse__Assign_targets',
     'parse_boolop',
     'parse_operator',
-    'parse_binop',
-    'parse_augop',
     'parse_unaryop',
     'parse_cmpop',
     'parse_comprehension',
@@ -153,7 +157,9 @@ __all__ = [
 
 _re_non_lcont_newline  = re.compile(r'(?<!\\)\n')
 _re_trailing_comma     = re.compile(r'(?: [)\s]* (?: (?: \\ | \#[^\n]* ) \n )? )* ,', re.VERBOSE)  # trailing comma search ignoring comments and line continuation backslashes
-_re_first_src          = re.compile(r'^ ([^\S\n]*) ([^\s\\#]+)', re.VERBOSE | re.MULTILINE)  # search for first non-comment non-linecont source code
+_re_first_src          = re.compile(r'^ ([^\S\n]*) ([^\s\\#]+)', re.VERBOSE | re.MULTILINE)  # search for non-comment non-linecont coding source code starting on a new line
+_re_next_src           = re.compile(r'  ([^\S\n]+) ([^\s\\#]+)', re.VERBOSE | re.MULTILINE)  # search for non-comment non-linecont coding source code starting not necessarily on a new line but with at least one whitespace, meant for followup search for multiword code like 'is not'
+
 _re_parse_all_category = re.compile(r'''
     (?P<stmt>                          (?: assert | break | class | continue | def | del | from | global | import | nonlocal | pass | raise | return | try | while | with ) \b ) |
     (?P<await_lambda_yield>            (?: await | lambda | yield ) \b ) |
@@ -168,7 +174,6 @@ _re_parse_all_category = re.compile(r'''
     (?P<syntax_error>                  (?: elif | else | finally | as ) \b ) |
     (?P<match_type_identifier>         (?: match | type | [^\d\W][''' + pat_alnum + r''']* ) \b ) |
     (?P<stmt_or_expr_or_pat_or_witem>  (?: [(\[{"'.\d] ) ) |
-    (?P<augop>                         (?: \+= | -= | @= | \*= | /= | %= | <<= | >>= | \|= | \^= | &= | //= | \*\*= ) ) |
     (?P<minus>                         (?: - ) ) |
     (?P<starstar>                      (?: \*\* ) ) |
     (?P<star>                          (?: \* ) ) |
@@ -202,8 +207,6 @@ Mode = Literal[
     '_decorator_list',
     'boolop',
     'operator',
-    'binop',
-    'augop',
     'unaryop',
     'cmpop',
     'comprehension',
@@ -262,9 +265,7 @@ Mode = Literal[
 - `'_decorator_list'`: Parse zero or more decorators returned in a `_decorator_list` SPECIAL SLICE. Each decorator must
     have a leading `@`.
 - `'boolop'`: Parse to a `boolop` operator.
-- `'operator'`: Parse to an `operator` operator, either normal binary `'*'` or augmented `'*='`.
-- `'binop'`: Parse to an `operator` only binary `'*'`, `'+'`, `'>>'`, etc...
-- `'augop'`: Parse to an `operator` only augmented `'*='`, `'+='`, `'>>='`, etc...
+- `'operator'`: Parse to an `operator` operator.
 - `'unaryop'`: Parse to a `unaryop` operator.
 - `'cmpop'`: Parse to a `cmpop` compare operator.
 - `'comprehension'`: Parse a single `comprehension` returned as itself. Same as passing `comprehension` type.
@@ -315,7 +316,7 @@ def _fixing_unparse(ast: AST) -> str:
         if not str(exc).endswith("has no attribute 'lineno'"):
             raise
 
-    ast_fix_missing_locations(ast)
+    fix_missing_locations(ast)
 
     return ast_unparse(ast)
 
@@ -572,6 +573,25 @@ def _parse_all_multiple(src: str, parse_params: Mapping[str, Any], stmt: bool, r
     raise ParseError('invalid syntax')
 
 
+def _parse_simple_op(src: str, type_name: str, opstr2cls: dict[str, type[AST]]) -> AST:
+    """Parse to a simple operator (not compound like 'is not' or 'not in')."""
+
+    if not (m := _re_first_src.search(src)):
+        raise SyntaxError(f'expecting {type_name}, got nothing')
+
+    op = m.group(2)
+
+    if not (kls := opstr2cls.get(op)):
+        raise SyntaxError(f'expecting {type_name}, got {shortstr(op)!r}')
+
+    end = m.end()
+
+    if m := (_re_next_src.match(src, end) or _re_first_src.search(src, end)):
+        raise SyntaxError(f'unexpected code after {type_name}, {shortstr(m.group(2))!r}')
+
+    return kls()
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 
 class ParseError(SyntaxError):
@@ -686,7 +706,7 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     if groupdict['minus']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (parse_expr_all, parse_pattern, _parse_all__withitems, parse_binop))
+                                   (parse_expr_all, parse_pattern, _parse_all__withitems, parse_operator))
 
     if groupdict['not']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
@@ -705,7 +725,7 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     if groupdict['plus']:
         return _parse_all_multiple(src, parse_params, not first.group(1),
-                                   (parse_expr_all, _parse_all__withitems, parse_binop))
+                                   (parse_expr_all, _parse_all__withitems, parse_operator))
 
     if groupdict['cmpop_w']:
         return parse_cmpop(src, parse_params)
@@ -715,9 +735,6 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     if groupdict['boolop']:
         return parse_boolop(src, parse_params)
-
-    if groupdict['augop']:
-        return parse_augop(src, parse_params)
 
     if groupdict['operator']:
         return parse_operator(src, parse_params)
@@ -1093,75 +1110,54 @@ def parse__decorator_list(src: str, parse_params: Mapping[str, Any] = {}) -> AST
 
 
 def parse_boolop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to a `boolop`."""
+    """Parse to a `boolop`. We do it manually. We refuse to do equivalent of `ast.parse('or')` on principle."""
 
-    ast = _ast_parse1(f'(a\n{src}\nb)', parse_params).value
-
-    if not isinstance(ast, BoolOp):
-        raise ParseError(f'expecting boolop, got {shortstr(src)!r}')
-
-    return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
+    return _parse_simple_op(src, 'boolop', OPSTR2CLS_BOOL)
 
 
 def parse_operator(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `operator`."""
+    """Parse to an `operator`. We do it manually. We refuse to do equivalent of `ast.parse('+')` on principle."""
 
-    if '=' in src:
-        try:
-            return parse_augop(src, parse_params)
-        except ParseError:  # maybe the '=' was in a comment, yes I know, a comment in an operator, people do strange things
-            pass
-
-    return parse_binop(src, parse_params)
-
-
-def parse_binop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `operator` in the context of a `BinOp`."""
-
-    ast = _ast_parse1(f'(a\n{src}\nb)', parse_params).value
-
-    if not isinstance(ast, BinOp):
-        raise ParseError(f'expecting operator, got {shortstr(src)!r}')
-
-    return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
-
-
-def parse_augop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an augmented `operator` in the context of a `AugAssign`."""
-
-    ast = _ast_parse1(f'a \\\n{src} b', parse_params)
-
-    if not isinstance(ast, AugAssign):
-        raise ParseError(f'expecting augmented operator, got {shortstr(src)!r}')
-
-    return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
+    return _parse_simple_op(src, 'operator', OPSTR2CLS_BIN)
 
 
 def parse_unaryop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to a `unaryop`."""
+    """Parse to an `unaryop`. We do it manually. We refuse to do equivalent of `ast.parse('~')` on principle."""
 
-    ast = _ast_parse1(f'(\n{src}\nb)', parse_params).value
-
-    if not isinstance(ast, UnaryOp):
-        raise ParseError(f'expecting unaryop, got {shortstr(src)!r}')
-
-    return ast.op.__class__()  # parse() returns the same identical object for all instances of the same operator
+    return _parse_simple_op(src, 'unaryop', OPSTR2CLS_UNARY)
 
 
 def parse_cmpop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to a `cmpop`."""
+    """Parse to a `cmpop`. We do it manually. We refuse to do equivalent of `ast.parse('==')` on principle."""
 
-    ast = _ast_parse1(f'(a\n{src}\nb)', parse_params).value
+    if not (m := _re_first_src.search(src)):
+        raise SyntaxError('expecting cmpop, got nothing')
 
-    if not isinstance(ast, Compare):
-        raise ParseError(f'expecting cmpop, got {shortstr(src)!r}')
+    op = m.group(2)
 
-    ops = ast.ops
+    if op == 'is':  # check for 'is not'
+        end = m.end()
 
-    if len(ops) != 1:
-        raise ParseError('expecting single cmpop')
+        if (n := (_re_next_src.match(src, end)) or _re_first_src.search(src, end)) and n.group(2) == 'not':
+            op = 'is not'
+            m = n
 
-    return ops[0].__class__()  # parse() returns the same identical object for all instances of the same operator
+    elif op == 'not':  # check for 'not in'
+        end = m.end()
+
+        if (n := (_re_next_src.match(src, end)) or _re_first_src.search(src, end)) and n.group(2) == 'in':
+            op = 'not in'
+            m = n
+
+    if not (kls := OPSTR2CLS_CMP.get(op)):
+        raise SyntaxError(f'expecting cmpop, got {shortstr(op)!r}')
+
+    end = m.end()
+
+    if m := (_re_next_src.match(src, end) or _re_first_src.search(src, end)):
+        raise SyntaxError(f'unexpected code after cmpop, {shortstr(m.group(2))!r}')
+
+    return kls()
 
 
 def parse_comprehension(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
@@ -1549,8 +1545,6 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     '_decorator_list':        parse__decorator_list,
     'boolop':                 parse_boolop,
     'operator':               parse_operator,
-    'binop':                  parse_binop,
-    'augop':                  parse_augop,
     'unaryop':                parse_unaryop,
     'cmpop':                  parse_cmpop,
     'comprehension':          parse_comprehension,

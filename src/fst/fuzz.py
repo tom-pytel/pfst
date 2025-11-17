@@ -816,8 +816,8 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
             if not allowed or not isinstance(repla, allowed):
                 return False
 
-        if isinstance(tgta, operator) and isinstance(repla, operator) and tgt._is_augop() ^ repl._is_augop():
-            return False
+        # if isinstance(tgta, operator) and isinstance(repla, operator) and tgt._is_augop() ^ repl._is_augop():
+        #     return False
 
     except Exception:
         return False

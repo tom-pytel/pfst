@@ -8,7 +8,7 @@
 
 ### Added
 
-- replacing all handlers in a `Try` or `TryStar` with the other kind will change the try to the other kind
+- replacing all handlers in a `Try` or `TryStar` with the other kind will change the try `AST` to the other kind
 - prescribed slicing for `FunctionDef.decorator_list`
 - prescribed slicing for `AsyncFunctionDef.decorator_list`
 - prescribed slicing for `ClassDef.decorator_list`
@@ -21,6 +21,7 @@
 
 ### Updated
 
+- removed artificial distinction between `augop` and `binop`, now is just `operator`
 - `.bloc` block statement last child line trailing comment
 - change `pars_walrus` and `pars_arglike` to pure overrides
 - default disable dump() color on win32

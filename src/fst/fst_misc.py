@@ -83,7 +83,6 @@ from .asttypes import (
     keyword,
     match_case,
     mod,
-    operator,
     pattern,
     stmt,
     withitem,
@@ -102,7 +101,7 @@ from .asttypes import (
     _type_params,
 )
 
-from .astutil import pat_alnum, OPSTR2CLS_AUG, constant, re_alnumdot_alnum, bistr, precedence_require_parens_by_type
+from .astutil import pat_alnum, constant, re_alnumdot_alnum, bistr, precedence_require_parens_by_type
 
 from .common import (
     NodeError,
@@ -1318,28 +1317,6 @@ def _is_solo_matchcls_pat(self: fst.FST) -> bool:
 
     return ((parent := self.parent) and self.pfield.name == 'patterns' and
             isinstance(parenta := parent.a, MatchClass) and not parenta.kwd_patterns and len(parenta.patterns) == 1)
-
-
-def _is_augop(self: fst.FST) -> bool | None:
-    """Whether `self` is an augmented `operator` or not, or not an `operator` at all.
-
-    **Returns:**
-    - `True` if is augmented `operator`, `False` if non-augmented `operator` and `None` if is not `operator` at all.
-
-    **Examples:**
-    ```py
-    >>> FST('+')._is_augop()
-    False
-
-    >>> FST('+=')._is_augop()
-    True
-
-    >>> repr(FST('~')._is_augop())
-    'None'
-    ```
-    """
-
-    return None if not isinstance(self.a, operator) else self._get_src(*self.loc) in OPSTR2CLS_AUG
 
 
 def _has_Slice(self: fst.FST) -> bool:

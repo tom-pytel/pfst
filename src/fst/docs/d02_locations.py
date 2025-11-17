@@ -107,7 +107,7 @@ fstloc(0, 5, 0, 11)
 fstloc(1, 3, 2, 11)
 
 >>> FST('a += b').op.loc
-fstloc(0, 2, 0, 4)
+fstloc(0, 2, 0, 3)
 ```
 
 ## `.bloc`

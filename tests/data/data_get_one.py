@@ -1,4 +1,4 @@
-# (case idx, attr, start, False, field, options, code | (parse_mode, code),
+# (attr, start, False, field, options, code | (parse_mode, code),
 #
 # code after cut,
 # dump code after cut)
@@ -391,8 +391,8 @@ r'''Name 'var' Load - ROOT 0,0..0,3'''),
 ('', None, False, 'op', {}, (AugAssign,
 r'''var += 123'''),
 r'''**ValueError('cannot delete AugAssign.op')**''',
-r'''+=''',
-r'''Add - ROOT 0,0..0,2'''),
+r'''+''',
+r'''Add - ROOT 0,0..0,1'''),
 
 ('', None, False, 'value', {}, (AugAssign,
 r'''var += 123'''),

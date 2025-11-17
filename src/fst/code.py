@@ -54,8 +54,6 @@ from .astutil import (
     OPSTR2CLS_BIN,
     OPSTR2CLS_CMP,
     OPSTR2CLS_BOOL,
-    OPSTR2CLS_AUG,
-    OPCLS2STR_AUG,
     OPCLS2STR,
     is_valid_identifier,
     is_valid_identifier_dotted,
@@ -83,8 +81,7 @@ from .parsex import (
     parse__Assign_targets,
     parse__decorator_list,
     parse_boolop,
-    parse_binop,
-    parse_augop,
+    parse_operator,
     parse_unaryop,
     parse_cmpop,
     parse_comprehension,
@@ -124,8 +121,7 @@ __all__ = [
     'code_as__Assign_targets',
     'code_as__decorator_list',
     'code_as_boolop',
-    'code_as_binop',
-    'code_as_augop',
+    'code_as_operator',
     'code_as_unaryop',
     'code_as_cmpop',
     'code_as_comprehension',
@@ -187,7 +183,7 @@ def _code_as_op(
                 if parse(code.src).__class__ is codea.__class__:  # parses to same thing so just return the canonical str for the op, otherwise it gets complicated
                     return code  # return fst.FST(codea, [expected], from_=code)
 
-            except SyntaxError:  # mostly for mismatched augop / binop operator types
+            except SyntaxError:  # mostly for mismatched operator types
                 pass
 
             raise NodeError(f'expecting {expected!r}, got {shortstr(code.src)!r}', rawable=True)
@@ -563,16 +559,10 @@ def code_as_boolop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize
     return _code_as_op(code, boolop, parse_params, parse_boolop, OPSTR2CLS_BOOL, sanitize=sanitize)
 
 
-def code_as_binop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
+def code_as_operator(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
     """Convert `code` to a `operator` `FST` if possible."""
 
-    return _code_as_op(code, operator, parse_params, parse_binop, OPSTR2CLS_BIN, sanitize=sanitize)
-
-
-def code_as_augop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:
-    """Convert `code` to an augmented `operator` `FST` if possible, e.g. "+="."""
-
-    return _code_as_op(code, operator, parse_params, parse_augop, OPSTR2CLS_AUG, OPCLS2STR_AUG, sanitize=sanitize)
+    return _code_as_op(code, operator, parse_params, parse_operator, OPSTR2CLS_BIN, sanitize=sanitize)
 
 
 def code_as_unaryop(code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False) -> fst.FST:

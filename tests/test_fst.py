@@ -34,8 +34,7 @@ from fst.code import (
     code_as_expr_slice,
     code_as_Tuple,
     code_as_boolop,
-    code_as_binop,
-    code_as_augop,
+    code_as_operator,
     code_as_unaryop,
     code_as_cmpop,
     code_as_comprehension,
@@ -164,7 +163,6 @@ PARSE_TESTS = [
     ('all',                px.parse__withitems,         _withitems,               'f(**a) as b,'),
     ('all',                px.parse__withitems,         _withitems,               'f(**a) as b, c as d'),
     ('all',                px.parse_operator,           Mult,                     '*'),
-    ('all',                px.parse_augop,              Mult,                     '*='),
     ('all',                px.parse_cmpop,              Gt,                       '>'),
     ('all',                px.parse_boolop,             And,                      'and'),
     ('all',                px.parse_unaryop,            Invert,                   '~'),
@@ -297,20 +295,16 @@ PARSE_TESTS = [
     ('expr_sliceelt',      px.parse_expr_sliceelt,      SyntaxError,              'a:b:c, x:y:z'),
 
     ('boolop',             px.parse_boolop,             And,                      'and'),
-    ('boolop',             px.parse_boolop,             ParseError,               '*'),
+    ('boolop',             px.parse_boolop,             SyntaxError,              '*'),
     ('operator',           px.parse_operator,           Mult,                     '*'),
-    ('operator',           px.parse_operator,           Mult,                     '*='),
-    ('operator',           px.parse_operator,           ParseError,               'and'),
-    ('binop',              px.parse_binop,              Mult,                     '*'),
-    ('binop',              px.parse_binop,              SyntaxError,              '*='),
-    ('augop',              px.parse_augop,              ParseError,               '*'),
-    ('augop',              px.parse_augop,              Mult,                     '*='),
+    ('operator',           px.parse_operator,           SyntaxError,              '*='),
+    ('operator',           px.parse_operator,           SyntaxError,              'and'),
     ('unaryop',            px.parse_unaryop,            UAdd,                     '+'),
     ('unaryop',            px.parse_unaryop,            SyntaxError,              'and'),
     ('cmpop',              px.parse_cmpop,              GtE,                      '>='),
     ('cmpop',              px.parse_cmpop,              IsNot,                    'is\nnot'),
-    ('cmpop',              px.parse_cmpop,              ParseError,               '>= a >='),
-    ('cmpop',              px.parse_cmpop,              ParseError,               'and'),
+    ('cmpop',              px.parse_cmpop,              SyntaxError,              '>= a >='),
+    ('cmpop',              px.parse_cmpop,              SyntaxError,              'and'),
 
     ('comprehension',      px.parse_comprehension,      comprehension,            'for u in v'),
     ('comprehension',      px.parse_comprehension,      comprehension,            'async for u in v'),
@@ -605,16 +599,16 @@ PARSE_TESTS = [
     (Slice,                px.parse_expr_slice,         Slice,                    'a:b'),
 
     (boolop,               px.parse_boolop,             And,                      'and'),
-    (boolop,               px.parse_boolop,             ParseError,               '*'),
+    (boolop,               px.parse_boolop,             SyntaxError,              '*'),
     (operator,             px.parse_operator,           Mult,                     '*'),
-    (operator,             px.parse_operator,           Mult,                     '*='),
-    (operator,             px.parse_operator,           ParseError,               'and'),
+    (operator,             px.parse_operator,           SyntaxError,              '*='),
+    (operator,             px.parse_operator,           SyntaxError,              'and'),
     (unaryop,              px.parse_unaryop,            UAdd,                     '+'),
     (unaryop,              px.parse_unaryop,            SyntaxError,              'and'),
     (cmpop,                px.parse_cmpop,              GtE,                      '>='),
     (cmpop,                px.parse_cmpop,              IsNot,                    'is\nnot'),
-    (cmpop,                px.parse_cmpop,              ParseError,               '>= a >='),
-    (cmpop,                px.parse_cmpop,              ParseError,               'and'),
+    (cmpop,                px.parse_cmpop,              SyntaxError,              '>= a >='),
+    (cmpop,                px.parse_cmpop,              SyntaxError,              'and'),
 
     (comprehension,        px.parse_comprehension,      comprehension,            'for u in v'),
     (comprehension,        px.parse_comprehension,      comprehension,            'for u in v if w'),
@@ -689,8 +683,7 @@ PARSE_TESTS = [
     ('expr_slice',         px.parse_expr_slice,         Slice,                    ' a:b:c  # tail'),
     ('expr_slice',         px.parse_expr_slice,         Yield,                    ' yield  # tail'),
     ('boolop',             px.parse_boolop,             And,                      ' and  # tail'),
-    ('binop',              px.parse_binop,              RShift,                   ' >>  # tail'),
-    ('augop',              px.parse_augop,              SyntaxError,              ' >>=  # tail'),  # this can never be as a statement can never be enclosed and a line continuation cannot follow a comment
+    ('operator',           px.parse_operator,           RShift,                   ' >>  # tail'),
     ('unaryop',            px.parse_unaryop,            Invert,                   ' ~  # tail'),
     ('cmpop',              px.parse_cmpop,              GtE,                      ' >=  # tail'),
     ('comprehension',      px.parse_comprehension,      comprehension,            ' for i in j  # tail'),
@@ -986,8 +979,7 @@ class TestFST(unittest.TestCase):
 
                 # reparse
 
-                if (src != '*=' and  # augassign is ambiguous for unparse
-                    (src or func not in (px.parse__aliases, px.parse__Import_names, px.parse__ImportFrom_names)) and  # these unparse to '()' which can't be reparsed as these
+                if ((src or func not in (px.parse__aliases, px.parse__Import_names, px.parse__ImportFrom_names)) and  # these unparse to '()' which can't be reparsed as these
                     not (src.endswith(',') and func in (px.parse__withitems, px.parse__type_params))  # special case of singletons list containers that can with a trailing comma, which unparse from AST without the comma so reparse to a single element of the type
                 ):
                     test = 'reparse'
@@ -998,9 +990,7 @@ class TestFST(unittest.TestCase):
 
                 # trailing newline
 
-                if (src != '*=' and                  # newline following augassign is syntactically impossible
-                    func != px.parse__Assign_targets  # this can't take trailing newline
-                ):
+                if func != px.parse__Assign_targets:  # this can't take trailing newline
                     test = 'newline'
                     srcn = src + '\n'
                     ast  = px.parse(srcn, mode)
@@ -1264,8 +1254,7 @@ match a:
             (code_as_expr_slice, 'body[0].value.slice', 'a[1]'),
             (code_as_expr_slice, 'body[0].value.slice', 'a[b:c:d]'),
             (code_as_expr_slice, 'body[0].value.slice', 'a[b:c:d, e:f]'),
-            (code_as_binop, 'body[0].value.op', 'a + b'),
-            (code_as_augop, 'body[0].op', 'a += b'),
+            (code_as_operator, 'body[0].value.op', 'a + b'),
             (code_as_unaryop, 'body[0].value.op', '~a'),
             (code_as_cmpop, 'body[0].value.ops[0]', 'a < b'),
             (code_as_comprehension, 'body[0].value.generators[0]', '[i for i in j if i < 0]'),
@@ -1574,8 +1563,8 @@ match a:
             (code_as_expr_slice, 'b:c:d'),
             (code_as_expr_slice, 'b:c:d, e:f'),
             (code_as_Tuple, '1, 2, 3'),
-            (code_as_binop, '+'),
-            (code_as_augop, '+='),
+            (code_as_boolop, 'and'),
+            (code_as_operator, '+'),
             (code_as_unaryop, '~'),
             (code_as_cmpop, '<'),
             (code_as_comprehension, 'for i in j if i < 0'),
@@ -1755,19 +1744,19 @@ match a:
         self.assertEqual((1, 0, 2, 2), FST(NotIn(), ['# pre', 'not # inner', 'in # post', '# next']).loc)
         self.assertEqual((1, 0, 1, 3), FST(And(), ['# pre', 'and # post', '# next']).loc)
         self.assertEqual((1, 0, 1, 2), FST(Or(), ['# pre', 'or # post', '# next']).loc)
-        self.assertEqual((1, 0, 1, 2), FST(Add(), ['# pre', '+= # post', '# next']).loc)
-        self.assertEqual((1, 0, 1, 2), FST(Sub(), ['# pre', '-= # post', '# next']).loc)
-        self.assertEqual((1, 0, 1, 2), FST(Mult(), ['# pre', '*= # post', '# next']).loc)
-        self.assertEqual((1, 0, 1, 2), FST(MatMult(), ['# pre', '@= # post', '# next']).loc)
-        self.assertEqual((1, 0, 1, 2), FST(Div(), ['# pre', '/= # post', '# next']).loc)
-        self.assertEqual((1, 0, 1, 2), FST(Mod(), ['# pre', '%= # post', '# next']).loc)
-        self.assertEqual((1, 0, 1, 3), FST(LShift(), ['# pre', '<<= # post', '# next']).loc)
-        self.assertEqual((1, 0, 1, 3), FST(RShift(), ['# pre', '>>= # post', '# next']).loc)
-        self.assertEqual((1, 0, 1, 2), FST(BitOr(), ['# pre', '|= # post', '# next']).loc)
-        self.assertEqual((1, 0, 1, 2), FST(BitXor(), ['# pre', '^= # post', '# next']).loc)
-        self.assertEqual((1, 0, 1, 2), FST(BitAnd(), ['# pre', '&= # post', '# next']).loc)
-        self.assertEqual((1, 0, 1, 3), FST(FloorDiv(), ['# pre', '//= # post', '# next']).loc)
-        self.assertEqual((1, 0, 1, 3), FST(Pow(), ['# pre', '**= # post', '# next']).loc)
+        # self.assertEqual((1, 0, 1, 2), FST(Add(), ['# pre', '+= # post', '# next']).loc)
+        # self.assertEqual((1, 0, 1, 2), FST(Sub(), ['# pre', '-= # post', '# next']).loc)
+        # self.assertEqual((1, 0, 1, 2), FST(Mult(), ['# pre', '*= # post', '# next']).loc)
+        # self.assertEqual((1, 0, 1, 2), FST(MatMult(), ['# pre', '@= # post', '# next']).loc)
+        # self.assertEqual((1, 0, 1, 2), FST(Div(), ['# pre', '/= # post', '# next']).loc)
+        # self.assertEqual((1, 0, 1, 2), FST(Mod(), ['# pre', '%= # post', '# next']).loc)
+        # self.assertEqual((1, 0, 1, 3), FST(LShift(), ['# pre', '<<= # post', '# next']).loc)
+        # self.assertEqual((1, 0, 1, 3), FST(RShift(), ['# pre', '>>= # post', '# next']).loc)
+        # self.assertEqual((1, 0, 1, 2), FST(BitOr(), ['# pre', '|= # post', '# next']).loc)
+        # self.assertEqual((1, 0, 1, 2), FST(BitXor(), ['# pre', '^= # post', '# next']).loc)
+        # self.assertEqual((1, 0, 1, 2), FST(BitAnd(), ['# pre', '&= # post', '# next']).loc)
+        # self.assertEqual((1, 0, 1, 3), FST(FloorDiv(), ['# pre', '//= # post', '# next']).loc)
+        # self.assertEqual((1, 0, 1, 3), FST(Pow(), ['# pre', '**= # post', '# next']).loc)
 
     def test_loc_block_header_end(self):
         self.assertEqual((0, 15, 0, 15), loc_block_header_end(parse('def f(a) -> int: pass').body[0].f))
@@ -6573,9 +6562,9 @@ opts.ignore_module = [mod.strip()
         self.assertIs(fass, f.find_loc_in(0, 0, 0, 4, 'top'))
         self.assertIs(fass, f.find_loc_in(0, 3, 0, 4, False))
         self.assertIs(fass, f.find_loc_in(0, 3, 0, 4, 'top'))
-        self.assertIs(fpeq, f.find_loc_in(0, 4, 0, 6))
+        self.assertIs(fpeq, f.find_loc_in(0, 4, 0, 5))
         self.assertIs(fass, f.find_loc_in(0, 4, 0, 6, False))
-        self.assertIs(fpeq, f.find_loc_in(0, 4, 0, 6, 'top'))
+        self.assertIs(fpeq, f.find_loc_in(0, 4, 0, 5, 'top'))
         self.assertIs(fxyz, f.find_loc_in(0, 7, 0, 10))
         self.assertIs(fass, f.find_loc_in(0, 7, 0, 10, False))
         self.assertIs(fxyz, f.find_loc_in(0, 7, 0, 10, 'top'))
@@ -6699,7 +6688,7 @@ opts.ignore_module = [mod.strip()
         self.assertIs(fabc, f.find_loc(0, 0, 0, 3))
         self.assertIs(fpeq, f.find_loc(0, 1, 0, 10))
         self.assertIs(fxyz, f.find_loc(0, 5, 0, 10))
-        self.assertIs(fpeq, f.find_loc(0, 5, 0, 6))
+        self.assertIs(fpeq, f.find_loc(0, 4, 0, 6))
         self.assertIs(fass, f.find_loc(0, 6, 0, 7))
         self.assertIs(fass, f.find_loc(0, 6, 0, 7, True))
 
@@ -7493,7 +7482,7 @@ match a:
 
         o = FST('a + b')
         m = o.mark()
-        o.a.op = FST('*=').a
+        o.a.op = FST('*').a
         f = o.reconcile(m)
         self.assertEqual('a * b', f.src)
         f.verify()
@@ -7528,7 +7517,7 @@ match a:
 
         o = FST('a += b')
         m = o.mark()
-        o.a.op = FST('*=').a
+        o.a.op = FST('*').a
         f = o.reconcile(m)
         self.assertEqual('a *= b', f.src)
         f.verify()
@@ -8013,7 +8002,7 @@ if 1:
 
         f = FST('a += b')
         self.assertEqual('new += b', test(f, 'target', 'new', FST, 'a').src)
-        self.assertEqual('new >>= b', test(f, 'op', '>>=', FST, '+=').src)
+        self.assertEqual('new >>= b', test(f, 'op', '>>', FST, '+').src)
         self.assertEqual('new >>= zzz', test(f, 'value', 'zzz', FST, 'b').src)
 
         f = FST('a: int = v')

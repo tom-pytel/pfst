@@ -347,7 +347,7 @@ OPSTR2CLS_BIN = {
     '&':      BitAnd,
     '//':     FloorDiv,
     '**':     Pow,
-}  ; """String (non-augmented) to `operator` binary operator `AST` class mapping, e.g. `'+': ast.Add`."""
+}  ; """String to `operator` binary operator `AST` class mapping, e.g. `'+': ast.Add`."""
 
 OPSTR2CLS_CMP = {
     '==':     Eq,
@@ -367,26 +367,8 @@ OPSTR2CLS_BOOL = {
     'or':     Or,
 }  ; "String to `boolop` boolean operator `AST` class mapping, e.g. `'and': ast.And`."""
 
-OPSTR2CLS_AUG = {
-    '+=':     Add,
-    '-=':     Sub,
-    '*=':     Mult,
-    '@=':     MatMult,
-    '/=':     Div,
-    '%=':     Mod,
-    '<<=':    LShift,
-    '>>=':    RShift,
-    '|=':     BitOr,
-    '^=':     BitXor,
-    '&=':     BitAnd,
-    '//=':    FloorDiv,
-    '**=':    Pow,
-}  ; """String (augmented) to `operator` binary operator `AST` class mapping, e.g. `'+=': ast.Add`."""
-
-OPSTR2CLS     = {**OPSTR2CLS_UNARY, **OPSTR2CLS_BIN, **OPSTR2CLS_CMP, **OPSTR2CLS_BOOL}                                ; """Mapping of operator string to operator `AST` class, e.g. `'+': ast.Add`. Unary `'-'` and `'+'` are overridden by the binary versions."""
-OPSTR2CLSWAUG = {**OPSTR2CLS, **OPSTR2CLS}                                                                             ; """Mapping of all operator strings to operator `AST` class including AugAssign operators."""
-OPCLS2STR     = {v: k for d in (OPSTR2CLS_UNARY, OPSTR2CLS_BIN, OPSTR2CLS_CMP, OPSTR2CLS_BOOL) for k, v in d.items()}  ; """Mapping of operator `AST` class to operator string, e.g. `ast.Add: '+'`."""
-OPCLS2STR_AUG = {v: k for k, v in OPSTR2CLS_AUG.items()}                                                               ; """Mapping of operator `AST` class to operator string mapping to augmented operator strings, e.g. `ast.Add: '+='`."""
+OPSTR2CLS = {**OPSTR2CLS_UNARY, **OPSTR2CLS_BIN, **OPSTR2CLS_CMP, **OPSTR2CLS_BOOL}                                ; """Mapping of operator string to operator `AST` class, e.g. `'+': ast.Add`. Unary `'-'` and `'+'` are overridden by the binary versions."""
+OPCLS2STR = {v: k for d in (OPSTR2CLS_UNARY, OPSTR2CLS_BIN, OPSTR2CLS_CMP, OPSTR2CLS_BOOL) for k, v in d.items()}  ; """Mapping of operator `AST` class to operator string, e.g. `ast.Add: '+'`."""
 
 
 class bistr(str):

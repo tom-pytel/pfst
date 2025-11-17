@@ -1,4 +1,4 @@
-# (case idx, attr, start, False, field, options, code | (parse_mode, code), put_code | (parse_mode, put_code),
+# (attr, start, False, field, options, code | (parse_mode, code), put_code | (parse_mode, put_code),
 #
 # code after put,
 # [code after put FST if different,]  - shouldn't be present if everything working correctly
@@ -438,7 +438,7 @@ Module - ROOT 0,0..0,11
   .body[1]
    0] AugAssign - 0,0..0,11
      .target Name 'i' Store - 0,0..0,1
-     .op Add - 0,2..0,4
+     .op Add - 0,2..0,3
      .value Tuple - 0,5..0,11
        .elts[2]
         0] Name 'a' Load - 0,6..0,7
@@ -1219,7 +1219,7 @@ Module - ROOT 0,0..0,8
   .body[1]
    0] AugAssign - 0,0..0,8
      .target Name 'new' Store - 0,0..0,3
-     .op Add - 0,4..0,6
+     .op Add - 0,4..0,5
      .value Name 'j' Load - 0,7..0,8
 '''),
 
@@ -1234,7 +1234,7 @@ Module - ROOT 0,0..0,11
        .value Name 'new' Load - 0,0..0,3
        .attr 'to'
        .ctx Store
-     .op Add - 0,7..0,9
+     .op Add - 0,7..0,8
      .value Name 'j' Load - 0,10..0,11
 '''),
 
@@ -1249,7 +1249,7 @@ Module - ROOT 0,0..0,12
        .value Name 'new' Load - 0,0..0,3
        .slice Name 'to' Load - 0,4..0,6
        .ctx Store
-     .op Add - 0,8..0,10
+     .op Add - 0,8..0,9
      .value Name 'j' Load - 0,11..0,12
 '''),
 

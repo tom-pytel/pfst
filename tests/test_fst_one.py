@@ -43,7 +43,7 @@ REPLACE_EXISTING_ONE_DATA = [
 
 # AugAssign
 ("t += v", 'body[0].target', {}, "z", "z", "z += v"),
-("t += v", 'body[0].op', {}, "-=", "-=", "t -= v"),
+("t += v", 'body[0].op', {}, "-", "-", "t -= v"),
 ("t += v", 'body[0].value', {}, "z", "z", "t += z"),
 
 # AnnAssign
@@ -2207,9 +2207,9 @@ c, # c
         self.assertRaises(NodeError, f.pattern.cls.replace, '_', raw=False)
 
     def test_put_one_op(self):
-        self.assertEqual('a >>= b', parse('a *= b').body[0].f.put('>>=', field='op', raw=False).src)
+        # self.assertEqual('a >>= b', parse('a *= b').body[0].f.put('>>=', field='op', raw=False).src)
         self.assertRaises(ParseError, parse('a *= b').body[0].f.put, 'and', field='op', raw=False)
-        self.assertRaises(ParseError, parse('a *= b').body[0].f.put, '*', field='op', raw=False)
+        self.assertEqual('a += b', parse('a *= b').body[0].f.put('+', field='op', raw=False).src)
         self.assertRaises(ParseError, parse('a *= b').body[0].f.put, '~', field='op', raw=False)
         self.assertRaises(ParseError, parse('a *= b').body[0].f.put, '<', field='op', raw=False)
 
@@ -2237,9 +2237,9 @@ c, # c
         self.assertRaises(ParseError, parse('a is not b').body[0].value.f.put, '~', 0, field='ops', raw=False)
         self.assertEqual('a > b', parse('a is not b').body[0].value.f.put('>', 0, field='ops', raw=False).src)
 
-        self.assertEqual('a >>= b', parse('a *= b').body[0].f.put(['>>='], field='op', raw=False).src)
+        # self.assertEqual('a >>= b', parse('a *= b').body[0].f.put(['>>='], field='op', raw=False).src)
         self.assertRaises(ParseError, parse('a *= b').body[0].f.put, ['and'], field='op', raw=False)
-        self.assertRaises(ParseError, parse('a *= b').body[0].f.put, ['*'], field='op', raw=False)
+        self.assertEqual('a += b', parse('a *= b').body[0].f.put(['+'], field='op', raw=False).src)
         self.assertRaises(ParseError, parse('a *= b').body[0].f.put, ['~'], field='op', raw=False)
         self.assertRaises(ParseError, parse('a *= b').body[0].f.put, ['<'], field='op', raw=False)
 
@@ -2297,23 +2297,23 @@ c, # c
         self.assertRaises(NodeError, parse('a < b').body[0].value.f.put, UAdd(), 0, field='ops', raw=False)
         self.assertEqual('a > b', parse('a < b').body[0].value.f.put(Gt(), 0, field='ops', raw=False).src)
 
-        self.assertEqual('a >>= b', parse('a *= b').body[0].f.put(FST(RShift(), ['>>=']), field='op', raw=False).src)
+        # self.assertEqual('a >>= b', parse('a *= b').body[0].f.put(FST(RShift(), ['>>=']), field='op', raw=False).src)
         self.assertRaises(NodeError, parse('a *= b').body[0].f.put, FST(And(), ['and']), field='op', raw=False)
-        self.assertRaises(NodeError, parse('a *= b').body[0].f.put, FST(Add(), ['+']), field='op', raw=False)
+        self.assertEqual('a >>= b', parse('a *= b').body[0].f.put(FST(RShift(), ['>>']), field='op', raw=False).src)
         self.assertRaises(NodeError, parse('a *= b').body[0].f.put, FST(Invert(), ['~']), field='op', raw=False)
-        self.assertRaises(NodeError, parse('a *= b').body[0].f.put, FST(Lt(), ['~']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a *= b').body[0].f.put, FST(Lt(), ['<']), field='op', raw=False)
 
         self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, FST(Mult(), ['*']), field='op', raw=False)
         self.assertEqual('a and b', parse('a or b').body[0].value.f.put(FST(And(), ['and']), field='op', raw=False).src)
         self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, FST(Div(), ['/']), field='op', raw=False)
         self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, FST(Invert(), ['~']), field='op', raw=False)
-        self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, FST(Lt(), ['~']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a or b').body[0].value.f.put, FST(Lt(), ['<']), field='op', raw=False)
 
         self.assertEqual('a * b', parse('a + b').body[0].value.f.put(FST(Mult(), ['*']), field='op', raw=False).src)
         self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, FST(And(), ['and']), field='op', raw=False)
-        self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, FST(RShift(), ['>>=']), field='op', raw=False)
+        self.assertEqual('a >> b', parse('a + b').body[0].value.f.put(FST(RShift(), ['>>']), field='op', raw=False).src)
         self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, FST(Invert(), ['~']), field='op', raw=False)
-        self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, FST(Lt(), ['~']), field='op', raw=False)
+        self.assertRaises(NodeError, parse('a + b').body[0].value.f.put, FST(Lt(), ['<']), field='op', raw=False)
 
         self.assertRaises(NodeError, parse('-a').body[0].value.f.put, FST(Mult(), ['*']), field='op', raw=False)
         self.assertRaises(NodeError, parse('-a').body[0].value.f.put, FST(And(), ['and']), field='op', raw=False)

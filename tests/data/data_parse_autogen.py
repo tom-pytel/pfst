@@ -1,4 +1,4 @@
-# (case idx, 'parse_function', NOT_USED, NOT_USED, 'expected_class', NOT_USED, (parse_mode, code),
+# ('parse_function', NOT_USED, NOT_USED, 'expected_class', NOT_USED, (parse_mode, code),
 #
 # code,
 # dump code)
@@ -352,10 +352,6 @@ _withitems - ROOT 0,0..0,19
 ('parse_operator', 0, 0, 'Mult', {}, ('all',
 r'''*'''),
 r'''Mult - ROOT 0,0..0,1'''),
-
-('parse_augop', 0, 0, 'Mult', {}, ('all',
-r'''*='''),
-r'''Mult - ROOT 0,0..0,2'''),
 
 ('parse_cmpop', 0, 0, 'Gt', {}, ('all',
 r'''>'''),
@@ -1193,37 +1189,21 @@ r'''**SyntaxError('invalid expression')**'''),
 r'''and'''),
 r'''And - ROOT 0,0..0,3'''),
 
-('parse_boolop', 0, 0, 'ParseError', {}, ('boolop',
+('parse_boolop', 0, 0, 'SyntaxError', {}, ('boolop',
 r'''*'''),
-r'''**ParseError("expecting boolop, got '*'")**'''),
+r'''**SyntaxError("expecting boolop, got '*'")**'''),
 
 ('parse_operator', 0, 0, 'Mult', {}, ('operator',
 r'''*'''),
 r'''Mult - ROOT 0,0..0,1'''),
 
-('parse_operator', 0, 0, 'Mult', {}, ('operator',
+('parse_operator', 0, 0, 'SyntaxError', {}, ('operator',
 r'''*='''),
-r'''Mult - ROOT 0,0..0,2'''),
+r'''**SyntaxError("expecting operator, got '*='")**'''),
 
-('parse_operator', 0, 0, 'ParseError', {}, ('operator',
+('parse_operator', 0, 0, 'SyntaxError', {}, ('operator',
 r'''and'''),
-r'''**ParseError("expecting operator, got 'and'")**'''),
-
-('parse_binop', 0, 0, 'Mult', {}, ('binop',
-r'''*'''),
-r'''Mult - ROOT 0,0..0,1'''),
-
-('parse_binop', 0, 0, 'SyntaxError', {}, ('binop',
-r'''*='''),
-r'''**SyntaxError('invalid syntax')**'''),
-
-('parse_augop', 0, 0, 'ParseError', {}, ('augop',
-r'''*'''),
-r'''**ParseError("expecting augmented operator, got '*'")**'''),
-
-('parse_augop', 0, 0, 'Mult', {}, ('augop',
-r'''*='''),
-r'''Mult - ROOT 0,0..0,2'''),
+r'''**SyntaxError("expecting operator, got 'and'")**'''),
 
 ('parse_unaryop', 0, 0, 'UAdd', {}, ('unaryop',
 r'''+'''),
@@ -1231,7 +1211,7 @@ r'''UAdd - ROOT 0,0..0,1'''),
 
 ('parse_unaryop', 0, 0, 'SyntaxError', {}, ('unaryop',
 r'''and'''),
-r'''**SyntaxError('invalid syntax')**'''),
+r'''**SyntaxError("expecting unaryop, got 'and'")**'''),
 
 ('parse_cmpop', 0, 0, 'GtE', {}, ('cmpop',
 r'''>='''),
@@ -1243,13 +1223,13 @@ not
 '''),
 r'''IsNot - ROOT 0,0..1,3'''),
 
-('parse_cmpop', 0, 0, 'ParseError', {}, ('cmpop',
+('parse_cmpop', 0, 0, 'SyntaxError', {}, ('cmpop',
 r'''>= a >='''),
-r'''**ParseError('expecting single cmpop')**'''),
+r'''**SyntaxError("unexpected code after cmpop, 'a'")**'''),
 
-('parse_cmpop', 0, 0, 'ParseError', {}, ('cmpop',
+('parse_cmpop', 0, 0, 'SyntaxError', {}, ('cmpop',
 r'''and'''),
-r'''**ParseError("expecting cmpop, got 'and'")**'''),
+r'''**SyntaxError("expecting cmpop, got 'and'")**'''),
 
 ('parse_comprehension', 0, 0, 'comprehension', {}, ('comprehension',
 r'''for u in v'''), r'''
@@ -3271,21 +3251,21 @@ Slice - ROOT 0,0..0,3
 r'''and'''),
 r'''And - ROOT 0,0..0,3'''),
 
-('parse_boolop', 0, 0, 'ParseError', {}, (boolop,
+('parse_boolop', 0, 0, 'SyntaxError', {}, (boolop,
 r'''*'''),
-r'''**ParseError("expecting boolop, got '*'")**'''),
+r'''**SyntaxError("expecting boolop, got '*'")**'''),
 
 ('parse_operator', 0, 0, 'Mult', {}, (operator,
 r'''*'''),
 r'''Mult - ROOT 0,0..0,1'''),
 
-('parse_operator', 0, 0, 'Mult', {}, (operator,
+('parse_operator', 0, 0, 'SyntaxError', {}, (operator,
 r'''*='''),
-r'''Mult - ROOT 0,0..0,2'''),
+r'''**SyntaxError("expecting operator, got '*='")**'''),
 
-('parse_operator', 0, 0, 'ParseError', {}, (operator,
+('parse_operator', 0, 0, 'SyntaxError', {}, (operator,
 r'''and'''),
-r'''**ParseError("expecting operator, got 'and'")**'''),
+r'''**SyntaxError("expecting operator, got 'and'")**'''),
 
 ('parse_unaryop', 0, 0, 'UAdd', {}, (unaryop,
 r'''+'''),
@@ -3293,7 +3273,7 @@ r'''UAdd - ROOT 0,0..0,1'''),
 
 ('parse_unaryop', 0, 0, 'SyntaxError', {}, (unaryop,
 r'''and'''),
-r'''**SyntaxError('invalid syntax')**'''),
+r'''**SyntaxError("expecting unaryop, got 'and'")**'''),
 
 ('parse_cmpop', 0, 0, 'GtE', {}, (cmpop,
 r'''>='''),
@@ -3305,13 +3285,13 @@ not
 '''),
 r'''IsNot - ROOT 0,0..1,3'''),
 
-('parse_cmpop', 0, 0, 'ParseError', {}, (cmpop,
+('parse_cmpop', 0, 0, 'SyntaxError', {}, (cmpop,
 r'''>= a >='''),
-r'''**ParseError('expecting single cmpop')**'''),
+r'''**SyntaxError("unexpected code after cmpop, 'a'")**'''),
 
-('parse_cmpop', 0, 0, 'ParseError', {}, (cmpop,
+('parse_cmpop', 0, 0, 'SyntaxError', {}, (cmpop,
 r'''and'''),
-r'''**ParseError("expecting cmpop, got 'and'")**'''),
+r'''**SyntaxError("expecting cmpop, got 'and'")**'''),
 
 ('parse_comprehension', 0, 0, 'comprehension', {}, (comprehension,
 r'''for u in v'''), r'''
@@ -3750,13 +3730,9 @@ r'''Yield - ROOT 0,1..0,6'''),
 r''' and  # tail'''),
 r'''And - ROOT 0,1..0,4'''),
 
-('parse_binop', 0, 0, 'RShift', {}, ('binop',
+('parse_operator', 0, 0, 'RShift', {}, ('operator',
 r''' >>  # tail'''),
 r'''RShift - ROOT 0,1..0,3'''),
-
-('parse_augop', 0, 0, 'SyntaxError', {}, ('augop',
-r''' >>=  # tail'''),
-r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_unaryop', 0, 0, 'Invert', {}, ('unaryop',
 r''' ~  # tail'''),

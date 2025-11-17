@@ -1,4 +1,4 @@
-# (case idx, attr, start, stop, field, options, code | (parse_mode, code),
+# (attr, start, stop, field, options, code | (parse_mode, code),
 #
 # code after cut,
 # dump code after cut)
