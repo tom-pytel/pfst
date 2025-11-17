@@ -41,7 +41,10 @@ from fst.code import (
     code_as__ExceptHandlers,
     code_as__match_cases,
     code_as_expr,
+    code_as_expr_all,
+    code_as_expr_arglike,
     code_as_expr_slice,
+    code_as_expr_sliceelt,
     code_as_Tuple,
     code_as_boolop,
     code_as_operator,
@@ -1714,14 +1717,33 @@ match a:
 
         # lambda arguments from FST
 
-        args = FST('a=1, /, b=2, *c, d=3, **e', 'arguments')
-        self.assertIs(args, code_as_arguments_lambda(args))
+        self.assertIs(f := FST('a=1, /, b=2, *c, d=3, **e', 'arguments'), code_as_arguments_lambda(f))
 
         self.assertRaises(NodeError, code_as_arguments_lambda, FST('a: int = 1, /, b=2, *c, d=3, **e', 'arguments'))
         self.assertRaises(NodeError, code_as_arguments_lambda, FST('a=1, /, b: int = 2, *c, d=3, **e', 'arguments'))
         self.assertRaises(NodeError, code_as_arguments_lambda, FST('a=1, /, b=2, *c: tuple, d=3, **e', 'arguments'))
         self.assertRaises(NodeError, code_as_arguments_lambda, FST('a=1, /, b=2, *c, d: int = 3, **e', 'arguments'))
         self.assertRaises(NodeError, code_as_arguments_lambda, FST('a=1, /, b=2, *c, d=3, **e: dict', 'arguments'))
+
+        # expr from FST
+
+        self.assertRaises(NodeError, code_as_expr, FST('a:b:c', 'Slice'))
+        self.assertRaises(NodeError, code_as_expr, FST('a:b:c, d:e', 'expr_slice'))
+
+        self.assertIs(f := FST('a:b:c', 'Slice'), code_as_expr_all(f))
+        self.assertIs(f := FST('a:b:c, d:e', 'expr_slice'), code_as_expr_all(f))
+
+        self.assertRaises(NodeError, code_as_expr_arglike, FST('a:b:c', 'Slice'))
+        self.assertRaises(NodeError, code_as_expr_arglike, FST('a:b:c, d:e', 'expr_slice'))
+
+        self.assertIs(f := FST('a:b:c', 'Slice'), code_as_expr_slice(f))
+        self.assertIs(f := FST('a:b:c, d:e', 'expr_slice'), code_as_expr_slice(f))
+
+        self.assertIs(f := FST('a:b:c', 'Slice'), code_as_expr_sliceelt(f))
+        self.assertRaises(NodeError, code_as_expr_sliceelt, FST('a:b:c, d:e', 'expr_slice'))
+
+        self.assertRaises(NodeError, code_as_Tuple, FST('a:b:c', 'Slice'))
+        self.assertIs(f := FST('a:b:c, d:e', 'expr_slice'), code_as_Tuple(f))
 
     def test_sanitize_stmtish(self):
         f = FST('# pre\ni = j  # line\n# post', 'stmt')
