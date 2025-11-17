@@ -27942,6 +27942,102 @@ List - ROOT 0,0..6,1
    2] Constant 2 - 5,0..5,1
   .ctx Load
 '''),
+
+('', 0, 1, None, {}, (None, r'''
+match _:
+    case _:
+        pass
+'''), (None, r'''
+case _:
+    if False:
+        return 0  # comment
+'''), r'''
+match _:
+    case _:
+        if False:
+            return 0  # comment
+''', r'''
+match _:
+    case _:
+        if False:
+            return 0
+''', r'''
+Match - ROOT 0,0..3,20
+  .subject Name '_' Load - 0,6..0,7
+  .cases[1]
+   0] match_case - 1,4..3,20
+     .pattern MatchAs - 1,9..1,10
+     .body[1]
+      0] If - 2,8..3,20
+        .test Constant False - 2,11..2,16
+        .body[1]
+         0] Return - 3,12..3,20
+           .value Constant 0 - 3,19..3,20
+'''),
+
+('', 0, 1, None, {}, (None, r'''
+match _:
+    case _:
+        pass;
+'''), (None, r'''
+case _:
+    if False:
+        return 0  # comment
+'''), r'''
+match _:
+    case _:
+        if False:
+            return 0  # comment
+''', r'''
+match _:
+    case _:
+        if False:
+            return 0
+''', r'''
+Match - ROOT 0,0..3,20
+  .subject Name '_' Load - 0,6..0,7
+  .cases[1]
+   0] match_case - 1,4..3,20
+     .pattern MatchAs - 1,9..1,10
+     .body[1]
+      0] If - 2,8..3,20
+        .test Constant False - 2,11..2,16
+        .body[1]
+         0] Return - 3,12..3,20
+           .value Constant 0 - 3,19..3,20
+'''),
+
+('', 0, 1, None, {}, (None, r'''
+match _:
+    case _:
+        pass
+'''), (None, r'''
+case _:
+    if False:
+        return 0 ;
+'''), r'''
+match _:
+    case _:
+        if False:
+            return 0 ;
+''', r'''
+match _:
+    case _:
+        if False:
+            return 0
+''', r'''
+Match - ROOT 0,0..3,22
+  .subject Name '_' Load - 0,6..0,7
+  .cases[1]
+   0] match_case - 1,4..3,22
+     .pattern MatchAs - 1,9..1,10
+     .body[1]
+      0] If - 2,8..3,22
+        .test Constant False - 2,11..2,16
+        .body[1]
+         0] Return - 3,12..3,20
+           .value Constant 0 - 3,19..3,20
+'''),
 ],
 
 }

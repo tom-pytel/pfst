@@ -213,7 +213,7 @@ def loc_match_case(self: fst.FST) -> fstloc:
     ast = self.a
     lines = self.root._lines
     ln, col, _, _ = ast.pattern.f.loc
-    _, _, end_ln, end_col = self.last_child().bloc
+    _, _, end_ln, end_col = self.last_child().loc  # .loc instead of .bloc because we don't want any trailing comment from last child for the actual match_case.loc
 
     ln, col = prev_find(lines, 0, 0, ln, col, 'case')  # we can use '0, 0' because we know "case" starts on a newline (internals of prev_find() go line by line)
 
