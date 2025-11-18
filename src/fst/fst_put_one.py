@@ -1162,7 +1162,7 @@ def _put_one_Lambda_arguments(
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 1, target, prefix)
 
 
-def _put_one_Compare(
+def _put_one_Compare__all(
     self: fst.FST,
     code: _PutOneCode,
     idx: int | None,
@@ -2431,7 +2431,7 @@ _PUT_ONE_HANDLERS = {
     (IfExp, 'orelse'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (Dict, 'keys'):                       (False, _put_one_Dict_keys, onestatic(_one_info_Dict_key, _restrict_default)),  # expr*
     (Dict, 'values'):                     (False, _put_one_exprish_required, _onestatic_expr_required),  # expr*
-    (Dict, '_keys_values'):               (True,  None, None),  # expr*
+    (Dict, '_all'):                       (True,  None, None),  # expr*
     (Set, 'elts'):                        (True,  _put_one_exprish_required, _onestatic_expr_required_starred),  # expr*
     (ListComp, 'elt'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (ListComp, 'generators'):             (True,  _put_one_exprish_required, _onestatic_comprehension_required),  # comprehension*
@@ -2448,7 +2448,7 @@ _PUT_ONE_HANDLERS = {
     (Compare, 'left'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (Compare, 'ops'):                     (False, _put_one_op, onestatic(None, code_as=code_as_cmpop)),  # cmpop*
     (Compare, 'comparators'):             (False, _put_one_exprish_required, _onestatic_expr_required),  # expr*
-    (Compare, '_left_ops_comparators'):   (True,  _put_one_Compare, _onestatic_expr_required),  # expr*
+    (Compare, '_all'):                    (True,  _put_one_Compare__all, _onestatic_expr_required),  # expr*
     (Call, 'func'):                       (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (Call, 'args'):                       (True,  _put_one_Call_args, onestatic(_one_info_exprish_required, _restrict_fmtval_slice, code_as=code_as_expr_arglike)),  # expr*
     (Call, 'keywords'):                   (True,  _put_one_Call_keywords, _onestatic_keyword_required),  # keyword*
@@ -2512,7 +2512,7 @@ _PUT_ONE_HANDLERS = {
     (MatchMapping, 'keys'):               (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _is_valid_MatchMapping_key)),  # expr*  Ops for `-1` or `2+3j`
     (MatchMapping, 'patterns'):           (False, _put_one_pattern, _onestatic_pattern_required),  # pattern*
     (MatchMapping, 'rest'):               (False, _put_one_identifier_optional, onestatic(_one_info_MatchMapping_rest, _restrict_default, code_as=code_as_identifier)),  # identifier?
-    (MatchMapping, '_keys_patterns'):     (True,  None, None),  # expr*
+    (MatchMapping, '_all'):               (True,  None, None),  # expr*
     (MatchClass, 'cls'):                  (False, _put_one_exprish_required, onestatic(_one_info_exprish_required, _is_valid_MatchClass_cls)),  # expr
     (MatchClass, 'patterns'):             (True,  _put_one_pattern, _onestatic_pattern_required),  # pattern*
     (MatchClass, 'kwd_attrs'):            (False, _put_one_identifier_required, onestatic(_one_info_MatchClass_kwd_attrs, _restrict_default, code_as=code_as_identifier)),  # identifier*

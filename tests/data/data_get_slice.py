@@ -18242,6 +18242,121 @@ _comprehension_ifs - ROOT 0,0..0,14
 '''),
 ],
 
+'MatchMapping': [  # ................................................................................
+
+('', 0, 0, None, {}, ('pattern',
+r'''{0: x, **rest}'''),
+r'''{0: x, **rest}''', r'''
+MatchMapping - ROOT 0,0..0,14
+  .keys[1]
+   0] Constant 0 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+  .rest 'rest'
+''',
+r'''{}''',
+r'''MatchMapping - ROOT 0,0..0,2'''),
+
+('', 0, 1, None, {}, ('pattern',
+r'''{0: x, **rest}'''),
+r'''{**rest}''', r'''
+MatchMapping - ROOT 0,0..0,8
+  .rest 'rest'
+''',
+r'''{0: x}''', r'''
+MatchMapping - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 0 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+'''),
+
+('', 0, 2, None, {}, ('pattern',
+r'''{0: x, **rest}'''),
+r'''{}''',
+r'''MatchMapping - ROOT 0,0..0,2''',
+r'''{0: x, **rest}''', r'''
+MatchMapping - ROOT 0,0..0,14
+  .keys[1]
+   0] Constant 0 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+  .rest 'rest'
+'''),
+
+('', 1, 2, None, {}, ('pattern',
+r'''{0: x, **rest}'''),
+r'''{0: x}''', r'''
+MatchMapping - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 0 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+''',
+r'''{**rest}''', r'''
+MatchMapping - ROOT 0,0..0,8
+  .rest 'rest'
+'''),
+
+('', 2, 2, None, {}, ('pattern',
+r'''{0: x, **rest}'''),
+r'''{0: x, **rest}''', r'''
+MatchMapping - ROOT 0,0..0,14
+  .keys[1]
+   0] Constant 0 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+  .rest 'rest'
+''',
+r'''{}''',
+r'''MatchMapping - ROOT 0,0..0,2'''),
+
+('', 1, 2, None, {}, ('pattern',
+r'''{0: x, 1: y, **rest}'''),
+r'''{0: x, **rest}''', r'''
+MatchMapping - ROOT 0,0..0,14
+  .keys[1]
+   0] Constant 0 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+  .rest 'rest'
+''',
+r'''{1: y}''', r'''
+MatchMapping - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 1 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'y'
+'''),
+
+('', 1, 3, None, {}, ('pattern',
+r'''{0: x, 1: y, **rest}'''),
+r'''{0: x}''', r'''
+MatchMapping - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 0 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+''',
+r'''{1: y, **rest}''', r'''
+MatchMapping - ROOT 0,0..0,14
+  .keys[1]
+   0] Constant 1 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'y'
+  .rest 'rest'
+'''),
+],
+
 'type_params': [  # ................................................................................
 
 ('body[0]', 1, 2, 'type_params', {'_ver': 12}, ('exec',

@@ -2087,8 +2087,9 @@ class SliceExprish(Fuzzy):
         if not field:  # Dict or MatchMapping
             src_elts.extend(getattr(src.a, 'values' if isinstance(src.a, Dict) else 'patterns')[src_start : src_stop])
 
-        src_start_ = src_start if src_start >= src_len or randint(0, 1) else src_start - src_len  # randomly change index to negative (referring to same location)
-        src_stop_ = src_stop if src_stop >= src_len or randint(0, 1) else src_stop - src_len
+        src_rest = bool(getattr(src.a, 'rest', False))  # because MatchSequence includes rest in virtual field but we don't deal with it
+        src_start_ = src_start if src_start >= src_len or randint(0, 1) else src_start - src_len - src_rest  # randomly change index to negative (referring to same location)
+        src_stop_ = src_stop if src_stop >= src_len or randint(0, 1) else src_stop - src_len - src_rest
 
         slice = src.get_slice(src_start_, src_stop_, field=field, cut=cut, trivia=src_trivia)
 
@@ -2103,8 +2104,9 @@ class SliceExprish(Fuzzy):
         if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
             print('   SLICE:   ', slice, slice.src)
 
-        dst_start_ = dst_start if dst_start >= dst_len or randint(0, 1) else dst_start - dst_len  # randomly change index to negative (referring to same location)
-        dst_stop_ = dst_stop if dst_stop >= dst_len or randint(0, 1) else dst_stop - dst_len
+        dst_rest = bool(getattr(dst.a, 'rest', False))  # because MatchSequence includes rest in virtual field but we don't deal with it
+        dst_start_ = dst_start if dst_start >= dst_len or randint(0, 1) else dst_start - dst_len - dst_rest  # randomly change index to negative (referring to same location)
+        dst_stop_ = dst_stop if dst_stop >= dst_len or randint(0, 1) else dst_stop - dst_len - dst_rest
 
         dst.put_slice(slice, dst_start_, dst_stop_, field=field, one=one, trivia=dst_trivia)
 

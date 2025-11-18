@@ -622,6 +622,29 @@ def _loc_Subscript_brackets(self: fst.FST) -> fstloc:
     return fstloc(ln, col, end_ln, end_col)
 
 
+def _loc_MatchMapping_rest(self: fst.FST) -> fstloc | None:
+    """Location of `rest` identifier if present, otherwise `None`."""
+
+    # assert isinstance(self.a, MatchMapping)
+
+    ast = self.a
+
+    if (rest := ast.rest) is None:
+        return None
+
+    ln, col, end_ln, end_col = self.loc
+    end_col -= 1
+
+    if patterns := ast.patterns:
+        _, _, ln, col = patterns[-1].f.loc
+    else:
+        col += 1
+
+    ln, col = next_find(self.root._lines, ln, col, end_ln, end_col, rest)
+
+    return fstloc(ln, col, ln, col + len(rest))
+
+
 def _loc_MatchClass_pars(self: fst.FST) -> fstloc:
     # assert isinstance(self.a, MatchClass)
 

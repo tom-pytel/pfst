@@ -39,6 +39,7 @@ from .asttypes import (
     ListComp,
     Load,
     Match,
+    MatchAs,
     MatchClass,
     MatchMapping,
     MatchOr,
@@ -179,6 +180,42 @@ def _bounds_generators(self: fst.FST, start: int = 0) -> tuple[int, int, int, in
         _, _, bound_ln, bound_col = ast.elt.f.pars()
 
     return bound_ln, bound_col, bound_end_ln, bound_end_col
+
+
+def _add_MatchMapping_rest_as_real_node(self: fst.FST) -> fst.FST:
+    """Add `MatchMapping.rest` temporarily as a None to `self.keys` and a `MatchAs` to `self.patterns`. No source is
+    modified since the `rest` is already there so its location is just used for the new `MatchAs` node."""
+
+    rest_ln, rest_col, rest_end_ln, rest_end_col = self._loc_MatchMapping_rest()
+
+    assert rest_end_ln == rest_ln
+
+    ast = self.a
+    patterns = ast.patterns
+    rest_line = self.root._lines[rest_ln]
+    rest_ln += 1
+
+    rest_ast = MatchAs(pattern=None, name=ast.rest, lineno=rest_ln, col_offset=rest_line.c2b(rest_col),
+                       end_lineno=rest_ln, end_col_offset=rest_line.c2b(rest_end_col))
+    rest_fst = fst.FST(rest_ast, self, astfield('patterns', len(patterns)), from_=self)
+
+    ast.keys.append(None)  # this is normally illegal but we allow for it temporarily
+    patterns.append(rest_ast)
+
+    return rest_fst
+
+
+def _remove_MatchMapping_rest_real_node(self: fst.FST) -> None:
+    """Remove last pattern and key in `MatchMapping` which is assumed to be a previously temporarily created `rest`
+    node."""
+
+    ast = self.a
+    patterns = ast.patterns
+
+    patterns[-1].f._unmake_fst_tree()
+
+    del patterns[-1]
+    del ast.keys[-1]
 
 
 def _update_loc_up_parents(self: fst.FST, lineno: int, col_offset: int, end_lineno: int, end_col_offset: int) -> None:
@@ -487,7 +524,7 @@ def _get_slice_NOT_IMPLEMENTED_YET(
     raise NotImplementedError('this is not implemented yet')
 
 
-def _get_slice_Dict(
+def _get_slice_Dict__all(
     self: fst.FST,
     start: int | Literal['end'] | None,
     stop: int | None,
@@ -1250,7 +1287,7 @@ def _get_slice_MatchSequence_patterns(
     return fst_
 
 
-def _get_slice_MatchMapping(
+def _get_slice_MatchMapping__all(
     self: fst.FST,
     start: int | Literal['end'] | None,
     stop: int | None,
@@ -1262,27 +1299,50 @@ def _get_slice_MatchMapping(
 
     ast = self.a
     body = ast.keys
-    len_body = len(body)
     body2 = ast.patterns
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    rest = ast.rest
+    len_body = len(body)
+    len_body_w_rest = len_body + bool(rest)
+    start, stop = fixup_slice_indices(len_body_w_rest, start, stop)
 
     if start == stop:
         return fst.FST(MatchMapping(keys=[], patterns=[], rest=None, lineno=1, col_offset=0, end_lineno=1,
                                     end_col_offset=2),
                        ['{}'], from_=self)
 
-    locs = _locs_and_bound_get(self, start, stop, body, body2, 1)
-    rest = ast.rest
-    self_tail_sep = True if rest else 0
+    if not rest or stop < len_body_w_rest:
+        # this is a slightly optimized path which doesn't include .rest so doesn't have to create a temporary element for it, unnecessary, remove if gets annoying
 
-    asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'patterns', cut, body, body2)
-    ret_ast = MatchMapping(keys=asts, patterns=asts2, rest=None)
+        locs = _locs_and_bound_get(self, start, stop, body, body2, 1)
+        self_tail_sep = True if rest else 0
 
-    fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts2[-1], *locs,
-                         options, 'patterns', '{', '}', ',', self_tail_sep, False)
+        asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'patterns', cut, body, body2)
+        ret_ast = MatchMapping(keys=asts, patterns=asts2, rest=None)
 
-    if cut and start and rest and stop == len_body:  # if there is a rest element and we removed tail element we make sure there is a space between comma of the new last element and the rest
-        self._maybe_ins_separator(*(f := body2[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+        fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts2[-1], *locs,
+                             options, 'patterns', '{', '}', ',', self_tail_sep, False)
+
+        if cut and start and rest and stop == len_body:  # if there is a rest element and we removed tail element we make sure there is a space between comma of the new last element and the rest
+            self._maybe_ins_separator(*(f := body2[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+
+    else:
+        # here .rest exists and is included so we add it temporarily to end as `key=None` and `pattern=MatchAs(name=rest)` for the operation
+
+        _add_MatchMapping_rest_as_real_node(self)
+
+        locs = _locs_and_bound_get(self, start, stop, body, body2, 1)
+        asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'patterns', cut, body, body2)
+        ret_ast = MatchMapping(keys=asts, patterns=asts2, rest=rest)
+
+        fst_ = get_slice_sep(self, start, stop, len_body_w_rest, cut, ret_ast, asts2[-1], *locs,
+                            options, 'patterns', '{', '}', ',', 0, 0)
+
+        _remove_MatchMapping_rest_real_node(fst_)  # we know this contains the temporary .rest node
+
+        if cut:  # temporary .rest node was cut
+            ast.rest = None
+        else:  # otherwise remove the temporary node
+            _remove_MatchMapping_rest_real_node(self)
 
     return fst_
 
@@ -1451,9 +1511,9 @@ _GET_SLICE_HANDLERS = {
 
     (Match, 'cases'):                         get_slice_stmtish,  # match_case*
     (Try, 'handlers'):                        get_slice_stmtish,  # excepthandler*
-    (TryStar, 'handlers'):                    get_slice_stmtish,  # excepthandlerstar*
+    (TryStar, 'handlers'):                    get_slice_stmtish,  # excepthandler* ('except*')
 
-    (Dict, '_keys_values'):                   _get_slice_Dict,  # key:value*
+    (Dict, '_all'):                           _get_slice_Dict__all,  # key:value*
 
     (Set, 'elts'):                            _get_slice_Set_elts,  # expr*
     (List, 'elts'):                           _get_slice_List_elts,  # expr*
@@ -1466,7 +1526,7 @@ _GET_SLICE_HANDLERS = {
     (Delete, 'targets'):                      _get_slice_Delete_targets,  # expr*
     (Assign, 'targets'):                      _get_slice_Assign_targets,  # expr*
     (BoolOp, 'values'):                       _get_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (Compare, '_left_ops_comparators'):       _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Compare, '_all'):                        _get_slice_NOT_IMPLEMENTED_YET,  # expr*
     (Call, 'args'):                           _get_slice_Call_args,  # expr*
     (comprehension, 'ifs'):                   _get_slice_comprehension_ifs,  # expr*
 
@@ -1485,7 +1545,7 @@ _GET_SLICE_HANDLERS = {
     (AsyncWith, 'items'):                     _get_slice_With_AsyncWith_items,  # withitem*
 
     (MatchSequence, 'patterns'):              _get_slice_MatchSequence_patterns,  # pattern*
-    (MatchMapping, '_keys_patterns'):         _get_slice_MatchMapping,  # key:pattern*
+    (MatchMapping, '_all'):                   _get_slice_MatchMapping__all,  # key:pattern*
     (MatchClass, 'patterns'):                 _get_slice_NOT_IMPLEMENTED_YET,  # pattern*
     (MatchOr, 'patterns'):                    _get_slice_MatchOr_patterns,  # pattern*
 

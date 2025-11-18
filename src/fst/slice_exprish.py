@@ -62,7 +62,7 @@ def _locs_first_and_last(
             loc_last = loc_first if start == stop_1 else body[stop_1].f.pars()
 
     else:
-        ln, col, _, _ = self._loc_maybe_key(start, True, body)
+        ln, col, _, _ = self._loc_maybe_key(start, True, body, body2)
         _, _, end_ln, end_col = body2[start].f.pars()
         loc_first = fstloc(ln, col, end_ln, end_col)
 
@@ -70,7 +70,7 @@ def _locs_first_and_last(
             loc_last = loc_first
 
         else:
-            ln, col, _, _ = self._loc_maybe_key(stop_1, True, body)
+            ln, col, _, _ = self._loc_maybe_key(stop_1, True, body, body2)
             _, _, end_ln, end_col = body2[stop_1].f.pars()
             loc_last = fstloc(ln, col, end_ln, end_col)
 
@@ -918,7 +918,7 @@ def put_slice_sep_end(self: fst.FST, params: tuple) -> None:
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# get and put without separator (comprehension and comprehension.ifs)
+# get and put without separator (comprehension, comprehension.ifs, decorator_list)
 
 def get_slice_nosep(
     self: fst.FST,

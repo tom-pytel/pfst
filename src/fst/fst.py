@@ -731,9 +731,8 @@ class FST:
         self.a = ast_or_src  # we don't assume `self.a` is `ast_or_src` if `.f` exists
         self.pfield = pfield
         self._cache = {}
-        self._serial = 0
 
-        if pfield is not None:
+        if pfield is not None:  # if this is not a root node then we are done
             self.parent = mode_or_lines_or_parent
             self.root = mode_or_lines_or_parent.root
 
@@ -746,6 +745,7 @@ class FST:
         self._lines = ([bistr(s) for s in mode_or_lines_or_parent]
                        if kwargs.get('lcopy', True) else
                        mode_or_lines_or_parent)
+        self._serial = 0
 
         if from_ := kwargs.get('from_'):  # copy params from source tree
             from_root = from_.root
@@ -1817,21 +1817,21 @@ class FST:
 
         ast = self.a
         idx, stop, field = _swizzle_getput_params(idx, stop, field, False)
-        field_, body = fixup_field_body(ast, field, False)
+        field, body = fixup_field_body(ast, field, False)
 
         if isinstance(body, list):
             if stop is not False:
-                return self._get_slice(idx, stop, field_, cut, options)
+                return self._get_slice(idx, stop, field, cut, options)
             if idx is None:
-                return self._get_slice(None, None, field_, cut, options)
+                return self._get_slice(None, None, field, cut, options)
 
             if idx == 'end':
                 raise IndexError("cannot get() non-slice from index 'end'")
 
         elif stop is not False or idx is not None:
-            raise IndexError(f'{ast.__class__.__name__}{f".{field_}" if field_ else ""} does not take an index')
+            raise IndexError(f'{ast.__class__.__name__}.{field} does not take an index')
 
-        return self._get_one(idx, field_, cut, options)
+        return self._get_one(idx, field, cut, options)
 
     def put(
         self,
@@ -1928,24 +1928,24 @@ class FST:
 
         ast = self.a
         idx, stop, field = _swizzle_getput_params(idx, stop, field, False)
-        field_, body = fixup_field_body(ast, field, False)
+        field, body = fixup_field_body(ast, field, False)
 
         if isinstance(body, list):
             if stop is not False:
-                return self._put_slice(code, idx, stop, field_, one, options)
+                return self._put_slice(code, idx, stop, field, one, options)
             if idx is None:
-                return self._put_slice(code, None, None, field_, one, options)
+                return self._put_slice(code, None, None, field, one, options)
 
             if idx == 'end':
                 raise IndexError("cannot put() non-slice to index 'end'")
 
         elif stop is not False or idx is not None:
-            raise IndexError(f'{ast.__class__.__name__}{f".{field_}" if field_ else ""} does not take an index')
+            raise IndexError(f'{ast.__class__.__name__}.{field} does not take an index')
 
         if not one:
             raise ValueError("cannot use 'one=False' in non-slice put()")
 
-        self._put_one(code, idx, field_, options)
+        self._put_one(code, idx, field, options)
 
         return self if self.a else self.repath()
 
@@ -2006,12 +2006,12 @@ class FST:
 
         ast = self.a
         start, stop, field = _swizzle_getput_params(start, stop, field, None)
-        field_, body = fixup_field_body(ast, field, True)
+        field, body = fixup_field_body(ast, field, True)
 
         if not isinstance(body, list):
-            raise ValueError(f'cannot get slice from non-list field {ast.__class__.__name__}.{field_}')
+            raise ValueError(f'cannot get slice from non-list field {ast.__class__.__name__}.{field}')
 
-        return self._get_slice(start, stop, field_, cut, options)
+        return self._get_slice(start, stop, field, cut, options)
 
     def put_slice(
         self,
@@ -2042,6 +2042,9 @@ class FST:
             type is used. Most node types have a common-sense default field, e.g. `body` for all block statements,
             `elts` for things like `List` and `Tuple`. `MatchMapping` and `Compare` nodes have special-case handling for
             a `None` field.
+        - `one`: `True` specifies that the source should be put as a single element to the range specified even if it
+            is a valid slice. `False` indicates a true slice operation replacing the range with the slice passed, which
+            must in this case be a compatible slice type.
         - `options`: See `options()`.
 
         **Note:** The `field` value can be passed positionally in either the `start` or `stop` parameter. If passed in
@@ -2094,12 +2097,12 @@ class FST:
 
         ast = self.a
         start, stop, field = _swizzle_getput_params(start, stop, field, None)
-        field_, body = fixup_field_body(ast, field, True)
+        field, body = fixup_field_body(ast, field, True)
 
         if not isinstance(body, list):
-            raise ValueError(f'cannot put slice to non-list field {ast.__class__.__name__}.{field_}')
+            raise ValueError(f'cannot put slice to non-list field {ast.__class__.__name__}.{field}')
 
-        return self._put_slice(code, start, stop, field_, one, options)
+        return self._put_slice(code, start, stop, field, one, options)
 
     def get_src(
         self, ln: int, col: int, end_ln: int, end_col: int, as_lines: bool = False
@@ -2827,8 +2830,13 @@ class FST:
                         case 5:  # from MatchMapping.patterns
                             next = 4
 
+                            # try:
+                            #     a = aparent.keys[(idx := idx + 1)]
+                            # except IndexError:
+                            #     return None
                             try:
-                                a = aparent.keys[(idx := idx + 1)]
+                                if not (a := aparent.keys[(idx := idx + 1)]):  # MatchMapping.keys cannot normally be None but we make use of this temporarily in some operations
+                                    continue
                             except IndexError:
                                 return None
 
@@ -3140,7 +3148,7 @@ class FST:
 
                                 break
 
-                        case 4:  # from Keys.keys
+                        case 4:  # from MatchMapping.keys
                             if not idx:
                                 return None
 
@@ -3148,9 +3156,12 @@ class FST:
                                 prev = 5
                                 a = aparent.patterns[(idx := idx - 1)]
 
-                        case 5:  # from Keys.patterns
+                        case 5:  # from MatchMapping.patterns
                             prev = 4
-                            a = aparent.keys[idx]
+
+                            # a = aparent.keys[idx]
+                            if not (a := aparent.keys[idx]):  # MatchMapping.keys cannot normally be None but we make use of this temporarily in some operations
+                                continue
 
                     if check_with_loc(f := a.f, with_loc):
                         return f
@@ -4520,6 +4531,7 @@ class FST:
         _loc_With_items_pars,
         _loc_Call_pars,
         _loc_Subscript_brackets,
+        _loc_MatchMapping_rest,
         _loc_MatchClass_pars,
         _loc_FunctionDef_type_params_brackets,
         _loc_ClassDef_type_params_brackets,

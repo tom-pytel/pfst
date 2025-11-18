@@ -26646,6 +26646,502 @@ r'''{**rest,}''', r'''
 MatchMapping - ROOT 0,0..0,9
   .rest 'rest'
 '''),
+
+('', 0, 0, None, {}, ('pattern',
+r'''{}'''), ('pattern',
+r'''{}'''),
+r'''{}''',
+r'''MatchMapping - ROOT 0,0..0,2'''),
+
+('', 0, 0, None, {}, ('pattern',
+r'''{}'''), ('pattern',
+r'''{2: x}'''),
+r'''{2: x}''', r'''
+MatchMapping - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 2 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+'''),
+
+('', 0, 0, None, {}, ('pattern',
+r'''{}'''), ('pattern',
+r'''{**y}'''),
+r'''{**y}''', r'''
+MatchMapping - ROOT 0,0..0,5
+  .rest 'y'
+'''),
+
+('', 0, 0, None, {}, ('pattern',
+r'''{}'''), ('pattern',
+r'''{2: x, **y}'''),
+r'''{2: x, **y}''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+   0] Constant 2 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+  .rest 'y'
+'''),
+
+('', 0, 0, None, {}, ('pattern',
+r'''{1: a}'''), ('pattern',
+r'''{}'''),
+r'''{1: a}''', r'''
+MatchMapping - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 1 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+'''),
+
+('', 0, 0, None, {}, ('pattern',
+r'''{1: a}'''), ('pattern',
+r'''{2: x}'''),
+r'''{2: x, 1: a}''', r'''
+MatchMapping - ROOT 0,0..0,12
+  .keys[2]
+   0] Constant 2 - 0,1..0,2
+   1] Constant 1 - 0,7..0,8
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+   1] MatchAs - 0,10..0,11
+     .name 'a'
+'''),
+
+('', 0, 0, None, {}, ('pattern',
+r'''{1: a}'''), ('pattern',
+r'''{**y}'''),
+r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+
+('', 0, 0, None, {}, ('pattern',
+r'''{1: a}'''), ('pattern',
+r'''{2: x, **y}'''),
+r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+
+('', 0, 1, None, {}, ('pattern',
+r'''{1: a}'''), ('pattern',
+r'''{}'''),
+r'''{}''',
+r'''MatchMapping - ROOT 0,0..0,2'''),
+
+('', 0, 1, None, {}, ('pattern',
+r'''{1: a}'''), ('pattern',
+r'''{2: x}'''),
+r'''{2: x}''', r'''
+MatchMapping - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 2 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+'''),
+
+('', 0, 1, None, {}, ('pattern',
+r'''{1: a}'''), ('pattern',
+r'''{**y}'''),
+r'''{**y}''', r'''
+MatchMapping - ROOT 0,0..0,5
+  .rest 'y'
+'''),
+
+('', 0, 1, None, {}, ('pattern',
+r'''{1: a}'''), ('pattern',
+r'''{2: x, **y}'''),
+r'''{2: x, **y}''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+   0] Constant 2 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+  .rest 'y'
+'''),
+
+('', 1, 1, None, {}, ('pattern',
+r'''{1: a}'''), ('pattern',
+r'''{}'''),
+r'''{1: a}''', r'''
+MatchMapping - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 1 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+'''),
+
+('', 1, 1, None, {}, ('pattern',
+r'''{1: a}'''), ('pattern',
+r'''{2: x}'''),
+r'''{1: a, 2: x}''', r'''
+MatchMapping - ROOT 0,0..0,12
+  .keys[2]
+   0] Constant 1 - 0,1..0,2
+   1] Constant 2 - 0,7..0,8
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,10..0,11
+     .name 'x'
+'''),
+
+('', 1, 1, None, {}, ('pattern',
+r'''{1: a}'''), ('pattern',
+r'''{**y}'''),
+r'''{1: a, **y}''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+   0] Constant 1 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+  .rest 'y'
+'''),
+
+('', 1, 1, None, {}, ('pattern',
+r'''{1: a}'''), ('pattern',
+r'''{2: x, **y}'''),
+r'''{1: a, 2: x, **y}''', r'''
+MatchMapping - ROOT 0,0..0,17
+  .keys[2]
+   0] Constant 1 - 0,1..0,2
+   1] Constant 2 - 0,7..0,8
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,10..0,11
+     .name 'x'
+  .rest 'y'
+'''),
+
+('', 0, 0, None, {}, ('pattern',
+r'''{**b}'''), ('pattern',
+r'''{}'''),
+r'''{**b}''', r'''
+MatchMapping - ROOT 0,0..0,5
+  .rest 'b'
+'''),
+
+('', 0, 0, None, {}, ('pattern',
+r'''{**b}'''), ('pattern',
+r'''{2: x}'''),
+r'''{2: x, **b}''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+   0] Constant 2 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+  .rest 'b'
+'''),
+
+('', 0, 0, None, {}, ('pattern',
+r'''{**b}'''), ('pattern',
+r'''{**y}'''),
+r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+
+('', 0, 0, None, {}, ('pattern',
+r'''{**b}'''), ('pattern',
+r'''{2: x, **y}'''),
+r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+
+('', 0, 1, None, {}, ('pattern',
+r'''{**b}'''), ('pattern',
+r'''{}'''),
+r'''{}''',
+r'''MatchMapping - ROOT 0,0..0,2'''),
+
+('', 0, 1, None, {}, ('pattern',
+r'''{**b}'''), ('pattern',
+r'''{2: x}'''),
+r'''{2: x}''', r'''
+MatchMapping - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 2 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+'''),
+
+('', 0, 1, None, {}, ('pattern',
+r'''{**b}'''), ('pattern',
+r'''{**y}'''),
+r'''{**y}''', r'''
+MatchMapping - ROOT 0,0..0,5
+  .rest 'y'
+'''),
+
+('', 0, 1, None, {}, ('pattern',
+r'''{**b}'''), ('pattern',
+r'''{2: x, **y}'''),
+r'''{2: x, **y}''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+   0] Constant 2 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+  .rest 'y'
+'''),
+
+('', 1, 1, None, {}, ('pattern',
+r'''{**b}'''), ('pattern',
+r'''{}'''),
+r'''{**b}''', r'''
+MatchMapping - ROOT 0,0..0,5
+  .rest 'b'
+'''),
+
+('', 1, 1, None, {}, ('pattern',
+r'''{**b}'''), ('pattern',
+r'''{2: x}'''),
+r'''**ValueError("cannot put slice to MatchMapping after '.rest' element")**'''),
+
+('', 1, 1, None, {}, ('pattern',
+r'''{**b}'''), ('pattern',
+r'''{**y}'''),
+r'''**ValueError("cannot put slice to MatchMapping after '.rest' element")**'''),
+
+('', 1, 1, None, {}, ('pattern',
+r'''{**b}'''), ('pattern',
+r'''{2: x, **y}'''),
+r'''**ValueError("cannot put slice to MatchMapping after '.rest' element")**'''),
+
+('', 0, 0, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{}'''),
+r'''{1: a, **b}''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+   0] Constant 1 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+  .rest 'b'
+'''),
+
+('', 0, 0, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{2: x}'''),
+r'''{2: x, 1: a, **b}''', r'''
+MatchMapping - ROOT 0,0..0,17
+  .keys[2]
+   0] Constant 2 - 0,1..0,2
+   1] Constant 1 - 0,7..0,8
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+   1] MatchAs - 0,10..0,11
+     .name 'a'
+  .rest 'b'
+'''),
+
+('', 0, 0, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{**y}'''),
+r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+
+('', 0, 0, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{2: x, **y}'''),
+r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+
+('', 0, 1, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{}'''),
+r'''{**b}''', r'''
+MatchMapping - ROOT 0,0..0,5
+  .rest 'b'
+'''),
+
+('', 0, 1, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{2: x}'''),
+r'''{2: x, **b}''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+   0] Constant 2 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+  .rest 'b'
+'''),
+
+('', 0, 1, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{**y}'''),
+r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+
+('', 0, 1, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{2: x, **y}'''),
+r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+
+('', 0, 2, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{}'''),
+r'''{}''',
+r'''MatchMapping - ROOT 0,0..0,2'''),
+
+('', 0, 2, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{2: x}'''),
+r'''{2: x}''', r'''
+MatchMapping - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 2 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+'''),
+
+('', 0, 2, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{**y}'''),
+r'''{**y}''', r'''
+MatchMapping - ROOT 0,0..0,5
+  .rest 'y'
+'''),
+
+('', 0, 2, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{2: x, **y}'''),
+r'''{2: x, **y}''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+   0] Constant 2 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+  .rest 'y'
+'''),
+
+('', 1, 1, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{}'''),
+r'''{1: a, **b}''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+   0] Constant 1 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+  .rest 'b'
+'''),
+
+('', 1, 1, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{2: x}'''),
+r'''{1: a, 2: x, **b}''', r'''
+MatchMapping - ROOT 0,0..0,17
+  .keys[2]
+   0] Constant 1 - 0,1..0,2
+   1] Constant 2 - 0,7..0,8
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,10..0,11
+     .name 'x'
+  .rest 'b'
+'''),
+
+('', 1, 1, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{**y}'''),
+r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+
+('', 1, 1, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{2: x, **y}'''),
+r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+
+('', 1, 2, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{}'''),
+r'''{1: a}''', r'''
+MatchMapping - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 1 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+'''),
+
+('', 1, 2, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{2: x}'''),
+r'''{1: a, 2: x}''', r'''
+MatchMapping - ROOT 0,0..0,12
+  .keys[2]
+   0] Constant 1 - 0,1..0,2
+   1] Constant 2 - 0,7..0,8
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,10..0,11
+     .name 'x'
+'''),
+
+('', 1, 2, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{**y}'''),
+r'''{1: a, **y}''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+   0] Constant 1 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+  .rest 'y'
+'''),
+
+('', 1, 2, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{2: x, **y}'''),
+r'''{1: a, 2: x, **y}''', r'''
+MatchMapping - ROOT 0,0..0,17
+  .keys[2]
+   0] Constant 1 - 0,1..0,2
+   1] Constant 2 - 0,7..0,8
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,10..0,11
+     .name 'x'
+  .rest 'y'
+'''),
+
+('', 2, 2, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{}'''),
+r'''{1: a, **b}''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+   0] Constant 1 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+  .rest 'b'
+'''),
+
+('', 2, 2, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{2: x}'''),
+r'''**ValueError("cannot put slice to MatchMapping after '.rest' element")**'''),
+
+('', 2, 2, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{**y}'''),
+r'''**ValueError("cannot put slice to MatchMapping after '.rest' element")**'''),
+
+('', 2, 2, None, {}, ('pattern',
+r'''{1: a, **b}'''), ('pattern',
+r'''{2: x, **y}'''),
+r'''**ValueError("cannot put slice to MatchMapping after '.rest' element")**'''),
 ],
 
 'type_params': [  # ................................................................................
@@ -27313,6 +27809,26 @@ r'''MatchMapping - ROOT 0,0..0,2'''),
 ('', None, None, None, {'raw': True}, ('pattern',
 r'''{1: b, 3: d, **f}'''), (None,
 r'''7: y'''),
+r'''{7: y}''', r'''
+MatchMapping - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 7 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'y'
+'''),
+
+('', None, None, None, {'raw': True}, ('pattern',
+r'''{1: b, 3: d, **f}'''), (None,
+r'''**z'''),
+r'''{**z}''', r'''
+MatchMapping - ROOT 0,0..0,5
+  .rest 'z'
+'''),
+
+('', 0, 1, None, {'raw': True}, ('pattern',
+r'''{1: b, **f}'''), (None,
+r'''7: y'''),
 r'''{7: y, **f}''', r'''
 MatchMapping - ROOT 0,0..0,11
   .keys[1]
@@ -27321,6 +27837,47 @@ MatchMapping - ROOT 0,0..0,11
    0] MatchAs - 0,4..0,5
      .name 'y'
   .rest 'f'
+'''),
+
+('', 1, 2, None, {'raw': True}, ('pattern',
+r'''{1: b, **f}'''), (None,
+r'''7: y'''),
+r'''{1: b, 7: y}''', r'''
+MatchMapping - ROOT 0,0..0,12
+  .keys[2]
+   0] Constant 1 - 0,1..0,2
+   1] Constant 7 - 0,7..0,8
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'b'
+   1] MatchAs - 0,10..0,11
+     .name 'y'
+'''),
+
+('', 0, 1, None, {'raw': True}, ('pattern',
+r'''{1: b, **f}'''), (None,
+r'''**z'''),
+r'''{**z, **f}''', r'''
+Dict - ROOT 0,0..0,10
+  .keys[2]
+   0] None
+   1] None
+  .values[2]
+   0] Name 'z' Load - 0,3..0,4
+   1] Name 'f' Load - 0,8..0,9
+'''),
+
+('', 1, 2, None, {'raw': True}, ('pattern',
+r'''{1: b, **f}'''), (None,
+r'''**z'''),
+r'''{1: b, **z}''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+   0] Constant 1 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'b'
+  .rest 'z'
 '''),
 
 ('', 1, 2, None, {'raw': True}, ('pattern',

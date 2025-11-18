@@ -287,7 +287,7 @@ def _get_one_BoolOp_op(self: fst.FST, idx: int | None, field: str, cut: bool, op
     return fst.FST(And(), ['and'], from_=self) if isinstance(child, And) else fst.FST(Or(), ['or'], from_=self)  # just create new ones because they can be in multiple places
 
 
-def _get_one_invalid_combined(
+def _get_one_invalid_virtual(
     self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]
 ) -> _GetOneRet:
     raise ValueError(f'cannot get single element from {self.a.__class__.__name__}.{field}')
@@ -551,7 +551,7 @@ _GET_ONE_HANDLERS = {
     (IfExp, 'orelse'):                    _get_one_default,  # expr
     (Dict, 'keys'):                       _get_one_default,  # expr*
     (Dict, 'values'):                     _get_one_default,  # expr*
-    (Dict, '_keys_values'):               _get_one_invalid_combined,  # expr*
+    (Dict, '_all'):                       _get_one_invalid_virtual,  # expr*
     (Set, 'elts'):                        _get_one_default,  # expr*
     (ListComp, 'elt'):                    _get_one_default,  # expr
     (ListComp, 'generators'):             _get_one_default,  # comprehension*
@@ -568,7 +568,7 @@ _GET_ONE_HANDLERS = {
     (Compare, 'left'):                    _get_one_default,  # expr
     (Compare, 'ops'):                     _get_one_default,  # cmpop*
     (Compare, 'comparators'):             _get_one_default,  # expr*
-    (Compare, '_left_ops_comparators'):   _get_one_Compare,  # expr*
+    (Compare, '_all'):                    _get_one_Compare,  # expr*
     (Call, 'func'):                       _get_one_default,  # expr
     (Call, 'args'):                       _get_one_arglike,  # expr*
     (Call, 'keywords'):                   _get_one_default,  # keyword*
@@ -631,7 +631,7 @@ _GET_ONE_HANDLERS = {
     (MatchMapping, 'keys'):               _get_one_default,  # expr*
     (MatchMapping, 'patterns'):           _get_one_default,  # pattern*
     (MatchMapping, 'rest'):               _get_one_identifier,  # identifier?
-    (MatchMapping, '_keys_patterns'):     _get_one_invalid_combined,  # expr*
+    (MatchMapping, '_all'):               _get_one_invalid_virtual,  # expr*
     (MatchClass, 'cls'):                  _get_one_default,  # expr
     (MatchClass, 'patterns'):             _get_one_default,  # pattern*
     (MatchClass, 'kwd_attrs'):            _get_one_identifier,  # identifier*

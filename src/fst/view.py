@@ -236,7 +236,7 @@ class fstview:
             asts = getattr(self.fst.a, self.field)
             len_before = len(asts)
 
-            self.fst = self.fst.put(code, start + idx, field=self.field) or self.fst
+            self.fst = self.fst.put(code, start + idx, field=self.field)  # or self.fst
 
             self.stop += len(asts) - len_before
 

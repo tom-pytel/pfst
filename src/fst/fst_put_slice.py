@@ -85,6 +85,7 @@ from .common import (
     astfield,
     next_frag,
     next_find,
+    prev_find,
     next_find_re,
 )
 
@@ -124,6 +125,8 @@ from .fst_get_slice import (
     _bounds_Assign_targets,
     _bounds_decorator_list,
     _bounds_generators,
+    _add_MatchMapping_rest_as_real_node,
+    _remove_MatchMapping_rest_real_node,
     _maybe_fix_Assign_target0,
     _maybe_fix_decorator_list_trailing_newline,
     _maybe_fix_decorator_list_del,
@@ -154,8 +157,7 @@ from .fst_get_slice import (
 # *   N ,     {}   (Dict, 'keys:values')                   # expr:expr*            -> Dict                       _parse_expr / restrict dict
 #                                                                                  .
 # *   N ,     []   (MatchSequence, 'patterns'):            # pattern*              -> MatchSequence              _parse_pattern / restrict MatchSequence
-# *   N ,     {}   (MatchMapping, 'keys:patterns'):        # expr:pattern*         -> MatchMapping               _parse_pattern / restrict MatchMapping
-#     N ,     {}   (MatchMapping, 'keys:patterns,rest'):   # expr:pattern*,expr?   -> MatchMapping               _parse_pattern / restrict MatchMapping
+# *   N ,     {}   (MatchMapping, 'keys:patterns,rest'):   # expr:pattern*,expr?   -> MatchMapping               _parse_pattern / restrict MatchMapping
 #                                                                                  .
 # * ? N |          (MatchOr, 'patterns'):                  # pattern*              -> MatchOr                    _parse_pattern / restrict MatchOr
 #                                                                                  .
@@ -323,8 +325,10 @@ def _code_to_slice_seq(
 
 
 def _code_to_slice_seq2(
-    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any], code_as: Callable
+    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any], code_as: Callable, trim: bool = True
 ) -> fst.FST | None:
+    """Handles `Dict` and `MatchMapping`."""
+
     if code is None:
         return None
 
@@ -338,10 +342,11 @@ def _code_to_slice_seq2(
         raise NodeError(f"slice being assigned to a {self.a.__class__.__name__} must be a {self.a.__class__.__name__}"
                         f", not a {ast_.__class__.__name__}", rawable=True)
 
-    if not ast_.keys:  # put empty sequence is same as delete
+    if not ast_.keys and not getattr(ast_, 'rest', None):  # put empty sequence is same as delete
         return None
 
-    _trim_delimiters(fst_)
+    if trim:
+        _trim_delimiters(fst_)
 
     return fst_
 
@@ -808,7 +813,7 @@ def _put_slice_NOT_IMPLEMENTED_YET(
     raise NotImplementedError("not implemented yet, try with option raw='auto'")
 
 
-def _put_slice_Dict(
+def _put_slice_Dict__all(
     self: fst.FST,
     code: Code | None,
     start: int | Literal['end'] | None,
@@ -1641,7 +1646,7 @@ def _put_slice_MatchSequence_patterns(
     _maybe_fix_MatchSequence(self, delims)
 
 
-def _put_slice_MatchMapping(
+def _put_slice_MatchMapping__all(
     self: fst.FST,
     code: Code | None,
     start: int | Literal['end'] | None,
@@ -1650,46 +1655,99 @@ def _put_slice_MatchMapping(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice_seq2(self, code, one, options, code_as_pattern)
+    fst_ = _code_to_slice_seq2(self, code, one, options, code_as_pattern, False)
     ast = self.a
     body = ast.keys
-    len_body = len(body)
     body2 = ast.patterns
-    start, stop = fixup_slice_indices(len_body, start, stop)
+    rest = ast.rest
+    len_body = len(body)
+    len_body_w_rest = len_body + bool(rest)
+    start, stop = fixup_slice_indices(len_body_w_rest, start, stop)
 
-    if not fst_ and start == stop:
-        return
+    if not fst_:
+        if start == stop:  # delete empty slice
+            return
+
+        fst_rest = None
+
+    else:
+        if rest and start >= len_body_w_rest:
+            raise ValueError("cannot put slice to MatchMapping after '.rest' element")
+
+        ast_ = fst_.a
+
+        if fst_rest := ast_.rest:
+            if stop < len_body_w_rest:
+                raise ValueError("put slice with '.rest' element to MatchMapping must be at end")
+
+            _add_MatchMapping_rest_as_real_node(fst_)  # this needs to be done before the _trim_delimiters()
+
+        _trim_delimiters(fst_)  # didn't do it in _code_to_slice_seq2()
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
     bound_col += 1
     bound_end_col -= 1
 
-    if not fst_:
-        self_tail_sep = (start and ast.rest and stop == len_body) or None
+    if not fst_rest and (not rest or stop < len_body_w_rest):
+        # this is a slightly optimized path which doesn't include .rest so doesn't have to create a temporary element for it and if code being put then it also doesn't have a .rest, unnecessary, remove if gets annoying
 
-        end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0,
-                                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, 'keys', 'patterns', ',', self_tail_sep)
+        if not fst_:
+            self_tail_sep = (start and ast.rest and stop == len_body) or None
 
-        _put_slice_asts2(self, start, stop, 'patterns', body, body2, None, None, None)
+            end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0,
+                                             bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                             options, 'keys', 'patterns', ',', self_tail_sep)
+
+            _put_slice_asts2(self, start, stop, 'patterns', body, body2, None, None, None)
+
+        else:
+            fst_body = ast_.keys
+            fst_body2 = ast_.patterns
+            self_tail_sep = (ast.rest and stop == len_body) or None
+
+            end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body2[-1].f, len(fst_body),
+                                             bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                             options, 'keys', 'patterns', ',', self_tail_sep)
+
+            _put_slice_asts2(self, start, stop, 'patterns', body, body2, fst_, fst_body, fst_body2)
+
+        put_slice_sep_end(self, end_params)
+
+        if self_tail_sep:  # if there is a **rest and we removed tail element so here we make sure there is a space between comma of the new last element and the **rest
+            self._maybe_ins_separator(*body2[-1].f.loc[2:], True)  # this will only maybe add a space, comma is already there
 
     else:
-        ast_ = fst_.a
-        fst_body = ast_.keys
-        fst_body2 = ast_.patterns
-        self_tail_sep = (ast.rest and stop == len_body) or None
+        # here .rest exists in self OR in code being put and is included so we add it temporarily to end as `key=None` and `pattern=MatchAs(name=rest)` for the operation
 
-        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body2[-1].f, len(fst_body),
-                                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, 'keys', 'patterns', ',', self_tail_sep)
+        if rest:
+            _add_MatchMapping_rest_as_real_node(self)
 
-        _put_slice_asts2(self, start, stop, 'patterns', body, body2, fst_, fst_body, fst_body2)
+        if not fst_:
+            end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0,
+                                             bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                             options, 'keys', 'patterns')
 
-    put_slice_sep_end(self, end_params)
+            _put_slice_asts2(self, start, stop, 'patterns', body, body2, None, None, None)
 
-    if self_tail_sep:  # if there is a **rest and we removed tail element so here we make sure there is a space between comma of the new last element and the **rest
-        self._maybe_ins_separator(*body2[-1].f.loc[2:], True)  # this will only maybe add a space, comma is already there
+        else:
+            fst_body = ast_.keys
+            fst_body2 = ast_.patterns
+            fst_first = a.f if (a := fst_body[0]) else None  # could be the temporary .rest key of None
+
+            end_params = put_slice_sep_begin(self, start, stop, fst_, fst_first, fst_body2[-1].f, len(fst_body),
+                                             bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                             options, 'keys', 'patterns')
+
+            _put_slice_asts2(self, start, stop, 'patterns', body, body2, fst_, fst_body, fst_body2)
+
+        put_slice_sep_end(self, end_params)
+
+        if stop == len_body_w_rest:  # if this and we are here then .rest (and the temporary node) was either deleted or replaced from slice, because otherwise we wouldn't be here
+            ast.rest = fst_rest
+
+        if fst_rest:  # if no fst_rest then our rest was deleted or overwritten with real node, otherwise need to remove temporary node from put FST
+            _remove_MatchMapping_rest_real_node(self)
 
 
 def _put_slice_MatchOr_patterns(
@@ -1885,7 +1943,7 @@ _PUT_SLICE_HANDLERS = {
     (Try, 'handlers'):                        put_slice_stmtish,  # excepthandler*
     (TryStar, 'handlers'):                    put_slice_stmtish,  # excepthandlerstar*
 
-    (Dict, '_keys_values'):                   _put_slice_Dict,  # key:value*
+    (Dict, '_all'):                           _put_slice_Dict__all,  # key:value*
 
     (Set, 'elts'):                            _put_slice_Set_elts,  # expr*
     (List, 'elts'):                           _put_slice_List_elts,  # expr*
@@ -1898,7 +1956,7 @@ _PUT_SLICE_HANDLERS = {
     (Delete, 'targets'):                      _put_slice_Delete_targets,  # expr*
     (Assign, 'targets'):                      _put_slice_Assign_targets,  # expr*
     (BoolOp, 'values'):                       _put_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (Compare, '_left_ops_comparators'):       _put_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Compare, '_all'):                        _put_slice_NOT_IMPLEMENTED_YET,  # expr*
     (Call, 'args'):                           _put_slice_Call_args,  # expr*
     (comprehension, 'ifs'):                   _put_slice_comprehension_ifs,  # expr*
 
@@ -1917,7 +1975,7 @@ _PUT_SLICE_HANDLERS = {
     (AsyncWith, 'items'):                     _put_slice_With_AsyncWith_items,  # withitem*
 
     (MatchSequence, 'patterns'):              _put_slice_MatchSequence_patterns,  # pattern*
-    (MatchMapping, '_keys_patterns'):         _put_slice_MatchMapping,  # key:pattern*
+    (MatchMapping, '_all'):                   _put_slice_MatchMapping__all,  # key:pattern*
     (MatchClass, 'patterns'):                 _put_slice_NOT_IMPLEMENTED_YET,  # pattern*
     (MatchOr, 'patterns'):                    _put_slice_MatchOr_patterns,  # pattern*
 
@@ -1947,6 +2005,15 @@ _PUT_SLICE_HANDLERS = {
 # ----------------------------------------------------------------------------------------------------------------------
 # put raw
 
+def _fixup_slice_index_for_raw(len_: int, start: int, stop: int) -> tuple[int, int]:
+    start, stop = fixup_slice_indices(len_, start, stop)
+
+    if start == stop:
+        raise ValueError('cannot insert in raw slice put')
+
+    return start, stop
+
+
 def _loc_slice_raw_put_decorator_list(
     self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
@@ -1966,7 +2033,7 @@ def _loc_slice_raw_put_Global_Nonlocal_names(
 
     return ln, col, end_ln, end_col, start, stop, names
 
-def _loc_slice_raw_put_Dict(
+def _loc_slice_raw_put_Dict__all(
     self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
     values = self.a.values
@@ -1976,7 +2043,7 @@ def _loc_slice_raw_put_Dict(
 
     return ln, col, end_ln, end_col, start, stop, values
 
-def _loc_slice_raw_put_Compare(
+def _loc_slice_raw_put_Compare__all(
     self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
     ast = self.a
@@ -2003,15 +2070,32 @@ def _loc_slice_raw_put_comprehension_ifs(
 
     return ln, col, end_ln, end_col, start, stop, ifs
 
-def _loc_slice_raw_put_MatchMapping(
+def _loc_slice_raw_put_MatchMapping__all(
     self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
     ast = self.a
     keys = ast.keys
     patterns = ast.patterns
-    start, stop = _fixup_slice_index_for_raw(len(keys), start, stop)
-    ln, col, _, _ = keys[start].f.loc
-    _, _, end_ln, end_col = patterns[stop - 1].f.pars()
+    rest = ast.rest
+    len_keys = len(keys)
+    len_keys_w_rest = len_keys + bool(rest)
+    start, stop = _fixup_slice_index_for_raw(len_keys_w_rest, start, stop)
+
+    if rest and stop == len_keys_w_rest:
+        ln, col, end_ln, end_col = self._loc_MatchMapping_rest()
+    else:
+        _, _, end_ln, end_col = patterns[stop - 1].f.pars()
+
+    if start < len_keys:
+        ln, col, _, _ = keys[start].f.loc  # these cannot have pars
+
+    else:  # in this case _loc_MatchMapping_rest() was gotten so (ln, col) is at the start of the .rest identifier
+        if start:
+            _, _, prev_ln, prev_col = patterns[start - 1].f.loc
+        else:
+            prev_ln, prev_col, _, _ = self.loc
+
+        ln, col = prev_find(self.root._lines, prev_ln, prev_col, ln, col, '**')  # '**' must be there
 
     return ln, col, end_ln, end_col, start, stop, patterns
 
@@ -2042,20 +2126,11 @@ _LOC_SLICE_RAW_PUT_FUNCS = {
     (ClassDef, 'decorator_list'):         _loc_slice_raw_put_decorator_list,
     (Global, 'names'):                    _loc_slice_raw_put_Global_Nonlocal_names,
     (Nonlocal, 'names'):                  _loc_slice_raw_put_Global_Nonlocal_names,
-    (Dict, '_keys_values'):               _loc_slice_raw_put_Dict,
-    (Compare, '_left_ops_comparators'):   _loc_slice_raw_put_Compare,
+    (Dict, '_all'):                       _loc_slice_raw_put_Dict__all,
+    (Compare, '_all'):                    _loc_slice_raw_put_Compare__all,
     (comprehension, 'ifs'):               _loc_slice_raw_put_comprehension_ifs,
-    (MatchMapping, '_keys_patterns'):     _loc_slice_raw_put_MatchMapping,
+    (MatchMapping, '_all'):               _loc_slice_raw_put_MatchMapping__all,
 }
-
-
-def _fixup_slice_index_for_raw(len_: int, start: int, stop: int) -> tuple[int, int]:
-    start, stop = fixup_slice_indices(len_, start, stop)
-
-    if start == stop:
-        raise ValueError('cannot insert in raw slice put')
-
-    return start, stop
 
 
 def _singleton_needs_comma(fst_: fst.FST) -> bool:

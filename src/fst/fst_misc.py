@@ -198,9 +198,9 @@ _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: '
     ('args',                  (Call,)),  # potential conflict of default body with put to empty 'set()'
 
     # special case fields
-    ('_keys_values',          (Dict,)),
-    ('_keys_patterns',        (MatchMapping,)),
-    ('_left_ops_comparators', (Compare,)),
+    ('_all',                  (Dict,)),          # key:value
+    ('_all',                  (MatchMapping,)),  # key:pattern,rest?
+    ('_all',                  (Compare,)),       # left,op:comparator
 
     # single value fields
     ('value',                 (Expr, Return, Assign, TypeAlias, AugAssign, AnnAssign, NamedExpr, Await, Yield, YieldFrom,
@@ -789,7 +789,7 @@ def fixup_field_body(ast: AST, field: str | None, only_list: bool) -> tuple[str,
         if (field := _DEFAULT_AST_FIELD.get(ast.__class__, fixup_field_body)) is fixup_field_body:  # fixup_field_body is sentinel
             raise ValueError(f"{ast.__class__.__name__} has no default body field")
 
-        if field.startswith('_'):  # virtual field like Dict._keys_values
+        if field.startswith('_'):  # virtual field like Dict._all
             return field, []
 
     if (body := getattr(ast, field, fixup_field_body)) is fixup_field_body:
