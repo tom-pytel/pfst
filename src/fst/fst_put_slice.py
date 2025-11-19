@@ -809,55 +809,6 @@ def _put_slice_NOT_IMPLEMENTED_YET(
     raise NotImplementedError("not implemented yet, try with option raw='auto'")
 
 
-def _put_slice_Dict__all(
-    self: fst.FST,
-    code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
-    field: str,
-    one: bool,
-    options: Mapping[str, Any],
-) -> None:
-    fst_ = _code_to_slice_seq2(self, code, one, options, code_as_expr)
-    ast = self.a
-    body = ast.keys
-    body2 = ast.values
-    start, stop = fixup_slice_indices(len(body), start, stop)
-
-    if not fst_:
-        if start == stop:  # delete empty slice
-            return
-
-    else:
-        _trim_delimiters(fst_)
-
-    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
-
-    bound_col += 1
-    bound_end_col -= 1
-
-    if not fst_:
-        end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0,
-                                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, 'keys', 'values')
-
-        _put_slice_asts2(self, start, stop, 'values', body, body2, None, None, None)
-
-    else:
-        ast_ = fst_.a
-        fst_body = ast_.keys
-        fst_body2 = ast_.values
-        fst_first = a.f if (a := fst_body[0]) else None
-
-        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_first, fst_body2[-1].f, len(fst_body),
-                                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, 'keys', 'values')
-
-        _put_slice_asts2(self, start, stop, 'values', body, body2, fst_, fst_body, fst_body2)
-
-    put_slice_sep_end(self, end_params)
-
-
 def _put_slice_Tuple_elts(
     self: fst.FST,
     code: Code | None,
@@ -978,6 +929,55 @@ def _put_slice_Set_elts(
                             bound_ln, bound_col, bound_end_ln, bound_end_col, ',', None, options)
 
     _maybe_fix_Set(self, _get_norm_option('norm_self', 'set_norm', options))
+
+
+def _put_slice_Dict__all(
+    self: fst.FST,
+    code: Code | None,
+    start: int | Literal['end'] | None,
+    stop: int | None,
+    field: str,
+    one: bool,
+    options: Mapping[str, Any],
+) -> None:
+    fst_ = _code_to_slice_seq2(self, code, one, options, code_as_expr)
+    ast = self.a
+    body = ast.keys
+    body2 = ast.values
+    start, stop = fixup_slice_indices(len(body), start, stop)
+
+    if not fst_:
+        if start == stop:  # delete empty slice
+            return
+
+    else:
+        _trim_delimiters(fst_)
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+
+    bound_col += 1
+    bound_end_col -= 1
+
+    if not fst_:
+        end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0,
+                                         bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                         options, 'keys', 'values')
+
+        _put_slice_asts2(self, start, stop, 'values', body, body2, None, None, None)
+
+    else:
+        ast_ = fst_.a
+        fst_body = ast_.keys
+        fst_body2 = ast_.values
+        fst_first = a.f if (a := fst_body[0]) else None
+
+        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_first, fst_body2[-1].f, len(fst_body),
+                                         bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                         options, 'keys', 'values')
+
+        _put_slice_asts2(self, start, stop, 'values', body, body2, fst_, fst_body, fst_body2)
+
+    put_slice_sep_end(self, end_params)
 
 
 def _put_slice_Delete_targets(
@@ -1944,11 +1944,11 @@ _PUT_SLICE_HANDLERS = {
     (Try, 'handlers'):                        put_slice_stmtish,  # excepthandler*
     (TryStar, 'handlers'):                    put_slice_stmtish,  # excepthandlerstar*
 
-    (Dict, '_all'):                           _put_slice_Dict__all,  # key:value*
-
-    (Set, 'elts'):                            _put_slice_Set_elts,  # expr*
-    (List, 'elts'):                           _put_slice_List_elts,  # expr*
     (Tuple, 'elts'):                          _put_slice_Tuple_elts,  # expr*
+    (List, 'elts'):                           _put_slice_List_elts,  # expr*
+    (Set, 'elts'):                            _put_slice_Set_elts,  # expr*
+
+    (Dict, '_all'):                           _put_slice_Dict__all,  # key:value*
 
     (FunctionDef, 'decorator_list'):          _put_slice_decorator_list,  # expr*
     (AsyncFunctionDef, 'decorator_list'):     _put_slice_decorator_list,  # expr*

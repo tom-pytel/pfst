@@ -524,34 +524,6 @@ def _get_slice_NOT_IMPLEMENTED_YET(
     raise NotImplementedError('this is not implemented yet')
 
 
-def _get_slice_Dict__all(
-    self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
-    field: str,
-    cut: bool,
-    options: Mapping[str, Any],
-) -> fst.FST:
-    """A `Dict` slice is just a normal `Dict`."""
-
-    ast = self.a
-    body = ast.keys
-    len_body = len(body)
-    body2 = ast.values
-    start, stop = fixup_slice_indices(len_body, start, stop)
-
-    if start == stop:
-        return fst.FST(Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
-                       ['{}'], from_=self)
-
-    locs = _locs_and_bound_get(self, start, stop, body, body2, 1)
-    asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'values', cut, body, body2)
-    ret_ast = Dict(keys=asts, values=asts2)
-
-    return get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts2[-1], *locs,
-                         options, 'values', '{', '}', ',', 0, 0)
-
-
 def _get_slice_Tuple_elts(
     self: fst.FST,
     start: int | Literal['end'] | None,
@@ -666,6 +638,34 @@ def _get_slice_Set_elts(
         _maybe_fix_Set(self, _get_norm_option('norm_self', 'set_norm', options))
 
     return fst_
+
+
+def _get_slice_Dict__all(
+    self: fst.FST,
+    start: int | Literal['end'] | None,
+    stop: int | None,
+    field: str,
+    cut: bool,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """A `Dict` slice is just a normal `Dict`."""
+
+    ast = self.a
+    body = ast.keys
+    len_body = len(body)
+    body2 = ast.values
+    start, stop = fixup_slice_indices(len_body, start, stop)
+
+    if start == stop:
+        return fst.FST(Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
+                       ['{}'], from_=self)
+
+    locs = _locs_and_bound_get(self, start, stop, body, body2, 1)
+    asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'values', cut, body, body2)
+    ret_ast = Dict(keys=asts, values=asts2)
+
+    return get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts2[-1], *locs,
+                         options, 'values', '{', '}', ',', 0, 0)
 
 
 def _get_slice_Delete_targets(
@@ -1048,6 +1048,65 @@ def _get_slice_ClassDef_bases(
     return fst_
 
 
+def _get_slice_Call_args(
+    self: fst.FST,
+    start: int | Literal['end'] | None,
+    stop: int | None,
+    field: str,
+    cut: bool,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """A `Call.args` slice is just a normal `Tuple`, with possibly expr_arglike elements which are invalid in a normal
+    expression tuple."""
+
+    ast = self.a
+    body = ast.args
+    len_body = len(body)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
+
+    if start == stop:
+        return new_empty_tuple(from_=self)
+
+    if keywords := ast.keywords:
+        kw0_pos = keywords[0].f.loc[:2]
+
+        if kw0_pos < body[stop - 1].f.loc[2:]:
+            raise NodeError('cannot get this Call.args slice because it includes parts after a keyword')
+
+        self_tail_sep = True if body[-1].f.loc[2:] < kw0_pos else None
+
+    else:
+        self_tail_sep = None
+
+        if body and (f0 := body[0].f)._is_solo_call_arg_genexp() and f0.pars(shared=False).n == -1:  # single call argument GeneratorExp shares parentheses with Call?
+            f0._parenthesize_grouping()
+
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_Call_pars()
+    bound_end_col -= 1
+
+    if start:
+        _, _, bound_ln, bound_col = body[start - 1].f.pars()
+    else:
+        bound_col += 1
+
+    loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
+
+    asts = _cut_or_copy_asts(start, stop, 'args', cut, body)
+    ret_ast = Tuple(elts=asts, ctx=Load())
+
+    fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1],
+                         loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
+                         options, 'args', '(', ')', ',', self_tail_sep, len_slice == 1)
+
+    fst_._maybe_fix_arglikes(options)  # parenthesize any arglike expressions
+
+    if cut and start and keywords and stop == len_body:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
+        self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
+
+    return fst_
+
+
 def _get_slice_decorator_list(
     self: fst.FST,
     start: int | Literal['end'] | None,
@@ -1180,65 +1239,6 @@ def _get_slice_comprehension_ifs(
 
     fst_ = get_slice_nosep(self, start, stop, len_body, cut, ret_ast,
                            loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col, options)
-
-    return fst_
-
-
-def _get_slice_Call_args(
-    self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
-    field: str,
-    cut: bool,
-    options: Mapping[str, Any],
-) -> fst.FST:
-    """A `Call.args` slice is just a normal `Tuple`, with possibly expr_arglike elements which are invalid in a normal
-    expression tuple."""
-
-    ast = self.a
-    body = ast.args
-    len_body = len(body)
-    start, stop = fixup_slice_indices(len_body, start, stop)
-    len_slice = stop - start
-
-    if start == stop:
-        return new_empty_tuple(from_=self)
-
-    if keywords := ast.keywords:
-        kw0_pos = keywords[0].f.loc[:2]
-
-        if kw0_pos < body[stop - 1].f.loc[2:]:
-            raise NodeError('cannot get this Call.args slice because it includes parts after a keyword')
-
-        self_tail_sep = True if body[-1].f.loc[2:] < kw0_pos else None
-
-    else:
-        self_tail_sep = None
-
-        if body and (f0 := body[0].f)._is_solo_call_arg_genexp() and f0.pars(shared=False).n == -1:  # single call argument GeneratorExp shares parentheses with Call?
-            f0._parenthesize_grouping()
-
-    bound_ln, bound_col, bound_end_ln, bound_end_col = self._loc_Call_pars()
-    bound_end_col -= 1
-
-    if start:
-        _, _, bound_ln, bound_col = body[start - 1].f.pars()
-    else:
-        bound_col += 1
-
-    loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
-
-    asts = _cut_or_copy_asts(start, stop, 'args', cut, body)
-    ret_ast = Tuple(elts=asts, ctx=Load())
-
-    fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1],
-                         loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
-                         options, 'args', '(', ')', ',', self_tail_sep, len_slice == 1)
-
-    fst_._maybe_fix_arglikes(options)  # parenthesize any arglike expressions
-
-    if cut and start and keywords and stop == len_body:  # if there are keywords and we removed tail element we make sure there is a space between comma of the new last element and first keyword
-        self._maybe_ins_separator(*(f := body[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
 
     return fst_
 
@@ -1513,11 +1513,11 @@ _GET_SLICE_HANDLERS = {
     (Try, 'handlers'):                        get_slice_stmtish,  # excepthandler*
     (TryStar, 'handlers'):                    get_slice_stmtish,  # excepthandler* ('except*')
 
-    (Dict, '_all'):                           _get_slice_Dict__all,  # key:value*
-
-    (Set, 'elts'):                            _get_slice_Set_elts,  # expr*
-    (List, 'elts'):                           _get_slice_List_elts,  # expr*
     (Tuple, 'elts'):                          _get_slice_Tuple_elts,  # expr*
+    (List, 'elts'):                           _get_slice_List_elts,  # expr*
+    (Set, 'elts'):                            _get_slice_Set_elts,  # expr*
+
+    (Dict, '_all'):                           _get_slice_Dict__all,  # key:value*
 
     (FunctionDef, 'decorator_list'):          _get_slice_decorator_list,  # expr*
     (AsyncFunctionDef, 'decorator_list'):     _get_slice_decorator_list,  # expr*

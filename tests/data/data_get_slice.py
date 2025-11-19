@@ -11253,1188 +11253,6 @@ _Assign_targets - ROOT 0,0..0,11
 '''),
 ],
 
-'decorator_list': [  # ................................................................................
-
-('', 0, 1, 'decorator_list', {}, (None, r'''
-@a
-@ ( b )
-@c()
-class cls: pass
-'''), r'''
-@ ( b )
-@c()
-class cls: pass
-''', r'''
-ClassDef - ROOT 2,0..2,15
-  .name 'cls'
-  .body[1]
-   0] Pass - 2,11..2,15
-  .decorator_list[2]
-   0] Name 'b' Load - 0,4..0,5
-   1] Call - 1,1..1,4
-     .func Name 'c' Load - 1,1..1,2
-''',
-r'''@a''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'a' Load - 0,1..0,2
-'''),
-
-('', 1, 2, 'decorator_list', {}, (None, r'''
-@a
-@ ( b )
-@c()
-class cls: pass
-'''), r'''
-@a
-@c()
-class cls: pass
-''', r'''
-ClassDef - ROOT 2,0..2,15
-  .name 'cls'
-  .body[1]
-   0] Pass - 2,11..2,15
-  .decorator_list[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Call - 1,1..1,4
-     .func Name 'c' Load - 1,1..1,2
-''',
-r'''@ ( b )''', r'''
-_decorator_list - ROOT 0,0..0,7
-  .decorator_list[1]
-   0] Name 'b' Load - 0,4..0,5
-'''),
-
-('', 2, 3, 'decorator_list', {}, (None, r'''
-@a
-@ ( b )
-@c()
-class cls: pass
-'''), r'''
-@a
-@ ( b )
-class cls: pass
-''', r'''
-ClassDef - ROOT 2,0..2,15
-  .name 'cls'
-  .body[1]
-   0] Pass - 2,11..2,15
-  .decorator_list[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Name 'b' Load - 1,4..1,5
-''',
-r'''@c()''', r'''
-_decorator_list - ROOT 0,0..0,4
-  .decorator_list[1]
-   0] Call - 0,1..0,4
-     .func Name 'c' Load - 0,1..0,2
-'''),
-
-('', 0, 2, 'decorator_list', {}, (None, r'''
-@a
-@ ( b )
-@c()
-class cls: pass
-'''), r'''
-@c()
-class cls: pass
-''', r'''
-ClassDef - ROOT 1,0..1,15
-  .name 'cls'
-  .body[1]
-   0] Pass - 1,11..1,15
-  .decorator_list[1]
-   0] Call - 0,1..0,4
-     .func Name 'c' Load - 0,1..0,2
-''', r'''
-@a
-@ ( b )
-''', r'''
-_decorator_list - ROOT 0,0..1,7
-  .decorator_list[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Name 'b' Load - 1,4..1,5
-'''),
-
-('', 1, 3, 'decorator_list', {}, (None, r'''
-@a
-@ ( b )
-@c()
-class cls: pass
-'''), r'''
-@a
-class cls: pass
-''', r'''
-ClassDef - ROOT 1,0..1,15
-  .name 'cls'
-  .body[1]
-   0] Pass - 1,11..1,15
-  .decorator_list[1]
-   0] Name 'a' Load - 0,1..0,2
-''', r'''
-@ ( b )
-@c()
-''', r'''
-_decorator_list - ROOT 0,0..1,4
-  .decorator_list[2]
-   0] Name 'b' Load - 0,4..0,5
-   1] Call - 1,1..1,4
-     .func Name 'c' Load - 1,1..1,2
-'''),
-
-('', 0, 3, 'decorator_list', {}, (None, r'''
-@a
-@ ( b )
-@c()
-class cls: pass
-'''),
-r'''class cls: pass''', r'''
-ClassDef - ROOT 0,0..0,15
-  .name 'cls'
-  .body[1]
-   0] Pass - 0,11..0,15
-''', r'''
-@a
-@ ( b )
-@c()
-''', r'''
-_decorator_list - ROOT 0,0..2,4
-  .decorator_list[3]
-   0] Name 'a' Load - 0,1..0,2
-   1] Name 'b' Load - 1,4..1,5
-   2] Call - 2,1..2,4
-     .func Name 'c' Load - 2,1..2,2
-'''),
-
-('', 1, 2, 'decorator_list', {'trivia': ('all+', 'all+')}, (None, r'''
-@a
-
-# pre
-@ ( b )  # line
-# post
-
-@c()
-class cls: pass
-'''), r'''
-@a
-@c()
-class cls: pass
-''', r'''
-ClassDef - ROOT 2,0..2,15
-  .name 'cls'
-  .body[1]
-   0] Pass - 2,11..2,15
-  .decorator_list[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Call - 1,1..1,4
-     .func Name 'c' Load - 1,1..1,2
-''', r'''
-
-# pre
-@ ( b )  # line
-# post
-
-''', r'''
-_decorator_list - ROOT 0,0..4,0
-  .decorator_list[1]
-   0] Name 'b' Load - 2,4..2,5
-'''),
-
-('', 1, 2, 'decorator_list', {'trivia': ('all+', 'all+')}, (None, r'''
-@a
-
-
-# pre
-@ ( b )  # line
-# post
-
-
-@c()
-class cls: pass
-'''), r'''
-@a
-@c()
-class cls: pass
-''', r'''
-ClassDef - ROOT 2,0..2,15
-  .name 'cls'
-  .body[1]
-   0] Pass - 2,11..2,15
-  .decorator_list[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Call - 1,1..1,4
-     .func Name 'c' Load - 1,1..1,2
-''', r'''
-
-
-# pre
-@ ( b )  # line
-# post
-
-
-''', r'''
-_decorator_list - ROOT 0,0..6,0
-  .decorator_list[1]
-   0] Name 'b' Load - 3,4..3,5
-'''),
-
-('', 0, 2, 'decorator_list', {}, (None, r'''
-\
-@a
-\
-@ ( b )
-\
-@c()
-\
-class cls: pass
-'''), r'''
-\
-\
-@c()
-\
-class cls: pass
-''', r'''
-ClassDef - ROOT 4,0..4,15
-  .name 'cls'
-  .body[1]
-   0] Pass - 4,11..4,15
-  .decorator_list[1]
-   0] Call - 2,1..2,4
-     .func Name 'c' Load - 2,1..2,2
-''', r'''
-@a
-\
-@ ( b )
-''', r'''
-_decorator_list - ROOT 0,0..2,7
-  .decorator_list[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Name 'b' Load - 2,4..2,5
-'''),
-
-('body[0]', 0, 1, 'decorator_list', {}, (None, r'''
-if 1:
-  @a
-  @ ( b )
-  @c()
-  class cls: pass
-'''), r'''
-if 1:
-  @ ( b )
-  @c()
-  class cls: pass
-''', r'''
-If - ROOT 0,0..3,17
-  .test Constant 1 - 0,3..0,4
-  .body[1]
-   0] ClassDef - 3,2..3,17
-     .name 'cls'
-     .body[1]
-      0] Pass - 3,13..3,17
-     .decorator_list[2]
-      0] Name 'b' Load - 1,6..1,7
-      1] Call - 2,3..2,6
-        .func Name 'c' Load - 2,3..2,4
-''',
-r'''@a''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'a' Load - 0,1..0,2
-'''),
-
-('body[0]', 1, 2, 'decorator_list', {}, (None, r'''
-if 1:
-  @a
-  @ ( b )
-  @c()
-  class cls: pass
-'''), r'''
-if 1:
-  @a
-  @c()
-  class cls: pass
-''', r'''
-If - ROOT 0,0..3,17
-  .test Constant 1 - 0,3..0,4
-  .body[1]
-   0] ClassDef - 3,2..3,17
-     .name 'cls'
-     .body[1]
-      0] Pass - 3,13..3,17
-     .decorator_list[2]
-      0] Name 'a' Load - 1,3..1,4
-      1] Call - 2,3..2,6
-        .func Name 'c' Load - 2,3..2,4
-''',
-r'''@ ( b )''', r'''
-_decorator_list - ROOT 0,0..0,7
-  .decorator_list[1]
-   0] Name 'b' Load - 0,4..0,5
-'''),
-
-('body[0]', 2, 3, 'decorator_list', {}, (None, r'''
-if 1:
-  @a
-  @ ( b )
-  @c()
-  class cls: pass
-'''), r'''
-if 1:
-  @a
-  @ ( b )
-  class cls: pass
-''', r'''
-If - ROOT 0,0..3,17
-  .test Constant 1 - 0,3..0,4
-  .body[1]
-   0] ClassDef - 3,2..3,17
-     .name 'cls'
-     .body[1]
-      0] Pass - 3,13..3,17
-     .decorator_list[2]
-      0] Name 'a' Load - 1,3..1,4
-      1] Name 'b' Load - 2,6..2,7
-''',
-r'''@c()''', r'''
-_decorator_list - ROOT 0,0..0,4
-  .decorator_list[1]
-   0] Call - 0,1..0,4
-     .func Name 'c' Load - 0,1..0,2
-'''),
-
-('body[0]', 0, 2, 'decorator_list', {}, (None, r'''
-if 1:
-  @a
-  @ ( b )
-  @c()
-  class cls: pass
-'''), r'''
-if 1:
-  @c()
-  class cls: pass
-''', r'''
-If - ROOT 0,0..2,17
-  .test Constant 1 - 0,3..0,4
-  .body[1]
-   0] ClassDef - 2,2..2,17
-     .name 'cls'
-     .body[1]
-      0] Pass - 2,13..2,17
-     .decorator_list[1]
-      0] Call - 1,3..1,6
-        .func Name 'c' Load - 1,3..1,4
-''', r'''
-@a
-@ ( b )
-''', r'''
-_decorator_list - ROOT 0,0..1,7
-  .decorator_list[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Name 'b' Load - 1,4..1,5
-'''),
-
-('body[0]', 1, 3, 'decorator_list', {}, (None, r'''
-if 1:
-  @a
-  @ ( b )
-  @c()
-  class cls: pass
-'''), r'''
-if 1:
-  @a
-  class cls: pass
-''', r'''
-If - ROOT 0,0..2,17
-  .test Constant 1 - 0,3..0,4
-  .body[1]
-   0] ClassDef - 2,2..2,17
-     .name 'cls'
-     .body[1]
-      0] Pass - 2,13..2,17
-     .decorator_list[1]
-      0] Name 'a' Load - 1,3..1,4
-''', r'''
-@ ( b )
-@c()
-''', r'''
-_decorator_list - ROOT 0,0..1,4
-  .decorator_list[2]
-   0] Name 'b' Load - 0,4..0,5
-   1] Call - 1,1..1,4
-     .func Name 'c' Load - 1,1..1,2
-'''),
-
-('body[0]', 0, 3, 'decorator_list', {}, (None, r'''
-if 1:
-  @a
-  @ ( b )
-  @c()
-  class cls: pass
-'''), r'''
-if 1:
-  class cls: pass
-''', r'''
-If - ROOT 0,0..1,17
-  .test Constant 1 - 0,3..0,4
-  .body[1]
-   0] ClassDef - 1,2..1,17
-     .name 'cls'
-     .body[1]
-      0] Pass - 1,13..1,17
-''', r'''
-@a
-@ ( b )
-@c()
-''', r'''
-_decorator_list - ROOT 0,0..2,4
-  .decorator_list[3]
-   0] Name 'a' Load - 0,1..0,2
-   1] Name 'b' Load - 1,4..1,5
-   2] Call - 2,1..2,4
-     .func Name 'c' Load - 2,1..2,2
-'''),
-
-('body[0]', 1, 2, 'decorator_list', {'trivia': ('all+', 'all+')}, (None, r'''
-if 1:
-  @a
-
-  # pre
-  @ ( b )  # line
-  # post
-
-  @c()
-  class cls: pass
-'''), r'''
-if 1:
-  @a
-  @c()
-  class cls: pass
-''', r'''
-If - ROOT 0,0..3,17
-  .test Constant 1 - 0,3..0,4
-  .body[1]
-   0] ClassDef - 3,2..3,17
-     .name 'cls'
-     .body[1]
-      0] Pass - 3,13..3,17
-     .decorator_list[2]
-      0] Name 'a' Load - 1,3..1,4
-      1] Call - 2,3..2,6
-        .func Name 'c' Load - 2,3..2,4
-''', r'''
-
-# pre
-@ ( b )  # line
-# post
-
-''', r'''
-_decorator_list - ROOT 0,0..4,0
-  .decorator_list[1]
-   0] Name 'b' Load - 2,4..2,5
-'''),
-
-('body[0]', 1, 2, 'decorator_list', {'trivia': ('all+', 'all+')}, (None, r'''
-if 1:
-  @a
-
-
-  # pre
-  @ ( b )  # line
-  # post
-
-
-  @c()
-  class cls: pass
-'''), r'''
-if 1:
-  @a
-  @c()
-  class cls: pass
-''', r'''
-If - ROOT 0,0..3,17
-  .test Constant 1 - 0,3..0,4
-  .body[1]
-   0] ClassDef - 3,2..3,17
-     .name 'cls'
-     .body[1]
-      0] Pass - 3,13..3,17
-     .decorator_list[2]
-      0] Name 'a' Load - 1,3..1,4
-      1] Call - 2,3..2,6
-        .func Name 'c' Load - 2,3..2,4
-''', r'''
-
-
-# pre
-@ ( b )  # line
-# post
-
-
-''', r'''
-_decorator_list - ROOT 0,0..6,0
-  .decorator_list[1]
-   0] Name 'b' Load - 3,4..3,5
-'''),
-
-('body[0]', 0, 2, 'decorator_list', {}, (None, r'''
-if 1:
-\
-  @a
-\
-  @ ( b )
-\
-  @c()
-\
-  class cls: pass
-'''), r'''
-if 1:
-\
-\
-  @c()
-\
-  class cls: pass
-''', r'''
-If - ROOT 0,0..5,17
-  .test Constant 1 - 0,3..0,4
-  .body[1]
-   0] ClassDef - 5,2..5,17
-     .name 'cls'
-     .body[1]
-      0] Pass - 5,13..5,17
-     .decorator_list[1]
-      0] Call - 3,3..3,6
-        .func Name 'c' Load - 3,3..3,4
-''', r'''
-@a
-\
-@ ( b )
-''', r'''
-_decorator_list - ROOT 0,0..2,7
-  .decorator_list[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Name 'b' Load - 2,4..2,5
-'''),
-
-('body[0]', 0, 2, 'decorator_list', {}, (None, r'''
-if 1:
-  \
-@a
-  \
-@ ( b )
-  \
-@c()
-  \
-class cls: pass
-'''), r'''
-if 1:
-  \
-  \
-@c()
-  \
-class cls: pass
-''', r'''
-If - ROOT 0,0..5,15
-  .test Constant 1 - 0,3..0,4
-  .body[1]
-   0] ClassDef - 5,0..5,15
-     .name 'cls'
-     .body[1]
-      0] Pass - 5,11..5,15
-     .decorator_list[1]
-      0] Call - 3,1..3,4
-        .func Name 'c' Load - 3,1..3,2
-''', r'''
-@a
-\
-@ ( b )
-''', r'''
-_decorator_list - ROOT 0,0..2,7
-  .decorator_list[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Name 'b' Load - 2,4..2,5
-'''),
-
-('', None, None, 'decorator_list', {}, (None, r'''
-@a
-
-# pre
-@b  # line
-
-# post
-
-@c
-def f(): pass
-'''),
-r'''def f(): pass''', r'''
-FunctionDef - ROOT 0,0..0,13
-  .name 'f'
-  .body[1]
-   0] Pass - 0,9..0,13
-''', r'''
-@a
-
-# pre
-@b  # line
-
-# post
-
-@c
-''', r'''
-_decorator_list - ROOT 0,0..7,2
-  .decorator_list[3]
-   0] Name 'a' Load - 0,1..0,2
-   1] Name 'b' Load - 3,1..3,2
-   2] Name 'c' Load - 7,1..7,2
-'''),
-
-('', 0, 1, 'decorator_list', {}, (None, r'''
-@a
-
-# pre
-@b  # line
-
-# post
-
-@c
-def f(): pass
-'''), r'''
-
-# pre
-@b  # line
-
-# post
-
-@c
-def f(): pass
-''', r'''
-FunctionDef - ROOT 7,0..7,13
-  .name 'f'
-  .body[1]
-   0] Pass - 7,9..7,13
-  .decorator_list[2]
-   0] Name 'b' Load - 2,1..2,2
-   1] Name 'c' Load - 6,1..6,2
-''',
-r'''@a''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'a' Load - 0,1..0,2
-'''),
-
-('', 1, 2, 'decorator_list', {}, (None, r'''
-@a
-
-# pre
-@b  # line
-
-# post
-
-@c
-def f(): pass
-'''), r'''
-@a
-
-
-# post
-
-@c
-def f(): pass
-''', r'''
-FunctionDef - ROOT 6,0..6,13
-  .name 'f'
-  .body[1]
-   0] Pass - 6,9..6,13
-  .decorator_list[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Name 'c' Load - 5,1..5,2
-''', r'''
-# pre
-@b  # line
-''', r'''
-_decorator_list - ROOT 0,0..1,10
-  .decorator_list[1]
-   0] Name 'b' Load - 1,1..1,2
-'''),
-
-('', 1, 2, 'decorator_list', {'trivia': ('all+', 'all+')}, (None, r'''
-@a
-
-# pre
-@b  # line
-
-# post
-
-@c
-def f(): pass
-'''), r'''
-@a
-@c
-def f(): pass
-''', r'''
-FunctionDef - ROOT 2,0..2,13
-  .name 'f'
-  .body[1]
-   0] Pass - 2,9..2,13
-  .decorator_list[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Name 'c' Load - 1,1..1,2
-''', r'''
-
-# pre
-@b  # line
-
-# post
-
-''', r'''
-_decorator_list - ROOT 0,0..5,0
-  .decorator_list[1]
-   0] Name 'b' Load - 2,1..2,2
-'''),
-
-('', 2, 3, 'decorator_list', {}, (None, r'''
-@a
-
-# pre
-@b  # line
-
-# post
-
-@c
-def f(): pass
-'''), r'''
-@a
-
-# pre
-@b  # line
-
-# post
-
-def f(): pass
-''', r'''
-FunctionDef - ROOT 7,0..7,13
-  .name 'f'
-  .body[1]
-   0] Pass - 7,9..7,13
-  .decorator_list[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Name 'b' Load - 3,1..3,2
-''',
-r'''@c''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'c' Load - 0,1..0,2
-'''),
-
-('', 2, 3, 'decorator_list', {'trivia': False}, (None, r'''
-@a
-
-# pre
-@b  # line
-
-# post
-
-@c
-def f(): pass
-'''), r'''
-@a
-
-# pre
-@b  # line
-
-# post
-
-def f(): pass
-''', r'''
-FunctionDef - ROOT 7,0..7,13
-  .name 'f'
-  .body[1]
-   0] Pass - 7,9..7,13
-  .decorator_list[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Name 'b' Load - 3,1..3,2
-''',
-r'''@c''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'c' Load - 0,1..0,2
-'''),
-
-('', 0, 2, 'decorator_list', {'trivia': (None, 'all+')}, (None, r'''
-@a
-
-# pre
-@b  # line
-
-# post
-
-@c
-def f(): pass
-'''), r'''
-@c
-def f(): pass
-''', r'''
-FunctionDef - ROOT 1,0..1,13
-  .name 'f'
-  .body[1]
-   0] Pass - 1,9..1,13
-  .decorator_list[1]
-   0] Name 'c' Load - 0,1..0,2
-''', r'''
-@a
-
-# pre
-@b  # line
-
-# post
-
-''', r'''
-_decorator_list - ROOT 0,0..6,0
-  .decorator_list[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Name 'b' Load - 3,1..3,2
-'''),
-
-('', 1, 3, 'decorator_list', {'trivia': 'all+'}, (None, r'''
-@a
-
-# pre
-@b  # line
-
-# post
-
-@c
-def f(): pass
-'''), r'''
-@a
-def f(): pass
-''', r'''
-FunctionDef - ROOT 1,0..1,13
-  .name 'f'
-  .body[1]
-   0] Pass - 1,9..1,13
-  .decorator_list[1]
-   0] Name 'a' Load - 0,1..0,2
-''', r'''
-
-# pre
-@b  # line
-
-# post
-
-@c
-''', r'''
-_decorator_list - ROOT 0,0..6,2
-  .decorator_list[2]
-   0] Name 'b' Load - 2,1..2,2
-   1] Name 'c' Load - 6,1..6,2
-'''),
-],
-
-'decorator_list_newlines': [  # ................................................................................
-
-('', None, None, None, {}, ('_decorator_list',
-r'''@a'''),
-r'''''',
-r'''_decorator_list - ROOT 0,0..0,0''',
-r'''@a''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'a' Load - 0,1..0,2
-'''),
-
-('', 0, 2, None, {}, ('_decorator_list', r'''
-@a
-@b
-'''),
-r'''''',
-r'''_decorator_list - ROOT 0,0..0,0''', r'''
-@a
-@b
-''', r'''
-_decorator_list - ROOT 0,0..1,2
-  .decorator_list[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Name 'b' Load - 1,1..1,2
-'''),
-
-('', 1, 2, None, {}, ('_decorator_list', r'''
-@a
-@b
-'''),
-r'''@a''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'a' Load - 0,1..0,2
-''',
-r'''@b''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'b' Load - 0,1..0,2
-'''),
-
-('', 1, 2, None, {}, ('_decorator_list', r'''
-@a
-
-@b
-'''), r'''
-@a
-
-''', r'''
-_decorator_list - ROOT 0,0..1,0
-  .decorator_list[1]
-   0] Name 'a' Load - 0,1..0,2
-''',
-r'''@b''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'b' Load - 0,1..0,2
-'''),
-
-('', 1, 2, None, {'trivia': '-'}, ('_decorator_list', r'''
-@a
-
-@b
-'''),
-r'''@a''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'a' Load - 0,1..0,2
-''',
-r'''@b''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'b' Load - 0,1..0,2
-'''),
-
-('', 1, 2, None, {}, ('_decorator_list', r'''
-@a
-# comment
-@b
-'''),
-r'''@a''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'a' Load - 0,1..0,2
-''', r'''
-# comment
-@b
-''', r'''
-_decorator_list - ROOT 0,0..1,2
-  .decorator_list[1]
-   0] Name 'b' Load - 1,1..1,2
-'''),
-
-('', 1, 2, None, {'trivia': False}, ('_decorator_list', r'''
-@a
-# comment
-@b
-'''), r'''
-@a
-# comment
-''', r'''
-_decorator_list - ROOT 0,0..1,9
-  .decorator_list[1]
-   0] Name 'a' Load - 0,1..0,2
-''',
-r'''@b''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'b' Load - 0,1..0,2
-'''),
-
-('', 1, 2, None, {}, ('_decorator_list', r'''
-@a
-# comment
-
-@b
-'''), r'''
-@a
-# comment
-
-''', r'''
-_decorator_list - ROOT 0,0..2,0
-  .decorator_list[1]
-   0] Name 'a' Load - 0,1..0,2
-''',
-r'''@b''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'b' Load - 0,1..0,2
-'''),
-
-('', 1, 2, None, {'trivia': '-'}, ('_decorator_list', r'''
-@a
-# comment
-
-@b
-'''), r'''
-@a
-# comment
-''', r'''
-_decorator_list - ROOT 0,0..1,9
-  .decorator_list[1]
-   0] Name 'a' Load - 0,1..0,2
-''',
-r'''@b''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'b' Load - 0,1..0,2
-'''),
-
-('body[1]', 0, 1, 'decorator_list', {'trivia': '-'}, (None, r'''
-pass
-
-@a
-class cls: pass
-'''), r'''
-pass
-
-class cls: pass
-''', r'''
-Module - ROOT 0,0..2,15
-  .body[2]
-   0] Pass - 0,0..0,4
-   1] ClassDef - 2,0..2,15
-     .name 'cls'
-     .body[1]
-      0] Pass - 2,11..2,15
-''',
-r'''@a''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'a' Load - 0,1..0,2
-'''),
-
-('body[1]', 0, 1, 'decorator_list', {'trivia': '-'}, (None, r'''
-if 1:
-  pass
-
-  @a
-  class cls: pass
-'''), r'''
-if 1:
-  pass
-
-  class cls: pass
-''', r'''
-If - ROOT 0,0..3,17
-  .test Constant 1 - 0,3..0,4
-  .body[2]
-   0] Pass - 1,2..1,6
-   1] ClassDef - 3,2..3,17
-     .name 'cls'
-     .body[1]
-      0] Pass - 3,13..3,17
-''',
-r'''@a''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'a' Load - 0,1..0,2
-'''),
-
-('', 0, 1, 'decorator_list', {}, (None, r'''
-
-@a
-@b
-class cls: pass
-'''), r'''
-
-@b
-class cls: pass
-''', r'''
-ClassDef - ROOT 2,0..2,15
-  .name 'cls'
-  .body[1]
-   0] Pass - 2,11..2,15
-  .decorator_list[1]
-   0] Name 'b' Load - 1,1..1,2
-''',
-r'''@a''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'a' Load - 0,1..0,2
-'''),
-
-('', 0, 2, 'decorator_list', {}, (None, r'''
-
-@a
-@b
-class cls: pass
-'''), r'''
-
-class cls: pass
-''', r'''
-ClassDef - ROOT 1,0..1,15
-  .name 'cls'
-  .body[1]
-   0] Pass - 1,11..1,15
-''', r'''
-@a
-@b
-''', r'''
-_decorator_list - ROOT 0,0..1,2
-  .decorator_list[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Name 'b' Load - 1,1..1,2
-'''),
-
-('body[0]', 0, 1, 'decorator_list', {}, (None, r'''
-if 1:
-
-  @a
-  @b
-  class cls: pass
-'''), r'''
-if 1:
-
-  @b
-  class cls: pass
-''', r'''
-If - ROOT 0,0..3,17
-  .test Constant 1 - 0,3..0,4
-  .body[1]
-   0] ClassDef - 3,2..3,17
-     .name 'cls'
-     .body[1]
-      0] Pass - 3,13..3,17
-     .decorator_list[1]
-      0] Name 'b' Load - 2,3..2,4
-''',
-r'''@a''', r'''
-_decorator_list - ROOT 0,0..0,2
-  .decorator_list[1]
-   0] Name 'a' Load - 0,1..0,2
-'''),
-
-('body[0]', 0, 2, 'decorator_list', {}, (None, r'''
-if 1:
-
-  @a
-  @b
-  class cls: pass
-'''), r'''
-if 1:
-
-  class cls: pass
-''', r'''
-If - ROOT 0,0..2,17
-  .test Constant 1 - 0,3..0,4
-  .body[1]
-   0] ClassDef - 2,2..2,17
-     .name 'cls'
-     .body[1]
-      0] Pass - 2,13..2,17
-''', r'''
-@a
-@b
-''', r'''
-_decorator_list - ROOT 0,0..1,2
-  .decorator_list[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Name 'b' Load - 1,1..1,2
-'''),
-],
-
 'With_items': [  # ................................................................................
 
 ('body[0]', 1, 2, 'items', {}, ('exec',
@@ -15248,599 +14066,6 @@ Tuple - ROOT 0,0..0,2
 '''),
 ],
 
-'Call_args': [  # ................................................................................
-
-('', 0, 0, None, {}, (None,
-r'''call(a, *b)'''),
-r'''call(a, *b)''', r'''
-Call - ROOT 0,0..0,11
-  .func Name 'call' Load - 0,0..0,4
-  .args[2]
-   0] Name 'a' Load - 0,5..0,6
-   1] Starred - 0,8..0,10
-     .value Name 'b' Load - 0,9..0,10
-     .ctx Load
-''',
-r'''()''', r'''
-Tuple - ROOT 0,0..0,2
-  .ctx Load
-'''),
-
-('', None, None, None, {}, (None,
-r'''call(a, *b)'''),
-r'''call()''', r'''
-Call - ROOT 0,0..0,6
-  .func Name 'call' Load - 0,0..0,4
-''',
-r'''(a, *b)''', r'''
-Tuple - ROOT 0,0..0,7
-  .elts[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Starred - 0,4..0,6
-     .value Name 'b' Load - 0,5..0,6
-     .ctx Load
-  .ctx Load
-'''),
-
-('', 0, 1, None, {}, (None,
-r'''call(a, *b)'''),
-r'''call(*b)''', r'''
-Call - ROOT 0,0..0,8
-  .func Name 'call' Load - 0,0..0,4
-  .args[1]
-   0] Starred - 0,5..0,7
-     .value Name 'b' Load - 0,6..0,7
-     .ctx Load
-''',
-r'''(a,)''', r'''
-Tuple - ROOT 0,0..0,4
-  .elts[1]
-   0] Name 'a' Load - 0,1..0,2
-  .ctx Load
-'''),
-
-('', 1, 2, None, {}, (None,
-r'''call(a, *b)'''),
-r'''call(a)''', r'''
-Call - ROOT 0,0..0,7
-  .func Name 'call' Load - 0,0..0,4
-  .args[1]
-   0] Name 'a' Load - 0,5..0,6
-''',
-r'''(*b,)''', r'''
-Tuple - ROOT 0,0..0,5
-  .elts[1]
-   0] Starred - 0,1..0,3
-     .value Name 'b' Load - 0,2..0,3
-     .ctx Load
-  .ctx Load
-'''),
-
-('', None, None, None, {}, (None,
-r'''call(a, *b, c=d)'''),
-r'''call(c=d)''', r'''
-Call - ROOT 0,0..0,9
-  .func Name 'call' Load - 0,0..0,4
-  .keywords[1]
-   0] keyword - 0,5..0,8
-     .arg 'c'
-     .value Name 'd' Load - 0,7..0,8
-''',
-r'''(a, *b)''', r'''
-Tuple - ROOT 0,0..0,7
-  .elts[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Starred - 0,4..0,6
-     .value Name 'b' Load - 0,5..0,6
-     .ctx Load
-  .ctx Load
-'''),
-
-('', 0, 1, None, {}, (None,
-r'''call(a, *b, c=d)'''),
-r'''call(*b, c=d)''', r'''
-Call - ROOT 0,0..0,13
-  .func Name 'call' Load - 0,0..0,4
-  .args[1]
-   0] Starred - 0,5..0,7
-     .value Name 'b' Load - 0,6..0,7
-     .ctx Load
-  .keywords[1]
-   0] keyword - 0,9..0,12
-     .arg 'c'
-     .value Name 'd' Load - 0,11..0,12
-''',
-r'''(a,)''', r'''
-Tuple - ROOT 0,0..0,4
-  .elts[1]
-   0] Name 'a' Load - 0,1..0,2
-  .ctx Load
-'''),
-
-('', 1, 2, None, {}, (None,
-r'''call(a, *b, c=d)'''),
-r'''call(a, c=d)''', r'''
-Call - ROOT 0,0..0,12
-  .func Name 'call' Load - 0,0..0,4
-  .args[1]
-   0] Name 'a' Load - 0,5..0,6
-  .keywords[1]
-   0] keyword - 0,8..0,11
-     .arg 'c'
-     .value Name 'd' Load - 0,10..0,11
-''',
-r'''(*b,)''', r'''
-Tuple - ROOT 0,0..0,5
-  .elts[1]
-   0] Starred - 0,1..0,3
-     .value Name 'b' Load - 0,2..0,3
-     .ctx Load
-  .ctx Load
-'''),
-
-('', None, None, None, {}, (None,
-r'''call(a, *b, **c)'''),
-r'''call(**c)''', r'''
-Call - ROOT 0,0..0,9
-  .func Name 'call' Load - 0,0..0,4
-  .keywords[1]
-   0] keyword - 0,5..0,8
-     .value Name 'c' Load - 0,7..0,8
-''',
-r'''(a, *b)''', r'''
-Tuple - ROOT 0,0..0,7
-  .elts[2]
-   0] Name 'a' Load - 0,1..0,2
-   1] Starred - 0,4..0,6
-     .value Name 'b' Load - 0,5..0,6
-     .ctx Load
-  .ctx Load
-'''),
-
-('', 0, 1, None, {}, (None,
-r'''call(a, *b, **c)'''),
-r'''call(*b, **c)''', r'''
-Call - ROOT 0,0..0,13
-  .func Name 'call' Load - 0,0..0,4
-  .args[1]
-   0] Starred - 0,5..0,7
-     .value Name 'b' Load - 0,6..0,7
-     .ctx Load
-  .keywords[1]
-   0] keyword - 0,9..0,12
-     .value Name 'c' Load - 0,11..0,12
-''',
-r'''(a,)''', r'''
-Tuple - ROOT 0,0..0,4
-  .elts[1]
-   0] Name 'a' Load - 0,1..0,2
-  .ctx Load
-'''),
-
-('', 1, 2, None, {}, (None,
-r'''call(a, *b, **c)'''),
-r'''call(a, **c)''', r'''
-Call - ROOT 0,0..0,12
-  .func Name 'call' Load - 0,0..0,4
-  .args[1]
-   0] Name 'a' Load - 0,5..0,6
-  .keywords[1]
-   0] keyword - 0,8..0,11
-     .value Name 'c' Load - 0,10..0,11
-''',
-r'''(*b,)''', r'''
-Tuple - ROOT 0,0..0,5
-  .elts[1]
-   0] Starred - 0,1..0,3
-     .value Name 'b' Load - 0,2..0,3
-     .ctx Load
-  .ctx Load
-'''),
-
-('', 1, 2, None, {}, (None, r'''
-call( \
-a \
-, \
-* \
-b \
-, \
-c \
-, \
-** \
-d \
-)
-'''), r'''
-call( \
-a \
-, \
-c \
-, \
-** \
-d \
-)
-''', r'''
-Call - ROOT 0,0..7,1
-  .func Name 'call' Load - 0,0..0,4
-  .args[2]
-   0] Name 'a' Load - 1,0..1,1
-   1] Name 'c' Load - 3,0..3,1
-  .keywords[1]
-   0] keyword - 5,0..6,1
-     .value Name 'd' Load - 6,0..6,1
-''', r'''
-(
-* \
-b \
-, \
-)
-''', r'''
-Tuple - ROOT 0,0..4,1
-  .elts[1]
-   0] Starred - 1,0..2,1
-     .value Name 'b' Load - 2,0..2,1
-     .ctx Load
-  .ctx Load
-'''),
-
-('', 0, 3, None, {}, (None, r'''
-call( \
-a \
-, \
-* \
-b \
-, \
-c \
-, \
-** \
-d \
-)
-'''), r'''
-call( \
-** \
-d \
-)
-''', r'''
-Call - ROOT 0,0..3,1
-  .func Name 'call' Load - 0,0..0,4
-  .keywords[1]
-   0] keyword - 1,0..2,1
-     .value Name 'd' Load - 2,0..2,1
-''', r'''
-(
-a \
-, \
-* \
-b \
-, \
-c \
- \
-)
-''', r'''
-Tuple - ROOT 0,0..8,1
-  .elts[3]
-   0] Name 'a' Load - 1,0..1,1
-   1] Starred - 3,0..4,1
-     .value Name 'b' Load - 4,0..4,1
-     .ctx Load
-   2] Name 'c' Load - 6,0..6,1
-  .ctx Load
-'''),
-
-('', 0, 3, None, {}, (None, r'''
-call( \
-a, \
-* \
-b, \
-c, \
-** \
-d \
-)
-'''), r'''
-call( \
-** \
-d \
-)
-''', r'''
-Call - ROOT 0,0..3,1
-  .func Name 'call' Load - 0,0..0,4
-  .keywords[1]
-   0] keyword - 1,0..2,1
-     .value Name 'd' Load - 2,0..2,1
-''', r'''
-(
-a, \
-* \
-b, \
-c \
-)
-''', r'''
-Tuple - ROOT 0,0..5,1
-  .elts[3]
-   0] Name 'a' Load - 1,0..1,1
-   1] Starred - 2,0..3,1
-     .value Name 'b' Load - 3,0..3,1
-     .ctx Load
-   2] Name 'c' Load - 4,0..4,1
-  .ctx Load
-'''),
-
-('', 1, 2, None, {}, (None, r'''
-call(
-a
-,
-*
-b
-,
-c
-,
-**
-d
-)
-'''), r'''
-call(
-a
-,
-c
-,
-**
-d
-)
-''', r'''
-Call - ROOT 0,0..7,1
-  .func Name 'call' Load - 0,0..0,4
-  .args[2]
-   0] Name 'a' Load - 1,0..1,1
-   1] Name 'c' Load - 3,0..3,1
-  .keywords[1]
-   0] keyword - 5,0..6,1
-     .value Name 'd' Load - 6,0..6,1
-''', r'''
-(
-*
-b
-,
-)
-''', r'''
-Tuple - ROOT 0,0..4,1
-  .elts[1]
-   0] Starred - 1,0..2,1
-     .value Name 'b' Load - 2,0..2,1
-     .ctx Load
-  .ctx Load
-'''),
-
-('', 0, 3, None, {}, (None, r'''
-call(
-a
-,
-*
-b
-,
-c
-,
-**
-d
-)
-'''), r'''
-call(
-**
-d
-)
-''', r'''
-Call - ROOT 0,0..3,1
-  .func Name 'call' Load - 0,0..0,4
-  .keywords[1]
-   0] keyword - 1,0..2,1
-     .value Name 'd' Load - 2,0..2,1
-''', r'''
-(
-a
-,
-*
-b
-,
-c
-
-)
-''', r'''
-Tuple - ROOT 0,0..8,1
-  .elts[3]
-   0] Name 'a' Load - 1,0..1,1
-   1] Starred - 3,0..4,1
-     .value Name 'b' Load - 4,0..4,1
-     .ctx Load
-   2] Name 'c' Load - 6,0..6,1
-  .ctx Load
-'''),
-
-('', 0, 3, None, {}, (None, r'''
-call(
-a,
-*
-b,
-c,
-**
-d
-)
-'''), r'''
-call(
-**
-d
-)
-''', r'''
-Call - ROOT 0,0..3,1
-  .func Name 'call' Load - 0,0..0,4
-  .keywords[1]
-   0] keyword - 1,0..2,1
-     .value Name 'd' Load - 2,0..2,1
-''', r'''
-(
-a,
-*
-b,
-c
-)
-''', r'''
-Tuple - ROOT 0,0..5,1
-  .elts[3]
-   0] Name 'a' Load - 1,0..1,1
-   1] Starred - 2,0..3,1
-     .value Name 'b' Load - 3,0..3,1
-     .ctx Load
-   2] Name 'c' Load - 4,0..4,1
-  .ctx Load
-'''),
-
-('', 0, 2, None, {}, (None,
-r'''call(a, b=c, *d)'''),
-r'''**NodeError('cannot get this Call.args slice because it includes parts after a keyword')**'''),
-
-('', 1, 2, None, {}, (None,
-r'''call(a, b=c, *d)'''),
-r'''**NodeError('cannot get this Call.args slice because it includes parts after a keyword')**'''),
-
-('', 0, 1, None, {}, (None,
-r'''call(a, b, c=d, *e)'''),
-r'''call(b, c=d, *e)''', r'''
-Call - ROOT 0,0..0,16
-  .func Name 'call' Load - 0,0..0,4
-  .args[2]
-   0] Name 'b' Load - 0,5..0,6
-   1] Starred - 0,13..0,15
-     .value Name 'e' Load - 0,14..0,15
-     .ctx Load
-  .keywords[1]
-   0] keyword - 0,8..0,11
-     .arg 'c'
-     .value Name 'd' Load - 0,10..0,11
-''',
-r'''(a,)''', r'''
-Tuple - ROOT 0,0..0,4
-  .elts[1]
-   0] Name 'a' Load - 0,1..0,2
-  .ctx Load
-'''),
-
-('', 1, 2, None, {}, (None,
-r'''call(a, b, c=d, *e)'''),
-r'''call(a, c=d, *e)''', r'''
-Call - ROOT 0,0..0,16
-  .func Name 'call' Load - 0,0..0,4
-  .args[2]
-   0] Name 'a' Load - 0,5..0,6
-   1] Starred - 0,13..0,15
-     .value Name 'e' Load - 0,14..0,15
-     .ctx Load
-  .keywords[1]
-   0] keyword - 0,8..0,11
-     .arg 'c'
-     .value Name 'd' Load - 0,10..0,11
-''',
-r'''(b,)''', r'''
-Tuple - ROOT 0,0..0,4
-  .elts[1]
-   0] Name 'b' Load - 0,1..0,2
-  .ctx Load
-'''),
-
-('', 1, 2, None, {}, (None,
-r'''call(a, b, c=d, *e,)'''),
-r'''call(a, c=d, *e,)''', r'''
-Call - ROOT 0,0..0,17
-  .func Name 'call' Load - 0,0..0,4
-  .args[2]
-   0] Name 'a' Load - 0,5..0,6
-   1] Starred - 0,13..0,15
-     .value Name 'e' Load - 0,14..0,15
-     .ctx Load
-  .keywords[1]
-   0] keyword - 0,8..0,11
-     .arg 'c'
-     .value Name 'd' Load - 0,10..0,11
-''',
-r'''(b,)''', r'''
-Tuple - ROOT 0,0..0,4
-  .elts[1]
-   0] Name 'b' Load - 0,1..0,2
-  .ctx Load
-'''),
-
-('', 0, 1, None, {}, (None,
-r'''call(i for i in j)'''),
-r'''call()''', r'''
-Call - ROOT 0,0..0,6
-  .func Name 'call' Load - 0,0..0,4
-''',
-r'''((i for i in j),)''', r'''
-Tuple - ROOT 0,0..0,17
-  .elts[1]
-   0] GeneratorExp - 0,1..0,15
-     .elt Name 'i' Load - 0,2..0,3
-     .generators[1]
-      0] comprehension - 0,4..0,14
-        .target Name 'i' Store - 0,8..0,9
-        .iter Name 'j' Load - 0,13..0,14
-        .is_async 0
-  .ctx Load
-'''),
-
-('', None, None, None, {}, (None,
-r'''call(*not a, b, *c or d, *e)'''),
-r'''call()''', r'''
-Call - ROOT 0,0..0,6
-  .func Name 'call' Load - 0,0..0,4
-''',
-r'''(*(not a), b, *(c or d), *e)''', r'''
-Tuple - ROOT 0,0..0,28
-  .elts[4]
-   0] Starred - 0,1..0,9
-     .value UnaryOp - 0,3..0,8
-       .op Not - 0,3..0,6
-       .operand Name 'a' Load - 0,7..0,8
-     .ctx Load
-   1] Name 'b' Load - 0,11..0,12
-   2] Starred - 0,14..0,23
-     .value BoolOp - 0,16..0,22
-       .op Or
-       .values[2]
-        0] Name 'c' Load - 0,16..0,17
-        1] Name 'd' Load - 0,21..0,22
-     .ctx Load
-   3] Starred - 0,25..0,27
-     .value Name 'e' Load - 0,26..0,27
-     .ctx Load
-  .ctx Load
-'''),
-
-('', None, None, None, {'pars': False, '_verify_get': False}, (None,
-r'''call(*not a, b, *c or d, *e)'''),
-r'''call()''', r'''
-Call - ROOT 0,0..0,6
-  .func Name 'call' Load - 0,0..0,4
-''',
-r'''(*(not a), b, *(c or d), *e)''', r'''
-Tuple - ROOT 0,0..0,28
-  .elts[4]
-   0] Starred - 0,1..0,9
-     .value UnaryOp - 0,3..0,8
-       .op Not - 0,3..0,6
-       .operand Name 'a' Load - 0,7..0,8
-     .ctx Load
-   1] Name 'b' Load - 0,11..0,12
-   2] Starred - 0,14..0,23
-     .value BoolOp - 0,16..0,22
-       .op Or
-       .values[2]
-        0] Name 'c' Load - 0,16..0,17
-        1] Name 'd' Load - 0,21..0,22
-     .ctx Load
-   3] Starred - 0,25..0,27
-     .value Name 'e' Load - 0,26..0,27
-     .ctx Load
-  .ctx Load
-'''),
-],
-
 'ClassDef_bases': [  # ................................................................................
 
 ('', 0, 0, 'bases', {}, (None,
@@ -17285,6 +15510,1781 @@ r'''**NodeError('cannot get this ClassDef.bases slice because it includes parts 
 ('', 1, 2, 'bases', {'_ver': 12}, (None,
 r'''class cls[T](a, b=c, *d): pass'''),
 r'''**NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')**'''),
+],
+
+'Call_args': [  # ................................................................................
+
+('', 0, 0, None, {}, (None,
+r'''call(a, *b)'''),
+r'''call(a, *b)''', r'''
+Call - ROOT 0,0..0,11
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'a' Load - 0,5..0,6
+   1] Starred - 0,8..0,10
+     .value Name 'b' Load - 0,9..0,10
+     .ctx Load
+''',
+r'''()''', r'''
+Tuple - ROOT 0,0..0,2
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''call(a, *b)'''),
+r'''call()''', r'''
+Call - ROOT 0,0..0,6
+  .func Name 'call' Load - 0,0..0,4
+''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 1, None, {}, (None,
+r'''call(a, *b)'''),
+r'''call(*b)''', r'''
+Call - ROOT 0,0..0,8
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Starred - 0,5..0,7
+     .value Name 'b' Load - 0,6..0,7
+     .ctx Load
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+   0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', 1, 2, None, {}, (None,
+r'''call(a, *b)'''),
+r'''call(a)''', r'''
+Call - ROOT 0,0..0,7
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'a' Load - 0,5..0,6
+''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[1]
+   0] Starred - 0,1..0,3
+     .value Name 'b' Load - 0,2..0,3
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''call(a, *b, c=d)'''),
+r'''call(c=d)''', r'''
+Call - ROOT 0,0..0,9
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[1]
+   0] keyword - 0,5..0,8
+     .arg 'c'
+     .value Name 'd' Load - 0,7..0,8
+''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 1, None, {}, (None,
+r'''call(a, *b, c=d)'''),
+r'''call(*b, c=d)''', r'''
+Call - ROOT 0,0..0,13
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Starred - 0,5..0,7
+     .value Name 'b' Load - 0,6..0,7
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,9..0,12
+     .arg 'c'
+     .value Name 'd' Load - 0,11..0,12
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+   0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', 1, 2, None, {}, (None,
+r'''call(a, *b, c=d)'''),
+r'''call(a, c=d)''', r'''
+Call - ROOT 0,0..0,12
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'a' Load - 0,5..0,6
+  .keywords[1]
+   0] keyword - 0,8..0,11
+     .arg 'c'
+     .value Name 'd' Load - 0,10..0,11
+''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[1]
+   0] Starred - 0,1..0,3
+     .value Name 'b' Load - 0,2..0,3
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''call(a, *b, **c)'''),
+r'''call(**c)''', r'''
+Call - ROOT 0,0..0,9
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[1]
+   0] keyword - 0,5..0,8
+     .value Name 'c' Load - 0,7..0,8
+''',
+r'''(a, *b)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Starred - 0,4..0,6
+     .value Name 'b' Load - 0,5..0,6
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 1, None, {}, (None,
+r'''call(a, *b, **c)'''),
+r'''call(*b, **c)''', r'''
+Call - ROOT 0,0..0,13
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Starred - 0,5..0,7
+     .value Name 'b' Load - 0,6..0,7
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,9..0,12
+     .value Name 'c' Load - 0,11..0,12
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+   0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', 1, 2, None, {}, (None,
+r'''call(a, *b, **c)'''),
+r'''call(a, **c)''', r'''
+Call - ROOT 0,0..0,12
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Name 'a' Load - 0,5..0,6
+  .keywords[1]
+   0] keyword - 0,8..0,11
+     .value Name 'c' Load - 0,10..0,11
+''',
+r'''(*b,)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[1]
+   0] Starred - 0,1..0,3
+     .value Name 'b' Load - 0,2..0,3
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 1, 2, None, {}, (None, r'''
+call( \
+a \
+, \
+* \
+b \
+, \
+c \
+, \
+** \
+d \
+)
+'''), r'''
+call( \
+a \
+, \
+c \
+, \
+** \
+d \
+)
+''', r'''
+Call - ROOT 0,0..7,1
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'a' Load - 1,0..1,1
+   1] Name 'c' Load - 3,0..3,1
+  .keywords[1]
+   0] keyword - 5,0..6,1
+     .value Name 'd' Load - 6,0..6,1
+''', r'''
+(
+* \
+b \
+, \
+)
+''', r'''
+Tuple - ROOT 0,0..4,1
+  .elts[1]
+   0] Starred - 1,0..2,1
+     .value Name 'b' Load - 2,0..2,1
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 3, None, {}, (None, r'''
+call( \
+a \
+, \
+* \
+b \
+, \
+c \
+, \
+** \
+d \
+)
+'''), r'''
+call( \
+** \
+d \
+)
+''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[1]
+   0] keyword - 1,0..2,1
+     .value Name 'd' Load - 2,0..2,1
+''', r'''
+(
+a \
+, \
+* \
+b \
+, \
+c \
+ \
+)
+''', r'''
+Tuple - ROOT 0,0..8,1
+  .elts[3]
+   0] Name 'a' Load - 1,0..1,1
+   1] Starred - 3,0..4,1
+     .value Name 'b' Load - 4,0..4,1
+     .ctx Load
+   2] Name 'c' Load - 6,0..6,1
+  .ctx Load
+'''),
+
+('', 0, 3, None, {}, (None, r'''
+call( \
+a, \
+* \
+b, \
+c, \
+** \
+d \
+)
+'''), r'''
+call( \
+** \
+d \
+)
+''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[1]
+   0] keyword - 1,0..2,1
+     .value Name 'd' Load - 2,0..2,1
+''', r'''
+(
+a, \
+* \
+b, \
+c \
+)
+''', r'''
+Tuple - ROOT 0,0..5,1
+  .elts[3]
+   0] Name 'a' Load - 1,0..1,1
+   1] Starred - 2,0..3,1
+     .value Name 'b' Load - 3,0..3,1
+     .ctx Load
+   2] Name 'c' Load - 4,0..4,1
+  .ctx Load
+'''),
+
+('', 1, 2, None, {}, (None, r'''
+call(
+a
+,
+*
+b
+,
+c
+,
+**
+d
+)
+'''), r'''
+call(
+a
+,
+c
+,
+**
+d
+)
+''', r'''
+Call - ROOT 0,0..7,1
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'a' Load - 1,0..1,1
+   1] Name 'c' Load - 3,0..3,1
+  .keywords[1]
+   0] keyword - 5,0..6,1
+     .value Name 'd' Load - 6,0..6,1
+''', r'''
+(
+*
+b
+,
+)
+''', r'''
+Tuple - ROOT 0,0..4,1
+  .elts[1]
+   0] Starred - 1,0..2,1
+     .value Name 'b' Load - 2,0..2,1
+     .ctx Load
+  .ctx Load
+'''),
+
+('', 0, 3, None, {}, (None, r'''
+call(
+a
+,
+*
+b
+,
+c
+,
+**
+d
+)
+'''), r'''
+call(
+**
+d
+)
+''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[1]
+   0] keyword - 1,0..2,1
+     .value Name 'd' Load - 2,0..2,1
+''', r'''
+(
+a
+,
+*
+b
+,
+c
+
+)
+''', r'''
+Tuple - ROOT 0,0..8,1
+  .elts[3]
+   0] Name 'a' Load - 1,0..1,1
+   1] Starred - 3,0..4,1
+     .value Name 'b' Load - 4,0..4,1
+     .ctx Load
+   2] Name 'c' Load - 6,0..6,1
+  .ctx Load
+'''),
+
+('', 0, 3, None, {}, (None, r'''
+call(
+a,
+*
+b,
+c,
+**
+d
+)
+'''), r'''
+call(
+**
+d
+)
+''', r'''
+Call - ROOT 0,0..3,1
+  .func Name 'call' Load - 0,0..0,4
+  .keywords[1]
+   0] keyword - 1,0..2,1
+     .value Name 'd' Load - 2,0..2,1
+''', r'''
+(
+a,
+*
+b,
+c
+)
+''', r'''
+Tuple - ROOT 0,0..5,1
+  .elts[3]
+   0] Name 'a' Load - 1,0..1,1
+   1] Starred - 2,0..3,1
+     .value Name 'b' Load - 3,0..3,1
+     .ctx Load
+   2] Name 'c' Load - 4,0..4,1
+  .ctx Load
+'''),
+
+('', 0, 2, None, {}, (None,
+r'''call(a, b=c, *d)'''),
+r'''**NodeError('cannot get this Call.args slice because it includes parts after a keyword')**'''),
+
+('', 1, 2, None, {}, (None,
+r'''call(a, b=c, *d)'''),
+r'''**NodeError('cannot get this Call.args slice because it includes parts after a keyword')**'''),
+
+('', 0, 1, None, {}, (None,
+r'''call(a, b, c=d, *e)'''),
+r'''call(b, c=d, *e)''', r'''
+Call - ROOT 0,0..0,16
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'b' Load - 0,5..0,6
+   1] Starred - 0,13..0,15
+     .value Name 'e' Load - 0,14..0,15
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,8..0,11
+     .arg 'c'
+     .value Name 'd' Load - 0,10..0,11
+''',
+r'''(a,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+   0] Name 'a' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', 1, 2, None, {}, (None,
+r'''call(a, b, c=d, *e)'''),
+r'''call(a, c=d, *e)''', r'''
+Call - ROOT 0,0..0,16
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'a' Load - 0,5..0,6
+   1] Starred - 0,13..0,15
+     .value Name 'e' Load - 0,14..0,15
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,8..0,11
+     .arg 'c'
+     .value Name 'd' Load - 0,10..0,11
+''',
+r'''(b,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+   0] Name 'b' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', 1, 2, None, {}, (None,
+r'''call(a, b, c=d, *e,)'''),
+r'''call(a, c=d, *e,)''', r'''
+Call - ROOT 0,0..0,17
+  .func Name 'call' Load - 0,0..0,4
+  .args[2]
+   0] Name 'a' Load - 0,5..0,6
+   1] Starred - 0,13..0,15
+     .value Name 'e' Load - 0,14..0,15
+     .ctx Load
+  .keywords[1]
+   0] keyword - 0,8..0,11
+     .arg 'c'
+     .value Name 'd' Load - 0,10..0,11
+''',
+r'''(b,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+   0] Name 'b' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', 0, 1, None, {}, (None,
+r'''call(i for i in j)'''),
+r'''call()''', r'''
+Call - ROOT 0,0..0,6
+  .func Name 'call' Load - 0,0..0,4
+''',
+r'''((i for i in j),)''', r'''
+Tuple - ROOT 0,0..0,17
+  .elts[1]
+   0] GeneratorExp - 0,1..0,15
+     .elt Name 'i' Load - 0,2..0,3
+     .generators[1]
+      0] comprehension - 0,4..0,14
+        .target Name 'i' Store - 0,8..0,9
+        .iter Name 'j' Load - 0,13..0,14
+        .is_async 0
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''call(*not a, b, *c or d, *e)'''),
+r'''call()''', r'''
+Call - ROOT 0,0..0,6
+  .func Name 'call' Load - 0,0..0,4
+''',
+r'''(*(not a), b, *(c or d), *e)''', r'''
+Tuple - ROOT 0,0..0,28
+  .elts[4]
+   0] Starred - 0,1..0,9
+     .value UnaryOp - 0,3..0,8
+       .op Not - 0,3..0,6
+       .operand Name 'a' Load - 0,7..0,8
+     .ctx Load
+   1] Name 'b' Load - 0,11..0,12
+   2] Starred - 0,14..0,23
+     .value BoolOp - 0,16..0,22
+       .op Or
+       .values[2]
+        0] Name 'c' Load - 0,16..0,17
+        1] Name 'd' Load - 0,21..0,22
+     .ctx Load
+   3] Starred - 0,25..0,27
+     .value Name 'e' Load - 0,26..0,27
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {'pars': False, '_verify_get': False}, (None,
+r'''call(*not a, b, *c or d, *e)'''),
+r'''call()''', r'''
+Call - ROOT 0,0..0,6
+  .func Name 'call' Load - 0,0..0,4
+''',
+r'''(*(not a), b, *(c or d), *e)''', r'''
+Tuple - ROOT 0,0..0,28
+  .elts[4]
+   0] Starred - 0,1..0,9
+     .value UnaryOp - 0,3..0,8
+       .op Not - 0,3..0,6
+       .operand Name 'a' Load - 0,7..0,8
+     .ctx Load
+   1] Name 'b' Load - 0,11..0,12
+   2] Starred - 0,14..0,23
+     .value BoolOp - 0,16..0,22
+       .op Or
+       .values[2]
+        0] Name 'c' Load - 0,16..0,17
+        1] Name 'd' Load - 0,21..0,22
+     .ctx Load
+   3] Starred - 0,25..0,27
+     .value Name 'e' Load - 0,26..0,27
+     .ctx Load
+  .ctx Load
+'''),
+],
+
+'decorator_list': [  # ................................................................................
+
+('', 0, 1, 'decorator_list', {}, (None, r'''
+@a
+@ ( b )
+@c()
+class cls: pass
+'''), r'''
+@ ( b )
+@c()
+class cls: pass
+''', r'''
+ClassDef - ROOT 2,0..2,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 2,11..2,15
+  .decorator_list[2]
+   0] Name 'b' Load - 0,4..0,5
+   1] Call - 1,1..1,4
+     .func Name 'c' Load - 1,1..1,2
+''',
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('', 1, 2, 'decorator_list', {}, (None, r'''
+@a
+@ ( b )
+@c()
+class cls: pass
+'''), r'''
+@a
+@c()
+class cls: pass
+''', r'''
+ClassDef - ROOT 2,0..2,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 2,11..2,15
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Call - 1,1..1,4
+     .func Name 'c' Load - 1,1..1,2
+''',
+r'''@ ( b )''', r'''
+_decorator_list - ROOT 0,0..0,7
+  .decorator_list[1]
+   0] Name 'b' Load - 0,4..0,5
+'''),
+
+('', 2, 3, 'decorator_list', {}, (None, r'''
+@a
+@ ( b )
+@c()
+class cls: pass
+'''), r'''
+@a
+@ ( b )
+class cls: pass
+''', r'''
+ClassDef - ROOT 2,0..2,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 2,11..2,15
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,4..1,5
+''',
+r'''@c()''', r'''
+_decorator_list - ROOT 0,0..0,4
+  .decorator_list[1]
+   0] Call - 0,1..0,4
+     .func Name 'c' Load - 0,1..0,2
+'''),
+
+('', 0, 2, 'decorator_list', {}, (None, r'''
+@a
+@ ( b )
+@c()
+class cls: pass
+'''), r'''
+@c()
+class cls: pass
+''', r'''
+ClassDef - ROOT 1,0..1,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 1,11..1,15
+  .decorator_list[1]
+   0] Call - 0,1..0,4
+     .func Name 'c' Load - 0,1..0,2
+''', r'''
+@a
+@ ( b )
+''', r'''
+_decorator_list - ROOT 0,0..1,7
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,4..1,5
+'''),
+
+('', 1, 3, 'decorator_list', {}, (None, r'''
+@a
+@ ( b )
+@c()
+class cls: pass
+'''), r'''
+@a
+class cls: pass
+''', r'''
+ClassDef - ROOT 1,0..1,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 1,11..1,15
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+''', r'''
+@ ( b )
+@c()
+''', r'''
+_decorator_list - ROOT 0,0..1,4
+  .decorator_list[2]
+   0] Name 'b' Load - 0,4..0,5
+   1] Call - 1,1..1,4
+     .func Name 'c' Load - 1,1..1,2
+'''),
+
+('', 0, 3, 'decorator_list', {}, (None, r'''
+@a
+@ ( b )
+@c()
+class cls: pass
+'''),
+r'''class cls: pass''', r'''
+ClassDef - ROOT 0,0..0,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 0,11..0,15
+''', r'''
+@a
+@ ( b )
+@c()
+''', r'''
+_decorator_list - ROOT 0,0..2,4
+  .decorator_list[3]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,4..1,5
+   2] Call - 2,1..2,4
+     .func Name 'c' Load - 2,1..2,2
+'''),
+
+('', 1, 2, 'decorator_list', {'trivia': ('all+', 'all+')}, (None, r'''
+@a
+
+# pre
+@ ( b )  # line
+# post
+
+@c()
+class cls: pass
+'''), r'''
+@a
+@c()
+class cls: pass
+''', r'''
+ClassDef - ROOT 2,0..2,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 2,11..2,15
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Call - 1,1..1,4
+     .func Name 'c' Load - 1,1..1,2
+''', r'''
+
+# pre
+@ ( b )  # line
+# post
+
+''', r'''
+_decorator_list - ROOT 0,0..4,0
+  .decorator_list[1]
+   0] Name 'b' Load - 2,4..2,5
+'''),
+
+('', 1, 2, 'decorator_list', {'trivia': ('all+', 'all+')}, (None, r'''
+@a
+
+
+# pre
+@ ( b )  # line
+# post
+
+
+@c()
+class cls: pass
+'''), r'''
+@a
+@c()
+class cls: pass
+''', r'''
+ClassDef - ROOT 2,0..2,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 2,11..2,15
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Call - 1,1..1,4
+     .func Name 'c' Load - 1,1..1,2
+''', r'''
+
+
+# pre
+@ ( b )  # line
+# post
+
+
+''', r'''
+_decorator_list - ROOT 0,0..6,0
+  .decorator_list[1]
+   0] Name 'b' Load - 3,4..3,5
+'''),
+
+('', 0, 2, 'decorator_list', {}, (None, r'''
+\
+@a
+\
+@ ( b )
+\
+@c()
+\
+class cls: pass
+'''), r'''
+\
+\
+@c()
+\
+class cls: pass
+''', r'''
+ClassDef - ROOT 4,0..4,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 4,11..4,15
+  .decorator_list[1]
+   0] Call - 2,1..2,4
+     .func Name 'c' Load - 2,1..2,2
+''', r'''
+@a
+\
+@ ( b )
+''', r'''
+_decorator_list - ROOT 0,0..2,7
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 2,4..2,5
+'''),
+
+('body[0]', 0, 1, 'decorator_list', {}, (None, r'''
+if 1:
+  @a
+  @ ( b )
+  @c()
+  class cls: pass
+'''), r'''
+if 1:
+  @ ( b )
+  @c()
+  class cls: pass
+''', r'''
+If - ROOT 0,0..3,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 3,2..3,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 3,13..3,17
+     .decorator_list[2]
+      0] Name 'b' Load - 1,6..1,7
+      1] Call - 2,3..2,6
+        .func Name 'c' Load - 2,3..2,4
+''',
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('body[0]', 1, 2, 'decorator_list', {}, (None, r'''
+if 1:
+  @a
+  @ ( b )
+  @c()
+  class cls: pass
+'''), r'''
+if 1:
+  @a
+  @c()
+  class cls: pass
+''', r'''
+If - ROOT 0,0..3,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 3,2..3,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 3,13..3,17
+     .decorator_list[2]
+      0] Name 'a' Load - 1,3..1,4
+      1] Call - 2,3..2,6
+        .func Name 'c' Load - 2,3..2,4
+''',
+r'''@ ( b )''', r'''
+_decorator_list - ROOT 0,0..0,7
+  .decorator_list[1]
+   0] Name 'b' Load - 0,4..0,5
+'''),
+
+('body[0]', 2, 3, 'decorator_list', {}, (None, r'''
+if 1:
+  @a
+  @ ( b )
+  @c()
+  class cls: pass
+'''), r'''
+if 1:
+  @a
+  @ ( b )
+  class cls: pass
+''', r'''
+If - ROOT 0,0..3,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 3,2..3,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 3,13..3,17
+     .decorator_list[2]
+      0] Name 'a' Load - 1,3..1,4
+      1] Name 'b' Load - 2,6..2,7
+''',
+r'''@c()''', r'''
+_decorator_list - ROOT 0,0..0,4
+  .decorator_list[1]
+   0] Call - 0,1..0,4
+     .func Name 'c' Load - 0,1..0,2
+'''),
+
+('body[0]', 0, 2, 'decorator_list', {}, (None, r'''
+if 1:
+  @a
+  @ ( b )
+  @c()
+  class cls: pass
+'''), r'''
+if 1:
+  @c()
+  class cls: pass
+''', r'''
+If - ROOT 0,0..2,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 2,2..2,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 2,13..2,17
+     .decorator_list[1]
+      0] Call - 1,3..1,6
+        .func Name 'c' Load - 1,3..1,4
+''', r'''
+@a
+@ ( b )
+''', r'''
+_decorator_list - ROOT 0,0..1,7
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,4..1,5
+'''),
+
+('body[0]', 1, 3, 'decorator_list', {}, (None, r'''
+if 1:
+  @a
+  @ ( b )
+  @c()
+  class cls: pass
+'''), r'''
+if 1:
+  @a
+  class cls: pass
+''', r'''
+If - ROOT 0,0..2,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 2,2..2,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 2,13..2,17
+     .decorator_list[1]
+      0] Name 'a' Load - 1,3..1,4
+''', r'''
+@ ( b )
+@c()
+''', r'''
+_decorator_list - ROOT 0,0..1,4
+  .decorator_list[2]
+   0] Name 'b' Load - 0,4..0,5
+   1] Call - 1,1..1,4
+     .func Name 'c' Load - 1,1..1,2
+'''),
+
+('body[0]', 0, 3, 'decorator_list', {}, (None, r'''
+if 1:
+  @a
+  @ ( b )
+  @c()
+  class cls: pass
+'''), r'''
+if 1:
+  class cls: pass
+''', r'''
+If - ROOT 0,0..1,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 1,2..1,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 1,13..1,17
+''', r'''
+@a
+@ ( b )
+@c()
+''', r'''
+_decorator_list - ROOT 0,0..2,4
+  .decorator_list[3]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,4..1,5
+   2] Call - 2,1..2,4
+     .func Name 'c' Load - 2,1..2,2
+'''),
+
+('body[0]', 1, 2, 'decorator_list', {'trivia': ('all+', 'all+')}, (None, r'''
+if 1:
+  @a
+
+  # pre
+  @ ( b )  # line
+  # post
+
+  @c()
+  class cls: pass
+'''), r'''
+if 1:
+  @a
+  @c()
+  class cls: pass
+''', r'''
+If - ROOT 0,0..3,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 3,2..3,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 3,13..3,17
+     .decorator_list[2]
+      0] Name 'a' Load - 1,3..1,4
+      1] Call - 2,3..2,6
+        .func Name 'c' Load - 2,3..2,4
+''', r'''
+
+# pre
+@ ( b )  # line
+# post
+
+''', r'''
+_decorator_list - ROOT 0,0..4,0
+  .decorator_list[1]
+   0] Name 'b' Load - 2,4..2,5
+'''),
+
+('body[0]', 1, 2, 'decorator_list', {'trivia': ('all+', 'all+')}, (None, r'''
+if 1:
+  @a
+
+
+  # pre
+  @ ( b )  # line
+  # post
+
+
+  @c()
+  class cls: pass
+'''), r'''
+if 1:
+  @a
+  @c()
+  class cls: pass
+''', r'''
+If - ROOT 0,0..3,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 3,2..3,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 3,13..3,17
+     .decorator_list[2]
+      0] Name 'a' Load - 1,3..1,4
+      1] Call - 2,3..2,6
+        .func Name 'c' Load - 2,3..2,4
+''', r'''
+
+
+# pre
+@ ( b )  # line
+# post
+
+
+''', r'''
+_decorator_list - ROOT 0,0..6,0
+  .decorator_list[1]
+   0] Name 'b' Load - 3,4..3,5
+'''),
+
+('body[0]', 0, 2, 'decorator_list', {}, (None, r'''
+if 1:
+\
+  @a
+\
+  @ ( b )
+\
+  @c()
+\
+  class cls: pass
+'''), r'''
+if 1:
+\
+\
+  @c()
+\
+  class cls: pass
+''', r'''
+If - ROOT 0,0..5,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 5,2..5,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 5,13..5,17
+     .decorator_list[1]
+      0] Call - 3,3..3,6
+        .func Name 'c' Load - 3,3..3,4
+''', r'''
+@a
+\
+@ ( b )
+''', r'''
+_decorator_list - ROOT 0,0..2,7
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 2,4..2,5
+'''),
+
+('body[0]', 0, 2, 'decorator_list', {}, (None, r'''
+if 1:
+  \
+@a
+  \
+@ ( b )
+  \
+@c()
+  \
+class cls: pass
+'''), r'''
+if 1:
+  \
+  \
+@c()
+  \
+class cls: pass
+''', r'''
+If - ROOT 0,0..5,15
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 5,0..5,15
+     .name 'cls'
+     .body[1]
+      0] Pass - 5,11..5,15
+     .decorator_list[1]
+      0] Call - 3,1..3,4
+        .func Name 'c' Load - 3,1..3,2
+''', r'''
+@a
+\
+@ ( b )
+''', r'''
+_decorator_list - ROOT 0,0..2,7
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 2,4..2,5
+'''),
+
+('', None, None, 'decorator_list', {}, (None, r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+@c
+def f(): pass
+'''),
+r'''def f(): pass''', r'''
+FunctionDef - ROOT 0,0..0,13
+  .name 'f'
+  .body[1]
+   0] Pass - 0,9..0,13
+''', r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+@c
+''', r'''
+_decorator_list - ROOT 0,0..7,2
+  .decorator_list[3]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 3,1..3,2
+   2] Name 'c' Load - 7,1..7,2
+'''),
+
+('', 0, 1, 'decorator_list', {}, (None, r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+@c
+def f(): pass
+'''), r'''
+
+# pre
+@b  # line
+
+# post
+
+@c
+def f(): pass
+''', r'''
+FunctionDef - ROOT 7,0..7,13
+  .name 'f'
+  .body[1]
+   0] Pass - 7,9..7,13
+  .decorator_list[2]
+   0] Name 'b' Load - 2,1..2,2
+   1] Name 'c' Load - 6,1..6,2
+''',
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('', 1, 2, 'decorator_list', {}, (None, r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+@c
+def f(): pass
+'''), r'''
+@a
+
+
+# post
+
+@c
+def f(): pass
+''', r'''
+FunctionDef - ROOT 6,0..6,13
+  .name 'f'
+  .body[1]
+   0] Pass - 6,9..6,13
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'c' Load - 5,1..5,2
+''', r'''
+# pre
+@b  # line
+''', r'''
+_decorator_list - ROOT 0,0..1,10
+  .decorator_list[1]
+   0] Name 'b' Load - 1,1..1,2
+'''),
+
+('', 1, 2, 'decorator_list', {'trivia': ('all+', 'all+')}, (None, r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+@c
+def f(): pass
+'''), r'''
+@a
+@c
+def f(): pass
+''', r'''
+FunctionDef - ROOT 2,0..2,13
+  .name 'f'
+  .body[1]
+   0] Pass - 2,9..2,13
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'c' Load - 1,1..1,2
+''', r'''
+
+# pre
+@b  # line
+
+# post
+
+''', r'''
+_decorator_list - ROOT 0,0..5,0
+  .decorator_list[1]
+   0] Name 'b' Load - 2,1..2,2
+'''),
+
+('', 2, 3, 'decorator_list', {}, (None, r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+@c
+def f(): pass
+'''), r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+def f(): pass
+''', r'''
+FunctionDef - ROOT 7,0..7,13
+  .name 'f'
+  .body[1]
+   0] Pass - 7,9..7,13
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 3,1..3,2
+''',
+r'''@c''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'c' Load - 0,1..0,2
+'''),
+
+('', 2, 3, 'decorator_list', {'trivia': False}, (None, r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+@c
+def f(): pass
+'''), r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+def f(): pass
+''', r'''
+FunctionDef - ROOT 7,0..7,13
+  .name 'f'
+  .body[1]
+   0] Pass - 7,9..7,13
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 3,1..3,2
+''',
+r'''@c''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'c' Load - 0,1..0,2
+'''),
+
+('', 0, 2, 'decorator_list', {'trivia': (None, 'all+')}, (None, r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+@c
+def f(): pass
+'''), r'''
+@c
+def f(): pass
+''', r'''
+FunctionDef - ROOT 1,0..1,13
+  .name 'f'
+  .body[1]
+   0] Pass - 1,9..1,13
+  .decorator_list[1]
+   0] Name 'c' Load - 0,1..0,2
+''', r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+''', r'''
+_decorator_list - ROOT 0,0..6,0
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 3,1..3,2
+'''),
+
+('', 1, 3, 'decorator_list', {'trivia': 'all+'}, (None, r'''
+@a
+
+# pre
+@b  # line
+
+# post
+
+@c
+def f(): pass
+'''), r'''
+@a
+def f(): pass
+''', r'''
+FunctionDef - ROOT 1,0..1,13
+  .name 'f'
+  .body[1]
+   0] Pass - 1,9..1,13
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+''', r'''
+
+# pre
+@b  # line
+
+# post
+
+@c
+''', r'''
+_decorator_list - ROOT 0,0..6,2
+  .decorator_list[2]
+   0] Name 'b' Load - 2,1..2,2
+   1] Name 'c' Load - 6,1..6,2
+'''),
+],
+
+'decorator_list_newlines': [  # ................................................................................
+
+('', None, None, None, {}, ('_decorator_list',
+r'''@a'''),
+r'''''',
+r'''_decorator_list - ROOT 0,0..0,0''',
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('', 0, 2, None, {}, ('_decorator_list', r'''
+@a
+@b
+'''),
+r'''''',
+r'''_decorator_list - ROOT 0,0..0,0''', r'''
+@a
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
+'''),
+
+('', 1, 2, None, {}, ('_decorator_list', r'''
+@a
+@b
+'''),
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+''',
+r'''@b''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'b' Load - 0,1..0,2
+'''),
+
+('', 1, 2, None, {}, ('_decorator_list', r'''
+@a
+
+@b
+'''), r'''
+@a
+
+''', r'''
+_decorator_list - ROOT 0,0..1,0
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+''',
+r'''@b''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'b' Load - 0,1..0,2
+'''),
+
+('', 1, 2, None, {'trivia': '-'}, ('_decorator_list', r'''
+@a
+
+@b
+'''),
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+''',
+r'''@b''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'b' Load - 0,1..0,2
+'''),
+
+('', 1, 2, None, {}, ('_decorator_list', r'''
+@a
+# comment
+@b
+'''),
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+''', r'''
+# comment
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[1]
+   0] Name 'b' Load - 1,1..1,2
+'''),
+
+('', 1, 2, None, {'trivia': False}, ('_decorator_list', r'''
+@a
+# comment
+@b
+'''), r'''
+@a
+# comment
+''', r'''
+_decorator_list - ROOT 0,0..1,9
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+''',
+r'''@b''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'b' Load - 0,1..0,2
+'''),
+
+('', 1, 2, None, {}, ('_decorator_list', r'''
+@a
+# comment
+
+@b
+'''), r'''
+@a
+# comment
+
+''', r'''
+_decorator_list - ROOT 0,0..2,0
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+''',
+r'''@b''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'b' Load - 0,1..0,2
+'''),
+
+('', 1, 2, None, {'trivia': '-'}, ('_decorator_list', r'''
+@a
+# comment
+
+@b
+'''), r'''
+@a
+# comment
+''', r'''
+_decorator_list - ROOT 0,0..1,9
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+''',
+r'''@b''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'b' Load - 0,1..0,2
+'''),
+
+('body[1]', 0, 1, 'decorator_list', {'trivia': '-'}, (None, r'''
+pass
+
+@a
+class cls: pass
+'''), r'''
+pass
+
+class cls: pass
+''', r'''
+Module - ROOT 0,0..2,15
+  .body[2]
+   0] Pass - 0,0..0,4
+   1] ClassDef - 2,0..2,15
+     .name 'cls'
+     .body[1]
+      0] Pass - 2,11..2,15
+''',
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('body[1]', 0, 1, 'decorator_list', {'trivia': '-'}, (None, r'''
+if 1:
+  pass
+
+  @a
+  class cls: pass
+'''), r'''
+if 1:
+  pass
+
+  class cls: pass
+''', r'''
+If - ROOT 0,0..3,17
+  .test Constant 1 - 0,3..0,4
+  .body[2]
+   0] Pass - 1,2..1,6
+   1] ClassDef - 3,2..3,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 3,13..3,17
+''',
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('', 0, 1, 'decorator_list', {}, (None, r'''
+
+@a
+@b
+class cls: pass
+'''), r'''
+
+@b
+class cls: pass
+''', r'''
+ClassDef - ROOT 2,0..2,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 2,11..2,15
+  .decorator_list[1]
+   0] Name 'b' Load - 1,1..1,2
+''',
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('', 0, 2, 'decorator_list', {}, (None, r'''
+
+@a
+@b
+class cls: pass
+'''), r'''
+
+class cls: pass
+''', r'''
+ClassDef - ROOT 1,0..1,15
+  .name 'cls'
+  .body[1]
+   0] Pass - 1,11..1,15
+''', r'''
+@a
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
+'''),
+
+('body[0]', 0, 1, 'decorator_list', {}, (None, r'''
+if 1:
+
+  @a
+  @b
+  class cls: pass
+'''), r'''
+if 1:
+
+  @b
+  class cls: pass
+''', r'''
+If - ROOT 0,0..3,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 3,2..3,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 3,13..3,17
+     .decorator_list[1]
+      0] Name 'b' Load - 2,3..2,4
+''',
+r'''@a''', r'''
+_decorator_list - ROOT 0,0..0,2
+  .decorator_list[1]
+   0] Name 'a' Load - 0,1..0,2
+'''),
+
+('body[0]', 0, 2, 'decorator_list', {}, (None, r'''
+if 1:
+
+  @a
+  @b
+  class cls: pass
+'''), r'''
+if 1:
+
+  class cls: pass
+''', r'''
+If - ROOT 0,0..2,17
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] ClassDef - 2,2..2,17
+     .name 'cls'
+     .body[1]
+      0] Pass - 2,13..2,17
+''', r'''
+@a
+@b
+''', r'''
+_decorator_list - ROOT 0,0..1,2
+  .decorator_list[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,1..1,2
+'''),
 ],
 
 'generators': [  # ................................................................................
