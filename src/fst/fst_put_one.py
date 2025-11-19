@@ -1371,20 +1371,23 @@ def _put_one_Tuple_elts(
     ast = self.a
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params, sanitize=True)
+    codea = code.a
     pfield = self.pfield
-    is_slice = pfield == ('slice', None)
-    is_par = None
+    is_slice = pfield and pfield.name == 'slice'
+    is_par = None  # cached
 
-
-    if (pfield and not is_slice) or (is_par := self._is_delimited_seq()):  # only allow slice in unparenthesized tuple, in slice or at root
-        static = _onestatic_expr_required_starred  # default static allows slices, this disallows them
+    if pfield and isinstance(codea, Slice):  # putting Slice to non-root Tuple
+        if not is_slice:
+            raise NodeError('cannot put Slice to non-root Tuple which is not an Subscript.slice')
+        elif is_par := self._is_delimited_seq():
+            raise NodeError('cannot put Slice to parenthesized Subscript.slice Tuple')
 
     if not isinstance(ctx := ast.ctx, Load):  # only allow possible expression targets into an expression target
-        if not (is_valid_del_target if isinstance(ctx, Del) else is_valid_target)(code.a):
-            raise NodeError(f"invalid expression for Tuple {ctx.__class__.__name__} target")
+        if not (is_valid_del_target if isinstance(ctx, Del) else is_valid_target)(codea):
+            raise NodeError(f'invalid expression for Tuple {ctx.__class__.__name__} target')
 
     if PYLT11:
-        if put_star_to_unpar_slice := (is_slice and isinstance(code.a, Starred) and
+        if put_star_to_unpar_slice := (is_slice and isinstance(codea, Starred) and
             (is_par is False or (is_par is None and not self._is_delimited_seq()))
         ):
             r = (elts := ast.elts)[idx]
@@ -1398,7 +1401,7 @@ def _put_one_Tuple_elts(
             self._delimit_node()
 
     else:
-        if (PYGE14 and self.pfield == ('type', None) and isinstance(code.a, Starred) and
+        if (PYGE14 and self.pfield == ('type', None) and isinstance(codea, Starred) and
             (is_par is False or (is_par is None and not self._is_delimited_seq()))
         ):  # if putting Starred to unparenthesized ExceptHandler.type Tuple then parenthesize it
             self._delimit_node()
