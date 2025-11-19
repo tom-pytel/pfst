@@ -2166,8 +2166,15 @@ i ; \\
         self.assertEqual('del z', (f := FST('del a, b')).put_slice(['z']).root.src)
         f.verify()
 
-        self.assertRaises(NodeError, FST('del a, b').put_slice, FST('z'))
-        self.assertRaises(NodeError, FST('del a, b').put_slice, FST('z').a)
+        # self.assertRaises(NodeError, FST('del a, b').put_slice, FST('z'))
+        # self.assertRaises(NodeError, FST('del a, b').put_slice, FST('z').a)
+
+        self.assertEqual('del z', (f := FST('del a, b')).put_slice(FST('z')).root.src)
+        f.verify()
+
+        self.assertEqual('del z', (f := FST('del a, b')).put_slice(FST('z').a).root.src)
+        f.verify()
+
 
     def test_put_slice_raw(self):
         f = parse('[a for c in d for b in c for a in b]').body[0].value.f
@@ -2904,7 +2911,7 @@ i ; \\
             self.assertEqual('(x,)', FST('(a, b)').put_slice(FST('x', '_type_params'), 0, 2, raw=True).src)
             self.assertRaises(NodeError, FST('(a,)').put_slice, FST('x, y', '_type_params'), 0, 1, raw=True, one=True)
 
-    def test_slice_set_empty(self):
+    def test_slice_empty_set(self):
         with FST.options(norm=True):
             # put slice using norm_put=
 
@@ -2913,7 +2920,8 @@ i ; \\
             self.assertEqual('[]', FST('[1, 2]').put_slice('{*[]}', raw=False).src)
             self.assertEqual('[]', FST('[1, 2]').put_slice('{*{}}', raw=False).src)
 
-            self.assertRaises(NodeError, FST('[1, 2]').put_slice, 'set()', raw=False, norm_put='star')
+            # self.assertRaises(NodeError, FST('[1, 2]').put_slice, 'set()', raw=False, norm_put='star')
+            self.assertEqual('[set()]', FST('[1, 2]').put_slice('set()', raw=False, norm_put='star').src)
             self.assertEqual('[]', FST('[1, 2]').put_slice('{*()}', raw=False, norm_put='star').src)
             self.assertEqual('[]', FST('[1, 2]').put_slice('{*[]}', raw=False, norm_put='star').src)
             self.assertEqual('[]', FST('[1, 2]').put_slice('{*{}}', raw=False, norm_put='star').src)
@@ -2923,31 +2931,36 @@ i ; \\
             self.assertEqual('[*[]]', FST('[1, 2]').put_slice('{*[]}', raw=False, norm_put='call').src)
             self.assertEqual('[*{}]', FST('[1, 2]').put_slice('{*{}}', raw=False, norm_put='call').src)
 
-            self.assertRaises(NodeError, FST('[1, 2]').put_slice, 'set()', raw=False, norm_put=False)
+            # self.assertRaises(NodeError, FST('[1, 2]').put_slice, 'set()', raw=False, norm_put=False)
+            self.assertEqual('[set()]', FST('[1, 2]').put_slice('{set()}', raw=False, norm_put=False).src)
             self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, norm_put=False).src)
             self.assertEqual('[*[]]', FST('[1, 2]').put_slice('{*[]}', raw=False, norm_put=False).src)
             self.assertEqual('[*{}]', FST('[1, 2]').put_slice('{*{}}', raw=False, norm_put=False).src)
 
             # using norm=
 
-            self.assertRaises(NodeError, FST('[1, 2]').put_slice, 'set()', raw=False, norm='star')
+            # self.assertRaises(NodeError, FST('[1, 2]').put_slice, 'set()', raw=False, norm='star')
+            self.assertEqual('[set()]', FST('[1, 2]').put_slice('set()', raw=False, norm='star').src)
             self.assertEqual('[]', FST('[1, 2]').put_slice('{*()}', raw=False, norm='star').src)
 
             self.assertEqual('[]', FST('[1, 2]').put_slice('set()', raw=False, norm='call').src)
             self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, norm='call').src)
 
-            self.assertRaises(NodeError, FST('[1, 2]').put_slice, 'set()', raw=False, norm=False)
+            # self.assertRaises(NodeError, FST('[1, 2]').put_slice, 'set()', raw=False, norm=False)
+            self.assertEqual('[set()]', FST('[1, 2]').put_slice('set()', raw=False, norm=False).src)
             self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, norm=False).src)
 
             # using set_norm=
 
-            self.assertRaises(NodeError, FST('[1, 2]').put_slice, 'set()', raw=False, set_norm='star')
+            # self.assertRaises(NodeError, FST('[1, 2]').put_slice, 'set()', raw=False, set_norm='star')
+            self.assertEqual('[set()]', FST('[1, 2]').put_slice('set()', raw=False, set_norm='star').src)
             self.assertEqual('[]', FST('[1, 2]').put_slice('{*()}', raw=False, set_norm='star').src)
 
             self.assertEqual('[]', FST('[1, 2]').put_slice('set()', raw=False, set_norm='call').src)
             self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, set_norm='call').src)
 
-            self.assertRaises(NodeError, FST('[1, 2]').put_slice, 'set()', raw=False, set_norm=False)
+            # self.assertRaises(NodeError, FST('[1, 2]').put_slice, 'set()', raw=False, set_norm=False)
+            self.assertEqual('[set()]', FST('[1, 2]').put_slice('set()', raw=False, set_norm=False).src)
             self.assertEqual('[*()]', FST('[1, 2]').put_slice('{*()}', raw=False, set_norm=False).src)
 
             # delete

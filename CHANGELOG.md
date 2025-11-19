@@ -21,6 +21,7 @@
 
 ### Updated
 
+- allow put `Slice` to top level parenthesized `Tuple`
 - `MatchMapping` slicing includes the `rest` element, more intuitive
 - removed artificial distinction between `augop` and `binop`, now is just `operator`
 - `.bloc` block statement last child line trailing comment

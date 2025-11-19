@@ -266,18 +266,28 @@ def _code_to_slice_seq(
     code: Code | None,
     one: bool,
     options: Mapping[str, Any],
-    *,
     code_as: Callable = code_as_expr,
-    non_seq_str_as_one: bool = False,
 ) -> fst.FST | None:
+    """Convert code to sequence of expressions slice. Will accept `Tuple`, `List` and `Set` as sequences and wil coerce
+    any other expressions to a `Tuple` sequence for use as a slice. Will apply `norm_put` to recognize empty sets as
+    empty slices according to options."""
+
     if code is None:
         return None
 
     fst_ = code_as(code, self.root.parse_params, sanitize=False)
     ast_ = fst_.a
 
-    if not one and non_seq_str_as_one and not isinstance(ast_, (Tuple, List, Set)) and isinstance(code, (str, list)):  # this exists as a convenience for allowing doing `Delete.targets = 'target'` (without trailing comma if string source)
-        one = True
+    if not one:
+        if put_norm := _get_norm_option('norm_put', 'set_norm', options):  # recognize put-normalized empty set
+            if (fst_._is_empty_set_star() if put_norm == 'star' else
+                fst_._is_empty_set_call() if put_norm == 'call' else
+                fst_._is_empty_set_star() or fst_._is_empty_set_call()  # True or 'both'
+            ):
+                return None
+
+        if not isinstance(ast_, (Tuple, List, Set)):  # any expression which is not a slice type gets automatically coerced to a singleton slice
+            one = True
 
     if one:
         if (is_par := fst_._is_parenthesized_tuple()) is not None:
@@ -298,20 +308,9 @@ def _code_to_slice_seq(
                 fst_._parenthesize_grouping()
 
         ast_ = Tuple(elts=[fst_.a], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),  # fst_.a because may have changed in Set processing
-                     end_col_offset=ls[-1].lenbytes)  # Tuple because it is valid target if checked in validate and allows _is_enclosed_or_line() check without delimiters to check content
+                     end_col_offset=ls[-1].lenbytes)  # Tuple as temporary container because it is valid target if checked in validate and allows _is_enclosed_or_line() check without delimiters to check content
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
-
-    if put_norm := _get_norm_option('norm_put', 'set_norm', options):
-        if (fst_._is_empty_set_star() if put_norm == 'star' else
-            fst_._is_empty_set_call() if put_norm == 'call' else
-            fst_._is_empty_set_star() or fst_._is_empty_set_call()  # True or 'both'
-        ):
-            return None
-
-    if not isinstance(ast_, (Tuple, List, Set)):
-        raise NodeError(f"slice being assigned to a {self.a.__class__.__name__} "
-                        f"must be a Tuple, List or Set, not a {ast_.__class__.__name__}", rawable=True)
 
     if not ast_.elts:  # put empty sequence is same as delete
         return None
@@ -870,7 +869,7 @@ def _put_slice_Tuple_elts(
 ) -> None:
     """Tuple is used in many different ways in python, also for expressionish slices by us."""
 
-    fst_ = _code_to_slice_seq(self, code, one, options, code_as=code_as_expr_all)
+    fst_ = _code_to_slice_seq(self, code, one, options, code_as_expr_all)
     ast = self.a
     body = ast.elts
     start, stop = fixup_slice_indices(len(body), start, stop)
@@ -899,13 +898,14 @@ def _put_slice_Tuple_elts(
                 need_par = True
 
         elif PYGE14:
-            if not is_par and pfield == ('type', None) and any(isinstance(e, Starred) for e in fst_body):  # if putting Starred to unparenthesized ExceptHandler.type Tuple then parenthesize it
+            if not is_par and pfield and pfield.name == 'type' and any(isinstance(e, Starred) for e in fst_body):  # if putting Starred to unparenthesized ExceptHandler.type Tuple then parenthesize it
                 need_par = True
 
     # normal stuff
 
     _validate_put_seq(self, fst_,
                       '' if not is_par and (not pfield or is_slice) else 'non-slice Tuple',
+                    #   '' if not is_par and (not pfield or is_slice) else 'non-root non-unparenthesized-slice Tuple',
                       check_target=is_valid_target)
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
@@ -994,7 +994,7 @@ def _put_slice_Delete_targets(
     non-comma terminated syntax of `Delete` targets (a non-sequence `FST` or `AST` will not be accepted like this). This
     allows correct-appearing syntax like `delfst.targets = 'target'` to work."""
 
-    fst_ = _code_to_slice_seq(self, code, one, options, non_seq_str_as_one=True)
+    fst_ = _code_to_slice_seq(self, code, one, options)
     ast = self.a
     body = ast.targets
     len_body = len(body)
@@ -1227,7 +1227,7 @@ def _put_slice_Global_Nonlocal_names(
     create a temporary container which does have `Name` elements for each name and operate on that. Afterwards we get
     rid of that but the modified source identifiers remain."""
 
-    fst_ = _code_to_slice_seq(self, code, one, options, non_seq_str_as_one=True)
+    fst_ = _code_to_slice_seq(self, code, one, options)
     ast = self.a
     body = ast.names
     len_body = len(body)

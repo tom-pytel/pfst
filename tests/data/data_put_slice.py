@@ -16757,8 +16757,7 @@ Module - ROOT 0,0..0,5
 ('body[0]', None, None, None, {}, ('exec',
 r'''del a, b, c'''), (None,
 r'''x'''),
-r'''del x''',
-r'''**NodeError('slice being assigned to a Delete must be a Tuple, List or Set, not a Name')**''', r'''
+r'''del x''', r'''
 Module - ROOT 0,0..0,5
   .body[1]
    0] Delete - 0,0..0,5
@@ -16844,7 +16843,7 @@ del a, x \
     . \
     y, c
 ''',
-r'''**NodeError('slice being assigned to a Delete must be a Tuple, List or Set, not a Attribute')**''', r'''
+r'''del a, x.y, c''', r'''
 Module - ROOT 0,0..2,8
   .body[1]
    0] Delete - 0,0..2,8
@@ -16883,7 +16882,7 @@ x \
 del x \
 
 ''',
-r'''**NodeError('slice being assigned to a Delete must be a Tuple, List or Set, not a Name')**''', r'''
+r'''del x''', r'''
 Module - ROOT 0,0..1,0
   .body[1]
    0] Delete - 0,0..0,5
@@ -17014,8 +17013,7 @@ if 1:
 r'''y'''), r'''
 if 1:
   del x, y;
-''',
-r'''**NodeError('slice being assigned to a Delete must be a Tuple, List or Set, not a Name')**''', r'''
+''', r'''
 If - ROOT 0,0..1,11
   .test Constant 1 - 0,3..0,4
   .body[1]
@@ -21909,8 +21907,7 @@ Module - ROOT 0,0..5,6
 ('body[0]', 1, 2, None, {}, ('exec',
 r'''global a, b, c  # comment'''), (None,
 r'''x'''),
-r'''global a, x, c  # comment''',
-r'''**NodeError('slice being assigned to a Global must be a Tuple, List or Set, not a Name')**''', r'''
+r'''global a, x, c  # comment''', r'''
 Module - ROOT 0,0..0,25
   .body[1]
    0] Global - 0,0..0,14
@@ -21989,7 +21986,7 @@ x \
 global x \
   # comment
 ''',
-r'''**NodeError('slice being assigned to a Global must be a Tuple, List or Set, not a Name')**''', r'''
+r'''global x  # comment''', r'''
 Module - ROOT 0,0..1,11
   .body[1]
    0] Global - 0,0..0,8
@@ -22499,8 +22496,7 @@ Module - ROOT 0,0..5,6
 ('body[0]', 1, 2, None, {}, ('exec',
 r'''nonlocal a, b, c  # comment'''), (None,
 r'''x'''),
-r'''nonlocal a, x, c  # comment''',
-r'''**NodeError('slice being assigned to a Nonlocal must be a Tuple, List or Set, not a Name')**''', r'''
+r'''nonlocal a, x, c  # comment''', r'''
 Module - ROOT 0,0..0,27
   .body[1]
    0] Nonlocal - 0,0..0,16
@@ -22579,7 +22575,7 @@ x \
 nonlocal x \
   # comment
 ''',
-r'''**NodeError('slice being assigned to a Nonlocal must be a Tuple, List or Set, not a Name')**''', r'''
+r'''nonlocal x  # comment''', r'''
 Module - ROOT 0,0..1,11
   .body[1]
    0] Nonlocal - 0,0..0,10

@@ -326,7 +326,13 @@ def code_as__expr_arglikes(code: Code, parse_params: Mapping[str, Any] = {}, *, 
     if isinstance(code, Tuple):  # strip parentheses
         code = _fixing_unparse(code)[1:-1]
 
-    return _code_as(code, parse_params, parse__expr_arglikes, Tuple, sanitize)
+    fst_ = _code_as(code, parse_params, parse__expr_arglikes, Tuple, sanitize)
+
+    if fst_ is code:  # validation if was passed in as FST
+        if any(isinstance(e, Slice) for e in fst_.a.elts):
+            raise NodeError('expecting non-Slice expressions (arglike), found Slice')
+
+    return fst_
 
 
 # ----------------------------------------------------------------------------------------------------------------------

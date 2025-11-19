@@ -553,7 +553,7 @@ def is_valid_target(asts: AST | list[AST]) -> bool:
 
 def is_valid_del_target(asts: AST | list[AST]) -> bool:
     """Check if `asts` is a valid target for `Delete` operations. Must be `Name`, `Attribute`, `Subscript` and / or
-    possibly nested `Tuple` and `List`."""
+    possibly nested `Tuple` and `List`. No `Starred` allowed."""
 
     stack = [asts] if isinstance(asts, AST) else list(asts)
 

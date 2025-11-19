@@ -1028,7 +1028,7 @@ if 1:
             self.assertEqual('match a:\n case {1: a, 4: d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 1, 3).root.src)
             self.assertEqual('match a:\n case {4: d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d', 0, 3).root.src)
             self.assertEqual('match a:\n case {4: d}: pass', parse('match a:\n case {1: a, 2: b, 3: c}: pass').body[0].cases[0].pattern.f.put_slice('4: d').root.src)
- 
+
             self.assertEqual('z < b < c', parse('a < b < c').body[0].value.f.put('z', 0).root.src)
             self.assertEqual('a < z < c', parse('a < b < c').body[0].value.f.put('z', 1).root.src)
             self.assertEqual('a < b < z', parse('a < b < c').body[0].value.f.put('z', 2).root.src)
@@ -1778,7 +1778,7 @@ a
         # Tuple Slice behavior
 
         self.assertEqual('x:y:z, b', FST('a, b').elts[0].replace('x:y:z', raw=False).root.src)
-        self.assertRaises(NodeError, FST('(a, b)').elts[0].replace, 'x:y:z', raw=False)
+        self.assertEqual('(x:y:z, b)', FST('(a, b)').elts[0].replace('x:y:z', raw=False).root.src)
         self.assertEqual('s[x:y:z, b]', FST('s[a, b]').slice.elts[0].replace('x:y:z', raw=False).root.src)
         self.assertRaises(NodeError, FST('s[(a, b)]').slice.elts[0].replace, 'x:y:z', raw=False)
         self.assertRaises(NodeError, FST('i = a, b').value.elts[0].replace, 'x:y:z', raw=False)
