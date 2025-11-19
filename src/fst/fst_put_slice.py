@@ -325,7 +325,7 @@ def _code_to_slice_seq(
 
 
 def _code_to_slice_seq2(
-    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any], code_as: Callable, trim: bool = True
+    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any], code_as: Callable
 ) -> fst.FST | None:
     """Handles `Dict` and `MatchMapping`."""
 
@@ -344,9 +344,6 @@ def _code_to_slice_seq2(
 
     if not ast_.keys and not getattr(ast_, 'rest', None):  # put empty sequence is same as delete
         return None
-
-    if trim:
-        _trim_delimiters(fst_)
 
     return fst_
 
@@ -828,8 +825,12 @@ def _put_slice_Dict__all(
     body2 = ast.values
     start, stop = fixup_slice_indices(len(body), start, stop)
 
-    if not fst_ and start == stop:
-        return
+    if not fst_:
+        if start == stop:  # delete empty slice
+            return
+
+    else:
+        _trim_delimiters(fst_)
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
@@ -1655,7 +1656,7 @@ def _put_slice_MatchMapping__all(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice_seq2(self, code, one, options, code_as_pattern, False)
+    fst_ = _code_to_slice_seq2(self, code, one, options, code_as_pattern)
     ast = self.a
     body = ast.keys
     body2 = ast.patterns
