@@ -885,15 +885,15 @@ Tuple - ROOT 0,0..3,1
 
 ('parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
 r'''*not a'''),
-r'''**SyntaxError('invalid expression')**'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
 
 ('parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
 r'''a:b'''),
-r'''**SyntaxError('invalid expression')**'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
 
 ('parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
 r'''a:b:c'''),
-r'''**SyntaxError('invalid expression')**'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
 
 ('parse_expr_all', 0, 0, 'Name', {}, ('expr_all',
 r'''j'''),
@@ -1183,7 +1183,7 @@ Tuple - ROOT 0,0..0,4
 
 ('parse_expr_sliceelt', 0, 0, 'SyntaxError', {}, ('expr_sliceelt',
 r'''a:b:c, x:y:z'''),
-r'''**SyntaxError('invalid expression')**'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
 
 ('parse_boolop', 0, 0, 'And', {}, ('boolop',
 r'''and'''),
@@ -3226,15 +3226,15 @@ Tuple - ROOT 0,0..3,1
 
 ('parse_expr', 0, 0, 'SyntaxError', {}, (expr,
 r'''*not a'''),
-r'''**SyntaxError('invalid expression')**'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
 
 ('parse_expr', 0, 0, 'SyntaxError', {}, (expr,
 r'''a:b'''),
-r'''**SyntaxError('invalid expression')**'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
 
 ('parse_expr', 0, 0, 'SyntaxError', {}, (expr,
 r'''a:b:c'''),
-r'''**SyntaxError('invalid expression')**'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
 
 ('parse_expr', 0, 0, 'Name', {}, (Name,
 r'''j'''),
@@ -3914,7 +3914,7 @@ Starred - ROOT 0,0..0,6
 
 ('parse_expr_sliceelt', 0, 0, 'SyntaxError', {'_ver': 11}, ('expr_sliceelt',
 r'''*not a, *b or c'''),
-r'''**SyntaxError('invalid expression')**'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
 
 ('parse_ExceptHandler', 0, 0, 'ExceptHandler', {'_ver': 11}, (ExceptHandler,
 r'''except* Exception: pass'''), r'''

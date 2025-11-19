@@ -934,7 +934,7 @@ def parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         try:
             elts = _ast_parse1(f'(\n{src}\n,)', parse_params).value.elts  # Starred expression with newlines or indentation
         except SyntaxError:
-            raise SyntaxError('invalid expression') from None
+            raise SyntaxError('invalid expression (standard)') from None
 
         ast = elts[0]
 

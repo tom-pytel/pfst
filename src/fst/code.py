@@ -156,7 +156,7 @@ def _expecting(parse: Callable[[Code, Mapping[str, Any]], AST]) -> str:
             'expecting expression (slice element)' if parse is parse_expr_sliceelt else
             'expecting expression (slice)' if parse is parse_expr_slice else
             'expecting expression (arglike)' if parse is parse_expr_arglike else
-            'expecting expression (all)' if parse is parse_expr_all else
+            'expecting expression (all types)' if parse is parse_expr_all else
             'expecting expression (standard)')
 
 

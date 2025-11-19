@@ -277,6 +277,7 @@ def _code_to_slice_seq(
 
     fst_ = code_as(code, self.root.parse_params, sanitize=False)
     ast_ = fst_.a
+    put_norm = None  # cached
 
     if not one:
         if put_norm := _get_norm_option('norm_put', 'set_norm', options):  # recognize put-normalized empty set
@@ -286,7 +287,7 @@ def _code_to_slice_seq(
             ):
                 return None
 
-        if not isinstance(ast_, (Tuple, List, Set)):  # any expression which is not a slice type gets automatically coerced to a singleton slice
+        if not isinstance(ast_, (Tuple, List, Set)):  # any expression which is not a slice type we automatically coerce to a singleton slice
             one = True
 
     if one:
@@ -297,7 +298,7 @@ def _code_to_slice_seq(
                 fst_._delimit_node()
 
         elif isinstance(ast_, Set):
-            _maybe_fix_Set(fst_, _get_norm_option('norm_put', 'set_norm', options))
+            _maybe_fix_Set(fst_, _get_norm_option('norm_put', 'set_norm', options) if put_norm is None else put_norm)
 
         elif isinstance(ast_, NamedExpr):  # this needs to be parenthesized if being put to unparenthesized tuple
             if not fst_.pars().n and self._is_parenthesized_tuple() is False:
@@ -855,8 +856,7 @@ def _put_slice_Tuple_elts(
     # normal stuff
 
     _validate_put_seq(self, fst_,
-                      '' if not is_par and (not pfield or is_slice) else 'non-slice Tuple',
-                    #   '' if not is_par and (not pfield or is_slice) else 'non-root non-unparenthesized-slice Tuple',
+                      '' if not pfield or (is_slice and not is_par) else 'non-root non-unparenthesized-slice Tuple',
                       check_target=is_valid_target)
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc

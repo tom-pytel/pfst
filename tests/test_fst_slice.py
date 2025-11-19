@@ -1658,8 +1658,10 @@ c  # comment
         f = FST('del [a]')
         self.assertRaises(NodeError, f.targets[0].put_slice, '2,')
 
+        # f = FST('(1, 2)')
+        # self.assertRaises(NodeError, f.put_slice, FST('x:y:z,', 'expr_slice'))
         f = FST('(1, 2)')
-        self.assertRaises(NodeError, f.put_slice, FST('x:y:z,', 'expr_slice'))
+        self.assertEqual('(x:y:z,)', f.put_slice(FST('x:y:z,', 'expr_slice')).src)
 
         f = FST('(a,) = b')
         self.assertRaises(NodeError, f.targets[0].put_slice, '2,')

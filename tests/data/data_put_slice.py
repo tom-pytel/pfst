@@ -16741,6 +16741,816 @@ _ExceptHandlers - ROOT 0,0..0,22
 '''),
 ],
 
+'seq_w_Slice': [  # ................................................................................
+
+('', None, None, None, {}, (None,
+r'''a, b, c'''), ('Slice',
+r'''x:y:z'''),
+r'''x:y:z,''', r'''
+Tuple - ROOT 0,0..0,6
+  .elts[1]
+   0] Slice - 0,0..0,5
+     .lower Name 'x' Load - 0,0..0,1
+     .upper Name 'y' Load - 0,2..0,3
+     .step Name 'z' Load - 0,4..0,5
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''a, b, c'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''x:y:z,''', r'''
+Tuple - ROOT 0,0..0,6
+  .elts[1]
+   0] Slice - 0,0..0,5
+     .lower Name 'x' Load - 0,0..0,1
+     .upper Name 'y' Load - 0,2..0,3
+     .step Name 'z' Load - 0,4..0,5
+  .ctx Load
+'''),
+
+('', None, None, None, {'_verify': False}, (None,
+r'''(a, b, c)'''), ('Slice',
+r'''x:y:z'''),
+r'''(x:y:z,)''', r'''
+Tuple - ROOT 0,0..0,8
+  .elts[1]
+   0] Slice - 0,1..0,6
+     .lower Name 'x' Load - 0,1..0,2
+     .upper Name 'y' Load - 0,3..0,4
+     .step Name 'z' Load - 0,5..0,6
+  .ctx Load
+'''),
+
+('', None, None, None, {'_verify': False}, (None,
+r'''(a, b, c)'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''(x:y:z,)''', r'''
+Tuple - ROOT 0,0..0,8
+  .elts[1]
+   0] Slice - 0,1..0,6
+     .lower Name 'x' Load - 0,1..0,2
+     .upper Name 'y' Load - 0,3..0,4
+     .step Name 'z' Load - 0,5..0,6
+  .ctx Load
+'''),
+
+('value', None, None, None, {}, ('Expr',
+r'''a, b, c'''), ('Slice',
+r'''x:y:z'''),
+r'''**NodeError('cannot put Slice into non-root non-unparenthesized-slice Tuple')**'''),
+
+('value', None, None, None, {}, ('Expr',
+r'''a, b, c'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''**NodeError('cannot put Slice into non-root non-unparenthesized-slice Tuple')**'''),
+
+('value', None, None, None, {'_verify': False}, ('Expr',
+r'''(a, b, c)'''), ('Slice',
+r'''x:y:z'''),
+r'''**NodeError('cannot put Slice into non-root non-unparenthesized-slice Tuple')**'''),
+
+('value', None, None, None, {'_verify': False}, ('Expr',
+r'''(a, b, c)'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''**NodeError('cannot put Slice into non-root non-unparenthesized-slice Tuple')**'''),
+
+('body[0].value', None, None, None, {}, ('exec',
+r'''a, b, c'''), ('Slice',
+r'''x:y:z'''),
+r'''**NodeError('cannot put Slice into non-root non-unparenthesized-slice Tuple')**'''),
+
+('body[0].value', None, None, None, {}, ('exec',
+r'''a, b, c'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''**NodeError('cannot put Slice into non-root non-unparenthesized-slice Tuple')**'''),
+
+('body[0].value', None, None, None, {'_verify': False}, ('exec',
+r'''(a, b, c)'''), ('Slice',
+r'''x:y:z'''),
+r'''**NodeError('cannot put Slice into non-root non-unparenthesized-slice Tuple')**'''),
+
+('body[0].value', None, None, None, {'_verify': False}, ('exec',
+r'''(a, b, c)'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''**NodeError('cannot put Slice into non-root non-unparenthesized-slice Tuple')**'''),
+
+('slice', None, None, None, {}, (None,
+r'''s[a, b, c]'''), ('Slice',
+r'''x:y:z'''),
+r'''s[x:y:z,]''', r'''
+Subscript - ROOT 0,0..0,9
+  .value Name 's' Load - 0,0..0,1
+  .slice Tuple - 0,2..0,8
+    .elts[1]
+     0] Slice - 0,2..0,7
+       .lower Name 'x' Load - 0,2..0,3
+       .upper Name 'y' Load - 0,4..0,5
+       .step Name 'z' Load - 0,6..0,7
+    .ctx Load
+  .ctx Load
+'''),
+
+('slice', None, None, None, {}, (None,
+r'''s[a, b, c]'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''s[x:y:z,]''', r'''
+Subscript - ROOT 0,0..0,9
+  .value Name 's' Load - 0,0..0,1
+  .slice Tuple - 0,2..0,8
+    .elts[1]
+     0] Slice - 0,2..0,7
+       .lower Name 'x' Load - 0,2..0,3
+       .upper Name 'y' Load - 0,4..0,5
+       .step Name 'z' Load - 0,6..0,7
+    .ctx Load
+  .ctx Load
+'''),
+
+('slice', None, None, None, {'_verify': False}, (None,
+r'''s[(a, b, c)]'''), ('Slice',
+r'''x:y:z'''),
+r'''**NodeError('cannot put Slice into non-root non-unparenthesized-slice Tuple')**'''),
+
+('slice', None, None, None, {'_verify': False}, (None,
+r'''s[(a, b, c)]'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''**NodeError('cannot put Slice into non-root non-unparenthesized-slice Tuple')**'''),
+
+('', None, None, None, {}, (None,
+r'''[a, b, c]'''), ('Slice',
+r'''x:y:z'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('', None, None, None, {}, (None,
+r'''[a, b, c]'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('value', None, None, None, {}, ('Expr',
+r'''[a, b, c]'''), ('Slice',
+r'''x:y:z'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('value', None, None, None, {}, ('Expr',
+r'''[a, b, c]'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('body[0].value', None, None, None, {}, ('exec',
+r'''[a, b, c]'''), ('Slice',
+r'''x:y:z'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('body[0].value', None, None, None, {}, ('exec',
+r'''[a, b, c]'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('slice', None, None, None, {'_verify': False}, (None,
+r'''s[[a, b, c]]'''), ('Slice',
+r'''x:y:z'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('slice', None, None, None, {'_verify': False}, (None,
+r'''s[[a, b, c]]'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('', None, None, None, {}, (None,
+r'''{a, b, c}'''), ('Slice',
+r'''x:y:z'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('', None, None, None, {}, (None,
+r'''{a, b, c}'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('value', None, None, None, {}, ('Expr',
+r'''{a, b, c}'''), ('Slice',
+r'''x:y:z'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('value', None, None, None, {}, ('Expr',
+r'''{a, b, c}'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('body[0].value', None, None, None, {}, ('exec',
+r'''{a, b, c}'''), ('Slice',
+r'''x:y:z'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('body[0].value', None, None, None, {}, ('exec',
+r'''{a, b, c}'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('slice', None, None, None, {'_verify': False}, (None,
+r'''s[{a, b, c}]'''), ('Slice',
+r'''x:y:z'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('slice', None, None, None, {'_verify': False}, (None,
+r'''s[{a, b, c}]'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('', None, None, None, {}, (None,
+r'''del a, b, c'''), ('Slice',
+r'''x:y:z'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('', None, None, None, {}, (None,
+r'''del a, b, c'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('body[0]', None, None, None, {}, ('exec',
+r'''del a, b, c'''), ('Slice',
+r'''x:y:z'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('body[0]', None, None, None, {}, ('exec',
+r'''del a, b, c'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('', None, None, None, {}, (None,
+r'''global a, b, c'''), ('Slice',
+r'''x:y:z'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('', None, None, None, {}, (None,
+r'''global a, b, c'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('body[0]', None, None, None, {}, ('exec',
+r'''global a, b, c'''), ('Slice',
+r'''x:y:z'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('body[0]', None, None, None, {}, ('exec',
+r'''global a, b, c'''), ('expr_slice',
+r'''x:y:z,'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+],
+
+'Tuple_elts': [  # ................................................................................
+
+('', None, None, None, {}, (None,
+r'''a, b, c'''), (None,
+r'''x'''),
+r'''x,''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+   0] Name 'x' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''a, b, c'''), (None,
+r'''x.y'''),
+r'''x.y,''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+   0] Attribute - 0,0..0,3
+     .value Name 'x' Load - 0,0..0,1
+     .attr 'y'
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''a, b, c'''), (None,
+r'''x[y]'''),
+r'''x[y],''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[1]
+   0] Subscript - 0,0..0,4
+     .value Name 'x' Load - 0,0..0,1
+     .slice Name 'y' Load - 0,2..0,3
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''a, b, c'''), (None,
+r'''*x'''),
+r'''*x,''', r'''
+Tuple - ROOT 0,0..0,3
+  .elts[1]
+   0] Starred - 0,0..0,2
+     .value Name 'x' Load - 0,1..0,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''a, b, c'''), (None,
+r'''x,'''),
+r'''x,''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+   0] Name 'x' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''a, b, c'''), (None,
+r'''x,'''),
+r'''(x,),''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[1]
+   0] Tuple - 0,0..0,4
+     .elts[1]
+      0] Name 'x' Load - 0,1..0,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''a, b, c'''), (None,
+r'''(x,)'''),
+r'''x,''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+   0] Name 'x' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''a, b, c'''), (None,
+r'''(x,)'''),
+r'''(x,),''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[1]
+   0] Tuple - 0,0..0,4
+     .elts[1]
+      0] Name 'x' Load - 0,1..0,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''a, b, c'''), (None,
+r'''[x]'''),
+r'''x,''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+   0] Name 'x' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''a, b, c'''), (None,
+r'''[x]'''),
+r'''[x],''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+   0] List - 0,0..0,3
+     .elts[1]
+      0] Name 'x' Load - 0,1..0,2
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''a, b, c'''), (None,
+r'''{x}'''),
+r'''x,''', r'''
+Tuple - ROOT 0,0..0,2
+  .elts[1]
+   0] Name 'x' Load - 0,0..0,1
+  .ctx Load
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''a, b, c'''), (None,
+r'''{x}'''),
+r'''{x},''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+   0] Set - 0,0..0,3
+     .elts[1]
+      0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''(a, b, c)'''), (None,
+r'''x'''),
+r'''(x,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+   0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''(a, b, c)'''), (None,
+r'''x.y'''),
+r'''(x.y,)''', r'''
+Tuple - ROOT 0,0..0,6
+  .elts[1]
+   0] Attribute - 0,1..0,4
+     .value Name 'x' Load - 0,1..0,2
+     .attr 'y'
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''(a, b, c)'''), (None,
+r'''x[y]'''),
+r'''(x[y],)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[1]
+   0] Subscript - 0,1..0,5
+     .value Name 'x' Load - 0,1..0,2
+     .slice Name 'y' Load - 0,3..0,4
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''(a, b, c)'''), (None,
+r'''*x'''),
+r'''(*x,)''', r'''
+Tuple - ROOT 0,0..0,5
+  .elts[1]
+   0] Starred - 0,1..0,3
+     .value Name 'x' Load - 0,2..0,3
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''(a, b, c)'''), (None,
+r'''x,'''),
+r'''(x,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+   0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''(a, b, c)'''), (None,
+r'''x,'''),
+r'''((x,),)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[1]
+   0] Tuple - 0,1..0,5
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''(a, b, c)'''), (None,
+r'''(x,)'''),
+r'''(x,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+   0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''(a, b, c)'''), (None,
+r'''(x,)'''),
+r'''((x,),)''', r'''
+Tuple - ROOT 0,0..0,7
+  .elts[1]
+   0] Tuple - 0,1..0,5
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''(a, b, c)'''), (None,
+r'''[x]'''),
+r'''(x,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+   0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''(a, b, c)'''), (None,
+r'''[x]'''),
+r'''([x],)''', r'''
+Tuple - ROOT 0,0..0,6
+  .elts[1]
+   0] List - 0,1..0,4
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''(a, b, c)'''), (None,
+r'''{x}'''),
+r'''(x,)''', r'''
+Tuple - ROOT 0,0..0,4
+  .elts[1]
+   0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''(a, b, c)'''), (None,
+r'''{x}'''),
+r'''({x},)''', r'''
+Tuple - ROOT 0,0..0,6
+  .elts[1]
+   0] Set - 0,1..0,4
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+  .ctx Load
+'''),
+],
+
+'List_elts': [  # ................................................................................
+
+('', None, None, None, {}, (None,
+r'''[a, b, c]'''), (None,
+r'''x'''),
+r'''[x]''', r'''
+List - ROOT 0,0..0,3
+  .elts[1]
+   0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''[a, b, c]'''), (None,
+r'''x.y'''),
+r'''[x.y]''', r'''
+List - ROOT 0,0..0,5
+  .elts[1]
+   0] Attribute - 0,1..0,4
+     .value Name 'x' Load - 0,1..0,2
+     .attr 'y'
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''[a, b, c]'''), (None,
+r'''x[y]'''),
+r'''[x[y]]''', r'''
+List - ROOT 0,0..0,6
+  .elts[1]
+   0] Subscript - 0,1..0,5
+     .value Name 'x' Load - 0,1..0,2
+     .slice Name 'y' Load - 0,3..0,4
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''[a, b, c]'''), (None,
+r'''*x'''),
+r'''[*x]''', r'''
+List - ROOT 0,0..0,4
+  .elts[1]
+   0] Starred - 0,1..0,3
+     .value Name 'x' Load - 0,2..0,3
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''[a, b, c]'''), (None,
+r'''x,'''),
+r'''[x]''', r'''
+List - ROOT 0,0..0,3
+  .elts[1]
+   0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''[a, b, c]'''), (None,
+r'''x,'''),
+r'''[(x,)]''', r'''
+List - ROOT 0,0..0,6
+  .elts[1]
+   0] Tuple - 0,1..0,5
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''[a, b, c]'''), (None,
+r'''(x,)'''),
+r'''[x]''', r'''
+List - ROOT 0,0..0,3
+  .elts[1]
+   0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''[a, b, c]'''), (None,
+r'''(x,)'''),
+r'''[(x,)]''', r'''
+List - ROOT 0,0..0,6
+  .elts[1]
+   0] Tuple - 0,1..0,5
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''[a, b, c]'''), (None,
+r'''[x]'''),
+r'''[x]''', r'''
+List - ROOT 0,0..0,3
+  .elts[1]
+   0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''[a, b, c]'''), (None,
+r'''[x]'''),
+r'''[[x]]''', r'''
+List - ROOT 0,0..0,5
+  .elts[1]
+   0] List - 0,1..0,4
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+     .ctx Load
+  .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''[a, b, c]'''), (None,
+r'''{x}'''),
+r'''[x]''', r'''
+List - ROOT 0,0..0,3
+  .elts[1]
+   0] Name 'x' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''[a, b, c]'''), (None,
+r'''{x}'''),
+r'''[{x}]''', r'''
+List - ROOT 0,0..0,5
+  .elts[1]
+   0] Set - 0,1..0,4
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+  .ctx Load
+'''),
+],
+
+'Set_elts': [  # ................................................................................
+
+('', None, None, None, {}, (None,
+r'''{a, b, c}'''), (None,
+r'''x'''),
+r'''{x}''', r'''
+Set - ROOT 0,0..0,3
+  .elts[1]
+   0] Name 'x' Load - 0,1..0,2
+'''),
+
+('', None, None, None, {}, (None,
+r'''{a, b, c}'''), (None,
+r'''x.y'''),
+r'''{x.y}''', r'''
+Set - ROOT 0,0..0,5
+  .elts[1]
+   0] Attribute - 0,1..0,4
+     .value Name 'x' Load - 0,1..0,2
+     .attr 'y'
+     .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''{a, b, c}'''), (None,
+r'''x[y]'''),
+r'''{x[y]}''', r'''
+Set - ROOT 0,0..0,6
+  .elts[1]
+   0] Subscript - 0,1..0,5
+     .value Name 'x' Load - 0,1..0,2
+     .slice Name 'y' Load - 0,3..0,4
+     .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''{a, b, c}'''), (None,
+r'''*x'''),
+r'''{*x}''', r'''
+Set - ROOT 0,0..0,4
+  .elts[1]
+   0] Starred - 0,1..0,3
+     .value Name 'x' Load - 0,2..0,3
+     .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''{a, b, c}'''), (None,
+r'''x,'''),
+r'''{x}''', r'''
+Set - ROOT 0,0..0,3
+  .elts[1]
+   0] Name 'x' Load - 0,1..0,2
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''{a, b, c}'''), (None,
+r'''x,'''),
+r'''{(x,)}''', r'''
+Set - ROOT 0,0..0,6
+  .elts[1]
+   0] Tuple - 0,1..0,5
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+     .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''{a, b, c}'''), (None,
+r'''(x,)'''),
+r'''{x}''', r'''
+Set - ROOT 0,0..0,3
+  .elts[1]
+   0] Name 'x' Load - 0,1..0,2
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''{a, b, c}'''), (None,
+r'''(x,)'''),
+r'''{(x,)}''', r'''
+Set - ROOT 0,0..0,6
+  .elts[1]
+   0] Tuple - 0,1..0,5
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+     .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''{a, b, c}'''), (None,
+r'''[x]'''),
+r'''{x}''', r'''
+Set - ROOT 0,0..0,3
+  .elts[1]
+   0] Name 'x' Load - 0,1..0,2
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''{a, b, c}'''), (None,
+r'''[x]'''),
+r'''{[x]}''', r'''
+Set - ROOT 0,0..0,5
+  .elts[1]
+   0] List - 0,1..0,4
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+     .ctx Load
+'''),
+
+('', None, None, None, {}, (None,
+r'''{a, b, c}'''), (None,
+r'''{x}'''),
+r'''{x}''', r'''
+Set - ROOT 0,0..0,3
+  .elts[1]
+   0] Name 'x' Load - 0,1..0,2
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''{a, b, c}'''), (None,
+r'''{x}'''),
+r'''{{x}}''', r'''
+Set - ROOT 0,0..0,5
+  .elts[1]
+   0] Set - 0,1..0,4
+     .elts[1]
+      0] Name 'x' Load - 0,2..0,3
+'''),
+],
+
 'Delete_targets': [  # ................................................................................
 
 ('body[0]', None, None, None, {}, ('exec',
@@ -17022,6 +17832,131 @@ If - ROOT 0,0..1,11
       0] Name 'x' Del - 1,6..1,7
       1] Name 'y' Del - 1,9..1,10
 '''),
+
+('', None, None, None, {}, (None,
+r'''del a, b, c'''), (None,
+r'''x'''),
+r'''del x''', r'''
+Delete - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'x' Del - 0,4..0,5
+'''),
+
+('', None, None, None, {}, (None,
+r'''del a, b, c'''), (None,
+r'''x.y'''),
+r'''del x.y''', r'''
+Delete - ROOT 0,0..0,7
+  .targets[1]
+   0] Attribute - 0,4..0,7
+     .value Name 'x' Load - 0,4..0,5
+     .attr 'y'
+     .ctx Del
+'''),
+
+('', None, None, None, {}, (None,
+r'''del a, b, c'''), (None,
+r'''x[y]'''),
+r'''del x[y]''', r'''
+Delete - ROOT 0,0..0,8
+  .targets[1]
+   0] Subscript - 0,4..0,8
+     .value Name 'x' Load - 0,4..0,5
+     .slice Name 'y' Load - 0,6..0,7
+     .ctx Del
+'''),
+
+('', None, None, None, {}, (None,
+r'''del a, b, c'''), (None,
+r'''*x'''),
+r'''**NodeError('invalid slice for Delete target')**'''),
+
+('', None, None, None, {}, (None,
+r'''del a, b, c'''), (None,
+r'''x,'''),
+r'''del x''', r'''
+Delete - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'x' Del - 0,4..0,5
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''del a, b, c'''), (None,
+r'''x,'''),
+r'''del (x,)''', r'''
+Delete - ROOT 0,0..0,8
+  .targets[1]
+   0] Tuple - 0,4..0,8
+     .elts[1]
+      0] Name 'x' Del - 0,5..0,6
+     .ctx Del
+'''),
+
+('', None, None, None, {}, (None,
+r'''del a, b, c'''), (None,
+r'''(x,)'''),
+r'''del x''', r'''
+Delete - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'x' Del - 0,4..0,5
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''del a, b, c'''), (None,
+r'''(x,)'''),
+r'''del (x,)''', r'''
+Delete - ROOT 0,0..0,8
+  .targets[1]
+   0] Tuple - 0,4..0,8
+     .elts[1]
+      0] Name 'x' Del - 0,5..0,6
+     .ctx Del
+'''),
+
+('', None, None, None, {}, (None,
+r'''del a, b, c'''), (None,
+r'''[x]'''),
+r'''del x''', r'''
+Delete - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'x' Del - 0,4..0,5
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''del a, b, c'''), (None,
+r'''[x]'''),
+r'''del [x]''', r'''
+Delete - ROOT 0,0..0,7
+  .targets[1]
+   0] List - 0,4..0,7
+     .elts[1]
+      0] Name 'x' Del - 0,5..0,6
+     .ctx Del
+'''),
+
+('', None, None, None, {}, (None,
+r'''del a, b, c'''), (None,
+r'''{x}'''),
+r'''del x''', r'''
+Delete - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'x' Del - 0,4..0,5
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''del a, b, c'''), (None,
+r'''{x}'''),
+r'''**NodeError('invalid slice for Delete target')**'''),
+
+('', None, None, None, {}, (None,
+r'''del a, b, c'''), (None,
+r'''f()'''),
+r'''**NodeError('invalid slice for Delete target')**'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''del a, b, c'''), (None,
+r'''f()'''),
+r'''**NodeError('invalid slice for Delete target')**'''),
 ],
 
 'Delete_targets_semicolon': [  # ................................................................................
@@ -20785,6 +21720,96 @@ If - ROOT 0,0..1,14
       0] 'x'
       1] 'y'
 '''),
+
+('', None, None, None, {}, (None,
+r'''global a, b, c'''), (None,
+r'''x'''),
+r'''global x''', r'''
+Global - ROOT 0,0..0,8
+  .names[1]
+   0] 'x'
+'''),
+
+('', None, None, None, {}, (None,
+r'''global a, b, c'''), (None,
+r'''x.y'''),
+r'''**NodeError('cannot put Attribute to Global.names')**'''),
+
+('', None, None, None, {}, (None,
+r'''global a, b, c'''), (None,
+r'''x[y]'''),
+r'''**NodeError('cannot put Subscript to Global.names')**'''),
+
+('', None, None, None, {}, (None,
+r'''global a, b, c'''), (None,
+r'''*x'''),
+r'''**NodeError('cannot put Starred to Global.names')**'''),
+
+('', None, None, None, {}, (None,
+r'''global a, b, c'''), (None,
+r'''x,'''),
+r'''global x''', r'''
+Global - ROOT 0,0..0,8
+  .names[1]
+   0] 'x'
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''global a, b, c'''), (None,
+r'''x,'''),
+r'''**NodeError('cannot put Tuple to Global.names')**'''),
+
+('', None, None, None, {}, (None,
+r'''global a, b, c'''), (None,
+r'''(x,)'''),
+r'''global x''', r'''
+Global - ROOT 0,0..0,8
+  .names[1]
+   0] 'x'
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''global a, b, c'''), (None,
+r'''(x,)'''),
+r'''**NodeError('cannot put Tuple to Global.names')**'''),
+
+('', None, None, None, {}, (None,
+r'''global a, b, c'''), (None,
+r'''[x]'''),
+r'''global x''', r'''
+Global - ROOT 0,0..0,8
+  .names[1]
+   0] 'x'
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''global a, b, c'''), (None,
+r'''[x]'''),
+r'''**NodeError('cannot put List to Global.names')**'''),
+
+('', None, None, None, {}, (None,
+r'''global a, b, c'''), (None,
+r'''{x}'''),
+r'''global x''', r'''
+Global - ROOT 0,0..0,8
+  .names[1]
+   0] 'x'
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''global a, b, c'''), (None,
+r'''{x}'''),
+r'''**NodeError('cannot put Set to Global.names')**'''),
+
+('', None, None, None, {}, (None,
+r'''global a, b, c'''), (None,
+r'''f()'''),
+r'''**NodeError('cannot put Call to Global.names')**'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''global a, b, c'''), (None,
+r'''f()'''),
+r'''**NodeError('cannot put Call to Global.names')**'''),
 ],
 
 'Global_names_semicolon': [  # ................................................................................
@@ -21374,6 +22399,96 @@ If - ROOT 0,0..1,16
       0] 'x'
       1] 'y'
 '''),
+
+('', None, None, None, {}, (None,
+r'''nonlocal a, b, c'''), (None,
+r'''x'''),
+r'''nonlocal x''', r'''
+Nonlocal - ROOT 0,0..0,10
+  .names[1]
+   0] 'x'
+'''),
+
+('', None, None, None, {}, (None,
+r'''nonlocal a, b, c'''), (None,
+r'''x.y'''),
+r'''**NodeError('cannot put Attribute to Nonlocal.names')**'''),
+
+('', None, None, None, {}, (None,
+r'''nonlocal a, b, c'''), (None,
+r'''x[y]'''),
+r'''**NodeError('cannot put Subscript to Nonlocal.names')**'''),
+
+('', None, None, None, {}, (None,
+r'''nonlocal a, b, c'''), (None,
+r'''*x'''),
+r'''**NodeError('cannot put Starred to Nonlocal.names')**'''),
+
+('', None, None, None, {}, (None,
+r'''nonlocal a, b, c'''), (None,
+r'''x,'''),
+r'''nonlocal x''', r'''
+Nonlocal - ROOT 0,0..0,10
+  .names[1]
+   0] 'x'
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''nonlocal a, b, c'''), (None,
+r'''x,'''),
+r'''**NodeError('cannot put Tuple to Nonlocal.names')**'''),
+
+('', None, None, None, {}, (None,
+r'''nonlocal a, b, c'''), (None,
+r'''(x,)'''),
+r'''nonlocal x''', r'''
+Nonlocal - ROOT 0,0..0,10
+  .names[1]
+   0] 'x'
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''nonlocal a, b, c'''), (None,
+r'''(x,)'''),
+r'''**NodeError('cannot put Tuple to Nonlocal.names')**'''),
+
+('', None, None, None, {}, (None,
+r'''nonlocal a, b, c'''), (None,
+r'''[x]'''),
+r'''nonlocal x''', r'''
+Nonlocal - ROOT 0,0..0,10
+  .names[1]
+   0] 'x'
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''nonlocal a, b, c'''), (None,
+r'''[x]'''),
+r'''**NodeError('cannot put List to Nonlocal.names')**'''),
+
+('', None, None, None, {}, (None,
+r'''nonlocal a, b, c'''), (None,
+r'''{x}'''),
+r'''nonlocal x''', r'''
+Nonlocal - ROOT 0,0..0,10
+  .names[1]
+   0] 'x'
+'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''nonlocal a, b, c'''), (None,
+r'''{x}'''),
+r'''**NodeError('cannot put Set to Nonlocal.names')**'''),
+
+('', None, None, None, {}, (None,
+r'''nonlocal a, b, c'''), (None,
+r'''f()'''),
+r'''**NodeError('cannot put Call to Nonlocal.names')**'''),
+
+('', None, None, None, {'one': True}, (None,
+r'''nonlocal a, b, c'''), (None,
+r'''f()'''),
+r'''**NodeError('cannot put Call to Nonlocal.names')**'''),
 ],
 
 'Nonlocal_names_semicolon': [  # ................................................................................
