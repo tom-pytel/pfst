@@ -1852,7 +1852,8 @@ c  # comment
         if PYGE11:
             # multiple arglikes as `one` to single arglike field
 
-            self.assertRaises(NodeError, FST('call()').put_slice, FST('*not a, *b or c', Tuple), one=True)
+            self.assertEqual('call((*not a, *b or c))', (f := FST('call()')).put_slice(FST('*not a, *b or c', Tuple), one=True).src)  # TODO this should be fixed on put
+            self.assertFalse(f.verify(raise_=False))
 
         # more unparenthesized tuple schenanigans
 

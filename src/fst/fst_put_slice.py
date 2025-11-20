@@ -94,7 +94,6 @@ from .code import (
     Code,
     code_as_expr,
     code_as_expr_all,
-    code_as_expr_arglike,
     code_as__Assign_targets,
     code_as__decorator_list,
     code_as__comprehensions,
@@ -106,6 +105,7 @@ from .code import (
     code_as_pattern,
     code_as__type_params,
     code_as__expr_arglikes,
+    _coerce_as__expr_arglikes,
 )
 
 from .fst_misc import get_option_overridable, fixup_slice_indices
@@ -236,23 +236,6 @@ def _set_loc_whole(self: fst.FST) -> None:  # self must be root
     self._touch()
 
 
-def _trim_delimiters(self: fst.FST) -> None:  # self must be root
-    lines = self._lines
-    ast = self.a
-    ln, col, end_ln, end_col = self.loc
-    col += 1
-    end_col -= 1
-    ast.col_offset += 1
-    ast.end_col_offset -= 1
-
-    self._offset(ln, col, -ln, -lines[ln].c2b(col))
-
-    lines[end_ln] = bistr(lines[end_ln][:end_col])
-    lines[ln] = bistr(lines[ln][col:])
-
-    del lines[end_ln + 1:], lines[:ln]
-
-
 def _code_to_slice_expr(
     self: fst.FST,
     code: Code | None,
@@ -284,7 +267,7 @@ def _code_to_slice_expr(
                 return None
 
             if fst_._is_parenthesized_tuple() is not False:  # anything that is not an unparenthesize tuple is restricted to the inside of the delimiters, which are removed
-                _trim_delimiters(fst_)
+                fst_._trim_delimiters()
             else:  # if unparenthesized tuple then use whole source, including leading and trailing trivia not included
                 _set_loc_whole(fst_)
 
@@ -364,10 +347,7 @@ def _code_to_slice__special(
 
     fst_ = code_as(code, self.root.parse_params, coerce=one or coerce)
 
-    if not getattr(fst_.a, field, None):  # put empty sequence is same as delete
-        return None
-
-    return fst_
+    return fst_ if getattr(fst_.a, field, None) else None  # put empty sequence is same as delete
 
 
 def _code_to_slice__Assign_targets(
@@ -425,32 +405,11 @@ def _code_to_slice__expr_arglikes(
         return None
 
     if one:
-        fst_ = code_as_expr_arglike(code, self.root.parse_params)
-        ast_ = fst_.a
+        fst_ = _coerce_as__expr_arglikes(code, self.root.parse_params)
+    else:
+        fst_ = code_as__expr_arglikes(code, self.root.parse_params, coerce=fst.FST.get_option('coerce', options))
 
-        if (is_par := fst_._is_parenthesized_tuple()) is not None:
-            if fst_ is code and any(e.f._is_expr_arglike() for e in ast_.elts):
-                raise NodeError("cannot put argument-like expression(s) in a Tuple as 'one'")
-
-            if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
-                fst_._delimit_node()
-
-        ast_ = Tuple(elts=[ast_], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                     end_col_offset=ls[-1].lenbytes)
-
-        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
-
-    fst_ = code_as__expr_arglikes(code, self.root.parse_params)
-
-    if not fst_.a.elts:  # put empty sequence is same as delete
-        return None
-
-    if fst_._is_delimited_seq():  # parenthesize tuple is restricted to the inside of the delimiters, which are removed
-        _trim_delimiters(fst_)
-    else:  # if unparenthesized tuple then use whole source, including leading and trailing trivia not included
-        _set_loc_whole(fst_)
-
-    return fst_
+    return fst_ if fst_.a.elts else None  # put empty sequence is same as delete
 
 
 def _code_to_slice_MatchSequence(
@@ -480,7 +439,7 @@ def _code_to_slice_MatchSequence(
         return None
 
     if fst_._is_delimited_matchseq():  # delimited is restricted to the inside of the delimiters, which are removed
-        _trim_delimiters(fst_)
+        fst_._trim_delimiters()
     else:  # if undelimited then use whole source, including leading and trailing trivia not included
         _set_loc_whole(fst_)
 
@@ -859,7 +818,7 @@ def _put_slice_Dict__all(
             return
 
     else:
-        _trim_delimiters(fst_)
+        fst_._trim_delimiters()
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
@@ -1591,7 +1550,7 @@ def _put_slice_MatchMapping__all(
 
             _add_MatchMapping_rest_as_real_node(fst_)  # this needs to be done before the _trim_delimiters()
 
-        _trim_delimiters(fst_)  # didn't do it in _code_to_slice_key_and_other()
+        fst_._trim_delimiters()  # didn't do it in _code_to_slice_key_and_other()
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 

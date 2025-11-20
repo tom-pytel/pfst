@@ -24855,7 +24855,7 @@ r'''**ParseError('expecting single argumnent-like expression')**'''),
 r'''class cls(a, b, c): pass'''), (None,
 r'''*not a'''),
 r'''class cls(*not a, c): pass''',
-r'''**NodeError('expecting Tuple, got Starred')**''', r'''
+r'''class cls(*(not a), c): pass''', r'''
 ClassDef - ROOT 0,0..0,26
   .name 'cls'
   .bases[2]
@@ -27020,7 +27020,7 @@ r'''**ParseError('expecting single argumnent-like expression')**'''),
 r'''call(a, b, c)'''), (None,
 r'''*not a'''),
 r'''call(*not a, c)''',
-r'''**NodeError('expecting Tuple, got Starred')**''', r'''
+r'''call(*(not a), c)''', r'''
 Call - ROOT 0,0..0,15
   .func Name 'call' Load - 0,0..0,4
   .args[2]

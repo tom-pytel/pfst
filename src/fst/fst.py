@@ -4521,6 +4521,7 @@ class FST:
         _unparenthesize_grouping,
         _delimit_node,
         _undelimit_node,
+        _trim_delimiters,
     )
 
     from .fst_locs import (

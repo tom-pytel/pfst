@@ -15,6 +15,7 @@ from .asttypes import (
     Expr,
     Expression,
     Interactive,
+    Load,
     MatchOr,
     Module,
     Name,
@@ -162,6 +163,21 @@ def _expecting(parse: Callable[[Code, Mapping[str, Any]], AST]) -> str:
             'expecting expression (arglike)' if parse is parse_expr_arglike else
             'expecting expression (all types)' if parse is parse_expr_all else
             'expecting expression (standard)')
+
+
+def _coerce_as__expr_arglikes(
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+) -> fst.FST:
+    fst_ = code_as_expr_arglike(code, parse_params, sanitize=sanitize)
+    ast_ = fst_.a
+
+    if fst_._is_parenthesized_tuple() is False:  # can't have unparenthesized tuple as sole element, will look like multiple elements
+        fst_._delimit_node()
+
+    ast_ = Tuple(elts=[ast_], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+                 end_col_offset=ls[-1].lenbytes)
+
+    return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
 
 def _coerce_as__Assign_targets(
@@ -320,7 +336,7 @@ def _coerce_as__withitems(
 def _coerce_as__type_params(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
-    fst_ = code_as_type_param(code, parse_params)
+    fst_ = code_as_type_param(code, parse_params, sanitize=sanitize)
     ast_ = _type_params(type_params=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                         end_col_offset=ls[-1].lenbytes)
 
@@ -518,21 +534,26 @@ def code_as__expr_arglikes(
     coerce: bool = False,
 ) -> fst.FST:
     """Convert `code` to a `Tuple` contianing possibly arglike expressions. Meant for putting slices to `Call.args` and
-    `ClassDef.bases`.
+    `ClassDef.bases`. The `Tuple` will be unparenthesized and the location will be the entire source. We use a `Tuple`
+    for this because unfortunately sometimes a `Tuple` is valid with arglikes in it and sometimes not.
 
-    **WARNING!** The `Tuple` that is returned may be an invalid python `Tuple` as it may be an empty `Tuple` `AST` with
-    source having no parentheses or an unparenthesized `Tuple` with incorrect start and stop locations. Meant as a
-    convenience for putting slices.
+    **WARNING!** The `Tuple` that is returned is just being used as a container and may be an invalid python `Tuple` as
+    it may be an empty `Tuple` `AST` with source having no parentheses or an unparenthesized `Tuple` with incorrect
+    start and stop locations (since its the whole source). Singleton `Tuple` may also not have trailing comma.
     """
 
     if isinstance(code, Tuple):  # strip parentheses
         code = _fixing_unparse(code)[1:-1]
 
-    fst_ = _code_as(code, parse_params, parse__expr_arglikes, Tuple, sanitize)
+    fst_ = _code_as(code, parse_params, parse__expr_arglikes, Tuple, sanitize,
+                    _coerce_as__expr_arglikes if coerce else None)
 
     if fst_ is code:  # validation if returning same FST that was passed in
         if any(isinstance(e, Slice) for e in fst_.a.elts):
             raise NodeError('expecting non-Slice expressions (arglike), found Slice')
+
+        if fst_._is_delimited_seq():
+            fst_._trim_delimiters()
 
     return fst_
 

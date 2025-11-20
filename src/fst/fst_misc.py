@@ -1864,3 +1864,25 @@ def _undelimit_node(self: fst.FST, field: str = 'elts') -> bool:
         self._put_src(' ', ln, col, ln, col, False)
 
     return True
+
+
+def _trim_delimiters(self: fst.FST) -> None:
+    """Remove the delimiters of `self` and everything before and after them. `self` must be a container with single
+    character delimiters like a parenthesized `Tuple`, `List`, `Set`, `Dict`, `MatchSequence` or `MatchMapping`."""
+
+    # assert self.is_root
+
+    lines = self._lines
+    ast = self.a
+    ln, col, end_ln, end_col = self.loc
+    col += 1
+    end_col -= 1
+    ast.col_offset += 1
+    ast.end_col_offset -= 1
+
+    self._offset(ln, col, -ln, -lines[ln].c2b(col))
+
+    lines[end_ln] = bistr(lines[end_ln][:end_col])
+    lines[ln] = bistr(lines[ln][col:])
+
+    del lines[end_ln + 1:], lines[:ln]
