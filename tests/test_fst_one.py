@@ -1858,8 +1858,8 @@ c, # c
 
         a = FST('import a.b')
         b = FST('from c import *')
-        self.assertRaises(ParseError, a.a.names[0].f.replace, b.names[0].copy(), raw=False)
-        self.assertRaises(ParseError, b.a.names[0].f.replace, a.names[0].copy(), raw=False)
+        self.assertRaises(NodeError, a.a.names[0].f.replace, b.names[0].copy(), raw=False)
+        self.assertRaises(NodeError, b.a.names[0].f.replace, a.names[0].copy(), raw=False)
 
         # replacing implicit starred tuple
 

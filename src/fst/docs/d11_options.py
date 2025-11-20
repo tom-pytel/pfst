@@ -139,6 +139,7 @@ Or get all global options.
 >>> pp(FST.get_options())
 {'raw': False,
  'trivia': True,
+ 'coerce': True,
  'elif_': True,
  'pep8space': True,
  'docstr': True,

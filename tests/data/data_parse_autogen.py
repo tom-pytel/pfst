@@ -1336,6 +1336,18 @@ _comprehension_ifs - ROOT 0,0..0,9
    1] Name 'v' Load - 0,8..0,9
 '''),
 
+('parse__comprehension_ifs', 0, 0, 'ParseError', {}, ('_comprehension_ifs',
+r'''(a)'''),
+r'''**ParseError('expecting comprehension ifs')**'''),
+
+('parse__comprehension_ifs', 0, 0, 'ParseError', {}, ('_comprehension_ifs',
+r'''.b'''),
+r'''**ParseError('expecting comprehension ifs')**'''),
+
+('parse__comprehension_ifs', 0, 0, 'ParseError', {}, ('_comprehension_ifs',
+r'''+b'''),
+r'''**ParseError('expecting comprehension ifs')**'''),
+
 ('parse_arguments', 0, 0, 'arguments', {}, ('arguments',
 r''''''),
 r'''arguments - ROOT'''),

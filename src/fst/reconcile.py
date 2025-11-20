@@ -138,6 +138,12 @@ class Reconcile:
     def __init__(self, work: fst.FST, mark: fst.FST, options: Mapping[str, Any] = {}) -> None:
         if 'raw' in options:
             raise ValueError("cannot use reconcile with 'raw' option")
+        if 'coerce' in options:
+            raise ValueError("cannot use reconcile with 'coerce' option")
+        if 'pars' in options:
+            raise ValueError("cannot use reconcile with 'pars' option")
+        if 'pars_arglike' in options:
+            raise ValueError("cannot use reconcile with 'pars_arglike' option")
 
         self.options = options
         self.work = work
@@ -146,9 +152,9 @@ class Reconcile:
 
     def put_node(self, code: fst.FST | AST, out_parent: fst.FST | None = None, pfield: astfield | None = None) -> None:
         if out_parent:
-            out_parent.put(code, pfield.idx, False, pfield.name, raw=False, **self.options)
+            out_parent.put(code, pfield.idx, False, pfield.name, **self.options)
         else:  # because can replace AST at root node which has out_parent=None
-            self.out.replace(code, raw=False, **self.options)
+            self.out.replace(code, **self.options)
 
     def recurse_slice_dict(self, node: AST, outf: fst.FST | None) -> None:  # TODO: refactor!
         """Recurse into a combined slice of a Dict's keys and values using slice operations to copy over formatting
@@ -226,7 +232,7 @@ class Reconcile:
                         pass
 
                     else:  # no recurse because we wouldn't be at this point if it wasn't a valid full FST without AST replacements, couldn't anyway as we don't know anything about that tree
-                        outf.put_slice(slice, start, end, None, raw=False, **self.options)
+                        outf.put_slice(slice, start, end, None, **self.options)
 
                         start = end
 
@@ -236,7 +242,7 @@ class Reconcile:
                     mark_parent = self.mark.child_from_path(self.work.child_path(child_parent))
                     slice = mark_parent.get_slice(child_idx, child_idx - start + end, None)
 
-                    outf.put_slice(slice, start, end, None, raw=False, **self.options)
+                    outf.put_slice(slice, start, end, None, **self.options)
 
             len_outa_body = len(outa_keys)  # get each time because could have been modified by put_slice, will not change if coming from AST
 
@@ -245,19 +251,19 @@ class Reconcile:
                 v = values[i]
 
                 if i >= len_outa_body:  # if past end then we need to slice insert AST before recursing into it, doesn't happen if coming from AST
-                    outf.put_slice(Dict(keys=[k], values=[v]), i, i, None, raw=False, **self.options)
+                    outf.put_slice(Dict(keys=[k], values=[v]), i, i, None, **self.options)
 
                 if k:
                     self.recurse_node(k, astfield('keys', i), outf, nodef)
                 elif outa_keys[i] is not None:
-                    outf.put(None, i, False, 'keys', raw=False, **self.options)
+                    outf.put(None, i, False, 'keys', **self.options)
 
                 self.recurse_node(v, astfield('values', i), outf, nodef)  # nodef set accordingly regardless of if coming from FST or AST
 
             start = end
 
         if start < len(outa_keys):  # delete tail in output, doesn't happen if coming from AST
-            outf.put_slice(None, start, None, None, raw=False, **self.options)
+            outf.put_slice(None, start, None, None, **self.options)
 
     def recurse_slice(self, node: AST, outf: fst.FST | None, field: str, body: list[AST]) -> None:  # TODO: refactor!
         """Recurse into a slice of children using slice operations to copy over formatting where possible (if not
@@ -307,7 +313,7 @@ class Reconcile:
                         pass
 
                     else:  # no recurse because we wouldn't be at this point if it wasn't a valid full FST without AST replacements, couldn't anyway as we don't know anything about that tree
-                        outf.put_slice(slice, start, end, field, raw=False, **self.options)
+                        outf.put_slice(slice, start, end, field, **self.options)
 
                         start = end
 
@@ -317,7 +323,7 @@ class Reconcile:
                     mark_parent = self.mark.child_from_path(self.work.child_path(child_parent))
                     slice = mark_parent.get_slice(child_idx, child_off_idx + end, child_field)
 
-                    outf.put_slice(slice, start, end, field, raw=False, **self.options)
+                    outf.put_slice(slice, start, end, field, **self.options)
 
             len_outa_body = len(outa_body)  # get each time because could have been modified by put_slice, will not change if coming from AST
 
@@ -325,14 +331,14 @@ class Reconcile:
                 n = body[i]  # this is safe to use in 'put_slice()' then 'recurse()' without duplicating because ASTs are not consumed
 
                 if i >= len_outa_body:  # if past end then we need to slice insert AST before recursing into it, doesn't happen if coming from AST
-                    outf.put_slice(n, i, i, field, one=True, raw=False, **self.options)  # put one
+                    outf.put_slice(n, i, i, field, one=True, **self.options)  # put one
 
                 self.recurse_node(n, astfield(field, i), outf, nodef)  # nodef set accordingly regardless of if coming from FST or AST
 
             start = end
 
         if start < len(outa_body):  # delete tail in output, doesn't happen if coming from AST
-            outf.put_slice(None, start, None, field, raw=False, **self.options)
+            outf.put_slice(None, start, None, field, **self.options)
 
     def recurse_children(self, node: AST, outa: AST) -> None:
         """Recurse into children of a node."""
@@ -357,7 +363,7 @@ class Reconcile:
 
             elif not isinstance(child, list):  # primitive, or None to delete possibly AST child
                 if nodef is not False and child != getattr(outa, field):  # this SHOULDN'T happen if coming from pure AST but could if there was a contradictory value set by the user, so in case of pure AST we don't do this at all because was set correctly on our own put of the AST somewhere above
-                    outf.put(child, field=field, raw=False, **self.options)
+                    outf.put(child, field=field, **self.options)
 
             else:  # slice
                 if (field in ('body', 'orelse', 'finalbody', 'handlers', 'cases', 'elts') or

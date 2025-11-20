@@ -11929,10 +11929,9 @@ Module - ROOT 0,0..0,29
 '''),
 
 ('body[0].args', None, False, 'kwarg', {}, ('exec',
-r'''def f(a, /): pass'''), (None,
+r'''def f(a, /): pass'''), ('arg',
 r'''new'''),
-r'''def f(a, /, **new): pass''',
-r'''**NodeError('expecting arg, got Name')**''', r'''
+r'''def f(a, /, **new): pass''', r'''
 Module - ROOT 0,0..0,24
   .body[1]
    0] FunctionDef - 0,0..0,24

@@ -1897,7 +1897,7 @@ def _sanitize(self: fst.FST) -> Self:
     del lines[end_ln + 1:]
 
     if ln or col:
-        self._offset(0, 0, -ln, -lines[ln].c2b(col))  # can do at 0, 0 because it doesn't really matter, we are offsetting everything anyway
+        self._offset(ln, 0, -ln, -lines[ln].c2b(col))  # can do at ln, 0 because it doesn't really matter, we are offsetting everything anyway
 
         lines[ln] = bistr(lines[ln][col:])
 

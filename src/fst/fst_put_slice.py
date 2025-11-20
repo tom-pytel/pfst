@@ -51,7 +51,6 @@ from .asttypes import (
     SetComp,
     Slice,
     Starred,
-    Store,
     Try,
     Tuple,
     While,
@@ -98,19 +97,13 @@ from .code import (
     code_as_expr_arglike,
     code_as__Assign_targets,
     code_as__decorator_list,
-    code_as_comprehension,
     code_as__comprehensions,
     code_as__comprehension_ifs,
-    code_as_alias,
     code_as__aliases,
-    code_as_Import_name,
     code_as__Import_names,
-    code_as_ImportFrom_name,
     code_as__ImportFrom_names,
-    code_as_withitem,
     code_as__withitems,
     code_as_pattern,
-    code_as_type_param,
     code_as__type_params,
     code_as__expr_arglikes,
 )
@@ -226,7 +219,6 @@ from .fst_get_slice import (
 
 
 class slicestatic(NamedTuple):
-    field:         str
     code_to:       Callable[[fst.FST, Code, bool, dict], fst.FST]
     sep:           str
     self_tail_sep: bool | Literal[0, 1] | None
@@ -261,21 +253,21 @@ def _trim_delimiters(self: fst.FST) -> None:  # self must be root
     del lines[end_ln + 1:], lines[:ln]
 
 
-def _code_to_slice_seq(
+def _code_to_slice_expr(
     self: fst.FST,
     code: Code | None,
     one: bool,
     options: Mapping[str, Any],
     code_as: Callable = code_as_expr,
 ) -> fst.FST | None:
-    """Convert code to sequence of expressions slice. Will accept `Tuple`, `List` and `Set` as sequences and wil coerce
-    any other expressions to a `Tuple` sequence for use as a slice. Will apply `norm_put` to recognize empty sets as
-    empty slices according to options."""
+    """Convert code to sequence of expressions slice. Will accept `Tuple`, `List` and `Set` as sequences and will coerce
+    any other expressions to a singleton `Tuple` sequence for use as a slice if allowed by `one` and / or `coerce`
+    options. Will apply `norm_put` to recognize empty sets as empty slices according to options."""
 
     if code is None:
         return None
 
-    fst_ = code_as(code, self.root.parse_params, sanitize=False)
+    fst_ = code_as(code, self.root.parse_params)
     ast_ = fst_.a
     put_norm = None  # cached
 
@@ -287,44 +279,46 @@ def _code_to_slice_seq(
             ):
                 return None
 
-        if not isinstance(ast_, (Tuple, List, Set)):  # any expression which is not a slice type we automatically coerce to a singleton slice
-            one = True
+        if isinstance(ast_, (Tuple, List, Set)):
+            if not ast_.elts:  # put empty sequence is same as delete
+                return None
 
-    if one:
-        if (is_par := fst_._is_parenthesized_tuple()) is not None:
-            fst_._maybe_add_singleton_tuple_comma(is_par)  # specifically for lone '*starred' without comma from slices, even though those can't be gotten alone organically
+            if fst_._is_parenthesized_tuple() is not False:  # anything that is not an unparenthesize tuple is restricted to the inside of the delimiters, which are removed
+                _trim_delimiters(fst_)
+            else:  # if unparenthesized tuple then use whole source, including leading and trailing trivia not included
+                _set_loc_whole(fst_)
 
-            if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
-                fst_._delimit_node()
+            return fst_
 
-        elif isinstance(ast_, Set):
-            _maybe_fix_Set(fst_, _get_norm_option('norm_put', 'set_norm', options) if put_norm is None else put_norm)
+    # one=True or any expression which is not a slice type we can coerce to a singleton slice
 
-        elif isinstance(ast_, NamedExpr):  # this needs to be parenthesized if being put to unparenthesized tuple
-            if not fst_.pars().n and self._is_parenthesized_tuple() is False:
-                fst_._parenthesize_grouping()
+    if not isinstance(ast_, (Tuple, List, Set)) and not (one or fst.FST.get_option('coerce', options)):
+        raise ValueError(f'cannot put {fst_.a.__class__.__name__} as slice without `one=True` or `coerce=True`')
 
-        elif isinstance(ast_, (Yield, YieldFrom)):  # these need to be parenthesized definitely
-            if not fst_.pars().n:
-                fst_._parenthesize_grouping()
+    if (is_par := fst_._is_parenthesized_tuple()) is not None:
+        fst_._maybe_add_singleton_tuple_comma(is_par)  # specifically for lone '*starred' without comma from slices, even though those can't be gotten alone organically
 
-        ast_ = Tuple(elts=[fst_.a], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),  # fst_.a because may have changed in Set processing
-                     end_col_offset=ls[-1].lenbytes)  # Tuple as temporary container because it is valid target if checked in validate and allows _is_enclosed_or_line() check without delimiters to check content
+        if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
+            fst_._delimit_node()
 
-        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+    elif isinstance(ast_, Set):
+        _maybe_fix_Set(fst_, _get_norm_option('norm_put', 'set_norm', options) if put_norm is None else put_norm)
 
-    if not ast_.elts:  # put empty sequence is same as delete
-        return None
+    elif isinstance(ast_, NamedExpr):  # this needs to be parenthesized if being put to unparenthesized tuple
+        if not fst_.pars().n and self._is_parenthesized_tuple() is False:
+            fst_._parenthesize_grouping()
 
-    if fst_._is_parenthesized_tuple() is not False:  # anything that is not an unparenthesize tuple is restricted to the inside of the delimiters, which are removed
-        _trim_delimiters(fst_)
-    else:  # if unparenthesized tuple then use whole source, including leading and trailing trivia not included
-        _set_loc_whole(fst_)
+    elif isinstance(ast_, (Yield, YieldFrom)):  # these need to be parenthesized definitely
+        if not fst_.pars().n:
+            fst_._parenthesize_grouping()
 
-    return fst_
+    ast_ = Tuple(elts=[fst_.a], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),  # fst_.a because may have changed in Set processing
+                 end_col_offset=ls[-1].lenbytes)  # Tuple as temporary container because it is valid target if checked in validate and allows _is_enclosed_or_line() check without delimiters to check content
+
+    return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
 
-def _code_to_slice_seq2(
+def _code_to_slice_key_and_other(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any], code_as: Callable
 ) -> fst.FST | None:
     """Handles `Dict` and `MatchMapping`."""
@@ -335,14 +329,42 @@ def _code_to_slice_seq2(
     if one:
         raise ValueError(f"cannot put as 'one' item to a {self.a.__class__.__name__} slice")
 
-    fst_ = code_as(code, self.root.parse_params, sanitize=False)
+    fst_ = code_as(code, self.root.parse_params)
     ast_ = fst_.a
 
     if ast_.__class__ is not self.a.__class__:
         raise NodeError(f"slice being assigned to a {self.a.__class__.__name__} must be a {self.a.__class__.__name__}"
                         f", not a {ast_.__class__.__name__}", rawable=True)
 
-    if not ast_.keys and not getattr(ast_, 'rest', None):  # put empty sequence is same as delete
+    if not ast_.keys and not getattr(ast_, 'rest', None):  # put empty sequence is same as delete, check `rest` because in that case MatchMapping is not empty
+        return None
+
+    return fst_
+
+
+def _code_to_slice__special(
+    self: fst.FST,
+    code: Code | None,
+    field: str,
+    one: bool,
+    options: Mapping[str, Any],
+    type_ast: type[AST],
+    code_as: Callable,
+) -> fst.FST | None:
+    if code is None:
+        return None
+
+    coerce = fst.FST.get_option('coerce', options)
+
+    if (one and not coerce and
+        (isinstance(code, type_ast) or
+         (isinstance(code, fst.FST) and isinstance(code.a, type_ast)))
+    ):
+        raise ValueError(f"cannot put {type_ast.__name__} node as 'one=True' without 'coerce=True'")
+
+    fst_ = code_as(code, self.root.parse_params, coerce=one or coerce)
+
+    if not getattr(fst_.a, field, None):  # put empty sequence is same as delete
         return None
 
     return fst_
@@ -351,148 +373,49 @@ def _code_to_slice_seq2(
 def _code_to_slice__Assign_targets(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    if code is None:
-        return None
-
-    if one:
-        fst_ = code_as_expr(code, self.root.parse_params, sanitize=False)
-        ast_ = fst_.a
-
-        if not is_valid_target(ast_):
-            raise NodeError(f'expecting one Assign target, got {fst_.a.__class__.__name__}')
-
-        set_ctx(ast_, Store)
-
-        ast_ = _Assign_targets(targets=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                               end_col_offset=ls[-1].lenbytes)
-
-        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
-
-    fst_ = code_as__Assign_targets(code, self.root.parse_params, sanitize=False)
-
-    if not fst_.a.targets:  # put empty sequence is same as delete
-        return None
-
-    return fst_
+    return _code_to_slice__special(self, code, 'targets', one, options, _Assign_targets, code_as__Assign_targets)
 
 
 def _code_to_slice__decorator_list(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    if code is None:
-        return None
-
-    if one:
-        fst_ = code_as_expr(code, self.root.parse_params, sanitize=False)
-
-        fst_._put_src('@', 0, 0, 0, 0, False)  # prepend 'if' to expression to make it a _comprehension_ifs slice, we do it before the container because the container will have to start at 0, 0
-
-        ast_ = _decorator_list(decorator_list=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                               end_col_offset=ls[-1].lenbytes)
-
-        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
-
-    fst_ = code_as__decorator_list(code, self.root.parse_params, sanitize=False)
-
-    if not fst_.a.decorator_list:  # put empty sequence is same as delete
-        return None
-
-    return fst_
+    return _code_to_slice__special(self, code, 'decorator_list', one, options, _decorator_list, code_as__decorator_list)
 
 
 def _code_to_slice__comprehensions(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    if code is None:
-        return None
-
-    if one:
-        fst_ = code_as_comprehension(code, self.root.parse_params, sanitize=False)
-        ast_ = _comprehensions(generators=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                               end_col_offset=ls[-1].lenbytes)
-
-        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
-
-    fst_ = code_as__comprehensions(code, self.root.parse_params, sanitize=False)
-
-    if not fst_.a.generators:  # put empty sequence is same as delete
-        return None
-
-    return fst_
+    return _code_to_slice__special(self, code, 'generators', one, options, _comprehensions, code_as__comprehensions)
 
 
 def _code_to_slice__comprehensions_ifs(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    if code is None:
-        return None
-
-    if one:
-        fst_ = code_as_expr(code, self.root.parse_params, sanitize=False)
-
-        ls = fst_._lines
-        l0 = ls[0]
-
-        fst_._put_src('if' if not l0 or l0.isspace() else 'if ', 0, 0, 0, 0, False)  # prepend 'if' to expression to make it a _comprehension_ifs slice, we do it before the container because the container will have to start at 0, 0
-
-        ast_ = _comprehension_ifs(ifs=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls),
-                                  end_col_offset=ls[-1].lenbytes)
-
-        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
-
-    fst_ = code_as__comprehension_ifs(code, self.root.parse_params, sanitize=False)
-
-    if not fst_.a.ifs:  # put empty sequence is same as delete
-        return None
-
-    return fst_
+    return _code_to_slice__special(self, code, 'ifs', one, options, _comprehension_ifs, code_as__comprehension_ifs)
 
 
 def _code_to_slice__aliases(
-    self: fst.FST,
-    code: Code | None,
-    one: bool,
-    options: Mapping[str, Any],
-    code_as_one: Callable = code_as_alias,
-    code_as_slice: Callable = code_as__aliases,
+    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    if code is None:
-        return None
+    return _code_to_slice__special(self, code, 'names', one, options, _aliases, code_as__aliases)
 
-    if one:
-        fst_ = code_as_one(code, self.root.parse_params, sanitize=False)
-        ast_ = _aliases(names=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                        end_col_offset=ls[-1].lenbytes)
 
-        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+def _code_to_slice_Import_names(
+    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
+) -> fst.FST | None:
+    return _code_to_slice__special(self, code, 'names', one, options, _aliases, code_as__Import_names)
 
-    fst_ = code_as_slice(code, self.root.parse_params, sanitize=False)
 
-    if not fst_.a.names:  # put empty sequence is same as delete
-        return None
-
-    return fst_
+def _code_to_slice_ImportFrom_names(
+    self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
+) -> fst.FST | None:
+    return _code_to_slice__special(self, code, 'names', one, options, _aliases, code_as__ImportFrom_names)
 
 
 def _code_to_slice__withitems(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    if code is None:
-        return None
-
-    if one:
-        fst_ = code_as_withitem(code, self.root.parse_params, sanitize=False)
-        ast_ = _withitems(items=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                          end_col_offset=ls[-1].lenbytes)
-
-        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
-
-    fst_ = code_as__withitems(code, self.root.parse_params, sanitize=False)
-
-    if not fst_.a.items:  # put empty sequence is same as delete
-        return None
-
-    return fst_
+    return _code_to_slice__special(self, code, 'items', one, options, _withitems, code_as__withitems)
 
 
 def _code_to_slice__expr_arglikes(
@@ -502,7 +425,7 @@ def _code_to_slice__expr_arglikes(
         return None
 
     if one:
-        fst_ = code_as_expr_arglike(code, self.root.parse_params, sanitize=False)
+        fst_ = code_as_expr_arglike(code, self.root.parse_params)
         ast_ = fst_.a
 
         if (is_par := fst_._is_parenthesized_tuple()) is not None:
@@ -517,12 +440,12 @@ def _code_to_slice__expr_arglikes(
 
         return fst.FST(ast_, ls, from_=fst_, lcopy=False)
 
-    fst_ = code_as__expr_arglikes(code, self.root.parse_params, sanitize=False)
+    fst_ = code_as__expr_arglikes(code, self.root.parse_params)
 
     if not fst_.a.elts:  # put empty sequence is same as delete
         return None
 
-    if fst_._is_parenthesized_tuple() is not False:  # parenthesize tuple is restricted to the inside of the delimiters, which are removed
+    if fst_._is_delimited_seq():  # parenthesize tuple is restricted to the inside of the delimiters, which are removed
         _trim_delimiters(fst_)
     else:  # if unparenthesized tuple then use whole source, including leading and trailing trivia not included
         _set_loc_whole(fst_)
@@ -536,7 +459,7 @@ def _code_to_slice_MatchSequence(
     if code is None:
         return None
 
-    fst_ = code_as_pattern(code, self.root.parse_params, sanitize=False)
+    fst_ = code_as_pattern(code, self.root.parse_params)
 
     if one:
         if fst_._is_delimited_matchseq() == '':
@@ -569,7 +492,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
         return None
 
     try:
-        fst_ = code_as_pattern(code, self.root.parse_params, sanitize=False, allow_invalid_matchor=True)
+        fst_ = code_as_pattern(code, self.root.parse_params, allow_invalid_matchor=True)
 
     except SyntaxError:
         if isinstance(code, str):
@@ -624,22 +547,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
 def _code_to_slice__type_params(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
-    if code is None:
-        return None
-
-    if one:
-        fst_ = code_as_type_param(code, self.root.parse_params, sanitize=False)
-        ast_ = _type_params(type_params=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
-                            end_col_offset=ls[-1].lenbytes)
-
-        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
-
-    fst_ = code_as__type_params(code, self.root.parse_params, sanitize=False)
-
-    if not fst_.a.type_params:  # put empty sequence is same as delete
-        return None
-
-    return fst_
+    return _code_to_slice__special(self, code, 'type_params', one, options, _type_params, code_as__type_params)
 
 
 def _put_slice_asts(
@@ -788,11 +696,11 @@ def _put_slice_seq_and_asts(
     put_slice_sep_end(self, end_params)
 
 
-_SLICE_STATICS = {
-    _Assign_targets: slicestatic('targets', _code_to_slice__Assign_targets, '=', True, True),
-    _aliases:        slicestatic('names', _code_to_slice__aliases, ',', False, False),
-    _withitems:      slicestatic('items', _code_to_slice__withitems, ',', False, False),
-    _type_params:    slicestatic('type_params', _code_to_slice__type_params, ',', False, False),
+_SPECIAL_SLICE_STATICS = {
+    _Assign_targets: slicestatic(_code_to_slice__Assign_targets, '=', True, True),
+    _aliases:        slicestatic(_code_to_slice__aliases, ',', False, False),
+    _withitems:      slicestatic(_code_to_slice__withitems, ',', False, False),
+    _type_params:    slicestatic(_code_to_slice__type_params, ',', False, False),
 }
 
 
@@ -821,7 +729,7 @@ def _put_slice_Tuple_elts(
 ) -> None:
     """Tuple is used in many different ways in python, also for expressionish slices by us."""
 
-    fst_ = _code_to_slice_seq(self, code, one, options, code_as_expr_all)
+    fst_ = _code_to_slice_expr(self, code, one, options, code_as_expr_all)
     ast = self.a
     body = ast.elts
     start, stop = fixup_slice_indices(len(body), start, stop)
@@ -883,7 +791,7 @@ def _put_slice_List_elts(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice_seq(self, code, one, options)
+    fst_ = _code_to_slice_expr(self, code, one, options)
     ast = self.a
     body = ast.elts
     start, stop = fixup_slice_indices(len(body), start, stop)
@@ -911,7 +819,7 @@ def _put_slice_Set_elts(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice_seq(self, code, one, options)
+    fst_ = _code_to_slice_expr(self, code, one, options)
     body = self.a.elts
     start, stop = fixup_slice_indices(len(body), start, stop)
 
@@ -940,7 +848,7 @@ def _put_slice_Dict__all(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice_seq2(self, code, one, options, code_as_expr)
+    fst_ = _code_to_slice_key_and_other(self, code, one, options, code_as_expr)
     ast = self.a
     body = ast.keys
     body2 = ast.values
@@ -994,7 +902,7 @@ def _put_slice_Delete_targets(
     non-comma terminated syntax of `Delete` targets (a non-sequence `FST` or `AST` will not be accepted like this). This
     allows correct-appearing syntax like `delfst.targets = 'target'` to work."""
 
-    fst_ = _code_to_slice_seq(self, code, one, options)
+    fst_ = _code_to_slice_expr(self, code, one, options)
     ast = self.a
     body = ast.targets
     len_body = len(body)
@@ -1111,7 +1019,7 @@ def _put_slice_Import_names(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice__aliases(self, code, one, options, code_as_Import_name, code_as__Import_names)
+    fst_ = _code_to_slice_Import_names(self, code, one, options)
     ast = self.a
     body = ast.names
     len_body = len(body)
@@ -1158,7 +1066,7 @@ def _put_slice_ImportFrom_names(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice__aliases(self, code, one, options, code_as_ImportFrom_name, code_as__ImportFrom_names)
+    fst_ = _code_to_slice_ImportFrom_names(self, code, one, options)
     ast = self.a
     body = ast.names
     len_body = len(body)
@@ -1227,7 +1135,7 @@ def _put_slice_Global_Nonlocal_names(
     create a temporary container which does have `Name` elements for each name and operate on that. Afterwards we get
     rid of that but the modified source identifiers remain."""
 
-    fst_ = _code_to_slice_seq(self, code, one, options)
+    fst_ = _code_to_slice_expr(self, code, one, options)
     ast = self.a
     body = ast.names
     len_body = len(body)
@@ -1656,7 +1564,7 @@ def _put_slice_MatchMapping__all(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice_seq2(self, code, one, options, code_as_pattern)
+    fst_ = _code_to_slice_key_and_other(self, code, one, options, code_as_pattern)
     ast = self.a
     body = ast.keys
     body2 = ast.patterns
@@ -1683,7 +1591,7 @@ def _put_slice_MatchMapping__all(
 
             _add_MatchMapping_rest_as_real_node(fst_)  # this needs to be done before the _trim_delimiters()
 
-        _trim_delimiters(fst_)  # didn't do it in _code_to_slice_seq2()
+        _trim_delimiters(fst_)  # didn't do it in _code_to_slice_key_and_other()
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
@@ -1691,7 +1599,7 @@ def _put_slice_MatchMapping__all(
     bound_end_col -= 1
 
     if not fst_rest and (not rest or stop < len_body_w_rest):
-        # this is a slightly optimized path which doesn't include .rest so doesn't have to create a temporary element for it and if code being put then it also doesn't have a .rest, unnecessary, remove if gets annoying
+        # this is a slightly optimized path which doesn't include `rest` so doesn't have to create a temporary element for it and if code being put then it also doesn't have a `rest`, unnecessary, remove if gets annoying
 
         if not fst_:
             self_tail_sep = (start and ast.rest and stop == len_body) or None
@@ -1719,7 +1627,7 @@ def _put_slice_MatchMapping__all(
             self._maybe_ins_separator(*body2[-1].f.loc[2:], True)  # this will only maybe add a space, comma is already there
 
     else:
-        # here .rest exists in self OR in code being put and is included so we add it temporarily to end as `key=None` and `pattern=MatchAs(name=rest)` for the operation
+        # here `rest` exists in self OR in code being put and is included so we add it temporarily to end as `key=None` and `pattern=MatchAs(name=rest)` for the operation
 
         if rest:
             _add_MatchMapping_rest_as_real_node(self)
@@ -1734,7 +1642,7 @@ def _put_slice_MatchMapping__all(
         else:
             fst_body = ast_.keys
             fst_body2 = ast_.patterns
-            fst_first = a.f if (a := fst_body[0]) else None  # could be the temporary .rest key of None
+            fst_first = a.f if (a := fst_body[0]) else None  # could be the temporary `rest` key of None
 
             end_params = put_slice_sep_begin(self, start, stop, fst_, fst_first, fst_body2[-1].f, len(fst_body),
                                              bound_ln, bound_col, bound_end_ln, bound_end_col,
@@ -1744,7 +1652,7 @@ def _put_slice_MatchMapping__all(
 
         put_slice_sep_end(self, end_params)
 
-        if stop == len_body_w_rest:  # if this and we are here then .rest (and the temporary node) was either deleted or replaced from slice, because otherwise we wouldn't be here
+        if stop == len_body_w_rest:  # if this and we are here then `rest` (and the temporary node) was either deleted or replaced from slice, because otherwise we wouldn't be here
             ast.rest = fst_rest
 
         if fst_rest:  # if no fst_rest then our rest was deleted or overwritten with real node, otherwise need to remove temporary node from put FST
@@ -1869,7 +1777,7 @@ def _put_slice__slice(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    static = _SLICE_STATICS[(ast := self.a).__class__]
+    static = _SPECIAL_SLICE_STATICS[(ast := self.a).__class__]
     fst_ = static.code_to(self, code, one, options)
     len_body = len(body := getattr(ast, field))
     start, stop = fixup_slice_indices(len_body, start, stop)
@@ -2090,7 +1998,7 @@ def _loc_slice_raw_put_MatchMapping__all(
     if start < len_keys:
         ln, col, _, _ = keys[start].f.loc  # these cannot have pars
 
-    else:  # in this case _loc_MatchMapping_rest() was gotten so (ln, col) is at the start of the .rest identifier
+    else:  # in this case _loc_MatchMapping_rest() was gotten so (ln, col) is at the start of the `rest` identifier
         if start:
             _, _, prev_ln, prev_col = patterns[start - 1].f.loc
         else:
@@ -2378,7 +2286,7 @@ def _put_slice(
 
             return self
 
-        except (NodeError, SyntaxError, NotImplementedError) as exc:
+        except (NodeError, SyntaxError, NotImplementedError) as exc:  # SyntaxError includes ParseError
             if not raw or (isinstance(exc, NodeError) and not exc.rawable):
                 raise
 

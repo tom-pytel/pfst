@@ -2736,7 +2736,7 @@ def _put_one(
             with self._modifying(field):
                 return handler(self, code, idx, field, child, static, options)
 
-        except (NodeError, SyntaxError, NotImplementedError) as exc:
+        except (NodeError, SyntaxError, NotImplementedError) as exc:  # SyntaxError includes ParseError
             if not raw or (isinstance(exc, NodeError) and not exc.rawable):
                 raise
 

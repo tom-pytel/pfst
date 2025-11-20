@@ -8,6 +8,7 @@
 
 ### Added
 
+- automatic coercion of nodes put as `AST` or `FST` to compatible types
 - replacing all handlers in a `Try` or `TryStar` with the other kind will change the try `AST` to the other kind
 - prescribed slicing for `FunctionDef.decorator_list`
 - prescribed slicing for `AsyncFunctionDef.decorator_list`

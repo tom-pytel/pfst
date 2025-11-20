@@ -1188,7 +1188,7 @@ def parse__comprehension_ifs(src: str, parse_params: Mapping[str, Any] = {}) -> 
 
     ast = _ast_parse1(f'[_ for _ in _\n{src}\n]', parse_params).value
 
-    if not isinstance(ast, ListComp) or len(ast.generators) != 1:
+    if not isinstance(ast, ListComp) or len(ast.generators) != 1 or not isinstance(ast.generators[0].iter, Name):
         raise ParseError('expecting comprehension ifs')
 
     ast = _comprehension_ifs(ifs=ast.generators[0].ifs, **_astloc_from_src(src, 2))

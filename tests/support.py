@@ -283,8 +283,13 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
             f, to = _make_fst(code, attr, to_attr)
             options = {**options, 'to': to}
 
+        if not src or options.get('_src', True):  # HACK to allow not putting as source text and only FST and AST, useful for testing things that only apply to AST/FST puts like coerce
+            src_code = src
+        else:
+            src_code = _make_fst(rest0)
+
         try:
-            g = func(f, src, start, stop, field, **options)
+            g = func(f, src_code, start, stop, field, **options)
         except Exception as exc:
             rest.append(f'**{_san_exc(exc)!r}**')
 

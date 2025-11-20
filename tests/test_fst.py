@@ -35,38 +35,7 @@ from fst.astutil import (
 from fst.common import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, astfield, fstloc
 from fst.view import fstview
 
-from fst.code import (
-    code_as_all,
-    code_as_stmts,
-    code_as__ExceptHandlers,
-    code_as__match_cases,
-    code_as_expr,
-    code_as_expr_all,
-    code_as_expr_arglike,
-    code_as_expr_slice,
-    code_as_expr_sliceelt,
-    code_as_Tuple,
-    code_as_boolop,
-    code_as_operator,
-    code_as_unaryop,
-    code_as_cmpop,
-    code_as_comprehension,
-    code_as_arguments,
-    code_as_arguments_lambda,
-    code_as_arg,
-    code_as_keyword,
-    code_as_alias,
-    code_as_Import_name,
-    code_as_ImportFrom_name,
-    code_as__ImportFrom_names,
-    code_as_withitem,
-    code_as_pattern,
-    code_as_type_param,
-    code_as_identifier,
-    code_as_identifier_dotted,
-    code_as_identifier_star,
-    code_as_identifier_alias,
-)
+from fst.code import *
 
 from fst import parsex as px, code
 from fst.fst_misc import get_trivia_params
@@ -326,6 +295,9 @@ PARSE_TESTS = [
     ('_comprehension_ifs', px.parse__comprehension_ifs, _comprehension_ifs,       ''),
     ('_comprehension_ifs', px.parse__comprehension_ifs, _comprehension_ifs,       'if u'),
     ('_comprehension_ifs', px.parse__comprehension_ifs, _comprehension_ifs,       'if u if v'),
+    ('_comprehension_ifs', px.parse__comprehension_ifs, ParseError,               '(a)'),
+    ('_comprehension_ifs', px.parse__comprehension_ifs, ParseError,               '.b'),
+    ('_comprehension_ifs', px.parse__comprehension_ifs, ParseError,               '+b'),
 
     ('arguments',          px.parse_arguments,          arguments,                ''),
     ('arguments',          px.parse_arguments,          arguments,                'a: list[str], /, b: int = 1, *c, d=100, **e'),
@@ -1679,19 +1651,19 @@ match a:
                     test    = 'parse'
                     ref_ast = px.parse(src, mode)
                     test    = 'src'
-                    fst     = code_as(src, sanitize=False)
+                    fst     = code_as(src)
 
                     compare_asts(ref_ast, fst.a, locs=True, raise_=True)
 
                     if fst._get_parse_mode() not in ('_ExceptHandlers', '_match_cases'):  # this tells us if it is a SPECIAL SLICE, which can not be unparsed  TODO: remove this check once ExceptHandler and match_case special slices moved from Module to their own _slice AST classes
                         test    = 'ast'
-                        ast_fst = code_as(fst.a, sanitize=False)
+                        ast_fst = code_as(fst.a)
 
                         compare_asts(ref_ast, ast_fst.a, locs=False, raise_=True)
 
                     test    = 'fst'
                     fst_src = fst.src
-                    fst_fst = code_as(fst, sanitize=False)
+                    fst_fst = code_as(fst)
 
                     compare_asts(ref_ast, fst_fst.a, locs=False, raise_=True)
 
@@ -1711,8 +1683,8 @@ match a:
     def test_code_as_special(self):
         # aliases slice multiple stars
 
-        self.assertRaises(ParseError, code_as__ImportFrom_names, FST('*', '_aliases').names.append('*').fst)
-        self.assertRaises(ParseError, code_as__ImportFrom_names, FST('a', '_aliases').names.append('*').fst)
+        self.assertRaises(NodeError, code_as__ImportFrom_names, FST('*', '_aliases').names.append('*').fst)
+        self.assertRaises(NodeError, code_as__ImportFrom_names, FST('a', '_aliases').names.append('*').fst)
         self.assertEqual('*', code_as__ImportFrom_names(FST('*', '_aliases')).src)
 
         # lambda arguments from FST
@@ -1745,6 +1717,184 @@ match a:
         self.assertRaises(NodeError, code_as_Tuple, FST('a:b:c', 'Slice'))
         self.assertIs(f := FST('a:b:c, d:e', 'expr_slice'), code_as_Tuple(f))
 
+        # expr_arglikes
+
+        self.assertRaises(NodeError, code_as__expr_arglikes, FST('a:b:c'))
+        self.assertRaises(NodeError, code_as__expr_arglikes, FST('a:b:c,'))
+
+    def test_code_as_coerce(self):
+        def test(code, res):
+            try:
+                f = code_as(code, coerce=True)
+            except Exception as exc:
+                r = f'**{exc!r}**'
+            else:
+                r = (f.a.__class__, f.src)
+
+            self.assertEqual(r, res)
+
+        cases = [
+            (code_as__Assign_targets, (Name, 'a'), (_Assign_targets, 'a')),
+            (code_as__Assign_targets, (Attribute, 'a.b'), (_Assign_targets, 'a.b')),
+            (code_as__Assign_targets, (Subscript, 'a[b]'), (_Assign_targets, 'a[b]')),
+            (code_as__Assign_targets, (Tuple, 'a, b'), (_Assign_targets, 'a, b'),     # src and FST
+                                                       (_Assign_targets, '(a, b)')),  # AST
+            (code_as__Assign_targets, (Tuple, '(a, b)'), (_Assign_targets, '(a, b)')),
+            (code_as__Assign_targets, (List, '[a, b]'), (_Assign_targets, '[a, b]')),
+            (code_as__Assign_targets, (Starred, '*a'), (_Assign_targets, '*a')),
+            (code_as__Assign_targets, (Call, 'f()'), "**ParseError('expecting _Assign_targets, could not parse or coerce')**",   # src
+                                                     "**NodeError('expecting _Assign_targets, got Call, could not coerce')**",   # AST
+                                                     "**NodeError('expecting _Assign_targets, got Call, could not coerce')**"),  # FST
+            (code_as__Assign_targets, (Name, '#0\n ( a ) #1\n#2'), (_Assign_targets, '#0\n ( a ) #1\n#2'),
+                                                                   (_Assign_targets, 'a')),
+
+            (code_as__decorator_list, (Name, 'a'), (_decorator_list, '@a')),
+            (code_as__decorator_list, (Call, 'f()'), (_decorator_list, '@f()')),
+            (code_as__decorator_list, (Name, '#0\n ( a ) #1\n#2'), (_decorator_list, '#0\n@ ( a ) #1\n#2'),
+                                                                   (_decorator_list, '@a')),
+
+            (code_as__comprehensions, (comprehension, 'for a in a'), (_comprehensions, 'for a in a')),
+            (code_as__comprehensions, (comprehension, '#0\n for a in a #1\n#2'), (_comprehensions, '#0\n for a in a #1\n#2'),
+                                                                                 (_comprehensions, 'for a in a')),
+
+            (code_as__comprehension_ifs, (Name, 'a'), (_comprehension_ifs, 'if a')),
+            (code_as__comprehension_ifs, (Call, 'f()'), (_comprehension_ifs, 'if f()')),
+            (code_as__comprehension_ifs, (Name, '#0\n ( a ) #1\n#2'), (_comprehension_ifs, '#0\n if ( a ) #1\n#2'),
+                                                                      (_comprehension_ifs, 'if a')),
+
+            (code_as_alias, (Name, 'a'), (alias, 'a')),
+            (code_as_alias, (Attribute, 'a.b'), (alias, 'a.b')),
+            (code_as_alias, (Mult, '*'), (alias, '*'),
+                                         "**NodeError('expecting alias, got Mult, could not coerce')**",
+                                         "**NodeError('expecting alias, got Mult, could not coerce')**"),
+            (code_as_alias, (Subscript, 'a[b]'), "**ParseError('expecting alias, could not parse or coerce')**",
+                                                 "**NodeError('expecting alias, got Subscript, could not coerce')**",
+                                                 "**NodeError('expecting alias, got Subscript, could not coerce')**"),
+            (code_as_alias, (Name, '#0\n ( a ) #1\n#2'), (alias, 'a')),
+
+            (code_as__aliases, (Name, 'a'), (_aliases, 'a')),
+            (code_as__aliases, (Attribute, 'a.b'), (_aliases, 'a.b')),
+            (code_as__aliases, (Mult, '*'), (_aliases, '*'),
+                                            "**NodeError('expecting _aliases, got Mult, could not coerce')**",
+                                            "**NodeError('expecting _aliases, got Mult, could not coerce')**"),
+            (code_as__aliases, (Subscript, 'a[b]'), "**ParseError('expecting _aliases, could not parse or coerce')**",
+                                                    "**NodeError('expecting _aliases, got Subscript, could not coerce')**",
+                                                    "**NodeError('expecting _aliases, got Subscript, could not coerce')**"),
+            (code_as__aliases, (Name, '#0\n ( a ) #1\n#2'), (_aliases, 'a')),
+            (code_as__aliases, (alias, 'a'), (_aliases, 'a')),
+            (code_as__aliases, (alias, 'a as b'), (_aliases, 'a as b')),
+            (code_as__aliases, (alias, 'a.b'), (_aliases, 'a.b')),
+            (code_as__aliases, (alias, 'a.b as c'), (_aliases, 'a.b as c')),
+            (code_as__aliases, (alias, '*'), (_aliases, '*')),
+
+            (code_as_Import_name, (Name, 'a'), (alias, 'a')),
+            (code_as_Import_name, (Attribute, 'a.b'), (alias, 'a.b')),
+            (code_as_Import_name, (Mult, '*'), "**ParseError('expecting alias, could not parse or coerce')**",
+                                               "**NodeError('expecting alias, got Mult, could not coerce')**",
+                                               "**NodeError('expecting alias, got Mult, could not coerce')**"),
+            (code_as_Import_name, (Subscript, 'a[b]'), "**ParseError('expecting alias, could not parse or coerce')**",
+                                                       "**NodeError('expecting alias, got Subscript, could not coerce')**",
+                                                       "**NodeError('expecting alias, got Subscript, could not coerce')**"),
+            (code_as_Import_name, (Name, '#0\n ( a ) #1\n#2'), (alias, 'a')),
+
+            (code_as__Import_names, (Name, 'a'), (_aliases, 'a')),
+            (code_as__Import_names, (Attribute, 'a.b'), (_aliases, 'a.b')),
+            (code_as__Import_names, (Mult, '*'), "**ParseError('expecting _aliases, could not parse or coerce')**",
+                                                 "**NodeError('expecting _aliases, got Mult, could not coerce')**",
+                                                 "**NodeError('expecting _aliases, got Mult, could not coerce')**"),
+            (code_as__Import_names, (Subscript, 'a[b]'), "**ParseError('expecting _aliases, could not parse or coerce')**",
+                                                         "**NodeError('expecting _aliases, got Subscript, could not coerce')**",
+                                                         "**NodeError('expecting _aliases, got Subscript, could not coerce')**"),
+            (code_as__Import_names, (Name, '#0\n ( a ) #1\n#2'), (_aliases, 'a')),
+            (code_as__Import_names, (alias, 'a'), (_aliases, 'a')),
+            (code_as__Import_names, (alias, 'a as b'), (_aliases, 'a as b')),
+            (code_as__Import_names, (alias, 'a.b'), (_aliases, 'a.b')),
+            (code_as__Import_names, (alias, 'a.b as c'), (_aliases, 'a.b as c')),
+            (code_as__Import_names, (alias, '*'), "**ParseError('expecting _aliases, could not parse or coerce')**",
+                                                  "**NodeError('expecting _aliases, got alias, could not coerce')**",
+                                                  "**NodeError('expecting _aliases, got alias, could not coerce')**"),
+
+            (code_as_ImportFrom_name, (Name, 'a'), (alias, 'a')),
+            (code_as_ImportFrom_name, (Attribute, 'a.b'), "**ParseError('expecting alias, could not parse or coerce')**",
+                                                          "**NodeError('expecting alias, got Attribute, could not coerce')**",
+                                                          "**NodeError('expecting alias, got Attribute, could not coerce')**"),
+            (code_as_ImportFrom_name, (Mult, '*'), (alias, '*'),
+                                                   "**NodeError('expecting alias, got Mult, could not coerce')**",
+                                                   "**NodeError('expecting alias, got Mult, could not coerce')**"),
+            (code_as_ImportFrom_name, (Subscript, 'a[b]'), "**ParseError('expecting alias, could not parse or coerce')**",
+                                                           "**NodeError('expecting alias, got Subscript, could not coerce')**",
+                                                           "**NodeError('expecting alias, got Subscript, could not coerce')**"),
+            (code_as_ImportFrom_name, (Name, '#0\n ( a ) #1\n#2'), (alias, 'a')),
+
+            (code_as__ImportFrom_names, (Name, 'a'), (_aliases, 'a')),
+            (code_as__ImportFrom_names, (Attribute, 'a.b'), "**ParseError('expecting _aliases, could not parse or coerce')**",
+                                                            "**NodeError('expecting _aliases, got Attribute, could not coerce')**",
+                                                            "**NodeError('expecting _aliases, got Attribute, could not coerce')**"),
+            (code_as__ImportFrom_names, (Mult, '*'), (_aliases, '*'),
+                                                     "**NodeError('expecting _aliases, got Mult, could not coerce')**",
+                                                     "**NodeError('expecting _aliases, got Mult, could not coerce')**"),
+            (code_as__ImportFrom_names, (Subscript, 'a[b]'), "**ParseError('expecting _aliases, could not parse or coerce')**",
+                                                             "**NodeError('expecting _aliases, got Subscript, could not coerce')**",
+                                                             "**NodeError('expecting _aliases, got Subscript, could not coerce')**"),
+            (code_as__ImportFrom_names, (Name, '#0\n ( a ) #1\n#2'), (_aliases, 'a')),
+            (code_as__ImportFrom_names, (alias, 'a'), (_aliases, 'a')),
+            (code_as__ImportFrom_names, (alias, 'a as b'), (_aliases, 'a as b')),
+            (code_as__ImportFrom_names, (alias, 'a.b'), "**ParseError('expecting _aliases, could not parse or coerce')**",
+                                                        "**NodeError('expecting _aliases, got alias, could not coerce')**",
+                                                        "**NodeError('expecting _aliases, got alias, could not coerce')**"),
+            (code_as__ImportFrom_names, (alias, '*'), (_aliases, '*')),
+
+            (code_as_withitem, (Name, 'a'), (withitem, 'a')),
+            (code_as_withitem, (Call, 'f()'), (withitem, 'f()')),
+            (code_as_withitem, (Slice, 'a:b:c'), "**ParseError('expecting withitem, could not parse or coerce')**",
+                                                 "**NodeError('expecting withitem, got Slice, could not coerce')**",
+                                                 "**NodeError('expecting withitem, got Slice, could not coerce')**"),
+            (code_as_withitem, (Name, '#0\n ( a ) #1\n#2'), (withitem, '#0\n ( a ) #1\n#2'),
+                                                            (withitem, 'a')),
+
+            (code_as__withitems, (Name, 'a'), (_withitems, 'a')),
+            (code_as__withitems, (Call, 'f()'), (_withitems, 'f()')),
+            (code_as__withitems, (Slice, 'a:b:c'), "**ParseError('expecting _withitems, could not parse or coerce')**",
+                                                   "**NodeError('expecting _withitems, got Slice, could not coerce')**",
+                                                   "**NodeError('expecting _withitems, got Slice, could not coerce')**"),
+            (code_as__withitems, (Name, '#0\n ( a ) #1\n#2'), (_withitems, '#0\n ( a ) #1\n#2'),
+                                                              (_withitems, 'a')),
+            (code_as__withitems, (withitem, 'a'), (_withitems, 'a')),
+            (code_as__withitems, (withitem, 'a as b'), (_withitems, 'a as b')),
+        ]
+
+        if PYGE12:
+            cases.extend([
+                (code_as__type_params, (type_param, '**X'), (_type_params, '**X')),
+                (code_as__type_params, (type_param, '#0\n **X #1\n#2'), (_type_params, '#0\n **X #1\n#2'),
+                                                                        (_type_params, '**X')),
+            ])
+
+        for case in cases:
+            try:
+                code_as, (mode, src), *ress = case
+
+                if (l := len(ress)) == 1:
+                    res_src = res_fst = res_ast = ress[0]
+
+                elif l == 2:
+                    res_src = res_fst = ress[0]
+                    res_ast = ress[1]
+
+                else:
+                    res_src, res_fst, res_ast = ress
+
+                fst_ = FST(src, mode)
+
+                test(src, res_src)
+                test(fst_.a, res_ast)
+                test(fst_, res_fst)
+
+            except Exception:
+                print(f'Case: {case}')
+
+                raise
+
     def test_sanitize_stmtish(self):
         f = FST('# pre\ni = j  # line\n# post', 'stmt')
         self.assertEqual('# pre\ni = j  # line\n# post', f.src)
@@ -1765,6 +1915,11 @@ match a:
         f = FST('# pre\ncase None: pass  # line\n# post', 'match_case')
         self.assertEqual('# pre\ncase None: pass  # line\n# post', f.src)
         self.assertEqual('case None: pass  # line', f._sanitize().src)
+
+    def test_sanitize(self):
+        f = FST('#0\n ( a ) #1\n#2')._sanitize()
+        self.assertEqual('( a )', f.src)
+        f.verify()
 
     def test__loc_match_case(self):
         # make sure it includes trailing semicolon

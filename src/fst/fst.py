@@ -131,6 +131,7 @@ class _ThreadLocal(threading.local):
         self.options = {
             'raw':           False,   # True | False | 'auto'
             'trivia':        True,    # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line')
+            'coerce':        True,    # True | False
             'elif_':         True,    # True | False
             'pep8space':     True,    # True | False | 1
             'docstr':        True,    # True | False | 'strict'
@@ -1043,6 +1044,7 @@ class FST:
         >>> pp(FST.get_options())
         {'raw': False,
          'trivia': True,
+         'coerce': True,
          'elif_': True,
          'pep8space': True,
          'docstr': True,
@@ -1160,6 +1162,9 @@ class FST:
                     element.
                 - `int`: A specific line number specifying the first or last line that can be returned as a comment or
                     empty line. If not interrupted by other code, will always return up to this line.
+        - `coerce`: Whether to allow coercion between compatible `AST` / `FST` types on put. For example allow put a
+            non-slice `expr` as a slice to something that expects a slice of `expr`s or allowing use of `arg` where
+            `arguments` is expected.
         - `elif_`: How to handle lone `If` statements as the only statements in an `If` statement `orelse` field.
             - `False`: Always put as a standalone `If` statement.
             - `True`: If putting a single `If` statement to an `orelse` field of a parent `If` statement then
@@ -1432,6 +1437,9 @@ class FST:
         links, then (optionally) reparse source and make sure parsed tree matches currently stored tree (locations and
         everything). The reparse can only be carried out on root nodes but the link validation can be done on any level.
 
+        SPECIAL SLICEs like `_decorator_list` will verify ok with reparse but invalid nodes like an empty `Set` or
+        block statements with empty bodies will not.
+
         **Parameters:**
         - `mode`: Parse mode to use, otherwise if `None` then use the top level AST node type for the mode. Depending on
             how this is set will determine whether the verification is checking if is parsable by python (`'exec'` or
@@ -1619,7 +1627,8 @@ class FST:
 
         rec = Reconcile(self, mark, options)
 
-        rec.recurse_node(self.a)
+        with FST.options(raw=False, coerce=False, pars='auto', pars_arglike=True):
+            rec.recurse_node(self.a)
 
         return rec.out
 
