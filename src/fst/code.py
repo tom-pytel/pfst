@@ -239,7 +239,7 @@ def _coerce_as_alias(
     if fst_.pars().n:  # aliases can't have pars
         fst_._unparenthesize_grouping(False)
 
-    name = f'{ast_.id}{name}'
+    name = ast_.id + name
     ast_ = fst_.a
     ast_ = alias(name=name, lineno=ast_.lineno, col_offset=ast_.col_offset, end_lineno=ast_.end_lineno,
                  end_col_offset=ast_.end_col_offset)
@@ -1156,7 +1156,7 @@ def code_as_identifier_alias(
 
 
 def code_as_constant(
-    code: constant, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+    code: Code | constant, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> constant:
     """Convert `code` to valid constant if possible. If `code` is a `str` then it is treated as the constant value and
     not as the python representation of the constant. The only `FST` or `AST` accepted is a `Constant`, whose `value` is

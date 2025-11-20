@@ -13958,4 +13958,86 @@ TemplateStr - ROOT 0,0..0,12
 '''),
 ],
 
+'coerce': [  # ................................................................................
+
+('', 0, False, None, {}, (None,
+r'''import a'''), ('Name',
+r'''x'''),
+r'''import x''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'x'
+'''),
+
+('', 0, False, None, {}, (None,
+r'''import a'''), ('Attribute',
+r'''x.y'''),
+r'''import x.y''', r'''
+Import - ROOT 0,0..0,10
+  .names[1]
+   0] alias - 0,7..0,10
+     .name 'x.y'
+'''),
+
+('', 0, False, None, {}, (None,
+r'''from _ import a'''), ('Name',
+r'''x'''),
+r'''from _ import x''', r'''
+ImportFrom - ROOT 0,0..0,15
+  .module '_'
+  .names[1]
+   0] alias - 0,14..0,15
+     .name 'x'
+  .level 0
+'''),
+
+('', 0, False, None, {}, (None,
+r'''from _ import a'''), ('Attribute',
+r'''x.y'''),
+r'''**ParseError('expecting alias, could not parse or coerce')**'''),
+
+('', 0, False, None, {'_src': False}, (None,
+r'''from _ import a'''), ('Attribute',
+r'''x.y'''),
+r'''**NodeError('expecting alias, got Attribute, could not coerce')**'''),
+
+('', 0, False, 'items', {}, (None,
+r'''with a as b: pass'''), ('Name',
+r'''x'''),
+r'''with x: pass''', r'''
+With - ROOT 0,0..0,12
+  .items[1]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+  .body[1]
+   0] Pass - 0,8..0,12
+'''),
+
+('', 0, False, 'items', {}, (None,
+r'''with a as b: pass'''), ('Attribute',
+r'''x.y'''),
+r'''with x.y: pass''', r'''
+With - ROOT 0,0..0,14
+  .items[1]
+   0] withitem - 0,5..0,8
+     .context_expr Attribute - 0,5..0,8
+       .value Name 'x' Load - 0,5..0,6
+       .attr 'y'
+       .ctx Load
+  .body[1]
+   0] Pass - 0,10..0,14
+'''),
+
+('', 0, False, 'items', {}, (None,
+r'''with a as b: pass'''), ('Slice',
+r'''x:y:z'''),
+r'''**ParseError('expecting withitem, could not parse or coerce')**'''),
+
+('', 0, False, 'items', {'_src': False}, (None,
+r'''with a as b: pass'''), ('Slice',
+r'''x:y:z'''),
+r'''**NodeError('expecting withitem, got Slice, could not coerce')**'''),
+],
+
 }
