@@ -515,7 +515,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
 
         if not one or len(patterns) == 1:
             if fst_pars.n:
-                fst_._unparenthesize_grouping()
+                fst_._unparenthesize_grouping(False)
 
             _set_loc_whole(fst_)
 

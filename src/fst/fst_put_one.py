@@ -484,7 +484,7 @@ def _put_one_AnnAssign_simple(
             if not is_name:
                 raise ValueError('cannot make simple')
 
-            target.f._unparenthesize_grouping()
+            target.f._unparenthesize_grouping(False)
 
         elif is_name and not target.f.pars().n:
             target.f._parenthesize_grouping()
@@ -771,7 +771,7 @@ def _make_exprish_fst(
 
             if pars == 'auto':
                 if not need_pars(False):
-                    put_fst._unparenthesize_grouping()
+                    put_fst._unparenthesize_grouping(False)
 
         else:  # src does not have grouping pars
             if ((tgt_has_pars := tgt_is_FST and getattr(target.pars(), 'n', 0)) and
