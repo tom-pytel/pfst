@@ -4605,7 +4605,7 @@ if 1:
     def test_dump(self):
         f = FST('a = b ; ')
         f.value.put_src(' b ', 0, 4, 0, 5, 'offset')
-        self.assertEqual(f.dump('all', list_indent=2, out=list), [
+        self.assertEqual(f.dump('node', list_indent=2, out=list), [
             '0: a =  b  ;',
             'Assign - ROOT 0,0..0,7',
             '  .targets[1]',
@@ -4616,7 +4616,7 @@ if 1:
         ])
 
         f = FST('call() ;', 'exec')
-        self.assertEqual(f.dump('all', loc=False, out=list), [
+        self.assertEqual(f.dump('node', loc=False, out=list), [
             'Module - ROOT',
             '  .body[1]',
             '0: call() ;',
@@ -4646,6 +4646,114 @@ if 1:  # 1
             "3:   c ;  # 3",
             "   2] Expr - 3,2..3,3",
             "     .value Name 'c' Load - 3,2..3,3",
+        ])
+
+        # src_plus
+
+        f = FST('# 1\nif a:\n  # 2\n  pass\n  # 3\n# 4', 'exec')
+        self.assertEqual(f.dump('stmt', out=list), [
+            'Module - ROOT 0,0..5,3',
+            '  .body[1]',
+            '1: if a:',
+            '   0] If - 1,0..3,6',
+            "     .test Name 'a' Load - 1,3..1,4",
+            '     .body[1]',
+            '3:   pass',
+            '      0] Pass - 3,2..3,6'
+        ])
+        self.assertEqual(f.dump('stmt+', out=list), [
+            'Module - ROOT 0,0..5,3',
+            '  .body[1]',
+            '0: # 1',
+            '1: if a:',
+            '   0] If - 1,0..3,6',
+            "     .test Name 'a' Load - 1,3..1,4",
+            '     .body[1]',
+            '2:   # 2',
+            '3:   pass',
+            '      0] Pass - 3,2..3,6',
+            '4:   # 3',
+            '5: # 4'
+        ])
+        self.assertEqual(f.body[0].dump('stmt', out=list), [
+            '1: if a:',
+            'If - 1,0..3,6',
+            "  .test Name 'a' Load - 1,3..1,4",
+            '  .body[1]',
+            '3:   pass',
+            '   0] Pass - 3,2..3,6'
+        ])
+        self.assertEqual(f.body[0].dump('stmt+', out=list), [
+            '1: if a:',
+            'If - 1,0..3,6',
+            "  .test Name 'a' Load - 1,3..1,4",
+            '  .body[1]',
+            '2:   # 2',
+            '3:   pass',
+            '   0] Pass - 3,2..3,6'
+        ])
+        self.assertEqual(f.body[0].body[0].dump('stmt', out=list), [
+            '3:   pass',
+            'Pass - 3,2..3,6'
+        ])
+        self.assertEqual(f.body[0].body[0].dump('stmt+', out=list), [
+            '3:   pass',
+            'Pass - 3,2..3,6'
+        ])
+
+        f = FST('# 1\nif a:\n  # 2\n  pass\n  # 3\n# 4', 'exec')
+        self.assertEqual(f.dump('node', out=list), [
+            'Module - ROOT 0,0..5,3',
+            '  .body[1]',
+            '1: if a:',
+            '   0] If - 1,0..3,6',
+            '1:    a',
+            "     .test Name 'a' Load - 1,3..1,4",
+            '     .body[1]',
+            '3:   pass',
+            '      0] Pass - 3,2..3,6'
+        ])
+        self.assertEqual(f.dump('node+', out=list), [
+            'Module - ROOT 0,0..5,3',
+            '  .body[1]',
+            '0: # 1',
+            '1: if a:',
+            '   0] If - 1,0..3,6',
+            '1:    a',
+            "     .test Name 'a' Load - 1,3..1,4",
+            '     .body[1]',
+            '2:   # 2',
+            '3:   pass',
+            '      0] Pass - 3,2..3,6',
+            '4:   # 3',
+            '5: # 4'
+        ])
+        self.assertEqual(f.body[0].dump('node', out=list), [
+            '1: if a:',
+            'If - 1,0..3,6',
+            '1:    a',
+            "  .test Name 'a' Load - 1,3..1,4",
+            '  .body[1]',
+            '3:   pass',
+            '   0] Pass - 3,2..3,6'
+        ])
+        self.assertEqual(f.body[0].dump('node+', out=list), [
+            '1: if a:',
+            'If - 1,0..3,6',
+            '1:    a',
+            "  .test Name 'a' Load - 1,3..1,4",
+            '  .body[1]',
+            '2:   # 2',
+            '3:   pass',
+            '   0] Pass - 3,2..3,6'
+        ])
+        self.assertEqual(f.body[0].body[0].dump('node', out=list), [
+            '3:   pass',
+            'Pass - 3,2..3,6'
+        ])
+        self.assertEqual(f.body[0].body[0].dump('node+', out=list), [
+            '3:   pass',
+            'Pass - 3,2..3,6'
         ])
 
     def test_verify(self):

@@ -9,7 +9,7 @@ import re
 from ast import iter_fields, walk
 from math import log10
 from pprint import pformat
-from typing import Any, Callable, Literal, Mapping
+from typing import Any, Literal, Mapping
 
 from . import fst
 
@@ -229,20 +229,33 @@ _re_delim_close_alnums = re.compile(rf'[{pat_alnum}.][)\]][{pat_alnum}]')
 
 def _dump_lines(
     fst_: fst.FST,
-    linefunc: Callable,
+    st: nspace,
     ln: int,
     col: int,
     end_ln: int,
     end_col: int,
-    eol: str = '',
-    is_stmt: bool = False,
-    c: nspace = DUMP_NO_COLOR,
+    is_stmt: bool | None,
 ) -> None:
-    """Dump one or more lines of source."""
+    """Dump one or more lines of source. `is_stmt=None` specifies end put of just lines, no nodes."""
 
+    linefunc = st.linefunc
+    eol = st.eol
+    c = st.color
     width = int(log10(len(fst_.root._lines) - 1 or 1)) + 1
 
+    if (src_ln := st.src_ln) <= ln:  # if 'stmt+' or 'node+' putting them then put any lines after last put end line and before this put start line
+        if src_ln < ln:
+            lines = fst_.root._lines
+
+            for cln in range(src_ln, ln):
+                linefunc(f'{c.clr_loc}{cln:<{width}}:{c.end_loc} {c.clr_src}{lines[cln]}{c.end_src}{eol}')
+
+        st.src_ln = end_ln + 1
+
     if not is_stmt:
+        if is_stmt is None:  # we just wanted to put trailing lines so we are done
+            return
+
         lines = fst_._get_src(ln, col, end_ln, end_col, True)
 
     else:
@@ -283,7 +296,7 @@ def _dump_prim(prim: constant, c: nspace) -> str:
     return f'{clr_type}{prim!r}{end_type}'
 
 
-def _dump_prim_long(prim: constant, st: nspace, cind: str = '') -> str:
+def _dump_prim_long(prim: constant, st: nspace, cind: str) -> str:
     """Dump primitive potentially long primitive (str or bytes)."""
 
     prim_cls = prim.__class__
@@ -300,6 +313,134 @@ def _dump_prim_long(prim: constant, st: nspace, cind: str = '') -> str:
         fmt = f'(\n{cind}' + fmt[1:].replace('\n', f'\n{cind[1:]}')
 
     return f'{clr_type}{fmt}{end_type}'
+
+
+def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
+    ast = self.a
+    sind = st.sind
+    c = st.color
+    tail = self._repr_tail(st.loc)
+    tail = f' {c.clr_loc}-{tail}{c.end_loc}' if tail else ''
+
+    if not st.src:  # noop
+        pass
+
+    elif isinstance(ast, (stmt, ExceptHandler, match_case)):  # src = 'stmt' or 'node'
+        loc = self.bloc
+
+        if isinstance(ast, ASTS_BLOCK):
+            ln, col, _, _ = loc
+            end_ln, end_col, _, _ = self._loc_block_header_end()
+
+            _dump_lines(self, st, ln, col, end_ln, end_col + 1, True)
+
+        else:
+
+            _dump_lines(self, st, *loc, True)
+
+    elif not isinstance(ast, (mod, _ExceptHandlers, _match_cases)):
+        if st.src == 'node':
+            if not (parent := self.parent) or not isinstance(parent.a, Expr):
+                if loc := self.loc:
+                    _dump_lines(self, st, *loc, False)
+
+        elif st.src == 'stmt' and not self.parent:  # if putting statements but root is not statement or mod then just put root src and no src below
+            st.src = None
+
+            if loc := self.loc:
+                _dump_lines(self, st, *loc, False)
+
+    if not st.expand:
+        if isinstance(ast, Name):
+            st.linefunc(f'{cind}{prefix}{c.clr_ast}Name{c.end_ast} {_dump_prim(ast.id, c)} '
+                        f'{c.clr_ast}{ast.ctx.__class__.__name__}{c.end_ast}{tail}{st.eol}')
+
+            return
+
+        if isinstance(ast, Constant):
+            kind = '' if ast.kind is None else f' {c.clr_field}.kind{c.end_field} {_dump_prim(ast.kind, c)}'
+
+            st.linefunc(f'{cind}{prefix}{c.clr_ast}Constant{c.end_ast} '
+                        f'{_dump_prim_long(ast.value, st, cind + sind)}{kind}{tail}{st.eol}')
+
+            return
+
+        if isinstance(ast, MatchSingleton):
+            st.linefunc(f'{cind}{prefix}{c.clr_ast}MatchSingleton{c.end_ast} {_dump_prim(ast.value, c)}'
+                        f'{tail}{st.eol}')
+
+            return
+
+    st.linefunc(f'{cind}{prefix}{c.clr_ast}{ast.__class__.__name__}{c.end_ast}{tail}{st.eol}')
+
+    for name, child in iter_fields(ast):
+        is_list = isinstance(child, list)
+
+        if not st.expand:
+            if not st.full and child is None and not isinstance(ast, MatchSingleton):
+                continue
+
+            if name == 'ctx':
+                st.linefunc(f'{cind}{sind}{c.clr_field}.{name}{c.end_field} '
+                            f'{c.clr_ast}{child.__class__.__name__}{c.end_ast}{st.eol}')
+
+                continue
+
+            if (name in ('type', 'id', 'attr', 'module', 'arg', 'vararg', 'kwarg', 'rest', 'format_spec',
+                         'name', 'asname', 'value', 'left', 'right', 'operand', 'returns', 'target',
+                         'annotation', 'iter', 'test', 'exc', 'cause', 'msg', 'elt', 'key', 'func',
+                         'slice', 'lower', 'upper', 'step', 'guard', 'context_expr', 'optional_vars',
+                         'cls', 'bound', 'default_value', 'pattern', 'subject',
+                         'type_comment', 'lineno', 'tag', 'op',
+                         'simple', 'level', 'conversion', 'str', 'is_async', 'lineno') or
+                (not is_list and name in ('body', 'orelse'))
+            ):
+                if isinstance(child, AST):
+                    _dump_node(child.f, st, cind + sind, f'{c.clr_field}.{name}{c.end_field} ')
+                else:
+                    st.linefunc(f'{cind}{sind}{c.clr_field}.{name}{c.end_field} {_dump_prim(child, c)}{st.eol}')
+
+                continue
+
+            if name == 'args' and isinstance(child, arguments):
+                if child.posonlyargs or child.args or child.vararg or child.kwonlyargs or child.kwarg or st.full:
+                    _dump_node(child.f, st, cind + sind, f'{c.clr_field}.args{c.end_field} ')
+
+                    continue
+
+                elif not st.full:
+                    continue
+
+        if not st.full and (child == [] or
+                            (child is None and
+                             not ((name == 'value' and isinstance(ast, (Constant, MatchSingleton)))))):
+            continue
+
+        if not is_list:
+            st.linefunc(f'{cind}{sind}{c.clr_field}.{name}{c.end_field}{st.eol}')
+
+            if isinstance(child, AST):
+                _dump_node(child.f, st, cind + sind * 2, '')
+
+            else:
+                ind = f'{cind}{sind}{sind}'
+
+                st.linefunc(f'{ind}{_dump_prim_long(child, st, ind)}{st.eol}')
+
+        # elif len(child) == 1:  # length 1 lists show element on single line
+        #     if isinstance(ast := child[0], AST):
+        #         _dump_node(ast.f, st, cind + sind, f'{c.clr_field}.{name}[1]{c.end_field} ')
+        #     else:
+        #         st.linefunc(f'{cind}{c.clr_field}.{name}[1]{c.end_field} {ast!r}{st.eol}')
+
+        else:
+            st.linefunc(f'{cind}{sind}{c.clr_field}.{name}[{len(child)}]{c.end_field}{st.eol}')
+
+            for i, ast in enumerate(child):
+                if isinstance(ast, AST):
+                    _dump_node(ast.f, st, cind + st.lind, f'{c.clr_field}{i}]{c.end_field} ')
+                else:
+                    st.linefunc(f'{cind}{st.lind}{c.clr_field}{i}]{c.end_field} {ast!r}{st.eol}')
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -818,132 +959,18 @@ def _repr_tail(self: fst.FST, loc: bool = True) -> str:
     return f'{tail} {loc[0]},{loc[1]}..{loc[2]},{loc[3]}' if loc else tail
 
 
-def _dump(self: fst.FST, st: nspace, cind: str = '', prefix: str = '') -> None:
-    ast = self.a
-    sind = st.sind
-    c = st.color
-    tail = self._repr_tail(st.loc)
-    tail = f' {c.clr_loc}-{tail}{c.end_loc}' if tail else ''
+def _dump(self: fst.FST, st: nspace, src_plus: bool = False) -> None:
+    if not src_plus:
+        st.src_ln = 0x7fffffffffffffff
+    elif is_root := self.is_root:
+        st.src_ln = 0
+    else:
+        st.src_ln = self.ln or 0  # if self doesn't have a location then we put everything since its a low level node anyway
 
-    if not st.src:  # noop
-        pass
+    _dump_node(self, st, '', '')
 
-    elif isinstance(ast, (stmt, ExceptHandler, match_case)):  # src = 'stmt' or 'all'
-        loc = self.bloc
-
-        if isinstance(ast, ASTS_BLOCK):
-            ln, col, _, _ = loc
-            end_ln, end_col, _, _ = self._loc_block_header_end()
-
-            _dump_lines(self, st.linefunc, ln, col, end_ln, end_col + 1, st.eol, True, c)
-
-        else:
-
-            _dump_lines(self, st.linefunc, *loc, st.eol, True, c)
-
-    elif not isinstance(ast, (mod, _ExceptHandlers, _match_cases)):
-        if st.src == 'all':
-            if not (parent := self.parent) or not isinstance(parent.a, Expr):
-                if loc := self.loc:
-                    _dump_lines(self, st.linefunc, *loc, st.eol, False, c)
-
-        elif st.src == 'stmt' and not self.parent:  # if putting statements but root is not statement or mod then just put root src and no src below
-            st.src = None
-
-            if loc := self.loc:
-                _dump_lines(self, st.linefunc, *loc, st.eol, False, c)
-
-    if not st.expand:
-        if isinstance(ast, Name):
-            st.linefunc(f'{cind}{prefix}{c.clr_ast}Name{c.end_ast} {_dump_prim(ast.id, c)} '
-                        f'{c.clr_ast}{ast.ctx.__class__.__name__}{c.end_ast}{tail}{st.eol}')
-
-            return
-
-        if isinstance(ast, Constant):
-            kind = '' if ast.kind is None else f' {c.clr_field}.kind{c.end_field} {_dump_prim(ast.kind, c)}'
-
-            st.linefunc(f'{cind}{prefix}{c.clr_ast}Constant{c.end_ast} '
-                        f'{_dump_prim_long(ast.value, st, cind + sind)}{kind}{tail}{st.eol}')
-
-            return
-
-        if isinstance(ast, MatchSingleton):
-            st.linefunc(f'{cind}{prefix}{c.clr_ast}MatchSingleton{c.end_ast} {_dump_prim(ast.value, c)}'
-                        f'{tail}{st.eol}')
-
-            return
-
-    st.linefunc(f'{cind}{prefix}{c.clr_ast}{ast.__class__.__name__}{c.end_ast}{tail}{st.eol}')
-
-    for name, child in iter_fields(ast):
-        is_list = isinstance(child, list)
-
-        if not st.expand:
-            if not st.full and child is None and not isinstance(ast, MatchSingleton):
-                continue
-
-            if name == 'ctx':
-                st.linefunc(f'{cind}{sind}{c.clr_field}.{name}{c.end_field} '
-                            f'{c.clr_ast}{child.__class__.__name__}{c.end_ast}{st.eol}')
-
-                continue
-
-            if (name in ('type', 'id', 'attr', 'module', 'arg', 'vararg', 'kwarg', 'rest', 'format_spec',
-                         'name', 'asname', 'value', 'left', 'right', 'operand', 'returns', 'target',
-                         'annotation', 'iter', 'test', 'exc', 'cause', 'msg', 'elt', 'key', 'func',
-                         'slice', 'lower', 'upper', 'step', 'guard', 'context_expr', 'optional_vars',
-                         'cls', 'bound', 'default_value', 'pattern', 'subject',
-                         'type_comment', 'lineno', 'tag', 'op',
-                         'simple', 'level', 'conversion', 'str', 'is_async', 'lineno') or
-                (not is_list and name in ('body', 'orelse'))
-            ):
-                if isinstance(child, AST):
-                    child.f._dump(st, cind + sind, f'{c.clr_field}.{name}{c.end_field} ')
-                else:
-                    st.linefunc(f'{cind}{sind}{c.clr_field}.{name}{c.end_field} {_dump_prim(child, c)}{st.eol}')
-
-                continue
-
-            if name == 'args' and isinstance(child, arguments):
-                if child.posonlyargs or child.args or child.vararg or child.kwonlyargs or child.kwarg or st.full:
-                    child.f._dump(st, cind + sind, f'{c.clr_field}.args{c.end_field} ')
-
-                    continue
-
-                elif not st.full:
-                    continue
-
-        if not st.full and (child == [] or
-                            (child is None and
-                             not ((name == 'value' and isinstance(ast, (Constant, MatchSingleton)))))):
-            continue
-
-        if not is_list:
-            st.linefunc(f'{cind}{sind}{c.clr_field}.{name}{c.end_field}{st.eol}')
-
-            if isinstance(child, AST):
-                child.f._dump(st, cind + sind * 2)
-
-            else:
-                ind = f'{cind}{sind}{sind}'
-
-                st.linefunc(f'{ind}{_dump_prim_long(child, st, ind)}{st.eol}')
-
-        # elif len(child) == 1:  # length 1 lists show element on single line
-        #     if isinstance(ast := child[0], AST):
-        #         ast.f._dump(st, cind + sind, f'{c.clr_field}.{name}[1]{c.end_field} ')
-        #     else:
-        #         st.linefunc(f'{cind}{c.clr_field}.{name}[1]{c.end_field} {ast!r}{st.eol}')
-
-        else:
-            st.linefunc(f'{cind}{sind}{c.clr_field}.{name}[{len(child)}]{c.end_field}{st.eol}')
-
-            for i, ast in enumerate(child):
-                if isinstance(ast, AST):
-                    ast.f._dump(st, cind + st.lind, f'{c.clr_field}{i}]{c.end_field} ')
-                else:
-                    st.linefunc(f'{cind}{st.lind}{c.clr_field}{i}]{c.end_field} {ast!r}{st.eol}')
+    if src_plus and is_root:  # put any trailing lines if putting at root
+        _dump_lines(self, st, len(self.root._lines), 0, 0, 0, None)
 
 
 def _is_parenthesizable(self: fst.FST) -> bool:

@@ -994,7 +994,7 @@ class FST:
                  0] Name 'j' Store - 1,4..1,5
                 .value Constant 5 - 1,8..1,9
 
-        >>> FST.fromast(Slice(lower=Constant(value=1), step=Name(id='step'))).dump('all')
+        >>> FST.fromast(Slice(lower=Constant(value=1), step=Name(id='step'))).dump('node')
         0: 1::step
         Slice - ROOT 0,0..0,7
         0: 1
@@ -1289,12 +1289,22 @@ class FST:
         call a provided function once with each line of the output.
 
         **Parameters:**
-        - `src`: `'stmt'` means output statement source lines (including `ExceptHandler` and `match_case`) or top level
-            source if level is below statement. `'all'` means output source for each individual and node and `None` does
-            not output any source. Can also be a string for shortcut specification of source and flags by first letter:
-            `'s'` means `src='stmt'`, `'a'` means `src='all'`, `'f'` means `full=True`, `'e'` means `expand=True` and
-            `'l'` means DON'T put location, so `'sfel'` would be equivalent to
-            `.dump(src='stmt', full=True, expand=True, loc=False)`.
+        - `src`:
+            - `'stmt'` or `'stmt+'` means output statement source lines (including `ExceptHandler` and `match_case`)
+            or top level source if level is below statement.
+            - `'node'` or `'node+'` means output source for each individual node.
+            - `None` does not output any source.
+            - `str`: Can be a string for shortcut specification of source and flags by first letter, `'s+feL'` would be
+                equivalent to `.dump(src='stmt+', full=True, expand=True, loc=False)`.
+                - `'s'` or `'s+'` means `src='stmt'` or `src='stmt+'`
+                - `'n'` or '`n+'` means `src='node'` or `src='node+'`
+                - `'f'` means `full=True`
+                - `'e'` means `expand=True`
+                - `'i'` means `list_indent=indent`
+                - `'I'` means `list_indent=False`
+                - `'L'` means `loc=False`
+                - `'c'` means `color=True`
+                - `'C'` means `color=False`
         - `full`: If `True` then will list all fields in nodes including empty ones, otherwise will exclude most empty
             fields.
         - `expand`: If `True` then the output is a nice compact representation. If `False` then it is ugly and wasteful.
@@ -1303,7 +1313,7 @@ class FST:
             If `True` then will be same as `indent`.
         - `loc`: Whether to put location of node in source or not.
         - `color`: `True` or `False` means whether to use ANSI color codes or not. If `None` then will only do so if
-            `out=print` and `sys.stdout.isatty()`.
+            `out=print` and `sys.stdout.isatty()` and not overridden by environment variables.
         - `out`: `print` means print to stdout, `list` returns a list of lines and `str` returns a whole string.
             `TextIO` will cann the `write` method for each line of output. Otherwise a `Callable[[str], None]` which is
             called for each line of output individually.
@@ -1335,7 +1345,7 @@ class FST:
                 1] keyword - 1,14..1,17
                   .value Name 'c' Load - 1,16..1,17
 
-        >>> f.dump(src='all', indent=3, list_indent=True)
+        >>> f.dump(src='node', indent=3, list_indent=True)
         0: if 1:
         If - ROOT 0,0..1,18
         0:    1
@@ -1379,14 +1389,21 @@ class FST:
         ```
         """
 
+        src_plus = False
+
         if isinstance(src, str):
-            if src not in ('stmt', 'all'):
-                full = full or 'f' in src
-                expand = expand or 'e' in src
-                loc = loc and 'L' not in src
-                color = (True if 'c' in src else False if 'C' in src else None) if color is None else color
-                list_indent = 2 if 'i' in src and list_indent == 0 else list_indent
-                src = 'all' if 'a' in src else 'stmt' if 's' in src else None
+            if src in ('stmt+', 'node+'):
+                src = src[:-1]
+                src_plus = True
+
+            elif src not in ('stmt', 'node'):  # shorthand
+                full = True if 'f' in src else False if 'F' in src else full
+                expand = True if 'e' in src else False if 'E' in src else expand
+                loc = True if 'l' in src else False if 'L' in src else loc
+                color =True if 'c' in src else False if 'C' in src else color
+                list_indent = indent if 'i' in src else 0 if 'I' in src else list_indent
+                src_plus = '+' in src
+                src = 'stmt' if 's' in src else 'node' if 'n' in src else None
 
         if color is None and out is print and (color := _DEFAULT_COLOR) is None:
             if not hasattr(sys.stdout, 'fileno'):
@@ -1410,19 +1427,20 @@ class FST:
                        list_indent if isinstance(list_indent, str) else
                        ' ' * list_indent)
         color = DUMP_COLOR if color else DUMP_NO_COLOR
-        st = nspace(src=src, full=full, expand=expand, loc=loc, eol=eol, sind=sind, lind=lind, color=color)
+        st = nspace(src=src, src_plus=src_plus, full=full, expand=expand, loc=loc, color=color,
+                    eol=eol, sind=sind, lind=lind)
 
         if out in (str, list):
             lines = []
             st.linefunc = lines.append
 
-            self._dump(st)
+            self._dump(st, src_plus)
 
             return lines if out is list else '\n'.join(lines)
 
         st.linefunc = out
 
-        return self._dump(st)
+        return self._dump(st, src_plus)
 
     def verify(
         self,

@@ -21,8 +21,10 @@ def main() -> None:
                         help="expanded view")
     parser.add_argument('-s', '--stmt', default=False, action='store_true',
                         help="show statmenent source lines")
-    parser.add_argument('-a', '--all', default=False, action='store_true',
+    parser.add_argument('-n', '--node', default=False, action='store_true',
                         help="show all node source lines")
+    parser.add_argument('-+', dest='src_plus', default=False, action='store_true',
+                        help="show all non-coding source lines")
     parser.add_argument('--type-comments', default=False, action='store_true',
                         help="add information about type comments")
     parser.add_argument('-i', '--indent', type=int, default=2,
@@ -51,7 +53,9 @@ def main() -> None:
     if not args.no_verify:# and args.mode in ('exec', 'eval', 'single', 'stmt', 'expr'):
         ast.f.verify(raise_=True)
 
-    src = 'all' if args.all else 'stmt' if args.stmt else None
+    if src := ('node' if args.node else 'stmt' if args.stmt else None):
+        if args.src_plus:
+            src += '+'
 
     ast.f.dump(src=src, full=args.full, expand=args.expand, indent=args.indent, list_indent=args.list_indent)
 
