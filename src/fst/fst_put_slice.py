@@ -1540,13 +1540,13 @@ def _put_slice_MatchMapping__all(
 
     else:
         if rest and start >= len_body_w_rest:
-            raise ValueError("cannot put slice to MatchMapping after '.rest' element")
+            raise ValueError("cannot put slice to MatchMapping after 'rest' element")
 
         ast_ = fst_.a
 
         if fst_rest := ast_.rest:
             if stop < len_body_w_rest:
-                raise ValueError("put slice with '.rest' element to MatchMapping must be at end")
+                raise ValueError("put slice with 'rest' element to MatchMapping must be at end")
 
             _add_MatchMapping_rest_as_real_node(fst_)  # this needs to be done before the _trim_delimiters()
 
@@ -1557,65 +1557,47 @@ def _put_slice_MatchMapping__all(
     bound_col += 1
     bound_end_col -= 1
 
-    if not fst_rest and (not rest or stop < len_body_w_rest):
-        # this is a slightly optimized path which doesn't include `rest` so doesn't have to create a temporary element for it and if code being put then it also doesn't have a `rest`, unnecessary, remove if gets annoying
-
-        if not fst_:
-            self_tail_sep = (start and ast.rest and stop == len_body) or None
-
-            end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0,
-                                             bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                             options, 'keys', 'patterns', ',', self_tail_sep)
-
-            _put_slice_asts2(self, start, stop, 'patterns', body, body2, None, None, None)
-
-        else:
-            fst_body = ast_.keys
-            fst_body2 = ast_.patterns
-            self_tail_sep = (ast.rest and stop == len_body) or None
-
-            end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body2[-1].f, len(fst_body),
-                                             bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                             options, 'keys', 'patterns', ',', self_tail_sep)
-
-            _put_slice_asts2(self, start, stop, 'patterns', body, body2, fst_, fst_body, fst_body2)
-
-        put_slice_sep_end(self, end_params)
-
-        if self_tail_sep:  # if there is a **rest and we removed tail element so here we make sure there is a space between comma of the new last element and the **rest
-            self._maybe_ins_separator(*body2[-1].f.loc[2:], True)  # this will only maybe add a space, comma is already there
-
-    else:
-        # here `rest` exists in self OR in code being put and is included so we add it temporarily to end as `key=None` and `pattern=MatchAs(name=rest)` for the operation
+    if with_rest := (fst_rest or (rest and stop == len_body_w_rest)):  # either self or fst_ has a `rest` included in the put
+        self_tail_sep = None
 
         if rest:
             _add_MatchMapping_rest_as_real_node(self)
 
-        if not fst_:
-            end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0,
-                                             bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                             options, 'keys', 'patterns')
+    elif not fst_:  # no `rest` involved in put, these are sneaky hacks to get out of having to add it in self as a temporary element (which would be needed for correct separator handling at tail of put)
+        self_tail_sep = (start and ast.rest and stop == len_body) or None
+    else:
+        self_tail_sep = (ast.rest and stop == len_body) or None
 
-            _put_slice_asts2(self, start, stop, 'patterns', body, body2, None, None, None)
+    if not fst_:
+        end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0,
+                                            bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                            options, 'keys', 'patterns', ',', self_tail_sep)
 
-        else:
-            fst_body = ast_.keys
-            fst_body2 = ast_.patterns
-            fst_first = a.f if (a := fst_body[0]) else None  # could be the temporary `rest` key of None
+        _put_slice_asts2(self, start, stop, 'patterns', body, body2, None, None, None)
 
-            end_params = put_slice_sep_begin(self, start, stop, fst_, fst_first, fst_body2[-1].f, len(fst_body),
-                                             bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                             options, 'keys', 'patterns')
+    else:
+        fst_body = ast_.keys
+        fst_body2 = ast_.patterns
+        fst_first = a.f if (a := fst_body[0]) else None  # could be the temporary `rest` key of None
 
-            _put_slice_asts2(self, start, stop, 'patterns', body, body2, fst_, fst_body, fst_body2)
+        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_first, fst_body2[-1].f, len(fst_body),
+                                            bound_ln, bound_col, bound_end_ln, bound_end_col,
+                                            options, 'keys', 'patterns', ',', self_tail_sep)
 
-        put_slice_sep_end(self, end_params)
+        _put_slice_asts2(self, start, stop, 'patterns', body, body2, fst_, fst_body, fst_body2)
 
+    put_slice_sep_end(self, end_params)
+
+    if with_rest:
         if stop == len_body_w_rest:  # if this and we are here then `rest` (and the temporary node) was either deleted or replaced from slice, because otherwise we wouldn't be here
             ast.rest = fst_rest
 
-        if fst_rest:  # if no fst_rest then our rest was deleted or overwritten with real node, otherwise need to remove temporary node from put FST
-            _remove_MatchMapping_rest_real_node(self)
+            if fst_rest:  # if no fst_rest then our rest was deleted or overwritten with real node, otherwise need to remove temporary node from put FST
+                _remove_MatchMapping_rest_real_node(self)
+
+    else:
+        if self_tail_sep:  # if there is a **rest and we removed tail element so here we make sure there is a space between comma of the new last element and the **rest
+            self._maybe_ins_separator(*body2[-1].f.loc[2:], True)  # this will only maybe add a space, comma is already there
 
 
 def _put_slice_MatchOr_patterns(

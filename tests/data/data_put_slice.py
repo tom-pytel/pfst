@@ -29658,12 +29658,12 @@ MatchMapping - ROOT 0,0..0,12
 ('', 0, 0, None, {}, ('pattern',
 r'''{1: a}'''), ('pattern',
 r'''{**y}'''),
-r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+r'''**ValueError("put slice with 'rest' element to MatchMapping must be at end")**'''),
 
 ('', 0, 0, None, {}, ('pattern',
 r'''{1: a}'''), ('pattern',
 r'''{2: x, **y}'''),
-r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+r'''**ValueError("put slice with 'rest' element to MatchMapping must be at end")**'''),
 
 ('', 0, 1, None, {}, ('pattern',
 r'''{1: a}'''), ('pattern',
@@ -29784,12 +29784,12 @@ MatchMapping - ROOT 0,0..0,11
 ('', 0, 0, None, {}, ('pattern',
 r'''{**b}'''), ('pattern',
 r'''{**y}'''),
-r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+r'''**ValueError("put slice with 'rest' element to MatchMapping must be at end")**'''),
 
 ('', 0, 0, None, {}, ('pattern',
 r'''{**b}'''), ('pattern',
 r'''{2: x, **y}'''),
-r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+r'''**ValueError("put slice with 'rest' element to MatchMapping must be at end")**'''),
 
 ('', 0, 1, None, {}, ('pattern',
 r'''{**b}'''), ('pattern',
@@ -29841,17 +29841,17 @@ MatchMapping - ROOT 0,0..0,5
 ('', 1, 1, None, {}, ('pattern',
 r'''{**b}'''), ('pattern',
 r'''{2: x}'''),
-r'''**ValueError("cannot put slice to MatchMapping after '.rest' element")**'''),
+r'''**ValueError("cannot put slice to MatchMapping after 'rest' element")**'''),
 
 ('', 1, 1, None, {}, ('pattern',
 r'''{**b}'''), ('pattern',
 r'''{**y}'''),
-r'''**ValueError("cannot put slice to MatchMapping after '.rest' element")**'''),
+r'''**ValueError("cannot put slice to MatchMapping after 'rest' element")**'''),
 
 ('', 1, 1, None, {}, ('pattern',
 r'''{**b}'''), ('pattern',
 r'''{2: x, **y}'''),
-r'''**ValueError("cannot put slice to MatchMapping after '.rest' element")**'''),
+r'''**ValueError("cannot put slice to MatchMapping after 'rest' element")**'''),
 
 ('', 0, 0, None, {}, ('pattern',
 r'''{1: a, **b}'''), ('pattern',
@@ -29885,12 +29885,12 @@ MatchMapping - ROOT 0,0..0,17
 ('', 0, 0, None, {}, ('pattern',
 r'''{1: a, **b}'''), ('pattern',
 r'''{**y}'''),
-r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+r'''**ValueError("put slice with 'rest' element to MatchMapping must be at end")**'''),
 
 ('', 0, 0, None, {}, ('pattern',
 r'''{1: a, **b}'''), ('pattern',
 r'''{2: x, **y}'''),
-r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+r'''**ValueError("put slice with 'rest' element to MatchMapping must be at end")**'''),
 
 ('', 0, 1, None, {}, ('pattern',
 r'''{1: a, **b}'''), ('pattern',
@@ -29916,12 +29916,12 @@ MatchMapping - ROOT 0,0..0,11
 ('', 0, 1, None, {}, ('pattern',
 r'''{1: a, **b}'''), ('pattern',
 r'''{**y}'''),
-r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+r'''**ValueError("put slice with 'rest' element to MatchMapping must be at end")**'''),
 
 ('', 0, 1, None, {}, ('pattern',
 r'''{1: a, **b}'''), ('pattern',
 r'''{2: x, **y}'''),
-r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+r'''**ValueError("put slice with 'rest' element to MatchMapping must be at end")**'''),
 
 ('', 0, 2, None, {}, ('pattern',
 r'''{1: a, **b}'''), ('pattern',
@@ -29994,12 +29994,12 @@ MatchMapping - ROOT 0,0..0,17
 ('', 1, 1, None, {}, ('pattern',
 r'''{1: a, **b}'''), ('pattern',
 r'''{**y}'''),
-r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+r'''**ValueError("put slice with 'rest' element to MatchMapping must be at end")**'''),
 
 ('', 1, 1, None, {}, ('pattern',
 r'''{1: a, **b}'''), ('pattern',
 r'''{2: x, **y}'''),
-r'''**ValueError("put slice with '.rest' element to MatchMapping must be at end")**'''),
+r'''**ValueError("put slice with 'rest' element to MatchMapping must be at end")**'''),
 
 ('', 1, 2, None, {}, ('pattern',
 r'''{1: a, **b}'''), ('pattern',
@@ -30073,17 +30073,17 @@ MatchMapping - ROOT 0,0..0,11
 ('', 2, 2, None, {}, ('pattern',
 r'''{1: a, **b}'''), ('pattern',
 r'''{2: x}'''),
-r'''**ValueError("cannot put slice to MatchMapping after '.rest' element")**'''),
+r'''**ValueError("cannot put slice to MatchMapping after 'rest' element")**'''),
 
 ('', 2, 2, None, {}, ('pattern',
 r'''{1: a, **b}'''), ('pattern',
 r'''{**y}'''),
-r'''**ValueError("cannot put slice to MatchMapping after '.rest' element")**'''),
+r'''**ValueError("cannot put slice to MatchMapping after 'rest' element")**'''),
 
 ('', 2, 2, None, {}, ('pattern',
 r'''{1: a, **b}'''), ('pattern',
 r'''{2: x, **y}'''),
-r'''**ValueError("cannot put slice to MatchMapping after '.rest' element")**'''),
+r'''**ValueError("cannot put slice to MatchMapping after 'rest' element")**'''),
 ],
 
 'type_params': [  # ................................................................................

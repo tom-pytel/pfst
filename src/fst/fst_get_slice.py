@@ -1301,42 +1301,25 @@ def _get_slice_MatchMapping__all(
     body = ast.keys
     body2 = ast.patterns
     rest = ast.rest
-    len_body = len(body)
-    len_body_w_rest = len_body + bool(rest)
-    start, stop = fixup_slice_indices(len_body_w_rest, start, stop)
+    len_body = len(body) + bool(rest)
+    start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
         return fst.FST(MatchMapping(keys=[], patterns=[], rest=None, lineno=1, col_offset=0, end_lineno=1,
                                     end_col_offset=2),
                        ['{}'], from_=self)
 
-    if not rest or stop < len_body_w_rest:
-        # this is a slightly optimized path which doesn't include .rest so doesn't have to create a temporary element for it, unnecessary, remove if gets annoying
-
-        locs = _locs_and_bound_get(self, start, stop, body, body2, 1)
-        self_tail_sep = True if rest else 0
-
-        asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'patterns', cut, body, body2)
-        ret_ast = MatchMapping(keys=asts, patterns=asts2, rest=None)
-
-        fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts2[-1], *locs,
-                             options, 'patterns', '{', '}', ',', self_tail_sep, False)
-
-        if cut and start and rest and stop == len_body:  # if there is a rest element and we removed tail element we make sure there is a space between comma of the new last element and the rest
-            self._maybe_ins_separator(*(f := body2[-1].f).loc[2:], True, exclude=f)  # this will only maybe add a space, comma is already there
-
-    else:
-        # here .rest exists and is included so we add it temporarily to end as `key=None` and `pattern=MatchAs(name=rest)` for the operation
-
+    if with_rest := (rest and stop == len_body):  # if slice includes rest then add it as temporary `**rest` node so it can be processed like the rest of the sequence
         _add_MatchMapping_rest_as_real_node(self)
 
-        locs = _locs_and_bound_get(self, start, stop, body, body2, 1)
-        asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'patterns', cut, body, body2)
-        ret_ast = MatchMapping(keys=asts, patterns=asts2, rest=rest)
+    locs = _locs_and_bound_get(self, start, stop, body, body2, 1)
+    asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'patterns', cut, body, body2)
+    ret_ast = MatchMapping(keys=asts, patterns=asts2, rest=rest if with_rest else None)
 
-        fst_ = get_slice_sep(self, start, stop, len_body_w_rest, cut, ret_ast, asts2[-1], *locs,
-                            options, 'patterns', '{', '}', ',', 0, 0)
+    fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts2[-1], *locs,
+                        options, 'patterns', '{', '}', ',', 0, 0)
 
+    if with_rest:
         _remove_MatchMapping_rest_real_node(fst_)  # we know this contains the temporary .rest node
 
         if cut:  # temporary .rest node was cut

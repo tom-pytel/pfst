@@ -18316,6 +18316,61 @@ MatchMapping - ROOT 0,0..0,14
 r'''{}''',
 r'''MatchMapping - ROOT 0,0..0,2'''),
 
+('', 0, 1, None, {}, ('pattern',
+r'''{0: x, 1: y, **rest}'''),
+r'''{1: y, **rest}''', r'''
+MatchMapping - ROOT 0,0..0,14
+  .keys[1]
+   0] Constant 1 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'y'
+  .rest 'rest'
+''',
+r'''{0: x}''', r'''
+MatchMapping - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 0 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+'''),
+
+('', 0, 2, None, {}, ('pattern',
+r'''{0: x, 1: y, **rest}'''),
+r'''{**rest}''', r'''
+MatchMapping - ROOT 0,0..0,8
+  .rest 'rest'
+''',
+r'''{0: x, 1: y}''', r'''
+MatchMapping - ROOT 0,0..0,12
+  .keys[2]
+   0] Constant 0 - 0,1..0,2
+   1] Constant 1 - 0,7..0,8
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+   1] MatchAs - 0,10..0,11
+     .name 'y'
+'''),
+
+('', 0, 3, None, {}, ('pattern',
+r'''{0: x, 1: y, **rest}'''),
+r'''{}''',
+r'''MatchMapping - ROOT 0,0..0,2''',
+r'''{0: x, 1: y, **rest}''', r'''
+MatchMapping - ROOT 0,0..0,20
+  .keys[2]
+   0] Constant 0 - 0,1..0,2
+   1] Constant 1 - 0,7..0,8
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+   1] MatchAs - 0,10..0,11
+     .name 'y'
+  .rest 'rest'
+'''),
+
 ('', 1, 2, None, {}, ('pattern',
 r'''{0: x, 1: y, **rest}'''),
 r'''{0: x, **rest}''', r'''
@@ -18353,6 +18408,24 @@ MatchMapping - ROOT 0,0..0,14
   .patterns[1]
    0] MatchAs - 0,4..0,5
      .name 'y'
+  .rest 'rest'
+'''),
+
+('', 2, 3, None, {}, ('pattern',
+r'''{0: x, 1: y, **rest}'''),
+r'''{0: x, 1: y}''', r'''
+MatchMapping - ROOT 0,0..0,12
+  .keys[2]
+   0] Constant 0 - 0,1..0,2
+   1] Constant 1 - 0,7..0,8
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'x'
+   1] MatchAs - 0,10..0,11
+     .name 'y'
+''',
+r'''{**rest}''', r'''
+MatchMapping - ROOT 0,0..0,8
   .rest 'rest'
 '''),
 ],
