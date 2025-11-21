@@ -101,5 +101,5 @@ from .asttypes import *  # noqa: F403  - import standins form some AST classes w
 
 from . import asttypes
 
-__all__ = (['FST', 'NodeError', 'ParseError'] +
+__all__ = (['ast', 'FST', 'NodeError', 'ParseError'] +
            [n for n in dict.fromkeys(dir(ast) + asttypes.__all__) if not n.startswith('_')])

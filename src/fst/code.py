@@ -77,7 +77,7 @@ from .parsex import (
     parse_expr_all,
     parse_expr_arglike,
     parse_expr_slice,
-    parse_expr_sliceelt,
+    parse_Tuple_elt,
     parse_Tuple,
     parse__Assign_targets,
     parse__decorator_list,
@@ -109,7 +109,6 @@ from .parsex import (
 __all__ = [
     'Code',
     'code_as_lines',
-    'code_as__expr_arglikes',
     'code_as_all',
     'code_as_stmts',
     'code_as__ExceptHandlers',
@@ -118,7 +117,7 @@ __all__ = [
     'code_as_expr_all',
     'code_as_expr_arglike',
     'code_as_expr_slice',
-    'code_as_expr_sliceelt',
+    'code_as_Tuple_elt',
     'code_as_Tuple',
     'code_as__Assign_targets',
     'code_as__decorator_list',
@@ -149,6 +148,7 @@ __all__ = [
     'code_as_identifier_star',
     'code_as_identifier_alias',
     'code_as_constant',
+    'code_as__expr_arglikes',
 ]
 
 
@@ -158,7 +158,7 @@ CodeAs = Callable[[Code, Mapping[str, Any]], 'fst.FST']  # + kwargs: *, sanitize
 
 def _expecting(parse: Callable[[Code, Mapping[str, Any]], AST]) -> str:
     return ('expecting Tuple' if parse is parse_Tuple else
-            'expecting expression (slice element)' if parse is parse_expr_sliceelt else
+            'expecting expression (tuple element)' if parse is parse_Tuple_elt else
             'expecting expression (slice)' if parse is parse_expr_slice else
             'expecting expression (arglike)' if parse is parse_expr_arglike else
             'expecting expression (all types)' if parse is parse_expr_all else
@@ -506,7 +506,7 @@ def _code_as_op(
     return code._sanitize() if sanitize else code
 
 
-# ......................................................................................................................
+# ----------------------------------------------------------------------------------------------------------------------
 
 def code_as_lines(code: Code | None) -> list[str]:
     """Get list of lines of `code` if is `FST`, unparse `AST`, split `str` or just return `list[str]` if is that.
@@ -525,40 +525,6 @@ def code_as_lines(code: Code | None) -> list[str]:
     else:
         return code._lines
 
-
-def code_as__expr_arglikes(
-    code: Code,
-    parse_params: Mapping[str, Any] = {},
-    *,
-    sanitize: bool = False,
-    coerce: bool = False,
-) -> fst.FST:
-    """Convert `code` to a `Tuple` contianing possibly arglike expressions. Meant for putting slices to `Call.args` and
-    `ClassDef.bases`. The `Tuple` will be unparenthesized and the location will be the entire source. We use a `Tuple`
-    for this because unfortunately sometimes a `Tuple` is valid with arglikes in it and sometimes not.
-
-    **WARNING!** The `Tuple` that is returned is just being used as a container and may be an invalid python `Tuple` as
-    it may be an empty `Tuple` `AST` with source having no parentheses or an unparenthesized `Tuple` with incorrect
-    start and stop locations (since its the whole source). Singleton `Tuple` may also not have trailing comma.
-    """
-
-    if isinstance(code, Tuple):  # strip parentheses
-        code = _fixing_unparse(code)[1:-1]
-
-    fst_ = _code_as(code, parse_params, parse__expr_arglikes, Tuple, sanitize,
-                    _coerce_as__expr_arglikes if coerce else None)
-
-    if fst_ is code:  # validation if returning same FST that was passed in
-        if any(isinstance(e, Slice) for e in fst_.a.elts):
-            raise NodeError('expecting non-Slice expressions (arglike), found Slice')
-
-        if fst_._is_delimited_seq():
-            fst_._trim_delimiters()
-
-    return fst_
-
-
-# ----------------------------------------------------------------------------------------------------------------------
 
 def code_as_all(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
@@ -774,19 +740,18 @@ def code_as_expr_arglike(
 def code_as_expr_slice(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
-    """Convert `code` to a Slice `FST` if possible (or anthing else that can serve in `Subscript.slice`, like any old
-    generic `expr`)."""
+    """Convert `code` to a any `expr` `FST` that can go into a `Subscript.slice` if possible."""
 
     return _code_as_expr(code, parse_params, parse_expr_slice, True, True, sanitize)
 
 
-def code_as_expr_sliceelt(
+def code_as_Tuple_elt(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
-    """Convert `code` to an `expr` or `Slice` `FST` if possible. This exists because of the behavior of naked `Starred`
-    expressions in a `Subscript` `slice` field."""
+    """Convert `code` to an `expr` which can be an element of a `Tuple` anywhere, including `Slice` and arglike
+    expressions like `*not a` on py 3.11+ (both in a `Tuple` in `Subscript.slice`)."""
 
-    return _code_as_expr(code, parse_params, parse_expr_sliceelt, True, False, sanitize)
+    return _code_as_expr(code, parse_params, parse_Tuple_elt, True, False, sanitize)
 
 
 def code_as_Tuple(
@@ -1214,3 +1179,38 @@ def code_as_constant(
         raise NodeError('expecting constant', rawable=True)
 
     return code
+
+
+# ......................................................................................................................
+# internal stuff, not meant for direct user use
+
+def code_as__expr_arglikes(
+    code: Code,
+    parse_params: Mapping[str, Any] = {},
+    *,
+    sanitize: bool = False,
+    coerce: bool = False,
+) -> fst.FST:
+    """Convert `code` to a `Tuple` contianing possibly arglike expressions. Meant for putting slices to `Call.args` and
+    `ClassDef.bases`. The `Tuple` will be unparenthesized and the location will be the entire source. We use a `Tuple`
+    for this because unfortunately sometimes a `Tuple` is valid with arglikes in it and sometimes not.
+
+    **WARNING!** The `Tuple` that is returned is just being used as a container and may be an invalid python `Tuple` as
+    it may be an empty `Tuple` `AST` with source having no parentheses or an unparenthesized `Tuple` with incorrect
+    start and stop locations (since its the whole source). Singleton `Tuple` may also not have trailing comma.
+    """
+
+    if isinstance(code, Tuple):  # strip parentheses
+        code = _fixing_unparse(code)[1:-1]
+
+    fst_ = _code_as(code, parse_params, parse__expr_arglikes, Tuple, sanitize,
+                    _coerce_as__expr_arglikes if coerce else None)
+
+    if fst_ is code:  # validation if returning same FST that was passed in
+        if any(isinstance(e, Slice) for e in fst_.a.elts):
+            raise NodeError('expecting non-Slice expressions (arglike), found Slice')
+
+        if fst_._is_delimited_seq():
+            fst_._trim_delimiters()
+
+    return fst_

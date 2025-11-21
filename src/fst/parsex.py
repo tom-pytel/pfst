@@ -126,7 +126,7 @@ __all__ = [
     'parse_expr_all',
     'parse_expr_arglike',
     'parse_expr_slice',
-    'parse_expr_sliceelt',
+    'parse_Tuple_elt',
     'parse_Tuple',
     'parse__Assign_targets',
     'parse_boolop',
@@ -201,7 +201,7 @@ Mode = Literal[
     'expr_all',
     'expr_arglike',
     'expr_slice',
-    'expr_sliceelt',
+    'Tuple_elt',
     'Tuple',
     '_Assign_targets',
     '_decorator_list',
@@ -251,15 +251,18 @@ Mode = Literal[
 - `'expr'`: "expression", parse a single `expr` returned as itself. This is differentiated from the following modes by
     the handling of slices and starred expressions. In this mode `a:b` and `*not v` are syntax errors. Same as passing
     `expr` type.
-- `'expr_all'`: Parse to any kind of expression including `Slice`, `*not a` or `Tuple` of any of those combined.
+- `'expr_all'`: Parse to any kind of expression including `Slice`, `*not a` or `Tuple` of any of those combined (but
+    unparenthesized in that case).
 - `'expr_arglike'`: Accept special syntax for `Starred` (call argument, class base definition, slice implicit tuple),
     same as `'expr'` except that in this mode `a:b` is a syntax error and `*not v` parses to a starred expression
     `*(not v)`.
 - `'expr_slice'`: "slice expression", same as `'expr'` except that in this mode `a:b` parses to a `Slice` and `*not v`
     parses to a single element tuple containing a starred expression `(*(not v),)`.
-- `'expr_sliceelt'`: "slice tuple element expression", same as `'expr'` except that in this mode `a:b` parses to a
-    `Slice` and `*not v` parses to a starred expression `*(not v)`. `Tuples` are parsed but cannot contain `Slice`s.
-- `'Tuple'`: Parse to a `Tuple` which may contain anything that a tuple can contain like multiple `Slice`s.
+- `'Tuple_elt'`: "tuple element expression" as in a `Tuple` that can be anywhere including a `Subscript.slice`. Same
+    as `'expr'` except that in this mode `a:b` parses to a `Slice` and `*not v` parses to a starred expression
+    `*(not v)`. `Tuples` are parsed but cannot contain `Slice`s or arglike expressions.
+- `'Tuple'`: Parse to a `Tuple` which may contain anything that a tuple can contain like multiple `Slice`s and arglike
+    expressions. If it contains `Slice`s or arglikes then it must not be parenthesized (as per python syntax).
 - `'_Assign_targets'`: Parse zero or more `Assign` targets returned in a `_Assign_targets` SPECIAL SLICE, with `=` as
     separators and an optional trailing `=`.
 - `'_decorator_list'`: Parse zero or more decorators returned in a `_decorator_list` SPECIAL SLICE. Each decorator must
@@ -1004,7 +1007,7 @@ def parse_expr_arglike(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 def parse_expr_slice(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a `Slice` or anything else that can go into `Subscript.slice` (`expr`), e.g. "start:stop:step" or "name"
     or even "a:b, c:d:e, g". Using this, naked `Starred` expressions parse to single element `Tuple` with the `Starred`
-    as the only element."""
+    as the only element (on py 3.11, py 3.10 is an error in this case)."""
 
     try:
         ast = _ast_parse1(f'a[\n{src}\n]', parse_params).value.slice
@@ -1027,12 +1030,14 @@ def parse_expr_slice(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     return _offset_linenos(ast, -1)
 
 
-def parse_expr_sliceelt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an element of a slice `Tuple`, an `expr` or `Slice`. This exists because otherwise a naked `Starred`
-    expression parses to an implicit single element `Tuple` and the caller of this function does not want that behavior.
-    Using this, naked `Starred` expressions parse to just the `Starred` and not a `Tuple` like in `parse_expr_slice()`.
+def parse_Tuple_elt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
+    """Parse to any `expr` which can be an element of a `Tuple` anywhere, including `Slice` and arglike expressions like
+    `*not a` on py 3.11+ (both in a `Tuple` in `Subscript.slice`).
+
+    Naked `Starred` expression parses to just the `Starred` and not a `Tuple` like in `parse_expr_slice()`.
+
     Does not allow a `Tuple` with `Slice` in it as it is expected that this expression is already in a slice `Tuple` and
-    that is not allowed in python."""
+    nested `Tuple`s with `Slice`s are not allowed."""
 
     try:
         ast = parse_expr_slice(src, parse_params)
@@ -1043,7 +1048,7 @@ def parse_expr_sliceelt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         if not isinstance(ast, Tuple):
             return ast
 
-        if (len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for '*starred' acting as '*starred,'
+        if (len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for '*starred' acting as '*starred,' due to py 3.11 'a[*starred]' sneaky tuple syntax
             e0.end_col_offset == ast.end_col_offset and e0.end_lineno == ast.end_lineno
         ):
             return e0
@@ -1070,7 +1075,7 @@ def parse_Tuple(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if not isinstance(ast, Tuple):
         raise ParseError(f'expecting Tuple, got {ast.__class__.__name__}')
 
-    if (from_slice and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for '*starred' acting as '*starred,'
+    if (from_slice and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for '*starred' acting as '*starred,' due to py 3.11 'a[*starred]' sneaky tuple syntax
         e0.end_col_offset == ast.end_col_offset and e0.end_lineno == ast.end_lineno
     ):
         raise ParseError('expecting Tuple, got Starred')
@@ -1527,7 +1532,7 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
     'expr_all':               parse_expr_all,       # `a:b:c`, `*not c`, `*st`, `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`, `*not c`
     'expr_arglike':           parse_expr_arglike,   # `*a or b`, `*not c`
     'expr_slice':             parse_expr_slice,     # `a:b:c`, `*not c`, `a:b:c, x:y:z`, `*st` -> `*st,` (py 3.11+)
-    'expr_sliceelt':          parse_expr_sliceelt,  # `a:b:c`, `*not c`, `*st`
+    'Tuple_elt':              parse_Tuple_elt,      # `a:b:c`, `*not c`, `*st`
     'Tuple':                  parse_Tuple,          # `a,`, `a, b`, `a:b:c,`, `a:b:c, x:y:x, *st`, `*not a,` (py 3.11+)
     '_Assign_targets':        parse__Assign_targets,
     '_decorator_list':        parse__decorator_list,

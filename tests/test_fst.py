@@ -261,10 +261,11 @@ PARSE_TESTS = [
     ('expr_slice',         px.parse_expr_slice,         Tuple,                    'j, k'),
     ('expr_slice',         px.parse_expr_slice,         Tuple,                    'a:b:c, x:y:z'),
 
-    ('expr_sliceelt',      px.parse_expr_sliceelt,      Name,                     'j'),
-    ('expr_sliceelt',      px.parse_expr_sliceelt,      Slice,                    'a:b'),
-    ('expr_sliceelt',      px.parse_expr_sliceelt,      Tuple,                    'j, k'),
-    ('expr_sliceelt',      px.parse_expr_sliceelt,      SyntaxError,              'a:b:c, x:y:z'),
+    ('Tuple_elt',          px.parse_Tuple_elt,          Name,                     'j'),
+    ('Tuple_elt',          px.parse_Tuple_elt,          Starred,                  '*s'),
+    ('Tuple_elt',          px.parse_Tuple_elt,          Slice,                    'a:b'),
+    ('Tuple_elt',          px.parse_Tuple_elt,          Tuple,                    'j, k'),
+    ('Tuple_elt',          px.parse_Tuple_elt,          SyntaxError,              'a:b:c, x:y:z'),
 
     ('boolop',             px.parse_boolop,             And,                      'and'),
     ('boolop',             px.parse_boolop,             SyntaxError,              'and 1'),
@@ -688,8 +689,8 @@ if PYGE11:
         ('expr_slice',         px.parse_expr_slice,         Tuple,                  '*s'),
         ('expr_slice',         px.parse_expr_slice,         Tuple,                  '*not a'),
 
-        ('expr_sliceelt',      px.parse_expr_sliceelt,      Starred,                '*not a'),
-        ('expr_sliceelt',      px.parse_expr_sliceelt,      SyntaxError,            '*not a, *b or c'),
+        ('Tuple_elt',          px.parse_Tuple_elt,          Starred,                '*not a'),
+        ('Tuple_elt',          px.parse_Tuple_elt,          SyntaxError,            '*not a, *b or c'),
 
         (ExceptHandler,        px.parse_ExceptHandler,      ExceptHandler,          'except* Exception: pass'),
 
@@ -1711,8 +1712,8 @@ match a:
         self.assertIs(f := FST('a:b:c', 'Slice'), code_as_expr_slice(f))
         self.assertIs(f := FST('a:b:c, d:e', 'expr_slice'), code_as_expr_slice(f))
 
-        self.assertIs(f := FST('a:b:c', 'Slice'), code_as_expr_sliceelt(f))
-        self.assertRaises(NodeError, code_as_expr_sliceelt, FST('a:b:c, d:e', 'expr_slice'))
+        self.assertIs(f := FST('a:b:c', 'Slice'), code_as_Tuple_elt(f))
+        self.assertRaises(NodeError, code_as_Tuple_elt, FST('a:b:c, d:e', 'expr_slice'))
 
         self.assertRaises(NodeError, code_as_Tuple, FST('a:b:c', 'Slice'))
         self.assertIs(f := FST('a:b:c, d:e', 'expr_slice'), code_as_Tuple(f))

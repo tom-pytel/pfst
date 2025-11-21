@@ -1161,18 +1161,25 @@ Tuple - ROOT 0,0..0,12
   .ctx Load
 '''),
 
-('parse_expr_sliceelt', 0, 0, 'Name', {}, ('expr_sliceelt',
+('parse_Tuple_elt', 0, 0, 'Name', {}, ('Tuple_elt',
 r'''j'''),
 r'''Name 'j' Load - ROOT 0,0..0,1'''),
 
-('parse_expr_sliceelt', 0, 0, 'Slice', {}, ('expr_sliceelt',
+('parse_Tuple_elt', 0, 0, 'Starred', {}, ('Tuple_elt',
+r'''*s'''), r'''
+Starred - ROOT 0,0..0,2
+  .value Name 's' Load - 0,1..0,2
+  .ctx Load
+'''),
+
+('parse_Tuple_elt', 0, 0, 'Slice', {}, ('Tuple_elt',
 r'''a:b'''), r'''
 Slice - ROOT 0,0..0,3
   .lower Name 'a' Load - 0,0..0,1
   .upper Name 'b' Load - 0,2..0,3
 '''),
 
-('parse_expr_sliceelt', 0, 0, 'Tuple', {}, ('expr_sliceelt',
+('parse_Tuple_elt', 0, 0, 'Tuple', {}, ('Tuple_elt',
 r'''j, k'''), r'''
 Tuple - ROOT 0,0..0,4
   .elts[2]
@@ -1181,7 +1188,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-('parse_expr_sliceelt', 0, 0, 'SyntaxError', {}, ('expr_sliceelt',
+('parse_Tuple_elt', 0, 0, 'SyntaxError', {}, ('Tuple_elt',
 r'''a:b:c, x:y:z'''),
 r'''**SyntaxError('invalid expression (standard)')**'''),
 
@@ -3915,7 +3922,7 @@ Tuple - ROOT 0,0..0,6
   .ctx Load
 '''),
 
-('parse_expr_sliceelt', 0, 0, 'Starred', {'_ver': 11}, ('expr_sliceelt',
+('parse_Tuple_elt', 0, 0, 'Starred', {'_ver': 11}, ('Tuple_elt',
 r'''*not a'''), r'''
 Starred - ROOT 0,0..0,6
   .value UnaryOp - 0,1..0,6
@@ -3924,7 +3931,7 @@ Starred - ROOT 0,0..0,6
   .ctx Load
 '''),
 
-('parse_expr_sliceelt', 0, 0, 'SyntaxError', {'_ver': 11}, ('expr_sliceelt',
+('parse_Tuple_elt', 0, 0, 'SyntaxError', {'_ver': 11}, ('Tuple_elt',
 r'''*not a, *b or c'''),
 r'''**SyntaxError('invalid expression (standard)')**'''),
 

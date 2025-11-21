@@ -156,7 +156,7 @@ from .code import (
     code_as_expr,
     code_as_expr_arglike,
     code_as_expr_slice,
-    code_as_expr_sliceelt,
+    code_as_Tuple_elt,
     code_as_boolop,
     code_as_operator,
     code_as_unaryop,
@@ -2483,7 +2483,7 @@ _PUT_ONE_HANDLERS = {
     (Name, 'ctx'):                        (False, _put_one_ctx, _onestatic_ctx),  # expr_context
     (List, 'elts'):                       (True,  _put_one_List_elts, _onestatic_expr_required_starred),  # expr*
     (List, 'ctx'):                        (False, _put_one_ctx, _onestatic_ctx),  # expr_context
-    (Tuple, 'elts'):                      (True,  _put_one_Tuple_elts, onestatic(_one_info_exprish_required, _restrict_fmtval, code_as=code_as_expr_sliceelt)),  # expr*  - special handling because Tuples can contain Slices in an unparenthesized .slice field
+    (Tuple, 'elts'):                      (True,  _put_one_Tuple_elts, onestatic(_one_info_exprish_required, _restrict_fmtval, code_as=code_as_Tuple_elt)),  # expr*  - special handling because Tuples can contain Slices in an unparenthesized .slice field
     (Tuple, 'ctx'):                       (False, _put_one_ctx, _onestatic_ctx),  # expr_context
     (Slice, 'lower'):                     (False, _put_one_exprish_optional, _onestatic_Slice_lower),  # expr?
     (Slice, 'upper'):                     (False, _put_one_exprish_optional, _onestatic_Slice_upper),  # expr?

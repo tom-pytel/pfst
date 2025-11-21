@@ -4782,10 +4782,10 @@ class cls:
             self.assertRaises(NodeError, FST('a[b]').put, FST('T, **U', '_type_params'), 'slice')  # expr_slice
             self.assertRaises(NodeError, FST('a[b]').put, FST('T, **U', '_type_params').a, 'slice')
 
-            self.assertRaises(NodeError, FST('a[b, c]').slice.put, FST('T, **U', '_type_params'), 0, 'elts')  # expr_sliceelt
+            self.assertRaises(NodeError, FST('a[b, c]').slice.put, FST('T, **U', '_type_params'), 0, 'elts')  # Tuple_elt
             self.assertRaises(NodeError, FST('a[b, c]').slice.put, FST('T, **U', '_type_params').a, 0, 'elts')
 
-            self.assertRaises(NodeError, FST('(b, c)').put, FST('T, **U', '_type_params'), 0, 'elts')  # expr_sliceelt
+            self.assertRaises(NodeError, FST('(b, c)').put, FST('T, **U', '_type_params'), 0, 'elts')  # Tuple_elt
             self.assertRaises(NodeError, FST('(b, c)').put, FST('T, **U', '_type_params').a, 0, 'elts')
 
     @unittest.skipUnless(PYGE11, 'only valid for py >= 3.11')

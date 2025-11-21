@@ -143,7 +143,7 @@ from .fst_get_slice import (
 #   | | |  |  Delimiters
 #   | | |  |  |
 #                                                                                  .
-# *   N ,     ()   (Tuple, 'elts')                         # expr*                 -> Tuple                      _parse_expr_sliceelts
+# *   N ,     ()   (Tuple, 'elts')                         # expr*                 -> Tuple                      _parse_Tuple_elts
 # *   N ,     []   (List, 'elts')                          # expr*                 -> List                       _parse_expr / restrict seq
 # * ? N ,     {}   (Set, 'elts')                           # expr*                 -> Set                        _parse_expr / restrict seq
 #                                                                                  .
