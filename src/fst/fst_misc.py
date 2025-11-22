@@ -248,7 +248,10 @@ def _dump_lines(
             lines = fst_.root._lines
 
             for cln in range(src_ln, ln):
-                linefunc(f'{c.clr_loc}{cln:<{width}}:{c.end_loc} {c.clr_src}{lines[cln]}{c.end_src}{eol}')
+                l = lines[cln]
+                e = f'{c.clr_loc}<*END*{c.end_loc}' if l[-1:].isspace() else ''
+
+                linefunc(f'{c.clr_loc}{cln:<{width}}:{c.end_loc} {c.clr_src}{lines[cln]}{c.end_src}{e}{eol}')
 
         st.src_ln = end_ln + 1
 
