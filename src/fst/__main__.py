@@ -1,7 +1,7 @@
 from typing import get_args
 
 from .fst import parse
-from .parsex import Mode
+from .parsex import _PARSE_MODE_FUNCS
 
 
 def main() -> None:
@@ -13,7 +13,7 @@ def main() -> None:
     parser.add_argument('infile', nargs='?', default='-',
                         help='the file to parse; defaults to stdin')
     parser.add_argument('-m', '--mode', default='all',
-                        choices=get_args(get_args(Mode)[0]),
+                        choices=[m for m in _PARSE_MODE_FUNCS if isinstance(m, str)],
                         help='specify what kind of code must be parsed')
     parser.add_argument('-f', '--full', default=False, action='store_true',
                         help="show full tree including empty nodes")
@@ -48,8 +48,6 @@ def main() -> None:
 
     ast = parse(source.decode(), name, args.mode, type_comments=args.type_comments)
 
-    # if args.no_verify and args.mode in ('exec', 'eval', 'single', 'stmt', 'expr'):
-    #     ast.f.verify(raise_=True)
     if not args.no_verify:# and args.mode in ('exec', 'eval', 'single', 'stmt', 'expr'):
         ast.f.verify(raise_=True)
 
