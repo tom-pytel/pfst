@@ -1289,10 +1289,13 @@ class FST:
         call a provided function once with each line of the output.
 
         **Parameters:**
-        - `src`:
+        - `src`: Either what level of source to show along with the nodes or a shorthand string which can specify almost
+            all the formatting parameters as a string of characters.
             - `'stmt'` or `'stmt+'` means output statement source lines (including `ExceptHandler` and `match_case`)
-            or top level source if level is below statement.
-            - `'node'` or `'node+'` means output source for each individual node.
+                or top level source if level is below statement. The `+` means put all lines of source including
+                non-coding ones so that whole source is shown.
+            - `'node'` or `'node+'` means output source for each individual node. The `+` means the same as for
+                `'stmt+'`.
             - `None` does not output any source.
             - `str`: Can be a string for shortcut specification of source and flags by first letter, `'s+feL'` would be
                 equivalent to `.dump(src='stmt+', full=True, expand=True, loc=False)`.
@@ -1402,8 +1405,16 @@ class FST:
                 loc = True if 'l' in src else False if 'L' in src else loc
                 color =True if 'c' in src else False if 'C' in src else color
                 list_indent = indent if 'i' in src else 0 if 'I' in src else list_indent
-                src_plus = '+' in src
-                src = 'stmt' if 's' in src else 'node' if 'n' in src else None
+
+                if 'S' in src:
+                    src_plus = True
+                    src = 'stmt'
+                elif 'N' in src:
+                    src_plus = True
+                    src = 'node'
+                else:
+                    src_plus = '+' in src
+                    src = 'stmt' if 's' in src else 'node' if 'n' in src else None
 
         if color is None and out is print and (color := _DEFAULT_COLOR) is None:
             if not hasattr(sys.stdout, 'fileno'):
@@ -2857,12 +2868,8 @@ class FST:
                         case 5:  # from MatchMapping.patterns
                             next = 4
 
-                            # try:
-                            #     a = aparent.keys[(idx := idx + 1)]
-                            # except IndexError:
-                            #     return None
                             try:
-                                if not (a := aparent.keys[(idx := idx + 1)]):  # MatchMapping.keys cannot normally be None but we make use of this temporarily in some operations
+                                if not (a := aparent.keys[(idx := idx + 1)]):  # OUR OWN SPECIAL CASE: MatchMapping.keys cannot normally be None but we make use of this temporarily in some operations
                                     continue
                             except IndexError:
                                 return None
@@ -2906,6 +2913,9 @@ class FST:
                 match next:
                     case 2:  # from Compare.left
                         name = 'comparators'  # will cause to get .ops[0]
+                        idx = -1
+
+                    case 3:  # OUR OWN SPECIAL CASE: from empty Compare.comparators, not normally allowed
                         idx = -1
 
                     case 6:  # from Call.func
@@ -3186,8 +3196,7 @@ class FST:
                         case 5:  # from MatchMapping.patterns
                             prev = 4
 
-                            # a = aparent.keys[idx]
-                            if not (a := aparent.keys[idx]):  # MatchMapping.keys cannot normally be None but we make use of this temporarily in some operations
+                            if not (a := aparent.keys[idx]):  # OUR OWN SPECIAL CASE: MatchMapping.keys cannot normally be None but we make use of this temporarily in some operations
                                 continue
 
                     if check_with_loc(f := a.f, with_loc):

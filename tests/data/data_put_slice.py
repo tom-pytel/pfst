@@ -17142,7 +17142,7 @@ Tuple - ROOT 0,0..0,4
 ('', None, None, None, {'coerce': False}, (None,
 r'''a, b, c'''), (None,
 r'''x'''),
-r'''**ValueError('cannot put Name as slice without `one=True` or `coerce=True`')**'''),
+r'''**ValueError("cannot put Name as slice to Tuple without 'one=True' or 'coerce=True'")**'''),
 
 ('', None, None, None, {'coerce': False, 'one': True}, (None,
 r'''a, b, c'''), (None,
@@ -17296,7 +17296,7 @@ Tuple - ROOT 0,0..0,6
 ('', None, None, None, {'coerce': False}, (None,
 r'''(a, b, c)'''), (None,
 r'''x'''),
-r'''**ValueError('cannot put Name as slice without `one=True` or `coerce=True`')**'''),
+r'''**ValueError("cannot put Name as slice to Tuple without 'one=True' or 'coerce=True'")**'''),
 
 ('', None, None, None, {'coerce': False, 'one': True}, (None,
 r'''(a, b, c)'''), (None,
@@ -17453,7 +17453,7 @@ List - ROOT 0,0..0,5
 ('', None, None, None, {'coerce': False}, (None,
 r'''[a, b, c]'''), (None,
 r'''x'''),
-r'''**ValueError('cannot put Name as slice without `one=True` or `coerce=True`')**'''),
+r'''**ValueError("cannot put Name as slice to List without 'one=True' or 'coerce=True'")**'''),
 
 ('', None, None, None, {'coerce': False, 'one': True}, (None,
 r'''[a, b, c]'''), (None,
@@ -17598,7 +17598,7 @@ Set - ROOT 0,0..0,5
 ('', None, None, None, {'coerce': False}, (None,
 r'''{a, b, c}'''), (None,
 r'''x'''),
-r'''**ValueError('cannot put Name as slice without `one=True` or `coerce=True`')**'''),
+r'''**ValueError("cannot put Name as slice to Set without 'one=True' or 'coerce=True'")**'''),
 
 ('', None, None, None, {'coerce': False, 'one': True}, (None,
 r'''{a, b, c}'''), (None,
@@ -18010,7 +18010,7 @@ r'''**NodeError('invalid slice for Delete target')**'''),
 ('', None, None, None, {'coerce': False}, (None,
 r'''del a, b, c'''), (None,
 r'''x'''),
-r'''**ValueError('cannot put Name as slice without `one=True` or `coerce=True`')**'''),
+r'''**ValueError("cannot put Name as slice to Delete without 'one=True' or 'coerce=True'")**'''),
 
 ('', None, None, None, {'coerce': False, 'one': True}, (None,
 r'''del a, b, c'''), (None,
@@ -23077,7 +23077,7 @@ r'''**NodeError('cannot put Set to Global.names')**'''),
 ('', None, None, None, {'coerce': False}, (None,
 r'''global a, b, c'''), (None,
 r'''x'''),
-r'''**ValueError('cannot put Name as slice without `one=True` or `coerce=True`')**'''),
+r'''**ValueError("cannot put Name as slice to Global without 'one=True' or 'coerce=True'")**'''),
 
 ('', None, None, None, {'coerce': False, 'one': True}, (None,
 r'''global a, b, c'''), (None,
@@ -23770,7 +23770,7 @@ r'''**NodeError('cannot put Set to Nonlocal.names')**'''),
 ('', None, None, None, {'coerce': False}, (None,
 r'''nonlocal a, b, c'''), (None,
 r'''x'''),
-r'''**ValueError('cannot put Name as slice without `one=True` or `coerce=True`')**'''),
+r'''**ValueError("cannot put Name as slice to Nonlocal without 'one=True' or 'coerce=True'")**'''),
 
 ('', None, None, None, {'coerce': False, 'one': True}, (None,
 r'''nonlocal a, b, c'''), (None,
@@ -26125,6 +26125,1039 @@ ClassDef - ROOT 0,0..0,39
      .name 'U'
    2] ParamSpec - 0,15..0,18
      .name 'V'
+'''),
+],
+
+'Compare__all': [  # ................................................................................
+
+('', 0, 1, None, {}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''x'''),
+r'''x is not (b) not in (c)''', r'''
+Compare - ROOT 0,0..0,23
+  .left Name 'x' Load - 0,0..0,1
+  .ops[2]
+   0] IsNot - 0,2..0,8
+   1] NotIn - 0,13..0,19
+  .comparators[2]
+   0] Name 'b' Load - 0,10..0,11
+   1] Name 'c' Load - 0,21..0,22
+'''),
+
+('', 1, 2, None, {}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''x'''),
+r'''(a) is not x not in (c)''', r'''
+Compare - ROOT 0,0..0,23
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] IsNot - 0,4..0,10
+   1] NotIn - 0,13..0,19
+  .comparators[2]
+   0] Name 'x' Load - 0,11..0,12
+   1] Name 'c' Load - 0,21..0,22
+'''),
+
+('', 2, 3, None, {}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''x'''),
+r'''(a) is not (b) not in x''', r'''
+Compare - ROOT 0,0..0,23
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] IsNot - 0,4..0,10
+   1] NotIn - 0,15..0,21
+  .comparators[2]
+   0] Name 'b' Load - 0,12..0,13
+   1] Name 'x' Load - 0,22..0,23
+'''),
+
+('', 0, 2, None, {}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''x'''),
+r'''x not in (c)''', r'''
+Compare - ROOT 0,0..0,12
+  .left Name 'x' Load - 0,0..0,1
+  .ops[1]
+   0] NotIn - 0,2..0,8
+  .comparators[1]
+   0] Name 'c' Load - 0,10..0,11
+'''),
+
+('', 1, 3, None, {}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''x'''),
+r'''(a) is not x''', r'''
+Compare - ROOT 0,0..0,12
+  .left Name 'a' Load - 0,1..0,2
+  .ops[1]
+   0] IsNot - 0,4..0,10
+  .comparators[1]
+   0] Name 'x' Load - 0,11..0,12
+'''),
+
+('', 0, 3, None, {'_verify_self': False}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''x'''),
+r'''x''', r'''
+Compare - ROOT 0,0..0,1
+  .left Name 'x' Load - 0,0..0,1
+'''),
+
+('', 0, 3, None, {'norm_self': True}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''x'''),
+r'''x''',
+r'''Name 'x' Load - ROOT 0,0..0,1'''),
+
+('', 0, 1, None, {}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''( x )'''),
+r'''( x ) is not (b) not in (c)''',
+r'''x is not (b) not in (c)''', r'''
+Compare - ROOT 0,0..0,27
+  .left Name 'x' Load - 0,2..0,3
+  .ops[2]
+   0] IsNot - 0,6..0,12
+   1] NotIn - 0,17..0,23
+  .comparators[2]
+   0] Name 'b' Load - 0,14..0,15
+   1] Name 'c' Load - 0,25..0,26
+'''),
+
+('', 1, 2, None, {}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''( x )'''),
+r'''(a) is not ( x ) not in (c)''',
+r'''(a) is not x not in (c)''', r'''
+Compare - ROOT 0,0..0,27
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] IsNot - 0,4..0,10
+   1] NotIn - 0,17..0,23
+  .comparators[2]
+   0] Name 'x' Load - 0,13..0,14
+   1] Name 'c' Load - 0,25..0,26
+'''),
+
+('', 2, 3, None, {}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''( x )'''),
+r'''(a) is not (b) not in ( x )''',
+r'''(a) is not (b) not in x''', r'''
+Compare - ROOT 0,0..0,27
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] IsNot - 0,4..0,10
+   1] NotIn - 0,15..0,21
+  .comparators[2]
+   0] Name 'b' Load - 0,12..0,13
+   1] Name 'x' Load - 0,24..0,25
+'''),
+
+('', 0, 2, None, {}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''( x )'''),
+r'''( x ) not in (c)''',
+r'''x not in (c)''', r'''
+Compare - ROOT 0,0..0,16
+  .left Name 'x' Load - 0,2..0,3
+  .ops[1]
+   0] NotIn - 0,6..0,12
+  .comparators[1]
+   0] Name 'c' Load - 0,14..0,15
+'''),
+
+('', 1, 3, None, {}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''( x )'''),
+r'''(a) is not ( x )''',
+r'''(a) is not x''', r'''
+Compare - ROOT 0,0..0,16
+  .left Name 'a' Load - 0,1..0,2
+  .ops[1]
+   0] IsNot - 0,4..0,10
+  .comparators[1]
+   0] Name 'x' Load - 0,13..0,14
+'''),
+
+('', 0, 3, None, {'_verify_self': False}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''( x )'''),
+r'''( x )''',
+r'''x''', r'''
+Compare - ROOT 0,0..0,5
+  .left Name 'x' Load - 0,2..0,3
+'''),
+
+('', 0, 3, None, {'norm_self': True}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''( x )'''),
+r'''( x )''',
+r'''x''',
+r'''Name 'x' Load - ROOT 0,2..0,3'''),
+
+('', 0, 1, None, {}, (None,
+r'''(a) is not (b) not in (c)'''), (None, r'''
+# pre
+x  # line
+# post
+'''), r'''
+(# pre
+x  # line
+# post
+is not (b) not in (c))
+''',
+r'''x is not (b) not in (c)''', r'''
+Compare - ROOT 1,0..3,21
+  .left Name 'x' Load - 1,0..1,1
+  .ops[2]
+   0] IsNot - 3,0..3,6
+   1] NotIn - 3,11..3,17
+  .comparators[2]
+   0] Name 'b' Load - 3,8..3,9
+   1] Name 'c' Load - 3,19..3,20
+'''),
+
+('', 1, 2, None, {}, (None,
+r'''(a) is not (b) not in (c)'''), (None, r'''
+# pre
+x  # line
+# post
+'''), r'''
+((a) is not # pre
+x  # line
+# post
+not in (c))
+''',
+r'''(a) is not x not in (c)''', r'''
+Compare - ROOT 0,1..3,10
+  .left Name 'a' Load - 0,2..0,3
+  .ops[2]
+   0] IsNot - 0,5..0,11
+   1] NotIn - 3,0..3,6
+  .comparators[2]
+   0] Name 'x' Load - 1,0..1,1
+   1] Name 'c' Load - 3,8..3,9
+'''),
+
+('', 1, 2, None, {}, (None,
+r'''(a) is not (b) not in (c)'''), (None, r'''
+
+# pre
+x  # line
+# post
+
+'''), r'''
+((a) is not
+# pre
+x  # line
+# post
+not in (c))
+''',
+r'''(a) is not x not in (c)''', r'''
+Compare - ROOT 0,1..4,10
+  .left Name 'a' Load - 0,2..0,3
+  .ops[2]
+   0] IsNot - 0,5..0,11
+   1] NotIn - 4,0..4,6
+  .comparators[2]
+   0] Name 'x' Load - 2,0..2,1
+   1] Name 'c' Load - 4,8..4,9
+'''),
+
+('', 2, 3, None, {}, (None,
+r'''(a) is not (b) not in (c)'''), (None, r'''
+# pre
+x  # line
+# post
+'''), r'''
+((a) is not (b) not in # pre
+x  # line
+# post
+)
+''',
+r'''(a) is not (b) not in x''', r'''
+Compare - ROOT 0,1..1,1
+  .left Name 'a' Load - 0,2..0,3
+  .ops[2]
+   0] IsNot - 0,5..0,11
+   1] NotIn - 0,16..0,22
+  .comparators[2]
+   0] Name 'b' Load - 0,13..0,14
+   1] Name 'x' Load - 1,0..1,1
+'''),
+
+('', 0, 2, None, {}, (None,
+r'''(a) is not (b) not in (c)'''), (None, r'''
+# pre
+x  # line
+# post
+'''), r'''
+(# pre
+x  # line
+# post
+not in (c))
+''',
+r'''x not in (c)''', r'''
+Compare - ROOT 1,0..3,10
+  .left Name 'x' Load - 1,0..1,1
+  .ops[1]
+   0] NotIn - 3,0..3,6
+  .comparators[1]
+   0] Name 'c' Load - 3,8..3,9
+'''),
+
+('', 1, 3, None, {}, (None,
+r'''(a) is not (b) not in (c)'''), (None, r'''
+# pre
+x  # line
+# post
+'''), r'''
+((a) is not # pre
+x  # line
+# post
+)
+''',
+r'''(a) is not x''', r'''
+Compare - ROOT 0,1..1,1
+  .left Name 'a' Load - 0,2..0,3
+  .ops[1]
+   0] IsNot - 0,5..0,11
+  .comparators[1]
+   0] Name 'x' Load - 1,0..1,1
+'''),
+
+('', 0, 3, None, {'_verify_self': False}, (None,
+r'''(a) is not (b) not in (c)'''), (None, r'''
+# pre
+x  # line
+# post
+'''), r'''
+(# pre
+x  # line
+# post
+)
+''',
+r'''x''', r'''
+Compare - ROOT 1,0..1,1
+  .left Name 'x' Load - 1,0..1,1
+'''),
+
+('', 0, 3, None, {'norm_self': True}, (None,
+r'''(a) is not (b) not in (c)'''), (None, r'''
+# pre
+x  # line
+# post
+'''), r'''
+(# pre
+x  # line
+# post
+)
+''',
+r'''x''',
+r'''Name 'x' Load - ROOT 1,0..1,1'''),
+
+('', 0, 1, None, {}, (None, r'''
+(a)
+< (b)
+< (c)
+'''), (None, r'''
+(x)
+> (y)
+'''), r'''
+((x)
+> (y)
+< (b)
+< (c))
+''', r'''
+(x > y
+< (b)
+< (c))
+''', r'''
+Compare - ROOT 0,1..3,5
+  .left Name 'x' Load - 0,2..0,3
+  .ops[3]
+   0] Gt - 1,0..1,1
+   1] Lt - 2,0..2,1
+   2] Lt - 3,0..3,1
+  .comparators[3]
+   0] Name 'y' Load - 1,3..1,4
+   1] Name 'b' Load - 2,3..2,4
+   2] Name 'c' Load - 3,3..3,4
+'''),
+
+('', 1, 2, None, {}, (None, r'''
+(a)
+< (b)
+< (c)
+'''), (None, r'''
+(x)
+> (y)
+'''), r'''
+((a)
+< (x)
+> (y)
+< (c))
+''', r'''
+((a)
+< x > y
+< (c))
+''', r'''
+Compare - ROOT 0,1..3,5
+  .left Name 'a' Load - 0,2..0,3
+  .ops[3]
+   0] Lt - 1,0..1,1
+   1] Gt - 2,0..2,1
+   2] Lt - 3,0..3,1
+  .comparators[3]
+   0] Name 'x' Load - 1,3..1,4
+   1] Name 'y' Load - 2,3..2,4
+   2] Name 'c' Load - 3,3..3,4
+'''),
+
+('', 2, 3, None, {}, (None, r'''
+(a)
+< (b)
+< (c)
+'''), (None, r'''
+(x)
+> (y)
+'''), r'''
+((a)
+< (b)
+< (x)
+> (y))
+''', r'''
+((a)
+< (b)
+< x > y)
+''', r'''
+Compare - ROOT 0,1..3,5
+  .left Name 'a' Load - 0,2..0,3
+  .ops[3]
+   0] Lt - 1,0..1,1
+   1] Lt - 2,0..2,1
+   2] Gt - 3,0..3,1
+  .comparators[3]
+   0] Name 'b' Load - 1,3..1,4
+   1] Name 'x' Load - 2,3..2,4
+   2] Name 'y' Load - 3,3..3,4
+'''),
+
+('', 0, 2, None, {}, (None, r'''
+(a)
+< (b)
+< (c)
+'''), (None, r'''
+(x)
+> (y)
+'''), r'''
+((x)
+> (y)
+< (c))
+''', r'''
+(x > y
+< (c))
+''', r'''
+Compare - ROOT 0,1..2,5
+  .left Name 'x' Load - 0,2..0,3
+  .ops[2]
+   0] Gt - 1,0..1,1
+   1] Lt - 2,0..2,1
+  .comparators[2]
+   0] Name 'y' Load - 1,3..1,4
+   1] Name 'c' Load - 2,3..2,4
+'''),
+
+('', 1, 3, None, {}, (None, r'''
+(a)
+< (b)
+< (c)
+'''), (None, r'''
+(x)
+> (y)
+'''), r'''
+((a)
+< (x)
+> (y))
+''', r'''
+((a)
+< x > y)
+''', r'''
+Compare - ROOT 0,1..2,5
+  .left Name 'a' Load - 0,2..0,3
+  .ops[2]
+   0] Lt - 1,0..1,1
+   1] Gt - 2,0..2,1
+  .comparators[2]
+   0] Name 'x' Load - 1,3..1,4
+   1] Name 'y' Load - 2,3..2,4
+'''),
+
+('', 0, 3, None, {}, (None, r'''
+(a)
+< (b)
+< (c)
+'''), (None, r'''
+(x)
+> (y)
+'''), r'''
+((x)
+> (y))
+''',
+r'''x > y''', r'''
+Compare - ROOT 0,1..1,5
+  .left Name 'x' Load - 0,2..0,3
+  .ops[1]
+   0] Gt - 1,0..1,1
+  .comparators[1]
+   0] Name 'y' Load - 1,3..1,4
+'''),
+
+('', 0, 1, None, {}, (None, r'''
+((a)
+< (b)
+< (c))
+'''), (None, r'''
+(x)
+> (y)
+'''), r'''
+((x)
+ > (y)
+< (b)
+< (c))
+''', r'''
+(x > y
+< (b)
+< (c))
+''', r'''
+Compare - ROOT 0,1..3,5
+  .left Name 'x' Load - 0,2..0,3
+  .ops[3]
+   0] Gt - 1,1..1,2
+   1] Lt - 2,0..2,1
+   2] Lt - 3,0..3,1
+  .comparators[3]
+   0] Name 'y' Load - 1,4..1,5
+   1] Name 'b' Load - 2,3..2,4
+   2] Name 'c' Load - 3,3..3,4
+'''),
+
+('', 1, 2, None, {}, (None, r'''
+((a)
+< (b)
+< (c))
+'''), (None, r'''
+(x)
+> (y)
+'''), r'''
+((a)
+< (x)
+ > (y)
+< (c))
+''', r'''
+((a)
+< x > y
+< (c))
+''', r'''
+Compare - ROOT 0,1..3,5
+  .left Name 'a' Load - 0,2..0,3
+  .ops[3]
+   0] Lt - 1,0..1,1
+   1] Gt - 2,1..2,2
+   2] Lt - 3,0..3,1
+  .comparators[3]
+   0] Name 'x' Load - 1,3..1,4
+   1] Name 'y' Load - 2,4..2,5
+   2] Name 'c' Load - 3,3..3,4
+'''),
+
+('', 2, 3, None, {}, (None, r'''
+((a)
+< (b)
+< (c))
+'''), (None, r'''
+(x)
+> (y)
+'''), r'''
+((a)
+< (b)
+< (x)
+ > (y))
+''', r'''
+((a)
+< (b)
+< x > y)
+''', r'''
+Compare - ROOT 0,1..3,6
+  .left Name 'a' Load - 0,2..0,3
+  .ops[3]
+   0] Lt - 1,0..1,1
+   1] Lt - 2,0..2,1
+   2] Gt - 3,1..3,2
+  .comparators[3]
+   0] Name 'b' Load - 1,3..1,4
+   1] Name 'x' Load - 2,3..2,4
+   2] Name 'y' Load - 3,4..3,5
+'''),
+
+('', 0, 2, None, {}, (None, r'''
+((a)
+< (b)
+< (c))
+'''), (None, r'''
+(x)
+> (y)
+'''), r'''
+((x)
+ > (y)
+< (c))
+''', r'''
+(x > y
+< (c))
+''', r'''
+Compare - ROOT 0,1..2,5
+  .left Name 'x' Load - 0,2..0,3
+  .ops[2]
+   0] Gt - 1,1..1,2
+   1] Lt - 2,0..2,1
+  .comparators[2]
+   0] Name 'y' Load - 1,4..1,5
+   1] Name 'c' Load - 2,3..2,4
+'''),
+
+('', 1, 3, None, {}, (None, r'''
+((a)
+< (b)
+< (c))
+'''), (None, r'''
+(x)
+> (y)
+'''), r'''
+((a)
+< (x)
+ > (y))
+''', r'''
+((a)
+< x > y)
+''', r'''
+Compare - ROOT 0,1..2,6
+  .left Name 'a' Load - 0,2..0,3
+  .ops[2]
+   0] Lt - 1,0..1,1
+   1] Gt - 2,1..2,2
+  .comparators[2]
+   0] Name 'x' Load - 1,3..1,4
+   1] Name 'y' Load - 2,4..2,5
+'''),
+
+('', 0, 3, None, {}, (None, r'''
+((a)
+< (b)
+< (c))
+'''), (None, r'''
+(x)
+> (y)
+'''), r'''
+((x)
+ > (y))
+''',
+r'''(x > y)''', r'''
+Compare - ROOT 0,1..1,6
+  .left Name 'x' Load - 0,2..0,3
+  .ops[1]
+   0] Gt - 1,1..1,2
+  .comparators[1]
+   0] Name 'y' Load - 1,4..1,5
+'''),
+
+('', 0, 1, None, {}, (None, r'''
+a \
+is \
+not \
+b \
+not \
+in \
+c
+'''), (None, r'''
+x \
+> \
+y
+'''), r'''
+(x \
+> \
+y
+is \
+not \
+b \
+not \
+in \
+c)
+''', r'''
+(x > y
+is \
+not \
+b \
+not \
+in \
+c)
+''', r'''
+Compare - ROOT 0,1..8,1
+  .left Name 'x' Load - 0,1..0,2
+  .ops[3]
+   0] Gt - 1,0..1,1
+   1] IsNot - 3,0..4,3
+   2] NotIn - 6,0..7,2
+  .comparators[3]
+   0] Name 'y' Load - 2,0..2,1
+   1] Name 'b' Load - 5,0..5,1
+   2] Name 'c' Load - 8,0..8,1
+'''),
+
+('', 1, 2, None, {}, (None, r'''
+a \
+is \
+not \
+b \
+not \
+in \
+c
+'''), (None, r'''
+x \
+> \
+y
+'''), r'''
+(a \
+is \
+not \
+x \
+> \
+y
+not \
+in \
+c)
+''', r'''
+(a \
+is \
+not \
+x > y
+not \
+in \
+c)
+''', r'''
+Compare - ROOT 0,1..8,1
+  .left Name 'a' Load - 0,1..0,2
+  .ops[3]
+   0] IsNot - 1,0..2,3
+   1] Gt - 4,0..4,1
+   2] NotIn - 6,0..7,2
+  .comparators[3]
+   0] Name 'x' Load - 3,0..3,1
+   1] Name 'y' Load - 5,0..5,1
+   2] Name 'c' Load - 8,0..8,1
+'''),
+
+('', 2, 3, None, {}, (None, r'''
+a \
+is \
+not \
+b \
+not \
+in \
+c
+'''), (None, r'''
+x \
+> \
+y
+'''), r'''
+a \
+is \
+not \
+b \
+not \
+in \
+x \
+> \
+y
+''', r'''
+a \
+is \
+not \
+b \
+not \
+in \
+x > y
+''', r'''
+Compare - ROOT 0,0..8,1
+  .left Name 'a' Load - 0,0..0,1
+  .ops[3]
+   0] IsNot - 1,0..2,3
+   1] NotIn - 4,0..5,2
+   2] Gt - 7,0..7,1
+  .comparators[3]
+   0] Name 'b' Load - 3,0..3,1
+   1] Name 'x' Load - 6,0..6,1
+   2] Name 'y' Load - 8,0..8,1
+'''),
+
+('', 0, 2, None, {}, (None, r'''
+a \
+is \
+not \
+b \
+not \
+in \
+c
+'''), (None, r'''
+x \
+> \
+y
+'''), r'''
+(x \
+> \
+y
+not \
+in \
+c)
+''', r'''
+(x > y
+not \
+in \
+c)
+''', r'''
+Compare - ROOT 0,1..5,1
+  .left Name 'x' Load - 0,1..0,2
+  .ops[2]
+   0] Gt - 1,0..1,1
+   1] NotIn - 3,0..4,2
+  .comparators[2]
+   0] Name 'y' Load - 2,0..2,1
+   1] Name 'c' Load - 5,0..5,1
+'''),
+
+('', 1, 3, None, {}, (None, r'''
+a \
+is \
+not \
+b \
+not \
+in \
+c
+'''), (None, r'''
+x \
+> \
+y
+'''), r'''
+a \
+is \
+not \
+x \
+> \
+y
+''', r'''
+a \
+is \
+not \
+x > y
+''', r'''
+Compare - ROOT 0,0..5,1
+  .left Name 'a' Load - 0,0..0,1
+  .ops[2]
+   0] IsNot - 1,0..2,3
+   1] Gt - 4,0..4,1
+  .comparators[2]
+   0] Name 'x' Load - 3,0..3,1
+   1] Name 'y' Load - 5,0..5,1
+'''),
+
+('', 0, 3, None, {}, (None, r'''
+a \
+is \
+not \
+b \
+not \
+in \
+c
+'''), (None, r'''
+x \
+> \
+y
+'''), r'''
+x \
+> \
+y
+''',
+r'''x > y''', r'''
+Compare - ROOT 0,0..2,1
+  .left Name 'x' Load - 0,0..0,1
+  .ops[1]
+   0] Gt - 1,0..1,1
+  .comparators[1]
+   0] Name 'y' Load - 2,0..2,1
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''x < y'''),
+r'''(a) is not (x < y) not in (c)''', r'''
+Compare - ROOT 0,0..0,29
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] IsNot - 0,4..0,10
+   1] NotIn - 0,19..0,25
+  .comparators[2]
+   0] Compare - 0,12..0,17
+     .left Name 'x' Load - 0,12..0,13
+     .ops[1]
+      0] Lt - 0,14..0,15
+     .comparators[1]
+      0] Name 'y' Load - 0,16..0,17
+   1] Name 'c' Load - 0,27..0,28
+'''),
+
+('', 1, 2, None, {'coerce': False}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''x'''),
+r'''**ValueError("cannot put Name as slice to Compare without 'one=True' or 'coerce=True'")**'''),
+
+('', 1, 2, None, {'coerce': False, 'one': True}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''x'''),
+r'''(a) is not x not in (c)''', r'''
+Compare - ROOT 0,0..0,23
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] IsNot - 0,4..0,10
+   1] NotIn - 0,13..0,19
+  .comparators[2]
+   0] Name 'x' Load - 0,11..0,12
+   1] Name 'c' Load - 0,21..0,22
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''x'''),
+r'''(a) is not x not in (c)''', r'''
+Compare - ROOT 0,0..0,23
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] IsNot - 0,4..0,10
+   1] NotIn - 0,13..0,19
+  .comparators[2]
+   0] Name 'x' Load - 0,11..0,12
+   1] Name 'c' Load - 0,21..0,22
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''x := y'''),
+r'''(a) is not (x := y) not in (c)''', r'''
+Compare - ROOT 0,0..0,30
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] IsNot - 0,4..0,10
+   1] NotIn - 0,20..0,26
+  .comparators[2]
+   0] NamedExpr - 0,12..0,18
+     .target Name 'x' Store - 0,12..0,13
+     .value Name 'y' Load - 0,17..0,18
+   1] Name 'c' Load - 0,28..0,29
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''yield'''),
+r'''(a) is not (yield) not in (c)''', r'''
+Compare - ROOT 0,0..0,29
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] IsNot - 0,4..0,10
+   1] NotIn - 0,19..0,25
+  .comparators[2]
+   0] Yield - 0,12..0,17
+   1] Name 'c' Load - 0,27..0,28
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''yield x'''),
+r'''(a) is not (yield x) not in (c)''', r'''
+Compare - ROOT 0,0..0,31
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] IsNot - 0,4..0,10
+   1] NotIn - 0,21..0,27
+  .comparators[2]
+   0] Yield - 0,12..0,19
+     .value Name 'x' Load - 0,18..0,19
+   1] Name 'c' Load - 0,29..0,30
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''yield from x'''),
+r'''(a) is not (yield from x) not in (c)''', r'''
+Compare - ROOT 0,0..0,36
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] IsNot - 0,4..0,10
+   1] NotIn - 0,26..0,32
+  .comparators[2]
+   0] YieldFrom - 0,12..0,24
+     .value Name 'x' Load - 0,23..0,24
+   1] Name 'c' Load - 0,34..0,35
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''x if y else z'''),
+r'''(a) is not (x if y else z) not in (c)''', r'''
+Compare - ROOT 0,0..0,37
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] IsNot - 0,4..0,10
+   1] NotIn - 0,27..0,33
+  .comparators[2]
+   0] IfExp - 0,12..0,25
+     .test Name 'y' Load - 0,17..0,18
+     .body Name 'x' Load - 0,12..0,13
+     .orelse Name 'z' Load - 0,24..0,25
+   1] Name 'c' Load - 0,35..0,36
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''x and y'''),
+r'''(a) is not (x and y) not in (c)''', r'''
+Compare - ROOT 0,0..0,31
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] IsNot - 0,4..0,10
+   1] NotIn - 0,21..0,27
+  .comparators[2]
+   0] BoolOp - 0,12..0,19
+     .op And
+     .values[2]
+      0] Name 'x' Load - 0,12..0,13
+      1] Name 'y' Load - 0,18..0,19
+   1] Name 'c' Load - 0,29..0,30
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''(a) is not (b) not in (c)'''), (None,
+r'''not x'''),
+r'''(a) is not (not x) not in (c)''', r'''
+Compare - ROOT 0,0..0,29
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] IsNot - 0,4..0,10
+   1] NotIn - 0,19..0,25
+  .comparators[2]
+   0] UnaryOp - 0,12..0,17
+     .op Not - 0,12..0,15
+     .operand Name 'x' Load - 0,16..0,17
+   1] Name 'c' Load - 0,27..0,28
 '''),
 ],
 

@@ -1048,6 +1048,63 @@ def _get_slice_ClassDef_bases(
     return fst_
 
 
+def _get_slice_Compare__all(
+    self: fst.FST,
+    start: int | Literal['end'] | None,
+    stop: int | None,
+    field: str,
+    cut: bool,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """Slice from whole compare, including `left` field. Can never get zero-length slice or leave length 0 self. Length
+    one `Compare` will be returned / left as a `Compare` without `ops` or `comparators` with `norm=False`, otherwise
+    will be returned / left as a single `expr` with `norm=True`. Cut is not done here but rather delete after copy via
+    `_put_slice_Compare__all(None)` to keep all the tricky logic in one place."""
+
+    ast = self.a
+    body = ast.comparators
+    len_body = len(body) + 1  # +1 to include `left` element
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
+
+    if not len_slice:
+        raise ValueError("cannot get empty slice from Compare")
+
+    if cut:
+        if len_slice == len_body:
+            raise ValueError("cannot cut all nodes from Compare")
+
+    ast_first = body[start - 1] if start else ast.left
+    loc_first = ast_first.f.pars()
+    loc_last = body[stop - 2].f.pars() if stop >= 2 else loc_first
+
+    if start:
+        _, _, bound_ln, bound_col = ast.ops[start - 1].f.loc
+    else:
+        bound_ln, bound_col, _, _ = loc_first
+
+    if stop < len_body:
+        _, _, bound_end_ln, bound_end_col = body[-1].f.pars()
+    else:
+        _, _, bound_end_ln, bound_end_col = loc_last
+
+    if len_slice == 1 and get_option_overridable('norm', 'norm_get', options):  # if length 1 slice and normalizing then return just the expression
+        ret_ast = copy_ast(ast_first)
+    else:
+        ret_ast = Compare(left=copy_ast(ast_first),
+                          ops=[copy_ast(a) for a in ast.ops[start : stop - 1]],
+                          comparators=[copy_ast(a) for a in ast.comparators[start : stop - 1]])
+
+    fst_ = get_slice_nosep(self, start, stop, len_body, False, ret_ast,
+                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col, options,
+                           set_ast_loc=ret_ast.__class__ is Compare)
+
+    if cut:
+        fst_top_level.fst_put_slice._put_slice_Compare__all(self, None, start, stop, field, False, options)
+
+    return fst_
+
+
 def _get_slice_Call_args(
     self: fst.FST,
     start: int | Literal['end'] | None,
@@ -1509,7 +1566,7 @@ _GET_SLICE_HANDLERS = {
     (Delete, 'targets'):                      _get_slice_Delete_targets,  # expr*
     (Assign, 'targets'):                      _get_slice_Assign_targets,  # expr*
     (BoolOp, 'values'):                       _get_slice_NOT_IMPLEMENTED_YET,  # expr*
-    (Compare, '_all'):                        _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (Compare, '_all'):                        _get_slice_Compare__all,  # expr*
     (Call, 'args'):                           _get_slice_Call_args,  # expr*
     (comprehension, 'ifs'):                   _get_slice_comprehension_ifs,  # expr*
 

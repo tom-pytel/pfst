@@ -2154,6 +2154,9 @@ class SliceExprish(Fuzzy):
             else:
                 return ('type_params', 'decorator_list')
 
+        # if isinstance(ast, Compare):
+        #     return (Compare,)
+
         if isinstance(ast, (ListComp, SetComp, DictComp, GeneratorExp)):
             return ('generators',)
 
@@ -2189,6 +2192,7 @@ class SliceExprish(Fuzzy):
             Global:           (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
             Nonlocal:         glbucket,
             'ClassDef_bases': self.Bucket('bases', 'elts', 0, 0, True, FST('class tmp(): pass')),
+            # Compare:          self.Bucket(None, None, 2, 2, False, FST('a < b', Compare)),
             'Call_args':      self.Bucket('args', 'elts', 0, 0, True, FST('call()')),
             'generators':     self.Bucket('generators', None, 1, 0, False, FST('', '_comprehensions')),
             comprehension:    self.Bucket('ifs', None, 0, 0, False, FST('', '_comprehension_ifs')),

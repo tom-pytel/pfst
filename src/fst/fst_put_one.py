@@ -2584,11 +2584,15 @@ def _put_one_raw(
     if code is None:
         raise ValueError('cannot delete in raw put')
 
+    to = options.get('to')
+
+    if to is not None and not isinstance(to, fst.FST):
+        raise ValueError(f"expecting FST for 'to' option, got {to.__class__.__name__}")
+
     put_lines = code_as_lines(code)
 
     ast = self.a
     root = self.root
-    to = options.get('to')
     pars = bool(fst.FST.get_option('pars', options))
     loc = None
 

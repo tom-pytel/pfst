@@ -450,6 +450,9 @@ def _code_as_expr(
             if not allow_Tuple_of_Slice and any(isinstance(e, Slice) for e in ast.elts):
                 raise NodeError(f'{_expecting(parse)}, got Tuple with a Slice in it', rawable=True)
 
+            if parse is not parse_expr_slice:  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, even though those can't be gotten alone organically, maybe we shouldn't even bother?
+                code._maybe_add_singleton_tuple_comma()
+
     else:
         if is_ast := isinstance(code, AST):
             if not isinstance(code, expr):

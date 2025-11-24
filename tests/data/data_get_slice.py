@@ -15512,6 +15512,625 @@ r'''class cls[T](a, b=c, *d): pass'''),
 r'''**NodeError('cannot get this ClassDef.bases slice because it includes parts after a keyword')**'''),
 ],
 
+'Compare__all': [  # ................................................................................
+
+('', 0, 1, None, {'_verify_get': False}, (None,
+r'''(a) is not (b) not in (c)'''),
+r'''(b) not in (c)''', r'''
+Compare - ROOT 0,0..0,14
+  .left Name 'b' Load - 0,1..0,2
+  .ops[1]
+   0] NotIn - 0,4..0,10
+  .comparators[1]
+   0] Name 'c' Load - 0,12..0,13
+''',
+r'''(a)''', r'''
+Compare - ROOT 0,0..0,3
+  .left Name 'a' Load - 0,1..0,2
+'''),
+
+('', 1, 2, None, {'_verify_get': False}, (None,
+r'''(a) is not (b) not in (c)'''),
+r'''(a) not in (c)''', r'''
+Compare - ROOT 0,0..0,14
+  .left Name 'a' Load - 0,1..0,2
+  .ops[1]
+   0] NotIn - 0,4..0,10
+  .comparators[1]
+   0] Name 'c' Load - 0,12..0,13
+''',
+r'''(b)''', r'''
+Compare - ROOT 0,0..0,3
+  .left Name 'b' Load - 0,1..0,2
+'''),
+
+('', 1, 2, None, {'_verify_get': False, 'del_op_side': 'right'}, (None,
+r'''(a) is not (b) not in (c)'''),
+r'''(a) is not (c)''', r'''
+Compare - ROOT 0,0..0,14
+  .left Name 'a' Load - 0,1..0,2
+  .ops[1]
+   0] IsNot - 0,4..0,10
+  .comparators[1]
+   0] Name 'c' Load - 0,12..0,13
+''',
+r'''(b)''', r'''
+Compare - ROOT 0,0..0,3
+  .left Name 'b' Load - 0,1..0,2
+'''),
+
+('', 2, 3, None, {'_verify_get': False}, (None,
+r'''(a) is not (b) not in (c)'''),
+r'''(a) is not (b)''', r'''
+Compare - ROOT 0,0..0,14
+  .left Name 'a' Load - 0,1..0,2
+  .ops[1]
+   0] IsNot - 0,4..0,10
+  .comparators[1]
+   0] Name 'b' Load - 0,12..0,13
+''',
+r'''(c)''', r'''
+Compare - ROOT 0,0..0,3
+  .left Name 'c' Load - 0,1..0,2
+'''),
+
+('', 0, 2, None, {'_verify_self': False}, (None,
+r'''(a) is not (b) not in (c)'''),
+r'''(c)''', r'''
+Compare - ROOT 0,0..0,3
+  .left Name 'c' Load - 0,1..0,2
+''',
+r'''(a) is not (b)''', r'''
+Compare - ROOT 0,0..0,14
+  .left Name 'a' Load - 0,1..0,2
+  .ops[1]
+   0] IsNot - 0,4..0,10
+  .comparators[1]
+   0] Name 'b' Load - 0,12..0,13
+'''),
+
+('', 0, 2, None, {'_verify_self': False, 'norm_self': True}, (None,
+r'''(a) is not (b) not in (c)'''),
+r'''(c)''',
+r'''Name 'c' Load - ROOT 0,1..0,2''',
+r'''(a) is not (b)''', r'''
+Compare - ROOT 0,0..0,14
+  .left Name 'a' Load - 0,1..0,2
+  .ops[1]
+   0] IsNot - 0,4..0,10
+  .comparators[1]
+   0] Name 'b' Load - 0,12..0,13
+'''),
+
+('', 1, 3, None, {'_verify_self': False}, (None,
+r'''(a) is not (b) not in (c)'''),
+r'''(a)''', r'''
+Compare - ROOT 0,0..0,3
+  .left Name 'a' Load - 0,1..0,2
+''',
+r'''(b) not in (c)''', r'''
+Compare - ROOT 0,0..0,14
+  .left Name 'b' Load - 0,1..0,2
+  .ops[1]
+   0] NotIn - 0,4..0,10
+  .comparators[1]
+   0] Name 'c' Load - 0,12..0,13
+'''),
+
+('', 1, 3, None, {'_verify_self': False, 'norm_self': True}, (None,
+r'''(a) is not (b) not in (c)'''),
+r'''(a)''',
+r'''Name 'a' Load - ROOT 0,1..0,2''',
+r'''(b) not in (c)''', r'''
+Compare - ROOT 0,0..0,14
+  .left Name 'b' Load - 0,1..0,2
+  .ops[1]
+   0] NotIn - 0,4..0,10
+  .comparators[1]
+   0] Name 'c' Load - 0,12..0,13
+'''),
+
+('', 0, 3, None, {}, (None,
+r'''(a) is not (b) not in (c)'''),
+r'''**ValueError('cannot cut all nodes from Compare')**''',
+r'''(a) is not (b) not in (c)''', r'''
+Compare - ROOT 0,0..0,25
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] IsNot - 0,4..0,10
+   1] NotIn - 0,15..0,21
+  .comparators[2]
+   0] Name 'b' Load - 0,12..0,13
+   1] Name 'c' Load - 0,23..0,24
+'''),
+
+('', 0, 1, None, {'norm': True}, (None,
+r'''(a) is not (b) not in (c)'''),
+r'''(b) not in (c)''', r'''
+Compare - ROOT 0,0..0,14
+  .left Name 'b' Load - 0,1..0,2
+  .ops[1]
+   0] NotIn - 0,4..0,10
+  .comparators[1]
+   0] Name 'c' Load - 0,12..0,13
+''',
+r'''(a)''',
+r'''Name 'a' Load - ROOT 0,1..0,2'''),
+
+('', 1, 2, None, {'norm_get': True}, (None,
+r'''(a) is not (b) not in (c)'''),
+r'''(a) not in (c)''', r'''
+Compare - ROOT 0,0..0,14
+  .left Name 'a' Load - 0,1..0,2
+  .ops[1]
+   0] NotIn - 0,4..0,10
+  .comparators[1]
+   0] Name 'c' Load - 0,12..0,13
+''',
+r'''(b)''',
+r'''Name 'b' Load - ROOT 0,1..0,2'''),
+
+('', 1, 2, None, {'norm_get': True, 'del_op_side': 'right'}, (None,
+r'''(a) is not (b) not in (c)'''),
+r'''(a) is not (c)''', r'''
+Compare - ROOT 0,0..0,14
+  .left Name 'a' Load - 0,1..0,2
+  .ops[1]
+   0] IsNot - 0,4..0,10
+  .comparators[1]
+   0] Name 'c' Load - 0,12..0,13
+''',
+r'''(b)''',
+r'''Name 'b' Load - ROOT 0,1..0,2'''),
+
+('', 2, 3, None, {'norm_get': True}, (None,
+r'''(a) is not (b) not in (c)'''),
+r'''(a) is not (b)''', r'''
+Compare - ROOT 0,0..0,14
+  .left Name 'a' Load - 0,1..0,2
+  .ops[1]
+   0] IsNot - 0,4..0,10
+  .comparators[1]
+   0] Name 'b' Load - 0,12..0,13
+''',
+r'''(c)''',
+r'''Name 'c' Load - ROOT 0,1..0,2'''),
+
+('', 1, 2, None, {'_verify_get': False, 'trivia': (False, False)}, (None, r'''
+a <
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+< c
+'''), r'''
+a # line
+# post
+
+# post post
+
+< c
+''', r'''
+Compare - ROOT 0,0..5,3
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Lt - 5,0..5,1
+  .comparators[1]
+   0] Name 'c' Load - 5,2..5,3
+''',
+r'''b''', r'''
+Compare - ROOT 0,0..0,1
+  .left Name 'b' Load - 0,0..0,1
+'''),
+
+('', 1, 2, None, {'_verify_get': False, 'trivia': (False, 'line')}, (None, r'''
+a <
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+< c
+'''), r'''
+a
+# post
+
+# post post
+
+< c
+''', r'''
+Compare - ROOT 0,0..5,3
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Lt - 5,0..5,1
+  .comparators[1]
+   0] Name 'c' Load - 5,2..5,3
+''', r'''
+
+b # line
+
+''', r'''
+Compare - ROOT 0,0..2,0
+  .left Name 'b' Load - 1,0..1,1
+'''),
+
+('', 1, 2, None, {'_verify_get': False, 'trivia': ('block', 'block')}, (None, r'''
+a <
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+< c
+'''), r'''
+a
+
+# post post
+
+< c
+''', r'''
+Compare - ROOT 0,0..4,3
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Lt - 4,0..4,1
+  .comparators[1]
+   0] Name 'c' Load - 4,2..4,3
+''', r'''
+
+# pre
+b # line
+# post
+
+''', r'''
+Compare - ROOT 0,0..4,0
+  .left Name 'b' Load - 2,0..2,1
+'''),
+
+('', 1, 2, None, {'_verify_get': False, 'trivia': ('block+', 'block+')}, (None, r'''
+a <
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+< c
+'''), r'''
+a
+# post post
+
+< c
+''', r'''
+Compare - ROOT 0,0..3,3
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Lt - 3,0..3,1
+  .comparators[1]
+   0] Name 'c' Load - 3,2..3,3
+''', r'''
+
+
+# pre
+b # line
+# post
+
+
+''', r'''
+Compare - ROOT 0,0..6,0
+  .left Name 'b' Load - 3,0..3,1
+'''),
+
+('', 1, 2, None, {'_verify_get': False, 'trivia': ('all', 'all')}, (None, r'''
+a <
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+< c
+'''), r'''
+a
+
+< c
+''', r'''
+Compare - ROOT 0,0..2,3
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Lt - 2,0..2,1
+  .comparators[1]
+   0] Name 'c' Load - 2,2..2,3
+''', r'''
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+''', r'''
+Compare - ROOT 0,0..8,0
+  .left Name 'b' Load - 4,0..4,1
+'''),
+
+('', 1, 2, None, {'_verify_get': False, 'trivia': ('all+', 'all+')}, (None, r'''
+a <
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+< c
+'''), r'''
+a
+< c
+''', r'''
+Compare - ROOT 0,0..1,3
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Lt - 1,0..1,1
+  .comparators[1]
+   0] Name 'c' Load - 1,2..1,3
+''', r'''
+
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+
+''', r'''
+Compare - ROOT 0,0..10,0
+  .left Name 'b' Load - 5,0..5,1
+'''),
+
+('', 1, 2, None, {'_verify_get': False, 'trivia': (False, False), 'del_op_side': 'right'}, (None, r'''
+a <
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+< c
+'''), r'''
+a <
+
+# pre pre
+
+# pre
+c
+''', r'''
+Compare - ROOT 0,0..5,1
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Lt - 0,2..0,3
+  .comparators[1]
+   0] Name 'c' Load - 5,0..5,1
+''',
+r'''b''', r'''
+Compare - ROOT 0,0..0,1
+  .left Name 'b' Load - 0,0..0,1
+'''),
+
+('', 1, 2, None, {'_verify_get': False, 'trivia': (False, 'line'), 'del_op_side': 'right'}, (None, r'''
+a <
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+< c
+'''), r'''
+a <
+
+# pre pre
+
+# pre
+c
+''', r'''
+Compare - ROOT 0,0..5,1
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Lt - 0,2..0,3
+  .comparators[1]
+   0] Name 'c' Load - 5,0..5,1
+''', r'''
+
+b # line
+
+''', r'''
+Compare - ROOT 0,0..2,0
+  .left Name 'b' Load - 1,0..1,1
+'''),
+
+('', 1, 2, None, {'_verify_get': False, 'trivia': ('block', 'block'), 'del_op_side': 'right'}, (None, r'''
+a <
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+< c
+'''), r'''
+a <
+
+# pre pre
+
+c
+''', r'''
+Compare - ROOT 0,0..4,1
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Lt - 0,2..0,3
+  .comparators[1]
+   0] Name 'c' Load - 4,0..4,1
+''', r'''
+
+# pre
+b # line
+# post
+
+''', r'''
+Compare - ROOT 0,0..4,0
+  .left Name 'b' Load - 2,0..2,1
+'''),
+
+('', 1, 2, None, {'_verify_get': False, 'trivia': ('block+', 'block+'), 'del_op_side': 'right'}, (None, r'''
+a <
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+< c
+'''), r'''
+a <
+
+# pre pre
+c
+''', r'''
+Compare - ROOT 0,0..3,1
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Lt - 0,2..0,3
+  .comparators[1]
+   0] Name 'c' Load - 3,0..3,1
+''', r'''
+
+
+# pre
+b # line
+# post
+
+
+''', r'''
+Compare - ROOT 0,0..6,0
+  .left Name 'b' Load - 3,0..3,1
+'''),
+
+('', 1, 2, None, {'_verify_get': False, 'trivia': ('all', 'all'), 'del_op_side': 'right'}, (None, r'''
+a <
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+< c
+'''), r'''
+a <
+
+c
+''', r'''
+Compare - ROOT 0,0..2,1
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Lt - 0,2..0,3
+  .comparators[1]
+   0] Name 'c' Load - 2,0..2,1
+''', r'''
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+''', r'''
+Compare - ROOT 0,0..8,0
+  .left Name 'b' Load - 4,0..4,1
+'''),
+
+('', 1, 2, None, {'_verify_get': False, 'trivia': ('all+', 'all+'), 'del_op_side': 'right'}, (None, r'''
+a <
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+< c
+'''), r'''
+a <
+c
+''', r'''
+Compare - ROOT 0,0..1,1
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Lt - 0,2..0,3
+  .comparators[1]
+   0] Name 'c' Load - 1,0..1,1
+''', r'''
+
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+
+''', r'''
+Compare - ROOT 0,0..10,0
+  .left Name 'b' Load - 5,0..5,1
+'''),
+],
+
 'Call_args': [  # ................................................................................
 
 ('', 0, 0, None, {}, (None,

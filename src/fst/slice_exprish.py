@@ -31,6 +31,7 @@ __all__ = [
 
 _LocFunc = Callable[[list[AST], int], fstloc]  # location function for child with first param being container (of ASTs which belong to FSTs) and second index in that container, e.g. Dict.keys[idx] (because can be `**`) or comprehension.ifs which includes the `if`
 
+_re_open_delim_or_space = re.compile(r'[({\s[]')  # this is a special set of delimiter openers which are considered to not need an aesthetic space after
 _re_close_delim_or_space_or_end = re.compile(r'[)}\s\]:]|$')  # this is a special set of terminations which are considered to not need an aesthetic space before if a slice put ends with a non-space right before them
 
 _re_sep_line_nonexpr_end = {  # empty line with optional separator and line continuation or a pure comment line
@@ -410,7 +411,7 @@ def get_slice_sep(
     len_body: int,
     cut: bool,
     ast: AST,
-    ast_last: AST,
+    ast_last: AST | None,
     loc_first: fstloc,
     loc_last: fstloc,
     bound_ln: int,
@@ -424,6 +425,7 @@ def get_slice_sep(
     sep: str = ',',
     self_tail_sep: bool | Literal[0, 1] | None = None,
     ret_tail_sep: bool | Literal[0, 1] | None = None,
+    set_ast_loc: bool = True,
 ) -> fst.FST:
     """Copy slice sequence source, dedent it, and create a new `FST` from that source and the new `AST` already made
     with the old locations (which will be updated). If the operation is a cut then the source in `self` will also be
@@ -442,8 +444,9 @@ def get_slice_sep(
     **Parameters:**
     - `start`, `stop`, `len_body`: Slice parameters, `len_body` being current length of field.
     - `ast`: The already built new `AST` that is being gotten. The elements being gotten must be in this with their
-        current locations in the `self`.
+        current locations in the `self`. The insides of this are not accessed, just the location is set.
     - `ast_last`: The `AST` of the last element copied or cut, not assumend to have `.f` `FST` attribute to begin with.
+        Can be `None` if not doing separators.
     - `loc_first`: The full location of the first element copied or cut, parentheses included.
     - `loc_last`: The full location of the last element copied or cut, parentheses included.
     - (`bound_ln`, `bound_col`): End of previous element (past pars) or start of container (just past
@@ -470,6 +473,8 @@ def get_slice_sep(
         - `False`: Always remove if present.
         - `1`: Add if not present and single element.
         - `0`: Remove if not aesthetically significant (present on same line as end of element), otherwise leave.
+    - `set_ast_loc`: Whether to set the `ast` `(lineno, col_offset, end_lineno, end_col_offset)` location or not. For
+        special cases like returning an existing expression without container `AST`.
     """
 
     lines = self.root._lines
@@ -514,20 +519,22 @@ def get_slice_sep(
 
     # set location of root node and make the actual FST
 
-    ast.lineno = copy_ln + 1
-    ast.col_offset = lines[copy_ln].c2b(copy_col)
-    ast.end_lineno = copy_end_ln + 1
-    ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
+    if set_ast_loc:
+        ast.lineno = copy_ln + 1
+        ast.col_offset = lines[copy_ln].c2b(copy_col)
+        ast.end_lineno = copy_end_ln + 1
+        ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
 
     fst_, params_offset = self._make_fst_and_dedent(self, ast, copy_loc, prefix, suffix,
                                                     del_loc if cut else None,
                                                     [del_indent] if del_indent and del_loc.end_col else None,
                                                     docstr=False)  # docstr False because none of the things handled by this function can have any form of docstring
 
-    ast.col_offset = 0  # before prefix
-    ast.end_col_offset = fst_._lines[-1].lenbytes  # after suffix
+    if set_ast_loc:
+        ast.col_offset = 0  # before prefix
+        ast.end_col_offset = fst_._lines[-1].lenbytes  # after suffix
 
-    fst_._touch()
+        fst_._touch()
 
     # add / remove trailing separators as needed
 
@@ -682,7 +689,7 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
     # locations
 
     if not is_first:  # if not first then bound start is at end of previous element
-        _, _, bound_ln, bound_col = body2[start - 1].f.pars()  # we don't use locfunc(body2, start - 1) because currenly that only returns a different BEGINNING location, so end_ln and end_col will be same
+        _, _, bound_ln, bound_col = body2[start - 1].f.pars()  # we don't use locfunc(body2, start - 1) because currenly that only returns a different BEGINNING location and end_ln and end_col are same as this
 
     if not is_ins:  # replace or delete, location is element span
         loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body2, locfunc)
@@ -782,7 +789,7 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
 
             put_col = copy_col  # maybe leave the space between previous separator or element and self intact
 
-            if not sep and not lines[put_ln][put_col - 1].isspace():  # if not doing separator there will be no end pass to separate these if there is no space between these so we need to insert space here
+            if not sep and not _re_open_delim_or_space.match(lines[put_ln], put_col - 1):  # if not doing separator and immediately follows non-space-non-delimiter open there will be no end pass to separate these if there is no space between these so we need to insert space here
                 fst_._put_src(' ', 0, 0, 0, 0, False)
 
         if not put_lines[-1]:  # slice put ends with pure newline?
@@ -934,6 +941,7 @@ def get_slice_nosep(
     bound_end_ln: int,
     bound_end_col: int,
     options: Mapping[str, Any],
+    set_ast_loc: bool = True,
 ) -> fst.FST:
     """Copy slice sequence source without separators, dedent it, and create a new `FST` from that source and the new
     `AST` already made with the old locations (which will be updated). If the operation is a cut then the source in
@@ -955,10 +963,13 @@ def get_slice_nosep(
     - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters) or just before space before next
         element which is not part of this sequence.
     - `options`: The dictionary of options passed to the put function. Options used are `trivia`.
+    - `set_ast_loc`: Whether to set the `ast` `(lineno, col_offset, end_lineno, end_col_offset)` location or not. For
+        special cases like returning an existing expression without container `AST`.
     """
 
     return get_slice_sep(self, start, stop, len_body, cut, ast, None, loc_first, loc_last,
-                         bound_ln, bound_col, bound_end_ln, bound_end_col, options, '', '', '', '')
+                         bound_ln, bound_col, bound_end_ln, bound_end_col, options, '', '', '', '', None, None,
+                         set_ast_loc)
 
 
 def put_slice_nosep(

@@ -115,8 +115,13 @@ _GetOneRet = Union['fst.FST', None, str, constant]
 
 
 def _params_Compare(self: fst.FST, idx: int | None) -> tuple[int, str, AST | list[AST]]:
-    """Convert `idx` of combined Compare `left`, `ops` and `comparators` fields into parameters which access the actual
-    field."""
+    """Convert `idx` of combined Compare all `left` and `comparators` fields into parameters which access the actual
+    field.
+
+    **Returns:**
+    - `(idx, field, child)`: The real index (or `None` if is `left`), field name and field value (either `AST` of `left`
+        or list of `AST`s of `comparators`).
+    """
 
     ast         = self.a
     comparators = ast.comparators
@@ -182,7 +187,7 @@ def _maybe_fix_copy(self: fst.FST, options: Mapping[str, Any]) -> None:
             elif any(isinstance(e, NamedExpr) and not e.f.pars().n for e in ast.elts):  # unparenthesized walrus in naked tuple?
                 need_pars = True
 
-            self._maybe_add_singleton_tuple_comma(is_par)  # this exists because of copy lone Starred out of a Subscript.slice
+            self._maybe_add_singleton_tuple_comma(is_par)  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, even though those can't be gotten alone organically, maybe we shouldn't even bother?
 
         elif is_walrus and not self.pars().n:
             need_pars = True

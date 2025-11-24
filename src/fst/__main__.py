@@ -1,5 +1,3 @@
-from typing import get_args
-
 from .fst import parse
 from .parsex import _PARSE_MODE_FUNCS
 

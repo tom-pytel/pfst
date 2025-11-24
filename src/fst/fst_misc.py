@@ -933,8 +933,8 @@ def fixup_field_body(ast: AST, field: str | None, only_list: bool) -> tuple[str,
         if (field := _DEFAULT_AST_FIELD.get(ast.__class__, fixup_field_body)) is fixup_field_body:  # fixup_field_body is sentinel
             raise ValueError(f"{ast.__class__.__name__} has no default body field")
 
-        if field.startswith('_'):  # virtual field like Dict._all
-            return field, []
+    if field.startswith('_'):  # virtual field like Dict._all
+        return field, []
 
     if (body := getattr(ast, field, fixup_field_body)) is fixup_field_body:
         raise ValueError(f"{ast.__class__.__name__} has no field '{field}'")
@@ -1583,7 +1583,7 @@ def _maybe_add_singleton_tuple_comma(self: fst.FST, is_par: bool | None = None) 
 
     # assert isinstance(self.a, Tuple)
 
-    if (elts := self.a.elts) and len(elts) == 1:
+    if len(elts := self.a.elts) == 1:
         self._maybe_ins_separator((f := elts[0].f).end_ln, f.end_col, False, self.end_ln,
                                   self.end_col - (self._is_delimited_seq() if is_par is None else is_par))
 

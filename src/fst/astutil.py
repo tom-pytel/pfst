@@ -1218,7 +1218,7 @@ _SYNTAX_ORDERED_CHILDREN = {
 
     Dict:         lambda ast: list(chain_from_iterable(zip(ast.keys, ast.values, strict=True))),
     Compare:      lambda ast: [ast.left] + (list(chain_from_iterable(zip(ops, ast.comparators, strict=True)))
-                                            if len(ops := ast.ops) > 1 else [ops[0], ast.comparators[0]]),
+                                            if len(ops := ast.ops) != 1 else [ops[0], ast.comparators[0]]),
     Call:         _syntax_ordered_children_Call,
     arguments:    _syntax_ordered_children_arguments,
     MatchMapping: lambda ast: list(chain_from_iterable(zip(ast.keys, ast.patterns, strict=True))),

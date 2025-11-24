@@ -1,21 +1,19 @@
 # Overview
 
-This module exists in order to facilitate quick and easy high level editing of Python source in the form of an `AST` tree while preserving formatting. E.g:
+This module exists in order to facilitate quick and easy high level editing of Python source in the form of an `AST` tree while preserving formatting. It is meant to allow you to change python code functionality while not having to deal with the miniutae of precedence, indentation, parentheses, commas, comments, docstrings, semicolons, line continuations, else vs. elif, and all the various other niche special cases of Python syntax across different versions of the language.
+
+Example:
 
 ```py
->>> import ast, fst
+>>> import fst
 
 >>> ext_ast = fst.parse('if a: b = c, d  # comment')
 
 >>> print(fst.unparse(ext_ast))  # formatting is preserved
 if a: b = c, d  # comment
-
->>> print(ast.unparse(ext_ast))  # just a normal AST with metadata
-if a:
-    b = (c, d)
 ```
 
-Operations on the tree preserve formatting.
+Straightforward operations.
 
 ```py
 >>> ext_ast.f.body[0].body[0].value.elts[1:1] = 'u,\nv  # blah'
@@ -24,15 +22,21 @@ Operations on the tree preserve formatting.
 if a: b = (c, u,
           v,  # blah
           d)  # comment
+```
 
->>> print(ast.unparse(ext_ast))  # AST is kept up to date
+The tree is just normal `AST` with metadata.
+
+```py
+>>> import ast
+
+>>> print(ast.unparse(ext_ast))
 if a:
     b = (c, u, v, d)
 ```
 
-`fst` grew out of a frustration of not being able to just edit python source to change some bit of functionality without having to deal with the miniutae of precedence, indentation, parentheses, commas, comments, docstrings, semicolons, line continuations, else vs. elif, etc... `fst` deals with all of these automatically and especially the many, many niche special cases of Python syntax.
-
 `fst` works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute which keep extra structure information, the original source, and provide the interface to format-preserving operations. Each operation through `fst` is a simultaneous edit of the `AST` tree and the source code and those are kept synchronized so that the current source will always parse to the current tree.
+
+Please note `fst` is not written for speed but rather for ease of editing, not necessarily to lint an entire codebase, there are better options for that.
 
 # Links
 
@@ -55,8 +59,6 @@ From GitHub, after cloning for development:
     pip install -e .[dev]
 
 # More Examples
-
-Indentation is automatic.
 
 ```py
 >>> from fst import *
@@ -184,7 +186,7 @@ This is intended to allow something which is not aware of `fst` to edit the `AST
 formatting where it can.
 
 ```py
->>> def pure_ast_operation(node: AST):
+>>> def pure_AST_operation(node: AST):
 ...    class Transform(ast.NodeTransformer):
 ...        def visit_arg(self, node):
 ...            return ast.arg('NEW_' + node.arg.upper(), node.annotation)
@@ -218,7 +220,7 @@ formatting where it can.
 ```py
 >>> marked = f.mark()
 
->>> pure_ast_operation(f.a)
+>>> pure_AST_operation(f.a)
 
 >>> reconciled = f.reconcile(marked)
 ```
@@ -267,14 +269,18 @@ This package is not finished but functional enough that it can be useful.
 
 * Prescribed get / put slice from / to:
   * `BoolOp.values`
-  * `Compare`
-  * `ClassDef.keywords`
-  * `Call.keywords`
+  * `FunctionsDef/AsyncFunctionDef/ClassDef.args`
+  * `ClassDef.bases+keywords`
+  * `Call.args+keywords`
   * `MatchClass.patterns`
+  * `MatchClass.patterns+kwd_attrs:kwd_patterns`
   * `JoinedStr.values`
   * `TemplateStr.values`
 
-* Improve comment and whitespace handling.
+* Improve comment and whitespace handling, especially allow get / put comments in single element operations where it may
+apply.
+
+* Make reconcile use all slice operations to preserve more formatting.
 
 * LOTS of cleaning up.
 
