@@ -2044,8 +2044,13 @@ class SliceExprish(Fuzzy):
         if slice_field is None:
             slice_field = field
 
-        src_len = len(src_body := getattr(src.a, field or 'keys'))
-        dst_len = len(dst_body := getattr(dst.a, field or 'keys'))
+        if is_compare := isinstance(src.a, Compare):
+            src_len = len(src_body := getattr(src.a, 'comparators')) + 1
+            dst_len = len(dst_body := getattr(dst.a, 'comparators')) + 1
+        else:
+            src_len = len(src_body := getattr(src.a, field or 'keys'))
+            dst_len = len(dst_body := getattr(dst.a, field or 'keys'))
+
         src_start = randint(0, src_len)
         src_stop = randint(src_start, src_len)
         dst_start = randint(0, dst_len)
@@ -2066,6 +2071,15 @@ class SliceExprish(Fuzzy):
                 else:
                     break  # can actually get here because of initially lower length containers than we allow
 
+        if is_compare:  # can't get empty slice from or insert into Compare
+            if src_stop == src_start:
+                src_stop += not src_start
+                src_start -= bool(src_start)
+
+            if dst_stop == dst_start:
+                dst_stop += not dst_start
+                dst_start -= bool(dst_start)
+
         cut = False if src_len - (src_stop - src_start) < min_src else bool(randint(0, 1))
 
         if one:
@@ -2080,26 +2094,31 @@ class SliceExprish(Fuzzy):
             print(f'    {dst_start = }, {dst_stop = }, {dst_len = }, {min_dst = }, {dst_trivia = }')
             print('   PRE SRC: ', src, src.src)
             print('   PRE DST: ', dst, dst.src)
+            # if src.parent: print('   PRE SRC PARENT: ', src.parent, src.parent.src)
+            # if dst.parent: print('   PRE DST PARENT: ', dst.parent, dst.parent.src)
             # src.dump()
 
-        src_elts = src_body[src_start : src_stop]
+        if not is_compare:
+            src_elts = src_body[src_start : src_stop]
 
-        if not field:  # Dict or MatchMapping
-            src_elts.extend(getattr(src.a, 'values' if isinstance(src.a, Dict) else 'patterns')[src_start : src_stop])
+            if not field:  # Dict or MatchMapping
+                src_elts.extend(getattr(src.a, 'values' if isinstance(src.a, Dict) else 'patterns')[src_start : src_stop])
 
         src_rest = bool(getattr(src.a, 'rest', False))  # because MatchSequence includes rest in virtual field but we don't deal with it
         src_start_ = src_start if src_start >= src_len or randint(0, 1) else src_start - src_len - src_rest  # randomly change index to negative (referring to same location)
         src_stop_ = src_stop if src_stop >= src_len or randint(0, 1) else src_stop - src_len - src_rest
 
+        # slice = src.get_slice(src_start, src_stop, field=field, cut=cut, trivia=src_trivia)
         slice = src.get_slice(src_start_, src_stop_, field=field, cut=cut, trivia=src_trivia)
 
-        slice_elts = getattr(slice.a, slice_field or 'keys')[:]
+        if not is_compare:
+            slice_elts = getattr(slice.a, slice_field or 'keys')[:]
 
-        if not slice_field:  # Dict or MatchMapping
-            slice_elts.extend(getattr(slice.a, 'values' if isinstance(src.a, Dict) else 'patterns'))
+            if not slice_field:  # Dict or MatchMapping
+                slice_elts.extend(getattr(slice.a, 'values' if isinstance(src.a, Dict) else 'patterns'))
 
-        if cut and not isinstance(src.a, (Global, Nonlocal)):
-            assert all(a is b for a, b in zip(src_elts, slice_elts))  # identity check
+            if cut and not isinstance(src.a, (Global, Nonlocal)):
+                assert all(a is b for a, b in zip(src_elts, slice_elts))  # identity check
 
         if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
             print('   SLICE:   ', slice, slice.src)
@@ -2110,18 +2129,21 @@ class SliceExprish(Fuzzy):
 
         dst.put_slice(slice, dst_start_, dst_stop_, field=field, one=one, trivia=dst_trivia)
 
-        if not one:
-            dst_elts = dst_body[dst_start : dst_start + (src_stop - src_start)]
+        if not is_compare:
+            if not one:
+                dst_elts = dst_body[dst_start : dst_start + (src_stop - src_start)]
 
-            if not field:  # Dict or MatchMapping
-                dst_elts.extend(getattr(dst.a, 'values' if isinstance(dst.a, Dict) else 'patterns')[dst_start : dst_start + (src_stop - src_start)])
+                if not field:  # Dict or MatchMapping
+                    dst_elts.extend(getattr(dst.a, 'values' if isinstance(dst.a, Dict) else 'patterns')[dst_start : dst_start + (src_stop - src_start)])
 
-            if not isinstance(src.a, (Global, Nonlocal)):
-                assert all(a is b for a, b in zip(dst_elts, slice_elts))  # identity check
+                if not isinstance(src.a, (Global, Nonlocal)):
+                    assert all(a is b for a, b in zip(dst_elts, slice_elts))  # identity check
 
         if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
             print('   POST SRC:', src, src.src)
             print('   POST DST:', dst, dst.src)
+            # if src.parent: print('   POST SRC PARENT: ', src.parent, src.parent.src)
+            # if dst.parent: print('   POST DST PARENT: ', dst.parent, dst.parent.src)
             # dst.dump()
             print()
 
@@ -2154,8 +2176,8 @@ class SliceExprish(Fuzzy):
             else:
                 return ('type_params', 'decorator_list')
 
-        # if isinstance(ast, Compare):
-        #     return (Compare,)
+        if isinstance(ast, Compare):
+            return (Compare,)
 
         if isinstance(ast, (ListComp, SetComp, DictComp, GeneratorExp)):
             return ('generators',)
@@ -2192,7 +2214,7 @@ class SliceExprish(Fuzzy):
             Global:           (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
             Nonlocal:         glbucket,
             'ClassDef_bases': self.Bucket('bases', 'elts', 0, 0, True, FST('class tmp(): pass')),
-            # Compare:          self.Bucket(None, None, 2, 2, False, FST('a < b', Compare)),
+            Compare:          self.Bucket(None, None, 2, 2, False, FST('a < b', Compare)),
             'Call_args':      self.Bucket('args', 'elts', 0, 0, True, FST('call()')),
             'generators':     self.Bucket('generators', None, 1, 0, False, FST('', '_comprehensions')),
             comprehension:    self.Bucket('ifs', None, 0, 0, False, FST('', '_comprehension_ifs')),
@@ -2253,10 +2275,14 @@ class SliceExprish(Fuzzy):
 
                     with FST.options(norm=False):
                         self.transfer('src > bkt:', cat, bucket.field, bucket.slice_field, exprish, bucket.fst, bucket.min_script, bucket.min_tmp, bucket.one)
+
+                        if self.verify:
+                            fst.verify()
+
                         self.transfer('src < bkt:', cat, bucket.field, bucket.slice_field, bucket.fst, exprish, bucket.min_tmp, bucket.min_script, bucket.one)
 
-                    if self.verify:
-                        fst.verify()
+                        if self.verify:
+                            fst.verify()
 
                     # input('Waiting...')
 

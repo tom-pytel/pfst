@@ -15709,15 +15709,15 @@ b # line
 
 < c
 '''), r'''
-a # line
+(a # line
 # post
 
 # post post
 
-< c
+< c)
 ''', r'''
-Compare - ROOT 0,0..5,3
-  .left Name 'a' Load - 0,0..0,1
+Compare - ROOT 0,1..5,3
+  .left Name 'a' Load - 0,1..0,2
   .ops[1]
    0] Lt - 5,0..5,1
   .comparators[1]
@@ -15741,15 +15741,15 @@ b # line
 
 < c
 '''), r'''
-a
+(a
 # post
 
 # post post
 
-< c
+< c)
 ''', r'''
-Compare - ROOT 0,0..5,3
-  .left Name 'a' Load - 0,0..0,1
+Compare - ROOT 0,1..5,3
+  .left Name 'a' Load - 0,1..0,2
   .ops[1]
    0] Lt - 5,0..5,1
   .comparators[1]
@@ -15776,14 +15776,14 @@ b # line
 
 < c
 '''), r'''
-a
+(a
 
 # post post
 
-< c
+< c)
 ''', r'''
-Compare - ROOT 0,0..4,3
-  .left Name 'a' Load - 0,0..0,1
+Compare - ROOT 0,1..4,3
+  .left Name 'a' Load - 0,1..0,2
   .ops[1]
    0] Lt - 4,0..4,1
   .comparators[1]
@@ -15812,13 +15812,13 @@ b # line
 
 < c
 '''), r'''
-a
+(a
 # post post
 
-< c
+< c)
 ''', r'''
-Compare - ROOT 0,0..3,3
-  .left Name 'a' Load - 0,0..0,1
+Compare - ROOT 0,1..3,3
+  .left Name 'a' Load - 0,1..0,2
   .ops[1]
    0] Lt - 3,0..3,1
   .comparators[1]
@@ -15849,12 +15849,12 @@ b # line
 
 < c
 '''), r'''
-a
+(a
 
-< c
+< c)
 ''', r'''
-Compare - ROOT 0,0..2,3
-  .left Name 'a' Load - 0,0..0,1
+Compare - ROOT 0,1..2,3
+  .left Name 'a' Load - 0,1..0,2
   .ops[1]
    0] Lt - 2,0..2,1
   .comparators[1]
@@ -15887,11 +15887,11 @@ b # line
 
 < c
 '''), r'''
-a
-< c
+(a
+< c)
 ''', r'''
-Compare - ROOT 0,0..1,3
-  .left Name 'a' Load - 0,0..0,1
+Compare - ROOT 0,1..1,3
+  .left Name 'a' Load - 0,1..0,2
   .ops[1]
    0] Lt - 1,0..1,1
   .comparators[1]
@@ -15926,17 +15926,17 @@ b # line
 
 < c
 '''), r'''
-a <
+(a <
 
 # pre pre
 
 # pre
-c
+c)
 ''', r'''
-Compare - ROOT 0,0..5,1
-  .left Name 'a' Load - 0,0..0,1
+Compare - ROOT 0,1..5,1
+  .left Name 'a' Load - 0,1..0,2
   .ops[1]
-   0] Lt - 0,2..0,3
+   0] Lt - 0,3..0,4
   .comparators[1]
    0] Name 'c' Load - 5,0..5,1
 ''',
@@ -15958,17 +15958,17 @@ b # line
 
 < c
 '''), r'''
-a <
+(a <
 
 # pre pre
 
 # pre
-c
+c)
 ''', r'''
-Compare - ROOT 0,0..5,1
-  .left Name 'a' Load - 0,0..0,1
+Compare - ROOT 0,1..5,1
+  .left Name 'a' Load - 0,1..0,2
   .ops[1]
-   0] Lt - 0,2..0,3
+   0] Lt - 0,3..0,4
   .comparators[1]
    0] Name 'c' Load - 5,0..5,1
 ''', r'''
@@ -15993,16 +15993,16 @@ b # line
 
 < c
 '''), r'''
-a <
+(a <
 
 # pre pre
 
-c
+c)
 ''', r'''
-Compare - ROOT 0,0..4,1
-  .left Name 'a' Load - 0,0..0,1
+Compare - ROOT 0,1..4,1
+  .left Name 'a' Load - 0,1..0,2
   .ops[1]
-   0] Lt - 0,2..0,3
+   0] Lt - 0,3..0,4
   .comparators[1]
    0] Name 'c' Load - 4,0..4,1
 ''', r'''
@@ -16029,15 +16029,15 @@ b # line
 
 < c
 '''), r'''
-a <
+(a <
 
 # pre pre
-c
+c)
 ''', r'''
-Compare - ROOT 0,0..3,1
-  .left Name 'a' Load - 0,0..0,1
+Compare - ROOT 0,1..3,1
+  .left Name 'a' Load - 0,1..0,2
   .ops[1]
-   0] Lt - 0,2..0,3
+   0] Lt - 0,3..0,4
   .comparators[1]
    0] Name 'c' Load - 3,0..3,1
 ''', r'''
@@ -16066,14 +16066,14 @@ b # line
 
 < c
 '''), r'''
-a <
+(a <
 
-c
+c)
 ''', r'''
-Compare - ROOT 0,0..2,1
-  .left Name 'a' Load - 0,0..0,1
+Compare - ROOT 0,1..2,1
+  .left Name 'a' Load - 0,1..0,2
   .ops[1]
-   0] Lt - 0,2..0,3
+   0] Lt - 0,3..0,4
   .comparators[1]
    0] Name 'c' Load - 2,0..2,1
 ''', r'''
@@ -16092,6 +16092,45 @@ Compare - ROOT 0,0..8,0
 '''),
 
 ('', 1, 2, None, {'_verify_get': False, 'trivia': ('all+', 'all+'), 'del_op_side': 'right'}, (None, r'''
+a <
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+< c
+'''), r'''
+(a <
+c)
+''', r'''
+Compare - ROOT 0,1..1,1
+  .left Name 'a' Load - 0,1..0,2
+  .ops[1]
+   0] Lt - 0,3..0,4
+  .comparators[1]
+   0] Name 'c' Load - 1,0..1,1
+''', r'''
+
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+
+''', r'''
+Compare - ROOT 0,0..10,0
+  .left Name 'b' Load - 5,0..5,1
+'''),
+
+('', 1, 2, None, {'_verify_get': False, 'trivia': ('all+', 'all+'), 'del_op_side': 'right', 'pars': False}, (None, r'''
 a <
 
 # pre pre

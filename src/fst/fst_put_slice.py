@@ -5,6 +5,7 @@ This module contains functions which are imported as methods in the `FST` class 
 
 from __future__ import annotations
 
+import re
 from typing import Any, Callable, Literal, Mapping, NamedTuple, Union
 
 from . import fst
@@ -221,6 +222,9 @@ from .fst_get_slice import (
 # (MatchClass, 'kwd_patterns'):         # pattern*
 
 
+_re_empty_line_or_cont = re.compile(r'[ \t]+\\$')  # empty line continuation with at least one leading whitespace
+
+
 class slicestatic(NamedTuple):
     code_to:       Callable[[fst.FST, Code, bool, dict], fst.FST]
     sep:           str
@@ -241,7 +245,7 @@ def _set_loc_whole(self: fst.FST) -> None:  # self must be root
 
 def _move_Compare_left_into_comparators(self: fst.FST) -> None:
     """Move the `left` node of a `Compare` into `comparators` as the first node and insert a placeholder alignment
-    operator into `ops`. Set all `pfields accordingly."""
+    operator into `ops`. Set all `pfield`s accordingly."""
 
     ast = self.a
     comparators = ast.comparators
@@ -252,10 +256,11 @@ def _move_Compare_left_into_comparators(self: fst.FST) -> None:
     ast.left = None
 
     comparators.insert(0, left)
-    ops.insert(0, fst.FST(Name('', ctx=Load(), lineno=left_lineno, col_offset=left_col_offset,
-                               end_lineno=left_lineno, end_col_offset=left_col_offset), ['']).a)  # this is to keep alignment between ops and comparators so that locs and pars() continue to work
+    ops.insert(0, fst.FST(Set([], lineno=left_lineno, col_offset=left_col_offset,
+                              end_lineno=left_lineno, end_col_offset=left_col_offset),  # we use a Set because it can be empty and has no `ctx`
+                          self, astfield('ops', 0)).a)  # this is to keep alignment between ops and comparators so that locs and pars() continue to work
 
-    for i, (o, b) in enumerate(zip(ops, comparators, strict=True)):  # adjust all parent fields for inserted `left` at start
+    for i, (o, b) in enumerate(zip(ops, comparators, strict=True)):  # adjust all parent fields for inserted `left` and placeholder op at start
         o.f.pfield = astfield('ops', i)
         b.f.pfield = astfield('comparators', i)
 
@@ -1520,7 +1525,8 @@ def _put_slice_Compare__all(
     """In order to carry out this operation over all the operands we temporarily add `left` to `comparators` to make
     that a contiguous list of everything since source-wise it already is. When deleting we also need to delete an extra
     operator, which defaults to the one on the left side of the comparators being deleted but can be overridden with
-    `del_op_side='right'` (which is treated as a hint so if not possible no error is raised and other one is deleted)."""
+    `del_op_side='right'` (which is treated as a hint so if not possible no error is raised and other one is deleted).
+    """
 
     fst_ = _code_to_slice_Compare__all(self, code, one, options)
     ast = self.a
@@ -1529,6 +1535,8 @@ def _put_slice_Compare__all(
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
     is_del = not fst_
+    is_first = not start
+    is_last = stop == len_body
 
     if is_del:
         if start == stop:
@@ -1537,18 +1545,18 @@ def _put_slice_Compare__all(
         if len_slice == len_body:
             raise ValueError('cannot delete all Compare elements')
 
-        side = options.get('del_op_side')  # figure out which side we are deleting the extra operator from, the option is treated as a hint
-        side_right = side == 'right'
+        del_op_side = options.get('del_op_side')  # figure out which side we are deleting the extra operator from, the option is treated as a hint
+        del_op_side_right = del_op_side == 'right'
 
-        if not side_right:
-            if side not in (None, 'left'):
-                raise ValueError(f"expecting 'left' or 'right' for 'side' option, got {side!r}")
+        if not del_op_side_right:
+            if del_op_side not in (None, 'left'):
+                raise ValueError(f"expecting 'left' or 'right' for 'del_op_side' option, got {del_op_side!r}")
 
-            if not start:
-                side_right = True
+            if is_first:
+                del_op_side_right = True
 
-        elif stop == len_body:
-            side_right = False
+        elif is_last:
+            del_op_side_right = False
 
     elif start == stop:
         raise NotImplementedError('cannot insert to Compare')
@@ -1563,9 +1571,10 @@ def _put_slice_Compare__all(
         _, _, bound_end_ln, bound_end_col = body[-1].f.pars()
 
     if is_del:  # hacky but valid way of doing this, include the extra operator which will be deleted in the location of the comparator next to it which will be deleted, otherwise it gets reeeally complicated
-        if side_right:
+        if del_op_side_right:
             cmp = body[stop - 2] if stop >= 2 else left  # last comparator
             op = ops[stop - 1].f  # operator to the right of it
+
             ln, col, _, _ = cmp.f.pars()  # we need pars because if they are present the op is outside of them so the start of cmp needs to include them as well
 
             cmp.lineno = ln + 1
@@ -1574,8 +1583,9 @@ def _put_slice_Compare__all(
             cmp.end_col_offset = op.end_col_offset
 
         else:
-            cmp = body[start - 1]  # first comparator (we know start > 0 because side_right is False)
+            cmp = body[start - 1]  # first comparator (we know start > 0 because del_op_side_right is False)
             op = ops[start - 1].f  # operator to the left of it
+
             _, _, end_ln, end_col = cmp.f.pars()  # we need pars because if they are present the op is outside of them so the start of cmp needs to include them as well
 
             cmp.lineno = op.lineno
@@ -1587,17 +1597,19 @@ def _put_slice_Compare__all(
 
     _move_Compare_left_into_comparators(self)  # we put everything in `comparators` because code below works on one list field
 
+    # end of setup, now we do the actual operation
+
     if is_del:
         put_slice_nosep(self, start, stop, None, None, None,
                         bound_ln, bound_col, bound_end_ln, bound_end_col,
                         options, 'comparators')
 
-        del body[start : stop]
+        slice_ops = slice(start + 1, stop + 1) if del_op_side_right else slice(start, stop)
 
-        if side_right:
-            del ops[start + 1 : stop + 1]
-        else:
-            del ops[start : stop]
+        self._unmake_fst_tree(body[start : stop] + ops[slice_ops])
+
+        del body[start : stop]
+        del ops[slice_ops]
 
     else:
         ast_ = fst_.a
@@ -1611,7 +1623,8 @@ def _put_slice_Compare__all(
                         options, 'comparators')
 
         fst_._unmake_fst_parents(True)
-        fst_ops[0].f._unmake_fst_tree()  # remove alignment placeholder op
+        fst_ops[0].f._unmake_fst_tree()  # clean up alignment placeholder op
+        self._unmake_fst_tree(body[start : stop] + ops[start + 1 : stop])
 
         body[start : stop] = fst_body
         ops[start + 1 : stop] = fst_ops[1:]
@@ -1639,25 +1652,44 @@ def _put_slice_Compare__all(
         cmp.f.pfield = astfield('comparators', i)
         op.f.pfield = astfield('ops', i)
 
-    if not is_del:  # if put stuff instead of just deleting then we may need to add pars to make parsable
-        if not self._is_enclosed_or_line() and not self._is_enclosed_in_parents():
+    # operation done, now on to the cleanup
+
+    if not self.is_root or fst.FST.get_option('pars', options):  # if at root then this is optional via 'pars' option
+        if not self._is_enclosed_or_line() and not self._is_enclosed_in_parents():  # we may need to add pars to fix parsable, we do this before fixing compare location so it includes any trivia that was put
             self._parenthesize_grouping(False)
 
-    if not body and get_option_overridable('norm', 'norm_self', options):  # if only one element remains and normalizing then replace the Compare AST in self with the single `left` AST which remains
-        self._set_ast(left, True, False)
+        elif is_first and is_del and (parent := self.parent) and isinstance(parent.a, Expr):  # VERY SPECIAL CASE where we may have left a line continuation not exactly at proper indentation after delete at start of Expr which is our parent
+            ln, col, _, _ = self.loc
 
-    else:  # otherwise Compare location may have been set invalid (because was treated as a container), so make sure is from first element to last
-        ln, col, end_ln, end_col = left.f.pars()
+            if ln == parent.ln and _re_empty_line_or_cont.match(l := lines[ln], col):  # if Compare (expanded) starts on same line as Expr and is an empty line continuation that starts with a whitespace then we need to remove the whitespace because of indentation
+                lines[ln] = bistr(l[:col] + '\\')  # can do this directly and don't need to offset anything because this won't change any actual start or end node positions
 
+    if is_first:  # make sure our and parents' start position is at start of `left` element (before any pars)
+        ln, col, end_ln, end_col = left.f.pars()  # end_ln and end_col may be used in is_last adjustment below
+
+        self._set_start_pos(ln + 1, lines[ln].c2b(col), ast.lineno, ast.col_offset)
+
+    if is_last:  # make sure our and parents' end position is at end of last comparator (after any pars)
         if body:
             _, _, end_ln, end_col = body[-1].f.pars()
+        elif not is_first:
+            _, _, end_ln, end_col = left.f.pars()
 
-        ast.lineno = ln + 1
-        ast.col_offset = lines[ln].c2b(col)
-        ast.end_lineno = end_ln + 1
-        ast.end_col_offset = lines[end_ln].c2b(end_col)
+        self._set_end_pos(end_ln + 1, lines[end_ln].c2b(end_col), ast.end_lineno, ast.end_col_offset)
 
-        self._touch()
+    if not body:
+        if get_option_overridable('norm', 'norm_self', options):  # if only one element remains and normalizing then replace the Compare AST in self with the single `left` AST which remains
+            self._set_ast(left)
+
+    elif is_del:  # otherwise more than one element and there are operators and if deleted then need to make sure we didn't join alnums with an 'is', 'is not', 'in' or 'not in' by deleting the extra operator
+        if del_op_side_right:
+            ln, col, _, _ = body[stop - len_slice - 1].f.loc  # start of comparator after extra operator that was deleted
+        else:
+            _, _, ln, col = cmp = (body[start - 2] if start >= 2 else left).f.loc  # end of element before start
+
+        self._maybe_fix_joined_alnum(ln, col)
+
+    self._maybe_fix_joined_alnum(*self.loc)  # fix stuff like 'a<(b)and c' -> 'a<xand c
 
 
 def _put_slice_Call_args(

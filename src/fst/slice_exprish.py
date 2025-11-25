@@ -862,7 +862,9 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
                                            (self_end_ln == put_end_ln and self_end_col <= put_end_col))
 
     if put_col == self_col and put_ln == self_ln:  # put at beginning of unenclosed sequence
-        params_offset = self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, is_last, False, self)
+        offset_head = self._is_any_parent_format_spec_start_pos(put_end_ln, put_end_col)  # if also putting at end of sequence then may need to offset with head=True if FormattedValue/Interpolation .format_spec starts at exactly same position as put ends
+
+        params_offset = self._put_src(put_lines, put_ln, put_col, put_end_ln, put_end_col, is_last, offset_head, self)
 
         self._offset(*params_offset, True, True, self_=False)
 

@@ -1316,6 +1316,29 @@ def _is_solo_matchcls_pat(self: fst.FST) -> bool:
             isinstance(parenta := parent.a, MatchClass) and not parenta.kwd_patterns and len(parenta.patterns) == 1)
 
 
+def _is_any_parent_format_spec_start_pos(self: fst.FST, ln: int, col: int) -> bool:
+    """Whether `(ln, col)` is the start position of some parent up the chain `format_spec` field. This is used in put
+    operations to decide whether to offset head or not since a `format_spec` can follow immediately after a value, which
+    is normally not the case for other `AST` fields. We walk up multiple parents because multiple nodes may end at the
+    same location."""
+
+    lineno = ln + 1
+    col_offset = self.root._lines[ln].c2b(col)
+
+    while parent := self.parent:
+        if (end_lineno := getattr(self.a, 'end_lineno', None)) is not None:  # if self ends past the check location then no parent .format_spec can possibly start at it
+            if end_lineno > lineno or (end_lineno == lineno and self.a.end_col_offset > col_offset):
+                return False
+
+        if isinstance(parenta := parent.a, (FormattedValue, Interpolation)):
+            return (self.pfield.name == 'value' and
+                    (fs := parenta.format_spec) and fs.col_offset == col_offset and fs.lineno == lineno)
+
+        self = parent
+
+    return False
+
+
 def _has_Slice(self: fst.FST) -> bool:
     """Whether self is a `Slice` or a `Tuple` which directly contains any `Slice`.
 

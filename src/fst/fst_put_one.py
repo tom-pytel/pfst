@@ -826,17 +826,7 @@ def _make_exprish_fst(
     put_fst._indent_lns(self._get_indent(), docstr=False)
 
     dcol_offset = lines[ln].c2b(col) + merge_alnum_start
-    end_col_offset = lines[end_ln].c2b(end_col)
-
-    offset_head = False
-    parent = self
-
-    while parent := (self_ := parent).parent:  # possibly fix FormattedValue and Interpolation .format_spec location if present above self - because can follow IMMEDIATELY after modified value and thus would not have its start offset with head=False in put_src() below (which if this is not the case must be False)
-        if isinstance(parenta := parent.a, (FormattedValue, Interpolation)):
-            offset_head = (self_.pfield.name == 'value' and (fs := parenta.format_spec) and
-                           fs.col_offset == end_col_offset and fs.lineno == end_ln + 1)
-
-            break
+    offset_head = self._is_any_parent_format_spec_start_pos(end_ln, end_col)  # possibly fix FormattedValue and Interpolation .format_spec location if present above self - because can follow IMMEDIATELY after modified value and thus would not have its start offset with head=False in put_src() below (which if this is not the case must be False)
 
     params_offset = self._put_src(put_lines, ln, col, end_ln, end_col, True, offset_head, exclude=self)
 

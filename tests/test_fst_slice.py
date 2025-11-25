@@ -1927,6 +1927,131 @@ class cls:
         self.assertEqual('[_ for _ in _ if "a" if x for _ in _]', (f := FST('[_ for _ in _ if "a"for _ in _]')).generators[0].put_slice('if x', 1, 1, 'ifs').root.src)
         f.verify()
 
+    def test_put_slice_special_Compare(self):
+        # Compare joined alnum
+
+        self.assertEqual('a< x and c', (f := FST('a<(b)and c')).values[0].put_slice('x', 1, 2).root.src)
+        f.verify()
+
+        self.assertEqual('a and x <c', (f := FST('a and(b)<c')).values[1].put_slice('x', 0, 1).root.src)
+        f.verify()
+
+        self.assertEqual('a is not x not in c', (f := FST('a is not(b)not in c')).put_slice('x', 1, 2).root.src)
+        f.verify()
+
+        self.assertEqual('a is c', (f := FST('a!= b is c')).put_slice(None, 1, 2).root.src)
+        f.verify()
+
+        self.assertEqual('a is c', (f := FST('a is(b)!=c')).put_slice(None, 1, 2, del_op_side='right').root.src)
+        f.verify()
+
+        # Compare start and end positions
+
+        f = FST(r'''
+if"repository"in ext_data["jupyterlab"] and b:
+    pass
+            '''.strip())
+        self.assertEqual(r'''
+if "extension" in ext_data["jupyterlab"] and b:
+    pass
+            '''.strip(), f.test.values[0].put_slice('"extension"', 0, 1).root.src)
+        f.verify()
+
+        f = FST(r'''
+if as_upstream \
+and b in\
+ b\
+ :
+    pass
+            '''.strip())
+        g = FST('name\\\n< 0').get_slice(0, 1)
+        self.assertEqual(r'''
+if as_upstream \
+and b in\
+ name\
+ \
+ :
+    pass
+            '''.strip(), f.test.values[1].put_slice(g, 1, 2, trivia=('all+', 'none+2')).root.src)
+        f.verify()
+
+        # VERY SPECIAL CASE of Compare as child of Expr leaving a leading line continuation on delete which is not aligned with indentation
+
+        f = FST(r'''
+if 1:
+    a \
+ in \
+ b in c
+    pass
+            '''.strip())
+        self.assertEqual(r'''
+if 1:
+    \
+ b in c
+    pass
+            '''.strip(), f.body[0].value.put_slice(None, 0, 1).root.src)
+        f.verify()
+
+        f = FST(r'''
+if 1:
+    a \
+ in \
+ b
+    pass
+            '''.strip())
+        self.assertEqual(r'''
+if 1:
+    \
+ b
+    pass
+            '''.strip(), f.body[0].value.put_slice(None, 0, 1, norm=True).root.src)
+        f.verify()
+
+        # Compare make sure enclosed and parsable
+
+        f = FST(r'''
+if  \
+  casefolded in \
+  casefolded in \
+  casefolded in \
+  casefolded:
+      pass
+            '''.strip())
+        f.test.get_slice(0, 2, cut=True)
+        self.assertEqual(r'''
+if  \
+  (
+  casefolded in \
+  casefolded):
+      pass
+            '''.strip(), f.root.src)
+        f.verify()
+
+        f = FST(r'''
+if casefolded in \
+  casefolded in \
+  casefolded in \
+  casefolded:
+      pass
+            '''.strip())
+        f.test.get_slice(0, 2, cut=True)
+        self.assertEqual(r'''
+if (
+  casefolded in \
+  casefolded):
+      pass
+            '''.strip(), f.root.src)
+        f.verify()
+
+        if PYGE12:
+            # putting slice at end of sequence which ends exactly where a parent .format_spec starts
+
+            self.assertEqual("f'{x,:}'", (f := FST("f'{a,b:}'")).values[0].value.put_slice('x,', 0, 2).root.src)
+            f.verify()
+
+            self.assertEqual("f'{3 == 4:<12}'", (f := FST("f'{4 != 4 == 4:<12}'")).values[0].value.put_slice('3 == 4', 0, 3).root.src)
+            f.verify()
+
     def test_unparenthesized_tuple_with_line_continuations(self):
         # backslashes are annoying to include in the regenerable test cases
 
@@ -2177,7 +2302,6 @@ i ; \\
 
         self.assertEqual('del z', (f := FST('del a, b')).put_slice(FST('z').a).root.src)
         f.verify()
-
 
     def test_put_slice_raw(self):
         f = parse('[a for c in d for b in c for a in b]').body[0].value.f
@@ -4655,6 +4779,18 @@ class cls:
         with FST.options(norm=False):
             self.assertEqual('', (g := (f := FST('for _ in _ if i if j if k').get_slice(0, 0, 'ifs')).get_slice(0, 0)).src)
             self.assertEqual('', f.put_slice(g, 'end', 'ifs').src)
+            f.verify()
+
+        # Compare
+
+        with FST.options(norm=True):
+            self.assertEqual('i', (g := (f := FST('i < j < k').get_slice(0, 2)).get_slice(0, 1)).src)
+            self.assertEqual('i < i', f.put_slice(g, 1).src)
+            f.verify()
+
+        with FST.options(norm=False):
+            self.assertEqual('i', (g := (f := FST('i < j < k').get_slice(0, 2)).get_slice(0, 1)).src)
+            self.assertEqual('i < i', f.put_slice(g, 1).src)
             f.verify()
 
         # aliases

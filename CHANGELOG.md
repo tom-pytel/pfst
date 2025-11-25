@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- put slice to last element of undelimited sequence as value of `FormattedValue` or `Interpolation` with format string immediately following will offset that format string location correctly
 - correct `.bloc` location if decorator `@` is on a different line with line continuations
 - leave leading `\` above statement being deleted if trailing semicolon is left in place on stmt line
 - account for degenerate case of first decorator following line continuation in `.bloc`

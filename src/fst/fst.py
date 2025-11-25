@@ -4488,6 +4488,7 @@ class FST:
         _unmake_fst_parents,
         _set_ast,
         _set_ctx,
+        _set_start_pos,
         _set_end_pos,
 
         _is_atom,
@@ -4528,6 +4529,7 @@ class FST:
         _is_solo_call_arg,
         _is_solo_call_arg_genexp,
         _is_solo_matchcls_pat,
+        _is_any_parent_format_spec_start_pos,
         _is_arguments_empty,
         _is_delimited_seq,
         _has_Slice,

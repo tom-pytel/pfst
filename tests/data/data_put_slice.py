@@ -27159,6 +27159,40 @@ Compare - ROOT 0,0..0,29
      .operand Name 'x' Load - 0,16..0,17
    1] Name 'c' Load - 0,27..0,28
 '''),
+
+('body[0].value', 0, 1, None, {'trivia': ('block+1', 'none')}, (None, r'''
+if 1:
+  7 \
+not in \
+None
+'''), (None, r'''
+
+ None \
+
+'''), r'''
+if 1:
+  (
+   None \
+ \
+not in \
+None)
+''', r'''
+if 1:
+  None \
+not in \
+None
+''', r'''
+If - ROOT 0,0..5,5
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] Expr - 1,2..5,5
+     .value Compare - 2,3..5,4
+       .left Constant None - 2,3..2,7
+       .ops[1]
+        0] NotIn - 4,0..4,6
+       .comparators[1]
+        0] Constant None - 5,0..5,4
+'''),
 ],
 
 'Call_args': [  # ................................................................................

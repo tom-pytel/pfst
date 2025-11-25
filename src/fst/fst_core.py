@@ -638,12 +638,37 @@ def _set_ctx(self: fst.FST, ctx: type[expr_context]) -> None:
                 stack.append(a.value)
 
 
+def _set_start_pos(self: fst.FST, lineno: int, col_offset: int, old_lineno: int = -1, old_col_offset: int = -1) -> None:
+    """Walk up parent chain setting start position as long as the node is the first child. If `old_lineno` and
+    `old_col_offset` are provided then will only set end position as long as it matches this old position. This is
+    used in case a child has leading trivia which should be included in the parent, or changing the size of a container
+    after put."""
+
+    check_old_pos = old_lineno != -1
+
+    while True:
+        if (co := getattr(a := self.a, 'col_offset', None)) is not None:  # maybe an empty `arguments`,
+            if check_old_pos and (co != old_col_offset or a.lineno != old_lineno):  # if doesn't end at expected location then we are done
+                break
+
+            a.lineno = lineno
+            a.col_offset = col_offset
+
+        self._touch()  # even if AST doesn't have location it may be calculated and needs to be cleared out anyway
+
+        if not (parent := self.parent) or self.prev():
+            break
+
+        self = parent
+
+
 def _set_end_pos(
     self: fst.FST, end_lineno: int, end_col_offset: int, old_end_lineno: int = -1, old_end_col_offset: int = -1
 ) -> None:
-    """Wall up parent chain setting end position. If `old_end_lineno` and `old_end_col_offset` are provided then will
-    only set end position as long as it matches this old position. This is used in case a child has trailing trivia
-    which should be included in the parent, like a semicolon."""
+    """Walk up parent chain setting end position as long as the node is the last child. If `old_end_lineno` and
+    `old_end_col_offset` are provided then will only set end position as long as it matches this old position. This is
+    used in case a child has trailing trivia which should be included in the parent, like a semicolon, or changing the
+    size of a container after put."""
 
     check_old_pos = old_end_lineno != -1
 
@@ -798,7 +823,7 @@ def _is_enclosed_or_line(
 
     **Returns:**
     - `True`: Node is enclosed or single logical line.
-    - `'pars'` Enclosed by grouping parentheses.
+    - `'pars'` Enclosed by grouping parentheses (only if other checks fail)
     - `False`: Not enclosed or single logical line and should be parenthesized or put into an enclosed parent or
         have line continuations added for successful parse.
 
