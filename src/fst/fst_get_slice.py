@@ -1100,7 +1100,7 @@ def _get_slice_Compare__all(
                            set_ast_loc=ret_ast.__class__ is Compare)
 
     if cut:
-        fst_top_level.fst_put_slice._put_slice_Compare__all(self, None, start, stop, field, False, options)
+        fst_top_level.fst_put_slice._put_slice_Compare__all(self, None, start, stop, '_all', False, options)
 
     return fst_
 

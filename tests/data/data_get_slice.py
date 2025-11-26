@@ -19293,4 +19293,78 @@ _type_params - ROOT 0,0..0,10
 '''),
 ],
 
+'virtual_fields': [  # ................................................................................
+
+('', 1, 2, '_all', {}, ('Dict',
+r'''{1: a, 2: b, 3: c}'''),
+r'''{1: a, 3: c}''', r'''
+Dict - ROOT 0,0..0,12
+  .keys[2]
+   0] Constant 1 - 0,1..0,2
+   1] Constant 3 - 0,7..0,8
+  .values[2]
+   0] Name 'a' Load - 0,4..0,5
+   1] Name 'c' Load - 0,10..0,11
+''',
+r'''{2: b}''', r'''
+Dict - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 2 - 0,1..0,2
+  .values[1]
+   0] Name 'b' Load - 0,4..0,5
+'''),
+
+('', 1, 2, '_all', {}, ('MatchMapping',
+r'''{1: a, 2: b, 3: c}'''),
+r'''{1: a, 3: c}''', r'''
+MatchMapping - ROOT 0,0..0,12
+  .keys[2]
+   0] Constant 1 - 0,1..0,2
+   1] Constant 3 - 0,7..0,8
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,10..0,11
+     .name 'c'
+''',
+r'''{2: b}''', r'''
+MatchMapping - ROOT 0,0..0,6
+  .keys[1]
+   0] Constant 2 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
+('', 1, 2, '_all', {'_verify_get': False}, ('Compare',
+r'''a < b > c'''),
+r'''a > c''', r'''
+Compare - ROOT 0,0..0,5
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Gt - 0,2..0,3
+  .comparators[1]
+   0] Name 'c' Load - 0,4..0,5
+''',
+r'''b''', r'''
+Compare - ROOT 0,0..0,1
+  .left Name 'b' Load - 0,0..0,1
+'''),
+
+('', 1, 2, '_all', {'_verify_get': False, 'del_op_side': 'right'}, ('Compare',
+r'''a < b > c'''),
+r'''a < c''', r'''
+Compare - ROOT 0,0..0,5
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Lt - 0,2..0,3
+  .comparators[1]
+   0] Name 'c' Load - 0,4..0,5
+''',
+r'''b''', r'''
+Compare - ROOT 0,0..0,1
+  .left Name 'b' Load - 0,0..0,1
+'''),
+],
+
 }

@@ -31602,6 +31602,63 @@ _type_params - ROOT 0,0..0,6
 '''),
 ],
 
+'virtual_fields': [  # ................................................................................
+
+('', 1, 2, '_all', {}, ('Dict',
+r'''{1: a, 2: b, 3: c}'''), ('Dict',
+r'''{4: x, 5: y}'''),
+r'''{1: a, 4: x, 5: y, 3: c}''', r'''
+Dict - ROOT 0,0..0,24
+  .keys[4]
+   0] Constant 1 - 0,1..0,2
+   1] Constant 4 - 0,7..0,8
+   2] Constant 5 - 0,13..0,14
+   3] Constant 3 - 0,19..0,20
+  .values[4]
+   0] Name 'a' Load - 0,4..0,5
+   1] Name 'x' Load - 0,10..0,11
+   2] Name 'y' Load - 0,16..0,17
+   3] Name 'c' Load - 0,22..0,23
+'''),
+
+('', 1, 2, '_all', {}, ('MatchMapping',
+r'''{1: a, 2: b, 3: c}'''), ('MatchMapping',
+r'''{4: x, 5: y}'''),
+r'''{1: a, 4: x, 5: y, 3: c}''', r'''
+MatchMapping - ROOT 0,0..0,24
+  .keys[4]
+   0] Constant 1 - 0,1..0,2
+   1] Constant 4 - 0,7..0,8
+   2] Constant 5 - 0,13..0,14
+   3] Constant 3 - 0,19..0,20
+  .patterns[4]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,10..0,11
+     .name 'x'
+   2] MatchAs - 0,16..0,17
+     .name 'y'
+   3] MatchAs - 0,22..0,23
+     .name 'c'
+'''),
+
+('', 1, 2, '_all', {}, ('Compare',
+r'''a < b > c'''), ('Compare',
+r'''x != y'''),
+r'''a < x != y > c''', r'''
+Compare - ROOT 0,0..0,14
+  .left Name 'a' Load - 0,0..0,1
+  .ops[3]
+   0] Lt - 0,2..0,3
+   1] NotEq - 0,6..0,8
+   2] Gt - 0,11..0,12
+  .comparators[3]
+   0] Name 'x' Load - 0,4..0,5
+   1] Name 'y' Load - 0,9..0,10
+   2] Name 'c' Load - 0,13..0,14
+'''),
+],
+
 'raw': [  # ................................................................................
 
 ('', 0, 1, None, {'raw': True}, (None,

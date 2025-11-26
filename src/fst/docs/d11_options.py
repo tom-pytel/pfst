@@ -151,7 +151,8 @@ Or get all global options.
  'norm_get': None,
  'norm_put': None,
  'set_norm': 'both',
- 'matchor_norm': 'value'}
+ 'matchor_norm': 'value',
+ 'del_op_side': 'left'}
 ```
 
 ## Special

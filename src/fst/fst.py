@@ -130,7 +130,7 @@ class _ThreadLocal(threading.local):
     def __init__(self) -> None:
         self.options = {
             'raw':           False,   # True | False | 'auto'
-            'trivia':        True,    # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line')
+            'trivia':        True,    # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line')  - 'all' and 'block' may be followed by a '+|-[int]' ('all+1', 'block-10', 'block+')
             'coerce':        True,    # True | False
             'elif_':         True,    # True | False
             'pep8space':     True,    # True | False | 1
@@ -144,6 +144,7 @@ class _ThreadLocal(threading.local):
             'norm_put':      None,    # True | False | None
             'set_norm':     'both',   # False | 'star' | 'call' | 'both'
             'matchor_norm': 'value',  # False | 'value' | 'strict'
+            'del_op_side':  'left',   # 'left' | 'right'
         }
 
 
@@ -1056,7 +1057,8 @@ class FST:
          'norm_get': None,
          'norm_put': None,
          'set_norm': 'both',
-         'matchor_norm': 'value'}
+         'matchor_norm': 'value',
+         'del_op_side': 'left'}
         ```
         """
 
@@ -1234,6 +1236,12 @@ class FST:
             - `strict`: Error on length 1 as well as length zero.
             - `False`: No `MatchOr` normalization regardless of `norm` or `norm_*` options, just leave or return an
                 invalid `MatchOr` object.
+        -`del_op_side`: When cutting or deleting from a `Compare` or `BoolOp` an extra operator needs to be deleted.
+            This options specifies which side, `'left'` or `'right'`. This matters for `Compare` because the operators
+            may be different and for `BoolOp` mainly for trivia on either side. This option is treated as a hint and
+            will not raise an error if the side cannot be deleted or the other side must be.
+            - `'left'`: Delete preceding operator on left side of slice.
+            - `'right'`: Delete trailing operator on right side of slice.
 
         **Note:** `pars` behavior:
         ```
