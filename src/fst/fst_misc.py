@@ -310,12 +310,12 @@ def _dump_prim_long(prim: constant, st: nspace, cind: str) -> str:
     ):
         return f'{clr_type}{prim!r}{end_type}'
 
-    if st.expand:
-        fmt = fmt.replace('\n', f'\n{cind}')
-    else:
-        fmt = f'(\n{cind}' + fmt[1:].replace('\n', f'\n{cind[1:]}')
+    fmt = fmt[1:-1].replace('\n ', f'\n{cind}')  # remove parentheses, dedent by opening par 1 column
 
-    return f'{clr_type}{fmt}{end_type}'
+    if st.expand:
+        return f'{clr_type}{fmt}{end_type}'
+    else:
+        return f'\n{cind}{clr_type}{fmt}{end_type}'
 
 
 def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
@@ -362,9 +362,12 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
 
         if isinstance(ast, Constant):
             kind = '' if ast.kind is None else f' {c.clr_field}.kind{c.end_field} {_dump_prim(ast.kind, c)}'
+            prim = _dump_prim_long(ast.value, st, cind + sind)
 
-            st.linefunc(f'{cind}{prefix}{c.clr_ast}Constant{c.end_ast} '
-                        f'{_dump_prim_long(ast.value, st, cind + sind)}{kind}{tail}{st.eol}')
+            if prim.startswith('\n'):
+                st.linefunc(f'{cind}{prefix}{c.clr_ast}Constant{c.end_ast}{kind}{tail}{prim}{st.eol}')
+            else:
+                st.linefunc(f'{cind}{prefix}{c.clr_ast}Constant{c.end_ast} {prim}{kind}{tail}{st.eol}')
 
             return
 
@@ -426,7 +429,7 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
                 _dump_node(child.f, st, cind + sind * 2, '')
 
             else:
-                ind = f'{cind}{sind}{sind}'
+                ind = f'{cind}{sind * 2}'
 
                 st.linefunc(f'{ind}{_dump_prim_long(child, st, ind)}{st.eol}')
 
