@@ -741,8 +741,9 @@ def _make_exprish_fst(
                 ):
                     return True
 
-        elif (tgt_is_FST and field == 'value' and isinstance(put_ast, Constant) and isinstance(put_ast.value, int) and  # veeery special case "3.__abs__()" -> "(3).__abs__()"
-              (tgt_parent := target.parent) and isinstance(tgt_parent.a, Attribute)):
+        elif (tgt_is_FST and field == 'value' and
+              isinstance(put_ast, Constant) and isinstance(put_ast.value, int) and
+              (tgt_parent := target.parent) and isinstance(tgt_parent.a, Attribute)):  # veeery special case "3.__abs__()" -> "(3).__abs__()"
             return True
 
         if not self._is_enclosed_in_parents(field) and not put_fst._is_enclosed_or_line(pars=adding):
@@ -791,8 +792,11 @@ def _make_exprish_fst(
                                             isinstance(tgt_parent.a, AnnAssign)):
                         del_tgt_pars = True
 
-            elif need_pars(True):
-                put_fst.par(True)  # could be parenthesizing grouping or a tuple
+            elif need_pars(True):  # could be parenthesizing grouping or a tuple, not a MatchSeqence because that never gets here unenclosed
+                if put_fst._is_parenthesized_tuple() is False:
+                    put_fst._delimit_node()
+                else:
+                    put_fst._parenthesize_grouping()
 
     # figure out put target location
 

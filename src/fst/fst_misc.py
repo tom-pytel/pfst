@@ -1743,7 +1743,7 @@ def _maybe_fix_arglike(self: fst.FST, options: Mapping[str, Any]) -> None:
     """Parenthesize `self` if is arglike expression according to `options`."""
 
     if get_option_overridable('pars', 'pars_arglike', options) and self._is_expr_arglike():
-        self.par()
+        self._parenthesize_grouping()
 
 
 def _maybe_fix_arglikes(self: fst.FST, options: Mapping[str, Any]) -> None:
@@ -1754,7 +1754,7 @@ def _maybe_fix_arglikes(self: fst.FST, options: Mapping[str, Any]) -> None:
     if get_option_overridable('pars', 'pars_arglike', options):
         for e in self.a.elts:
             if (f := e.f)._is_expr_arglike():
-                f.a.value.f.par()  # will be a Starred so we just go for .value
+                f._parenthesize_grouping()
 
 
 def _maybe_fix_elif(self: fst.FST) -> None:
