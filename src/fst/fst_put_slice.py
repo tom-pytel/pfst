@@ -1658,11 +1658,12 @@ def _put_slice_Compare__all(
         if not self._is_enclosed_or_line() and not self._is_enclosed_in_parents():  # we may need to add pars to fix parsable, we do this before fixing compare location so it includes any trivia that was put
             self._parenthesize_grouping(False)
 
-        elif is_first and is_del and (parent := self.parent) and isinstance(parent.a, Expr):  # VERY SPECIAL CASE where we may have left a line continuation not exactly at proper indentation after delete at start of Expr which is our parent
-            ln, col, _, _ = self.loc
+        elif is_del and is_first:  # VERY SPECIAL CASE where we may have left a line continuation not exactly at proper indentation after delete at start of Expr which is our statement parent
+            if (parent := self.parent_stmtish()) and isinstance(parent.a, Expr):
+                ln, col, _, _ = self.loc
 
-            if ln == parent.ln and _re_empty_line_or_cont.match(l := lines[ln], col):  # if Compare (expanded) starts on same line as Expr and is an empty line continuation that starts with a whitespace then we need to remove the whitespace because of indentation
-                lines[ln] = bistr(l[:col] + '\\')  # can do this directly and don't need to offset anything because this won't change any actual start or end node positions
+                if ln == parent.ln and _re_empty_line_or_cont.match(l := lines[ln]):  # if Compare (expanded) starts on same line as Expr and is an empty line continuation that starts with a whitespace then we need to remove the whitespace because of indentation
+                    lines[ln] = bistr(l[:col] + '\\')  # can do this directly and don't need to offset anything because this won't change any actual start or end node positions
 
     if is_first:  # make sure our and parents' start position is at start of `left` element (before any pars)
         ln, col, end_ln, end_col = left.f.pars()  # end_ln and end_col may be used in is_last adjustment below

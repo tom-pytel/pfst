@@ -2007,6 +2007,63 @@ if 1:
             '''.strip(), f.body[0].value.put_slice(None, 0, 1, norm=True).root.src)
         f.verify()
 
+        f = FST(r'''
+if 1:
+    a \
+ in \
+ b
+    pass
+            '''.strip())
+        self.assertEqual(r'''
+if 1:
+    \
+ b
+    pass
+            '''.strip(), f.body[0].value.put_slice(None, 0, 1).root.src)
+        # f.verify()  # no verify() because was not normalized
+
+        f = FST(r'''
+if 1:
+    pass
+    a in \
+       b in c or d
+            '''.strip())
+        self.assertEqual(r'''
+if 1:
+    pass
+    \
+       b in c or d
+            '''.strip(), f.body[1].value.values[0].put_slice(None, 0, 1).root.src)
+        f.verify()
+
+        f = FST(r'''
+if 1:
+    pass
+    a in \
+       b or d
+            '''.strip())
+        self.assertEqual(r'''
+if 1:
+    pass
+    \
+       b or d
+            '''.strip(), f.body[1].value.values[0].put_slice(None, 0, 1, norm=True).root.src)
+        f.verify()
+
+        f = FST(r'''
+if 1:
+    pass
+    a in \
+       b or d
+            '''.strip())
+        self.assertEqual(r'''
+if 1:
+    pass
+    \
+       b or d
+            '''.strip(), f.body[1].value.values[0].put_slice(None, 0, 1).root.src)
+        # f.verify()  # no verify() because was not normalized
+
         # Compare make sure enclosed and parsable
 
         f = FST(r'''
