@@ -36,8 +36,6 @@ if a:
 
 `fst` works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute which keep extra structure information, the original source, and provide the interface to format-preserving operations. Each operation through `fst` is a simultaneous edit of the `AST` tree and the source code and those are kept synchronized so that the current source will always parse to the current tree.
 
-Please note `fst` is not written for speed but rather for ease of editing, not necessarily to lint an entire codebase, there are better options for that.
-
 # Links
 
 - [Repository](https://github.com/tom-pytel/pfst)
