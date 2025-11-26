@@ -977,12 +977,10 @@ def _get_slice_stmtish_old(
         _src_edit.get_slice_stmt(self, field, cut, block_loc, ffirst, flast, fpre, fpost, **options))
 
     if not cut:
-        modifying = None
         asts = [copy_ast(body[i]) for i in range(start, stop)]
         put_loc = None
 
     else:
-        modifying = self._modifying(field).enter()
         is_last_child = not fpost and not flast.next()
         asts = body[start : stop]
 
@@ -1026,9 +1024,6 @@ def _get_slice_stmtish_old(
 
     if len(asts) == 1 and isinstance(a := asts[0], If):
         a.f._maybe_fix_elif()
-
-    if modifying:
-        modifying.success()
 
     return fst_
 

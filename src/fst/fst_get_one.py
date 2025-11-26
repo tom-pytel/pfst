@@ -694,10 +694,14 @@ def _get_one(self: fst.FST, idx: int | None, field: str, cut: bool, options: Map
     if not (handler := _GET_ONE_HANDLERS.get((self.a.__class__, field))):
         raise NodeError(f'cannot get from {self.a.__class__.__name__}.{field}')
 
-    ret = handler(self, idx, field, cut, options)
+    if handler is _get_one_stmtish:
+        if cut:  # this one does its own cut (because of evil semicolons), so maybe need _modifying()
+            with self._modifying(field):
+                return handler(self, idx, field, cut, options)
 
-    if handler is _get_one_stmtish:  # this one does its own cut (because of evil semicolons)
-        return ret
+        return handler(self, idx, field, cut, options)
+
+    ret = handler(self, idx, field, cut, options)
 
     if cut:
         options = options.copy()

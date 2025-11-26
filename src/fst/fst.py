@@ -128,6 +128,7 @@ __all__ = [
 
 class _ThreadLocal(threading.local):
     def __init__(self) -> None:
+        self.modifying = set()  # root nodes of trees being `_Modifying()`ed, to prevent multiple nested on same tree
         self.options = {
             'raw':           False,   # True | False | 'auto'
             'trivia':        True,    # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line')  - 'all' and 'block' may be followed by a '+|-[int]' ('all+1', 'block-10', 'block+')
@@ -2605,24 +2606,32 @@ class FST:
 
         modifying = None
 
-        if self.pars(shared=None if shared is None else True).n:
-            modifying = self._modifying().enter()
+        try:
+            if self.pars(shared=None if shared is None else True).n:
+                modifying = self._modifying().enter()
 
-            self._unparenthesize_grouping(shared)
+                self._unparenthesize_grouping(shared)
 
-        if node:
-            if isinstance(self.a, Tuple):
-                modifying = modifying or self._modifying().enter()
+            if node:
+                if isinstance(self.a, Tuple):
+                    modifying = modifying or self._modifying().enter()
 
-                self._undelimit_node()
+                    self._undelimit_node()
 
-            elif isinstance(self.a, MatchSequence):
-                modifying = modifying or self._modifying().enter()
+                elif isinstance(self.a, MatchSequence):
+                    modifying = modifying or self._modifying().enter()
 
-                self._undelimit_node('patterns')
+                    self._undelimit_node('patterns')
 
-        if modifying:
-            modifying.success()
+        except:
+            if modifying:
+                modifying.fail()
+
+            raise
+
+        else:
+            if modifying:
+                modifying.success()
 
         return self  # ret
 

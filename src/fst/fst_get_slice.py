@@ -1629,11 +1629,7 @@ def _get_slice(
         raise ValueError(f'cannot get slice from {self.a.__class__.__name__}.{field}')
 
     if cut:
-        modifying = self._modifying(field).enter()
+        with self._modifying(field):
+            return handler(self, start, stop, field, cut, options)
 
-    ret = handler(self, start, stop, field, cut, options)
-
-    if cut:
-        modifying.success()
-
-    return ret
+    return handler(self, start, stop, field, cut, options)

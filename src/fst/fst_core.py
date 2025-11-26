@@ -234,14 +234,14 @@ class _Modifying:
 
     def __init__(self, fst_: fst.FST, field: str | Literal[False] = False, raw: bool = False) -> None:
         """Call before modifying `FST` node (even just source) to mark possible data for updates after modification.
-        This function just collects information when it enters so is safe to call without ever explicitly exiting.
-        Though it should be called on a successful modification because it increments the modification cound
-        `_serial`. Can be used as a context manager or can just call `.enter()` and `.success()` manually.
+        `.success()` should be called on a successful modification because it increments the modification count
+        `_serial`. Can be used as a context manager or can just call `.enter()`, `.success()` and `.fail()` manually.
 
-        It is assumed that neither the `fst_` node passed in or its parents will not be changed, otherwise this must
-        be used manually and not as a context manager and the changed node must be passed into the `.success()` method
-        on success. In this case currently no parents are updated as it is assumed the changes are due to raw
-        reparse which goes up to the statement level and would thus include any modifications this class would make.
+        It is assumed that neither the `fst_` node passed in (or its parent if `field=False`) nor its parents will be
+        changed, otherwise this must be used manually and not as a context manager and the changed node must be passed
+        into the `.success()` method on success. In this case currently no parents are updated as it is assumed the
+        changes are due to raw reparse which goes up to the statement level and would thus include any modifications
+        this class would make.
 
         **Parameters:**
         - `fst_`: Parent of or actual node being modified, depending on value of `field` (because actual child may be
@@ -251,50 +251,7 @@ class _Modifying:
         - `raw`: Whether this is going to be a raw modification or not.
         """
 
-        self.root = fst_.root
-
-        if raw:
-            self.fst = False
-
-            return
-
-        if field is False:
-            pfield = fst_.pfield
-
-            if fst_ := fst_.parent:
-                field = pfield.name
-
-        self.fst = fst_ if fst_ and isinstance(fst_.a, expr) else False
-
-        if self.fst:
-            self.field = field
-            self.data = data = []  # [(FormattedValue or Interpolation FST, len(dbg_str) or None, bool do val_str), ...]
-
-            while isinstance(fst_.a, ASTS_EXPRISH):
-                parent = fst_.parent
-                pfield = fst_.pfield
-
-                if field == 'value' and (strs := _get_fmtval_interp_strs(fst_)):  # this will never proc for py < 3.12, in case we ever make this code common
-                    dbg_str, val_str, end_ln, end_col = strs
-
-                    if (dbg_str is None or not parent or not (idx := pfield.idx) or
-                        not isinstance(prev := parent.a.values[idx - 1], Constant) or
-                        not isinstance(v := prev.value, str) or not v.endswith(dbg_str) or
-                        (prevf := prev.f).end_col != end_col or prevf.end_ln != end_ln
-                    ):
-                        if val_str is not None:
-                            data.append((fst_, None, True))
-                        elif not data:  # first one always gets put because needs to do other stuff
-                            data.append((fst_, None, False))
-
-                    else:
-                        data.append((fst_, len(dbg_str), bool(val_str)))
-
-                if not parent:
-                    break
-
-                field = pfield.name
-                fst_ = parent
+        self._params = fst_, field, raw
 
     def __enter__(self) -> Self:
         return self.enter()
@@ -304,10 +261,67 @@ class _Modifying:
     ) -> bool:
         if exc_type is None:
             self.success()
+        else:
+            self.fail(exc_val)
 
         return False
 
     def enter(self) -> Self:
+        """This is called on manual use and should be called immediately after creating the class to avoid the
+        parameters being invalidated by some other modification."""
+
+        fst_, field, raw = self._params
+
+        self.root = root = fst_.root
+        modifying = fst._TLOCAL.modifying
+
+        if root in modifying:
+            raise RuntimeError(f'nested modification not allowed on {root}')
+
+        if raw:
+            self.fst = False
+
+        else:
+            if field is False:
+                pfield = fst_.pfield
+
+                if fst_ := fst_.parent:
+                    field = pfield.name
+
+            self.fst = fst_ if fst_ and isinstance(fst_.a, expr) else False
+
+            if self.fst:
+                self.field = field
+                self.data = data = []  # [(FormattedValue or Interpolation FST, len(dbg_str) or None, bool do val_str), ...]
+
+                while isinstance(fst_.a, ASTS_EXPRISH):
+                    parent = fst_.parent
+                    pfield = fst_.pfield
+
+                    if field == 'value' and (strs := _get_fmtval_interp_strs(fst_)):  # this will never proc for py < 3.12, in case we ever make this code common
+                        dbg_str, val_str, end_ln, end_col = strs
+
+                        if (dbg_str is None or not parent or not (idx := pfield.idx) or
+                            not isinstance(prev := parent.a.values[idx - 1], Constant) or
+                            not isinstance(v := prev.value, str) or not v.endswith(dbg_str) or
+                            (prevf := prev.f).end_col != end_col or prevf.end_ln != end_ln
+                        ):
+                            if val_str is not None:
+                                data.append((fst_, None, True))
+                            elif not data:  # first one always gets put because needs to do other stuff
+                                data.append((fst_, None, False))
+
+                        else:
+                            data.append((fst_, len(dbg_str), bool(val_str)))
+
+                    if not parent:
+                        break
+
+                    field = pfield.name
+                    fst_ = parent
+
+        modifying.add(root)
+
         return self
 
     def success(self, fst_: fst.FST | None | Literal[False] = False) -> None:
@@ -320,7 +334,11 @@ class _Modifying:
             itself was modified. This is meant for special case use outside of the context manager.
         """
 
-        self.root._serial += 1
+        root = self.root  # should be same as fst_.root if passed in since root node never changes even with raw reparse
+
+        fst._TLOCAL.modifying.remove(root)
+
+        root._serial += 1
 
         if fst_ is False:
             if not (fst_ := self.fst):
@@ -330,6 +348,7 @@ class _Modifying:
             return
 
         if data := self.data:
+            lines = root._lines
             first = data[0]
 
             for strs in data:
@@ -340,7 +359,7 @@ class _Modifying:
                     fix_const = ((parent := fst_.parent) and (idx := fst_.pfield.idx) and   # parent should exist here but just in case, whether we need to reset start of debug string or not
                                  (f := parent.a.values[idx - 1].f).col == col and f.ln == ln)
 
-                    if fst_.root._lines[ln].startswith('{', col):
+                    if lines[ln].startswith('{', col):
                         fst_._put_src([' '], ln, col, ln, col, False)
 
                         if fix_const:
@@ -352,26 +371,23 @@ class _Modifying:
                     fst_.a.str = val_str
 
                 if len_old_dbg_str is not None:
-                    lines = fst_.root._lines
                     c = fst_.parent.a.values[fst_.pfield.idx - 1]
                     c.value = c.value[:-len_old_dbg_str] + dbg_str
                     c.end_lineno = end_ln + 1
                     c.end_col_offset = lines[end_ln].c2b(end_col)
 
+    def fail(self, exc_val: BaseException | None = None) -> None:
+        """Parameter `exc_val` not currently used for anything."""
+
+        fst._TLOCAL.modifying.remove(self.root)
+
+
 @pyver(lt=12)  # override _Modifying if py too low
 class _Modifying:
-    """Dummy because py < 3.12 doesn't have f-string location information."""
+    """Dummy because py < 3.12 doesn't have f-string location information and we are too lazy to do the work ourself."""
 
     def __init__(self, fst_: fst.FST, field: str | Literal[False] = False, raw: bool = False) -> None:
-        self.root = fst_.root
-
-        if not raw:
-            while not isinstance(a := fst_.a, (stmt, pattern, match_case, ExceptHandler)):  # don't allow modification if inside an f-string because before 3.12 they were very fragile
-                if isinstance(a, JoinedStr):
-                    raise NotImplementedError('put inside JoinedStr not implemented on python < 3.12')
-
-                if not (fst_ := fst_.parent):
-                    break
+        self._params = fst_, field, raw
 
     def __enter__(self) -> Self:
         return self.enter()
@@ -381,14 +397,41 @@ class _Modifying:
     ) -> bool:
         if exc_type is None:
             self.success()
+        else:
+            self.fail(exc_val)
 
         return False
 
     def enter(self) -> Self:
+        fst_, _, raw = self._params
+
+        self.root = root = fst_.root
+        modifying = fst._TLOCAL.modifying
+
+        if root in modifying:
+            raise RuntimeError(f'nested modification not allowed on {root}')
+
+        if not raw:
+            while not isinstance(a := fst_.a, (stmt, pattern, match_case, ExceptHandler)):  # don't allow modification if inside an f-string because before 3.12 they were very fragile
+                if isinstance(a, JoinedStr):
+                    raise NotImplementedError('put inside JoinedStr not implemented on python < 3.12')
+
+                if not (fst_ := fst_.parent):
+                    break
+
+        modifying.add(root)
+
         return self
 
     def success(self, fst_: fst.FST | None | Literal[False] = False) -> None:
-        self.root._serial += 1
+        root = self.root  # should be same as fst_.root if present since root node never changes
+
+        fst._TLOCAL.modifying.remove(root)
+
+        root._serial += 1
+
+    def fail(self, exc_val: BaseException | None = None) -> None:
+        fst._TLOCAL.modifying.remove(self.root)
 
 
 class _ParamsOffset(NamedTuple):
