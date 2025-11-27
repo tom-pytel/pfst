@@ -1342,6 +1342,68 @@ def _is_any_parent_format_spec_start_pos(self: fst.FST, ln: int, col: int) -> bo
     return False
 
 
+def _is_arguments_empty(self: fst.FST) -> bool:
+    """Is this `arguments` node empty?"""
+
+    # assert isinstance(self.a, arguments)
+
+    return not ((a := self.a).posonlyargs or a.args or a.vararg or a.kwonlyargs or a.kwarg)
+
+
+def _is_delimited_seq(self: fst.FST, field: str = 'elts', delims: str | tuple[str, str] = '()') -> bool:
+    """Whether `self` is a delimited (parenthesized or bracketed) sequence of `field` or not. Makes sure the entire
+    node is surrounded by a balanced pair of delimiters. Functions as `_is_parenthesized_tuple()` if already know is a
+    Tuple. Other use is for `MatchSequence`, whether parenthesized or bracketed.
+
+    **Note:** Since this is such a common function it is cached.
+    """
+
+    key = f'isdelseq{field}{delims}'
+
+    try:
+        return self._cache[key]
+    except KeyError:
+        pass
+
+    ldelim, rdelim = delims
+    lines = self.root._lines
+
+    self_ln, self_col, self_end_ln, self_end_col = self.loc
+
+    if not lines[self_end_ln].startswith(rdelim, self_end_col - 1):
+        is_delim = False
+
+    elif not (asts := getattr(self.a, field)):
+        is_delim = True  # return True if no children because assume '()' in this case
+
+    elif not lines[self_ln].startswith(ldelim, self_col):
+        is_delim = False
+
+    else:
+        f0_ln, f0_col, f0_end_ln, f0_end_col = asts[0].f.loc
+
+        if f0_col == self_col and f0_ln == self_ln:
+            is_delim = False
+
+        else:
+            _, _, fn_end_ln, fn_end_col = asts[-1].f.loc
+
+            if fn_end_col == self_end_col and fn_end_ln == self_end_ln:
+                is_delim = False
+
+            else:  # dagnabit! have to count and balance delimiters around first element
+                self_end_col -= 1  # because in case of singleton tuple for sure there is a comma between end of first element and end of tuple, so at worst we exclude either the tuple closing paren or a comma, otherwise we exclude non-tuple closing delimiter
+
+                ldelims = len(next_delims(lines, self_ln, self_col, f0_ln, f0_col, ldelim))  # yes, we use next_delims() to count opening delimiters because we know conditions allow it
+                rdelims = len(next_delims(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col, rdelim))
+
+                is_delim = ldelims > rdelims
+
+    self._cache[key] = is_delim
+
+    return is_delim
+
+
 def _has_Slice(self: fst.FST) -> bool:
     """Whether self is a `Slice` or a `Tuple` which directly contains any `Slice`.
 
@@ -1378,53 +1440,6 @@ def _has_Starred(self: fst.FST) -> bool:
 
     return isinstance(a := self.a, Starred) or (isinstance(a, (Tuple, List, Set)) and
                                                 any(isinstance(e, Starred) for e in a.elts))
-
-
-def _is_arguments_empty(self: fst.FST) -> bool:
-    """Is this `arguments` node empty?"""
-
-    # assert isinstance(self.a, arguments)
-
-    return not ((a := self.a).posonlyargs or a.args or a.vararg or a.kwonlyargs or a.kwarg)
-
-
-def _is_delimited_seq(self: fst.FST, field: str = 'elts', delims: str | tuple[str, str] = '()') -> bool:
-    """Whether `self` is a delimited (parenthesized or bracketed) sequence of `field` or not. Makes sure the entire
-    node is surrounded by a balanced pair of delimiters. Functions as `_is_parenthesized_tuple()` if already know is a
-    Tuple. Other use is for `MatchSequence`, whether parenthesized or bracketed."""
-
-    ldelim, rdelim = delims
-    lines = self.root._lines
-
-    self_ln, self_col, self_end_ln, self_end_col = self.loc
-
-    if not lines[self_end_ln].startswith(rdelim, self_end_col - 1):
-        return False
-
-    if not (asts := getattr(self.a, field)):
-        return True  # return True if no children because assume '()' in this case
-
-    if not lines[self_ln].startswith(ldelim, self_col):
-        return False
-
-    f0_ln, f0_col, f0_end_ln, f0_end_col = asts[0].f.loc
-
-    if f0_col == self_col and f0_ln == self_ln:
-        return False
-
-    _, _, fn_end_ln, fn_end_col = asts[-1].f.loc
-
-    if fn_end_col == self_end_col and fn_end_ln == self_end_ln:
-        return False
-
-    # dagnabit! have to count and balance delimiters around first element
-
-    self_end_col -= 1  # because in case of singleton tuple for sure there is a comma between end of first element and end of tuple, so at worst we exclude either the tuple closing paren or a comma, otherwise we exclude non-tuple closing delimiter
-
-    ldelims = len(next_delims(lines, self_ln, self_col, f0_ln, f0_col, ldelim))  # yes, we use next_delims() to count opening delimiters because we know conditions allow it
-    rdelims = len(next_delims(lines, f0_end_ln, f0_end_col, self_end_ln, self_end_col, rdelim))
-
-    return ldelims > rdelims
 
 
 def _maybe_add_line_continuations(self: fst.FST, whole: bool = False, del_comments: bool = True) -> bool:
