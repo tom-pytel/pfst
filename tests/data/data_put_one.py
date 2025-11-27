@@ -13494,9 +13494,93 @@ r'''V: list[int]'''),
 r'''**IndexError('index out of range')**'''),
 ],
 
+'arglike': [  # ................................................................................
+
+('', 0, False, 'bases', {}, (None,
+r'''class cls(b): pass'''),
+r'''*not b''',
+r'''class cls(*not b): pass''', r'''
+ClassDef - ROOT 0,0..0,23
+  .name 'cls'
+  .bases[1]
+   0] Starred - 0,10..0,16
+     .value UnaryOp - 0,11..0,16
+       .op Not - 0,11..0,14
+       .operand Name 'b' Load - 0,15..0,16
+     .ctx Load
+  .body[1]
+   0] Pass - 0,19..0,23
+'''),
+
+('', 0, False, None, {}, (None,
+r'''call(a)'''),
+r'''*not a''',
+r'''call(*not a)''', r'''
+Call - ROOT 0,0..0,12
+  .func Name 'call' Load - 0,0..0,4
+  .args[1]
+   0] Starred - 0,5..0,11
+     .value UnaryOp - 0,6..0,11
+       .op Not - 0,6..0,9
+       .operand Name 'a' Load - 0,10..0,11
+     .ctx Load
+'''),
+
+('slice', 0, False, None, {'_ver': 11}, (None,
+r'''a[b,]'''),
+r'''*not a''',
+r'''a[*not a,]''', r'''
+Subscript - ROOT 0,0..0,10
+  .value Name 'a' Load - 0,0..0,1
+  .slice Tuple - 0,2..0,9
+    .elts[1]
+     0] Starred - 0,2..0,8
+       .value UnaryOp - 0,3..0,8
+         .op Not - 0,3..0,6
+         .operand Name 'a' Load - 0,7..0,8
+       .ctx Load
+    .ctx Load
+  .ctx Load
+'''),
+
+('slice', 0, False, None, {'_ver': 11, 'raw': False}, (None,
+r'''a[*b]'''),
+r'''*not a''',
+r'''a[*not a,]''', r'''
+Subscript - ROOT 0,0..0,10
+  .value Name 'a' Load - 0,0..0,1
+  .slice Tuple - 0,2..0,9
+    .elts[1]
+     0] Starred - 0,2..0,8
+       .value UnaryOp - 0,3..0,8
+         .op Not - 0,3..0,6
+         .operand Name 'a' Load - 0,7..0,8
+       .ctx Load
+    .ctx Load
+  .ctx Load
+'''),
+
+('slice', 0, False, None, {'_ver': 11, 'raw': False}, (None,
+r'''a[(b,)]'''),
+r'''*not a''',
+r'''a[(*(not a),)]''', r'''
+Subscript - ROOT 0,0..0,14
+  .value Name 'a' Load - 0,0..0,1
+  .slice Tuple - 0,2..0,13
+    .elts[1]
+     0] Starred - 0,3..0,11
+       .value UnaryOp - 0,5..0,10
+         .op Not - 0,5..0,8
+         .operand Name 'a' Load - 0,9..0,10
+       .ctx Load
+    .ctx Load
+  .ctx Load
+'''),
+],
+
 'virtual_fields': [  # ................................................................................
 
-('', 1, 2, '_all', {}, ('Dict',
+('', 1, False, '_all', {}, ('Dict',
 r'''{1: a, 2: b, 3: c}'''),
 r'''**DEL**''',
 r'''{1: a, 3: c}''', r'''
@@ -13509,7 +13593,7 @@ Dict - ROOT 0,0..0,12
    1] Name 'c' Load - 0,10..0,11
 '''),
 
-('', 1, 2, '_all', {}, ('MatchMapping',
+('', 1, False, '_all', {}, ('MatchMapping',
 r'''{1: a, 2: b, 3: c}'''),
 r'''**DEL**''',
 r'''{1: a, 3: c}''', r'''
@@ -13524,7 +13608,7 @@ MatchMapping - ROOT 0,0..0,12
      .name 'c'
 '''),
 
-('', 1, 2, '_all', {'_verify_get': False}, ('Compare',
+('', 1, False, '_all', {'_verify_get': False}, ('Compare',
 r'''a < b > c'''),
 r'''**DEL**''',
 r'''a > c''', r'''
@@ -13536,7 +13620,7 @@ Compare - ROOT 0,0..0,5
    0] Name 'c' Load - 0,4..0,5
 '''),
 
-('', 1, 2, '_all', {'_verify_get': False, 'del_op_side': 'right'}, ('Compare',
+('', 1, False, '_all', {'_verify_get': False, 'del_op_side': 'right'}, ('Compare',
 r'''a < b > c'''),
 r'''**DEL**''',
 r'''a < c''', r'''

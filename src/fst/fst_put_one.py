@@ -702,9 +702,16 @@ def _make_exprish_fst(
     prefix: str = '',
     suffix: str = '',
     validated: int = 0,
+    arglike: bool = False,
 ) -> fst.FST:
     """Make an expression `FST` from `Code` for a field/idx containing an existing node or creating a new one. Takes
-    care of parenthesizing, indenting and offsetting."""
+    care of parenthesizing, indenting and offsetting.
+
+    **Parameters:**
+    - `validated`: The level to which code has already been validated and / or code_as()ed, `0`, `1` or `2`.
+    - `arglike`: Whether target is a valid arglike location (`Call.args`, `ClassDef.bases` or unaprenthesized slice
+        `Tuple`). Used to determine whether arglike expression needs parentheses added.
+    """
 
     if validated < 2:
         put_fst = static.code_as(code, self.root.parse_params, sanitize=True,
@@ -731,12 +738,11 @@ def _make_exprish_fst(
                 if precedence_require_parens(put_ast, self.a, field, idx):
                     return True
 
-            else:  # Starred gets checked against its child value because is complicated, could be a Call.args or ClassDef.bases '*a or b' or could have child already parenthesized
+            else:  # Starred gets checked against its child value because is complicated, could be a Call.args or ClassDef.bases '*a or b' or could have child already parenthesized (or worse, unparenthesized Subscript.slice Tuple)
                 star_child = put_ast.value
 
                 if (not isinstance(star_child, Tuple) and  # if Tuple we assume it is parenthesized because otherwise it could not come into existence without schenanigans
-                    precedence_require_parens(star_child, put_ast, 'value', star_call_arg=
-                                              (field == 'bases' or (field == 'args' and isinstance(self.a, Call)))) and
+                    precedence_require_parens(star_child, put_ast, 'value', star_arglike=arglike) and
                     (not adding or not star_child.f.pars().n)  # `not adding` to make sure we don't remove existing needed pars
                 ):
                     return True
@@ -863,6 +869,7 @@ def _put_one_exprish_required(
     validated: int = 0,
     target: fstloc | None = None,
     prefix: str = '',
+    arglike: bool = False,
 ) -> fst.FST:
     """Put a single required expression. Can be standalone or as part of sequence."""
 
@@ -875,7 +882,8 @@ def _put_one_exprish_required(
     childf = child.f
     ctx = ctx.__class__ if (ctx := getattr(child, 'ctx', None)) else Load
 
-    put_fst = _make_exprish_fst(self, code, idx, field, static, options, target or childf, ctx, prefix, '', validated)
+    put_fst = _make_exprish_fst(self, code, idx, field, static, options, target or childf, ctx, prefix, '', validated,
+                                arglike)
 
     childf._set_ast(put_fst.a)
 
@@ -967,7 +975,7 @@ def _put_one_ClassDef_bases(
         raise ValueError('cannot replace Starred ClassDef.bases element '
                          'with non-Starred base at this location (after keywords)')
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
+    return _put_one_exprish_required(self, code, idx, field, child, static, options, 2, arglike=True)
 
 
 def _put_one_ClassDef_keywords(
@@ -1197,7 +1205,7 @@ def _put_one_Call_args(
         raise ValueError('cannot replace Starred Call.args element with non-Starred arg at this location'
                          ' (after keywords)')
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
+    return _put_one_exprish_required(self, code, idx, field, child, static, options, 2, arglike=True)
 
 
 def _put_one_Call_keywords(
@@ -1373,12 +1381,12 @@ def _put_one_Tuple_elts(
     codea = code.a
     pfield = self.pfield
     is_slice = pfield and pfield.name == 'slice'
-    is_par = None  # cached
+    is_par = self._is_delimited_seq()
 
     if pfield and isinstance(codea, Slice):  # putting Slice to non-root Tuple
         if not is_slice:
             raise NodeError('cannot put Slice to non-root Tuple which is not an Subscript.slice')
-        elif is_par := self._is_delimited_seq():
+        elif is_par:
             raise NodeError('cannot put Slice to parenthesized Subscript.slice Tuple')
 
     if not isinstance(ctx := ast.ctx, Load):  # only allow possible expression targets into an expression target
@@ -1386,9 +1394,7 @@ def _put_one_Tuple_elts(
             raise NodeError(f'invalid expression for Tuple {ctx.__class__.__name__} target')
 
     if PYLT11:
-        if put_star_to_unpar_slice := (is_slice and isinstance(codea, Starred) and
-            (is_par is False or (is_par is None and not self._is_delimited_seq()))
-        ):
+        if put_star_to_unpar_slice := (is_slice and isinstance(codea, Starred) and not is_par):
             r = (elts := ast.elts)[idx]
 
             if any(isinstance(e, Slice) for e in elts if e is not r):
@@ -1400,14 +1406,13 @@ def _put_one_Tuple_elts(
             self._delimit_node()
 
     else:
-        if (PYGE14 and self.pfield == ('type', None) and isinstance(codea, Starred) and
-            (is_par is False or (is_par is None and not self._is_delimited_seq()))
-        ):  # if putting Starred to unparenthesized ExceptHandler.type Tuple then parenthesize it
+        if (PYGE14 and self.pfield == ('type', None) and isinstance(codea, Starred) and not is_par):  # if putting Starred to unparenthesized ExceptHandler.type Tuple then parenthesize it
             self._delimit_node()
 
         self_is_solo_star_in_slice = is_slice and len(elts := ast.elts) == 1 and isinstance(elts[0], Starred)  # because of replacing the Starred in 'a[*i_am_really_a_tuple]'
 
-        ret = _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
+        ret = _put_one_exprish_required(self, code, idx, field, child, static, options, 2,
+                                        arglike=is_slice and not is_par)
 
         if self_is_solo_star_in_slice:
             self._maybe_add_singleton_tuple_comma(is_par)
@@ -1755,7 +1760,8 @@ def _one_info_exprish_required(self: fst.FST, static: onestatic, idx: int | None
     return _oneinfo_default
 
 _onestatic_expr_required             = onestatic(_one_info_exprish_required, _restrict_default)
-_onestatic_expr_required_starred     = onestatic(_one_info_exprish_required, _restrict_fmtval_slice)
+_onestatic_expr_required_w_starred   = onestatic(_one_info_exprish_required, _restrict_fmtval_slice)
+_onestatic_expr_required_arglike     = onestatic(_one_info_exprish_required, _restrict_fmtval_slice, code_as=code_as_expr_arglike)
 _onestatic_comprehension_required    = onestatic(_one_info_exprish_required, comprehension, code_as=code_as_comprehension)
 _onestatic_arguments_required        = onestatic(_one_info_exprish_required, arguments, code_as=code_as_arguments)
 _onestatic_arguments_lambda_required = onestatic(_one_info_exprish_required, arguments, code_as=code_as_arguments_lambda)
@@ -2361,13 +2367,13 @@ _PUT_ONE_HANDLERS = {
     (ClassDef, 'decorator_list'):         (True,  _put_one_exprish_required, _onestatic_expr_required),  # expr*
     (ClassDef, 'name'):                   (False, _put_one_identifier_required, onestatic(_one_info_ClassDef_name, _restrict_default, code_as=code_as_identifier)),  # identifier
     (ClassDef, 'type_params'):            (True,  _put_one_exprish_required, _onestatic_type_param_required),  # type_param*
-    (ClassDef, 'bases'):                  (True,  _put_one_ClassDef_bases, _onestatic_expr_required_starred),  # expr*
+    (ClassDef, 'bases'):                  (True,  _put_one_ClassDef_bases, _onestatic_expr_required_arglike),  # expr*
     (ClassDef, 'keywords'):               (True,  _put_one_ClassDef_keywords, _onestatic_keyword_required),  # keyword*
     (ClassDef, 'body'):                   (True,  None, None),  # stmt*
     (Return, 'value'):                    (False, _put_one_exprish_optional, onestatic(_one_info_Return_value, _restrict_default)),  # expr?
     (Delete, 'targets'):                  (True,  _put_one_exprish_required, onestatic(_one_info_exprish_required, is_valid_del_target, ctx=Del)),  # expr*
     (Assign, 'targets'):                  (True,  _put_one_exprish_required, _onestatic_target),  # expr*
-    (Assign, 'value'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
+    (Assign, 'value'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr  - python technically allows Starred for parse but is not compilable, should we allow it as well for consistency?
     (TypeAlias, 'name'):                  (False, _put_one_exprish_required, _onestatic_target_Name),  # expr
     (TypeAlias, 'type_params'):           (True,  _put_one_exprish_required, _onestatic_type_param_required),  # type_param*
     (TypeAlias, 'value'):                 (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
@@ -2434,7 +2440,7 @@ _PUT_ONE_HANDLERS = {
     (Dict, 'keys'):                       (False, _put_one_Dict_keys, onestatic(_one_info_Dict_key, _restrict_default)),  # expr*
     (Dict, 'values'):                     (False, _put_one_exprish_required, _onestatic_expr_required),  # expr*
     (Dict, '_all'):                       (True,  None, None),  # expr*
-    (Set, 'elts'):                        (True,  _put_one_exprish_required, _onestatic_expr_required_starred),  # expr*
+    (Set, 'elts'):                        (True,  _put_one_exprish_required, _onestatic_expr_required_w_starred),  # expr*
     (ListComp, 'elt'):                    (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (ListComp, 'generators'):             (True,  _put_one_exprish_required, _onestatic_comprehension_required),  # comprehension*
     (SetComp, 'elt'):                     (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
@@ -2452,7 +2458,7 @@ _PUT_ONE_HANDLERS = {
     (Compare, 'comparators'):             (False, _put_one_exprish_required, _onestatic_expr_required),  # expr*
     (Compare, '_all'):                    (True,  _put_one_Compare__all, _onestatic_expr_required),  # expr*
     (Call, 'func'):                       (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
-    (Call, 'args'):                       (True,  _put_one_Call_args, onestatic(_one_info_exprish_required, _restrict_fmtval_slice, code_as=code_as_expr_arglike)),  # expr*
+    (Call, 'args'):                       (True,  _put_one_Call_args, _onestatic_expr_required_arglike),  # expr*
     (Call, 'keywords'):                   (True,  _put_one_Call_keywords, _onestatic_keyword_required),  # keyword*
     (FormattedValue, 'value'):            (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (FormattedValue, 'conversion'):       (False, _put_one_NOT_IMPLEMENTED_YET_12, onestatic(_one_info_conversion, Constant)),  # int  # onestatic only here for info for raw put, Constant must be str
@@ -2475,7 +2481,7 @@ _PUT_ONE_HANDLERS = {
     (Starred, 'ctx'):                     (False, _put_one_ctx, _onestatic_ctx),  # expr_context
     (Name, 'id'):                         (False, _put_one_identifier_required, _onestatic_identifier_required),  # identifier
     (Name, 'ctx'):                        (False, _put_one_ctx, _onestatic_ctx),  # expr_context
-    (List, 'elts'):                       (True,  _put_one_List_elts, _onestatic_expr_required_starred),  # expr*
+    (List, 'elts'):                       (True,  _put_one_List_elts, _onestatic_expr_required_w_starred),  # expr*
     (List, 'ctx'):                        (False, _put_one_ctx, _onestatic_ctx),  # expr_context
     (Tuple, 'elts'):                      (True,  _put_one_Tuple_elts, onestatic(_one_info_exprish_required, _restrict_fmtval, code_as=code_as_Tuple_elt)),  # expr*  - special handling because Tuples can contain Slices in an unparenthesized .slice field
     (Tuple, 'ctx'):                       (False, _put_one_ctx, _onestatic_ctx),  # expr_context

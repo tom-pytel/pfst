@@ -58,11 +58,6 @@ always parse to the current tree.
 
 # Details
 
-Disclaimer: The intended use of this module is if you want to change code functionality without having to deal with
-syntax details, not lint or format, there are better options for that. The main focus of `fst` is not necessarily to be
-fast but rather to handle all the weird cases of python syntax so that functional code always results, use a formatter
-afterwards as needed.
-
 `fst` was written and tested on Python versions 3.10 through 3.14.
 
 `fst` works by keeping a copy of the entire source at the root `FST` node of a tree and modifying this source alongside
@@ -91,6 +86,13 @@ There is also a mechanism for allowing outside editing of the `AST` tree and the
 to preserve formatting where possible. This is intended for existing code or third-party libraries which don't know
 anything about `fst` to maybe gain the ability to preserve some existing formatting when editing a tree.
 `fst.docs.d10_reconcile`.
+
+Disclaimer: The intended use of this module is if you want to change code functionality without having to deal with
+syntax details, not lint or format, there are better options for that. The main focus of `fst` is not necessarily to be
+fast but rather to handle all the weird cases of python syntax so that functional code always results, use a formatter
+afterwards as needed.
+
+Note: If you will be playing with this module then the `FST.dump()` method will be your friend.
 """
 
 import ast
