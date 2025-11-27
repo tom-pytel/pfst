@@ -1584,26 +1584,23 @@ def _maybe_ins_separator(
     while frag := next_frag(lines, ln, col, end_ln, end_col):  # find comma or something else, skipping close parens
         cln, ccol, src = frag
 
-        for c in src:
-            ccol += 1
+        while src.startswith(')'):
+            ln = cln
+            col = ccol = ccol + 1
+            src = src[1:]
 
-            if c == ')':
-                ln = cln
-                col = ccol
-
-            elif c != sep:
-                break
-
-            else:
-                if space and ((cln == end_ln and ccol == end_col) or not _re_one_space_or_end.match(lines[cln], ccol)):
-                    self._put_src([' '], cln, ccol, cln, ccol, True, exclude=exclude, offset_excluded=offset_excluded)
-
-                    return srcwpos(cln, ccol, ' ')
-
-                return None
-
-        else:
+        if not src:
             continue
+
+        if src.startswith(sep):
+            ccol += len(sep)
+
+            if space and ((cln == end_ln and ccol == end_col) or not _re_one_space_or_end.match(lines[cln], ccol)):
+                self._put_src([' '], cln, ccol, cln, ccol, True, exclude=exclude, offset_excluded=offset_excluded)
+
+                return srcwpos(cln, ccol, ' ')
+
+            return None
 
         break
 
