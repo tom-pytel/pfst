@@ -152,7 +152,7 @@ Or get all global options.
  'norm_put': None,
  'set_norm': 'both',
  'matchor_norm': 'value',
- 'del_op_side': 'left'}
+ 'op_side': 'left'}
 ```
 
 ## Special

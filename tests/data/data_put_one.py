@@ -13629,7 +13629,7 @@ Compare - ROOT 0,0..0,5
    0] Name 'c' Load - 0,4..0,5
 '''),
 
-('', 1, False, '_all', {'_verify_get': False, 'del_op_side': 'right'}, ('Compare',
+('', 1, False, '_all', {'_verify_get': False, 'op_side': 'right'}, ('Compare',
 r'''a < b > c'''),
 r'''**DEL**''',
 r'''a < c''', r'''

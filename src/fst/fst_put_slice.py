@@ -1612,7 +1612,7 @@ def _put_slice_Compare__all(
     """In order to carry out this operation over all the operands we temporarily add `left` to `comparators` to make
     that a contiguous list of everything since source-wise it already is. When deleting we also need to delete an extra
     operator, which defaults to the one on the left side of the comparators being deleted but can be overridden with
-    `del_op_side='right'` (which is treated as a hint so if not possible no error is raised and other one is deleted).
+    `op_side='right'` (which is treated as a hint so if not possible no error is raised and other one is deleted).
     """
 
     fst_ = _code_to_slice_Compare__all(self, code, one, options)
@@ -1635,22 +1635,22 @@ def _put_slice_Compare__all(
         if len_slice == len_body:
             raise ValueError('cannot delete all Compare elements')
 
-        del_op_side = options.get('del_op_side')  # figure out which side we are deleting the extra operator from, the option is treated as a hint
-        del_op_side_right = del_op_side == 'right'
+        op_side = options.get('op_side')  # figure out which side we are deleting the extra operator from, the option is treated as a hint
+        op_side_right = op_side == 'right'
 
-        if not del_op_side_right:
-            if del_op_side not in (None, 'left'):
-                raise ValueError(f"expecting 'left' or 'right' for 'del_op_side' option, got {del_op_side!r}")
+        if not op_side_right:
+            if op_side not in (None, 'left'):
+                raise ValueError(f"expecting 'left' or 'right' for 'op_side' option, got {op_side!r}")
 
             if is_first:
-                del_op_side_right = True
+                op_side_right = True
 
         elif is_last:
-            del_op_side_right = False
+            op_side_right = False
 
         # hacky but valid way of doing this, include the extra operator which will be deleted in the location of the comparator next to it which will be deleted, otherwise it gets reeeally complicated
 
-        if del_op_side_right:
+        if op_side_right:
             cmp = body[stop - 2] if stop >= 2 else left  # last comparator
             op = ops[stop - 1].f  # operator to the right of it
 
@@ -1662,7 +1662,7 @@ def _put_slice_Compare__all(
             cmp.end_col_offset = op.end_col_offset
 
         else:
-            cmp = body[start - 1]  # first comparator (we know start > 0 because del_op_side_right is False)
+            cmp = body[start - 1]  # first comparator (we know start > 0 because op_side_right is False)
             op = ops[start - 1].f  # operator to the left of it
 
             _, _, end_ln, end_col = cmp.f.pars()  # we need pars because if they are present the op is outside of them so the start of cmp needs to include them as well
@@ -1691,7 +1691,7 @@ def _put_slice_Compare__all(
                         bound_ln, bound_col, bound_end_ln, bound_end_col,
                         options, 'comparators')
 
-        slice_ops = slice(start + 1, stop + 1) if del_op_side_right else slice(start, stop)
+        slice_ops = slice(start + 1, stop + 1) if op_side_right else slice(start, stop)
 
         self._unmake_fst_tree(body[start : stop] + ops[slice_ops])
 
@@ -1756,7 +1756,7 @@ def _put_slice_Compare__all(
             self._set_ast(left, True)
 
     elif is_del:  # otherwise more than one element and there are operators and if deleted then need to make sure we didn't join alnums with an 'is', 'is not', 'in' or 'not in' by deleting the extra operator
-        if del_op_side_right:
+        if op_side_right:
             ln, col, _, _ = body[stop - len_slice - 1].f.loc  # start of comparator after extra operator that was deleted
         else:
             _, _, ln, col = cmp = (body[start - 2] if start >= 2 else left).f.loc  # end of element before start

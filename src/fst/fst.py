@@ -144,7 +144,7 @@ class _ThreadLocal(threading.local):
             'norm_put':      None,    # True | False | None
             'set_norm':     'both',   # False | 'star' | 'call' | 'both'
             'matchor_norm': 'value',  # False | 'value' | 'strict'
-            'del_op_side':  'left',   # 'left' | 'right'
+            'op_side':      'left',   # 'left' | 'right'
         }
 
 
@@ -1058,7 +1058,7 @@ class FST:
          'norm_put': None,
          'set_norm': 'both',
          'matchor_norm': 'value',
-         'del_op_side': 'left'}
+         'op_side': 'left'}
         ```
         """
 
@@ -1236,7 +1236,7 @@ class FST:
             - `strict`: Error on length 1 as well as length zero.
             - `False`: No `MatchOr` normalization regardless of `norm` or `norm_*` options, just leave or return an
                 invalid `MatchOr` object.
-        -`del_op_side`: When cutting or deleting from a `Compare` an extra operator needs to be deleted. This options
+        -`op_side`: When cutting or deleting from a `Compare` an extra operator needs to be deleted. This options
             specifies which side, `'left'` or `'right'`. This matters for `Compare` because the operators may be
             different. This option is treated as a hint and will not raise an error if the side cannot be deleted or the
             other side must be.

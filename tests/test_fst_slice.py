@@ -1816,7 +1816,7 @@ if (
         self.assertEqual('a is c', (f := FST('a!= b is c')).put_slice(None, 1, 2).root.src)
         f.verify()
 
-        self.assertEqual('a is c', (f := FST('a is(b)!=c')).put_slice(None, 1, 2, del_op_side='right').root.src)
+        self.assertEqual('a is c', (f := FST('a is(b)!=c')).put_slice(None, 1, 2, op_side='right').root.src)
         f.verify()
 
         # start and end positions
