@@ -128,7 +128,6 @@ __all__ = [
 
 class _ThreadLocal(threading.local):
     def __init__(self) -> None:
-        self.modifying = set()  # root nodes of trees being `_Modifying()`ed, to prevent multiple nested on same tree
         self.options = {
             'raw':           False,   # True | False | 'auto'
             'trivia':        True,    # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line')  - 'all' and 'block' may be followed by a '+|-[int]' ('all+1', 'block-10', 'block+')

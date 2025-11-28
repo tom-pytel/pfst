@@ -104,6 +104,8 @@ from .common import (
 
 _HAS_FSTR_COMMENT_BUG = f'{"a#b"=}' != '"a#b"=\'a#b\''  # gh-135148
 
+_MODIFYING = set()  # root nodes of trees being `_Modifying()`ed, to prevent multiple nested on same tree
+
 _astfieldctx = astfield('ctx')
 
 _re_fval_expr_equals = re.compile(r'(?:\s*(?:#.*|\\)\n)*\s*=\s*(?:(?:#.*|\\)\n\s*)*')  # format string expression tail '=' indicating self-documenting debug str
@@ -271,11 +273,9 @@ class _Modifying:
         parameters being invalidated by some other modification."""
 
         fst_, field, raw = self._params
-
         self.root = root = fst_.root
-        modifying = fst._TLOCAL.modifying
 
-        if root in modifying:
+        if root in _MODIFYING:
             raise RuntimeError(f'nested modification not allowed on {root}')
 
         if raw:
@@ -320,7 +320,7 @@ class _Modifying:
                     field = pfield.name
                     fst_ = parent
 
-        modifying.add(root)
+        _MODIFYING.add(root)
 
         return self
 
@@ -336,7 +336,7 @@ class _Modifying:
 
         root = self.root  # should be same as fst_.root if passed in since root node never changes even with raw reparse
 
-        fst._TLOCAL.modifying.remove(root)
+        _MODIFYING.remove(root)
 
         root._serial += 1
 
@@ -379,7 +379,7 @@ class _Modifying:
     def fail(self, exc_val: BaseException | None = None) -> None:
         """Parameter `exc_val` not currently used for anything."""
 
-        fst._TLOCAL.modifying.remove(self.root)
+        _MODIFYING.remove(self.root)
 
 
 @pyver(lt=12)  # override _Modifying if py too low
@@ -404,11 +404,9 @@ class _Modifying:
 
     def enter(self) -> Self:
         fst_, _, raw = self._params
-
         self.root = root = fst_.root
-        modifying = fst._TLOCAL.modifying
 
-        if root in modifying:
+        if root in _MODIFYING:
             raise RuntimeError(f'nested modification not allowed on {root}')
 
         if not raw:
@@ -419,19 +417,19 @@ class _Modifying:
                 if not (fst_ := fst_.parent):
                     break
 
-        modifying.add(root)
+        _MODIFYING.add(root)
 
         return self
 
     def success(self, fst_: fst.FST | None | Literal[False] = False) -> None:
         root = self.root  # should be same as fst_.root if present since root node never changes
 
-        fst._TLOCAL.modifying.remove(root)
+        _MODIFYING.remove(root)
 
         root._serial += 1
 
     def fail(self, exc_val: BaseException | None = None) -> None:
-        fst._TLOCAL.modifying.remove(self.root)
+        _MODIFYING.remove(self.root)
 
 
 class _ParamsOffset(NamedTuple):
