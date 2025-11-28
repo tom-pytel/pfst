@@ -34,11 +34,21 @@ _LocFunc = Callable[[list[AST], int], fstloc]  # location function for child wit
 _re_open_delim_or_space = re.compile(r'[({\s[]')  # this is a special set of delimiter openers which are considered to not need an aesthetic space after
 _re_close_delim_or_space_or_end = re.compile(r'[)}\s\]:]|$')  # this is a special set of terminations which are considered to not need an aesthetic space before if a slice put ends with a non-space right before them
 
+_re_sep_starts = {  # match separator at start of fragment, needs to be a pattern to recognize 'and\b' and 'or\b' so they are not recognized as part of an identifier like 'origin'
+    ',':   re.compile(r','),
+    '|':   re.compile(r'\|'),  # this doesn't need a check against '|='
+    '=':   re.compile(r'='),  # this doesn't need a check against '=='
+    'and': re.compile(r'and\b'),
+    'or':  re.compile(r'or\b'),
+}
+
 _re_sep_line_nonexpr_end = {  # empty line with optional separator and line continuation or a pure comment line
-    ',': re.compile(r'\s*(?:,\s*)?(?:\\|#.*)?$'),
-    '|': re.compile(r'\s*(?:\|\s*)?(?:\\|#.*)?$'),
-    '=': re.compile(r'\s*(?:=\s*)?(?:\\|#.*)?$'),
-    '': re.compile(r'\s*(?:\\|#.*)?$'),
+    ',':   re.compile(r'\s*  (?:,\s*)?    (?:\\|\#.*)?  $', re.VERBOSE),
+    '|':   re.compile(r'\s*  (?:\|\s*)?   (?:\\|\#.*)?  $', re.VERBOSE),
+    '=':   re.compile(r'\s*  (?:=\s*)?    (?:\\|\#.*)?  $', re.VERBOSE),
+    'and': re.compile(r'\s*  (?:and\s*)?  (?:\\|\#.*)?  $', re.VERBOSE),
+    'or':  re.compile(r'\s*  (?:or\s*)?   (?:\\|\#.*)?  $', re.VERBOSE),
+    '':    re.compile(r'\s*               (?:\\|\#.*)?  $', re.VERBOSE),
 }
 
 _shorter = lambda a, b: a if len(a) < len(b) else b
@@ -302,7 +312,7 @@ def _locs_slice(
         _, _, last_end_ln, last_end_col = loc_last
 
     if (sep and (frag := next_frag(lines, last_end_ln, last_end_col, bound_end_ln, bound_end_col)) and
-        frag.src.startswith(sep)
+        _re_sep_starts[sep].match(frag.src)
     ):  # if separator present then set end of element to just past it
         last_end_ln = frag.ln
         last_end_col = frag.col + len(sep)
@@ -448,7 +458,8 @@ def get_slice_sep(
     - `ast_last`: The `AST` of the last element copied or cut, not assumend to have `.f` `FST` attribute to begin with.
         Can be `None` if not doing separators.
     - `loc_first`: The full location of the first element copied or cut, parentheses included.
-    - `loc_last`: The full location of the last element copied or cut, parentheses included.
+    - `loc_last`: The full location of the last element copied or cut, parentheses included. Must be `is` identical to
+        `loc_first` if they are the same element.
     - (`bound_ln`, `bound_col`): End of previous element (past pars) or start of container (just past
         delimiters) if no previous element. DIFFERENT FROM put_slice_sep_begin()!!!
     - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters). This can be past last element of

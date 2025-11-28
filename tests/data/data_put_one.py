@@ -7589,7 +7589,16 @@ Module - ROOT 0,0..0,19
 ('body[0].value', 0, False, None, {'raw': False}, ('exec',
 r'''a and (b) and c'''), (None,
 r'''**DEL**'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**'''),
+r'''(b) and c''', r'''
+Module - ROOT 0,0..0,9
+  .body[1]
+   0] Expr - 0,0..0,9
+     .value BoolOp - 0,0..0,9
+       .op And
+       .values[2]
+        0] Name 'b' Load - 0,1..0,2
+        1] Name 'c' Load - 0,8..0,9
+'''),
 
 ('body[0].value', 0, False, None, {}, ('exec',
 r'''a and (b) and c'''), (None,

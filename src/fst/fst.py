@@ -1237,10 +1237,10 @@ class FST:
             - `strict`: Error on length 1 as well as length zero.
             - `False`: No `MatchOr` normalization regardless of `norm` or `norm_*` options, just leave or return an
                 invalid `MatchOr` object.
-        -`del_op_side`: When cutting or deleting from a `Compare` or `BoolOp` an extra operator needs to be deleted.
-            This options specifies which side, `'left'` or `'right'`. This matters for `Compare` because the operators
-            may be different and for `BoolOp` mainly for trivia on either side. This option is treated as a hint and
-            will not raise an error if the side cannot be deleted or the other side must be.
+        -`del_op_side`: When cutting or deleting from a `Compare` an extra operator needs to be deleted. This options
+            specifies which side, `'left'` or `'right'`. This matters for `Compare` because the operators may be
+            different. This option is treated as a hint and will not raise an error if the side cannot be deleted or the
+            other side must be.
             - `'left'`: Delete preceding operator on left side of slice.
             - `'right'`: Delete trailing operator on right side of slice.
 
@@ -2409,50 +2409,46 @@ class FST:
         ```
         """
 
-        key = f'pars_{None if shared is None else bool(shared)}'
+        key = 'parsT' if shared else 'parsF' if shared is False else 'parsN'
 
         try:
-            cached = self._cache[key]
+            return self._cache[key]
         except KeyError:
             pass
-        else:
-            return cached
 
         if not self._is_parenthesizable() and shared is not None:
-            self._cache[key] = locn = None if (l := self.bloc) is None else fstlocn(l[0], l[1], l[2], l[3], n=0)
-
-            return locn
-
-        ln, col, end_ln, end_col = self.bloc
-
-        rpars = next_delims(self.root._lines, end_ln, end_col, *next_bound(self))
-
-        if (lrpars := len(rpars)) == 1:  # no pars on right
-            if not shared and self._is_solo_call_arg_genexp():
-                locn = fstlocn(ln, col + 1, end_ln, end_col - 1, n=-1)
+            if (l := self.bloc) is None:
+                locn = None
             else:
-                locn = fstlocn(ln, col, end_ln, end_col, n=0)
+                locn = fstlocn(l[0], l[1], l[2], l[3], n=0)
 
-            self._cache[key] = locn
-
-            return locn
-
-        lpars = prev_delims(self.root._lines, *prev_bound(self), ln, col)
-
-        if (llpars := len(lpars)) == 1:  # no pars on left
-            self._cache[key] = locn = fstlocn(ln, col, end_ln, end_col, n=0)
-
-            return locn
-
-        if (llpars <= lrpars and shared is not None and
-            (self._is_solo_call_arg() or self._is_solo_class_base() or self._is_solo_matchcls_pat())
-        ):
-            llpars -= 1
-
-        if llpars != lrpars:  # unbalanced pars so we know we can safely use the lower count
-            locn = fstlocn(*lpars[npars := min(llpars, lrpars) - 1], *rpars[npars], n=npars)
         else:
-            locn = fstlocn(*lpars[npars := llpars - 1], *rpars[npars], n=npars)
+            ln, col, end_ln, end_col = self.bloc
+
+            rpars = next_delims(self.root._lines, end_ln, end_col, *next_bound(self))
+
+            if (lrpars := len(rpars)) == 1:  # no pars on right
+                if not shared and self._is_solo_call_arg_genexp():
+                    locn = fstlocn(ln, col + 1, end_ln, end_col - 1, n=-1)
+                else:
+                    locn = fstlocn(ln, col, end_ln, end_col, n=0)
+
+            else:
+                lpars = prev_delims(self.root._lines, *prev_bound(self), ln, col)
+
+                if (llpars := len(lpars)) == 1:  # no pars on left
+                    locn = fstlocn(ln, col, end_ln, end_col, n=0)
+
+                else:
+                    if (llpars <= lrpars and shared is not None and
+                        (self._is_solo_call_arg() or self._is_solo_class_base() or self._is_solo_matchcls_pat())
+                    ):
+                        llpars -= 1
+
+                    if llpars != lrpars:  # unbalanced pars so we know we can safely use the lower count
+                        locn = fstlocn(*lpars[n := min(llpars, lrpars) - 1], *rpars[n], n=n)
+                    else:
+                        locn = fstlocn(*lpars[n := llpars - 1], *rpars[n], n=n)
 
         self._cache[key] = locn
 

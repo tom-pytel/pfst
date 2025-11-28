@@ -936,9 +936,21 @@ r'''**ValueError('cannot delete BoolOp.op')**''',
 r'''and''',
 r'''And - ROOT 0,0..0,3'''),
 
-('', 0, False, 'values', {}, (BoolOp,
+('', 0, False, 'values', {'norm': True}, (BoolOp,
 r'''val1 and val2'''),
-r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
+r'''val2''',
+r'''Name 'val2' Load - ROOT 0,0..0,4''',
+r'''val1''',
+r'''Name 'val1' Load - ROOT 0,0..0,4'''),
+
+('', 0, False, 'values', {'_verify_self': False, 'norm_self': False}, (BoolOp,
+r'''val1 and val2'''),
+r'''val2''', r'''
+BoolOp - ROOT 0,0..0,4
+  .op And
+  .values[1]
+   0] Name 'val2' Load - 0,0..0,4
+''',
 r'''val1''',
 r'''Name 'val1' Load - ROOT 0,0..0,4'''),
 

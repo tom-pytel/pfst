@@ -26128,6 +26128,975 @@ ClassDef - ROOT 0,0..0,39
 '''),
 ],
 
+'BoolOp_values': [  # ................................................................................
+
+('', 0, 1, None, {}, (None,
+r'''a and b and c'''), (None,
+r'''x'''),
+r'''x and b and c''', r'''
+BoolOp - ROOT 0,0..0,13
+  .op And
+  .values[3]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'b' Load - 0,6..0,7
+   2] Name 'c' Load - 0,12..0,13
+'''),
+
+('', 1, 2, None, {}, (None,
+r'''a and b and c'''), (None,
+r'''x'''),
+r'''a and x and c''', r'''
+BoolOp - ROOT 0,0..0,13
+  .op And
+  .values[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 0,6..0,7
+   2] Name 'c' Load - 0,12..0,13
+'''),
+
+('', 2, 3, None, {}, (None,
+r'''a and b and c'''), (None,
+r'''x'''),
+r'''a and b and x''', r'''
+BoolOp - ROOT 0,0..0,13
+  .op And
+  .values[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,6..0,7
+   2] Name 'x' Load - 0,12..0,13
+'''),
+
+('', 0, 2, None, {}, (None,
+r'''a and b and c'''), (None,
+r'''x'''),
+r'''x and c''', r'''
+BoolOp - ROOT 0,0..0,7
+  .op And
+  .values[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'c' Load - 0,6..0,7
+'''),
+
+('', 1, 3, None, {}, (None,
+r'''a and b and c'''), (None,
+r'''x'''),
+r'''a and x''', r'''
+BoolOp - ROOT 0,0..0,7
+  .op And
+  .values[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 0,6..0,7
+'''),
+
+('', 0, 3, None, {'_verify_self': False}, (None,
+r'''a and b and c'''), (None,
+r'''x'''),
+r'''x''', r'''
+BoolOp - ROOT 0,0..0,1
+  .op And
+  .values[1]
+   0] Name 'x' Load - 0,0..0,1
+'''),
+
+('', 0, 3, None, {'norm_self': True}, (None,
+r'''a and b and c'''), (None,
+r'''x'''),
+r'''x''',
+r'''Name 'x' Load - ROOT 0,0..0,1'''),
+
+('', 0, 1, None, {}, (None,
+r'''a and b and c'''), (None,
+r'''( x )'''),
+r'''( x ) and b and c''',
+r'''x and b and c''', r'''
+BoolOp - ROOT 0,0..0,17
+  .op And
+  .values[3]
+   0] Name 'x' Load - 0,2..0,3
+   1] Name 'b' Load - 0,10..0,11
+   2] Name 'c' Load - 0,16..0,17
+'''),
+
+('', 1, 2, None, {}, (None,
+r'''a and b and c'''), (None,
+r'''( x )'''),
+r'''a and ( x ) and c''',
+r'''a and x and c''', r'''
+BoolOp - ROOT 0,0..0,17
+  .op And
+  .values[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 0,8..0,9
+   2] Name 'c' Load - 0,16..0,17
+'''),
+
+('', 2, 3, None, {}, (None,
+r'''a and b and c'''), (None,
+r'''( x )'''),
+r'''a and b and ( x )''',
+r'''a and b and x''', r'''
+BoolOp - ROOT 0,0..0,17
+  .op And
+  .values[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,6..0,7
+   2] Name 'x' Load - 0,14..0,15
+'''),
+
+('', 0, 2, None, {}, (None,
+r'''a and b and c'''), (None,
+r'''( x )'''),
+r'''( x ) and c''',
+r'''x and c''', r'''
+BoolOp - ROOT 0,0..0,11
+  .op And
+  .values[2]
+   0] Name 'x' Load - 0,2..0,3
+   1] Name 'c' Load - 0,10..0,11
+'''),
+
+('', 1, 3, None, {}, (None,
+r'''a and b and c'''), (None,
+r'''( x )'''),
+r'''a and ( x )''',
+r'''a and x''', r'''
+BoolOp - ROOT 0,0..0,11
+  .op And
+  .values[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 0,8..0,9
+'''),
+
+('', 0, 3, None, {'_verify_self': False}, (None,
+r'''a and b and c'''), (None,
+r'''( x )'''),
+r'''( x )''',
+r'''x''', r'''
+BoolOp - ROOT 0,0..0,5
+  .op And
+  .values[1]
+   0] Name 'x' Load - 0,2..0,3
+'''),
+
+('', 0, 3, None, {'norm_self': True}, (None,
+r'''a and b and c'''), (None,
+r'''( x )'''),
+r'''( x )''',
+r'''x''',
+r'''Name 'x' Load - ROOT 0,2..0,3'''),
+
+('', 0, 1, None, {}, (None,
+r'''a and b and c'''), (None, r'''
+# pre
+x  # line
+# post
+'''), r'''
+(# pre
+x and  # line
+# post
+b and c)
+''',
+r'''x and b and c''', r'''
+BoolOp - ROOT 1,0..3,7
+  .op And
+  .values[3]
+   0] Name 'x' Load - 1,0..1,1
+   1] Name 'b' Load - 3,0..3,1
+   2] Name 'c' Load - 3,6..3,7
+'''),
+
+('', 0, 1, None, {'pars': False}, (None,
+r'''a and b and c'''), (None, r'''
+# pre
+x  # line
+# post
+'''), r'''
+# pre
+x and  # line
+# post
+b and c
+''',
+r'''x and b and c''', r'''
+BoolOp - ROOT 1,0..3,7
+  .op And
+  .values[3]
+   0] Name 'x' Load - 1,0..1,1
+   1] Name 'b' Load - 3,0..3,1
+   2] Name 'c' Load - 3,6..3,7
+'''),
+
+('', 1, 2, None, {}, (None,
+r'''a and b and c'''), (None, r'''
+# pre
+x  # line
+# post
+'''), r'''
+(a and # pre
+x and  # line
+# post
+c)
+''',
+r'''a and x and c''', r'''
+BoolOp - ROOT 0,1..3,1
+  .op And
+  .values[3]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'x' Load - 1,0..1,1
+   2] Name 'c' Load - 3,0..3,1
+'''),
+
+('', 1, 2, None, {}, (None,
+r'''a and b and c'''), (None, r'''
+
+# pre
+x  # line
+# post
+
+'''), r'''
+(a and
+# pre
+x and  # line
+# post
+c)
+''',
+r'''a and x and c''', r'''
+BoolOp - ROOT 0,1..4,1
+  .op And
+  .values[3]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'x' Load - 2,0..2,1
+   2] Name 'c' Load - 4,0..4,1
+'''),
+
+('', 2, 3, None, {}, (None,
+r'''a and b and c'''), (None, r'''
+# pre
+x  # line
+# post
+'''), r'''
+(a and b and # pre
+x  # line
+# post
+)
+''',
+r'''a and b and x''', r'''
+BoolOp - ROOT 0,1..1,1
+  .op And
+  .values[3]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 0,7..0,8
+   2] Name 'x' Load - 1,0..1,1
+'''),
+
+('', 0, 2, None, {}, (None,
+r'''a and b and c'''), (None, r'''
+# pre
+x  # line
+# post
+'''), r'''
+(# pre
+x and  # line
+# post
+c)
+''',
+r'''x and c''', r'''
+BoolOp - ROOT 1,0..3,1
+  .op And
+  .values[2]
+   0] Name 'x' Load - 1,0..1,1
+   1] Name 'c' Load - 3,0..3,1
+'''),
+
+('', 1, 3, None, {}, (None,
+r'''a and b and c'''), (None, r'''
+# pre
+x  # line
+# post
+'''), r'''
+(a and # pre
+x  # line
+# post
+)
+''',
+r'''a and x''', r'''
+BoolOp - ROOT 0,1..1,1
+  .op And
+  .values[2]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'x' Load - 1,0..1,1
+'''),
+
+('', 0, 3, None, {'_verify_self': False}, (None,
+r'''a and b and c'''), (None, r'''
+# pre
+x  # line
+# post
+'''), r'''
+(# pre
+x  # line
+# post
+)
+''',
+r'''x''', r'''
+BoolOp - ROOT 1,0..1,1
+  .op And
+  .values[1]
+   0] Name 'x' Load - 1,0..1,1
+'''),
+
+('', 0, 3, None, {'norm_self': True}, (None,
+r'''a and b and c'''), (None, r'''
+# pre
+x  # line
+# post
+'''), r'''
+(# pre
+x  # line
+# post
+)
+''',
+r'''x''',
+r'''Name 'x' Load - ROOT 1,0..1,1'''),
+
+('', 0, 1, None, {}, (None, r'''
+a
+and b
+and c
+'''), (None, r'''
+x
+and y
+'''), r'''
+(x
+and y and b
+and c)
+''', r'''
+(x and y and b
+and c)
+''', r'''
+BoolOp - ROOT 0,1..2,5
+  .op And
+  .values[4]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,4..1,5
+   2] Name 'b' Load - 1,10..1,11
+   3] Name 'c' Load - 2,4..2,5
+'''),
+
+('', 1, 2, None, {}, (None, r'''
+a
+and b
+and c
+'''), (None, r'''
+x
+and y
+'''), r'''
+(a
+and x
+and y and c)
+''', r'''
+(a
+and x and y and c)
+''', r'''
+BoolOp - ROOT 0,1..2,11
+  .op And
+  .values[4]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'x' Load - 1,4..1,5
+   2] Name 'y' Load - 2,4..2,5
+   3] Name 'c' Load - 2,10..2,11
+'''),
+
+('', 2, 3, None, {}, (None, r'''
+a
+and b
+and c
+'''), (None, r'''
+x
+and y
+'''), r'''
+(a
+and b
+and x
+and y)
+''', r'''
+(a
+and b
+and x and y)
+''', r'''
+BoolOp - ROOT 0,1..3,5
+  .op And
+  .values[4]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,4..1,5
+   2] Name 'x' Load - 2,4..2,5
+   3] Name 'y' Load - 3,4..3,5
+'''),
+
+('', 0, 2, None, {}, (None, r'''
+a
+and b
+and c
+'''), (None, r'''
+x
+and y
+'''), r'''
+(x
+and y and c)
+''',
+r'''x and y and c''', r'''
+BoolOp - ROOT 0,1..1,11
+  .op And
+  .values[3]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,4..1,5
+   2] Name 'c' Load - 1,10..1,11
+'''),
+
+('', 1, 3, None, {}, (None, r'''
+a
+and b
+and c
+'''), (None, r'''
+x
+and y
+'''), r'''
+(a
+and x
+and y)
+''', r'''
+(a
+and x and y)
+''', r'''
+BoolOp - ROOT 0,1..2,5
+  .op And
+  .values[3]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'x' Load - 1,4..1,5
+   2] Name 'y' Load - 2,4..2,5
+'''),
+
+('', 0, 3, None, {}, (None, r'''
+a
+and b
+and c
+'''), (None, r'''
+x
+and y
+'''), r'''
+(x
+and y)
+''',
+r'''x and y''', r'''
+BoolOp - ROOT 0,1..1,5
+  .op And
+  .values[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,4..1,5
+'''),
+
+('', 0, 1, None, {}, (None, r'''
+(a
+and b
+and c)
+'''), (None, r'''
+x
+and y
+'''), r'''
+(x
+ and y and b
+and c)
+''', r'''
+(x and y and b
+and c)
+''', r'''
+BoolOp - ROOT 0,1..2,5
+  .op And
+  .values[4]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,5..1,6
+   2] Name 'b' Load - 1,11..1,12
+   3] Name 'c' Load - 2,4..2,5
+'''),
+
+('', 1, 2, None, {}, (None, r'''
+(a
+and b
+and c)
+'''), (None, r'''
+x
+and y
+'''), r'''
+(a
+and x
+ and y and c)
+''', r'''
+(a
+and x and y and c)
+''', r'''
+BoolOp - ROOT 0,1..2,12
+  .op And
+  .values[4]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'x' Load - 1,4..1,5
+   2] Name 'y' Load - 2,5..2,6
+   3] Name 'c' Load - 2,11..2,12
+'''),
+
+('', 2, 3, None, {}, (None, r'''
+(a
+and b
+and c)
+'''), (None, r'''
+x
+and y
+'''), r'''
+(a
+and b
+and x
+ and y)
+''', r'''
+(a
+and b
+and x and y)
+''', r'''
+BoolOp - ROOT 0,1..3,6
+  .op And
+  .values[4]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 1,4..1,5
+   2] Name 'x' Load - 2,4..2,5
+   3] Name 'y' Load - 3,5..3,6
+'''),
+
+('', 0, 2, None, {}, (None, r'''
+(a
+and b
+and c)
+'''), (None, r'''
+x
+and y
+'''), r'''
+(x
+ and y and c)
+''',
+r'''(x and y and c)''', r'''
+BoolOp - ROOT 0,1..1,12
+  .op And
+  .values[3]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,5..1,6
+   2] Name 'c' Load - 1,11..1,12
+'''),
+
+('', 1, 3, None, {}, (None, r'''
+(a
+and b
+and c)
+'''), (None, r'''
+x
+and y
+'''), r'''
+(a
+and x
+ and y)
+''', r'''
+(a
+and x and y)
+''', r'''
+BoolOp - ROOT 0,1..2,6
+  .op And
+  .values[3]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'x' Load - 1,4..1,5
+   2] Name 'y' Load - 2,5..2,6
+'''),
+
+('', 0, 3, None, {}, (None, r'''
+(a
+and b
+and c)
+'''), (None, r'''
+x
+and y
+'''), r'''
+(x
+ and y)
+''',
+r'''(x and y)''', r'''
+BoolOp - ROOT 0,1..1,6
+  .op And
+  .values[2]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 1,5..1,6
+'''),
+
+('', 0, 1, None, {}, (None, r'''
+a \
+and \
+b \
+and \
+c
+'''), (None, r'''
+x \
+and \
+y
+'''), r'''
+(x \
+and \
+y and
+b \
+and \
+c)
+''', r'''
+(x and y and
+b \
+and \
+c)
+''', r'''
+BoolOp - ROOT 0,1..5,1
+  .op And
+  .values[4]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 2,0..2,1
+   2] Name 'b' Load - 3,0..3,1
+   3] Name 'c' Load - 5,0..5,1
+'''),
+
+('', 1, 2, None, {}, (None, r'''
+a \
+and \
+b \
+and \
+c
+'''), (None, r'''
+x \
+and \
+y
+'''), r'''
+(a \
+and \
+x \
+and \
+y and
+c)
+''', r'''
+(a \
+and \
+x and y and
+c)
+''', r'''
+BoolOp - ROOT 0,1..5,1
+  .op And
+  .values[4]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'x' Load - 2,0..2,1
+   2] Name 'y' Load - 4,0..4,1
+   3] Name 'c' Load - 5,0..5,1
+'''),
+
+('', 2, 3, None, {}, (None, r'''
+a \
+and \
+b \
+and \
+c
+'''), (None, r'''
+x \
+and \
+y
+'''), r'''
+a \
+and \
+b \
+and \
+x \
+and \
+y
+''', r'''
+a \
+and \
+b \
+and \
+x and y
+''', r'''
+BoolOp - ROOT 0,0..6,1
+  .op And
+  .values[4]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 2,0..2,1
+   2] Name 'x' Load - 4,0..4,1
+   3] Name 'y' Load - 6,0..6,1
+'''),
+
+('', 0, 2, None, {}, (None, r'''
+a \
+and \
+b \
+and \
+c
+'''), (None, r'''
+x \
+and \
+y
+'''), r'''
+(x \
+and \
+y and
+c)
+''', r'''
+(x and y and
+c)
+''', r'''
+BoolOp - ROOT 0,1..3,1
+  .op And
+  .values[3]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'y' Load - 2,0..2,1
+   2] Name 'c' Load - 3,0..3,1
+'''),
+
+('', 1, 3, None, {}, (None, r'''
+a \
+and \
+b \
+and \
+c
+'''), (None, r'''
+x \
+and \
+y
+'''), r'''
+a \
+and \
+x \
+and \
+y
+''', r'''
+a \
+and \
+x and y
+''', r'''
+BoolOp - ROOT 0,0..4,1
+  .op And
+  .values[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 2,0..2,1
+   2] Name 'y' Load - 4,0..4,1
+'''),
+
+('', 0, 3, None, {}, (None, r'''
+a \
+and \
+b \
+and \
+c
+'''), (None, r'''
+x \
+and \
+y
+'''), r'''
+x \
+and \
+y
+''',
+r'''x and y''', r'''
+BoolOp - ROOT 0,0..2,1
+  .op And
+  .values[2]
+   0] Name 'x' Load - 0,0..0,1
+   1] Name 'y' Load - 2,0..2,1
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''a or b or c'''), (None,
+r'''x or y'''),
+r'''a or (x or y) or c''', r'''
+BoolOp - ROOT 0,0..0,18
+  .op Or
+  .values[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] BoolOp - 0,6..0,12
+     .op Or
+     .values[2]
+      0] Name 'x' Load - 0,6..0,7
+      1] Name 'y' Load - 0,11..0,12
+   2] Name 'c' Load - 0,17..0,18
+'''),
+
+('', 1, 2, None, {'coerce': False}, (None,
+r'''a or b or c'''), (None,
+r'''x'''),
+r'''**ValueError("cannot put Name as slice to BoolOp without 'one=True' or 'coerce=True'")**'''),
+
+('', 1, 2, None, {'coerce': False, 'one': True}, (None,
+r'''a or b or c'''), (None,
+r'''x'''),
+r'''a or x or c''', r'''
+BoolOp - ROOT 0,0..0,11
+  .op Or
+  .values[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 0,5..0,6
+   2] Name 'c' Load - 0,10..0,11
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''a or b or c'''), (None,
+r'''x'''),
+r'''a or x or c''', r'''
+BoolOp - ROOT 0,0..0,11
+  .op Or
+  .values[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 0,5..0,6
+   2] Name 'c' Load - 0,10..0,11
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''a or b or c'''), (None,
+r'''x := y'''),
+r'''a or (x := y) or c''', r'''
+BoolOp - ROOT 0,0..0,18
+  .op Or
+  .values[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] NamedExpr - 0,6..0,12
+     .target Name 'x' Store - 0,6..0,7
+     .value Name 'y' Load - 0,11..0,12
+   2] Name 'c' Load - 0,17..0,18
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''a or b or c'''), (None,
+r'''yield'''),
+r'''a or (yield) or c''', r'''
+BoolOp - ROOT 0,0..0,17
+  .op Or
+  .values[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Yield - 0,6..0,11
+   2] Name 'c' Load - 0,16..0,17
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''a or b or c'''), (None,
+r'''yield x'''),
+r'''a or (yield x) or c''', r'''
+BoolOp - ROOT 0,0..0,19
+  .op Or
+  .values[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Yield - 0,6..0,13
+     .value Name 'x' Load - 0,12..0,13
+   2] Name 'c' Load - 0,18..0,19
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''a or b or c'''), (None,
+r'''yield from x'''),
+r'''a or (yield from x) or c''', r'''
+BoolOp - ROOT 0,0..0,24
+  .op Or
+  .values[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] YieldFrom - 0,6..0,18
+     .value Name 'x' Load - 0,17..0,18
+   2] Name 'c' Load - 0,23..0,24
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''a or b or c'''), (None,
+r'''x if y else z'''),
+r'''a or (x if y else z) or c''', r'''
+BoolOp - ROOT 0,0..0,25
+  .op Or
+  .values[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] IfExp - 0,6..0,19
+     .test Name 'y' Load - 0,11..0,12
+     .body Name 'x' Load - 0,6..0,7
+     .orelse Name 'z' Load - 0,18..0,19
+   2] Name 'c' Load - 0,24..0,25
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''a or b or c'''), (None,
+r'''x and y'''),
+r'''a or x and y or c''', r'''
+BoolOp - ROOT 0,0..0,17
+  .op Or
+  .values[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] BoolOp - 0,5..0,12
+     .op And
+     .values[2]
+      0] Name 'x' Load - 0,5..0,6
+      1] Name 'y' Load - 0,11..0,12
+   2] Name 'c' Load - 0,16..0,17
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''a and b and c'''), (None,
+r'''x or y'''),
+r'''a and (x or y) and c''', r'''
+BoolOp - ROOT 0,0..0,20
+  .op And
+  .values[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] BoolOp - 0,7..0,13
+     .op Or
+     .values[2]
+      0] Name 'x' Load - 0,7..0,8
+      1] Name 'y' Load - 0,12..0,13
+   2] Name 'c' Load - 0,19..0,20
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''a or b or c'''), (None,
+r'''not x'''),
+r'''a or not x or c''', r'''
+BoolOp - ROOT 0,0..0,15
+  .op Or
+  .values[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] UnaryOp - 0,5..0,10
+     .op Not - 0,5..0,8
+     .operand Name 'x' Load - 0,9..0,10
+   2] Name 'c' Load - 0,14..0,15
+'''),
+
+('body[0].value', 0, 1, None, {'trivia': ('block+1', 'none')}, (None, r'''
+if 1:
+  7 \
+and \
+None
+'''), (None, r'''
+
+ None \
+
+'''), r'''
+if 1:
+  (
+   None and \
+ \
+None)
+''', r'''
+if 1:
+  None and \
+None
+''', r'''
+If - ROOT 0,0..4,5
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] Expr - 1,2..4,5
+     .value BoolOp - 2,3..4,4
+       .op And
+       .values[2]
+        0] Constant None - 2,3..2,7
+        1] Constant None - 4,0..4,4
+'''),
+],
+
 'Compare__all': [  # ................................................................................
 
 ('', 0, 1, None, {}, (None,
@@ -26307,6 +27276,28 @@ x  # line
 x  # line
 # post
 is not (b) not in (c))
+''',
+r'''x is not (b) not in (c)''', r'''
+Compare - ROOT 1,0..3,21
+  .left Name 'x' Load - 1,0..1,1
+  .ops[2]
+   0] IsNot - 3,0..3,6
+   1] NotIn - 3,11..3,17
+  .comparators[2]
+   0] Name 'b' Load - 3,8..3,9
+   1] Name 'c' Load - 3,19..3,20
+'''),
+
+('', 0, 1, None, {'pars': False}, (None,
+r'''(a) is not (b) not in (c)'''), (None, r'''
+# pre
+x  # line
+# post
+'''), r'''
+# pre
+x  # line
+# post
+is not (b) not in (c)
 ''',
 r'''x is not (b) not in (c)''', r'''
 Compare - ROOT 1,0..3,21

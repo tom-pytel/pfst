@@ -1592,7 +1592,7 @@ def _maybe_ins_separator(
         if not src:
             continue
 
-        if src.startswith(sep):
+        if src.startswith(sep):  # TODO: maybe need to do regex check in future for separator like 'and' and 'or' to make sure they are not part of an identifier, but so far aren't checked in places where this may be the case
             ccol += len(sep)
 
             if space and ((cln == end_ln and ccol == end_col) or not _re_one_space_or_end.match(lines[cln], ccol)):

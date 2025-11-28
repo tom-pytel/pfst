@@ -5,14 +5,16 @@ This module contains functions which are imported as methods in the `FST` class 
 
 from __future__ import annotations
 
+import re
 from typing import Any, Literal, Mapping
 
-import fst as fst_top_level  # because of circular imports
+import fst as fst_package  # because of circular imports
 
 from . import fst
 
 from .asttypes import (
     AST,
+    And,
     Assign,
     AsyncFor,
     AsyncFunctionDef,
@@ -26,6 +28,7 @@ from .asttypes import (
     Dict,
     DictComp,
     ExceptHandler,
+    Expr,
     For,
     FunctionDef,
     GeneratorExp,
@@ -83,6 +86,9 @@ from .fst_misc import (
 
 from .slice_stmtish import get_slice_stmtish
 from .slice_exprish import _locs_first_and_last, get_slice_sep, get_slice_nosep
+
+
+_re_empty_line_start_maybe_cont = re.compile(r'[ \t]+\\?')  # empty line start with maybe continuation with at least one leading whitespace
 
 
 # ......................................................................................................................
@@ -182,6 +188,29 @@ def _bounds_generators(self: fst.FST, start: int = 0) -> tuple[int, int, int, in
     return bound_ln, bound_col, bound_end_ln, bound_end_col
 
 
+def _bounds_comprehension_ifs(self: fst.FST, start: int = 0) -> tuple[int, int, int, int]:
+    ast = self.a
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+
+    if is_comprehension := isinstance(ast, comprehension):  # therefore not _comprehension_ifs
+        if next := self.next():
+            if next.ln > bound_end_ln:  # so that multiline ifs are handled correctly, yeah, really pedantic
+                bound_end_ln += 1
+                bound_end_col = 0
+
+        elif (parent := self.parent) and not isinstance(parent.a, _comprehensions):  # we don't extend to end of `ListComp` (or one of the others) but we do set end boound to start of next line if past our end line so that multiline stuff procs correctly
+            if parent.end_ln > bound_end_ln:
+                bound_end_ln += 1
+                bound_end_col = 0
+
+    if start:
+        _, _, bound_ln, bound_col = self._loc_comprehension_if(start - 1)
+    elif is_comprehension:
+        _, _, bound_ln, bound_col = ast.iter.f.pars()
+
+    return bound_ln, bound_col, bound_end_ln, bound_end_col
+
+
 def _add_MatchMapping_rest_as_real_node(self: fst.FST) -> fst.FST:
     """Add `MatchMapping.rest` temporarily as a None to `self.keys` and a `MatchAs` to `self.patterns`. No source is
     modified since the `rest` is already there so its location is just used for the new `MatchAs` node."""
@@ -256,6 +285,75 @@ def _update_loc_up_parents(self: fst.FST, lineno: int, col_offset: int, end_line
 
     if self:
         self._touchall(True, True, False)
+
+
+def _maybe_fix_naked_exprish(
+    self: fst.FST, body: list[AST], is_del: bool, is_first: bool, is_last: bool, options: Mapping[str, Any]
+) -> None:
+    """Fix the start and end positions of self and parents of a naked expression-ish which may have changed location to
+    those of first and last child. If is first child of an `Expr` statement then may need to dedent line continuation to
+    `Expr` indentation if that is the first line left, which may not start exactly at proper indentation level."""
+
+    lines = self.root._lines
+
+    if not self.is_root or (not is_del and fst.FST.get_option('pars', options)):  # if at root then this is optional and not done for a delete or disabled via 'pars=False' option otherwise
+        if not self._is_enclosed_or_line() and not self._is_enclosed_in_parents():  # we may need to add pars to fix parsable
+            self._parenthesize_grouping(False)
+
+    if is_del and is_first:  # VERY SPECIAL CASE where we may have left a line continuation not exactly at proper indentation after delete at start of Expr which is our statement parent
+        if (parent := self.parent_stmtish()) and isinstance(parent.a, Expr):
+            ln, col, _, _ = self.loc
+
+            if ln == parent.ln:  # if starts on same line as Expr then we may need to fix
+                line = lines[ln]
+
+                if m := _re_empty_line_start_maybe_cont.match(line):
+                    if m.group().endswith('\\'):  # if is pure line continuation then can do this directly and don't need to offset anything because this won't change any actual start or end node positions
+                        lines[ln] = bistr(line[:col] + '\\')
+                    elif (end := m.end()) > col:  # wound up with leading whitespace before expression on same line as Expr so need to offset
+                        self._put_src(None, ln, col, ln, end, True)  # tail=True because maybe wound up with zero-length expression?
+
+    if body:  # if everything erased then nothing to adjust to and we just leave previous location
+        ast = self.a
+
+        if is_first:  # make sure our and parents' start position is at start of first element (before any pars)
+            ln, col, end_ln, end_col = body[0].f.pars()
+
+            self._set_start_pos(ln + 1, lines[ln].c2b(col), ast.lineno, ast.col_offset)
+
+        if is_last:  # make sure our and parents' end position is at end of last element (after any pars)
+            if not is_first or len(body) > 1:  # if not then we use end_ln and end_col from block above
+                _, _, end_ln, end_col = body[-1].f.pars()
+
+            self._set_end_pos(end_ln + 1, lines[end_ln].c2b(end_col), ast.end_lineno, ast.end_col_offset)
+
+
+def _maybe_fix_BoolOp(
+    self: fst.FST,
+    start: int,
+    is_del: bool,
+    is_last: bool,
+    options: Mapping[str, Any],
+    norm_self: bool,
+) -> None:
+    """Fix anything that might have been left wrong in a `BoolOp` after a cut, del or put."""
+
+    body = self.a.values
+    is_first = not start
+
+    _maybe_fix_naked_exprish(self, body, is_del, is_first, is_last, options)
+
+    if body and not (is_first or (is_del and is_last)):  # interior possibly joined alnum due to add or delete
+        ln, col, _, _ = body[start].f.loc
+
+        self._maybe_fix_joined_alnum(ln, col)
+
+    ln, col, end_ln, end_col = self.loc
+
+    self._maybe_fix_joined_alnum(ln, col, end_ln, end_col)  # fix stuff like 'a and(b)if 1 else 0' -> 'aif 1 else 0' and '2 if 1 else(a)and b' -> '2 if 1 elseb'
+
+    if norm_self and len(body) == 1:  # if only one element remains and normalizing then replace the BoolOp AST in self with the single `values` AST which remains
+        self._set_ast(body.pop(), True)  # body.pop() is a minor optimization so that we don't have to rebuild left links on tree make
 
 
 def _maybe_fix_Assign_target0(self: fst.FST) -> None:
@@ -778,7 +876,7 @@ def _get_slice_With_AsyncWith_items(
         raise ValueError(f'cannot cut all {ast.__class__.__name__}.items without norm_self=False')
 
     loc_first = body[start].f.loc
-    loc_last = loc_first if stop == start else body[stop - 1].f.loc
+    loc_last = loc_first if start == stop - 1 else body[stop - 1].f.loc
 
     pars = self._loc_With_items_pars()  # may be pars or may be where pars would go from just after `with` to end of block header
     pars_ln, pars_col, pars_end_ln, pars_end_col = pars
@@ -832,7 +930,7 @@ def _get_slice_Import_names(
         raise ValueError('cannot cut all Import.names without norm_self=False')
 
     loc_first = body[start].f.loc
-    loc_last = loc_first if stop == start else body[stop - 1].f.loc
+    loc_last = loc_first if start == stop - 1 else body[stop - 1].f.loc
 
     _, _, bound_end_ln, bound_end_col = self.loc
 
@@ -879,7 +977,7 @@ def _get_slice_ImportFrom_names(
         raise ValueError('cannot cut all ImportFrom.names without norm_self=False')
 
     loc_first = body[start].f.loc
-    loc_last = loc_first if stop == start else body[stop - 1].f.loc
+    loc_last = loc_first if start == stop - 1 else body[stop - 1].f.loc
 
     pars = self._loc_ImportFrom_names_pars()  # may be pars or may be where pars would go from just after `import` to end of node
     pars_ln, pars_col, pars_end_ln, pars_end_col = pars
@@ -1048,6 +1146,69 @@ def _get_slice_ClassDef_bases(
     return fst_
 
 
+def _get_slice_Boolop_values(
+    self: fst.FST,
+    start: int | Literal['end'] | None,
+    stop: int | None,
+    field: str,
+    cut: bool,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """Cut is not done here but rather delete after copy via `_put_slice_BoolOp_values(None)` to keep all the tricky
+    logic in one place."""
+
+    ast = self.a
+    body = ast.values
+    len_body = len(body)
+    start, stop = fixup_slice_indices(len_body, start, stop)
+    len_slice = stop - start
+    is_last = stop == len_body
+    norm_get = get_option_overridable('norm', 'norm_get', options)
+    norm_self = get_option_overridable('norm', 'norm_self', options)
+
+    if not len_slice:
+        if norm_get:
+            raise ValueError("cannot get empty slice from BoolOp without 'norm_get=False'")
+
+        return fst.FST(BoolOp(op=ast.op.__class__(), values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
+                       [''], from_=self)
+
+    if cut and len_slice == len_body and norm_self:
+        raise ValueError("cannot cut all BoolOp.values without 'norm_self=False'")
+
+    # locs = _locs_and_bound_get(self, start, stop, body, body, 0)
+
+    # if single := (norm_get and len_slice == 1):  # if length 1 slice and normalizing then return just the expression
+    #     ret_ast = copy_ast(body[start])
+    # else:
+    #     ret_ast = BoolOp(op=copy_ast(ast.op), values=[copy_ast(a) for a in body[start : stop]])
+
+    # fst_ = get_slice_nosep(self, start, stop, len_body, False, ret_ast,
+    #                        *locs, options, set_ast_loc=not single)
+
+    # if cut:
+    #     fst_package.fst_put_slice._put_slice_BoolOp_values(self, None, start, stop, 'values', False, options)
+
+    # TODO: doesn't work well for multiline with operator leading on new line and trivia after the value as the trivia search in this case treats trivia after the trailing operator as belonging to the value
+
+    locs = _locs_and_bound_get(self, start, stop, body, body, 0)
+    asts = _cut_or_copy_asts(start, stop, 'values', cut, body)
+    sep = 'and' if isinstance(ast.op, And) else 'or'
+
+    if single := (norm_get and len_slice == 1):  # if length 1 slice and normalizing then return just the expression
+        ret_ast = asts[0]
+    else:
+        ret_ast = BoolOp(op=ast.op.__class__(), values=asts)
+
+    fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
+                         options, 'values', '', '', sep, False, False, not single)
+
+    if cut:
+        _maybe_fix_BoolOp(self, start, cut, is_last, options, norm_self)
+
+    return fst_
+
+
 def _get_slice_Compare__all(
     self: fst.FST,
     start: int | Literal['end'] | None,
@@ -1056,9 +1217,9 @@ def _get_slice_Compare__all(
     cut: bool,
     options: Mapping[str, Any],
 ) -> fst.FST:
-    """Slice from whole compare, including `left` field. Can never get zero-length slice or leave length 0 self. Length
-    one `Compare` will be returned / left as a `Compare` without `ops` or `comparators` with `norm=False`, otherwise
-    will be returned / left as a single `expr` with `norm=True`. Cut is not done here but rather delete after copy via
+    """Slice from whole compare, including `left` field. Can never get empty slice or leave empty self. Length 1
+    `Compare` will be returned / left as a `Compare` without `ops` or `comparators` with `norm=False`, otherwise will be
+    returned / left as a single `expr` with `norm=True`. Cut is not done here but rather delete after copy via
     `_put_slice_Compare__all(None)` to keep all the tricky logic in one place."""
 
     ast = self.a
@@ -1078,17 +1239,12 @@ def _get_slice_Compare__all(
     loc_first = ast_first.f.pars()
     loc_last = body[stop - 2].f.pars() if stop >= 2 else loc_first
 
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+
     if start:
         _, _, bound_ln, bound_col = ast.ops[start - 1].f.loc
-    else:
-        bound_ln, bound_col, _, _ = loc_first
 
-    if stop < len_body:
-        _, _, bound_end_ln, bound_end_col = body[-1].f.pars()
-    else:
-        _, _, bound_end_ln, bound_end_col = loc_last
-
-    if len_slice == 1 and get_option_overridable('norm', 'norm_get', options):  # if length 1 slice and normalizing then return just the expression
+    if single := (len_slice == 1 and get_option_overridable('norm', 'norm_get', options)):  # if length 1 slice and normalizing then return just the expression
         ret_ast = copy_ast(ast_first)
     else:
         ret_ast = Compare(left=copy_ast(ast_first),
@@ -1096,11 +1252,11 @@ def _get_slice_Compare__all(
                           comparators=[copy_ast(a) for a in ast.comparators[start : stop - 1]])
 
     fst_ = get_slice_nosep(self, start, stop, len_body, False, ret_ast,
-                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col, options,
-                           set_ast_loc=ret_ast.__class__ is Compare)
+                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
+                           options, set_ast_loc=not single)
 
     if cut:
-        fst_top_level.fst_put_slice._put_slice_Compare__all(self, None, start, stop, '_all', False, options)
+        fst_package.fst_put_slice._put_slice_Compare__all(self, None, start, stop, '_all', False, options)
 
     return fst_
 
@@ -1186,7 +1342,7 @@ def _get_slice_decorator_list(
                        [''], from_=self)
 
     loc_first = self._loc_decorator(start)
-    loc_last = loc_first if stop == start else self._loc_decorator(stop - 1)
+    loc_last = loc_first if start == stop - 1 else self._loc_decorator(stop - 1)
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bounds_decorator_list(self, start)
 
@@ -1248,7 +1404,7 @@ def _get_slice_generators(
             raise ValueError(f'cannot cut all {ast.__class__.__name__}.generators without norm_self=False')
 
     loc_first = body[start].f.loc
-    loc_last = loc_first if stop == start else body[stop - 1].f.loc
+    loc_last = loc_first if start == stop - 1 else body[stop - 1].f.loc
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = _bounds_generators(self, start)
 
@@ -1282,14 +1438,9 @@ def _get_slice_comprehension_ifs(
                        [''], from_=self)
 
     loc_first = self._loc_comprehension_if(start)
-    loc_last = loc_first if stop == start else self._loc_comprehension_if(stop - 1)
+    loc_last = loc_first if start == stop - 1 else self._loc_comprehension_if(stop - 1)
 
-    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
-
-    if start:
-        _, _, bound_ln, bound_col = self._loc_comprehension_if(start - 1)
-    elif isinstance(ast, comprehension):
-        _, _, bound_ln, bound_col = ast.iter.f.pars()
+    bound_ln, bound_col, bound_end_ln, bound_end_col = _bounds_comprehension_ifs(self, start)
 
     asts = _cut_or_copy_asts(start, stop, 'ifs', cut, body)
     ret_ast = _comprehension_ifs(ifs=asts)
@@ -1499,7 +1650,7 @@ def _get_slice__slice(
 
     ast = self.a
     kls = ast.__class__
-    static = fst_top_level.fst_put_slice._SPECIAL_SLICE_STATICS[kls]
+    static = fst_package.fst_put_slice._SPECIAL_SLICE_STATICS[kls]
     body = getattr(ast, field)
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
@@ -1565,7 +1716,7 @@ _GET_SLICE_HANDLERS = {
     (ClassDef, 'bases'):                      _get_slice_ClassDef_bases,  # expr*
     (Delete, 'targets'):                      _get_slice_Delete_targets,  # expr*
     (Assign, 'targets'):                      _get_slice_Assign_targets,  # expr*
-    (BoolOp, 'values'):                       _get_slice_NOT_IMPLEMENTED_YET,  # expr*
+    (BoolOp, 'values'):                       _get_slice_Boolop_values,  # expr*
     (Compare, '_all'):                        _get_slice_Compare__all,  # expr*
     (Call, 'args'):                           _get_slice_Call_args,  # expr*
     (comprehension, 'ifs'):                   _get_slice_comprehension_ifs,  # expr*
