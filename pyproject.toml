@@ -55,7 +55,7 @@ where = ["src"]
 version = { file = "VERSION" }
 
 [tool.ruff]
-line-length = 12000  # would be 120 but ruff includes comments in that and there is no way to turn that off
+line-length = 120
 exclude = ["tests", "src/fst/fuzz.py", "make_docs.py"]
 
 [tool.ruff.format]
@@ -70,10 +70,10 @@ select = [
     "E", "F", "B"
 ]
 ignore = [
+  "E501",    # Line too long (132 > 120), seriously, long comments are useful
   "E701",    # Multiple statements on one line (colon)
   "E702",    # Multiple statements on one line (semicolon)
   "E731",    # Do not assign a `lambda` expression, use a `def`
   "E741",    # Ambiguous variable name: `l`
-  "ANN003",  # Missing type annotation for `**options`
-  "ANN204",  # Missing return type annotation for special method `__init__`
+  "ANN003",  # Missing type annotation for `**kwargs`
 ]

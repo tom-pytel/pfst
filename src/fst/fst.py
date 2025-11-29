@@ -4601,7 +4601,7 @@ class FST:
 # Make AST field accessors
 
 def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> property:
-    if cardinality == 1:
+    if cardinality == 1:  # is an AST or a primitive
         @property
         def accessor(self: FST) -> FST | None | constant:
             """@private"""
@@ -4609,7 +4609,7 @@ def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> prope
             return getattr(child, 'f', None) if isinstance(child := getattr(self.a, field), AST) else child
 
         @accessor.setter
-        def accessor(self: FST, code: Code | builtins.str | constant | None) -> None:
+        def accessor(self: FST, code: Code | constant | None) -> None:
             """@private"""
 
             self.put(code, field)
@@ -4620,7 +4620,7 @@ def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> prope
 
             self.put(None, field)
 
-    elif cardinality == 2:
+    elif cardinality == 2:  # is a list[AST]
         @property
         def accessor(self: FST) -> fstview:
             """@private"""
@@ -4628,7 +4628,7 @@ def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> prope
             return fstview(self, field, 0, len(getattr(self.a, field)))
 
         @accessor.setter
-        def accessor(self: FST, code: Code | builtins.str | None) -> None:
+        def accessor(self: FST, code: Code | None) -> None:
             """@private"""
 
             self.put_slice(code, field)
@@ -4639,7 +4639,7 @@ def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> prope
 
             self.put_slice(None, field)
 
-    else:  # cardinality == 3  # can be single element or list depending on the AST type
+    else:  # cardinality == 3  # can be single AST or list depending on the parent AST type
         @property
         def accessor(self: FST) -> fstview | FST | None | constant:
             """@private"""
@@ -4652,7 +4652,7 @@ def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> prope
             return child
 
         @accessor.setter
-        def accessor(self: FST, code: Code | builtins.str | None) -> None:
+        def accessor(self: FST, code: Code | None) -> None:
             """@private"""
 
             if isinstance(getattr(self.a, field), list):

@@ -79,19 +79,7 @@ from .asttypes import (
 )
 
 from .astutil import re_identifier, bistr, is_valid_target, is_valid_del_target, reduce_ast, set_ctx
-
-from .common import (
-    PYLT11,
-    PYGE14,
-    Self,
-    NodeError,
-    astfield,
-    next_frag,
-    next_find,
-    prev_find,
-    next_find_re,
-)
-
+from .common import PYLT11, PYGE14, Self, NodeError, astfield, next_frag, next_find, prev_find, next_find_re
 from .parsex import unparse
 
 from .code import (
@@ -393,12 +381,12 @@ def _code_to_slice_BoolOp_values(
     if not (one or fst.FST.get_option('coerce', options)):
         if not is_slice_type:
             raise ValueError(f'cannot put {ast_.__class__.__name__} as slice to {self.a.__class__.__name__} '
-                            "without 'one=True' or 'coerce=True'")
+                             "without 'one=True' or 'coerce=True'")
 
         elif not is_same_op:
             raise ValueError(f'cannot put {ast_.op.__class__.__name__} {ast_.__class__.__name__} '
                              f'as slice to {op_type.__name__} {self.a.__class__.__name__} '
-                            "without 'one=True' or 'coerce=True'")
+                             "without 'one=True' or 'coerce=True'")
 
     if (is_par := fst_._is_parenthesized_tuple()) is not None:
         if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence

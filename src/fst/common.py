@@ -162,7 +162,7 @@ class fstlocn(fstloc):
         return (f'fstlocn({ln}, {col}, {end_ln}, {end_col}, {ns})' if ns else
                 f'fstlocn({ln}, {col}, {end_ln}, {end_col})')
 
-    def __new__(cls, ln: int, col: int, end_ln: int, end_col: int, **kwargs):
+    def __new__(cls, ln: int, col: int, end_ln: int, end_col: int, **kwargs) -> 'fstlocn':
         self = fstloc.__new__(cls, ln, col, end_ln, end_col)
 
         self.__dict__.update(kwargs)
