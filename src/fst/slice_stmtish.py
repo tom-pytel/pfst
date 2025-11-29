@@ -92,8 +92,11 @@ class SrcEdit:
         if not precomms:
             return None
 
-        if bound_ln == bound_end_ln or (bound_end_col and
-                                        not re_empty_line.match(lines[bound_end_ln], 0, bound_end_col)):
+        if (bound_ln == bound_end_ln
+            or (
+                bound_end_col
+                and not re_empty_line.match(lines[bound_end_ln], 0, bound_end_col)
+        )):
             return None
 
         allpre = precomms == 'all'
@@ -359,9 +362,11 @@ class SrcEdit:
         # special case of deleting everything from a block
 
         if not fpre and not fpost:
-            if del_else_and_fin and ((is_finally := field == 'finalbody') or  # remove 'else:' or 'finally:' (but not 'elif ...:' as that lives in first cut statement)
-                (field == 'orelse' and not lines[ffirst.bln].startswith('elif', ffirst.bcol))
-            ):
+            if (del_else_and_fin
+                and (
+                    (is_finally := field == 'finalbody')  # remove 'else:' or 'finally:' (but not 'elif ...:' as that lives in first cut statement)
+                    or (field == 'orelse' and not lines[ffirst.bln].startswith('elif', ffirst.bcol))
+            )):
                 del_ln, del_col, del_end_ln, del_end_col = del_loc
 
                 del_ln, del_col = prev_find(lines, bound_ln, bound_col, del_ln, del_col,
@@ -392,10 +397,15 @@ class SrcEdit:
 
             pep8space = 2 if pep8space is True and (p := get_fst.parent_scope(True)) and isinstance(p.a, mod) else 1
 
-            if fpre and isinstance(ffirst.a, ASTS_SCOPE_NAMED) and (fpre.pfield.idx or
-                                                               not isinstance(a := fpre.a, Expr) or
-                                                               not isinstance(v := a.value, Constant) or
-                                                               not isinstance(v.value, str)):
+            if (fpre
+                and isinstance(ffirst.a, ASTS_SCOPE_NAMED)
+                and (
+                    fpre.pfield.idx
+                    or not isinstance(a := fpre.a, Expr)
+                    or not isinstance(v := a.value, Constant)
+                    or not isinstance(v.value, str)
+                )
+            ):
                 prespace = max(prespace, pep8space)
 
             elif fpost and isinstance(flast.a, ASTS_SCOPE_NAMED):
@@ -438,10 +448,10 @@ class SrcEdit:
 
         del_ln, del_col, del_end_ln, del_end_col = del_loc
 
-        if (del_ln > bound_ln and
-            (not del_col or re_empty_line.match(lines[del_ln], 0, del_col)) and
-            lines[del_ln - 1].endswith('\\') and  # the endswith() is not definitive because a comment may end with it
-            (not post_semi or (post_semi < (del_end_ln, del_end_col)))  # very special case of leaving trailing semicolon on next line, which absolutely needs the line continuation above
+        if (del_ln > bound_ln
+            and (not del_col or re_empty_line.match(lines[del_ln], 0, del_col))
+            and lines[del_ln - 1].endswith('\\')  # the endswith() is not definitive because a comment may end with it
+            and (not post_semi or (post_semi < (del_end_ln, del_end_col)))  # very special case of leaving trailing semicolon on next line, which absolutely needs the line continuation above
         ):
             new_del_ln = del_ln - 1
             new_del_col = 0 if new_del_ln != bound_ln else bound_col
@@ -487,17 +497,28 @@ class SrcEdit:
 
         prepend = 2 if put_col else 0  # don't put initial empty line if putting on a first AST line at root
 
-        if is_pep8 and fpre and (
-            (put_ns := isinstance(put_body[0], ASTS_SCOPE_NAMED)) or isinstance(fpre.a, ASTS_SCOPE_NAMED)
+        if (is_pep8
+            and fpre
+            and ((put_ns := isinstance(put_body[0], ASTS_SCOPE_NAMED)) or isinstance(fpre.a, ASTS_SCOPE_NAMED))
         ):  # preceding space
-            if pep8space == 1 or (not fpre.pfield.idx and isinstance(a := fpre.a, Expr) and   # docstring
-                                  isinstance(v := a.value, Constant) and isinstance(v.value, str)):
+            if (pep8space == 1
+                or (
+                    not fpre.pfield.idx
+                    and isinstance(a := fpre.a, Expr)  # docstring
+                    and isinstance(v := a.value, Constant)
+                    and isinstance(v.value, str)
+            )):
                 want = 1
             else:
                 want = pep8space
 
-            if need := (want if not re_empty_line.match(put_lines[0]) else 1 if want == 2 and (  # how many empty lines at start of put_fst?
-                        len(put_lines) < 2 or not re_empty_line.match(put_lines[1])) else 0):
+            if need := (
+                want
+                if not re_empty_line.match(put_lines[0])
+                else 1
+                if (want == 2 and (len(put_lines) < 2 or not re_empty_line.match(put_lines[1])))
+                else 0
+            ):  # how many empty lines at start of put_fst?
                 bound_ln = block_loc.ln
                 ln = put_loc.ln
 
@@ -509,15 +530,21 @@ class SrcEdit:
                         if (ln := ln - 1) > bound_ln and re_empty_line.match(lines[ln]):
                             need = 0
 
-                if (need and not is_ins and put_ns and ln > bound_ln and re_comment_line_start.match(lines[ln]) and
-                    not fst.FST.get_option('precomms', options) and not fst.FST.get_option('prespace', options)
+                if (need
+                    and not is_ins
+                    and put_ns
+                    and ln > bound_ln
+                    and re_comment_line_start.match(lines[ln])
+                    and not fst.FST.get_option('precomms', options)
+                    and not fst.FST.get_option('prespace', options)
                 ):  # super-duper special case, replacing a named scope (at start) with another named scope, if not removing comments and/or space then don't insert space between preceding comment and put fst (because there was none before the previous named scope)
                     need = 0
 
                 prepend += need
 
-        if not (is_pep8 and fpost and
-                (isinstance(put_body[-1], ASTS_SCOPE_NAMED) or isinstance(fpost.a, ASTS_SCOPE_NAMED))):  # if don't need pep8space then maybe just need trailing newline
+        if not (
+            is_pep8 and fpost and (isinstance(put_body[-1], ASTS_SCOPE_NAMED) or isinstance(fpost.a, ASTS_SCOPE_NAMED))
+        ):  # if don't need pep8space then maybe just need trailing newline
             if put_loc.end_col == len(lines[-1]) and put_loc.end_ln == len(lines) - 1:  # if putting to very end of source then don't add newlines
                 postpend = 0
             else:  # otherwise if last line of put contains something then append a newline
@@ -528,7 +555,7 @@ class SrcEdit:
             ln = len(put_lines) - 1
 
             while postpend:  # how many empty lines at end of put_fst?
-                if (l := put_lines[ln]) and  not re_empty_line.match(l):
+                if (l := put_lines[ln]) and not re_empty_line.match(l):
                     break
 
                 postpend -= 1
@@ -850,8 +877,8 @@ def _set_end_pos_after_del(self: fst.FST, bound_ln: int, bound_col: int, bound_e
         new last child is before colon.
     """
 
-    if ((last_child := self.last_child()) and  # easy enough when we have a new last child
-        last_child.pfield.name in ('body', 'orelse', 'finalbody', 'handlers', 'cases')  # but make sure its past the block open colon
+    if ((last_child := self.last_child())  # easy enough when we have a new last child
+        and last_child.pfield.name in ('body', 'orelse', 'finalbody', 'handlers', 'cases')  # but make sure its past the block open colon
     ):
         _, _, end_ln, end_col = last_child.loc
 
@@ -1338,7 +1365,11 @@ def _maybe_del_trailing_newline(self: fst.FST, old_last_line: str, put_fst_end_n
     is_special = isinstance(roota, (_ExceptHandlers, _match_cases))
     lines = root._lines
 
-    if not put_fst_end_nl and old_last_line and not (new_last_line := lines[-1]) and new_last_line is not old_last_line:  # if self last line changed and was previously not a trailing newline and code put did not end in trailing newline then make sure it is not so now
+    if (not put_fst_end_nl
+        and old_last_line
+        and not (new_last_line := lines[-1])
+        and new_last_line is not old_last_line
+    ):  # if self last line changed and was previously not a trailing newline and code put did not end in trailing newline then make sure it is not so now
         if (is_special or isinstance(roota, mod)) and not (root := root.last_child()):
             if len(lines) > 1:
                 del lines[-1]  # we specifically delete just one trailing newline because there may be multiple and we want to preserve the rest

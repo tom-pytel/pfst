@@ -311,8 +311,9 @@ def _locs_slice(
     if not single:
         _, _, last_end_ln, last_end_col = loc_last
 
-    if (sep and (frag := next_frag(lines, last_end_ln, last_end_col, bound_end_ln, bound_end_col)) and
-        _re_sep_starts[sep].match(frag.src)
+    if (sep
+        and (frag := next_frag(lines, last_end_ln, last_end_col, bound_end_ln, bound_end_col))
+        and _re_sep_starts[sep].match(frag.src)
     ):  # if separator present then set end of element to just past it
         last_end_ln = frag.ln
         last_end_col = frag.col + len(sep)
@@ -833,9 +834,10 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
             else:  # otherwise add newline to slice
                 put_lines.append(bistr(''))  # this doesn't need to be post_indent-ed because its just a newline, doesn't do indentation of following text
 
-        elif (not put_lines[-1][-1].isspace() and   # putting something that ends with non-space to something that starts with not a closing delimiter or space, put space between
-              not _re_close_delim_or_space_or_end.match(lines[put_end_ln], put_end_col) and
-              (put_end_ln < self.end_ln or put_end_col < self.end_col)  # but not at the very end of self
+        elif (
+            not put_lines[-1][-1].isspace()  # putting something that ends with non-space to something that starts with not a closing delimiter or space, put space between
+            and not _re_close_delim_or_space_or_end.match(lines[put_end_ln], put_end_col)
+            and (put_end_ln < self.end_ln or put_end_col < self.end_col)  # but not at the very end of self
         ):
             put_lines[-1] = bistr(put_lines[-1] + ' ')
 

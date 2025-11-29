@@ -231,7 +231,9 @@ def _reparse_raw(self: fst.FST, code: Code | None, ln: int, col: int, end_ln: in
     if not _reparse_raw_stmtish(self, new_lines, ln, col, end_ln, end_col):  # attempt to reparse only statement (or even only block header), if fails then no statement found above
         root = self.root
 
-        if (mode := root.a.__class__) is not Slice and (base := mode.__bases__[0]) not in (AST, mod, ExceptHandler):  # first generalize a bit
+        if ((mode := root.a.__class__) is not Slice
+            and (base := mode.__bases__[0]) not in (AST, mod, ExceptHandler)
+        ):  # first generalize a bit
             mode = base
 
         _reparse_raw_base(self, new_lines, ln, col, end_ln, end_col, root._lines[:],  # fallback to reparse all source

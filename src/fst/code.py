@@ -865,11 +865,11 @@ def code_as_arguments_lambda(
     if fst_ is code:  # validation if returning same FST that was passed in
         ast = fst_.a
 
-        if (((args := ast.args) and any(a.annotation for a in args)) or
-            ((args := ast.kwonlyargs) and any(a.annotation for a in args)) or
-            ((arg := ast.vararg) and arg.annotation) or
-            ((arg := ast.kwarg) and arg.annotation) or
-            ((args := ast.posonlyargs) and any(a.annotation for a in args))
+        if (((args := ast.args) and any(a.annotation for a in args))
+            or ((args := ast.kwonlyargs) and any(a.annotation for a in args))
+            or ((arg := ast.vararg) and arg.annotation)
+            or ((arg := ast.kwarg) and arg.annotation)
+            or ((args := ast.posonlyargs) and any(a.annotation for a in args))
         ):
             raise NodeError('lambda arguments cannot have annotations')
 

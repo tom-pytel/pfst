@@ -174,24 +174,22 @@ class Reconcile:
         start = 0
 
         while start < len_body:
-            if (not (valf := getattr(values[start], 'f', None)) or       # if value doesn't have FST
-                not (child_parent := valf.parent) or                     # or no value parent
-                (val_pfield := valf.pfield).name != 'values' or          # or value field is not 'values'
-                (
-                    val_pfield.idx == start                              # or (value is at the correct location
-                    if child_parent is nodef else                        # if is our own child, else
-                    not isinstance(child_parent.a, Dict)                 # value parent is not Dict)
-                ) or
-                (
-                    child_parent.a.keys[val_pfield.idx] is not None      # or (key associated with value is not None
-                    if (keya := keys[start]) is None else                # if our key is None, else
-                    (
-                        not (keyf := getattr(keya, 'f', None)) or        # if key doesn't have FST
-                        keyf.parent is not child_parent or               # or key parent is not same as value parent
-                        keyf.pfield != ('keys', val_pfield.idx)          # or key field is not 'keys' or key idx != value idx
-                    )
+            if (not (valf := getattr(values[start], 'f', None))      # if value doesn't have FST
+                or not (child_parent := valf.parent)                 # or no value parent
+                or (val_pfield := valf.pfield).name != 'values'      # or value field is not 'values'
+                or (
+                    val_pfield.idx == start                          # or (value is at the correct location
+                    if child_parent is nodef                         # if is our own child, else
+                    else not isinstance(child_parent.a, Dict)        # value parent is not Dict)
                 )
-            ):
+                or (
+                    child_parent.a.keys[val_pfield.idx] is not None  # or (key associated with value is not None
+                    if (keya := keys[start]) is None                 # if our key is None, else
+                    else (
+                        not (keyf := getattr(keya, 'f', None))       # if key doesn't have FST
+                        or keyf.parent is not child_parent           # or key parent is not same as value parent
+                        or keyf.pfield != ('keys', val_pfield.idx)   # or key field is not 'keys' or key idx != value idx
+            ))):
                 end = start + 1
 
             else:  # slice operation, even if its just one element because slice copies more formatting and comments
@@ -200,19 +198,17 @@ class Reconcile:
                 child_off_idx = child_idx - start
 
                 for end in range(start + 1, len_body):  # get length of contiguous slice
-                    if (not (f := getattr(values[end], 'f', None)) or
-                        f.parent is not child_parent or
-                        f.pfield != ('values', i := child_off_idx + end) or
-                        (
+                    if (not (f := getattr(values[end], 'f', None))
+                        or f.parent is not child_parent
+                        or f.pfield != ('values', i := child_off_idx + end)
+                        or (
                             child_parent_keys[i] is not None  # child_parent_keys and keys COULD be the same, but not guaranteed
-                            if (a := keys[end]) is None else
-                            (
-                                not (f := getattr(a, 'f', None)) or
-                                f.parent is not child_parent or
-                                f.pfield != ('keys', i)
-                            )
-                        )
-                    ):  # if is not following element then done
+                            if (a := keys[end]) is None
+                            else (
+                                not (f := getattr(a, 'f', None))
+                                or f.parent is not child_parent
+                                or f.pfield != ('keys', i)
+                    ))):  # if is not following element then done
                         break
 
                 else:
@@ -278,24 +274,23 @@ class Reconcile:
         node_sig = (node.__class__, field)
 
         while start < len_body:
-            if (not (childf := getattr(body[start], 'f', None)) or                                 # if child doesn't have FST
-                not (child_parent := childf.parent) or                                             # or no parent
-                (child_idx := (child_pfield := childf.pfield).idx) is None or                      # or no index (not part of a sliceable list)
-                (
-                    child_idx == start                                                             # or (child is at the correct location
-                    if (child_field := child_pfield.name) == field and child_parent is nodef else  # if is from same field and our own child, else
-                    not _is_slice_compatible(node_sig, (child_parent.a.__class__, child_field))    # child slice is not compatible)
-                )
-            ):                                                                                     # then can't possibly slice, or it doesn't make sense to
+            if (not (childf := getattr(body[start], 'f', None))                                       # if child doesn't have FST
+                or not (child_parent := childf.parent)                                                # or no parent
+                or (child_idx := (child_pfield := childf.pfield).idx) is None                         # or no index (not part of a sliceable list)
+                or (
+                    child_idx == start                                                                # or (child is at the correct location
+                    if (child_field := child_pfield.name) == field and child_parent is nodef          # if is from same field and our own child, else
+                    else not _is_slice_compatible(node_sig, (child_parent.a.__class__, child_field))  # child slice is not compatible)
+            )):                                                                                       # then can't possibly slice, or it doesn't make sense to
                 end = start + 1
 
             else:  # slice operation, even if its just one element because slice copies more formatting and comments
                 child_off_idx = child_idx - start
 
                 for end in range(start + 1, len_body):  # get length of contiguous slice
-                    if (not (f := getattr(body[end], 'f', None)) or
-                        f.parent is not child_parent or
-                        f.pfield != (child_field, child_off_idx + end)
+                    if (not (f := getattr(body[end], 'f', None))
+                        or f.parent is not child_parent
+                        or f.pfield != (child_field, child_off_idx + end)
                     ):  # if is not following element then done
                         break
 
@@ -366,9 +361,11 @@ class Reconcile:
                     outf.put(child, field=field, **self.options)
 
             else:  # slice
-                if (field in ('body', 'orelse', 'finalbody', 'handlers', 'cases', 'elts') or
-                    field == 'names' and isinstance(node, (Global, Nonlocal))  # list of identifier names
-                ):
+                if (field in ('body', 'orelse', 'finalbody', 'handlers', 'cases', 'elts')
+                    or (
+                        field == 'names'
+                        and isinstance(node, (Global, Nonlocal)  # list of identifier names
+                ))):
                     self.recurse_slice(node, outf, field, child)
 
                     continue

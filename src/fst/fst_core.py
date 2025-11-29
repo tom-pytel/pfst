@@ -301,10 +301,14 @@ class _Modifying:
                     if field == 'value' and (strs := _get_fmtval_interp_strs(fst_)):  # this will never proc for py < 3.12, in case we ever make this code common
                         dbg_str, val_str, end_ln, end_col = strs
 
-                        if (dbg_str is None or not parent or not (idx := pfield.idx) or
-                            not isinstance(prev := parent.a.values[idx - 1], Constant) or
-                            not isinstance(v := prev.value, str) or not v.endswith(dbg_str) or
-                            (prevf := prev.f).end_col != end_col or prevf.end_ln != end_ln
+                        if (dbg_str is None
+                            or not parent
+                            or not (idx := pfield.idx)
+                            or not isinstance(prev := parent.a.values[idx - 1], Constant)
+                            or not isinstance(v := prev.value, str)
+                            or not v.endswith(dbg_str)
+                            or (prevf := prev.f).end_col != end_col
+                            or prevf.end_ln != end_ln
                         ):
                             if val_str is not None:
                                 data.append((fst_, None, True))
@@ -356,8 +360,10 @@ class _Modifying:
 
                 if strs is first:  # on first one check to make sure no double '{{', and if so then fix: f'{{a}}' -> f'{ {a}}'
                     ln, col, _, _ = fst_.a.value.f.loc
-                    fix_const = ((parent := fst_.parent) and (idx := fst_.pfield.idx) and   # parent should exist here but just in case, whether we need to reset start of debug string or not
-                                 (f := parent.a.values[idx - 1].f).col == col and f.ln == ln)
+                    fix_const = ((parent := fst_.parent)  # parent should exist here but just in case, whether we need to reset start of debug string or not
+                                 and (idx := fst_.pfield.idx)
+                                 and (f := parent.a.values[idx - 1].f).col == col
+                                 and f.ln == ln)
 
                     if lines[ln].startswith('{', col):
                         fst_._put_src([' '], ln, col, ln, col, False)
@@ -555,8 +561,10 @@ def _reparse_docstr_Constants(self: fst.FST, docstr: bool | Literal['strict'] = 
     elif docstr == 'strict':
         for a in walk(self.a):
             if isinstance(a, ASTS_SCOPE_NAMED_OR_MOD):
-                if ((body := a.body) and isinstance(b0 := body[0], Expr) and isinstance(v := b0.value, Constant) and
-                    isinstance(v.value, str)
+                if ((body := a.body)
+                    and isinstance(b0 := body[0], Expr)
+                    and isinstance(v := b0.value, Constant)
+                    and isinstance(v.value, str)
                 ):
                     v.value = literal_eval((f := b0.f)._get_src(*f.loc))
 
@@ -666,9 +674,10 @@ def _set_ctx(self: fst.FST, ctx: type[expr_context]) -> None:
     while stack:
         a = stack.pop()
 
-        if (((is_seq := isinstance(a, (Tuple, List))) or (is_starred := isinstance(a, Starred)) or
-            isinstance(a, (Name, Subscript, Attribute))) and not isinstance(a.ctx, ctx)
-        ):
+        if ((is_seq := isinstance(a, (Tuple, List)))
+            or (is_starred := isinstance(a, Starred))
+            or isinstance(a, (Name, Subscript, Attribute))
+        ) and not isinstance(a.ctx, ctx):
             a.ctx = child = ctx()
 
             _make_tree_fst(child, a.f, _astfieldctx)
@@ -1339,14 +1348,19 @@ def _get_indentable_lns(
             walking.send(False)
 
         elif isinstance(a := f.a, Constant):  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
-            if (not docstr or
-                not isinstance(a.value, str) or  # could be bytes
-                not ((parent := f.parent) and
-                     isinstance(parent.a, Expr) and
-                     (not strict or ((grandparent := parent.parent) and
-                                     parent.pfield == ('body', 0) and
-                                     isinstance(grandparent.a, ASTS_SCOPE_NAMED_OR_MOD) and
-                                     parent.a is not docstr_strict_exclude)))):
+            if not (
+                docstr
+                and isinstance(a.value, str)  # could be bytes
+                and (parent := f.parent)
+                and isinstance(parent.a, Expr)
+                and (
+                    not strict
+                    or (
+                        (grandparent := parent.parent)
+                        and parent.pfield == ('body', 0)
+                        and isinstance(grandparent.a, ASTS_SCOPE_NAMED_OR_MOD)
+                        and parent.a is not docstr_strict_exclude
+            ))):
                 lns.difference_update(_multiline_str_continuation_lns(lines, *f.loc))
 
         elif isinstance(a, (JoinedStr, TemplateStr)):
@@ -1534,9 +1548,11 @@ def _offset(
             elif fend_colo < colo:
                 continue
 
-            elif (fend_colo > colo or
-                  (tail and (fwd or head is not False or fcolo != fend_colo or flno != fend_lno)) or  # at (ln, col), moving tail allowed and not blocked by head?
-                  (tail is None and head and fwd and fcolo == fend_colo and flno == fend_lno)):  # allowed to be and being moved by head?
+            elif (
+                fend_colo > colo
+                or (tail and (fwd or head is not False or fcolo != fend_colo or flno != fend_lno))  # at (ln, col), moving tail allowed and not blocked by head?
+                or (tail is None and head and fwd and fcolo == fend_colo and flno == fend_lno)
+            ):  # allowed to be and being moved by head?
                 a.end_lineno = fend_lno + dln
                 a.end_col_offset = fend_colo + dcol_offset
 
@@ -1546,9 +1562,14 @@ def _offset(
 
                 a.lineno = flno + dln
 
-            elif (flno == lno and (fcolo > colo or (fcolo == colo and (
-                  (head and (not fwd or tail is not False or fcolo != fend_colo or flno != fend_lno)) or  # at (ln, col), moving head allowed and not blocked by tail?
-                  (head is None and tail and not fwd and fcolo == fend_colo and flno == fend_lno))))):  # allowed to be and being moved by tail?
+            elif flno == lno and (
+                fcolo > colo
+                or (
+                    fcolo == colo
+                    and (
+                        (head and (not fwd or tail is not False or fcolo != fend_colo or flno != fend_lno))  # at (ln, col), moving head allowed and not blocked by tail?
+                        or (head is None and tail and not fwd and fcolo == fend_colo and flno == fend_lno)
+            ))):  # allowed to be and being moved by tail?
                 a.lineno = flno + dln
                 a.col_offset = fcolo + dcol_offset
 

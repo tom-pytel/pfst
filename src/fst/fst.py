@@ -759,8 +759,10 @@ class FST:
 
             if (indent := kwargs.get('indent')) is not None:
                 self.indent = indent
-            elif ((is_modish := isinstance(ast_or_src, (Module, _ExceptHandlers, _match_cases))) or
-                  isinstance(ast_or_src, ASTS_BLOCK)):
+            elif (
+                (is_modish := isinstance(ast_or_src, (Module, _ExceptHandlers, _match_cases)))
+                or isinstance(ast_or_src, ASTS_BLOCK)
+            ):
                 self.indent = '?'
             else:
                 self.indent = _DEFAULT_INDENT
@@ -2326,8 +2328,10 @@ class FST:
 
             self_ln, self_col, self_end_ln, self_end_col = loc
 
-            if (ln < self_ln or (ln == self_ln and col < self_col) or
-                end_ln > self_end_ln or (end_ln == self_end_ln and end_col > self_end_col)
+            if (ln < self_ln
+                or (ln == self_ln and col < self_col)
+                or end_ln > self_end_ln
+                or (end_ln == self_end_ln and end_col > self_end_col)
             ):
                 raise ValueError("location with 'offset' must be at or inside location of node")
 
@@ -2439,8 +2443,9 @@ class FST:
                     locn = fstlocn(ln, col, end_ln, end_col, n=0)
 
                 else:
-                    if (llpars <= lrpars and shared is not None and
-                        (self._is_solo_call_arg() or self._is_solo_class_base() or self._is_solo_matchcls_pat())
+                    if (llpars <= lrpars
+                        and shared is not None
+                        and (self._is_solo_call_arg() or self._is_solo_class_base() or self._is_solo_matchcls_pat())
                     ):
                         llpars -= 1
 
@@ -2502,11 +2507,12 @@ class FST:
         """
 
         if not force:
-            if (not self._is_parenthesizable() or (is_atom := self._is_atom()) in (True, 'pars') or
-                ((is_atom or
-                  (isinstance(self.a, Starred) and self.a.value.f._is_atom() in (True, 'pars'))) and
-                 self._is_enclosed_or_line())  # _is_enclosed_or_line() can return 'unenclosable'
-            ):
+            if (not self._is_parenthesizable()
+                or (is_atom := self._is_atom()) in (True, 'pars')
+                or (
+                    (is_atom or (isinstance(self.a, Starred) and self.a.value.f._is_atom() in (True, 'pars')))
+                    and self._is_enclosed_or_line()  # _is_enclosed_or_line() can return 'unenclosable'
+            )):
                 return self
 
         with self._modifying():
@@ -2723,9 +2729,11 @@ class FST:
                                     try:
                                         a = args[(idx := idx + 1)]
 
-                                        if (a is star and ((kw := keywords[0]).lineno, kw.col_offset) <
-                                            (star.lineno, star.col_offset)
-                                        ):  # reached star and there is a keyword before it
+                                        if (a is star
+                                            and (
+                                                ((kw := keywords[0]).lineno, kw.col_offset)
+                                                < (star.lineno, star.col_offset)
+                                        )):  # reached star and there is a keyword before it
                                             name = 'keywords'
                                             idx = 0
                                             a = kw
@@ -2757,8 +2765,8 @@ class FST:
                                     else:
                                         star_pos = (star.lineno, star.col_offset)
 
-                                        if (((sa := self.a).lineno, sa.col_offset) < star_pos and
-                                            (a.lineno, a.col_offset) > star_pos
+                                        if (((sa := self.a).lineno, sa.col_offset) < star_pos
+                                            and (a.lineno, a.col_offset) > star_pos
                                         ):  # crossed star, jump back to it
                                             name = 'args'
                                             idx = len(args) - 1
@@ -2779,8 +2787,16 @@ class FST:
                                         posonlyargs = aparent.posonlyargs
                                         defaults = aparent.defaults
 
-                                        if (not defaults or (didx := (idx + ((ldefaults := len(defaults)) -
-                                            len(args := aparent.args) - len(posonlyargs)))) < 0 or didx >= ldefaults
+                                        if (not defaults
+                                            or (
+                                                didx := (
+                                                    idx
+                                                    + (
+                                                        (ldefaults := len(defaults))
+                                                        - len(args := aparent.args)
+                                                        - len(posonlyargs)
+                                            ))) < 0
+                                            or didx >= ldefaults
                                         ):
                                             try:
                                                 a = posonlyargs[(idx := idx + 1)]
@@ -2799,8 +2815,11 @@ class FST:
                                         args = aparent.args
                                         defaults = aparent.defaults
 
-                                        if (not defaults or (didx := (idx + ((ldefaults := len(defaults)) -
-                                            len(args := aparent.args)))) < 0  # or didx >= ldefaults
+                                        if (not defaults
+                                            or (
+                                                didx := (
+                                                    idx + ((ldefaults := len(defaults)) - len(args := aparent.args))
+                                            )) < 0  # or didx >= ldefaults
                                         ):
                                             try:
                                                 a = args[(idx := idx + 1)]
@@ -3078,8 +3097,8 @@ class FST:
                                     else:
                                         a = keywords[(idx := idx - 1)]
 
-                                        if ((a.lineno, a.col_offset) < star_pos and
-                                            ((sa := self.a).lineno, sa.col_offset) > star_pos
+                                        if ((a.lineno, a.col_offset) < star_pos
+                                            and ((sa := self.a).lineno, sa.col_offset) > star_pos
                                         ):  # crossed star walking back, return star
                                             name = 'args'
                                             idx = len(args) - 1
@@ -3106,8 +3125,8 @@ class FST:
                                         posonlyargs = aparent.posonlyargs
                                         defaults = aparent.defaults
 
-                                        if ((didx := idx - len(aparent.args) - len(posonlyargs) + len(defaults) - 1) >=
-                                            0
+                                        if ((didx := idx - len(aparent.args) - len(posonlyargs) + len(defaults) - 1)
+                                            >= 0
                                         ):
                                             name = 'defaults'
                                             a = defaults[(idx := didx)]
@@ -3282,7 +3301,7 @@ class FST:
         """
 
         for name in AST_FIELDS[(a := self.a).__class__]:
-            if (child := getattr(a, name, None)):
+            if child := getattr(a, name, None):
                 if isinstance(child, AST):
                     if check_with_loc(f := child.f, with_loc):
                         return f
@@ -3331,7 +3350,7 @@ class FST:
             return fst_.prev(with_loc)
 
         for name in reversed(AST_FIELDS[(a := self.a).__class__]):
-            if (child := getattr(a, name, None)):
+            if child := getattr(a, name, None):
                 if isinstance(child, AST):
                     if check_with_loc(f := child.f, with_loc):
                         return f
@@ -3869,8 +3888,12 @@ class FST:
                         gen = fst_.walk(with_loc, self_=False, back=back)
 
                         for f in gen:  # all NamedExpr assignments below are visible here, yeah, its ugly
-                            if (a := f.a) is comp_first_iter or (f.pfield.name == 'target' and isinstance(a, Name) and
-                                                                isinstance(f.parent.a, NamedExpr)):
+                            if ((a := f.a) is comp_first_iter
+                                or (
+                                    f.pfield.name == 'target'
+                                    and isinstance(a, Name)
+                                    and isinstance(f.parent.a, NamedExpr)
+                            )):
                                 subrecurse = recurse
 
                                 while (sent := (yield f)) is not None:
@@ -4351,8 +4374,8 @@ class FST:
 
         fln, fcol, fend_ln, fend_col = self.loc
 
-        if ((((same_ln := fln == ln) and fcol <= col) or fln < ln) and
-            (((same_end_ln := fend_ln == end_ln) and fend_col >= end_col) or fend_ln > end_ln)
+        if ((((same_ln := fln == ln) and fcol <= col) or fln < ln)
+            and (((same_end_ln := fend_ln == end_ln) and fend_col >= end_col) or fend_ln > end_ln)
         ):
             if same_ln and same_end_ln and fcol == col and fend_col == end_col:
                 if not allow_exact:
@@ -4371,8 +4394,10 @@ class FST:
                 if fend_ln < ln or (fend_ln == ln and fend_col <= col):
                     continue
 
-                if (fln > ln or ((same_ln := fln == ln) and fcol > col) or
-                    fend_ln < end_ln or ((same_end_ln := fend_ln == end_ln) and fend_col < end_col)
+                if (fln > ln
+                    or ((same_ln := fln == ln) and fcol > col)
+                    or fend_ln < end_ln
+                    or ((same_end_ln := fend_ln == end_ln) and fend_col < end_col)
                 ):
                     return self
 
@@ -4418,8 +4443,8 @@ class FST:
 
         fln, fcol, fend_ln, fend_col = self.loc
 
-        if ((fln > ln or (fln == ln and fcol >= col)) and
-            (fend_ln < end_ln or (fend_ln == end_ln and fend_col <= end_col))
+        if ((fln > ln or (fln == ln and fcol >= col))
+            and (fend_ln < end_ln or (fend_ln == end_ln and fend_col <= end_col))
         ):
             return self
 

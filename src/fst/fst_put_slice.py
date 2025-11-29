@@ -392,7 +392,10 @@ def _code_to_slice_BoolOp_values(
         if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
             fst_._delimit_node()
 
-    elif (is_slice_type and (is_same_op or op_type is And)) or isinstance(ast_, (NamedExpr, Yield, YieldFrom, IfExp)):  # these need to be parenthesized definitely
+    elif (
+        (is_slice_type and (is_same_op or op_type is And))
+        or isinstance(ast_, (NamedExpr, Yield, YieldFrom, IfExp))
+    ):  # these need to be parenthesized definitely
         if not fst_.pars().n:
             fst_._parenthesize_grouping()
 
@@ -430,8 +433,10 @@ def _code_to_slice_Compare__all(
         if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
             fst_._delimit_node()
 
-    elif (is_slice_type or isinstance(ast_, (NamedExpr, Yield, YieldFrom, IfExp, BoolOp)) or
-          (isinstance(ast_, UnaryOp) and isinstance(ast_.op, Not))
+    elif (
+        is_slice_type
+        or isinstance(ast_, (NamedExpr, Yield, YieldFrom, IfExp, BoolOp))
+        or (isinstance(ast_, UnaryOp) and isinstance(ast_.op, Not))
     ):  # these need to be parenthesized definitely
         if not fst_.pars().n:
             fst_._parenthesize_grouping()
@@ -547,10 +552,14 @@ def _code_to_slice__special(
 
     coerce = fst.FST.get_option('coerce', options)
 
-    if (one and not coerce and
-        (isinstance(code, type_ast) or
-         (isinstance(code, fst.FST) and isinstance(code.a, type_ast)))
-    ):
+    if (one
+        and not coerce
+        and (
+            isinstance(code, type_ast)
+            or (
+                isinstance(code, fst.FST)
+                and isinstance(code.a, type_ast)
+    ))):
         raise ValueError(f"cannot put {type_ast.__name__} node as 'one=True' without 'coerce=True'")
 
     fst_ = code_as(code, self.root.parse_params, coerce=one or coerce)
@@ -2316,9 +2325,9 @@ def _adjust_slice_raw_ast(
 
     code = reduce_ast(code, True)
 
-    if ((code_is_tuple := isinstance(code, Tuple)) or
-        (code_is_normal := isinstance(code, (List, Set, Dict, MatchSequence, MatchMapping))) or
-        isinstance(code, (_withitems, _aliases, _type_params))
+    if ((code_is_tuple := isinstance(code, Tuple))
+        or (code_is_normal := isinstance(code, (List, Set, Dict, MatchSequence, MatchMapping)))
+        or isinstance(code, (_withitems, _aliases, _type_params))
     ):  # all nodes which are separated by comma at top level
         src = unparse(code)
 
@@ -2382,8 +2391,8 @@ def _adjust_slice_raw_fst(
 
     code_ast = reduce_ast(code.a, True)
 
-    if ((code_is_normal := isinstance(code_ast, (Tuple, List, Set, Dict, MatchSequence, MatchMapping))) or
-        isinstance(code_ast, (_withitems, _aliases, _type_params))
+    if ((code_is_normal := isinstance(code_ast, (Tuple, List, Set, Dict, MatchSequence, MatchMapping)))
+        or isinstance(code_ast, (_withitems, _aliases, _type_params))
     ):  # all nodes which are separated by comma at top level
         code_fst = code_ast.f
         code_lines = code._lines
@@ -2391,9 +2400,11 @@ def _adjust_slice_raw_fst(
         if not one:  # strip delimiters (if any) and everything before and after actual node
             ln, col, end_ln, end_col = code_fst.loc
 
-            if (code_is_normal and
-                not (code_fst._is_parenthesized_tuple() is False or code_fst._is_delimited_matchseq() == '')  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence or is a special slice
-            ):
+            if (code_is_normal
+                and not (
+                    code_fst._is_parenthesized_tuple() is False
+                    or code_fst._is_delimited_matchseq() == ''  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence or is a special slice
+            )):
                 col += 1
                 end_col -= 1
                 col_offset = code_ast.col_offset = code_ast.col_offset + 1
@@ -2443,11 +2454,14 @@ def _adjust_slice_raw_fst(
             len_code_body2 = 1
 
         if comma := next_find(self.root._lines, put_end_ln, put_end_col, self.end_ln, self.end_col, ',', True):  # trailing comma
-            if (code_comma_is_explicit or
-                (len_code_body2 > 1 and  # code has no comma because otherwise it would be explicit
-                 len(body2) == 1 and _singleton_needs_comma(self) and  # self is singleton and singleton needs comma
-                 comma[1] == put_end_col and comma[0] == put_end_ln)  # that comma follows right after element and so is not explicit and can be deleted
-            ):
+            if (code_comma_is_explicit
+                or (
+                    len_code_body2 > 1  # code has no comma because otherwise it would be explicit
+                    and len(body2) == 1
+                    and _singleton_needs_comma(self)  # self is singleton and singleton needs comma
+                    and comma[1] == put_end_col
+                    and comma[0] == put_end_ln  # that comma follows right after element and so is not explicit and can be deleted
+            )):
                 put_end_ln, put_end_col = comma
                 put_end_col += 1
 

@@ -159,8 +159,9 @@ def _loc_comprehension(self: fst.FST) -> fstloc:
         end_ln, end_col = rpars[0]
 
     else:
-        is_genexp_last = ((parent := self.parent) and isinstance(parent.a, GeneratorExp) and  # correct for parenthesized GeneratorExp
-                          self.pfield.idx == len(parent.a.generators) - 1)
+        is_genexp_last = ((parent := self.parent)
+                          and isinstance(parent.a, GeneratorExp)
+                          and self.pfield.idx == len(parent.a.generators) - 1)  # correct for parenthesized GeneratorExp
 
         if is_genexp_last and lrpars == 2:  # can't be pars on left since only par on right was close of GeneratorExp
             end_ln, end_col = rpars[0]
@@ -571,8 +572,9 @@ def _loc_With_items_pars(self: fst.FST) -> fstlocn:
 
     bound = fstloc(ln, col, end_ln, end_col)
 
-    if ((lpar := next_frag(lines, ln, col, end_ln, end_col)) and lpar.src.startswith('(') and  # does opening par follow 'with'
-        not (items and ((_loc_i0 := items[0].f.loc).col == lpar.col and _loc_i0.ln == lpar.ln))  # if there are items and first `withitem` starts at lpar found then we know that lpar belongs to it and whole `items` field doesn't have pars
+    if ((lpar := next_frag(lines, ln, col, end_ln, end_col))
+        and lpar.src.startswith('(')  # does opening par follow 'with'
+        and not (items and ((_loc_i0 := items[0].f.loc).col == lpar.col and _loc_i0.ln == lpar.ln))  # if there are items and first `withitem` starts at lpar found then we know that lpar belongs to it and whole `items` field doesn't have pars
     ):
         ln, col, _ = lpar
 
@@ -673,8 +675,9 @@ def _loc_FunctionDef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None,
 
     ln, col, end_ln, end_col = self.loc
 
-    if after := (args.posonlyargs or args.args or args.vararg or args.kwonlyargs or args.kwarg or ast.returns or
-                 ast.body):
+    if after := (
+        args.posonlyargs or args.args or args.vararg or args.kwonlyargs or args.kwarg or ast.returns or ast.body
+    ):
         after_ln, after_col, _, _ = (after[0] if isinstance(after, list) else after).f.loc
     else:  # accomodate temporarily empty bodies
         after_ln = end_ln

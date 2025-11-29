@@ -959,8 +959,8 @@ class TestFST(unittest.TestCase):
 
                 # reparse
 
-                if ((src or func not in (px.parse__aliases, px.parse__Import_names, px.parse__ImportFrom_names)) and  # these unparse to '()' which can't be reparsed as these
-                    not (src.endswith(',') and func in (px.parse__withitems, px.parse__type_params))  # special case of singletons list containers that can with a trailing comma, which unparse from AST without the comma so reparse to a single element of the type
+                if ((src or func not in (px.parse__aliases, px.parse__Import_names, px.parse__ImportFrom_names))  # these unparse to '()' which can't be reparsed as these
+                    and not (src.endswith(',') and func in (px.parse__withitems, px.parse__type_params))  # special case of singletons list containers that can with a trailing comma, which unparse from AST without the comma so reparse to a single element of the type
                 ):
                     test = 'reparse'
                     unp  = ((s := px.unparse(ast)) and s.lstrip()) or src  # 'lstrip' because comprehension has leading space, 'or src' because unparse of operators gives nothing

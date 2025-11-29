@@ -338,7 +338,10 @@ def add_lineconts(fst: FST) -> None:
         if f.is_stmtish or f.is_mod:
             continue
 
-        if isinstance(a := f.a, (JoinedStr, TemplateStr)) or (isinstance(a, Constant) and isinstance(a.value, (str, bytes))):
+        if (isinstance(a := f.a, (JoinedStr, TemplateStr))
+            or (isinstance(a, Constant)
+                and isinstance(a.value, (str, bytes)
+        ))):
             gen.send(False)
 
             g = None  # we don't want to accidentally pick a span which includes this
@@ -370,10 +373,14 @@ def add_semicolons(fst: FST) -> None:
         if (r := randint(0, 3)) >= 2:
             continue
 
-        if (r and (pfield := f.pfield) and pfield.idx and
-            isinstance((g := f.prev()).a, ASTS_STMT_NONBLOCK) and
-            (not (fr := next_frag(lines, g.end_ln, g.end_col, g.end_ln, 0x7fffffffffffffff)) or fr.src.startswith('#'))
-        ):
+        if (r
+            and (pfield := f.pfield)
+            and pfield.idx
+            and isinstance((g := f.prev()).a, ASTS_STMT_NONBLOCK)
+            and (
+                not (fr := next_frag(lines, g.end_ln, g.end_col, g.end_ln, 0x7fffffffffffffff))
+                or fr.src.startswith('#')
+        )):
             f.parent.put_src(choice((';', ' ;', '; ', ' ; ')), g.end_ln, g.end_col, f.ln, f.col, 'offset')
 
         elif not (fr := next_frag(lines, f.end_ln, f.end_col, f.end_ln, 0x7fffffffffffffff)) or fr.src.startswith('#'):
@@ -532,20 +539,21 @@ def ignorable_exc(exc: Exception, putsrc: str | Literal[False] | None = None):
             # msg.startswith('cannot assign to expression here') or
             # "Maybe you meant '==' instead of '='" in msg or
             # "Maybe you meant '==' or ':=' instead of '='"
-            "Maybe you meant '==' " in msg or
-            ' for augmented assignment' in msg or
-            msg.startswith('positional argument follows keyword argument') or
-            msg.startswith('cannot use starred expression here') or
-            msg.startswith('illegal target for annotation') or
+            "Maybe you meant '==' " in msg
+            or ' for augmented assignment' in msg
+            or msg.startswith('positional argument follows keyword argument')
+            or msg.startswith('cannot use starred expression here')
+            or msg.startswith('illegal target for annotation')
+            or msg.startswith('cannot delete ')
             # msg.startswith('cannot delete literal') or
             # msg.startswith('cannot delete function call') or
-            msg.startswith('cannot delete ') or
+
+            or msg.startswith('cannot assign to ')
             # msg.startswith('cannot assign to literal') or
             # msg.startswith('cannot assign to function call') or
             # msg.startswith('cannot assign to expression') or
             # msg.startswith('cannot assign to None') or
-            msg.startswith('cannot assign to ') or
-            (msg.startswith('future feature') and 'is not defined' in msg)
+            or (msg.startswith('future feature') and 'is not defined' in msg)
         ):
             ignorable = True
 
@@ -777,13 +785,13 @@ def can_replace(tgt: FST, repl: FST) -> bool:  # assuming ASTCat has already bee
                 if '*' in repla.name and len(tgt_parenta.names) > 1:
                     return False
 
-        if (isinstance(tgta, arguments) and isinstance(tgt_parenta, Lambda) and
-            not isinstance(repl_parenta, Lambda)
-        ):
+        if isinstance(tgta, arguments) and isinstance(tgt_parenta, Lambda) and not isinstance(repl_parenta, Lambda):
             return False
 
-        if (isinstance(tgta, arg) and isinstance(tgt_parenta, arguments) and
-            isinstance(tgt.parent.parent.a, Lambda) and repla.annotation
+        if (isinstance(tgta, arg)
+            and isinstance(tgt_parenta, arguments)
+            and isinstance(tgt.parent.parent.a, Lambda)
+            and repla.annotation
         ):
             return False
 
@@ -890,9 +898,7 @@ def can_replace_ast(
                 if '*' in repla.name and len(tgt_parenta.names) > 1:
                     return False
 
-        if (isinstance(tgta, arguments) and isinstance(tgt_parenta, Lambda) and
-            not isinstance(repl_parenta, Lambda)
-        ):
+        if isinstance(tgta, arguments) and isinstance(tgt_parenta, Lambda) and not isinstance(repl_parenta, Lambda):
             return False
 
         # if (isinstance(tgta, arg) and isinstance(tgt_parenta, arguments) and
@@ -1148,7 +1154,8 @@ class SynOrder(Fuzzy):
 
                 assert l3 == l4
 
-                if isinstance(f.a, (FunctionDef, AsyncFunctionDef, ClassDef, Lambda, ListComp, SetComp, DictComp, GeneratorExp)):
+                if isinstance(f.a, (FunctionDef, AsyncFunctionDef, ClassDef, Lambda, ListComp, SetComp, DictComp,
+                                    GeneratorExp)):
                     l5 = list(f.walk(True, self_=False, recurse=False, scope=True))
                     l6 = list(f.walk(True, self_=False, recurse=False, scope=True, back=True))
 
@@ -1480,10 +1487,10 @@ class PutOne(Fuzzy):
                                 except Exception as e:
                                     msg = str(e)
 
-                                    if (not msg.startswith('cannot delete') and
-                                        not msg.startswith('cannot put slice to') and
-                                        msg != "cannot change MatchAs with pattern into wildcard '_'" and
-                                        'not implemented' not in msg
+                                    if (not msg.startswith('cannot delete')
+                                        and not msg.startswith('cannot put slice to')
+                                        and msg != "cannot change MatchAs with pattern into wildcard '_'"
+                                        and 'not implemented' not in msg
                                     ):  # 'in this state' not in str(e):
                                         raise
 
@@ -1684,9 +1691,10 @@ class ReconcileRnd(Fuzzy):
                 elif repltype == 'fstin':
                     repl, _ = self.parts.getrnd(allowed_cats)
 
-                    if (repl and can_replace(f, repl) and
-                    #    not f.root.child_path(f, as_str=True).startswith(repl.root.child_path(repl, as_str=True))
-                        repl.a not in parents
+                    if (repl
+                        and can_replace(f, repl)
+                        and repl.a not in parents
+                        #    not f.root.child_path(f, as_str=True).startswith(repl.root.child_path(repl, as_str=True))
                     ):
                         self.parts.remove_all(repl)
                         f.pfield.set(ast, repl.a)
@@ -2186,8 +2194,8 @@ class SliceExprish(Fuzzy):
             return ('generators',)
 
         if isinstance(ast, Call):
-            if ((ast.keywords or len(ast.args) != 1 or not isinstance(ast.args[0], GeneratorExp)) and  # safe `GeneratorExp`, two possible slices - `args` and `keywords`?
-                not ast.keywords
+            if ((ast.keywords or len(ast.args) != 1 or not isinstance(ast.args[0], GeneratorExp))  # safe `GeneratorExp`, two possible slices - `args` and `keywords`?
+                and not ast.keywords
             ):
                 return ('Call_args',)
             else:

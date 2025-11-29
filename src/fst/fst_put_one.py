@@ -741,15 +741,20 @@ def _make_exprish_fst(
             else:  # Starred gets checked against its child value because is complicated, could be a Call.args or ClassDef.bases '*a or b' or could have child already parenthesized (or worse, unparenthesized Subscript.slice Tuple)
                 star_child = put_ast.value
 
-                if (not isinstance(star_child, Tuple) and  # if Tuple we assume it is parenthesized because otherwise it could not come into existence without schenanigans
-                    precedence_require_parens(star_child, put_ast, 'value', star_arglike=arglike) and
-                    (not adding or not star_child.f.pars().n)  # `not adding` to make sure we don't remove existing needed pars
+                if (not isinstance(star_child, Tuple)  # if Tuple we assume it is parenthesized because otherwise it could not come into existence without schenanigans
+                    and precedence_require_parens(star_child, put_ast, 'value', star_arglike=arglike)
+                    and (not adding or not star_child.f.pars().n)  # `not adding` to make sure we don't remove existing needed pars
                 ):
                     return True
 
-        elif (tgt_is_FST and field == 'value' and
-              isinstance(put_ast, Constant) and isinstance(put_ast.value, int) and
-              (tgt_parent := target.parent) and isinstance(tgt_parent.a, Attribute)):  # veeery special case "3.__abs__()" -> "(3).__abs__()"
+        elif (
+            tgt_is_FST
+            and field == 'value'
+            and isinstance(put_ast, Constant)
+            and isinstance(put_ast.value, int)
+            and (tgt_parent := target.parent)
+            and isinstance(tgt_parent.a, Attribute)
+        ):  # veeery special case "3.__abs__()" -> "(3).__abs__()"
             return True
 
         if not self._is_enclosed_in_parents(field) and not put_fst._is_enclosed_or_line(pars=adding):
@@ -786,16 +791,19 @@ def _make_exprish_fst(
                     put_fst._unparenthesize_grouping(False)
 
         else:  # src does not have grouping pars
-            if ((tgt_has_pars := tgt_is_FST and getattr(target.pars(), 'n', 0)) and
-                put_fst._is_parenthesized_tuple() is False
+            if ((tgt_has_pars := tgt_is_FST and getattr(target.pars(), 'n', 0))
+                and put_fst._is_parenthesized_tuple() is False
             ):
                 del_tgt_pars = True
                 tgt_has_pars = False
 
             if tgt_has_pars:
                 if not need_pars(True):
-                    if pars is True or not (field == 'target' and (tgt_parent := target.parent) and  # suuuper minor special case, don't automatically unparenthesize AnnAssign targets
-                                            isinstance(tgt_parent.a, AnnAssign)):
+                    if pars is True or not (
+                        field == 'target'
+                        and (tgt_parent := target.parent)  # suuuper minor special case, don't automatically unparenthesize AnnAssign targets
+                        and isinstance(tgt_parent.a, AnnAssign)
+                    ):
                         del_tgt_pars = True
 
             elif need_pars(True):  # could be parenthesizing grouping or a tuple, not a MatchSeqence because that never gets here unenclosed
@@ -969,8 +977,10 @@ def _put_one_ClassDef_bases(
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
 
-    if (isinstance(child, Starred) and not isinstance(code.a, Starred) and (keywords := self.a.keywords) and
-        child.f.loc > keywords[0].f.loc
+    if (isinstance(child, Starred)
+        and not isinstance(code.a, Starred)
+        and (keywords := self.a.keywords)
+        and child.f.loc > keywords[0].f.loc
     ):
         raise ValueError('cannot replace Starred ClassDef.bases element '
                          'with non-Starred base at this location (after keywords)')
@@ -1199,8 +1209,10 @@ def _put_one_Call_args(
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
 
-    if (isinstance(child, Starred) and not isinstance(code.a, Starred) and (keywords := self.a.keywords) and
-        child.f.loc > keywords[0].f.loc
+    if (isinstance(child, Starred)
+        and not isinstance(code.a, Starred)
+        and (keywords := self.a.keywords)
+        and child.f.loc > keywords[0].f.loc
     ):
         raise ValueError('cannot replace Starred Call.args element with non-Starred arg at this location'
                          ' (after keywords)')
@@ -1406,7 +1418,7 @@ def _put_one_Tuple_elts(
             self._delimit_node()
 
     else:
-        if (PYGE14 and self.pfield == ('type', None) and isinstance(codea, Starred) and not is_par):  # if putting Starred to unparenthesized ExceptHandler.type Tuple then parenthesize it
+        if PYGE14 and self.pfield == ('type', None) and isinstance(codea, Starred) and not is_par:  # if putting Starred to unparenthesized ExceptHandler.type Tuple then parenthesize it
             self._delimit_node()
 
         self_is_solo_star_in_slice = is_slice and len(elts := ast.elts) == 1 and isinstance(elts[0], Starred)  # because of replacing the Starred in 'a[*i_am_really_a_tuple]'
@@ -1433,8 +1445,9 @@ def _put_one_Dict_keys(
 
     ret = _put_one_exprish_optional(self, code, idx, field, child, static, options)
 
-    if (code is None and not (value := (a := self.a).values[idx].f)._is_atom() and
-        precedence_require_parens(value.a, a, 'values',  idx)
+    if (code is None
+        and not (value := (a := self.a).values[idx].f)._is_atom()
+        and precedence_require_parens(value.a, a, 'values', idx)
     ):
         value._parenthesize_grouping()
 
@@ -2000,9 +2013,12 @@ def _one_info_arguments_vararg(self: fst.FST, static: onestatic, idx: int | None
         if prev := varargf.prev():
             delstr = ', *' if ast.kwonlyargs else ''
 
-            if not (ast.posonlyargs and
-                    ((n := prev.pfield.name) == 'posonlyargs' or
-                     (n == 'defaults' and prev.prev().pfield.name == 'posonlyargs'))):
+            if not (
+                ast.posonlyargs
+                and (
+                    (n := prev.pfield.name) == 'posonlyargs'
+                    or (n == 'defaults' and prev.prev().pfield.name == 'posonlyargs')
+            )):
                 _, _, ln, col = prev.pars()
 
                 return oneinfo('', fstloc(ln, col, end_ln, end_col), delstr=delstr)
@@ -2110,9 +2126,14 @@ def _one_info_arguments_kwarg(self: fst.FST, static: onestatic, idx: int | None,
 
             return oneinfo('', fstloc(ln, col + 6, self.end_ln, self.end_col))
 
-        if not (ast.posonlyargs and
-                ((n := prev.pfield.name) == 'posonlyargs' or
-                 (n == 'defaults' and prev.prev().pfield.name == 'posonlyargs'))):
+        if not (
+            ast.posonlyargs
+            and (
+                (n := prev.pfield.name) == 'posonlyargs'
+                or (
+                    n == 'defaults'
+                    and prev.prev().pfield.name == 'posonlyargs'
+        ))):
             _, _, ln, col = prev.pars()
 
         else:
@@ -2133,9 +2154,14 @@ def _one_info_arguments_kwarg(self: fst.FST, static: onestatic, idx: int | None,
 
     last = self.last_child()
 
-    if not (ast.posonlyargs and
-            ((n := last.pfield.name) == 'posonlyargs' or
-             (n == 'defaults' and last.prev().pfield.name == 'posonlyargs'))):
+    if not (
+        ast.posonlyargs
+        and (
+            (n := last.pfield.name) == 'posonlyargs'
+            or (
+                n == 'defaults'
+                and last.prev().pfield.name == 'posonlyargs'
+    ))):
         _, _, ln, col = last.pars()
 
     else:

@@ -76,10 +76,10 @@ def func(self):  # comment
     string"""
 ```
 
-Don't need docstring.
+Can zero out bodies.
 
 ```py
->>> del func.body  # can zero out bodies
+>>> del func.body  # don't need docstring
 
 >>> print(func.src)
 def func(self):  # comment
@@ -251,12 +251,86 @@ Assign - ROOT 0,0..0,5
     .right Name 'д' Load - 0,4..0,5
 ```
 
+Crazy syntax is handled correctly (which is a main goal of this module).
+
+```py
+>>> f = FST(r'''
+... if True:
+...     @decorator1
+...
+...     # pre-comment
+...     \
+...  @ \
+...   ( decorator2 )(
+...         a,
+...     ) \
+...     # post-comment
+...
+...     @ \
+...     decorator3()
+...
+...     def func(): pass
+... '''.strip())
+```
+
+```py
+>>> d = f.body[0].get_slice(1, 2, 'decorator_list', cut=True, trivia=('all+', 'all+'))
+```
+
+```py
+>>> d.dump('stmt+')
+0:
+1: # pre-comment
+2: \
+3: @ \
+4: ( decorator2 )(
+5:     a,
+6: ) \
+7: # post-comment
+8:
+_decorator_list - ROOT 0,0..8,0
+  .decorator_list[1]
+   0] Call - 4,0..6,1
+     .func Name 'decorator2' Load - 4,2..4,12
+     .args[1]
+      0] Name 'a' Load - 5,4..5,5
+```
+
+```py
+>>> print(f.src)
+if True:
+    @decorator1
+    @ \
+    decorator3()
+
+    def func(): pass
+```
+
+```py
+>>> f.body[0].put_slice(d, 'decorator_list', trivia=('all+', 'all+'))
+```
+
+```py
+>>> print(f.src)
+if True:
+
+    # pre-comment
+    \
+    @ \
+    ( decorator2 )(
+        a,
+    ) \
+    # post-comment
+
+    def func(): pass
+```
+
 For more examples see the documentation in `docs/`, or if you're feeling particularly masochistic have a look at the
 tests in the `tests/` directory.
 
 ## TODO
 
-This package is not finished but functional enough that it can be useful.
+This module is not finished but functional enough that it can be useful.
 
 * Put one to:
   * `FormattedValue.conversion`

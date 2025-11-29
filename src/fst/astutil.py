@@ -842,10 +842,10 @@ def compare_asts(
     try:
         for n1, n2 in walk2(ast1, ast2, cb_primitive, ctx=ctx, recurse=recurse, skip1=skip1, skip2=skip2):
             if locs:
-                if (getattr(n1, 'lineno', None) != getattr(n2, 'lineno', None) or
-                    getattr(n1, 'col_offset', None) != getattr(n2, 'col_offset', None) or
-                    getattr(n1, 'end_lineno', None) != getattr(n2, 'end_lineno', None) or
-                    getattr(n1, 'end_col_offset', None) != getattr(n2, 'end_col_offset', None)
+                if (getattr(n1, 'lineno', None) != getattr(n2, 'lineno', None)
+                    or getattr(n1, 'col_offset', None) != getattr(n2, 'col_offset', None)
+                    or getattr(n1, 'end_lineno', None) != getattr(n2, 'end_lineno', None)
+                    or getattr(n1, 'end_col_offset', None) != getattr(n2, 'end_col_offset', None)
                 ):
                     locs = (f"{(getattr(n1, 'lineno', '?'), getattr(n1, 'col_offset', '?'), getattr(n1, 'end_lineno', '?'), getattr(n1, 'end_col_offset', '?'))} / "
                             f"{(getattr(n2, 'lineno', '?'), getattr(n2, 'col_offset', '?'), getattr(n2, 'end_lineno', '?'), getattr(n2, 'end_col_offset', '?'))}")
@@ -957,11 +957,10 @@ def set_ctx(asts: AST | list[AST], ctx: type[expr_context], *, doit: bool = True
 
     while stack:
         if a := stack.pop():  # might be `None`s in there
-            if (((is_seq := isinstance(a, (Tuple, List))) or
-                 (is_starred := isinstance(a, Starred)) or
-                 isinstance(a, (Name, Subscript, Attribute))) and
-                not isinstance(a.ctx, ctx)
-            ):
+            if ((is_seq := isinstance(a, (Tuple, List)))
+                or (is_starred := isinstance(a, Starred))
+                or isinstance(a, (Name, Subscript, Attribute))
+            ) and not isinstance(a.ctx, ctx):
                 change = True
 
                 if doit:
@@ -1127,7 +1126,7 @@ def _syntax_ordered_children_arguments(ast: AST) -> list[AST]:
                                                 strict=True)))
         children.extend(chain_from_iterable(zip(args, defaults[lposonly_defaults:], strict=True)))
 
-    if (vararg := ast.vararg):
+    if vararg := ast.vararg:
         children.append(vararg)
 
     if not (kw_defaults := ast.kw_defaults):
@@ -1135,7 +1134,7 @@ def _syntax_ordered_children_arguments(ast: AST) -> list[AST]:
     else:
         children.extend(chain_from_iterable(zip(ast.kwonlyargs, kw_defaults, strict=True)))
 
-    if (kwarg := ast.kwarg):
+    if kwarg := ast.kwarg:
         children.append(kwarg)
 
     return children

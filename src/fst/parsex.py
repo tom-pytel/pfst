@@ -501,8 +501,8 @@ def _fix_unparenthesized_tuple_parsed_parenthesized(src: str, ast: AST) -> None:
     end_ln = en.end_lineno - 2  # -2 because of extra line introduced in parse
     end_col = len(lines[end_ln].encode()[:en.end_col_offset].decode())  # bistr(lines[end_ln]).b2c(en.end_col_offset)
 
-    if (not (frag := next_frag(lines, end_ln, end_col, ast.end_lineno - 3, 0x7fffffffffffffff)) or  # if nothing following then last element is ast end, -3 because end also had \n tacked on
-        not frag.src.startswith(',')  # if no comma then last element is ast end
+    if (not (frag := next_frag(lines, end_ln, end_col, ast.end_lineno - 3, 0x7fffffffffffffff))  # if nothing following then last element is ast end, -3 because end also had \n tacked on
+        or not frag.src.startswith(',')  # if no comma then last element is ast end
     ):
         ast.end_lineno = en.end_lineno
         ast.end_col_offset = en.end_col_offset
@@ -970,8 +970,11 @@ def parse_expr_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             raise SyntaxError('invalid expression (all types)') from None
 
     else:
-        if (isinstance(ast, Tuple) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for '*starred' acting as '*starred,'
-            e0.end_col_offset == ast.end_col_offset and e0.end_lineno == ast.end_lineno
+        if (isinstance(ast, Tuple)
+            and len(elts := ast.elts) == 1
+            and isinstance(e0 := elts[0], Starred)  # check for '*starred' acting as '*starred,'
+            and e0.end_col_offset == ast.end_col_offset
+            and e0.end_lineno == ast.end_lineno
         ):
             return e0
 
@@ -1048,8 +1051,10 @@ def parse_Tuple_elt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         if not isinstance(ast, Tuple):
             return ast
 
-        if (len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for '*starred' acting as '*starred,' due to py 3.11 'a[*starred]' sneaky tuple syntax
-            e0.end_col_offset == ast.end_col_offset and e0.end_lineno == ast.end_lineno
+        if (len(elts := ast.elts) == 1
+            and isinstance(e0 := elts[0], Starred)  # check for '*starred' acting as '*starred,' due to py 3.11 'a[*starred]' sneaky tuple syntax
+            and e0.end_col_offset == ast.end_col_offset
+            and e0.end_lineno == ast.end_lineno
         ):
             return e0
 
@@ -1075,8 +1080,11 @@ def parse_Tuple(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if not isinstance(ast, Tuple):
         raise ParseError(f'expecting Tuple, got {ast.__class__.__name__}')
 
-    if (from_slice and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and  # check for '*starred' acting as '*starred,' due to py 3.11 'a[*starred]' sneaky tuple syntax
-        e0.end_col_offset == ast.end_col_offset and e0.end_lineno == ast.end_lineno
+    if (from_slice
+        and len(elts := ast.elts) == 1
+        and isinstance(e0 := elts[0], Starred)  # check for '*starred' acting as '*starred,' due to py 3.11 'a[*starred]' sneaky tuple syntax
+        and e0.end_col_offset == ast.end_col_offset
+        and e0.end_lineno == ast.end_lineno
     ):
         raise ParseError('expecting Tuple, got Starred')
 
@@ -1235,8 +1243,13 @@ def parse_arg(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             ast = args.vararg
 
     else:
-        if (args.posonlyargs or args.vararg or args.kwonlyargs or args.defaults or args.kw_defaults or args.kwarg or
-            len(args := args.args) != 1
+        if (args.posonlyargs
+            or args.vararg
+            or args.kwonlyargs
+            or args.defaults
+            or args.kw_defaults
+            or args.kwarg
+            or len(args := args.args) != 1
         ):
             ast = None
         else:

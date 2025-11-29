@@ -305,8 +305,9 @@ def _dump_prim_long(prim: constant, st: nspace, cind: str) -> str:
     prim_cls = prim.__class__
     clr_type, end_type = st.color.type.get(prim_cls, ('', ''))
 
-    if ((prim_cls is not str and prim_cls is not bytes) or len(prim) < 120 or
-        not (fmt := pformat(prim, width=120)).startswith('(')
+    if ((prim_cls is not str and prim_cls is not bytes)
+        or len(prim) < 120
+        or not (fmt := pformat(prim, width=120)).startswith('(')
     ):
         return f'{clr_type}{prim!r}{end_type}'
 
@@ -417,9 +418,14 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
                 elif not st.full:
                     continue
 
-        if not st.full and (child == [] or
-                            (child is None and
-                             not ((name == 'value' and isinstance(ast, (Constant, MatchSingleton)))))):
+        if (not st.full
+            and (
+                child == []
+                or (
+                    child is None
+                    and not (
+                        name == 'value'
+                        and isinstance(ast, (Constant, MatchSingleton)))))):
             continue
 
         if not is_list:
@@ -1676,9 +1682,11 @@ def _maybe_fix_undelimited_seq(self: fst.FST, body: list[AST], delims: str = '()
     ln, col, end_ln, end_col = self.loc
     encpar = None  # cached call to self._is_enclosed_in_parents()
 
-    if ((end_ln != ln and not self._is_enclosed_or_line(pars=False) and
-         not (encpar := self._is_enclosed_in_parents())) or  # could have line continuations
-        (any(isinstance(e, NamedExpr) and not e.f.pars().n for e in body))  # yeah, this is fine in parenthesized tuples but not in naked ones, only applies to tuples and not MatchSequence obviously
+    if ((end_ln != ln
+         and not self._is_enclosed_or_line(pars=False)
+         and not (encpar := self._is_enclosed_in_parents())
+        )  # could have line continuations
+        or (any(isinstance(e, NamedExpr) and not e.f.pars().n for e in body))  # yeah, this is fine in parenthesized tuples but not in naked ones, only applies to tuples and not MatchSequence obviously
     ):
         self._delimit_node(delims=delims)
 
