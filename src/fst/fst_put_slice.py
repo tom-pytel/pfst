@@ -1419,7 +1419,8 @@ def _put_slice_decorator_list(
 
     locfunc = lambda body, idx: body[idx].f.parent._loc_decorator(idx)
 
-    lines = self.root._lines  # for fixes after put or del
+    root = self.root
+    lines = root._lines  # for fixes after put or del
     old_last_line = lines[-1]
     old_first_line = lines[bound_ln]
 
@@ -1455,7 +1456,7 @@ def _put_slice_decorator_list(
         elif not old_first_line and lines[bound_ln] is not old_first_line:  # bound was at end of previous line and if that line was empty string then it will been eaten and we need to put it back (whitespace string will have been handled correctly)
             lines.insert(bound_ln, bistr(''))
 
-            self.root._offset(bound_ln, 0, 1, 0)
+            root._offset(bound_ln, 0, 1, 0)
 
 
 def _put_slice_generators(

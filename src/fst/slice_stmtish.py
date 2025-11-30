@@ -1065,6 +1065,7 @@ def _put_slice_stmtish_old(
     options: Mapping[str, Any],
 ) -> bool:
     ast = self.a
+    root = self.root
     body = getattr(ast, field)
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
@@ -1085,15 +1086,15 @@ def _put_slice_stmtish_old(
             else:  # isinstance(ast, _ExceptHandlers)
                 is_trystar = body[0].f._is_except_star() if body else None
 
-            put_fst = code_as__ExceptHandlers(code, self.root.parse_params, is_trystar=is_trystar)
+            put_fst = code_as__ExceptHandlers(code, root.parse_params, is_trystar=is_trystar)
             put_body = put_fst.a.handlers
 
         elif field == 'cases':
-            put_fst = code_as__match_cases(code, self.root.parse_params)
+            put_fst = code_as__match_cases(code, root.parse_params)
             put_body = put_fst.a.cases
 
         else:  # 'body', 'orelse', 'finalbody'
-            put_fst = code_as_stmts(code, self.root.parse_params)
+            put_fst = code_as_stmts(code, root.parse_params)
             put_body = put_fst.a.body
 
         # NOTE: we do not convert an empty put_body to put_fst=None because we may be putting just comments and/or empty space
@@ -1110,7 +1111,6 @@ def _put_slice_stmtish_old(
     if (not put_fst or not put_body) and len_slice == len_body and not _can_del_all(self, field, options):
         raise ValueError(f'cannot delete all elements from {ast.__class__.__name__}.{field} without norm_self=False')
 
-    root = self.root
     lines = root._lines
     fpre = body[start - 1].f if start else None
     fpost = body[stop].f if stop < len_body else None
@@ -1370,22 +1370,24 @@ def _maybe_del_trailing_newline(self: fst.FST, old_last_line: str, put_fst_end_n
         and not (new_last_line := lines[-1])
         and new_last_line is not old_last_line
     ):  # if self last line changed and was previously not a trailing newline and code put did not end in trailing newline then make sure it is not so now
-        if (is_special or isinstance(roota, mod)) and not (root := root.last_child()):
+        child_root = root
+
+        if (is_special or isinstance(roota, mod)) and not (child_root := root.last_child()):
             if len(lines) > 1:
                 del lines[-1]  # we specifically delete just one trailing newline because there may be multiple and we want to preserve the rest
 
-                self.root._touch()
+                root._touch()
 
-        elif root.end_ln < len(lines) - 1:  # make sure position doesn't include last line (possibly body cut down to zero elements)
+        elif child_root.end_ln < len(lines) - 1:  # make sure position doesn't include last line (possibly body cut down to zero elements)
             del lines[-1]
 
-            root._touchall(True, True, False)
+            child_root._touchall(True, True, False)
 
     if is_special:  # if a special _ExceptHandler or _match_cases slice then end needs to be set to end of source
         roota.end_lineno = len(lines)
         roota.end_col_offset = lines[-1].lenbytes
 
-        self.root._touch()
+        root._touch()
 
 
 def get_slice_stmtish(

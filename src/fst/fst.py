@@ -464,8 +464,9 @@ class FST:
                 loc = None
 
         else:
-            col = self.root._lines[ln].b2c(col_offset)
-            end_col = self.root._lines[end_ln].b2c(end_col_offset)
+            lines = self.root._lines
+            col = lines[ln].b2c(col_offset)
+            end_col = lines[end_ln].b2c(end_col_offset)
             loc = fstloc(ln, col, end_ln, end_col)
 
         self._cache['loc'] = loc
@@ -2440,9 +2441,10 @@ class FST:
                 locn = fstlocn(l[0], l[1], l[2], l[3], n=0)
 
         else:
+            lines = self.root._lines
             ln, col, end_ln, end_col = self.bloc
 
-            rpars = next_delims(self.root._lines, end_ln, end_col, *next_bound(self))
+            rpars = next_delims(lines, end_ln, end_col, *next_bound(self))
 
             if (lrpars := len(rpars)) == 1:  # no pars on right
                 if not shared and self._is_solo_call_arg_genexp():
@@ -2451,7 +2453,7 @@ class FST:
                     locn = fstlocn(ln, col, end_ln, end_col, n=0)
 
             else:
-                lpars = prev_delims(self.root._lines, *prev_bound(self), ln, col)
+                lpars = prev_delims(lines, *prev_bound(self), ln, col)
 
                 if (llpars := len(lpars)) == 1:  # no pars on left
                     locn = fstlocn(ln, col, end_ln, end_col, n=0)
@@ -4325,7 +4327,9 @@ class FST:
         ```
         """
 
-        return (root := self.root).child_from_path(root.child_path(self))
+        root = self.root
+
+        return root.child_from_path(root.child_path(self))
 
     def find_loc_in(
         self, ln: int, col: int, end_ln: int, end_col: int, allow_exact: bool | Literal['top'] = True

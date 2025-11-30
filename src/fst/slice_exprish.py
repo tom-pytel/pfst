@@ -661,13 +661,14 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
         elif body:  # match indentation of our own first element
             elts_indent_cached = self_indent + ' ' * (locfunc_maybe_key(body, 0).col - len(self_indent))  # (self._loc_maybe_key(0, True, body).col - len(self_indent))
         else:
-            elts_indent_cached = self_indent + self.root.indent  # default
+            elts_indent_cached = self_indent + root.indent  # default
 
         return elts_indent_cached
 
     trivia = options.get('trivia')  # finalized with global option in lower level functions
     ins_ln = fst.FST.get_option('ins_ln', options)
-    lines = self.root._lines
+    root = self.root
+    lines = root._lines
     body = getattr(self.a, field)
     body2 = body if field2 is None else getattr(self.a, field2)
     len_body = len(body)

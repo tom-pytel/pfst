@@ -964,10 +964,10 @@ def _is_enclosed_or_line(
                 if not isinstance(ast.value, (str, bytes)):
                     return True
 
-                lns = _multiline_str_continuation_lns(self.root._lines, ln, col, end_ln, end_col)
+                lns = _multiline_str_continuation_lns(lines, ln, col, end_ln, end_col)
 
             else:
-                lns = _multiline_ftstr_continuation_lns(self.root._lines, ln, col, end_ln, end_col)
+                lns = _multiline_ftstr_continuation_lns(lines, ln, col, end_ln, end_col)
 
             lns = set(lns)
 
@@ -1923,7 +1923,8 @@ def _put_src(
         is returned as a byte offset so that `offset()` doesn't attempt to calculate it from already modified
         source."""
 
-    lines = self.root._lines
+    root = self.root
+    lines = root._lines
 
     if is_del := not src:  # src is None or src == '' or src == [] (even though the last shouldn't be used)
         put_lines = ['']
@@ -1938,7 +1939,7 @@ def _put_src(
     else:
         params_offset = _params_offset(lines, put_lines, ln, col, end_ln, end_col)
 
-        self.root._offset(*params_offset, tail, head, exclude, offset_excluded=offset_excluded)
+        root._offset(*params_offset, tail, head, exclude, offset_excluded=offset_excluded)
 
     if is_del:  # delete lines
         if end_ln == ln:

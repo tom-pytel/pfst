@@ -410,12 +410,13 @@ def _maybe_fix_decorator_list_del(
         pass  # noop
 
     elif not start and not old_first_line:  # if del first element and preceding was empty line ...
-        lines = self.root._lines
+        root = self.root
+        lines = root._lines
 
         if lines[bound_ln]:  # and that empty line was deleted (because of trivia) then we need to put it back
             lines.insert(bound_ln, bistr(''))
 
-            self.root._offset(bound_ln, 0, 1, 0)
+            root._offset(bound_ln, 0, 1, 0)
 
 
 def _maybe_fix_Set(self: fst.FST, norm: bool | str = True) -> None:

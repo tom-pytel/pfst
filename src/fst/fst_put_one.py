@@ -387,8 +387,9 @@ def _put_one_op(
 ) -> fst.FST:  # child: type[boolop | operator | unaryop | cmpop]
     """Put a single operator, lots of rules to check."""
 
+    root = self.root
     child, idx = _validate_put(self, code, idx, field, child)
-    code = static.code_as(code, self.root.parse_params, sanitize=True)
+    code = static.code_as(code, root.parse_params, sanitize=True)
     codea = code.a
     childf = child.f
 
@@ -424,7 +425,7 @@ def _put_one_op(
 
     if is_alnum:  # we do this after parenthesization because it can remove the need for spaces
         ln, col, end_ln, end_col = get_field(ast, field, idx).f.loc
-        lines = self.root._lines
+        lines = root._lines
 
         if re_alnum.match(lines[end_ln], end_col):  # insert space at end of operator?
             self._put_src([' '], end_ln, end_col, end_ln, end_col, False)
@@ -506,8 +507,9 @@ def _put_one_ImportFrom_level(
     """Set a comprehension as async or sync."""
 
     ast = self.a
+    root = self.root
     child, idx = _validate_put(self, code, idx, field, child)
-    value = code_as_constant(code, self.root.parse_params)
+    value = code_as_constant(code, root.parse_params)
 
     if value.__class__ is not int or value < 0:
         raise ValueError(f'expection int >= 0, got {value!r}')
@@ -516,7 +518,7 @@ def _put_one_ImportFrom_level(
         if not value and self.a.module is None:
             raise ValueError('cannot set ImportFrom.level to 0 in this state (no module present)')
 
-        lines = self.root._lines
+        lines = root._lines
         ln, col, _, _ = self.loc
         end_ln, end_col, _, _ = ast.names[0].f.loc
         ln, col, _ = next_frag(lines, ln, col + 4, end_ln, end_col)  # must be there, col + 4 is just past 'from'
@@ -548,10 +550,11 @@ def _put_one_BoolOp_op(
 ) -> fst.FST:  # child: type[boolop]
     """Put BoolOp op to potentially multiple places."""
 
-    lines = self.root._lines
+    root = self.root
+    lines = root._lines
     child, idx = _validate_put(self, code, idx, field, child)
     childf = child.f
-    code = code_as_boolop(code, self.root.parse_params)
+    code = code_as_boolop(code, root.parse_params)
     codea = code.a
     src = 'and' if isinstance(codea, And) else 'or'
     tgt = 'and' if isinstance(child, And) else 'or'
@@ -590,14 +593,15 @@ def _put_one_Constant_kind(
     """Set a Constant string kind to 'u' or None, this is truly unnecessary."""
 
     ast = self.a
+    root = self.root
     child, idx = _validate_put(self, code, idx, field, child, can_del=True)
-    value = code_as_constant(code, self.root.parse_params)
+    value = code_as_constant(code, root.parse_params)
 
     if not isinstance(ast.value, str):
         raise ValueError('cannot set kind of non-str Constant')
 
     ln, col, _, _ = self.loc
-    lines = self.root._lines
+    lines = root._lines
 
     if value != child:
         if value is None:
@@ -627,8 +631,9 @@ def _put_one_comprehension_is_async(
 ) -> fst.FST:  # child: int
     """Set a comprehension as async or sync."""
 
+    root = self.root
     child, idx = _validate_put(self, code, idx, field, child)
-    value = code_as_constant(code, self.root.parse_params)
+    value = code_as_constant(code, root.parse_params)
 
     if value.__class__ is not int or not 0 <= value <= 1:
         raise ValueError(f'expection 0 or 1, got {value!r}')
@@ -640,7 +645,7 @@ def _put_one_comprehension_is_async(
             self._put_src(['async '], ln, col, ln, col, False, False)
 
         else:
-            end_ln, end_col = next_find(self.root._lines, ln, col, end_ln, end_col, 'for')  # must be there
+            end_ln, end_col = next_find(root._lines, ln, col, end_ln, end_col, 'for')  # must be there
 
             self._put_src(None, ln, col, end_ln, end_col, False)
 
@@ -713,8 +718,10 @@ def _make_exprish_fst(
         `Tuple`). Used to determine whether arglike expression needs parentheses added.
     """
 
+    root = self.root
+
     if validated < 2:
-        put_fst = static.code_as(code, self.root.parse_params, sanitize=True,
+        put_fst = static.code_as(code, root.parse_params, sanitize=True,
                                  coerce=fst.FST.get_option('coerce', options))
     else:
         put_fst = code
@@ -828,7 +835,7 @@ def _make_exprish_fst(
 
     # do it
 
-    lines = self.root._lines
+    lines = root._lines
     put_lines = put_fst._lines
 
     merge_alnum_start = bool(col and re_alnumdot_alnum.match(lines[ln][col - 1] + (prefix or put_lines[0][:1])))  # would the start location result in a merged alphanumeric? we do this here because we need to know if to offset put_fst by one more space
@@ -1057,8 +1064,9 @@ def _put_one_ImportFrom_names(
 ) -> fst.FST:
     """Disallow put star to list of multiple names and unparenthesize if star was put to single name."""
 
+    root = self.root
     child, idx = _validate_put(self, code, idx, field, child)
-    code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    code = static.code_as(code, root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
 
     if is_star := ('*' in code.a.name):  # `in` just in case some whitespace got in there somehow
         if len(self.a.names) != 1:
@@ -1073,7 +1081,7 @@ def _put_one_ImportFrom_names(
             star_ln, star_col, star_end_ln, star_end_col = self.a.names[0].f.loc
             _, _, end_ln, end_col = self.loc
 
-            head = ' ' if pars_col and re_alnumdot.match(self.root._lines[pars_ln], pars_col - 1) else None  # make sure at least space between `from` and `*`
+            head = ' ' if pars_col and re_alnumdot.match(root._lines[pars_ln], pars_col - 1) else None  # make sure at least space between `from` and `*`
 
             self._put_src(None, star_end_ln, star_end_col, end_ln, end_col, True)
             self._put_src(head, pars_ln, pars_col, star_ln, star_col, False)
@@ -1880,8 +1888,8 @@ def _one_info_ImportFrom_module(self: fst.FST, static: onestatic, idx: int | Non
         return oneinfo('', None, fstloc(ln, col, ln, end_col))
 
     self_ln, self_col, _, _ = self.loc
-    ln, col = prev_find(self.root._lines, self_ln, self_col, *self.a.names[0].f.loc[:2], 'import')
-    ln, col, src = prev_frag(self.root._lines, self_ln, self_col, ln, col)  # must be there, the module name with any/some/all preceding '.' level indicators
+    ln, col = prev_find(lines, self_ln, self_col, *self.a.names[0].f.loc[:2], 'import')
+    ln, col, src = prev_frag(lines, self_ln, self_col, ln, col)  # must be there, the module name with any/some/all preceding '.' level indicators
     end_col = col + len(src)
     col = end_col - len((src[4:] if col == self_col and ln == self_ln else src).lstrip('.'))  # may be special case, dot right after 'from', e.g. 'from.something import ...'
 
@@ -2001,6 +2009,7 @@ def _one_info_ExceptHandler_name(self: fst.FST, static: onestatic, idx: int | No
 
 def _one_info_arguments_vararg(self: fst.FST, static: onestatic, idx: int | None, field: str) -> oneinfo:
     ast = self.a
+    lines = self.root._lines
 
     if vararg := ast.vararg:  # delete location
         varargf = vararg.f
@@ -2023,7 +2032,7 @@ def _one_info_arguments_vararg(self: fst.FST, static: onestatic, idx: int | None
 
                 return oneinfo('', fstloc(ln, col, end_ln, end_col), delstr=delstr)
 
-            ln, col = next_find(self.root._lines, prev.end_ln, prev.end_col, end_ln, end_col, '/')  # must be there
+            ln, col = next_find(lines, prev.end_ln, prev.end_col, end_ln, end_col, '/')  # must be there
 
             return oneinfo('', fstloc(ln, col + 1, end_ln, end_col), delstr=delstr)
 
@@ -2033,7 +2042,7 @@ def _one_info_arguments_vararg(self: fst.FST, static: onestatic, idx: int | None
 
                 return oneinfo('', fstloc(self.ln, self.col, next_ln, next_col), delstr='*, ')
 
-            end_ln, end_col = next_find(self.root._lines, end_ln, end_col, next.ln, next.col, '**')  # must be there
+            end_ln, end_col = next_find(lines, end_ln, end_col, next.ln, next.col, '**')  # must be there
 
             return oneinfo('', fstloc(self.ln, self.col, end_ln, end_col))
 
@@ -2055,7 +2064,7 @@ def _one_info_arguments_vararg(self: fst.FST, static: onestatic, idx: int | None
         else:
             ln, col, _, _ = self.loc
 
-        ln, col = next_find(self.root._lines, ln, col, end_ln, end_col, '*')  # must be there
+        ln, col = next_find(lines, ln, col, end_ln, end_col, '*')  # must be there
         col += 1
 
         return oneinfo('', fstloc(ln, col, ln, col))
@@ -2069,7 +2078,7 @@ def _one_info_arguments_vararg(self: fst.FST, static: onestatic, idx: int | None
         else:
             ln, col, _, _ = self.loc
 
-        ln, col = next_find(self.root._lines, ln, col, end_ln, end_col, '**')  # must be there
+        ln, col = next_find(lines, ln, col, end_ln, end_col, '**')  # must be there
 
         return oneinfo('*', fstloc(ln, col, ln, col), None, ', ')
 
@@ -2081,7 +2090,7 @@ def _one_info_arguments_vararg(self: fst.FST, static: onestatic, idx: int | None
     if ast.posonlyargs:
         _, _, ln, col = self.last_child().loc
 
-        ln, col = next_find(self.root._lines, ln, col, self.end_ln, self.end_col, '/')  # must be there
+        ln, col = next_find(lines, ln, col, self.end_ln, self.end_col, '/')  # must be there
         col += 1
 
         return oneinfo(', *', fstloc(ln, col, ln, col))

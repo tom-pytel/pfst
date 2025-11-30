@@ -241,12 +241,11 @@ def _dump_lines(
     linefunc = st.linefunc
     eol = st.eol
     c = st.color
-    width = int(log10(len(fst_.root._lines) - 1 or 1)) + 1
+    lines = fst_.root._lines
+    width = int(log10(len(lines) - 1 or 1)) + 1
 
     if (src_ln := st.src_ln) <= ln:  # if 'stmt+' or 'node+' putting them then put any lines after last put end line and before this put start line
         if src_ln < ln:
-            lines = fst_.root._lines
-
             for cln in range(src_ln, ln):
                 l = lines[cln]
                 e = f'{c.clr_loc}<*END*{c.end_loc}' if l[-1:].isspace() else ''
@@ -1848,9 +1847,9 @@ def _unparenthesize_grouping(self: fst.FST, shared: bool | None = True, *, star_
 
     ln, col, end_ln, end_col = self.bloc
     pln, pcol, pend_ln, pend_col = pars_loc
+    lines = self.root._lines
 
     if shared:  # special case merge solo argument GeneratorExp parentheses with call argument parens
-        lines = self.root._lines
         _, _, cend_ln, cend_col = self.parent.a.func.f.loc
         pln, pcol = prev_find(lines, cend_ln, cend_col, pln, pcol, '(')  # must be there
         pend_ln, pend_col = next_find(lines, pend_ln, pend_col, len(lines) - 1, len(lines[-1]), ')')  # ditto
@@ -1860,8 +1859,6 @@ def _unparenthesize_grouping(self: fst.FST, shared: bool | None = True, *, star_
         self._put_src(None, pln, pcol, ln, col, False)
 
     else:  # in all other case we need to make sure par is not separating us from an alphanumeric on either side, and if so then just replace that par with a space
-        lines = self.root._lines
-
         if pend_col >= 2 and _re_par_close_alnums.match(l := lines[pend_ln], pend_col - 2):
             lines[pend_ln] = bistr(l[:pend_col - 1] + ' ' + l[pend_col:])
         else:
@@ -1923,7 +1920,7 @@ def _undelimit_node(self: fst.FST, field: str = 'elts') -> bool:
     ln, col, end_ln, end_col = self.loc
     _, _, bn_end_ln, bn_end_col = body[-1].f.loc
 
-    if comma := next_find(self.root._lines, bn_end_ln, bn_end_col, end_ln, end_col, ','):  # need to leave trailing comma if its there
+    if comma := next_find(lines, bn_end_ln, bn_end_col, end_ln, end_col, ','):  # need to leave trailing comma if its there
         bn_end_ln, bn_end_col = comma
         bn_end_col += 1
 
