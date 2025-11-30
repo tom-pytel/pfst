@@ -4672,13 +4672,13 @@ def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> prope
         def accessor(self: FST, code: Code | constant | None) -> None:
             """@private"""
 
-            self.put(code, field)
+            self._put_one(code, None, field)
 
         @accessor.deleter
         def accessor(self: FST) -> None:
             """@private"""
 
-            self.put(None, field)
+            self._put_one(None, None, field)
 
     elif cardinality == 2:  # is a list[AST]
         @property
@@ -4691,13 +4691,13 @@ def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> prope
         def accessor(self: FST, code: Code | None) -> None:
             """@private"""
 
-            self.put_slice(code, field)
+            self._put_slice(code, None, None, field)
 
         @accessor.deleter
         def accessor(self: FST) -> None:
             """@private"""
 
-            self.put_slice(None, field)
+            self._put_slice(None, None, None, field)
 
     else:  # cardinality == 3  # can be single AST or list depending on the parent AST type
         @property
@@ -4716,18 +4716,18 @@ def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> prope
             """@private"""
 
             if isinstance(getattr(self.a, field), list):
-                self.put_slice(code, field)
+                self._put_slice(code, None, None, field)
             else:
-                self.put(code, field)
+                self._put_one(code, None, field)
 
         @accessor.deleter
         def accessor(self: FST) -> None:
             """@private"""
 
             if isinstance(getattr(self.a, field), list):
-                self.put_slice(None, field)
+                self._put_slice(None, None, None, field)
             else:
-                self.put(None, field)
+                self._put_one(None, None, field)
 
     return accessor
 

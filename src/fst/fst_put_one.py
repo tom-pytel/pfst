@@ -2729,7 +2729,12 @@ def _put_one_raw(
 # FST class methods
 
 def _put_one(
-    self: fst.FST, code: _PutOneCode, idx: int | None, field: str, options: Mapping[str, Any], ret_child: bool = True
+    self: fst.FST,
+    code: _PutOneCode,
+    idx: int | None,
+    field: str,
+    options: Mapping[str, Any] = {},
+    ret_child: bool = True
 ) -> fst.FST | None:  # -> child or reparsed child or self or reparsed self or could disappear due to raw
     """Put new, replace or delete a node (or limited non-node) to a field of `self`.
 

@@ -2526,8 +2526,8 @@ def _put_slice(
     start: int | Literal['end'] | None,
     stop: int | None,
     field: str,
-    one: bool,
-    options: Mapping[str, Any],
+    one: bool = False,
+    options: Mapping[str, Any] = {},
 ) -> fst.FST | None:  # -> self or reparsed self or None if disappeared due to raw
     """Put an a slice of child nodes to `self`."""
 
