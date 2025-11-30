@@ -1794,10 +1794,10 @@ class FST:
         ```
         """
 
-        if parent := self.parent:
-            return parent._put_one(None, (pf := self.pfield).idx, pf.name, options)
+        if not (parent := self.parent):
+            raise ValueError('cannot delete root node')
 
-        raise ValueError('cannot delete root node')
+        parent._put_one(None, (pf := self.pfield).idx, pf.name, options)
 
     def get(
         self,
@@ -2009,9 +2009,7 @@ class FST:
         if not one:
             raise ValueError("cannot use 'one=False' in non-slice put()")
 
-        self._put_one(code, idx, field, options)
-
-        return self if self.a else self.repath()
+        return self._put_one(code, idx, field, options, False)
 
     def get_slice(
         self,

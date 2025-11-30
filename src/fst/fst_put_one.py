@@ -2720,8 +2720,8 @@ def _put_one_raw(
 # FST class methods
 
 def _put_one(
-    self: fst.FST, code: _PutOneCode, idx: int | None, field: str, options: Mapping[str, Any]
-) -> fst.FST | None:  # -> Self or reparsed Self or could disappear due to raw
+    self: fst.FST, code: _PutOneCode, idx: int | None, field: str, options: Mapping[str, Any], ret_child: bool = True
+) -> fst.FST | None:  # -> child or reparsed child or self or reparsed self or could disappear due to raw
     """Put new, replace or delete a node (or limited non-node) to a field of `self`.
 
     **Parameters:**
@@ -2731,6 +2731,13 @@ def _put_one(
     - `idx`: The index in the body list of the field to put, or `None` if is a standalone node.
     - `field`: The `AST` field to modify.
     - `options`: See `FST.options()`.
+    - `ret_child`: If `True` then this function returns the new child node if it was replaced or `None` if deleted or
+        otherwise raw repared out. If `False` then attepmts to return `self` or a new `self` if was raw reparsed
+        and `None` if disappeared due to that.
+
+    **Returns:**
+    - `FST | None`: New child or `self` if reparsed (and requested via `ret_self=True`) or `None` if deleted either
+        intentionally or as a side-effect of raw reparse.
     """
 
     if code is self.root:  # don't allow own root to be put to self
@@ -2742,18 +2749,38 @@ def _put_one(
 
     sliceable, handler, static = _PUT_ONE_HANDLERS.get((ast.__class__, field), (False, None, None))
 
-    if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementishs and combined mapping fields
+    if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementishs and virtual fields (which have handler=None)
         if not (is_virtual_field := field.startswith('_')):
             len_ = len(child)
-        elif (keys := getattr(ast, 'keys', None)) is not None:
+        elif (keys := getattr(ast, 'keys', None)) is not None:  # Dict, MatchMapping
             len_ = len(keys)
-        else:
+        else:  # Compare
             len_ = len(ast.comparators) + 1
 
         idx = fixup_one_index(len_, idx)  # we need to fixup index here explicitly to get an error if it is out of bounds because slice index fixups don't error but just clip to [0..len(body))
-        new_self = self._put_slice(code, idx, idx + 1, field, True, options)
 
-        return None if code is None or is_virtual_field else getattr(new_self.a, field)[idx].f  # guaranteed to be there if code is not None because was just replacement
+        new_self = self._put_slice(code, idx, idx + 1, field, True, options)  # MAYBE new self, or just old self
+
+        if not ret_child:
+            return new_self
+
+        if code is None or new_self is None:
+            return None
+
+        if is_virtual_field:
+            if keys:  # Dict, MatchMapping
+                return None
+
+            if not idx:  # Compare.left
+                return new_self.a.left
+
+            idx -= 1
+            field = 'comparators'
+
+        try:
+            return getattr(new_self.a, field)[idx].f  # may not be there due to raw reparsing of weird *(^$
+        except IndexError:
+            return None
 
     raw = fst.FST.get_option('raw', options)
     nonraw_exc = None
@@ -2769,7 +2796,9 @@ def _put_one(
                                 f"{f'.{field}' if field else ' combined fields'}", rawable=True)
 
             with self._modifying(field):
-                return handler(self, code, idx, field, child, static, options)
+                child = handler(self, code, idx, field, child, static, options)
+
+                return child if ret_child else self
 
         except (NodeError, SyntaxError, NotImplementedError) as exc:  # SyntaxError includes ParseError
             if not raw or (isinstance(exc, NodeError) and not exc.rawable):
@@ -2779,7 +2808,12 @@ def _put_one(
 
     with self._modifying(field, True):
         try:
-            return _put_one_raw(self, code, idx, field, child, static, options)
+            child = _put_one_raw(self, code, idx, field, child, static, options)
+
+            if ret_child:
+                return child
+
+            return self if self.a else self.repath()
 
         except Exception as raw_exc:
             raw_exc.__context__ = nonraw_exc

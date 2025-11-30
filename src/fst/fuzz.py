@@ -1968,9 +1968,9 @@ class SliceStmtish(Fuzzy):
                                 raise RuntimeError('this should not happen')
 
                             container = containers[cat := fstcat(stmtish)]
-                            container = containers[cat] = getattr(container.fst, container.field)  # remake the container because its size can be wrong
+                            container = containers[cat] = getattr(container.base, container.field)  # remake the container because its size can be wrong
 
-                            if any(p is container.fst for p in stmtish.parents()):
+                            if any(p is container.base for p in stmtish.parents()):
                                 continue
 
                             break
@@ -1986,8 +1986,8 @@ class SliceStmtish(Fuzzy):
 
                         # refresh containers because of node operations
 
-                        stmtish_container = getattr(stmtish_container.fst, stmtish_container.field)
-                        container = getattr(container.fst, container.field)
+                        stmtish_container = getattr(stmtish_container.base, stmtish_container.field)
+                        container = getattr(container.base, container.field)
 
                         # from temporary container to source
 

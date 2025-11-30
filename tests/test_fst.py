@@ -1684,8 +1684,8 @@ match a:
     def test_code_as_special(self):
         # aliases slice multiple stars
 
-        self.assertRaises(NodeError, code_as__ImportFrom_names, FST('*', '_aliases').names.append('*').fst)
-        self.assertRaises(NodeError, code_as__ImportFrom_names, FST('a', '_aliases').names.append('*').fst)
+        self.assertRaises(NodeError, code_as__ImportFrom_names, FST('*', '_aliases').names.append('*').base)
+        self.assertRaises(NodeError, code_as__ImportFrom_names, FST('a', '_aliases').names.append('*').base)
         self.assertEqual('*', code_as__ImportFrom_names(FST('*', '_aliases')).src)
 
         # lambda arguments from FST
@@ -7251,12 +7251,12 @@ class cls:
 
         c = FST('a\nb').body
         c[0] = None
-        self.assertEqual('b', c.fst.src)
+        self.assertEqual('b', c.base.src)
         self.assertEqual(1, c.stop)
 
         c = FST.new().body
         c[0:0] = 'a\nb'
-        self.assertEqual('a\nb', c.fst.src)
+        self.assertEqual('a\nb', c.base.src)
         self.assertEqual(2, c.stop)
 
     def test_is_node_type_properties_and_parents(self):

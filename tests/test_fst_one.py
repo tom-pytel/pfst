@@ -2865,6 +2865,165 @@ c, # c
     def test_put_one_negative_idx(self):
         FST('{**b}').put('a', -1, 'keys')
 
+    def test__put_one_virtual_field(self):
+        # Dict return child
+
+        child = (self_ := FST('{a: b, c: d, e: f}', 'exec').body[0].value)._put_one(None, 1, '_all', {'raw': False}, True)
+        self.assertIsNone(child)
+        self.assertIsNotNone(self_.a)  # .a will be None if deleted
+        self.assertEqual('{a: b, e: f}', self_.src)
+
+        self.assertRaises(ValueError, FST('{a: b, c: d, e: f}')._put_one, None, 1, '_all', {'raw': True}, True)
+        self.assertRaises(ValueError, FST('{a: b, c: d, e: f}')._put_one, 'x: y', 1, '_all', {'raw': False}, True)
+
+        child = (self_ := FST('{a: b, c: d, e: f}', 'exec').body[0].value)._put_one('x: y', 1, '_all', {'raw': True}, True)
+        self.assertIsNone(child)
+        self.assertIsNone(self_.a)
+        self.assertEqual('{a: b, x: y, e: f}', self_.repath().src)
+
+        # Dict return self
+
+        new_self = (self_ := FST('{a: b, c: d, e: f}', 'exec').body[0].value)._put_one(None, 1, '_all', {'raw': False}, False)
+        self.assertIs(new_self, self_)
+        self.assertIsNotNone(self_.a)
+        self.assertEqual('{a: b, e: f}', self_.src)
+
+        self.assertRaises(ValueError, FST('{a: b, c: d, e: f}')._put_one, None, 1, '_all', {'raw': True}, False)
+        self.assertRaises(ValueError, FST('{a: b, c: d, e: f}')._put_one, 'x: y', 1, '_all', {'raw': False}, False)
+
+        new_self = (self_ := FST('{a: b, c: d, e: f}', 'exec').body[0].value)._put_one('x: y', 1, '_all', {'raw': True}, False)
+        self.assertIsNot(new_self, self)
+        self.assertIsNone(self_.a)
+        self.assertEqual('{a: b, x: y, e: f}', new_self.src)
+
+        # TODO: currently bugged raw reparse match_case
+        # # MatchMapping return child
+
+        # child = (self_ := FST('case {1: a, 2: b, 3: c}: pass', 'match_case')).pattern._put_one(None, 1, '_all', {'raw': False}, True)
+        # self.assertIsNone(child)
+        # self.assertIsNotNone(self_.a)
+        # self.assertEqual('case {1: a, 3: c}: pass', self_.src)
+
+        # self.assertRaises(ValueError, FST('case {1: a, 2: b, 3: c}: pass').pattern._put_one, None, 1, '_all', {'raw': True}, True)
+        # self.assertRaises(ValueError, FST('case {1: a, 2: b, 3: c}: pass').pattern._put_one, '4: x', 1, '_all', {'raw': False}, True)
+
+        # child = (self_ := FST('case {1: a, 2: b, 3: c}: pass', 'match_case')).pattern._put_one('4: x', 1, '_all', {'raw': True}, True)
+        # self.assertIsNone(child)
+        # self.assertIsNone(self_.a)
+        # self.assertEqual('case {1: a, 4: x, 3: c}: pass', self_.repath().src)
+
+        # # MatchMapping return self
+
+        # new_self = (self_ := FST('case {1: a, 2: b, 3: c}: pass', 'match_case')).pattern._put_one(None, 1, '_all', {'raw': False}, False)
+        # self.assertIs(new_self, self_)
+        # self.assertIsNotNone(self_.a)
+        # self.assertEqual('case {1: a, 3: c}: pass', self_.src)
+
+        # self.assertRaises(ValueError, FST('case {1: a, 2: b, 3: c}: pass').pattern._put_one, None, 1, '_all', {'raw': True}, False)
+        # self.assertRaises(ValueError, FST('case {1: a, 2: b, 3: c}: pass').pattern._put_one, '4: x', 1, '_all', {'raw': False}, False)
+
+        # new_self = (self_ := FST('case {1: a, 2: b, 3: c}: pass', 'match_case')).pattern._put_one('4: x', 1, '_all', {'raw': True}, False)
+        # self.assertIsNot(new_self, self)
+        # self.assertIsNone(self_.a)
+        # self.assertEqual('case {1: a, 4: x, 3: c}: pass', new_self.src)
+
+        # # MatchMapping return child
+
+        # child = (self_ := FST('match _:\n case {1: a, 2: b, 3: c}: pass', 'Match').cases[0]).pattern._put_one(None, 1, '_all', {'raw': False}, True)
+        # self.assertIsNone(child)
+        # self.assertIsNotNone(self_.a)
+        # self.assertEqual('case {1: a, 3: c}: pass', self_.src)
+
+        # self.assertRaises(ValueError, FST('match _:\n case {1: a, 2: b, 3: c}: pass').cases[0].pattern._put_one, None, 1, '_all', {'raw': True}, True)
+        # self.assertRaises(ValueError, FST('match _:\n case {1: a, 2: b, 3: c}: pass').cases[0].pattern._put_one, '4: x', 1, '_all', {'raw': False}, True)
+
+        # child = (self_ := FST('match _:\n case {1: a, 2: b, 3: c}: pass', 'Match').cases[0]).pattern._put_one('4: x', 1, '_all', {'raw': True}, True)
+        # self.assertIsNone(child)
+        # self.assertIsNone(self_.a)
+        # self.assertEqual('case {1: a, 4: x, 3: c}: pass', self_.repath().src)
+
+        # # MatchMapping return self
+
+        # new_self = (self_ := FST('match _:\n case {1: a, 2: b, 3: c}: pass', 'Match').cases[0]).pattern._put_one(None, 1, '_all', {'raw': False}, False)
+        # self.assertIs(new_self, self_)
+        # self.assertIsNotNone(self_.a)
+        # self.assertEqual('case {1: a, 3: c}: pass', self_.src)
+
+        # self.assertRaises(ValueError, FST('match _:\n case {1: a, 2: b, 3: c}: pass').cases[0].pattern._put_one, None, 1, '_all', {'raw': True}, False)
+        # self.assertRaises(ValueError, FST('match _:\n case {1: a, 2: b, 3: c}: pass').cases[0].pattern._put_one, '4: x', 1, '_all', {'raw': False}, False)
+
+        # new_self = (self_ := FST('match _:\n case {1: a, 2: b, 3: c}: pass', 'Match').cases[0]).pattern._put_one('4: x', 1, '_all', {'raw': True}, False)
+        # self.assertIsNot(new_self, self)
+        # self.assertIsNone(self_.a)
+        # self.assertEqual('case {1: a, 4: x, 3: c}: pass', new_self.src)
+
+        # Compare return child left
+
+        child = (self_ := FST('a < b > c', 'exec').body[0].value)._put_one(None, 0, '_all', {'raw': False}, True)
+        self.assertIsNone(child)
+        self.assertIsNotNone(self_.a)
+        self.assertEqual('b > c', self_.src)
+
+        self.assertRaises(ValueError, FST('a < b > c')._put_one, None, 0, '_all', {'raw': True}, True)
+
+        child = (self_ := FST('a < b > c', 'exec').body[0].value)._put_one('x', 0, '_all', {'raw': False}, True)
+        self.assertIsNotNone(child)
+        self.assertIsNotNone(self_.a)
+        self.assertIs(child.a, self_.a.left)
+        self.assertIs(child, self_.a.left.f)
+        self.assertEqual('x < b > c', self_.src)
+
+        child = (self_ := FST('a < b > c', 'exec').body[0].value)._put_one('x', 0, '_all', {'raw': True}, True)
+        self.assertIsNotNone(child)
+        self.assertIsNone(self_.a)
+        self_ = self_.repath()
+        self.assertIs(child.a, self_.a.left)
+        self.assertIs(child, self_.a.left.f)
+        self.assertEqual('x < b > c', self_.src)
+
+        # Compare return child comparator
+
+        child = (self_ := FST('a < b > c', 'exec').body[0].value)._put_one(None, 1, '_all', {'raw': False}, True)
+        self.assertIsNone(child)
+        self.assertIsNotNone(self_.a)
+        self.assertEqual('a > c', self_.src)
+
+        self.assertRaises(ValueError, FST('a < b > c')._put_one, None, 1, '_all', {'raw': True}, True)
+
+        child = (self_ := FST('a < b > c', 'exec').body[0].value)._put_one('x', 1, '_all', {'raw': False}, True)
+        self.assertIsNotNone(child)
+        self.assertIsNotNone(self_.a)
+        self.assertIs(child.a, self_.a.comparators[0])
+        self.assertIs(child, self_.a.comparators[0].f)
+        self.assertEqual('a < x > c', self_.src)
+
+        child = (self_ := FST('a < b > c', 'exec').body[0].value)._put_one('x', 1, '_all', {'raw': True}, True)
+        self.assertIsNotNone(child)
+        self.assertIsNone(self_.a)
+        self_ = self_.repath()
+        self.assertIs(child.a, self_.a.comparators[0])
+        self.assertIs(child, self_.a.comparators[0].f)
+        self.assertEqual('a < x > c', self_.src)
+
+        # Compare return self
+
+        new_self = (self_ := FST('a < b > c', 'exec').body[0].value)._put_one(None, 0, '_all', {'raw': False}, False)
+        self.assertIs(new_self, self_)
+        self.assertIsNotNone(self_.a)
+        self.assertEqual('b > c', self_.src)
+
+        self.assertRaises(ValueError, FST('a < b > c')._put_one, None, 0, '_all', {'raw': True}, False)
+
+        new_self = (self_ := FST('a < b > c', 'exec').body[0].value)._put_one('x', 0, '_all', {'raw': False}, False)
+        self.assertIs(new_self, self_)
+        self.assertIsNotNone(self_.a)
+        self.assertEqual('x < b > c', self_.src)
+
+        new_self = (self_ := FST('a < b > c', 'exec').body[0].value)._put_one('x', 0, '_all', {'raw': True}, False)
+        self.assertIsNot(new_self, self)
+        self.assertIsNone(self_.a)
+        self.assertEqual('x < b > c', new_self.src)
+
     def test_put_default_non_list_field(self):
         self.assertEqual('y', parse('n').body[0].f.put('y').root.src)  # Expr
         self.assertEqual('return y', parse('return n').body[0].f.put('y').root.src)  # Return

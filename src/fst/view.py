@@ -1,3 +1,5 @@
+"""Slice-acces views on `FST` lists of children."""
+
 from __future__ import annotations
 
 from builtins import slice
@@ -10,6 +12,9 @@ from .code import Code
 from .fst_misc import fixup_one_index, fixup_slice_indices
 
 __all__ = ['fstview']
+
+
+_EMPTY_OPTIONS = {}
 
 
 class fstview:
@@ -92,7 +97,7 @@ class fstview:
     ```
     """
 
-    fst:   fst.FST  ; """The target `FST` node this view references."""
+    base:  fst.FST  ; """The target `FST` node this view references."""
     field: str      ; """The target field this view references."""
     start: int      ; """Start position within the target field list this view references."""
     stop:  int      ; """One past the last element within the target field list this view references."""
@@ -103,18 +108,18 @@ class fstview:
     def root(self) -> fst.FST:
         """Root node of the `FST` node this view belongs to."""
 
-        return self.fst.root
+        return self.base.root
 
-    def __init__(self, fst: fst.FST, field: str, start: int, stop: int) -> None:
+    def __init__(self, base: fst.FST, field: str, start: int, stop: int) -> None:
         """@private"""
 
-        self.fst = fst
+        self.base = base
         self.field = field
         self.start = start
         self.stop = stop
 
     def __repr__(self) -> str:
-        return f'<{self.fst!r}.{self.field}[{self.start}:{self.stop}] {list(self)}>'
+        return f'<{self.base!r}.{self.field}[{self.start}:{self.stop}] {list(self)}>'
 
     def __len__(self) -> int:
         return self.stop - self.start
@@ -169,10 +174,10 @@ class fstview:
             start = self.start
             idx = fixup_one_index(self.stop - start, idx)
 
-            return a.f if isinstance(a := getattr(self.fst.a, self.field)[start + idx], AST) else a
+            return a.f if isinstance(a := getattr(self.base.a, self.field)[start + idx], AST) else a
 
         if isinstance(idx, str):
-            if not (a := get_func_class_or_ass_by_name(getattr(self.fst.a, self.field)[self.start : self.stop], idx)):
+            if not (a := get_func_class_or_ass_by_name(getattr(self.base.a, self.field)[self.start : self.stop], idx)):
                 raise IndexError(f"function, class or variable '{idx}' not found")
 
             return a.f
@@ -183,7 +188,7 @@ class fstview:
         start = self.start
         idx_start, idx_stop = fixup_slice_indices(self.stop - start, idx.start, idx.stop)
 
-        return fstview(self.fst, self.field, start + idx_start, start + idx_stop)
+        return fstview(self.base, self.field, start + idx_start, start + idx_stop)
 
     def __setitem__(self, idx: int | slice | str, code: Code | None) -> None:
         """Set a single item or a slice view in this slice view. All indices (including negative) are relative to the
@@ -225,18 +230,19 @@ class fstview:
         """
 
         if isinstance(idx, str):
-            if not (a := get_func_class_or_ass_by_name(getattr(self.fst.a, self.field)[self.start : self.stop], idx)):
+            if not (a := get_func_class_or_ass_by_name(getattr(self.base.a, self.field)[self.start : self.stop], idx)):
                 raise IndexError(f"function, class or variable '{idx}' not found")
 
             idx = a.f.pfield.idx
 
         if isinstance(idx, int):
+            base = self.base
             start = self.start
             idx = fixup_one_index(self.stop - start, idx)
-            asts = getattr(self.fst.a, self.field)
+            asts = getattr(base.a, self.field)
             len_before = len(asts)
 
-            self.fst = self.fst.put(code, start + idx, field=self.field)  # or self.fst
+            self.base = base._put_one(code, start + idx, self.field, _EMPTY_OPTIONS, False)
 
             self.stop += len(asts) - len_before
 
@@ -244,12 +250,13 @@ class fstview:
             raise IndexError('step slicing not supported')
 
         else:
+            base = self.base
             start = self.start
             idx_start, idx_stop = fixup_slice_indices(self.stop - start, idx.start, idx.stop)
-            asts = getattr(self.fst.a, self.field)
+            asts = getattr(base.a, self.field)
             len_before = len(asts)
 
-            self.fst = self.fst.put_slice(code, start + idx_start, start + idx_stop, self.field)
+            self.base = base._put_slice(code, start + idx_start, start + idx_stop, self.field, False, _EMPTY_OPTIONS)
 
             self.stop += len(asts) - len_before
 
@@ -284,8 +291,10 @@ class fstview:
         @public
         """
 
+        base = self.base
+
         if isinstance(idx, str):
-            if not (a := get_func_class_or_ass_by_name(getattr(self.fst.a, self.field)[self.start : self.stop], idx)):
+            if not (a := get_func_class_or_ass_by_name(getattr(base.a, self.field)[self.start : self.stop], idx)):
                 raise IndexError(f"function, class or variable '{idx}' not found")
 
             idx = a.f.pfield.idx
@@ -295,7 +304,7 @@ class fstview:
             stop = self.stop
             idx = fixup_one_index(stop - start, idx)
 
-            self.fst = self.fst.put_slice(None, start + idx, start + idx + 1, field=self.field)
+            self.base = base._put_slice(None, start + idx, start + idx + 1, self.field, False, _EMPTY_OPTIONS)
 
             self.stop = max(start, stop - 1)
 
@@ -307,7 +316,7 @@ class fstview:
             stop = self.stop
             idx_start, idx_stop = fixup_slice_indices(stop - start, idx.start, idx.stop)
 
-            self.fst = self.fst.put_slice(None, start + idx_start, start + idx_stop, self.field)
+            self.base = base._put_slice(None, start + idx_start, start + idx_stop, self.field, False, _EMPTY_OPTIONS)
 
             self.stop = max(start, stop - (idx_stop - idx_start))
 
@@ -329,7 +338,7 @@ class fstview:
         ```
         """
 
-        return self.fst.get_slice(self.start, self.stop, self.field, cut=False, **options)
+        return self.base.get_slice(self.start, self.stop, self.field, cut=False, **options)
 
     def cut(self, **options) -> fst.FST:
         """Cut out this slice to a new top-level tree (if possible), dedenting and fixing as necessary. Cannot cut root
@@ -355,7 +364,7 @@ class fstview:
 
         start = self.start
 
-        f = self.fst.get_slice(start, self.stop, self.field, cut=True, **options)
+        f = self.base._get_slice(start, self.stop, self.field, True, options)
 
         self.stop = start
 
@@ -377,18 +386,19 @@ class fstview:
         ```py
         >>> from fst import FST
 
-        >>> FST('[0, 1, 2, 3]').elts[1:3].replace('(4, 5)').fst.src
+        >>> FST('[0, 1, 2, 3]').elts[1:3].replace('(4, 5)').base.src
         '[0, (4, 5), 3]'
 
-        >>> FST('[0, 1, 2, 3]').elts[1:3].replace('(4, 5)', one=False).fst.src
+        >>> FST('[0, 1, 2, 3]').elts[1:3].replace('(4, 5)', one=False).base.src
         '[0, 4, 5, 3]'
         ```
         """
 
-        asts = getattr(self.fst.a, self.field)
+        base = self.base
+        asts = getattr(base.a, self.field)
         len_before = len(asts)
 
-        self.fst = self.fst.put_slice(code, self.start, self.stop, self.field, one=one, **options)
+        self.base = base._put_slice(code, self.start, self.stop, self.field, one, options)
 
         self.stop += len(asts) - len_before
 
@@ -407,15 +417,16 @@ class fstview:
         ```py
         >>> from fst import FST
 
-        >>> FST('[0, 1, 2, 3]').elts[1:3].remove().fst.src
+        >>> FST('[0, 1, 2, 3]').elts[1:3].remove().base.src
         '[0, 3]'
         ```
         """
 
-        asts = getattr(self.fst.a, self.field)
+        base = self.base
+        asts = getattr(base.a, self.field)
         len_before = len(asts)
 
-        self.fst = self.fst.put_slice(None, self.start, self.stop, self.field, one=True, **options)
+        self.base = base._put_slice(None, self.start, self.stop, self.field, True, options)
 
         self.stop += len(asts) - len_before
 
@@ -438,22 +449,23 @@ class fstview:
         ```py
         >>> from fst import FST
 
-        >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 1).fst.src
+        >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 1).base.src
         '[0, (4, 5), 1, 2, 3]'
 
-        >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 'end', one=False).fst.src
+        >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 'end', one=False).base.src
         '[0, 1, 2, 3, 4, 5]'
 
         >>> # same as 'end' but 'end' is always 'end'
-        >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 4, one=False).fst.src
+        >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 4, one=False).base.src
         '[0, 1, 2, 3, 4, 5]'
 
-        >>> FST('[0, 1, 2, 3]').elts[1:3].insert('*star').fst.src
+        >>> FST('[0, 1, 2, 3]').elts[1:3].insert('*star').base.src
         '[0, *star, 1, 2, 3]'
         ```
         """
 
-        asts = getattr(self.fst.a, self.field)
+        base = self.base
+        asts = getattr(base.a, self.field)
         len_before = len(asts)
         start = self.start
         stop = self.stop
@@ -464,7 +476,7 @@ class fstview:
         else:
             idx = start + (idx if idx >= 0 else max(0, idx + len_view))
 
-        self.fst = self.fst.put_slice(code, idx, idx, self.field, one=one, **options)
+        self.base = base._put_slice(code, idx, idx, self.field, one, options)
 
         self.stop += len(asts) - len_before
 
@@ -484,17 +496,17 @@ class fstview:
         ```py
         >>> from fst import FST
 
-        >>> FST('[0, 1, 2, 3]').elts.append('(4, 5)').fst.src
+        >>> FST('[0, 1, 2, 3]').elts.append('(4, 5)').base.src
         '[0, 1, 2, 3, (4, 5)]'
 
-        >>> FST('[0, 1, 2, 3]').elts[1:3].append('*star').fst.src
+        >>> FST('[0, 1, 2, 3]').elts[1:3].append('*star').base.src
         '[0, 1, 2, *star, 3]'
         ```
         """
 
         stop = self.stop
 
-        self.fst = self.fst.put_slice(code, stop, stop, self.field, one=True, **options)
+        self.base = self.base._put_slice(code, stop, stop, self.field, True, options)
 
         self.stop = stop + 1
 
@@ -514,19 +526,20 @@ class fstview:
         ```py
         >>> from fst import FST
 
-        >>> FST('[0, 1, 2, 3]').elts.extend('(4, 5)').fst.src
+        >>> FST('[0, 1, 2, 3]').elts.extend('(4, 5)').base.src
         '[0, 1, 2, 3, 4, 5]'
 
-        >>> FST('[0, 1, 2, 3]').elts[1:3].extend('(4, 5)').fst.src
+        >>> FST('[0, 1, 2, 3]').elts[1:3].extend('(4, 5)').base.src
         '[0, 1, 2, 4, 5, 3]'
         ```
         """
 
-        asts = getattr(self.fst.a, self.field)
+        base = self.base
+        asts = getattr(base.a, self.field)
         len_before = len(asts)
         stop = self.stop
 
-        self.fst = self.fst.put_slice(code, stop, stop, self.field, one=False, **options)
+        self.base = base._put_slice(code, stop, stop, self.field, False, options)
 
         self.stop = stop + (len(asts) - len_before)
 
@@ -546,17 +559,17 @@ class fstview:
         ```py
         >>> from fst import FST
 
-        >>> FST('[0, 1, 2, 3]').elts.prepend('(4, 5)').fst.src
+        >>> FST('[0, 1, 2, 3]').elts.prepend('(4, 5)').base.src
         '[(4, 5), 0, 1, 2, 3]'
 
-        >>> FST('[0, 1, 2, 3]').elts[1:3].prepend('*star').fst.src
+        >>> FST('[0, 1, 2, 3]').elts[1:3].prepend('*star').base.src
         '[0, *star, 1, 2, 3]'
         ```
         """
 
         start = self.start
 
-        self.fst = self.fst.put_slice(code, start, start, self.field, one=True, **options)
+        self.base = self.base._put_slice(code, start, start, self.field, True, options)
 
         self.stop += 1
 
@@ -576,19 +589,20 @@ class fstview:
         ```py
         >>> from fst import FST
 
-        >>> FST('[0, 1, 2, 3]').elts.prextend('(4, 5)').fst.src
+        >>> FST('[0, 1, 2, 3]').elts.prextend('(4, 5)').base.src
         '[4, 5, 0, 1, 2, 3]'
 
-        >>> FST('[0, 1, 2, 3]').elts[1:3].prextend('(4, 5)').fst.src
+        >>> FST('[0, 1, 2, 3]').elts[1:3].prextend('(4, 5)').base.src
         '[0, 4, 5, 1, 2, 3]'
         ```
         """
 
-        asts = getattr(self.fst.a, self.field)
+        base = self.base
+        asts = getattr(base.a, self.field)
         len_before = len(asts)
         start = self.start
 
-        self.fst = self.fst.put_slice(code, start, start, self.field, one=False, **options)
+        self.base = base._put_slice(code, start, start, self.field, False, options)
 
         self.stop += len(asts) - len_before
 

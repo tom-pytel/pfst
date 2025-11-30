@@ -22,7 +22,7 @@ in the case of `Global` or `Nonlocal`) will make use of an `fstview` when access
 >>> view
 <<List ROOT 0,0..0,9>.elts[0:3] [<Constant 0,1..0,2>, <Constant 0,4..0,5>, <Constant 0,7..0,8>]>
 
->>> view.fst, view.field, view.start, view.stop
+>>> view.base, view.field, view.start, view.stop
 (<List ROOT 0,0..0,9>, 'elts', 0, 3)
 ```
 
@@ -43,7 +43,7 @@ basically exists to facilitate direct access to slices of children for immediate
 >>> print(f.src)
 [1, 3]
 
->>> print(f.elts.insert('4', 1).fst.src)
+>>> print(f.elts.insert('4', 1).base.src)
 [1, 4, 3]
 
 >>> del f.elts[:2]
@@ -138,74 +138,74 @@ With the exception if `insert()` (since its a standard pattern) these operations
 to be executed on a particular indexed view which selects their range in the list.
 
 ```py
->>> print(FST('[a, b, c]').elts.replace('[x, y]').fst.src)
+>>> print(FST('[a, b, c]').elts.replace('[x, y]').base.src)
 [[x, y]]
 
->>> print(FST('[a, b, c]').elts.replace('[x, y]', one=False).fst.src)
+>>> print(FST('[a, b, c]').elts.replace('[x, y]', one=False).base.src)
 [x, y]
 
->>> print(FST('[a, b, c]').elts.remove().fst.src)
+>>> print(FST('[a, b, c]').elts.remove().base.src)
 []
 
->>> print(FST('[a, b, c]').elts.insert('[x, y]', 1).fst.src)
+>>> print(FST('[a, b, c]').elts.insert('[x, y]', 1).base.src)
 [a, [x, y], b, c]
 
->>> print(FST('[a, b, c]').elts[1:1].insert('[x, y]').fst.src)
+>>> print(FST('[a, b, c]').elts[1:1].insert('[x, y]').base.src)
 [a, [x, y], b, c]
 
->>> print(FST('[a, b, c]').elts.insert('[x, y]', 1, one=False).fst.src)
+>>> print(FST('[a, b, c]').elts.insert('[x, y]', 1, one=False).base.src)
 [a, x, y, b, c]
 
->>> print(FST('[a, b, c]').elts.insert('[x, y]', 'end', one=False).fst.src)
+>>> print(FST('[a, b, c]').elts.insert('[x, y]', 'end', one=False).base.src)
 [a, b, c, x, y]
 
->>> print(FST('[a, b, c]').elts.append('[x, y]').fst.src)
+>>> print(FST('[a, b, c]').elts.append('[x, y]').base.src)
 [a, b, c, [x, y]]
 
->>> print(FST('[a, b, c]').elts.extend('[x, y]').fst.src)
+>>> print(FST('[a, b, c]').elts.extend('[x, y]').base.src)
 [a, b, c, x, y]
 
->>> print(FST('[a, b, c]').elts.prepend('[x, y]').fst.src)
+>>> print(FST('[a, b, c]').elts.prepend('[x, y]').base.src)
 [[x, y], a, b, c]
 
->>> print(FST('[a, b, c]').elts.prextend('[x, y]').fst.src)
+>>> print(FST('[a, b, c]').elts.prextend('[x, y]').base.src)
 [x, y, a, b, c]
 ```
 
 They work on subviews as well.
 
 ```py
->>> print(FST('[a, b, c]').elts[1:2].replace('[x, y]').fst.src)
+>>> print(FST('[a, b, c]').elts[1:2].replace('[x, y]').base.src)
 [a, [x, y], c]
 
->>> print(FST('[a, b, c]').elts[1:2].replace('[x, y]', one=False).fst.src)
+>>> print(FST('[a, b, c]').elts[1:2].replace('[x, y]', one=False).base.src)
 [a, x, y, c]
 
->>> print(FST('[a, b, c]').elts[1:3].remove().fst.src)
+>>> print(FST('[a, b, c]').elts[1:3].remove().base.src)
 [a]
 
->>> print(FST('[a, b, c]').elts[1:2].insert('[x, y]', 1).fst.src)
+>>> print(FST('[a, b, c]').elts[1:2].insert('[x, y]', 1).base.src)
 [a, b, [x, y], c]
 
->>> print(FST('[a, b, c]').elts[1:2][1:1].insert('[x, y]').fst.src)
+>>> print(FST('[a, b, c]').elts[1:2][1:1].insert('[x, y]').base.src)
 [a, b, [x, y], c]
 
->>> print(FST('[a, b, c]').elts[1:2].insert('[x, y]', 1, one=False).fst.src)
+>>> print(FST('[a, b, c]').elts[1:2].insert('[x, y]', 1, one=False).base.src)
 [a, b, x, y, c]
 
->>> print(FST('[a, b, c]').elts[1:2].insert('[x, y]', 'end', one=False).fst.src)
+>>> print(FST('[a, b, c]').elts[1:2].insert('[x, y]', 'end', one=False).base.src)
 [a, b, x, y, c]
 
->>> print(FST('[a, b, c]').elts[1:2].append('[x, y]').fst.src)
+>>> print(FST('[a, b, c]').elts[1:2].append('[x, y]').base.src)
 [a, b, [x, y], c]
 
->>> print(FST('[a, b, c]').elts[1:2].extend('[x, y]').fst.src)
+>>> print(FST('[a, b, c]').elts[1:2].extend('[x, y]').base.src)
 [a, b, x, y, c]
 
->>> print(FST('[a, b, c]').elts[1:2].prepend('[x, y]').fst.src)
+>>> print(FST('[a, b, c]').elts[1:2].prepend('[x, y]').base.src)
 [a, [x, y], b, c]
 
->>> print(FST('[a, b, c]').elts[1:2].prextend('[x, y]').fst.src)
+>>> print(FST('[a, b, c]').elts[1:2].prextend('[x, y]').base.src)
 [a, x, y, b, c]
 ```
 
