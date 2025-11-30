@@ -353,7 +353,7 @@ apply.
 
 * Make reconcile use all slice operations to preserve more formatting.
 
-* LOTS of cleaning up.
+* LOTS of code cleanups, API additions for real-world use, optimization, testing, bughunting.
 
 
 ## Trivia

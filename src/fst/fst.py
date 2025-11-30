@@ -43,6 +43,7 @@ from .asttypes import (
     Div,
     Eq,
     ExceptHandler,
+    Expr,
     Expression,
     FloorDiv,
     For,
@@ -638,6 +639,21 @@ class FST:
         return isinstance(self.a, ASTS_SCOPE_ANONYMOUS)
 
     @property
+    def docstr(self) -> str | None:
+        """The docstring of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `Module`. `None` if
+        not one of those nodes or has no docstring."""
+
+        if (isinstance(a := self.a, ASTS_SCOPE_NAMED_OR_MOD)
+            and (b := a.body)
+            and isinstance(b0 := b[0], Expr)
+            and isinstance(v := b0.value, Constant)
+            and isinstance(v := v.value, str)
+        ):
+            return v
+
+        return None
+
+    @property
     def f(self) -> None:
         """@private"""
 
@@ -1179,8 +1195,8 @@ class FST:
             - `1`: One empty line in all scopes.
         - `docstr`: Which docstrings are indentable / dedentable.
             - `False`: None.
-            - `True`: All `Expr` multiline strings (as they serve no coding purpose).
-            - `'strict'`: Only multiline strings in expected docstring positions (functions and classes).
+            - `True`: All `Expr` string constants (as they serve no other coding purpose).
+            - `'strict'`: Only string constants in expected docstring positions (functions, classes and top of module).
         - `pars`: How parentheses are handled, can be `False`, `True` or `'auto'`. This is for individual element
             operations, slice operations ignore this as parentheses usually cannot be removed or may need to be added to
             keep the slices usable. Raw puts generally do not have parentheses added or removed automatically, except
