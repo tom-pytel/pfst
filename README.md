@@ -348,8 +348,8 @@ This module is not finished but functional enough that it can be useful.
   * `JoinedStr.values`
   * `TemplateStr.values`
 
-* Improve comment and whitespace handling, especially allow get / put comments in single element operations where it may
-apply.
+* Improve comment and whitespace handling, especially allow get / put comments in single element non-statement
+operations where it may apply (where comment may belong to expression instead of statement).
 
 * Make reconcile use all slice operations to preserve more formatting.
 

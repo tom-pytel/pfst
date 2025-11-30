@@ -371,7 +371,7 @@ class FST:
     a:            AST              ; """The actual `AST` node."""
     parent:       FST | None       ; """Parent `FST` node, `None` in root node."""
     pfield:       astfield | None  ; """The `astfield` location of this node in the parent, `None` in root node."""
-    root:         FST              ; """The root node of this tree, `self` in root node."""
+    # root:         FST              ; """The root node of this tree, `self` in root node."""  # ROOT-AS-ATTRIBUTE
     _cache:       dict
 
     # ROOT ONLY
@@ -384,6 +384,29 @@ class FST:
     is_FST:       bool = True  ; """@private"""  # for quick checks vs. `fstloc` or `fstview`
 
     @property
+    def is_root(self) -> bool:
+        """`True` for the root node, `False` otherwise."""
+
+        return self.parent is None
+
+    @property
+    def root(self) -> FST:  # ROOT-AS-PROPERTY
+        """Root node of the tree this node belongs to."""
+
+        try:
+            return self._cache['root']
+
+        except KeyError:
+            root = self
+
+            while parent := root.parent:
+                root = parent
+
+            self._cache['root'] = root
+
+            return root
+
+    @property
     def lines(self) -> list[builtins.str] | None:
         """Whole lines which contain this node, may also contain parts of enclosing nodes. If gotten at root then the
         entire source is returned, which may extend beyond the location of the top level node (mostly for statements
@@ -392,7 +415,7 @@ class FST:
         **Note:** The lines list returned is always a copy so safe to modify.
         """
 
-        if self.is_root:
+        if not self.parent:  # is_root
             return self._lines[:]
         elif loc := self.bloc:
             return self.root._lines[loc.ln : loc.end_ln + 1]
@@ -407,7 +430,7 @@ class FST:
         it appears in the top level source if multiple lines. If gotten at root then the entire source is returned,
         regardless of whether the actual top level node location includes it or not."""
 
-        if self.is_root:
+        if not self.parent:  # is_root
             return '\n'.join(self._lines)
         elif loc := self.bloc:
             return self._get_src(*loc)
@@ -415,12 +438,6 @@ class FST:
             return ''
         else:
             return OPCLS2STR.get(a.__class__, None)  # for boolop only really, otherwise None
-
-    @property
-    def is_root(self) -> bool:
-        """`True` for the root node, `False` otherwise."""
-
-        return self.parent is None
 
     @property
     def has_own_loc(self) -> bool:
@@ -753,14 +770,14 @@ class FST:
 
         if pfield is not None:  # if this is not a root node then we are done
             self.parent = mode_or_lines_or_parent
-            self.root = mode_or_lines_or_parent.root
+            # self.root = mode_or_lines_or_parent.root  # ROOT-AS-ATTRIBUTE
 
             return self
 
         # ROOT
 
         self.parent = None
-        self.root = self
+        # self.root = self  # ROOT-AS-ATTRIBUTE
         self._lines = ([bistr(s) for s in mode_or_lines_or_parent]
                        if kwargs.get('lcopy', True) else
                        mode_or_lines_or_parent)
