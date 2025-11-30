@@ -370,7 +370,7 @@ class fstview:
 
         return f
 
-    def replace(self, code: Code | None, one: bool = True, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
+    def replace(self, code: Code | None, one: bool = True, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
         """Replace or delete (if `code=None`) this slice.
 
         **Returns:**
@@ -404,7 +404,7 @@ class fstview:
 
         return self
 
-    def remove(self, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
+    def remove(self, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
         """Delete this slice, equivalent to `replace(None, ...)`
 
         **Parameters:**
@@ -432,7 +432,7 @@ class fstview:
 
         return self
 
-    def insert(self, code: Code, idx: int | Literal['end'] = 0, one: bool = True, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
+    def insert(self, code: Code, idx: int | Literal['end'] = 0, one: bool = True, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
         """Insert into this slice at a specific index.
 
         **Returns:**
@@ -482,7 +482,7 @@ class fstview:
 
         return self
 
-    def append(self, code: Code, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
+    def append(self, code: Code, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
         """Append `code` as a single element to the end of this slice.
 
         **Returns:**
@@ -512,7 +512,7 @@ class fstview:
 
         return self
 
-    def extend(self, code: Code, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
+    def extend(self, code: Code, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
         """Extend this slice with the slice in `code` (type must be compatible).
 
         **Returns:**
@@ -545,7 +545,7 @@ class fstview:
 
         return self
 
-    def prepend(self, code: Code, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
+    def prepend(self, code: Code, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
         """prepend `code` as a single element to the beginning of this slice.
 
         **Returns:**
@@ -575,7 +575,7 @@ class fstview:
 
         return self
 
-    def prextend(self, code: Code, **options) -> fstview | None:  # -> Self or reparsed Self or could disappear due to raw
+    def prextend(self, code: Code, **options) -> fstview:  # -> self, self.base could disappear due to raw reparse
         """Extend the beginning of this slice with the slice in `code` (type must be compatible).
 
         **Returns:**

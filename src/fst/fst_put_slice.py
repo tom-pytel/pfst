@@ -5,7 +5,7 @@ This module contains functions which are imported as methods in the `FST` class 
 
 from __future__ import annotations
 
-from typing import Any, Callable, Literal, Mapping, NamedTuple, Union
+from typing import Any, Callable, Literal, Mapping, NamedTuple
 
 from . import fst
 
@@ -79,7 +79,7 @@ from .asttypes import (
 )
 
 from .astutil import re_identifier, bistr, is_valid_target, is_valid_del_target, reduce_ast, set_ctx
-from .common import PYLT11, PYGE14, Self, NodeError, astfield, next_frag, next_find, prev_find, next_find_re
+from .common import PYLT11, PYGE14, NodeError, astfield, next_frag, next_find, prev_find, next_find_re
 from .parsex import unparse
 
 from .code import (
@@ -2493,7 +2493,7 @@ def _put_slice_raw(
     field: str,
     one: bool,
     options: Mapping[str, Any],
-) -> Union[Self, fst.FST, None]:  # -> Self or reparsed Self
+) -> fst.FST | None:  # -> self or reparsed self or None if deleted
     """Put a raw slice to `self`. Currently just trailing comma stuff."""
 
     if code is None:
@@ -2527,7 +2527,7 @@ def _put_slice(
     field: str,
     one: bool,
     options: Mapping[str, Any],
-) -> Union[Self, fst.FST, None]:  # -> Self or reparsed Self or could disappear due to raw
+) -> fst.FST | None:  # -> self or reparsed self or None if disappeared due to raw
     """Put an a slice of child nodes to `self`."""
 
     if code is self.root:  # don't allow own root to be put to self

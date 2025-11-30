@@ -10,12 +10,6 @@ from .asttypes import AST
 from .astutil import constant
 
 try:
-    from typing import Self
-except ImportError:  # for py 3.10
-    from typing import ForwardRef
-    Self = ForwardRef('FST')
-
-try:
     from tokenize import FSTRING_START, FSTRING_END
 
     try:
@@ -34,7 +28,6 @@ except ImportError:
     FTSTRING_START_TOKENS = FTSTRING_END_TOKENS = ()
 
 __all__ = [
-    'Self',
     'FSTRING_START',
     'FSTRING_END',
     'TSTRING_START',

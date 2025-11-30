@@ -12,7 +12,7 @@ from ast import iter_fields
 from ast import dump as ast_dump, unparse as ast_unparse, mod as ast_mod
 from contextlib import contextmanager
 from io import TextIOBase
-from typing import Any, Callable, Generator, Iterator, Literal, Mapping, TextIO, Union
+from typing import Any, Callable, Generator, Iterator, Literal, Mapping, TextIO
 
 from . import parsex
 
@@ -113,7 +113,7 @@ from .astutil import (
     syntax_ordered_children,
 )
 
-from .common import PYLT13, astfield, fstloc, fstlocn, nspace, Self, next_delims, prev_delims
+from .common import PYLT13, astfield, fstloc, fstlocn, nspace, next_delims, prev_delims
 from .parsex import Mode
 from .code import Code, code_as_lines, code_as_all
 from .traverse import AST_FIELDS_NEXT, AST_FIELDS_PREV, next_bound, prev_bound, check_with_loc
@@ -673,7 +673,7 @@ class FST:
         pfield: astfield | None = None,
         /,
         **kwargs,
-    ) -> Self:
+    ) -> 'FST':
         """Create a new individual `FST` node or full tree. The main way to use this constructor is as a shortcut for
         `FST.fromsrc()` or `FST.fromast()`, the usage is:
 
@@ -1487,7 +1487,7 @@ class FST:
         locs: bool = True,
         ctx: bool = True,
         raise_: bool = True,
-    ) -> Union[Self, None]:
+    ) -> FST | None:
         """Sanity check. Walk the tree and make sure all `AST`s have corresponding `FST` nodes with valid parent / child
         links, then (optionally) reparse source and make sure parsed tree matches currently stored tree (locations and
         everything). The reparse can only be carried out on root nodes but the link validation can be done on any level.
@@ -1737,7 +1737,7 @@ class FST:
 
         raise ValueError('cannot cut root node')
 
-    def replace(self, code: Code | None, **options) -> FST | None:  # -> replaced Self or None if deleted
+    def replace(self, code: Code | None, **options) -> FST | None:  # -> replaced self or None if deleted
         """Replace or delete (if `code=None`, if possible) this node. Returns the new node for `self`, not the old
         replaced node, or `None` if was deleted or raw replaced and the old node disappeared. Cannot delete root node.
         CAN replace root node, in which case the accessing `FST` node remains the same but the top-level `AST` and
@@ -1906,7 +1906,7 @@ class FST:
         *,
         one: bool = True,
         **options,
-    ) -> Self | None:
+    ) -> FST | None:  # -> self or None if deleted due to raw reparse
         r"""Put an individual node or a slice of nodes to `self` if possible. This function can do everything that
         `put_slice()` can. The node is passed as an existing top-level `FST`, `AST`, string or list of string lines. If
         passed as an `FST` then it should be considered "consumed" after this function returns and is no logner valid,
@@ -2084,7 +2084,7 @@ class FST:
         *,
         one: bool = False,
         **options,
-    ) -> Self | None:
+    ) -> FST | None:  # -> self or None if deleted due to raw reparse
         r"""Put a slice of nodes to `self` if possible.  The node is passed as an existing top-level `FST`, `AST`, string
         or list of string lines. If passed as an `FST` then it should be considered "consumed" after this function
         returns and is no logner valid, even on failure. `AST` is copied.
@@ -2472,7 +2472,7 @@ class FST:
 
         return locn
 
-    def par(self, force: bool = False, *, whole: bool = True) -> Self:
+    def par(self, force: bool = False, *, whole: bool = True) -> FST:  # -> self
         """Parenthesize node if it MAY need it. Will not parenthesize atoms which are always enclosed like `List`, or
         nodes which are not `_is_parenthesizable()`, unless `force=True`. Will add parentheses to unparenthesized
         `Tuple` and brackets to unbracketed `MatchSequence` adjusting the node location. If dealing with a `Starred`
@@ -2546,7 +2546,7 @@ class FST:
 
         return self
 
-    def unpar(self, node: bool = False, *, shared: bool | None = True) -> Self:
+    def unpar(self, node: bool = False, *, shared: bool | None = True) -> FST:  # -> self
         """Remove all parentheses if present. Normally removes just grouping parentheses but can also remove `Tuple`
         parentheses and `MatchSequence` parentheses or brackets intrinsic to the node if `node=True`. If dealing with a
         `Starred` then the parentheses are checked in and removed from the child. If `shared=None` then will also remove

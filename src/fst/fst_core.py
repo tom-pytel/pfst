@@ -88,7 +88,6 @@ from .astutil import bistr, syntax_ordered_children
 from .common import (
     FTSTRING_START_TOKENS,
     FTSTRING_END_TOKENS,
-    Self,
     astfield,
     fstloc,
     nspace,
@@ -255,7 +254,7 @@ class _Modifying:
 
         self._params = fst_, field, raw
 
-    def __enter__(self) -> Self:
+    def __enter__(self) -> '_Modifying':
         return self.enter()
 
     def __exit__(
@@ -268,7 +267,7 @@ class _Modifying:
 
         return False
 
-    def enter(self) -> Self:
+    def enter(self) -> '_Modifying':
         """This is called on manual use and should be called immediately after creating the class to avoid the
         parameters being invalidated by some other modification."""
 
@@ -395,7 +394,7 @@ class _Modifying:
     def __init__(self, fst_: fst.FST, field: str | Literal[False] = False, raw: bool = False) -> None:
         self._params = fst_, field, raw
 
-    def __enter__(self) -> Self:
+    def __enter__(self) -> '_Modifying':
         return self.enter()
 
     def __exit__(
@@ -408,7 +407,7 @@ class _Modifying:
 
         return False
 
-    def enter(self) -> Self:
+    def enter(self) -> '_Modifying':
         fst_, _, raw = self._params
         self.root = root = fst_.root
 
@@ -1392,7 +1391,7 @@ def _modifying(self: fst.FST, field: str | Literal[False] = False, raw: bool = F
     return _Modifying(self, field, raw)
 
 
-def _touch(self: fst.FST) -> Self:
+def _touch(self: fst.FST) -> fst.FST:  # -> self
     """AST node was modified, clear out any cached info for this node only."""
 
     self._cache.clear()
@@ -1400,7 +1399,7 @@ def _touch(self: fst.FST) -> Self:
     return self
 
 
-def _touchall(self: fst.FST, parents: bool = True, self_: bool = True, children: bool = True) -> Self:
+def _touchall(self: fst.FST, parents: bool = True, self_: bool = True, children: bool = True) -> fst.FST:  # -> self
     """Touch self, parents and children, optionally. Flushes location cache so that changes to `AST` locations will
     get picked up."""
 
@@ -1437,7 +1436,7 @@ def _offset(
     *,
     offset_excluded: bool = True,
     self_: bool = True,
-) -> Self:
+) -> fst.FST:  # -> self
     """Offset `AST` node positions in the tree on or after (ln, col) by (delta line, col_offset) (column byte
     offset).
 
@@ -1968,7 +1967,7 @@ def _put_src(
     return params_offset
 
 
-def _sanitize(self: fst.FST) -> Self:
+def _sanitize(self: fst.FST) -> fst.FST:  # -> self
     """Remove any leading or trailing junk which is not part of the location or parenthesized location of the node."""
 
     assert self.is_root
