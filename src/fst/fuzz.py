@@ -26,6 +26,16 @@ from .parsex import parse, parse_expr_arglike
 from .fst import FST
 from . import NodeError
 
+try:
+    from tokenize import FSTRING_MIDDLE
+    try:
+        from tokenize import TSTRING_MIDDLE
+        ftstr_middles = (FSTRING_MIDDLE, TSTRING_MIDDLE)
+    except ImportError:
+        ftstr_middles = (FSTRING_MIDDLE,)
+except ImportError:
+    ftstr_middles = ()
+
 
 PROGRAM = 'python -m fst.fuzz'
 
@@ -315,6 +325,12 @@ def minify_src(source_code):
             continue
         if tok_type == tokenize.ENDMARKER:
             break
+
+        if tok_type in ftstr_middles:  # handle '{{' and '}}' in f/t-strings
+            if tok_str.endswith('{'):
+                tok_str = tok_str + '{'
+            elif tok_str.endswith('}'):
+                tok_str = tok_str + '}'
 
         if start > prev_end:
             if start[0] > prev_end[0]:
@@ -624,7 +640,7 @@ class FSTParts:
 
             return
 
-        cats = {}                 # {FST: ASTCat, ...}
+        cats = {}                  # {FST: ASTCat, ...}
         parts = defaultdict(list)  # {ASTCat: [FST, ...], ...}
 
         if exclude is None:
