@@ -61,14 +61,14 @@ From GitHub, after cloning for development:
 ```py
 >>> from fst import *
 
->>> cls = FST('''
+>>> f = FST('''
 ... class cls:
 ...     def func(self):  # comment
 ...         """doc
 ...         string"""
 ... '''.strip())
 
->>> func = cls.body['func'].copy()
+>>> func = f.body[0].copy()
 
 >>> print(func.src)
 def func(self):  # comment

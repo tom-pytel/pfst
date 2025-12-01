@@ -1,4 +1,4 @@
-"""Slice-acces views on `FST` lists of children."""
+"""Slice-access views on `FST` lists of children."""
 
 from __future__ import annotations
 
@@ -7,14 +7,11 @@ from typing import Literal
 
 from . import fst
 
-from .astutil import AST, get_func_class_or_ass_by_name
+from .astutil import OPCLS2STR, AST
 from .code import Code
 from .fst_misc import fixup_one_index, fixup_slice_indices
 
-__all__ = ['fstview']
-
-
-_EMPTY_OPTIONS = {}
+__all__ = ['fstview', 'fstview_Dict', 'fstview_MatchMapping', 'fstview_Compare']
 
 
 class fstview:
@@ -110,13 +107,23 @@ class fstview:
 
         return self.base.root
 
-    def __init__(self, base: fst.FST, field: str, start: int, stop: int) -> None:
+    def _len_field(self) -> int:
+        """Length of full base `FST` field, irrespective of view `start` and `stop`."""
+
+        return len(getattr(self.base.a, self.field))
+
+    def _deref_one(self, idx: int) -> AST | str:
+        """Return a single element from field (which may not be a contiguous list). NO COPY JUST RETURN NODE."""
+
+        return getattr(self.base.a, self.field)[idx]
+
+    def __init__(self, base: fst.FST, field: str, start: int, stop: int | None) -> None:
         """@private"""
 
         self.base = base
         self.field = field
         self.start = start
-        self.stop = stop
+        self.stop = self._len_field() if stop is None else stop
 
     def __repr__(self) -> str:
         return f'<{self.base!r}.{self.field}[{self.start}:{self.stop}] {list(self)}>'
@@ -158,7 +165,7 @@ class fstview:
         >>> FST('[0, 1, 2, 3]').elts[-3:]
         <<List ROOT 0,0..0,12>.elts[1:4] [<Constant 0,4..0,5>, <Constant 0,7..0,8>, <Constant 0,10..0,11>]>
 
-        >>> FST('def fun(): pass\nclass cls: pass\nvar = val').body['cls']
+        >>> FST('def fun(): pass\nclass cls: pass\nvar = val').body[1]
         <ClassDef 1,0..1,15>
 
         >>> FST('global a, b, c').names
@@ -170,25 +177,21 @@ class fstview:
         @public
         """
 
-        if isinstance(idx, int):
+        if isinstance(idx, slice):
+            if idx.step is not None:
+                raise IndexError('step slicing not supported')
+
             start = self.start
-            idx = fixup_one_index(self.stop - start, idx)
+            idx_start, idx_stop = fixup_slice_indices(self.stop - start, idx.start, idx.stop)
 
-            return a.f if isinstance(a := getattr(self.base.a, self.field)[start + idx], AST) else a
+            return self.__class__(self.base, self.field, start + idx_start, start + idx_stop)
 
-        if isinstance(idx, str):
-            if not (a := get_func_class_or_ass_by_name(getattr(self.base.a, self.field)[self.start : self.stop], idx)):
-                raise IndexError(f"function, class or variable '{idx}' not found")
-
-            return a.f
-
-        if idx.step is not None:
-            raise IndexError('step slicing not supported')
+        assert isinstance(idx, int)
 
         start = self.start
-        idx_start, idx_stop = fixup_slice_indices(self.stop - start, idx.start, idx.stop)
+        idx = fixup_one_index(self.stop - start, idx)
 
-        return fstview(self.base, self.field, start + idx_start, start + idx_stop)
+        return a.f if isinstance(a := self._deref_one(start + idx), AST) else a
 
     def __setitem__(self, idx: int | slice | str, code: Code | None) -> None:
         """Set a single item or a slice view in this slice view. All indices (including negative) are relative to the
@@ -229,36 +232,29 @@ class fstview:
         @public
         """
 
-        if isinstance(idx, str):
-            if not (a := get_func_class_or_ass_by_name(getattr(self.base.a, self.field)[self.start : self.stop], idx)):
-                raise IndexError(f"function, class or variable '{idx}' not found")
+        if isinstance(idx, slice):
+            if idx.step is not None:
+                raise IndexError('step slicing not supported')
 
-            idx = a.f.pfield.idx
-
-        if isinstance(idx, int):
-            base = self.base
-            start = self.start
-            idx = fixup_one_index(self.stop - start, idx)
-            asts = getattr(base.a, self.field)
-            len_before = len(asts)
-
-            self.base = base._put_one(code, start + idx, self.field, _EMPTY_OPTIONS, False)
-
-            self.stop += len(asts) - len_before
-
-        elif idx.step is not None:
-            raise IndexError('step slicing not supported')
-
-        else:
-            base = self.base
             start = self.start
             idx_start, idx_stop = fixup_slice_indices(self.stop - start, idx.start, idx.stop)
-            asts = getattr(base.a, self.field)
-            len_before = len(asts)
+            len_before = self._len_field()
 
-            self.base = base._put_slice(code, start + idx_start, start + idx_stop, self.field, False, _EMPTY_OPTIONS)
+            self.base = self.base._put_slice(code, start + idx_start, start + idx_stop, self.field)
 
-            self.stop += len(asts) - len_before
+            self.stop += self._len_field() - len_before
+
+            return
+
+        assert isinstance(idx, int)
+
+        start = self.start
+        idx = fixup_one_index(self.stop - start, idx)
+        len_before = self._len_field()
+
+        self.base = self.base._put_one(code, start + idx, self.field, ret_child=False)
+
+        self.stop += self._len_field() - len_before
 
     def __delitem__(self, idx: int | slice | str) -> None:
         """Delete a single item or a slice from this slice view. All indices (including negative) are relative to the
@@ -291,34 +287,29 @@ class fstview:
         @public
         """
 
-        base = self.base
+        if isinstance(idx, slice):
+            if idx.step is not None:
+                raise IndexError('step slicing not supported')
 
-        if isinstance(idx, str):
-            if not (a := get_func_class_or_ass_by_name(getattr(base.a, self.field)[self.start : self.stop], idx)):
-                raise IndexError(f"function, class or variable '{idx}' not found")
-
-            idx = a.f.pfield.idx
-
-        if isinstance(idx, int):
-            start = self.start
-            stop = self.stop
-            idx = fixup_one_index(stop - start, idx)
-
-            self.base = base._put_slice(None, start + idx, start + idx + 1, self.field, False, _EMPTY_OPTIONS)
-
-            self.stop = max(start, stop - 1)
-
-        elif idx.step is not None:
-            raise IndexError('step slicing not supported')
-
-        else:
             start = self.start
             stop = self.stop
             idx_start, idx_stop = fixup_slice_indices(stop - start, idx.start, idx.stop)
 
-            self.base = base._put_slice(None, start + idx_start, start + idx_stop, self.field, False, _EMPTY_OPTIONS)
+            self.base = self.base._put_slice(None, start + idx_start, start + idx_stop, self.field)
 
             self.stop = max(start, stop - (idx_stop - idx_start))
+
+            return
+
+        assert isinstance(idx, int)
+
+        start = self.start
+        stop = self.stop
+        idx = fixup_one_index(stop - start, idx)
+
+        self.base = self.base._put_slice(None, start + idx, start + idx + 1, self.field)
+
+        self.stop = max(start, stop - 1)
 
     def copy(self, **options) -> fst.FST:
         """Copy this slice to a new top-level tree, dedenting and fixing as necessary.
@@ -394,13 +385,11 @@ class fstview:
         ```
         """
 
-        base = self.base
-        asts = getattr(base.a, self.field)
-        len_before = len(asts)
+        len_before = self._len_field()
 
-        self.base = base._put_slice(code, self.start, self.stop, self.field, one, options)
+        self.base = self.base._put_slice(code, self.start, self.stop, self.field, one, options)
 
-        self.stop += len(asts) - len_before
+        self.stop += self._len_field() - len_before
 
         return self
 
@@ -422,13 +411,11 @@ class fstview:
         ```
         """
 
-        base = self.base
-        asts = getattr(base.a, self.field)
-        len_before = len(asts)
+        len_before = self._len_field()
 
-        self.base = base._put_slice(None, self.start, self.stop, self.field, True, options)
+        self.base = self.base._put_slice(None, self.start, self.stop, self.field, True, options)
 
-        self.stop += len(asts) - len_before
+        self.stop += self._len_field() - len_before
 
         return self
 
@@ -464,9 +451,7 @@ class fstview:
         ```
         """
 
-        base = self.base
-        asts = getattr(base.a, self.field)
-        len_before = len(asts)
+        len_before = self._len_field()
         start = self.start
         stop = self.stop
         len_view = stop - start
@@ -476,9 +461,9 @@ class fstview:
         else:
             idx = start + (idx if idx >= 0 else max(0, idx + len_view))
 
-        self.base = base._put_slice(code, idx, idx, self.field, one, options)
+        self.base = self.base._put_slice(code, idx, idx, self.field, one, options)
 
-        self.stop += len(asts) - len_before
+        self.stop += self._len_field() - len_before
 
         return self
 
@@ -534,14 +519,12 @@ class fstview:
         ```
         """
 
-        base = self.base
-        asts = getattr(base.a, self.field)
-        len_before = len(asts)
+        len_before = self._len_field()
         stop = self.stop
 
-        self.base = base._put_slice(code, stop, stop, self.field, False, options)
+        self.base = self.base._put_slice(code, stop, stop, self.field, False, options)
 
-        self.stop = stop + (len(asts) - len_before)
+        self.stop = stop + (self._len_field() - len_before)
 
         return self
 
@@ -597,13 +580,94 @@ class fstview:
         ```
         """
 
-        base = self.base
-        asts = getattr(base.a, self.field)
-        len_before = len(asts)
+        len_before = self._len_field()
         start = self.start
 
-        self.base = base._put_slice(code, start, start, self.field, False, options)
+        self.base = self.base._put_slice(code, start, start, self.field, False, options)
 
-        self.stop += len(asts) - len_before
+        self.stop += self._len_field() - len_before
 
         return self
+
+
+class fstview_Dict(fstview):
+    """View for `Dict` combined `key:value` virtual field `_all`."""
+
+    def _len_field(self) -> int:
+        return len(self.base.a.keys)
+
+    def _deref_one(self, idx: int) -> AST | str:
+        raise ValueError('cannot get single element from Dict._all')
+
+    def __repr__(self) -> str:
+        base = self.base
+        ast = base.a
+        start = self.start
+        stop = self.stop
+        keys = ast.keys[start : stop]
+        values = ast.values[start : stop]
+
+        seq = ', '.join(f'{f"{k.f}:" if k else "**"}{v.f}' for k, v in zip(keys, values, strict=True))
+
+        return f'<{base!r}._all[{start}:{stop}] {{{seq}}}>'
+
+
+class fstview_MatchMapping(fstview):
+    """View for `MatchMapping` combined `key:pattern + rest` virtual field `_all`."""
+
+    def _len_field(self) -> int:
+        return len((a := self.base.a).keys) + bool(a.rest)
+
+    def _deref_one(self, idx: int) -> AST | str:
+        raise ValueError('cannot get single element from MatchMapping._all')
+
+    def __repr__(self) -> str:
+        base = self.base
+        ast = base.a
+        start = self.start
+        stop = self.stop
+        keys = ast.keys[start : stop]
+        patterns = ast.patterns[start : stop]
+
+        seq = [f'{k.f}: {p.f}' for k, p in zip(keys, patterns, strict=True)]
+
+        if (rest := ast.rest) and stop > len(patterns):
+            seq.append('**' + rest)
+
+        seq = ', '.join(seq)
+
+        return f'<{base!r}._all[{self.start}:{self.stop}] {{{seq}}}>'
+
+
+class fstview_Compare(fstview):
+    """View for `Compare` combined `left + comparators` virtual field `_all`."""
+
+    def _len_field(self) -> int:
+        return 1 + len(self.base.a.comparators)
+
+    def _deref_one(self, idx: int) -> AST | str:
+        return self.base.a.comparators[idx - 1] if idx else self.base.a.left
+
+    def __repr__(self) -> str:
+        base = self.base
+        ast = base.a
+        start = self.start
+        stop = self.stop
+        start_1 = max(0, start - 1)
+        stop_1 = max(0, stop - 1)
+        comparators = ast.comparators[start_1 : stop_1]
+
+        if start:
+            left = comparators.pop(0) if comparators else None
+            ops = ast.ops[start : stop_1]
+
+        else:
+            left = ast.left
+            ops = ast.ops[start_1 : stop_1]
+
+        seq = [f' {OPCLS2STR[o.__class__]} {c.f}' for o, c in zip(ops, comparators, strict=True)]
+
+        if left:
+            seq.insert(0, repr(left.f))
+
+        return f'<{base!r}._all[{self.start}:{self.stop}] {"".join(seq)}>'

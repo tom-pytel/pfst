@@ -38,7 +38,9 @@ from .asttypes import (
     BitXor,
     Call,
     ClassDef,
+    Compare,
     Constant,
+    Dict,
     DictComp,
     Div,
     Eq,
@@ -64,6 +66,7 @@ from .asttypes import (
     LtE,
     MatMult,
     Match,
+    MatchMapping,
     MatchSequence,
     Mod,
     Module,
@@ -117,7 +120,7 @@ from .common import PYLT13, astfield, fstloc, fstlocn, nspace, next_delims, prev
 from .parsex import Mode
 from .code import Code, code_as_lines, code_as_all
 from .traverse import AST_FIELDS_NEXT, AST_FIELDS_PREV, next_bound, prev_bound, check_with_loc
-from .view import fstview
+from .view import fstview, fstview_Dict, fstview_MatchMapping, fstview_Compare
 from .reconcile import Reconcile
 from .fst_misc import DUMP_COLOR, DUMP_NO_COLOR, clip_src_loc, fixup_field_body
 from .fst_locs import _loc_arguments, _loc_comprehension, _loc_withitem, _loc_match_case, _loc_op
@@ -673,7 +676,8 @@ class FST:
 
     @property
     def f(self) -> None:
-        """@private"""
+        """Runtime confusion protection.
+        @private"""
 
         raise RuntimeError(f"you probably think you're accessing an AST node '.f', but you're not, "
                            f"you're accessing an FST {self}.f")
@@ -4656,9 +4660,42 @@ class FST:
     from .fst_get_one import _get_one
     from .fst_put_one import _put_one
 
+    # ------------------------------------------------------------------------------------------------------------------
+    # Virtual field accessors
+
+    @property
+    def _all(self: FST) -> fstview:
+        """Virtual `_all` field view.
+        @private"""
+
+        if view := _VIRTUAL_FIELD_VIEW__ALL.get(self.a.__class__):
+            return view(self, '_all', 0, None)
+
+        raise ValueError(f"{self.a.__class__.__name__} does not have virtual field '_all'")
+
+    @_all.setter
+    def _all(self: FST, code: Code | None) -> None:
+        """Virtual `_all` field set everything.
+        @private"""
+
+        self._put_slice(code, None, None, '_all')
+
+    @_all.deleter
+    def _all(self: FST) -> None:
+        """Virtual `_all` field delete everything.
+        @private"""
+
+        self._put_slice(None, None, None, '_all')
+
+
+_VIRTUAL_FIELD_VIEW__ALL = {
+    Dict:         fstview_Dict,
+    MatchMapping: fstview_MatchMapping,
+    Compare:      fstview_Compare,
+}
 
 # ----------------------------------------------------------------------------------------------------------------------
-# Make AST field accessors
+# AST field accessors
 
 def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> property:
     if cardinality == 1:  # is an AST or a primitive

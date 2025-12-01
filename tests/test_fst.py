@@ -33,7 +33,7 @@ from fst.astutil import (
 )
 
 from fst.common import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, astfield, fstloc
-from fst.view import fstview
+from fst.view import fstview, fstview_Dict, fstview_MatchMapping, fstview_Compare
 
 from fst.code import *
 
@@ -8640,6 +8640,59 @@ if 1:
 
             self.assertEqual('t"new"', test(FST('t"{a}"'), 'values', 'new', fstview,
                                             '<<TemplateStr ROOT 0,0..0,6>.values[0:1] [<Interpolation 0,2..0,5>]>').src)  # TODO: the result of this put is incorrect because it is not implemented yet
+
+    def test_ast_accessors_virtual_fields(self):
+        # Dict
+
+        f = FST('{a: b, c: d, e: f}')
+        self.assertEqual('<<Dict ROOT 0,0..0,18>._all[0:3] {<Name 0,1..0,2>:<Name 0,4..0,5>, <Name 0,7..0,8>:<Name 0,10..0,11>, <Name 0,13..0,14>:<Name 0,16..0,17>}>', str(f._all))
+        self.assertEqual('{a: b}', f._all[:1].copy().src)
+        self.assertEqual('{e: f}', f._all[-1:].copy().src)
+        self.assertEqual('{}', f._all[0:0].copy().src)
+
+        self.assertRaises(ValueError, lambda: f._all[1])
+        self.assertRaises(ValueError, f._all.__setitem__, 1, 'x')
+
+        f._all[1] = None
+
+        self.assertEqual('{a: b, e: f}', f.src)
+
+        # MatchMapping
+
+        f = FST('{1: a, 2: b, **c}', pattern)
+        self.assertEqual('<<MatchMapping ROOT 0,0..0,17>._all[0:3] {<Constant 0,1..0,2>: <MatchAs 0,4..0,5>, <Constant 0,7..0,8>: <MatchAs 0,10..0,11>, **c}>', str(f._all))
+        self.assertEqual('{1: a}', f._all[:1].copy().src)
+        self.assertEqual('{**c}', f._all[-1:].copy().src)
+        self.assertEqual('{2: b, **c}', f._all[-2:].copy().src)
+        self.assertEqual('{}', f._all[0:0].copy().src)
+
+        self.assertRaises(ValueError, lambda: f._all[0])
+        self.assertRaises(ValueError, f._all.__setitem__, 1, 'x')
+
+        f._all[1] = None
+
+        self.assertEqual('{1: a, **c}', f.src)
+
+        # Compare
+
+        f = FST('a < b > c')
+        self.assertEqual('<<Compare ROOT 0,0..0,9>._all[0:3] <Name 0,0..0,1> < <Name 0,4..0,5> > <Name 0,8..0,9>>', str(f._all))
+        self.assertEqual('a', f._all[:1].copy().src)
+        self.assertEqual('c', f._all[-1:].copy().src)
+        self.assertEqual('a < b', f._all[:2].copy().src)
+        self.assertEqual('b > c', f._all[-2:].copy().src)
+
+        self.assertRaises(ValueError, f._all[0:0].copy)
+
+        self.assertEqual('b', f._all[1].src)
+
+        f._all[1] = 'x'
+
+        self.assertEqual('a < x > c', f.src)
+
+        f._all[1] = None
+
+        self.assertEqual('a > c', f.src)
 
     @unittest.skipUnless(PYLT12, 'only valid for py < 3.12')
     def test_disallow_put_JoinedStr_pylt12(self):
