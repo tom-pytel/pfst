@@ -393,7 +393,7 @@ class FST:
         return self.parent is None
 
     @property
-    def root(self) -> FST:  # ROOT-AS-PROPERTY
+    def root(self) -> FST:  # NOT ROOT-AS-ATTRIBUTE
         """Root node of the tree this node belongs to."""
 
         try:

@@ -18,6 +18,7 @@ from .asttypes import (
     ASTS_EXPRISH,
     ASTS_STMTISH,
     ASTS_SCOPE_NAMED_OR_MOD,
+    ASTS_MAYBE_SINGLETON,
     AST,
     AsyncFor,
     AsyncFunctionDef,
@@ -465,16 +466,6 @@ def _params_offset(
     return _ParamsOffset(end_ln, col_offset, dln, dcol_offset)
 
 
-def _make_tree_fst(ast: AST, parent: fst.FST, pfield: astfield) -> fst.FST:
-    """Make `FST` node from `AST`, recreating possibly non-unique AST nodes."""
-
-    if not getattr(ast, 'f', None):  # if `.f` exists and points to an FST then this has already been done
-        if isinstance(ast, (expr_context, unaryop, operator, boolop, cmpop)):  # ast.parse() reuses simple objects, we need all objects to be unique
-            pfield.set(parent.a, ast := ast.__class__())
-
-    return fst.FST(ast, parent, pfield)
-
-
 def _multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln: int, end_col: int) -> list[int]:
     """Return the line numbers of a potentially multiline string `Constant` or f or t-string continuation lines (lines
     which should not be indented because their start is part of the string value because they follow a newline inside
@@ -573,18 +564,37 @@ def _reparse_docstr_Constants(self: fst.FST, docstr: bool | Literal['strict'] = 
 
 def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None) -> None:
     """Create tree of `FST` nodes, one for each AST node from root. Call only on root or with pre-made stack of nodes
-    to walk."""
+    to walk and make trees for individually."""
 
     if stack is None:
         stack = [self]
 
+    FST = fst.FST
+
     while stack:
-        for name, child in iter_fields((f := stack.pop()).a):
-            if isinstance(child, AST):
-                stack.append(_make_tree_fst(child, f, astfield(name)))
-            elif isinstance(child, list):
-                stack.extend(_make_tree_fst(a, f, astfield(name, idx))
-                             for idx, a in enumerate(child) if isinstance(a, AST))
+        parent = stack.pop()
+        parenta = parent.a
+
+        for field in parenta._fields:
+            if child := getattr(parenta, field, None):
+                if isinstance(child, AST):
+                    if not hasattr(child, 'f') and isinstance(child, ASTS_MAYBE_SINGLETON):  # if `.f` exists and points to an FST then this has already been done
+                        setattr(parenta, field, child := child.__class__())
+
+                    stack.append(FST(child, parent, astfield(field)))
+
+                elif isinstance(child, list):
+                    if field != 'ops':
+                        stack.extend(FST(c, parent, astfield(field, i))
+                                     for i, c in enumerate(child) if isinstance(c, AST))
+
+                    else:  # field == 'ops', this is the only list field (of Compare.ops) that can contain singleton ASTs
+                        for i, c in enumerate(child):
+                            if isinstance(c, AST):
+                                if not hasattr(c, 'f'):  # we know isisntance(c, cmpop)
+                                    child[i] = c = c.__class__()
+
+                                FST(c, parent, astfield(field, i))  # this just creates the FST and adds it to the child, we don't add to stack because we know it doesn't have children
 
 
 def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None) -> None:
@@ -602,9 +612,10 @@ def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None) -> None:
 
 
 def _unmake_fst_parents(self: fst.FST, self_: bool = False) -> None:
-    """Walk up parent list unmaking each parent along the way. This does not unmake the entire parent tree, just the
+    """Walk up parent list unmaking each parent along the way. This DOES NOT unmake the entire parent tree, just the
     parents directly above this node (and including `self` if `self_` is `True). Meant for when you know the parents are
-    just a direct succession like `expr` -> `Expr` -> `Module` with just the single `Expr` element in `Module`."""
+    just a direct succession like `expr` -> `Expr` -> `Module` with just the single `Expr` element in `Module` and NO
+    OTHER SIBLINGS!"""
 
     if self_:
         self.a.f = self.a = None
@@ -679,7 +690,7 @@ def _set_ctx(self: fst.FST, ctx: type[expr_context]) -> None:
         ) and not isinstance(a.ctx, ctx):
             a.ctx = child = ctx()
 
-            _make_tree_fst(child, a.f, _astfieldctx)
+            fst.FST(child, a.f, _astfieldctx)  # this just creates the FST and adds it to the child
 
             if is_seq:
                 stack.extend(a.elts)

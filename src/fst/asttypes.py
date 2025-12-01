@@ -302,6 +302,8 @@ ASTS_SCOPE_NAMED        = (FunctionDef, AsyncFunctionDef, ClassDef)
 ASTS_SCOPE_NAMED_OR_MOD = ASTS_SCOPE_NAMED + (mod,)
 ASTS_SCOPE_ANONYMOUS    = (Lambda, ListComp, SetComp, DictComp, GeneratorExp)
 
+ASTS_MAYBE_SINGLETON    = (expr_context, unaryop, operator, boolop, cmpop)  # these may be reused by ast.parse() in mutiple places in the tree
+
 
 class _slice(AST):
     """General non-AST-compatible slice of some `type[AST]` list field. This is not generally usable as an `AST` and
