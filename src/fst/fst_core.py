@@ -1529,9 +1529,17 @@ def _offset(
         stack = list(iter_child_nodes(self.a))
 
     lno = ln + 1
-    colo = (-col if col <= 0 else  # yes, -0 to not look up 0
-            (l := ls[ln]).c2b(min(col, len(l))) if ln < len(ls := self.root._lines) else 0x7fffffffffffffff)
+    colo = (-col  # yes, -0 to not look up 0
+            if col <= 0 else
+            (l := ls[ln]).c2b(min(col, len(l)))
+            if ln < len(ls := self.root._lines) else
+            0x7fffffffffffffff)
     fwd = dln > 0 or (not dln and dcol_offset >= 0)
+
+    fwd_or_head_is_not_False = fwd or head is not False
+    tail_is_None_and_head_and_fwd = tail is None and head and fwd
+    not_fwd_or_tail_is_not_False = not fwd or tail is not False
+    head_is_None_and_tail_and_not_fwd = head is None and tail and not fwd
 
     while stack:
         a = stack.pop()
@@ -1559,8 +1567,8 @@ def _offset(
 
             elif (
                 fend_colo > colo
-                or (tail and (fwd or head is not False or fcolo != fend_colo or flno != fend_lno))  # at (ln, col), moving tail allowed and not blocked by head?
-                or (tail is None and head and fwd and fcolo == fend_colo and flno == fend_lno)
+                or (tail and (fwd_or_head_is_not_False or fcolo != fend_colo or flno != fend_lno))  # at (ln, col), moving tail allowed and not blocked by head?
+                or (tail_is_None_and_head_and_fwd and fcolo == fend_colo and flno == fend_lno)
             ):  # allowed to be and being moved by head?
                 a.end_lineno = fend_lno + dln
                 a.end_col_offset = fend_colo + dcol_offset
@@ -1576,8 +1584,8 @@ def _offset(
                 or (
                     fcolo == colo
                     and (
-                        (head and (not fwd or tail is not False or fcolo != fend_colo or flno != fend_lno))  # at (ln, col), moving head allowed and not blocked by tail?
-                        or (head is None and tail and not fwd and fcolo == fend_colo and flno == fend_lno)
+                        (head and (not_fwd_or_tail_is_not_False or fcolo != fend_colo or flno != fend_lno))  # at (ln, col), moving head allowed and not blocked by tail?
+                        or (head_is_None_and_tail_and_not_fwd and fcolo == fend_colo and flno == fend_lno)
             ))):  # allowed to be and being moved by tail?
                 a.lineno = flno + dln
                 a.col_offset = fcolo + dcol_offset
