@@ -27,6 +27,7 @@ from .asttypes import (
     ASTS_SCOPE_NAMED,
     ASTS_SCOPE_NAMED_OR_MOD,
     ASTS_SCOPE_ANONYMOUS,
+    ASTS_MAYBE_DOCSTR,
     AST,
     Add,
     And,
@@ -664,7 +665,7 @@ class FST:
         """The docstring of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `Module`. `None` if
         not one of those nodes or has no docstring."""
 
-        if (isinstance(a := self.a, ASTS_SCOPE_NAMED_OR_MOD)
+        if (isinstance(a := self.a, ASTS_MAYBE_DOCSTR)
             and (b := a.body)
             and isinstance(b0 := b[0], Expr)
             and isinstance(v := b0.value, Constant)

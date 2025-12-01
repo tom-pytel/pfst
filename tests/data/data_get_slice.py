@@ -16033,31 +16033,31 @@ BoolOp - ROOT 0,0..10,0
    0] Name 'b' Load - 5,0..5,1
 '''),
 
-('', 1, 2, None, {'_verify_get': False, 'trivia': ('all+', 'all+')}, (None, r'''
-a
+('', 1, 2, None, {'_verify_get': False, 'trivia': (False, False), 'op_side': 'right'}, (None, r'''
+a or
 
 # pre pre
 
 # pre
-or b # line
+b # line
 # post
 
 # post post
 
 or c
 '''), r'''
-a
+a or
 
 # pre pre
 
 # pre
-or c
+c
 ''', r'''
-BoolOp - ROOT 0,0..5,4
+BoolOp - ROOT 0,0..5,1
   .op Or
   .values[2]
    0] Name 'a' Load - 0,0..0,1
-   1] Name 'c' Load - 5,3..5,4
+   1] Name 'c' Load - 5,0..5,1
 ''', r'''
 b # line
 # post
@@ -16072,7 +16072,7 @@ BoolOp - ROOT 0,0..5,0
    0] Name 'b' Load - 0,0..0,1
 '''),
 
-('', 1, 2, None, {'_verify_get': False, 'trivia': ('all+', 'all+')}, (None, r'''
+('', 1, 2, None, {'_verify_get': False, 'trivia': (False, False), 'op_side': 'right'}, (None, r'''
 a or
 
 # pre pre
@@ -16084,6 +16084,203 @@ b or # line
 # post post
 
 c
+'''), r'''
+a or
+
+# pre pre
+
+# pre
+# line
+# post
+
+# post post
+
+c
+''', r'''
+BoolOp - ROOT 0,0..10,1
+  .op Or
+  .values[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'c' Load - 10,0..10,1
+''',
+r'''b''', r'''
+BoolOp - ROOT 0,0..0,1
+  .op Or
+  .values[1]
+   0] Name 'b' Load - 0,0..0,1
+'''),
+
+('', 1, 2, None, {'_verify_get': False, 'trivia': (False, 'line'), 'op_side': 'right'}, (None, r'''
+a or
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+or c
+'''), r'''
+a or
+
+# pre pre
+
+# pre
+c
+''', r'''
+BoolOp - ROOT 0,0..5,1
+  .op Or
+  .values[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'c' Load - 5,0..5,1
+''', r'''
+b # line
+# post
+
+# post post
+
+
+''', r'''
+BoolOp - ROOT 0,0..5,0
+  .op Or
+  .values[1]
+   0] Name 'b' Load - 0,0..0,1
+'''),
+
+('', 1, 2, None, {'_verify_get': False, 'trivia': ('block', 'block'), 'op_side': 'right'}, (None, r'''
+a or
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+or c
+'''), r'''
+a or
+
+# pre pre
+
+c
+''', r'''
+BoolOp - ROOT 0,0..4,1
+  .op Or
+  .values[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'c' Load - 4,0..4,1
+''', r'''
+
+# pre
+b # line
+# post
+
+# post post
+
+
+''', r'''
+BoolOp - ROOT 0,0..7,0
+  .op Or
+  .values[1]
+   0] Name 'b' Load - 2,0..2,1
+'''),
+
+('', 1, 2, None, {'_verify_get': False, 'trivia': ('block+', 'block+'), 'op_side': 'right'}, (None, r'''
+a or
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+or c
+'''), r'''
+a or
+
+# pre pre
+c
+''', r'''
+BoolOp - ROOT 0,0..3,1
+  .op Or
+  .values[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'c' Load - 3,0..3,1
+''', r'''
+
+
+# pre
+b # line
+# post
+
+# post post
+
+
+''', r'''
+BoolOp - ROOT 0,0..8,0
+  .op Or
+  .values[1]
+   0] Name 'b' Load - 3,0..3,1
+'''),
+
+('', 1, 2, None, {'_verify_get': False, 'trivia': ('all', 'all'), 'op_side': 'right'}, (None, r'''
+a or
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+or c
+'''), r'''
+a or
+
+c
+''', r'''
+BoolOp - ROOT 0,0..2,1
+  .op Or
+  .values[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'c' Load - 2,0..2,1
+''', r'''
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+
+''', r'''
+BoolOp - ROOT 0,0..9,0
+  .op Or
+  .values[1]
+   0] Name 'b' Load - 4,0..4,1
+'''),
+
+('', 1, 2, None, {'_verify_get': False, 'trivia': ('all+', 'all+'), 'op_side': 'right'}, (None, r'''
+a or
+
+# pre pre
+
+# pre
+b # line
+# post
+
+# post post
+
+or c
 '''), r'''
 a or
 c
@@ -16636,6 +16833,43 @@ Compare - ROOT 0,0..0,1
   .left Name 'b' Load - 0,0..0,1
 '''),
 
+('', 1, 2, None, {'_verify_get': False, 'trivia': (False, False), 'op_side': 'right'}, (None, r'''
+a <
+
+# pre pre
+
+# pre
+b < # line
+# post
+
+# post post
+
+c
+'''), r'''
+a <
+
+# pre pre
+
+# pre
+# line
+# post
+
+# post post
+
+c
+''', r'''
+Compare - ROOT 0,0..10,1
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Lt - 0,2..0,3
+  .comparators[1]
+   0] Name 'c' Load - 10,0..10,1
+''',
+r'''b''', r'''
+Compare - ROOT 0,0..0,1
+  .left Name 'b' Load - 0,0..0,1
+'''),
+
 ('', 1, 2, None, {'_verify_get': False, 'trivia': (False, 'line'), 'op_side': 'right'}, (None, r'''
 a <
 
@@ -16783,45 +17017,6 @@ Compare - ROOT 0,0..8,0
 '''),
 
 ('', 1, 2, None, {'_verify_get': False, 'trivia': ('all+', 'all+'), 'op_side': 'right'}, (None, r'''
-a <
-
-# pre pre
-
-# pre
-b # line
-# post
-
-# post post
-
-< c
-'''), r'''
-a <
-c
-''', r'''
-Compare - ROOT 0,0..1,1
-  .left Name 'a' Load - 0,0..0,1
-  .ops[1]
-   0] Lt - 0,2..0,3
-  .comparators[1]
-   0] Name 'c' Load - 1,0..1,1
-''', r'''
-
-
-# pre pre
-
-# pre
-b # line
-# post
-
-# post post
-
-
-''', r'''
-Compare - ROOT 0,0..10,0
-  .left Name 'b' Load - 5,0..5,1
-'''),
-
-('', 1, 2, None, {'_verify_get': False, 'trivia': ('all+', 'all+'), 'op_side': 'right', 'pars': False}, (None, r'''
 a <
 
 # pre pre

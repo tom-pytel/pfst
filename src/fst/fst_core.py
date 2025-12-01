@@ -17,8 +17,7 @@ from . import fst
 from .asttypes import (
     ASTS_EXPRISH,
     ASTS_STMTISH,
-    ASTS_SCOPE_NAMED_OR_MOD,
-    ASTS_MAYBE_SINGLETON,
+    ASTS_MAYBE_DOCSTR,
     AST,
     AsyncFor,
     AsyncFunctionDef,
@@ -550,7 +549,7 @@ def _reparse_docstr_Constants(self: fst.FST, docstr: bool | Literal['strict'] = 
 
     elif docstr == 'strict':
         for a in walk(self.a):
-            if isinstance(a, ASTS_SCOPE_NAMED_OR_MOD):
+            if isinstance(a, ASTS_MAYBE_DOCSTR):
                 if ((body := a.body)
                     and isinstance(b0 := body[0], Expr)
                     and isinstance(v := b0.value, Constant)
@@ -578,8 +577,8 @@ def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None) -> None:
         for field in parenta._fields:
             if child := getattr(parenta, field, None):
                 if isinstance(child, AST):
-                    if not hasattr(child, 'f') and isinstance(child, ASTS_MAYBE_SINGLETON):  # if `.f` exists and points to an FST then this has already been done
-                        setattr(parenta, field, child := child.__class__())
+                    if not hasattr(child, 'f') and field in ('ctx', 'op'):  # if `.f` exists and points to an FST then this has already been done
+                        setattr(parenta, field, child := child.__class__())  # (expr_context, unaryop, operator, boolop, cmpop)  - the same object may be reused by ast.parse() in mutiple places in the tree, we need unique objects (cmpop done below for list field 'ops')
 
                     stack.append(FST(child, parent, astfield(field)))
 
@@ -1368,7 +1367,7 @@ def _get_indentable_lns(
                     or (
                         (grandparent := parent.parent)
                         and parent.pfield == ('body', 0)
-                        and isinstance(grandparent.a, ASTS_SCOPE_NAMED_OR_MOD)
+                        and isinstance(grandparent.a, ASTS_MAYBE_DOCSTR)
                         and parent.a is not docstr_strict_exclude
             ))):
                 lns.difference_update(_multiline_str_continuation_lns(lines, *f.loc))
