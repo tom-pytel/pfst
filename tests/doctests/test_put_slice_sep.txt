@@ -182,19 +182,19 @@ replace
 
 >>> new000 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
 ...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
-...              ['NEW'])
+...              ['NEW'], None)
 
 >>> new010 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
 ...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=0),
-...              ['NEW', ''])
+...              ['NEW', ''], None)
 
 >>> new100 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=2, col_offset=0, end_lineno=2, end_col_offset=3)],
 ...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=3),
-...              ['', 'NEW'])
+...              ['', 'NEW'], None)
 
 >>> new110 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=2, col_offset=0, end_lineno=2, end_col_offset=3)],
 ...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=3, end_col_offset=0),
-...              ['', 'NEW', ''])
+...              ['', 'NEW', ''], None)
 
 
 leading newlines
@@ -296,19 +296,19 @@ trailing newlines
 
 >>> new001 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
 ...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=4),
-...              ['NEW,'])
+...              ['NEW,'], None)
 
 >>> new011 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
 ...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=0),
-...              ['NEW,', ''])
+...              ['NEW,', ''], None)
 
 >>> new101 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=2, col_offset=0, end_lineno=2, end_col_offset=3)],
 ...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=4),
-...              ['', 'NEW,'])
+...              ['', 'NEW,'], None)
 
 >>> new111 = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=2, col_offset=0, end_lineno=2, end_col_offset=3)],
 ...                                         ctx=Load(), lineno=1, col_offset=0, end_lineno=3, end_col_offset=0),
-...              ['', 'NEW,', ''])
+...              ['', 'NEW,', ''], None)
 
 
 leading newlines
@@ -821,7 +821,7 @@ fix comment or line continuation backslash without trailing newline
 
 >>> new = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
 ...                                      ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
-...               ['NEW#'])
+...               ['NEW#'], None)
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a, b, c]
@@ -831,7 +831,7 @@ fix comment or line continuation backslash without trailing newline
 
 >>> new = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
 ...                                      ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
-...                ['NEW\\'])
+...                ['NEW\\'], None)
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a, b, c]
@@ -844,7 +844,7 @@ don't remove comma with stuff after it
 
 >>> new = FST(Tuple(elts=[Name(id='NEW', ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=3)],
 ...                                      ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=0),
-...               ['NEW, #', ''])
+...               ['NEW, #', ''], None)
 
 >>> print('\n'.join(repr(l) for l in test_replace(FST('''
 ... [a, b, c]

@@ -691,8 +691,8 @@ class FST:
     def __new__(
         cls,
         ast_or_src: AST | builtins.str | list[builtins.str] | None,
-        mode_or_lines_or_parent: FST | list[builtins.str] | Mode | None = None,
-        pfield: astfield | None = None,
+        mode: FST | list[builtins.str] | Mode | None = None,
+        pfield: astfield | Literal[False] | None = False,
         /,
         **kwargs,
     ) -> 'FST':
@@ -719,13 +719,13 @@ class FST:
         - `ast_or_src`: `AST` node for `FST` or source code in the form of a `str` or a list of lines. If an `AST` then
             will be processed differently depending on if creating child node, top level node or using this as a
             shortcut for a full `fromsrc()` or `fromast()`.
-        - `mode_or_lines_or_parent`: Parent node for this child node or lines for a root node creating a new tree. If
-            `pfield` is `None` and this is a shortcut to create a full tree from an `AST` node or source provided in
-            `ast_or_src`.
+        - `mode`: Is really `mode_or_lines_or_parent`. Parent node for this child node or lines for a root node creating
+            a new tree. If `pfield` is `False` then this is a shortcut to create a full tree from an `AST` node or
+            source provided in `ast_or_src`.
         - `pfield`: `astfield` indication position in parent of this node. If provided then creating a simple child node
-            and it is created with the `self.parent` set to `mode_or_lines_or_parent` node and `self.pfield` set to
-            this. If `None` then it means the creation of a full new `FST` tree and this is the root node with
-            `mode_or_lines_or_parent` providing the source.
+            and it is created with the `self.parent` set to `mode` node and `self.pfield` set to this. If `None` then it
+            means the creation of a full new `FST` tree and this is the root node with `mode` providing the source. If
+            `False` then this is a shortcut for `FST.fromast()` or `FST.fromsrc()` or `FST.new()`.
         - `kwargs`: Contextual parameters:
             - `from_`: If this is provided then it must be an `FST` node from which this node is being created. This
                 allows to copy parse parameters and already determined default indentation.
@@ -735,10 +735,12 @@ class FST:
                 then indentation will be inferred from source. Only valid when creating a root node.
             - `filename`, `type_comments` and `feature_version`: If creating from an `AST` or source only then these are
                 the parameteres passed to the respective `.new()`, `.fromsrc()` or `.fromast()` functions. Only valid
-                when `mode_or_lines_or_parent` and `pfield` are `None`.
+                when `mode` and `pfield` are `None`.
+            - `lcopy`: Whether to copy lines of source on root node create or just use what is passed in, which in this
+                case must be a list of `bistr` and this node takes ownership of the list.
         """
 
-        if pfield is None and not isinstance(mode_or_lines_or_parent, list):  # top level shortcut
+        if pfield is False:  # top level shortcut
             params = {k: v for k in ('filename', 'type_comments', 'feature_version')
                       if (v := kwargs.get(k, k)) is not k}  # k used as sentinel
             indent = None
@@ -749,12 +751,11 @@ class FST:
                 indent = from_root.indent
 
             if ast_or_src is None:
-                f = FST.new('exec' if mode_or_lines_or_parent is None else mode_or_lines_or_parent, **params)
+                f = FST.new('exec' if mode is None else mode, **params)
             elif isinstance(ast_or_src, AST):
-                f = FST.fromast(ast_or_src, mode_or_lines_or_parent, **params)
+                f = FST.fromast(ast_or_src, mode, **params)
             else:
-                f = FST.fromsrc(ast_or_src, 'all' if mode_or_lines_or_parent is None else mode_or_lines_or_parent,
-                                **params)
+                f = FST.fromsrc(ast_or_src, 'all' if mode is None else mode, **params)
 
             if indent is not None or (indent := kwargs.get('indent')) is not None:
                 f.indent = indent
@@ -773,8 +774,8 @@ class FST:
         self._cache = {}
 
         if pfield is not None:  # if this is not a root node then we are done
-            self.parent = mode_or_lines_or_parent
-            # self.root = mode_or_lines_or_parent.root  # ROOT-AS-ATTRIBUTE
+            self.parent = mode
+            # self.root = mode.root  # ROOT-AS-ATTRIBUTE
 
             return self
 
@@ -782,9 +783,7 @@ class FST:
 
         self.parent = None
         # self.root = self  # ROOT-AS-ATTRIBUTE
-        self._lines = ([bistr(s) for s in mode_or_lines_or_parent]
-                       if kwargs.get('lcopy', True) else
-                       mode_or_lines_or_parent)
+        self._lines = ([bistr(s) for s in mode] if kwargs.get('lcopy', True) else mode)
         self._serial = 0
 
         if from_ := kwargs.get('from_'):  # copy params from source tree
@@ -905,7 +904,7 @@ class FST:
         else:
             raise ValueError(f"invalid mode '{mode}' for blank FST")
 
-        return FST(ast, [src], parse_params=parse_params)
+        return FST(ast, [src], None, parse_params=parse_params)
 
     @staticmethod
     def fromsrc(
@@ -978,7 +977,7 @@ class FST:
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
         ast = parsex.parse(src, mode, parse_params)
 
-        return FST(ast, lines, parse_params=parse_params)
+        return FST(ast, lines, None, parse_params=parse_params)
 
     @staticmethod
     def fromast(
@@ -1061,7 +1060,7 @@ class FST:
             except WalkFail as exc:
                 raise ValueError('could not reparse ast identically') from exc
 
-        return FST(ast, lines, parse_params=parse_params, indent='    ')
+        return FST(ast, lines, None, parse_params=parse_params, indent='    ')
 
     @staticmethod
     def get_options() -> dict[builtins.str, Any]:
@@ -1732,7 +1731,7 @@ class FST:
         if parent := self.parent:
             return parent._get_one((pf := self.pfield).idx, pf.name, False, options)
 
-        return FST(copy_ast(self.a), self._lines[:], from_=self, lcopy=False)
+        return FST(copy_ast(self.a), self._lines[:], None, from_=self, lcopy=False)
 
     def cut(self, **options) -> FST:
         """Cut out this node to a new top-level tree (if possible), dedenting and fixing as necessary. Cannot cut root

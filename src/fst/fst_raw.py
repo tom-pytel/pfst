@@ -47,7 +47,7 @@ def _reparse_raw_base(
     Otherwise it will try this mode first, then all other parse modes as it is assumed to be a non-top level
     statementish thing being reparsed."""
 
-    copy_root = fst.FST(Pass(), copy_lines, lcopy=False)  # we don't need the ASTs here, just the lines
+    copy_root = fst.FST(Pass(), copy_lines, None, lcopy=False)  # we don't need the ASTs here, just the lines
 
     copy_root._put_src(new_lines, ln, col, end_ln, end_col)
 

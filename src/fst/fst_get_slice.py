@@ -687,7 +687,7 @@ def _get_slice_List_elts(
 
     if start == stop:
         return fst.FST(List(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
-                       ['[]'], from_=self)
+                       ['[]'], None, from_=self)
 
     locs = _locs_and_bound_get(self, start, stop, body, body, 1)
     asts = _cut_or_copy_asts(start, stop, 'elts', cut, body)
@@ -757,7 +757,7 @@ def _get_slice_Dict__all(
 
     if start == stop:
         return fst.FST(Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
-                       ['{}'], from_=self)
+                       ['{}'], None, from_=self)
 
     locs = _locs_and_bound_get(self, start, stop, body, body2, 1)
     asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'values', cut, body, body2)
@@ -832,8 +832,8 @@ def _get_slice_Assign_targets(
     len_slice = stop - start
 
     if not len_slice:
-        return fst.FST(_Assign_targets(targets=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''],
-                       from_=self)
+        return fst.FST(_Assign_targets(targets=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
+                       [''], None, from_=self)
 
     if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
         raise ValueError("cannot cut all Assign.targets without norm_self=False")
@@ -871,7 +871,8 @@ def _get_slice_With_AsyncWith_items(
     len_slice = stop - start
 
     if not len_slice:
-        return fst.FST(_withitems(items=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], from_=self)
+        return fst.FST(_withitems(items=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
+                       [''], None, from_=self)
 
     if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
         raise ValueError(f'cannot cut all {ast.__class__.__name__}.items without norm_self=False')
@@ -925,7 +926,8 @@ def _get_slice_Import_names(
     len_slice = stop - start
 
     if not len_slice:
-        return fst.FST(_aliases(names=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], from_=self)
+        return fst.FST(_aliases(names=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
+                       [''], None, from_=self)
 
     if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
         raise ValueError('cannot cut all Import.names without norm_self=False')
@@ -972,7 +974,8 @@ def _get_slice_ImportFrom_names(
     len_slice = stop - start
 
     if not len_slice:
-        return fst.FST(_aliases(names=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], from_=self)
+        return fst.FST(_aliases(names=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
+                       [''], None, from_=self)
 
     if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
         raise ValueError('cannot cut all ImportFrom.names without norm_self=False')
@@ -1172,7 +1175,7 @@ def _get_slice_Boolop_values(
             raise ValueError("cannot get empty slice from BoolOp without 'norm_get=False'")
 
         return fst.FST(BoolOp(op=ast.op.__class__(), values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
-                       [''], from_=self)
+                       [''], None, from_=self)
 
     if cut and len_slice == len_body and norm_self:
         raise ValueError("cannot cut all BoolOp.values without 'norm_self=False'")
@@ -1340,7 +1343,7 @@ def _get_slice_decorator_list(
 
     if not len_slice:
         return fst.FST(_decorator_list(decorator_list=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
-                       [''], from_=self)
+                       [''], None, from_=self)
 
     loc_first = self._loc_decorator(start)
     loc_last = loc_first if start == stop - 1 else self._loc_decorator(stop - 1)
@@ -1398,7 +1401,7 @@ def _get_slice_generators(
 
     if not len_slice:
         return fst.FST(_comprehensions(generators=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
-                       [''], from_=self)
+                       [''], None, from_=self)
 
     if not isinstance(ast, _comprehensions):
         if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
@@ -1436,7 +1439,7 @@ def _get_slice_comprehension_ifs(
 
     if not len_slice:
         return fst.FST(_comprehension_ifs(ifs=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
-                       [''], from_=self)
+                       [''], None, from_=self)
 
     loc_first = self._loc_comprehension_if(start)
     loc_last = loc_first if start == stop - 1 else self._loc_comprehension_if(stop - 1)
@@ -1469,7 +1472,7 @@ def _get_slice_MatchSequence_patterns(
 
     if start == stop:
         return fst.FST(MatchSequence(patterns=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
-                       ['[]'], from_=self)
+                       ['[]'], None, from_=self)
 
     delims = self._is_delimited_matchseq()
     locs = _locs_and_bound_get(self, start, stop, body, body, bool(delims))
@@ -1516,7 +1519,7 @@ def _get_slice_MatchMapping__all(
     if start == stop:
         return fst.FST(MatchMapping(keys=[], patterns=[], rest=None, lineno=1, col_offset=0, end_lineno=1,
                                     end_col_offset=2),
-                       ['{}'], from_=self)
+                       ['{}'], None, from_=self)
 
     if with_rest := (rest and stop == len_body):  # if slice includes rest then add it as temporary `**rest` node so it can be processed like the rest of the sequence
         _add_MatchMapping_rest_as_real_node(self)
@@ -1563,7 +1566,7 @@ def _get_slice_MatchOr_patterns(
             raise ValueError("cannot get empty slice from MatchOr without norm_get=False")
 
         return fst.FST(MatchOr(patterns=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
-                       [''], from_=self)
+                       [''], None, from_=self)
 
     if len_slice == 1 and get_norm == 'strict':
         raise ValueError("cannot get length 1 slice from MatchOr with norm_get='strict'")
@@ -1605,7 +1608,7 @@ def _get_slice_type_params(
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
-        return fst.FST(_type_params([], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], from_=self)
+        return fst.FST(_type_params([], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], None, from_=self)
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
@@ -1657,7 +1660,7 @@ def _get_slice__slice(
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
-        return fst.FST(kls([], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], from_=self)
+        return fst.FST(kls([], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], None, from_=self)
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 

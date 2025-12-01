@@ -6,7 +6,7 @@ This module contains functions which are imported as methods in the `FST` class 
 from __future__ import annotations
 
 import re
-from ast import literal_eval, iter_fields, iter_child_nodes, walk
+from ast import literal_eval, iter_child_nodes, walk
 from io import BytesIO
 from tokenize import tokenize as tokenize_tokenize, STRING
 from types import EllipsisType, TracebackType
@@ -2042,7 +2042,7 @@ def _make_fst_and_dedent(
         prefix_col_offset = len(prefix[-1].encode())
 
     lines = self.root._lines
-    fst_ = fst.FST(ast, lines, from_=self, lcopy=False)  # we use original lines for nodes offset calc before putting new lines
+    fst_ = fst.FST(ast, lines, None, from_=self, lcopy=False)  # we use original lines for nodes offset calc before putting new lines
 
     fst_._offset(copy_loc.ln, copy_loc.col,
                  prefix_extra_lns - copy_loc.ln,

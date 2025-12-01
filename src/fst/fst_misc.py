@@ -459,39 +459,39 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
 def new_empty_tuple(*, from_: fst.FST | None = None) -> fst.FST:
     ast = Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2)
 
-    return fst.FST(ast, ['()'], from_=from_)
+    return fst.FST(ast, ['()'], None, from_=from_)
 
 
 def new_empty_set_star(
     lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None, as_fst: bool = True
 ) -> fst.FST | AST:
-    src = ['{*()}']
+    lines = ['{*()}']
     ast = Set(elts=[Starred(value=Tuple(elts=[], ctx=Load(), lineno=lineno, col_offset=col_offset+2,
                                         end_lineno=lineno, end_col_offset=col_offset+4),
                             ctx=Load(),
                             lineno=lineno, col_offset=col_offset+1, end_lineno=lineno, end_col_offset=col_offset+4)],
               lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+5)
 
-    return fst.FST(ast, src, from_=from_) if as_fst else (ast, src)
+    return fst.FST(ast, lines, None, from_=from_) if as_fst else (ast, lines)
 
 
 def new_empty_set_call(
     lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None, as_fst: bool = True
 ) -> fst.FST:
-    src = ['set()']
+    lines = ['set()']
     ast = Call(func=Name(id='set', ctx=Load(),
                          lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+3),
                args=[], keywords=[],
                lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset+5)
 
-    return fst.FST(ast, src, from_=from_) if as_fst else (ast, src)
+    return fst.FST(ast, lines, None, from_=from_) if as_fst else (ast, lines)
 
 
 def new_empty_set_curlies(lineno: int = 1, col_offset: int = 0, *, from_: fst.FST | None = None) -> fst.FST | AST:
     ast = Set(elts=[], lineno=lineno, col_offset=col_offset, end_lineno=lineno,
               end_col_offset=col_offset + 2)
 
-    return fst.FST(ast, ['{}'], from_=from_)
+    return fst.FST(ast, ['{}'], None, from_=from_)
 
 
 def leading_trivia(

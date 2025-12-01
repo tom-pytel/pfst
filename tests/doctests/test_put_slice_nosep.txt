@@ -136,7 +136,7 @@ replace
 ...
 ...     return FST(Tuple(elts=f.a.generators, ctx=Load(), lineno=1, col_offset=0, \
 ...                      end_lineno=len(ls), end_col_offset=len(ls[-1])),
-...                ls, lcopy=False)
+...                ls, None, lcopy=False)
 
 >>> def test_rep_gens(fst_, start, stop, new, trivia=None):
 ...     body = fst_.a.generators

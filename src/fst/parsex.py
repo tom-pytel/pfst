@@ -876,7 +876,7 @@ def parse__match_cases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if not (cases := ast.cases[1:]):
         return _match_cases(cases=[], **_astloc_from_src(src, 1))
 
-    fst_ = fst.FST(ast, lines, parse_params=parse_params, lcopy=False)
+    fst_ = fst.FST(ast, lines, None, parse_params=parse_params, lcopy=False)
     lns = fst_._get_indentable_lns(2, docstr=False)
 
     if len(lns) != len(lines) - 2:  # if there are multiline strings then we need to dedent them and reparse, because of f-strings, TODO: optimize out second reparse if no f-strings
@@ -888,7 +888,7 @@ def parse__match_cases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             lines[ln] = bistr(lines[ln][1:])
 
         ast = _ast_parse1('\n'.join(lines), parse_params)
-        fst_ = fst.FST(ast, lines, parse_params=parse_params, lcopy=False)
+        fst_ = fst.FST(ast, lines, None, parse_params=parse_params, lcopy=False)
 
     a0 = cases[0]
     an = cases[-1]

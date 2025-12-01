@@ -177,7 +177,7 @@ def _coerce_as__expr_arglikes(
     ast_ = Tuple(elts=[ast_], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                  end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
 def _coerce_as__Assign_targets(
@@ -194,7 +194,7 @@ def _coerce_as__Assign_targets(
     ast_ = _Assign_targets(targets=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                            end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
 def _coerce_as__decorator_list(
@@ -208,7 +208,7 @@ def _coerce_as__decorator_list(
     ast_ = _decorator_list(decorator_list=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                            end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
 def _coerce_as__comprehensions(
@@ -218,7 +218,7 @@ def _coerce_as__comprehensions(
     ast_ = _comprehensions(generators=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                            end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
 def _coerce_as__comprehension_ifs(
@@ -232,7 +232,7 @@ def _coerce_as__comprehension_ifs(
     ast_ = _comprehension_ifs(ifs=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                               end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
 def _coerce_as_alias(
@@ -260,7 +260,7 @@ def _coerce_as_alias(
     ast_ = alias(name=name, lineno=ast_.lineno, col_offset=ast_.col_offset, end_lineno=ast_.end_lineno,
                  end_col_offset=ast_.end_col_offset)
 
-    return fst.FST(ast_, fst_._lines, from_=fst_, lcopy=False)
+    return fst.FST(ast_, fst_._lines, None, from_=fst_, lcopy=False)
 
 
 def _coerce_as__aliases(
@@ -270,7 +270,7 @@ def _coerce_as__aliases(
     ast_ = _aliases(names=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                     end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
 _coerce_as__Import_name = _coerce_as_alias
@@ -283,7 +283,7 @@ def _coerce_as__Import_names(
     ast_ = _aliases(names=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                     end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
 def _coerce_as__ImportFrom_name(
@@ -301,7 +301,7 @@ def _coerce_as__ImportFrom_name(
     ast_ = alias(name=ast_.id, lineno=ast_.lineno, col_offset=ast_.col_offset, end_lineno=ast_.end_lineno,
                  end_col_offset=ast_.end_col_offset)
 
-    return fst.FST(ast_, fst_._lines, from_=fst_, lcopy=False)
+    return fst.FST(ast_, fst_._lines, None, from_=fst_, lcopy=False)
 
 
 def _coerce_as__ImportFrom_names(
@@ -311,7 +311,7 @@ def _coerce_as__ImportFrom_names(
     ast_ = _aliases(names=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                     end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
 def _coerce_as_withitem(
@@ -320,7 +320,7 @@ def _coerce_as_withitem(
     fst_ = code_as_expr(code, parse_params, sanitize=sanitize)
     ast_ = withitem(context_expr=fst_.a)
 
-    return fst.FST(ast_, fst_._lines, from_=fst_, lcopy=False)
+    return fst.FST(ast_, fst_._lines, None, from_=fst_, lcopy=False)
 
 
 def _coerce_as__withitems(
@@ -330,7 +330,7 @@ def _coerce_as__withitems(
     ast_ = _withitems(items=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                       end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
 def _coerce_as__type_params(
@@ -340,7 +340,7 @@ def _coerce_as__type_params(
     ast_ = _type_params(type_params=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                         end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
 def _code_as(
@@ -408,7 +408,7 @@ def _code_as(
             if not isinstance(ast, ast_type):  # sanity check, parse func should guarantee what we want but maybe in future is used to get a specific subset of what parse func returns
                 raise ParseError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
 
-        code = fst.FST(ast, lines, parse_params=parse_params)
+        code = fst.FST(ast, lines, None, parse_params=parse_params)
 
     return code._sanitize() if sanitize else code
 
@@ -440,7 +440,7 @@ def _code_as_expr(
         if ast is not codea:
             ast.f._unmake_fst_parents()
 
-            code = fst.FST(ast, code._lines, from_=code, lcopy=False)
+            code = fst.FST(ast, code._lines, None, from_=code, lcopy=False)
 
         if isinstance(ast, Slice):
             if not allow_Slice:
@@ -471,7 +471,7 @@ def _code_as_expr(
         if is_ast and ast.__class__ is not code.__class__:
             raise ParseError(f'could not reparse AST to {code.__class__.__name__}, got {ast.__class__.__name__}')
 
-        code = fst.FST(ast, lines, parse_params=parse_params)
+        code = fst.FST(ast, lines, None, parse_params=parse_params)
 
     return code._sanitize() if sanitize else code
 
@@ -496,7 +496,7 @@ def _code_as_op(
         if not isinstance(code, op_type):
             raise NodeError(f'expecting {op_type.__name__}, got {code.__class__.__name__}', rawable=True)
 
-        return fst.FST(code.__class__(), [OPCLS2STR[code.__class__]], parse_params=parse_params)  # don't use same AST as was passed in
+        return fst.FST(code.__class__(), [OPCLS2STR[code.__class__]], None, parse_params=parse_params)  # don't use same AST as was passed in
 
     else:
         if isinstance(code, list):
@@ -504,7 +504,7 @@ def _code_as_op(
         else:  # str
             lines = (src := code).split('\n')
 
-        code = fst.FST(parse(src, parse_params), lines, parse_params=parse_params)
+        code = fst.FST(parse(src, parse_params), lines, None, parse_params=parse_params)
 
     return code._sanitize() if sanitize else code
 
@@ -552,7 +552,7 @@ def code_as_all(
             else:  # str
                 lines = code.split('\n')
 
-        code = fst.FST(parse(code, mode), lines, parse_params=parse_params)
+        code = fst.FST(parse(code, mode), lines, None, parse_params=parse_params)
 
     return code._sanitize() if sanitize else code
 
@@ -581,7 +581,7 @@ def code_as_stmts(
                          end_lineno=codea.end_lineno, end_col_offset=codea.end_col_offset)
 
         if isinstance(codea, stmt):
-            return fst.FST(Module(body=[codea], type_ignores=[]), code._lines, from_=code, lcopy=False)
+            return fst.FST(Module(body=[codea], type_ignores=[]), code._lines, None, from_=code, lcopy=False)
 
         if isinstance(codea, Module):
             if all(isinstance(a, stmt) for a in codea.body):
@@ -593,7 +593,7 @@ def code_as_stmts(
         if isinstance(codea, Interactive):
             code._unmake_fst_parents()
 
-            return fst.FST(Module(body=code.body, type_ignores=[]), code._lines, from_=code, lcopy=False)
+            return fst.FST(Module(body=code.body, type_ignores=[]), code._lines, None, from_=code, lcopy=False)
 
         raise NodeError(f'expecting zero or more stmts, got {codea.__class__.__name__}', rawable=True)
 
@@ -609,7 +609,7 @@ def code_as_stmts(
     else:  # str
         lines = code.split('\n')
 
-    return fst.FST(parse_stmts(code, parse_params), lines, parse_params=parse_params)
+    return fst.FST(parse_stmts(code, parse_params), lines, None, parse_params=parse_params)
 
 
 def code_as__ExceptHandlers(
@@ -639,7 +639,7 @@ def code_as__ExceptHandlers(
 
         if isinstance(codea, ExceptHandler):
             code = fst.FST(_ExceptHandlers(handlers=[codea], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
-                                           end_col_offset=ls[-1].lenbytes), ls, from_=code, lcopy=False)
+                                           end_col_offset=ls[-1].lenbytes), ls, None, from_=code, lcopy=False)
 
         elif not isinstance(codea, _ExceptHandlers):
             raise NodeError(f'expecting zero or more ExceptHandlers, got {codea.__class__.__name__}')#, rawable=True)
@@ -668,7 +668,7 @@ def code_as__ExceptHandlers(
         else:  # str
             lines = code.split('\n')
 
-        code = fst.FST(parse__ExceptHandlers(code, parse_params), lines, parse_params=parse_params)
+        code = fst.FST(parse__ExceptHandlers(code, parse_params), lines, None, parse_params=parse_params)
 
     if (handlers := code.a.handlers) and is_trystar is not None:
         if is_trystar != handlers[0].f._is_except_star():
@@ -694,7 +694,7 @@ def code_as__match_cases(
 
         if isinstance(codea, match_case):
             return fst.FST(_match_cases(cases=[codea], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
-                                        end_col_offset=ls[-1].lenbytes), ls, from_=code, lcopy=False)
+                                        end_col_offset=ls[-1].lenbytes), ls, None, from_=code, lcopy=False)
 
         if not isinstance(codea, _match_cases):
             raise NodeError(f'expecting zero or more match_cases, got {codea.__class__.__name__}', rawable=True)
@@ -713,7 +713,7 @@ def code_as__match_cases(
     else:  # str
         lines = code.split('\n')
 
-    return fst.FST(parse__match_cases(code, parse_params), lines, parse_params=parse_params)
+    return fst.FST(parse__match_cases(code, parse_params), lines, None, parse_params=parse_params)
 
 
 def code_as_expr(
@@ -1014,7 +1014,7 @@ def code_as_pattern(
                 raise NodeError('expecting valid pattern, got zero-length MatchOr')
 
             if len_pattern == 1:  # a length 1 MatchOr can just return its single element pattern
-                return fst.FST(a.patterns[0], fst_._lines, from_=fst_, lcopy=False)
+                return fst.FST(a.patterns[0], fst_._lines, None, from_=fst_, lcopy=False)
 
     return fst_
 

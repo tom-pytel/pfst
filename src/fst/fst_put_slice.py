@@ -315,7 +315,7 @@ def _code_to_slice_expr(
     ast_ = Tuple(elts=[fst_.a], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),  # fst_.a because may have changed in Set processing
                  end_col_offset=ls[-1].lenbytes)  # Tuple as temporary container because it is valid target if checked in validate and allows _is_enclosed_or_line() check without delimiters to check content
 
-    return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
 def _code_to_slice_key_and_other(
@@ -402,7 +402,7 @@ def _code_to_slice_BoolOp_values(
     ast_ = BoolOp(op=op_type(), values=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                   end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
 def _code_to_slice_Compare__all(
@@ -444,7 +444,7 @@ def _code_to_slice_Compare__all(
     ast_ = Compare(left=ast_, ops=[], comparators=[], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                    end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
 def _code_to_slice_MatchSequence(
@@ -462,7 +462,7 @@ def _code_to_slice_MatchSequence(
         ast_ = MatchSequence(patterns=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                              end_col_offset=ls[-1].lenbytes)
 
-        return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+        return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
     ast_ = fst_.a
 
@@ -535,7 +535,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
     ast_ = MatchOr(patterns=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                    end_col_offset=ls[-1].lenbytes)
 
-    return fst.FST(ast_, ls, from_=fst_, lcopy=False)
+    return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
 def _code_to_slice__special(

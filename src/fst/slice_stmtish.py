@@ -982,11 +982,11 @@ def _get_slice_stmtish_old(
 
     if start == stop:
         if field == 'handlers':
-            return fst.FST(_ExceptHandlers([], 1, 0, 1, 0), [''], from_=self)
+            return fst.FST(_ExceptHandlers([], 1, 0, 1, 0), [''], None, from_=self)
         elif field == 'cases':
-            return fst.FST(_match_cases([], 1, 0, 1, 0), [''], from_=self)
+            return fst.FST(_match_cases([], 1, 0, 1, 0), [''], None, from_=self)
 
-        return fst.FST(Module(body=[], type_ignores=[]), [''], from_=self)
+        return fst.FST(Module(body=[], type_ignores=[]), [''], None, from_=self)
 
     if cut and not start and stop == len(body) and not _can_del_all(self, field, options):
         raise ValueError(f'cannot cut all elements from {ast.__class__.__name__}.{field} without norm_self=False')

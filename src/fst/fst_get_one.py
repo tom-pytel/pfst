@@ -260,7 +260,7 @@ def _get_one_Compare(self: fst.FST, idx: int | None, field: str, cut: bool, opti
 def _get_one_ctx(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
 
-    return fst.FST(child.__class__(), [''], from_=self)
+    return fst.FST(child.__class__(), [''], None, from_=self)
 
 
 def _get_one_identifier(
@@ -283,13 +283,16 @@ def _get_one_arguments(self: fst.FST, idx: int | None, field: str, cut: bool, op
 
     _validate_get(self, idx, field)
 
-    return fst.FST(arguments(posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[]), [''], from_=self)
+    return fst.FST(arguments(posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[]),
+                   [''], None, from_=self)
 
 
 def _get_one_BoolOp_op(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
 
-    return fst.FST(And(), ['and'], from_=self) if isinstance(child, And) else fst.FST(Or(), ['or'], from_=self)  # just create new ones because they can be in multiple places
+    return (fst.FST(And(), ['and'], None, from_=self)
+            if isinstance(child, And) else
+            fst.FST(Or(), ['or'], None, from_=self))  # just create new ones because they can be in multiple places
 
 
 def _get_one_invalid_virtual(
@@ -327,8 +330,8 @@ def _get_one_conversion(
 
     conv = chr(child)
 
-    return fst.FST(Constant(value=conv, lineno=1, col_offset=0, end_lineno=1, end_col_offset=3), [f"'{conv}'"],
-                   from_=self)
+    return fst.FST(Constant(value=conv, lineno=1, col_offset=0, end_lineno=1, end_col_offset=3),
+                   [f"'{conv}'"], None, from_=self)
 
 
 @pyver(lt=12)
@@ -460,7 +463,7 @@ def _get_one_JoinedStr_TemplateStr_values(
         ret = fst.FST((JoinedStr if typ == 'f' else TemplateStr)
                       (values=[fmt.a], lineno=fmt.lineno, col_offset=fmt.col_offset - lprefix,
                        end_lineno=fmt.end_lineno, end_col_offset=fmt.end_col_offset + lprefix - 1),
-                      fmt._lines, from_=self, lcopy=False)
+                      fmt._lines, None, from_=self, lcopy=False)
 
     return ret
 
