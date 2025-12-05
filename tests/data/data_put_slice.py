@@ -27454,6 +27454,153 @@ BoolOp - ROOT 0,1..4,1
    2] Name 'b' Load - 2,0..2,1
    3] Name 'c' Load - 4,0..4,1
 '''),
+
+('body[0].value', 1, 2, None, {}, (None, r'''
+if 1:
+    a = (a
+         and b
+         and c
+    )
+'''), (None, r'''
+
+and d
+and e
+
+'''), r'''
+if 1:
+    a = (a
+         and d
+         and e
+         and c
+    )
+''',
+r'''**SyntaxError("unexpected code after boolop, 'd'")**''', r'''
+If - ROOT 0,0..5,5
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] Assign - 1,4..5,5
+     .targets[1]
+      0] Name 'a' Store - 1,4..1,5
+     .value BoolOp - 1,9..4,14
+       .op And
+       .values[4]
+        0] Name 'a' Load - 1,9..1,10
+        1] Name 'd' Load - 2,13..2,14
+        2] Name 'e' Load - 3,13..3,14
+        3] Name 'c' Load - 4,13..4,14
+'''),
+
+('body[0].value', 1, 2, None, {}, (None, r'''
+if 1:
+    a = (a
+         and b
+         and c
+    )
+'''), (None, r'''
+
+d and
+e and
+
+'''), r'''
+if 1:
+    a = (a
+         and
+         d and
+         e and
+         c
+    )
+''',
+r'''**ParseError('invalid syntax')**''', r'''
+If - ROOT 0,0..6,5
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] Assign - 1,4..6,5
+     .targets[1]
+      0] Name 'a' Store - 1,4..1,5
+     .value BoolOp - 1,9..5,10
+       .op And
+       .values[4]
+        0] Name 'a' Load - 1,9..1,10
+        1] Name 'd' Load - 3,9..3,10
+        2] Name 'e' Load - 4,9..4,10
+        3] Name 'c' Load - 5,9..5,10
+'''),
+
+('body[0].value', 1, 2, None, {}, (None, r'''
+if 1:
+    a = (a and
+         b and
+         c
+    )
+'''), (None, r'''
+
+and d
+and e
+
+'''), r'''
+if 1:
+    a = (a
+         and d
+         and e
+         and
+         c
+    )
+''',
+r'''**SyntaxError("unexpected code after boolop, 'd'")**''', r'''
+If - ROOT 0,0..6,5
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] Assign - 1,4..6,5
+     .targets[1]
+      0] Name 'a' Store - 1,4..1,5
+     .value BoolOp - 1,9..5,10
+       .op And
+       .values[4]
+        0] Name 'a' Load - 1,9..1,10
+        1] Name 'd' Load - 2,13..2,14
+        2] Name 'e' Load - 3,13..3,14
+        3] Name 'c' Load - 5,9..5,10
+'''),
+
+('body[0].value', 1, 2, None, {}, (None, r'''
+if 1:
+    a = (a and
+         b and
+         c
+    )
+'''), (None, r'''
+
+d and
+e and
+
+'''), r'''
+if 1:
+    a = (a and
+         d and
+         e and
+         c
+    )
+''',
+r'''**ParseError('invalid syntax')**''', r'''
+If - ROOT 0,0..5,5
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] Assign - 1,4..5,5
+     .targets[1]
+      0] Name 'a' Store - 1,4..1,5
+     .value BoolOp - 1,9..4,10
+       .op And
+       .values[4]
+        0] Name 'a' Load - 1,9..1,10
+        1] Name 'd' Load - 2,9..2,10
+        2] Name 'e' Load - 3,9..3,10
+        3] Name 'c' Load - 4,9..4,10
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''a or b or c'''), (None,
+r'''x or'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
 ],
 
 'Compare__all': [  # ................................................................................
@@ -29004,6 +29151,165 @@ Compare - ROOT 0,1..6,1
    1] Name 'b' Load - 4,0..4,1
    2] Name 'c' Load - 6,0..6,1
 '''),
+
+('body[0].value', 1, 2, None, {}, (None, r'''
+if 1:
+    a = (a
+         < b
+         > c
+    )
+'''), (None, r'''
+
+== d
+!= e
+
+'''), r'''
+if 1:
+    a = (a
+         == d
+         != e
+         > c
+    )
+''',
+r'''**SyntaxError("unexpected code after cmpop, 'd'")**''', r'''
+If - ROOT 0,0..5,5
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] Assign - 1,4..5,5
+     .targets[1]
+      0] Name 'a' Store - 1,4..1,5
+     .value Compare - 1,9..4,12
+       .left Name 'a' Load - 1,9..1,10
+       .ops[3]
+        0] Eq - 2,9..2,11
+        1] NotEq - 3,9..3,11
+        2] Gt - 4,9..4,10
+       .comparators[3]
+        0] Name 'd' Load - 2,12..2,13
+        1] Name 'e' Load - 3,12..3,13
+        2] Name 'c' Load - 4,11..4,12
+'''),
+
+('body[0].value', 1, 2, None, {}, (None, r'''
+if 1:
+    a = (a
+         < b
+         > c
+    )
+'''), (None, r'''
+
+d ==
+e !=
+
+'''), r'''
+if 1:
+    a = (a
+         <
+         d ==
+         e !=
+         c
+    )
+''',
+r'''**ParseError('invalid syntax')**''', r'''
+If - ROOT 0,0..6,5
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] Assign - 1,4..6,5
+     .targets[1]
+      0] Name 'a' Store - 1,4..1,5
+     .value Compare - 1,9..5,10
+       .left Name 'a' Load - 1,9..1,10
+       .ops[3]
+        0] Lt - 2,9..2,10
+        1] Eq - 3,11..3,13
+        2] NotEq - 4,11..4,13
+       .comparators[3]
+        0] Name 'd' Load - 3,9..3,10
+        1] Name 'e' Load - 4,9..4,10
+        2] Name 'c' Load - 5,9..5,10
+'''),
+
+('body[0].value', 1, 2, None, {}, (None, r'''
+if 1:
+    a = (a <
+         b >
+         c
+    )
+'''), (None, r'''
+
+== d
+!= e
+
+'''), r'''
+if 1:
+    a = (a
+         == d
+         != e
+         >
+         c
+    )
+''',
+r'''**SyntaxError("unexpected code after cmpop, 'd'")**''', r'''
+If - ROOT 0,0..6,5
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] Assign - 1,4..6,5
+     .targets[1]
+      0] Name 'a' Store - 1,4..1,5
+     .value Compare - 1,9..5,10
+       .left Name 'a' Load - 1,9..1,10
+       .ops[3]
+        0] Eq - 2,9..2,11
+        1] NotEq - 3,9..3,11
+        2] Gt - 4,9..4,10
+       .comparators[3]
+        0] Name 'd' Load - 2,12..2,13
+        1] Name 'e' Load - 3,12..3,13
+        2] Name 'c' Load - 5,9..5,10
+'''),
+
+('body[0].value', 1, 2, None, {}, (None, r'''
+if 1:
+    a = (a <
+         b >
+         c
+    )
+'''), (None, r'''
+
+d ==
+e !=
+
+'''), r'''
+if 1:
+    a = (a <
+         d ==
+         e !=
+         c
+    )
+''',
+r'''**ParseError('invalid syntax')**''', r'''
+If - ROOT 0,0..5,5
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] Assign - 1,4..5,5
+     .targets[1]
+      0] Name 'a' Store - 1,4..1,5
+     .value Compare - 1,9..4,10
+       .left Name 'a' Load - 1,9..1,10
+       .ops[3]
+        0] Lt - 1,11..1,12
+        1] Eq - 2,11..2,13
+        2] NotEq - 3,11..3,13
+       .comparators[3]
+        0] Name 'd' Load - 2,9..2,10
+        1] Name 'e' Load - 3,9..3,10
+        2] Name 'c' Load - 4,9..4,10
+'''),
+
+('', 1, 2, None, {'one': True}, (None,
+r'''a < b > c'''), (None,
+r'''x or'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
 ],
 
 'Call_args': [  # ................................................................................

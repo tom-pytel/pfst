@@ -1,6 +1,7 @@
 """Ugly, super-hacky standalone runnable module of fuzzers, mostly meant for debugging `fst` itself."""
 
 import argparse
+import gc
 import os
 import sys
 import sysconfig
@@ -1061,6 +1062,8 @@ class Fuzzy:
             for fnm, fst in self.iter_pys():
                 seed(self.rnd_seed)
 
+                gc.collect()
+
                 self.fuzz_one(fst, fnm)
 
         except:  # Exception:
@@ -1076,6 +1079,25 @@ class Fuzzy:
 
     def fuzz_one(self, fst: FST, fnm: str):
         pass
+
+    def check_abort(self) -> bool:
+        """Check memory usage and return abort true if too large. Because random edits can explode file sizes."""
+
+        try:
+            with open("/proc/self/status") as f:
+                for line in f:
+                    if line.startswith("VmRSS:"):
+                        if (l := len(s := line.split()[1])) > 6 or (l == 6 and s > '500000'):
+                            print('\nMemory!')
+
+                            return True
+
+                        break
+
+        except Exception:
+            pass
+
+        return False
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -1781,6 +1803,9 @@ class ReconcileRnd(Fuzzy):
             # print(fst.src)
             # print('-'*120)
             for count in range(self.batch or 100):
+                if self.check_abort():
+                    break
+
                 self.master_parts = FSTParts(real_master)
                 master = real_master.copy()
 
@@ -1972,6 +1997,9 @@ class SliceStmtish(Fuzzy):
 
             try:
                 for count in range(self.batch or 1000):
+                    if self.check_abort():
+                        break
+
                     try:
                         if not (count % 20):
                             sys.stdout.write('.'); sys.stdout.flush()
@@ -2247,7 +2275,7 @@ class SliceExprish(Fuzzy):
             'ClassDef_bases': self.Bucket('bases', 'elts', 0, 0, True, FST('class tmp(): pass')),
             'and':            self.Bucket('values', None, 2, 2, True, FST('a and b', BoolOp)),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
             'or':             self.Bucket('values', None, 2, 2, True, FST('a or b', BoolOp)),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
-            Compare:          self.Bucket(None, None, 2, 2, False, FST('a < b', Compare)),
+            Compare:          self.Bucket(None, None, 2, 2, True, FST('a < b', Compare)),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
             'Call_args':      self.Bucket('args', 'elts', 0, 0, True, FST('call()')),
             'generators':     self.Bucket('generators', None, 1, 0, False, FST('', '_comprehensions')),
             comprehension:    self.Bucket('ifs', None, 0, 0, False, FST('', '_comprehension_ifs')),
@@ -2279,6 +2307,9 @@ class SliceExprish(Fuzzy):
 
         try:
             for count in range(self.batch or 1000):
+                if self.check_abort():
+                    break
+
                 try:
                     if not (count % 20):
                         sys.stdout.write('.'); sys.stdout.flush()

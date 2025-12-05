@@ -443,6 +443,9 @@ def _code_to_slice_BoolOp_values_maybe_dangling(
         fst_ = _code_to_slice_BoolOp_values(self, code, one, options)
 
     except SyntaxError:  # maybe a dangling op in source, if conditions allow then check for this
+        if one:
+            raise
+
         if not (is_first and is_last) and ((is_str := isinstance(code, str)) or isinstance(code, list)):  # can only be present if replacement is not of entire BoolOp from first to last
             if is_str:
                 lines = (src := code).split('\n')
@@ -579,6 +582,9 @@ def _code_to_slice_Compare__all_maybe_dangling(
         fst_ = _code_to_slice_Compare__all(self, code, one, options)
 
     except SyntaxError:  # maybe a dangling op in source, if conditions allow then check for this
+        if one:
+            raise
+
         if not (is_first and is_last) and ((is_str := isinstance(code, str)) or isinstance(code, list)):  # can only be present if replacement is not of entire Compare from first to last
             if is_str:
                 lines = (src := code).split('\n')
@@ -614,107 +620,117 @@ def _code_to_slice_Compare__all_maybe_dangling(
     if not fst_:
         return None, op_side_left
 
-    if is_ins:  # if is insert then a dangling operator MUST be added from a non-global `op` option which must be present, op_side_left will be either True or False here
-        if not (op := options.get('op')):
+    if op_side_left is None:
+        return fst_, None
+
+    if not (op := options.get('op')):
+        if is_ins:  # if is insert then a dangling operator MUST be added from a non-global `op` option which must be present, op_side_left will be either True or False in that case
             raise ValueError("insertion to Compare requires and 'op' extra operator to insert")
 
-        if isinstance(op, str):
-            op_lines = op.split('\n')
-            op_ast = parse_cmpop(op)
+        return fst_, None
 
-        elif isinstance(op, cmpop):
-            op_lines = [OPCLS2STR[op_cls := op.__class__]]
-            op_ast = op_cls()
+    if isinstance(op, str):
+        op_lines = op.split('\n')
+        op_ast = parse_cmpop(op)
 
-        elif isinstance(op, fst.FST):
-            if not op.is_root:
-                raise ValueError("expecting root node for 'op' option")
+    elif isinstance(op, cmpop):
+        op_lines = [OPCLS2STR[op_cls := op.__class__]]
+        op_ast = op_cls()
 
-            op_lines = op._lines
-            op_ast = op.a  # this is fine like this and no unmake because it is just reset in FST() below
+    elif isinstance(op, fst.FST):
+        if not op.is_root:
+            raise ValueError("expecting root node for 'op' option")
 
-            if not isinstance(op_ast, cmpop):
-                raise ValueError(f"expecting cmpop for 'op' option, got {op_ast.__class__.__name__}")
+        op_lines = op._lines
+        op_ast = op.a  # this is fine like this and no unmake because it is just reset in FST() below
 
-        elif isinstance(op, list):
-            op_lines = op
-            op_ast = parse_cmpop('\n'.join(op))
+        if not isinstance(op_ast, cmpop):
+            raise NodeError(f"expecting cmpop for 'op' option, got {op_ast.__class__.__name__}")
 
-        elif isinstance(op, type) and issubclass(op, cmpop):
+    elif isinstance(op, list):
+        op_lines = op
+        op_ast = parse_cmpop('\n'.join(op))
+
+    elif isinstance(op, type):
+        if issubclass(op, cmpop):
             op_lines = [OPCLS2STR[op]]
             op_ast = op()
 
         else:
-            raise ValueError(f"expecting cmpop source, AST, FST or AST type for 'op' option, got {op.__class__.__qualname__}")
+            raise (NodeError if issubclass(op, AST) else ValueError)(
+                    "expecting cmpop source, AST, FST or AST type for 'op' option, "
+                    f"got {op.__qualname__}")
 
-        ast_ = fst_.a
-        ops = ast_.ops
-        comparators = ast_.comparators
-        idx = len(ops)
+    else:
+        raise ValueError("expecting cmpop source, AST, FST or AST type for 'op' option, "
+                        f"got {op.__class__.__qualname__}")
 
-        if op_side_left:
-            left = ast_.left
-            left_ln, left_col, _, _ = left.f.pars()
+    ast_ = fst_.a
+    ops = ast_.ops
+    comparators = ast_.comparators
+    idx = len(ops)
 
-            bound_end_ln = len(op_lines) - 1
-            bound_end_col = len(op_lines[-1])
+    if op_side_left:
+        left = ast_.left
+        left_ln, left_col, _, _ = left.f.pars()
 
-            end_ln, end_col, src = next_frag(op_lines, 0, 0, bound_end_ln, bound_end_col)  # must be there
+        bound_end_ln = len(op_lines) - 1
+        bound_end_col = len(op_lines[-1])
 
-            lineno = left_ln + end_ln + 1  # these are for the placeholder left node
-            col_offset = len(op_lines[end_ln][:end_col].encode())
+        end_ln, end_col, src = next_frag(op_lines, 0, 0, bound_end_ln, bound_end_col)  # must be there
 
-            if not end_ln:  # if op starts on first line then it must be offset by left location because it will be on that line in fst_
-                col_offset += fst_._lines[left_ln].c2b(left_col)
+        lineno = left_ln + end_ln + 1  # these are for the placeholder left node
+        col_offset = len(op_lines[end_ln][:end_col].encode())
 
-            if isinstance(op_ast, (IsNot, NotIn)):  # if two-part operator move on to second part
-                end_ln, end_col, src = next_frag(op_lines, end_ln, end_col + len(src), bound_end_ln, bound_end_col)  # must be there
+        if not end_ln:  # if op starts on first line then it must be offset by left location because it will be on that line in fst_
+            col_offset += fst_._lines[left_ln].c2b(left_col)
 
-            if end_ln == bound_end_ln and end_col + len(src) == bound_end_col:  # operator right at end of lines, needs a whitespace
-                op_lines[end_ln] = op_lines[end_ln] + ' '
+        if isinstance(op_ast, (IsNot, NotIn)):  # if two-part operator move on to second part
+            end_ln, end_col, src = next_frag(op_lines, end_ln, end_col + len(src), bound_end_ln, bound_end_col)  # must be there
 
-            elif re_line_end_cont_or_comment.match(op_lines[l := len(op_lines) - 1]).group(1):  # if last line is a comment or line continuation without a newline then add one
-                op_lines.append('')
+        if end_ln == bound_end_ln and end_col + len(src) == bound_end_col:  # operator right at end of lines, needs a whitespace
+            op_lines[end_ln] = op_lines[end_ln] + ' '
 
-            fst_._put_src(op_lines, left_ln, left_col, left_ln, left_col, False)  # we don't care if we offset fst_ itself incorrectly since we will set its location to whole source anyway, we only care about the children here
+        elif re_line_end_cont_or_comment.match(op_lines[l := len(op_lines) - 1]).group(1):  # if last line is a comment or line continuation without a newline then add one
+            op_lines.append('')
 
-            placeholder = astfield('')
-            ast_.left = fst.FST(Pass(lineno=lineno, col_offset=col_offset,
-                                     end_lineno=lineno, end_col_offset=col_offset),
-                                fst_, placeholder).a
+        fst_._put_src(op_lines, left_ln, left_col, left_ln, left_col, False)  # we don't care if we offset fst_ itself incorrectly since we will set its location to whole source anyway, we only care about the children here
 
-            ops.insert(0, fst.FST(op_ast, fst_, placeholder).a)
-            comparators.insert(0, left)
+        placeholder = astfield('')
+        ast_.left = fst.FST(Pass(lineno=lineno, col_offset=col_offset,
+                                end_lineno=lineno, end_col_offset=col_offset),
+                            fst_, placeholder).a
 
-            for i, (cmp, op) in enumerate(zip(comparators, ops, strict=True)):
-                cmp.f.pfield = astfield('comparators', i)
-                op.f.pfield = astfield('ops', i)
+        ops.insert(0, fst.FST(op_ast, fst_, placeholder).a)
+        comparators.insert(0, left)
 
-        else:  # op_side_left is False
-            _, _, end_ln, end_col = (comparators[-1] if comparators else ast_.left).f.pars()
+        for i, (cmp, op) in enumerate(zip(comparators, ops, strict=True)):
+            cmp.f.pfield = astfield('comparators', i)
+            op.f.pfield = astfield('ops', i)
 
-            if (l := op_lines[0]) and not l.isspace():  # if no whitespace before operator then insert one
-                op_lines[0] = ' ' + l
+    else:  # op_side_left is False
+        _, _, end_ln, end_col = (comparators[-1] if comparators else ast_.left).f.pars()
 
-            ln, col, src = prev_frag(op_lines, 0, 0, len(op_lines) - 1, 0x7fffffffffffffff)  # must be there, last part of op, can search from (0, 0) because is an op so we know there are no strings (which are the things which can screw up the searches)
-            col += len(src)  # we want the end
+        if (l := op_lines[0]) and not l.isspace():  # if no whitespace before operator then insert one
+            op_lines[0] = ' ' + l
 
-            end_lineno = end_ln + ln + 1  # these are for the placeholder comparator node
-            end_col_offset = len(op_lines[ln][:col].encode())
+        ln, col, src = prev_frag(op_lines, 0, 0, len(op_lines) - 1, 0x7fffffffffffffff)  # must be there, last part of op, can search from (0, 0) because is an op so we know there are no strings (which are the things which can screw up the searches)
+        col += len(src)  # we want the end
 
-            if not ln:  # if op ends on first line then it must be offset by location because it will be on that line in fst_
-                end_col_offset += fst_._lines[end_ln].c2b(end_col)
+        end_lineno = end_ln + ln + 1  # these are for the placeholder comparator node
+        end_col_offset = len(op_lines[ln][:col].encode())
 
-            fst_._put_src(op_lines, end_ln, end_col, end_ln, end_col)  # we offset nothing because we reset fst_ location to whole anyway
+        if not ln:  # if op ends on first line then it must be offset by location because it will be on that line in fst_
+            end_col_offset += fst_._lines[end_ln].c2b(end_col)
 
-            ops.append(fst.FST(op_ast, fst_, astfield('ops', idx)).a)
-            comparators.append(fst.FST(Pass(lineno=end_lineno, col_offset=end_col_offset,
-                                            end_lineno=end_lineno, end_col_offset=end_col_offset),
-                                       fst_, astfield('comparators', idx)).a)  # placeholder
+        fst_._put_src(op_lines, end_ln, end_col, end_ln, end_col)  # we offset nothing because we reset fst_ location to whole anyway
 
-        return _set_loc_whole(fst_), op_side_left
+        ops.append(fst.FST(op_ast, fst_, astfield('ops', idx)).a)
+        comparators.append(fst.FST(Pass(lineno=end_lineno, col_offset=end_col_offset,
+                                        end_lineno=end_lineno, end_col_offset=end_col_offset),
+                                fst_, astfield('comparators', idx)).a)  # placeholder
 
-    return fst_, None
+    return _set_loc_whole(fst_), op_side_left
 
 
 def _code_to_slice_MatchSequence(
@@ -1876,7 +1892,7 @@ def _put_slice_BoolOp_values(
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    locfunc = None  # TODO: this will currently have a problem with alignment detection, need to still have a preferred location function for that if no dangling operators
+    locfunc = None
 
     if op_side_left is not None:  # if no dangling operator then location function is just normal location
         ast_dangling = None
@@ -1964,7 +1980,7 @@ def _put_slice_Compare__all(
     _move_Compare_left_into_comparators(self)  # we put everything into `comparators` for the sake of sanity (relatively speaking)
 
     if op_side_left is None:  # if no operator side then location function is just normal location
-        locfunc = None  # TODO: this will currently have a problem with alignment detection, need to still have a preferred location function for that if no dangling operators
+        locfunc = None
 
     elif op_side_left:
         def locfunc(body: list[AST], idx: int) -> fstloc:

@@ -440,7 +440,6 @@ def get_slice_sep(
     sep: str = ',',
     self_tail_sep: bool | Literal[0, 1] | None = None,
     ret_tail_sep: bool | Literal[0, 1] | None = None,
-    set_ast_loc: bool = True,
 ) -> fst.FST:
     """Copy slice sequence source, dedent it, and create a new `FST` from that source and the new `AST` already made
     with the old locations (which will be updated). If the operation is a cut then the source in `self` will also be
@@ -489,8 +488,6 @@ def get_slice_sep(
         - `False`: Always remove if present.
         - `1`: Add if not present and single element.
         - `0`: Remove if not aesthetically significant (present on same line as end of element), otherwise leave.
-    - `set_ast_loc`: Whether to set the `ast` `(lineno, col_offset, end_lineno, end_col_offset)` location or not. For
-        special cases like returning an existing expression without container `AST`.
     """
 
     lines = self.root._lines
@@ -535,22 +532,20 @@ def get_slice_sep(
 
     # set location of root node and make the actual FST
 
-    if set_ast_loc:
-        ast.lineno = copy_ln + 1
-        ast.col_offset = lines[copy_ln].c2b(copy_col)
-        ast.end_lineno = copy_end_ln + 1
-        ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
+    ast.lineno = copy_ln + 1
+    ast.col_offset = lines[copy_ln].c2b(copy_col)
+    ast.end_lineno = copy_end_ln + 1
+    ast.end_col_offset = lines[copy_end_ln].c2b(copy_end_col)
 
     fst_, params_offset = self._make_fst_and_dedent(self, ast, copy_loc, prefix, suffix,
                                                     del_loc if cut else None,
                                                     [del_indent] if del_indent and del_loc.end_col else None,
                                                     docstr=False)  # docstr False because none of the things handled by this function can have any form of docstring
 
-    if set_ast_loc:
-        ast.col_offset = 0  # before prefix
-        ast.end_col_offset = fst_._lines[-1].lenbytes  # after suffix
+    ast.col_offset = 0  # before prefix
+    ast.end_col_offset = fst_._lines[-1].lenbytes  # after suffix
 
-        fst_._touch()
+    fst_._touch()
 
     # add / remove trailing separators as needed
 
@@ -961,7 +956,6 @@ def get_slice_nosep(
     bound_end_ln: int,
     bound_end_col: int,
     options: Mapping[str, Any],
-    set_ast_loc: bool = True,
 ) -> fst.FST:
     """Copy slice sequence source without separators, dedent it, and create a new `FST` from that source and the new
     `AST` already made with the old locations (which will be updated). If the operation is a cut then the source in
@@ -983,13 +977,10 @@ def get_slice_nosep(
     - (`bound_end_ln`, `bound_end_col`): End of container (just before delimiters) or just before space before next
         element which is not part of this sequence.
     - `options`: The dictionary of options passed to the put function. Options used are `trivia`.
-    - `set_ast_loc`: Whether to set the `ast` `(lineno, col_offset, end_lineno, end_col_offset)` location or not. For
-        special cases like returning an existing expression without container `AST`.
     """
 
     return get_slice_sep(self, start, stop, len_body, cut, ast, None, loc_first, loc_last,
-                         bound_ln, bound_col, bound_end_ln, bound_end_col, options, '', '', '', '', None, None,
-                         set_ast_loc)
+                         bound_ln, bound_col, bound_end_ln, bound_end_col, options, '', '', '', '', None, None)
 
 
 def put_slice_nosep(

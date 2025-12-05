@@ -2021,6 +2021,130 @@ if (
             self.assertEqual("f'{3 == 4:<12}'", (f := FST("f'{4 != 4 == 4:<12}'")).values[0].value.put_slice('3 == 4', 0, 3).root.src)
             f.verify()
 
+    def test_slice_special_Compare_op(self):
+        # invalid
+
+        self.assertRaises(SyntaxError, (f := FST('a < b')).put_slice, 'x', 1, 1, op_side='left', op='?')
+        self.assertRaises(NodeError, (f := FST('a < b')).put_slice, 'x', 1, 1, op_side='left', op=Mult)
+        self.assertRaises(ValueError, (f := FST('a < b')).put_slice, 'x', 1, 1, op_side='left', op=list)
+        self.assertRaises(ValueError, (f := FST('a < b')).put_slice, 'x', 1, 1, op_side='left', op=Mult())
+        self.assertRaises(NodeError, (f := FST('a < b')).put_slice, 'x', 1, 1, op_side='left', op=FST('*', Mult))
+        self.assertRaises(ValueError, (f := FST('a < b')).put_slice, 'x', 1, 1, op_side='left', op=FST('a + b').left)
+
+        # insert
+
+        self.assertEqual('a is not x < b', (f := FST('a < b')).put_slice('x', 1, 1, op_side='left', op='is not').src)
+        f.verify()
+
+        self.assertEqual('a < x is not b', (f := FST('a < b')).put_slice('x', 1, 1, op_side='right', op='is not').src)
+        f.verify()
+
+        self.assertEqual('a\nis\nnot\nx < b', (f := FST('a < b')).put_slice('x', 1, 1, op_side='left', op='\nis\nnot\n', pars=False).src)
+        f.verify()
+
+        self.assertEqual('a < x\nis\nnot\nb', (f := FST('a < b')).put_slice('x', 1, 1, op_side='right', op='\nis\nnot\n', pars=False).src)
+        f.verify()
+
+        self.assertEqual('a # 1\nis # 2\nnot # 3\nx < b', (f := FST('a < b')).put_slice('x', 1, 1, op_side='left', op='# 1\nis # 2\nnot # 3', pars=False).src)
+        f.verify()
+
+        self.assertEqual('a < x # 1\nis # 2\nnot # 3\nb', (f := FST('a < b')).put_slice('x', 1, 1, op_side='right', op='# 1\nis # 2\nnot # 3', pars=False).src)
+        f.verify()
+
+        self.assertEqual('a is not x < b', (f := FST('a < b')).put_slice('x', 1, 1, op_side='left', op=IsNot).src)
+        f.verify()
+
+        self.assertEqual('a < x is not b', (f := FST('a < b')).put_slice('x', 1, 1, op_side='right', op=IsNot).src)
+        f.verify()
+
+        self.assertEqual('a is not x < b', (f := FST('a < b')).put_slice('x', 1, 1, op_side='left', op=IsNot()).src)
+        f.verify()
+
+        self.assertEqual('a < x is not b', (f := FST('a < b')).put_slice('x', 1, 1, op_side='right', op=IsNot()).src)
+        f.verify()
+
+        self.assertEqual('a is not x < b', (f := FST('a < b')).put_slice('x', 1, 1, op_side='left', op=FST('is not', cmpop)).src)
+        f.verify()
+
+        self.assertEqual('a < x is not b', (f := FST('a < b')).put_slice('x', 1, 1, op_side='right', op=FST('is not', cmpop)).src)
+        f.verify()
+
+        # replace
+
+        self.assertEqual('a is not x', (f := FST('a < b')).put_slice('x', 1, 2, op='is not').src)
+        f.verify()
+
+        self.assertEqual('x is not b', (f := FST('a < b')).put_slice('x', 0, 1, op='is not').src)
+        f.verify()
+
+        self.assertEqual('a\nis\nnot\nx', (f := FST('a < b')).put_slice('x', 1, 2, op='\nis\nnot\n', pars=False).src)
+        f.verify()
+
+        self.assertEqual('x\nis\nnot\nb', (f := FST('a < b')).put_slice('x', 0, 1, op='\nis\nnot\n', pars=False).src)
+        f.verify()
+
+        self.assertEqual('a # 1\nis # 2\nnot # 3\nx', (f := FST('a < b')).put_slice('x', 1, 2, op='# 1\nis # 2\nnot # 3', pars=False).src)
+        f.verify()
+
+        self.assertEqual('x # 1\nis # 2\nnot # 3\nb', (f := FST('a < b')).put_slice('x', 0, 1, op='# 1\nis # 2\nnot # 3', pars=False).src)
+        f.verify()
+
+        self.assertEqual('a is not x', (f := FST('a < b')).put_slice('x', 1, 2, op=IsNot).src)
+        f.verify()
+
+        self.assertEqual('x is not b', (f := FST('a < b')).put_slice('x', 0, 1, op=IsNot).src)
+        f.verify()
+
+        self.assertEqual('a is not x', (f := FST('a < b')).put_slice('x', 1, 2, op=IsNot()).src)
+        f.verify()
+
+        self.assertEqual('x is not b', (f := FST('a < b')).put_slice('x', 0, 1, op=IsNot()).src)
+        f.verify()
+
+        self.assertEqual('a is not x', (f := FST('a < b')).put_slice('x', 1, 2, op=FST('is not', cmpop)).src)
+        f.verify()
+
+        self.assertEqual('x is not b', (f := FST('a < b')).put_slice('x', 0, 1, op=FST('is not', cmpop)).src)
+        f.verify()
+
+        # more replace
+
+        self.assertEqual('a is not x > c', (f := FST('a < b > c')).put_slice('x', 1, 2, op_side='left', op='is not').src)
+        f.verify()
+
+        self.assertEqual('a < x is not c', (f := FST('a < b > c')).put_slice('x', 1, 2, op_side='right', op='is not').src)
+        f.verify()
+
+        self.assertEqual('a\nis\nnot\nx > c', (f := FST('a < b > c')).put_slice('x', 1, 2, op_side='left', op='\nis\nnot\n', pars=False).src)
+        f.verify()
+
+        self.assertEqual('a < x\nis\nnot\nc', (f := FST('a < b > c')).put_slice('x', 1, 2, op_side='right', op='\nis\nnot\n', pars=False).src)
+        f.verify()
+
+        self.assertEqual('a # 1\nis # 2\nnot # 3\nx > c', (f := FST('a < b > c')).put_slice('x', 1, 2, op_side='left', op='# 1\nis # 2\nnot # 3', pars=False).src)
+        f.verify()
+
+        self.assertEqual('a < x # 1\nis # 2\nnot # 3\nc', (f := FST('a < b > c')).put_slice('x', 1, 2, op_side='right', op='# 1\nis # 2\nnot # 3', pars=False).src)
+        f.verify()
+
+        self.assertEqual('a is not x > c', (f := FST('a < b > c')).put_slice('x', 1, 2, op_side='left', op=IsNot).src)
+        f.verify()
+
+        self.assertEqual('a < x is not c', (f := FST('a < b > c')).put_slice('x', 1, 2, op_side='right', op=IsNot).src)
+        f.verify()
+
+        self.assertEqual('a is not x > c', (f := FST('a < b > c')).put_slice('x', 1, 2, op_side='left', op=IsNot()).src)
+        f.verify()
+
+        self.assertEqual('a < x is not c', (f := FST('a < b > c')).put_slice('x', 1, 2, op_side='right', op=IsNot()).src)
+        f.verify()
+
+        self.assertEqual('a is not x > c', (f := FST('a < b > c')).put_slice('x', 1, 2, op_side='left', op=FST('is not', cmpop)).src)
+        f.verify()
+
+        self.assertEqual('a < x is not c', (f := FST('a < b > c')).put_slice('x', 1, 2, op_side='right', op=FST('is not', cmpop)).src)
+        f.verify()
+
     def test_get_slice_special(self):
         f = FST('''(
             TI(string="case"),

@@ -1269,12 +1269,17 @@ class FST:
             - `strict`: Error on length 1 as well as length zero.
             - `False`: No `MatchOr` normalization regardless of `norm` or `norm_*` options, just leave or return an
                 invalid `MatchOr` object.
-        -`op_side`: When cutting or deleting from a `Compare` an extra operator needs to be deleted. This options
-            specifies which side, `'left'` or `'right'`. This matters for `Compare` because the operators may be
-            different. This option is treated as a hint and will not raise an error if the side cannot be deleted or the
-            other side must be.
-            - `'left'`: Delete preceding operator on left side of slice.
-            - `'right'`: Delete trailing operator on right side of slice.
+        -`op_side`: When doing slice operations on a `BoolOp` or a `Compare` it may be necessary to specify which side
+            operator is to be deleted or inserted before or after. This can take the values of `'left'` or `'right'` and
+            specifies which side operator to delete for delete operations. For insert operations this specifies whether
+            to insert before an operator `'left'` or operand `'right'`, roughly translating to which side operator is
+            treated as part of the operator+operand unit. This option is treated as a hint and may be overridden by
+            source code passed to the slice operation or slice position constraints, it will never raise an error if
+            set incompatible with what the operation needs. When inserting into a `Compare` a non-global `op` option
+            may be necessary to specify extra missing operator to add if a dangling operator is not passed in the source
+            to insert.
+            - `'left'`: Delete preceding operator on left side of slice or insert before preceding operator.
+            - `'right'`: Delete trailing operator on right side of slice or insert after preceding operator.
 
         **Note:** `pars` behavior:
         ```
