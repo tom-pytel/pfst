@@ -1,5 +1,6 @@
 """Functions which compute the locations of various node elements which don't have stored locations, or entire nodes
-themselves for those which don't normally have a location.
+themselves for those which don't normally have a location. The only thing all these functions have in common is that
+they compute locations, there is no standard return type or conditions, read the docstrings for use.
 
 This module contains functions which are imported as methods in the `FST` class (for now).
 """
@@ -13,6 +14,7 @@ from . import fst
 from .asttypes import (
     ASTS_BLOCK,
     AST,
+    And,
     AsyncFunctionDef,
     AsyncWith,
     Compare,
@@ -265,7 +267,7 @@ def _loc_op(self: fst.FST) -> fstloc | None:
     if not (parent := self.parent):  # standalone
         ln, col, src = next_frag(lines, 0, 0, len(lines) - 1, 0x7fffffffffffffff)  # must be there
 
-        if not isinstance(ast, (NotIn, IsNot)):  # simple one element operator means we are done
+        if not isinstance(ast, (IsNot, NotIn)):  # simple one element operator means we are done
             assert src == op
 
             return fstloc(ln, col, ln, col + len(src))
@@ -294,7 +296,7 @@ def _loc_op(self: fst.FST) -> fstloc | None:
 
         _, _, end_ln, end_col = prev.f.loc
 
-        if has_space := isinstance(ast, (NotIn, IsNot)):  # stupid two-element operators, can be anything like "not    \\\n     in"
+        if has_space := isinstance(ast, (IsNot, NotIn)):  # stupid two-element operators, can be anything like "not    \\\n     in"
             op, op2 = op.split(' ')
 
         last_ln = len(lines) - 1
@@ -574,7 +576,7 @@ def _loc_With_items_pars(self: fst.FST) -> fstlocn:
 
     if ((lpar := next_frag(lines, ln, col, end_ln, end_col))
         and lpar.src.startswith('(')  # does opening par follow 'with'
-        and not (items and ((_loc_i0 := items[0].f.loc).col == lpar.col and _loc_i0.ln == lpar.ln))  # if there are items and first `withitem` starts at lpar found then we know that lpar belongs to it and whole `items` field doesn't have pars
+        and not (items and items[0].f.loc[:2] <= lpar[:2])  # if there are items and first `withitem` starts at !!! OR BEFORE !!! lpar found then we know that lpar belongs to it and whole `items` field doesn't have pars (OR BEFORE because this may be the case during operations in some places (put slice to BoolOp as of the writing of this comment))
     ):
         ln, col, _ = lpar
 
@@ -596,6 +598,22 @@ def _loc_With_items_pars(self: fst.FST) -> fstlocn:
         n = 0
 
     return fstlocn(ln, col, end_ln, end_col, n=n, bound=bound)
+
+
+def _loc_BoolOp_op(self: fst.FST, idx: int) -> fstloc:
+    """Get location of operator in a `BoolOp` at index `idx`. The index works the same as in a `Compare.ops`, the first
+    operator is between the first and second `values` and there are n-1 operators for n elements."""
+
+    # assert isinstance(self.a, BoolOp)
+
+    lines = self.root._lines
+    ast = self.a
+    values = ast.values
+    op = 'and' if isinstance(ast.op, And) else 'or'
+    _, _, end_ln, end_col = values[idx].f.pars()
+    ln, col, _ = next_frag(lines, end_ln, end_col, 0x7fffffffffffffff, 0x7fffffffffffffff)  # must be there
+
+    return fstloc(ln, col, ln, col + len(op))
 
 
 def _loc_Call_pars(self: fst.FST) -> fstloc:

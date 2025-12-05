@@ -1,5 +1,9 @@
 """Low level get and put slice expression-ish slices."""
 
+# TODO: High level. On first create it was assumed the simpler needs and interface of `get_slice_sep()` compared with
+# `put_slice_sep()` would make things easier for slice gets. It did, but since the work had do be done for
+# `put_slice_sep()` anyway should make the interface and location getting and everything consistent with that.
+
 from __future__ import annotations
 
 import re
@@ -34,20 +38,20 @@ _LocFunc = Callable[[list[AST], int], fstloc]  # location function for child wit
 _re_open_delim_or_space = re.compile(r'[({\s[]')  # this is a special set of delimiter openers which are considered to not need an aesthetic space after
 _re_close_delim_or_space_or_end = re.compile(r'[)}\s\]:]|$')  # this is a special set of terminations which are considered to not need an aesthetic space before if a slice put ends with a non-space right before them
 
-_re_sep_starts = {  # match separator at start of fragment, needs to be a pattern to recognize 'and\b' and 'or\b' so they are not recognized as part of an identifier like 'origin'
-    ',':   re.compile(r','),
-    '|':   re.compile(r'\|'),  # this doesn't need a check against '|='
-    '=':   re.compile(r'='),  # this doesn't need a check against '=='
-    'and': re.compile(r'and\b'),
-    'or':  re.compile(r'or\b'),
-}
+# _re_sep_starts = {  # match separator at start of fragment, needs to be a pattern to recognize 'and\b' and 'or\b' so they are not recognized as part of an identifier like 'origin'
+#     ',':   re.compile(r','),
+#     '|':   re.compile(r'\|'),  # this doesn't need a check against '|='
+#     '=':   re.compile(r'='),  # this doesn't need a check against '=='
+#     'and': re.compile(r'and\b'),
+#     'or':  re.compile(r'or\b'),
+# }
 
 _re_sep_line_nonexpr_end = {  # empty line with optional separator and line continuation or a pure comment line
     ',':   re.compile(r'\s*  (?:,\s*)?    (?:\\|\#.*)?  $', re.VERBOSE),
     '|':   re.compile(r'\s*  (?:\|\s*)?   (?:\\|\#.*)?  $', re.VERBOSE),
     '=':   re.compile(r'\s*  (?:=\s*)?    (?:\\|\#.*)?  $', re.VERBOSE),
-    'and': re.compile(r'\s*  (?:and\s*)?  (?:\\|\#.*)?  $', re.VERBOSE),
-    'or':  re.compile(r'\s*  (?:or\s*)?   (?:\\|\#.*)?  $', re.VERBOSE),
+    # 'and': re.compile(r'\s*  (?:and\s*)?  (?:\\|\#.*)?  $', re.VERBOSE),
+    # 'or':  re.compile(r'\s*  (?:or\s*)?   (?:\\|\#.*)?  $', re.VERBOSE),
     '':    re.compile(r'\s*               (?:\\|\#.*)?  $', re.VERBOSE),
 }
 
@@ -313,7 +317,7 @@ def _locs_slice(
 
     if (sep
         and (frag := next_frag(lines, last_end_ln, last_end_col, bound_end_ln, bound_end_col))
-        and _re_sep_starts[sep].match(frag.src)
+        and frag.src.startswith(sep)  # _re_sep_starts[sep].match(frag.src)
     ):  # if separator present then set end of element to just past it
         last_end_ln = frag.ln
         last_end_col = frag.col + len(sep)
@@ -557,7 +561,7 @@ def get_slice_sep(
                 _, _, fst_end_ln, fst_end_col = fst_.loc
 
                 fst_._maybe_del_separator(last_end_ln, last_end_col, ret_tail_sep is False,
-                                        fst_end_ln, fst_end_col - len(suffix), sep)
+                                          fst_end_ln, fst_end_col - len(suffix), sep)
 
         elif not sep_end_pos:  # need return trailing separator and don't have it
             _, _, last_end_ln, last_end_col = ast_last.f.loc
@@ -682,7 +686,7 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
     bound_end_col_offset = lines[bound_end_ln].c2b(bound_end_col)
 
     if locfunc:
-        locfunc_maybe_key = locfunc  # locfunc will never be provided for a two-element sequence so we don't need to check maybe_key in case it exists
+        locfunc_maybe_key = locfunc  # locfunc will never be provided for a two-element sequence so no keys means loc_maybe_key is just normal locfunc
     else:
         locfunc = lambda body, idx: body[idx].f.pars()
         locfunc_maybe_key = lambda body, idx: self._loc_maybe_key(idx, True, body)

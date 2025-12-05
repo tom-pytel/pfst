@@ -37,6 +37,8 @@ except ImportError:
     ftstr_middles = ()
 
 
+INCLUDE_PYTHON_STDLIB = True
+
 PROGRAM = 'python -m fst.fuzz'
 
 UNICODE = ''.join([
@@ -989,8 +991,9 @@ class Fuzzy:
         elif Fuzzy.syspyfnms is None:
             fnms = find_pys(sys.prefix)
 
-            if stdlib := sysconfig.get_paths().get('stdlib'):
-                fnms.extend(find_pys(stdlib))
+            if INCLUDE_PYTHON_STDLIB:
+                if stdlib := sysconfig.get_paths().get('stdlib'):
+                    fnms.extend(find_pys(stdlib))
 
         self.fnms = fnms
 
@@ -2104,13 +2107,14 @@ class SliceExprish(Fuzzy):
                 dst_stop += not dst_start
                 dst_start -= bool(dst_start)
 
-        cut = False if src_len - (src_stop - src_start) < min_src else bool(randint(0, 1))
+        len_src_slice = src_stop - src_start
+        cut = False if src_len - len_src_slice < min_src else bool(randint(0, 1))
 
         if one:
             if src_stop - src_start == 0 and isinstance(src.a, Set):
                 one = False
             else:
-                one = False if dst_len - (dst_stop - dst_start) + 1 < min_dst else bool(randint(0, 1))
+                one = False if dst_len - (dst_stop - dst_start) + 1 < min_dst or len_src_slice < min_src else bool(randint(0, 1))  # len_src_slice < min_src because of potentially invalid slice ASTs
 
         if self.debug:  # isinstance(src.a, Set) or isinstance(dst.a, Set):
             print(f'\x08... {dir} {cat = }, {cut = }, {one = }')
@@ -2241,8 +2245,8 @@ class SliceExprish(Fuzzy):
             Global:           (glbucket := self.Bucket('names', 'elts', 1, 1, False, FST('global z'))),
             Nonlocal:         glbucket,
             'ClassDef_bases': self.Bucket('bases', 'elts', 0, 0, True, FST('class tmp(): pass')),
-            'and':            self.Bucket('values', None, 2, 2, False, FST('a and b', BoolOp)),
-            'or':             self.Bucket('values', None, 2, 2, False, FST('a or b', BoolOp)),
+            'and':            self.Bucket('values', None, 2, 2, True, FST('a and b', BoolOp)),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
+            'or':             self.Bucket('values', None, 2, 2, True, FST('a or b', BoolOp)),  # one=True in this can cause very large expressions and slow performance if testing just this, lower batch size to 100-200
             Compare:          self.Bucket(None, None, 2, 2, False, FST('a < b', Compare)),
             'Call_args':      self.Bucket('args', 'elts', 0, 0, True, FST('call()')),
             'generators':     self.Bucket('generators', None, 1, 0, False, FST('', '_comprehensions')),

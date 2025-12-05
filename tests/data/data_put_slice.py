@@ -26292,17 +26292,17 @@ x  # line
 # post
 '''), r'''
 (# pre
-x and  # line
+x  # line
 # post
-b and c)
+and b and c)
 ''',
 r'''x and b and c''', r'''
-BoolOp - ROOT 1,0..3,7
+BoolOp - ROOT 1,0..3,11
   .op And
   .values[3]
    0] Name 'x' Load - 1,0..1,1
-   1] Name 'b' Load - 3,0..3,1
-   2] Name 'c' Load - 3,6..3,7
+   1] Name 'b' Load - 3,4..3,5
+   2] Name 'c' Load - 3,10..3,11
 '''),
 
 ('', 0, 1, None, {'pars': False}, (None,
@@ -26312,17 +26312,17 @@ x  # line
 # post
 '''), r'''
 # pre
-x and  # line
+x  # line
 # post
-b and c
+and b and c
 ''',
 r'''x and b and c''', r'''
-BoolOp - ROOT 1,0..3,7
+BoolOp - ROOT 1,0..3,11
   .op And
   .values[3]
    0] Name 'x' Load - 1,0..1,1
-   1] Name 'b' Load - 3,0..3,1
-   2] Name 'c' Load - 3,6..3,7
+   1] Name 'b' Load - 3,4..3,5
+   2] Name 'c' Load - 3,10..3,11
 '''),
 
 ('', 1, 2, None, {}, (None,
@@ -26332,17 +26332,17 @@ x  # line
 # post
 '''), r'''
 (a and # pre
-x and  # line
+x  # line
 # post
-c)
+and c)
 ''',
 r'''a and x and c''', r'''
-BoolOp - ROOT 0,1..3,1
+BoolOp - ROOT 0,1..3,5
   .op And
   .values[3]
    0] Name 'a' Load - 0,1..0,2
    1] Name 'x' Load - 1,0..1,1
-   2] Name 'c' Load - 3,0..3,1
+   2] Name 'c' Load - 3,4..3,5
 '''),
 
 ('', 1, 2, None, {}, (None,
@@ -26355,17 +26355,17 @@ x  # line
 '''), r'''
 (a and
 # pre
-x and  # line
+x  # line
 # post
-c)
+and c)
 ''',
 r'''a and x and c''', r'''
-BoolOp - ROOT 0,1..4,1
+BoolOp - ROOT 0,1..4,5
   .op And
   .values[3]
    0] Name 'a' Load - 0,1..0,2
    1] Name 'x' Load - 2,0..2,1
-   2] Name 'c' Load - 4,0..4,1
+   2] Name 'c' Load - 4,4..4,5
 '''),
 
 ('', 2, 3, None, {}, (None,
@@ -26395,16 +26395,16 @@ x  # line
 # post
 '''), r'''
 (# pre
-x and  # line
+x  # line
 # post
-c)
+and c)
 ''',
 r'''x and c''', r'''
-BoolOp - ROOT 1,0..3,1
+BoolOp - ROOT 1,0..3,5
   .op And
   .values[2]
    0] Name 'x' Load - 1,0..1,1
-   1] Name 'c' Load - 3,0..3,1
+   1] Name 'c' Load - 3,4..3,5
 '''),
 
 ('', 1, 3, None, {}, (None,
@@ -26467,19 +26467,21 @@ x
 and y
 '''), r'''
 (x
-and y and b
+and y
+and b
 and c)
 ''', r'''
-(x and y and b
+(x and y
+and b
 and c)
 ''', r'''
-BoolOp - ROOT 0,1..2,5
+BoolOp - ROOT 0,1..3,5
   .op And
   .values[4]
    0] Name 'x' Load - 0,1..0,2
    1] Name 'y' Load - 1,4..1,5
-   2] Name 'b' Load - 1,10..1,11
-   3] Name 'c' Load - 2,4..2,5
+   2] Name 'b' Load - 2,4..2,5
+   3] Name 'c' Load - 3,4..3,5
 '''),
 
 ('', 1, 2, None, {}, (None, r'''
@@ -26492,18 +26494,20 @@ and y
 '''), r'''
 (a
 and x
-and y and c)
+and y
+and c)
 ''', r'''
 (a
-and x and y and c)
+and x and y
+and c)
 ''', r'''
-BoolOp - ROOT 0,1..2,11
+BoolOp - ROOT 0,1..3,5
   .op And
   .values[4]
    0] Name 'a' Load - 0,1..0,2
    1] Name 'x' Load - 1,4..1,5
    2] Name 'y' Load - 2,4..2,5
-   3] Name 'c' Load - 2,10..2,11
+   3] Name 'c' Load - 3,4..3,5
 '''),
 
 ('', 2, 3, None, {}, (None, r'''
@@ -26541,15 +26545,18 @@ x
 and y
 '''), r'''
 (x
-and y and c)
-''',
-r'''x and y and c''', r'''
-BoolOp - ROOT 0,1..1,11
+and y
+and c)
+''', r'''
+(x and y
+and c)
+''', r'''
+BoolOp - ROOT 0,1..2,5
   .op And
   .values[3]
    0] Name 'x' Load - 0,1..0,2
    1] Name 'y' Load - 1,4..1,5
-   2] Name 'c' Load - 1,10..1,11
+   2] Name 'c' Load - 2,4..2,5
 '''),
 
 ('', 1, 3, None, {}, (None, r'''
@@ -26603,19 +26610,21 @@ x
 and y
 '''), r'''
 (x
- and y and b
+ and y
+and b
 and c)
 ''', r'''
-(x and y and b
+(x and y
+and b
 and c)
 ''', r'''
-BoolOp - ROOT 0,1..2,5
+BoolOp - ROOT 0,1..3,5
   .op And
   .values[4]
    0] Name 'x' Load - 0,1..0,2
    1] Name 'y' Load - 1,5..1,6
-   2] Name 'b' Load - 1,11..1,12
-   3] Name 'c' Load - 2,4..2,5
+   2] Name 'b' Load - 2,4..2,5
+   3] Name 'c' Load - 3,4..3,5
 '''),
 
 ('', 1, 2, None, {}, (None, r'''
@@ -26628,18 +26637,20 @@ and y
 '''), r'''
 (a
 and x
- and y and c)
+ and y
+and c)
 ''', r'''
 (a
-and x and y and c)
+and x and y
+and c)
 ''', r'''
-BoolOp - ROOT 0,1..2,12
+BoolOp - ROOT 0,1..3,5
   .op And
   .values[4]
    0] Name 'a' Load - 0,1..0,2
    1] Name 'x' Load - 1,4..1,5
    2] Name 'y' Load - 2,5..2,6
-   3] Name 'c' Load - 2,11..2,12
+   3] Name 'c' Load - 3,4..3,5
 '''),
 
 ('', 2, 3, None, {}, (None, r'''
@@ -26677,15 +26688,18 @@ x
 and y
 '''), r'''
 (x
- and y and c)
-''',
-r'''(x and y and c)''', r'''
-BoolOp - ROOT 0,1..1,12
+ and y
+and c)
+''', r'''
+(x and y
+and c)
+''', r'''
+BoolOp - ROOT 0,1..2,5
   .op And
   .values[3]
    0] Name 'x' Load - 0,1..0,2
    1] Name 'y' Load - 1,5..1,6
-   2] Name 'c' Load - 1,11..1,12
+   2] Name 'c' Load - 2,4..2,5
 '''),
 
 ('', 1, 3, None, {}, (None, r'''
@@ -26743,23 +26757,25 @@ y
 '''), r'''
 (x \
 and \
-y and
+y
+and \
 b \
 and \
 c)
 ''', r'''
-(x and y and
+(x and y
+and \
 b \
 and \
 c)
 ''', r'''
-BoolOp - ROOT 0,1..5,1
+BoolOp - ROOT 0,1..6,1
   .op And
   .values[4]
    0] Name 'x' Load - 0,1..0,2
    1] Name 'y' Load - 2,0..2,1
-   2] Name 'b' Load - 3,0..3,1
-   3] Name 'c' Load - 5,0..5,1
+   2] Name 'b' Load - 4,0..4,1
+   3] Name 'c' Load - 6,0..6,1
 '''),
 
 ('', 1, 2, None, {}, (None, r'''
@@ -26777,21 +26793,23 @@ y
 and \
 x \
 and \
-y and
+y
+and \
 c)
 ''', r'''
 (a \
 and \
-x and y and
+x and y
+and \
 c)
 ''', r'''
-BoolOp - ROOT 0,1..5,1
+BoolOp - ROOT 0,1..6,1
   .op And
   .values[4]
    0] Name 'a' Load - 0,1..0,2
    1] Name 'x' Load - 2,0..2,1
    2] Name 'y' Load - 4,0..4,1
-   3] Name 'c' Load - 5,0..5,1
+   3] Name 'c' Load - 6,0..6,1
 '''),
 
 ('', 2, 3, None, {}, (None, r'''
@@ -26841,18 +26859,20 @@ y
 '''), r'''
 (x \
 and \
-y and
+y
+and \
 c)
 ''', r'''
-(x and y and
+(x and y
+and \
 c)
 ''', r'''
-BoolOp - ROOT 0,1..3,1
+BoolOp - ROOT 0,1..4,1
   .op And
   .values[3]
    0] Name 'x' Load - 0,1..0,2
    1] Name 'y' Load - 2,0..2,1
-   2] Name 'c' Load - 3,0..3,1
+   2] Name 'c' Load - 4,0..4,1
 '''),
 
 ('', 1, 3, None, {}, (None, r'''
@@ -27077,23 +27097,362 @@ None
 '''), r'''
 if 1:
   (
-   None and \
+   None \
  \
+and \
 None)
 ''', r'''
 if 1:
-  None and \
+  None \
+and \
 None
 ''', r'''
-If - ROOT 0,0..4,5
+If - ROOT 0,0..5,5
   .test Constant 1 - 0,3..0,4
   .body[1]
-   0] Expr - 1,2..4,5
-     .value BoolOp - 2,3..4,4
+   0] Expr - 1,2..5,5
+     .value BoolOp - 2,3..5,4
        .op And
        .values[2]
         0] Constant None - 2,3..2,7
-        1] Constant None - 4,0..4,4
+        1] Constant None - 5,0..5,4
+'''),
+
+('', 1, 2, None, {'op_side': 'left'}, (None, r'''
+a
+or # left
+b
+or # right
+c
+'''), (None,
+r'''**DEL**'''), r'''
+a
+or # right
+c
+''', r'''
+BoolOp - ROOT 0,0..2,1
+  .op Or
+  .values[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'c' Load - 2,0..2,1
+'''),
+
+('', 1, 2, None, {'op_side': 'right'}, (None, r'''
+a
+or # left
+b
+or # right
+c
+'''), (None,
+r'''**DEL**'''), r'''
+a
+or # left
+c
+''', r'''
+BoolOp - ROOT 0,0..2,1
+  .op Or
+  .values[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'c' Load - 2,0..2,1
+'''),
+
+('', 1, 2, None, {}, (None, r'''
+a
+or # left
+b
+or # right
+c
+'''), (None,
+r'''and x'''),
+r'''**ParseError('dangling BoolOp operator does not match')**'''),
+
+('', 1, 2, None, {}, (None, r'''
+a
+or # left
+b
+or # right
+c
+'''), (None,
+r'''x and'''),
+r'''**ParseError('dangling BoolOp operator does not match')**'''),
+
+('', 0, 1, None, {}, (None, r'''
+a
+or # left
+b
+or # right
+c
+'''), (None,
+r'''or x'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('', 2, 3, None, {}, (None, r'''
+a
+or # left
+b
+or # right
+c
+'''), (None,
+r'''x or'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('', 1, 2, None, {}, (None, r'''
+a
+or # left
+b
+or # right
+c
+'''), (None,
+r'''or x'''), r'''
+(a
+or x
+or # right
+c)
+''',
+r'''**SyntaxError("unexpected code after boolop, 'x'")**''', r'''
+BoolOp - ROOT 0,1..3,1
+  .op Or
+  .values[3]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'x' Load - 1,3..1,4
+   2] Name 'c' Load - 3,0..3,1
+'''),
+
+('', 1, 2, None, {}, (None, r'''
+a
+or # left
+b
+or # right
+c
+'''), (None,
+r'''x or'''), r'''
+(a
+or # left
+x or
+c)
+''',
+r'''**ParseError('invalid syntax')**''', r'''
+BoolOp - ROOT 0,1..3,1
+  .op Or
+  .values[3]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'x' Load - 2,0..2,1
+   2] Name 'c' Load - 3,0..3,1
+'''),
+
+('', 1, 1, None, {}, (None, r'''
+a
+or # left
+b
+or # right
+c
+'''), (None,
+r'''or x'''), r'''
+(a
+or x or # left
+b
+or # right
+c)
+''',
+r'''**SyntaxError("unexpected code after boolop, 'x'")**''', r'''
+BoolOp - ROOT 0,1..4,1
+  .op Or
+  .values[4]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'x' Load - 1,3..1,4
+   2] Name 'b' Load - 2,0..2,1
+   3] Name 'c' Load - 4,0..4,1
+'''),
+
+('', 1, 1, None, {}, (None, r'''
+a
+or # left
+b
+or # right
+c
+'''), (None,
+r'''x or'''), r'''
+(a
+or # left
+x or b
+or # right
+c)
+''',
+r'''**ParseError('invalid syntax')**''', r'''
+BoolOp - ROOT 0,1..4,1
+  .op Or
+  .values[4]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'x' Load - 2,0..2,1
+   2] Name 'b' Load - 2,5..2,6
+   3] Name 'c' Load - 4,0..4,1
+'''),
+
+('', 1, 1, None, {}, (None, r'''
+a
+or # left
+b
+or # right
+c
+'''), (None, r'''
+
+or # dangling
+x
+
+'''), r'''
+(a
+or # dangling
+x
+or # left
+b
+or # right
+c)
+''',
+r'''**SyntaxError("unexpected code after boolop, 'x'")**''', r'''
+BoolOp - ROOT 0,1..6,1
+  .op Or
+  .values[4]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'x' Load - 2,0..2,1
+   2] Name 'b' Load - 4,0..4,1
+   3] Name 'c' Load - 6,0..6,1
+'''),
+
+('', 1, 1, None, {}, (None, r'''
+a
+or # left
+b
+or # right
+c
+'''), (None, r'''
+
+x
+or # dangling
+
+'''), r'''
+(a
+or # left
+x
+or # dangling
+b
+or # right
+c)
+''',
+r'''**ParseError('invalid syntax')**''', r'''
+BoolOp - ROOT 0,1..6,1
+  .op Or
+  .values[4]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'x' Load - 2,0..2,1
+   2] Name 'b' Load - 4,0..4,1
+   3] Name 'c' Load - 6,0..6,1
+'''),
+
+('', 3, 3, None, {}, (None, r'''
+a
+or # left
+b
+or # right
+c
+'''), (None, r'''
+
+or # dangling
+x
+
+'''), r'''
+(a
+or # left
+b
+or # right
+c
+or # dangling
+x
+)
+''',
+r'''**SyntaxError("unexpected code after boolop, 'x'")**''', r'''
+BoolOp - ROOT 0,1..6,1
+  .op Or
+  .values[4]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 2,0..2,1
+   2] Name 'c' Load - 4,0..4,1
+   3] Name 'x' Load - 6,0..6,1
+'''),
+
+('', 0, 0, None, {}, (None, r'''
+a
+or # left
+b
+or # right
+c
+'''), (None, r'''
+
+x
+or # dangling
+
+'''), r'''
+(x
+or # dangling
+a
+or # left
+b
+or # right
+c)
+''',
+r'''**ParseError('invalid syntax')**''', r'''
+BoolOp - ROOT 0,1..6,1
+  .op Or
+  .values[4]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'a' Load - 2,0..2,1
+   2] Name 'b' Load - 4,0..4,1
+   3] Name 'c' Load - 6,0..6,1
+'''),
+
+('', 3, 3, None, {}, (None, r'''
+a
+or # left
+b
+or # right
+c
+'''), (None,
+r'''x'''), r'''
+(a
+or # left
+b
+or # right
+c or x)
+''', r'''
+BoolOp - ROOT 0,1..4,6
+  .op Or
+  .values[4]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'b' Load - 2,0..2,1
+   2] Name 'c' Load - 4,0..4,1
+   3] Name 'x' Load - 4,5..4,6
+'''),
+
+('', 0, 0, None, {}, (None, r'''
+a
+or # left
+b
+or # right
+c
+'''), (None,
+r'''x'''), r'''
+(x or a
+or # left
+b
+or # right
+c)
+''', r'''
+BoolOp - ROOT 0,1..4,1
+  .op Or
+  .values[4]
+   0] Name 'x' Load - 0,1..0,2
+   1] Name 'a' Load - 0,6..0,7
+   2] Name 'b' Load - 2,0..2,1
+   3] Name 'c' Load - 4,0..4,1
 '''),
 ],
 
@@ -28183,6 +28542,467 @@ If - ROOT 0,0..5,5
         0] NotIn - 4,0..4,6
        .comparators[1]
         0] Constant None - 5,0..5,4
+'''),
+
+('', 1, 2, None, {'op_side': 'left'}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None,
+r'''**DEL**'''), r'''
+a
+> # right
+c
+''', r'''
+Compare - ROOT 0,0..2,1
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Gt - 1,0..1,1
+  .comparators[1]
+   0] Name 'c' Load - 2,0..2,1
+'''),
+
+('', 1, 2, None, {'op_side': 'right'}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None,
+r'''**DEL**'''), r'''
+a
+< # left
+c
+''', r'''
+Compare - ROOT 0,0..2,1
+  .left Name 'a' Load - 0,0..0,1
+  .ops[1]
+   0] Lt - 1,0..1,1
+  .comparators[1]
+   0] Name 'c' Load - 2,0..2,1
+'''),
+
+('', 1, 2, None, {}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None,
+r'''!= x'''), r'''
+(a
+!= x
+> # right
+c)
+''',
+r'''**SyntaxError("unexpected code after cmpop, 'x'")**''', r'''
+Compare - ROOT 0,1..3,1
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] NotEq - 1,0..1,2
+   1] Gt - 2,0..2,1
+  .comparators[2]
+   0] Name 'x' Load - 1,3..1,4
+   1] Name 'c' Load - 3,0..3,1
+'''),
+
+('', 1, 2, None, {}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None,
+r'''x !='''), r'''
+(a
+< # left
+x !=
+c)
+''',
+r'''**ParseError('invalid syntax')**''', r'''
+Compare - ROOT 0,1..3,1
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] Lt - 1,0..1,1
+   1] NotEq - 2,2..2,4
+  .comparators[2]
+   0] Name 'x' Load - 2,0..2,1
+   1] Name 'c' Load - 3,0..3,1
+'''),
+
+('', 0, 1, None, {}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None,
+r'''== x'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('', 2, 3, None, {}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None,
+r'''x =='''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('', 1, 2, None, {}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None,
+r'''== x'''), r'''
+(a
+== x
+> # right
+c)
+''',
+r'''**SyntaxError("unexpected code after cmpop, 'x'")**''', r'''
+Compare - ROOT 0,1..3,1
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] Eq - 1,0..1,2
+   1] Gt - 2,0..2,1
+  .comparators[2]
+   0] Name 'x' Load - 1,3..1,4
+   1] Name 'c' Load - 3,0..3,1
+'''),
+
+('', 1, 2, None, {}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None,
+r'''x =='''), r'''
+(a
+< # left
+x ==
+c)
+''',
+r'''**ParseError('invalid syntax')**''', r'''
+Compare - ROOT 0,1..3,1
+  .left Name 'a' Load - 0,1..0,2
+  .ops[2]
+   0] Lt - 1,0..1,1
+   1] Eq - 2,2..2,4
+  .comparators[2]
+   0] Name 'x' Load - 2,0..2,1
+   1] Name 'c' Load - 3,0..3,1
+'''),
+
+('', 1, 1, None, {}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None,
+r'''== x'''), r'''
+(a
+== x < # left
+b
+> # right
+c)
+''',
+r'''**SyntaxError("unexpected code after cmpop, 'x'")**''', r'''
+Compare - ROOT 0,1..4,1
+  .left Name 'a' Load - 0,1..0,2
+  .ops[3]
+   0] Eq - 1,0..1,2
+   1] Lt - 1,5..1,6
+   2] Gt - 3,0..3,1
+  .comparators[3]
+   0] Name 'x' Load - 1,3..1,4
+   1] Name 'b' Load - 2,0..2,1
+   2] Name 'c' Load - 4,0..4,1
+'''),
+
+('', 1, 1, None, {}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None,
+r'''x =='''), r'''
+(a
+< # left
+x == b
+> # right
+c)
+''',
+r'''**ParseError('invalid syntax')**''', r'''
+Compare - ROOT 0,1..4,1
+  .left Name 'a' Load - 0,1..0,2
+  .ops[3]
+   0] Lt - 1,0..1,1
+   1] Eq - 2,2..2,4
+   2] Gt - 3,0..3,1
+  .comparators[3]
+   0] Name 'x' Load - 2,0..2,1
+   1] Name 'b' Load - 2,5..2,6
+   2] Name 'c' Load - 4,0..4,1
+'''),
+
+('', 1, 1, None, {}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None, r'''
+
+== # dangling
+x
+
+'''), r'''
+(a
+== # dangling
+x
+< # left
+b
+> # right
+c)
+''',
+r'''**SyntaxError("unexpected code after cmpop, 'x'")**''', r'''
+Compare - ROOT 0,1..6,1
+  .left Name 'a' Load - 0,1..0,2
+  .ops[3]
+   0] Eq - 1,0..1,2
+   1] Lt - 3,0..3,1
+   2] Gt - 5,0..5,1
+  .comparators[3]
+   0] Name 'x' Load - 2,0..2,1
+   1] Name 'b' Load - 4,0..4,1
+   2] Name 'c' Load - 6,0..6,1
+'''),
+
+('', 1, 1, None, {}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None, r'''
+
+x
+== # dangling
+
+'''), r'''
+(a
+< # left
+x
+== # dangling
+b
+> # right
+c)
+''',
+r'''**ParseError('invalid syntax')**''', r'''
+Compare - ROOT 0,1..6,1
+  .left Name 'a' Load - 0,1..0,2
+  .ops[3]
+   0] Lt - 1,0..1,1
+   1] Eq - 3,0..3,2
+   2] Gt - 5,0..5,1
+  .comparators[3]
+   0] Name 'x' Load - 2,0..2,1
+   1] Name 'b' Load - 4,0..4,1
+   2] Name 'c' Load - 6,0..6,1
+'''),
+
+('', 3, 3, None, {}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None, r'''
+
+== # dangling
+x
+
+'''), r'''
+(a
+< # left
+b
+> # right
+c
+== # dangling
+x
+)
+''',
+r'''**SyntaxError("unexpected code after cmpop, 'x'")**''', r'''
+Compare - ROOT 0,1..6,1
+  .left Name 'a' Load - 0,1..0,2
+  .ops[3]
+   0] Lt - 1,0..1,1
+   1] Gt - 3,0..3,1
+   2] Eq - 5,0..5,2
+  .comparators[3]
+   0] Name 'b' Load - 2,0..2,1
+   1] Name 'c' Load - 4,0..4,1
+   2] Name 'x' Load - 6,0..6,1
+'''),
+
+('', 0, 0, None, {}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None, r'''
+
+x
+== # dangling
+
+'''), r'''
+(x
+== # dangling
+a
+< # left
+b
+> # right
+c)
+''',
+r'''**ParseError('invalid syntax')**''', r'''
+Compare - ROOT 0,1..6,1
+  .left Name 'x' Load - 0,1..0,2
+  .ops[3]
+   0] Eq - 1,0..1,2
+   1] Lt - 3,0..3,1
+   2] Gt - 5,0..5,1
+  .comparators[3]
+   0] Name 'a' Load - 2,0..2,1
+   1] Name 'b' Load - 4,0..4,1
+   2] Name 'c' Load - 6,0..6,1
+'''),
+
+('', 3, 3, None, {}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None,
+r'''x'''),
+r'''**ValueError("insertion to Compare requires and 'op' extra operator to insert")**'''),
+
+('', 3, 3, None, {'op': '=='}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None,
+r'''x'''), r'''
+(a
+< # left
+b
+> # right
+c == x)
+''', r'''
+Compare - ROOT 0,1..4,6
+  .left Name 'a' Load - 0,1..0,2
+  .ops[3]
+   0] Lt - 1,0..1,1
+   1] Gt - 3,0..3,1
+   2] Eq - 4,2..4,4
+  .comparators[3]
+   0] Name 'b' Load - 2,0..2,1
+   1] Name 'c' Load - 4,0..4,1
+   2] Name 'x' Load - 4,5..4,6
+'''),
+
+('', 3, 3, None, {'op': '\n==\n'}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None,
+r'''x'''), r'''
+(a
+< # left
+b
+> # right
+c
+==
+x)
+''', r'''
+Compare - ROOT 0,1..6,1
+  .left Name 'a' Load - 0,1..0,2
+  .ops[3]
+   0] Lt - 1,0..1,1
+   1] Gt - 3,0..3,1
+   2] Eq - 5,0..5,2
+  .comparators[3]
+   0] Name 'b' Load - 2,0..2,1
+   1] Name 'c' Load - 4,0..4,1
+   2] Name 'x' Load - 6,0..6,1
+'''),
+
+('', 0, 0, None, {'op': '=='}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None,
+r'''x'''), r'''
+(x == a
+< # left
+b
+> # right
+c)
+''', r'''
+Compare - ROOT 0,1..4,1
+  .left Name 'x' Load - 0,1..0,2
+  .ops[3]
+   0] Eq - 0,3..0,5
+   1] Lt - 1,0..1,1
+   2] Gt - 3,0..3,1
+  .comparators[3]
+   0] Name 'a' Load - 0,6..0,7
+   1] Name 'b' Load - 2,0..2,1
+   2] Name 'c' Load - 4,0..4,1
+'''),
+
+('', 0, 0, None, {'op': '\n==\n'}, (None, r'''
+a
+< # left
+b
+> # right
+c
+'''), (None,
+r'''x'''), r'''
+(x
+==
+a
+< # left
+b
+> # right
+c)
+''', r'''
+Compare - ROOT 0,1..6,1
+  .left Name 'x' Load - 0,1..0,2
+  .ops[3]
+   0] Eq - 1,0..1,2
+   1] Lt - 3,0..3,1
+   2] Gt - 5,0..5,1
+  .comparators[3]
+   0] Name 'a' Load - 2,0..2,1
+   1] Name 'b' Load - 4,0..4,1
+   2] Name 'c' Load - 6,0..6,1
 '''),
 ],
 

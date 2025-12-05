@@ -1005,6 +1005,65 @@ class TestFST(unittest.TestCase):
         self.assertRaises(SyntaxError, px.parse_withitem, 'i for i in j')
         self.assertRaises(SyntaxError, px.parse_withitem, '')
 
+    def test_parse__Boolop_dangling(self):
+        # left
+
+        src = '\n# comment\n \\\n and # line\n x # line\n \\\n'
+        f = FST(px.parse__BoolOp_dangling_left(src, loc_whole=False), src.split('\n'), None)
+        self.assertEqual((3, 1, 4, 2), f.loc)
+
+        f = FST(px.parse__BoolOp_dangling_left(src, loc_whole=True), src.split('\n'), None)
+        self.assertEqual((0, 0, 6, 0), f.loc)
+
+        # right
+
+        src = '\n# comment\n \\\n x # comment\n \\\n and # line\n \\\n'
+        f = FST(px.parse__BoolOp_dangling_right(src, loc_whole=False), src.split('\n'), None)
+        self.assertEqual((3, 1, 5, 4), f.loc)
+
+        f = FST(px.parse__BoolOp_dangling_right(src, loc_whole=True), src.split('\n'), None)
+        self.assertEqual((0, 0, 7, 0), f.loc)
+
+    def test_parse__Compare_dangling(self):
+        # left
+
+        src = '\n# comment\n \\\n < # line\n x # line\n \\\n'
+        f = FST(px.parse__Compare_dangling_left(src, loc_whole=False), src.split('\n'), None)
+        self.assertEqual((3, 1, 4, 2), f.loc)
+
+        f = FST(px.parse__Compare_dangling_left(src, loc_whole=True), src.split('\n'), None)
+        self.assertEqual((0, 0, 6, 0), f.loc)
+
+        src = '\n# comment\n \\\n is \\\n not \\\n # line\n x # line\n \\\n'
+        f = FST(px.parse__Compare_dangling_left(src, loc_whole=False), src.split('\n'), None)
+        self.assertEqual((3, 1, 6, 2), f.loc)
+
+        f = FST(px.parse__Compare_dangling_left(src, loc_whole=True), src.split('\n'), None)
+        self.assertEqual((0, 0, 8, 0), f.loc)
+
+        # right
+
+        src = '\n# comment\n \\\n x # comment\n \\\n > # line\n \\\n'
+        f = FST(px.parse__Compare_dangling_right(src, loc_whole=False), src.split('\n'), None)
+        self.assertEqual((3, 1, 5, 2), f.loc)
+
+        f = FST(px.parse__Compare_dangling_right(src, loc_whole=True), src.split('\n'), None)
+        self.assertEqual((0, 0, 7, 0), f.loc)
+
+        src = '\n# comment\n \\\n x # comment\n \\\n is \\\n not \\\n # line\n \\\n'
+        f = FST(px.parse__Compare_dangling_right(src, loc_whole=False), src.split('\n'), None)
+        self.assertEqual((3, 1, 6, 4), f.loc)
+
+        f = FST(px.parse__Compare_dangling_right(src, loc_whole=True), src.split('\n'), None)
+        self.assertEqual((0, 0, 9, 0), f.loc)
+
+        src = '\n# comment\n \\\n x # comment\n \\\n not \\\n in \\\n # line\n \\\n'
+        f = FST(px.parse__Compare_dangling_right(src, loc_whole=False), src.split('\n'), None)
+        self.assertEqual((3, 1, 6, 3), f.loc)
+
+        f = FST(px.parse__Compare_dangling_right(src, loc_whole=True), src.split('\n'), None)
+        self.assertEqual((0, 0, 9, 0), f.loc)
+
     def test_parse_by_ast_name_from_get_one_data(self):
         # make sure parsing by name of `AST` class is same as parsing by `AST` class
 

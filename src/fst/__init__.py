@@ -76,10 +76,10 @@ both valid even though they are uncompilable.
 
 Format preserving native modification operations exist in two flavors (see the documentation on how to use either):
 
-* Prescribed put operations which do specific things for each type of node being put, including indentation, precedence
+- Prescribed put operations which do specific things for each type of node being put, including indentation, precedence
 and syntax parenthesization, etc... `fst.docs.d05_put`.
 
-* Raw mode put operations which just put the raw source you want to replace and then attempt to reparse a small part of
+- Raw mode put operations which just put the raw source you want to replace and then attempt to reparse a small part of
 the full source around the changes (at least statement level). `fst.docs.d07_raw`, `fst.fst.FST.put_src()`.
 
 There is also a mechanism for allowing outside editing of the `AST` tree and then reconciling with a marked snapshot
@@ -89,8 +89,8 @@ anything about `fst` to maybe gain the ability to preserve some existing formatt
 
 Disclaimer: The intended use of this module is if you want to change code functionality without having to deal with
 syntax details, not lint or format, there are better options for that. The main focus of `fst` is not necessarily to be
-fast but rather to handle all the weird cases of python syntax so that functional code always results, use a formatter
-afterwards as needed.
+fast but rather to handle all the weird cases of python syntax correctly so that functional code always results, use a
+formatter afterwards as needed.
 
 Note: If you will be playing with this module then the `FST.dump()` method will be your friend.
 """

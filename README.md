@@ -353,8 +353,8 @@ operations where it may apply (where comment may belong to expression instead of
 
 * Make reconcile use all slice operations to preserve more formatting.
 
-* Lots of other stuff, code cleanups, API additions for real-world use, optimization, testing, bughunting.
-
+* Tree search, `options` validation, mutate-immune walk, code cleanups, API additions for real-world use, optimization,
+testing, bughunting, lots...
 
 ## Trivia
 

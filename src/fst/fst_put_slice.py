@@ -35,10 +35,12 @@ from .asttypes import (
     Import,
     ImportFrom,
     Interactive,
+    IsNot,
     JoinedStr,
     List,
     ListComp,
     Load,
+    NotIn,
     Match,
     MatchAs,
     MatchClass,
@@ -50,6 +52,7 @@ from .asttypes import (
     NamedExpr,
     Nonlocal,
     Not,
+    Pass,
     Set,
     SetComp,
     Slice,
@@ -66,6 +69,7 @@ from .asttypes import (
     TryStar,
     TypeAlias,
     TemplateStr,
+    cmpop,
     expr_context,
     _ExceptHandlers,
     _match_cases,
@@ -78,9 +82,31 @@ from .asttypes import (
     _type_params,
 )
 
-from .astutil import re_identifier, bistr, is_valid_target, is_valid_del_target, reduce_ast, set_ctx
-from .common import PYLT11, PYGE14, NodeError, astfield, next_frag, next_find, prev_find, next_find_re
-from .parsex import unparse
+from .astutil import re_identifier, OPCLS2STR, bistr, is_valid_target, is_valid_del_target, reduce_ast, set_ctx
+
+from .common import (
+    PYLT11,
+    PYGE14,
+    re_line_end_cont_or_comment,
+    NodeError,
+    astfield,
+    fstloc,
+    next_frag,
+    prev_frag,
+    next_find,
+    prev_find,
+    next_find_re,
+)
+
+from .parsex import (
+    ParseError,
+    unparse,
+    parse_cmpop,
+    parse__BoolOp_dangling_left,
+    parse__BoolOp_dangling_right,
+    parse__Compare_dangling_left,
+    parse__Compare_dangling_right,
+)
 
 from .code import (
     Code,
@@ -105,16 +131,18 @@ from .slice_stmtish import put_slice_stmtish
 from .slice_exprish import put_slice_sep_begin, put_slice_sep_end, put_slice_nosep
 
 from .fst_get_slice import (
-    _get_norm_option,
+    _get_option_norm,
+    _get_option_op_side,
     _bounds_Delete_targets,
     _bounds_Assign_targets,
     _bounds_decorator_list,
     _bounds_generators,
     _bounds_comprehension_ifs,
+    _move_Compare_left_into_comparators,
     _add_MatchMapping_rest_as_real_node,
     _remove_MatchMapping_rest_real_node,
-    _maybe_fix_naked_exprish,
     _maybe_fix_BoolOp,
+    _maybe_fix_Compare,
     _maybe_fix_Assign_target0,
     _maybe_fix_decorator_list_trailing_newline,
     _maybe_fix_decorator_list_del,
@@ -220,7 +248,9 @@ class slicestatic(NamedTuple):
     ret_tail_sep:  bool | Literal[0, 1] | None
 
 
-def _set_loc_whole(self: fst.FST) -> None:  # self must be root
+def _set_loc_whole(self: fst.FST) -> fst.FST:  # self
+    """Set location of `self` (which must be root) to the location of the whole source."""
+
     lines = self._lines
     ast = self.a
     ast.lineno = 1
@@ -228,29 +258,7 @@ def _set_loc_whole(self: fst.FST) -> None:  # self must be root
     ast.end_lineno = len(lines)
     ast.end_col_offset = lines[-1].lenbytes
 
-    self._touch()
-
-
-def _move_Compare_left_into_comparators(self: fst.FST) -> None:
-    """Move the `left` node of a `Compare` into `comparators` as the first node and insert a placeholder alignment
-    operator into `ops`. Set all `pfield`s accordingly."""
-
-    ast = self.a
-    comparators = ast.comparators
-    ops = ast.ops
-    left = ast.left
-    left_lineno = left.lineno
-    left_col_offset = left.col_offset
-    ast.left = None
-
-    comparators.insert(0, left)
-    ops.insert(0, fst.FST(Set([], lineno=left_lineno, col_offset=left_col_offset,
-                              end_lineno=left_lineno, end_col_offset=left_col_offset),  # we use a Set because it can be empty and has no `ctx`
-                          self, astfield('ops', 0)).a)  # this is to keep alignment between ops and comparators so that locs and pars() continue to work
-
-    for i, (o, b) in enumerate(zip(ops, comparators, strict=True)):  # adjust all parent fields for inserted `left` and placeholder op at start
-        o.f.pfield = astfield('ops', i)
-        b.f.pfield = astfield('comparators', i)
+    return self._touch()
 
 
 def _code_to_slice_expr(
@@ -273,7 +281,7 @@ def _code_to_slice_expr(
     put_norm = None  # cached
 
     if not one:
-        if put_norm := _get_norm_option('norm_put', 'set_norm', options):  # recognize put-normalized empty set
+        if put_norm := _get_option_norm('norm_put', 'set_norm', options):  # recognize put-normalized empty set
             if (fst_._is_empty_set_star() if put_norm == 'star' else
                 fst_._is_empty_set_call() if put_norm == 'call' else
                 fst_._is_empty_set_star() or fst_._is_empty_set_call()  # True or 'both'
@@ -302,7 +310,7 @@ def _code_to_slice_expr(
             fst_._delimit_node()
 
     elif isinstance(ast_, Set):
-        _maybe_fix_Set(fst_, _get_norm_option('norm_put', 'set_norm', options) if put_norm is None else put_norm)
+        _maybe_fix_Set(fst_, _get_option_norm('norm_put', 'set_norm', options) if put_norm is None else put_norm)
 
     elif isinstance(ast_, NamedExpr):  # this needs to be parenthesized if being put to unparenthesized tuple
         if not fst_.pars().n and self._is_parenthesized_tuple() is False:
@@ -405,6 +413,94 @@ def _code_to_slice_BoolOp_values(
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
+def _code_to_slice_BoolOp_values_maybe_dangling(
+    self: fst.FST,
+    code: Code | None,
+    one: bool,
+    options: Mapping[str, Any],
+    is_first: bool,
+    is_last: bool,
+    is_ins: bool,
+) -> fst.FST | None:
+    """Get a normal `BoolOp` slice (including invalid length) or possibly one with a dangling left or right-side
+    operator in case of replace and definitely one in case of insertion. The dangling operator may come from passed in
+    source in `code` or be added to it if doesn't have according to where it can go and the `op_side` option.
+
+    **Returns:**
+    - `(FST, op_side_left)`: Returns an `FST` just like normal `code_to_*()` functions and also an operator side option
+        indicating whether the operator side is left or right or neither. This may be inferred from slice location,
+        source passed in for the slice and operation type, or it may come from the `op_side` option if allowed on either
+        side and not specified explicitly in `code` source. If is an insertion then the operator is guaranteed to be
+        dangling on the correct side in the `FST` source returned.
+    """
+
+    op_side_left = _get_option_op_side(is_first, is_last, options)
+
+    if code is None:
+        return None, op_side_left
+
+    try:  # most likely case for BoolOp is pure expr so we try getting that first before checking for dangling op versions
+        fst_ = _code_to_slice_BoolOp_values(self, code, one, options)
+
+    except SyntaxError:  # maybe a dangling op in source, if conditions allow then check for this
+        if not (is_first and is_last) and ((is_str := isinstance(code, str)) or isinstance(code, list)):  # can only be present if replacement is not of entire BoolOp from first to last
+            if is_str:
+                lines = (src := code).split('\n')
+            else:
+                src = '\n'.join(lines := code)
+
+            parse_params = self.root.parse_params
+            ast_ = None
+
+            if not is_first:  # dangling op can be on the left
+                try:
+                    ast_ = parse__BoolOp_dangling_left(src, parse_params, loc_whole=True)
+                    op_side_left = True
+
+                except SyntaxError:
+                    pass
+
+            if not is_last and not ast_:  # dangling op can be on the right and hasn't already been parsed on the left
+                try:
+                    ast_ = parse__BoolOp_dangling_right(src, parse_params, loc_whole=True)
+                    op_side_left = False
+
+                except SyntaxError:
+                    pass
+
+            if ast_:
+                if ast_.op.__class__ is not self.a.op.__class__:
+                    raise ParseError('dangling BoolOp operator does not match') from None
+
+                return fst.FST(ast_, lines, None, parse_params=parse_params), op_side_left
+
+        raise  # reraise original _code_to_slice_BoolOp_values() exception
+
+    # parsed successfully so post-process to add dangling op if needed
+
+    if not fst_:
+        return None, op_side_left
+
+    if is_ins:  # if is insert then a dangling operator MUST be added, op_side_left will be either True or False here
+        values = fst_.a.values
+
+        if op_side_left:
+            ln, col, _, _ = values[0].f.pars()
+            op_lines = ['and '] if isinstance(self.a.op, And) else ['or ']
+
+            fst_._put_src(op_lines, ln, col, ln, col, False)  # we don't care if we offset fst_ itself incorrectly since we will set its location to whole source anyway, we only care about the children here
+
+        else:  # op_side_left is False
+            _, _, end_ln, end_col = values[-1].f.pars()
+            op_lines = [' and'] if isinstance(self.a.op, And) else [' or']
+
+            fst_._put_src(op_lines, end_ln, end_col, end_ln, end_col)  # we offset nothing because we reset fst_ location to whole anyway
+
+        return _set_loc_whole(fst_), op_side_left
+
+    return fst_, None
+
+
 def _code_to_slice_Compare__all(
     self: fst.FST, code: Code | None, one: bool, options: Mapping[str, Any]
 ) -> fst.FST | None:
@@ -445,6 +541,180 @@ def _code_to_slice_Compare__all(
                    end_col_offset=ls[-1].lenbytes)
 
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
+
+
+def _code_to_slice_Compare__all_maybe_dangling(
+    self: fst.FST,
+    code: Code | None,
+    one: bool,
+    options: Mapping[str, Any],
+    is_first: bool,
+    is_last: bool,
+    is_ins: bool,
+) -> fst.FST | None:
+    """Get a normal `Compare` slice (including invalid length) or possibly one with a dangling left or right-side
+    operator in case of replace and definitely one in case of insertion. The dangling operator may come from passed in
+    source in `code` or be added to it from the `op` option if doesn't have according to where it can go and the
+    `op_side` option. For deletions an `op` is obviously not needed but the `op_side` is used as a hint.
+
+    The `op` option is accepted as a `Code` so can be a `str`, `list[str]`, `AST`, `FST` as well as a direct `cmpop`
+    `type[AST]` class (not instance).
+
+    **Returns:**
+    - `(FST, op_side_left)`: Returns an `FST` just like normal `code_to_*()` functions and also an operator side option
+        indicating whether the operator side is left or right or neither. This may be inferred from slice location,
+        source passed in for the slice and operation type, or it may come from the `op_side` option if allowed on either
+        side and not specified explicitly in `code` source. If is an insertion then the operator is guaranteed to be
+        dangling on the correct side in the `FST` source returned. If there is a dangling operator then either the
+        `left` field or the last `comparators` will be a placeholder `AST` with a location for the start or end of the
+        `Compare` expression (with the dangling operator).
+    """
+
+    op_side_left = _get_option_op_side(is_first, is_last, options)
+
+    if code is None:
+        return None, op_side_left
+
+    try:  # most likely case for Compare is pure expr so we try getting that first before checking for dangling op versions
+        fst_ = _code_to_slice_Compare__all(self, code, one, options)
+
+    except SyntaxError:  # maybe a dangling op in source, if conditions allow then check for this
+        if not (is_first and is_last) and ((is_str := isinstance(code, str)) or isinstance(code, list)):  # can only be present if replacement is not of entire Compare from first to last
+            if is_str:
+                lines = (src := code).split('\n')
+            else:
+                src = '\n'.join(lines := code)
+
+            parse_params = self.root.parse_params
+            ast_ = None
+
+            if not is_first:  # dangling op can be on the left
+                try:
+                    ast_ = parse__Compare_dangling_left(src, parse_params, loc_whole=True)
+                    op_side_left = True
+
+                except SyntaxError:
+                    pass
+
+            if not is_last and not ast_:  # dangling op can be on the right and hasn't already been parsed on the left
+                try:
+                    ast_ = parse__Compare_dangling_right(src, parse_params, loc_whole=True)
+                    op_side_left = False
+
+                except SyntaxError:
+                    pass
+
+            if ast_:
+                return fst.FST(ast_, lines, None, parse_params=parse_params), op_side_left
+
+        raise  # reraise original _code_to_slice_Compare__all() exception
+
+    # parsed successfully so post-process to add dangling op if needed
+
+    if not fst_:
+        return None, op_side_left
+
+    if is_ins:  # if is insert then a dangling operator MUST be added from a non-global `op` option which must be present, op_side_left will be either True or False here
+        if not (op := options.get('op')):
+            raise ValueError("insertion to Compare requires and 'op' extra operator to insert")
+
+        if isinstance(op, str):
+            op_lines = op.split('\n')
+            op_ast = parse_cmpop(op)
+
+        elif isinstance(op, cmpop):
+            op_lines = [OPCLS2STR[op_cls := op.__class__]]
+            op_ast = op_cls()
+
+        elif isinstance(op, fst.FST):
+            if not op.is_root:
+                raise ValueError("expecting root node for 'op' option")
+
+            op_lines = op._lines
+            op_ast = op.a  # this is fine like this and no unmake because it is just reset in FST() below
+
+            if not isinstance(op_ast, cmpop):
+                raise ValueError(f"expecting cmpop for 'op' option, got {op_ast.__class__.__name__}")
+
+        elif isinstance(op, list):
+            op_lines = op
+            op_ast = parse_cmpop('\n'.join(op))
+
+        elif isinstance(op, type) and issubclass(op, cmpop):
+            op_lines = [OPCLS2STR[op]]
+            op_ast = op()
+
+        else:
+            raise ValueError(f"expecting cmpop source, AST, FST or AST type for 'op' option, got {op.__class__.__qualname__}")
+
+        ast_ = fst_.a
+        ops = ast_.ops
+        comparators = ast_.comparators
+        idx = len(ops)
+
+        if op_side_left:
+            left = ast_.left
+            left_ln, left_col, _, _ = left.f.pars()
+
+            bound_end_ln = len(op_lines) - 1
+            bound_end_col = len(op_lines[-1])
+
+            end_ln, end_col, src = next_frag(op_lines, 0, 0, bound_end_ln, bound_end_col)  # must be there
+
+            lineno = left_ln + end_ln + 1  # these are for the placeholder left node
+            col_offset = len(op_lines[end_ln][:end_col].encode())
+
+            if not end_ln:  # if op starts on first line then it must be offset by left location because it will be on that line in fst_
+                col_offset += fst_._lines[left_ln].c2b(left_col)
+
+            if isinstance(op_ast, (IsNot, NotIn)):  # if two-part operator move on to second part
+                end_ln, end_col, src = next_frag(op_lines, end_ln, end_col + len(src), bound_end_ln, bound_end_col)  # must be there
+
+            if end_ln == bound_end_ln and end_col + len(src) == bound_end_col:  # operator right at end of lines, needs a whitespace
+                op_lines[end_ln] = op_lines[end_ln] + ' '
+
+            elif re_line_end_cont_or_comment.match(op_lines[l := len(op_lines) - 1]).group(1):  # if last line is a comment or line continuation without a newline then add one
+                op_lines.append('')
+
+            fst_._put_src(op_lines, left_ln, left_col, left_ln, left_col, False)  # we don't care if we offset fst_ itself incorrectly since we will set its location to whole source anyway, we only care about the children here
+
+            placeholder = astfield('')
+            ast_.left = fst.FST(Pass(lineno=lineno, col_offset=col_offset,
+                                     end_lineno=lineno, end_col_offset=col_offset),
+                                fst_, placeholder).a
+
+            ops.insert(0, fst.FST(op_ast, fst_, placeholder).a)
+            comparators.insert(0, left)
+
+            for i, (cmp, op) in enumerate(zip(comparators, ops, strict=True)):
+                cmp.f.pfield = astfield('comparators', i)
+                op.f.pfield = astfield('ops', i)
+
+        else:  # op_side_left is False
+            _, _, end_ln, end_col = (comparators[-1] if comparators else ast_.left).f.pars()
+
+            if (l := op_lines[0]) and not l.isspace():  # if no whitespace before operator then insert one
+                op_lines[0] = ' ' + l
+
+            ln, col, src = prev_frag(op_lines, 0, 0, len(op_lines) - 1, 0x7fffffffffffffff)  # must be there, last part of op, can search from (0, 0) because is an op so we know there are no strings (which are the things which can screw up the searches)
+            col += len(src)  # we want the end
+
+            end_lineno = end_ln + ln + 1  # these are for the placeholder comparator node
+            end_col_offset = len(op_lines[ln][:col].encode())
+
+            if not ln:  # if op ends on first line then it must be offset by location because it will be on that line in fst_
+                end_col_offset += fst_._lines[end_ln].c2b(end_col)
+
+            fst_._put_src(op_lines, end_ln, end_col, end_ln, end_col)  # we offset nothing because we reset fst_ location to whole anyway
+
+            ops.append(fst.FST(op_ast, fst_, astfield('ops', idx)).a)
+            comparators.append(fst.FST(Pass(lineno=end_lineno, col_offset=end_col_offset,
+                                            end_lineno=end_lineno, end_col_offset=end_col_offset),
+                                       fst_, astfield('comparators', idx)).a)  # placeholder
+
+        return _set_loc_whole(fst_), op_side_left
+
+    return fst_, None
 
 
 def _code_to_slice_MatchSequence(
@@ -519,7 +789,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
             fst_._parenthesize_grouping()
 
     else:
-        if not one and not _get_norm_option('norm_put', 'matchor_norm', options):
+        if not one and not _get_option_norm('norm_put', 'matchor_norm', options):
             raise NodeError(f"slice being assigned to a MatchOr "
                             f"must be a MatchOr with norm_put=False, not a {ast_.__class__.__name__}",
                             rawable=True)
@@ -802,10 +1072,11 @@ def _put_slice_Tuple_elts(
 ) -> None:
     """Tuple is used in many different ways in python, also for expressionish slices by us."""
 
-    fst_ = _code_to_slice_expr(self, code, one, options, code_as_expr_all)
     ast = self.a
     body = ast.elts
     start, stop = fixup_slice_indices(len(body), start, stop)
+
+    fst_ = _code_to_slice_expr(self, code, one, options, code_as_expr_all)
 
     if not fst_ and start == stop:
         return
@@ -864,10 +1135,11 @@ def _put_slice_List_elts(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice_expr(self, code, one, options)
     ast = self.a
     body = ast.elts
     start, stop = fixup_slice_indices(len(body), start, stop)
+
+    fst_ = _code_to_slice_expr(self, code, one, options)
 
     if not fst_ and start == stop:
         return
@@ -892,9 +1164,10 @@ def _put_slice_Set_elts(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice_expr(self, code, one, options)
     body = self.a.elts
     start, stop = fixup_slice_indices(len(body), start, stop)
+
+    fst_ = _code_to_slice_expr(self, code, one, options)
 
     if not fst_ and start == stop:
         return
@@ -909,7 +1182,7 @@ def _put_slice_Set_elts(
     _put_slice_seq_and_asts(self, start, stop, 'elts', body, fst_, 'elts', None,
                             bound_ln, bound_col, bound_end_ln, bound_end_col, ',', None, options)
 
-    _maybe_fix_Set(self, _get_norm_option('norm_self', 'set_norm', options))
+    _maybe_fix_Set(self, _get_option_norm('norm_self', 'set_norm', options))
 
 
 def _put_slice_Dict__all(
@@ -921,11 +1194,12 @@ def _put_slice_Dict__all(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice_key_and_other(self, code, one, options, code_as_expr)
     ast = self.a
     body = ast.keys
     body2 = ast.values
     start, stop = fixup_slice_indices(len(body), start, stop)
+
+    fst_ = _code_to_slice_key_and_other(self, code, one, options, code_as_expr)
 
     if not fst_:
         if start == stop:  # delete empty slice
@@ -975,12 +1249,13 @@ def _put_slice_Delete_targets(
     non-comma terminated syntax of `Delete` targets (a non-sequence `FST` or `AST` will not be accepted like this). This
     allows correct-appearing syntax like `delfst.targets = 'target'` to work."""
 
-    fst_ = _code_to_slice_expr(self, code, one, options)
     ast = self.a
     body = ast.targets
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
+
+    fst_ = _code_to_slice_expr(self, code, one, options)
 
     if not fst_:
         if not len_slice:
@@ -1018,11 +1293,12 @@ def _put_slice_Assign_targets(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice__Assign_targets(self, code, one, options)
     body = self.a.targets
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
+
+    fst_ = _code_to_slice__Assign_targets(self, code, one, options)
 
     if not fst_:
         if not len_slice:
@@ -1049,12 +1325,13 @@ def _put_slice_With_AsyncWith_items(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice__withitems(self, code, one, options)
     ast = self.a
     body = ast.items
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
+
+    fst_ = _code_to_slice__withitems(self, code, one, options)
 
     if not fst_:
         if not len_slice:
@@ -1092,12 +1369,13 @@ def _put_slice_Import_names(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice_Import_names(self, code, one, options)
     ast = self.a
     body = ast.names
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
+
+    fst_ = _code_to_slice_Import_names(self, code, one, options)
 
     if not fst_:
         if not len_slice:
@@ -1139,13 +1417,14 @@ def _put_slice_ImportFrom_names(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice_ImportFrom_names(self, code, one, options)
     ast = self.a
     body = ast.names
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
     put_star = False
+
+    fst_ = _code_to_slice_ImportFrom_names(self, code, one, options)
 
     if not fst_:
         if not len_slice:
@@ -1208,12 +1487,13 @@ def _put_slice_Global_Nonlocal_names(
     create a temporary container which does have `Name` elements for each name and operate on that. Afterwards we get
     rid of that but the modified source identifiers remain."""
 
-    fst_ = _code_to_slice_expr(self, code, one, options)
     ast = self.a
     body = ast.names
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
+
+    fst_ = _code_to_slice_expr(self, code, one, options)
 
     if not fst_:
         if not len_slice:
@@ -1317,12 +1597,13 @@ def _put_slice_ClassDef_bases(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice__expr_arglikes(self, code, one, options)
     ast = self.a
     body = ast.bases
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
+
+    fst_ = _code_to_slice__expr_arglikes(self, code, one, options)
 
     if not fst_ and not len_slice:
         return
@@ -1392,12 +1673,13 @@ def _put_slice_decorator_list(
     """This handles `FunctionDef`, `AsyncFunctionDef`, `ClassDef` and the `_decorator_list` SPECIAL SLICE. Since a
     decorator list is a very unique slice we need to do more fixing than ususal for newlines here."""
 
-    fst_ = _code_to_slice__decorator_list(self, code, one, options)
     ast = self.a
     body = ast.decorator_list
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
+
+    fst_ = _code_to_slice__decorator_list(self, code, one, options)
 
     if not fst_:
         if not len_slice:
@@ -1470,12 +1752,13 @@ def _put_slice_generators(
 ) -> None:
     """This handles `ListComp`, `SetComp`, `DictComp`, `GeneratorExp` and the `_comprehensions` SPECIAL SLICE."""
 
-    fst_ = _code_to_slice__comprehensions(self, code, one, options)
     ast = self.a
     body = ast.generators
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
+
+    fst_ = _code_to_slice__comprehensions(self, code, one, options)
 
     if not fst_:
         if not len_slice:
@@ -1515,12 +1798,13 @@ def _put_slice_comprehension_ifs(
 ) -> None:
     """This handles `comprehension` and the `_comprehension_ifs` SPECIAL SLICE."""
 
-    fst_ = _code_to_slice__comprehensions_ifs(self, code, one, options)
     ast = self.a
     body = ast.ifs
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
+
+    fst_ = _code_to_slice__comprehensions_ifs(self, code, one, options)
 
     if not fst_ and not len_slice:
         return
@@ -1568,18 +1852,23 @@ def _put_slice_BoolOp_values(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice_BoolOp_values(self, code, one, options)
     ast = self.a
     body = ast.values
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
-    is_del = not fst_
+    is_first = not start
     is_last = stop == len_body
+    is_ins = not len_slice if len_body else False  # put to empty body is not considereed insert but replace for the purposes of dangling operators, could still be delete if code is None or empty BoolOp so is_del after code_to overrides this
     norm_self = get_option_overridable('norm', 'norm_self', options)
 
+    fst_, op_side_left = (
+        _code_to_slice_BoolOp_values_maybe_dangling(self, code, one, options, is_first, is_last, is_ins))
+
+    is_del = not fst_
+
     if is_del:
-        if start == stop:
+        if not len_slice:
             return
 
         if len_slice == len_body and norm_self:
@@ -1587,13 +1876,43 @@ def _put_slice_BoolOp_values(
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    if start:
-        _, _, bound_ln, bound_col = body[start - 1].f.pars()
+    locfunc = None  # TODO: this will currently have a problem with alignment detection, need to still have a preferred location function for that if no dangling operators
 
-    sep = 'and' if isinstance(ast.op, And) else 'or'
+    if op_side_left is not None:  # if no dangling operator then location function is just normal location
+        ast_dangling = None
 
-    _put_slice_seq_and_asts(self, start, stop, 'values', body, fst_, 'values', None,
-                            bound_ln, bound_col, bound_end_ln, bound_end_col, sep, False, options)
+        if op_side_left:  # dangling left operator, include it in first element location
+            if start < len_body:  # could be insert past body
+                ast_dangling = body[start]
+                ln, col, _, _ = self._loc_BoolOp_op(start - 1)
+                _, _, end_ln, end_col = ast_dangling.f.pars()
+
+        else:  # op_side_left is False, dangling right operator, include it in last element location
+            if stop:  # insert at 0 doesn't replace any operator
+                ast_dangling = body[stop - 1]
+                _, _, end_ln, end_col = self._loc_BoolOp_op(stop - 1)
+                ln, col, _, _ = ast_dangling.f.pars()
+
+        if ast_dangling:
+            loc_first = fstloc(ln, col, end_ln, end_col)
+
+            locfunc = lambda body, idx: loc_first if (a := body[idx]) is ast_dangling else a.f.pars()
+
+    if is_del:
+        fst_body = None
+
+        put_slice_nosep(self, start, stop, None, None, None,
+                        bound_ln, bound_col, bound_end_ln, bound_end_col,
+                        options, 'values', locfunc)
+
+    else:
+        fst_body = fst_.a.values
+
+        put_slice_nosep(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f,
+                        bound_ln, bound_col, bound_end_ln, bound_end_col,
+                        options, 'values', locfunc)
+
+    _put_slice_asts(self, start, stop, 'values', body, fst_, fst_body)
 
     _maybe_fix_BoolOp(self, start, is_del, is_last, options, norm_self)
 
@@ -1610,86 +1929,73 @@ def _put_slice_Compare__all(
     """In order to carry out this operation over all the operands we temporarily add `left` to `comparators` to make
     that a contiguous list of everything since source-wise it already is. When deleting we also need to delete an extra
     operator, which defaults to the one on the left side of the comparators being deleted but can be overridden with
-    `op_side='right'` (which is treated as a hint so if not possible no error is raised and other one is deleted).
+    `op_side='right'` (which is treated as a hint so if not possible no error is raised and other one is deleted). When
+    inserting an `op_side` also determines which side of an operator the new slice is inserted. When replacing it is
+    optional whether to replace a side operator or not (determined by if source with that dangling operator is passed in
+    or not).
     """
 
-    fst_ = _code_to_slice_Compare__all(self, code, one, options)
     ast = self.a
-    lines = self.root._lines
-    left = ast.left
-    ops = ast.ops
     body = ast.comparators
     len_body = len(body) + 1  # +1 to include `left` element
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
-    is_del = not fst_
     is_first = not start
     is_last = stop == len_body
+    is_ins = not len_slice if len_body else False  # put to empty body is not considereed insert but replace for the purposes of dangling operators, could still be delete if code is None or empty BoolOp so is_del after code_to overrides this
+
+    fst_, op_side_left = (
+        _code_to_slice_Compare__all_maybe_dangling(self, code, one, options, is_first, is_last, is_ins))
+
+    is_del = not fst_
 
     if is_del:
-        if start == stop:
+        if not len_slice:
             return
 
         if len_slice == len_body:
             raise ValueError('cannot delete all Compare elements')
 
-        op_side = options.get('op_side')  # figure out which side we are deleting the extra operator from, the option is treated as a hint
-        op_side_right = op_side == 'right'
+    elif op_side_left is not True:  # if op_side_left is True then all operands already in comparators and left is already a placeholder
+        _move_Compare_left_into_comparators(fst_)
 
-        if not op_side_right:
-            if op_side not in (None, 'left'):
-                raise ValueError(f"expecting 'left' or 'right' for 'op_side' option, got {op_side!r}")
+    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-            if is_first:
-                op_side_right = True
+    _move_Compare_left_into_comparators(self)  # we put everything into `comparators` for the sake of sanity (relatively speaking)
 
-        elif is_last:
-            op_side_right = False
+    if op_side_left is None:  # if no operator side then location function is just normal location
+        locfunc = None  # TODO: this will currently have a problem with alignment detection, need to still have a preferred location function for that if no dangling operators
 
-        # hacky but valid way of doing this, include the extra operator which will be deleted in the location of the comparator next to it which will be deleted, otherwise it gets reeeally complicated
+    elif op_side_left:
+        def locfunc(body: list[AST], idx: int) -> fstloc:
+            f = body[idx].f
+            _, _, end_ln, end_col = f.pars()
+            ln, col, _, _ = f.parent.a.ops[idx].f.loc  # comparator always has an operator on thje left
 
-        if op_side_right:
-            cmp = body[stop - 2] if stop >= 2 else left  # last comparator
-            op = ops[stop - 1].f  # operator to the right of it
+            return fstloc(ln, col, end_ln, end_col)
 
-            ln, col, _, _ = cmp.f.pars()  # we need pars because if they are present the op is outside of them so the start of cmp needs to include them as well
+    else:  # op_side_left is False
+        def locfunc(body: list[AST], idx: int) -> fstloc:
+            f = body[idx].f
+            ln, col, end_ln, end_col = f.pars()
 
-            cmp.lineno = ln + 1
-            cmp.col_offset = lines[ln].c2b(col)
-            cmp.end_lineno = op.end_lineno
-            cmp.end_col_offset = op.end_col_offset
+            if (i := idx + 1) < len(body):  # comparator doesn't always have an opertator on the right
+                _, _, end_ln, end_col = f.parent.a.ops[i].f.loc
 
-        else:
-            cmp = body[start - 1]  # first comparator (we know start > 0 because op_side_right is False)
-            op = ops[start - 1].f  # operator to the left of it
+            return fstloc(ln, col, end_ln, end_col)
 
-            _, _, end_ln, end_col = cmp.f.pars()  # we need pars because if they are present the op is outside of them so the start of cmp needs to include them as well
-
-            cmp.lineno = op.lineno
-            cmp.col_offset = op.col_offset
-            cmp.end_lineno = end_ln + 1
-            cmp.end_col_offset = lines[end_ln].c2b(end_col)
-
-        cmp.f._touch()
-
-    elif start == stop:
-        raise NotImplementedError('cannot insert to Compare')
-
-    bound_ln, bound_col, bound_end_ln, bound_end_col = left.f.pars()
-
-    if body:
-        _, _, bound_end_ln, bound_end_col = body[-1].f.pars()
-
-    _move_Compare_left_into_comparators(self)  # we put everything in `comparators` because code below works on one list field
-
-    # end of setup, now we do the actual operation
+    ops = ast.ops
 
     if is_del:
+        fst_body = None
+        start_old_right = start
+
         put_slice_nosep(self, start, stop, None, None, None,
                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                        options, 'comparators')
+                        options, 'comparators', locfunc)
 
-        slice_ops = slice(start + 1, stop + 1) if op_side_right else slice(start, stop)
+        # slice_ops = slice(start + (op_off := op_side_left is False), stop + op_off)
+        slice_ops = slice(start + (not op_side_left), stop + (not op_side_left))  # op_side_left is never None here
 
         self._unmake_fst_tree(body[start : stop] + ops[slice_ops])
 
@@ -1701,65 +2007,55 @@ def _put_slice_Compare__all(
         fst_body = ast_.comparators
         fst_ops = ast_.ops
 
-        _move_Compare_left_into_comparators(fst_)
-
         put_slice_nosep(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f,
                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                        options, 'comparators')
+                        options, 'comparators', locfunc)
 
-        fst_._unmake_fst_parents(True)
-        self._unmake_fst_tree(body[start : stop] + ops[start + 1 : stop])
-        fst_ops[0].f._unmake_fst_tree()  # clean up alignment placeholder op
+        len_fst = len(fst_body)
 
-        ops[start + 1 : stop] = fst_ops[1:]
-        body[start : stop] = fst_body
+        if op_side_left:
+            ssbody = slice(start, stop)
+            ssops = ssbody
+            fsbody = slice(0, len_fst)
+            fsops = fsbody
 
-        new_fsts = []
-        placeholder = astfield('')
+        elif op_side_left is False:
+            ssbody = slice(start, stop)
+            ssops = slice(start + 1, stop + 1)
+            fsbody = slice(0, len_fst - 1)
+            fsops = slice(1, len_fst)
+
+        else:  # op_side_left is None
+            ssbody = slice(start, stop)
+            ssops = slice(start + 1, stop)
+            fsbody = slice(0, len_fst)
+            fsops = slice(1, len_fst)
+
+        self._unmake_fst_tree(body[ssbody] + ops[ssops])
+
+        body[ssbody] = fst_body[fsbody]
+        ops[ssops] = fst_ops[fsops]
+
+        del fst_body[fsbody]
+        del fst_ops[fsops]
+
+        fst_._unmake_fst_tree()  # be nice and clean up after ourselves
+
         FST = fst.FST
+        new_fsts_body = [FST(body[i], self, astfield('comparators', i))
+                         for i in range(ssbody.start, ssbody.start + fsbody.stop)]  # no - fsbody.start because it is always 0
+        new_fsts_ops = [FST(ops[i], self, astfield('ops', i))
+                        for i in range(ssops.start, ssops.start + fsops.stop - fsops.start)]
 
-        for i in range(start, start + len(fst_body)):
-            new_fsts.append(FST(body[i], self, placeholder))
+        self._make_fst_tree(new_fsts_body + new_fsts_ops)
 
-            if i != start:
-                new_fsts.append(FST(ops[i], self, placeholder))
+        start_old_right = start + fsbody.stop  # because of extra comparator which is not copied in the case of op_side_left=False
 
-        self._make_fst_tree(new_fsts)
+    for i in range(start_old_right, len(body)):  # for fix before restoring to normal Compare structure
+        body[i].f.pfield = astfield('comparators', i)
+        ops[i].f.pfield = astfield('ops', i)
 
-    ops[0].f._unmake_fst_tree()
-
-    del ops[0]  # remove alignment placeholder op
-
-    full_body = body
-    ast.left = left = body[0]  # move original or new `left` element from start of `comparators` back to `left`
-    ast.comparators = body = body[1:]
-    left.f.pfield = astfield('left')
-
-    for i, (cmp, op) in enumerate(zip(body, ops, strict=True)):  # set ALL pfields, we removed first element so adjust all pfields for this as ALL pfield idxs were incremented before
-        cmp.f.pfield = astfield('comparators', i)
-        op.f.pfield = astfield('ops', i)
-
-    # operation done, now on to the cleanup
-
-    _maybe_fix_naked_exprish(self, full_body, is_del, is_first, is_last, options)
-
-    ln, col, end_ln, end_col = self.loc
-
-    self._maybe_fix_joined_alnum(ln, col, end_ln, end_col)  # fix stuff like 'a<(b)and c' -> 'a<xand c', '1 if 2 else(a)<b<c' -> '1 if 2 elseb<c'
-
-    if not body:
-        if get_option_overridable('norm', 'norm_self', options):  # if only one element remains and normalizing then replace the Compare AST in self with the single `left` AST which remains
-            ast.left = None  # minor optimization so that we don't have to rebuild left links on tree make
-
-            self._set_ast(left, True)
-
-    elif is_del:  # otherwise more than one element and there are operators and if deleted then need to make sure we didn't join alnums with an 'is', 'is not', 'in' or 'not in' by deleting the extra operator
-        if op_side_right:
-            ln, col, _, _ = body[stop - len_slice - 1].f.loc  # start of comparator after extra operator that was deleted
-        else:
-            _, _, ln, col = cmp = (body[start - 2] if start >= 2 else left).f.loc  # end of element before start
-
-        self._maybe_fix_joined_alnum(ln, col)
+    _maybe_fix_Compare(self, start, is_del, is_last, options, get_option_overridable('norm', 'norm_self', options))
 
 
 def _put_slice_Call_args(
@@ -1771,11 +2067,12 @@ def _put_slice_Call_args(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice__expr_arglikes(self, code, one, options)
     ast = self.a
     body = ast.args
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
+
+    fst_ = _code_to_slice__expr_arglikes(self, code, one, options)
 
     if not fst_ and start == stop:
         return
@@ -1813,9 +2110,10 @@ def _put_slice_MatchSequence_patterns(
     options: Mapping[str, Any],
 ) -> None:
     # NOTE: we allow multiple MatchStars to be put to the same MatchSequence
-    fst_ = _code_to_slice_MatchSequence(self, code, one, options)
     body = self.a.patterns
     start, stop = fixup_slice_indices(len(body), start, stop)
+
+    fst_ = _code_to_slice_MatchSequence(self, code, one, options)
 
     if not fst_ and start == stop:
         return
@@ -1841,7 +2139,6 @@ def _put_slice_MatchMapping__all(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice_key_and_other(self, code, one, options, code_as_pattern)
     ast = self.a
     body = ast.keys
     body2 = ast.patterns
@@ -1849,6 +2146,8 @@ def _put_slice_MatchMapping__all(
     len_body = len(body)
     len_body_w_rest = len_body + bool(rest)
     start, stop = fixup_slice_indices(len_body_w_rest, start, stop)
+
+    fst_ = _code_to_slice_key_and_other(self, code, one, options, code_as_pattern)
 
     if not fst_:
         if start == stop:  # delete empty slice
@@ -1927,12 +2226,13 @@ def _put_slice_MatchOr_patterns(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    fst_ = _code_to_slice_MatchOr(self, code, one, options)
     body = self.a.patterns
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
-    self_norm = _get_norm_option('norm_self', 'matchor_norm', options)
+    self_norm = _get_option_norm('norm_self', 'matchor_norm', options)
+
+    fst_ = _code_to_slice_MatchOr(self, code, one, options)
 
     if not fst_:
         if not len_slice:
@@ -1978,10 +2278,11 @@ def _put_slice_type_params(
 ) -> None:
     """An empty `Tuple` is accepted as a zero-element `type_params` slice."""
 
-    fst_ = _code_to_slice__type_params(self, code, one, options)
     len_body = len(body := (ast := self.a).type_params)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
+
+    fst_ = _code_to_slice__type_params(self, code, one, options)
 
     bound, (name_ln, name_col) = (
         (fst.FST._loc_TypeAlias_type_params_brackets if isinstance(ast, TypeAlias) else
@@ -2037,10 +2338,11 @@ def _put_slice__slice(
     options: Mapping[str, Any],
 ) -> None:
     static = _SPECIAL_SLICE_STATICS[(ast := self.a).__class__]
-    fst_ = static.code_to(self, code, one, options)
     len_body = len(body := getattr(ast, field))
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
+
+    fst_ = static.code_to(self, code, one, options)
 
     if not fst_ and not len_slice:
         return

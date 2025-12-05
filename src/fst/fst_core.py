@@ -563,7 +563,9 @@ def _reparse_docstr_Constants(self: fst.FST, docstr: bool | Literal['strict'] = 
 
 def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None) -> None:
     """Create tree of `FST` nodes, one for each AST node from root. Call only on root or with pre-made stack of nodes
-    to walk and make trees for individually."""
+    to walk and make trees for individually. If the `AST`s already have `FST` nodes then those are repurposed in
+    `FST()`. In this case the nodes are not removed from whatever previous parent `AST` contained them, that is up to
+    the caller."""
 
     if stack is None:
         stack = [self]

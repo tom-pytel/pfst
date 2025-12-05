@@ -50,6 +50,7 @@ from .asttypes import (
     Module,
     Name,
     Nonlocal,
+    Pass,
     Set,
     SetComp,
     Try,
@@ -73,7 +74,7 @@ from .asttypes import (
 )
 
 from .astutil import re_identifier, bistr, set_ctx, copy_ast
-from .common import NodeError, astfield, fstloc, next_find, next_find_re
+from .common import NodeError, astfield, fstloc, next_frag, next_find, next_find_re
 
 from .fst_misc import (
     new_empty_tuple,
@@ -94,10 +95,27 @@ _re_empty_line_start_maybe_cont = re.compile(r'[ \t]+\\?')  # empty line start w
 # ......................................................................................................................
 # shared with fst_slice_put
 
-def _get_norm_option(override_option: str, norm_option: str, options: Mapping[str, Any]) -> bool | str:
+def _get_option_norm(override_option: str, norm_option: str, options: Mapping[str, Any]) -> bool | str:
     set_norm = get_option_overridable('norm', override_option, options)
 
     return fst.FST.get_option(norm_option, options) if set_norm is True else set_norm
+
+
+def _get_option_op_side(is_first: bool, is_last: bool, options: Mapping[str, Any]) -> bool | None:
+    """Get concrete `op_side_left` from `op_side` option hint and actual location of slice (if at start or end).
+
+    **Returns:**
+    - `True`: If operator side is on the left.
+    - `False`: If operator side is on the right.
+    - `None`: If operator side is neither (slice is from start to stop so there is no other operator on either side).
+    """
+
+    if is_first:
+        return None if is_last else False
+    if is_last:
+        return True
+    else:
+        return fst.FST.get_option('op_side', options) == 'left'
 
 
 def _bounds_Delete_targets(
@@ -211,6 +229,54 @@ def _bounds_comprehension_ifs(self: fst.FST, start: int = 0) -> tuple[int, int, 
     return bound_ln, bound_col, bound_end_ln, bound_end_col
 
 
+def _move_Compare_left_into_comparators(self: fst.FST) -> None:
+    """Move the `left` node of a `Compare` into `comparators` as the first node and insert a placeholder operator
+    alignment node into `ops`. Set `left` to a temporary placeholder as well with the correct location (for operator
+    location calculations). Set all `pfield`s accordingly."""
+
+    ast = self.a
+    ops = ast.ops
+    comparators = ast.comparators
+    left = ast.left
+    lineno = ast.lineno
+    col_offset = ast.col_offset
+    ast.left = fst.FST(Pass(lineno=lineno, col_offset=col_offset,
+                            end_lineno=lineno, end_col_offset=col_offset),  # illegal temporary use of Pass, doesn't have children, has loc and doesn't parenthesize (so no pars() overhead)
+                       self, astfield('left')).a
+
+    comparators.insert(0, left)
+    ops.insert(0, fst.FST(Pass(lineno=lineno, col_offset=col_offset,
+                               end_lineno=lineno, end_col_offset=col_offset),
+                          self, astfield('')).a)  # this is to keep alignment between ops and comparators so that locs and pars() continue to work
+
+    for i, (o, b) in enumerate(zip(ops, comparators, strict=True)):  # adjust all parent fields for inserted `left` and placeholder op at start
+        o.f.pfield = astfield('ops', i)
+        b.f.pfield = astfield('comparators', i)
+
+
+def _move_Compare_first_comparator_into_left(self: fst.FST) -> None:
+    """Move the first element of `comparators` into the `left` node of a `Compare` and delete the first `ops` operator
+    and previous `left` placeholder. Set all `pfield`s accordingly. This undoes `_move_Compare_left_into_comparators()`.
+    """
+
+    ast = self.a
+    ops = ast.ops
+    comparators = ast.comparators
+
+    ast.left.f._unmake_fst_tree()
+
+    ast.left = left = comparators.pop(0)  # move original or new left element from start of `comparators` back to `left`
+    left.f.pfield = astfield('left')
+
+    ops[0].f._unmake_fst_tree()
+
+    del ops[0]  # remove alignment placeholder op
+
+    for i, (cmp, op) in enumerate(zip(comparators, ops, strict=True)):  # adjust all parent fields for inserted `left` and placeholder op at start
+        cmp.f.pfield = astfield('comparators', i)
+        op.f.pfield = astfield('ops', i)
+
+
 def _add_MatchMapping_rest_as_real_node(self: fst.FST) -> fst.FST:
     """Add `MatchMapping.rest` temporarily as a None to `self.keys` and a `MatchAs` to `self.patterns`. No source is
     modified since the `rest` is already there so its location is just used for the new `MatchAs` node."""
@@ -287,12 +353,29 @@ def _update_loc_up_parents(self: fst.FST, lineno: int, col_offset: int, end_line
         self._touchall(True, True, False)
 
 
-def _maybe_fix_naked_exprish(
-    self: fst.FST, body: list[AST], is_del: bool, is_first: bool, is_last: bool, options: Mapping[str, Any]
-) -> None:
-    """Fix the start and end positions of self and parents of a naked expression-ish which may have changed location to
-    those of first and last child. If is first child of an `Expr` statement then may need to dedent line continuation to
-    `Expr` indentation if that is the first line left, which may not start exactly at proper indentation level."""
+def _maybe_fix_naked_seq_loc(self: fst.FST, body: list[AST], is_first: bool = True, is_last: bool = True) -> None:
+    """Fix the start and end positions of self and parents of a naked sequence which may have changed location to those
+    of first and last child."""
+
+    lines = self.root._lines
+    ast = self.a
+
+    if is_first:  # make sure our and parents' start position is at start of first element (before any pars)
+        ln, col, end_ln, end_col = body[0].f.pars()
+
+        self._set_start_pos(ln + 1, lines[ln].c2b(col), ast.lineno, ast.col_offset)
+
+    if is_last:  # make sure our and parents' end position is at end of last element (after any pars)
+        if not is_first or len(body) > 1:  # if not then we use end_ln and end_col from block above
+            _, _, end_ln, end_col = body[-1].f.pars()
+
+        self._set_end_pos(end_ln + 1, lines[end_ln].c2b(end_col), ast.end_lineno, ast.end_col_offset)
+
+
+def _maybe_fix_naked_expr(self: fst.FST, is_del: bool, is_first: bool, options: Mapping[str, Any]) -> None:
+    """Parenthesize if needed and allowed. If is first child of an `Expr` statement then may need to dedent line
+    continuation to `Expr` indentation if that is the first line left, which may not start exactly at proper indentation
+    level."""
 
     lines = self.root._lines
 
@@ -300,7 +383,7 @@ def _maybe_fix_naked_exprish(
         if not self._is_enclosed_or_line() and not self._is_enclosed_in_parents():  # we may need to add pars to fix parsable
             self._parenthesize_grouping(False)
 
-    if is_del and is_first:  # VERY SPECIAL CASE where we may have left a line continuation not exactly at proper indentation after delete at start of Expr which is our statement parent
+    if is_first:  # VERY SPECIAL CASE where we may have left a line continuation not exactly at proper indentation after delete at start of Expr which is our statement parent
         if (parent := self.parent_stmtish()) and isinstance(parent.a, Expr):
             ln, col, _, _ = self.loc
 
@@ -313,20 +396,6 @@ def _maybe_fix_naked_exprish(
                     elif (end := m.end()) > col:  # wound up with leading whitespace before expression on same line as Expr so need to offset
                         self._put_src(None, ln, col, ln, end, True)  # tail=True because maybe wound up with zero-length expression?
 
-    if body:  # if everything erased then nothing to adjust to and we just leave previous location
-        ast = self.a
-
-        if is_first:  # make sure our and parents' start position is at start of first element (before any pars)
-            ln, col, end_ln, end_col = body[0].f.pars()
-
-            self._set_start_pos(ln + 1, lines[ln].c2b(col), ast.lineno, ast.col_offset)
-
-        if is_last:  # make sure our and parents' end position is at end of last element (after any pars)
-            if not is_first or len(body) > 1:  # if not then we use end_ln and end_col from block above
-                _, _, end_ln, end_col = body[-1].f.pars()
-
-            self._set_end_pos(end_ln + 1, lines[end_ln].c2b(end_col), ast.end_lineno, ast.end_col_offset)
-
 
 def _maybe_fix_BoolOp(
     self: fst.FST,
@@ -334,26 +403,68 @@ def _maybe_fix_BoolOp(
     is_del: bool,
     is_last: bool,
     options: Mapping[str, Any],
-    norm_self: bool,
+    norm: bool,
 ) -> None:
     """Fix anything that might have been left wrong in a `BoolOp` after a cut, del or put."""
 
     body = self.a.values
     is_first = not start
 
-    _maybe_fix_naked_exprish(self, body, is_del, is_first, is_last, options)
+    _maybe_fix_naked_expr(self, is_del, is_first, options)
 
-    if body and not (is_first or (is_del and is_last)):  # interior possibly joined alnum due to add or delete
-        ln, col, _, _ = body[start].f.loc
+    if body:
+        _maybe_fix_naked_seq_loc(self, body, is_first, is_last)  # if everything erased then nothing to adjust to and we just leave previous location
 
-        self._maybe_fix_joined_alnum(ln, col)
+        if not (is_first or (is_del and is_last)):  # interior possibly joined alnum due to add or delete
+            ln, col, _, _ = body[start].f.loc
+
+            self._maybe_fix_joined_alnum(ln, col)
 
     ln, col, end_ln, end_col = self.loc
 
     self._maybe_fix_joined_alnum(ln, col, end_ln, end_col)  # fix stuff like 'a and(b)if 1 else 0' -> 'aif 1 else 0' and '2 if 1 else(a)and b' -> '2 if 1 elseb'
 
-    if norm_self and len(body) == 1:  # if only one element remains and normalizing then replace the BoolOp AST in self with the single `values` AST which remains
-        self._set_ast(body.pop(), True)  # body.pop() is a minor optimization so that we don't have to rebuild left links on tree make
+    if norm and len(body) == 1:  # if only one element remains and normalizing then replace the BoolOp AST in self with the single `values` AST which remains
+        self._set_ast(body.pop(), True)
+
+
+def _maybe_fix_Compare(
+    self: fst.FST,
+    start: int,
+    is_del: bool,
+    is_last: bool,
+    options: Mapping[str, Any],
+    norm: bool,
+) -> None:
+    """Fix anything that might have been left wrong in a `Compare` after a cut, del or put. Expects `Compare` to be in
+    `_move_Compare_left_into_comparators()` form."""
+
+    body = self.a.comparators
+    is_first = not start
+
+    _maybe_fix_naked_expr(self, is_del, is_first, options)
+
+    if body:
+        _maybe_fix_naked_seq_loc(self, body, is_first, is_last)  # if everything erased then nothing to adjust to and we just leave previous location
+
+        if not (is_first or (is_del and is_last)):  # interior possibly joined alnum due to add or delete on left
+            ln, col, _, _ = body[start].f.loc
+
+            self._maybe_fix_joined_alnum(ln, col)
+
+        if is_del and not is_first:  # on right of start of delete
+            _, _, end_ln, end_col = body[start - 1].f.loc
+
+            self._maybe_fix_joined_alnum(end_ln, end_col)
+
+    ln, col, end_ln, end_col = self.loc
+
+    self._maybe_fix_joined_alnum(ln, col, end_ln, end_col)  # fix stuff like 'a and(b)if 1 else 0' -> 'aif 1 else 0' and '2 if 1 else(a)and b' -> '2 if 1 elseb'
+
+    if len(body) == 1 and norm:  # if only one element remains and normalizing then replace the Compare AST in self with the single `comparators` AST which remains
+        self._set_ast(body.pop(), True)  # this will unmake the leftmost operator fine, placeholder or op_side left or rotated right as well as `left` placeholder
+    else:
+        _move_Compare_first_comparator_into_left(self)
 
 
 def _maybe_fix_Assign_target0(self: fst.FST) -> None:
@@ -546,8 +657,9 @@ def _maybe_fix_stmt_end(
 
 
 # ......................................................................................................................
+# ours
 
-def _locs_and_bound_get(
+def _locs_and_bounds_get(
     self: fst.FST, start: int, stop: int, body: list[AST], body2: list[AST], off: int
 ) -> tuple[fstloc, fstloc, int, int, int, int]:
     """Get the location of the first and last elemnts (assumed present) and the bounding location of a one or
@@ -643,7 +755,7 @@ def _get_slice_Tuple_elts(
         return new_empty_tuple(from_=self)
 
     is_par = self._is_delimited_seq()
-    locs = _locs_and_bound_get(self, start, stop, body, body, is_par)
+    locs = _locs_and_bounds_get(self, start, stop, body, body, is_par)
     asts = _cut_or_copy_asts(start, stop, 'elts', cut, body)
     ctx = ast.ctx.__class__
     ret_ast = Tuple(elts=asts, ctx=ctx())
@@ -689,7 +801,7 @@ def _get_slice_List_elts(
         return fst.FST(List(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
                        ['[]'], None, from_=self)
 
-    locs = _locs_and_bound_get(self, start, stop, body, body, 1)
+    locs = _locs_and_bounds_get(self, start, stop, body, body, 1)
     asts = _cut_or_copy_asts(start, stop, 'elts', cut, body)
     ctx = ast.ctx.__class__
     ret_ast = List(elts=asts, ctx=ctx())  # we set ctx() so that if it is not Load then set_ctx() below will recurse into it
@@ -718,7 +830,7 @@ def _get_slice_Set_elts(
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
-        get_norm = _get_norm_option('norm_get', 'set_norm', options)
+        get_norm = _get_option_norm('norm_get', 'set_norm', options)
 
         return (
             new_empty_set_curlies(from_=self) if not get_norm else
@@ -726,7 +838,7 @@ def _get_slice_Set_elts(
             new_empty_set_star(from_=self)  # True, 'star', 'both'
         )
 
-    locs = _locs_and_bound_get(self, start, stop, body, body, 1)
+    locs = _locs_and_bounds_get(self, start, stop, body, body, 1)
     asts = _cut_or_copy_asts(start, stop, 'elts', cut, body)
     ret_ast = Set(elts=asts)
 
@@ -734,7 +846,7 @@ def _get_slice_Set_elts(
                          options, 'elts', '{', '}', ',', 0, 0)
 
     if cut:
-        _maybe_fix_Set(self, _get_norm_option('norm_self', 'set_norm', options))
+        _maybe_fix_Set(self, _get_option_norm('norm_self', 'set_norm', options))
 
     return fst_
 
@@ -759,7 +871,7 @@ def _get_slice_Dict__all(
         return fst.FST(Dict(keys=[], values=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
                        ['{}'], None, from_=self)
 
-    locs = _locs_and_bound_get(self, start, stop, body, body2, 1)
+    locs = _locs_and_bounds_get(self, start, stop, body, body2, 1)
     asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'values', cut, body, body2)
     ret_ast = Dict(keys=asts, values=asts2)
 
@@ -1158,14 +1270,15 @@ def _get_slice_Boolop_values(
     cut: bool,
     options: Mapping[str, Any],
 ) -> fst.FST:
-    """Cut is not done here but rather delete after copy via `_put_slice_BoolOp_values(None)` to keep all the tricky
-    logic in one place."""
+    """Here we need to deal with possibly deleting a leading or trailing operator and getting the proper trivia from
+    before or after it."""
 
     ast = self.a
     body = ast.values
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
+    is_first = not start
     is_last = stop == len_body
     norm_get = get_option_overridable('norm', 'norm_get', options)
     norm_self = get_option_overridable('norm', 'norm_self', options)
@@ -1180,32 +1293,71 @@ def _get_slice_Boolop_values(
     if cut and len_slice == len_body and norm_self:
         raise ValueError("cannot cut all BoolOp.values without 'norm_self=False'")
 
-    # locs = _locs_and_bound_get(self, start, stop, body, body, 0)
+    loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col = (
+        _locs_and_bounds_get(self, start, stop, body, body, 0))
 
-    # if single := (norm_get and len_slice == 1):  # if length 1 slice and normalizing then return just the expression
-    #     ret_ast = copy_ast(body[start])
-    # else:
-    #     ret_ast = BoolOp(op=copy_ast(ast.op), values=[copy_ast(a) for a in body[start : stop]])
+    # include location of possible extra operator on either side of slice
 
-    # fst_ = get_slice_nosep(self, start, stop, len_body, False, ret_ast,
-    #                        *locs, options, set_ast_loc=not single)
-
-    # if cut:
-    #     fst_package.fst_put_slice._put_slice_BoolOp_values(self, None, start, stop, 'values', False, options)
-
-    # TODO: doesn't work well for multiline with operator leading on new line and trivia after the value as the trivia search in this case treats trivia after the trailing operator as belonging to the value
-
-    locs = _locs_and_bound_get(self, start, stop, body, body, 0)
-    asts = _cut_or_copy_asts(start, stop, 'values', cut, body)
+    lines = self.root._lines
     sep = 'and' if isinstance(ast.op, And) else 'or'
 
-    if single := (norm_get and len_slice == 1):  # if length 1 slice and normalizing then return just the expression
-        ret_ast = asts[0]
-    else:
-        ret_ast = BoolOp(op=ast.op.__class__(), values=asts)
+    op_side_left = _get_option_op_side(is_first, is_last, options)
 
-    fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
-                         options, 'values', '', '', sep, False, False, not single)
+    if op_side_left:  # include left side operator in location of first element so that trivia search starts before it
+        ln, col, end_ln, end_col = loc_first
+        ln, col, src = next_frag(lines, bound_ln, bound_col, ln, col)  # must be there, op
+        loc_first = fstloc(ln, col, end_ln, end_col)
+
+        assert src.startswith(sep)
+
+    elif op_side_left is False:  # include right side operator in location of last element so that trivia search starts past it
+        ln, col, end_ln, end_col = loc_last
+        end_ln, end_col, src = next_frag(lines, end_ln, end_col, bound_end_ln, bound_end_col)  # must be there, op
+        loc_last = fstloc(ln, col, end_ln, end_col + len(sep))
+
+        assert src.startswith(sep)
+
+    # do the thing
+
+    asts = _cut_or_copy_asts(start, stop, 'values', cut, body)
+    ret_ast = BoolOp(op=ast.op.__class__(), values=asts)
+
+    fst_ = get_slice_nosep(self, start, stop, len_body, cut, ret_ast,
+                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col, options)
+
+    # remove possible extra operator on either side of slice
+
+    fst_lines = fst_._lines
+    fst_body = fst_.a.values
+
+    if op_side_left:  # remove left side leading operator
+        end_ln, end_col, _, _ = fst_body[0].f.pars()
+        ln, col, src = next_frag(fst_lines, 0, 0, end_ln, end_col)  # must be there, op
+
+        if ln == end_ln:  # if on same line as first element then delete everything from start of operator to start of element
+            fst_._put_src(None, ln, col, end_ln, end_col, True)
+        elif not fst_lines[ln].strip():  # if operator only thing on the line (incuding comments and line continuations) then nuke the whole line
+            fst_._put_src(None, ln, 0, ln, 0x7fffffffffffffff, True)
+        else:  # otherwise just remove operator
+            fst_._put_src(None, ln, col, ln, col + len(sep), True)
+
+    elif op_side_left is False:  # remove right side trailing operator source
+        _, _, ln, col = fst_body[-1].f.pars()
+        end_ln, end_col, src = next_frag(fst_lines, ln, col, len(fst_lines) - 1, 0x7fffffffffffffff)  # must be there, op
+
+        if end_ln == ln:  # if on same line as last element then delete everything from end of element to end of operator
+            fst_._put_src(None, ln, col, end_ln, end_col + len(sep), True)
+        elif not fst_lines[end_ln].strip():  # if operator only thing on the line (incuding comments and line continuations) then nuke the whole line
+            fst_._put_src(None, end_ln, 0, end_ln, 0x7fffffffffffffff, True)
+        else:  # otherwise just remove operator source
+            fst_._put_src(None, end_ln, end_col, end_ln, end_col + len(sep), True)
+
+    # rest of cleanups
+
+    _maybe_fix_naked_seq_loc(fst_, fst_body)
+
+    if len(fst_body) == 1 and norm_get:  # if only one element gotten and normalizing then replace the BoolOp AST in fst_ with the single `values` AST which it has
+        fst_._set_ast(fst_body.pop(), True)
 
     if cut:
         _maybe_fix_BoolOp(self, start, cut, is_last, options, norm_self)
@@ -1221,16 +1373,19 @@ def _get_slice_Compare__all(
     cut: bool,
     options: Mapping[str, Any],
 ) -> fst.FST:
-    """Slice from whole compare, including `left` field. Can never get empty slice or leave empty self. Length 1
+    """Slice from whole `Compare`, including `left` field. Can never get empty slice or leave empty self. Length 1
     `Compare` will be returned / left as a `Compare` without `ops` or `comparators` with `norm=False`, otherwise will be
-    returned / left as a single `expr` with `norm=True`. Cut is not done here but rather delete after copy via
-    `_put_slice_Compare__all(None)` to keep all the tricky logic in one place."""
+    returned / left as a single `expr` with `norm=True`."""
 
     ast = self.a
     body = ast.comparators
     len_body = len(body) + 1  # +1 to include `left` element
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
+    is_first = not start
+    is_last = stop == len_body
+    norm_get = get_option_overridable('norm', 'norm_get', options)
+    norm_self = get_option_overridable('norm', 'norm_self', options)
 
     if not len_slice:
         raise ValueError("cannot get empty slice from Compare")
@@ -1239,28 +1394,102 @@ def _get_slice_Compare__all(
         if len_slice == len_body:
             raise ValueError("cannot cut all nodes from Compare")
 
-    ast_first = body[start - 1] if start else ast.left
-    loc_first = ast_first.f.pars()
-    loc_last = body[stop - 2].f.pars() if stop >= 2 else loc_first
+    _move_Compare_left_into_comparators(self)  # we put everything into `comparators` for the sake of sanity (relatively speaking)
 
-    bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
+    loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col = (
+        _locs_and_bounds_get(self, start, stop, body, body, 0))
 
-    if start:
-        _, _, bound_ln, bound_col = ast.ops[start - 1].f.loc
+    # include location of possible extra operator on either side of slice
 
-    if single := (len_slice == 1 and get_option_overridable('norm', 'norm_get', options)):  # if length 1 slice and normalizing then return just the expression
-        ret_ast = copy_ast(ast_first)
+    lines = self.root._lines
+    ops = ast.ops
+
+    op_side_left = _get_option_op_side(is_first, is_last, options)
+
+    if op_side_left is False:  # include right side operator in location of last element so that trivia search starts past it
+        ln, col, _, _ = loc_last
+        _, _, end_ln, end_col = ops[stop].f.loc
+        loc_last = fstloc(ln, col, end_ln, end_col)
+
+        fst_body = _cut_or_copy_asts(start, stop, 'comparators', cut, body)
+        asts_ops = _cut_or_copy_asts(start + 1, stop + 1, 'ops', cut, ops)
+
+        lineno = end_ln + 1
+        col_offset = lines[end_ln].c2b(end_col)
+
+        fst_body.append(Pass(lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset))  # placeholders for location calculations
+        asts_ops.insert(0, Pass(lineno=1, col_offset=0, end_lineno=1, end_col_offset=0))
+
     else:
-        ret_ast = Compare(left=copy_ast(ast_first),
-                          ops=[copy_ast(a) for a in ast.ops[start : stop - 1]],
-                          comparators=[copy_ast(a) for a in ast.comparators[start : stop - 1]])
+        if op_side_left:  # include left side operator in location of first element so that trivia search starts before it
+            _, _, end_ln, end_col = loc_first
+            ln, col, _, _ = ops[start].f.loc
+            loc_first = fstloc(ln, col, end_ln, end_col)
 
-    fst_ = get_slice_nosep(self, start, stop, len_body, False, ret_ast,
-                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,
-                           options, set_ast_loc=not single)
+        fst_body = _cut_or_copy_asts(start, stop, 'comparators', cut, body)
+        asts_ops = _cut_or_copy_asts(start, stop, 'ops', cut, ops)
+
+    # do the thing
+
+    ret_ast = Compare(left=Pass(lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),  # left is placeholder for location calculations
+                      ops=asts_ops, comparators=fst_body)
+
+    fst_ = get_slice_nosep(self, start, stop, len_body, cut, ret_ast,
+                           loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col, options)
+
+    # remove possible extra operator on either side of slice
+
+    fst_lines = fst_._lines
+
+    if op_side_left:  # remove left side leading operator
+        op0f = asts_ops[0].f
+        op_ln, op_col, op_end_ln, op_end_col = op0f.loc
+        left_ln, left_col, _, _ = fst_body[0].f.pars()
+
+        if op_end_ln == left_ln:  # if op ends on same line as first element then delete everything from start of operator to start of element
+            fst_._put_src(None, op_ln, op_col, left_ln, left_col, True)
+        elif fst_lines[op_ln][:op_col].isspace() and fst_lines[op_end_ln][op_end_col:].isspace():  # if operator only thing on its line(s) (incuding comments and line continuations, except for anything inside ('is not', 'not in')) then nuke the whole line(s)
+            fst_._put_src(None, op_ln, 0, op_end_ln, 0x7fffffffffffffff, True)
+        else:  # otherwise just remove operator source
+            fst_._put_src(None, op_ln, op_col, op_end_ln, op_end_col, True)
+
+        op0f._unmake_fst_tree()  # delete left operator AST and replace with placeholder for correct location calculations
+
+        asts_ops[0] = fst.FST(Pass(lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), fst_, astfield('ops', 0)).a
+
+    else:
+        if isinstance(op0 := asts_ops[0], Pass):  # first operator is placeholder which was not offset in get_slice_nosep() so assign temporary location here
+            op0.lineno = op0.end_lineno = 1
+            op0.col_offset = op0.end_col_offset = 0
+
+        if op_side_left is False:  # remove right side trailing operator and placeholder comparator
+            _, _, last_end_ln, last_end_col = fst_body[-2].f.pars()
+            opnf = asts_ops.pop().f
+            op_ln, op_col, op_end_ln, op_end_col = opnf.loc
+
+            if op_ln == last_end_ln:  # if op starts on same line as last element ends then delete everything from end of element to end of operator
+                fst_._put_src(None, last_end_ln, last_end_col, op_end_ln, op_end_col, True)
+            elif fst_lines[op_ln][:op_col].isspace() and fst_lines[op_end_ln][op_end_col:].isspace():  # if operator only thing on its line(s) (incuding comments and line continuations, except for anything inside ('is not', 'not in')) then nuke the whole line(s)
+                fst_._put_src(None, op_ln, 0, op_end_ln, 0x7fffffffffffffff, True)
+            else:  # otherwise just remove operator source
+                fst_._put_src(None, op_ln, op_col, op_end_ln, op_end_col, True)
+
+            opnf._unmake_fst_tree()  # delete right operator AST and comparator placeholder AST
+            fst_body.pop().f._unmake_fst_tree()
+
+    # rest of cleanups
+
+    _maybe_fix_naked_seq_loc(fst_, fst_body)
+
+    if len(fst_body) == 1 and norm_get:  # if only one element gotten and normalizing then replace the Compare AST in fst_ with the single `comparators` AST which it has, don't need to unmake `left` since it is None at this point
+        fst_._set_ast(fst_body.pop(), True)  # this will unmake the leftmost operator fine, placeholder or op_side left or rotated right
+    else:
+        _move_Compare_first_comparator_into_left(fst_)
 
     if cut:
-        fst_package.fst_put_slice._put_slice_Compare__all(self, None, start, stop, '_all', False, options)
+        _maybe_fix_Compare(self, start, True, is_last, options, norm_self)
+    else:
+        _move_Compare_first_comparator_into_left(self)
 
     return fst_
 
@@ -1475,7 +1704,7 @@ def _get_slice_MatchSequence_patterns(
                        ['[]'], None, from_=self)
 
     delims = self._is_delimited_matchseq()
-    locs = _locs_and_bound_get(self, start, stop, body, body, bool(delims))
+    locs = _locs_and_bounds_get(self, start, stop, body, body, bool(delims))
     asts = _cut_or_copy_asts(start, stop, 'patterns', cut, body)
     ret_ast = MatchSequence(patterns=asts)
 
@@ -1524,7 +1753,7 @@ def _get_slice_MatchMapping__all(
     if with_rest := (rest and stop == len_body):  # if slice includes rest then add it as temporary `**rest` node so it can be processed like the rest of the sequence
         _add_MatchMapping_rest_as_real_node(self)
 
-    locs = _locs_and_bound_get(self, start, stop, body, body2, 1)
+    locs = _locs_and_bounds_get(self, start, stop, body, body2, 1)
     asts, asts2 = _cut_or_copy_asts2(start, stop, 'keys', 'patterns', cut, body, body2)
     ret_ast = MatchMapping(keys=asts, patterns=asts2, rest=rest if with_rest else None)
 
@@ -1558,8 +1787,8 @@ def _get_slice_MatchOr_patterns(
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
-    get_norm = _get_norm_option('norm_get', 'matchor_norm', options)
-    self_norm = _get_norm_option('norm_self', 'matchor_norm', options)
+    get_norm = _get_option_norm('norm_get', 'matchor_norm', options)
+    self_norm = _get_option_norm('norm_self', 'matchor_norm', options)
 
     if not len_slice:
         if get_norm:
@@ -1579,7 +1808,7 @@ def _get_slice_MatchOr_patterns(
         elif len_left == 1 and self_norm == 'strict':
             raise ValueError("cannot cut MatchOr to length 1 with norm_self='strict'")
 
-    locs = _locs_and_bound_get(self, start, stop, body, body, 0)
+    locs = _locs_and_bounds_get(self, start, stop, body, body, 0)
     asts = _cut_or_copy_asts(start, stop, 'patterns', cut, body)
     ret_ast = MatchOr(patterns=asts)
 

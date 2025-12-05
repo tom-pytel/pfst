@@ -1581,7 +1581,7 @@ c  # comment
         self.assertEqual('(a)and x and y', (f := FST('(a)and(b)')).put_slice('x and y', 1, 2, norm=True).root.src)
         f.verify()
 
-        self.assertEqual('(a)and x and y and (c)', (f := FST('(a)and(b)and(c)')).put_slice('x and y', 1, 2, norm=True).root.src)
+        self.assertEqual('(a)and x and y and(c)', (f := FST('(a)and(b)and(c)')).put_slice('x and y', 1, 2, norm=True).root.src)
         f.verify()
 
         self.assertEqual('(a)and c', (f := FST('(a)and(b)and c')).put_slice(None, 1, 2, norm=True).root.src)
@@ -1597,7 +1597,7 @@ if"repository"or ext_data["jupyterlab"] if b else c:
     pass
             '''.strip())
         self.assertEqual(r'''
-if"extension" or ext_data["jupyterlab"] if b else c:
+if "extension" or ext_data["jupyterlab"] if b else c:
     pass
             '''.strip(), f.test.body.put_slice('"extension"', 0, 1).root.src)
         f.verify()
@@ -1793,6 +1793,11 @@ if (
         f.verify()
 
         self.assertEqual('a and x is y and andy is b', (f := FST('a and andy is b')).put_slice('x is y', 1, 1).root.src)
+        f.verify()
+
+        # had random error in _loc_With_items_pars() because of intermediate expression before fix
+
+        self.assertEqual('with (\n     (x) or (a) or b or (c)): pass'.strip(), (f := FST('with (a) or b or (c): pass')).items[0].context_expr.put_slice('\n(x)', 0, 0).root.src)
         f.verify()
 
     def test_slice_special_Compare(self):

@@ -397,18 +397,10 @@ class FST:
     def root(self) -> FST:  # NOT ROOT-AS-ATTRIBUTE
         """Root node of the tree this node belongs to."""
 
-        try:
-            return self._cache['root']
+        while parent := self.parent:
+            self = parent
 
-        except KeyError:
-            root = self
-
-            while parent := root.parent:
-                root = parent
-
-            self._cache['root'] = root
-
-            return root
+        return self
 
     @property
     def lines(self) -> list[builtins.str] | None:
@@ -765,16 +757,17 @@ class FST:
 
         # creating actual node
 
-        if self := getattr(ast_or_src, 'f', None):  # reuse FST node assigned to AST node (because otherwise it isn't valid anyway)
-            self._touch()
-        else:
+        if not (self := getattr(ast_or_src, 'f', None)):  # reuse FST node assigned to AST node (because otherwise it isn't valid anyway)
             self = ast_or_src.f = object.__new__(cls)
 
-        self.a = ast_or_src  # we don't assume `self.a` is `ast_or_src` if `.f` exists
-        self.pfield = pfield
-        self._cache = {}
+        elif not self.parent:  # if was root previously then clear out root attributes
+            del self.parse_params, self.indent, self._lines, self._serial
 
-        if pfield is not None:  # if this is not a root node then we are done
+        self.a = ast_or_src  # we don't assume `self.a` is `ast_or_src` if even if `.f` exists, it should always be but juuuuust in case
+        self.pfield = pfield
+        self._cache = {}  # this is same a self._touch() if .f already existed in AST
+
+        if pfield:  # if this is not a root node then we are done
             self.parent = mode
             # self.root = mode.root  # ROOT-AS-ATTRIBUTE
 
@@ -4644,6 +4637,7 @@ class FST:
         _loc_ClassDef_bases_pars,
         _loc_ImportFrom_names_pars,
         _loc_With_items_pars,
+        _loc_BoolOp_op,
         _loc_Call_pars,
         _loc_Subscript_brackets,
         _loc_MatchMapping_rest,

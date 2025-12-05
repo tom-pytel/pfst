@@ -1,4 +1,5 @@
-Miscellaneous console sessions mostly meant to screen for random errors.
+Miscellaneous console sessions mostly meant to screen for random errors. Feel free to nuke any these should they become
+annoying.
 
 >>> from fst import *
 
@@ -185,3 +186,43 @@ Tuple - ROOT 0,0..0,19
 >>> f.args = g.copy()
 >>> f.src
 'call(*not a, *[] or ())'
+
+
+........................................................................................................................
+insert into empty BoolOp slice
+
+>>> f = FST('a and b')
+>>> f.put_slice(None)
+<BoolOp ROOT 0,0..0,0>
+>>> f.dump()
+BoolOp - ROOT 0,0..0,0
+  .op And
+>>> f.put_slice('x')
+<BoolOp ROOT 0,0..0,1>
+>>> f.dump('N')
+0: x
+BoolOp - ROOT 0,0..0,1
+  .op And
+  .values[1]
+0: x
+   0] Name 'x' Load - 0,0..0,1
+>>> f.put_slice('y')
+<BoolOp ROOT 0,0..0,1>
+>>> f.dump('N')
+0: y
+BoolOp - ROOT 0,0..0,1
+  .op And
+  .values[1]
+0: y
+   0] Name 'y' Load - 0,0..0,1
+>>> f.put_slice('z', 1, 1)
+<BoolOp ROOT 0,0..0,7>
+>>> f.dump('N')
+0: y and z
+BoolOp - ROOT 0,0..0,7
+  .op And
+  .values[2]
+0: y
+   0] Name 'y' Load - 0,0..0,1
+0:       z
+   1] Name 'z' Load - 0,6..0,7

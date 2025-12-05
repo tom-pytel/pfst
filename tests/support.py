@@ -234,10 +234,10 @@ class GetCases(BaseCases):
 
             if (options := case.options).get('_verify', True):
                 if options.get('_verify_self', True):
-                    f.root.verify()
+                    f.root.verify()  # _verify_self
 
                 if options.get('_verify_get', True) and g_is_FST:
-                    g.verify()
+                    g.verify()  # _verify_get
 
             if not g_is_FST:
                 rest.extend([repr(g), f'{type(g)}'])

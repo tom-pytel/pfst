@@ -23,7 +23,9 @@ from .asttypes import (
     BitOr,
     BitXor,
     BitAnd,
+    BoolOp,
     ClassDef,
+    Compare,
     Del,
     Div,
     Eq,
@@ -99,6 +101,7 @@ from .astutil import (
     OPSTR2CLS_BIN,
     OPSTR2CLS_CMP,
     OPSTR2CLS_BOOL,
+    OPCLS2STR,
     bistr,
     walk,
     reduce_ast,
@@ -152,13 +155,18 @@ __all__ = [
     'parse_type_param',
     'parse__type_params',
     'parse__expr_arglikes',
+    'parse__BoolOp_dangling_left',
+    'parse__BoolOp_dangling_right',
+    'parse__Compare_dangling_left',
+    'parse__Compare_dangling_right',
 ]
 
 
 _re_non_lcont_newline  = re.compile(r'(?<!\\)\n')
 _re_trailing_comma     = re.compile(r'(?: [)\s]* (?: (?: \\ | \#[^\n]* ) \n )? )* ,', re.VERBOSE)  # trailing comma search ignoring comments and line continuation backslashes
 _re_first_src          = re.compile(r'^ ([^\S\n]*) ([^\s\\#]+)', re.VERBOSE | re.MULTILINE)  # search for non-comment non-linecont coding source code starting on a new line
-_re_next_src           = re.compile(r'  ([^\S\n]+) ([^\s\\#]+)', re.VERBOSE | re.MULTILINE)  # search for non-comment non-linecont coding source code starting not necessarily on a new line but with at least one whitespace, meant for followup search for multiword code like 'is not'
+_re_next_src_space     = re.compile(r'  ([^\S\n]+) ([^\s\\#]+)', re.VERBOSE | re.MULTILINE)  # match for non-comment non-linecont coding source code starting not necessarily on a new line but with at least one whitespace, meant for followup search for multiword code like 'is not'
+_re_next_src_no_space  = re.compile(r'  ([^\S\n]*) ([^\s\\#]+)', re.VERBOSE | re.MULTILINE)  # match for non-comment non-linecont coding source code starting not necessarily on a new line and no whitespace constraint
 
 _re_parse_all_category = re.compile(r'''
     (?P<stmt>                          (?: assert | break | class | continue | def | del | from | global | import | nonlocal | pass | raise | return | try | while | with ) \b ) |
@@ -588,14 +596,14 @@ def _parse_op(src: str, type_name: str, opstr2cls: dict[str, type[AST]]) -> AST:
         if op == 'is':  # check for 'is not'
             end = m.end()
 
-            if (n := (_re_next_src.match(src, end)) or _re_first_src.search(src, end)) and n.group(2) == 'not':
+            if (n := (_re_next_src_space.match(src, end)) or _re_first_src.search(src, end)) and n.group(2) == 'not':
                 op = 'is not'
                 m = n
 
         elif op == 'not':  # check for 'not in'
             end = m.end()
 
-            if (n := (_re_next_src.match(src, end)) or _re_first_src.search(src, end)) and n.group(2) == 'in':
+            if (n := (_re_next_src_space.match(src, end)) or _re_first_src.search(src, end)) and n.group(2) == 'in':
                 op = 'not in'
                 m = n
 
@@ -604,7 +612,7 @@ def _parse_op(src: str, type_name: str, opstr2cls: dict[str, type[AST]]) -> AST:
 
     end = m.end()
 
-    if m := (_re_next_src.match(src, end) or _re_first_src.search(src, end)):
+    if m := (_re_next_src_space.match(src, end) or _re_first_src.search(src, end)):
         raise SyntaxError(f'unexpected code after {type_name}, {shortstr(m.group(2))!r}')
 
     return kls()
@@ -1523,6 +1531,214 @@ def parse__expr_arglikes(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     ast = Tuple(elts=value.args, ctx=Load(), **_astloc_from_src(src, 2))
 
     return _offset_linenos(ast, -1)
+
+
+def parse__BoolOp_dangling_left(src: str, parse_params: Mapping[str, Any] = {}, *, loc_whole: bool = False) -> AST:
+    """Parse to a `BoolOp` expecting an explicit dangling operator on left side, e.g. 'and b and c' or `or x'.
+
+    **Parameters:**
+    - `loc_whole': Whether the location of the root `BoolOp` should be the full source or just the `BoolOp` starting at
+        the left dangling op.
+    """
+
+    try:
+        ast = _ast_parse1(f'(_\n{src}\n)', parse_params).value
+    except SyntaxError:
+        raise SyntaxError('expecting BoolOp with dangling operator on left side') from None
+
+    if not isinstance(ast, BoolOp):
+        raise ParseError('expecting BoolOp with dangling operator on left side')
+
+    del ast.values[0]
+
+    ast = _offset_linenos(ast, -1)
+
+    if loc_whole:
+        loc = _astloc_from_src(src)
+        ast.lineno = 1
+        ast.col_offset = 0
+        ast.end_lineno = loc['end_lineno']
+        ast.end_col_offset = loc['end_col_offset']
+
+    else:
+        m = _re_first_src.search(src)  # left dangling operator, needs to become start position of BoolOp
+
+        ast.lineno = src.count('\n', 0, m.start()) + 1
+        ast.col_offset = len(m.group(1).encode())
+
+    return ast
+
+
+def parse__BoolOp_dangling_right(src: str, parse_params: Mapping[str, Any] = {}, *, loc_whole: bool = False) -> AST:
+    """Parse to a `BoolOp` expecting an explicit dangling operator on right side, e.g. 'b and c and' or `x or'.
+
+    **Parameters:**
+    - `loc_whole': Whether the location of the root `BoolOp` should be the full source or just the `BoolOp` ending past
+        the right dangling op.
+    """
+
+    try:
+        ast = _ast_parse1(f'(\n{src}\n_)', parse_params).value
+    except SyntaxError:
+        raise SyntaxError('expecting BoolOp with dangling operator on right side') from None
+
+    if not isinstance(ast, BoolOp):
+        raise ParseError('expecting BoolOp with dangling operator on right side')
+
+    values = ast.values
+
+    del values[-1]
+
+    ast = _offset_linenos(ast, -1)
+
+    if loc_whole:
+        loc = _astloc_from_src(src)
+        ast.lineno = 1
+        ast.col_offset = 0
+        ast.end_lineno = loc['end_lineno']
+        ast.end_col_offset = loc['end_col_offset']
+
+    else:  # search for dangling op from end of last value
+        valn = values[-1]
+        end_lineno = valn.end_lineno
+        end_col_offset = valn.end_col_offset
+        pos = 0
+
+        for _ in range(end_lineno - 1):  # find start of line of node
+            pos = src.index('\n', pos) + 1
+
+        op_len = 3 if isinstance(ast.op, And) else 2
+        end_col = len(src[pos : pos + end_col_offset].encode()[:end_col_offset].decode())  # convert byte column to char column
+        pos += end_col
+
+        m = (_re_next_src_no_space.match(src, pos) or _re_first_src.search(src, pos))  # right dangling operator, needs to become end position of BoolOp
+
+        if extra_lines := src.count('\n', pos, m.start()):
+            ast.end_lineno = end_lineno + extra_lines
+            ast.end_col_offset = len(m.group(1).encode()) + op_len
+
+        else:
+            ast.end_lineno = end_lineno
+            ast.end_col_offset = end_col_offset + len(m.group(1).encode()) + op_len
+
+    return ast
+
+
+def parse__Compare_dangling_left(src: str, parse_params: Mapping[str, Any] = {}, *, loc_whole: bool = False) -> AST:
+    """Parse to a `Compare` expecting an explicit dangling operator on left side, e.g. '< b == c' or `> x'.
+
+    **Parameters:**
+    - `loc_whole': Whether the location of the root `Compare` should be the full source or just the `Compare` starting
+        at the left dangling op.
+
+    **Returns:**
+    - `Compare`: The operators and comparators will be in the `ops` and `comparators` fields and the `left` field will
+        be a placeholder `AST` with location at the start of the left dangling operator, regardless of `loc_whole`.
+    """
+
+    try:
+        ast = _ast_parse1(f'(_\n{src}\n)', parse_params).value
+    except SyntaxError:
+        raise SyntaxError('expecting Compare with dangling operator on left side') from None
+
+    if not isinstance(ast, Compare):
+        raise ParseError('expecting Compare with dangling operator on left side')
+
+    ast.left = None  # no need to offset this
+
+    ast = _offset_linenos(ast, -1)
+
+    m = _re_first_src.search(src)  # left dangling operator, needs to become start position of `left`
+
+    lineno = src.count('\n', 0, m.start()) + 1
+    col_offset = len(m.group(1).encode())
+
+    ast.left = Pass(lineno=lineno, col_offset=col_offset, end_lineno=lineno, end_col_offset=col_offset)  # placeholder AST
+
+    if loc_whole:
+        loc = _astloc_from_src(src)
+        ast.lineno = 1
+        ast.col_offset = 0
+        ast.end_lineno = loc['end_lineno']
+        ast.end_col_offset = loc['end_col_offset']
+
+    else:
+        ast.lineno = lineno
+        ast.col_offset = col_offset
+
+    return ast
+
+
+def parse__Compare_dangling_right(src: str, parse_params: Mapping[str, Any] = {}, *, loc_whole: bool = False) -> AST:
+    """Parse to a `Compare` expecting an explicit dangling operator on right side, e.g. 'b < c ==' or `x >'.
+
+    **Parameters:**
+    - `loc_whole': Whether the location of the root `Compare` should be the full source or just the `Compare` ending
+        past the right dangling op.
+
+    **Returns:**
+    - `Compare`: The operators and comparators will be in the `ops`, `left` and `comparators` fields and the last
+        `comparator` field will be a placeholder `AST` with location at the end of the right dangling operator,
+        regardless of `loc_whole`.
+    """
+
+    try:
+        ast = _ast_parse1(f'(\n{src}\n_)', parse_params).value
+    except SyntaxError:
+        raise SyntaxError('expecting Compare with dangling operator on right side') from None
+
+    if not isinstance(ast, Compare):
+        raise ParseError('expecting Compare with dangling operator on right side')
+
+    comparators = ast.comparators
+    comparators[-1] = None  # no need to offset this
+
+    ast = _offset_linenos(ast, -1)
+
+    valn = comparators[-2] if len(comparators) > 1 else ast.left  # search for dangling op from end of last comparator
+    end_lineno = valn.end_lineno
+    end_col_offset = valn.end_col_offset
+    pos = 0
+
+    for _ in range(end_lineno - 1):  # find start of line of node
+        pos = src.index('\n', pos) + 1
+
+    end_col = len(src[pos : pos + end_col_offset].encode()[:end_col_offset].decode())  # convert byte column to char column
+    pos += end_col
+
+    m = (_re_next_src_no_space.match(src, pos) or _re_first_src.search(src, pos))  # right dangling operator, needs to become end position of placeholder AST and maybe Compare
+
+    if (op_cls := ast.ops[-1].__class__) not in (IsNot, NotIn):  # if not two-part operator then done searching
+        op_len = len(OPCLS2STR[op_cls])
+
+    else:  # two-part operator, find second part
+        p = m.end()
+        m = (_re_next_src_no_space.match(src, p) or _re_first_src.search(src, p))
+        op_len = 3 if op_cls is IsNot else 2
+
+    if extra_lines := src.count('\n', pos, m.start()):
+        end_lineno = end_lineno + extra_lines
+        end_col_offset = len(m.group(1).encode()) + op_len
+
+    else:
+        end_lineno = end_lineno
+        end_col_offset = end_col_offset + len(m.group(1).encode()) + op_len
+
+    comparators[-1] = Pass(lineno=end_lineno, col_offset=end_col_offset,
+                           end_lineno=end_lineno, end_col_offset=end_col_offset)  # placeholder AST
+
+    if loc_whole:
+        loc = _astloc_from_src(src)
+        ast.lineno = 1
+        ast.col_offset = 0
+        ast.end_lineno = loc['end_lineno']
+        ast.end_col_offset = loc['end_col_offset']
+
+    else:
+        ast.end_lineno = end_lineno
+        ast.end_col_offset = end_col_offset
+
+    return ast
 
 
 # ......................................................................................................................

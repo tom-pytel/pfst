@@ -277,7 +277,7 @@ def _dump_lines(
 
     if not col:
         l = f'{c.end_loc}{c.clr_src}{l}{c.end_src}'
-    elif l[0].isspace():
+    elif l[:1].isspace():
         l = f'{" " * (col - 1)}>{c.end_loc}{c.clr_src}{l}{c.end_src}'
     else:
         l = f'{" " * col}{c.end_loc}{c.clr_src}{l}{c.end_src}'
@@ -338,7 +338,6 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
             _dump_lines(self, st, ln, col, end_ln, end_col + 1, True)
 
         else:
-
             _dump_lines(self, st, *loc, True)
 
     elif not isinstance(ast, (mod, _ExceptHandlers, _match_cases)):
