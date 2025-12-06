@@ -788,7 +788,7 @@ def _is_atom(
     - `False`: Not atomic.
 
     **Examples:**
-    ```py
+
     >>> FST('a')._is_atom()
     True
 
@@ -812,7 +812,6 @@ def _is_atom(
 
     >>> FST('[]')._is_atom(always_enclosed=True)  # because List is always enclosed
     True
-    ```
     """
 
     ast = self.a
@@ -895,7 +894,7 @@ def _is_enclosed_or_line(
         have line continuations added for successful parse.
 
     **Examples:**
-    ```py
+
     >>> FST('a')._is_enclosed_or_line()
     True
 
@@ -929,7 +928,6 @@ def _is_enclosed_or_line(
 
     >>> FST('(a is \n not b)').ops[0]._is_enclosed_or_line()
     False
-    ```
     """
 
     lines = self.root._lines
@@ -1101,7 +1099,7 @@ def _is_enclosed_in_parents(self: fst.FST, field: str | None = None) -> bool:
     the first parent and we are really considering the node which would live at `field`, whether it exists or not.
 
     **Examples:**
-    ```py
+
     >>> FST('1 + 2').left._is_enclosed_in_parents()
     False
 
@@ -1134,7 +1132,6 @@ def _is_enclosed_in_parents(self: fst.FST, field: str | None = None) -> bool:
 
     >>> FST('with (x as y): pass').items[0]._is_enclosed_in_parents()
     True
-    ```
     """
 
     if field:
@@ -1213,16 +1210,15 @@ def _get_parse_mode(self: fst.FST) -> str | type[AST] | None:
     - `None`: If invalid or cannot be determined.
 
     **Examples:**
-    ```py
+
     >>> FST('a | b')._get_parse_mode()
-    <class 'ast.BinOp'>
+    'BinOp'
 
     >>> FST('a | b', 'pattern')._get_parse_mode()
-    <class 'ast.MatchOr'>
+    'MatchOr'
 
     >>> FST('except ValueError: pass\nexcept: pass', '_ExceptHandlers')._get_parse_mode()
     '_ExceptHandlers'
-    ```
     """
 
     ast = self.a
@@ -1251,7 +1247,7 @@ def _get_indent(self: fst.FST) -> str:
     - `str`: Entire indentation string for the block this node lives in (not just a single level).
 
     **Examples:**
-    ```py
+
     >>> FST('i = 1')._get_indent()
     ''
 
@@ -1275,7 +1271,6 @@ def _get_indent(self: fst.FST) -> str:
 
     >>> FST('if 1:\n \\\n  i = 1').body[0]._get_indent()
     ' '
-    ```
     """
 
     while (parent := self.parent) and not isinstance(self.a, ASTS_STMTISH):
@@ -1330,8 +1325,6 @@ def _get_indentable_lns(
     - `set[int]`: Set of line numbers (zero based) which are sytactically indentable.
 
     **Examples:**
-    ```py
-    >>> from fst import *
 
     >>> FST("def f():\n    i = 1\n    j = 2")._get_indentable_lns()
     {0, 1, 2}
@@ -1350,7 +1343,6 @@ def _get_indentable_lns(
 
     >>> FST("def f():\n  '''doc\nstr'''\n  s = '''multi\nline\nstring'''\n  i = 1")._get_indentable_lns()
     {0, 1, 2, 3, 6}
-    ```
     """
 
     strict = docstr == 'strict'

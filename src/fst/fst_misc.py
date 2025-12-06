@@ -993,7 +993,7 @@ def _is_parenthesizable(self: fst.FST) -> bool:
     - `bool`: Whether is syntactically legal to add grouping parentheses or not. Can always be forced.
 
     **Examples:**
-    ```py
+
     >>> FST('i + j')._is_parenthesizable()  # expr
     True
 
@@ -1020,7 +1020,6 @@ def _is_parenthesizable(self: fst.FST) -> bool:
 
     >>> FST('a as b', 'withitem')._is_parenthesizable()
     False
-    ```
     """
 
     if not isinstance(a := self.a, expr):
@@ -1046,7 +1045,7 @@ def _is_parenthesized_tuple(self: fst.FST) -> bool | None:
     - `True` if is parenthesized `Tuple`, `False` if is unparenthesized `Tuple`, `None` if is not `Tuple` at all.
 
     **Examples:**
-    ```py
+
     >>> FST('1, 2')._is_parenthesized_tuple()
     False
 
@@ -1055,7 +1054,6 @@ def _is_parenthesized_tuple(self: fst.FST) -> bool | None:
 
     >>> print(FST('1')._is_parenthesized_tuple())
     None
-    ```
     """
 
     return self._is_delimited_seq() if isinstance(self.a, Tuple) else None
@@ -1071,7 +1069,7 @@ def _is_delimited_matchseq(self: fst.FST) -> Literal['', '[]', '()'] | None:
     - `'()'` or `'[]'`: Is delimited with these delimiters.
 
     **Examples:**
-    ```py
+
     >>> FST('match a:\n  case 1, 2: pass').cases[0].pattern._is_delimited_matchseq()
     ''
 
@@ -1083,7 +1081,6 @@ def _is_delimited_matchseq(self: fst.FST) -> Literal['', '[]', '()'] | None:
 
     >>> print(FST('match a:\n  case 1: pass').cases[0].pattern._is_delimited_matchseq())
     None
-    ```
     """
 
     if not isinstance(self.a, MatchSequence):
@@ -1109,7 +1106,7 @@ def _is_except_star(self: fst.FST) -> bool | None:
     at all.
 
     **Examples:**
-    ```py
+
     >>> import sys
 
     >>> if sys.version_info[:2] >= (3, 11):
@@ -1126,7 +1123,6 @@ def _is_except_star(self: fst.FST) -> bool | None:
 
     >>> print(FST('i = 1')._is_except_star())
     None
-    ```
     """
 
     if not isinstance(self.a, ExceptHandler):
@@ -1162,7 +1158,7 @@ def _is_empty_set_call(self: fst.FST) -> bool:
     """Whether `self` is an empty `set()` call.
 
     **Examples:**
-    ```py
+
     >>> FST('{1}')._is_empty_set_call()
     False
 
@@ -1174,7 +1170,6 @@ def _is_empty_set_call(self: fst.FST) -> bool:
 
     >>> FST('{*()}')._is_empty_set_call()
     False
-    ```
     """
 
     return (isinstance(ast := self.a, Call) and not ast.args and not ast.keywords and
@@ -1186,7 +1181,7 @@ def _is_empty_set_star(self: fst.FST) -> bool:
     and `{*{}}`.
 
     **Examples:**
-    ```py
+
     >>> FST('{1}')._is_empty_set_star()
     False
 
@@ -1195,7 +1190,6 @@ def _is_empty_set_star(self: fst.FST) -> bool:
 
     >>> FST('set()')._is_empty_set_star()
     False
-    ```
     """
 
     return (isinstance(ast := self.a, Set) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and
@@ -1209,7 +1203,7 @@ def _is_elif(self: fst.FST) -> bool | None:
     - `True` if is `elif` `If`, `False` if is normal `If`, `None` if is not `If` at all.
 
     **Examples:**
-    ```py
+
     >>> FST('if 1: pass\nelif 2: pass').orelse[0]._is_elif()
     True
 
@@ -1218,7 +1212,6 @@ def _is_elif(self: fst.FST) -> bool | None:
 
     >>> print(FST('if 1: pass\nelse:\n  i = 2').orelse[0]._is_elif())
     None
-    ```
     """
 
     return self.root._lines[(loc := self.loc).ln].startswith('elif', loc.col) if isinstance(self.a, If) else None
@@ -1231,7 +1224,7 @@ def _is_solo_class_base(self: fst.FST) -> bool | None:
     - `True` if is solo class base, `False` if is class base, but not solo and `None` if is not class base at all.
 
     **Examples:**
-    ```py
+
     >>> FST('class cls(b1): pass').bases[0]._is_solo_class_base()
     True
 
@@ -1243,7 +1236,6 @@ def _is_solo_class_base(self: fst.FST) -> bool | None:
 
     >>> print(FST('class cls(b1, meta=m): pass').keywords[0]._is_solo_class_base())
     None
-    ```
     """
 
     if not (parent := self.parent) or self.pfield.name != 'bases':
@@ -1256,7 +1248,7 @@ def _is_solo_call_arg(self: fst.FST) -> bool:
     """Whether `self` is a solo `Call` non-keyword argument.
 
     **Examples:**
-    ```py
+
     >>> FST('call(a)').args[0]._is_solo_call_arg()
     True
 
@@ -1265,7 +1257,6 @@ def _is_solo_call_arg(self: fst.FST) -> bool:
 
     >>> FST('call(i for i in range(3))').args[0]._is_solo_call_arg()
     True
-    ```
     """
 
     return ((parent := self.parent) and self.pfield.name == 'args' and isinstance(parenta := parent.a, Call) and
@@ -1278,7 +1269,7 @@ def _is_solo_call_arg_genexp(self: fst.FST) -> bool:
     even `sum(((i for i in a)))`. To differentiate that see `pars(shared=False)`.
 
     **Examples:**
-    ```py
+
     >>> FST('call(i for i in range(3))').args[0]._is_solo_call_arg_genexp()
     True
 
@@ -1290,7 +1281,6 @@ def _is_solo_call_arg_genexp(self: fst.FST) -> bool:
 
     >>> FST('call(a)').args[0]._is_solo_call_arg_genexp()
     False
-    ```
     """
 
     return ((parent := self.parent) and self.pfield.name == 'args' and isinstance(self.a, GeneratorExp) and
@@ -1302,7 +1292,7 @@ def _is_solo_matchcls_pat(self: fst.FST) -> bool:
     qualifies as `True` for this check if the `MatchValue` does.
 
     **Examples:**
-    ```py
+
     >>> (FST('match a:\n  case cls(a): pass')
     ...  .cases[0].pattern.patterns[0]._is_solo_matchcls_pat())
     True
@@ -1310,7 +1300,6 @@ def _is_solo_matchcls_pat(self: fst.FST) -> bool:
     >>> (FST('match a:\n  case cls(a, b): pass')
     ...  .cases[0].pattern.patterns[0]._is_solo_matchcls_pat())
     False
-    ```
     """
 
     if not (parent := self.parent):
@@ -1412,7 +1401,7 @@ def _has_Slice(self: fst.FST) -> bool:
     """Whether self is a `Slice` or a `Tuple` which directly contains any `Slice`.
 
     **Examples:**
-    ```py
+
     >>> FST('a:b:c', 'expr_slice')._has_Slice()
     True
 
@@ -1422,7 +1411,6 @@ def _has_Slice(self: fst.FST) -> bool:
     >>> # b is in the .slice field but is not a Slice or Slice Tuple
     >>> FST('a[b]').slice._has_Slice()
     False
-    ```
     """
 
     return isinstance(a := self.a, Slice) or (isinstance(a, Tuple) and
@@ -1433,13 +1421,12 @@ def _has_Starred(self: fst.FST) -> bool:
     """Whether self is a `Starred` or a `Tuple`, `List` or `Set` which directly contains any `Starred`.
 
     **Examples:**
-    ```py
+
     >>> FST('*a')._has_Starred()
     True
 
     >>> FST('1, *a')._has_Starred()  # Tuple contains at least one Starred
     True
-    ```
     """
 
     return isinstance(a := self.a, Starred) or (isinstance(a, (Tuple, List, Set)) and

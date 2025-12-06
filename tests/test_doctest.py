@@ -60,12 +60,16 @@ def load_tests(loader, tests, ignore):
 class TestDocTest(unittest.TestCase):
     def test_fst_module(self):
         options = fst.FST.get_options()
+        fst_mod_dict = {k: v for k, v in fst.__dict__.items() if not k.startswith('_')}
 
         try:
-            for mod in (fst.fst,):
+            for mod in (fst.fst, fst.fst_core, fst.fst_misc, fst.fst_locs):
+                if mod is not fst.fst:  # this is so that `FST` and other misc things are available to the doctests
+                    mod.__dict__.update(fst_mod_dict)
+
                 cleanup_docstrs(mod)
 
-                self.assertEqual(0, doctest.testmod(mod).failed)
+                self.assertEqual(0, doctest.testmod(mod, exclude_empty=False).failed)
 
         finally:
             fst.FST.set_options(**options)
@@ -74,9 +78,10 @@ class TestDocTest(unittest.TestCase):
         options = fst.FST.get_options()
 
         try:
-            mod = sys.modules['fst.view']
+            mod = fst.view
 
             cleanup_docstrs(mod)
+
             self.assertEqual(0, doctest.testmod(mod).failed)
 
         finally:
@@ -91,6 +96,7 @@ class TestDocTest(unittest.TestCase):
         try:
             for mod in mods:
                 cleanup_docstrs(mod)
+
                 self.assertEqual(0, doctest.testmod(mod).failed)
 
         finally:
