@@ -251,9 +251,10 @@ def parse(
     - `AST`: Tree with an `FST` `.f` attribute added to each `AST` node.
 
     **Examples:**
-    ```py
+
     >>> import ast, fst
     >>> a = fst.parse('if 1:\n  i = 2')
+
     >>> type(a)
     <class 'ast.Module'>
 
@@ -283,7 +284,6 @@ def parse(
             .targets[1]
              0] Name 'i' Store - 1,2..1,3
             .value Constant 2 - 1,6..1,7
-    ```
     """
 
     if isinstance(source, AST):
@@ -308,13 +308,14 @@ def unparse(ast_obj: AST) -> str:
     - `str`: The unparsed source code, formatted if it came from `FST`.
 
     **Examples:**
-    ```py
+
     >>> import ast, fst
     >>> a = fst.parse('''
     ... if 1: i = 1  # same line
     ... else:
     ...   j=2 # comment
     ... '''.strip())
+
     >>> print(ast.unparse(a))
     if 1:
         i = 1
@@ -332,7 +333,6 @@ def unparse(ast_obj: AST) -> str:
 
     >>> fst.unparse(a)  # also unparses regular AST
     'i = 1'
-    ```
     """
 
     if (f := getattr(ast_obj, 'f', None)) and isinstance(f, FST):
@@ -492,7 +492,7 @@ class FST:
         will include any leading decorators and a trailing line comment on the last child (or self if no children).
 
         **Examples:**
-        ```py
+
         >>> f = FST('''
         ... @decorator
         ... def func():
@@ -509,7 +509,6 @@ class FST:
 
         >>> f.body[0].bloc  # non-block statement doesn't include comment
         fstloc(0, 0, 0, 4)
-        ```
         """
 
         try:
@@ -653,7 +652,7 @@ class FST:
         return isinstance(self.a, ASTS_SCOPE_ANONYMOUS)
 
     @property
-    def docstr(self) -> str | None:
+    def docstr(self) -> builtins.str | None:
         """The docstring of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `Module`. `None` if
         not one of those nodes or has no docstring."""
 
@@ -862,7 +861,7 @@ class FST:
         - `FST`: The new empty top level `FST` node.
 
         **Examples:**
-        ```py
+
         >>> FST.new()
         <Module ROOT 0,0..0,0>
 
@@ -878,7 +877,6 @@ class FST:
 
         >>> _.src
         'None'
-        ```
         """
 
         parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
@@ -922,7 +920,7 @@ class FST:
         - `FST`: The parsed tree with `.f` attributes added to each `AST` node for `FST` access.
 
         **Examples:**
-        ```py
+
         >>> FST.fromsrc('var').dump()
         Module - ROOT 0,0..0,3
           .body[1]
@@ -955,11 +953,11 @@ class FST:
            0] Pass - 0,13..0,17
 
         >>> import ast
+
         >>> FST.fromsrc('a:b', ast.Slice).dump()
         Slice - ROOT 0,0..0,3
           .lower Name 'a' Load - 0,0..0,1
           .upper Name 'b' Load - 0,2..0,3
-        ```
         """
 
         if isinstance(src, str):
@@ -1004,9 +1002,10 @@ class FST:
         - `FST`: The augmented tree with `.f` attributes added to each `AST` node for `FST` access.
 
         **Examples:**
-        ```py
+
         >>> import ast
         >>> from ast import Assign, Slice, Constant
+
         >>> FST.fromast(Assign(targets=[Name(id='var')],
         ...                    value=Constant(value=123))).dump('stmt')
         0: var = 123
@@ -1035,7 +1034,6 @@ class FST:
           .lower Constant 1 - 0,0..0,1
         0:    step
           .step Name 'step' Load - 0,3..0,7
-        ```
         """
 
         if type_comments is None:
@@ -1072,9 +1070,8 @@ class FST:
         - `{option: value, ...}`: Dictionary of all global default options.
 
         **Examples:**
-        ```py
-        >>> from pprint import pp
 
+        >>> from pprint import pp
         >>> pp(FST.get_options())
         {'raw': False,
          'trivia': True,
@@ -1092,7 +1089,6 @@ class FST:
          'set_norm': 'both',
          'matchor_norm': 'value',
          'op_side': 'left'}
-        ```
         """
 
         return _TLOCAL.options.copy()
@@ -1111,7 +1107,7 @@ class FST:
             default value for `option`.
 
         **Examples:**
-        ```py
+
         >>> FST.get_option('pars')
         'auto'
 
@@ -1120,7 +1116,6 @@ class FST:
 
         >>> FST.get_option('pars', {'pars': None})
         'auto'
-        ```
         """
 
         return _TLOCAL.options.get(option) if (o := options.get(option)) is None else o
@@ -1137,7 +1132,7 @@ class FST:
         - `options`: `dict` of previous values of changed parameters, reset with `set_options(**options)`.
 
         **Examples:**
-        ```py
+
         >>> FST.get_option('pars')
         'auto'
 
@@ -1155,7 +1150,6 @@ class FST:
 
         >>> FST.set_options(pars=True, raw=True, docstr=False)
         {'pars': 'auto', 'raw': False, 'docstr': True}
-        ```
         """
 
         _options = _TLOCAL.options
@@ -1298,7 +1292,7 @@ class FST:
             number is specified and just a `'-'` then all empty lines will be deleted.
 
         **Examples:**
-        ```py
+
         >>> print(FST.get_option('pars'), FST.get_option('elif_'))
         auto True
 
@@ -1308,7 +1302,6 @@ class FST:
 
         >>> print(FST.get_option('pars'), FST.get_option('elif_'))
         auto True
-        ```
         """
 
         old_options = FST.set_options(**options)
@@ -1374,7 +1367,7 @@ class FST:
         - `None`: Otherwise.
 
         **Examples:**
-        ```py
+
         >>> f = FST('''
         ... if 1:
         ...     call(a=b, **c)
@@ -1435,7 +1428,6 @@ class FST:
          "          .value Name 'b' Load",
          '        1] keyword',
          "          .value Name 'c' Load"]
-        ```
         """
 
         src_plus = False
@@ -1531,7 +1523,7 @@ class FST:
         - `None` on failure to verify (if not `raise_`), otherwise `self`.
 
         **Examples:**
-        ```py
+
         >>> FST('var = 123').verify()
         <Assign ROOT 0,0..0,9>
 
@@ -1546,7 +1538,6 @@ class FST:
 
         >>> bool(FST('if a if b').verify('strict', raise_=False))
         False
-        ```
         """
 
         # validate tree links
@@ -1641,7 +1632,7 @@ class FST:
         - `FST`: A new valid reconciled `FST` if possible.
 
         **Examples:**
-        ```py
+
         >>> f = FST('''
         ... @decorator  # something
         ... def function(a: int, b=2)->int:  # blah
@@ -1689,7 +1680,6 @@ class FST:
         .
         def last_function(a, b):
             return a+b  # return this
-        ```
         """
 
         # TODO: allow multiple marked trees to participate?
@@ -1721,10 +1711,9 @@ class FST:
         - `FST`: Copied node.
 
         **Examples:**
-        ```py
+
         >>> FST('[0, 1, 2, 3]').elts[1].copy().src
         '1'
-        ```
         """
 
         if parent := self.parent:
@@ -1743,13 +1732,12 @@ class FST:
         - `FST`: Cut node.
 
         **Examples:**
-        ```py
+
         >>> (f := FST('[0, 1, 2, 3]')).elts[1].cut().src
         '1'
 
         >>> f.src
         '[0, 2, 3]'
-        ```
         """
 
         if parent := self.parent:
@@ -1775,15 +1763,15 @@ class FST:
             corresponding new node could not be found.
 
         **Examples:**
-        ```py
+
         >>> FST('[0, 1, 2, 3]').elts[1].replace('4').root.src
         '[0, 4, 2, 3]'
 
         >>> f = FST('def f(a, /, b, *c, **d) -> int: pass')
+
         >>> f.args.posonlyargs[0].replace(')', to=f.returns, raw=True)  # raw reparse
         >>> f.src
         'def f(): pass'
-        ```
         """
 
         if parent := self.parent:
@@ -1808,10 +1796,10 @@ class FST:
         - `options`: See `options()`.
 
         **Examples:**
-        ```py
-        >>> (f := FST('[0, 1, 2, 3]')).elts[1].remove(); f.src
+
+        >>> (f := FST('[0, 1, 2, 3]')).elts[1].remove()
+        >>> f.src
         '[0, 2, 3]'
-        ```
         """
 
         if not (parent := self.parent):
@@ -1857,19 +1845,17 @@ class FST:
         - `constant`: When getting a constant (`fst.astutil.constant`), like from `MatchSingleton.value`.
 
         **Examples:**
-        ```py
+
         >>> FST('[0, 1, 2, 3]').get(1).src
         '1'
 
         >>> (f := FST('[0, 1, 2, 3]')).get(1, 3).src
         '[1, 2]'
-
         >>> f.src
         '[0, 1, 2, 3]'
 
         >>> (f := FST('[0, 1, 2, 3]')).get(1, 3, cut=True).src
         '[1, 2]'
-
         >>> f.src
         '[0, 3]'
 
@@ -1896,7 +1882,6 @@ class FST:
 
         >>> FST('[0, 1, 2, 3]').get().src  # 'elts' slice copy is made
         '[0, 1, 2, 3]'
-        ```
         """
 
         ast = self.a
@@ -1970,7 +1955,7 @@ class FST:
         - `self` or `None` if a raw put was done and corresponding new node could not be found.
 
         **Examples:**
-        ```py
+
         >>> FST('[0, 1, 2, 3]').put('4', 1).src
         '[0, 4, 2, 3]'
 
@@ -2007,7 +1992,6 @@ class FST:
         >>> print((f := FST('if 1: i = 1\nelse: j = 2'))
         ...       .put('z = -1', 0, raw=True, to=f.orelse[0]).root.src)
         if 1: z = -1
-        ```
         """
 
         ast = self.a
@@ -2062,7 +2046,7 @@ class FST:
         - `FST`: Slice node of nodes gotten.
 
         **Examples:**
-        ```py
+
         >>> FST('[0, 1, 2, 3]').get_slice(1).src
         '[1, 2, 3]'
 
@@ -2071,19 +2055,20 @@ class FST:
 
         >>> (f := FST('[0, 1, 2, 3]')).get_slice(1, 3, cut=True).src
         '[1, 2]'
-
         >>> f.src
         '[0, 3]'
 
         >>> f = FST('if 1: i = 1\nelse: j = 2; k = 3; l = 4; m = 5')
-        >>> s = f.get_slice(1, 3, 'orelse', cut=True)
+        >>> print(f.src)
+        if 1: i = 1
+        else: j = 2; k = 3; l = 4; m = 5
+
+        >>> print(f.get_slice(1, 3, 'orelse', cut=True).src)
+        k = 3; l = 4
+
         >>> print(f.src)
         if 1: i = 1
         else: j = 2; m = 5
-
-        >>> print(s.src)
-        k = 3; l = 4
-        ```
         """
 
         ast = self.a
@@ -2137,7 +2122,7 @@ class FST:
         - `self` or `None` if a raw put was done and corresponding new node could not be found.
 
         **Examples:**
-        ```py
+
         >>> FST('[0, 1, 2, 3]').put('4', 1).src
         '[0, 4, 2, 3]'
 
@@ -2150,7 +2135,7 @@ class FST:
         >>> FST('[0, 1, 2, 3]').put('4, 5', None, 3).src
         '[(4, 5), 3]'
 
-        >>> (f := FST('[0, 1, 2, 3]')).put('4, 5', -3, None, one=False).src
+        >>> FST('[0, 1, 2, 3]').put('4, 5', -3, None, one=False).src
         '[0, 4, 5]'
 
         >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0).src)
@@ -2174,7 +2159,6 @@ class FST:
         >>> print((f := FST('if 1: i = 1\nelse: j = 2'))
         ...       .put('z = -1', 0, raw=True, to=f.orelse[0]).root.src)
         if 1: z = -1
-        ```
         """
 
         ast = self.a
@@ -2209,7 +2193,7 @@ class FST:
             newlines in the individual line strings.
 
         **Examples:**
-        ```py
+
         >>> FST('if 1:\n  i = 2').get_src(0, 3, 1, 5)
         '1:\n  i ='
 
@@ -2218,7 +2202,6 @@ class FST:
 
         >>> (f := FST('if 1:\n  i = 2')).get_src(*f.body[0].bloc)
         'i = 2'
-        ```
         """
 
         ln, col, end_ln, end_col = clip_src_loc(self, ln, col, end_ln, end_col)
@@ -2232,11 +2215,11 @@ class FST:
         col: int,
         end_ln: int,
         end_col: int,
-        ast_op: Literal['reparse', 'offset'] | None = 'reparse',
-    ) -> FST | None:
+        ast_action: Literal['reparse', 'offset'] | None = 'reparse',
+    ) -> tuple[int, int]:
         r"""Put source and maybe adjust `AST` tree for source modified. The adjustment may be a reparse of the area
         changed, an offset of nodes (assuming put source was just trivia and wouldn't affect the tree) or nothing at
-        all. The `ast_op` options are:
+        all. The `ast_action` options are:
 
         * `'reparse'`: Put source and reparse. There are no rules on what is put, it is simply put and parse is
           attempted.
@@ -2283,13 +2266,13 @@ class FST:
         - `col`: Start column (character) on start line.
         - `end_ln`: End line of span to put (0 based, inclusive).
         - `end_col`: End column (character, exclusive) on end line.
-        - `ast_op`: What action to take on the `AST` tree, the options are `'reparse'`, `'offset'` or `None`.
+        - `ast_action`: What action to take on the `AST` tree, the options are `'reparse'`, `'offset'` or `None`.
 
         **Returns:**
         - `(end_ln, end_col)`: New end location of source put (all source after this was not modified).
 
         **Examples:**
-        ```py
+
         >>> f = FST('i = 1')
         >>> f.put_src('2', 0, 4, 0, 5)
         (0, 5)
@@ -2335,26 +2318,24 @@ class FST:
           if b:
             k = 4
 
-        >>> f = FST('a, b')
-        >>> f.put_src(' ', 0, 4, 0, 4, 'offset')
+        >>> (f := FST('a, b')).put_src(' ', 0, 4, 0, 4, 'offset')
         (0, 5)
 
         >>> f.src, f.loc, f.elts[1].loc
         ('a, b ', fstloc(0, 0, 0, 5), fstloc(0, 3, 0, 4))
-        ```
         """
 
         root = self.root
         ln, col, end_ln, end_col = clip_src_loc(self, ln, col, end_ln, end_col)
 
-        if ast_op == 'reparse':
+        if ast_action == 'reparse':
             parent = root.find_loc_in(ln, col, end_ln, end_col, False) or root
 
             return parent._reparse_raw(code, ln, col, end_ln, end_col)
 
         put_lines = code_as_lines(code)
 
-        if ast_op == 'offset':
+        if ast_action == 'offset':
             # TODO: there may be issues with certain zero-length trees but I can't think of any that might occur in normal usage
 
             if not (loc := self.loc):
@@ -2373,10 +2354,11 @@ class FST:
 
             self._offset(*params_offset, False, True, self_=False)
 
-        else:  # ast_op is None
-            assert ast_op is None
-
+        elif ast_action is None:
             root._put_src(put_lines, ln, col, end_ln, end_col)
+
+        else:
+            raise ValueError(f"ast_action must be 'reparse', 'offset' or None, got {ast_action!r}")
 
         if len(put_lines) == 1:
             return ln, col + len(put_lines[0])
@@ -2413,7 +2395,7 @@ class FST:
             still have the count of parentheses in an attribute `.n`.
 
         **Examples:**
-        ```py
+
         >>> FST('i').pars()
         fstlocn(0, 0, 0, 1, n=0)
 
@@ -2443,7 +2425,6 @@ class FST:
 
         >>> FST('call((i for i in j))').args[0].pars(shared=False)
         fstlocn(0, 5, 0, 19, n=0)
-        ```
         """
 
         key = 'parsT' if shared else 'parsF' if shared is False else 'parsN'
@@ -2510,7 +2491,7 @@ class FST:
         - `self`
 
         **Examples:**
-        ```py
+
         >>> FST('a + b').par().src
         '(a + b)'
 
@@ -2538,7 +2519,6 @@ class FST:
 
         >>> FST('call(i = 1 + 2)').keywords[0].value.par().root.src  # not just root node
         'call(i = (1 + 2))'
-        ```
         """
 
         if not force:
@@ -2588,7 +2568,7 @@ class FST:
         - `self`
 
         **Examples:**
-        ```py
+
         >>> FST('a + b').unpar().src  # nothing done if no pars
         'a + b'
 
@@ -2630,7 +2610,6 @@ class FST:
         >>> # unless told not to
         >>> FST('call(((i for i in j)))').args[0].unpar(shared=False).root.src
         'call((i for i in j))'
-        ```
         """
 
         if isinstance(a := self.a, Starred):
@@ -2692,14 +2671,14 @@ class FST:
         - `None` if last valid sibling in parent, otherwise next node.
 
         **Examples:**
-        ```py
+
         >>> f = FST('[[1, 2], [3, 4]]')
+
         >>> f.elts[0].next().src
         '[3, 4]'
 
         >>> print(f.elts[1].next())
         None
-        ```
         """
 
         if not (parent := self.parent):
@@ -3014,14 +2993,14 @@ class FST:
         - `None` if first valid sibling in parent, otherwise previous node.
 
         **Examples:**
-        ```py
+
         >>> f = FST('[[1, 2], [3, 4]]')
+
         >>> f.elts[1].prev().src
         '[1, 2]'
 
         >>> print(f.elts[0].prev())
         None
-        ```
         """
 
         if not (parent := self.parent):
@@ -3322,8 +3301,9 @@ class FST:
         - `None` if no valid children, otherwise first valid child.
 
         **Examples:**
-        ```py
+
         >>> f = FST('def f(a: list[str], /, reject: int, *c, d=100, **e): pass')
+
         >>> f.first_child().src
         'a: list[str], /, reject: int, *c, d=100, **e'
 
@@ -3332,7 +3312,6 @@ class FST:
 
         >>> f.args.first_child().first_child().src
         'list[str]'
-        ```
         """
 
         for name in AST_FIELDS[(a := self.a).__class__]:
@@ -3367,14 +3346,14 @@ class FST:
         - `None` if no valid children, otherwise last valid child.
 
         **Examples:**
-        ```py
+
         >>> f = FST('def f(a: list[str], /, reject: int, *c, d=100, **e): pass')
+
         >>> f.last_child().src
         'pass'
 
         >>> f.args.last_child().src
         'e'
-        ```
         """
 
         if (isinstance(a := self.a, Call)) and a.args and (keywords := a.keywords) and isinstance(a.args[-1], Starred):  # super-special case Call with args and keywords and a Starred, it could be anywhere in there, including after last keyword, defer to prev() logic
@@ -3418,7 +3397,7 @@ class FST:
             header.
 
         **Examples:**
-        ```py
+
         >>> print(FST('if something:\n    i = 2\n    i = 3')
         ...       .last_header_child().src)
         something
@@ -3435,7 +3414,6 @@ class FST:
 
         >>> print(FST('i = 1').last_header_child())
         None
-        ```
         """
 
         if not (child := last_block_header_child(self.a)):
@@ -3468,8 +3446,9 @@ class FST:
         - `None` if last valid child in `self`, otherwise next child node.
 
         **Examples:**
-        ```py
+
         >>> f = FST('[[1, 2], [3, 4]]')
+
         >>> f.next_child(f.elts[0]).src
         '[3, 4]'
 
@@ -3483,7 +3462,6 @@ class FST:
         ...         n = n.replace(n.id[::-1])
         >>> f.src
         '[siht, _si, desraper, hcae, pets, _dna, llits, sklaw, ko]'
-        ```
         """
 
         return self.first_child(with_loc) if from_child is None else from_child.next(with_loc)
@@ -3510,8 +3488,9 @@ class FST:
         - `None` if first valid child in `self`, otherwise previous child node.
 
         **Examples:**
-        ```py
+
         >>> f = FST('[[1, 2], [3, 4]]')
+
         >>> f.prev_child(f.elts[1]).src
         '[1, 2]'
 
@@ -3525,7 +3504,6 @@ class FST:
         ...         n = n.replace(n.id[::-1])
         >>> f.src
         '[siht, _si, desraper, hcae, pets, _dna, llits, sklaw, ko]'
-        ```
         """
 
         return self.last_child(with_loc) if from_child is None else from_child.prev(with_loc)
@@ -3556,8 +3534,9 @@ class FST:
         - `None` if last valid node in tree, otherwise next node in order.
 
         **Examples:**
-        ```py
+
         >>> f = FST('[[1, 2], [3, 4]]')
+
         >>> f.elts[0].src
         '[1, 2]'
 
@@ -3582,7 +3561,6 @@ class FST:
         ...         break
         >>> f.src
         '[siht, [_si, [desraper, hcae], pets, _dna, llits], sklaw, ko]'
-        ```
         """
 
         if allown := with_loc == 'allown':
@@ -3629,10 +3607,9 @@ class FST:
         - `None` if first valid node in tree, otherwise previous node in order.
 
         **Examples:**
-        ```py
-        >>> from fst import *
 
         >>> f = FST('[[1, 2], [3, 4]]')
+
         >>> f.elts[1].src
         '[3, 4]'
 
@@ -3657,7 +3634,6 @@ class FST:
         ...         break
         >>> f.src
         '[siht, [_si, [desraper, hcae], pets, _dna, llits], sklaw, ko]'
-        ```
         """
 
         if allown := with_loc == 'allown':
@@ -3724,10 +3700,11 @@ class FST:
             walk reversed due to recursion (parents are still returned before children, only in reverse sibling order).
 
         **Examples:**
-        ```py
+
         >>> import ast
 
         >>> f = FST('def f(a: list[str], /, reject: int, *c, d=100, **e): pass')
+
         >>> for g in (gen := f.walk(with_loc=True)):
         ...     if isinstance(g.a, ast.arg) and g.a.arg == 'reject':
         ...         _ = gen.send(False)
@@ -3778,7 +3755,6 @@ class FST:
         <arguments 1,10..1,15>        'arg=1'
         <Constant 1,14..1,15>         '1'
         <arg 1,10..1,13>              'arg'
-        ```
         """
 
         if self_:
@@ -3971,13 +3947,12 @@ class FST:
         - `self_`: Whether to yield `self` first.
 
         **Examples:**
-        ```py
+
         >>> list(FST('i = (f(), g())', 'exec').body[0].value.elts[0].parents())
         [<Tuple 0,4..0,14>, <Assign 0,0..0,14>, <Module ROOT 0,0..0,14>]
 
         >>> list(FST('i = (f(), g())', 'exec').body[0].value.elts[0].parents(self_=True))
         [<Call 0,5..0,8>, <Tuple 0,4..0,14>, <Assign 0,0..0,14>, <Module ROOT 0,0..0,14>]
-        ```
         """
 
         if self_:
@@ -3995,7 +3970,7 @@ class FST:
         - `mod`: Whether to return `mod` nodes if found.
 
         **Examples:**
-        ```py
+
         >>> FST('if 1: i = 1', 'exec').body[0].body[0].value.parent_stmt()
         <Assign 0,6..0,11>
 
@@ -4010,7 +3985,6 @@ class FST:
 
         >>> FST('if 1: i = 1', 'exec').body[0].parent_stmt(self_=True)
         <If 0,0..0,11>
-        ```
         """
 
         types = (stmt, ast_mod) if mod else stmt
@@ -4028,7 +4002,7 @@ class FST:
         `self_` is `True` then will check `self` first, otherwise only checks parents.
 
         **Examples:**
-        ```py
+
         >>> (FST('try: pass\nexcept: pass', 'exec')
         ...  .body[0].handlers[0].body[0].parent_stmtish())
         <ExceptHandler 1,0..1,12>
@@ -4044,7 +4018,6 @@ class FST:
 
         >>> FST('match a:\n  case 1: pass').cases[0].pattern.parent_stmtish()
         <match_case 1,2..1,14>
-        ```
         """
 
         types = ASTS_STMTISH_OR_MOD if mod else ASTS_STMTISH
@@ -4064,13 +4037,12 @@ class FST:
         `self` first, otherwise only checks parents.
 
         **Examples:**
-        ```py
+
         >>> FST('if 1: i = 1', 'exec').body[0].body[0].value.parent_block()
         <If 0,0..0,11>
 
         >>> FST('if 1: i = 1', 'exec').body[0].parent_block()
         <Module ROOT 0,0..0,11>
-        ```
         """
 
         types = ASTS_BLOCK_OR_MOD if mod else ASTS_BLOCK
@@ -4089,7 +4061,7 @@ class FST:
         node (if any). If `self_` is `True` then will check `self` first, otherwise only checks parents.
 
         **Examples:**
-        ```py
+
         >>> FST('if 1: i = 1', 'exec').body[0].body[0].value.parent_scope()
         <Module ROOT 0,0..0,11>
 
@@ -4102,7 +4074,6 @@ class FST:
 
         >>> FST('[i for i in j]', 'exec').body[0].value.elt.parent_scope()
         <ListComp 0,0..0,14>
-        ```
         """
 
         types = ASTS_SCOPE_OR_MOD if mod else ASTS_SCOPE
@@ -4121,7 +4092,7 @@ class FST:
         first, otherwise only checks parents.
 
         **Examples:**
-        ```py
+
         >>> FST('if 1: i = 1', 'exec').body[0].body[0].value.parent_named_scope()
         <Module ROOT 0,0..0,11>
 
@@ -4136,7 +4107,6 @@ class FST:
         >>> (FST('class cls: [i for i in j]', 'exec')
         ...  .body[0].body[0].value.elt.parent_named_scope())
         <ClassDef 0,0..0,25>
-        ```
         """
 
         types = ASTS_SCOPE_NAMED_OR_MOD if mod else ASTS_SCOPE_NAMED
@@ -4156,13 +4126,13 @@ class FST:
         **Parameters:**
         - `self_`: Whether to include `self` in the search, if so and `self` matches criteria then it is returned.
         - `strict`: `False` means consider `comprehension`, `arguments`, `arg` and `keyword` nodes as `expr` for the
-            sake of the walk up since these nodes can have other `expr` parents. `True` means only `expr` nodes, which
-            means you could get an `arg` or `comprehension` node for example which still has `expr` parents. Also
-            `expr_context`, `boolop`, `operator`, `unaruop` and `cmpop` are included if `strict=False` but this only
-            makes sense if `self_=True` and you are calling this function on one of those.
+            sake of the walk up since these nodes can have other `expr` parents (meaning they will be skipped). `True`
+            means only `expr` nodes, which means you could get an `arg` or `comprehension` node for example which still
+            has `expr` parents. Also `expr_context`, `boolop`, `operator`, `unaruop` and `cmpop` are included if
+            `strict=False` but this only makes sense if `self_=True` and you are calling this function on one of those.
 
         **Examples:**
-        ```py
+
         >>> FST('if 1: i = 1 + a[b]').body[0].value.right.value.parent_non_expr()
         <Assign 0,6..0,18>
 
@@ -4176,7 +4146,6 @@ class FST:
         >>> (FST('var = call(a, b=1)')
         ...  .value.keywords[0].value.parent_non_expr(strict=True))
         <keyword 0,14..0,17>
-        ```
         """
 
         types = expr if strict else ASTS_EXPRISH_ALL  # ops because of maybe self_
@@ -4197,7 +4166,7 @@ class FST:
         - `self_`: Whether to include `self` in the search, if so and `self` matches criteria then it is returned.
 
         **Examples:**
-        ```py
+
         >>> FST('case 1+1j: pass').pattern.value.left.parent_pattern().src
         '1+1j'
 
@@ -4212,7 +4181,6 @@ class FST:
         >>> (FST('case 1 | {a.b: c}: pass')
         ...  .pattern.patterns[1].patterns[0].parent_pattern().parent_pattern())
         <MatchOr 0,5..0,17>
-        ```
         """
 
         if self_ and isinstance(self.a, pattern):
@@ -4237,7 +4205,7 @@ class FST:
         - `list[astfield] | str`: Path to child if exists, otherwise raises.
 
         **Examples:**
-        ```py
+
         >>> (f := FST('[i for i in j]', 'exec')).child_path(f.body[0].value.elt)
         [astfield('body', 0), astfield('value'), astfield('elt')]
 
@@ -4250,7 +4218,6 @@ class FST:
 
         >>> (f := FST('i')).child_path(f, as_str=True)
         ''
-        ```
         """
 
         if child.root is not self.root:
@@ -4283,8 +4250,9 @@ class FST:
             can be in a field that can hold an `AST` but `False` can not.
 
         **Examples:**
-        ```py
+
         >>> f = FST('[i for i in j]', 'exec')
+
         >>> f.child_from_path(f.child_path(f.body[0].value.elt)).src
         'i'
 
@@ -4303,7 +4271,6 @@ class FST:
 
         >>> (f := FST('i')).child_from_path('') is f
         True
-        ```
         """
 
         if isinstance(path, str):
@@ -4311,7 +4278,7 @@ class FST:
                     for p in path.split('.')] if path else []
 
         for p in path:
-            if (next := p.get_no_raise(self.a)) is False:
+            if (next := p.get_default(self.a)) is False:
                 return self if last_valid else False
 
             self = next.f
@@ -4328,9 +4295,10 @@ class FST:
         - `FST`: Possibly `self` or the node which took our place at our relative position from `root`.
 
         **Examples:**
-        ```py
+
         >>> f = FST('[0, 1, 2, 3]')
         >>> g = f.elts[1]
+
         >>> print(type(g.a), g.root)
         <class 'ast.Constant'> <List ROOT 0,0..0,12>
 
@@ -4343,7 +4311,6 @@ class FST:
         >>> g = g.repath()
         >>> print(type(g.a), g.root)
         <class 'ast.Name'> <List ROOT 0,0..0,12>
-        ```
         """
 
         root = self.root
@@ -4373,7 +4340,7 @@ class FST:
         - `FST | None`: Node which entirely contains location, either exactly or not, or `None` if no such node.
 
         **Examples:**
-        ```py
+
         >>> FST('i = val', 'exec').find_loc_in(0, 6, 0, 7)
         <Name 0,4..0,7>
 
@@ -4406,7 +4373,6 @@ class FST:
 
         >>> FST('i = val', 'exec').find_loc_in(0, 0, 0, 7, allow_exact='top')
         <Module ROOT 0,0..0,7>
-        ```
         """
 
         fln, fcol, fend_ln, fend_col = self.loc
@@ -4463,7 +4429,7 @@ class FST:
             node.
 
         **Examples:**
-        ```py
+
         >>> FST('i = val', 'exec').find_in_loc(0, 0, 0, 7)
         <Module ROOT 0,0..0,7>
 
@@ -4475,7 +4441,6 @@ class FST:
 
         >>> print(FST('i = val', 'exec').find_in_loc(0, 5, 0, 7))
         None
-        ```
         """
 
         fln, fcol, fend_ln, fend_col = self.loc
@@ -4520,7 +4485,7 @@ class FST:
         - `FST | None`: Node found if any.
 
         **Examples:**
-        ```py
+
         >>> FST('var', 'exec').find_loc(0, 0, 0, 3)
         <Name 0,0..0,3>
 
@@ -4538,7 +4503,6 @@ class FST:
 
         >>> repr(FST('var', 'exec').find_loc(0, 2, 1, 4))
         'None'
-        ```
         """
 
         f = self.find_loc_in(ln, col, end_ln, end_col, 'top' if exact_top else True)

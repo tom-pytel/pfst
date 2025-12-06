@@ -10,35 +10,29 @@ else vs. elif, and all the various other niche special cases of Python syntax ac
 
 Example:
 
-```py
 >>> import fst
 
 >>> ext_ast = fst.parse('if a: b = c, d  # comment')
 
 >>> print(fst.unparse(ext_ast))  # formatting is preserved
 if a: b = c, d  # comment
-```
 
 Straightforward operations.
 
-```py
 >>> ext_ast.f.body[0].body[0].value.elts[1:1] = 'u,\nv  # blah'
 
 >>> print(fst.unparse(ext_ast))
 if a: b = (c, u,
           v,  # blah
           d)  # comment
-```
 
 The tree is just normal `AST` with metadata.
 
-```py
 >>> import ast
 
 >>> print(ast.unparse(ext_ast))
 if a:
     b = (c, u, v, d)
-```
 
 `fst` works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute which keep extra structure information,
 the original source, and provide the interface to format-preserving operations. Each operation through `fst` is a
@@ -56,7 +50,7 @@ always parse to the current tree.
 - [Documentation](https://tom-pytel.github.io/pfst/)
 - [PyPI](https://pypi.org/project/pfst/)
 
-# Details
+# Notes
 
 `fst` was written and tested on Python versions 3.10 through 3.14.
 
@@ -87,12 +81,12 @@ to preserve formatting where possible. This is intended for existing code or thi
 anything about `fst` to maybe gain the ability to preserve some existing formatting when editing a tree.
 `fst.docs.d10_reconcile`.
 
+If you will be playing with this module then the `FST.dump()` method will be your friend.
+
 Disclaimer: The intended use of this module is if you want to change code functionality without having to deal with
 syntax details, not lint or format, there are better options for that. The main focus of `fst` is not necessarily to be
 fast but rather to handle all the weird cases of python syntax correctly so that functional code always results, use a
 formatter afterwards as needed.
-
-Note: If you will be playing with this module then the `FST.dump()` method will be your friend.
 """
 
 import ast
@@ -107,8 +101,5 @@ from . import asttypes
 
 __all__ = [
     'ast', 'FST', 'NodeError', 'ParseError',
-    *[n
-      for n in dict.fromkeys(dir(ast) + asttypes.__all__)
-      if not n.startswith('_')
-    ],
+    *[n for n in dict.fromkeys(dir(ast) + asttypes.__all__) if not n.startswith('_')],
 ]

@@ -626,7 +626,7 @@ class ParseError(SyntaxError):
 
 def unparse(ast: AST) -> str:
     """AST unparse that handles misc case of comprehension starting with a single space by stripping it as well as
-    removing parentheses from `Tuple`s with `Slice`s."""
+    removing parentheses from `Tuple`s with `Slice`s. @private"""
 
     return _UNPARSE_FUNCS.get(ast.__class__, _fixing_unparse)(ast)
 
@@ -647,6 +647,8 @@ def parse(src: str, mode: Mode = 'all', parse_params: Mapping[str, Any] = {}) ->
         See `Mode`.
     - `parse_params`: Dictionary of optional parse parameters to pass to `ast.parse()`, can contain `filename`,
         `type_comments` and `feature_version`.
+
+    @private
     """
 
     if parse := _PARSE_MODE_FUNCS.get(mode):
@@ -667,7 +669,7 @@ def parse(src: str, mode: Mode = 'all', parse_params: Mapping[str, Any] = {}) ->
 
 def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """All parse modes. Get a hint from starting source and attempt parse according to that from most probable to least
-    of what it could be."""
+    of what it could be. @private"""
 
     if not (first := _re_first_src.search(src)):
         return _ast_parse(src, parse_params)  # should return empty Module with src trivia
@@ -774,25 +776,25 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 def parse_strict(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Attempt to parse valid parsable statements and then reduce to a single statement or expressing if possible. Only
-    parses what `ast.parse()` can, no funny stuff."""
+    parses what `ast.parse()` can, no funny stuff. @private"""
 
     return reduce_ast(_ast_parse(src, parse_params), True)
 
 
 def parse_Module(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse `Module`, ast.parse(mode='exec')'."""
+    """Parse `Module`, ast.parse(mode='exec')'. @private"""
 
     return _ast_parse(src, {**parse_params, 'mode': 'exec'})
 
 
 def parse_Expression(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse `Expression`, `ast.parse(mode='eval')."""
+    """Parse `Expression`, `ast.parse(mode='eval'). @private"""
 
     return _ast_parse(src, {**parse_params, 'mode': 'eval'})
 
 
 def parse_Interactive(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse `Interactive`."""
+    """Parse `Interactive`. @private"""
 
     if not src.endswith('\n'):  # because otherwise error for block statement on single line like `if a: b`
         src = src + '\n'
@@ -801,13 +803,13 @@ def parse_Interactive(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_stmts(src: str, parse_params: Mapping[str, Any] = {}) -> AST:  # same as parse_Module() but I want the IDE context coloring
-    """Parse zero or more `stmt`s and return them in a `Module` `body` (just `ast.parse()` basically)."""
+    """Parse zero or more `stmt`s and return them in a `Module` `body` (just `ast.parse()` basically). @private"""
 
     return _ast_parse(src, parse_params)
 
 
 def parse_stmt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse exactly one `stmt` and return as itself."""
+    """Parse exactly one `stmt` and return as itself. @private"""
 
     body = _ast_parse(src, parse_params).body
 
@@ -818,7 +820,7 @@ def parse_stmt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_ExceptHandler(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse exactly one `ExceptHandler` and return as itself."""
+    """Parse exactly one `ExceptHandler` and return as itself. @private"""
 
     handlers = parse__ExceptHandlers(src, parse_params).handlers
 
@@ -829,7 +831,7 @@ def parse_ExceptHandler(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse__ExceptHandlers(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse zero or more `ExceptHandler`s and return them in an `_ExceptHandlers` SPECIAL SLICE."""
+    """Parse zero or more `ExceptHandler`s and return them in an `_ExceptHandlers` SPECIAL SLICE. @private"""
 
     try:
         ast = _ast_parse1(f'try: pass\n{src}\nfinally: pass', parse_params)
@@ -862,7 +864,7 @@ def parse__ExceptHandlers(src: str, parse_params: Mapping[str, Any] = {}) -> AST
 
 
 def parse_match_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse exactly one `match_case` and return as itself."""
+    """Parse exactly one `match_case` and return as itself. @private"""
 
     cases = parse__match_cases(src, parse_params).cases
 
@@ -873,7 +875,7 @@ def parse_match_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse__match_cases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse zero or more `match_case`s and return them in a `_match_cases` SPECIAL SLICE."""
+    """Parse zero or more `match_case`s and return them in a `_match_cases` SPECIAL SLICE. @private"""
 
     lines = [bistr('match x:'),
              bistr(' case None: pass'),
@@ -928,7 +930,7 @@ def parse__match_cases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 def parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a "standard" `expr`, only things which are normally valid in an `expr` location, no `Slices` or
-    `Starred` expressions which are only valid as a `Call` arg (`*not a`)."""
+    `Starred` expressions which are only valid as a `Call` arg (`*not a`). @private"""
 
     try:
         body = _ast_parse(src, parse_params).body
@@ -966,7 +968,7 @@ def parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 def parse_expr_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to any kind of expression including `Slice`, `*not a` or `Tuple` of any of those combined. Lone `*a`
-    `Starred` is returned as a `Starred` and not `Tuple` as would be in a slice."""
+    `Starred` is returned as a `Starred` and not `Tuple` as would be in a slice. @private"""
 
     try:
         ast = parse_expr_slice(src, parse_params)
@@ -990,7 +992,7 @@ def parse_expr_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_expr_arglike(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `expr` in the context of a `Call.args` which treats `Starred` differently."""
+    """Parse to an `expr` in the context of a `Call.args` which treats `Starred` differently. @private"""
 
     try:
         return parse_expr(src, parse_params)
@@ -1018,7 +1020,7 @@ def parse_expr_arglike(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 def parse_expr_slice(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a `Slice` or anything else that can go into `Subscript.slice` (`expr`), e.g. "start:stop:step" or "name"
     or even "a:b, c:d:e, g". Using this, naked `Starred` expressions parse to single element `Tuple` with the `Starred`
-    as the only element (on py 3.11, py 3.10 is an error in this case)."""
+    as the only element (on py 3.11, py 3.10 is an error in this case). @private"""
 
     try:
         ast = _ast_parse1(f'a[\n{src}\n]', parse_params).value.slice
@@ -1048,7 +1050,10 @@ def parse_Tuple_elt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     Naked `Starred` expression parses to just the `Starred` and not a `Tuple` like in `parse_expr_slice()`.
 
     Does not allow a `Tuple` with `Slice` in it as it is expected that this expression is already in a slice `Tuple` and
-    nested `Tuple`s with `Slice`s are not allowed."""
+    nested `Tuple`s with `Slice`s are not allowed.
+
+    @private
+    """
 
     try:
         ast = parse_expr_slice(src, parse_params)
@@ -1071,7 +1076,7 @@ def parse_Tuple_elt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 def parse_Tuple(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a `Tuple` which may or may not contain `Slice`s and otherwise invalid syntax in normal `Tuple`s like
-    `*not a` (if not parenthesized)."""
+    `*not a` (if not parenthesized). @private"""
 
     try:
         ast = parse_expr_slice(src, parse_params)
@@ -1101,7 +1106,7 @@ def parse_Tuple(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 def parse__Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse zero or more `Assign` targets and return them in a `_Assign_targets` SPECIAL SLICE. Takes `=` as separators
-    and accepts an optional trailing `=`."""
+    and accepts an optional trailing `=`. @private"""
 
     src_ = '\\' + src if src.startswith('\n') else src  # we allow an initial non-line-continued newline because that is a slice indicator to start on new line and will have line continuation added in slice put to Assign
 
@@ -1138,7 +1143,7 @@ def parse__Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST
 
 def parse__decorator_list(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse zero or more decorators and return them in a `_decorator_list` SPECIAL SLICE. Each decorator must have a
-    leading `@`."""
+    leading `@`. @private"""
 
     ast = _ast_parse1(f'{src}\nclass c: pass', parse_params)
 
@@ -1146,31 +1151,33 @@ def parse__decorator_list(src: str, parse_params: Mapping[str, Any] = {}) -> AST
 
 
 def parse_boolop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to a `boolop`. We do it manually. We refuse to do equivalent of `ast.parse('or')` on principle."""
+    """Parse to a `boolop`. We do it manually. We refuse to do equivalent of `ast.parse('or')` on principle. @private"""
 
     return _parse_op(src, 'boolop', OPSTR2CLS_BOOL)
 
 
 def parse_operator(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `operator`. We do it manually. We refuse to do equivalent of `ast.parse('+')` on principle."""
+    """Parse to an `operator`. We do it manually. We refuse to do equivalent of `ast.parse('+')` on principle.
+    @private"""
 
     return _parse_op(src, 'operator', OPSTR2CLS_BIN)
 
 
 def parse_unaryop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `unaryop`. We do it manually. We refuse to do equivalent of `ast.parse('~')` on principle."""
+    """Parse to an `unaryop`. We do it manually. We refuse to do equivalent of `ast.parse('~')` on principle.
+    @private"""
 
     return _parse_op(src, 'unaryop', OPSTR2CLS_UNARY)
 
 
 def parse_cmpop(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to a `cmpop`. We do it manually. We refuse to do equivalent of `ast.parse('==')` on principle."""
+    """Parse to a `cmpop`. We do it manually. We refuse to do equivalent of `ast.parse('==')` on principle. @private"""
 
     return _parse_op(src, 'cmpop', OPSTR2CLS_CMP)
 
 
 def parse_comprehension(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to a `comprehension`, e.g. "async for i in something() if i"."""
+    """Parse to a `comprehension`, e.g. "async for i in something() if i". @private"""
 
     ast = _ast_parse1(f'[_ \n{src}\n]', parse_params).value
 
@@ -1186,7 +1193,7 @@ def parse_comprehension(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse__comprehensions(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse zero or more `comprehension`s, returned as a `_comprehensions` SPECIAL SLICE."""
+    """Parse zero or more `comprehension`s, returned as a `_comprehensions` SPECIAL SLICE. @private"""
 
     ast = _ast_parse1(f'[_ for _ in _\n{src}\n]', parse_params).value
 
@@ -1205,7 +1212,7 @@ def parse__comprehensions(src: str, parse_params: Mapping[str, Any] = {}) -> AST
 
 def parse__comprehension_ifs(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse zero or more `comprehension` `if`s (including the `if`), returned as a `_comprehension_ifs` SPECIAL
-    SLICE."""
+    SLICE. @private"""
 
     ast = _ast_parse1(f'[_ for _ in _\n{src}\n]', parse_params).value
 
@@ -1218,7 +1225,7 @@ def parse__comprehension_ifs(src: str, parse_params: Mapping[str, Any] = {}) -> 
 
 
 def parse_arguments(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `arguments`, e.g. "a: list[str], /, b: int = 1, *c, d=100, **e"."""
+    """Parse to an `arguments`, e.g. "a: list[str], /, b: int = 1, *c, d=100, **e". @private"""
 
     ast = _ast_parse1(f'def f(\n{src}\n): pass', parse_params).args
 
@@ -1226,7 +1233,7 @@ def parse_arguments(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_arguments_lambda(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `arguments` for a `Lambda`, e.g. "a, /, b, *c, d=100, **e"."""
+    """Parse to an `arguments` for a `Lambda`, e.g. "a, /, b, *c, d=100, **e". @private"""
 
     ast = _ast_parse1(f'(lambda \n{src}\n: None)', parse_params).value.args
 
@@ -1234,7 +1241,7 @@ def parse_arguments_lambda(src: str, parse_params: Mapping[str, Any] = {}) -> AS
 
 
 def parse_arg(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `arg`, e.g. "var: list[int]"."""
+    """Parse to an `arg`, e.g. "var: list[int]". @private"""
 
     try:
         args = _ast_parse1(f'def f(\n{src}\n): pass', parse_params).args
@@ -1270,7 +1277,7 @@ def parse_arg(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_keyword(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to a `keyword`, e.g. "var=val"."""
+    """Parse to a `keyword`, e.g. "var=val". @private"""
 
     keywords = _ast_parse1(f'f(\n{src}\n)', parse_params).value.keywords
 
@@ -1281,7 +1288,7 @@ def parse_keyword(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_alias(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `alias`, allowing star or dotted notation or star, e.g. "name as alias"."""
+    """Parse to an `alias`, allowing star or dotted notation or star, e.g. "name as alias". @private"""
 
     if '*' in src:
         try:
@@ -1293,7 +1300,7 @@ def parse_alias(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse__aliases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `_aliases` of `alias` SPECIAL SLICE, allowing star or dotted, e.g. "name as alias"."""
+    """Parse to an `_aliases` of `alias` SPECIAL SLICE, allowing star or dotted, e.g. "name as alias". @private"""
 
     if '*' in src:
         try:
@@ -1306,7 +1313,7 @@ def parse__aliases(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 def parse_Import_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to an `alias`, allowing dotted notation but not star (not all aliases are created equal), e.g.
-    "name as alias"."""
+    "name as alias". @private"""
 
     try:
         names = _ast_parse1(f'import \\\n{src}', parse_params).names
@@ -1326,7 +1333,7 @@ def parse_Import_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse__Import_names(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `_aliases` of `alias` SPECIAL SLICE, allowing dotted notation but not star."""
+    """Parse to an `_aliases` of `alias` SPECIAL SLICE, allowing dotted notation but not star. @private"""
 
     try:
         names = _ast_parse1(f'import \\\n{src}', parse_params).names
@@ -1349,7 +1356,7 @@ def parse__Import_names(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_ImportFrom_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `alias`, allowing star but not dotted."""
+    """Parse to an `alias`, allowing star but not dotted. @private"""
 
     try:
         names = _ast_parse1(f'from . import \\\n{src}', parse_params).names  # this instead of parentheses because could be '*' which doesn't like parentheses
@@ -1369,7 +1376,7 @@ def parse_ImportFrom_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST
 
 
 def parse__ImportFrom_names(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to an `_aliases` of `alias` SPECIAL SLICE, allowing star but not dotted."""
+    """Parse to an `_aliases` of `alias` SPECIAL SLICE, allowing star but not dotted. @private"""
 
     try:
         names = _ast_parse1(f'from . import \\\n{src}', parse_params).names  # this instead of parentheses because could be '*' which doesn't like parentheses
@@ -1392,7 +1399,7 @@ def parse__ImportFrom_names(src: str, parse_params: Mapping[str, Any] = {}) -> A
 
 
 def parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to a `withitem`, e.g. "something() as var"."""
+    """Parse to a `withitem`, e.g. "something() as var". @private"""
 
     items = _ast_parse1(f'with (\n{src}\n): pass', parse_params).items
 
@@ -1422,7 +1429,7 @@ def parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse__withitems(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to zero or more `withitem`s, returned as a `_withitems` SPECIAL SLICE."""
+    """Parse to zero or more `withitem`s, returned as a `_withitems` SPECIAL SLICE. @private"""
 
     items = _ast_parse1(f'with (\n{src}\n): pass', parse_params).items
 
@@ -1441,7 +1448,7 @@ def parse__withitems(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_pattern(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to a `pattern`, e.g. "{a.b: i, **rest}"."""
+    """Parse to a `pattern`, e.g. "{a.b: i, **rest}". @private"""
 
     try:
         ast = _ast_parse1_case(f'match _:\n case \\\n{src}: pass', parse_params).pattern
@@ -1475,7 +1482,7 @@ def parse_pattern(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse_type_param(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse to a `type_param`, e.g. "t: Base = Subclass"."""
+    """Parse to a `type_param`, e.g. "t: Base = Subclass". @private"""
 
     type_params = _ast_parse1(f'type t[\n{src}\n] = None', parse_params).type_params
 
@@ -1491,7 +1498,7 @@ def parse_type_param(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
 
 def parse__type_params(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
-    """Parse zero or more `type_param`s and return them in a `_type_params` SPECIAL SLICE."""
+    """Parse zero or more `type_param`s and return them in a `_type_params` SPECIAL SLICE. @private"""
 
     try:
         type_params = _ast_parse1(f'type t[\n{src}\n] = None', parse_params).type_params
@@ -1518,6 +1525,8 @@ def parse__expr_arglikes(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     **WARNING!** The `Tuple` that is returned may be an invalid python `Tuple` as it may be an empty `Tuple` `AST` with
     source having no parentheses or an unparenthesized `Tuple` with incorrect start and stop locations. Intended as a
     convenience for putting slices.
+
+    @private
     """
 
     try:
@@ -1539,6 +1548,8 @@ def parse__BoolOp_dangling_left(src: str, parse_params: Mapping[str, Any] = {}, 
     **Parameters:**
     - `loc_whole': Whether the location of the root `BoolOp` should be the full source or just the `BoolOp` starting at
         the left dangling op.
+
+    @private
     """
 
     try:
@@ -1575,6 +1586,8 @@ def parse__BoolOp_dangling_right(src: str, parse_params: Mapping[str, Any] = {},
     **Parameters:**
     - `loc_whole': Whether the location of the root `BoolOp` should be the full source or just the `BoolOp` ending past
         the right dangling op.
+
+    @private
     """
 
     try:
@@ -1634,6 +1647,8 @@ def parse__Compare_dangling_left(src: str, parse_params: Mapping[str, Any] = {},
     **Returns:**
     - `Compare`: The operators and comparators will be in the `ops` and `comparators` fields and the `left` field will
         be a placeholder `AST` with location at the start of the left dangling operator, regardless of `loc_whole`.
+
+    @private
     """
 
     try:
@@ -1680,6 +1695,8 @@ def parse__Compare_dangling_right(src: str, parse_params: Mapping[str, Any] = {}
     - `Compare`: The operators and comparators will be in the `ops`, `left` and `comparators` fields and the last
         `comparator` field will be a placeholder `AST` with location at the end of the right dangling operator,
         regardless of `loc_whole`.
+
+    @private
     """
 
     try:

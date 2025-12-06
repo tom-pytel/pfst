@@ -28,12 +28,6 @@ except ImportError:
     FTSTRING_START_TOKENS = FTSTRING_END_TOKENS = ()
 
 __all__ = [
-    'FSTRING_START',
-    'FSTRING_END',
-    'TSTRING_START',
-    'TSTRING_END',
-    'FTSTRING_START_TOKENS',
-    'FTSTRING_END_TOKENS',
     'NodeError',
     'astfield',
     'fstloc',
@@ -104,10 +98,10 @@ class astfield(NamedTuple):
 
         return getattr(parent, self.name) if self.idx is None else getattr(parent, self.name)[self.idx]
 
-    def get_no_raise(self, parent: AST, default: AST | constant = False) -> AST | constant:
+    def get_default(self, parent: AST, default: AST | constant = False) -> AST | constant:
         """Get child node at this field in the given `parent`. Return `default` if not found instead of raising
-        `AttributError` or `IndexError`, `False` works well because not normally found locations where `AST` nodes can
-         reside in `AST` trees."""
+        `AttributError` or `IndexError`, `False` works well because not normally found in locations where `AST` nodes
+        can reside in `AST` trees."""
 
         return (getattr(parent, self.name, default) if (idx := self.idx) is None else
                 default if (body := getattr(parent, self.name, False)) is False or idx >= len(body) else

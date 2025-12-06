@@ -42,7 +42,7 @@ False
 Exception: expecting root node
 ```
 
-In order to get this node standalone you need to `copy()` it.
+In order to get this node standalone you need to `copy()` it (`fst.fst.FST.copy()`).
 
 ```py
 >>> g = f.body[0].copy()
@@ -75,7 +75,7 @@ tree. It does not have to be valid parsable code, any node is supported as the r
 can be put into other FST trees.
 
 You can also cut nodes out, which will remove them from the tree. Important, the `FST` node returned by `cut()` may be,
-but will not necessarily be the same `FST` node that was in the tree!
+but will not necessarily be the same `FST` node that was in the tree! See `fst.fst.FST.cut()`.
 
 ```py
 >>> g = f.body[0].cut()
@@ -88,12 +88,13 @@ if i:
         k = 0
 ```
 
-When dealing with statements you can temporarily cut out the last statement in a body if you pass either `norm=False` or
-`norm_self=False`, but make sure to put something back as soon as possible because most operations will fail with a tree
-in this state.
+When dealing with statements you can temporarily cut out the last statement in a body. This can be disabled by passing
+`norm=True` or `norm_self=True` which ensure that only valid `AST` trees result from operations. If you do cut
+everything from a field which normally needs something in it then make sure to put something back as soon as possible
+because most operations will fail with a tree in this state.
 
 ```py
->>> g = f.body[0].body[0].cut(norm=False)
+>>> g = f.body[0].body[0].cut()
 
 >>> print(f.src)
 if i:
@@ -110,6 +111,12 @@ if i:
         k = 1
     else:
         k = 0
+
+>>> try:
+...     f.body[0].body[0].cut(norm=True)
+... except Exception as exc:
+...     print(repr(exc))
+ValueError('cannot cut all elements from If.body without norm_self=False')
 ```
 
 Cutting out an optional body field like an `orelse`, `finalbody` or `handlers` (if there is a `finalbody`) will leave
@@ -153,7 +160,8 @@ Exception: cannot cut root node
 ## `get()` and `get_slice()`
 
 `copy()` and `cut()` are basically shortcuts to `get()` (except in the case of a root node copy). The `get()` function
-essentially does a `copy()` except from the point of view of the parent node. So the following two are equivalent.
+essentially does a `copy()` except from the point of view of the parent node (`fst.fst.FST.get()`). So the following two
+are equivalent.
 
 ```py
 >>> print(FST('i = 123').value.copy().src)
@@ -206,7 +214,7 @@ k = 3
 l = 4
 ```
 
-Which gets us to `get_slice()`, which ONLY gets slices.
+Which gets us to `get_slice()`, which ONLY gets slices (`fst.fst.FST.get_slice()`).
 
 ```py
 >>> print(f.get_slice(1, 3, 'orelse').src)
@@ -251,10 +259,23 @@ behavior which slices across the multiple fields and gives a new `Dict`.
 {3:4, 5:6}
 ```
 
+The `field=None` is just a shortcut for specifying the "virtual" field `'_all'`, which exists for `Dict`, `MatchMapping`
+and `Compare` in order to allow access to combined elements which are not normally accessible by themselves as `AST`
+nodes.
+
+Note below that the first `a` in the `Compare` is normally not part of a `list` field but can be sliced as if it were
+using the `'_all'` virtual field (which is the default field for `Compare` but we include it explicitly for
+demonstration purposes).
+
+```py
+>>> print(FST('a < b < c').get_slice(0, 2, field='_all').src)
+a < b
+```
+
 Slices being gotten or put are implemented using common sense containers, like for sequences using the same type of
 sequence or for a dictionary returning / expecting a `Dict`. When there is not possible pure container for a slice of
-elements, like `ExceptHandler` or `match_case`, then they are put directly into a `Module` body field. This is not a
-valid `AST` object of course, but works for moving stuff around.
+elements, like `ExceptHandler` or `match_case`, then they are put into our own special container `AST` which exists just
+for this purpose. This is not a valid `AST` object of course, but works for moving stuff around.
 
 ```py
 >>> f = FST('''
@@ -267,6 +288,9 @@ valid `AST` object of course, but works for moving stuff around.
 ... '''.strip())
 
 >>> s = f.get_slice(0, 2, 'handlers')
+
+>>> s
+<_ExceptHandlers ROOT 0,0..3,9>
 
 >>> print(s.src)
 except ValueError:
@@ -295,9 +319,8 @@ _ExceptHandlers - ROOT 0,0..3,9
 
 ## Non-AST values
 
-Using `get()` (and eventually `get_slice()`, not implemented yet) you can get non-AST primitive values from nodes. This
-exists mostly to accomondate `MatchSingleton`, as it just has a primitive value instead of an expression (it is also
-set this way, via primitive).
+Using `get()` and `get_slice()` you can get non-AST primitive values from nodes. This exists to accomondate stuff like
+`MatchSingleton`, as it just has a primitive value instead of an expression (it is also set this way, via primitive).
 
 ```py
 >>> f = FST('case True: pass')
@@ -317,6 +340,41 @@ b'bytes'
 
 >>> FST('a.b: int = 1').get('simple')
 0
+```
+
+TODO: Maybe it would be better to convert single primitive get/put to/from `AST`?
+
+Getting slices from a primitive list does convert the primitives to their common-sense `AST` equivalents.
+
+```py
+>>> f = FST('global a, b, c')
+
+>>> f.dump()
+Global - ROOT 0,0..0,14
+  .names[3]
+   0] 'a'
+   1] 'b'
+   2] 'c'
+
+>>> g = f.get_slice()
+
+>>> g.dump()
+Tuple - ROOT 0,0..0,7
+  .elts[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'b' Load - 0,3..0,4
+   2] Name 'c' Load - 0,6..0,7
+  .ctx Load
+```
+
+Put likewise expects a valid `Tuple` in this case.
+
+```py
+>>> f.put_slice(g, 1, 2)
+<Global ROOT 0,0..0,20>
+
+>>> print(f.src)
+global a, a, b, c, c
 ```
 
 ## By attribute
@@ -368,7 +426,7 @@ standalone element that you can put into another tree then you need to make a co
 ## `get_src()`
 
 This just gets source code from a given location. It doesn't matter what node of a tree this is called on, it always
-gets from the root source and will always return the same results.
+gets from the root source and will always return the same results (`fst.fst.FST.get_src()`).
 
 ```py
 >>> f = FST('''
@@ -420,4 +478,8 @@ happy = little = node
 >>> print(f.get_src(*f.loc))
 happy = little = node
 ```
+
+**Note:** Cut is not implemented in `get_src()`. If you want to delete the source gotten then follow this up with a
+`put_src(None, ...)` at the same location as changing source code has several options selectable in that function. See
+the `put_src()` section in `fst.docs.d05_put`.
 """

@@ -34,7 +34,7 @@ FunctionDef - ROOT 1,0..2,16
    0] Name 'decorator' Load - 0,1..0,10
 ```
 
-These are accessed via the `.loc` attribute.
+These are accessed via the `.loc` attribute (`fst.fst.FST.loc`).
 
 ```py
 >>> f.loc
@@ -101,10 +101,10 @@ fstloc(0, 5, 0, 11)
 
 >>> FST('''
 ... match a:
-...    case a as b:
-...        pass
+...     case a as b:
+...         pass
 ... '''.strip()).cases[0].loc
-fstloc(1, 3, 2, 11)
+fstloc(1, 4, 2, 12)
 
 >>> FST('a += b').op.loc
 fstloc(0, 2, 0, 3)
@@ -112,9 +112,10 @@ fstloc(0, 2, 0, 3)
 
 ## `.bloc`
 
-There is also a `.bloc` bounding location attribute. This is equal to the `loc` location in all cases except when there
-are preceding decorators or a trailing line comment on the last child of a block statement, in which case those are
-included in the bounding location. There are corresponding `bln`, `bcol`, `bend_ln` and `bend_col` attributes.
+There is also a `.bloc` bounding location attribute (`fst.fst.FST.bloc`). This is equal to the `loc` location in all
+cases except when there are preceding decorators or a trailing line comment on the last child of a block statement, in
+which case those are included in the bounding location. There are corresponding `bln`, `bcol`, `bend_ln` and `bend_col`
+attributes.
 
 ```py
 >>> f = FST('''
@@ -207,40 +208,81 @@ fstloc(0, 0, 2, 16)
 
 ## Search by location
 
-You can search for a node by location. This is done by either searching for a node in a given location.
+Lets use this.
 
 ```py
 >>> f = FST('''
 ... if a < b:
-...     print(a)
+...     pass
 ... '''.strip())
 
->>> # find node matching or in this location
->>> f.find_in_loc(0, 3, 0, 8).src
-'a < b'
-
->>> # doesn't have to be exact, this function returns whole first node found in location
->>> f.find_in_loc(0, 1, 1, 6).src
-'a < b'
-
->>> # returns only entire nodes in location
->>> f.find_in_loc(0, 4, 0, 6).src
-'<'
+>>> f.dump()
+If - ROOT 0,0..1,8
+  .test Compare - 0,3..0,8
+    .left Name 'a' Load - 0,3..0,4
+    .ops[1]
+     0] Lt - 0,5..0,6
+    .comparators[1]
+     0] Name 'b' Load - 0,7..0,8
+  .body[1]
+   0] Pass - 1,4..1,8
 ```
 
-Or searching for a node which contains a location.
+You can search for a node by location. This is done by either searching for a node contained INSIDE a given location
+using `fst.fst.FST.find_in_loc()`.
 
 ```py
->>> # or you can search for a node entirely CONTAINING THE LOCATION
->>> f.find_loc_in(0, 4, 0, 6).src
-'a < b'
+>>> # find node matching or in this location
+>>> f.find_in_loc(0, 3, 0, 8)  # "a < b"
+<Compare 0,3..0,8>
+
+>>> # doesn't have to be exact, this function returns whole first node found in location
+>>> f.find_in_loc(0, 1, 1, 6)  # "f a < b:\n    pa"
+<Compare 0,3..0,8>
+
+>>> # returns only entire nodes in location
+>>> f.find_in_loc(0, 4, 0, 8)  # " < b"
+<Lt 0,5..0,6>
+```
+
+Or searching for a node which CONTAINS a location using `fst.fst.FST.find_loc_in()`.
+
+```py
+>>> # you can search for a node which entirely CONTAININS THE LOCATION
+>>> f.find_loc_in(0, 4, 0, 6)  # " <"
+<Compare 0,3..0,8>
 
 >>> # will return nodes matching the location EXACTLY by default
->>> f.find_loc_in(0, 3, 0, 8).src
-'a < b'
+>>> f.find_loc_in(0, 3, 0, 8)  # "a < b"
+<Compare 0,3..0,8>
 
 >>> # but that can be disabled
->>> f.find_loc_in(0, 3, 0, 8, allow_exact=False).src
-'if a < b:\n    print(a)'
+>>> f.find_loc_in(0, 3, 0, 8, allow_exact=False)  # "a < b"
+<If ROOT 0,0..1,8>
+```
+
+The `fst.fst.FST.find_loc()` method combines the two efficiently to find a node which is either the first one completely
+contained in the location, or if no candidate for that then one which contains the location. This is a more general
+"find me the node associated with this location" function.
+
+Here it gives the containing node while `find_in_loc()` gives nothing at all.
+
+```py
+>>> loc = (0, 4, 0, 5)  # empty space in Compare
+>>> print(f'{f.find_loc(*loc) = }\n{f.find_loc_in(*loc) = }\n{f.find_in_loc(*loc) = }')
+f.find_loc(*loc) = <Compare 0,3..0,8>
+f.find_loc_in(*loc) = <Compare 0,3..0,8>
+f.find_in_loc(*loc) = None
+```
+
+And here it gives the contained `Name` same as `find_in_loc()`, which gave nothing above but gives the "closest" node
+here.
+
+```py
+>>> loc = (0, 3, 0, 5)  # first element of Compare including whitespace after "a "
+>>> print(f'{f.find_loc(*loc) = }\n{f.find_loc_in(*loc) = }\n{f.find_in_loc(*loc) = }')
+f.find_loc(*loc) = <Name 0,3..0,4>
+f.find_loc_in(*loc) = <Compare 0,3..0,8>
+f.find_in_loc(*loc) = <Name 0,3..0,4>
 ```
 """

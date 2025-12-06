@@ -55,7 +55,7 @@ class fstview:
     This object is meant to be, and is normally created automatically by accessing `AST` list fields on an `FST` node.
 
     **Examples:**
-    ```py
+
     >>> from fst import FST
 
     >>> f = FST('[0, 1, 2, 3]')
@@ -91,7 +91,6 @@ class fstview:
     >>> f.elts[0] = '*star'
     >>> f.src
     '[*star]'
-    ```
     """
 
     base:  fst.FST  ; """The target `FST` node this view references."""
@@ -150,7 +149,7 @@ class fstview:
             `Dict.keys`.
 
         **Examples:**
-        ```py
+
         >>> from fst import FST
 
         >>> FST('[0, 1, 2, 3]').elts[1].src
@@ -173,7 +172,7 @@ class fstview:
 
         >>> FST('global a, b, c').names[1]
         'b'
-        ```
+
         @public
         """
 
@@ -206,7 +205,7 @@ class fstview:
         - `idx`: The index or `slice` where to put the element(s).
 
         **Examples:**
-        ```py
+
         >>> from fst import FST
 
         >>> (f := FST('[0, 1, 2, 3]')).elts[1] = '4'; f.src
@@ -228,7 +227,7 @@ class fstview:
         >>> f.elts[2:2] = f.elts[1:3].copy()
         >>> f.src
         '[0, 1, 1, 2, 2, 3]'
-        ```
+
         @public
         """
 
@@ -269,7 +268,7 @@ class fstview:
         - `idx`: The index or `slice` to delete.
 
         **Examples:**
-        ```py
+
         >>> from fst import FST
 
         >>> del (f := FST('[0, 1, 2, 3]')).elts[1]; f.src
@@ -283,7 +282,7 @@ class fstview:
 
         >>> del (f := FST('[0, 1, 2, 3]')).elts[:]; f.src
         '[]'
-        ```
+
         @public
         """
 
@@ -321,12 +320,11 @@ class fstview:
         - `FST`: Copied slice.
 
         **Examples:**
-        ```py
+
         >>> from fst import FST
 
         >>> FST('[0, 1, 2, 3]').elts[1:3].copy().src
         '[1, 2]'
-        ```
         """
 
         return self.base.get_slice(self.start, self.stop, self.field, cut=False, **options)
@@ -342,15 +340,13 @@ class fstview:
         - `FST`: Cut slice.
 
         **Examples:**
-        ```py
+
         >>> from fst import FST
 
         >>> (f := FST('[0, 1, 2, 3]')).elts[1:3].cut().src
         '[1, 2]'
-
         >>> f.src
         '[0, 3]'
-        ```
         """
 
         start = self.start
@@ -374,7 +370,7 @@ class fstview:
         - `options`: See `fst.fst.FST.options()`.
 
         **Examples:**
-        ```py
+
         >>> from fst import FST
 
         >>> FST('[0, 1, 2, 3]').elts[1:3].replace('(4, 5)').base.src
@@ -382,7 +378,6 @@ class fstview:
 
         >>> FST('[0, 1, 2, 3]').elts[1:3].replace('(4, 5)', one=False).base.src
         '[0, 4, 5, 3]'
-        ```
         """
 
         len_before = self._len_field()
@@ -403,12 +398,11 @@ class fstview:
         - `self`
 
         **Examples:**
-        ```py
+
         >>> from fst import FST
 
         >>> FST('[0, 1, 2, 3]').elts[1:3].remove().base.src
         '[0, 3]'
-        ```
         """
 
         len_before = self._len_field()
@@ -433,7 +427,7 @@ class fstview:
         - `options`: See `fst.fst.FST.options()`.
 
         **Examples:**
-        ```py
+
         >>> from fst import FST
 
         >>> FST('[0, 1, 2, 3]').elts.insert('(4, 5)', 1).base.src
@@ -448,7 +442,6 @@ class fstview:
 
         >>> FST('[0, 1, 2, 3]').elts[1:3].insert('*star').base.src
         '[0, *star, 1, 2, 3]'
-        ```
         """
 
         len_before = self._len_field()
@@ -478,7 +471,7 @@ class fstview:
         - `options`: See `fst.fst.FST.options()`.
 
         **Examples:**
-        ```py
+
         >>> from fst import FST
 
         >>> FST('[0, 1, 2, 3]').elts.append('(4, 5)').base.src
@@ -486,7 +479,6 @@ class fstview:
 
         >>> FST('[0, 1, 2, 3]').elts[1:3].append('*star').base.src
         '[0, 1, 2, *star, 3]'
-        ```
         """
 
         stop = self.stop
@@ -508,7 +500,7 @@ class fstview:
         - `options`: See `fst.fst.FST.options()`.
 
         **Examples:**
-        ```py
+
         >>> from fst import FST
 
         >>> FST('[0, 1, 2, 3]').elts.extend('(4, 5)').base.src
@@ -516,7 +508,6 @@ class fstview:
 
         >>> FST('[0, 1, 2, 3]').elts[1:3].extend('(4, 5)').base.src
         '[0, 1, 2, 4, 5, 3]'
-        ```
         """
 
         len_before = self._len_field()
@@ -539,7 +530,7 @@ class fstview:
         - `options`: See `fst.fst.FST.options()`.
 
         **Examples:**
-        ```py
+
         >>> from fst import FST
 
         >>> FST('[0, 1, 2, 3]').elts.prepend('(4, 5)').base.src
@@ -547,7 +538,6 @@ class fstview:
 
         >>> FST('[0, 1, 2, 3]').elts[1:3].prepend('*star').base.src
         '[0, *star, 1, 2, 3]'
-        ```
         """
 
         start = self.start
@@ -569,7 +559,7 @@ class fstview:
         - `options`: See `fst.fst.FST.options()`.
 
         **Examples:**
-        ```py
+
         >>> from fst import FST
 
         >>> FST('[0, 1, 2, 3]').elts.prextend('(4, 5)').base.src
@@ -577,7 +567,6 @@ class fstview:
 
         >>> FST('[0, 1, 2, 3]').elts[1:3].prextend('(4, 5)').base.src
         '[0, 4, 5, 1, 2, 3]'
-        ```
         """
 
         len_before = self._len_field()
@@ -591,7 +580,7 @@ class fstview:
 
 
 class fstview_Dict(fstview):
-    """View for `Dict` combined `key:value` virtual field `_all`."""
+    """View for `Dict` combined `key:value` virtual field `_all`. @private"""
 
     def _len_field(self) -> int:
         return len(self.base.a.keys)
@@ -613,7 +602,7 @@ class fstview_Dict(fstview):
 
 
 class fstview_MatchMapping(fstview):
-    """View for `MatchMapping` combined `key:pattern + rest` virtual field `_all`."""
+    """View for `MatchMapping` combined `key:pattern + rest` virtual field `_all`. @private"""
 
     def _len_field(self) -> int:
         return len((a := self.base.a).keys) + bool(a.rest)
@@ -640,7 +629,7 @@ class fstview_MatchMapping(fstview):
 
 
 class fstview_Compare(fstview):
-    """View for `Compare` combined `left + comparators` virtual field `_all`."""
+    """View for `Compare` combined `left + comparators` virtual field `_all`. @private"""
 
     def _len_field(self) -> int:
         return 1 + len(self.base.a.comparators)

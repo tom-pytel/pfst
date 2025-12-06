@@ -8,7 +8,7 @@ To be able to execute the examples, import this.
 
 ## Links
 
-For an FST parsed `AST` tree, each node will have its own `FST` node. The `FST` nodes contain the tree structure missing
+For an fst-parsed `AST` tree, each node will have its own `FST` node. The `FST` nodes contain the tree structure missing
 in the `AST` nodes, specifically a reference to the parent `FST` node and the field and index of this node in the
 parent.
 
@@ -79,9 +79,61 @@ The linkage to children is just via the existing `AST` fields.
 <class 'ast.Name'>
 ```
 
+Here is an example for a simple `Module` with a single `Expr` which is a `Name` to demonstrate.
+
+```py
+>>> a = parse('var')
+
+>>> a.f.dump()
+Module - ROOT 0,0..0,3
+  .body[1]
+   0] Expr - 0,0..0,3
+     .value Name 'var' Load - 0,0..0,3
+```
+
+This is the node layout, note that even the `.ctx` gets an `FST`, every `AST` node does. Also note that the `FST` class
+type is not differentiated according to the `AST`.
+
+```
+                                 None
+                          .root   ^
+                           +--+   | .parent
+                           V  |   |
++--------------+    .a    +--------------+<-------------------------+
+|              |<---------|              |<---------------------+   |
+|  ast.Module  |          |     FST      |<-----------------+   |   |
+|              |--------->|              | .pfield=None     |   |   |
++--------------+    .f    +--------------+                  |   |   |
+       |                          ^                         |   |   |
+       | .body[0]                 | .parent                 |   |   |
+       V                          |                         |   |   |
++--------------+    .a    +--------------+       .root      |   |   |
+|              |<---------|              |---------->-------+   |   |
+|   ast.Expr   |          |     FST      |                      |   |
+|              |--------->|              | .pfield=('body', 0)  |   |
++--------------+    .f    +--------------+                      |   |
+       |                          ^                             |   |
+       | .value                   | .parent                     |   |
+       V                          |                             |   |
++--------------+    .a    +--------------+       .root          |   |
+|              |<---------|              |---------->-----------+   |
+|   ast.Name   |          |     FST      |                          |
+|              |--------->|              | .pfield=('value', None)  |
++--------------+    .f    +--------------+                          |
+       |                          ^                                 |
+       | .ctx                     | .parent                         |
+       V                          |                                 |
++--------------+    .a    +--------------+       .root              |
+|              |<---------|              |---------->---------------+
+|   ast.Load   |          |     FST      |
+|              |--------->|              | .pfield=('ctx', None)
++--------------+    .f    +--------------+
+```
+
 ## Siblings
 
-You can access each `FST` node's previous and next siblings directly.
+You can access each `FST` node's previous and next siblings directly using `fst.fst.FST.next()` and
+`fst.fst.FST.prev()`.
 
 ```py
 >>> f = FST('[[1, 2], [3, 4], [5, 6]]')
@@ -105,7 +157,8 @@ You can access each `FST` node's previous and next siblings directly.
 
 ## Children
 
-You can access a node's children and iterate over them.
+You can access a node's children and iterate over them (`fst.fst.FST.first_child()`, `fst.fst.FST.last_child()`,
+`fst.fst.FST.next_child()`, `fst.fst.FST.prev_child()`).
 
 ```py
 >>> f = FST('[[1, 2, 3], [4, 5, 6]]')
@@ -131,7 +184,7 @@ You can access a node's children and iterate over them.
 1
 ```
 
-You can get the last child in a block node header.
+You can get the last child in a block node header using `fst.fst.FST.last_header_child()`.
 
 ```py
 >>> FST('if here: pass').last_header_child().src
@@ -143,7 +196,7 @@ You can get the last child in a block node header.
 
 ## Walk
 
-There is an explicit `walk()` function with a few options.
+There is an explicit `walk()` function with a few options (`fst.fst.FST.walk()`).
 
 ```py
 >>> f = FST('[[1, 2], [3, 4]]')
@@ -307,7 +360,7 @@ name
 Unlike the `next` and `prev` functions, the `step` functions allow walking forward or backward and going up and down
 parents and children automatically. Notice the order is parents before children regardless of if going forward or back,
 so the two functions are not inverses unlike the `next` / `prev` functions. You can walk the entire tree just stepping
-forward or back one node at a time.
+forward or back one node at a time. See `fst.fst.FST.step_fwd()` and `fst.fst.FST.step_back()`.
 
 ```py
 >>> f = FST('[[1, 2], [3, 4]]')
@@ -337,7 +390,7 @@ forward or back one node at a time.
 
 ## Paths
 
-You can get a path from any given node to any of its children.
+You can get a path from any given node to any of its children using `fst.fst.FST.child_path()`.
 
 ```py
 >>> f = FST('i = [a * (b + c)]')
@@ -360,13 +413,12 @@ Assign - ROOT 0,0..0,17
 >>> f.child_path(f.value.elts[0].right.left)
 [astfield('value'), astfield('elts', 0), astfield('right'), astfield('left')]
 
->>> # for the humans
->>> f.child_path(f.value.elts[0].right.left, as_str=True)
+>>> f.child_path(f.value.elts[0].right.left, as_str=True)  # for the humans
 'value.elts[0].right.left'
 ```
 
-You can then get the child by this path, either the `astfield` one or the string one. Useful for getting the same
-relative child in a copy of a tree.
+You can then get the child by this path, either the `astfield` one or the string one, using
+`fst.fst.FST.child_from_path()`. Useful for getting the same relative child in a copy of a tree.
 
 ```py
 >>> g = f.copy()

@@ -467,8 +467,9 @@ def is_parsable(self) -> bool:
     - `bool`: Whether is parsable by `FST` from a string or not.
 
     **Examples:**
-    ```py
+
     >>> from fst import astutil
+
     >>> FST('i').is_parsable()
     True
 
@@ -507,7 +508,6 @@ def is_parsable(self) -> bool:
 
     >>> astutil.is_parsable(FST('match a:\n  case 1: pass').cases[0].a)
     False
-    ```
     """
 
     if not self.loc:

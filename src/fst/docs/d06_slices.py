@@ -22,19 +22,19 @@ In many cases a slice of a list of children of a node can be returned as the sam
 >>> print(node)
 <Tuple ROOT 0,0..0,12>
 
->>> slice = node.get_slice(1, 3)
+>>> slc = node.get_slice(1, 3)
 
->>> print(slice)
+>>> print(slc)
 <Tuple ROOT 0,0..0,6>
 
->>> print(slice.src)
+>>> print(slc.src)
 (2, 3)
 ```
 
 This same type is used to put back to the node.
 
 ```py
->>> node.put_slice(slice, 3, 3)
+>>> node.put_slice(slc, 3, 3)
 <Tuple ROOT 0,0..0,18>
 
 >>> print(node.src)
@@ -69,22 +69,25 @@ Some other types of nodes may return and accept slices as `Tuple`. Generally the
 children separated by commas in a syntax similar to tuples, e.g. `Delete.targets` or `Global.names`.
 
 ```py
->>> slice = FST('del a, b, c').get_slice()
+>>> slc = FST('del a, b, c').get_slice()
 
->>> print(slice)
+>>> print(slc)
 <Tuple ROOT 0,0..0,7>
 
->>> print(slice.src)
+>>> print(slc.src)
 a, b, c
 ```
 
-```py
->>> slice = FST('global a, b, c').get_slice()
+Note that a `Global` node stores its names as primitive strings. The slice operations coerce these to and from `Name`
+`AST` nodes.
 
->>> print(slice)
+```py
+>>> slc = FST('global a, b, c').get_slice()
+
+>>> print(slc)
 <Tuple ROOT 0,0..0,7>
 
->>> print(slice.src)
+>>> print(slc.src)
 a, b, c
 ```
 
@@ -113,12 +116,12 @@ nonlocal a, x, y, c
 If a type does not have comma separators but can be represented by a standard `AST` for its slice, that type is used.
 
 ```py
->>> slice = FST('case a | b | c | d: pass').pattern.get_slice(1, 3)
+>>> slc = FST('case a | b | c | d: pass').pattern.get_slice(1, 3)
 
->>> print(slice)
+>>> print(slc)
 <MatchOr ROOT 0,0..0,5>
 
->>> print(slice.src)
+>>> print(slc.src)
 b | c
 ```
 
@@ -131,53 +134,53 @@ custom `AST` node container. These custom types are meant to allow slice operati
 For example, `Assign.targets`:
 
 ```py
->>> slice = FST('a = b = c = d = e').get_slice(1, 3, 'targets')
+>>> slc = FST('a = b = c = d = e').get_slice(1, 3, 'targets')
 
->>> print(slice)
+>>> print(slc)
 <_Assign_targets ROOT 0,0..0,7>
 
->>> print(slice.src)
+>>> print(slc.src)
 b = c =
 ```
 
 `ListComp.generators` (and others):
 
 ```py
->>> slice = FST('[i for k in l for j in k for i in j]').get_slice('generators')
+>>> slc = FST('[i for k in l for j in k for i in j]').get_slice('generators')
 
->>> print(slice)
+>>> print(slc)
 <_comprehensions ROOT 0,0..0,32>
 
->>> print(slice.src)
+>>> print(slc.src)
 for k in l for j in k for i in j
 ```
 
 `comprehension.ifs`:
 
 ```py
->>> slice = FST('[i for a, b, c in j if a if b if c]').generators[0].get_slice('ifs')
+>>> slc = FST('[i for a, b, c in j if a if b if c]').generators[0].get_slice('ifs')
 
->>> print(slice)
+>>> print(slc)
 <_comprehension_ifs ROOT 0,0..0,14>
 
->>> print(slice.src)
+>>> print(slc.src)
 if a if b if c
 ```
 
 `FunctionDef.decorator_list` (and others):
 
 ```py
->>> slice = FST('''
+>>> slc = FST('''
 ... @deco_a
 ... @deco_b()
 ... @deco_c  # comment
 ... def f(): pass
 ... '''.strip()).get_slice('decorator_list')
 
->>> print(slice)
+>>> print(slc)
 <_decorator_list ROOT 0,0..2,18>
 
->>> print(slice.src)
+>>> print(slc.src)
 @deco_a
 @deco_b()
 @deco_c  # comment
@@ -188,32 +191,184 @@ actually aliases. They have an `asname`, which is not allowed in standard `Tuple
 slice type `_aliases`.
 
 ```py
->>> slice = FST('import a, b as c, d').get_slice()
+>>> slc = FST('import a, b as c, d').get_slice()
 
->>> print(slice)
+>>> print(slc)
 <_aliases ROOT 0,0..0,12>
 
->>> print(slice.src)
+>>> print(slc.src)
 a, b as c, d
 ```
 
 These special slices can be put to and gotten from just like any other node.
 
 ```py
->>> slice = FST('import a, b as c, d').get_slice()
+>>> slc = FST('import a, b as c, d').get_slice()
 
->>> slice.put_slice('u as v, x as y', -1)
+>>> slc.put_slice('u as v, x as y', -1)
 <_aliases ROOT 0,0..0,25>
 
->>> print(slice)
+>>> print(slc)
 <_aliases ROOT 0,0..0,25>
 
->>> print(slice.src)
+>>> print(slc.src)
 a, b as c, u as v, x as y
 
->>> print(slice.get_slice(1, 3).src)
+>>> print(slc.get_slice(1, 3).src)
 b as c, u as v
 ```
+
+You can get and put to these non-standard slices just like normal nodes.
+
+```py
+>>> slc = FST('[i for a, b, c in j if a if b if c]').generators[0].get_slice('ifs')
+
+>>> slc.dump()
+_comprehension_ifs - ROOT 0,0..0,14
+  .ifs[3]
+   0] Name 'a' Load - 0,3..0,4
+   1] Name 'b' Load - 0,8..0,9
+   2] Name 'c' Load - 0,13..0,14
+
+>>> slc.get_slice(1, 3).dump()
+_comprehension_ifs - ROOT 0,0..0,9
+  .ifs[2]
+   0] Name 'b' Load - 0,3..0,4
+   1] Name 'c' Load - 0,8..0,9
+
+>>> slc.put_slice('if x if y', 1, 2).dump()
+_comprehension_ifs - ROOT 0,0..0,19
+  .ifs[4]
+   0] Name 'a' Load - 0,3..0,4
+   1] Name 'x' Load - 0,8..0,9
+   2] Name 'y' Load - 0,13..0,14
+   3] Name 'c' Load - 0,18..0,19
+
+>>> print(slc.src)
+if a if x if y if c
+```
+
+## BoolOp and Compare "slices"
+
+You can also slice these node types as they contain lists of child nodes, though there are some extra parameters since
+the children are separated by operators (same operator in the case of `BoolOp` and possibly different ones for
+`Compare`). The "slices" in this case are just the same kind of node as is being sliced.
+
+```py
+>>> f = FST('a and b and c and d')
+
+>>> print(f.get_slice(1, 3).src)
+b and c
+
+>>> print(f.put_slice('x and y', 0, 3).src)
+x and y and d
+```
+
+```py
+>>> f = FST('a < b == c > d')
+
+>>> print(f.get_slice(1, 3).src)
+b == c
+
+>>> print(f.put_slice('x != y', 0, 3).src)
+x != y > d
+```
+
+The first new parameter which applies to these two node types is `op_side` which determines what side of a slice any
+extra operator is to be found when we need to delete or insert an extra. The possible values are `'left'` and `'right'`
+which mean exactly that.
+
+When deleting a slice from one of these nodes an extra operator will need to be deleted (otherwise you would wind up
+with something like `a and and d`) and this option determines which side it is removed from.
+
+This does actually matter for a `BoolOp` regardless of the fact that all the operators are the same because of
+placement.
+
+```py
+>>> print(FST('''
+... a
+... and  # left
+... b
+... and  # right
+... c
+... '''.strip()).put_slice(None, 1, 2, op_side='left').src)
+a
+and  # right
+c
+
+>>> print(FST('''
+... a
+... and  # left
+... b
+... and  # right
+... c
+... '''.strip()).put_slice(None, 1, 2, op_side='right').src)
+a
+and  # left
+c
+```
+
+And in the case of a `Compare` it really matters as the operators can all be different.
+
+```py
+>>> print(FST('a < b > c').put_slice(None, 1, 2, op_side='left').src)
+a > c
+
+>>> print(FST('a < b > c').put_slice(None, 1, 2, op_side='right').src)
+a < c
+```
+
+The `op_side` option is a conisdered a hint and it may be overridden without error by the location of the slice being
+deleted or inserted.
+
+If inserting to a `Compare` an extra operator MUST be added and the operator must be specified either in the source
+being put to the compare or as a separate `op` option.
+
+```py
+>>> print(FST('a < b').put_slice('== x', 1, 1).src)
+a == x < b
+
+>>> print(FST('a < b').put_slice('x ==', 1, 1).src)
+a < x == b
+
+>>> print(FST('a < b').put_slice('x', 1, 1, op_side='left', op='==').src)
+a == x < b
+
+>>> print(FST('a < b').put_slice('x', 1, 1, op_side='right', op='==').src)
+a < x == b
+
+>>> try:  # no extra op in source or `op` option
+...     print(FST('a < b').put_slice('x', 1, 1).src)
+... except Exception as exc:
+...     print(repr(exc))
+ValueError("insertion to Compare requires and 'op' extra operator to insert")
+```
+
+If replacing then this is optional.
+
+```py
+>>> print(FST('a < b > c').put_slice('x', 1, 2).src)
+a < x > c
+
+>>> print(FST('a < b > c').put_slice('== x', 1, 2).src)
+a == x > c
+
+>>> print(FST('a < b > c').put_slice('x ==', 1, 2).src)
+a < x == c
+
+>>> print(FST('a < b > c').put_slice('x', 1, 2, op_side='left', op='==').src)
+a == x > c
+
+>>> print(FST('a < b > c').put_slice('x', 1, 2, op_side='right', op='==').src)
+a < x == c
+```
+
+
+
+
+
+
+
 
 ## Normalization
 
@@ -376,6 +531,29 @@ but can be put to normally.
 x = y = val
 ```
 
+For a `BoolOp` or `Compare` normalization will convert a single element "slice" to just the element that was left.
+
+```py
+>>> FST('a or b').get_slice(0, 1).dump()  # invalid
+BoolOp - ROOT 0,0..0,1
+  .op Or
+  .values[1]
+   0] Name 'a' Load - 0,0..0,1
+
+>>> FST('a or b').get_slice(0, 1, norm=True).dump()  # valid
+Name 'a' Load - ROOT 0,0..0,1
+```
+
+```py
+>>> FST('a < b').get_slice(0, 1).dump()  # invalid
+Compare - ROOT 0,0..0,1
+  .left Name 'a' Load - 0,0..0,1
+
+>>> FST('a < b').get_slice(0, 1, norm=True).dump()  # valid
+Name 'a' Load - ROOT 0,0..0,1
+```
+
+
 ## Put as `one=True`
 
 When putting a slice the node being put is normally considered to be a slice of the type needed to put to the target
@@ -413,7 +591,9 @@ del a, (x, y), d
 It also allows putting things which are not slices of the given type to a slice range withing the target.
 
 ```py
->>> print(FST('case a | b | c | d: pass').pattern.put_slice('x as y', 1, 3, one=True).src)
+>>> f = FST('case a | b | c | d: pass')
+
+>>> print(f.pattern.put_slice('x as y', 1, 3, one=True).src)
 a | (x as y) | d
 ```
 
