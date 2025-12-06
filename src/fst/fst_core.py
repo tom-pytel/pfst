@@ -567,6 +567,8 @@ def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None) -> None:
     `FST()`. In this case the nodes are not removed from whatever previous parent `AST` contained them, that is up to
     the caller."""
 
+    # THIS IS A HOT FUNCTION!
+
     if stack is None:
         stack = [self]
 
@@ -576,26 +578,30 @@ def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None) -> None:
         parent = stack.pop()
         parenta = parent.a
 
-        for field in parenta._fields:
+        for field in parenta._fields:  # unrolled iter_child_nodes(parenta) because it makes a difference here
             if child := getattr(parenta, field, None):
                 if isinstance(child, AST):
-                    if not hasattr(child, 'f') and field in ('ctx', 'op'):  # if `.f` exists and points to an FST then this has already been done
-                        setattr(parenta, field, child := child.__class__())  # (expr_context, unaryop, operator, boolop, cmpop)  - the same object may be reused by ast.parse() in mutiple places in the tree, we need unique objects (cmpop done below for list field 'ops')
+                    if field in ('ctx', 'op'):
+                        if not hasattr(child, 'f'):  # if `.f` exists and points to an FST then this has already been done
+                            setattr(parenta, field, child := child.__class__())  # (expr_context, unaryop, operator, boolop, cmpop)  - the same object may be reused by ast.parse() in mutiple places in the tree, we need unique objects (cmpop done below for list field 'ops')
 
-                    stack.append(FST(child, parent, astfield(field)))
+                        FST(child, parent, astfield(field))  # this just creates the FST and adds it to the child AST, we don't add to stack because we know child doesn't have children
+
+                    else:
+                        stack.append(FST(child, parent, astfield(field)))
 
                 elif isinstance(child, list):
                     if field != 'ops':
-                        stack.extend(FST(c, parent, astfield(field, i))
-                                     for i, c in enumerate(child) if isinstance(c, AST))
+                        if not isinstance(child[0], str):
+                            stack.extend(FST(c, parent, astfield(field, i))
+                                         for i, c in enumerate(child) if isinstance(c, AST))
 
                     else:  # field == 'ops', this is the only list field (of Compare.ops) that can contain singleton ASTs
                         for i, c in enumerate(child):
-                            if isinstance(c, AST):
-                                if not hasattr(c, 'f'):  # we know isisntance(c, cmpop)
-                                    child[i] = c = c.__class__()
+                            if not hasattr(c, 'f'):  # we know isisntance(c, cmpop)
+                                child[i] = c = c.__class__()
 
-                                FST(c, parent, astfield(field, i))  # this just creates the FST and adds it to the child, we don't add to stack because we know it doesn't have children
+                            FST(c, parent, astfield(field, i))  # no children
 
 
 def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None) -> None:
