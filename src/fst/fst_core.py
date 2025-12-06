@@ -1406,6 +1406,8 @@ def _modifying(self: fst.FST, field: str | Literal[False] = False, raw: bool = F
 def _touch(self: fst.FST) -> fst.FST:  # -> self
     """AST node was modified, clear out any cached info for this node only."""
 
+    # WARNING!!! If this function is changed then search for "._touch()" in the whole source and update where necessary for changes!!!
+
     self._cache.clear()
 
     return self
@@ -1523,6 +1525,8 @@ def _offset(
     ```
     """
 
+    # THIS IS A HOT FUNCTION!
+
     if self_:
         stack = [self.a]
     elif self is exclude:
@@ -1544,17 +1548,17 @@ def _offset(
     head_is_None_and_tail_and_not_fwd = head is None and tail and not fwd
 
     while stack:
-        a = stack.pop()
-        f = a.f
+        if not (a := stack.pop()):  # may be None
+            continue
 
-        if f is not exclude:
-            children = iter_child_nodes(a)
+        if (f := a.f) is not exclude:
+            children = a._fields
         elif offset_excluded:
             children = ()
         else:
             continue
 
-        f._touch()
+        f._cache.clear()  # f._touch()
 
         if (fend_colo := getattr(a, 'end_col_offset', None)) is not None:
             flno = a.lineno
@@ -1592,7 +1596,12 @@ def _offset(
                 a.lineno = flno + dln
                 a.col_offset = fcolo + dcol_offset
 
-        stack.extend(children)
+        for field in children:  # unrolled iter_child_nodes(a) because it makes a difference here
+            if child := getattr(a, field, None):
+                if isinstance(child, AST):
+                    stack.append(child)
+                elif isinstance(child, list) and not isinstance(child[0], str):
+                    stack.extend(child)
 
     self._touchall(True, False, False)
 
