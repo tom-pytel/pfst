@@ -2164,7 +2164,6 @@ class SliceExprish(Fuzzy):
         src_start_ = src_start if src_start >= src_len or randint(0, 1) else src_start - src_len - src_rest  # randomly change index to negative (referring to same location)
         src_stop_ = src_stop if src_stop >= src_len or randint(0, 1) else src_stop - src_len - src_rest
 
-        # slice = src.get_slice(src_start, src_stop, field=field, cut=cut, trivia=src_trivia)
         slice = src.get_slice(src_start_, src_stop_, field=field, cut=cut, trivia=src_trivia)
 
         if not is_compare:

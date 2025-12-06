@@ -1800,6 +1800,22 @@ if (
         self.assertEqual('with (\n     (x) or (a) or b or (c)): pass'.strip(), (f := FST('with (a) or b or (c): pass')).items[0].context_expr.put_slice('\n(x)', 0, 0).root.src)
         f.verify()
 
+        # other misc
+
+        f = FST(r'''
+a or b \
+\
+  if 1 else 2
+            '''.strip(), 'exec')
+        self.assertEqual('if 1 else 2', f.body[0].value.body.put_slice(None).root.src)
+
+        f = FST(r'''
+a or b \
+\
+
+'''.lstrip(), 'exec')
+        self.assertEqual('\n', f.body[0].value.put_slice(None).root.src)
+
     def test_slice_special_Compare(self):
         self.assertRaises(ValueError, FST('a < b').get_slice, 0, 0)
         self.assertRaises(ValueError, FST('a < b').get_slice, 0, 0, norm=True)
@@ -2020,6 +2036,22 @@ if (
         if PYGE12:
             self.assertEqual("f'{3 == 4:<12}'", (f := FST("f'{4 != 4 == 4:<12}'")).values[0].value.put_slice('3 == 4', 0, 3).root.src)
             f.verify()
+
+        # misc errors
+
+        f = FST(r'''
+if 1:
+    ('' < """
+""") > c
+'''.strip())
+        self.assertEqual('''('' < """\n""")''', f.body[0].value.get_slice(0, 1).src)
+        f.verify()
+
+        self.assertEqual('c < b', (f := FST('a < b', 'exec')).body[0].value.put_slice(' \\\n c', 0, 1).root.src)
+        f.verify()
+
+        self.assertEqual('c < b', (f := FST('a < b', 'exec')).body[0].value.put_slice(' \\\n\\\n c', 0, 1).root.src)
+        f.verify()
 
     def test_slice_special_Compare_op(self):
         # invalid

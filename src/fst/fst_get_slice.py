@@ -89,7 +89,8 @@ from .slice_stmtish import get_slice_stmtish
 from .slice_exprish import _locs_first_and_last, get_slice_sep, get_slice_nosep
 
 
-_re_empty_line_start_maybe_cont = re.compile(r'[ \t]+\\?')  # empty line start with maybe continuation with at least one leading whitespace
+_re_empty_line_start_maybe_cont_0 = re.compile(r'[ \t]*\\?')  # empty line start with maybe continuation
+_re_empty_line_start_maybe_cont_1 = re.compile(r'[ \t]+\\?')  # empty line start with maybe continuation WITH AT LEAST 1 leading whitespace
 
 
 # ......................................................................................................................
@@ -388,13 +389,27 @@ def _maybe_fix_naked_expr(self: fst.FST, is_del: bool, is_first: bool, options: 
             ln, col, _, _ = self.loc
 
             if ln == parent.ln:  # if starts on same line as Expr then we may need to fix
-                line = lines[ln]
+                if col:  # if Expr starts after column 0 then is safe to just dedent any line continuation
+                    line = lines[ln]
 
-                if m := _re_empty_line_start_maybe_cont.match(line):
-                    if m.group().endswith('\\'):  # if is pure line continuation then can do this directly and don't need to offset anything because this won't change any actual start or end node positions
-                        lines[ln] = bistr(line[:col] + '\\')
-                    elif (end := m.end()) > col:  # wound up with leading whitespace before expression on same line as Expr so need to offset
-                        self._put_src(None, ln, col, ln, end, True)  # tail=True because maybe wound up with zero-length expression?
+                    if m := _re_empty_line_start_maybe_cont_1.match(line):
+                        if m.group().endswith('\\'):  # if is pure line continuation then can do this directly and don't need to offset anything because this won't change any actual start or end node positions
+                            lines[ln] = bistr(line[:col] + '\\')
+
+                        elif (end := m.end()) > col:  # wound up with leading whitespace before expression on same line as Expr so need to dedent to start of Expr
+                            self._put_src(None, ln, col, ln, end, True)  # tail=True because maybe wound up with zero-length expression?
+
+                else:  # a line continuation at column 0 effectively doesn't exist so if an expression on the next line is indented then it is an error, so we need to remove all line continuations which may follow and dedent any following expression
+                    while m := _re_empty_line_start_maybe_cont_0.match(lines[ln]):
+                        if m.group().endswith('\\'):  # if is pure line continuation then the safest thing to do is remove the line entirely because if the line continuation winds up at column 0 then it is like it doesn't exist and if the expression doesn't start at column 0 after it then it is an indentation error
+                            self._put_src(None, ln, 0, ln + 1, 0, True)
+
+                            continue
+
+                        elif (end := m.end()) > col:
+                            self._put_src(None, ln, col, ln, end, True)
+
+                        break
 
 
 def _maybe_fix_BoolOp(
@@ -1436,6 +1451,9 @@ def _get_slice_Compare__all(
 
     fst_ = get_slice_nosep(self, start, stop, len_body, cut, ret_ast,
                            loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col, options)
+
+    for op in asts_ops:  # we need to explicitly clean out ops caches because location has changed but these were not "._touch()ed" in get_slice_nosep() because that only dealt with the comparators
+        op.f._touch()
 
     # remove possible extra operator on either side of slice
 
