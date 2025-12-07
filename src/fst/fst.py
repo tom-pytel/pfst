@@ -1670,6 +1670,29 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
     # High level
 
+    def copy_ast(self) -> AST:
+        """Copy the `AST` node tree of this `FST` node, not including any `FST` stuff. Use when you just want a copy of
+        the `AST` tree from this point down.
+
+        Needless to say since this just returns an `AST` all formatting is lost, except that the `AST` nodes will have
+        the same `lineno`, `col_offset`, `end_lineno` and `end_col_offset` values as they had in the `FST` tree.
+
+        **Returns:**
+        - `AST`: Copied `AST` tree from this point down.
+
+        **Examples:**
+
+        >>> a = FST('[0, 1, 2, 3]').copy_ast()
+
+        >>> print(type(a))
+        <class 'ast.List'>
+
+        >>> print(dump(a))
+        List(elts=[Constant(value=0), Constant(value=1), Constant(value=2), Constant(value=3)], ctx=Load())
+        """
+
+        return copy_ast(self.a)
+
     def copy(self, **options) -> FST:
         """Copy this node to a new top-level tree, dedenting and fixing as necessary. If copying root node then an
         identical copy is made and no fixes / modifications are applied.
@@ -2200,11 +2223,11 @@ class FST:
         col: int,
         end_ln: int,
         end_col: int,
-        ast_action: Literal['reparse', 'offset'] | None = 'reparse',
+        action: Literal['reparse', 'offset'] | None = 'reparse',
     ) -> tuple[int, int]:
         r"""Put source and maybe adjust `AST` tree for source modified. The adjustment may be a reparse of the area
         changed, an offset of nodes (assuming put source was just trivia and wouldn't affect the tree) or nothing at
-        all. The `ast_action` options are:
+        all. The `action` options are:
 
         * `'reparse'`: Put source and reparse. There are no rules on what is put, it is simply put and parse is
           attempted.
@@ -2251,7 +2274,7 @@ class FST:
         - `col`: Start column (character) on start line.
         - `end_ln`: End line of span to put (0 based, inclusive).
         - `end_col`: End column (character, exclusive) on end line.
-        - `ast_action`: What action to take on the `AST` tree, the options are `'reparse'`, `'offset'` or `None`.
+        - `action`: What action to take on the `AST` tree, the options are `'reparse'`, `'offset'` or `None`.
 
         **Returns:**
         - `(end_ln, end_col)`: New end location of source put (all source after this was not modified).
@@ -2313,14 +2336,14 @@ class FST:
         root = self.root
         ln, col, end_ln, end_col = clip_src_loc(self, ln, col, end_ln, end_col)
 
-        if ast_action == 'reparse':
+        if action == 'reparse':
             parent = root.find_loc_in(ln, col, end_ln, end_col, False) or root
 
             return parent._reparse_raw(code, ln, col, end_ln, end_col)
 
         put_lines = code_as_lines(code)
 
-        if ast_action == 'offset':
+        if action == 'offset':
             # TODO: there may be issues with certain zero-length trees but I can't think of any that might occur in normal usage
 
             if not (loc := self.loc):
@@ -2339,11 +2362,11 @@ class FST:
 
             self._offset(*params_offset, False, True, self_=False)
 
-        elif ast_action is None:
+        elif action is None:
             root._put_src(put_lines, ln, col, end_ln, end_col)
 
         else:
-            raise ValueError(f"ast_action must be 'reparse', 'offset' or None, got {ast_action!r}")
+            raise ValueError(f"action must be 'reparse', 'offset' or None, got {action!r}")
 
         if len(put_lines) == 1:
             return ln, col + len(put_lines[0])
