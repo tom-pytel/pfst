@@ -290,7 +290,7 @@ if the walk is restricted to a scope you can decide to recurse into a specific c
 ```py
 >>> for g in (gen := f.walk(True, scope=True)):
 ...     print(g)
-...     if isinstance(g.a, FunctionDef) and g.a.name == 'g':
+...     if g.is_FunctionDef and g.a.name == 'g':
 ...         _ = gen.send(True)  # ignore the '_', it shuts up return in stdout
 <Module ROOT 0,0..3,8>
 <FunctionDef 0,0..1,9>
@@ -304,7 +304,7 @@ children. You can override this by sending to the generator.
 ```py
 >>> for g in (gen := f.walk(True, recurse=False)):
 ...     print(g)
-...     if isinstance(g.a, FunctionDef) and g.a.name == 'f':
+...     if g.is_FunctionDef and g.a.name == 'f':
 ...         _ = gen.send(True)
 <Module ROOT 0,0..3,8>
 <FunctionDef 0,0..1,9>
@@ -319,7 +319,7 @@ Or you can decide NOT to recurse into children.
 ```py
 >>> for g in (gen := f.walk(True)):
 ...     print(g)
-...     if isinstance(g.a, FunctionDef) and g.a.name == 'f':
+...     if g.is_FunctionDef and g.a.name == 'f':
 ...         _ = gen.send(False)
 <Module ROOT 0,0..3,8>
 <FunctionDef 0,0..1,9>
@@ -336,9 +336,9 @@ been there. This is not safe to do if using "raw" operations (explained elsewher
 
 >>> for g in f.walk(True):
 ...     print(g.src)
-...     if isinstance(g.a, Constant) and g.a.value & 1:
+...     if g.is_Constant and g.a.value & 1:
 ...         _ = g.replace('x')
-...     elif isinstance(g.a, Name):
+...     elif g.is_Name:
 ...         _ = g.replace('[5, 6]')
 [[1, 2], [3, 4], name]
 [1, 2]

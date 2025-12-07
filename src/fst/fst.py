@@ -107,6 +107,7 @@ from .astutil import (
     constant,
     FIELDS,
     AST_FIELDS,
+    AST_BASES,
     OPCLS2STR,
     bistr,
     WalkFail,
@@ -606,55 +607,23 @@ class FST:
         return (loc := self.loc) and self.root._lines[loc[2]].c2b(loc[3])
 
     @property
-    def is_mod(self) -> bool:
-        """Is a `mod`."""
+    def has_docstr(self) -> bool:
+        """Pure `bool` for whether this node has a docstring if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
+        `Module`. For quick use as starting index."""
 
-        return isinstance(self.a, mod)
-
-    @property
-    def is_stmtish(self) -> bool:
-        """Is a `stmt`, `ExceptHandler` or `match_case`."""
-
-        return isinstance(self.a, ASTS_STMTISH)
-
-    @property
-    def is_stmt(self) -> bool:
-        """Is a `stmt`."""
-
-        return isinstance(self.a, stmt)
-
-    @property
-    def is_block(self) -> bool:
-        """Is a node which opens a block. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `For`,
-        `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`, `TryStar`, `ExceptHandler`, `match_case` or
-        `mod`."""
-
-        return isinstance(self.a, ASTS_BLOCK_OR_MOD)
-
-    @property
-    def is_scope(self) -> bool:
-        """Is a node which opens a scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `Lambda`,
-        `ListComp`, `SetComp`, `DictComp`, `GeneratorExp` or `mod`."""
-
-        return isinstance(self.a, ASTS_SCOPE_OR_MOD)
-
-    @property
-    def is_named_scope(self) -> bool:
-        """Is a node which opens a named scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `mod`."""
-
-        return isinstance(self.a, ASTS_SCOPE_NAMED_OR_MOD)
-
-    @property
-    def is_anon_scope(self) -> bool:
-        """Is a node which opens an anonymous scope. Types include `Lambda`, `ListComp`, `SetComp`, `DictComp` or
-        `GeneratorExp`."""
-
-        return isinstance(self.a, ASTS_SCOPE_ANONYMOUS)
+        return (
+            isinstance(a := self.a, ASTS_MAYBE_DOCSTR)
+            and (b := a.body)
+            and isinstance(b0 := b[0], Expr)
+            and isinstance(v := b0.value, Constant)
+            and isinstance(v := v.value, str)
+        )
 
     @property
     def docstr(self) -> builtins.str | None:
         """The docstring of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `Module`. `None` if
-        not one of those nodes or has no docstring."""
+        not one of those nodes or has no docstring. Keep in mind an empty docstring may exist but will be a falsey
+        value so make sure to check for `None`."""
 
         if (isinstance(a := self.a, ASTS_MAYBE_DOCSTR)
             and (b := a.body)
@@ -4518,6 +4487,76 @@ class FST:
         return f.find_in_loc(ln, col, end_ln, end_col) or f
 
     # ------------------------------------------------------------------------------------------------------------------
+    # Predicates
+
+    @property
+    def is_stmt_or_mod(self) -> bool:
+        """Is a `stmt` or `mod`."""
+
+        return isinstance(self.a, (stmt, mod))
+
+    @property
+    def is_stmtish(self) -> bool:
+        """Is a `stmt`, `ExceptHandler` or `match_case`."""
+
+        return isinstance(self.a, ASTS_STMTISH)
+
+    @property
+    def is_stmtish_or_mod(self) -> bool:
+        """Is a `stmt`, `ExceptHandler`, `match_case` or `mod`."""
+
+        return isinstance(self.a, ASTS_STMTISH_OR_MOD)
+
+    @property
+    def is_block(self) -> bool:
+        """Is a node which opens a block. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `For`,
+        `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`, `TryStar`, `ExceptHandler` or `match_case`."""
+
+        return isinstance(self.a, ASTS_BLOCK)
+
+    @property
+    def is_block_or_mod(self) -> bool:
+        """Is a node which opens a block. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `For`,
+        `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`, `TryStar`, `ExceptHandler`, `match_case` or
+        `mod`."""
+
+        return isinstance(self.a, ASTS_BLOCK_OR_MOD)
+
+    @property
+    def is_scope(self) -> bool:
+        """Is a node which opens a scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `Lambda`,
+        `ListComp`, `SetComp`, `DictComp` or `GeneratorExp`."""
+
+        return isinstance(self.a, ASTS_SCOPE)
+
+    @property
+    def is_scope_or_mod(self) -> bool:
+        """Is a node which opens a scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `Lambda`,
+        `ListComp`, `SetComp`, `DictComp`, `GeneratorExp` or `mod`."""
+
+        return isinstance(self.a, ASTS_SCOPE_OR_MOD)
+
+    @property
+    def is_named_scope(self) -> bool:
+        """Is a node which opens a named scope. Types include `FunctionDef`, `AsyncFunctionDef` or `ClassDef`."""
+
+        return isinstance(self.a, ASTS_SCOPE_NAMED)
+
+    @property
+    def is_named_scope_or_mod(self) -> bool:
+        """Is a node which opens a named scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `mod`."""
+
+        return isinstance(self.a, ASTS_SCOPE_NAMED_OR_MOD)
+
+    @property
+    def is_anon_scope(self) -> bool:
+        """Is a node which opens an anonymous scope. Types include `Lambda`, `ListComp`, `SetComp`, `DictComp` or
+        `GeneratorExp`."""
+
+        return isinstance(self.a, ASTS_SCOPE_ANONYMOUS)
+
+
+    # ------------------------------------------------------------------------------------------------------------------
     # Private
 
     from .fst_core import (
@@ -4658,96 +4697,134 @@ _VIRTUAL_FIELD_VIEW__ALL = {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
+# Generated methods  # TODO: at some point make external generator and pre-generate
+
+# Predicates
+
+def _make_predicates() -> None:
+    def _make_class_is_predicate(kls: type[AST]) -> property:
+        @property
+        def predicate(self: FST, kls: type = kls) -> bool:
+            """@private"""
+
+            return self.a.__class__ is kls
+
+        return predicate
+
+    def _make_isinstance_predicate(kls: type[AST]) -> property:
+        @property
+        def predicate(self: FST, kls: type = kls) -> bool:
+            """@private"""
+
+            return isinstance(self.a, kls)
+
+        return predicate
+
+    for kls in FIELDS:
+        name = f'is_{kls.__name__}'
+
+        if not hasattr(FST, name):  # in case explicitly overridden
+            setattr(FST, name, _make_class_is_predicate(kls))
+
+    for kls in AST_BASES:
+        name = f'is_{kls.__name__}'
+
+        if not hasattr(FST, name):  # things like is_stmt() already exist
+            setattr(FST, name, _make_isinstance_predicate(kls))
+
+
+_make_predicates()
+
+
 # AST field accessors
 
-def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> property:
-    if cardinality == 1:  # is an AST or a primitive
-        @property
-        def accessor(self: FST) -> FST | None | constant:
-            """@private"""
+def _make_AST_field_accessors() -> None:
+    def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> property:
+        if cardinality == 1:  # is an AST or a primitive
+            @property
+            def accessor(self: FST, field: str = field) -> FST | None | constant:
+                """@private"""
 
-            return getattr(child, 'f', None) if isinstance(child := getattr(self.a, field), AST) else child
+                return getattr(child, 'f', None) if isinstance(child := getattr(self.a, field), AST) else child
 
-        @accessor.setter
-        def accessor(self: FST, code: Code | constant | None) -> None:
-            """@private"""
+            @accessor.setter
+            def accessor(self: FST, code: Code | constant | None, field: str = field) -> None:
+                """@private"""
 
-            self._put_one(code, None, field)
-
-        @accessor.deleter
-        def accessor(self: FST) -> None:
-            """@private"""
-
-            self._put_one(None, None, field)
-
-    elif cardinality == 2:  # is a list[AST]
-        @property
-        def accessor(self: FST) -> fstview:
-            """@private"""
-
-            return fstview(self, field, 0, len(getattr(self.a, field)))
-
-        @accessor.setter
-        def accessor(self: FST, code: Code | None) -> None:
-            """@private"""
-
-            self._put_slice(code, None, None, field)
-
-        @accessor.deleter
-        def accessor(self: FST) -> None:
-            """@private"""
-
-            self._put_slice(None, None, None, field)
-
-    else:  # cardinality == 3  # can be single AST or list depending on the parent AST type
-        @property
-        def accessor(self: FST) -> fstview | FST | None | constant:
-            """@private"""
-
-            if isinstance(child := getattr(self.a, field), list):
-                return fstview(self, field, 0, len(child))
-            elif isinstance(child, AST):
-                return getattr(child, 'f', None)
-
-            return child
-
-        @accessor.setter
-        def accessor(self: FST, code: Code | None) -> None:
-            """@private"""
-
-            if isinstance(getattr(self.a, field), list):
-                self._put_slice(code, None, None, field)
-            else:
                 self._put_one(code, None, field)
 
-        @accessor.deleter
-        def accessor(self: FST) -> None:
-            """@private"""
+            @accessor.deleter
+            def accessor(self: FST, field: str = field) -> None:
+                """@private"""
 
-            if isinstance(getattr(self.a, field), list):
-                self._put_slice(None, None, None, field)
-            else:
                 self._put_one(None, None, field)
 
-    return accessor
+        elif cardinality == 2:  # is a list[AST]
+            @property
+            def accessor(self: FST, field: str = field) -> fstview:
+                """@private"""
 
+                return fstview(self, field, 0, len(getattr(self.a, field)))
 
-def _make_AST_field_accessors() -> None:
+            @accessor.setter
+            def accessor(self: FST, code: Code | None, field: str = field) -> None:
+                """@private"""
+
+                self._put_slice(code, None, None, field)
+
+            @accessor.deleter
+            def accessor(self: FST, field: str = field) -> None:
+                """@private"""
+
+                self._put_slice(None, None, None, field)
+
+        else:  # cardinality == 3  # can be single AST or list depending on the parent AST type
+            @property
+            def accessor(self: FST, field: str = field) -> fstview | FST | None | constant:
+                """@private"""
+
+                if isinstance(child := getattr(self.a, field), list):
+                    return fstview(self, field, 0, len(child))
+                elif isinstance(child, AST):
+                    return getattr(child, 'f', None)
+
+                return child
+
+            @accessor.setter
+            def accessor(self: FST, code: Code | None, field: str = field) -> None:
+                """@private"""
+
+                if isinstance(getattr(self.a, field), list):
+                    self._put_slice(code, None, None, field)
+                else:
+                    self._put_one(code, None, field)
+
+            @accessor.deleter
+            def accessor(self: FST, field: str = field) -> None:
+                """@private"""
+
+                if isinstance(getattr(self.a, field), list):
+                    self._put_slice(None, None, None, field)
+                else:
+                    self._put_one(None, None, field)
+
+        return accessor
+
     FST_dict = FST.__dict__
-    cardinality = {}  # {'field': 1 means single element | 2 means list (3 means can be either)}
+    cardinality = {}  # {'field': 1 means single element | 2 means list (3 means can be either), ...}
 
     for fields in FIELDS.values():
-        for f, t in fields:
-            if f == 'lineno':  # TypeIgnore.lineno
+        for field, type_ in fields:
+            if field == 'lineno':  # TypeIgnore.lineno
                 continue
 
-            if f in FST_dict:
-                raise RuntimeError(f'AST field name {f!r} already taken in FST class')
+            if field in FST_dict:
+                raise RuntimeError(f'AST field name {field!r} already taken in FST class')
 
-            cardinality[f] = cardinality.get(f, 0) | (2 if t.endswith('*') else 1)
+            cardinality[field] = cardinality.get(field, 0) | (2 if type_.endswith('*') else 1)
 
-    for f, c in cardinality.items():
-        setattr(FST, f, _make_AST_field_accessor(f, c))
+    for field, c in cardinality.items():
+        setattr(FST, field, _make_AST_field_accessor(field, c))
 
 
 _make_AST_field_accessors()

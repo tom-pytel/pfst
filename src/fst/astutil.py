@@ -116,12 +116,15 @@ from .asttypes import (
     boolop,
     cmpop,
     comprehension,
+    excepthandler,
     expr,
     expr_context,
     keyword,
     match_case,
+    mod,
     operator,
     pattern,
+    stmt,
     type_ignore,
     unaryop,
     withitem,
@@ -132,6 +135,7 @@ from .asttypes import (
     TypeVarTuple,
     TemplateStr,
     Interpolation,
+    _slice,
     _ExceptHandlers,
     _match_cases,
     _Assign_targets,
@@ -184,7 +188,7 @@ re_identifier_alias_only   = re.compile(rf'^(?:\*|{pat_identifier}(?:\.{pat_iden
 #   arguments     - interleaved `posonlyargs`/`args` and `defaults` (partially), interleaved `kwonlyargs` and `kw_defaults`
 #   Call          - type `Starred` can be in `args`, `arg=None` in `keywords` means double starred
 
-FIELDS = dict([
+FIELDS = dict([  # FINAL types which get instantiated, not base stuff like `cmpop` or `excepthandler`
     (Module,                   (('body', 'stmt*'), ('type_ignores', 'type_ignore*'))),
     (Interactive,              (('body', 'stmt*'),)),
     (Expression,               (('body', 'expr'),)),
@@ -307,6 +311,8 @@ FIELDS = dict([
     (ParamSpec,                (('name', 'identifier'), ('default_value', 'expr?'))),
     (TypeVarTuple,             (('name', 'identifier'), ('default_value', 'expr?'))),
 
+    # our own SPECIAL SLICEs
+
     (_ExceptHandlers,          (('handlers', 'excepthandler*'),)),
     (_match_cases,             (('cases', 'match_case*'),)),
     (_Assign_targets,          (('targets', 'expr*'),)),
@@ -319,12 +325,29 @@ FIELDS = dict([
 
 ])  ; """List of all fields for AST classes: [(`AST` class, (('field name', 'type name'), ...)), ...]"""
 
-# only fields which can contain an AST, {cls: ('field1', 'field2', ...), ...}
-AST_FIELDS = {kls: tuple(f for f, t in fields
-                         if not t.startswith('int') and not t.startswith('string') and
-                         not t.startswith('identifier') and not t.startswith('constant') and
-                         not t.startswith('type_ignore'))
+AST_FIELDS = {kls: tuple(f for f, t in fields  # only fields which can contain an AST, {cls: ('field1', 'field2', ...), ...}
+                         if (not t.startswith('int')
+                             and not t.startswith('string')
+                             and not t.startswith('identifier')
+                             and not t.startswith('constant')
+                             and not t.startswith('type_ignore')
+                        ))
               for kls, fields in FIELDS.items()}  ; """Mapping of `AST` class to tuple of fields which may contain an `AST` node or `list` of `AST` nodes or `None` if optional `AST` node."""
+
+AST_BASES = (  # non-final bases of AST types in use
+    mod,
+    stmt,
+    expr,
+    expr_context,
+    boolop,
+    operator,
+    unaryop,
+    cmpop,
+    excepthandler,
+    pattern,
+    type_ignore,
+    _slice,  # our own base SPECIAL SLICE
+)
 
 OPSTR2CLS_UNARY = {
     '~':      Invert,
