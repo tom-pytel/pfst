@@ -9,6 +9,9 @@
 
 ### Added
 
+- allow `FST.replace()` as a slice operation if applicable (`.replace()` one statement with multiple)
+- moved some other predicates from private to public code, e.g. `is_elif()`, etc...
+- predicates for checking `AST` type in `FST`, e.g. `is_Name`, `is_Call`, `is_FunctionDef`, etc...
 - `FST._all` virtual field slice view attribute access for `Dict`, `MatchMapping` and `Compare`
 - `FST.docstr` property
 - automatic coercion of nodes put as `AST` or `FST` to compatible types

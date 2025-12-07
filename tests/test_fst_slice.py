@@ -1494,6 +1494,26 @@ def func():
             f.put_slice('x, y, z')
             self.assertEqual('nonlocal x, y, z', f.src)
 
+    def test_replace_with_slice(self):
+        f = FST('a\nb\nc')
+        self.assertRaises(ValueError, f.body[1].replace, 'x\ny')
+        self.assertEqual('x', f.body[1].replace('x\ny', one=False).src)
+        self.assertEqual('a\nx\ny\nc', f.src)
+        f.verify()
+        self.assertIsNone(f.body[1].replace(None, one=False))
+        self.assertEqual('a\ny\nc', f.src)
+        f.verify()
+
+        f = FST('[a, b, c]')
+        self.assertEqual('[x, y]', f.elts[1].replace('[x, y]').src)
+        self.assertEqual('[a, [x, y], c]', f.src)
+        f.verify()
+        self.assertEqual('x', f.elts[1].replace('[x, y]', one=False).src)
+        self.assertEqual('[a, x, y, c]', f.src)
+        f.verify()
+        self.assertIsNone(f.elts[1].replace(None, one=False))
+        self.assertEqual('[a, y, c]', f.src)
+
     def test_slice_special(self):
         # Global.names preserves trailing commas and locations
 

@@ -373,7 +373,7 @@ class FST:
     to each `AST` node in a tree. It provides format-preserving operations as well as ability to navigate the tree in
     any direction."""
 
-    a:            AST              ; """The actual `AST` node."""
+    a:            AST | None       ; """The actual `AST` node. Will be set to `None` for `FST` nodes which were deleted or otherwise invalidated so can be checked for that to see if the `FST` is still alive (while walking and modifying for example)."""
     parent:       FST | None       ; """Parent `FST` node, `None` in root node."""
     pfield:       astfield | None  ; """The `astfield` location of this node in the parent, `None` in root node."""
     # root:         FST              ; """The root node of this tree, `self` in root node."""  # ROOT-AS-ATTRIBUTE
@@ -623,7 +623,8 @@ class FST:
     def docstr(self) -> builtins.str | None:
         """The docstring of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `Module`. `None` if
         not one of those nodes or has no docstring. Keep in mind an empty docstring may exist but will be a falsey
-        value so make sure to check for `None`."""
+        value so make sure to check for `None`. If you want the actual docstring node then just check for presence and
+        get `.body[0]`."""
 
         if (isinstance(a := self.a, ASTS_MAYBE_DOCSTR)
             and (b := a.body)
@@ -1714,7 +1715,7 @@ class FST:
 
         raise ValueError('cannot cut root node')
 
-    def replace(self, code: Code | None, **options) -> FST | None:  # -> replaced self or None if deleted
+    def replace(self, code: Code | None, one: bool=True, **options) -> FST | None:  # -> replaced self or None if deleted
         """Replace or delete (if `code=None`, if possible) this node. Returns the new node for `self`, not the old
         replaced node, or `None` if was deleted or raw replaced and the old node disappeared. Cannot delete root node.
         CAN replace root node, in which case the accessing `FST` node remains the same but the top-level `AST` and
@@ -1722,6 +1723,8 @@ class FST:
 
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to put at this location. `None` to delete this node.
+        - `one`: Default `True` means replace with a single element. If `False` and field allows it then can replace
+            single element with a slice.
         - `options`: See `options()`.
             - `to`: Special option which only applies replacing in `raw` mode (either through `True` or `'auto'`).
                 Instead of replacing just this node, will replace the entire span from this node to the node specified
@@ -1744,7 +1747,20 @@ class FST:
         """
 
         if parent := self.parent:
-            return parent._put_one(code, (pf := self.pfield).idx, pf.name, options)
+            field, idx = pfield = self.pfield
+
+            if one:
+                return parent._put_one(code, idx, field, options)
+
+            if idx is None:
+                raise ValueError(f"cannot replace {parent.a.__class__.__name__}.{field} with slice")
+
+            parent = parent._put_slice(code, idx, idx + 1, field, False, options)
+
+            if code is None or not parent:
+                return None
+
+            return pfield.get_default(parent.a, None).f
 
         if code is None:
             raise ValueError('cannot delete root node')
