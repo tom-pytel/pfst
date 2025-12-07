@@ -59,8 +59,8 @@ def load_tests(loader, tests, ignore):
 
 class TestDocTest(unittest.TestCase):
     def test_fst_module(self):
-        options = fst.FST.get_options()
         fst_mod_dict = {k: v for k, v in fst.__dict__.items() if not k.startswith('_')}
+        options = fst.FST.get_options()
 
         try:
             for mod in (fst.fst, fst.fst_core, fst.fst_misc, fst.fst_locs):

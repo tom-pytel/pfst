@@ -22,6 +22,8 @@ This is rather crude documentation that hopefully can show usage through many sm
 `fst.docs.d10_reconcile`: Edit pure AST while preserving formatting
 
 `fst.docs.d11_options`: Options
+
+`fst.docs.d12_examples`: Example recipes
 """
 
 from . import (
@@ -36,6 +38,7 @@ from . import (
     d09_parentheses,
     d10_reconcile,
     d11_options,
+    d12_examples,
 )
 
 __all__ = [
@@ -50,4 +53,5 @@ __all__ = [
     'd09_parentheses',
     'd10_reconcile',
     'd11_options',
+    'd12_examples',
 ]

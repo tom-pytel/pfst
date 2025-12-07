@@ -2,6 +2,8 @@
 
 This module exists in order to facilitate quick and easy high level editing of Python source in the form of an `AST` tree while preserving formatting. It is meant to allow you to change python code functionality while not having to deal with the miniutae of precedence, indentation, parentheses, commas, comments, docstrings, semicolons, line continuations, else vs. elif, and all the various other niche special cases of Python syntax across different versions of the language.
 
+See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d12_examples.html) for more in-depth examples.
+
 Example:
 
 ```py
@@ -56,7 +58,7 @@ From GitHub, after cloning for development:
 
     pip install -e .[dev]
 
-# More Examples
+# Features
 
 ```py
 >>> from fst import *
@@ -349,12 +351,11 @@ This module is not finished but functional enough that it can be useful.
   * `TemplateStr.values`
 
 * Improve comment and whitespace handling, especially allow get / put comments in single element non-statement
-operations where it may apply (where comment may belong to expression instead of statement).
-
-* Make reconcile use all slice operations to preserve more formatting.
+operations where it may apply (where comment may belong to expression instead of statement). Allow specification of
+trivia by line number, as well as insert location. Direct comment manipulation functions.
 
 * Tree search, `options` validation, mutate-immune walk, code cleanups, API additions for real-world use, optimization,
-testing, bughunting, lots...
+testing, bughunting, make reconcile use all slice operations to preserve more formatting, lots more...
 
 ## Trivia
 

@@ -8,6 +8,8 @@ tree while preserving formatting. It is meant to allow you to change python code
 with the miniutae of precedence, indentation, parentheses, commas, comments, docstrings, semicolons, line continuations,
 else vs. elif, and all the various other niche special cases of Python syntax across different versions of the language.
 
+See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d12_examples.html) for more in-depth examples.
+
 Example:
 
 >>> import fst
