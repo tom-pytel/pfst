@@ -795,7 +795,7 @@ class SrcEdit:
         if not fpre and not fpost and is_orelse and isinstance(tgt_fst.a, If):  # possible else <-> elif changes
             orelse = tgt_fst.a.orelse
             opt_elif = fst.FST.get_option('elif_', options)
-            is_old_elif = orelse[0].f._is_elif()
+            is_old_elif = orelse[0].f.is_elif()
             is_new_elif = opt_elif and len(put_body) == 1 and isinstance(put_body[0], If)
 
             if is_new_elif:
@@ -1123,7 +1123,7 @@ def _put_slice_stmtish_old(
                             if isinstance(self.a, (mod, _ExceptHandlers, _match_cases)) else
                             opener_indent + root.indent)
 
-        elif not (b0 := body[0]).f._is_elif():
+        elif not (b0 := body[0]).f.is_elif():
             block_indent = b0.f._get_indent()
         elif (bb := b0.body) or (bb := b0.orelse):
             block_indent = bb[0].f._get_indent()
@@ -1145,7 +1145,7 @@ def _put_slice_stmtish_old(
     else:  # insertion
         ffirst = flast = None
 
-        if field == 'orelse' and len_body == 1 and (f := body[0].f)._is_elif():
+        if field == 'orelse' and len_body == 1 and (f := body[0].f).is_elif():
             _elif_to_else_if(f, fst.FST.get_option('docstr', options))
 
         if fpre:

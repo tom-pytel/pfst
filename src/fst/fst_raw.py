@@ -157,14 +157,14 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
             path = _PATH_BODY2HANDLERS if indent else _PATH_BODYHANDLERS
 
         elif not pcol:  # not 'not indent' because could be semicolon
-            if stmtish._is_elif():
+            if stmtish.is_elif():
                 copy_lines[0] = bistr('if 2: pass')
                 path = _PATH_BODYORELSE
             else:
                 path = _PATH_BODY
 
         else:
-            if stmtish._is_elif():
+            if stmtish.is_elif():
                 copy_lines[1] = bistr(indent + 'if 2: pass')
                 path = _PATH_BODY2ORELSE
             else:

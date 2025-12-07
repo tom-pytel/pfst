@@ -4555,6 +4555,26 @@ class FST:
 
         return isinstance(self.a, ASTS_SCOPE_ANONYMOUS)
 
+    def is_elif(self) -> bool | None:
+        r"""Whether `self` is an `elif` or not, or not an `If` at all.
+
+        **Returns:**
+        - `True` if is `elif` `If`, `False` if is normal `If`, `None` if is not `If` at all.
+
+        **Examples:**
+
+        >>> FST('if 1: pass\nelif 2: pass').orelse[0].is_elif()
+        True
+
+        >>> FST('if 1: pass\nelse:\n  if 2: pass').orelse[0].is_elif()
+        False
+
+        >>> print(FST('if 1: pass\nelse:\n  i = 2').orelse[0].is_elif())
+        None
+        """
+
+        return self.root._lines[(loc := self.loc).ln].startswith('elif', loc.col) if self.a.__class__ is If else None
+
 
     # ------------------------------------------------------------------------------------------------------------------
     # Private
@@ -4601,7 +4621,6 @@ class FST:
         _is_expr_arglike,
         _is_empty_set_call,
         _is_empty_set_star,
-        _is_elif,
         _is_solo_class_base,
         _is_solo_call_arg,
         _is_solo_call_arg_genexp,

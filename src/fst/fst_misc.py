@@ -1196,27 +1196,6 @@ def _is_empty_set_star(self: fst.FST) -> bool:
             ((isinstance(v := e0.value, (Tuple, List)) and not v.elts) or (isinstance(v, Dict) and not v.keys)))
 
 
-def _is_elif(self: fst.FST) -> bool | None:
-    r"""Whether `self` is an `elif` or not, or not an `If` at all.
-
-    **Returns:**
-    - `True` if is `elif` `If`, `False` if is normal `If`, `None` if is not `If` at all.
-
-    **Examples:**
-
-    >>> FST('if 1: pass\nelif 2: pass').orelse[0]._is_elif()
-    True
-
-    >>> FST('if 1: pass\nelse:\n  if 2: pass').orelse[0]._is_elif()
-    False
-
-    >>> print(FST('if 1: pass\nelse:\n  i = 2').orelse[0]._is_elif())
-    None
-    """
-
-    return self.root._lines[(loc := self.loc).ln].startswith('elif', loc.col) if isinstance(self.a, If) else None
-
-
 def _is_solo_class_base(self: fst.FST) -> bool | None:
     """Whether `self` is a solo `ClassDef` base in list without any keywords, or not a class base at all.
 
