@@ -34118,6 +34118,52 @@ r'''case {1: b, 3: d, 5: f}: pass'''), (None,
 r'''**z'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
+('pattern', 1, 2, None, {'raw': True}, ('match_case',
+r'''case {1: b, 3: d, 5: f}: pass'''), (None,
+r'''7: h'''),
+r'''case {1: b, 7: h, 5: f}: pass''', r'''
+match_case - ROOT 0,0..0,29
+  .pattern MatchMapping - 0,5..0,23
+    .keys[3]
+     0] Constant 1 - 0,6..0,7
+     1] Constant 7 - 0,12..0,13
+     2] Constant 5 - 0,18..0,19
+    .patterns[3]
+     0] MatchAs - 0,9..0,10
+       .name 'b'
+     1] MatchAs - 0,15..0,16
+       .name 'h'
+     2] MatchAs - 0,21..0,22
+       .name 'f'
+  .body[1]
+   0] Pass - 0,25..0,29
+'''),
+
+('pattern', 1, 2, None, {'raw': True}, ('match_case', r'''
+
+case {1: b, 3: d, 5: f}: pass
+'''), (None,
+r'''7: h'''), r'''
+
+case {1: b, 7: h, 5: f}: pass
+''', r'''
+match_case - ROOT 1,0..1,29
+  .pattern MatchMapping - 1,5..1,23
+    .keys[3]
+     0] Constant 1 - 1,6..1,7
+     1] Constant 7 - 1,12..1,13
+     2] Constant 5 - 1,18..1,19
+    .patterns[3]
+     0] MatchAs - 1,9..1,10
+       .name 'b'
+     1] MatchAs - 1,15..1,16
+       .name 'h'
+     2] MatchAs - 1,21..1,22
+       .name 'f'
+  .body[1]
+   0] Pass - 1,25..1,29
+'''),
+
 ('', 2, 3, None, {'raw': True}, ('pattern',
 r'''{1: b, 3: d, 5: f}'''), (None,
 r'''**z'''),

@@ -14015,6 +14015,164 @@ r'''False'''),
 r'''True''',
 r'''True''',
 r'''MatchSingleton True - ROOT 0,0..0,4'''),
+
+('pattern', None, False, None, {'raw': True}, ('match_case',
+r'''case 1: pass'''), (None,
+r'''2'''),
+r'''case 2: pass''', r'''
+match_case - ROOT 0,0..0,12
+  .pattern MatchValue - 0,5..0,6
+    .value Constant 2 - 0,5..0,6
+  .body[1]
+   0] Pass - 0,8..0,12
+'''),
+
+('pattern', None, False, None, {'raw': True}, ('match_case', r'''
+
+case 1: pass
+'''), (None,
+r'''2'''), r'''
+
+case 2: pass
+''', r'''
+match_case - ROOT 1,0..1,12
+  .pattern MatchValue - 1,5..1,6
+    .value Constant 2 - 1,5..1,6
+  .body[1]
+   0] Pass - 1,8..1,12
+'''),
+
+('', None, False, 'type', {'raw': True}, ('ExceptHandler',
+r'''except ValueError as exc: pass'''), (None,
+r'''RuntimeError'''),
+r'''except RuntimeError as exc: pass''', r'''
+ExceptHandler - ROOT 0,0..0,32
+  .type Name 'RuntimeError' Load - 0,7..0,19
+  .name 'exc'
+  .body[1]
+   0] Pass - 0,28..0,32
+'''),
+
+('', None, False, 'type', {'raw': True}, ('ExceptHandler', r'''
+
+except ValueError as exc: pass
+'''), (None,
+r'''RuntimeError'''), r'''
+
+except RuntimeError as exc: pass
+''', r'''
+ExceptHandler - ROOT 1,0..1,32
+  .type Name 'RuntimeError' Load - 1,7..1,19
+  .name 'exc'
+  .body[1]
+   0] Pass - 1,28..1,32
+'''),
+
+('handlers[0]', None, False, 'type', {'raw': True}, ('_ExceptHandlers', r'''
+except Exception: pass
+except Exception: pass
+'''), (None,
+r'''ValueError'''), r'''
+except ValueError: pass
+except Exception: pass
+''', r'''
+_ExceptHandlers - ROOT 0,0..1,22
+  .handlers[2]
+   0] ExceptHandler - 0,0..0,23
+     .type Name 'ValueError' Load - 0,7..0,17
+     .body[1]
+      0] Pass - 0,19..0,23
+   1] ExceptHandler - 1,0..1,22
+     .type Name 'Exception' Load - 1,7..1,16
+     .body[1]
+      0] Pass - 1,18..1,22
+'''),
+
+('handlers[0]', None, False, 'type', {'raw': True, 'to': 'handlers[1].type'}, ('_ExceptHandlers', r'''
+except Exception: pass
+except Exception: pass
+'''), (None, r'''
+ValueError: _
+except RuntimeError
+'''), r'''
+except ValueError: _
+except RuntimeError: pass
+''', r'''
+_ExceptHandlers - ROOT 0,0..1,25
+  .handlers[2]
+   0] ExceptHandler - 0,0..0,20
+     .type Name 'ValueError' Load - 0,7..0,17
+     .body[1]
+      0] Expr - 0,19..0,20
+        .value Name '_' Load - 0,19..0,20
+   1] ExceptHandler - 1,0..1,25
+     .type Name 'RuntimeError' Load - 1,7..1,19
+     .body[1]
+      0] Pass - 1,21..1,25
+'''),
+
+('cases[0]', None, False, 'pattern', {'raw': True}, ('_match_cases', r'''
+case 1: pass
+case 2: pass
+'''), (None,
+r'''3'''), r'''
+case 3: pass
+case 2: pass
+''', r'''
+_match_cases - ROOT 0,0..1,12
+  .cases[2]
+   0] match_case - 0,0..0,12
+     .pattern MatchValue - 0,5..0,6
+       .value Constant 3 - 0,5..0,6
+     .body[1]
+      0] Pass - 0,8..0,12
+   1] match_case - 1,0..1,12
+     .pattern MatchValue - 1,5..1,6
+       .value Constant 2 - 1,5..1,6
+     .body[1]
+      0] Pass - 1,8..1,12
+'''),
+
+('cases[0]', None, False, 'pattern', {'raw': True, 'to': 'cases[1].pattern'}, ('_match_cases', r'''
+case 1: pass
+case 2: pass
+'''), (None, r'''
+3: _
+case 4
+'''), r'''
+case 3: _
+case 4: pass
+''', r'''
+_match_cases - ROOT 0,0..1,12
+  .cases[2]
+   0] match_case - 0,0..0,9
+     .pattern MatchValue - 0,5..0,6
+       .value Constant 3 - 0,5..0,6
+     .body[1]
+      0] Expr - 0,8..0,9
+        .value Name '_' Load - 0,8..0,9
+   1] match_case - 1,0..1,12
+     .pattern MatchValue - 1,5..1,6
+       .value Constant 4 - 1,5..1,6
+     .body[1]
+      0] Pass - 1,8..1,12
+'''),
+
+('targets[0]', None, False, None, {'raw': True}, ('_Assign_targets',
+r'''a = b = c ='''), (None,
+r'''**FIX ME**'''),
+r'''**ParseError('cannot parse to _slice')**'''),
+
+('targets[0]', None, False, None, {'raw': True, 'to': 'targets[1]'}, ('_Assign_targets',
+r'''a = b = c ='''), (None,
+r'''x = y '''),
+r'''x = y  = c =''', r'''
+_Assign_targets - ROOT 0,0..0,12
+  .targets[3]
+   0] Name 'x' Store - 0,0..0,1
+   1] Name 'y' Store - 0,4..0,5
+   2] Name 'c' Store - 0,9..0,10
+'''),
 ],
 
 'f-string': [  # ................................................................................
