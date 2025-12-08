@@ -2,9 +2,8 @@ r"""
 # Raw reparse operations
 
 To be able to execute the examples, import this.
-```py
+
 >>> from fst import *
-```
 
 ## Basics
 
@@ -24,7 +23,6 @@ option.
 
 Raw node put operations can do things which are not normally possible with prescribed operations.
 
-```py
 >>> f = FST('{a: b, c: d, e: f}')
 
 >>> try:
@@ -39,12 +37,10 @@ cannot put as 'one' item to a Dict slice
 
 >>> print(f.src)
 {a: b, **g, e: f}
-```
 
 Unlike a prescibed single node replacement, a single node raw replacement many affect other nodes around it and
 completely change their meaning and structure (invalidating any `FST` references you had to the previous nodes).
 
-```py
 >>> f = FST('i + 1')
 
 >>> f.dump()
@@ -63,12 +59,10 @@ Assign - ROOT 0,0..0,5
   .targets[1]
    0] Name 'i' Store - 0,0..0,1
   .value Constant 1 - 0,4..0,5
-```
 
 Raw mode node operations are available for slices as well, in which case whatever source you pass is just put at the
 location spanned by the first and last elements.
 
-```py
 >>> f = FST('[1, 2, 3, 4, 5]')
 
 >>> f.put_slice('''
@@ -80,18 +74,15 @@ location spanned by the first and last elements.
 >>> print(f.src)
 [1, 6, # blah
    7,8, 4, 5]
-```
 
 And just like for individual nodes, this can completely change the structure.
 
-```py
 >>> f.put_slice('], sub[0', 2, 3, raw=True)
 <Tuple ROOT 0,0..1,20>
 
 >>> print(f.src)
 [1, 6, # blah
    ], sub[0,8, 4, 5]
-```
 
 ## Locations
 
@@ -99,7 +90,6 @@ Raw node operations use the location of the node (including grouping parentheses
 two special-case locations which are automatically provided which are not normally available for a node. For a `Dict` or
 `MatchMapping` the location of a nonexistent key replaced with `**` is provided if operating on the `keys` field.
 
-```py
 >>> f = FST('{a: b, **c, d: e}')
 
 >>> f.put('z: ', 1, 'keys', raw=True)  # note the explicit trailing ': ' after the 'z'
@@ -107,19 +97,17 @@ two special-case locations which are automatically provided which are not normal
 
 >>> print(f.src)
 {a: b, z: c, d: e}
-```
 
 You cannot undo this with a raw put as the location of the key ends before the `:` and so that will not be overwritten
 if putting just to `keys`. If you wish to change a `a: b` key-value pair in a `Dict` or `MatchMapping` to a `**b` using
-raw operations then you must operate on the default `None` field.
+raw operations then you must operate on the virtual `_all` field (which is selected by the default field value of
+`None`).
 
-```py
 >>> f.put('**c', 1, raw=True)  # note we don't specify 'keys' field
 <Dict ROOT 0,0..0,17>
 
 >>> print(f.src)
 {a: b, **c, d: e}
-```
 
 Also the location of empty `arguments` for a `FunctionDef` or a `Lambda` are provided at the expected location of those
 `arguments` even though empty `arguments` don't normally have a `.loc`.
@@ -132,7 +120,6 @@ the `:` normally follows right after. In order to stay consistent with puts to e
 working, in this case if the source being put does not start with a space (in any form, `AST`, `FST` or source string)
 then a single space will be prepended.
 
-```py
 >>> f = FST('lambda: None')
 
 >>> f.put('a', 'args', raw=True)  # no leading space before the 'a'
@@ -140,14 +127,12 @@ then a single space will be prepended.
 
 >>> print(f.src)  # one was automatically inserted
 lambda a: None
-```
 
 Other than this, if you pass `AST` or `FST` nodes to raw mode slice operations, the `AST` is unparsed and the `FST`
 just has its own source code used for the put. One of the only two modifications which may happen to this unparsed `AST`
 or existing `FST` source is that if a sequence with delimiters is passed to a slice put then the delimiters are stripped
 for `Tuple`, `List`, `Set`, `Dict`, `MatchSequence` and `MatchMapping`, otherwise the source is used as-is for the put.
 
-```py
 >>> f = FST('[1, 2, 3]')
 
 >>> f.put_slice(FST('{x, y}'), 2, None, raw=True)
@@ -155,13 +140,11 @@ for `Tuple`, `List`, `Set`, `Dict`, `MatchSequence` and `MatchMapping`, otherwis
 
 >>> print(f.src)
 [1, 2, x, y]
-```
 
 The other modification that can happen is that locations are selected for the put in order that commas are not
 duplicated and that a resulting singleton `Tuple` or `MatchSequence` always has a trailing comma. If this is not
 possible by selecting copy locations then a comma is inserted where needed.
 
-```py
 >>> f = FST('(a, b)')
 
 >>> f.put_slice(FST('[x]'), 0, 2, raw=True)
@@ -169,11 +152,9 @@ possible by selecting copy locations then a comma is inserted where needed.
 
 >>> print(f.src)
 (x,)
-```
 
 These modifications do not apply if putting source as a string directly.
 
-```py
 >>> f = FST('(a, b)')
 
 >>> f.put_slice('[x]', 0, 2, raw=True)
@@ -181,7 +162,6 @@ These modifications do not apply if putting source as a string directly.
 
 >>> print(f.src)
 ([x])
-```
 
 ## `to` parameter
 
@@ -189,7 +169,6 @@ A single element raw node operation can take an optional `to` parameter to speci
 replacement. This is different from a slice operation in that the `to` can be any node, not just a node in the same
 slice container, as long as it follows syntactically in the source.
 
-```py
 >>> f = FST('''
 ... if f(a=1):
 ...     g(b)
@@ -204,12 +183,10 @@ slice container, as long as it follows syntactically in the source.
 >>> print(f.src)
 if f(a=3, **z):
     h(x, y)
-```
 
 This only works for single element `replace()` and `put()` operations. It does not apply to slice operations as that
 could get confusing with those operations also specifying an explicit end location.
 
-```py
 >>> f = FST('[1, 2, 3]')
 
 >>> try:
@@ -217,14 +194,12 @@ could get confusing with those operations also specifying an explicit end locati
 ... except Exception as exc:
 ...     print(exc)
 cannot put slice with 'to' option
-```
 
 ## Parentheses
 
 Raw mode node operations do not take into account precedence or parenthesization and do not add any parentheses, but
 they do remove them from targets.
 
-```py
 >>> f = FST('[(a), (b), (c)]')
 
 >>> f.elts[0].replace('x', raw=True)
@@ -232,39 +207,33 @@ they do remove them from targets.
 
 >>> print(f.src)
 [x, (b), (c)]
-```
 
 You can turn this behavior off for single element operations.
 
-```py
 >>> f.elts[1].replace('y', raw=True, pars=False)
 <Name 0,5..0,6>
 
 >>> print(f.src)
 [x, (y), (c)]
-```
 
 But it can cause problems.
 
-```py
 >>> try:
 ...     f.elts[0].replace('z', raw=True, pars=False, to=f.elts[2])
 ... except Exception as exc:
 ...     print(str(exc))
 invalid syntax
 
->>> # this failed because the source code winds up being `[z, )]`
+This failed because the source code winds up being `[z, )]`.
 
 >>> f.elts[0].replace('z', raw=True, to=f.elts[2])
 <Name 0,1..0,2>
 
 >>> print(f.src)
 [z]
-```
 
 Parentheses are always removed for raw slice operations because otherwise it gets too messy.
 
-```py
 >>> f = FST('[(a), (b), (c)]')
 
 >>> f.put_slice('x, y', 0, 2, raw=True, pars=False)
@@ -272,7 +241,6 @@ Parentheses are always removed for raw slice operations because otherwise it get
 
 >>> print(f.src)
 [x, y, (c)]
-```
 
 If you want to avoid all automatic behavior on raw puts, then use `fst.fst.FST.put_src()` directly.
 """

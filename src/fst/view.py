@@ -33,7 +33,6 @@ class fstview:
     **WARNING!** Keep in mind that operations on NODES or even CHILD VIEWS instead of on THIS VIEW will not update this
     view. Do not hold on to views, use them and discard.
 
-    ```py
     >>> from fst import FST
 
     >>> view = FST('[1, 2, 3]').elts
@@ -50,7 +49,6 @@ class fstview:
 
     >>> view  # WRONG again
     <<List ROOT 0,0..0,3>.elts[0:3] [<Constant 0,1..0,2>]>
-    ```
 
     This object is meant to be, and is normally created automatically by accessing `AST` list fields on an `FST` node.
 

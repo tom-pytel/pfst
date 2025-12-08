@@ -246,7 +246,7 @@ def _locs_slice(
             line.
         - `sep_end_pos`: Position right after separator `sep` if found after `loc_last`, else `None`.
 
-    ```py
+    ```
     '+' = copy_loc
     '-' = del_loc
     '=' = del_loc and return indent

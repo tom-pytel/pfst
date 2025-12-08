@@ -1180,7 +1180,7 @@ class FST:
             operations, slice operations ignore this as parentheses usually cannot be removed or may need to be added to
             keep the slices usable. Raw puts generally do not have parentheses added or removed automatically, except
             maybe removed according to this from the destination node if putting to a node instead of a pure location.
-            - `False`: Parentheses are not MODIFIED, doesn't mean remove all parentheses. Not copied with nodes or
+            - `False`: Parentheses are not **MODIFIED**, doesn't mean remove all parentheses. Not copied with nodes or
                 removed on put from source or destination. Using incorrectly can result in invalid trees.
             - `True`: Parentheses are copied with nodes, added to copies if needed and not present, removed from
                 destination on put if not needed there (but not source).
@@ -4613,7 +4613,6 @@ class FST:
         """
 
         return self.root._lines[(loc := self.loc).ln].startswith('elif', loc.col) if self.a.__class__ is If else None
-
 
     # ------------------------------------------------------------------------------------------------------------------
     # Private

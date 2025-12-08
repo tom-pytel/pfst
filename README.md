@@ -91,6 +91,7 @@ Simple edit.
 
 ```py
 >>> func.args = 'a, b'
+
 >>> func.body.append('return a * b  # blah')
 
 >>> print(func.src)
@@ -112,6 +113,7 @@ Use native AST.
 
 ```py
 >>> func.body[0:0] = ast.Assign([ast.Name('a')], func.body[-1].value.a)
+
 >>> func.body[-1].value = ast.Name('a')
 
 >>> print(func.src)

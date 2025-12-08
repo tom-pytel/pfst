@@ -2,15 +2,13 @@ r"""
 # Parse and unparse from source or `AST`
 
 To be able to execute the examples, import this.
-```py
+
 >>> from fst import *
-```
 
 ## Parse
 
 Drop-in `ast.parse()` replacement gives normal `AST` (`fst.fst.parse()`).
 
-```py
 >>> a = parse('if 1: i = 2  # comment')
 
 >>> print(dump(a, indent=2))
@@ -25,11 +23,9 @@ Module(
           value=Constant(value=2))],
       orelse=[])],
   type_ignores=[])
-```
 
 But it has an `FST` node at `.f`, we can `dump()` it to stdout (`fst.fst.FST.dump()`).
 
-```py
 >>> a.f.dump()
 Module - ROOT 0,0..0,22
   .body[1]
@@ -40,31 +36,25 @@ Module - ROOT 0,0..0,22
         .targets[1]
          0] Name 'i' Store - 0,6..0,7
         .value Constant 2 - 0,10..0,11
-```
 
 ## Basic structure
 
 Before anything else, some needed structure information. Every `AST` node in the tree gets an `.f` pointing to its own
 `FST` node.
 
-```py
 >>> a.body[0].body[0].f.dump()
 Assign - 0,6..0,11
   .targets[1]
    0] Name 'i' Store - 0,6..0,7
   .value Constant 2 - 0,10..0,11
-```
 
 Correspondingly, every `FST` node has an `.a` attribute which points to the `AST` node.
 
-```py
 >>> a.f.a is a
 True
-```
 
 The tree can be traversed downwards either though the `AST` nodes or the `FST` nodes using `AST` field names.
 
-```py
 >>> a.body[0].body[0].f
 <Assign 0,6..0,11>
 
@@ -82,32 +72,26 @@ The tree can be traversed downwards either though the `AST` nodes or the `FST` n
 
 >>> type(a.f.body[0].a.body[0])
 <class 'ast.Assign'>
-```
 
-Note that the `FST` field attributes shadow their respective `AST` attributes and give the corresponding `FST` node. For
+Note that the `FST` field attributes mirror their respective `AST` attributes and give the corresponding `FST` node. For
 more information on structure see `fst.docs.d03_structure`.
 
 ## Unparse
 
 Drop-in `ast.unparse()` replacement outputs with formatting (`fst.fst.unparse()`).
 
-```py
 >>> print(unparse(a))
 if 1: i = 2  # comment
-```
 
 You can also just access the source.
 
-```py
 >>> print(a.f.src)
 if 1: i = 2  # comment
-```
 
 ## Simpler parse
 
 Quicker way to parse which gives the same thing but returns the `FST` node (`fst.fst.FST()`).
 
-```py
 >>> FST('if 1: i = 2', 'exec').dump()
 Module - ROOT 0,0..0,11
   .body[1]
@@ -118,13 +102,11 @@ Module - ROOT 0,0..0,11
         .targets[1]
          0] Name 'i' Store - 0,6..0,7
         .value Constant 2 - 0,10..0,11
-```
 
 Note the `'exec'` mode parameter above, it specifies to parse to a `Module` just like the `'exec'` value for the `mode`
 parameter to `ast.parse()`. If you leave it out you will get the minimal reduced `AST` possible, which in this case is
 just the `If`.
 
-```py
 >>> FST('if 1: i = 2').dump()
 If - ROOT 0,0..0,11
   .test Constant 1 - 0,3..0,4
@@ -133,62 +115,49 @@ If - ROOT 0,0..0,11
      .targets[1]
       0] Name 'i' Store - 0,6..0,7
      .value Constant 2 - 0,10..0,11
-```
 
 The minimal reduced `AST` does not have to be a statement.
 
-```py
 >>> FST('i + j')
 <BinOp ROOT 0,0..0,5>
-```
 
 You can parse things that are not normally parsable by themselves.
 
-```py
 >>> FST('except Exception: pass')
 <ExceptHandler ROOT 0,0..0,22>
-```
 
 Or a comprehension.
 
-```py
 >>> print(FST('for a in b if a'))
 <comprehension ROOT 0,0..0,15>
-```
 
-You can tell it what you are looking for.
+You can tell it what you are looking for, either by `AST` type or its name.
 
-```py
 >>> print(FST('a:b', Slice))
 <Slice ROOT 0,0..0,3>
-```
+
+>>> print(FST('a:b', 'Slice'))
+<Slice ROOT 0,0..0,3>
 
 Because maybe it is normally shadowed by something more common.
 
-```py
 >>> print(FST('a:b'))
 <AnnAssign ROOT 0,0..0,3>
-```
 
 In some cases you must tell it what you want (valid empty arguments).
 
-```py
 >>> print(FST('', arguments))
 <arguments ROOT>
-```
 
 Have you ever dreamed of being able to parse the `+` operator by itself? Well now you can!
 
-```py
 >>> print(FST('+'))
 <Add ROOT 0,0..0,1>
-```
 
 There are some special modes, like `'expr_arglike'`, which allow parsing some things which are not normally parsable in
 their usual context. The below is not normally parsable in an expression context as it is special syntax for `Call`
 starred arguments. For a full list of parse modes see `fst.parsex.Mode`.
 
-```py
 >>> FST('*a or b', 'expr_arglike').dump()
 Starred - ROOT 0,0..0,7
   .value BoolOp - 0,1..0,7
@@ -197,14 +166,12 @@ Starred - ROOT 0,0..0,7
      0] Name 'a' Load - 0,1..0,2
      1] Name 'b' Load - 0,6..0,7
   .ctx Load
-```
 
 ## From `AST` nodes
 
 You can also pass `AST` nodes, which are then unparsed and reparsed (because otherwise we couldn't trust the location
-information in them). When used like this, the `AST` nodes are NOT CONSUMED.
+information in them). When used like this, the `AST` nodes are **NOT CONSUMED**.
 
-```py
 >>> f = FST(Assign(targets=[Name(id='x')], value=Constant(value=1)))
 
 >>> f.dump()
@@ -215,24 +182,20 @@ Assign - ROOT 0,0..0,5
 
 >>> print(f.src)
 x = 1
-```
 
 This also allows normally non-parsable nodes.
 
-```py
 >>> FST(Slice(lower=Name(id='a'), upper=Name(id='b'), step=Name(id='c'))).dump()
 Slice - ROOT 0,0..0,5
   .lower Name 'a' Load - 0,0..0,1
   .upper Name 'b' Load - 0,2..0,3
   .step Name 'c' Load - 0,4..0,5
-```
 
 ## Underlying functions
 
 The `FST(...)` syntax used in the above examples is just a shortcut for the functions `fst.fst.FST.fromsrc()` and
 `fst.fst.FST.fromast()`.
 
-```py
 >>> FST.fromsrc('i = 1').dump()
 Module - ROOT 0,0..0,5
   .body[1]
@@ -240,36 +203,30 @@ Module - ROOT 0,0..0,5
      .targets[1]
       0] Name 'i' Store - 0,0..0,1
      .value Constant 1 - 0,4..0,5
-```
 
 Except that `fromsrc()` defaults to `mode='exec'` instead of minimal node.
 
-```py
 >>> FST.fromsrc('i = 1', 'strict').dump()
 Assign - ROOT 0,0..0,5
   .targets[1]
    0] Name 'i' Store - 0,0..0,1
   .value Constant 1 - 0,4..0,5
-```
 
 `FST.fromast()` works the same as when passing an `AST` to `FST()`.
 
-```py
 >>> FST.fromast(Slice(lower=Name(id='a'), upper=Name(id='b'), step=Name(id='c'))).dump()
 Slice - ROOT 0,0..0,5
   .lower Name 'a' Load - 0,0..0,1
   .upper Name 'b' Load - 0,2..0,3
   .step Name 'c' Load - 0,4..0,5
-```
 
 ## Source
 
 A note on the `.src` attribute, it gives the full valid source only if accessed at the root node. If accessed at any
-node below, it will return the INDENTED source for the location of the node, except for the first line which will be
+node below, it will return the **INDENTED** source for the location of the node, except for the first line which will be
 completely unindented. If you want full correctly unindented source for nodes which are not root, you should `copy()`
 that node and get the source of that (`fst.fst.FST.copy()`). E.g.
 
-```py
 >>> f = FST('''
 ... def f(a):
 ...     if a:
@@ -299,11 +256,9 @@ if a:
     print(a)
 else:
     print(-a)
-```
 
 The `FST.dump()` method can be useful in visualizing the source along with the actual nodes it corresponds to.
 
-```py
 >>> f.dump(src='stmt')
 0: def f(a):
 FunctionDef - ROOT 0,0..4,17
@@ -332,5 +287,4 @@ FunctionDef - ROOT 0,0..4,17
            0] UnaryOp - 4,14..4,16
              .op USub - 4,14..4,15
              .operand Name 'a' Load - 4,15..4,16
-```
 """

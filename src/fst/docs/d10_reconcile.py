@@ -2,9 +2,8 @@ r"""
 # Edit pure AST while preserving formatting
 
 To be able to execute the examples, import this.
-```py
+
 >>> from fst import *
-```
 
 ## What it does
 
@@ -13,7 +12,6 @@ control, this can easily be done. Rather it is to allow other code to modify `AS
 `FST` and then having `FST` reconcile these changes with what it knows about the tree to preserve formatting where it
 can.
 
-```py
 >>> f = FST('''
 ... if i:  # 1
 ...   j = [f(), # 2
@@ -23,8 +21,10 @@ can.
 
 >>> m = f.mark()
 
->>> # notice the 'f.a', all changes must happen in the `AST` nodes
+Notice the `f.a`, all changes must happen in the `AST` tree.
+
 >>> f.a.body[0].value.elts[0] = Name(id='pure_ast')
+
 >>> f.a.body.append(Assign(targets=[Name(id='k')], value=Constant(value=3)))
 
 >>> f = f.reconcile(m)
@@ -35,17 +35,18 @@ if i:  # 1
        g() # 3
       ]
   k = 3
-```
 
 You can reuse and mix nodes from the original tree.
 
-```py
 >>> m = f.mark()
 
 >>> f.a.body.append(f.a.body[0])
+
 >>> f.a.body[0].value.elts.append(Constant(value='pure_ast'))
 
->>> f.a.body[0] is f.a.body[2]  # we put the same AST node in two different places
+We put the same `AST` node in two different places, this is allowed in for `reconcile()`.
+
+>>> f.a.body[0] is f.a.body[2]
 True
 
 >>> f = f.reconcile(m)
@@ -60,19 +61,21 @@ if i:  # 1
        g(), 'pure_ast'
       ]
 
->>> f.a.body[0] is f.a.body[2]  # the same AST used in two places is deduplicated
+That same `AST` used in two places was deduplicated.
+
+>>> f.a.body[0] is f.a.body[2]
 False
-```
 
 You can add in `AST` nodes from other `FST` trees and they will retain their formatting, though not if you modify those
 `AST`s since the only tree that has reconcile information to be able to preserve formatting if this is done is the
 original tree that was marked, for now.
 
-```py
 >>> m = f.mark()
 
 >>> f.a.body.append(FST('l="formatting"  # stays').a)
+
 >>> f.a.body.append(FST('m  =  "formatting"  # disappears').a)
+
 >>> f.a.body[-1].value = Constant(value="formatting")
 
 >>> f = f.reconcile(m)
@@ -88,11 +91,9 @@ if i:  # 1
       ]
   l="formatting"  # stays
   m = 'formatting'
-```
 
 But if the goal is to change a small part of a larger program then this should work well enough.
 
-```py
 >>> f = FST('''
 ... from .data import (
 ...     scalar1,  # this is 60% for now
@@ -120,7 +121,9 @@ But if the goal is to change a small part of a larger program then this should w
 >>> m = f.mark()
 
 >>> f.a.body[1].body[0].value.left.right = Name(id='scalar1')
+
 >>> f.a.body[1].body[0].value.right.right = Name(id='scalar2')
+
 >>> f.a.body[1].body[-1].orelse[0] = (
 ...     If(test=Compare(left=Name(id='result'),
 ...                     ops=[Gt()],
@@ -132,7 +135,8 @@ But if the goal is to change a small part of a larger program then this should w
 
 >>> f = f.reconcile(m)
 
->>> # we print like this because of doctest
+We print like this because of doctest, just ignore.
+
 >>> print('\n'.join(l or '.' for l in f.lines))
 from .data import (
     scalar1,  # this is 60% for now
@@ -157,7 +161,6 @@ def compute(x, y):
         return 0
     else:
         return -1
-```
 
 ## How it works
 

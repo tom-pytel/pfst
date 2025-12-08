@@ -2,9 +2,8 @@ r"""
 # Modifying nodes
 
 To be able to execute the examples, import this.
-```py
+
 >>> from fst import *
-```
 
 ## `Code` for modifying
 
@@ -13,7 +12,6 @@ When modifying a node, you specify what to replace the node `AST` with. You can 
 modification succeeds or not. `AST` nodes are not consumed as they are unparsed and then reparsed in order to make sure
 their locations are correct. Source code in the form of a string or a list of lines is also not consumed.
 
-```py
 >>> FST.new().body.append('i = 1').root.src
 'i = 1'
 
@@ -26,7 +24,6 @@ their locations are correct. Source code in the form of a string or a list of li
 
 >>> FST.new().body.append(FST('i = 1')).root.src
 'i = 1'
-```
 
 ## `replace()` and `remove()`
 
@@ -34,7 +31,6 @@ their locations are correct. Source code in the form of a string or a list of li
 processing needed for the copy before removing the node, its just a shortcut for `put(None)`. Just like `cut()`, you
 cannot `remove()` the root node obviously (`fst.fst.FST.remove()`).
 
-```py
 >>> f = FST('[1, 2, 3]')
 
 >>> f.elts[1].remove()
@@ -53,13 +49,11 @@ cannot `remove()` the root node obviously (`fst.fst.FST.remove()`).
 >>> print(f.src)
 i = 1
 k = 3
-```
 
 `replace(code)` is just a `put(code)` executed in the parent normally. Except at the root node level where it allows you
 to replace the root node `AST` without changing the top level `FST` so that it remains valid wherever you reference the
 tree through the root node (`fst.fst.FST.replace()`).
 
-```py
 >>> f = FST('[1, 2, 3]')
 
 >>> f.elts[1].replace('a()')
@@ -77,15 +71,15 @@ tree through the root node (`fst.fst.FST.replace()`).
 >>> f.elts[0].replace(FST('j := 3'))
 <NamedExpr 0,2..0,8>
 
->>> print(f.src)  # notice the parentheses added atomatically (because they are needed)
+Notice the parentheses added atomatically (because they are needed).
+
+>>> print(f.src)
 [(j := 3), a(), blah()]
-```
 
 The `replace()` function returns the new replaced node, as the actual `FST` node (regardless of the contents) can be
 different from the original `FST` at this location under some circumstances (raw put). Except for the root `FST` node,
 which is the only one guarenteed to never change under any circumstances.
 
-```py
 >>> f = FST('i = 1')
 
 >>> g = f.value
@@ -101,11 +95,9 @@ False
 
 >>> print(f.src)
 i = 3
-```
 
 Non-raw replace operations take into account precedence and parsability and parenthesize as needed by default.
 
-```py
 >>> f = FST('i * j')
 
 >>> f.right.replace('x + y')
@@ -113,11 +105,9 @@ Non-raw replace operations take into account precedence and parsability and pare
 
 >>> print(f.src)
 i * (x + y)
-```
 
 This can be turned off, in which case it can lead to invalid source code which does not match the tree structure.
 
-```py
 >>> f.left.replace('a + b', pars=False)
 <BinOp 0,0..0,5>
 
@@ -126,12 +116,10 @@ a + b * (x + y)
 
 >>> bool(f.verify(raise_=False))
 False
-```
 
 It is possible that with a raw operation a node disappears entirely and there is no new node at its previous location.
 In this case, `None` is returned as the new node.
 
-```py
 >>> f = FST('"a" + "b"')
 
 >>> f.dump()
@@ -143,19 +131,19 @@ BinOp - ROOT 0,0..0,9
 >>> f.op.replace('\\\n', raw=True) is None
 True
 
->>> f.dump()
+>>> f.dump('stmt')
+0: "a" \
+1:  "b"
 Constant 'ab' - ROOT 0,0..1,4
-```
 
 ## `put()` and `put_slice()`
 
-Just like with `copy()` and `cut()` using `get()`, `put()` is the undelying function used by `replace()` and `remove()`.
+Just like with `copy()` and `cut()` using `get()`, `put()` is the underlying function used by `replace()` and `remove()`.
 `put()` can replace a node or delete it if `None` is passed as the replacement. It cannot put anything to a root node as
 it requires a parent to operate on a node, so if you want to replace a root node you must use `replace()`. The
 parameters are similar to the `get()` function except that the first parameter is always the `Code` to put or `None`
 (`fst.fst.FST.put()`).
 
-```py
 >>> f = FST('[1, 2, 3]')
 
 >>> f.put('x', 1)
@@ -163,23 +151,19 @@ parameters are similar to the `get()` function except that the first parameter i
 
 >>> print(f.src)
 [1, x, 3]
-```
 
 Just like `get()`, `put()` can operate on single elements or slices. It can do everything that `put_slice()` can do, but
 not vice versa.
 
-```py
 >>> f.put('y', 1, 3)
 <List ROOT 0,0..0,6>
 
 >>> print(f.src)
 [1, y]
-```
 
 Notice how it replaced two elements with a single one. This is because the normal mode of `put()` is to put as a single
 element, not as a slice. You can specify slice operation via the `one` parameter, which is normally `True` for `put()`.
 
-```py
 >>> f.put('[a, b, c]', 1, None)
 <List ROOT 0,0..0,14>
 
@@ -191,21 +175,17 @@ element, not as a slice. You can specify slice operation via the `one` parameter
 
 >>> print(f.src)
 [1, a, b, c]
-```
 
 Putting `None` deletes and it can delete multiple elements.
 
-```py
 >>> f.put(None, 1, 3)
 <List ROOT 0,0..0,6>
 
 >>> print(f.src)
 [1, c]
-```
 
 Slices from compatible containers can be put to each other.
 
-```py
 >>> s = FST('[1, 2, 3, 4]').get_slice(1, None)
 
 >>> print(s.src)
@@ -213,38 +193,34 @@ Slices from compatible containers can be put to each other.
 
 >>> print(FST('{a, b, c, d}').put_slice(s, 1, 3).root.src)
 {a, 2, 3, 4, d}
-```
 
 Either `put()` or `put_slice()` can be used to insert by setting the `start` and `stop` locations to the same thing,
 possibly at the start, end or between other elements (`fst.fst.FST.put_slice()`).
 
-```py
 >>> f.put('[x]', 1, 1, one=False)
 <List ROOT 0,0..0,9>
 
 >>> print(f.src)
 [1, x, c]
 
->>> f.put_slice('[y]', 2, 2)  # doesn't need one=False as its default for put_slice()
+`put_slice()` doesn't need `one=False` as that is the default there.
+
+>>> f.put_slice('[y]', 2, 2)
 <List ROOT 0,0..0,12>
 
 >>> print(f.src)
 [1, x, y, c]
-```
 
 The special `'end'` index allows you to put at the end without knowing how long the field is.
 
-```py
 >>> f.put_slice('[4,5,6]', 'end')
 <List ROOT 0,0..0,19>
 
 >>> print(f.src)
 [1, x, y, c, 4,5,6]
-```
 
 Just like with `get()`, a field can be specified.
 
-```py
 >>> f = FST('''
 ... if 1:
 ...     i = 1
@@ -261,13 +237,11 @@ if 1:
 else:
     j = 2
     k = 3
-```
 
 `put()` and `put_slice()` return the object on which they were called (the parent of the put) for the same reason that
 `replace()` returns the new node. Normally the object will be unchanged, but with raw operations it can change and in
 order to continue operating on the same element in the tree you need the new `FST` node.
 
-```py
 >>> f = FST('i = [1, 2, 3]')
 
 >>> g = f.value
@@ -285,11 +259,9 @@ False
 
 >>> print(f.src)
 i = [1, x, y]
-```
 
 You can put some fields as primitives.
 
-```py
 >>> f = FST('case True: pass')
 
 >>> f.pattern
@@ -314,7 +286,6 @@ Constant 2.5 - ROOT 0,0..0,3
 
 >>> print(f.src)
 2.5
-```
 
 ## By attribute
 
@@ -323,7 +294,6 @@ processed from the point of view of `FST`. This means that you can assign an `FS
 movements and `AST` setting will be done automatically. Under the hood these assignments are just carried out using
 `put()` and  `put_slice()`, so results will be the same between the two methods.
 
-```py
 >>> f = FST('i, j = [x, 2.5]')
 
 >>> f.targets[0].elts[0] = FST('name')
@@ -341,15 +311,13 @@ z = [x, 2.5]
 >>> print(f.src)
 z = [x, a, b]
 
->>> f.value.elts = 'c, d, e'  # this is an `FST` attribute operation
+>>> f.value.elts = 'c, d, e'
 
 >>> print(f.src)
 z = [c, d, e]
-```
 
 You can also delete by attribute.
 
-```py
 >>> del f.value.elts[1:]
 
 >>> print(f.src)
@@ -366,14 +334,13 @@ z = []
 
 >>> print(f.src)
 def f(): pass
-```
 
 ## `put_src()`
 
 Unlike `get_src()` which is a very simple function, `put_src()` (`fst.fst.FST.put_src()`) doesn't just put text to the
 source code and leave it at that. Since changing the source can change the location of `AST` nodes or even the tree
 structure, `put_src()` may account for this by either reparsing the part of the source which was changed or offsetting
-`AST` nodes around the changes. The desired behavior is selected via the `ast_action` parameter.
+`AST` nodes around the changes. The desired behavior is selected via the `action` parameter.
 
 The options are:
 - `'reparse'`: Attempt reparse of source around the change and modify `AST` tree accordingly.
@@ -383,7 +350,7 @@ The options are:
     tree unless you are absolutely sure the change does not affect any `AST` locations or the tree itself (trailing
     line comment on a statement).
 
-### `put_src(ast_action='reparse')`
+### `put_src(action='reparse')`
 
 This is the default action and uses the same raw reparse mechanism to do its job as raw node operations. But unlike
 those, which may modify the source put a little bit depending on circumstances, `put_src()` puts the source exactly as
@@ -398,7 +365,6 @@ The actual location for the reparse is not restricted in any way. It doesn't hav
 extend over the entire source code if need be. Like `get_src()`, it doesn't matter what node of the tree this function
 is called on in this mode, the domain is always over the entire tree.
 
-```py
 >>> f = FST('''
 ... if a < b:
 ...     if c < d:
@@ -429,31 +395,25 @@ if a <= x:
         s()
     else:
         t()
-```
 
 The `put_src()` function returns the position of the end of the source modification (in the new source). This position
 along with the start position of the modification can be used to find any resulting changed nodes using the `find*()`
 functions.
 
-```py
 >>> f.find_loc(1, 7, 1, 10).src
 'a'
-```
 
 We got `a` because that is the first node in the modified part. If you want the lowest level node which completely
 encompasses the modification then use `find_loc_in()`.
 
-```py
 >>> f.find_loc_in(1, 7, 1, 10).src
 'a < d'
-```
 
 As stated above, the source you pass in is not modified in any way, including indentation, so you must make sure
 everything is correct with respect to this and parentheses and everything else. Note the `elif` in the replacement
 source below is not indented because it is put right at the beginning of the statement it is replacing. Likewise the
 `pass` is indented twice since it starts its own line and that is the indentation level for that block of code.
 
-```py
 >>> f.put_src('''
 ... elif z != e:
 ...         pass
@@ -466,22 +426,20 @@ if a <= x:
         s()
     elif z != e:
         pass
-```
 
-### `put_src(ast_action='offset')`
+### `put_src(action='offset')`
 
 This does not do any reparsing and only offsets existing nodes according to the location of the source change and the
 node that the `put_src()` function was called on. Unlike with `'reparse'`, in this mode the node you use to call the
-function actually has an effect and determines which node you are modifying INSIDE of. All children of this node are
-considered OUTSIDE the modification and are offset differently from the calling node and its parents.
+function actually has an effect and determines which node you are modifying **INSIDE** of. All children of this node are
+considered **OUTSIDE** the modification and are offset differently from the calling node and its parents.
 
-This mode will only wind up with a valid and synchronized source and tree if you use it to change essentially whitespace
+This action will only wind up with a valid and synchronized source and tree if you use it to change essentially whitespace
 and trivia. You can use it to change non-coding source like the `=` in an `Assign` node or the locations of commas, but
 any changes to things which are actually stored inside `AST` nodes must be carried out in `'reparse'` mode.
 
 Example using `'offset'` to change the spacing in a `Tuple`.
 
-```py
 >>> f = FST('(a, b, c)')
 
 >>> f.dump()
@@ -508,15 +466,13 @@ Tuple - ROOT 0,0..0,11
 
 >>> bool(f.verify())
 True
-```
 
 Note how we did the change inside the `Tuple` but outside its children. If we had done the change for example inside
 the `a` child we would be increasing the size of that and wind up with an invalid node.
 
-```py
 >>> f = FST('(a, b, c)')
 
->>> f.elts[0].put_src('  ', 0, 2, 0, 2, ast_action='offset')
+>>> f.elts[0].put_src('  ', 0, 2, 0, 2, action='offset')
 (0, 4)
 
 >>> print(f.src)
@@ -532,17 +488,15 @@ Tuple - ROOT 0,0..0,11
 
 >>> bool(f.verify(raise_=False))
 False
-```
 
-### `put_src(ast_action=None)`
+### `put_src(action=None)`
 
 This just doesn't touch the `AST` tree at all. Gun, meet foot. There is a use for this, it is much faster than the other
 two modes for changing trivia, but only if you understand exactly what is going on.
 
-```py
 >>> f = FST('(a, b, c)')
 
->>> f.elts[0].put_src('  ', 0, 2, 0, 2, ast_action=None)
+>>> f.elts[0].put_src('  ', 0, 2, 0, 2, action=None)
 (0, 4)
 
 >>> print(f.src)
@@ -558,5 +512,4 @@ Tuple - ROOT 0,0..0,9
 
 >>> bool(f.verify(raise_=False))
 False
-```
 """
