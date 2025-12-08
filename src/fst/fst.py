@@ -2364,7 +2364,6 @@ class FST:
 
         elif action is None:
             root._put_src(put_lines, ln, col, end_ln, end_col)
-
         else:
             raise ValueError(f"action must be 'reparse', 'offset' or None, got {action!r}")
 
@@ -4593,6 +4592,37 @@ class FST:
         `GeneratorExp`."""
 
         return isinstance(self.a, ASTS_SCOPE_ANONYMOUS)
+
+    @property
+    def is_funcdef(self) -> bool:
+        """Is a sync or async function definition node, `FunctionDef` or `AsyncFunctionDef`."""
+
+        return isinstance(self.a, (FunctionDef, AsyncFunctionDef))
+
+    @property
+    def is_def(self) -> bool:
+        """Is a sync or async function or class definition node, `FunctionDef`, `AsyncFunctionDef` or `ClassDef`."""
+
+        return isinstance(self.a, (FunctionDef, AsyncFunctionDef, ClassDef))
+
+    @property
+    def is_def_or_mod(self) -> bool:
+        """Is a sync or async function or class definition node, `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
+        `mod`."""
+
+        return isinstance(self.a, (FunctionDef, AsyncFunctionDef, ClassDef, mod))
+
+    @property
+    def is_for(self) -> bool:
+        """Is a sync or async `for` node, `For` or `AsyncFor`."""
+
+        return isinstance(self.a, (For, AsyncFor))
+
+    @property
+    def is_with(self) -> bool:
+        """Is a sync or async `with` node, `With` or `AsyncWith`."""
+
+        return isinstance(self.a, (With, AsyncWith))
 
     def is_elif(self) -> bool | None:
         r"""Whether `self` is an `elif` or not, or not an `If` at all.

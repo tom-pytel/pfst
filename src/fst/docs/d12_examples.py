@@ -19,7 +19,8 @@ And this is just a print helper function for this documentation specifically, yo
 
 ## `else if` chain to `elif`
 
-Original source.
+`fst` has `elif` <-> `else if` code built in as its needed for statement insertions and deletions from conditional
+bodies so its fairly easy to leverage to change these kinds of chains.
 
 ```py
 >>> src = r"""
@@ -77,7 +78,7 @@ Function.
 ...     return fst.src
 ```
 
-Pretty for comparison.
+Original.
 
 ```py
 >>> pprint(src)
@@ -149,7 +150,7 @@ def func():
 
 ## `elif` chain to `else if`
 
-Original source.
+This is just the inverse of the `else if` to `elif` code, just as easy.
 
 ```py
 >>> src = r"""
@@ -205,7 +206,7 @@ Function.
 ...     return fst.src
 ```
 
-Pretty for comparison.
+Original.
 
 ```py
 >>> pprint(src)
@@ -277,7 +278,8 @@ def func():
 
 ## `lambda` to `def`
 
-Original source.
+Maybe you have too many lambdas and want proper function defs for debugging or logging or other tools. Note the defs are
+left in the same scope in case of nonlocals.
 
 ```py
 >>> src = r"""
@@ -323,7 +325,7 @@ Function.
 ...     return fst.src
 ```
 
-Pretty for comparison.
+Original.
 
 ```py
 >>> pprint(src)
@@ -363,7 +365,7 @@ class cls:
 
 ## squash nested `with`s
 
-Original source.
+Slice operations make this easy enough. We only do synchronous `with` here as you can't mix sync with async anyway.
 
 ```py
 >>> src = r"""
@@ -389,7 +391,7 @@ Function.
 ...     fst = FST(src, 'exec')
 ...
 ...     for f in reversed([f for f in fst.walk() if f.is_stmt]):
-...         if (f.is_With              # we are a `with`
+...         if (f.is_With              # we are a `with`, we don't do `async with` here
 ...             and f.parent.is_With   # parent is another `with`
 ...             and f.pfield.idx == 0  # we are first child (we know we are in `.body`)
 ...         ):
@@ -403,7 +405,7 @@ Function.
 ...     return fst.src
 ```
 
-Pretty for comparison.
+Original.
 
 ```py
 >>> pprint(src)
@@ -439,7 +441,7 @@ with (open(a) as f,
 
 ## comprehension to loop
 
-Original source.
+We build up a body and replace the original comprehension `Assign` statement with the new statements.
 
 ```py
 >>> src = r"""
@@ -519,7 +521,7 @@ Function.
 ...     return fst.src
 ```
 
-Pretty for comparison.
+Original.
 
 ```py
 >>> pprint(src)

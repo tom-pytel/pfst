@@ -491,8 +491,13 @@ False
 
 ### `put_src(action=None)`
 
-This just doesn't touch the `AST` tree at all. Gun, meet foot. There is a use for this, it is much faster than the other
-two modes for changing trivia, but only if you understand exactly what is going on.
+This just doesn't touch the `AST` tree at all, or the `FST` node caches, its meant to be fast. Gun, meet foot. There is
+a use for this, it is much faster than the other two modes for changing trivia, but only if you understand exactly what
+is going on.
+
+To be absolutely safe after using this mode, do a `root._touchall()` on your tree so the caches get flushed (block
+statement `.bloc`s may change due to changes to tail inline comments in last child, even though `AST` locations didn't
+change).
 
 >>> f = FST('(a, b, c)')
 
