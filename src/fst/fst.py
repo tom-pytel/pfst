@@ -1744,6 +1744,9 @@ class FST:
         CAN replace root node, in which case the accessing `FST` node remains the same but the top-level `AST` and
         source change.
 
+        **WARNING!** If passing an `FST` then this is not guaranteed to become the new node. If you wish to continue
+        using the node make sure to use the one returned from this function.
+
         **Parameters:**
         - `code`: `FST`, `AST` or source `str` or `list[str]` to put at this location. `None` to delete this node.
         - `one`: Default `True` means replace with a single element. If `False` and field allows it then can replace
@@ -4642,7 +4645,7 @@ class FST:
         None
         """
 
-        return self.root._lines[(loc := self.loc).ln].startswith('elif', loc.col) if self.a.__class__ is If else None
+        return self.root._lines[(loc := self.loc).ln].startswith('elif', loc.col) if isinstance(self.a, If) else None
 
     # ------------------------------------------------------------------------------------------------------------------
     # Private
