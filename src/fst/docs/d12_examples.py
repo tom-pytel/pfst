@@ -9,12 +9,13 @@ The examples are deliberately not the most efficient but are rather meant to sho
 them are somewhat linter-y, which is not the intended use of this module, but fine for demonstration purposes.
 
 To be able to execute the examples, import this.
-```py
+
 >>> from fst import *
+
+And this is just a print helper function for this documentation specifically, you can ignore it.
 
 >>> def pprint(src):  # helper
 ...    print(src.replace('\n\n', '\n\xa0\n'))  # replace() to avoid '<BLANKLINE>'
-```
 
 ## `else if` chain to `elif`
 

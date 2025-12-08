@@ -561,6 +561,6 @@ there is an optional variable in the `withitem`.
 >>> print(FST('with (a as b): pass').items[0].context_expr.unpar().root.src)
 with (a as b): pass
 
-And no, this is not an `fst` quirk, it is a python quirk and where python assumes ownership of the parentheses. Which
-why you can parse `with (((a))): pass` but not `with (((a as b))): pass`.
+And no, this is not an `fst` quirk, it is a python quirk where python assumes ownership of the parentheses. Which why
+you can parse `with (((a))): pass` but not `with (((a as b))): pass`.
 """
