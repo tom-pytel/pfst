@@ -302,6 +302,21 @@
                                 <a class="variable" href="#FST.is_anon_scope">is_anon_scope</a>
                         </li>
                         <li>
+                                <a class="variable" href="#FST.is_funcdef">is_funcdef</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#FST.is_def">is_def</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#FST.is_def_or_mod">is_def_or_mod</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#FST.is_for">is_for</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#FST.is_with">is_with</a>
+                        </li>
+                        <li>
                                 <a class="function" href="#FST.is_elif">is_elif</a>
                         </li>
                 </ul>
@@ -1407,7 +1422,7 @@ defaults set here for those individual operations, see <code><a href="#FST.optio
         <div class="decorator decorator-contextmanager">@contextmanager</div>
 
         <span class="def">def</span>
-        <span class="name">options</span><span class="signature pdoc-code condensed">(<span class="param"><span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n">Iterator</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="o">&lt;</span><span class="nb">property</span> <span class="nb">object</span> <span class="n">at</span> <span class="mh">0x728ecc91ae80</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>:</span></span>
+        <span class="name">options</span><span class="signature pdoc-code condensed">(<span class="param"><span class="o">**</span><span class="n">options</span></span><span class="return-annotation">) -> <span class="n">Iterator</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="o">&lt;</span><span class="nb">property</span> <span class="nb">object</span> <span class="n">at</span> <span class="mh">0x714cea7d89f0</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>:</span></span>
 
         
     </div>
@@ -4828,6 +4843,72 @@ then this decides whether the highest level node is returned or the lowest (<cod
     
             <div class="docstring"><p>Is a node which opens an anonymous scope. Types include <code>Lambda</code>, <code>ListComp</code>, <code>SetComp</code>, <code>DictComp</code> or
 <code>GeneratorExp</code>.</p>
+</div>
+
+
+                            </div>
+                            <div id="FST.is_funcdef" class="classattr">
+                                <div class="attr variable">
+            <span class="name">is_funcdef</span><span class="annotation">: bool</span>
+
+        
+    </div>
+    <a class="headerlink" href="#FST.is_funcdef"></a>
+    
+            <div class="docstring"><p>Is a sync or async function definition node, <code>FunctionDef</code> or <code>AsyncFunctionDef</code>.</p>
+</div>
+
+
+                            </div>
+                            <div id="FST.is_def" class="classattr">
+                                <div class="attr variable">
+            <span class="name">is_def</span><span class="annotation">: bool</span>
+
+        
+    </div>
+    <a class="headerlink" href="#FST.is_def"></a>
+    
+            <div class="docstring"><p>Is a sync or async function or class definition node, <code>FunctionDef</code>, <code>AsyncFunctionDef</code> or <code>ClassDef</code>.</p>
+</div>
+
+
+                            </div>
+                            <div id="FST.is_def_or_mod" class="classattr">
+                                <div class="attr variable">
+            <span class="name">is_def_or_mod</span><span class="annotation">: bool</span>
+
+        
+    </div>
+    <a class="headerlink" href="#FST.is_def_or_mod"></a>
+    
+            <div class="docstring"><p>Is a sync or async function or class definition node, <code>FunctionDef</code>, <code>AsyncFunctionDef</code>, <code>ClassDef</code> or
+<code>mod</code>.</p>
+</div>
+
+
+                            </div>
+                            <div id="FST.is_for" class="classattr">
+                                <div class="attr variable">
+            <span class="name">is_for</span><span class="annotation">: bool</span>
+
+        
+    </div>
+    <a class="headerlink" href="#FST.is_for"></a>
+    
+            <div class="docstring"><p>Is a sync or async <code>for</code> node, <code>For</code> or <code>AsyncFor</code>.</p>
+</div>
+
+
+                            </div>
+                            <div id="FST.is_with" class="classattr">
+                                <div class="attr variable">
+            <span class="name">is_with</span><span class="annotation">: bool</span>
+
+        
+    </div>
+    <a class="headerlink" href="#FST.is_with"></a>
+    
+            <div class="docstring"><p>Is a sync or async <code>with</code> node, <code>With</code> or <code>AsyncWith</code>.</p>
 </div>
 
 

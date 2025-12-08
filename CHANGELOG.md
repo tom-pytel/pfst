@@ -1,4 +1,4 @@
-## 0.2.4 - alpha - ????-??-??
+## 0.2.4 - alpha - 2025-12-08
 
 ### Fixed
 
@@ -10,6 +10,7 @@
 
 ### Added
 
+- `FST.copy_ast()` to copy just the `AST` tree without any `FST` stuff
 - allow `FST.replace()` as a slice operation if applicable (`.replace()` one statement with multiple)
 - moved some other predicates from private to public code, e.g. `is_elif()`, etc...
 - predicates for checking `AST` type in `FST`, e.g. `is_Name`, `is_Call`, `is_FunctionDef`, etc...
@@ -31,6 +32,7 @@
 
 ### Updated
 
+- lots of documentation updates
 - allow put `Slice` to top level parenthesized `Tuple`
 - `MatchMapping` slicing includes the `rest` element, more intuitive
 - removed artificial distinction between `augop` and `binop`, now is just `operator`

@@ -64,16 +64,22 @@ them are somewhat linter-y, which is not the intended use of this module, but fi
 <p>To be able to execute the examples, import this.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span><span class="w"> </span><span class="nf">pprint</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>  <span class="c1"># helper</span>
-<span class="o">...</span>    <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\xa0\n</span><span class="s1">&#39;</span><span class="p">))</span>  <span class="c1"># replace() to avoid &#39;&lt;BLANKLINE&gt;&#39;</span>
+<p>And this is just a print helper function for this documentation specifically, you can ignore it.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">pprint</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>  <span class="c1"># helper</span>
+<span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\xa0\n</span><span class="s1">&#39;</span><span class="p">))</span>  <span class="c1"># replace() to avoid &#39;&lt;BLANKLINE&gt;&#39;</span>
 </code></pre>
 </div>
 
 <h2 id="else-if-chain-to-elif"><code>else if</code> chain to <code>elif</code></h2>
 
-<p>Original source.</p>
+<p><code><a href="../../fst.html">fst</a></code> has <code>elif</code> &lt;-> <code>else if</code> code built in as its needed for statement insertions and deletions from conditional
+bodies so its fairly easy to leverage to change these kinds of chains.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">src</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;&quot;&quot;</span>
@@ -133,7 +139,7 @@ them are somewhat linter-y, which is not the intended use of this module, but fi
 </code></pre>
 </div>
 
-<p>Pretty for comparison.</p>
+<p>Original.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
@@ -207,7 +213,7 @@ them are somewhat linter-y, which is not the intended use of this module, but fi
 
 <h2 id="elif-chain-to-else-if"><code>elif</code> chain to <code>else if</code></h2>
 
-<p>Original source.</p>
+<p>This is just the inverse of the <code>else if</code> to <code>elif</code> code, just as easy.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">src</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;&quot;&quot;</span>
@@ -265,7 +271,7 @@ them are somewhat linter-y, which is not the intended use of this module, but fi
 </code></pre>
 </div>
 
-<p>Pretty for comparison.</p>
+<p>Original.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
@@ -339,7 +345,8 @@ them are somewhat linter-y, which is not the intended use of this module, but fi
 
 <h2 id="lambda-to-def"><code>lambda</code> to <code>def</code></h2>
 
-<p>Original source.</p>
+<p>Maybe you have too many lambdas and want proper function defs for debugging or logging or other tools. Note the defs are
+left in the same scope in case of nonlocals.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">src</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;&quot;&quot;</span>
@@ -387,7 +394,7 @@ them are somewhat linter-y, which is not the intended use of this module, but fi
 </code></pre>
 </div>
 
-<p>Pretty for comparison.</p>
+<p>Original.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
@@ -429,7 +436,7 @@ them are somewhat linter-y, which is not the intended use of this module, but fi
 
 <h2 id="squash-nested-withs">squash nested <code>with</code>s</h2>
 
-<p>Original source.</p>
+<p>Slice operations make this easy enough. We only do synchronous <code>with</code> here as you can't mix sync with async anyway.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">src</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;&quot;&quot;</span>
@@ -456,7 +463,7 @@ them are somewhat linter-y, which is not the intended use of this module, but fi
 <span class="o">...</span>     <span class="n">fst</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
 <span class="o">...</span>
 <span class="o">...</span>     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">([</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fst</span><span class="o">.</span><span class="n">walk</span><span class="p">()</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">is_stmt</span><span class="p">]):</span>
-<span class="o">...</span>         <span class="k">if</span> <span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">is_With</span>              <span class="c1"># we are a `with`</span>
+<span class="o">...</span>         <span class="k">if</span> <span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">is_With</span>              <span class="c1"># we are a `with`, we don&#39;t do `async with` here</span>
 <span class="o">...</span>             <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">is_With</span>   <span class="c1"># parent is another `with`</span>
 <span class="o">...</span>             <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">pfield</span><span class="o">.</span><span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span>  <span class="c1"># we are first child (we know we are in `.body`)</span>
 <span class="o">...</span>         <span class="p">):</span>
@@ -471,7 +478,7 @@ them are somewhat linter-y, which is not the intended use of this module, but fi
 </code></pre>
 </div>
 
-<p>Pretty for comparison.</p>
+<p>Original.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
@@ -509,7 +516,7 @@ them are somewhat linter-y, which is not the intended use of this module, but fi
 
 <h2 id="comprehension-to-loop">comprehension to loop</h2>
 
-<p>Original source.</p>
+<p>We build up a body and replace the original comprehension <code>Assign</code> statement with the new statements.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">src</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;&quot;&quot;</span>
@@ -591,7 +598,7 @@ them are somewhat linter-y, which is not the intended use of this module, but fi
 </code></pre>
 </div>
 
-<p>Pretty for comparison.</p>
+<p>Original.</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pprint</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>

@@ -874,8 +874,13 @@ the <code>a</code> child we would be increasing the size of that and wind up wit
 
 <h3 id="put_srcactionnone"><code>put_src(action=None)</code></h3>
 
-<p>This just doesn't touch the <code>AST</code> tree at all. Gun, meet foot. There is a use for this, it is much faster than the other
-two modes for changing trivia, but only if you understand exactly what is going on.</p>
+<p>This just doesn't touch the <code>AST</code> tree at all, or the <code>FST</code> node caches, its meant to be fast. Gun, meet foot. There is
+a use for this, it is much faster than the other two modes for changing trivia, but only if you understand exactly what
+is going on.</p>
+
+<p>To be absolutely safe after using this mode, do a <code>root._touchall()</code> on your tree so the caches get flushed (block
+statement <code>.bloc</code>s may change due to changes to tail inline comments in last child, even though <code>AST</code> locations didn't
+change).</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a, b, c)&#39;</span><span class="p">)</span>
