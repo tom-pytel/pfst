@@ -59,45 +59,48 @@
 <p>To be able to execute the examples, import this.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 </code></pre>
 </div>
 
 <h2 id="parse">Parse</h2>
 
-<p>Drop-in <code>ast.parse()</code> replacement gives normal <code>AST</code>.</p>
+<p>Drop-in <code>ast.parse()</code> replacement gives normal <code>AST</code> (<code><a href="../fst.html#parse">fst.fst.parse()</a></code>).</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="n">parse</span><span class="p">(</span><span class="s1">&#39;if 1: i = 2  # comment&#39;</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">dump</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
-<span class="n">Module</span><span class="p">(</span>
-  <span class="n">body</span><span class="o">=</span><span class="p">[</span>
-    <span class="n">If</span><span class="p">(</span>
-      <span class="n">test</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
-      <span class="n">body</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">Assign</span><span class="p">(</span>
-          <span class="n">targets</span><span class="o">=</span><span class="p">[</span>
-            <span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="n">ctx</span><span class="o">=</span><span class="n">Store</span><span class="p">())],</span>
-          <span class="n">value</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">2</span><span class="p">))],</span>
-      <span class="n">orelse</span><span class="o">=</span><span class="p">[])],</span>
-  <span class="n">type_ignores</span><span class="o">=</span><span class="p">[])</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">parse</span><span class="p">(</span><span class="s1">&#39;if 1: i = 2  # comment&#39;</span><span class="p">)</span>
 </code></pre>
 </div>
 
-<p>But it has an <code>FST</code> node at <code>.f</code>, we can <code>dump()</code> it to stdout.</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dump</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">Module(</span>
+<span class="go">  body=[</span>
+<span class="go">    If(</span>
+<span class="go">      test=Constant(value=1),</span>
+<span class="go">      body=[</span>
+<span class="go">        Assign(</span>
+<span class="go">          targets=[</span>
+<span class="go">            Name(id=&#39;i&#39;, ctx=Store())],</span>
+<span class="go">          value=Constant(value=2))],</span>
+<span class="go">      orelse=[])],</span>
+<span class="go">  type_ignores=[])</span>
+</code></pre>
+</div>
+
+<p>But it has an <code>FST</code> node at <code>.f</code>, we can <code>dump()</code> it to stdout (<code><a href="../fst.html#FST.dump">fst.fst.FST.dump()</a></code>).</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
-<span class="n">Module</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">22</span>
-  <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-   <span class="mi">0</span><span class="p">]</span> <span class="n">If</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">11</span>
-     <span class="o">.</span><span class="n">test</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">3..0</span><span class="p">,</span><span class="mi">4</span>
-     <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-      <span class="mi">0</span><span class="p">]</span> <span class="n">Assign</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">11</span>
-        <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-         <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
-        <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">10..0</span><span class="p">,</span><span class="mi">11</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">Module - ROOT 0,0..0,22</span>
+<span class="go">  .body[1]</span>
+<span class="go">   0] If - 0,0..0,11</span>
+<span class="go">     .test Constant 1 - 0,3..0,4</span>
+<span class="go">     .body[1]</span>
+<span class="go">      0] Assign - 0,6..0,11</span>
+<span class="go">        .targets[1]</span>
+<span class="go">         0] Name &#39;i&#39; Store - 0,6..0,7</span>
+<span class="go">        .value Constant 2 - 0,10..0,11</span>
 </code></pre>
 </div>
 
@@ -107,166 +110,174 @@
 <code>FST</code> node.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
-<span class="n">Assign</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">11</span>
-  <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-   <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
-  <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">10..0</span><span class="p">,</span><span class="mi">11</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">Assign - 0,6..0,11</span>
+<span class="go">  .targets[1]</span>
+<span class="go">   0] Name &#39;i&#39; Store - 0,6..0,7</span>
+<span class="go">  .value Constant 2 - 0,10..0,11</span>
 </code></pre>
 </div>
 
 <p>Correspondingly, every <code>FST</code> node has an <code>.a</code> attribute which points to the <code>AST</code> node.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">a</span> <span class="ow">is</span> <span class="n">a</span>
-<span class="kc">True</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">a</span> <span class="ow">is</span> <span class="n">a</span>
+<span class="go">True</span>
 </code></pre>
 </div>
 
 <p>The tree can be traversed downwards either though the <code>AST</code> nodes or the <code>FST</code> nodes using <code>AST</code> field names.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">f</span>
-<span class="o">&lt;</span><span class="n">Assign</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">11</span><span class="o">&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="o">&lt;</span><span class="n">Assign</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">11</span><span class="o">&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="o">&lt;</span><span class="n">Assign</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">11</span><span class="o">&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">type</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="err">&#39;</span><span class="nc">ast</span><span class="o">.</span><span class="n">Assign</span><span class="s1">&#39;&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">type</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="err">&#39;</span><span class="nc">ast</span><span class="o">.</span><span class="n">Assign</span><span class="s1">&#39;&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">type</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="err">&#39;</span><span class="nc">ast</span><span class="o">.</span><span class="n">Assign</span><span class="s1">&#39;&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">f</span>
+<span class="go">&lt;Assign 0,6..0,11&gt;</span>
 </code></pre>
 </div>
 
-<h2 id="unparse">Unparse</h2>
-
-<p>Drop-in <code>ast.unparse()</code> replacement outputs with formatting.</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">&lt;Assign 0,6..0,11&gt;</span>
+</code></pre>
+</div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">unparse</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
-<span class="k">if</span> <span class="mi">1</span><span class="p">:</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># comment</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">&lt;Assign 0,6..0,11&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">&lt;class &#39;ast.Assign&#39;&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
+<span class="go">&lt;class &#39;ast.Assign&#39;&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">&lt;class &#39;ast.Assign&#39;&gt;</span>
+</code></pre>
+</div>
+
+<p>Note that the <code>FST</code> field attributes mirror their respective <code>AST</code> attributes and give the corresponding <code>FST</code> node. For
+more information on structure see <code><a href="d03_structure.html">fst.docs.d03_structure</a></code>.</p>
+
+<h2 id="unparse">Unparse</h2>
+
+<p>Drop-in <code>ast.unparse()</code> replacement outputs with formatting (<code><a href="../fst.html#unparse">fst.fst.unparse()</a></code>).</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">unparse</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
+<span class="go">if 1: i = 2  # comment</span>
 </code></pre>
 </div>
 
 <p>You can also just access the source.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">if</span> <span class="mi">1</span><span class="p">:</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># comment</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">if 1: i = 2  # comment</span>
 </code></pre>
 </div>
 
 <h2 id="simpler-parse">Simpler parse</h2>
 
-<p>Quicker way to parse which gives the same thing but returns the <code>FST</code> node.</p>
+<p>Quicker way to parse which gives the same thing but returns the <code>FST</code> node (<code><a href="../fst.html#FST">fst.fst.FST()</a></code>).</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if 1: i = 2&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
-<span class="n">Module</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">11</span>
-  <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-   <span class="mi">0</span><span class="p">]</span> <span class="n">If</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">11</span>
-     <span class="o">.</span><span class="n">test</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">3..0</span><span class="p">,</span><span class="mi">4</span>
-     <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-      <span class="mi">0</span><span class="p">]</span> <span class="n">Assign</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">11</span>
-        <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-         <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
-        <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">10..0</span><span class="p">,</span><span class="mi">11</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if 1: i = 2&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">Module - ROOT 0,0..0,11</span>
+<span class="go">  .body[1]</span>
+<span class="go">   0] If - 0,0..0,11</span>
+<span class="go">     .test Constant 1 - 0,3..0,4</span>
+<span class="go">     .body[1]</span>
+<span class="go">      0] Assign - 0,6..0,11</span>
+<span class="go">        .targets[1]</span>
+<span class="go">         0] Name &#39;i&#39; Store - 0,6..0,7</span>
+<span class="go">        .value Constant 2 - 0,10..0,11</span>
 </code></pre>
 </div>
 
-<p>Note the <code>'exec'</code> mode specifier above, it can be one of the other <code>ast.parse()</code> mode specifiers.</p>
+<p>Note the <code>'exec'</code> mode parameter above, it specifies to parse to a <code>Module</code> just like the <code>'exec'</code> value for the <code>mode</code>
+parameter to <code>ast.parse()</code>. If you leave it out you will get the minimal reduced <code>AST</code> possible, which in this case is
+just the <code>If</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if 1: i = 2&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
-<span class="n">Interactive</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">11</span>
-  <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-   <span class="mi">0</span><span class="p">]</span> <span class="n">If</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">11</span>
-     <span class="o">.</span><span class="n">test</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">3..0</span><span class="p">,</span><span class="mi">4</span>
-     <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-      <span class="mi">0</span><span class="p">]</span> <span class="n">Assign</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">11</span>
-        <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-         <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
-        <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">10..0</span><span class="p">,</span><span class="mi">11</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if 1: i = 2&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">If - ROOT 0,0..0,11</span>
+<span class="go">  .test Constant 1 - 0,3..0,4</span>
+<span class="go">  .body[1]</span>
+<span class="go">   0] Assign - 0,6..0,11</span>
+<span class="go">     .targets[1]</span>
+<span class="go">      0] Name &#39;i&#39; Store - 0,6..0,7</span>
+<span class="go">     .value Constant 2 - 0,10..0,11</span>
 </code></pre>
 </div>
 
-<p>Or <code>'eval'</code>.</p>
+<p>The minimal reduced <code>AST</code> does not have to be a statement.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;i + j&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">))</span>
-<span class="o">&lt;</span><span class="n">Expression</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span><span class="o">&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;i + j&#39;</span><span class="p">)</span>
+<span class="go">&lt;BinOp ROOT 0,0..0,5&gt;</span>
 </code></pre>
 </div>
 
-<p>If you leave it out then FST gives the minimal valid node, a single statement in this case.</p>
+<p>You can parse things that are not normally parsable by themselves.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if 1: i = 2&#39;</span><span class="p">))</span>
-<span class="o">&lt;</span><span class="n">If</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">11</span><span class="o">&gt;</span>
-</code></pre>
-</div>
-
-<p>Or just an expression.</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;i + j&#39;</span><span class="p">))</span>
-<span class="o">&lt;</span><span class="n">BinOp</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span><span class="o">&gt;</span>
-</code></pre>
-</div>
-
-<p>Including things that are not parsable by themselves.</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;except Exception: pass&#39;</span><span class="p">))</span>
-<span class="o">&lt;</span><span class="n">ExceptHandler</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">22</span><span class="o">&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;except Exception: pass&#39;</span><span class="p">)</span>
+<span class="go">&lt;ExceptHandler ROOT 0,0..0,22&gt;</span>
 </code></pre>
 </div>
 
 <p>Or a comprehension.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;for a in b if a&#39;</span><span class="p">))</span>
-<span class="o">&lt;</span><span class="n">comprehension</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">15</span><span class="o">&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;for a in b if a&#39;</span><span class="p">))</span>
+<span class="go">&lt;comprehension ROOT 0,0..0,15&gt;</span>
 </code></pre>
 </div>
 
-<p>You can tell it what you are looking for.</p>
+<p>You can tell it what you are looking for, either by <code>AST</code> type or its name.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a:b&#39;</span><span class="p">,</span> <span class="n">Slice</span><span class="p">))</span>
-<span class="o">&lt;</span><span class="n">Slice</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">3</span><span class="o">&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a:b&#39;</span><span class="p">,</span> <span class="n">Slice</span><span class="p">))</span>
+<span class="go">&lt;Slice ROOT 0,0..0,3&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a:b&#39;</span><span class="p">,</span> <span class="s1">&#39;Slice&#39;</span><span class="p">))</span>
+<span class="go">&lt;Slice ROOT 0,0..0,3&gt;</span>
 </code></pre>
 </div>
 
 <p>Because maybe it is normally shadowed by something more common.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a:b&#39;</span><span class="p">))</span>
-<span class="o">&lt;</span><span class="n">AnnAssign</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">3</span><span class="o">&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a:b&#39;</span><span class="p">))</span>
+<span class="go">&lt;AnnAssign ROOT 0,0..0,3&gt;</span>
 </code></pre>
 </div>
 
 <p>In some cases you must tell it what you want (valid empty arguments).</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">arguments</span><span class="p">))</span>
-<span class="o">&lt;</span><span class="n">arguments</span> <span class="n">ROOT</span><span class="o">&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">arguments</span><span class="p">))</span>
+<span class="go">&lt;arguments ROOT&gt;</span>
 </code></pre>
 </div>
 
 <p>Have you ever dreamed of being able to parse the <code>+</code> operator by itself? Well now you can!</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">))</span>
-<span class="o">&lt;</span><span class="n">Add</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">1</span><span class="o">&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">))</span>
+<span class="go">&lt;Add ROOT 0,0..0,1&gt;</span>
 </code></pre>
 </div>
 
@@ -275,148 +286,174 @@ their usual context. The below is not normally parsable in an expression context
 starred arguments. For a full list of parse modes see <code><a href="../parsex.html#Mode">fst.parsex.Mode</a></code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;*a or b&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
-<span class="n">Starred</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">7</span>
-  <span class="o">.</span><span class="n">value</span> <span class="n">BoolOp</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">1..0</span><span class="p">,</span><span class="mi">7</span>
-    <span class="o">.</span><span class="n">op</span> <span class="n">Or</span>
-    <span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-     <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;a&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">1..0</span><span class="p">,</span><span class="mi">2</span>
-     <span class="mi">1</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;b&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
-  <span class="o">.</span><span class="n">ctx</span> <span class="n">Load</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;*a or b&#39;</span><span class="p">,</span> <span class="s1">&#39;expr_arglike&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">Starred - ROOT 0,0..0,7</span>
+<span class="go">  .value BoolOp - 0,1..0,7</span>
+<span class="go">    .op Or</span>
+<span class="go">    .values[2]</span>
+<span class="go">     0] Name &#39;a&#39; Load - 0,1..0,2</span>
+<span class="go">     1] Name &#39;b&#39; Load - 0,6..0,7</span>
+<span class="go">  .ctx Load</span>
 </code></pre>
 </div>
 
 <h2 id="from-ast-nodes">From <code>AST</code> nodes</h2>
 
 <p>You can also pass <code>AST</code> nodes, which are then unparsed and reparsed (because otherwise we couldn't trust the location
-information in them). When used like this, the <code>AST</code> nodes are not consumed.</p>
+information in them). When used like this, the <code>AST</code> nodes are <strong>NOT CONSUMED</strong>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">Assign</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">)],</span> <span class="n">value</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="n">Assign</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">)],</span> <span class="n">value</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">Assign - ROOT 0,0..0,5</span>
+<span class="go">  .targets[1]</span>
+<span class="go">   0] Name &#39;x&#39; Store - 0,0..0,1</span>
+<span class="go">  .value Constant 1 - 0,4..0,5</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">x = 1</span>
 </code></pre>
 </div>
 
 <p>This also allows normally non-parsable nodes.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="n">Slice</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">),</span> <span class="n">upper</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">),</span> <span class="n">step</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;c&#39;</span><span class="p">)))</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
-<span class="n">Slice</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span>
-  <span class="o">.</span><span class="n">lower</span> <span class="n">Name</span> <span class="s1">&#39;a&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">1</span>
-  <span class="o">.</span><span class="n">upper</span> <span class="n">Name</span> <span class="s1">&#39;b&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">2..0</span><span class="p">,</span><span class="mi">3</span>
-  <span class="o">.</span><span class="n">step</span> <span class="n">Name</span> <span class="s1">&#39;c&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">4..0</span><span class="p">,</span><span class="mi">5</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="n">Slice</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">),</span> <span class="n">upper</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">),</span> <span class="n">step</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;c&#39;</span><span class="p">)))</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">Slice - ROOT 0,0..0,5</span>
+<span class="go">  .lower Name &#39;a&#39; Load - 0,0..0,1</span>
+<span class="go">  .upper Name &#39;b&#39; Load - 0,2..0,3</span>
+<span class="go">  .step Name &#39;c&#39; Load - 0,4..0,5</span>
 </code></pre>
 </div>
 
 <h2 id="underlying-functions">Underlying functions</h2>
 
-<p>The <code>FST(...)</code> syntax used in the above examples is just a shortcut for the functions <code>FST.fromsrc()</code> and
-<code>FST.fromast()</code>.</p>
+<p>The <code>FST(...)</code> syntax used in the above examples is just a shortcut for the functions <code><a href="../fst.html#FST.fromsrc">fst.fst.FST.fromsrc()</a></code> and
+<code><a href="../fst.html#FST.fromast">fst.fst.FST.fromast()</a></code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="o">.</span><span class="n">fromsrc</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
-<span class="n">Module</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span>
-  <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-   <span class="mi">0</span><span class="p">]</span> <span class="n">Assign</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span>
-     <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-      <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">1</span>
-     <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">4..0</span><span class="p">,</span><span class="mi">5</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="o">.</span><span class="n">fromsrc</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">Module - ROOT 0,0..0,5</span>
+<span class="go">  .body[1]</span>
+<span class="go">   0] Assign - 0,0..0,5</span>
+<span class="go">     .targets[1]</span>
+<span class="go">      0] Name &#39;i&#39; Store - 0,0..0,1</span>
+<span class="go">     .value Constant 1 - 0,4..0,5</span>
 </code></pre>
 </div>
 
 <p>Except that <code>fromsrc()</code> defaults to <code>mode='exec'</code> instead of minimal node.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="o">.</span><span class="n">fromsrc</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
-<span class="n">Assign</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span>
-  <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-   <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">1</span>
-  <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">4..0</span><span class="p">,</span><span class="mi">5</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="o">.</span><span class="n">fromsrc</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">,</span> <span class="s1">&#39;strict&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">Assign - ROOT 0,0..0,5</span>
+<span class="go">  .targets[1]</span>
+<span class="go">   0] Name &#39;i&#39; Store - 0,0..0,1</span>
+<span class="go">  .value Constant 1 - 0,4..0,5</span>
 </code></pre>
 </div>
 
 <p><code>FST.fromast()</code> works the same as when passing an <code>AST</code> to <code>FST()</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="o">.</span><span class="n">fromast</span><span class="p">(</span><span class="n">Slice</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">),</span> <span class="n">upper</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">),</span> <span class="n">step</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;c&#39;</span><span class="p">)))</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
-<span class="n">Slice</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span>
-  <span class="o">.</span><span class="n">lower</span> <span class="n">Name</span> <span class="s1">&#39;a&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">1</span>
-  <span class="o">.</span><span class="n">upper</span> <span class="n">Name</span> <span class="s1">&#39;b&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">2..0</span><span class="p">,</span><span class="mi">3</span>
-  <span class="o">.</span><span class="n">step</span> <span class="n">Name</span> <span class="s1">&#39;c&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">4..0</span><span class="p">,</span><span class="mi">5</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="o">.</span><span class="n">fromast</span><span class="p">(</span><span class="n">Slice</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">),</span> <span class="n">upper</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">),</span> <span class="n">step</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;c&#39;</span><span class="p">)))</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">Slice - ROOT 0,0..0,5</span>
+<span class="go">  .lower Name &#39;a&#39; Load - 0,0..0,1</span>
+<span class="go">  .upper Name &#39;b&#39; Load - 0,2..0,3</span>
+<span class="go">  .step Name &#39;c&#39; Load - 0,4..0,5</span>
 </code></pre>
 </div>
 
 <h2 id="source">Source</h2>
 
 <p>A note on the <code>.src</code> attribute, it gives the full valid source only if accessed at the root node. If accessed at any
-node below, it will return the INDENTED source for the location of the node, except for the first line which will be
+node below, it will return the <strong>INDENTED</strong> source for the location of the node, except for the first line which will be
 completely unindented. If you want full correctly unindented source for nodes which are not root, you should <code>copy()</code>
-that node and get the source of that. E.g.</p>
+that node and get the source of that (<code><a href="../fst.html#FST.copy">fst.fst.FST.copy()</a></code>). E.g.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... def f(a):</span>
-<span class="s1">...     if a:</span>
-<span class="s1">...         print(a)</span>
-<span class="s1">...     else:</span>
-<span class="s1">...         print(-a)</span>
-<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">def f(a):</span>
+<span class="gp">... </span><span class="s1">    if a:</span>
+<span class="gp">... </span><span class="s1">        print(a)</span>
+<span class="gp">... </span><span class="s1">    else:</span>
+<span class="gp">... </span><span class="s1">        print(-a)</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="o">&lt;</span><span class="n">If</span> <span class="mi">1</span><span class="p">,</span><span class="mf">4..4</span><span class="p">,</span><span class="mi">17</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">&lt;If 1,4..4,17&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">a</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">def f(a):</span>
+<span class="go">    if a:</span>
+<span class="go">        print(a)</span>
+<span class="go">    else:</span>
+<span class="go">        print(-a)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">if</span> <span class="n">a</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">if a:</span>
+<span class="go">        print(a)</span>
+<span class="go">    else:</span>
+<span class="go">        print(-a)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">if</span> <span class="n">a</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">if a:</span>
+<span class="go">    print(a)</span>
+<span class="go">else:</span>
+<span class="go">    print(-a)</span>
 </code></pre>
 </div>
 
 <p>The <code>FST.dump()</code> method can be useful in visualizing the source along with the actual nodes it corresponds to.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
-<span class="mi">0</span><span class="p">:</span> <span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
-<span class="n">FunctionDef</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..4</span><span class="p">,</span><span class="mi">17</span>
-  <span class="o">.</span><span class="n">name</span> <span class="s1">&#39;f&#39;</span>
-  <span class="o">.</span><span class="n">args</span> <span class="n">arguments</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
-    <span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-     <span class="mi">0</span><span class="p">]</span> <span class="n">arg</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..0</span><span class="p">,</span><span class="mi">7</span>
-       <span class="o">.</span><span class="n">arg</span> <span class="s1">&#39;a&#39;</span>
-  <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="mi">1</span><span class="p">:</span>     <span class="k">if</span> <span class="n">a</span><span class="p">:</span>
-   <span class="mi">0</span><span class="p">]</span> <span class="n">If</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span><span class="mf">4..4</span><span class="p">,</span><span class="mi">17</span>
-     <span class="o">.</span><span class="n">test</span> <span class="n">Name</span> <span class="s1">&#39;a&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span><span class="mf">7..1</span><span class="p">,</span><span class="mi">8</span>
-     <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="mi">2</span><span class="p">:</span>         <span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
-      <span class="mi">0</span><span class="p">]</span> <span class="n">Expr</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">8..2</span><span class="p">,</span><span class="mi">16</span>
-        <span class="o">.</span><span class="n">value</span> <span class="n">Call</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">8..2</span><span class="p">,</span><span class="mi">16</span>
-          <span class="o">.</span><span class="n">func</span> <span class="n">Name</span> <span class="s1">&#39;print&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">8..2</span><span class="p">,</span><span class="mi">13</span>
-          <span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-           <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;a&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">14..2</span><span class="p">,</span><span class="mi">15</span>
-     <span class="o">.</span><span class="n">orelse</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="mi">4</span><span class="p">:</span>         <span class="nb">print</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="p">)</span>
-      <span class="mi">0</span><span class="p">]</span> <span class="n">Expr</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">8..4</span><span class="p">,</span><span class="mi">17</span>
-        <span class="o">.</span><span class="n">value</span> <span class="n">Call</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">8..4</span><span class="p">,</span><span class="mi">17</span>
-          <span class="o">.</span><span class="n">func</span> <span class="n">Name</span> <span class="s1">&#39;print&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">8..4</span><span class="p">,</span><span class="mi">13</span>
-          <span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-           <span class="mi">0</span><span class="p">]</span> <span class="n">UnaryOp</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">14..4</span><span class="p">,</span><span class="mi">16</span>
-             <span class="o">.</span><span class="n">op</span> <span class="n">USub</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">14..4</span><span class="p">,</span><span class="mi">15</span>
-             <span class="o">.</span><span class="n">operand</span> <span class="n">Name</span> <span class="s1">&#39;a&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span><span class="mf">15..4</span><span class="p">,</span><span class="mi">16</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
+<span class="go">0: def f(a):</span>
+<span class="go">FunctionDef - ROOT 0,0..4,17</span>
+<span class="go">  .name &#39;f&#39;</span>
+<span class="go">  .args arguments - 0,6..0,7</span>
+<span class="go">    .args[1]</span>
+<span class="go">     0] arg - 0,6..0,7</span>
+<span class="go">       .arg &#39;a&#39;</span>
+<span class="go">  .body[1]</span>
+<span class="go">1:     if a:</span>
+<span class="go">   0] If - 1,4..4,17</span>
+<span class="go">     .test Name &#39;a&#39; Load - 1,7..1,8</span>
+<span class="go">     .body[1]</span>
+<span class="go">2:         print(a)</span>
+<span class="go">      0] Expr - 2,8..2,16</span>
+<span class="go">        .value Call - 2,8..2,16</span>
+<span class="go">          .func Name &#39;print&#39; Load - 2,8..2,13</span>
+<span class="go">          .args[1]</span>
+<span class="go">           0] Name &#39;a&#39; Load - 2,14..2,15</span>
+<span class="go">     .orelse[1]</span>
+<span class="go">4:         print(-a)</span>
+<span class="go">      0] Expr - 4,8..4,17</span>
+<span class="go">        .value Call - 4,8..4,17</span>
+<span class="go">          .func Name &#39;print&#39; Load - 4,8..4,13</span>
+<span class="go">          .args[1]</span>
+<span class="go">           0] UnaryOp - 4,14..4,16</span>
+<span class="go">             .op USub - 4,14..4,15</span>
+<span class="go">             .operand Name &#39;a&#39; Load - 4,15..4,16</span>
 </code></pre>
 </div>
 </div>

@@ -58,11 +58,15 @@
 <p>To be able to execute the examples, import this.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 </code></pre>
 </div>
 
 <h2 id="types-of-parentheses">Types of parentheses</h2>
+
+<p><strong>Note:</strong> Most of this section references single-element operations. Parenthesization in slice operations is ususally
+not controllable as there is usually only one valid possibility. Though some slice operations may have optional
+parentheses on the tail-end for fixups which may be controllable by the <code>pars</code> option.</p>
 
 <p>In Python, parentheses can exist for one of three general sometimes overlapping reasons:</p>
 
@@ -76,35 +80,47 @@ definition.</li>
 <p>All of these are handled automatically, if you want.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a * b&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a * b&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;x + y&#39;</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">BinOp</span> <span class="mi">0</span><span class="p">,</span><span class="mf">1..0</span><span class="p">,</span><span class="mi">6</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;x + y&#39;</span><span class="p">)</span>
+<span class="go">&lt;BinOp 0,1..0,6&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">b</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(x + y) * b</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">bool</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">raise_</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
-<span class="kc">True</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">bool</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">raise_</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="go">True</span>
 </code></pre>
 </div>
 
 <p>The parentheses were added above because otherwise the tree would not reparse to the same structure. This behavior can be turned off if you really want via the <code>pars</code> option.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;u + v&#39;</span><span class="p">,</span> <span class="n">pars</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">BinOp</span> <span class="mi">0</span><span class="p">,</span><span class="mf">10..0</span><span class="p">,</span><span class="mi">15</span><span class="o">&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;u + v&#39;</span><span class="p">,</span> <span class="n">pars</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">&lt;BinOp 0,10..0,15&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span> <span class="o">+</span> <span class="n">v</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(x + y) * u + v</span>
 </code></pre>
 </div>
 
 <p>But now the tree is incorrect.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">bool</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">raise_</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
-<span class="kc">False</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">bool</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="n">raise_</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="go">False</span>
 </code></pre>
 </div>
 
@@ -112,42 +128,57 @@ definition.</li>
 parse to a different structure.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;i = a, b&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;i = a, b&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;c</span><span class="se">\n</span><span class="s1">+</span><span class="se">\n</span><span class="s1">d&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;c</span><span class="se">\n</span><span class="s1">+</span><span class="se">\n</span><span class="s1">d&#39;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">i</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="n">c</span>
-<span class="o">+</span>
-<span class="n">d</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">i = a, (c</span>
+<span class="go">+</span>
+<span class="go">d)</span>
 </code></pre>
 </div>
 
 <p>A confusing category are parentheses which may be needed for parsability but which belong to a parent node.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with a: pass&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with a: pass&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;c</span><span class="se">\n</span><span class="s1">as</span><span class="se">\n</span><span class="s1">d&#39;</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">withitem</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..2</span><span class="p">,</span><span class="mi">1</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;c</span><span class="se">\n</span><span class="s1">as</span><span class="se">\n</span><span class="s1">d&#39;</span><span class="p">)</span>
+<span class="go">&lt;withitem 0,6..2,1&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">with</span> <span class="p">(</span><span class="n">c</span>
-<span class="k">as</span>
-<span class="n">d</span><span class="p">):</span> <span class="k">pass</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">with (c</span>
+<span class="go">as</span>
+<span class="go">d): pass</span>
 </code></pre>
 </div>
 
 <p>These parentheses belong to the <code>with</code> node and cannot be removed by the user.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span>
-<span class="o">&lt;</span><span class="n">withitem</span> <span class="mi">0</span><span class="p">,</span><span class="mf">6..2</span><span class="p">,</span><span class="mi">1</span><span class="o">&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span>
+<span class="go">&lt;withitem 0,6..2,1&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">with</span> <span class="p">(</span><span class="n">c</span>
-<span class="k">as</span>
-<span class="n">d</span><span class="p">):</span> <span class="k">pass</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">with (c</span>
+<span class="go">as</span>
+<span class="go">d): pass</span>
 </code></pre>
 </div>
 
@@ -157,28 +188,40 @@ parse to a different structure.</p>
 be added after the cut or copy to the new node to make it parsable.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;[a</span>
-<span class="s1">... +</span>
-<span class="s1">... b]&#39;&#39;&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;[a</span>
+<span class="gp">... </span><span class="s1">+</span>
+<span class="gp">... </span><span class="s1">b]&#39;&#39;&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="n">a</span>
-<span class="o">+</span>
-<span class="n">b</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(a</span>
+<span class="go">+</span>
+<span class="go">b)</span>
 </code></pre>
 </div>
 
 <p>Parentheses are not normally copied (and not added) to expressions which do not need them alone.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a * (x + y)&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a * (x + y)&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">x + y</span>
 </code></pre>
 </div>
 
@@ -186,55 +229,95 @@ be added after the cut or copy to the new node to make it parsable.</p>
 there are no parentheses in the source and it doesn't need parentheses added.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">a</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre>
 </div>
 
-<p>Named expressions copied out of other expressions which may or may not have parentheses do not normally have those
-parentheses copied or added. Keep this in mind as an unparenthesized named expression is not normally parsable
-standalone by Python.</p>
-
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, b := c, d&#39;</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="n">b</span> <span class="o">:=</span> <span class="n">c</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b := c)&#39;</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="n">b</span> <span class="o">:=</span> <span class="n">c</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(x + y)</span>
 </code></pre>
 </div>
 
-<p>This can be changed with the <code>pars_walrus</code> option (which also needs <code>pars</code> to not be <code>False</code>).</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre>
+</div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, b := c, d&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars_walrus</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<p>Named expressions copied out of other expressions which may or may not have parentheses normally have those parentheses
+copied or added.</p>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">b</span> <span class="o">:=</span> <span class="n">c</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, b := c, d&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b := c)&#39;</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars_walrus</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(b := c)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">b</span> <span class="o">:=</span> <span class="n">c</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b := c)&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(b := c)</span>
+</code></pre>
+</div>
+
+<p>This can be turned off with the <code>pars_walrus=False</code> option (it is normally not affected by the standard <code>pars</code> option
+(unless you set <code>pars_walrus=None</code> globally)). Though if you do this, keep in mind that an unparenthesized named
+expression is not normally parsable standalone by Python.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, b := c, d&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars_walrus</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">b := c</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b := c)&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars_walrus</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">b := c</span>
 </code></pre>
 </div>
 
@@ -242,30 +325,38 @@ standalone by Python.</p>
 <code>Subscript.slice</code> <code>Tuple</code>) are normally parenthesized on get. This can be turned off via the <code>pars_arglike</code> option.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(*a or b)&#39;</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="o">*</span><span class="p">(</span><span class="n">a</span> <span class="ow">or</span> <span class="n">b</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars_arglike</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="o">*</span><span class="n">a</span> <span class="ow">or</span> <span class="n">b</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(*a or b)&#39;</span><span class="p">)</span>
 </code></pre>
 </div>
 
-<p>They are also not parenthesized if <code>pars=False</code>.</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">*(a or b)</span>
+</code></pre>
+</div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;class cls(*not a, *b, *c or d): pass&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars_arglike</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">*a or b</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="s1">&#39;bases&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="ow">not</span> <span class="n">a</span><span class="p">),</span> <span class="o">*</span><span class="n">b</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">c</span> <span class="ow">or</span> <span class="n">d</span><span class="p">))</span>
+<p>If <code>pars_arglike=None</code> then they are parenthesized according to <code>pars</code>.</p>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="s1">&#39;bases&#39;</span><span class="p">,</span> <span class="n">pars</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="o">*</span><span class="ow">not</span> <span class="n">a</span><span class="p">,</span> <span class="o">*</span><span class="n">b</span><span class="p">,</span> <span class="o">*</span><span class="n">c</span> <span class="ow">or</span> <span class="n">d</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;class cls(*not a, *b, *c or d): pass&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="s1">&#39;bases&#39;</span><span class="p">,</span> <span class="n">pars_arglike</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pars</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(*(not a), *b, *(c or d))</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="s1">&#39;bases&#39;</span><span class="p">,</span> <span class="n">pars_arglike</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pars</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(*not a, *b, *c or d)</span>
 </code></pre>
 </div>
 
@@ -275,76 +366,141 @@ standalone by Python.</p>
 <code>'auto'</code> is somewhere in between these two and attempts to get and put parentheses where a human might do so.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a * (x + y)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span>
-<span class="o">...</span>  <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;auto&#39;</span><span class="p">)]</span>
-<span class="p">[</span><span class="s1">&#39;(x + y)&#39;</span><span class="p">,</span> <span class="s1">&#39;x + y&#39;</span><span class="p">,</span> <span class="s1">&#39;x + y&#39;</span><span class="p">]</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">pars</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;auto&#39;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pars=</span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span><span class="si">:</span><span class="s2">&lt;8</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="gp">... </span>          <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a + x * y&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="n">pars</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="go">pars=True    x * y</span>
+<span class="go">pars=False   x * y</span>
+<span class="go">pars=&#39;auto&#39;  x * y</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a * b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;x + y&#39;</span><span class="p">,</span> <span class="n">pars</span><span class="o">=</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span>
-<span class="o">...</span>  <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;auto&#39;</span><span class="p">)]</span>
-<span class="p">[</span><span class="s1">&#39;a * (x + y)&#39;</span><span class="p">,</span> <span class="s1">&#39;a * x + y&#39;</span><span class="p">,</span> <span class="s1">&#39;a * (x + y)&#39;</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">pars</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;auto&#39;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pars=</span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span><span class="si">:</span><span class="s2">&lt;8</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="gp">... </span>          <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a * (x + y)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="n">pars</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="go">pars=True    (x + y)</span>
+<span class="go">pars=False   x + y</span>
+<span class="go">pars=&#39;auto&#39;  x + y</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;x + y&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;(a * b)&#39;</span><span class="p">,</span> <span class="n">pars</span><span class="o">=</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span>
-<span class="o">...</span>  <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;auto&#39;</span><span class="p">)]</span>
-<span class="p">[</span><span class="s1">&#39;x + (a * b)&#39;</span><span class="p">,</span> <span class="s1">&#39;x + (a * b)&#39;</span><span class="p">,</span> <span class="s1">&#39;x + a * b&#39;</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">pars</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;auto&#39;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pars=</span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span><span class="si">:</span><span class="s2">&lt;8</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="gp">... </span>          <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;x + y&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;a * b&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">pars</span><span class="o">=</span><span class="n">pars</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="go">pars=True    x + a * b</span>
+<span class="go">pars=False   x + a * b</span>
+<span class="go">pars=&#39;auto&#39;  x + a * b</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a * b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;(x + y)&#39;</span><span class="p">,</span> <span class="n">pars</span><span class="o">=</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span>
-<span class="o">...</span>  <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;auto&#39;</span><span class="p">)]</span>
-<span class="p">[</span><span class="s1">&#39;a * (x + y)&#39;</span><span class="p">,</span> <span class="s1">&#39;a * (x + y)&#39;</span><span class="p">,</span> <span class="s1">&#39;a * (x + y)&#39;</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">pars</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;auto&#39;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pars=</span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span><span class="si">:</span><span class="s2">&lt;8</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="gp">... </span>          <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;x + y&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;(a * b)&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">pars</span><span class="o">=</span><span class="n">pars</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="go">pars=True    x + (a * b)</span>
+<span class="go">pars=False   x + (a * b)</span>
+<span class="go">pars=&#39;auto&#39;  x + a * b</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">pars</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;auto&#39;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pars=</span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span><span class="si">:</span><span class="s2">&lt;8</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="gp">... </span>          <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a * b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;x + y&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">pars</span><span class="o">=</span><span class="n">pars</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="go">pars=True    a * (x + y)</span>
+<span class="go">pars=False   a * x + y</span>
+<span class="go">pars=&#39;auto&#39;  a * (x + y)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">pars</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;auto&#39;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pars=</span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span><span class="si">:</span><span class="s2">&lt;8</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="gp">... </span>          <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a * b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;(x + y)&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">pars</span><span class="o">=</span><span class="n">pars</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="go">pars=True    a * (x + y)</span>
+<span class="go">pars=False   a * (x + y)</span>
+<span class="go">pars=&#39;auto&#39;  a * (x + y)</span>
 </code></pre>
 </div>
 
 <p>Notice in the examples above that the <code>pars=False</code> mode did not remove parentheses from the source before putting to
-the target. This is because <code>pars=False</code> does not mean NO PARENTHESES, it means DON'T MODIFY PARENTHESES. The
+the target. This is because <code>pars=False</code> does not mean <strong>NO PARENTHESES</strong>, it means <strong>DON'T MODIFY PARENTHESES</strong>. The
 <code>pars='auto'</code> mode remove parentheses from the source if they are not needed at the target while the <code>pars=True</code> mode
 also leaves them in the source (but removes them from the target which <code>pars=False</code> does not do). For more information
-on pars behavior, see the information on <code>pars</code> in <code><a href="../fst.html#FST.get_options">fst.fst.FST.get_options()</a></code>.</p>
+on pars behavior, see the information on <code>pars</code> in <code><a href="../fst.html#FST.options">fst.fst.FST.options()</a></code>.</p>
 
 <h2 id="checking-parentheses-on-a-node">Checking parentheses on a node</h2>
 
-<p>You can get the location and number of GROUPING parentheses on a node via the <code>pars()</code> method. Grouping parentheses are
-those which fall into one of the first two categories at the top of this document. They do not include the parentheses
-which are intrinsic to a node and already included in its location (like tuple parentheses), or parentheses which belong
-to a parent node, either as part of the node or as grouping parentheses around that node.</p>
+<p>You can get the location and number of <strong>GROUPING</strong> parentheses on a node via the <code>pars()</code> method. Grouping parentheses
+are those which fall into one of the first two categories at the top of this document. They do not include the
+parentheses which are intrinsic to a node and already included in its location (like tuple parentheses), or parentheses
+which belong to a parent node, either as part of the node or as grouping parentheses around that node.</p>
 
 <p>The location which is returned form the <code>pars()</code> method also includes an attribute <code>n</code> which indicates the number of
-enclosing parentheses found. One note of caution here, this is only valid for nodes which have location (almost all of
+enclosing parentheses found. One note of caution here, this is only valid for nodes which have a location (almost all of
 them). If you attempt to get <code>pars()</code> for a node which does not have a location, like <code>boolop</code>, <code>expr_context</code> or empty
 <code>arguments</code>, you will get <code>None</code> back and <code>None</code> doesn't have an attribute <code>n</code> to tell you there are zero parentheses so
-make sure to take this into accound where the node you are querying may not have a location.</p>
+make sure to take this into account where the node you are querying may not have a location.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a + b)&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
-<span class="p">(</span><span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">fstlocn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a + b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(0, 1, 0, 6)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;((a + b))&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
-<span class="p">(</span><span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="n">fstlocn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a + b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 0, 0, 7, n=1)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(  ((a + b))  )&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
-<span class="p">(</span><span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">fstlocn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;((a + b))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(0, 2, 0, 7)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;((a + b))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 0, 0, 9, n=2)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(  ((a + b))  )&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(0, 5, 0, 10)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(  ((a + b))  )&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 0, 0, 15, n=3)</span>
 </code></pre>
 </div>
 
 <p>If the node does not have parentheses then the node locations will be returned with <code>n=0</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a + b&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
-<span class="p">(</span><span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">fstlocn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a + b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 0, 0, 5, n=0)</span>
 </code></pre>
 </div>
 
 <p><code>pars()</code> will not return parentheses intrinsic to a node.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a, b)&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
-<span class="p">(</span><span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">fstlocn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a, b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 0, 0, 6, n=0)</span>
 </code></pre>
 </div>
 
 <p>But it will return parentheses around that.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;((a, b))&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
-<span class="p">(</span><span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="n">fstlocn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;((a, b))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 0, 0, 8, n=1)</span>
 </code></pre>
 </div>
 
@@ -354,39 +510,123 @@ this case if shared parentheses are detected, the returned <code>n</code> will b
 parentheses (making the source invalid for a generator expression).</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(i for i in j)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
-<span class="p">(</span><span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">18</span><span class="p">),</span> <span class="n">fstlocn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(i for i in j)&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(i for i in j)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">pars</span><span class="p">(</span><span class="n">shared</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="p">(</span><span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">18</span><span class="p">),</span> <span class="n">fstlocn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="n">n</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(0, 4, 0, 18)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_src</span><span class="p">(</span><span class="o">*</span><span class="n">f</span><span class="o">.</span><span class="n">pars</span><span class="p">(</span><span class="n">shared</span><span class="o">=</span><span class="kc">False</span><span class="p">)))</span>
-<span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">j</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 4, 0, 18, n=0)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call((i for i in j))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">pars</span><span class="p">(</span><span class="n">shared</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="p">(</span><span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">19</span><span class="p">),</span> <span class="n">fstlocn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pars</span><span class="p">(</span><span class="n">shared</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">fstlocn(0, 5, 0, 17, n=-1)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">f</span> <span class="o">:=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(((i for i in j)))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">pars</span><span class="p">(</span><span class="n">shared</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="p">(</span><span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="n">fstlocn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_src</span><span class="p">(</span><span class="o">*</span><span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pars</span><span class="p">(</span><span class="n">shared</span><span class="o">=</span><span class="kc">False</span><span class="p">)))</span>
+<span class="go">i for i in j</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call((i for i in j))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(0, 5, 0, 19)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call((i for i in j))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pars</span><span class="p">(</span><span class="n">shared</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">fstlocn(0, 5, 0, 19, n=0)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(((i for i in j)))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(0, 6, 0, 20)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(((i for i in j)))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pars</span><span class="p">(</span><span class="n">shared</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">fstlocn(0, 5, 0, 21, n=1)</span>
 </code></pre>
 </div>
 
 <p><code>pars()</code> will also not return parentheses which technically enclose a single node but belong to the parent.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(a)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
-<span class="n">fstlocn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;class cls(base): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
-<span class="n">fstlocn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;from a import (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
-<span class="n">fstlocn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with (a): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
-<span class="n">fstlocn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(a)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 5, 0, 6, n=0)</span>
 </code></pre>
 </div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;class cls(base): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 10, 0, 14, n=0)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;from a import (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 15, 0, 16, n=0)</span>
+</code></pre>
+</div>
+
+<p>And finally, <code>withitem</code>s can be tricky. Parentheses cannot belong to a <code>withitem</code> but they <strong>CAN</strong> belong to the
+<code>context_expr</code> of a <code>withitem</code>, and if there is no <code>optional_vars</code> then it can look like the parentheses belong to the
+<code>withitem</code> when they really do not. Note the <code>n=0</code> on the <code>items[0]</code> access.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with (a): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 5, 0, 8, n=0)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with (a): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">context_expr</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 5, 0, 8, n=1)</span>
+</code></pre>
+</div>
+
+<p>These parentheses still belong to the <code>context_expr</code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with (a) as b: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 5, 0, 13, n=0)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with (a) as b: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">context_expr</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 5, 0, 8, n=1)</span>
+</code></pre>
+</div>
+
+<p>But it gets tricky with parentheses which belong to the <code>with</code> (since an entire <code>withitem</code> cannot be parenthesized).</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with (a as b): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 6, 0, 12, n=0)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with (a as b): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">context_expr</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 6, 0, 7, n=0)</span>
+</code></pre>
+</div>
+
+<p>Aren't you glad this is taken care of for you :)</p>
 
 <h2 id="adding-parentheses-manually">Adding parentheses manually</h2>
 
@@ -394,12 +634,18 @@ parentheses (making the source invalid for a generator expression).</p>
 do that, <code>par()</code> for adding and <code>unpar()</code> for removing. Keep in mind that any parentheses you add or remove might be
 automatically removed or added when you put the node unless you specify <code>pars=False</code> on use.</p>
 
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a + b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span>
+<p><strong>WARNING!</strong> Parentheses added and removed with these functions <strong>ARE NOT VALIDATED</strong>, so it is possible to break your
+tree using them.</p>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a + b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a + b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(a + b)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a + b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a + b</span>
 </code></pre>
 </div>
 
@@ -407,32 +653,62 @@ automatically removed or added when you put the node unless you specify <code>pa
 normal delimiters. Parentheses added in this way will not show up in <code>pars()</code> as they become a part of the node itself.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, b&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, b&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
-<span class="s1">&#39;(a, b)&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;(a, b)&#39;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
-<span class="p">(</span><span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">fstlocn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(0, 0, 0, 6)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case a, b: pass&#39;</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 0, 0, 6, n=0)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
-<span class="s1">&#39;[a, b]&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case a, b: pass&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">case</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">]:</span> <span class="k">pass</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
+<span class="go">&#39;[a, b]&#39;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">loc</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
-<span class="p">(</span><span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">11</span><span class="p">),</span> <span class="n">fstlocn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">case [a, b]: pass</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(0, 5, 0, 11)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">pars</span><span class="p">()</span>
+<span class="go">fstlocn(0, 5, 0, 11, n=0)</span>
 </code></pre>
 </div>
 
 <p><code>par()</code> and <code>unpar()</code> work on any node, not just root.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;i = a + b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">i</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;i = a + b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">i = (a + b)</span>
 </code></pre>
 </div>
 
@@ -440,23 +716,38 @@ normal delimiters. Parentheses added in this way will not show up in <code>pars(
 always enclosed), or a node which already has grouping parentheses, but it can be forced.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">name</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">name</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(name)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, b]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">([</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">])</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">([a, b])</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(a)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">((</span><span class="n">a</span><span class="p">))</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">((a))</span>
 </code></pre>
 </div>
 
@@ -464,61 +755,100 @@ always enclosed), or a node which already has grouping parentheses, but it can b
 over multiple lines without line continuations.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a.b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">a</span><span class="o">.</span><span class="n">b</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a.b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a.b</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... a \</span>
-<span class="s1">... . \</span>
-<span class="s1">... b</span>
-<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">a</span> \
-<span class="o">.</span> \
-<span class="n">b</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">a \</span>
+<span class="gp">... </span><span class="s1">. \</span>
+<span class="gp">... </span><span class="s1">b</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a \</span>
+<span class="go">. \</span>
+<span class="go">b</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... a</span>
-<span class="s1">... .</span>
-<span class="s1">... b</span>
-<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="n">a</span>
-<span class="o">.</span>
-<span class="n">b</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">a</span>
+<span class="gp">... </span><span class="s1">.</span>
+<span class="gp">... </span><span class="s1">b</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(a</span>
+<span class="go">.</span>
+<span class="go">b)</span>
 </code></pre>
 </div>
 
 <p>Even a <code>Constant</code> is not safe from this, consider an implicit string normally enclosed by a parent.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... s = (&#39;oh&#39;</span>
-<span class="s1">... &#39;no&#39;)</span>
-<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Constant</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..1</span><span class="p">,</span><span class="mi">4</span><span class="o">&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>  <span class="c1"># this is a single string, but not parsable like this</span>
-<span class="s1">&#39;oh&#39;</span>
-<span class="s1">&#39;no&#39;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="s1">&#39;oh&#39;</span>
-<span class="s1">&#39;no&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">s = (&#39;oh&#39;</span>
+<span class="gp">... </span><span class="s1">&#39;no&#39;)</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
 </code></pre>
 </div>
 
-<p><code>Starred</code> expressions are a special case as a <code>Starred</code> expression cannot be parenthesized syntactically speaking. If
-you attempt to parenthesize or unparenthesize a <code>Starred</code> expression the operation happens on its child.</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre>
+</div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;*starred&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="o">*</span><span class="p">(</span><span class="n">starred</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;stmt&#39;</span><span class="p">)</span>
+<span class="go">0: &#39;oh&#39;</span>
+<span class="go">1: &#39;no&#39;</span>
+<span class="go">Constant &#39;ohno&#39; - ROOT 0,0..1,4</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;*(starred)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="o">*</span><span class="n">starred</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">&#39;oh&#39;</span>
+<span class="go">&#39;no&#39;</span>
+</code></pre>
+</div>
+
+<p>This is a single string and an invalid <code>FST</code> like this.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="n">raise_</span><span class="o">=</span><span class="kc">False</span><span class="p">)))</span>
+<span class="go">False</span>
+</code></pre>
+</div>
+
+<p>We can fix this with parentheses (which would have been copied normally but we suppressed with <code>pars=False</code>).</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">par</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(&#39;oh&#39;</span>
+<span class="go">&#39;no&#39;)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="s1">&#39;strict&#39;</span><span class="p">,</span> <span class="n">raise_</span><span class="o">=</span><span class="kc">False</span><span class="p">)))</span>
+<span class="go">True</span>
+</code></pre>
+</div>
+
+<p><code>Starred</code> expressions are another special case as a <code>Starred</code> expression cannot be parenthesized syntactically speaking.
+If you attempt to parenthesize or unparenthesize a <code>Starred</code> expression the operation happens on its child.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;*starred&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">par</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">*(starred)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;*(starred)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">*starred</span>
 </code></pre>
 </div>
 
@@ -528,99 +858,153 @@ you attempt to parenthesize or unparenthesize a <code>Starred</code> expression 
 parentheses at once.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a + b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(a + b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a + b</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(((a + b)))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(((a + b)))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a + b</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;((x, y))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;((x, y))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(x, y)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;((((x, y))))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;((((x, y))))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(x, y)</span>
 </code></pre>
 </div>
 
 <p><code>unpar()</code> will not remove intrinsic parentheses normally.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(x, y)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(x, y)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(x, y)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(((x, y)))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(((x, y)))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(x, y)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case [a, b]: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">case</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">]:</span> <span class="k">pass</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case [a, b]: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">case [a, b]: pass</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case (([a, b])): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">case</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">]:</span> <span class="k">pass</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case (([a, b])): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">case [a, b]: pass</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case (((a, b))): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">case</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span> <span class="k">pass</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case (((a, b))): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">case (a, b): pass</span>
 </code></pre>
 </div>
 
 <p>But can be forced.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(x, y)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(x, y)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">x, y</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(((x, y)))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(((x, y)))&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">x, y</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case [a, b]: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">case</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="k">pass</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case [a, b]: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">case a, b: pass</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case (([a, b])): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">case</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="k">pass</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case (([a, b])): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">case a, b: pass</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case (((a, b))): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">case</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="k">pass</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case (((a, b))): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">unpar</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">case a, b: pass</span>
 </code></pre>
 </div>
 
 <p><code>unpar()</code> will not remove parentheses which belong to a parent at all.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(a)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">call</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;class cls(base): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">cls</span><span class="p">(</span><span class="n">base</span><span class="p">):</span> <span class="k">pass</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with (a): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">with</span> <span class="p">(</span><span class="n">a</span><span class="p">):</span> <span class="k">pass</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with (((a))): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">with</span> <span class="p">(((</span><span class="n">a</span><span class="p">))):</span> <span class="k">pass</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;call(a)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">call(a)</span>
 </code></pre>
 </div>
-
-<p>Sometimes this behavior can seem unintuitive like the last example above. In that case, <code>withitem</code> nodes are not
-parenthesizable in the syntax so that all those grouping parentheses belong to the parent <code>with</code> if attempting to
-unparenthesize a <code>withitem</code>. HOWEVER, you can remove the parentheses from the <code>with (a)</code> example above if you
-unparenthesize the element INSIDE the <code>withitem</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with (a): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">context_expr</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">with</span> <span class="n">a</span><span class="p">:</span> <span class="k">pass</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with (((a))): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">context_expr</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">with</span> <span class="n">a</span><span class="p">:</span> <span class="k">pass</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;class cls(base): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">class cls(base): pass</span>
 </code></pre>
 </div>
-
-<p>This is not an issue as in this case there is a single element and it won't break anything. This will not work if there
-is an optional variable in the <code>withitem</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with (a as b): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">context_expr</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">with</span> <span class="p">(</span><span class="n">a</span> <span class="k">as</span> <span class="n">b</span><span class="p">):</span> <span class="k">pass</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with (a as b): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">with (a as b): pass</span>
 </code></pre>
 </div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with (a): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">with (a): pass</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with (((a))): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">with (((a))): pass</span>
+</code></pre>
+</div>
+
+<p>Sometimes this behavior can seem unintuitive like the last two examples above. In these cases, <code>withitem</code> nodes are not
+parenthesizable in the syntax so that all those grouping parentheses belong to the parent <code>with</code> from the point of view
+of the <code>withitem</code>. However, you can remove the parentheses from the <code>with (a)</code> example above if you unparenthesize the
+<code>context_expr</code> <strong>INSIDE</strong> the <code>withitem</code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with (a): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">context_expr</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">with a: pass</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with (((a))): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">context_expr</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">with a: pass</span>
+</code></pre>
+</div>
+
+<p>This is not an issue as in these cases there is a single element and it won't break anything. This will not work if
+there is an optional variable in the <code>withitem</code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with (a as b): pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">context_expr</span><span class="o">.</span><span class="n">unpar</span><span class="p">()</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">with (a as b): pass</span>
+</code></pre>
+</div>
+
+<p>And no, this is not an <code><a href="../../fst.html">fst</a></code> quirk, it is a python quirk and where python assumes ownership of the parentheses. Which
+why you can parse <code>with (((a))): pass</code> but not <code>with (((a as b))): pass</code>.</p>
 </div>
 
                 

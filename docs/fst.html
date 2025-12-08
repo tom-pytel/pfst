@@ -24,7 +24,7 @@
   <li><a href="#overview">Overview</a></li>
   <li><a href="#index">Index</a></li>
   <li><a href="#links">Links</a></li>
-  <li><a href="#details">Details</a></li>
+  <li><a href="#notes">Notes</a></li>
 </ul>
 
 
@@ -52,48 +52,64 @@
                     <h1 class="modulename">
 fst    </h1>
 
-                        <div class="docstring"><p>Version 0.2.3</p>
+                        <div class="docstring"><p>Version 0.2.4.dev20251208</p>
 
 <h1 id="overview">Overview</h1>
 
-<p>This module exists in order to facilitate quick and easy high level editing of Python source while preserving
-formatting. E.g:</p>
+<p>This module exists in order to facilitate quick and easy high level editing of Python source in the form of an <code>AST</code>
+tree while preserving formatting. It is meant to allow you to change python code functionality while not having to deal
+with the miniutae of precedence, indentation, parentheses, commas, comments, docstrings, semicolons, line continuations,
+else vs. elif, and all the various other niche special cases of Python syntax across different versions of the language.</p>
+
+<p>See <a href="https://tom-pytel.github.io/pfst/fst/docs/d12_examples.html">Example Recipes</a> for more in-depth examples.</p>
+
+<p>Example:</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span><span class="w"> </span><span class="nn">ast</span><span class="o">,</span><span class="w"> </span><span class="nn">fst</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="n">fst</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;if a: b = c, d  # comment&#39;</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">fst</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>  <span class="c1"># formatting is preserved</span>
-<span class="k">if</span> <span class="n">a</span><span class="p">:</span> <span class="n">b</span> <span class="o">=</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span>  <span class="c1"># comment</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>  <span class="c1"># just a normal AST with metadata</span>
-<span class="k">if</span> <span class="n">a</span><span class="p">:</span>
-    <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">fst</span>
 </code></pre>
 </div>
 
-<p>Operations on the tree preserve formatting.</p>
-
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;u,</span>
-<span class="n">v</span>  <span class="c1"># blah&#39;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">fst</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
-<span class="k">if</span> <span class="n">a</span><span class="p">:</span> <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span>
-          <span class="n">v</span><span class="p">,</span>  <span class="c1"># blah</span>
-          <span class="n">d</span><span class="p">)</span>  <span class="c1"># comment</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>  <span class="c1"># AST is kept up to date</span>
-<span class="k">if</span> <span class="n">a</span><span class="p">:</span>
-    <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ext_ast</span> <span class="o">=</span> <span class="n">fst</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;if a: b = c, d  # comment&#39;</span><span class="p">)</span>
 </code></pre>
 </div>
 
-<p><code><a href="">fst</a></code> grew out of a frustration of not being able to just edit python source to change some bit of functionality without
-having to deal with the miniutae of precedence, indentation, parentheses, commas, comments, docstrings, semicolons, line
-continuations, else vs. elif, etc... <code><a href="">fst</a></code> deals with all of these for you and especially the many, many niche special
-cases of Python syntax.</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">fst</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">ext_ast</span><span class="p">))</span>  <span class="c1"># formatting is preserved</span>
+<span class="go">if a: b = c, d  # comment</span>
+</code></pre>
+</div>
+
+<p>Straightforward operations.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ext_ast</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;u,</span>
+<span class="go">v  # blah&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">fst</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">ext_ast</span><span class="p">))</span>
+<span class="go">if a: b = (c, u,</span>
+<span class="go">          v,  # blah</span>
+<span class="go">          d)  # comment</span>
+</code></pre>
+</div>
+
+<p>The tree is just normal <code>AST</code> with metadata.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">unparse</span><span class="p">(</span><span class="n">ext_ast</span><span class="p">))</span>
+<span class="go">if a:</span>
+<span class="go">    b = (c, u, v, d)</span>
+</code></pre>
+</div>
 
 <p><code><a href="">fst</a></code> works by adding <code>FST</code> nodes to existing <code>AST</code> nodes as an <code>.f</code> attribute which keep extra structure information,
 the original source, and provide the interface to format-preserving operations. Each operation through <code><a href="">fst</a></code> is a
@@ -115,12 +131,7 @@ always parse to the current tree.</p>
 <li><a href="https://pypi.org/project/pfst/">PyPI</a></li>
 </ul>
 
-<h1 id="details">Details</h1>
-
-<p>Disclaimer: The intended use of this module is if you want to change code functionality without having to deal with
-syntax details, not lint or format, there are better options for that. The main focus of <code><a href="">fst</a></code> is not necessarily to be
-fast but rather to handle all the weird cases of python syntax so that functional code always results, use a formatter
-afterwards as needed.</p>
+<h1 id="notes">Notes</h1>
 
 <p><code><a href="">fst</a></code> was written and tested on Python versions 3.10 through 3.14.</p>
 
@@ -151,6 +162,13 @@ the full source around the changes (at least statement level). <code><a href="fs
 to preserve formatting where possible. This is intended for existing code or third-party libraries which don't know
 anything about <code><a href="">fst</a></code> to maybe gain the ability to preserve some existing formatting when editing a tree.
 <code><a href="fst/docs/d10_reconcile.html">fst.docs.d10_reconcile</a></code>.</p>
+
+<p>If you will be playing with this module then the <code>FST.dump()</code> method will be your friend.</p>
+
+<p>Disclaimer: The intended use of this module is if you want to change code functionality without having to deal with
+syntax details, not lint or format, there are better options for that. The main focus of <code><a href="">fst</a></code> is not necessarily to be
+fast but rather to handle all the weird cases of python syntax correctly so that functional code always results, use a
+formatter afterwards as needed.</p>
 </div>
 
                 

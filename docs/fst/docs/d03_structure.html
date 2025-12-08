@@ -58,186 +58,316 @@
 <p>To be able to execute the examples, import this.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 </code></pre>
 </div>
 
 <h2 id="links">Links</h2>
 
-<p>For an FST parsed <code>AST</code> tree, each node will have its own <code>FST</code> node. The <code>FST</code> nodes contain the tree structure missing
+<p>For an fst-parsed <code>AST</code> tree, each node will have its own <code>FST</code> node. The <code>FST</code> nodes contain the tree structure missing
 in the <code>AST</code> nodes, specifically a reference to the parent <code>FST</code> node and the field and index of this node in the
 parent.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;i = 1&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
-<span class="n">Assign</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span>
-  <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-   <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">1</span>
-  <span class="o">.</span><span class="n">value</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">4..0</span><span class="p">,</span><span class="mi">5</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">Assign - ROOT 0,0..0,5</span>
+<span class="go">  .targets[1]</span>
+<span class="go">   0] Name &#39;i&#39; Store - 0,0..0,1</span>
+<span class="go">  .value Constant 1 - 0,4..0,5</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span>
-<span class="o">&lt;</span><span class="n">Assign</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span>
+<span class="go">&lt;Assign ROOT 0,0..0,5&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span>
-<span class="o">&lt;</span><span class="n">Constant</span> <span class="mi">0</span><span class="p">,</span><span class="mf">4..0</span><span class="p">,</span><span class="mi">5</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">value</span>
+<span class="go">&lt;Constant 0,4..0,5&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">parent</span>
-<span class="o">&lt;</span><span class="n">Assign</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">parent</span>
+<span class="go">&lt;Assign ROOT 0,0..0,5&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">pfield</span>
-<span class="n">astfield</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">pfield</span>
+<span class="go">astfield(&#39;value&#39;)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">pfield</span><span class="o">.</span><span class="n">name</span>
-<span class="s1">&#39;value&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">pfield</span><span class="o">.</span><span class="n">name</span>
+<span class="go">&#39;value&#39;</span>
 </code></pre>
 </div>
 
 <p>For indexed fields the index is present in <code>pfield</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[x]&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[x]&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="o">&lt;</span><span class="n">Name</span> <span class="mi">0</span><span class="p">,</span><span class="mf">1..0</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">&lt;Name 0,1..0,2&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pfield</span>
-<span class="n">astfield</span><span class="p">(</span><span class="s1">&#39;elts&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pfield</span>
+<span class="go">astfield(&#39;elts&#39;, 0)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pfield</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pfield</span><span class="o">.</span><span class="n">idx</span>
-<span class="p">(</span><span class="s1">&#39;elts&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pfield</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pfield</span><span class="o">.</span><span class="n">idx</span>
+<span class="go">(&#39;elts&#39;, 0)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pfield</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pfield</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="p">(</span><span class="s1">&#39;elts&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pfield</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pfield</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">(&#39;elts&#39;, 0)</span>
 </code></pre>
 </div>
 
 <p>Every <code>FST</code> node also has a reference directly to the root of the tree.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">root</span>
-<span class="o">&lt;</span><span class="n">List</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">3</span><span class="o">&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">root</span>
+<span class="go">&lt;List ROOT 0,0..0,3&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">root</span>
-<span class="o">&lt;</span><span class="n">List</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">3</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">root</span>
+<span class="go">&lt;List ROOT 0,0..0,3&gt;</span>
 </code></pre>
 </div>
 
 <p>The linkage to children is just via the existing <code>AST</code> fields.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">type</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="err">&#39;</span><span class="nc">ast</span><span class="o">.</span><span class="n">Name</span><span class="s1">&#39;&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="c1"># which if accessed through the `FST` node will return the corresponding `FST` node</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="o">&lt;</span><span class="n">Name</span> <span class="mi">0</span><span class="p">,</span><span class="mf">1..0</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">type</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="err">&#39;</span><span class="nc">ast</span><span class="o">.</span><span class="n">Name</span><span class="s1">&#39;&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">&lt;class &#39;ast.Name&#39;&gt;</span>
 </code></pre>
 </div>
 
-<h2 id="siblings">Siblings</h2>
-
-<p>You can access each <code>FST</code> node's previous and next siblings directly.</p>
+<p>Which if accessed through the <code>FST</code> node will return the corresponding <code>FST</code> node.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[[1, 2], [3, 4], [5, 6]]&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">&lt;Name 0,1..0,2&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">src</span>
-<span class="s1">&#39;[3, 4]&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
+<span class="go">&lt;class &#39;ast.Name&#39;&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">next</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
-<span class="s1">&#39;[5, 6]&#39;</span>
+<p>Here is an example for a simple <code>Module</code> with a single <code>Expr</code> which is a <code>Name</code> to demonstrate.</p>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">prev</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
-<span class="s1">&#39;[1, 2]&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">parse</span><span class="p">(</span><span class="s1">&#39;var&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="c1"># if there is no next or previous sibling, None is returned</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">repr</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">next</span><span class="p">())</span>
-<span class="s1">&#39;None&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">Module - ROOT 0,0..0,3</span>
+<span class="go">  .body[1]</span>
+<span class="go">   0] Expr - 0,0..0,3</span>
+<span class="go">     .value Name &#39;var&#39; Load - 0,0..0,3</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">repr</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">prev</span><span class="p">())</span>
-<span class="s1">&#39;None&#39;</span>
+<p>This is the node layout, note that even the <code>.ctx</code> gets an <code>FST</code>, every <code>AST</code> node does. Also note that the <code>FST</code> class
+type is not differentiated according to the <code>AST</code>.</p>
+
+<pre><code>                                 None
+                          .root   ^
+                           +--+   | .parent
+                           V  |   |
++--------------+    .a    +--------------+&lt;-------------------------+
+|              |&lt;---------|              |&lt;---------------------+   |
+|  ast.Module  |          |     FST      |&lt;-----------------+   |   |
+|              |---------&gt;|              | .pfield=None     |   |   |
++--------------+    .f    +--------------+                  |   |   |
+       |                          ^                         |   |   |
+       | .body[0]                 | .parent                 |   |   |
+       V                          |                         |   |   |
++--------------+    .a    +--------------+       .root      |   |   |
+|              |&lt;---------|              |----------&gt;-------+   |   |
+|   ast.Expr   |          |     FST      |                      |   |
+|              |---------&gt;|              | .pfield=('body', 0)  |   |
++--------------+    .f    +--------------+                      |   |
+       |                          ^                             |   |
+       | .value                   | .parent                     |   |
+       V                          |                             |   |
++--------------+    .a    +--------------+       .root          |   |
+|              |&lt;---------|              |----------&gt;-----------+   |
+|   ast.Name   |          |     FST      |                          |
+|              |---------&gt;|              | .pfield=('value', None)  |
++--------------+    .f    +--------------+                          |
+       |                          ^                                 |
+       | .ctx                     | .parent                         |
+       V                          |                                 |
++--------------+    .a    +--------------+       .root              |
+|              |&lt;---------|              |----------&gt;---------------+
+|   ast.Load   |          |     FST      |
+|              |---------&gt;|              | .pfield=('ctx', None)
++--------------+    .f    +--------------+
+</code></pre>
+
+<h2 id="siblings">Siblings</h2>
+
+<p>You can access each <code>FST</code> node's next and previous siblings directly using <code><a href="../fst.html#FST.next">fst.fst.FST.next()</a></code> and
+<code><a href="../fst.html#FST.prev">fst.fst.FST.prev()</a></code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[[1, 2], [3, 4], [5, 6]]&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[3, 4]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">next</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[5, 6]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">prev</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, 2]</span>
+</code></pre>
+</div>
+
+<p>If there is no next or previous sibling then <code>None</code> is returned.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">next</span><span class="p">())</span>
+<span class="go">None</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">prev</span><span class="p">())</span>
+<span class="go">None</span>
 </code></pre>
 </div>
 
 <h2 id="children">Children</h2>
 
-<p>You can access a node's children and iterate over them.</p>
+<p>You can access a node's children and iterate over them (<code><a href="../fst.html#FST.first_child">fst.fst.FST.first_child()</a></code>, <code><a href="../fst.html#FST.last_child">fst.fst.FST.last_child()</a></code>,
+<code><a href="../fst.html#FST.next_child">fst.fst.FST.next_child()</a></code>, <code><a href="../fst.html#FST.prev_child">fst.fst.FST.prev_child()</a></code>).</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[[1, 2, 3], [4, 5, 6]]&#39;</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">first_child</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
-<span class="s1">&#39;1&#39;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">last_child</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
-<span class="s1">&#39;3&#39;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">n</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="k">while</span> <span class="n">n</span> <span class="o">:=</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">next_child</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="mi">1</span>
-<span class="mi">2</span>
-<span class="mi">3</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">n</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="k">while</span> <span class="n">n</span> <span class="o">:=</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">prev_child</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="mi">3</span>
-<span class="mi">2</span>
-<span class="mi">1</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[[1, 2, 3], [4, 5, 6]]&#39;</span><span class="p">)</span>
 </code></pre>
 </div>
 
-<p>You can get the last child in a block node header.</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">first_child</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">1</span>
+</code></pre>
+</div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if here: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">last_header_child</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
-<span class="s1">&#39;here&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">last_child</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">3</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if here: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">last_child</span><span class="p">()</span><span class="o">.</span><span class="n">src</span>
-<span class="s1">&#39;pass&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">while</span> <span class="n">n</span> <span class="o">:=</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">next_child</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="go">2</span>
+<span class="go">3</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">while</span> <span class="n">n</span> <span class="o">:=</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">prev_child</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">3</span>
+<span class="go">2</span>
+<span class="go">1</span>
+</code></pre>
+</div>
+
+<p>You can get the last child in a block node header using <code><a href="../fst.html#FST.last_header_child">fst.fst.FST.last_header_child()</a></code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if here: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">last_header_child</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">here</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;if here: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">last_child</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">pass</span>
 </code></pre>
 </div>
 
 <h2 id="walk">Walk</h2>
 
-<p>There is an explicit <code>walk()</code> function with a few options.</p>
+<p>There is an explicit <code>walk()</code> function with a few options (<code><a href="../fst.html#FST.walk">fst.fst.FST.walk()</a></code>).</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[[1, 2], [3, 4]]&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[[1, 2], [3, 4]]&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">():</span>
-<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
-<span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]</span> <span class="o">&lt;</span><span class="n">List</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">16</span><span class="o">&gt;</span>
-<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">List</span> <span class="mi">0</span><span class="p">,</span><span class="mf">1..0</span><span class="p">,</span><span class="mi">7</span><span class="o">&gt;</span>
-<span class="mi">1</span> <span class="o">&lt;</span><span class="n">Constant</span> <span class="mi">0</span><span class="p">,</span><span class="mf">2..0</span><span class="p">,</span><span class="mi">3</span><span class="o">&gt;</span>
-<span class="mi">2</span> <span class="o">&lt;</span><span class="n">Constant</span> <span class="mi">0</span><span class="p">,</span><span class="mf">5..0</span><span class="p">,</span><span class="mi">6</span><span class="o">&gt;</span>
-<span class="kc">None</span> <span class="o">&lt;</span><span class="n">Load</span><span class="o">&gt;</span>
-<span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">List</span> <span class="mi">0</span><span class="p">,</span><span class="mf">9..0</span><span class="p">,</span><span class="mi">15</span><span class="o">&gt;</span>
-<span class="mi">3</span> <span class="o">&lt;</span><span class="n">Constant</span> <span class="mi">0</span><span class="p">,</span><span class="mf">10..0</span><span class="p">,</span><span class="mi">11</span><span class="o">&gt;</span>
-<span class="mi">4</span> <span class="o">&lt;</span><span class="n">Constant</span> <span class="mi">0</span><span class="p">,</span><span class="mf">13..0</span><span class="p">,</span><span class="mi">14</span><span class="o">&gt;</span>
-<span class="kc">None</span> <span class="o">&lt;</span><span class="n">Load</span><span class="o">&gt;</span>
-<span class="kc">None</span> <span class="o">&lt;</span><span class="n">Load</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">g</span><span class="p">)</span><span class="si">:</span><span class="s1">24</span><span class="si">}{</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="go">&lt;List ROOT 0,0..0,16&gt;   [[1, 2], [3, 4]]</span>
+<span class="go">&lt;List 0,1..0,7&gt;         [1, 2]</span>
+<span class="go">&lt;Constant 0,2..0,3&gt;     1</span>
+<span class="go">&lt;Constant 0,5..0,6&gt;     2</span>
+<span class="go">&lt;Load&gt;                  None</span>
+<span class="go">&lt;List 0,9..0,15&gt;        [3, 4]</span>
+<span class="go">&lt;Constant 0,10..0,11&gt;   3</span>
+<span class="go">&lt;Constant 0,13..0,14&gt;   4</span>
+<span class="go">&lt;Load&gt;                  None</span>
+<span class="go">&lt;Load&gt;                  None</span>
 </code></pre>
 </div>
 
 <p>Or without the uninteresting <code>ctx</code> fields.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="kc">True</span><span class="p">):</span>
-<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]</span>
-<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
-<span class="mi">1</span>
-<span class="mi">2</span>
-<span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
-<span class="mi">3</span>
-<span class="mi">4</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="kc">True</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[[1, 2], [3, 4]]</span>
+<span class="go">[1, 2]</span>
+<span class="go">1</span>
+<span class="go">2</span>
+<span class="go">[3, 4]</span>
+<span class="go">3</span>
+<span class="go">4</span>
 </code></pre>
 </div>
 
@@ -245,57 +375,63 @@ parent.</p>
 before children).</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">back</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]</span>
-<span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
-<span class="mi">4</span>
-<span class="mi">3</span>
-<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
-<span class="mi">2</span>
-<span class="mi">1</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">back</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[[1, 2], [3, 4]]</span>
+<span class="go">[3, 4]</span>
+<span class="go">4</span>
+<span class="go">3</span>
+<span class="go">[1, 2]</span>
+<span class="go">2</span>
+<span class="go">1</span>
 </code></pre>
 </div>
 
 <p>You can exclude the top-level node.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">self_</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
-<span class="mi">1</span>
-<span class="mi">2</span>
-<span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
-<span class="mi">3</span>
-<span class="mi">4</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">self_</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, 2]</span>
+<span class="go">1</span>
+<span class="go">2</span>
+<span class="go">[3, 4]</span>
+<span class="go">3</span>
+<span class="go">4</span>
 </code></pre>
 </div>
 
 <p>You can limit the walk to a scope.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... def f():</span>
-<span class="s1">...     i = 1</span>
-<span class="s1">... def g():</span>
-<span class="s1">...     pass</span>
-<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">def f():</span>
+<span class="gp">... </span><span class="s1">    i = 1</span>
+<span class="gp">... </span><span class="s1">def g():</span>
+<span class="gp">... </span><span class="s1">    pass</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="kc">True</span><span class="p">):</span>
-<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Module</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..3</span><span class="p">,</span><span class="mi">8</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">FunctionDef</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..1</span><span class="p">,</span><span class="mi">9</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">Assign</span> <span class="mi">1</span><span class="p">,</span><span class="mf">4..1</span><span class="p">,</span><span class="mi">9</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">Name</span> <span class="mi">1</span><span class="p">,</span><span class="mf">4..1</span><span class="p">,</span><span class="mi">5</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">Constant</span> <span class="mi">1</span><span class="p">,</span><span class="mf">8..1</span><span class="p">,</span><span class="mi">9</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">FunctionDef</span> <span class="mi">2</span><span class="p">,</span><span class="mf">0..3</span><span class="p">,</span><span class="mi">8</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">Pass</span> <span class="mi">3</span><span class="p">,</span><span class="mf">4..3</span><span class="p">,</span><span class="mi">8</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="kc">True</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="go">&lt;Module ROOT 0,0..3,8&gt;</span>
+<span class="go">&lt;FunctionDef 0,0..1,9&gt;</span>
+<span class="go">&lt;Assign 1,4..1,9&gt;</span>
+<span class="go">&lt;Name 1,4..1,5&gt;</span>
+<span class="go">&lt;Constant 1,8..1,9&gt;</span>
+<span class="go">&lt;FunctionDef 2,0..3,8&gt;</span>
+<span class="go">&lt;Pass 3,4..3,8&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Module</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..3</span><span class="p">,</span><span class="mi">8</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">FunctionDef</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..1</span><span class="p">,</span><span class="mi">9</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">FunctionDef</span> <span class="mi">2</span><span class="p">,</span><span class="mf">0..3</span><span class="p">,</span><span class="mi">8</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="go">&lt;Module ROOT 0,0..3,8&gt;</span>
+<span class="go">&lt;FunctionDef 0,0..1,9&gt;</span>
+<span class="go">&lt;FunctionDef 2,0..3,8&gt;</span>
 </code></pre>
 </div>
 
@@ -303,14 +439,14 @@ before children).</p>
 if the walk is restricted to a scope you can decide to recurse into a specific child.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="p">(</span><span class="n">gen</span> <span class="o">:=</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="kc">True</span><span class="p">)):</span>
-<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-<span class="o">...</span>     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">FunctionDef</span><span class="p">)</span> <span class="ow">and</span> <span class="n">g</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;g&#39;</span><span class="p">:</span>
-<span class="o">...</span>         <span class="n">_</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># ignore the &#39;_&#39;, it shuts up return in stdout</span>
-<span class="o">&lt;</span><span class="n">Module</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..3</span><span class="p">,</span><span class="mi">8</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">FunctionDef</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..1</span><span class="p">,</span><span class="mi">9</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">FunctionDef</span> <span class="mi">2</span><span class="p">,</span><span class="mf">0..3</span><span class="p">,</span><span class="mi">8</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">Pass</span> <span class="mi">3</span><span class="p">,</span><span class="mf">4..3</span><span class="p">,</span><span class="mi">8</span><span class="o">&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="p">(</span><span class="n">gen</span> <span class="o">:=</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="kc">True</span><span class="p">)):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">is_FunctionDef</span> <span class="ow">and</span> <span class="n">g</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;g&#39;</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">_</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># ignore the &#39;_&#39;, it shuts up return in stdout</span>
+<span class="go">&lt;Module ROOT 0,0..3,8&gt;</span>
+<span class="go">&lt;FunctionDef 0,0..1,9&gt;</span>
+<span class="go">&lt;FunctionDef 2,0..3,8&gt;</span>
+<span class="go">&lt;Pass 3,4..3,8&gt;</span>
 </code></pre>
 </div>
 
@@ -318,30 +454,30 @@ if the walk is restricted to a scope you can decide to recurse into a specific c
 children. You can override this by sending to the generator.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="p">(</span><span class="n">gen</span> <span class="o">:=</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">recurse</span><span class="o">=</span><span class="kc">False</span><span class="p">)):</span>
-<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-<span class="o">...</span>     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">FunctionDef</span><span class="p">)</span> <span class="ow">and</span> <span class="n">g</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span>
-<span class="o">...</span>         <span class="n">_</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Module</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..3</span><span class="p">,</span><span class="mi">8</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">FunctionDef</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..1</span><span class="p">,</span><span class="mi">9</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">Assign</span> <span class="mi">1</span><span class="p">,</span><span class="mf">4..1</span><span class="p">,</span><span class="mi">9</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">Name</span> <span class="mi">1</span><span class="p">,</span><span class="mf">4..1</span><span class="p">,</span><span class="mi">5</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">Constant</span> <span class="mi">1</span><span class="p">,</span><span class="mf">8..1</span><span class="p">,</span><span class="mi">9</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">FunctionDef</span> <span class="mi">2</span><span class="p">,</span><span class="mf">0..3</span><span class="p">,</span><span class="mi">8</span><span class="o">&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="p">(</span><span class="n">gen</span> <span class="o">:=</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">recurse</span><span class="o">=</span><span class="kc">False</span><span class="p">)):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">is_FunctionDef</span> <span class="ow">and</span> <span class="n">g</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">_</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;Module ROOT 0,0..3,8&gt;</span>
+<span class="go">&lt;FunctionDef 0,0..1,9&gt;</span>
+<span class="go">&lt;Assign 1,4..1,9&gt;</span>
+<span class="go">&lt;Name 1,4..1,5&gt;</span>
+<span class="go">&lt;Constant 1,8..1,9&gt;</span>
+<span class="go">&lt;FunctionDef 2,0..3,8&gt;</span>
 </code></pre>
 </div>
 
-<p>Or you can decide NOT to recurse into children.</p>
+<p>Or you can decide <strong>NOT</strong> to recurse into children.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="p">(</span><span class="n">gen</span> <span class="o">:=</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="kc">True</span><span class="p">)):</span>
-<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-<span class="o">...</span>     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">FunctionDef</span><span class="p">)</span> <span class="ow">and</span> <span class="n">g</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span>
-<span class="o">...</span>         <span class="n">_</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Module</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..3</span><span class="p">,</span><span class="mi">8</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">FunctionDef</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..1</span><span class="p">,</span><span class="mi">9</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">FunctionDef</span> <span class="mi">2</span><span class="p">,</span><span class="mf">0..3</span><span class="p">,</span><span class="mi">8</span><span class="o">&gt;</span>
-<span class="o">&lt;</span><span class="n">Pass</span> <span class="mi">3</span><span class="p">,</span><span class="mf">4..3</span><span class="p">,</span><span class="mi">8</span><span class="o">&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="p">(</span><span class="n">gen</span> <span class="o">:=</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="kc">True</span><span class="p">)):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">is_FunctionDef</span> <span class="ow">and</span> <span class="n">g</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">_</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">&lt;Module ROOT 0,0..3,8&gt;</span>
+<span class="go">&lt;FunctionDef 0,0..1,9&gt;</span>
+<span class="go">&lt;FunctionDef 2,0..3,8&gt;</span>
+<span class="go">&lt;Pass 3,4..3,8&gt;</span>
 </code></pre>
 </div>
 
@@ -350,27 +486,33 @@ children and not any parents or sibling nodes. Any modifications to child nodes 
 been there. This is not safe to do if using "raw" operations (explained elsewhere).</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[[1, 2], [3, 4], name]&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[[1, 2], [3, 4], name]&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="kc">True</span><span class="p">):</span>
-<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="o">...</span>     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">Constant</span><span class="p">)</span> <span class="ow">and</span> <span class="n">g</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">:</span>
-<span class="o">...</span>         <span class="n">_</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
-<span class="o">...</span>     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">Name</span><span class="p">):</span>
-<span class="o">...</span>         <span class="n">_</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;[5, 6]&#39;</span><span class="p">)</span>
-<span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="n">name</span><span class="p">]</span>
-<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
-<span class="mi">1</span>
-<span class="mi">2</span>
-<span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
-<span class="mi">3</span>
-<span class="mi">4</span>
-<span class="n">name</span>
-<span class="mi">5</span>
-<span class="mi">6</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="kc">True</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">is_Constant</span> <span class="ow">and</span> <span class="n">g</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">_</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">elif</span> <span class="n">g</span><span class="o">.</span><span class="n">is_Name</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">_</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;[5, 6]&#39;</span><span class="p">)</span>
+<span class="go">[[1, 2], [3, 4], name]</span>
+<span class="go">[1, 2]</span>
+<span class="go">1</span>
+<span class="go">2</span>
+<span class="go">[3, 4]</span>
+<span class="go">3</span>
+<span class="go">4</span>
+<span class="go">name</span>
+<span class="go">5</span>
+<span class="go">6</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[[</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="mi">6</span><span class="p">]]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[[x, 2], [x, 4], [x, 6]]</span>
 </code></pre>
 </div>
 
@@ -379,81 +521,105 @@ been there. This is not safe to do if using "raw" operations (explained elsewher
 <p>Unlike the <code>next</code> and <code>prev</code> functions, the <code>step</code> functions allow walking forward or backward and going up and down
 parents and children automatically. Notice the order is parents before children regardless of if going forward or back,
 so the two functions are not inverses unlike the <code>next</code> / <code>prev</code> functions. You can walk the entire tree just stepping
-forward or back one node at a time.</p>
+forward or back one node at a time. See <code><a href="../fst.html#FST.step_fwd">fst.fst.FST.step_fwd()</a></code> and <code><a href="../fst.html#FST.step_back">fst.fst.FST.step_back()</a></code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[[1, 2], [3, 4]]&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[[1, 2], [3, 4]]&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">first_child</span><span class="p">()</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="k">while</span> <span class="n">g</span><span class="p">:</span>
-<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="o">...</span>     <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">step_fwd</span><span class="p">()</span>
-<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
-<span class="mi">1</span>
-<span class="mi">2</span>
-<span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
-<span class="mi">3</span>
-<span class="mi">4</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">first_child</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">while</span> <span class="n">g</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">step_fwd</span><span class="p">()</span>
+<span class="go">[1, 2]</span>
+<span class="go">1</span>
+<span class="go">2</span>
+<span class="go">[3, 4]</span>
+<span class="go">3</span>
+<span class="go">4</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">last_child</span><span class="p">()</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="k">while</span> <span class="n">g</span><span class="p">:</span>
-<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="o">...</span>     <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">step_back</span><span class="p">()</span>
-<span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
-<span class="mi">4</span>
-<span class="mi">3</span>
-<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
-<span class="mi">2</span>
-<span class="mi">1</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">last_child</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">while</span> <span class="n">g</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">step_back</span><span class="p">()</span>
+<span class="go">[3, 4]</span>
+<span class="go">4</span>
+<span class="go">3</span>
+<span class="go">[1, 2]</span>
+<span class="go">2</span>
+<span class="go">1</span>
 </code></pre>
 </div>
 
 <h2 id="paths">Paths</h2>
 
-<p>You can get a path from any given node to any of its children.</p>
+<p>You can get a path from any given node to any of its children using <code><a href="../fst.html#FST.child_path">fst.fst.FST.child_path()</a></code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;i = [a * (b + c)]&#39;</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
-<span class="n">Assign</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">17</span>
-  <span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-   <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;i&#39;</span> <span class="n">Store</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">1</span>
-  <span class="o">.</span><span class="n">value</span> <span class="n">List</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">4..0</span><span class="p">,</span><span class="mi">17</span>
-    <span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-     <span class="mi">0</span><span class="p">]</span> <span class="n">BinOp</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">5..0</span><span class="p">,</span><span class="mi">16</span>
-       <span class="o">.</span><span class="n">left</span> <span class="n">Name</span> <span class="s1">&#39;a&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">5..0</span><span class="p">,</span><span class="mi">6</span>
-       <span class="o">.</span><span class="n">op</span> <span class="n">Mult</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">7..0</span><span class="p">,</span><span class="mi">8</span>
-       <span class="o">.</span><span class="n">right</span> <span class="n">BinOp</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">10..0</span><span class="p">,</span><span class="mi">15</span>
-         <span class="o">.</span><span class="n">left</span> <span class="n">Name</span> <span class="s1">&#39;b&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">10..0</span><span class="p">,</span><span class="mi">11</span>
-         <span class="o">.</span><span class="n">op</span> <span class="n">Add</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">12..0</span><span class="p">,</span><span class="mi">13</span>
-         <span class="o">.</span><span class="n">right</span> <span class="n">Name</span> <span class="s1">&#39;c&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">14..0</span><span class="p">,</span><span class="mi">15</span>
-    <span class="o">.</span><span class="n">ctx</span> <span class="n">Load</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">child_path</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
-<span class="p">[</span><span class="n">astfield</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">),</span> <span class="n">astfield</span><span class="p">(</span><span class="s1">&#39;elts&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">astfield</span><span class="p">(</span><span class="s1">&#39;right&#39;</span><span class="p">),</span> <span class="n">astfield</span><span class="p">(</span><span class="s1">&#39;left&#39;</span><span class="p">)]</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="c1"># for the humans</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">child_path</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">as_str</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="s1">&#39;value.elts[0].right.left&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;i = [a * (b + c)]&#39;</span><span class="p">)</span>
 </code></pre>
 </div>
 
-<p>You can then get the child by this path, either the <code>astfield</code> one or the string one. Useful for getting the same
-relative child in a copy of a tree.</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">Assign - ROOT 0,0..0,17</span>
+<span class="go">  .targets[1]</span>
+<span class="go">   0] Name &#39;i&#39; Store - 0,0..0,1</span>
+<span class="go">  .value List - 0,4..0,17</span>
+<span class="go">    .elts[1]</span>
+<span class="go">     0] BinOp - 0,5..0,16</span>
+<span class="go">       .left Name &#39;a&#39; Load - 0,5..0,6</span>
+<span class="go">       .op Mult - 0,7..0,8</span>
+<span class="go">       .right BinOp - 0,10..0,15</span>
+<span class="go">         .left Name &#39;b&#39; Load - 0,10..0,11</span>
+<span class="go">         .op Add - 0,12..0,13</span>
+<span class="go">         .right Name &#39;c&#39; Load - 0,14..0,15</span>
+<span class="go">    .ctx Load</span>
+</code></pre>
+</div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">left</span>
-<span class="o">&lt;</span><span class="n">Name</span> <span class="mi">0</span><span class="p">,</span><span class="mf">10..0</span><span class="p">,</span><span class="mi">11</span><span class="o">&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">child_path</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+<span class="go">[astfield(&#39;value&#39;), astfield(&#39;elts&#39;, 0), astfield(&#39;right&#39;), astfield(&#39;left&#39;)]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">p</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">child_path</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">g</span><span class="o">.</span><span class="n">child_from_path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>  <span class="c1"># different tree</span>
-<span class="o">&lt;</span><span class="n">Name</span> <span class="mi">0</span><span class="p">,</span><span class="mf">10..0</span><span class="p">,</span><span class="mi">11</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">child_path</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">as_str</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># for the humans</span>
+<span class="go">&#39;value.elts[0].right.left&#39;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">p</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">child_path</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">as_str</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">g</span><span class="o">.</span><span class="n">child_from_path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>  <span class="c1"># different tree</span>
-<span class="o">&lt;</span><span class="n">Name</span> <span class="mi">0</span><span class="p">,</span><span class="mf">10..0</span><span class="p">,</span><span class="mi">11</span><span class="o">&gt;</span>
+<p>You can then get the child by this path, either the <code>astfield</code> one or the string one, using
+<code><a href="../fst.html#FST.child_from_path">fst.fst.FST.child_from_path()</a></code>. Useful for getting the same relative child in a copy of a tree.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">left</span>
+<span class="go">&lt;Name 0,10..0,11&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">child_path</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">child_from_path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>  <span class="c1"># different tree</span>
+<span class="go">&lt;Name 0,10..0,11&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">child_path</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">as_str</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">child_from_path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>  <span class="c1"># different tree</span>
+<span class="go">&lt;Name 0,10..0,11&gt;</span>
 </code></pre>
 </div>
 </div>

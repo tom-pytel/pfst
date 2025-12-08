@@ -375,7 +375,7 @@ and / or possibly nested <code>Starred</code>, <code>Tuple</code> and <code>List
     <a class="headerlink" href="#is_valid_del_target"></a>
     
             <div class="docstring"><p>Check if <code>asts</code> is a valid target for <code>Delete</code> operations. Must be <code>Name</code>, <code>Attribute</code>, <code>Subscript</code> and / or
-possibly nested <code>Tuple</code> and <code>List</code>.</p>
+possibly nested <code>Tuple</code> and <code>List</code>. No <code>Starred</code> allowed.</p>
 </div>
 
 
@@ -782,8 +782,8 @@ parent and child <code>BoolOp</code>, <code>BinOp</code> and <code>UnaryOp</code
 if <code>field</code> is <code>'value'</code>, otherwise no effect.</li>
 <li><code>matchas_pat_None</code>: Child is <code>MatchAs</code> and the <code>pattern</code> is <code>None</code> (just a name).</li>
 <li><code>attr_val_int</code>: Parent is <code>Attribute</code> and child <code>value</code> is a <code>Constant</code> integer.</li>
-<li><code>star_call_arg</code>: Parent is <code>Starred</code> and it is a <code>Call</code> <code>args</code> argument, different rules for child
-parentheses.</li>
+<li><code>star_arglike</code>: Parent is <code>Starred</code> in a place where arglike expressions are allowed (<code>Call.args</code>,
+<code>ClassDef.bases</code> or unaprenthesized slice <code>Tuple</code>).</li>
 </ul></li>
 </ul>
 
@@ -817,7 +817,7 @@ and flags.</p>
 <li><code>parent</code>: Parent <code>AST</code> node.</li>
 <li><code>field</code>: The name of the field in the parent where the child resides.</li>
 <li><code>idx</code>: The optional index of the child in the parent field, or <code>None</code> if does not apply.</li>
-<li><code>flags</code>: Used to passed in some flags that cannot be determined here, specifically <code>star_call_arg</code>.</li>
+<li><code>flags</code>: Used to passed in some flags that cannot be determined here, specifically <code>star_arglike</code>.</li>
 </ul>
 
 <p><strong>Returns:</strong></p>

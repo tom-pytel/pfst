@@ -55,91 +55,115 @@
 <p>To be able to execute the examples, import this.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 </code></pre>
 </div>
 
 <h2 id="individual-functions">Individual functions</h2>
 
-<p>For a full list of global options see <code><a href="../fst.html#FST.get_options">fst.fst.FST.get_options()</a></code>.</p>
+<p>For a full list of global options see <code><a href="../fst.html#FST.options">fst.fst.FST.options()</a></code>.</p>
 
 <p>Many of the <code>FST</code> functions have an <code>**options</code> kwarg which indicates they can take one or more keyword-only parameters
 to control how the operation proceeds. Most of these options also have global defaults which can be set and which will
 be used if a specific value for that option is not passed to the function.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">b</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">b</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{a: b}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;**c&#39;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">{</span><span class="o">**</span><span class="n">c</span><span class="p">}</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="k">try</span><span class="p">:</span>
-<span class="o">...</span>     <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{a: b}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;**c&#39;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="o">...</span> <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
-<span class="n">cannot</span> <span class="n">put</span> <span class="k">as</span> <span class="s1">&#39;one&#39;</span> <span class="n">item</span> <span class="n">to</span> <span class="n">a</span> <span class="n">Dict</span> <span class="nb">slice</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(b)</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">src</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... if a:</span>
-<span class="s1">...     pass</span>
-<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">add</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... if b:</span>
-<span class="s1">...     return -1</span>
-<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">orelse</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">add</span><span class="p">,</span> <span class="n">elif_</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
-<span class="k">if</span> <span class="n">a</span><span class="p">:</span>
-    <span class="k">pass</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">b</span><span class="p">:</span>
-        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">orelse</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">add</span><span class="p">,</span> <span class="n">elif_</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
-<span class="k">if</span> <span class="n">a</span><span class="p">:</span>
-    <span class="k">pass</span>
-<span class="k">elif</span> <span class="n">b</span><span class="p">:</span>
-    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{a: b}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;**c&#39;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{**c}</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">src</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>  <span class="c1"># because this example lives in a docstring already</span>
-<span class="o">...</span> <span class="s2">&quot;class cls:&quot;</span><span class="p">,</span>
-<span class="o">...</span> <span class="s2">&quot;    def f():&quot;</span><span class="p">,</span>
-<span class="o">...</span> <span class="s2">&quot;        &#39;&#39;&#39;doc&quot;</span><span class="p">,</span>
-<span class="o">...</span> <span class="s2">&quot;        str&#39;&#39;&#39;&quot;</span><span class="p">,</span>
-<span class="o">...</span> <span class="p">])</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">docstr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;doc</span>
-<span class="sd">        str&#39;&#39;&#39;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">docstr</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;doc</span>
-<span class="sd">    str&#39;&#39;&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{a: b}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;**c&#39;</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+<span class="go">cannot put as &#39;one&#39; item to a Dict slice</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm_put</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">{</span><span class="n">a</span><span class="p">,</span> <span class="o">*</span><span class="p">(),</span> <span class="n">b</span><span class="p">}</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">if a:</span>
+<span class="gp">... </span><span class="s1">    pass</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm_put</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">{</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">}</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">add</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">if b:</span>
+<span class="gp">... </span><span class="s1">    return -1</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">orelse</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">add</span><span class="p">,</span> <span class="n">elif_</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">if a:</span>
+<span class="go">    pass</span>
+<span class="go">else:</span>
+<span class="go">    if b:</span>
+<span class="go">        return -1</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">orelse</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">add</span><span class="p">,</span> <span class="n">elif_</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">if a:</span>
+<span class="go">    pass</span>
+<span class="go">elif b:</span>
+<span class="go">    return -1</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">src</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>  <span class="c1"># because this example lives in a docstring already</span>
+<span class="gp">... </span><span class="s2">&quot;class cls:&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="s2">&quot;    def f():&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="s2">&quot;        &#39;&#39;&#39;doc&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="s2">&quot;        str&#39;&#39;&#39;&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">])</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">docstr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">def f():</span>
+<span class="go">    &#39;&#39;&#39;doc</span>
+<span class="go">        str&#39;&#39;&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">docstr</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">def f():</span>
+<span class="go">    &#39;&#39;&#39;doc</span>
+<span class="go">    str&#39;&#39;&#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm_put</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{a, *(), b}</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm_put</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{a, b}</span>
 </code></pre>
 </div>
 
@@ -148,17 +172,26 @@ be used if a specific value for that option is not passed to the function.</p>
 <p>These options can be set globally with the <code>set_options()</code> function, which returns the previous value.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="p">{</span><span class="s1">&#39;pars&#39;</span><span class="p">:</span> <span class="s1">&#39;auto&#39;</span><span class="p">}</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">{&#39;pars&#39;: &#39;auto&#39;}</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">b</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">b</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="p">{</span><span class="s1">&#39;pars&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">{&#39;pars&#39;: False}</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(b)</span>
 </code></pre>
 </div>
 
@@ -166,52 +199,60 @@ be used if a specific value for that option is not passed to the function.</p>
 default state will fail.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
-<span class="p">{</span><span class="s1">&#39;pars&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
+<span class="go">{&#39;pars&#39;: True}</span>
 </code></pre>
 </div>
 
 <p>For this reason there is also a context manager.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="k">with</span> <span class="n">FST</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">b</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">FST</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">b</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="k">with</span> <span class="n">FST</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">FST</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = (b)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(b)</span>
 </code></pre>
 </div>
 
 <p>Any given option default can also be queried.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s1">&#39;pars&#39;</span><span class="p">)</span>
-<span class="s1">&#39;auto&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s1">&#39;pars&#39;</span><span class="p">)</span>
+<span class="go">&#39;auto&#39;</span>
 </code></pre>
 </div>
 
 <p>Or get all global options.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">pprint</span><span class="w"> </span><span class="kn">import</span> <span class="n">pp</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pprint</span><span class="w"> </span><span class="kn">import</span> <span class="n">pp</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">FST</span><span class="o">.</span><span class="n">get_options</span><span class="p">())</span>
-<span class="p">{</span><span class="s1">&#39;raw&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
- <span class="s1">&#39;trivia&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
- <span class="s1">&#39;elif_&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
- <span class="s1">&#39;pep8space&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
- <span class="s1">&#39;docstr&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
- <span class="s1">&#39;pars&#39;</span><span class="p">:</span> <span class="s1">&#39;auto&#39;</span><span class="p">,</span>
- <span class="s1">&#39;pars_walrus&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
- <span class="s1">&#39;pars_arglike&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
- <span class="s1">&#39;norm&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
- <span class="s1">&#39;norm_self&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
- <span class="s1">&#39;norm_get&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
- <span class="s1">&#39;norm_put&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
- <span class="s1">&#39;set_norm&#39;</span><span class="p">:</span> <span class="s1">&#39;both&#39;</span><span class="p">,</span>
- <span class="s1">&#39;matchor_norm&#39;</span><span class="p">:</span> <span class="s1">&#39;value&#39;</span><span class="p">}</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">FST</span><span class="o">.</span><span class="n">get_options</span><span class="p">())</span>
+<span class="go">{&#39;raw&#39;: False,</span>
+<span class="go"> &#39;trivia&#39;: True,</span>
+<span class="go"> &#39;coerce&#39;: True,</span>
+<span class="go"> &#39;elif_&#39;: True,</span>
+<span class="go"> &#39;pep8space&#39;: True,</span>
+<span class="go"> &#39;docstr&#39;: True,</span>
+<span class="go"> &#39;pars&#39;: &#39;auto&#39;,</span>
+<span class="go"> &#39;pars_walrus&#39;: True,</span>
+<span class="go"> &#39;pars_arglike&#39;: True,</span>
+<span class="go"> &#39;norm&#39;: False,</span>
+<span class="go"> &#39;norm_self&#39;: None,</span>
+<span class="go"> &#39;norm_get&#39;: None,</span>
+<span class="go"> &#39;norm_put&#39;: None,</span>
+<span class="go"> &#39;set_norm&#39;: &#39;both&#39;,</span>
+<span class="go"> &#39;matchor_norm&#39;: &#39;value&#39;,</span>
+<span class="go"> &#39;op_side&#39;: &#39;left&#39;}</span>
 </code></pre>
 </div>
 
@@ -221,16 +262,33 @@ default state will fail.</p>
 such as the <code>'to'</code> option when putting a single element in raw mode.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="s1">&#39;to&#39;</span> <span class="ow">in</span> <span class="n">FST</span><span class="o">.</span><span class="n">get_options</span><span class="p">()</span>
-<span class="kc">False</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;to&#39;</span> <span class="ow">in</span> <span class="n">FST</span><span class="o">.</span><span class="n">get_options</span><span class="p">()</span>
+<span class="go">False</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c, d, e, f]&#39;</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c, d, e, f]&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;zzz&#39;</span><span class="p">,</span> <span class="n">to</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Name</span> <span class="mi">0</span><span class="p">,</span><span class="mf">4..0</span><span class="p">,</span><span class="mi">7</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;zzz&#39;</span><span class="p">,</span> <span class="n">to</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;Name 0,4..0,7&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">zzz</span><span class="p">,</span> <span class="n">f</span><span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, zzz, f]</span>
+</code></pre>
+</div>
+
+<p>Or the <code>'op'</code> option when doing <code>Compare</code> slice operations.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b &gt; c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="s1">&#39;!=&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a != x &gt; c</span>
 </code></pre>
 </div>
 </div>

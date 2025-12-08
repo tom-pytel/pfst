@@ -28,7 +28,8 @@
             <ul>
   <li><a href="#node-locations-in-the-source-code">Node locations in the source code</a>
   <ul>
-    <li><a href="#loc-and-bloc"><code>loc</code> and <code>bloc</code></a></li>
+    <li><a href="#loc"><code>.loc</code></a></li>
+    <li><a href="#bloc"><code>.bloc</code></a></li>
     <li><a href="#line-and-column-coordinates">Line and column coordinates</a></li>
     <li><a href="#search-by-location">Search by location</a></li>
   </ul></li>
@@ -55,70 +56,91 @@
 <p>To be able to execute the examples, import this.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 </code></pre>
 </div>
 
-<h2 id="loc-and-bloc"><code>loc</code> and <code>bloc</code></h2>
+<h2 id="loc"><code>.loc</code></h2>
 
 <p>Almost all <code>FST</code> nodes have a location attribute pointing to where they exist in the source code.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... @decorator</span>
-<span class="s1">... def func(x):</span>
-<span class="s1">...     return x + 1</span>
-<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
-<span class="n">FunctionDef</span> <span class="o">-</span> <span class="n">ROOT</span> <span class="mi">1</span><span class="p">,</span><span class="mf">0..2</span><span class="p">,</span><span class="mi">16</span>
-  <span class="o">.</span><span class="n">name</span> <span class="s1">&#39;func&#39;</span>
-  <span class="o">.</span><span class="n">args</span> <span class="n">arguments</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span><span class="mf">9..1</span><span class="p">,</span><span class="mi">10</span>
-    <span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-     <span class="mi">0</span><span class="p">]</span> <span class="n">arg</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span><span class="mf">9..1</span><span class="p">,</span><span class="mi">10</span>
-       <span class="o">.</span><span class="n">arg</span> <span class="s1">&#39;x&#39;</span>
-  <span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-   <span class="mi">0</span><span class="p">]</span> <span class="n">Return</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">4..2</span><span class="p">,</span><span class="mi">16</span>
-     <span class="o">.</span><span class="n">value</span> <span class="n">BinOp</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">11..2</span><span class="p">,</span><span class="mi">16</span>
-       <span class="o">.</span><span class="n">left</span> <span class="n">Name</span> <span class="s1">&#39;x&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">11..2</span><span class="p">,</span><span class="mi">12</span>
-       <span class="o">.</span><span class="n">op</span> <span class="n">Add</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">13..2</span><span class="p">,</span><span class="mi">14</span>
-       <span class="o">.</span><span class="n">right</span> <span class="n">Constant</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span><span class="mf">15..2</span><span class="p">,</span><span class="mi">16</span>
-  <span class="o">.</span><span class="n">decorator_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-   <span class="mi">0</span><span class="p">]</span> <span class="n">Name</span> <span class="s1">&#39;decorator&#39;</span> <span class="n">Load</span> <span class="o">-</span> <span class="mi">0</span><span class="p">,</span><span class="mf">1..0</span><span class="p">,</span><span class="mi">10</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">@decorator</span>
+<span class="gp">... </span><span class="s1">def func(x):</span>
+<span class="gp">... </span><span class="s1">    return x + 1</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
 </code></pre>
 </div>
 
-<p>These are accessed via the <code>.loc</code> attribute.</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">FunctionDef - ROOT 1,0..2,16</span>
+<span class="go">  .name &#39;func&#39;</span>
+<span class="go">  .args arguments - 1,9..1,10</span>
+<span class="go">    .args[1]</span>
+<span class="go">     0] arg - 1,9..1,10</span>
+<span class="go">       .arg &#39;x&#39;</span>
+<span class="go">  .body[1]</span>
+<span class="go">   0] Return - 2,4..2,16</span>
+<span class="go">     .value BinOp - 2,11..2,16</span>
+<span class="go">       .left Name &#39;x&#39; Load - 2,11..2,12</span>
+<span class="go">       .op Add - 2,13..2,14</span>
+<span class="go">       .right Constant 1 - 2,15..2,16</span>
+<span class="go">  .decorator_list[1]</span>
+<span class="go">   0] Name &#39;decorator&#39; Load - 0,1..0,10</span>
+</code></pre>
+</div>
+
+<p>These are accessed via the <code>.loc</code> attribute (<code><a href="../fst.html#FST.loc">fst.fst.FST.loc</a></code>).</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">loc</span>
-<span class="n">fstloc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(1, 0, 2, 16)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">loc</span>
-<span class="n">fstloc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(1, 9, 1, 10)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span>
-<span class="n">fstloc</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(2, 4, 2, 16)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">loc</span>
-<span class="n">fstloc</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(2, 13, 2, 14)</span>
 </code></pre>
 </div>
 
 <p>Or the individual location elements can be gotten directly.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">ln</span>
-<span class="mi">1</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">ln</span>
+<span class="go">1</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">col</span>
-<span class="mi">9</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">col</span>
+<span class="go">9</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">end_ln</span>
-<span class="mi">1</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">end_ln</span>
+<span class="go">1</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">end_col</span>
-<span class="mi">10</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">end_col</span>
+<span class="go">10</span>
 </code></pre>
 </div>
 
@@ -126,17 +148,26 @@
 in <code>FST</code> nodes, like <code>arguments</code> or <code>operators</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="s1">&#39;lineno&#39;</span><span class="p">)</span>
-<span class="kc">False</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">hasattr</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="s1">&#39;lineno&#39;</span><span class="p">)</span>
+<span class="go">False</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">loc</span>
-<span class="n">fstloc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(1, 9, 1, 10)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="s1">&#39;lineno&#39;</span><span class="p">)</span>
-<span class="kc">False</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">hasattr</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="s1">&#39;lineno&#39;</span><span class="p">)</span>
+<span class="go">False</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">loc</span>
-<span class="n">fstloc</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(2, 13, 2, 14)</span>
 </code></pre>
 </div>
 
@@ -152,52 +183,90 @@ in <code>FST</code> nodes, like <code>arguments</code> or <code>operators</code>
 have locations computed for them by <code>FST</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[i for i in j]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">generators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span>
-<span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">13</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with a as b: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span>
-<span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... match a:</span>
-<span class="s1">...    case a as b:</span>
-<span class="s1">...        pass</span>
-<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">cases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span>
-<span class="n">fstloc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a += b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">loc</span>
-<span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[i for i in j]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">generators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(0, 3, 0, 13)</span>
 </code></pre>
 </div>
 
-<p>There is also a <code>bloc</code> location attribute, which is equal to the <code>loc</code> location in all cases except when there are
-preceding decorators, in which case the location starts at the first decorator. There are corresponding <code>bln</code>, <code>bcol</code>,
-<code>bend_ln</code> and <code>bend_col</code> attributes, though the last three currently just equal the normal <code>loc</code> elements. This may
-change in the future (include trailing comments maybe).</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;with a as b: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(0, 5, 0, 11)</span>
+</code></pre>
+</div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... @decorator</span>
-<span class="s1">... def func(x):</span>
-<span class="s1">...     return x + 1</span>
-<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">match a:</span>
+<span class="gp">... </span><span class="s1">    case a as b:</span>
+<span class="gp">... </span><span class="s1">        pass</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">cases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(1, 4, 2, 12)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="nd">@decorator</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a += b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(0, 2, 0, 3)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">loc</span>
-<span class="n">fstloc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<p>Yes that last one is an <code>AugAssign</code> and the location of the operator is only the <code>+</code> and does not include the <code>=</code> to
+stay consistent with the operators in <code>BinOp</code>. For the record, the <code>=</code> in a normal <code>Assign</code> doesn't get its own operator
+anyway so is essentially just a trivia delimiter.</p>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">bloc</span>
-<span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<h2 id="bloc"><code>.bloc</code></h2>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">ln</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">col</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">end_ln</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">end_col</span>
-<span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<p>There is also a <code>.bloc</code> bounding location attribute (<code><a href="../fst.html#FST.bloc">fst.fst.FST.bloc</a></code>). This is equal to the <code>loc</code> location in all
+cases except when there are preceding decorators or a trailing line comment on the last child of a block statement, in
+which case those are included in the bounding location. There are corresponding <code>bln</code>, <code>bcol</code>, <code>bend_ln</code> and <code>bend_col</code>
+attributes.</p>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">bln</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">bcol</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">bend_ln</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">bend_col</span>
-<span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">@decorator</span>
+<span class="gp">... </span><span class="s1">def func(x):</span>
+<span class="gp">... </span><span class="s1">    return x + 1  # comment</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">@decorator</span>
+<span class="go">def func(x):</span>
+<span class="go">    return x + 1  # comment</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(1, 0, 2, 16)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">bloc</span>
+<span class="go">fstloc(0, 0, 2, 27)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">ln</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">col</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">end_ln</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">end_col</span>
+<span class="go">(1, 0, 2, 16)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">bln</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">bcol</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">bend_ln</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">bend_col</span>
+<span class="go">(0, 0, 2, 27)</span>
+</code></pre>
+</div>
+
+<p>Note that the trailing comment of a non-block statement is not included in the <code>.bloc</code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;i = j  # comment&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">bloc</span>
+<span class="go">fstloc(0, 0, 0, 5)</span>
 </code></pre>
 </div>
 
@@ -207,12 +276,19 @@ change in the future (include trailing comments maybe).</p>
 offsets are in characters and not encoded bytes.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;абвгд&#39;</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">loc</span>
-<span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;абвгд&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">col_offset</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">end_lineno</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">end_col_offset</span>
-<span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">loc</span>
+<span class="go">fstloc(0, 0, 0, 5)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">col_offset</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">end_lineno</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">end_col_offset</span>
+<span class="go">(1, 0, 1, 10)</span>
 </code></pre>
 </div>
 
@@ -221,23 +297,33 @@ offsets are in characters and not encoded bytes.</p>
 which don't normally have them.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[i for i in j]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">generators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">col_offset</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">end_lineno</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">end_col_offset</span>
-<span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">13</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[i for i in j]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">generators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="s1">&#39;lineno&#39;</span><span class="p">)</span>
-<span class="kc">False</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">col_offset</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">end_lineno</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">end_col_offset</span>
+<span class="go">(1, 3, 1, 13)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">hasattr</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="s1">&#39;lineno&#39;</span><span class="p">)</span>
+<span class="go">False</span>
 </code></pre>
 </div>
 
 <p>You can check if a location comes from an <code>AST</code> node or if is computed by <code>FST</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">has_own_loc</span>
-<span class="kc">False</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">has_own_loc</span>
+<span class="go">False</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">has_own_loc</span>
-<span class="kc">True</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">has_own_loc</span>
+<span class="go">True</span>
 </code></pre>
 </div>
 
@@ -245,61 +331,139 @@ which don't normally have them.</p>
 the source code.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... @decorator</span>
-<span class="s1">... def func(x):</span>
-<span class="s1">...     return x + 1</span>
-<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">@decorator</span>
+<span class="gp">... </span><span class="s1">def func(x):</span>
+<span class="gp">... </span><span class="s1">    return x + 1</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">whole_loc</span>
-<span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">whole_loc</span>
+<span class="go">fstloc(0, 0, 2, 16)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">whole_loc</span>
-<span class="n">fstloc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">whole_loc</span>
+<span class="go">fstloc(0, 0, 2, 16)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">lines</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-<span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">lines</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">(3, 16)</span>
 </code></pre>
 </div>
 
 <h2 id="search-by-location">Search by location</h2>
 
-<p>You can search for a node by location. This is done by either searching for a node in a given location.</p>
+<p>Lets use this.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... if a &lt; b:</span>
-<span class="s1">...     print(a)</span>
-<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="c1"># find node matching or in this location</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">find_in_loc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
-<span class="s1">&#39;a &lt; b&#39;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="c1"># doesn&#39;t have to be exact, this function returns whole first node found in location</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">find_in_loc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
-<span class="s1">&#39;a &lt; b&#39;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="c1"># returns only entire nodes in location</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">find_in_loc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
-<span class="s1">&#39;&lt;&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">if a &lt; b:</span>
+<span class="gp">... </span><span class="s1">    pass</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
 </code></pre>
 </div>
 
-<p>Or searching for a node which contains a location.</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">If - ROOT 0,0..1,8</span>
+<span class="go">  .test Compare - 0,3..0,8</span>
+<span class="go">    .left Name &#39;a&#39; Load - 0,3..0,4</span>
+<span class="go">    .ops[1]</span>
+<span class="go">     0] Lt - 0,5..0,6</span>
+<span class="go">    .comparators[1]</span>
+<span class="go">     0] Name &#39;b&#39; Load - 0,7..0,8</span>
+<span class="go">  .body[1]</span>
+<span class="go">   0] Pass - 1,4..1,8</span>
+</code></pre>
+</div>
+
+<p>You can search for a node by location. This is done by either searching for a node contained <strong>INSIDE</strong> a given location
+using <code><a href="../fst.html#FST.find_in_loc">fst.fst.FST.find_in_loc()</a></code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="c1"># or you can search for a node entirely CONTAINING THE LOCATION</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">find_loc_in</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
-<span class="s1">&#39;a &lt; b&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">find_in_loc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>  <span class="c1"># &quot;a &lt; b&quot;</span>
+<span class="go">&lt;Compare 0,3..0,8&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="c1"># will return nodes matching the location EXACTLY by default</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">find_loc_in</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
-<span class="s1">&#39;a &lt; b&#39;</span>
+<p>It doesn't have to be exact, this function returns whole first node found in location.</p>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="c1"># but that can be disabled</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">find_loc_in</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">allow_exact</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span>
-<span class="s1">&#39;if a &lt; b:</span><span class="se">\n</span><span class="s1">    print(a)&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">find_in_loc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>  <span class="c1"># &quot;f a &lt; b:\n    pa&quot;</span>
+<span class="go">&lt;Compare 0,3..0,8&gt;</span>
+</code></pre>
+</div>
+
+<p>Returns only entire nodes in location.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">find_in_loc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>  <span class="c1"># &quot; &lt; b&quot;</span>
+<span class="go">&lt;Lt 0,5..0,6&gt;</span>
+</code></pre>
+</div>
+
+<p>Or you can search for a node which <strong>CONTAINS</strong> a location using <code><a href="../fst.html#FST.find_loc_in">fst.fst.FST.find_loc_in()</a></code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">find_loc_in</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>  <span class="c1"># &quot; &lt;&quot;</span>
+<span class="go">&lt;Compare 0,3..0,8&gt;</span>
+</code></pre>
+</div>
+
+<p>Will include nodes which match the location <strong>EXACTLY</strong> by default.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">find_loc_in</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>  <span class="c1"># &quot;a &lt; b&quot;</span>
+<span class="go">&lt;Compare 0,3..0,8&gt;</span>
+</code></pre>
+</div>
+
+<p>But that can be disabled.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">find_loc_in</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">allow_exact</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># &quot;a &lt; b&quot;</span>
+<span class="go">&lt;If ROOT 0,0..1,8&gt;</span>
+</code></pre>
+</div>
+
+<p>The <code><a href="../fst.html#FST.find_loc">fst.fst.FST.find_loc()</a></code> method combines the two efficiently to find a node which is either the first one completely
+contained in the location, or if no candidate for that then one which contains the location. This is a more general
+"find me the node associated with this location" function.</p>
+
+<p>Here it gives the containing node while <code>find_in_loc()</code> gives nothing at all.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">loc</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>  <span class="c1"># empty space in Compare</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">find_loc</span><span class="p">(</span><span class="o">*</span><span class="n">loc</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span><span class="se">\n</span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">find_loc_in</span><span class="p">(</span><span class="o">*</span><span class="n">loc</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span><span class="se">\n</span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">find_in_loc</span><span class="p">(</span><span class="o">*</span><span class="n">loc</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="go">f.find_loc(*loc) = &lt;Compare 0,3..0,8&gt;</span>
+<span class="go">f.find_loc_in(*loc) = &lt;Compare 0,3..0,8&gt;</span>
+<span class="go">f.find_in_loc(*loc) = None</span>
+</code></pre>
+</div>
+
+<p>And here it gives the contained <code>Name</code> same as <code>find_in_loc()</code>, which gave nothing above but gives the "closest" node
+here.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">loc</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>  <span class="c1"># first element of Compare including whitespace after &quot;a &quot;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">find_loc</span><span class="p">(</span><span class="o">*</span><span class="n">loc</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span><span class="se">\n</span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">find_loc_in</span><span class="p">(</span><span class="o">*</span><span class="n">loc</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span><span class="se">\n</span><span class="si">{</span><span class="n">f</span><span class="o">.</span><span class="n">find_in_loc</span><span class="p">(</span><span class="o">*</span><span class="n">loc</span><span class="p">)</span><span class="w"> </span><span class="si">= }</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="go">f.find_loc(*loc) = &lt;Name 0,3..0,4&gt;</span>
+<span class="go">f.find_loc_in(*loc) = &lt;Compare 0,3..0,8&gt;</span>
+<span class="go">f.find_in_loc(*loc) = &lt;Name 0,3..0,4&gt;</span>
 </code></pre>
 </div>
 </div>

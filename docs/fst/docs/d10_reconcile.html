@@ -54,7 +54,7 @@
 <p>To be able to execute the examples, import this.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 </code></pre>
 </div>
 
@@ -66,55 +66,95 @@ control, this can easily be done. Rather it is to allow other code to modify <co
 can.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... if i:  # 1</span>
-<span class="s1">...   j = [f(), # 2</span>
-<span class="s1">...        g() # 3</span>
-<span class="s1">...       ]</span>
-<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">if i:  # 1</span>
+<span class="gp">... </span><span class="s1">  j = [f(), # 2</span>
+<span class="gp">... </span><span class="s1">       g() # 3</span>
+<span class="gp">... </span><span class="s1">      ]</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">m</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">mark</span><span class="p">()</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">mark</span><span class="p">()</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="c1"># notice the &#39;f.a&#39;, all changes must happen in the `AST` nodes</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;pure_ast&#39;</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Assign</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)],</span> <span class="n">value</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">3</span><span class="p">)))</span>
+<p>Notice the <code>f.a</code>, all changes must happen in the <code>AST</code> tree.</p>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">reconcile</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;pure_ast&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
-<span class="k">if</span> <span class="n">i</span><span class="p">:</span>  <span class="c1"># 1</span>
-  <span class="n">j</span> <span class="o">=</span> <span class="p">[</span><span class="n">pure_ast</span><span class="p">,</span> <span class="c1"># 2</span>
-       <span class="n">g</span><span class="p">()</span> <span class="c1"># 3</span>
-      <span class="p">]</span>
-  <span class="n">k</span> <span class="o">=</span> <span class="mi">3</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Assign</span><span class="p">(</span><span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">)],</span> <span class="n">value</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">3</span><span class="p">)))</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">reconcile</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">if i:  # 1</span>
+<span class="go">  j = [pure_ast, # 2</span>
+<span class="go">       g() # 3</span>
+<span class="go">      ]</span>
+<span class="go">  k = 3</span>
 </code></pre>
 </div>
 
 <p>You can reuse and mix nodes from the original tree.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">m</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">mark</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">mark</span><span class="p">()</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s1">&#39;pure_ast&#39;</span><span class="p">))</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># we put the same AST node in two different places</span>
-<span class="kc">True</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">elts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s1">&#39;pure_ast&#39;</span><span class="p">))</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">reconcile</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+<p>We put the same <code>AST</code> node in two different places, this is allowed in for <code>reconcile()</code>.</p>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
-<span class="k">if</span> <span class="n">i</span><span class="p">:</span>  <span class="c1"># 1</span>
-  <span class="n">j</span> <span class="o">=</span> <span class="p">[</span><span class="n">pure_ast</span><span class="p">,</span> <span class="c1"># 2</span>
-       <span class="n">g</span><span class="p">(),</span> <span class="s1">&#39;pure_ast&#39;</span>
-      <span class="p">]</span>
-  <span class="n">k</span> <span class="o">=</span> <span class="mi">3</span>
-  <span class="n">j</span> <span class="o">=</span> <span class="p">[</span><span class="n">pure_ast</span><span class="p">,</span> <span class="c1"># 2</span>
-       <span class="n">g</span><span class="p">(),</span> <span class="s1">&#39;pure_ast&#39;</span>
-      <span class="p">]</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+<span class="go">True</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># the same AST used in two places is deduplicated</span>
-<span class="kc">False</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">reconcile</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">if i:  # 1</span>
+<span class="go">  j = [pure_ast, # 2</span>
+<span class="go">       g(), &#39;pure_ast&#39;</span>
+<span class="go">      ]</span>
+<span class="go">  k = 3</span>
+<span class="go">  j = [pure_ast, # 2</span>
+<span class="go">       g(), &#39;pure_ast&#39;</span>
+<span class="go">      ]</span>
+</code></pre>
+</div>
+
+<p>That same <code>AST</code> used in two places was deduplicated.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+<span class="go">False</span>
 </code></pre>
 </div>
 
@@ -123,95 +163,133 @@ can.</p>
 original tree that was marked, for now.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">m</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">mark</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">mark</span><span class="p">()</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;l=&quot;formatting&quot;  # stays&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;m  =  &quot;formatting&quot;  # disappears&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;formatting&quot;</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;l=&quot;formatting&quot;  # stays&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">reconcile</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;m  =  &quot;formatting&quot;  # disappears&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
-<span class="k">if</span> <span class="n">i</span><span class="p">:</span>  <span class="c1"># 1</span>
-  <span class="n">j</span> <span class="o">=</span> <span class="p">[</span><span class="n">pure_ast</span><span class="p">,</span> <span class="c1"># 2</span>
-       <span class="n">g</span><span class="p">(),</span> <span class="s1">&#39;pure_ast&#39;</span>
-      <span class="p">]</span>
-  <span class="n">k</span> <span class="o">=</span> <span class="mi">3</span>
-  <span class="n">j</span> <span class="o">=</span> <span class="p">[</span><span class="n">pure_ast</span><span class="p">,</span> <span class="c1"># 2</span>
-       <span class="n">g</span><span class="p">(),</span> <span class="s1">&#39;pure_ast&#39;</span>
-      <span class="p">]</span>
-  <span class="n">l</span><span class="o">=</span><span class="s2">&quot;formatting&quot;</span>  <span class="c1"># stays</span>
-  <span class="n">m</span> <span class="o">=</span> <span class="s1">&#39;formatting&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;formatting&quot;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">reconcile</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">if i:  # 1</span>
+<span class="go">  j = [pure_ast, # 2</span>
+<span class="go">       g(), &#39;pure_ast&#39;</span>
+<span class="go">      ]</span>
+<span class="go">  k = 3</span>
+<span class="go">  j = [pure_ast, # 2</span>
+<span class="go">       g(), &#39;pure_ast&#39;</span>
+<span class="go">      ]</span>
+<span class="go">  l=&quot;formatting&quot;  # stays</span>
+<span class="go">  m = &#39;formatting&#39;</span>
 </code></pre>
 </div>
 
 <p>But if the goal is to change a small part of a larger program then this should work well enough.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... from .data import (</span>
-<span class="s1">...     scalar1,  # this is 60</span><span class="si">% f</span><span class="s1">or now</span>
-<span class="s1">...     scalar2,  # the rest</span>
-<span class="s1">... )</span>
-<span class="s1">...</span>
-<span class="s1">... def compute(x, y):</span>
-<span class="s1">...     # Compute the weighted sum</span>
-<span class="s1">...     result = (</span>
-<span class="s1">...         x * 0.6  # x gets 60%</span>
-<span class="s1">...         + y * 0.4  # y gets 40%</span>
-<span class="s1">...     )</span>
-<span class="s1">...</span>
-<span class="s1">...     # Apply thresholding</span>
-<span class="s1">...     if (</span>
-<span class="s1">...         result &gt; 10</span>
-<span class="s1">...         # cap high values</span>
-<span class="s1">...         and result &lt; 100  # ignore overflow</span>
-<span class="s1">...     ):</span>
-<span class="s1">...         return result</span>
-<span class="s1">...     else:</span>
-<span class="s1">...         return 0</span>
-<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">from .data import (</span>
+<span class="gp">... </span><span class="s1">    scalar1,  # this is 60</span><span class="si">% f</span><span class="s1">or now</span>
+<span class="gp">... </span><span class="s1">    scalar2,  # the rest</span>
+<span class="gp">... </span><span class="s1">)</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1">def compute(x, y):</span>
+<span class="gp">... </span><span class="s1">    # Compute the weighted sum</span>
+<span class="gp">... </span><span class="s1">    result = (</span>
+<span class="gp">... </span><span class="s1">        x * 0.6  # x gets 60%</span>
+<span class="gp">... </span><span class="s1">        + y * 0.4  # y gets 40%</span>
+<span class="gp">... </span><span class="s1">    )</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1">    # Apply thresholding</span>
+<span class="gp">... </span><span class="s1">    if (</span>
+<span class="gp">... </span><span class="s1">        result &gt; 10</span>
+<span class="gp">... </span><span class="s1">        # cap high values</span>
+<span class="gp">... </span><span class="s1">        and result &lt; 100  # ignore overflow</span>
+<span class="gp">... </span><span class="s1">    ):</span>
+<span class="gp">... </span><span class="s1">        return result</span>
+<span class="gp">... </span><span class="s1">    else:</span>
+<span class="gp">... </span><span class="s1">        return 0</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">m</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">mark</span><span class="p">()</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">mark</span><span class="p">()</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">right</span> <span class="o">=</span> <span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;scalar1&#39;</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">right</span> <span class="o">=</span> <span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;scalar2&#39;</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">orelse</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-<span class="o">...</span>     <span class="n">If</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">Compare</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;result&#39;</span><span class="p">),</span>
-<span class="o">...</span>                     <span class="n">ops</span><span class="o">=</span><span class="p">[</span><span class="n">Gt</span><span class="p">()],</span>
-<span class="o">...</span>                     <span class="n">comparators</span><span class="o">=</span><span class="p">[</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)]),</span>
-<span class="o">...</span>        <span class="n">body</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">orelse</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
-<span class="o">...</span>        <span class="n">orelse</span><span class="o">=</span><span class="p">[</span><span class="n">Return</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">UnaryOp</span><span class="p">(</span><span class="n">op</span><span class="o">=</span><span class="n">USub</span><span class="p">(),</span> <span class="n">operand</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)))]</span>
-<span class="o">...</span>     <span class="p">)</span>
-<span class="o">...</span> <span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">left</span><span class="o">.</span><span class="n">right</span> <span class="o">=</span> <span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;scalar1&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">reconcile</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">right</span><span class="o">.</span><span class="n">right</span> <span class="o">=</span> <span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;scalar2&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="c1"># we print like this because of doctest</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l</span> <span class="ow">or</span> <span class="s1">&#39;.&#39;</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">lines</span><span class="p">))</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.data</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">scalar1</span><span class="p">,</span>  <span class="c1"># this is 60% for now</span>
-    <span class="n">scalar2</span><span class="p">,</span>  <span class="c1"># the rest</span>
-<span class="p">)</span>
-<span class="o">.</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">compute</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-    <span class="c1"># Compute the weighted sum</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">x</span> <span class="o">*</span> <span class="n">scalar1</span>  <span class="c1"># x gets 60%</span>
-        <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="n">scalar2</span>  <span class="c1"># y gets 40%</span>
-    <span class="p">)</span>
-<span class="o">.</span>
-    <span class="c1"># Apply thresholding</span>
-    <span class="k">if</span> <span class="p">(</span>
-        <span class="n">result</span> <span class="o">&gt;</span> <span class="mi">10</span>
-        <span class="c1"># cap high values</span>
-        <span class="ow">and</span> <span class="n">result</span> <span class="o">&lt;</span> <span class="mi">100</span>  <span class="c1"># ignore overflow</span>
-    <span class="p">):</span>
-        <span class="k">return</span> <span class="n">result</span>
-    <span class="k">elif</span> <span class="n">result</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">return</span> <span class="mi">0</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">orelse</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+<span class="gp">... </span>    <span class="n">If</span><span class="p">(</span><span class="n">test</span><span class="o">=</span><span class="n">Compare</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;result&#39;</span><span class="p">),</span>
+<span class="gp">... </span>                    <span class="n">ops</span><span class="o">=</span><span class="p">[</span><span class="n">Gt</span><span class="p">()],</span>
+<span class="gp">... </span>                    <span class="n">comparators</span><span class="o">=</span><span class="p">[</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)]),</span>
+<span class="gp">... </span>       <span class="n">body</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">orelse</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
+<span class="gp">... </span>       <span class="n">orelse</span><span class="o">=</span><span class="p">[</span><span class="n">Return</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">UnaryOp</span><span class="p">(</span><span class="n">op</span><span class="o">=</span><span class="n">USub</span><span class="p">(),</span> <span class="n">operand</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)))]</span>
+<span class="gp">... </span>    <span class="p">)</span>
+<span class="gp">... </span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">reconcile</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>We print like this because of doctest, just ignore.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l</span> <span class="ow">or</span> <span class="s1">&#39;.&#39;</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">lines</span><span class="p">))</span>
+<span class="go">from .data import (</span>
+<span class="go">    scalar1,  # this is 60% for now</span>
+<span class="go">    scalar2,  # the rest</span>
+<span class="go">)</span>
+<span class="go">.</span>
+<span class="go">def compute(x, y):</span>
+<span class="go">    # Compute the weighted sum</span>
+<span class="go">    result = (</span>
+<span class="go">        x * scalar1  # x gets 60%</span>
+<span class="go">        + y * scalar2  # y gets 40%</span>
+<span class="go">    )</span>
+<span class="go">.</span>
+<span class="go">    # Apply thresholding</span>
+<span class="go">    if (</span>
+<span class="go">        result &gt; 10</span>
+<span class="go">        # cap high values</span>
+<span class="go">        and result &lt; 100  # ignore overflow</span>
+<span class="go">    ):</span>
+<span class="go">        return result</span>
+<span class="go">    elif result &gt; 1:</span>
+<span class="go">        return 0</span>
+<span class="go">    else:</span>
+<span class="go">        return -1</span>
 </code></pre>
 </div>
 

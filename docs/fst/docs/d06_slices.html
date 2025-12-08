@@ -30,6 +30,8 @@
   <ul>
     <li><a href="#slices">Slices</a></li>
     <li><a href="#non-standard-ast-slices">Non-standard <code>AST</code> slices</a></li>
+    <li><a href="#boolop-and-compare-slices">BoolOp and Compare "slices"</a></li>
+    <li><a href="#normalization">Normalization</a></li>
     <li><a href="#normalization-of-set">Normalization of <code>Set</code></a></li>
     <li><a href="#normalization-of-other-nodes">Normalization of other nodes</a></li>
     <li><a href="#put-as-onetrue">Put as <code>one=True</code></a></li>
@@ -59,7 +61,7 @@
 <p>To be able to execute the examples, import this.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fst</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 </code></pre>
 </div>
 
@@ -68,35 +70,50 @@
 <p><code>AST</code> nodes may have individual <code>AST</code> children like <code>FunctionDef.returns</code> or lists of <code>AST</code> children like
 <code>FunctionDef.body</code>. Any single node or a single element of a list of children can be gotten individually as one node,
 but getting a sequence of nodes from a list of children requires a slice operation via <code>get_slice()</code> or <code>put_slice()</code>
-(or the equivalent attribute accesses).</p>
+(or the equivalent attribute accesses). (<code><a href="../fst.html#FST.get_slice">fst.fst.FST.get_slice()</a></code>, <code><a href="../fst.html#FST.put_slice">fst.fst.FST.put_slice()</a></code>)</p>
 
 <p>In many cases a slice of a list of children of a node can be returned as the same type of node. For example a slice of a
 <code>Tuple</code> is a <code>Tuple</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">node</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(1, 2, 3, 4)&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(1, 2, 3, 4)&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Tuple</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">12</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+<span class="go">&lt;Tuple ROOT 0,0..0,12&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">slice</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">slc</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="nb">slice</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Tuple</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">6</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="p">)</span>
+<span class="go">&lt;Tuple ROOT 0,0..0,6&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="nb">slice</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(2, 3)</span>
 </code></pre>
 </div>
 
 <p>This same type is used to put back to the node.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="nb">slice</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Tuple</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">18</span><span class="o">&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="n">slc</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">&lt;Tuple ROOT 0,0..0,18&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(1, 2, 3, 2, 3, 4)</span>
 </code></pre>
 </div>
 
@@ -104,25 +121,34 @@ but getting a sequence of nodes from a list of children requires a slice operati
 put.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;(4, 5)&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[1, 4, 5, 3]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{1, 2, 3}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[4, 5]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">}</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{1, 2, 3}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[4, 5]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{1, 4, 5, 3}</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(1, 2, 3)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{4, 5}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;(1, 2, 3)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{4, 5}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">(1, 4, 5, 3)</span>
 </code></pre>
 </div>
 
 <p>But return their own type on a get.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3, 4]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">List</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">6</span><span class="o">&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[1, 2, 3, 4]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">&lt;List ROOT 0,0..0,6&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{1, 2, 3, 4}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Set</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">6</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{1, 2, 3, 4}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">&lt;Set ROOT 0,0..0,6&gt;</span>
 </code></pre>
 </div>
 
@@ -130,61 +156,94 @@ put.</p>
 children separated by commas in a syntax similar to tuples, e.g. <code>Delete.targets</code> or <code>Global.names</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">slice</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;del a, b, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">()</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="nb">slice</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Tuple</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">7</span><span class="o">&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="nb">slice</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">slc</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;del a, b, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">()</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">slice</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="p">)</span>
+<span class="go">&lt;Tuple ROOT 0,0..0,7&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="nb">slice</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Tuple</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">7</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a, b, c</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="nb">slice</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span>
+<p>Note that a <code>Global</code> node stores its names as primitive strings. The slice operations coerce these to and from <code>Name</code>
+<code>AST</code> nodes.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">slc</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;global a, b, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="p">)</span>
+<span class="go">&lt;Tuple ROOT 0,0..0,7&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a, b, c</span>
 </code></pre>
 </div>
 
 <p>These will also generally accept any of the three sequence types for a slice put.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">parent</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;del a, b, c&#39;</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">parent</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Delete</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">14</span><span class="o">&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">del</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">c</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">parent</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;del a, b, c&#39;</span><span class="p">)</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">parent</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;nonlocal a, b, c&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">parent</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">&lt;Delete ROOT 0,0..0,14&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">parent</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{x, y}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Nonlocal</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">19</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">del a, x, y, c</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">nonlocal</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">c</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">parent</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;nonlocal a, b, c&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">parent</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{x, y}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">&lt;Nonlocal ROOT 0,0..0,19&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">nonlocal a, x, y, c</span>
 </code></pre>
 </div>
 
 <p>If a type does not have comma separators but can be represented by a standard <code>AST</code> for its slice, that type is used.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">slice</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case a | b | c | d: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">slc</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case a | b | c | d: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="nb">slice</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">MatchOr</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="p">)</span>
+<span class="go">&lt;MatchOr ROOT 0,0..0,5&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="nb">slice</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">b</span> <span class="o">|</span> <span class="n">c</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">b | c</span>
 </code></pre>
 </div>
 
@@ -192,145 +251,541 @@ children separated by commas in a syntax similar to tuples, e.g. <code>Delete.ta
 
 <p>Nodes which have list children which do not match tuple comma-separated syntax or <code>expr</code> child type may be returned in
 custom <code>AST</code> node container. These custom types are meant to allow slice operations while preserving source format
-(since we will not be adding or removing commas or other separators in order to preserve format). For example:</p>
+(since we will not be adding or removing commas or other separators in order to preserve format).</p>
+
+<p>For example, <code>Assign.targets</code>:</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">slice</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = b = c = d = e&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;targets&#39;</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="nb">slice</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">_Assign_targets</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">7</span><span class="o">&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="nb">slice</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">c</span> <span class="o">=</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">slc</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = b = c = d = e&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;targets&#39;</span><span class="p">)</span>
 </code></pre>
 </div>
 
-<p>Or for example the <code>Import</code> and <code>ImportFrom</code> <code>names</code> field. It is a comma separated list of what look like expressions
-but they are actually aliases which may have an <code>asname</code>, which is not allowed in standard <code>Tuples</code>, so they are
-returned in their own slice type.</p>
-
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">slice</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;import a, b as c, d&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">()</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="nb">slice</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">_aliases</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">12</span><span class="o">&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="nb">slice</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="k">as</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="p">)</span>
+<span class="go">&lt;_Assign_targets ROOT 0,0..0,7&gt;</span>
 </code></pre>
 </div>
 
-<p>These special slices can be put to and gotten from just like any other node.</p>
-
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">slice</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;import a, b as c, d&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">()</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">slice</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;u as v, x as y&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">_aliases</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">25</span><span class="o">&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="nb">slice</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">_aliases</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">25</span><span class="o">&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="nb">slice</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="k">as</span> <span class="n">c</span><span class="p">,</span> <span class="n">u</span> <span class="k">as</span> <span class="n">v</span><span class="p">,</span> <span class="n">x</span> <span class="k">as</span> <span class="n">y</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="nb">slice</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">b</span> <span class="k">as</span> <span class="n">c</span><span class="p">,</span> <span class="n">u</span> <span class="k">as</span> <span class="n">v</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">b = c =</span>
 </code></pre>
 </div>
 
-<h2 id="normalization-of-set">Normalization of <code>Set</code></h2>
+<p><code>ListComp.generators</code> (and other comprehensions):</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">slc</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[i for k in l for j in k for i in j]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="s1">&#39;generators&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="p">)</span>
+<span class="go">&lt;_comprehensions ROOT 0,0..0,32&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">for k in l for j in k for i in j</span>
+</code></pre>
+</div>
+
+<p><code>comprehension.ifs</code>:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">slc</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[i for a, b, c in j if a if b if c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">generators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="s1">&#39;ifs&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="p">)</span>
+<span class="go">&lt;_comprehension_ifs ROOT 0,0..0,14&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">if a if b if c</span>
+</code></pre>
+</div>
+
+<p><code>FunctionDef.decorator_list</code> (and other defs):</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">slc</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">@deco_a</span>
+<span class="gp">... </span><span class="s1">@deco_b()</span>
+<span class="gp">... </span><span class="s1">@deco_c  # comment</span>
+<span class="gp">... </span><span class="s1">def f(): pass</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="s1">&#39;decorator_list&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="p">)</span>
+<span class="go">&lt;_decorator_list ROOT 0,0..2,18&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">@deco_a</span>
+<span class="go">@deco_b()</span>
+<span class="go">@deco_c  # comment</span>
+</code></pre>
+</div>
+
+<p>The <code>Import</code> and <code>ImportFrom</code> <code>names</code> field is a comma separated list of what look like expressions but they are
+actually aliases. They have an <code>asname</code>, which is not allowed in standard <code>Tuples</code>, so they are returned in their own
+slice type <code>_aliases</code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">slc</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;import a, b as c, d&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="p">)</span>
+<span class="go">&lt;_aliases ROOT 0,0..0,12&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a, b as c, d</span>
+</code></pre>
+</div>
+
+<p>You can get and put to these non-standard slices just like normal nodes.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">slc</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;import a, b as c, d&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">slc</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;u as v, x as y&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">&lt;_aliases ROOT 0,0..0,25&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="p">)</span>
+<span class="go">&lt;_aliases ROOT 0,0..0,25&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a, b as c, u as v, x as y</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">b as c, u as v</span>
+</code></pre>
+</div>
+
+<p>Or.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">slc</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[i for a, b, c in j if a if b if c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">generators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="s1">&#39;ifs&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">slc</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">_comprehension_ifs - ROOT 0,0..0,14</span>
+<span class="go">  .ifs[3]</span>
+<span class="go">   0] Name &#39;a&#39; Load - 0,3..0,4</span>
+<span class="go">   1] Name &#39;b&#39; Load - 0,8..0,9</span>
+<span class="go">   2] Name &#39;c&#39; Load - 0,13..0,14</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">slc</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">_comprehension_ifs - ROOT 0,0..0,9</span>
+<span class="go">  .ifs[2]</span>
+<span class="go">   0] Name &#39;b&#39; Load - 0,3..0,4</span>
+<span class="go">   1] Name &#39;c&#39; Load - 0,8..0,9</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">slc</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;if x if y&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+<span class="go">_comprehension_ifs - ROOT 0,0..0,19</span>
+<span class="go">  .ifs[4]</span>
+<span class="go">   0] Name &#39;a&#39; Load - 0,3..0,4</span>
+<span class="go">   1] Name &#39;x&#39; Load - 0,8..0,9</span>
+<span class="go">   2] Name &#39;y&#39; Load - 0,13..0,14</span>
+<span class="go">   3] Name &#39;c&#39; Load - 0,18..0,19</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">slc</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">if a if x if y if c</span>
+</code></pre>
+</div>
+
+<h2 id="boolop-and-compare-slices">BoolOp and Compare "slices"</h2>
+
+<p>You can also slice these node types as they contain lists of child nodes, though there are some extra parameters since
+the children are separated by operators (same operator in the case of <code>BoolOp</code> and possibly different ones for
+<code>Compare</code>). The "slices" in this case are just the same kind of node as is being sliced.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a and b and c and d&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">b and c</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x and y&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">x and y and d</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b == c &gt; d&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">b == c</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x != y&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">x != y &gt; d</span>
+</code></pre>
+</div>
+
+<p>The first new parameter which applies to these two node types is <code>op_side</code> which determines what side of a slice any
+extra operator is to be found when we need to delete or insert an extra. The possible values are <code>'left'</code> and <code>'right'</code>
+which mean exactly that.</p>
+
+<p>When deleting a slice from one of these nodes an extra operator will need to be deleted (otherwise you would wind up
+with something like <code>a and and d</code>) and this option determines which side it is removed from.</p>
+
+<p>This does actually matter for a <code>BoolOp</code> regardless of the fact that all the operators are the same because of
+placement.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">a</span>
+<span class="gp">... </span><span class="s1">and  # left</span>
+<span class="gp">... </span><span class="s1">b</span>
+<span class="gp">... </span><span class="s1">and  # right</span>
+<span class="gp">... </span><span class="s1">c</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">op_side</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a</span>
+<span class="go">and  # right</span>
+<span class="go">c</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">a</span>
+<span class="gp">... </span><span class="s1">and  # left</span>
+<span class="gp">... </span><span class="s1">b</span>
+<span class="gp">... </span><span class="s1">and  # right</span>
+<span class="gp">... </span><span class="s1">c</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">op_side</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a</span>
+<span class="go">and  # left</span>
+<span class="go">c</span>
+</code></pre>
+</div>
+
+<p>And in the case of a <code>Compare</code> it really matters as the operators can all be different.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b &gt; c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">op_side</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a &gt; c</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b &gt; c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">op_side</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a &lt; c</span>
+</code></pre>
+</div>
+
+<p>The <code>op_side</code> option is a conisdered a hint and it may be overridden without error by the location of the slice being
+deleted or inserted.</p>
+
+<p>If inserting to a <code>Compare</code> an extra operator <strong>MUST</strong> be added and the operator must be specified either in the source
+being put to the compare or as a separate <code>op</code> option.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;== x&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a == x &lt; b</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x ==&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a &lt; x == b</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">op_side</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="s1">&#39;==&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a == x &lt; b</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">op_side</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="s1">&#39;==&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a &lt; x == b</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>  <span class="c1"># no extra op in source or `op` option</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">exc</span><span class="p">))</span>
+<span class="go">ValueError(&quot;insertion to Compare requires and &#39;op&#39; extra operator to insert&quot;)</span>
+</code></pre>
+</div>
+
+<p>If replacing then this is optional.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b &gt; c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a &lt; x &gt; c</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b &gt; c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;== x&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a == x &gt; c</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b &gt; c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x ==&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a &lt; x == c</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b &gt; c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">op_side</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="s1">&#39;==&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a == x &gt; c</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b &gt; c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">op_side</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">,</span> <span class="n">op</span><span class="o">=</span><span class="s1">&#39;==&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a &lt; x == c</span>
+</code></pre>
+</div>
+
+<h2 id="normalization">Normalization</h2>
 
 <p>For some types of <code>AST</code> nodes it is permissible to remove all children and still remain valid, for example <code>Tuple</code> or
 <code>List</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, b, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>  <span class="c1"># delete</span>
-<span class="p">()</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">node</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># cut</span>
-<span class="o">&lt;</span><span class="n">List</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">9</span><span class="o">&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[]</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a, b, c&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>  <span class="c1"># delete</span>
+<span class="go">()</span>
 </code></pre>
 </div>
 
-<p>Note how for the unparenthesized <code>Tuple</code> parentheses were added for the empty <code>Tuple</code> to be valid. In general if
-something is needed on a slice operation (or single operation for that matter) in order to result in a valid <code>AST</code> then
-it is done. This can include adding delimiters, grouping parentheses, line continuations, etc...</p>
-
-<p>In extreme cases, like deleting all elements from a <code>Set</code>, an element may be added to the <code>Set</code> node as a child to
-maintain its parsability and validity as a <code>AST</code>.</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">node</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b, c}&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># cut</span>
+<span class="go">&lt;List ROOT 0,0..0,9&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Set</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">5</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[]</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">{</span><span class="o">*</span><span class="p">()}</span>
+<p>Note how for the unparenthesized <code>Tuple</code> parentheses were added for the empty <code>Tuple</code> to be valid. However deleting all
+field elements from a node does not always result in a valid <code>AST</code>. <code><a href="../../fst.html">fst</a></code> allows you to delete all the elements in these
+cases for editing purposes and it is on you to ensure that something is put there before writing the code out for use.</p>
+
+<p>You can delete all the statements from bodies (or <code>orelse</code> or <code>handlers</code> or <code>finalbody</code> or <code>Match.cases</code>).</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">if 1:</span>
+<span class="gp">... </span><span class="s1">    pass</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">if 1:</span>
+</code></pre>
+</div>
+
+<p>Or from individual statements which normally can't have empty child lists.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;del a, b, c&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">&lt;Delete ROOT 0,0..0,4&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">src</span><span class="p">))</span>
+<span class="go">&#39;del &#39;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = b = c = val&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;targets&#39;</span><span class="p">)</span>
+<span class="go">&lt;Assign ROOT 0,0..0,4&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">src</span><span class="p">))</span>
+<span class="go">&#39; val&#39;</span>
+</code></pre>
+</div>
+
+<p>Doing this with a <code>Set</code> winds up with empty curlies which look like a <code>Dict</code> (but can still be used normally for editing
+as a <code>Set</code>).</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b, c}&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">&lt;Set ROOT 0,0..0,2&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{}</span>
+</code></pre>
+</div>
+
+<p>In all cases these result in invalid <code>AST</code> nodes but is allowed with the understanding that valid data will be replaced
+eventually, preferably sooner rather than later as not all operations are valid on invalid <code>AST</code> nodes.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x, y&#39;</span><span class="p">)</span>
+<span class="go">&lt;Set ROOT 0,0..0,6&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{x, y}</span>
+</code></pre>
+</div>
+
+<p>If you wish to avoid invalid <code>AST</code> nodes completely then you can pass the <code>norm=True</code> option. For most nodes this will
+simply disallow operations which would leave an invalid node. However there are some <code>AST</code> types which have special
+handling.</p>
+
+<h2 id="normalization-of-set">Normalization of <code>Set</code></h2>
+
+<p>In extreme cases, like deleting all elements from a <code>Set</code>, you can use the <code>norm=True</code> option to maintain its
+parsability and validity as a <code>AST</code>.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b, c}&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">&lt;Set ROOT 0,0..0,5&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">{*()}</span>
 </code></pre>
 </div>
 
 <p>Likewise getting an empty slice from a <code>Set</code> will also give you a "normalized" slice.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>  <span class="c1"># empty slice form a list</span>
-<span class="p">[]</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b, c}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>  <span class="c1"># empty slice from a set</span>
-<span class="p">{</span><span class="o">*</span><span class="p">()}</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>  <span class="c1"># empty slice form a list</span>
+<span class="go">[]</span>
 </code></pre>
 </div>
-
-<p>This may not be desirable and you may wish to use an actual empty <code>Set</code> for a bit. You can do this by passing the option
-<code>norm=False</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">slice</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b, c}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="nb">slice</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Set</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="nb">slice</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">{}</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;{a, b, c}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>  <span class="c1"># empty slice from a set</span>
+<span class="go">{*()}</span>
 </code></pre>
 </div>
-
-<p>Note that a <code>Set</code> was returned but with zero children. This is not a valid <code>AST</code> node and if you attempt to reparse this
-it will parse as an empty <code>Dict</code>. For this reason normalization should be used for intermediate objects which you may
-want to operate on without having to deal with special rules and not for source code you are writing out.</p>
 
 <p>The standard <code>norm</code> option applies to three cases of normalization. The normalization of the target object (what you are
 putting to or cutting from), the returned object and a possible object which may be being put. The <code>norm</code> option sets
 all of these to the same value, but you can set them individually as <code>norm_self</code>, <code>norm_get</code> or <code>norm_put</code>.</p>
 
-<p>In general, invalid <code>AST</code> slices like the above empty <code>Set</code> are accepted and processed correctly as sources to a slice
-put, but there may be cases where you need to specify whether the special rules should apply or not. For example when
-putting an "empty" <code>Set</code> of the form <code>{*()}</code>, it will be treated as empty with normalization on.</p>
+<p>In general, invalid <code>AST</code> slices like an empty <code>Set</code> from <code>norm=False</code> are accepted and processed correctly as sources
+to a slice put. But for "normalized" slices there may be cases where you need to specify whether the special rules
+should apply or not. When putting an "empty" <code>Set</code> of the form <code>{*()}</code>, it will be treated as empty with normalization
+on.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, b, c]</span>
 </code></pre>
 </div>
 
 <p>If you want it to be treated literally and not interpreted as an empty <code>Set</code> then pass either <code>norm=False</code> or
-<code>norm_put=False</code>.</p>
+<code>norm_put=False</code> (<code>norm=False</code> is the default if not passing <code>norm</code> at all).</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm_put</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="o">*</span><span class="p">(),</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;{*()}&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, *(), b, c]</span>
 </code></pre>
 </div>
 
 <p>To finish off the <code>Set</code> normalization, there is an option <code>set_norm</code> which may be <code>True</code>, <code>False</code>, <code>'star'</code>, <code>'call'</code> or
 <code>'both'</code>. This specifies what should be used for <code>Set</code> normalization with the options allowing empty starred immediate
-objects or the <code>set()</code> function call (which you may not use if it is shadowed in the code being worked on).</p>
+objects <code>*()</code>, <code>*[]</code>, <code>*{}</code> or the <code>set()</code> function call (which you may not use if it is shadowed in the code being
+worked on).</p>
 
 <h2 id="normalization-of-other-nodes">Normalization of other nodes</h2>
 
@@ -338,19 +793,28 @@ objects or the <code>set()</code> function call (which you may not use if it is 
 allowed to delete all the children of that node even if it is not valid to do so. For example:</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">node</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = b = val&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a = b = val&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="k">try</span><span class="p">:</span>
-<span class="o">...</span>     <span class="n">node</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;targets&#39;</span><span class="p">)</span>  <span class="c1"># try to delete everything</span>
-<span class="o">...</span> <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-<span class="o">...</span>     <span class="nb">print</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
-<span class="n">cannot</span> <span class="n">delete</span> <span class="nb">all</span> <span class="n">Assign</span><span class="o">.</span><span class="n">targets</span> <span class="n">without</span> <span class="n">norm_self</span><span class="o">=</span><span class="kc">False</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">node</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;targets&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># try to delete everything</span>
+<span class="gp">... </span><span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+<span class="go">cannot delete all Assign.targets without norm_self=False</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;targets&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Assign</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">4</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;targets&#39;</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">&lt;Assign ROOT 0,0..0,4&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
- <span class="n">val</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">src</span><span class="p">))</span>
+<span class="go">&#39; val&#39;</span>
 </code></pre>
 </div>
 
@@ -358,57 +822,95 @@ allowed to delete all the children of that node even if it is not valid to do so
 but can be put to normally.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x = y =&#39;</span><span class="p">,</span> <span class="s1">&#39;targets&#39;</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Assign</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..0</span><span class="p">,</span><span class="mi">11</span><span class="o">&gt;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x = y =&#39;</span><span class="p">,</span> <span class="s1">&#39;targets&#39;</span><span class="p">)</span>
+<span class="go">&lt;Assign ROOT 0,0..0,11&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">x</span> <span class="o">=</span> <span class="n">y</span> <span class="o">=</span> <span class="n">val</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">x = y = val</span>
+</code></pre>
+</div>
+
+<p>For a <code>BoolOp</code> or <code>Compare</code> normalization will convert a single element "slice" to just the element that was left.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a or b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>  <span class="c1"># invalid</span>
+<span class="go">BoolOp - ROOT 0,0..0,1</span>
+<span class="go">  .op Or</span>
+<span class="go">  .values[1]</span>
+<span class="go">   0] Name &#39;a&#39; Load - 0,0..0,1</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a or b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>  <span class="c1"># valid</span>
+<span class="go">Name &#39;a&#39; Load - ROOT 0,0..0,1</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>  <span class="c1"># invalid</span>
+<span class="go">Compare - ROOT 0,0..0,1</span>
+<span class="go">  .left Name &#39;a&#39; Load - 0,0..0,1</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;a &lt; b&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>  <span class="c1"># valid</span>
+<span class="go">Name &#39;a&#39; Load - ROOT 0,0..0,1</span>
 </code></pre>
 </div>
 
 <h2 id="put-as-onetrue">Put as <code>one=True</code></h2>
 
-<p>When putting a slice the node being put is normally considered to be a slice of the type needed to put to the target
+<p>When putting a slice, the node being put is normally considered to be a slice of the type needed to put to the target
 and the elements specified from <code>start</code> to <code>stop</code> will be replaced with the elements of the slice. For example:</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, x, y, c]</span>
 </code></pre>
 </div>
 
-<p>In this case the elements <code>x, y</code> replaced the element <code>b</code> in the target. If instead of replacing with the elements of the
-node being put you wish to just put the node itself then specify <code>one=True</code>.</p>
+<p>In this case the elements <code>x, y</code> replaced the element <code>b</code> in the target. If instead of replacing with the elements of
+the node being put you wish to just put the node itself then specify <code>one=True</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">c</span><span class="p">]</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, [x, y], c]</span>
 </code></pre>
 </div>
 
 <p>The same thing could have been accomplished just by putting the node with a normal <code>put()</code> to the second element of the
-target. The reason the <code>one</code> option exists is when you want to replace or delete multiple elements with a single "one".</p>
+target. The reason the <code>one</code> option exists is when you want to replace multiple elements with a single "one" instead of
+using that one as a slice.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]]</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;[x, y]&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">[a, [x, y]]</span>
+</code></pre>
+</div>
+
+<p>This is allowed anywhere where the single element being put would be allowed to replace multiple elements.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;del a, b, c, d&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x, y&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">del a, (x, y), d</span>
+</code></pre>
+</div>
+
+<p>It also allows putting things which are not slices of the given type to a slice range withing the target.</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case a | b | c | d: pass&#39;</span><span class="p">)</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;[a, b, c]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="p">[</span><span class="n">c</span><span class="p">]</span>
-</code></pre>
-</div>
-
-<p>This is allowed anywhere where the single element being put would be allowed to replace multiple elements. For example:</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;del a, b, c, d&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x, y&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="k">del</span> <span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">d</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">FST</span><span class="p">(</span><span class="s1">&#39;case a | b | c | d: pass&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x as y&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
-<span class="n">a</span> <span class="o">|</span> <span class="p">(</span><span class="n">x</span> <span class="k">as</span> <span class="n">y</span><span class="p">)</span> <span class="o">|</span> <span class="n">d</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">put_slice</span><span class="p">(</span><span class="s1">&#39;x as y&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">one</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">src</span><span class="p">)</span>
+<span class="go">a | (x as y) | d</span>
 </code></pre>
 </div>
 
@@ -430,27 +932,30 @@ specify just the leading trivia or both the leading and trailing.</p>
 to copy or cut or delete.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">lines</span><span class="p">))</span>  <span class="c1"># helper</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">lines</span><span class="p">))</span>  <span class="c1"># helper</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">parent</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... pre_stmt</span>
-<span class="s1">...</span>
-<span class="s1">... # pre-comment 1a</span>
-<span class="s1">... # pre-comment 1b</span>
-<span class="s1">...</span>
-<span class="s1">...</span>
-<span class="s1">... # pre-comment 2a</span>
-<span class="s1">... # pre-comment 2b</span>
-<span class="s1">... target_stmt</span>
-<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">parent</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">pre_stmt</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1"># pre-comment 1a</span>
+<span class="gp">... </span><span class="s1"># pre-comment 1b</span>
+<span class="gp">...</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1"># pre-comment 2a</span>
+<span class="gp">... </span><span class="s1"># pre-comment 2b</span>
+<span class="gp">... </span><span class="s1">target_stmt</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
 </code></pre>
 </div>
 
 <p><code>trivia=False</code> will just give you the individual element.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
-<span class="s1">&#39;target_stmt&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="go">&#39;target_stmt&#39;</span>
 </code></pre>
 </div>
 
@@ -458,15 +963,18 @@ to copy or cut or delete.</p>
 comments.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-<span class="s1">&#39;# pre-comment 2a&#39;</span>
-<span class="s1">&#39;# pre-comment 2b&#39;</span>
-<span class="s1">&#39;target_stmt&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="go">&#39;# pre-comment 2a&#39;</span>
+<span class="go">&#39;# pre-comment 2b&#39;</span>
+<span class="go">&#39;target_stmt&#39;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;block&#39;</span><span class="p">))</span>  <span class="c1"># &#39;block&#39; same as True for leading comments</span>
-<span class="s1">&#39;# pre-comment 2a&#39;</span>
-<span class="s1">&#39;# pre-comment 2b&#39;</span>
-<span class="s1">&#39;target_stmt&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;block&#39;</span><span class="p">))</span>  <span class="c1"># &#39;block&#39; same as True for leading comments</span>
+<span class="go">&#39;# pre-comment 2a&#39;</span>
+<span class="go">&#39;# pre-comment 2b&#39;</span>
+<span class="go">&#39;target_stmt&#39;</span>
 </code></pre>
 </div>
 
@@ -474,63 +982,81 @@ comments.</p>
 start of block statement or top of module).</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">))</span>  <span class="c1"># &#39;block&#39; same as True for leading comments</span>
-<span class="s1">&#39;# pre-comment 1a&#39;</span>
-<span class="s1">&#39;# pre-comment 1b&#39;</span>
-<span class="s1">&#39;&#39;</span>
-<span class="s1">&#39;&#39;</span>
-<span class="s1">&#39;# pre-comment 2a&#39;</span>
-<span class="s1">&#39;# pre-comment 2b&#39;</span>
-<span class="s1">&#39;target_stmt&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">))</span>  <span class="c1"># &#39;block&#39; same as True for leading comments</span>
+<span class="go">&#39;# pre-comment 1a&#39;</span>
+<span class="go">&#39;# pre-comment 1b&#39;</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;# pre-comment 2a&#39;</span>
+<span class="go">&#39;# pre-comment 2b&#39;</span>
+<span class="go">&#39;target_stmt&#39;</span>
 </code></pre>
 </div>
 
 <p>If the operation is a cut then these lines will be removed from the target.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">node</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;block&#39;</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Expr</span> <span class="n">ROOT</span> <span class="mi">2</span><span class="p">,</span><span class="mf">0..2</span><span class="p">,</span><span class="mi">11</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;block&#39;</span><span class="p">)</span>
+<span class="go">&lt;Expr ROOT 2,0..2,11&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-<span class="s1">&#39;pre_stmt&#39;</span>
-<span class="s1">&#39;&#39;</span>
-<span class="s1">&#39;# pre-comment 1a&#39;</span>
-<span class="s1">&#39;# pre-comment 1b&#39;</span>
-<span class="s1">&#39;&#39;</span>
-<span class="s1">&#39;&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+<span class="go">&#39;pre_stmt&#39;</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;# pre-comment 1a&#39;</span>
+<span class="go">&#39;# pre-comment 1b&#39;</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;&#39;</span>
 </code></pre>
 </div>
 
 <p>Likewise on a put the trivia specifies what to overwrite.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">node</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;put_stmt&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Module</span> <span class="n">ROOT</span> <span class="mi">0</span><span class="p">,</span><span class="mf">0..2</span><span class="p">,</span><span class="mi">8</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;put_stmt&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+<span class="go">&lt;Module ROOT 0,0..2,8&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-<span class="s1">&#39;pre_stmt&#39;</span>
-<span class="s1">&#39;&#39;</span>
-<span class="s1">&#39;put_stmt&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+<span class="go">&#39;pre_stmt&#39;</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;put_stmt&#39;</span>
 </code></pre>
 </div>
 
 <p>If you wish to include empty lines to overwrite then add them to the trivia option like so:</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">node</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;block-&#39;</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Expr</span> <span class="n">ROOT</span> <span class="mi">2</span><span class="p">,</span><span class="mf">0..2</span><span class="p">,</span><span class="mi">11</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;block-&#39;</span><span class="p">)</span>
+<span class="go">&lt;Expr ROOT 2,0..2,11&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-<span class="s1">&#39;pre_stmt&#39;</span>
-<span class="s1">&#39;&#39;</span>
-<span class="s1">&#39;# pre-comment 1a&#39;</span>
-<span class="s1">&#39;# pre-comment 1b&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+<span class="go">&#39;pre_stmt&#39;</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;# pre-comment 1a&#39;</span>
+<span class="go">&#39;# pre-comment 1b&#39;</span>
 </code></pre>
 </div>
 
@@ -538,31 +1064,43 @@ start of block statement or top of module).</p>
 delete.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">node</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;block-1&#39;</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Expr</span> <span class="n">ROOT</span> <span class="mi">2</span><span class="p">,</span><span class="mf">0..2</span><span class="p">,</span><span class="mi">11</span><span class="o">&gt;</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-<span class="s1">&#39;pre_stmt&#39;</span>
-<span class="s1">&#39;&#39;</span>
-<span class="s1">&#39;# pre-comment 1a&#39;</span>
-<span class="s1">&#39;# pre-comment 1b&#39;</span>
-<span class="s1">&#39;&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 </code></pre>
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">node</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;block-1&#39;</span><span class="p">)</span>
+<span class="go">&lt;Expr ROOT 2,0..2,11&gt;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;block-2&#39;</span><span class="p">)</span>
-<span class="o">&lt;</span><span class="n">Expr</span> <span class="n">ROOT</span> <span class="mi">2</span><span class="p">,</span><span class="mf">0..2</span><span class="p">,</span><span class="mi">11</span><span class="o">&gt;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+<span class="go">&#39;pre_stmt&#39;</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;# pre-comment 1a&#39;</span>
+<span class="go">&#39;# pre-comment 1b&#39;</span>
+<span class="go">&#39;&#39;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-<span class="s1">&#39;pre_stmt&#39;</span>
-<span class="s1">&#39;&#39;</span>
-<span class="s1">&#39;# pre-comment 1a&#39;</span>
-<span class="s1">&#39;# pre-comment 1b&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;block-2&#39;</span><span class="p">)</span>
+<span class="go">&lt;Expr ROOT 2,0..2,11&gt;</span>
+</code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+<span class="go">&#39;pre_stmt&#39;</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;# pre-comment 1a&#39;</span>
+<span class="go">&#39;# pre-comment 1b&#39;</span>
 </code></pre>
 </div>
 
@@ -570,32 +1108,41 @@ delete.</p>
 not returned in the gotten node.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">node</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;block-1&#39;</span><span class="p">))</span>
-<span class="s1">&#39;# pre-comment 2a&#39;</span>
-<span class="s1">&#39;# pre-comment 2b&#39;</span>
-<span class="s1">&#39;target_stmt&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 </code></pre>
 </div>
 
-<p>If you want the space then use a plus <code>'+'</code> instead of the minus.</p>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;block-1&#39;</span><span class="p">))</span>
+<span class="go">&#39;# pre-comment 2a&#39;</span>
+<span class="go">&#39;# pre-comment 2b&#39;</span>
+<span class="go">&#39;target_stmt&#39;</span>
+</code></pre>
+</div>
+
+<p>If you want the space then use a plus <code>'+'</code> instead of the minus <code>'+'</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">node</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;block+1&#39;</span><span class="p">))</span>
-<span class="s1">&#39;&#39;</span>
-<span class="s1">&#39;# pre-comment 2a&#39;</span>
-<span class="s1">&#39;# pre-comment 2b&#39;</span>
-<span class="s1">&#39;target_stmt&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;block+1&#39;</span><span class="p">))</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;# pre-comment 2a&#39;</span>
+<span class="go">&#39;# pre-comment 2b&#39;</span>
+<span class="go">&#39;target_stmt&#39;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-<span class="s1">&#39;pre_stmt&#39;</span>
-<span class="s1">&#39;&#39;</span>
-<span class="s1">&#39;# pre-comment 1a&#39;</span>
-<span class="s1">&#39;# pre-comment 1b&#39;</span>
-<span class="s1">&#39;&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+<span class="go">&#39;pre_stmt&#39;</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;# pre-comment 1a&#39;</span>
+<span class="go">&#39;# pre-comment 1b&#39;</span>
+<span class="go">&#39;&#39;</span>
 </code></pre>
 </div>
 
@@ -605,34 +1152,40 @@ target.</p>
 <p>All of this applies to all statement-ish operations but also expression-ish slice operations as well.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">node</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;[</span>
-<span class="s1">... pre_expr,</span>
-<span class="s1">...</span>
-<span class="s1">... # pre-comment 1a</span>
-<span class="s1">... # pre-comment 1b</span>
-<span class="s1">...</span>
-<span class="s1">...</span>
-<span class="s1">... # pre-comment 2a</span>
-<span class="s1">... # pre-comment 2b</span>
-<span class="s1">... target_expr,</span>
-<span class="s1">... ]&#39;&#39;&#39;</span><span class="p">)</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">node</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;[</span>
+<span class="gp">... </span><span class="s1">pre_expr,</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1"># pre-comment 1a</span>
+<span class="gp">... </span><span class="s1"># pre-comment 1b</span>
+<span class="gp">...</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1"># pre-comment 2a</span>
+<span class="gp">... </span><span class="s1"># pre-comment 2b</span>
+<span class="gp">... </span><span class="s1">target_expr,</span>
+<span class="gp">... </span><span class="s1">]&#39;&#39;&#39;</span><span class="p">)</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;block+1&#39;</span><span class="p">))</span>
-<span class="s1">&#39;[&#39;</span>
-<span class="s1">&#39;&#39;</span>
-<span class="s1">&#39;# pre-comment 2a&#39;</span>
-<span class="s1">&#39;# pre-comment 2b&#39;</span>
-<span class="s1">&#39;target_expr,&#39;</span>
-<span class="s1">&#39;]&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="s1">&#39;block+1&#39;</span><span class="p">))</span>
+<span class="go">&#39;[&#39;</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;# pre-comment 2a&#39;</span>
+<span class="go">&#39;# pre-comment 2b&#39;</span>
+<span class="go">&#39;target_expr,&#39;</span>
+<span class="go">&#39;]&#39;</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-<span class="s1">&#39;[&#39;</span>
-<span class="s1">&#39;pre_expr&#39;</span>
-<span class="s1">&#39;&#39;</span>
-<span class="s1">&#39;# pre-comment 1a&#39;</span>
-<span class="s1">&#39;# pre-comment 1b&#39;</span>
-<span class="s1">&#39;&#39;</span>
-<span class="s1">&#39;]&#39;</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+<span class="go">&#39;[&#39;</span>
+<span class="go">&#39;pre_expr&#39;</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;# pre-comment 1a&#39;</span>
+<span class="go">&#39;# pre-comment 1b&#39;</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;]&#39;</span>
 </code></pre>
 </div>
 
@@ -648,71 +1201,74 @@ line as the element or last element of the slice, not any other comments of a fo
 is normally <code>'block'</code> for leading trivia.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">lines</span><span class="p">))</span>  <span class="c1"># helper</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">lines</span><span class="p">))</span>  <span class="c1"># helper</span>
+</code></pre>
+</div>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">parent</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">... target_stmt  # line-comment</span>
-<span class="s1">... # post-comment 1a</span>
-<span class="s1">... # post-comment 1b</span>
-<span class="s1">...</span>
-<span class="s1">...</span>
-<span class="s1">... # post-comment 2a</span>
-<span class="s1">... # post-comment 2b</span>
-<span class="s1">...</span>
-<span class="s1">... post_stmt</span>
-<span class="s1">... &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">parent</span> <span class="o">=</span> <span class="n">FST</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">target_stmt  # line-comment</span>
+<span class="gp">... </span><span class="s1"># post-comment 1a</span>
+<span class="gp">... </span><span class="s1"># post-comment 1b</span>
+<span class="gp">...</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1"># post-comment 2a</span>
+<span class="gp">... </span><span class="s1"># post-comment 2b</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1">post_stmt</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
 </code></pre>
 </div>
 
 <p>The default trailing trivia is <code>'line'</code>.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
-<span class="s1">&#39;target_stmt  # line-comment&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="go">&#39;target_stmt  # line-comment&#39;</span>
 </code></pre>
 </div>
 
 <p>You can turn that off.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">)))</span>
-<span class="s1">&#39;target_stmt&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">)))</span>
+<span class="go">&#39;target_stmt&#39;</span>
 </code></pre>
 </div>
 
 <p>Trailing block comment.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;block&#39;</span><span class="p">)))</span>
-<span class="s1">&#39;target_stmt  # line-comment&#39;</span>
-<span class="s1">&#39;# post-comment 1a&#39;</span>
-<span class="s1">&#39;# post-comment 1b&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;block&#39;</span><span class="p">)))</span>
+<span class="go">&#39;target_stmt  # line-comment&#39;</span>
+<span class="go">&#39;# post-comment 1a&#39;</span>
+<span class="go">&#39;# post-comment 1b&#39;</span>
 </code></pre>
 </div>
 
 <p>With space.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;block+1&#39;</span><span class="p">)))</span>
-<span class="s1">&#39;target_stmt  # line-comment&#39;</span>
-<span class="s1">&#39;# post-comment 1a&#39;</span>
-<span class="s1">&#39;# post-comment 1b&#39;</span>
-<span class="s1">&#39;&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;block+1&#39;</span><span class="p">)))</span>
+<span class="go">&#39;target_stmt  # line-comment&#39;</span>
+<span class="go">&#39;# post-comment 1a&#39;</span>
+<span class="go">&#39;# post-comment 1b&#39;</span>
+<span class="go">&#39;&#39;</span>
 </code></pre>
 </div>
 
 <p>All.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;all+&#39;</span><span class="p">)))</span>
-<span class="s1">&#39;target_stmt  # line-comment&#39;</span>
-<span class="s1">&#39;# post-comment 1a&#39;</span>
-<span class="s1">&#39;# post-comment 1b&#39;</span>
-<span class="s1">&#39;&#39;</span>
-<span class="s1">&#39;&#39;</span>
-<span class="s1">&#39;# post-comment 2a&#39;</span>
-<span class="s1">&#39;# post-comment 2b&#39;</span>
-<span class="s1">&#39;&#39;</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pp</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">trivia</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;all+&#39;</span><span class="p">)))</span>
+<span class="go">&#39;target_stmt  # line-comment&#39;</span>
+<span class="go">&#39;# post-comment 1a&#39;</span>
+<span class="go">&#39;# post-comment 1b&#39;</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;&#39;</span>
+<span class="go">&#39;# post-comment 2a&#39;</span>
+<span class="go">&#39;# post-comment 2b&#39;</span>
+<span class="go">&#39;&#39;</span>
 </code></pre>
 </div>
 

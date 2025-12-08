@@ -29,27 +29,6 @@
             <h2>API Documentation</h2>
                 <ul class="memberlist">
             <li>
-                    <a class="variable" href="#Self">Self</a>
-            </li>
-            <li>
-                    <a class="variable" href="#FSTRING_START">FSTRING_START</a>
-            </li>
-            <li>
-                    <a class="variable" href="#FSTRING_END">FSTRING_END</a>
-            </li>
-            <li>
-                    <a class="variable" href="#TSTRING_START">TSTRING_START</a>
-            </li>
-            <li>
-                    <a class="variable" href="#TSTRING_END">TSTRING_END</a>
-            </li>
-            <li>
-                    <a class="variable" href="#FTSTRING_START_TOKENS">FTSTRING_START_TOKENS</a>
-            </li>
-            <li>
-                    <a class="variable" href="#FTSTRING_END_TOKENS">FTSTRING_END_TOKENS</a>
-            </li>
-            <li>
                     <a class="class" href="#NodeError">NodeError</a>
                             <ul class="memberlist">
                 </ul>
@@ -71,7 +50,7 @@
                                 <a class="function" href="#astfield.get">get</a>
                         </li>
                         <li>
-                                <a class="function" href="#astfield.get_no_raise">get_no_raise</a>
+                                <a class="function" href="#astfield.get_default">get_default</a>
                         </li>
                         <li>
                                 <a class="function" href="#astfield.set">set</a>
@@ -147,90 +126,6 @@
                 
                 
             </section>
-                <section id="Self">
-                    <div class="attr variable">
-            <span class="name">Self</span>        =
-<span class="default_value">typing.Self</span>
-
-        
-    </div>
-    <a class="headerlink" href="#Self"></a>
-    
-    
-
-                </section>
-                <section id="FSTRING_START">
-                    <div class="attr variable">
-            <span class="name">FSTRING_START</span>        =
-<span class="default_value">59</span>
-
-        
-    </div>
-    <a class="headerlink" href="#FSTRING_START"></a>
-    
-    
-
-                </section>
-                <section id="FSTRING_END">
-                    <div class="attr variable">
-            <span class="name">FSTRING_END</span>        =
-<span class="default_value">61</span>
-
-        
-    </div>
-    <a class="headerlink" href="#FSTRING_END"></a>
-    
-    
-
-                </section>
-                <section id="TSTRING_START">
-                    <div class="attr variable">
-            <span class="name">TSTRING_START</span>        =
-<span class="default_value">None</span>
-
-        
-    </div>
-    <a class="headerlink" href="#TSTRING_START"></a>
-    
-    
-
-                </section>
-                <section id="TSTRING_END">
-                    <div class="attr variable">
-            <span class="name">TSTRING_END</span>        =
-<span class="default_value">None</span>
-
-        
-    </div>
-    <a class="headerlink" href="#TSTRING_END"></a>
-    
-    
-
-                </section>
-                <section id="FTSTRING_START_TOKENS">
-                    <div class="attr variable">
-            <span class="name">FTSTRING_START_TOKENS</span>        =
-<span class="default_value">(59,)</span>
-
-        
-    </div>
-    <a class="headerlink" href="#FTSTRING_START_TOKENS"></a>
-    
-    
-
-                </section>
-                <section id="FTSTRING_END_TOKENS">
-                    <div class="attr variable">
-            <span class="name">FTSTRING_END_TOKENS</span>        =
-<span class="default_value">(61,)</span>
-
-        
-    </div>
-    <a class="headerlink" href="#FTSTRING_END_TOKENS"></a>
-    
-    
-
-                </section>
                 <section id="NodeError">
                     <div class="attr class">
             
@@ -315,19 +210,19 @@
 
 
                             </div>
-                            <div id="astfield.get_no_raise" class="classattr">
+                            <div id="astfield.get_default" class="classattr">
                                 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">get_no_raise</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">parent</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>,</span><span class="param">	<span class="n">default</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="n">ellipsis</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">complex</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">False</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="n">ellipsis</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">complex</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+        <span class="name">get_default</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">parent</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span>,</span><span class="param">	<span class="n">default</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="n">ellipsis</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">complex</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">False</span></span><span class="return-annotation">) -> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span> <span class="o">|</span> <span class="n">ellipsis</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">complex</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
 
         
     </div>
-    <a class="headerlink" href="#astfield.get_no_raise"></a>
+    <a class="headerlink" href="#astfield.get_default"></a>
     
             <div class="docstring"><p>Get child node at this field in the given <code>parent</code>. Return <code>default</code> if not found instead of raising
-<code>AttributError</code> or <code>IndexError</code>, <code>False</code> works well because not normally found locations where <code>AST</code> nodes can
- reside in <code>AST</code> trees.</p>
+<code>AttributError</code> or <code>IndexError</code>, <code>False</code> works well because not normally found in locations where <code>AST</code> nodes
+can reside in <code>AST</code> trees.</p>
 </div>
 
 
