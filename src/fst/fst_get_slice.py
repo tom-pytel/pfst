@@ -192,14 +192,15 @@ def _bounds_decorator_list(self: fst.FST, start: int = 0) -> tuple[int, int, int
 
 def _bounds_generators(self: fst.FST, start: int = 0) -> tuple[int, int, int, int]:
     ast = self.a
+    ast_cls = ast.__class__
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    if not (is_special := (ast.__class__ is _comprehensions)):
+    if not (is_special := (ast_cls is _comprehensions)):
         bound_end_col -= 1
 
     if start:
         _, _, bound_ln, bound_col = ast.generators[start - 1].f.loc
-    elif ast.__class__ is DictComp:
+    elif ast_cls is DictComp:
         _, _, bound_ln, bound_col = ast.value.f.pars()
     elif not is_special:  # ListComp, SetComp, GeneratorExp
         _, _, bound_ln, bound_col = ast.elt.f.pars()
@@ -1314,7 +1315,8 @@ def _get_slice_Boolop_values(
     # include location of possible extra operator on either side of slice
 
     lines = self.root._lines
-    sep = 'and' if ast.op.__class__ is And else 'or'
+    op_cls = ast.op.__class__
+    sep = 'and' if op_cls is And else 'or'
 
     op_side_left = _get_option_op_side(is_first, is_last, options)
 
@@ -1335,7 +1337,7 @@ def _get_slice_Boolop_values(
     # do the thing
 
     asts = _cut_or_copy_asts(start, stop, 'values', cut, body)
-    ret_ast = BoolOp(op=ast.op.__class__(), values=asts)
+    ret_ast = BoolOp(op=op_cls(), values=asts)
 
     fst_ = get_slice_nosep(self, start, stop, len_body, cut, ret_ast,
                            loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col, options)
@@ -1850,6 +1852,7 @@ def _get_slice_type_params(
     options: Mapping[str, Any],
 ) -> fst.FST:
     ast = self.a
+    ast_cls = ast.__class__
     body = ast.type_params
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
@@ -1860,8 +1863,8 @@ def _get_slice_type_params(
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
     bound_func = (
-        fst.FST._loc_TypeAlias_type_params_brackets if ast.__class__ is TypeAlias else
-        fst.FST._loc_ClassDef_type_params_brackets if ast.__class__ is ClassDef else
+        fst.FST._loc_TypeAlias_type_params_brackets if ast_cls is TypeAlias else
+        fst.FST._loc_ClassDef_type_params_brackets if ast_cls is ClassDef else
         fst.FST._loc_FunctionDef_type_params_brackets  # FunctionDef, AsyncFunctionDef
     )
 

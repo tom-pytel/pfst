@@ -420,10 +420,10 @@ class FST:
             return self._lines[:]
         elif loc := self.bloc:
             return self.root._lines[loc.ln : loc.end_ln + 1]
-        elif (a := self.a).__class__ is arguments:  # arguments with no loc are empty arguments
+        elif (ast_cls := self.a.__class__) is arguments:  # arguments with no loc are empty arguments
             return ['']
         else:
-            return [s] if (s := OPCLS2STR.get(a.__class__, None)) else None  # for boolop only really, otherwise None
+            return [s] if (s := OPCLS2STR.get(ast_cls, None)) else None  # for boolop only really, otherwise None
 
     @property
     def src(self) -> builtins.str | None:
@@ -435,10 +435,10 @@ class FST:
             return '\n'.join(self._lines)
         elif loc := self.bloc:
             return self._get_src(*loc)
-        elif (a := self.a).__class__ is arguments:  # arguments with no loc are empty arguments
+        elif (ast_cls := self.a.__class__) is arguments:  # arguments with no loc are empty arguments
             return ''
         else:
-            return OPCLS2STR.get(a.__class__, None)  # for boolop only really, otherwise None
+            return OPCLS2STR.get(ast_cls, None)  # for boolop only really, otherwise None
 
     @property
     def has_own_loc(self) -> bool:
@@ -2535,23 +2535,25 @@ class FST:
         'call(i = (1 + 2))'
         """
 
+        ast_cls = self.a.__class__
+
         if not force:
             if (not self._is_parenthesizable()
                 or (is_atom := self._is_atom()) in (True, 'pars')
                 or (
-                    (is_atom or (self.a.__class__ is Starred and self.a.value.f._is_atom() in (True, 'pars')))
+                    (is_atom or (ast_cls is Starred and self.a.value.f._is_atom() in (True, 'pars')))
                     and self._is_enclosed_or_line()  # _is_enclosed_or_line() can return 'unenclosable'
             )):
                 return self
 
         with self._modifying():
-            if self.a.__class__ is Tuple:
+            if ast_cls is Tuple:
                 if not (force and self._is_parenthesized_tuple()):
                     self._delimit_node(whole)
 
                     return self
 
-            elif self.a.__class__ is MatchSequence:
+            elif ast_cls is MatchSequence:
                 if not (force and self._is_delimited_matchseq()):
                     self._delimit_node(whole, '[]')
 
@@ -2626,8 +2628,11 @@ class FST:
         'call((i for i in j))'
         """
 
-        if (a := self.a).__class__ is Starred:
-            if (value := a.value.f).pars().n:
+        ast = self.a
+        ast_cls = self.a.__class__
+
+        if ast_cls is Starred:
+            if (value := ast.value.f).pars().n:
                 with self._modifying():
                     value._unparenthesize_grouping(shared)
 
@@ -2642,12 +2647,12 @@ class FST:
                 self._unparenthesize_grouping(shared)
 
             if node:
-                if self.a.__class__ is Tuple:
+                if ast_cls is Tuple:
                     modifying = modifying or self._modifying().enter()
 
                     self._undelimit_node()
 
-                elif self.a.__class__ is MatchSequence:
+                elif ast_cls is MatchSequence:
                     modifying = modifying or self._modifying().enter()
 
                     self._undelimit_node('patterns')
@@ -3370,15 +3375,18 @@ class FST:
         'e'
         """
 
-        if (a := self.a).__class__ is Call and a.args and (keywords := a.keywords) and a.args[-1].__class__ is Starred:  # super-special case Call with args and keywords and a Starred, it could be anywhere in there, including after last keyword, defer to prev() logic
+        ast = self.a
+        ast_cls = ast.__class__
+
+        if ast_cls is Call and ast.args and (keywords := ast.keywords) and ast.args[-1].__class__ is Starred:  # super-special case Call with args and keywords and a Starred, it could be anywhere in there, including after last keyword, defer to prev() logic
             fst_ = FST(f := Pass(), self, astfield('keywords', len(keywords)))
             f.lineno = 0x7fffffffffffffff
             f.col_offset = 0
 
             return fst_.prev(with_loc)
 
-        for name in reversed(AST_FIELDS[(a := self.a).__class__]):
-            if child := getattr(a, name, None):
+        for name in reversed(AST_FIELDS[ast_cls]):
+            if child := getattr(ast, name, None):
                 if isinstance(child, AST):
                     if check_with_loc(f := child.f, with_loc):
                         return f

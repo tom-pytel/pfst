@@ -565,11 +565,14 @@ def is_valid_target(asts: AST | list[AST]) -> bool:
     stack = [asts] if isinstance(asts, AST) else list(asts)
 
     while stack:
-        if (a := stack.pop()).__class__ in (Tuple, List):
+        a = stack.pop()
+        a_cls = a.__class__
+
+        if a_cls in (Tuple, List):
             stack.extend(a.elts)
-        elif a.__class__ is Starred:
+        elif a_cls is Starred:
             stack.append(a.value)
-        elif a.__class__ not in (Name, Attribute, Subscript):
+        elif a_cls not in (Name, Attribute, Subscript):
             return False
 
     return True
@@ -582,9 +585,12 @@ def is_valid_del_target(asts: AST | list[AST]) -> bool:
     stack = [asts] if isinstance(asts, AST) else list(asts)
 
     while stack:
-        if (a := stack.pop()).__class__ in (Tuple, List):
+        a = stack.pop()
+        a_cls = a.__class__
+
+        if a_cls in (Tuple, List):
             stack.extend(a.elts)
-        elif a.__class__ not in (Name, Attribute, Subscript):
+        elif a_cls not in (Name, Attribute, Subscript):
             return False
 
     return True
@@ -603,24 +609,26 @@ def reduce_ast(ast: AST, multi_mod: bool | type[Exception] = False, reduce_Expr:
     - `reduce_Expr`: Whether to reduce a single `Expr` node and return its expression or not.
     """
 
-    if ast.__class__ in (Module, Interactive):
+    ast_cls = ast.__class__
+
+    if ast_cls in (Module, Interactive):
         if len(body := ast.body) == 1:
-            ast = body[0]
+            b0 = body[0]
 
-            return ast.value if ast.__class__ is Expr and reduce_Expr else ast
+            return b0.value if b0.__class__ is Expr and reduce_Expr else b0
 
-    elif ast.__class__ is _ExceptHandlers:
+    elif ast_cls is _ExceptHandlers:
         if len(body := ast.handlers) == 1:
             return body[0]
 
-    elif ast.__class__ is _match_cases:
+    elif ast_cls is _match_cases:
         if len(body := ast.cases) == 1:
             return body[0]
 
     else:
-        if ast.__class__ is Expr and reduce_Expr:
+        if ast_cls is Expr and reduce_Expr:
             return ast.value
-        elif ast.__class__ is Expression:
+        elif ast_cls is Expression:
             return ast.body
 
         return ast
@@ -686,11 +694,13 @@ def is_parsable(ast: AST) -> bool:
 def get_parse_mode(ast: AST) -> Literal['exec', 'eval', 'single']:
     """Return the original `mode` string that is used to parse to this `mod`."""
 
-    if ast.__class__ is Module:
+    ast_cls = ast.__class__
+
+    if ast_cls is Module:
         return 'exec'
-    if ast.__class__ is Expression:
+    if ast_cls is Expression:
         return 'eval'
-    if ast.__class__ is Interactive:
+    if ast_cls is Interactive:
         return 'single'
 
     return None
@@ -981,9 +991,11 @@ def set_ctx(asts: AST | list[AST], ctx: type[expr_context], *, doit: bool = True
 
     while stack:
         if a := stack.pop():  # might be `None`s in there
-            if ((is_seq := (a.__class__ in (Tuple, List)))
-                or (is_starred := (a.__class__ is Starred))
-                or a.__class__ in (Name, Subscript, Attribute)
+            a_cls = a.__class__
+
+            if ((is_seq := (a_cls in (Tuple, List)))
+                or (is_starred := (a_cls is Starred))
+                or a_cls in (Name, Subscript, Attribute)
             ) and not isinstance(a.ctx, ctx):
                 change = True
 
@@ -1012,16 +1024,18 @@ def get_func_class_or_ass_by_name(asts: Iterable[AST], name: str, ass: bool = Tr
     """
 
     for a in asts:
-        if a.__class__ in (FunctionDef, AsyncFunctionDef, ClassDef):
+        a_cls = a.__class__
+
+        if a_cls in (FunctionDef, AsyncFunctionDef, ClassDef):
             if a.name == name:
                 return a
 
         elif ass:
-            if a.__class__ is Assign:
+            if a_cls is Assign:
                 if any(t.__class__ is Name and t.id == name for t in a.targets):
                     return a
 
-            elif a.__class__ is AnnAssign:
+            elif a_cls is AnnAssign:
                 if (t := a.target).__class__ is Name and t.id == name:
                     return a
 
@@ -1032,11 +1046,13 @@ def last_block_header_child(ast: AST) -> AST | None:
     """Return last `AST` node in the block header before the ':'. Returns `None` for non-block nodes and things like
     `Try` and empty  `ExceptHandler` nodes or other block nodes which might have normally present fields missing."""
 
-    if ast.__class__ not in (FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith, Match,
-                            ExceptHandler, match_case):  # Try, TryStar open blocks but don't have children
+    ast_cls = ast.__class__
+
+    if ast_cls not in (FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith, Match,
+                       ExceptHandler, match_case):  # Try, TryStar open blocks but don't have children
         return None
 
-    for field in reversed(AST_FIELDS[ast.__class__]):
+    for field in reversed(AST_FIELDS[ast_cls]):
         if field in ('body', 'orelse', 'finalbody', 'handlers', 'cases') or not (child := getattr(ast, field, None)):
             continue
 

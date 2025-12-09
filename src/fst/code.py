@@ -499,7 +499,9 @@ def _code_as_op(
         if not isinstance(code, op_type):
             raise NodeError(f'expecting {op_type.__name__}, got {code.__class__.__name__}', rawable=True)
 
-        return fst.FST(code.__class__(), [OPCLS2STR[code.__class__]], None, parse_params=parse_params)  # don't use same AST as was passed in
+        code_cls = code.__class__
+
+        return fst.FST(code_cls(), [OPCLS2STR[code_cls]], None, parse_params=parse_params)  # don't use same AST as was passed in
 
     else:
         if isinstance(code, list):
@@ -583,22 +585,24 @@ def code_as_stmts(
             codea = Expr(value=codea, lineno=codea.lineno, col_offset=codea.col_offset,
                          end_lineno=codea.end_lineno, end_col_offset=codea.end_col_offset)
 
-        if codea.__class__ in ASTS_LEAF_STMT:
+        codea_cls = codea.__class__
+
+        if codea_cls in ASTS_LEAF_STMT:
             return fst.FST(Module(body=[codea], type_ignores=[]), code._lines, None, from_=code, lcopy=False)
 
-        if codea.__class__ is Module:
+        if codea_cls is Module:
             if all(a.__class__ in ASTS_LEAF_STMT for a in codea.body):
                 return code
 
             raise NodeError(f'expecting zero or more stmts, got '
                             f'[{shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]', rawable=True)
 
-        if codea.__class__ is Interactive:
+        if codea_cls is Interactive:
             code._unmake_fst_parents()
 
             return fst.FST(Module(body=code.body, type_ignores=[]), code._lines, None, from_=code, lcopy=False)
 
-        raise NodeError(f'expecting zero or more stmts, got {codea.__class__.__name__}', rawable=True)
+        raise NodeError(f'expecting zero or more stmts, got {codea_cls.__name__}', rawable=True)
 
     if isinstance(code, AST):
         if code.__class__ not in ASTS_LEAF_EXPR_STMT_OR_MOD:  # all these can be coerced into stmts
@@ -639,13 +643,14 @@ def code_as__ExceptHandlers(
             raise ValueError('expecting root node')
 
         codea = code.a
+        codea_cls = codea.__class__
 
-        if codea.__class__ is ExceptHandler:
+        if codea_cls is ExceptHandler:
             code = fst.FST(_ExceptHandlers(handlers=[codea], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                                            end_col_offset=ls[-1].lenbytes), ls, None, from_=code, lcopy=False)
 
-        elif codea.__class__ is not _ExceptHandlers:
-            raise NodeError(f'expecting zero or more ExceptHandlers, got {codea.__class__.__name__}')#, rawable=True)
+        elif codea_cls is not _ExceptHandlers:
+            raise NodeError(f'expecting zero or more ExceptHandlers, got {codea_cls.__name__}')#, rawable=True)
 
         error = NodeError
 
@@ -653,12 +658,14 @@ def code_as__ExceptHandlers(
         error = ParseError
 
         if isinstance(code, AST):
-            if code.__class__ is ExceptHandler:
+            code_cls = code.__class__
+
+            if code_cls is ExceptHandler:
                 handlers = [code]
-            elif code.__class__ is _ExceptHandlers:
+            elif code_cls is _ExceptHandlers:
                 handlers = code.handlers
             else:
-                raise NodeError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}')#, rawable=True)
+                raise NodeError(f'expecting zero or more ExceptHandlers, got {code_cls.__name__}')#, rawable=True)
 
             code = _fixing_unparse((TryStar if is_trystar else Try)(body=[Pass()],
                                                                     handlers=handlers, orelse=[], finalbody=[]))
@@ -694,13 +701,14 @@ def code_as__match_cases(
             raise ValueError('expecting root node')
 
         codea = code.a
+        codea_cls = codea.__class__
 
-        if codea.__class__ is match_case:
+        if codea_cls is match_case:
             return fst.FST(_match_cases(cases=[codea], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                                         end_col_offset=ls[-1].lenbytes), ls, None, from_=code, lcopy=False)
 
-        if codea.__class__ is not _match_cases:
-            raise NodeError(f'expecting zero or more match_cases, got {codea.__class__.__name__}', rawable=True)
+        if codea_cls is not _match_cases:
+            raise NodeError(f'expecting zero or more match_cases, got {codea_cls.__name__}', rawable=True)
 
         return code
 

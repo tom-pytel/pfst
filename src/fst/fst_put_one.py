@@ -255,13 +255,16 @@ def _validate_pattern_attr(self: fst.FST) -> Name:
         if self.pars().n:
             raise NodeError(f'cannot put parenthesized {self.a.__class__.__name__} to pattern expression', rawable=True)
 
-        if (a := self.a).__class__ is Name:
-            return a
+        ast = self.a
+        ast_cls = ast.__class__
 
-        if a.__class__ is not Attribute:
-            raise NodeError(f'cannot put {self.a.__class__.__name__} to pattern expression', rawable=True)
+        if ast_cls is Name:
+            return ast
 
-        self = a.value.f
+        if ast_cls is not Attribute:
+            raise NodeError(f'cannot put {ast_cls.__name__} to pattern expression', rawable=True)
+
+        self = ast.value.f
 
 
 def _is_valid_MatchClass_cls(ast: AST) -> bool:
@@ -409,8 +412,9 @@ def _put_one_op(
     childf._set_ast(codea)
 
     ast = self.a
+    ast_cls = ast.__class__
 
-    if (is_binop := (ast.__class__ is BinOp)) or ast.__class__ is UnaryOp:  # parenthesize if precedence requires according to new operator
+    if (is_binop := (ast_cls is BinOp)) or ast_cls is UnaryOp:  # parenthesize if precedence requires according to new operator
         if (parent := self.parent) and precedence_require_parens(ast, parent.a, *self.pfield) and not self.pars().n:
             self._parenthesize_grouping()
 
@@ -1332,13 +1336,16 @@ def _put_one_Subscript_value(
     above = ret
 
     while (parent := above.parent) and above.pfield.name in ('value', 'target'):
-        if (parenta := parent.a).__class__ is AnnAssign:
+        parenta = parent.a
+        parent_cls = parenta.__class__
+
+        if parent_cls is AnnAssign:
             if not above.pars().n:
                 _maybe_par_above(above, ret)
 
             break
 
-        if parenta.__class__ not in (Attribute, Subscript):
+        if parent_cls not in (Attribute, Subscript):
             break
 
         above = parent
@@ -1380,10 +1387,11 @@ def _put_one_List_elts(
 
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
+    ctx_cls = self.a.ctx.__class__
 
-    if (ctx := self.a.ctx).__class__ is not Load:  # only allow possible expression targets into an expression target
-        if not (is_valid_del_target if ctx.__class__ is Del else is_valid_target)(code.a):
-            raise NodeError(f"invalid expression for List {ctx.__class__.__name__} target")
+    if ctx_cls is not Load:  # only allow possible expression targets into an expression target
+        if not (is_valid_del_target if ctx_cls is Del else is_valid_target)(code.a):
+            raise NodeError(f"invalid expression for List {ctx_cls.__name__} target")
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
 
@@ -1414,9 +1422,11 @@ def _put_one_Tuple_elts(
         elif is_par:
             raise NodeError('cannot put Slice to parenthesized Subscript.slice Tuple')
 
-    if (ctx := ast.ctx).__class__ is not Load:  # only allow possible expression targets into an expression target
-        if not (is_valid_del_target if ctx.__class__ is Del else is_valid_target)(codea):
-            raise NodeError(f'invalid expression for Tuple {ctx.__class__.__name__} target')
+    ctx_cls = ast.ctx.__class__
+
+    if ctx_cls is not Load:  # only allow possible expression targets into an expression target
+        if not (is_valid_del_target if ctx_cls is Del else is_valid_target)(codea):
+            raise NodeError(f'invalid expression for Tuple {ctx_cls.__name__} target')
 
     if PYLT11:
         if put_star_to_unpar_slice := (is_slice and codea.__class__ is Starred and not is_par):
@@ -1712,11 +1722,14 @@ def _put_one_keyword_arg(
     """Don't allow delete keyword.arg if non-keywords follow."""
 
     if code is None and (parent := self.parent):
-        if (parenta := parent.a).__class__ is Call:
+        parenta = parent.a
+        parent_cls = parenta.__class__
+
+        if parent_cls is Call:
             if (args := parenta.args) and args[-1].f.loc > self.loc:
                 raise ValueError('cannot delete arg from Call.keywords at this location (non-keywords follow)')
 
-        elif parenta.__class__ is ClassDef:
+        elif parent_cls is ClassDef:
             if (bases := parenta.bases) and bases[-1].f.loc > self.loc:
                 raise ValueError('cannot delete arg from ClassDef.keywords at this location (non-keywords follow)')
 
@@ -2632,13 +2645,12 @@ def _put_one_raw(
     put_lines = code_as_lines(code)
 
     ast = self.a
+    ast_cls = ast.__class__
     root = self.root
     pars = bool(fst.FST.get_option('pars', options))
     loc = None
 
     if field.startswith('_'):  # special case field
-        ast_cls = ast.__class__
-
         if (is_dict := (ast_cls is Dict)) or ast_cls is MatchMapping:
             static = _PUT_ONE_HANDLERS[(ast_cls, 'keys')][-1]
             field = 'keys'
@@ -2663,8 +2675,8 @@ def _put_one_raw(
 
     if child is None and loc is None:
         if field == 'keys':  # only Dict and MatchMapping have this, will not have been processed as a special field above
-            loc = self._loc_maybe_key(idx, pars, ast.keys, ast.values if ast.__class__ is Dict else ast.patterns)
-        elif ast.__class__ is not MatchSingleton:  # breaking convention as always, `None` in a MatchSingleton.value is a value, not the absence of a value
+            loc = self._loc_maybe_key(idx, pars, ast.keys, ast.values if ast_cls is Dict else ast.patterns)
+        elif ast_cls is not MatchSingleton:  # breaking convention as always, `None` in a MatchSingleton.value is a value, not the absence of a value
             raise ValueError('cannot insert in raw put')
 
     childf = child.f if isinstance(child, AST) else None
@@ -2680,7 +2692,7 @@ def _put_one_raw(
                 if child.__class__ is arguments:  # empty arguments need special loc get
                     loc = childf._loc_arguments_empty()
 
-                    if ast.__class__ is Lambda:  # SUPER SPECIAL CASE, adding arguments to lambda without them, may need to prepend a space to source being put
+                    if ast_cls is Lambda:  # SUPER SPECIAL CASE, adding arguments to lambda without them, may need to prepend a space to source being put
                         if not put_lines[0][:1].isspace():
                             put_lines[0] =  ' ' + put_lines[0]
 

@@ -425,13 +425,14 @@ def _get_one_JoinedStr_TemplateStr_values(
 ) -> _GetOneRet:
     child, _ = _validate_get(self, idx, field)
     childf = child.f
+    child_cls = child.__class__
 
     ln, col, _, _ = self.loc
     lines = self.root._lines
     l = lines[ln]
     prefix = l[col : col + (4 if l.startswith('"""', col + 1) or l.startswith("'''", col + 1) else 2)]
 
-    if child.__class__ is Constant:
+    if child_cls is Constant:
         ret = fst.FST(copy_ast(child), Constant)  # this is because of implicit string madness
 
         # TODO: maybe pick this up again to return source-accurate string if possible?
@@ -457,9 +458,9 @@ def _get_one_JoinedStr_TemplateStr_values(
         #     ret._dedent_lns(indent, skip=1, docstr=False)
 
     else:
-        assert child.__class__ in (FormattedValue, Interpolation)
+        assert child_cls in (FormattedValue, Interpolation)
 
-        typ = 'f' if child.__class__ is FormattedValue else 't'
+        typ = 'f' if child_cls is FormattedValue else 't'
         prefix = typ + prefix[1:]
         fmt, _ = childf._make_fst_and_dedent(childf, copy_ast(child), childf.loc, prefix, prefix[1:], docstr=False)
         lprefix = len(prefix)

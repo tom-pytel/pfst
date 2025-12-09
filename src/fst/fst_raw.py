@@ -121,9 +121,11 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
         pend_ln = len(lines) - 1
         pend_col = len(lines[-1])
 
+    stmtish_cls = stmtisha.__class__
+
     if (  # special positional cases
-        (is_match_case := (stmtisha.__class__ is match_case)) and not pcol          # can't reparse match_case at column 0 using the simple method below because needs indent / dedent (no line 0 check because that implies col 0)
-        or (is_ExceptHandler := (stmtisha.__class__ is ExceptHandler)) and not pln  # can't reparse ExceptHandler at line 0 (implies column 0) because needs offsetting
+        (is_match_case := (stmtish_cls is match_case)) and not pcol          # can't reparse match_case at column 0 using the simple method below because needs indent / dedent (no line 0 check because that implies col 0)
+        or (is_ExceptHandler := (stmtish_cls is ExceptHandler)) and not pln  # can't reparse ExceptHandler at line 0 (implies column 0) because needs offsetting
     ):
         copy_lines = ([bistr('')] * pln +
                       lines[pln : pend_ln] +
@@ -219,7 +221,7 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
 
     # modifications only to block header line(s) of block statement
 
-    if stmtisha.__class__ is Match:
+    if stmtish_cls is Match:
         copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col])
 
         copy_lines.append(bistr(indent + ' case _: pass'))
@@ -227,9 +229,9 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
     else:
         copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col] + ' pass')
 
-        if stmtisha.__class__ is Try:  # this one is just silly, nothing to put there, but we cover it
+        if stmtish_cls is Try:  # this one is just silly, nothing to put there, but we cover it
             copy_lines.append(bistr(indent + 'except: pass'))
-        elif stmtisha.__class__ is TryStar:  # ditto
+        elif stmtish_cls is TryStar:  # ditto
             copy_lines.append(bistr(indent + 'except* Exception: pass'))
 
     copy = _reparse_raw_base(stmtish, new_lines, ln, col, end_ln, end_col, copy_lines, path, False, None,

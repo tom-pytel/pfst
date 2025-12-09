@@ -970,16 +970,18 @@ def _can_del_all(self: fst.FST, field: str, options: Mapping[str, Any]) -> bool:
     if field == 'orelse' or not get_option_overridable('norm', 'norm_self', options):
         return True
 
+    ast = self.a
+
     if field == 'body':
-        return self.a.__class__ is Module
+        return ast.__class__ is Module
 
     if field == 'cases':
-        return self.a.__class__ is _match_cases
+        return ast.__class__ is _match_cases
 
     if field == 'finalbody':
-        return bool(self.a.handlers)
+        return bool(ast.handlers)
 
-    return (a := self.a).__class__ is _ExceptHandlers or bool(a.finalbody)  # field == 'handlers'
+    return ast.__class__ is _ExceptHandlers or bool(ast.finalbody)  # field == 'handlers'
 
 
 # ......................................................................................................................
@@ -1084,6 +1086,7 @@ def _put_slice_stmtish_old(
     options: Mapping[str, Any],
 ) -> bool:
     ast = self.a
+    ast_cls = ast.__class__
     root = self.root
     body = getattr(ast, field)
     len_body = len(body)
@@ -1098,9 +1101,9 @@ def _put_slice_stmtish_old(
         if is_handlers := (field == 'handlers'):
             if len_slice == len_body and not isinstance(code, AST):  # if replacing all handlers then can change Try <-> TryStar according to what is being put (if we know, we don't know if code is AST)
                 is_trystar = None
-            elif ast.__class__ is Try:
+            elif ast_cls is Try:
                 is_trystar = False
-            elif ast.__class__ is TryStar:
+            elif ast_cls is TryStar:
                 is_trystar = True
             else:  # isinstance(ast, _ExceptHandlers)
                 is_trystar = body[0].f._is_except_star() if body else None
@@ -1128,7 +1131,7 @@ def _put_slice_stmtish_old(
         return True
 
     if (not put_fst or not put_body) and len_slice == len_body and not _can_del_all(self, field, options):
-        raise ValueError(f'cannot delete all elements from {ast.__class__.__name__}.{field} without norm_self=False')
+        raise ValueError(f'cannot delete all elements from {ast_cls.__name__}.{field} without norm_self=False')
 
     lines = root._lines
     fpre = body[start - 1].f if start else None
@@ -1190,8 +1193,8 @@ def _put_slice_stmtish_old(
             if not put_body and field in ('orelse', 'finalbody'):
                 raise ValueError(f"cannot insert empty statement into empty '{field}' field")
 
-            if ast.__class__ in (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, Match, ExceptHandler,
-                                match_case):  # only one block possible, 'body' or 'cases'
+            if ast_cls in (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, Match, ExceptHandler,
+                                 match_case):  # only one block possible, 'body' or 'cases'
                 block_loc = fstloc(*self.bloc[2:], *next_bound_step(self))  # end of bloc will be just past ':'
                 is_last_child = True
 
@@ -1201,7 +1204,7 @@ def _put_slice_stmtish_old(
                 block_loc = fstloc(end_ln, end_col, end_ln, end_col)
                 is_last_child = True
 
-            elif ast.__class__ in (For, AsyncFor, While, If):  # 'body' or 'orelse'
+            elif ast_cls in (For, AsyncFor, While, If):  # 'body' or 'orelse'
                 if field == 'orelse':
                     is_last_child = True
 
@@ -1221,7 +1224,7 @@ def _put_slice_stmtish_old(
                         is_last_child = True
 
             else:  # isinstance(ast, (Try, TryStar))
-                assert ast.__class__ in (Try, TryStar)
+                assert ast_cls in (Try, TryStar)
 
                 if field == 'finalbody':
                     is_last_child = True
@@ -1319,10 +1322,10 @@ def _put_slice_stmtish_old(
 
         self._make_fst_tree(stack)
 
-        if is_handlers and is_trystar is None and ast.__class__ is not _ExceptHandlers:  # we may have to change Try <-> TryStar if put ExceptHandlers and all handlers replaced
+        if is_handlers and is_trystar is None and ast_cls is not _ExceptHandlers:  # we may have to change Try <-> TryStar if put ExceptHandlers and all handlers replaced
             is_except_star = body[0].f._is_except_star()
 
-            if is_except_star != (ast.__class__ is TryStar):  # need to swap?
+            if is_except_star != (ast_cls is TryStar):  # need to swap?
                 new_type = TryStar if is_except_star else Try
                 new_ast = new_type(body=ast.body, handlers=body, orelse=ast.orelse, finalbody=ast.finalbody,
                                    lineno=ast.lineno, col_offset=ast.col_offset,
@@ -1381,7 +1384,8 @@ def _maybe_del_trailing_newline(self: fst.FST, old_last_line: str, put_fst_end_n
 
     root = self.root
     roota = root.a
-    is_special = roota.__class__ in (_ExceptHandlers, _match_cases)
+    root_cls = roota.__class__
+    is_special = root_cls in (_ExceptHandlers, _match_cases)
     lines = root._lines
 
     if (not put_fst_end_nl
@@ -1391,7 +1395,7 @@ def _maybe_del_trailing_newline(self: fst.FST, old_last_line: str, put_fst_end_n
     ):  # if self last line changed and was previously not a trailing newline and code put did not end in trailing newline then make sure it is not so now
         child_root = root
 
-        if (is_special or roota.__class__ in ASTS_LEAF_MOD) and not (child_root := root.last_child()):
+        if (is_special or root_cls in ASTS_LEAF_MOD) and not (child_root := root.last_child()):
             if len(lines) > 1:
                 del lines[-1]  # we specifically delete just one trailing newline because there may be multiple and we want to preserve the rest
 

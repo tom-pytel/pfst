@@ -128,9 +128,10 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
     """
 
     ast = self.a
+    ast_cls = ast.__class__
 
-    if not (get_val := (ast.__class__ is Interpolation)):
-        if ast.__class__ is not FormattedValue:
+    if not (get_val := (ast_cls is Interpolation)):
+        if ast_cls is not FormattedValue:
             return None
 
     lines = self.root._lines
@@ -173,10 +174,10 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
             if fend_ln == fln:  # everything on one line, don't need to recurse
                 walking.send(False)
 
-            elif (a := f.a).__class__ is Constant:  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
+            elif (a_cls := f.a.__class__) is Constant:  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
                 lns.update(_multiline_str_continuation_lns(lines, *f.loc))
 
-            elif a.__class__ in (JoinedStr, TemplateStr):
+            elif a_cls in (JoinedStr, TemplateStr):
                 lns.update(_multiline_ftstr_continuation_lns(lines, *f.loc))
 
                 walking.send(False)  # skip everything inside regardless, because it is evil
@@ -692,10 +693,11 @@ def _set_ctx(self: fst.FST, ctx: type[expr_context]) -> None:
 
     while stack:
         a = stack.pop()
+        a_cls = a.__class__
 
-        if ((is_seq := (a.__class__ in (Tuple, List)))
-            or (is_starred := (a.__class__ is Starred))
-            or a.__class__ in (Name, Subscript, Attribute)
+        if ((is_seq := (a_cls in (Tuple, List)))
+            or (is_starred := (a_cls is Starred))
+            or a_cls in (Name, Subscript, Attribute)
         ) and not isinstance(a.ctx, ctx):
             a.ctx = child = ctx()
 
@@ -963,8 +965,10 @@ def _is_enclosed_or_line(
                             expr_context, type_ignore)):
             return True
 
-        if ast.__class__ in (Module, Interactive, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
-                             Match, Try, TryStar, ExceptHandler, match_case):  # With, AsyncWith not checked because they are handled
+        ast_cls = ast.__class__
+
+        if ast_cls in (Module, Interactive, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
+                       Match, Try, TryStar, ExceptHandler, match_case):  # With, AsyncWith not checked because they are handled
             raise NotImplementedError("we don't do block statements yet")  # TODO: this
 
         ln, col, end_ln, end_col = loc
@@ -978,7 +982,7 @@ def _is_enclosed_or_line(
 
             pars = False
 
-        if (is_const := (ast.__class__ is Constant)) or ast.__class__ in (JoinedStr, TemplateStr):
+        if (is_const := (ast_cls is Constant)) or ast_cls in (JoinedStr, TemplateStr):
             if is_const:
                 if not isinstance(ast.value, (str, bytes)):
                     return True
@@ -1010,7 +1014,6 @@ def _is_enclosed_or_line(
                 return True
 
         last_ln = ln
-        ast_cls = ast.__class__
 
         if ast_cls is Call:  # these will replace any fields which we know to be enclosed with mock FST nodes which just say the location is enclosed
             children = [ast.func,
@@ -1227,10 +1230,11 @@ def _get_parse_mode(self: fst.FST) -> str | type[AST] | None:
     """
 
     ast = self.a
+    ast_cls = ast.__class__
 
     # check the cases that need source code
 
-    if ast.__class__ is Tuple and (elts := ast.elts):
+    if ast_cls is Tuple and (elts := ast.elts):
         if (e0 := elts[0]).__class__ is Starred:
             if len(elts) == 1:
                 _, _, ln, col = e0.f.loc
@@ -1239,7 +1243,7 @@ def _get_parse_mode(self: fst.FST) -> str | type[AST] | None:
                 if not next_find(self.root._lines, ln, col, end_ln, end_col, ',', True):  # if lone Starred in Tuple with no comma then is expr_slice (py 3.11+)
                     return 'expr_slice'
 
-    return ast.__class__.__name__  # otherwise regular parse by AST type is valid
+    return ast_cls.__name__  # otherwise regular parse by AST type is valid
 
 
 def _get_indent(self: fst.FST) -> str:
@@ -1361,7 +1365,7 @@ def _get_indentable_lns(
         if f.bend_ln == f.bln:  # everything on one line, don't need to recurse
             walking.send(False)
 
-        elif (a := f.a).__class__ is Constant:  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
+        elif (a_cls := (a := f.a).__class__) is Constant:  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
             if not (
                 docstr
                 and isinstance(a.value, str)  # could be bytes
@@ -1377,7 +1381,7 @@ def _get_indentable_lns(
             ))):
                 lns.difference_update(_multiline_str_continuation_lns(lines, *f.loc))
 
-        elif a.__class__ in (JoinedStr, TemplateStr):
+        elif a_cls in (JoinedStr, TemplateStr):
             lns.difference_update(_multiline_ftstr_continuation_lns(lines, *f.loc))
 
             walking.send(False)  # skip everything inside regardless, because it is evil

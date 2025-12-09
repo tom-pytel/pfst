@@ -364,7 +364,8 @@ class Reconcile:
                 if (field in ('body', 'orelse', 'finalbody', 'handlers', 'cases', 'elts')
                     or (
                         field == 'names'
-                        and node.__class__ in (Global, Nonlocal))):
+                        and node.__class__ in (Global, Nonlocal)
+                )):
                     self.recurse_slice(node, outf, field, child)
 
                     continue

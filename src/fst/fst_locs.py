@@ -257,8 +257,9 @@ def _loc_op(self: fst.FST) -> fstloc | None:
     # assert isinstance(self.a, (operator, unaryop, cmpop))
 
     ast = self.a
+    ast_cls = ast.__class__
 
-    if not (op := OPCLS2STR.get(ast.__class__)):
+    if not (op := OPCLS2STR.get(ast_cls)):
         return None
 
     lines = self.root._lines
@@ -266,7 +267,7 @@ def _loc_op(self: fst.FST) -> fstloc | None:
     if not (parent := self.parent):  # standalone
         ln, col, src = next_frag(lines, 0, 0, len(lines) - 1, 0x7fffffffffffffff)  # must be there
 
-        if ast.__class__ not in ASTS_LEAF_CMPOP_TWO_WORD:  # simple one element operator means we are done
+        if ast_cls not in ASTS_LEAF_CMPOP_TWO_WORD:  # simple one element operator means we are done
             assert src == op
 
             return fstloc(ln, col, ln, col + len(src))
@@ -284,18 +285,19 @@ def _loc_op(self: fst.FST) -> fstloc | None:
     # has a parent
 
     parenta = parent.a
+    parent_cls = parenta.__class__
 
-    if parenta.__class__ is UnaryOp:
+    if parent_cls is UnaryOp:
         ln, col, _, _ = parenta.f.loc
 
         return fstloc(ln, col, ln, col + len(op))
 
-    if parenta.__class__ is Compare:  # special handling due to compound operators and array of ops and comparators
+    if parent_cls is Compare:  # special handling due to compound operators and array of ops and comparators
         prev = parenta.comparators[idx - 1] if (idx := self.pfield.idx) else parenta.left
 
         _, _, end_ln, end_col = prev.f.loc
 
-        if has_space := (ast.__class__ in ASTS_LEAF_CMPOP_TWO_WORD):  # stupid two-element operators, can be anything like "not    \\\n     in"
+        if has_space := (ast_cls in ASTS_LEAF_CMPOP_TWO_WORD):  # stupid two-element operators, can be anything like "not    \\\n     in"
             op, op2 = op.split(' ')
 
         last_ln = len(lines) - 1

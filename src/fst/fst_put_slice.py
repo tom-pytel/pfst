@@ -276,7 +276,8 @@ def _code_to_slice_expr(
 
     fst_ = code_as(code, self.root.parse_params)
     ast_ = fst_.a
-    is_slice_type = ast_.__class__ in (Tuple, List, Set)
+    ast__cls = ast_.__class__
+    is_slice_type = ast__cls in (Tuple, List, Set)
     put_norm = None  # cached
 
     if not one:
@@ -308,14 +309,14 @@ def _code_to_slice_expr(
         if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
             fst_._delimit_node()
 
-    elif ast_.__class__ is Set:
+    elif ast__cls is Set:
         _maybe_fix_Set(fst_, _get_option_norm('norm_put', 'set_norm', options) if put_norm is None else put_norm)
 
-    elif ast_.__class__ is NamedExpr:  # this needs to be parenthesized if being put to unparenthesized tuple
+    elif ast__cls is NamedExpr:  # this needs to be parenthesized if being put to unparenthesized tuple
         if not fst_.pars().n and self._is_parenthesized_tuple() is False:
             fst_._parenthesize_grouping()
 
-    elif ast_.__class__ in (Yield, YieldFrom):  # these need to be parenthesized definitely
+    elif ast__cls in (Yield, YieldFrom):  # these need to be parenthesized definitely
         if not fst_.pars().n:
             fst_._parenthesize_grouping()
 
@@ -371,8 +372,9 @@ def _code_to_slice_BoolOp_values(
 
     fst_ = code_as_expr(code, self.root.parse_params)
     ast_ = fst_.a
-    op_type = self.a.op.__class__
-    is_slice_type = ast_.__class__ is BoolOp
+    ast__cls = ast_.__class__
+    op_cls = self.a.op.__class__
+    is_slice_type = ast__cls is BoolOp
     is_same_op = is_slice_type and ast_.op.__class__ is self.a.op.__class__
 
     if is_slice_type and is_same_op and not one:
@@ -387,12 +389,12 @@ def _code_to_slice_BoolOp_values(
 
     if not (one or fst.FST.get_option('coerce', options)):
         if not is_slice_type:
-            raise ValueError(f'cannot put {ast_.__class__.__name__} as slice to {self.a.__class__.__name__} '
+            raise ValueError(f'cannot put {ast__cls.__name__} as slice to {self.a.__class__.__name__} '
                              "without 'one=True' or 'coerce=True'")
 
         elif not is_same_op:
-            raise ValueError(f'cannot put {ast_.op.__class__.__name__} {ast_.__class__.__name__} '
-                             f'as slice to {op_type.__name__} {self.a.__class__.__name__} '
+            raise ValueError(f'cannot put {ast_.op.__class__.__name__} {ast__cls.__name__} '
+                             f'as slice to {op_cls.__name__} {self.a.__class__.__name__} '
                              "without 'one=True' or 'coerce=True'")
 
     if (is_par := fst_._is_parenthesized_tuple()) is not None:
@@ -400,13 +402,13 @@ def _code_to_slice_BoolOp_values(
             fst_._delimit_node()
 
     elif (
-        (is_slice_type and (is_same_op or op_type is And))
-        or ast_.__class__ in (NamedExpr, Yield, YieldFrom, IfExp)
+        (is_slice_type and (is_same_op or op_cls is And))
+        or ast__cls in (NamedExpr, Yield, YieldFrom, IfExp)
     ):  # these need to be parenthesized definitely
         if not fst_.pars().n:
             fst_._parenthesize_grouping()
 
-    ast_ = BoolOp(op=op_type(), values=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+    ast_ = BoolOp(op=op_cls(), values=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                   end_col_offset=ls[-1].lenbytes)
 
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
@@ -514,7 +516,8 @@ def _code_to_slice_Compare__all(
 
     fst_ = code_as_expr(code, self.root.parse_params)
     ast_ = fst_.a
-    is_slice_type = ast_.__class__ is Compare
+    ast__cls = ast_.__class__
+    is_slice_type = ast__cls is Compare
 
     if is_slice_type and (not one or not ast_.comparators):  # if is singleton Comparator invalid AST slice then we just return it even if putting as one=True since by fact that it was already in a Compare it doesn't need any pars added
         _set_loc_whole(fst_)
@@ -524,7 +527,7 @@ def _code_to_slice_Compare__all(
     # one=True or any expression which is not a Compare type we can coerce to a singleton Compare slice
 
     if not is_slice_type and not (one or fst.FST.get_option('coerce', options)):
-        raise ValueError(f'cannot put {ast_.__class__.__name__} as slice to {self.a.__class__.__name__} '
+        raise ValueError(f'cannot put {ast__cls.__name__} as slice to {self.a.__class__.__name__} '
                          "without 'one=True' or 'coerce=True'")
 
     if (is_par := fst_._is_parenthesized_tuple()) is not None:
@@ -533,8 +536,8 @@ def _code_to_slice_Compare__all(
 
     elif (
         is_slice_type
-        or ast_.__class__ in (NamedExpr, Yield, YieldFrom, IfExp, BoolOp)
-        or (ast_.__class__ is UnaryOp and ast_.op.__class__ is Not)
+        or ast__cls in (NamedExpr, Yield, YieldFrom, IfExp, BoolOp)
+        or (ast__cls is UnaryOp and ast_.op.__class__ is Not)
     ):  # these need to be parenthesized definitely
         if not fst_.pars().n:
             fst_._parenthesize_grouping()
@@ -809,11 +812,13 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
                             f"must be a MatchOr with norm_put=False, not a {ast_.__class__.__name__}",
                             rawable=True)
 
-        if ast_.__class__ is MatchAs:
+        ast_cls = ast_.__class__
+
+        if ast_cls is MatchAs:
             if ast_.pattern is not None and not fst_.pars().n:
                 fst_._parenthesize_grouping()
 
-        elif ast_.__class__ is MatchSequence:
+        elif ast_cls is MatchSequence:
             if not fst_._is_delimited_matchseq():
                 fst_._delimit_node(delims='[]')
 
@@ -2293,15 +2298,18 @@ def _put_slice_type_params(
 ) -> None:
     """An empty `Tuple` is accepted as a zero-element `type_params` slice."""
 
-    len_body = len(body := (ast := self.a).type_params)
+    ast = self.a
+    ast_cls = ast.__class__
+    body = ast.type_params
+    len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
     fst_ = _code_to_slice__type_params(self, code, one, options)
 
     bound, (name_ln, name_col) = (
-        (fst.FST._loc_TypeAlias_type_params_brackets if ast.__class__ is TypeAlias else
-         fst.FST._loc_ClassDef_type_params_brackets if ast.__class__ is ClassDef else
+        (fst.FST._loc_TypeAlias_type_params_brackets if ast_cls is TypeAlias else
+         fst.FST._loc_ClassDef_type_params_brackets if ast_cls is ClassDef else
          fst.FST._loc_FunctionDef_type_params_brackets)  # FunctionDef, AsyncFunctionDef
     )(self)
 
@@ -2352,7 +2360,8 @@ def _put_slice__slice(
     one: bool,
     options: Mapping[str, Any],
 ) -> None:
-    static = _SPECIAL_SLICE_STATICS[(ast := self.a).__class__]
+    ast = self.a
+    static = _SPECIAL_SLICE_STATICS[ast.__class__]
     len_body = len(body := getattr(ast, field))
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
@@ -2621,8 +2630,12 @@ _LOC_SLICE_RAW_PUT_FUNCS = {
 def _singleton_needs_comma(fst_: fst.FST) -> bool:
     """Whether a singleton value in this container needs a trailing comma or not."""
 
-    return ((a := fst_.a).__class__ is Tuple or
-            (a.__class__ is MatchSequence and not fst_._is_delimited_seq('patterns', '[]')))  # MatchSequence because it can be undelimited or delimited with parentheses and in that case a singleton needs a trailing comma
+    return (
+        (ast_cls := fst_.a.__class__) is Tuple
+        or (
+            ast_cls is MatchSequence  # MatchSequence because it can be undelimited or delimited with parentheses and in that case a singleton needs a trailing comma
+            and not fst_._is_delimited_seq('patterns', '[]')
+    ))
 
 
 def _adjust_slice_raw_ast(
@@ -2642,10 +2655,11 @@ def _adjust_slice_raw_ast(
     """Adjust `code` and put location when putting raw from an `AST`. Currently just trailing comma stuff."""
 
     code = reduce_ast(code, True)
+    code_cls = code.__class__
 
-    if ((code_is_tuple := (code.__class__ is Tuple))
-        or (code_is_normal := (code.__class__ in (List, Set, Dict, MatchSequence, MatchMapping)))
-        or code.__class__ in (_withitems, _aliases, _type_params)
+    if ((code_is_tuple := (code_cls is Tuple))
+        or (code_is_normal := (code_cls in (List, Set, Dict, MatchSequence, MatchMapping)))
+        or code_cls in (_withitems, _aliases, _type_params)
     ):  # all nodes which are separated by comma at top level
         src = unparse(code)
 
@@ -2708,9 +2722,10 @@ def _adjust_slice_raw_fst(
         raise ValueError('expecting root node')
 
     code_ast = reduce_ast(code.a, True)
+    code_cls = code_ast.__class__
 
-    if ((code_is_normal := (code_ast.__class__ in (Tuple, List, Set, Dict, MatchSequence, MatchMapping)))
-        or code_ast.__class__ in (_withitems, _aliases, _type_params)
+    if ((code_is_normal := (code_cls in (Tuple, List, Set, Dict, MatchSequence, MatchMapping)))
+        or code_cls in (_withitems, _aliases, _type_params)
     ):  # all nodes which are separated by comma at top level
         code_fst = code_ast.f
         code_lines = code._lines

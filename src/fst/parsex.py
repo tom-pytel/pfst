@@ -955,10 +955,12 @@ def parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         assert ast.__class__ is Starred and len(elts) == 1
 
     else:
-        if ast.__class__ is GeneratorExp and ast.lineno == 1 and ast.col_offset == 0:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
+        ast_cls = ast.__class__
+
+        if ast_cls is GeneratorExp and ast.lineno == 1 and ast.col_offset == 0:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
             raise SyntaxError('expecting expression, got unparenthesized GeneratorExp')
 
-        if ast.__class__ is Tuple and ast.lineno == 1:  # tuple with newlines included grouping pars which are not in source, fix
+        if ast_cls is Tuple and ast.lineno == 1:  # tuple with newlines included grouping pars which are not in source, fix
             if not ast.elts:
                 raise SyntaxError('expecting expression')
 
@@ -1032,10 +1034,12 @@ def parse_expr_slice(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         except SyntaxError:
             raise SyntaxError('invalid slice expression') from None
 
-        if ast.__class__ is GeneratorExp:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
+        ast_cls = ast.__class__
+
+        if ast_cls is GeneratorExp:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
             raise SyntaxError('expecting slice expression, got unparenthesized GeneratorExp') from None
 
-        if ast.__class__ is Tuple:  # only py 3.10 because otherwise the parse above would have gotten it
+        if ast_cls is Tuple:  # only py 3.10 because otherwise the parse above would have gotten it
             if ast.elts:
                 raise SyntaxError('cannot have unparenthesized tuple containing Starred in slice') from None
 
@@ -1406,11 +1410,12 @@ def parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     if len(items) == 1:
         ast = items[0].context_expr
+        ast_cls = ast.__class__
 
-        if ast.__class__ is GeneratorExp:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
+        if ast_cls is GeneratorExp:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
             raise SyntaxError('expecting withitem, got unparenthesized GeneratorExp')
 
-        if ast.__class__ is Tuple and not ast.elts and ast.col_offset == 5:
+        if ast_cls is Tuple and not ast.elts and ast.col_offset == 5:
             raise SyntaxError('expecting withitem')
 
     else:  # unparenthesized Tuple
@@ -1436,11 +1441,12 @@ def parse__withitems(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     if len(items) == 1:
         ast = items[0].context_expr
+        ast_cls = ast.__class__
 
-        if ast.__class__ is GeneratorExp:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
+        if ast_cls is GeneratorExp:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
             raise SyntaxError('expecting withitem, got unparenthesized GeneratorExp')
 
-        if ast.__class__ is Tuple and not ast.elts and ast.col_offset == 5:
+        if ast_cls is Tuple and not ast.elts and ast.col_offset == 5:
             items = []
 
     ast = _withitems(items=items, **_astloc_from_src(src, 2))
