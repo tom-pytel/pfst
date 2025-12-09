@@ -17,17 +17,26 @@ from typing import Any, Callable, Generator, Iterator, Literal, Mapping, TextIO
 from . import parsex
 
 from .asttypes import (
-    ASTS_EXPRISH_ALL,
-    ASTS_STMTISH,
-    ASTS_STMTISH_OR_MOD,
-    ASTS_BLOCK,
-    ASTS_BLOCK_OR_MOD,
-    ASTS_SCOPE,
-    ASTS_SCOPE_OR_MOD,
-    ASTS_SCOPE_NAMED,
-    ASTS_SCOPE_NAMED_OR_MOD,
-    ASTS_SCOPE_ANONYMOUS,
-    ASTS_MAYBE_DOCSTR,
+    ASTS_LEAF_EXPR,
+    ASTS_LEAF_PATTERN,
+    ASTS_LEAF_STMT_OR_MOD,
+    ASTS_LEAF_EXPRISH_ALL,
+    ASTS_LEAF_STMTISH,
+    ASTS_LEAF_STMTISH_OR_MOD,
+    ASTS_LEAF_BLOCK,
+    ASTS_LEAF_BLOCK_OR_MOD,
+    ASTS_LEAF_SCOPE,
+    ASTS_LEAF_SCOPE_OR_MOD,
+    ASTS_LEAF_SCOPE_NAMED,
+    ASTS_LEAF_SCOPE_NAMED_OR_MOD,
+    ASTS_LEAF_SCOPE_ANONYMOUS,
+    ASTS_LEAF_FUNCDEF,
+    ASTS_LEAF_DEF,
+    ASTS_LEAF_DEF_OR_MOD,
+    ASTS_LEAF_FOR,
+    ASTS_LEAF_WITH,
+    ASTS_LEAF_TRY_OR_TRYSTAR,
+    ASTS_LEAF_MAYBE_DOCSTR,
     AST,
     Add,
     And,
@@ -84,7 +93,6 @@ from .asttypes import (
     SetComp,
     Starred,
     Sub,
-    Try,
     Tuple,
     UAdd,
     USub,
@@ -92,13 +100,9 @@ from .asttypes import (
     With,
     arguments,
     comprehension,
-    expr,
     match_case,
-    mod,
-    pattern,
     stmt,
     withitem,
-    TryStar,
     _ExceptHandlers,
     _match_cases,
 )
@@ -416,7 +420,7 @@ class FST:
             return self._lines[:]
         elif loc := self.bloc:
             return self.root._lines[loc.ln : loc.end_ln + 1]
-        elif isinstance(a := self.a, arguments):  # arguments with no loc are empty arguments
+        elif (a := self.a).__class__ is arguments:  # arguments with no loc are empty arguments
             return ['']
         else:
             return [s] if (s := OPCLS2STR.get(a.__class__, None)) else None  # for boolop only really, otherwise None
@@ -431,7 +435,7 @@ class FST:
             return '\n'.join(self._lines)
         elif loc := self.bloc:
             return self._get_src(*loc)
-        elif isinstance(a := self.a, arguments):  # arguments with no loc are empty arguments
+        elif (a := self.a).__class__ is arguments:  # arguments with no loc are empty arguments
             return ''
         else:
             return OPCLS2STR.get(a.__class__, None)  # for boolop only really, otherwise None
@@ -517,7 +521,7 @@ class FST:
         except KeyError:
             pass
 
-        if (bloc := self.loc) and isinstance(self.a, ASTS_BLOCK):  # bloc can only be different for block-type ASTs
+        if (bloc := self.loc) and self.a.__class__ in ASTS_LEAF_BLOCK:  # bloc can only be different for block-type ASTs
             ln, col, end_ln, end_col = bloc
             last_line = self.root._lines[end_ln]
 
@@ -612,10 +616,10 @@ class FST:
         `Module`. For quick use as starting index."""
 
         return (
-            isinstance(a := self.a, ASTS_MAYBE_DOCSTR)
+            (a := self.a).__class__ in ASTS_LEAF_MAYBE_DOCSTR
             and (b := a.body)
-            and isinstance(b0 := b[0], Expr)
-            and isinstance(v := b0.value, Constant)
+            and (b0 := b[0]).__class__ is Expr
+            and (v := b0.value).__class__ is Constant
             and isinstance(v := v.value, str)
         )
 
@@ -626,10 +630,10 @@ class FST:
         value so make sure to check for `None`. If you want the actual docstring node then just check for presence and
         get `.body[0]`."""
 
-        if (isinstance(a := self.a, ASTS_MAYBE_DOCSTR)
+        if ((a := self.a).__class__ in ASTS_LEAF_MAYBE_DOCSTR
             and (b := a.body)
-            and isinstance(b0 := b[0], Expr)
-            and isinstance(v := b0.value, Constant)
+            and (b0 := b[0]).__class__ is Expr
+            and (v := b0.value).__class__ is Constant
             and isinstance(v := v.value, str)
         ):
             return v
@@ -760,8 +764,8 @@ class FST:
             if (indent := kwargs.get('indent')) is not None:
                 self.indent = indent
             elif (
-                (is_modish := isinstance(ast_or_src, (Module, _ExceptHandlers, _match_cases)))
-                or isinstance(ast_or_src, ASTS_BLOCK)
+                (is_modish := (ast_or_src.__class__ in (Module, _ExceptHandlers, _match_cases)))
+                or ast_or_src.__class__ in ASTS_LEAF_BLOCK
             ):
                 self.indent = '?'
             else:
@@ -778,16 +782,17 @@ class FST:
                 asts = (ast_or_src,)
 
             for a in asts:
-                if isinstance(a, (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, ExceptHandler,
-                                  match_case)):  # we check ExceptHandler and match_case because they may be supported as standalone parsed elements eventually
+                a_cls = a.__class__
+
+                if a_cls in (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, ExceptHandler, match_case):  # we check ExceptHandler and match_case because they may be supported as standalone parsed elements eventually
                     indent = a.body[0].f._get_indent()
 
-                elif isinstance(a, (For, AsyncFor, While, If)):
+                elif a_cls in (For, AsyncFor, While, If):
                     if (indent := a.body[0].f._get_indent()) == '?' and (orelse := a.orelse):
                         if not (indent := orelse[0].f._get_indent()):  # because can be 'elif'
                             indent = '?'
 
-                elif isinstance(a, (Try, TryStar)):
+                elif a_cls in ASTS_LEAF_TRY_OR_TRYSTAR:
                     if (indent := a.body[0].f._get_indent()) == '?':
                         if not (orelse := a.orelse) or (indent := orelse[0].f._get_indent()) == '?':
                             if not (finalbody := a.finalbody) or (indent := finalbody[0].f._get_indent()) == '?':
@@ -795,9 +800,8 @@ class FST:
                                     if (indent := handler.body[0].f._get_indent()) != '?':
                                         break
 
-                elif isinstance(a, Match):
+                elif a_cls is Match:
                     indent = a.cases[0].f._get_indent()
-
                 else:
                     continue
 
@@ -2535,19 +2539,19 @@ class FST:
             if (not self._is_parenthesizable()
                 or (is_atom := self._is_atom()) in (True, 'pars')
                 or (
-                    (is_atom or (isinstance(self.a, Starred) and self.a.value.f._is_atom() in (True, 'pars')))
+                    (is_atom or (self.a.__class__ is Starred and self.a.value.f._is_atom() in (True, 'pars')))
                     and self._is_enclosed_or_line()  # _is_enclosed_or_line() can return 'unenclosable'
             )):
                 return self
 
         with self._modifying():
-            if isinstance(self.a, Tuple):
+            if self.a.__class__ is Tuple:
                 if not (force and self._is_parenthesized_tuple()):
                     self._delimit_node(whole)
 
                     return self
 
-            elif isinstance(self.a, MatchSequence):
+            elif self.a.__class__ is MatchSequence:
                 if not (force and self._is_delimited_matchseq()):
                     self._delimit_node(whole, '[]')
 
@@ -2622,7 +2626,7 @@ class FST:
         'call((i for i in j))'
         """
 
-        if isinstance(a := self.a, Starred):
+        if (a := self.a).__class__ is Starred:
             if (value := a.value.f).pars().n:
                 with self._modifying():
                     value._unparenthesize_grouping(shared)
@@ -2638,12 +2642,12 @@ class FST:
                 self._unparenthesize_grouping(shared)
 
             if node:
-                if isinstance(self.a, Tuple):
+                if self.a.__class__ is Tuple:
                     modifying = modifying or self._modifying().enter()
 
                     self._undelimit_node()
 
-                elif isinstance(self.a, MatchSequence):
+                elif self.a.__class__ is MatchSequence:
                     modifying = modifying or self._modifying().enter()
 
                     self._undelimit_node('patterns')
@@ -2733,7 +2737,7 @@ class FST:
                                 except IndexError:
                                     return None
 
-                            elif not isinstance(star := args[-1], Starred):  # both args and keywords but no Starred
+                            elif (star := args[-1]).__class__ is not Starred:  # both args and keywords but no Starred
                                 if name == 'args':
                                     try:
                                         a = args[(idx := idx + 1)]
@@ -3056,7 +3060,7 @@ class FST:
                                     name = 'func'
                                     a = aparent.func
 
-                            elif not isinstance(star := args[-1], Starred):  # both args and keywords but no Starred
+                            elif (star := args[-1]).__class__ is not Starred:  # both args and keywords but no Starred
                                 if name == 'args':
                                     if idx:
                                         a = aparent.args[(idx := idx - 1)]
@@ -3366,7 +3370,7 @@ class FST:
         'e'
         """
 
-        if (isinstance(a := self.a, Call)) and a.args and (keywords := a.keywords) and isinstance(a.args[-1], Starred):  # super-special case Call with args and keywords and a Starred, it could be anywhere in there, including after last keyword, defer to prev() logic
+        if (a := self.a).__class__ is Call and a.args and (keywords := a.keywords) and a.args[-1].__class__ is Starred:  # super-special case Call with args and keywords and a Starred, it could be anywhere in there, including after last keyword, defer to prev() logic
             fst_ = FST(f := Pass(), self, astfield('keywords', len(keywords)))
             f.lineno = 0x7fffffffffffffff
             f.col_offset = 0
@@ -3788,12 +3792,13 @@ class FST:
 
         stack = None
         ast = self.a
+        ast_cls = ast.__class__
 
         if scope:  # some parts of a FunctionDef or ClassDef are outside its scope
             if isinstance(ast, list):
                 stack = ast[:] if back else ast[::-1]
 
-            elif isinstance(ast, (ClassDef, Module, Interactive)):
+            elif ast_cls in (ClassDef, Module, Interactive):
                 if back:
                     stack = []
 
@@ -3808,7 +3813,7 @@ class FST:
                     if type_params := getattr(ast, 'type_params', None):
                         stack.extend(type_params[::-1])
 
-            elif (is_func := isinstance(ast, (FunctionDef, AsyncFunctionDef))) or isinstance(ast, Lambda):
+            elif (is_func := (ast_cls in ASTS_LEAF_FUNCDEF)) or ast_cls is Lambda:
                 if back:
                     stack = []
 
@@ -3830,7 +3835,7 @@ class FST:
                     if type_params := getattr(ast, 'type_params', None):
                         stack.extend(type_params[::-1])
 
-            elif (is_elt := isinstance(ast, (ListComp, SetComp, GeneratorExp))) or isinstance(ast, DictComp):
+            elif (is_elt := (ast_cls in (ListComp, SetComp, GeneratorExp))) or ast_cls is DictComp:
                 if back:
                     stack = ([ast.elt] if is_elt else [ast.key, ast.value]) + (generators := ast.generators)
                 else:
@@ -3838,7 +3843,7 @@ class FST:
 
                 skip_iter = generators[0].iter
 
-            elif isinstance(ast, Expression):
+            elif ast_cls is Expression:
                 stack = [ast.body]
 
         if stack is None:
@@ -3865,6 +3870,7 @@ class FST:
                 fst_ = fst_.repath()
 
             ast = fst_.a  # could have just modified the ast
+            ast_cls = ast.__class__
 
             if recurse_ is not True:
                 if recurse_:  # user did send(True), walk this child unconditionally
@@ -3874,7 +3880,7 @@ class FST:
                 if scope:
                     recurse_ = False
 
-                    if isinstance(ast, ClassDef):
+                    if ast_cls is ClassDef:
                         if back:
                             stack.extend(ast.decorator_list)
                             stack.extend(ast.bases)
@@ -3885,7 +3891,7 @@ class FST:
                             stack.extend(ast.bases[::-1])
                             stack.extend(ast.decorator_list[::-1])
 
-                    elif isinstance(ast, (FunctionDef, AsyncFunctionDef)):
+                    elif ast_cls in ASTS_LEAF_FUNCDEF:
                         if back:
                             stack.extend(ast.decorator_list)
                             stack.extend(ast.args.defaults)
@@ -3896,7 +3902,7 @@ class FST:
                             stack.extend(ast.args.defaults[::-1])
                             stack.extend(ast.decorator_list[::-1])
 
-                    elif isinstance(ast, Lambda):
+                    elif ast_cls is Lambda:
                         if back:
                             stack.extend(ast.args.defaults)
                             stack.extend(ast.args.kw_defaults)
@@ -3904,7 +3910,7 @@ class FST:
                             stack.extend(ast.args.kw_defaults[::-1])
                             stack.extend(ast.args.defaults[::-1])
 
-                    elif isinstance(ast, (ListComp, SetComp, DictComp, GeneratorExp)):
+                    elif ast_cls in (ListComp, SetComp, DictComp, GeneratorExp):
                         comp_first_iter = ast.generators[0].iter
                         gen = fst_.walk(with_loc, self_=False, back=back)
 
@@ -3912,8 +3918,8 @@ class FST:
                             if ((a := f.a) is comp_first_iter
                                 or (
                                     f.pfield.name == 'target'
-                                    and isinstance(a, Name)
-                                    and isinstance(f.parent.a, NamedExpr)
+                                    and a.__class__ is Name
+                                    and f.parent.a.__class__ is NamedExpr
                             )):
                                 subrecurse = recurse
 
@@ -3923,7 +3929,7 @@ class FST:
                                 if not subrecurse:
                                     gen.send(False)
 
-                    elif isinstance(ast, comprehension):  # this only comes from top level comprehension, not ones encountered here
+                    elif ast_cls is comprehension:  # this only comes from top level comprehension, not ones encountered here
                         if back:
                             stack.append(ast.target)
 
@@ -4030,12 +4036,12 @@ class FST:
         <match_case 1,2..1,14>
         """
 
-        types = ASTS_STMTISH_OR_MOD if mod else ASTS_STMTISH
+        types = ASTS_LEAF_STMTISH_OR_MOD if mod else ASTS_LEAF_STMTISH
 
-        if self_ and isinstance(self.a, types):
+        if self_ and self.a.__class__ in types:
             return self
 
-        while (self := self.parent) and not isinstance(self.a, types):
+        while (self := self.parent) and self.a.__class__ not in types:
             pass
 
         return self
@@ -4055,12 +4061,12 @@ class FST:
         <Module ROOT 0,0..0,11>
         """
 
-        types = ASTS_BLOCK_OR_MOD if mod else ASTS_BLOCK
+        types = ASTS_LEAF_BLOCK_OR_MOD if mod else ASTS_LEAF_BLOCK
 
-        if self_ and isinstance(self.a, types):
+        if self_ and self.a.__class__ in types:
             return self
 
-        while (self := self.parent) and not isinstance(self.a, types):
+        while (self := self.parent) and self.a.__class__ not in types:
             pass
 
         return self
@@ -4086,12 +4092,12 @@ class FST:
         <ListComp 0,0..0,14>
         """
 
-        types = ASTS_SCOPE_OR_MOD if mod else ASTS_SCOPE
+        types = ASTS_LEAF_SCOPE_OR_MOD if mod else ASTS_LEAF_SCOPE
 
-        if self_ and isinstance(self.a, types):
+        if self_ and self.a.__class__ in types:
             return self
 
-        while (self := self.parent) and not isinstance(self.a, types):
+        while (self := self.parent) and self.a.__class__ not in types:
             pass
 
         return self
@@ -4119,12 +4125,12 @@ class FST:
         <ClassDef 0,0..0,25>
         """
 
-        types = ASTS_SCOPE_NAMED_OR_MOD if mod else ASTS_SCOPE_NAMED
+        types = ASTS_LEAF_SCOPE_NAMED_OR_MOD if mod else ASTS_LEAF_SCOPE_NAMED
 
-        if self_ and isinstance(self.a, types):
+        if self_ and self.a.__class__ in types:
             return self
 
-        while (self := self.parent) and not isinstance(self.a, types):
+        while (self := self.parent) and self.a.__class__ not in types:
             pass
 
         return self
@@ -4158,12 +4164,12 @@ class FST:
         <keyword 0,14..0,17>
         """
 
-        types = expr if strict else ASTS_EXPRISH_ALL  # ops because of maybe self_
+        types = ASTS_LEAF_EXPR if strict else ASTS_LEAF_EXPRISH_ALL  # ops because of maybe self_
 
-        if self_ and not isinstance(self.a, types):
+        if self_ and self.a.__class__ not in types:
             return self
 
-        while (self := self.parent) and isinstance(self.a, types):
+        while (self := self.parent) and self.a.__class__ in types:
             pass
 
         return self
@@ -4193,10 +4199,10 @@ class FST:
         <MatchOr 0,5..0,17>
         """
 
-        if self_ and isinstance(self.a, pattern):
+        if self_ and self.a.__class__ in ASTS_LEAF_PATTERN:
             return self
 
-        while (self := self.parent) and not isinstance(a := self.a, pattern):
+        while (self := self.parent) and (a := self.a).__class__ not in ASTS_LEAF_PATTERN:
             if isinstance(a, (match_case, stmt)):
                 return None
 
@@ -4534,26 +4540,26 @@ class FST:
     def is_stmt_or_mod(self) -> bool:
         """Is a `stmt` or `mod`."""
 
-        return isinstance(self.a, (stmt, mod))
+        return self.a.__class__ in ASTS_LEAF_STMT_OR_MOD
 
     @property
     def is_stmtish(self) -> bool:
         """Is a `stmt`, `ExceptHandler` or `match_case`."""
 
-        return isinstance(self.a, ASTS_STMTISH)
+        return self.a.__class__ in ASTS_LEAF_STMTISH
 
     @property
     def is_stmtish_or_mod(self) -> bool:
         """Is a `stmt`, `ExceptHandler`, `match_case` or `mod`."""
 
-        return isinstance(self.a, ASTS_STMTISH_OR_MOD)
+        return self.a.__class__ in ASTS_LEAF_STMTISH_OR_MOD
 
     @property
     def is_block(self) -> bool:
         """Is a node which opens a block. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `For`,
         `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`, `TryStar`, `ExceptHandler` or `match_case`."""
 
-        return isinstance(self.a, ASTS_BLOCK)
+        return self.a.__class__ in ASTS_LEAF_BLOCK
 
     @property
     def is_block_or_mod(self) -> bool:
@@ -4561,71 +4567,71 @@ class FST:
         `AsyncFor`, `While`, `If`, `With`, `AsyncWith`, `Match`, `Try`, `TryStar`, `ExceptHandler`, `match_case` or
         `mod`."""
 
-        return isinstance(self.a, ASTS_BLOCK_OR_MOD)
+        return self.a.__class__ in ASTS_LEAF_BLOCK_OR_MOD
 
     @property
     def is_scope(self) -> bool:
         """Is a node which opens a scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `Lambda`,
         `ListComp`, `SetComp`, `DictComp` or `GeneratorExp`."""
 
-        return isinstance(self.a, ASTS_SCOPE)
+        return self.a.__class__ in ASTS_LEAF_SCOPE
 
     @property
     def is_scope_or_mod(self) -> bool:
         """Is a node which opens a scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef`, `Lambda`,
         `ListComp`, `SetComp`, `DictComp`, `GeneratorExp` or `mod`."""
 
-        return isinstance(self.a, ASTS_SCOPE_OR_MOD)
+        return self.a.__class__ in ASTS_LEAF_SCOPE_OR_MOD
 
     @property
     def is_named_scope(self) -> bool:
         """Is a node which opens a named scope. Types include `FunctionDef`, `AsyncFunctionDef` or `ClassDef`."""
 
-        return isinstance(self.a, ASTS_SCOPE_NAMED)
+        return self.a.__class__ in ASTS_LEAF_SCOPE_NAMED
 
     @property
     def is_named_scope_or_mod(self) -> bool:
         """Is a node which opens a named scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `mod`."""
 
-        return isinstance(self.a, ASTS_SCOPE_NAMED_OR_MOD)
+        return self.a.__class__ in ASTS_LEAF_SCOPE_NAMED_OR_MOD
 
     @property
     def is_anon_scope(self) -> bool:
         """Is a node which opens an anonymous scope. Types include `Lambda`, `ListComp`, `SetComp`, `DictComp` or
         `GeneratorExp`."""
 
-        return isinstance(self.a, ASTS_SCOPE_ANONYMOUS)
+        return self.a.__class__ in ASTS_LEAF_SCOPE_ANONYMOUS
 
     @property
     def is_funcdef(self) -> bool:
         """Is a sync or async function definition node, `FunctionDef` or `AsyncFunctionDef`."""
 
-        return isinstance(self.a, (FunctionDef, AsyncFunctionDef))
+        return self.a.__class__ in ASTS_LEAF_FUNCDEF
 
     @property
     def is_def(self) -> bool:
         """Is a sync or async function or class definition node, `FunctionDef`, `AsyncFunctionDef` or `ClassDef`."""
 
-        return isinstance(self.a, (FunctionDef, AsyncFunctionDef, ClassDef))
+        return self.a.__class__ in ASTS_LEAF_DEF
 
     @property
     def is_def_or_mod(self) -> bool:
         """Is a sync or async function or class definition node, `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
         `mod`."""
 
-        return isinstance(self.a, (FunctionDef, AsyncFunctionDef, ClassDef, mod))
+        return self.a.__class__ in ASTS_LEAF_DEF_OR_MOD
 
     @property
     def is_for(self) -> bool:
         """Is a sync or async `for` node, `For` or `AsyncFor`."""
 
-        return isinstance(self.a, (For, AsyncFor))
+        return self.a.__class__ in ASTS_LEAF_FOR
 
     @property
     def is_with(self) -> bool:
         """Is a sync or async `with` node, `With` or `AsyncWith`."""
 
-        return isinstance(self.a, (With, AsyncWith))
+        return self.a.__class__ in ASTS_LEAF_WITH
 
     def is_elif(self) -> bool | None:
         r"""Whether `self` is an `elif` or not, or not an `If` at all.
@@ -4645,7 +4651,12 @@ class FST:
         None
         """
 
-        return self.root._lines[(loc := self.loc).ln].startswith('elif', loc.col) if isinstance(self.a, If) else None
+        if self.a.__class__ is not If:
+            return None
+
+        ln, col, _, _ = self.loc
+
+        return self.root._lines[ln].startswith('elif', col)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Private
@@ -4792,35 +4803,35 @@ _VIRTUAL_FIELD_VIEW__ALL = {
 # Predicates
 
 def _make_predicates() -> None:
-    def _make_class_is_predicate(kls: type[AST]) -> property:
+    def _make_class_is_predicate(ast_cls: type[AST]) -> property:
         @property
-        def predicate(self: FST, kls: type = kls) -> bool:
+        def predicate(self: FST, ast_cls: type = ast_cls) -> bool:
             """@private"""
 
-            return self.a.__class__ is kls
+            return self.a.__class__ is ast_cls
 
         return predicate
 
-    def _make_isinstance_predicate(kls: type[AST]) -> property:
+    def _make_isinstance_predicate(ast_cls: type[AST]) -> property:
         @property
-        def predicate(self: FST, kls: type = kls) -> bool:
+        def predicate(self: FST, ast_cls: type = ast_cls) -> bool:
             """@private"""
 
-            return isinstance(self.a, kls)
+            return isinstance(self.a, ast_cls)
 
         return predicate
 
-    for kls in FIELDS:
-        name = f'is_{kls.__name__}'
+    for ast_cls in FIELDS:
+        name = f'is_{ast_cls.__name__}'
 
         if not hasattr(FST, name):  # in case explicitly overridden
-            setattr(FST, name, _make_class_is_predicate(kls))
+            setattr(FST, name, _make_class_is_predicate(ast_cls))
 
-    for kls in AST_BASES:
-        name = f'is_{kls.__name__}'
+    for ast_cls in AST_BASES:
+        name = f'is_{ast_cls.__name__}'
 
         if not hasattr(FST, name):  # things like is_stmt() already exist
-            setattr(FST, name, _make_isinstance_predicate(kls))
+            setattr(FST, name, _make_isinstance_predicate(ast_cls))
 
 
 _make_predicates()

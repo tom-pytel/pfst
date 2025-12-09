@@ -13,6 +13,7 @@ from typing import Any, Mapping, Union
 from . import fst
 
 from .asttypes import (
+    ASTS_LEAF_EXPR,
     AST,
     And,
     AnnAssign,
@@ -83,7 +84,6 @@ from .asttypes import (
     arg,
     arguments,
     comprehension,
-    expr,
     keyword,
     match_case,
     withitem,
@@ -162,16 +162,19 @@ def _maybe_fix_copy(self: fst.FST, options: Mapping[str, Any]) -> None:
 
     # assert self.is_root
 
-    if isinstance(ast := self.a, If):
+    ast = self.a
+    ast_cls = ast.__class__
+
+    if ast_cls is If:
         self._maybe_fix_elif()
 
-    elif isinstance(ast, expr):
-        if isinstance(ast, (Slice, FormattedValue, Interpolation)):  # things that should not get pars
+    elif ast_cls in ASTS_LEAF_EXPR:
+        if ast_cls in (Slice, FormattedValue, Interpolation):  # things that should not get pars
             return
 
         self._set_ctx(Load)  # anything that is excluded by is_parsable() above (or does not have .loc) does not need this
 
-        if is_walrus := isinstance(ast, NamedExpr):
+        if is_walrus := (ast_cls is NamedExpr):
             pars = get_option_overridable('pars', 'pars_walrus', options)
         else:
             pars = fst.FST.get_option('pars', options)
@@ -181,10 +184,10 @@ def _maybe_fix_copy(self: fst.FST, options: Mapping[str, Any]) -> None:
 
         need_pars = None
 
-        if is_tuple := isinstance(ast, Tuple):
+        if is_tuple := (ast_cls is Tuple):
             if is_par := self._is_delimited_seq():
                 need_pars = False
-            elif any(isinstance(e, NamedExpr) and not e.f.pars().n for e in ast.elts):  # unparenthesized walrus in naked tuple?
+            elif any(e.__class__ is NamedExpr and not e.f.pars().n for e in ast.elts):  # unparenthesized walrus in naked tuple?
                 need_pars = True
 
             self._maybe_add_singleton_tuple_comma(is_par)  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, even though those can't be gotten alone organically, maybe we shouldn't even bother?
@@ -239,7 +242,7 @@ def _get_one_arglikes(self: fst.FST, idx: int | None, field: str, cut: bool, opt
 
     fst_ = _get_one_default(self, idx, field, cut, options)
 
-    if isinstance(fst_.a, Tuple):
+    if fst_.a.__class__ is Tuple:
         fst_._maybe_fix_arglikes(options)
 
     return fst_
@@ -291,7 +294,7 @@ def _get_one_BoolOp_op(self: fst.FST, idx: int | None, field: str, cut: bool, op
     child, _ = _validate_get(self, idx, field)
 
     return (fst.FST(And(), ['and'], None, from_=self)
-            if isinstance(child, And) else
+            if child.__class__ is And else
             fst.FST(Or(), ['or'], None, from_=self))  # just create new ones because they can be in multiple places
 
 
@@ -309,7 +312,7 @@ def _get_one_FormattedValue_value(
 
     ret = _get_one_default(self, idx, field, cut, options)
 
-    if isinstance(ret.a, Tuple):
+    if ret.a.__class__ is Tuple:
         ln, col, end_ln, end_col = ret.loc
         lines = ret._lines
 
@@ -383,7 +386,7 @@ def _get_one_format_spec(
         quotes = next(iter(quotes))
         prefix = 'f' + quotes[2:]
 
-    assert isinstance(child, JoinedStr)
+    assert child.__class__ is JoinedStr
 
     ret, _ = childf._make_fst_and_dedent(childf, copy_ast(child), loc, prefix, quotes, docstr=False)
     reta = ret.a
@@ -401,7 +404,7 @@ def _get_one_format_spec(
 
     if PYGE13:
         for a in child.values:  # see if we need to make a raw formatted string, prepend an 'r' to the string start  # TODO: optimize this into the puts above
-            if isinstance(a, Constant):
+            if a.__class__ is Constant:
                 if '\\' in (v := a.value) and v != literal_eval(f'{quotes}{childf._get_src(*a.f.loc)}{quotes}'):
                     ret._put_src('r', 0, 0, 0, 0, False, False)
 
@@ -428,7 +431,7 @@ def _get_one_JoinedStr_TemplateStr_values(
     l = lines[ln]
     prefix = l[col : col + (4 if l.startswith('"""', col + 1) or l.startswith("'''", col + 1) else 2)]
 
-    if isinstance(child, Constant):
+    if child.__class__ is Constant:
         ret = fst.FST(copy_ast(child), Constant)  # this is because of implicit string madness
 
         # TODO: maybe pick this up again to return source-accurate string if possible?
@@ -454,9 +457,9 @@ def _get_one_JoinedStr_TemplateStr_values(
         #     ret._dedent_lns(indent, skip=1, docstr=False)
 
     else:
-        assert isinstance(child, (FormattedValue, Interpolation))
+        assert child.__class__ in (FormattedValue, Interpolation)
 
-        typ = 'f' if isinstance(child, FormattedValue) else 't'
+        typ = 'f' if child.__class__ is FormattedValue else 't'
         prefix = typ + prefix[1:]
         fmt, _ = childf._make_fst_and_dedent(childf, copy_ast(child), childf.loc, prefix, prefix[1:], docstr=False)
         lprefix = len(prefix)

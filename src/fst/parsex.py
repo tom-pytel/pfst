@@ -16,6 +16,7 @@ from typing import Any, Callable, Literal, Mapping, get_args
 from . import fst
 
 from .asttypes import (
+    ASTS_LEAF_CMPOP_TWO_WORD,
     AST,
     Add,
     And,
@@ -335,7 +336,7 @@ def _fixing_unparse(ast: AST) -> str:
 def _unparse_Tuple(ast: AST) -> str:
     src = _fixing_unparse(ast)
 
-    if (elts := ast.elts) and any(isinstance(e, Slice) for e in elts):  # tuples with Slices cannot have parentheses
+    if (elts := ast.elts) and any(e.__class__ is Slice for e in elts):  # tuples with Slices cannot have parentheses
         return src[1 : -1]
 
     return src
@@ -607,7 +608,7 @@ def _parse_op(src: str, type_name: str, opstr2cls: dict[str, type[AST]]) -> AST:
                 op = 'not in'
                 m = n
 
-    if not (kls := opstr2cls.get(op)):
+    if not (op_cls := opstr2cls.get(op)):
         raise SyntaxError(f'expecting {type_name}, got {shortstr(op)!r}')
 
     end = m.end()
@@ -615,7 +616,7 @@ def _parse_op(src: str, type_name: str, opstr2cls: dict[str, type[AST]]) -> AST:
     if m := (_re_next_src_space.match(src, end) or _re_first_src.search(src, end)):
         raise SyntaxError(f'unexpected code after {type_name}, {shortstr(m.group(2))!r}')
 
-    return kls()
+    return op_cls()
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -727,7 +728,7 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
                                   (parse_expr_all, parse_pattern, parse_arguments, parse_arguments_lambda,
                                    _parse_all__type_params, parse_operator, parse__Assign_targets))
 
-        if isinstance(ast, Assign) and len(targets := ast.targets) == 1 and isinstance(targets[0], Starred):  # '*T = ...' validly parses to Assign statement but is invalid compile, but valid type_param so reparse as that
+        if ast.__class__ is Assign and len(targets := ast.targets) == 1 and targets[0].__class__ is Starred:  # '*T = ...' validly parses to Assign statement but is invalid compile, but valid type_param so reparse as that
             return _parse_all__type_params(src, parse_params)
 
         return ast
@@ -937,7 +938,7 @@ def parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     except SyntaxError:
         pass
     else:
-        if len(body) == 1 and isinstance(b0 := body[0], Expr):  # if parsed to single expression then done
+        if len(body) == 1 and (b0 := body[0]).__class__ is Expr:  # if parsed to single expression then done
             return b0.value
 
     try:
@@ -951,13 +952,13 @@ def parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
         ast = elts[0]
 
-        assert isinstance(ast, Starred) and len(elts) == 1
+        assert ast.__class__ is Starred and len(elts) == 1
 
     else:
-        if isinstance(ast, GeneratorExp) and ast.lineno == 1 and ast.col_offset == 0:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
+        if ast.__class__ is GeneratorExp and ast.lineno == 1 and ast.col_offset == 0:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
             raise SyntaxError('expecting expression, got unparenthesized GeneratorExp')
 
-        if isinstance(ast, Tuple) and ast.lineno == 1:  # tuple with newlines included grouping pars which are not in source, fix
+        if ast.__class__ is Tuple and ast.lineno == 1:  # tuple with newlines included grouping pars which are not in source, fix
             if not ast.elts:
                 raise SyntaxError('expecting expression')
 
@@ -980,9 +981,9 @@ def parse_expr_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             raise SyntaxError('invalid expression (all types)') from None
 
     else:
-        if (isinstance(ast, Tuple)
+        if (ast.__class__ is Tuple
             and len(elts := ast.elts) == 1
-            and isinstance(e0 := elts[0], Starred)  # check for '*starred' acting as '*starred,'
+            and (e0 := elts[0]).__class__ is Starred  # check for '*starred' acting as '*starred,'
             and e0.end_col_offset == ast.end_col_offset
             and e0.end_lineno == ast.end_lineno
         ):
@@ -1031,10 +1032,10 @@ def parse_expr_slice(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         except SyntaxError:
             raise SyntaxError('invalid slice expression') from None
 
-        if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
+        if ast.__class__ is GeneratorExp:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
             raise SyntaxError('expecting slice expression, got unparenthesized GeneratorExp') from None
 
-        if isinstance(ast, Tuple):  # only py 3.10 because otherwise the parse above would have gotten it
+        if ast.__class__ is Tuple:  # only py 3.10 because otherwise the parse above would have gotten it
             if ast.elts:
                 raise SyntaxError('cannot have unparenthesized tuple containing Starred in slice') from None
 
@@ -1061,11 +1062,11 @@ def parse_Tuple_elt(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         pass
 
     else:
-        if not isinstance(ast, Tuple):
+        if ast.__class__ is not Tuple:
             return ast
 
         if (len(elts := ast.elts) == 1
-            and isinstance(e0 := elts[0], Starred)  # check for '*starred' acting as '*starred,' due to py 3.11 'a[*starred]' sneaky tuple syntax
+            and (e0 := elts[0]).__class__ is Starred  # check for '*starred' acting as '*starred,' due to py 3.11 'a[*starred]' sneaky tuple syntax
             and e0.end_col_offset == ast.end_col_offset
             and e0.end_lineno == ast.end_lineno
         ):
@@ -1090,12 +1091,12 @@ def parse_Tuple(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
         from_slice = False
 
-    if not isinstance(ast, Tuple):
+    if ast.__class__ is not Tuple:
         raise ParseError(f'expecting Tuple, got {ast.__class__.__name__}')
 
     if (from_slice
         and len(elts := ast.elts) == 1
-        and isinstance(e0 := elts[0], Starred)  # check for '*starred' acting as '*starred,' due to py 3.11 'a[*starred]' sneaky tuple syntax
+        and (e0 := elts[0]).__class__ is Starred  # check for '*starred' acting as '*starred,' due to py 3.11 'a[*starred]' sneaky tuple syntax
         and e0.end_col_offset == ast.end_col_offset
         and e0.end_lineno == ast.end_lineno
     ):
@@ -1119,12 +1120,12 @@ def parse__Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST
         except SyntaxError:
             raise SyntaxError('invalid Assign targets slice') from None
 
-    if not isinstance(ast, Assign):
+    if ast.__class__ is not Assign:
         raise ParseError(f'expecting Assign targets, got {ast.__class__.__name__}')
 
     name = ast.value
 
-    if not isinstance(name, Name):
+    if name.__class__ is not Name:
         raise ParseError(f'unexpected value type parsing Assign targets, {name.__class__.__name__}')
     elif name.id != '_':
         raise ParseError(f'unexpected value id parsing Assign targets, {name.value!r}')
@@ -1181,7 +1182,7 @@ def parse_comprehension(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     ast = _ast_parse1(f'[_ \n{src}\n]', parse_params).value
 
-    if not isinstance(ast, ListComp):
+    if ast.__class__ is not ListComp:
         raise ParseError('expecting comprehension')
 
     generators = ast.generators
@@ -1197,7 +1198,7 @@ def parse__comprehensions(src: str, parse_params: Mapping[str, Any] = {}) -> AST
 
     ast = _ast_parse1(f'[_ for _ in _\n{src}\n]', parse_params).value
 
-    if not isinstance(ast, ListComp):
+    if ast.__class__ is not ListComp:
         raise ParseError('expecting comprehensions')
 
     generators = ast.generators
@@ -1216,7 +1217,7 @@ def parse__comprehension_ifs(src: str, parse_params: Mapping[str, Any] = {}) -> 
 
     ast = _ast_parse1(f'[_ for _ in _\n{src}\n]', parse_params).value
 
-    if not isinstance(ast, ListComp) or len(ast.generators) != 1 or not isinstance(ast.generators[0].iter, Name):
+    if ast.__class__ is not ListComp or len(ast.generators) != 1 or ast.generators[0].iter.__class__ is not Name:
         raise ParseError('expecting comprehension ifs')
 
     ast = _comprehension_ifs(ifs=ast.generators[0].ifs, **_astloc_from_src(src, 2))
@@ -1406,10 +1407,10 @@ def parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if len(items) == 1:
         ast = items[0].context_expr
 
-        if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
+        if ast.__class__ is GeneratorExp:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
             raise SyntaxError('expecting withitem, got unparenthesized GeneratorExp')
 
-        if isinstance(ast, Tuple) and not ast.elts and ast.col_offset == 5:
+        if ast.__class__ is Tuple and not ast.elts and ast.col_offset == 5:
             raise SyntaxError('expecting withitem')
 
     else:  # unparenthesized Tuple
@@ -1421,7 +1422,7 @@ def parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
         ast = items[0].context_expr
 
-        assert isinstance(ast, Tuple)
+        assert ast.__class__ is Tuple
 
         _fix_unparenthesized_tuple_parsed_parenthesized(src, ast)
 
@@ -1436,10 +1437,10 @@ def parse__withitems(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if len(items) == 1:
         ast = items[0].context_expr
 
-        if isinstance(ast, GeneratorExp):  # wrapped something that looks like a GeneratorExp and turned it into that, bad
+        if ast.__class__ is GeneratorExp:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
             raise SyntaxError('expecting withitem, got unparenthesized GeneratorExp')
 
-        if isinstance(ast, Tuple) and not ast.elts and ast.col_offset == 5:
+        if ast.__class__ is Tuple and not ast.elts and ast.col_offset == 5:
             items = []
 
     ast = _withitems(items=items, **_astloc_from_src(src, 2))
@@ -1469,7 +1470,7 @@ def parse_pattern(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             ast = patterns[0]
 
         else:
-            if ast.lineno < 3 and isinstance(ast, MatchSequence):
+            if ast.lineno < 3 and ast.__class__ is MatchSequence:
                 if not (patterns := ast.patterns):
                     raise SyntaxError('empty pattern') from None
 
@@ -1557,7 +1558,7 @@ def parse__BoolOp_dangling_left(src: str, parse_params: Mapping[str, Any] = {}, 
     except SyntaxError:
         raise SyntaxError('expecting BoolOp with dangling operator on left side') from None
 
-    if not isinstance(ast, BoolOp):
+    if ast.__class__ is not BoolOp:
         raise ParseError('expecting BoolOp with dangling operator on left side')
 
     del ast.values[0]
@@ -1595,7 +1596,7 @@ def parse__BoolOp_dangling_right(src: str, parse_params: Mapping[str, Any] = {},
     except SyntaxError:
         raise SyntaxError('expecting BoolOp with dangling operator on right side') from None
 
-    if not isinstance(ast, BoolOp):
+    if ast.__class__ is not BoolOp:
         raise ParseError('expecting BoolOp with dangling operator on right side')
 
     values = ast.values
@@ -1620,7 +1621,7 @@ def parse__BoolOp_dangling_right(src: str, parse_params: Mapping[str, Any] = {},
         for _ in range(end_lineno - 1):  # find start of line of node
             pos = src.index('\n', pos) + 1
 
-        op_len = 3 if isinstance(ast.op, And) else 2
+        op_len = 3 if ast.op.__class__ is And else 2
         end_col = len(src[pos : pos + end_col_offset].encode()[:end_col_offset].decode())  # convert byte column to char column
         pos += end_col
 
@@ -1656,7 +1657,7 @@ def parse__Compare_dangling_left(src: str, parse_params: Mapping[str, Any] = {},
     except SyntaxError:
         raise SyntaxError('expecting Compare with dangling operator on left side') from None
 
-    if not isinstance(ast, Compare):
+    if ast.__class__ is not Compare:
         raise ParseError('expecting Compare with dangling operator on left side')
 
     ast.left = None  # no need to offset this
@@ -1704,7 +1705,7 @@ def parse__Compare_dangling_right(src: str, parse_params: Mapping[str, Any] = {}
     except SyntaxError:
         raise SyntaxError('expecting Compare with dangling operator on right side') from None
 
-    if not isinstance(ast, Compare):
+    if ast.__class__ is not Compare:
         raise ParseError('expecting Compare with dangling operator on right side')
 
     comparators = ast.comparators
@@ -1725,7 +1726,7 @@ def parse__Compare_dangling_right(src: str, parse_params: Mapping[str, Any] = {}
 
     m = (_re_next_src_no_space.match(src, pos) or _re_first_src.search(src, pos))  # right dangling operator, needs to become end position of placeholder AST and maybe Compare
 
-    if (op_cls := ast.ops[-1].__class__) not in (IsNot, NotIn):  # if not two-part operator then done searching
+    if (op_cls := ast.ops[-1].__class__) not in ASTS_LEAF_CMPOP_TWO_WORD:  # if not two-part operator then done searching
         op_len = len(OPCLS2STR[op_cls])
 
     else:  # two-part operator, find second part
@@ -1844,20 +1845,20 @@ _PARSE_MODE_FUNCS = {  # these do not all guarantee will parse ONLY to that type
 assert not set(get_args(get_args(Mode)[0])).symmetric_difference(k for k in _PARSE_MODE_FUNCS if isinstance(k, str)), \
     'Mode string modes do not match _PARSE_MODE_FUNCS table'
 
-for ast_type in FIELDS:  # fill out _PARSE_MODE_FUNCS with all supported AST types and their class names as parse modes
-    ast_name = ast_type.__name__
+for ast_cls in FIELDS:  # fill out _PARSE_MODE_FUNCS with all supported AST types and their class names as parse modes
+    ast_name = ast_cls.__name__
 
-    _AST_TYPE_BY_NAME_OR_TYPE[ast_type] = _AST_TYPE_BY_NAME_OR_TYPE[ast_name] = ast_type
+    _AST_TYPE_BY_NAME_OR_TYPE[ast_cls] = _AST_TYPE_BY_NAME_OR_TYPE[ast_name] = ast_cls
 
-    if parse_func := _PARSE_MODE_FUNCS.get(ast_type):
+    if parse_func := _PARSE_MODE_FUNCS.get(ast_cls):
         if ast_name not in _PARSE_MODE_FUNCS:  # for top level types already in table name is probably in table as well (and may be different in future?)
             _PARSE_MODE_FUNCS[ast_name] = parse_func
 
     else:
-        base = ast_type
+        base = ast_cls
 
         while (base := base.__bases__[0]) is not AST:
             if parse_func := _PARSE_MODE_FUNCS.get(base):
-                _PARSE_MODE_FUNCS[ast_type] = _PARSE_MODE_FUNCS[ast_name] = parse_func  # base ASTs not in table will not have name in table either
+                _PARSE_MODE_FUNCS[ast_cls] = _PARSE_MODE_FUNCS[ast_name] = parse_func  # base ASTs not in table will not have name in table either
 
                 break

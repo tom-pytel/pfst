@@ -14,7 +14,9 @@ from typing import Any, Literal, Mapping
 from . import fst
 
 from .asttypes import (
-    ASTS_BLOCK,
+    ASTS_LEAF_EXPR,
+    ASTS_LEAF_PATTERN,
+    ASTS_LEAF_BLOCK,
     AST,
     AnnAssign,
     Assert,
@@ -80,11 +82,9 @@ from .asttypes import (
     arg,
     arguments,
     comprehension,
-    expr,
     keyword,
     match_case,
     mod,
-    pattern,
     stmt,
     withitem,
     TryStar,
@@ -331,7 +331,7 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
     elif isinstance(ast, (stmt, ExceptHandler, match_case)):  # src = 'stmt' or 'node'
         loc = self.bloc
 
-        if isinstance(ast, ASTS_BLOCK):
+        if ast.__class__ in ASTS_LEAF_BLOCK:
             ln, col, _, _ = loc
             end_ln, end_col, _, _ = self._loc_block_header_end()
 
@@ -342,7 +342,7 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
 
     elif not isinstance(ast, (mod, _ExceptHandlers, _match_cases)):
         if st.src == 'node':
-            if not (parent := self.parent) or not isinstance(parent.a, Expr):
+            if not (parent := self.parent) or parent.a.__class__ is not Expr:
                 if loc := self.loc:
                     _dump_lines(self, st, *loc, False)
 
@@ -353,13 +353,13 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
                 _dump_lines(self, st, *loc, False)
 
     if not st.expand:
-        if isinstance(ast, Name):
+        if ast.__class__ is Name:
             st.linefunc(f'{cind}{prefix}{c.clr_ast}Name{c.end_ast} {_dump_prim(ast.id, c)} '
                         f'{c.clr_ast}{ast.ctx.__class__.__name__}{c.end_ast}{tail}{st.eol}')
 
             return
 
-        if isinstance(ast, Constant):
+        if ast.__class__ is Constant:
             kind = '' if ast.kind is None else f' {c.clr_field}.kind{c.end_field} {_dump_prim(ast.kind, c)}'
             prim = _dump_prim_long(ast.value, st, cind + sind)
 
@@ -370,7 +370,7 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
 
             return
 
-        if isinstance(ast, MatchSingleton):
+        if ast.__class__ is MatchSingleton:
             st.linefunc(f'{cind}{prefix}{c.clr_ast}MatchSingleton{c.end_ast} {_dump_prim(ast.value, c)}'
                         f'{tail}{st.eol}')
 
@@ -382,7 +382,7 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
         is_list = isinstance(child, list)
 
         if not st.expand:
-            if not st.full and child is None and not isinstance(ast, MatchSingleton):
+            if not st.full and child is None and ast.__class__ is not MatchSingleton:
                 continue
 
             if name == 'ctx':
@@ -407,7 +407,7 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
 
                 continue
 
-            if name == 'args' and isinstance(child, arguments):
+            if name == 'args' and child.__class__ is arguments:
                 if child.posonlyargs or child.args or child.vararg or child.kwonlyargs or child.kwarg or st.full:
                     _dump_node(child.f, st, cind + sind, f'{c.clr_field}.args{c.end_field} ')
 
@@ -423,7 +423,7 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
                     child is None
                     and not (
                         name == 'value'
-                        and isinstance(ast, (Constant, MatchSingleton)))))):
+                        and ast.__class__ in (Constant, MatchSingleton))))):
             continue
 
         if not is_list:
@@ -1022,15 +1022,15 @@ def _is_parenthesizable(self: fst.FST) -> bool:
     False
     """
 
-    if not isinstance(a := self.a, expr):
-        return isinstance(a, pattern)
+    if (ast_cls := self.a.__class__) not in ASTS_LEAF_EXPR:
+        return ast_cls in ASTS_LEAF_PATTERN
 
-    if isinstance(a, (Slice, FormattedValue, Interpolation)):
+    if ast_cls in (Slice, FormattedValue, Interpolation):
         return False
 
     while self := self.parent:
-        if not isinstance(a := self.a, expr):
-            if isinstance(a, pattern):
+        if (ast_cls := self.a.__class__) not in ASTS_LEAF_EXPR:
+            if ast_cls in ASTS_LEAF_PATTERN:
                 return False
 
             break
@@ -1056,7 +1056,7 @@ def _is_parenthesized_tuple(self: fst.FST) -> bool | None:
     None
     """
 
-    return self._is_delimited_seq() if isinstance(self.a, Tuple) else None
+    return self._is_delimited_seq() if self.a.__class__ is Tuple else None
 
 
 def _is_delimited_matchseq(self: fst.FST) -> Literal['', '[]', '()'] | None:
@@ -1083,7 +1083,7 @@ def _is_delimited_matchseq(self: fst.FST) -> Literal['', '[]', '()'] | None:
     None
     """
 
-    if not isinstance(self.a, MatchSequence):
+    if self.a.__class__ is not MatchSequence:
         return None
 
     ln, col, _, _ = self.loc
@@ -1125,7 +1125,7 @@ def _is_except_star(self: fst.FST) -> bool | None:
     None
     """
 
-    if not isinstance(self.a, ExceptHandler):
+    if self.a.__class__ is not ExceptHandler:
         return None
 
     ln, col, end_ln, end_col = self.loc
@@ -1143,7 +1143,7 @@ def _is_expr_arglike(self: fst.FST) -> bool | None:
     - `False`: Is a not an arglike expression, `*x`, `y`, `i = 1`, etc...
     """
 
-    if not isinstance(ast := self.a, Starred) or isinstance(child := ast.value, Tuple):  # we assume any Tuple child of a Starred is intrinsically parenthesized, otherwise it is invalid
+    if (ast := self.a).__class__ is not Starred or (child := ast.value).__class__ is Tuple:  # we assume any Tuple child of a Starred is intrinsically parenthesized, otherwise it is invalid
         return False
 
     child_type = child.op.__class__ if (child_cls := child.__class__) in (BoolOp, BinOp, UnaryOp) else child_cls
@@ -1172,8 +1172,8 @@ def _is_empty_set_call(self: fst.FST) -> bool:
     False
     """
 
-    return (isinstance(ast := self.a, Call) and not ast.args and not ast.keywords and
-            isinstance(func := ast.func, Name) and func.id == 'set' and isinstance(func.ctx, Load))
+    return ((ast := self.a).__class__ is Call and not ast.args and not ast.keywords and
+            (func := ast.func).__class__ is Name and func.id == 'set' and func.ctx.__class__ is Load)
 
 
 def _is_empty_set_star(self: fst.FST) -> bool:
@@ -1192,8 +1192,8 @@ def _is_empty_set_star(self: fst.FST) -> bool:
     False
     """
 
-    return (isinstance(ast := self.a, Set) and len(elts := ast.elts) == 1 and isinstance(e0 := elts[0], Starred) and
-            ((isinstance(v := e0.value, (Tuple, List)) and not v.elts) or (isinstance(v, Dict) and not v.keys)))
+    return ((ast := self.a).__class__ is Set and len(elts := ast.elts) == 1 and (e0 := elts[0]).__class__ is Starred and
+            (((v := e0.value).__class__ in (Tuple, List) and not v.elts) or (v.__class__ is Dict and not v.keys)))
 
 
 def _is_solo_class_base(self: fst.FST) -> bool | None:
@@ -1238,7 +1238,7 @@ def _is_solo_call_arg(self: fst.FST) -> bool:
     True
     """
 
-    return ((parent := self.parent) and self.pfield.name == 'args' and isinstance(parenta := parent.a, Call) and
+    return ((parent := self.parent) and self.pfield.name == 'args' and (parenta := parent.a).__class__ is Call and
             not parenta.keywords and len(parenta.args) == 1)
 
 
@@ -1262,8 +1262,8 @@ def _is_solo_call_arg_genexp(self: fst.FST) -> bool:
     False
     """
 
-    return ((parent := self.parent) and self.pfield.name == 'args' and isinstance(self.a, GeneratorExp) and
-            isinstance(parenta := parent.a, Call) and not parenta.keywords and len(parenta.args) == 1)
+    return ((parent := self.parent) and self.pfield.name == 'args' and self.a.__class__ is GeneratorExp and
+            (parenta := parent.a).__class__ is Call and not parenta.keywords and len(parenta.args) == 1)
 
 
 def _is_solo_matchcls_pat(self: fst.FST) -> bool:
@@ -1284,11 +1284,11 @@ def _is_solo_matchcls_pat(self: fst.FST) -> bool:
     if not (parent := self.parent):
         return False
 
-    if isinstance(parenta := parent.a, MatchValue):
+    if (parenta := parent.a).__class__ is MatchValue:
         self = parent
 
     return ((parent := self.parent) and self.pfield.name == 'patterns' and
-            isinstance(parenta := parent.a, MatchClass) and not parenta.kwd_patterns and len(parenta.patterns) == 1)
+            (parenta := parent.a).__class__ is MatchClass and not parenta.kwd_patterns and len(parenta.patterns) == 1)
 
 
 def _is_any_parent_format_spec_start_pos(self: fst.FST, ln: int, col: int) -> bool:
@@ -1305,7 +1305,7 @@ def _is_any_parent_format_spec_start_pos(self: fst.FST, ln: int, col: int) -> bo
             if end_lineno > lineno or (end_lineno == lineno and self.a.end_col_offset > col_offset):
                 return False
 
-        if isinstance(parenta := parent.a, (FormattedValue, Interpolation)):
+        if (parenta := parent.a).__class__ in (FormattedValue, Interpolation):
             return (self.pfield.name == 'value' and
                     (fs := parenta.format_spec) and fs.col_offset == col_offset and fs.lineno == lineno)
 
@@ -1392,8 +1392,8 @@ def _has_Slice(self: fst.FST) -> bool:
     False
     """
 
-    return isinstance(a := self.a, Slice) or (isinstance(a, Tuple) and
-                                                any(isinstance(e, Slice) for e in a.elts))
+    return (a := self.a).__class__ is Slice or (a.__class__ is Tuple and
+                                                any(e.__class__ is Slice for e in a.elts))
 
 
 def _has_Starred(self: fst.FST) -> bool:
@@ -1408,8 +1408,8 @@ def _has_Starred(self: fst.FST) -> bool:
     True
     """
 
-    return isinstance(a := self.a, Starred) or (isinstance(a, (Tuple, List, Set)) and
-                                                any(isinstance(e, Starred) for e in a.elts))
+    return (a := self.a).__class__ is Starred or (a.__class__ in (Tuple, List, Set) and
+                                                any(e.__class__ is Starred for e in a.elts))
 
 
 def _maybe_add_line_continuations(self: fst.FST, whole: bool = False, del_comments: bool = True) -> bool:
@@ -1650,7 +1650,7 @@ def _maybe_fix_undelimited_seq(self: fst.FST, body: list[AST], delims: str = '()
          and not self._is_enclosed_or_line(pars=False)
          and not (encpar := self._is_enclosed_in_parents())
         )  # could have line continuations
-        or (any(isinstance(e, NamedExpr) and not e.f.pars().n for e in body))  # yeah, this is fine in parenthesized tuples but not in naked ones, only applies to tuples and not MatchSequence obviously
+        or (any(e.__class__ is NamedExpr and not e.f.pars().n for e in body))  # yeah, this is fine in parenthesized tuples but not in naked ones, only applies to tuples and not MatchSequence obviously
     ):
         self._delimit_node(delims=delims)
 
@@ -1770,7 +1770,7 @@ def _parenthesize_grouping(self: fst.FST, whole: bool = True, *, star_child: boo
 
     ln, col, end_ln, end_col = self.whole_loc if whole and self.is_root else self.loc
 
-    if is_star_child := isinstance(ast, Starred) and star_child:
+    if is_star_child := ast.__class__ is Starred and star_child:
         ln, col, _, _ = self.loc
         col += 1
         self = ast.value.f
@@ -1799,7 +1799,7 @@ def _unparenthesize_grouping(self: fst.FST, shared: bool | None = True, *, star_
     - `bool`: Whether parentheses were removed or not (only removed if present to begin with and removable).
     """
 
-    if isinstance(self.a, Starred) and star_child:
+    if self.a.__class__ is Starred and star_child:
         self = self.a.value.f
 
     pars_loc = self.pars(shared=None if shared is None else True)

@@ -15,13 +15,19 @@ from typing import Iterable, Literal, NamedTuple
 from . import fst
 
 from .asttypes import (
-    ASTS_EXPRISH,
-    ASTS_STMTISH,
-    ASTS_MAYBE_DOCSTR,
+    ASTS_LEAF_EXPR,
+    ASTS_LEAF_EXPR_CONTEXT,
+    ASTS_LEAF_CMPOP,
+    ASTS_LEAF_EXPR_OR_PATTERN,
+    ASTS_LEAF_EXPRISH,
+    ASTS_LEAF_STMTISH,
+    ASTS_LEAF_FUNCDEF,
+    ASTS_LEAF_WITH,
+    ASTS_LEAF_CMPOP_TWO_WORD,
+    ASTS_LEAF_MAYBE_DOCSTR,
     AST,
     AsyncFor,
     AsyncFunctionDef,
-    AsyncWith,
     Attribute,
     Call,
     ClassDef,
@@ -37,7 +43,6 @@ from .asttypes import (
     If,
     ImportFrom,
     Interactive,
-    IsNot,
     JoinedStr,
     List,
     ListComp,
@@ -49,7 +54,6 @@ from .asttypes import (
     MatchValue,
     Module,
     Name,
-    NotIn,
     Set,
     SetComp,
     Slice,
@@ -58,14 +62,12 @@ from .asttypes import (
     Try,
     Tuple,
     While,
-    With,
     alias,
     arg,
     arguments,
     boolop,
     cmpop,
     comprehension,
-    expr,
     expr_context,
     keyword,
     match_case,
@@ -127,8 +129,8 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
 
     ast = self.a
 
-    if not (get_val := isinstance(ast, Interpolation)):
-        if not isinstance(ast, FormattedValue):
+    if not (get_val := (ast.__class__ is Interpolation)):
+        if ast.__class__ is not FormattedValue:
             return None
 
     lines = self.root._lines
@@ -171,10 +173,10 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
             if fend_ln == fln:  # everything on one line, don't need to recurse
                 walking.send(False)
 
-            elif isinstance(a := f.a, Constant):  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
+            elif (a := f.a).__class__ is Constant:  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
                 lns.update(_multiline_str_continuation_lns(lines, *f.loc))
 
-            elif isinstance(a, (JoinedStr, TemplateStr)):
+            elif a.__class__ in (JoinedStr, TemplateStr):
                 lns.update(_multiline_ftstr_continuation_lns(lines, *f.loc))
 
                 walking.send(False)  # skip everything inside regardless, because it is evil
@@ -287,13 +289,13 @@ class _Modifying:
                 if fst_ := fst_.parent:
                     field = pfield.name
 
-            self.fst = fst_ if fst_ and isinstance(fst_.a, expr) else False
+            self.fst = fst_ if fst_ and fst_.a.__class__ in ASTS_LEAF_EXPR else False
 
             if self.fst:
                 self.field = field
                 self.data = data = []  # [(FormattedValue or Interpolation FST, len(dbg_str) or None, bool do val_str), ...]
 
-                while isinstance(fst_.a, ASTS_EXPRISH):
+                while fst_.a.__class__ in ASTS_LEAF_EXPRISH:
                     parent = fst_.parent
                     pfield = fst_.pfield
 
@@ -303,7 +305,7 @@ class _Modifying:
                         if (dbg_str is None
                             or not parent
                             or not (idx := pfield.idx)
-                            or not isinstance(prev := parent.a.values[idx - 1], Constant)
+                            or (prev := parent.a.values[idx - 1]).__class__ is not Constant
                             or not isinstance(v := prev.value, str)
                             or not v.endswith(dbg_str)
                             or (prevf := prev.f).end_col != end_col
@@ -416,7 +418,7 @@ class _Modifying:
 
         if not raw:
             while not isinstance(a := fst_.a, (stmt, pattern, match_case, ExceptHandler)):  # don't allow modification if inside an f-string because before 3.12 they were very fragile
-                if isinstance(a, JoinedStr):
+                if a.__class__ is JoinedStr:
                     raise NotImplementedError('put inside JoinedStr not implemented on python < 3.12')
 
                 if not (fst_ := fst_.parent):
@@ -544,15 +546,15 @@ def _reparse_docstr_Constants(self: fst.FST, docstr: bool | Literal['strict'] = 
 
     if docstr is True:
         for a in walk(self.a):
-            if isinstance(a, Expr) and isinstance(v := a.value, Constant) and isinstance(v.value, str):
+            if a.__class__ is Expr and (v := a.value).__class__ is Constant and isinstance(v.value, str):
                 v.value = literal_eval((f := a.f)._get_src(*f.loc))
 
     elif docstr == 'strict':
         for a in walk(self.a):
-            if isinstance(a, ASTS_MAYBE_DOCSTR):
+            if a.__class__ in ASTS_LEAF_MAYBE_DOCSTR:
                 if ((body := a.body)
-                    and isinstance(b0 := body[0], Expr)
-                    and isinstance(v := b0.value, Constant)
+                    and (b0 := body[0]).__class__ is Expr
+                    and (v := b0.value).__class__ is Constant
                     and isinstance(v.value, str)
                 ):
                     v.value = literal_eval((f := b0.f)._get_src(*f.loc))
@@ -581,7 +583,7 @@ def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None) -> None:
         for field in parenta._fields:  # unrolled iter_child_nodes(parenta) because it makes a difference here
             if child := getattr(parenta, field, None):
                 if isinstance(child, AST):
-                    if field in ('ctx', 'op'):
+                    if field in ('ctx', 'op'):  # SINGLETON instances from ast.parse() live in these fields
                         if not hasattr(child, 'f'):  # if `.f` exists and points to an FST then this has already been done
                             setattr(parenta, field, child := child.__class__())  # (expr_context, unaryop, operator, boolop, cmpop)  - the same object may be reused by ast.parse() in mutiple places in the tree, we need unique objects (cmpop done below for list field 'ops')
 
@@ -591,7 +593,7 @@ def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None) -> None:
                         stack.append(FST(child, parent, astfield(field)))
 
                 elif isinstance(child, list):
-                    if field != 'ops':
+                    if field != 'ops':  # SINGLETON instances from ast.parse() live in this field
                         if not isinstance(child[0], str):
                             stack.extend(FST(c, parent, astfield(field, i))
                                          for i, c in enumerate(child) if isinstance(c, AST))
@@ -691,9 +693,9 @@ def _set_ctx(self: fst.FST, ctx: type[expr_context]) -> None:
     while stack:
         a = stack.pop()
 
-        if ((is_seq := isinstance(a, (Tuple, List)))
-            or (is_starred := isinstance(a, Starred))
-            or isinstance(a, (Name, Subscript, Attribute))
+        if ((is_seq := (a.__class__ in (Tuple, List)))
+            or (is_starred := (a.__class__ is Starred))
+            or a.__class__ in (Name, Subscript, Attribute)
         ) and not isinstance(a.ctx, ctx):
             a.ctx = child = ctx()
 
@@ -815,6 +817,7 @@ def _is_atom(
     """
 
     ast = self.a
+    ast_cls = ast.__class__
 
     if isinstance(ast, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Name,
                         MatchValue, MatchSingleton, MatchMapping,
@@ -823,7 +826,7 @@ def _is_atom(
         return True
 
     if not always_enclosed:
-        if isinstance(ast, Constant):
+        if ast_cls is Constant:
             return 'unenclosable' if isinstance(ast.value, (str, bytes)) else True
 
         if isinstance(ast, (Call, JoinedStr, TemplateStr, Constant, Attribute, Subscript,
@@ -835,16 +838,16 @@ def _is_atom(
     elif isinstance(ast, (comprehension, arguments, arg, keyword, alias, type_param)):  # can't be parenthesized
         return False
 
-    elif isinstance(ast, Constant):
+    elif ast_cls is Constant:
         if not isinstance(ast.value, (str, bytes)):  # str and bytes can be multiline implicit needing parentheses
             return True
 
-    elif isinstance(ast, withitem):  # isn't atom on its own and can't be parenthesized directly but if only has context_expr then take on value of that if starts and ends on same lines
+    elif ast_cls is withitem:  # isn't atom on its own and can't be parenthesized directly but if only has context_expr then take on value of that if starts and ends on same lines
         return (not ast.optional_vars and self.loc[::2] == (ce := ast.context_expr.f).pars()[::2] and
                 ce._is_atom(pars=pars, always_enclosed=always_enclosed))
 
-    elif isinstance(ast, cmpop):
-        return not isinstance(ast, (IsNot, NotIn))  # could be spread across multiple lines
+    elif ast_cls in ASTS_LEAF_CMPOP:
+        return ast_cls not in ASTS_LEAF_CMPOP_TWO_WORD  # could be spread across multiple lines
 
     if (ret := self._is_parenthesized_tuple()) is not None:  # if this is False then cannot be enclosed in grouping pars because that would reparse to a parenthesized Tuple and so is inconsistent
         return ret
@@ -852,7 +855,7 @@ def _is_atom(
     if (ret := self._is_delimited_matchseq()) is not None:  # like Tuple, cannot be enclosed in grouping pars
         return bool(ret)
 
-    assert isinstance(ast, (expr, pattern))
+    assert ast_cls in ASTS_LEAF_EXPR_OR_PATTERN
 
     return 'pars' if pars and self.pars().n else False
 
@@ -960,8 +963,8 @@ def _is_enclosed_or_line(
                             expr_context, type_ignore)):
             return True
 
-        if isinstance(ast, (Module, Interactive, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
-                            Match, Try, TryStar, ExceptHandler, match_case)):  # With, AsyncWith not checked because they are handled
+        if ast.__class__ in (Module, Interactive, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If,
+                             Match, Try, TryStar, ExceptHandler, match_case):  # With, AsyncWith not checked because they are handled
             raise NotImplementedError("we don't do block statements yet")  # TODO: this
 
         ln, col, end_ln, end_col = loc
@@ -975,7 +978,7 @@ def _is_enclosed_or_line(
 
             pars = False
 
-        if (is_const := isinstance(ast, Constant)) or isinstance(ast, (JoinedStr, TemplateStr)):
+        if (is_const := (ast.__class__ is Constant)) or ast.__class__ in (JoinedStr, TemplateStr):
             if is_const:
                 if not isinstance(ast.value, (str, bytes)):
                     return True
@@ -1007,31 +1010,32 @@ def _is_enclosed_or_line(
                 return True
 
         last_ln = ln
+        ast_cls = ast.__class__
 
-        if isinstance(ast, Call):  # these will replace any fields which we know to be enclosed with mock FST nodes which just say the location is enclosed
+        if ast_cls is Call:  # these will replace any fields which we know to be enclosed with mock FST nodes which just say the location is enclosed
             children = [ast.func,
                         nspace(f=nspace(pars=lambda: self._loc_Call_pars(),
                                         _is_enclosed_or_line=lambda **kw: True))]
 
-        elif isinstance(ast, Subscript):
+        elif ast_cls is Subscript:
             children = [ast.value,
                         nspace(f=nspace(pars=lambda: self._loc_Subscript_brackets(),
                                         _is_enclosed_or_line=lambda **kw: True))]
 
-        elif isinstance(ast, ImportFrom):
+        elif ast_cls is ImportFrom:
             pars_names = self._loc_ImportFrom_names_pars()
             children = ([nspace(f=nspace(pars=lambda: pars_names, _is_enclosed_or_line=lambda **kw: True))]
                         if pars_names.n else
                         ast.names)
 
-        elif isinstance(ast, (With, AsyncWith)):
+        elif ast_cls in ASTS_LEAF_WITH:
             pars_items = self._loc_With_items_pars()
             end_ln = pars_items.bound.end_ln
             children = ([nspace(f=nspace(pars=lambda: pars_items, _is_enclosed_or_line=lambda **kw: True))]
                         if pars_items.n else
                         ast.items)
 
-        elif isinstance(ast, MatchClass):
+        elif ast_cls is MatchClass:
             children = [ast.cls,
                         nspace(f=nspace(pars=lambda: self._loc_MatchClass_pars(),
                                         _is_enclosed_or_line=lambda **kw: True))]
@@ -1138,45 +1142,46 @@ def _is_enclosed_in_parents(self: fst.FST, field: str | None = None) -> bool:
         if field != 'ctx':  # so that the `ctx` of a List is not considered enclosed
             self = nspace(parent=self, pfield=astfield(field))
 
-    elif isinstance(self.a, expr_context):  # so that the `ctx` of a List is not considered enclosed
+    elif self.a.__class__ in ASTS_LEAF_EXPR_CONTEXT:  # so that the `ctx` of a List is not considered enclosed
         if not (self := self.parent):
             return False
 
     while parent := self.parent:
         parenta = parent.a
+        parent_cls = parenta.__class__
 
-        if isinstance(parenta, (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp,
-                                FormattedValue, Interpolation, JoinedStr, TemplateStr,
-                                MatchMapping)):
+        if parent_cls in (List, Dict, Set, ListComp, SetComp, DictComp, GeneratorExp,
+                          FormattedValue, Interpolation, JoinedStr, TemplateStr,
+                          MatchMapping):
             return True
 
-        if isinstance(parenta, (FunctionDef, AsyncFunctionDef)):
+        if parent_cls in ASTS_LEAF_FUNCDEF:
             return self.pfield.name in ('type_params', 'args')
 
-        if isinstance(parenta, ClassDef):
+        if parent_cls is ClassDef:
             return self.pfield.name in ('type_params', 'bases', 'keywords')
 
-        if isinstance(parenta, TypeAlias):
+        if parent_cls is TypeAlias:
             return self.pfield.name == 'type_params'
 
-        if isinstance(parenta, ImportFrom):
+        if parent_cls is ImportFrom:
             return bool(parent._loc_ImportFrom_names_pars().n)  # we know we are in `names`
 
-        if isinstance(parenta, (With, AsyncWith)):
+        if parent_cls in ASTS_LEAF_WITH:
             return bool(parent._loc_With_items_pars().n)  # we know we are in `items`
 
         if isinstance(parenta, (stmt, ExceptHandler, match_case, mod, type_ignore)):
             return False
 
-        if isinstance(parenta, Call):
+        if parent_cls is Call:
             if self.pfield.name in ('args', 'keywords'):
                 return True
 
-        elif isinstance(parenta, Subscript):
+        elif parent_cls is Subscript:
             if self.pfield.name == 'slice':
                 return True
 
-        elif isinstance(parenta, MatchClass):
+        elif parent_cls is MatchClass:
             if self.pfield.name in ('patterns', 'kwd_attrs', 'kwd_patterns'):
                 return True
 
@@ -1225,8 +1230,8 @@ def _get_parse_mode(self: fst.FST) -> str | type[AST] | None:
 
     # check the cases that need source code
 
-    if isinstance(ast, Tuple) and (elts := ast.elts):
-        if isinstance(e0 := elts[0], Starred):
+    if ast.__class__ is Tuple and (elts := ast.elts):
+        if (e0 := elts[0]).__class__ is Starred:
             if len(elts) == 1:
                 _, _, ln, col = e0.f.loc
                 _, _, end_ln, end_col = self.loc
@@ -1273,7 +1278,7 @@ def _get_indent(self: fst.FST) -> str:
     ' '
     """
 
-    while (parent := self.parent) and not isinstance(self.a, ASTS_STMTISH):
+    while (parent := self.parent) and self.a.__class__ not in ASTS_LEAF_STMTISH:
         self = parent
 
     root = self.root
@@ -1349,30 +1354,30 @@ def _get_indentable_lns(
     lines = self.root._lines
     lns = set(range(skip, len(lines))) if self.is_root else set(range(self.bln + skip, self.bend_ln + 1))  # start with all lines indentable and remove multiline strings which are not docstrings
 
-    while (parent := self.parent) and not isinstance(self.a, ASTS_STMTISH):
+    while (parent := self.parent) and self.a.__class__ not in ASTS_LEAF_STMTISH:
         self = parent
 
     for f in (walking := self.walk(False)):  # find multiline strings and exclude their unindentable lines
         if f.bend_ln == f.bln:  # everything on one line, don't need to recurse
             walking.send(False)
 
-        elif isinstance(a := f.a, Constant):  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
+        elif (a := f.a).__class__ is Constant:  # isinstance(f.a.value, (str, bytes)) is a given if bend_ln != bln
             if not (
                 docstr
                 and isinstance(a.value, str)  # could be bytes
                 and (parent := f.parent)
-                and isinstance(parent.a, Expr)
+                and parent.a.__class__ is Expr
                 and (
                     not strict
                     or (
                         (grandparent := parent.parent)
                         and parent.pfield == ('body', 0)
-                        and isinstance(grandparent.a, ASTS_MAYBE_DOCSTR)
+                        and grandparent.a.__class__ in ASTS_LEAF_MAYBE_DOCSTR
                         and parent.a is not docstr_strict_exclude
             ))):
                 lns.difference_update(_multiline_str_continuation_lns(lines, *f.loc))
 
-        elif isinstance(a, (JoinedStr, TemplateStr)):
+        elif a.__class__ in (JoinedStr, TemplateStr):
             lns.difference_update(_multiline_ftstr_continuation_lns(lines, *f.loc))
 
             walking.send(False)  # skip everything inside regardless, because it is evil

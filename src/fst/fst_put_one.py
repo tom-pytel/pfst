@@ -12,6 +12,9 @@ from typing import Any, Callable, Mapping, NamedTuple
 from . import fst
 
 from .asttypes import (
+    ASTS_LEAF_EXPR,
+    ASTS_LEAF_PATTERN,
+    ASTS_LEAF_WITH,
     AST,
     Add,
     And,
@@ -91,7 +94,6 @@ from .asttypes import (
     arg,
     arguments,
     comprehension,
-    expr,
     expr_context,
     keyword,
     match_case,
@@ -235,7 +237,7 @@ def _validate_put_ast(self: fst.FST, put_ast: AST, idx: int | None, field: str, 
                 raise NodeError(f'{self.a.__class__.__name__}.{field} '
                                 f'cannot be {put_ast.__class__.__name__}', rawable=True)
 
-        elif isinstance(restrict, FunctionType):
+        elif restrict.__class__ is FunctionType:
             if not restrict(put_ast):  # not "restrict" meaning is inverted here, really means "not allow"
                 raise NodeError(f'invalid value for {self.a.__class__.__name__}.{field}'
                                 f', got {put_ast.__class__.__name__}', rawable=True)
@@ -253,10 +255,10 @@ def _validate_pattern_attr(self: fst.FST) -> Name:
         if self.pars().n:
             raise NodeError(f'cannot put parenthesized {self.a.__class__.__name__} to pattern expression', rawable=True)
 
-        if isinstance(a := self.a, Name):
+        if (a := self.a).__class__ is Name:
             return a
 
-        if not isinstance(a, Attribute):
+        if a.__class__ is not Attribute:
             raise NodeError(f'cannot put {self.a.__class__.__name__} to pattern expression', rawable=True)
 
         self = a.value.f
@@ -299,7 +301,7 @@ def _is_valid_MatchMapping_key(ast: AST) -> bool:
 
 
 def _maybe_par_above(above: fst.FST, below: fst.FST) -> bool:
-    while isinstance(a := below.a, (Attribute, Subscript)):
+    while (a := below.a).__class__ in (Attribute, Subscript):
         if below.pars().n:
             above._parenthesize_grouping()
 
@@ -308,7 +310,7 @@ def _maybe_par_above(above: fst.FST, below: fst.FST) -> bool:
         below = a.value.f
 
     else:
-        if isinstance(a, Name) and below.pars().n:
+        if a.__class__ is Name and below.pars().n:
             above._parenthesize_grouping()
 
             return True
@@ -394,21 +396,21 @@ def _put_one_op(
     childf = child.f
 
     if self.parent_pattern():  # if we are in a pattern then replacements are restricted
-        if isinstance(child, USub):  # indicates we are in UnaryOp
-            if not isinstance(codea, USub):
+        if child.__class__ is USub:  # indicates we are in UnaryOp
+            if codea.__class__ is not USub:
                 raise NodeError("cannot put anything other than '-' to a pattern UnaryOp.op", rawable=True)
 
-        elif not isinstance(codea, (Add, Sub)):  # otherwise MUST be BinOp
+        elif codea.__class__ not in (Add, Sub):  # otherwise MUST be BinOp
             raise NodeError("cannot put anything other than '+' or '-' to a pattern BinOp.op", rawable=True)
 
-    is_alnum = isinstance(codea, (Not, Is, IsNot, In, NotIn))  # alphanumneric operators may need spaces added
+    is_alnum = codea.__class__ in (Not, Is, IsNot, In, NotIn)  # alphanumneric operators may need spaces added
 
     self._put_src(code._lines, *childf.loc, False)
     childf._set_ast(codea)
 
     ast = self.a
 
-    if (is_binop := isinstance(ast, BinOp)) or isinstance(ast, UnaryOp):  # parenthesize if precedence requires according to new operator
+    if (is_binop := (ast.__class__ is BinOp)) or ast.__class__ is UnaryOp:  # parenthesize if precedence requires according to new operator
         if (parent := self.parent) and precedence_require_parens(ast, parent.a, *self.pfield) and not self.pars().n:
             self._parenthesize_grouping()
 
@@ -479,7 +481,7 @@ def _put_one_AnnAssign_simple(
         raise ValueError('expection 0 or 1')
 
     if value != self.a.simple:
-        is_name = isinstance(target := ast.target, Name)
+        is_name = (target := ast.target).__class__ is Name
 
         if value:
             if not is_name:
@@ -556,8 +558,8 @@ def _put_one_BoolOp_op(
     childf = child.f
     code = code_as_boolop(code, root.parse_params)
     codea = code.a
-    src = 'and' if isinstance(codea, And) else 'or'
-    tgt = 'and' if isinstance(child, And) else 'or'
+    src = 'and' if codea.__class__ is And else 'or'
+    tgt = 'and' if child.__class__ is And else 'or'
     ltgt = len(tgt)
 
     _, _, end_ln, end_col = self.loc
@@ -571,11 +573,11 @@ def _put_one_BoolOp_op(
     childf._set_ast(codea)
 
     if src != tgt:  # if replacing with different boolop then need to parenthesize self if parent is BoolOp or children if they are BoolOps to keep structure regardless of precedence
-        if (parent := self.parent) and isinstance(parent.a, BoolOp) and not self.pars().n:
+        if (parent := self.parent) and parent.a.__class__ is BoolOp and not self.pars().n:
             self._parenthesize_grouping()
 
         for a in self.a.values:
-            if isinstance(a, BoolOp) and not (f := a.f).pars().n:
+            if a.__class__ is BoolOp and not (f := a.f).pars().n:
                 f._parenthesize_grouping()
 
     return childf
@@ -733,7 +735,7 @@ def _make_exprish_fst(
     # figure out parentheses
 
     pars = fst.FST.get_option('pars', options)
-    put_is_star = isinstance(put_ast, Starred)
+    put_is_star = put_ast.__class__ is Starred
     tgt_is_FST = target.is_FST
     del_tgt_pars = False
 
@@ -748,7 +750,7 @@ def _make_exprish_fst(
             else:  # Starred gets checked against its child value because is complicated, could be a Call.args or ClassDef.bases '*a or b' or could have child already parenthesized (or worse, unparenthesized Subscript.slice Tuple)
                 star_child = put_ast.value
 
-                if (not isinstance(star_child, Tuple)  # if Tuple we assume it is parenthesized because otherwise it could not come into existence without schenanigans
+                if (star_child.__class__ is not Tuple  # if Tuple we assume it is parenthesized because otherwise it could not come into existence without schenanigans
                     and precedence_require_parens(star_child, put_ast, 'value', star_arglike=arglike)
                     and (not adding or not star_child.f.pars().n)  # `not adding` to make sure we don't remove existing needed pars
                 ):
@@ -757,22 +759,22 @@ def _make_exprish_fst(
         elif (
             tgt_is_FST
             and field == 'value'
-            and isinstance(put_ast, Constant)
+            and put_ast.__class__ is Constant
             and isinstance(put_ast.value, int)
             and (tgt_parent := target.parent)
-            and isinstance(tgt_parent.a, Attribute)
+            and tgt_parent.a.__class__ is Attribute
         ):  # veeery special case "3.__abs__()" -> "(3).__abs__()"
             return True
 
         if not self._is_enclosed_in_parents(field) and not put_fst._is_enclosed_or_line(pars=adding):
             return True
 
-        if isinstance(put_ast, Lambda):  # Lambda inside FormattedValue/Interpolation needs pars
+        if put_ast.__class__ is Lambda:  # Lambda inside FormattedValue/Interpolation needs pars
             s = self
             f = field
 
-            while isinstance(a := s.a, expr):
-                if isinstance(a, (FormattedValue, Interpolation)):
+            while (s_cls := s.a.__class__) in ASTS_LEAF_EXPR:
+                if s_cls in (FormattedValue, Interpolation):
                     if f == 'value':
                         return True
 
@@ -809,7 +811,7 @@ def _make_exprish_fst(
                     if pars is True or not (
                         field == 'target'
                         and (tgt_parent := target.parent)  # suuuper minor special case, don't automatically unparenthesize AnnAssign targets
-                        and isinstance(tgt_parent.a, AnnAssign)
+                        and tgt_parent.a.__class__ is AnnAssign
                     ):
                         del_tgt_pars = True
 
@@ -984,8 +986,8 @@ def _put_one_ClassDef_bases(
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
 
-    if (isinstance(child, Starred)
-        and not isinstance(code.a, Starred)
+    if (child.__class__ is Starred
+        and code.a.__class__ is not Starred
         and (keywords := self.a.keywords)
         and child.f.loc > keywords[0].f.loc
     ):
@@ -1029,7 +1031,7 @@ def _put_one_AnnAssign_target(
 
     ret = _put_one_exprish_required(self, code, idx, field, child, static, options)
 
-    self.a.simple = 1 if isinstance(ret.a, Name) and not ret.pars().n else 0
+    self.a.simple = 1 if ret.a.__class__ is Name and not ret.pars().n else 0
 
     return ret
 
@@ -1111,15 +1113,15 @@ def _put_one_BinOp_left_right(
 
     if self.parent_pattern():
         if field == 'right':
-            if not isinstance(codea := code.a, Constant) or not isinstance(codea.value, complex):
+            if (codea := code.a).__class__ is not Constant or not isinstance(codea.value, complex):
                 raise NodeError('can only put imaginary Constant to a pattern BinOp.right', rawable=True)
 
         else:  # field == 'left'
-            if isinstance(codea := code.a, UnaryOp):
-                if isinstance(codea.op, USub):
+            if (codea := code.a).__class__ is UnaryOp:
+                if codea.op.__class__ is USub:
                     codea = codea.operand
 
-            if not isinstance(codea, Constant) or not isinstance(codea.value, (int, float)):
+            if codea.__class__ is not Constant or not isinstance(codea.value, (int, float)):
                 raise NodeError('can only put real Constant to a pattern BinOp.left', rawable=True)
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
@@ -1140,10 +1142,10 @@ def _put_one_UnaryOp_operand(
     code = static.code_as(code, self.root.parse_params, sanitize=True)
 
     if self.parent_pattern():
-        if not isinstance(codea := code.a, Constant):
+        if (codea := code.a).__class__ is not Constant:
             raise NodeError('can only put Constant to a pattern UnaryOp.operand', rawable=True)
 
-        if not isinstance(codea.value, (int, float) if isinstance(self.parent.a, BinOp) else (int, float, complex)):
+        if not isinstance(codea.value, (int, float) if self.parent.a.__class__ is BinOp else (int, float, complex)):
             raise NodeError('invalid Constant for pattern UnaryOp.operand', rawable=True)
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
@@ -1217,8 +1219,8 @@ def _put_one_Call_args(
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
 
-    if (isinstance(child, Starred)
-        and not isinstance(code.a, Starred)
+    if (child.__class__ is Starred
+        and code.a.__class__ is not Starred
         and (keywords := self.a.keywords)
         and child.f.loc > keywords[0].f.loc
     ):
@@ -1260,7 +1262,7 @@ def _put_one_Constant_value(
 ) -> fst.FST:
     """Set a `Constant` value, mostly normal unless its a child of a `JoinedStr` or `TemplateStr`."""
 
-    if not ((parent := self.parent) and isinstance(parent.a, (JoinedStr, TemplateStr))):
+    if not ((parent := self.parent) and parent.a.__class__ in (JoinedStr, TemplateStr)):
         return _put_one_constant(self, code, idx, field, child, static, options)
 
     raise NotImplementedError('put Constant.value which is in JoinedStr/TemplateStr.values')
@@ -1284,12 +1286,15 @@ def _put_one_Attribute_value(
     above = child.f
 
     while (parent := above.parent) and (pfname := above.pfield.name) in ('value', 'target', 'keys', 'cls'):
-        if isinstance(parenta := parent.a, AnnAssign):
+        parenta = parent.a
+        parent_cls = parenta.__class__
+
+        if parent_cls is AnnAssign:
             is_annass = pfname == 'target'
 
             break
 
-        if isinstance(parenta, pattern):
+        if parent_cls in ASTS_LEAF_PATTERN:
             if code.end_ln != code.ln and not above._is_enclosed_in_parents():
                 raise NodeError(f'cannot put multiline {above.a.__class__.__name__} to uneclosed pattern expression',
                                 rawable=True)
@@ -1298,7 +1303,7 @@ def _put_one_Attribute_value(
 
             break
 
-        if not isinstance(parenta, (Attribute, Subscript)):  # we need to walk up both of these for the AnnAssign, won't be Subscripts in a MatchMapping.keys
+        if parent_cls not in (Attribute, Subscript):  # we need to walk up both of these for the AnnAssign, won't be Subscripts in a MatchMapping.keys
             break
 
         above = parent
@@ -1327,13 +1332,13 @@ def _put_one_Subscript_value(
     above = ret
 
     while (parent := above.parent) and above.pfield.name in ('value', 'target'):
-        if isinstance(parenta := parent.a, AnnAssign):
+        if (parenta := parent.a).__class__ is AnnAssign:
             if not above.pars().n:
                 _maybe_par_above(above, ret)
 
             break
 
-        if not isinstance(parenta, (Attribute, Subscript)):
+        if parenta.__class__ not in (Attribute, Subscript):
             break
 
         above = parent
@@ -1356,7 +1361,7 @@ def _put_one_Subscript_slice(
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
 
-    if code._is_parenthesized_tuple() is False and any(isinstance(a, Starred) for a in code.a.elts):
+    if code._is_parenthesized_tuple() is False and any(a.__class__ is Starred for a in code.a.elts):
         raise NodeError('cannot have unparenthesized tuple containing Starred in slice', rawable=True)
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
@@ -1376,8 +1381,8 @@ def _put_one_List_elts(
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
 
-    if not isinstance(ctx := self.a.ctx, Load):  # only allow possible expression targets into an expression target
-        if not (is_valid_del_target if isinstance(ctx, Del) else is_valid_target)(code.a):
+    if (ctx := self.a.ctx).__class__ is not Load:  # only allow possible expression targets into an expression target
+        if not (is_valid_del_target if ctx.__class__ is Del else is_valid_target)(code.a):
             raise NodeError(f"invalid expression for List {ctx.__class__.__name__} target")
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
@@ -1403,21 +1408,21 @@ def _put_one_Tuple_elts(
     is_slice = pfield and pfield.name == 'slice'
     is_par = self._is_delimited_seq()
 
-    if pfield and isinstance(codea, Slice):  # putting Slice to non-root Tuple
+    if pfield and codea.__class__ is Slice:  # putting Slice to non-root Tuple
         if not is_slice:
             raise NodeError('cannot put Slice to non-root Tuple which is not an Subscript.slice')
         elif is_par:
             raise NodeError('cannot put Slice to parenthesized Subscript.slice Tuple')
 
-    if not isinstance(ctx := ast.ctx, Load):  # only allow possible expression targets into an expression target
-        if not (is_valid_del_target if isinstance(ctx, Del) else is_valid_target)(codea):
+    if (ctx := ast.ctx).__class__ is not Load:  # only allow possible expression targets into an expression target
+        if not (is_valid_del_target if ctx.__class__ is Del else is_valid_target)(codea):
             raise NodeError(f'invalid expression for Tuple {ctx.__class__.__name__} target')
 
     if PYLT11:
-        if put_star_to_unpar_slice := (is_slice and isinstance(codea, Starred) and not is_par):
+        if put_star_to_unpar_slice := (is_slice and codea.__class__ is Starred and not is_par):
             r = (elts := ast.elts)[idx]
 
-            if any(isinstance(e, Slice) for e in elts if e is not r):
+            if any(e.__class__ is Slice for e in elts if e is not r):
                 raise NodeError('cannot put Starred to a slice Tuple containing Slices', rawable=True)
 
         ret = _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
@@ -1426,10 +1431,10 @@ def _put_one_Tuple_elts(
             self._delimit_node()
 
     else:
-        if PYGE14 and self.pfield == ('type', None) and isinstance(codea, Starred) and not is_par:  # if putting Starred to unparenthesized ExceptHandler.type Tuple then parenthesize it
+        if PYGE14 and self.pfield == ('type', None) and codea.__class__ is Starred and not is_par:  # if putting Starred to unparenthesized ExceptHandler.type Tuple then parenthesize it
             self._delimit_node()
 
-        self_is_solo_star_in_slice = is_slice and len(elts := ast.elts) == 1 and isinstance(elts[0], Starred)  # because of replacing the Starred in 'a[*i_am_really_a_tuple]'
+        self_is_solo_star_in_slice = is_slice and len(elts := ast.elts) == 1 and elts[0].__class__ is Starred  # because of replacing the Starred in 'a[*i_am_really_a_tuple]'
 
         ret = _put_one_exprish_required(self, code, idx, field, child, static, options, 2,
                                         arglike=is_slice and not is_par)
@@ -1476,7 +1481,7 @@ def _put_one_arg(
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
 
-    if isinstance(code.a.annotation, Starred):
+    if code.a.annotation.__class__ is Starred:
         raise NodeError(f'cannot put arg with Starred annotation to {self.a.__class__.__name__}.{field}', rawable=True)
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
@@ -1514,7 +1519,7 @@ def _put_one_withitem_context_expr(
 
     ret = _put_one_exprish_optional(self, code, idx, field, child, static, options)
 
-    if (parent := self.parent) and isinstance(parent.a, (With, AsyncWith)):
+    if (parent := self.parent) and parent.a.__class__ in ASTS_LEAF_WITH:
         _maybe_fix_With_items(parent)
 
     return ret
@@ -1534,7 +1539,7 @@ def _put_one_withitem_optional_vars(
 
     ret = _put_one_exprish_optional(self, code, idx, field, child, static, options)
 
-    if (parent := self.parent) and isinstance(parent.a, (With, AsyncWith)):
+    if (parent := self.parent) and parent.a.__class__ in ASTS_LEAF_WITH:
         _maybe_fix_With_items(parent)
 
     return ret
@@ -1572,7 +1577,7 @@ def _put_one_MatchAs_pattern(
     if code is not None:
         code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
 
-        if isinstance(code.a, MatchStar):
+        if code.a.__class__ is MatchStar:
             raise NodeError('cannot put a MatchStar to MatchAs.pattern', rawable=True)
 
         if code._is_delimited_matchseq() == '':
@@ -1595,8 +1600,8 @@ def _put_one_pattern(
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
 
-    if isinstance(code.a, MatchStar):
-        if not isinstance(self.a, MatchSequence):
+    if code.a.__class__ is MatchStar:
+        if self.a.__class__ is not MatchSequence:
             raise NodeError(f'cannot put a MatchStar to {self.a.__class__.__name__}.{field}', rawable=True)
 
     elif code._is_delimited_matchseq() == '':
@@ -1707,11 +1712,11 @@ def _put_one_keyword_arg(
     """Don't allow delete keyword.arg if non-keywords follow."""
 
     if code is None and (parent := self.parent):
-        if isinstance(parenta := parent.a, Call):
+        if (parenta := parent.a).__class__ is Call:
             if (args := parenta.args) and args[-1].f.loc > self.loc:
                 raise ValueError('cannot delete arg from Call.keywords at this location (non-keywords follow)')
 
-        elif isinstance(parenta, ClassDef):
+        elif parenta.__class__ is ClassDef:
             if (bases := parenta.bases) and bases[-1].f.loc > self.loc:
                 raise ValueError('cannot delete arg from ClassDef.keywords at this location (non-keywords follow)')
 
@@ -2046,7 +2051,7 @@ def _one_info_arguments_vararg(self: fst.FST, static: onestatic, idx: int | None
 
             return oneinfo('', fstloc(self.ln, self.col, end_ln, end_col))
 
-        if not (parent := self.parent) or not isinstance(parent.a, Lambda):
+        if not (parent := self.parent) or parent.a.__class__ is not Lambda:
             return oneinfo('', self.loc)
 
         ln, col, _, _ = parent.loc
@@ -2096,7 +2101,7 @@ def _one_info_arguments_vararg(self: fst.FST, static: onestatic, idx: int | None
         return oneinfo(', *', fstloc(ln, col, ln, col))
 
     loc = self._loc_arguments_empty()
-    prefix = ' *' if (parent := self.parent) and isinstance(parent.a, Lambda) else '*'
+    prefix = ' *' if (parent := self.parent) and parent.a.__class__ is Lambda else '*'
 
     return oneinfo(prefix, loc)
 
@@ -2128,7 +2133,7 @@ def _one_info_arguments_kwarg(self: fst.FST, static: onestatic, idx: int | None,
         kwargf = kwarg.f
 
         if not (prev := kwargf.prev()):
-            if not (parent := self.parent) or not isinstance(parent.a, Lambda):
+            if not (parent := self.parent) or parent.a.__class__ is not Lambda:
                 return oneinfo('', self.loc)
 
             ln, col, _, _ = parent.loc
@@ -2155,7 +2160,7 @@ def _one_info_arguments_kwarg(self: fst.FST, static: onestatic, idx: int | None,
 
     if not (loc := self.loc):
         loc = self._loc_arguments_empty()
-        prefix = ' **' if (parent := self.parent) and isinstance(parent.a, Lambda) else '**'
+        prefix = ' **' if (parent := self.parent) and parent.a.__class__ is Lambda else '**'
 
         return oneinfo(prefix, loc)
 
@@ -2632,10 +2637,10 @@ def _put_one_raw(
     loc = None
 
     if field.startswith('_'):  # special case field
-        kls = ast.__class__
+        ast_cls = ast.__class__
 
-        if (is_dict := issubclass(kls, Dict)) or issubclass(kls, MatchMapping):
-            static = _PUT_ONE_HANDLERS[(kls, 'keys')][-1]
+        if (is_dict := (ast_cls is Dict)) or ast_cls is MatchMapping:
+            static = _PUT_ONE_HANDLERS[(ast_cls, 'keys')][-1]
             field = 'keys'
             child = ast.keys
             body2 = ast.values if is_dict else ast.patterns
@@ -2645,7 +2650,7 @@ def _put_one_raw(
             if not to:
                 to = body2[idx].f
 
-        elif issubclass(kls, Compare):
+        elif ast_cls is Compare:
             idx, field, child = _params_Compare(self, idx)
 
             if not to:
@@ -2658,8 +2663,8 @@ def _put_one_raw(
 
     if child is None and loc is None:
         if field == 'keys':  # only Dict and MatchMapping have this, will not have been processed as a special field above
-            loc = self._loc_maybe_key(idx, pars, ast.keys, ast.values if isinstance(ast, Dict) else ast.patterns)
-        elif not isinstance(ast, MatchSingleton):  # breaking convention as always, `None` in a MatchSingleton.value is a value, not the absence of a value
+            loc = self._loc_maybe_key(idx, pars, ast.keys, ast.values if ast.__class__ is Dict else ast.patterns)
+        elif ast.__class__ is not MatchSingleton:  # breaking convention as always, `None` in a MatchSingleton.value is a value, not the absence of a value
             raise ValueError('cannot insert in raw put')
 
     childf = child.f if isinstance(child, AST) else None
@@ -2672,10 +2677,10 @@ def _put_one_raw(
     if loc is None:
         if childf:
             if (loc := childf.pars(shared=False) if pars else childf.bloc) is None:
-                if isinstance(child, arguments):  # empty arguments need special loc get
+                if child.__class__ is arguments:  # empty arguments need special loc get
                     loc = childf._loc_arguments_empty()
 
-                    if isinstance(ast, Lambda):  # SUPER SPECIAL CASE, adding arguments to lambda without them, may need to prepend a space to source being put
+                    if ast.__class__ is Lambda:  # SUPER SPECIAL CASE, adding arguments to lambda without them, may need to prepend a space to source being put
                         if not put_lines[0][:1].isspace():
                             put_lines[0] =  ' ' + put_lines[0]
 
@@ -2699,7 +2704,7 @@ def _put_one_raw(
             raise ValueError("'to' must be part of same tree")
 
         if (to_loc := to.pars(shared=False) if pars else to.bloc) is None:
-            if isinstance(to.a, arguments):  # empty arguments need special loc get
+            if to.a.__class__ is arguments:  # empty arguments need special loc get
                 to_loc = to._loc_arguments_empty()
             else:
                 raise ValueError("'to' node must have a location")

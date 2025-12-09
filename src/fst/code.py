@@ -8,6 +8,9 @@ from unicodedata import normalize
 from . import fst
 
 from .asttypes import (
+    ASTS_LEAF_EXPR,
+    ASTS_LEAF_STMT,
+    ASTS_LEAF_EXPR_STMT_OR_MOD,
     AST,
     Attribute,
     Constant,
@@ -31,12 +34,10 @@ from .asttypes import (
     boolop,
     cmpop,
     comprehension,
-    expr,
     keyword,
     match_case,
     operator,
     pattern,
-    stmt,
     unaryop,
     withitem,
     type_param,
@@ -242,14 +243,14 @@ def _coerce_as_alias(
     ast_ = fst_.a
     name = ''
 
-    while isinstance(ast_, Attribute):
+    while ast_.__class__ is Attribute:
         name = f'.{ast_.attr}{name}'  # we build it up like this because there can be whitespace, line continuations and newlines in the source
         ast_ = ast_.value
 
         if ast_.f.pars().n:  # aliases can't have pars
             ast_.f._unparenthesize_grouping(False)
 
-    if not isinstance(ast_, Name):
+    if ast_.__class__ is not Name:
         raise NodeError(f'cannot coerce {ast_.__class__.__name__} to alias, must be Name or Attribute')
 
     if fst_.pars().n:  # aliases can't have pars
@@ -292,7 +293,7 @@ def _coerce_as__ImportFrom_name(
     fst_ = code_as_expr(code, parse_params, sanitize=True)  # sanitize because where aliases are used then generally can't have junk, comments specifically would break Import.names aliases
     ast_ = fst_.a
 
-    if not isinstance(ast_, Name):
+    if ast_.__class__ is not Name:
         raise NodeError(f'cannot coerce {ast_.__class__.__name__} to ImportFrom.names alias, must be Name')
 
     if fst_.pars().n:  # aliases can't have pars
@@ -347,7 +348,7 @@ def _code_as(
     code: Code,
     parse_params: Mapping[str, Any],
     parse: Callable[[Code, Mapping[str, Any]], AST],
-    ast_type: type[AST],
+    ast_cls: type[AST],
     sanitize: bool,
     coerce_as: CodeAs | None = None,
 ) -> fst.FST:
@@ -355,26 +356,26 @@ def _code_as(
         if not code.is_root:
             raise ValueError('expecting root node')
 
-        if not isinstance(code.a, ast_type):
+        if not isinstance(code.a, ast_cls):
             if coerce_as:
                 try:
                     return coerce_as(code, parse_params, sanitize=sanitize)
                 except Exception:
                     pass
 
-            raise NodeError(f'expecting {ast_type.__name__}, got {code.a.__class__.__name__}'
+            raise NodeError(f'expecting {ast_cls.__name__}, got {code.a.__class__.__name__}'
                             f'{", could not coerce" if coerce_as else ""}', rawable=True)
 
     else:
         if isinstance(code, AST):
-            if not isinstance(code, ast_type):
+            if not isinstance(code, ast_cls):
                 if coerce_as:
                     try:
                         return coerce_as(code, parse_params, sanitize=sanitize)
                     except Exception:
                         pass
 
-                raise NodeError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}'
+                raise NodeError(f'expecting {ast_cls.__name__}, got {code.__class__.__name__}'
                                 f'{", could not coerce" if coerce_as else ""}', rawable=True)
 
             src = unparse(code)
@@ -401,12 +402,12 @@ def _code_as(
                 try:
                     fst_ = coerce_as(code, parse_params, sanitize=sanitize)
                 except Exception:
-                    raise ParseError(f'expecting {ast_type.__name__}, could not parse or coerce') from None
+                    raise ParseError(f'expecting {ast_cls.__name__}, could not parse or coerce') from None
 
                 return fst_
 
-            if not isinstance(ast, ast_type):  # sanity check, parse func should guarantee what we want but maybe in future is used to get a specific subset of what parse func returns
-                raise ParseError(f'expecting {ast_type.__name__}, got {code.__class__.__name__}')
+            if not isinstance(ast, ast_cls):  # sanity check, parse func should guarantee what we want but maybe in future is used to get a specific subset of what parse func returns
+                raise ParseError(f'expecting {ast_cls.__name__}, got {code.__class__.__name__}')
 
         code = fst.FST(ast, lines, None, parse_params=parse_params)
 
@@ -434,20 +435,22 @@ def _code_as_expr(
         if not ast:
             raise NodeError(f'{_expecting(parse)}, got multiple statements', rawable=True)
 
-        if not isinstance(ast, expr):
-            raise NodeError(f'{_expecting(parse)}, got {ast.__class__.__name__}', rawable=True)
+        ast_cls = ast.__class__
+
+        if ast_cls not in ASTS_LEAF_EXPR:
+            raise NodeError(f'{_expecting(parse)}, got {ast_cls.__name__}', rawable=True)
 
         if ast is not codea:
             ast.f._unmake_fst_parents()
 
             code = fst.FST(ast, code._lines, None, from_=code, lcopy=False)
 
-        if isinstance(ast, Slice):
+        if ast_cls is Slice:
             if not allow_Slice:
                 raise NodeError(f'{_expecting(parse)}, got Slice', rawable=True)
 
-        elif isinstance(ast, Tuple):
-            if not allow_Tuple_of_Slice and any(isinstance(e, Slice) for e in ast.elts):
+        elif ast_cls is Tuple:
+            if not allow_Tuple_of_Slice and any(e.__class__ is Slice for e in ast.elts):
                 raise NodeError(f'{_expecting(parse)}, got Tuple with a Slice in it', rawable=True)
 
             if parse is not parse_expr_slice:  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, even though those can't be gotten alone organically, maybe we shouldn't even bother?
@@ -455,7 +458,7 @@ def _code_as_expr(
 
     else:
         if is_ast := isinstance(code, AST):
-            if not isinstance(code, expr):
+            if code.__class__ not in ASTS_LEAF_EXPR:
                 raise NodeError(f'{_expecting(parse)}, got {code.__class__.__name__}', rawable=True)
 
             src = unparse(code)
@@ -571,26 +574,26 @@ def code_as_stmts(
 
         codea = code.a
 
-        if isinstance(codea, Expression):  # coerce Expression to expr
+        if codea.__class__ is Expression:  # coerce Expression to expr
             code._unmake_fst_parents()
 
             codea = codea.body
 
-        if isinstance(codea, expr):  # coerce expr to Expr stmt
+        if codea.__class__ in ASTS_LEAF_EXPR:  # coerce expr to Expr stmt
             codea = Expr(value=codea, lineno=codea.lineno, col_offset=codea.col_offset,
                          end_lineno=codea.end_lineno, end_col_offset=codea.end_col_offset)
 
-        if isinstance(codea, stmt):
+        if codea.__class__ in ASTS_LEAF_STMT:
             return fst.FST(Module(body=[codea], type_ignores=[]), code._lines, None, from_=code, lcopy=False)
 
-        if isinstance(codea, Module):
-            if all(isinstance(a, stmt) for a in codea.body):
+        if codea.__class__ is Module:
+            if all(a.__class__ in ASTS_LEAF_STMT for a in codea.body):
                 return code
 
             raise NodeError(f'expecting zero or more stmts, got '
                             f'[{shortstr(", ".join(a.__class__.__name__ for a in codea.body))}]', rawable=True)
 
-        if isinstance(codea, Interactive):
+        if codea.__class__ is Interactive:
             code._unmake_fst_parents()
 
             return fst.FST(Module(body=code.body, type_ignores=[]), code._lines, None, from_=code, lcopy=False)
@@ -598,7 +601,7 @@ def code_as_stmts(
         raise NodeError(f'expecting zero or more stmts, got {codea.__class__.__name__}', rawable=True)
 
     if isinstance(code, AST):
-        if not isinstance(code, (stmt, expr, Module, Interactive, Expression)):  # all these can be coerced into stmts
+        if code.__class__ not in ASTS_LEAF_EXPR_STMT_OR_MOD:  # all these can be coerced into stmts
             raise NodeError(f'expecting zero or more stmts, got {code.__class__.__name__}', rawable=True)
 
         code = _fixing_unparse(code)
@@ -637,11 +640,11 @@ def code_as__ExceptHandlers(
 
         codea = code.a
 
-        if isinstance(codea, ExceptHandler):
+        if codea.__class__ is ExceptHandler:
             code = fst.FST(_ExceptHandlers(handlers=[codea], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                                            end_col_offset=ls[-1].lenbytes), ls, None, from_=code, lcopy=False)
 
-        elif not isinstance(codea, _ExceptHandlers):
+        elif codea.__class__ is not _ExceptHandlers:
             raise NodeError(f'expecting zero or more ExceptHandlers, got {codea.__class__.__name__}')#, rawable=True)
 
         error = NodeError
@@ -650,9 +653,9 @@ def code_as__ExceptHandlers(
         error = ParseError
 
         if isinstance(code, AST):
-            if isinstance(code, ExceptHandler):
+            if code.__class__ is ExceptHandler:
                 handlers = [code]
-            elif isinstance(code, _ExceptHandlers):
+            elif code.__class__ is _ExceptHandlers:
                 handlers = code.handlers
             else:
                 raise NodeError(f'expecting zero or more ExceptHandlers, got {code.__class__.__name__}')#, rawable=True)
@@ -692,17 +695,17 @@ def code_as__match_cases(
 
         codea = code.a
 
-        if isinstance(codea, match_case):
+        if codea.__class__ is match_case:
             return fst.FST(_match_cases(cases=[codea], lineno=1, col_offset=0, end_lineno=len(ls := code._lines),
                                         end_col_offset=ls[-1].lenbytes), ls, None, from_=code, lcopy=False)
 
-        if not isinstance(codea, _match_cases):
+        if codea.__class__ is not _match_cases:
             raise NodeError(f'expecting zero or more match_cases, got {codea.__class__.__name__}', rawable=True)
 
         return code
 
     if isinstance(code, AST):
-        if not isinstance(code, (match_case, _match_cases)):
+        if code.__class__ not in (match_case, _match_cases):
             raise NodeError(f'expecting zero or more match_cases, got {code.__class__.__name__}', rawable=True)
 
         code = unparse(code)
@@ -765,7 +768,7 @@ def code_as_Tuple(
 
     fst_ = _code_as_expr(code, parse_params, parse_Tuple, False, True, sanitize)
 
-    if fst_ is code and not isinstance(fst_.a, Tuple):  # fst_ is code only if FST passed in, in which case is passed through and we need to check that was Tuple to begin with
+    if fst_ is code and fst_.a.__class__ is not Tuple:  # fst_ is code only if FST passed in, in which case is passed through and we need to check that was Tuple to begin with
         raise NodeError(f'expecting Tuple, got {fst_.a.__class__.__name__}', rawable=True)
 
     return fst_
@@ -1009,7 +1012,7 @@ def code_as_pattern(
     fst_ = _code_as(code, parse_params, parse_pattern, pattern, sanitize)
 
     if fst_ is code:  # validation if returning same FST that was passed in
-        if not allow_invalid_matchor and isinstance(a := fst_.a, MatchOr):  # SPECIAL SLICE
+        if not allow_invalid_matchor and (a := fst_.a).__class__ is MatchOr:  # SPECIAL SLICE
             if not (len_pattern := len(a.patterns)):
                 raise NodeError('expecting valid pattern, got zero-length MatchOr')
 
@@ -1161,7 +1164,7 @@ def code_as_constant(
         code = code.a
 
     if isinstance(code, AST):
-        if not isinstance(code, Constant):
+        if code.__class__ is not Constant:
             raise NodeError('expecting constant', rawable=True)
 
         code = code.value
@@ -1203,14 +1206,14 @@ def code_as__expr_arglikes(
     start and stop locations (since its the whole source). Singleton `Tuple` may also not have trailing comma.
     """
 
-    if isinstance(code, Tuple):  # strip parentheses
+    if code.__class__ is Tuple:  # strip parentheses
         code = _fixing_unparse(code)[1:-1]
 
     fst_ = _code_as(code, parse_params, parse__expr_arglikes, Tuple, sanitize,
                     _coerce_as__expr_arglikes if coerce else None)
 
     if fst_ is code:  # validation if returning same FST that was passed in
-        if any(isinstance(e, Slice) for e in fst_.a.elts):
+        if any(e.__class__ is Slice for e in fst_.a.elts):
             raise NodeError('expecting non-Slice expressions (arglike), found Slice')
 
         if fst_._is_delimited_seq():

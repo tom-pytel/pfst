@@ -6,19 +6,22 @@ from typing import Literal
 
 from . import fst
 
+from .asttypes import (
+    ASTS_LEAF_EXPR_CONTEXT,
+    ASTS_LEAF_BOOLOP,
+    ASTS_LEAF_OPERATOR,
+    ASTS_LEAF_UNARYOP,
+    ASTS_LEAF_CMPOP,
+)
+
 from .astutil import (
+    AST_FIELDS,
     AST,
     Dict,
     Compare,
     MatchMapping,
     Call,
     arguments,
-    expr_context,
-    boolop,
-    operator,
-    unaryop,
-    cmpop,
-    AST_FIELDS,
 )
 
 __all__ = [
@@ -73,6 +76,10 @@ AST_FIELDS_PREV[(arguments, 'defaults')]    = 7
 AST_FIELDS_PREV[(arguments, 'kw_defaults')] = 7
 AST_FIELDS_PREV[(arguments, 'kwarg')]       = 7
 
+_ASTS_LEAF_EXPR_CONTEXT_OR_BOOLOP = ASTS_LEAF_EXPR_CONTEXT | ASTS_LEAF_BOOLOP
+_ASTS_LEAF_EXPR_CONTEXT_OR_OP     = (_ASTS_LEAF_EXPR_CONTEXT_OR_BOOLOP | ASTS_LEAF_OPERATOR | ASTS_LEAF_UNARYOP
+                                     | ASTS_LEAF_CMPOP)
+
 
 def next_bound(self: fst.FST, with_loc: bool | Literal['all', 'own'] = 'all') -> tuple[int, int]:
     """Get a next bound for search before any following ASTs for this object within parent. If no siblings found after
@@ -125,13 +132,25 @@ def check_with_loc(fst_: fst.FST, with_loc: bool | Literal['all', 'own'] = True)
         return True
 
     if with_loc is True:
-        return not (isinstance(a := fst_.a, (expr_context, boolop, operator, unaryop, cmpop)) or
-                    (isinstance(a, arguments) and not a.posonlyargs and not a.args and not a.vararg and
-                    not a.kwonlyargs and not a.kwarg))
+        a = fst_.a
+        a_cls = a.__class__
+
+        return not (
+            a_cls in _ASTS_LEAF_EXPR_CONTEXT_OR_OP
+            or (
+                a_cls is arguments
+                and not a.posonlyargs and not a.args and not a.vararg and not a.kwonlyargs and not a.kwarg
+        ))
 
     if with_loc == 'all':
-        return not (isinstance(a := fst_.a, (expr_context, boolop)) or
-                    (isinstance(a, arguments) and not a.posonlyargs and not a.args and not a.vararg and
-                    not a.kwonlyargs and not a.kwarg))
+        a = fst_.a
+        a_cls = a.__class__
+
+        return not (
+            a_cls in _ASTS_LEAF_EXPR_CONTEXT_OR_BOOLOP
+            or (
+                a_cls is arguments
+                and not a.posonlyargs and not a.args and not a.vararg and not a.kwonlyargs and not a.kwarg
+        ))
 
     return fst_.has_own_loc  # with_loc == 'own'

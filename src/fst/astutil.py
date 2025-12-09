@@ -10,6 +10,7 @@ from typing import Any, Callable, Iterable, Iterator, Literal
 from enum import IntEnum, auto
 
 from .asttypes import (
+    ASTS_LEAF_EXPR_OR_PATTERN,
     AST,
     Add,
     And,
@@ -188,7 +189,7 @@ re_identifier_alias_only   = re.compile(rf'^(?:\*|{pat_identifier}(?:\.{pat_iden
 #   arguments     - interleaved `posonlyargs`/`args` and `defaults` (partially), interleaved `kwonlyargs` and `kw_defaults`
 #   Call          - type `Starred` can be in `args`, `arg=None` in `keywords` means double starred
 
-FIELDS = dict([  # FINAL types which get instantiated, not base stuff like `cmpop` or `excepthandler`
+FIELDS = dict([  # only leaf node types which get instantiated and checked with `is` and `in`, not base stuff like `cmpop` or `excepthandler`
     (Module,                   (('body', 'stmt*'), ('type_ignores', 'type_ignore*'))),
     (Interactive,              (('body', 'stmt*'),)),
     (Expression,               (('body', 'expr'),)),
@@ -334,7 +335,7 @@ AST_FIELDS = {kls: tuple(f for f, t in fields  # only fields which can contain a
                         ))
               for kls, fields in FIELDS.items()}  ; """Mapping of `AST` class to tuple of fields which may contain an `AST` node or `list` of `AST` nodes or `None` if optional `AST` node."""
 
-AST_BASES = (  # non-final bases of AST types in use
+AST_BASES = (  # non-leaf base types
     mod,
     stmt,
     expr,
@@ -514,38 +515,38 @@ def is_valid_identifier_alias(s: str) -> bool:
 def is_valid_MatchSingleton_value(ast: AST) -> bool:
     """Check if `ast` is a valid `Constant` node for a `MatchSingleton.value` field."""
 
-    return isinstance(ast, Constant) and ast.value in (True, False, None)
+    return ast.__class__ is Constant and ast.value in (True, False, None)
 
 
 def is_valid_MatchValue_value(ast: AST, consts: tuple[type[constant]] = (str, bytes, int, float, complex)) -> bool:
     """Check if `ast` is a valid node for a `MatchValue.value` field."""
 
-    if isinstance(ast, Attribute):
-        while isinstance(ast := ast.value, Attribute):
+    if ast.__class__ is Attribute:
+        while (ast := ast.value).__class__ is Attribute:
             pass
 
-        return isinstance(ast, Name)
+        return ast.__class__ is Name
 
-    if isinstance(ast, UnaryOp):
-        if not isinstance(ast.op, USub):
+    if ast.__class__ is UnaryOp:
+        if ast.op.__class__ is not USub:
             return False
 
         ast = ast.operand
 
-    if isinstance(ast, Constant):
+    if ast.__class__ is Constant:
         return ast.value.__class__ in consts  # because bool is int
 
-    if isinstance(ast, BinOp):
-        if isinstance(ast.op, (Add, Sub)) and isinstance(r := ast.right, Constant) and isinstance(r.value, complex):
+    if ast.__class__ is BinOp:
+        if ast.op.__class__ in (Add, Sub) and (r := ast.right).__class__ is Constant and isinstance(r.value, complex):
             l = ast.left
 
-            if isinstance(l, UnaryOp):
-                if not isinstance(l.op, USub):
+            if l.__class__ is UnaryOp:
+                if l.op.__class__ is not USub:
                     return False
 
                 l = l.operand
 
-            if isinstance(l, Constant) and isinstance(l.value, (int, float)):
+            if l.__class__ is Constant and isinstance(l.value, (int, float)):
                 return True
 
     return False
@@ -564,11 +565,11 @@ def is_valid_target(asts: AST | list[AST]) -> bool:
     stack = [asts] if isinstance(asts, AST) else list(asts)
 
     while stack:
-        if isinstance(a := stack.pop(), (Tuple, List)):
+        if (a := stack.pop()).__class__ in (Tuple, List):
             stack.extend(a.elts)
-        elif isinstance(a, Starred):
+        elif a.__class__ is Starred:
             stack.append(a.value)
-        elif not isinstance(a, (Name, Attribute, Subscript)):
+        elif a.__class__ not in (Name, Attribute, Subscript):
             return False
 
     return True
@@ -581,9 +582,9 @@ def is_valid_del_target(asts: AST | list[AST]) -> bool:
     stack = [asts] if isinstance(asts, AST) else list(asts)
 
     while stack:
-        if isinstance(a := stack.pop(), (Tuple, List)):
+        if (a := stack.pop()).__class__ in (Tuple, List):
             stack.extend(a.elts)
-        elif not isinstance(a, (Name, Attribute, Subscript)):
+        elif a.__class__ not in (Name, Attribute, Subscript):
             return False
 
     return True
@@ -602,24 +603,24 @@ def reduce_ast(ast: AST, multi_mod: bool | type[Exception] = False, reduce_Expr:
     - `reduce_Expr`: Whether to reduce a single `Expr` node and return its expression or not.
     """
 
-    if isinstance(ast, (Module, Interactive)):
+    if ast.__class__ in (Module, Interactive):
         if len(body := ast.body) == 1:
             ast = body[0]
 
-            return ast.value if isinstance(ast, Expr) and reduce_Expr else ast
+            return ast.value if ast.__class__ is Expr and reduce_Expr else ast
 
-    elif isinstance(ast, _ExceptHandlers):
+    elif ast.__class__ is _ExceptHandlers:
         if len(body := ast.handlers) == 1:
             return body[0]
 
-    elif isinstance(ast, _match_cases):
+    elif ast.__class__ is _match_cases:
         if len(body := ast.cases) == 1:
             return body[0]
 
     else:
-        if isinstance(ast, Expr) and reduce_Expr:
+        if ast.__class__ is Expr and reduce_Expr:
             return ast.value
-        elif isinstance(ast, Expression):
+        elif ast.__class__ is Expression:
             return ast.body
 
         return ast
@@ -675,8 +676,8 @@ def is_parsable(ast: AST) -> bool:
     )):
         return False
 
-    if isinstance(ast, Tuple):  # tuple of slices used in indexing (like numpy)
-        if any(isinstance(e, Slice) for e in ast.elts):
+    if ast.__class__ is Tuple:  # tuple of slices used in indexing (like numpy)
+        if any(e.__class__ is Slice for e in ast.elts):
             return False
 
     return True
@@ -685,11 +686,11 @@ def is_parsable(ast: AST) -> bool:
 def get_parse_mode(ast: AST) -> Literal['exec', 'eval', 'single']:
     """Return the original `mode` string that is used to parse to this `mod`."""
 
-    if isinstance(ast, Module):
+    if ast.__class__ is Module:
         return 'exec'
-    if isinstance(ast, Expression):
+    if ast.__class__ is Expression:
         return 'eval'
-    if isinstance(ast, Interactive):
+    if ast.__class__ is Interactive:
         return 'single'
 
     return None
@@ -980,9 +981,9 @@ def set_ctx(asts: AST | list[AST], ctx: type[expr_context], *, doit: bool = True
 
     while stack:
         if a := stack.pop():  # might be `None`s in there
-            if ((is_seq := isinstance(a, (Tuple, List)))
-                or (is_starred := isinstance(a, Starred))
-                or isinstance(a, (Name, Subscript, Attribute))
+            if ((is_seq := (a.__class__ in (Tuple, List)))
+                or (is_starred := (a.__class__ is Starred))
+                or a.__class__ in (Name, Subscript, Attribute)
             ) and not isinstance(a.ctx, ctx):
                 change = True
 
@@ -1011,17 +1012,17 @@ def get_func_class_or_ass_by_name(asts: Iterable[AST], name: str, ass: bool = Tr
     """
 
     for a in asts:
-        if isinstance(a, (FunctionDef, AsyncFunctionDef, ClassDef)):
+        if a.__class__ in (FunctionDef, AsyncFunctionDef, ClassDef):
             if a.name == name:
                 return a
 
         elif ass:
-            if isinstance(a, Assign):
-                if any(isinstance(t, Name) and t.id == name for t in a.targets):
+            if a.__class__ is Assign:
+                if any(t.__class__ is Name and t.id == name for t in a.targets):
                     return a
 
-            elif isinstance(a, AnnAssign):
-                if isinstance(t := a.target, Name) and t.id == name:
+            elif a.__class__ is AnnAssign:
+                if (t := a.target).__class__ is Name and t.id == name:
                     return a
 
     return None
@@ -1031,8 +1032,8 @@ def last_block_header_child(ast: AST) -> AST | None:
     """Return last `AST` node in the block header before the ':'. Returns `None` for non-block nodes and things like
     `Try` and empty  `ExceptHandler` nodes or other block nodes which might have normally present fields missing."""
 
-    if not isinstance(ast, (FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith, Match,
-                            ExceptHandler, match_case)):  # Try, TryStar open blocks but don't have children
+    if ast.__class__ not in (FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith, Match,
+                            ExceptHandler, match_case):  # Try, TryStar open blocks but don't have children
         return None
 
     for field in reversed(AST_FIELDS[ast.__class__]):
@@ -1076,21 +1077,22 @@ def is_atom(
         `matchseq_as_atom` for `MatchSequence` as those all are special cases.
     """
 
-    if isinstance(ast, (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Constant, Attribute, Subscript, Name,  # , Await
-                        List, MatchValue, MatchSingleton, MatchMapping, MatchClass, MatchStar, MatchAs,
-                        MatchSequence)):
+    ast_cls = ast.__class__
+
+    if ast_cls in (Dict, Set, ListComp, SetComp, DictComp, GeneratorExp, Constant, Attribute, Subscript, Name, List,  # , Await
+                   MatchValue, MatchSingleton, MatchMapping, MatchClass, MatchStar, MatchAs):
         return True
 
-    if isinstance(ast, Tuple):
+    if ast_cls is Tuple:
         return tuple_as_atom
 
-    if isinstance(ast, (NamedExpr, Yield, YieldFrom)):
+    if ast_cls in (NamedExpr, Yield, YieldFrom):
         return unparse_pars_as_atom
 
-    if isinstance(ast, MatchSequence):
+    if ast_cls is MatchSequence:
         return matchseq_as_atom
 
-    if isinstance(ast, (expr, pattern)):
+    if ast_cls in ASTS_LEAF_EXPR_OR_PATTERN:  # one pattern left, MatchOr
         return False
 
     return True
@@ -1104,7 +1106,7 @@ def _syntax_ordered_children_Call(ast: AST) -> list[AST]:
     args = ast.args
     keywords = ast.keywords
 
-    if not args or not keywords or not isinstance(args[-1], Starred):
+    if not args or not keywords or args[-1].__class__ is not Starred:
         children.extend(args)
         children.extend(keywords)
 

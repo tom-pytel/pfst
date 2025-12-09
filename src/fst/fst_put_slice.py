@@ -10,6 +10,8 @@ from typing import Any, Callable, Literal, Mapping, NamedTuple
 from . import fst
 
 from .asttypes import (
+    ASTS_LEAF_CMPOP,
+    ASTS_LEAF_CMPOP_TWO_WORD,
     AST,
     And,
     Assign,
@@ -35,12 +37,10 @@ from .asttypes import (
     Import,
     ImportFrom,
     Interactive,
-    IsNot,
     JoinedStr,
     List,
     ListComp,
     Load,
-    NotIn,
     Match,
     MatchAs,
     MatchClass,
@@ -69,7 +69,6 @@ from .asttypes import (
     TryStar,
     TypeAlias,
     TemplateStr,
-    cmpop,
     expr_context,
     _ExceptHandlers,
     _match_cases,
@@ -277,7 +276,7 @@ def _code_to_slice_expr(
 
     fst_ = code_as(code, self.root.parse_params)
     ast_ = fst_.a
-    is_slice_type = isinstance(ast_, (Tuple, List, Set))
+    is_slice_type = ast_.__class__ in (Tuple, List, Set)
     put_norm = None  # cached
 
     if not one:
@@ -309,14 +308,14 @@ def _code_to_slice_expr(
         if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
             fst_._delimit_node()
 
-    elif isinstance(ast_, Set):
+    elif ast_.__class__ is Set:
         _maybe_fix_Set(fst_, _get_option_norm('norm_put', 'set_norm', options) if put_norm is None else put_norm)
 
-    elif isinstance(ast_, NamedExpr):  # this needs to be parenthesized if being put to unparenthesized tuple
+    elif ast_.__class__ is NamedExpr:  # this needs to be parenthesized if being put to unparenthesized tuple
         if not fst_.pars().n and self._is_parenthesized_tuple() is False:
             fst_._parenthesize_grouping()
 
-    elif isinstance(ast_, (Yield, YieldFrom)):  # these need to be parenthesized definitely
+    elif ast_.__class__ in (Yield, YieldFrom):  # these need to be parenthesized definitely
         if not fst_.pars().n:
             fst_._parenthesize_grouping()
 
@@ -373,7 +372,7 @@ def _code_to_slice_BoolOp_values(
     fst_ = code_as_expr(code, self.root.parse_params)
     ast_ = fst_.a
     op_type = self.a.op.__class__
-    is_slice_type = isinstance(ast_, BoolOp)
+    is_slice_type = ast_.__class__ is BoolOp
     is_same_op = is_slice_type and ast_.op.__class__ is self.a.op.__class__
 
     if is_slice_type and is_same_op and not one:
@@ -402,7 +401,7 @@ def _code_to_slice_BoolOp_values(
 
     elif (
         (is_slice_type and (is_same_op or op_type is And))
-        or isinstance(ast_, (NamedExpr, Yield, YieldFrom, IfExp))
+        or ast_.__class__ in (NamedExpr, Yield, YieldFrom, IfExp)
     ):  # these need to be parenthesized definitely
         if not fst_.pars().n:
             fst_._parenthesize_grouping()
@@ -489,13 +488,13 @@ def _code_to_slice_BoolOp_values_maybe_dangling(
 
         if op_side_left:
             ln, col, _, _ = values[0].f.pars()
-            op_lines = ['and '] if isinstance(self.a.op, And) else ['or ']
+            op_lines = ['and '] if self.a.op.__class__ is And else ['or ']
 
             fst_._put_src(op_lines, ln, col, ln, col, False)  # we don't care if we offset fst_ itself incorrectly since we will set its location to whole source anyway, we only care about the children here
 
         else:  # op_side_left is False
             _, _, end_ln, end_col = values[-1].f.pars()
-            op_lines = [' and'] if isinstance(self.a.op, And) else [' or']
+            op_lines = [' and'] if self.a.op.__class__ is And else [' or']
 
             fst_._put_src(op_lines, end_ln, end_col, end_ln, end_col)  # we offset nothing because we reset fst_ location to whole anyway
 
@@ -515,7 +514,7 @@ def _code_to_slice_Compare__all(
 
     fst_ = code_as_expr(code, self.root.parse_params)
     ast_ = fst_.a
-    is_slice_type = isinstance(ast_, Compare)
+    is_slice_type = ast_.__class__ is Compare
 
     if is_slice_type and (not one or not ast_.comparators):  # if is singleton Comparator invalid AST slice then we just return it even if putting as one=True since by fact that it was already in a Compare it doesn't need any pars added
         _set_loc_whole(fst_)
@@ -534,8 +533,8 @@ def _code_to_slice_Compare__all(
 
     elif (
         is_slice_type
-        or isinstance(ast_, (NamedExpr, Yield, YieldFrom, IfExp, BoolOp))
-        or (isinstance(ast_, UnaryOp) and isinstance(ast_.op, Not))
+        or ast_.__class__ in (NamedExpr, Yield, YieldFrom, IfExp, BoolOp)
+        or (ast_.__class__ is UnaryOp and ast_.op.__class__ is Not)
     ):  # these need to be parenthesized definitely
         if not fst_.pars().n:
             fst_._parenthesize_grouping()
@@ -633,7 +632,7 @@ def _code_to_slice_Compare__all_maybe_dangling(
         op_lines = op.split('\n')
         op_ast = parse_cmpop(op)
 
-    elif isinstance(op, cmpop):
+    elif op.__class__ in ASTS_LEAF_CMPOP:
         op_lines = [OPCLS2STR[op_cls := op.__class__]]
         op_ast = op_cls()
 
@@ -644,7 +643,7 @@ def _code_to_slice_Compare__all_maybe_dangling(
         op_lines = op._lines
         op_ast = op.a  # this is fine like this and no unmake because it is just reset in FST() below
 
-        if not isinstance(op_ast, cmpop):
+        if op_ast.__class__ not in ASTS_LEAF_CMPOP:
             raise NodeError(f"expecting cmpop for 'op' option, got {op_ast.__class__.__name__}")
 
     elif isinstance(op, list):
@@ -652,7 +651,7 @@ def _code_to_slice_Compare__all_maybe_dangling(
         op_ast = parse_cmpop('\n'.join(op))
 
     elif isinstance(op, type):
-        if issubclass(op, cmpop):
+        if op in ASTS_LEAF_CMPOP:
             op_lines = [OPCLS2STR[op]]
             op_ast = op()
 
@@ -685,7 +684,7 @@ def _code_to_slice_Compare__all_maybe_dangling(
         if not end_ln:  # if op starts on first line then it must be offset by left location because it will be on that line in fst_
             col_offset += fst_._lines[left_ln].c2b(left_col)
 
-        if isinstance(op_ast, (IsNot, NotIn)):  # if two-part operator move on to second part
+        if op_ast.__class__ in ASTS_LEAF_CMPOP_TWO_WORD:  # if two-part operator move on to second part
             end_ln, end_col, src = next_frag(op_lines, end_ln, end_col + len(src), bound_end_ln, bound_end_col)  # must be there
 
         if end_ln == bound_end_ln and end_col + len(src) == bound_end_col:  # operator right at end of lines, needs a whitespace
@@ -752,7 +751,7 @@ def _code_to_slice_MatchSequence(
 
     ast_ = fst_.a
 
-    if not isinstance(ast_, MatchSequence):
+    if ast_.__class__ is not MatchSequence:
         raise NodeError(f"slice being assigned to a {self.a.__class__.__name__} "
                         f"must be a MatchSequence, not a {ast_.__class__.__name__}", rawable=True)
 
@@ -787,7 +786,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
 
     ast_ = fst_.a
 
-    if isinstance(ast_, MatchOr):
+    if ast_.__class__ is MatchOr:
         if not (patterns := ast_.patterns):
             return None
 
@@ -810,11 +809,11 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
                             f"must be a MatchOr with norm_put=False, not a {ast_.__class__.__name__}",
                             rawable=True)
 
-        if isinstance(ast_, MatchAs):
+        if ast_.__class__ is MatchAs:
             if ast_.pattern is not None and not fst_.pars().n:
                 fst_._parenthesize_grouping()
 
-        elif isinstance(ast_, MatchSequence):
+        elif ast_.__class__ is MatchSequence:
             if not fst_._is_delimited_matchseq():
                 fst_._delimit_node(delims='[]')
 
@@ -830,7 +829,7 @@ def _code_to_slice__special(
     field: str,
     one: bool,
     options: Mapping[str, Any],
-    type_ast: type[AST],
+    ast_cls: type[AST],
     code_as: Callable,
 ) -> fst.FST | None:
     if code is None:
@@ -841,12 +840,12 @@ def _code_to_slice__special(
     if (one
         and not coerce
         and (
-            isinstance(code, type_ast)
+            code.__class__ is ast_cls
             or (
                 isinstance(code, fst.FST)
-                and isinstance(code.a, type_ast)
+                and code.a.__class__ is ast_cls
     ))):
-        raise ValueError(f"cannot put {type_ast.__name__} node as 'one=True' without 'coerce=True'")
+        raise ValueError(f"cannot put {ast_cls.__name__} node as 'one=True' without 'coerce=True'")
 
     fst_ = code_as(code, self.root.parse_params, coerce=one or coerce)
 
@@ -1006,13 +1005,13 @@ def _validate_put_seq(
     ast = self.a
     ast_ = fst_.a
 
-    if non_slice and isinstance(ast_, Tuple) and any(isinstance(e, Slice) for e in ast_.elts):
+    if non_slice and ast_.__class__ is Tuple and any(e.__class__ is Slice for e in ast_.elts):
         raise NodeError(f'cannot put Slice into {non_slice}')
 
     if check_target:
         ctx = getattr(ast, 'ctx', None)
 
-        if not isinstance(ctx, Load) and not check_target(ast_.elts):
+        if ctx.__class__ is not Load and not check_target(ast_.elts):
             raise NodeError(f'invalid slice for {ast.__class__.__name__}'
                             f'{f" {ctx.__class__.__name__}" if ctx else ""} target')
 
@@ -1107,18 +1106,18 @@ def _put_slice_Tuple_elts(
     if fst_:
         fst_body = fst_.a.elts
 
-        if len(fst_body) == 1 and isinstance(b0 := fst_body[0], Tuple) and any(isinstance(e, Slice) for e in b0.elts):  # putting a tuple with Slices as one
+        if len(fst_body) == 1 and (b0 := fst_body[0]).__class__ is Tuple and any(e.__class__ is Slice for e in b0.elts):  # putting a tuple with Slices as one
             raise NodeError('cannot put tuple with Slices to tuple')
 
         if PYLT11:
-            if is_slice and not is_par and any(isinstance(e, Starred) for e in fst_body):
-                if any(isinstance(e, Slice) for i, e in enumerate(body) if i < start or i >= stop):
+            if is_slice and not is_par and any(e.__class__ is Starred for e in fst_body):
+                if any(e.__class__ is Slice for i, e in enumerate(body) if i < start or i >= stop):
                     raise NodeError('cannot put Starred to a slice Tuple containing Slices')
 
                 need_par = True
 
         elif PYGE14:
-            if not is_par and pfield and pfield.name == 'type' and any(isinstance(e, Starred) for e in fst_body):  # if putting Starred to unparenthesized ExceptHandler.type Tuple then parenthesize it
+            if not is_par and pfield and pfield.name == 'type' and any(e.__class__ is Starred for e in fst_body):  # if putting Starred to unparenthesized ExceptHandler.type Tuple then parenthesize it
                 need_par = True
 
     # normal stuff
@@ -1521,7 +1520,7 @@ def _put_slice_Global_Nonlocal_names(
     else:
         npars = 0
 
-        if not all(isinstance(bad := e, Name) and not (npars := e.f.pars().n) for e in fst_.a.elts):
+        if not all((bad := e).__class__ is Name and not (npars := e.f.pars().n) for e in fst_.a.elts):
             raise NodeError(f'cannot put{" parenthesized" if npars else ""} {bad.__class__.__name__} '
                             f'to {ast.__class__.__name__}.names')
 
@@ -1531,7 +1530,7 @@ def _put_slice_Global_Nonlocal_names(
 
     lines = self.root._lines
     tmp_elts = []  # these will be temporary AST nodes so that we can edit the source using existing code
-    end_col += 5 if isinstance(ast, Global) else 7  # will have another +1 added in search
+    end_col += 5 if ast.__class__ is Global else 7  # will have another +1 added in search
 
     for _ in range(len_body):
         ln, col, src = next_find_re(lines, ln, end_col + 1, bound_end_ln, bound_end_col, re_identifier)  # must be there, + 1 probably skips comma
@@ -1780,7 +1779,7 @@ def _put_slice_generators(
         if not len_slice:
             return
 
-        if not isinstance(ast, _comprehensions):
+        if ast.__class__ is not _comprehensions:
             if len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
                 raise ValueError(f'cannot delete all {ast.__class__.__name__}.generators without norm_self=False')
 
@@ -1829,7 +1828,7 @@ def _put_slice_comprehension_ifs(
 
     locfunc = lambda body, idx: body[idx].f.parent._loc_comprehension_if(idx)
 
-    if isinstance(ast, comprehension):
+    if ast.__class__ is comprehension:
         _, _, bound_ln, bound_col = ast.iter.f.pars()
 
     if not fst_:
@@ -2301,8 +2300,8 @@ def _put_slice_type_params(
     fst_ = _code_to_slice__type_params(self, code, one, options)
 
     bound, (name_ln, name_col) = (
-        (fst.FST._loc_TypeAlias_type_params_brackets if isinstance(ast, TypeAlias) else
-         fst.FST._loc_ClassDef_type_params_brackets if isinstance(ast, ClassDef) else
+        (fst.FST._loc_TypeAlias_type_params_brackets if ast.__class__ is TypeAlias else
+         fst.FST._loc_ClassDef_type_params_brackets if ast.__class__ is ClassDef else
          fst.FST._loc_FunctionDef_type_params_brackets)  # FunctionDef, AsyncFunctionDef
     )(self)
 
@@ -2622,8 +2621,8 @@ _LOC_SLICE_RAW_PUT_FUNCS = {
 def _singleton_needs_comma(fst_: fst.FST) -> bool:
     """Whether a singleton value in this container needs a trailing comma or not."""
 
-    return (isinstance(a := fst_.a, Tuple) or
-            (isinstance(a, MatchSequence) and not fst_._is_delimited_seq('patterns', '[]')))  # MatchSequence because it can be undelimited or delimited with parentheses and in that case a singleton needs a trailing comma
+    return ((a := fst_.a).__class__ is Tuple or
+            (a.__class__ is MatchSequence and not fst_._is_delimited_seq('patterns', '[]')))  # MatchSequence because it can be undelimited or delimited with parentheses and in that case a singleton needs a trailing comma
 
 
 def _adjust_slice_raw_ast(
@@ -2644,9 +2643,9 @@ def _adjust_slice_raw_ast(
 
     code = reduce_ast(code, True)
 
-    if ((code_is_tuple := isinstance(code, Tuple))
-        or (code_is_normal := isinstance(code, (List, Set, Dict, MatchSequence, MatchMapping)))
-        or isinstance(code, (_withitems, _aliases, _type_params))
+    if ((code_is_tuple := (code.__class__ is Tuple))
+        or (code_is_normal := (code.__class__ in (List, Set, Dict, MatchSequence, MatchMapping)))
+        or code.__class__ in (_withitems, _aliases, _type_params)
     ):  # all nodes which are separated by comma at top level
         src = unparse(code)
 
@@ -2710,8 +2709,8 @@ def _adjust_slice_raw_fst(
 
     code_ast = reduce_ast(code.a, True)
 
-    if ((code_is_normal := isinstance(code_ast, (Tuple, List, Set, Dict, MatchSequence, MatchMapping)))
-        or isinstance(code_ast, (_withitems, _aliases, _type_params))
+    if ((code_is_normal := (code_ast.__class__ in (Tuple, List, Set, Dict, MatchSequence, MatchMapping)))
+        or code_ast.__class__ in (_withitems, _aliases, _type_params)
     ):  # all nodes which are separated by comma at top level
         code_fst = code_ast.f
         code_lines = code._lines
@@ -2734,7 +2733,7 @@ def _adjust_slice_raw_fst(
                     parenta.col_offset = col_offset
                     parenta.end_col_offset = end_col_offset
 
-                    assert isinstance(parenta, Expr)
+                    assert parenta.__class__ is Expr
 
             code._put_src(None, end_ln, end_col, len(code_lines) - 1, len(code_lines[-1]))
             code._put_src(None, 0, 0, ln, col, False)  # we are counting on this to _touch() everything because of possible assignments above to col_offset and end_col_offset

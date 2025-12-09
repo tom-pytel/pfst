@@ -165,7 +165,7 @@ def _bounds_decorator_list(self: fst.FST, start: int = 0) -> tuple[int, int, int
 
     ast = self.a
     body = ast.decorator_list
-    is_special = isinstance(ast, _decorator_list)
+    is_special = ast.__class__ is _decorator_list
 
     if is_special:
         bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
@@ -194,12 +194,12 @@ def _bounds_generators(self: fst.FST, start: int = 0) -> tuple[int, int, int, in
     ast = self.a
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    if not (is_special := isinstance(ast, _comprehensions)):
+    if not (is_special := (ast.__class__ is _comprehensions)):
         bound_end_col -= 1
 
     if start:
         _, _, bound_ln, bound_col = ast.generators[start - 1].f.loc
-    elif isinstance(ast, DictComp):
+    elif ast.__class__ is DictComp:
         _, _, bound_ln, bound_col = ast.value.f.pars()
     elif not is_special:  # ListComp, SetComp, GeneratorExp
         _, _, bound_ln, bound_col = ast.elt.f.pars()
@@ -211,13 +211,13 @@ def _bounds_comprehension_ifs(self: fst.FST, start: int = 0) -> tuple[int, int, 
     ast = self.a
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    if is_comprehension := isinstance(ast, comprehension):  # therefore not _comprehension_ifs
+    if is_comprehension := (ast.__class__ is comprehension):  # therefore not _comprehension_ifs
         if next := self.next():
             if next.ln > bound_end_ln:  # so that multiline ifs are handled correctly, yeah, really pedantic
                 bound_end_ln += 1
                 bound_end_col = 0
 
-        elif (parent := self.parent) and not isinstance(parent.a, _comprehensions):  # we don't extend to end of `ListComp` (or one of the others) but we do set end boound to start of next line if past our end line so that multiline stuff procs correctly
+        elif (parent := self.parent) and parent.a.__class__ is not _comprehensions:  # we don't extend to end of `ListComp` (or one of the others) but we do set end boound to start of next line if past our end line so that multiline stuff procs correctly
             if parent.end_ln > bound_end_ln:
                 bound_end_ln += 1
                 bound_end_col = 0
@@ -385,7 +385,7 @@ def _maybe_fix_naked_expr(self: fst.FST, is_del: bool, is_first: bool, options: 
             self._parenthesize_grouping(False)
 
     if is_first:  # VERY SPECIAL CASE where we may have left a line continuation not exactly at proper indentation after delete at start of Expr which is our statement parent
-        if (parent := self.parent_stmtish()) and isinstance(parent.a, Expr):
+        if (parent := self.parent_stmtish()) and parent.a.__class__ is Expr:
             ln, col, _, _ = self.loc
 
             if ln == parent.ln:  # if starts on same line as Expr then we may need to fix
@@ -507,7 +507,7 @@ def _maybe_fix_decorator_list_trailing_newline(self: fst.FST, old_last_line: str
 
     ast = self.a
 
-    if not isinstance(ast, _decorator_list):
+    if ast.__class__ is not _decorator_list:
         return False
 
     lines = self.root._lines
@@ -772,10 +772,10 @@ def _get_slice_Tuple_elts(
     is_par = self._is_delimited_seq()
     locs = _locs_and_bounds_get(self, start, stop, body, body, is_par)
     asts = _cut_or_copy_asts(start, stop, 'elts', cut, body)
-    ctx = ast.ctx.__class__
-    ret_ast = Tuple(elts=asts, ctx=ctx())
+    ctx_cls = ast.ctx.__class__
+    ret_ast = Tuple(elts=asts, ctx=ctx_cls())
 
-    if not issubclass(ctx, Load):  # new Tuple root object must have ctx=Load
+    if ctx_cls is not Load:  # new Tuple root object must have ctx=Load
         set_ctx(ret_ast, Load)
 
     if is_par:
@@ -818,10 +818,10 @@ def _get_slice_List_elts(
 
     locs = _locs_and_bounds_get(self, start, stop, body, body, 1)
     asts = _cut_or_copy_asts(start, stop, 'elts', cut, body)
-    ctx = ast.ctx.__class__
-    ret_ast = List(elts=asts, ctx=ctx())  # we set ctx() so that if it is not Load then set_ctx() below will recurse into it
+    ctx_cls = ast.ctx.__class__
+    ret_ast = List(elts=asts, ctx=ctx_cls())  # we set ctx() so that if it is not Load then set_ctx() below will recurse into it
 
-    if not issubclass(ctx, Load):  # new List root object must have ctx=Load
+    if ctx_cls is not Load:  # new List root object must have ctx=Load
         set_ctx(ret_ast, Load)
 
     return get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
@@ -1165,7 +1165,7 @@ def _get_slice_Global_Nonlocal_names(
     lines = self.root._lines
     ret_elts = []
     ret_ast = Tuple(elts=ret_elts, ctx=Load())
-    end_col += 5 if isinstance(ast, Global) else 7  # will have another +1 added in search
+    end_col += 5 if ast.__class__ is Global else 7  # will have another +1 added in search
 
     if not start:
         bound_ln = None  # set later
@@ -1314,7 +1314,7 @@ def _get_slice_Boolop_values(
     # include location of possible extra operator on either side of slice
 
     lines = self.root._lines
-    sep = 'and' if isinstance(ast.op, And) else 'or'
+    sep = 'and' if ast.op.__class__ is And else 'or'
 
     op_side_left = _get_option_op_side(is_first, is_last, options)
 
@@ -1476,7 +1476,7 @@ def _get_slice_Compare__all(
         asts_ops[0] = fst.FST(Pass(lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), fst_, astfield('ops', 0)).a
 
     else:
-        if isinstance(op0 := asts_ops[0], Pass):  # first operator is placeholder which was not offset in get_slice_nosep() so assign temporary location here
+        if (op0 := asts_ops[0]).__class__ is Pass:  # first operator is placeholder which was not offset in get_slice_nosep() so assign temporary location here
             op0.lineno = op0.end_lineno = 1
             op0.col_offset = op0.end_col_offset = 0
 
@@ -1650,7 +1650,7 @@ def _get_slice_generators(
         return fst.FST(_comprehensions(generators=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
                        [''], None, from_=self)
 
-    if not isinstance(ast, _comprehensions):
+    if ast.__class__ is not _comprehensions:
         if cut and len_slice == len_body and get_option_overridable('norm', 'norm_self', options):
             raise ValueError(f'cannot cut all {ast.__class__.__name__}.generators without norm_self=False')
 
@@ -1860,8 +1860,8 @@ def _get_slice_type_params(
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
     bound_func = (
-        fst.FST._loc_TypeAlias_type_params_brackets if isinstance(ast, TypeAlias) else
-        fst.FST._loc_ClassDef_type_params_brackets if isinstance(ast, ClassDef) else
+        fst.FST._loc_TypeAlias_type_params_brackets if ast.__class__ is TypeAlias else
+        fst.FST._loc_ClassDef_type_params_brackets if ast.__class__ is ClassDef else
         fst.FST._loc_FunctionDef_type_params_brackets  # FunctionDef, AsyncFunctionDef
     )
 
@@ -1900,14 +1900,14 @@ def _get_slice__slice(
     """Our own general non-AST-compatible slice of some `type[AST]` list field."""
 
     ast = self.a
-    kls = ast.__class__
-    static = fst_package.fst_put_slice._SPECIAL_SLICE_STATICS[kls]
+    ast_cls = ast.__class__
+    static = fst_package.fst_put_slice._SPECIAL_SLICE_STATICS[ast_cls]
     body = getattr(ast, field)
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
 
     if start == stop:
-        return fst.FST(kls([], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], None, from_=self)
+        return fst.FST(ast_cls([], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0), [''], None, from_=self)
 
     loc_first, loc_last = _locs_first_and_last(self, start, stop, body, body)
 
@@ -1917,7 +1917,7 @@ def _get_slice__slice(
         _, _, bound_ln, bound_col = body[start - 1].f.pars()
 
     asts = _cut_or_copy_asts(start, stop, field, cut, body)
-    ret_ast = kls(asts)
+    ret_ast = ast_cls(asts)
 
     fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1],
                          loc_first, loc_last, bound_ln, bound_col, bound_end_ln, bound_end_col,

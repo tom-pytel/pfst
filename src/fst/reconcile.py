@@ -180,7 +180,7 @@ class Reconcile:
                 or (
                     val_pfield.idx == start                          # or (value is at the correct location
                     if child_parent is nodef                         # if is our own child, else
-                    else not isinstance(child_parent.a, Dict)        # value parent is not Dict)
+                    else child_parent.a.__class__ is not Dict        # value parent is not Dict)
                 )
                 or (
                     child_parent.a.keys[val_pfield.idx] is not None  # or (key associated with value is not None
@@ -364,20 +364,19 @@ class Reconcile:
                 if (field in ('body', 'orelse', 'finalbody', 'handlers', 'cases', 'elts')
                     or (
                         field == 'names'
-                        and isinstance(node, (Global, Nonlocal)  # list of identifier names
-                ))):
+                        and node.__class__ in (Global, Nonlocal))):
                     self.recurse_slice(node, outf, field, child)
 
                     continue
 
                 if field == 'keys':
-                    if isinstance(node, Dict):
+                    if node.__class__ is Dict:
                         self.recurse_slice_dict(node, outf)
 
                         break  # so that 'values' doesn't get processed
 
                     else:
-                        assert isinstance(node, MatchMapping)
+                        assert node.__class__ is MatchMapping
 
                         # TODO: this special case
 

@@ -12,18 +12,17 @@ import re
 from . import fst
 
 from .asttypes import (
-    ASTS_BLOCK,
+    ASTS_LEAF_BLOCK,
+    ASTS_LEAF_FUNCDEF,
+    ASTS_LEAF_CMPOP_TWO_WORD,
     AST,
     And,
     AsyncFunctionDef,
     AsyncWith,
     Compare,
-    FunctionDef,
     GeneratorExp,
     Global,
-    IsNot,
     Lambda,
-    NotIn,
     UnaryOp,
     comprehension,
 )
@@ -115,7 +114,7 @@ def _loc_arguments(self: fst.FST) -> fstloc | None:
         end_ln, end_col, _ = frag
         end_col += 1
 
-    elif (parent := self.parent) and isinstance(parent.a, (FunctionDef, AsyncFunctionDef)):  # arguments enclosed in pars
+    elif (parent := self.parent) and parent.a.__class__ in ASTS_LEAF_FUNCDEF:  # arguments enclosed in pars
         end_ln, end_col = rpars[-2]  # must be there
 
     if leading_stars:  # find star to the left, we know it exists so we don't check for None return
@@ -162,7 +161,7 @@ def _loc_comprehension(self: fst.FST) -> fstloc:
 
     else:
         is_genexp_last = ((parent := self.parent)
-                          and isinstance(parent.a, GeneratorExp)
+                          and parent.a.__class__ is GeneratorExp
                           and self.pfield.idx == len(parent.a.generators) - 1)  # correct for parenthesized GeneratorExp
 
         if is_genexp_last and lrpars == 2:  # can't be pars on left since only par on right was close of GeneratorExp
@@ -267,7 +266,7 @@ def _loc_op(self: fst.FST) -> fstloc | None:
     if not (parent := self.parent):  # standalone
         ln, col, src = next_frag(lines, 0, 0, len(lines) - 1, 0x7fffffffffffffff)  # must be there
 
-        if not isinstance(ast, (IsNot, NotIn)):  # simple one element operator means we are done
+        if ast.__class__ not in ASTS_LEAF_CMPOP_TWO_WORD:  # simple one element operator means we are done
             assert src == op
 
             return fstloc(ln, col, ln, col + len(src))
@@ -286,17 +285,17 @@ def _loc_op(self: fst.FST) -> fstloc | None:
 
     parenta = parent.a
 
-    if isinstance(parenta, UnaryOp):
+    if parenta.__class__ is UnaryOp:
         ln, col, _, _ = parenta.f.loc
 
         return fstloc(ln, col, ln, col + len(op))
 
-    if isinstance(parenta, Compare):  # special handling due to compound operators and array of ops and comparators
+    if parenta.__class__ is Compare:  # special handling due to compound operators and array of ops and comparators
         prev = parenta.comparators[idx - 1] if (idx := self.pfield.idx) else parenta.left
 
         _, _, end_ln, end_col = prev.f.loc
 
-        if has_space := isinstance(ast, (IsNot, NotIn)):  # stupid two-element operators, can be anything like "not    \\\n     in"
+        if has_space := (ast.__class__ in ASTS_LEAF_CMPOP_TWO_WORD):  # stupid two-element operators, can be anything like "not    \\\n     in"
             op, op2 = op.split(' ')
 
         last_ln = len(lines) - 1
@@ -347,7 +346,7 @@ def _loc_block_header_end(self: fst.FST) -> tuple[int, int, int, int] | None:
             cend_ln = ln
             cend_col = col
 
-    elif isinstance(a, ASTS_BLOCK):
+    elif a.__class__ in ASTS_LEAF_BLOCK:
         cend_ln = ln
         cend_col = col
 
@@ -370,7 +369,7 @@ def _loc_arguments_empty(self: fst.FST) -> fstloc:
     ln, col, end_ln, end_col = parent.loc
     lines = self.root._lines
 
-    if isinstance(parenta := parent.a, Lambda):
+    if (parenta := parent.a).__class__ is Lambda:
         col += 6
         end_ln, end_col = next_find(lines, ln, col, end_ln, end_col, ':')
 
@@ -401,7 +400,7 @@ def _loc_comprehension_if(self: fst.FST, idx: int, pars: bool = True) -> fstloc:
 
     if idx:
         _, _, prev_ln, prev_col = ifs[idx - 1].f.loc
-    elif isinstance(ast, comprehension):
+    elif ast.__class__ is comprehension:
         _, _, prev_ln, prev_col = ast.iter.f.loc
     else:  # isinstance(ast, _comprehension_ifs)
         prev_ln, prev_col, _, _ = self.loc  # should be 0, 0 but in case someone inserts some garbage before
@@ -559,7 +558,7 @@ def _loc_With_items_pars(self: fst.FST) -> fstlocn:
     lines = self.root._lines
     ln, col, end_ln, end_col = self.loc
 
-    if isinstance(ast, AsyncWith):
+    if ast.__class__ is AsyncWith:
         ln, col, _ = next_find_re(lines, ln, col, end_ln, end_col, _re_keyword_with_start)  # must be there, skip the 'async'
 
     col += 4
@@ -609,7 +608,7 @@ def _loc_BoolOp_op(self: fst.FST, idx: int) -> fstloc:
     lines = self.root._lines
     ast = self.a
     values = ast.values
-    op = 'and' if isinstance(ast.op, And) else 'or'
+    op = 'and' if ast.op.__class__ is And else 'or'
     _, _, end_ln, end_col = values[idx].f.pars()
     ln, col, _ = next_frag(lines, end_ln, end_col, 0x7fffffffffffffff, 0x7fffffffffffffff)  # must be there
 
@@ -701,7 +700,7 @@ def _loc_FunctionDef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None,
         after_ln = end_ln
         after_col = end_col
 
-    if isinstance(ast, AsyncFunctionDef):
+    if ast.__class__ is AsyncFunctionDef:
         ln, col = next_find(lines, ln, col + 5, after_ln, after_col, 'def')  # must be there
 
     name_end_ln, name_end_col, src = next_find_re(lines, ln, col + 3, after_ln, after_col, re_identifier)  # must be there
@@ -805,7 +804,7 @@ def _loc_Global_Nonlocal_names(self: fst.FST, first: int, last: int | None = Non
 
     ln, col, end_ln, end_col = self.loc
 
-    col += 6 if isinstance(self.a, Global) else 8
+    col += 6 if self.a.__class__ is Global else 8
     lines = self.root._lines
     idx = first
 

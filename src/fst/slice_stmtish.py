@@ -9,7 +9,8 @@ from typing import Any, Literal, Mapping
 from . import fst
 
 from .asttypes import (
-    ASTS_BLOCK,
+    ASTS_LEAF_MOD,
+    ASTS_LEAF_BLOCK,
     AsyncFor,
     AsyncFunctionDef,
     AsyncWith,
@@ -41,7 +42,7 @@ from .fst_misc import get_trivia_params, get_option_overridable, fixup_slice_ind
 
 from . import fst  # noqa: F811
 
-from .asttypes import ASTS_SCOPE_NAMED, AST, Constant, Expr, If, mod  # noqa: F811
+from .asttypes import ASTS_LEAF_SCOPE_NAMED, AST, Constant, Expr, If, mod  # noqa: F811
 from .astutil import bistr
 
 from .common import (
@@ -395,20 +396,26 @@ class SrcEdit:
             if not 0 <= pep8space <= 1:
                 raise ValueError(f"'pep8space' must be True, False or 1, not {pep8space}")
 
-            pep8space = 2 if pep8space is True and (p := get_fst.parent_scope(True)) and isinstance(p.a, mod) else 1
+            if (pep8space is True
+                and (p := get_fst.parent_scope(True))
+                and p.a.__class__ in ASTS_LEAF_MOD
+            ):
+                pep8space = 2
+            else:
+                pep8space = 1
 
             if (fpre
-                and isinstance(ffirst.a, ASTS_SCOPE_NAMED)
+                and ffirst.a.__class__ in ASTS_LEAF_SCOPE_NAMED
                 and (
                     fpre.pfield.idx
-                    or not isinstance(a := fpre.a, Expr)
-                    or not isinstance(v := a.value, Constant)
+                    or (a := fpre.a).__class__ is not Expr
+                    or (v := a.value).__class__ is not Constant
                     or not isinstance(v.value, str)
                 )
             ):
                 prespace = max(prespace, pep8space)
 
-            elif fpost and isinstance(flast.a, ASTS_SCOPE_NAMED):
+            elif fpost and flast.a.__class__ in ASTS_LEAF_SCOPE_NAMED:
                 postspace = max(postspace, pep8space)
 
         del_ln, del_col, del_end_ln, del_end_col = del_loc
@@ -493,19 +500,27 @@ class SrcEdit:
             raise ValueError(f"'pep8space' must be True, False or 1, not {pep8space}")
 
         if is_pep8 := bool(put_body) and pep8space:  # no pep8 checks if only text being put (no AST body)
-            pep8space = 2 if pep8space is True and (p := tgt_fst.parent_scope(True)) and isinstance(p.a, mod) else 1
+            if (pep8space is True
+                and (p := tgt_fst.parent_scope(True))
+                and p.a.__class__ in ASTS_LEAF_MOD
+            ):
+                pep8space = 2
+            else:
+                pep8space = 1
 
         prepend = 2 if put_col else 0  # don't put initial empty line if putting on a first AST line at root
 
         if (is_pep8
             and fpre
-            and ((put_ns := isinstance(put_body[0], ASTS_SCOPE_NAMED)) or isinstance(fpre.a, ASTS_SCOPE_NAMED))
-        ):  # preceding space
+            and (
+                (put_ns := put_body[0].__class__ in ASTS_LEAF_SCOPE_NAMED)
+                 or fpre.a.__class__ in ASTS_LEAF_SCOPE_NAMED
+        )):  # preceding space
             if (pep8space == 1
                 or (
                     not fpre.pfield.idx
-                    and isinstance(a := fpre.a, Expr)  # docstring
-                    and isinstance(v := a.value, Constant)
+                    and (a := fpre.a).__class__ is Expr  # docstring
+                    and (v := a.value).__class__ is Constant
                     and isinstance(v.value, str)
             )):
                 want = 1
@@ -543,8 +558,12 @@ class SrcEdit:
                 prepend += need
 
         if not (
-            is_pep8 and fpost and (isinstance(put_body[-1], ASTS_SCOPE_NAMED) or isinstance(fpost.a, ASTS_SCOPE_NAMED))
-        ):  # if don't need pep8space then maybe just need trailing newline
+            is_pep8
+            and fpost
+            and (
+                put_body[-1].__class__ in ASTS_LEAF_SCOPE_NAMED
+                or fpost.a.__class__ in ASTS_LEAF_SCOPE_NAMED
+        )):  # if don't need pep8space then maybe just need trailing newline
             if put_loc.end_col == len(lines[-1]) and put_loc.end_ln == len(lines) - 1:  # if putting to very end of source then don't add newlines
                 postpend = 0
             else:  # otherwise if last line of put contains something then append a newline
@@ -671,7 +690,7 @@ class SrcEdit:
 
         if not ffirst:  # pure insertion
             is_elif = (not fpre and not fpost and is_orelse and opt_elif and len(b := put_body) == 1 and
-                       isinstance(b[0], If) and isinstance(tgt_fst.a, If))
+                       b[0].__class__ is If and tgt_fst.a.__class__ is If)
 
             put_fst._indent_lns(opener_indent if is_handler or is_elif else block_indent, skip=0, docstr=docstr,
                                 docstr_strict_exclude=docstr_strict_exclude)
@@ -722,7 +741,7 @@ class SrcEdit:
 
             elif fpost:  # no preceding statement, only trailing
                 if is_handler or tgt_fst.is_root:
-                    if not is_handler and isinstance(tgt_fst.a, ASTS_BLOCK):  # in this case start will be before block header colon
+                    if not is_handler and tgt_fst.a.__class__ in ASTS_LEAF_BLOCK:  # in this case start will be before block header colon
                         ln, col = next_find(lines, *block_loc, ':')
                         col += 1
 
@@ -792,11 +811,11 @@ class SrcEdit:
         del_else_and_fin = False
         indent = opener_indent if is_handler else block_indent
 
-        if not fpre and not fpost and is_orelse and isinstance(tgt_fst.a, If):  # possible else <-> elif changes
+        if not fpre and not fpost and is_orelse and tgt_fst.a.__class__ is If:  # possible else <-> elif changes
             orelse = tgt_fst.a.orelse
             opt_elif = fst.FST.get_option('elif_', options)
             is_old_elif = orelse[0].f.is_elif()
-            is_new_elif = opt_elif and len(put_body) == 1 and isinstance(put_body[0], If)
+            is_new_elif = opt_elif and len(put_body) == 1 and put_body[0].__class__ is If
 
             if is_new_elif:
                 ln, col, end_ln, end_col = put_body[0].f.bloc
@@ -927,7 +946,7 @@ def _normalize_block(self: fst.FST, field: str = 'body', *, indent: str | None =
     - `indent`: The indentation to use for the relocated line if already known, saves a call to `_get_indent()`.
     """
 
-    if isinstance(self.a, mod) or not (block := getattr(self.a, field)) or not isinstance(block, list):
+    if self.a.__class__ in ASTS_LEAF_MOD or not (block := getattr(self.a, field)) or not isinstance(block, list):
         return
 
     b0 = block[0].f
@@ -952,15 +971,15 @@ def _can_del_all(self: fst.FST, field: str, options: Mapping[str, Any]) -> bool:
         return True
 
     if field == 'body':
-        return isinstance(self.a, Module)
+        return self.a.__class__ is Module
 
     if field == 'cases':
-        return isinstance(self.a, _match_cases)
+        return self.a.__class__ is _match_cases
 
     if field == 'finalbody':
         return bool(self.a.handlers)
 
-    return isinstance(a := self.a, _ExceptHandlers) or bool(a.finalbody)  # field == 'handlers'
+    return (a := self.a).__class__ is _ExceptHandlers or bool(a.finalbody)  # field == 'handlers'
 
 
 # ......................................................................................................................
@@ -1049,7 +1068,7 @@ def _get_slice_stmtish_old(
     if cut and is_last_child:  # correct for removed last child nodes or last nodes past the block open colon
         _set_end_pos_after_del(self, block_loc.ln, block_loc.col, put_loc.ln, put_loc.col)
 
-    if len(asts) == 1 and isinstance(a := asts[0], If):
+    if len(asts) == 1 and (a := asts[0]).__class__ is If:
         a.f._maybe_fix_elif()
 
     return fst_
@@ -1079,9 +1098,9 @@ def _put_slice_stmtish_old(
         if is_handlers := (field == 'handlers'):
             if len_slice == len_body and not isinstance(code, AST):  # if replacing all handlers then can change Try <-> TryStar according to what is being put (if we know, we don't know if code is AST)
                 is_trystar = None
-            elif isinstance(ast, Try):
+            elif ast.__class__ is Try:
                 is_trystar = False
-            elif isinstance(ast, TryStar):
+            elif ast.__class__ is TryStar:
                 is_trystar = True
             else:  # isinstance(ast, _ExceptHandlers)
                 is_trystar = body[0].f._is_except_star() if body else None
@@ -1171,8 +1190,8 @@ def _put_slice_stmtish_old(
             if not put_body and field in ('orelse', 'finalbody'):
                 raise ValueError(f"cannot insert empty statement into empty '{field}' field")
 
-            if isinstance(ast, (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, Match, ExceptHandler,
-                                match_case)):  # only one block possible, 'body' or 'cases'
+            if ast.__class__ in (FunctionDef, AsyncFunctionDef, ClassDef, With, AsyncWith, Match, ExceptHandler,
+                                match_case):  # only one block possible, 'body' or 'cases'
                 block_loc = fstloc(*self.bloc[2:], *next_bound_step(self))  # end of bloc will be just past ':'
                 is_last_child = True
 
@@ -1182,7 +1201,7 @@ def _put_slice_stmtish_old(
                 block_loc = fstloc(end_ln, end_col, end_ln, end_col)
                 is_last_child = True
 
-            elif isinstance(ast, (For, AsyncFor, While, If)):  # 'body' or 'orelse'
+            elif ast.__class__ in (For, AsyncFor, While, If):  # 'body' or 'orelse'
                 if field == 'orelse':
                     is_last_child = True
 
@@ -1202,7 +1221,7 @@ def _put_slice_stmtish_old(
                         is_last_child = True
 
             else:  # isinstance(ast, (Try, TryStar))
-                assert isinstance(ast, (Try, TryStar))
+                assert ast.__class__ in (Try, TryStar)
 
                 if field == 'finalbody':
                     is_last_child = True
@@ -1300,10 +1319,10 @@ def _put_slice_stmtish_old(
 
         self._make_fst_tree(stack)
 
-        if is_handlers and is_trystar is None and not isinstance(ast, _ExceptHandlers):  # we may have to change Try <-> TryStar if put ExceptHandlers and all handlers replaced
+        if is_handlers and is_trystar is None and ast.__class__ is not _ExceptHandlers:  # we may have to change Try <-> TryStar if put ExceptHandlers and all handlers replaced
             is_except_star = body[0].f._is_except_star()
 
-            if is_except_star != isinstance(ast, TryStar):  # need to swap?
+            if is_except_star != (ast.__class__ is TryStar):  # need to swap?
                 new_type = TryStar if is_except_star else Try
                 new_ast = new_type(body=ast.body, handlers=body, orelse=ast.orelse, finalbody=ast.finalbody,
                                    lineno=ast.lineno, col_offset=ast.col_offset,
@@ -1362,7 +1381,7 @@ def _maybe_del_trailing_newline(self: fst.FST, old_last_line: str, put_fst_end_n
 
     root = self.root
     roota = root.a
-    is_special = isinstance(roota, (_ExceptHandlers, _match_cases))
+    is_special = roota.__class__ in (_ExceptHandlers, _match_cases)
     lines = root._lines
 
     if (not put_fst_end_nl
@@ -1372,7 +1391,7 @@ def _maybe_del_trailing_newline(self: fst.FST, old_last_line: str, put_fst_end_n
     ):  # if self last line changed and was previously not a trailing newline and code put did not end in trailing newline then make sure it is not so now
         child_root = root
 
-        if (is_special or isinstance(roota, mod)) and not (child_root := root.last_child()):
+        if (is_special or roota.__class__ in ASTS_LEAF_MOD) and not (child_root := root.last_child()):
             if len(lines) > 1:
                 del lines[-1]  # we specifically delete just one trailing newline because there may be multiple and we want to preserve the rest
 
