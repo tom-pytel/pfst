@@ -64,8 +64,9 @@ class TestDocTest(unittest.TestCase):
 
         try:
             for mod in (fst.fst, fst.fst_core, fst.fst_misc, fst.fst_locs):
-                if mod is not fst.fst:  # this is so that `FST` and other misc things are available to the doctests
-                    mod.__dict__.update(fst_mod_dict)
+                # if mod is not fst.fst:  # this is so that `FST` and other misc things are available to the doctests
+                #     mod.__dict__.update(fst_mod_dict)
+                mod.__dict__.update(fst_mod_dict)  # this is so that `FST` and other misc things are available to the doctests, fst.fst also needs some AST types which are not normally imported there
 
                 cleanup_docstrs(mod)
 

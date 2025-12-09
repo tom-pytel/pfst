@@ -81,7 +81,6 @@ from .asttypes import (
     Mod,
     Module,
     Mult,
-    Name,
     NamedExpr,
     Not,
     NotEq,
@@ -3684,6 +3683,7 @@ class FST:
         recurse: bool = True,
         scope: bool = False,
         back: bool = False,
+        walrus: bool | None = None,
     ) -> Generator[FST, bool, None]:
         r"""Walk `self` and descendants in syntactic order. When walking, you can `send(False)` to the generator to skip
         recursion into the current child. `send(True)` to allow recursion into child if called with `recurse=False` or
@@ -3693,11 +3693,13 @@ class FST:
         those in the given direction, recursing into each child's children before continuing with siblings. Walking
         backwards will not generate the same sequence as `list(walk())[::-1]` due to this behavior.
 
-        It is safe to modify the nodes (or previous nodes) as they are being walked as long as those modifications don't
-        touch the parent or following nodes. This means normal `.replace()` is fine as long as `raw=False`.
+        It is safe to `replace()` the node you get as you are walking, as well as modify all of its children or siblings
+        which came before, but not parents or siblings which have not been walked yet. We are referring to the normal
+        non-raw replacement, if you perform raw operations as you walk then all bets are off.
 
-        The walk is relatively efficient but if all you need to do is just walk ALL the `AST` children without any bells
-        or whistles then `ast.walk()` will be a bit faster.
+        This walk is relatively efficient but if all you need to do is just walk ALL the `AST` children without any
+        bells or whistles, from which you can get the `FST` nodes via the `.f` attribute, then `ast.walk()` will be
+        faster.
 
         **Parameters:**
         - `with_loc`: Return nodes depending on their location information.
@@ -3711,8 +3713,9 @@ class FST:
                 nodes with calculated locations.
         - `self_`: If `True` then self will be returned first with the possibility to skip children with `send(False)`,
             otherwise will start directly with children.
-        - `recurse`: Whether to recurse into children by default, `send(True)` for a given node will always override
-            this.
+        - `recurse`: Whether to recurse past the first level of children by default, `send(True)` for a given node will
+            always override this. Meaning that if `False`, will only return `self` (if allowed to by `self_`) and the
+            the immediate children of `self` and no deeper.
         - `scope`: If `True` then will walk only within the scope of `self`. Meaning if called on a `FunctionDef` then
             will only walk children which are within the function scope. Will yield children which have their own
             scopes, and the parts of them which are visible in this scope (like default argument values), but will not
@@ -3720,6 +3723,14 @@ class FST:
             them unless `send(True)` is done for that child.
         - `back`: If `True` then walk every node in reverse syntactic order. This is not the same as a full forwards
             walk reversed due to recursion (parents are still returned before children, only in reverse sibling order).
+        - `walrus`: Since `NamedExpr.target` in a `ListComp` or the like actually lives in the parent scope they are
+            returned as nodes when walking with `scope=True` if the walk recurses into one of those `Comp`s. Conversely,
+            if you walk a `Comp` (as `self` here) with `scope=True` the `NamedExpr.target`s don't belong to it and so
+            the `target` is not returned during the walk (though the full `NamedExpr` is). You can override this
+            behavior by setting `walrus=True` and you will get the `target`s. Setting `walrus=False` turns off
+            `NamedExpr.target` returning regardless of starting node. This only triggers when walking a `NamedExpr`. If
+            you start the walk on a `NamedExpr.target` already then it is always returned (and is also a pretty boring
+            walk).
 
         **Examples:**
 
@@ -3802,11 +3813,10 @@ class FST:
         ast = self.a
         ast_cls = ast.__class__
 
-        if scope:  # some parts of a FunctionDef or ClassDef are outside its scope
-            if isinstance(ast, list):
-                stack = ast[:] if back else ast[::-1]
+        # if we are walking scope then we may need to exclude some parts of the top-level node
 
-            elif ast_cls in (ClassDef, Module, Interactive):
+        if scope:  # some parts of a FunctionDef or ClassDef are outside its scope
+            if ast_cls in (ClassDef, Module, Interactive):
                 if back:
                     stack = []
 
@@ -3849,16 +3859,25 @@ class FST:
                 else:
                     stack = (generators := ast.generators)[::-1] + ([ast.elt] if is_elt else [ast.value, ast.key])
 
-                skip_iter = generators[0].iter
+                skip_iter = generators[0].iter if generators else None  # maybe the user deleted all generators
 
-            elif ast_cls is Expression:
-                stack = [ast.body]
+                if walrus is None:  # if NamedExpr.target return state not overridden then don't return for this by default
+                    walrus = False
 
-        if stack is None:
-            stack = syntax_ordered_children(ast)
+        if walrus is None:
+            walrus = True
 
-            if not back:
-                stack = stack[::-1]
+        if stack is None:  # nothing excluded so just add all children
+            if not walrus and ast_cls is NamedExpr:  # not returning NamedExpr.targets?
+                stack = [ast.value]
+
+            else:
+                stack = syntax_ordered_children(ast)
+
+                if not back:
+                    stack = stack[::-1]
+
+        # loop
 
         while stack:
             if not (ast := stack.pop()):
@@ -3882,9 +3901,9 @@ class FST:
 
             if recurse_ is not True:
                 if recurse_:  # user did send(True), walk this child unconditionally
-                    yield from fst_.walk(with_loc, self_=False, back=back)
+                    yield from fst_.walk(with_loc, self_=False, back=back, walrus=walrus)
 
-            else:
+            else:  # if walking scope then check if we got to another scope and walk the things from that which are visible in our scope
                 if scope:
                     recurse_ = False
 
@@ -3920,15 +3939,27 @@ class FST:
 
                     elif ast_cls in (ListComp, SetComp, DictComp, GeneratorExp):
                         comp_first_iter = ast.generators[0].iter
-                        gen = fst_.walk(with_loc, self_=False, back=back)
 
-                        for f in gen:  # all NamedExpr assignments below are visible here, yeah, its ugly
-                            if ((a := f.a) is comp_first_iter
-                                or (
-                                    f.pfield.name == 'target'
-                                    and a.__class__ is Name
-                                    and f.parent.a.__class__ is NamedExpr
-                            )):
+                        gen = fst_.walk(with_loc, self_=False, back=back, walrus=walrus)
+
+                        for f in gen:  # we want to return all NamedExpr.target and first top-level .iter, yeah, its ugly
+                            a = f.a
+
+                            if a is comp_first_iter:  # top-level iterator is in parent scope
+                                subrecurse = recurse
+
+                                while (sent := (yield f)) is not None:
+                                    subrecurse = sent
+
+                                if subrecurse:
+                                    yield from f.walk(with_loc, self_=False, back=back, walrus=walrus)
+
+                                gen.send(False)
+
+                            elif (  # all NamedExprs are in parent scope
+                                f.parent.a.__class__ is NamedExpr
+                                and f.pfield.name == 'target'  # a.__class__ is Name
+                            ):
                                 subrecurse = recurse
 
                                 while (sent := (yield f)) is not None:
@@ -3937,7 +3968,7 @@ class FST:
                                 if not subrecurse:
                                     gen.send(False)
 
-                    elif ast_cls is comprehension:  # this only comes from top level comprehension, not ones encountered here
+                    elif ast_cls is comprehension:  # this only comes from top-level *Comp, not ones encountered in a *Comp or GeneratorExp here
                         if back:
                             stack.append(ast.target)
 
@@ -3960,9 +3991,13 @@ class FST:
                         recurse_ = True
 
                 if recurse_:
-                    children = syntax_ordered_children(ast)
+                    if not walrus and ast_cls is NamedExpr:  # not returning NamedExpr.targets?
+                        stack.append(ast.value)
 
-                    stack.extend(children if back else children[::-1])
+                    else:
+                        children = syntax_ordered_children(ast)
+
+                        stack.extend(children if back else children[::-1])
 
     def parents(self, self_: bool = False) -> Generator[FST, None, None]:
         """Generator which yields parents all the way up to root. If `self_` is `True` then will yield `self` first.

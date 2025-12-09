@@ -4969,16 +4969,166 @@ def f(a, /, b, *c, d, **e):
         self.assertEqual(['f', 'g', 'h', 'deco1', 'm', 'deco2', 'cls', 'moto', 'hidden', 'o'], l)
 
         fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip()).a.body[0].value.f
-        self.assertEqual(['z', 'a', 'c', 'a'],
+        self.assertEqual(['z', 'a', 'a'],
                          [f.a.id for f in fst.walk(scope=True) if isinstance(f.a, Name)])
+
+        fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip()).a.body[0].value.f
+        self.assertEqual(['z', 'a', 'c', 'a'],
+                         [f.a.id for f in fst.walk(scope=True, walrus=True) if isinstance(f.a, Name)])
 
         fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip()).a.body[0].f
         self.assertEqual(['b', 'c'],
                          [f.a.id for f in fst.walk(scope=True) if isinstance(f.a, Name)])
 
         fst = FST.fromsrc("""[z for a in b if b in [c := i for i in j if i in {d := k for k in l}]]""".strip()).a.body[0].value.f
-        self.assertEqual(['z', 'a', 'b', 'c', 'j', 'd'],
+        self.assertEqual(['z', 'a', 'b', 'j'],
                          [f.a.id for f in fst.walk(scope=True) if isinstance(f.a, Name)])
+
+        fst = FST.fromsrc("""[z for a in b if b in [c := i for i in j if i in {d := k for k in l}]]""".strip()).a.body[0].value.f
+        self.assertEqual(['z', 'a', 'b', 'c', 'j', 'd'],
+                         [f.a.id for f in fst.walk(scope=True, walrus=True) if isinstance(f.a, Name)])
+
+        # newer tests
+
+        def walkscope(src, back=False, walrus=None):
+            return '\n'.join(f'{str(f):<32} {f.src}' for f in FST(src).walk(True, scope=True, back=back, walrus=walrus))
+
+        self.assertEqual(walkscope('z = [i := a for a in b(d := c) if (e := a)]'), '''
+<Assign ROOT 0,0..0,43>          z = [i := a for a in b(d := c) if (e := a)]
+<Name 0,0..0,1>                  z
+<ListComp 0,4..0,43>             [i := a for a in b(d := c) if (e := a)]
+<Name 0,5..0,6>                  i
+<Call 0,21..0,30>                b(d := c)
+<Name 0,21..0,22>                b
+<NamedExpr 0,23..0,29>           d := c
+<Name 0,23..0,24>                d
+<Name 0,28..0,29>                c
+<Name 0,35..0,36>                e
+            '''.strip())
+
+        self.assertEqual(walkscope('[a for a in b]'), '''
+<ListComp ROOT 0,0..0,14>        [a for a in b]
+<Name 0,1..0,2>                  a
+<comprehension 0,3..0,13>        for a in b
+<Name 0,7..0,8>                  a
+            '''.strip())
+
+        self.assertEqual(walkscope('var = [a for a in b]'), '''
+<Assign ROOT 0,0..0,20>          var = [a for a in b]
+<Name 0,0..0,3>                  var
+<ListComp 0,6..0,20>             [a for a in b]
+<Name 0,18..0,19>                b
+            '''.strip())
+
+        self.assertEqual(walkscope('var = [a for a in b]', back=True), '''
+<Assign ROOT 0,0..0,20>          var = [a for a in b]
+<ListComp 0,6..0,20>             [a for a in b]
+<Name 0,18..0,19>                b
+<Name 0,0..0,3>                  var
+            '''.strip())
+
+        self.assertEqual(walkscope('[i := a for a in b(j := c) if (k := a)]'), '''
+<ListComp ROOT 0,0..0,39>        [i := a for a in b(j := c) if (k := a)]
+<NamedExpr 0,1..0,7>             i := a
+<Name 0,6..0,7>                  a
+<comprehension 0,8..0,38>        for a in b(j := c) if (k := a)
+<Name 0,12..0,13>                a
+<NamedExpr 0,31..0,37>           k := a
+<Name 0,36..0,37>                a
+            '''.strip())
+
+        self.assertEqual(walkscope('var = [i := a for a in b(j := c) if (k := a)]'), '''
+<Assign ROOT 0,0..0,45>          var = [i := a for a in b(j := c) if (k := a)]
+<Name 0,0..0,3>                  var
+<ListComp 0,6..0,45>             [i := a for a in b(j := c) if (k := a)]
+<Name 0,7..0,8>                  i
+<Call 0,23..0,32>                b(j := c)
+<Name 0,23..0,24>                b
+<NamedExpr 0,25..0,31>           j := c
+<Name 0,25..0,26>                j
+<Name 0,30..0,31>                c
+<Name 0,37..0,38>                k
+            '''.strip())
+
+        self.assertEqual(walkscope('var = [i := a for a in b(j := c) if (k := a)]', back=True), '''
+<Assign ROOT 0,0..0,45>          var = [i := a for a in b(j := c) if (k := a)]
+<ListComp 0,6..0,45>             [i := a for a in b(j := c) if (k := a)]
+<Name 0,37..0,38>                k
+<Call 0,23..0,32>                b(j := c)
+<NamedExpr 0,25..0,31>           j := c
+<Name 0,30..0,31>                c
+<Name 0,25..0,26>                j
+<Name 0,23..0,24>                b
+<Name 0,7..0,8>                  i
+<Name 0,0..0,3>                  var
+            '''.strip())
+
+        # `walrus` option
+
+        self.assertEqual(walkscope('a = (b := c)'), '''
+<Assign ROOT 0,0..0,12>          a = (b := c)
+<Name 0,0..0,1>                  a
+<NamedExpr 0,5..0,11>            b := c
+<Name 0,5..0,6>                  b
+<Name 0,10..0,11>                c
+            '''.strip())
+
+        self.assertEqual(walkscope('a = (b := c)', walrus=True), '''
+<Assign ROOT 0,0..0,12>          a = (b := c)
+<Name 0,0..0,1>                  a
+<NamedExpr 0,5..0,11>            b := c
+<Name 0,5..0,6>                  b
+<Name 0,10..0,11>                c
+            '''.strip())
+
+        self.assertEqual(walkscope('a = (b := c)', walrus=False), '''
+<Assign ROOT 0,0..0,12>          a = (b := c)
+<Name 0,0..0,1>                  a
+<NamedExpr 0,5..0,11>            b := c
+<Name 0,10..0,11>                c
+            '''.strip())
+
+        self.assertEqual(walkscope('[i := a for a in b if (c := a)]'), '''
+<ListComp ROOT 0,0..0,31>        [i := a for a in b if (c := a)]
+<NamedExpr 0,1..0,7>             i := a
+<Name 0,6..0,7>                  a
+<comprehension 0,8..0,30>        for a in b if (c := a)
+<Name 0,12..0,13>                a
+<NamedExpr 0,23..0,29>           c := a
+<Name 0,28..0,29>                a
+            '''.strip())
+
+        self.assertEqual(walkscope('[i := a for a in b if (c := a)]', walrus=True), '''
+<ListComp ROOT 0,0..0,31>        [i := a for a in b if (c := a)]
+<NamedExpr 0,1..0,7>             i := a
+<Name 0,1..0,2>                  i
+<Name 0,6..0,7>                  a
+<comprehension 0,8..0,30>        for a in b if (c := a)
+<Name 0,12..0,13>                a
+<NamedExpr 0,23..0,29>           c := a
+<Name 0,23..0,24>                c
+<Name 0,28..0,29>                a
+            '''.strip())
+
+        self.assertEqual(walkscope('var = [i := a for a in b if (c := a)]'), '''
+<Assign ROOT 0,0..0,37>          var = [i := a for a in b if (c := a)]
+<Name 0,0..0,3>                  var
+<ListComp 0,6..0,37>             [i := a for a in b if (c := a)]
+<Name 0,7..0,8>                  i
+<Name 0,23..0,24>                b
+<Name 0,29..0,30>                c
+            '''.strip())
+
+        self.assertEqual(walkscope('var = [i := a for a in b if (c := a)]', walrus=False), '''
+<Assign ROOT 0,0..0,37>          var = [i := a for a in b if (c := a)]
+<Name 0,0..0,3>                  var
+<ListComp 0,6..0,37>             [i := a for a in b if (c := a)]
+<Name 0,23..0,24>                b
+            '''.strip())
+
+        f = FST('a := b')
+        self.assertEqual([f, f.value], list(f.walk(True, walrus=False)))
+        self.assertEqual([f.target], list(f.target.walk(True, walrus=False)))  # walking NamedExpr.target always returns it regardless
 
     def test_walk_modify(self):
         fst = parse('if 1:\n a\n b\n c\nelse:\n d\n e').body[0].f
