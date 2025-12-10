@@ -18,7 +18,14 @@ from . import parsex
 from . import fst_traverse
 
 from .asttypes import (
+    ASTS_LEAF_MOD,
+    ASTS_LEAF_STMT,
     ASTS_LEAF_EXPR,
+    ASTS_LEAF_EXPR_CONTEXT,
+    ASTS_LEAF_BOOLOP,
+    ASTS_LEAF_OPERATOR,
+    ASTS_LEAF_UNARYOP,
+    ASTS_LEAF_CMPOP,
     ASTS_LEAF_PATTERN,
     ASTS_LEAF_TYPE_PARAM,
     ASTS_LEAF_STMT_OR_MOD,
@@ -3487,20 +3494,74 @@ class FST:
     # Predicates
 
     @property
+    def is_mod(self) -> bool:
+        """Is a `mod` node."""
+
+        return self.a.__class__ in ASTS_LEAF_MOD
+
+    @property
+    def is_stmt(self) -> bool:
+        """Is a `stmt` node."""
+
+        return self.a.__class__ in ASTS_LEAF_STMT
+
+    @property
+    def is_expr(self) -> bool:
+        """Is an `expr` node."""
+
+        return self.a.__class__ in ASTS_LEAF_EXPR
+
+    @property
+    def is_expr_context(self) -> bool:
+        """Is an `expr_context` node."""
+
+        return self.a.__class__ in ASTS_LEAF_EXPR_CONTEXT
+
+    @property
+    def is_boolop(self) -> bool:
+        """Is a `boolop` node."""
+
+        return self.a.__class__ in ASTS_LEAF_BOOLOP
+
+    @property
+    def is_operator(self) -> bool:
+        """Is an `operator` node."""
+
+        return self.a.__class__ in ASTS_LEAF_OPERATOR
+
+    @property
+    def is_unaryop(self) -> bool:
+        """Is a `unaryop` node."""
+
+        return self.a.__class__ in ASTS_LEAF_UNARYOP
+
+    @property
+    def is_cmpop(self) -> bool:
+        """Is a `cmpop` node."""
+
+        return self.a.__class__ in ASTS_LEAF_CMPOP
+
+    @property
+    def is_pattern(self) -> bool:
+        """Is a `pattern` node."""
+
+        return self.a.__class__ in ASTS_LEAF_PATTERN
+
+    @property
     def is_stmt_or_mod(self) -> bool:
-        """Is a `stmt` or `mod`."""
+        """Is a `stmt` or `mod` node."""
 
         return self.a.__class__ in ASTS_LEAF_STMT_OR_MOD
 
     @property
     def is_stmtish(self) -> bool:
-        """Is a `stmt`, `ExceptHandler` or `match_case`."""
+        """Is a `stmt`, `ExceptHandler` or `match_case` node."""
 
         return self.a.__class__ in ASTS_LEAF_STMTISH
 
     @property
     def is_stmtish_or_mod(self) -> bool:
-        """Is a `stmt`, `ExceptHandler`, `match_case` or `mod`."""
+        """Is a `stmt`, `ExceptHandler`, `match_case` or `mod` node."""
 
         return self.a.__class__ in ASTS_LEAF_STMTISH_OR_MOD
 
@@ -3582,6 +3643,12 @@ class FST:
         """Is a sync or async `with` node, `With` or `AsyncWith`, different from `is_For` or `is_AsyncFor`."""
 
         return self.a.__class__ in ASTS_LEAF_WITHS
+
+    @property
+    def is_try(self) -> bool:
+        """Is a `Try` or `TryStar` node, different from `is_Try` or `is_TryStar`."""
+
+        return self.a.__class__ in ASTS_LEAF_TRYS
 
     def is_elif(self) -> bool | None:
         r"""Whether `self` is an `elif` or not, or not an `If` at all.
@@ -3751,22 +3818,20 @@ _VIRTUAL_FIELD_VIEW__ALL = {
 
 def _make_predicates() -> None:
     def _make_class_is_predicate(ast_cls: type[AST]) -> property:
-        @property
         def predicate(self: FST, ast_cls: type = ast_cls) -> bool:
-            """@private"""
-
             return self.a.__class__ is ast_cls
 
-        return predicate
+        predicate.__doc__ = f'Is a `{ast_cls.__name__}` node.'
+
+        return property(predicate)
 
     def _make_isinstance_predicate(ast_cls: type[AST]) -> property:
-        @property
         def predicate(self: FST, ast_cls: type = ast_cls) -> bool:
-            """@private"""
-
             return isinstance(self.a, ast_cls)
 
-        return predicate
+        predicate.__doc__ = f'Is a `{ast_cls.__name__}` node.'
+
+        return property(predicate)
 
     for ast_cls in FIELDS:
         name = f'is_{ast_cls.__name__}'
