@@ -2,11 +2,12 @@ r'''
 # Example recipes
 
 These are a few snippets which do some real-world-ish things. The comment handling blemishes are left in place and your
-actual mileage with comments may vary. It depends very much of correct usage of the `trivia` option both on `get()` and
-`put()`, and comment handling in general needs a bit more work (a lot more work), but they are preserved mostly.
+actual mileage with comments at the edges of modifications may vary. It depends very much of correct usage of the
+`trivia` option both on `get()` and `put()`, and comment handling in general needs a bit more work (a lot more work),
+but they are preserved mostly.
 
 The examples are deliberately not the most efficient but are rather meant to show off `fst` usage and features. Some of
-them are somewhat linter-y, which is not the intended use of this module, but fine for demonstration purposes.
+them are somewhat formatter-y, which is not the intended use of this module, but fine for demonstration purposes.
 
 To be able to execute the examples, import this.
 

@@ -1,6 +1,7 @@
 """Standalone AST utilities."""
 
 import re
+import sys
 from array import array
 from ast import iter_fields, walk
 from itertools import chain
@@ -163,6 +164,9 @@ __all__ = [
 chain_from_iterable = chain.from_iterable
 
 
+PYVER  = sys.version_info[:2]
+PYGE13 = PYVER >= (3, 13)
+
 constant = EllipsisType | int | float | complex | str | bytes | bool | None
 
 pat_alnum                  = r'\w\uFE00-\uFE0F\U000E0100-\U000E01EF\u0903-\u0980\u0591-\u05f2'
@@ -188,6 +192,8 @@ re_identifier_alias_only   = re.compile(rf'^(?:\*|{pat_identifier}(?:\.{pat_iden
 #   MatchMapping  - interleaved `keys` and `patterns`
 #   arguments     - interleaved `posonlyargs`/`args` and `defaults` (partially), interleaved `kwonlyargs` and `kw_defaults`
 #   Call          - type `Starred` can be in `args`, `arg=None` in `keywords` means double starred
+
+TYPE_PARAM_DEFAULT_VALUE_FIELD = (('default_value', 'expr?'),) if PYGE13 else ()
 
 FIELDS = dict([  # only leaf node types which get instantiated and checked with `is` and `in`, not base stuff like `cmpop` or `excepthandler`
     (Module,                   (('body', 'stmt*'), ('type_ignores', 'type_ignore*'))),
@@ -308,9 +314,9 @@ FIELDS = dict([  # only leaf node types which get instantiated and checked with 
 
     (TypeIgnore,               (('lineno', 'int'), ('tag', 'string'))),
 
-    (TypeVar,                  (('name', 'identifier'), ('bound', 'expr?'), ('default_value', 'expr?'))),
-    (ParamSpec,                (('name', 'identifier'), ('default_value', 'expr?'))),
-    (TypeVarTuple,             (('name', 'identifier'), ('default_value', 'expr?'))),
+    (TypeVar,                  (('name', 'identifier'), ('bound', 'expr?'), *TYPE_PARAM_DEFAULT_VALUE_FIELD)),
+    (ParamSpec,                (('name', 'identifier'), *TYPE_PARAM_DEFAULT_VALUE_FIELD)),
+    (TypeVarTuple,             (('name', 'identifier'), *TYPE_PARAM_DEFAULT_VALUE_FIELD)),
 
     # our own SPECIAL SLICEs
 

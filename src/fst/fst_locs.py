@@ -31,7 +31,7 @@ from .astutil import re_identifier, OPCLS2STR, last_block_header_child
 
 from .common import fstloc, fstlocn, next_frag, prev_frag, next_find, prev_find, next_delims, prev_delims, next_find_re
 
-from .traverse import next_bound, prev_bound, next_bound_step, prev_bound_step
+from .fst_traverse import next_bound, prev_bound, next_bound_step, prev_bound_step
 
 
 _re_deco_start         = re.compile(r'[ \t]*@')

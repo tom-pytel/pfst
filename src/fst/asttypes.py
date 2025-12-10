@@ -308,9 +308,9 @@ ASTS_LEAF_BOOLOP             = {And, Or}
 ASTS_LEAF_OPERATOR           = {Add, Sub, Mult, MatMult, Div, Mod, Pow, LShift, RShift, BitOr, BitXor, BitAnd, FloorDiv}
 ASTS_LEAF_UNARYOP            = {Invert, Not, UAdd, USub}
 ASTS_LEAF_CMPOP              = {Eq, NotEq, Lt, LtE, Gt, GtE, Is, IsNot, In, NotIn}
-
 ASTS_LEAF_PATTERN            = {MatchValue, MatchSingleton, MatchSequence, MatchMapping, MatchClass, MatchStar, MatchAs,
                                 MatchOr}
+ASTS_LEAF_TYPE_PARAM         = {TypeVar, ParamSpec, TypeVarTuple}
 
 ASTS_LEAF_STMT_OR_MOD        = ASTS_LEAF_STMT | ASTS_LEAF_MOD
 ASTS_LEAF_EXPR_OR_PATTERN    = ASTS_LEAF_EXPR | ASTS_LEAF_PATTERN
@@ -337,15 +337,15 @@ ASTS_LEAF_SCOPE_ANONYMOUS    = {Lambda, ListComp, SetComp, DictComp, GeneratorEx
 ASTS_LEAF_FUNCDEF            = {FunctionDef, AsyncFunctionDef}
 ASTS_LEAF_DEF                = ASTS_LEAF_FUNCDEF | {ClassDef}
 ASTS_LEAF_DEF_OR_MOD         = ASTS_LEAF_DEF | ASTS_LEAF_MOD
-ASTS_LEAF_FOR                = {For, AsyncFor}
-ASTS_LEAF_WITH               = {With, AsyncWith}
-ASTS_LEAF_TRY_OR_TRYSTAR     = {Try, TryStar}
+ASTS_LEAF_FORS               = {For, AsyncFor}
+ASTS_LEAF_WITHS              = {With, AsyncWith}
+ASTS_LEAF_TRYS               = {Try, TryStar}
 ASTS_LEAF_CMPOP_TWO_WORD     = {IsNot, NotIn}
 
 ASTS_LEAF_MAYBE_DOCSTR       = ASTS_LEAF_SCOPE_NAMED | {Module}  # these may have a docstring as the first Const str Expr in the body
 
-ASTS_LEAF_MAYBE_SINGLETON    = (ASTS_LEAF_EXPR_CONTEXT | ASTS_LEAF_BOOLOP | ASTS_LEAF_OPERATOR | ASTS_LEAF_UNARYOP
-                                | ASTS_LEAF_CMPOP)  # the same object may be reused by ast.parse() in mutiple places in the tree
+# ASTS_LEAF_MAYBE_SINGLETON    = (ASTS_LEAF_EXPR_CONTEXT | ASTS_LEAF_BOOLOP | ASTS_LEAF_OPERATOR | ASTS_LEAF_UNARYOP
+#                                 | ASTS_LEAF_CMPOP)  # the same object may be reused by ast.parse() in mutiple places in the tree
 
 
 class _slice(AST):

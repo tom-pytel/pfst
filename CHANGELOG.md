@@ -2,9 +2,17 @@
 
 ### Fixed
 
+- fixed some `walk(scope=True)` incorrectly included / excluded nodes from function defs
+
 ### Added
 
+- `FST.scope_symbols()` to get the names used in a scope
+- added explicit user control over `NamedExpr.target` when walking with `scope=True`
+
 ### Updated
+
+- made `default_value` field optional for `TypeVar`, `ParamSpec` and `TypeVarTuple` so it doesn't exist for for py 3.12
+- optimized lots of `isinstance()` and `issubclass()` to check directly by class
 
 
 ## 0.2.4 - alpha - 2025-12-08

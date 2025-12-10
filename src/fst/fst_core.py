@@ -22,7 +22,7 @@ from .asttypes import (
     ASTS_LEAF_EXPRISH,
     ASTS_LEAF_STMTISH,
     ASTS_LEAF_FUNCDEF,
-    ASTS_LEAF_WITH,
+    ASTS_LEAF_WITHS,
     ASTS_LEAF_CMPOP_TWO_WORD,
     ASTS_LEAF_MAYBE_DOCSTR,
     AST,
@@ -1031,7 +1031,7 @@ def _is_enclosed_or_line(
                         if pars_names.n else
                         ast.names)
 
-        elif ast_cls in ASTS_LEAF_WITH:
+        elif ast_cls in ASTS_LEAF_WITHS:
             pars_items = self._loc_With_items_pars()
             end_ln = pars_items.bound.end_ln
             children = ([nspace(f=nspace(pars=lambda: pars_items, _is_enclosed_or_line=lambda **kw: True))]
@@ -1170,7 +1170,7 @@ def _is_enclosed_in_parents(self: fst.FST, field: str | None = None) -> bool:
         if parent_cls is ImportFrom:
             return bool(parent._loc_ImportFrom_names_pars().n)  # we know we are in `names`
 
-        if parent_cls in ASTS_LEAF_WITH:
+        if parent_cls in ASTS_LEAF_WITHS:
             return bool(parent._loc_With_items_pars().n)  # we know we are in `items`
 
         if isinstance(parenta, (stmt, ExceptHandler, match_case, mod, type_ignore)):

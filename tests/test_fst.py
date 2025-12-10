@@ -5,6 +5,7 @@ import threading
 import unittest
 from ast import parse as ast_parse, unparse as ast_unparse
 from keyword import kwlist as keyword_kwlist
+from pprint import pformat
 from random import randint, seed
 
 from fst import *
@@ -4988,12 +4989,12 @@ def f(a, /, b, *c, d, **e):
         self.assertEqual(['z', 'a', 'b', 'c', 'j', 'd'],
                          [f.a.id for f in fst.walk(scope=True, walrus=True) if isinstance(f.a, Name)])
 
-        # newer tests
+        # walrus in comprehensions
 
-        def walkscope(src, back=False, walrus=None):
-            return '\n'.join(f'{str(f):<32} {f.src}' for f in FST(src).walk(True, scope=True, back=back, walrus=walrus))
+        def walkscope(fst_, back=False, walrus=None):
+            return '\n'.join(f'{str(f):<32} {f.src}' for f in fst_.walk(True, scope=True, back=back, walrus=walrus))
 
-        self.assertEqual(walkscope('z = [i := a for a in b(d := c) if (e := a)]'), '''
+        self.assertEqual(walkscope(FST('z = [i := a for a in b(d := c) if (e := a)]')), '''
 <Assign ROOT 0,0..0,43>          z = [i := a for a in b(d := c) if (e := a)]
 <Name 0,0..0,1>                  z
 <ListComp 0,4..0,43>             [i := a for a in b(d := c) if (e := a)]
@@ -5006,28 +5007,28 @@ def f(a, /, b, *c, d, **e):
 <Name 0,35..0,36>                e
             '''.strip())
 
-        self.assertEqual(walkscope('[a for a in b]'), '''
+        self.assertEqual(walkscope(FST('[a for a in b]')), '''
 <ListComp ROOT 0,0..0,14>        [a for a in b]
 <Name 0,1..0,2>                  a
 <comprehension 0,3..0,13>        for a in b
 <Name 0,7..0,8>                  a
             '''.strip())
 
-        self.assertEqual(walkscope('var = [a for a in b]'), '''
+        self.assertEqual(walkscope(FST('var = [a for a in b]')), '''
 <Assign ROOT 0,0..0,20>          var = [a for a in b]
 <Name 0,0..0,3>                  var
 <ListComp 0,6..0,20>             [a for a in b]
 <Name 0,18..0,19>                b
             '''.strip())
 
-        self.assertEqual(walkscope('var = [a for a in b]', back=True), '''
+        self.assertEqual(walkscope(FST('var = [a for a in b]'), back=True), '''
 <Assign ROOT 0,0..0,20>          var = [a for a in b]
 <ListComp 0,6..0,20>             [a for a in b]
 <Name 0,18..0,19>                b
 <Name 0,0..0,3>                  var
             '''.strip())
 
-        self.assertEqual(walkscope('[i := a for a in b(j := c) if (k := a)]'), '''
+        self.assertEqual(walkscope(FST('[i := a for a in b(j := c) if (k := a)]')), '''
 <ListComp ROOT 0,0..0,39>        [i := a for a in b(j := c) if (k := a)]
 <NamedExpr 0,1..0,7>             i := a
 <Name 0,6..0,7>                  a
@@ -5037,7 +5038,7 @@ def f(a, /, b, *c, d, **e):
 <Name 0,36..0,37>                a
             '''.strip())
 
-        self.assertEqual(walkscope('var = [i := a for a in b(j := c) if (k := a)]'), '''
+        self.assertEqual(walkscope(FST('var = [i := a for a in b(j := c) if (k := a)]')), '''
 <Assign ROOT 0,0..0,45>          var = [i := a for a in b(j := c) if (k := a)]
 <Name 0,0..0,3>                  var
 <ListComp 0,6..0,45>             [i := a for a in b(j := c) if (k := a)]
@@ -5050,7 +5051,7 @@ def f(a, /, b, *c, d, **e):
 <Name 0,37..0,38>                k
             '''.strip())
 
-        self.assertEqual(walkscope('var = [i := a for a in b(j := c) if (k := a)]', back=True), '''
+        self.assertEqual(walkscope(FST('var = [i := a for a in b(j := c) if (k := a)]'), back=True), '''
 <Assign ROOT 0,0..0,45>          var = [i := a for a in b(j := c) if (k := a)]
 <ListComp 0,6..0,45>             [i := a for a in b(j := c) if (k := a)]
 <Name 0,37..0,38>                k
@@ -5065,7 +5066,7 @@ def f(a, /, b, *c, d, **e):
 
         # `walrus` option
 
-        self.assertEqual(walkscope('a = (b := c)'), '''
+        self.assertEqual(walkscope(FST('a = (b := c)')), '''
 <Assign ROOT 0,0..0,12>          a = (b := c)
 <Name 0,0..0,1>                  a
 <NamedExpr 0,5..0,11>            b := c
@@ -5073,7 +5074,7 @@ def f(a, /, b, *c, d, **e):
 <Name 0,10..0,11>                c
             '''.strip())
 
-        self.assertEqual(walkscope('a = (b := c)', walrus=True), '''
+        self.assertEqual(walkscope(FST('a = (b := c)'), walrus=True), '''
 <Assign ROOT 0,0..0,12>          a = (b := c)
 <Name 0,0..0,1>                  a
 <NamedExpr 0,5..0,11>            b := c
@@ -5081,14 +5082,14 @@ def f(a, /, b, *c, d, **e):
 <Name 0,10..0,11>                c
             '''.strip())
 
-        self.assertEqual(walkscope('a = (b := c)', walrus=False), '''
+        self.assertEqual(walkscope(FST('a = (b := c)'), walrus=False), '''
 <Assign ROOT 0,0..0,12>          a = (b := c)
 <Name 0,0..0,1>                  a
 <NamedExpr 0,5..0,11>            b := c
 <Name 0,10..0,11>                c
             '''.strip())
 
-        self.assertEqual(walkscope('[i := a for a in b if (c := a)]'), '''
+        self.assertEqual(walkscope(FST('[i := a for a in b if (c := a)]')), '''
 <ListComp ROOT 0,0..0,31>        [i := a for a in b if (c := a)]
 <NamedExpr 0,1..0,7>             i := a
 <Name 0,6..0,7>                  a
@@ -5098,7 +5099,7 @@ def f(a, /, b, *c, d, **e):
 <Name 0,28..0,29>                a
             '''.strip())
 
-        self.assertEqual(walkscope('[i := a for a in b if (c := a)]', walrus=True), '''
+        self.assertEqual(walkscope(FST('[i := a for a in b if (c := a)]'), walrus=True), '''
 <ListComp ROOT 0,0..0,31>        [i := a for a in b if (c := a)]
 <NamedExpr 0,1..0,7>             i := a
 <Name 0,1..0,2>                  i
@@ -5110,7 +5111,7 @@ def f(a, /, b, *c, d, **e):
 <Name 0,28..0,29>                a
             '''.strip())
 
-        self.assertEqual(walkscope('var = [i := a for a in b if (c := a)]'), '''
+        self.assertEqual(walkscope(FST('var = [i := a for a in b if (c := a)]')), '''
 <Assign ROOT 0,0..0,37>          var = [i := a for a in b if (c := a)]
 <Name 0,0..0,3>                  var
 <ListComp 0,6..0,37>             [i := a for a in b if (c := a)]
@@ -5119,7 +5120,7 @@ def f(a, /, b, *c, d, **e):
 <Name 0,29..0,30>                c
             '''.strip())
 
-        self.assertEqual(walkscope('var = [i := a for a in b if (c := a)]', walrus=False), '''
+        self.assertEqual(walkscope(FST('var = [i := a for a in b if (c := a)]'), walrus=False), '''
 <Assign ROOT 0,0..0,37>          var = [i := a for a in b if (c := a)]
 <Name 0,0..0,3>                  var
 <ListComp 0,6..0,37>             [i := a for a in b if (c := a)]
@@ -5129,6 +5130,269 @@ def f(a, /, b, *c, d, **e):
         f = FST('a := b')
         self.assertEqual([f, f.value], list(f.walk(True, walrus=False)))
         self.assertEqual([f.target], list(f.target.walk(True, walrus=False)))  # walking NamedExpr.target always returns it regardless
+
+        # funcdef arguments
+
+        f = FST(r'''
+def f(a: ta = 1, /, b: tb = 2, *c: tc, d: td = 3, **e: te):
+    def g(h: th = 5, /, i: ti = 6, *j: tj, k: tk = 7, **l: tl): pass
+            '''.strip(), 'exec')
+
+        self.assertEqual(walkscope(f), '''
+<Module ROOT 0,0..1,68>          def f(a: ta = 1, /, b: tb = 2, *c: tc, d: td = 3, **e: te):
+    def g(h: th = 5, /, i: ti = 6, *j: tj, k: tk = 7, **l: tl): pass
+<FunctionDef 0,0..1,68>          def f(a: ta = 1, /, b: tb = 2, *c: tc, d: td = 3, **e: te):
+    def g(h: th = 5, /, i: ti = 6, *j: tj, k: tk = 7, **l: tl): pass
+<Name 0,9..0,11>                 ta
+<Constant 0,14..0,15>            1
+<Name 0,23..0,25>                tb
+<Constant 0,28..0,29>            2
+<Name 0,35..0,37>                tc
+<Name 0,42..0,44>                td
+<Constant 0,47..0,48>            3
+<Name 0,55..0,57>                te
+            '''.strip())
+
+        self.assertEqual(walkscope(f.body[0]), '''
+<FunctionDef 0,0..1,68>          def f(a: ta = 1, /, b: tb = 2, *c: tc, d: td = 3, **e: te):
+    def g(h: th = 5, /, i: ti = 6, *j: tj, k: tk = 7, **l: tl): pass
+<arg 0,6..0,11>                  a: ta
+<arg 0,20..0,25>                 b: tb
+<arg 0,32..0,37>                 c: tc
+<arg 0,39..0,44>                 d: td
+<arg 0,52..0,57>                 e: te
+<FunctionDef 1,4..1,68>          def g(h: th = 5, /, i: ti = 6, *j: tj, k: tk = 7, **l: tl): pass
+<Name 1,13..1,15>                th
+<Constant 1,18..1,19>            5
+<Name 1,27..1,29>                ti
+<Constant 1,32..1,33>            6
+<Name 1,39..1,41>                tj
+<Name 1,46..1,48>                tk
+<Constant 1,51..1,52>            7
+<Name 1,59..1,61>                tl
+            '''.strip())
+
+        self.assertEqual(walkscope(f.body[0].body[0]), '''
+<FunctionDef 1,4..1,68>          def g(h: th = 5, /, i: ti = 6, *j: tj, k: tk = 7, **l: tl): pass
+<arg 1,10..1,15>                 h: th
+<arg 1,24..1,29>                 i: ti
+<arg 1,36..1,41>                 j: tj
+<arg 1,43..1,48>                 k: tk
+<arg 1,56..1,61>                 l: tl
+<Pass 1,64..1,68>                pass
+            '''.strip())
+
+        # class bases
+
+        f = FST(r'''
+class cls(a, b=c):
+    class nest(d, e=f): pass
+            '''.strip(), 'exec')
+
+        self.assertEqual(walkscope(f), '''
+<Module ROOT 0,0..1,28>          class cls(a, b=c):
+    class nest(d, e=f): pass
+<ClassDef 0,0..1,28>             class cls(a, b=c):
+    class nest(d, e=f): pass
+<Name 0,10..0,11>                a
+<keyword 0,13..0,16>             b=c
+<Name 0,15..0,16>                c
+            '''.strip())
+
+        self.assertEqual(walkscope(f.body[0]), '''
+<ClassDef 0,0..1,28>             class cls(a, b=c):
+    class nest(d, e=f): pass
+<ClassDef 1,4..1,28>             class nest(d, e=f): pass
+<Name 1,15..1,16>                d
+<keyword 1,18..1,21>             e=f
+<Name 1,20..1,21>                f
+            '''.strip())
+
+        # TypeAlias
+
+        if PYGE13:
+            f = FST('type t[T: ftb = ftd, *U = fud, **V = fvd] = ...'.strip(), 'exec')
+
+            self.assertEqual(walkscope(f), '''
+<Module ROOT 0,0..0,47>          type t[T: ftb = ftd, *U = fud, **V = fvd] = ...
+<TypeAlias 0,0..0,47>            type t[T: ftb = ftd, *U = fud, **V = fvd] = ...
+<Name 0,5..0,6>                  t
+<TypeVar 0,7..0,19>              T: ftb = ftd
+<Name 0,10..0,13>                ftb
+<Name 0,16..0,19>                ftd
+<TypeVarTuple 0,21..0,29>        *U = fud
+<Name 0,26..0,29>                fud
+<ParamSpec 0,31..0,40>           **V = fvd
+<Name 0,37..0,40>                fvd
+<Constant 0,44..0,47>            ...
+                '''.strip())
+
+            self.assertEqual(walkscope(f.body[0]), '''
+<TypeAlias 0,0..0,47>            type t[T: ftb = ftd, *U = fud, **V = fvd] = ...
+<Name 0,5..0,6>                  t
+<TypeVar 0,7..0,19>              T: ftb = ftd
+<Name 0,10..0,13>                ftb
+<Name 0,16..0,19>                ftd
+<TypeVarTuple 0,21..0,29>        *U = fud
+<Name 0,26..0,29>                fud
+<ParamSpec 0,31..0,40>           **V = fvd
+<Name 0,37..0,40>                fvd
+<Constant 0,44..0,47>            ...
+                '''.strip())
+
+        if PYGE12:
+            f = FST('type t[T: ftb, *U, **V] = ...'.strip(), 'exec')
+
+            self.assertEqual(walkscope(f), '''
+<Module ROOT 0,0..0,29>          type t[T: ftb, *U, **V] = ...
+<TypeAlias 0,0..0,29>            type t[T: ftb, *U, **V] = ...
+<Name 0,5..0,6>                  t
+<TypeVar 0,7..0,13>              T: ftb
+<Name 0,10..0,13>                ftb
+<TypeVarTuple 0,15..0,17>        *U
+<ParamSpec 0,19..0,22>           **V
+<Constant 0,26..0,29>            ...
+                '''.strip())
+
+            self.assertEqual(walkscope(f.body[0]), '''
+<TypeAlias 0,0..0,29>            type t[T: ftb, *U, **V] = ...
+<Name 0,5..0,6>                  t
+<TypeVar 0,7..0,13>              T: ftb
+<Name 0,10..0,13>                ftb
+<TypeVarTuple 0,15..0,17>        *U
+<ParamSpec 0,19..0,22>           **V
+<Constant 0,26..0,29>            ...
+                '''.strip())
+
+        # type_params
+
+        if PYGE13:
+            f = FST(r'''
+def f[T: ftb = ftd, *U = fud, **V = fvd]():
+    def g[X: gtb = gtd, *Y = gud, **Z = gvd](): pass
+                '''.strip(), 'exec')
+
+            self.assertEqual(walkscope(f), '''
+<Module ROOT 0,0..1,52>          def f[T: ftb = ftd, *U = fud, **V = fvd]():
+    def g[X: gtb = gtd, *Y = gud, **Z = gvd](): pass
+<FunctionDef 0,0..1,52>          def f[T: ftb = ftd, *U = fud, **V = fvd]():
+    def g[X: gtb = gtd, *Y = gud, **Z = gvd](): pass
+<Name 0,9..0,12>                 ftb
+<Name 0,15..0,18>                ftd
+<Name 0,25..0,28>                fud
+<Name 0,36..0,39>                fvd
+                '''.strip())
+
+            self.assertEqual(walkscope(f.body[0]), '''
+<FunctionDef 0,0..1,52>          def f[T: ftb = ftd, *U = fud, **V = fvd]():
+    def g[X: gtb = gtd, *Y = gud, **Z = gvd](): pass
+<TypeVar 0,6..0,18>              T: ftb = ftd
+<TypeVarTuple 0,20..0,28>        *U = fud
+<ParamSpec 0,30..0,39>           **V = fvd
+<FunctionDef 1,4..1,52>          def g[X: gtb = gtd, *Y = gud, **Z = gvd](): pass
+<Name 1,13..1,16>                gtb
+<Name 1,19..1,22>                gtd
+<Name 1,29..1,32>                gud
+<Name 1,40..1,43>                gvd
+                '''.strip())
+
+            self.assertEqual(walkscope(f.body[0].body[0]), '''
+<FunctionDef 1,4..1,52>          def g[X: gtb = gtd, *Y = gud, **Z = gvd](): pass
+<TypeVar 1,10..1,22>             X: gtb = gtd
+<TypeVarTuple 1,24..1,32>        *Y = gud
+<ParamSpec 1,34..1,43>           **Z = gvd
+<Pass 1,48..1,52>                pass
+                '''.strip())
+
+            self.assertEqual(walkscope(f, back=True), '''
+<Module ROOT 0,0..1,52>          def f[T: ftb = ftd, *U = fud, **V = fvd]():
+    def g[X: gtb = gtd, *Y = gud, **Z = gvd](): pass
+<FunctionDef 0,0..1,52>          def f[T: ftb = ftd, *U = fud, **V = fvd]():
+    def g[X: gtb = gtd, *Y = gud, **Z = gvd](): pass
+<Name 0,36..0,39>                fvd
+<Name 0,25..0,28>                fud
+<Name 0,15..0,18>                ftd
+<Name 0,9..0,12>                 ftb
+                '''.strip())
+
+            self.assertEqual(walkscope(f.body[0], back=True), '''
+<FunctionDef 0,0..1,52>          def f[T: ftb = ftd, *U = fud, **V = fvd]():
+    def g[X: gtb = gtd, *Y = gud, **Z = gvd](): pass
+<FunctionDef 1,4..1,52>          def g[X: gtb = gtd, *Y = gud, **Z = gvd](): pass
+<Name 1,40..1,43>                gvd
+<Name 1,29..1,32>                gud
+<Name 1,19..1,22>                gtd
+<Name 1,13..1,16>                gtb
+<ParamSpec 0,30..0,39>           **V = fvd
+<TypeVarTuple 0,20..0,28>        *U = fud
+<TypeVar 0,6..0,18>              T: ftb = ftd
+                '''.strip())
+
+            self.assertEqual(walkscope(f.body[0].body[0], back=True), '''
+<FunctionDef 1,4..1,52>          def g[X: gtb = gtd, *Y = gud, **Z = gvd](): pass
+<Pass 1,48..1,52>                pass
+<ParamSpec 1,34..1,43>           **Z = gvd
+<TypeVarTuple 1,24..1,32>        *Y = gud
+<TypeVar 1,10..1,22>             X: gtb = gtd
+                '''.strip())
+
+        if PYGE12:
+            f = FST(r'''
+def f[T: ftb, *U, **V]():
+    def g[X: gtb, *Y, **Z](): pass
+                '''.strip(), 'exec')
+
+            self.assertEqual(walkscope(f), '''
+<Module ROOT 0,0..1,34>          def f[T: ftb, *U, **V]():
+    def g[X: gtb, *Y, **Z](): pass
+<FunctionDef 0,0..1,34>          def f[T: ftb, *U, **V]():
+    def g[X: gtb, *Y, **Z](): pass
+<Name 0,9..0,12>                 ftb
+                '''.strip())
+
+            self.assertEqual(walkscope(f.body[0]), '''
+<FunctionDef 0,0..1,34>          def f[T: ftb, *U, **V]():
+    def g[X: gtb, *Y, **Z](): pass
+<TypeVar 0,6..0,12>              T: ftb
+<TypeVarTuple 0,14..0,16>        *U
+<ParamSpec 0,18..0,21>           **V
+<FunctionDef 1,4..1,34>          def g[X: gtb, *Y, **Z](): pass
+<Name 1,13..1,16>                gtb
+                '''.strip())
+
+            self.assertEqual(walkscope(f.body[0].body[0]), '''
+<FunctionDef 1,4..1,34>          def g[X: gtb, *Y, **Z](): pass
+<TypeVar 1,10..1,16>             X: gtb
+<TypeVarTuple 1,18..1,20>        *Y
+<ParamSpec 1,22..1,25>           **Z
+<Pass 1,30..1,34>                pass
+                '''.strip())
+
+            self.assertEqual(walkscope(f, back=True), '''
+<Module ROOT 0,0..1,34>          def f[T: ftb, *U, **V]():
+    def g[X: gtb, *Y, **Z](): pass
+<FunctionDef 0,0..1,34>          def f[T: ftb, *U, **V]():
+    def g[X: gtb, *Y, **Z](): pass
+<Name 0,9..0,12>                 ftb
+                '''.strip())
+
+            self.assertEqual(walkscope(f.body[0], back=True), '''
+<FunctionDef 0,0..1,34>          def f[T: ftb, *U, **V]():
+    def g[X: gtb, *Y, **Z](): pass
+<FunctionDef 1,4..1,34>          def g[X: gtb, *Y, **Z](): pass
+<Name 1,13..1,16>                gtb
+<ParamSpec 0,18..0,21>           **V
+<TypeVarTuple 0,14..0,16>        *U
+<TypeVar 0,6..0,12>              T: ftb
+                '''.strip())
+
+            self.assertEqual(walkscope(f.body[0].body[0], back=True), '''
+<FunctionDef 1,4..1,34>          def g[X: gtb, *Y, **Z](): pass
+<Pass 1,30..1,34>                pass
+<ParamSpec 1,22..1,25>           **Z
+<TypeVarTuple 1,18..1,20>        *Y
+<TypeVar 1,10..1,16>             X: gtb
+                '''.strip())
 
     def test_walk_modify(self):
         fst = parse('if 1:\n a\n b\n c\nelse:\n d\n e').body[0].f
@@ -5148,6 +5412,172 @@ def f(a, /, b, *c, d, **e):
                 f.replace(str(i := i + 1), raw=False)
 
         self.assertEqual(fst.src, '[1, 2, 3]')
+
+    def test_scope_symbols(self):
+        f = FST(r'''
+def func():
+    global f
+    nonlocal a
+    a = b
+    del c
+    d += e
+    import f
+    import h.i
+    import j as k
+    from l import m
+    from o import p as q
+    from r import *
+    [s := t for t in z if (w := t) for x in y if (z := x)]
+            ''')
+        self.assertEqual(['f', 'a', 'b', 'c', 'd', 'e', 'h', 'k', 'm', 'q', 's', 'z', 'w'], list(f.scope_symbols()))
+        self.assertEqual(pformat(f.scope_symbols(full=True), sort_dicts=False), '''
+{'load': {'b': [<Name 4,8..4,9>],
+          'd': [<Name 6,4..6,5>],
+          'e': [<Name 6,9..6,10>],
+          'z': [<Name 13,21..13,22>]},
+ 'store': {'a': [<Name 4,4..4,5>],
+           'd': [<Name 6,4..6,5>],
+           'f': [<alias 7,11..7,12>],
+           'h': [<alias 8,11..8,14>],
+           'k': [<alias 9,11..9,17>],
+           'm': [<alias 10,18..10,19>],
+           'q': [<alias 11,18..11,24>],
+           's': [<Name 13,5..13,6>],
+           'w': [<Name 13,27..13,28>],
+           'z': [<Name 13,50..13,51>]},
+ 'del': {'c': [<Name 5,8..5,9>]},
+ 'global': {'f': [<Global 2,4..2,12>]},
+ 'nonlocal': {'a': [<Nonlocal 3,4..3,14>]},
+ 'local': {'d': [<Name 6,4..6,5>],
+           'h': [<alias 8,11..8,14>],
+           'k': [<alias 9,11..9,17>],
+           'm': [<alias 10,18..10,19>],
+           'q': [<alias 11,18..11,24>],
+           's': [<Name 13,5..13,6>],
+           'w': [<Name 13,27..13,28>],
+           'z': [<Name 13,50..13,51>]},
+ 'free': {'b': [<Name 4,8..4,9>], 'e': [<Name 6,9..6,10>]}}
+            '''.strip())
+
+        # arguments
+
+        f = FST('def func(a: b = c, /, d: e = f, *g, h: i = j, **k) -> l: _', 'exec')
+        self.assertEqual(['func', 'b', 'c', 'e', 'f', 'i', 'j', 'l'], list(f.scope_symbols()))
+        self.assertEqual(['a', 'd', 'g', 'h', 'k', '_'], list(f.body[0].scope_symbols()))
+
+        # class bases
+
+        f = FST(r'''
+class cls(a, b=c):
+    class nest(d, e=f): pass
+            '''.strip(), 'exec')
+
+        self.assertEqual(['cls', 'a', 'c'], list(f.scope_symbols()))
+        self.assertEqual(['nest', 'd', 'f'], list(f.body[0].scope_symbols()))
+
+        # TypeAlias
+
+        if PYGE13:
+            f = FST('type t[T: ftb = ftd, *U = fud, **V = fvd] = ...'.strip(), 'exec')
+
+            self.assertEqual(['t', 'T', 'ftb', 'ftd', 'U', 'fud', 'V', 'fvd'], list(f.scope_symbols()))
+            self.assertEqual(['t', 'T', 'ftb', 'ftd', 'U', 'fud', 'V', 'fvd'], list(f.body[0].scope_symbols()))
+
+        if PYGE12:
+            f = FST('type t[T: ftb, *U, **V] = ...'.strip(), 'exec')
+
+            self.assertEqual(['t', 'T', 'ftb', 'U', 'V'], list(f.scope_symbols()))
+            self.assertEqual(['t', 'T', 'ftb', 'U', 'V'], list(f.body[0].scope_symbols()))
+
+        # type_params
+
+        if PYGE13:
+            f = FST('def func[T: ftb = ftd, *U = fud, **V = fvd](): pass', 'exec')
+            self.assertEqual(['func', 'ftb', 'ftd', 'fud', 'fvd'], list(f.scope_symbols()))
+            self.assertEqual(['T', 'U', 'V'], list(f.body[0].scope_symbols()))
+
+            f = FST('async def afunc[T: ftb = ftd, *U = fud, **V = fvd](): pass', 'exec')
+            self.assertEqual(['afunc', 'ftb', 'ftd', 'fud', 'fvd'], list(f.scope_symbols()))
+            self.assertEqual(['T', 'U', 'V'], list(f.body[0].scope_symbols()))
+
+            f = FST('class cls[T: ftb = ftd, *U = fud, **V = fvd]: pass', 'exec')
+            self.assertEqual(['cls', 'ftb', 'ftd', 'fud', 'fvd'], list(f.scope_symbols()))
+            self.assertEqual(['T', 'U', 'V'], list(f.body[0].scope_symbols()))
+
+        if PYGE12:
+            f = FST('def func[T: ftb, *U, **V](): pass', 'exec')
+            self.assertEqual(['func', 'ftb'], list(f.scope_symbols()))
+            self.assertEqual(['T', 'U', 'V'], list(f.body[0].scope_symbols()))
+
+            f = FST('async def afunc[T: ftb, *U, **V](): pass', 'exec')
+            self.assertEqual(['afunc', 'ftb'], list(f.scope_symbols()))
+            self.assertEqual(['T', 'U', 'V'], list(f.body[0].scope_symbols()))
+
+            f = FST('class cls[T: ftb, *U, **V]: pass', 'exec')
+            self.assertEqual(['cls', 'ftb'], list(f.scope_symbols()))
+            self.assertEqual(['T', 'U', 'V'], list(f.body[0].scope_symbols()))
+
+        # Comp walrus detail
+
+        self.assertEqual(pformat(FST('[i for a in b if (i := a)]').scope_symbols(full=True), sort_dicts=False), '''
+{'load': {'i': [<Name 0,1..0,2>], 'a': [<Name 0,23..0,24>]},
+ 'store': {'a': [<Name 0,7..0,8>]},
+ 'del': {},
+ 'global': {},
+ 'nonlocal': {},
+ 'local': {'a': [<Name 0,7..0,8>]},
+ 'free': {'i': [<Name 0,1..0,2>]}}
+            '''.strip())
+
+        self.assertEqual(pformat(FST('[i for a in b if (i := a)]').scope_symbols(full=True, walrus=True), sort_dicts=False), '''
+{'load': {'i': [<Name 0,1..0,2>], 'a': [<Name 0,23..0,24>]},
+ 'store': {'a': [<Name 0,7..0,8>], 'i': [<Name 0,18..0,19>]},
+ 'del': {},
+ 'global': {},
+ 'nonlocal': {},
+ 'local': {'a': [<Name 0,7..0,8>], 'i': [<Name 0,18..0,19>]},
+ 'free': {}}
+            '''.strip())
+
+        # ListComp
+
+        self.assertEqual(['a'], list(FST('[a for a in b(c)]').scope_symbols()))
+        self.assertEqual(['a', 'b', 'e'], list(FST('[a for b in c(d) for a in b(e)]').scope_symbols()))
+
+        self.assertEqual(['a'], list(FST('[i := a for a in (j := b)]').scope_symbols()))
+        self.assertEqual(['i', 'a'], list(FST('[i := a for a in (j := b)]').scope_symbols(walrus=True)))
+        self.assertEqual(['i', 'a'], list(FST('[i for a in b if (i := a)]').scope_symbols()))
+        self.assertEqual(['i', 'a'], list(FST('[i for a in b if (i := a)]').scope_symbols(walrus=True)))
+
+        # SetComp
+
+        self.assertEqual(['a'], list(FST('{a for a in b(c)}').scope_symbols()))
+        self.assertEqual(['a', 'b', 'e'], list(FST('{a for b in c(d) for a in b(e)}').scope_symbols()))
+
+        self.assertEqual(['a'], list(FST('{i := a for a in (j := b)}').scope_symbols()))
+        self.assertEqual(['i', 'a'], list(FST('{i := a for a in (j := b)}').scope_symbols(walrus=True)))
+        self.assertEqual(['i', 'a'], list(FST('{i for a in b if (i := a)}').scope_symbols()))
+        self.assertEqual(['i', 'a'], list(FST('{i for a in b if (i := a)}').scope_symbols(walrus=True)))
+
+        # GeneratorExp
+
+        self.assertEqual(['a'], list(FST('(a for a in b(c))').scope_symbols()))
+        self.assertEqual(['a', 'b', 'e'], list(FST('(a for b in c(d) for a in b(e))').scope_symbols()))
+
+        self.assertEqual(['a'], list(FST('(i := a for a in (j := b))').scope_symbols()))
+        self.assertEqual(['i', 'a'], list(FST('(i := a for a in (j := b))').scope_symbols(walrus=True)))
+        self.assertEqual(['i', 'a'], list(FST('(i for a in b if (i := a))').scope_symbols()))
+        self.assertEqual(['i', 'a'], list(FST('(i for a in b if (i := a))').scope_symbols(walrus=True)))
+
+        # DictComp
+
+        self.assertEqual(['a'], list(FST('{a: a for a in b(c)}').scope_symbols()))
+        self.assertEqual(['a', 'b', 'e'], list(FST('{a: a for b in c(d) for a in b(e)}').scope_symbols()))
+
+        self.assertEqual(['a'], list(FST('{(i := a): a for a in (j := b)}').scope_symbols()))
+        self.assertEqual(['i', 'a'], list(FST('{(i := a): a for a in (j := b)}').scope_symbols(walrus=True)))
+        self.assertEqual(['i', 'a'], list(FST('{i: a for a in b if (i := a)}').scope_symbols()))
+        self.assertEqual(['i', 'a'], list(FST('{i: a for a in b if (i := a)}').scope_symbols(walrus=True)))
 
     def test_next_prev(self):
         fst = parse('a and b and c and d').body[0].value.f
