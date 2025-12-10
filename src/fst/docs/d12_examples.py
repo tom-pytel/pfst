@@ -50,6 +50,7 @@ bodies so its fairly easy to leverage to change these kinds of chains.
 ...                 # pre-l
 ...                 l = 4  # l
 ...                 # post-l
+...
 ...             # post-else-c
 ...
 ...         # post-else-b
@@ -108,6 +109,7 @@ def func():
                 # pre-l
                 l = 4  # l
                 # post-l
+ 
             # post-else-c
  
         # post-else-b
@@ -142,6 +144,7 @@ def func():
         # pre-l
         l = 4  # l
         # post-l
+ 
     # post-else-c
  
     # post-else-b
@@ -364,7 +367,7 @@ class cls:
         return add()
 ```
 
-## squash nested `with`s
+## Squash nested `with`s
 
 Slice operations make this easy enough. We only do synchronous `with` here as you can't mix sync with async anyway.
 
@@ -440,7 +443,7 @@ with (open(a) as f,
 # post-with comment
 ```
 
-## comprehension to loop
+## Comprehension to loop
 
 We build up a body and replace the original comprehension `Assign` statement with the new statements.
 
@@ -569,6 +572,136 @@ def f(k):
     # silly comment
  
     return clean + messy
+```
+
+## Reparenthesize expressions
+
+Parentheses are handled completely automatically normally and you can use this mechanism to clean up unnecessary
+or ugly parenthesization.
+
+```py
+>>> src = r"""
+... (x * y) * (a + b)  # "a * b" doesn't need pars, 'x + y' does
+...
+... (x * y) * z  # "x * y" is unpard because doesn't change tree structure
+...
+... x * (y * z)  # not unpard because would change structure (order of operations)
+...
+... a + ( (  (y) * (z)))  # nested pars cleaned up
+...
+... x * ( (  (y) * (z)))  # original pars normally left if needed, unless unpar() used
+...
+... if (
+...     (a <= b)
+... ):  # not needed
+...     return (a  # hello
+...             < b)  # needed for parsability
+...
+... match ("a"  # implicit string pars needed
+...        "b"):
+...     case ((1) | (a)):  # unnecessary pars
+...         pass
+...     case (a, b):  # part of MatchSequence node, not removed
+...         pass
+...     case ( ( (a, b) ) ):  # but the unnecessary ones are
+...         pass
+... """.strip()
+```
+
+Function.
+
+```py
+>>> def reparenthesize_simple(src):
+...     fst = FST(src, 'exec')
+...
+...     for f in fst.walk():
+...         if f.is_parenthesizable():
+...             f.replace(f.copy())
+...
+...     return fst.src
+```
+
+Original.
+
+```py
+>>> pprint(src)
+(x * y) * (a + b)  # "a * b" doesn't need pars, 'x + y' does
+ 
+(x * y) * z  # "x * y" is unpard because doesn't change tree structure
+ 
+x * (y * z)  # not unpard because would change structure (order of operations)
+ 
+a + ( (  (y) * (z)))  # nested pars cleaned up
+ 
+x * ( (  (y) * (z)))  # original pars normally left if needed, unless unpar() used
+ 
+if (
+    (a <= b)
+):  # not needed
+    return (a  # hello
+            < b)  # needed for parsability
+ 
+match ("a"  # implicit string pars needed
+       "b"):
+    case ((1) | (a)):  # unnecessary pars
+        pass
+    case (a, b):  # part of MatchSequence node, not removed
+        pass
+    case ( ( (a, b) ) ):  # but the unnecessary ones are
+        pass
+```
+
+Processed.
+
+```py
+>>> pprint(reparenthesize_simple(src))
+x * y * (a + b)  # "a * b" doesn't need pars, 'x + y' does
+ 
+x * y * z  # "x * y" is unpard because doesn't change tree structure
+ 
+x * (y * z)  # not unpard because would change structure (order of operations)
+ 
+a + y * z  # nested pars cleaned up
+ 
+x * ( (  y * z))  # original pars normally left if needed, unless unpar() used
+ 
+if a <= b:  # not needed
+    return (a  # hello
+            < b)  # needed for parsability
+ 
+match ("a"  # implicit string pars needed
+       "b"):
+    case 1 | a:  # unnecessary pars
+        pass
+    case (a, b):  # part of MatchSequence node, not removed
+        pass
+    case (a, b):  # but the unnecessary ones are
+        pass
+```
+
+A slight tweak to the function to unparenthesize first will force reparenthesize of parentheses which are needed but may
+not have been in normal locations to begin with.
+
+```py
+>>> def reparenthesize_full(src):
+...     fst = FST(src, 'exec')
+...
+...     for f in fst.walk():
+...         if f.is_parenthesizable():
+...             f.unpar().replace(f.copy())
+...
+...     return fst.src
+```
+
+```py
+>>> pprint(reparenthesize_full(r"""
+... a + ( (  (y) * (z)))  # nested pars cleaned up
+...
+... x * ( (  (y) * (z)))  # original pars normally left if needed, unless unpar() used
+... """.strip()))
+a + y * z  # nested pars cleaned up
+ 
+x * (y * z)  # original pars normally left if needed, unless unpar() used
 ```
 
 

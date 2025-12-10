@@ -11,7 +11,7 @@ Example:
 
 >>> ext_ast = fst.parse('if a: b = c, d  # comment')
 
->>> print(fst.unparse(ext_ast))  # formatting is preserved
+>>> print(fst.unparse(ext_ast))
 if a: b = c, d  # comment
 ```
 

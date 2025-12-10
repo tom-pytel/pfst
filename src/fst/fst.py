@@ -9,7 +9,7 @@ import os
 import sys
 import threading
 from ast import iter_fields
-from ast import dump as ast_dump, unparse as ast_unparse, mod as ast_mod
+from ast import dump as ast_dump, unparse as ast_unparse
 from contextlib import contextmanager
 from io import TextIOBase
 from typing import Any, Callable, Generator, Iterator, Literal, Mapping, TextIO
@@ -45,6 +45,7 @@ from .asttypes import (
     ASTS_LEAF_FOR,
     ASTS_LEAF_WITH,
     ASTS_LEAF_TRY,
+    ASTS_LEAF_FTSTR,
     ASTS_LEAF_MAYBE_DOCSTR,
     AST,
     Add,
@@ -67,6 +68,7 @@ from .asttypes import (
     Expression,
     FloorDiv,
     For,
+    FormattedValue,
     FunctionDef,
     Global,
     Gt,
@@ -76,6 +78,7 @@ from .asttypes import (
     ImportFrom,
     In,
     Interactive,
+    Interpolation,
     Invert,
     Is,
     IsNot,
@@ -98,6 +101,7 @@ from .asttypes import (
     Or,
     Pow,
     RShift,
+    Slice,
     Starred,
     Store,
     Sub,
@@ -2454,7 +2458,7 @@ class FST:
         except KeyError:
             pass
 
-        if not self._is_parenthesizable() and shared is not None:
+        if not self.is_parenthesizable() and shared is not None:
             if (l := self.bloc) is None:
                 locn = None
             else:
@@ -2496,7 +2500,7 @@ class FST:
 
     def par(self, force: bool = False, *, whole: bool = True) -> FST:  # -> self
         """Parenthesize node if it MAY need it. Will not parenthesize atoms which are always enclosed like `List`, or
-        nodes which are not `_is_parenthesizable()`, unless `force=True`. Will add parentheses to unparenthesized
+        nodes which are not `is_parenthesizable()`, unless `force=True`. Will add parentheses to unparenthesized
         `Tuple` and brackets to unbracketed `MatchSequence` adjusting the node location. If dealing with a `Starred`
         then the parentheses are applied to the child.
 
@@ -2544,7 +2548,7 @@ class FST:
         ast_cls = self.a.__class__
 
         if not force:
-            if (not self._is_parenthesizable()
+            if (not self.is_parenthesizable()
                 or (is_atom := self._is_atom()) in (True, 'pars')
                 or (
                     (is_atom or (ast_cls is Starred and self.a.value.f._is_atom() in (True, 'pars')))
@@ -2917,6 +2921,9 @@ class FST:
         **Parameters:**
         - `self_`: Whether to yield `self` first.
 
+        **Returns:**
+        - `Generator`: Will walk up the parent chain.
+
         **Examples:**
 
         >>> list(FST('i = (f(), g())', 'exec').body[0].value.elts[0].parents())
@@ -2940,6 +2947,9 @@ class FST:
         - `self_`: Whether to include `self` in the search, if so and `self` matches criteria then it is returned.
         - `mod`: Whether to return `mod` nodes if found.
 
+        **Returns:**
+        - `FST | None`: First `stmt` or optionally `mod` parent if present, else `None`.
+
         **Examples:**
 
         >>> FST('if 1: i = 1', 'exec').body[0].body[0].value.parent_stmt()
@@ -2958,12 +2968,12 @@ class FST:
         <If 0,0..0,11>
         """
 
-        types = (stmt, ast_mod) if mod else stmt
+        types = ASTS_LEAF_STMT_OR_MOD if mod else ASTS_LEAF_STMT
 
-        if self_ and isinstance(self.a, types):
+        if self_ and self.a.__class__ in types:
             return self
 
-        while (self := self.parent) and not isinstance(self.a, types):
+        while (self := self.parent) and self.a.__class__ not in types:
             pass
 
         return self
@@ -2971,6 +2981,9 @@ class FST:
     def parent_stmtish(self, self_: bool = False, mod: bool = True) -> FST | None:
         r"""The first parent which is a `stmt`, `ExceptHandler`, `match_case` or optionally `mod` node (if any). If
         `self_` is `True` then will check `self` first, otherwise only checks parents.
+
+        **Returns:**
+        - `FST | None`: First `stmtish` or optionally `mod` parent if present, else `None`.
 
         **Examples:**
 
@@ -3007,6 +3020,9 @@ class FST:
         `TryStar`, `ExceptHandler`, `match_case` or optionally `mod` node (if any). If `self_` is `True` then will check
         `self` first, otherwise only checks parents.
 
+        **Returns:**
+        - `FST | None`: First block `stmt` or optionally `mod` parent if present, else `None`.
+
         **Examples:**
 
         >>> FST('if 1: i = 1', 'exec').body[0].body[0].value.parent_block()
@@ -3030,6 +3046,9 @@ class FST:
         r"""The first parent which opens a scope that `self` lives in (if any). Types include `FunctionDef`,
         `AsyncFunctionDef`, `ClassDef`, `Lambda`, `ListComp`, `SetComp`, `DictComp`, `GeneratorExp` or optionally `mod`
         node (if any). If `self_` is `True` then will check `self` first, otherwise only checks parents.
+
+        **Returns:**
+        - `FST | None`: First scope `stmt` or optionally `mod` parent if present, else `None`.
 
         **Examples:**
 
@@ -3061,6 +3080,9 @@ class FST:
         r"""The first parent which opens a named scope that `self` lives in (if any). Types include `FunctionDef`,
         `AsyncFunctionDef`, `ClassDef` or optionally `mod` node (if any). If `self_` is `True` then will check `self`
         first, otherwise only checks parents.
+
+        **Returns:**
+        - `FST | None`: First named scope `stmt` or optionally `mod` parent if present, else `None`.
 
         **Examples:**
 
@@ -3102,6 +3124,10 @@ class FST:
             has `expr` parents. Also `expr_context`, `boolop`, `operator`, `unaruop` and `cmpop` are included if
             `strict=False` but this only makes sense if `self_=True` and you are calling this function on one of those.
 
+        **Returns:**
+        - `FST | None`: First non-`expr` parent if present, possibly skipping mentioned nodes according to `strict`,
+            else `None`.
+
         **Examples:**
 
         >>> FST('if 1: i = 1 + a[b]').body[0].value.right.value.parent_non_expr()
@@ -3136,6 +3162,9 @@ class FST:
         **Parameters:**
         - `self_`: Whether to include `self` in the search, if so and `self` matches criteria then it is returned.
 
+        **Returns:**
+        - `FST | None`: First `pattern` parent if present, else `None`.
+
         **Examples:**
 
         >>> FST('case 1+1j: pass').pattern.value.left.parent_pattern().src
@@ -3160,6 +3189,42 @@ class FST:
         while (self := self.parent) and (a := self.a).__class__ not in ASTS_LEAF_PATTERN:
             if isinstance(a, (match_case, stmt)):
                 return None
+
+        return self
+
+    def parent_ftstr(self, self_: bool = False) -> FST | None:
+        r"""The first parent which is an f or t-string. If `self_` is `True` then will check `self` first (possibly
+        returning `self`), otherwise only checks parents. This can be used to determine if an expression (or anything
+        else like lambda arguments) are ultimately inside one of these.
+
+        **Returns:**
+        - `FST | None`: First `JoinedStr` or `TemplateStr` parent if present, else `None`.
+
+        **Parameters:**
+        - `self_`: Whether to include `self` in the search, if so and `self` matches criteria then it is returned.
+
+        **Examples:**
+
+        >>> bool(FST('f"{a}"').values[0].value.parent_ftstr())
+        True
+
+        >>> bool(FST('f"{a}"').parent_ftstr())
+        False
+
+        >>> bool(FST('f"{a}"').parent_ftstr(self_=True))
+        False
+
+        >>> bool(FST('f"{a:{b}}"').values[0].format_spec.parent_ftstr(self_=True))
+        True
+        """
+
+        types = ASTS_LEAF_FTSTR
+
+        if self_ and self.a.__class__ not in types:
+            return self
+
+        while (self := self.parent) and self.a.__class__ in types:
+            pass
 
         return self
 
@@ -3493,6 +3558,108 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
     # Predicates
 
+    def is_parenthesizable(self, *, star: bool = True) -> bool:
+        """Whether `self` is parenthesizable with grouping parentheses or not. `True` for all `pattern`s and almost all
+        `expr`s which are `Slice`, `FormattedValue` or `Interpolation` and are not themselves inside `pattern`s.
+
+        **Note:** `Starred` may return `True` even though the `Starred` itself is not parenthesizable but rather its
+        child is.
+
+        **Parameters:**
+        - `star`: Whether to return top-level `Starred` as parenthesizable or not. It is convenient to consider it
+            parenthesizable like a normal expression since its children are parenthesizable and that is what gets
+            parenthesized if you try to `par()` a `Starred`.
+
+        **Returns:**
+        - `bool`: Whether is syntactically legal to add grouping parentheses or not. Can always be forced.
+
+        **Examples:**
+
+        >>> FST('i + j').is_parenthesizable()  # expr
+        True
+
+        >>> FST('{a.b: c, **d}', 'pattern').is_parenthesizable()
+        True
+
+        >>> FST('a:b:c').is_parenthesizable()  # Slice
+        False
+
+        >>> FST('for i in j').is_parenthesizable()  # comprehension
+        False
+
+        >>> FST('a: int, b=2', 'arguments').is_parenthesizable()  # arguments
+        False
+
+        >>> FST('a: int', 'arg').is_parenthesizable()
+        False
+
+        >>> FST('key="word"', 'keyword').is_parenthesizable()
+        False
+
+        >>> FST('a as b', 'alias').is_parenthesizable()
+        False
+
+        >>> f = FST('with a: pass')
+        >>> f.items[0].is_parenthesizable()  # withitem is not parenthesizable
+        False
+        >>> f.items[0].context_expr.is_parenthesizable()  # the expr in it is
+        True
+
+        >>> f = FST('case 1: pass')
+        >>> f.pattern.is_parenthesizable()  # pattern is parenthesizable
+        True
+        >>> f.pattern.value.is_parenthesizable()  # expr in pattern is not
+        False
+        """
+
+        ast_cls = self.a.__class__
+
+        if ast_cls not in ASTS_LEAF_EXPR:
+            return ast_cls in ASTS_LEAF_PATTERN
+
+        if ast_cls in (
+            (Slice, FormattedValue, Interpolation)
+            if star else
+            (Starred, Slice, FormattedValue, Interpolation)
+        ):
+            return False
+
+        while self := self.parent:
+            ast_cls = self.a.__class__
+
+            if ast_cls not in ASTS_LEAF_EXPR:
+                if ast_cls in ASTS_LEAF_PATTERN:
+                    return False
+
+                break
+
+        return True
+
+    def is_elif(self) -> bool | None:
+        r"""Whether `self` is an `elif` or not, or not an `If` at all.
+
+        **Returns:**
+        - `True` if is `elif` `If`, `False` if is normal `If`, `None` if is not `If` at all.
+
+        **Examples:**
+
+        >>> FST('if 1: pass\nelif 2: pass').orelse[0].is_elif()
+        True
+
+        >>> FST('if 1: pass\nelse:\n  if 2: pass').orelse[0].is_elif()
+        False
+
+        >>> print(FST('if 1: pass\nelse:\n  i = 2').orelse[0].is_elif())
+        None
+        """
+
+        if self.a.__class__ is not If:
+            return None
+
+        ln, col, _, _ = self.loc
+
+        return self.root._lines[ln].startswith('elif', col)
+
     @property
     def is_mod(self) -> bool:
         """Is a `mod` node."""
@@ -3650,31 +3817,6 @@ class FST:
 
         return self.a.__class__ in ASTS_LEAF_TRY
 
-    def is_elif(self) -> bool | None:
-        r"""Whether `self` is an `elif` or not, or not an `If` at all.
-
-        **Returns:**
-        - `True` if is `elif` `If`, `False` if is normal `If`, `None` if is not `If` at all.
-
-        **Examples:**
-
-        >>> FST('if 1: pass\nelif 2: pass').orelse[0].is_elif()
-        True
-
-        >>> FST('if 1: pass\nelse:\n  if 2: pass').orelse[0].is_elif()
-        False
-
-        >>> print(FST('if 1: pass\nelse:\n  i = 2').orelse[0].is_elif())
-        None
-        """
-
-        if self.a.__class__ is not If:
-            return None
-
-        ln, col, _, _ = self.loc
-
-        return self.root._lines[ln].startswith('elif', col)
-
     # ------------------------------------------------------------------------------------------------------------------
     # Private
 
@@ -3713,7 +3855,6 @@ class FST:
         _repr_tail,
         _dump,
 
-        _is_parenthesizable,
         _is_parenthesized_tuple,
         _is_delimited_matchseq,
         _is_except_star,

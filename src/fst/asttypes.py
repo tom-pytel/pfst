@@ -340,6 +340,7 @@ ASTS_LEAF_DEF_OR_MOD         = ASTS_LEAF_DEF | ASTS_LEAF_MOD
 ASTS_LEAF_FOR                = {For, AsyncFor}
 ASTS_LEAF_WITH               = {With, AsyncWith}
 ASTS_LEAF_TRY                = {Try, TryStar}
+ASTS_LEAF_FTSTR              = {JoinedStr, TemplateStr}
 ASTS_LEAF_CMPOP_TWO_WORD     = {IsNot, NotIn}
 
 ASTS_LEAF_MAYBE_DOCSTR       = ASTS_LEAF_SCOPE_NAMED | {Module}  # these may have a docstring as the first Const str Expr in the body

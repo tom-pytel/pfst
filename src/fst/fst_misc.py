@@ -984,65 +984,6 @@ def _dump(self: fst.FST, st: nspace, src_plus: bool = False) -> None:
         _dump_lines(self, st, len(self.root._lines), 0, 0, 0, None)
 
 
-def _is_parenthesizable(self: fst.FST) -> bool:
-    """Whether `self` is parenthesizable with grouping parentheses or not. All `pattern`s and almost all `expr`s which
-    are not themselves inside `pattern`s and are not themselves `Slice`, `FormattedValue` or `Interpolation`.
-
-    **Note:** `Starred` returns `True` even though the `Starred` itself is not parenthesizable but rather its child.
-
-    **Returns:**
-    - `bool`: Whether is syntactically legal to add grouping parentheses or not. Can always be forced.
-
-    **Examples:**
-
-    >>> FST('i + j')._is_parenthesizable()  # expr
-    True
-
-    >>> FST('{a.b: c, **d}', 'pattern')._is_parenthesizable()
-    True
-
-    >>> FST('a:b:c')._is_parenthesizable()  # Slice
-    False
-
-    >>> FST('for i in j')._is_parenthesizable()  # comprehension
-    False
-
-    >>> FST('a: int, b=2')._is_parenthesizable()  # arguments
-    False
-
-    >>> FST('a: int', 'arg')._is_parenthesizable()
-    False
-
-    >>> FST('key="word"', 'keyword')._is_parenthesizable()
-    False
-
-    >>> FST('a as b', 'alias')._is_parenthesizable()
-    False
-
-    >>> FST('a as b', 'withitem')._is_parenthesizable()
-    False
-    """
-
-    ast_cls = self.a.__class__
-
-    if ast_cls not in ASTS_LEAF_EXPR:
-        return ast_cls in ASTS_LEAF_PATTERN
-
-    if ast_cls in (Slice, FormattedValue, Interpolation):
-        return False
-
-    while self := self.parent:
-        ast_cls = self.a.__class__
-
-        if ast_cls not in ASTS_LEAF_EXPR:
-            if ast_cls in ASTS_LEAF_PATTERN:
-                return False
-
-            break
-
-    return True
-
-
 def _is_parenthesized_tuple(self: fst.FST) -> bool | None:
     """Whether `self` is a parenthesized `Tuple` or not, or not a `Tuple` at all.
 
