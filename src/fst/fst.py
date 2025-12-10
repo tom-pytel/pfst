@@ -42,9 +42,9 @@ from .asttypes import (
     ASTS_LEAF_FUNCDEF,
     ASTS_LEAF_DEF,
     ASTS_LEAF_DEF_OR_MOD,
-    ASTS_LEAF_FORS,
-    ASTS_LEAF_WITHS,
-    ASTS_LEAF_TRYS,
+    ASTS_LEAF_FOR,
+    ASTS_LEAF_WITH,
+    ASTS_LEAF_TRY,
     ASTS_LEAF_MAYBE_DOCSTR,
     AST,
     Add,
@@ -798,7 +798,7 @@ class FST:
                         if not (indent := orelse[0].f._get_indent()):  # because can be 'elif'
                             indent = '?'
 
-                elif a_cls in ASTS_LEAF_TRYS:
+                elif a_cls in ASTS_LEAF_TRY:
                     if (indent := a.body[0].f._get_indent()) == '?':
                         if not (orelse := a.orelse) or (indent := orelse[0].f._get_indent()) == '?':
                             if not (finalbody := a.finalbody) or (indent := finalbody[0].f._get_indent()) == '?':
@@ -3636,19 +3636,19 @@ class FST:
     def is_for(self) -> bool:
         """Is a sync or async `for` node, `For` or `AsyncFor`, different from `is_For` or `is_AsyncFor`."""
 
-        return self.a.__class__ in ASTS_LEAF_FORS
+        return self.a.__class__ in ASTS_LEAF_FOR
 
     @property
     def is_with(self) -> bool:
         """Is a sync or async `with` node, `With` or `AsyncWith`, different from `is_For` or `is_AsyncFor`."""
 
-        return self.a.__class__ in ASTS_LEAF_WITHS
+        return self.a.__class__ in ASTS_LEAF_WITH
 
     @property
     def is_try(self) -> bool:
         """Is a `Try` or `TryStar` node, different from `is_Try` or `is_TryStar`."""
 
-        return self.a.__class__ in ASTS_LEAF_TRYS
+        return self.a.__class__ in ASTS_LEAF_TRY
 
     def is_elif(self) -> bool | None:
         r"""Whether `self` is an `elif` or not, or not an `If` at all.

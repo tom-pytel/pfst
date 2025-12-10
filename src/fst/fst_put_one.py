@@ -14,7 +14,7 @@ from . import fst
 from .asttypes import (
     ASTS_LEAF_EXPR,
     ASTS_LEAF_PATTERN,
-    ASTS_LEAF_WITHS,
+    ASTS_LEAF_WITH,
     AST,
     Add,
     And,
@@ -1529,7 +1529,7 @@ def _put_one_withitem_context_expr(
 
     ret = _put_one_exprish_optional(self, code, idx, field, child, static, options)
 
-    if (parent := self.parent) and parent.a.__class__ in ASTS_LEAF_WITHS:
+    if (parent := self.parent) and parent.a.__class__ in ASTS_LEAF_WITH:
         _maybe_fix_With_items(parent)
 
     return ret
@@ -1549,7 +1549,7 @@ def _put_one_withitem_optional_vars(
 
     ret = _put_one_exprish_optional(self, code, idx, field, child, static, options)
 
-    if (parent := self.parent) and parent.a.__class__ in ASTS_LEAF_WITHS:
+    if (parent := self.parent) and parent.a.__class__ in ASTS_LEAF_WITH:
         _maybe_fix_With_items(parent)
 
     return ret
