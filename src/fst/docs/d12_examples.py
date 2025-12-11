@@ -820,7 +820,7 @@ Function:
 ...             for f in block:
 ...                 # we know this is all on one line by how we constructed it
 ...                 ln, _, _, end_col = f.targets[-1].pars()
-...                 eq_str = f'{' ' * (eq_col - end_col)} = '
+...                 eq_str = f'{" " * (eq_col - end_col)} = '
 ...
 ...                 f.put_src(eq_str, ln, end_col, ln, f.value.pars().col, 'offset')
 ```

@@ -165,6 +165,7 @@ chain_from_iterable = chain.from_iterable
 
 
 PYVER  = sys.version_info[:2]
+PYGE12 = PYVER >= (3, 12)
 PYGE13 = PYVER >= (3, 13)
 
 constant = EllipsisType | int | float | complex | str | bytes | bool | None
@@ -1201,73 +1202,168 @@ def _syntax_ordered_children_default(ast: AST) -> list[AST]:
 
 
 _syntax_ordered_children_nothing      = lambda ast: []
+
+_syntax_ordered_children_for          = lambda ast: [ast.target, ast.iter, *ast.body, *ast.orelse]
+_syntax_ordered_children_if_while     = lambda ast: [ast.test, *ast.body, *ast.orelse]
+_syntax_ordered_children_with         = lambda ast: [*ast.items, *ast.body]
+_syntax_ordered_children_try          = lambda ast: [*ast.body, *ast.handlers, *ast.orelse, *ast.finalbody]
+_syntax_ordered_children_names        = lambda ast: ast.names.copy()
+
 _syntax_ordered_children_value        = lambda ast: [ast.value]
+_syntax_ordered_children_comp         = lambda ast: [ast.elt, *ast.generators]
+_syntax_ordered_children_fmtval       = lambda ast: [ast.value, ast.format_spec]
+_syntax_ordered_children_values       = lambda ast: ast.values.copy()
 _syntax_ordered_children_elts         = lambda ast: ast.elts.copy()
 _syntax_ordered_children_elts_and_ctx = lambda ast: [*ast.elts, ast.ctx]
 _syntax_ordered_children_ctx          = lambda ast: [ast.ctx]
+_syntax_ordered_children_value_ctx    = lambda ast: [ast.value, ast.ctx]
+
+_syntax_ordered_children_patterns     = lambda ast: ast.patterns.copy()
+_syntax_ordered_children_defval       = (lambda ast: [ast.default_value]) if PYGE13 else lambda ast: []
+
+if PYGE12:
+    _syntax_ordered_children_funcdef  = lambda ast: [*ast.decorator_list, *ast.type_params, ast.args, ast.returns, *ast.body]
+    _syntax_ordered_children_classdef = lambda ast: [*ast.decorator_list, *ast.type_params, *ast.bases, *ast.keywords, *ast.body]
+else:
+    _syntax_ordered_children_funcdef  = lambda ast: [*ast.decorator_list, ast.args, ast.returns, *ast.body]
+    _syntax_ordered_children_classdef = lambda ast: [*ast.decorator_list, *ast.bases, *ast.keywords, *ast.body]
 
 _SYNTAX_ORDERED_CHILDREN = {
     # quick optimized get
 
-    Return:       _syntax_ordered_children_value,
-    Expr:         _syntax_ordered_children_value,
-    Await:        _syntax_ordered_children_value,
-    Yield:        _syntax_ordered_children_value,
-    YieldFrom:    _syntax_ordered_children_value,
+    Module:             lambda ast: [*ast.body, *ast.type_ignores],
+    Interactive:        lambda ast: ast.body.copy(),
+    Expression:         lambda ast: [ast.body],
+    FunctionType:       lambda ast: [*ast.argtypes, ast.returns],
+    FunctionDef:        _syntax_ordered_children_funcdef,
+    AsyncFunctionDef:   _syntax_ordered_children_funcdef,
+    ClassDef:           _syntax_ordered_children_classdef,
+    Return:             _syntax_ordered_children_value,
+    Delete:             lambda ast: ast.targets.copy(),
+    Assign:             lambda ast: [*ast.targets, ast.value],
+    TypeAlias:          lambda ast: [ast.name, *ast.type_params, ast.value],
+    AugAssign:          lambda ast: [ast.target, ast.op, ast.value],
+    AnnAssign:          lambda ast: [ast.target, ast.annotation, ast.value],
+    For:                _syntax_ordered_children_for,
+    AsyncFor:           _syntax_ordered_children_for,
+    While:              _syntax_ordered_children_if_while,
+    If:                 _syntax_ordered_children_if_while,
+    With:               _syntax_ordered_children_with,
+    AsyncWith:          _syntax_ordered_children_with,
+    Match:              lambda ast: [ast.subject, *ast.cases],
+    Raise:              lambda ast: [ast.exc, ast.cause],
+    Try:                _syntax_ordered_children_try,
+    TryStar:            _syntax_ordered_children_try,
+    Assert:             lambda ast: [ast.test, ast.msg],
+    Import:             _syntax_ordered_children_names,
+    ImportFrom:         _syntax_ordered_children_names,
+    Global:             _syntax_ordered_children_nothing,
+    Nonlocal:           _syntax_ordered_children_nothing,
+    Expr:               _syntax_ordered_children_value,
+    Pass:               _syntax_ordered_children_nothing,
+    Break:              _syntax_ordered_children_nothing,
+    Continue:           _syntax_ordered_children_nothing,
 
-    Set:          _syntax_ordered_children_elts,
-    List:         _syntax_ordered_children_elts_and_ctx,
-    Tuple:        _syntax_ordered_children_elts_and_ctx,
+    BoolOp:             lambda ast: [ast.op, *ast.values],
+    NamedExpr:          lambda ast: [ast.target, ast.value],
+    BinOp:              lambda ast: [ast.left, ast.op, ast.right],
+    UnaryOp:            lambda ast: [ast.op, ast.operand],
+    Lambda:             lambda ast: [ast.args, ast.body],
+    IfExp:              lambda ast: [ast.body, ast.test, ast.orelse],
+    Dict:               lambda ast: list(chain_from_iterable(zip(ast.keys, ast.values, strict=True))),
+    Set:                _syntax_ordered_children_elts,
+    ListComp:           _syntax_ordered_children_comp,
+    SetComp:            _syntax_ordered_children_comp,
+    DictComp:           lambda ast: [ast.key, ast.value, *ast.generators],
+    GeneratorExp:       _syntax_ordered_children_comp,
+    Await:              _syntax_ordered_children_value,
+    Yield:              _syntax_ordered_children_value,
+    YieldFrom:          _syntax_ordered_children_value,
+    Compare:            lambda ast: ([ast.left, *chain_from_iterable(zip(ops, ast.comparators, strict=True))]
+                                   if len(ops := ast.ops) != 1 else
+                                   [ast.left, ops[0], ast.comparators[0]]),
+    Call:               _syntax_ordered_children_Call,
+    FormattedValue:     _syntax_ordered_children_fmtval,
+    Interpolation:      _syntax_ordered_children_fmtval,
+    JoinedStr:          _syntax_ordered_children_values,
+    TemplateStr:        _syntax_ordered_children_values,
+    Constant:           _syntax_ordered_children_nothing,
+    Attribute:          _syntax_ordered_children_value_ctx,
+    Subscript:          lambda ast: [ast.value, ast.slice, ast.ctx],
+    Starred:            _syntax_ordered_children_value_ctx,
+    Name:               _syntax_ordered_children_ctx,
+    List:               _syntax_ordered_children_elts_and_ctx,
+    Tuple:              _syntax_ordered_children_elts_and_ctx,
+    Slice:              lambda ast: [ast.lower, ast.upper, ast.step],
 
-    Name:         _syntax_ordered_children_ctx,
+    Load:               _syntax_ordered_children_nothing,
+    Store:              _syntax_ordered_children_nothing,
+    Del:                _syntax_ordered_children_nothing,
+    And:                _syntax_ordered_children_nothing,
+    Or:                 _syntax_ordered_children_nothing,
+    Add:                _syntax_ordered_children_nothing,
+    Sub:                _syntax_ordered_children_nothing,
+    Mult:               _syntax_ordered_children_nothing,
+    MatMult:            _syntax_ordered_children_nothing,
+    Div:                _syntax_ordered_children_nothing,
+    Mod:                _syntax_ordered_children_nothing,
+    Pow:                _syntax_ordered_children_nothing,
+    LShift:             _syntax_ordered_children_nothing,
+    RShift:             _syntax_ordered_children_nothing,
+    BitOr:              _syntax_ordered_children_nothing,
+    BitXor:             _syntax_ordered_children_nothing,
+    BitAnd:             _syntax_ordered_children_nothing,
+    FloorDiv:           _syntax_ordered_children_nothing,
+    Invert:             _syntax_ordered_children_nothing,
+    Not:                _syntax_ordered_children_nothing,
+    UAdd:               _syntax_ordered_children_nothing,
+    USub:               _syntax_ordered_children_nothing,
+    Eq:                 _syntax_ordered_children_nothing,
+    NotEq:              _syntax_ordered_children_nothing,
+    Lt:                 _syntax_ordered_children_nothing,
+    LtE:                _syntax_ordered_children_nothing,
+    Gt:                 _syntax_ordered_children_nothing,
+    GtE:                _syntax_ordered_children_nothing,
+    Is:                 _syntax_ordered_children_nothing,
+    IsNot:              _syntax_ordered_children_nothing,
+    In:                 _syntax_ordered_children_nothing,
+    NotIn:              _syntax_ordered_children_nothing,
 
-    Pass:         _syntax_ordered_children_nothing,
-    Break:        _syntax_ordered_children_nothing,
-    Continue:     _syntax_ordered_children_nothing,
+    comprehension:      lambda ast: [ast.target, ast.iter, *ast.ifs],
 
-    Constant:     _syntax_ordered_children_nothing,
+    ExceptHandler:      lambda ast: [ast.type, *ast.body],
 
-    Load:         _syntax_ordered_children_nothing,
-    Store:        _syntax_ordered_children_nothing,
-    Del:          _syntax_ordered_children_nothing,
-    And:          _syntax_ordered_children_nothing,
-    Or:           _syntax_ordered_children_nothing,
-    Add:          _syntax_ordered_children_nothing,
-    Sub:          _syntax_ordered_children_nothing,
-    Mult:         _syntax_ordered_children_nothing,
-    MatMult:      _syntax_ordered_children_nothing,
-    Div:          _syntax_ordered_children_nothing,
-    Mod:          _syntax_ordered_children_nothing,
-    Pow:          _syntax_ordered_children_nothing,
-    LShift:       _syntax_ordered_children_nothing,
-    RShift:       _syntax_ordered_children_nothing,
-    BitOr:        _syntax_ordered_children_nothing,
-    BitXor:       _syntax_ordered_children_nothing,
-    BitAnd:       _syntax_ordered_children_nothing,
-    FloorDiv:     _syntax_ordered_children_nothing,
-    Invert:       _syntax_ordered_children_nothing,
-    Not:          _syntax_ordered_children_nothing,
-    UAdd:         _syntax_ordered_children_nothing,
-    USub:         _syntax_ordered_children_nothing,
-    Eq:           _syntax_ordered_children_nothing,
-    NotEq:        _syntax_ordered_children_nothing,
-    Lt:           _syntax_ordered_children_nothing,
-    LtE:          _syntax_ordered_children_nothing,
-    Gt:           _syntax_ordered_children_nothing,
-    GtE:          _syntax_ordered_children_nothing,
-    Is:           _syntax_ordered_children_nothing,
-    IsNot:        _syntax_ordered_children_nothing,
-    In:           _syntax_ordered_children_nothing,
-    NotIn:        _syntax_ordered_children_nothing,
+    arguments:          _syntax_ordered_children_arguments,
+    arg:                lambda ast: [ast.annotation],
+    keyword:            _syntax_ordered_children_value,
+    alias:              _syntax_ordered_children_nothing,
+    withitem:           lambda ast: [ast.context_expr, ast.optional_vars],
+    match_case:         lambda ast: [ast.pattern, ast.guard, *ast.body],
 
-    # special cases
+    MatchValue:         _syntax_ordered_children_value,
+    MatchSingleton:     _syntax_ordered_children_nothing,
+    MatchSequence:      _syntax_ordered_children_patterns,
+    MatchMapping:       lambda ast: list(chain_from_iterable(zip(ast.keys, ast.patterns, strict=True))),
+    MatchClass:         lambda ast: [ast.cls, *ast.patterns, *ast.kwd_patterns],
+    MatchStar:          _syntax_ordered_children_nothing,
+    MatchAs:            lambda ast: [ast.pattern],
+    MatchOr:            _syntax_ordered_children_patterns,
 
-    Dict:         lambda ast: list(chain_from_iterable(zip(ast.keys, ast.values, strict=True))),
-    Compare:      lambda ast: [ast.left] + (list(chain_from_iterable(zip(ops, ast.comparators, strict=True)))
-                                            if len(ops := ast.ops) != 1 else [ops[0], ast.comparators[0]]),
-    Call:         _syntax_ordered_children_Call,
-    arguments:    _syntax_ordered_children_arguments,
-    MatchMapping: lambda ast: list(chain_from_iterable(zip(ast.keys, ast.patterns, strict=True))),
+    TypeIgnore:         _syntax_ordered_children_nothing,
+
+    TypeVar:            (lambda ast: [ast.bound, ast.default_value]) if PYGE13 else (lambda ast: [ast.bound]),
+    ParamSpec:          _syntax_ordered_children_defval,
+    TypeVarTuple:       _syntax_ordered_children_defval,
+
+    _ExceptHandlers:    lambda ast: ast.handlers.copy(),
+    _match_cases:       lambda ast: ast.cases.copy(),
+    _Assign_targets:    lambda ast: ast.targets.copy(),
+    _decorator_list:    lambda ast: ast.decorator_list.copy(),
+    _comprehensions:    lambda ast: ast.generators.copy(),
+    _comprehension_ifs: lambda ast: ast.ifs.copy(),
+    _aliases:           lambda ast: ast.names.copy(),
+    _withitems:         lambda ast: ast.items.copy(),
+    _type_params:       lambda ast: ast.type_params.copy(),
 }
 
 
