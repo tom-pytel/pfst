@@ -196,13 +196,20 @@ def walk(
     those in the given direction, recursing into each child's children before continuing with siblings. Walking
     backwards will not generate the same sequence as `list(walk())[::-1]` due to this behavior.
 
-    It is safe to `replace()` the node you get as you are walking, as well as modify all of its children or siblings
-    which came before, but not parents or siblings which have not been walked yet. We are referring to the normal
-    non-raw replacement, if you perform raw operations as you walk then all bets are off.
+    Node replacement and removal during the walk is supported with some caveats, the rules are:
+    - Do not do `raw` operations, they will most likely break the walk with a `RuntimeError. They may work in some
+        situations but there are no guarantees.
+    - The current node can always be removed, replaced or inserted before (if list field). If replaced the new children
+        will be walked next unless you `send(False)` to the generator.
+    - Previously walked nodes can likewise be removed, replaced or inserted before as long as the node is not in the
+        current parent chain from this node to the root.
+    - Sibling nodes of this one which have not been walked yet can be removed, replaced or inserted before but the new
+        nodes will not be walked.
+    - Sibling nodes of parent nodes which have not been walked yet can be removed, replacer or inserted before but the
+        new nodes will not be walked.
 
-    This walk is relatively efficient but if all you need to do is just walk ALL the `AST` children without any
-    bells or whistles and regardless of syntax order, from which you can get the `FST` nodes via the `.f` attribute,
-    then `ast.walk()` will be faster.
+    If all you want to do is walk all nodes without any bells or whistles then `AST.walk()` is faster than this. You can
+    still get the `FST` nodes from that walk via the `.f` attribute.
 
     **Note:** The `NamedExpr` (walrus) expression is treated specially in a Comprehension. The `target` of the operation
     actually belongs to the first non-Comprehension enclosing scope. For this reason, when a walk recurses into a
@@ -215,11 +222,11 @@ def walk(
         - `False`: All nodes with or without location.
         - `True`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
-            arguments present).
+            arguments present). Operators not walked (even though they have computed location).
         - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
         - `'own'`: Only nodes with their own intrinsic `AST` locations, same as `True` but excludes those larger
-            nodes with calculated locations.
+            nodes with calculated locations `comprehension`, `withitem`, `match_case` and `arguments`.
     - `self_`: If `True` then self will be returned first with the possibility to skip children with `send(False)`,
         otherwise will start directly with children.
     - `recurse`: Whether to recurse past the first level of children by default, `send(True)` for a given node will
@@ -292,6 +299,8 @@ def walk(
     <arg 1,10..1,13>              'arg'
     """
 
+    ast = self.a
+
     if self_:
         if not _check_with_loc(self, with_loc):
             return
@@ -301,8 +310,14 @@ def walk(
         while (sent := (yield self)) is not None:
             recurse_ = sent
 
-        if not self.a:
-            self = self.repath()
+        if not (ast := self.a):
+            if not (parenta := self.parent.a):  # we know there is a parent because self.a is never set to None for a root node
+                raise RuntimeError('tree changed too much during walk')
+
+            if not (ast := self.pfield.get_default(parenta)):  # reget node at our astfield, if removed last element of list field or removable element of solo field then in this case walk is done because nothing left
+                return
+
+            self = ast.f
 
         if not recurse_:
             return
@@ -311,7 +326,6 @@ def walk(
             recurse = True
             scope = False
 
-    ast = self.a
     stack = None
 
     # if we are walking scope then we may need to exclude some parts of the top-level node
@@ -399,7 +413,8 @@ def walk(
         if not (ast := stack.pop()):
             continue
 
-        fst_ = ast.f
+        if not (fst_ := ast.f):  # if node has been removed or replaced then just continue walk
+            continue
 
         if not _check_with_loc(fst_, with_loc):
             continue
@@ -409,10 +424,14 @@ def walk(
         while (sent := (yield fst_)) is not None:
             recurse_ = 1 if sent else False
 
-        if not fst_.a:  # has been changed by the player
-            fst_ = fst_.repath()
+        if not (ast := fst_.a):  # has been modified by the player
+            if not (parenta := fst_.parent.a):
+                raise RuntimeError('tree changed too much during walk')
 
-        ast = fst_.a  # could have just modified the ast
+            if not (ast := fst_.pfield.get_default(parenta)):  # reget node at our astfield, if removed last element of list field or removable element of solo field then continue walk
+                continue
+
+            fst_ = ast.f  # otherwise possibly recurse into new node (unless user explicitly tells us not to with .send(False))
 
         if recurse_ is not True:
             if recurse_:  # user did send(True), walk this child unconditionally
@@ -579,7 +598,7 @@ def walk(
 
                         stack.append(ast.target)
 
-                elif ast is scope_args:  # exclude defaults and kw_defaults from walk  TODO: ast is arguments
+                elif ast is scope_args:  # exclude defaults and kw_defaults from walk, ast is arguments
                     if back:
                         scope.extend(ast.posonlyargs)
                         scope.extend(ast.args)

@@ -5439,6 +5439,165 @@ def f[T: ftb, *U, **V]():
 
         self.assertEqual(fst.src, '[1, 2, 3]')
 
+        # error on replace raw which changes parent
+
+        def test(f, with_loc):
+            for g in f.walk(True):
+                if g.is_Constant:
+                    g.replace('2', raw=True)
+
+        f = FST('i = x + 1')
+        self.assertRaises(RuntimeError, test, f, False)
+        self.assertRaises(RuntimeError, test, f, True)
+
+        f = FST('i = x + 1', 'stmt')
+        self.assertRaises(RuntimeError, test, f, False)
+        self.assertRaises(RuntimeError, test, f, True)
+
+        f = FST('i = x + 1', 'exec')
+        self.assertRaises(RuntimeError, test, f, False)
+        self.assertRaises(RuntimeError, test, f, True)
+
+        # this replace raw works because changes root AST
+
+        f = FST('i = 1')
+        test(f, False)
+        test(f, True)
+        self.assertEqual('i = 2', f.src)
+
+        # replace root
+
+        a = (f := FST('a')).a
+        for g in f.walk(True):
+            g.replace('1')
+        self.assertIsNone(a.f)
+        self.assertIsNot(f.a, a)
+        self.assertEqual('1', f.src)
+        self.assertTrue(f.is_Constant)
+        f.verify()
+
+        f = FST('a + b')
+        ns = []
+        for g in f.walk():
+            if g.is_BinOp:
+                g.replace('x * y')  # replace and continue walk into new node
+            else:
+                ns.append(g.src)
+        self.assertEqual(['x', None, '*', 'y', None], ns)  # should be newly replaced child nodes (including ctx)
+        self.assertEqual('x * y', f.src)
+        f.verify()
+
+        f = FST('a + b', 'Expr')  # doesn't replace root but just below it
+        ns = []
+        for g in f.walk():
+            if g.is_BinOp:
+                g.replace('x * y')  # replace and continue walk into new node
+            else:
+                ns.append(g.src)
+        self.assertEqual(['a + b', 'x', None, '*', 'y', None], ns)  # first node is original expr
+        self.assertEqual('x * y', f.src)
+        f.verify()
+
+        # replace but don't recurse into it
+
+        f = FST('a + b')
+        ns = []
+        for g in (gen := f.walk()):
+            ns.append(g.src)
+            if g.is_BinOp:
+                g.replace('x * y')  # replace and continue walk into new node
+                gen.send(False)
+        self.assertEqual(['a + b'], ns)  # should be newly replaced child nodes (including ctx)
+        self.assertEqual('x * y', f.src)
+        f.verify()
+
+        # remove first node walked which is not root
+
+        f = FST('[1, b, 3]')
+        ns = []
+        for g in f.elts[1].walk(True):
+            ns.append(g.src)
+            g.remove()
+        self.assertEqual(['b'], ns)
+        self.assertEqual('[1, 3]', f.src)
+        f.verify()
+
+        # remove or replace parent's parent results in tree changed too much
+
+        f = FST('a + 1', 'exec')
+        err = None
+        try:
+            for g in f.walk():
+                if g.is_Name:
+                    g.parent.parent.remove()
+        except Exception as exc:
+            err = repr(exc)
+        self.assertEqual("RuntimeError('tree changed too much during walk')", err)
+
+        f = FST('a + 1', 'exec')
+        err = None
+        try:
+            for g in f.walk():
+                if g.is_Name:
+                    g.parent.parent.replace('x * y')
+        except Exception as exc:
+            err = repr(exc)
+        self.assertEqual("RuntimeError('tree changed too much during walk')", err)
+
+        # replace nodes previously walked
+
+        f = FST('a + 1\na + 1\na + 1')
+        for g in f.walk(True):
+            if g.is_Constant:
+                if (idx := g.parent.parent.pfield.idx):  # g.BinOp.Expr.pfield.idx (in Module)
+                    f.put('b', idx - 1)  # replace previous stmt to ours
+        self.assertEqual('b\nb\na + 1', f.src)
+        f.verify()
+
+        # replace or remove sibling nodes not yet walked
+
+        f = FST('[1, b, 3]')
+        ns = []
+        for g in f.walk(True, self_=False):
+            ns.append(g.src)
+            if g.is_Name:
+                g.next().replace('4')
+        self.assertEqual(['1', 'b'], ns)
+        self.assertEqual('[1, b, 4]', f.src)
+        f.verify()
+
+        f = FST('[1, b, 3]')
+        ns = []
+        for g in f.walk(True, self_=False):
+            ns.append(g.src)
+            if g.is_Name:
+                g.next().remove()
+        self.assertEqual(['1', 'b'], ns)
+        self.assertEqual('[1, b]', f.src)
+        f.verify()
+
+        # replace or remove parent sibling nodes not yet walked
+
+        f = FST('a + b\nc + 1\nd + e\ny')
+        ns = []
+        for g in f.walk(True, self_=False):
+            ns.append(g.src)
+            if g.is_Constant:
+                g.parent.parent.next().replace('x')  # g.BinOp.Expr.next()
+        self.assertEqual(['a + b', 'a + b', 'a', 'b', 'c + 1', 'c + 1', 'c', '1', 'y', 'y'], ns)
+        self.assertEqual('a + b\nc + 1\nx\ny', f.src)
+        f.verify()
+
+        f = FST('a + b\nc + 1\nd + e\ny')
+        ns = []
+        for g in f.walk(True, self_=False):
+            ns.append(g.src)
+            if g.is_Constant:
+                g.parent.parent.next().remove()  # g.BinOp.Expr.next()
+        self.assertEqual(['a + b', 'a + b', 'a', 'b', 'c + 1', 'c + 1', 'c', '1', 'y', 'y'], ns)
+        self.assertEqual('a + b\nc + 1\ny', f.src)
+        f.verify()
+
     def test_scope_symbols(self):
         f = FST(r'''
 def func():

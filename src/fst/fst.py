@@ -407,6 +407,12 @@ class FST:
     is_FST:       bool = True  ; """@private"""  # for quick checks vs. `fstloc` or `fstview`
 
     @property
+    def is_alive(self) -> bool:
+        """`True` if the node is part of a tree, `False` if has been replaced or removed."""
+
+        return self.a is not None
+
+    @property
     def is_root(self) -> bool:
         """`True` for the root node, `False` otherwise."""
 

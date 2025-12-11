@@ -6,6 +6,7 @@
 
 ### Added
 
+- `FST.is_alive` to check if node has been removed or replaced
 - `FST.scope_symbols()` to get the names used in a scope
 - added explicit user control over `NamedExpr.target` when walking with `scope=True`
 
