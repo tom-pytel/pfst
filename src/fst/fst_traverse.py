@@ -187,7 +187,6 @@ def walk(
     recurse: bool = True,
     scope: bool = False,
     back: bool = False,
-    walrus: bool | None = None,
 ) -> Generator[fst.FST, bool, None]:
     r"""Walk `self` and descendants in syntactic order. When walking, you can `send(False)` to the generator to skip
     recursion into the current child. `send(True)` to allow recursion into child if called with `recurse=False` or
@@ -204,6 +203,12 @@ def walk(
     This walk is relatively efficient but if all you need to do is just walk ALL the `AST` children without any
     bells or whistles and regardless of syntax order, from which you can get the `FST` nodes via the `.f` attribute,
     then `ast.walk()` will be faster.
+
+    **Note:** The `NamedExpr` (walrus) expression is treated specially in a Comprehension. The `target` of the operation
+    actually belongs to the first non-Comprehension enclosing scope. For this reason, when a walk recurses into a
+    Comprehension scope the walrus `target` nodes are still returned even though everything else belongs to the
+    Comprehension scope and is not returned (except for the first `comprehension.iter`, which also belongs to the
+    enclosing scope). This remains true for whatever level of nesting of Comprehensions is recursed into.
 
     **Parameters:**
     - `with_loc`: Return nodes depending on their location information.
@@ -227,15 +232,6 @@ def walk(
         them unless `send(True)` is done for that child.
     - `back`: If `True` then walk every node in reverse syntactic order. This is not the same as a full forwards
         walk reversed due to recursion (parents are still returned before children, only in reverse sibling order).
-    - `walrus`: Since `NamedExpr.target` in a `ListComp` or the like actually lives in the parent scope they are
-        returned as nodes when walking with `scope=True` if the walk recurses into one of those `Comp`s. Conversely,
-        if you walk a `Comp` (as `self` here) with `scope=True` the `NamedExpr.target`s don't belong to it and so
-        the `target` is not returned during the walk (though the full `NamedExpr` is). You can override this
-        behavior by setting `walrus=True` and you will get the `target`s. Setting `walrus=False` turns off
-        `NamedExpr.target` returning regardless of starting node. This only triggers when walking a `NamedExpr`. If
-        you start the walk on a `NamedExpr.target` already then it is always returned regardless of if its in a `Comp`
-        or not. This option is mostly for internal use and you can ignore it unless you specifically want
-        `NamedExpr.target` always returned regardless of if walking a `Comp` or not.
 
     **Examples:**
 
@@ -315,14 +311,14 @@ def walk(
             recurse = True
             scope = False
 
-    stack = None
     ast = self.a
-    ast_cls = ast.__class__
+    stack = None
 
     # if we are walking scope then we may need to exclude some parts of the top-level node
 
     if scope:  # some parts of functions or classes or the various comprehensions are outside their scope
         scope_args = False  # can't use None because root node may have None as a parent
+        ast_cls = ast.__class__
 
         if (is_def := (ast_cls in ASTS_LEAF_FUNCDEF)) or ast_cls is Lambda:
             scope_args = ast.args  # will need these in the loop to exclude annotations and defailts
@@ -391,21 +387,11 @@ def walk(
 
             skip_iter = generators[0].iter if generators else None  # maybe the user deleted all generators
 
-            if walrus is None:  # if NamedExpr.target return state not overridden then don't return for this top-level type by default
-                walrus = False
-
-    if walrus is None:
-        walrus = True
-
     if stack is None:  # nothing excluded so just add all children
-        if not walrus and ast_cls is NamedExpr:  # not returning NamedExpr.targets?
-            stack = [ast.value]
+        stack = syntax_ordered_children(ast)
 
-        else:
-            stack = syntax_ordered_children(ast)
-
-            if not back:
-                stack = stack[::-1]
+        if not back:
+            stack = stack[::-1]
 
     # loop
 
@@ -427,15 +413,15 @@ def walk(
             fst_ = fst_.repath()
 
         ast = fst_.a  # could have just modified the ast
-        ast_cls = ast.__class__
 
         if recurse_ is not True:
             if recurse_:  # user did send(True), walk this child unconditionally
-                yield from fst_.walk(with_loc, self_=False, back=back, walrus=walrus)
+                yield from fst_.walk(with_loc, self_=False, back=back)
 
         else:  # if walking scope then check if we got to another scope and walk the things from that which are visible in our scope
             if scope:
                 recurse_ = False
+                ast_cls = ast.__class__
 
                 if ast_cls in ASTS_LEAF_FUNCDEF:
                     args = ast.args
@@ -546,7 +532,7 @@ def walk(
                 elif ast_cls in (ListComp, SetComp, DictComp, GeneratorExp):
                     comp_first_iter = ast.generators[0].iter
 
-                    gen = fst_.walk(with_loc, self_=False, back=back, walrus=walrus)
+                    gen = fst_.walk(with_loc, self_=False, back=back)
 
                     for f in gen:  # we want to return all NamedExpr.target and first top-level .iter, yeah, its ugly
                         a = f.a
@@ -558,7 +544,7 @@ def walk(
                                 subrecurse = sent
 
                             if subrecurse:
-                                yield from f.walk(with_loc, self_=False, back=back, walrus=walrus)
+                                yield from f.walk(with_loc, self_=False, back=back)
 
                             gen.send(False)
 
@@ -620,13 +606,9 @@ def walk(
                     recurse_ = True
 
             if recurse_:
-                if not walrus and ast_cls is NamedExpr:  # not returning NamedExpr.targets?
-                    stack.append(ast.value)
+                children = syntax_ordered_children(ast)
 
-                else:
-                    children = syntax_ordered_children(ast)
-
-                    stack.extend(children if back else children[::-1])
+                stack.extend(children if back else children[::-1])
 
 
 def next(self: fst.FST, with_loc: bool | Literal['all', 'own'] = True) -> fst.FST | None:  # TODO; redo

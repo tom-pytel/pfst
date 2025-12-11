@@ -14,8 +14,6 @@ from typing import Any, Literal, Mapping
 from . import fst
 
 from .asttypes import (
-    ASTS_LEAF_EXPR,
-    ASTS_LEAF_PATTERN,
     ASTS_LEAF_BLOCK,
     AST,
     AnnAssign,

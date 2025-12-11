@@ -45,6 +45,8 @@ from .asttypes import (
     ASTS_LEAF_FOR,
     ASTS_LEAF_WITH,
     ASTS_LEAF_TRY,
+    ASTS_LEAF_IMPORT,
+    ASTS_LEAF_COMP,
     ASTS_LEAF_FTSTR,
     ASTS_LEAF_MAYBE_DOCSTR,
     AST,
@@ -60,6 +62,7 @@ from .asttypes import (
     ClassDef,
     Compare,
     Constant,
+    Del,
     Dict,
     Div,
     Eq,
@@ -94,6 +97,7 @@ from .asttypes import (
     Module,
     Mult,
     Name,
+    NamedExpr,
     Nonlocal,
     Not,
     NotEq,
@@ -2689,7 +2693,6 @@ class FST:
         local: bool = True,
         free: bool = True,
         import_star: bool = False,
-        walrus: bool | None = None,
     ) -> dict[builtins.str, list[FST]] | dict[builtins.str, dict[builtins.str, list[FST]]]:
         """Get the symbols accessed in the scope of `self` (from `self` on down, will not search up if `self` is only
         part of a scope and doesn't define its own). Normally should be called on something that has a scope like a
@@ -2718,7 +2721,9 @@ class FST:
                 are not necessarily all the truly nonlocal symbols as there can be "free" variables which are not local
                 but not declared as such.
             - `'local'`: This is a dictionary of symbols determined to be local to the scope. These are all `'store'`
-                symbols which do not appear in either `'global'` or `'nonlocal'` explicit declarations.
+                symbols which do not appear in either `'global'` or `'nonlocal'` explicit declarations. There are no
+                `'load'` or `'del'` nodes in these lists even if they are local because it is faster. If you need those
+                nodes then look them up in their respective categories using the symbol names from this category.
             - `'free'`: This is a dictionary of symbols determined to be implicitly nonlocal to the scope. Basically all
                 nodes which are read but never written or deleted and are not explicitly `global` or `nonlocal`. Note
                 that this is slightly different from the python definition of a "free" variable as those can include
@@ -2727,10 +2732,6 @@ class FST:
         - `free`: Whether to compute the `'free'` category symbols or not, set to `False` if you don't need this.
         - `import_star`: Normally a `from mod import *` does not generate any symbols. If you pass this parameter as
             `True` then the `*` (invalid) name with its `alias` node is added to the `'store'` category.
-        - `walrus`: By default when walking a `ListComp` or other `Comp` then `NamedExpr.target` nodes are not walked
-            and consequently don't show up as symbols here unless they accessed using read, in which case they show up
-            as `'free'` symbols (which is what they are). If they are only stored however they will not show up in this
-            scope. Setting `walrus=True` will make them show up as if they belong to this scope.
 
         **Examples:**
 
@@ -2782,6 +2783,7 @@ class FST:
         """
 
         ast = self.a
+        full_and_comp = full and ast.__class__ in ASTS_LEAF_COMP
 
         if not full:
             syms_load = syms_store = syms_del = syms_global = syms_nonlocal = {}
@@ -2792,14 +2794,35 @@ class FST:
             syms_del = {}  # explicitly 'del'eted
             syms_global = {}  # explicitly 'global'
             syms_nonlocal = {}  # explicitly 'nonlocal'
+            syms_walrus = set()  # this will only get NamedExpr.target if self is a Comprehension, only used for the symbol names
 
-        for f in self.walk(True, scope=True, walrus=walrus):
+        for f in self.walk(True, scope=True):
             a = f.a
             a_cls = a.__class__
 
             if a_cls is Name:
                 name = a.id
                 ctx_cls = a.ctx.__class__
+
+                if ctx_cls is Load:
+                    syms = syms_load
+                elif ctx_cls is Del:
+                    syms = syms_del
+
+                else:  # ctx_cls is Store
+                    syms = syms_store
+
+                    if (full_and_comp  # we check for full because otherwise we would put the node twice to the single list which doesn't distinguish "free" symbols anyway
+                        and f.pfield.name == 'target'
+                        and f.parent.a.__class__ is NamedExpr  # if is_comp and pfield.name == 'target' then there is a parent for sure
+                    ):  # Comprehensions NamedExpr.target is a "free" variable in some outer scope
+                        syms_walrus.add(name)  # we need the names of these to build 'local' and 'load' correctly
+
+                        if name_fsts := syms_load.get(name):  # we also add to load because that is what will be used to generate sorted "free" symbols with their nodes, will be filtered out for the actual "load" symbol dict
+                            name_fsts.append(f)
+                        else:
+                            syms_load[name] = [f]
+
                 syms = syms_load if ctx_cls is Load else syms_store if ctx_cls is Store else syms_del
 
             elif a_cls is arg:  # these will only be returned for top-level node so their arg is part of our scope
@@ -2890,17 +2913,26 @@ class FST:
             non_local_names = set(syms_global)
 
             non_local_names.update(syms_nonlocal)
+            non_local_names.update(syms_walrus)  # these only come from NamedExpr.target when top-level node is a Comprehension
 
             ret['local'] = {n: fs for n, fs in syms_store.items() if n not in non_local_names}
 
         if free:
             non_load_names = set(syms_store)
 
-            non_load_names.update(syms_del)
-            non_load_names.update(syms_nonlocal)
-            non_load_names.update(syms_global)
+            if full_and_comp:  # top-level Comprehension, we may have syms_walrus from walruses, there are no syms_del/nonlocal/global
+                non_load_names.difference_update(syms_walrus)
 
-            ret['free'] = {n: fs for n, fs in syms_load.items() if n not in non_load_names}
+                ret['free'] = {n: fs for n, fs in syms_load.items() if n not in non_load_names}
+                ret['load'] = {n: ffs for n, fs in syms_load.items()
+                               if (ffs := [f for f in fs if f.a.ctx.__class__ is Load])}  # filter out store nodes which came from walruses
+
+            else:
+                non_load_names.update(syms_del)
+                non_load_names.update(syms_nonlocal)
+                non_load_names.update(syms_global)
+
+                ret['free'] = {n: fs for n, fs in syms_load.items() if n not in non_load_names}
 
         return ret
 
@@ -3816,6 +3848,12 @@ class FST:
         """Is a `Try` or `TryStar` node, different from `is_Try` or `is_TryStar`."""
 
         return self.a.__class__ in ASTS_LEAF_TRY
+
+    @property
+    def is_import(self) -> bool:
+        """Is an `Import` or `ImportFrom` node, different from `is_Import` or `is_ImportFrom`."""
+
+        return self.a.__class__ in ASTS_LEAF_IMPORT
 
     # ------------------------------------------------------------------------------------------------------------------
     # Private

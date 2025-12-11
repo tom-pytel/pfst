@@ -4969,30 +4969,34 @@ def f(a, /, b, *c, d, **e):
                 gen.send(True)
         self.assertEqual(['f', 'g', 'h', 'deco1', 'm', 'deco2', 'cls', 'moto', 'hidden', 'o'], l)
 
-        fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip()).a.body[0].value.f
-        self.assertEqual(['z', 'a', 'a'],
-                         [f.a.id for f in fst.walk(scope=True) if isinstance(f.a, Name)])
+        # fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip()).a.body[0].value.f
+        # self.assertEqual(['z', 'a', 'a'],
+        #                  [f.a.id for f in fst.walk(scope=True, walrus=False) if isinstance(f.a, Name)])
 
         fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip()).a.body[0].value.f
         self.assertEqual(['z', 'a', 'c', 'a'],
-                         [f.a.id for f in fst.walk(scope=True, walrus=True) if isinstance(f.a, Name)])
+                         [f.a.id for f in fst.walk(scope=True) if isinstance(f.a, Name)])
 
         fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip()).a.body[0].f
         self.assertEqual(['b', 'c'],
                          [f.a.id for f in fst.walk(scope=True) if isinstance(f.a, Name)])
 
-        fst = FST.fromsrc("""[z for a in b if b in [c := i for i in j if i in {d := k for k in l}]]""".strip()).a.body[0].value.f
-        self.assertEqual(['z', 'a', 'b', 'j'],
-                         [f.a.id for f in fst.walk(scope=True) if isinstance(f.a, Name)])
+        # fst = FST.fromsrc("""[z for a in b if b in [c := i for i in j if i in {d := k for k in l}]]""".strip()).a.body[0].value.f
+        # self.assertEqual(['z', 'a', 'b', 'j'],
+        #                  [f.a.id for f in fst.walk(scope=True, walrus=False) if isinstance(f.a, Name)])
 
         fst = FST.fromsrc("""[z for a in b if b in [c := i for i in j if i in {d := k for k in l}]]""".strip()).a.body[0].value.f
         self.assertEqual(['z', 'a', 'b', 'c', 'j', 'd'],
-                         [f.a.id for f in fst.walk(scope=True, walrus=True) if isinstance(f.a, Name)])
+                         [f.a.id for f in fst.walk(scope=True) if isinstance(f.a, Name)])
+
+        fst = FST.fromsrc("""[z for a in b if b in [c := i for i in j if i in {d := k for k in l}]]""".strip()).a.body[0].f
+        self.assertEqual(['b', 'c', 'd'],
+                         [f.a.id for f in fst.walk(scope=True) if isinstance(f.a, Name)])
 
         # walrus in comprehensions
 
-        def walkscope(fst_, back=False, walrus=None):
-            return '\n'.join(f'{str(f):<32} {f.src}' for f in fst_.walk(True, scope=True, back=back, walrus=walrus))
+        def walkscope(fst_, back=False):#, walrus=None):
+            return '\n'.join(f'{str(f):<32} {f.src}' for f in fst_.walk(True, scope=True, back=back))#, walrus=walrus))
 
         self.assertEqual(walkscope(FST('z = [i := a for a in b(d := c) if (e := a)]')), '''
 <Assign ROOT 0,0..0,43>          z = [i := a for a in b(d := c) if (e := a)]
@@ -5031,10 +5035,12 @@ def f(a, /, b, *c, d, **e):
         self.assertEqual(walkscope(FST('[i := a for a in b(j := c) if (k := a)]')), '''
 <ListComp ROOT 0,0..0,39>        [i := a for a in b(j := c) if (k := a)]
 <NamedExpr 0,1..0,7>             i := a
+<Name 0,1..0,2>                  i
 <Name 0,6..0,7>                  a
 <comprehension 0,8..0,38>        for a in b(j := c) if (k := a)
 <Name 0,12..0,13>                a
 <NamedExpr 0,31..0,37>           k := a
+<Name 0,31..0,32>                k
 <Name 0,36..0,37>                a
             '''.strip())
 
@@ -5064,72 +5070,92 @@ def f(a, /, b, *c, d, **e):
 <Name 0,0..0,3>                  var
             '''.strip())
 
-        # `walrus` option
-
-        self.assertEqual(walkscope(FST('a = (b := c)')), '''
-<Assign ROOT 0,0..0,12>          a = (b := c)
-<Name 0,0..0,1>                  a
-<NamedExpr 0,5..0,11>            b := c
-<Name 0,5..0,6>                  b
-<Name 0,10..0,11>                c
+        self.assertEqual(walkscope(FST('[[i := c for c in a] for a in b]')), '''
+<ListComp ROOT 0,0..0,32>        [[i := c for c in a] for a in b]
+<ListComp 0,1..0,20>             [i := c for c in a]
+<Name 0,2..0,3>                  i
+<Name 0,18..0,19>                a
+<comprehension 0,21..0,31>       for a in b
+<Name 0,25..0,26>                a
             '''.strip())
 
-        self.assertEqual(walkscope(FST('a = (b := c)'), walrus=True), '''
-<Assign ROOT 0,0..0,12>          a = (b := c)
-<Name 0,0..0,1>                  a
-<NamedExpr 0,5..0,11>            b := c
-<Name 0,5..0,6>                  b
-<Name 0,10..0,11>                c
+        self.assertEqual(walkscope(FST('[[i := c for c in a] for a in b]'), back=True), '''
+<ListComp ROOT 0,0..0,32>        [[i := c for c in a] for a in b]
+<comprehension 0,21..0,31>       for a in b
+<Name 0,25..0,26>                a
+<ListComp 0,1..0,20>             [i := c for c in a]
+<Name 0,18..0,19>                a
+<Name 0,2..0,3>                  i
             '''.strip())
 
-        self.assertEqual(walkscope(FST('a = (b := c)'), walrus=False), '''
-<Assign ROOT 0,0..0,12>          a = (b := c)
-<Name 0,0..0,1>                  a
-<NamedExpr 0,5..0,11>            b := c
-<Name 0,10..0,11>                c
-            '''.strip())
+#         # `walrus` option
 
-        self.assertEqual(walkscope(FST('[i := a for a in b if (c := a)]')), '''
-<ListComp ROOT 0,0..0,31>        [i := a for a in b if (c := a)]
-<NamedExpr 0,1..0,7>             i := a
-<Name 0,6..0,7>                  a
-<comprehension 0,8..0,30>        for a in b if (c := a)
-<Name 0,12..0,13>                a
-<NamedExpr 0,23..0,29>           c := a
-<Name 0,28..0,29>                a
-            '''.strip())
+#         self.assertEqual(walkscope(FST('a = (b := c)')), '''
+# <Assign ROOT 0,0..0,12>          a = (b := c)
+# <Name 0,0..0,1>                  a
+# <NamedExpr 0,5..0,11>            b := c
+# <Name 0,5..0,6>                  b
+# <Name 0,10..0,11>                c
+#             '''.strip())
 
-        self.assertEqual(walkscope(FST('[i := a for a in b if (c := a)]'), walrus=True), '''
-<ListComp ROOT 0,0..0,31>        [i := a for a in b if (c := a)]
-<NamedExpr 0,1..0,7>             i := a
-<Name 0,1..0,2>                  i
-<Name 0,6..0,7>                  a
-<comprehension 0,8..0,30>        for a in b if (c := a)
-<Name 0,12..0,13>                a
-<NamedExpr 0,23..0,29>           c := a
-<Name 0,23..0,24>                c
-<Name 0,28..0,29>                a
-            '''.strip())
+#         self.assertEqual(walkscope(FST('a = (b := c)')), '''
+# <Assign ROOT 0,0..0,12>          a = (b := c)
+# <Name 0,0..0,1>                  a
+# <NamedExpr 0,5..0,11>            b := c
+# <Name 0,5..0,6>                  b
+# <Name 0,10..0,11>                c
+#             '''.strip())
 
-        self.assertEqual(walkscope(FST('var = [i := a for a in b if (c := a)]')), '''
-<Assign ROOT 0,0..0,37>          var = [i := a for a in b if (c := a)]
-<Name 0,0..0,3>                  var
-<ListComp 0,6..0,37>             [i := a for a in b if (c := a)]
-<Name 0,7..0,8>                  i
-<Name 0,23..0,24>                b
-<Name 0,29..0,30>                c
-            '''.strip())
+# #         self.assertEqual(walkscope(FST('a = (b := c)'), walrus=False), '''
+# # <Assign ROOT 0,0..0,12>          a = (b := c)
+# # <Name 0,0..0,1>                  a
+# # <NamedExpr 0,5..0,11>            b := c
+# # <Name 0,10..0,11>                c
+# #             '''.strip())
 
-        self.assertEqual(walkscope(FST('var = [i := a for a in b if (c := a)]'), walrus=False), '''
-<Assign ROOT 0,0..0,37>          var = [i := a for a in b if (c := a)]
-<Name 0,0..0,3>                  var
-<ListComp 0,6..0,37>             [i := a for a in b if (c := a)]
-<Name 0,23..0,24>                b
-            '''.strip())
+#         self.assertEqual(walkscope(FST('[i := a for a in b if (c := a)]')), '''
+# <ListComp ROOT 0,0..0,31>        [i := a for a in b if (c := a)]
+# <NamedExpr 0,1..0,7>             i := a
+# <Name 0,1..0,2>                  i
+# <Name 0,6..0,7>                  a
+# <comprehension 0,8..0,30>        for a in b if (c := a)
+# <Name 0,12..0,13>                a
+# <NamedExpr 0,23..0,29>           c := a
+# <Name 0,23..0,24>                c
+# <Name 0,28..0,29>                a
+#             '''.strip())
 
-        f = FST('a := b')
-        self.assertEqual([f, f.value], list(f.walk(True, walrus=False)))
-        self.assertEqual([f.target], list(f.target.walk(True, walrus=False)))  # walking NamedExpr.target always returns it regardless
+#         self.assertEqual(walkscope(FST('[i := a for a in b if (c := a)]')), '''
+# <ListComp ROOT 0,0..0,31>        [i := a for a in b if (c := a)]
+# <NamedExpr 0,1..0,7>             i := a
+# <Name 0,1..0,2>                  i
+# <Name 0,6..0,7>                  a
+# <comprehension 0,8..0,30>        for a in b if (c := a)
+# <Name 0,12..0,13>                a
+# <NamedExpr 0,23..0,29>           c := a
+# <Name 0,23..0,24>                c
+# <Name 0,28..0,29>                a
+#             '''.strip())
+
+#         self.assertEqual(walkscope(FST('var = [i := a for a in b if (c := a)]')), '''
+# <Assign ROOT 0,0..0,37>          var = [i := a for a in b if (c := a)]
+# <Name 0,0..0,3>                  var
+# <ListComp 0,6..0,37>             [i := a for a in b if (c := a)]
+# <Name 0,7..0,8>                  i
+# <Name 0,23..0,24>                b
+# <Name 0,29..0,30>                c
+#             '''.strip())
+
+#         self.assertEqual(walkscope(FST('var = [i := a for a in b if (c := a)]'), walrus=False), '''
+# <Assign ROOT 0,0..0,37>          var = [i := a for a in b if (c := a)]
+# <Name 0,0..0,3>                  var
+# <ListComp 0,6..0,37>             [i := a for a in b if (c := a)]
+# <Name 0,23..0,24>                b
+#             '''.strip())
+
+        # f = FST('a := b')
+        # self.assertEqual([f, f.value], list(f.walk(True, walrus=False)))
+        # self.assertEqual([f.target], list(f.target.walk(True, walrus=False)))  # walking NamedExpr.target always returns it regardless
 
         # funcdef arguments
 
@@ -5521,63 +5547,63 @@ class cls(a, b=c):
 
         self.assertEqual(pformat(FST('[i for a in b if (i := a)]').scope_symbols(full=True), sort_dicts=False), '''
 {'load': {'i': [<Name 0,1..0,2>], 'a': [<Name 0,23..0,24>]},
- 'store': {'a': [<Name 0,7..0,8>]},
- 'del': {},
- 'global': {},
- 'nonlocal': {},
- 'local': {'a': [<Name 0,7..0,8>]},
- 'free': {'i': [<Name 0,1..0,2>]}}
-            '''.strip())
-
-        self.assertEqual(pformat(FST('[i for a in b if (i := a)]').scope_symbols(full=True, walrus=True), sort_dicts=False), '''
-{'load': {'i': [<Name 0,1..0,2>], 'a': [<Name 0,23..0,24>]},
  'store': {'a': [<Name 0,7..0,8>], 'i': [<Name 0,18..0,19>]},
  'del': {},
  'global': {},
  'nonlocal': {},
- 'local': {'a': [<Name 0,7..0,8>], 'i': [<Name 0,18..0,19>]},
- 'free': {}}
+ 'local': {'a': [<Name 0,7..0,8>]},
+ 'free': {'i': [<Name 0,1..0,2>, <Name 0,18..0,19>]}}
             '''.strip())
+
+#         self.assertEqual(pformat(FST('[i for a in b if (i := a)]').scope_symbols(full=True, walrus=True), sort_dicts=False), '''
+# {'load': {'i': [<Name 0,1..0,2>], 'a': [<Name 0,23..0,24>]},
+#  'store': {'a': [<Name 0,7..0,8>], 'i': [<Name 0,18..0,19>]},
+#  'del': {},
+#  'global': {},
+#  'nonlocal': {},
+#  'local': {'a': [<Name 0,7..0,8>], 'i': [<Name 0,18..0,19>]},
+#  'free': {}}
+#             '''.strip())
 
         # ListComp
 
         self.assertEqual(['a'], list(FST('[a for a in b(c)]').scope_symbols()))
         self.assertEqual(['a', 'b', 'e'], list(FST('[a for b in c(d) for a in b(e)]').scope_symbols()))
 
-        self.assertEqual(['a'], list(FST('[i := a for a in (j := b)]').scope_symbols()))
-        self.assertEqual(['i', 'a'], list(FST('[i := a for a in (j := b)]').scope_symbols(walrus=True)))
+        self.assertEqual(['i', 'a'], list(FST('[i := a for a in (j := b)]').scope_symbols()))
+        # self.assertEqual(['i', 'a'], list(FST('[i := a for a in (j := b)]').scope_symbols(walrus=True)))
         self.assertEqual(['i', 'a'], list(FST('[i for a in b if (i := a)]').scope_symbols()))
-        self.assertEqual(['i', 'a'], list(FST('[i for a in b if (i := a)]').scope_symbols(walrus=True)))
+        # self.assertEqual(['i', 'a'], list(FST('[i for a in b if (i := a)]').scope_symbols(walrus=True)))
 
         # SetComp
 
         self.assertEqual(['a'], list(FST('{a for a in b(c)}').scope_symbols()))
         self.assertEqual(['a', 'b', 'e'], list(FST('{a for b in c(d) for a in b(e)}').scope_symbols()))
 
-        self.assertEqual(['a'], list(FST('{i := a for a in (j := b)}').scope_symbols()))
-        self.assertEqual(['i', 'a'], list(FST('{i := a for a in (j := b)}').scope_symbols(walrus=True)))
+        self.assertEqual(['i', 'a'], list(FST('{i := a for a in (j := b)}').scope_symbols()))
+        # self.assertEqual(['i', 'a'], list(FST('{i := a for a in (j := b)}').scope_symbols(walrus=True)))
         self.assertEqual(['i', 'a'], list(FST('{i for a in b if (i := a)}').scope_symbols()))
-        self.assertEqual(['i', 'a'], list(FST('{i for a in b if (i := a)}').scope_symbols(walrus=True)))
+        # self.assertEqual(['i', 'a'], list(FST('{i for a in b if (i := a)}').scope_symbols(walrus=True)))
 
         # GeneratorExp
 
         self.assertEqual(['a'], list(FST('(a for a in b(c))').scope_symbols()))
         self.assertEqual(['a', 'b', 'e'], list(FST('(a for b in c(d) for a in b(e))').scope_symbols()))
 
-        self.assertEqual(['a'], list(FST('(i := a for a in (j := b))').scope_symbols()))
-        self.assertEqual(['i', 'a'], list(FST('(i := a for a in (j := b))').scope_symbols(walrus=True)))
+        self.assertEqual(['i', 'a'], list(FST('(i := a for a in (j := b))').scope_symbols()))
+        # self.assertEqual(['i', 'a'], list(FST('(i := a for a in (j := b))').scope_symbols(walrus=True)))
         self.assertEqual(['i', 'a'], list(FST('(i for a in b if (i := a))').scope_symbols()))
-        self.assertEqual(['i', 'a'], list(FST('(i for a in b if (i := a))').scope_symbols(walrus=True)))
+        # self.assertEqual(['i', 'a'], list(FST('(i for a in b if (i := a))').scope_symbols(walrus=True)))
 
         # DictComp
 
         self.assertEqual(['a'], list(FST('{a: a for a in b(c)}').scope_symbols()))
         self.assertEqual(['a', 'b', 'e'], list(FST('{a: a for b in c(d) for a in b(e)}').scope_symbols()))
 
-        self.assertEqual(['a'], list(FST('{(i := a): a for a in (j := b)}').scope_symbols()))
-        self.assertEqual(['i', 'a'], list(FST('{(i := a): a for a in (j := b)}').scope_symbols(walrus=True)))
+        self.assertEqual(['i', 'a'], list(FST('{(i := a): a for a in (j := b)}').scope_symbols()))
+        # self.assertEqual(['i', 'a'], list(FST('{(i := a): a for a in (j := b)}').scope_symbols(walrus=True)))
         self.assertEqual(['i', 'a'], list(FST('{i: a for a in b if (i := a)}').scope_symbols()))
-        self.assertEqual(['i', 'a'], list(FST('{i: a for a in b if (i := a)}').scope_symbols(walrus=True)))
+        # self.assertEqual(['i', 'a'], list(FST('{i: a for a in b if (i := a)}').scope_symbols(walrus=True)))
 
     def test_next_prev(self):
         fst = parse('a and b and c and d').body[0].value.f
