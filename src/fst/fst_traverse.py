@@ -188,25 +188,27 @@ def walk(
     scope: bool = False,
     back: bool = False,
 ) -> Generator[fst.FST, bool, None]:
-    r"""Walk `self` and descendants in syntactic order. When walking, you can `send(False)` to the generator to skip
-    recursion into the current child. `send(True)` to allow recursion into child if called with `recurse=False` or
-    `scope=True` would otherwise disallow it. Can send multiple times, last value sent takes effect.
+    r"""Walk `self` and descendants in syntactic order.
+
+    When walking, you can `send(False)` to the generator to skip recursion into the current child. `send(True)` will
+    allow recursion into child if called with `recurse=False` or `scope=True` would otherwise disallow it. Can send
+    multiple times, last value sent takes effect.
 
     The walk is defined forwards or backwards in that it returns a parent, then recurses into the children and walks
     those in the given direction, recursing into each child's children before continuing with siblings. Walking
     backwards will not generate the same sequence as `list(walk())[::-1]` due to this behavior.
 
     Node replacement and removal during the walk is supported with some caveats, the rules are:
-    - Do not do `raw` operations, they will most likely break the walk with a `RuntimeError. They may work in some
+    - Do not do `raw` operations, they will most likely break the walk with a `RuntimeError`. They may work in some
         situations but there are no guarantees.
     - The current node can always be removed, replaced or inserted before (if list field). If replaced the new children
         will be walked next unless you `send(False)` to the generator.
     - Previously walked nodes can likewise be removed, replaced or inserted before as long as the node is not in the
         current parent chain from this node to the root.
     - Sibling nodes of this one which have not been walked yet can be removed, replaced or inserted before but the new
-        nodes will not be walked.
-    - Sibling nodes of parent nodes which have not been walked yet can be removed, replacer or inserted before but the
-        new nodes will not be walked.
+        nodes will not be walked (and neither will the old if removed).
+    - Sibling nodes of parent nodes which have not been walked yet can be removed, replaced or inserted before but the
+        new nodes will not be walked (and neither will the old if removed).
 
     If all you want to do is walk all nodes without any bells or whistles then `AST.walk()` is faster than this. You can
     still get the `FST` nodes from that walk via the `.f` attribute.
@@ -218,11 +220,11 @@ def walk(
     enclosing scope). This remains true for whatever level of nesting of Comprehensions is recursed into.
 
     **Parameters:**
-    - `with_loc`: Return nodes depending on their location information.
-        - `False`: All nodes with or without location.
+    - `with_loc`: Return nodes depending on what location information they have.
+        - `False`: All nodes will be walked whether they have location or not.
         - `True`: Only nodes which have intrinsic `AST` locations and also larger computed location nodes like
             `comprehension`, `withitem`, `match_case` and `arguments` (the last one only if there are actually
-            arguments present). Operators not walked (even though they have computed location).
+            arguments present). Operators are not walked (even though they have computed location).
         - `'all'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
         - `'own'`: Only nodes with their own intrinsic `AST` locations, same as `True` but excludes those larger
@@ -410,7 +412,7 @@ def walk(
     # loop
 
     while stack:
-        if not (ast := stack.pop()):
+        if not (ast := stack.pop()):  # may be `None`s in there
             continue
 
         if not (fst_ := ast.f):  # if node has been removed or replaced then just continue walk
@@ -437,197 +439,198 @@ def walk(
             if recurse_:  # user did send(True), walk this child unconditionally
                 yield from fst_.walk(with_loc, self_=False, back=back)
 
-        else:  # if walking scope then check if we got to another scope and walk the things from that which are visible in our scope
-            if scope:
-                recurse_ = False
-                ast_cls = ast.__class__
+            continue
 
-                if ast_cls in ASTS_LEAF_FUNCDEF:
-                    args = ast.args
+        if scope:  # if walking scope then check if we got to another scope and walk the things from that which are visible in our scope
+            recurse_ = False
+            ast_cls = ast.__class__
 
-                    if back:
-                        stack.extend(ast.decorator_list)
+            if ast_cls in ASTS_LEAF_FUNCDEF:
+                args = ast.args
 
-                        for tp in getattr(ast, 'type_params', ()):  # type parameters
-                            if a := getattr(tp, 'bound', None):
-                                stack.append(a)
-                            if a := getattr(tp, 'default_value', None):
-                                stack.append(a)
+                if back:
+                    stack.extend(ast.decorator_list)
 
-                        nonkwargs = args.posonlyargs + args.args  # posonly and normal args, interleave annotations with defaults
-                        defaults = args.defaults[:]
-                        defaults[0:0] = [None] * (len(nonkwargs) - len(defaults))
+                    for tp in getattr(ast, 'type_params', ()):  # type parameters
+                        if a := getattr(tp, 'bound', None):
+                            stack.append(a)
+                        if a := getattr(tp, 'default_value', None):
+                            stack.append(a)
 
-                        for arg_, dflt in zip(nonkwargs, defaults, strict=True):
-                            if ann := arg_.annotation:
-                                stack.append(ann)
-                            if dflt:
-                                stack.append(dflt)
+                    nonkwargs = args.posonlyargs + args.args  # posonly and normal args, interleave annotations with defaults
+                    defaults = args.defaults[:]
+                    defaults[0:0] = [None] * (len(nonkwargs) - len(defaults))
 
-                        if (vararg := args.vararg) and (ann := vararg.annotation):
+                    for arg_, dflt in zip(nonkwargs, defaults, strict=True):
+                        if ann := arg_.annotation:
+                            stack.append(ann)
+                        if dflt:
+                            stack.append(dflt)
+
+                    if (vararg := args.vararg) and (ann := vararg.annotation):
+                        stack.append(ann)
+
+                    for arg_, dflt in zip(args.kwonlyargs, args.kw_defaults, strict=True):  # kwonly args and defaults
+                        if ann := arg_.annotation:
+                            stack.append(ann)
+                        if dflt:
+                            stack.append(dflt)
+
+                    if (kwarg := args.kwarg) and (ann := kwarg.annotation):
+                        stack.append(ann)
+
+                    if returns := ast.returns:
+                        stack.append(returns)
+
+                else:  # forward
+                    if returns := ast.returns:
+                        stack.append(returns)
+
+                    if (kwarg := args.kwarg) and (ann := kwarg.annotation):
+                        stack.append(ann)
+
+                    for arg_, dflt in reversed(list(zip(args.kwonlyargs, args.kw_defaults, strict=True))):  # kwonly args and defaults
+                        if dflt:
+                            stack.append(dflt)
+                        if ann := arg_.annotation:
                             stack.append(ann)
 
-                        for arg_, dflt in zip(args.kwonlyargs, args.kw_defaults, strict=True):  # kwonly args and defaults
-                            if ann := arg_.annotation:
-                                stack.append(ann)
-                            if dflt:
-                                stack.append(dflt)
+                    if (vararg := args.vararg) and (ann := vararg.annotation):
+                        stack.append(ann)
 
-                        if (kwarg := args.kwarg) and (ann := kwarg.annotation):
+                    nonkwargs = args.posonlyargs + args.args
+                    defaults = args.defaults[:]
+                    defaults[0:0] = [None] * (len(nonkwargs) - len(defaults))
+
+                    for arg_, dflt in reversed(list(zip(nonkwargs, defaults, strict=True))):  # posonly and normal args
+                        if dflt:
+                            stack.append(dflt)
+                        if ann := arg_.annotation:
                             stack.append(ann)
 
-                        if returns := ast.returns:
-                            stack.append(returns)
+                    for tp in getattr(ast, 'type_params', ())[::-1]:  # type parameters
+                        if a := getattr(tp, 'default_value', None):
+                            stack.append(a)
+                        if a := getattr(tp, 'bound', None):
+                            stack.append(a)
 
-                    else:  # forward
-                        if returns := ast.returns:
-                            stack.append(returns)
+                    stack.extend(ast.decorator_list[::-1])
 
-                        if (kwarg := args.kwarg) and (ann := kwarg.annotation):
-                            stack.append(ann)
+            elif ast_cls is ClassDef:
+                if back:
+                    stack.extend(ast.decorator_list)
 
-                        for arg_, dflt in reversed(list(zip(args.kwonlyargs, args.kw_defaults, strict=True))):  # kwonly args and defaults
-                            if dflt:
-                                stack.append(dflt)
-                            if ann := arg_.annotation:
-                                stack.append(ann)
+                    for tp in getattr(ast, 'type_params', ()):  # type parameters
+                        if a := getattr(tp, 'bound', None):
+                            stack.append(a)
+                        if a := getattr(tp, 'default_value', None):
+                            stack.append(a)
 
-                        if (vararg := args.vararg) and (ann := vararg.annotation):
-                            stack.append(ann)
+                    stack.extend(ast.bases)
+                    stack.extend(ast.keywords)
 
-                        nonkwargs = args.posonlyargs + args.args
-                        defaults = args.defaults[:]
-                        defaults[0:0] = [None] * (len(nonkwargs) - len(defaults))
+                else:  # forward
+                    stack.extend(ast.keywords[::-1])
+                    stack.extend(ast.bases[::-1])
 
-                        for arg_, dflt in reversed(list(zip(nonkwargs, defaults, strict=True))):  # posonly and normal args
-                            if dflt:
-                                stack.append(dflt)
-                            if ann := arg_.annotation:
-                                stack.append(ann)
+                    for tp in getattr(ast, 'type_params', ())[::-1]:  # type parameters
+                        if a := getattr(tp, 'default_value', None):
+                            stack.append(a)
+                        if a := getattr(tp, 'bound', None):
+                            stack.append(a)
 
-                        for tp in getattr(ast, 'type_params', ())[::-1]:  # type parameters
-                            if a := getattr(tp, 'default_value', None):
-                                stack.append(a)
-                            if a := getattr(tp, 'bound', None):
-                                stack.append(a)
+                    stack.extend(ast.decorator_list[::-1])
 
-                        stack.extend(ast.decorator_list[::-1])
+            elif ast_cls is Lambda:
+                args = ast.args
 
-                elif ast_cls is ClassDef:
-                    if back:
-                        stack.extend(ast.decorator_list)
+                if back:
+                    stack.extend(args.defaults)
+                    stack.extend(args.kw_defaults)
+                else:
+                    stack.extend(args.kw_defaults[::-1])
+                    stack.extend(args.defaults[::-1])
 
-                        for tp in getattr(ast, 'type_params', ()):  # type parameters
-                            if a := getattr(tp, 'bound', None):
-                                stack.append(a)
-                            if a := getattr(tp, 'default_value', None):
-                                stack.append(a)
+            elif ast_cls in (ListComp, SetComp, DictComp, GeneratorExp):
+                comp_first_iter = ast.generators[0].iter
 
-                        stack.extend(ast.bases)
-                        stack.extend(ast.keywords)
+                gen = fst_.walk(with_loc, self_=False, back=back)
 
-                    else:  # forward
-                        stack.extend(ast.keywords[::-1])
-                        stack.extend(ast.bases[::-1])
+                for f in gen:  # we want to return all NamedExpr.target and first top-level .iter, yeah, its ugly
+                    a = f.a
 
-                        for tp in getattr(ast, 'type_params', ())[::-1]:  # type parameters
-                            if a := getattr(tp, 'default_value', None):
-                                stack.append(a)
-                            if a := getattr(tp, 'bound', None):
-                                stack.append(a)
+                    if a is comp_first_iter:  # top-level iterator is in parent scope
+                        subrecurse = recurse
 
-                        stack.extend(ast.decorator_list[::-1])
+                        while (sent := (yield f)) is not None:
+                            subrecurse = sent
 
-                elif ast_cls is Lambda:
-                    args = ast.args
+                        if subrecurse:
+                            yield from f.walk(with_loc, self_=False, back=back)
 
-                    if back:
-                        stack.extend(args.defaults)
-                        stack.extend(args.kw_defaults)
-                    else:
-                        stack.extend(args.kw_defaults[::-1])
-                        stack.extend(args.defaults[::-1])
+                        gen.send(False)
 
-                elif ast_cls in (ListComp, SetComp, DictComp, GeneratorExp):
-                    comp_first_iter = ast.generators[0].iter
+                    elif (  # all NamedExprs are in parent scope
+                        f.parent.a.__class__ is NamedExpr
+                        and f.pfield.name == 'target'  # a.__class__ is Name
+                    ):
+                        subrecurse = recurse
 
-                    gen = fst_.walk(with_loc, self_=False, back=back)
+                        while (sent := (yield f)) is not None:
+                            subrecurse = sent
 
-                    for f in gen:  # we want to return all NamedExpr.target and first top-level .iter, yeah, its ugly
-                        a = f.a
-
-                        if a is comp_first_iter:  # top-level iterator is in parent scope
-                            subrecurse = recurse
-
-                            while (sent := (yield f)) is not None:
-                                subrecurse = sent
-
-                            if subrecurse:
-                                yield from f.walk(with_loc, self_=False, back=back)
-
+                        if not subrecurse:
                             gen.send(False)
 
-                        elif (  # all NamedExprs are in parent scope
-                            f.parent.a.__class__ is NamedExpr
-                            and f.pfield.name == 'target'  # a.__class__ is Name
-                        ):
-                            subrecurse = recurse
+            elif ast_cls is comprehension:  # this only comes from top-level *Comp, not ones encountered in a *Comp or GeneratorExp here
+                if back:
+                    stack.append(ast.target)
 
-                            while (sent := (yield f)) is not None:
-                                subrecurse = sent
+                    if (a := ast.iter) is not skip_iter:
+                        stack.append(a)
 
-                            if not subrecurse:
-                                gen.send(False)
-
-                elif ast_cls is comprehension:  # this only comes from top-level *Comp, not ones encountered in a *Comp or GeneratorExp here
-                    if back:
-                        stack.append(ast.target)
-
-                        if (a := ast.iter) is not skip_iter:
-                            stack.append(a)
-
-                        if a := ast.ifs:
-                            stack.extend(a)
-
-                    else:
-                        if a := ast.ifs:
-                            stack.extend(a)
-
-                        if (a := ast.iter) is not skip_iter:
-                            stack.append(a)
-
-                        stack.append(ast.target)
-
-                elif ast is scope_args:  # exclude defaults and kw_defaults from walk, ast is arguments
-                    if back:
-                        scope.extend(ast.posonlyargs)
-                        scope.extend(ast.args)
-                        scope.append(ast.vararg)
-                        scope.extend(ast.kwonlyargs)
-                        scope.append(ast.kwarg)
-
-                    else:
-                        scope.append(ast.kwarg)
-                        scope.extend(ast.kwonlyargs[::-1])
-                        scope.append(ast.vararg)
-                        scope.extend(ast.args[::-1])
-                        scope.extend(ast.posonlyargs[::-1])
-
-                elif ast_cls is arg:
-                    if fst_.parent.a is not scope_args:  # if arg not part of top-level node args then recurse normally
-                        recurse_ = True
-
-                elif ast_cls in ASTS_LEAF_TYPE_PARAM:
-                    if not (is_def and fst_.parent is self):  # leave recurse off for type annotations and defaults in top-level node
-                        recurse_ = True
+                    if a := ast.ifs:
+                        stack.extend(a)
 
                 else:
+                    if a := ast.ifs:
+                        stack.extend(a)
+
+                    if (a := ast.iter) is not skip_iter:
+                        stack.append(a)
+
+                    stack.append(ast.target)
+
+            elif ast is scope_args:  # exclude defaults and kw_defaults from walk, ast is arguments
+                if back:
+                    scope.extend(ast.posonlyargs)
+                    scope.extend(ast.args)
+                    scope.append(ast.vararg)
+                    scope.extend(ast.kwonlyargs)
+                    scope.append(ast.kwarg)
+
+                else:
+                    scope.append(ast.kwarg)
+                    scope.extend(ast.kwonlyargs[::-1])
+                    scope.append(ast.vararg)
+                    scope.extend(ast.args[::-1])
+                    scope.extend(ast.posonlyargs[::-1])
+
+            elif ast_cls is arg:
+                if fst_.parent.a is not scope_args:  # if arg not part of top-level node args then recurse normally
                     recurse_ = True
 
-            if recurse_:
-                children = syntax_ordered_children(ast)
+            elif ast_cls in ASTS_LEAF_TYPE_PARAM:
+                if not (is_def and fst_.parent is self):  # leave recurse off for type annotations and defaults in top-level node
+                    recurse_ = True
 
-                stack.extend(children if back else children[::-1])
+            else:
+                recurse_ = True
+
+        if recurse_:  # could have changed in scope stuff
+            children = syntax_ordered_children(ast)
+
+            stack.extend(children if back else children[::-1])
 
 
 def next(self: fst.FST, with_loc: bool | Literal['all', 'own'] = True) -> fst.FST | None:  # TODO; redo

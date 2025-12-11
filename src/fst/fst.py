@@ -469,7 +469,7 @@ class FST:
 
     @property
     def whole_loc(self) -> fstloc:
-        """Whole source location, from 0,0 to end of source. Works from any node (not just root)."""
+        """Whole source location, from (0, 0) to end of source. Works from any node (not just root)."""
 
         return fstloc(0, 0, len(ls := self.root._lines) - 1, len(ls[-1]))
 
@@ -1765,7 +1765,7 @@ class FST:
     def replace(self, code: Code | None, one: bool=True, **options) -> FST | None:  # -> replaced self or None if deleted
         """Replace or delete (if `code=None`, if possible) this node. Returns the new node for `self`, not the old
         replaced node, or `None` if was deleted or raw replaced and the old node disappeared. Cannot delete root node.
-        CAN replace root node, in which case the accessing `FST` node remains the same but the top-level `AST` and
+        **CAN** replace root node, in which case the accessing `FST` node remains the same but the top-level `AST` and
         source change.
 
         **WARNING!** If passing an `FST` then this is not guaranteed to become the new node. If you wish to continue
