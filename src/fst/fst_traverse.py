@@ -48,6 +48,8 @@ _ASTS_LEAF_ARGUMENTS_OR_EXPR_CONTEXT_OR_BOOLOP = {arguments,} | ASTS_LEAF_EXPR_C
 _ASTS_LEAF_ARGUMENTS_OR_EXPR_CONTEXT_OR_OP     = (_ASTS_LEAF_ARGUMENTS_OR_EXPR_CONTEXT_OR_BOOLOP | ASTS_LEAF_OPERATOR |
                                                   ASTS_LEAF_UNARYOP | ASTS_LEAF_CMPOP)
 
+_ASTS_LEAF_WALK_SCOPE = ASTS_LEAF_FUNCDEF | ASTS_LEAF_TYPE_PARAM | {ClassDef, Lambda, ListComp, SetComp, DictComp,
+                                                                    GeneratorExp, comprehension, arguments, arg}  # used in walk(scope=True) for a little optimization
 
 def _check_all_param(fst_: fst.FST, all: bool | Literal['loc'] | Container[AST]) -> bool:
     """Check 'all' parameter condition on node. Safe for low level because doesn't use `.loc` calculation machinery."""
@@ -746,15 +748,16 @@ def walk(
     ...         _ = f.elts[2].replace('new_post_parent')
     ...         _ = f.elts[1].elts[0].replace('new_pre_self')
     ...         _ = f.elts[1].elts[2].replace('new_post_self')
-    ...         _ = f.elts[1].elts[1].replace('new_child')
+    ...         _ = f.elts[1].elts[1].elts[0].replace('new_child')
     <List ROOT 0,0..0,57>  [pre_parent, [pre_self, [child], post_self], post_parent]
     <Name 0,1..0,11>       pre_parent
     <List 0,13..0,43>      [pre_self, [child], post_self]
     <Name 0,14..0,22>      pre_self
     <List 0,24..0,31>      [child]
+    <Name 0,33..0,42>      new_child
 
     >>> print(f.src)
-    [new_pre_parent, [new_pre_self, new_child, new_post_self], new_post_parent]
+    [new_pre_parent, [new_pre_self, [new_child], new_post_self], new_post_parent]
     """
 
     ast = self.a
@@ -898,6 +901,9 @@ def walk(
 
         if scope:  # if walking scope then check if we got to another scope and walk the things from that which are visible in our scope
             ast_cls = ast.__class__
+
+            # if ast_cls not in _ASTS_LEAF_WALK_SCOPE:  # early out
+            #     pass  # noop
 
             if ast_cls in ASTS_LEAF_FUNCDEF:
                 args = ast.args

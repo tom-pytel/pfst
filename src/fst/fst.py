@@ -226,6 +226,9 @@ _LOC_FUNCS = {  # quick lookup table for FST.loc
     NotIn:         _loc_op,
 }
 
+_ASTS_LEAF_SCOPE_SYMBOLS = ASTS_LEAF_DEF | ASTS_LEAF_TYPE_PARAM | {Name, arg, AugAssign, Import, ImportFrom, Nonlocal,
+                                                                   Global}  # used in scope_symbols() to optimize walk a tiny bit
+
 
 def _swizzle_getput_params(
     start: int | Literal['end'] | None,
@@ -2803,7 +2806,7 @@ class FST:
             syms_nonlocal = {}  # explicitly 'nonlocal'
             syms_walrus = set()  # this will only get NamedExpr.target if self is a Comprehension, only used for the symbol names
 
-        for f in self.walk(scope=True):
+        for f in self.walk(all=_ASTS_LEAF_SCOPE_SYMBOLS, scope=True):
             a = f.a
             a_cls = a.__class__
 
