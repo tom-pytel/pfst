@@ -341,9 +341,8 @@ Function:
 >>> def lambdas_to_defs(src):
 ...     fst = FST(src, 'exec')
 ...
-...     for f in fst.walk():
-...         if (f.is_Assign
-...             and f.value.is_Lambda
+...     for f in fst.walk({Assign}):
+...         if (f.value.is_Lambda
 ...             and f.targets[0].is_Name
 ...             and len(f.targets) == 1   # for demo purposes just deal with this case
 ...         ):
@@ -474,10 +473,8 @@ Function:
 >>> def isinstance_to_class_check(src):
 ...     fst = FST(src, 'exec')
 ...
-...     # list() because we will be replacing parent nodes
-...     for f in list(fst.walk()):
-...         if (f.is_Call
-...             and f.func.is_Name
+...     for f in fst.walk({Call}):
+...         if (f.func.is_Name
 ...             and f.func.id == 'isinstance'  # isinstance()
 ...         ):
 ...             ftest, ftype = f.args  # assume there are two for isinstance()
@@ -561,7 +558,8 @@ def is_valid_target(asts: AST | list[AST]) -> bool:
 
 ## Squash nested `with`s
 
-Slice operations make this easy enough. We only do synchronous `with` here as you can't mix sync with async anyway.
+Slice operations make this easy enough. We only do synchronous `with` here as you can't mix sync with async anyway. Yes
+the alignment is ugly, it will eventually be done properly, first priority was functional correctness.
 
 ```py
 >>> src = r"""
@@ -583,19 +581,15 @@ Slice operations make this easy enough. We only do synchronous `with` here as yo
 Function:
 
 ```py
->>> def squash_nested_withs(src):
+>>> def squash_nested_withs(src: str) -> str:
 ...     fst = FST(src, 'exec')
 ...
-...     # reversed because we want to squash upwards one after another
-...     for f in reversed([f for f in fst.walk() if f.is_stmt]):
-...         if (f.is_With              # we are a `with`, we don't do `async with` here
-...             and f.parent.is_With   # parent is another `with`
-...             and f.pfield.idx == 0  # we are first child (we know we are in `.body`)
-...         ):
-...             f.parent.items.extend(f.items.copy())
-...             f.parent.put_slice(
-...                 # we cut to remove previous comments since not overwriting
-...                 f.get_slice(trivia=('all+', 'block'), cut=True),
+...     for f in fst.walk({With}):  # we only get With nodes
+...         while f.body[0].is_With:  # first child is another With
+...             f.items.extend(f.body[0].items.copy())  # append child items to ours
+...
+...             f.put_slice(  # copy child body into our own
+...                 f.body[0].get_slice(trivia=('all+', 'block'), cut=True),
 ...                 trivia=(False, False),
 ...             )
 ...
@@ -674,7 +668,7 @@ Function:
 ...     fst = FST(src, 'exec')
 ...
 ...     for f in fst.walk():
-...         if (f.is_Assign
+...         if (f.is_Assign  # to show we can check here instead of passing to walk()
 ...             and f.value.is_ListComp
 ...             and f.targets[0].is_Name
 ...             and len(f.targets) == 1
@@ -806,12 +800,11 @@ Function:
 ...     blocks = []  # [[feq1, feq2, ...], [feq1, ...], ...]
 ...
 ...     # first we build up list of contiguous Assign nodes
-...     for f in fst.walk():
-...         if f.is_Assign:
-...             if not flast or f.col != flast.col or f.ln != flast.ln + 1:
-...                 blocks.append([])
+...     for f in fst.walk({Assign}):
+...         if not flast or f.col != flast.col or f.ln != flast.ln + 1:
+...             blocks.append([])
 ...
-...             blocks[-1].append(flast := f)
+...         blocks[-1].append(flast := f)
 ...
 ...     for block in blocks:
 ...         if len(block) > 1:

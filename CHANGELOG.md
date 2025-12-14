@@ -13,6 +13,7 @@
 
 ### Updated
 
+- `walk()` allows parent nodes to be modified
 - cleaned up and optimized traversal functions
 - optimized lots of `isinstance()` and `issubclass()` to check directly by class
 

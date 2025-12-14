@@ -5439,7 +5439,7 @@ def f[T: ftb, *U, **V]():
 
         self.assertEqual(fst.src, '[1, 2, 3]')
 
-        # error on replace raw which changes parent
+        # replace raw which changes parent doesn't error
 
         def test(f, all):
             for g in f.walk(all=all):
@@ -5447,16 +5447,19 @@ def f[T: ftb, *U, **V]():
                     g.replace('2', raw=True)
 
         f = FST('i = x + 1')
-        self.assertRaises(RuntimeError, test, f, False)
-        self.assertRaises(RuntimeError, test, f, True)
+        test(f, False)
+        test(f, True)
+        self.assertEqual('i = x + 2', f.src)
 
         f = FST('i = x + 1', 'stmt')
-        self.assertRaises(RuntimeError, test, f, False)
-        self.assertRaises(RuntimeError, test, f, True)
+        test(f, False)
+        test(f, True)
+        self.assertEqual('i = x + 2', f.src)
 
         f = FST('i = x + 1', 'exec')
-        self.assertRaises(RuntimeError, test, f, False)
-        self.assertRaises(RuntimeError, test, f, True)
+        test(f, False)
+        test(f, True)
+        self.assertEqual('i = x + 2', f.src)
 
         # this replace raw works because changes root AST
 
@@ -5522,27 +5525,19 @@ def f[T: ftb, *U, **V]():
         self.assertEqual('[1, 3]', f.src)
         f.verify()
 
-        # remove or replace parent's parent results in tree changed too much
+        # remove or replace parent's parent is fine
 
         f = FST('a + 1', 'exec')
-        err = None
-        try:
-            for g in f.walk():
-                if g.is_Name:
-                    g.parent.parent.remove()
-        except Exception as exc:
-            err = repr(exc)
-        self.assertEqual("RuntimeError('tree changed too much during walk')", err)
+        for g in f.walk():
+            if g.is_Name:
+                g.parent.parent.remove()
+        self.assertEqual('', f.src)
 
         f = FST('a + 1', 'exec')
-        err = None
-        try:
-            for g in f.walk():
-                if g.is_Name:
-                    g.parent.parent.replace('x * y')
-        except Exception as exc:
-            err = repr(exc)
-        self.assertEqual("RuntimeError('tree changed too much during walk')", err)
+        for g in f.walk():
+            if g.is_Name:
+                g.parent.parent.replace('x * y')
+        self.assertEqual('x * y', f.src)
 
         # replace nodes previously walked
 

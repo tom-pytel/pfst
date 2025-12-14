@@ -642,13 +642,14 @@ def walk(
     backwards will not generate the same sequence as `list(walk())[::-1]` due to this behavior.
 
     Node replacement and removal during the walk is supported with some caveats, the rules are:
-    - Do not do `raw` operations, they will most likely break the walk with a `RuntimeError`. They may work in some
-        situations but there are no guarantees.
+    - `raw` operations can change a lot of nodes and cause the walk to miss some you though would get walked, but they
+        will not cause the walk to break.
     - The current node can always be removed, replaced or inserted before (if list field). If replaced the new children
-        will be walked next unless you `send(False)` to the generator.
-    - Child nodes of the current node can be replaced and they will be walked.
-    - Previously walked nodes can likewise be removed, replaced or inserted before as long as the node is not in the
-        current parent chain from this node to the root.
+        will be walked next unless you explicitly `send(False)` to the generator.
+    - Child nodes of the current node can be replaced and they will be walked when the walk gets to them.
+    - Previously walked nodes can likewise be removed, replaced or inserted before.
+    - Replacing or removing a node in the current parent chain is allowed will cause the walk to continue at its
+        following siblings which were not removed.
     - Sibling nodes of either this node or any parents which have not been walked yet can be removed, replaced or
         inserted before but the new nodes will not be walked (and neither will any removed nodes).
 
@@ -734,8 +735,7 @@ def walk(
     new_a * (new_x.y + new_u[new_v])
 
     Replace nodes around us. The replacement doesn't have to be on the node being walked. Note how replacing a node
-    that hasn't been walked yet removes both that node **AND** the replacement node from the walk. We do not replace a
-    node in the current parent chain because that is not allowed and will break the walk in some cases. After the walk
+    that hasn't been walked yet removes both that node **AND** the replacement node from the walk. After the walk
     though, all nodes which were replaced have their new values.
 
     >>> f = FST('[pre_parent, [pre_self, [child], post_self], post_parent]')
@@ -758,6 +758,27 @@ def walk(
 
     >>> print(f.src)
     [new_pre_parent, [new_pre_self, [new_child], new_post_self], new_post_parent]
+
+    Replacing or removing a parent node is allowed and the walk will continue where it can.
+
+    >>> f = FST('[pre_grand, [pre_parent, [self], post_parent], post_grand]')
+
+    >>> for g in f.walk():
+    ...     print(f'{g!r:<23}{g.src[:58]}')
+    ...
+    ...     if g.src == 'self':
+    ...         g.parent.parent.remove()  # [pre_parent, [self], post_parent]
+    <List ROOT 0,0..0,58>  [pre_grand, [pre_parent, [self], post_parent], post_grand]
+    <Name 0,1..0,10>       pre_grand
+    <List 0,12..0,45>      [pre_parent, [self], post_parent]
+    <Name 0,13..0,23>      pre_parent
+    <List 0,25..0,31>      [self]
+    <Name 0,26..0,30>      self
+    <Name 0,12..0,22>      post_grand
+
+    >>> print(f.src)
+    [pre_grand, post_grand]
+
     """
 
     ast = self.a
@@ -769,19 +790,19 @@ def walk(
             while (sent := (yield self)) is not None:
                 recurse_ = sent
 
+            if not recurse_:
+                return
+
             if not (ast := self.a):
                 if not (parenta := self.parent.a):  # we know there is a parent because self.a is never set to None for a root node
-                    raise RuntimeError('tree changed too much during walk')
+                    return
 
                 if not (ast := self.pfield.get_default(parenta)):  # reget node at our astfield, if removed last element of list field or removable element of solo field then in this case walk is done because nothing left
                     return
 
                 self = ast.f
 
-            if not recurse_:
-                return
-
-            elif recurse_ is True:  # user changed their mind?!?
+            if recurse_ is True:  # user changed their mind?!?
                 recurse = True
                 scope = False
 
@@ -872,7 +893,7 @@ def walk(
         if not (ast := stack.pop()):  # may be `None`s in there
             continue
 
-        if not (fst_ := ast.f):  # if node has been removed or replaced then just continue walk
+        if not (fst_ := ast.f):  # if node was removed or replaced somewhere else then just continue walk
             continue
 
         if _check_all_param(fst_, all):
@@ -881,18 +902,20 @@ def walk(
             while (sent := (yield fst_)) is not None:
                 recurse_ = 1 if sent else False
 
+            if not recurse_:  # either send(False) or wasn't going to recurse anyways
+                continue
+
             if not (ast := fst_.a):  # has been modified by the player
                 if not (parenta := fst_.parent.a):
-                    raise RuntimeError('tree changed too much during walk')
+                    continue
 
                 if not (ast := fst_.pfield.get_default(parenta)):  # reget node at our astfield, if removed last element of list field or removable element of solo field then continue walk
                     continue
 
                 fst_ = ast.f  # otherwise possibly recurse into new node (unless user explicitly tells us not to with .send(False))
 
-            if recurse_ is not True:
-                if recurse_:  # user did send(True), walk this child unconditionally
-                    yield from fst_.walk(all, self_=False, back=back)
+            if recurse_ is not True:  # user did send(True), walk this child unconditionally
+                yield from fst_.walk(all, self_=False, back=back)
 
                 continue
 
