@@ -353,7 +353,7 @@ def add_lineconts(fst: FST) -> None:
     lines = fst._lines
     g = None
 
-    for f in (gen := fst.walk('all')):
+    for f in (gen := fst.walk('loc')):
         if f.is_stmtish or f.is_mod:
             continue
 
@@ -385,7 +385,7 @@ def add_lineconts(fst: FST) -> None:
 def add_semicolons(fst: FST) -> None:
     lines = fst._lines
 
-    for f in fst.walk(True, back=True):
+    for f in fst.walk(back=True):
         if not isinstance(f.a, ASTS_STMT_NONBLOCK):
             continue
 
@@ -425,7 +425,7 @@ def add_unicode(fst: FST) -> None:
 
         return i
 
-    for f in (gen := fst.walk(True)):
+    for f in (gen := fst.walk()):
         a = f.a
 
         if PYLT12 and isinstance(a, JoinedStr):
@@ -1115,7 +1115,7 @@ class VerifyCopy(Fuzzy):
     forever = False
 
     def fuzz_one(self, fst, fnm) -> bool:
-        for f in fst.walk('all'):
+        for f in fst.walk('loc'):
             if not is_parsable(f):  # because .verify() needs to parse
                 continue
 
@@ -1148,7 +1148,7 @@ class SynOrder(Fuzzy):
     def fuzz_one(self, fst, fnm) -> bool:
         bln, bcol = 0, 0
 
-        for f in (gen := fst.walk(True)):
+        for f in (gen := fst.walk()):
             if PYLT12 and isinstance(f.a, JoinedStr):  # these have no location info in py <3.12
                 gen.send(False)
 
@@ -1158,10 +1158,10 @@ class SynOrder(Fuzzy):
                 if not isinstance(f.a, (FormattedValue, Interpolation)):  # preceding '=' debug strings may start after these
                     assert f.bln > bln or (f.bln == bln and f.bcol >= bcol)
 
-                l2 = list(f.walk(True, self_=False, recurse=False))
+                l2 = list(f.walk(self_=False, recurse=False))
                 l, c = [], None
 
-                while c := f.next_child(c, True):
+                while c := f.next_child(c):
                     l.append(c)
 
                 try:
@@ -1176,7 +1176,7 @@ class SynOrder(Fuzzy):
                 l3 = l2[::-1]
                 l, c = [], None
 
-                while c := f.prev_child(c, True):
+                while c := f.prev_child(c):
                     l.append(c)
 
                 try:
@@ -1188,7 +1188,7 @@ class SynOrder(Fuzzy):
 
                     raise
 
-                l4 = list(f.walk(True, self_=False, recurse=False, back=True))
+                l4 = list(f.walk(self_=False, recurse=False, back=True))
 
                 # print('l3:', l3)
                 # print('l4:', l4)
@@ -1197,8 +1197,8 @@ class SynOrder(Fuzzy):
 
                 if isinstance(f.a, (FunctionDef, AsyncFunctionDef, ClassDef, Lambda, ListComp, SetComp, DictComp,
                                     GeneratorExp)):
-                    l5 = list(f.walk(True, self_=False, recurse=False, scope=True))
-                    l6 = list(f.walk(True, self_=False, recurse=False, scope=True, back=True))
+                    l5 = list(f.walk(self_=False, recurse=False, scope=True))
+                    l6 = list(f.walk(self_=False, recurse=False, scope=True, back=True))
 
                     # for g in l5: print(g)
                     # print('...')
@@ -1226,7 +1226,7 @@ class Reparse(Fuzzy):
     forever = False
 
     def fuzz_one(self, fst, fnm) -> bool:
-        for f in (gen := fst.walk()):
+        for f in (gen := fst.walk(all=True)):
             ast = f.a
 
             if isinstance(ast, expr_context):
@@ -1327,7 +1327,7 @@ class ReputOne(Fuzzy):
         backup = fst.copy()
         count = 0
 
-        for f in fst.walk(True, self_=False):
+        for f in fst.walk(self_=False):
 
             assert f.a is not None
 
@@ -1496,7 +1496,7 @@ class PutOne(Fuzzy):
         for pat in PATS:
             parts.add_all(pat.copy())
 
-        for f in fst.walk():
+        for f in fst.walk(all=True):
             if isinstance(f.a, (expr_context, mod)):#, FormattedValue, Interpolation)):
                 continue
 
@@ -1695,7 +1695,7 @@ class ReconcileRnd(Fuzzy):
         ast = fst.a
         parents = parents + [ast]
 
-        for f in fst.walk(self_=False, recurse=False):
+        for f in fst.walk(all=True, self_=False, recurse=False):
             if isinstance(f.a, exclude):
                 continue
 
@@ -1751,7 +1751,7 @@ class ReconcileRnd(Fuzzy):
     #     exclude      = self.master_parts.exclude
     #     ast          = fst.a
 
-    #     for f in fst.walk(True, self_=False, recurse=False):
+    #     for f in fst.walk(self_=False, recurse=False):
     #         if isinstance(f.a, exclude):
     #             continue
 
@@ -1864,7 +1864,7 @@ class ReconcileSame(Fuzzy):
     forever = False
 
     def walk_ast(self, ast: AST, fst: FST):
-        for f in fst.walk(self_=False, recurse=False):  # will have same nodes as ast
+        for f in fst.walk(all=True, self_=False, recurse=False):  # will have same nodes as ast
             if isinstance(a := f.a, (expr_context, mod)):#, FormattedValue, Interpolation)):
                 continue
 
@@ -1880,7 +1880,7 @@ class ReconcileSame(Fuzzy):
     def walk_fst(self, fst: FST):
         ast = fst.a
 
-        for f in fst.walk(self_=False, recurse=False):
+        for f in fst.walk(all=True, self_=False, recurse=False):
             if isinstance(a := f.a, (expr_context, mod)):#, FormattedValue, Interpolation)):
                 continue
 
@@ -1984,7 +1984,7 @@ class SliceStmtish(Fuzzy):
 
             stmtishs = []
 
-            for f in fst.walk(True):
+            for f in fst.walk():
                 if fstcat(f) in containers:
                     stmtishs.append(f)
 
@@ -2290,7 +2290,7 @@ class SliceExprish(Fuzzy):
 
         exprishs = []  # [('cat', FST), ...]
 
-        for f in (gen := fst.walk(True)):
+        for f in (gen := fst.walk()):
             if PYLT12 and isinstance(f.a, JoinedStr):
                 gen.send(False)
 

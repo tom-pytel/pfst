@@ -194,8 +194,6 @@ re_identifier_alias_only   = re.compile(rf'^(?:\*|{pat_identifier}(?:\.{pat_iden
 #   arguments     - interleaved `posonlyargs`/`args` and `defaults` (partially), interleaved `kwonlyargs` and `kw_defaults`
 #   Call          - type `Starred` can be in `args`, `arg=None` in `keywords` means double starred
 
-TYPE_PARAM_DEFAULT_VALUE_FIELD = (('default_value', 'expr?'),) if PYGE13 else ()
-
 FIELDS = dict([  # only leaf node types which get instantiated and checked with `is` and `in`, not base stuff like `cmpop` or `excepthandler`
     (Module,                   (('body', 'stmt*'), ('type_ignores', 'type_ignore*'))),
     (Interactive,              (('body', 'stmt*'),)),
@@ -315,9 +313,9 @@ FIELDS = dict([  # only leaf node types which get instantiated and checked with 
 
     (TypeIgnore,               (('lineno', 'int'), ('tag', 'string'))),
 
-    (TypeVar,                  (('name', 'identifier'), ('bound', 'expr?'), *TYPE_PARAM_DEFAULT_VALUE_FIELD)),
-    (ParamSpec,                (('name', 'identifier'), *TYPE_PARAM_DEFAULT_VALUE_FIELD)),
-    (TypeVarTuple,             (('name', 'identifier'), *TYPE_PARAM_DEFAULT_VALUE_FIELD)),
+    (TypeVar,                  (('name', 'identifier'), ('bound', 'expr?'), ('default_value', 'expr?'))),
+    (ParamSpec,                (('name', 'identifier'), ('default_value', 'expr?'))),
+    (TypeVarTuple,             (('name', 'identifier'), ('default_value', 'expr?'))),
 
     # our own SPECIAL SLICEs
 
@@ -1124,34 +1122,147 @@ def is_atom(
 # ......................................................................................................................
 # syntax orderding
 
-def _syntax_ordered_children_Call(ast: AST) -> list[AST]:
-    children = [ast.func]
-    args = ast.args
-    keywords = ast.keywords
-
-    if not args or not keywords or args[-1].__class__ is not Starred:
-        children.extend(args)
-        children.extend(keywords)
-
+def _syntax_ordered_children_ClassDef(ast: AST) -> list[AST]:
+    if PYGE12:
+        children = ast.decorator_list + ast.type_params
     else:
-        star = args[-1]
-        star_lineno = star.lineno
-        star_col_offset = star.col_offset
+        children = ast.decorator_list[:]
 
-        children.extend(args[:-1])
+    bases = ast.bases
+    kws = ast.keywords
 
-        for i, kw in enumerate(keywords):
-            if (lineno := kw.lineno) < star_lineno or ((lineno == star_lineno) and kw.col_offset < star_col_offset):
+    if not bases or not kws or bases[-1].__class__ is not Starred:
+        children.extend(bases)
+        children.extend(kws)
+
+    else:  # stars and keywords can be mixed
+        bases = bases[::-1]
+        kws = kws
+        kw = kws[0]
+        kw_pos = (kw.lineno, kw.col_offset)
+
+        while bases:
+            base = bases.pop()
+            base_pos = (base.lineno, base.col_offset)
+
+            if base_pos > kw_pos:  # first base found w pos after first keyword
+                break
+
+            children.append(base)
+
+        else:
+            children.extend(kws)
+            children.extend(ast.body)
+
+            return children
+
+        kws = kws[:0:-1]
+
+        while True:  # walk over the mixed portion putting the lower position element each time
+            children.append(kw)
+
+            while kws:
+                kw = kws.pop()
+                kw_pos = (kw.lineno, kw.col_offset)
+
+                if kw_pos > base_pos:
+                    break
+
                 children.append(kw)
 
             else:
-                children.append(star)
-                children.extend(keywords[i:])
+                children.append(base)
+                children.extend(bases[::-1])
 
                 break
 
+            children.append(base)
+
+            while bases:
+                base = bases.pop()
+                base_pos = (base.lineno, base.col_offset)
+
+                if base_pos > kw_pos:  # first base found w pos after first keyword
+                    break
+
+                children.append(base)
+
+            else:
+                children.append(kw)
+                children.extend(kws[::-1])
+
+                break
+
+    children.extend(ast.body)
+
+    return children
+
+
+def _syntax_ordered_children_Call(ast: AST) -> list[AST]:
+    children = [ast.func]
+    args = ast.args
+    kws = ast.keywords
+
+    if not args or not kws or args[-1].__class__ is not Starred:
+        children.extend(args)
+        children.extend(kws)
+
+    else:  # stars and keywords can be mixed
+        args = args[::-1]
+        kws = kws
+        kw = kws[0]
+        kw_pos = (kw.lineno, kw.col_offset)
+
+        while args:
+            arg = args.pop()
+            arg_pos = (arg.lineno, arg.col_offset)
+
+            if arg_pos > kw_pos:  # first arg found w pos after first keyword
+                break
+
+            children.append(arg)
+
         else:
-            children.append(star)
+            children.extend(kws)
+
+            return children
+
+        kws = kws[:0:-1]
+
+        while True:  # walk over the mixed portion putting the lower position element each time
+            children.append(kw)
+
+            while kws:
+                kw = kws.pop()
+                kw_pos = (kw.lineno, kw.col_offset)
+
+                if kw_pos > arg_pos:
+                    break
+
+                children.append(kw)
+
+            else:
+                children.append(arg)
+                children.extend(args[::-1])
+
+                break
+
+            children.append(arg)
+
+            while args:
+                arg = args.pop()
+                arg_pos = (arg.lineno, arg.col_offset)
+
+                if arg_pos > kw_pos:  # first arg found w pos after first keyword
+                    break
+
+                children.append(arg)
+
+            else:
+                children.append(kw)
+                children.extend(kws[::-1])
+
+                break
 
     return children
 
@@ -1219,14 +1330,13 @@ _syntax_ordered_children_ctx          = lambda ast: [ast.ctx]
 _syntax_ordered_children_value_ctx    = lambda ast: [ast.value, ast.ctx]
 
 _syntax_ordered_children_patterns     = lambda ast: ast.patterns.copy()
-_syntax_ordered_children_defval       = (lambda ast: [ast.default_value]) if PYGE13 else lambda ast: []
+_syntax_ordered_children_defval       = (lambda ast: [ast.default_value]) if PYGE13 else (lambda ast: [])
 
 if PYGE12:
-    _syntax_ordered_children_funcdef  = lambda ast: [*ast.decorator_list, *ast.type_params, ast.args, ast.returns, *ast.body]
-    _syntax_ordered_children_classdef = lambda ast: [*ast.decorator_list, *ast.type_params, *ast.bases, *ast.keywords, *ast.body]
+    _syntax_ordered_children_funcdef  = lambda ast: [*ast.decorator_list, *ast.type_params, ast.args, ast.returns,
+                                                     *ast.body]
 else:
     _syntax_ordered_children_funcdef  = lambda ast: [*ast.decorator_list, ast.args, ast.returns, *ast.body]
-    _syntax_ordered_children_classdef = lambda ast: [*ast.decorator_list, *ast.bases, *ast.keywords, *ast.body]
 
 _SYNTAX_ORDERED_CHILDREN = {
     # quick optimized get
@@ -1237,7 +1347,7 @@ _SYNTAX_ORDERED_CHILDREN = {
     FunctionType:       lambda ast: [*ast.argtypes, ast.returns],
     FunctionDef:        _syntax_ordered_children_funcdef,
     AsyncFunctionDef:   _syntax_ordered_children_funcdef,
-    ClassDef:           _syntax_ordered_children_classdef,
+    ClassDef:           _syntax_ordered_children_ClassDef,
     Return:             _syntax_ordered_children_value,
     Delete:             lambda ast: ast.targets.copy(),
     Assign:             lambda ast: [*ast.targets, ast.value],
@@ -1280,8 +1390,8 @@ _SYNTAX_ORDERED_CHILDREN = {
     Yield:              _syntax_ordered_children_value,
     YieldFrom:          _syntax_ordered_children_value,
     Compare:            lambda ast: ([ast.left, *chain_from_iterable(zip(ops, ast.comparators, strict=True))]
-                                   if len(ops := ast.ops) != 1 else
-                                   [ast.left, ops[0], ast.comparators[0]]),
+                                     if len(ops := ast.ops) != 1 else
+                                     [ast.left, ops[0], ast.comparators[0]]),
     Call:               _syntax_ordered_children_Call,
     FormattedValue:     _syntax_ordered_children_fmtval,
     Interpolation:      _syntax_ordered_children_fmtval,

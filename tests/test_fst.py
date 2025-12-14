@@ -4856,7 +4856,7 @@ if 1:  # 1
         a = parse("""
 def f(a, b=1, *c, d=2, **e): pass
             """.strip()).body[0].args
-        l = list(a.f.walk(True))
+        l = list(a.f.walk())
         self.assertIs(l[0], a.f)
         self.assertIs(l[1], a.args[0].f)
         self.assertIs(l[2], a.args[1].f)
@@ -4869,7 +4869,7 @@ def f(a, b=1, *c, d=2, **e): pass
         a = parse("""
 def f(*, a, b, c=1, d=2, **e): pass
             """.strip()).body[0].args
-        l = list(a.f.walk(True))
+        l = list(a.f.walk())
         self.assertIs(l[0], a.f)
         self.assertIs(l[1], a.kwonlyargs[0].f)
         self.assertIs(l[2], a.kwonlyargs[1].f)
@@ -4884,7 +4884,7 @@ def f(*, a, b, c=1, d=2, **e): pass
         a = parse("""
 def f(a, b=1, /, c=2, d=3, *e, f=4, **g): pass
             """.strip()).body[0].args
-        l = list(a.f.walk(True))
+        l = list(a.f.walk())
         self.assertIs(l[0], a.f)
         self.assertIs(l[1], a.posonlyargs[0].f)
         self.assertIs(l[2], a.posonlyargs[1].f)
@@ -4901,7 +4901,7 @@ def f(a, b=1, /, c=2, d=3, *e, f=4, **g): pass
         a = parse("""
 def f(a=1, /, b=2): pass
             """.strip()).body[0].args
-        l = list(a.f.walk(True))
+        l = list(a.f.walk())
         self.assertIs(l[0], a.f)
         self.assertIs(l[1], a.posonlyargs[0].f)
         self.assertIs(l[2], a.defaults[0].f)
@@ -4911,7 +4911,7 @@ def f(a=1, /, b=2): pass
         a = parse("""
 call(a, b=1, *c, d=2, **e)
             """.strip()).body[0].value
-        l = list(a.f.walk(True))
+        l = list(a.f.walk())
         self.assertIs(l[0], a.f)
         self.assertIs(l[1], a.func.f)
         self.assertIs(l[2], a.args[0].f)
@@ -4928,7 +4928,7 @@ call(a, b=1, *c, d=2, **e)
 i = 1
 self.save_reduce(obj=obj, *rv)
             """.strip()).body[1].value
-        l = list(a.f.walk(True))
+        l = list(a.f.walk())
         self.assertIs(l[0], a.f)
         self.assertIs(l[1], a.func.f)
         self.assertIs(l[2], a.func.value.f)
@@ -4938,11 +4938,11 @@ self.save_reduce(obj=obj, *rv)
         self.assertIs(l[6], a.args[0].value.f)
 
         f = parse('[] + [i for i in l]').body[0].value.f
-        self.assertEqual(12, len(list(f.walk(False))))
-        self.assertEqual(8, len(list(f.walk('all'))))
-        self.assertEqual(7, len(list(f.walk(True))))
+        self.assertEqual(12, len(list(f.walk(True))))
+        self.assertEqual(8, len(list(f.walk('loc'))))
+        self.assertEqual(7, len(list(f.walk(False))))
         # self.assertEqual(1, len(list(f.walk('allown'))))  # doesn't support
-        self.assertEqual(4, len(list(f.walk('own'))))
+        # self.assertEqual(4, len(list(f.walk('own'))))
 
     def test_walk_scope(self):
         fst = FST.fromsrc("""
@@ -4962,7 +4962,7 @@ def f(a, /, b, *c, d, **e):
                          [f.a.arg for f in fst.walk(scope=True) if isinstance(f.a, arg)])
 
         l = []
-        for f in (gen := fst.walk(True, scope=True)):
+        for f in (gen := fst.walk(scope=True)):
             if isinstance(f.a, Name):
                 l.append(f.a.id)
             elif isinstance(f.a, ClassDef):
@@ -4996,7 +4996,7 @@ def f(a, /, b, *c, d, **e):
         # walrus in comprehensions
 
         def walkscope(fst_, back=False):#, walrus=None):
-            return '\n'.join(f'{str(f):<32} {f.src}' for f in fst_.walk(True, scope=True, back=back))#, walrus=walrus))
+            return '\n'.join(f'{str(f):<32} {f.src}' for f in fst_.walk(scope=True, back=back))#, walrus=walrus))
 
         self.assertEqual(walkscope(FST('z = [i := a for a in b(d := c) if (e := a)]')), '''
 <Assign ROOT 0,0..0,43>          z = [i := a for a in b(d := c) if (e := a)]
@@ -5154,8 +5154,8 @@ def f(a, /, b, *c, d, **e):
 #             '''.strip())
 
         # f = FST('a := b')
-        # self.assertEqual([f, f.value], list(f.walk(True, walrus=False)))
-        # self.assertEqual([f.target], list(f.target.walk(True, walrus=False)))  # walking NamedExpr.target always returns it regardless
+        # self.assertEqual([f, f.value], list(f.walk(walrus=False)))
+        # self.assertEqual([f.target], list(f.target.walk(walrus=False)))  # walking NamedExpr.target always returns it regardless
 
         # funcdef arguments
 
@@ -5441,8 +5441,8 @@ def f[T: ftb, *U, **V]():
 
         # error on replace raw which changes parent
 
-        def test(f, with_loc):
-            for g in f.walk(True):
+        def test(f, all):
+            for g in f.walk(all=all):
                 if g.is_Constant:
                     g.replace('2', raw=True)
 
@@ -5468,7 +5468,7 @@ def f[T: ftb, *U, **V]():
         # replace root
 
         a = (f := FST('a')).a
-        for g in f.walk(True):
+        for g in f.walk():
             g.replace('1')
         self.assertIsNone(a.f)
         self.assertIsNot(f.a, a)
@@ -5478,23 +5478,23 @@ def f[T: ftb, *U, **V]():
 
         f = FST('a + b')
         ns = []
-        for g in f.walk():
+        for g in f.walk(True):
             if g.is_BinOp:
                 g.replace('x * y')  # replace and continue walk into new node
             else:
                 ns.append(g.src)
-        self.assertEqual(['x', None, '*', 'y', None], ns)  # should be newly replaced child nodes (including ctx)
+        self.assertEqual(['x', '', '*', 'y', ''], ns)  # should be newly replaced child nodes (including ctx)
         self.assertEqual('x * y', f.src)
         f.verify()
 
         f = FST('a + b', 'Expr')  # doesn't replace root but just below it
         ns = []
-        for g in f.walk():
+        for g in f.walk(True):
             if g.is_BinOp:
                 g.replace('x * y')  # replace and continue walk into new node
             else:
                 ns.append(g.src)
-        self.assertEqual(['a + b', 'x', None, '*', 'y', None], ns)  # first node is original expr
+        self.assertEqual(['a + b', 'x', '', '*', 'y', ''], ns)  # first node is original expr
         self.assertEqual('x * y', f.src)
         f.verify()
 
@@ -5515,7 +5515,7 @@ def f[T: ftb, *U, **V]():
 
         f = FST('[1, b, 3]')
         ns = []
-        for g in f.elts[1].walk(True):
+        for g in f.elts[1].walk():
             ns.append(g.src)
             g.remove()
         self.assertEqual(['b'], ns)
@@ -5547,7 +5547,7 @@ def f[T: ftb, *U, **V]():
         # replace nodes previously walked
 
         f = FST('a + 1\na + 1\na + 1')
-        for g in f.walk(True):
+        for g in f.walk():
             if g.is_Constant:
                 if (idx := g.parent.parent.pfield.idx):  # g.BinOp.Expr.pfield.idx (in Module)
                     f.put('b', idx - 1)  # replace previous stmt to ours
@@ -5558,7 +5558,7 @@ def f[T: ftb, *U, **V]():
 
         f = FST('[1, b, 3]')
         ns = []
-        for g in f.walk(True, self_=False):
+        for g in f.walk(self_=False):
             ns.append(g.src)
             if g.is_Name:
                 g.next().replace('4')
@@ -5568,7 +5568,7 @@ def f[T: ftb, *U, **V]():
 
         f = FST('[1, b, 3]')
         ns = []
-        for g in f.walk(True, self_=False):
+        for g in f.walk(self_=False):
             ns.append(g.src)
             if g.is_Name:
                 g.next().remove()
@@ -5580,7 +5580,7 @@ def f[T: ftb, *U, **V]():
 
         f = FST('a + b\nc + 1\nd + e\ny')
         ns = []
-        for g in f.walk(True, self_=False):
+        for g in f.walk(self_=False):
             ns.append(g.src)
             if g.is_Constant:
                 g.parent.parent.next().replace('x')  # g.BinOp.Expr.next()
@@ -5590,7 +5590,7 @@ def f[T: ftb, *U, **V]():
 
         f = FST('a + b\nc + 1\nd + e\ny')
         ns = []
-        for g in f.walk(True, self_=False):
+        for g in f.walk(self_=False):
             ns.append(g.src)
             if g.is_Constant:
                 g.parent.parent.next().remove()  # g.BinOp.Expr.next()
@@ -5764,47 +5764,39 @@ class cls(a, b=c):
         self.assertEqual(['i', 'a'], list(FST('{i: a for a in b if (i := a)}').scope_symbols()))
         # self.assertEqual(['i', 'a'], list(FST('{i: a for a in b if (i := a)}').scope_symbols(walrus=True)))
 
-    def test_next_prev(self):
+    def test_next_prev_child(self):
         fst = parse('a and b and c and d').body[0].value.f
         a = fst.a
         f = None
-        self.assertIs((f := fst.next_child(f, True)), a.values[0].f)
-        self.assertIs((f := fst.next_child(f, True)), a.values[1].f)
-        self.assertIs((f := fst.next_child(f, True)), a.values[2].f)
-        self.assertIs((f := fst.next_child(f, True)), a.values[3].f)
-        self.assertIs((f := fst.next_child(f, True)), None)
-        f = None
-        self.assertIs((f := fst.next_child(f, False)), a.op.f)
         self.assertIs((f := fst.next_child(f, False)), a.values[0].f)
         self.assertIs((f := fst.next_child(f, False)), a.values[1].f)
         self.assertIs((f := fst.next_child(f, False)), a.values[2].f)
         self.assertIs((f := fst.next_child(f, False)), a.values[3].f)
         self.assertIs((f := fst.next_child(f, False)), None)
         f = None
-        self.assertIs((f := fst.prev_child(f, True)), a.values[3].f)
-        self.assertIs((f := fst.prev_child(f, True)), a.values[2].f)
-        self.assertIs((f := fst.prev_child(f, True)), a.values[1].f)
-        self.assertIs((f := fst.prev_child(f, True)), a.values[0].f)
-        self.assertIs((f := fst.prev_child(f, True)), None)
+        self.assertIs((f := fst.next_child(f, True)), a.op.f)
+        self.assertIs((f := fst.next_child(f, True)), a.values[0].f)
+        self.assertIs((f := fst.next_child(f, True)), a.values[1].f)
+        self.assertIs((f := fst.next_child(f, True)), a.values[2].f)
+        self.assertIs((f := fst.next_child(f, True)), a.values[3].f)
+        self.assertIs((f := fst.next_child(f, True)), None)
         f = None
         self.assertIs((f := fst.prev_child(f, False)), a.values[3].f)
         self.assertIs((f := fst.prev_child(f, False)), a.values[2].f)
         self.assertIs((f := fst.prev_child(f, False)), a.values[1].f)
         self.assertIs((f := fst.prev_child(f, False)), a.values[0].f)
-        self.assertIs((f := fst.prev_child(f, False)), a.op.f)
         self.assertIs((f := fst.prev_child(f, False)), None)
+        f = None
+        self.assertIs((f := fst.prev_child(f, True)), a.values[3].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.values[2].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.values[1].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.values[0].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.op.f)
+        self.assertIs((f := fst.prev_child(f, True)), None)
 
         if PYGE12:
             fst = parse('@deco\ndef f[T, U](a, /, b: int, *, c: int = 2) -> str: pass').body[0].f
             a = fst.a
-            f = None
-            self.assertIs((f := fst.next_child(f, True)), a.decorator_list[0].f)
-            self.assertIs((f := fst.next_child(f, True)), a.type_params[0].f)
-            self.assertIs((f := fst.next_child(f, True)), a.type_params[1].f)
-            self.assertIs((f := fst.next_child(f, True)), a.args.f)
-            self.assertIs((f := fst.next_child(f, True)), a.returns.f)
-            self.assertIs((f := fst.next_child(f, True)), a.body[0].f)
-            self.assertIs((f := fst.next_child(f, True)), None)
             f = None
             self.assertIs((f := fst.next_child(f, False)), a.decorator_list[0].f)
             self.assertIs((f := fst.next_child(f, False)), a.type_params[0].f)
@@ -5814,13 +5806,13 @@ class cls(a, b=c):
             self.assertIs((f := fst.next_child(f, False)), a.body[0].f)
             self.assertIs((f := fst.next_child(f, False)), None)
             f = None
-            self.assertIs((f := fst.prev_child(f, True)), a.body[0].f)
-            self.assertIs((f := fst.prev_child(f, True)), a.returns.f)
-            self.assertIs((f := fst.prev_child(f, True)), a.args.f)
-            self.assertIs((f := fst.prev_child(f, True)), a.type_params[1].f)
-            self.assertIs((f := fst.prev_child(f, True)), a.type_params[0].f)
-            self.assertIs((f := fst.prev_child(f, True)), a.decorator_list[0].f)
-            self.assertIs((f := fst.prev_child(f, True)), None)
+            self.assertIs((f := fst.next_child(f, True)), a.decorator_list[0].f)
+            self.assertIs((f := fst.next_child(f, True)), a.type_params[0].f)
+            self.assertIs((f := fst.next_child(f, True)), a.type_params[1].f)
+            self.assertIs((f := fst.next_child(f, True)), a.args.f)
+            self.assertIs((f := fst.next_child(f, True)), a.returns.f)
+            self.assertIs((f := fst.next_child(f, True)), a.body[0].f)
+            self.assertIs((f := fst.next_child(f, True)), None)
             f = None
             self.assertIs((f := fst.prev_child(f, False)), a.body[0].f)
             self.assertIs((f := fst.prev_child(f, False)), a.returns.f)
@@ -5829,15 +5821,17 @@ class cls(a, b=c):
             self.assertIs((f := fst.prev_child(f, False)), a.type_params[0].f)
             self.assertIs((f := fst.prev_child(f, False)), a.decorator_list[0].f)
             self.assertIs((f := fst.prev_child(f, False)), None)
+            f = None
+            self.assertIs((f := fst.prev_child(f, True)), a.body[0].f)
+            self.assertIs((f := fst.prev_child(f, True)), a.returns.f)
+            self.assertIs((f := fst.prev_child(f, True)), a.args.f)
+            self.assertIs((f := fst.prev_child(f, True)), a.type_params[1].f)
+            self.assertIs((f := fst.prev_child(f, True)), a.type_params[0].f)
+            self.assertIs((f := fst.prev_child(f, True)), a.decorator_list[0].f)
+            self.assertIs((f := fst.prev_child(f, True)), None)
 
         fst = parse('@deco\ndef f(a, /, b: int, *, c: int = 2) -> str: pass').body[0].f
         a = fst.a
-        f = None
-        self.assertIs((f := fst.next_child(f, True)), a.decorator_list[0].f)
-        self.assertIs((f := fst.next_child(f, True)), a.args.f)
-        self.assertIs((f := fst.next_child(f, True)), a.returns.f)
-        self.assertIs((f := fst.next_child(f, True)), a.body[0].f)
-        self.assertIs((f := fst.next_child(f, True)), None)
         f = None
         self.assertIs((f := fst.next_child(f, False)), a.decorator_list[0].f)
         self.assertIs((f := fst.next_child(f, False)), a.args.f)
@@ -5845,59 +5839,59 @@ class cls(a, b=c):
         self.assertIs((f := fst.next_child(f, False)), a.body[0].f)
         self.assertIs((f := fst.next_child(f, False)), None)
         f = None
-        self.assertIs((f := fst.prev_child(f, True)), a.body[0].f)
-        self.assertIs((f := fst.prev_child(f, True)), a.returns.f)
-        self.assertIs((f := fst.prev_child(f, True)), a.args.f)
-        self.assertIs((f := fst.prev_child(f, True)), a.decorator_list[0].f)
-        self.assertIs((f := fst.prev_child(f, True)), None)
+        self.assertIs((f := fst.next_child(f, True)), a.decorator_list[0].f)
+        self.assertIs((f := fst.next_child(f, True)), a.args.f)
+        self.assertIs((f := fst.next_child(f, True)), a.returns.f)
+        self.assertIs((f := fst.next_child(f, True)), a.body[0].f)
+        self.assertIs((f := fst.next_child(f, True)), None)
         f = None
         self.assertIs((f := fst.prev_child(f, False)), a.body[0].f)
         self.assertIs((f := fst.prev_child(f, False)), a.returns.f)
         self.assertIs((f := fst.prev_child(f, False)), a.args.f)
         self.assertIs((f := fst.prev_child(f, False)), a.decorator_list[0].f)
         self.assertIs((f := fst.prev_child(f, False)), None)
+        f = None
+        self.assertIs((f := fst.prev_child(f, True)), a.body[0].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.returns.f)
+        self.assertIs((f := fst.prev_child(f, True)), a.args.f)
+        self.assertIs((f := fst.prev_child(f, True)), a.decorator_list[0].f)
+        self.assertIs((f := fst.prev_child(f, True)), None)
 
         fst = parse('a <= b == c >= d').body[0].value.f
         a = fst.a
         f = None
-        self.assertIs((f := fst.next_child(f, True)), a.left.f)
-        self.assertIs((f := fst.next_child(f, True)), a.comparators[0].f)
-        self.assertIs((f := fst.next_child(f, True)), a.comparators[1].f)
-        self.assertIs((f := fst.next_child(f, True)), a.comparators[2].f)
-        self.assertIs((f := fst.next_child(f, True)), None)
-        f = None
         self.assertIs((f := fst.next_child(f, False)), a.left.f)
-        self.assertIs((f := fst.next_child(f, False)), a.ops[0].f)
         self.assertIs((f := fst.next_child(f, False)), a.comparators[0].f)
-        self.assertIs((f := fst.next_child(f, False)), a.ops[1].f)
         self.assertIs((f := fst.next_child(f, False)), a.comparators[1].f)
-        self.assertIs((f := fst.next_child(f, False)), a.ops[2].f)
         self.assertIs((f := fst.next_child(f, False)), a.comparators[2].f)
         self.assertIs((f := fst.next_child(f, False)), None)
         f = None
-        self.assertIs((f := fst.prev_child(f, True)), a.comparators[2].f)
-        self.assertIs((f := fst.prev_child(f, True)), a.comparators[1].f)
-        self.assertIs((f := fst.prev_child(f, True)), a.comparators[0].f)
-        self.assertIs((f := fst.prev_child(f, True)), a.left.f)
-        self.assertIs((f := fst.prev_child(f, True)), None)
+        self.assertIs((f := fst.next_child(f, True)), a.left.f)
+        self.assertIs((f := fst.next_child(f, True)), a.ops[0].f)
+        self.assertIs((f := fst.next_child(f, True)), a.comparators[0].f)
+        self.assertIs((f := fst.next_child(f, True)), a.ops[1].f)
+        self.assertIs((f := fst.next_child(f, True)), a.comparators[1].f)
+        self.assertIs((f := fst.next_child(f, True)), a.ops[2].f)
+        self.assertIs((f := fst.next_child(f, True)), a.comparators[2].f)
+        self.assertIs((f := fst.next_child(f, True)), None)
         f = None
         self.assertIs((f := fst.prev_child(f, False)), a.comparators[2].f)
-        self.assertIs((f := fst.prev_child(f, False)), a.ops[2].f)
         self.assertIs((f := fst.prev_child(f, False)), a.comparators[1].f)
-        self.assertIs((f := fst.prev_child(f, False)), a.ops[1].f)
         self.assertIs((f := fst.prev_child(f, False)), a.comparators[0].f)
-        self.assertIs((f := fst.prev_child(f, False)), a.ops[0].f)
         self.assertIs((f := fst.prev_child(f, False)), a.left.f)
         self.assertIs((f := fst.prev_child(f, False)), None)
+        f = None
+        self.assertIs((f := fst.prev_child(f, True)), a.comparators[2].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.ops[2].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.comparators[1].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.ops[1].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.comparators[0].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.ops[0].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.left.f)
+        self.assertIs((f := fst.prev_child(f, True)), None)
 
         fst = parse('match a:\n case {1: a, 2: b, **rest}: pass').body[0].cases[0].pattern.f
         a = fst.a
-        f = None
-        self.assertIs((f := fst.next_child(f, True)), a.keys[0].f)
-        self.assertIs((f := fst.next_child(f, True)), a.patterns[0].f)
-        self.assertIs((f := fst.next_child(f, True)), a.keys[1].f)
-        self.assertIs((f := fst.next_child(f, True)), a.patterns[1].f)
-        self.assertIs((f := fst.next_child(f, True)), None)
         f = None
         self.assertIs((f := fst.next_child(f, False)), a.keys[0].f)
         self.assertIs((f := fst.next_child(f, False)), a.patterns[0].f)
@@ -5905,27 +5899,26 @@ class cls(a, b=c):
         self.assertIs((f := fst.next_child(f, False)), a.patterns[1].f)
         self.assertIs((f := fst.next_child(f, False)), None)
         f = None
-        self.assertIs((f := fst.prev_child(f, True)), a.patterns[1].f)
-        self.assertIs((f := fst.prev_child(f, True)), a.keys[1].f)
-        self.assertIs((f := fst.prev_child(f, True)), a.patterns[0].f)
-        self.assertIs((f := fst.prev_child(f, True)), a.keys[0].f)
-        self.assertIs((f := fst.prev_child(f, True)), None)
+        self.assertIs((f := fst.next_child(f, True)), a.keys[0].f)
+        self.assertIs((f := fst.next_child(f, True)), a.patterns[0].f)
+        self.assertIs((f := fst.next_child(f, True)), a.keys[1].f)
+        self.assertIs((f := fst.next_child(f, True)), a.patterns[1].f)
+        self.assertIs((f := fst.next_child(f, True)), None)
         f = None
         self.assertIs((f := fst.prev_child(f, False)), a.patterns[1].f)
         self.assertIs((f := fst.prev_child(f, False)), a.keys[1].f)
         self.assertIs((f := fst.prev_child(f, False)), a.patterns[0].f)
         self.assertIs((f := fst.prev_child(f, False)), a.keys[0].f)
         self.assertIs((f := fst.prev_child(f, False)), None)
+        f = None
+        self.assertIs((f := fst.prev_child(f, True)), a.patterns[1].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.keys[1].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.patterns[0].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.keys[0].f)
+        self.assertIs((f := fst.prev_child(f, True)), None)
 
         fst = parse('match a:\n case cls(1, 2, a=3, b=4): pass').body[0].cases[0].pattern.f
         a = fst.a
-        f = None
-        self.assertIs((f := fst.next_child(f, True)), a.cls.f)
-        self.assertIs((f := fst.next_child(f, True)), a.patterns[0].f)
-        self.assertIs((f := fst.next_child(f, True)), a.patterns[1].f)
-        self.assertIs((f := fst.next_child(f, True)), a.kwd_patterns[0].f)
-        self.assertIs((f := fst.next_child(f, True)), a.kwd_patterns[1].f)
-        self.assertIs((f := fst.next_child(f, True)), None)
         f = None
         self.assertIs((f := fst.next_child(f, False)), a.cls.f)
         self.assertIs((f := fst.next_child(f, False)), a.patterns[0].f)
@@ -5934,12 +5927,12 @@ class cls(a, b=c):
         self.assertIs((f := fst.next_child(f, False)), a.kwd_patterns[1].f)
         self.assertIs((f := fst.next_child(f, False)), None)
         f = None
-        self.assertIs((f := fst.prev_child(f, True)), a.kwd_patterns[1].f)
-        self.assertIs((f := fst.prev_child(f, True)), a.kwd_patterns[0].f)
-        self.assertIs((f := fst.prev_child(f, True)), a.patterns[1].f)
-        self.assertIs((f := fst.prev_child(f, True)), a.patterns[0].f)
-        self.assertIs((f := fst.prev_child(f, True)), a.cls.f)
-        self.assertIs((f := fst.prev_child(f, True)), None)
+        self.assertIs((f := fst.next_child(f, True)), a.cls.f)
+        self.assertIs((f := fst.next_child(f, True)), a.patterns[0].f)
+        self.assertIs((f := fst.next_child(f, True)), a.patterns[1].f)
+        self.assertIs((f := fst.next_child(f, True)), a.kwd_patterns[0].f)
+        self.assertIs((f := fst.next_child(f, True)), a.kwd_patterns[1].f)
+        self.assertIs((f := fst.next_child(f, True)), None)
         f = None
         self.assertIs((f := fst.prev_child(f, False)), a.kwd_patterns[1].f)
         self.assertIs((f := fst.prev_child(f, False)), a.kwd_patterns[0].f)
@@ -5947,11 +5940,68 @@ class cls(a, b=c):
         self.assertIs((f := fst.prev_child(f, False)), a.patterns[0].f)
         self.assertIs((f := fst.prev_child(f, False)), a.cls.f)
         self.assertIs((f := fst.prev_child(f, False)), None)
+        f = None
+        self.assertIs((f := fst.prev_child(f, True)), a.kwd_patterns[1].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.kwd_patterns[0].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.patterns[1].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.patterns[0].f)
+        self.assertIs((f := fst.prev_child(f, True)), a.cls.f)
+        self.assertIs((f := fst.prev_child(f, True)), None)
 
-    def test_next_prev_vs_walk(self):
+        # ...
+
+        f = FST('name')
+        self.assertIsNone(f.first_child(False))
+        self.assertIsNone(f.last_child(False))
+        self.assertIsNone(f.first_child('loc'))
+        self.assertIsNone(f.last_child('loc'))
+        self.assertIs(f.ctx, f.first_child(True))
+        self.assertIs(f.ctx, f.last_child(True))
+
+        f = FST('def f(): pass')
+        self.assertIsNone(f.body[0].prev(False))
+        self.assertIsNone(f.body[0].prev(False))
+        self.assertIsNone(f.body[0].prev('loc'))
+        self.assertIsNone(f.body[0].prev('loc'))
+        self.assertIs(f.args, f.body[0].prev(True))
+        self.assertIs(f.args, f.body[0].prev(True))
+
+        f = FST('-a')
+        self.assertIsNone(f.operand.prev(False))
+        self.assertIsNone(f.operand.prev(False))
+        self.assertIs(f.op, f.operand.prev('loc'))
+        self.assertIs(f.op, f.operand.prev('loc'))
+        self.assertIs(f.op, f.operand.prev(True))
+        self.assertIs(f.op, f.operand.prev(True))
+
+        f = FST('a + b')
+        self.assertIs(f.right, f.left.next(False))
+        self.assertIs(f.right, f.left.next(False))
+        self.assertIs(f.op, f.left.next('loc'))
+        self.assertIs(f.op, f.left.next('loc'))
+        self.assertIs(f.op, f.left.next(True))
+        self.assertIs(f.op, f.left.next(True))
+
+        f = FST('a < b')
+        self.assertIs(f.comparators[0], f.left.next(False))
+        self.assertIs(f.comparators[0], f.left.next(False))
+        self.assertIs(f.ops[0], f.left.next('loc'))
+        self.assertIs(f.ops[0], f.left.next('loc'))
+        self.assertIs(f.ops[0], f.left.next(True))
+        self.assertIs(f.ops[0], f.left.next(True))
+
+        f = FST('a and b')
+        self.assertIs(f.values[1], f.values[0].next(False))
+        self.assertIs(f.values[1], f.values[0].next(False))
+        self.assertIs(f.values[1], f.values[0].next('loc'))
+        self.assertIs(f.values[1], f.values[0].next('loc'))
+        self.assertIs(f.values[1], f.values[0].next(True))
+        self.assertIs(f.values[1], f.values[0].next(True))
+
+    def test_next_prev_child_vs_walk(self):
         def test1(src):
             f = FST.fromsrc(src).a.body[0].args.f
-            m = list(f.walk(True, self_=False, recurse=False))
+            m = list(f.walk(self_=False, recurse=False))
 
             l, c = [], None
             while c := f.next_child(c): l.append(c)
@@ -5998,7 +6048,7 @@ class cls(a, b=c):
 
         def test2(src):
             f = FST.fromsrc(src).a.body[0].value.f
-            m = list(f.walk(True, self_=False, recurse=False))
+            m = list(f.walk(self_=False, recurse=False))
 
             l, c = [], None
             while c := f.next_child(c): l.append(c)
@@ -6024,36 +6074,44 @@ class cls(a, b=c):
             fst = FST.fromsrc(src.strip())
 
             f, l = fst, []
-            while f := f.step_fwd(True): l.append(f)
-            self.assertEqual(l, list(fst.walk(True, self_=False)))
-
-            f, l = fst, []
-            while f := f.step_fwd(False): l.append(f)
+            while f := f.step_fwd(False):
+                l.append(f)
             self.assertEqual(l, list(fst.walk(False, self_=False)))
 
             f, l = fst, []
-            while f := f.step_fwd('own'): l.append(f)
-            self.assertEqual(l, list(fst.walk('own', self_=False)))
+            while f := f.step_fwd(True):
+                l.append(f)
+            self.assertEqual(l, list(fst.walk(True, self_=False)))
+
+            # f, l = fst, []
+            # while f := f.step_fwd('own'):
+                # l.append(f)
+            # self.assertEqual(l, list(fst.walk('own', self_=False)))
+
+            # f, l = fst, []
+            # while f := f.step_fwd('allown'):
+            #     l.append(f)
+            # self.assertEqual(l, [g for g in fst.walk(True, self_=False) if g.has_own_loc])
 
             f, l = fst, []
-            while f := f.step_fwd('allown'): l.append(f)
-            self.assertEqual(l, [g for g in fst.walk(True, self_=False) if g.has_own_loc])
-
-            f, l = fst, []
-            while f := f.step_back(True): l.append(f)
-            self.assertEqual(l, list(fst.walk(True, self_=False, back=True)))
-
-            f, l = fst, []
-            while f := f.step_back(False): l.append(f)
+            while f := f.step_back(False):
+                l.append(f)
             self.assertEqual(l, list(fst.walk(False, self_=False, back=True)))
 
             f, l = fst, []
-            while f := f.step_back('own'): l.append(f)
-            self.assertEqual(l, list(fst.walk('own', self_=False, back=True)))
+            while f := f.step_back(True):
+                l.append(f)
+            self.assertEqual(l, list(fst.walk(True, self_=False, back=True)))
 
-            f, l = fst, []
-            while f := f.step_back('allown'): l.append(f)
-            self.assertEqual(l, [g for g in fst.walk(True, self_=False, back=True) if g.has_own_loc])
+            # f, l = fst, []
+            # while f := f.step_back('own'):
+            #     l.append(f)
+            # self.assertEqual(l, list(fst.walk('own', self_=False, back=True)))
+
+            # f, l = fst, []
+            # while f := f.step_back('allown'):
+            #     l.append(f)
+            # self.assertEqual(l, [g for g in fst.walk(True, self_=False, back=True) if g.has_own_loc])
 
         test('''
 def f(a=1, b=2) -> int:
@@ -6070,6 +6128,92 @@ match a:
 with a as b, c as d:
     pass
             ''')
+
+    def test_walk_next_prev_tricky_nodes(self):
+        def test(fst_, expect):
+            expect_back = expect[::-1]
+
+            self.assertEqual(list(f.src for f in fst_.walk(self_=False, recurse=False)), expect)
+            self.assertEqual(list(f.src for f in fst_.walk(self_=False, recurse=False, back=True)), expect_back)
+
+            l = [f := fst_.first_child()]
+            while f := f.next():
+                l.append(f)
+            self.assertEqual(list(f.src for f in l), expect)
+
+            l = [f := fst_.last_child()]
+            while f := f.prev():
+                l.append(f)
+            self.assertEqual(list(f.src for f in l), expect_back)
+
+        test(FST('a, /', arguments), ['a'])
+        test(FST('a', arguments), ['a'])
+        test(FST('*a', arguments), ['a'])
+        test(FST('*, a', arguments), ['a'])
+        test(FST('**a', arguments), ['a'])
+        test(FST('a, b, /', arguments), ['a', 'b'])
+        test(FST('a=1, /', arguments), ['a', '1'])
+        test(FST('a, b=1, /', arguments), ['a', 'b', '1'])
+        test(FST('a=1, b=2, /', arguments), ['a', '1', 'b', '2'])
+        test(FST('a, b', arguments), ['a', 'b'])
+        test(FST('a=1', arguments), ['a', '1'])
+        test(FST('a, b=1', arguments), ['a', 'b', '1'])
+        test(FST('a=1, b=2', arguments), ['a', '1', 'b', '2'])
+        test(FST('a, b, /, c, d', arguments), ['a', 'b', 'c', 'd'])
+        test(FST('a, b, /, c, d=1', arguments), ['a', 'b', 'c', 'd', '1'])
+        test(FST('a, b, /, c=2, d=1', arguments), ['a', 'b', 'c', '2', 'd', '1'])
+        test(FST('a, b=3, /, c=2, d=1', arguments), ['a', 'b', '3', 'c', '2', 'd', '1'])
+        test(FST('a=4, b=3, /, c=2, d=1', arguments), ['a', '4', 'b', '3', 'c', '2', 'd', '1'])
+        test(FST('*, a, b', arguments), ['a', 'b'])
+        test(FST('*, a, b=1', arguments), ['a', 'b', '1'])
+        test(FST('*, a=1, b=1', arguments), ['a', '1', 'b', '1'])
+        test(FST('*, a=1, b', arguments), ['a', '1', 'b'])
+
+        test(FST('call(a)'), ['call', 'a'])
+        test(FST('call(a=b)'), ['call', 'a=b'])
+        test(FST('call(a, b)'), ['call', 'a', 'b'])
+        test(FST('call(a, b, *c)'), ['call', 'a', 'b', '*c'])
+        test(FST('call(a, b, *c, d=e)'), ['call', 'a', 'b', '*c', 'd=e'])
+        test(FST('call(a, b, *c, d=e, f=g)'), ['call', 'a', 'b', '*c', 'd=e', 'f=g'])
+        test(FST('call(d=e, f=g)'), ['call', 'd=e', 'f=g'])
+        test(FST('call(a=b, *c)'), ['call', 'a=b', '*c'])
+        test(FST('call(a=b, c=d, *e)'), ['call', 'a=b', 'c=d', '*e'])
+        test(FST('call(*c, d=e, f=g)'), ['call', '*c', 'd=e', 'f=g'])
+        test(FST('call(a=b, *c, *d)'), ['call', 'a=b', '*c', '*d'])
+        test(FST('call(e, a=b, *c, *d)'), ['call', 'e', 'a=b', '*c', '*d'])
+        test(FST('call(*e, a=b, *c, *d)'), ['call', '*e', 'a=b', '*c', '*d'])
+        test(FST('call(a, d=e, *c)'), ['call', 'a', 'd=e', '*c'])
+        test(FST('call(a, *b, d=e, *c)'), ['call', 'a', '*b', 'd=e', '*c'])
+        test(FST('call(*b, d=e, *c, f=g)'), ['call', '*b', 'd=e', '*c', 'f=g'])
+        test(FST('call(d=e, *c)'), ['call', 'd=e', '*c'])
+        test(FST('call(d=e, *c, *d)'), ['call', 'd=e', '*c', '*d'])
+        test(FST('call(d=e, *c, a=b)'), ['call', 'd=e', '*c', 'a=b'])
+        test(FST('call(a=b, d=e, *c, f=g)'), ['call', 'a=b', 'd=e', '*c', 'f=g'])
+        test(FST('call(a, *b, d=e, *c, f=g)'), ['call', 'a', '*b', 'd=e', '*c', 'f=g'])
+        test(FST('call(a=b, *c, d=e, *f, g=h, i=j, *k, *l)'), ['call', 'a=b', '*c', 'd=e', '*f', 'g=h', 'i=j', '*k', '*l'])
+
+        test(FST('class cls(a): pass'), ['a', 'pass'])
+        test(FST('class cls(a=b): pass'), ['a=b', 'pass'])
+        test(FST('class cls(a, b): pass'), ['a', 'b', 'pass'])
+        test(FST('class cls(a, b, *c): pass'), ['a', 'b', '*c', 'pass'])
+        test(FST('class cls(a, b, *c, d=e): pass'), ['a', 'b', '*c', 'd=e', 'pass'])
+        test(FST('class cls(a, b, *c, d=e, f=g): pass'), ['a', 'b', '*c', 'd=e', 'f=g', 'pass'])
+        test(FST('class cls(d=e, f=g): pass'), ['d=e', 'f=g', 'pass'])
+        test(FST('class cls(a=b, *c): pass'), ['a=b', '*c', 'pass'])
+        test(FST('class cls(a=b, c=d, *e): pass'), ['a=b', 'c=d', '*e', 'pass'])
+        test(FST('class cls(*c, d=e, f=g): pass'), ['*c', 'd=e', 'f=g', 'pass'])
+        test(FST('class cls(a=b, *c, *d): pass'), ['a=b', '*c', '*d', 'pass'])
+        test(FST('class cls(e, a=b, *c, *d): pass'), ['e', 'a=b', '*c', '*d', 'pass'])
+        test(FST('class cls(*e, a=b, *c, *d): pass'), ['*e', 'a=b', '*c', '*d', 'pass'])
+        test(FST('class cls(a, d=e, *c): pass'), ['a', 'd=e', '*c', 'pass'])
+        test(FST('class cls(a, *b, d=e, *c): pass'), ['a', '*b', 'd=e', '*c', 'pass'])
+        test(FST('class cls(*b, d=e, *c, f=g): pass'), ['*b', 'd=e', '*c', 'f=g', 'pass'])
+        test(FST('class cls(d=e, *c): pass'), ['d=e', '*c', 'pass'])
+        test(FST('class cls(d=e, *c, *d): pass'), ['d=e', '*c', '*d', 'pass'])
+        test(FST('class cls(d=e, *c, a=b): pass'), ['d=e', '*c', 'a=b', 'pass'])
+        test(FST('class cls(a=b, d=e, *c, f=g): pass'), ['a=b', 'd=e', '*c', 'f=g', 'pass'])
+        test(FST('class cls(a, *b, d=e, *c, f=g): pass'), ['a', '*b', 'd=e', '*c', 'f=g', 'pass'])
+        test(FST('class cls(a=b, *c, d=e, *f, g=h, i=j, *k, *l): pass'), ['a=b', '*c', 'd=e', '*f', 'g=h', 'i=j', '*k', '*l', 'pass'])
 
     def test_child_path(self):
         f = parse('if 1: a = (1, 2, {1: 2})').f

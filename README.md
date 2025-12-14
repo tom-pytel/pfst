@@ -242,7 +242,15 @@ def compute(NEW_X: float,  # x position
 
 # Misc
 
-Locations are zero based in character units, not bytes.
+Traversal is in syntactic order.
+
+```py
+>>> print(list(f.src for f in FST('def f[T](a, b=1) -> int: pass').walk()))
+['def f[T](a, b=1) -> int: pass', 'T', 'a, b=1', 'a', 'b', '1', 'int', 'pass']
+```
+
+Locations are zero based in character units, not bytes. Most nodes have a location, including ones which don't in `AST`
+nodes. Nodes that don't are `expr_context`, `boolop` (because they are one-to-many locations) and empty `arguments`.
 
 ```py
 >>> FST('蟒=Æ+д').dump()
@@ -356,8 +364,11 @@ This module is not finished but functional enough that it can be useful.
 operations where it may apply (where comment may belong to expression instead of statement). Allow specification of
 trivia by line number, as well as insert location. Direct comment manipulation functions.
 
-* Tree search, `options` validation, mutate-immune walk, code cleanups, API additions for real-world use, optimization,
-testing, bughunting, make reconcile use all slice operations to preserve more formatting, lots more...
+* Finish `reconcile()`, make it use all slice operations to preserve more formatting.
+
+* Tree search, `options` validation, indentation of multiline sequences should be better, more coercion on put,
+different source encodings, code cleanups, type_ignores, API additions for real-world use, optimization, testing,
+bughunting, etc...
 
 ## Trivia
 

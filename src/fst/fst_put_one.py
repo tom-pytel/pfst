@@ -284,7 +284,7 @@ def _is_valid_MatchValue_value(ast: AST) -> bool:
     # if (f := ast.f).end_ln != f.ln:
     #     raise NodeError(f'cannot put multiline {ast.__class__.__name__} to pattern expression', rawable=True)
 
-    if any((bad := f).pars().n for f in ast.f.walk(True)):
+    if any((bad := f).pars().n for f in ast.f.walk()):
         raise NodeError(f'cannot put parenthesized {bad.a.__class__.__name__} to pattern expression', rawable=True)
 
     return True
@@ -297,7 +297,7 @@ def _is_valid_MatchMapping_key(ast: AST) -> bool:
     # if (f := ast.f).end_ln != f.ln:
     #     raise NodeError(f'cannot put multiline {ast.__class__.__name__} to pattern expression', rawable=True)
 
-    if any((bad := f).pars().n for f in ast.f.walk(True)):
+    if any((bad := f).pars().n for f in ast.f.walk()):
         raise NodeError(f'cannot put parenthesized {bad.a.__class__.__name__} to pattern expression', rawable=True)
 
     return True

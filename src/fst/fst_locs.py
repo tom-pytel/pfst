@@ -31,7 +31,7 @@ from .astutil import re_identifier, OPCLS2STR, last_block_header_child
 
 from .common import fstloc, fstlocn, next_frag, prev_frag, next_find, prev_find, next_delims, prev_delims, next_find_re
 
-from .fst_traverse import next_bound, prev_bound, next_bound_step, prev_bound_step
+from .fst_traverse import next_bound, prev_bound, next_bound_step_own_loc, prev_bound_step_own_loc
 
 
 _re_deco_start         = re.compile(r'[ \t]*@')
@@ -39,6 +39,9 @@ _re_deco_start         = re.compile(r'[ \t]*@')
 _re_keyword_import     = re.compile(r'\bimport\b')  # we end with a '\b' because we need exactly this word and there may be other similar ones between `from` and `import`
 _re_keyword_with_start = re.compile(r'\bwith')  # we do not end with '\b' because the search using this may be checking source where the `with` is joined with a following `withitem` and there are no other words between `async` and `with`
 
+
+# ----------------------------------------------------------------------------------------------------------------------
+# FST class methods
 
 def _loc_maybe_key(
     self: fst.FST, idx: int, pars: bool = True, body: list[AST] | None = None, body2: list[AST] | None = None
@@ -144,8 +147,12 @@ def _loc_comprehension(self: fst.FST) -> fstloc:
     last = ifs[-1].f if (ifs := ast.ifs) else ast.iter.f  # self.last_child(), could be .iter or last .ifs
     lines = self.root._lines
 
-    if prev := self.step_back('allown', recurse_self=False):  # 'allown' so it doesn't recurse into calling `.loc`
-        _, _, ln, col = prev.loc
+    if ((prev := self.prev())
+        and (
+            prev.a.__class__ is not comprehension
+            or (prev := prev.last_child())
+    )):
+        _, _, ln, col = prev.loc  # definitely has own location
     else:
         ln = col = 0
 
@@ -154,7 +161,7 @@ def _loc_comprehension(self: fst.FST) -> fstloc:
     if ast.is_async:
         start_ln, start_col = prev_find(lines, ln, col, start_ln, start_col, 'async')  # must be there
 
-    rpars = next_delims(lines, last.end_ln, last.end_col, *next_bound_step(self, 'allown'))
+    rpars = next_delims(lines, last.end_ln, last.end_col, *next_bound_step_own_loc(self))
 
     if (lrpars := len(rpars)) == 1:  # no pars, just use end of last
         end_ln, end_col = rpars[0]
@@ -188,12 +195,12 @@ def _loc_withitem(self: fst.FST) -> fstloc:
     ce_ln, ce_col, ce_end_ln, ce_end_col = ce_loc = ce.loc
 
     if not (ov := ast.optional_vars):
-        rpars = next_delims(lines, ce_end_ln, ce_end_col, *next_bound_step(self, 'allown'))  # 'allown' so it doesn't recurse into calling `.loc`
+        rpars = next_delims(lines, ce_end_ln, ce_end_col, *next_bound_step_own_loc(self))
 
         if (lrpars := len(rpars)) == 1:
             return ce_loc
 
-        lpars = prev_delims(lines, *prev_bound_step(self, 'allown'), ce_ln, ce_col)
+        lpars = prev_delims(lines, *prev_bound_step_own_loc(self), ce_ln, ce_col)
         npars = min(lrpars, len(lpars)) - 1
 
         return fstloc(*lpars[npars], *rpars[npars])
@@ -207,7 +214,7 @@ def _loc_withitem(self: fst.FST) -> fstloc:
         col = ce_col
 
     else:
-        lpars = prev_delims(lines, *prev_bound_step(self, 'allown'), ce_ln, ce_col)
+        lpars = prev_delims(lines, *prev_bound_step_own_loc(self), ce_ln, ce_col)
         ln, col = lpars[min(lrpars, len(lpars)) - 1]
 
     lpars = prev_delims(lines, ce_end_ln, ce_end_col, ov_ln, ov_col)
@@ -215,7 +222,7 @@ def _loc_withitem(self: fst.FST) -> fstloc:
     if (llpars := len(lpars)) == 1:
         return fstloc(ln, col, ov_end_ln, ov_end_col)
 
-    rpars = next_delims(lines, ov_end_ln, ov_end_col, *next_bound_step(self, 'allown'))
+    rpars = next_delims(lines, ov_end_ln, ov_end_col, *next_bound_step_own_loc(self))
     end_ln, end_col = rpars[min(llpars, len(rpars)) - 1]
 
     return fstloc(ln, col, end_ln, end_col)

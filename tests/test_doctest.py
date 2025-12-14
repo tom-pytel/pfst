@@ -59,32 +59,27 @@ def load_tests(loader, tests, ignore):
 
 class TestDocTest(unittest.TestCase):
     def test_fst_module(self):
-        fst_mod_dict = {k: v for k, v in fst.__dict__.items() if not k.startswith('_')}
+        fst_mod_dict = {k: v for k, v in fst.__dict__.items() if not (k.startswith('_') or k == 'walk')}  # walk() is an evil special case that shadows fst.fst_traverse.walk()
         options = fst.FST.get_options()
 
-        try:
-            for mod in (fst.fst, fst.fst_core, fst.fst_misc, fst.fst_locs, fst.fst_traverse):
-                # if mod is not fst.fst:  # this is so that `FST` and other misc things are available to the doctests
-                #     mod.__dict__.update(fst_mod_dict)
-                mod.__dict__.update(fst_mod_dict)  # this is so that `FST` and other misc things are available to the doctests, fst.fst also needs some AST types which are not normally imported there
-
-                cleanup_docstrs(mod)
-
-                self.assertEqual(0, doctest.testmod(mod, exclude_empty=False).failed)
-
-        finally:
-            fst.FST.set_options(**options)
-
-    def test_view(self):
-        options = fst.FST.get_options()
-
-        try:
-            mod = fst.view
+        for mod in (fst.fst, fst.fst_core, fst.fst_misc, fst.fst_locs, fst.fst_traverse):
+            mod.__dict__.update(fst_mod_dict)  # this is so that `FST` and other misc things are available to the doctests, fst.fst also needs some AST types which are not normally imported there
 
             cleanup_docstrs(mod)
 
-            self.assertEqual(0, doctest.testmod(mod).failed)
+            try:
+                self.assertEqual(0, doctest.testmod(mod, exclude_empty=False).failed)
+            finally:
+                fst.FST.set_options(**options)
 
+    def test_view(self):
+        options = fst.FST.get_options()
+        mod = fst.view
+
+        cleanup_docstrs(mod)
+
+        try:
+            self.assertEqual(0, doctest.testmod(mod).failed)
         finally:
             fst.FST.set_options(**options)
 
@@ -94,14 +89,13 @@ class TestDocTest(unittest.TestCase):
         mods = list(sorted((m for m in docs.__dict__.values() if isinstance(m, ModuleType)), key=lambda m: m.__name__))
         options = fst.FST.get_options()
 
-        try:
-            for mod in mods:
-                cleanup_docstrs(mod)
+        for mod in mods:
+            cleanup_docstrs(mod)
 
+            try:
                 self.assertEqual(0, doctest.testmod(mod).failed)
-
-        finally:
-            fst.FST.set_options(**options)
+            finally:
+                fst.FST.set_options(**options)
 
     # def test_standalone(self):
     #     if VERBOSE:

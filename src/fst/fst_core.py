@@ -167,7 +167,7 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
         lns = set()
         ends = {}  # the starting column of where to search for comment '#', past end of any expression on given line
 
-        for f in (walking := ast.value.f.walk(True)):  # find multiline continuation line numbers
+        for f in (walking := ast.value.f.walk()):  # find multiline continuation line numbers
             fln, _, fend_ln, fend_col = f.loc
             ends[fend_ln] = max(fend_col, ends.get(fend_ln, 0))
 
@@ -1292,7 +1292,7 @@ def _get_indent(self: fst.FST) -> str:
     while parent:
         f = getattr(parent.a, self.pfield.name)[0].f
         ln, col, _, _ = f.loc
-        prev = f.prev(True)  # there may not be one ("try" at start of module)
+        prev = f.prev()  # there may not be one ("try" at start of module)
         prev_end_ln = prev.end_ln if prev else -2  # -2 so it never hits it
         good_line = ''
 
@@ -1361,7 +1361,7 @@ def _get_indentable_lns(
     while (parent := self.parent) and self.a.__class__ not in ASTS_LEAF_STMTISH:
         self = parent
 
-    for f in (walking := self.walk(False)):  # find multiline strings and exclude their unindentable lines
+    for f in (walking := self.walk()):  # find multiline strings and exclude their unindentable lines
         if f.bend_ln == f.bln:  # everything on one line, don't need to recurse
             walking.send(False)
 

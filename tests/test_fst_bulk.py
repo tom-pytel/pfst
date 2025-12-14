@@ -58,7 +58,7 @@ class TestFST(unittest.TestCase):
     #         ast       = FST.fromsrc(read(fnm)).a
     #         bln, bcol = 0, 0
 
-    #         for f in (gen := ast.f.walk(True)):
+    #         for f in (gen := ast.f.walk()):
     #             if isinstance(f.a, (JoinedStr, TemplateStr)):  # these are borked
     #                 gen.send(False)
 
@@ -66,17 +66,17 @@ class TestFST(unittest.TestCase):
 
     #             self.assertTrue(f.bln > bln or (f.bln == bln and f.bcol >= bcol))
 
-    #             lof = list(f.walk(True, self_=False, recurse=False))
-    #             lob = list(f.walk(True, self_=False, recurse=False, back=True))
+    #             lof = list(f.walk(self_=False, recurse=False))
+    #             lob = list(f.walk(self_=False, recurse=False, back=True))
 
     #             self.assertEqual(lof, lob[::-1])
 
     #             lf, c = [], None
-    #             while c := f.next_child(c, True): lf.append(c)
+    #             while c := f.next_child(c): lf.append(c)
     #             self.assertEqual(lf, lof)
 
     #             lb, c = [], None
-    #             while c := f.prev_child(c, True): lb.append(c)
+    #             while c := f.prev_child(c): lb.append(c)
     #             self.assertEqual(lb, lob)
 
     #             bln, bcol = f.bln, f.bcol

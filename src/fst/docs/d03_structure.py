@@ -185,8 +185,8 @@ There is an explicit `walk()` function with a few options (`fst.fst.FST.walk()`)
 
 >>> f = FST('[[1, 2], [3, 4]]')
 
->>> for g in f.walk():
-...     print(f'{str(g):24}{g.src}')
+>>> for g in f.walk(all=True):
+...     print(f'{str(g):24}{g.src or None}')
 <List ROOT 0,0..0,16>   [[1, 2], [3, 4]]
 <List 0,1..0,7>         [1, 2]
 <Constant 0,2..0,3>     1
@@ -200,7 +200,7 @@ There is an explicit `walk()` function with a few options (`fst.fst.FST.walk()`)
 
 Or without the uninteresting `ctx` fields.
 
->>> for g in f.walk(True):
+>>> for g in f.walk():
 ...     print(g.src)
 [[1, 2], [3, 4]]
 [1, 2]
@@ -213,7 +213,7 @@ Or without the uninteresting `ctx` fields.
 Notice the order of recursion, parents then children going forward. You can also go backward (though it is still parents
 before children).
 
->>> for g in f.walk(True, back=True):
+>>> for g in f.walk(back=True):
 ...     print(g.src)
 [[1, 2], [3, 4]]
 [3, 4]
@@ -225,7 +225,7 @@ before children).
 
 You can exclude the top-level node.
 
->>> for g in f.walk(True, self_=False):
+>>> for g in f.walk(self_=False):
 ...     print(g.src)
 [1, 2]
 1
@@ -243,7 +243,7 @@ You can limit the walk to a scope.
 ...     pass
 ... '''.strip())
 
->>> for g in f.walk(True):
+>>> for g in f.walk():
 ...     print(g)
 <Module ROOT 0,0..3,8>
 <FunctionDef 0,0..1,9>
@@ -262,7 +262,7 @@ You can limit the walk to a scope.
 You can interact with the generator during the walk to decide whether to recurse into the children or not. For example
 if the walk is restricted to a scope you can decide to recurse into a specific child.
 
->>> for g in (gen := f.walk(True, scope=True)):
+>>> for g in (gen := f.walk(scope=True)):
 ...     print(g)
 ...     if g.is_FunctionDef and g.a.name == 'g':
 ...         _ = gen.send(True)  # ignore the '_', it shuts up return in stdout
@@ -274,7 +274,7 @@ if the walk is restricted to a scope you can decide to recurse into a specific c
 If you use the `recurse=False` option of the `walk()` function then recursion is normally limited to the first level of
 children. You can override this by sending to the generator.
 
->>> for g in (gen := f.walk(True, recurse=False)):
+>>> for g in (gen := f.walk(recurse=False)):
 ...     print(g)
 ...     if g.is_FunctionDef and g.a.name == 'f':
 ...         _ = gen.send(True)
@@ -287,7 +287,7 @@ children. You can override this by sending to the generator.
 
 Or you can decide **NOT** to recurse into children.
 
->>> for g in (gen := f.walk(True)):
+>>> for g in (gen := f.walk()):
 ...     print(g)
 ...     if g.is_FunctionDef and g.a.name == 'f':
 ...         _ = gen.send(False)
@@ -302,7 +302,7 @@ been there. This is not safe to do if using "raw" operations (explained elsewher
 
 >>> f = FST('[[1, 2], [3, 4], name]')
 
->>> for g in f.walk(True):
+>>> for g in f.walk():
 ...     print(g.src)
 ...     if g.is_Constant and g.a.value & 1:
 ...         _ = g.replace('x')

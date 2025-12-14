@@ -428,10 +428,12 @@ class FST:
         return self
 
     @property
-    def lines(self) -> list[builtins.str] | None:
+    def lines(self) -> list[builtins.str]:
         """Whole lines which contain this node, may also contain parts of enclosing nodes. If gotten at root then the
         entire source is returned, which may extend beyond the location of the top level node (mostly for statements
         which may have leading / trailing comments or empty lines).
+
+        A string is always returned, even for nodes which can never have source like `Load`, etc...
 
         **Note:** The lines list returned is always a copy so safe to modify.
         """
@@ -440,25 +442,24 @@ class FST:
             return self._lines[:]
         elif loc := self.bloc:
             return self.root._lines[loc.ln : loc.end_ln + 1]
-        elif (ast_cls := self.a.__class__) is arguments:  # arguments with no loc are empty arguments
-            return ['']
         else:
-            return [s] if (s := OPCLS2STR.get(ast_cls, None)) else None  # for boolop only really, otherwise None
+            return [s] if (s := OPCLS2STR.get(self.a.__class__, None)) else ['']  # for boolop only really
 
     @property
-    def src(self) -> builtins.str | None:
+    def src(self) -> builtins.str:
         """Source code of this node clipped out of as a single string, without any dedentation. Will have indentation as
         it appears in the top level source if multiple lines. If gotten at root then the entire source is returned,
-        regardless of whether the actual top level node location includes it or not."""
+        regardless of whether the actual top level node location includes it or not.
+
+        A list of strings is always returned, even for nodes which can never have source like `Load`, etc...
+        """
 
         if not self.parent:  # is_root
             return '\n'.join(self._lines)
         elif loc := self.bloc:
             return self._get_src(*loc)
-        elif (ast_cls := self.a.__class__) is arguments:  # arguments with no loc are empty arguments
-            return ''
         else:
-            return OPCLS2STR.get(ast_cls, None)  # for boolop only really, otherwise None
+            return OPCLS2STR.get(self.a.__class__, '')  # for boolop only really
 
     @property
     def has_own_loc(self) -> bool:
@@ -2802,7 +2803,7 @@ class FST:
             syms_nonlocal = {}  # explicitly 'nonlocal'
             syms_walrus = set()  # this will only get NamedExpr.target if self is a Comprehension, only used for the symbol names
 
-        for f in self.walk(True, scope=True):
+        for f in self.walk(scope=True):
             a = f.a
             a_cls = a.__class__
 
@@ -2942,7 +2943,7 @@ class FST:
 
         return ret
 
-    walk = fst_traverse.walk  # we do assig instead of import so that pdoc gets the right order
+    walk = fst_traverse.walk  # we do assign instead of import so that pdoc gets the right order
     next = fst_traverse.next
     prev = fst_traverse.prev
     first_child = fst_traverse.first_child
@@ -3465,7 +3466,7 @@ class FST:
             return None
 
         while True:
-            for f in self.walk('all', self_=False):
+            for f in self.walk('loc', self_=False):
                 fln, fcol, fend_ln, fend_col = f.loc
 
                 if fend_ln < ln or (fend_ln == ln and fend_col <= col):
@@ -3525,7 +3526,7 @@ class FST:
             return self
 
         while True:
-            for f in self.walk('all', self_=False):
+            for f in self.walk('loc', self_=False):
                 fln, fcol, fend_ln, fend_col = f.loc
 
                 if fln < ln or (fln == ln and fcol < col):
