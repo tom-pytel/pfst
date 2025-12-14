@@ -287,67 +287,105 @@ __all__ = [
     '_aliases',
     '_withitems',
     '_type_params',
+
+    'ASTS_LEAF_MOD',
+    'ASTS_LEAF_STMT',
+    'ASTS_LEAF_EXPR',
+    'ASTS_LEAF_EXPR_CONTEXT',
+    'ASTS_LEAF_BOOLOP',
+    'ASTS_LEAF_OPERATOR',
+    'ASTS_LEAF_UNARYOP',
+    'ASTS_LEAF_CMPOP',
+    'ASTS_LEAF_PATTERN',
+    'ASTS_LEAF_TYPE_PARAM',
+    'ASTS_LEAF_STMT_OR_MOD',
+    'ASTS_LEAF_EXPR_OR_PATTERN',
+    'ASTS_LEAF_EXPR_STMT_OR_MOD',
+    'ASTS_LEAF_EXPRISH',
+    'ASTS_LEAF_EXPRISH_ALL',
+    'ASTS_LEAF_STMTISH',
+    'ASTS_LEAF_STMTISH_OR_MOD',
+    'ASTS_LEAF_BLOCK',
+    'ASTS_LEAF_BLOCK_OR_MOD',
+    'ASTS_LEAF_SCOPE',
+    'ASTS_LEAF_SCOPE_OR_MOD',
+    'ASTS_LEAF_NAMED_SCOPE',
+    'ASTS_LEAF_NAMED_SCOPE_OR_MOD',
+    'ASTS_LEAF_ANON_SCOPE',
+    'ASTS_LEAF_FUNCDEF',
+    'ASTS_LEAF_DEF',
+    'ASTS_LEAF_DEF_OR_MOD',
+    'ASTS_LEAF_FOR',
+    'ASTS_LEAF_WITH',
+    'ASTS_LEAF_TRY',
+    'ASTS_LEAF_IMPORT',
+    'ASTS_LEAF_COMP',
+    'ASTS_LEAF_FTSTR',
+    'ASTS_LEAF_CMPOP_TWO_WORD',
+    'ASTS_LEAF_MAYBE_DOCSTR',
 ]
 
 
 # leaf node types, as set for quick checks
 
-ASTS_LEAF_MOD                = {Module, Interactive, Expression}
+ASTS_LEAF_MOD                = frozenset([Module, Interactive, Expression])
 
-ASTS_LEAF_STMT               = {FunctionDef, AsyncFunctionDef, ClassDef, Return, Delete, Assign, TypeAlias, AugAssign,
-                                AnnAssign, For, AsyncFor, While, If, With, AsyncWith, Match, Raise, Try, TryStar,
-                                Assert, Import, ImportFrom, Global, Nonlocal, Expr, Pass, Break, Continue}
+ASTS_LEAF_STMT               = frozenset([FunctionDef, AsyncFunctionDef, ClassDef, Return, Delete, Assign, TypeAlias,
+                                          AugAssign, AnnAssign, For, AsyncFor, While, If, With, AsyncWith, Match, Raise,
+                                          Try, TryStar, Assert, Import, ImportFrom, Global, Nonlocal, Expr, Pass, Break,
+                                          Continue])
 
-ASTS_LEAF_EXPR               = {BoolOp, NamedExpr, BinOp, UnaryOp, Lambda, IfExp, Dict, Set, ListComp, SetComp,
-                                DictComp, GeneratorExp, Await, Yield, YieldFrom, Compare, Call, FormattedValue,
-                                Interpolation, JoinedStr, TemplateStr, Constant, Attribute, Subscript, Starred, Name,
-                                List, Tuple, Slice}
+ASTS_LEAF_EXPR               = frozenset([BoolOp, NamedExpr, BinOp, UnaryOp, Lambda, IfExp, Dict, Set, ListComp,
+                                          SetComp, DictComp, GeneratorExp, Await, Yield, YieldFrom, Compare, Call,
+                                          FormattedValue, Interpolation, JoinedStr, TemplateStr, Constant, Attribute,
+                                          Subscript, Starred, Name, List, Tuple, Slice])
 
-ASTS_LEAF_EXPR_CONTEXT       = {Load, Store, Del}
-ASTS_LEAF_BOOLOP             = {And, Or}
-ASTS_LEAF_OPERATOR           = {Add, Sub, Mult, MatMult, Div, Mod, Pow, LShift, RShift, BitOr, BitXor, BitAnd, FloorDiv}
-ASTS_LEAF_UNARYOP            = {Invert, Not, UAdd, USub}
-ASTS_LEAF_CMPOP              = {Eq, NotEq, Lt, LtE, Gt, GtE, Is, IsNot, In, NotIn}
-ASTS_LEAF_PATTERN            = {MatchValue, MatchSingleton, MatchSequence, MatchMapping, MatchClass, MatchStar, MatchAs,
-                                MatchOr}
-ASTS_LEAF_TYPE_PARAM         = {TypeVar, ParamSpec, TypeVarTuple}
+ASTS_LEAF_EXPR_CONTEXT       = frozenset([Load, Store, Del])
+ASTS_LEAF_BOOLOP             = frozenset([And, Or])
+ASTS_LEAF_OPERATOR           = frozenset([Add, Sub, Mult, MatMult, Div, Mod, Pow, LShift, RShift, BitOr, BitXor, BitAnd,
+                                          FloorDiv])
+ASTS_LEAF_UNARYOP            = frozenset([Invert, Not, UAdd, USub])
+ASTS_LEAF_CMPOP              = frozenset([Eq, NotEq, Lt, LtE, Gt, GtE, Is, IsNot, In, NotIn])
+ASTS_LEAF_PATTERN            = frozenset([MatchValue, MatchSingleton, MatchSequence, MatchMapping, MatchClass,
+                                          MatchStar, MatchAs, MatchOr])
+ASTS_LEAF_TYPE_PARAM         = frozenset([TypeVar, ParamSpec, TypeVarTuple])
 
 ASTS_LEAF_STMT_OR_MOD        = ASTS_LEAF_STMT | ASTS_LEAF_MOD
 ASTS_LEAF_EXPR_OR_PATTERN    = ASTS_LEAF_EXPR | ASTS_LEAF_PATTERN
 ASTS_LEAF_EXPR_STMT_OR_MOD   = ASTS_LEAF_EXPR | ASTS_LEAF_STMT | ASTS_LEAF_MOD
 
-ASTS_LEAF_EXPRISH            = ASTS_LEAF_EXPR | {comprehension, arguments, arg, keyword}  # can be in expression chain (have expressions above)
+ASTS_LEAF_EXPRISH            = ASTS_LEAF_EXPR | frozenset([comprehension, arguments, arg, keyword])  # can be in expression chain (have expressions above)
 ASTS_LEAF_EXPRISH_ALL        = (ASTS_LEAF_EXPRISH | ASTS_LEAF_EXPR_CONTEXT | ASTS_LEAF_BOOLOP | ASTS_LEAF_OPERATOR
                                 | ASTS_LEAF_UNARYOP | ASTS_LEAF_CMPOP)
 
-ASTS_LEAF_STMTISH            = ASTS_LEAF_STMT | {ExceptHandler, match_case}
+ASTS_LEAF_STMTISH            = ASTS_LEAF_STMT | frozenset([ExceptHandler, match_case])
 ASTS_LEAF_STMTISH_OR_MOD     = ASTS_LEAF_STMTISH | ASTS_LEAF_MOD
 
-ASTS_LEAF_BLOCK              = {FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With, AsyncWith,
-                                Match, Try, TryStar, ExceptHandler, match_case}
+ASTS_LEAF_BLOCK              = frozenset([FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While, If, With,
+                                          AsyncWith, Match, Try, TryStar, ExceptHandler, match_case])
 ASTS_LEAF_BLOCK_OR_MOD       = ASTS_LEAF_BLOCK | ASTS_LEAF_MOD
 
-ASTS_LEAF_SCOPE              = {FunctionDef, AsyncFunctionDef, ClassDef, Lambda, ListComp, SetComp, DictComp,
-                                GeneratorExp}
+ASTS_LEAF_SCOPE              = frozenset([FunctionDef, AsyncFunctionDef, ClassDef, Lambda, ListComp, SetComp, DictComp,
+                                          GeneratorExp])
 ASTS_LEAF_SCOPE_OR_MOD       = ASTS_LEAF_SCOPE | ASTS_LEAF_MOD
-ASTS_LEAF_SCOPE_NAMED        = {FunctionDef, AsyncFunctionDef, ClassDef}
-ASTS_LEAF_SCOPE_NAMED_OR_MOD = ASTS_LEAF_SCOPE_NAMED | ASTS_LEAF_MOD
-ASTS_LEAF_SCOPE_ANONYMOUS    = {Lambda, ListComp, SetComp, DictComp, GeneratorExp}
+ASTS_LEAF_NAMED_SCOPE        = frozenset([FunctionDef, AsyncFunctionDef, ClassDef])
+ASTS_LEAF_NAMED_SCOPE_OR_MOD = ASTS_LEAF_NAMED_SCOPE | ASTS_LEAF_MOD
+ASTS_LEAF_ANON_SCOPE         = frozenset([Lambda, ListComp, SetComp, DictComp, GeneratorExp])
 
-ASTS_LEAF_FUNCDEF            = {FunctionDef, AsyncFunctionDef}
-ASTS_LEAF_DEF                = ASTS_LEAF_FUNCDEF | {ClassDef}
+ASTS_LEAF_FUNCDEF            = frozenset([FunctionDef, AsyncFunctionDef])
+ASTS_LEAF_DEF                = ASTS_LEAF_FUNCDEF | frozenset([ClassDef])
 ASTS_LEAF_DEF_OR_MOD         = ASTS_LEAF_DEF | ASTS_LEAF_MOD
-ASTS_LEAF_FOR                = {For, AsyncFor}
-ASTS_LEAF_WITH               = {With, AsyncWith}
-ASTS_LEAF_TRY                = {Try, TryStar}
-ASTS_LEAF_IMPORT             = {Import, ImportFrom}
+ASTS_LEAF_FOR                = frozenset([For, AsyncFor])
+ASTS_LEAF_WITH               = frozenset([With, AsyncWith])
+ASTS_LEAF_TRY                = frozenset([Try, TryStar])
+ASTS_LEAF_IMPORT             = frozenset([Import, ImportFrom])
 
-ASTS_LEAF_COMP               = {ListComp, SetComp, DictComp, GeneratorExp}
-ASTS_LEAF_FTSTR              = {JoinedStr, TemplateStr}
+ASTS_LEAF_COMP               = frozenset([ListComp, SetComp, DictComp, GeneratorExp])
+ASTS_LEAF_FTSTR              = frozenset([JoinedStr, TemplateStr])
 
-ASTS_LEAF_CMPOP_TWO_WORD     = {IsNot, NotIn}
+ASTS_LEAF_CMPOP_TWO_WORD     = frozenset([IsNot, NotIn])
 
-ASTS_LEAF_MAYBE_DOCSTR       = ASTS_LEAF_SCOPE_NAMED | {Module}  # these may have a docstring as the first Const str Expr in the body
+ASTS_LEAF_MAYBE_DOCSTR       = ASTS_LEAF_NAMED_SCOPE | frozenset([Module])  # these may have a docstring as the first Const str Expr in the body
 
 # ASTS_LEAF_MAYBE_SINGLETON    = (ASTS_LEAF_EXPR_CONTEXT | ASTS_LEAF_BOOLOP | ASTS_LEAF_OPERATOR | ASTS_LEAF_UNARYOP
 #                                 | ASTS_LEAF_CMPOP)  # the same object may be reused by ast.parse() in mutiple places in the tree

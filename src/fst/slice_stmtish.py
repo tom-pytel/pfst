@@ -42,7 +42,7 @@ from .fst_traverse import prev_bound, next_bound_step, prev_bound_step
 
 from . import fst  # noqa: F811
 
-from .asttypes import ASTS_LEAF_SCOPE_NAMED, AST, Constant, Expr, If, mod  # noqa: F811
+from .asttypes import ASTS_LEAF_NAMED_SCOPE, AST, Constant, Expr, If, mod  # noqa: F811
 from .astutil import bistr
 
 from .common import (
@@ -405,7 +405,7 @@ class SrcEdit:
                 pep8space = 1
 
             if (fpre
-                and ffirst.a.__class__ in ASTS_LEAF_SCOPE_NAMED
+                and ffirst.a.__class__ in ASTS_LEAF_NAMED_SCOPE
                 and (
                     fpre.pfield.idx
                     or (a := fpre.a).__class__ is not Expr
@@ -415,7 +415,7 @@ class SrcEdit:
             ):
                 prespace = max(prespace, pep8space)
 
-            elif fpost and flast.a.__class__ in ASTS_LEAF_SCOPE_NAMED:
+            elif fpost and flast.a.__class__ in ASTS_LEAF_NAMED_SCOPE:
                 postspace = max(postspace, pep8space)
 
         del_ln, del_col, del_end_ln, del_end_col = del_loc
@@ -513,8 +513,8 @@ class SrcEdit:
         if (is_pep8
             and fpre
             and (
-                (put_ns := put_body[0].__class__ in ASTS_LEAF_SCOPE_NAMED)
-                 or fpre.a.__class__ in ASTS_LEAF_SCOPE_NAMED
+                (put_ns := put_body[0].__class__ in ASTS_LEAF_NAMED_SCOPE)
+                 or fpre.a.__class__ in ASTS_LEAF_NAMED_SCOPE
         )):  # preceding space
             if (pep8space == 1
                 or (
@@ -561,8 +561,8 @@ class SrcEdit:
             is_pep8
             and fpost
             and (
-                put_body[-1].__class__ in ASTS_LEAF_SCOPE_NAMED
-                or fpost.a.__class__ in ASTS_LEAF_SCOPE_NAMED
+                put_body[-1].__class__ in ASTS_LEAF_NAMED_SCOPE
+                or fpost.a.__class__ in ASTS_LEAF_NAMED_SCOPE
         )):  # if don't need pep8space then maybe just need trailing newline
             if put_loc.end_col == len(lines[-1]) and put_loc.end_ln == len(lines) - 1:  # if putting to very end of source then don't add newlines
                 postpend = 0

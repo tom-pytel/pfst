@@ -1326,7 +1326,6 @@ _syntax_ordered_children_fmtval       = lambda ast: [ast.value, ast.format_spec]
 _syntax_ordered_children_values       = lambda ast: ast.values.copy()
 _syntax_ordered_children_elts         = lambda ast: ast.elts.copy()
 _syntax_ordered_children_elts_and_ctx = lambda ast: [*ast.elts, ast.ctx]
-_syntax_ordered_children_ctx          = lambda ast: [ast.ctx]
 _syntax_ordered_children_value_ctx    = lambda ast: [ast.value, ast.ctx]
 
 _syntax_ordered_children_patterns     = lambda ast: ast.patterns.copy()
@@ -1401,7 +1400,7 @@ _SYNTAX_ORDERED_CHILDREN = {
     Attribute:          _syntax_ordered_children_value_ctx,
     Subscript:          lambda ast: [ast.value, ast.slice, ast.ctx],
     Starred:            _syntax_ordered_children_value_ctx,
-    Name:               _syntax_ordered_children_ctx,
+    Name:               lambda ast: [ast.ctx],
     List:               _syntax_ordered_children_elts_and_ctx,
     Tuple:              _syntax_ordered_children_elts_and_ctx,
     Slice:              lambda ast: [ast.lower, ast.upper, ast.step],

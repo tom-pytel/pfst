@@ -36,9 +36,9 @@ from .asttypes import (
     ASTS_LEAF_BLOCK_OR_MOD,
     ASTS_LEAF_SCOPE,
     ASTS_LEAF_SCOPE_OR_MOD,
-    ASTS_LEAF_SCOPE_NAMED,
-    ASTS_LEAF_SCOPE_NAMED_OR_MOD,
-    ASTS_LEAF_SCOPE_ANONYMOUS,
+    ASTS_LEAF_NAMED_SCOPE,
+    ASTS_LEAF_NAMED_SCOPE_OR_MOD,
+    ASTS_LEAF_ANON_SCOPE,
     ASTS_LEAF_FUNCDEF,
     ASTS_LEAF_DEF,
     ASTS_LEAF_DEF_OR_MOD,
@@ -3141,7 +3141,7 @@ class FST:
         <ClassDef 0,0..0,25>
         """
 
-        types = ASTS_LEAF_SCOPE_NAMED_OR_MOD if mod else ASTS_LEAF_SCOPE_NAMED
+        types = ASTS_LEAF_NAMED_SCOPE_OR_MOD if mod else ASTS_LEAF_NAMED_SCOPE
 
         if self_ and self.a.__class__ in types:
             return self
@@ -3804,20 +3804,20 @@ class FST:
     def is_named_scope(self) -> bool:
         """Is a node which opens a named scope. Types include `FunctionDef`, `AsyncFunctionDef` or `ClassDef`."""
 
-        return self.a.__class__ in ASTS_LEAF_SCOPE_NAMED
+        return self.a.__class__ in ASTS_LEAF_NAMED_SCOPE
 
     @property
     def is_named_scope_or_mod(self) -> bool:
         """Is a node which opens a named scope. Types include `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `mod`."""
 
-        return self.a.__class__ in ASTS_LEAF_SCOPE_NAMED_OR_MOD
+        return self.a.__class__ in ASTS_LEAF_NAMED_SCOPE_OR_MOD
 
     @property
     def is_anon_scope(self) -> bool:
         """Is a node which opens an anonymous scope. Types include `Lambda`, `ListComp`, `SetComp`, `DictComp` or
         `GeneratorExp`."""
 
-        return self.a.__class__ in ASTS_LEAF_SCOPE_ANONYMOUS
+        return self.a.__class__ in ASTS_LEAF_ANON_SCOPE
 
     @property
     def is_funcdef(self) -> bool:
