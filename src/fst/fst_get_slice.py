@@ -567,7 +567,7 @@ def _maybe_fix_MatchSequence(self: fst.FST, delims: Literal['', '[]', '()'] | No
     # assert isinstance(self.a, MatchSequence)
 
     if delims is None:
-        delims = self._is_delimited_matchseq()
+        delims = self.is_delimited_matchseq()
 
     body = self.a.patterns
 
@@ -1723,7 +1723,7 @@ def _get_slice_MatchSequence_patterns(
         return fst.FST(MatchSequence(patterns=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=2),
                        ['[]'], None, from_=self)
 
-    delims = self._is_delimited_matchseq()
+    delims = self.is_delimited_matchseq()
     locs = _locs_and_bounds_get(self, start, stop, body, body, bool(delims))
     asts = _cut_or_copy_asts(start, stop, 'patterns', cut, body)
     ret_ast = MatchSequence(patterns=asts)

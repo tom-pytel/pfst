@@ -1106,7 +1106,7 @@ def _put_slice_stmtish_old(
             elif ast_cls is TryStar:
                 is_trystar = True
             else:  # isinstance(ast, _ExceptHandlers)
-                is_trystar = body[0].f._is_except_star() if body else None
+                is_trystar = body[0].f.is_except_star() if body else None
 
             put_fst = code_as__ExceptHandlers(code, root.parse_params, is_trystar=is_trystar)
             put_body = put_fst.a.handlers
@@ -1323,7 +1323,7 @@ def _put_slice_stmtish_old(
         self._make_fst_tree(stack)
 
         if is_handlers and is_trystar is None and ast_cls is not _ExceptHandlers:  # we may have to change Try <-> TryStar if put ExceptHandlers and all handlers replaced
-            is_except_star = body[0].f._is_except_star()
+            is_except_star = body[0].f.is_except_star()
 
             if is_except_star != (ast_cls is TryStar):  # need to swap?
                 new_type = TryStar if is_except_star else Try

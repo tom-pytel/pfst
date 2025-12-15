@@ -851,10 +851,10 @@ def _is_atom(
     elif ast_cls in ASTS_LEAF_CMPOP:
         return ast_cls not in ASTS_LEAF_CMPOP_TWO_WORD  # could be spread across multiple lines
 
-    if (ret := self._is_parenthesized_tuple()) is not None:  # if this is False then cannot be enclosed in grouping pars because that would reparse to a parenthesized Tuple and so is inconsistent
+    if (ret := self.is_parenthesized_tuple()) is not None:  # if this is False then cannot be enclosed in grouping pars because that would reparse to a parenthesized Tuple and so is inconsistent
         return ret
 
-    if (ret := self._is_delimited_matchseq()) is not None:  # like Tuple, cannot be enclosed in grouping pars
+    if (ret := self.is_delimited_matchseq()) is not None:  # like Tuple, cannot be enclosed in grouping pars
         return bool(ret)
 
     assert ast_cls in ASTS_LEAF_EXPR_OR_PATTERN
@@ -1005,11 +1005,11 @@ def _is_enclosed_or_line(
 
             return False
 
-        if (ret := self._is_parenthesized_tuple()) is not None:
+        if (ret := self.is_parenthesized_tuple()) is not None:
             if ret:
                 return True
 
-        elif (ret := self._is_delimited_matchseq()) is not None:
+        elif (ret := self.is_delimited_matchseq()) is not None:
             if ret:
                 return True
 
@@ -1188,11 +1188,11 @@ def _is_enclosed_in_parents(self: fst.FST, field: str | None = None) -> bool:
             if self.pfield.name in ('patterns', 'kwd_attrs', 'kwd_patterns'):
                 return True
 
-        elif (ret := parent._is_parenthesized_tuple()) is not None:
+        elif (ret := parent.is_parenthesized_tuple()) is not None:
             if ret:
                 return True
 
-        elif (ret := parent._is_delimited_matchseq()) is not None:
+        elif (ret := parent.is_delimited_matchseq()) is not None:
             if ret:
                 return True
 

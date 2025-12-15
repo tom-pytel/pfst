@@ -334,7 +334,7 @@ def _maybe_fix_With_items(self: fst.FST) -> None:
 
     cef = i0a.context_expr.f
 
-    if (is_par := cef._is_parenthesized_tuple()) is None:
+    if (is_par := cef.is_parenthesized_tuple()) is None:
         return
 
     if not is_par:
@@ -805,7 +805,7 @@ def _make_exprish_fst(
 
         else:  # src does not have grouping pars
             if ((tgt_has_pars := tgt_is_FST and getattr(target.pars(), 'n', 0))
-                and put_fst._is_parenthesized_tuple() is False
+                and put_fst.is_parenthesized_tuple() is False
             ):
                 del_tgt_pars = True
                 tgt_has_pars = False
@@ -820,7 +820,7 @@ def _make_exprish_fst(
                         del_tgt_pars = True
 
             elif need_pars(True):  # could be parenthesizing grouping or a tuple, not a MatchSeqence because that never gets here unenclosed
-                if put_fst._is_parenthesized_tuple() is False:
+                if put_fst.is_parenthesized_tuple() is False:
                     put_fst._delimit_node()
                 else:
                     put_fst._parenthesize_grouping()
@@ -1368,7 +1368,7 @@ def _put_one_Subscript_slice(
     child, idx = _validate_put(self, code, idx, field, child)
     code = static.code_as(code, self.root.parse_params, sanitize=True, coerce=fst.FST.get_option('coerce', options))
 
-    if code._is_parenthesized_tuple() is False and any(a.__class__ is Starred for a in code.a.elts):
+    if code.is_parenthesized_tuple() is False and any(a.__class__ is Starred for a in code.a.elts):
         raise NodeError('cannot have unparenthesized tuple containing Starred in slice', rawable=True)
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
@@ -1590,7 +1590,7 @@ def _put_one_MatchAs_pattern(
         if code.a.__class__ is MatchStar:
             raise NodeError('cannot put a MatchStar to MatchAs.pattern', rawable=True)
 
-        if code._is_delimited_matchseq() == '':
+        if code.is_delimited_matchseq() == '':
             code._delimit_node(delims='[]')
 
     return _put_one_exprish_optional(self, code, idx, field, child, static, options, 2)
@@ -1614,7 +1614,7 @@ def _put_one_pattern(
         if self.a.__class__ is not MatchSequence:
             raise NodeError(f'cannot put a MatchStar to {self.a.__class__.__name__}.{field}', rawable=True)
 
-    elif code._is_delimited_matchseq() == '':
+    elif code.is_delimited_matchseq() == '':
         code._delimit_node(delims='[]')
 
     return _put_one_exprish_required(self, code, idx, field, child, static, options, 2)
@@ -1704,7 +1704,7 @@ def _put_one_ExceptHandler_name(
 
     ret = _put_one_identifier_optional(self, code, idx, field, child, static, options)
 
-    if ret and (typef := self.a.type.f)._is_parenthesized_tuple() is False:
+    if ret and (typef := self.a.type.f).is_parenthesized_tuple() is False:
         typef._delimit_node()
 
     return ret

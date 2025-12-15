@@ -281,7 +281,7 @@ def _get_one_constant(self: fst.FST, idx: int | None, field: str, cut: bool, opt
 
 
 def _get_one_arguments(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
-    if not self.a.args.f._is_arguments_empty():
+    if not self.a.args.f.is_empty_arguments():
         return _get_one_default(self, idx, field, cut, options)
 
     _validate_get(self, idx, field)

@@ -136,7 +136,7 @@ from .astutil import (
     copy_ast,
 )
 
-from .common import PYLT13, astfield, fstloc, fstlocn, nspace, next_delims, prev_delims
+from .common import PYLT13, astfield, fstloc, fstlocn, nspace, next_frag, next_delims, prev_delims
 from .parsex import Mode
 from .code import Code, code_as_lines, code_as_all
 from .view import fstview, fstview_Dict, fstview_MatchMapping, fstview_Compare
@@ -2572,13 +2572,13 @@ class FST:
 
         with self._modifying():
             if ast_cls is Tuple:
-                if not (force and self._is_parenthesized_tuple()):
+                if not (force and self.is_parenthesized_tuple()):
                     self._delimit_node(whole)
 
                     return self
 
             elif ast_cls is MatchSequence:
-                if not (force and self._is_delimited_matchseq()):
+                if not (force and self.is_delimited_matchseq()):
                     self._delimit_node(whole, '[]')
 
                     return self
@@ -3602,7 +3602,8 @@ class FST:
 
     def is_parenthesizable(self, *, star: bool = True) -> bool:
         """Whether `self` is parenthesizable with grouping parentheses or not. `True` for all `pattern`s and almost all
-        `expr`s which are `Slice`, `FormattedValue` or `Interpolation` and are not themselves inside `pattern`s.
+        `expr`s (those which which are not `Slice`, `FormattedValue` or `Interpolation` and are not themselves inside
+        `pattern`s).
 
         **Note:** `Starred` may return `True` even though the `Starred` itself is not parenthesizable but rather its
         child is.
@@ -3676,6 +3677,128 @@ class FST:
                 break
 
         return True
+
+    def is_parenthesized_tuple(self) -> bool | None:
+        """Whether `self` is a parenthesized `Tuple` or not, or not a `Tuple` at all.
+
+        **Returns:**
+        - `True` if is parenthesized `Tuple`, `False` if is unparenthesized `Tuple`, `None` if is not `Tuple` at all.
+
+        **Examples:**
+
+        >>> FST('1, 2').is_parenthesized_tuple()
+        False
+
+        >>> FST('(1, 2)').is_parenthesized_tuple()
+        True
+
+        >>> print(FST('1').is_parenthesized_tuple())
+        None
+        """
+
+        return self._is_delimited_seq() if self.a.__class__ is Tuple else None
+
+    def is_delimited_matchseq(self) -> Literal['', '[]', '()'] | None:
+        r"""Whether `self` is a delimited `MatchSequence` or not (parenthesized or bracketed), or not a `MatchSequence`
+        at all.
+
+        **Returns:**
+        - `None`: If is not `MatchSequence` at all.
+        - `''`: If is undelimited `MatchSequence`.
+        - `'()'` or `'[]'`: Is delimited with these delimiters.
+
+        **Examples:**
+
+        >>> FST('case 1, 2: pass').pattern.is_delimited_matchseq()
+        ''
+
+        >>> FST('case [1, 2]: pass').pattern.is_delimited_matchseq()
+        '[]'
+
+        >>> FST('case (1, 2): pass').pattern.is_delimited_matchseq()
+        '()'
+
+        >>> print(FST('case 1: pass').pattern.is_delimited_matchseq())
+        None
+        """
+
+        if self.a.__class__ is not MatchSequence:
+            return None
+
+        ln, col, _, _ = self.loc
+        lpar = self.root._lines[ln][col : col + 1]  # could be end of line
+
+        if lpar == '(':
+            return '()' if self._is_delimited_seq('patterns', '()') else ''
+        if lpar == '[':
+            return '[]' if self._is_delimited_seq('patterns', '[]') else ''
+
+        return ''
+
+    def is_empty_arguments(self) -> bool | None:
+        """Is this an empty `arguments` node or not an `arguments` at all?
+
+        **Returns:**
+        - `True`: Is an empty `arguments` node.
+        - `False`: Is an `arguments` node but not empty.
+        - `None`: Is not an `arguments` node.
+
+        **Examples:**
+
+        >>> print(FST('def f(): pass').args.is_empty_arguments())
+        True
+
+        >>> print(FST('def f(a, b): pass').args.is_empty_arguments())
+        False
+
+        >>> print(FST('def f(): pass').body[0].is_empty_arguments())
+        None
+        """
+
+        if self.a.__class__ is not arguments:
+            return None
+
+        return not ((a := self.a).posonlyargs or a.args or a.vararg or a.kwonlyargs or a.kwarg)
+
+    def is_except_star(self) -> bool | None:
+        """Whether `self` is an `except*` `ExceptHandler` or a normal `ExceptHandler`, or not and `ExceptHandler` at
+        all.
+
+        **Note:** This function checks the source, not the parent `Try` or `TryStar` node so it will give the correct
+        answer even for top-level `ExceptHandler` nodes cut out of their blocks.
+
+        **Returns:**
+        - `True` if is `except*` `ExceptHandler`, `False` if is normal `ExceptHandler`, `None` if is not `ExceptHandler`
+        at all.
+
+        **Examples:**
+
+        >>> import sys
+
+        >>> if sys.version_info[:2] >= (3, 11):
+        ...     f = FST('try: pass\\nexcept* Exception: pass')
+        ...     print(f.handlers[0].is_except_star())
+        ... else:
+        ...     print(True)
+        True
+
+        >>> if sys.version_info[:2] >= (3, 11):
+        ...     f = FST('try: pass\\nexcept Exception: pass')
+        ...     print(f.handlers[0].is_except_star())
+        ... else:
+        ...     print(False)
+        False
+
+        >>> print(FST('i = 1').is_except_star())
+        None
+        """
+
+        if self.a.__class__ is not ExceptHandler:
+            return None
+
+        ln, col, end_ln, end_col = self.loc
+
+        return next_frag(self.root._lines, ln, col + 6, end_ln, end_col).src.startswith('*')  # something must be there
 
     def is_elif(self) -> bool | None:
         r"""Whether `self` is an `elif` or not, or not an `If` at all.
@@ -3903,9 +4026,6 @@ class FST:
         _repr_tail,
         _dump,
 
-        _is_parenthesized_tuple,
-        _is_delimited_matchseq,
-        _is_except_star,
         _is_expr_arglike,
         _is_empty_set_call,
         _is_empty_set_star,
@@ -3914,7 +4034,6 @@ class FST:
         _is_solo_call_arg_genexp,
         _is_solo_matchcls_pat,
         _is_any_parent_format_spec_start_pos,
-        _is_arguments_empty,
         _is_delimited_seq,
         _has_Slice,
         _has_Starred,

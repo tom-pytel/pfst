@@ -13,7 +13,10 @@
 
 ### Updated
 
+- made some more useful predicate functions public
+- optimized some internal offset and syntax ordering functions
 - `walk()` allows parent nodes to be modified
+- all traversal functions can take container of `AST` types to filter traversal
 - cleaned up and optimized traversal functions
 - optimized lots of `isinstance()` and `issubclass()` to check directly by class
 

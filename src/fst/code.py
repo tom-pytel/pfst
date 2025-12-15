@@ -172,7 +172,7 @@ def _coerce_as__expr_arglikes(
     fst_ = code_as_expr_arglike(code, parse_params, sanitize=sanitize)
     ast_ = fst_.a
 
-    if fst_._is_parenthesized_tuple() is False:  # can't have unparenthesized tuple as sole element, will look like multiple elements
+    if fst_.is_parenthesized_tuple() is False:  # can't have unparenthesized tuple as sole element, will look like multiple elements
         fst_._delimit_node()
 
     ast_ = Tuple(elts=[ast_], ctx=Load(), lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
@@ -681,7 +681,7 @@ def code_as__ExceptHandlers(
         code = fst.FST(parse__ExceptHandlers(code, parse_params), lines, None, parse_params=parse_params)
 
     if (handlers := code.a.handlers) and is_trystar is not None:
-        if is_trystar != handlers[0].f._is_except_star():
+        if is_trystar != handlers[0].f.is_except_star():
             raise error("expecting star 'except*' handler, got plain 'except'" if is_trystar else
                         "expecting plain 'except' handler, got star 'except*'")
 

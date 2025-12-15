@@ -982,101 +982,6 @@ def _dump(self: fst.FST, st: nspace, src_plus: bool = False) -> None:
         _dump_lines(self, st, len(self.root._lines), 0, 0, 0, None)
 
 
-def _is_parenthesized_tuple(self: fst.FST) -> bool | None:
-    """Whether `self` is a parenthesized `Tuple` or not, or not a `Tuple` at all.
-
-    **Returns:**
-    - `True` if is parenthesized `Tuple`, `False` if is unparenthesized `Tuple`, `None` if is not `Tuple` at all.
-
-    **Examples:**
-
-    >>> FST('1, 2')._is_parenthesized_tuple()
-    False
-
-    >>> FST('(1, 2)')._is_parenthesized_tuple()
-    True
-
-    >>> print(FST('1')._is_parenthesized_tuple())
-    None
-    """
-
-    return self._is_delimited_seq() if self.a.__class__ is Tuple else None
-
-
-def _is_delimited_matchseq(self: fst.FST) -> Literal['', '[]', '()'] | None:
-    r"""Whether `self` is a delimited `MatchSequence` or not (parenthesized or bracketed), or not a `MatchSequence`
-    at all.
-
-    **Returns:**
-    - `None`: If is not `MatchSequence` at all.
-    - `''`: If is undelimited `MatchSequence`.
-    - `'()'` or `'[]'`: Is delimited with these delimiters.
-
-    **Examples:**
-
-    >>> FST('match a:\n  case 1, 2: pass').cases[0].pattern._is_delimited_matchseq()
-    ''
-
-    >>> FST('match a:\n  case [1, 2]: pass').cases[0].pattern._is_delimited_matchseq()
-    '[]'
-
-    >>> FST('match a:\n  case (1, 2): pass').cases[0].pattern._is_delimited_matchseq()
-    '()'
-
-    >>> print(FST('match a:\n  case 1: pass').cases[0].pattern._is_delimited_matchseq())
-    None
-    """
-
-    if self.a.__class__ is not MatchSequence:
-        return None
-
-    ln, col, _, _ = self.loc
-    lpar = self.root._lines[ln][col : col + 1]  # could be end of line
-
-    if lpar == '(':
-        return '()' if self._is_delimited_seq('patterns', '()') else ''
-    if lpar == '[':
-        return '[]' if self._is_delimited_seq('patterns', '[]') else ''
-
-    return ''
-
-
-def _is_except_star(self: fst.FST) -> bool | None:
-    """Whether `self` is an `except*` `ExceptHandler` or a normal `ExceptHandler`, or not and `ExceptHandler` at
-    all.
-
-    **Returns:**
-    - `True` if is `except*` `ExceptHandler`, `False` if is normal `ExceptHandler`, `None` if is not `ExceptHandler`
-    at all.
-
-    **Examples:**
-
-    >>> import sys
-
-    >>> if sys.version_info[:2] >= (3, 11):
-    ...     print(FST('try: pass\\nexcept* Exception: pass').handlers[0]._is_except_star())
-    ... else:
-    ...     print(True)
-    True
-
-    >>> if sys.version_info[:2] >= (3, 11):
-    ...     print(FST('try: pass\\nexcept Exception: pass').handlers[0]._is_except_star())
-    ... else:
-    ...     print(False)
-    False
-
-    >>> print(FST('i = 1')._is_except_star())
-    None
-    """
-
-    if self.a.__class__ is not ExceptHandler:
-        return None
-
-    ln, col, end_ln, end_col = self.loc
-
-    return next_frag(self.root._lines, ln, col + 6, end_ln, end_col).src.startswith('*')  # something must be there
-
-
 def _is_expr_arglike(self: fst.FST) -> bool | None:
     """Is an argument-like expression which can only appear in a `Call.args` or `ClassDef.bases` (or a `.slice`
     `Tuple.elts` in py 3.11+) list, e.g. `*not a`, `*a or b`.
@@ -1288,17 +1193,9 @@ def _is_any_parent_format_spec_start_pos(self: fst.FST, ln: int, col: int) -> bo
     return False
 
 
-def _is_arguments_empty(self: fst.FST) -> bool:
-    """Is this `arguments` node empty?"""
-
-    # assert isinstance(self.a, arguments)
-
-    return not ((a := self.a).posonlyargs or a.args or a.vararg or a.kwonlyargs or a.kwarg)
-
-
 def _is_delimited_seq(self: fst.FST, field: str = 'elts', delims: str | tuple[str, str] = '()') -> bool:
     """Whether `self` is a delimited (parenthesized or bracketed) sequence of `field` or not. Makes sure the entire
-    node is surrounded by a balanced pair of delimiters. Functions as `_is_parenthesized_tuple()` if already know is a
+    node is surrounded by a balanced pair of delimiters. Functions as `is_parenthesized_tuple()` if already know is a
     Tuple. Other use is for `MatchSequence`, whether parenthesized or bracketed.
 
     **Note:** Since this is such a common function it is cached.

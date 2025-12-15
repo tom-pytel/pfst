@@ -292,7 +292,7 @@ def _code_to_slice_expr(
             if not ast_.elts:  # put empty sequence is same as delete
                 return None
 
-            if fst_._is_parenthesized_tuple() is not False:  # anything that is not an unparenthesize tuple is restricted to the inside of the delimiters, which are removed
+            if fst_.is_parenthesized_tuple() is not False:  # anything that is not an unparenthesize tuple is restricted to the inside of the delimiters, which are removed
                 fst_._trim_delimiters()
             else:  # if unparenthesized tuple then use whole source, including leading and trailing trivia not included
                 _set_loc_whole(fst_)
@@ -305,7 +305,7 @@ def _code_to_slice_expr(
         raise ValueError(f'cannot put {fst_.a.__class__.__name__} as slice to {self.a.__class__.__name__} '
                          "without 'one=True' or 'coerce=True'")
 
-    if (is_par := fst_._is_parenthesized_tuple()) is not None:
+    if (is_par := fst_.is_parenthesized_tuple()) is not None:
         if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
             fst_._delimit_node()
 
@@ -313,7 +313,7 @@ def _code_to_slice_expr(
         _maybe_fix_Set(fst_, _get_option_norm('norm_put', 'set_norm', options) if put_norm is None else put_norm)
 
     elif ast__cls is NamedExpr:  # this needs to be parenthesized if being put to unparenthesized tuple
-        if not fst_.pars().n and self._is_parenthesized_tuple() is False:
+        if not fst_.pars().n and self.is_parenthesized_tuple() is False:
             fst_._parenthesize_grouping()
 
     elif ast__cls in (Yield, YieldFrom):  # these need to be parenthesized definitely
@@ -397,7 +397,7 @@ def _code_to_slice_BoolOp_values(
                              f'as slice to {op_cls.__name__} {self.a.__class__.__name__} '
                              "without 'one=True' or 'coerce=True'")
 
-    if (is_par := fst_._is_parenthesized_tuple()) is not None:
+    if (is_par := fst_.is_parenthesized_tuple()) is not None:
         if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
             fst_._delimit_node()
 
@@ -530,7 +530,7 @@ def _code_to_slice_Compare__all(
         raise ValueError(f'cannot put {ast__cls.__name__} as slice to {self.a.__class__.__name__} '
                          "without 'one=True' or 'coerce=True'")
 
-    if (is_par := fst_._is_parenthesized_tuple()) is not None:
+    if (is_par := fst_.is_parenthesized_tuple()) is not None:
         if is_par is False:  # don't put unparenthesized tuple source as one into sequence, it would merge into the sequence
             fst_._delimit_node()
 
@@ -744,7 +744,7 @@ def _code_to_slice_MatchSequence(
     fst_ = code_as_pattern(code, self.root.parse_params)
 
     if one:
-        if fst_._is_delimited_matchseq() == '':
+        if fst_.is_delimited_matchseq() == '':
             fst_._delimit_node(delims='[]')
 
         ast_ = MatchSequence(patterns=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
@@ -761,7 +761,7 @@ def _code_to_slice_MatchSequence(
     if not ast_.patterns:  # put empty sequence is same as delete
         return None
 
-    if fst_._is_delimited_matchseq():  # delimited is restricted to the inside of the delimiters, which are removed
+    if fst_.is_delimited_matchseq():  # delimited is restricted to the inside of the delimiters, which are removed
         fst_._trim_delimiters()
     else:  # if undelimited then use whole source, including leading and trailing trivia not included
         _set_loc_whole(fst_)
@@ -819,7 +819,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
                 fst_._parenthesize_grouping()
 
         elif ast_cls is MatchSequence:
-            if not fst_._is_delimited_matchseq():
+            if not fst_.is_delimited_matchseq():
                 fst_._delimit_node(delims='[]')
 
     ast_ = MatchOr(patterns=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
@@ -2140,7 +2140,7 @@ def _put_slice_MatchSequence_patterns(
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    if delims := self._is_delimited_matchseq():
+    if delims := self.is_delimited_matchseq():
         bound_col += 1
         bound_end_col -= 1
 
@@ -2735,8 +2735,8 @@ def _adjust_slice_raw_fst(
 
             if (code_is_normal
                 and not (
-                    code_fst._is_parenthesized_tuple() is False
-                    or code_fst._is_delimited_matchseq() == ''  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence or is a special slice
+                    code_fst.is_parenthesized_tuple() is False
+                    or code_fst.is_delimited_matchseq() == ''  # don't strip nonexistent delimiters if is unparenthesized Tuple or MatchSequence or is a special slice
             )):
                 col += 1
                 end_col -= 1
@@ -2777,9 +2777,9 @@ def _adjust_slice_raw_fst(
             raise NodeError('cannot put special slice as one')
 
         else:
-            if code_fst._is_parenthesized_tuple() is False:  # only Tuple or MatchMapping could be naked and needs to be delimited, everything else stays as-is
+            if code_fst.is_parenthesized_tuple() is False:  # only Tuple or MatchMapping could be naked and needs to be delimited, everything else stays as-is
                 code_fst._delimit_node()
-            elif code_fst._is_delimited_matchseq() == '':
+            elif code_fst.is_delimited_matchseq() == '':
                 code_fst._delimit_node(delims='[]')
 
             code_body2 = [code_ast]
