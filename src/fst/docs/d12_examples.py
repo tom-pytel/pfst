@@ -341,7 +341,7 @@ Function:
 >>> def lambdas_to_defs(src):
 ...     fst = FST(src, 'exec')
 ...
-...     for f in fst.walk({Assign}):
+...     for f in fst.walk(Assign):
 ...         if (f.value.is_Lambda
 ...             and f.targets[0].is_Name
 ...             and len(f.targets) == 1   # for demo purposes just deal with this case
@@ -473,7 +473,7 @@ Function:
 >>> def isinstance_to_class_check(src):
 ...     fst = FST(src, 'exec')
 ...
-...     for f in fst.walk({Call}):
+...     for f in fst.walk(Call):
 ...         if (f.func.is_Name
 ...             and f.func.id == 'isinstance'  # isinstance()
 ...         ):
@@ -584,7 +584,7 @@ Function:
 >>> def squash_nested_withs(src: str) -> str:
 ...     fst = FST(src, 'exec')
 ...
-...     for f in fst.walk({With}):  # we only get With nodes
+...     for f in fst.walk(With):  # we only get With nodes
 ...         while f.body[0].is_With:  # first child is another With
 ...             f.items.extend(f.body[0].items.copy())  # append child items to ours
 ...
@@ -800,7 +800,7 @@ Function:
 ...     blocks = []  # [[feq1, feq2, ...], [feq1, ...], ...]
 ...
 ...     # first we build up list of contiguous Assign nodes
-...     for f in fst.walk({Assign}):
+...     for f in fst.walk(Assign):
 ...         if not flast or f.col != flast.col or f.ln != flast.ln + 1:
 ...             blocks.append([])
 ...

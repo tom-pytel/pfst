@@ -181,32 +181,41 @@ pass
 
 ## Walk
 
-There is an explicit `walk()` function with a few options (`fst.fst.FST.walk()`).
+There is an explicit `walk()` function with a few options (`fst.fst.FST.walk()`). This function also doubles as a
+"transform" function as you can modify the tree structure as you are walking it, more on this below.
 
->>> f = FST('[[1, 2], [3, 4]]')
+A simple walk over all nodes (the `all=True`).
+
+>>> f = FST('def f(): return [[1, 2], 3 + 4]')
 
 >>> for g in f.walk(all=True):
-...     print(f'{str(g):24}{g.src or None}')
-<List ROOT 0,0..0,16>   [[1, 2], [3, 4]]
-<List 0,1..0,7>         [1, 2]
-<Constant 0,2..0,3>     1
-<Constant 0,5..0,6>     2
-<Load>                  None
-<List 0,9..0,15>        [3, 4]
-<Constant 0,10..0,11>   3
-<Constant 0,13..0,14>   4
-<Load>                  None
-<Load>                  None
+...     print(f'{str(g):30}{g.src or None}')
+<FunctionDef ROOT 0,0..0,31>  def f(): return [[1, 2], 3 + 4]
+<arguments>                   None
+<Return 0,9..0,31>            return [[1, 2], 3 + 4]
+<List 0,16..0,31>             [[1, 2], 3 + 4]
+<List 0,17..0,23>             [1, 2]
+<Constant 0,18..0,19>         1
+<Constant 0,21..0,22>         2
+<Load>                        None
+<BinOp 0,25..0,30>            3 + 4
+<Constant 0,25..0,26>         3
+<Add 0,27..0,28>              +
+<Constant 0,29..0,30>         4
+<Load>                        None
 
-Or without the uninteresting `ctx` fields.
+Or without the uninteresting `ctx` fields. We set `all=False` (this is actually the default) which excludes usually
+ignored nodes like `expr_context`, the various operators and **EMPTY** `arguments` nodes.
 
->>> for g in f.walk():
+>>> for g in f.walk(all=False):
 ...     print(g.src)
-[[1, 2], [3, 4]]
+def f(): return [[1, 2], 3 + 4]
+return [[1, 2], 3 + 4]
+[[1, 2], 3 + 4]
 [1, 2]
 1
 2
-[3, 4]
+3 + 4
 3
 4
 
@@ -215,8 +224,10 @@ before children).
 
 >>> for g in f.walk(back=True):
 ...     print(g.src)
-[[1, 2], [3, 4]]
-[3, 4]
+def f(): return [[1, 2], 3 + 4]
+return [[1, 2], 3 + 4]
+[[1, 2], 3 + 4]
+3 + 4
 4
 3
 [1, 2]
@@ -227,100 +238,174 @@ You can exclude the top-level node.
 
 >>> for g in f.walk(self_=False):
 ...     print(g.src)
+return [[1, 2], 3 + 4]
+[[1, 2], 3 + 4]
 [1, 2]
 1
 2
-[3, 4]
+3 + 4
 3
 4
 
-You can limit the walk to a scope.
+You can limit the walk to a scope. Which only returns the nodes that belong to that scope and not subscopes (module or
+function or lambda or comprehension).
+
+**Note:** There is a function for a common use case of this mode to get all the symbols in a given scope, see
+`fst.fst.FST.scope_symbols()`.
 
 >>> f = FST('''
-... def f():
-...     i = 1
-... def g():
-...     pass
+... def f(): f_var = 123
+... def g(): pass
+... x = y
 ... '''.strip())
 
 >>> for g in f.walk():
-...     print(g)
-<Module ROOT 0,0..3,8>
-<FunctionDef 0,0..1,9>
-<Assign 1,4..1,9>
-<Name 1,4..1,5>
-<Constant 1,8..1,9>
-<FunctionDef 2,0..3,8>
-<Pass 3,4..3,8>
+...     print(repr(g.src))
+'def f(): f_var = 123\ndef g(): pass\nx = y'
+'def f(): f_var = 123'
+'f_var = 123'
+'f_var'
+'123'
+'def g(): pass'
+'pass'
+'x = y'
+'x'
+'y'
 
->>> for g in f.walk(True, scope=True):
-...     print(g)
-<Module ROOT 0,0..3,8>
-<FunctionDef 0,0..1,9>
-<FunctionDef 2,0..3,8>
+>>> for g in f.walk(scope=True):
+...     print(repr(g.src))
+'def f(): f_var = 123\ndef g(): pass\nx = y'
+'def f(): f_var = 123'
+'def g(): pass'
+'x = y'
+'x'
+'y'
 
 You can interact with the generator during the walk to decide whether to recurse into the children or not. For example
 if the walk is restricted to a scope you can decide to recurse into a specific child.
 
 >>> for g in (gen := f.walk(scope=True)):
-...     print(g)
+...     print(repr(g.src))
 ...     if g.is_FunctionDef and g.a.name == 'g':
-...         _ = gen.send(True)  # ignore the '_', it shuts up return in stdout
-<Module ROOT 0,0..3,8>
-<FunctionDef 0,0..1,9>
-<FunctionDef 2,0..3,8>
-<Pass 3,4..3,8>
+...         _ = gen.send(True)  # ignore the '_', it shuts up printing the return value
+'def f(): f_var = 123\ndef g(): pass\nx = y'
+'def f(): f_var = 123'
+'def g(): pass'
+'pass'
+'x = y'
+'x'
+'y'
 
-If you use the `recurse=False` option of the `walk()` function then recursion is normally limited to the first level of
-children. You can override this by sending to the generator.
+If you use the `recurse=False` option then recursion is limited to the top-level node you call it on and its immediate
+children (but not THEIR children). Note that this is not the same as `scope=True` as that recurses into children within
+the scope, this does not.
 
 >>> for g in (gen := f.walk(recurse=False)):
-...     print(g)
+...     print(repr(g.src))
+'def f(): f_var = 123\ndef g(): pass\nx = y'
+'def f(): f_var = 123'
+'def g(): pass'
+'x = y'
+
+You can override the `recurse` option by sending to the generator.
+
+>>> for g in (gen := f.walk(recurse=False)):
+...     print(repr(g.src))
 ...     if g.is_FunctionDef and g.a.name == 'f':
 ...         _ = gen.send(True)
-<Module ROOT 0,0..3,8>
-<FunctionDef 0,0..1,9>
-<Assign 1,4..1,9>
-<Name 1,4..1,5>
-<Constant 1,8..1,9>
-<FunctionDef 2,0..3,8>
+'def f(): f_var = 123\ndef g(): pass\nx = y'
+'def f(): f_var = 123'
+'f_var = 123'
+'f_var'
+'123'
+'def g(): pass'
+'x = y'
 
-Or you can decide **NOT** to recurse into children.
+You can decide **NOT** to recurse into children.
 
 >>> for g in (gen := f.walk()):
-...     print(g)
+...     print(repr(g.src))
 ...     if g.is_FunctionDef and g.a.name == 'f':
 ...         _ = gen.send(False)
-<Module ROOT 0,0..3,8>
-<FunctionDef 0,0..1,9>
-<FunctionDef 2,0..3,8>
-<Pass 3,4..3,8>
+'def f(): f_var = 123\ndef g(): pass\nx = y'
+'def f(): f_var = 123'
+'def g(): pass'
+'pass'
+'x = y'
+'x'
+'y'
 
-When you `walk()` nodes, you can modify the node being walked as long as the change is limited to the node and its
-children and not any parents or sibling nodes. Any modifications to child nodes will be walked as if they had always
-been there. This is not safe to do if using "raw" operations (explained elsewhere).
+You can filter the node types which are returned using the `all` parameter to pass an `AST` node type. Make sure this is
+a **LEAF** type, so no `stmt` or `expr` or `mod` which are only bases.
 
->>> f = FST('[[1, 2], [3, 4], name]')
+>>> for g in f.walk(all=FunctionDef):
+...     print(repr(g.src))
+'def f(): f_var = 123'
+'def g(): pass'
 
->>> for g in f.walk():
-...     print(g.src)
-...     if g.is_Constant and g.a.value & 1:
-...         _ = g.replace('x')
-...     elif g.is_Name:
-...         _ = g.replace('[5, 6]')
-[[1, 2], [3, 4], name]
-[1, 2]
-1
-2
-[3, 4]
-3
-4
-name
-5
-6
+You can pass multiple types of nodes to return. But if you do this make sure to pass a `set` or `frozenset` or even
+`dict` for best performance.
+
+>>> for g in f.walk(all={FunctionDef, Constant}):
+...     print(repr(g.src))
+'def f(): f_var = 123'
+'123'
+'def g(): pass'
+
+When you `walk()` nodes, you can modify (or remove) the node being walked. See `fst.fst.FST.walk()`.
+
+>>> f = FST('a * (x.y + u[v])')
+
+>>> for g in f.walk(all=Name):
+...     _ = g.replace('new_' + g.id)
 
 >>> print(f.src)
-[[x, 2], [x, 4], [x, 6]]
+new_a * (new_x.y + new_u[new_v])
+
+You can replace any node within the tree. The replacement doesn't have to be executed on the node being walked, it can
+be any node. Note how replacing a node that hasn't been walked yet removes both that node **AND** the replacement node
+from the walk. After the walk though, all nodes which were replaced have their new values.
+
+>>> f = FST('[pre_parent, [pre_self, [child], post_self], post_parent]')
+
+>>> for g in f.walk():
+...     print(f'{g!r:<23}{g.src[:57]}')
+...
+...     if g.src == '[child]':
+...         _ = f.elts[0].replace('new_pre_parent')
+...         _ = f.elts[2].replace('new_post_parent')
+...         _ = f.elts[1].elts[0].replace('new_pre_self')
+...         _ = f.elts[1].elts[2].replace('new_post_self')
+...         _ = f.elts[1].elts[1].elts[0].replace('new_child')
+<List ROOT 0,0..0,57>  [pre_parent, [pre_self, [child], post_self], post_parent]
+<Name 0,1..0,11>       pre_parent
+<List 0,13..0,43>      [pre_self, [child], post_self]
+<Name 0,14..0,22>      pre_self
+<List 0,24..0,31>      [child]
+<Name 0,33..0,42>      new_child
+
+>>> print(f.src)
+[new_pre_parent, [new_pre_self, [new_child], new_post_self], new_post_parent]
+
+Replacing or removing a parent node is allowed and the walk will continue where it can.
+
+>>> f = FST('[pre_grand, [pre_parent, [self], post_parent], post_grand]')
+
+>>> for g in f.walk():
+...     print(f'{g!r:<23}{g.src[:58]}')
+...
+...     if g.src == 'self':
+...         g.parent.parent.remove()  # [pre_parent, [self], post_parent]
+<List ROOT 0,0..0,58>  [pre_grand, [pre_parent, [self], post_parent], post_grand]
+<Name 0,1..0,10>       pre_grand
+<List 0,12..0,45>      [pre_parent, [self], post_parent]
+<Name 0,13..0,23>      pre_parent
+<List 0,25..0,31>      [self]
+<Name 0,26..0,30>      self
+<Name 0,12..0,22>      post_grand
+
+>>> print(f.src)
+[pre_grand, post_grand]
 
 ## Step
 

@@ -51,7 +51,8 @@ _ASTS_LEAF_ARGUMENTS_OR_EXPR_CONTEXT_OR_OP     = (_ASTS_LEAF_ARGUMENTS_OR_EXPR_C
 _ASTS_LEAF_WALK_SCOPE = ASTS_LEAF_FUNCDEF | ASTS_LEAF_TYPE_PARAM | {ClassDef, Lambda, ListComp, SetComp, DictComp,
                                                                     GeneratorExp, comprehension, arguments, arg}  # used in walk(scope=True) for a little optimization
 
-def _check_all_param(fst_: fst.FST, all: bool | Literal['loc'] | Container[AST]) -> bool:
+
+def _check_all_param(fst_: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST]) -> bool:
     """Check 'all' parameter condition on node. Safe for low level because doesn't use `.loc` calculation machinery."""
 
     if all is True:
@@ -71,7 +72,7 @@ def _check_all_param(fst_: fst.FST, all: bool | Literal['loc'] | Container[AST])
                 and (a.args or a.vararg or a.kwonlyargs or a.kwarg or a.posonlyargs)
         ))
 
-    return fst_.a.__class__ in all
+    return fst_.a.__class__ in all if hasattr(all, '__contains__') else fst_.a.__class__ is all
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -155,7 +156,7 @@ def prev_bound_step_own_loc(self: fst.FST) -> tuple[int, int]:
 # ----------------------------------------------------------------------------------------------------------------------
 # FST class methods
 
-def next(self: fst.FST, all: bool | Literal['loc'] | Container[AST] = False) -> fst.FST | None:
+def next(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] = False) -> fst.FST | None:
     """Get next sibling of `self` in syntactic order, only within parent.
 
     **Parameters:**
@@ -166,6 +167,8 @@ def next(self: fst.FST, all: bool | Literal['loc'] | Container[AST] = False) -> 
             arguments present). Operators are not returned (even though they have computed location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
+        - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
+            are returned.
         - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
             or `dict` with the keys being the `AST` classes as those are the fastest checks.
 
@@ -199,7 +202,7 @@ def next(self: fst.FST, all: bool | Literal['loc'] | Container[AST] = False) -> 
             return self
 
 
-def prev(self: fst.FST, all: bool | Literal['loc'] | Container[AST] = False) -> fst.FST | None:
+def prev(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] = False) -> fst.FST | None:
     """Get previous sibling of `self` in syntactic order, only within parent.
 
     **Parameters:**
@@ -210,6 +213,8 @@ def prev(self: fst.FST, all: bool | Literal['loc'] | Container[AST] = False) -> 
             arguments present). Operators are not returned (even though they have computed location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
+        - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
+            are returned.
         - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
             or `dict` with the keys being the `AST` classes as those are the fastest checks.
 
@@ -243,7 +248,7 @@ def prev(self: fst.FST, all: bool | Literal['loc'] | Container[AST] = False) -> 
             return self
 
 
-def first_child(self: fst.FST, all: bool | Literal['loc'] | Container[AST] = False) -> fst.FST | None:
+def first_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] = False) -> fst.FST | None:
     """Get first valid child in syntactic order.
 
     **Parameters:**
@@ -254,6 +259,8 @@ def first_child(self: fst.FST, all: bool | Literal['loc'] | Container[AST] = Fal
             arguments present). Operators are not returned (even though they have computed location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
+        - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
+            are returned.
         - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
             or `dict` with the keys being the `AST` classes as those are the fastest checks.
 
@@ -288,7 +295,7 @@ def first_child(self: fst.FST, all: bool | Literal['loc'] | Container[AST] = Fal
         field, idx = self.pfield
 
 
-def last_child(self: fst.FST, all: bool | Literal['loc'] | Container[AST] = False) -> fst.FST | None:
+def last_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] = False) -> fst.FST | None:
     """Get last valid child in syntactic order.
 
     **Parameters:**
@@ -299,6 +306,8 @@ def last_child(self: fst.FST, all: bool | Literal['loc'] | Container[AST] = Fals
             arguments present). Operators are not returned (even though they have computed location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
+        - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
+            are returned.
         - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
             or `dict` with the keys being the `AST` classes as those are the fastest checks.
 
@@ -330,7 +339,7 @@ def last_child(self: fst.FST, all: bool | Literal['loc'] | Container[AST] = Fals
         field, idx = self.pfield
 
 
-def last_header_child(self: fst.FST, all: bool | Literal['loc'] | Container[AST] = False) -> fst.FST | None:
+def last_header_child(self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] = False) -> fst.FST | None:
     r"""Get last valid child in syntactic order in a block header (before the `:`), e.g. the `something` in
     `if something: pass`.
 
@@ -342,6 +351,8 @@ def last_header_child(self: fst.FST, all: bool | Literal['loc'] | Container[AST]
             arguments present). Operators are not returned (even though they have computed location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
+        - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
+            are returned.
         - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
             or `dict` with the keys being the `AST` classes as those are the fastest checks.
 
@@ -379,7 +390,7 @@ def last_header_child(self: fst.FST, all: bool | Literal['loc'] | Container[AST]
 
 
 def next_child(
-    self: fst.FST, from_child: fst.FST | None, all: bool | Literal['loc'] | Container[AST] = False
+    self: fst.FST, from_child: fst.FST | None, all: bool | Literal['loc'] | type[AST] | Container[AST] = False
 ) -> fst.FST | None:
     """Get the next child in syntactic order, meant for simple iteration.
 
@@ -394,6 +405,8 @@ def next_child(
             arguments present). Operators are not returned (even though they have computed location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
+        - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
+            are returned.
         - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
             or `dict` with the keys being the `AST` classes as those are the fastest checks.
 
@@ -438,7 +451,7 @@ def next_child(
 
 
 def prev_child(
-    self: fst.FST, from_child: fst.FST | None, all: bool | Literal['loc'] | Container[AST] = False
+    self: fst.FST, from_child: fst.FST | None, all: bool | Literal['loc'] | type[AST] | Container[AST] = False
 ) -> fst.FST | None:
     """Get the previous child in syntactic order, meant for simple iteration.
 
@@ -453,6 +466,8 @@ def prev_child(
             arguments present). Operators are not returned (even though they have computed location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
+        - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
+            are returned.
         - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
             or `dict` with the keys being the `AST` classes as those are the fastest checks.
 
@@ -497,7 +512,7 @@ def prev_child(
 
 
 def step_fwd(
-    self: fst.FST, all: bool | Literal['loc'] | Container[AST] = False, recurse_self: bool = True
+    self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] = False, recurse_self: bool = True
 ) -> fst.FST | None:
     """Step forward in the tree in syntactic order, as if `walk()`ing forward, NOT the inverse of `step_back()`. Will
     walk up parents and down children to get the next node, returning `None` only when we are at the end of the whole
@@ -511,10 +526,12 @@ def step_fwd(
             arguments present). Operators are not returned (even though they have computed location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
+        - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
+            are returned.
+        - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
+            or `dict` with the keys being the `AST` classes as those are the fastest checks.
     - `recurse_self`: Whether to allow recursion into `self` to return children or move directly to next nodes of
         `self` on start.
-    - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
-        or `dict` with the keys being the `AST` classes as those are the fastest checks.
 
     **Returns:**
     - `None` if last valid node in tree, otherwise next node in order.
@@ -560,7 +577,7 @@ def step_fwd(
 
 
 def step_back(
-    self: fst.FST, all: bool | Literal['loc'] | Container[AST] = False, recurse_self: bool = True
+    self: fst.FST, all: bool | Literal['loc'] | type[AST] | Container[AST] = False, recurse_self: bool = True
 ) -> fst.FST | None:
     """Step backward in the tree in syntactic order, as if `walk()`ing backward, NOT the inverse of `step_fwd()`.
     Will walk up parents and down children to get the next node, returning `None` only when we are at the beginning
@@ -574,6 +591,8 @@ def step_back(
             arguments present). Operators are not returned (even though they have computed location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
+        - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
+            are returned.
         - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
             or `dict` with the keys being the `AST` classes as those are the fastest checks.
     - `recurse_self`: Whether to allow recursion into `self` to return children or move directly to previous nodes
@@ -624,7 +643,7 @@ def step_back(
 
 def walk(
     self: fst.FST,
-    all: bool | Literal['loc'] | Container[AST] = False,
+    all: bool | Literal['loc'] | type[AST] | Container[AST] = False,
     *,
     self_: bool = True,
     recurse: bool = True,
@@ -653,9 +672,9 @@ def walk(
     - Sibling nodes of either this node or any parents which have not been walked yet can be removed, replaced or
         inserted before but the new nodes will not be walked (and neither will any removed nodes).
 
-    **Note:** The `NamedExpr` (walrus) expression is treated specially in a Comprehension. The `target` of the operation
-    actually belongs to the first non-Comprehension enclosing scope. For this reason, when a walk recurses into a
-    Comprehension scope the walrus `target` nodes are still returned even though everything else belongs to the
+    **Note:** About scopes, the `NamedExpr` (walrus) expression is treated specially in a Comprehension. The `target` of
+    the operation actually belongs to the first non-Comprehension enclosing scope. For this reason, when a walk recurses
+    into a Comprehension scope the walrus `target` nodes are still returned even though everything else belongs to the
     Comprehension scope and is not returned (except for the first `comprehension.iter`, which also belongs to the
     enclosing scope). This remains true for whatever level of nesting of Comprehensions is recursed into. One quirk, if
     starting a scope walk on a Comprehension, any walrus `targets` **WILL** be returned, the first iterator though will
@@ -669,6 +688,8 @@ def walk(
             arguments present). Operators are not returned (even though they have computed location).
         - `'loc'`: Same as `True` but also operators with calculated locations (excluding `and` and `or` since they
             do not always have a well defined location).
+        - `type[AST]`: A singe **LEAF** `AST` type to return. This will not constrain the walk, just filter which nodes
+            are returned.
         - `Container[AST]`: A container of **LEAF** `AST` types to return. Best container type is a `set`, `frozenset`
             or `dict` with the keys being the `AST` classes as those are the fastest checks. This will not constrain the
             walk, just filter which nodes are returned.
@@ -728,15 +749,15 @@ def walk(
 
     >>> f = FST('a * (x.y + u[v])')
 
-    >>> for g in f.walk(all={ast.Name}):
+    >>> for g in f.walk(all=ast.Name):
     ...     _ = g.replace('new_' + g.id)
 
     >>> print(f.src)
     new_a * (new_x.y + new_u[new_v])
 
-    Replace nodes around us. The replacement doesn't have to be on the node being walked. Note how replacing a node
-    that hasn't been walked yet removes both that node **AND** the replacement node from the walk. After the walk
-    though, all nodes which were replaced have their new values.
+    Replace nodes around us. The replacement doesn't have to be executed on the node being walked, it can be on any
+    node. Note how replacing a node that hasn't been walked yet removes both that node **AND** the replacement node from
+    the walk. After the walk though, all nodes which were replaced have their new values.
 
     >>> f = FST('[pre_parent, [pre_self, [child], post_self], post_parent]')
 
@@ -925,8 +946,8 @@ def walk(
         if scope:  # if walking scope then check if we got to another scope and walk the things from that which are visible in our scope
             ast_cls = ast.__class__
 
-            # if ast_cls not in _ASTS_LEAF_WALK_SCOPE:  # early out
-            #     pass  # noop
+            if ast_cls not in _ASTS_LEAF_WALK_SCOPE:  # early out optimization
+                pass  # noop
 
             if ast_cls in ASTS_LEAF_FUNCDEF:
                 args = ast.args
