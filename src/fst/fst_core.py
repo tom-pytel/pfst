@@ -1534,12 +1534,18 @@ def _offset(
 
     # THIS IS A HOT FUNCTION!
 
+    # WARNING! In the inner loop of this function there are two `break` statements with a note to see this warning. This
+    # is because here we assume that locations and specifically order of nodes is maintained during editing operations.
+    # If that ever fails to be the case then those `break` statements can be changed to `continue` to keep this function
+    # working. If they are not changed in this case then some ASTs may not be offset which should. On the other hand, if
+    # this expected condition fails to be the case a whole lot of other problems probably bigger than this will pop up.
+
     if self_:
         stack = [self.a]
     elif self is exclude:
         return
     else:
-        stack = list(iter_child_nodes(self.a))
+        stack = syntax_ordered_children(self.a)
 
     lno = ln + 1
     colo = (-col  # yes, -0 to not look up 0
@@ -1554,61 +1560,64 @@ def _offset(
     not_fwd_or_tail_is_not_False = not fwd or tail is not False
     head_is_None_and_tail_and_not_fwd = head is None and tail and not fwd
 
-    while stack:
-        if not (a := stack.pop()):  # may be None
-            continue
+    stacks = [stack]
 
-        if (f := a.f) is not exclude:
-            children = a._fields
-        elif offset_excluded:
-            children = ()
-        else:
-            continue
+    while stacks:
+        stack = stacks.pop()
 
-        f._cache.clear()  # f._touch()
-
-        if (fend_colo := getattr(a, 'end_col_offset', None)) is not None:
-            flno = a.lineno
-            fcolo = a.col_offset
-
-            if (fend_lno := a.end_lineno) < lno:
-                continue  # no need to walk into something which ends before offset point
-            elif fend_lno > lno:
-                a.end_lineno = fend_lno + dln
-            elif fend_colo < colo:
+        while stack:
+            if not (a := stack.pop()):  # may be None
                 continue
 
-            elif (
-                fend_colo > colo
-                or (tail and (fwd_or_head_is_not_False or fcolo != fend_colo or flno != fend_lno))  # at (ln, col), moving tail allowed and not blocked by head?
-                or (tail_is_None_and_head_and_fwd and fcolo == fend_colo and flno == fend_lno)
-            ):  # allowed to be and being moved by head?
-                a.end_lineno = fend_lno + dln
-                a.end_col_offset = fend_colo + dcol_offset
+            if (f := a.f) is not exclude:
+                recurse = a._fields  # this instead of True because it may be empty so no recursion needed, same check
+            elif offset_excluded:
+                recurse = False
+            else:
+                continue
 
-            if flno > lno:
-                if not dln and (not (decos := getattr(a, 'decorator_list', None)) or decos[0].lineno > lno):
-                    continue  # no need to walk into something past offset point if line change is 0, don't need to touch either could not have been changed above
+            f._cache.clear()  # f._touch()
 
-                a.lineno = flno + dln
+            if (fend_colo := getattr(a, 'end_col_offset', None)) is not None:
+                flno = a.lineno
+                fcolo = a.col_offset
 
-            elif flno == lno and (
-                fcolo > colo
-                or (
-                    fcolo == colo
-                    and (
-                        (head and (not_fwd_or_tail_is_not_False or fcolo != fend_colo or flno != fend_lno))  # at (ln, col), moving head allowed and not blocked by tail?
-                        or (head_is_None_and_tail_and_not_fwd and fcolo == fend_colo and flno == fend_lno)
-            ))):  # allowed to be and being moved by tail?
-                a.lineno = flno + dln
-                a.col_offset = fcolo + dcol_offset
+                if (fend_lno := a.end_lineno) < lno:
+                    break  # no need to walk into something which ends before offset point, all other ASTs assumed to be before so we don't even bother with them, SEE WARNING ABOVE!
+                elif fend_lno > lno:
+                    a.end_lineno = fend_lno + dln
+                elif fend_colo < colo:
+                    break  # SEE WARNING ABOVE!
 
-        for field in children:  # unrolled iter_child_nodes(a) because it makes a difference here
-            if child := getattr(a, field, None):
-                if isinstance(child, AST):
-                    stack.append(child)
-                elif isinstance(child, list) and not isinstance(child[0], str):
-                    stack.extend(child)
+                elif (
+                    fend_colo > colo
+                    or (tail and (fwd_or_head_is_not_False or fcolo != fend_colo or flno != fend_lno))  # at (ln, col), moving tail allowed and not blocked by head?
+                    or (tail_is_None_and_head_and_fwd and fcolo == fend_colo and flno == fend_lno)
+                ):  # allowed to be and being moved by head?
+                    a.end_lineno = fend_lno + dln
+                    a.end_col_offset = fend_colo + dcol_offset
+
+                if flno > lno:
+                    if not dln and (not (decos := getattr(a, 'decorator_list', None)) or decos[0].lineno > lno):
+                        continue  # no need to walk into something past offset point if line change is 0, don't need to touch either could not have been changed above
+
+                    a.lineno = flno + dln
+
+                elif flno == lno and (
+                    fcolo > colo
+                    or (
+                        fcolo == colo
+                        and (
+                            (head and (not_fwd_or_tail_is_not_False or fcolo != fend_colo or flno != fend_lno))  # at (ln, col), moving head allowed and not blocked by tail?
+                            or (head_is_None_and_tail_and_not_fwd and fcolo == fend_colo and flno == fend_lno)
+                ))):  # allowed to be and being moved by tail?
+                    a.lineno = flno + dln
+                    a.col_offset = fcolo + dcol_offset
+
+            if recurse:
+                stacks.append(stack)
+
+                stack = syntax_ordered_children(a)
 
     self._touchall(True, False, False)
 

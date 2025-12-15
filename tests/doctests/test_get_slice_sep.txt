@@ -23,7 +23,9 @@
 ...     self_tail_sep = 1 if self_tail_sep is None and ast_type is Tuple else self_tail_sep
 ...     ret_tail_sep = 1 if ret_tail_sep is None and ast_type is Tuple else ret_tail_sep
 ...
-...     return get_slice_sep(fst_, start, stop, len(fst_.elts), True, ast_type(elts=fst_.a.elts[start : stop]),
+...     ast = ast_type(elts=fst_.a.elts[start : stop], ctx=Load())
+...
+...     return get_slice_sep(fst_, start, stop, len(fst_.elts), True, ast,
 ...         elts[stop - 1], elts[start].f.pars(), elts[stop - 1].f.pars(),
 ...         bound_ln, bound_col, fst_.end_ln, fst_.end_col - 1,
 ...         {'trivia': trivia}, prefix=prefix, suffix=suffix, self_tail_sep=self_tail_sep, ret_tail_sep=ret_tail_sep)
@@ -429,7 +431,7 @@ more trailing separator checks
 ...
 ...     len_body = len(elts)
 ...     ast_elts = elts[start : stop]
-...     ast = ast_type(elts=ast_elts)
+...     ast = ast_type(elts=ast_elts, ctx=Load())
 ...
 ...     del elts[start : stop]
 ...

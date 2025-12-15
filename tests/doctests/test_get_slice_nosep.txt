@@ -10,7 +10,9 @@
 ...     _, _, bound_end_ln, bound_end_col = fst_.loc
 ...     bound_end_col -= 1
 ...
-...     ret = get_slice_nosep(fst_, start, stop, len(generators), True, Tuple(elts=generators[start : stop]),
+...     ast = Tuple(elts=generators[start : stop], ctx=Load())
+...
+...     ret = get_slice_nosep(fst_, start, stop, len(generators), True, ast,
 ...         generators[start].f.loc, generators[stop - 1].f.loc,
 ...         bound_ln, bound_col, bound_end_ln, bound_end_col, {'trivia': trivia})
 ...
@@ -188,7 +190,9 @@ basic
 ...         bound_end_ln = len(lines) - 1
 ...         bound_end_col = len(lines[-1])
 ...
-...     ret = get_slice_nosep(fst_, start, stop, len(ifs), True, Tuple(elts=ifs[start : stop]),
+...     ast = Tuple(elts=ifs[start : stop], ctx=Load())
+...
+...     ret = get_slice_nosep(fst_, start, stop, len(ifs), True, ast,
 ...         loc_if(start), loc_if(stop - 1),  # ifs[start].f.pars(), ifs[stop - 1].f.pars(),
 ...         bound_ln, bound_col, bound_end_ln, bound_end_col, {'trivia': trivia})
 ...
