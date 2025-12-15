@@ -4,7 +4,6 @@ import re
 import sys
 from array import array
 from ast import iter_fields, walk
-from itertools import chain
 from keyword import iskeyword as keyword_iskeyword
 from types import EllipsisType, NoneType
 from typing import Any, Callable, Iterable, Iterator, Literal
@@ -160,8 +159,6 @@ __all__ = [
     'syntax_ordered_children',
     'precedence_require_parens_by_type', 'precedence_require_parens',
 ]
-
-chain_from_iterable = chain.from_iterable
 
 
 PYVER  = sys.version_info[:2]
@@ -1267,6 +1264,47 @@ def _syntax_ordered_children_Call(ast: AST) -> list[AST]:
     return children
 
 
+def _syntax_ordered_children_Dict(ast: AST) -> list[AST]:
+    keys = ast.keys
+    values = ast.values
+    children = []
+
+    for i in range(len(keys)):  # yes this can be slightly faster than zip() (and defintely than chain.from_iterable())
+        children.append(keys[i])
+        children.append(values[i])
+
+    return children
+
+
+def _syntax_ordered_children_Compare(ast: AST) -> list[AST]:
+    ops = ast.ops
+    nops = len(ops)
+    comparators = ast.comparators
+    ncomparators = len(comparators)
+    children = [ast.left]
+
+    if nops < ncomparators:  # we specifically check for different length ops and comparators because this can be the case during our operations, it is not a normal AST thing
+        for i in range(nops):
+            children.append(ops[i])
+            children.append(comparators[i])
+
+        children.extend(comparators[nops:])
+
+    elif nops == ncomparators:
+        for i in range(nops):
+            children.append(ops[i])
+            children.append(comparators[i])
+
+    else:  # nops > ncomparators
+        for i in range(ncomparators):
+            children.append(ops[i])
+            children.append(comparators[i])
+
+        children.extend(ops[ncomparators:])
+
+    return children
+
+
 def _syntax_ordered_children_arguments(ast: AST) -> list[AST]:
     children = []
 
@@ -1277,21 +1315,32 @@ def _syntax_ordered_children_arguments(ast: AST) -> list[AST]:
     elif (ldefaults := len(defaults)) <= (largs := len(args := ast.args)):
         children.extend(ast.posonlyargs)
         children.extend(args[:-ldefaults])
-        children.extend(chain_from_iterable(zip(args[-ldefaults:], defaults, strict=True)))
+
+        for a, d in zip(args[-ldefaults:], defaults, strict=True):
+            children.append(a)
+            children.append(d)
 
     else:
         children.extend((posonlyargs := ast.posonlyargs)[:-(lposonly_defaults := ldefaults - largs)])
-        children.extend(chain_from_iterable(zip(posonlyargs[-lposonly_defaults:], defaults[:lposonly_defaults],
-                                                strict=True)))
-        children.extend(chain_from_iterable(zip(args, defaults[lposonly_defaults:], strict=True)))
+
+        for p, d in zip(posonlyargs[-lposonly_defaults:], defaults[:lposonly_defaults], strict=True):
+            children.append(p)
+            children.append(d)
+
+        for a, d in zip(args, defaults[lposonly_defaults:], strict=True):
+            children.append(a)
+            children.append(d)
 
     if vararg := ast.vararg:
         children.append(vararg)
 
     if not (kw_defaults := ast.kw_defaults):
         children.extend(ast.kwonlyargs)
+
     else:
-        children.extend(chain_from_iterable(zip(ast.kwonlyargs, kw_defaults, strict=True)))
+        for a, d in zip(ast.kwonlyargs, kw_defaults, strict=True):
+            children.append(a)
+            children.append(d)
 
     if kwarg := ast.kwarg:
         children.append(kwarg)
@@ -1299,7 +1348,21 @@ def _syntax_ordered_children_arguments(ast: AST) -> list[AST]:
     return children
 
 
+def _syntax_ordered_children_MatchMapping(ast: AST) -> list[AST]:
+    keys = ast.keys
+    patterns = ast.patterns
+    children = []
+
+    for i in range(len(keys)):
+        children.append(keys[i])
+        children.append(patterns[i])
+
+    return children
+
+
 def _syntax_ordered_children_default(ast: AST) -> list[AST]:
+    # if all is well this should never be called, just here for reference and fallback in case of new nodes
+
     children = []
 
     for field in AST_FIELDS[ast.__class__]:
@@ -1379,7 +1442,7 @@ _SYNTAX_ORDERED_CHILDREN = {
     UnaryOp:            lambda ast: [ast.op, ast.operand],
     Lambda:             lambda ast: [ast.args, ast.body],
     IfExp:              lambda ast: [ast.body, ast.test, ast.orelse],
-    Dict:               lambda ast: list(chain_from_iterable(zip(ast.keys, ast.values, strict=True))),
+    Dict:               _syntax_ordered_children_Dict,
     Set:                _syntax_ordered_children_elts,
     ListComp:           _syntax_ordered_children_comp,
     SetComp:            _syntax_ordered_children_comp,
@@ -1388,9 +1451,7 @@ _SYNTAX_ORDERED_CHILDREN = {
     Await:              _syntax_ordered_children_value,
     Yield:              _syntax_ordered_children_value,
     YieldFrom:          _syntax_ordered_children_value,
-    Compare:            lambda ast: ([ast.left, *chain_from_iterable(zip(ops, ast.comparators, strict=True))]
-                                     if len(ops := ast.ops) != 1 else
-                                     [ast.left, ops[0], ast.comparators[0]]),
+    Compare:            _syntax_ordered_children_Compare,
     Call:               _syntax_ordered_children_Call,
     FormattedValue:     _syntax_ordered_children_fmtval,
     Interpolation:      _syntax_ordered_children_fmtval,
@@ -1452,7 +1513,7 @@ _SYNTAX_ORDERED_CHILDREN = {
     MatchValue:         _syntax_ordered_children_value,
     MatchSingleton:     _syntax_ordered_children_nothing,
     MatchSequence:      _syntax_ordered_children_patterns,
-    MatchMapping:       lambda ast: list(chain_from_iterable(zip(ast.keys, ast.patterns, strict=True))),
+    MatchMapping:       _syntax_ordered_children_MatchMapping,
     MatchClass:         lambda ast: [ast.cls, *ast.patterns, *ast.kwd_patterns],
     MatchStar:          _syntax_ordered_children_nothing,
     MatchAs:            lambda ast: [ast.pattern],
@@ -1479,9 +1540,7 @@ _SYNTAX_ORDERED_CHILDREN = {
 def syntax_ordered_children(ast: AST) -> list:
     """Get list of all `AST` children in syntax order. This will include individual fields and aggregate fields like
     `body` all smushed up together into a single flat list. The list may contain `None` values for example from a `Dict`
-    `keys` field which has `**` elements."""
-
-    # TODO: optimize for each AST type
+    `keys` field which has `**` elements as it is faster to check for those in the calling functions than here."""
 
     return _SYNTAX_ORDERED_CHILDREN.get(ast.__class__, _syntax_ordered_children_default)(ast)
 
