@@ -3988,6 +3988,7 @@ class FST:
 
         return self.a.__class__ in ASTS_LEAF_IMPORT
 
+
     # ------------------------------------------------------------------------------------------------------------------
     # Private
 
@@ -4089,6 +4090,89 @@ class FST:
     from .fst_put_one import _put_one
 
     # ------------------------------------------------------------------------------------------------------------------
+    # AST field accessors
+
+    from .fst_accessors import (
+        body,
+        type_ignores,
+        argtypes,
+        returns,
+        decorator_list,
+        name,
+        type_params,
+        args,
+        type_comment,
+        bases,
+        keywords,
+        value,
+        targets,
+        target,
+        op,
+        annotation,
+        simple,
+        iter,
+        orelse,
+        test,
+        items,
+        subject,
+        cases,
+        exc,
+        cause,
+        handlers,
+        finalbody,
+        msg,
+        names,
+        module,
+        level,
+        values,
+        left,
+        right,
+        operand,
+        keys,
+        elts,
+        elt,
+        generators,
+        key,
+        ops,
+        comparators,
+        func,
+        conversion,
+        format_spec,
+        str,
+        kind,
+        attr,
+        ctx,
+        slice,
+        id,
+        lower,
+        upper,
+        step,
+        ifs,
+        is_async,
+        type,
+        posonlyargs,
+        defaults,
+        vararg,
+        kwonlyargs,
+        kw_defaults,
+        kwarg,
+        arg,
+        asname,
+        context_expr,
+        optional_vars,
+        pattern,
+        guard,
+        patterns,
+        rest,
+        cls,
+        kwd_attrs,
+        kwd_patterns,
+        tag,
+        bound,
+        default_value,
+    )
+
+    # ------------------------------------------------------------------------------------------------------------------
     # Virtual field accessors
 
     @property
@@ -4155,97 +4239,3 @@ def _make_predicates() -> None:
 
 
 _make_predicates()
-
-
-# AST field accessors
-
-def _make_AST_field_accessors() -> None:
-    def _make_AST_field_accessor(field: str, cardinality: Literal[1, 2, 3]) -> property:
-        if cardinality == 1:  # is an AST or a primitive
-            @property
-            def accessor(self: FST, field: str = field) -> FST | None | constant:
-                """@private"""
-
-                return getattr(child, 'f', None) if isinstance(child := getattr(self.a, field), AST) else child
-
-            @accessor.setter
-            def accessor(self: FST, code: Code | constant | None, field: str = field) -> None:
-                """@private"""
-
-                self._put_one(code, None, field)
-
-            @accessor.deleter
-            def accessor(self: FST, field: str = field) -> None:
-                """@private"""
-
-                self._put_one(None, None, field)
-
-        elif cardinality == 2:  # is a list[AST]
-            @property
-            def accessor(self: FST, field: str = field) -> fstview:
-                """@private"""
-
-                return fstview(self, field, 0, len(getattr(self.a, field)))
-
-            @accessor.setter
-            def accessor(self: FST, code: Code | None, field: str = field) -> None:
-                """@private"""
-
-                self._put_slice(code, None, None, field)
-
-            @accessor.deleter
-            def accessor(self: FST, field: str = field) -> None:
-                """@private"""
-
-                self._put_slice(None, None, None, field)
-
-        else:  # cardinality == 3  # can be single AST or list depending on the parent AST type
-            @property
-            def accessor(self: FST, field: str = field) -> fstview | FST | None | constant:
-                """@private"""
-
-                if isinstance(child := getattr(self.a, field), list):
-                    return fstview(self, field, 0, len(child))
-                elif isinstance(child, AST):
-                    return getattr(child, 'f', None)
-
-                return child
-
-            @accessor.setter
-            def accessor(self: FST, code: Code | None, field: str = field) -> None:
-                """@private"""
-
-                if isinstance(getattr(self.a, field), list):
-                    self._put_slice(code, None, None, field)
-                else:
-                    self._put_one(code, None, field)
-
-            @accessor.deleter
-            def accessor(self: FST, field: str = field) -> None:
-                """@private"""
-
-                if isinstance(getattr(self.a, field), list):
-                    self._put_slice(None, None, None, field)
-                else:
-                    self._put_one(None, None, field)
-
-        return accessor
-
-    FST_dict = FST.__dict__
-    cardinality = {}  # {'field': 1 means single element | 2 means list (3 means can be either), ...}
-
-    for fields in FIELDS.values():
-        for field, type_ in fields:
-            if field == 'lineno':  # TypeIgnore.lineno
-                continue
-
-            if field in FST_dict:
-                raise RuntimeError(f'AST field name {field!r} already taken in FST class')
-
-            cardinality[field] = cardinality.get(field, 0) | (2 if type_.endswith('*') else 1)
-
-    for field, c in cardinality.items():
-        setattr(FST, field, _make_AST_field_accessor(field, c))
-
-
-_make_AST_field_accessors()

@@ -56,7 +56,7 @@ version = { file = "VERSION" }
 
 [tool.ruff]
 line-length = 120
-exclude = ["tests", "src/fst/fuzz.py", "make_docs.py"]
+exclude = ["tests", "scripts", "src/fst/fuzz.py", "make_docs.py"]
 
 [tool.ruff.format]
 quote-style = "preserve"
