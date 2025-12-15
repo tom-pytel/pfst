@@ -49,6 +49,7 @@ from .asttypes import (
     ASTS_LEAF_COMP,
     ASTS_LEAF_FTSTR,
     ASTS_LEAF_MAYBE_DOCSTR,
+    ASTS_LEAF__SLICE,
     AST,
     Add,
     And,
@@ -126,8 +127,6 @@ from .asttypes import (
 
 from .astutil import (
     constant,
-    FIELDS,
-    AST_BASES,
     OPCLS2STR,
     bistr,
     WalkFail,
@@ -392,7 +391,12 @@ def dump(
 class FST:
     """Class which maintains structure and formatted source code for an `AST` tree. An instance of this class is added
     to each `AST` node in a tree. It provides format-preserving operations as well as ability to navigate the tree in
-    any direction."""
+    any direction.
+
+    **Note:** `AST` type check predicates of the form `is_For` and `is_BinOp` exist but they are not documented here
+    for brevity. You can also access `AST` node fields through this class like `FST.left` or `FST.op`, these are
+    likewise not documented.
+    """
 
     a:            AST | None       ; """The actual `AST` node. Will be set to `None` for `FST` nodes which were deleted or otherwise invalidated so can be checked for that to see if the `FST` is still alive (while walking and modifying for example)."""
     parent:       FST | None       ; """Parent `FST` node, `None` in root node."""
@@ -3988,6 +3992,137 @@ class FST:
 
         return self.a.__class__ in ASTS_LEAF_IMPORT
 
+    @property
+    def is__slice(self) -> bool:
+        """Is one of our own custom SPECIAL SLICE nodes."""
+
+        return self.a.__class__ in ASTS_LEAF__SLICE
+
+    from .fst_type_predicates import (
+        is_Module,
+        is_Interactive,
+        is_Expression,
+        is_FunctionType,
+        is_FunctionDef,
+        is_AsyncFunctionDef,
+        is_ClassDef,
+        is_Return,
+        is_Delete,
+        is_Assign,
+        is_TypeAlias,
+        is_AugAssign,
+        is_AnnAssign,
+        is_For,
+        is_AsyncFor,
+        is_While,
+        is_If,
+        is_With,
+        is_AsyncWith,
+        is_Match,
+        is_Raise,
+        is_Try,
+        is_TryStar,
+        is_Assert,
+        is_Import,
+        is_ImportFrom,
+        is_Global,
+        is_Nonlocal,
+        is_Expr,
+        is_Pass,
+        is_Break,
+        is_Continue,
+        is_BoolOp,
+        is_NamedExpr,
+        is_BinOp,
+        is_UnaryOp,
+        is_Lambda,
+        is_IfExp,
+        is_Dict,
+        is_Set,
+        is_ListComp,
+        is_SetComp,
+        is_DictComp,
+        is_GeneratorExp,
+        is_Await,
+        is_Yield,
+        is_YieldFrom,
+        is_Compare,
+        is_Call,
+        is_FormattedValue,
+        is_Interpolation,
+        is_JoinedStr,
+        is_TemplateStr,
+        is_Constant,
+        is_Attribute,
+        is_Subscript,
+        is_Starred,
+        is_Name,
+        is_List,
+        is_Tuple,
+        is_Slice,
+        is_Load,
+        is_Store,
+        is_Del,
+        is_And,
+        is_Or,
+        is_Add,
+        is_Sub,
+        is_Mult,
+        is_MatMult,
+        is_Div,
+        is_Mod,
+        is_Pow,
+        is_LShift,
+        is_RShift,
+        is_BitOr,
+        is_BitXor,
+        is_BitAnd,
+        is_FloorDiv,
+        is_Invert,
+        is_Not,
+        is_UAdd,
+        is_USub,
+        is_Eq,
+        is_NotEq,
+        is_Lt,
+        is_LtE,
+        is_Gt,
+        is_GtE,
+        is_Is,
+        is_IsNot,
+        is_In,
+        is_NotIn,
+        is_comprehension,
+        is_ExceptHandler,
+        is_arguments,
+        is_arg,
+        is_keyword,
+        is_alias,
+        is_withitem,
+        is_match_case,
+        is_MatchValue,
+        is_MatchSingleton,
+        is_MatchSequence,
+        is_MatchMapping,
+        is_MatchClass,
+        is_MatchStar,
+        is_MatchAs,
+        is_MatchOr,
+        is_TypeIgnore,
+        is_TypeVar,
+        is_ParamSpec,
+        is_TypeVarTuple,
+        is__ExceptHandlers,
+        is__match_cases,
+        is__Assign_targets,
+        is__decorator_list,
+        is__comprehensions,
+        is__comprehension_ifs,
+        is__aliases,
+        is__withitems,
+        is__type_params,
+    )
+
 
     # ------------------------------------------------------------------------------------------------------------------
     # Private
@@ -4202,40 +4337,3 @@ _VIRTUAL_FIELD_VIEW__ALL = {
     MatchMapping: fstview_MatchMapping,
     Compare:      fstview_Compare,
 }
-
-# ----------------------------------------------------------------------------------------------------------------------
-# Generated methods  # TODO: at some point make external generator and pre-generate
-
-# Predicates
-
-def _make_predicates() -> None:
-    def _make_class_is_predicate(ast_cls: type[AST]) -> property:
-        def predicate(self: FST, ast_cls: type = ast_cls) -> bool:
-            return self.a.__class__ is ast_cls
-
-        predicate.__doc__ = f'Is a `{ast_cls.__name__}` node.'
-
-        return property(predicate)
-
-    def _make_isinstance_predicate(ast_cls: type[AST]) -> property:
-        def predicate(self: FST, ast_cls: type = ast_cls) -> bool:
-            return isinstance(self.a, ast_cls)
-
-        predicate.__doc__ = f'Is a `{ast_cls.__name__}` node.'
-
-        return property(predicate)
-
-    for ast_cls in FIELDS:
-        name = f'is_{ast_cls.__name__}'
-
-        if not hasattr(FST, name):  # in case explicitly overridden
-            setattr(FST, name, _make_class_is_predicate(ast_cls))
-
-    for ast_cls in AST_BASES:
-        name = f'is_{ast_cls.__name__}'
-
-        if not hasattr(FST, name):  # things like is_stmt() already exist
-            setattr(FST, name, _make_isinstance_predicate(ast_cls))
-
-
-_make_predicates()

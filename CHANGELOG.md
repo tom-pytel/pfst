@@ -7,6 +7,7 @@
 
 ### Added
 
+- pre-generate `AST` type check predicates instead of on import, faster execution
 - pre-generate `AST` field accessors instead of on import, faster execution
 - `FST.is_alive` to check if node has been removed or replaced
 - `FST.scope_symbols()` to get the names used in a scope

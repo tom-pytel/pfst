@@ -605,3 +605,7 @@ class _type_params(_slice):
         self.col_offset = col_offset
         self.end_lineno = end_lineno
         self.end_col_offset = end_col_offset
+
+
+ASTS_LEAF__SLICE = frozenset([_ExceptHandlers, _match_cases, _Assign_targets, _decorator_list, _comprehensions,
+                              _comprehension_ifs, _aliases, _withitems, _type_params])
