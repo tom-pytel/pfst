@@ -404,9 +404,9 @@ functions.
 'a'
 
 We got `a` because that is the first node in the modified part. If you want the lowest level node which completely
-encompasses the modification then use `find_loc_in()`.
+encompasses the modification then use `find_contains_loc()`.
 
->>> f.find_loc_in(1, 7, 1, 10).src
+>>> f.find_contains_loc(1, 7, 1, 10).src
 'a < d'
 
 As stated above, the source you pass in is not modified in any way, including indentation, so you must make sure

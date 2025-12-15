@@ -225,19 +225,19 @@ Returns only entire nodes in location.
 >>> f.find_in_loc(0, 4, 0, 8)  # " < b"
 <Lt 0,5..0,6>
 
-Or you can search for a node which **CONTAINS** a location using `fst.fst.FST.find_loc_in()`.
+Or you can search for a node which **CONTAINS** a location using `fst.fst.FST.find_contains_loc()`.
 
->>> f.find_loc_in(0, 4, 0, 6)  # " <"
+>>> f.find_contains_loc(0, 4, 0, 6)  # " <"
 <Compare 0,3..0,8>
 
 Will include nodes which match the location **EXACTLY** by default.
 
->>> f.find_loc_in(0, 3, 0, 8)  # "a < b"
+>>> f.find_contains_loc(0, 3, 0, 8)  # "a < b"
 <Compare 0,3..0,8>
 
 But that can be disabled.
 
->>> f.find_loc_in(0, 3, 0, 8, allow_exact=False)  # "a < b"
+>>> f.find_contains_loc(0, 3, 0, 8, allow_exact=False)  # "a < b"
 <If ROOT 0,0..1,8>
 
 The `fst.fst.FST.find_loc()` method combines the two efficiently to find a node which is either the first one completely
@@ -248,9 +248,13 @@ Here it gives the containing node while `find_in_loc()` gives nothing at all.
 
 >>> loc = (0, 4, 0, 5)  # empty space in Compare
 
->>> print(f'{f.find_loc(*loc) = }\n{f.find_loc_in(*loc) = }\n{f.find_in_loc(*loc) = }')
+>>> print(f'''\
+... {f.find_loc(*loc) = }
+... {f.find_contains_loc(*loc) = }
+... {f.find_in_loc(*loc) = }\
+... ''')
 f.find_loc(*loc) = <Compare 0,3..0,8>
-f.find_loc_in(*loc) = <Compare 0,3..0,8>
+f.find_contains_loc(*loc) = <Compare 0,3..0,8>
 f.find_in_loc(*loc) = None
 
 And here it gives the contained `Name` same as `find_in_loc()`, which gave nothing above but gives the "closest" node
@@ -258,8 +262,12 @@ here.
 
 >>> loc = (0, 3, 0, 5)  # first element of Compare including whitespace after "a "
 
->>> print(f'{f.find_loc(*loc) = }\n{f.find_loc_in(*loc) = }\n{f.find_in_loc(*loc) = }')
+>>> print(f'''\
+... {f.find_loc(*loc) = }
+... {f.find_contains_loc(*loc) = }
+... {f.find_in_loc(*loc) = }\
+... ''')
 f.find_loc(*loc) = <Name 0,3..0,4>
-f.find_loc_in(*loc) = <Compare 0,3..0,8>
+f.find_contains_loc(*loc) = <Compare 0,3..0,8>
 f.find_in_loc(*loc) = <Name 0,3..0,4>
 """

@@ -1696,7 +1696,7 @@ class FST:
         return rec.out
 
     # ------------------------------------------------------------------------------------------------------------------
-    # High level
+    # Edit
 
     def copy_ast(self) -> AST:
         """Copy the `AST` node tree of this `FST` node, not including any `FST` stuff. Use when you just want a copy of
@@ -2368,7 +2368,7 @@ class FST:
         ln, col, end_ln, end_col = clip_src_loc(self, ln, col, end_ln, end_col)
 
         if action == 'reparse':
-            parent = root.find_loc_in(ln, col, end_ln, end_col, False) or root
+            parent = root.find_contains_loc(ln, col, end_ln, end_col, False) or root
 
             return parent._reparse_raw(code, ln, col, end_ln, end_col)
 
@@ -3395,7 +3395,7 @@ class FST:
 
         return root.child_from_path(root.child_path(self))
 
-    def find_loc_in(
+    def find_contains_loc(
         self, ln: int, col: int, end_ln: int, end_col: int, allow_exact: bool | Literal['top'] = True
     ) -> FST | None:
         r"""Find the lowest level node which entirely contains location (starting search at `self`). The search will
@@ -3419,37 +3419,37 @@ class FST:
 
         **Examples:**
 
-        >>> FST('i = val', 'exec').find_loc_in(0, 6, 0, 7)
+        >>> FST('i = val', 'exec').find_contains_loc(0, 6, 0, 7)
         <Name 0,4..0,7>
 
-        >>> FST('i = val', 'exec').find_loc_in(0, 4, 0, 7)
+        >>> FST('i = val', 'exec').find_contains_loc(0, 4, 0, 7)
         <Name 0,4..0,7>
 
-        >>> FST('i = val', 'exec').find_loc_in(0, 4, 0, 7, allow_exact=False)
+        >>> FST('i = val', 'exec').find_contains_loc(0, 4, 0, 7, allow_exact=False)
         <Assign 0,0..0,7>
 
-        >>> FST('i = val', 'exec').find_loc_in(0, 5, 0, 7, allow_exact=False)
+        >>> FST('i = val', 'exec').find_contains_loc(0, 5, 0, 7, allow_exact=False)
         <Name 0,4..0,7>
 
-        >>> FST('i = val', 'exec').find_loc_in(0, 4, 0, 6, allow_exact=False)
+        >>> FST('i = val', 'exec').find_contains_loc(0, 4, 0, 6, allow_exact=False)
         <Name 0,4..0,7>
 
-        >>> FST('i = val', 'exec').find_loc_in(0, 3, 0, 7)
+        >>> FST('i = val', 'exec').find_contains_loc(0, 3, 0, 7)
         <Assign 0,0..0,7>
 
-        >>> FST('i = val', 'exec').find_loc_in(0, 3, 0, 7, allow_exact=False)
+        >>> FST('i = val', 'exec').find_contains_loc(0, 3, 0, 7, allow_exact=False)
         <Assign 0,0..0,7>
 
-        >>> print(FST('i = val', 'exec').find_loc_in(0, 0, 0, 7, allow_exact=False))
+        >>> print(FST('i = val', 'exec').find_contains_loc(0, 0, 0, 7, allow_exact=False))
         None
 
-        >>> FST('i = val\n', 'exec').find_loc_in(0, 0, 0, 7, allow_exact=False)
+        >>> FST('i = val\n', 'exec').find_contains_loc(0, 0, 0, 7, allow_exact=False)
         <Module ROOT 0,0..1,0>
 
-        >>> FST('i = val', 'exec').find_loc_in(0, 0, 0, 7)
+        >>> FST('i = val', 'exec').find_contains_loc(0, 0, 0, 7)
         <Assign 0,0..0,7>
 
-        >>> FST('i = val', 'exec').find_loc_in(0, 0, 0, 7, allow_exact='top')
+        >>> FST('i = val', 'exec').find_contains_loc(0, 0, 0, 7, allow_exact='top')
         <Module ROOT 0,0..0,7>
         """
 
@@ -3494,7 +3494,7 @@ class FST:
 
     def find_in_loc(self, ln: int, col: int, end_ln: int, end_col: int) -> FST | None:
         """Find the first highest level node which is contained entirely in location (inclusive, starting search at
-        `self`). To reiterate, the search will only find nodes at self or below, no parents.
+        `self`). The search will only find nodes at self or below, no parents.
 
         **Parameters:**
         - `ln`: Start line of location to search (0 based).
@@ -3548,8 +3548,8 @@ class FST:
     def find_loc(self, ln: int, col: int, end_ln: int, end_col: int, exact_top: bool = False) -> FST | None:
         r"""Find node which best fits location. If an exact location match is found then that is returned with the `top`
         parameter specifying which of multiple nodes at same location is returned if that is the case. Otherwise
-        `find_in_loc()` is preferred if there is a match and if not then `find_loc_in()`. The search is done efficiently
-        so that the same nodes are not walked multiple times.
+        `find_in_loc()` is preferred if there is a match and if not then `find_contains_loc()`. The search is done
+        efficiently so that the same nodes are not walked multiple times.
 
         **Parameters:**
         - `ln`: Start line of location to search for (0 based).
@@ -3583,7 +3583,7 @@ class FST:
         'None'
         """
 
-        f = self.find_loc_in(ln, col, end_ln, end_col, 'top' if exact_top else True)
+        f = self.find_contains_loc(ln, col, end_ln, end_col, 'top' if exact_top else True)
 
         if not f:
             return self.find_in_loc(ln, col, end_ln, end_col)
