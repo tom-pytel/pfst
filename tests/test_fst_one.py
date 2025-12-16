@@ -280,7 +280,7 @@ class TestFSTPut(unittest.TestCase):
                 self.assertEqual(c, r, f'{case.id()}, rest idx = {rest_idx}')
 
     def test_put_one_raw_from_put_one_data(self):
-        from support import _unfmt_code, _make_fst
+        from support import _unfmt_code, _make_fst, _clean_options
 
         for case, rest in DATA_PUT_ONE.iterate(True):
             if case.options.get('raw') is not None or rest[1].startswith('**'):
@@ -295,7 +295,7 @@ class TestFSTPut(unittest.TestCase):
 
             try:
                 try:
-                    f.put(src, case.start, case.stop, field=case.field, **options)  # None if src == '**DEL**' else src
+                    f.put(src, case.start, case.stop, field=case.field, **_clean_options(options))  # None if src == '**DEL**' else src
 
                 except ValueError as exc:
                     if str(exc) != 'cannot insert in raw put':

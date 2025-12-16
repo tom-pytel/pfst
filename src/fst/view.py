@@ -10,6 +10,7 @@ from . import fst
 from .astutil import OPCLS2STR, AST
 from .code import Code
 from .fst_misc import fixup_one_index, fixup_slice_indices
+from .fst_options import check_options
 
 __all__ = ['fstview', 'fstview_Dict', 'fstview_MatchMapping', 'fstview_Compare']
 
@@ -345,6 +346,8 @@ class fstview:
         '[1, 2]'
         """
 
+        check_options(options)
+
         start, stop, _ = self._get_indices()
 
         return self.base.get_slice(start, stop, self.field, cut=False, **options)
@@ -368,6 +371,8 @@ class fstview:
         >>> f.src
         '[0, 3]'
         """
+
+        check_options(options)
 
         start, stop, _ = self._get_indices()
 
@@ -401,6 +406,8 @@ class fstview:
         '[0, 4, 5, 3]'
         """
 
+        check_options(options)
+
         start, stop, len_before = self._get_indices()
 
         self.base = self.base._put_slice(code, start, stop, self.field, one, options)
@@ -426,6 +433,8 @@ class fstview:
         >>> FST('[0, 1, 2, 3]').elts[1:3].remove().base.src
         '[0, 3]'
         """
+
+        check_options(options)
 
         start, stop, len_before = self._get_indices()
 
@@ -467,6 +476,8 @@ class fstview:
         '[0, *star, 1, 2, 3]'
         """
 
+        check_options(options)
+
         start, stop, len_before = self._get_indices()
         len_view = stop - start
 
@@ -503,6 +514,8 @@ class fstview:
         '[0, 1, 2, *star, 3]'
         """
 
+        check_options(options)
+
         _, stop, _ = self._get_indices()
 
         self.base = self.base._put_slice(code, stop, stop, self.field, True, options)
@@ -532,6 +545,8 @@ class fstview:
         >>> FST('[0, 1, 2, 3]').elts[1:3].extend('(4, 5)').base.src
         '[0, 1, 2, 4, 5, 3]'
         """
+
+        check_options(options)
 
         _, stop, len_before = self._get_indices()
 
@@ -563,6 +578,8 @@ class fstview:
         '[0, *star, 1, 2, 3]'
         """
 
+        check_options(options)
+
         start, _, _ = self._get_indices()
 
         self.base = self.base._put_slice(code, start, start, self.field, True, options)
@@ -592,6 +609,8 @@ class fstview:
         >>> FST('[0, 1, 2, 3]').elts[1:3].prextend('(4, 5)').base.src
         '[0, 4, 5, 1, 2, 3]'
         """
+
+        check_options(options)
 
         start, _, len_before = self._get_indices()
 

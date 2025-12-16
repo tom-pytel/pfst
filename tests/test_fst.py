@@ -8453,6 +8453,36 @@ match a:
 
         self.assertEqual(old, FST.set_options(**old))
 
+    def test_options_invalid(self):
+        self.assertRaises(ValueError, FST.set_options, invalid_option=True)
+        self.assertRaises(ValueError, FST.set_options, to=True)
+        self.assertRaises(ValueError, FST.set_options, op=True)
+
+        f = FST('[a]')
+
+        self.assertRaises(ValueError, f.reconcile, f, invalid_option=True)  # doesn't matter what we call it with, the options check is first and should raise immediately
+        self.assertRaises(ValueError, f.copy, invalid_option=True)
+        self.assertRaises(ValueError, f.cut, invalid_option=True)
+        self.assertRaises(ValueError, f.replace, None, invalid_option=True)
+        self.assertRaises(ValueError, f.remove, invalid_option=True)
+        self.assertRaises(ValueError, f.get, invalid_option=True)
+        self.assertRaises(ValueError, f.get_slice, invalid_option=True)
+        self.assertRaises(ValueError, f.put, None, invalid_option=True)
+        self.assertRaises(ValueError, f.put_slice, None, invalid_option=True)
+        self.assertRaises(ValueError, f.put_docstr, None, invalid_option=True)
+
+        v = f.elts
+
+        self.assertRaises(ValueError, v.copy, invalid_option=True)
+        self.assertRaises(ValueError, v.cut, invalid_option=True)
+        self.assertRaises(ValueError, v.replace, None, invalid_option=True)
+        self.assertRaises(ValueError, v.remove, invalid_option=True)
+        self.assertRaises(ValueError, v.insert, None, invalid_option=True)
+        self.assertRaises(ValueError, v.append, None, invalid_option=True)
+        self.assertRaises(ValueError, v.extend, None, invalid_option=True)
+        self.assertRaises(ValueError, v.prepend, None, invalid_option=True)
+        self.assertRaises(ValueError, v.prextend, None, invalid_option=True)
+
     def test_options_thread_local(self):
         def threadfunc(barrier, ret, option, value):
             FST.set_options(**{option: value})

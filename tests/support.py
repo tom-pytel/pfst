@@ -5,6 +5,7 @@ from typing import Any, Generator, Literal, NamedTuple
 from fst import FST
 from fst.asttypes import _slice
 from fst.astutil import copy_ast, compare_asts
+from fst.fst_options import _ALL_OPTIONS
 
 from ast import AST
 
@@ -14,6 +15,9 @@ __all__ = ['ParseCases', 'GetCases', 'GetSliceCases', 'PutCases', 'PutSliceCases
 _PYVER = sys.version_info[1]
 
 ParseMode = str | type[AST] | None
+
+_ALL_TEST_OPTIONS = {*_ALL_OPTIONS, 'one', 'cut'}  # we also allow these keywords as options because it is convenient for testing
+
 
 
 def _unfmt_code(code: str | tuple[str, str]) -> str | tuple[ParseMode, str]:
@@ -66,6 +70,12 @@ def _san_exc(exc: Exception) -> Exception:
     exc.args = exc.args[:1]
 
     return exc
+
+
+def _clean_options(options: dict[str, Any]) -> dict[str, Any]:
+    """Filter out any options which are not actual `FST` options."""
+
+    return {o: v for o, v in options.items() if o in _ALL_TEST_OPTIONS}
 
 
 class BaseCase(NamedTuple):
@@ -209,15 +219,16 @@ class GetCases(BaseCases):
         h    = None
         g    = exec  # sentinel
         f    = _make_fst(case.code, case.attr)
+        opts = _clean_options(case.options)
 
         try:
-            g = func(f, case.start, case.stop, case.field, cut=False, **case.options)
+            g = func(f, case.start, case.stop, case.field, cut=False, **opts)
         except Exception as exc:
             rest = [f'**{_san_exc(exc)!r}**']
 
         else:
             try:
-                h = func(f, case.start, case.stop, case.field, cut=True, **case.options)
+                h = func(f, case.start, case.stop, case.field, cut=True, **opts)
             except Exception as exc:
                 rest = [f'**{_san_exc(exc)!r}**']
 
@@ -276,12 +287,13 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
         rest     = [rest0]
         tail     = None
         src      = None if rest0 is None or rest0 == '**DEL**' else rest0 if isinstance(rest0, str) else None if ((rest01 := rest0[1]) == '**DEL**') else rest01
+        opts     = _clean_options(case.options)
 
-        if (to_attr := options.get('to')) is None:
+        if (to_attr := opts.get('to')) is None:
             f = _make_fst(code, attr)
         else:
             f, to = _make_fst(code, attr, to_attr)
-            options = {**options, 'to': to}
+            opts = {**opts, 'to': to}
 
         if not src or options.get('_src', True):  # HACK to allow not putting as source text and only FST and AST, useful for testing things that only apply to AST/FST puts like coerce
             src_code = src
@@ -289,7 +301,7 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
             src_code = _make_fst(rest0)
 
         try:
-            g = func(f, src_code, start, stop, field, **options)
+            g = func(f, src_code, start, stop, field, **opts)
         except Exception as exc:
             rest.append(f'**{_san_exc(exc)!r}**')
 
@@ -320,7 +332,7 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
                     k = _make_fst(code, attr)
 
                     try:
-                        g = func(k, h, start, stop, field, **options)
+                        g = func(k, h, start, stop, field, **opts)
                     except Exception as exc:
                         rest.append(f'**{_san_exc(exc)!r}**')
 
@@ -350,7 +362,7 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
                             l = _make_fst(code, attr)
 
                             try:
-                                g = func(l, a, start, stop, field, **options)
+                                g = func(l, a, start, stop, field, **opts)
                             except Exception as exc:
                                 rest.append(f'**{_san_exc(exc)!r}**')
 

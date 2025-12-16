@@ -13,7 +13,7 @@ from fst.astutil import compare_asts
 from fst.common import PYLT11, PYLT12, PYGE11, PYGE12, PYGE14
 from fst.fst_misc import new_empty_set_curlies
 
-from support import GetSliceCases, PutSliceCases
+from support import GetSliceCases, PutSliceCases, _clean_options
 
 
 DIR_NAME       = os.path.dirname(__file__)
@@ -53,7 +53,7 @@ class TestFSTSlice(unittest.TestCase):
             f = _make_fst(case.code, case.attr)
 
             try:
-                f.put_slice(None, case.start, case.stop, case.field, **case.options)
+                f.put_slice(None, case.start, case.stop, case.field, **_clean_options(case.options))
 
             except Exception:
                 if not ((r0 := rest[0]).startswith('**') and r0.endswith('**')):
