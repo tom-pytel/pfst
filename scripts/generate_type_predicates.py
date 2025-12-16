@@ -12,7 +12,10 @@ def make_predicates() -> None:
     type_imports = '\n'.join(f'    {ast_cls.__name__},' for ast_cls in LEAF_AND_BASE)
 
     print(f'''
-"""`FST` class predicates for checking underlying `AST` node type."""
+"""`FST` class predicates for checking underlying `AST` node type.
+
+This module contains functions which are imported as methods in the `FST` class (for now).
+"""
 
 from . import fst
 

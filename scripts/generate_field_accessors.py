@@ -163,7 +163,10 @@ def {field}(self: 'fst.FST') -> None:
             raise NotImplementedError  # currently this doesn't happen but we want to catch if it does
 
     print(r'''
-"""`FST` class accessors for underlying `AST` node fields."""
+"""`FST` class accessors for underlying `AST` node fields.
+
+This module contains functions which are imported as methods in the `FST` class (for now).
+"""
 
 from typing import Union
 

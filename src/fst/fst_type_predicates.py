@@ -1,4 +1,7 @@
-"""`FST` class predicates for checking underlying `AST` node type."""
+"""`FST` class predicates for checking underlying `AST` node type.
+
+This module contains functions which are imported as methods in the `FST` class (for now).
+"""
 
 from . import fst
 

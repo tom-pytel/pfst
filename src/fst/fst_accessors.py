@@ -1,4 +1,7 @@
-"""`FST` class accessors for underlying `AST` node fields."""
+"""`FST` class accessors for underlying `AST` node fields.
+
+This module contains functions which are imported as methods in the `FST` class (for now).
+"""
 
 from typing import Union
 
