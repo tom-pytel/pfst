@@ -50,7 +50,7 @@ else:
 True
 
 >>> f.body.append(g)
-<<If ROOT 0,0..8,13>.body[0:2] [<If 1,4..4,13>, <If 5,4..8,13>]>
+<<If ROOT 0,0..8,13>.body[:2] [<If 1,4..4,13>, <If 5,4..8,13>]>
 
 >>> print(f.src)
 if i:
@@ -93,7 +93,7 @@ if i:
         k = 0
 
 >>> f.body[0].body.append(g)
-<<If 1,4..4,13>.body[0:1] [<Assign 2,8..2,13>]>
+<<If 1,4..4,13>.body[:1] [<Assign 2,8..2,13>]>
 
 >>> print(f.src)
 if i:
@@ -340,7 +340,7 @@ to those fields through the `FST` class. When accessing like this, fields which 
 >>> f = FST('i, j = [x, 2.5]')
 
 >>> f.targets  # this is an `fstview`
-<<Assign ROOT 0,0..0,15>.targets[0:1] [<Tuple 0,0..0,4>]>
+<<Assign ROOT 0,0..0,15>.targets [<Tuple 0,0..0,4>]>
 
 >>> f.targets[0]
 <Tuple 0,0..0,4>
@@ -349,7 +349,7 @@ to those fields through the `FST` class. When accessing like this, fields which 
 <List 0,7..0,15>
 
 >>> f.value.elts
-<<List 0,7..0,15>.elts[0:2] [<Name 0,8..0,9>, <Constant 0,11..0,14>]>
+<<List 0,7..0,15>.elts [<Name 0,8..0,9>, <Constant 0,11..0,14>]>
 
 >>> f.value.elts[0]
 <Name 0,8..0,9>

@@ -7,10 +7,9 @@ To be able to execute the examples, import this.
 
 ## How to get
 
-An `fstview` is a lightweight short-lived object meant to facilitate access to lists of child objects like a block
-statement `body` or `Tuple` / `List` / `Set` `elts` field. Any field which is a list of other objects (or even strings
-in the case of `Global` or `Nonlocal`) will make use of an `fstview` when accessed through the field name on the parent
-`FST` object.
+An `fstview` is a lightweight object meant to facilitate access to lists of child objects like a block statement `body`
+or `Tuple` / `List` / `Set` `elts` field. Any field which is a list of other objects (or even strings in the case of
+`Global` or `Nonlocal`) will make use of an `fstview` when accessed through the field name on the parent `FST` object.
 
 >>> view = FST('[1, 2, 3]').elts
 
@@ -18,7 +17,7 @@ in the case of `Global` or `Nonlocal`) will make use of an `fstview` when access
 <class 'fst.view.fstview'>
 
 >>> print(str(view)[:88])
-<<List ROOT 0,0..0,9>.elts[0:3] [<Constant 0,1..0,2>, <Constant 0,4..0,5>, <Constant 0,7
+<<List ROOT 0,0..0,9>.elts [<Constant 0,1..0,2>, <Constant 0,4..0,5>, <Constant 0,7..0,8
 
 >>> view.base, view.field, view.start, view.stop
 (<List ROOT 0,0..0,9>, 'elts', 0, 3)
@@ -116,10 +115,30 @@ setter of the `FST` class itself.
 >>> print(f.src)
 [t, u, v]
 
+It is safe to modify the underlying object outside of the view as the view validates its indices every time they are
+used and truncates them to the actual size of the target field.
+
+>>> f = FST('[a, b, c, d, e]')
+
+>>> view = f.elts[1:3]
+
+>>> view
+<<List ROOT 0,0..0,15>.elts[1:3] [<Name 0,4..0,5>, <Name 0,7..0,8>]>
+
+>>> _ = f.put_slice(None, 2, 5)
+
+>>> view
+<<List ROOT 0,0..0,6>.elts[1:2] [<Name 0,4..0,5>]>
+
+>>> _ = f.put_slice(None, 0, 2)
+
+>>> view
+<<List ROOT 0,0..0,2>.elts[:0] []>
+
 ## Other operations
 
-With the exception if `insert()` (since its a standard pattern) these operations don't take indices but rather are meant
-to be executed on a particular indexed view which selects their range in the list.
+With the exception if `insert()`, these operations don't take indices but rather are meant to be executed on a
+particular indexed view which selects their range in the list.
 
 >>> print(FST('[a, b, c]').elts.replace('[x, y]').base.src)
 [[x, y]]
@@ -188,35 +207,4 @@ They work on subviews as well.
 
 >>> print(FST('[a, b, c]').elts[1:2].prextend('[x, y]').base.src)
 [a, x, y, b, c]
-
-## Why ephemeral?
-
-As stated above, views are meant for direct use and not for keeping around. The reason for this is that any operation
-that changes the size of the target of a view, if it is not effectuated through the view itself, will almost certainly
-invalidate the view information.
-
->>> view = FST('[1, 2, 3]').elts
-
-This is an operation on a node selected by the view.
-
->>> view[1].remove()
-
-Notice the size of the view is 3 but there are only two elements.
-
->>> view
-<<List ROOT 0,0..0,6>.elts[0:3] [<Constant 0,1..0,2>, <Constant 0,4..0,5>]>
-
->>> view = FST('[1, 2, 3]').elts
-
-This is not an operation on this view but a subview, which will not modify this view.
-
->>> view[1:].cut()
-<List ROOT 0,0..0,6>
-
-And the indices don't match the contents again.
-
->>> view
-<<List ROOT 0,0..0,3>.elts[0:3] [<Constant 0,1..0,2>]>
-
-So it is better to let a view go away after using it rather than trying to keep it around like in this example.
 """

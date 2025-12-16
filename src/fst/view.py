@@ -18,37 +18,25 @@ class fstview:
     """View for a list of `AST` nodes in a body, or any other field which is a list of values (not necessarily `AST`
     nodes), of an `FST` node.
 
-    This object acts as a list of corresponding `FST` nodes if applicable or otherwise strings (for example for a list
-    of `Global.names`). It is only meant for short term convenience along the lines of `fst.body.append(...)`. Outside
-    of this use, operations on the target `FST` node of the view which are not effectuated through the view may
-    invalidate the `start`  and `stop` positions and even the `fst` stored in the view if they change the size of the
-    list of nodes or reparse. Especially raw operations which reparse entire statements and can easily invalidate an
-    `fstview` even if performed directly on it.
-
     Nodes can be gotten or put via indexing. Nodes which are accessed through indexing (normal or slice) are not
     automatically copied, if a copy is desired then do `fst.body[start:stop].copy()`. Slice assignments also work but
     will always assign a slice to the range. If you want to assign an individual item to this range or a subrange then
     use `fst.body[start:stop].replace(..., one=True)`.
 
-    **WARNING!** Keep in mind that operations on NODES or even CHILD VIEWS instead of on THIS VIEW will not update this
-    view. Do not hold on to views, use them and discard.
-
     >>> from fst import FST
 
     >>> view = FST('[1, 2, 3]').elts
 
-    >>> view[1].remove()  # operation on node
+    >>> view[1].remove()
 
-    >>> view  # notice the size of the view is 3 but there are only two elements
-    <<List ROOT 0,0..0,6>.elts[0:3] [<Constant 0,1..0,2>, <Constant 0,4..0,5>]>
+    >>> view
+    <<List ROOT 0,0..0,6>.elts [<Constant 0,1..0,2>, <Constant 0,4..0,5>]>
 
-    >>> view = FST('[1, 2, 3]').elts
+    >>> view[1:].cut()
+    <List ROOT 0,0..0,3>
 
-    >>> view[1:].cut()  # not an operation on this view but a child view
-    <List ROOT 0,0..0,6>
-
-    >>> view  # WRONG again
-    <<List ROOT 0,0..0,3>.elts[0:3] [<Constant 0,1..0,2>]>
+    >>> view
+    <<List ROOT 0,0..0,3>.elts [<Constant 0,1..0,2>]>
 
     This object is meant to be, and is normally created automatically by accessing `AST` list fields on an `FST` node.
 
@@ -61,7 +49,7 @@ class fstview:
     <List ROOT 0,0..0,12>
 
     >>> f.elts
-    <<List ROOT 0,0..0,12>.elts[0:4] [<Constant 0,1..0,2>, <Constant 0,4..0,5>, <Constant 0,7..0,8>, <Constant 0,10..0,11>]>
+    <<List ROOT 0,0..0,12>.elts [<Constant 0,1..0,2>, <Constant 0,4..0,5>, <Constant 0,7..0,8>, <Constant 0,10..0,11>]>
 
     >>> f.elts[1]
     <Constant 0,4..0,5>
@@ -91,18 +79,30 @@ class fstview:
     '[*star]'
     """
 
-    base:  fst.FST  ; """The target `FST` node this view references."""
-    field: str      ; """The target field this view references."""
-    start: int      ; """Start position within the target field list this view references."""
-    stop:  int      ; """One past the last element within the target field list this view references."""
+    base:   fst.FST     ; """The target `FST` node this view references."""
+    field:  str         ; """The target field this view references."""
+    _start: int         ; """Start position within the target field list this view references."""
+    _stop:  int | None  ; """One past the last element within the target field list this view references. `None` means pinned the end of the field whatever it may be."""
 
     is_FST = False  ; """@private"""  # for quick checks vs. `FST`
 
     @property
     def root(self) -> fst.FST:
-        """Root node of the `FST` node this view belongs to."""
+        """Root node of the `FST` node this view belongs to, convenience property."""
 
         return self.base.root
+
+    @property
+    def start(self) -> int:
+        """Start position within the target field list this view references."""
+
+        return self._get_indices()[0]
+
+    @property
+    def stop(self) -> int:
+        """One past the last element within the target field list this view references."""
+
+        return self._get_indices()[1]
 
     def _len_field(self) -> int:
         """Length of full base `FST` field, irrespective of view `start` and `stop`."""
@@ -114,19 +114,43 @@ class fstview:
 
         return getattr(self.base.a, self.field)[idx]
 
-    def __init__(self, base: fst.FST, field: str, start: int, stop: int | None) -> None:
+    def _get_indices(self) -> tuple[int, int, int]:
+        """Refresh indices in case of field length change anywhere else and return them along with full length of field.
+
+        **Returns:**
+        - `(start, stop, len_field)`: Good start and stop indices and full length of field currently.
+        """
+
+        len_field = self._len_field()
+
+        if (stop := self._stop) is None:
+            stop = len_field
+        elif stop > len_field:
+            stop = self._stop = len_field
+
+        if (start := self._start) > stop:
+            start = self._start = stop
+
+        return start, stop, len_field
+
+    def __init__(self, base: fst.FST, field: str, start: int = 0, stop: int | None = None) -> None:
         """@private"""
 
         self.base = base
         self.field = field
-        self.start = start
-        self.stop = self._len_field() if stop is None else stop
+        self._start = start
+        self._stop = stop
 
     def __repr__(self) -> str:
-        return f'<{self.base!r}.{self.field}[{self.start}:{self.stop}] {list(self)}>'
+        start, stop, _ = self._get_indices()
+        indices = f'[{start or ""}:{stop}]' if self._stop is not None else f'[{start}:]' if start else ''
+
+        return f'<{self.base!r}.{self.field}{indices} {list(self)}>'
 
     def __len__(self) -> int:
-        return self.stop - self.start
+        start, stop, _ = self._get_indices()
+
+        return stop - start
 
     def __getitem__(self, idx: int | slice | str) -> fstview | fst.FST | str | None:
         r"""Get a single item or a slice view from this slice view. All indices (including negative) are relative to the
@@ -154,7 +178,7 @@ class fstview:
         '1'
 
         >>> FST('[0, 1, 2, 3]').elts[:3]
-        <<List ROOT 0,0..0,12>.elts[0:3] [<Constant 0,1..0,2>, <Constant 0,4..0,5>, <Constant 0,7..0,8>]>
+        <<List ROOT 0,0..0,12>.elts[:3] [<Constant 0,1..0,2>, <Constant 0,4..0,5>, <Constant 0,7..0,8>]>
 
         >>> FST('[0, 1, 2, 3]').elts[:3].copy().src
         '[0, 1, 2]'
@@ -166,7 +190,7 @@ class fstview:
         <ClassDef 1,0..1,15>
 
         >>> FST('global a, b, c').names
-        <<Global ROOT 0,0..0,14>.names[0:3] ['a', 'b', 'c']>
+        <<Global ROOT 0,0..0,14>.names ['a', 'b', 'c']>
 
         >>> FST('global a, b, c').names[1]
         'b'
@@ -174,19 +198,19 @@ class fstview:
         @public
         """
 
+        start, stop, _ = self._get_indices()
+
         if isinstance(idx, slice):
             if idx.step is not None:
                 raise IndexError('step slicing not supported')
 
-            start = self.start
-            idx_start, idx_stop = fixup_slice_indices(self.stop - start, idx.start, idx.stop)
+            idx_start, idx_stop = fixup_slice_indices(stop - start, idx.start, idx.stop)
 
             return self.__class__(self.base, self.field, start + idx_start, start + idx_stop)
 
         assert isinstance(idx, int)
 
-        start = self.start
-        idx = fixup_one_index(self.stop - start, idx)
+        idx = fixup_one_index(stop - start, idx)
 
         return a.f if isinstance(a := self._deref_one(start + idx), AST) else a
 
@@ -196,8 +220,6 @@ class fstview:
 
         Note that `fstview` can also hold references to non-AST lists of items, so keep this in mind when assigning
         values.
-
-        **WARNING!** Currently, for non-AST views, individual value assignment works but slices do not yet.
 
         **Parameters:**
         - `idx`: The index or `slice` where to put the element(s).
@@ -229,29 +251,29 @@ class fstview:
         @public
         """
 
+        start, stop, len_before = self._get_indices()
+
         if isinstance(idx, slice):
             if idx.step is not None:
                 raise IndexError('step slicing not supported')
 
-            start = self.start
-            idx_start, idx_stop = fixup_slice_indices(self.stop - start, idx.start, idx.stop)
-            len_before = self._len_field()
+            idx_start, idx_stop = fixup_slice_indices(stop - start, idx.start, idx.stop)
 
             self.base = self.base._put_slice(code, start + idx_start, start + idx_stop, self.field)
 
-            self.stop += self._len_field() - len_before
+            if self._stop is not None:
+                self._stop += self._len_field() - len_before
 
             return
 
         assert isinstance(idx, int)
 
-        start = self.start
-        idx = fixup_one_index(self.stop - start, idx)
-        len_before = self._len_field()
+        idx = fixup_one_index(stop - start, idx)
 
         self.base = self.base._put_one(code, start + idx, self.field, ret_child=False)
 
-        self.stop += self._len_field() - len_before
+        if self._stop is not None:
+            self._stop += self._len_field() - len_before
 
     def __delitem__(self, idx: int | slice | str) -> None:
         """Delete a single item or a slice from this slice view. All indices (including negative) are relative to the
@@ -259,8 +281,6 @@ class fstview:
 
         Note that `fstview` can also hold references to non-AST lists of items, so keep this in mind when assigning
         values.
-
-        **WARNING!** Currently, for non-AST views, deletion is not supported
 
         **Parameters:**
         - `idx`: The index or `slice` to delete.
@@ -284,29 +304,29 @@ class fstview:
         @public
         """
 
+        start, stop, _ = self._get_indices()
+
         if isinstance(idx, slice):
             if idx.step is not None:
                 raise IndexError('step slicing not supported')
 
-            start = self.start
-            stop = self.stop
             idx_start, idx_stop = fixup_slice_indices(stop - start, idx.start, idx.stop)
 
             self.base = self.base._put_slice(None, start + idx_start, start + idx_stop, self.field)
 
-            self.stop = max(start, stop - (idx_stop - idx_start))
+            if self._stop is not None:
+                self._stop = max(start, stop - (idx_stop - idx_start))
 
             return
 
         assert isinstance(idx, int)
 
-        start = self.start
-        stop = self.stop
         idx = fixup_one_index(stop - start, idx)
 
         self.base = self.base._put_slice(None, start + idx, start + idx + 1, self.field)
 
-        self.stop = max(start, stop - 1)
+        if self._stop is not None:
+            self._stop = max(start, stop - 1)
 
     def copy(self, **options) -> fst.FST:
         """Copy this slice to a new top-level tree, dedenting and fixing as necessary.
@@ -325,7 +345,9 @@ class fstview:
         '[1, 2]'
         """
 
-        return self.base.get_slice(self.start, self.stop, self.field, cut=False, **options)
+        start, stop, _ = self._get_indices()
+
+        return self.base.get_slice(start, stop, self.field, cut=False, **options)
 
     def cut(self, **options) -> fst.FST:
         """Cut out this slice to a new top-level tree (if possible), dedenting and fixing as necessary. Cannot cut root
@@ -347,11 +369,12 @@ class fstview:
         '[0, 3]'
         """
 
-        start = self.start
+        start, stop, _ = self._get_indices()
 
-        f = self.base._get_slice(start, self.stop, self.field, True, options)
+        f = self.base._get_slice(start, stop, self.field, True, options)
 
-        self.stop = start
+        if self._stop is not None:
+            self._stop = start
 
         return f
 
@@ -378,11 +401,12 @@ class fstview:
         '[0, 4, 5, 3]'
         """
 
-        len_before = self._len_field()
+        start, stop, len_before = self._get_indices()
 
-        self.base = self.base._put_slice(code, self.start, self.stop, self.field, one, options)
+        self.base = self.base._put_slice(code, start, stop, self.field, one, options)
 
-        self.stop += self._len_field() - len_before
+        if self._stop is not None:
+            self._stop += self._len_field() - len_before
 
         return self
 
@@ -403,11 +427,12 @@ class fstview:
         '[0, 3]'
         """
 
-        len_before = self._len_field()
+        start, stop, len_before = self._get_indices()
 
-        self.base = self.base._put_slice(None, self.start, self.stop, self.field, True, options)
+        self.base = self.base._put_slice(None, start, stop, self.field, True, options)
 
-        self.stop += self._len_field() - len_before
+        if self._stop is not None:
+            self._stop += self._len_field() - len_before
 
         return self
 
@@ -442,9 +467,7 @@ class fstview:
         '[0, *star, 1, 2, 3]'
         """
 
-        len_before = self._len_field()
-        start = self.start
-        stop = self.stop
+        start, stop, len_before = self._get_indices()
         len_view = stop - start
 
         if idx == 'end' or idx > len_view:
@@ -454,7 +477,8 @@ class fstview:
 
         self.base = self.base._put_slice(code, idx, idx, self.field, one, options)
 
-        self.stop += self._len_field() - len_before
+        if self._stop is not None:
+            self._stop += self._len_field() - len_before
 
         return self
 
@@ -479,11 +503,12 @@ class fstview:
         '[0, 1, 2, *star, 3]'
         """
 
-        stop = self.stop
+        _, stop, _ = self._get_indices()
 
         self.base = self.base._put_slice(code, stop, stop, self.field, True, options)
 
-        self.stop = stop + 1
+        if self._stop is not None:
+            self._stop = stop + 1
 
         return self
 
@@ -508,12 +533,12 @@ class fstview:
         '[0, 1, 2, 4, 5, 3]'
         """
 
-        len_before = self._len_field()
-        stop = self.stop
+        _, stop, len_before = self._get_indices()
 
         self.base = self.base._put_slice(code, stop, stop, self.field, False, options)
 
-        self.stop = stop + (self._len_field() - len_before)
+        if self._stop is not None:
+            self._stop = stop + (self._len_field() - len_before)
 
         return self
 
@@ -538,11 +563,12 @@ class fstview:
         '[0, *star, 1, 2, 3]'
         """
 
-        start = self.start
+        start, _, _ = self._get_indices()
 
         self.base = self.base._put_slice(code, start, start, self.field, True, options)
 
-        self.stop += 1
+        if self._stop is not None:
+            self._stop += 1
 
         return self
 
@@ -567,12 +593,12 @@ class fstview:
         '[0, 4, 5, 1, 2, 3]'
         """
 
-        len_before = self._len_field()
-        start = self.start
+        start, _, len_before = self._get_indices()
 
         self.base = self.base._put_slice(code, start, start, self.field, False, options)
 
-        self.stop += self._len_field() - len_before
+        if self._stop is not None:
+            self._stop += self._len_field() - len_before
 
         return self
 
@@ -587,16 +613,16 @@ class fstview_Dict(fstview):
         raise ValueError('cannot get single element from Dict._all')
 
     def __repr__(self) -> str:
+        start, stop, _ = self._get_indices()
+        indices = f'[{start or ""}:{stop}]' if self._stop is not None else f'[{start}:]' if start else ''
         base = self.base
         ast = base.a
-        start = self.start
-        stop = self.stop
         keys = ast.keys[start : stop]
         values = ast.values[start : stop]
 
         seq = ', '.join(f'{f"{k.f}:" if k else "**"}{v.f}' for k, v in zip(keys, values, strict=True))
 
-        return f'<{base!r}._all[{start}:{stop}] {{{seq}}}>'
+        return f'<{base!r}._all{indices} {{{seq}}}>'
 
 
 class fstview_MatchMapping(fstview):
@@ -609,10 +635,10 @@ class fstview_MatchMapping(fstview):
         raise ValueError('cannot get single element from MatchMapping._all')
 
     def __repr__(self) -> str:
+        start, stop, _ = self._get_indices()
+        indices = f'[{start or ""}:{stop}]' if self._stop is not None else f'[{start}:]' if start else ''
         base = self.base
         ast = base.a
-        start = self.start
-        stop = self.stop
         keys = ast.keys[start : stop]
         patterns = ast.patterns[start : stop]
 
@@ -623,7 +649,7 @@ class fstview_MatchMapping(fstview):
 
         seq = ', '.join(seq)
 
-        return f'<{base!r}._all[{self.start}:{self.stop}] {{{seq}}}>'
+        return f'<{base!r}._all{indices} {{{seq}}}>'
 
 
 class fstview_Compare(fstview):
@@ -636,10 +662,10 @@ class fstview_Compare(fstview):
         return self.base.a.comparators[idx - 1] if idx else self.base.a.left
 
     def __repr__(self) -> str:
+        start, stop, _ = self._get_indices()
+        indices = f'[{start or ""}:{stop}]' if self._stop is not None else f'[{start}:]' if start else ''
         base = self.base
         ast = base.a
-        start = self.start
-        stop = self.stop
         start_1 = max(0, start - 1)
         stop_1 = max(0, stop - 1)
         comparators = ast.comparators[start_1 : stop_1]
@@ -657,4 +683,4 @@ class fstview_Compare(fstview):
         if left:
             seq.insert(0, repr(left.f))
 
-        return f'<{base!r}._all[{self.start}:{self.stop}] {"".join(seq)}>'
+        return f'<{base!r}._all{indices} {"".join(seq)}>'

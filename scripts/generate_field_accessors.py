@@ -102,7 +102,7 @@ if PYGE12:
     def {field}(self: 'fst.FST') -> fstview:
         """@private"""
 
-        return fstview(self, {field!r}, 0, None)
+        return fstview(self, {field!r})
 else:  # HACK to safely access nonexistent empty field
     @property
     def {field}(self: 'fst.FST') -> list:
@@ -116,7 +116,7 @@ else:  # HACK to safely access nonexistent empty field
 def {field}(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, {field!r}, 0, None)
+    return fstview(self, {field!r})
 '''.strip())
 
             print(f'''

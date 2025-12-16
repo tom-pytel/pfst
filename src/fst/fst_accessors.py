@@ -123,7 +123,7 @@ def body(self: 'fst.FST') -> None:
 def type_ignores(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'type_ignores', 0, None)
+    return fstview(self, 'type_ignores')
 
 @type_ignores.setter
 def type_ignores(self: 'fst.FST', code: Code | None) -> None:
@@ -139,7 +139,7 @@ def type_ignores(self: 'fst.FST') -> None:
 def argtypes(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'argtypes', 0, None)
+    return fstview(self, 'argtypes')
 
 @argtypes.setter
 def argtypes(self: 'fst.FST', code: Code | None) -> None:
@@ -171,7 +171,7 @@ def returns(self: 'fst.FST') -> None:
 def decorator_list(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'decorator_list', 0, None)
+    return fstview(self, 'decorator_list')
 
 @decorator_list.setter
 def decorator_list(self: 'fst.FST', code: Code | None) -> None:
@@ -204,7 +204,7 @@ if PYGE12:
     def type_params(self: 'fst.FST') -> fstview:
         """@private"""
 
-        return fstview(self, 'type_params', 0, None)
+        return fstview(self, 'type_params')
 else:  # HACK to safely access nonexistent empty field
     @property
     def type_params(self: 'fst.FST') -> list:
@@ -269,7 +269,7 @@ def type_comment(self: 'fst.FST') -> None:
 def bases(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'bases', 0, None)
+    return fstview(self, 'bases')
 
 @bases.setter
 def bases(self: 'fst.FST', code: Code | None) -> None:
@@ -285,7 +285,7 @@ def bases(self: 'fst.FST') -> None:
 def keywords(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'keywords', 0, None)
+    return fstview(self, 'keywords')
 
 @keywords.setter
 def keywords(self: 'fst.FST', code: Code | None) -> None:
@@ -317,7 +317,7 @@ def value(self: 'fst.FST') -> None:
 def targets(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'targets', 0, None)
+    return fstview(self, 'targets')
 
 @targets.setter
 def targets(self: 'fst.FST', code: Code | None) -> None:
@@ -456,7 +456,7 @@ def test(self: 'fst.FST') -> None:
 def items(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'items', 0, None)
+    return fstview(self, 'items')
 
 @items.setter
 def items(self: 'fst.FST', code: Code | None) -> None:
@@ -488,7 +488,7 @@ def subject(self: 'fst.FST') -> None:
 def cases(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'cases', 0, None)
+    return fstview(self, 'cases')
 
 @cases.setter
 def cases(self: 'fst.FST', code: Code | None) -> None:
@@ -536,7 +536,7 @@ def cause(self: 'fst.FST') -> None:
 def handlers(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'handlers', 0, None)
+    return fstview(self, 'handlers')
 
 @handlers.setter
 def handlers(self: 'fst.FST', code: Code | None) -> None:
@@ -552,7 +552,7 @@ def handlers(self: 'fst.FST') -> None:
 def finalbody(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'finalbody', 0, None)
+    return fstview(self, 'finalbody')
 
 @finalbody.setter
 def finalbody(self: 'fst.FST', code: Code | None) -> None:
@@ -584,7 +584,7 @@ def msg(self: 'fst.FST') -> None:
 def names(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'names', 0, None)
+    return fstview(self, 'names')
 
 @names.setter
 def names(self: 'fst.FST', code: Code | None) -> None:
@@ -632,7 +632,7 @@ def level(self: 'fst.FST') -> None:
 def values(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'values', 0, None)
+    return fstview(self, 'values')
 
 @values.setter
 def values(self: 'fst.FST', code: Code | None) -> None:
@@ -696,7 +696,7 @@ def operand(self: 'fst.FST') -> None:
 def keys(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'keys', 0, None)
+    return fstview(self, 'keys')
 
 @keys.setter
 def keys(self: 'fst.FST', code: Code | None) -> None:
@@ -712,7 +712,7 @@ def keys(self: 'fst.FST') -> None:
 def elts(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'elts', 0, None)
+    return fstview(self, 'elts')
 
 @elts.setter
 def elts(self: 'fst.FST', code: Code | None) -> None:
@@ -744,7 +744,7 @@ def elt(self: 'fst.FST') -> None:
 def generators(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'generators', 0, None)
+    return fstview(self, 'generators')
 
 @generators.setter
 def generators(self: 'fst.FST', code: Code | None) -> None:
@@ -776,7 +776,7 @@ def key(self: 'fst.FST') -> None:
 def ops(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'ops', 0, None)
+    return fstview(self, 'ops')
 
 @ops.setter
 def ops(self: 'fst.FST', code: Code | None) -> None:
@@ -792,7 +792,7 @@ def ops(self: 'fst.FST') -> None:
 def comparators(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'comparators', 0, None)
+    return fstview(self, 'comparators')
 
 @comparators.setter
 def comparators(self: 'fst.FST', code: Code | None) -> None:
@@ -1000,7 +1000,7 @@ def step(self: 'fst.FST') -> None:
 def ifs(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'ifs', 0, None)
+    return fstview(self, 'ifs')
 
 @ifs.setter
 def ifs(self: 'fst.FST', code: Code | None) -> None:
@@ -1048,7 +1048,7 @@ def type(self: 'fst.FST') -> None:
 def posonlyargs(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'posonlyargs', 0, None)
+    return fstview(self, 'posonlyargs')
 
 @posonlyargs.setter
 def posonlyargs(self: 'fst.FST', code: Code | None) -> None:
@@ -1064,7 +1064,7 @@ def posonlyargs(self: 'fst.FST') -> None:
 def defaults(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'defaults', 0, None)
+    return fstview(self, 'defaults')
 
 @defaults.setter
 def defaults(self: 'fst.FST', code: Code | None) -> None:
@@ -1096,7 +1096,7 @@ def vararg(self: 'fst.FST') -> None:
 def kwonlyargs(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'kwonlyargs', 0, None)
+    return fstview(self, 'kwonlyargs')
 
 @kwonlyargs.setter
 def kwonlyargs(self: 'fst.FST', code: Code | None) -> None:
@@ -1112,7 +1112,7 @@ def kwonlyargs(self: 'fst.FST') -> None:
 def kw_defaults(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'kw_defaults', 0, None)
+    return fstview(self, 'kw_defaults')
 
 @kw_defaults.setter
 def kw_defaults(self: 'fst.FST', code: Code | None) -> None:
@@ -1240,7 +1240,7 @@ def guard(self: 'fst.FST') -> None:
 def patterns(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'patterns', 0, None)
+    return fstview(self, 'patterns')
 
 @patterns.setter
 def patterns(self: 'fst.FST', code: Code | None) -> None:
@@ -1288,7 +1288,7 @@ def cls(self: 'fst.FST') -> None:
 def kwd_attrs(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'kwd_attrs', 0, None)
+    return fstview(self, 'kwd_attrs')
 
 @kwd_attrs.setter
 def kwd_attrs(self: 'fst.FST', code: Code | None) -> None:
@@ -1304,7 +1304,7 @@ def kwd_attrs(self: 'fst.FST') -> None:
 def kwd_patterns(self: 'fst.FST') -> fstview:
     """@private"""
 
-    return fstview(self, 'kwd_patterns', 0, None)
+    return fstview(self, 'kwd_patterns')
 
 @kwd_patterns.setter
 def kwd_patterns(self: 'fst.FST', code: Code | None) -> None:

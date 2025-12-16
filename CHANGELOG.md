@@ -7,6 +7,7 @@
 
 ### Added
 
+- `FST` slice views validate and truncate indices as needed for modifications elsewhere
 - added `set_docstr()` which formats and indents string to put
 - pre-generate `AST` type check predicates instead of on import, faster execution
 - pre-generate `AST` field accessors instead of on import, faster execution
