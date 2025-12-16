@@ -624,6 +624,8 @@ def _parse_op(src: str, type_name: str, opstr2cls: dict[str, type[AST]]) -> AST:
 class ParseError(SyntaxError):
     """Not technically a syntax error but mostly not the code we were expecting."""
 
+    __module__ = 'fst'  # so the exception shows up as 'fst.NodeError'
+
 
 def unparse(ast: AST) -> str:
     """AST unparse that handles misc case of comprehension starting with a single space by stripping it as well as

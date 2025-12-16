@@ -74,6 +74,8 @@ _re_next_frag_or_comment_or_lcont = re.compile(r'\s*([^\s#\\]+|#.*|\\$)')  # nex
 class NodeError(Exception):
     """General FST node error."""
 
+    __module__ = 'fst'  # so the exception shows up as 'fst.NodeError'
+
     rawable: bool  ; """Whether the operation that caused this error can be retried in raw mode. @private"""
 
     def __init__(self, *args: object, rawable: bool = False) -> None:
