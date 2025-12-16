@@ -447,6 +447,7 @@ def _code_as_expr(
     allow_Slice: bool,
     allow_Tuple_of_Slice: bool,
     sanitize: bool,
+    coerce: bool,
 ) -> fst.FST:
     """General convert `code` to `expr`. Meant to handle any type of expression including `Slice`, `Tuple` of `Slice`s,
     `Tuple` of `Slice` elements and arglikes."""
@@ -463,8 +464,21 @@ def _code_as_expr(
 
         ast_cls = ast.__class__
 
-        if ast_cls not in ASTS_LEAF_EXPR:
-            raise NodeError(f'{_expecting_expr(parse)}, got {ast_cls.__name__}', rawable=True)
+        if ast_cls not in ASTS_LEAF_EXPR:  # if not an expr then try coerce if allowed
+            if not coerce:
+                raise NodeError(f'{_expecting_expr(parse)}, got {ast_cls.__name__}', rawable=True)
+
+            if ast_cls is withitem:
+                if ast.optional_vars:
+                    raise NodeError(f'{_expecting_expr(parse)}, got withitem with optional_vars, '
+                                    'could not coerce', rawable=True)
+
+                ast = ast.context_expr  # if coerce from withitem can reuse its AST
+
+            # TODO: add other coercions? alias? arg? TypeVar? TypeVarTuple?
+
+            else:
+                raise NodeError(f'{_expecting_expr(parse)}, got {ast_cls.__name__}, could not coerce', rawable=True)
 
         if ast is not codea:
             ast.f._unmake_fst_parents()
@@ -484,8 +498,24 @@ def _code_as_expr(
 
     else:
         if is_ast := isinstance(code, AST):
-            if code.__class__ not in ASTS_LEAF_EXPR:
-                raise NodeError(f'{_expecting_expr(parse)}, got {code.__class__.__name__}', rawable=True)
+            code_cls = code.__class__
+
+            if code_cls not in ASTS_LEAF_EXPR:  # if not an expr then try coerce if allowed
+                if not coerce:
+                    raise NodeError(f'{_expecting_expr(parse)}, got {code_cls.__name__}', rawable=True)
+
+                if code_cls is withitem:
+                    if code.optional_vars:
+                        raise NodeError(f'{_expecting_expr(parse)}, got withitem with optional_vars, '
+                                        'could not coerce', rawable=True)
+
+                    code = code.context_expr
+
+                # TODO: add other coercions? alias? arg? TypeVar? TypeVarTuple?
+
+                else:
+                    raise NodeError(f'{_expecting_expr(parse)}, got {code_cls.__name__}, could not coerce',
+                                    rawable=True)
 
             src = unparse(code)
             lines = src.split('\n')
@@ -758,7 +788,7 @@ def code_as_expr(
 ) -> fst.FST:
     """Convert `code` to an `expr` using `parse_expr()`."""
 
-    return _code_as_expr(code, parse_params, parse_expr, False, False, sanitize)
+    return _code_as_expr(code, parse_params, parse_expr, False, False, sanitize, coerce)
 
 
 def code_as_expr_all(
@@ -766,7 +796,7 @@ def code_as_expr_all(
 ) -> fst.FST:
     """Convert `code` to an `expr` using `parse_expr_all()`."""
 
-    return _code_as_expr(code, parse_params, parse_expr_all, True, True, sanitize)
+    return _code_as_expr(code, parse_params, parse_expr_all, True, True, sanitize, coerce)
 
 
 def code_as_expr_arglike(
@@ -774,7 +804,7 @@ def code_as_expr_arglike(
 ) -> fst.FST:
     """Convert `code` to an `expr` in the context of a `Call.args` which has special parse rules for `Starred`."""
 
-    return _code_as_expr(code, parse_params, parse_expr_arglike, False, False, sanitize)
+    return _code_as_expr(code, parse_params, parse_expr_arglike, False, False, sanitize, coerce)
 
 
 def code_as_expr_slice(
@@ -782,7 +812,7 @@ def code_as_expr_slice(
 ) -> fst.FST:
     """Convert `code` to a any `expr` `FST` that can go into a `Subscript.slice` if possible."""
 
-    return _code_as_expr(code, parse_params, parse_expr_slice, True, True, sanitize)
+    return _code_as_expr(code, parse_params, parse_expr_slice, True, True, sanitize, coerce)
 
 
 def code_as_Tuple_elt(
@@ -791,7 +821,7 @@ def code_as_Tuple_elt(
     """Convert `code` to an `expr` which can be an element of a `Tuple` anywhere, including `Slice` and arglike
     expressions like `*not a` on py 3.11+ (both in a `Tuple` in `Subscript.slice`)."""
 
-    return _code_as_expr(code, parse_params, parse_Tuple_elt, True, False, sanitize)
+    return _code_as_expr(code, parse_params, parse_Tuple_elt, True, False, sanitize, coerce)
 
 
 def code_as_Tuple(
@@ -800,7 +830,7 @@ def code_as_Tuple(
     """Convert `code` to a `Tuple` using `parse_Tuple()`. The `Tuple` can contain any other kind of expression,
     including `Slice` and arglike (if py version supports it in `Subscript.slice`)."""
 
-    fst_ = _code_as_expr(code, parse_params, parse_Tuple, False, True, sanitize)
+    fst_ = _code_as_expr(code, parse_params, parse_Tuple, False, True, sanitize, coerce)
 
     if fst_ is code and fst_.a.__class__ is not Tuple:  # fst_ is code only if FST passed in, in which case is passed through and we need to check that was Tuple to begin with
         raise NodeError(f'expecting Tuple, got {fst_.a.__class__.__name__}', rawable=True)

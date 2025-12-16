@@ -7,7 +7,7 @@
 
 ### Added
 
-- can coerce `arg` to `arguments` on put
+- new coercions on put: `arg` to `arguments`, `withitem` to `expr`
 - basic options checking in all functions which take them, make sure all passed are actual options
 - `FST` slice views validate and truncate indices as needed for modifications elsewhere
 - added `set_docstr()` which formats and indents string to put

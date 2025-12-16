@@ -14264,6 +14264,24 @@ TemplateStr - ROOT 0,0..0,12
 '''),
 ],
 
+'coerce_to_expr': [  # ................................................................................
+
+('', None, False, 'value', {}, (None,
+r'''i = v'''), ('withitem',
+r'''x'''),
+r'''i = x''', r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Name 'x' Load - 0,4..0,5
+'''),
+
+('', None, False, 'value', {}, (None,
+r'''i = v'''), ('withitem',
+r'''x as y'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
+],
+
 'coerce_to_arguments': [  # ................................................................................
 
 ('', None, False, 'args', {}, (None,
