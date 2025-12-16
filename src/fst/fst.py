@@ -130,12 +130,13 @@ from .astutil import (
     OPCLS2STR,
     bistr,
     WalkFail,
+    repr_str_multiline,
     has_type_comments,
     compare_asts,
     copy_ast,
 )
 
-from .common import PYLT13, astfield, fstloc, fstlocn, nspace, next_frag, next_delims, prev_delims
+from .common import PYLT13, re_empty_line_start, astfield, fstloc, fstlocn, nspace, next_frag, next_delims, prev_delims
 from .parsex import Mode
 from .code import Code, code_as_lines, code_as_all
 from .view import fstview, fstview_Dict, fstview_MatchMapping, fstview_Compare
@@ -643,30 +644,13 @@ class FST:
         """Pure `bool` for whether this node has a docstring if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
         `Module`. For quick use as starting index."""
 
-        return (
+        return True if (
             (a := self.a).__class__ in ASTS_LEAF_MAYBE_DOCSTR
             and (b := a.body)
             and (b0 := b[0]).__class__ is Expr
             and (v := b0.value).__class__ is Constant
             and isinstance(v := v.value, str)
-        )
-
-    @property
-    def docstr(self) -> builtins.str | None:
-        """The docstring of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `Module`. `None` if
-        not one of those nodes or has no docstring. Keep in mind an empty docstring may exist but will be a falsey
-        value so make sure to check for `None`. If you want the actual docstring node then just check for presence and
-        get `.body[0]`."""
-
-        if ((a := self.a).__class__ in ASTS_LEAF_MAYBE_DOCSTR
-            and (b := a.body)
-            and (b0 := b[0]).__class__ is Expr
-            and (v := b0.value).__class__ is Constant
-            and isinstance(v := v.value, str)
-        ):
-            return v
-
-        return None
+        ) else False  # IfExp because of the (b := a.body)
 
     @property
     def f(self) -> None:
@@ -2696,6 +2680,65 @@ class FST:
                 modifying.success()
 
         return self  # ret
+
+    def get_docstr(self) -> builtins.str | None:
+        """Get the docstring value of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or `Module`.
+        The docstring is dedented and returned as a normal string, not a node. Keep in mind an empty docstring may exist
+        but will be a falsey value so make sure to check for `None`. If you want the actual docstring node then just
+        check for presence with `.has_docstr` and get `.body[0]`.
+
+        **Returns:**
+        - `str | None`: Actual dedented docstring value, not the node or syntactic string representation with quotes.
+            `None` if there is no docstring or the node cannot have a docstring.
+        """
+
+        if not self.has_docstr:
+            return None
+
+        b0 = self.a.body[0]
+        dedent = b0.f._get_indent()
+        ldedent = len(dedent)
+        lines = b0.value.value.split('\n')
+
+        for i, l in enumerate(lines):
+            if l.startswith(dedent) or (lempty_start := re_empty_line_start.match(l).end()) >= ldedent:
+                lines[i] = l[ldedent:]
+            else:
+                lines[i] = l[lempty_start:]
+
+        return '\n'.join(lines)
+
+    def put_docstr(self, text: builtins.str | None, **options) -> None:
+        """Set or delete the docstring of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
+        `Module`. Will replace, insert or delete the node as required. If setting, the `text` string that is passed will
+        be formatted with triple quotes and indented as needed.
+
+        **Parameters:**
+        - `text`: The string to set as a docstring or `None` to delete.
+        - `options`: The options to use for a put if a put is done, see `options()`.
+        """
+
+        # TODO: differentiate better header comments of Module and put after shebang and encoding but before others using specific line number once that functionality is concretized
+
+        if (a := self.a).__class__ not in ASTS_LEAF_MAYBE_DOCSTR:
+            return
+
+        has_docstr = 1 if (
+            (b := a.body)
+            and (b0 := b[0]).__class__ is Expr
+            and (v := b0.value).__class__ is Constant
+            and isinstance(v := v.value, str)
+        ) else 0
+
+        if text is not None:
+            text = repr_str_multiline(text)
+        elif not has_docstr:
+            return
+
+        if 'trivia' not in options:
+            options['trivia'] = (False, False)
+
+        self._put_slice(text, 0, has_docstr, 'body', False, options)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Traverse

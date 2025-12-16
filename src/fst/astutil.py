@@ -150,6 +150,7 @@ from .asttypes import (
 
 __all__ = [
     'bistr', 'constant',
+    'repr_str_multiline',
     'is_valid_identifier', 'is_valid_identifier_dotted', 'is_valid_identifier_star', 'is_valid_identifier_alias',
     'is_valid_MatchSingleton_value', 'is_valid_MatchValue_value', 'is_valid_MatchMapping_key',
     'is_valid_target', 'is_valid_del_target',
@@ -488,6 +489,42 @@ class bistr(str):
             del self.b2c, self._b2c
         except AttributeError:
             pass
+
+
+def _escape_char(c: str) -> str:
+    if c in '\n\t':
+        return c
+    if c == '\\' or not c.isprintable():
+        return c.encode('unicode_escape').decode('ascii')
+
+    return c
+
+
+def repr_str_multiline(string: str) -> str:
+    """Get triple-quoted multiline string representation."""
+
+    if not string:
+        return '""""""'
+
+    escaped_string = ''.join(map(_escape_char, string))
+
+    if '"""' not in escaped_string:
+        possible_quotes = ['"""'] if "'''" in escaped_string else ['"""', "'''"]
+    elif "'''" not in escaped_string:
+        possible_quotes = ["'''"]
+
+    else:
+        string = repr(string).replace('\\\\', '\x00').replace('\\n', '\n').replace('\x00', '\\\\')  # any '\x00' in original str will have been escaped
+        quotes2 = string[0] * 2
+
+        return f'{quotes2}{string}{quotes2}'
+
+    quotes = possible_quotes[-1] if escaped_string[-1] == possible_quotes[0][0] else possible_quotes[0]  # prefer '''"''' over """\""""
+
+    if quotes[0] == escaped_string[-1]:  # """a'''"""" -> """a'''\""""
+        escaped_string = escaped_string[:-1] + '\\' + escaped_string[-1]
+
+    return f'{quotes}{escaped_string}{quotes}'
 
 
 def is_valid_identifier(s: str) -> bool:

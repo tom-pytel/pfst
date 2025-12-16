@@ -7,6 +7,7 @@
 
 ### Added
 
+- added `set_docstr()` which formats and indents string to put
 - pre-generate `AST` type check predicates instead of on import, faster execution
 - pre-generate `AST` field accessors instead of on import, faster execution
 - `FST.is_alive` to check if node has been removed or replaced
@@ -15,6 +16,7 @@
 
 ### Updated
 
+- changed `.docstr` to `get_docstr()` which now dedents returned string
 - made some more useful predicate functions public
 - optimized some internal offset and syntax ordering functions
 - `walk()` allows parent nodes to be modified

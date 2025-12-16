@@ -896,7 +896,8 @@ Module - ROOT 0,0..2,22
 ## Normalize docstrings
 
 This is just a side effect of how put and indentation works. Its not full proper docstring fixing, for that could just
-get the string from the `.docstr` property and format using anything then put as a python multiline.
+get the string from the `.docstr` property and format using anything then put as a python multiline. There are also
+`fst.fst.FST.get_docstr()` and `fst.fst.FST.put_docstr()`.
 
 ```py
 >>> src = """
@@ -923,7 +924,7 @@ Function:
 ...     fst = FST(src, 'exec')
 ...
 ...     for f in fst.walk():
-...         if f.is_def and f.has_docstr:
+...         if f.has_docstr:
 ...             f.put(f.get(0, cut=True, trivia=(False, False)),
 ...                   0, 0, trivia=(False, False))
 ...

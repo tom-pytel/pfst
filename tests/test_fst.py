@@ -7675,6 +7675,50 @@ def func():
         self.assertEqual('1|2', parse('match a:\n case ( # pre\n1|2\n# post\n): pass').body[0].cases[0].pattern.f.copy(pars=False).root.src)
         self.assertEqual('( # pre\n1|2\n# post\n)', parse('match a:\n case ( # pre\n1|2\n# post\n): pass').body[0].cases[0].pattern.f.copy(pars=True).root.src)
 
+    def test_get_put_docstr(self):
+        f = FST('''
+class cls:
+    """doc
+bad
+    string"""
+
+    def f():
+        """cod
+dog
+           ind
+        bell"""
+'''.strip())
+        self.assertEqual('doc\nbad\nstring', f.get_docstr())
+        self.assertEqual('cod\ndog\n   ind\nbell', f.body[1].get_docstr())
+
+        f.body[1].put_docstr(None)
+        f.put_docstr(None)
+
+        self.assertEqual('''
+class cls:
+
+    def f():
+'''.strip(), f.src)
+
+        f.body[0].put_docstr("Hello\nWorld\n  ...")
+        f.put_docstr('"""YAY!!!\n\'\'\'\\nHEY!!!\x00')
+
+        self.assertEqual('''
+class cls:
+    \'\'\'"""YAY!!!
+    \\'\\'\\'\\\\nHEY!!!\\x00\'\'\'
+
+
+    def f():
+        """Hello
+        World
+          ..."""
+'''.strip(), f.src)
+
+        f.put_docstr('"')
+
+        self.assertEqual('\'\'\'"\'\'\'', f.body[0].src)
+
     def test_copy_special(self):
         f = FST.fromsrc('@decorator\nclass cls:\n  pass')
         self.assertEqual(f.a.body[0].f.copy().src, '@decorator\nclass cls:\n  pass')
