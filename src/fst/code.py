@@ -157,7 +157,7 @@ Code = Union['fst.FST', AST, list[str], str]  ; """Code types accepted for put t
 CodeAs = Callable[[Code, Mapping[str, Any]], 'fst.FST']  # + kwargs: *, sanitize: bool = False, coerce: bool = False
 
 
-def _expecting(parse: Callable[[Code, Mapping[str, Any]], AST]) -> str:
+def _expecting_expr(parse: Callable[[Code, Mapping[str, Any]], AST]) -> str:
     return ('expecting Tuple' if parse is parse_Tuple else
             'expecting expression (tuple element)' if parse is parse_Tuple_elt else
             'expecting expression (slice)' if parse is parse_expr_slice else
@@ -315,6 +315,29 @@ def _coerce_as__ImportFrom_names(
     return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
 
 
+def _coerce_as_arguments(
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+) -> fst.FST:
+    fst_ = code_as_arg(code, parse_params, sanitize=sanitize)
+    ast_ = arguments(posonlyargs=[], args=[fst_.a], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[])
+
+    return fst.FST(ast_, fst_._lines, None, from_=fst_, lcopy=False)
+
+
+def _coerce_as_arguments_lambda(
+    code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
+) -> fst.FST:
+    fst_ = code_as_arg(code, parse_params, sanitize=sanitize)
+    ast_ = fst_.a
+
+    if ast_.annotation:
+        raise NodeError('lambda arguments cannot have annotations')
+
+    ast_ = arguments(posonlyargs=[], args=[fst_.a], vararg=None, kwonlyargs=[], kw_defaults=[], kwarg=None, defaults=[])
+
+    return fst.FST(ast_, fst_._lines, None, from_=fst_, lcopy=False)
+
+
 def _coerce_as_withitem(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
@@ -351,6 +374,8 @@ def _code_as(
     ast_cls: type[AST],
     sanitize: bool,
     coerce_as: CodeAs | None = None,
+    *,
+    name: str | None = None,
 ) -> fst.FST:
     if isinstance(code, fst.FST):
         if not code.is_root:
@@ -363,7 +388,7 @@ def _code_as(
                 except Exception:
                     pass
 
-            raise NodeError(f'expecting {ast_cls.__name__}, got {code.a.__class__.__name__}'
+            raise NodeError(f'expecting {name or ast_cls.__name__}, got {code.a.__class__.__name__}'
                             f'{", could not coerce" if coerce_as else ""}', rawable=True)
 
     else:
@@ -375,7 +400,7 @@ def _code_as(
                     except Exception:
                         pass
 
-                raise NodeError(f'expecting {ast_cls.__name__}, got {code.__class__.__name__}'
+                raise NodeError(f'expecting {name or ast_cls.__name__}, got {code.__class__.__name__}'
                                 f'{", could not coerce" if coerce_as else ""}', rawable=True)
 
             src = unparse(code)
@@ -402,12 +427,12 @@ def _code_as(
                 try:
                     fst_ = coerce_as(code, parse_params, sanitize=sanitize)
                 except Exception:
-                    raise ParseError(f'expecting {ast_cls.__name__}, could not parse or coerce') from None
+                    raise ParseError(f'expecting {name or ast_cls.__name__}, could not parse or coerce') from None
 
                 return fst_
 
             if not isinstance(ast, ast_cls):  # sanity check, parse func should guarantee what we want but maybe in future is used to get a specific subset of what parse func returns
-                raise ParseError(f'expecting {ast_cls.__name__}, got {code.__class__.__name__}')
+                raise ParseError(f'expecting {name or ast_cls.__name__}, got {code.__class__.__name__}')
 
         code = fst.FST(ast, lines, None, parse_params=parse_params)
 
@@ -433,12 +458,12 @@ def _code_as_expr(
         ast = reduce_ast(codea)
 
         if not ast:
-            raise NodeError(f'{_expecting(parse)}, got multiple statements', rawable=True)
+            raise NodeError(f'{_expecting_expr(parse)}, got multiple statements', rawable=True)
 
         ast_cls = ast.__class__
 
         if ast_cls not in ASTS_LEAF_EXPR:
-            raise NodeError(f'{_expecting(parse)}, got {ast_cls.__name__}', rawable=True)
+            raise NodeError(f'{_expecting_expr(parse)}, got {ast_cls.__name__}', rawable=True)
 
         if ast is not codea:
             ast.f._unmake_fst_parents()
@@ -447,11 +472,11 @@ def _code_as_expr(
 
         if ast_cls is Slice:
             if not allow_Slice:
-                raise NodeError(f'{_expecting(parse)}, got Slice', rawable=True)
+                raise NodeError(f'{_expecting_expr(parse)}, got Slice', rawable=True)
 
         elif ast_cls is Tuple:
             if not allow_Tuple_of_Slice and any(e.__class__ is Slice for e in ast.elts):
-                raise NodeError(f'{_expecting(parse)}, got Tuple with a Slice in it', rawable=True)
+                raise NodeError(f'{_expecting_expr(parse)}, got Tuple with a Slice in it', rawable=True)
 
             if parse is not parse_expr_slice:  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, even though those can't be gotten alone organically, maybe we shouldn't even bother?
                 code._maybe_add_singleton_tuple_comma()
@@ -459,7 +484,7 @@ def _code_as_expr(
     else:
         if is_ast := isinstance(code, AST):
             if code.__class__ not in ASTS_LEAF_EXPR:
-                raise NodeError(f'{_expecting(parse)}, got {code.__class__.__name__}', rawable=True)
+                raise NodeError(f'{_expecting_expr(parse)}, got {code.__class__.__name__}', rawable=True)
 
             src = unparse(code)
             lines = src.split('\n')
@@ -863,7 +888,8 @@ def code_as_arguments(
 ) -> fst.FST:
     """Convert `code` to a arguments `FST` if possible."""
 
-    return _code_as(code, parse_params, parse_arguments, arguments, sanitize)
+    return _code_as(code, parse_params, parse_arguments, arguments, sanitize,
+                    _coerce_as_arguments if coerce else None)
 
 
 def code_as_arguments_lambda(
@@ -871,7 +897,9 @@ def code_as_arguments_lambda(
 ) -> fst.FST:
     """Convert `code` to a lambda arguments `FST` if possible (no annotations allowed)."""
 
-    fst_ = _code_as(code, parse_params, parse_arguments_lambda, arguments, sanitize)
+    fst_ = _code_as(code, parse_params, parse_arguments_lambda, arguments, sanitize,
+                    _coerce_as_arguments_lambda if coerce else None,
+                    name='lambda arguments')
 
     if fst_ is code:  # validation if returning same FST that was passed in
         ast = fst_.a

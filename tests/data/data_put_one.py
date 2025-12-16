@@ -10321,7 +10321,7 @@ Module - ROOT 0,0..0,12
 ('body[0].value', None, False, 'args', {}, ('exec',
 r'''lambda a=1: None'''), (None,
 r'''a: list[str], /, b: int = 1, *c, d=100, **e'''),
-r'''**SyntaxError('invalid syntax')**'''),
+r'''**ParseError('expecting lambda arguments, could not parse or coerce')**'''),
 
 ('body[0].value', None, False, 'args', {}, ('exec',
 r'''lambda a=1: None'''), (None,
@@ -14264,7 +14264,56 @@ TemplateStr - ROOT 0,0..0,12
 '''),
 ],
 
-'coerce': [  # ................................................................................
+'coerce_to_arguments': [  # ................................................................................
+
+('', None, False, 'args', {}, (None,
+r'''def f(): pass'''), ('arg',
+r'''x'''),
+r'''def f(x): pass''', r'''
+FunctionDef - ROOT 0,0..0,14
+  .name 'f'
+  .args arguments - 0,6..0,7
+    .args[1]
+     0] arg - 0,6..0,7
+       .arg 'x'
+  .body[1]
+   0] Pass - 0,10..0,14
+'''),
+
+('', None, False, 'args', {}, (None,
+r'''def f(): pass'''), ('arg',
+r'''x: int'''),
+r'''def f(x: int): pass''', r'''
+FunctionDef - ROOT 0,0..0,19
+  .name 'f'
+  .args arguments - 0,6..0,12
+    .args[1]
+     0] arg - 0,6..0,12
+       .arg 'x'
+       .annotation Name 'int' Load - 0,9..0,12
+  .body[1]
+   0] Pass - 0,15..0,19
+'''),
+
+('', None, False, 'args', {}, (None,
+r'''lambda: None'''), ('arg',
+r'''x'''),
+r'''lambda x: None''', r'''
+Lambda - ROOT 0,0..0,14
+  .args arguments - 0,7..0,8
+    .args[1]
+     0] arg - 0,7..0,8
+       .arg 'x'
+  .body Constant None - 0,10..0,14
+'''),
+
+('', None, False, 'args', {'_src': False}, (None,
+r'''lambda: None'''), ('arg',
+r'''x: int'''),
+r'''**NodeError('expecting lambda arguments, got arg, could not coerce')**'''),
+],
+
+'coerce_to_alias': [  # ................................................................................
 
 ('', 0, False, None, {}, (None,
 r'''import a'''), ('Name',
@@ -14307,6 +14356,9 @@ r'''**ParseError('expecting alias, could not parse or coerce')**'''),
 r'''from _ import a'''), ('Attribute',
 r'''x.y'''),
 r'''**NodeError('expecting alias, got Attribute, could not coerce')**'''),
+],
+
+'coerce_to_withitem': [  # ................................................................................
 
 ('', 0, False, 'items', {}, (None,
 r'''with a as b: pass'''), ('Name',
