@@ -382,26 +382,27 @@ def _code_as(
             raise ValueError('expecting root node')
 
         if not isinstance(code.a, ast_cls):
-            if coerce_as:
-                try:
-                    return coerce_as(code, parse_params, sanitize=sanitize)
-                except Exception:
-                    pass
+            if not coerce_as:
+                raise NodeError(f'expecting {name or ast_cls.__name__}, got {code.a.__class__.__name__}', rawable=True)
 
-            raise NodeError(f'expecting {name or ast_cls.__name__}, got {code.a.__class__.__name__}'
-                            f'{", could not coerce" if coerce_as else ""}', rawable=True)
+            try:
+                return coerce_as(code, parse_params, sanitize=sanitize)
+            except Exception as exc:
+                raise NodeError(f'expecting {name or ast_cls.__name__}, got {code.a.__class__.__name__}, '
+                                'could not coerce', rawable=True) from exc
 
     else:
         if isinstance(code, AST):
             if not isinstance(code, ast_cls):
-                if coerce_as:
-                    try:
-                        return coerce_as(code, parse_params, sanitize=sanitize)
-                    except Exception:
-                        pass
+                if not coerce_as:
+                    raise NodeError(f'expecting {name or ast_cls.__name__}, got {code.__class__.__name__}',
+                                    rawable=True)
 
-                raise NodeError(f'expecting {name or ast_cls.__name__}, got {code.__class__.__name__}'
-                                f'{", could not coerce" if coerce_as else ""}', rawable=True)
+                try:
+                    return coerce_as(code, parse_params, sanitize=sanitize)
+                except Exception as exc:
+                    raise NodeError(f'expecting {name or ast_cls.__name__}, got {code.__class__.__name__}, '
+                                    'could not coerce', rawable=True) from exc
 
             src = unparse(code)
             lines = src.split('\n')
@@ -426,8 +427,8 @@ def _code_as(
 
                 try:
                     fst_ = coerce_as(code, parse_params, sanitize=sanitize)
-                except Exception:
-                    raise ParseError(f'expecting {name or ast_cls.__name__}, could not parse or coerce') from None
+                except Exception as exc:
+                    raise ParseError(f'expecting {name or ast_cls.__name__}, could not parse or coerce') from exc
 
                 return fst_
 
