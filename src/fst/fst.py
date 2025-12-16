@@ -674,7 +674,7 @@ class FST:
         /,
         **kwargs,
     ) -> 'FST':
-        """Create a new individual `FST` node or full tree. The main way to use this constructor is as a shortcut for
+        r"""Create a new individual `FST` node or full tree. The main way to use this constructor is as a shortcut for
         `FST.fromsrc()` or `FST.fromast()`, the usage is:
 
         **`FST(ast_or_src, mode=None)`**
@@ -691,7 +691,60 @@ class FST:
             parsing anything. And if `ast_or_src` is `None` then `mode` must be provided and be one of `'exec'`,
             `'eval'` or `'single'`.
 
-        The other forms of this function are meant for internal use and their parameters are below:
+        **Examples:**
+
+        >>> FST('def f(): call()\ndef g(): pass')
+        <Module ROOT 0,0..1,13>
+
+        Minimal node representation is created by default, so `stmt` instead of `mod` if possible and `expr` instead of
+        `stmt`.
+
+        >>> FST('def f(): call()')
+        <FunctionDef ROOT 0,0..0,15>
+
+        >>> FST('call()')
+        <Call ROOT 0,0..0,6>
+
+        You can force a module.
+
+        >>> FST('call()', 'exec')
+        <Module ROOT 0,0..0,6>
+
+        Can parse things not normally parsable.
+
+        >>> FST('start:stop:step')
+        <Slice ROOT 0,0..0,15>
+
+        `FST` guesses what you want in this case but doesn't always get it right.
+
+        >>> FST('start:stop')
+        <AnnAssign ROOT 0,0..0,10>
+
+        So you can tell it.
+
+        >>> FST('start:stop', 'Slice')
+        <Slice ROOT 0,0..0,10>
+
+        You can tell it to only parse things which are top-level parsable by `ast.parse()`.
+
+        >>> try:
+        ...     FST('start:stop:step', 'strict')
+        ... except Exception as exc:
+        ...     print(repr(exc))
+        SyntaxError('invalid syntax', ('<unknown>', 1, 11, 'start:stop:step\n', 1, 12))
+
+        You can also pass an `AST` and the source will be generated from it.
+
+        >>> FST(ast.Slice(Constant(1), Constant(2), Constant(3)))
+        <Slice ROOT 0,0..0,5>
+
+        >>> print(_.src)
+        1:2:3
+
+
+
+        The other forms of this function are meant for internal use, their parameters are below for reference just in
+        case:
 
         **Parameters:**
         - `ast_or_src`: `AST` node for `FST` or source code in the form of a `str` or a list of lines. If an `AST` then
