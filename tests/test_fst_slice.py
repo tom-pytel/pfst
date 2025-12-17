@@ -5439,79 +5439,79 @@ class cls:
             # put to Try
 
             self.assertEqual('try: pass\nexcept  Exception: pass\nexcept  Exception: pass',
-                            FST('try: pass\nexcept  Exception: pass').handlers.append('except  Exception: pass').root.src)
+                             FST('try: pass\nexcept  Exception: pass').handlers.append('except  Exception: pass').base.root.src)
             self.assertEqual('try: pass\nexcept  Exception: pass\nexcept  Exception: pass',
-                            FST('try: pass\nexcept  Exception: pass').handlers.append(FST('except  Exception: pass')).root.src)
+                             FST('try: pass\nexcept  Exception: pass').handlers.append(FST('except  Exception: pass')).base.root.src)
             self.assertRaises(ParseError, FST('try: pass\nexcept  Exception: pass').handlers.append, 'except* Exception: pass')
             self.assertRaises(NodeError, FST('try: pass\nexcept  Exception: pass').handlers.append, FST('except* Exception: pass'))
 
             # put to Try with empty handlers
 
             self.assertEqual('try: pass\nexcept  Exception: pass',
-                            FST('try: pass\nexcept  Exception: pass').put(None, 0, 1, 'handlers')
-                            .handlers.append('except  Exception: pass').root.src)
+                             FST('try: pass\nexcept  Exception: pass').put(None, 0, 1, 'handlers')
+                             .handlers.append('except  Exception: pass').base.root.src)
             self.assertEqual('try: pass\nexcept  Exception: pass',
-                            FST('try: pass\nexcept  Exception: pass').put(None, 0, 1, 'handlers')
-                            .handlers.append(FST('except  Exception: pass')).root.src)
+                             FST('try: pass\nexcept  Exception: pass').put(None, 0, 1, 'handlers')
+                             .handlers.append(FST('except  Exception: pass')).base.root.src)
             self.assertEqual('try: pass\nexcept* Exception: pass',
-                            FST('try: pass\nexcept  Exception: pass').put(None, 0, 1, 'handlers')
-                            .handlers.append('except* Exception: pass').root.src)
+                             FST('try: pass\nexcept  Exception: pass').put(None, 0, 1, 'handlers')
+                             .handlers.append('except* Exception: pass').base.root.src)
             self.assertEqual('try: pass\nexcept* Exception: pass',
-                            FST('try: pass\nexcept  Exception: pass').put(None, 0, 1, 'handlers')
-                            .handlers.append(FST('except* Exception: pass')).root.src)
+                             FST('try: pass\nexcept  Exception: pass').put(None, 0, 1, 'handlers')
+                             .handlers.append(FST('except* Exception: pass')).base.root.src)
 
             # put to TryStar
 
             self.assertEqual('try: pass\nexcept* Exception: pass\nexcept* Exception: pass',
-                            FST('try: pass\nexcept* Exception: pass').handlers.append('except* Exception: pass').root.src)
+                             FST('try: pass\nexcept* Exception: pass').handlers.append('except* Exception: pass').base.root.src)
             self.assertEqual('try: pass\nexcept* Exception: pass\nexcept* Exception: pass',
-                            FST('try: pass\nexcept* Exception: pass').handlers.append(FST('except* Exception: pass')).root.src)
+                             FST('try: pass\nexcept* Exception: pass').handlers.append(FST('except* Exception: pass')).base.root.src)
             self.assertRaises(ParseError, FST('try: pass\nexcept* Exception: pass').handlers.append, 'except Exception: pass')
             self.assertRaises(NodeError, FST('try: pass\nexcept* Exception: pass').handlers.append, FST('except Exception: pass'))
 
             # put to TryStar with empty handlers
 
             self.assertEqual('try: pass\nexcept* Exception: pass',
-                            FST('try: pass\nexcept* Exception: pass').put(None, 0, 1, 'handlers')
-                            .handlers.append('except* Exception: pass').root.src)
+                             FST('try: pass\nexcept* Exception: pass').put(None, 0, 1, 'handlers')
+                             .handlers.append('except* Exception: pass').base.root.src)
             self.assertEqual('try: pass\nexcept* Exception: pass',
-                            FST('try: pass\nexcept* Exception: pass').put(None, 0, 1, 'handlers')
-                            .handlers.append(FST('except* Exception: pass')).root.src)
+                             FST('try: pass\nexcept* Exception: pass').put(None, 0, 1, 'handlers')
+                             .handlers.append(FST('except* Exception: pass')).base.root.src)
             self.assertEqual('try: pass\nexcept Exception: pass',
-                            FST('try: pass\nexcept* Exception: pass').put(None, 0, 1, 'handlers')
-                            .handlers.append('except Exception: pass').root.src)
+                             FST('try: pass\nexcept* Exception: pass').put(None, 0, 1, 'handlers')
+                             .handlers.append('except Exception: pass').base.root.src)
             self.assertEqual('try: pass\nexcept Exception: pass',
-                            FST('try: pass\nexcept* Exception: pass').put(None, 0, 1, 'handlers')
-                            .handlers.append(FST('except Exception: pass')).root.src)
+                             FST('try: pass\nexcept* Exception: pass').put(None, 0, 1, 'handlers')
+                             .handlers.append(FST('except Exception: pass')).base.root.src)
 
             # put to _ExceptHandlers with plain handlers
 
             self.assertEqual('except  Exception: pass\nexcept  Exception: pass',
-                            FST('except  Exception: pass', '_ExceptHandlers').handlers.append('except  Exception: pass').root.src)
+                             FST('except  Exception: pass', '_ExceptHandlers').handlers.append('except  Exception: pass').base.root.src)
             self.assertEqual('except  Exception: pass\nexcept  Exception: pass',
-                            FST('except  Exception: pass', '_ExceptHandlers').handlers.append(FST('except  Exception: pass')).root.src)
+                             FST('except  Exception: pass', '_ExceptHandlers').handlers.append(FST('except  Exception: pass')).base.root.src)
             self.assertRaises(ParseError, FST('except  Exception: pass', '_ExceptHandlers').handlers.append, 'except* Exception: pass')
             self.assertRaises(NodeError, FST('except  Exception: pass', '_ExceptHandlers').handlers.append, FST('except* Exception: pass'))
 
             # put to _ExceptHandlers with star handlers
 
             self.assertEqual('except* Exception: pass\nexcept* Exception: pass',
-                            FST('except* Exception: pass', '_ExceptHandlers').handlers.append('except* Exception: pass').root.src)
+                             FST('except* Exception: pass', '_ExceptHandlers').handlers.append('except* Exception: pass').base.root.src)
             self.assertEqual('except* Exception: pass\nexcept* Exception: pass',
-                            FST('except* Exception: pass', '_ExceptHandlers').handlers.append(FST('except* Exception: pass')).root.src)
+                             FST('except* Exception: pass', '_ExceptHandlers').handlers.append(FST('except* Exception: pass')).base.root.src)
             self.assertRaises(ParseError, FST('except* Exception: pass', '_ExceptHandlers').handlers.append, 'except  Exception: pass')
             self.assertRaises(NodeError, FST('except* Exception: pass', '_ExceptHandlers').handlers.append, FST('except  Exception: pass'))
 
             # put to empty _ExceptHandlers
 
             self.assertEqual('except  Exception: pass',
-                            FST('', '_ExceptHandlers').handlers.append('except  Exception: pass').root.src)
+                             FST('', '_ExceptHandlers').handlers.append('except  Exception: pass').base.root.src)
             self.assertEqual('except  Exception: pass',
-                            FST('', '_ExceptHandlers').handlers.append(FST('except  Exception: pass')).root.src)
+                             FST('', '_ExceptHandlers').handlers.append(FST('except  Exception: pass')).base.root.src)
             self.assertEqual('except* Exception: pass',
-                            FST('', '_ExceptHandlers').handlers.append('except* Exception: pass').root.src)
+                             FST('', '_ExceptHandlers').handlers.append('except* Exception: pass').base.root.src)
             self.assertEqual('except* Exception: pass',
-                            FST('', '_ExceptHandlers').handlers.append(FST('except* Exception: pass')).root.src)
+                             FST('', '_ExceptHandlers').handlers.append(FST('except* Exception: pass')).base.root.src)
 
 
 if __name__ == '__main__':

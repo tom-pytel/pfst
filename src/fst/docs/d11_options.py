@@ -38,14 +38,14 @@ cannot put as 'one' item to a Dict slice
 ...     return -1
 ... '''.strip()
 
->>> print(FST(src).orelse.append(add, elif_=False).root.src)
+>>> print(FST(src).orelse.append(add, elif_=False).base.root.src)
 if a:
     pass
 else:
     if b:
         return -1
 
->>> print(FST(src).orelse.append(add, elif_=True).root.src)
+>>> print(FST(src).orelse.append(add, elif_=True).base.root.src)
 if a:
     pass
 elif b:

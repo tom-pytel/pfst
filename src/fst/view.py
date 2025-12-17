@@ -81,17 +81,11 @@ class fstview:
     """
 
     base:   fst.FST     ; """The target `FST` node this view references."""
-    field:  str         ; """The target field this view references."""
+    field:  str         ; """The target field this view references. Can be virtual field like `_all`."""
     _start: int         ; """Start position within the target field list this view references."""
     _stop:  int | None  ; """One past the last element within the target field list this view references. `None` means pinned the end of the field whatever it may be."""
 
     is_FST = False  ; """@private"""  # for quick checks vs. `FST`
-
-    @property
-    def root(self) -> fst.FST:
-        """Root node of the `FST` node this view belongs to, convenience property."""
-
-        return self.base.root
 
     @property
     def start(self) -> int:
