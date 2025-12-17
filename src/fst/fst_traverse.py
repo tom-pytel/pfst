@@ -72,7 +72,10 @@ def _check_all_param(fst_: fst.FST, all: bool | Literal['loc'] | type[AST] | Con
                 and (a.args or a.vararg or a.kwonlyargs or a.kwarg or a.posonlyargs)
         ))
 
-    return fst_.a.__class__ in all if hasattr(all, '__contains__') else fst_.a.__class__ is all
+    if hasattr(all, '__contains__'):
+        return fst_.a.__class__ in all
+
+    return fst_.a.__class__ is all
 
 
 # ----------------------------------------------------------------------------------------------------------------------
