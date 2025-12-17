@@ -46,6 +46,8 @@ dev = [
   "twine",
   "pdoc==15.0.1",
   "ruff==0.12.7",
+  "pytest==9.0.1",
+  "pytest-cov==7.0.0",
 ]
 
 [tool.setuptools.packages.find]

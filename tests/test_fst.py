@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import builtins
 import os
 import threading
 import unittest
@@ -8296,8 +8297,9 @@ class cls:
         self.assertIs(v, v[:])
 
         self.assertRaises(IndexError, lambda: v[0])
-        def setitem(): v[:] = True
-        self.assertRaises(RuntimeError, setitem)
+        def setitem(idx): v[idx] = True
+        self.assertRaises(RuntimeError, setitem, builtins.slice(None, None))
+        self.assertRaises(IndexError, setitem, 0)
         v[:] = None
 
         def delitem(): del v[0]
@@ -8319,6 +8321,27 @@ class cls:
         self.assertRaises(RuntimeError, v.prepend, True)
         self.assertIs(v, v.prextend(None))
         self.assertRaises(RuntimeError, v.prextend, True)
+
+        self.assertEqual('<<Name ROOT 0,0..0,1>.type_params DUMMY VIEW>', repr(v))
+
+    def test_fstview_misc(self):
+        # slice with step errors
+
+        v = FST('[1, 2, 3]').elts
+        self.assertRaises(IndexError, lambda: v[::2])
+        def setitem(): v[::2] = True
+        self.assertRaises(IndexError, setitem)
+        def delitem(): del v[::2]
+        self.assertRaises(IndexError, delitem)
+
+        # update non-refreshing indices
+
+        f = FST('[1, 2, 3, 4]')
+        v = f.elts[1:3]
+        self.assertEqual(3, v.stop)
+        del v[-1:]
+        self.assertEqual('[1, 2, 4]', f.src)
+        self.assertEqual(2, v.stop)
 
     def test_is_node_type_properties_and_parents(self):
         fst = parse('''
@@ -9775,7 +9798,7 @@ if 1:
             self.assertEqual('t"new"', test(FST('t"{a}"'), 'values', 'new', fstview,
                                             '<<TemplateStr ROOT 0,0..0,6>.values [<Interpolation 0,2..0,5>]>').src)  # TODO: the result of this put is incorrect because it is not implemented yet
 
-    def test_ast_accessors_virtual_fields(self):
+    def test_ast_accessors_virtual_field__all(self):
         # Dict
 
         f = FST('{a: b, c: d, e: f}')
@@ -9827,6 +9850,8 @@ if 1:
         f._all[1] = None
 
         self.assertEqual('a > c', f.src)
+
+        self.assertEqual('<<Compare ROOT 0,0..0,14>._all[1:3] <Name 0,4..0,5> == <Name 0,9..0,10>>', repr(FST('a < b == c > d')._all[1:3]))
 
     def test_ast_accessors_dummy(self):
         if PYLT12:

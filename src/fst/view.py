@@ -703,7 +703,7 @@ class fstview_dummy(fstview):
     """Dummy view for nonexistent fields (type_params on py < 3.12)."""
 
     def _len_field(self) -> int:
-        return 0
+        return 0  # pragma: no cover
 
     def __repr__(self) -> str:
         return f'<{self.base!r}.{self.field} DUMMY VIEW>'

@@ -17,7 +17,13 @@ install:  ## Install locally from current directory
 
 .PHONY: test
 test:  ## Run basic unit tests
-	python -m unittest discover --verbose tests
+	# python -m unittest discover --verbose tests
+	pytest -vv tests
+
+
+.PHONY: coverage
+coverage:  ## Run basic unit tests
+	pytest -v --cov=fst --cov-report=html tests
 
 
 .PHONY: lint

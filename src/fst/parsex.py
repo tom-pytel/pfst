@@ -562,9 +562,12 @@ def _parse_all__type_params(src: str, parse_params: Mapping[str, Any] = {}) -> A
 
     ast = parse__type_params(src, parse_params)
 
-    return (ast if len(ast.type_params) != 1 or
-                   _has_trailing_comma(src, (tp0 := ast.type_params[0]).end_lineno, tp0.end_col_offset) else
-            ast.type_params[0])
+    if (len(ast.type_params) != 1
+        or _has_trailing_comma(src, (tp0 := ast.type_params[0]).end_lineno, tp0.end_col_offset)
+    ):
+        return ast
+
+    return ast.type_params[0]
 
 
 def _parse_all_multiple(src: str, parse_params: Mapping[str, Any], stmt: bool, rest: list[Callable]) -> AST:

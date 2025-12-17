@@ -13,7 +13,7 @@ from fst.astutil import compare_asts
 from fst.common import PYLT11, PYLT12, PYGE11, PYGE12, PYGE14
 from fst.fst_misc import new_empty_set_curlies
 
-from support import GetSliceCases, PutSliceCases, _clean_options
+from support import GetSliceCases, PutSliceCases, _clean_options, inform_test_progress
 
 
 DIR_NAME       = os.path.dirname(__file__)
@@ -43,13 +43,19 @@ def regen_put_slice():
 class TestFSTSlice(unittest.TestCase):
     def test_get_slice_from_data(self):
         for case, rest in DATA_GET_SLICE.iterate(True):
+            inform_test_progress('test_get_slice_from_data', case.key)
+
             for rest_idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
                 self.assertEqual(c, r, f'{case.id()}, rest idx = {rest_idx}')
+
+        inform_test_progress('test_get_slice_from_data')
 
     def test_del_slice_from_get_slice_data(self):
         from support import _make_fst
 
         for case, rest in DATA_GET_SLICE.iterate(True):
+            inform_test_progress('test_del_slice_from_get_slice_data', case.key)
+
             f = _make_fst(case.code, case.attr)
 
             try:
@@ -66,10 +72,16 @@ class TestFSTSlice(unittest.TestCase):
                 if (root_dump := f.root.dump(out=str)) != rest[1]:
                     raise RuntimeError(f'del and cut FST dump are not identical, {case.id()}\n{root_dump}\n...\n{rest[1]}')
 
+        inform_test_progress('test_del_slice_from_get_slice_data')
+
     def test_put_slice_from_data(self):
         for case, rest in DATA_PUT_SLICE.iterate(True):
+            inform_test_progress('test_put_slice_from_data', case.key)
+
             for rest_idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
                 self.assertEqual(c, r, f'{case.id()}, rest idx = {rest_idx}')
+
+        inform_test_progress('test_put_slice_from_data')
 
     def test_put_src_from_put_slice_data(self):  # this test may go away at some point
         from fst.fst_misc import fixup_field_body
@@ -77,6 +89,8 @@ class TestFSTSlice(unittest.TestCase):
         from support import _unfmt_code, _make_fst
 
         for case, rest in DATA_PUT_SLICE.iterate(True):
+            inform_test_progress('test_put_src_from_put_slice_data', case.key)
+
             if not case.options.get('raw') or rest[1].startswith('**'):
                 continue
 
@@ -93,6 +107,8 @@ class TestFSTSlice(unittest.TestCase):
 
             if (root_dump := f.root.dump(out=str)) != rest[2]:
                 raise RuntimeError(f'put_src and put raw FST dump are not identical, {case.id()}\n{root_dump}\n...\n{rest[2]}')
+
+        inform_test_progress('test_put_src_from_put_slice_data')
 
     def test_cut_slice_neg_space(self):
         f = FST('''[

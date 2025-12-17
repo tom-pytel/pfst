@@ -8,8 +8,6 @@ from types import FunctionType, ModuleType
 
 import fst
 
-# VERBOSE = any(arg == '-v' for arg in sys.argv)
-
 
 def cleanup_docstrs_recurse(obj, exclude: set[str] = set()):
     for name, o in obj.__dict__.items():
