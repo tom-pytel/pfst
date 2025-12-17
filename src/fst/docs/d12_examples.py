@@ -74,12 +74,12 @@ Function:
 ...     fst = FST(src, 'exec')
 ...
 ...     for f in fst.walk(If):  # we will only get the `ast.If` nodes
-...         if (f.orelse
+...         if (len(f.orelse) == 1
 ...             and f.orelse[0].is_elif() is False  # False means normal `if`
 ...         ):
 ...             f.orelse[0].replace(  # can replace while walking
 ...                 f.orelse[0].copy(trivia=('block', 'all')),
-...                 trivia=(False, 'all'),
+...                 trivia=(False, 'all'),  # trivia specifies how to handle comments
 ...                 elif_=True,  # elif_=True is default, here to show usage
 ...             )
 ...

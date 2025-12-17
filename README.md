@@ -1,10 +1,15 @@
 # Overview
 
-This module exists in order to facilitate quick and easy high level editing of Python source in the form of an `AST` tree while preserving formatting. It is meant to allow you to change python code functionality while not having to deal with the miniutae of precedence, indentation, parentheses, commas, comments, docstrings, semicolons, line continuations, else vs. elif, and all the various other niche special cases of Python syntax across different versions of the language.
+This module exists in order to facilitate quick and easy high level editing of Python source in the form of an `AST` tree while preserving formatting. It is meant to allow you to change Python code functionality while not having to deal with the miniutae of:
+
+- operator precedence and parentheses
+- indentation and line continuations
+- commas, semicolons, and tuple edge cases
+- comments and docstrings
+- various Python version–specific syntax quirks
+- lots more
 
 See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d12_examples.html) for more in-depth examples.
-
-Example:
 
 ```py
 >>> import fst
@@ -15,7 +20,7 @@ Example:
 if a: b = c, d  # comment
 ```
 
-Straightforward operations.
+Operations are straightforward.
 
 ```py
 >>> ext_ast.f.body[0].body[0].value.elts[1:1] = 'u,\nv  # blah'
@@ -58,30 +63,73 @@ From GitHub, after cloning for development:
 
     pip install -e .[dev]
 
-# Features
+# Example
 
 ```py
 >>> from fst import *
 
->>> f = FST('''
-... class cls:
-...     def func(self):  # comment
-...         """doc
-...         string"""
-... '''.strip())
-
->>> func = f.body[0].copy()
-
->>> print(func.src)
-def func(self):  # comment
-    """doc
-    string"""
+>>> def else_if_chain_to_elifs(src):
+...     fst = FST(src)
+...
+...     for f in fst.walk(If):  # we will only get the `ast.If` nodes
+...         if (len(f.orelse) == 1
+...             and f.orelse[0].is_elif() is False  # False means normal `if`, not an `elif`
+...         ):
+...             f.orelse[0].replace(  # can modify while walking, reput `if` as `elif`
+...                 f.orelse[0].copy(trivia=('block', 'all')),  # get old `if`
+...                 trivia=(False, 'all'),  # trivia specifies how to handle comments
+...                 elif_=True,  # elif_=True is default, here to show usage
+...             )
+...
+...     return fst.src
 ```
+
+```py
+>>> print(else_if_chain_to_elifs(r"""
+... # pre-if-a
+... if a:  # if-a
+...     i = 1  # i
+... else:  # else-a
+...     # pre-if-b
+...     if b:  # if-b
+...         j = 2  # j
+...     else:  # else-b
+...         # pre-if-c
+...         if c:  # if-c
+...             k = 3  # k
+...         else:  # else-c
+...             l = 4  # l
+...         # post-else-c
+...     # post-else-b
+... # post-else-a
+... """.strip()))
+# pre-if-a
+if a:  # if-a
+    i = 1  # i
+# pre-if-b
+elif b:  # if-b
+    j = 2  # j
+# pre-if-c
+elif c:  # if-c
+    k = 3  # k
+else:  # else-c
+    l = 4  # l
+# post-else-c
+# post-else-b
+# post-else-a
+```
+
+# Features
 
 Can zero out bodies.
 
 ```py
->>> del func.body  # don't need docstring
+>>> f = FST('''
+... def func(self):  # comment
+...     pass
+... '''.strip())
+
+>>> del func.body
 
 >>> print(func.src)
 def func(self):  # comment
@@ -245,7 +293,7 @@ def compute(NEW_X: float,  # x position
 Traversal is in syntactic order.
 
 ```py
->>> print(list(f.src for f in FST('def f[T](a, b=1) -> int: pass').walk()))
+>>> list(f.src for f in FST('def f[T](a, b=1) -> int: pass').walk())
 ['def f[T](a, b=1) -> int: pass', 'T', 'a, b=1', 'a', 'b', '1', 'int', 'pass']
 ```
 
