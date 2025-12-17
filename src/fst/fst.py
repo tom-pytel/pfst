@@ -379,7 +379,6 @@ class FST:
     a:            AST | None       ; """The actual `AST` node. Will be set to `None` for `FST` nodes which were deleted or otherwise invalidated so can be checked for that to see if the `FST` is still alive (while walking and modifying for example)."""
     parent:       FST | None       ; """Parent `FST` node, `None` in root node."""
     pfield:       astfield | None  ; """The `astfield` location of this node in the parent, `None` in root node."""
-    # root:         FST              ; """The root node of this tree, `self` in root node."""  # ROOT-AS-ATTRIBUTE
     _cache:       dict
 
     # ROOT ONLY
@@ -404,7 +403,7 @@ class FST:
         return self.parent is None
 
     @property
-    def root(self) -> FST:  # NOT ROOT-AS-ATTRIBUTE
+    def root(self) -> FST:
         """Root node of the tree this node belongs to."""
 
         while parent := self.parent:
@@ -775,7 +774,7 @@ class FST:
         if not (self := getattr(ast_or_src, 'f', None)):  # reuse FST node assigned to AST node (because otherwise it isn't valid anyway)
             self = ast_or_src.f = object.__new__(cls)
 
-        elif not self.parent:  # if was root previously then clear out root attributes
+        elif not self.parent:  # if was previously root then clear out root attributes
             del self.parse_params, self.indent, self._lines, self._serial
 
         self.a = ast_or_src  # we don't assume `self.a` is `ast_or_src` if even if `.f` exists, it should always be but juuuuust in case
@@ -784,14 +783,12 @@ class FST:
 
         if pfield:  # if this is not a root node then we are done
             self.parent = mode
-            # self.root = mode.root  # ROOT-AS-ATTRIBUTE
 
             return self
 
         # ROOT
 
         self.parent = None
-        # self.root = self  # ROOT-AS-ATTRIBUTE
         self._lines = ([bistr(s) for s in mode] if kwargs.get('lcopy', True) else mode)
         self._serial = 0
 

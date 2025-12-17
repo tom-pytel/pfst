@@ -660,20 +660,7 @@ def _set_ast(self: fst.FST, ast: AST, valid_fst: bool = False, unmake: bool = Tr
         self._make_fst_tree()
 
     else:
-        # root = self.root  # ROOT-AS-ATTRIBUTE, other place is in FST.__new__()
-        # itr = walk(ast)
-
-        # try:
-        #     if (f := next(itr).f).root is not root:  # if tree already has same root then we don't need to do this
-        #         f.root = root
-
-        #         for a in itr:
-        #             a.f.root = root
-
-        # except StopIteration:  # from the next() if empty
-        #     pass
-
-        for a in iter_child_nodes(ast):
+        for a in iter_child_nodes(ast):  # this is the price we pay for keeping the current FST when replacing its AST, worth it? Or would be better to use AST FST if present? Inconsistent, but would allow keep custom user attributes on FST
             a.f.parent = self
 
     if parent := self.parent:
