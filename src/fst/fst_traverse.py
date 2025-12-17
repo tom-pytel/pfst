@@ -817,14 +817,8 @@ def walk(
             if not recurse_:
                 return
 
-            if not (ast := self.a):
-                if not (parenta := self.parent.a):  # we know there is a parent because self.a is never set to None for a root node
-                    return
-
-                if not (ast := self.pfield.get_default(parenta)):  # reget node at our astfield, if removed last element of list field or removable element of solo field then in this case walk is done because nothing left
-                    return
-
-                self = ast.f
+            if not (ast := self.a):  # if deleted this node then we are done
+                return
 
             if recurse_ is True:  # user changed their mind?!?
                 recurse = True
@@ -929,14 +923,8 @@ def walk(
             if not recurse_:  # either send(False) or wasn't going to recurse anyways
                 continue
 
-            if not (ast := fst_.a):  # has been modified by the player
-                if not (parenta := fst_.parent.a):
-                    continue
-
-                if not (ast := fst_.pfield.get_default(parenta)):  # reget node at our astfield, if removed last element of list field or removable element of solo field then continue walk
-                    continue
-
-                fst_ = ast.f  # otherwise possibly recurse into new node (unless user explicitly tells us not to with .send(False))
+            if not (ast := fst_.a):  # has been deleted by the player (if modified then this FST node will still exist but the .a will have changed)
+                continue
 
             if recurse_ is not True:  # user did send(True), walk this child unconditionally
                 yield from fst_.walk(all, self_=False, back=back)

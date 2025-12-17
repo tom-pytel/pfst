@@ -73,14 +73,12 @@ Function:
 >>> def else_if_chain_to_elifs(src):
 ...     fst = FST(src, 'exec')
 ...
-...     for f in fst.walk():
-...         if (f.is_elif() is False           # False means normal `if`, not an `elif`
-...             and f.parent.is_If             # in a parent `if`
-...             and f.pfield == ('orelse', 0)  # as first element of `.orelse` body
-...             and len(f.parent.orelse) == 1  # which has only this node
+...     for f in fst.walk(If):  # we will only get the `ast.If` nodes
+...         if (f.orelse
+...             and f.orelse[0].is_elif() is False  # False means normal `if`
 ...         ):
-...             f.replace(  # can replace while walking
-...                 f.copy(trivia=('block', 'all')),
+...             f.orelse[0].replace(  # can replace while walking
+...                 f.orelse[0].copy(trivia=('block', 'all')),
 ...                 trivia=(False, 'all'),
 ...                 elif_=True,  # elif_=True is default, here to show usage
 ...             )
@@ -1113,7 +1111,7 @@ The instrumentation is ugly but is meant to show that all these nested manipulat
 source.
 
 Note that this instrumentation counts on the fact that the syntactic order of the children of these particular node
-types is actually the order they will be evaluated in. This is not always the case. E.g. with the `IfExp` node the
+types is actually the order they will be evaluated in. This is not always the case, e.g. with the `IfExp` node the
 middle gets evaluated first `THEN_THIS if FIRST_THIS else OR_THIS`.
 
 ```py
