@@ -50,7 +50,7 @@ else:
 True
 
 >>> f.body.append(g)
-<<If ROOT 0,0..8,13>.body[:2] [<If 1,4..4,13>, <If 5,4..8,13>]>
+<<If ROOT 0,0..8,13>.body [<If 1,4..4,13>, <If 5,4..8,13>]>
 
 >>> print(f.src)
 if i:
@@ -93,7 +93,7 @@ if i:
         k = 0
 
 >>> f.body[0].body.append(g)
-<<If 1,4..4,13>.body[:1] [<Assign 2,8..2,13>]>
+<<If 1,4..4,13>.body [<Assign 2,8..2,13>]>
 
 >>> print(f.src)
 if i:

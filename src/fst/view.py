@@ -105,7 +105,8 @@ class fstview:
         return len(getattr(self.base.a, self.field))
 
     def _deref_one(self, idx: int) -> AST | str:
-        """Return a single element from field (which may not be a contiguous list). NO COPY JUST RETURN NODE."""
+        """Return a single element from field (which may not be a contiguous list). `idx` guaranteed to be positive. NO
+        COPY JUST RETURN NODE."""
 
         return getattr(self.base.a, self.field)[idx]
 
@@ -697,6 +698,20 @@ class fstview_Compare(fstview):
             seq.insert(0, repr(left.f))
 
         return f'<{base!r}._all{indices} {"".join(seq)}>'
+
+
+class fstview__body(fstview):
+    """View for `_body` virtual field, only used on node types that can have a docstring. @private"""
+
+    def _len_field(self) -> int:
+        base = self.base
+
+        return len(base.a.body) - base.has_docstr
+
+    def _deref_one(self, idx: int) -> AST | str:
+        base = self.base
+
+        return base.a.body[idx + base.has_docstr]
 
 
 class fstview_dummy(fstview):

@@ -100,7 +100,7 @@ def body(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
     """@private"""
 
     if isinstance(child := self.a.body, list):
-        return fstview(self, 'body', 0, len(child))
+        return fstview(self, 'body')
     elif isinstance(child, AST):
         return getattr(child, 'f', None)
 
@@ -240,7 +240,7 @@ def args(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
     """@private"""
 
     if isinstance(child := self.a.args, list):
-        return fstview(self, 'args', 0, len(child))
+        return fstview(self, 'args')
     elif isinstance(child, AST):
         return getattr(child, 'f', None)
 
@@ -427,7 +427,7 @@ def orelse(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
     """@private"""
 
     if isinstance(child := self.a.orelse, list):
-        return fstview(self, 'orelse', 0, len(child))
+        return fstview(self, 'orelse')
     elif isinstance(child, AST):
         return getattr(child, 'f', None)
 

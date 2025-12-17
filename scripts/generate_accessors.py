@@ -173,7 +173,7 @@ def {field}(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
     """@private"""
 
     if isinstance(child := self.a.{field}, list):
-        return fstview(self, {field!r}, 0, len(child))
+        return fstview(self, {field!r})
     elif isinstance(child, AST):
         return getattr(child, 'f', None)
 

@@ -138,7 +138,7 @@ from .astutil import (
 from .common import PYLT13, re_empty_line_start, astfield, fstloc, fstlocn, nspace, next_frag, next_delims, prev_delims
 from .parsex import Mode
 from .code import Code, code_as_lines, code_as_all
-from .view import fstview, fstview_Dict, fstview_MatchMapping, fstview_Compare
+from .view import fstview, fstview_Dict, fstview_MatchMapping, fstview_Compare, fstview__body
 from .reconcile import Reconcile
 from .fst_misc import DUMP_COLOR, DUMP_NO_COLOR, clip_src_loc, fixup_field_body
 from .fst_locs import _loc_arguments, _loc_comprehension, _loc_withitem, _loc_match_case, _loc_op
@@ -4151,24 +4151,38 @@ class FST:
 
     @property
     def _all(self: FST) -> fstview:
-        """Virtual `_all` field view."""
+        """Virtual `_all` field view for `Dict`, `MatchMapping` and `Compare`."""
 
         if view := _VIRTUAL_FIELD_VIEW__ALL.get(self.a.__class__):
-            return view(self, '_all', 0, None)
+            return view(self, '_all')
 
         raise ValueError(f"{self.a.__class__.__name__} does not have virtual field '_all'")
 
     @_all.setter
     def _all(self: FST, code: Code | None) -> None:
-        """Virtual `_all` field set everything."""
-
         self._put_slice(code, None, None, '_all')
 
     @_all.deleter
     def _all(self: FST) -> None:
-        """Virtual `_all` field delete everything."""
-
         self._put_slice(None, None, None, '_all')
+
+    @property
+    def _body(self: FST) -> fstview:
+        """Virtual `_body` field for statements. Special `fstview__body` for statements which may have a docstring and
+        normal `fstview` for the rest. @private"""
+
+        if self.a.__class__ in ASTS_LEAF_MAYBE_DOCSTR:
+            return fstview__body(self, '_body')
+
+        return fstview(self, 'body')
+
+    @_body.setter
+    def _body(self: FST, code: Code | None) -> None:
+        self._put_slice(code, None, None, '_body')
+
+    @_body.deleter
+    def _body(self: FST) -> None:
+        self._put_slice(None, None, None, '_body')
 
 
 _VIRTUAL_FIELD_VIEW__ALL = {
