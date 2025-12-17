@@ -42,24 +42,42 @@ def {field}(self: 'fst.FST') -> None:
 '''.rstrip())
 
         elif cardinality == 5:  # optional AST or primitive
-            if astorprim == 1:  # only AST
-                if field == 'default_value':  # SPECIAL CASE!!!
-                    print(f'''
+            if field == 'default_value':  # SPECIAL CASE!!!
+                print(f'''
 if PYGE13:
     @property
     def {field}(self: 'fst.FST') -> Union['fst.FST', None, constant]:
         """@private"""
 
         return child.f if (child := self.a.{field}) else None
-else:  # HACK to safely return nonexistent field
+
+    @{field}.setter
+    def {field}(self: 'fst.FST', code: Code | constant | None) -> None:
+        self._put_one(code, None, {field!r})
+
+    @{field}.deleter
+    def {field}(self: 'fst.FST') -> None:
+        self._put_one(None, None, {field!r})
+
+else:  # safely access nonexistent field
     @property
     def {field}(self: 'fst.FST') -> Union['fst.FST', None, constant]:
         """@private"""
 
         return None
+
+    @{field}.setter
+    def {field}(self: 'fst.FST', code: Code | constant | None) -> None:
+        if code is not None:  # maybe fail successfully
+            raise RuntimeError("field 'default_value' does not exist on python < 3.13")
+
+    @{field}.deleter
+    def {field}(self: 'fst.FST') -> None:
+        pass
 '''.strip())
-                else:
-                    print(f'''
+
+            elif astorprim == 1:  # only AST
+                print(f'''
 @property
 def {field}(self: 'fst.FST') -> Union['fst.FST', None, constant]:
     """@private"""
@@ -84,7 +102,8 @@ def {field}(self: 'fst.FST') -> Union['fst.FST', None, constant]:
     return child.f if isinstance(child := self.a.{field}, AST) else child
 '''.strip())
 
-            print(f'''
+            if field != 'default_value':  # if not printed in SPECIAL CASE!!!
+                print(f'''
 @{field}.setter
 def {field}(self: 'fst.FST', code: Code | constant | None) -> None:
     self._put_one(code, None, {field!r})
@@ -103,12 +122,30 @@ if PYGE12:
         """@private"""
 
         return fstview(self, {field!r})
-else:  # HACK to safely access nonexistent empty field
+
+    @{field}.setter
+    def {field}(self: 'fst.FST', code: Code | None) -> None:
+        self._put_slice(code, None, None, {field!r})
+
+    @{field}.deleter
+    def {field}(self: 'fst.FST') -> None:
+        self._put_slice(None, None, None, {field!r})
+
+else:  # safely access nonexistent empty field
     @property
     def {field}(self: 'fst.FST') -> list:
         """@private"""
 
-        return []
+        return fstview_dummy(self, '{field}')
+
+    @{field}.setter
+    def {field}(self: 'fst.FST', code: Code | None) -> None:
+        if code is not None:  # maybe fail successfully
+            raise RuntimeError("field '{field}' does not exist on python < 3.12")
+
+    @{field}.deleter
+    def {field}(self: 'fst.FST') -> None:
+        pass
 '''.strip())
             else:
                 print(f'''
@@ -117,9 +154,7 @@ def {field}(self: 'fst.FST') -> fstview:
     """@private"""
 
     return fstview(self, {field!r})
-'''.strip())
 
-            print(f'''
 @{field}.setter
 def {field}(self: 'fst.FST', code: Code | None) -> None:
     self._put_slice(code, None, None, {field!r})
@@ -127,7 +162,7 @@ def {field}(self: 'fst.FST', code: Code | None) -> None:
 @{field}.deleter
 def {field}(self: 'fst.FST') -> None:
     self._put_slice(None, None, None, {field!r})
-'''.rstrip())
+'''.strip())
 
         elif cardinality == 3:  # single AST or list[AST]
             assert astorprim == 1  # only AST
@@ -176,7 +211,7 @@ from .asttypes import AST
 from .astutil import constant
 from .common import PYGE12, PYGE13
 from .code import Code
-from .view import fstview
+from .view import fstview, fstview_dummy
 '''.strip())
 
     cardinality = {}  # {'field': 1 means single element | 2 means list (3 means can be either) | 4 if is optional (for single), ...}

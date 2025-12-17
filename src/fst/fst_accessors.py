@@ -11,7 +11,7 @@ from .asttypes import AST
 from .astutil import constant
 from .common import PYGE12, PYGE13
 from .code import Code
-from .view import fstview
+from .view import fstview, fstview_dummy
 
 __all__ = [
     'body',
@@ -208,20 +208,30 @@ if PYGE12:
         """@private"""
 
         return fstview(self, 'type_params')
-else:  # HACK to safely access nonexistent empty field
+
+    @type_params.setter
+    def type_params(self: 'fst.FST', code: Code | None) -> None:
+        self._put_slice(code, None, None, 'type_params')
+
+    @type_params.deleter
+    def type_params(self: 'fst.FST') -> None:
+        self._put_slice(None, None, None, 'type_params')
+
+else:  # safely access nonexistent empty field
     @property
     def type_params(self: 'fst.FST') -> list:
         """@private"""
 
-        return []
+        return fstview_dummy(self, 'type_params')
 
-@type_params.setter
-def type_params(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'type_params')
+    @type_params.setter
+    def type_params(self: 'fst.FST', code: Code | None) -> None:
+        if code is not None:  # maybe fail successfully
+            raise RuntimeError("field 'type_params' does not exist on python < 3.12")
 
-@type_params.deleter
-def type_params(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'type_params')
+    @type_params.deleter
+    def type_params(self: 'fst.FST') -> None:
+        pass
 
 
 # FunctionDef, AsyncFunctionDef, Lambda, Call, arguments
@@ -1357,17 +1367,27 @@ if PYGE13:
         """@private"""
 
         return child.f if (child := self.a.default_value) else None
-else:  # HACK to safely return nonexistent field
+
+    @default_value.setter
+    def default_value(self: 'fst.FST', code: Code | constant | None) -> None:
+        self._put_one(code, None, 'default_value')
+
+    @default_value.deleter
+    def default_value(self: 'fst.FST') -> None:
+        self._put_one(None, None, 'default_value')
+
+else:  # safely access nonexistent field
     @property
     def default_value(self: 'fst.FST') -> Union['fst.FST', None, constant]:
         """@private"""
 
         return None
 
-@default_value.setter
-def default_value(self: 'fst.FST', code: Code | constant | None) -> None:
-    self._put_one(code, None, 'default_value')
+    @default_value.setter
+    def default_value(self: 'fst.FST', code: Code | constant | None) -> None:
+        if code is not None:  # maybe fail successfully
+            raise RuntimeError("field 'default_value' does not exist on python < 3.13")
 
-@default_value.deleter
-def default_value(self: 'fst.FST') -> None:
-    self._put_one(None, None, 'default_value')
+    @default_value.deleter
+    def default_value(self: 'fst.FST') -> None:
+        pass

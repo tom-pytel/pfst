@@ -1,40 +1,48 @@
 """
 Version {{VERSION}}
 
-# Overview
-
 This module exists in order to facilitate quick and easy high level editing of Python source in the form of an `AST`
-tree while preserving formatting. It is meant to allow you to change python code functionality while not having to deal
-with the miniutae of precedence, indentation, parentheses, commas, comments, docstrings, semicolons, line continuations,
-else vs. elif, and all the various other niche special cases of Python syntax across different versions of the language.
+tree while preserving formatting. It is meant to allow you to change Python code functionality while not having to deal
+with the miniutae of:
+
+- operator precedence and parentheses
+- indentation and line continuations
+- commas, semicolons, and tuple edge cases
+- comments and docstrings
+- various Python version–specific syntax quirks
+- lots more
 
 See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d12_examples.html) for more in-depth examples.
 
-Example:
-
+```py
 >>> import fst
 
 >>> ext_ast = fst.parse('if a: b = c, d  # comment')
 
->>> print(fst.unparse(ext_ast))  # formatting is preserved
+>>> print(fst.unparse(ext_ast))
 if a: b = c, d  # comment
+```
 
-Straightforward operations.
+Operations are straightforward.
 
+```py
 >>> ext_ast.f.body[0].body[0].value.elts[1:1] = 'u,\nv  # blah'
 
 >>> print(fst.unparse(ext_ast))
 if a: b = (c, u,
           v,  # blah
           d)  # comment
+```
 
 The tree is just normal `AST` with metadata.
 
+```py
 >>> import ast
 
 >>> print(ast.unparse(ext_ast))
 if a:
     b = (c, u, v, d)
+```
 
 `fst` works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute which keep extra structure information,
 the original source, and provide the interface to format-preserving operations. Each operation through `fst` is a

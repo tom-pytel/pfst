@@ -12,7 +12,7 @@ from .code import Code
 from .fst_misc import fixup_one_index, fixup_slice_indices
 from .fst_options import check_options
 
-__all__ = ['fstview', 'fstview_Dict', 'fstview_MatchMapping', 'fstview_Compare']
+__all__ = ['fstview', 'fstview_Dict', 'fstview_MatchMapping', 'fstview_Compare', 'fstview_dummy']
 
 
 class fstview:
@@ -697,3 +697,74 @@ class fstview_Compare(fstview):
             seq.insert(0, repr(left.f))
 
         return f'<{base!r}._all{indices} {"".join(seq)}>'
+
+
+class fstview_dummy(fstview):
+    """Dummy view for nonexistent fields (type_params on py < 3.12)."""
+
+    def _len_field(self) -> int:
+        return 0
+
+    def __repr__(self) -> str:
+        return f'<{self.base!r}.{self.field} DUMMY VIEW>'
+
+    def __getitem__(self, idx: int | slice | str) -> fstview | fst.FST | str | None:
+        if not isinstance(idx, slice):
+            raise IndexError('cannot get items from a dummy view')
+
+        return self
+
+    def __setitem__(self, idx: int | slice | str, code: Code | None) -> None:
+        if not isinstance(idx, slice):
+            raise IndexError('cannot set items in a dummy view')
+        if code is not None:
+            raise RuntimeError('cannot set items in a dummy view')
+
+    def __delitem__(self, idx: int | slice | str) -> None:
+        if not isinstance(idx, slice):
+            raise IndexError('index out of range on dummy view')
+
+    def copy(self, **options) -> fst.FST:
+        raise RuntimeError('cannot copy a dummy view')
+
+    def cut(self, **options) -> fst.FST:
+        raise RuntimeError('cannot cut a dummy view')
+
+    def replace(self, code: Code | None, one: bool = True, **options) -> fstview:
+        if code is not None:
+            raise RuntimeError('cannot replace a dummy view')
+
+        return self
+
+    def remove(self, **options) -> fstview:
+        return self
+
+    def insert(self, code: Code, idx: int | Literal['end'] = 0, one: bool = True, **options) -> fstview:
+        if code is not None:
+            raise RuntimeError('cannot insert to a dummy view')
+
+        return self
+
+    def append(self, code: Code, **options) -> fstview:
+        if code is not None:
+            raise RuntimeError('cannot append to a dummy view')
+
+        return self
+
+    def extend(self, code: Code, **options) -> fstview:
+        if code is not None:
+            raise RuntimeError('cannot extend a dummy view')
+
+        return self
+
+    def prepend(self, code: Code, **options) -> fstview:
+        if code is not None:
+            raise RuntimeError('cannot prepend to a dummy view')
+
+        return self
+
+    def prextend(self, code: Code, **options) -> fstview:
+        if code is not None:
+            raise RuntimeError('cannot prextend a dummy view')
+
+        return self

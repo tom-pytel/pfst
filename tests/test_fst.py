@@ -40,6 +40,7 @@ from fst.code import *
 
 from fst import parsex as px, code
 from fst.fst_misc import get_trivia_params
+from fst.view import fstview_dummy
 
 from support import BaseCases, ParseCases
 from data.data_other import PARS_DATA, PUT_SRC_REPARSE_DATA, PRECEDENCE_DATA
@@ -8288,6 +8289,37 @@ class cls:
 
         # TODO: this is not exhaustive
 
+    def test_fstview_dummy(self):
+        v = fstview_dummy(FST('a'), 'type_params')
+
+        self.assertRaises(IndexError, lambda: v[0])
+        self.assertIs(v, v[:])
+
+        self.assertRaises(IndexError, lambda: v[0])
+        def setitem(): v[:] = True
+        self.assertRaises(RuntimeError, setitem)
+        v[:] = None
+
+        def delitem(): del v[0]
+        self.assertRaises(IndexError, delitem)
+        del v[:]
+
+        self.assertRaises(RuntimeError, v.copy)
+        self.assertRaises(RuntimeError, v.cut)
+        self.assertIs(v, v.replace(None))
+        self.assertRaises(RuntimeError, v.replace, True)
+        self.assertIs(v, v.remove())
+        self.assertIs(v, v.insert(None))
+        self.assertRaises(RuntimeError, v.insert, True)
+        self.assertIs(v, v.append(None))
+        self.assertRaises(RuntimeError, v.append, True)
+        self.assertIs(v, v.extend(None))
+        self.assertRaises(RuntimeError, v.extend, True)
+        self.assertIs(v, v.prepend(None))
+        self.assertRaises(RuntimeError, v.prepend, True)
+        self.assertIs(v, v.prextend(None))
+        self.assertRaises(RuntimeError, v.prextend, True)
+
     def test_is_node_type_properties_and_parents(self):
         fst = parse('''
 match a:
@@ -9795,6 +9827,27 @@ if 1:
         f._all[1] = None
 
         self.assertEqual('a > c', f.src)
+
+    def test_ast_accessors_dummy(self):
+        if PYLT12:
+            self.assertIsInstance(FST('def f(): pass').type_params, fstview_dummy)
+            self.assertIsInstance(FST('async def f(): pass').type_params, fstview_dummy)
+            self.assertIsInstance(FST('class cls: pass').type_params, fstview_dummy)
+
+            f = FST('class cls: pass')
+            del f.type_params
+            f.type_params = None
+            self.assertRaises(RuntimeError, setattr, f, 'type_params', True)
+
+        if PYGE12 and PYLT13:
+            self.assertIsNone(FST('T', 'TypeVar').default_value)
+            self.assertIsNone(FST('*U', 'TypeVarTuple').default_value)
+            self.assertIsNone(FST('**V', 'ParamSpec').default_value)
+
+            f = FST('T', 'TypeVar')
+            del f.default_value
+            f.default_value = None
+            self.assertRaises(RuntimeError, setattr, f, 'default_value', True)
 
     def test_generated_predicates(self):  # TODO: comprehensive test them all
         f = FST('call(a, b=c)', 'exec')

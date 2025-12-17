@@ -8,6 +8,7 @@
 
 ### Added
 
+- dummy view for nonexistent list fields from higher python versions on lower ones
 - new coercions on put: `arg` to `arguments`, `withitem` to `expr`
 - basic options checking in all functions which take them, make sure all passed are actual options
 - `FST` slice views validate and truncate indices as needed for modifications elsewhere
@@ -20,6 +21,7 @@
 
 ### Updated
 
+- `FST.type_params` on py < 3.12 and `.default_value` on py < 3.13 give dummy values
 - changed `.docstr` to `get_docstr()` which now dedents returned string
 - made some more useful predicate functions public
 - optimized some internal offset and syntax ordering functions
