@@ -297,8 +297,8 @@ if the walk is restricted to a scope you can decide to recurse into a specific c
 'y'
 
 If you use the `recurse=False` option then recursion is limited to the top-level node you call it on and its immediate
-children (but not THEIR children). Note that this is not the same as `scope=True` as that recurses into children within
-the scope, this does not.
+children (but not **THEIR** children). Note that this is not the same as `scope=True` as that recurses into children
+within the scope, this does not.
 
 >>> for g in (gen := f.walk(recurse=False)):
 ...     print(repr(g.src))
@@ -321,7 +321,7 @@ You can override the `recurse` option by sending to the generator.
 'def g(): pass'
 'x = y'
 
-You can decide **NOT** to recurse into children.
+For normal walks where things would normally be recursed into, you can decide **NOT** to recurse into children.
 
 >>> for g in (gen := f.walk()):
 ...     print(repr(g.src))

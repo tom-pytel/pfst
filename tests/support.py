@@ -235,7 +235,7 @@ class GetCases(BaseCases):
         if rest is None:
             rest = [f.root.src, f.root.dump(out=str)]
 
-        if g is exec:  # exec is sentinel
+        if g is exec:  # exec is just a sentinel value here
             pass  # noop
         elif g is None:
             rest.append('**None**')

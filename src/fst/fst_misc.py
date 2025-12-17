@@ -856,7 +856,7 @@ def get_option_overridable(overridable_option: str, override_option: str, option
     again.
     """
 
-    if (o := options.get(override_option, get_option_overridable)) is not None:  # get_option_overridable is sentinel
+    if (o := options.get(override_option, get_option_overridable)) is not None:  # get_option_overridable is just a sentinel value here
         if o is not get_option_overridable:
             return o
 
@@ -936,7 +936,7 @@ def fixup_field_body(ast: AST, field: str | None, only_list: bool) -> tuple[str,
     """Get `AST` member list for specified `field` or default if `field=None`."""
 
     if field is None:
-        if (field := _DEFAULT_AST_FIELD.get(ast.__class__, fixup_field_body)) is fixup_field_body:  # fixup_field_body is sentinel
+        if (field := _DEFAULT_AST_FIELD.get(ast.__class__, fixup_field_body)) is fixup_field_body:  # fixup_field_body is just a sentinel value here
             raise ValueError(f"{ast.__class__.__name__} has no default body field")
 
     if field.startswith('_'):  # virtual field like Dict._all
