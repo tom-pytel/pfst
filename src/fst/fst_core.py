@@ -158,7 +158,7 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
         lines = self._get_src(sln, scol + 1, end_ln, end_col, True)
 
         for i, l in enumerate(lines):
-            m = re_line_end_cont_or_comment.match(l)  # always matches
+            m = re_line_end_cont_or_comment.search(l)  # always matches
 
             if (g := m.group(1)) and g.startswith('#'):  # line ends in comment, nuke it
                 lines[i] = l[:m.start(1)]
@@ -198,7 +198,7 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
                 if not i:  # if first line then need to remove offset of first value from first line of expression
                     c -= scol + 1
 
-                m = re_line_end_cont_or_comment.match(l, c)  # always matches
+                m = re_line_end_cont_or_comment.search(l, c)  # always matches
 
                 if (g := m.group(1)) and g.startswith('#'):  # line ends in comment, nuke it
                     lines[i] = l[:m.start(1)]
@@ -1053,7 +1053,7 @@ def _is_enclosed_or_line(
             continue
 
         for ln in range(last_ln, loc.ln):
-            if re_line_end_cont_or_comment.match(lines[ln]).group(1) != '\\':
+            if not lines[ln].endswith('\\'):  # we know end of line is outside of a string so we can check for this
                 if out_lns is None:
                     return False
 
@@ -1072,7 +1072,7 @@ def _is_enclosed_or_line(
         last_ln = child_end_ln
 
     for ln in range(last_ln, end_ln):  # tail
-        if re_line_end_cont_or_comment.match(lines[ln]).group(1) != '\\':
+        if not lines[ln].endswith('\\'):
             if out_lns is None:
                 return False
 

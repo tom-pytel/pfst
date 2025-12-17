@@ -391,7 +391,7 @@ ASTS_LEAF_MAYBE_DOCSTR       = ASTS_LEAF_NAMED_SCOPE | frozenset([Module])  # th
 #                                 | ASTS_LEAF_CMPOP)  # the same object may be reused by ast.parse() in mutiple places in the tree
 
 
-class _slice(AST):
+class _slice(AST):  # SPECIAL SLICE base type
     """General non-AST-compatible slice of some `type[AST]` list field. This is not generally usable as an `AST` and
     will not `ast.unparse()` correctly (though `FST.parsex.unparse()` will unparse correctly). Meant only to be used
     as a container with `FST` taking care of source and all operations.

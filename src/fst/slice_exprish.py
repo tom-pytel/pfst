@@ -777,8 +777,8 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
         skip = 1
         post_indent = None  # this is a FULL indent in self, not a partial indent in fst_
 
-        if re_line_end_cont_or_comment.match(put_lines[l := len(put_lines) - 1],  # if last line of fst_ is a comment or line continuation without a newline then add one (don't need to check pars for last line)
-                                             0 if l > fst_last.end_ln else fst_last.end_col).group(1):
+        if re_line_end_cont_or_comment.search(put_lines[l := len(put_lines) - 1],  # if last line of fst_ is a comment or line continuation without a newline then add one (don't need to check pars for last line)
+                                              0 if l > fst_last.end_ln else fst_last.end_col).group(1):
             put_lines.append(bistr(''))
 
         # newlines and indentation

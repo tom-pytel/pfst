@@ -1319,7 +1319,7 @@ def _maybe_add_line_continuations(self: fst.FST, whole: bool = False, del_commen
             end_cols[end_ln] = max(end_cols.get(end_ln, 0), end_col)
 
     for ln in lns:
-        m = re_line_end_cont_or_comment.match(l := lines[ln], end_cols.get(ln, 0))
+        m = re_line_end_cont_or_comment.search(l := lines[ln], end_cols.get(ln, 0))
 
         if not (g := m.group(1)):
             lines[ln] = bistr(l + ('\\' if not l or l[-1:].isspace() else ' \\'))

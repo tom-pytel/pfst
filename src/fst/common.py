@@ -63,7 +63,8 @@ re_line_continuation          = re.compile(r'[^#]*\\$')          # line continua
 re_empty_space                = re.compile(r'\s*$')              # completely empty or space-filled line (from start pos, start of line indentation, any space, not just line indenting space)
 re_empty_line_or_cont         = re.compile(r'[ \t]*(\\)?$')      # empty line or line continuation
 re_empty_line_cont_or_comment = re.compile(r'[ \t]*(\\|#.*)?$')  # empty line or line continuation or a pure comment line
-re_line_end_cont_or_comment   = re.compile(r'.*?(\\|#.*)?$')     # line end line continuation or a comment, the first part is mostly meant to skip closing parentheses and separators, not expression stuff
+
+re_line_end_cont_or_comment   = re.compile(r'(\\|#.*)?$')        # search: line end line continuation or a comment, the first part is mostly meant to skip closing parentheses and separators, not expression stuff
 
 _re_next_frag                     = re.compile(r'\s*([^\s#\\]+)')          # next non-space non-continuation non-comment code text, don't look into strings with this!
 _re_next_frag_or_comment          = re.compile(r'\s*([^\s#\\]+|#.*)')      # next non-space non-continuation code or comment text, don't look into strings with this!

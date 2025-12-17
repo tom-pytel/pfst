@@ -693,7 +693,7 @@ def _code_to_slice_Compare__all_maybe_dangling(
         if end_ln == bound_end_ln and end_col + len(src) == bound_end_col:  # operator right at end of lines, needs a whitespace
             op_lines[end_ln] = op_lines[end_ln] + ' '
 
-        elif re_line_end_cont_or_comment.match(op_lines[l := len(op_lines) - 1]).group(1):  # if last line is a comment or line continuation without a newline then add one
+        elif re_line_end_cont_or_comment.search(op_lines[l := len(op_lines) - 1]).group(1):  # if last line is a comment or line continuation without a newline then add one
             op_lines.append('')
 
         fst_._put_src(op_lines, left_ln, left_col, left_ln, left_col, False)  # we don't care if we offset fst_ itself incorrectly since we will set its location to whole source anyway, we only care about the children here
