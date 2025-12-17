@@ -2809,7 +2809,7 @@ def _put_one(
             field = 'comparators'
 
         try:
-            return getattr(new_self.a, field)[idx].f  # may not be there due to raw reparsing of weird *(^$
+            return getattr(new_self.a, field)[idx].f  # may not be there due to removal of last element or raw reparsing of weird *(^$
         except IndexError:
             return None
 

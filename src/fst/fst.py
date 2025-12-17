@@ -1583,7 +1583,10 @@ class FST:
             if code is None or not parent:
                 return None
 
-            return pfield.get_default(parent.a, None).f
+            if a := pfield.get_default(parent.a, None):  # may not be there due to removal of last element or raw reparsing of weird *(^$
+                return a.f
+
+            return None
 
         if code is None:
             raise ValueError('cannot delete root node')

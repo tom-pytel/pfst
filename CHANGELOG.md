@@ -2,9 +2,10 @@
 
 ### Fixed
 
-- fixed minor type_params non-existent brackets location bug due to use of `loc` instead of `bloc`
-- fixed syntax order bug in `walk()` for multiple mixed `Starred` and `keywords`, `*a, b=c, *d, e=f, etc...`.
-- fixed some `walk(scope=True)` incorrectly included / excluded nodes from function defs
+- fix `replace()` end of sequence with empty slice while using `one=False` returns `None` instead of raising
+- fix minor type_params non-existent brackets location bug due to use of `loc` instead of `bloc`
+- fix syntax order bug in `walk()` for multiple mixed `Starred` and `keywords`, `*a, b=c, *d, e=f, etc...`.
+- fix some `walk(scope=True)` incorrectly included / excluded nodes from function defs
 
 ### Added
 

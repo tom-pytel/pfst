@@ -1,5 +1,5 @@
-Miscellaneous console sessions mostly meant to screen for random errors. Feel free to nuke any these should they become
-annoying.
+Miscellaneous console sessions mostly meant to screen for random errors. Feel free to nuke any of these should they
+become annoying.
 
 >>> from fst import *
 
@@ -226,3 +226,55 @@ BoolOp - ROOT 0,0..0,7
    0] Name 'y' Load - 0,0..0,1
 0:       z
    1] Name 'z' Load - 0,6..0,7
+
+
+........................................................................................................................
+replace() end of sequence with nothing
+
+>>> f = FST('a\nb\nc\nd\ne')
+>>> f.body[1].replace(None)
+>>> f.body[1].replace('')
+Traceback (most recent call last):
+  File "<python-input-4>", line 1, in <module>
+    f.body[1].replace('')
+    ~~~~~~~~~~~~~~~~~^^^^
+  File "/home/tom/work/fst/pfst/src/fst/fst.py", line 1576, in replace
+    return parent._put_one(code, idx, field, options)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tom/work/fst/pfst/src/fst/fst_put_one.py", line 2793, in _put_one
+    new_self = self._put_slice(code, idx, idx + 1, field, True, options)  # MAYBE new self, or just old self
+  File "/home/tom/work/fst/pfst/src/fst/fst_put_slice.py", line 2881, in _put_slice
+    handler(self, code, start, stop, field, one, options)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tom/work/fst/pfst/src/fst/slice_stmtish.py", line 1462, in put_slice_stmtish
+    put_fst_end_nl = _put_slice_stmtish_old(self, code, start, stop, field, one, options)
+  File "/home/tom/work/fst/pfst/src/fst/slice_stmtish.py", line 1128, in _put_slice_stmtish_old
+    raise ValueError('expecting a single element')
+ValueError: expecting a single element
+>>> f.body[1].replace('', one=False)
+<Expr 1,0..1,1>
+>>> _.src
+'d'
+>>> f.src
+'a\nd\ne'
+>>> f.body[1].replace('x\ny\nz', one=False)
+<Expr 1,0..1,1>
+>>> _.src
+'x'
+>>> f.body[-1].replace('u', one=False)
+<Expr 4,0..4,1>
+>>> _.src
+'u'
+>>> f.src
+'a\nx\ny\nz\nu'
+>>> f.put('', -1, one=False)
+Traceback (most recent call last):
+  File "<python-input-14>", line 1, in <module>
+    f.put('', -1, one=False)
+    ~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/home/tom/work/fst/pfst/src/fst/fst.py", line 1828, in put
+    raise ValueError("cannot use 'one=False' in non-slice put()")
+ValueError: cannot use 'one=False' in non-slice put()
+>>> f.body[-1].replace('', one=False)
+>>> f.src
+'a\nx\ny\nz\n'
