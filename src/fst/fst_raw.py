@@ -9,7 +9,7 @@ from ast import walk
 
 from . import fst
 
-from .asttypes import AST, ExceptHandler, Match, Pass, Slice, Try, TryStar, match_case, mod
+from .asttypes import AST, ExceptHandler, Match, Pass, Slice, Try, TryStar, match_case, mod, _slice
 from .astutil import bistr
 
 from .common import NodeError, astfield
@@ -271,12 +271,12 @@ def _reparse_raw(self: fst.FST, code: Code | None, ln: int, col: int, end_ln: in
         root = self.root
 
         if ((mode := root.a.__class__) is not Slice
-            and (base := mode.__bases__[0]) not in (AST, mod, ExceptHandler)
+            and (base := mode.__bases__[0]) not in (AST, mod, ExceptHandler, _slice)
         ):  # first generalize a bit
             mode = base
 
         _reparse_raw_base(self, new_lines, ln, col, end_ln, end_col, root._lines[:],  # fallback to reparse all source
-                            None if self is root else root.child_path(self), True, mode)
+                          None if self is root else root.child_path(self), True, mode)
 
     if len(new_lines) == 1:
         return ln, col + len(new_lines[0])

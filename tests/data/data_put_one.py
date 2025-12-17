@@ -14161,7 +14161,7 @@ _match_cases - ROOT 0,0..1,12
 ('targets[0]', None, False, None, {'raw': True}, ('_Assign_targets',
 r'''a = b = c ='''), (None,
 r'''**FIX ME**'''),
-r'''**ParseError('cannot parse to _slice')**'''),
+r'''**SyntaxError('invalid Assign targets slice')**'''),
 
 ('targets[0]', None, False, None, {'raw': True, 'to': 'targets[1]'}, ('_Assign_targets',
 r'''a = b = c ='''), (None,

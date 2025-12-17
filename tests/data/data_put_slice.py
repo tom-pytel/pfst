@@ -7,39 +7,6 @@
 # - OR
 # error)
 
-# TODO: raw
-#
-#   ! S ,          (ClassDef, 'keywords'):                 # keyword*         -> _keywords            _parse_keywords  - keywords and Starred bases can mix
-#   ! S ,          (Call, 'keywords'):                     # keyword*         -> _keywords            _parse_keywords  - keywords and Starred args can mix
-#                                                                             .
-# * ! S ,          (FunctionDef, 'type_params'):           # type_param*      -> _type_params         _parse_type_params
-# * ! S ,          (AsyncFunctionDef, 'type_params'):      # type_param*      -> _type_params         _parse_type_params
-# * ! S ,          (ClassDef, 'type_params'):              # type_param*      -> _type_params         _parse_type_params
-# * ! S ,          (TypeAlias, 'type_params'):             # type_param*      -> _type_params         _parse_type_params
-#                                                                             .
-# * ! S ,          (With, 'items'):                        # withitem*        -> _withitems           _parse_withitems               - no trailing commas
-# * ! S ,          (AsyncWith, 'items'):                   # withitem*        -> _withitems           _parse_withitems               - no trailing commas
-#                                                                             .
-# * ! S ,          (Import, 'names'):                      # alias*           -> _aliases             _parse_aliases_dotted          - no trailing commas
-# * ! S ,          (ImportFrom, 'names'):                  # alias*           -> _aliases             _parse_aliases_star            - no trailing commas
-#                                                                             .
-#                                                                             .
-# * ! S ' '        (ListComp, 'generators'):               # comprehension*   -> _comprehensions      _parse_comprehensions
-# * ! S ' '        (SetComp, 'generators'):                # comprehension*   -> _comprehensions      _parse_comprehensions
-# * ! S ' '        (DictComp, 'generators'):               # comprehension*   -> _comprehensions      _parse_comprehensions
-# * ! S ' '        (GeneratorExp, 'generators'):           # comprehension*   -> _comprehensions      _parse_comprehensions
-#                                                                             .
-# * ! S    if      (comprehension, 'ifs'):                 # expr*            -> _comprehension_ifs   _parse_comprehension_ifs
-#                                                                             .
-#   ! S    @       (FunctionDef, 'decorator_list'):        # expr*            -> _decorator_list      _parse_decorator_list
-#   ! S    @       (AsyncFunctionDef, 'decorator_list'):   # expr*            -> _decorator_list      _parse_decorator_list
-#   ! S    @       (ClassDef, 'decorator_list'):           # expr*            -> _decorator_list      _parse_decorator_list
-#                                                                             .
-#                                                                             .
-#     N    op      (Compare, 'ops':'comparators'):         # cmpop:expr*      -> _ops_comparators     _parse_ops_comparators / restrict expr or Compare
-#                                                                             .
-#     N ao         (BoolOp, 'values'):                     # expr*            -> BoolOp               _parse_expr / restrict BoolOp  - interchangeable between and / or
-
 DATA_PUT_SLICE = {
 'old_stmtish': [  # ................................................................................
 
@@ -34799,6 +34766,283 @@ comprehension - ROOT 0,0..0,20
    0] Name 'x' Load - 0,14..0,15
    1] Name 'y' Load - 0,19..0,20
   .is_async 0
+'''),
+],
+
+'raw_SPECIAL_SLICE': [  # ................................................................................
+
+('', 1, 2, None, {'raw': True}, ('_ExceptHandlers', r'''
+except ValueError as a: pass
+except RuntimeError as b: pass
+except IndexError as c: pass
+'''), (None,
+r'''except: pass'''), r'''
+except ValueError as a: pass
+except: pass
+except IndexError as c: pass
+''', r'''
+_ExceptHandlers - ROOT 0,0..2,28
+  .handlers[3]
+   0] ExceptHandler - 0,0..0,28
+     .type Name 'ValueError' Load - 0,7..0,17
+     .name 'a'
+     .body[1]
+      0] Pass - 0,24..0,28
+   1] ExceptHandler - 1,0..1,12
+     .body[1]
+      0] Pass - 1,8..1,12
+   2] ExceptHandler - 2,0..2,28
+     .type Name 'IndexError' Load - 2,7..2,17
+     .name 'c'
+     .body[1]
+      0] Pass - 2,24..2,28
+'''),
+
+('', None, None, None, {'raw': True}, ('_ExceptHandlers', r'''
+except ValueError as a: pass
+except RuntimeError as b: pass
+except IndexError as c: pass
+'''), (None,
+r'''except: pass'''),
+r'''except: pass''', r'''
+_ExceptHandlers - ROOT 0,0..0,12
+  .handlers[1]
+   0] ExceptHandler - 0,0..0,12
+     .body[1]
+      0] Pass - 0,8..0,12
+'''),
+
+('', 1, 2, None, {'raw': True}, ('_match_cases', r'''
+case 1: pass
+case cls(a, b=c): pass
+case _: pass
+'''), (None,
+r'''case True: pass'''), r'''
+case 1: pass
+case True: pass
+case _: pass
+''', r'''
+_match_cases - ROOT 0,0..2,12
+  .cases[3]
+   0] match_case - 0,0..0,12
+     .pattern MatchValue - 0,5..0,6
+       .value Constant 1 - 0,5..0,6
+     .body[1]
+      0] Pass - 0,8..0,12
+   1] match_case - 1,0..1,15
+     .pattern MatchSingleton True - 1,5..1,9
+     .body[1]
+      0] Pass - 1,11..1,15
+   2] match_case - 2,0..2,12
+     .pattern MatchAs - 2,5..2,6
+     .body[1]
+      0] Pass - 2,8..2,12
+'''),
+
+('', None, None, None, {'raw': True}, ('_match_cases', r'''
+case 1: pass
+case cls(a, b=c): pass
+case _: pass
+'''), (None,
+r'''case True: pass'''),
+r'''case True: pass''', r'''
+_match_cases - ROOT 0,0..0,15
+  .cases[1]
+   0] match_case - 0,0..0,15
+     .pattern MatchSingleton True - 0,5..0,9
+     .body[1]
+      0] Pass - 0,11..0,15
+'''),
+
+('', 1, 2, None, {'raw': True}, ('_Assign_targets',
+r'''a = b = c ='''), (None,
+r'''x'''),
+r'''a = x = c =''', r'''
+_Assign_targets - ROOT 0,0..0,11
+  .targets[3]
+   0] Name 'a' Store - 0,0..0,1
+   1] Name 'x' Store - 0,4..0,5
+   2] Name 'c' Store - 0,8..0,9
+'''),
+
+('', None, None, None, {'raw': True}, ('_Assign_targets',
+r'''a = b = c ='''), (None,
+r'''x'''),
+r'''x =''', r'''
+_Assign_targets - ROOT 0,0..0,3
+  .targets[1]
+   0] Name 'x' Store - 0,0..0,1
+'''),
+
+('', 1, 2, None, {'raw': True}, ('_decorator_list', r'''
+@deco1
+@deco2(arg)
+@deco3
+'''), (None,
+r'''deco4(arg1, arg2)'''), r'''
+@deco1
+@deco4(arg1, arg2)
+@deco3
+''', r'''
+_decorator_list - ROOT 0,0..2,6
+  .decorator_list[3]
+   0] Name 'deco1' Load - 0,1..0,6
+   1] Call - 1,1..1,18
+     .func Name 'deco4' Load - 1,1..1,6
+     .args[2]
+      0] Name 'arg1' Load - 1,7..1,11
+      1] Name 'arg2' Load - 1,13..1,17
+   2] Name 'deco3' Load - 2,1..2,6
+'''),
+
+('', None, None, None, {'raw': True}, ('_decorator_list', r'''
+@deco1
+@deco2(arg)
+@deco3
+'''), (None,
+r'''deco4(arg1, arg2)'''),
+r'''@deco4(arg1, arg2)''', r'''
+_decorator_list - ROOT 0,0..0,18
+  .decorator_list[1]
+   0] Call - 0,1..0,18
+     .func Name 'deco4' Load - 0,1..0,6
+     .args[2]
+      0] Name 'arg1' Load - 0,7..0,11
+      1] Name 'arg2' Load - 0,13..0,17
+'''),
+
+('', 1, 2, None, {'raw': True}, ('_comprehensions',
+r'''for a in a for b in b for c in c'''), (None,
+r'''for x in x'''),
+r'''for a in a for x in x for c in c''', r'''
+_comprehensions - ROOT 0,0..0,32
+  .generators[3]
+   0] comprehension - 0,0..0,10
+     .target Name 'a' Store - 0,4..0,5
+     .iter Name 'a' Load - 0,9..0,10
+     .is_async 0
+   1] comprehension - 0,11..0,21
+     .target Name 'x' Store - 0,15..0,16
+     .iter Name 'x' Load - 0,20..0,21
+     .is_async 0
+   2] comprehension - 0,22..0,32
+     .target Name 'c' Store - 0,26..0,27
+     .iter Name 'c' Load - 0,31..0,32
+     .is_async 0
+'''),
+
+('', None, None, None, {'raw': True}, ('_comprehensions',
+r'''for a in a for b in b for c in c'''), (None,
+r'''for x in x'''),
+r'''for x in x''', r'''
+_comprehensions - ROOT 0,0..0,10
+  .generators[1]
+   0] comprehension - 0,0..0,10
+     .target Name 'x' Store - 0,4..0,5
+     .iter Name 'x' Load - 0,9..0,10
+     .is_async 0
+'''),
+
+('', 1, 2, None, {'raw': True}, ('_comprehension_ifs',
+r'''if a if b if c'''), (None,
+r'''x'''),
+r'''if a if x if c''', r'''
+_comprehension_ifs - ROOT 0,0..0,14
+  .ifs[3]
+   0] Name 'a' Load - 0,3..0,4
+   1] Name 'x' Load - 0,8..0,9
+   2] Name 'c' Load - 0,13..0,14
+'''),
+
+('', None, None, None, {'raw': True}, ('_comprehension_ifs',
+r'''if a if b if c'''), (None,
+r'''x'''),
+r'''if x''', r'''
+_comprehension_ifs - ROOT 0,0..0,4
+  .ifs[1]
+   0] Name 'x' Load - 0,3..0,4
+'''),
+
+('', 1, 2, None, {'raw': True}, ('_aliases',
+r'''a as a, b as b, c as c'''), (None,
+r'''x as x'''),
+r'''a as a, x as x, c as c''', r'''
+_aliases - ROOT 0,0..0,22
+  .names[3]
+   0] alias - 0,0..0,6
+     .name 'a'
+     .asname 'a'
+   1] alias - 0,8..0,14
+     .name 'x'
+     .asname 'x'
+   2] alias - 0,16..0,22
+     .name 'c'
+     .asname 'c'
+'''),
+
+('', None, None, None, {'raw': True}, ('_aliases',
+r'''a as a, b as b, c as c'''), (None,
+r'''x as x'''),
+r'''x as x''', r'''
+_aliases - ROOT 0,0..0,6
+  .names[1]
+   0] alias - 0,0..0,6
+     .name 'x'
+     .asname 'x'
+'''),
+
+('', 1, 2, None, {'raw': True}, ('_withitems',
+r'''a as a, b as b, c as c'''), (None,
+r'''x as x'''),
+r'''a as a, x as x, c as c''', r'''
+_withitems - ROOT 0,0..0,22
+  .items[3]
+   0] withitem - 0,0..0,6
+     .context_expr Name 'a' Load - 0,0..0,1
+     .optional_vars Name 'a' Store - 0,5..0,6
+   1] withitem - 0,8..0,14
+     .context_expr Name 'x' Load - 0,8..0,9
+     .optional_vars Name 'x' Store - 0,13..0,14
+   2] withitem - 0,16..0,22
+     .context_expr Name 'c' Load - 0,16..0,17
+     .optional_vars Name 'c' Store - 0,21..0,22
+'''),
+
+('', None, None, None, {'raw': True}, ('_withitems',
+r'''a as a, b as b, c as c'''), (None,
+r'''x as x'''),
+r'''x as x''', r'''
+_withitems - ROOT 0,0..0,6
+  .items[1]
+   0] withitem - 0,0..0,6
+     .context_expr Name 'x' Load - 0,0..0,1
+     .optional_vars Name 'x' Store - 0,5..0,6
+'''),
+
+('', 1, 2, None, {'_ver': 12, 'raw': True}, ('_type_params',
+r'''T, *U, **V'''), (None,
+r'''X: int'''),
+r'''T, X: int, **V''', r'''
+_type_params - ROOT 0,0..0,14
+  .type_params[3]
+   0] TypeVar - 0,0..0,1
+     .name 'T'
+   1] TypeVar - 0,3..0,9
+     .name 'X'
+     .bound Name 'int' Load - 0,6..0,9
+   2] ParamSpec - 0,11..0,14
+     .name 'V'
+'''),
+
+('', None, None, None, {'_ver': 12, 'raw': True}, ('_type_params',
+r'''T, *U, **V'''), (None,
+r'''X: int'''),
+r'''X: int''', r'''
+_type_params - ROOT 0,0..0,6
+  .type_params[1]
+   0] TypeVar - 0,0..0,6
+     .name 'X'
+     .bound Name 'int' Load - 0,3..0,6
 '''),
 ],
 

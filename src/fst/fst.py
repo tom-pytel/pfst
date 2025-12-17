@@ -733,7 +733,7 @@ class FST:
         - `pfield`: `astfield` indication position in parent of this node. If provided then creating a simple child node
             and it is created with the `self.parent` set to `mode` node and `self.pfield` set to this. If `None` then it
             means the creation of a full new `FST` tree and this is the root node with `mode` providing the source. If
-            `False` then this is a shortcut for `FST.fromast()` or `FST.fromsrc()` or `FST.new()`.
+            `False` then this is a shortcut for `FST.fromsrc()`, `FST.fromast()` or `FST.new()`.
         - `kwargs`: Contextual parameters:
             - `from_`: If this is provided then it must be an `FST` node from which this node is being created. This
                 allows to copy parse parameters and already determined default indentation.
@@ -743,7 +743,7 @@ class FST:
                 then indentation will be inferred from source. Only valid when creating a root node.
             - `filename`, `type_comments` and `feature_version`: If creating from an `AST` or source only then these are
                 the parameteres passed to the respective `.new()`, `.fromsrc()` or `.fromast()` functions. Only valid
-                when `mode` and `pfield` are `None`.
+                when `pfield` is `False`, meaning a shortcut use of `FST()`.
             - `lcopy`: Whether to copy lines of source on root node create or just use what is passed in, which in this
                 case must be a list of `bistr` and this node takes ownership of the list.
         """
