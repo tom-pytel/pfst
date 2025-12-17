@@ -2231,6 +2231,15 @@ match a:
         self.assertEqual((1, 9, 1, 17), _loc_MatchClass_pars(FST('match a:\n case cls(c="()"): pass', 'exec').body[0].cases[0].pattern))
         self.assertEqual((2, 0, 9, 1), _loc_MatchClass_pars(FST('match a:\n case cls\\\n(\nc\n=\n"\\\n(\\\n)\\\n"\n): pass', 'exec').body[0].cases[0].pattern))
 
+    def test_loc_FunctionDef_type_params_brackets(self):
+        if PYGE12:
+            f = FST(r'''
+def f():
+    @deco(["\\"])
+    def gen(): pass
+                '''.strip())
+            self.assertEqual((None, (0, 5)), f._loc_FunctionDef_type_params_brackets())
+
     def test__is_atom(self):
         self.assertIs(False, parse('1 + 2').body[0].value.f._is_atom())
         self.assertEqual('unenclosable', parse('f()').body[0].value.f._is_atom())

@@ -704,7 +704,7 @@ def _loc_FunctionDef_type_params_brackets(self: fst.FST) -> tuple[fstloc | None,
     if after := (
         args.posonlyargs or args.args or args.vararg or args.kwonlyargs or args.kwarg or ast.returns or ast.body
     ):
-        after_ln, after_col, _, _ = (after[0] if isinstance(after, list) else after).f.loc
+        after_ln, after_col, _, _ = (after[0] if isinstance(after, list) else after).f.bloc
     else:  # accomodate temporarily empty bodies
         after_ln = end_ln
         after_col = end_col
