@@ -1929,6 +1929,22 @@ def _get_slice__slice(
     return fst_
 
 
+def _get_slice_stmtish__body(
+    self: fst.FST,
+    start: int | Literal['end'] | None,
+    stop: int | None,
+    field: str,
+    cut: bool,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """Get a slice from a statementish virtual `_body` field which is just a `body` as if it didn't have a docstring."""
+
+    if self.has_docstr:
+        start, stop = fixup_slice_indices(len(self.a.body), start, stop, 1)
+
+    return get_slice_stmtish(self, start, stop, 'body', cut, options)
+
+
 _GET_SLICE_HANDLERS = {
     (Module, 'body'):                         get_slice_stmtish,  # stmt*
     (Interactive, 'body'):                    get_slice_stmtish,  # stmt*
@@ -1957,6 +1973,22 @@ _GET_SLICE_HANDLERS = {
     (Match, 'cases'):                         get_slice_stmtish,  # match_case*
     (Try, 'handlers'):                        get_slice_stmtish,  # excepthandler*
     (TryStar, 'handlers'):                    get_slice_stmtish,  # excepthandler* ('except*')
+
+    (Module, '_body'):                        _get_slice_stmtish__body,  # stmt*  - without docstr
+    (Interactive, '_body'):                   _get_slice_stmtish__body,  # stmt*
+    (FunctionDef, '_body'):                   _get_slice_stmtish__body,  # stmt*
+    (AsyncFunctionDef, '_body'):              _get_slice_stmtish__body,  # stmt*
+    (ClassDef, '_body'):                      _get_slice_stmtish__body,  # stmt*
+    (For, '_body'):                           _get_slice_stmtish__body,  # stmt*
+    (AsyncFor, '_body'):                      _get_slice_stmtish__body,  # stmt*
+    (While, '_body'):                         _get_slice_stmtish__body,  # stmt*
+    (If, '_body'):                            _get_slice_stmtish__body,  # stmt*
+    (With, '_body'):                          _get_slice_stmtish__body,  # stmt*
+    (AsyncWith, '_body'):                     _get_slice_stmtish__body,  # stmt*
+    (Try, '_body'):                           _get_slice_stmtish__body,  # stmt*
+    (TryStar, '_body'):                       _get_slice_stmtish__body,  # stmt*
+    (ExceptHandler, '_body'):                 _get_slice_stmtish__body,  # stmt*
+    (match_case, '_body'):                    _get_slice_stmtish__body,  # stmt*
 
     (Tuple, 'elts'):                          _get_slice_Tuple_elts,  # expr*
     (List, 'elts'):                           _get_slice_List_elts,  # expr*

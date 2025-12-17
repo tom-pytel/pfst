@@ -2408,6 +2408,23 @@ def _put_slice__slice(
     put_slice_sep_end(self, end_params)
 
 
+def _put_slice_stmtish__body(
+    self: fst.FST,
+    code: Code | None,
+    start: int | Literal['end'] | None,
+    stop: int | None,
+    field: str,
+    one: bool,
+    options: Mapping[str, Any],
+) -> fst.FST:
+    """Put a slice to a statementish virtual `_body` field which is just a `body` as if it didn't have a docstring."""
+
+    if self.has_docstr:
+        start, stop = fixup_slice_indices(len(self.a.body), start, stop, 1)
+
+    return put_slice_stmtish(self, code, start, stop, 'body', one, options)
+
+
 _PUT_SLICE_HANDLERS = {
     (Module, 'body'):                         put_slice_stmtish,  # stmt*
     (Interactive, 'body'):                    put_slice_stmtish,  # stmt*
@@ -2436,6 +2453,22 @@ _PUT_SLICE_HANDLERS = {
     (Match, 'cases'):                         put_slice_stmtish,  # match_case*
     (Try, 'handlers'):                        put_slice_stmtish,  # excepthandler*
     (TryStar, 'handlers'):                    put_slice_stmtish,  # excepthandlerstar*
+
+    (Module, '_body'):                        _put_slice_stmtish__body,  # stmt*  - without docstr
+    (Interactive, '_body'):                   _put_slice_stmtish__body,  # stmt*
+    (FunctionDef, '_body'):                   _put_slice_stmtish__body,  # stmt*
+    (AsyncFunctionDef, '_body'):              _put_slice_stmtish__body,  # stmt*
+    (ClassDef, '_body'):                      _put_slice_stmtish__body,  # stmt*
+    (For, '_body'):                           _put_slice_stmtish__body,  # stmt*
+    (AsyncFor, '_body'):                      _put_slice_stmtish__body,  # stmt*
+    (While, '_body'):                         _put_slice_stmtish__body,  # stmt*
+    (If, '_body'):                            _put_slice_stmtish__body,  # stmt*
+    (With, '_body'):                          _put_slice_stmtish__body,  # stmt*
+    (AsyncWith, '_body'):                     _put_slice_stmtish__body,  # stmt*
+    (Try, '_body'):                           _put_slice_stmtish__body,  # stmt*
+    (TryStar, '_body'):                       _put_slice_stmtish__body,  # stmt*
+    (ExceptHandler, '_body'):                 _put_slice_stmtish__body,  # stmt*
+    (match_case, '_body'):                    _put_slice_stmtish__body,  # stmt*
 
     (Tuple, 'elts'):                          _put_slice_Tuple_elts,  # expr*
     (List, 'elts'):                           _put_slice_List_elts,  # expr*

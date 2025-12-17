@@ -23,6 +23,7 @@
 ### Updated
 
 - `FST.type_params` on py < 3.12 and `.default_value` on py < 3.13 give dummy values
+- `fstview` can represent unbounded field list, can grow as well as shring with modifications outside the view
 - changed `.docstr` to `get_docstr()` which now dedents returned string
 - made some more useful predicate functions public
 - optimized some internal offset and syntax ordering functions

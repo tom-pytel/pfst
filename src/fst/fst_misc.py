@@ -910,21 +910,32 @@ def fixup_one_index(len_: int, idx: int) -> int:
     return idx
 
 
-def fixup_slice_indices(len_: int, start: int | Literal['end'] | None, stop: int | None) -> tuple[int, int]:
+def fixup_slice_indices(
+    len_: int, start: int | Literal['end'] | None, stop: int | None, start_at: int = 0
+) -> tuple[int, int]:
     """Clip slice indices to slice range allowing first negative range to map into positive range. Greater negative
-    indices clip to 0."""
+    indices clip to 0 (or `start_at` if not 0).
+
+    If `start_at` is not 0 then the lower bounding index is this. This is meant for restricting slice ranges in a
+    statement `body` which may have a docstring to start past the docstring. The returned indices are be for the real
+    `body` field starting at `start_at`, not the virtual `_body` which starts at 0.
+    """
 
     if start is None:
-        start = 0
+        start = start_at
     elif start == 'end' or start > len_:
         start = len_
     elif start < 0:
-        start = max(0, start + len_)
+        start = max(start_at, start + len_)
+    else:
+        start = min(len_, start + start_at)
 
     if stop is None or stop > len_:
         stop = len_
     elif stop < 0:
-        stop = max(0, stop + len_)
+        stop = max(start_at, stop + len_)
+    else:
+        stop = min(len_, stop + start_at)
 
     if stop < start:
         raise ValueError('start index must precede stop index')

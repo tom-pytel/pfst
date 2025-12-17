@@ -33686,7 +33686,7 @@ _type_params - ROOT 0,0..0,6
 '''),
 ],
 
-'virtual_fields': [  # ................................................................................
+'virtual_field__all': [  # ................................................................................
 
 ('', 1, 2, '_all', {}, ('Dict',
 r'''{1: a, 2: b, 3: c}'''), ('Dict',
@@ -33740,6 +33740,407 @@ Compare - ROOT 0,0..0,14
    0] Name 'x' Load - 0,4..0,5
    1] Name 'y' Load - 0,9..0,10
    2] Name 'c' Load - 0,13..0,14
+'''),
+],
+
+'virtual_field__body': [  # ................................................................................
+
+('', None, None, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''),
+r'''x''', r'''
+"""doc"""
+x
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+   1] Expr - 1,0..1,1
+     .value Name 'x' Load - 1,0..1,1
+'''),
+
+('', None, None, '_body', {'_verify': False}, ('Interactive',
+r'''"""non-doc"""; a; b'''),
+r'''x''',
+r'''x''', r'''
+Interactive - ROOT 0,0..0,1
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'x' Load - 0,0..0,1
+'''),
+
+('', None, None, '_body', {}, ('FunctionDef', r'''
+def f():
+    """doc"""
+    a
+    b
+'''),
+r'''x''', r'''
+def f():
+    """doc"""
+    x
+''', r'''
+FunctionDef - ROOT 0,0..2,5
+  .name 'f'
+  .body[2]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+   1] Expr - 2,4..2,5
+     .value Name 'x' Load - 2,4..2,5
+'''),
+
+('', None, None, '_body', {}, ('AsyncFunctionDef', r'''
+async def f():
+    """doc"""
+    a
+    b
+'''),
+r'''x''', r'''
+async def f():
+    """doc"""
+    x
+''', r'''
+AsyncFunctionDef - ROOT 0,0..2,5
+  .name 'f'
+  .body[2]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+   1] Expr - 2,4..2,5
+     .value Name 'x' Load - 2,4..2,5
+'''),
+
+('', None, None, '_body', {}, ('ClassDef', r'''
+class cls:
+    """doc"""
+    a
+    b
+'''),
+r'''x''', r'''
+class cls:
+    """doc"""
+    x
+''', r'''
+ClassDef - ROOT 0,0..2,5
+  .name 'cls'
+  .body[2]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+   1] Expr - 2,4..2,5
+     .value Name 'x' Load - 2,4..2,5
+'''),
+
+('', None, None, '_body', {}, ('For', r'''
+for _ in _:
+    """non-doc"""
+    a
+    b
+'''),
+r'''x''', r'''
+for _ in _:
+    x
+''', r'''
+For - ROOT 0,0..1,5
+  .target Name '_' Store - 0,4..0,5
+  .iter Name '_' Load - 0,9..0,10
+  .body[1]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+'''),
+
+('', None, None, '_body', {}, ('AsyncFor', r'''
+async for _ in _:
+    """non-doc"""
+    a
+    b
+'''),
+r'''x''', r'''
+async for _ in _:
+    x
+''', r'''
+AsyncFor - ROOT 0,0..1,5
+  .target Name '_' Store - 0,10..0,11
+  .iter Name '_' Load - 0,15..0,16
+  .body[1]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+'''),
+
+('', None, None, '_body', {}, ('While', r'''
+while _:
+    """non-doc"""
+    a
+    b
+'''),
+r'''x''', r'''
+while _:
+    x
+''', r'''
+While - ROOT 0,0..1,5
+  .test Name '_' Load - 0,6..0,7
+  .body[1]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+'''),
+
+('', None, None, '_body', {}, ('If', r'''
+if _:
+    """non-doc"""
+    a
+    b
+'''),
+r'''x''', r'''
+if _:
+    x
+''', r'''
+If - ROOT 0,0..1,5
+  .test Name '_' Load - 0,3..0,4
+  .body[1]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+'''),
+
+('', None, None, '_body', {}, ('With', r'''
+with _:
+    """non-doc"""
+    a
+    b
+'''),
+r'''x''', r'''
+with _:
+    x
+''', r'''
+With - ROOT 0,0..1,5
+  .items[1]
+   0] withitem - 0,5..0,6
+     .context_expr Name '_' Load - 0,5..0,6
+  .body[1]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+'''),
+
+('', None, None, '_body', {}, ('AsyncWith', r'''
+async with _:
+    """non-doc"""
+    a
+    b
+'''),
+r'''x''', r'''
+async with _:
+    x
+''', r'''
+AsyncWith - ROOT 0,0..1,5
+  .items[1]
+   0] withitem - 0,11..0,12
+     .context_expr Name '_' Load - 0,11..0,12
+  .body[1]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+'''),
+
+('', None, None, '_body', {}, ('Try', r'''
+try:
+    """non-doc"""
+    a
+    b
+except: pass
+'''),
+r'''x''', r'''
+try:
+    x
+except: pass
+''', r'''
+Try - ROOT 0,0..2,12
+  .body[1]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+  .handlers[1]
+   0] ExceptHandler - 2,0..2,12
+     .body[1]
+      0] Pass - 2,8..2,12
+'''),
+
+('', None, None, '_body', {'_ver': 11}, ('TryStar', r'''
+try:
+    """non-doc"""
+    a
+    b
+except* Exception: pass
+'''),
+r'''x''', r'''
+try:
+    x
+except* Exception: pass
+''', r'''
+TryStar - ROOT 0,0..2,23
+  .body[1]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+  .handlers[1]
+   0] ExceptHandler - 2,0..2,23
+     .type Name 'Exception' Load - 2,8..2,17
+     .body[1]
+      0] Pass - 2,19..2,23
+'''),
+
+('', None, None, '_body', {}, ('ExceptHandler', r'''
+except:
+    """non-doc"""
+    a
+    b
+'''),
+r'''x''', r'''
+except:
+    x
+''', r'''
+ExceptHandler - ROOT 0,0..1,5
+  .body[1]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+'''),
+
+('', None, None, '_body', {}, ('match_case', r'''
+case _:
+    """non-doc"""
+    a
+    b
+'''),
+r'''x''', r'''
+case _:
+    x
+''', r'''
+match_case - ROOT 0,0..1,5
+  .pattern MatchAs - 0,5..0,6
+  .body[1]
+   0] Expr - 1,4..1,5
+     .value Name 'x' Load - 1,4..1,5
+'''),
+
+('', 0, 1, '_body', {'trivia': False}, ('FunctionDef', r'''
+def f():
+    """doc"""
+
+    # pre-2
+
+    # pre-1
+    a
+'''),
+r'''x''', r'''
+def f():
+    """doc"""
+
+    # pre-2
+
+    # pre-1
+    x
+''', r'''
+FunctionDef - ROOT 0,0..6,5
+  .name 'f'
+  .body[2]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+   1] Expr - 6,4..6,5
+     .value Name 'x' Load - 6,4..6,5
+'''),
+
+('', 0, 1, '_body', {'trivia': 'block'}, ('FunctionDef', r'''
+def f():
+    """doc"""
+
+    # pre-2
+
+    # pre-1
+    a
+'''),
+r'''x''', r'''
+def f():
+    """doc"""
+
+    # pre-2
+
+    x
+''', r'''
+FunctionDef - ROOT 0,0..5,5
+  .name 'f'
+  .body[2]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+   1] Expr - 5,4..5,5
+     .value Name 'x' Load - 5,4..5,5
+'''),
+
+('', 0, 1, '_body', {'trivia': 'block+'}, ('FunctionDef', r'''
+def f():
+    """doc"""
+
+    # pre-2
+
+    # pre-1
+    a
+'''),
+r'''x''', r'''
+def f():
+    """doc"""
+
+    # pre-2
+    x
+''', r'''
+FunctionDef - ROOT 0,0..4,5
+  .name 'f'
+  .body[2]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+   1] Expr - 4,4..4,5
+     .value Name 'x' Load - 4,4..4,5
+'''),
+
+('', 0, 1, '_body', {'trivia': 'all'}, ('FunctionDef', r'''
+def f():
+    """doc"""
+
+    # pre-2
+
+    # pre-1
+    a
+'''),
+r'''x''', r'''
+def f():
+    """doc"""
+
+    x
+''', r'''
+FunctionDef - ROOT 0,0..3,5
+  .name 'f'
+  .body[2]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+   1] Expr - 3,4..3,5
+     .value Name 'x' Load - 3,4..3,5
+'''),
+
+('', 0, 1, '_body', {'trivia': 'all+'}, ('FunctionDef', r'''
+def f():
+    """doc"""
+
+    # pre-2
+
+    # pre-1
+    a
+'''),
+r'''x''', r'''
+def f():
+    """doc"""
+    x
+''', r'''
+FunctionDef - ROOT 0,0..2,5
+  .name 'f'
+  .body[2]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+   1] Expr - 2,4..2,5
+     .value Name 'x' Load - 2,4..2,5
 '''),
 ],
 

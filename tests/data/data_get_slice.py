@@ -20898,7 +20898,7 @@ _type_params - ROOT 0,0..0,10
 '''),
 ],
 
-'virtual_fields': [  # ................................................................................
+'virtual_field__all': [  # ................................................................................
 
 ('', 1, 2, '_all', {}, ('Dict',
 r'''{1: a, 2: b, 3: c}'''),
@@ -20969,6 +20969,861 @@ Compare - ROOT 0,0..0,5
 r'''b''', r'''
 Compare - ROOT 0,0..0,1
   .left Name 'b' Load - 0,0..0,1
+'''),
+],
+
+'virtual_field__body': [  # ................................................................................
+
+('', None, None, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''),
+r'''"""doc"""''', r'''
+Module - ROOT 0,0..0,9
+  .body[1]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+''', r'''
+a
+b
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'b' Load - 1,0..1,1
+'''),
+
+('', None, None, '_body', {'_verify': False}, ('Interactive',
+r'''"""non-doc"""; a; b'''),
+r'''''',
+r'''Interactive - ROOT 0,0..0,0''',
+r'''"""non-doc"""; a; b''', r'''
+Module - ROOT 0,0..0,19
+  .body[3]
+   0] Expr - 0,0..0,13
+     .value Constant 'non-doc' - 0,0..0,13
+   1] Expr - 0,15..0,16
+     .value Name 'a' Load - 0,15..0,16
+   2] Expr - 0,18..0,19
+     .value Name 'b' Load - 0,18..0,19
+'''),
+
+('', None, None, '_body', {}, ('FunctionDef', r'''
+def f():
+    """doc"""
+    a
+    b
+'''), r'''
+def f():
+    """doc"""
+''', r'''
+FunctionDef - ROOT 0,0..1,13
+  .name 'f'
+  .body[1]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+''', r'''
+a
+b
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'b' Load - 1,0..1,1
+'''),
+
+('', None, None, '_body', {}, ('AsyncFunctionDef', r'''
+async def f():
+    """doc"""
+    a
+    b
+'''), r'''
+async def f():
+    """doc"""
+''', r'''
+AsyncFunctionDef - ROOT 0,0..1,13
+  .name 'f'
+  .body[1]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+''', r'''
+a
+b
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'b' Load - 1,0..1,1
+'''),
+
+('', None, None, '_body', {}, ('ClassDef', r'''
+class cls:
+    """doc"""
+    a
+    b
+'''), r'''
+class cls:
+    """doc"""
+''', r'''
+ClassDef - ROOT 0,0..1,13
+  .name 'cls'
+  .body[1]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+''', r'''
+a
+b
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'b' Load - 1,0..1,1
+'''),
+
+('', None, None, '_body', {'_verify': False}, ('For', r'''
+for _ in _:
+    """non-doc"""
+    a
+    b
+'''),
+r'''for _ in _:''', r'''
+For - ROOT 0,0..0,11
+  .target Name '_' Store - 0,4..0,5
+  .iter Name '_' Load - 0,9..0,10
+''', r'''
+"""non-doc"""
+a
+b
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[3]
+   0] Expr - 0,0..0,13
+     .value Constant 'non-doc' - 0,0..0,13
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
+'''),
+
+('', None, None, '_body', {'_verify': False}, ('AsyncFor', r'''
+async for _ in _:
+    """non-doc"""
+    a
+    b
+'''),
+r'''async for _ in _:''', r'''
+AsyncFor - ROOT 0,0..0,17
+  .target Name '_' Store - 0,10..0,11
+  .iter Name '_' Load - 0,15..0,16
+''', r'''
+"""non-doc"""
+a
+b
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[3]
+   0] Expr - 0,0..0,13
+     .value Constant 'non-doc' - 0,0..0,13
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
+'''),
+
+('', None, None, '_body', {'_verify': False}, ('While', r'''
+while _:
+    """non-doc"""
+    a
+    b
+'''),
+r'''while _:''', r'''
+While - ROOT 0,0..0,8
+  .test Name '_' Load - 0,6..0,7
+''', r'''
+"""non-doc"""
+a
+b
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[3]
+   0] Expr - 0,0..0,13
+     .value Constant 'non-doc' - 0,0..0,13
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
+'''),
+
+('', None, None, '_body', {'_verify': False}, ('If', r'''
+if _:
+    """non-doc"""
+    a
+    b
+'''),
+r'''if _:''', r'''
+If - ROOT 0,0..0,5
+  .test Name '_' Load - 0,3..0,4
+''', r'''
+"""non-doc"""
+a
+b
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[3]
+   0] Expr - 0,0..0,13
+     .value Constant 'non-doc' - 0,0..0,13
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
+'''),
+
+('', None, None, '_body', {'_verify': False}, ('With', r'''
+with _:
+    """non-doc"""
+    a
+    b
+'''),
+r'''with _:''', r'''
+With - ROOT 0,0..0,7
+  .items[1]
+   0] withitem - 0,5..0,6
+     .context_expr Name '_' Load - 0,5..0,6
+''', r'''
+"""non-doc"""
+a
+b
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[3]
+   0] Expr - 0,0..0,13
+     .value Constant 'non-doc' - 0,0..0,13
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
+'''),
+
+('', None, None, '_body', {'_verify': False}, ('AsyncWith', r'''
+async with _:
+    """non-doc"""
+    a
+    b
+'''),
+r'''async with _:''', r'''
+AsyncWith - ROOT 0,0..0,13
+  .items[1]
+   0] withitem - 0,11..0,12
+     .context_expr Name '_' Load - 0,11..0,12
+''', r'''
+"""non-doc"""
+a
+b
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[3]
+   0] Expr - 0,0..0,13
+     .value Constant 'non-doc' - 0,0..0,13
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
+'''),
+
+('', None, None, '_body', {'_verify': False}, ('Try', r'''
+try:
+    """non-doc"""
+    a
+    b
+except: pass
+'''), r'''
+try:
+except: pass
+''', r'''
+Try - ROOT 0,0..1,12
+  .handlers[1]
+   0] ExceptHandler - 1,0..1,12
+     .body[1]
+      0] Pass - 1,8..1,12
+''', r'''
+"""non-doc"""
+a
+b
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[3]
+   0] Expr - 0,0..0,13
+     .value Constant 'non-doc' - 0,0..0,13
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
+'''),
+
+('', None, None, '_body', {'_verify': False, '_ver': 11}, ('TryStar', r'''
+try:
+    """non-doc"""
+    a
+    b
+except* Exception: pass
+'''), r'''
+try:
+except* Exception: pass
+''', r'''
+TryStar - ROOT 0,0..1,23
+  .handlers[1]
+   0] ExceptHandler - 1,0..1,23
+     .type Name 'Exception' Load - 1,8..1,17
+     .body[1]
+      0] Pass - 1,19..1,23
+''', r'''
+"""non-doc"""
+a
+b
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[3]
+   0] Expr - 0,0..0,13
+     .value Constant 'non-doc' - 0,0..0,13
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
+'''),
+
+('', None, None, '_body', {'_verify': False}, ('ExceptHandler', r'''
+except:
+    """non-doc"""
+    a
+    b
+'''),
+r'''except:''',
+r'''ExceptHandler - ROOT 0,0..0,7''', r'''
+"""non-doc"""
+a
+b
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[3]
+   0] Expr - 0,0..0,13
+     .value Constant 'non-doc' - 0,0..0,13
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
+'''),
+
+('', None, None, '_body', {'_verify': False}, ('match_case', r'''
+case _:
+    """non-doc"""
+    a
+    b
+'''),
+r'''case _:''', r'''
+match_case - ROOT 0,0..0,7
+  .pattern MatchAs - 0,5..0,6
+''', r'''
+"""non-doc"""
+a
+b
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[3]
+   0] Expr - 0,0..0,13
+     .value Constant 'non-doc' - 0,0..0,13
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
+'''),
+
+('', 0, 0, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''), r'''
+"""doc"""
+a
+b
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[3]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
+''',
+r'''''',
+r'''Module - ROOT 0,0..0,0'''),
+
+('', 0, 1, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''), r'''
+"""doc"""
+b
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+   1] Expr - 1,0..1,1
+     .value Name 'b' Load - 1,0..1,1
+''',
+r'''a''', r'''
+Module - ROOT 0,0..0,1
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, 2, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''),
+r'''"""doc"""''', r'''
+Module - ROOT 0,0..0,9
+  .body[1]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+''', r'''
+a
+b
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'b' Load - 1,0..1,1
+'''),
+
+('', 0, 3, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''),
+r'''"""doc"""''', r'''
+Module - ROOT 0,0..0,9
+  .body[1]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+''', r'''
+a
+b
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'b' Load - 1,0..1,1
+'''),
+
+('', 1, 0, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''),
+r'''**ValueError('start index must precede stop index')**'''),
+
+('', 1, 1, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''), r'''
+"""doc"""
+a
+b
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[3]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
+''',
+r'''''',
+r'''Module - ROOT 0,0..0,0'''),
+
+('', 1, 2, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''), r'''
+"""doc"""
+a
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+''',
+r'''b''', r'''
+Module - ROOT 0,0..0,1
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'b' Load - 0,0..0,1
+'''),
+
+('', 1, 3, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''), r'''
+"""doc"""
+a
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+''',
+r'''b''', r'''
+Module - ROOT 0,0..0,1
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'b' Load - 0,0..0,1
+'''),
+
+('', 2, 3, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''), r'''
+"""doc"""
+a
+b
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[3]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
+''',
+r'''''',
+r'''Module - ROOT 0,0..0,0'''),
+
+('', 3, 3, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''), r'''
+"""doc"""
+a
+b
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[3]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
+''',
+r'''''',
+r'''Module - ROOT 0,0..0,0'''),
+
+('', 0, -1, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''), r'''
+"""doc"""
+b
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+   1] Expr - 1,0..1,1
+     .value Name 'b' Load - 1,0..1,1
+''',
+r'''a''', r'''
+Module - ROOT 0,0..0,1
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, -2, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''), r'''
+"""doc"""
+a
+b
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[3]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
+''',
+r'''''',
+r'''Module - ROOT 0,0..0,0'''),
+
+('', 0, -3, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''), r'''
+"""doc"""
+a
+b
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[3]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+   2] Expr - 2,0..2,1
+     .value Name 'b' Load - 2,0..2,1
+''',
+r'''''',
+r'''Module - ROOT 0,0..0,0'''),
+
+('', -2, -1, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''), r'''
+"""doc"""
+b
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+   1] Expr - 1,0..1,1
+     .value Name 'b' Load - 1,0..1,1
+''',
+r'''a''', r'''
+Module - ROOT 0,0..0,1
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+'''),
+
+('', -3, -1, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''), r'''
+"""doc"""
+b
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+   1] Expr - 1,0..1,1
+     .value Name 'b' Load - 1,0..1,1
+''',
+r'''a''', r'''
+Module - ROOT 0,0..0,1
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+'''),
+
+('', -3, 2, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''),
+r'''"""doc"""''', r'''
+Module - ROOT 0,0..0,9
+  .body[1]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+''', r'''
+a
+b
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'b' Load - 1,0..1,1
+'''),
+
+('', 0, 1, '_body', {'trivia': False}, ('FunctionDef', r'''
+def f():
+    """doc"""
+
+    # pre-2
+
+    # pre-1
+    a
+'''), r'''
+def f():
+    """doc"""
+
+    # pre-2
+
+    # pre-1
+''', r'''
+FunctionDef - ROOT 0,0..1,13
+  .name 'f'
+  .body[1]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+''',
+r'''a''', r'''
+Module - ROOT 0,0..0,1
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, 1, '_body', {'trivia': 'block'}, ('FunctionDef', r'''
+def f():
+    """doc"""
+
+    # pre-2
+
+    # pre-1
+    a
+'''), r'''
+def f():
+    """doc"""
+
+    # pre-2
+
+''', r'''
+FunctionDef - ROOT 0,0..1,13
+  .name 'f'
+  .body[1]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+''', r'''
+# pre-1
+a
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[1]
+   0] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+'''),
+
+('', 0, 1, '_body', {'trivia': 'block+'}, ('FunctionDef', r'''
+def f():
+    """doc"""
+
+    # pre-2
+
+    # pre-1
+    a
+'''), r'''
+def f():
+    """doc"""
+
+    # pre-2
+''', r'''
+FunctionDef - ROOT 0,0..1,13
+  .name 'f'
+  .body[1]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+''', r'''
+
+# pre-1
+a
+''', r'''
+Module - ROOT 0,0..2,1
+  .body[1]
+   0] Expr - 2,0..2,1
+     .value Name 'a' Load - 2,0..2,1
+'''),
+
+('', 0, 1, '_body', {'trivia': 'all'}, ('FunctionDef', r'''
+def f():
+    """doc"""
+
+    # pre-2
+
+    # pre-1
+    a
+'''), r'''
+def f():
+    """doc"""
+
+''', r'''
+FunctionDef - ROOT 0,0..1,13
+  .name 'f'
+  .body[1]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+''', r'''
+# pre-2
+
+# pre-1
+a
+''', r'''
+Module - ROOT 0,0..3,1
+  .body[1]
+   0] Expr - 3,0..3,1
+     .value Name 'a' Load - 3,0..3,1
+'''),
+
+('', 0, 1, '_body', {'trivia': 'all+'}, ('FunctionDef', r'''
+def f():
+    """doc"""
+
+    # pre-2
+
+    # pre-1
+    a
+'''), r'''
+def f():
+    """doc"""
+''', r'''
+FunctionDef - ROOT 0,0..1,13
+  .name 'f'
+  .body[1]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+''', r'''
+
+# pre-2
+
+# pre-1
+a
+''', r'''
+Module - ROOT 0,0..4,1
+  .body[1]
+   0] Expr - 4,0..4,1
+     .value Name 'a' Load - 4,0..4,1
 '''),
 ],
 

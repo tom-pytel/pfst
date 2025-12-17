@@ -385,7 +385,7 @@ ASTS_LEAF_FTSTR              = frozenset([JoinedStr, TemplateStr])
 
 ASTS_LEAF_CMPOP_TWO_WORD     = frozenset([IsNot, NotIn])
 
-ASTS_LEAF_MAYBE_DOCSTR       = ASTS_LEAF_NAMED_SCOPE | frozenset([Module])  # these may have a docstring as the first Const str Expr in the body
+ASTS_LEAF_MAYBE_DOCSTR       = ASTS_LEAF_NAMED_SCOPE | frozenset([Module])  # these may have a docstring as the first Const str Expr in the body, we specifically leave out Interactive because... its not a Module?
 
 # ASTS_LEAF_MAYBE_SINGLETON    = (ASTS_LEAF_EXPR_CONTEXT | ASTS_LEAF_BOOLOP | ASTS_LEAF_OPERATOR | ASTS_LEAF_UNARYOP
 #                                 | ASTS_LEAF_CMPOP)  # the same object may be reused by ast.parse() in mutiple places in the tree
