@@ -1710,7 +1710,6 @@ class FST:
                 return self._get_slice(0, 'end', field, cut, options)
             if idx == 'end':
                 return self._get_slice('end', 'end', field, cut, options)
-                # raise IndexError("cannot get() non-slice from index 'end'")
 
         elif stop is not None or idx is not None:
             raise IndexError(f'{ast.__class__.__name__}.{field} does not take an index')
@@ -1828,8 +1827,6 @@ class FST:
                 return self._put_slice(code, 0, 'end', field, one, options)
             if idx == 'end':
                 return self._put_slice(code, 'end', 'end', field, one, options)
-
-            # return self._put_slice(code, idx or 0, 'end' if stop is None else stop, field, one, options)
 
         elif stop is not None or idx is not None:
             raise IndexError(f'{ast.__class__.__name__}.{field} does not take an index')
@@ -1997,14 +1994,21 @@ class FST:
         return self._put_slice(code, start, stop, field, one, options)
 
     def get_src(
-        self, ln: int, col: int, end_ln: int, end_col: int, as_lines: bool = False
+        self,
+        ln: int | Literal['end'],
+        col: int | Literal['end'],
+        end_ln: int | Literal['end'],
+        end_col: int | Literal['end'],
+        as_lines: bool = False
     ) -> builtins.str | list[builtins.str]:
         r"""Get source at location, without dedenting or any other modification, returned as a string or individual
-        lines. The first and last lines are cropped to start `col` and `end_col`.
+        lines.
 
         Can call on any node in tree to access source for the whole tree.
 
-        The coordinates passed in are clipped to the whole valid source area.
+        The coordinates passed in are clipped to the whole valid source area. Negative indexing is supported and the
+        `'end'` special value means either the last line if used for `ln` or `end_ln` or one past the last column on
+        their respective line if used for `col` or `end_col`.
 
         **Parameters:**
         - `ln`: Start line of span to get (0 based).
@@ -2028,6 +2032,9 @@ class FST:
 
         >>> (f := FST('if 1:\n  i = 2')).get_src(*f.body[0].bloc)
         'i = 2'
+
+        >>> FST('if 1:\n  i = 2').get_src('end', -3, 'end', 'end')
+        '= 2'
         """
 
         ln, col, end_ln, end_col = clip_src_loc(self, ln, col, end_ln, end_col)
@@ -2037,10 +2044,10 @@ class FST:
     def put_src(
         self,
         code: Code | None,
-        ln: int,
-        col: int,
-        end_ln: int,
-        end_col: int,
+        ln: int | Literal['end'],
+        col: int | Literal['end'],
+        end_ln: int | Literal['end'],
+        end_col: int | Literal['end'],
         action: Literal['reparse', 'offset'] | None = 'reparse',
     ) -> tuple[int, int]:
         r"""Put source and maybe adjust `AST` tree for source modified. The adjustment may be a reparse of the area
@@ -2084,7 +2091,9 @@ class FST:
         `code` is an `FST` then the exact source of the `FST` is put. If passed as a string or lines then that is put
         directly.
 
-        The coordinates passed in are clipped to the whole valid source area.
+        The coordinates passed in are clipped to the whole valid source area. Negative indexing is supported and the
+        `'end'` special value means either the last line if used for `ln` or `end_ln` or one past the last column on
+        their respective line if used for `col` or `end_col`.
 
         **Parameters:**
         - `code`: The code to put as an `FST` (must be root node), `AST`, a string or list of line strings.

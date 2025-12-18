@@ -6240,19 +6240,24 @@ with a as b, c as d:
     def test_get_src_clip(self):
         f = FST('if 1:\n    j = 2\n    pass')
 
-        self.assertEqual('if', f.get_src(-1, -1, 0, 2))
+        self.assertEqual('if', f.get_src(-999, -999, 0, 2))
         self.assertEqual('pass', f.get_src(2, 4, 999, 999))
-        self.assertEqual('if 1:\n    j = 2\n    pass', f.get_src(-1, -1, 999, 999))
-        self.assertEqual('    j = 2', f.get_src(1, -1, 1, 999))
-        self.assertEqual('1:\n    j = 2\n    p', f.get_src(-1, 3, 999, 5))
+        self.assertEqual('if 1:\n    j = 2\n    pass', f.get_src(-999, -999, 999, 999))
+        self.assertEqual('    j = 2', f.get_src(1, -999, 1, 999))
+        self.assertEqual('1:\n    j = 2\n    p', f.get_src(-999, 3, 999, 5))
 
-        self.assertRaises(ValueError, f.get_src, 2, 0, 1, 0)
-        self.assertRaises(ValueError, f.get_src, 1, 2, 1, 1)
+        self.assertRaises(IndexError, f.get_src, 2, 0, 1, 0)
+        self.assertRaises(IndexError, f.get_src, 1, 2, 1, 1)
+
+        self.assertEqual('= 2\n', f.get_src(-2, -3, -1, 0))
+        self.assertEqual('if 1:', f.get_src(-3, 0, -3, 'end'))
+        self.assertEqual('s', f.get_src(-1, -1, 'end', 'end'))
+        self.assertEqual('', f.get_src('end', 'end', 'end', 'end'))
 
     def test_put_src_clip(self):
         f = FST('if 1:\n    j = 2\n    pass')
 
-        f.put_src('if', -1, -1, 0, 2)
+        f.put_src('if', -999, -999, 0, 2)
         self.assertEqual('if 1:\n    j = 2\n    pass', f.src)
         f.verify()
 
@@ -6260,20 +6265,28 @@ with a as b, c as d:
         self.assertEqual('if 1:\n    j = 2\n    pass', f.src)
         f.verify()
 
-        f.put_src('if 1:\n    j = 2\n    pass', -1, -1, 999, 999)
+        f.put_src('if 1:\n    j = 2\n    pass', -999, -999, 999, 999)
         self.assertEqual('if 1:\n    j = 2\n    pass', f.src)
         f.verify()
 
-        f.put_src('    j = 2', 1, -1, 1, 999)
+        f.put_src('    j = 2', 1, -999, 1, 999)
         self.assertEqual('if 1:\n    j = 2\n    pass', f.src)
         f.verify()
 
-        f.put_src('1:\n    j = 2\n    p', -1, 3, 999, 5)
+        f.put_src('1:\n    j = 2\n    p', -999, 3, 999, 5)
         self.assertEqual('if 1:\n    j = 2\n    pass', f.src)
         f.verify()
 
-        self.assertRaises(ValueError, f.put_src, None, 2, 0, 1, 0)
-        self.assertRaises(ValueError, f.put_src, None, 1, 2, 1, 1)
+        self.assertRaises(IndexError, f.put_src, None, 2, 0, 1, 0)
+        self.assertRaises(IndexError, f.put_src, None, 1, 2, 1, 1)
+
+        f.put_src('call()\n', -2, -5, 'end', 0)
+        self.assertEqual('if 1:\n    call()\n    pass', f.src)
+        f.verify()
+
+        f.put_src('True:', -3, -2, 0, 'end')
+        self.assertEqual('if True:\n    call()\n    pass', f.src)
+        f.verify()
 
     def test_put_src_reparse(self):
         for i, (dst, attr, (ln, col, end_ln, end_col), options, src, put_ret, put_src, put_dump) in enumerate(PUT_SRC_REPARSE_DATA):
@@ -8325,6 +8338,8 @@ class cls:
         self.assertEqual('<<Name ROOT 0,0..0,1>.type_params DUMMY VIEW>', repr(v))
 
     def test_fstview_misc(self):
+        # filling out coverage
+
         # slice with step errors
 
         v = FST('[1, 2, 3]').elts

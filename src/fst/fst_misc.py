@@ -866,34 +866,51 @@ def get_option_overridable(overridable_option: str, override_option: str, option
     return fst.FST.get_option(overridable_option, options)
 
 
-def clip_src_loc(self: fst.FST, ln: int, col: int, end_ln: int, end_col: int) -> tuple[int, int, int, int]:
+def clip_src_loc(
+    self: fst.FST,
+    ln: int | Literal['end'],
+    col: int | Literal['end'],
+    end_ln: int | Literal['end'],
+    end_col: int | Literal['end'],
+) -> tuple[int, int, int, int]:
     """Clip location to valid source coordinates and verify that the end does not precede the start."""
 
     lines = self.root._lines
-    last_ln = len(lines) - 1
+    len_lines = len(lines)
+    last_ln = len_lines - 1
 
-    if ln > end_ln or ((end_ln == ln) and col > end_col):  # we do this before clip so that out-of-bounds coordinates are still validated wrt common sense as wrong order may indicate other bugs
-        raise ValueError('end location cannot precede start location')
-
-    if ln < 0:
-        ln = 0
-    elif ln > last_ln:
+    if ln == 'end':
         ln = last_ln
+    elif ln < 0:
+        ln += len_lines
 
-    if col < 0:
-        col = 0
-    elif col > (len_line := len(lines[ln])):
-        col = len_line
-
-    if end_ln < 0:
-        end_ln = 0
-    elif end_ln > last_ln:
+    if end_ln == 'end':
         end_ln = last_ln
+    elif end_ln < 0:
+        end_ln += len_lines
 
-    if end_col < 0:
-        end_col = 0
-    elif end_col > (len_line := len(lines[end_ln])):
-        end_col = len_line
+    if ln > end_ln:
+        raise IndexError('end line cannot precede start line')
+
+    ln = max(0, min(last_ln, ln))
+    end_ln = max(0, min(last_ln, end_ln))
+
+    if col == 'end':
+        col = len(lines[ln])
+    elif col < 0:
+        col = max(0, col + len(lines[ln]))
+    else:
+        col = min(col, len(lines[ln]))
+
+    if end_col == 'end':
+        end_col = len(lines[end_ln])
+    elif end_col < 0:
+        end_col = max(0, end_col + len(lines[end_ln]))
+    else:
+        end_col = min(end_col, len(lines[end_ln]))
+
+    if end_ln == ln and col > end_col:
+        raise IndexError('end column cannot precede start column on line')
 
     return ln, col, end_ln, end_col
 
