@@ -133,7 +133,7 @@ def _params_Compare(self: fst.FST, idx: int | None) -> tuple[int, str, AST | lis
         return None, 'left', ast.left
 
 
-def _validate_get(self: fst.FST, idx: int | None, field: str) -> tuple[AST | None, int]:
+def _validate_get(self: fst.FST, idx: int | None, field: str, start_at: int = 0) -> tuple[AST | None, int]:
     """Check that `idx` was passed (or not) as needed."""
 
     child = getattr(self.a, field)
@@ -142,7 +142,7 @@ def _validate_get(self: fst.FST, idx: int | None, field: str) -> tuple[AST | Non
         if idx is None:
             raise IndexError(f'{self.a.__class__.__name__}.{field} needs an index')
 
-        fixup_one_index(len(child), idx)
+        idx = fixup_one_index(len(child), idx, start_at)
 
         child = child[idx]
 
@@ -208,7 +208,7 @@ def _maybe_fix_copy(self: fst.FST, options: Mapping[str, Any]) -> None:
 # ......................................................................................................................
 
 def _get_one_default(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
-    child, idx = _validate_get(self, idx, field)
+    child, _ = _validate_get(self, idx, field)
 
     if child is None:
         return None
@@ -249,7 +249,13 @@ def _get_one_arglikes(self: fst.FST, idx: int | None, field: str, cut: bool, opt
 
 
 def _get_one_stmtish(self: fst.FST, idx: int | None, field: str, cut: bool, options: Mapping[str, Any]) -> _GetOneRet:
-    _, idx = _validate_get(self, idx, field)
+    if field == '_body':
+        field = 'body'
+        start_at = self.has_docstr
+    else:
+        start_at = 0
+
+    _, idx = _validate_get(self, idx, field, start_at)
 
     return get_slice_stmtish(self, idx, idx + 1, field, cut, options, one=True)
 
@@ -659,6 +665,22 @@ _GET_ONE_HANDLERS = {
     (ParamSpec, 'default_value'):         _get_one_default,  # expr?
     (TypeVarTuple, 'name'):               _get_one_identifier,  # identifier
     (TypeVarTuple, 'default_value'):      _get_one_default,  # expr?
+
+    (Module, '_body'):                    _get_one_stmtish,  # stmt*  - without docstr
+    (Interactive, '_body'):               _get_one_stmtish,  # stmt*
+    (FunctionDef, '_body'):               _get_one_stmtish,  # stmt*
+    (AsyncFunctionDef, '_body'):          _get_one_stmtish,  # stmt*
+    (ClassDef, '_body'):                  _get_one_stmtish,  # stmt*
+    (For, '_body'):                       _get_one_stmtish,  # stmt*
+    (AsyncFor, '_body'):                  _get_one_stmtish,  # stmt*
+    (While, '_body'):                     _get_one_stmtish,  # stmt*
+    (If, '_body'):                        _get_one_stmtish,  # stmt*
+    (With, '_body'):                      _get_one_stmtish,  # stmt*
+    (AsyncWith, '_body'):                 _get_one_stmtish,  # stmt*
+    (Try, '_body'):                       _get_one_stmtish,  # stmt*
+    (TryStar, '_body'):                   _get_one_stmtish,  # stmt*
+    (ExceptHandler, '_body'):             _get_one_stmtish,  # stmt*
+    (match_case, '_body'):                _get_one_stmtish,  # stmt*
 
     (_ExceptHandlers, 'handlers'):        _get_one_stmtish,  # ExceptHandler*
     (_match_cases, 'cases'):              _get_one_stmtish,  # match_case*

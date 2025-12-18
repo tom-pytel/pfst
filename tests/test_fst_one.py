@@ -8,7 +8,7 @@ from fst import *
 from fst.asttypes import *
 from fst.common import PYLT11, PYLT12, PYGE12, PYGE13, PYGE14
 
-from support import GetCases, PutCases, inform_test_progress
+from support import GetCases, PutCases
 
 
 DIR_NAME     = os.path.dirname(__file__)
@@ -271,21 +271,13 @@ def regen_put_one():
 class TestFSTPut(unittest.TestCase):
     def test_get_one_from_data(self):
         for case, rest in DATA_GET_ONE.iterate(True):
-            inform_test_progress('test_get_one_from_data', case.key)
-
             for rest_idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
                 self.assertEqual(c, r, f'{case.id()}, rest idx = {rest_idx}')
-
-        inform_test_progress('test_get_one_from_data', None)
 
     def test_put_one_from_data(self):
         for case, rest in DATA_PUT_ONE.iterate(True):
-            inform_test_progress('test_put_one_from_data', case.key)
-
             for rest_idx, (c, r) in enumerate(zip(case.rest, rest, strict=True)):
                 self.assertEqual(c, r, f'{case.id()}, rest idx = {rest_idx}')
-
-        inform_test_progress('test_put_one_from_data', None)
 
     def test_put_one_raw_from_put_one_data(self):
         from support import _unfmt_code, _make_fst, _clean_options

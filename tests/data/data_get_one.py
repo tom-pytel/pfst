@@ -3160,4 +3160,431 @@ r'''T: int, U: (str)'''),
 r'''**IndexError('index out of range')**'''),
 ],
 
+'virtual_field__body': [  # ................................................................................
+
+('', 0, False, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''), r'''
+"""doc"""
+b
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+   1] Expr - 1,0..1,1
+     .value Name 'b' Load - 1,0..1,1
+''',
+r'''a''', r'''
+Expr - ROOT 0,0..0,1
+  .value Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, False, '_body', {}, ('Interactive',
+r'''"""non-doc"""; a; b'''),
+r'''a; b''', r'''
+Interactive - ROOT 0,0..0,4
+  .body[2]
+   0] Expr - 0,0..0,1
+     .value Name 'a' Load - 0,0..0,1
+   1] Expr - 0,3..0,4
+     .value Name 'b' Load - 0,3..0,4
+''',
+r'''"""non-doc"""''', r'''
+Expr - ROOT 0,0..0,13
+  .value Constant 'non-doc' - 0,0..0,13
+'''),
+
+('', 0, False, '_body', {}, ('FunctionDef', r'''
+def f():
+    """doc"""
+    a
+    b
+'''), r'''
+def f():
+    """doc"""
+    b
+''', r'''
+FunctionDef - ROOT 0,0..2,5
+  .name 'f'
+  .body[2]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+''',
+r'''a''', r'''
+Expr - ROOT 0,0..0,1
+  .value Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, False, '_body', {}, ('AsyncFunctionDef', r'''
+async def f():
+    """doc"""
+    a
+    b
+'''), r'''
+async def f():
+    """doc"""
+    b
+''', r'''
+AsyncFunctionDef - ROOT 0,0..2,5
+  .name 'f'
+  .body[2]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+''',
+r'''a''', r'''
+Expr - ROOT 0,0..0,1
+  .value Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, False, '_body', {}, ('ClassDef', r'''
+class cls:
+    """doc"""
+    a
+    b
+'''), r'''
+class cls:
+    """doc"""
+    b
+''', r'''
+ClassDef - ROOT 0,0..2,5
+  .name 'cls'
+  .body[2]
+   0] Expr - 1,4..1,13
+     .value Constant 'doc' - 1,4..1,13
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+''',
+r'''a''', r'''
+Expr - ROOT 0,0..0,1
+  .value Name 'a' Load - 0,0..0,1
+'''),
+
+('', 0, False, '_body', {}, ('For', r'''
+for _ in _:
+    """non-doc"""
+    a
+    b
+'''), r'''
+for _ in _:
+    a
+    b
+''', r'''
+For - ROOT 0,0..2,5
+  .target Name '_' Store - 0,4..0,5
+  .iter Name '_' Load - 0,9..0,10
+  .body[2]
+   0] Expr - 1,4..1,5
+     .value Name 'a' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+''',
+r'''"""non-doc"""''', r'''
+Expr - ROOT 0,0..0,13
+  .value Constant 'non-doc' - 0,0..0,13
+'''),
+
+('', 0, False, '_body', {}, ('AsyncFor', r'''
+async for _ in _:
+    """non-doc"""
+    a
+    b
+'''), r'''
+async for _ in _:
+    a
+    b
+''', r'''
+AsyncFor - ROOT 0,0..2,5
+  .target Name '_' Store - 0,10..0,11
+  .iter Name '_' Load - 0,15..0,16
+  .body[2]
+   0] Expr - 1,4..1,5
+     .value Name 'a' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+''',
+r'''"""non-doc"""''', r'''
+Expr - ROOT 0,0..0,13
+  .value Constant 'non-doc' - 0,0..0,13
+'''),
+
+('', 0, False, '_body', {}, ('While', r'''
+while _:
+    """non-doc"""
+    a
+    b
+'''), r'''
+while _:
+    a
+    b
+''', r'''
+While - ROOT 0,0..2,5
+  .test Name '_' Load - 0,6..0,7
+  .body[2]
+   0] Expr - 1,4..1,5
+     .value Name 'a' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+''',
+r'''"""non-doc"""''', r'''
+Expr - ROOT 0,0..0,13
+  .value Constant 'non-doc' - 0,0..0,13
+'''),
+
+('', 0, False, '_body', {}, ('If', r'''
+if _:
+    """non-doc"""
+    a
+    b
+'''), r'''
+if _:
+    a
+    b
+''', r'''
+If - ROOT 0,0..2,5
+  .test Name '_' Load - 0,3..0,4
+  .body[2]
+   0] Expr - 1,4..1,5
+     .value Name 'a' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+''',
+r'''"""non-doc"""''', r'''
+Expr - ROOT 0,0..0,13
+  .value Constant 'non-doc' - 0,0..0,13
+'''),
+
+('', 0, False, '_body', {}, ('With', r'''
+with _:
+    """non-doc"""
+    a
+    b
+'''), r'''
+with _:
+    a
+    b
+''', r'''
+With - ROOT 0,0..2,5
+  .items[1]
+   0] withitem - 0,5..0,6
+     .context_expr Name '_' Load - 0,5..0,6
+  .body[2]
+   0] Expr - 1,4..1,5
+     .value Name 'a' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+''',
+r'''"""non-doc"""''', r'''
+Expr - ROOT 0,0..0,13
+  .value Constant 'non-doc' - 0,0..0,13
+'''),
+
+('', 0, False, '_body', {}, ('AsyncWith', r'''
+async with _:
+    """non-doc"""
+    a
+    b
+'''), r'''
+async with _:
+    a
+    b
+''', r'''
+AsyncWith - ROOT 0,0..2,5
+  .items[1]
+   0] withitem - 0,11..0,12
+     .context_expr Name '_' Load - 0,11..0,12
+  .body[2]
+   0] Expr - 1,4..1,5
+     .value Name 'a' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+''',
+r'''"""non-doc"""''', r'''
+Expr - ROOT 0,0..0,13
+  .value Constant 'non-doc' - 0,0..0,13
+'''),
+
+('', 0, False, '_body', {}, ('Try', r'''
+try:
+    """non-doc"""
+    a
+    b
+except: pass
+'''), r'''
+try:
+    a
+    b
+except: pass
+''', r'''
+Try - ROOT 0,0..3,12
+  .body[2]
+   0] Expr - 1,4..1,5
+     .value Name 'a' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+  .handlers[1]
+   0] ExceptHandler - 3,0..3,12
+     .body[1]
+      0] Pass - 3,8..3,12
+''',
+r'''"""non-doc"""''', r'''
+Expr - ROOT 0,0..0,13
+  .value Constant 'non-doc' - 0,0..0,13
+'''),
+
+('', 0, False, '_body', {'_ver': 11}, ('TryStar', r'''
+try:
+    """non-doc"""
+    a
+    b
+except* Exception: pass
+'''), r'''
+try:
+    a
+    b
+except* Exception: pass
+''', r'''
+TryStar - ROOT 0,0..3,23
+  .body[2]
+   0] Expr - 1,4..1,5
+     .value Name 'a' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+  .handlers[1]
+   0] ExceptHandler - 3,0..3,23
+     .type Name 'Exception' Load - 3,8..3,17
+     .body[1]
+      0] Pass - 3,19..3,23
+''',
+r'''"""non-doc"""''', r'''
+Expr - ROOT 0,0..0,13
+  .value Constant 'non-doc' - 0,0..0,13
+'''),
+
+('', 0, False, '_body', {}, ('ExceptHandler', r'''
+except:
+    """non-doc"""
+    a
+    b
+'''), r'''
+except:
+    a
+    b
+''', r'''
+ExceptHandler - ROOT 0,0..2,5
+  .body[2]
+   0] Expr - 1,4..1,5
+     .value Name 'a' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+''',
+r'''"""non-doc"""''', r'''
+Expr - ROOT 0,0..0,13
+  .value Constant 'non-doc' - 0,0..0,13
+'''),
+
+('', 0, False, '_body', {}, ('match_case', r'''
+case _:
+    """non-doc"""
+    a
+    b
+'''), r'''
+case _:
+    a
+    b
+''', r'''
+match_case - ROOT 0,0..2,5
+  .pattern MatchAs - 0,5..0,6
+  .body[2]
+   0] Expr - 1,4..1,5
+     .value Name 'a' Load - 1,4..1,5
+   1] Expr - 2,4..2,5
+     .value Name 'b' Load - 2,4..2,5
+''',
+r'''"""non-doc"""''', r'''
+Expr - ROOT 0,0..0,13
+  .value Constant 'non-doc' - 0,0..0,13
+'''),
+
+('', 1, False, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''), r'''
+"""doc"""
+a
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+''',
+r'''b''', r'''
+Expr - ROOT 0,0..0,1
+  .value Name 'b' Load - 0,0..0,1
+'''),
+
+('', 2, False, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''),
+r'''**IndexError('index out of range')**'''),
+
+('', -1, False, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''), r'''
+"""doc"""
+a
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+   1] Expr - 1,0..1,1
+     .value Name 'a' Load - 1,0..1,1
+''',
+r'''b''', r'''
+Expr - ROOT 0,0..0,1
+  .value Name 'b' Load - 0,0..0,1
+'''),
+
+('', -2, False, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''), r'''
+"""doc"""
+b
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,9
+     .value Constant 'doc' - 0,0..0,9
+   1] Expr - 1,0..1,1
+     .value Name 'b' Load - 1,0..1,1
+''',
+r'''a''', r'''
+Expr - ROOT 0,0..0,1
+  .value Name 'a' Load - 0,0..0,1
+'''),
+
+('', -3, False, '_body', {}, ('Module', r'''
+"""doc"""
+a
+b
+'''),
+r'''**IndexError('index out of range')**'''),
+],
+
 }

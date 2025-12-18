@@ -12,7 +12,7 @@ __all__ = ['ParseCases', 'GetCases', 'GetSliceCases', 'PutCases', 'PutSliceCases
 
 
 _PYVER = sys.version_info[1]
-VERBOSE = False  # any(arg == '-v' or arg == '--verbose' for arg in sys.argv)
+# VERBOSE = False  # any(arg == '-v' or arg == '--verbose' for arg in sys.argv)
 
 ParseMode = str | type[AST] | None
 
@@ -389,22 +389,6 @@ class PutCases(BaseCases):  # TODO: maybe automatically test 'raw' here?
 class PutSliceCases(PutCases):
     def __init__(self, fnm) -> None:
         super().__init__(fnm, FST.put_slice)
-
-
-# _test_progress_state = {}  # {name: key, ...}
-
-def inform_test_progress(name: str, key: str | None = None) -> None:
-    pass
-    # if not VERBOSE:
-    #     return
-
-    # last_key = _test_progress_state.get(name)
-
-    # if key != last_key:
-    #     _test_progress_state[name] = key
-
-    #     if key is not None:
-    #         print(f'{"" if last_key is None else "ok"}\n{name}: {key} ... ', end='')
 
 
 # if __name__ == '__main__':

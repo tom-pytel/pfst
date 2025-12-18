@@ -2590,6 +2590,22 @@ _PUT_ONE_HANDLERS = {
     (TypeVarTuple, 'name'):               (False, _put_one_identifier_required, onestatic(_one_info_TypeVarTuple_name, _restrict_default, code_as=code_as_identifier)),  # identifier
     (TypeVarTuple, 'default_value'):      (False, _put_one_exprish_optional, onestatic(_one_info_TypeVarTuple_default_value, _restrict_default)),  # expr?
 
+    (Module, '_body'):                    (True,  None, None),  # stmt*  - without docstr
+    (Interactive, '_body'):               (True,  None, None),  # stmt*
+    (FunctionDef, '_body'):               (True,  None, None),  # stmt*
+    (AsyncFunctionDef, '_body'):          (True,  None, None),  # stmt*
+    (ClassDef, '_body'):                  (True,  None, None),  # stmt*
+    (For, '_body'):                       (True,  None, None),  # stmt*
+    (AsyncFor, '_body'):                  (True,  None, None),  # stmt*
+    (While, '_body'):                     (True,  None, None),  # stmt*
+    (If, '_body'):                        (True,  None, None),  # stmt*
+    (With, '_body'):                      (True,  None, None),  # stmt*
+    (AsyncWith, '_body'):                 (True,  None, None),  # stmt*
+    (Try, '_body'):                       (True,  None, None),  # stmt*
+    (TryStar, '_body'):                   (True,  None, None),  # stmt*
+    (ExceptHandler, '_body'):             (True,  None, None),  # stmt*
+    (match_case, '_body'):                (True,  None, None),  # stmt*
+
     (_ExceptHandlers, 'handlers'):        (True,  None, None),  # stmt*,  # ExceptHandler*
     (_match_cases, 'cases'):              (True,  None, None),  # stmt*,  # match_case*
     (_Assign_targets, 'targets'):         (True,  _put_one_exprish_required, _onestatic_target),  # expr*
@@ -2651,7 +2667,12 @@ def _put_one_raw(
     loc = None
 
     if field.startswith('_'):  # special case field
-        if (is_dict := (ast_cls is Dict)) or ast_cls is MatchMapping:
+        if field == '_body':
+            field = 'body'
+            child = ast.body
+            idx = fixup_one_index(len(child), idx, self.has_docstr)
+
+        elif (is_dict := (ast_cls is Dict)) or ast_cls is MatchMapping:
             static = _PUT_ONE_HANDLERS[(ast_cls, 'keys')][-1]
             field = 'keys'
             child = ast.keys
@@ -2783,12 +2804,23 @@ def _put_one(
     if sliceable and (not handler or code is None) and not to:  # if deleting from a sliceable field without a 'to' parameter then delegate to slice operation, also all statementishs and virtual fields (which have handler=None)
         if not (is_virtual_field := field.startswith('_')):
             len_ = len(child)
+            start_at = 0
+
+        elif field == '_body':
+            is_virtual_field = False
+            field = 'body'
+            len_ = len(self.a.body)
+            start_at = self.has_docstr
+
         elif (keys := getattr(ast, 'keys', None)) is not None:  # Dict, MatchMapping
             len_ = len(keys)
+            start_at = 0
+
         else:  # Compare
             len_ = len(ast.comparators) + 1
+            start_at = 0
 
-        idx = fixup_one_index(len_, idx)  # we need to fixup index here explicitly to get an error if it is out of bounds because slice index fixups don't error but just clip to [0..len(body))
+        idx = fixup_one_index(len_, idx, start_at)  # we need to fixup index here explicitly to get an error if it is out of bounds because slice index fixups don't error but just clip to [0..len(body))
 
         new_self = self._put_slice(code, idx, idx + 1, field, True, options)  # MAYBE new self, or just old self
 
@@ -2805,7 +2837,7 @@ def _put_one(
             if not idx:  # Compare.left
                 return new_self.a.left
 
-            idx -= 1
+            idx -= 1  # Compare.comparators
             field = 'comparators'
 
         try:

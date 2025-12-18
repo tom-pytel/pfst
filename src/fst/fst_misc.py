@@ -898,13 +898,21 @@ def clip_src_loc(self: fst.FST, ln: int, col: int, end_ln: int, end_col: int) ->
     return ln, col, end_ln, end_col
 
 
-def fixup_one_index(len_: int, idx: int) -> int:
-    """Convert negative indices in range to len()+idx and verify index in range."""
+def fixup_one_index(len_: int, idx: int, start_at: int = 0) -> int:
+    """Convert negative indices in range to len()+idx and verify index in range.
+
+    If `start_at` is not 0 then the lower bounding index is this. This is meant for restricting slice ranges in a
+    statement `body` (which may have a docstring) to start past that docstring. The returned index is for the real
+    `body` field starting at `start_at`, not the virtual `_body` which starts at 0. The `len_` in all cases is the true
+    length of the field.
+    """
 
     if idx < 0:
         idx += len_
+    else:
+        idx += start_at
 
-    if not (0 <= idx < len_):
+    if not (start_at <= idx < len_):
         raise IndexError('index out of range')
 
     return idx
@@ -917,8 +925,9 @@ def fixup_slice_indices(
     indices clip to 0 (or `start_at` if not 0).
 
     If `start_at` is not 0 then the lower bounding index is this. This is meant for restricting slice ranges in a
-    statement `body` which may have a docstring to start past the docstring. The returned indices are be for the real
-    `body` field starting at `start_at`, not the virtual `_body` which starts at 0.
+    statement `body` (which may have a docstring) to start past that docstring. The returned indices are for the real
+    `body` field starting at `start_at`, not the virtual `_body` which starts at 0. The `len_` in all cases is the true
+    length of the field.
     """
 
     if start is None:
