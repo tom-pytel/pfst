@@ -7,10 +7,10 @@ To be able to execute the examples, import this.
 
 ## Basics
 
-Raw put operations to nodes are different from the standard prescribed operations in that for the most part they do not
-take into account rules like precedence and indentation for the nodes being put and replaced and just try to put the
-source at the location and reparse. They exist because they allow things which are not covered or otherwise impossible
-with normal node operations.
+Raw put operations to nodes are different from the standard prescribed operations in that they do not take into account
+rules like precedence and indentation for the nodes being put and replaced and just try to put the source at the
+location and reparse. They exist because they allow things which are not covered or otherwise impossible with normal
+prescribed node operations.
 
 Raw mode puts can be executed on individual nodes or slices by specifying the option `raw=True`. `raw='auto'` can be
 used so that the prescribed operation with rules is tried first and if that fails a raw put is attempted as a fallback.

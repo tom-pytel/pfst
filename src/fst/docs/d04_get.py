@@ -68,7 +68,7 @@ tree. It does not have to be valid parsable code, any node is supported as the r
 can be put into other `FST` trees.
 
 You can also cut nodes out, which will remove them from the tree. Important, the `FST` node returned by `cut()` may be,
-but will not necessarily be the same `FST` node that was in the tree! See `fst.fst.FST.cut()`.
+but will not necessarily be the same `FST` node that was in the tree!
 
 >>> g = f.body[0].cut()
 
@@ -197,7 +197,8 @@ Which gets us to `get_slice()`, which **ONLY** gets slices (`fst.fst.FST.get_sli
 k = 3
 l = 4
 
-It can only get individual elements as slices, unlike `get()` which can get them as the element itself.
+If you try to get an individual element then it is always returned as a slice, unlike `get()` which can get it as the
+element itself.
 
 >>> print(FST('[1, 2, 3]').get_slice(1, 2).src)
 [2]
@@ -230,12 +231,14 @@ The `field=None` is just a shortcut for specifying the "virtual" field `'_all'`,
 and `Compare` in order to allow access to combined elements which are not normally accessible by themselves as `AST`
 nodes.
 
-Note below that the first `a` in the `Compare` is normally not part of a `list` field but can be sliced as if it were
+Note that the first `a` in the `Compare` below is normally not part of a `list` field but can be sliced as if it were by
 using the `'_all'` virtual field (which is the default field for `Compare` but we include it explicitly for
 demonstration purposes).
 
 >>> print(FST('a < b < c').get_slice(0, 2, field='_all').src)
 a < b
+
+For more on virtual fields see `fst.docs.d07_views`.
 
 Slices being gotten or put are implemented using common sense containers, like for sequences using the same type of
 sequence or for a dictionary returning / expecting a `Dict`. When there is not possible pure container for a slice of
@@ -335,7 +338,7 @@ global a, a, b, c, c
 The `FST` class provides properties that mirror the fields of all possible `AST` classes in order to allow direct access
 to those fields through the `FST` class. When accessing like this, fields which are `AST` nodes have their corresponding
 `FST` node returned and fields which are lists of `AST` nodes return an `fstview` which acts as a list of corresponding
-`FST` nodes. Elements which are primitive values are returned as such.
+`FST` nodes (see `fst.docs.d07_views`). Elements which are primitive values are returned as such.
 
 >>> f = FST('i, j = [x, 2.5]')
 

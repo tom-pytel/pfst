@@ -10,7 +10,7 @@ To be able to execute the examples, import this.
 When modifying a node, you specify what to replace the node `AST` with. You can pass this as either source code, an
 `AST` node or an `FST` root node. If an `FST` node is used then it should be considered consumed on use, whether the
 modification succeeds or not. `AST` nodes are not consumed as they are unparsed and then reparsed in order to make sure
-their locations are correct. Source code in the form of a string or a list of lines is also not consumed.
+their locations are correct. Source code in the form of a list of line strings is also not consumed.
 
 >>> FST.new().body.append('i = 1').base.root.src
 'i = 1'
@@ -71,14 +71,15 @@ tree through the root node (`fst.fst.FST.replace()`).
 >>> f.elts[0].replace(FST('j := 3'))
 <NamedExpr 0,2..0,8>
 
-Notice the parentheses added atomatically (because they are needed).
-
 >>> print(f.src)
 [(j := 3), a(), blah()]
 
-The `replace()` function returns the new replaced node, as the actual `FST` node (regardless of the contents) can be
-different from the original `FST` at this location under some circumstances (raw put). Except for the root `FST` node,
-which is the only one guarenteed to never change under any circumstances.
+Notice the parentheses were added atomatically (because they are needed).
+
+The `replace()` function returns the new replaced node. This is because the actual final new `FST` node in the tree
+(regardless of the contents) can be different from both the `FST` node put **AND** the original `FST` at this location
+(mostly when using raw put but may happen for other reasons like coercion). The only `FST` node which is guaranteed to
+never change identity is the root `FST` node.
 
 >>> f = FST('i = 1')
 
@@ -287,6 +288,17 @@ Constant 2.5 - ROOT 0,0..0,3
 >>> print(f.src)
 2.5
 
+`put()` and `put_slice()` use virtual fields for special puts just like the get functions (`fst.docs.d07_views`):
+
+>>> print(FST('{a: b, c: d}').put_slice('{x: y, u: v}', 1, 1, field='_all').src)
+{a: b, x: y, u: v, c: d}
+
+>>> print(FST('a < b == c > d').put(None, 1, field='_all').src)
+a == c > d
+
+
+
+
 ## By attribute
 
 Just like with getting, it is possible to assign directly to an `AST` field on an `FST` node and have that assignment
@@ -361,7 +373,7 @@ amount of code which is reparsed and the minimum elemenent that can be reparsed 
 header. Though multiple statements or even entire blocks may be reparsed if the changes span those blocks. Whatever is
 reparsed will have its `FST` nodes changed, except the root node.
 
-The actual location for the reparse is not restricted in any way. It doesn't have to fall on node bondaries and can
+The actual location for the reparse is not restricted in any way. It doesn't have to fall on node boundaries and can
 extend over the entire source code if need be. Like `get_src()`, it doesn't matter what node of the tree this function
 is called on in this mode, the domain is always over the entire tree.
 

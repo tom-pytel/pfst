@@ -13,9 +13,9 @@ This is rather crude documentation that hopefully can show usage through many sm
 
 `fst.docs.d06_slices`: Slices and trivia
 
-`fst.docs.d07_raw`: Raw reparse operations
+`fst.docs.d07_views`: FST slice views and virtual fields
 
-`fst.docs.d08_views`: `FST` slice indexing
+`fst.docs.d08_raw`: Raw reparse operations
 
 `fst.docs.d09_parentheses`: Parentheses handling
 
@@ -33,8 +33,8 @@ from . import (
     d04_get,
     d05_put,
     d06_slices,
-    d07_raw,
-    d08_views,
+    d07_views,
+    d08_raw,
     d09_parentheses,
     d10_reconcile,
     d11_options,
@@ -48,8 +48,8 @@ __all__ = [
     'd04_get',
     'd05_put',
     'd06_slices',
-    'd07_raw',
-    'd08_views',
+    'd07_views',
+    'd08_raw',
     'd09_parentheses',
     'd10_reconcile',
     'd11_options',

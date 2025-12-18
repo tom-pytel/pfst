@@ -84,7 +84,7 @@ Format preserving native modification operations exist in two flavors (see the d
 and syntax parenthesization, etc... `fst.docs.d05_put`.
 
 - Raw mode put operations which just put the raw source you want to replace and then attempt to reparse a small part of
-the full source around the changes (at least statement level). `fst.docs.d07_raw`, `fst.fst.FST.put_src()`.
+the full source around the changes (at least statement level). `fst.docs.d08_raw`, `fst.fst.FST.put_src()`.
 
 There is also a mechanism for allowing outside editing of the `AST` tree and then reconciling with a marked snapshot
 to preserve formatting where possible. This is intended for existing code or third-party libraries which don't know
