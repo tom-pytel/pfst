@@ -988,8 +988,8 @@ def _can_del_all(self: fst.FST, field: str, options: Mapping[str, Any]) -> bool:
 
 def _get_slice_stmtish_old(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     one: bool,
@@ -1079,8 +1079,8 @@ def _get_slice_stmtish_old(
 def _put_slice_stmtish_old(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -1415,8 +1415,8 @@ def _maybe_del_trailing_newline(self: fst.FST, old_last_line: str, put_fst_end_n
 
 def get_slice_stmtish(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -1443,8 +1443,8 @@ def get_slice_stmtish(
 def put_slice_stmtish(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],

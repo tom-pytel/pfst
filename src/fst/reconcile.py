@@ -152,7 +152,7 @@ class Reconcile:
 
     def put_node(self, code: fst.FST | AST, out_parent: fst.FST | None = None, pfield: astfield | None = None) -> None:
         if out_parent:
-            out_parent.put(code, pfield.idx, False, pfield.name, **self.options)
+            out_parent.put(code, pfield.idx, None, pfield.name, **self.options)
         else:  # because can replace AST at root node which has out_parent=None
             self.out.replace(code, **self.options)
 
@@ -252,14 +252,14 @@ class Reconcile:
                 if k:
                     self.recurse_node(k, astfield('keys', i), outf, nodef)
                 elif outa_keys[i] is not None:
-                    outf.put(None, i, False, 'keys', **self.options)
+                    outf.put(None, i, None, 'keys', **self.options)
 
                 self.recurse_node(v, astfield('values', i), outf, nodef)  # nodef set accordingly regardless of if coming from FST or AST
 
             start = end
 
         if start < len(outa_keys):  # delete tail in output, doesn't happen if coming from AST
-            outf.put_slice(None, start, None, None, **self.options)
+            outf.put_slice(None, start, 'end', None, **self.options)
 
     def recurse_slice(self, node: AST, outf: fst.FST | None, field: str, body: list[AST]) -> None:  # TODO: refactor!
         """Recurse into a slice of children using slice operations to copy over formatting where possible (if not
@@ -333,7 +333,7 @@ class Reconcile:
             start = end
 
         if start < len(outa_body):  # delete tail in output, doesn't happen if coming from AST
-            outf.put_slice(None, start, None, field, **self.options)
+            outf.put_slice(None, start, 'end', field, **self.options)
 
     def recurse_children(self, node: AST, outa: AST) -> None:
         """Recurse into children of a node."""

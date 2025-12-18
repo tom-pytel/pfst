@@ -135,7 +135,7 @@ for `Tuple`, `List`, `Set`, `Dict`, `MatchSequence` and `MatchMapping`, otherwis
 
 >>> f = FST('[1, 2, 3]')
 
->>> f.put_slice(FST('{x, y}'), 2, None, raw=True)
+>>> f.put_slice(FST('{x, y}'), 2, 'end', raw=True)
 <List ROOT 0,0..0,12>
 
 >>> print(f.src)

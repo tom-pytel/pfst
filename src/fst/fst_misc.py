@@ -898,7 +898,7 @@ def clip_src_loc(self: fst.FST, ln: int, col: int, end_ln: int, end_col: int) ->
     return ln, col, end_ln, end_col
 
 
-def fixup_one_index(len_: int, idx: int, start_at: int = 0) -> int:
+def fixup_one_index(len_: int, idx: int | Literal['end'], start_at: int = 0) -> int:
     """Convert negative indices in range to len()+idx and verify index in range.
 
     If `start_at` is not 0 then the lower bounding index is this. This is meant for restricting slice ranges in a
@@ -907,7 +907,9 @@ def fixup_one_index(len_: int, idx: int, start_at: int = 0) -> int:
     length of the field.
     """
 
-    if idx < 0:
+    if idx == 'end':
+        idx = len_
+    elif idx < 0:
         idx += len_
     else:
         idx += start_at
@@ -919,7 +921,7 @@ def fixup_one_index(len_: int, idx: int, start_at: int = 0) -> int:
 
 
 def fixup_slice_indices(
-    len_: int, start: int | Literal['end'] | None, stop: int | None, start_at: int = 0
+    len_: int, start: int | Literal['end'], stop: int | Literal['end'], start_at: int = 0
 ) -> tuple[int, int]:
     """Clip slice indices to slice range allowing first negative range to map into positive range. Greater negative
     indices clip to 0 (or `start_at` if not 0).
@@ -930,16 +932,14 @@ def fixup_slice_indices(
     length of the field.
     """
 
-    if start is None:
-        start = start_at
-    elif start == 'end' or start > len_:
+    if start == 'end' or start > len_:
         start = len_
     elif start < 0:
         start = max(start_at, start + len_)
     else:
         start = min(len_, start + start_at)
 
-    if stop is None or stop > len_:
+    if stop == 'end' or stop > len_:
         stop = len_
     elif stop < 0:
         stop = max(start_at, stop + len_)

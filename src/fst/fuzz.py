@@ -1570,7 +1570,7 @@ class PutOne(Fuzzy):
 
                 if random() < 0.5 and not ReputOne._PUT_ONE_HANDLERS.get((parent.a.__class__, field), [True])[0]:
                     try:
-                        parent.put(None, idx, False, field, raw=False)
+                        parent.put(None, idx, None, field, raw=False)
 
                     except Exception as e:
                         msg = str(e)
@@ -1594,7 +1594,7 @@ class PutOne(Fuzzy):
                         print(f'{repl=}')
                         print(f'{repl.src=}')
 
-                    parent.put(code, idx, False, field, raw=False)
+                    parent.put(code, idx, None, field, raw=False)
 
                     if self.verify:
                         fst.verify()

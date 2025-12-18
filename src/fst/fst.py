@@ -208,17 +208,18 @@ _ASTS_LEAF_SCOPE_SYMBOLS = ASTS_LEAF_DEF | ASTS_LEAF_TYPE_PARAM | {Name, arg, Au
 
 
 def _swizzle_getput_params(
-    start: int | Literal['end'] | None,
-    stop: int | None | Literal[False],
+    start: str | int | None,  #  | Literal['end']
+    stop: str | int | None,  #  | Literal['end']
     field: str | None,
-    default_stop: Literal[False] | None,
+    default_start: int | None,
+    default_stop: Literal['end'] | None,
 ) -> tuple[int | Literal['end'] | None, int | None | Literal[False], str | None]:
     """Allow passing `stop` and `field` for get/put() functions positionally. Will accept `get/put('field')`,
     `get/put(start, 'field')` and `get/put(start, stop, 'field')`."""
 
     if isinstance(start, str) and start != 'end':
-        return None, default_stop, start
-    if isinstance(stop, str):
+        return default_start, default_stop, start
+    if isinstance(stop, str) and stop != 'end':
         return start, default_stop, stop
 
     return start, stop, field
@@ -1623,7 +1624,7 @@ class FST:
     def get(
         self,
         idx: int | Literal['end'] | None = None,
-        stop: int | None | Literal[False] = False,
+        stop: int | Literal['end'] | None = None,
         field: builtins.str | None = None,
         *,
         cut: bool = False,
@@ -1672,10 +1673,10 @@ class FST:
         >>> f.src
         '[0, 3]'
 
-        >>> FST('[0, 1, 2, 3]').get(None, 3).src
+        >>> FST('[0, 1, 2, 3]').get(0, 3).src
         '[0, 1, 2]'
 
-        >>> FST('[0, 1, 2, 3]').get(-3, None).src
+        >>> FST('[0, 1, 2, 3]').get(-3, 'end').src
         '[1, 2, 3]'
 
         >>> FST('if 1: i = 1\nelse: j = 2').get(0).src
@@ -1700,19 +1701,19 @@ class FST:
         check_options(options)
 
         ast = self.a
-        idx, stop, field = _swizzle_getput_params(idx, stop, field, False)
+        idx, stop, field = _swizzle_getput_params(idx, stop, field, None, None)
         field, body = fixup_field_body(ast, field, False)
 
         if isinstance(body, list):
-            if stop is not False:
+            if stop is not None:
                 return self._get_slice(idx, stop, field, cut, options)
             if idx is None:
-                return self._get_slice(None, None, field, cut, options)
+                return self._get_slice(0, 'end', field, cut, options)
 
             if idx == 'end':
                 raise IndexError("cannot get() non-slice from index 'end'")
 
-        elif stop is not False or idx is not None:
+        elif stop is not None or idx is not None:
             raise IndexError(f'{ast.__class__.__name__}.{field} does not take an index')
 
         return self._get_one(idx, field, cut, options)
@@ -1721,7 +1722,7 @@ class FST:
         self,
         code: Code | builtins.str | constant | None,
         idx: int | Literal['end'] | None = None,
-        stop: int | None | Literal[False] = False,
+        stop: int | Literal['end'] | None = None,
         field: builtins.str | None = None,
         *,
         one: bool = True,
@@ -1780,10 +1781,10 @@ class FST:
         >>> FST('[0, 1, 2, 3]').put('4, 5', 1, 3, one=False).src
         '[0, 4, 5, 3]'
 
-        >>> FST('[0, 1, 2, 3]').put('4, 5', None, 3).src
+        >>> FST('[0, 1, 2, 3]').put('4, 5', 0, 3).src
         '[(4, 5), 3]'
 
-        >>> (f := FST('[0, 1, 2, 3]')).put('4, 5', -3, None, one=False).src
+        >>> (f := FST('[0, 1, 2, 3]')).put('4, 5', -3, 'end', one=False).src
         '[0, 4, 5]'
 
         >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0).src)
@@ -1812,19 +1813,19 @@ class FST:
         check_options(options)
 
         ast = self.a
-        idx, stop, field = _swizzle_getput_params(idx, stop, field, False)
+        idx, stop, field = _swizzle_getput_params(idx, stop, field, None, None)
         field, body = fixup_field_body(ast, field, False)
 
         if isinstance(body, list):
-            if stop is not False:
+            if stop is not None:
                 return self._put_slice(code, idx, stop, field, one, options)
             if idx is None:
-                return self._put_slice(code, None, None, field, one, options)
+                return self._put_slice(code, 0, 'end', field, one, options)
 
             if idx == 'end':
                 raise IndexError("cannot put() non-slice to index 'end'")
 
-        elif stop is not False or idx is not None:
+        elif stop is not None or idx is not None:
             raise IndexError(f'{ast.__class__.__name__}.{field} does not take an index')
 
         if not one:
@@ -1834,8 +1835,8 @@ class FST:
 
     def get_slice(
         self,
-        start: int | Literal['end'] | None = None,
-        stop: int | None = None,
+        start: int | Literal['end'] = 0,
+        stop: int | Literal['end'] = 'end',
         field: builtins.str | None = None,
         *,
         cut: bool = False,
@@ -1844,9 +1845,9 @@ class FST:
         r"""Copy or cut a slice of child nodes from `self` if possible.
 
         **Parameters:**
-        - `start`: The start of the slice to get, or `None` for the beginning of the entire range.
+        - `start`: The start of the slice to get.
         - `stop`: The end index (exclusive) of the slice to get. This should be one past the last element to get (like
-            python list indexing). If this is `None` then it indicates a slice operation to the end of the list (like
+            python list indexing). If this is `'end'` then it indicates a slice operation to the end of the list (like
             python `a[start:]`).
         - `field`: The name of the field to get the elements from, which can be an individual element like a `value` or
             a list like `body`. If this is `None` then the default field for the node type is used. Most node types
@@ -1867,7 +1868,7 @@ class FST:
         >>> FST('[0, 1, 2, 3]').get_slice(1).src
         '[1, 2, 3]'
 
-        >>> FST('[0, 1, 2, 3]').get_slice(None, -1).src
+        >>> FST('[0, 1, 2, 3]').get_slice(0, -1).src
         '[0, 1, 2]'
 
         >>> (f := FST('[0, 1, 2, 3]')).get_slice(1, 3, cut=True).src
@@ -1891,7 +1892,7 @@ class FST:
         check_options(options)
 
         ast = self.a
-        start, stop, field = _swizzle_getput_params(start, stop, field, None)
+        start, stop, field = _swizzle_getput_params(start, stop, field, 0, 'end')
         field, body = fixup_field_body(ast, field, True)
 
         if not isinstance(body, list):
@@ -1902,8 +1903,8 @@ class FST:
     def put_slice(
         self,
         code: Code | None,
-        start: int | Literal['end'] | None = None,
-        stop: int | None = None,
+        start: int | Literal['end'] = 0,
+        stop: int | Literal['end'] = 'end',
         field: builtins.str | None = None,
         *,
         one: bool = False,
@@ -1920,9 +1921,9 @@ class FST:
 
         **Parameters:**
         - `code`: The slice to put as an `FST` (must be root node), `AST`, a string or list of line strings.
-        - `start`: The start of the slice to put, or `None` for the beginning of the entire range.
+        - `start`: The start of the slice to put.
         - `stop`: The end index (exclusive) of the slice. This should be one past the last element to put (like python
-            list indexing). If this is `None` then it indicates a slice operation to the end of the list (like python
+            list indexing). If this is `'end'` then it indicates a slice operation to the end of the list (like python
             `a[start:]`).
         - `field`: The name of the field to put the elements to. If this is `None` then the default field for the node
             type is used. Most node types have a common-sense default field, e.g. `body` for all block statements,
@@ -1951,10 +1952,10 @@ class FST:
         >>> FST('[0, 1, 2, 3]').put('4, 5', 1, 3, one=False).src
         '[0, 4, 5, 3]'
 
-        >>> FST('[0, 1, 2, 3]').put('4, 5', None, 3).src
+        >>> FST('[0, 1, 2, 3]').put('4, 5', 0, 3).src
         '[(4, 5), 3]'
 
-        >>> FST('[0, 1, 2, 3]').put('4, 5', -3, None, one=False).src
+        >>> FST('[0, 1, 2, 3]').put('4, 5', -3, 'end', one=False).src
         '[0, 4, 5]'
 
         >>> print(FST('if 1: i = 1\nelse: j = 2').put('z = -1', 0).src)
@@ -1983,7 +1984,7 @@ class FST:
         check_options(options)
 
         ast = self.a
-        start, stop, field = _swizzle_getput_params(start, stop, field, None)
+        start, stop, field = _swizzle_getput_params(start, stop, field, 0, 'end')
         field, body = fixup_field_body(ast, field, True)
 
         if not isinstance(body, list):
@@ -4160,11 +4161,11 @@ class FST:
 
     @_all.setter
     def _all(self: FST, code: Code | None) -> None:
-        self._put_slice(code, None, None, '_all')
+        self._put_slice(code, 0, 'end', '_all')
 
     @_all.deleter
     def _all(self: FST) -> None:
-        self._put_slice(None, None, None, '_all')
+        self._put_slice(None, 0, 'end', '_all')
 
     @property
     def _body(self: FST) -> fstview:
@@ -4178,11 +4179,11 @@ class FST:
 
     @_body.setter
     def _body(self: FST, code: Code | None) -> None:
-        self._put_slice(code, None, None, '_body')
+        self._put_slice(code, 0, 'end', '_body')
 
     @_body.deleter
     def _body(self: FST) -> None:
-        self._put_slice(None, None, None, '_body')
+        self._put_slice(None, 0, 'end', '_body')
 
 
 _VIRTUAL_FIELD_VIEW__ALL = {

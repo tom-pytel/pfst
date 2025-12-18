@@ -10,7 +10,7 @@ from fst.asttypes import *
 DATA_GET_ONE = {
 'all_basic': [  # ................................................................................
 
-('', 0, False, 'body', {}, (Module,
+('', 0, None, 'body', {}, (Module,
 r'''a = 1'''),
 r'''''',
 r'''Module - ROOT 0,0..0,0''',
@@ -21,7 +21,7 @@ Assign - ROOT 0,0..0,5
   .value Constant 1 - 0,4..0,5
 '''),
 
-('', 0, False, 'body', {'_verify_self': False, 'norm': False}, (Interactive,
+('', 0, None, 'body', {'_verify_self': False, 'norm': False}, (Interactive,
 r'''a = 1'''),
 r'''''',
 r'''Interactive - ROOT 0,0..0,0''',
@@ -32,13 +32,13 @@ Assign - ROOT 0,0..0,5
   .value Constant 1 - 0,4..0,5
 '''),
 
-('', None, False, 'body', {}, (Expression,
+('', None, None, 'body', {}, (Expression,
 r'''a'''),
 r'''**ValueError('cannot delete Expression.body')**''',
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
 
-('', None, False, 'decorator_list', {}, (FunctionDef, r'''
+('', None, None, 'decorator_list', {}, (FunctionDef, r'''
 @deco
 def func(): pass
 
@@ -57,13 +57,13 @@ _decorator_list - ROOT 0,0..0,5
    0] Name 'deco' Load - 0,1..0,5
 '''),
 
-('', None, False, 'name', {}, (FunctionDef,
+('', None, None, 'name', {}, (FunctionDef,
 r'''def func(): pass'''),
 r'''**ValueError('cannot delete FunctionDef.name')**''',
 "\n'func'\n",
 r'''<class 'str'>'''),
 
-('', 0, False, 'type_params', {'_ver': 12}, (FunctionDef,
+('', 0, None, 'type_params', {'_ver': 12}, (FunctionDef,
 r'''def func[T](): pass'''),
 r'''def func(): pass''', r'''
 FunctionDef - ROOT 0,0..0,16
@@ -76,7 +76,7 @@ TypeVar - ROOT 0,0..0,1
   .name 'T'
 '''),
 
-('', None, False, 'args', {}, (FunctionDef,
+('', None, None, 'args', {}, (FunctionDef,
 r'''def func(a, /, b: int = 1, *c, d=2, **e): pass'''),
 r'''def func(): pass''', r'''
 FunctionDef - ROOT 0,0..0,16
@@ -106,7 +106,7 @@ arguments - ROOT 0,0..0,30
    0] Constant 1 - 0,15..0,16
 '''),
 
-('', None, False, 'args', {}, (FunctionDef,
+('', None, None, 'args', {}, (FunctionDef,
 r'''def func(): pass'''),
 r'''def func(): pass''', r'''
 FunctionDef - ROOT 0,0..0,16
@@ -117,7 +117,7 @@ FunctionDef - ROOT 0,0..0,16
 r'''''',
 r'''arguments - ROOT'''),
 
-('', None, False, 'returns', {}, (FunctionDef,
+('', None, None, 'returns', {}, (FunctionDef,
 r'''def func() -> int: pass'''),
 r'''def func(): pass''', r'''
 FunctionDef - ROOT 0,0..0,16
@@ -128,7 +128,7 @@ FunctionDef - ROOT 0,0..0,16
 r'''int''',
 r'''Name 'int' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'returns', {}, (FunctionDef,
+('', None, None, 'returns', {}, (FunctionDef,
 r'''def func(): pass'''),
 r'''def func(): pass''', r'''
 FunctionDef - ROOT 0,0..0,16
@@ -138,7 +138,7 @@ FunctionDef - ROOT 0,0..0,16
 ''',
 r'''**None**'''),
 
-('', 0, False, 'body', {'_verify_self': False, 'norm': False}, (FunctionDef,
+('', 0, None, 'body', {'_verify_self': False, 'norm': False}, (FunctionDef,
 r'''def func(): pass'''),
 r'''def func():''', r'''
 FunctionDef - ROOT 0,0..0,11
@@ -147,7 +147,7 @@ FunctionDef - ROOT 0,0..0,11
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
 
-('', 0, False, 'decorator_list', {}, (AsyncFunctionDef, r'''
+('', 0, None, 'decorator_list', {}, (AsyncFunctionDef, r'''
 @deco
 async def func(): pass
 
@@ -163,13 +163,13 @@ AsyncFunctionDef - ROOT 0,0..0,22
 r'''deco''',
 r'''Name 'deco' Load - ROOT 0,0..0,4'''),
 
-('', None, False, 'name', {}, (AsyncFunctionDef,
+('', None, None, 'name', {}, (AsyncFunctionDef,
 r'''async def func(): pass'''),
 r'''**ValueError('cannot delete AsyncFunctionDef.name')**''',
 "\n'func'\n",
 r'''<class 'str'>'''),
 
-('', 0, False, 'type_params', {'_ver': 12}, (AsyncFunctionDef,
+('', 0, None, 'type_params', {'_ver': 12}, (AsyncFunctionDef,
 r'''async def func[T](): pass'''),
 r'''async def func(): pass''', r'''
 AsyncFunctionDef - ROOT 0,0..0,22
@@ -182,7 +182,7 @@ TypeVar - ROOT 0,0..0,1
   .name 'T'
 '''),
 
-('', None, False, 'args', {}, (AsyncFunctionDef,
+('', None, None, 'args', {}, (AsyncFunctionDef,
 r'''async def func(a, /, b: int = 1, *c, d=2, **e): pass'''),
 r'''async def func(): pass''', r'''
 AsyncFunctionDef - ROOT 0,0..0,22
@@ -212,7 +212,7 @@ arguments - ROOT 0,0..0,30
    0] Constant 1 - 0,15..0,16
 '''),
 
-('', None, False, 'args', {}, (AsyncFunctionDef,
+('', None, None, 'args', {}, (AsyncFunctionDef,
 r'''async def func(): pass'''),
 r'''async def func(): pass''', r'''
 AsyncFunctionDef - ROOT 0,0..0,22
@@ -223,7 +223,7 @@ AsyncFunctionDef - ROOT 0,0..0,22
 r'''''',
 r'''arguments - ROOT'''),
 
-('', None, False, 'returns', {}, (AsyncFunctionDef,
+('', None, None, 'returns', {}, (AsyncFunctionDef,
 r'''async def func() -> int: pass'''),
 r'''async def func(): pass''', r'''
 AsyncFunctionDef - ROOT 0,0..0,22
@@ -234,7 +234,7 @@ AsyncFunctionDef - ROOT 0,0..0,22
 r'''int''',
 r'''Name 'int' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'returns', {}, (AsyncFunctionDef,
+('', None, None, 'returns', {}, (AsyncFunctionDef,
 r'''async def func(): pass'''),
 r'''async def func(): pass''', r'''
 AsyncFunctionDef - ROOT 0,0..0,22
@@ -244,7 +244,7 @@ AsyncFunctionDef - ROOT 0,0..0,22
 ''',
 r'''**None**'''),
 
-('', 0, False, 'body', {'_verify_self': False, 'norm': False}, (AsyncFunctionDef,
+('', 0, None, 'body', {'_verify_self': False, 'norm': False}, (AsyncFunctionDef,
 r'''async def func(): pass'''),
 r'''async def func():''', r'''
 AsyncFunctionDef - ROOT 0,0..0,17
@@ -253,7 +253,7 @@ AsyncFunctionDef - ROOT 0,0..0,17
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
 
-('', 0, False, 'decorator_list', {}, (ClassDef, r'''
+('', 0, None, 'decorator_list', {}, (ClassDef, r'''
 @deco
 class cls: pass
 
@@ -269,13 +269,13 @@ ClassDef - ROOT 0,0..0,15
 r'''deco''',
 r'''Name 'deco' Load - ROOT 0,0..0,4'''),
 
-('', None, False, 'name', {}, (ClassDef,
+('', None, None, 'name', {}, (ClassDef,
 r'''class cls: pass'''),
 r'''**ValueError('cannot delete ClassDef.name')**''',
 "\n'cls'\n",
 r'''<class 'str'>'''),
 
-('', 0, False, 'type_params', {'_ver': 12}, (ClassDef,
+('', 0, None, 'type_params', {'_ver': 12}, (ClassDef,
 r'''class cls[T](): pass'''),
 r'''class cls(): pass''', r'''
 ClassDef - ROOT 0,0..0,17
@@ -288,7 +288,7 @@ TypeVar - ROOT 0,0..0,1
   .name 'T'
 '''),
 
-('', 0, False, 'bases', {}, (ClassDef,
+('', 0, None, 'bases', {}, (ClassDef,
 r'''class cls(base): pass'''),
 r'''class cls: pass''', r'''
 ClassDef - ROOT 0,0..0,15
@@ -299,7 +299,7 @@ ClassDef - ROOT 0,0..0,15
 r'''base''',
 r'''Name 'base' Load - ROOT 0,0..0,4'''),
 
-('', 0, False, 'keywords', {}, (ClassDef,
+('', 0, None, 'keywords', {}, (ClassDef,
 r'''class cls(key=val): pass'''),
 r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
 r'''key=val''', r'''
@@ -308,7 +308,7 @@ keyword - ROOT 0,0..0,7
   .value Name 'val' Load - 0,4..0,7
 '''),
 
-('', 0, False, 'body', {'_verify_self': False, 'norm': False}, (ClassDef,
+('', 0, None, 'body', {'_verify_self': False, 'norm': False}, (ClassDef,
 r'''class cls(): pass'''),
 r'''class cls():''', r'''
 ClassDef - ROOT 0,0..0,12
@@ -317,33 +317,33 @@ ClassDef - ROOT 0,0..0,12
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
 
-('', None, False, 'value', {}, (Return,
+('', None, None, 'value', {}, (Return,
 r'''return ret'''),
 r'''return''',
 r'''Return - ROOT 0,0..0,6''',
 r'''ret''',
 r'''Name 'ret' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'targets', {'norm': True}, (Delete,
+('', 0, None, 'targets', {'norm': True}, (Delete,
 r'''del var'''),
 r'''**ValueError('cannot delete all Delete.targets without norm_self=False')**''',
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'targets', {'_verify_self': False, 'norm_self': False}, (Delete,
+('', 0, None, 'targets', {'_verify_self': False, 'norm_self': False}, (Delete,
 r'''del var'''),
 r'''del ''',
 r'''Delete - ROOT 0,0..0,4''',
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'targets', {'norm': True}, (Assign,
+('', 0, None, 'targets', {'norm': True}, (Assign,
 r'''var = val'''),
 r'''**ValueError('cannot delete all Assign.targets without norm_self=False')**''',
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'targets', {'_verify_self': False, 'norm_self': False}, (Assign,
+('', 0, None, 'targets', {'_verify_self': False, 'norm_self': False}, (Assign,
 r'''var = val'''),
 r''' val''', r'''
 Assign - ROOT 0,0..0,4
@@ -352,19 +352,19 @@ Assign - ROOT 0,0..0,4
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'value', {}, (Assign,
+('', None, None, 'value', {}, (Assign,
 r'''var = val'''),
 r'''**ValueError('cannot delete Assign.value')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'name', {'_ver': 12}, (TypeAlias,
+('', None, None, 'name', {'_ver': 12}, (TypeAlias,
 r'''type t[T] = ...'''),
 r'''**ValueError('cannot delete TypeAlias.name')**''',
 r'''t''',
 r'''Name 't' Load - ROOT 0,0..0,1'''),
 
-('', 0, False, 'type_params', {'_ver': 12}, (TypeAlias,
+('', 0, None, 'type_params', {'_ver': 12}, (TypeAlias,
 r'''type t[T] = ...'''),
 r'''type t = ...''', r'''
 TypeAlias - ROOT 0,0..0,12
@@ -376,43 +376,43 @@ TypeVar - ROOT 0,0..0,1
   .name 'T'
 '''),
 
-('', None, False, 'value', {'_ver': 12}, (TypeAlias,
+('', None, None, 'value', {'_ver': 12}, (TypeAlias,
 r'''type t[T] = ...'''),
 r'''**ValueError('cannot delete TypeAlias.value')**''',
 r'''...''',
 r'''Constant Ellipsis - ROOT 0,0..0,3'''),
 
-('', None, False, 'target', {}, (AugAssign,
+('', None, None, 'target', {}, (AugAssign,
 r'''var += 123'''),
 r'''**ValueError('cannot delete AugAssign.target')**''',
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'op', {}, (AugAssign,
+('', None, None, 'op', {}, (AugAssign,
 r'''var += 123'''),
 r'''**ValueError('cannot delete AugAssign.op')**''',
 r'''+''',
 r'''Add - ROOT 0,0..0,1'''),
 
-('', None, False, 'value', {}, (AugAssign,
+('', None, None, 'value', {}, (AugAssign,
 r'''var += 123'''),
 r'''**ValueError('cannot delete AugAssign.value')**''',
 r'''123''',
 r'''Constant 123 - ROOT 0,0..0,3'''),
 
-('', None, False, 'target', {}, (AnnAssign,
+('', None, None, 'target', {}, (AnnAssign,
 r'''var: int = 123'''),
 r'''**ValueError('cannot delete AnnAssign.target')**''',
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'annotation', {}, (AnnAssign,
+('', None, None, 'annotation', {}, (AnnAssign,
 r'''var: int = 123'''),
 r'''**ValueError('cannot delete AnnAssign.annotation')**''',
 r'''int''',
 r'''Name 'int' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'value', {}, (AnnAssign,
+('', None, None, 'value', {}, (AnnAssign,
 r'''var: int = 123'''),
 r'''var: int''', r'''
 AnnAssign - ROOT 0,0..0,8
@@ -423,19 +423,19 @@ AnnAssign - ROOT 0,0..0,8
 r'''123''',
 r'''Constant 123 - ROOT 0,0..0,3'''),
 
-('', None, False, 'simple', {}, (AnnAssign,
+('', None, None, 'simple', {}, (AnnAssign,
 r'''var: int = 123'''),
 r'''**ValueError('cannot delete AnnAssign.simple')**''',
 r'''1''',
 r'''<class 'int'>'''),
 
-('', None, False, 'target', {}, (For,
+('', None, None, 'target', {}, (For,
 r'''for var in iter(): pass'''),
 r'''**ValueError('cannot delete For.target')**''',
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'iter', {}, (For,
+('', None, None, 'iter', {}, (For,
 r'''for var in iter(): pass'''),
 r'''**ValueError('cannot delete For.iter')**''',
 r'''iter()''', r'''
@@ -443,7 +443,7 @@ Call - ROOT 0,0..0,6
   .func Name 'iter' Load - 0,0..0,4
 '''),
 
-('', 0, False, 'body', {'_verify_self': False, 'norm': False}, (For,
+('', 0, None, 'body', {'_verify_self': False, 'norm': False}, (For,
 r'''for var in iter(): pass'''),
 r'''for var in iter():''', r'''
 For - ROOT 0,0..0,18
@@ -454,7 +454,7 @@ For - ROOT 0,0..0,18
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
 
-('', 0, False, 'orelse', {}, (For, r'''
+('', 0, None, 'orelse', {}, (For, r'''
 for var in iter(): pass
 else: continue
 '''),
@@ -469,13 +469,13 @@ For - ROOT 0,0..0,23
 r'''continue''',
 r'''Continue - ROOT 0,0..0,8'''),
 
-('', None, False, 'target', {}, (AsyncFor,
+('', None, None, 'target', {}, (AsyncFor,
 r'''async for var in iter(): pass'''),
 r'''**ValueError('cannot delete AsyncFor.target')**''',
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'iter', {}, (AsyncFor,
+('', None, None, 'iter', {}, (AsyncFor,
 r'''async for var in iter(): pass'''),
 r'''**ValueError('cannot delete AsyncFor.iter')**''',
 r'''iter()''', r'''
@@ -483,7 +483,7 @@ Call - ROOT 0,0..0,6
   .func Name 'iter' Load - 0,0..0,4
 '''),
 
-('', 0, False, 'body', {'_verify_self': False, 'norm': False}, (AsyncFor,
+('', 0, None, 'body', {'_verify_self': False, 'norm': False}, (AsyncFor,
 r'''async for var in iter(): pass'''),
 r'''async for var in iter():''', r'''
 AsyncFor - ROOT 0,0..0,24
@@ -494,7 +494,7 @@ AsyncFor - ROOT 0,0..0,24
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
 
-('', 0, False, 'orelse', {}, (AsyncFor, r'''
+('', 0, None, 'orelse', {}, (AsyncFor, r'''
 async for var in iter(): pass
 else: continue
 '''),
@@ -509,13 +509,13 @@ AsyncFor - ROOT 0,0..0,29
 r'''continue''',
 r'''Continue - ROOT 0,0..0,8'''),
 
-('', None, False, 'test', {}, (While,
+('', None, None, 'test', {}, (While,
 r'''while var: pass'''),
 r'''**ValueError('cannot delete While.test')**''',
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'body', {'_verify_self': False, 'norm': False}, (While,
+('', 0, None, 'body', {'_verify_self': False, 'norm': False}, (While,
 r'''while var: pass'''),
 r'''while var:''', r'''
 While - ROOT 0,0..0,10
@@ -524,7 +524,7 @@ While - ROOT 0,0..0,10
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
 
-('', 0, False, 'orelse', {}, (While, r'''
+('', 0, None, 'orelse', {}, (While, r'''
 while var: pass
 else: continue
 '''),
@@ -537,13 +537,13 @@ While - ROOT 0,0..0,15
 r'''continue''',
 r'''Continue - ROOT 0,0..0,8'''),
 
-('', None, False, 'test', {}, (If,
+('', None, None, 'test', {}, (If,
 r'''if var: pass'''),
 r'''**ValueError('cannot delete If.test')**''',
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'body', {'_verify_self': False, 'norm': False}, (If,
+('', 0, None, 'body', {'_verify_self': False, 'norm': False}, (If,
 r'''if var: pass'''),
 r'''if var:''', r'''
 If - ROOT 0,0..0,7
@@ -552,7 +552,7 @@ If - ROOT 0,0..0,7
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
 
-('', 0, False, 'orelse', {}, (If, r'''
+('', 0, None, 'orelse', {}, (If, r'''
 if var: pass
 else: continue
 '''),
@@ -565,7 +565,7 @@ If - ROOT 0,0..0,12
 r'''continue''',
 r'''Continue - ROOT 0,0..0,8'''),
 
-('', 0, False, 'items', {'_verify_self': False, 'norm': True}, (With,
+('', 0, None, 'items', {'_verify_self': False, 'norm': True}, (With,
 r'''with var: pass'''),
 r'''**ValueError('cannot delete all With.items without norm_self=False')**''',
 r'''var''', r'''
@@ -573,7 +573,7 @@ withitem - ROOT 0,0..0,3
   .context_expr Name 'var' Load - 0,0..0,3
 '''),
 
-('', 0, False, 'body', {'_verify_self': False, 'norm': False}, (With,
+('', 0, None, 'body', {'_verify_self': False, 'norm': False}, (With,
 r'''with var: pass'''),
 r'''with var:''', r'''
 With - ROOT 0,0..0,9
@@ -584,7 +584,7 @@ With - ROOT 0,0..0,9
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
 
-('', 0, False, 'items', {'_verify_self': False, 'norm': True}, (AsyncWith,
+('', 0, None, 'items', {'_verify_self': False, 'norm': True}, (AsyncWith,
 r'''async with var: pass'''),
 r'''**ValueError('cannot delete all AsyncWith.items without norm_self=False')**''',
 r'''var''', r'''
@@ -592,7 +592,7 @@ withitem - ROOT 0,0..0,3
   .context_expr Name 'var' Load - 0,0..0,3
 '''),
 
-('', 0, False, 'body', {'_verify_self': False, 'norm': False}, (AsyncWith,
+('', 0, None, 'body', {'_verify_self': False, 'norm': False}, (AsyncWith,
 r'''async with var: pass'''),
 r'''async with var:''', r'''
 AsyncWith - ROOT 0,0..0,15
@@ -603,7 +603,7 @@ AsyncWith - ROOT 0,0..0,15
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
 
-('', None, False, 'subject', {}, (Match, r'''
+('', None, None, 'subject', {}, (Match, r'''
 match var:
   case 1: pass
 '''),
@@ -611,7 +611,7 @@ r'''**ValueError('cannot delete Match.subject')**''',
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'cases', {'_verify_self': False, 'norm': False}, (Match, r'''
+('', 0, None, 'cases', {'_verify_self': False, 'norm': False}, (Match, r'''
 match var:
   case 1: pass
 '''),
@@ -627,20 +627,20 @@ match_case - ROOT 0,0..0,12
    0] Pass - 0,8..0,12
 '''),
 
-('', None, False, 'exc', {}, (Raise,
+('', None, None, 'exc', {}, (Raise,
 r'''raise exc'''),
 r'''raise''',
 r'''Raise - ROOT 0,0..0,5''',
 r'''exc''',
 r'''Name 'exc' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'exc', {}, (Raise,
+('', None, None, 'exc', {}, (Raise,
 r'''raise exc from cause'''),
 r'''**ValueError('cannot delete Raise.exc in this state')**''',
 r'''exc''',
 r'''Name 'exc' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'cause', {}, (Raise,
+('', None, None, 'cause', {}, (Raise,
 r'''raise exc from cause'''),
 r'''raise exc''', r'''
 Raise - ROOT 0,0..0,9
@@ -649,7 +649,7 @@ Raise - ROOT 0,0..0,9
 r'''cause''',
 r'''Name 'cause' Load - ROOT 0,0..0,5'''),
 
-('', None, False, 'cause', {}, (Raise,
+('', None, None, 'cause', {}, (Raise,
 r'''raise exc'''),
 r'''raise exc''', r'''
 Raise - ROOT 0,0..0,9
@@ -657,7 +657,7 @@ Raise - ROOT 0,0..0,9
 ''',
 r'''**None**'''),
 
-('', 0, False, 'body', {'_verify_self': False, 'norm': False}, (Try, r'''
+('', 0, None, 'body', {'_verify_self': False, 'norm': False}, (Try, r'''
 try: pass
 except Exception: continue
 '''),
@@ -672,7 +672,7 @@ Try - ROOT 0,0..0,30
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
 
-('', 0, False, 'handlers', {'_verify_self': False, 'norm': False}, (Try, r'''
+('', 0, None, 'handlers', {'_verify_self': False, 'norm': False}, (Try, r'''
 try: pass
 except Exception: continue
 '''),
@@ -688,7 +688,7 @@ ExceptHandler - ROOT 0,0..0,26
    0] Continue - 0,18..0,26
 '''),
 
-('', 0, False, 'orelse', {}, (Try, r'''
+('', 0, None, 'orelse', {}, (Try, r'''
 try: pass
 except Exception: continue
 else: break
@@ -708,7 +708,7 @@ Try - ROOT 0,0..1,26
 r'''break''',
 r'''Break - ROOT 0,0..0,5'''),
 
-('', 0, False, 'finalbody', {}, (Try, r'''
+('', 0, None, 'finalbody', {}, (Try, r'''
 try: pass
 except Exception: continue
 finally: ...
@@ -730,7 +730,7 @@ Expr - ROOT 0,0..0,3
   .value Constant Ellipsis - 0,0..0,3
 '''),
 
-('', 0, False, 'body', {'_ver': 11, '_verify_self': False, 'norm': False}, (TryStar, r'''
+('', 0, None, 'body', {'_ver': 11, '_verify_self': False, 'norm': False}, (TryStar, r'''
 try: pass
 except* Exception: continue
 '''),
@@ -745,7 +745,7 @@ TryStar - ROOT 0,0..0,31
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
 
-('', 0, False, 'handlers', {'_ver': 11, '_verify_self': False, 'norm': False}, (TryStar, r'''
+('', 0, None, 'handlers', {'_ver': 11, '_verify_self': False, 'norm': False}, (TryStar, r'''
 try: pass
 except* Exception: continue
 '''),
@@ -761,7 +761,7 @@ ExceptHandler - ROOT 0,0..0,27
    0] Continue - 0,19..0,27
 '''),
 
-('', 0, False, 'orelse', {'_ver': 11}, (TryStar, r'''
+('', 0, None, 'orelse', {'_ver': 11}, (TryStar, r'''
 try: pass
 except* Exception: continue
 else: break
@@ -781,7 +781,7 @@ TryStar - ROOT 0,0..1,27
 r'''break''',
 r'''Break - ROOT 0,0..0,5'''),
 
-('', 0, False, 'finalbody', {'_ver': 11}, (TryStar, r'''
+('', 0, None, 'finalbody', {'_ver': 11}, (TryStar, r'''
 try: pass
 except* Exception: continue
 finally: ...
@@ -803,13 +803,13 @@ Expr - ROOT 0,0..0,3
   .value Constant Ellipsis - 0,0..0,3
 '''),
 
-('', None, False, 'test', {}, (Assert,
+('', None, None, 'test', {}, (Assert,
 r'''assert condition, message'''),
 r'''**ValueError('cannot delete Assert.test')**''',
 r'''condition''',
 r'''Name 'condition' Load - ROOT 0,0..0,9'''),
 
-('', None, False, 'msg', {}, (Assert,
+('', None, None, 'msg', {}, (Assert,
 r'''assert condition, message'''),
 r'''assert condition''', r'''
 Assert - ROOT 0,0..0,16
@@ -818,7 +818,7 @@ Assert - ROOT 0,0..0,16
 r'''message''',
 r'''Name 'message' Load - ROOT 0,0..0,7'''),
 
-('', None, False, 'msg', {}, (Assert,
+('', None, None, 'msg', {}, (Assert,
 r'''assert condition'''),
 r'''assert condition''', r'''
 Assert - ROOT 0,0..0,16
@@ -826,7 +826,7 @@ Assert - ROOT 0,0..0,16
 ''',
 r'''**None**'''),
 
-('', 0, False, 'names', {'norm': True}, (Import,
+('', 0, None, 'names', {'norm': True}, (Import,
 r'''import mod'''),
 r'''**ValueError('cannot delete all Import.names without norm_self=False')**''',
 r'''mod''', r'''
@@ -834,7 +834,7 @@ alias - ROOT 0,0..0,3
   .name 'mod'
 '''),
 
-('', 0, False, 'names', {'_verify_self': False, 'norm_self': False}, (Import,
+('', 0, None, 'names', {'_verify_self': False, 'norm_self': False}, (Import,
 r'''import mod'''),
 r'''import ''',
 r'''Import - ROOT 0,0..0,7''',
@@ -843,13 +843,13 @@ alias - ROOT 0,0..0,3
   .name 'mod'
 '''),
 
-('', None, False, 'module', {}, (ImportFrom,
+('', None, None, 'module', {}, (ImportFrom,
 r'''from mod import name'''),
 r'''**ValueError('cannot delete ImportFrom.module in this state')**''',
 "\n'mod'\n",
 r'''<class 'str'>'''),
 
-('', None, False, 'module', {}, (ImportFrom,
+('', None, None, 'module', {}, (ImportFrom,
 r'''from . import name'''),
 r'''from . import name''', r'''
 ImportFrom - ROOT 0,0..0,18
@@ -860,7 +860,7 @@ ImportFrom - ROOT 0,0..0,18
 ''',
 r'''**None**'''),
 
-('', None, False, 'module', {}, (ImportFrom,
+('', None, None, 'module', {}, (ImportFrom,
 r'''from .mod import name'''),
 r'''from . import name''', r'''
 ImportFrom - ROOT 0,0..0,18
@@ -872,7 +872,7 @@ ImportFrom - ROOT 0,0..0,18
 "\n'mod'\n",
 r'''<class 'str'>'''),
 
-('', 0, False, 'names', {'norm': True}, (ImportFrom,
+('', 0, None, 'names', {'norm': True}, (ImportFrom,
 r'''from mod import name'''),
 r'''**ValueError('cannot delete all ImportFrom.names without norm_self=False')**''',
 r'''name''', r'''
@@ -880,7 +880,7 @@ alias - ROOT 0,0..0,4
   .name 'name'
 '''),
 
-('', 0, False, 'names', {'_verify_self': False, 'norm_self': False}, (ImportFrom,
+('', 0, None, 'names', {'_verify_self': False, 'norm_self': False}, (ImportFrom,
 r'''from mod import name'''),
 r'''from mod import ''', r'''
 ImportFrom - ROOT 0,0..0,16
@@ -892,58 +892,58 @@ alias - ROOT 0,0..0,4
   .name 'name'
 '''),
 
-('', None, False, 'level', {}, (ImportFrom,
+('', None, None, 'level', {}, (ImportFrom,
 r'''from mod import name'''),
 r'''**ValueError('cannot delete ImportFrom.level')**''',
 r'''0''',
 r'''<class 'int'>'''),
 
-('', 0, False, 'names', {'norm': True}, (Global,
+('', 0, None, 'names', {'norm': True}, (Global,
 r'''global var'''),
 r'''**ValueError('cannot delete all Global.names without norm_self=False')**''',
 "\n'var'\n",
 r'''<class 'str'>'''),
 
-('', 0, False, 'names', {'_verify_self': False, 'norm_self': False}, (Global,
+('', 0, None, 'names', {'_verify_self': False, 'norm_self': False}, (Global,
 r'''global var'''),
 r'''global ''',
 r'''Global - ROOT 0,0..0,7''',
 "\n'var'\n",
 r'''<class 'str'>'''),
 
-('', 0, False, 'names', {'norm': True}, (Nonlocal,
+('', 0, None, 'names', {'norm': True}, (Nonlocal,
 r'''nonlocal var'''),
 r'''**ValueError('cannot delete all Nonlocal.names without norm_self=False')**''',
 "\n'var'\n",
 r'''<class 'str'>'''),
 
-('', 0, False, 'names', {'_verify_self': False, 'norm_self': False}, (Nonlocal,
+('', 0, None, 'names', {'_verify_self': False, 'norm_self': False}, (Nonlocal,
 r'''nonlocal var'''),
 r'''nonlocal ''',
 r'''Nonlocal - ROOT 0,0..0,9''',
 "\n'var'\n",
 r'''<class 'str'>'''),
 
-('', None, False, 'value', {}, (Expr,
+('', None, None, 'value', {}, (Expr,
 r'''val'''),
 r'''**ValueError('cannot delete Expr.value')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'op', {}, (BoolOp,
+('', None, None, 'op', {}, (BoolOp,
 r'''val1 and val2'''),
 r'''**ValueError('cannot delete BoolOp.op')**''',
 r'''and''',
 r'''And - ROOT 0,0..0,3'''),
 
-('', 0, False, 'values', {'norm': True}, (BoolOp,
+('', 0, None, 'values', {'norm': True}, (BoolOp,
 r'''val1 and val2'''),
 r'''val2''',
 r'''Name 'val2' Load - ROOT 0,0..0,4''',
 r'''val1''',
 r'''Name 'val1' Load - ROOT 0,0..0,4'''),
 
-('', 0, False, 'values', {'_verify_self': False, 'norm_self': False}, (BoolOp,
+('', 0, None, 'values', {'_verify_self': False, 'norm_self': False}, (BoolOp,
 r'''val1 and val2'''),
 r'''val2''', r'''
 BoolOp - ROOT 0,0..0,4
@@ -954,49 +954,49 @@ BoolOp - ROOT 0,0..0,4
 r'''val1''',
 r'''Name 'val1' Load - ROOT 0,0..0,4'''),
 
-('', None, False, 'target', {}, (NamedExpr,
+('', None, None, 'target', {}, (NamedExpr,
 r'''(var := val)'''),
 r'''**ValueError('cannot delete NamedExpr.target')**''',
 r'''var''',
 r'''Name 'var' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'value', {}, (NamedExpr,
+('', None, None, 'value', {}, (NamedExpr,
 r'''(var := val)'''),
 r'''**ValueError('cannot delete NamedExpr.value')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'left', {}, (BinOp,
+('', None, None, 'left', {}, (BinOp,
 r'''val1 + val2'''),
 r'''**ValueError('cannot delete BinOp.left')**''',
 r'''val1''',
 r'''Name 'val1' Load - ROOT 0,0..0,4'''),
 
-('', None, False, 'op', {}, (BinOp,
+('', None, None, 'op', {}, (BinOp,
 r'''val1 + val2'''),
 r'''**ValueError('cannot delete BinOp.op')**''',
 r'''+''',
 r'''Add - ROOT 0,0..0,1'''),
 
-('', None, False, 'right', {}, (BinOp,
+('', None, None, 'right', {}, (BinOp,
 r'''val1 + val2'''),
 r'''**ValueError('cannot delete BinOp.right')**''',
 r'''val2''',
 r'''Name 'val2' Load - ROOT 0,0..0,4'''),
 
-('', None, False, 'op', {}, (UnaryOp,
+('', None, None, 'op', {}, (UnaryOp,
 r'''-val'''),
 r'''**ValueError('cannot delete UnaryOp.op')**''',
 r'''-''',
 r'''USub - ROOT 0,0..0,1'''),
 
-('', None, False, 'operand', {}, (UnaryOp,
+('', None, None, 'operand', {}, (UnaryOp,
 r'''-val'''),
 r'''**ValueError('cannot delete UnaryOp.operand')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'args', {}, (Lambda,
+('', None, None, 'args', {}, (Lambda,
 r'''lambda a, /, b=1, *c, d=2, **e: None'''),
 r'''lambda: None''', r'''
 Lambda - ROOT 0,0..0,12
@@ -1023,7 +1023,7 @@ arguments - ROOT 0,0..0,23
    0] Constant 1 - 0,8..0,9
 '''),
 
-('', None, False, 'args', {}, (Lambda,
+('', None, None, 'args', {}, (Lambda,
 r'''lambda: None'''),
 r'''lambda: None''', r'''
 Lambda - ROOT 0,0..0,12
@@ -1032,31 +1032,31 @@ Lambda - ROOT 0,0..0,12
 r'''''',
 r'''arguments - ROOT'''),
 
-('', None, False, 'body', {}, (Lambda,
+('', None, None, 'body', {}, (Lambda,
 r'''lambda: None'''),
 r'''**ValueError('cannot delete Lambda.body')**''',
 r'''None''',
 r'''Constant None - ROOT 0,0..0,4'''),
 
-('', None, False, 'body', {}, (IfExp,
+('', None, None, 'body', {}, (IfExp,
 r'''body if test else orelse'''),
 r'''**ValueError('cannot delete IfExp.body')**''',
 r'''body''',
 r'''Name 'body' Load - ROOT 0,0..0,4'''),
 
-('', None, False, 'test', {}, (IfExp,
+('', None, None, 'test', {}, (IfExp,
 r'''body if test else orelse'''),
 r'''**ValueError('cannot delete IfExp.test')**''',
 r'''test''',
 r'''Name 'test' Load - ROOT 0,0..0,4'''),
 
-('', None, False, 'orelse', {}, (IfExp,
+('', None, None, 'orelse', {}, (IfExp,
 r'''body if test else orelse'''),
 r'''**ValueError('cannot delete IfExp.orelse')**''',
 r'''orelse''',
 r'''Name 'orelse' Load - ROOT 0,0..0,6'''),
 
-('', 0, False, 'keys', {}, (Dict,
+('', 0, None, 'keys', {}, (Dict,
 r'''{key: val}'''),
 r'''{**val}''', r'''
 Dict - ROOT 0,0..0,7
@@ -1068,7 +1068,7 @@ Dict - ROOT 0,0..0,7
 r'''key''',
 r'''Name 'key' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'keys', {}, (Dict,
+('', 0, None, 'keys', {}, (Dict,
 r'''{**val}'''),
 r'''{**val}''', r'''
 Dict - ROOT 0,0..0,7
@@ -1079,17 +1079,17 @@ Dict - ROOT 0,0..0,7
 ''',
 r'''**None**'''),
 
-('', 0, False, 'values', {}, (Dict,
+('', 0, None, 'values', {}, (Dict,
 r'''{key: val}'''),
 r'''**ValueError('cannot delete from Dict.values')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, None, {}, (Dict,
+('', 0, None, None, {}, (Dict,
 r'''{key: val}'''),
 r'''**ValueError('cannot get single element from Dict._all')**'''),
 
-('', 0, False, 'elts', {}, (Set,
+('', 0, None, 'elts', {}, (Set,
 r'''{elt0, elt1}'''),
 r'''{elt1}''', r'''
 Set - ROOT 0,0..0,6
@@ -1099,7 +1099,7 @@ Set - ROOT 0,0..0,6
 r'''elt0''',
 r'''Name 'elt0' Load - ROOT 0,0..0,4'''),
 
-('', 0, False, 'elts', {'norm': True}, (Set,
+('', 0, None, 'elts', {'norm': True}, (Set,
 r'''{elt}'''),
 r'''{*()}''', r'''
 Set - ROOT 0,0..0,5
@@ -1112,13 +1112,13 @@ Set - ROOT 0,0..0,5
 r'''elt''',
 r'''Name 'elt' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'elt', {}, (ListComp,
+('', None, None, 'elt', {}, (ListComp,
 r'''[val for val in iter]'''),
 r'''**ValueError('cannot delete ListComp.elt')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'generators', {'norm': True}, (ListComp,
+('', 0, None, 'generators', {'norm': True}, (ListComp,
 r'''[val for val in iter]'''),
 r'''**ValueError('cannot delete all ListComp.generators without norm_self=False')**''',
 r'''for val in iter''', r'''
@@ -1128,13 +1128,13 @@ comprehension - ROOT 0,0..0,15
   .is_async 0
 '''),
 
-('', None, False, 'elt', {}, (SetComp,
+('', None, None, 'elt', {}, (SetComp,
 r'''{val for val in iter}'''),
 r'''**ValueError('cannot delete SetComp.elt')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'generators', {'norm': True}, (SetComp,
+('', 0, None, 'generators', {'norm': True}, (SetComp,
 r'''{val for val in iter}'''),
 r'''**ValueError('cannot delete all SetComp.generators without norm_self=False')**''',
 r'''for val in iter''', r'''
@@ -1144,19 +1144,19 @@ comprehension - ROOT 0,0..0,15
   .is_async 0
 '''),
 
-('', None, False, 'key', {}, (DictComp,
+('', None, None, 'key', {}, (DictComp,
 r'''{key: val for key, val in iter}'''),
 r'''**ValueError('cannot delete DictComp.key')**''',
 r'''key''',
 r'''Name 'key' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'value', {}, (DictComp,
+('', None, None, 'value', {}, (DictComp,
 r'''{key: val for key, val in iter}'''),
 r'''**ValueError('cannot delete DictComp.value')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'generators', {'norm': True}, (DictComp,
+('', 0, None, 'generators', {'norm': True}, (DictComp,
 r'''{key: val for key, val in iter}'''),
 r'''**ValueError('cannot delete all DictComp.generators without norm_self=False')**''',
 r'''for key, val in iter''', r'''
@@ -1170,13 +1170,13 @@ comprehension - ROOT 0,0..0,20
   .is_async 0
 '''),
 
-('', None, False, 'elt', {}, (GeneratorExp,
+('', None, None, 'elt', {}, (GeneratorExp,
 r'''(val for val in iter)'''),
 r'''**ValueError('cannot delete GeneratorExp.elt')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'generators', {'norm': True}, (GeneratorExp,
+('', 0, None, 'generators', {'norm': True}, (GeneratorExp,
 r'''(val for val in iter)'''),
 r'''**ValueError('cannot delete all GeneratorExp.generators without norm_self=False')**''',
 r'''for val in iter''', r'''
@@ -1186,56 +1186,56 @@ comprehension - ROOT 0,0..0,15
   .is_async 0
 '''),
 
-('', None, False, 'value', {}, (Await,
+('', None, None, 'value', {}, (Await,
 r'''await val'''),
 r'''**ValueError('cannot delete Await.value')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'value', {}, (Yield,
+('', None, None, 'value', {}, (Yield,
 r'''yield val'''),
 r'''yield''',
 r'''Yield - ROOT 0,0..0,5''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'value', {}, (Yield,
+('', None, None, 'value', {}, (Yield,
 r'''yield'''),
 r'''yield''',
 r'''Yield - ROOT 0,0..0,5''',
 r'''**None**'''),
 
-('', None, False, 'value', {}, (YieldFrom,
+('', None, None, 'value', {}, (YieldFrom,
 r'''yield from val'''),
 r'''**ValueError('cannot delete YieldFrom.value')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'left', {}, (Compare,
+('', None, None, 'left', {}, (Compare,
 r'''val0 < val1'''),
 r'''**ValueError('cannot delete Compare.left')**''',
 r'''val0''',
 r'''Name 'val0' Load - ROOT 0,0..0,4'''),
 
-('', 0, False, 'ops', {}, (Compare,
+('', 0, None, 'ops', {}, (Compare,
 r'''val0 < val1'''),
 r'''**ValueError('cannot delete from Compare.ops')**''',
 r'''<''',
 r'''Lt - ROOT 0,0..0,1'''),
 
-('', 0, False, 'comparators', {}, (Compare,
+('', 0, None, 'comparators', {}, (Compare,
 r'''val0 < val1'''),
 r'''**ValueError('cannot delete from Compare.comparators')**''',
 r'''val1''',
 r'''Name 'val1' Load - ROOT 0,0..0,4'''),
 
-('', None, False, 'func', {}, (Call,
+('', None, None, 'func', {}, (Call,
 r'''call()'''),
 r'''**ValueError('cannot delete Call.func')**''',
 r'''call''',
 r'''Name 'call' Load - ROOT 0,0..0,4'''),
 
-('', 0, False, 'args', {}, (Call,
+('', 0, None, 'args', {}, (Call,
 r'''call(arg)'''),
 r'''call()''', r'''
 Call - ROOT 0,0..0,6
@@ -1244,7 +1244,7 @@ Call - ROOT 0,0..0,6
 r'''arg''',
 r'''Name 'arg' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'keywords', {}, (Call,
+('', 0, None, 'keywords', {}, (Call,
 r'''call(key=val)'''),
 r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
 r'''key=val''', r'''
@@ -1253,18 +1253,18 @@ keyword - ROOT 0,0..0,7
   .value Name 'val' Load - 0,4..0,7
 '''),
 
-('values[1]', None, False, 'value', {'_ver': 12}, (None,
+('values[1]', None, None, 'value', {'_ver': 12}, (None,
 r'''f"a{val:<16!r}c"'''),
 r'''**ValueError('cannot delete FormattedValue.value')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('values[1]', None, False, 'conversion', {'_ver': 12}, (None,
+('values[1]', None, None, 'conversion', {'_ver': 12}, (None,
 r'''f"a{val:<16!r}c"'''),
 r'''**NotImplementedError('this is not implemented yet')**''',
 r'''**None**'''),
 
-('values[1]', None, False, 'format_spec', {'_ver': 12}, (None,
+('values[1]', None, None, 'format_spec', {'_ver': 12}, (None,
 r'''f"a{val:<16!r}c"'''),
 r'''**NotImplementedError('this is not implemented yet')**''',
 "\nf'<16!r'\n", r'''
@@ -1273,13 +1273,13 @@ JoinedStr - ROOT 0,0..0,8
    0] Constant '<16!r' - 0,2..0,7
 '''),
 
-('', 0, False, 'values', {'_ver': 12}, (JoinedStr,
+('', 0, None, 'values', {'_ver': 12}, (JoinedStr,
 r'''f"a{val:<16!r}c"'''),
 r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
 "\n'a'\n",
 r'''Constant 'a' - ROOT 0,0..0,3'''),
 
-('', 1, False, 'values', {'_ver': 12}, (JoinedStr,
+('', 1, None, 'values', {'_ver': 12}, (JoinedStr,
 r'''f"a{val:<16!r}c"'''),
 r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
 r'''f"{val:<16!r}"''', r'''
@@ -1293,24 +1293,24 @@ JoinedStr - ROOT 0,0..0,14
         0] Constant '<16!r' - 0,7..0,12
 '''),
 
-('values[1]', None, False, 'value', {'_ver': 14}, (None,
+('values[1]', None, None, 'value', {'_ver': 14}, (None,
 r'''t"a{val:<16!r}c"'''),
 r'''**ValueError('cannot delete Interpolation.value')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('values[1]', None, False, 'str', {'_ver': 14}, (None,
+('values[1]', None, None, 'str', {'_ver': 14}, (None,
 r'''t"a{val:<16!r}c"'''),
 r'''**NotImplementedError('this is not implemented yet')**''',
 "\n'val'\n",
 r'''<class 'str'>'''),
 
-('values[1]', None, False, 'conversion', {'_ver': 14}, (None,
+('values[1]', None, None, 'conversion', {'_ver': 14}, (None,
 r'''t"a{val:<16!r}c"'''),
 r'''**NotImplementedError('this is not implemented yet')**''',
 r'''**None**'''),
 
-('values[1]', None, False, 'format_spec', {'_ver': 14}, (None,
+('values[1]', None, None, 'format_spec', {'_ver': 14}, (None,
 r'''t"a{val:<16!r}c"'''),
 r'''**NotImplementedError('this is not implemented yet')**''',
 "\nf'<16!r'\n", r'''
@@ -1319,13 +1319,13 @@ JoinedStr - ROOT 0,0..0,8
    0] Constant '<16!r' - 0,2..0,7
 '''),
 
-('', 0, False, 'values', {'_ver': 14}, (TemplateStr,
+('', 0, None, 'values', {'_ver': 14}, (TemplateStr,
 r'''t"a{val:<16!r}c"'''),
 r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
 "\n'a'\n",
 r'''Constant 'a' - ROOT 0,0..0,3'''),
 
-('', 1, False, 'values', {'_ver': 14}, (TemplateStr,
+('', 1, None, 'values', {'_ver': 14}, (TemplateStr,
 r'''t"a{val:<16!r}c"'''),
 r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
 r'''t"{val:<16!r}"''', r'''
@@ -1340,189 +1340,189 @@ TemplateStr - ROOT 0,0..0,14
         0] Constant '<16!r' - 0,7..0,12
 '''),
 
-('', None, False, 'value', {}, (Constant,
+('', None, None, 'value', {}, (Constant,
 r'''...'''),
 r'''None''',
 r'''Constant None - ROOT 0,0..0,4''',
 r'''Ellipsis''',
 r'''<class 'ellipsis'>'''),
 
-('', None, False, 'value', {}, (Constant,
+('', None, None, 'value', {}, (Constant,
 r'''123'''),
 r'''None''',
 r'''Constant None - ROOT 0,0..0,4''',
 r'''123''',
 r'''<class 'int'>'''),
 
-('', None, False, 'value', {}, (Constant,
+('', None, None, 'value', {}, (Constant,
 r'''1.23'''),
 r'''None''',
 r'''Constant None - ROOT 0,0..0,4''',
 r'''1.23''',
 r'''<class 'float'>'''),
 
-('', None, False, 'value', {}, (Constant,
+('', None, None, 'value', {}, (Constant,
 r'''123j'''),
 r'''None''',
 r'''Constant None - ROOT 0,0..0,4''',
 r'''123j''',
 r'''<class 'complex'>'''),
 
-('', None, False, 'value', {}, (Constant,
+('', None, None, 'value', {}, (Constant,
 r'''"str"'''),
 r'''None''',
 r'''Constant None - ROOT 0,0..0,4''',
 "\n'str'\n",
 r'''<class 'str'>'''),
 
-('', None, False, 'value', {}, (Constant,
+('', None, None, 'value', {}, (Constant,
 r'''b"123"'''),
 r'''None''',
 r'''Constant None - ROOT 0,0..0,4''',
 "\nb'123'\n",
 r'''<class 'bytes'>'''),
 
-('', None, False, 'value', {}, (Constant,
+('', None, None, 'value', {}, (Constant,
 r'''True'''),
 r'''None''',
 r'''Constant None - ROOT 0,0..0,4''',
 r'''True''',
 r'''<class 'bool'>'''),
 
-('', None, False, 'value', {}, (Constant,
+('', None, None, 'value', {}, (Constant,
 r'''False'''),
 r'''None''',
 r'''Constant None - ROOT 0,0..0,4''',
 r'''False''',
 r'''<class 'bool'>'''),
 
-('', None, False, 'value', {}, (Constant,
+('', None, None, 'value', {}, (Constant,
 r'''None'''),
 r'''None''',
 r'''Constant None - ROOT 0,0..0,4''',
 r'''**None**'''),
 
-('', None, False, 'kind', {}, (Constant,
+('', None, None, 'kind', {}, (Constant,
 r'''1'''),
 r'''**ValueError('cannot set kind of non-str Constant')**''',
 r'''**None**'''),
 
-('', None, False, 'kind', {}, (Constant,
+('', None, None, 'kind', {}, (Constant,
 r'''"str"'''),
 r'''"str"''',
 r'''Constant 'str' - ROOT 0,0..0,5''',
 r'''**None**'''),
 
-('', None, False, 'kind', {}, (Constant,
+('', None, None, 'kind', {}, (Constant,
 r'''u"str"'''),
 r'''"str"''',
 r'''Constant 'str' - ROOT 0,0..0,5''',
 "\n'u'\n",
 r'''<class 'str'>'''),
 
-('', None, False, 'value', {}, (Attribute,
+('', None, None, 'value', {}, (Attribute,
 r'''val.attr'''),
 r'''**ValueError('cannot delete Attribute.value')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'attr', {}, (Attribute,
+('', None, None, 'attr', {}, (Attribute,
 r'''val.attr'''),
 r'''**ValueError('cannot delete Attribute.attr')**''',
 "\n'attr'\n",
 r'''<class 'str'>'''),
 
-('', None, False, 'ctx', {}, (Attribute,
+('', None, None, 'ctx', {}, (Attribute,
 r'''val.attr'''),
 r'''**ValueError('cannot delete Attribute.ctx')**''',
 r'''''',
 r'''Load - ROOT 0,0..0,0'''),
 
-('targets[0]', None, False, 'ctx', {}, (None,
+('targets[0]', None, None, 'ctx', {}, (None,
 r'''val.attr = 1'''),
 r'''**ValueError('cannot delete Attribute.ctx')**''',
 r'''''',
 r'''Store - ROOT 0,0..0,0'''),
 
-('targets[0]', None, False, 'ctx', {}, (None,
+('targets[0]', None, None, 'ctx', {}, (None,
 r'''del val.attr'''),
 r'''**ValueError('cannot delete Attribute.ctx')**''',
 r'''''',
 r'''Del - ROOT 0,0..0,0'''),
 
-('', None, False, 'value', {}, (Subscript,
+('', None, None, 'value', {}, (Subscript,
 r'''val[slice]'''),
 r'''**ValueError('cannot delete Subscript.value')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'slice', {}, (Subscript,
+('', None, None, 'slice', {}, (Subscript,
 r'''val[slice]'''),
 r'''**ValueError('cannot delete Subscript.slice')**''',
 r'''slice''',
 r'''Name 'slice' Load - ROOT 0,0..0,5'''),
 
-('', None, False, 'ctx', {}, (Subscript,
+('', None, None, 'ctx', {}, (Subscript,
 r'''val[slice]'''),
 r'''**ValueError('cannot delete Subscript.ctx')**''',
 r'''''',
 r'''Load - ROOT 0,0..0,0'''),
 
-('targets[0]', None, False, 'ctx', {}, (None,
+('targets[0]', None, None, 'ctx', {}, (None,
 r'''val[slice] = 1'''),
 r'''**ValueError('cannot delete Subscript.ctx')**''',
 r'''''',
 r'''Store - ROOT 0,0..0,0'''),
 
-('targets[0]', None, False, 'ctx', {}, (None,
+('targets[0]', None, None, 'ctx', {}, (None,
 r'''del val[slice]'''),
 r'''**ValueError('cannot delete Subscript.ctx')**''',
 r'''''',
 r'''Del - ROOT 0,0..0,0'''),
 
-('', None, False, 'value', {}, (Starred,
+('', None, None, 'value', {}, (Starred,
 r'''*st'''),
 r'''**ValueError('cannot delete Starred.value')**''',
 r'''st''',
 r'''Name 'st' Load - ROOT 0,0..0,2'''),
 
-('', None, False, 'ctx', {}, (Starred,
+('', None, None, 'ctx', {}, (Starred,
 r'''*st'''),
 r'''**ValueError('cannot delete Starred.ctx')**''',
 r'''''',
 r'''Load - ROOT 0,0..0,0'''),
 
-('targets[0].elts[0]', None, False, 'ctx', {}, (None,
+('targets[0].elts[0]', None, None, 'ctx', {}, (None,
 r'''*st, = 1'''),
 r'''**ValueError('cannot delete Starred.ctx')**''',
 r'''''',
 r'''Store - ROOT 0,0..0,0'''),
 
-('', None, False, 'id', {}, (Name,
+('', None, None, 'id', {}, (Name,
 r'''name'''),
 r'''**ValueError('cannot delete Name.id')**''',
 "\n'name'\n",
 r'''<class 'str'>'''),
 
-('', None, False, 'ctx', {}, (Name,
+('', None, None, 'ctx', {}, (Name,
 r'''name'''),
 r'''**ValueError('cannot delete Name.ctx')**''',
 r'''''',
 r'''Load - ROOT 0,0..0,0'''),
 
-('targets[0]', None, False, 'ctx', {}, (None,
+('targets[0]', None, None, 'ctx', {}, (None,
 r'''name = 1'''),
 r'''**ValueError('cannot delete Name.ctx')**''',
 r'''''',
 r'''Store - ROOT 0,0..0,0'''),
 
-('targets[0]', None, False, 'ctx', {}, (None,
+('targets[0]', None, None, 'ctx', {}, (None,
 r'''del name'''),
 r'''**ValueError('cannot delete Name.ctx')**''',
 r'''''',
 r'''Del - ROOT 0,0..0,0'''),
 
-('', None, False, 'elts', {}, (List,
+('', None, None, 'elts', {}, (List,
 r'''[val]'''),
 r'''[]''', r'''
 List - ROOT 0,0..0,2
@@ -1535,25 +1535,25 @@ List - ROOT 0,0..0,5
   .ctx Load
 '''),
 
-('', None, False, 'ctx', {}, (List,
+('', None, None, 'ctx', {}, (List,
 r'''[val]'''),
 r'''**ValueError('cannot delete List.ctx')**''',
 r'''''',
 r'''Load - ROOT 0,0..0,0'''),
 
-('targets[0]', None, False, 'ctx', {}, (None,
+('targets[0]', None, None, 'ctx', {}, (None,
 r'''[val] = 1'''),
 r'''**ValueError('cannot delete List.ctx')**''',
 r'''''',
 r'''Store - ROOT 0,0..0,0'''),
 
-('targets[0]', None, False, 'ctx', {}, (None,
+('targets[0]', None, None, 'ctx', {}, (None,
 r'''del [val]'''),
 r'''**ValueError('cannot delete List.ctx')**''',
 r'''''',
 r'''Del - ROOT 0,0..0,0'''),
 
-('', None, False, 'elts', {}, (Tuple,
+('', None, None, 'elts', {}, (Tuple,
 r'''(val,)'''),
 r'''()''', r'''
 Tuple - ROOT 0,0..0,2
@@ -1566,13 +1566,13 @@ Tuple - ROOT 0,0..0,6
   .ctx Load
 '''),
 
-('', None, False, 'ctx', {}, (Tuple,
+('', None, None, 'ctx', {}, (Tuple,
 r'''(val,)'''),
 r'''**ValueError('cannot delete Tuple.ctx')**''',
 r'''''',
 r'''Load - ROOT 0,0..0,0'''),
 
-('', None, False, 'elts', {}, (Tuple,
+('', None, None, 'elts', {}, (Tuple,
 r'''val,'''),
 r'''()''', r'''
 Tuple - ROOT 0,0..0,2
@@ -1585,25 +1585,25 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-('', None, False, 'ctx', {}, (Tuple,
+('', None, None, 'ctx', {}, (Tuple,
 r'''val,'''),
 r'''**ValueError('cannot delete Tuple.ctx')**''',
 r'''''',
 r'''Load - ROOT 0,0..0,0'''),
 
-('targets[0]', None, False, 'ctx', {}, (None,
+('targets[0]', None, None, 'ctx', {}, (None,
 r'''val, = 1'''),
 r'''**ValueError('cannot delete Tuple.ctx')**''',
 r'''''',
 r'''Store - ROOT 0,0..0,0'''),
 
-('targets[0]', None, False, 'ctx', {}, (None,
+('targets[0]', None, None, 'ctx', {}, (None,
 r'''del val,'''),
 r'''**ValueError('cannot delete Name.ctx')**''',
 r'''''',
 r'''Del - ROOT 0,0..0,0'''),
 
-('', None, False, 'lower', {}, (Slice,
+('', None, None, 'lower', {}, (Slice,
 r'''lower:upper:step'''),
 r''':upper:step''', r'''
 Slice - ROOT 0,0..0,11
@@ -1613,13 +1613,13 @@ Slice - ROOT 0,0..0,11
 r'''lower''',
 r'''Name 'lower' Load - ROOT 0,0..0,5'''),
 
-('', None, False, 'lower', {}, (Slice,
+('', None, None, 'lower', {}, (Slice,
 r''':'''),
 r''':''',
 r'''Slice - ROOT 0,0..0,1''',
 r'''**None**'''),
 
-('', None, False, 'upper', {}, (Slice,
+('', None, None, 'upper', {}, (Slice,
 r'''lower:upper:step'''),
 r'''lower::step''', r'''
 Slice - ROOT 0,0..0,11
@@ -1629,13 +1629,13 @@ Slice - ROOT 0,0..0,11
 r'''upper''',
 r'''Name 'upper' Load - ROOT 0,0..0,5'''),
 
-('', None, False, 'upper', {}, (Slice,
+('', None, None, 'upper', {}, (Slice,
 r''':'''),
 r''':''',
 r'''Slice - ROOT 0,0..0,1''',
 r'''**None**'''),
 
-('', None, False, 'step', {}, (Slice,
+('', None, None, 'step', {}, (Slice,
 r'''lower:upper:step'''),
 r'''lower:upper:''', r'''
 Slice - ROOT 0,0..0,12
@@ -1645,25 +1645,25 @@ Slice - ROOT 0,0..0,12
 r'''step''',
 r'''Name 'step' Load - ROOT 0,0..0,4'''),
 
-('', None, False, 'step', {}, (Slice,
+('', None, None, 'step', {}, (Slice,
 r''':'''),
 r''':''',
 r'''Slice - ROOT 0,0..0,1''',
 r'''**None**'''),
 
-('', None, False, 'target', {}, (comprehension,
+('', None, None, 'target', {}, (comprehension,
 r'''for val in iter if not val'''),
 r'''**ValueError('cannot delete comprehension.target')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'iter', {}, (comprehension,
+('', None, None, 'iter', {}, (comprehension,
 r'''for val in iter if not val'''),
 r'''**ValueError('cannot delete comprehension.iter')**''',
 r'''iter''',
 r'''Name 'iter' Load - ROOT 0,0..0,4'''),
 
-('', 0, False, 'ifs', {}, (comprehension,
+('', 0, None, 'ifs', {}, (comprehension,
 r'''for val in iter if not val'''),
 r'''for val in iter''', r'''
 comprehension - ROOT 0,0..0,15
@@ -1677,19 +1677,19 @@ UnaryOp - ROOT 0,0..0,7
   .operand Name 'val' Load - 0,4..0,7
 '''),
 
-('', None, False, 'is_async', {}, (comprehension,
+('', None, None, 'is_async', {}, (comprehension,
 r'''for val in iter if not val'''),
 r'''**ValueError('cannot delete comprehension.is_async')**''',
 r'''0''',
 r'''<class 'int'>'''),
 
-('', None, False, 'is_async', {}, (comprehension,
+('', None, None, 'is_async', {}, (comprehension,
 r'''async for val in iter if not val'''),
 r'''**ValueError('cannot delete comprehension.is_async')**''',
 r'''1''',
 r'''<class 'int'>'''),
 
-('', None, False, 'type', {}, (ExceptHandler,
+('', None, None, 'type', {}, (ExceptHandler,
 r'''except Exception: pass'''),
 r'''except: pass''', r'''
 ExceptHandler - ROOT 0,0..0,12
@@ -1699,13 +1699,13 @@ ExceptHandler - ROOT 0,0..0,12
 r'''Exception''',
 r'''Name 'Exception' Load - ROOT 0,0..0,9'''),
 
-('', None, False, 'type', {}, (ExceptHandler,
+('', None, None, 'type', {}, (ExceptHandler,
 r'''except Exception as exc: pass'''),
 r'''**ValueError('cannot delete ExceptHandler.type in this state')**''',
 r'''Exception''',
 r'''Name 'Exception' Load - ROOT 0,0..0,9'''),
 
-('', None, False, 'name', {}, (ExceptHandler,
+('', None, None, 'name', {}, (ExceptHandler,
 r'''except Exception as exc: pass'''),
 r'''except Exception: pass''', r'''
 ExceptHandler - ROOT 0,0..0,22
@@ -1716,7 +1716,7 @@ ExceptHandler - ROOT 0,0..0,22
 "\n'exc'\n",
 r'''<class 'str'>'''),
 
-('', None, False, 'name', {}, (ExceptHandler,
+('', None, None, 'name', {}, (ExceptHandler,
 r'''except Exception: pass'''),
 r'''except Exception: pass''', r'''
 ExceptHandler - ROOT 0,0..0,22
@@ -1726,7 +1726,7 @@ ExceptHandler - ROOT 0,0..0,22
 ''',
 r'''**None**'''),
 
-('', 0, False, 'body', {'_verify_self': False, 'norm': False}, (ExceptHandler,
+('', 0, None, 'body', {'_verify_self': False, 'norm': False}, (ExceptHandler,
 r'''except Exception as exc: pass'''),
 r'''except Exception as exc:''', r'''
 ExceptHandler - ROOT 0,0..0,24
@@ -1736,19 +1736,19 @@ ExceptHandler - ROOT 0,0..0,24
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
 
-('', None, False, 'type', {'_ver': 11}, (ExceptHandler,
+('', None, None, 'type', {'_ver': 11}, (ExceptHandler,
 r'''except* Exception: pass'''),
 r'''**ValueError('cannot delete ExceptHandler.type in this state')**''',
 r'''Exception''',
 r'''Name 'Exception' Load - ROOT 0,0..0,9'''),
 
-('', None, False, 'type', {'_ver': 11}, (ExceptHandler,
+('', None, None, 'type', {'_ver': 11}, (ExceptHandler,
 r'''except* Exception as exc: pass'''),
 r'''**ValueError('cannot delete ExceptHandler.type in this state')**''',
 r'''Exception''',
 r'''Name 'Exception' Load - ROOT 0,0..0,9'''),
 
-('', None, False, 'name', {'_ver': 11}, (ExceptHandler,
+('', None, None, 'name', {'_ver': 11}, (ExceptHandler,
 r'''except* Exception as exc: pass'''),
 r'''except* Exception: pass''', r'''
 ExceptHandler - ROOT 0,0..0,23
@@ -1759,7 +1759,7 @@ ExceptHandler - ROOT 0,0..0,23
 "\n'exc'\n",
 r'''<class 'str'>'''),
 
-('', None, False, 'name', {'_ver': 11}, (ExceptHandler,
+('', None, None, 'name', {'_ver': 11}, (ExceptHandler,
 r'''except* Exception: pass'''),
 r'''except* Exception: pass''', r'''
 ExceptHandler - ROOT 0,0..0,23
@@ -1769,7 +1769,7 @@ ExceptHandler - ROOT 0,0..0,23
 ''',
 r'''**None**'''),
 
-('', 0, False, 'body', {'_ver': 11, '_verify_self': False, 'norm': False}, (ExceptHandler,
+('', 0, None, 'body', {'_ver': 11, '_verify_self': False, 'norm': False}, (ExceptHandler,
 r'''except* Exception as exc: pass'''),
 r'''except* Exception as exc:''', r'''
 ExceptHandler - ROOT 0,0..0,25
@@ -1779,7 +1779,7 @@ ExceptHandler - ROOT 0,0..0,25
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
 
-('', 0, False, 'posonlyargs', {}, (arguments,
+('', 0, None, 'posonlyargs', {}, (arguments,
 r'''a, /, b: int = 1, *c, d=2, **e'''),
 r'''**ValueError('cannot delete from arguments.posonlyargs')**''',
 r'''a''', r'''
@@ -1787,7 +1787,7 @@ arg - ROOT 0,0..0,1
   .arg 'a'
 '''),
 
-('', 0, False, 'args', {}, (arguments,
+('', 0, None, 'args', {}, (arguments,
 r'''a, /, b: int = 1, *c, d=2, **e'''),
 r'''**ValueError('cannot delete from arguments.args')**''',
 r'''b: int''', r'''
@@ -1796,13 +1796,13 @@ arg - ROOT 0,0..0,6
   .annotation Name 'int' Load - 0,3..0,6
 '''),
 
-('', 0, False, 'defaults', {}, (arguments,
+('', 0, None, 'defaults', {}, (arguments,
 r'''a, /, b: int = 1, *c, d=2, **e'''),
 r'''**ValueError('cannot delete from arguments.defaults')**''',
 r'''1''',
 r'''Constant 1 - ROOT 0,0..0,1'''),
 
-('', None, False, 'vararg', {}, (arguments,
+('', None, None, 'vararg', {}, (arguments,
 r'''a, /, b: int = 1, *c, d=2, **e'''),
 r'''a, /, b: int = 1, *, d=2, **e''', r'''
 arguments - ROOT 0,0..0,29
@@ -1828,7 +1828,7 @@ arg - ROOT 0,0..0,1
   .arg 'c'
 '''),
 
-('', None, False, 'vararg', {}, (arguments,
+('', None, None, 'vararg', {}, (arguments,
 r'''a, /, b: int = 1, d=2, **e'''),
 r'''a, /, b: int = 1, d=2, **e''', r'''
 arguments - ROOT 0,0..0,26
@@ -1849,7 +1849,7 @@ arguments - ROOT 0,0..0,26
 ''',
 r'''**None**'''),
 
-('', 0, False, 'kwonlyargs', {}, (arguments,
+('', 0, None, 'kwonlyargs', {}, (arguments,
 r'''a, /, b: int = 1, *c, d=2, **e'''),
 r'''**ValueError('cannot delete from arguments.kwonlyargs')**''',
 r'''d''', r'''
@@ -1857,7 +1857,7 @@ arg - ROOT 0,0..0,1
   .arg 'd'
 '''),
 
-('', 0, False, 'kw_defaults', {}, (arguments,
+('', 0, None, 'kw_defaults', {}, (arguments,
 r'''a, /, b: int = 1, *c, d=2, **e'''),
 r'''a, /, b: int = 1, *c, d, **e''', r'''
 arguments - ROOT 0,0..0,28
@@ -1883,7 +1883,7 @@ arguments - ROOT 0,0..0,28
 r'''2''',
 r'''Constant 2 - ROOT 0,0..0,1'''),
 
-('', None, False, 'kwarg', {}, (arguments,
+('', None, None, 'kwarg', {}, (arguments,
 r'''a, /, b: int = 1, *c, d=2, **e'''),
 r'''a, /, b: int = 1, *c, d=2''', r'''
 arguments - ROOT 0,0..0,25
@@ -1909,7 +1909,7 @@ arg - ROOT 0,0..0,1
   .arg 'e'
 '''),
 
-('', None, False, 'kwarg', {}, (arguments,
+('', None, None, 'kwarg', {}, (arguments,
 r'''a, /, b: int = 1, *c, d=2'''),
 r'''a, /, b: int = 1, *c, d=2''', r'''
 arguments - ROOT 0,0..0,25
@@ -1932,13 +1932,13 @@ arguments - ROOT 0,0..0,25
 ''',
 r'''**None**'''),
 
-('', None, False, 'arg', {}, (arg,
+('', None, None, 'arg', {}, (arg,
 r'''arg: ann'''),
 r'''**ValueError('cannot delete arg.arg')**''',
 "\n'arg'\n",
 r'''<class 'str'>'''),
 
-('', None, False, 'annotation', {}, (arg,
+('', None, None, 'annotation', {}, (arg,
 r'''arg: ann'''),
 r'''arg''', r'''
 arg - ROOT 0,0..0,3
@@ -1947,7 +1947,7 @@ arg - ROOT 0,0..0,3
 r'''ann''',
 r'''Name 'ann' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'annotation', {}, (arg,
+('', None, None, 'annotation', {}, (arg,
 r'''arg'''),
 r'''arg''', r'''
 arg - ROOT 0,0..0,3
@@ -1955,7 +1955,7 @@ arg - ROOT 0,0..0,3
 ''',
 r'''**None**'''),
 
-('', None, False, 'arg', {}, (keyword,
+('', None, None, 'arg', {}, (keyword,
 r'''key=val'''),
 r'''**val''', r'''
 keyword - ROOT 0,0..0,5
@@ -1964,19 +1964,19 @@ keyword - ROOT 0,0..0,5
 "\n'key'\n",
 r'''<class 'str'>'''),
 
-('', None, False, 'value', {}, (keyword,
+('', None, None, 'value', {}, (keyword,
 r'''key=val'''),
 r'''**ValueError('cannot delete keyword.value')**''',
 r'''val''',
 r'''Name 'val' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'name', {}, (alias,
+('', None, None, 'name', {}, (alias,
 r'''name as asname'''),
 r'''**ValueError('cannot delete alias.name')**''',
 "\n'name'\n",
 r'''<class 'str'>'''),
 
-('', None, False, 'asname', {}, (alias,
+('', None, None, 'asname', {}, (alias,
 r'''name as asname'''),
 r'''name''', r'''
 alias - ROOT 0,0..0,4
@@ -1985,7 +1985,7 @@ alias - ROOT 0,0..0,4
 "\n'asname'\n",
 r'''<class 'str'>'''),
 
-('', None, False, 'asname', {}, (alias,
+('', None, None, 'asname', {}, (alias,
 r'''name'''),
 r'''name''', r'''
 alias - ROOT 0,0..0,4
@@ -1993,13 +1993,13 @@ alias - ROOT 0,0..0,4
 ''',
 r'''**None**'''),
 
-('', None, False, 'context_expr', {}, (withitem,
+('', None, None, 'context_expr', {}, (withitem,
 r'''context as optional'''),
 r'''**ValueError('cannot delete withitem.context_expr in this state')**''',
 r'''context''',
 r'''Name 'context' Load - ROOT 0,0..0,7'''),
 
-('', None, False, 'optional_vars', {}, (withitem,
+('', None, None, 'optional_vars', {}, (withitem,
 r'''context as optional'''),
 r'''context''', r'''
 withitem - ROOT 0,0..0,7
@@ -2008,7 +2008,7 @@ withitem - ROOT 0,0..0,7
 r'''optional''',
 r'''Name 'optional' Load - ROOT 0,0..0,8'''),
 
-('', None, False, 'optional_vars', {}, (withitem,
+('', None, None, 'optional_vars', {}, (withitem,
 r'''context'''),
 r'''context''', r'''
 withitem - ROOT 0,0..0,7
@@ -2016,7 +2016,7 @@ withitem - ROOT 0,0..0,7
 ''',
 r'''**None**'''),
 
-('', None, False, 'pattern', {}, (match_case,
+('', None, None, 'pattern', {}, (match_case,
 r'''case 1 as a if not a: pass'''),
 r'''**ValueError('cannot delete match_case.pattern')**''',
 r'''1 as a''', r'''
@@ -2026,7 +2026,7 @@ MatchAs - ROOT 0,0..0,6
   .name 'a'
 '''),
 
-('', None, False, 'guard', {}, (match_case,
+('', None, None, 'guard', {}, (match_case,
 r'''case 1 as a if not a: pass'''),
 r'''case 1 as a: pass''', r'''
 match_case - ROOT 0,0..0,17
@@ -2043,7 +2043,7 @@ UnaryOp - ROOT 0,0..0,5
   .operand Name 'a' Load - 0,4..0,5
 '''),
 
-('', None, False, 'guard', {}, (match_case,
+('', None, None, 'guard', {}, (match_case,
 r'''case 1 as a: pass'''),
 r'''case 1 as a: pass''', r'''
 match_case - ROOT 0,0..0,17
@@ -2056,7 +2056,7 @@ match_case - ROOT 0,0..0,17
 ''',
 r'''**None**'''),
 
-('', 0, False, 'body', {'_verify_self': False, 'norm': False}, (match_case,
+('', 0, None, 'body', {'_verify_self': False, 'norm': False}, (match_case,
 r'''case 1 as a if not a: pass'''),
 r'''case 1 as a if not a:''', r'''
 match_case - ROOT 0,0..0,21
@@ -2071,33 +2071,33 @@ match_case - ROOT 0,0..0,21
 r'''pass''',
 r'''Pass - ROOT 0,0..0,4'''),
 
-('', None, False, 'value', {}, (MatchValue,
+('', None, None, 'value', {}, (MatchValue,
 r'''123'''),
 r'''**ValueError('cannot delete MatchValue.value')**''',
 r'''123''',
 r'''Constant 123 - ROOT 0,0..0,3'''),
 
-('', None, False, 'value', {}, (MatchSingleton,
+('', None, None, 'value', {}, (MatchSingleton,
 r'''True'''),
 r'''None''',
 r'''MatchSingleton None - ROOT 0,0..0,4''',
 r'''True''',
 r'''<class 'bool'>'''),
 
-('', None, False, 'value', {}, (MatchSingleton,
+('', None, None, 'value', {}, (MatchSingleton,
 r'''False'''),
 r'''None''',
 r'''MatchSingleton None - ROOT 0,0..0,4''',
 r'''False''',
 r'''<class 'bool'>'''),
 
-('', None, False, 'value', {}, (MatchSingleton,
+('', None, None, 'value', {}, (MatchSingleton,
 r'''None'''),
 r'''None''',
 r'''MatchSingleton None - ROOT 0,0..0,4''',
 r'''**None**'''),
 
-('', 0, False, 'patterns', {}, (MatchSequence,
+('', 0, None, 'patterns', {}, (MatchSequence,
 r'''[a]'''),
 r'''[]''',
 r'''MatchSequence - ROOT 0,0..0,2''',
@@ -2106,13 +2106,13 @@ MatchAs - ROOT 0,0..0,1
   .name 'a'
 '''),
 
-('', 0, False, 'keys', {}, (MatchMapping,
+('', 0, None, 'keys', {}, (MatchMapping,
 r'''{1: a, **rest}'''),
 r'''**ValueError('cannot delete from MatchMapping.keys')**''',
 r'''1''',
 r'''Constant 1 - ROOT 0,0..0,1'''),
 
-('', 0, False, 'patterns', {}, (MatchMapping,
+('', 0, None, 'patterns', {}, (MatchMapping,
 r'''{1: a, **rest}'''),
 r'''**ValueError('cannot delete from MatchMapping.patterns')**''',
 r'''a''', r'''
@@ -2120,7 +2120,7 @@ MatchAs - ROOT 0,0..0,1
   .name 'a'
 '''),
 
-('', None, False, 'rest', {}, (MatchMapping,
+('', None, None, 'rest', {}, (MatchMapping,
 r'''{1: a, **rest}'''),
 r'''{1: a}''', r'''
 MatchMapping - ROOT 0,0..0,6
@@ -2133,7 +2133,7 @@ MatchMapping - ROOT 0,0..0,6
 "\n'rest'\n",
 r'''<class 'str'>'''),
 
-('', None, False, 'rest', {}, (MatchMapping,
+('', None, None, 'rest', {}, (MatchMapping,
 r'''{1: a}'''),
 r'''{1: a}''', r'''
 MatchMapping - ROOT 0,0..0,6
@@ -2145,17 +2145,17 @@ MatchMapping - ROOT 0,0..0,6
 ''',
 r'''**None**'''),
 
-('', 0, False, None, {}, (MatchMapping,
+('', 0, None, None, {}, (MatchMapping,
 r'''{1: a, **rest}'''),
 r'''**ValueError('cannot get single element from MatchMapping._all')**'''),
 
-('', None, False, 'cls', {}, (MatchClass,
+('', None, None, 'cls', {}, (MatchClass,
 r'''cls(a, b=c)'''),
 r'''**ValueError('cannot delete MatchClass.cls')**''',
 r'''cls''',
 r'''Name 'cls' Load - ROOT 0,0..0,3'''),
 
-('', 0, False, 'patterns', {}, (MatchClass,
+('', 0, None, 'patterns', {}, (MatchClass,
 r'''cls(a, b=c)'''),
 r'''**NotImplementedError("not implemented yet, try with option raw='auto'")**''',
 r'''a''', r'''
@@ -2163,13 +2163,13 @@ MatchAs - ROOT 0,0..0,1
   .name 'a'
 '''),
 
-('', 0, False, 'kwd_attrs', {}, (MatchClass,
+('', 0, None, 'kwd_attrs', {}, (MatchClass,
 r'''cls(a, b=c)'''),
 r'''**ValueError('cannot delete from MatchClass.kwd_attrs')**''',
 "\n'b'\n",
 r'''<class 'str'>'''),
 
-('', 0, False, 'kwd_patterns', {}, (MatchClass,
+('', 0, None, 'kwd_patterns', {}, (MatchClass,
 r'''cls(a, b=c)'''),
 r'''**ValueError('cannot delete from MatchClass.kwd_patterns')**''',
 r'''c''', r'''
@@ -2177,20 +2177,20 @@ MatchAs - ROOT 0,0..0,1
   .name 'c'
 '''),
 
-('', None, False, 'name', {}, (MatchStar,
+('', None, None, 'name', {}, (MatchStar,
 r'''*st'''),
 r'''*_''',
 r'''MatchStar - ROOT 0,0..0,2''',
 "\n'st'\n",
 r'''<class 'str'>'''),
 
-('', None, False, 'name', {}, (MatchStar,
+('', None, None, 'name', {}, (MatchStar,
 r'''*_'''),
 r'''*_''',
 r'''MatchStar - ROOT 0,0..0,2''',
 r'''**None**'''),
 
-('', None, False, 'pattern', {}, (MatchAs,
+('', None, None, 'pattern', {}, (MatchAs,
 r'''pat as name'''),
 r'''name''', r'''
 MatchAs - ROOT 0,0..0,4
@@ -2201,7 +2201,7 @@ MatchAs - ROOT 0,0..0,3
   .name 'pat'
 '''),
 
-('', None, False, 'pattern', {}, (MatchAs,
+('', None, None, 'pattern', {}, (MatchAs,
 r'''name'''),
 r'''name''', r'''
 MatchAs - ROOT 0,0..0,4
@@ -2209,13 +2209,13 @@ MatchAs - ROOT 0,0..0,4
 ''',
 r'''**None**'''),
 
-('', None, False, 'name', {}, (MatchAs,
+('', None, None, 'name', {}, (MatchAs,
 r'''pat as name'''),
 r'''**ValueError("cannot change MatchAs with pattern into wildcard '_'")**''',
 "\n'name'\n",
 r'''<class 'str'>'''),
 
-('', 0, False, 'patterns', {}, (MatchOr,
+('', 0, None, 'patterns', {}, (MatchOr,
 r'''a | b | c'''),
 r'''b | c''', r'''
 MatchOr - ROOT 0,0..0,5
@@ -2230,7 +2230,7 @@ MatchAs - ROOT 0,0..0,1
   .name 'a'
 '''),
 
-('', 0, False, 'patterns', {'norm': True}, (MatchOr,
+('', 0, None, 'patterns', {'norm': True}, (MatchOr,
 r'''a | b'''),
 r'''b''', r'''
 MatchAs - ROOT 0,0..0,1
@@ -2241,13 +2241,13 @@ MatchAs - ROOT 0,0..0,1
   .name 'a'
 '''),
 
-('', None, False, 'name', {'_ver': 12}, (TypeVar,
+('', None, None, 'name', {'_ver': 12}, (TypeVar,
 r'''T'''),
 r'''**ValueError('cannot delete TypeVar.name')**''',
 "\n'T'\n",
 r'''<class 'str'>'''),
 
-('', None, False, 'bound', {'_ver': 12}, (TypeVar,
+('', None, None, 'bound', {'_ver': 12}, (TypeVar,
 r'''T: int'''),
 r'''T''', r'''
 TypeVar - ROOT 0,0..0,1
@@ -2256,7 +2256,7 @@ TypeVar - ROOT 0,0..0,1
 r'''int''',
 r'''Name 'int' Load - ROOT 0,0..0,3'''),
 
-('', None, False, 'bound', {'_ver': 12}, (TypeVar,
+('', None, None, 'bound', {'_ver': 12}, (TypeVar,
 r'''T'''),
 r'''T''', r'''
 TypeVar - ROOT 0,0..0,1
@@ -2264,7 +2264,7 @@ TypeVar - ROOT 0,0..0,1
 ''',
 r'''**None**'''),
 
-('', None, False, 'default_value', {'_ver': 13}, (TypeVar,
+('', None, None, 'default_value', {'_ver': 13}, (TypeVar,
 r'''T: int = bool'''),
 r'''T: int''', r'''
 TypeVar - ROOT 0,0..0,6
@@ -2274,7 +2274,7 @@ TypeVar - ROOT 0,0..0,6
 r'''bool''',
 r'''Name 'bool' Load - ROOT 0,0..0,4'''),
 
-('', None, False, 'default_value', {'_ver': 13}, (TypeVar,
+('', None, None, 'default_value', {'_ver': 13}, (TypeVar,
 r'''T'''),
 r'''T''', r'''
 TypeVar - ROOT 0,0..0,1
@@ -2282,13 +2282,13 @@ TypeVar - ROOT 0,0..0,1
 ''',
 r'''**None**'''),
 
-('', None, False, 'name', {'_ver': 12}, (ParamSpec,
+('', None, None, 'name', {'_ver': 12}, (ParamSpec,
 r'''**V'''),
 r'''**ValueError('cannot delete ParamSpec.name')**''',
 "\n'V'\n",
 r'''<class 'str'>'''),
 
-('', None, False, 'default_value', {'_ver': 13}, (ParamSpec,
+('', None, None, 'default_value', {'_ver': 13}, (ParamSpec,
 r'''**V = {}'''),
 r'''**V''', r'''
 ParamSpec - ROOT 0,0..0,3
@@ -2297,7 +2297,7 @@ ParamSpec - ROOT 0,0..0,3
 r'''{}''',
 r'''Dict - ROOT 0,0..0,2'''),
 
-('', None, False, 'default_value', {'_ver': 13}, (ParamSpec,
+('', None, None, 'default_value', {'_ver': 13}, (ParamSpec,
 r'''**V'''),
 r'''**V''', r'''
 ParamSpec - ROOT 0,0..0,3
@@ -2305,13 +2305,13 @@ ParamSpec - ROOT 0,0..0,3
 ''',
 r'''**None**'''),
 
-('', None, False, 'name', {'_ver': 12}, (TypeVarTuple,
+('', None, None, 'name', {'_ver': 12}, (TypeVarTuple,
 r'''*U'''),
 r'''**ValueError('cannot delete TypeVarTuple.name')**''',
 "\n'U'\n",
 r'''<class 'str'>'''),
 
-('', None, False, 'default_value', {'_ver': 13}, (TypeVarTuple,
+('', None, None, 'default_value', {'_ver': 13}, (TypeVarTuple,
 r'''*U = ()'''),
 r'''*U''', r'''
 TypeVarTuple - ROOT 0,0..0,2
@@ -2322,7 +2322,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-('', None, False, 'default_value', {'_ver': 13}, (TypeVarTuple,
+('', None, None, 'default_value', {'_ver': 13}, (TypeVarTuple,
 r'''*U'''),
 r'''*U''', r'''
 TypeVarTuple - ROOT 0,0..0,2
@@ -2333,7 +2333,7 @@ r'''**None**'''),
 
 'arglike': [  # ................................................................................
 
-('', 0, False, 'bases', {}, (ClassDef,
+('', 0, None, 'bases', {}, (ClassDef,
 r'''class cls(*a): pass'''),
 r'''class cls: pass''', r'''
 ClassDef - ROOT 0,0..0,15
@@ -2347,7 +2347,7 @@ Starred - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-('', 0, False, 'bases', {}, (ClassDef,
+('', 0, None, 'bases', {}, (ClassDef,
 r'''class cls(*not a): pass'''),
 r'''class cls: pass''', r'''
 ClassDef - ROOT 0,0..0,15
@@ -2363,7 +2363,7 @@ Starred - ROOT 0,0..0,8
   .ctx Load
 '''),
 
-('', 0, False, 'bases', {'pars': False}, (ClassDef,
+('', 0, None, 'bases', {'pars': False}, (ClassDef,
 r'''class cls(*not a): pass'''),
 r'''class cls: pass''', r'''
 ClassDef - ROOT 0,0..0,15
@@ -2379,7 +2379,7 @@ Starred - ROOT 0,0..0,8
   .ctx Load
 '''),
 
-('', 0, False, 'bases', {'pars': False, 'pars_arglike': None}, (ClassDef,
+('', 0, None, 'bases', {'pars': False, 'pars_arglike': None}, (ClassDef,
 r'''class cls(*not a): pass'''),
 r'''class cls: pass''', r'''
 ClassDef - ROOT 0,0..0,15
@@ -2395,7 +2395,7 @@ Starred - ROOT 0,0..0,6
   .ctx Load
 '''),
 
-('', 0, False, 'bases', {'pars_arglike': False}, (ClassDef,
+('', 0, None, 'bases', {'pars_arglike': False}, (ClassDef,
 r'''class cls(*not a): pass'''),
 r'''class cls: pass''', r'''
 ClassDef - ROOT 0,0..0,15
@@ -2411,7 +2411,7 @@ Starred - ROOT 0,0..0,6
   .ctx Load
 '''),
 
-('', 0, False, 'args', {}, (Call,
+('', 0, None, 'args', {}, (Call,
 r'''call(*a)'''),
 r'''call()''', r'''
 Call - ROOT 0,0..0,6
@@ -2423,7 +2423,7 @@ Starred - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-('', 0, False, 'args', {}, (Call,
+('', 0, None, 'args', {}, (Call,
 r'''call(*not a)'''),
 r'''call()''', r'''
 Call - ROOT 0,0..0,6
@@ -2437,7 +2437,7 @@ Starred - ROOT 0,0..0,8
   .ctx Load
 '''),
 
-('', 0, False, 'args', {'pars_arglike': False}, (Call,
+('', 0, None, 'args', {'pars_arglike': False}, (Call,
 r'''call(*not a)'''),
 r'''call()''', r'''
 Call - ROOT 0,0..0,6
@@ -2451,7 +2451,7 @@ Starred - ROOT 0,0..0,6
   .ctx Load
 '''),
 
-('slice', 0, False, 'elts', {'_ver': 11}, (Subscript,
+('slice', 0, None, 'elts', {'_ver': 11}, (Subscript,
 r'''sub[*a]'''),
 r'''sub[()]''', r'''
 Subscript - ROOT 0,0..0,7
@@ -2466,7 +2466,7 @@ Starred - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-('slice', 0, False, 'elts', {'_ver': 11}, (Subscript,
+('slice', 0, None, 'elts', {'_ver': 11}, (Subscript,
 r'''sub[*not a]'''),
 r'''sub[()]''', r'''
 Subscript - ROOT 0,0..0,7
@@ -2483,7 +2483,7 @@ Starred - ROOT 0,0..0,8
   .ctx Load
 '''),
 
-('slice', 0, False, 'elts', {'_ver': 11, 'pars_arglike': False}, (Subscript,
+('slice', 0, None, 'elts', {'_ver': 11, 'pars_arglike': False}, (Subscript,
 r'''sub[*not a]'''),
 r'''sub[()]''', r'''
 Subscript - ROOT 0,0..0,7
@@ -2500,7 +2500,7 @@ Starred - ROOT 0,0..0,6
   .ctx Load
 '''),
 
-('', None, False, 'slice', {'_ver': 11}, (Subscript,
+('', None, None, 'slice', {'_ver': 11}, (Subscript,
 r'''sub[*not a, b, *c or d, *e]'''),
 r'''**ValueError('cannot delete Subscript.slice')**''',
 r'''*(not a), b, *(c or d), *e''', r'''
@@ -2525,7 +2525,7 @@ Tuple - ROOT 0,0..0,26
   .ctx Load
 '''),
 
-('', None, False, 'slice', {'_ver': 11, 'pars': False}, (Subscript,
+('', None, None, 'slice', {'_ver': 11, 'pars': False}, (Subscript,
 r'''sub[*not a, b, *c or d, *e]'''),
 r'''**ValueError('cannot delete Subscript.slice')**''',
 r'''*(not a), b, *(c or d), *e''', r'''
@@ -2550,7 +2550,7 @@ Tuple - ROOT 0,0..0,26
   .ctx Load
 '''),
 
-('', None, False, 'slice', {'_ver': 11, 'pars': False, 'pars_arglike': None}, (Subscript,
+('', None, None, 'slice', {'_ver': 11, 'pars': False, 'pars_arglike': None}, (Subscript,
 r'''sub[*not a, b, *c or d, *e]'''),
 r'''**ValueError('cannot delete Subscript.slice')**''',
 r'''*not a, b, *c or d, *e''', r'''
@@ -2575,7 +2575,7 @@ Tuple - ROOT 0,0..0,22
   .ctx Load
 '''),
 
-('', None, False, 'slice', {'_ver': 11, 'pars_arglike': False}, (Subscript,
+('', None, None, 'slice', {'_ver': 11, 'pars_arglike': False}, (Subscript,
 r'''sub[*not a, b, *c or d, *e]'''),
 r'''**ValueError('cannot delete Subscript.slice')**''',
 r'''*not a, b, *c or d, *e''', r'''
@@ -2603,7 +2603,7 @@ Tuple - ROOT 0,0..0,22
 
 'Assign_targets': [  # ................................................................................
 
-('body[0]', 0, False, 'targets', {}, ('exec',
+('body[0]', 0, None, 'targets', {}, ('exec',
 r'''a = (b, c) = d = z'''),
 r'''(b, c) = d = z''', r'''
 Module - ROOT 0,0..0,14
@@ -2621,7 +2621,7 @@ Module - ROOT 0,0..0,14
 r'''a''',
 r'''Name 'a' Load - ROOT 0,0..0,1'''),
 
-('body[0]', 1, False, 'targets', {}, ('exec',
+('body[0]', 1, None, 'targets', {}, ('exec',
 r'''a = (b, c) = d = z'''),
 r'''a = d = z''', r'''
 Module - ROOT 0,0..0,9
@@ -2640,7 +2640,7 @@ Tuple - ROOT 0,0..0,6
   .ctx Load
 '''),
 
-('body[0]', 2, False, 'targets', {}, ('exec',
+('body[0]', 2, None, 'targets', {}, ('exec',
 r'''a = (b, c) = d = z'''),
 r'''a = (b, c) = z''', r'''
 Module - ROOT 0,0..0,14
@@ -2658,7 +2658,7 @@ Module - ROOT 0,0..0,14
 r'''d''',
 r'''Name 'd' Load - ROOT 0,0..0,1'''),
 
-('body[0]', -1, False, 'targets', {}, ('exec',
+('body[0]', -1, None, 'targets', {}, ('exec',
 r'''a = (b, c) = d = z'''),
 r'''a = (b, c) = z''', r'''
 Module - ROOT 0,0..0,14
@@ -2676,11 +2676,11 @@ Module - ROOT 0,0..0,14
 r'''d''',
 r'''Name 'd' Load - ROOT 0,0..0,1'''),
 
-('body[0]', -4, False, 'targets', {}, ('exec',
+('body[0]', -4, None, 'targets', {}, ('exec',
 r'''a = (b, c) = d = z'''),
 r'''**IndexError('index out of range')**'''),
 
-('', 1, False, 'targets', {}, (None, r'''
+('', 1, None, 'targets', {}, (None, r'''
 a = \
 b = \
 c \
@@ -2701,7 +2701,7 @@ Assign - ROOT 0,0..3,1
 r'''b''',
 r'''Name 'b' Load - ROOT 0,0..0,1'''),
 
-('', 2, False, 'targets', {}, (None, r'''
+('', 2, None, 'targets', {}, (None, r'''
 a = \
 b = \
 c \
@@ -2721,7 +2721,7 @@ Assign - ROOT 0,0..2,1
 r'''c''',
 r'''Name 'c' Load - ROOT 0,0..0,1'''),
 
-('', 1, False, 'targets', {}, ('_Assign_targets', r'''
+('', 1, None, 'targets', {}, ('_Assign_targets', r'''
 a = \
 b = \
 c \
@@ -2741,7 +2741,7 @@ _Assign_targets - ROOT 0,0..3,0
 r'''b''',
 r'''Name 'b' Load - ROOT 0,0..0,1'''),
 
-('', 2, False, 'targets', {}, ('_Assign_targets', r'''
+('', 2, None, 'targets', {}, ('_Assign_targets', r'''
 a = \
 b = \
 c \
@@ -2763,7 +2763,7 @@ r'''Name 'c' Load - ROOT 0,0..0,1'''),
 
 'type_params': [  # ................................................................................
 
-('body[0]', 0, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', 0, None, 'type_params', {'_ver': 12}, ('exec',
 r'''def f[T: int, U: (str)](): pass'''),
 r'''def f[U: (str)](): pass''', r'''
 Module - ROOT 0,0..0,23
@@ -2783,7 +2783,7 @@ TypeVar - ROOT 0,0..0,6
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-('body[0]', 1, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', 1, None, 'type_params', {'_ver': 12}, ('exec',
 r'''def f[T: int, U: (str)](): pass'''),
 r'''def f[T: int](): pass''', r'''
 Module - ROOT 0,0..0,21
@@ -2803,7 +2803,7 @@ TypeVar - ROOT 0,0..0,8
   .bound Name 'str' Load - 0,4..0,7
 '''),
 
-('body[0]', -1, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', -1, None, 'type_params', {'_ver': 12}, ('exec',
 r'''def f[T: int, U: (str)](): pass'''),
 r'''def f[T: int](): pass''', r'''
 Module - ROOT 0,0..0,21
@@ -2823,7 +2823,7 @@ TypeVar - ROOT 0,0..0,8
   .bound Name 'str' Load - 0,4..0,7
 '''),
 
-('body[0]', -2, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', -2, None, 'type_params', {'_ver': 12}, ('exec',
 r'''def f[T: int, U: (str)](): pass'''),
 r'''def f[U: (str)](): pass''', r'''
 Module - ROOT 0,0..0,23
@@ -2843,11 +2843,11 @@ TypeVar - ROOT 0,0..0,6
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-('body[0]', -4, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', -4, None, 'type_params', {'_ver': 12}, ('exec',
 r'''def f[T: int, U: (str)](): pass'''),
 r'''**IndexError('index out of range')**'''),
 
-('body[0]', 0, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', 0, None, 'type_params', {'_ver': 12}, ('exec',
 r'''async def f[T: int, U: (str)](): pass'''),
 r'''async def f[U: (str)](): pass''', r'''
 Module - ROOT 0,0..0,29
@@ -2867,7 +2867,7 @@ TypeVar - ROOT 0,0..0,6
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-('body[0]', 1, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', 1, None, 'type_params', {'_ver': 12}, ('exec',
 r'''async def f[T: int, U: (str)](): pass'''),
 r'''async def f[T: int](): pass''', r'''
 Module - ROOT 0,0..0,27
@@ -2887,7 +2887,7 @@ TypeVar - ROOT 0,0..0,8
   .bound Name 'str' Load - 0,4..0,7
 '''),
 
-('body[0]', -1, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', -1, None, 'type_params', {'_ver': 12}, ('exec',
 r'''async def f[T: int, U: (str)](): pass'''),
 r'''async def f[T: int](): pass''', r'''
 Module - ROOT 0,0..0,27
@@ -2907,7 +2907,7 @@ TypeVar - ROOT 0,0..0,8
   .bound Name 'str' Load - 0,4..0,7
 '''),
 
-('body[0]', -2, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', -2, None, 'type_params', {'_ver': 12}, ('exec',
 r'''async def f[T: int, U: (str)](): pass'''),
 r'''async def f[U: (str)](): pass''', r'''
 Module - ROOT 0,0..0,29
@@ -2927,11 +2927,11 @@ TypeVar - ROOT 0,0..0,6
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-('body[0]', -4, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', -4, None, 'type_params', {'_ver': 12}, ('exec',
 r'''async def f[T: int, U: (str)](): pass'''),
 r'''**IndexError('index out of range')**'''),
 
-('body[0]', 0, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', 0, None, 'type_params', {'_ver': 12}, ('exec',
 r'''class c[T: int, U: (str)]: pass'''),
 r'''class c[U: (str)]: pass''', r'''
 Module - ROOT 0,0..0,23
@@ -2951,7 +2951,7 @@ TypeVar - ROOT 0,0..0,6
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-('body[0]', 1, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', 1, None, 'type_params', {'_ver': 12}, ('exec',
 r'''class c[T: int, U: (str)]: pass'''),
 r'''class c[T: int]: pass''', r'''
 Module - ROOT 0,0..0,21
@@ -2971,7 +2971,7 @@ TypeVar - ROOT 0,0..0,8
   .bound Name 'str' Load - 0,4..0,7
 '''),
 
-('body[0]', -1, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', -1, None, 'type_params', {'_ver': 12}, ('exec',
 r'''class c[T: int, U: (str)]: pass'''),
 r'''class c[T: int]: pass''', r'''
 Module - ROOT 0,0..0,21
@@ -2991,7 +2991,7 @@ TypeVar - ROOT 0,0..0,8
   .bound Name 'str' Load - 0,4..0,7
 '''),
 
-('body[0]', -2, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', -2, None, 'type_params', {'_ver': 12}, ('exec',
 r'''class c[T: int, U: (str)]: pass'''),
 r'''class c[U: (str)]: pass''', r'''
 Module - ROOT 0,0..0,23
@@ -3011,11 +3011,11 @@ TypeVar - ROOT 0,0..0,6
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-('body[0]', -4, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', -4, None, 'type_params', {'_ver': 12}, ('exec',
 r'''class c[T: int, U: (str)]: pass'''),
 r'''**IndexError('index out of range')**'''),
 
-('body[0]', 0, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', 0, None, 'type_params', {'_ver': 12}, ('exec',
 r'''type t[T: int, U: (str)] = ...'''),
 r'''type t[U: (str)] = ...''', r'''
 Module - ROOT 0,0..0,22
@@ -3034,7 +3034,7 @@ TypeVar - ROOT 0,0..0,6
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-('body[0]', 1, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', 1, None, 'type_params', {'_ver': 12}, ('exec',
 r'''type t[T: int, U: (str)] = ...'''),
 r'''type t[T: int] = ...''', r'''
 Module - ROOT 0,0..0,20
@@ -3053,7 +3053,7 @@ TypeVar - ROOT 0,0..0,8
   .bound Name 'str' Load - 0,4..0,7
 '''),
 
-('body[0]', -1, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', -1, None, 'type_params', {'_ver': 12}, ('exec',
 r'''type t[T: int, U: (str)] = ...'''),
 r'''type t[T: int] = ...''', r'''
 Module - ROOT 0,0..0,20
@@ -3072,7 +3072,7 @@ TypeVar - ROOT 0,0..0,8
   .bound Name 'str' Load - 0,4..0,7
 '''),
 
-('body[0]', -2, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', -2, None, 'type_params', {'_ver': 12}, ('exec',
 r'''type t[T: int, U: (str)] = ...'''),
 r'''type t[U: (str)] = ...''', r'''
 Module - ROOT 0,0..0,22
@@ -3091,11 +3091,11 @@ TypeVar - ROOT 0,0..0,6
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-('body[0]', -4, False, 'type_params', {'_ver': 12}, ('exec',
+('body[0]', -4, None, 'type_params', {'_ver': 12}, ('exec',
 r'''type t[T: int, U: (str)] = ...'''),
 r'''**IndexError('index out of range')**'''),
 
-('', 0, False, 'type_params', {'_ver': 12}, ('_type_params',
+('', 0, None, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T: int, U: (str)'''),
 r'''U: (str)''', r'''
 _type_params - ROOT 0,0..0,8
@@ -3110,7 +3110,7 @@ TypeVar - ROOT 0,0..0,6
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-('', 1, False, 'type_params', {'_ver': 12}, ('_type_params',
+('', 1, None, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T: int, U: (str)'''),
 r'''T: int''', r'''
 _type_params - ROOT 0,0..0,6
@@ -3125,7 +3125,7 @@ TypeVar - ROOT 0,0..0,8
   .bound Name 'str' Load - 0,4..0,7
 '''),
 
-('', -1, False, 'type_params', {'_ver': 12}, ('_type_params',
+('', -1, None, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T: int, U: (str)'''),
 r'''T: int''', r'''
 _type_params - ROOT 0,0..0,6
@@ -3140,7 +3140,7 @@ TypeVar - ROOT 0,0..0,8
   .bound Name 'str' Load - 0,4..0,7
 '''),
 
-('', -2, False, 'type_params', {'_ver': 12}, ('_type_params',
+('', -2, None, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T: int, U: (str)'''),
 r'''U: (str)''', r'''
 _type_params - ROOT 0,0..0,8
@@ -3155,14 +3155,14 @@ TypeVar - ROOT 0,0..0,6
   .bound Name 'int' Load - 0,3..0,6
 '''),
 
-('', -4, False, 'type_params', {'_ver': 12}, ('_type_params',
+('', -4, None, 'type_params', {'_ver': 12}, ('_type_params',
 r'''T: int, U: (str)'''),
 r'''**IndexError('index out of range')**'''),
 ],
 
 'virtual_field__body': [  # ................................................................................
 
-('', 0, False, '_body', {}, ('Module', r'''
+('', 0, None, '_body', {}, ('Module', r'''
 """doc"""
 a
 b
@@ -3182,7 +3182,7 @@ Expr - ROOT 0,0..0,1
   .value Name 'a' Load - 0,0..0,1
 '''),
 
-('', 0, False, '_body', {}, ('Interactive',
+('', 0, None, '_body', {}, ('Interactive',
 r'''"""non-doc"""; a; b'''),
 r'''a; b''', r'''
 Interactive - ROOT 0,0..0,4
@@ -3197,7 +3197,7 @@ Expr - ROOT 0,0..0,13
   .value Constant 'non-doc' - 0,0..0,13
 '''),
 
-('', 0, False, '_body', {}, ('FunctionDef', r'''
+('', 0, None, '_body', {}, ('FunctionDef', r'''
 def f():
     """doc"""
     a
@@ -3220,7 +3220,7 @@ Expr - ROOT 0,0..0,1
   .value Name 'a' Load - 0,0..0,1
 '''),
 
-('', 0, False, '_body', {}, ('AsyncFunctionDef', r'''
+('', 0, None, '_body', {}, ('AsyncFunctionDef', r'''
 async def f():
     """doc"""
     a
@@ -3243,7 +3243,7 @@ Expr - ROOT 0,0..0,1
   .value Name 'a' Load - 0,0..0,1
 '''),
 
-('', 0, False, '_body', {}, ('ClassDef', r'''
+('', 0, None, '_body', {}, ('ClassDef', r'''
 class cls:
     """doc"""
     a
@@ -3266,7 +3266,7 @@ Expr - ROOT 0,0..0,1
   .value Name 'a' Load - 0,0..0,1
 '''),
 
-('', 0, False, '_body', {}, ('For', r'''
+('', 0, None, '_body', {}, ('For', r'''
 for _ in _:
     """non-doc"""
     a
@@ -3290,7 +3290,7 @@ Expr - ROOT 0,0..0,13
   .value Constant 'non-doc' - 0,0..0,13
 '''),
 
-('', 0, False, '_body', {}, ('AsyncFor', r'''
+('', 0, None, '_body', {}, ('AsyncFor', r'''
 async for _ in _:
     """non-doc"""
     a
@@ -3314,7 +3314,7 @@ Expr - ROOT 0,0..0,13
   .value Constant 'non-doc' - 0,0..0,13
 '''),
 
-('', 0, False, '_body', {}, ('While', r'''
+('', 0, None, '_body', {}, ('While', r'''
 while _:
     """non-doc"""
     a
@@ -3337,7 +3337,7 @@ Expr - ROOT 0,0..0,13
   .value Constant 'non-doc' - 0,0..0,13
 '''),
 
-('', 0, False, '_body', {}, ('If', r'''
+('', 0, None, '_body', {}, ('If', r'''
 if _:
     """non-doc"""
     a
@@ -3360,7 +3360,7 @@ Expr - ROOT 0,0..0,13
   .value Constant 'non-doc' - 0,0..0,13
 '''),
 
-('', 0, False, '_body', {}, ('With', r'''
+('', 0, None, '_body', {}, ('With', r'''
 with _:
     """non-doc"""
     a
@@ -3385,7 +3385,7 @@ Expr - ROOT 0,0..0,13
   .value Constant 'non-doc' - 0,0..0,13
 '''),
 
-('', 0, False, '_body', {}, ('AsyncWith', r'''
+('', 0, None, '_body', {}, ('AsyncWith', r'''
 async with _:
     """non-doc"""
     a
@@ -3410,7 +3410,7 @@ Expr - ROOT 0,0..0,13
   .value Constant 'non-doc' - 0,0..0,13
 '''),
 
-('', 0, False, '_body', {}, ('Try', r'''
+('', 0, None, '_body', {}, ('Try', r'''
 try:
     """non-doc"""
     a
@@ -3438,7 +3438,7 @@ Expr - ROOT 0,0..0,13
   .value Constant 'non-doc' - 0,0..0,13
 '''),
 
-('', 0, False, '_body', {'_ver': 11}, ('TryStar', r'''
+('', 0, None, '_body', {'_ver': 11}, ('TryStar', r'''
 try:
     """non-doc"""
     a
@@ -3467,7 +3467,7 @@ Expr - ROOT 0,0..0,13
   .value Constant 'non-doc' - 0,0..0,13
 '''),
 
-('', 0, False, '_body', {}, ('ExceptHandler', r'''
+('', 0, None, '_body', {}, ('ExceptHandler', r'''
 except:
     """non-doc"""
     a
@@ -3489,7 +3489,7 @@ Expr - ROOT 0,0..0,13
   .value Constant 'non-doc' - 0,0..0,13
 '''),
 
-('', 0, False, '_body', {}, ('match_case', r'''
+('', 0, None, '_body', {}, ('match_case', r'''
 case _:
     """non-doc"""
     a
@@ -3512,7 +3512,7 @@ Expr - ROOT 0,0..0,13
   .value Constant 'non-doc' - 0,0..0,13
 '''),
 
-('', 1, False, '_body', {}, ('Module', r'''
+('', 1, None, '_body', {}, ('Module', r'''
 """doc"""
 a
 b
@@ -3532,14 +3532,14 @@ Expr - ROOT 0,0..0,1
   .value Name 'b' Load - 0,0..0,1
 '''),
 
-('', 2, False, '_body', {}, ('Module', r'''
+('', 2, None, '_body', {}, ('Module', r'''
 """doc"""
 a
 b
 '''),
 r'''**IndexError('index out of range')**'''),
 
-('', -1, False, '_body', {}, ('Module', r'''
+('', -1, None, '_body', {}, ('Module', r'''
 """doc"""
 a
 b
@@ -3559,7 +3559,7 @@ Expr - ROOT 0,0..0,1
   .value Name 'b' Load - 0,0..0,1
 '''),
 
-('', -2, False, '_body', {}, ('Module', r'''
+('', -2, None, '_body', {}, ('Module', r'''
 """doc"""
 a
 b
@@ -3579,7 +3579,7 @@ Expr - ROOT 0,0..0,1
   .value Name 'a' Load - 0,0..0,1
 '''),
 
-('', -3, False, '_body', {}, ('Module', r'''
+('', -3, None, '_body', {}, ('Module', r'''
 """doc"""
 a
 b

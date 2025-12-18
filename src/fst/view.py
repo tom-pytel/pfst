@@ -83,7 +83,7 @@ class fstview:
     base:   fst.FST     ; """The target `FST` node this view references."""
     field:  str         ; """The target field this view references. Can be virtual field like `_all`."""
     _start: int         ; """Start position within the target field list this view references."""
-    _stop:  int | None  ; """One past the last element within the target field list this view references. `None` means pinned the end of the field whatever it may be."""
+    _stop:  int | None  ; """One past the last element within the target field list this view references. `None` means 'end', pinned the end of the field whatever it may be."""
 
     is_FST = False  ; """@private"""  # for quick checks vs. `FST`
 
@@ -148,7 +148,7 @@ class fstview:
 
         return stop - start
 
-    def __getitem__(self, idx: int | slice | str) -> fstview | fst.FST | str | None:
+    def __getitem__(self, idx: int | slice) -> fstview | fst.FST | str | None:
         r"""Get a single item or a slice view from this slice view. All indices (including negative) are relative to the
         bounds of this view. This is just an access, not a cut or a copy, so if you want a copy you must explicitly do
         `.copy()` on the returned value.
@@ -200,7 +200,8 @@ class fstview:
             if idx.step is not None:
                 raise IndexError('step slicing not supported')
 
-            idx_start, idx_stop = fixup_slice_indices(stop - start, idx.start, idx.stop)
+            idx_start, idx_stop = fixup_slice_indices(stop - start, idx.start or 0,
+                                                      'end' if (i := idx.stop) is None else i)
 
             return self.__class__(self.base, self.field, start + idx_start, start + idx_stop)
 
@@ -210,7 +211,7 @@ class fstview:
 
         return a.f if isinstance(a := self._deref_one(start + idx), AST) else a
 
-    def __setitem__(self, idx: int | slice | str, code: Code | None) -> None:
+    def __setitem__(self, idx: int | slice, code: Code | None) -> None:
         """Set a single item or a slice view in this slice view. All indices (including negative) are relative to the
         bounds of this view. This is not just with a set, it is a full `FST` operation.
 
@@ -253,7 +254,8 @@ class fstview:
             if idx.step is not None:
                 raise IndexError('step slicing not supported')
 
-            idx_start, idx_stop = fixup_slice_indices(stop - start, idx.start, idx.stop)
+            idx_start, idx_stop = fixup_slice_indices(stop - start, idx.start or 0,
+                                                      'end' if (i := idx.stop) is None else i)
 
             self.base = self.base._put_slice(code, start + idx_start, start + idx_stop, self.field)
 
@@ -271,7 +273,7 @@ class fstview:
         if self._stop is not None:
             self._stop += self._len_field() - len_before
 
-    def __delitem__(self, idx: int | slice | str) -> None:
+    def __delitem__(self, idx: int | slice) -> None:
         """Delete a single item or a slice from this slice view. All indices (including negative) are relative to the
         bounds of this view.
 
@@ -306,7 +308,8 @@ class fstview:
             if idx.step is not None:
                 raise IndexError('step slicing not supported')
 
-            idx_start, idx_stop = fixup_slice_indices(stop - start, idx.start, idx.stop)
+            idx_start, idx_stop = fixup_slice_indices(stop - start, idx.start or 0,
+                                                      'end' if (i := idx.stop) is None else i)
 
             self.base = self.base._put_slice(None, start + idx_start, start + idx_stop, self.field)
 
@@ -723,19 +726,19 @@ class fstview_dummy(fstview):
     def __repr__(self) -> str:
         return f'<{self.base!r}.{self.field} DUMMY VIEW>'
 
-    def __getitem__(self, idx: int | slice | str) -> fstview | fst.FST | str | None:
+    def __getitem__(self, idx: int | slice) -> fstview | fst.FST | str | None:
         if not isinstance(idx, slice):
             raise IndexError('cannot get items from a dummy view')
 
         return self
 
-    def __setitem__(self, idx: int | slice | str, code: Code | None) -> None:
+    def __setitem__(self, idx: int | slice, code: Code | None) -> None:
         if not isinstance(idx, slice):
             raise IndexError('cannot set items in a dummy view')
         if code is not None:
             raise RuntimeError('cannot set items in a dummy view')
 
-    def __delitem__(self, idx: int | slice | str) -> None:
+    def __delitem__(self, idx: int | slice) -> None:
         if not isinstance(idx, slice):
             raise IndexError('index out of range on dummy view')
 

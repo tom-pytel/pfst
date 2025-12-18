@@ -109,14 +109,14 @@ def body(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
 @body.setter
 def body(self: 'fst.FST', code: Code | None) -> None:
     if isinstance(self.a.body, list):
-        self._put_slice(code, None, None, 'body')
+        self._put_slice(code, 0, 'end', 'body')
     else:
         self._put_one(code, None, 'body')
 
 @body.deleter
 def body(self: 'fst.FST') -> None:
     if isinstance(self.a.body, list):
-        self._put_slice(None, None, None, 'body')
+        self._put_slice(None, 0, 'end', 'body')
     else:
         self._put_one(None, None, 'body')
 
@@ -130,11 +130,11 @@ def type_ignores(self: 'fst.FST') -> fstview:
 
 @type_ignores.setter
 def type_ignores(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'type_ignores')
+    self._put_slice(code, 0, 'end', 'type_ignores')
 
 @type_ignores.deleter
 def type_ignores(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'type_ignores')
+    self._put_slice(None, 0, 'end', 'type_ignores')
 
 
 # FunctionType
@@ -146,11 +146,11 @@ def argtypes(self: 'fst.FST') -> fstview:
 
 @argtypes.setter
 def argtypes(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'argtypes')
+    self._put_slice(code, 0, 'end', 'argtypes')
 
 @argtypes.deleter
 def argtypes(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'argtypes')
+    self._put_slice(None, 0, 'end', 'argtypes')
 
 
 # FunctionType, FunctionDef, AsyncFunctionDef
@@ -178,11 +178,11 @@ def decorator_list(self: 'fst.FST') -> fstview:
 
 @decorator_list.setter
 def decorator_list(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'decorator_list')
+    self._put_slice(code, 0, 'end', 'decorator_list')
 
 @decorator_list.deleter
 def decorator_list(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'decorator_list')
+    self._put_slice(None, 0, 'end', 'decorator_list')
 
 
 # FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias, ExceptHandler, alias, MatchStar, MatchAs, TypeVar, ParamSpec, TypeVarTuple
@@ -211,11 +211,11 @@ if PYGE12:
 
     @type_params.setter
     def type_params(self: 'fst.FST', code: Code | None) -> None:
-        self._put_slice(code, None, None, 'type_params')
+        self._put_slice(code, 0, 'end', 'type_params')
 
     @type_params.deleter
     def type_params(self: 'fst.FST') -> None:
-        self._put_slice(None, None, None, 'type_params')
+        self._put_slice(None, 0, 'end', 'type_params')
 
 else:  # safely access nonexistent empty field
     @property
@@ -249,14 +249,14 @@ def args(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
 @args.setter
 def args(self: 'fst.FST', code: Code | None) -> None:
     if isinstance(self.a.args, list):
-        self._put_slice(code, None, None, 'args')
+        self._put_slice(code, 0, 'end', 'args')
     else:
         self._put_one(code, None, 'args')
 
 @args.deleter
 def args(self: 'fst.FST') -> None:
     if isinstance(self.a.args, list):
-        self._put_slice(None, None, None, 'args')
+        self._put_slice(None, 0, 'end', 'args')
     else:
         self._put_one(None, None, 'args')
 
@@ -286,11 +286,11 @@ def bases(self: 'fst.FST') -> fstview:
 
 @bases.setter
 def bases(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'bases')
+    self._put_slice(code, 0, 'end', 'bases')
 
 @bases.deleter
 def bases(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'bases')
+    self._put_slice(None, 0, 'end', 'bases')
 
 
 # ClassDef, Call
@@ -302,11 +302,11 @@ def keywords(self: 'fst.FST') -> fstview:
 
 @keywords.setter
 def keywords(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'keywords')
+    self._put_slice(code, 0, 'end', 'keywords')
 
 @keywords.deleter
 def keywords(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'keywords')
+    self._put_slice(None, 0, 'end', 'keywords')
 
 
 # Return, Assign, TypeAlias, AugAssign, AnnAssign, Expr, NamedExpr, DictComp, Await, Yield, YieldFrom, FormattedValue, Interpolation, Constant, Attribute, Subscript, Starred, keyword, MatchValue, MatchSingleton
@@ -334,11 +334,11 @@ def targets(self: 'fst.FST') -> fstview:
 
 @targets.setter
 def targets(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'targets')
+    self._put_slice(code, 0, 'end', 'targets')
 
 @targets.deleter
 def targets(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'targets')
+    self._put_slice(None, 0, 'end', 'targets')
 
 
 # AugAssign, AnnAssign, For, AsyncFor, NamedExpr, comprehension
@@ -436,14 +436,14 @@ def orelse(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
 @orelse.setter
 def orelse(self: 'fst.FST', code: Code | None) -> None:
     if isinstance(self.a.orelse, list):
-        self._put_slice(code, None, None, 'orelse')
+        self._put_slice(code, 0, 'end', 'orelse')
     else:
         self._put_one(code, None, 'orelse')
 
 @orelse.deleter
 def orelse(self: 'fst.FST') -> None:
     if isinstance(self.a.orelse, list):
-        self._put_slice(None, None, None, 'orelse')
+        self._put_slice(None, 0, 'end', 'orelse')
     else:
         self._put_one(None, None, 'orelse')
 
@@ -473,11 +473,11 @@ def items(self: 'fst.FST') -> fstview:
 
 @items.setter
 def items(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'items')
+    self._put_slice(code, 0, 'end', 'items')
 
 @items.deleter
 def items(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'items')
+    self._put_slice(None, 0, 'end', 'items')
 
 
 # Match
@@ -505,11 +505,11 @@ def cases(self: 'fst.FST') -> fstview:
 
 @cases.setter
 def cases(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'cases')
+    self._put_slice(code, 0, 'end', 'cases')
 
 @cases.deleter
 def cases(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'cases')
+    self._put_slice(None, 0, 'end', 'cases')
 
 
 # Raise
@@ -553,11 +553,11 @@ def handlers(self: 'fst.FST') -> fstview:
 
 @handlers.setter
 def handlers(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'handlers')
+    self._put_slice(code, 0, 'end', 'handlers')
 
 @handlers.deleter
 def handlers(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'handlers')
+    self._put_slice(None, 0, 'end', 'handlers')
 
 
 # Try, TryStar
@@ -569,11 +569,11 @@ def finalbody(self: 'fst.FST') -> fstview:
 
 @finalbody.setter
 def finalbody(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'finalbody')
+    self._put_slice(code, 0, 'end', 'finalbody')
 
 @finalbody.deleter
 def finalbody(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'finalbody')
+    self._put_slice(None, 0, 'end', 'finalbody')
 
 
 # Assert
@@ -601,11 +601,11 @@ def names(self: 'fst.FST') -> fstview:
 
 @names.setter
 def names(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'names')
+    self._put_slice(code, 0, 'end', 'names')
 
 @names.deleter
 def names(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'names')
+    self._put_slice(None, 0, 'end', 'names')
 
 
 # ImportFrom
@@ -649,11 +649,11 @@ def values(self: 'fst.FST') -> fstview:
 
 @values.setter
 def values(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'values')
+    self._put_slice(code, 0, 'end', 'values')
 
 @values.deleter
 def values(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'values')
+    self._put_slice(None, 0, 'end', 'values')
 
 
 # BinOp, Compare
@@ -713,11 +713,11 @@ def keys(self: 'fst.FST') -> fstview:
 
 @keys.setter
 def keys(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'keys')
+    self._put_slice(code, 0, 'end', 'keys')
 
 @keys.deleter
 def keys(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'keys')
+    self._put_slice(None, 0, 'end', 'keys')
 
 
 # Set, List, Tuple
@@ -729,11 +729,11 @@ def elts(self: 'fst.FST') -> fstview:
 
 @elts.setter
 def elts(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'elts')
+    self._put_slice(code, 0, 'end', 'elts')
 
 @elts.deleter
 def elts(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'elts')
+    self._put_slice(None, 0, 'end', 'elts')
 
 
 # ListComp, SetComp, GeneratorExp
@@ -761,11 +761,11 @@ def generators(self: 'fst.FST') -> fstview:
 
 @generators.setter
 def generators(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'generators')
+    self._put_slice(code, 0, 'end', 'generators')
 
 @generators.deleter
 def generators(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'generators')
+    self._put_slice(None, 0, 'end', 'generators')
 
 
 # DictComp
@@ -793,11 +793,11 @@ def ops(self: 'fst.FST') -> fstview:
 
 @ops.setter
 def ops(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'ops')
+    self._put_slice(code, 0, 'end', 'ops')
 
 @ops.deleter
 def ops(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'ops')
+    self._put_slice(None, 0, 'end', 'ops')
 
 
 # Compare
@@ -809,11 +809,11 @@ def comparators(self: 'fst.FST') -> fstview:
 
 @comparators.setter
 def comparators(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'comparators')
+    self._put_slice(code, 0, 'end', 'comparators')
 
 @comparators.deleter
 def comparators(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'comparators')
+    self._put_slice(None, 0, 'end', 'comparators')
 
 
 # Call
@@ -1017,11 +1017,11 @@ def ifs(self: 'fst.FST') -> fstview:
 
 @ifs.setter
 def ifs(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'ifs')
+    self._put_slice(code, 0, 'end', 'ifs')
 
 @ifs.deleter
 def ifs(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'ifs')
+    self._put_slice(None, 0, 'end', 'ifs')
 
 
 # comprehension
@@ -1065,11 +1065,11 @@ def posonlyargs(self: 'fst.FST') -> fstview:
 
 @posonlyargs.setter
 def posonlyargs(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'posonlyargs')
+    self._put_slice(code, 0, 'end', 'posonlyargs')
 
 @posonlyargs.deleter
 def posonlyargs(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'posonlyargs')
+    self._put_slice(None, 0, 'end', 'posonlyargs')
 
 
 # arguments
@@ -1081,11 +1081,11 @@ def defaults(self: 'fst.FST') -> fstview:
 
 @defaults.setter
 def defaults(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'defaults')
+    self._put_slice(code, 0, 'end', 'defaults')
 
 @defaults.deleter
 def defaults(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'defaults')
+    self._put_slice(None, 0, 'end', 'defaults')
 
 
 # arguments
@@ -1113,11 +1113,11 @@ def kwonlyargs(self: 'fst.FST') -> fstview:
 
 @kwonlyargs.setter
 def kwonlyargs(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'kwonlyargs')
+    self._put_slice(code, 0, 'end', 'kwonlyargs')
 
 @kwonlyargs.deleter
 def kwonlyargs(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'kwonlyargs')
+    self._put_slice(None, 0, 'end', 'kwonlyargs')
 
 
 # arguments
@@ -1129,11 +1129,11 @@ def kw_defaults(self: 'fst.FST') -> fstview:
 
 @kw_defaults.setter
 def kw_defaults(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'kw_defaults')
+    self._put_slice(code, 0, 'end', 'kw_defaults')
 
 @kw_defaults.deleter
 def kw_defaults(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'kw_defaults')
+    self._put_slice(None, 0, 'end', 'kw_defaults')
 
 
 # arguments
@@ -1257,11 +1257,11 @@ def patterns(self: 'fst.FST') -> fstview:
 
 @patterns.setter
 def patterns(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'patterns')
+    self._put_slice(code, 0, 'end', 'patterns')
 
 @patterns.deleter
 def patterns(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'patterns')
+    self._put_slice(None, 0, 'end', 'patterns')
 
 
 # MatchMapping
@@ -1305,11 +1305,11 @@ def kwd_attrs(self: 'fst.FST') -> fstview:
 
 @kwd_attrs.setter
 def kwd_attrs(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'kwd_attrs')
+    self._put_slice(code, 0, 'end', 'kwd_attrs')
 
 @kwd_attrs.deleter
 def kwd_attrs(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'kwd_attrs')
+    self._put_slice(None, 0, 'end', 'kwd_attrs')
 
 
 # MatchClass
@@ -1321,11 +1321,11 @@ def kwd_patterns(self: 'fst.FST') -> fstview:
 
 @kwd_patterns.setter
 def kwd_patterns(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, 'kwd_patterns')
+    self._put_slice(code, 0, 'end', 'kwd_patterns')
 
 @kwd_patterns.deleter
 def kwd_patterns(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, 'kwd_patterns')
+    self._put_slice(None, 0, 'end', 'kwd_patterns')
 
 
 # TypeIgnore

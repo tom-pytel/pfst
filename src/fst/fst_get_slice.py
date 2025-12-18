@@ -742,8 +742,8 @@ def _cut_or_copy_asts2(
 
 def _get_slice_NOT_IMPLEMENTED_YET(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -753,8 +753,8 @@ def _get_slice_NOT_IMPLEMENTED_YET(
 
 def _get_slice_Tuple_elts(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -800,8 +800,8 @@ def _get_slice_Tuple_elts(
 
 def _get_slice_List_elts(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -831,8 +831,8 @@ def _get_slice_List_elts(
 
 def _get_slice_Set_elts(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -869,8 +869,8 @@ def _get_slice_Set_elts(
 
 def _get_slice_Dict__all(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -897,8 +897,8 @@ def _get_slice_Dict__all(
 
 def _get_slice_Delete_targets(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -948,8 +948,8 @@ def _get_slice_Delete_targets(
 
 def _get_slice_Assign_targets(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -986,8 +986,8 @@ def _get_slice_Assign_targets(
 
 def _get_slice_With_AsyncWith_items(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -1041,8 +1041,8 @@ def _get_slice_With_AsyncWith_items(
 
 def _get_slice_Import_names(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -1089,8 +1089,8 @@ def _get_slice_Import_names(
 
 def _get_slice_ImportFrom_names(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -1144,8 +1144,8 @@ def _get_slice_ImportFrom_names(
 
 def _get_slice_Global_Nonlocal_names(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -1217,8 +1217,8 @@ def _get_slice_Global_Nonlocal_names(
 
 def _get_slice_ClassDef_bases(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -1280,8 +1280,8 @@ def _get_slice_ClassDef_bases(
 
 def _get_slice_Boolop_values(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -1384,8 +1384,8 @@ def _get_slice_Boolop_values(
 
 def _get_slice_Compare__all(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -1516,8 +1516,8 @@ def _get_slice_Compare__all(
 
 def _get_slice_Call_args(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -1575,8 +1575,8 @@ def _get_slice_Call_args(
 
 def _get_slice_decorator_list(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -1634,8 +1634,8 @@ def _get_slice_decorator_list(
 
 def _get_slice_generators(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -1672,8 +1672,8 @@ def _get_slice_generators(
 
 def _get_slice_comprehension_ifs(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -1706,8 +1706,8 @@ def _get_slice_comprehension_ifs(
 
 def _get_slice_MatchSequence_patterns(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -1750,8 +1750,8 @@ def _get_slice_MatchSequence_patterns(
 
 def _get_slice_MatchMapping__all(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -1793,8 +1793,8 @@ def _get_slice_MatchMapping__all(
 
 def _get_slice_MatchOr_patterns(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -1845,8 +1845,8 @@ def _get_slice_MatchOr_patterns(
 
 def _get_slice_type_params(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -1894,8 +1894,8 @@ def _get_slice_type_params(
 
 def _get_slice__slice(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -1931,8 +1931,8 @@ def _get_slice__slice(
 
 def _get_slice_stmtish__body(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],
@@ -2054,8 +2054,8 @@ _GET_SLICE_HANDLERS = {
 
 def _get_slice(
     self: fst.FST,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     cut: bool,
     options: Mapping[str, Any],

@@ -1072,8 +1072,8 @@ _SPECIAL_SLICE_STATICS = {
 def _put_slice_NOT_IMPLEMENTED_YET(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -1084,8 +1084,8 @@ def _put_slice_NOT_IMPLEMENTED_YET(
 def _put_slice_Tuple_elts(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -1149,8 +1149,8 @@ def _put_slice_Tuple_elts(
 def _put_slice_List_elts(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -1178,8 +1178,8 @@ def _put_slice_List_elts(
 def _put_slice_Set_elts(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -1208,8 +1208,8 @@ def _put_slice_Set_elts(
 def _put_slice_Dict__all(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -1258,8 +1258,8 @@ def _put_slice_Dict__all(
 def _put_slice_Delete_targets(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -1307,8 +1307,8 @@ def _put_slice_Delete_targets(
 def _put_slice_Assign_targets(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -1339,8 +1339,8 @@ def _put_slice_Assign_targets(
 def _put_slice_With_AsyncWith_items(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -1383,8 +1383,8 @@ def _put_slice_With_AsyncWith_items(
 def _put_slice_Import_names(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -1431,8 +1431,8 @@ def _put_slice_Import_names(
 def _put_slice_ImportFrom_names(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -1497,8 +1497,8 @@ def _put_slice_ImportFrom_names(
 def _put_slice_Global_Nonlocal_names(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -1611,8 +1611,8 @@ def _put_slice_Global_Nonlocal_names(
 def _put_slice_ClassDef_bases(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -1684,8 +1684,8 @@ def _put_slice_ClassDef_bases(
 def _put_slice_decorator_list(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -1764,8 +1764,8 @@ def _put_slice_decorator_list(
 def _put_slice_generators(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -1810,8 +1810,8 @@ def _put_slice_generators(
 def _put_slice_comprehension_ifs(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -1866,8 +1866,8 @@ def _put_slice_comprehension_ifs(
 def _put_slice_BoolOp_values(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -1940,8 +1940,8 @@ def _put_slice_BoolOp_values(
 def _put_slice_Compare__all(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -2081,8 +2081,8 @@ def _put_slice_Compare__all(
 def _put_slice_Call_args(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -2123,8 +2123,8 @@ def _put_slice_Call_args(
 def _put_slice_MatchSequence_patterns(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -2153,8 +2153,8 @@ def _put_slice_MatchSequence_patterns(
 def _put_slice_MatchMapping__all(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -2240,8 +2240,8 @@ def _put_slice_MatchMapping__all(
 def _put_slice_MatchOr_patterns(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -2290,8 +2290,8 @@ def _put_slice_MatchOr_patterns(
 def _put_slice_type_params(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -2354,8 +2354,8 @@ def _put_slice_type_params(
 def _put_slice__slice(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -2411,8 +2411,8 @@ def _put_slice__slice(
 def _put_slice_stmtish__body(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -2542,7 +2542,7 @@ def _fixup_slice_index_for_raw(len_: int, start: int, stop: int) -> tuple[int, i
 
 
 def _loc_slice_raw_put_decorator_list(
-    self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
+    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
     decorator_list = self.a.decorator_list
     start, stop = _fixup_slice_index_for_raw(len(decorator_list), start, stop)
@@ -2552,7 +2552,7 @@ def _loc_slice_raw_put_decorator_list(
     return ln, col, end_ln, end_col, start, stop, decorator_list
 
 def _loc_slice_raw_put_Global_Nonlocal_names(
-    self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
+    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
     names = self.a.names
     start, stop = _fixup_slice_index_for_raw(len(names), start, stop)
@@ -2561,7 +2561,7 @@ def _loc_slice_raw_put_Global_Nonlocal_names(
     return ln, col, end_ln, end_col, start, stop, names
 
 def _loc_slice_raw_put_comprehension_ifs(
-    self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
+    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
     ifs = self.a.ifs
     start, stop = _fixup_slice_index_for_raw(len(ifs), start, stop)
@@ -2575,7 +2575,7 @@ def _loc_slice_raw_put_comprehension_ifs(
     return ln, col, end_ln, end_col, start, stop, ifs
 
 def _loc_slice_raw_put_Dict__all(
-    self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
+    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
     values = self.a.values
     start, stop = _fixup_slice_index_for_raw(len(values), start, stop)
@@ -2585,7 +2585,7 @@ def _loc_slice_raw_put_Dict__all(
     return ln, col, end_ln, end_col, start, stop, values
 
 def _loc_slice_raw_put_Compare__all(
-    self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
+    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
     ast = self.a
     comparators = ast.comparators
@@ -2598,7 +2598,7 @@ def _loc_slice_raw_put_Compare__all(
     return ln, col, end_ln, end_col, start, stop, comparators
 
 def _loc_slice_raw_put_MatchMapping__all(
-    self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
+    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
     ast = self.a
     keys = ast.keys
@@ -2627,7 +2627,7 @@ def _loc_slice_raw_put_MatchMapping__all(
     return ln, col, end_ln, end_col, start, stop, patterns
 
 def _loc_slice_raw_put__body(
-    self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
+    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
     body = self.a.body
 
@@ -2638,7 +2638,7 @@ def _loc_slice_raw_put__body(
     return ln, col, end_ln, end_col, start, stop, body
 
 def _loc_slice_raw_put_default(
-    self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
+    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
     body = getattr(self.a, field, None)
 
@@ -2652,7 +2652,7 @@ def _loc_slice_raw_put_default(
     return ln, col, end_ln, end_col, start, stop, body
 
 def _loc_slice_raw_put(
-    self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
+    self: fst.FST, start: int | Literal['end'], stop: int | Literal['end'], field: str
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
     """Get location of a raw slice. Sepcial cases for decorators, comprehension ifs and other nodes."""
 
@@ -2882,8 +2882,8 @@ def _adjust_slice_raw_fst(
 def _put_slice_raw(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool,
     options: Mapping[str, Any],
@@ -2916,8 +2916,8 @@ def _put_slice_raw(
 def _put_slice(
     self: fst.FST,
     code: Code | None,
-    start: int | Literal['end'] | None,
-    stop: int | None,
+    start: int | Literal['end'],
+    stop: int | Literal['end'],
     field: str,
     one: bool = False,
     options: Mapping[str, Any] = {},

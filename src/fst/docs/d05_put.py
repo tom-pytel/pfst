@@ -165,13 +165,13 @@ not vice versa.
 Notice how it replaced two elements with a single one. This is because the normal mode of `put()` is to put as a single
 element, not as a slice. You can specify slice operation via the `one` parameter, which is normally `True` for `put()`.
 
->>> f.put('[a, b, c]', 1, None)
+>>> f.put('[a, b, c]', 1, 'end')
 <List ROOT 0,0..0,14>
 
 >>> print(f.src)
 [1, [a, b, c]]
 
->>> f.put('[a, b, c]', 1, None, one=False)
+>>> f.put('[a, b, c]', 1, 'end', one=False)
 <List ROOT 0,0..0,12>
 
 >>> print(f.src)
@@ -187,7 +187,7 @@ Putting `None` deletes and it can delete multiple elements.
 
 Slices from compatible containers can be put to each other.
 
->>> s = FST('[1, 2, 3, 4]').get_slice(1, None)
+>>> s = FST('[1, 2, 3, 4]').get_slice(1, 'end')
 
 >>> print(s.src)
 [2, 3, 4]
@@ -229,7 +229,7 @@ Just like with `get()`, a field can be specified.
 ...     j = 2
 ... '''.strip())
 
->>> f.put('k = 3', 'end', None, 'orelse')
+>>> f.put('k = 3', 'end', 'end', 'orelse')
 <If ROOT 0,0..4,9>
 
 >>> print(f.src)

@@ -3511,7 +3511,7 @@ Set - ROOT 0,0..0,5
      .ctx Load
 '''),
 
-('body[0].value', None, None, None, {}, ('exec', r'''
+('body[0].value', 0, 'end', None, {}, ('exec', r'''
 (       # hello
     1,  # last line
     2,  # second line
@@ -3603,7 +3603,7 @@ Tuple - ROOT 0,0..2,1
   .ctx Load
 '''),
 
-('body[0].value', 2, None, None, {}, ('exec', r'''
+('body[0].value', 2, 'end', None, {}, ('exec', r'''
 (       # hello
     1,  # last line
     2,  # second line
@@ -3634,7 +3634,7 @@ Tuple - ROOT 0,0..2,1
   .ctx Load
 '''),
 
-('body[0].value', None, None, None, {}, ('exec', r'''
+('body[0].value', 0, 'end', None, {}, ('exec', r'''
 (           # hello
     1, 2, 3 # last line
 )
@@ -3710,7 +3710,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-('body[0].value', 2, None, None, {}, ('exec', r'''
+('body[0].value', 2, 'end', None, {}, ('exec', r'''
 (           # hello
     1, 2, 3 # last line
 )
@@ -3757,7 +3757,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-('body[0].value', -1, None, None, {}, ('exec',
+('body[0].value', -1, 'end', None, {}, ('exec',
 r'''1, 2, 3, 4'''),
 r'''1, 2, 3''', r'''
 Module - ROOT 0,0..0,7
@@ -3777,7 +3777,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-('body[0].value', None, None, None, {}, ('exec',
+('body[0].value', 0, 'end', None, {}, ('exec',
 r'''1, 2, 3, 4'''),
 r'''()''', r'''
 Module - ROOT 0,0..0,2
@@ -3815,7 +3815,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-('body[0].value', 1, None, None, {}, ('exec',
+('body[0].value', 1, 'end', None, {}, ('exec',
 r'''1, 2, 3, 4'''),
 r'''1,''', r'''
 Module - ROOT 0,0..0,2
@@ -4039,7 +4039,7 @@ Tuple - ROOT 0,0..1,4
   .ctx Load
 '''),
 
-('body[0].body[0].value', None, None, None, {}, ('exec', r'''
+('body[0].body[0].value', 0, 'end', None, {}, ('exec', r'''
 if 1:
     (       # hello
         1,  # last line
@@ -4146,7 +4146,7 @@ Tuple - ROOT 0,0..2,1
   .ctx Load
 '''),
 
-('body[0].body[0].value', 2, None, None, {}, ('exec', r'''
+('body[0].body[0].value', 2, 'end', None, {}, ('exec', r'''
 if 1:
     (       # hello
         1,  # last line
@@ -4204,7 +4204,7 @@ Dict - ROOT 0,0..0,5
    0] Name 'b' Load - 0,3..0,4
 '''),
 
-('body[0].value', None, None, None, {}, ('exec',
+('body[0].value', 0, 'end', None, {}, ('exec',
 r'''{1: 2, **b, **c}'''),
 r'''{}''', r'''
 Module - ROOT 0,0..0,2
@@ -4224,7 +4224,7 @@ Dict - ROOT 0,0..0,16
    2] Name 'c' Load - 0,14..0,15
 '''),
 
-('body[0].value', 2, None, None, {}, ('exec',
+('body[0].value', 2, 'end', None, {}, ('exec',
 r'''{1: 2, **b, **c}'''),
 r'''{1: 2, **b}''', r'''
 Module - ROOT 0,0..0,11
@@ -4246,7 +4246,7 @@ Dict - ROOT 0,0..0,5
    0] Name 'c' Load - 0,3..0,4
 '''),
 
-('body[0].value', None, None, None, {}, ('exec', r'''
+('body[0].value', 0, 'end', None, {}, ('exec', r'''
 [
     1,
     2,
@@ -4338,7 +4338,7 @@ List - ROOT 0,0..2,1
   .ctx Load
 '''),
 
-('body[0].value', 2, None, None, {}, ('exec', r'''
+('body[0].value', 2, 'end', None, {}, ('exec', r'''
 [
     1,
     2,
@@ -4455,7 +4455,7 @@ List - ROOT 0,0..1,7
   .ctx Load
 '''),
 
-('body[0].value', 1, None, None, {}, ('exec', r'''
+('body[0].value', 1, 'end', None, {}, ('exec', r'''
 [            # hello
     1, 2, ( 3
      ), 4
@@ -4589,7 +4589,7 @@ Dict - ROOT 0,0..0,34
      .ctx Load
 '''),
 
-('body[0].value', None, 2, None, {}, ('exec', r'''
+('body[0].value', 0, 2, None, {}, ('exec', r'''
 env = {
     **{k.upper(): v for k, v in os.environ.items() if k.upper() not in ignore},
     "PYLAUNCHER_DEBUG": "1",
@@ -10140,7 +10140,7 @@ Module - ROOT 0,0..0,5
 
 'stmtish_norm_self': [  # ................................................................................
 
-('', None, None, 'body', {}, ('exec',
+('', 0, 'end', 'body', {}, ('exec',
 r'''stmt'''),
 r'''''',
 r'''Module - ROOT 0,0..0,0''',
@@ -10151,7 +10151,7 @@ Module - ROOT 0,0..0,4
      .value Name 'stmt' Load - 0,0..0,4
 '''),
 
-('', None, None, 'body', {'norm': True}, ('single',
+('', 0, 'end', 'body', {'norm': True}, ('single',
 r'''stmt'''),
 r'''**ValueError('cannot cut all elements from Interactive.body without norm_self=False')**''',
 r'''stmt''', r'''
@@ -10161,7 +10161,7 @@ Module - ROOT 0,0..0,4
      .value Name 'stmt' Load - 0,0..0,4
 '''),
 
-('', None, None, 'body', {'norm_self': False, '_verify_self': False}, ('single',
+('', 0, 'end', 'body', {'norm_self': False, '_verify_self': False}, ('single',
 r'''stmt'''),
 r'''''',
 r'''Interactive - ROOT 0,0..0,0''',
@@ -10172,7 +10172,7 @@ Module - ROOT 0,0..0,4
      .value Name 'stmt' Load - 0,0..0,4
 '''),
 
-('', None, None, 'body', {'norm': True}, (None,
+('', 0, 'end', 'body', {'norm': True}, (None,
 r'''if 1: pass'''),
 r'''**ValueError('cannot cut all elements from If.body without norm_self=False')**''',
 r'''pass''', r'''
@@ -10181,7 +10181,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-('', None, None, 'body', {'norm_self': False, '_verify_self': False}, (None,
+('', 0, 'end', 'body', {'norm_self': False, '_verify_self': False}, (None,
 r'''if 1: pass'''),
 r'''if 1:''', r'''
 If - ROOT 0,0..0,5
@@ -10193,7 +10193,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-('', None, None, 'orelse', {}, (None, r'''
+('', 0, 'end', 'orelse', {}, (None, r'''
 if 1: pass
 else: pass
 '''),
@@ -10209,7 +10209,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-('', None, None, 'cases', {'norm': True}, (None, r'''
+('', 0, 'end', 'cases', {'norm': True}, (None, r'''
 match a:
   case 1: pass
 '''),
@@ -10224,7 +10224,7 @@ _match_cases - ROOT 0,0..0,12
       0] Pass - 0,8..0,12
 '''),
 
-('', None, None, 'cases', {'norm_self': False, '_verify_self': False}, (None, r'''
+('', 0, 'end', 'cases', {'norm_self': False, '_verify_self': False}, (None, r'''
 match a:
   case 1: pass
 '''),
@@ -10242,7 +10242,7 @@ _match_cases - ROOT 0,0..0,12
       0] Pass - 0,8..0,12
 '''),
 
-('', None, None, 'handlers', {'norm': True}, (None, r'''
+('', 0, 'end', 'handlers', {'norm': True}, (None, r'''
 try: pass
 except: pass
 '''),
@@ -10255,7 +10255,7 @@ _ExceptHandlers - ROOT 0,0..0,12
       0] Pass - 0,8..0,12
 '''),
 
-('', None, None, 'handlers', {'norm_self': False, '_verify_self': False}, (None, r'''
+('', 0, 'end', 'handlers', {'norm_self': False, '_verify_self': False}, (None, r'''
 try: pass
 except: pass
 '''),
@@ -10272,7 +10272,7 @@ _ExceptHandlers - ROOT 0,0..0,12
       0] Pass - 0,8..0,12
 '''),
 
-('', None, None, 'handlers', {}, (None, r'''
+('', 0, 'end', 'handlers', {}, (None, r'''
 try: pass
 except: pass
 finally: pass
@@ -10294,7 +10294,7 @@ _ExceptHandlers - ROOT 0,0..0,12
       0] Pass - 0,8..0,12
 '''),
 
-('', None, None, 'finalbody', {'norm': True}, (None, r'''
+('', 0, 'end', 'finalbody', {'norm': True}, (None, r'''
 try: pass
 finally: pass
 '''),
@@ -10305,7 +10305,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-('', None, None, 'finalbody', {'norm_self': False, '_verify_self': False}, (None, r'''
+('', 0, 'end', 'finalbody', {'norm_self': False, '_verify_self': False}, (None, r'''
 try: pass
 finally: pass
 '''),
@@ -10320,7 +10320,7 @@ Module - ROOT 0,0..0,4
    0] Pass - 0,0..0,4
 '''),
 
-('', None, None, 'finalbody', {}, (None, r'''
+('', 0, 'end', 'finalbody', {}, (None, r'''
 try: pass
 except: pass
 finally: pass
@@ -10494,7 +10494,7 @@ Module - ROOT 0,0..0,18
 
 'Tuple_elts': [  # ................................................................................
 
-('slice', None, None, None, {'_ver': 11}, (None,
+('slice', 0, 'end', None, {'_ver': 11}, (None,
 r'''a[*not a, b, *c or d, *e]'''),
 r'''a[()]''', r'''
 Subscript - ROOT 0,0..0,5
@@ -10525,7 +10525,7 @@ Tuple - ROOT 0,0..0,26
   .ctx Load
 '''),
 
-('slice', None, None, None, {'_ver': 11, 'pars': False, '_verify_get': False}, (None,
+('slice', 0, 'end', None, {'_ver': 11, 'pars': False, '_verify_get': False}, (None,
 r'''a[*not a, b, *c or d, *e]'''),
 r'''a[()]''', r'''
 Subscript - ROOT 0,0..0,5
@@ -10556,7 +10556,7 @@ Tuple - ROOT 0,0..0,26
   .ctx Load
 '''),
 
-('slice', None, None, None, {'_ver': 11, 'pars': False, 'pars_arglike': None, '_verify_get': False}, (None,
+('slice', 0, 'end', None, {'_ver': 11, 'pars': False, 'pars_arglike': None, '_verify_get': False}, (None,
 r'''a[*not a, b, *c or d, *e]'''),
 r'''a[()]''', r'''
 Subscript - ROOT 0,0..0,5
@@ -10587,7 +10587,7 @@ Tuple - ROOT 0,0..0,22
   .ctx Load
 '''),
 
-('slice', None, None, None, {'_ver': 11, 'pars_arglike': False, '_verify_get': False}, (None,
+('slice', 0, 'end', None, {'_ver': 11, 'pars_arglike': False, '_verify_get': False}, (None,
 r'''a[*not a, b, *c or d, *e]'''),
 r'''a[()]''', r'''
 Subscript - ROOT 0,0..0,5
@@ -13764,7 +13764,7 @@ Tuple - ROOT 0,0..1,3
   .ctx Load
 '''),
 
-('body[0]', None, None, None, {'norm': True}, ('exec',
+('body[0]', 0, 'end', None, {'norm': True}, ('exec',
 r'''global a, b, c  # comment'''),
 r'''**ValueError('cannot cut all Global.names without norm_self=False')**''',
 r'''a, b, c''', r'''
@@ -13776,7 +13776,7 @@ Tuple - ROOT 0,0..0,7
   .ctx Load
 '''),
 
-('body[0]', None, None, None, {'norm_self': False, '_verify_self': False}, ('exec',
+('body[0]', 0, 'end', None, {'norm_self': False, '_verify_self': False}, ('exec',
 r'''global a, b, c  # comment'''),
 r'''global   # comment''', r'''
 Module - ROOT 0,0..0,18
@@ -14016,7 +14016,7 @@ Tuple - ROOT 0,0..1,3
   .ctx Load
 '''),
 
-('body[0]', None, None, None, {'norm': True}, ('exec',
+('body[0]', 0, 'end', None, {'norm': True}, ('exec',
 r'''nonlocal a, b, c  # comment'''),
 r'''**ValueError('cannot cut all Nonlocal.names without norm_self=False')**''',
 r'''a, b, c''', r'''
@@ -14028,7 +14028,7 @@ Tuple - ROOT 0,0..0,7
   .ctx Load
 '''),
 
-('body[0]', None, None, None, {'norm_self': False, '_verify_self': False}, ('exec',
+('body[0]', 0, 'end', None, {'norm_self': False, '_verify_self': False}, ('exec',
 r'''nonlocal a, b, c  # comment'''),
 r'''nonlocal   # comment''', r'''
 Module - ROOT 0,0..0,20
@@ -14086,7 +14086,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-('', None, None, 'bases', {}, (None,
+('', 0, 'end', 'bases', {}, (None,
 r'''class cls(a, *b): pass'''),
 r'''class cls: pass''', r'''
 ClassDef - ROOT 0,0..0,15
@@ -14104,7 +14104,7 @@ Tuple - ROOT 0,0..0,7
   .ctx Load
 '''),
 
-('', None, None, 'bases', {}, (None,
+('', 0, 'end', 'bases', {}, (None,
 r'''class cls (a) : pass'''),
 r'''class cls  : pass''', r'''
 ClassDef - ROOT 0,0..0,17
@@ -14119,7 +14119,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-('', None, None, 'bases', {}, (None, r'''
+('', 0, 'end', 'bases', {}, (None, r'''
 class cls (
 a
 ) : pass
@@ -14140,7 +14140,7 @@ Tuple - ROOT 0,0..2,1
   .ctx Load
 '''),
 
-('', None, None, 'bases', {}, (None, r'''
+('', 0, 'end', 'bases', {}, (None, r'''
 class cls \
 (a) \
  : pass
@@ -14199,7 +14199,7 @@ Tuple - ROOT 0,0..0,5
   .ctx Load
 '''),
 
-('', None, None, 'bases', {}, (None,
+('', 0, 'end', 'bases', {}, (None,
 r'''class cls(a, *b, c=d): pass'''),
 r'''class cls(c=d): pass''', r'''
 ClassDef - ROOT 0,0..0,20
@@ -14267,7 +14267,7 @@ Tuple - ROOT 0,0..0,5
   .ctx Load
 '''),
 
-('', None, None, 'bases', {}, (None,
+('', 0, 'end', 'bases', {}, (None,
 r'''class cls(a, *b, **c): pass'''),
 r'''class cls(**c): pass''', r'''
 ClassDef - ROOT 0,0..0,20
@@ -14678,7 +14678,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-('', None, None, 'bases', {}, (None,
+('', 0, 'end', 'bases', {}, (None,
 r'''class cls(*not a, b, *c or d, *e): pass'''),
 r'''class cls: pass''', r'''
 ClassDef - ROOT 0,0..0,15
@@ -14708,7 +14708,7 @@ Tuple - ROOT 0,0..0,28
   .ctx Load
 '''),
 
-('', None, None, 'bases', {'pars': False, '_verify_get': False}, (None,
+('', 0, 'end', 'bases', {'pars': False, '_verify_get': False}, (None,
 r'''class cls(*not a, b, *c or d, *e): pass'''),
 r'''class cls: pass''', r'''
 ClassDef - ROOT 0,0..0,15
@@ -14762,7 +14762,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-('', None, None, 'bases', {'_ver': 12}, (None,
+('', 0, 'end', 'bases', {'_ver': 12}, (None,
 r'''class cls[T, *U](a, *b): pass'''),
 r'''class cls[T, *U]: pass''', r'''
 ClassDef - ROOT 0,0..0,22
@@ -14785,7 +14785,7 @@ Tuple - ROOT 0,0..0,7
   .ctx Load
 '''),
 
-('', None, None, 'bases', {'_ver': 12}, (None, r'''
+('', 0, 'end', 'bases', {'_ver': 12}, (None, r'''
 class cls [T,
 *U] (a) : pass
 '''), r'''
@@ -14809,7 +14809,7 @@ Tuple - ROOT 0,0..0,4
   .ctx Load
 '''),
 
-('', None, None, 'bases', {'_ver': 12}, (None, r'''
+('', 0, 'end', 'bases', {'_ver': 12}, (None, r'''
 class cls [
 T
 ] \
@@ -14840,7 +14840,7 @@ Tuple - ROOT 0,0..2,1
   .ctx Load
 '''),
 
-('', None, None, 'bases', {'_ver': 12}, (None, r'''
+('', 0, 'end', 'bases', {'_ver': 12}, (None, r'''
 class cls \
 [T] \
 (a) \
@@ -14928,7 +14928,7 @@ Tuple - ROOT 0,0..0,5
   .ctx Load
 '''),
 
-('', None, None, 'bases', {'_ver': 12}, (None,
+('', 0, 'end', 'bases', {'_ver': 12}, (None,
 r'''class cls[T, *U, **V](a, *b, c=d): pass'''),
 r'''class cls[T, *U, **V](c=d): pass''', r'''
 ClassDef - ROOT 0,0..0,32
@@ -15031,7 +15031,7 @@ Tuple - ROOT 0,0..0,5
   .ctx Load
 '''),
 
-('', None, None, 'bases', {'_ver': 12}, (None,
+('', 0, 'end', 'bases', {'_ver': 12}, (None,
 r'''class cls [T, *U, **V] (a, *b, **c): pass'''),
 r'''class cls [T, *U, **V] (**c): pass''', r'''
 ClassDef - ROOT 0,0..0,34
@@ -17685,7 +17685,7 @@ Tuple - ROOT 0,0..0,2
   .ctx Load
 '''),
 
-('', None, None, None, {}, (None,
+('', 0, 'end', None, {}, (None,
 r'''call(a, *b)'''),
 r'''call()''', r'''
 Call - ROOT 0,0..0,6
@@ -17735,7 +17735,7 @@ Tuple - ROOT 0,0..0,5
   .ctx Load
 '''),
 
-('', None, None, None, {}, (None,
+('', 0, 'end', None, {}, (None,
 r'''call(a, *b, c=d)'''),
 r'''call(c=d)''', r'''
 Call - ROOT 0,0..0,9
@@ -17797,7 +17797,7 @@ Tuple - ROOT 0,0..0,5
   .ctx Load
 '''),
 
-('', None, None, None, {}, (None,
+('', 0, 'end', None, {}, (None,
 r'''call(a, *b, **c)'''),
 r'''call(**c)''', r'''
 Call - ROOT 0,0..0,9
@@ -18203,7 +18203,7 @@ Tuple - ROOT 0,0..0,17
   .ctx Load
 '''),
 
-('', None, None, None, {}, (None,
+('', 0, 'end', None, {}, (None,
 r'''call(*not a, b, *c or d, *e)'''),
 r'''call()''', r'''
 Call - ROOT 0,0..0,6
@@ -18231,7 +18231,7 @@ Tuple - ROOT 0,0..0,28
   .ctx Load
 '''),
 
-('', None, None, None, {'pars': False, '_verify_get': False}, (None,
+('', 0, 'end', None, {'pars': False, '_verify_get': False}, (None,
 r'''call(*not a, b, *c or d, *e)'''),
 r'''call()''', r'''
 Call - ROOT 0,0..0,6
@@ -18861,7 +18861,7 @@ _decorator_list - ROOT 0,0..2,7
    1] Name 'b' Load - 2,4..2,5
 '''),
 
-('', None, None, 'decorator_list', {}, (None, r'''
+('', 0, 'end', 'decorator_list', {}, (None, r'''
 @a
 
 # pre
@@ -19139,7 +19139,7 @@ _decorator_list - ROOT 0,0..6,2
 
 'decorator_list_newlines': [  # ................................................................................
 
-('', None, None, None, {}, ('_decorator_list',
+('', 0, 'end', None, {}, ('_decorator_list',
 r'''@a'''),
 r'''''',
 r'''_decorator_list - ROOT 0,0..0,0''',
@@ -20974,7 +20974,7 @@ Compare - ROOT 0,0..0,1
 
 'virtual_field__body': [  # ................................................................................
 
-('', None, None, '_body', {}, ('Module', r'''
+('', 0, 'end', '_body', {}, ('Module', r'''
 """doc"""
 a
 b
@@ -20996,7 +20996,7 @@ Module - ROOT 0,0..1,1
      .value Name 'b' Load - 1,0..1,1
 '''),
 
-('', None, None, '_body', {'_verify': False}, ('Interactive',
+('', 0, 'end', '_body', {'_verify': False}, ('Interactive',
 r'''"""non-doc"""; a; b'''),
 r'''''',
 r'''Interactive - ROOT 0,0..0,0''',
@@ -21011,7 +21011,7 @@ Module - ROOT 0,0..0,19
      .value Name 'b' Load - 0,18..0,19
 '''),
 
-('', None, None, '_body', {}, ('FunctionDef', r'''
+('', 0, 'end', '_body', {}, ('FunctionDef', r'''
 def f():
     """doc"""
     a
@@ -21037,7 +21037,7 @@ Module - ROOT 0,0..1,1
      .value Name 'b' Load - 1,0..1,1
 '''),
 
-('', None, None, '_body', {}, ('AsyncFunctionDef', r'''
+('', 0, 'end', '_body', {}, ('AsyncFunctionDef', r'''
 async def f():
     """doc"""
     a
@@ -21063,7 +21063,7 @@ Module - ROOT 0,0..1,1
      .value Name 'b' Load - 1,0..1,1
 '''),
 
-('', None, None, '_body', {}, ('ClassDef', r'''
+('', 0, 'end', '_body', {}, ('ClassDef', r'''
 class cls:
     """doc"""
     a
@@ -21089,7 +21089,7 @@ Module - ROOT 0,0..1,1
      .value Name 'b' Load - 1,0..1,1
 '''),
 
-('', None, None, '_body', {'_verify': False}, ('For', r'''
+('', 0, 'end', '_body', {'_verify': False}, ('For', r'''
 for _ in _:
     """non-doc"""
     a
@@ -21114,7 +21114,7 @@ Module - ROOT 0,0..2,1
      .value Name 'b' Load - 2,0..2,1
 '''),
 
-('', None, None, '_body', {'_verify': False}, ('AsyncFor', r'''
+('', 0, 'end', '_body', {'_verify': False}, ('AsyncFor', r'''
 async for _ in _:
     """non-doc"""
     a
@@ -21139,7 +21139,7 @@ Module - ROOT 0,0..2,1
      .value Name 'b' Load - 2,0..2,1
 '''),
 
-('', None, None, '_body', {'_verify': False}, ('While', r'''
+('', 0, 'end', '_body', {'_verify': False}, ('While', r'''
 while _:
     """non-doc"""
     a
@@ -21163,7 +21163,7 @@ Module - ROOT 0,0..2,1
      .value Name 'b' Load - 2,0..2,1
 '''),
 
-('', None, None, '_body', {'_verify': False}, ('If', r'''
+('', 0, 'end', '_body', {'_verify': False}, ('If', r'''
 if _:
     """non-doc"""
     a
@@ -21187,7 +21187,7 @@ Module - ROOT 0,0..2,1
      .value Name 'b' Load - 2,0..2,1
 '''),
 
-('', None, None, '_body', {'_verify': False}, ('With', r'''
+('', 0, 'end', '_body', {'_verify': False}, ('With', r'''
 with _:
     """non-doc"""
     a
@@ -21213,7 +21213,7 @@ Module - ROOT 0,0..2,1
      .value Name 'b' Load - 2,0..2,1
 '''),
 
-('', None, None, '_body', {'_verify': False}, ('AsyncWith', r'''
+('', 0, 'end', '_body', {'_verify': False}, ('AsyncWith', r'''
 async with _:
     """non-doc"""
     a
@@ -21239,7 +21239,7 @@ Module - ROOT 0,0..2,1
      .value Name 'b' Load - 2,0..2,1
 '''),
 
-('', None, None, '_body', {'_verify': False}, ('Try', r'''
+('', 0, 'end', '_body', {'_verify': False}, ('Try', r'''
 try:
     """non-doc"""
     a
@@ -21269,7 +21269,7 @@ Module - ROOT 0,0..2,1
      .value Name 'b' Load - 2,0..2,1
 '''),
 
-('', None, None, '_body', {'_verify': False, '_ver': 11}, ('TryStar', r'''
+('', 0, 'end', '_body', {'_verify': False, '_ver': 11}, ('TryStar', r'''
 try:
     """non-doc"""
     a
@@ -21300,7 +21300,7 @@ Module - ROOT 0,0..2,1
      .value Name 'b' Load - 2,0..2,1
 '''),
 
-('', None, None, '_body', {'_verify': False}, ('ExceptHandler', r'''
+('', 0, 'end', '_body', {'_verify': False}, ('ExceptHandler', r'''
 except:
     """non-doc"""
     a
@@ -21322,7 +21322,7 @@ Module - ROOT 0,0..2,1
      .value Name 'b' Load - 2,0..2,1
 '''),
 
-('', None, None, '_body', {'_verify': False}, ('match_case', r'''
+('', 0, 'end', '_body', {'_verify': False}, ('match_case', r'''
 case _:
     """non-doc"""
     a

@@ -125,11 +125,11 @@ if PYGE12:
 
     @{field}.setter
     def {field}(self: 'fst.FST', code: Code | None) -> None:
-        self._put_slice(code, None, None, {field!r})
+        self._put_slice(code, 0, 'end', {field!r})
 
     @{field}.deleter
     def {field}(self: 'fst.FST') -> None:
-        self._put_slice(None, None, None, {field!r})
+        self._put_slice(None, 0, 'end', {field!r})
 
 else:  # safely access nonexistent empty field
     @property
@@ -157,11 +157,11 @@ def {field}(self: 'fst.FST') -> fstview:
 
 @{field}.setter
 def {field}(self: 'fst.FST', code: Code | None) -> None:
-    self._put_slice(code, None, None, {field!r})
+    self._put_slice(code, 0, 'end', {field!r})
 
 @{field}.deleter
 def {field}(self: 'fst.FST') -> None:
-    self._put_slice(None, None, None, {field!r})
+    self._put_slice(None, 0, 'end', {field!r})
 '''.strip())
 
         elif cardinality == 3:  # single AST or list[AST]
@@ -182,14 +182,14 @@ def {field}(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
 @{field}.setter
 def {field}(self: 'fst.FST', code: Code | None) -> None:
     if isinstance(self.a.{field}, list):
-        self._put_slice(code, None, None, {field!r})
+        self._put_slice(code, 0, 'end', {field!r})
     else:
         self._put_one(code, None, {field!r})
 
 @{field}.deleter
 def {field}(self: 'fst.FST') -> None:
     if isinstance(self.a.{field}, list):
-        self._put_slice(None, None, None, {field!r})
+        self._put_slice(None, 0, 'end', {field!r})
     else:
         self._put_one(None, None, {field!r})
 '''.strip())

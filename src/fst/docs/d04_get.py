@@ -206,13 +206,13 @@ element itself.
 >>> print(FST('[1, 2, 3]').get(1).src)
 2
 
-Both `get()` and `get_slice()` can specify slice beginning and end points as `None`, which specifies from beginning of
-the body or to the end of it.
+Both `get()` and `get_slice()` can specify slice beginning and end points as. Passing `'end'` as an index specifies the
+end of the body however long it may be.
 
->>> print(FST('[1, 2, 3]').get_slice(1, None).src)
+>>> print(FST('[1, 2, 3]').get_slice(1, 'end').src)
 [2, 3]
 
->>> print(FST('[1, 2, 3]').get(None, 2).src)
+>>> print(FST('[1, 2, 3]').get(0, 2).src)
 [1, 2]
 
 Many nodes have a specific common-sense default field, like `value` for a `Return`.
