@@ -16,13 +16,6 @@ See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d12_examples.htm
 
 >>> ext_ast = fst.parse('if a: b = c, d  # comment')
 
->>> print(fst.unparse(ext_ast))
-if a: b = c, d  # comment
-```
-
-Operations are straightforward.
-
-```py
 >>> ext_ast.f.body[0].body[0].value.elts[1:1] = 'u,\nv  # blah'
 
 >>> print(fst.unparse(ext_ast))

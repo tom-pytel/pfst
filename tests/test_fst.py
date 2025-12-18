@@ -8303,6 +8303,47 @@ class cls:
 
         # TODO: this is not exhaustive
 
+    def test_fstview_fixed_indices(self):
+        # update non-refreshing indices
+
+        f = FST('[1, 2, 3, 4]')
+        v = f.elts[1:3]
+        self.assertEqual(3, v.stop)
+
+        del v[-1:]
+        self.assertEqual('[1, 2, 4]', f.src)
+        self.assertEqual(2, v.stop)
+
+        del v[-1]
+        self.assertEqual('[1, 4]', f.src)
+        self.assertEqual(1, v.stop)
+
+        v[0:] = 'x, y'
+        self.assertEqual('[1, x, y, 4]', f.src)
+        self.assertEqual(3, v.stop)
+
+        v[-1] = 'z'
+        self.assertEqual('[1, x, z, 4]', f.src)
+        self.assertEqual(3, v.stop)
+
+        self.assertEqual('[x, z]', v.copy().src)
+        self.assertEqual('[a, b]', v.replace('[a, b]', one=False).copy().src)
+        self.assertEqual(3, v.stop)
+        self.assertEqual('[[c, d]]', v.replace('[c, d]').copy().src)
+        self.assertEqual(2, v.stop)
+        self.assertEqual('[[c, d]]', v.cut().src)
+        self.assertEqual('[1, 4]', f.src)
+        self.assertEqual('[1, e, f, 4]', v.insert('e, f', 0, one=False).base.src)
+        self.assertEqual('[1, e, (g, h), f, 4]', v.insert('g, h', 1).base.src)
+        self.assertEqual(4, v.stop)
+        self.assertEqual('[1, 4]', v.remove().base.src)
+        self.assertEqual('[1, a, 4]', v.append('a').base.src)
+        self.assertEqual('[1, a, b, c, 4]', v.extend('b, c').base.src)
+        self.assertEqual('[1, d, a, b, c, 4]', v.prepend('d').base.src)
+        self.assertEqual('[1, e, f, d, a, b, c, 4]', v.prextend('e, f').base.src)
+        self.assertEqual(1, v.start)
+        self.assertEqual(7, v.stop)
+
     def test_fstview_dummy(self):
         v = fstview_dummy(FST('a'), 'type_params')
 
@@ -8348,15 +8389,6 @@ class cls:
         self.assertRaises(IndexError, setitem)
         def delitem(): del v[::2]
         self.assertRaises(IndexError, delitem)
-
-        # update non-refreshing indices
-
-        f = FST('[1, 2, 3, 4]')
-        v = f.elts[1:3]
-        self.assertEqual(3, v.stop)
-        del v[-1:]
-        self.assertEqual('[1, 2, 4]', f.src)
-        self.assertEqual(2, v.stop)
 
     def test_is_node_type_properties_and_parents(self):
         fst = parse('''
@@ -9868,6 +9900,24 @@ if 1:
 
         self.assertEqual('<<Compare ROOT 0,0..0,14>._all[1:3] <Name 0,4..0,5> == <Name 0,9..0,10>>', repr(FST('a < b == c > d')._all[1:3]))
 
+    def test_ast_accessors_virtual_field__body(self):
+        f = FST('"""doc"""\na\nb')
+        self.assertEqual('a\nb', f._body.copy().src)
+        self.assertEqual('a', f._body[0].src)
+        self.assertEqual('b', f._body[1].src)
+        self.assertRaises(IndexError, lambda: f._body[2])
+        self.assertEqual('b', f._body[-1].src)
+        self.assertEqual('a', f._body[-2].src)
+        self.assertRaises(IndexError, lambda: f._body[-3])
+
+        del f._body
+        self.assertEqual('"""doc"""', f.src)
+
+        f._body = 'x\ny'
+        self.assertEqual('"""doc"""\nx\ny', f.src)
+
+        self.assertEqual(0, len(fstview_dummy(f, 'invalid')))
+
     def test_ast_accessors_dummy(self):
         if PYLT12:
             self.assertIsInstance(FST('def f(): pass').type_params, fstview_dummy)
@@ -9878,6 +9928,8 @@ if 1:
             del f.type_params
             f.type_params = None
             self.assertRaises(RuntimeError, setattr, f, 'type_params', True)
+
+            self.assertEqual(0, len(f.type_params))
 
         if PYGE12 and PYLT13:
             self.assertIsNone(FST('T', 'TypeVar').default_value)
