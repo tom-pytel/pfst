@@ -8338,6 +8338,8 @@ class cls:
         self.assertEqual('<<Name ROOT 0,0..0,1>.type_params DUMMY VIEW>', repr(v))
 
     def test_fstview_coverage(self):
+        # misc stuff to fill out test coverage
+
         # slice with step errors
 
         v = FST('[1, 2, 3]').elts

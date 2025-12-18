@@ -27085,6 +27085,37 @@ If - ROOT 0,0..5,5
         1] Constant None - 5,0..5,4
 '''),
 
+('body[0].value', 0, 1, None, {'trivia': ('block+1', 'none')}, (None, r'''
+if 1:
+  7 \
+and \
+None
+'''), (None, r'''
+  None \
+
+'''), r'''
+if 1:
+  None \
+ \
+and \
+None
+''', r'''
+if 1:
+  None \
+and \
+None
+''', r'''
+If - ROOT 0,0..4,4
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] Expr - 1,2..4,4
+     .value BoolOp - 1,2..4,4
+       .op And
+       .values[2]
+        0] Constant None - 1,2..1,6
+        1] Constant None - 4,0..4,4
+'''),
+
 ('', 1, 2, None, {'op_side': 'left'}, (None, r'''
 a
 or # left
