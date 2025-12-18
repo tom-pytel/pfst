@@ -125,25 +125,30 @@ from ast import (
 
 # create standin dummy AST types if they don't exist, mostly for isinstance() checks
 
+class _ASTStandin(AST):
+    def __init__(self, *args, **kwargs):
+        raise RuntimeError("this is a standin class for an AST type that doesn't exist in this version of python, "
+                           "it should not be instantiated")
+
 if sys.version_info[:2] >= (3, 11):
     from ast import TryStar
 else:
-    class TryStar(AST): """Standin."""  # should we try to duplicate params? opening up possible can of descent into madness there
+    class TryStar(_ASTStandin): """Standin."""  # should we try to duplicate params? opening up possible can of descent into madness there
 
 if sys.version_info[:2] >= (3, 12):
     from ast import TypeAlias, type_param, TypeVar, ParamSpec, TypeVarTuple
 else:
-    class TypeAlias(AST): """Standin."""
-    class type_param(AST): """Standin."""
-    class TypeVar(AST): """Standin."""
-    class ParamSpec(AST): """Standin."""
-    class TypeVarTuple(AST): """Standin."""
+    class TypeAlias(_ASTStandin): """Standin."""
+    class type_param(_ASTStandin): """Standin."""
+    class TypeVar(_ASTStandin): """Standin."""
+    class ParamSpec(_ASTStandin): """Standin."""
+    class TypeVarTuple(_ASTStandin): """Standin."""
 
 if sys.version_info[:2] >= (3, 14):
     from ast import TemplateStr, Interpolation
 else:
-    class TemplateStr(AST): """Standin."""
-    class Interpolation(AST): """Standin."""
+    class TemplateStr(_ASTStandin): """Standin."""
+    class Interpolation(_ASTStandin): """Standin."""
 
 __all__ = [
     'AST',
