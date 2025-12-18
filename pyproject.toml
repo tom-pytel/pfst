@@ -79,3 +79,10 @@ ignore = [
   "E741",    # Ambiguous variable name: `l`
   "ANN003",  # Missing type annotation for `**kwargs`
 ]
+
+[tool.coverage.run]
+omit = [
+    "src/fst/docs/*",
+    "src/fst/__main__.py",
+    "src/fst/fuzz.py",
+]

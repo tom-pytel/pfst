@@ -17,8 +17,8 @@ install:  ## Install locally from current directory
 
 .PHONY: test
 test:  ## Run basic unit tests
-	# python -m unittest discover --verbose tests
-	pytest -vv tests
+	python -m unittest discover --verbose tests
+	# pytest -vv tests
 
 
 .PHONY: coverage

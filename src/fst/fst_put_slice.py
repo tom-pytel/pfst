@@ -2560,6 +2560,20 @@ def _loc_slice_raw_put_Global_Nonlocal_names(
 
     return ln, col, end_ln, end_col, start, stop, names
 
+def _loc_slice_raw_put_comprehension_ifs(
+    self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
+) -> tuple[int, int, int, int, int, int, list[AST]]:
+    ifs = self.a.ifs
+    start, stop = _fixup_slice_index_for_raw(len(ifs), start, stop)
+    start_eq_stop = start == stop
+
+    ln, col, end_ln, end_col = self._loc_comprehension_if(start, start_eq_stop)  # if start != stop then we don't need pars here because we will only use the start which will be the `if`
+
+    if not start_eq_stop:
+        _, _, end_ln, end_col = ifs[stop - 1].f.pars()
+
+    return ln, col, end_ln, end_col, start, stop, ifs
+
 def _loc_slice_raw_put_Dict__all(
     self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
@@ -2582,20 +2596,6 @@ def _loc_slice_raw_put_Compare__all(
         _, _, end_ln, end_col = comparators[stop - 2].f.pars()
 
     return ln, col, end_ln, end_col, start, stop, comparators
-
-def _loc_slice_raw_put_comprehension_ifs(
-    self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
-) -> tuple[int, int, int, int, int, int, list[AST]]:
-    ifs = self.a.ifs
-    start, stop = _fixup_slice_index_for_raw(len(ifs), start, stop)
-    start_eq_stop = start == stop
-
-    ln, col, end_ln, end_col = self._loc_comprehension_if(start, start_eq_stop)  # if start != stop then we don't need pars here because we will only use the start which will be the `if`
-
-    if not start_eq_stop:
-        _, _, end_ln, end_col = ifs[stop - 1].f.pars()
-
-    return ln, col, end_ln, end_col, start, stop, ifs
 
 def _loc_slice_raw_put_MatchMapping__all(
     self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
@@ -2626,6 +2626,17 @@ def _loc_slice_raw_put_MatchMapping__all(
 
     return ln, col, end_ln, end_col, start, stop, patterns
 
+def _loc_slice_raw_put__body(
+    self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
+) -> tuple[int, int, int, int, int, int, list[AST]]:
+    body = self.a.body
+
+    start, stop = fixup_slice_indices(len(body), start, stop, self.has_docstr)
+    ln, col, _, _ = body[start].f.bloc
+    _, _, end_ln, end_col = body[stop - 1].f.bloc
+
+    return ln, col, end_ln, end_col, start, stop, body
+
 def _loc_slice_raw_put_default(
     self: fst.FST, start: int | Literal['end'] | None, stop: int | None, field: str
 ) -> tuple[int, int, int, int, int, int, list[AST]]:
@@ -2653,10 +2664,27 @@ _LOC_SLICE_RAW_PUT_FUNCS = {
     (ClassDef, 'decorator_list'):         _loc_slice_raw_put_decorator_list,
     (Global, 'names'):                    _loc_slice_raw_put_Global_Nonlocal_names,
     (Nonlocal, 'names'):                  _loc_slice_raw_put_Global_Nonlocal_names,
+    (comprehension, 'ifs'):               _loc_slice_raw_put_comprehension_ifs,
+
     (Dict, '_all'):                       _loc_slice_raw_put_Dict__all,
     (Compare, '_all'):                    _loc_slice_raw_put_Compare__all,
-    (comprehension, 'ifs'):               _loc_slice_raw_put_comprehension_ifs,
     (MatchMapping, '_all'):               _loc_slice_raw_put_MatchMapping__all,
+
+    (Module, '_body'):                    _loc_slice_raw_put__body,
+    (Interactive, '_body'):               _loc_slice_raw_put__body,
+    (FunctionDef, '_body'):               _loc_slice_raw_put__body,
+    (AsyncFunctionDef, '_body'):          _loc_slice_raw_put__body,
+    (ClassDef, '_body'):                  _loc_slice_raw_put__body,
+    (For, '_body'):                       _loc_slice_raw_put__body,
+    (AsyncFor, '_body'):                  _loc_slice_raw_put__body,
+    (While, '_body'):                     _loc_slice_raw_put__body,
+    (If, '_body'):                        _loc_slice_raw_put__body,
+    (With, '_body'):                      _loc_slice_raw_put__body,
+    (AsyncWith, '_body'):                 _loc_slice_raw_put__body,
+    (Try, '_body'):                       _loc_slice_raw_put__body,
+    (TryStar, '_body'):                   _loc_slice_raw_put__body,
+    (ExceptHandler, '_body'):             _loc_slice_raw_put__body,
+    (match_case, '_body'):                _loc_slice_raw_put__body,
 }
 
 
