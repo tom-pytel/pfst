@@ -13,7 +13,7 @@ This is rather crude documentation that hopefully can show usage through many sm
 
 `fst.docs.d06_slices`: Slices and trivia
 
-`fst.docs.d07_views`: FST slice views and virtual fields
+`fst.docs.d07_views`: Slice views and virtual fields
 
 `fst.docs.d08_raw`: Raw reparse operations
 

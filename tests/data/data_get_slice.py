@@ -21438,7 +21438,7 @@ Module - ROOT 0,0..1,1
 a
 b
 '''),
-r'''**ValueError('start index must precede stop index')**'''),
+r'''**IndexError('start index must precede stop index')**'''),
 
 ('', 1, 1, '_body', {}, ('Module', r'''
 """doc"""

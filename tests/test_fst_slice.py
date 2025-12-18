@@ -1494,6 +1494,25 @@ def func():
             f.put_slice('x, y, z')
             self.assertEqual('nonlocal x, y, z', f.src)
 
+    def test_get_slice_param_matrix(self):
+        f = FST('[a, b, c]')
+
+        self.assertEqual('[b]', f.get_slice(1, 2).src)
+        self.assertRaises(IndexError, f.get_slice, 'end', 2)
+        self.assertEqual('[b, c]', f.get_slice(1, 'end').src)
+        self.assertEqual('[]', f.get_slice('end', 'end').src)
+
+    def test_put_slice_param_matrix(self):
+        self.assertEqual('[a, x, c]', FST('[a, b, c]').put_slice('[x]', 1, 2).src)
+        self.assertRaises(IndexError, FST('[a, b, c]').put_slice,'[x]', 'end', 2)
+        self.assertEqual('[a, x]', FST('[a, b, c]').put_slice('[x]', 1, 'end').src)
+        self.assertEqual('[a, b, c, x]', FST('[a, b, c]').put_slice('[x]', 'end', 'end').src)
+
+        self.assertEqual('[a, [x], c]', FST('[a, b, c]').put_slice('[x]', 1, 2, one=True).src)
+        self.assertRaises(IndexError, FST('[a, b, c]').put_slice,'[x]', 'end', 2, one=True)
+        self.assertEqual('[a, [x]]', FST('[a, b, c]').put_slice('[x]', 1, 'end', one=True).src)
+        self.assertEqual('[a, b, c, [x]]', FST('[a, b, c]').put_slice('[x]', 'end', 'end', one=True).src)
+
     def test_replace_with_slice(self):
         f = FST('a\nb\nc')
         self.assertRaises(ValueError, f.body[1].replace, 'x\ny')

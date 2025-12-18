@@ -1,5 +1,5 @@
 r"""
-# `FST` slice views and virtual fields
+# Slice views and virtual fields
 
 To be able to execute the examples, import this.
 

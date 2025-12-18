@@ -947,7 +947,7 @@ def fixup_slice_indices(
         stop = min(len_, stop + start_at)
 
     if stop < start:
-        raise ValueError('start index must precede stop index')
+        raise IndexError('start index must precede stop index')
 
     return start, stop
 

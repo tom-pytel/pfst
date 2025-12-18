@@ -12,17 +12,17 @@ When modifying a node, you specify what to replace the node `AST` with. You can 
 modification succeeds or not. `AST` nodes are not consumed as they are unparsed and then reparsed in order to make sure
 their locations are correct. Source code in the form of a list of line strings is also not consumed.
 
->>> FST.new().body.append('i = 1').base.root.src
+>>> FST.new().body.append('i = 1').base.src
 'i = 1'
 
->>> FST.new().body.append(['i = 1']).base.root.src
+>>> FST.new().body.append(['i = 1']).base.src
 'i = 1'
 
 >>> FST.new().body.append(Assign(targets=[Name(id='i')],
-...                              value=Constant(value=1))).base.root.src
+...                              value=Constant(value=1))).base.src
 'i = 1'
 
->>> FST.new().body.append(FST('i = 1')).base.root.src
+>>> FST.new().body.append(FST('i = 1')).base.src
 'i = 1'
 
 ## `replace()` and `remove()`
@@ -192,11 +192,13 @@ Slices from compatible containers can be put to each other.
 >>> print(s.src)
 [2, 3, 4]
 
->>> print(FST('{a, b, c, d}').put_slice(s, 1, 3).root.src)
+>>> print(FST('{a, b, c, d}').put_slice(s, 1, 3).src)
 {a, 2, 3, 4, d}
 
 Either `put()` or `put_slice()` can be used to insert by setting the `start` and `stop` locations to the same thing,
 possibly at the start, end or between other elements (`fst.fst.FST.put_slice()`).
+
+>>> f = FST('[1, c]')
 
 >>> f.put('[x]', 1, 1, one=False)
 <List ROOT 0,0..0,9>
@@ -229,7 +231,7 @@ Just like with `get()`, a field can be specified.
 ...     j = 2
 ... '''.strip())
 
->>> f.put('k = 3', 'end', 'end', 'orelse')
+>>> f.put('k = 3', 'end', 'orelse')
 <If ROOT 0,0..4,9>
 
 >>> print(f.src)
@@ -238,6 +240,14 @@ if 1:
 else:
     j = 2
     k = 3
+
+You can use `'end'` with `put()` or `put_slice()` to append or extend to a list field.
+
+>>> print(FST('[1, 2]').put('x', 'end').src)
+[1, 2, x]
+
+>>> print(FST('[1, 2]').put_slice('[x, y]', 'end').src)
+[1, 2, x, y]
 
 `put()` and `put_slice()` return the object on which they were called (the parent of the put) for the same reason that
 `replace()` returns the new node. Normally the object will be unchanged, but with raw operations it can change and in

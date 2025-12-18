@@ -731,6 +731,72 @@ if 1:
             self.assertEqual(FST(r'''rf"""{1:{'a'\
                                               'b'}}"""''').values[0].format_spec.copy().a.values[0].value.value, 'ab')
 
+    def test_get_param_matrix(self):
+        f = FST('a = b')
+
+        self.assertEqual('b', f.get(None, None).src)
+        self.assertRaises(IndexError, f.get, 0, None)
+        self.assertRaises(IndexError, f.get, 'end', None)
+        self.assertRaises(IndexError, f.get, None, 0)
+        self.assertRaises(IndexError, f.get, 0, 0)
+        self.assertRaises(IndexError, f.get, 'end', 0)
+        self.assertRaises(IndexError, f.get, None, 'end')
+        self.assertRaises(IndexError, f.get, 0, 'end')
+        self.assertRaises(IndexError, f.get, 'end', 'end')
+
+        f = FST('[a, b, c]')
+
+        self.assertEqual('[a, b, c]', f.get(None, None).src)
+        self.assertEqual('b', f.get(1, None).src)
+        self.assertEqual('[]', f.get('end', None).src)
+        self.assertEqual('[a]', f.get(None, 1).src)
+        self.assertEqual('[]', f.get(1, 1).src)
+        self.assertRaises(IndexError, f.get, 'end', 1)
+        self.assertEqual('[a, b, c]', f.get(None, 'end').src)
+        self.assertEqual('[b, c]', f.get(1, 'end').src)
+        self.assertEqual('[]', f.get('end', 'end').src)
+
+    def test_put_param_matrix(self):
+        self.assertEqual('a = x', FST('a = b').put('x', None, None).src)
+        self.assertRaises(IndexError, FST('a = b').put, 'x', 0, None)
+        self.assertRaises(IndexError, FST('a = b').put, 'x', 'end', None)
+        self.assertRaises(IndexError, FST('a = b').put, 'x', None, 0)
+        self.assertRaises(IndexError, FST('a = b').put, 'x', 0, 0)
+        self.assertRaises(IndexError, FST('a = b').put, 'x', 'end', 0)
+        self.assertRaises(IndexError, FST('a = b').put, 'x', None, 'end')
+        self.assertRaises(IndexError, FST('a = b').put, 'x', 0, 'end')
+        self.assertRaises(IndexError, FST('a = b').put, 'x', 'end', 'end')
+
+        self.assertRaises(ValueError, FST('a = b').put, 'x', None, None, one=False)
+        self.assertRaises(IndexError, FST('a = b').put, 'x', 0, None, one=False)
+        self.assertRaises(IndexError, FST('a = b').put, 'x', 'end', None, one=False)
+        self.assertRaises(IndexError, FST('a = b').put, 'x', None, 0, one=False)
+        self.assertRaises(IndexError, FST('a = b').put, 'x', 0, 0, one=False)
+        self.assertRaises(IndexError, FST('a = b').put, 'x', 'end', 0, one=False)
+        self.assertRaises(IndexError, FST('a = b').put, 'x', None, 'end', one=False)
+        self.assertRaises(IndexError, FST('a = b').put, 'x', 0, 'end', one=False)
+        self.assertRaises(IndexError, FST('a = b').put, 'x', 'end', 'end', one=False)
+
+        self.assertEqual('[[x]]', FST('[a, b, c]').put('[x]', None, None).src)
+        self.assertEqual('[a, [x], c]', FST('[a, b, c]').put('[x]', 1, None).src)
+        self.assertEqual('[a, b, c, [x]]', FST('[a, b, c]').put('[x]', 'end', None).src)
+        self.assertEqual('[[x], b, c]', FST('[a, b, c]').put('[x]', None, 1).src)
+        self.assertEqual('[a, [x], b, c]', FST('[a, b, c]').put('[x]', 1, 1).src)
+        self.assertRaises(IndexError, FST('[a, b, c]').put,'[x]', 'end', 1)
+        self.assertEqual('[[x]]', FST('[a, b, c]').put('[x]', None, 'end').src)
+        self.assertEqual('[a, [x]]', FST('[a, b, c]').put('[x]', 1, 'end').src)
+        self.assertEqual('[a, b, c, [x]]', FST('[a, b, c]').put('[x]', 'end', 'end').src)
+
+        self.assertEqual('[x]', FST('[a, b, c]').put('[x]', None, None, one=False).src)
+        self.assertRaises(ValueError, FST('[a, b, c]').put, '[x]', 1, None, one=False)
+        self.assertEqual('[a, b, c, x]', FST('[a, b, c]').put('[x]', 'end', None, one=False).src)
+        self.assertEqual('[x, b, c]', FST('[a, b, c]').put('[x]', None, 1, one=False).src)
+        self.assertEqual('[a, x, b, c]', FST('[a, b, c]').put('[x]', 1, 1, one=False).src)
+        self.assertRaises(IndexError, FST('[a, b, c]').put,'[x]', 'end', 1)
+        self.assertEqual('[x]', FST('[a, b, c]').put('[x]', None, 'end', one=False).src)
+        self.assertEqual('[a, x]', FST('[a, b, c]').put('[x]', 1, 'end', one=False).src)
+        self.assertEqual('[a, b, c, x]', FST('[a, b, c]').put('[x]', 'end', 'end', one=False).src)
+
     def test_replace_and_put_pars_special(self):
         f = parse('( a )').body[0].value.f.copy(pars=True)
         self.assertEqual('[1, ( a ), 3]', parse('[1, 2, 3]').body[0].value.elts[1].f.replace(f, pars=True).root.src)
