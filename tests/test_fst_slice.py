@@ -1533,6 +1533,17 @@ def func():
         self.assertIsNone(f.elts[1].replace(None, one=False))
         self.assertEqual('[a, y, c]', f.src)
 
+    def test_get_slice_cocerage(self):
+        self.assertRaises(ValueError, FST('a or b').get_slice, 0, 0, norm_get=True)
+
+
+
+
+
+
+
+
+
     def test_slice_special(self):
         # Global.names preserves trailing commas and locations
 

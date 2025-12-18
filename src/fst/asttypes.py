@@ -128,7 +128,7 @@ from ast import (
 class _ASTStandin(AST):
     def __init__(self, *args: object, **kwargs) -> None:
         raise RuntimeError("this is a standin class for an AST type that doesn't exist in this version of python, "
-                           "it should not be instantiated")
+                           "it should not be instantiated")  # pragma: no cover
 
 if sys.version_info[:2] >= (3, 11):
     from ast import TryStar

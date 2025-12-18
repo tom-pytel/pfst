@@ -566,8 +566,9 @@ def _maybe_fix_Set(self: fst.FST, norm: bool | str = True) -> None:
 def _maybe_fix_MatchSequence(self: fst.FST, delims: Literal['', '[]', '()'] | None = None) -> str:
     # assert isinstance(self.a, MatchSequence)
 
-    if delims is None:
-        delims = self.is_delimited_matchseq()
+    assert delims is not None  # not currently needed VVV
+    # if delims is None:
+    #     delims = self.is_delimited_matchseq()
 
     body = self.a.patterns
 
@@ -1353,21 +1354,24 @@ def _get_slice_Boolop_values(
 
         if ln == end_ln:  # if on same line as first element then delete everything from start of operator to start of element
             fst_._put_src(None, ln, col, end_ln, end_col, True)
-        elif not fst_lines[ln].strip():  # if operator only thing on the line (incuding comments and line continuations) then nuke the whole line
-            fst_._put_src(None, ln, 0, ln, 0x7fffffffffffffff, True)
-        else:  # otherwise just remove operator
+        elif (s := (l := fst_lines[ln])[:col] + l[end_col + len(sep):]) and not s.isspace():  # operator not only thing on line, just remove operator
             fst_._put_src(None, ln, col, ln, col + len(sep), True)
+        else:  # operator only thing on the line (incuding comments and line continuations), nuke the whole line (we know there is a next line)
+            fst_._put_src(None, ln, 0, ln + 1, 0, True)
 
     elif op_side_left is False:  # remove right side trailing operator source
+        last_fst_ln = len(fst_lines) - 1
         _, _, ln, col = fst_body[-1].f.pars()
-        end_ln, end_col, src = next_frag(fst_lines, ln, col, len(fst_lines) - 1, 0x7fffffffffffffff)  # must be there, op
+        end_ln, end_col, src = next_frag(fst_lines, ln, col, last_fst_ln, 0x7fffffffffffffff)  # must be there, op
 
         if end_ln == ln:  # if on same line as last element then delete everything from end of element to end of operator
             fst_._put_src(None, ln, col, end_ln, end_col + len(sep), True)
-        elif not fst_lines[end_ln].strip():  # if operator only thing on the line (incuding comments and line continuations) then nuke the whole line
-            fst_._put_src(None, end_ln, 0, end_ln, 0x7fffffffffffffff, True)
-        else:  # otherwise just remove operator source
+        elif fst_lines[end_ln][end_col + len(sep):].strip():  # operator not only thing on line, just remove operator
             fst_._put_src(None, end_ln, end_col, end_ln, end_col + len(sep), True)
+        elif end_ln < last_fst_ln:  # operator only thing on the line (incuding comments and line continuations), nuke the whole line
+            fst_._put_src(None, end_ln, 0, end_ln + 1, 0, True)
+        else:  # on last line so just nuke to the end of the line
+            fst_._put_src(None, end_ln, 0, end_ln, 0x7fffffffffffffff, True)
 
     # rest of cleanups
 
@@ -1468,10 +1472,13 @@ def _get_slice_Compare__all(
 
         if op_end_ln == left_ln:  # if op ends on same line as first element then delete everything from start of operator to start of element
             fst_._put_src(None, op_ln, op_col, left_ln, left_col, True)
-        elif fst_lines[op_ln][:op_col].isspace() and fst_lines[op_end_ln][op_end_col:].isspace():  # if operator only thing on its line(s) (incuding comments and line continuations, except for anything inside ('is not', 'not in')) then nuke the whole line(s)
-            fst_._put_src(None, op_ln, 0, op_end_ln, 0x7fffffffffffffff, True)
-        else:  # otherwise just remove operator source
+        elif (
+            ((s := fst_lines[op_ln][:op_col]) and not s.isspace())
+            or ((s := fst_lines[op_end_ln][op_end_col:]) and not s.isspace())
+        ):  # operator not only thing on its line(s), just remove operator
             fst_._put_src(None, op_ln, op_col, op_end_ln, op_end_col, True)
+        else:  # operator only thing on its line(s) (incuding comments and line continuations, except for anything inside ('is not', 'not in')), nuke the whole line(s)
+            fst_._put_src(None, op_ln, 0, op_end_ln + 1, 0, True)
 
         op0f._unmake_fst_tree()  # delete left operator AST and replace with placeholder for correct location calculations
 
@@ -1489,10 +1496,12 @@ def _get_slice_Compare__all(
 
             if op_ln == last_end_ln:  # if op starts on same line as last element ends then delete everything from end of element to end of operator
                 fst_._put_src(None, last_end_ln, last_end_col, op_end_ln, op_end_col, True)
-            elif fst_lines[op_ln][:op_col].isspace() and fst_lines[op_end_ln][op_end_col:].isspace():  # if operator only thing on its line(s) (incuding comments and line continuations, except for anything inside ('is not', 'not in')) then nuke the whole line(s)
-                fst_._put_src(None, op_ln, 0, op_end_ln, 0x7fffffffffffffff, True)
-            else:  # otherwise just remove operator source
+            elif fst_lines[op_end_ln][op_end_col:].strip():  # operator not only thing on line, just remove operator
                 fst_._put_src(None, op_ln, op_col, op_end_ln, op_end_col, True)
+            elif op_end_ln < len(fst_lines) - 1:   # operator only thing on its line(s) (incuding comments and line continuations, except for anything inside ('is not', 'not in')) nuke the whole line(s)
+                fst_._put_src(None, op_ln, 0, op_end_ln + 1, 0, True)
+            else:  # on last line so just nuke to the end of the line
+                fst_._put_src(None, op_ln, 0, op_end_ln, 0x7fffffffffffffff, True)
 
             opnf._unmake_fst_tree()  # delete right operator AST and comparator placeholder AST
             fst_body.pop().f._unmake_fst_tree()
