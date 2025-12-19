@@ -683,7 +683,7 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     if not (cat := _re_parse_all_category.match(first.group(2))):
         _ast_parse(src, parse_params)  # should raise SyntaxError
 
-        raise RuntimeError('should not get here')
+        raise RuntimeError('should not get here')  # pragma: no cover
 
     groupdict = cat.groupdict()
 
@@ -777,7 +777,7 @@ def parse_all(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
     _ast_parse(src, parse_params)  # should raise SyntaxError
 
-    raise RuntimeError('should not get here')
+    raise RuntimeError('should not get here')  # pragma: no cover
 
 
 def parse_strict(src: str, parse_params: Mapping[str, Any] = {}) -> AST:

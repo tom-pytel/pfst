@@ -2323,7 +2323,7 @@ class SliceExprish(Fuzzy):
                                 break
 
                         else:
-                            raise RuntimeError('should not get here')
+                            raise RuntimeError('should not get here')  # pragma: no cover
 
                         bucket = buckets[cat]
 

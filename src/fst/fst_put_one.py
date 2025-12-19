@@ -2690,7 +2690,7 @@ def _put_one_raw(
                 to = (child if idx is None else child[idx]).f
 
         else:
-            raise RuntimeError('should not get here')
+            raise RuntimeError('should not get here')  # pragma: no cover
 
     child, idx = _validate_put(self, code, idx, field, child)
 

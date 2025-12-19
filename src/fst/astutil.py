@@ -154,9 +154,9 @@ __all__ = [
     'is_valid_identifier', 'is_valid_identifier_dotted', 'is_valid_identifier_star', 'is_valid_identifier_alias',
     'is_valid_MatchSingleton_value', 'is_valid_MatchValue_value', 'is_valid_MatchMapping_key',
     'is_valid_target', 'is_valid_del_target',
-    'reduce_ast', 'get_field', 'set_field', 'has_type_comments', 'is_parsable', 'get_parse_mode',
+    'reduce_ast', 'get_field', 'set_field', 'has_type_comments', 'is_parsable',
     'WalkFail', 'walk2', 'compare_asts', 'copy_attributes', 'copy_ast', 'set_ctx',
-    'get_func_class_or_ass_by_name', 'last_block_header_child', 'is_atom',
+    'last_block_header_child', 'is_atom',
     'syntax_ordered_children',
     'precedence_require_parens_by_type', 'precedence_require_parens',
 ]
@@ -477,19 +477,6 @@ class bistr(str):
 
         return b2c[idx]
 
-    def clear_cache(self) -> None:
-        """Remove the lookup array (if need to save some memory)."""
-
-        try:
-            del self.c2b, self._c2b
-        except AttributeError:
-            pass
-
-        try:
-            del self.b2c, self._b2c
-        except AttributeError:
-            pass
-
 
 def _escape_char(c: str) -> str:
     if c in '\n\t':
@@ -728,21 +715,6 @@ def is_parsable(ast: AST) -> bool:
             return False
 
     return True
-
-
-def get_parse_mode(ast: AST) -> Literal['exec', 'eval', 'single']:
-    """Return the original `mode` string that is used to parse to this `mod`."""
-
-    ast_cls = ast.__class__
-
-    if ast_cls is Module:
-        return 'exec'
-    if ast_cls is Expression:
-        return 'eval'
-    if ast_cls is Interactive:
-        return 'single'
-
-    return None
 
 
 class WalkFail(Exception):
@@ -1047,38 +1019,6 @@ def set_ctx(asts: AST | list[AST], ctx: type[expr_context], *, doit: bool = True
                     stack.append(a.value)
 
     return change
-
-
-def get_func_class_or_ass_by_name(asts: Iterable[AST], name: str, ass: bool = True) -> AST | None:
-    """Walk through an `Iterable` of `AST` nodes looking for the first `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
-    optionally `Assign` or `AnnAssign` which has a `name` or `target` or any `targets` field matching `name`.
-
-    **Parameters:**
-    - `asts`: `Iterable` of `AST`s to search through, e.g. a `body` list.
-    - `name`: Name to look for.
-    - `ass`: A domesticated donkey: a sturdy, short-haired animal used as a beast of burden.
-
-    **Returns:**
-    - `AST` node if found matching, else `None`
-    """
-
-    for a in asts:
-        a_cls = a.__class__
-
-        if a_cls in (FunctionDef, AsyncFunctionDef, ClassDef):
-            if a.name == name:
-                return a
-
-        elif ass:
-            if a_cls is Assign:
-                if any(t.__class__ is Name and t.id == name for t in a.targets):
-                    return a
-
-            elif a_cls is AnnAssign:
-                if (t := a.target).__class__ is Name and t.id == name:
-                    return a
-
-    return None
 
 
 def last_block_header_child(ast: AST) -> AST | None:
@@ -1400,16 +1340,18 @@ def _syntax_ordered_children_MatchMapping(ast: AST) -> list[AST]:
 def _syntax_ordered_children_default(ast: AST) -> list[AST]:
     # if all is well this should never be called, just here for reference and fallback in case of new nodes
 
-    children = []
+    raise RuntimeError('should not get here')  # pragma: no cover  - either write _syntax_ordered_children handler for new node type or comment in the code below for generic handling
 
-    for field in AST_FIELDS[ast.__class__]:
-        if child := getattr(ast, field, None):
-            if isinstance(child, list):
-                children.extend(child)
-            else:
-                children.append(child)
+    # children = []
 
-    return children
+    # for field in AST_FIELDS[ast.__class__]:
+    #     if child := getattr(ast, field, None):
+    #         if isinstance(child, list):
+    #             children.extend(child)
+    #         else:
+    #             children.append(child)
+
+    # return children
 
 
 _syntax_ordered_children_nothing      = lambda ast: []
