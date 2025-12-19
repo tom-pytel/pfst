@@ -566,13 +566,12 @@ def _maybe_fix_Set(self: fst.FST, norm: bool | str = True) -> None:
 def _maybe_fix_MatchSequence(self: fst.FST, delims: Literal['', '[]', '()'] | None = None) -> str:
     # assert isinstance(self.a, MatchSequence)
 
-    assert delims is not None  # not currently needed VVV
-    # if delims is None:
-    #     delims = self.is_delimited_matchseq()
+    if delims is None:
+        delims = self.is_delimited_matchseq()
 
     body = self.a.patterns
 
-    if len(body) == 1 and not delims.startswith('['):
+    if len(body) == 1 and not delims.startswith('['):  #delims.startswith('('):  #
         self._maybe_ins_separator((f := body[0].f).end_ln, f.end_col, False, self.end_ln, self.end_col - bool(delims))
 
     if not delims:
