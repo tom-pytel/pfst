@@ -821,18 +821,14 @@ def put_slice_sep_begin(  # **WARNING!** Here there be dragons! TODO: this reall
 
             elif put_end_ln < bound_end_ln:  # nothing (or whitespace) at end of put end line, only do this if we are not at end line of container
                 if put_end_col or not re_empty_space.match(line_put_end):  # end of put not start of next line or next line not empty
-                    fst_._put_src(None, l := len(put_lines) - 2, len(put_lines[l]), l + 1, 0, True)  # remove fst_ trailing newline to not duplicate and remove trailing space from self if present
+                    fst_._put_src(None, l := len(put_lines) - 2, len(put_lines[l]), l + 1, 0, True)  # remove fst_ trailing newline to not duplicate
 
-                    if put_end_col != (ec := len(line_put_end)):
+                    if put_end_col != (ec := len(line_put_end)):  # remove trailing space from self if present
                         self._put_src(None, put_end_ln, put_end_col, put_end_ln, ec, True)
 
-        elif not put_end_col and (put_col or put_end_ln != put_ln):  # we are putting slice before an element which starts a newline and slice doesn't have trailing newline (but not insert to zero-length location at exact start of line)
-            if put_end_ln != put_ln:  # change put end to not delete last newline if possible
-                put_end_ln = put_end_ln - 1
-                put_end_col = len(lines[put_end_ln])
-
-            else:  # otherwise add newline to slice
-                put_lines.append(bistr(''))  # this doesn't need to be post_indent-ed because its just a newline, doesn't do indentation of following text
+        elif not put_end_col and put_end_ln != put_ln:  # we are putting slice which doesn't have trailing newline before an element which starts a newline (but not insert to zero-length location at exact start of line)
+            put_end_ln = put_end_ln - 1  # change put end to not delete last newline if possible
+            put_end_col = len(lines[put_end_ln])
 
         elif (
             not put_lines[-1][-1].isspace()  # putting something that ends with non-space to something that starts with not a closing delimiter or space, put space between

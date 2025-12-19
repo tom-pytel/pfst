@@ -9215,6 +9215,27 @@ Module - ROOT 0,0..2,1
        .ctx Load
 '''),
 
+('body[0].value', 2, 3, None, {}, ('exec',
+'[            # hello\n    a, b, c   \n]'), (None, r'''
+[3
+]
+'''), r'''
+[            # hello
+    a, b, 3
+]
+''',
+'[            # hello\n    a, b, 3   \n]', r'''
+Module - ROOT 0,0..2,1
+  .body[1]
+   0] Expr - 0,0..2,1
+     .value List - 0,0..2,1
+       .elts[3]
+        0] Name 'a' Load - 1,4..1,5
+        1] Name 'b' Load - 1,7..1,8
+        2] Constant 3 - 1,10..1,11
+       .ctx Load
+'''),
+
 ('body[0].value', 0, 1, None, {}, ('exec', r'''
 [            # hello
     a, b, c,
