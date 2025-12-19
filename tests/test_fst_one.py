@@ -2071,6 +2071,14 @@ c, # c
 
         self.assertRaises(NotImplementedError, FST('f"a"').values[0].put, '"b"')
 
+        # misc incorrect constant values
+
+        self.assertRaises(ValueError, FST('a: int', 'AnnAssign').put, -1, 'simple')
+        self.assertRaises(ValueError, FST('from . import *').put, -1, 'level')
+        self.assertRaises(ValueError, FST('from . import *').put, 0, 'level')
+        self.assertRaises(ValueError, FST('"a"').put, 'z', 'kind')
+        self.assertRaises(ValueError, FST('async for a in b').put, -1, 'is_async')
+
     def test_put_one_pattern(self):
 
         # pattern BinOp and UnaryOp
@@ -3180,6 +3188,23 @@ c, # c
             self.assertEqual('try: pass\nexcept* Exception: pass', f.src)
             f.verify()
 
+        # misc
+
+        self.assertRaises(ValueError, FST('a + b').put, 'x', 'right', raw=True, to=FST('DIFFERENT_TREE'))  # `to` a node in a different tree
+
+        self.assertRaises(ValueError, (f := FST('a = b and c')).put, 'x or', 0, 'targets', raw=True, to=f.value.op)  # `to` a node without a location
+
+        self.assertEqual('x, lambda y: None', (f := FST('a = lambda: None')).put('x, lambda y', 0, 'targets', raw=True, to=f.value.args).root.src)  # `to` empty arguments
+        f.verify()
+
+        self.assertEqual('x, (y)', (f := FST('a = f(i for i in j)')).put('x, (y', 0, 'targets', raw=True, to=f.value.args[0]).root.src)  # `to` GeneratorExp Call arg with shared parentheses
+        f.verify()
+        self.assertEqual('x, (y)', (f := FST('a = f(i for i in j)')).put('x, (y', 0, 'targets', raw=True, pars=False, to=f.value.args[0]).root.src)  # `to` GeneratorExp Call arg with shared parentheses
+        f.verify()
+
+        self.assertIsNone((f := FST('a\nb')).body[1].replace('', raw=True))
+        f.verify()
+
     def test_replace_raw_non_mod_stmt_root(self):
         f = FST('call(a, *b, **c)')
         f.args[0].replace('d', to=f.keywords[-1], raw=True)
@@ -3295,6 +3320,20 @@ f'd{t"e{f=!s:0.1f<1}"=}'
         self.assertIsInstance(a.value.ctx, Load)
         self.assertIsInstance(a.value.elts[0].ctx, Load)
         self.assertIsInstance(a.value.elts[1].ctx, Load)
+
+    def test_one_coverage(self):
+        # misc stuff to fill out test coverage
+
+        from fst.fst_put_one import _validate_put
+        self.assertRaises(IndexError, _validate_put, f := FST('a, b'), None, None, 'elts', f.a.elts)
+        self.assertRaises(IndexError, _validate_put, f := FST('a = 1'), None, 0, 'value', f.a.value)
+
+        self.assertRaises(ValueError, (f := FST('a + b')).put, 'z', 'left', raw=True, to=f.a.right)
+
+        self.assertRaises(NodeError, FST('def f(): pass').put, 'x', 'type_comment')
+
+        from fst.fst_put_one import _put_one_raw
+        self.assertEqual('{x: y}', _put_one_raw(FST('{a: b}'), 'x: y', 0, '_all', [], None, {}).root.src)
 
 
 if __name__ == '__main__':

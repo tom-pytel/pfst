@@ -269,7 +269,7 @@ def _validate_pattern_attr(self: fst.FST) -> Name:
 
 def _is_valid_MatchClass_cls(ast: AST) -> bool:
     if (f := ast.f).end_ln != f.ln:
-        raise NodeError(f'cannot put multiline {ast.__class__.__name__} to MatchClass pattern expression', rawable=True)
+        raise NotImplementedError(f'cannot put multiline {ast.__class__.__name__} to MatchClass pattern expression')
 
     if _validate_pattern_attr(ast.f).id == '_':
         raise NodeError("cannot start MatchClass.cls with wildcard specifier '_'", rawable=True)
@@ -293,9 +293,6 @@ def _is_valid_MatchValue_value(ast: AST) -> bool:
 def _is_valid_MatchMapping_key(ast: AST) -> bool:
     if not is_valid_MatchMapping_key(ast):
         return False
-
-    # if (f := ast.f).end_ln != f.ln:
-    #     raise NodeError(f'cannot put multiline {ast.__class__.__name__} to pattern expression', rawable=True)
 
     if any((bad := f).pars().n for f in ast.f.walk()):
         raise NodeError(f'cannot put parenthesized {bad.a.__class__.__name__} to pattern expression', rawable=True)
@@ -782,7 +779,7 @@ def _make_exprish_fst(
                     if f == 'value':
                         return True
 
-                    break
+                    break  # will only get here when changing format_spec.values[], TODO: what needs to be done here when that is implemented?
 
                 if s._is_atom(pars=True, always_enclosed=True):
                     break
@@ -897,8 +894,7 @@ def _put_one_exprish_required(
     if not validated:
         child, idx = _validate_put(self, code, idx, field, child)
 
-        if not child:
-            raise ValueError(f'cannot replace nonexistent {self.a.__class__.__name__}.{field}')
+        assert child  # this is a required field so should not be None, unless at some point in the future we remove it for some special slice representation or some intermediate operationms, in which case catch this
 
     childf = child.f
     ctx = ctx.__class__ if (ctx := getattr(child, 'ctx', None)) else Load
@@ -1206,7 +1202,7 @@ def _put_one_Compare__all(
 
     idx, field, child = _params_Compare(self, idx)
 
-    return _put_one_exprish_required(self, code, idx, field, child, static, options)
+    return _put_one_exprish_required(self, code, idx, field, child, static, options)  # code=None delete does not get here
 
 
 def _put_one_Call_args(
@@ -2680,7 +2676,7 @@ def _put_one_raw(
             idx = fixup_one_index(len(child), idx)
             loc = self._loc_maybe_key(idx, pars, child, body2)  # maybe the key is a '**'
 
-            if not to:
+            if not to:  # does not currently get here without a `to` in normal operation because in that case it is handled by slice operations in _put_one()
                 to = body2[idx].f
 
         elif ast_cls is Compare:
@@ -2831,14 +2827,17 @@ def _put_one(
             return None
 
         if is_virtual_field:
-            if keys:  # Dict, MatchMapping
-                return None
+            assert keys  # only Dict or MatchMapping get here, Compare is only in the outer block for a delete with code=None which exited after completing just above, otherwise for a put Compare._all has handler _put_one_Compare__all
 
-            if not idx:  # Compare.left
-                return new_self.a.left
+            return None
+            # if keys:  # Dict, MatchMapping
+            #     return None  # because there is not an individual element to return, they are a pair
 
-            idx -= 1  # Compare.comparators
-            field = 'comparators'
+            # if not idx:  # Compare.left
+            #     return new_self.a.left
+
+            # idx -= 1  # Compare.comparators
+            # field = 'comparators'
 
         try:
             return getattr(new_self.a, field)[idx].f  # may not be there due to removal of last element or raw reparsing of weird *(^$
@@ -2851,12 +2850,12 @@ def _put_one(
     if raw is not True:
         try:
             if to:
-                raise NodeError(f"cannot put with 'to' to {self.a.__class__.__name__}"
-                                f"{f'.{field}' if field else ''} without 'raw'", rawable=True)
+                raise NodeError(f"cannot put with 'to' to {self.a.__class__.__name__}.{field} without 'raw'",
+                                rawable=True)
 
-            if not handler:
-                raise NodeError(f"cannot {'delete' if code is None else 'replace'} {ast.__class__.__name__}"
-                                f"{f'.{field}' if field else ' combined fields'}", rawable=True)
+            if not handler:  # came from the default to _PUT_ONE_HANDLERS.get() because otherwise all (cls,field) keys in the table should be either 'sliceable' or have a  handler
+                raise NodeError(f"cannot {'delete' if code is None else 'replace'} {ast.__class__.__name__}.{field}",
+                                rawable=True)
 
             with self._modifying(field):
                 child = handler(self, code, idx, field, child, static, options)

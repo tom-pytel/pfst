@@ -261,9 +261,11 @@ def _loc_op(self: fst.FST) -> fstloc | None:
     **Note:** This function is explicitly safe to call from `FST.loc`.
     """
 
+    # assert isinstance(self.a, (operator, unaryop, cmpop))
+
     ast = self.a
     ast_cls = ast.__class__
-    op = OPCLS2STR[ast_cls]  # assert isinstance(self.a, (operator, unaryop, cmpop))
+    op = OPCLS2STR[ast_cls]
     lines = self.root._lines
 
     if not (parent := self.parent):  # standalone

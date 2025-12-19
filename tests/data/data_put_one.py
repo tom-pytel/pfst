@@ -12985,6 +12985,52 @@ Module - ROOT 0,0..0,13
 '''),
 ],
 
+'MatchClass': [  # ................................................................................
+
+('', None, None, 'cls', {}, ('MatchClass',
+r'''cls()'''), (None,
+r'''new_cls'''),
+r'''new_cls()''', r'''
+MatchClass - ROOT 0,0..0,9
+  .cls Name 'new_cls' Load - 0,0..0,7
+'''),
+
+('', None, None, 'cls', {}, ('MatchClass',
+r'''cls()'''), (None, r'''
+new
+.
+cls
+'''),
+r'''**NotImplementedError('cannot put multiline Attribute to MatchClass pattern expression')**'''),
+],
+
+'MatchMapping': [  # ................................................................................
+
+('', 0, None, 'keys', {}, ('MatchMapping',
+r'''{1: a}'''), (None,
+r'''...'''),
+r'''**NodeError('invalid value for MatchMapping.keys, got Constant')**'''),
+
+('', 0, None, 'keys', {}, ('MatchMapping',
+r'''{1: a}'''), (None, r'''
+-
+2
+'''), r'''
+{-
+2: a}
+''',
+r'''{-2: a}''', r'''
+MatchMapping - ROOT 0,0..1,5
+  .keys[1]
+   0] UnaryOp - 0,1..1,1
+     .op USub - 0,1..0,2
+     .operand Constant 2 - 1,0..1,1
+  .patterns[1]
+   0] MatchAs - 1,3..1,4
+     .name 'a'
+'''),
+],
+
 'type_params': [  # ................................................................................
 
 ('body[0]', 0, None, 'type_params', {'_ver': 12}, ('exec',
@@ -14173,6 +14219,22 @@ _Assign_targets - ROOT 0,0..0,12
    1] Name 'y' Store - 0,4..0,5
    2] Name 'c' Store - 0,9..0,10
 '''),
+
+('', 0, None, None, {'raw': True}, (None,
+r'''{a: b}'''), (None,
+r'''c: d'''),
+r'''{c: d}''', r'''
+Dict - ROOT 0,0..0,6
+  .keys[1]
+   0] Name 'c' Load - 0,1..0,2
+  .values[1]
+   0] Name 'd' Load - 0,4..0,5
+'''),
+
+('', None, None, 'returns', {'raw': True}, (None,
+r'''def f() -> int: pass'''), (None,
+r'''**DEL**'''),
+r'''**ValueError('cannot delete in raw put')**'''),
 ],
 
 'f-string': [  # ................................................................................
@@ -14992,6 +15054,51 @@ For - ROOT 0,0..1,5
    0] Expr - 1,4..1,5
      .value Name 'x' Load - 1,4..1,5
 '''),
+],
+
+'misc': [  # ................................................................................
+
+('target', None, None, 'value', {}, (None,
+r'''a[b]: int = c'''), (None,
+r'''f()'''),
+r'''f()[b]: int = c''', r'''
+AnnAssign - ROOT 0,0..0,15
+  .target Subscript - 0,0..0,6
+    .value Call - 0,0..0,3
+      .func Name 'f' Load - 0,0..0,1
+    .slice Name 'b' Load - 0,4..0,5
+    .ctx Store
+  .annotation Name 'int' Load - 0,8..0,11
+  .value Name 'c' Load - 0,14..0,15
+  .simple 0
+'''),
+
+('', None, None, 'ctx', {}, (None,
+r'''a'''), (None,
+r''''''),
+r'''**ValueError('expecting expr_context, got str')**'''),
+
+('values[0].format_spec', 0, None, 'values', {'_ver': 12}, (None,
+r'''f"{a:s}"'''), (None,
+r'''lambda: None'''),
+r'''**NotImplementedError('this is not implemented yet')**'''),
+
+('', 1, None, 'elts', {'_ver': 11}, (None,
+r'''a, b'''), (None,
+r'''lambda: None'''),
+r'''a, lambda: None''', r'''
+Tuple - ROOT 0,0..0,15
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Lambda - 0,3..0,15
+     .body Constant None - 0,11..0,15
+  .ctx Load
+'''),
+
+('', None, None, 'op', {'raw': True}, (None,
+r'''a or b'''), (None,
+r'''and'''),
+r'''**ValueError('cannot determine location to put to')**'''),
 ],
 
 }
