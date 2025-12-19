@@ -3630,6 +3630,9 @@ b,
         self.assertFalse(FST('((pos < len(ranges))>>32),(r&((1<<32)-1))')._is_delimited_seq())
         self.assertFalse(FST('((1)+1),(1)')._is_delimited_seq())
 
+        self.assertFalse(FST('(a,), (b)')._is_delimited_seq())
+        self.assertFalse(FST('(a), (b,)')._is_delimited_seq())
+
     def test__maybe_add_line_continuations(self):
         f = FST(r'''
 a + \
@@ -3736,6 +3739,31 @@ d  # comment3''', f.src)
         f._maybe_ins_separator(0, 2, True, 1, 0)
         self.assertEqual('[a, #c\n]', f.src)
 
+    def test__maybe_del_separator(self):
+        f = FST('[a, #c\n]')
+        f._maybe_del_separator(0, 2, True, 0, 2)
+        self.assertEqual('[a, #c\n]', f.src)
+
+        f = FST('[a, #c\n]')
+        f._maybe_del_separator(0, 2, True, 0, 3)
+        self.assertEqual('[a #c\n]', f.src)
+
+        f = FST('[a, #c\n]')
+        f._maybe_del_separator(0, 2, False)
+        self.assertEqual('[a, #c\n]', f.src)
+
+        f = FST('[a, \\\n]')
+        f._maybe_del_separator(0, 2, False)
+        self.assertEqual('[a, \\\n]', f.src)
+
+        f = FST('[a, #c\n]')
+        f._maybe_del_separator(0, 2, True)
+        self.assertEqual('[a #c\n]', f.src)
+
+        f = FST('[a,\n]')
+        f._maybe_del_separator(0, 2, False)
+        self.assertEqual('[a\n]', f.src)
+
     def test__maybe_fix_tuple(self):
         # parenthesize naked tuple preserve comments if present
 
@@ -3752,6 +3780,24 @@ d  # comment3''', f.src)
         f = FST(Tuple(elts=[], ctx=Load(), lineno=1, col_offset=0, end_lineno=2, end_col_offset=0), ['         ', ''], None)
         f._maybe_fix_tuple()
         self.assertEqual('()', f.src)
+        f.verify()
+
+        # fix parent location after removing trailing whitespace
+
+        f = FST('a = b, c')
+        f.value.put_src(None, 0, 7, 0, 8, 'offset')
+        del f.a.value.elts[-1]  # specifically just the AST
+        self.assertEqual((0, 4, 0, 7), f.value.loc)
+        f.value._maybe_fix_tuple()
+        self.assertEqual('a = b,', f.src)
+        f.verify()
+
+        f = FST('(yield a, b)')
+        f.value.put_src(None, 0, 10, 0, 11, 'offset')
+        del f.a.value.elts[-1]  # specifically just the AST
+        self.assertEqual((0, 7, 0, 10), f.value.loc)
+        f.value._maybe_fix_tuple()
+        self.assertEqual('(yield a, )', f.src)
         f.verify()
 
     def test__maybe_fix_copy(self):
@@ -6359,6 +6405,7 @@ with a as b, c as d:
         self.assertRaises(IndexError, f.get_src, 1, 2, 1, 1)
 
         self.assertEqual('= 2\n', f.get_src(-2, -3, -1, 0))
+        self.assertEqual('j =', f.get_src(-2, -5, -2, -2))
         self.assertEqual('if 1:', f.get_src(-3, 0, -3, 'end'))
         self.assertEqual('s', f.get_src(-1, -1, 'end', 'end'))
         self.assertEqual('', f.get_src('end', 'end', 'end', 'end'))
@@ -7564,6 +7611,11 @@ def func():
 
         self.assertEqual('(b := c)', FST('a, b := c, d').elts[1].copy(pars_walrus=True).src)
         self.assertEqual('(b := c)', FST('a = (b := c)').value.copy(pars_walrus=True).src)
+
+        # more cases
+
+        self.assertEqual('fstlocn(0, 0, 0, 9, n=0)', str(FST('(a,), (b)').pars()))
+        self.assertEqual('fstlocn(0, 0, 0, 9, n=0)', str(FST('(a), (b,)').pars()))
 
     def test_pars_walrus(self):
         # not already parenthesized

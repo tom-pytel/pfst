@@ -1533,13 +1533,17 @@ def func():
         self.assertIsNone(f.elts[1].replace(None, one=False))
         self.assertEqual('[a, y, c]', f.src)
 
-    def test_get_slice_coverage(self):
+    def test_slice_coverage(self):
         # misc stuff to fill out test coverage
 
         self.assertRaises(ValueError, FST('a or b').get_slice, 0, 0, norm_get=True)
 
         self.assertEqual('case 2, 1 | c: pass', (f := FST('case 2, 1 | "a": pass')).pattern.patterns[1].put_slice('c', 1, 2, norm=True).root.src)
         f.verify()
+
+        self.assertRaises(ValueError, FST('pass').get)
+        self.assertRaises(ValueError, FST('pass').get, 'nonexistent_field')
+        self.assertRaises(ValueError, FST('a = b').get_slice, 'value')
 
     def test_slice_special(self):
         # Global.names preserves trailing commas and locations

@@ -930,7 +930,7 @@ def fixup_one_index(len_: int, idx: int | Literal['end'], start_at: int = 0) -> 
     """
 
     if idx == 'end':
-        idx = len_
+        idx = len_  # pragma: no cover  - yes, this is intended to cause the IndexError, if it ever gets here with this value
     elif idx < 0:
         idx += len_
     else:
@@ -1000,10 +1000,10 @@ def _repr_tail(self: fst.FST, loc: bool = True) -> str:
     if loc:
         try:
             loc = self.loc
-        except Exception:  # maybe in middle of operation changing locations and lines
+        except Exception:  # pragma: no cover  - maybe in middle of operation changing locations and lines
             loc = '????'
 
-        # self._touchall(False, True, True)  # for debugging because we may have cached locs which would not have otherwise been cached during execution
+        # self.root._touchall()  # for debugging because we may have cached locs which would not have otherwise been cached during execution
 
     tail = ' ROOT' if self.is_root else ''
 
@@ -1195,6 +1195,14 @@ def _is_solo_matchcls_pat(self: fst.FST) -> bool:
     >>> (FST('match a:\n  case cls(a, b): pass')
     ...  .cases[0].pattern.patterns[0]._is_solo_matchcls_pat())
     False
+
+    >>> (FST('match a:\n  case cls(1): pass')
+    ...  .cases[0].pattern.patterns[0]._is_solo_matchcls_pat())
+    True
+
+    >>> (FST('match a:\n  case cls(1): pass')
+    ...  .cases[0].pattern.patterns[0].value._is_solo_matchcls_pat())
+    True
     """
 
     if not (parent := self.parent):
@@ -1604,18 +1612,20 @@ def _maybe_fix_undelimited_seq(self: fst.FST, body: list[AST], delims: str = '()
 
             self._touch()
 
-            while ((self := self.parent) and
-                    getattr(a := self.a, 'end_col_offset', -1) == cur_end_col_offset and
-                    a.end_lineno == cur_end_lineno
+            cur = self
+
+            while ((cur := cur.parent)
+                   and getattr(a := cur.a, 'end_col_offset', -1) == cur_end_col_offset
+                   and a.end_lineno == cur_end_lineno
             ):  # update parents, only as long as they end exactly where we end
                 a.end_lineno = end_lineno
                 a.end_col_offset = end_col_offset
 
-                self._touch()
+                cur._touch()
 
             else:
-                if self:
-                    self._touchall(True, True, False)
+                if cur:
+                    cur._touchall(True, True, False)
 
         _, _, end_ln, end_col = self.loc
 
