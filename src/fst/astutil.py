@@ -6,7 +6,7 @@ from array import array
 from ast import iter_fields, walk
 from keyword import iskeyword as keyword_iskeyword
 from types import EllipsisType, NoneType
-from typing import Any, Callable, Iterable, Iterator, Literal
+from typing import Any, Callable, Iterator
 from enum import IntEnum, auto
 
 from .asttypes import (

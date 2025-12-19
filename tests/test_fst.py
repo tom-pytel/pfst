@@ -2073,6 +2073,34 @@ match a:
         self.assertEqual((0, 17, 0, 15), _loc_block_header_end(parse('class cls((base)): pass').body[0].f))
         self.assertEqual((0, 12, 0, 11), _loc_block_header_end(parse('for a in (b): pass\nelse: pass').body[0].f))
 
+    def test__loc_arguments_empty(self):
+        self.assertEqual((0, 0, 0, 6), FST('# test', 'arguments')._loc_arguments_empty())
+        self.assertEqual((0, 6, 0, 6), FST('lambda: None').args._loc_arguments_empty())
+        self.assertEqual((0, 6, 0, 8), FST('lambda  : None').args._loc_arguments_empty())
+        self.assertEqual((0, 6, 0, 6), FST('def f(): pass').args._loc_arguments_empty())
+        self.assertEqual((0, 6, 0, 8), FST('def f(  ): pass').args._loc_arguments_empty())
+
+        if PYGE12:
+            self.assertEqual((0, 14, 0, 14), FST('def f[T: int](): pass').args._loc_arguments_empty())
+            self.assertEqual((0, 14, 0, 16), FST('def f[T: int](  ): pass').args._loc_arguments_empty())
+
+        if PYGE13:
+            self.assertEqual((0, 21, 0, 21), FST('def f[T: int = bool](): pass').args._loc_arguments_empty())
+            self.assertEqual((0, 21, 0, 23), FST('def f[T: int = bool](  ): pass').args._loc_arguments_empty())
+
+    def test__loc_decorator(self):
+        self.assertEqual((1, 2, 1, 10), FST('if 1:\n  @ ( deco )\n  class cls: pass').body[0]._loc_decorator(0, pars=False))
+        self.assertEqual((1, 2, 1, 12), FST('if 1:\n  @ ( deco )\n  class cls: pass').body[0]._loc_decorator(0, pars=True))
+
+        self.assertEqual((3, 2, 4, 6), FST(r'''
+if 1:
+    @deco1
+    \
+  @ \
+ deco2
+    class cls: pass
+'''.strip()).body[0]._loc_decorator(1))
+
     def test__loc_ClassDef_bases_pars(self):
         from fst.fst_locs import _loc_ClassDef_bases_pars
 
@@ -2203,6 +2231,14 @@ match a:
         self.assertEqual('fstlocn(0, 5, 0, 15, n=0)', str_(_loc_With_items_pars(FST('with (a) as (b): pass'))))
         self.assertEqual('fstlocn(0, 5, 0, 17, n=1)', str_(_loc_With_items_pars(FST('with ((a) as (b)): pass'))))
 
+        f = FST(r'''
+with (
+    a as b
+    ): pass
+'''.strip())
+        f.items[0].remove()
+        self.assertEqual('fstlocn(0, 5, 1, 5, n=1)', str_(_loc_With_items_pars(f)))
+
     def test__loc_Call_pars(self):
         from fst.fst_locs import _loc_Call_pars
 
@@ -2223,7 +2259,12 @@ match a:
         self.assertEqual((1, 0, 7, 1), _loc_Subscript_brackets(FST('a\\\n[\nb\n:\nc\n:\nd\n]', 'exec').body[0].value))
         self.assertEqual((1, 0, 7, 1), _loc_Subscript_brackets(FST('"[]["\\\n[\nb\n:\nc\n:\nd\n]', 'exec').body[0].value))
 
-    def test_loc_MatchClass_pars(self):
+    def test__loc_MatchMapping_rest(self):
+        self.assertIsNone(FST('{1: a, 2: b}', 'MatchMapping')._loc_MatchMapping_rest())
+        self.assertEqual((0, 15, 0, 19), FST('{1: a, 2: b, **rest}', 'MatchMapping')._loc_MatchMapping_rest())
+        self.assertEqual((0, 3, 0, 7), FST('{**rest}', 'MatchMapping')._loc_MatchMapping_rest())
+
+    def test__loc_MatchClass_pars(self):
         from fst.fst_locs import _loc_MatchClass_pars
 
         self.assertEqual((1, 9, 1, 11), _loc_MatchClass_pars(FST('match a:\n case cls(): pass', 'exec').body[0].cases[0].pattern))
@@ -2233,14 +2274,47 @@ match a:
         self.assertEqual((1, 9, 1, 17), _loc_MatchClass_pars(FST('match a:\n case cls(c="()"): pass', 'exec').body[0].cases[0].pattern))
         self.assertEqual((2, 0, 9, 1), _loc_MatchClass_pars(FST('match a:\n case cls\\\n(\nc\n=\n"\\\n(\\\n)\\\n"\n): pass', 'exec').body[0].cases[0].pattern))
 
-    def test_loc_FunctionDef_type_params_brackets(self):
-        if PYGE12:
-            f = FST(r'''
+    def test__loc_FunctionDef_type_params_brackets(self):
+        f = FST('def f(): pass')
+        self.assertEqual((None, (0, 5)), f._loc_FunctionDef_type_params_brackets())
+        del f.body
+        self.assertEqual((None, (0, 5)), f._loc_FunctionDef_type_params_brackets())
+
+        f = FST(r'''
 def f():
     @deco(["\\"])
     def gen(): pass
                 '''.strip())
-            self.assertEqual((None, (0, 5)), f._loc_FunctionDef_type_params_brackets())
+        self.assertEqual((None, (0, 5)), f._loc_FunctionDef_type_params_brackets())
+        del f.body
+        self.assertEqual((None, (0, 5)), f._loc_FunctionDef_type_params_brackets())
+
+        if PYGE12:
+            f = FST('def f [T] (): pass')
+            self.assertEqual(((0, 6, 0, 9), (0, 5)), f._loc_FunctionDef_type_params_brackets())
+            del f.body
+            self.assertEqual(((0, 6, 0, 9), (0, 5)), f._loc_FunctionDef_type_params_brackets())
+
+    def test__loc_ClassDef_type_params_brackets(self):
+        f = FST('class cls: pass')
+        self.assertEqual((None, (0, 9)), f._loc_ClassDef_type_params_brackets())
+        del f.body
+        self.assertEqual((None, (0, 9)), f._loc_ClassDef_type_params_brackets())
+
+        f = FST(r'''
+class cls:
+    @deco(["\\"])
+    def gen(): pass
+                '''.strip())
+        self.assertEqual((None, (0, 9)), f._loc_ClassDef_type_params_brackets())
+        del f.body
+        self.assertEqual((None, (0, 9)), f._loc_ClassDef_type_params_brackets())
+
+        if PYGE12:
+            f = FST('class cls [T] (): pass')
+            self.assertEqual(((0, 10, 0, 13), (0, 9)), f._loc_ClassDef_type_params_brackets())
+            del f.body
+            self.assertEqual(((0, 10, 0, 13), (0, 9)), f._loc_ClassDef_type_params_brackets())
 
     def test__is_atom(self):
         self.assertIs(False, parse('1 + 2').body[0].value.f._is_atom())
