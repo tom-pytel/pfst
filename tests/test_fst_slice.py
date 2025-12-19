@@ -1847,6 +1847,23 @@ if (
         self.assertEqual('with (\n     (x) or (a) or b or (c)): pass'.strip(), (f := FST('with (a) or b or (c): pass')).items[0].context_expr.put_slice('\n(x)', 0, 0).root.src)
         f.verify()
 
+        # put empty slice
+
+        f = FST('a or b')
+        f.put_slice(None)
+        self.assertEqual('', f.src)
+        self.assertEqual(0, len(f.a.values))
+
+        self.assertEqual('x or z', FST('x or y or z').put_slice(f, 1, 2).src)
+
+        # can't put incompatible op type without coercion
+
+        self.assertRaises(ValueError, FST('a or b').put_slice, 'x and y', coerce=False)
+
+        # parenthesize tuple put as one
+
+        self.assertEqual('a or (x, y) or d', FST('a or b or c or d').put_slice('x, y', 1, 3).src)
+
         # other misc
 
         f = FST(r'''
@@ -1862,6 +1879,8 @@ a or b \
 
 '''.lstrip(), 'exec')
         self.assertEqual('\n', f.body[0].value.put_slice(None).root.src)
+
+        self.assertEqual('(a or x\nor c)', FST('a or b or c').put_slice(['x', 'or'], 1, 2).src)
 
     def test_slice_special_Compare(self):
         self.assertRaises(ValueError, FST('a < b').get_slice, 0, 0)
@@ -2084,6 +2103,14 @@ if (
             self.assertEqual("f'{3 == 4:<12}'", (f := FST("f'{4 != 4 == 4:<12}'")).values[0].value.put_slice('3 == 4', 0, 3).root.src)
             f.verify()
 
+        # parenthesize tuple put as one
+
+        self.assertEqual('a < (x, y) > d', FST('a < b == c > d').put_slice('x, y', 1, 3).src)
+
+        # other misc
+
+        self.assertEqual('(a < x\n== c)', FST('a < b > c').put_slice(['x', '=='], 1, 2).src)
+
         # misc errors
 
         f = FST(r'''
@@ -2222,6 +2249,11 @@ if 1:
         f.verify()
 
         self.assertEqual('a < x is not c', (f := FST('a < b > c')).put_slice('x', 1, 2, op_side='right', op=FST('is not', cmpop)).src)
+        f.verify()
+
+        # list, if this one works every case works
+
+        self.assertEqual('a is not x < b', (f := FST('a < b')).put_slice('x', 1, 1, op_side='left', op=['is not']).src)
         f.verify()
 
     def test_get_slice_special(self):
@@ -2447,6 +2479,8 @@ if 1:
 
         self.assertEqual('[b, y, z]', (f := FST('[x, y, z]', pattern)).put(FST('a | b', pattern).get_slice(1, norm_get=False), 0).src)  # length 1
         f.verify()
+
+        self.assertRaises(SyntaxError, FST('x | y', pattern).put_slice, ['+'])
 
         # del
 
@@ -2939,6 +2973,19 @@ i ; \\
         self.assertEqual('[a, [x, y], c]', parse('[a, b, c]').body[0].value.f.put_slice(ast_parse('[x, y,]'), 1, 2, one=True, raw=True).root.src)
         self.assertEqual('[a, {x, y}, c]', parse('[a, b, c]').body[0].value.f.put_slice(ast_parse('{x, y,}'), 1, 2, one=True, raw=True).root.src)
         self.assertRaises(SyntaxError, parse('{a: a, b: b, c: c}').body[0].value.f.put_slice, ast_parse('{x: x, y: y,}'), 1, 2, one=True, raw=True)
+
+        # can't put empty slice raw
+
+        self.assertRaises(NodeError, FST('a, b').put_slice, FST('()').a, raw=True)
+        self.assertRaises(NodeError, FST('a, b').put_slice, FST('()'), raw=True)
+
+        # FST must be root
+
+        self.assertRaises(ValueError, FST('a, b').put_slice, FST('x, y').elts[0], raw=True)
+
+        # misc raw 'auto' for test coverage
+
+        self.assertEqual('a, x, c', FST('a, b, c').put_slice(FST('x', pattern), 1, 2,raw='auto').root.src)
 
     def test_put_slice_raw_strip_delimiters(self):
         # strip or add delimiters from/to different type of node to put as slice

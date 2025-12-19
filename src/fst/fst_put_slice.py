@@ -437,9 +437,6 @@ def _code_to_slice_BoolOp_values_maybe_dangling(
 
     op_side_left = _get_option_op_side(is_first, is_last, options)
 
-    if code is None:
-        return None, op_side_left
-
     try:  # most likely case for BoolOp is pure expr so we try getting that first before checking for dangling op versions
         fst_ = _code_to_slice_BoolOp_values(self, code, one, options)
 
@@ -576,9 +573,6 @@ def _code_to_slice_Compare__all_maybe_dangling(
     """
 
     op_side_left = _get_option_op_side(is_first, is_last, options)
-
-    if code is None:
-        return None, op_side_left
 
     try:  # most likely case for Compare is pure expr so we try getting that first before checking for dangling op versions
         fst_ = _code_to_slice_Compare__all(self, code, one, options)
@@ -780,7 +774,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
         if isinstance(code, str):
             code = code.split('\n')
         elif not isinstance(code, list):
-            raise
+            raise  # pragma: no cover  - this will never proc in practice as only str or list should give SyntaxError, FST and AST will give some other error as will any other wrong `code` type, there is a tiny impossible chance in the future that if an unparsed pattern AST doesn't reparse to itself there will be a SyntaxError
 
         if next_frag(code, 0, 0, len(code) - 1, len(code[-1])):
             raise
@@ -2643,7 +2637,7 @@ def _loc_slice_raw_put_default(
     body = getattr(self.a, field, None)
 
     if body is None or not isinstance(body, list):
-        raise ValueError(f'cannot put raw slice to {self.a.__class__.__name__}.{field}')
+        raise ValueError(f'cannot put raw slice to {self.a.__class__.__name__}.{field}')  # pragma: no cover  - in practice never gets here because slice put to non-list field is errored before here, but juuust in case for inevitable future screwups
 
     start, stop = _fixup_slice_index_for_raw(len(body), start, stop)
     ln, col, _, _ = body[start].f.pars(shared=False)

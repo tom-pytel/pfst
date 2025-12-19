@@ -18856,6 +18856,22 @@ If - ROOT 0,0..2,9
      .body[1]
       0] Pass - 2,4..2,8
 '''),
+
+('', 1, 1, 'items', {}, (None,
+r'''with x, y, z: pass'''), ('_withitems',
+r''''''),
+r'''with x, y, z: pass''', r'''
+With - ROOT 0,0..0,18
+  .items[3]
+   0] withitem - 0,5..0,6
+     .context_expr Name 'x' Load - 0,5..0,6
+   1] withitem - 0,8..0,9
+     .context_expr Name 'y' Load - 0,8..0,9
+   2] withitem - 0,11..0,12
+     .context_expr Name 'z' Load - 0,11..0,12
+  .body[1]
+   0] Pass - 0,14..0,18
+'''),
 ],
 
 'With_items_coerce': [  # ................................................................................
@@ -20763,6 +20779,20 @@ If - ROOT 0,0..1,14
         .name 'x'
       1] alias - 1,12..1,13
         .name 'y'
+'''),
+
+('', 1, 1, None, {}, (None,
+r'''import x, y, z'''), ('_Import_names',
+r''''''),
+r'''import x, y, z''', r'''
+Import - ROOT 0,0..0,14
+  .names[3]
+   0] alias - 0,7..0,8
+     .name 'x'
+   1] alias - 0,10..0,11
+     .name 'y'
+   2] alias - 0,13..0,14
+     .name 'z'
 '''),
 ],
 
@@ -27620,6 +27650,17 @@ If - ROOT 0,0..5,5
 r'''a or b or c'''), (None,
 r'''x or'''),
 r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('', 1, 2, None, {}, (None,
+r'''a or b or c'''), (None,
+r'''**DEL**'''),
+r'''a or c''', r'''
+BoolOp - ROOT 0,0..0,6
+  .op Or
+  .values[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'c' Load - 0,5..0,6
+'''),
 ],
 
 'Compare__all': [  # ................................................................................
@@ -29329,6 +29370,20 @@ If - ROOT 0,0..5,5
 r'''a < b > c'''), (None,
 r'''x or'''),
 r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('', 1, 1, None, {'one': True}, (None,
+r'''a < b > c'''), (None,
+r'''**DEL**'''),
+r'''a < b > c''', r'''
+Compare - ROOT 0,0..0,9
+  .left Name 'a' Load - 0,0..0,1
+  .ops[2]
+   0] Lt - 0,2..0,3
+   1] Gt - 0,6..0,7
+  .comparators[2]
+   0] Name 'b' Load - 0,4..0,5
+   1] Name 'c' Load - 0,8..0,9
+'''),
 ],
 
 'Call_args': [  # ................................................................................
@@ -32612,6 +32667,38 @@ _comprehension_ifs - ROOT 0,0..0,9
 '''),
 ],
 
+'MatchSequence': [  # ................................................................................
+
+('', 1, 3, None, {}, ('pattern',
+r'''[a, b, c, d]'''), ('pattern',
+r'''[x, y]'''),
+r'''[a, x, y, d]''', r'''
+MatchSequence - ROOT 0,0..0,12
+  .patterns[4]
+   0] MatchAs - 0,1..0,2
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'x'
+   2] MatchAs - 0,7..0,8
+     .name 'y'
+   3] MatchAs - 0,10..0,11
+     .name 'd'
+'''),
+
+('', 1, 3, None, {}, ('pattern',
+r'''[a, b, c, d]'''), ('pattern',
+r'''x as y'''),
+r'''**NodeError('slice being assigned to a MatchSequence must be a MatchSequence, not a MatchAs')**'''),
+],
+
+'MatchSequence_coerce': [  # ................................................................................
+
+('', 1, 3, None, {'coerce': False}, ('pattern',
+r'''[a, b, c, d]'''), ('pattern',
+r'''x as y'''),
+r'''**NodeError('slice being assigned to a MatchSequence must be a MatchSequence, not a MatchAs')**'''),
+],
+
 'MatchMapping': [  # ................................................................................
 
 ('', 0, 0, None, {}, ('pattern',
@@ -33289,6 +33376,27 @@ r'''{2: x, **y}'''),
 r'''**ValueError("cannot put slice to MatchMapping after 'rest' element")**'''),
 ],
 
+'MatchOr': [  # ................................................................................
+
+('', 1, 3, None, {'one': True}, ('pattern',
+r'''a | b | c | d'''), ('pattern',
+r'''x, y'''),
+r'''a | [x, y] | d''', r'''
+MatchOr - ROOT 0,0..0,14
+  .patterns[3]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchSequence - 0,4..0,10
+     .patterns[2]
+      0] MatchAs - 0,5..0,6
+        .name 'x'
+      1] MatchAs - 0,8..0,9
+        .name 'y'
+   2] MatchAs - 0,13..0,14
+     .name 'd'
+'''),
+],
+
 'type_params': [  # ................................................................................
 
 ('body[0]', 0, 3, 'type_params', {'_ver': 13}, ('exec',
@@ -33591,6 +33699,23 @@ _type_params - ROOT 0,0..0,10
    2] ParamSpec - 0,7..0,10
      .name 'V'
 '''),
+
+('', 1, 1, 'type_params', {'_ver': 12}, (None,
+r'''def f[T, *U, **V](): pass'''), ('_type_params',
+r''''''),
+r'''def f[T, *U, **V](): pass''', r'''
+FunctionDef - ROOT 0,0..0,25
+  .name 'f'
+  .body[1]
+   0] Pass - 0,21..0,25
+  .type_params[3]
+   0] TypeVar - 0,6..0,7
+     .name 'T'
+   1] TypeVarTuple - 0,9..0,11
+     .name 'U'
+   2] ParamSpec - 0,13..0,16
+     .name 'V'
+'''),
 ],
 
 'type_params_coerce': [  # ................................................................................
@@ -33757,6 +33882,11 @@ Dict - ROOT 0,0..0,24
    3] Name 'c' Load - 0,22..0,23
 '''),
 
+('', 1, 2, '_all', {}, ('Dict',
+r'''{1: a, 2: b, 3: c}'''), ('Dict',
+r'''a'''),
+r'''**NodeError('slice being assigned to a Dict must be a Dict, not a Name')**'''),
+
 ('', 1, 2, '_all', {}, ('MatchMapping',
 r'''{1: a, 2: b, 3: c}'''), ('MatchMapping',
 r'''{4: x, 5: y}'''),
@@ -33777,6 +33907,11 @@ MatchMapping - ROOT 0,0..0,24
    3] MatchAs - 0,22..0,23
      .name 'c'
 '''),
+
+('', 1, 2, '_all', {}, ('MatchMapping',
+r'''{1: a, 2: b, 3: c}'''), ('MatchMapping',
+r'''a'''),
+r'''**NodeError('slice being assigned to a MatchMapping must be a MatchMapping, not a MatchAs')**'''),
 
 ('', 1, 2, '_all', {}, ('Compare',
 r'''a < b > c'''), ('Compare',
@@ -34693,6 +34828,14 @@ MatchMapping - ROOT 0,0..0,11
   .patterns[1]
    0] MatchAs - 0,4..0,5
      .name 'b'
+  .rest 'z'
+'''),
+
+('', 0, 1, None, {'raw': True}, ('pattern',
+r'''{**f}'''), (None,
+r'''**z'''),
+r'''{**z}''', r'''
+MatchMapping - ROOT 0,0..0,5
   .rest 'z'
 '''),
 
