@@ -363,9 +363,12 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
             prim = _dump_prim_long(ast.value, st, cind + sind)
 
             if prim.startswith('\n'):
-                st.linefunc(f'{cind}{prefix}{c.clr_ast}Constant{c.end_ast}{kind}{tail}{prim}{st.eol}')
+                prim = f'{cind}{prefix}{c.clr_ast}Constant{c.end_ast}{kind}{tail}{prim}'
             else:
-                st.linefunc(f'{cind}{prefix}{c.clr_ast}Constant{c.end_ast} {prim}{kind}{tail}{st.eol}')
+                prim = f'{cind}{prefix}{c.clr_ast}Constant{c.end_ast} {prim}{kind}{tail}'
+
+            for l in prim.split('\n'):
+                st.linefunc(f'{l}{st.eol}')
 
             return
 
@@ -433,8 +436,10 @@ def _dump_node(self: fst.FST, st: nspace, cind: str, prefix: str) -> None:
 
             else:
                 ind = f'{cind}{sind * 2}'
+                prim = f'{ind}{_dump_prim_long(child, st, ind)}'
 
-                st.linefunc(f'{ind}{_dump_prim_long(child, st, ind)}{st.eol}')
+                for l in prim.split('\n'):
+                    st.linefunc(f'{l}{st.eol}')
 
         # elif len(child) == 1:  # length 1 lists show element on single line
         #     if isinstance(ast := child[0], AST):
