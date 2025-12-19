@@ -5599,6 +5599,120 @@ class cls:
             self.assertEqual('except* Exception: pass',
                              FST('', '_ExceptHandlers').handlers.append(FST('except* Exception: pass')).base.root.src)
 
+    def test__normalize_block(self):
+        from fst.slice_stmtish import _normalize_block
+
+        a = parse('''
+if 1: i ; j ; l ; m
+            '''.strip())
+        _normalize_block(a.body[0].f)
+        a.f.verify()
+        self.assertEqual(a.f.src, 'if 1:\n    i ; j ; l ; m')
+
+        a = parse('''
+def f() -> int: \\
+  i \\
+  ; \\
+  j
+            '''.strip())
+        _normalize_block(a.body[0].f)
+        a.f.verify()
+        self.assertEqual(a.f.src, 'def f() -> int:\n    i \\\n  ; \\\n  j')
+
+        a = parse('''def f(a = """ a
+...   # something """): i = 2''')
+        _normalize_block(a.body[0].f)
+        self.assertEqual(a.f.src, 'def f(a = """ a\n...   # something """):\n    i = 2')
+
+    def test__elif_to_else_if(self):
+        from fst.slice_stmtish import _elif_to_else_if
+
+        a = parse('''
+if 1: pass
+elif 2: pass
+        '''.strip())
+        _elif_to_else_if(a.body[0].orelse[0].f)
+        a.f.verify()
+        self.assertEqual(a.f.src, '''
+if 1: pass
+else:
+    if 2: pass
+            '''.strip())
+
+        a = parse('''
+def f():
+    if 1: pass
+    elif 2: pass
+        '''.strip())
+        _elif_to_else_if(a.body[0].body[0].orelse[0].f)
+        a.f.verify()
+        self.assertEqual(a.f.src, '''
+def f():
+    if 1: pass
+    else:
+        if 2: pass
+            '''.strip())
+
+        a = parse('''
+if 1: pass
+elif 2: pass
+return
+        '''.strip())
+        _elif_to_else_if(a.body[0].orelse[0].f)
+        a.f.verify()
+        self.assertEqual(a.f.src, '''
+if 1: pass
+else:
+    if 2: pass
+return
+            '''.strip())
+
+        a = parse('''
+def f():
+    if 1: pass
+    elif 2: pass
+    return
+        '''.strip())
+        _elif_to_else_if(a.body[0].body[0].orelse[0].f)
+        a.f.verify()
+        self.assertEqual(a.f.src, '''
+def f():
+    if 1: pass
+    else:
+        if 2: pass
+    return
+            '''.strip())
+
+        a = parse('''
+if 1: pass
+elif 2: pass
+elif 3: pass
+        '''.strip())
+        _elif_to_else_if(a.body[0].orelse[0].f)
+        a.f.verify()
+        self.assertEqual(a.f.src, '''
+if 1: pass
+else:
+    if 2: pass
+    elif 3: pass
+            '''.strip())
+
+        a = parse('''
+def f():
+    if 1: pass
+    elif 2: pass
+    elif 3: pass
+        '''.strip())
+        _elif_to_else_if(a.body[0].body[0].orelse[0].f)
+        a.f.verify()
+        self.assertEqual(a.f.src, '''
+def f():
+    if 1: pass
+    else:
+        if 2: pass
+        elif 3: pass
+            '''.strip())
+
 
 if __name__ == '__main__':
     import argparse

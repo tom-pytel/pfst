@@ -34,6 +34,7 @@ lint:  ## Lint stuff
 .PHONY: regen-tests
 regen-tests:  ## Regenerate test data
 	python tests/test_fst.py --regen-all
+	python tests/test_parse.py --regen-all
 	python tests/test_fst_one.py --regen-all
 	python tests/test_fst_slice.py --regen-all
 
