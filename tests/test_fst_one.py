@@ -6,7 +6,7 @@ import unittest
 from fst import *
 
 from fst.asttypes import *
-from fst.common import PYLT11, PYLT12, PYGE12, PYGE13, PYGE14
+from fst.common import PYLT11, PYLT12, PYGE11, PYGE12, PYGE13, PYGE14
 
 from support import GetCases, PutCases
 
@@ -3162,6 +3162,23 @@ c, # c
         self.assertEqual('{1: 2, 7: 8}', (f := FST('{1: 2, 3: 4, 5: 6}')).put('7: 8', 1, raw=True, to=f.values[-1]).root.src)
         self.assertEqual('{1: 2, 7: 8}', (f := FST('{1: 2, 3: 4, 5: 6}', pattern)).put('7: 8', 1, raw=True, to=f.patterns[-1]).root.src)
         self.assertEqual('a < x > z', (f := FST('a < b < c')).put('x > z', 1, raw=True, to=f.comparators[-1]).root.src)
+
+        # field disappears
+
+        self.assertIsNone(FST('a + b').op.replace(',', raw=True))
+
+        # replace try header (nothing there to replace)
+
+        f = FST('try: pass\nexcept: pass')
+        f.put_src('try', 0, 0, 0, 3)
+        self.assertEqual('try: pass\nexcept: pass', f.src)
+        f.verify()
+
+        if PYGE11:
+            f = FST('try: pass\nexcept* Exception: pass')
+            f.put_src('try', 0, 0, 0, 3)
+            self.assertEqual('try: pass\nexcept* Exception: pass', f.src)
+            f.verify()
 
     def test_replace_raw_non_mod_stmt_root(self):
         f = FST('call(a, *b, **c)')

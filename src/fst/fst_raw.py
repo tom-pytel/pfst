@@ -73,7 +73,7 @@ def _reparse_raw_base(
         copy = copy_root.child_from_path(path)
 
         if not copy:
-            raise RuntimeError('could not find node after raw reparse')
+            raise RuntimeError('could not find node after reparse, should not get here')  # pragma: no cover
 
         root._put_src(new_lines, ln, col, end_ln, end_col, True, True, self if set_ast else None)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy, can exclude self if setting ast because it overrides self locations
 
@@ -229,7 +229,7 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
     else:
         copy_lines[pend_ln] = bistr(copy_lines[pend_ln][:pend_col] + ' pass')
 
-        if stmtish_cls is Try:  # this one is just silly, nothing to put there, but we cover it
+        if stmtish_cls is Try:  # this is silly, someone is changing just the `try` header, but we cover it
             copy_lines.append(bistr(indent + 'except: pass'))
         elif stmtish_cls is TryStar:  # ditto
             copy_lines.append(bistr(indent + 'except* Exception: pass'))
