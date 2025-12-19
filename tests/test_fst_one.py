@@ -2970,7 +2970,6 @@ c, # c
         self.assertIsNone(self_.a)
         self.assertEqual('{a: b, x: y, e: f}', new_self.src)
 
-        # TODO: currently bugged raw reparse match_case
         # MatchMapping return child
 
         child = (self_ := FST('case {1: a, 2: b, 3: c}: pass', 'match_case')).pattern._put_one(None, 1, '_all', {'raw': False}, True)

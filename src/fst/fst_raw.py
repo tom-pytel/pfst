@@ -73,7 +73,7 @@ def _reparse_raw_base(
         copy = copy_root.child_from_path(path)
 
         if not copy:
-            raise RuntimeError('could not find node after reparse, should not get here')  # pragma: no cover
+            raise RuntimeError('could not find node after reparse')  # pragma: no cover
 
         root._put_src(new_lines, ln, col, end_ln, end_col, True, True, self if set_ast else None)  # we do this again in our own tree to offset our nodes which aren't being moved over from the modified copy, can exclude self if setting ast because it overrides self locations
 

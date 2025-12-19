@@ -1338,20 +1338,16 @@ def _syntax_ordered_children_MatchMapping(ast: AST) -> list[AST]:
 
 
 def _syntax_ordered_children_default(ast: AST) -> list[AST]:
-    # if all is well this should never be called, just here for reference and fallback in case of new nodes
+    children = []
 
-    raise RuntimeError('should not get here')  # pragma: no cover  - either write _syntax_ordered_children handler for new node type or comment in the code below for generic handling
+    for field in AST_FIELDS[ast.__class__]:
+        if child := getattr(ast, field, None):
+            if isinstance(child, list):
+                children.extend(child)
+            else:
+                children.append(child)
 
-    # children = []
-
-    # for field in AST_FIELDS[ast.__class__]:
-    #     if child := getattr(ast, field, None):
-    #         if isinstance(child, list):
-    #             children.extend(child)
-    #         else:
-    #             children.append(child)
-
-    # return children
+    return children
 
 
 _syntax_ordered_children_nothing      = lambda ast: []
