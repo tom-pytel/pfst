@@ -17,13 +17,13 @@ from . import fst
 from .asttypes import (
     ASTS_LEAF_EXPR,
     ASTS_LEAF_EXPR_CONTEXT,
-    ASTS_LEAF_CMPOP,
     ASTS_LEAF_EXPR_OR_PATTERN,
     ASTS_LEAF_EXPRISH,
     ASTS_LEAF_STMTISH,
     ASTS_LEAF_FUNCDEF,
     ASTS_LEAF_WITH,
     ASTS_LEAF_CMPOP_TWO_WORD,
+    ASTS_LEAF_CMPOP_ONE_WORD,
     ASTS_LEAF_MAYBE_DOCSTR,
     AST,
     AsyncFor,
@@ -507,7 +507,7 @@ def _multiline_str_continuation_lns(lines: list[str], ln: int, col: int, end_ln:
                         break
 
             else:
-                raise RuntimeError('f or t-string not closed')
+                raise RuntimeError('f or t-string not closed, should not get here, should have gotten tokenize.TokenError')  # pragma: no cover
 
     return lns
 
@@ -814,11 +814,14 @@ def _is_atom(
                         stmt, match_case, mod, type_ignore)):
         return True
 
+    if ast_cls in ASTS_LEAF_CMPOP_ONE_WORD:
+        return True
+
     if not always_enclosed:
-        if ast_cls is Constant:
+        if ast_cls is Constant:  # string can be unenclosable because can be implicit and possibly spread over multiple lines (even if not, implicit is still tricky)
             return 'unenclosable' if isinstance(ast.value, (str, bytes)) else True
 
-        if isinstance(ast, (Call, JoinedStr, TemplateStr, Constant, Attribute, Subscript,
+        if isinstance(ast, (Call, JoinedStr, TemplateStr, Attribute, Subscript,
                             MatchClass, MatchStar,
                             cmpop, comprehension, arguments,
                             arg, keyword, alias, withitem, type_param)):
@@ -835,8 +838,8 @@ def _is_atom(
         return (not ast.optional_vars and self.loc[::2] == (ce := ast.context_expr.f).pars()[::2] and
                 ce._is_atom(pars=pars, always_enclosed=always_enclosed))
 
-    elif ast_cls in ASTS_LEAF_CMPOP:
-        return ast_cls not in ASTS_LEAF_CMPOP_TWO_WORD  # could be spread across multiple lines
+    elif ast_cls in ASTS_LEAF_CMPOP_TWO_WORD:  # could be spread across multiple lines
+        return False  # this cannot be parenthesized so just False
 
     if (ret := self.is_parenthesized_tuple()) is not None:  # if this is False then cannot be enclosed in grouping pars because that would reparse to a parenthesized Tuple and so is inconsistent
         return ret
@@ -971,8 +974,7 @@ def _is_enclosed_or_line(
 
         if (is_const := (ast_cls is Constant)) or ast_cls in (JoinedStr, TemplateStr):
             if is_const:
-                if not isinstance(ast.value, (str, bytes)):
-                    return True
+                assert isinstance(ast.value, (str, bytes))  # other types will have end_ln == ln and will have returned above
 
                 lns = _multiline_str_continuation_lns(lines, ln, col, end_ln, end_col)
 

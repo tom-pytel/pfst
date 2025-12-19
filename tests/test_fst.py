@@ -3,6 +3,7 @@
 import builtins
 import os
 import threading
+import tokenize
 import unittest
 from ast import parse as ast_parse, unparse as ast_unparse
 from pprint import pformat
@@ -266,6 +267,40 @@ class TestFST(unittest.TestCase):
 
         self.assertIs(False, FST('*a')._is_atom())  # because of `*a or b`
 
+        self.assertEqual('unenclosable', FST('for i in j', 'comprehension')._is_atom())
+        self.assertEqual('unenclosable', FST('', 'arguments')._is_atom())
+        self.assertEqual('unenclosable', FST('a', 'arg')._is_atom())
+        self.assertEqual('unenclosable', FST('a=b', 'keyword')._is_atom())
+        self.assertEqual('unenclosable', FST('a as b', 'alias')._is_atom())
+        self.assertEqual('unenclosable', FST('a as b', 'withitem')._is_atom())
+        self.assertEqual('unenclosable', FST('is not', 'cmpop')._is_atom())
+        self.assertEqual('unenclosable', FST('not in', 'cmpop')._is_atom())
+        self.assertEqual('unenclosable', FST('"a"', 'Constant')._is_atom())
+        self.assertEqual(True, FST('1', 'Constant')._is_atom())
+
+        if PYGE12:
+            self.assertEqual('unenclosable', FST('T', 'TypeVar')._is_atom())
+            self.assertEqual('unenclosable', FST('*U', 'TypeVarTuple')._is_atom())
+            self.assertEqual('unenclosable', FST('**V', 'ParamSpec')._is_atom())
+
+        self.assertIs(False, FST('for i in j', 'comprehension')._is_atom(always_enclosed=True))
+        self.assertIs(False, FST('', 'arguments')._is_atom(always_enclosed=True))
+        self.assertIs(False, FST('a', 'arg')._is_atom(always_enclosed=True))
+        self.assertIs(False, FST('a=b', 'keyword')._is_atom(always_enclosed=True))
+        self.assertIs(False, FST('a as b', 'alias')._is_atom(always_enclosed=True))
+        self.assertIs(False, FST('a as b', 'withitem')._is_atom(always_enclosed=True))
+        self.assertIs(False, FST('is not', 'cmpop')._is_atom(always_enclosed=True))
+        self.assertIs(False, FST('not in', 'cmpop')._is_atom(always_enclosed=True))
+        self.assertIs(False, FST('"a"', 'Constant')._is_atom(always_enclosed=True))
+        self.assertIs(True, FST('1', 'Constant')._is_atom(always_enclosed=True))
+
+        if PYGE12:
+            self.assertIs(False, FST('T', 'TypeVar')._is_atom(always_enclosed=True))
+            self.assertIs(False, FST('*U', 'TypeVarTuple')._is_atom(always_enclosed=True))
+            self.assertIs(False, FST('**V', 'ParamSpec')._is_atom(always_enclosed=True))
+
+        self.assertIs(True, FST('<', 'cmpop')._is_atom())
+
     def test__is_enclosed_or_line_special(self):
         # Call
         # JoinedStr
@@ -434,6 +469,8 @@ y")
         self.assertTrue(FST('a\n: \nb: \nc', 'expr_slice')._is_enclosed_or_line())  # because is never used unenclosed
         self.assertTrue(FST('a\\\n: \\\nb: \\\nc', 'expr_slice')._is_enclosed_or_line())
 
+        self.assertTrue(FST('1')._is_enclosed_or_line())
+
         if PYGE12:
             self.assertTrue(FST('a, f"{(1,\n2)}", c', 'exec').body[0].value.copy(pars=False)._is_enclosed_or_line())
 
@@ -444,6 +481,7 @@ y")
         self.assertFalse(FST('\\\na + b\n')._is_enclosed_or_line(whole=True))
         self.assertFalse(FST('\na + b\\\n')._is_enclosed_or_line(whole=True))
         self.assertTrue(FST('\\\na + b\\\n')._is_enclosed_or_line(whole=True))
+        self.assertTrue(FST('a + b')._is_enclosed_or_line(whole=True))
 
         self.assertTrue(FST('\na + b * c\n').right._is_enclosed_or_line(whole=False))
         self.assertRaises(ValueError, FST('\na + b * c\n').right._is_enclosed_or_line, whole=True)
@@ -492,6 +530,25 @@ a + \
         f._put_src(None, 2, 0, 2, 1, True)
         f._put_src(None, 0, 5, 0, 6, False)
         self.assertFalse(f._is_enclosed_or_line())
+
+        # not implemented yet (because haven't run into a need)
+
+        self.assertRaises(NotImplementedError, FST('a\nb')._is_enclosed_or_line)
+        self.assertRaises(NotImplementedError, FST('a; b', 'Interactive')._is_enclosed_or_line)
+        self.assertRaises(NotImplementedError, FST('def f(): pass')._is_enclosed_or_line)
+        self.assertRaises(NotImplementedError, FST('async def f(): pass')._is_enclosed_or_line)
+        self.assertRaises(NotImplementedError, FST('class cls: pass')._is_enclosed_or_line)
+        self.assertRaises(NotImplementedError, FST('for _ in _: pass')._is_enclosed_or_line)
+        self.assertRaises(NotImplementedError, FST('async for _ in _: pass')._is_enclosed_or_line)
+        self.assertRaises(NotImplementedError, FST('while _: pass')._is_enclosed_or_line)
+        self.assertRaises(NotImplementedError, FST('if _: pass')._is_enclosed_or_line)
+        self.assertRaises(NotImplementedError, FST('match _:\n  case _: pass')._is_enclosed_or_line)
+        self.assertRaises(NotImplementedError, FST('try: pass\nexcept: pass')._is_enclosed_or_line)
+        self.assertRaises(NotImplementedError, FST('except: pass')._is_enclosed_or_line)
+        self.assertRaises(NotImplementedError, FST('case _: pass')._is_enclosed_or_line)
+
+        if PYGE11:
+            self.assertRaises(NotImplementedError, FST('try: pass\nexcept* Exception: pass')._is_enclosed_or_line)
 
     def test__is_enclosed_or_multiline_str(self):
         self.assertTrue(FST(r'''["""a
@@ -912,6 +969,10 @@ t"c"]''').elts[0]._is_enclosed_or_line())
             self.assertTrue(FST('t"1{2}"', 'exec').body[0].value._is_enclosed_in_parents('values'))
             self.assertTrue(FST('t"1{2}"', 'exec').body[0].value.values[1]._is_enclosed_in_parents('value'))
 
+        # extreme misc for coverage
+
+        self.assertFalse(FST(Load())._is_enclosed_in_parents())
+
     def test__touchall(self):
         a = parse('i = [1]').body[0]
         self.assertEqual(7, a.f.end_col)
@@ -1122,6 +1183,11 @@ t"c"]''').elts[0]._is_enclosed_or_line())
         self.assertEqual((0, 6, 0, 8), m.body[1].f.loc)
         self.assertEqual((0, 6, 0, 6), m.body[2].f.loc)
 
+        # misc for coverage
+
+        (f := FST('1'))._offset(0, 0, 0, 0, exclude=f, self_=False)
+        f.verify()
+
     def test__get_indent(self):
         ast = parse('i = 1; j = 2')
 
@@ -1217,6 +1283,9 @@ t"c"]''').elts[0]._is_enclosed_or_line())
 
         self.assertEqual({1, 2, 5, 7, 8, 9, 10}, ast.f._get_indentable_lns(1))
         self.assertEqual({0, 1, 2, 5, 7, 8, 9, 10}, ast.f._get_indentable_lns(0))
+
+        self.assertEqual(set(), ast.body[0].body[0].body[0].value.f._get_indentable_lns(1))
+        self.assertEqual({2}, ast.body[0].body[0].body[0].value.f._get_indentable_lns(0))
 
         f = FST.fromsrc('''
 def _splitext(p, sep, altsep, extsep):
@@ -1407,6 +1476,11 @@ f"distutils.command.sdist.check_metadata is deprecated, \\
         # self.assertEqual({2}, lns)
         # self.assertEqual('@decorator\nclass cls:\npass', ast.f.src)
 
+        # misc for coverage
+
+        (f := FST('if 1:\n  pass'))._dedent_lns(None, {0, 1})
+        self.assertEqual('if 1:\npass', f.src)
+
     def test__redent_lns(self):
         f = FST('''
 [
@@ -1475,6 +1549,20 @@ b,
         self.assertEqual((1, 19, 1, 31), f.elts[1].loc)
         self.assertEqual((1, 19, 1, 26), f.elts[1].value.loc)
         self.assertEqual((1, 19, 1, 23), f.elts[1].value.value.loc)
+
+        # misc for coverage
+
+        f = FST('if 1:\n  pass')
+        f._redent_lns(None, None, {0, 1})
+        self.assertEqual('if 1:\n  pass', f.src)
+        f._redent_lns('  ', '    ', {})
+        self.assertEqual('if 1:\n  pass', f.src)
+        f._redent_lns('  ', '    ', {1})
+        self.assertEqual('if 1:\n    pass', f.src)
+
+        f = FST('if 1:\n    pass\n  # inconsistent')
+        f._redent_lns('    ', ' ', {1, 2})
+        self.assertEqual('if 1:\n pass\n# inconsistent', f.src)
 
     def test__put_src(self):
         f = FST(Load(), [''], None)
@@ -1629,6 +1717,14 @@ c' \
             '        r\'(\\\'[^\\\']*\\\'|"[^"]*"|[-a-zA-Z0-9./,:;+*%?!&$\\(\\)_#=~@]\'',
             '        r\'[][\\-a-zA-Z0-9./,:;+*%?!&$\\(\\)_#=~\\\'"@]*(?=[\\s>/<])))?\'',
             "    r')*\\s*/?\\s*(?=[<>])'"], 0, 0, len(ls) - 1, len(ls[-1])))
+
+        # coverage
+
+        f = FST('''f"""{f'{1}'}\n"""''')
+        self.assertEqual([1], mscl(f._lines, *f.whole_loc))
+
+        f.put_src(None, 1, 0, 1, 3, 'offset')
+        self.assertRaises(tokenize.TokenError, mscl, f._lines, *f.whole_loc)
 
     def test__multiline_ftstr_continuation_lns(self):
         from fst.fst_core import _multiline_ftstr_continuation_lns as mscl
@@ -1957,6 +2053,29 @@ t"a{(1,
 {5}""" t"x\
 y"
             '''.strip().split('\n'), 0, 0, len(ls) - 1, len(ls[-1])))
+
+    def test__modifying(self):
+        # don't allow nested mofifying same tree
+
+        f = FST('a, b')
+        g = FST('c, d')
+
+        with f.elts[0]._modifying():
+            with g.elts[0]._modifying():
+                pass
+
+        with self.assertRaises(RuntimeError):
+            with f.elts[0]._modifying():
+                with f.elts[1]._modifying():
+                    pass
+
+        # for coverage
+
+        f = FST('i = a, b')
+        m = f.value.elts[0]._modifying()
+        m.enter()
+        f._set_ast(FST('i = a, b').a, True)
+        m.success(f)
 
     def test___new__(self):
         f = FST(None, 'exec')
@@ -6328,27 +6447,28 @@ match a:
 
         # error causing parent replacement
 
-        m = (o := FST("f'{a}'")).mark()
+        if PYGE12:
+            m = (o := FST("f'{a}'")).mark()
 
-        o.a.values[0].conversion = 97
-        f = o.reconcile(m)
-        self.assertEqual("f'{a!a}'", f.src)
-        f.verify()
+            o.a.values[0].conversion = 97
+            f = o.reconcile(m)
+            self.assertEqual("f'{a!a}'", f.src)
+            f.verify()
 
-        o.a.values[0].conversion = 115
-        f = o.reconcile(m)
-        self.assertEqual("f'{a!s}'", f.src)
-        f.verify()
+            o.a.values[0].conversion = 115
+            f = o.reconcile(m)
+            self.assertEqual("f'{a!s}'", f.src)
+            f.verify()
 
-        o.a.values[0].conversion = 114
-        f = o.reconcile(m)
-        self.assertEqual("f'{a!r}'", f.src)
-        f.verify()
+            o.a.values[0].conversion = 114
+            f = o.reconcile(m)
+            self.assertEqual("f'{a!r}'", f.src)
+            f.verify()
 
-        o.a.values[0].conversion = -1
-        f = o.reconcile(m)
-        self.assertEqual("f'{a}'", f.src)
-        f.verify()
+            o.a.values[0].conversion = -1
+            f = o.reconcile(m)
+            self.assertEqual("f'{a}'", f.src)
+            f.verify()
 
         # misc change ctx
 
