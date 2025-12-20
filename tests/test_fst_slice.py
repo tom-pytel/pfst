@@ -1553,6 +1553,9 @@ def func():
         self.assertEqual('a,', f.src)
         f.verify()
 
+        self.assertRaises(ValueError, FST('a = 1', 'exec').put_slice, 'x', 0, 1, pep8space=3)
+        self.assertRaises(ValueError, FST('a = 1', 'exec').put_slice, 'x', 0, 0, pep8space=3)
+
     def test_slice_special(self):
         # Global.names preserves trailing commas and locations
 

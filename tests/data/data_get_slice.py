@@ -10136,6 +10136,151 @@ Module - ROOT 0,0..0,5
       0] Name 'b' Store - 0,0..0,1
      .value Constant 2 - 0,4..0,5
 '''),
+
+('', 0, 'end', 'orelse', {}, (None, r'''
+try: pass
+except: pass
+else: truly_evil\
+ ;
+finally: pass
+'''), r'''
+try: pass
+except: pass
+
+finally: pass
+''', r'''
+Try - ROOT 0,0..3,13
+  .body[1]
+   0] Pass - 0,5..0,9
+  .handlers[1]
+   0] ExceptHandler - 1,0..1,12
+     .body[1]
+      0] Pass - 1,8..1,12
+  .finalbody[1]
+   0] Pass - 3,9..3,13
+''',
+r'''truly_evil''', r'''
+Module - ROOT 0,0..0,10
+  .body[1]
+   0] Expr - 0,0..0,10
+     .value Name 'truly_evil' Load - 0,0..0,10
+'''),
+
+('', 0, 'end', 'orelse', {}, (None, r'''
+try: pass
+except: pass
+else: beyond_truly_evil\
+ ; \
+\
+
+\
+finally: pass
+'''), r'''
+try: pass
+except: pass
+\
+
+\
+finally: pass
+''', r'''
+Try - ROOT 0,0..5,13
+  .body[1]
+   0] Pass - 0,5..0,9
+  .handlers[1]
+   0] ExceptHandler - 1,0..1,12
+     .body[1]
+      0] Pass - 1,8..1,12
+  .finalbody[1]
+   0] Pass - 5,9..5,13
+''',
+r'''beyond_truly_evil''', r'''
+Module - ROOT 0,0..0,17
+  .body[1]
+   0] Expr - 0,0..0,17
+     .value Name 'beyond_truly_evil' Load - 0,0..0,17
+'''),
+
+('', 0, 'end', 'orelse', {}, (None, r'''
+if 1: pass
+else: oh_well\
+ ; \
+\
+
+'''), r'''
+if 1: pass
+\
+
+''', r'''
+If - ROOT 0,0..0,10
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] Pass - 0,6..0,10
+''',
+r'''oh_well''', r'''
+Module - ROOT 0,0..0,7
+  .body[1]
+   0] Expr - 0,0..0,7
+     .value Name 'oh_well' Load - 0,0..0,7
+'''),
+
+('', 0, 'end', 'orelse', {}, (None, r'''
+if 1: pass
+else: oh_well\
+ ; \
+\
+i = j
+'''),
+r'''if 1: pass''', r'''
+If - ROOT 0,0..0,10
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] Pass - 0,6..0,10
+''', r'''
+oh_well\
+; \
+\
+i = j
+''', r'''
+Module - ROOT 0,0..3,5
+  .body[2]
+   0] Expr - 0,0..0,7
+     .value Name 'oh_well' Load - 0,0..0,7
+   1] Assign - 3,0..3,5
+     .targets[1]
+      0] Name 'i' Store - 3,0..3,1
+     .value Name 'j' Load - 3,4..3,5
+'''),
+
+('body[0]', 0, 'end', 'orelse', {}, ('exec', r'''
+if 1: pass
+else: oh_well\
+ ; \
+\
+
+i = j
+'''), r'''
+if 1: pass
+\
+
+i = j
+''', r'''
+Module - ROOT 0,0..3,5
+  .body[2]
+   0] If - 0,0..0,10
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Pass - 0,6..0,10
+   1] Assign - 3,0..3,5
+     .targets[1]
+      0] Name 'i' Store - 3,0..3,1
+     .value Name 'j' Load - 3,4..3,5
+''',
+r'''oh_well''', r'''
+Module - ROOT 0,0..0,7
+  .body[1]
+   0] Expr - 0,0..0,7
+     .value Name 'oh_well' Load - 0,0..0,7
+'''),
 ],
 
 'stmtish_norm_self': [  # ................................................................................
@@ -21974,6 +22119,21 @@ List - ROOT 0,0..2,2
   .elts[1]
    0] Name 'b' Load - 2,0..2,1
   .ctx Load
+'''),
+
+('', 0, 1, None, {}, ('exec', r'''
+
+if 1: pass
+'''),
+r'''''',
+r'''Module - ROOT 0,0..0,0''',
+r'''if 1: pass''', r'''
+Module - ROOT 0,0..0,10
+  .body[1]
+   0] If - 0,0..0,10
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Pass - 0,6..0,10
 '''),
 ],
 

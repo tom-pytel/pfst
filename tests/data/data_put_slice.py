@@ -3289,6 +3289,38 @@ Module - ROOT 0,0..6,24
          0] Pass - 6,20..6,24
 '''),
 
+('', 1, 2, None, {}, ('exec', r'''
+def prefunc(): pass
+
+
+
+# pre
+def SHOULDNT_EAT_THE_SPACE(): pass  # post
+'''), (None,
+r'''def newfunc(): pass'''), r'''
+def prefunc(): pass
+
+
+def newfunc(): pass
+''', r'''
+def prefunc(): pass
+
+
+def newfunc():
+    pass
+''', r'''
+Module - ROOT 0,0..3,19
+  .body[2]
+   0] FunctionDef - 0,0..0,19
+     .name 'prefunc'
+     .body[1]
+      0] Pass - 0,15..0,19
+   1] FunctionDef - 3,0..3,19
+     .name 'newfunc'
+     .body[1]
+      0] Pass - 3,15..3,19
+'''),
+
 ('body[0]', 1, 1, None, {}, ('exec', r'''
 class cls:
     def premeth(): pass
@@ -5136,9 +5168,42 @@ Module - ROOT 0,0..1,6
 i ; \
  # post
 '''), (None,
-r'''l'''),
-r'''l''', r'''
-Module - ROOT 0,0..0,1
+r'''l'''), r'''
+l
+ # post
+''', r'''
+Module - ROOT 0,0..1,7
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
+'''),
+
+('', 0, 1, None, {}, ('exec', r'''
+i ; \
+ j
+'''), (None,
+r'''l'''), r'''
+l
+j
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
+   0] Expr - 0,0..0,1
+     .value Name 'l' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
+'''),
+
+('', 0, 1, None, {}, ('exec', r'''
+i \
+ ; \
+ # post
+'''), (None,
+r'''l'''), r'''
+l
+ # post
+''', r'''
+Module - ROOT 0,0..1,7
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'l' Load - 0,0..0,1
@@ -5147,14 +5212,18 @@ Module - ROOT 0,0..0,1
 ('', 0, 1, None, {}, ('exec', r'''
 i \
  ; \
- # post
+ j
 '''), (None,
-r'''l'''),
-r'''l''', r'''
-Module - ROOT 0,0..0,1
-  .body[1]
+r'''l'''), r'''
+l
+j
+''', r'''
+Module - ROOT 0,0..1,1
+  .body[2]
    0] Expr - 0,0..0,1
      .value Name 'l' Load - 0,0..0,1
+   1] Expr - 1,0..1,1
+     .value Name 'j' Load - 1,0..1,1
 '''),
 
 ('body[0]', 0, 1, None, {}, ('exec', r'''
@@ -5200,8 +5269,9 @@ if 1:
 r'''l'''), r'''
 if 1:
     l
+     # post
 ''', r'''
-Module - ROOT 0,0..1,5
+Module - ROOT 0,0..2,11
   .body[1]
    0] If - 0,0..1,5
      .test Constant 1 - 0,3..0,4
@@ -5219,8 +5289,9 @@ if 1:
 r'''l'''), r'''
 if 1:
     l
+     # post
 ''', r'''
-Module - ROOT 0,0..1,5
+Module - ROOT 0,0..2,11
   .body[1]
    0] If - 0,0..1,5
      .test Constant 1 - 0,3..0,4
@@ -5639,9 +5710,11 @@ Module - ROOT 0,0..1,6
 i ; \
  # post
 '''), (None,
-r'''l'''),
-r'''l''', r'''
-Module - ROOT 0,0..0,1
+r'''l'''), r'''
+l
+ # post
+''', r'''
+Module - ROOT 0,0..1,7
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'l' Load - 0,0..0,1
@@ -5653,9 +5726,11 @@ i \
  ; \
  # post
 '''), (None,
-r'''l'''),
-r'''l''', r'''
-Module - ROOT 0,0..0,1
+r'''l'''), r'''
+l
+ # post
+''', r'''
+Module - ROOT 0,0..1,7
   .body[1]
    0] Expr - 0,0..0,1
      .value Name 'l' Load - 0,0..0,1
@@ -5707,8 +5782,9 @@ if 1:
 r'''l'''), r'''
 if 1:
     l
+ # post
 ''', r'''
-Module - ROOT 0,0..1,5
+Module - ROOT 0,0..2,7
   .body[1]
    0] If - 0,0..1,5
      .test Constant 1 - 0,3..0,4
@@ -5727,8 +5803,9 @@ if 1:
 r'''l'''), r'''
 if 1:
     l
+ # post
 ''', r'''
-Module - ROOT 0,0..1,5
+Module - ROOT 0,0..2,7
   .body[1]
    0] If - 0,0..1,5
      .test Constant 1 - 0,3..0,4
@@ -16492,6 +16569,124 @@ _match_cases - ROOT 0,0..1,13
        .value Constant 2 - 1,5..1,6
      .body[1]
       0] Pass - 1,8..1,12
+'''),
+
+('', 0, 'end', 'orelse', {}, (None, r'''
+try: pass
+except: pass
+else: truly_evil\
+ ;
+finally: pass
+'''),
+r'''I_banish_thee''', r'''
+try: pass
+except: pass
+else:
+    I_banish_thee
+finally: pass
+''', r'''
+Try - ROOT 0,0..4,13
+  .body[1]
+   0] Pass - 0,5..0,9
+  .handlers[1]
+   0] ExceptHandler - 1,0..1,12
+     .body[1]
+      0] Pass - 1,8..1,12
+  .orelse[1]
+   0] Expr - 3,4..3,17
+     .value Name 'I_banish_thee' Load - 3,4..3,17
+  .finalbody[1]
+   0] Pass - 4,9..4,13
+'''),
+
+('', 0, 'end', 'orelse', {}, (None, r'''
+try: pass
+except: pass
+else: beyond_truly_evil\
+ ; \
+\
+
+\
+finally: pass
+'''),
+r'''I_super_duper_banish_thee''',
+'try: pass\nexcept: pass\nelse: \n    I_super_duper_banish_thee\n\\\n\n\\\nfinally: pass', r'''
+Try - ROOT 0,0..7,13
+  .body[1]
+   0] Pass - 0,5..0,9
+  .handlers[1]
+   0] ExceptHandler - 1,0..1,12
+     .body[1]
+      0] Pass - 1,8..1,12
+  .orelse[1]
+   0] Expr - 3,4..3,29
+     .value Name 'I_super_duper_banish_thee' Load - 3,4..3,29
+  .finalbody[1]
+   0] Pass - 7,9..7,13
+'''),
+
+('', 0, 'end', 'orelse', {}, (None, r'''
+if 1: pass
+else: oh_well\
+ ; \
+\
+
+'''),
+r'''blah''',
+'if 1: pass\nelse: \n    blah\n\\\n', r'''
+If - ROOT 0,0..2,8
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] Pass - 0,6..0,10
+  .orelse[1]
+   0] Expr - 2,4..2,8
+     .value Name 'blah' Load - 2,4..2,8
+'''),
+
+('', 0, 'end', 'orelse', {}, (None, r'''
+if 1: pass
+else: oh_well\
+ ; \
+\
+i = j
+'''),
+r'''blah''', r'''
+if 1: pass
+else:
+    blah
+''', r'''
+If - ROOT 0,0..2,8
+  .test Constant 1 - 0,3..0,4
+  .body[1]
+   0] Pass - 0,6..0,10
+  .orelse[1]
+   0] Expr - 2,4..2,8
+     .value Name 'blah' Load - 2,4..2,8
+'''),
+
+('body[0]', 0, 'end', 'orelse', {}, ('exec', r'''
+if 1: pass
+else: oh_well\
+ ; \
+\
+
+i = j
+'''),
+r'''blah''',
+'if 1: pass\nelse: \n    blah\n\n\\\n\ni = j', r'''
+Module - ROOT 0,0..6,5
+  .body[2]
+   0] If - 0,0..2,8
+     .test Constant 1 - 0,3..0,4
+     .body[1]
+      0] Pass - 0,6..0,10
+     .orelse[1]
+      0] Expr - 2,4..2,8
+        .value Name 'blah' Load - 2,4..2,8
+   1] Assign - 6,0..6,5
+     .targets[1]
+      0] Name 'i' Store - 6,0..6,1
+     .value Name 'j' Load - 6,4..6,5
 '''),
 ],
 
@@ -35993,6 +36188,28 @@ Match - ROOT 0,0..3,22
          0] Return - 3,12..3,20
            .value Constant 0 - 3,19..3,20
 '''),
+
+('', 0, 0, 'orelse', {}, (None, r'''
+if 1:
+    pass
+'''), (None,
+r'''  '''),
+r'''**ValueError("cannot insert empty statement into empty 'orelse' field")**'''),
+
+('', 0, 0, 'finalbody', {}, (None, r'''
+try: pass
+except: pass
+'''), (None,
+r'''  '''),
+r'''**ValueError("cannot insert empty statement into empty 'finalbody' field")**'''),
+
+('', 0, 1, None, {}, ('exec', r'''
+
+if 1: pass
+'''),
+r'''**DEL**''',
+r'''''',
+r'''Module - ROOT 0,0..0,0'''),
 ],
 
 }

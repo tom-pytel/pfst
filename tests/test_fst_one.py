@@ -3324,7 +3324,7 @@ f'd{t"e{f=!s:0.1f<1}"=}'
         self.assertIsInstance(a.value.elts[0].ctx, Load)
         self.assertIsInstance(a.value.elts[1].ctx, Load)
 
-    def test_coverage(self):
+    def test_one_coverage(self):
         # misc stuff to fill out test coverage
 
         from fst.fst_put_one import _validate_put

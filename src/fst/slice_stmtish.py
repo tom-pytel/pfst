@@ -71,7 +71,7 @@ class SrcEdit:
         bound_col: int,
         bound_end_ln: int,
         bound_end_col: int,
-        precomms: bool | str | None = None,
+        precomms: bool | str,
     ) -> tuple[int, int] | None:
         """Return the position of the start of any preceding comments to the element which is assumed to live just past
         (`bound_ln`, `bound_col`). Returns `None` if no preceding comment. If preceding entire line comments exist then
@@ -88,8 +88,8 @@ class SrcEdit:
             start of preceding comments.
         """
 
-        if precomms is None:
-            precomms = fst.FST.get_option('precomms')
+        assert precomms is not None
+
         if not precomms:
             return None
 
@@ -121,7 +121,7 @@ class SrcEdit:
         bound_col: int,
         bound_end_ln: int,
         bound_end_col: int,
-        postcomms: bool | str | None = None,
+        postcomms: bool | str,
     ) -> tuple[int, int] | None:
         """Return the position of the end of any trailing comments to the element which is assumed to live just before
         (`bound_end_ln`, `bound_end_col`). Returns `None` if no trailing comment. Should return the location at the
@@ -137,8 +137,8 @@ class SrcEdit:
             position of end of trailing comments (past trailing comment newline if possible).
         """
 
-        if postcomms is None:
-            postcomms = fst.FST.get_option('postcomms')
+        assert postcomms is not None
+
         if not postcomms:
             return None
 
@@ -259,11 +259,14 @@ class SrcEdit:
                     if starts_line and fpost:
                         put_lines = [re_empty_line_start.match(lines[copy_loc.ln]).group(0)]  # can use copy_loc.ln because if got this line there are never any preceding comments
 
-                else:  # HACK FIX! TODO: do this properly, only here because '\\\n stmt' does not work at module level even though it works inside indented blocks, otherwise `del_loc` above would be sufficient unconditionally
+                elif fpost:  # HACK FIX! TODO: this is shaky, only here because '\\\n stmt' does not work at module level col 0 even though it works inside indented blocks, otherwise `del_loc` above would be sufficient unconditionally, tail cases are annoying
                     del_loc = fstloc(ln, 0, bound_end_ln, bound_end_col)
+                    put_lines = [ffirst._get_indent()]  # SHOULDN'T DO THIS HERE!!!
 
-                    if fpost:
-                        put_lines = [ffirst._get_indent()]  # SHOULDN'T DO THIS HERE!!!
+                else:
+                    assert frag.ln < bound_end_ln  # there MUST be a next line after a line continuation
+
+                    del_loc = fstloc(ln, col, frag.ln + 1, 0)
 
                 return del_loc, put_lines
 
@@ -388,8 +391,8 @@ class SrcEdit:
 
         # delete preceding and trailing empty lines according to 'pep8' and 'space' format flags
 
-        prespace = o_prespace = (float('inf') if (o := fst.FST.get_option('prespace', options)) is True else int(o))
-        postspace = o_postspace = (float('inf') if (o := fst.FST.get_option('postspace', options)) is True else int(o))
+        prespace = o_prespace = (float('inf') if (o := options.get('prespace')) is True else int(o))
+        postspace = o_postspace = (float('inf') if (o := options.get('postspace')) is True else int(o))
         pep8space = fst.FST.get_option('pep8space', options)
 
         if pep8space:
@@ -543,15 +546,15 @@ class SrcEdit:
                 if ln > bound_ln and re_empty_line.match(lines[ln], 0, put_col):  # reduce need by leading empty lines present in destination
                     if need := need - 1:
                         if (ln := ln - 1) > bound_ln and re_empty_line.match(lines[ln]):
-                            need = 0
+                            need -= 1
 
                 if (need
                     and not is_ins
                     and put_ns
                     and ln > bound_ln
                     and re_comment_line_start.match(lines[ln])
-                    and not fst.FST.get_option('precomms', options)
-                    and not fst.FST.get_option('prespace', options)
+                    and not options.get('precomms')
+                    and not options.get('prespace')
                 ):  # super-duper special case, replacing a named scope (at start) with another named scope, if not removing comments and/or space then don't insert space between preceding comment and put fst (because there was none before the previous named scope)
                     need = 0
 
@@ -578,9 +581,9 @@ class SrcEdit:
                     break
 
                 postpend -= 1
+                ln -= 1
 
-                if (ln := ln - 1) < 0:
-                    break
+                assert ln >= 0  # this should never fail because to get here there must be a body and for there to be a body there must be source and if there is source then the empty line check above will fail before ln goes negative, otherwise just break
 
             if postpend:  # reduce needed postpend by trailing empty lines present in destination
                 _, _, end_ln, end_col = put_loc
@@ -588,10 +591,10 @@ class SrcEdit:
 
                 while postpend and re_empty_line.match(lines[end_ln], end_col):
                     postpend -= 1
+                    end_ln += 1
                     end_col = 0
 
-                    if (end_ln := end_ln + 1) >= len_lines:
-                        break
+                    assert end_ln < len_lines  # this should never fail because to get here there must be an fpost named scope node and for there to be that there must be source and if there is source then the empty line check above will fail before end_ln passes the end of lines, otherwise just break
 
                 postpend += not postpend
 
@@ -707,10 +710,7 @@ class SrcEdit:
                     cln, ccol, csrc = frag
 
                     if csrc.startswith('#'):
-                        if cln < end_ln:
-                            put_loc = fstloc(cln, ccol + len(csrc), cln + 1, 0)
-                        else:
-                            put_loc = fstloc(cln, ccol + len(csrc), cln, end_col)
+                        put_loc = fstloc(cln, ccol + len(csrc), cln + 1, 0)  # we know there is a next line because we only ever search on lines before the last one, if there wasn't the end could be (cln, end_col)
 
                         break
 
@@ -855,7 +855,7 @@ class SrcEdit:
                 put_col = 0
 
                 if del_lines:
-                    del_lines[-1] = del_lines[-1] + l
+                    del_lines[-1] += l  # pragma: no cover  - doesn't currently happen
                 else:
                     del_lines = [l]
 
@@ -1058,7 +1058,7 @@ def _get_slice_stmtish_old(
     elif len(asts) == 1:
         get_ast = asts[0]
     else:
-        raise ValueError('cannot specify `one=True` if getting multiple statements')
+        raise ValueError('cannot specify `one=True` if getting multiple statements')  # pragma: no cover  - doesn't currently happen
 
     prefix = [''] * (del_prespace + 1) if del_prespace and not ld_neg else None  # if maybe requested leading space returned (ld_neg=False) and there was leading space deleted then add this many leading empty lines, this is a HACK because old stmtish slicing did not support this, need to redo
     suffix = [''] * (del_postspace + 1) if del_postspace and not tr_neg else None  # same for trailing space
@@ -1379,7 +1379,7 @@ _trivia2postcomms = {False: False, 'none': False, 'line': True, 'block': 'block'
 
 def _maybe_del_trailing_newline(self: fst.FST, old_last_line: str, put_fst_end_nl: bool) -> None:
     """Cut or del or put operation may leave a trailing newline at end of source. If that happens and there was not a
-    traling newline before then remove it. Also update end location of `_ExceptHandlesr` or `_match_cases` SPECIAL SLICE
+    traling newline before then remove it. Also update end location of `_ExceptHandlers` or `_match_cases` SPECIAL SLICE
     since those always need to end at end of source."""
 
     root = self.root

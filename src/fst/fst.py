@@ -1389,6 +1389,8 @@ class FST:
         much formatting as possible and maybe continue operating in `FST` land. Only `AST` nodes from the original tree
         carry formatting information, so the more of those are replaced the more formatting is lost.
 
+        THIS FUNCTION IS A WORK IN PROGRESS, results not guaranteed.
+
         **Note:** When replacing the `AST` nodes, make sure you are replacing the nodes in the parent `AST` fields, not
         the `.a` attribute in `FST` nodes, that won't do anything.
 
