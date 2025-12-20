@@ -6,10 +6,12 @@ import threading
 import tokenize
 import unittest
 from ast import parse as ast_parse, unparse as ast_unparse
+from io import StringIO
 from pprint import pformat
 from random import randint, seed
 
 from fst import *
+import fst
 
 from fst.astutil import (
     WalkFail,
@@ -225,6 +227,41 @@ def regen_precedence_data():
 
 
 class TestFST(unittest.TestCase):
+    """Main fst module, `FST` class and core functions."""
+
+    def test_fst_unparse(self):
+        a = fst.parse('if 1: pass')
+
+        self.assertEqual('if 1: pass', fst.unparse(a))
+        self.assertEqual('if 1:\n    pass', ast.unparse(a))
+        self.assertEqual('if 1:\n    pass', ast.unparse(a.f.copy_ast()))
+
+        self.assertEqual('if 1: pass', fst.unparse(a.body[0]))
+        self.assertEqual('if 1:\n    pass', ast.unparse(a.body[0]))
+        self.assertEqual('if 1:\n    pass', ast.unparse(a.body[0].f.copy_ast()))
+
+        self.assertEqual('pass', fst.unparse(a.body[0].body[0]))
+        self.assertEqual('pass', ast.unparse(a.body[0].body[0]))
+        self.assertEqual('pass', ast.unparse(a.body[0].body[0].f.copy_ast()))
+
+        a.f._lines = None
+
+        self.assertEqual('if 1:\n    pass', fst.unparse(a))
+
+        a = fst.parse('if 1:\n  if 2: pass')
+
+        self.assertEqual('if 1:\n  if 2: pass', fst.unparse(a))
+        self.assertEqual('if 1:\n    if 2:\n        pass', ast.unparse(a))
+        self.assertEqual('if 1:\n    if 2:\n        pass', ast.unparse(a.f.copy_ast()))
+
+        self.assertEqual('if 1:\n  if 2: pass', fst.unparse(a.body[0]))
+        self.assertEqual('if 1:\n    if 2:\n        pass', ast.unparse(a.body[0]))
+        self.assertEqual('if 1:\n    if 2:\n        pass', ast.unparse(a.body[0].f.copy_ast()))
+
+        self.assertEqual('if 2: pass', fst.unparse(a.body[0].body[0]))
+        self.assertEqual('if 2:\n    pass', ast.unparse(a.body[0].body[0]))
+        self.assertEqual('if 2:\n    pass', ast.unparse(a.body[0].body[0].f.copy_ast()))
+
     def test__sanitize_stmtish(self):
         f = FST('# pre\ni = j  # line\n# post', 'stmt')
         self.assertEqual('# pre\ni = j  # line\n# post', f.src)
@@ -2151,6 +2188,46 @@ y"
 
                 raise
 
+    def test_new(self):
+        self.assertEqual('Module - ROOT 0,0..0,0', FST.new().dump(out=str))
+        self.assertEqual('Expression - ROOT 0,0..0,4\n  .body Constant None - 0,0..0,4', FST.new('eval').dump(out=str))
+        self.assertEqual('Interactive - ROOT 0,0..0,0', FST.new('single').dump(out=str))
+
+        self.assertRaises(ValueError, FST.new, None)
+        self.assertRaises(ValueError, FST.new, 'INVALID')
+
+    def test_fromast(self):
+        a = ast_parse('i = 1', '', 'exec')
+
+        self.assertEqual('i = 1', FST.fromast(a).src)
+        self.assertEqual('i = 1', FST.fromast(a, 'exec').src)
+        self.assertEqual('i = 1', FST.fromast(a.body[0]).src)
+        self.assertRaises(ValueError, FST.fromast, a.body[0], 'exec')
+
+        # just testing, don't use type_comments
+
+        a = ast_parse('i = 1  # type: int', '', 'exec', type_comments=True)
+
+        self.assertEqual('i = 1 # type: int', FST.fromast(a).src)
+        self.assertEqual('i = 1 # type: int', FST.fromast(a, 'exec').src)
+        self.assertEqual('i = 1 # type: int', FST.fromast(a, type_comments=True).src)
+        self.assertEqual('i = 1 # type: int', FST.fromast(a, 'exec', type_comments=True).src)
+        self.assertEqual('i = 1 # type: int', FST.fromast(a, type_comments=None).src)
+        self.assertEqual('i = 1 # type: int', FST.fromast(a, 'exec', type_comments=None).src)
+        self.assertEqual('i = 1 # type: int', FST.fromast(a.body[0], type_comments=True).src)
+        self.assertRaises(ValueError, FST.fromast, a.body[0], 'exec', type_comments=True)
+
+        a = ast_parse('i = 1  # type: ignore', '', 'exec', type_comments=True)
+
+        self.assertRaises(ValueError, FST.fromast, a)
+        self.assertRaises(ValueError, FST.fromast, a, 'exec')
+        self.assertEqual('i = 1 # type: ignore', FST.fromast(a, type_comments=True).src)
+        self.assertEqual('i = 1 # type: ignore', FST.fromast(a, 'exec', type_comments=True).src)
+        self.assertEqual('i = 1 # type: ignore', FST.fromast(a, type_comments=None).src)
+        self.assertEqual('i = 1 # type: ignore', FST.fromast(a, 'exec', type_comments=None).src)
+        self.assertEqual('i = 1', FST.fromast(a.body[0], type_comments=True).src)
+        self.assertRaises(ValueError, FST.fromast, a.body[0], 'exec', type_comments=True)
+
     def test_infer_indent(self):
         self.assertEqual('    ', FST.fromsrc('def f(): pass').indent)
         self.assertEqual('  ', FST.fromsrc('def f():\n  pass').indent)
@@ -2281,11 +2358,23 @@ y"
         self.assertIsNone(h.a)
         self.assertIsNone(g.a)
 
-    def test_src(self):
+    def test_src_and_lines(self):
         self.assertEqual('and', FST('a and b').op.src)
         self.assertEqual('or', FST('a or b').op.src)
         self.assertEqual(['and'], FST('a and b').op.lines)
         self.assertEqual(['or'], FST('a or b').op.lines)
+
+        f = FST('# 0\na = b\n# 1')
+        self.assertEqual('# 0\na = b\n# 1', f.src)
+        self.assertEqual(['# 0', 'a = b', '# 1'], f.lines)
+        self.assertEqual('a = b', f.get_src(*f.loc))
+        self.assertEqual(['a = b'], f.get_src(*f.loc, as_lines=True))
+
+        f = FST('if 1:\n  if 2: pass  # line')
+        self.assertEqual('if 2: pass  # line', f.body[0].src)
+        self.assertEqual(['  if 2: pass  # line'], f.body[0].lines)
+        self.assertEqual('pass', f.body[0].body[0].src)
+        self.assertEqual(['  if 2: pass  # line'], f.body[0].body[0].lines)
 
     def test_loc(self):
         self.assertEqual((0, 6, 0, 9), parse('def f(i=1): pass').body[0].args.f.loc)  # arguments
@@ -2627,6 +2716,58 @@ def f():
             "   1] Pass - 4,4..4,8",
         ])
 
+        f = FST('#!/usr/bin/env python\n\ni = 1')
+        self.assertEqual([
+            'Assign - ROOT 2,0..2,5',
+            '  .targets[1]',
+            "   0] Name 'i' Store - 2,0..2,1",
+            '  .value Constant 1 - 2,4..2,5',
+        ], f.dump(out=list))
+        self.assertEqual([
+            '2: i = 1',
+            'Assign - ROOT 2,0..2,5',
+            '  .targets[1]',
+            "   0] Name 'i' Store - 2,0..2,1",
+            '  .value Constant 1 - 2,4..2,5',
+        ], f.dump('s', out=list))
+        self.assertEqual([
+            '0: #!/usr/bin/env python',
+            '1: ',
+            '2: i = 1',
+            'Assign - ROOT 2,0..2,5',
+            '  .targets[1]',
+            "   0] Name 'i' Store - 2,0..2,1",
+            '  .value Constant 1 - 2,4..2,5',
+        ], f.dump('S', out=list))
+        self.assertEqual([
+            '2: i = 1',
+            'Assign - ROOT 2,0..2,5',
+            '  .targets[1]',
+            '2: i',
+            "   0] Name 'i' Store - 2,0..2,1",
+            '2:     1',
+            '  .value Constant 1 - 2,4..2,5',
+        ], f.dump('n', out=list))
+        self.assertEqual([
+            '0: #!/usr/bin/env python',
+            '1: ',
+            '2: i = 1',
+            'Assign - ROOT 2,0..2,5',
+            '  .targets[1]',
+            '2: i',
+            "   0] Name 'i' Store - 2,0..2,1",
+            '2:     1',
+            '  .value Constant 1 - 2,4..2,5',
+        ], f.dump('N', out=list))
+
+        fp = StringIO()
+        f.dump(out=fp)
+        self.assertEqual("Assign - ROOT 2,0..2,5\n  .targets[1]\n   0] Name 'i' Store - 2,0..2,1\n  .value Constant 1 - 2,4..2,5\n", fp.getvalue())
+
+        f = FST('None')
+        self.assertEqual('Constant None - ROOT 0,0..0,4', f.dump(color=False, out=str))
+        self.assertEqual('\x1b[1;34mConstant\x1b[0m \x1b[1;36mNone\x1b[0m \x1b[90m- ROOT 0,0..0,4\x1b[0m', f.dump(color=True, out=str))
+
     def test_verify(self):
         ast = parse('i = 1')
         ast.f.verify(raise_=True)
@@ -2661,6 +2802,21 @@ def f():
                 print(mode, src, res, func)
 
                 raise
+
+        f = FST('a = b')
+
+        self.assertRaises(ValueError, f.value.verify)
+
+        self.assertIs(f, f.verify(raise_=False))
+        f.value.parent = None
+        self.assertIsNone(f.verify(raise_=False))
+        self.assertRaises(WalkFail, f.verify)
+
+        f = FST('a = b')
+        f.put_src(None, 0, 4, 0, 5, None)
+
+        self.assertIsNone(f.verify(raise_=False))
+        self.assertRaises(SyntaxError, f.verify)
 
     def test_walk(self):
         a = parse("""
@@ -3519,15 +3675,15 @@ class cls(a, b=c):
  'free': {'i': [<Name 0,1..0,2>, <Name 0,18..0,19>]}}
             '''.strip())
 
-#         self.assertEqual(pformat(FST('[i for a in b if (i := a)]').scope_symbols(full=True, walrus=True), sort_dicts=False), '''
-# {'load': {'i': [<Name 0,1..0,2>], 'a': [<Name 0,23..0,24>]},
-#  'store': {'a': [<Name 0,7..0,8>], 'i': [<Name 0,18..0,19>]},
-#  'del': {},
-#  'global': {},
-#  'nonlocal': {},
-#  'local': {'a': [<Name 0,7..0,8>], 'i': [<Name 0,18..0,19>]},
-#  'free': {}}
-#             '''.strip())
+        self.assertEqual(pformat(FST('[i := a for a in b]').scope_symbols(full=True), sort_dicts=False), '''
+{'load': {'a': [<Name 0,6..0,7>]},
+ 'store': {'i': [<Name 0,1..0,2>], 'a': [<Name 0,12..0,13>]},
+ 'del': {},
+ 'global': {},
+ 'nonlocal': {},
+ 'local': {'a': [<Name 0,12..0,13>]},
+ 'free': {'i': [<Name 0,1..0,2>]}}
+            '''.strip())
 
         # ListComp
 
@@ -3535,9 +3691,7 @@ class cls(a, b=c):
         self.assertEqual(['a', 'b', 'e'], list(FST('[a for b in c(d) for a in b(e)]').scope_symbols()))
 
         self.assertEqual(['i', 'a'], list(FST('[i := a for a in (j := b)]').scope_symbols()))
-        # self.assertEqual(['i', 'a'], list(FST('[i := a for a in (j := b)]').scope_symbols(walrus=True)))
         self.assertEqual(['i', 'a'], list(FST('[i for a in b if (i := a)]').scope_symbols()))
-        # self.assertEqual(['i', 'a'], list(FST('[i for a in b if (i := a)]').scope_symbols(walrus=True)))
 
         # SetComp
 
@@ -3545,9 +3699,7 @@ class cls(a, b=c):
         self.assertEqual(['a', 'b', 'e'], list(FST('{a for b in c(d) for a in b(e)}').scope_symbols()))
 
         self.assertEqual(['i', 'a'], list(FST('{i := a for a in (j := b)}').scope_symbols()))
-        # self.assertEqual(['i', 'a'], list(FST('{i := a for a in (j := b)}').scope_symbols(walrus=True)))
         self.assertEqual(['i', 'a'], list(FST('{i for a in b if (i := a)}').scope_symbols()))
-        # self.assertEqual(['i', 'a'], list(FST('{i for a in b if (i := a)}').scope_symbols(walrus=True)))
 
         # GeneratorExp
 
@@ -3555,9 +3707,7 @@ class cls(a, b=c):
         self.assertEqual(['a', 'b', 'e'], list(FST('(a for b in c(d) for a in b(e))').scope_symbols()))
 
         self.assertEqual(['i', 'a'], list(FST('(i := a for a in (j := b))').scope_symbols()))
-        # self.assertEqual(['i', 'a'], list(FST('(i := a for a in (j := b))').scope_symbols(walrus=True)))
         self.assertEqual(['i', 'a'], list(FST('(i for a in b if (i := a))').scope_symbols()))
-        # self.assertEqual(['i', 'a'], list(FST('(i for a in b if (i := a))').scope_symbols(walrus=True)))
 
         # DictComp
 
@@ -3565,9 +3715,39 @@ class cls(a, b=c):
         self.assertEqual(['a', 'b', 'e'], list(FST('{a: a for b in c(d) for a in b(e)}').scope_symbols()))
 
         self.assertEqual(['i', 'a'], list(FST('{(i := a): a for a in (j := b)}').scope_symbols()))
-        # self.assertEqual(['i', 'a'], list(FST('{(i := a): a for a in (j := b)}').scope_symbols(walrus=True)))
         self.assertEqual(['i', 'a'], list(FST('{i: a for a in b if (i := a)}').scope_symbols()))
-        # self.assertEqual(['i', 'a'], list(FST('{i: a for a in b if (i := a)}').scope_symbols(walrus=True)))
+
+        # other detail and test coverage
+
+        self.assertEqual(pformat(FST('a\na += b').scope_symbols(full=True), sort_dicts=False), '''
+{'load': {'a': [<Name 0,0..0,1>, <Name 1,0..1,1>], 'b': [<Name 1,5..1,6>]},
+ 'store': {'a': [<Name 1,0..1,1>]},
+ 'del': {},
+ 'global': {},
+ 'nonlocal': {},
+ 'local': {'a': [<Name 1,0..1,1>]},
+ 'free': {'b': [<Name 1,5..1,6>]}}
+            '''.strip())
+
+        self.assertEqual(pformat(FST('a = 1\nfrom b import a').scope_symbols(full=True), sort_dicts=False), '''
+{'load': {},
+ 'store': {'a': [<Name 0,0..0,1>, <alias 1,14..1,15>]},
+ 'del': {},
+ 'global': {},
+ 'nonlocal': {},
+ 'local': {'a': [<Name 0,0..0,1>, <alias 1,14..1,15>]},
+ 'free': {}}
+            '''.strip())
+
+        self.assertEqual(pformat(FST('global a\nglobal a\nnonlocal b\nnonlocal b').scope_symbols(full=True), sort_dicts=False), '''
+{'load': {},
+ 'store': {},
+ 'del': {},
+ 'global': {'a': [<Global 0,0..0,8>, <Global 1,0..1,8>]},
+ 'nonlocal': {'b': [<Nonlocal 2,0..2,10>, <Nonlocal 3,0..3,10>]},
+ 'local': {},
+ 'free': {}}
+            '''.strip())
 
     def test_next_prev_child(self):
         fst = parse('a and b and c and d').body[0].value.f
@@ -4036,6 +4216,9 @@ with a as b, c as d:
 
         self.assertRaises(ValueError, f.child_path, parse('1').f)
 
+        f = FST('i = [a, b]')
+        self.assertRaises(ValueError, f.value.elts[0].child_path, f.value.elts[1])
+
     def test_get_src_clip(self):
         f = FST('if 1:\n    j = 2\n    pass')
 
@@ -4397,6 +4580,11 @@ if 1:
             '''.strip(), f.root.src)
         f.verify()
 
+        self.assertRaises(ValueError, FST('i').put_src, 'i', 0, 0, 0, 1, 'INVALID')
+
+        self.assertEqual((1, 1), (f := FST('i')).put_src(['a', 'b'], 0, 0, 0, 1, None))  # misc, not really reparse
+        self.assertEqual('a\nb', f.src)
+
     def test_put_src_offset(self):
         f = FST('a, b, c')
         f.put_src(' ', 0, 0, 0, 0, 'offset')
@@ -4501,6 +4689,8 @@ if 1:
         self.assertRaises(ValueError, f.elts[1].put_src, ' ', 0, 2, 0, 4, 'offset')
         self.assertRaises(ValueError, f.elts[1].put_src, ' ', 0, 3, 0, 5, 'offset')
         self.assertRaises(ValueError, f.elts[1].put_src, ' ', 0, 2, 0, 5, 'offset')
+
+        self.assertRaises(ValueError, FST('a').ctx.put_src, '', 0, 0, 0, 0, 'offset')
 
     def test_dedent_multiline_strings(self):
         f = parse('''
@@ -5120,6 +5310,12 @@ def func():
         f.names[0].unpar(shared=None)
         self.assertEqual('from a import b', f.src)
 
+        # for test coverage
+
+        f = FST('(i)')
+        f._unparenthesize_grouping = lambda *a, **kw: 1/0
+        self.assertRaises(ZeroDivisionError, f.unpar)
+
     def test_pars(self):
         for src, elt, slice_copy in PARS_DATA:
             src  = src.strip()
@@ -5547,6 +5743,13 @@ class cls:
         f.put_docstr('"')
 
         self.assertEqual('\'\'\'"\'\'\'', f.body[0].src)
+
+        f = FST('if 1: pass')
+        self.assertIsNone(f.get_docstr())
+
+        f.put_docstr('test')
+
+        self.assertEqual('class cls: pass', FST('class cls: pass').put_docstr(None).src)
 
     def test_copy_special(self):
         f = FST.fromsrc('@decorator\nclass cls:\n  pass')
@@ -6195,7 +6398,7 @@ class cls:
         def delitem(): del v[::2]
         self.assertRaises(IndexError, delitem)
 
-    def test_is_node_type_properties_and_parents(self):
+    def test_parents_and_their_is_type_predicates(self):
         fst = parse('''
 match a:
     case 1:
@@ -6334,6 +6537,29 @@ match a:
         self.assertTrue(f.is_stmtish_or_mod)
         self.assertTrue(f.is_mod)
 
+        self.assertIs((f := FST('i = 1')).parent_stmt(self_=True), f)
+        self.assertIs((f := FST('except: pass')).parent_stmtish(self_=True), f)
+        self.assertIs((f := FST('if 1: pass')).parent_block(self_=True), f)
+        self.assertIs((f := FST('class cls: pass')).parent_scope(self_=True), f)
+        self.assertIs((f := FST('def f(): pass')).parent_named_scope(self_=True), f)
+        self.assertIs((f := FST('a as b', 'withitem')).parent_non_expr(self_=True), f)
+        self.assertIs((f := FST('a as b', 'pattern')).parent_pattern(self_=True), f)
+
+        # f and t-strings
+
+        f = FST('f"{1}"')
+
+        self.assertTrue(f.is_ftstr)
+        self.assertIs(f.values[0].value.parent_ftstr(), f)
+        self.assertIs(f.parent_ftstr(self_=True), f)
+
+        if PYGE14:
+            f = FST('t"{1}"')
+
+            self.assertTrue(f.is_ftstr)
+            self.assertIs(f.values[0].value.parent_ftstr(), f)
+            self.assertIs(f.parent_ftstr(self_=True), f)
+
     def test_options(self):
         new = dict(
             docstr    = 'test_docstr',
@@ -6422,7 +6648,11 @@ match a:
     def test_reconcile(self):
         # basic replacements
 
+        self.assertRaises(ValueError, FST('i = 1').value.mark)
+
         m = (o := FST('i = 1')).mark()
+
+        self.assertRaises(ValueError, o.value.reconcile, m.value)
 
         o.a.value = Name(id='test')
         f = o.reconcile(m)
@@ -7667,6 +7897,14 @@ if 1:
 
         self.assertEqual('{a: b, e: f}', f.src)
 
+        f._all = '{x: y}'
+
+        self.assertEqual('{x: y}', f.src)
+
+        del f._all
+
+        self.assertEqual('{}', f.src)
+
         # MatchMapping
 
         f = FST('{1: a, 2: b, **c}', pattern)
@@ -7682,6 +7920,14 @@ if 1:
         f._all[1] = None
 
         self.assertEqual('{1: a, **c}', f.src)
+
+        f._all = '{1: y}'
+
+        self.assertEqual('{1: y}', f.src)
+
+        del f._all
+
+        self.assertEqual('{}', f.src)
 
         # Compare
 
@@ -7706,6 +7952,18 @@ if 1:
 
         self.assertEqual('<<Compare ROOT 0,0..0,14>._all[1:3] <Name 0,4..0,5> == <Name 0,9..0,10>>', repr(FST('a < b == c > d')._all[1:3]))
 
+        f._all = 'x != y'
+
+        self.assertEqual('x != y', f.src)
+
+        def del_all():
+            del f._all
+        self.assertRaises(ValueError, del_all)
+
+        # error
+
+        self.assertRaises(AttributeError, lambda: FST('a')._all)
+
     def test_ast_accessors_virtual_field__body(self):
         f = FST('"""doc"""\na\nb')
         self.assertEqual('a\nb', f._body.copy().src)
@@ -7723,6 +7981,10 @@ if 1:
         self.assertEqual('"""doc"""\nx\ny', f.src)
 
         self.assertEqual(0, len(fstview_dummy(f, 'invalid')))
+
+        # error
+
+        self.assertRaises(AttributeError, lambda: FST('a')._body)
 
     def test_ast_accessors_dummy(self):
         if PYLT12:
@@ -7746,6 +8008,43 @@ if 1:
             del f.default_value
             f.default_value = None
             self.assertRaises(RuntimeError, setattr, f, 'default_value', True)
+
+    def test_predicates(self):
+        f = FST('a = (b, c)')
+        val = f.value
+        elt0 = val.elts[0]
+        self.assertTrue(val.is_alive)
+        self.assertTrue(elt0.is_alive)
+        f.value.elts[0] = 'x'
+        self.assertTrue(val.is_alive)
+        self.assertTrue(elt0.is_alive)  # yeah, quirk, it changed but is still alive because only its .a changed
+        f.value = 'y'
+        self.assertTrue(val.is_alive)
+        self.assertFalse(elt0.is_alive)  # here it finally died
+
+        self.assertTrue(FST('', 'exec').is_mod)
+        self.assertTrue(FST('i = i', 'Assign').is_stmt)
+        self.assertTrue(FST('f()', 'Call').is_expr)
+        self.assertTrue(FST('i').ctx.is_expr_context)
+        self.assertTrue(FST('and', 'And').is_boolop)
+        self.assertTrue(FST('+', 'Add').is_operator)
+        self.assertTrue(FST('~', 'Invert').is_unaryop)
+        self.assertTrue(FST('>', 'Gt').is_cmpop)
+
+        self.assertTrue(FST('def f(): pass').is_def)
+        self.assertTrue(FST('async def f(): pass').is_def)
+        self.assertTrue(FST('class cls: pass').is_def)
+        self.assertTrue(FST('', 'exec').is_def_or_mod)
+        self.assertTrue(FST('for _ in _: pass').is_for)
+        self.assertTrue(FST('async for _ in _: pass').is_for)
+        self.assertTrue(FST('with _: pass').is_with)
+        self.assertTrue(FST('async with _: pass').is_with)
+        self.assertTrue(FST('try: pass\nexcept: pass').is_try)
+        self.assertTrue(FST('import _').is_import)
+        self.assertTrue(FST('from . import _').is_import)
+
+        if PYGE11:
+            self.assertTrue(FST('try: pass\nexcept* Exception: pass').is_try)
 
     def test_generated_predicates(self):  # TODO: comprehensive test them all
         f = FST('call(a, b=c)', 'exec')
@@ -7896,6 +8195,10 @@ if 1:
         self.assertFalse(parse('((a)), ((b))').body[0].value.f.is_parenthesized_tuple())
 
         self.assertIsNone(parse('[(a), (b)]').body[0].value.f.is_parenthesized_tuple())
+
+    def test_misc(self):
+        f = FST('a')
+        self.assertRaises(RuntimeError, lambda: f.f)
 
 
 if __name__ == '__main__':

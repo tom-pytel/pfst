@@ -5,6 +5,7 @@ To be able to execute the examples, import this.
 
 >>> from fst import *
 
+
 ## What it does
 
 The idea of the `reconcile()` functionality is not to be able to put `AST` nodes to an `FST` tree under your own
@@ -161,6 +162,7 @@ def compute(x, y):
         return 0
     else:
         return -1
+
 
 ## How it works
 

@@ -5,6 +5,7 @@ To be able to execute the examples, import this.
 
 >>> from fst import *
 
+
 ## Types of parentheses
 
 **Note:** Most of this section references single-element operations. Parenthesization in slice operations is ususally
@@ -78,6 +79,7 @@ These parentheses belong to the `with` node and cannot be removed by the user.
 with (c
 as
 d): pass
+
 
 ## Parentheses on get
 
@@ -173,6 +175,7 @@ If `pars_arglike=None` then they are parenthesized according to `pars`.
 >>> print(f.get_slice('bases', pars_arglike=None, pars=False).src)
 (*not a, *b, *c or d)
 
+
 ## `pars` modes
 
 The `pars` option has been mentioned above with two possible values, `True` and `False`, but its default value of
@@ -225,6 +228,7 @@ the target. This is because `pars=False` does not mean **NO PARENTHESES**, it me
 `pars='auto'` mode remove parentheses from the source if they are not needed at the target while the `pars=True` mode
 also leaves them in the source (but removes them from the target which `pars=False` does not do). For more information
 on pars behavior, see the information on `pars` in `fst.fst.FST.options()`.
+
 
 ## Checking parentheses on a node
 
@@ -341,6 +345,7 @@ fstlocn(0, 6, 0, 12, n=0)
 fstlocn(0, 6, 0, 7, n=0)
 
 Aren't you glad this is taken care of for you :)
+
 
 ## Adding parentheses manually
 
@@ -475,6 +480,7 @@ If you attempt to parenthesize or unparenthesize a `Starred` expression the oper
 
 >>> print(FST('*(starred)').unpar().src)
 *starred
+
 
 ## Removing parentheses manually
 

@@ -1015,6 +1015,7 @@ if 1:
         self.assertEqual('j = 2', f.src)
 
         self.assertRaises(ValueError, f.replace, None)
+        self.assertRaises(ValueError, f.replace, 'i', to=f.value)
 
     def test_put_existing_one(self):
         for i, (dst, attr, options, src, put_ret, put_src) in enumerate(REPLACE_EXISTING_ONE_DATA):
@@ -3323,7 +3324,7 @@ f'd{t"e{f=!s:0.1f<1}"=}'
         self.assertIsInstance(a.value.elts[0].ctx, Load)
         self.assertIsInstance(a.value.elts[1].ctx, Load)
 
-    def test_one_coverage(self):
+    def test_coverage(self):
         # misc stuff to fill out test coverage
 
         from fst.fst_put_one import _validate_put
@@ -3336,6 +3337,14 @@ f'd{t"e{f=!s:0.1f<1}"=}'
 
         from fst.fst_put_one import _put_one_raw
         self.assertEqual('{x: y}', _put_one_raw(FST('{a: b}'), 'x: y', 0, '_all', [], None, {}).root.src)
+
+        # misc
+
+        f = FST('i = 1')
+        self.assertRaises(ValueError, f.value.replace, 'i, j', one=False)
+        self.assertRaises(ValueError, f.remove)
+        self.assertRaises(ValueError, f.get_slice, 'value')
+        self.assertRaises(ValueError, f.put_slice, 'a, b', 'value')
 
 
 if __name__ == '__main__':

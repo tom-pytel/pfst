@@ -5,6 +5,7 @@ To be able to execute the examples, import this.
 
 >>> from fst import *
 
+
 ## Slices
 
 `AST` nodes may have individual `AST` children like `FunctionDef.returns` or lists of `AST` children like
@@ -105,6 +106,7 @@ If a type does not have comma separators but can be represented by a standard `A
 
 >>> print(slc.src)
 b | c
+
 
 ## Non-standard `AST` slices
 
@@ -215,6 +217,7 @@ _comprehension_ifs - ROOT 0,0..0,19
 >>> print(slc.src)
 if a if x if y if c
 
+
 ## BoolOp and Compare "slices"
 
 You can also slice these node types as they contain lists of child nodes, though there are some extra parameters since
@@ -318,6 +321,7 @@ a == x > c
 >>> print(FST('a < b > c').put_slice('x', 1, 2, op_side='right', op='==').src)
 a < x == c
 
+
 ## Normalization
 
 For some types of `AST` nodes it is permissible to remove all children and still remain valid, for example `Tuple` or
@@ -392,6 +396,7 @@ If you wish to avoid invalid `AST` nodes completely then you can pass the `norm=
 simply disallow operations which would leave an invalid node. However there are some `AST` types which have special
 handling.
 
+
 ## Normalization of `Set`
 
 In extreme cases, like deleting all elements from a `Set`, you can use the `norm=True` option to maintain its
@@ -435,6 +440,7 @@ To finish off the `Set` normalization, there is an option `set_norm` which may b
 `'both'`. This specifies what should be used for `Set` normalization with the options allowing empty starred immediate
 objects `*()`, `*[]`, `*{}` or the `set()` function call (which you may not use if it is shadowed in the code being
 worked on).
+
 
 ## Normalization of other nodes
 
@@ -515,6 +521,7 @@ It also allows putting things which are not slices of the given type to a slice 
 
 >>> print(f.pattern.put_slice('x as y', 1, 3, one=True).src)
 a | (x as y) | d
+
 
 ## Trivia
 
@@ -705,6 +712,7 @@ All of this applies to all statement-ish operations but also expression-ish slic
 ']'
 
 The default leading trivia is `'block'`.
+
 
 ## Trivia (trailing)
 

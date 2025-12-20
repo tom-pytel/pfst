@@ -9,6 +9,7 @@
 
 ### Added
 
+- `_body` virtual field for accessing block statement bodies leaving any possibly present docstr unchanged
 - dummy view for nonexistent list fields from higher python versions on lower ones
 - new coercions on put: `arg` to `arguments`, `withitem` to `expr`
 - basic options checking in all functions which take them, make sure all passed are actual options
@@ -22,6 +23,8 @@
 
 ### Updated
 
+- add negative and `'end'` index options to `get_src()` and `put_src()`
+- change get/put index specification to use 0 to `'end'` instead of archaic `None` and `False` for the slice endpoints
 - `FST.type_params` on py < 3.12 and `.default_value` on py < 3.13 give dummy values
 - `fstview` can represent unbounded field list, can grow as well as shring with modifications outside the view
 - changed `.docstr` to `get_docstr()` which now dedents returned string

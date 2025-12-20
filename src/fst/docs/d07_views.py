@@ -300,6 +300,7 @@ b == c
 When carrying out slice operations on a `Compare` though there are extra considerations to take into account for the
 operators. This is explained in more detail in the section on slices `fst.docs.d06_slices`.
 
+
 ## `_body` virtual field
 
 This is a pure convenience field. It doesn't solve any problem but rather allows you to work with blocks of statements
@@ -348,6 +349,7 @@ call()
 
 Also note that `_body` is not the default field unlike `_all` is for its respective node types, you will always have to
 specify it explicitly.
+
 
 ## Virtual field attribute access
 

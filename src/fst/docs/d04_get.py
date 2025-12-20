@@ -5,6 +5,7 @@ To be able to execute the examples, import this.
 
 >>> from fst import *
 
+
 ## `copy()` and `cut()`
 
 If you just access nodes directly you get the node as it lives in the parent tree, without source dedenting (except for
@@ -141,6 +142,7 @@ You can copy a root node but you cannot cut one.
 ... except Exception as exc:
 ...     print('Exception:', exc)
 Exception: cannot cut root node
+
 
 ## `get()` and `get_slice()`
 
@@ -283,6 +285,7 @@ _ExceptHandlers - ROOT 0,0..3,9
          0] Name 'j' Store - 3,4..3,5
         .value Constant 2 - 3,8..3,9
 
+
 ## Non-AST values
 
 Using `get()` and `get_slice()` you can get non-`AST` primitive values from nodes. This exists to accomondate stuff like
@@ -333,6 +336,7 @@ Put likewise expects a valid `Tuple` when putting to a list of comma-separated p
 >>> print(f.src)
 global a, a, b, c, c
 
+
 ## By attribute
 
 The `FST` class provides properties that mirror the fields of all possible `AST` classes in order to allow direct access
@@ -374,6 +378,7 @@ standalone element that you can put into another tree then you need to make a co
 
 >>> f.value.copy()
 <List ROOT 0,0..0,8>
+
 
 ## `get_src()`
 

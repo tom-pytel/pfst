@@ -714,6 +714,8 @@ def regen_parse_autogen_data():
 
 
 class TestParse(unittest.TestCase):
+    """Genral parse and unparse and `Code` conversions."""
+
     def test_parse_autogen(self):
         DATA_PARSE_AUTOGEN = ParseCases(FNM_PARSE_AUTOGEN)
 

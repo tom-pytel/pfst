@@ -23,7 +23,6 @@ This is just a print helper function for this documentation specifically, you ca
 ...    print(src.replace('\n\n', '\n\xa0\n'))  # replace() to avoid '<BLANKLINE>'
 
 
-
 ## `else if` chain to `elif`
 
 `fst` has `elif` <-> `else if` code built in as its needed for statement insertions and deletions from conditional
@@ -157,7 +156,6 @@ def func():
  
     # post-else-a
 ```
-
 
 
 ## Pull out nested functions
@@ -311,7 +309,6 @@ class cls:
 ```
 
 
-
 ## `lambda` to `def`
 
 Maybe you have too many lambdas and want proper function defs for debugging or logging or other tools. Note the defs are
@@ -416,7 +413,6 @@ class cls:
     def method(self, a, b):
         return cls_method_add(a, b)
 ```
-
 
 
 ## `isinstance()` to `__class__ is` / `in`
@@ -553,7 +549,6 @@ def is_valid_target(asts: AST | list[AST]) -> bool:
 ```
 
 
-
 ## Squash nested `with`s
 
 Slice operations make this easy enough. We only do synchronous `with` here as you can't mix sync with async anyway. Yes
@@ -627,7 +622,6 @@ with (open(a) as f,
  
 # post-with comment
 ```
-
 
 
 ## Comprehension to loop
@@ -762,7 +756,6 @@ def f(k):
 ```
 
 
-
 ## Align equals
 
 This is just here to show pure source modification without messing with the actual structure. It just walks everything
@@ -890,7 +883,6 @@ Module - ROOT 0,0..2,22
 ```
 
 
-
 ## Normalize docstrings
 
 This is just a side effect of how put and indentation works. Its not full proper docstring fixing, for that could just
@@ -967,7 +959,6 @@ class cls:
  
         pass
 ```
-
 
 
 ## Reparenthesize expressions
@@ -1100,7 +1091,6 @@ a + y * z  # nested pars cleaned up
  
 x * (y * z)  # original pars normally left if needed, unless unpar() used
 ```
-
 
 
 ## Instrument expressions

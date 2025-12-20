@@ -153,8 +153,8 @@ __all__ = [
 
 try:
     from IPython import get_ipython
-    _IPYTHON_COLOR = getattr(get_ipython(), 'colors', 'NoColor') != 'NoColor'
-except Exception:
+    _IPYTHON_COLOR = getattr(get_ipython(), 'colors', 'NoColor') != 'NoColor'  # pragma: no cover
+except Exception:  # pragma: no cover
     _IPYTHON_COLOR = False
 
 _DEFAULT_COLOR = (
@@ -336,11 +336,12 @@ def unparse(ast_obj: AST) -> str:
     """
 
     if (f := getattr(ast_obj, 'f', None)) and isinstance(f, FST):
-        if f.is_root:
-            return f.src
-
         try:
+            if f.is_root:
+                return f.src
+
             return f.copy().src
+
         except Exception:
             pass
 
@@ -923,12 +924,17 @@ class FST:
     ) -> FST:
         """Parse and create a new `FST` tree from source, preserving the original source and locations.
 
+        **WARNING!** The `type_comments` parameter is `False` by default and no guarantees are made if you turn it on.
+        It is provided just in case but really shouldn't be used as `fst` takes care of comments anyway, this just turns
+        on storing the comments in the `AST` nodes which may cause all sorts of madness like duplication on unparse or
+        nodes failing to reparse to themselves on operations.
+
         **Parameters:**
         - `src`: The source to parse as a single `str` or list of individual line strings (without newlines).
         - `mode`: Parse mode, extended `ast.parse()` parameter, See `fst.parsex.Mode`.
         - `filename`: `ast.parse()` parameter.
-        - `type_comments`: `ast.parse()` parameter.
-        - `feature_version`: `ast.parse()` parameter.
+        - `type_comments`: `ast.parse()` parameter. Don't use this, see warning above.
+        - `feature_version`: `ast.parse()` parameter. Don't use this either, here just in case.
 
         **Returns:**
         - `FST`: The parsed tree with `.f` attributes added to each `AST` node for `FST` access.
@@ -997,6 +1003,11 @@ class FST:
     ) -> FST:
         r"""Unparse and reparse an `AST` for new `FST` (the reparse is necessary to make sure locations are correct).
 
+        **WARNING!** The `type_comments` parameter is `False` by default and no guarantees are made if you turn it on.
+        It is provided just in case but really shouldn't be used as `fst` takes care of comments anyway, this just turns
+        on storing the comments in the `AST` nodes which may cause all sorts of madness like duplication on unparse or
+        nodes failing to reparse to themselves on operations.
+
         **Parameters:**
         - `ast`: The root `AST` node.
         - `mode`: Parse mode, extended `ast.parse()` parameter, see `fst.parsex.Mode`. Two special values are added:
@@ -1007,8 +1018,8 @@ class FST:
                 locations already present in the `AST`. This is almost never the case unless the `AST` was
                 `ast.parse()`d from an explicitly `ast.unparse()`d `AST`.
         - `filename`: `ast.parse()` parameter.
-        - `type_comments`: `ast.parse()` parameter.
-        - `feature_version`: `ast.parse()` parameter.
+        - `type_comments`: `ast.parse()` parameter. Don't use this, see warning above.
+        - `feature_version`: `ast.parse()` parameter. Don't use this either, here just in case.
         - `ctx`: Whether to make sure that the `ctx` field of the reparsed `AST` matches or not. `False` for
             convenience, `True` if you're feeling pedantic.
 
@@ -1218,11 +1229,12 @@ class FST:
 
         if color is None and out is print and (color := _DEFAULT_COLOR) is None:
             if not hasattr(sys.stdout, 'fileno'):
-                color = False
-            try:
-                color = os.isatty(sys.stdout.fileno()) or _IPYTHON_COLOR
-            except io.UnsupportedOperation:
-                color = hasattr(sys.stdout, 'isatty') and (sys.stdout.isatty() or _IPYTHON_COLOR)
+                color = False  # pragma: no cover
+            else:
+                try:
+                    color = os.isatty(sys.stdout.fileno()) or _IPYTHON_COLOR
+                except io.UnsupportedOperation:
+                    color = hasattr(sys.stdout, 'isatty') and (sys.stdout.isatty() or _IPYTHON_COLOR)
 
         if isinstance(out, TextIOBase):
             out = out.write
@@ -1897,12 +1909,8 @@ class FST:
 
         check_options(options)
 
-        ast = self.a
         start, stop, field = _swizzle_getput_params(start, stop, field, 0, 'end')
-        field, body = fixup_field_body(ast, field, True)
-
-        if not isinstance(body, list):
-            raise ValueError(f'cannot get slice from non-list field {ast.__class__.__name__}.{field}')
+        field, _ = fixup_field_body(self.a, field, True)
 
         return self._get_slice(start, stop, field, cut, options)
 
@@ -1985,12 +1993,8 @@ class FST:
 
         check_options(options)
 
-        ast = self.a
         start, stop, field = _swizzle_getput_params(start, stop, field, 0, 'end')
-        field, body = fixup_field_body(ast, field, True)
-
-        if not isinstance(body, list):
-            raise ValueError(f'cannot put slice to non-list field {ast.__class__.__name__}.{field}')
+        field, _ = fixup_field_body(self.a, field, True)
 
         return self._put_slice(code, start, stop, field, one, options)
 
@@ -2517,7 +2521,7 @@ class FST:
 
         return '\n'.join(lines)
 
-    def put_docstr(self, text: builtins.str | None, **options) -> None:
+    def put_docstr(self, text: builtins.str | None, **options) -> FST:
         """Set or delete the docstring of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
         `Module`. Will replace, insert or delete the node as required. If setting, the `text` string that is passed will
         be formatted with triple quotes and indented as needed.
@@ -2525,6 +2529,9 @@ class FST:
         **Parameters:**
         - `text`: The string to set as a docstring or `None` to delete.
         - `options`: The options to use for a put if a put is done, see `options()`.
+
+        **Returns:**
+        - `self`
         """
 
         # TODO: differentiate better header comments of Module and put after shebang and encoding but before others using specific line number once that functionality is concretized
@@ -2532,7 +2539,7 @@ class FST:
         check_options(options)
 
         if (a := self.a).__class__ not in ASTS_LEAF_MAYBE_DOCSTR:
-            return
+            return self
 
         has_docstr = 1 if (
             (b := a.body)
@@ -2544,12 +2551,14 @@ class FST:
         if text is not None:
             text = repr_str_multiline(text)
         elif not has_docstr:
-            return
+            return self
 
         if 'trivia' not in options:
             options['trivia'] = (False, False)
 
         self._put_slice(text, 0, has_docstr, 'body', False, options)
+
+        return self
 
     # ------------------------------------------------------------------------------------------------------------------
     # Traverse
@@ -2590,8 +2599,9 @@ class FST:
                 but not declared as such.
             - `'local'`: This is a dictionary of symbols determined to be local to the scope. These are all `'store'`
                 symbols which do not appear in either `'global'` or `'nonlocal'` explicit declarations. There are no
-                `'load'` or `'del'` nodes in these lists even if they are local because it is faster. If you need those
-                nodes then look them up in their respective categories using the symbol names from this category.
+                `'load'` or `'del'` nodes in these lists even if they are local both because "local" symbols are defined
+                as such by a store operation and also because it is faster. If you need any respective `'load'` or
+                `'del'` nods then look them up in their respective category lists.
             - `'free'`: This is a dictionary of symbols determined to be implicitly nonlocal to the scope. Basically all
                 nodes which are read but never written or deleted and are not explicitly `global` or `nonlocal`. Note
                 that this is slightly different from the python definition of a "free" variable as those can include
@@ -2657,8 +2667,8 @@ class FST:
             syms_load = syms_store = syms_del = syms_global = syms_nonlocal = {}
 
         else:
-            syms_load = {}  # every varname explicitly loaded in this scope  - {'name': [FST, ...]}
-            syms_store = {}  # explicitly stored
+            syms_load = {}  # every varname loaded in this scope  - {'name': [FST, ...]}
+            syms_store = {}  # explicitly or implicitly stored
             syms_del = {}  # explicitly 'del'eted
             syms_global = {}  # explicitly 'global'
             syms_nonlocal = {}  # explicitly 'nonlocal'
@@ -2748,10 +2758,11 @@ class FST:
             else:
                 if a_cls is Nonlocal:
                     syms = syms_nonlocal
-                elif a_cls is Global:
+
+                else:  # a_cls is Global:
+                    assert a_cls is Global
+
                     syms = syms_global
-                else:
-                    continue
 
                 for name in a.names:
                     if name_fsts := syms.get(name):
@@ -3112,7 +3123,7 @@ class FST:
         False
 
         >>> bool(FST('f"{a}"').parent_ftstr(self_=True))
-        False
+        True
 
         >>> bool(FST('f"{a:{b}}"').values[0].format_spec.parent_ftstr(self_=True))
         True
@@ -3120,10 +3131,10 @@ class FST:
 
         types = ASTS_LEAF_FTSTR
 
-        if self_ and self.a.__class__ not in types:
+        if self_ and self.a.__class__ in types:
             return self
 
-        while (self := self.parent) and self.a.__class__ in types:
+        while (self := self.parent) and self.a.__class__ not in types:
             pass
 
         return self
@@ -3131,6 +3142,9 @@ class FST:
     def child_path(self, child: FST, as_str: bool = False) -> list[astfield] | builtins.str:
         """Get path to `child` node from `self` which can later be used on a copy of this tree to get to the  same
         relative child node.
+
+        **Note:** This function is intentionally made to work for nodes which have been removed from a tree (because
+        their parent links are not severed). This is useful for finding a node if it has been replaced by a raw reparse.
 
         **Parameters:**
         - `child`: Child node to get path to, can be `self` in which case an empty path is returned.
@@ -3847,6 +3861,12 @@ class FST:
         return self.a.__class__ in ASTS_LEAF_IMPORT
 
     @property
+    def is_ftstr(self) -> bool:
+        """Is an f-string `JoinedStr` or t-string `TemplateStr` node."""
+
+        return self.a.__class__ in ASTS_LEAF_FTSTR
+
+    @property
     def is__slice(self) -> bool:
         """Is one of our own custom SPECIAL SLICE nodes."""
 
@@ -4168,10 +4188,10 @@ class FST:
     def _all(self: FST) -> fstview:
         """Virtual `_all` field view for `Dict`, `MatchMapping` and `Compare`."""
 
-        if view := _VIRTUAL_FIELD_VIEW__ALL.get(self.a.__class__):
-            return view(self, '_all')
+        if view_cls := _VIRTUAL_FIELD_VIEW__ALL.get(self.a.__class__):
+            return view_cls(self, '_all')
 
-        raise ValueError(f"{self.a.__class__.__name__} does not have virtual field '_all'")
+        raise AttributeError(f"{self.a.__class__.__name__} does not have virtual field '_all'")
 
     @_all.setter
     def _all(self: FST, code: Code | None) -> None:
@@ -4189,7 +4209,7 @@ class FST:
         if self.a.__class__ in ASTS_LEAF_MAYBE_DOCSTR:
             return fstview__body(self, '_body')
 
-        return fstview(self, 'body')
+        raise AttributeError(f"{self.a.__class__.__name__} does not have virtual field '_body'")
 
     @_body.setter
     def _body(self: FST, code: Code | None) -> None:

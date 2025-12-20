@@ -5,6 +5,7 @@ To be able to execute the examples, import this.
 
 >>> from fst import *
 
+
 ## `Code` for modifying
 
 When modifying a node, you specify what to replace the node `AST` with. You can pass this as either source code, an
@@ -24,6 +25,7 @@ their locations are correct. Source code in the form of a list of line strings i
 
 >>> FST.new().body.append(FST('i = 1')).base.src
 'i = 1'
+
 
 ## `replace()` and `remove()`
 
@@ -136,6 +138,7 @@ True
 0: "a" \
 1:  "b"
 Constant 'ab' - ROOT 0,0..1,4
+
 
 ## `put()` and `put_slice()`
 
@@ -307,8 +310,6 @@ Constant 2.5 - ROOT 0,0..0,3
 a == c > d
 
 
-
-
 ## By attribute
 
 Just like with getting, it is possible to assign directly to an `AST` field on an `FST` node and have that assignment
@@ -357,6 +358,7 @@ z = []
 >>> print(f.src)
 def f(): pass
 
+
 ## `put_src()`
 
 Unlike `get_src()` which is a very simple function, `put_src()` (`fst.fst.FST.put_src()`) doesn't just put text to the
@@ -371,6 +373,7 @@ The options are:
 - `None`: Do not modify the `AST` tree at all. This will almost certainly result in desynchronized source code and `AST`
     tree unless you are absolutely sure the change does not affect any `AST` locations or the tree itself (trailing
     line comment on a statement).
+
 
 ### `put_src(action='reparse')`
 
@@ -449,6 +452,7 @@ if a <= x:
     elif z != e:
         pass
 
+
 ### `put_src(action='offset')`
 
 This does not do any reparsing and only offsets existing nodes according to the location of the source change and the
@@ -510,6 +514,7 @@ Tuple - ROOT 0,0..0,11
 
 >>> bool(f.verify(raise_=False))
 False
+
 
 ### `put_src(action=None)`
 

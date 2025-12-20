@@ -5,6 +5,7 @@ To be able to execute the examples, import this.
 
 >>> from fst import *
 
+
 ## Links
 
 For an fst-parsed `AST` tree, each node will have its own `FST` node. The `FST` nodes contain the tree structure missing
@@ -120,6 +121,7 @@ type is not differentiated according to the `AST`.
 +--------------+    .f    +--------------+
 ```
 
+
 ## Siblings
 
 You can access each `FST` node's next and previous siblings directly using `fst.fst.FST.next()` and
@@ -143,6 +145,7 @@ None
 
 >>> print(f.elts[0].prev())
 None
+
 
 ## Children
 
@@ -178,6 +181,7 @@ here
 
 >>> print(FST('if here: pass').last_child().src)
 pass
+
 
 ## Walk
 
@@ -407,6 +411,7 @@ Replacing or removing a parent node is allowed and the walk will continue where 
 >>> print(f.src)
 [pre_grand, post_grand]
 
+
 ## Step
 
 Unlike the `next` and `prev` functions, the `step` functions allow walking forward or backward and going up and down
@@ -437,6 +442,7 @@ forward or back one node at a time. See `fst.fst.FST.step_fwd()` and `fst.fst.FS
 [1, 2]
 2
 1
+
 
 ## Paths
 

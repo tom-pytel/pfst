@@ -5,6 +5,7 @@ To be able to execute the examples, import this.
 
 >>> from fst import *
 
+
 ## Basics
 
 Raw put operations to nodes are different from the standard prescribed operations in that they do not take into account
@@ -84,6 +85,7 @@ And just like for individual nodes, this can completely change the structure.
 [1, 6, # blah
    ], sub[0,8, 4, 5]
 
+
 ## Locations
 
 Raw node operations use the location of the node (including grouping parentheses if `pars` is not `False`). There are
@@ -111,6 +113,7 @@ raw operations then you must operate on the virtual `_all` field (which is selec
 
 Also the location of empty `arguments` for a `FunctionDef` or a `Lambda` are provided at the expected location of those
 `arguments` even though empty `arguments` don't normally have a `.loc`.
+
 
 ## Source and automatic modifications
 
@@ -163,6 +166,7 @@ These modifications do not apply if putting source as a string directly.
 >>> print(f.src)
 ([x])
 
+
 ## `to` parameter
 
 A single element raw node operation can take an optional `to` parameter to specify what node is the end of a source code
@@ -194,6 +198,7 @@ could get confusing with those operations also specifying an explicit end locati
 ... except Exception as exc:
 ...     print(exc)
 cannot put slice with 'to' option
+
 
 ## Parentheses
 

@@ -5,6 +5,7 @@ To be able to execute the examples, import this.
 
 >>> from fst import *
 
+
 ## `.loc`
 
 Almost all `FST` nodes have a location attribute pointing to where they exist in the source code.
@@ -103,6 +104,7 @@ Yes that last one is an `AugAssign` and the location of the operator is only the
 stay consistent with the operators in `BinOp`. For the record, the `=` in a normal `Assign` doesn't get its own operator
 anyway so is essentially just a trivia delimiter.
 
+
 ## `.bloc`
 
 There is also a `.bloc` bounding location attribute (`fst.fst.FST.bloc`). This is equal to the `loc` location in all
@@ -137,6 +139,7 @@ Note that the trailing comment of a non-block statement is not included in the `
 
 >>> FST('i = j  # comment', 'exec').body[0].bloc
 fstloc(0, 0, 0, 5)
+
 
 ## Line and column coordinates
 
@@ -188,6 +191,7 @@ fstloc(0, 0, 2, 16)
 
 >>> len(f.lines), len(f.lines[-1])
 (3, 16)
+
 
 ## Search by location
 

@@ -685,6 +685,9 @@ def set_field(parent: AST, child: AST | constant, name: str, idx: int | None = N
 def has_type_comments(ast: AST) -> bool:
     """Does it has type comments?"""
 
+    if ast.__class__ is Module and ast.type_ignores:
+        return True
+
     for n in walk(ast):
         if getattr(n, 'type_comments', None) is not None:
             return True

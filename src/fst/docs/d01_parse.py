@@ -5,6 +5,7 @@ To be able to execute the examples, import this.
 
 >>> from fst import *
 
+
 ## Parse
 
 Drop-in `ast.parse()` replacement gives normal `AST` (`fst.fst.parse()`).
@@ -36,6 +37,7 @@ Module - ROOT 0,0..0,22
         .targets[1]
          0] Name 'i' Store - 0,6..0,7
         .value Constant 2 - 0,10..0,11
+
 
 ## Basic structure
 
@@ -76,6 +78,7 @@ The tree can be traversed downwards either though the `AST` nodes or the `FST` n
 Note that the `FST` field attributes mirror their respective `AST` attributes and give the corresponding `FST` node. For
 more information on structure see `fst.docs.d03_structure`.
 
+
 ## Unparse
 
 Drop-in `ast.unparse()` replacement outputs with formatting (`fst.fst.unparse()`).
@@ -87,6 +90,7 @@ You can also just access the source.
 
 >>> print(a.f.src)
 if 1: i = 2  # comment
+
 
 ## Simpler parse
 
@@ -167,6 +171,7 @@ Starred - ROOT 0,0..0,7
      1] Name 'b' Load - 0,6..0,7
   .ctx Load
 
+
 ## From `AST` nodes
 
 You can also pass `AST` nodes, which are then unparsed and reparsed (because otherwise we couldn't trust the location
@@ -190,6 +195,7 @@ Slice - ROOT 0,0..0,5
   .lower Name 'a' Load - 0,0..0,1
   .upper Name 'b' Load - 0,2..0,3
   .step Name 'c' Load - 0,4..0,5
+
 
 ## Underlying functions
 
@@ -219,6 +225,7 @@ Slice - ROOT 0,0..0,5
   .lower Name 'a' Load - 0,0..0,1
   .upper Name 'b' Load - 0,2..0,3
   .step Name 'c' Load - 0,4..0,5
+
 
 ## Source
 

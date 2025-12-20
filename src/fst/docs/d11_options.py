@@ -5,6 +5,7 @@ To be able to execute the examples, import this.
 
 >>> from fst import *
 
+
 ## Individual functions
 
 For a full list of global options see `fst.fst.FST.options()`.
@@ -74,6 +75,7 @@ def f():
 >>> print(FST('{a, b}').put_slice('{*()}', 1, 1, norm_put=True).src)
 {a, b}
 
+
 ## Global defaults
 
 These options can be set globally with the `set_options()` function, which returns the previous value.
@@ -132,6 +134,7 @@ Or get all global options.
  'set_norm': 'both',
  'matchor_norm': 'value',
  'op_side': 'left'}
+
 
 ## Special
 
