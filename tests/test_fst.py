@@ -13,6 +13,18 @@ from random import randint, seed
 from fst import *
 import fst
 
+from fst.asttypes import (
+    _ExceptHandlers,
+    _match_cases,
+    _Assign_targets,
+    _decorator_list,
+    _comprehensions,
+    _comprehension_ifs,
+    _aliases,
+    _withitems,
+    _type_params,
+)
+
 from fst.astutil import (
     WalkFail,
     copy_ast,
@@ -20,13 +32,10 @@ from fst.astutil import (
 )
 
 from fst.common import PYVER, PYLT11, PYLT12, PYLT13, PYLT14, PYGE11, PYGE12, PYGE13, PYGE14, astfield, fstloc
-from fst.view import fstview
-
 from fst.code import *
+from fst.view import fstview, fstview_dummy
 
-from fst.view import fstview_dummy
 from test_parse import PARSE_TESTS
-
 from data.data_other import PARS_DATA, PUT_SRC_REPARSE_DATA, PRECEDENCE_DATA
 
 
@@ -7956,13 +7965,20 @@ if 1:
 
         self.assertEqual('x != y', f.src)
 
-        def del_all():
-            del f._all
-        self.assertRaises(ValueError, del_all)
+        def delitem(): del f._all
+        self.assertRaises(ValueError, delitem)
 
         # error
 
-        self.assertRaises(AttributeError, lambda: FST('a')._all)
+        f = FST('a')
+
+        self.assertRaises(AttributeError, lambda: f._all)
+
+        def setitem(): f._all = '[]'
+        self.assertRaises(NodeError, setitem)
+
+        def delitem(): del f._all
+        self.assertRaises(NodeError, delitem)
 
     def test_ast_accessors_virtual_field__body(self):
         f = FST('"""doc"""\na\nb')
@@ -7982,9 +7998,19 @@ if 1:
 
         self.assertEqual(0, len(fstview_dummy(f, 'invalid')))
 
+        self.assertEqual('b', FST('if 1:\n  a\n  b\n  c')._body[1].src)
+
         # error
 
-        self.assertRaises(AttributeError, lambda: FST('a')._body)
+        f = FST('a')
+
+        self.assertRaises(AttributeError, lambda: f._body)
+
+        def setitem(): f._body = '[]'
+        self.assertRaises(NodeError, setitem)
+
+        def delitem(): del f._body
+        self.assertRaises(NodeError, delitem)
 
     def test_ast_accessors_dummy(self):
         if PYLT12:
@@ -8009,7 +8035,7 @@ if 1:
             f.default_value = None
             self.assertRaises(RuntimeError, setattr, f, 'default_value', True)
 
-    def test_predicates(self):
+    def test_misc_predicates(self):
         f = FST('a = (b, c)')
         val = f.value
         elt0 = val.elts[0]
@@ -8046,7 +8072,6 @@ if 1:
         if PYGE11:
             self.assertTrue(FST('try: pass\nexcept* Exception: pass').is_try)
 
-    def test_generated_predicates(self):  # TODO: comprehensive test them all
         f = FST('call(a, b=c)', 'exec')
         self.assertTrue(f.is_mod)
         self.assertTrue(f.is_Module)
@@ -8081,6 +8106,163 @@ if 1:
         self.assertTrue(f.is__slice)
         self.assertTrue(f.is__comprehension_ifs)
         self.assertFalse(f.is__comprehensions)
+
+        self.assertFalse(FST('a').is_FunctionType)
+        self.assertTrue(FST.fromsrc('x = 1  # type: ignore', type_comments=True).type_ignores[0].is_TypeIgnore)
+
+        self.assertTrue(FST('f"{a}"').values[0].is_FormattedValue)
+
+        if PYGE14:
+            self.assertTrue(FST('t"{a}"').values[0].is_Interpolation)
+
+    def test_generated_predicates(self):
+        srcs_and_modes = [
+            ('', 'Module'),
+            ('a', 'Interactive'),
+            ('v', 'Expression'),
+            ('def f(): pass', 'FunctionDef'),
+            ('async def f(): pass', 'AsyncFunctionDef'),
+            ('class cls: pass', 'ClassDef'),
+            ('return', 'Return'),
+            ('del a', 'Delete'),
+            ('a = b', 'Assign'),
+            ('a += b', 'AugAssign'),
+            ('a: b', 'AnnAssign'),
+            ('for _ in _: pass', 'For'),
+            ('async for _ in _: pass', 'AsyncFor'),
+            ('while _: pass', 'While'),
+            ('if _: pass', 'If'),
+            ('with _: pass', 'With'),
+            ('async with _: pass', 'AsyncWith'),
+            ('match _:\n  case _: pass', 'Match'),
+            ('raise', 'Raise'),
+            ('try: pass\nexcept: pass', 'Try'),
+            ('assert v', 'Assert'),
+            ('import m', 'Import'),
+            ('from . import a', 'ImportFrom'),
+            ('global n', 'Global'),
+            ('nonlocal n', 'Nonlocal'),
+            ('a', 'Expr'),
+            ('pass', 'Pass'),
+            ('break', 'Break'),
+            ('continue', 'Continue'),
+            ('a or b', 'BoolOp'),
+            ('a := b', 'NamedExpr'),
+            ('a + b', 'BinOp'),
+            ('-a', 'UnaryOp'),
+            ('lambda: None', 'Lambda'),
+            ('a if b else c', 'IfExp'),
+            ('{a: b}', 'Dict'),
+            ('{a}', 'Set'),
+            ('[_ for _ in _]', 'ListComp'),
+            ('{_ for _ in _}', 'SetComp'),
+            ('{_: _ for _ in _}', 'DictComp'),
+            ('(_ for _ in _)', 'GeneratorExp'),
+            ('await _', 'Await'),
+            ('yield _', 'Yield'),
+            ('yield from _', 'YieldFrom'),
+            ('a < b', 'Compare'),
+            ('f()', 'Call'),
+            # ('zzz', 'FormattedValue'),
+            # ('zzz', 'Interpolation'),
+            ('f"{1}"', 'JoinedStr'),
+            ('1', 'Constant'),
+            ('a.b', 'Attribute'),
+            ('a[b]', 'Subscript'),
+            ('*s', 'Starred'),
+            ('n', 'Name'),
+            ('[a]', 'List'),
+            ('(a,)', 'Tuple'),
+            ('a:b:c', 'Slice'),
+            ('', 'Load'),
+            ('', 'Store'),
+            ('', 'Del'),
+            ('and', 'And'),
+            ('or', 'Or'),
+            ('+', 'Add'),
+            ('-', 'Sub'),
+            ('*', 'Mult'),
+            ('@', 'MatMult'),
+            ('/', 'Div'),
+            ('%', 'Mod'),
+            ('**', 'Pow'),
+            ('<<', 'LShift'),
+            ('>>', 'RShift'),
+            ('|', 'BitOr'),
+            ('^', 'BitXor'),
+            ('&', 'BitAnd'),
+            ('//', 'FloorDiv'),
+            ('~', 'Invert'),
+            ('not', 'Not'),
+            ('+', 'UAdd'),
+            ('-', 'USub'),
+            ('==', 'Eq'),
+            ('!=', 'NotEq'),
+            ('<', 'Lt'),
+            ('<=', 'LtE'),
+            ('>', 'Gt'),
+            ('>=', 'GtE'),
+            ('is', 'Is'),
+            ('is not', 'IsNot'),
+            ('in', 'In'),
+            ('not in', 'NotIn'),
+            ('for _ in _', 'comprehension'),
+            ('except: pass', 'ExceptHandler'),
+            ('a', 'arguments'),
+            ('a', 'arg'),
+            ('k=v', 'keyword'),
+            ('a', 'alias'),
+            ('w', 'withitem'),
+            ('case _: pass', 'match_case'),
+            ('1', 'MatchValue'),
+            ('None', 'MatchSingleton'),
+            ('[p]', 'MatchSequence'),
+            ('{1: p}', 'MatchMapping'),
+            ('cls()', 'MatchClass'),
+            ('*s', 'MatchStar'),
+            ('p', 'MatchAs'),
+            ('a | b', 'MatchOr'),
+            ('', '_ExceptHandlers'),
+            ('', '_match_cases'),
+            ('', '_Assign_targets'),
+            ('', '_decorator_list'),
+            ('', '_comprehensions'),
+            ('', '_comprehension_ifs'),
+            ('', '_aliases'),
+            ('', '_withitems'),
+            ('', '_type_params'),
+        ]
+
+        if PYGE11:
+            srcs_and_modes.extend([
+                ('try: pass\nexcept* Exception: pass', 'TryStar'),
+                ('except* Exception: pass', 'ExceptHandler'),
+            ])
+
+        if PYGE12:
+            srcs_and_modes.extend([
+                ('type t[T] = ...', 'TypeAlias'),
+                ('T', 'TypeVar'),
+                ('**V', 'ParamSpec'),
+                ('*U', 'TypeVarTuple'),
+            ])
+
+        if PYGE14:
+            srcs_and_modes.extend([
+                ('t"{1}"', 'TemplateStr'),
+            ])
+
+        for src, mode in srcs_and_modes:
+            f = FST(src, mode)
+
+            self.assertTrue(getattr(f, f'is_{mode}'))
+
+            if (base := f.a.__class__.__bases__[0]) is not AST:
+                self.assertTrue(getattr(f, f'is_{base.__name__}'))
+
+            for _, not_mode in srcs_and_modes:
+                if not_mode is not mode:
+                    self.assertFalse(getattr(f, f'is_{not_mode}'))
 
     @unittest.skipUnless(PYLT12, 'only valid for py < 3.12')
     def test_disallow_put_JoinedStr_pylt12(self):

@@ -110,6 +110,7 @@ from .asttypes import (
     Store,
     Sub,
     Tuple,
+    TypeIgnore,
     UAdd,
     USub,
     While,
@@ -1389,10 +1390,10 @@ class FST:
         much formatting as possible and maybe continue operating in `FST` land. Only `AST` nodes from the original tree
         carry formatting information, so the more of those are replaced the more formatting is lost.
 
-        THIS FUNCTION IS A WORK IN PROGRESS, results not guaranteed.
-
         **Note:** When replacing the `AST` nodes, make sure you are replacing the nodes in the parent `AST` fields, not
         the `.a` attribute in `FST` nodes, that won't do anything.
+
+        **Note:** This function is still a work in progress so not all comments which should be will be preserved.
 
         **WARNING!** Just like an `ast.unparse()`, the fact that this function completes successfully does NOT mean the
         output is syntactically correct if you put weird nodes where they don't belong, maybe accidentally. In order to
@@ -3748,10 +3749,28 @@ class FST:
         return self.a.__class__ in ASTS_LEAF_CMPOP
 
     @property
+    def is_excepthandler(self) -> bool:
+        """Is a `excepthandler` node."""
+
+        return self.a.__class__ is ExceptHandler  # here for completeness
+
+    @property
     def is_pattern(self) -> bool:
         """Is a `pattern` node."""
 
         return self.a.__class__ in ASTS_LEAF_PATTERN
+
+    @property
+    def is_type_ignore(self) -> bool:
+        """Is a `type_ignore` node."""
+
+        return self.a.__class__ is TypeIgnore  # here for completeness
+
+    @property
+    def is_type_param(self) -> bool:
+        """Is a `type_param` node."""
+
+        return self.a.__class__ in ASTS_LEAF_TYPE_PARAM  # here for completeness
 
     @property
     def is_stmt_or_mod(self) -> bool:
@@ -4208,10 +4227,15 @@ class FST:
         """Virtual `_body` field for statements. Special `fstview__body` for statements which may have a docstring and
         normal `fstview` for the rest. @private"""
 
-        if self.a.__class__ in ASTS_LEAF_MAYBE_DOCSTR:
+        ast_cls = self.a.__class__
+
+        if ast_cls in ASTS_LEAF_MAYBE_DOCSTR:
             return fstview__body(self, '_body')
 
-        raise AttributeError(f"{self.a.__class__.__name__} does not have virtual field '_body'")
+        if ast_cls in ASTS_LEAF_BLOCK:
+            return fstview(self, 'body')
+
+        raise AttributeError(f"{ast_cls.__name__} does not have virtual field '_body'")
 
     @_body.setter
     def _body(self: FST, code: Code | None) -> None:
