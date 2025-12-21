@@ -18,12 +18,12 @@ try:
         FTSTRING_START_TOKENS = (FSTRING_START, TSTRING_START)
         FTSTRING_END_TOKENS = (FSTRING_END, TSTRING_END)
 
-    except ImportError:
+    except ImportError:  # pragma: no cover
         TSTRING_START = TSTRING_END = None
         FTSTRING_START_TOKENS = (FSTRING_START,)
         FTSTRING_END_TOKENS = (FSTRING_END,)
 
-except ImportError:
+except ImportError:  # pragma: no cover
     FSTRING_START = FSTRING_END = TSTRING_START = TSTRING_END = None
     FTSTRING_START_TOKENS = FTSTRING_END_TOKENS = ()
 
@@ -185,7 +185,7 @@ _pyver = sys.version_info[1]  # just the minor version
 
 def pyver(
     func: Callable | None = None, *, ge: int | None = None, lt: int | None = None, else_: Callable | None = None
-) -> Callable:
+) -> Callable:  # pragma: no cover
     """Decorator to restrict to a range of python versions. If the version of python does not match the parameters
     passed then will return a previously registered function that does match or `None` if no matching function. Does not
     wrap the functions but rather returns the originals to not add unnecessary overhead.
@@ -415,10 +415,7 @@ def prev_frag(
             end_col = 0x7fffffffffffffff
 
         else:
-            if not (s := m.group(1)).startswith('#') or comment:
-                return srcwpos(end_ln, m.start(1), m.group(1))
-
-            end_col = m.start(1)
+            return srcwpos(end_ln, m.start(1), m.group(1))  # assert not (s := m.group(1)).startswith('#') or comment
 
         i = end_ln + 1
 

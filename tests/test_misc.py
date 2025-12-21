@@ -144,6 +144,7 @@ k \\
         self.assertEqual(None, prev_find(lines, 0, 0, 5, 0, '# world', False, comment=False, lcont=True))
         self.assertEqual((2, 2), prev_find(lines, 0, 0, 5, 0, '# hello', False, comment=True, lcont=True))
         self.assertEqual(None, prev_find(lines, 0, 0, 5, 0, '# hello', True, comment=True, lcont=True))
+        self.assertEqual((0, 2), prev_find(['i # test'], 0, 0, 0, 8, '# test', True, comment=True))
 
         lines = '''
   \\

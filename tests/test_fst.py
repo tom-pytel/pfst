@@ -8492,6 +8492,10 @@ match a:
         f = FST('a')
         self.assertRaises(RuntimeError, lambda: f.f)
 
+        from fst.common import shortstr
+        self.assertEqual('123', shortstr('123'))
+        self.assertEqual('12312312312312312312312 .. [90 chars] .. 23123123123123123123123', shortstr('123' * 30))
+
 
 if __name__ == '__main__':
     import argparse
