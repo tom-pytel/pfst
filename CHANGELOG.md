@@ -24,6 +24,7 @@
 
 ### Updated
 
+- simplified `reconcile()` usage, user doesn't need to preserve explicit "marked" copy
 - add negative and `'end'` index options to `get_src()` and `put_src()`
 - change get/put index specification to use 0 to `'end'` instead of archaic `None` and `False` for the slice endpoints
 - `FST.type_params` on py < 3.12 and `.default_value` on py < 3.13 give dummy values

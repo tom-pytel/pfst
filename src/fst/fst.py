@@ -389,7 +389,6 @@ class FST:
     parse_params: Mapping[builtins.str, Any]  ; """The parameters to use for any `ast.parse()` that needs to be done (filename, type_comments, feature_version), root node only."""
     indent:       builtins.str                ; """The default single level of block indentation string for this tree when not available from context, root node only."""
     _lines:       list[bistr]                 ; """The actual full source lines as `bistr`."""
-    _serial:      int                         ; """Serial number of modifications, used to make sure tree wasn't modified on `.reconcile()` after `.mark()`."""
 
     # class attributes
     is_FST:       bool = True  ; """@private"""  # for quick checks vs. `fstloc` or `fstview`
@@ -779,7 +778,7 @@ class FST:
             self = ast_or_src.f = object.__new__(cls)
 
         elif not self.parent:  # if was previously root then clear out root attributes
-            del self.parse_params, self.indent, self._lines, self._serial
+            del self.parse_params, self.indent, self._lines
 
         self.a = ast_or_src  # we don't assume `self.a` is `ast_or_src` if even if `.f` exists, it should always be but juuuuust in case
         self.pfield = pfield
@@ -794,7 +793,6 @@ class FST:
 
         self.parent = None
         self._lines = ([bistr(s) for s in mode] if kwargs.get('lcopy', True) else mode)
-        self._serial = 0
 
         if from_ := kwargs.get('from_'):  # copy params from source tree
             from_root = from_.root
@@ -1368,43 +1366,36 @@ class FST:
     # ------------------------------------------------------------------------------------------------------------------
     # Reconcile
 
-    def mark(self) -> FST:
+    def mark(self) -> FST:  # -> self
         """Return an object marking the current state of this `FST` tree. Used to `reconcile()` later for non-FST
         operation changes made (changing `AST` nodes directly). Currently is just a copy of the original tree but may
         change in the future.
 
         **Returns:**
-        - `FST`: A marked copy of `self` with any necessary information added for a later `reconcile()`.
+        - `self`
         """
 
         if not self.is_root:
             raise ValueError('can only mark root nodes')
 
-        mark = self.copy()
-        mark._serial = self._serial
+        self._cache['mark'] = self.copy()
 
-        return mark
+        return self
 
-    def reconcile(self, mark: FST, **options) -> FST:
+    def reconcile(self, **options) -> FST:
         r"""Reconcile `self` with a previously marked version and return a new valid `FST` tree. This is meant for
         allowing non-FST modifications to an `FST` tree and later converting it to a valid `FST` tree to preserve as
         much formatting as possible and maybe continue operating in `FST` land. Only `AST` nodes from the original tree
         carry formatting information, so the more of those are replaced the more formatting is lost.
 
-        **Note:** When replacing the `AST` nodes, make sure you are replacing the nodes in the parent `AST` fields, not
-        the `.a` attribute in `FST` nodes, that won't do anything.
+        **Caveat:** When replacing the `AST` nodes, make sure you are replacing the nodes in the actual `AST` node
+        fields, not the `.a` attribute in `FST` nodes, that won't do anything.
 
-        **Note:** This function is still a work in progress so not all comments which should be will be preserved.
-
-        **WARNING!** Just like an `ast.unparse()`, the fact that this function completes successfully does NOT mean the
-        output is syntactically correct if you put weird nodes where they don't belong, maybe accidentally. In order to
-        make sure the result is valid (syntactically) you should run `verify()` on the output. This still won't
-        guarantee you have actual valid code, `def f(x, x): pass` parses ok but will cause an error if you try to
-        compile it.
+        **Note:** This function is still a work in progress so not all comments which should be may be preserved.
 
         **Parameters:**
-        - `mark`: A previously marked snapshot of `self`. This object is not consumed on use, success or failure.
-        - `options`: See `options()`.
+        - `options`: Only a few options are allowed for reconcile as others are managed during the process. The most
+            useful ones are `elif_` and `pep8space`. See `options()`.
 
         **Returns:**
         - `FST`: A new valid reconciled `FST` if possible.
@@ -1420,7 +1411,8 @@ class FST:
         ...     return a - b  # return that
         ... '''.strip())
 
-        >>> m = f.mark()
+        >>> f.mark()
+        <Module ROOT 0,0..5,31>
 
         >>> f.a.body[0].returns = Name('float')  # pure AST
         >>> f.a.body[0].args.args[0].annotation = Name('float')
@@ -1430,7 +1422,7 @@ class FST:
         >>> other = FST('def first_function(a, b): return a * b  # yay!')
         >>> f.a.body.insert(0, other.a)  # AST from other FST tree
 
-        >>> f = f.reconcile(m, pep8space=1)
+        >>> f = f.reconcile(pep8space=1)
 
         >>> print('\n'.join(l or '.' for l in f.lines))  # print this way for doctest
         def first_function(a, b): return a * b  # yay!
@@ -1442,13 +1434,14 @@ class FST:
         def last_function(a, b):
             return a+b  # return this
 
-        >>> m = f.mark()
+        >>> f.mark()
+        <Module ROOT 0,0..7,29>
 
         >>> body = f.a.body[1].body
         >>> f.a.body[1] = FST('def f(): pass').a
         >>> f.a.body[1].body = body
 
-        >>> f = f.reconcile(m, pep8space=1)
+        >>> f = f.reconcile(pep8space=1)
 
         >>> print('\n'.join(l or '.' for l in f.lines))
         def first_function(a, b): return a * b  # yay!
@@ -1462,15 +1455,42 @@ class FST:
 
         check_options(options)
 
+        if any((bad := o) in (
+            'raw',
+            'trivia',
+            'coerce',
+            'docstr',
+            'pars',
+            'pars_walrus',
+            'pars_arglike',
+            'norm',
+            'norm_self',
+            'norm_get',
+            'norm_put',
+        ) for o in options):
+            raise ValueError(f'option {bad!r} not allowed in reconcile()')
+
         if not self.is_root:
             raise ValueError('can only reconcile root nodes')
 
-        if self._serial != mark._serial:
-            raise RuntimeError('modification detected after mark(), irreconcilable')
+        if not (mark := self._cache.get('mark')):
+            raise RuntimeError('not marked or modification detected after mark, irreconcilable')
 
         rec = Reconcile(self, mark, options)
 
-        with FST.options(raw=False, coerce=False, pars='auto', pars_arglike=True):
+        with FST.options(
+            raw = False,
+            trivia = False,
+            coerce = False,
+            docstr = True,
+            pars = 'auto',
+            pars_walrus = True,
+            pars_arglike = True,
+            norm = False,
+            norm_self = False,
+            norm_get = False,
+            norm_put = False,
+        ):
             rec.recurse_node(self.a)
 
         return rec.out

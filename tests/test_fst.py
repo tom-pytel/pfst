@@ -6471,7 +6471,7 @@ class cls:
 
         f = FST('[a]')
 
-        self.assertRaises(ValueError, f.reconcile, f, invalid_option=True)  # doesn't matter what we call it with, the options check is first and should raise immediately
+        self.assertRaises(ValueError, f.reconcile, invalid_option=True)  # doesn't matter what we call it with, the options check is first and should raise immediately
         self.assertRaises(ValueError, f.copy, invalid_option=True)
         self.assertRaises(ValueError, f.cut, invalid_option=True)
         self.assertRaises(ValueError, f.replace, None, invalid_option=True)
@@ -6521,26 +6521,29 @@ class cls:
 
         m = (o := FST('i = 1')).mark()
 
-        self.assertRaises(ValueError, o.value.reconcile, m.value)
+        self.assertRaises(ValueError, o.value.reconcile)  # only on root
 
         o.a.value = Name(id='test')
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('i = test', f.src)
         f.verify()
 
+        f.mark()
         o.a.targets[0].id = 'blah'
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('blah = test', f.src)
         f.verify()
 
+        f.mark()
         o.a.value = copy_ast(o.a.targets[0])
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('blah = blah', f.src)
         f.verify()
 
+        f.mark()
         o.a.value.ctx = Load()
         o.a.targets[0].ctx = Store()
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('blah = blah', f.src)
         f.verify()
 
@@ -6550,22 +6553,25 @@ class cls:
             m = (o := FST("f'{a}'")).mark()
 
             o.a.values[0].conversion = 97
-            f = o.reconcile(m)
+            f = o.reconcile()
             self.assertEqual("f'{a!a}'", f.src)
             f.verify()
 
+            f.mark()
             o.a.values[0].conversion = 115
-            f = o.reconcile(m)
+            f = o.reconcile()
             self.assertEqual("f'{a!s}'", f.src)
             f.verify()
 
+            f.mark()
             o.a.values[0].conversion = 114
-            f = o.reconcile(m)
+            f = o.reconcile()
             self.assertEqual("f'{a!r}'", f.src)
             f.verify()
 
+            f.mark()
             o.a.values[0].conversion = -1
-            f = o.reconcile(m)
+            f = o.reconcile()
             self.assertEqual("f'{a}'", f.src)
             f.verify()
 
@@ -6573,7 +6579,7 @@ class cls:
 
         m = (o := FST('i')).mark()
         o.a.ctx = Load()
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('i', f.src)
         self.assertIsInstance(f.a.ctx.f, FST)
         f.verify()
@@ -6582,7 +6588,7 @@ class cls:
 
         m = (o := FST('i = a')).mark()
         o.a.value = Starred(value=o.a.value)
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('i = *a', f.src)
         f.verify()
 
@@ -6590,7 +6596,7 @@ class cls:
 
         m = (o := FST('i = 1')).mark()
         o.a.value = FST('(x,\n # comment\ny)').a
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('i = (x,\n # comment\ny)', f.src)
         f.verify()
 
@@ -6598,7 +6604,7 @@ class cls:
 
         m = (o := FST('def f() -> int: pass')).mark()
         o.a.returns = None
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('def f(): pass', f.src)
         f.verify()
 
@@ -6606,7 +6612,7 @@ class cls:
 
         m = (o := FST('def f(): int')).mark()
         o.a.returns = Name(id='str')
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('def f() -> str: int', f.src)
         f.verify()
 
@@ -6614,7 +6620,7 @@ class cls:
 
         m = (o := FST('def f(): int')).mark()
         o.a.returns = o.a.body[0].value
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('def f() -> int: int', f.src)
         f.verify()
 
@@ -6622,7 +6628,7 @@ class cls:
 
         m = (o := FST('def f(): int')).mark()
         o.a = o.a.body[0].value
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertIsInstance(f.a, Name)
         self.assertEqual('int', f.src)
         f.verify()
@@ -6631,7 +6637,7 @@ class cls:
 
         m = (o := FST('def f(): int')).mark()
         o.a = FST('call()').a
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertIsInstance(f.a, Call)
         self.assertEqual('call()', f.src)
         f.verify()
@@ -6640,7 +6646,7 @@ class cls:
 
         m = (o := FST('def f(): int')).mark()
         o.a = Name(id='hello')
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertIsInstance(f.a, Name)
         self.assertEqual('hello', f.src)
         f.verify()
@@ -6651,7 +6657,7 @@ class cls:
         o.a.elts[0] = UnaryOp(USub(), Constant(value=1))
         o.a.elts[1] = UnaryOp(USub(), Constant(value=2))
         o.a.elts[2] = UnaryOp(USub(), Constant(value=3))
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('[\n-1,  # one\n-2,  # two\n-3   # three\n]', f.src)
         f.verify()
 
@@ -6659,7 +6665,7 @@ class cls:
 
         m = (o := FST('i = 1')).mark()
         o.a.value = List(elts=[Name(id='a')])
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('i = [a]', f.src)
         f.verify()
 
@@ -6667,7 +6673,7 @@ class cls:
 
         m = (o := FST('i = 1')).mark()
         o.a.value = List(elts=[FST('(a, # yay!\n)').a])
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('i = [(a, # yay!\n)]', f.src)
         f.verify()
 
@@ -6675,7 +6681,7 @@ class cls:
 
         m = (o := FST('i = (a, # yay!\n)')).mark()
         o.a.value = List(elts=[o.value.a])
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('i = [(a, # yay!\n)]', f.src)
         f.verify()
 
@@ -6685,7 +6691,7 @@ class cls:
         a = o.a.elts[0]
         o.a.elts[0] = o.a.elts[1]
         o.a.elts[1] = a
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('[\n2, # 2\n1, # 1\n]', f.src)
         f.verify()
 
@@ -6693,13 +6699,13 @@ class cls:
 
         m = (o := FST('[1, 2, 3, 4]')).mark()
         del o.a.elts[2:]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('[1, 2]', f.src)
         f.verify()
 
         m = (o := FST('[1, 2, 3, 4]')).mark()
         del o.a.elts[:]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('[]', f.src)
         f.verify()
 
@@ -6712,7 +6718,7 @@ class cls:
         o.a.elts[1] = o.a.elts[3]
         o.a.elts[2] = e0
         o.a.elts[3] = e1
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('[3, 4, 1, 2]', f.src)
         f.verify()
 
@@ -6720,7 +6726,7 @@ class cls:
 
         m = (o := FST('[1, 2, 3]')).mark()
         o.a.elts.extend(o.a.elts[:2])
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('[1, 2, 3, 1, 2]', f.src)
         f.verify()
 
@@ -6728,7 +6734,7 @@ class cls:
 
         m = (o := FST('[1, 2, 3]')).mark()
         o.a.elts.extend(FST('[4, 5]').a.elts)
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('[1, 2, 3, 4, 5]', f.src)
         f.verify()
 
@@ -6736,14 +6742,14 @@ class cls:
 
         m = (o := FST('[1, 2, 3]')).mark()
         o.a.elts.extend([Name(id='x'), Name(id='y')])
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('[1, 2, 3, x, y]', f.src)
         f.verify()
 
         m = (o := FST('i = 1\nj = 2\nk = 3')).mark()
         o.a.body.append(Assign(targets=[Name(id='x')], value=Constant(value=4)))
         o.a.body.append(Assign(targets=[Name(id='y')], value=Constant(value=5)))
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('i = 1\nj = 2\nk = 3\nx = 4\ny = 5', f.src)
         f.verify()
 
@@ -6751,14 +6757,14 @@ class cls:
 
         m = (o := FST('[1]')).mark()
         o.a.elts.extend(FST('[2,#2\n3,#3\n4,#4\n]').a.elts)
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('[1, 2,#2\n 3,#3\n 4,#4\n]', f.src)
         f.verify()
 
         m = (o := FST('{a: b, **c}')).mark()
         o.a.keys[1] = o.a.keys[0]
         o.a.keys[0] = None
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('{**b, a: c}', f.src)
         f.verify()
 
@@ -6766,31 +6772,31 @@ class cls:
         body = o.a.body[:]
         o.a.body[:] = o.a.orelse[1:]
         o.a.orelse = body * 2
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('if 1:\n  b = 5\n  c = 6\nelse:\n  i = 1\n  j = 2\n  k = 3\n  i = 1\n  j = 2\n  k = 3', f.src)
         f.verify()
 
         m = (o := FST('def f(*, a=1, b=2): pass')).mark()
         o.a.args.kw_defaults[0] = None
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('def f(*, a, b=2): pass', f.src)
         f.verify()
 
         m = (o := FST('{1: a, **b}', MatchMapping)).mark()
         o.a.rest = None
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('{1: a}', f.src)
         f.verify()
 
         m = (o := FST('{1: a, **b}', MatchMapping)).mark()
         o.a.rest = 'rest'
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('{1: a, **rest}', f.src)
         f.verify()
 
         m = (o := FST('{1: a}', MatchMapping)).mark()
         o.a.rest = 'rest'
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('{1: a, **rest}', f.src)
         f.verify()
 
@@ -6798,50 +6804,50 @@ class cls:
 
         m = (o := FST('[\n1, # 1\n2, # 2\n]')).mark()
         o.a = List(elts=[o.a.elts[1], o.a.elts[0]])
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('[\n 2, # 2\n 1, # 1\n]', f.src)
         f.verify()
 
         m = (o := FST('[1,\n# 1and2\n2, 3,\n# 3and4\n4]')).mark()
         o.a = List(elts=[o.a.elts[2], o.a.elts[3], o.a.elts[0], o.a.elts[1]])
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('[3,\n # 3and4\n 4, 1,\n # 1and2\n 2]', f.src)
         f.verify()
 
         m = (o := FST('[1,#1\n]')).mark()
         o.a = List(elts=[o.a.elts[0]])
         o.a.elts.extend(FST('[2,#2\n3,#3\n4,#4\n]').a.elts)
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('[1, #1\n 2,#2\n 3,#3\n 4,#4\n]', f.src)
         f.verify()
 
         m = (o := FST('{a: b, **c}')).mark()
         o.a = Dict(keys=[None, o.a.keys[0]], values=[o.a.values[0], o.a.values[1]])
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('{**b, a: c}', f.src)
         f.verify()
 
         m = (o := FST('def f(*, a=1, b=2): pass')).mark()
         o.a.args = arguments(kwonlyargs=o.a.args.kwonlyargs, kw_defaults=[None, o.a.args.kw_defaults[1]], posonlyargs=[], args=[], defaults=[])
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('def f(*, a, b=2): pass', f.src)
         f.verify()
 
         m = (o := FST('{1: a, **b}', MatchMapping)).mark()
         o.a = MatchMapping(keys=[o.a.keys[0]], patterns=[o.a.patterns[0]], rest=None)
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('{1: a}', f.src)
         f.verify()
 
         m = (o := FST('{1: a, **b}', MatchMapping)).mark()
         o.a = MatchMapping(keys=[o.a.keys[0]], patterns=[o.a.patterns[0]], rest='rest')
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('{1: a, **rest}', f.src)
         f.verify()
 
         m = (o := FST('{1: a}', MatchMapping)).mark()
         o.a = MatchMapping(keys=[o.a.keys[0]], patterns=[o.a.patterns[0]], rest='rest')
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('{1: a, **rest}', f.src)
         f.verify()
 
@@ -6850,13 +6856,13 @@ class cls:
         m = (o := FST('{a: b}')).mark()
         o.a.keys[0] = Name(id='x')
         o.a.values[0] = Name(id='y')
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('{x: y}', f.src)
         f.verify()
 
         m = (o := FST('{a: b}')).mark()
         o.a.keys[0] = None
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('{**b}', f.src)
         f.verify()
 
@@ -6869,7 +6875,7 @@ class cls:
         b = FST('{s : t, u : v}').a
         a.keys.extend(b.keys)
         a.values.extend(b.values)
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('{a : b, c : d, x: y, a : b, c : d, s : t, u : v}', f.src)
         f.verify()
 
@@ -6883,7 +6889,7 @@ class cls:
         a.keys.extend(b.keys)
         a.values.extend(b.values)
         o.a = Dict(keys=o.a.keys, values=o.a.values)
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('{a : b, c : d, x: y, a : b, c : d, s : t, u : v}', f.src)
         f.verify()
 
@@ -6892,133 +6898,133 @@ class cls:
         o = FST('a or b or c')
         m = o.mark()
         o.a.op = And()
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('a and b and c', f.src)
         f.verify()
 
         o = FST('a or b or c')
         m = o.mark()
         o.a.op = FST(And()).a
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('a and b and c', f.src)
         f.verify()
 
         o = FST('a or b or c\nd and e')
         m = o.mark()
         o.a.body[0].value.op = o.a.body[1].value.op
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('a and b and c\nd and e', f.src)
         f.verify()
 
         o = FST('a + b')
         m = o.mark()
         o.a.op = Mult()
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('a * b', f.src)
         f.verify()
 
         o = FST('a + b')
         m = o.mark()
         o.a.op = FST(Mult()).a
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('a * b', f.src)
         f.verify()
 
         o = FST('a + b')
         m = o.mark()
         o.a.op = FST('*').a
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('a * b', f.src)
         f.verify()
 
         o = FST('a + b\nc * d')
         m = o.mark()
         o.a.body[0].value.op = o.a.body[1].value.op
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('a * b\nc * d', f.src)
         f.verify()
 
         o = FST('a + b\nc *= d')
         m = o.mark()
         o.a.body[0].value.op = o.a.body[1].op
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('a * b\nc *= d', f.src)
         f.verify()
 
         o = FST('a += b')
         m = o.mark()
         o.a.op = Mult()
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('a *= b', f.src)
         f.verify()
 
         o = FST('a += b')
         m = o.mark()
         o.a.op = FST(Mult()).a
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('a *= b', f.src)
         f.verify()
 
         o = FST('a += b')
         m = o.mark()
         o.a.op = FST('*').a
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('a *= b', f.src)
         f.verify()
 
         o = FST('a += b\nc *= d')
         m = o.mark()
         o.a.body[0].op = o.a.body[1].op
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('a *= b\nc *= d', f.src)
         f.verify()
 
         o = FST('a += b\nc * d')
         m = o.mark()
         o.a.body[0].op = o.a.body[1].value.op
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('a *= b\nc * d', f.src)
         f.verify()
 
         o = FST('-a')
         m = o.mark()
         o.a.op = Not()
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('not a', f.src)
         f.verify()
 
         o = FST('-a')
         m = o.mark()
         o.a.op = FST(Not()).a
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('not a', f.src)
         f.verify()
 
         o = FST('-a\nnot b')
         m = o.mark()
         o.a.body[0].value.op = o.a.body[1].value.op
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('not a\nnot b', f.src)
         f.verify()
 
         o = FST('a<b')
         m = o.mark()
         o.a.ops[0] = IsNot()
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('a is not b', f.src)
         f.verify()
 
         o = FST('a<b')
         m = o.mark()
         o.a.ops[0] = FST(IsNot()).a
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('a is not b', f.src)
         f.verify()
 
         o = FST('a<b\nc is not d')
         m = o.mark()
         o.a.body[0].value.ops[0] = o.a.body[1].value.ops[0]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('a is not b\nc is not d', f.src)
         f.verify()
 
@@ -7031,7 +7037,7 @@ if 1:
     f"{f()}"
                 '''.strip(), 'exec')).mark()
             o.a.body[0].body[1].value.values[0].value.func = o.a.body[0].body[0]
-            f = o.reconcile(m)
+            f = o.reconcile()
             self.assertEqual(r'''
 if 1:
     "a\n"
@@ -7045,7 +7051,7 @@ if 1:
         a.elts[0].elts[0].elts[0] = List(elts=[a.elts[0].elts[0].elts[0].elts[0]])
         a.elts[0].elts[0].elts[0].elts[0].elts[0] = List(elts=[a.elts[0].elts[0].elts[0].elts[0].elts[0].elts[0]])
         a.elts[0].elts[0].elts[0].elts[0].elts[0].elts[0].elts[0] = List(elts=[a.elts[0].elts[0].elts[0].elts[0].elts[0].elts[0].elts[0].elts[0]])
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('[\n[\n [\n[\n [\n[\n [\n[\n x,#0\n],#1\n1\n],#2\n],#3\n3\n],#4\n],#5\n5\n],#6\n],#7\n7\n]', f.src)
         f.verify()
 
@@ -7055,7 +7061,7 @@ if 1:
         a.elts[0].elts[0] = List(elts=[a.elts[0].elts[0].elts[0]])
         a.elts[0].elts[0].elts[0].elts[0] = List(elts=[a.elts[0].elts[0].elts[0].elts[0].elts[0]])
         a.elts[0].elts[0].elts[0].elts[0].elts[0].elts[0] = List(elts=[a.elts[0].elts[0].elts[0].elts[0].elts[0].elts[0].elts[0]])
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('[\n [\n[\n [\n[\n [\n[\n [\nx,#0\n0\n],#1\n],#2\n2\n],#3\n],#4\n4\n],#5\n],#6\n6\n],#7\n]', f.src)
         f.verify()
 
@@ -7063,42 +7069,81 @@ if 1:
         m = o.mark()
         a.args[0] = Call(func=Name('g'), args=[a.args[0].args[0]], keywords=[])
         a.args[0].args[0].args[0] = Call(func=Name('i'), args=[], keywords=[])
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('f(#0\ng(h(#2\ni())))', f.src)
         f.verify()
 
         # make sure modifications are detected
 
+        m = (o := FST('i = [a, b]')).mark()
+        self.assertEqual('i = [a, b]', o.reconcile().src)  # no modification no error
+
+        m = (o := FST('i = [a, b]')).mark()
+        o.value.elts = '[]'
+        self.assertRaises(RuntimeError, o.reconcile)
+
+        m = (o := FST('i = [a, b]')).mark()
+        o.value.elts[0] = 'a'
+        self.assertRaises(RuntimeError, o.reconcile)
+
+        m = (o := FST('i = [a, b]')).mark()
+        del o.value.elts
+        self.assertRaises(RuntimeError, o.reconcile)
+
+        m = (o := FST('i = [a, b]')).mark()
+        o.value.elts[0] = 'a'
+        self.assertRaises(RuntimeError, o.reconcile)
+
+        m = (o := FST('i = 1')).mark()
+        o.value = '1'
+        self.assertRaises(RuntimeError, o.reconcile)
+
         m = (o := FST('i = 1')).mark()
         o.value.par(True)
-        self.assertRaises(RuntimeError, o.reconcile, m)
+        self.assertRaises(RuntimeError, o.reconcile)
+
+        m = (o := FST('i = (1)')).mark()
+        o.value.unpar()
+        self.assertRaises(RuntimeError, o.reconcile)
+
+        m = (o := FST('i = 1')).mark()
+        o.put_src('j', 0, 0, 0, 1)
+        self.assertRaises(RuntimeError, o.reconcile)
+
+        m = (o := FST('i = 1')).mark()
+        o.put_src(' ', 0, 1, 0, 1, 'offset')
+        self.assertRaises(RuntimeError, o.reconcile)
+
+        m = (o := FST('def f(): pass')).mark()
+        o.put_docstr("test")
+        self.assertRaises(RuntimeError, o.reconcile)
 
     def test_reconcile_slices(self):
         m = (o := FST('a # a\nb # b\nc # c', 'exec')).mark()
         o.a.body[0] = o.a.body[1]
         o.a.body[1] = o.a.body[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('b # b\nc # c\nc # c', f.src)
         f.verify()
 
         m = (o := FST('{\na, # a\nb, # b\nc, # c\n}', 'exec')).mark()
         o.a.body[0].value.elts[0] = o.a.body[0].value.elts[1]
         o.a.body[0].value.elts[1] = o.a.body[0].value.elts[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('{\nb, # b\nc, # c\nc, # c\n}', f.src)
         f.verify()
 
         m = (o := FST('[\na, # a\nb, # b\nc, # c\n]', 'exec')).mark()
         o.a.body[0].value.elts[0] = o.a.body[0].value.elts[1]
         o.a.body[0].value.elts[1] = o.a.body[0].value.elts[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('[\nb, # b\nc, # c\nc, # c\n]', f.src)
         f.verify()
 
         m = (o := FST('(\na, # a\nb, # b\nc, # c\n)', 'exec')).mark()
         o.a.body[0].value.elts[0] = o.a.body[0].value.elts[1]
         o.a.body[0].value.elts[1] = o.a.body[0].value.elts[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('(\nb, # b\nc, # c\nc, # c\n)', f.src)
         f.verify()
 
@@ -7107,147 +7152,147 @@ if 1:
         o.a.body[0].value.values[0] = o.a.body[0].value.values[1]
         o.a.body[0].value.keys[1] = o.a.body[0].value.keys[2]
         o.a.body[0].value.values[1] = o.a.body[0].value.values[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('{\nb:b, # b\nc:c, # c\nc:c, # c\n}', f.src)
         f.verify()
 
         m = (o := FST('@a # a\n@b # b\n@c # c\ndef f(): pass', 'exec')).mark()
         o.a.body[0].decorator_list[0] = o.a.body[0].decorator_list[1]
         o.a.body[0].decorator_list[1] = o.a.body[0].decorator_list[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('@b # a\n@c # b\n@c # c\ndef f(): pass', f.src)
         f.verify()
 
         m = (o := FST('@a # a\n@b # b\n@c # c\nasync def f(): pass', 'exec')).mark()
         o.a.body[0].decorator_list[0] = o.a.body[0].decorator_list[1]
         o.a.body[0].decorator_list[1] = o.a.body[0].decorator_list[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('@b # a\n@c # b\n@c # c\nasync def f(): pass', f.src)
         f.verify()
 
         m = (o := FST('@a # a\n@b # b\n@c # c\nclass cls: pass', 'exec')).mark()
         o.a.body[0].decorator_list[0] = o.a.body[0].decorator_list[1]
         o.a.body[0].decorator_list[1] = o.a.body[0].decorator_list[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('@b # a\n@c # b\n@c # c\nclass cls: pass', f.src)
         f.verify()
 
         m = (o := FST('class cls(a,b,c): pass', 'exec')).mark()
         o.a.body[0].bases[0] = o.a.body[0].bases[1]
         o.a.body[0].bases[1] = o.a.body[0].bases[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('class cls(b,c,c): pass', f.src)
         f.verify()
 
         m = (o := FST('del a,b,c', 'exec')).mark()
         o.a.body[0].targets[0] = o.a.body[0].targets[1]
         o.a.body[0].targets[1] = o.a.body[0].targets[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('del b,c,c', f.src)
         f.verify()
 
         m = (o := FST('a=b=c = d', 'exec')).mark()
         o.a.body[0].targets[0] = o.a.body[0].targets[1]
         o.a.body[0].targets[1] = o.a.body[0].targets[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('b=c=c = d', f.src)
         f.verify()
 
         m = (o := FST('a  or  b  or  c', 'exec')).mark()
         o.a.body[0].value.values[0] = o.a.body[0].value.values[1]
         o.a.body[0].value.values[1] = o.a.body[0].value.values[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('b  or  c  or  c', f.src)
         f.verify()
 
         m = (o := FST('call(a,b,c)', 'exec')).mark()
         o.a.body[0].value.args[0] = o.a.body[0].value.args[1]
         o.a.body[0].value.args[1] = o.a.body[0].value.args[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('call(b,c,c)', f.src)
         f.verify()
 
         m = (o := FST('[i for i in j if a if b if c]', 'exec')).mark()
         o.a.body[0].value.generators[0].ifs[0] = o.a.body[0].value.generators[0].ifs[1]
         o.a.body[0].value.generators[0].ifs[1] = o.a.body[0].value.generators[0].ifs[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('[i for i in j if b if c if c]', f.src)
         f.verify()
 
         m = (o := FST('[i for k in l if k for j in k if j for i in j if i]', 'exec')).mark()
         o.a.body[0].value.generators[0] = o.a.body[0].value.generators[1]
         o.a.body[0].value.generators[1] = o.a.body[0].value.generators[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('[i for j in k if j for i in j if i for i in j if i]', f.src)
         f.verify()
 
         m = (o := FST('{i for k in l if k for j in k if j for i in j if i}', 'exec')).mark()
         o.a.body[0].value.generators[0] = o.a.body[0].value.generators[1]
         o.a.body[0].value.generators[1] = o.a.body[0].value.generators[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('{i for j in k if j for i in j if i for i in j if i}', f.src)
         f.verify()
 
         m = (o := FST('{i: i for k in l if k for j in k if j for i in j if i}', 'exec')).mark()
         o.a.body[0].value.generators[0] = o.a.body[0].value.generators[1]
         o.a.body[0].value.generators[1] = o.a.body[0].value.generators[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('{i: i for j in k if j for i in j if i for i in j if i}', f.src)
         f.verify()
 
         m = (o := FST('(i for k in l if k for j in k if j for i in j if i)', 'exec')).mark()
         o.a.body[0].value.generators[0] = o.a.body[0].value.generators[1]
         o.a.body[0].value.generators[1] = o.a.body[0].value.generators[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('(i for j in k if j for i in j if i for i in j if i)', f.src)
         f.verify()
 
         m = (o := FST('class cls(a=1,b=2,c=3): pass', 'exec')).mark()
         o.a.body[0].keywords[0] = o.a.body[0].keywords[1]
         o.a.body[0].keywords[1] = o.a.body[0].keywords[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('class cls(b=2,c=3,c=3): pass', f.src)
         f.verify()
 
         m = (o := FST('call(a=1,b=2,c=3)', 'exec')).mark()
         o.a.body[0].value.keywords[0] = o.a.body[0].value.keywords[1]
         o.a.body[0].value.keywords[1] = o.a.body[0].value.keywords[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('call(b=2,c=3,c=3)', f.src)
         f.verify()
 
         m = (o := FST('import a,b,c', 'exec')).mark()
         o.a.body[0].names[0] = o.a.body[0].names[1]
         o.a.body[0].names[1] = o.a.body[0].names[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('import b,c,c', f.src)
         f.verify()
 
         m = (o := FST('from z import a,b,c', 'exec')).mark()
         o.a.body[0].names[0] = o.a.body[0].names[1]
         o.a.body[0].names[1] = o.a.body[0].names[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('from z import b,c,c', f.src)
         f.verify()
 
         m = (o := FST('with a  as  a, b  as  b, c  as  c: pass', 'exec')).mark()
         o.a.body[0].items[0] = o.a.body[0].items[1]
         o.a.body[0].items[1] = o.a.body[0].items[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('with b  as  b, c  as  c, c  as  c: pass', f.src)
         f.verify()
 
         m = (o := FST('async with a  as  a, b  as  b, c  as  c: pass', 'exec')).mark()
         o.a.body[0].items[0] = o.a.body[0].items[1]
         o.a.body[0].items[1] = o.a.body[0].items[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('async with b  as  b, c  as  c, c  as  c: pass', f.src)
         f.verify()
 
         m = (o := FST('case [a,b,c]: pass', 'match_case')).mark()
         o.a.pattern.patterns[0] = o.a.pattern.patterns[1]
         o.a.pattern.patterns[1] = o.a.pattern.patterns[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('case [b,c,c]: pass', f.src)
         f.verify()
 
@@ -7256,35 +7301,35 @@ if 1:
         o.a.pattern.patterns[0] = o.a.pattern.patterns[1]
         o.a.pattern.keys[1] = o.a.pattern.keys[2]
         o.a.pattern.patterns[1] = o.a.pattern.patterns[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('case {2:b,3:c,3:c}: pass', f.src)
         f.verify()
 
         m = (o := FST('case cls(a,b,c): pass', 'match_case')).mark()
         o.a.pattern.patterns[0] = o.a.pattern.patterns[1]
         o.a.pattern.patterns[1] = o.a.pattern.patterns[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('case cls(b,c,c): pass', f.src)
         f.verify()
 
         m = (o := FST('case a|b|c: pass', 'match_case')).mark()
         o.a.pattern.patterns[0] = o.a.pattern.patterns[1]
         o.a.pattern.patterns[1] = o.a.pattern.patterns[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('case b|c|c: pass', f.src)
         f.verify()
 
         m = (o := FST('global a,b,c', 'exec')).mark()
         o.a.body[0].names[0] = o.a.body[0].names[1]
         o.a.body[0].names[1] = o.a.body[0].names[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('global b,c,c', f.src)
         f.verify()
 
         m = (o := FST('nonlocal a,b,c', 'exec')).mark()
         o.a.body[0].names[0] = o.a.body[0].names[1]
         o.a.body[0].names[1] = o.a.body[0].names[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('nonlocal b,c,c', f.src)
         f.verify()
 
@@ -7293,7 +7338,7 @@ if 1:
         o.a.body[0].value.values[1] = o.a.body[0].value.values[3]
         o.a.body[0].value.values[2] = o.a.body[0].value.values[4]
         o.a.body[0].value.values[3] = o.a.body[0].value.values[5]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual("f'b{b}c{c}c{c}'", f.src)
         f.verify()
 
@@ -7301,28 +7346,28 @@ if 1:
             m = (o := FST('def f[T,U,V](): pass', 'exec')).mark()
             o.a.body[0].type_params[0] = o.a.body[0].type_params[1]
             o.a.body[0].type_params[1] = o.a.body[0].type_params[2]
-            f = o.reconcile(m)
+            f = o.reconcile()
             self.assertEqual('def f[U,V,V](): pass', f.src)
             f.verify()
 
             m = (o := FST('async def f[T,U,V](): pass', 'exec')).mark()
             o.a.body[0].type_params[0] = o.a.body[0].type_params[1]
             o.a.body[0].type_params[1] = o.a.body[0].type_params[2]
-            f = o.reconcile(m)
+            f = o.reconcile()
             self.assertEqual('async def f[U,V,V](): pass', f.src)
             f.verify()
 
             m = (o := FST('class cls[T,U,V]: pass', 'exec')).mark()
             o.a.body[0].type_params[0] = o.a.body[0].type_params[1]
             o.a.body[0].type_params[1] = o.a.body[0].type_params[2]
-            f = o.reconcile(m)
+            f = o.reconcile()
             self.assertEqual('class cls[U,V,V]: pass', f.src)
             f.verify()
 
             m = (o := FST('type t[T,U,V] = ...', 'exec')).mark()
             o.a.body[0].type_params[0] = o.a.body[0].type_params[1]
             o.a.body[0].type_params[1] = o.a.body[0].type_params[2]
-            f = o.reconcile(m)
+            f = o.reconcile()
             self.assertEqual('type t[U,V,V] = ...', f.src)
             f.verify()
 
@@ -7332,7 +7377,7 @@ if 1:
             o.a.body[0].value.values[1] = o.a.body[0].value.values[3]
             o.a.body[0].value.values[2] = o.a.body[0].value.values[4]
             o.a.body[0].value.values[3] = o.a.body[0].value.values[5]
-            f = o.reconcile(m)
+            f = o.reconcile()
             self.assertEqual("t'b{b}c{c}c{c}'", f.src)
             f.verify()
 
@@ -7345,7 +7390,7 @@ if 1:
         o.a.body[0].args.defaults[2] = o.a.body[0].args.defaults[3]
         o.a.body[0].args.kwonlyargs[0] = o.a.body[0].args.kwonlyargs[1]
         o.a.body[0].args.kw_defaults[0] = o.a.body[0].args.kw_defaults[1]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('def f(b=2,b=2,/,d=4,d=4,*,f=6,f=6): pass', f.src)
         f.verify()
 
@@ -7354,7 +7399,7 @@ if 1:
         o.a.pattern.kwd_patterns[0] = o.a.pattern.kwd_patterns[1]
         o.a.pattern.kwd_attrs[1] = o.a.pattern.kwd_attrs[2]
         o.a.pattern.kwd_patterns[1] = o.a.pattern.kwd_patterns[2]
-        f = o.reconcile(m)
+        f = o.reconcile()
         self.assertEqual('case cls(b=2,c=3,c=3): pass', f.src)
         f.verify()
 

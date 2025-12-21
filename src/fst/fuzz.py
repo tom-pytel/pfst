@@ -1821,12 +1821,12 @@ class ReconcileRnd(Fuzzy):
 
                     fst = master.copy()
                     # self.parts = FSTParts(fst)
-                    mark = fst.mark()
+                    fst.mark()
 
                     self.walk_fst(fst)
 
                     with FST.options(docstr=False):
-                        fst = fst.reconcile(mark)
+                        fst = fst.reconcile()
 
                     try:
                         fst.verify()
@@ -1895,12 +1895,12 @@ class ReconcileSame(Fuzzy):
 
     def fuzz_one(self, fst, fnm) -> bool:
         try:
-            mark = fst.mark()
+            fst.mark()
 
             self.walk_fst(fst)
 
             with FST.options(docstr=False):
-                fst = fst.reconcile(mark)
+                fst = fst.reconcile()
 
             fst.verify()
 

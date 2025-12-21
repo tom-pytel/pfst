@@ -136,15 +136,6 @@ class Reconcile:
     out:     fst.FST            ; """The output `FST` tree to build up and return."""
 
     def __init__(self, work: fst.FST, mark: fst.FST, options: Mapping[str, Any] = {}) -> None:
-        if 'raw' in options:
-            raise ValueError("cannot use reconcile with 'raw' option")
-        if 'coerce' in options:
-            raise ValueError("cannot use reconcile with 'coerce' option")
-        if 'pars' in options:
-            raise ValueError("cannot use reconcile with 'pars' option")
-        if 'pars_arglike' in options:
-            raise ValueError("cannot use reconcile with 'pars_arglike' option")
-
         self.options = options
         self.work = work
         self.mark = mark

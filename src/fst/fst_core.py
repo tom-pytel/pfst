@@ -231,15 +231,15 @@ def _get_fmtval_interp_strs(self: fst.FST) -> tuple[str | None, str | None, int,
 class _Modifying:
     """Modification context manager. Updates some parent stuff after a successful modification."""
 
-    root:  fst.FST                   # for updating _serial
+    root:  fst.FST
     fst:   fst.FST | Literal[False]  # False indicates nothing to update on done()
     field: astfield
     data:  list
 
     def __init__(self, fst_: fst.FST, field: str | Literal[False] = False, raw: bool | None = False) -> None:
         """Call before modifying `FST` node (even just source) to mark possible data for updates after modification.
-        `.success()` should be called on a successful modification because it increments the modification count
-        `_serial`. Can be used as a context manager or can just call `.enter()`, `.success()` and `.fail()` manually.
+        `.success()` should be called on a successful modification. Can be used as a context manager or can just call
+        `.enter()`, `.success()` and `.fail()` manually.
 
         It is assumed that neither the `fst_` node passed in (or its parent if `field=False`) nor its parents will be
         changed, otherwise this must be used manually and not as a context manager and the changed node must be passed
@@ -348,8 +348,6 @@ class _Modifying:
 
         _MODIFYING.remove(root)
 
-        root._serial += 1
-
         if fst_ is False:
             if not (fst_ := self.fst):
                 return
@@ -437,8 +435,6 @@ class _Modifying:
         root = self.root  # should be same as fst_.root if present since root node never changes
 
         _MODIFYING.remove(root)
-
-        root._serial += 1
 
     def fail(self, exc_val: BaseException | None = None) -> None:
         _MODIFYING.remove(self.root)

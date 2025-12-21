@@ -20,7 +20,8 @@ can.
 ...       ]
 ... '''.strip())
 
->>> m = f.mark()
+>>> f.mark()  # the _ is just so that the return (which is self) doesn't print
+<If ROOT 0,0..3,7>
 
 Notice the `f.a`, all changes must happen in the `AST` tree.
 
@@ -28,7 +29,7 @@ Notice the `f.a`, all changes must happen in the `AST` tree.
 
 >>> f.a.body.append(Assign(targets=[Name(id='k')], value=Constant(value=3)))
 
->>> f = f.reconcile(m)
+>>> f = f.reconcile()
 
 >>> print(f.src)
 if i:  # 1
@@ -39,7 +40,8 @@ if i:  # 1
 
 You can reuse and mix nodes from the original tree.
 
->>> m = f.mark()
+>>> f.mark()
+<If ROOT 0,0..4,7>
 
 >>> f.a.body.append(f.a.body[0])
 
@@ -50,7 +52,7 @@ We put the same `AST` node in two different places, this is allowed in for `reco
 >>> f.a.body[0] is f.a.body[2]
 True
 
->>> f = f.reconcile(m)
+>>> f = f.reconcile()
 
 >>> print(f.src)
 if i:  # 1
@@ -71,7 +73,8 @@ You can add in `AST` nodes from other `FST` trees and they will retain their for
 `AST`s since the only tree that has reconcile information to be able to preserve formatting if this is done is the
 original tree that was marked, for now.
 
->>> m = f.mark()
+>>> f.mark()
+<If ROOT 0,0..7,7>
 
 >>> f.a.body.append(FST('l="formatting"  # stays').a)
 
@@ -79,7 +82,7 @@ original tree that was marked, for now.
 
 >>> f.a.body[-1].value = Constant(value="formatting")
 
->>> f = f.reconcile(m)
+>>> f = f.reconcile()
 
 >>> print(f.src)
 if i:  # 1
@@ -119,7 +122,8 @@ But if the goal is to change a small part of a larger program then this should w
 ...         return 0
 ... '''.strip())
 
->>> m = f.mark()
+>>> f.mark()
+<Module ROOT 0,0..20,16>
 
 >>> f.a.body[1].body[0].value.left.right = Name(id='scalar1')
 
@@ -134,7 +138,7 @@ But if the goal is to change a small part of a larger program then this should w
 ...     )
 ... )
 
->>> f = f.reconcile(m)
+>>> f = f.reconcile()
 
 We print like this because of doctest, just ignore.
 

@@ -261,15 +261,13 @@ formatting where it can.
 ```
 
 ```py
->>> marked = f.mark()
-
+>>> f.mark()
 >>> pure_AST_operation(f.a)
-
->>> reconciled = f.reconcile(marked)
+>>> f = f.reconcile()
 ```
 
 ```py
->>> print(reconciled.src)
+>>> print(f.src)
 def compute(NEW_X: float,  # x position
             NEW_Y: float,  # y position
 ) -> float:
