@@ -21117,6 +21117,31 @@ Import - ROOT 0,0..0,14
    2] alias - 0,13..0,14
      .name 'z'
 '''),
+
+('', 0, 'end', None, {}, (None,
+r'''import _'''), (None,
+r'''(a)'''),
+r'''import a''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'a'
+'''),
+
+('', 0, 'end', None, {'coerce': False}, (None,
+r'''import _'''), (None,
+r'''(a)'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('', 0, 'end', None, {}, (None,
+r'''import _'''), (None,
+r'''(a, b)'''),
+r'''**ParseError('expecting _aliases, could not parse or coerce')**'''),
+
+('', 0, 'end', None, {'coerce': False}, (None,
+r'''import _'''), (None,
+r'''(a, b)'''),
+r'''**SyntaxError('invalid syntax')**'''),
 ],
 
 'Import_names_coerce': [  # ................................................................................
@@ -21978,6 +22003,32 @@ If - ROOT 0,0..1,23
         .name 'y'
      .level 0
 '''),
+
+('', 0, 'end', None, {}, (None,
+r'''from . import _'''), (None,
+r'''(a)'''),
+r'''from . import a''', r'''
+ImportFrom - ROOT 0,0..0,15
+  .names[1]
+   0] alias - 0,14..0,15
+     .name 'a'
+  .level 1
+'''),
+
+('', 0, 'end', None, {'coerce': False}, (None,
+r'''from . import _'''), (None,
+r'''(a)'''),
+r'''**SyntaxError('ImportFrom.names cannot have explicit parentheses')**'''),
+
+('', 0, 'end', None, {}, (None,
+r'''from . import _'''), (None,
+r'''(a, b)'''),
+r'''**ParseError('expecting _aliases, could not parse or coerce')**'''),
+
+('', 0, 'end', None, {'coerce': False}, (None,
+r'''from . import _'''), (None,
+r'''(a, b)'''),
+r'''**SyntaxError('ImportFrom.names cannot have explicit parentheses')**'''),
 ],
 
 'ImportFrom_names_coerce': [  # ................................................................................

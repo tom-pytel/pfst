@@ -242,7 +242,7 @@ stuff()
 ```py
 >>> f.body[0].put_slice(deco, 'decorator_list', trivia=('all+', 'all+'))
 
->>> f.body[0].body[0] = 'all_better'
+>>> f.body[0].body[0] = 'good'
 ```
 
 ```py
@@ -258,7 +258,7 @@ if True:
     # post-comment
 
     def func():
-        all_better
+        good
         stuff()
 
     pass
@@ -293,9 +293,8 @@ trivia by line number, as well as insert location. Direct comment manipulation f
 
 * Finish `reconcile()`, make it use all slice operations to preserve more formatting.
 
-* Tree search, `options` validation, indentation of multiline sequences should be better, more coercion on put,
-different source encodings, code cleanups, type_ignores, API additions for real-world use, optimization, testing,
-bughunting, etc...
+* Tree search, indentation of multiline sequences should be better, more coercion on put, different source encodings,
+code cleanups, API additions for real-world use, optimization, testing, bughunting, etc...
 
 ## Trivia
 

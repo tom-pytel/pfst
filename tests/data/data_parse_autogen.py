@@ -1682,6 +1682,10 @@ r'''**ParseError('expecting single name')**'''),
 r'''a as x, a.b as y'''),
 r'''**ParseError('expecting single name')**'''),
 
+('parse_Import_name', 0, 0, 'SyntaxError', {}, ('Import_name',
+r'''(a)'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
 ('parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r''''''),
 r'''_aliases - ROOT 0,0..0,0'''),
@@ -1762,6 +1766,22 @@ _aliases - ROOT 0,0..0,16
      .asname 'y'
 '''),
 
+('parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names', r'''
+a,
+b
+'''), r'''
+_aliases - ROOT 0,0..1,1
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 1,0..1,1
+     .name 'b'
+'''),
+
+('parse__Import_names', 0, 0, 'SyntaxError', {}, ('_Import_names',
+r'''(a, b)'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
 ('parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
 r''''''),
 r'''**SyntaxError("Expected one or more names after 'import'")**'''),
@@ -1808,6 +1828,10 @@ r'''**ParseError('expecting single name')**'''),
 ('parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
 r'''a as x, a.b as y'''),
 r'''**SyntaxError('invalid syntax')**'''),
+
+('parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
+r'''(a)'''),
+r'''**SyntaxError('ImportFrom.names cannot have explicit parentheses')**'''),
 
 ('parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
 r''''''),
@@ -1875,6 +1899,22 @@ _aliases - ROOT 0,0..0,14
 ('parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
 r'''a as x, a.b as y'''),
 r'''**SyntaxError('invalid syntax')**'''),
+
+('parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names', r'''
+a,
+b
+'''), r'''
+_aliases - ROOT 0,0..1,1
+  .names[2]
+   0] alias - 0,0..0,1
+     .name 'a'
+   1] alias - 1,0..1,1
+     .name 'b'
+'''),
+
+('parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
+r'''(a, b)'''),
+r'''**SyntaxError('ImportFrom.names cannot have explicit parentheses')**'''),
 
 ('parse_withitem', 0, 0, 'SyntaxError', {}, ('withitem',
 r''''''),

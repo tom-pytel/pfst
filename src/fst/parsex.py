@@ -1369,18 +1369,25 @@ def parse_ImportFrom_name(src: str, parse_params: Mapping[str, Any] = {}) -> AST
     """Parse to an `alias`, allowing star but not dotted. @private"""
 
     try:
-        names = _ast_parse1(f'from . import \\\n{src}', parse_params).names  # this instead of parentheses because could be '*' which doesn't like parentheses
+        import_ = _ast_parse1(f'from . import \\\n{src}', parse_params)  # this instead of parentheses because could be '*' which doesn't like parentheses
 
     except SyntaxError as first_exc:
         try:
             src = _re_non_lcont_newline.sub('\\\n', src)
-            names = _ast_parse1(f'from . import \\\n{src}', parse_params).names  # multiline?
+            import_ = _ast_parse1(f'from . import \\\n{src}', parse_params)  # multiline?
 
         except SyntaxError:
             raise first_exc from None
 
+    names = import_.names
+
     if len(names) != 1:
         raise ParseError('expecting single name')
+
+    nn = names[-1]
+
+    if nn.end_col_offset != import_.end_col_offset or nn.end_lineno != import_.end_lineno:  # cannot have parentheses
+        raise SyntaxError('ImportFrom.names cannot have explicit parentheses')
 
     return _offset_linenos(names[0], -1)
 
@@ -1389,19 +1396,29 @@ def parse__ImportFrom_names(src: str, parse_params: Mapping[str, Any] = {}) -> A
     """Parse to an `_aliases` of `alias` SPECIAL SLICE, allowing star but not dotted. @private"""
 
     try:
-        names = _ast_parse1(f'from . import \\\n{src}', parse_params).names  # this instead of parentheses because could be '*' which doesn't like parentheses
+        import_ = _ast_parse1(f'from . import \\\n{src}', parse_params)  # this instead of parentheses because could be '*' which doesn't like parentheses
 
     except SyntaxError as first_exc:
         if not _re_first_src.search(src):  # empty?
-            names = []
+            import_ = None
 
         else:
             try:
                 src = _re_non_lcont_newline.sub('\\\n', src)
-                names = _ast_parse1(f'from . import \\\n{src}', parse_params).names  # multiline?
+                import_ = _ast_parse1(f'from . import \\\n{src}', parse_params)  # multiline?
 
             except SyntaxError:
                 raise first_exc from None
+
+    if not import_:
+        names = []
+
+    else:
+        names = import_.names
+        nn = names[-1]
+
+        if nn.end_col_offset != import_.end_col_offset or nn.end_lineno != import_.end_lineno:  # cannot have parentheses
+            raise SyntaxError('ImportFrom.names cannot have explicit parentheses')
 
     ast = _aliases(names=names, **_astloc_from_src(src, 2))
 

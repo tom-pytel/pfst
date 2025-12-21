@@ -291,6 +291,7 @@ PARSE_TESTS = [
     ('Import_name',        px.parse_Import_name,        SyntaxError,              '* as c'),
     ('Import_name',        px.parse_Import_name,        ParseError,               'a as x, b as y'),
     ('Import_name',        px.parse_Import_name,        ParseError,               'a as x, a.b as y'),
+    ('Import_name',        px.parse_Import_name,        SyntaxError,              '(a)'),
 
     ('_Import_names',      px.parse__Import_names,      _aliases,                 ''),
     ('_Import_names',      px.parse__Import_names,      _aliases,                 'a'),
@@ -302,6 +303,8 @@ PARSE_TESTS = [
     ('_Import_names',      px.parse__Import_names,      SyntaxError,              '* as c'),
     ('_Import_names',      px.parse__Import_names,      _aliases,                 'a as x, b as y'),
     ('_Import_names',      px.parse__Import_names,      _aliases,                 'a as x, a.b as y'),
+    ('_Import_names',      px.parse__Import_names,      _aliases,                 'a,\nb'),
+    ('_Import_names',      px.parse__Import_names,      SyntaxError,              '(a, b)'),
 
     ('ImportFrom_name',    px.parse_ImportFrom_name,    SyntaxError,              ''),
     ('ImportFrom_name',    px.parse_ImportFrom_name,    alias,                    'a'),
@@ -313,6 +316,7 @@ PARSE_TESTS = [
     ('ImportFrom_name',    px.parse_ImportFrom_name,    SyntaxError,              '* as c'),
     ('ImportFrom_name',    px.parse_ImportFrom_name,    ParseError,               'a as x, b as y'),
     ('ImportFrom_name',    px.parse_ImportFrom_name,    SyntaxError,              'a as x, a.b as y'),
+    ('ImportFrom_name',    px.parse_ImportFrom_name,    SyntaxError,              '(a)'),
 
     ('_ImportFrom_names',  px.parse__ImportFrom_names,  _aliases,                 ''),
     ('_ImportFrom_names',  px.parse__ImportFrom_names,  _aliases,                 'a'),
@@ -324,6 +328,8 @@ PARSE_TESTS = [
     ('_ImportFrom_names',  px.parse__ImportFrom_names,  SyntaxError,              '* as c'),
     ('_ImportFrom_names',  px.parse__ImportFrom_names,  _aliases,                 'a as x, b as y'),
     ('_ImportFrom_names',  px.parse__ImportFrom_names,  SyntaxError,              'a as x, a.b as y'),
+    ('_ImportFrom_names',  px.parse__ImportFrom_names,  _aliases,                 'a,\nb'),
+    ('_ImportFrom_names',  px.parse__ImportFrom_names,  SyntaxError,              '(a, b)'),
 
     ('withitem',           px.parse_withitem,           SyntaxError,              ''),
     ('withitem',           px.parse_withitem,           withitem,                 'a'),

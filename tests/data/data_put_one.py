@@ -12330,7 +12330,7 @@ _Assign_targets - ROOT 0,0..4,0
 
 'With_items': [  # ................................................................................
 
-('', 0, None, 'items', {'_src': False}, (None,
+('', 0, None, 'items', {'raw': False}, (None,
 r'''with _: pass'''), ('Tuple',
 r'''x, y'''),
 r'''with ((x, y)): pass''', r'''
@@ -12346,7 +12346,7 @@ With - ROOT 0,0..0,19
    0] Pass - 0,15..0,19
 '''),
 
-('', 0, None, 'items', {'_src': False}, (None,
+('', 0, None, 'items', {'raw': False}, (None,
 r'''with _: pass'''), ('Tuple',
 r'''(x, y)'''),
 r'''with ((x, y)): pass''', r'''
@@ -12362,7 +12362,7 @@ With - ROOT 0,0..0,19
    0] Pass - 0,15..0,19
 '''),
 
-('', 0, None, 'items', {'_src': False}, (None,
+('', 0, None, 'items', {'raw': False}, (None,
 r'''with (_): pass'''), ('Tuple',
 r'''x, y'''),
 r'''with ((x, y)): pass''', r'''
@@ -12378,7 +12378,7 @@ With - ROOT 0,0..0,19
    0] Pass - 0,15..0,19
 '''),
 
-('', 0, None, 'items', {'_src': False}, (None,
+('', 0, None, 'items', {'raw': False}, (None,
 r'''with (_): pass'''), ('Tuple',
 r'''(x, y)'''),
 r'''with ((x, y)): pass''', r'''
@@ -12397,7 +12397,7 @@ With - ROOT 0,0..0,19
 
 'AsyncWith_items': [  # ................................................................................
 
-('', 0, None, 'items', {'_src': False}, (None,
+('', 0, None, 'items', {'raw': False}, (None,
 r'''async with _: pass'''), ('Tuple',
 r'''x, y'''),
 r'''async with ((x, y)): pass''', r'''
@@ -12413,7 +12413,7 @@ AsyncWith - ROOT 0,0..0,25
    0] Pass - 0,21..0,25
 '''),
 
-('', 0, None, 'items', {'_src': False}, (None,
+('', 0, None, 'items', {'raw': False}, (None,
 r'''async with _: pass'''), ('Tuple',
 r'''(x, y)'''),
 r'''async with ((x, y)): pass''', r'''
@@ -12429,7 +12429,7 @@ AsyncWith - ROOT 0,0..0,25
    0] Pass - 0,21..0,25
 '''),
 
-('', 0, None, 'items', {'_src': False}, (None,
+('', 0, None, 'items', {'raw': False}, (None,
 r'''async with (_): pass'''), ('Tuple',
 r'''x, y'''),
 r'''async with ((x, y)): pass''', r'''
@@ -12445,7 +12445,7 @@ AsyncWith - ROOT 0,0..0,25
    0] Pass - 0,21..0,25
 '''),
 
-('', 0, None, 'items', {'_src': False}, (None,
+('', 0, None, 'items', {'raw': False}, (None,
 r'''async with (_): pass'''), ('Tuple',
 r'''(x, y)'''),
 r'''async with ((x, y)): pass''', r'''
@@ -12559,6 +12559,21 @@ Module - ROOT 0,0..0,25
         .name 'c.d'
         .asname 'e'
 '''),
+
+('', 0, None, 'names', {}, (None,
+r'''import _'''), (None,
+r'''(a)'''),
+r'''import a''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'a'
+'''),
+
+('', 0, None, 'names', {'coerce': False}, (None,
+r'''import _'''), (None,
+r'''(a)'''),
+r'''**SyntaxError('invalid syntax')**'''),
 ],
 
 'ImportFrom_names': [  # ................................................................................
@@ -12955,6 +12970,32 @@ Module - ROOT 0,0..0,30
 r'''from z import (a, c as d)'''), ('alias',
 r'''f as g'''),
 r'''**IndexError('index out of range')**'''),
+
+('', 0, None, 'names', {}, (None,
+r'''from . import _'''), (None,
+r'''(a)'''),
+r'''from . import a''', r'''
+ImportFrom - ROOT 0,0..0,15
+  .names[1]
+   0] alias - 0,14..0,15
+     .name 'a'
+  .level 1
+'''),
+
+('', 0, None, 'names', {}, (None,
+r'''from . import _'''), (None,
+r'''(a, b)'''),
+r'''**ParseError('expecting alias, could not parse or coerce')**'''),
+
+('', 0, None, 'names', {'coerce': False}, (None,
+r'''from . import _'''), (None,
+r'''(a)'''),
+r'''**SyntaxError('ImportFrom.names cannot have explicit parentheses')**'''),
+
+('', 0, None, 'names', {'coerce': False}, (None,
+r'''from . import _'''), (None,
+r'''(a, b)'''),
+r'''**ParseError('expecting single name')**'''),
 ],
 
 'Global_names': [  # ................................................................................
