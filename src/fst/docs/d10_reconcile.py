@@ -5,6 +5,11 @@ To be able to execute the examples, import this.
 
 >>> from fst import *
 
+This is just a print helper function for this documentation specifically, you can ignore it.
+
+>>> def pprint(src):  # helper
+...    print(src.replace('\n\n', '\n\xa0\n'))  # replace() to avoid '<BLANKLINE>'
+
 
 ## What it does
 
@@ -20,7 +25,7 @@ can.
 ...       ]
 ... '''.strip())
 
->>> f.mark()  # the _ is just so that the return (which is self) doesn't print
+>>> f.mark()
 <If ROOT 0,0..3,7>
 
 Notice the `f.a`, all changes must happen in the `AST` tree.
@@ -31,12 +36,14 @@ Notice the `f.a`, all changes must happen in the `AST` tree.
 
 >>> f = f.reconcile()
 
+```py
 >>> print(f.src)
 if i:  # 1
   j = [pure_ast, # 2
        g() # 3
       ]
   k = 3
+```
 
 You can reuse and mix nodes from the original tree.
 
@@ -45,24 +52,26 @@ You can reuse and mix nodes from the original tree.
 
 >>> f.a.body.append(f.a.body[0])
 
->>> f.a.body[0].value.elts.append(Constant(value='pure_ast'))
+>>> f.a.body[0].value.elts.append(Constant(value='another_ast'))
 
-We put the same `AST` node in two different places, this is allowed in for `reconcile()`.
+We put the same `AST` node in two different places, this is allowed for `reconcile()`.
 
 >>> f.a.body[0] is f.a.body[2]
 True
 
 >>> f = f.reconcile()
 
+```py
 >>> print(f.src)
 if i:  # 1
   j = [pure_ast, # 2
-       g(), 'pure_ast'
+       g(), 'another_ast'
       ]
   k = 3
   j = [pure_ast, # 2
-       g(), 'pure_ast'
+       g(), 'another_ast'
       ]
+```
 
 That same `AST` used in two places was deduplicated.
 
@@ -71,7 +80,7 @@ False
 
 You can add in `AST` nodes from other `FST` trees and they will retain their formatting, though not if you modify those
 `AST`s since the only tree that has reconcile information to be able to preserve formatting if this is done is the
-original tree that was marked, for now.
+original tree that was marked.
 
 >>> f.mark()
 <If ROOT 0,0..7,7>
@@ -84,17 +93,19 @@ original tree that was marked, for now.
 
 >>> f = f.reconcile()
 
+```py
 >>> print(f.src)
 if i:  # 1
   j = [pure_ast, # 2
-       g(), 'pure_ast'
+       g(), 'another_ast'
       ]
   k = 3
   j = [pure_ast, # 2
-       g(), 'pure_ast'
+       g(), 'another_ast'
       ]
   l="formatting"  # stays
   m = 'formatting'
+```
 
 But if the goal is to change a small part of a larger program then this should work well enough.
 
@@ -140,21 +151,20 @@ But if the goal is to change a small part of a larger program then this should w
 
 >>> f = f.reconcile()
 
-We print like this because of doctest, just ignore.
-
->>> print('\n'.join(l or '.' for l in f.lines))
+```py
+>>> pprint(f.src)
 from .data import (
     scalar1,  # this is 60% for now
     scalar2,  # the rest
 )
-.
+ 
 def compute(x, y):
     # Compute the weighted sum
     result = (
         x * scalar1  # x gets 60%
         + y * scalar2  # y gets 40%
     )
-.
+ 
     # Apply thresholding
     if (
         result > 10
@@ -166,6 +176,7 @@ def compute(x, y):
         return 0
     else:
         return -1
+```
 
 
 ## How it works
@@ -181,4 +192,7 @@ node, but at least it makes the operation possible.
 This method is not particularly fast when there are a lot of nested changes as it is possible that large chunks of the
 source wind up being put multiple times with minor deviations. But it does a better job at preserving formatting than
 walking bottom-up.
+
+**Note:** This functionality is still a work in progress so not all comments which should be may be preserved and other
+comments may be duplicated.
 """

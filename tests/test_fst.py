@@ -5782,6 +5782,21 @@ class cls:
 
         self.assertEqual('class cls: pass', FST('class cls: pass').put_docstr(None).src)
 
+        f = FST('''
+class cls:
+    # pre-comment
+    """docstr"""  # line-comment
+    # post-comment
+'''.strip())
+        f.put_docstr('test', reinsert=True)
+        self.assertEqual('''
+class cls:
+    """test"""
+    # pre-comment
+    # line-comment
+    # post-comment
+'''.strip(), f.src)
+
     def test_copy_special(self):
         f = FST.fromsrc('@decorator\nclass cls:\n  pass')
         self.assertEqual(f.a.body[0].f.copy().src, '@decorator\nclass cls:\n  pass')
@@ -7073,6 +7088,31 @@ if 1:
         self.assertEqual('f(#0\ng(h(#2\ni())))', f.src)
         f.verify()
 
+        # allowed options
+
+        self.assertEqual('i', FST('i').mark().reconcile(elif_=True).src)
+        self.assertEqual('i', FST('i').mark().reconcile(pep8space=1).src)
+
+        # disallowed options
+
+        m = (o := FST('i')).mark()
+
+        self.assertRaises(ValueError, FST('i').reconcile, raw=None)
+        self.assertRaises(ValueError, FST('i').reconcile, trivia=None)
+        self.assertRaises(ValueError, FST('i').reconcile, coerce=None)
+        self.assertRaises(ValueError, FST('i').reconcile, docstr=None)
+        self.assertRaises(ValueError, FST('i').reconcile, pars=None)
+        self.assertRaises(ValueError, FST('i').reconcile, pars_walrus=None)
+        self.assertRaises(ValueError, FST('i').reconcile, pars_arglike=None)
+        self.assertRaises(ValueError, FST('i').reconcile, norm=None)
+        self.assertRaises(ValueError, FST('i').reconcile, norm_self=None)
+        self.assertRaises(ValueError, FST('i').reconcile, norm_get=None)
+        self.assertRaises(ValueError, FST('i').reconcile, norm_put=None)
+
+        # unmarked error
+
+        self.assertRaises(RuntimeError, FST('i').reconcile)
+
         # make sure modifications are detected
 
         m = (o := FST('i = [a, b]')).mark()
@@ -8175,7 +8215,10 @@ match a:
         self.assertFalse(f.is__comprehensions)
 
         self.assertFalse(FST('a').is_FunctionType)
-        self.assertTrue(FST.fromsrc('x = 1  # type: ignore', type_comments=True).type_ignores[0].is_TypeIgnore)
+
+        f = FST.fromsrc('x = 1  # type: ignore', type_comments=True)
+        self.assertTrue(f.type_ignores[0].is_TypeIgnore)
+        self.assertTrue(f.type_ignores[0].is_type_ignore)
 
         self.assertTrue(FST('f"{a}"').values[0].is_FormattedValue)
 

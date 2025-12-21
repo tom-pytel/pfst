@@ -10,8 +10,8 @@ The examples are deliberately not the most efficient but are rather meant to sho
 them are somewhat formatter-y, which is not the intended use of this module, but fine for demonstration purposes. If you
 want to see an example of an intended use case then see [Instrument expressions](#instrument-expressions).
 
-You will see a lot or `.replace()` of nodes while `.walk()`ing them. There are specific rules on where this is allowed,
-see `fst.fst.FST.walk()`.
+You will see a lot of `.replace()` of nodes while `.walk()`ing them, this is allowed as `walk()` is really a
+`transform()` function, see `fst.fst.FST.walk()` for more details.
 
 To be able to execute the examples, import this.
 
@@ -205,10 +205,8 @@ Function:
 >>> def pull_out_inner_funcs_safely(src):
 ...     fst = FST(src, 'exec')
 ...
-...     for f in fst.walk():
-...         if (f.is_funcdef
-...             and (scope := f.parent_named_scope()).is_funcdef  # func in a func
-...         ):
+...     for f in fst.walk({FunctionDef, AsyncFunctionDef}):
+...         if (parent_scope := f.parent_named_scope()).is_funcdef:  # func in a func
 ...             func_name = f.name
 ...             syms = f.scope_symbols(full=True)
 ...
@@ -221,29 +219,28 @@ Function:
 ...                 continue
 ...
 ...             # check if any function args defaults use variables
-...             if any(getattr(g.a, 'ctx', None).__class__ is Load
-...                    for g in f.args.walk()
-...             ):
+...             if next(f.args.walk(Name), False):
 ...                 continue
 ...
 ...             # build global name from enclosing scopes
-...             glob_name = f'{scope.name}_{func_name}'
+...             global_name = f'{parent_scope.name}_{func_name}'
+...             top_scope = parent_scope
 ...
-...             while parent_scope := scope.parent_named_scope(mod=False):
-...                 scope = parent_scope
-...                 glob_name = f'{scope.name}_{glob_name}'
+...             while up_scope := top_scope.parent_named_scope(mod=False):
+...                 top_scope = up_scope
+...                 global_name = f'{top_scope.name}_{global_name}'
 ...
 ...             # replace all occurrences of original inner name with new global one
 ...             # we do this first so that it includes the function being moved
-...             for g in f.parent.walk(self_=False):
-...                 if g.is_Name and g.id == func_name:
-...                     g.replace(glob_name)
+...             for g in parent_scope.walk(Name):
+...                 if g.id == func_name:
+...                     g.replace(global_name)
 ...
 ...             f = f.cut()
-...             f.name = glob_name
+...             f.name = global_name
 ...
-...             # safe to insert before walked nodes above
-...             fst.body.insert(f, scope.pfield.idx, pep8space=1)
+...             # insert just before our top-level scope
+...             fst.body.insert(f, top_scope.pfield.idx, pep8space=1)
 ...
 ...     return fst.src
 ```
@@ -885,22 +882,22 @@ Module - ROOT 0,0..2,22
 
 ## Normalize docstrings
 
-This is just a side effect of how put and indentation works. Its not full proper docstring fixing, for that could just
-get the string from the `.docstr` property and format using anything then put as a python multiline. There are also
-`fst.fst.FST.get_docstr()` and `fst.fst.FST.put_docstr()`.
+`get_docstr()` gives you a normal string and `put_docstr()` puts it with appropriate formatting for a docstring. In this
+case we also pass `reinsert=True` because we specifically want it to remove and reinsert the docstring expression so
+that it precedes any comments. Otherwise it just replaces the docstring in the location where it currently is.
 
 ```py
 >>> src = """
 ... class cls:
 ...     # docstr should be before this
-...     \"\"\"Some stupid docstr.\"\"\"  # what is this?!?
+...     "Some\\nunformatted\\ndocstr."  # what is this?!?
 ...
 ...     def method(self):
 ...
 ...         \"\"\"I'm not
 ...     even properly
-... aligned!!!
-...         Or am I?\"\"\"
+... aligned!!! \\U0001F92a
+...         Or am I\\x3f\"\"\"
 ...         # comment
 ...
 ...         pass
@@ -915,8 +912,7 @@ Function:
 ...
 ...     for f in fst.walk():
 ...         if f.has_docstr:
-...             f.put(f.get(0, cut=True, trivia=(False, False)),
-...                   0, 0, trivia=(False, False))
+...             f.put_docstr(f.get_docstr(), reinsert=True)
 ...
 ...     return fst.src
 ```
@@ -927,14 +923,14 @@ Original:
 >>> pprint(src)
 class cls:
     # docstr should be before this
-    """Some stupid docstr."""  # what is this?!?
+    "Some\nunformatted\ndocstr."  # what is this?!?
  
     def method(self):
  
         """I'm not
     even properly
-aligned!!!
-        Or am I?"""
+aligned!!! \U0001F92a
+        Or am I\x3f"""
         # comment
  
         pass
@@ -944,7 +940,9 @@ Processed:
 
 ```py
 class cls:
-    """Some stupid docstr."""
+    """Some
+    unformatted
+    docstr."""
  
     # docstr should be before this
     # what is this?!?
@@ -952,7 +950,7 @@ class cls:
     def method(self):
         """I'm not
         even properly
-        aligned!!!
+        aligned!!! 🤪
         Or am I?"""
  
         # comment
@@ -1273,5 +1271,112 @@ src: '(z < 0) * -z + (z >= 0) * +z', args: (0, 10)
 10
 ```
 
+## Misc
 
+The following examples are all covered in the documentation, but in case you came here first...
+
+Traversal is in syntactic order.
+
+```py
+>>> list(f.src for f in FST('def f(a=1, b=2) -> int: pass').walk())
+['def f(a=1, b=2) -> int: pass', 'a=1, b=2', 'a', '1', 'b', '2', 'int', 'pass']
+
+>>> list(f.src for f in FST('f(a, x=1, *b, **c)').walk())
+['f(a, x=1, *b, **c)', 'f', 'a', 'x=1', '1', '*b', 'b', '**c', 'c']
+```
+
+Locations are zero based in character units, not bytes. Most nodes have a location, including ones which don't in `AST`
+nodes. Nodes that don't are `expr_context`, `boolop` (because they are one-to-many locations) and empty `arguments`.
+
+```py
+>>> FST('蟒=Æ+д').dump()
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name '蟒' Store - 0,0..0,1
+  .value BinOp - 0,2..0,5
+    .left Name 'Æ' Load - 0,2..0,3
+    .op Add - 0,3..0,4
+    .right Name 'д' Load - 0,4..0,5
+```
+
+Can zero out bodies.
+
+```py
+>>> f = FST("""
+... def func(self):  # comment
+...     pass
+... """.strip())
+
+>>> del f.body
+
+>>> print(f.src)
+def func(self):  # comment
+
+>>> f.body.append('pass')
+<<FunctionDef ROOT 0,0..1,8>.body [<Pass 1,4..1,8>]>
+
+>>> print(f.src)
+def func(self):  # comment
+    pass
+```
+
+Including non-statement.
+
+```py
+>>> f = FST('[i for i in j]')
+
+>>> del f.generators
+
+>>> print(f.src)
+[i]
+
+>>> _ = f.generators.extend('for a in b for i in a')  # "_ =" to avoid print
+
+>>> print(f.src)
+[i for a in b for i in a]
+```
+
+Use native AST.
+
+```py
+>>> f = FST('i = [a, b, c]')
+
+>>> f.targets[0] = Subscript(Name('j'), Slice(Name('x'), Name('y')))
+
+>>> f.value.elts[1:] = Name('d')
+
+>>> print(f.src)
+j[x:y] = [a, d]
+```
+
+Don't have to care if docstrings are there or not.
+
+```py
+>>> f = FST("""
+... class cls:
+...     \"\"\"docstring\"\"\"
+...     a = b
+...     c = d
+... """.strip())
+
+>>> f._body[0] = 'pass'
+
+>>> print(f.src)
+class cls:
+    """docstring"""
+    pass
+    c = d
+```
+
+Higher level slice abstraction.
+
+```py
+>>> print(FST('a < b < c')._all[:2].copy().src)
+a < b
+
+>>> f = FST('case {1: a, 2: b, **c}: pass', 'match_case')
+
+>>> print(f.pattern.get_slice(1, 3, '_all').src)
+{2: b, **c}
+```
 '''

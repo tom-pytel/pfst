@@ -12560,7 +12560,7 @@ Module - ROOT 0,0..0,25
         .asname 'e'
 '''),
 
-('', 0, None, 'names', {}, (None,
+('', 0, None, 'names', {'raw': False}, (None,
 r'''import _'''), (None,
 r'''(a)'''),
 r'''import a''', r'''
@@ -12971,7 +12971,7 @@ r'''from z import (a, c as d)'''), ('alias',
 r'''f as g'''),
 r'''**IndexError('index out of range')**'''),
 
-('', 0, None, 'names', {}, (None,
+('', 0, None, 'names', {'raw': False}, (None,
 r'''from . import _'''), (None,
 r'''(a)'''),
 r'''from . import a''', r'''

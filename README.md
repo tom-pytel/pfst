@@ -291,7 +291,8 @@ This module is not finished but functional enough that it can be useful.
 operations where it may apply (where comment may belong to expression instead of statement). Allow specification of
 trivia by line number, as well as insert location. Direct comment manipulation functions.
 
-* Finish `reconcile()`, make it use all slice operations to preserve more formatting.
+* Finish `reconcile()`. Proper comment handling, locations and deduplication. Make it use all slice operations to
+preserve more formatting.
 
 * Tree search, indentation of multiline sequences should be better, more coercion on put, different source encodings,
 code cleanups, API additions for real-world use, optimization, testing, bughunting, etc...

@@ -1367,9 +1367,11 @@ class FST:
     # Reconcile
 
     def mark(self) -> FST:  # -> self
-        """Return an object marking the current state of this `FST` tree. Used to `reconcile()` later for non-FST
-        operation changes made (changing `AST` nodes directly). Currently is just a copy of the original tree but may
-        change in the future.
+        """Create a checkpoint with data needed for a later `reconcile()`. After this function is used, no more
+        FST-native modifications should be made to the tree until after the `reconcile()`. Any changes for the
+        `reconcile()` to work must be exclusively in the `AST` tree. If any modifications are made using `FST` functions
+        then the checkpoint will be invalidated and will need to be recreated if `reconcile()` is wanted after the
+        modifications.
 
         **Returns:**
         - `self`
@@ -1391,7 +1393,8 @@ class FST:
         **Caveat:** When replacing the `AST` nodes, make sure you are replacing the nodes in the actual `AST` node
         fields, not the `.a` attribute in `FST` nodes, that won't do anything.
 
-        **Note:** This function is still a work in progress so not all comments which should be may be preserved.
+        **Note:** This functionality is still a work in progress so not all comments which should be may be preserved
+        and other comments may be duplicated.
 
         **Parameters:**
         - `options`: Only a few options are allowed for reconcile as others are managed during the process. The most
@@ -2550,13 +2553,15 @@ class FST:
 
         return '\n'.join(lines)
 
-    def put_docstr(self, text: builtins.str | None, **options) -> FST:
+    def put_docstr(self, text: builtins.str | None, reinsert: bool = False, **options) -> FST:
         """Set or delete the docstring of this node if it is a `FunctionDef`, `AsyncFunctionDef`, `ClassDef` or
         `Module`. Will replace, insert or delete the node as required. If setting, the `text` string that is passed will
         be formatted with triple quotes and indented as needed.
 
         **Parameters:**
         - `text`: The string to set as a docstring or `None` to delete.
+        - `reinsert`: If `True` then remove old docstring `Expr` first (if present) before reinserting new one. This is
+            to allow repositioning the docstring before any comments.
         - `options`: The options to use for a put if a put is done, see `options()`.
 
         **Returns:**
@@ -2584,6 +2589,11 @@ class FST:
 
         if 'trivia' not in options:
             options['trivia'] = (False, False)
+
+        if reinsert and has_docstr:  # if user wants to reinsert then delete old one first
+            self._put_slice(None, 0, 1, 'body', False, options)
+
+            has_docstr = False
 
         self._put_slice(text, 0, has_docstr, 'body', False, options)
 
@@ -3796,7 +3806,7 @@ class FST:
     def is_type_param(self) -> bool:
         """Is a `type_param` node."""
 
-        return self.a.__class__ in ASTS_LEAF_TYPE_PARAM  # here for completeness
+        return self.a.__class__ in ASTS_LEAF_TYPE_PARAM
 
     @property
     def is_stmt_or_mod(self) -> bool:
