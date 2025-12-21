@@ -151,6 +151,8 @@ from .fst_get_slice import (
     _maybe_fix_stmt_end,
 )
 
+from .fst_put_one import _maybe_fix_With_items
+
 
 # * Keep src same.
 # * Use normal AST and src where possible.
@@ -219,7 +221,7 @@ from .fst_get_slice import (
 #                                                                                  .
 # *   N    op      (Compare, 'left,ops:comparators'):      # expr,cmpop:expr*      -> _ops_comparators           _parse_expr / restrict expr or Compare
 #                                                                                  .
-#     N ao         (BoolOp, 'values'):                     # expr*                 -> BoolOp                     _parse_expr / restrict BoolOp  - interchangeable between and / or
+# *   N ao         (BoolOp, 'values'):                     # expr*                 -> BoolOp                     _parse_expr / restrict BoolOp  - interchangeable between and / or
 #                                                                                  .
 #                                                                                  .
 #                  (JoinedStr, 'values'):                  # Constant|FormattedValue*   -> JoinedStr
@@ -1368,7 +1370,10 @@ def _put_slice_With_AsyncWith_items(
             self._put_src(')', pars_end_ln, pars_end_col, pars_end_ln, pars_end_col, False)
             self._put_src('(', pars_ln, pars_col, pars_ln, pars_col, False)
 
-        if not start:  # if not adding pars then need to make sure del or put didn't join new first `withitem` with the `with`
+        else:
+            _maybe_fix_With_items(self)  # if we wound up with a tuple as the only item then need to parenthesize it because otherwise the elements will be mistaken for individual withitems on parse
+
+        if not start:  # if pars weren't added then need to make sure del or put didn't join new first `withitem` with the `with`
             ln, col, _, _ = pars.bound
 
             self._maybe_fix_joined_alnum(ln, col)

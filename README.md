@@ -2,12 +2,12 @@
 
 This module exists in order to facilitate quick and easy high level editing of Python source in the form of an `AST` tree while preserving formatting. It is meant to allow you to change Python code functionality while not having to deal with the minutiae of:
 
-- operator precedence and parentheses
-- indentation and line continuations
-- commas, semicolons, and tuple edge cases
-- comments and docstrings
-- various Python version–specific syntax quirks
-- lots more
+- Operator precedence and parentheses
+- Indentation and line continuations
+- Commas, semicolons, and tuple edge cases
+- Comments and docstrings
+- Various Python version–specific syntax quirks
+- Lots more...
 
 See [Example Recipes](https://tom-pytel.github.io/pfst/fst/docs/d12_examples.html) for more in-depth examples.
 
@@ -35,6 +35,8 @@ if a:
 ```
 
 `fst` works by adding `FST` nodes to existing `AST` nodes as an `.f` attribute which keep extra structure information, the original source, and provide the interface to format-preserving operations. Each operation through `fst` is a simultaneous edit of the `AST` tree and the source code and those are kept synchronized so that the current source will always parse to the current tree.
+
+Formatting, comments, and layout are preserved unless explicitly modified. Unparsing is lossless by default and performs no implicit normalization or stylistic rewriting.
 
 # Links
 

@@ -2449,7 +2449,7 @@ _PUT_ONE_HANDLERS = {
     (If, 'orelse'):                       (True,  None, None),  # stmt*
     (With, 'items'):                      (True,  _put_one_with_items, _onestatic_withitem_required),  # withitem*
     (With, 'body'):                       (True,  None, None),  # stmt*
-    (AsyncWith, 'items'):                 (True,  _put_one_exprish_required, _onestatic_withitem_required),  # withitem*
+    (AsyncWith, 'items'):                 (True,  _put_one_with_items, _onestatic_withitem_required),  # withitem*
     (AsyncWith, 'body'):                  (True,  None, None),  # stmt*
     (Match, 'subject'):                   (False, _put_one_exprish_required, _onestatic_expr_required),  # expr
     (Match, 'cases'):                     (True,  None, None),  # match_case*

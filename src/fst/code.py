@@ -342,6 +342,10 @@ def _coerce_as_withitem(
     code: Code, parse_params: Mapping[str, Any] = {}, *, sanitize: bool = False, coerce: bool = False
 ) -> fst.FST:
     fst_ = code_as_expr(code, parse_params, sanitize=sanitize)
+
+    if fst_.is_parenthesized_tuple() is False:
+        fst_._delimit_node()
+
     ast_ = withitem(context_expr=fst_.a)
 
     return fst.FST(ast_, fst_._lines, None, from_=fst_, lcopy=False)
