@@ -165,44 +165,40 @@ def _maybe_fix_copy(self: fst.FST, options: Mapping[str, Any]) -> None:
     ast = self.a
     ast_cls = ast.__class__
 
-    if ast_cls is If:
-        self._maybe_fix_elif()
+    if ast_cls not in ASTS_LEAF_EXPR or ast_cls in (Slice, FormattedValue, Interpolation):  # things that should not get pars
+        return
 
-    elif ast_cls in ASTS_LEAF_EXPR:
-        if ast_cls in (Slice, FormattedValue, Interpolation):  # things that should not get pars
-            return
+    self._set_ctx(Load)  # anything that is excluded by is_parsable() above (or does not have .loc) does not need this
 
-        self._set_ctx(Load)  # anything that is excluded by is_parsable() above (or does not have .loc) does not need this
+    if is_walrus := (ast_cls is NamedExpr):
+        pars = get_option_overridable('pars', 'pars_walrus', options)
+    else:
+        pars = fst.FST.get_option('pars', options)
 
-        if is_walrus := (ast_cls is NamedExpr):
-            pars = get_option_overridable('pars', 'pars_walrus', options)
-        else:
-            pars = fst.FST.get_option('pars', options)
+    if not pars:
+        return
 
-        if not pars:
-            return
+    need_pars = None
 
-        need_pars = None
-
-        if is_tuple := (ast_cls is Tuple):
-            if is_par := self._is_delimited_seq():
-                need_pars = False
-            elif any(e.__class__ is NamedExpr and not e.f.pars().n for e in ast.elts):  # unparenthesized walrus in naked tuple?
-                need_pars = True
-
-            self._maybe_add_singleton_tuple_comma(is_par)  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, even though those can't be gotten alone organically, maybe we shouldn't even bother?
-
-        elif is_walrus and not self.pars().n:
+    if is_tuple := (ast_cls is Tuple):
+        if is_par := self._is_delimited_seq():
+            need_pars = False
+        elif any(e.__class__ is NamedExpr and not e.f.pars().n for e in ast.elts):  # unparenthesized walrus in naked tuple?
             need_pars = True
 
-        if need_pars is None:
-            need_pars = not self._is_enclosed_or_line()
+        self._maybe_add_singleton_tuple_comma(is_par)  # specifically for lone '*starred' as a `Tuple` without comma from `Subscript.slice`, even though those can't be gotten alone organically, maybe we shouldn't even bother?
 
-        if need_pars:
-            if is_tuple:
-                self._delimit_node()
-            else:
-                self._parenthesize_grouping()
+    elif is_walrus and not self.pars().n:
+        need_pars = True
+
+    if need_pars is None:
+        need_pars = not self._is_enclosed_or_line()
+
+    if need_pars:
+        if is_tuple:
+            self._delimit_node()
+        else:
+            self._parenthesize_grouping()
 
 
 # ......................................................................................................................

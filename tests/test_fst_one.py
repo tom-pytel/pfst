@@ -669,6 +669,15 @@ if 1:
             self.assertEqual("f'\\n'", (f := FST(r'''f"{a:\n}"''').values[0].format_spec.copy()).src)
             f.verify()
 
+            # too many quotes in string so can't figure out which to use
+
+            if PYGE12:
+                self.assertRaises(RuntimeError, FST('''f\'\'\'{1:<{f"{f"""{f'{f\'\'\'{1}\'\'\'}'}"""}"} }\'\'\' ''').values[0].get, 'format_spec')
+
+            # type and field not in handlers list
+
+            self.assertRaises(NodeError, FST.fromsrc('x = 1  # type: int', type_comments=True).body[0].get, 'type_comment')
+
     @unittest.skipUnless(PYGE12, 'only valid for py >= 3.12')
     def test_get_format_spec(self):
         self.assertEqual('''f" {a}, 'b': {b}, 'c': {c}"''', (f := FST('''f"{'a': {a}, 'b': {b}, 'c': {c}}"''').values[0].format_spec.copy()).src)
@@ -3345,6 +3354,13 @@ f'd{t"e{f=!s:0.1f<1}"=}'
         self.assertRaises(ValueError, f.remove)
         self.assertRaises(ValueError, f.get_slice, 'value')
         self.assertRaises(ValueError, f.put_slice, 'a, b', 'value')
+
+        from fst.fst_get_one import _validate_get
+        self.assertRaises(IndexError, _validate_get, FST('i = j'), 1, 'value')
+        self.assertRaises(IndexError, _validate_get, FST('[0, 1]'), None, 'elts')
+
+        from fst.fst_get_one import _get_one_default
+        self.assertRaises(ValueError, _get_one_default, FST('i'), None, 'ctx', False, {})
 
 
 if __name__ == '__main__':
