@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- `put_src(action='offset')` exactly on `FormattedValue` or `Interpolation` debug expression will update the preceding debug string correctly
 - fix `replace()` end of sequence with empty slice while using `one=False` returns `None` instead of raising
 - fix minor type_params non-existent brackets location bug due to use of `loc` instead of `bloc`
 - fix syntax order bug in `walk()` for multiple mixed `Starred` and `keywords`, `*a, b=c, *d, e=f, etc...`.

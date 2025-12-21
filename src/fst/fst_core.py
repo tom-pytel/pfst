@@ -236,7 +236,7 @@ class _Modifying:
     field: astfield
     data:  list
 
-    def __init__(self, fst_: fst.FST, field: str | Literal[False] = False, raw: bool = False) -> None:
+    def __init__(self, fst_: fst.FST, field: str | Literal[False] = False, raw: bool | None = False) -> None:
         """Call before modifying `FST` node (even just source) to mark possible data for updates after modification.
         `.success()` should be called on a successful modification because it increments the modification count
         `_serial`. Can be used as a context manager or can just call `.enter()`, `.success()` and `.fail()` manually.
@@ -252,7 +252,8 @@ class _Modifying:
             being created and may not exist yet).
         - `field`: Name of field being modified or `False` to indicate that `self` is the child, in which case the
             parent and field will be gotten from `self`.
-        - `raw`: Whether this is going to be a raw modification or not.
+        - `raw`: Whether this is going to be a raw modification or not. Special value of `None` is an override for
+            python version < 3.12 to allow the modification, used for specical case of `put_src(action='offset'`).
         """
 
         self._params = fst_, field, raw
@@ -290,9 +291,12 @@ class _Modifying:
                 if fst_ := fst_.parent:
                     field = pfield.name
 
-            self.fst = fst_ if fst_ and fst_.a.__class__ in ASTS_LEAF_EXPR else False
+            if not fst_ or fst_.a.__class__ not in ASTS_LEAF_EXPR:
+                fst_ = False
 
-            if self.fst:
+            self.fst = fst_
+
+            if fst_:
                 self.field = field
                 self.data = data = []  # [(FormattedValue or Interpolation FST, len(dbg_str) or None, bool do val_str), ...]
 
@@ -417,7 +421,7 @@ class _Modifying:
         if root in _MODIFYING:
             raise RuntimeError(f'nested modification not allowed on {root}')
 
-        if not raw:
+        if raw is False:
             while not isinstance(a := fst_.a, (stmt, pattern, match_case, ExceptHandler)):  # don't allow modification if inside an f-string because before 3.12 they were very fragile
                 if a.__class__ is JoinedStr:
                     raise NotImplementedError('put inside JoinedStr not implemented on python < 3.12')
@@ -1378,23 +1382,8 @@ def _get_indentable_lns(
     return lns
 
 
-def _modifying(self: fst.FST, field: str | Literal[False] = False, raw: bool = False) -> _Modifying:
-    """Call before modifying `FST` node (even just source) to mark possible data for updates after modification. This
-    function just collects information so is safe to call without ever calling `.success()` method of the return value
-    in case of failure, though it should be called on success. In fact, this method is not called if the return is used
-    as a context manager and is exited with an exception.
-
-    **Parameters:**
-    - `self`: Parent of or actual node being modified, depending on value of `field` (because actual child may be being
-        created and may not exist yet).
-    - `field`: Name of field being modified or `False` to indicate that `self` is the child, in which case the parent
-        and field will be gotten from `self`.
-    - `raw`: Whether this is going to be a raw modification or not.
-
-    **Returns:**
-    - `_Modifying`: Can be used as a context manager or `.enter()`ed manually, in which case `.success()` should be
-        called on success, and nothing if no modification was performed.
-    """
+def _modifying(self: fst.FST, field: str | Literal[False] = False, raw: bool | None = False) -> _Modifying:
+    """See `_Modifying`."""
 
     return _Modifying(self, field, raw)
 

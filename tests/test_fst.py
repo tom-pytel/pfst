@@ -4701,6 +4701,28 @@ if 1:
 
         self.assertRaises(ValueError, FST('a').ctx.put_src, '', 0, 0, 0, 0, 'offset')
 
+        # special case of modifying exactly inside FormattedValue or Interpolation
+
+        if PYGE12:
+            f = FST('f"{a+b=}"')
+            f.values[1].put_src(' ', 0, 7, 0, 7, 'offset')
+            f.values[1].put_src(' ', 0, 6, 0, 6, 'offset')
+            f.values[1].put_src(' ', 0, 5, 0, 5, 'offset')
+            f.values[1].put_src(' ', 0, 4, 0, 4, 'offset')
+            f.values[1].put_src(' ', 0, 3, 0, 3, 'offset')
+            f.verify()
+            self.assertEqual(f.values[0].value, ' a + b = ')
+
+        if PYGE14:
+            f = FST('t"{a+b=}"')
+            f.values[1].put_src(' ', 0, 7, 0, 7, 'offset')
+            f.values[1].put_src(' ', 0, 6, 0, 6, 'offset')
+            f.values[1].put_src(' ', 0, 5, 0, 5, 'offset')
+            f.values[1].put_src(' ', 0, 4, 0, 4, 'offset')
+            f.values[1].put_src(' ', 0, 3, 0, 3, 'offset')
+            f.verify()
+            self.assertEqual(f.values[0].value, ' a + b = ')
+
     def test_dedent_multiline_strings(self):
         f = parse('''
 class cls:
@@ -6407,168 +6429,6 @@ class cls:
         def delitem(): del v[::2]
         self.assertRaises(IndexError, delitem)
 
-    def test_parents_and_their_is_type_predicates(self):
-        fst = parse('''
-match a:
-    case 1:
-        try:
-            pass
-        except Exception:
-            class cls:
-                def f():
-                    return [lambda: None for i in ()]
-            '''.strip())
-
-        f = fst.body[0].cases[0].body[0].handlers[0].body[0].body[0].body[0].value.elt.body.f
-        self.assertEqual(f.src, 'None')
-
-        self.assertIsInstance((f := f.parent_scope()).a, Lambda)
-        self.assertTrue(f.is_anon_scope)
-        self.assertFalse(f.is_named_scope)
-        self.assertFalse(f.is_named_scope_or_mod)
-        self.assertTrue(f.is_scope)
-        self.assertTrue(f.is_scope_or_mod)
-        self.assertFalse(f.is_block)
-        self.assertFalse(f.is_block_or_mod)
-        self.assertFalse(f.is_stmt)
-        self.assertFalse(f.is_stmt_or_mod)
-        self.assertFalse(f.is_stmtish)
-        self.assertFalse(f.is_stmtish_or_mod)
-        self.assertFalse(f.is_mod)
-
-        self.assertIsInstance((f := f.parent_scope()).a, ListComp)
-        self.assertTrue(f.is_anon_scope)
-        self.assertFalse(f.is_named_scope)
-        self.assertFalse(f.is_named_scope_or_mod)
-        self.assertTrue(f.is_scope)
-        self.assertTrue(f.is_scope_or_mod)
-        self.assertFalse(f.is_block)
-        self.assertFalse(f.is_block_or_mod)
-        self.assertFalse(f.is_stmt)
-        self.assertFalse(f.is_stmt_or_mod)
-        self.assertFalse(f.is_stmtish)
-        self.assertFalse(f.is_stmtish_or_mod)
-        self.assertFalse(f.is_mod)
-
-        self.assertIsInstance((f := f.parent_named_scope()).a, FunctionDef)
-        self.assertFalse(f.is_anon_scope)
-        self.assertTrue(f.is_named_scope)
-        self.assertTrue(f.is_named_scope_or_mod)
-        self.assertTrue(f.is_scope)
-        self.assertTrue(f.is_scope_or_mod)
-        self.assertTrue(f.is_block)
-        self.assertTrue(f.is_block_or_mod)
-        self.assertTrue(f.is_stmt)
-        self.assertTrue(f.is_stmt_or_mod)
-        self.assertTrue(f.is_stmtish)
-        self.assertTrue(f.is_stmtish_or_mod)
-        self.assertFalse(f.is_mod)
-
-        self.assertIsInstance((f := f.parent_named_scope()).a, ClassDef)
-        self.assertFalse(f.is_anon_scope)
-        self.assertTrue(f.is_named_scope)
-        self.assertTrue(f.is_named_scope_or_mod)
-        self.assertTrue(f.is_scope)
-        self.assertTrue(f.is_scope_or_mod)
-        self.assertTrue(f.is_block)
-        self.assertTrue(f.is_block_or_mod)
-        self.assertTrue(f.is_stmt)
-        self.assertTrue(f.is_stmtish)
-        self.assertTrue(f.is_stmtish_or_mod)
-        self.assertFalse(f.is_mod)
-
-        self.assertIsInstance((f := f.parent_stmtish()).a, ExceptHandler)
-        self.assertFalse(f.is_anon_scope)
-        self.assertFalse(f.is_named_scope)
-        self.assertFalse(f.is_named_scope_or_mod)
-        self.assertFalse(f.is_scope)
-        self.assertFalse(f.is_scope_or_mod)
-        self.assertTrue(f.is_block)
-        self.assertTrue(f.is_block_or_mod)
-        self.assertFalse(f.is_stmt)
-        self.assertFalse(f.is_stmt_or_mod)
-        self.assertTrue(f.is_stmtish)
-        self.assertTrue(f.is_stmtish_or_mod)
-        self.assertFalse(f.is_mod)
-
-        self.assertIsInstance((f := f.parent_stmt()).a, Try)
-        self.assertFalse(f.is_anon_scope)
-        self.assertFalse(f.is_named_scope)
-        self.assertFalse(f.is_named_scope_or_mod)
-        self.assertFalse(f.is_scope)
-        self.assertFalse(f.is_scope_or_mod)
-        self.assertTrue(f.is_block)
-        self.assertTrue(f.is_block_or_mod)
-        self.assertTrue(f.is_stmt)
-        self.assertTrue(f.is_stmt_or_mod)
-        self.assertTrue(f.is_stmtish)
-        self.assertFalse(f.is_mod)
-
-        self.assertIsInstance((f := f.parent_stmtish()).a, match_case)
-        self.assertFalse(f.is_anon_scope)
-        self.assertFalse(f.is_named_scope)
-        self.assertFalse(f.is_named_scope_or_mod)
-        self.assertFalse(f.is_scope)
-        self.assertFalse(f.is_scope_or_mod)
-        self.assertTrue(f.is_block)
-        self.assertTrue(f.is_block_or_mod)
-        self.assertFalse(f.is_stmt)
-        self.assertFalse(f.is_stmt_or_mod)
-        self.assertTrue(f.is_stmtish)
-        self.assertTrue(f.is_stmtish_or_mod)
-        self.assertFalse(f.is_mod)
-
-        self.assertIsInstance((f := f.parent_block()).a, Match)
-        self.assertFalse(f.is_anon_scope)
-        self.assertFalse(f.is_named_scope)
-        self.assertFalse(f.is_named_scope_or_mod)
-        self.assertFalse(f.is_scope)
-        self.assertFalse(f.is_scope_or_mod)
-        self.assertTrue(f.is_block)
-        self.assertTrue(f.is_block_or_mod)
-        self.assertTrue(f.is_stmt)
-        self.assertTrue(f.is_stmt_or_mod)
-        self.assertTrue(f.is_stmtish)
-        self.assertTrue(f.is_stmtish_or_mod)
-        self.assertFalse(f.is_mod)
-
-        self.assertIsInstance((f := f.parent_scope()).a, Module)
-        self.assertFalse(f.is_anon_scope)
-        self.assertFalse(f.is_named_scope)
-        self.assertTrue(f.is_named_scope_or_mod)
-        self.assertFalse(f.is_scope)
-        self.assertTrue(f.is_scope_or_mod)
-        self.assertFalse(f.is_block)
-        self.assertTrue(f.is_block_or_mod)
-        self.assertFalse(f.is_stmt)
-        self.assertTrue(f.is_stmt_or_mod)
-        self.assertFalse(f.is_stmtish)
-        self.assertTrue(f.is_stmtish_or_mod)
-        self.assertTrue(f.is_mod)
-
-        self.assertIs((f := FST('i = 1')).parent_stmt(self_=True), f)
-        self.assertIs((f := FST('except: pass')).parent_stmtish(self_=True), f)
-        self.assertIs((f := FST('if 1: pass')).parent_block(self_=True), f)
-        self.assertIs((f := FST('class cls: pass')).parent_scope(self_=True), f)
-        self.assertIs((f := FST('def f(): pass')).parent_named_scope(self_=True), f)
-        self.assertIs((f := FST('a as b', 'withitem')).parent_non_expr(self_=True), f)
-        self.assertIs((f := FST('a as b', 'pattern')).parent_pattern(self_=True), f)
-
-        # f and t-strings
-
-        f = FST('f"{1}"')
-
-        self.assertTrue(f.is_ftstr)
-        self.assertIs(f.values[0].value.parent_ftstr(), f)
-        self.assertIs(f.parent_ftstr(self_=True), f)
-
-        if PYGE14:
-            f = FST('t"{1}"')
-
-            self.assertTrue(f.is_ftstr)
-            self.assertIs(f.values[0].value.parent_ftstr(), f)
-            self.assertIs(f.parent_ftstr(self_=True), f)
-
     def test_options(self):
         new = dict(
             docstr    = 'test_docstr',
@@ -8034,6 +7894,168 @@ if 1:
             del f.default_value
             f.default_value = None
             self.assertRaises(RuntimeError, setattr, f, 'default_value', True)
+
+    def test_parents_and_their_is_type_predicates(self):
+        fst = parse('''
+match a:
+    case 1:
+        try:
+            pass
+        except Exception:
+            class cls:
+                def f():
+                    return [lambda: None for i in ()]
+            '''.strip())
+
+        f = fst.body[0].cases[0].body[0].handlers[0].body[0].body[0].body[0].value.elt.body.f
+        self.assertEqual(f.src, 'None')
+
+        self.assertIsInstance((f := f.parent_scope()).a, Lambda)
+        self.assertTrue(f.is_anon_scope)
+        self.assertFalse(f.is_named_scope)
+        self.assertFalse(f.is_named_scope_or_mod)
+        self.assertTrue(f.is_scope)
+        self.assertTrue(f.is_scope_or_mod)
+        self.assertFalse(f.is_block)
+        self.assertFalse(f.is_block_or_mod)
+        self.assertFalse(f.is_stmt)
+        self.assertFalse(f.is_stmt_or_mod)
+        self.assertFalse(f.is_stmtish)
+        self.assertFalse(f.is_stmtish_or_mod)
+        self.assertFalse(f.is_mod)
+
+        self.assertIsInstance((f := f.parent_scope()).a, ListComp)
+        self.assertTrue(f.is_anon_scope)
+        self.assertFalse(f.is_named_scope)
+        self.assertFalse(f.is_named_scope_or_mod)
+        self.assertTrue(f.is_scope)
+        self.assertTrue(f.is_scope_or_mod)
+        self.assertFalse(f.is_block)
+        self.assertFalse(f.is_block_or_mod)
+        self.assertFalse(f.is_stmt)
+        self.assertFalse(f.is_stmt_or_mod)
+        self.assertFalse(f.is_stmtish)
+        self.assertFalse(f.is_stmtish_or_mod)
+        self.assertFalse(f.is_mod)
+
+        self.assertIsInstance((f := f.parent_named_scope()).a, FunctionDef)
+        self.assertFalse(f.is_anon_scope)
+        self.assertTrue(f.is_named_scope)
+        self.assertTrue(f.is_named_scope_or_mod)
+        self.assertTrue(f.is_scope)
+        self.assertTrue(f.is_scope_or_mod)
+        self.assertTrue(f.is_block)
+        self.assertTrue(f.is_block_or_mod)
+        self.assertTrue(f.is_stmt)
+        self.assertTrue(f.is_stmt_or_mod)
+        self.assertTrue(f.is_stmtish)
+        self.assertTrue(f.is_stmtish_or_mod)
+        self.assertFalse(f.is_mod)
+
+        self.assertIsInstance((f := f.parent_named_scope()).a, ClassDef)
+        self.assertFalse(f.is_anon_scope)
+        self.assertTrue(f.is_named_scope)
+        self.assertTrue(f.is_named_scope_or_mod)
+        self.assertTrue(f.is_scope)
+        self.assertTrue(f.is_scope_or_mod)
+        self.assertTrue(f.is_block)
+        self.assertTrue(f.is_block_or_mod)
+        self.assertTrue(f.is_stmt)
+        self.assertTrue(f.is_stmtish)
+        self.assertTrue(f.is_stmtish_or_mod)
+        self.assertFalse(f.is_mod)
+
+        self.assertIsInstance((f := f.parent_stmtish()).a, ExceptHandler)
+        self.assertFalse(f.is_anon_scope)
+        self.assertFalse(f.is_named_scope)
+        self.assertFalse(f.is_named_scope_or_mod)
+        self.assertFalse(f.is_scope)
+        self.assertFalse(f.is_scope_or_mod)
+        self.assertTrue(f.is_block)
+        self.assertTrue(f.is_block_or_mod)
+        self.assertFalse(f.is_stmt)
+        self.assertFalse(f.is_stmt_or_mod)
+        self.assertTrue(f.is_stmtish)
+        self.assertTrue(f.is_stmtish_or_mod)
+        self.assertFalse(f.is_mod)
+
+        self.assertIsInstance((f := f.parent_stmt()).a, Try)
+        self.assertFalse(f.is_anon_scope)
+        self.assertFalse(f.is_named_scope)
+        self.assertFalse(f.is_named_scope_or_mod)
+        self.assertFalse(f.is_scope)
+        self.assertFalse(f.is_scope_or_mod)
+        self.assertTrue(f.is_block)
+        self.assertTrue(f.is_block_or_mod)
+        self.assertTrue(f.is_stmt)
+        self.assertTrue(f.is_stmt_or_mod)
+        self.assertTrue(f.is_stmtish)
+        self.assertFalse(f.is_mod)
+
+        self.assertIsInstance((f := f.parent_stmtish()).a, match_case)
+        self.assertFalse(f.is_anon_scope)
+        self.assertFalse(f.is_named_scope)
+        self.assertFalse(f.is_named_scope_or_mod)
+        self.assertFalse(f.is_scope)
+        self.assertFalse(f.is_scope_or_mod)
+        self.assertTrue(f.is_block)
+        self.assertTrue(f.is_block_or_mod)
+        self.assertFalse(f.is_stmt)
+        self.assertFalse(f.is_stmt_or_mod)
+        self.assertTrue(f.is_stmtish)
+        self.assertTrue(f.is_stmtish_or_mod)
+        self.assertFalse(f.is_mod)
+
+        self.assertIsInstance((f := f.parent_block()).a, Match)
+        self.assertFalse(f.is_anon_scope)
+        self.assertFalse(f.is_named_scope)
+        self.assertFalse(f.is_named_scope_or_mod)
+        self.assertFalse(f.is_scope)
+        self.assertFalse(f.is_scope_or_mod)
+        self.assertTrue(f.is_block)
+        self.assertTrue(f.is_block_or_mod)
+        self.assertTrue(f.is_stmt)
+        self.assertTrue(f.is_stmt_or_mod)
+        self.assertTrue(f.is_stmtish)
+        self.assertTrue(f.is_stmtish_or_mod)
+        self.assertFalse(f.is_mod)
+
+        self.assertIsInstance((f := f.parent_scope()).a, Module)
+        self.assertFalse(f.is_anon_scope)
+        self.assertFalse(f.is_named_scope)
+        self.assertTrue(f.is_named_scope_or_mod)
+        self.assertFalse(f.is_scope)
+        self.assertTrue(f.is_scope_or_mod)
+        self.assertFalse(f.is_block)
+        self.assertTrue(f.is_block_or_mod)
+        self.assertFalse(f.is_stmt)
+        self.assertTrue(f.is_stmt_or_mod)
+        self.assertFalse(f.is_stmtish)
+        self.assertTrue(f.is_stmtish_or_mod)
+        self.assertTrue(f.is_mod)
+
+        self.assertIs((f := FST('i = 1')).parent_stmt(self_=True), f)
+        self.assertIs((f := FST('except: pass')).parent_stmtish(self_=True), f)
+        self.assertIs((f := FST('if 1: pass')).parent_block(self_=True), f)
+        self.assertIs((f := FST('class cls: pass')).parent_scope(self_=True), f)
+        self.assertIs((f := FST('def f(): pass')).parent_named_scope(self_=True), f)
+        self.assertIs((f := FST('a as b', 'withitem')).parent_non_expr(self_=True), f)
+        self.assertIs((f := FST('a as b', 'pattern')).parent_pattern(self_=True), f)
+
+        # f and t-strings
+
+        f = FST('f"{1}"')
+
+        self.assertTrue(f.is_ftstr)
+        self.assertIs(f.values[0].value.parent_ftstr(), f)
+        self.assertIs(f.parent_ftstr(self_=True), f)
+
+        if PYGE14:
+            f = FST('t"{1}"')
+
+            self.assertTrue(f.is_ftstr)
+            self.assertIs(f.values[0].value.parent_ftstr(), f)
+            self.assertIs(f.parent_ftstr(self_=True), f)
 
     def test_misc_predicates(self):
         f = FST('a = (b, c)')

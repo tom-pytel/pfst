@@ -80,13 +80,19 @@ class TestFSTSlice(unittest.TestCase):
             if not case.options.get('raw') or rest[1].startswith('**'):
                 continue
 
-            f        = _make_fst(case.code, case.attr)
-            field, _ = fixup_field_body(f.a, case.field, True)
-            loc      = _loc_slice_raw_put(f, case.start, case.stop, field)[:4]
-            src      = _unfmt_code(r0 if isinstance(r0 := rest[0], str) else r0[1])
+            try:
+                f        = _make_fst(case.code, case.attr)
+                field, _ = fixup_field_body(f.a, case.field, True)
+                loc      = _loc_slice_raw_put(f, case.start, case.stop, field)[:4]
+                src      = _unfmt_code(r0 if isinstance(r0 := rest[0], str) else r0[1])
 
-            f.put_src(None if src == '**DEL**' else src, *loc)
-            f.root.verify(raise_=True)
+                f.put_src(None if src == '**DEL**' else src, *loc)
+                f.root.verify(raise_=True)
+
+            except Exception:
+                print(case.id())
+
+                raise
 
             if f.root.src != rest[1]:
                 raise RuntimeError(f'put_src and put raw FST src are not identical, {case.id()}\n{f.root.src}\n...\n{rest[1]}')

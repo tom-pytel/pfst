@@ -185,7 +185,7 @@ def _reparse_raw_stmtish(self: fst.FST, new_lines: list[str], ln: int, col: int,
         elif (off_after_try := pcol - 4) < 0:
             raise NotImplementedError('degenerate statement starts at (0,1), (0,2) or (0,3)')
 
-        else:
+        else:  # the `try` is just the shortest block open header, doesn't say anything about the stmt
             copy_lines = ([bistr(f"try:{' ' * off_after_try}{lines[pln][pcol:]}")] +
                           lines[pln + 1 : pend_ln + 1] +
                           [bistr('finally: pass')])

@@ -47,6 +47,7 @@ from .asttypes import (
     ASTS_LEAF_IMPORT,
     ASTS_LEAF_COMP,
     ASTS_LEAF_FTSTR,
+    ASTS_LEAF_FTSTR_FMT_VALUE,
     ASTS_LEAF_MAYBE_DOCSTR,
     ASTS_LEAF__SLICE,
     AST,
@@ -2172,14 +2173,16 @@ class FST:
         ln, col, end_ln, end_col = clip_src_loc(self, ln, col, end_ln, end_col)
 
         if action == 'reparse':
-            parent = root.find_contains_loc(ln, col, end_ln, end_col, False) or root
+            allow_exact = self.a.__class__ in ASTS_LEAF_STMTISH
+            parent = root.find_contains_loc(ln, col, end_ln, end_col, allow_exact) or root  # we will get either the exact statement-ish node if the location matches otherwise a parent, always a parent if the node is not statement-ish
 
-            return parent._reparse_raw(code, ln, col, end_ln, end_col)
+            with parent._modifying(False, True):
+                return parent._reparse_raw(code, ln, col, end_ln, end_col)
 
         put_lines = code_as_lines(code)
 
-        if action == 'offset':
-            # TODO: there may be issues with certain zero-length trees but I can't think of any that might occur in normal usage
+        if action == 'offset':  # self matters in this mode!
+            # TODO: there may be issues with certain zero-length trees but I can't think of any that might occur in normal usage, not arguments because at zero-length it has no loc
 
             if not (loc := self.loc):
                 raise ValueError("cannot be called with 'offset' on a node which has no location")
@@ -2193,9 +2196,12 @@ class FST:
             ):
                 raise ValueError("location with 'offset' must be at or inside location of node")
 
-            params_offset = root._put_src(put_lines, ln, col, end_ln, end_col, True, False, self)
+            field = 'value' if self.a.__class__ in ASTS_LEAF_FTSTR_FMT_VALUE else False  # the 'value' is so that modifying spacing inside a debug string updates its preceding string Constant, don't need to do this for 'reparse'
 
-            self._offset(*params_offset, False, True, self_=False)
+            with self._modifying(field, None):  # we use raw=None to signal that the modification should be allowed on py < 3.12 as it only offsets
+                params_offset = root._put_src(put_lines, ln, col, end_ln, end_col, True, False, self)
+
+                self._offset(*params_offset, False, True, self_=False)
 
         elif action is None:
             root._put_src(put_lines, ln, col, end_ln, end_col)

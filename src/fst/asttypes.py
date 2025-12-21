@@ -388,6 +388,7 @@ ASTS_LEAF_IMPORT             = frozenset([Import, ImportFrom])
 
 ASTS_LEAF_COMP               = frozenset([ListComp, SetComp, DictComp, GeneratorExp])
 ASTS_LEAF_FTSTR              = frozenset([JoinedStr, TemplateStr])
+ASTS_LEAF_FTSTR_FMT_VALUE    = frozenset([FormattedValue, Interpolation])
 
 ASTS_LEAF_CMPOP_TWO_WORD     = frozenset([IsNot, NotIn])
 ASTS_LEAF_CMPOP_ONE_WORD     = ASTS_LEAF_CMPOP - ASTS_LEAF_CMPOP_TWO_WORD
