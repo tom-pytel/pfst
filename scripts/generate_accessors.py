@@ -174,10 +174,8 @@ def {field}(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
 
     if isinstance(child := self.a.{field}, list):
         return fstview(self, {field!r})
-    elif isinstance(child, AST):
-        return getattr(child, 'f', None)
 
-    return child
+    return child.f
 
 @{field}.setter
 def {field}(self: 'fst.FST', code: Code | None) -> None:

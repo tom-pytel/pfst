@@ -101,10 +101,8 @@ def body(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
 
     if isinstance(child := self.a.body, list):
         return fstview(self, 'body')
-    elif isinstance(child, AST):
-        return getattr(child, 'f', None)
 
-    return child
+    return child.f
 
 @body.setter
 def body(self: 'fst.FST', code: Code | None) -> None:
@@ -241,10 +239,8 @@ def args(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
 
     if isinstance(child := self.a.args, list):
         return fstview(self, 'args')
-    elif isinstance(child, AST):
-        return getattr(child, 'f', None)
 
-    return child
+    return child.f
 
 @args.setter
 def args(self: 'fst.FST', code: Code | None) -> None:
@@ -428,10 +424,8 @@ def orelse(self: 'fst.FST') -> fstview | Union['fst.FST', None, constant]:
 
     if isinstance(child := self.a.orelse, list):
         return fstview(self, 'orelse')
-    elif isinstance(child, AST):
-        return getattr(child, 'f', None)
 
-    return child
+    return child.f
 
 @orelse.setter
 def orelse(self: 'fst.FST', code: Code | None) -> None:
