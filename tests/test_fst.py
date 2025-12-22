@@ -2798,7 +2798,11 @@ def f():
 
                 if isinstance(a := fst.a, Expression):
                     a = a.body
+
                 elif isinstance(a, (Module, Interactive)):
+                    if not a.body:
+                        continue
+
                     a = a.body[0]
 
                 if end_col_offset := getattr(a, 'end_col_offset', None):

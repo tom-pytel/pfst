@@ -14382,7 +14382,7 @@ _match_cases - ROOT 0,0..1,12
 ('targets[0]', None, None, None, {'raw': True}, ('_Assign_targets',
 r'''a = b = c ='''), (None,
 r'''**FIX ME**'''),
-r'''**SyntaxError('invalid Assign targets slice')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('targets[0]', None, None, None, {'raw': True, 'to': 'targets[1]'}, ('_Assign_targets',
 r'''a = b = c ='''), (None,
@@ -14516,7 +14516,7 @@ Assign - ROOT 0,0..0,5
 ('', None, None, 'value', {}, (None,
 r'''i = v'''), ('withitem',
 r'''x as y'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 ],
 
 'coerce_to_arguments': [  # ................................................................................

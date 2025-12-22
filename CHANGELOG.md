@@ -27,6 +27,7 @@
 
 ### Updated
 
+- pass through more specific `SyntaxError` information from our extended parsing
 - filled out test coverage for all modules
 - simplified `reconcile()` usage, user doesn't need to preserve explicit "marked" copy
 - add negative and `'end'` index options to `get_src()` and `put_src()`

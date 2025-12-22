@@ -17063,122 +17063,122 @@ r'''**NodeError('cannot put Slice into non-root non-unparenthesized-slice Tuple'
 ('', 0, 'end', None, {}, (None,
 r'''[a, b, c]'''), ('Slice',
 r'''x:y:z'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, 'end', None, {}, (None,
 r'''[a, b, c]'''), ('expr_slice',
 r'''x:y:z,'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('value', 0, 'end', None, {}, ('Expr',
 r'''[a, b, c]'''), ('Slice',
 r'''x:y:z'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('value', 0, 'end', None, {}, ('Expr',
 r'''[a, b, c]'''), ('expr_slice',
 r'''x:y:z,'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('body[0].value', 0, 'end', None, {}, ('exec',
 r'''[a, b, c]'''), ('Slice',
 r'''x:y:z'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('body[0].value', 0, 'end', None, {}, ('exec',
 r'''[a, b, c]'''), ('expr_slice',
 r'''x:y:z,'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('slice', 0, 'end', None, {'_verify': False}, (None,
 r'''s[[a, b, c]]'''), ('Slice',
 r'''x:y:z'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('slice', 0, 'end', None, {'_verify': False}, (None,
 r'''s[[a, b, c]]'''), ('expr_slice',
 r'''x:y:z,'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, 'end', None, {}, (None,
 r'''{a, b, c}'''), ('Slice',
 r'''x:y:z'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, 'end', None, {}, (None,
 r'''{a, b, c}'''), ('expr_slice',
 r'''x:y:z,'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('value', 0, 'end', None, {}, ('Expr',
 r'''{a, b, c}'''), ('Slice',
 r'''x:y:z'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('value', 0, 'end', None, {}, ('Expr',
 r'''{a, b, c}'''), ('expr_slice',
 r'''x:y:z,'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('body[0].value', 0, 'end', None, {}, ('exec',
 r'''{a, b, c}'''), ('Slice',
 r'''x:y:z'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('body[0].value', 0, 'end', None, {}, ('exec',
 r'''{a, b, c}'''), ('expr_slice',
 r'''x:y:z,'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('slice', 0, 'end', None, {'_verify': False}, (None,
 r'''s[{a, b, c}]'''), ('Slice',
 r'''x:y:z'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('slice', 0, 'end', None, {'_verify': False}, (None,
 r'''s[{a, b, c}]'''), ('expr_slice',
 r'''x:y:z,'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, 'end', None, {}, (None,
 r'''del a, b, c'''), ('Slice',
 r'''x:y:z'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, 'end', None, {}, (None,
 r'''del a, b, c'''), ('expr_slice',
 r'''x:y:z,'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('body[0]', 0, 'end', None, {}, ('exec',
 r'''del a, b, c'''), ('Slice',
 r'''x:y:z'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('body[0]', 0, 'end', None, {}, ('exec',
 r'''del a, b, c'''), ('expr_slice',
 r'''x:y:z,'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, 'end', None, {}, (None,
 r'''global a, b, c'''), ('Slice',
 r'''x:y:z'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 0, 'end', None, {}, (None,
 r'''global a, b, c'''), ('expr_slice',
 r'''x:y:z,'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('body[0]', 0, 'end', None, {}, ('exec',
 r'''global a, b, c'''), ('Slice',
 r'''x:y:z'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('body[0]', 0, 'end', None, {}, ('exec',
 r'''global a, b, c'''), ('expr_slice',
 r'''x:y:z,'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 ],
 
 'Tuple_elts': [  # ................................................................................
@@ -25241,7 +25241,7 @@ ClassDef - ROOT 0,0..0,32
 ('', 0, 'end', 'bases', {'one': True}, (None,
 r'''class cls: pass'''), (None,
 r'''*not a, *b or c'''),
-r'''**ParseError('expecting single argumnent-like expression')**'''),
+r'''**ParseError('expecting single expression (arglike)')**'''),
 
 ('', 0, 2, 'bases', {}, (None,
 r'''class cls(a, b, c): pass'''), (None,
@@ -27607,7 +27607,7 @@ or # right
 c
 '''), (None,
 r'''or x'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 2, 3, None, {}, (None, r'''
 a
@@ -27617,7 +27617,7 @@ or # right
 c
 '''), (None,
 r'''x or'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 1, 2, None, {}, (None, r'''
 a
@@ -28023,7 +28023,7 @@ If - ROOT 0,0..5,5
 ('', 1, 2, None, {'one': True}, (None,
 r'''a or b or c'''), (None,
 r'''x or'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 1, 2, None, {}, (None,
 r'''a or b or c'''), (None,
@@ -29221,7 +29221,7 @@ b
 c
 '''), (None,
 r'''== x'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 2, 3, None, {}, (None, r'''
 a
@@ -29231,7 +29231,7 @@ b
 c
 '''), (None,
 r'''x =='''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 1, 2, None, {}, (None, r'''
 a
@@ -29743,7 +29743,7 @@ If - ROOT 0,0..5,5
 ('', 1, 2, None, {'one': True}, (None,
 r'''a < b > c'''), (None,
 r'''x or'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('', 1, 1, None, {'one': True}, (None,
 r'''a < b > c'''), (None,
@@ -30646,7 +30646,7 @@ Call - ROOT 0,0..0,21
 ('', 0, 2, None, {'one': True}, (None,
 r'''call()'''), (None,
 r'''*not a, *b or c'''),
-r'''**ParseError('expecting single argumnent-like expression')**'''),
+r'''**ParseError('expecting single expression (arglike)')**'''),
 
 ('', 0, 2, None, {}, (None,
 r'''call(a, b, c)'''), (None,

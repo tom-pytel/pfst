@@ -10,6 +10,10 @@ from fst.asttypes import *
 DATA_PARSE_AUTOGEN = {
 'autogen': [  # ................................................................................
 
+('parse_stmts', 0, 0, 'Module', {}, ('all',
+r'''#'''),
+r'''Module - ROOT 0,0..0,1'''),
+
 ('parse_stmts', 0, 0, 'Module', {}, ('all', r'''
 i: int = 1
 j
@@ -464,6 +468,10 @@ r'''**SyntaxError('invalid syntax')**'''),
 r'''as'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
+('parse_stmts', 0, 0, 'Module', {}, ('strict',
+r'''#'''),
+r'''Module - ROOT 0,0..0,1'''),
+
 ('parse_stmts', 0, 0, 'Module', {}, ('strict', r'''
 i: int = 1
 j
@@ -624,6 +632,10 @@ r'''~'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_Module', 0, 0, 'Module', {}, ('exec',
+r'''#'''),
+r'''Module - ROOT 0,0..0,1'''),
+
+('parse_Module', 0, 0, 'Module', {}, ('exec',
 r'''i: int = 1'''), r'''
 Module - ROOT 0,0..0,10
   .body[1]
@@ -634,11 +646,19 @@ Module - ROOT 0,0..0,10
      .simple 1
 '''),
 
+('parse_Expression', 0, 0, 'SyntaxError', {}, ('eval',
+r'''#'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
 ('parse_Expression', 0, 0, 'Expression', {}, ('eval',
 r'''None'''), r'''
 Expression - ROOT 0,0..0,4
   .body Constant None - 0,0..0,4
 '''),
+
+('parse_Interactive', 0, 0, 'SyntaxError', {}, ('single',
+r'''#'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_Interactive', 0, 0, 'Interactive', {}, ('single',
 r'''i: int = 1'''), r'''
@@ -650,6 +670,10 @@ Interactive - ROOT 0,0..0,10
      .value Constant 1 - 0,9..0,10
      .simple 1
 '''),
+
+('parse_stmts', 0, 0, 'Module', {}, ('stmts',
+r'''#'''),
+r'''Module - ROOT 0,0..0,1'''),
 
 ('parse_stmts', 0, 0, 'Module', {}, ('stmts', r'''
 i: int = 1
@@ -671,6 +695,10 @@ except Exception: pass
 except: pass
 '''),
 r'''**SyntaxError('invalid syntax')**'''),
+
+('parse_stmt', 0, 0, 'ParseError', {}, ('stmt',
+r'''#'''),
+r'''**ParseError('expecting single stmt')**'''),
 
 ('parse_stmt', 0, 0, 'AnnAssign', {}, ('stmt',
 r'''i: int = 1'''), r'''
@@ -696,6 +724,14 @@ r'''**ParseError('expecting single stmt')**'''),
 ('parse_stmt', 0, 0, 'SyntaxError', {}, ('stmt',
 r'''except: pass'''),
 r'''**SyntaxError('invalid syntax')**'''),
+
+('parse__ExceptHandlers', 0, 0, '_ExceptHandlers', {}, ('_ExceptHandlers',
+r'''#'''),
+r'''_ExceptHandlers - ROOT 0,0..0,1'''),
+
+('parse__ExceptHandlers', 0, 0, '_ExceptHandlers', {}, ('_ExceptHandlers',
+r''''''),
+r'''_ExceptHandlers - ROOT 0,0..0,0'''),
 
 ('parse__ExceptHandlers', 0, 0, '_ExceptHandlers', {}, ('_ExceptHandlers', r'''
 except Exception: pass
@@ -738,6 +774,14 @@ j
 '''),
 r'''**SyntaxError("expected 'except' or 'finally' block")**'''),
 
+('parse_ExceptHandler', 0, 0, 'ParseError', {}, ('ExceptHandler',
+r'''#'''),
+r'''**ParseError('expecting single ExceptHandler')**'''),
+
+('parse_ExceptHandler', 0, 0, 'ParseError', {}, ('ExceptHandler',
+r''''''),
+r'''**ParseError('expecting single ExceptHandler')**'''),
+
 ('parse_ExceptHandler', 0, 0, 'ExceptHandler', {}, ('ExceptHandler',
 r'''except: pass'''), r'''
 ExceptHandler - ROOT 0,0..0,12
@@ -774,6 +818,14 @@ r'''**SyntaxError("expected 'except' or 'finally' block")**'''),
 r'''i: int = 1'''),
 r'''**SyntaxError("expected 'except' or 'finally' block")**'''),
 
+('parse__match_cases', 0, 0, '_match_cases', {}, ('_match_cases',
+r'''#'''),
+r'''_match_cases - ROOT 0,0..0,1'''),
+
+('parse__match_cases', 0, 0, '_match_cases', {}, ('_match_cases',
+r''''''),
+r'''_match_cases - ROOT 0,0..0,0'''),
+
 ('parse__match_cases', 0, 0, '_match_cases', {}, ('_match_cases', r'''
 case None: pass
 case 1: pass
@@ -801,6 +853,14 @@ r'''**IndentationError('unexpected indent')**'''),
 r'''i: int = 1'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
+('parse_match_case', 0, 0, 'ParseError', {}, ('match_case',
+r'''#'''),
+r'''**ParseError('expecting single match_case')**'''),
+
+('parse_match_case', 0, 0, 'ParseError', {}, ('match_case',
+r''''''),
+r'''**ParseError('expecting single match_case')**'''),
+
 ('parse_match_case', 0, 0, 'match_case', {}, ('match_case',
 r'''case None: pass'''), r'''
 match_case - ROOT 0,0..0,15
@@ -817,6 +877,10 @@ r'''**ParseError('expecting single match_case')**'''),
 
 ('parse_match_case', 0, 0, 'SyntaxError', {}, ('match_case',
 r'''i: int = 1'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets',
+r'''#'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('_Assign_targets',
@@ -885,23 +949,39 @@ _Assign_targets - ROOT 0,0..1,1
 
 a
 '''),
-r'''**SyntaxError('invalid Assign targets slice')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets', r'''
 a
 =
 '''),
-r'''**SyntaxError('invalid Assign targets slice')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets',
 r'''a =  # tail'''),
-r'''**SyntaxError('invalid Assign targets slice')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets', r'''
 # head
 a =
 '''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets',
+r'''f()'''),
+r'''**SyntaxError('cannot assign to function call')**'''),
+
+('parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets',
+r'''pass'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse__Assign_targets', 0, 0, 'SyntaxError', {}, ('_Assign_targets',
+r'''a; b'''),
 r'''**SyntaxError('invalid Assign targets slice')**'''),
+
+('parse__decorator_list', 0, 0, '_decorator_list', {}, ('_decorator_list',
+r'''#'''),
+r'''_decorator_list - ROOT 0,0..0,1'''),
 
 ('parse__decorator_list', 0, 0, '_decorator_list', {}, ('_decorator_list',
 r''''''),
@@ -923,6 +1003,14 @@ _decorator_list - ROOT 0,0..1,2
    0] Name 'a' Load - 0,1..0,2
    1] Name 'b' Load - 1,1..1,2
 '''),
+
+('parse__decorator_list', 0, 0, 'SyntaxError', {}, ('_decorator_list',
+r'''pass'''),
+r'''**SyntaxError('unexpected multiple statements')**'''),
+
+('parse__decorator_list', 0, 0, 'SyntaxError', {}, ('_decorator_list',
+r'''f()'''),
+r'''**SyntaxError('unexpected multiple statements')**'''),
 
 ('parse_expr', 0, 0, 'Name', {}, ('expr',
 r'''j'''),
@@ -956,6 +1044,10 @@ Tuple - ROOT 0,0..1,2
   .ctx Load
 '''),
 
+('parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
+r'''*not a'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
 ('parse_expr', 0, 0, 'Tuple', {}, ('expr', r'''
 1
 ,
@@ -971,19 +1063,35 @@ Tuple - ROOT 0,0..3,1
 
 ('parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
 r'''*not a'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
 r'''a:b'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
 r'''a:b:c'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
+r'''i for i in j'''),
+r'''**SyntaxError('expecting expression, got unparenthesized GeneratorExp')**'''),
+
+('parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
+r'''* *a'''),
+r'''**SyntaxError('Invalid star expression')**'''),
+
+('parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
+r'''pass]'''),
+r'''**SyntaxError("closing parenthesis ']' does not match opening parenthesis '(' on line 1")**'''),
+
+('parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
+r'''#'''),
+r'''**SyntaxError('expecting expression, got nothing')**'''),
 
 ('parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
 r''''''),
-r'''**SyntaxError('expecting expression')**'''),
+r'''**SyntaxError('expecting expression, got nothing')**'''),
 
 ('parse_expr_all', 0, 0, 'Name', {}, ('expr_all',
 r'''j'''),
@@ -1069,6 +1177,22 @@ Tuple - ROOT 0,0..0,12
   .ctx Load
 '''),
 
+('parse_expr_all', 0, 0, 'SyntaxError', {}, ('expr_all',
+r'''* *a'''),
+r'''**SyntaxError('Invalid star expression')**'''),
+
+('parse_expr_all', 0, 0, 'SyntaxError', {}, ('expr_all',
+r'''pass'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse_expr_all', 0, 0, 'SyntaxError', {}, ('expr_all',
+r'''#'''),
+r'''**SyntaxError('invalid expression (all types)')**'''),
+
+('parse_expr_all', 0, 0, 'SyntaxError', {}, ('expr_all',
+r''''''),
+r'''**SyntaxError('invalid expression (all types)')**'''),
+
 ('parse_expr_arglike', 0, 0, 'Name', {}, ('expr_arglike',
 r'''j'''),
 r'''Name 'j' Load - ROOT 0,0..0,1'''),
@@ -1101,7 +1225,7 @@ Starred - ROOT 0,0..0,6
 
 ('parse_expr_arglike', 0, 0, 'SyntaxError', {}, ('expr_arglike',
 r'''*not a,'''),
-r'''**SyntaxError('invalid argument-like expression')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_expr_arglike', 0, 0, 'Tuple', {}, ('expr_arglike',
 r'''j, k'''), r'''
@@ -1114,15 +1238,43 @@ Tuple - ROOT 0,0..0,4
 
 ('parse_expr_arglike', 0, 0, 'ParseError', {}, ('expr_arglike',
 r'''i=1'''),
-r'''**ParseError('expecting single argumnent-like expression')**'''),
+r'''**ParseError('expecting single expression (arglike)')**'''),
 
 ('parse_expr_arglike', 0, 0, 'SyntaxError', {}, ('expr_arglike',
 r'''a:b'''),
-r'''**SyntaxError('invalid argument-like expression')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_expr_arglike', 0, 0, 'SyntaxError', {}, ('expr_arglike',
 r'''a:b:c'''),
-r'''**SyntaxError('invalid argument-like expression')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse_expr_arglike', 0, 0, 'SyntaxError', {}, ('expr_arglike',
+r'''* *a'''),
+r'''**SyntaxError('Invalid star expression')**'''),
+
+('parse_expr_arglike', 0, 0, 'SyntaxError', {}, ('expr_arglike',
+r'''pass'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse_expr_arglike', 0, 0, 'SyntaxError', {}, ('expr_arglike',
+r'''#'''),
+r'''**SyntaxError('invalid expression (arglike)')**'''),
+
+('parse_expr_arglike', 0, 0, 'SyntaxError', {}, ('expr_arglike',
+r''''''),
+r'''**SyntaxError('invalid expression (arglike)')**'''),
+
+('parse__expr_arglikes', 0, 0, 'Tuple', {}, ('_expr_arglikes',
+r''''''), r'''
+Tuple - ROOT 0,0..0,0
+  .ctx Load
+'''),
+
+('parse__expr_arglikes', 0, 0, 'Tuple', {}, ('_expr_arglikes',
+r'''#'''), r'''
+Tuple - ROOT 0,0..0,1
+  .ctx Load
+'''),
 
 ('parse__expr_arglikes', 0, 0, 'Tuple', {}, ('_expr_arglikes',
 r'''j'''), r'''
@@ -1253,7 +1405,27 @@ Tuple - ROOT 0,0..0,12
 
 ('parse_expr_slice', 0, 0, 'SyntaxError', {}, ('expr_slice',
 r''''''),
-r'''**SyntaxError('expecting slice expression')**'''),
+r'''**SyntaxError('expecting expression (slice), got nothing')**'''),
+
+('parse_expr_slice', 0, 0, 'SyntaxError', {}, ('expr_slice',
+r'''i for i in j'''),
+r'''**SyntaxError('expecting expression (slice), got unparenthesized GeneratorExp')**'''),
+
+('parse_expr_slice', 0, 0, 'SyntaxError', {}, ('expr_slice',
+r'''* *a'''),
+r'''**SyntaxError('Invalid star expression')**'''),
+
+('parse_expr_slice', 0, 0, 'SyntaxError', {}, ('expr_slice',
+r'''pass'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse_expr_slice', 0, 0, 'SyntaxError', {}, ('expr_slice',
+r'''#'''),
+r'''**SyntaxError('expecting expression (slice), got nothing')**'''),
+
+('parse_expr_slice', 0, 0, 'SyntaxError', {}, ('expr_slice',
+r''''''),
+r'''**SyntaxError('expecting expression (slice), got nothing')**'''),
 
 ('parse_Tuple_elt', 0, 0, 'Name', {}, ('Tuple_elt',
 r'''j'''),
@@ -1284,7 +1456,23 @@ Tuple - ROOT 0,0..0,4
 
 ('parse_Tuple_elt', 0, 0, 'SyntaxError', {}, ('Tuple_elt',
 r'''a:b:c, x:y:z'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse_Tuple_elt', 0, 0, 'SyntaxError', {}, ('Tuple_elt',
+r'''* *a'''),
+r'''**SyntaxError('Invalid star expression')**'''),
+
+('parse_Tuple_elt', 0, 0, 'SyntaxError', {}, ('Tuple_elt',
+r'''pass'''),
 r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('parse_Tuple_elt', 0, 0, 'SyntaxError', {}, ('Tuple_elt',
+r'''#'''),
+r'''**SyntaxError('expecting expression, got nothing')**'''),
+
+('parse_Tuple_elt', 0, 0, 'SyntaxError', {}, ('Tuple_elt',
+r''''''),
+r'''**SyntaxError('expecting expression, got nothing')**'''),
 
 ('parse_Tuple', 0, 0, 'ParseError', {}, ('Tuple',
 r'''1'''),
@@ -1293,6 +1481,26 @@ r'''**ParseError('expecting Tuple, got Constant')**'''),
 ('parse_Tuple', 0, 0, 'ParseError', {}, ('Tuple',
 r'''*st'''),
 r'''**ParseError('expecting Tuple, got Starred')**'''),
+
+('parse_Tuple', 0, 0, 'SyntaxError', {}, ('Tuple',
+r'''~'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse_Tuple', 0, 0, 'SyntaxError', {}, ('Tuple',
+r'''* *a'''),
+r'''**SyntaxError('Invalid star expression')**'''),
+
+('parse_Tuple', 0, 0, 'SyntaxError', {}, ('Tuple',
+r'''pass'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse_Tuple', 0, 0, 'SyntaxError', {}, ('Tuple',
+r'''#'''),
+r'''**SyntaxError('invalid tuple')**'''),
+
+('parse_Tuple', 0, 0, 'SyntaxError', {}, ('Tuple',
+r''''''),
+r'''**SyntaxError('invalid tuple')**'''),
 
 ('parse_boolop', 0, 0, 'And', {}, ('boolop',
 r'''and'''),
@@ -1402,9 +1610,21 @@ comprehension - ROOT 0,0..0,15
 r'''for u in v async for s in t'''),
 r'''**ParseError('expecting single comprehension')**'''),
 
+('parse_comprehension', 0, 0, 'ParseError', {}, ('comprehension',
+r'''#'''),
+r'''**ParseError('expecting comprehension, got List')**'''),
+
+('parse_comprehension', 0, 0, 'ParseError', {}, ('comprehension',
+r''']+['''),
+r'''**ParseError('expecting comprehension, got BinOp')**'''),
+
 ('parse__comprehensions', 0, 0, '_comprehensions', {}, ('_comprehensions',
 r''''''),
 r'''_comprehensions - ROOT 0,0..0,0'''),
+
+('parse__comprehensions', 0, 0, '_comprehensions', {}, ('_comprehensions',
+r'''#'''),
+r'''_comprehensions - ROOT 0,0..0,1'''),
 
 ('parse__comprehensions', 0, 0, '_comprehensions', {}, ('_comprehensions',
 r'''for u in v'''), r'''
@@ -1455,6 +1675,10 @@ r''''''),
 r'''_comprehension_ifs - ROOT 0,0..0,0'''),
 
 ('parse__comprehension_ifs', 0, 0, '_comprehension_ifs', {}, ('_comprehension_ifs',
+r'''#'''),
+r'''_comprehension_ifs - ROOT 0,0..0,1'''),
+
+('parse__comprehension_ifs', 0, 0, '_comprehension_ifs', {}, ('_comprehension_ifs',
 r'''if u'''), r'''
 _comprehension_ifs - ROOT 0,0..0,4
   .ifs[1]
@@ -1469,20 +1693,36 @@ _comprehension_ifs - ROOT 0,0..0,9
    1] Name 'v' Load - 0,8..0,9
 '''),
 
+('parse__comprehension_ifs', 0, 0, 'SyntaxError', {}, ('_comprehension_ifs',
+r'''if 1 else 2'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
 ('parse__comprehension_ifs', 0, 0, 'ParseError', {}, ('_comprehension_ifs',
 r'''(a)'''),
-r'''**ParseError('expecting comprehension ifs')**'''),
+r'''**ParseError("expecting comprehension ifs, does not start with 'if'")**'''),
 
 ('parse__comprehension_ifs', 0, 0, 'ParseError', {}, ('_comprehension_ifs',
 r'''.b'''),
-r'''**ParseError('expecting comprehension ifs')**'''),
+r'''**ParseError("expecting comprehension ifs, does not start with 'if'")**'''),
 
 ('parse__comprehension_ifs', 0, 0, 'ParseError', {}, ('_comprehension_ifs',
 r'''+b'''),
-r'''**ParseError('expecting comprehension ifs')**'''),
+r'''**ParseError("expecting comprehension ifs, does not start with 'if'")**'''),
+
+('parse__comprehension_ifs', 0, 0, 'ParseError', {}, ('_comprehension_ifs',
+r''']+['''),
+r'''**ParseError('expecting comprehensions ifs, got BinOp')**'''),
+
+('parse__comprehension_ifs', 0, 0, 'ParseError', {}, ('_comprehension_ifs',
+r'''for _ in _'''),
+r'''**ParseError('expecting comprehension ifs, got extra generators')**'''),
 
 ('parse_arguments', 0, 0, 'arguments', {}, ('arguments',
 r''''''),
+r'''arguments - ROOT'''),
+
+('parse_arguments', 0, 0, 'arguments', {}, ('arguments',
+r'''#'''),
 r'''arguments - ROOT'''),
 
 ('parse_arguments', 0, 0, 'arguments', {}, ('arguments',
@@ -1514,6 +1754,10 @@ arguments - ROOT 0,0..0,43
 
 ('parse_arguments_lambda', 0, 0, 'arguments', {}, ('arguments_lambda',
 r''''''),
+r'''arguments - ROOT'''),
+
+('parse_arguments_lambda', 0, 0, 'arguments', {}, ('arguments_lambda',
+r'''#'''),
 r'''arguments - ROOT'''),
 
 ('parse_arguments_lambda', 0, 0, 'arguments', {}, ('arguments_lambda',
@@ -1586,6 +1830,10 @@ r'''a, /'''),
 r'''**ParseError('expecting single argument without default')**'''),
 
 ('parse_arg', 0, 0, 'ParseError', {}, ('arg',
+r''', a'''),
+r'''**ParseError('expecting single argument without default')**'''),
+
+('parse_arg', 0, 0, 'ParseError', {}, ('arg',
 r'''*, a'''),
 r'''**ParseError('expecting single argument without default')**'''),
 
@@ -1597,9 +1845,13 @@ r'''**ParseError('expecting single argument without default')**'''),
 r'''**a'''),
 r'''**ParseError('expecting single argument without default')**'''),
 
-('parse_arg', 0, 0, 'ParseError', {}, ('arg',
-r'''a, b'''),
-r'''**ParseError('expecting single argument without default')**'''),
+('parse_arg', 0, 0, 'SyntaxError', {}, ('arg',
+r''','''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse_arg', 0, 0, 'SyntaxError', {}, ('arg',
+r''')'''),
+r'''**SyntaxError('invalid arg')**'''),
 
 ('parse_keyword', 0, 0, 'keyword', {}, ('keyword',
 r'''a=1'''), r'''
@@ -3443,15 +3695,15 @@ Tuple - ROOT 0,0..3,1
 
 ('parse_expr', 0, 0, 'SyntaxError', {}, (expr,
 r'''*not a'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_expr', 0, 0, 'SyntaxError', {}, (expr,
 r'''a:b'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_expr', 0, 0, 'SyntaxError', {}, (expr,
 r'''a:b:c'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_expr', 0, 0, 'Name', {}, (Name,
 r'''j'''),
@@ -3546,7 +3798,7 @@ comprehension - ROOT 0,0..0,15
 
 ('parse_comprehension', 0, 0, 'ParseError', {}, (comprehension,
 r'''()'''),
-r'''**ParseError('expecting comprehension')**'''),
+r'''**ParseError('expecting comprehension, got List')**'''),
 
 ('parse_arguments', 0, 0, 'arguments', {}, (arguments,
 r''''''),
@@ -4134,6 +4386,18 @@ Starred - ROOT 0,0..0,6
   .ctx Load
 '''),
 
+('parse_expr_all', 0, 0, 'Tuple', {'_ver': 11}, ('expr_all',
+r'''*not a,'''), r'''
+Tuple - ROOT 0,0..0,7
+  .elts[1]
+   0] Starred - 0,0..0,6
+     .value UnaryOp - 0,1..0,6
+       .op Not - 0,1..0,4
+       .operand Name 'a' Load - 0,5..0,6
+     .ctx Load
+  .ctx Load
+'''),
+
 ('parse_expr_slice', 0, 0, 'Tuple', {'_ver': 11}, ('expr_slice',
 r'''*s'''), r'''
 Tuple - ROOT 0,0..0,2
@@ -4156,6 +4420,20 @@ Tuple - ROOT 0,0..0,6
   .ctx Load
 '''),
 
+('parse_expr_slice', 0, 0, 'Tuple', {'_ver': 11}, ('expr_slice',
+r'''a:b:c, *st'''), r'''
+Tuple - ROOT 0,0..0,10
+  .elts[2]
+   0] Slice - 0,0..0,5
+     .lower Name 'a' Load - 0,0..0,1
+     .upper Name 'b' Load - 0,2..0,3
+     .step Name 'c' Load - 0,4..0,5
+   1] Starred - 0,7..0,10
+     .value Name 'st' Load - 0,8..0,10
+     .ctx Load
+  .ctx Load
+'''),
+
 ('parse_Tuple_elt', 0, 0, 'Starred', {'_ver': 11}, ('Tuple_elt',
 r'''*not a'''), r'''
 Starred - ROOT 0,0..0,6
@@ -4167,7 +4445,7 @@ Starred - ROOT 0,0..0,6
 
 ('parse_Tuple_elt', 0, 0, 'SyntaxError', {'_ver': 11}, ('Tuple_elt',
 r'''*not a, *b or c'''),
-r'''**SyntaxError('invalid expression (standard)')**'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_ExceptHandler', 0, 0, 'ExceptHandler', {'_ver': 11}, (ExceptHandler,
 r'''except* Exception: pass'''), r'''
@@ -4178,6 +4456,16 @@ ExceptHandler - ROOT 0,0..0,23
 '''),
 
 ('parse_arg', 0, 0, 'arg', {'_ver': 11}, ('arg',
+r''' a: *()'''), r'''
+arg - ROOT 0,1..0,7
+  .arg 'a'
+  .annotation Starred - 0,4..0,7
+    .value Tuple - 0,5..0,7
+      .ctx Load
+    .ctx Load
+'''),
+
+('parse_arg', 0, 0, 'arg', {'_ver': 11}, ('arg',
 r''' a: *b  # tail'''), r'''
 arg - ROOT 0,1..0,6
   .arg 'a'
@@ -4185,6 +4473,14 @@ arg - ROOT 0,1..0,6
     .value Name 'b' Load - 0,5..0,6
     .ctx Load
 '''),
+
+('parse_arg', 0, 0, 'SyntaxError', {'_ver': 11}, ('arg',
+r'''a: *(,)'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse_arg', 0, 0, 'SyntaxError', {'_ver': 11}, ('arg',
+r'''a: *+'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('all',
 r'''*U, **V, **Z'''), r'''

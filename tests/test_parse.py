@@ -42,6 +42,7 @@ DIR_NAME = os.path.dirname(__file__)
 FNM_PARSE_AUTOGEN = os.path.join(DIR_NAME, 'data/data_parse_autogen.py')
 
 PARSE_TESTS = [
+    ('all',                px.parse_stmts,              Module,                   '#'),
     ('all',                px.parse_stmts,              Module,                   'i: int = 1\nj'),
     ('all',                px.parse__ExceptHandlers,    _ExceptHandlers,          'except Exception: pass\nexcept: pass'),
     ('all',                px.parse__match_cases,       _match_cases,             'case None: pass\ncase 1: pass'),
@@ -92,6 +93,7 @@ PARSE_TESTS = [
     ('all',                px.parse_all,                SyntaxError,              'finally'),
     ('all',                px.parse_all,                SyntaxError,              'as'),
 
+    ('strict',             px.parse_stmts,              Module,                   '#'),
     ('strict',             px.parse_stmts,              Module,                   'i: int = 1\nj'),
     ('strict',             px.parse__ExceptHandlers,    SyntaxError,              'except Exception: pass\nexcept: pass'),
     ('strict',             px.parse__match_cases,       SyntaxError,              'case None: pass\ncase 1: pass'),
@@ -121,22 +123,33 @@ PARSE_TESTS = [
     ('strict',             px.parse_all,                SyntaxError,              'and'),
     ('strict',             px.parse_all,                SyntaxError,              '~'),
 
+    ('exec',               px.parse_Module,             Module,                   '#'),
     ('exec',               px.parse_Module,             Module,                   'i: int = 1'),
+
+    ('eval',               px.parse_Expression,         SyntaxError,              '#'),
     ('eval',               px.parse_Expression,         Expression,               'None'),
+
+    ('single',             px.parse_Interactive,        SyntaxError,              '#'),
     ('single',             px.parse_Interactive,        Interactive,              'i: int = 1'),
 
+    ('stmts',              px.parse_stmts,              Module,                   '#'),
     ('stmts',              px.parse_stmts,              Module,                   'i: int = 1\nj'),
     ('stmts',              px.parse_stmts,              SyntaxError,              'except Exception: pass\nexcept: pass'),
+    ('stmt',               px.parse_stmt,               ParseError,               '#'),
     ('stmt',               px.parse_stmt,               AnnAssign,                'i: int = 1'),
     ('stmt',               px.parse_stmt,               Expr,                     'j'),
     ('stmt',               px.parse_stmt,               ParseError,               'i: int = 1\nj'),
     ('stmt',               px.parse_stmt,               SyntaxError,              'except: pass'),
 
+    ('_ExceptHandlers',    px.parse__ExceptHandlers,    _ExceptHandlers,          '#'),
+    ('_ExceptHandlers',    px.parse__ExceptHandlers,    _ExceptHandlers,          ''),
     ('_ExceptHandlers',    px.parse__ExceptHandlers,    _ExceptHandlers,          'except Exception: pass\nexcept: pass'),
     ('_ExceptHandlers',    px.parse__ExceptHandlers,    IndentationError,         ' except Exception: pass\nexcept: pass'),
     ('_ExceptHandlers',    px.parse__ExceptHandlers,    ParseError,               'except Exception: pass\nexcept: pass\nelse: pass'),
     ('_ExceptHandlers',    px.parse__ExceptHandlers,    ParseError,               'except Exception: pass\nexcept: pass\nfinally: pass'),
     ('_ExceptHandlers',    px.parse__ExceptHandlers,    SyntaxError,              'i: int = 1\nj'),
+    ('ExceptHandler',      px.parse_ExceptHandler,      ParseError,               '#'),
+    ('ExceptHandler',      px.parse_ExceptHandler,      ParseError,               ''),
     ('ExceptHandler',      px.parse_ExceptHandler,      ExceptHandler,            'except: pass'),
     ('ExceptHandler',      px.parse_ExceptHandler,      ParseError,               'except Exception: pass\nexcept: pass'),
     ('ExceptHandler',      px.parse_ExceptHandler,      IndentationError,         'except:\n  pass\n    pass'),
@@ -145,13 +158,18 @@ PARSE_TESTS = [
     ('ExceptHandler',      px.parse_ExceptHandler,      SyntaxError,              'else: pass'),
     ('ExceptHandler',      px.parse_ExceptHandler,      SyntaxError,              'i: int = 1'),
 
+    ('_match_cases',       px.parse__match_cases,       _match_cases,             '#'),
+    ('_match_cases',       px.parse__match_cases,       _match_cases,             ''),
     ('_match_cases',       px.parse__match_cases,       _match_cases,             'case None: pass\ncase 1: pass'),
     ('_match_cases',       px.parse__match_cases,       IndentationError,         ' case None: pass\ncase 1: pass'),
     ('_match_cases',       px.parse__match_cases,       SyntaxError,              'i: int = 1'),
+    ('match_case',         px.parse_match_case,         ParseError,               '#'),
+    ('match_case',         px.parse_match_case,         ParseError,               ''),
     ('match_case',         px.parse_match_case,         match_case,               'case None: pass'),
     ('match_case',         px.parse_match_case,         ParseError,               'case None: pass\ncase 1: pass'),
     ('match_case',         px.parse_match_case,         SyntaxError,              'i: int = 1'),
 
+    ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              '#'),  # cannot be this because newlines not allowed
     ('_Assign_targets',    px.parse__Assign_targets,    _Assign_targets,          ''),
     ('_Assign_targets',    px.parse__Assign_targets,    _Assign_targets,          'a'),
     ('_Assign_targets',    px.parse__Assign_targets,    _Assign_targets,          'a ='),
@@ -164,19 +182,30 @@ PARSE_TESTS = [
     ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              'a\n='),
     ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              'a =  # tail'),
     ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              '# head\na ='),
+    ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              'f()'),
+    ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              'pass'),
+    ('_Assign_targets',    px.parse__Assign_targets,    SyntaxError,              'a; b'),
 
+    ('_decorator_list',    px.parse__decorator_list,    _decorator_list,          '#'),
     ('_decorator_list',    px.parse__decorator_list,    _decorator_list,          ''),
     ('_decorator_list',    px.parse__decorator_list,    _decorator_list,          '@a'),
     ('_decorator_list',    px.parse__decorator_list,    _decorator_list,          '@a\n@b'),
+    ('_decorator_list',    px.parse__decorator_list,    SyntaxError,              'pass'),
+    ('_decorator_list',    px.parse__decorator_list,    SyntaxError,              'f()'),
 
     ('expr',               px.parse_expr,               Name,                     'j'),
     ('expr',               px.parse_expr,               Starred,                  '*s'),
     ('expr',               px.parse_expr,               Starred,                  '*\ns'),
     ('expr',               px.parse_expr,               Tuple,                    '*\ns,'),
+    ('expr',               px.parse_expr,               SyntaxError,              '*not a'),
     ('expr',               px.parse_expr,               Tuple,                    '1\n,\n2\n,'),
     ('expr',               px.parse_expr,               SyntaxError,              '*not a'),
     ('expr',               px.parse_expr,               SyntaxError,              'a:b'),
     ('expr',               px.parse_expr,               SyntaxError,              'a:b:c'),
+    ('expr',               px.parse_expr,               SyntaxError,              'i for i in j'),
+    ('expr',               px.parse_expr,               SyntaxError,              '* *a'),
+    ('expr',               px.parse_expr,               SyntaxError,              'pass]'),
+    ('expr',               px.parse_expr,               SyntaxError,              '#'),
     ('expr',               px.parse_expr,               SyntaxError,              ''),
 
     ('expr_all',           px.parse_expr_all,           Name,                     'j'),
@@ -188,6 +217,10 @@ PARSE_TESTS = [
     ('expr_all',           px.parse_expr_all,           Slice,                    'a:b:c'),
     ('expr_all',           px.parse_expr_all,           Tuple,                    'j, k'),
     ('expr_all',           px.parse_expr_all,           Tuple,                    'a:b:c, x:y:z'),
+    ('expr_all',           px.parse_expr_all,           SyntaxError,              '* *a'),
+    ('expr_all',           px.parse_expr_all,           SyntaxError,              'pass'),
+    ('expr_all',           px.parse_expr_all,           SyntaxError,              '#'),
+    ('expr_all',           px.parse_expr_all,           SyntaxError,              ''),
 
     ('expr_arglike',       px.parse_expr_arglike,       Name,                     'j'),
     ('expr_arglike',       px.parse_expr_arglike,       Starred,                  '*s'),
@@ -198,7 +231,13 @@ PARSE_TESTS = [
     ('expr_arglike',       px.parse_expr_arglike,       ParseError,               'i=1'),
     ('expr_arglike',       px.parse_expr_arglike,       SyntaxError,              'a:b'),
     ('expr_arglike',       px.parse_expr_arglike,       SyntaxError,              'a:b:c'),
+    ('expr_arglike',       px.parse_expr_arglike,       SyntaxError,              '* *a'),
+    ('expr_arglike',       px.parse_expr_arglike,       SyntaxError,              'pass'),
+    ('expr_arglike',       px.parse_expr_arglike,       SyntaxError,              '#'),
+    ('expr_arglike',       px.parse_expr_arglike,       SyntaxError,              ''),
 
+    ('_expr_arglikes',     px.parse__expr_arglikes,     Tuple,                    ''),
+    ('_expr_arglikes',     px.parse__expr_arglikes,     Tuple,                    '#'),
     ('_expr_arglikes',     px.parse__expr_arglikes,     Tuple,                    'j'),
     ('_expr_arglikes',     px.parse__expr_arglikes,     Tuple,                    '*s'),
     ('_expr_arglikes',     px.parse__expr_arglikes,     Tuple,                    '*s,'),
@@ -215,15 +254,29 @@ PARSE_TESTS = [
     ('expr_slice',         px.parse_expr_slice,         Tuple,                    'j, k'),
     ('expr_slice',         px.parse_expr_slice,         Tuple,                    'a:b:c, x:y:z'),
     ('expr_slice',         px.parse_expr_slice,         SyntaxError,              ''),
+    ('expr_slice',         px.parse_expr_slice,         SyntaxError,              'i for i in j'),
+    ('expr_slice',         px.parse_expr_slice,         SyntaxError,              '* *a'),
+    ('expr_slice',         px.parse_expr_slice,         SyntaxError,              'pass'),
+    ('expr_slice',         px.parse_expr_slice,         SyntaxError,              '#'),
+    ('expr_slice',         px.parse_expr_slice,         SyntaxError,              ''),
 
     ('Tuple_elt',          px.parse_Tuple_elt,          Name,                     'j'),
     ('Tuple_elt',          px.parse_Tuple_elt,          Starred,                  '*s'),
     ('Tuple_elt',          px.parse_Tuple_elt,          Slice,                    'a:b'),
     ('Tuple_elt',          px.parse_Tuple_elt,          Tuple,                    'j, k'),
     ('Tuple_elt',          px.parse_Tuple_elt,          SyntaxError,              'a:b:c, x:y:z'),
+    ('Tuple_elt',          px.parse_Tuple_elt,          SyntaxError,              '* *a'),
+    ('Tuple_elt',          px.parse_Tuple_elt,          SyntaxError,              'pass'),
+    ('Tuple_elt',          px.parse_Tuple_elt,          SyntaxError,              '#'),
+    ('Tuple_elt',          px.parse_Tuple_elt,          SyntaxError,              ''),
 
     ('Tuple',              px.parse_Tuple,              ParseError,               '1'),
     ('Tuple',              px.parse_Tuple,              ParseError,               '*st'),
+    ('Tuple',              px.parse_Tuple,              SyntaxError,              '~'),
+    ('Tuple',              px.parse_Tuple,              SyntaxError,              '* *a'),
+    ('Tuple',              px.parse_Tuple,              SyntaxError,              'pass'),
+    ('Tuple',              px.parse_Tuple,              SyntaxError,              '#'),
+    ('Tuple',              px.parse_Tuple,              SyntaxError,              ''),
 
     ('boolop',             px.parse_boolop,             And,                      'and'),
     ('boolop',             px.parse_boolop,             SyntaxError,              'and 1'),
@@ -249,8 +302,11 @@ PARSE_TESTS = [
     ('comprehension',      px.parse_comprehension,      comprehension,            'async for u in v'),
     ('comprehension',      px.parse_comprehension,      comprehension,            'for u in v if w'),
     ('comprehension',      px.parse_comprehension,      ParseError,               'for u in v async for s in t'),
+    ('comprehension',      px.parse_comprehension,      ParseError,               '#'),
+    ('comprehension',      px.parse_comprehension,      ParseError,               ']+['),
 
     ('_comprehensions',    px.parse__comprehensions,    _comprehensions,          ''),
+    ('_comprehensions',    px.parse__comprehensions,    _comprehensions,          '#'),
     ('_comprehensions',    px.parse__comprehensions,    _comprehensions,          'for u in v'),
     ('_comprehensions',    px.parse__comprehensions,    _comprehensions,          'async for u in v'),
     ('_comprehensions',    px.parse__comprehensions,    _comprehensions,          'for u in v if w async for s in t'),
@@ -258,16 +314,22 @@ PARSE_TESTS = [
     ('_comprehensions',    px.parse__comprehensions,    ParseError,               ']+['),
 
     ('_comprehension_ifs', px.parse__comprehension_ifs, _comprehension_ifs,       ''),
+    ('_comprehension_ifs', px.parse__comprehension_ifs, _comprehension_ifs,       '#'),
     ('_comprehension_ifs', px.parse__comprehension_ifs, _comprehension_ifs,       'if u'),
     ('_comprehension_ifs', px.parse__comprehension_ifs, _comprehension_ifs,       'if u if v'),
+    ('_comprehension_ifs', px.parse__comprehension_ifs, SyntaxError,              'if 1 else 2'),
     ('_comprehension_ifs', px.parse__comprehension_ifs, ParseError,               '(a)'),
     ('_comprehension_ifs', px.parse__comprehension_ifs, ParseError,               '.b'),
     ('_comprehension_ifs', px.parse__comprehension_ifs, ParseError,               '+b'),
+    ('_comprehension_ifs', px.parse__comprehension_ifs, ParseError,               ']+['),
+    ('_comprehension_ifs', px.parse__comprehension_ifs, ParseError,               'for _ in _'),
 
     ('arguments',          px.parse_arguments,          arguments,                ''),
+    ('arguments',          px.parse_arguments,          arguments,                '#'),
     ('arguments',          px.parse_arguments,          arguments,                'a: list[str], /, b: int = 1, *c, d=100, **e'),
 
     ('arguments_lambda',   px.parse_arguments_lambda,   arguments,                ''),
+    ('arguments_lambda',   px.parse_arguments_lambda,   arguments,                '#'),
     ('arguments_lambda',   px.parse_arguments_lambda,   arguments,                'a, /, b, *c, d=100, **e'),
     ('arguments_lambda',   px.parse_arguments_lambda,   arguments,                'a,\n/,\nb,\n*c,\nd=100,\n**e'),
     ('arguments_lambda',   px.parse_arguments_lambda,   SyntaxError,              'a: list[str], /, b: int = 1, *c, d=100, **e'),
@@ -276,10 +338,12 @@ PARSE_TESTS = [
     ('arg',                px.parse_arg,                ParseError,               'a: b = c'),
     ('arg',                px.parse_arg,                ParseError,               'a, b'),
     ('arg',                px.parse_arg,                ParseError,               'a, /'),
+    ('arg',                px.parse_arg,                ParseError,               ', a'),
     ('arg',                px.parse_arg,                ParseError,               '*, a'),
     ('arg',                px.parse_arg,                ParseError,               '*a'),
     ('arg',                px.parse_arg,                ParseError,               '**a'),
-    ('arg',                px.parse_arg,                ParseError,               'a, b'),
+    ('arg',                px.parse_arg,                SyntaxError,              ','),
+    ('arg',                px.parse_arg,                SyntaxError,              ')'),
 
     ('keyword',            px.parse_keyword,            keyword,                  'a=1'),
     ('keyword',            px.parse_keyword,            keyword,                  '**a'),
@@ -664,16 +728,21 @@ if PYGE11:
         ('ExceptHandler',      px.parse_ExceptHandler,      ExceptHandler,          'except* Exception: pass'),
 
         ('expr_all',           px.parse_expr_all,           Starred,                '*not a'),
+        ('expr_all',           px.parse_expr_all,           Tuple,                  '*not a,'),
 
         ('expr_slice',         px.parse_expr_slice,         Tuple,                  '*s'),
         ('expr_slice',         px.parse_expr_slice,         Tuple,                  '*not a'),
+        ('expr_slice',         px.parse_expr_slice,         Tuple,                  'a:b:c, *st'),
 
         ('Tuple_elt',          px.parse_Tuple_elt,          Starred,                '*not a'),
         ('Tuple_elt',          px.parse_Tuple_elt,          SyntaxError,            '*not a, *b or c'),
 
         (ExceptHandler,        px.parse_ExceptHandler,      ExceptHandler,          'except* Exception: pass'),
 
+        ('arg',                px.parse_arg,                arg,                    ' a: *()'),
         ('arg',                px.parse_arg,                arg,                    ' a: *b  # tail'),
+        ('arg',                px.parse_arg,                SyntaxError,            'a: *(,)'),
+        ('arg',                px.parse_arg,                SyntaxError,            'a: *+'),
     ])
 
 if PYGE12:
@@ -964,6 +1033,8 @@ class TestParse(unittest.TestCase):
         self.assertRaises(ValueError, px.parse, '', list)
 
         self.assertRaises(SyntaxError, px.parse_all, '!')
+
+        self.assertRaises(SyntaxError, px.parse_expr_slice, ']')
 
         if PYLT11:
             self.assertRaises(SyntaxError, px.parse_expr_slice, '*st')
