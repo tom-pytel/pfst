@@ -361,6 +361,8 @@ PARSE_TESTS = [
     ('pattern',            px.parse_pattern,            MatchSingleton,           'None'),
     ('pattern',            px.parse_pattern,            MatchSequence,            '[a, *_]'),
     ('pattern',            px.parse_pattern,            MatchSequence,            '[]'),
+    ('pattern',            px.parse_pattern,            MatchSequence,            'a,'),
+    ('pattern',            px.parse_pattern,            MatchSequence,            'a\n,'),
     ('pattern',            px.parse_pattern,            MatchMapping,             '{"key": _}'),
     ('pattern',            px.parse_pattern,            MatchMapping,             '{}'),
     ('pattern',            px.parse_pattern,            MatchClass,               'SomeClass()'),
@@ -576,6 +578,8 @@ PARSE_TESTS = [
     (pattern,              px.parse_pattern,            MatchSingleton,           'None'),
     (pattern,              px.parse_pattern,            MatchSequence,            '[a, *_]'),
     (pattern,              px.parse_pattern,            MatchSequence,            '[]'),
+    (pattern,              px.parse_pattern,            MatchSequence,            'a,'),
+    (pattern,              px.parse_pattern,            MatchSequence,            'a\n,'),
     (pattern,              px.parse_pattern,            MatchMapping,             '{"key": _}'),
     (pattern,              px.parse_pattern,            MatchMapping,             '{}'),
     (pattern,              px.parse_pattern,            MatchClass,               'SomeClass()'),
@@ -591,6 +595,8 @@ PARSE_TESTS = [
     (MatchSingleton,       px.parse_pattern,            MatchSingleton,           'None'),
     (MatchSequence,        px.parse_pattern,            MatchSequence,            '[a, *_]'),
     (MatchSequence,        px.parse_pattern,            MatchSequence,            '[]'),
+    (MatchSequence,        px.parse_pattern,            MatchSequence,            'a,'),
+    (MatchSequence,        px.parse_pattern,            MatchSequence,            'a\n,'),
     (MatchMapping,         px.parse_pattern,            MatchMapping,             '{"key": _}'),
     (MatchMapping,         px.parse_pattern,            MatchMapping,             '{}'),
     (MatchClass,           px.parse_pattern,            MatchClass,               'SomeClass()'),
@@ -619,6 +625,8 @@ PARSE_TESTS = [
     ('withitem',           px.parse_withitem,           withitem,                 ' a as b,  # tail'),
     ('pattern',            px.parse_pattern,            MatchOr,                  ' 1 | 2 | 3  # tail'),
     ('pattern',            px.parse_pattern,            MatchStar,                ' *a  # tail'),
+
+    ('pattern',            px.parse_pattern,            SyntaxError,              'i: pass\n case 2'),
   ]
 
 PARSE_TESTS_10 = PARSE_TESTS.copy()

@@ -2112,6 +2112,24 @@ MatchSequence - ROOT 0,0..0,7
 r'''[]'''),
 r'''MatchSequence - ROOT 0,0..0,2'''),
 
+('parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern',
+r'''a,'''), r'''
+MatchSequence - ROOT 0,0..0,2
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern', r'''
+a
+,
+'''), r'''
+MatchSequence - ROOT 0,0..1,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
 ('parse_pattern', 0, 0, 'MatchMapping', {}, ('pattern',
 r'''{"key": _}'''), r'''
 MatchMapping - ROOT 0,0..0,10
@@ -2666,7 +2684,7 @@ a
 b
 
 '''), r'''
-MatchSequence - ROOT 0,0..4,1
+MatchSequence - ROOT 1,0..4,1
   .patterns[2]
    0] MatchAs - 1,0..1,1
      .name 'a'
@@ -3081,7 +3099,7 @@ MatchSequence - ROOT 1,1..6,2
 
 ('parse_pattern', 0, 0, 'MatchSequence', {}, ('pattern',
 '\n \n a\n ,\n *\n b\n \n         '), r'''
-MatchSequence - ROOT 0,0..5,2
+MatchSequence - ROOT 2,1..5,2
   .patterns[2]
    0] MatchAs - 2,1..2,2
      .name 'a'
@@ -3611,6 +3629,24 @@ MatchSequence - ROOT 0,0..0,7
 r'''[]'''),
 r'''MatchSequence - ROOT 0,0..0,2'''),
 
+('parse_pattern', 0, 0, 'MatchSequence', {}, (pattern,
+r'''a,'''), r'''
+MatchSequence - ROOT 0,0..0,2
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('parse_pattern', 0, 0, 'MatchSequence', {}, (pattern, r'''
+a
+,
+'''), r'''
+MatchSequence - ROOT 0,0..1,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
 ('parse_pattern', 0, 0, 'MatchMapping', {}, (pattern,
 r'''{"key": _}'''), r'''
 MatchMapping - ROOT 0,0..0,10
@@ -3703,6 +3739,24 @@ MatchSequence - ROOT 0,0..0,7
 ('parse_pattern', 0, 0, 'MatchSequence', {}, (MatchSequence,
 r'''[]'''),
 r'''MatchSequence - ROOT 0,0..0,2'''),
+
+('parse_pattern', 0, 0, 'MatchSequence', {}, (MatchSequence,
+r'''a,'''), r'''
+MatchSequence - ROOT 0,0..0,2
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('parse_pattern', 0, 0, 'MatchSequence', {}, (MatchSequence, r'''
+a
+,
+'''), r'''
+MatchSequence - ROOT 0,0..1,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
 
 ('parse_pattern', 0, 0, 'MatchMapping', {}, (MatchMapping,
 r'''{"key": _}'''), r'''
@@ -3922,6 +3976,12 @@ r''' *a  # tail'''), r'''
 MatchStar - ROOT 0,1..0,3
   .name 'a'
 '''),
+
+('parse_pattern', 0, 0, 'SyntaxError', {}, ('pattern', r'''
+i: pass
+ case 2
+'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_ExceptHandler', 0, 0, 'ExceptHandler', {'_ver': 11}, ('ExceptHandler',
 r'''except* Exception: pass'''), r'''

@@ -50,6 +50,7 @@ from .asttypes import (
     LtE,
     MatMult,
     MatchSequence,
+    MatchStar,
     Mod,
     Module,
     Mult,
@@ -326,7 +327,7 @@ def _fixing_unparse(ast: AST) -> str:
 
     except AttributeError as exc:
         if not str(exc).endswith("has no attribute 'lineno'"):
-            raise
+            raise  # pragma: no cover
 
     fix_missing_locations(ast)
 
@@ -461,9 +462,6 @@ def _ast_parse1(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 def _ast_parse1_case(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse a single `match_case`."""
 
-    if src.endswith('\\\n'):  # python doesn't like trailing line continuation (which we may actually want to parse like this)
-        src += '\n'
-
     body = ast_parse(src, **parse_params).body
 
     if len(body) != 1 or len(cases := body[0].cases) != 1:
@@ -497,20 +495,25 @@ def _offset_linenos(ast: AST, delta: int) -> AST:
     return ast
 
 
-def _fix_unparenthesized_tuple_parsed_parenthesized(src: str, ast: AST) -> None:
-    """Fix a parsed `Tuple` locations which had original source unparenthesized but which was parenthesized for the
-    parse."""
+def _fix_unparenthesized_seq_parsed_parenthesized(src: str, ast: AST, field: str = 'elts', lineno: int = 2) -> None:
+    """Fix a parsed `Tuple` or `MatchSequence` locations which had original source unparenthesized but which was
+    parenthesized for the parse.
+
+    **Parameters:**
+    - `lineno`: The actual `AST.lineno` the expression is expected to start on, 1 + number of extra lines above it in
+        the parse.
+    """
 
     lines = src.split('\n')
-    elts = ast.elts
+    elts = getattr(ast, field)  # or patterns
     e0 = elts[0]
     en = elts[-1]
     ast.lineno = e0.lineno
     ast.col_offset = e0.col_offset
-    end_ln = en.end_lineno - 2  # -2 because of extra line introduced in parse
-    end_col = len(lines[end_ln].encode()[:en.end_col_offset].decode())  # bistr(lines[end_ln]).b2c(en.end_col_offset)
+    end_ln = en.end_lineno - lineno  # "- lineno" because of extra line introduced in parse
+    end_col = len(lines[end_ln].encode()[:en.end_col_offset].decode())
 
-    if (not (frag := next_frag(lines, end_ln, end_col, ast.end_lineno - 3, 0x7fffffffffffffff))  # if nothing following then last element is ast end, -3 because end also had \n tacked on
+    if (not (frag := next_frag(lines, end_ln, end_col, ast.end_lineno - (lineno + 1), 0x7fffffffffffffff))  # if nothing following then last element is ast end, "- (lineno + 1)" because end also had \n tacked on
         or not frag.src.startswith(',')  # if no comma then last element is ast end
     ):
         ast.end_lineno = en.end_lineno
@@ -518,7 +521,7 @@ def _fix_unparenthesized_tuple_parsed_parenthesized(src: str, ast: AST) -> None:
 
     else:
         end_ln, end_col, _ = frag
-        ast.end_lineno = end_ln + 2
+        ast.end_lineno = end_ln + lineno
         ast.end_col_offset = len(lines[end_ln][:end_col + 1].encode())
 
 
@@ -969,7 +972,7 @@ def parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             if not ast.elts:
                 raise SyntaxError('expecting expression')
 
-            _fix_unparenthesized_tuple_parsed_parenthesized(src, ast)  # we have to do some work to find a possible comma
+            _fix_unparenthesized_seq_parsed_parenthesized(src, ast)  # we have to do some work to find a possible comma
 
     return _offset_linenos(ast, -1)
 
@@ -1451,7 +1454,7 @@ def parse_withitem(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
         assert ast.__class__ is Tuple
 
-        _fix_unparenthesized_tuple_parsed_parenthesized(src, ast)
+        _fix_unparenthesized_seq_parsed_parenthesized(src, ast)
 
     return _offset_linenos(items[0], -1)
 
@@ -1479,33 +1482,34 @@ def parse__withitems(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 def parse_pattern(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     """Parse to a `pattern`, e.g. "{a.b: i, **rest}". @private"""
 
-    try:
+    try:  # first the most common and expected case, single line or otherwise enclosed
         ast = _ast_parse1_case(f'match _:\n case \\\n{src}: pass', parse_params).pattern
 
-    except SyntaxError:  # first in case needs to be enclosed
+    except SyntaxError:  # maybe spread over multiple lines
         try:
-            ast = _ast_parse1_case(f'match _:\n case (\\\n{src}\n): pass', parse_params).pattern
+            ast = _ast_parse1_case(f'match _:\n case (\n{src}\n): pass', parse_params).pattern
 
-        except SyntaxError:  # now just the case of a lone MatchStar
+        except SyntaxError as exc:  # now just the case of a lone MatchStar
             try:
                 patterns = _ast_parse1_case(f'match _:\n case [\\\n{src}\n]: pass', parse_params).pattern.patterns
             except SyntaxError:
-                raise SyntaxError('invalid pattern') from None
+                raise exc from None  # this should be the most informative error we can raise  # SyntaxError('invalid pattern') from None
 
             if len(patterns) != 1:
                 raise ParseError('expecting single pattern') from None
 
             ast = patterns[0]
 
+            if ast.__class__ is not MatchStar:
+                raise RuntimeError(f'expecting MatchStar, got {ast.__class__.__name__}, '
+                                   'only a MatchStar should have gotten here, something has changed in Python syntax')
+
         else:
-            if ast.lineno < 3 and ast.__class__ is MatchSequence:
+            if ast.lineno < 3:  # if this is true then it can only be an unparenthesized MatchSequence
                 if not (patterns := ast.patterns):
                     raise SyntaxError('empty pattern') from None
 
-                ast.lineno = 3  # remove our delimiters from location
-                ast.col_offset = 0
-                ast.end_lineno = (p_1 := patterns[-1]).end_lineno
-                ast.end_col_offset = p_1.end_col_offset
+                _fix_unparenthesized_seq_parsed_parenthesized(src, ast, 'patterns', 3)
 
     return _offset_linenos(ast, -2)
 

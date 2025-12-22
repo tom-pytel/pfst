@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- fix parse single element undelimited `MatchSequence` to include trailing comma
 - disallow putting already parenthesized elements to `Import/ImportFrom.names` and `With/AsyncWith.items`.
 - gave `AsyncWith` put one the correct handler, was missing cases because was doing normal expression put
 - `put_src(action='offset')` exactly on `FormattedValue` or `Interpolation` debug expression will update the preceding debug string correctly
@@ -26,6 +27,7 @@
 
 ### Updated
 
+- filled out test coverage for all modules
 - simplified `reconcile()` usage, user doesn't need to preserve explicit "marked" copy
 - add negative and `'end'` index options to `get_src()` and `put_src()`
 - change get/put index specification to use 0 to `'end'` instead of archaic `None` and `False` for the slice endpoints
