@@ -647,7 +647,7 @@ class FST:
 
     def __new__(
         cls,
-        ast_or_src: AST | builtins.str | list[builtins.str] | None,
+        ast_or_src: AST | builtins.str | list[builtins.str] = '',
         mode: FST | list[builtins.str] | Mode | None = None,
         pfield: astfield | Literal[False] | None = False,
         /,
@@ -728,14 +728,15 @@ class FST:
         **Parameters:**
         - `ast_or_src`: `AST` node for `FST` or source code in the form of a `str` or a list of lines. If an `AST` then
             will be processed differently depending on if creating child node, top level node or using this as a
-            shortcut for a full `fromsrc()` or `fromast()`.
+            shortcut for a full `fromsrc()` or `fromast()`. If left as empty default then just creates a new empty
+            `Module`.
         - `mode`: Is really `mode_or_lines_or_parent`. Parent node for this child node or lines for a root node creating
             a new tree. If `pfield` is `False` then this is a shortcut to create a full tree from an `AST` node or
             source provided in `ast_or_src`.
         - `pfield`: `astfield` indication position in parent of this node. If provided then creating a simple child node
             and it is created with the `self.parent` set to `mode` node and `self.pfield` set to this. If `None` then it
             means the creation of a full new `FST` tree and this is the root node with `mode` providing the source. If
-            `False` then this is a shortcut for `FST.fromsrc()`, `FST.fromast()` or `FST.new()`.
+            `False` then this is a shortcut for `FST.fromsrc()` or `FST.fromast()`.
         - `kwargs`: Contextual parameters:
             - `from_`: If this is provided then it must be an `FST` node from which this node is being created. This
                 allows to copy parse parameters and already determined default indentation.
@@ -744,28 +745,26 @@ class FST:
             - `indent`: Indentation string to use as default indentation. If not provided and not gotten from `from_`
                 then indentation will be inferred from source. Only valid when creating a root node.
             - `filename`, `type_comments` and `feature_version`: If creating from an `AST` or source only then these are
-                the parameteres passed to the respective `.new()`, `.fromsrc()` or `.fromast()` functions. Only valid
-                when `pfield` is `False`, meaning a shortcut use of `FST()`.
+                the parameteres passed to the respective `.fromsrc()` or `.fromast()` functions. Only valid when
+                `pfield` is `False`, meaning a shortcut use of `FST()`.
             - `lcopy`: Whether to copy lines of source on root node create or just use what is passed in, which in this
                 case must be a list of `bistr` and this node takes ownership of the list.
         """
 
         if pfield is False:  # top level shortcut
-            params = {k: v for k in ('filename', 'type_comments', 'feature_version')
-                      if (v := kwargs.get(k, k)) is not k}  # k used as sentinel
+            parse_params = {k: v for k in ('filename', 'type_comments', 'feature_version')
+                            if (v := kwargs.get(k, k)) is not k}  # k used as sentinel
             indent = None
 
-            if from_ := kwargs.get('from_'): # copy parse params from source tree
+            if from_ := kwargs.get('from_'): # copy parse_params from source tree
                 from_root = from_.root
-                params = {**from_root.parse_params, **params}
+                parse_params = {**from_root.parse_params, **parse_params}
                 indent = from_root.indent
 
-            if ast_or_src is None:
-                f = FST.new('exec' if mode is None else mode, **params)
-            elif isinstance(ast_or_src, AST):
-                f = FST.fromast(ast_or_src, mode, **params)
-            else:
-                f = FST.fromsrc(ast_or_src, 'all' if mode is None else mode, **params)
+            if isinstance(ast_or_src, AST):
+                f = FST.fromast(ast_or_src, mode, **parse_params)
+            else:  # str | list[str]
+                f = FST.fromsrc(ast_or_src, 'all' if mode is None else mode, **parse_params)
 
             if indent is not None or (indent := kwargs.get('indent')) is not None:
                 f.indent = indent
@@ -855,63 +854,6 @@ class FST:
                 self.indent = _DEFAULT_INDENT
 
         return self
-
-    @staticmethod
-    def new(
-        mode: Literal['exec', 'eval', 'single'] = 'exec',
-        *,
-        filename: builtins.str = '<unknown>',
-        type_comments: bool = False,
-        feature_version: tuple[int, int] | None = None,
-    ) -> FST:
-        """Create a new empty `FST` tree with the top level node dictated by the `mode` parameter.
-
-        **Parameters:**
-        - `mode`: `ast.parse()` parameter, can only be `'exec'`, `'eval'` or `'single'` here.
-        - `filename`: `ast.parse()` parameter.
-        - `type_comments`: `ast.parse()` parameter.
-        - `feature_version`: `ast.parse()` parameter.
-
-        **Returns:**
-        - `FST`: The new empty top level `FST` node.
-
-        **Examples:**
-
-        >>> FST.new()
-        <Module ROOT 0,0..0,0>
-
-        >>> FST.new(mode='single')
-        <Interactive ROOT 0,0..0,0>
-
-        >>> FST.new(mode='eval')
-        <Expression ROOT 0,0..0,4>
-
-        >>> _.dump()
-        Expression - ROOT 0,0..0,4
-          .body Constant None - 0,0..0,4
-
-        >>> _.src
-        'None'
-        """
-
-        parse_params = dict(filename=filename, type_comments=type_comments, feature_version=feature_version)
-
-        if mode == 'exec':
-            ast = Module(body=[], type_ignores=[])
-            src = ''
-
-        elif mode == 'eval':
-            ast = Expression(body=Constant(value=None, lineno=1, col_offset=0, end_lineno=1, end_col_offset=4))
-            src = 'None'
-
-        elif mode == 'single':
-            ast = Interactive(body=[])
-            src = ''
-
-        else:
-            raise ValueError(f"invalid mode '{mode}' for blank FST")
-
-        return FST(ast, [src], None, parse_params=parse_params)
 
     @staticmethod
     def fromsrc(

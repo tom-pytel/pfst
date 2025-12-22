@@ -2124,20 +2124,20 @@ y"
         m.success(f)
 
     def test___new__(self):
-        f = FST(None, 'exec')
+        f = FST()
         self.assertEqual('', f.src)
         self.assertIsInstance(f.a, Module)
         self.assertEqual([], f.a.body)
 
-        f = FST(None, 'single')
+        f = FST('')
         self.assertEqual('', f.src)
-        self.assertIsInstance(f.a, Interactive)
+        self.assertIsInstance(f.a, Module)
         self.assertEqual([], f.a.body)
 
-        f = FST(None, 'eval')
-        self.assertEqual('None', f.src)
-        self.assertIsInstance(f.a, Expression)
-        self.assertIsInstance(f.a.body, expr)
+        f = FST('', 'exec')
+        self.assertEqual('', f.src)
+        self.assertIsInstance(f.a, Module)
+        self.assertEqual([], f.a.body)
 
         f = FST('i = 1', 'exec')
         self.assertEqual('i = 1', f.src)
@@ -2196,14 +2196,6 @@ y"
                 print(f'{src = !r}')
 
                 raise
-
-    def test_new(self):
-        self.assertEqual('Module - ROOT 0,0..0,0', FST.new().dump(out=str))
-        self.assertEqual('Expression - ROOT 0,0..0,4\n  .body Constant None - 0,0..0,4', FST.new('eval').dump(out=str))
-        self.assertEqual('Interactive - ROOT 0,0..0,0', FST.new('single').dump(out=str))
-
-        self.assertRaises(ValueError, FST.new, None)
-        self.assertRaises(ValueError, FST.new, 'INVALID')
 
     def test_fromast(self):
         a = ast_parse('i = 1', '', 'exec')
@@ -6343,7 +6335,7 @@ class cls:
         self.assertEqual('b', c.base.src)
         self.assertEqual(1, c.stop)
 
-        c = FST.new().body
+        c = FST().body
         c[0:0] = 'a\nb'
         self.assertEqual('a\nb', c.base.src)
         self.assertEqual(2, c.stop)

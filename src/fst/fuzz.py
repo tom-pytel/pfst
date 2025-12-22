@@ -1961,7 +1961,7 @@ class SliceStmtish(Fuzzy):
     def fuzz_one(self, fst, fnm) -> bool:
         with FST.options(norm_self=False):  # so we can cut bodies down to empty
             containers = {
-                stmt:          FST.new().body,
+                stmt:          FST('', 'exec').body,
                 ExceptHandler: FST('try: pass\nfinally: pass').handlers,
                 match_case:    FST('match _:\n  case _: pass').cases,
             }

@@ -13,17 +13,17 @@ When modifying a node, you specify what to replace the node `AST` with. You can 
 modification succeeds or not. `AST` nodes are not consumed as they are unparsed and then reparsed in order to make sure
 their locations are correct. Source code in the form of a list of line strings is also not consumed.
 
->>> FST.new().body.append('i = 1').base.src
+>>> FST().body.append('i = 1').base.src
 'i = 1'
 
->>> FST.new().body.append(['i = 1']).base.src
+>>> FST().body.append(['i = 1']).base.src
 'i = 1'
 
->>> FST.new().body.append(Assign(targets=[Name(id='i')],
-...                              value=Constant(value=1))).base.src
+>>> FST().body.append(Assign(targets=[Name(id='i')],
+...                        value=Constant(value=1))).base.src
 'i = 1'
 
->>> FST.new().body.append(FST('i = 1')).base.src
+>>> FST().body.append(FST('i = 1')).base.src
 'i = 1'
 
 
