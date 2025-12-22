@@ -29,7 +29,7 @@ from fst.astutil import (
     compare_asts,
 )
 
-from fst.common import PYLT14, PYGE11, PYGE12, PYGE13
+from fst.common import PYLT11, PYLT14, PYGE11, PYGE12, PYGE13
 
 from fst.code import *
 
@@ -59,6 +59,9 @@ PARSE_TESTS = [
     ('all',                px.parse_expr_all,           Starred,                  '*not a'),
     ('all',                px.parse_stmt,               AnnAssign,                'a:b'),
     ('all',                px.parse_expr_all,           Slice,                    'a:b:c'),
+    ('all',                px.parse_expr_all,           Slice,                    ':b:c'),
+    ('all',                px.parse_expr_all,           Slice,                    '::'),
+    ('all',                px.parse_expr_all,           Slice,                    ':'),
     ('all',                px.parse_pattern,            MatchAs,                  '1 as a'),
     ('all',                px.parse_arguments,          arguments,                'a: list[str], /, b: int = 1, *c, d=100, **e'),
     ('all',                px.parse_arguments_lambda,   arguments,                'a, /, b, *c, d=100, **e'),
@@ -75,10 +78,19 @@ PARSE_TESTS = [
     ('all',                px.parse_cmpop,              Gt,                       '>'),
     ('all',                px.parse_boolop,             And,                      'and'),
     ('all',                px.parse_unaryop,            Invert,                   '~'),
+    ('all',                px.parse_operator,           LShift,                   '<<'),
     ('all',                px.parse__Assign_targets,    _Assign_targets,          'a = '),
     ('all',                px.parse__Assign_targets,    _Assign_targets,          'a = b ='),
     ('all',                px.parse__decorator_list,    _decorator_list,          '@a'),
     ('all',                px.parse__decorator_list,    _decorator_list,          '@a\n@b'),
+    ('all',                px.parse_stmt,               Assign,                   '_ = 1'),
+    ('all',                px.parse_stmt,               Assign,                   'case = 1'),
+    ('all',                px.parse_stmt,               Assign,                   'match = 1'),
+    ('all',                px.parse_stmt,               Assign,                   'type = 1'),
+    ('all',                px.parse_all,                SyntaxError,              'elif'),
+    ('all',                px.parse_all,                SyntaxError,              'else'),
+    ('all',                px.parse_all,                SyntaxError,              'finally'),
+    ('all',                px.parse_all,                SyntaxError,              'as'),
 
     ('strict',             px.parse_stmts,              Module,                   'i: int = 1\nj'),
     ('strict',             px.parse__ExceptHandlers,    SyntaxError,              'except Exception: pass\nexcept: pass'),
@@ -127,6 +139,10 @@ PARSE_TESTS = [
     ('_ExceptHandlers',    px.parse__ExceptHandlers,    SyntaxError,              'i: int = 1\nj'),
     ('ExceptHandler',      px.parse_ExceptHandler,      ExceptHandler,            'except: pass'),
     ('ExceptHandler',      px.parse_ExceptHandler,      ParseError,               'except Exception: pass\nexcept: pass'),
+    ('ExceptHandler',      px.parse_ExceptHandler,      IndentationError,         'except:\n  pass\n    pass'),
+    ('ExceptHandler',      px.parse_ExceptHandler,      IndentationError,         '  except: pass'),
+    ('ExceptHandler',      px.parse_ExceptHandler,      ParseError,               'finally: pass'),
+    ('ExceptHandler',      px.parse_ExceptHandler,      SyntaxError,              'else: pass'),
     ('ExceptHandler',      px.parse_ExceptHandler,      SyntaxError,              'i: int = 1'),
 
     ('_match_cases',       px.parse__match_cases,       _match_cases,             'case None: pass\ncase 1: pass'),
@@ -161,6 +177,7 @@ PARSE_TESTS = [
     ('expr',               px.parse_expr,               SyntaxError,              '*not a'),
     ('expr',               px.parse_expr,               SyntaxError,              'a:b'),
     ('expr',               px.parse_expr,               SyntaxError,              'a:b:c'),
+    ('expr',               px.parse_expr,               SyntaxError,              ''),
 
     ('expr_all',           px.parse_expr_all,           Name,                     'j'),
     ('expr_all',           px.parse_expr_all,           Starred,                  '*s'),
@@ -197,6 +214,7 @@ PARSE_TESTS = [
     ('expr_slice',         px.parse_expr_slice,         Slice,                    'a:b'),
     ('expr_slice',         px.parse_expr_slice,         Tuple,                    'j, k'),
     ('expr_slice',         px.parse_expr_slice,         Tuple,                    'a:b:c, x:y:z'),
+    ('expr_slice',         px.parse_expr_slice,         SyntaxError,              ''),
 
     ('Tuple_elt',          px.parse_Tuple_elt,          Name,                     'j'),
     ('Tuple_elt',          px.parse_Tuple_elt,          Starred,                  '*s'),
@@ -204,21 +222,28 @@ PARSE_TESTS = [
     ('Tuple_elt',          px.parse_Tuple_elt,          Tuple,                    'j, k'),
     ('Tuple_elt',          px.parse_Tuple_elt,          SyntaxError,              'a:b:c, x:y:z'),
 
+    ('Tuple',              px.parse_Tuple,              ParseError,               '1'),
+    ('Tuple',              px.parse_Tuple,              ParseError,               '*st'),
+
     ('boolop',             px.parse_boolop,             And,                      'and'),
     ('boolop',             px.parse_boolop,             SyntaxError,              'and 1'),
     ('boolop',             px.parse_boolop,             SyntaxError,              '*'),
+    ('boolop',             px.parse_boolop,             SyntaxError,              ''),
     ('operator',           px.parse_operator,           Mult,                     '*'),
     ('operator',           px.parse_operator,           SyntaxError,              '* 1'),
     ('operator',           px.parse_operator,           SyntaxError,              '*='),
     ('operator',           px.parse_operator,           SyntaxError,              'and'),
+    ('operator',           px.parse_operator,           SyntaxError,              ''),
     ('unaryop',            px.parse_unaryop,            UAdd,                     '+'),
     ('unaryop',            px.parse_unaryop,            SyntaxError,              '+ 1'),
     ('unaryop',            px.parse_unaryop,            SyntaxError,              'and'),
+    ('unaryop',            px.parse_unaryop,            SyntaxError,              ''),
     ('cmpop',              px.parse_cmpop,              GtE,                      '>='),
     ('cmpop',              px.parse_cmpop,              IsNot,                    'is\nnot'),
     ('cmpop',              px.parse_cmpop,              SyntaxError,              '+='),
     ('cmpop',              px.parse_cmpop,              SyntaxError,              '>= a >='),
     ('cmpop',              px.parse_cmpop,              SyntaxError,              'and'),
+    ('cmpop',              px.parse_cmpop,              SyntaxError,              ''),
 
     ('comprehension',      px.parse_comprehension,      comprehension,            'for u in v'),
     ('comprehension',      px.parse_comprehension,      comprehension,            'async for u in v'),
@@ -229,6 +254,8 @@ PARSE_TESTS = [
     ('_comprehensions',    px.parse__comprehensions,    _comprehensions,          'for u in v'),
     ('_comprehensions',    px.parse__comprehensions,    _comprehensions,          'async for u in v'),
     ('_comprehensions',    px.parse__comprehensions,    _comprehensions,          'for u in v if w async for s in t'),
+    ('_comprehensions',    px.parse__comprehensions,    ParseError,               'if i'),
+    ('_comprehensions',    px.parse__comprehensions,    ParseError,               ']+['),
 
     ('_comprehension_ifs', px.parse__comprehension_ifs, _comprehension_ifs,       ''),
     ('_comprehension_ifs', px.parse__comprehension_ifs, _comprehension_ifs,       'if u'),
@@ -252,6 +279,7 @@ PARSE_TESTS = [
     ('arg',                px.parse_arg,                ParseError,               '*, a'),
     ('arg',                px.parse_arg,                ParseError,               '*a'),
     ('arg',                px.parse_arg,                ParseError,               '**a'),
+    ('arg',                px.parse_arg,                ParseError,               'a, b'),
 
     ('keyword',            px.parse_keyword,            keyword,                  'a=1'),
     ('keyword',            px.parse_keyword,            keyword,                  '**a'),
@@ -356,6 +384,7 @@ PARSE_TESTS = [
     ('_withitems',         px.parse__withitems,         _withitems,               '(a)'),
     ('_withitems',         px.parse__withitems,         SyntaxError,              '(a as b)'),
     ('_withitems',         px.parse__withitems,         SyntaxError,              '(a as b, x as y)'),
+    ('_withitems',         px.parse__withitems,         SyntaxError,              'i for i in j'),
 
     ('pattern',            px.parse_pattern,            MatchValue,               '42'),
     ('pattern',            px.parse_pattern,            MatchSingleton,           'None'),
@@ -373,6 +402,7 @@ PARSE_TESTS = [
     ('pattern',            px.parse_pattern,            MatchAs,                  '_'),
     ('pattern',            px.parse_pattern,            MatchStar,                '*a'),
     ('pattern',            px.parse_pattern,            SyntaxError,              ''),
+    ('pattern',            px.parse_pattern,            SyntaxError,              'i: pass\n case 2'),
 
     ('expr',               px.parse_expr,               BoolOp,                   '\na\nor\nb\n'),
     ('expr',               px.parse_expr,               NamedExpr,                '\na\n:=\nb\n'),
@@ -625,8 +655,6 @@ PARSE_TESTS = [
     ('withitem',           px.parse_withitem,           withitem,                 ' a as b,  # tail'),
     ('pattern',            px.parse_pattern,            MatchOr,                  ' 1 | 2 | 3  # tail'),
     ('pattern',            px.parse_pattern,            MatchStar,                ' *a  # tail'),
-
-    ('pattern',            px.parse_pattern,            SyntaxError,              'i: pass\n case 2'),
   ]
 
 PARSE_TESTS_10 = PARSE_TESTS.copy()
@@ -657,6 +685,7 @@ if PYGE12:
         ('type_param',         px.parse_type_param,         ParamSpec,              '**a'),
         ('type_param',         px.parse_type_param,         TypeVarTuple,           '*a'),
         ('type_param',         px.parse_type_param,         ParseError,             'a: int,'),
+        ('type_param',         px.parse_type_param,         ParseError,             'T, U'),
 
         ('_type_params',       px.parse__type_params,       _type_params,           ''),
         ('_type_params',       px.parse__type_params,       _type_params,           'a: int'),
@@ -827,7 +856,7 @@ class TestParse(unittest.TestCase):
         self.assertRaises(SyntaxError, px.parse_withitem, 'i for i in j')
         self.assertRaises(SyntaxError, px.parse_withitem, '')
 
-    def test_parse__Boolop_dangling(self):
+    def test_parse__BoolOp_dangling(self):
         # left
 
         src = '\n# comment\n \\\n and # line\n x # line\n \\\n'
@@ -837,6 +866,8 @@ class TestParse(unittest.TestCase):
         f = FST(px.parse__BoolOp_dangling_left(src, loc_whole=True), src.split('\n'), None)
         self.assertEqual((0, 0, 6, 0), f.loc)
 
+        self.assertRaises(ParseError, px.parse__BoolOp_dangling_left, '+ 1')
+
         # right
 
         src = '\n# comment\n \\\n x # comment\n \\\n and # line\n \\\n'
@@ -845,6 +876,13 @@ class TestParse(unittest.TestCase):
 
         f = FST(px.parse__BoolOp_dangling_right(src, loc_whole=True), src.split('\n'), None)
         self.assertEqual((0, 0, 7, 0), f.loc)
+
+        src = '\na and\n'
+
+        f = FST(px.parse__BoolOp_dangling_right(src, loc_whole=False), src.split('\n'), None)
+        self.assertEqual((1, 0, 1, 5), f.loc)
+
+        self.assertRaises(ParseError, px.parse__BoolOp_dangling_right, '1 +')
 
     def test_parse__Compare_dangling(self):
         # left
@@ -862,6 +900,8 @@ class TestParse(unittest.TestCase):
 
         f = FST(px.parse__Compare_dangling_left(src, loc_whole=True), src.split('\n'), None)
         self.assertEqual((0, 0, 8, 0), f.loc)
+
+        self.assertRaises(ParseError, px.parse__Compare_dangling_left, '+ 1')
 
         # right
 
@@ -885,6 +925,8 @@ class TestParse(unittest.TestCase):
 
         f = FST(px.parse__Compare_dangling_right(src, loc_whole=True), src.split('\n'), None)
         self.assertEqual((0, 0, 9, 0), f.loc)
+
+        self.assertRaises(ParseError, px.parse__Compare_dangling_right, '1 +')
 
     def test_parse_by_ast_name_from_get_one_data(self):
         # make sure parsing by name of `AST` class is same as parsing by `AST` class
@@ -910,6 +952,26 @@ class TestParse(unittest.TestCase):
 
         if not cases_found:
             raise RuntimeError("'all_basic' cases not found at start of DATA_GET_ONE")
+
+    def test_parse_coverage(self):
+        # for test coverage
+
+        self.assertRaises(ParseError, px.parse, 'pass', Assign)
+        self.assertRaises(ParseError, px.parse, 'call()', BinOp)
+        self.assertRaises(ParseError, px.parse, '*st', MatchSequence)
+
+        self.assertRaises(ParseError, px.parse, '', TypeIgnore)
+        self.assertRaises(ValueError, px.parse, '', list)
+
+        self.assertRaises(SyntaxError, px.parse_all, '!')
+
+        if PYLT11:
+            self.assertRaises(SyntaxError, px.parse_expr_slice, '*st')
+            self.assertIsInstance(px.parse_Tuple_elt('*st'), Starred)
+            self.assertRaises(SyntaxError, px.parse_Tuple, '')
+
+        if PYGE11:
+            self.assertRaises(ParseError, px.parse_arg, 'arg: *st, b')
 
     def test_code_as_simple(self):
         # stmts

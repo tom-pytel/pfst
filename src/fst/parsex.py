@@ -855,12 +855,8 @@ def parse__ExceptHandlers(src: str, parse_params: Mapping[str, Any] = {}) -> AST
             ast = _ast_parse(f'try: pass\n{src}', parse_params)  # just reparse without our finally block to confirm if that was the error
         except SyntaxError:
             pass
-
         else:
-            if len(ast.body) == 1:
-                raise ParseError("not expecting 'finally' block") from None
-            else:
-                raise ParseError('expecting only exception handlers`') from None
+            raise ParseError("not expecting 'finally' block") from None
 
         raise
 
@@ -965,10 +961,13 @@ def parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     else:
         ast_cls = ast.__class__
 
-        if ast_cls is GeneratorExp and ast.lineno == 1 and ast.col_offset == 0:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
-            raise SyntaxError('expecting expression, got unparenthesized GeneratorExp')
+        if ast.lineno == 1:  # our grouping parentheses are included as part of the expression
+            if ast_cls is GeneratorExp:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
+                raise SyntaxError('expecting expression, got unparenthesized GeneratorExp')
 
-        if ast_cls is Tuple and ast.lineno == 1:  # tuple with newlines included grouping pars which are not in source, fix
+            if ast_cls is not Tuple:  # unparenthesized tuple with newlines included grouping pars which are not in source, fix
+                raise RuntimeError(f'expecting Tuple, got {ast_cls.__name__}, should not get here')  # pragma: no cover
+
             if not ast.elts:
                 raise SyntaxError('expecting expression')
 
@@ -1047,8 +1046,8 @@ def parse_expr_slice(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         if ast_cls is GeneratorExp:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
             raise SyntaxError('expecting slice expression, got unparenthesized GeneratorExp') from None
 
-        if ast_cls is Tuple:  # only py 3.10 because otherwise the parse above would have gotten it
-            if ast.elts:
+        if ast_cls is Tuple:
+            if ast.elts:  # only py 3.10 because otherwise the parse above would have gotten it
                 raise SyntaxError('cannot have unparenthesized tuple containing Starred in slice') from None
 
             raise SyntaxError('expecting slice expression') from None
@@ -1133,14 +1132,14 @@ def parse__Assign_targets(src: str, parse_params: Mapping[str, Any] = {}) -> AST
             raise SyntaxError('invalid Assign targets slice') from None
 
     if ast.__class__ is not Assign:
-        raise ParseError(f'expecting Assign targets, got {ast.__class__.__name__}')
+        raise RuntimeError(f'expecting Assign targets, got {ast.__class__.__name__}, should not get here')  # pragma: no cover
 
     name = ast.value
 
     if name.__class__ is not Name:
         raise ParseError(f'unexpected value type parsing Assign targets, {name.__class__.__name__}')
     elif name.id != '_':
-        raise ParseError(f'unexpected value id parsing Assign targets, {name.value!r}')
+        raise RuntimeError(f'unexpected value id parsing Assign targets, {name.value!r}, should not get here')  # pragma: no cover
 
     targets = ast.targets
 
@@ -1211,7 +1210,7 @@ def parse__comprehensions(src: str, parse_params: Mapping[str, Any] = {}) -> AST
     ast = _ast_parse1(f'[_ for _ in _\n{src}\n]', parse_params).value
 
     if ast.__class__ is not ListComp:
-        raise ParseError('expecting comprehensions')
+        raise ParseError(f'expecting comprehensions, got {ast.__class__.__name__}')
 
     generators = ast.generators
 
@@ -1259,7 +1258,7 @@ def parse_arg(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     try:
         args = _ast_parse1(f'def f(\n{src}\n): pass', parse_params).args
 
-    except SyntaxError:  # may be '*vararg: *starred'
+    except SyntaxError:  # may be '*vararg: *starred', py >= 3.11
         try:
             args = _ast_parse1(f'def f(*\n{src}\n): pass', parse_params).args
         except SyntaxError:
@@ -1471,7 +1470,7 @@ def parse__withitems(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
         if ast_cls is GeneratorExp:  # wrapped something that looks like a GeneratorExp and turned it into that, bad
             raise SyntaxError('expecting withitem, got unparenthesized GeneratorExp')
 
-        if ast_cls is Tuple and not ast.elts and ast.col_offset == 5:
+        if ast_cls is Tuple and not ast.elts and ast.lineno == 1:  # empty tuple created by our pars
             items = []
 
     ast = _withitems(items=items, **_astloc_from_src(src, 2))
@@ -1491,18 +1490,17 @@ def parse_pattern(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
 
         except SyntaxError as exc:  # now just the case of a lone MatchStar
             try:
-                patterns = _ast_parse1_case(f'match _:\n case [\\\n{src}\n]: pass', parse_params).pattern.patterns
+                patterns = _ast_parse1_case(f'match _:\n case [\n{src}\n]: pass', parse_params).pattern.patterns
             except SyntaxError:
                 raise exc from None  # this should be the most informative error we can raise  # SyntaxError('invalid pattern') from None
 
             if len(patterns) != 1:
-                raise ParseError('expecting single pattern') from None
+                raise RuntimeError('expecting single pattern, should not get here')  # pragma: no cover
 
             ast = patterns[0]
 
             if ast.__class__ is not MatchStar:
-                raise RuntimeError(f'expecting MatchStar, got {ast.__class__.__name__}, '
-                                   'only a MatchStar should have gotten here, something has changed in Python syntax')
+                raise RuntimeError(f'expecting MatchStar, got {ast.__class__.__name__}, should not get here')  # pragma: no cover
 
         else:
             if ast.lineno < 3:  # if this is true then it can only be an unparenthesized MatchSequence

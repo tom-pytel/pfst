@@ -188,6 +188,21 @@ Slice - ROOT 0,0..0,5
   .step Name 'c' Load - 0,4..0,5
 '''),
 
+('parse_expr_all', 0, 0, 'Slice', {}, ('all',
+r''':b:c'''), r'''
+Slice - ROOT 0,0..0,4
+  .upper Name 'b' Load - 0,1..0,2
+  .step Name 'c' Load - 0,3..0,4
+'''),
+
+('parse_expr_all', 0, 0, 'Slice', {}, ('all',
+r'''::'''),
+r'''Slice - ROOT 0,0..0,2'''),
+
+('parse_expr_all', 0, 0, 'Slice', {}, ('all',
+r''':'''),
+r'''Slice - ROOT 0,0..0,1'''),
+
 ('parse_pattern', 0, 0, 'MatchAs', {}, ('all',
 r'''1 as a'''), r'''
 MatchAs - ROOT 0,0..0,6
@@ -365,6 +380,10 @@ r'''And - ROOT 0,0..0,3'''),
 r'''~'''),
 r'''Invert - ROOT 0,0..0,1'''),
 
+('parse_operator', 0, 0, 'LShift', {}, ('all',
+r'''<<'''),
+r'''LShift - ROOT 0,0..0,2'''),
+
 ('parse__Assign_targets', 0, 0, '_Assign_targets', {}, ('all',
 r'''a = '''), r'''
 _Assign_targets - ROOT 0,0..0,4
@@ -396,6 +415,54 @@ _decorator_list - ROOT 0,0..1,2
    0] Name 'a' Load - 0,1..0,2
    1] Name 'b' Load - 1,1..1,2
 '''),
+
+('parse_stmt', 0, 0, 'Assign', {}, ('all',
+r'''_ = 1'''), r'''
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name '_' Store - 0,0..0,1
+  .value Constant 1 - 0,4..0,5
+'''),
+
+('parse_stmt', 0, 0, 'Assign', {}, ('all',
+r'''case = 1'''), r'''
+Assign - ROOT 0,0..0,8
+  .targets[1]
+   0] Name 'case' Store - 0,0..0,4
+  .value Constant 1 - 0,7..0,8
+'''),
+
+('parse_stmt', 0, 0, 'Assign', {}, ('all',
+r'''match = 1'''), r'''
+Assign - ROOT 0,0..0,9
+  .targets[1]
+   0] Name 'match' Store - 0,0..0,5
+  .value Constant 1 - 0,8..0,9
+'''),
+
+('parse_stmt', 0, 0, 'Assign', {}, ('all',
+r'''type = 1'''), r'''
+Assign - ROOT 0,0..0,8
+  .targets[1]
+   0] Name 'type' Store - 0,0..0,4
+  .value Constant 1 - 0,7..0,8
+'''),
+
+('parse_all', 0, 0, 'SyntaxError', {}, ('all',
+r'''elif'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse_all', 0, 0, 'SyntaxError', {}, ('all',
+r'''else'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse_all', 0, 0, 'SyntaxError', {}, ('all',
+r'''finally'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse_all', 0, 0, 'SyntaxError', {}, ('all',
+r'''as'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_stmts', 0, 0, 'Module', {}, ('strict', r'''
 i: int = 1
@@ -684,6 +751,25 @@ except: pass
 '''),
 r'''**ParseError('expecting single ExceptHandler')**'''),
 
+('parse_ExceptHandler', 0, 0, 'IndentationError', {}, ('ExceptHandler', r'''
+except:
+  pass
+    pass
+'''),
+r'''**IndentationError('unexpected indent')**'''),
+
+('parse_ExceptHandler', 0, 0, 'IndentationError', {}, ('ExceptHandler',
+r'''  except: pass'''),
+r'''**IndentationError('unexpected indent')**'''),
+
+('parse_ExceptHandler', 0, 0, 'ParseError', {}, ('ExceptHandler',
+r'''finally: pass'''),
+r'''**ParseError("not expecting 'finally' block")**'''),
+
+('parse_ExceptHandler', 0, 0, 'SyntaxError', {}, ('ExceptHandler',
+r'''else: pass'''),
+r'''**SyntaxError("expected 'except' or 'finally' block")**'''),
+
 ('parse_ExceptHandler', 0, 0, 'SyntaxError', {}, ('ExceptHandler',
 r'''i: int = 1'''),
 r'''**SyntaxError("expected 'except' or 'finally' block")**'''),
@@ -894,6 +980,10 @@ r'''**SyntaxError('invalid expression (standard)')**'''),
 ('parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
 r'''a:b:c'''),
 r'''**SyntaxError('invalid expression (standard)')**'''),
+
+('parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
+r''''''),
+r'''**SyntaxError('expecting expression')**'''),
 
 ('parse_expr_all', 0, 0, 'Name', {}, ('expr_all',
 r'''j'''),
@@ -1161,6 +1251,10 @@ Tuple - ROOT 0,0..0,12
   .ctx Load
 '''),
 
+('parse_expr_slice', 0, 0, 'SyntaxError', {}, ('expr_slice',
+r''''''),
+r'''**SyntaxError('expecting slice expression')**'''),
+
 ('parse_Tuple_elt', 0, 0, 'Name', {}, ('Tuple_elt',
 r'''j'''),
 r'''Name 'j' Load - ROOT 0,0..0,1'''),
@@ -1192,6 +1286,14 @@ Tuple - ROOT 0,0..0,4
 r'''a:b:c, x:y:z'''),
 r'''**SyntaxError('invalid expression (standard)')**'''),
 
+('parse_Tuple', 0, 0, 'ParseError', {}, ('Tuple',
+r'''1'''),
+r'''**ParseError('expecting Tuple, got Constant')**'''),
+
+('parse_Tuple', 0, 0, 'ParseError', {}, ('Tuple',
+r'''*st'''),
+r'''**ParseError('expecting Tuple, got Starred')**'''),
+
 ('parse_boolop', 0, 0, 'And', {}, ('boolop',
 r'''and'''),
 r'''And - ROOT 0,0..0,3'''),
@@ -1203,6 +1305,10 @@ r'''**SyntaxError("unexpected code after boolop, '1'")**'''),
 ('parse_boolop', 0, 0, 'SyntaxError', {}, ('boolop',
 r'''*'''),
 r'''**SyntaxError("expecting boolop, got '*'")**'''),
+
+('parse_boolop', 0, 0, 'SyntaxError', {}, ('boolop',
+r''''''),
+r'''**SyntaxError('expecting boolop, got nothing')**'''),
 
 ('parse_operator', 0, 0, 'Mult', {}, ('operator',
 r'''*'''),
@@ -1220,6 +1326,10 @@ r'''**SyntaxError("expecting operator, got '*='")**'''),
 r'''and'''),
 r'''**SyntaxError("expecting operator, got 'and'")**'''),
 
+('parse_operator', 0, 0, 'SyntaxError', {}, ('operator',
+r''''''),
+r'''**SyntaxError('expecting operator, got nothing')**'''),
+
 ('parse_unaryop', 0, 0, 'UAdd', {}, ('unaryop',
 r'''+'''),
 r'''UAdd - ROOT 0,0..0,1'''),
@@ -1231,6 +1341,10 @@ r'''**SyntaxError("unexpected code after unaryop, '1'")**'''),
 ('parse_unaryop', 0, 0, 'SyntaxError', {}, ('unaryop',
 r'''and'''),
 r'''**SyntaxError("expecting unaryop, got 'and'")**'''),
+
+('parse_unaryop', 0, 0, 'SyntaxError', {}, ('unaryop',
+r''''''),
+r'''**SyntaxError('expecting unaryop, got nothing')**'''),
 
 ('parse_cmpop', 0, 0, 'GtE', {}, ('cmpop',
 r'''>='''),
@@ -1253,6 +1367,10 @@ r'''**SyntaxError("unexpected code after cmpop, 'a'")**'''),
 ('parse_cmpop', 0, 0, 'SyntaxError', {}, ('cmpop',
 r'''and'''),
 r'''**SyntaxError("expecting cmpop, got 'and'")**'''),
+
+('parse_cmpop', 0, 0, 'SyntaxError', {}, ('cmpop',
+r''''''),
+r'''**SyntaxError('expecting cmpop, got nothing')**'''),
 
 ('parse_comprehension', 0, 0, 'comprehension', {}, ('comprehension',
 r'''for u in v'''), r'''
@@ -1323,6 +1441,14 @@ _comprehensions - ROOT 0,0..0,32
      .iter Name 't' Load - 0,31..0,32
      .is_async 1
 '''),
+
+('parse__comprehensions', 0, 0, 'ParseError', {}, ('_comprehensions',
+r'''if i'''),
+r'''**ParseError('expecting comprehensions, got comprehension ifs')**'''),
+
+('parse__comprehensions', 0, 0, 'ParseError', {}, ('_comprehensions',
+r''']+['''),
+r'''**ParseError('expecting comprehensions, got BinOp')**'''),
 
 ('parse__comprehension_ifs', 0, 0, '_comprehension_ifs', {}, ('_comprehension_ifs',
 r''''''),
@@ -1469,6 +1595,10 @@ r'''**ParseError('expecting single argument without default')**'''),
 
 ('parse_arg', 0, 0, 'ParseError', {}, ('arg',
 r'''**a'''),
+r'''**ParseError('expecting single argument without default')**'''),
+
+('parse_arg', 0, 0, 'ParseError', {}, ('arg',
+r'''a, b'''),
 r'''**ParseError('expecting single argument without default')**'''),
 
 ('parse_keyword', 0, 0, 'keyword', {}, ('keyword',
@@ -2089,6 +2219,10 @@ r'''**SyntaxError('invalid syntax')**'''),
 r'''(a as b, x as y)'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
+('parse__withitems', 0, 0, 'SyntaxError', {}, ('_withitems',
+r'''i for i in j'''),
+r'''**SyntaxError('expecting withitem, got unparenthesized GeneratorExp')**'''),
+
 ('parse_pattern', 0, 0, 'MatchValue', {}, ('pattern',
 r'''42'''), r'''
 MatchValue - ROOT 0,0..0,2
@@ -2199,6 +2333,12 @@ MatchStar - ROOT 0,0..0,2
 ('parse_pattern', 0, 0, 'SyntaxError', {}, ('pattern',
 r''''''),
 r'''**SyntaxError('empty pattern')**'''),
+
+('parse_pattern', 0, 0, 'SyntaxError', {}, ('pattern', r'''
+i: pass
+ case 2
+'''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_expr', 0, 0, 'BoolOp', {}, ('expr', r'''
 a
@@ -3977,12 +4117,6 @@ MatchStar - ROOT 0,1..0,3
   .name 'a'
 '''),
 
-('parse_pattern', 0, 0, 'SyntaxError', {}, ('pattern', r'''
-i: pass
- case 2
-'''),
-r'''**SyntaxError('invalid syntax')**'''),
-
 ('parse_ExceptHandler', 0, 0, 'ExceptHandler', {'_ver': 11}, ('ExceptHandler',
 r'''except* Exception: pass'''), r'''
 ExceptHandler - ROOT 0,0..0,23
@@ -4101,6 +4235,10 @@ TypeVarTuple - ROOT 0,0..0,2
 ('parse_type_param', 0, 0, 'ParseError', {'_ver': 12}, ('type_param',
 r'''a: int,'''),
 r'''**ParseError('expecting single type_param, has trailing comma')**'''),
+
+('parse_type_param', 0, 0, 'ParseError', {'_ver': 12}, ('type_param',
+r'''T, U'''),
+r'''**ParseError('expecting single type_param')**'''),
 
 ('parse__type_params', 0, 0, '_type_params', {'_ver': 12}, ('_type_params',
 r''''''),
