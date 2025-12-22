@@ -384,6 +384,8 @@ PARSE_TESTS = [
     ('Import_name',        px.parse_Import_name,        ParseError,               'a as x, b as y'),
     ('Import_name',        px.parse_Import_name,        ParseError,               'a as x, a.b as y'),
     ('Import_name',        px.parse_Import_name,        SyntaxError,              '(a)'),
+    ('Import_name',        px.parse_Import_name,        SyntaxError,              ')'),
+    ('Import_name',        px.parse_Import_name,        SyntaxError,              ','),
 
     ('_Import_names',      px.parse__Import_names,      _aliases,                 ''),
     ('_Import_names',      px.parse__Import_names,      _aliases,                 'a'),
@@ -397,6 +399,8 @@ PARSE_TESTS = [
     ('_Import_names',      px.parse__Import_names,      _aliases,                 'a as x, a.b as y'),
     ('_Import_names',      px.parse__Import_names,      _aliases,                 'a,\nb'),
     ('_Import_names',      px.parse__Import_names,      SyntaxError,              '(a, b)'),
+    ('_Import_names',      px.parse__Import_names,      SyntaxError,              ')'),
+    ('_Import_names',      px.parse__Import_names,      SyntaxError,              ','),
 
     ('ImportFrom_name',    px.parse_ImportFrom_name,    SyntaxError,              ''),
     ('ImportFrom_name',    px.parse_ImportFrom_name,    alias,                    'a'),
@@ -409,6 +413,8 @@ PARSE_TESTS = [
     ('ImportFrom_name',    px.parse_ImportFrom_name,    ParseError,               'a as x, b as y'),
     ('ImportFrom_name',    px.parse_ImportFrom_name,    SyntaxError,              'a as x, a.b as y'),
     ('ImportFrom_name',    px.parse_ImportFrom_name,    SyntaxError,              '(a)'),
+    ('ImportFrom_name',    px.parse_ImportFrom_name,    SyntaxError,              ')'),
+    ('ImportFrom_name',    px.parse_ImportFrom_name,    SyntaxError,              ','),
 
     ('_ImportFrom_names',  px.parse__ImportFrom_names,  _aliases,                 ''),
     ('_ImportFrom_names',  px.parse__ImportFrom_names,  _aliases,                 'a'),
@@ -422,6 +428,8 @@ PARSE_TESTS = [
     ('_ImportFrom_names',  px.parse__ImportFrom_names,  SyntaxError,              'a as x, a.b as y'),
     ('_ImportFrom_names',  px.parse__ImportFrom_names,  _aliases,                 'a,\nb'),
     ('_ImportFrom_names',  px.parse__ImportFrom_names,  SyntaxError,              '(a, b)'),
+    ('_ImportFrom_names',  px.parse__ImportFrom_names,  SyntaxError,              ')'),
+    ('_ImportFrom_names',  px.parse__ImportFrom_names,  SyntaxError,              ','),
 
     ('withitem',           px.parse_withitem,           SyntaxError,              ''),
     ('withitem',           px.parse_withitem,           withitem,                 'a'),
@@ -435,6 +443,8 @@ PARSE_TESTS = [
     ('withitem',           px.parse_withitem,           withitem,                 '(a)'),
     ('withitem',           px.parse_withitem,           SyntaxError,              '(a as b)'),
     ('withitem',           px.parse_withitem,           SyntaxError,              '(a as b, x as y)'),
+    ('withitem',           px.parse_withitem,           SyntaxError,              ')'),
+    ('withitem',           px.parse_withitem,           SyntaxError,              ','),
 
     ('_withitems',         px.parse__withitems,         _withitems,               ''),
     ('_withitems',         px.parse__withitems,         _withitems,               'a'),
@@ -449,6 +459,8 @@ PARSE_TESTS = [
     ('_withitems',         px.parse__withitems,         SyntaxError,              '(a as b)'),
     ('_withitems',         px.parse__withitems,         SyntaxError,              '(a as b, x as y)'),
     ('_withitems',         px.parse__withitems,         SyntaxError,              'i for i in j'),
+    ('_withitems',         px.parse__withitems,         SyntaxError,              ')'),
+    ('_withitems',         px.parse__withitems,         SyntaxError,              ','),
 
     ('pattern',            px.parse_pattern,            MatchValue,               '42'),
     ('pattern',            px.parse_pattern,            MatchSingleton,           'None'),
@@ -466,6 +478,8 @@ PARSE_TESTS = [
     ('pattern',            px.parse_pattern,            MatchAs,                  '_'),
     ('pattern',            px.parse_pattern,            MatchStar,                '*a'),
     ('pattern',            px.parse_pattern,            SyntaxError,              ''),
+    ('pattern',            px.parse_pattern,            SyntaxError,              ')'),
+    ('pattern',            px.parse_pattern,            SyntaxError,              ','),
     ('pattern',            px.parse_pattern,            SyntaxError,              'i: pass\n case 2'),
 
     ('expr',               px.parse_expr,               BoolOp,                   '\na\nor\nb\n'),

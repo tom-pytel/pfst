@@ -2068,6 +2068,14 @@ r'''**ParseError('expecting single name')**'''),
 r'''(a)'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
+('parse_Import_name', 0, 0, 'SyntaxError', {}, ('Import_name',
+r''')'''),
+r'''**SyntaxError("unmatched ')'")**'''),
+
+('parse_Import_name', 0, 0, 'SyntaxError', {}, ('Import_name',
+r''','''),
+r'''**SyntaxError('invalid syntax')**'''),
+
 ('parse__Import_names', 0, 0, '_aliases', {}, ('_Import_names',
 r''''''),
 r'''_aliases - ROOT 0,0..0,0'''),
@@ -2164,6 +2172,14 @@ _aliases - ROOT 0,0..1,1
 r'''(a, b)'''),
 r'''**SyntaxError('invalid syntax')**'''),
 
+('parse__Import_names', 0, 0, 'SyntaxError', {}, ('_Import_names',
+r''')'''),
+r'''**SyntaxError("unmatched ')'")**'''),
+
+('parse__Import_names', 0, 0, 'SyntaxError', {}, ('_Import_names',
+r''','''),
+r'''**SyntaxError('invalid syntax')**'''),
+
 ('parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
 r''''''),
 r'''**SyntaxError("Expected one or more names after 'import'")**'''),
@@ -2214,6 +2230,14 @@ r'''**SyntaxError('invalid syntax')**'''),
 ('parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
 r'''(a)'''),
 r'''**SyntaxError('ImportFrom.names cannot have explicit parentheses')**'''),
+
+('parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
+r''')'''),
+r'''**SyntaxError("unmatched ')'")**'''),
+
+('parse_ImportFrom_name', 0, 0, 'SyntaxError', {}, ('ImportFrom_name',
+r''','''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse__ImportFrom_names', 0, 0, '_aliases', {}, ('_ImportFrom_names',
 r''''''),
@@ -2298,9 +2322,17 @@ _aliases - ROOT 0,0..1,1
 r'''(a, b)'''),
 r'''**SyntaxError('ImportFrom.names cannot have explicit parentheses')**'''),
 
+('parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
+r''')'''),
+r'''**SyntaxError("unmatched ')'")**'''),
+
+('parse__ImportFrom_names', 0, 0, 'SyntaxError', {}, ('_ImportFrom_names',
+r''','''),
+r'''**SyntaxError('invalid syntax')**'''),
+
 ('parse_withitem', 0, 0, 'SyntaxError', {}, ('withitem',
 r''''''),
-r'''**SyntaxError('expecting withitem')**'''),
+r'''**SyntaxError('expecting withitem, got nothing')**'''),
 
 ('parse_withitem', 0, 0, 'withitem', {}, ('withitem',
 r'''a'''), r'''
@@ -2369,6 +2401,14 @@ r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_withitem', 0, 0, 'SyntaxError', {}, ('withitem',
 r'''(a as b, x as y)'''),
+r'''**SyntaxError('invalid syntax')**'''),
+
+('parse_withitem', 0, 0, 'SyntaxError', {}, ('withitem',
+r''')'''),
+r'''**SyntaxError("unmatched ')'")**'''),
+
+('parse_withitem', 0, 0, 'SyntaxError', {}, ('withitem',
+r''','''),
 r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse__withitems', 0, 0, '_withitems', {}, ('_withitems',
@@ -2473,7 +2513,15 @@ r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse__withitems', 0, 0, 'SyntaxError', {}, ('_withitems',
 r'''i for i in j'''),
-r'''**SyntaxError('expecting withitem, got unparenthesized GeneratorExp')**'''),
+r'''**SyntaxError('expecting withitems, got unparenthesized GeneratorExp')**'''),
+
+('parse__withitems', 0, 0, 'SyntaxError', {}, ('_withitems',
+r''')'''),
+r'''**SyntaxError("unmatched ')'")**'''),
+
+('parse__withitems', 0, 0, 'SyntaxError', {}, ('_withitems',
+r''','''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_pattern', 0, 0, 'MatchValue', {}, ('pattern',
 r'''42'''), r'''
@@ -2585,6 +2633,14 @@ MatchStar - ROOT 0,0..0,2
 ('parse_pattern', 0, 0, 'SyntaxError', {}, ('pattern',
 r''''''),
 r'''**SyntaxError('empty pattern')**'''),
+
+('parse_pattern', 0, 0, 'SyntaxError', {}, ('pattern',
+r''')'''),
+r'''**SyntaxError("unmatched ')'")**'''),
+
+('parse_pattern', 0, 0, 'SyntaxError', {}, ('pattern',
+r''','''),
+r'''**SyntaxError('invalid syntax')**'''),
 
 ('parse_pattern', 0, 0, 'SyntaxError', {}, ('pattern', r'''
 i: pass
