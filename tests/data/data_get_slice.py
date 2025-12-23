@@ -20960,6 +20960,145 @@ MatchMapping - ROOT 0,0..0,8
 '''),
 ],
 
+'MatchOr': [  # ................................................................................
+
+('', 0, 0, None, {'_verify_get': False}, ('MatchOr',
+r'''a | b'''),
+r'''a | b''', r'''
+MatchOr - ROOT 0,0..0,5
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+''',
+r'''''',
+r'''MatchOr - ROOT 0,0..0,0'''),
+
+('', 0, 1, None, {'_verify': False}, ('MatchOr',
+r'''a | b'''),
+r'''b''', r'''
+MatchOr - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'b'
+''',
+r'''a''', r'''
+MatchOr - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 2, None, {'_verify_self': False}, ('MatchOr',
+r'''a | b'''),
+r'''''',
+r'''MatchOr - ROOT 0,0..0,0''',
+r'''a | b''', r'''
+MatchOr - ROOT 0,0..0,5
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
+('', 0, 0, None, {'_verify_get': False, 'norm_self': True}, ('MatchOr',
+r'''a | b'''),
+r'''a | b''', r'''
+MatchOr - ROOT 0,0..0,5
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+''',
+r'''''',
+r'''MatchOr - ROOT 0,0..0,0'''),
+
+('', 0, 1, None, {'_verify_get': False, 'norm_self': True}, ('MatchOr',
+r'''a | b'''),
+r'''b''', r'''
+MatchAs - ROOT 0,0..0,1
+  .name 'b'
+''',
+r'''a''', r'''
+MatchOr - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+'''),
+
+('', 0, 2, None, {'norm_self': True}, ('MatchOr',
+r'''a | b'''),
+r'''**ValueError('cannot cut all MatchOr.patterns without norm_self=False')**''',
+r'''a | b''', r'''
+MatchOr - ROOT 0,0..0,5
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
+('', 0, 0, None, {'norm_get': True, '_del': False}, ('MatchOr',
+r'''a | b'''),
+r'''**ValueError('cannot get empty slice from MatchOr without norm_get=False')**'''),
+
+('', 0, 1, None, {'_verify_self': False, 'norm_get': True}, ('MatchOr',
+r'''a | b'''),
+r'''b''', r'''
+MatchOr - ROOT 0,0..0,1
+  .patterns[1]
+   0] MatchAs - 0,0..0,1
+     .name 'b'
+''',
+r'''a''', r'''
+MatchAs - ROOT 0,0..0,1
+  .name 'a'
+'''),
+
+('', 0, 2, None, {'_verify_self': False, 'norm_get': True}, ('MatchOr',
+r'''a | b'''),
+r'''''',
+r'''MatchOr - ROOT 0,0..0,0''',
+r'''a | b''', r'''
+MatchOr - ROOT 0,0..0,5
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+
+('', 0, 0, None, {'norm': True, '_del': False}, ('MatchOr',
+r'''a | b'''),
+r'''**ValueError('cannot get empty slice from MatchOr without norm_get=False')**'''),
+
+('', 0, 1, None, {'norm': True}, ('MatchOr',
+r'''a | b'''),
+r'''b''', r'''
+MatchAs - ROOT 0,0..0,1
+  .name 'b'
+''',
+r'''a''', r'''
+MatchAs - ROOT 0,0..0,1
+  .name 'a'
+'''),
+
+('', 0, 2, None, {'norm': True}, ('MatchOr',
+r'''a | b'''),
+r'''**ValueError('cannot cut all MatchOr.patterns without norm_self=False')**''',
+r'''a | b''', r'''
+MatchOr - ROOT 0,0..0,5
+  .patterns[2]
+   0] MatchAs - 0,0..0,1
+     .name 'a'
+   1] MatchAs - 0,4..0,5
+     .name 'b'
+'''),
+],
+
 'type_params': [  # ................................................................................
 
 ('body[0]', 1, 2, 'type_params', {'_ver': 12}, ('exec',

@@ -35,7 +35,6 @@ _DEFAULT_OPTIONS = {
     'norm_get':      None,    # True | False | None
     'norm_put':      None,    # True | False | None
     'set_norm':     'both',   # False | 'star' | 'call' | 'both'
-    'matchor_norm': 'value',  # False | 'value' | 'strict'
     'op_side':      'left',   # 'left' | 'right'
 }
 
@@ -89,7 +88,6 @@ def get_options() -> dict[str, Any]:
      'norm_get': None,
      'norm_put': None,
      'set_norm': 'both',
-     'matchor_norm': 'value',
      'op_side': 'left'}
     """
 
@@ -265,13 +263,6 @@ def options(**options) -> Iterator[dict[str, Any]]:
             operation and normalization of `self`.
         - `False`: No `Set` normalization regardless of `norm` or `norm_*` options, just leave or return an invalid
             `Set` object.
-    - `matchor_norm`: The possible alternate representation for `MatchOr` nodes with length 1. Length zero is always
-        error unless `False`. This can also be set to `False` to disable normalization for all operations on a
-        `MatchOr` (unless one of the `norm` options is set to one of these string modes).
-        - `value`: Convert to single element `pattern` if length 1.
-        - `strict`: Error on length 1 as well as length zero.
-        - `False`: No `MatchOr` normalization regardless of `norm` or `norm_*` options, just leave or return an
-            invalid `MatchOr` object.
     -`op_side`: When doing slice operations on a `BoolOp` or a `Compare` it may be necessary to specify which side
         operator is to be deleted or inserted before or after. This can take the values of `'left'` or `'right'` and
         specifies which side operator to delete for delete operations. For insert operations this specifies whether

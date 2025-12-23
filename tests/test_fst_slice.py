@@ -50,6 +50,9 @@ class TestFSTSlice(unittest.TestCase):
         from support import _make_fst
 
         for case, rest in DATA_GET_SLICE.iterate(True):
+            if not case.options.get('_del', True):
+                continue
+
             f = _make_fst(case.code, case.attr)
 
             try:
@@ -3800,49 +3803,29 @@ i ; \\
         with FST.options(norm=True):
             self.assertEqual('', FST('a | b', pattern).get_slice(0, 0, norm_get=False).src)
             self.assertRaises(ValueError, FST('a | b', pattern).get_slice, 0, 0, norm_get=True)
-            self.assertRaises(ValueError, FST('a | b', pattern).get_slice, 0, 0, norm_get='strict')
 
             self.assertEqual('a', FST('a | b', pattern).get_slice(0, 1, norm_get=False).src)
             self.assertEqual('a', FST('a | b', pattern).get_slice(0, 1, norm_get=True).src)
-            self.assertRaises(ValueError, FST('a | b', pattern).get_slice, 0, 1, norm_get='strict')
 
             self.assertEqual('a | b', FST('a | b', pattern).get_slice(0, 2, norm_get=False).src)
             self.assertEqual('a | b', FST('a | b', pattern).get_slice(0, 2, norm_get=True).src)
-            self.assertEqual('a | b', FST('a | b', pattern).get_slice(0, 2, norm_get='strict').src)
 
             self.assertEqual('', FST('a | b', pattern).get_slice(0, 0, norm=False).src)
             self.assertRaises(ValueError, FST('a | b', pattern).get_slice, 0, 0, norm=True)
-            self.assertRaises(ValueError, FST('a | b', pattern).get_slice, 0, 0, norm='strict')
 
             self.assertEqual('a', FST('a | b', pattern).get_slice(0, 1, norm=False).src)
             self.assertEqual('a', FST('a | b', pattern).get_slice(0, 1, norm=True).src)
-            self.assertRaises(ValueError, FST('a | b', pattern).get_slice, 0, 1, norm='strict')
 
             self.assertEqual('a | b', FST('a | b', pattern).get_slice(0, 2, norm=False).src)
             self.assertEqual('a | b', FST('a | b', pattern).get_slice(0, 2, norm=True).src)
-            self.assertEqual('a | b', FST('a | b', pattern).get_slice(0, 2, norm='strict').src)
-
-            self.assertEqual('', FST('a | b', pattern).get_slice(0, 0, matchor_norm=False).src)
-            self.assertRaises(ValueError, FST('a | b', pattern).get_slice, 0, 0, matchor_norm=True)
-            self.assertRaises(ValueError, FST('a | b', pattern).get_slice, 0, 0, matchor_norm='strict')
-
-            self.assertEqual('a', FST('a | b', pattern).get_slice(0, 1, matchor_norm=False).src)
-            self.assertEqual('a', FST('a | b', pattern).get_slice(0, 1, matchor_norm=True).src)
-            self.assertRaises(ValueError, FST('a | b', pattern).get_slice, 0, 1, matchor_norm='strict')
-
-            self.assertEqual('a | b', FST('a | b', pattern).get_slice(0, 2, matchor_norm=False).src)
-            self.assertEqual('a | b', FST('a | b', pattern).get_slice(0, 2, matchor_norm=True).src)
-            self.assertEqual('a | b', FST('a | b', pattern).get_slice(0, 2, matchor_norm='strict').src)
 
             len0mo = FST('c | d', pattern).get_slice(0, 0, norm_get=False)
             len1mo = FST('c | d', pattern).get_slice(0, 1, norm_get=False)
             len2mo = FST('c | d', pattern)
 
             self.assertTrue(compare_asts(len0mo.a, FST('c | d', pattern).get_slice(0, 0, norm=False).a, locs=True))
-            self.assertTrue(compare_asts(len0mo.a, FST('c | d', pattern).get_slice(0, 0, matchor_norm=False).a, locs=True))
 
             self.assertTrue(compare_asts(len1mo.a, FST('c | d', pattern).get_slice(0, 1, norm=False).a, locs=True))
-            self.assertTrue(compare_asts(len1mo.a, FST('c | d', pattern).get_slice(0, 1, matchor_norm=False).a, locs=True))
 
             self.assertEqual('a | b', FST('a | b', pattern).put_slice(None, 2, 2, norm_put=False).src)
             self.assertEqual('a | b', FST('a | b', pattern).put_slice(None, 2, 2, norm_put=True).src)
@@ -3883,10 +3866,6 @@ i ; \\
                 self.assertEqual('a | b', f.src)
                 self.assertIsInstance(f.a, MatchOr)
 
-                (f := FST('a | b', pattern)).get_slice(0, 0, cut=True, norm_self='strict')
-                self.assertEqual('a | b', f.src)
-                self.assertIsInstance(f.a, MatchOr)
-
                 (f := FST('a | b', pattern)).get_slice(0, 1, cut=True, norm_self=False)
                 self.assertEqual('b', f.src)
                 self.assertIsInstance(f.a, MatchOr)
@@ -3895,24 +3874,17 @@ i ; \\
                 self.assertEqual('b', f.src)
                 self.assertIsInstance(f.a, MatchAs)
 
-                self.assertRaises(ValueError, (f := FST('a | b', pattern)).get_slice, 0, 1, cut=True, norm_self='strict')
-
                 (f := FST('a | b', pattern)).get_slice(0, 2, cut=True, norm_self=False)
                 self.assertEqual('', f.src)
                 self.assertIsInstance(f.a, MatchOr)
 
                 self.assertRaises(ValueError, (f := FST('a | b', pattern)).get_slice, 0, 2, cut=True, norm_self=True)
-                self.assertRaises(ValueError, (f := FST('a | b', pattern)).get_slice, 0, 2, cut=True, norm_self='strict')
 
                 (f := FST('a | b', pattern)).put_slice(None, 0, 0, norm_self=False)
                 self.assertEqual('a | b', f.src)
                 self.assertIsInstance(f.a, MatchOr)
 
                 (f := FST('a | b', pattern)).put_slice(None, 0, 0, norm_self=True)
-                self.assertEqual('a | b', f.src)
-                self.assertIsInstance(f.a, MatchOr)
-
-                (f := FST('a | b', pattern)).put_slice(None, 0, 0, norm_self='strict')
                 self.assertEqual('a | b', f.src)
                 self.assertIsInstance(f.a, MatchOr)
 
@@ -3924,14 +3896,11 @@ i ; \\
                 self.assertEqual('b', f.src)
                 self.assertIsInstance(f.a, MatchAs)
 
-                self.assertRaises(ValueError, (f := FST('a | b', pattern)).put_slice, None, 0, 1, norm_self='strict')
-
                 (f := FST('a | b', pattern)).put_slice(None, 0, 2, norm_self=False)
                 self.assertEqual('', f.src)
                 self.assertIsInstance(f.a, MatchOr)
 
                 self.assertRaises(ValueError, (f := FST('a | b', pattern)).put_slice, None, 0, 2, norm_self=True)
-                self.assertRaises(ValueError, (f := FST('a | b', pattern)).put_slice, None, 0, 2, norm_self='strict')
 
     def test_slice_line_continuations(self):
         f = FST(r'''del a, b, c, \

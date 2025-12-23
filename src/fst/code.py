@@ -1088,6 +1088,8 @@ def code_as_pattern(
                 raise NodeError('expecting valid pattern, got zero-length MatchOr')
 
             if len_pattern == 1:  # a length 1 MatchOr can just return its single element pattern
+                fst_._unmake_fst_parents(True)
+
                 return fst.FST(a.patterns[0], fst_._lines, None, from_=fst_, lcopy=False)
 
     return fst_

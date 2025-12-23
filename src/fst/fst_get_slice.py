@@ -97,9 +97,9 @@ _re_empty_line_start_maybe_cont_1 = re.compile(r'[ \t]+\\?')  # empty line start
 # shared with fst_slice_put
 
 def _get_option_norm(override_option: str, norm_option: str, options: Mapping[str, Any]) -> bool | str:
-    set_norm = get_option_overridable('norm', override_option, options)
+    norm_value = get_option_overridable('norm', override_option, options)
 
-    return fst.FST.get_option(norm_option, options) if set_norm is True else set_norm
+    return fst.FST.get_option(norm_option, options) if norm_value is True else norm_value
 
 
 def _get_option_op_side(is_first: bool, is_last: bool, options: Mapping[str, Any]) -> bool | None:
@@ -1815,26 +1815,18 @@ def _get_slice_MatchOr_patterns(
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
-    get_norm = _get_option_norm('norm_get', 'matchor_norm', options)
-    self_norm = _get_option_norm('norm_self', 'matchor_norm', options)
+    norm_get = get_option_overridable('norm', 'norm_get', options)
+    norm_self = get_option_overridable('norm', 'norm_self', options)
 
     if not len_slice:
-        if get_norm:
+        if norm_get:
             raise ValueError("cannot get empty slice from MatchOr without norm_get=False")
 
         return fst.FST(MatchOr(patterns=[], lineno=1, col_offset=0, end_lineno=1, end_col_offset=0),
                        [''], None, from_=self)
 
-    if len_slice == 1 and get_norm == 'strict':
-        raise ValueError("cannot get length 1 slice from MatchOr with norm_get='strict'")
-
-    if cut:
-        if not (len_left := len_body - len_slice):
-            if self_norm:
-                raise ValueError("cannot cut all MatchOr.patterns without norm_self=False")
-
-        elif len_left == 1 and self_norm == 'strict':
-            raise ValueError("cannot cut MatchOr to length 1 with norm_self='strict'")
+    if cut and len_slice == len_body and norm_self:
+        raise ValueError("cannot cut all MatchOr.patterns without norm_self=False")
 
     locs = _locs_and_bounds_get(self, start, stop, body, body, 0)
     asts = _cut_or_copy_asts(start, stop, 'patterns', cut, body)
@@ -1843,10 +1835,10 @@ def _get_slice_MatchOr_patterns(
     fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
                          options, 'patterns', '', '', '|', False, False)
 
-    _maybe_fix_MatchOr(fst_, bool(get_norm))
+    _maybe_fix_MatchOr(fst_, norm_get)
 
     if cut:
-        _maybe_fix_MatchOr(self, bool(self_norm))
+        _maybe_fix_MatchOr(self, norm_self)
 
     return fst_
 

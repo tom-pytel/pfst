@@ -132,7 +132,6 @@ Or get all global options.
  'norm_get': None,
  'norm_put': None,
  'set_norm': 'both',
- 'matchor_norm': 'value',
  'op_side': 'left'}
 
 

@@ -47,6 +47,7 @@ from .asttypes import (
     MatchMapping,
     MatchOr,
     MatchSequence,
+    MatchStar,
     Module,
     Name,
     NamedExpr,
@@ -784,32 +785,33 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
         return None  # nothing other than maybe comments or line continuations present, empty pattern, not an error but delete
 
     ast_ = fst_.a
+    ast_cls = ast_.__class__
 
-    if ast_.__class__ is MatchOr:
+    if ast_cls is MatchOr:
         if not (patterns := ast_.patterns):
             return None
 
-        fst_pars = fst_.pars()
+        has_pars = fst_.pars().n
 
-        if not one or len(patterns) == 1:
-            if fst_pars.n:
+        if not one or len(patterns) == 1:  # if one=True then a length 1 MatchOr is already in the format we want
+            if has_pars:
                 fst_._unparenthesize_grouping(False)
 
             _set_loc_whole(fst_)
 
             return fst_
 
-        if not fst_pars.n:
+        if not has_pars:
             fst_._parenthesize_grouping()
 
+    elif ast_cls is MatchStar:
+        raise ValueError(f'cannot put MatchStar as slice to {self.a.__class__.__name__}')
+
+    elif not (one or fst.FST.get_option('coerce', options)):
+        raise ValueError(f'cannot put {ast_cls.__name__} as slice to {self.a.__class__.__name__} '
+                         "without 'one=True' or 'coerce=True'")
+
     else:
-        if not one and not _get_option_norm('norm_put', 'matchor_norm', options):
-            raise NodeError(f"slice being assigned to a MatchOr "
-                            f"must be a MatchOr with norm_put=False, not a {ast_.__class__.__name__}",
-                            rawable=True)
-
-        ast_cls = ast_.__class__
-
         if ast_cls is MatchAs:
             if ast_.pattern is not None and not fst_.pars().n:
                 fst_._parenthesize_grouping()
@@ -2249,7 +2251,7 @@ def _put_slice_MatchOr_patterns(
     len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
-    self_norm = _get_option_norm('norm_self', 'matchor_norm', options)
+    self_norm = get_option_overridable('norm', 'norm_self', options)
 
     fst_ = _code_to_slice_MatchOr(self, code, one, options)
 
@@ -2257,12 +2259,8 @@ def _put_slice_MatchOr_patterns(
         if not len_slice:
             return
 
-        if not (len_left := len_body - len_slice):
-            if self_norm:
-                raise ValueError("cannot delete all MatchOr.patterns without norm_self=False")
-
-        elif len_left == 1 and self_norm == 'strict':
-            raise ValueError("cannot del MatchOr to length 1 with matchor_norm='strict'")
+        if len_slice == len_body and self_norm:
+            raise ValueError("cannot delete all MatchOr.patterns without norm_self=False")
 
         end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0, *self.loc,
                                          options, 'patterns', None, '|', False)
@@ -2272,9 +2270,6 @@ def _put_slice_MatchOr_patterns(
     else:
         fst_body = fst_.a.patterns
         len_fst_body = len(fst_body)
-
-        if (len_body - len_slice + len_fst_body) == 1 and self_norm == 'strict':
-            raise NodeError("cannot put MatchOr to length 1 with matchor_norm='strict'")
 
         end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
                                          *self.loc, options, 'patterns', None, '|', False)
