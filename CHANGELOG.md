@@ -2,8 +2,8 @@
 
 ### Fixed
 
-- fix `MatchMapping` single element operation indexing of `rest` if present
-- fix parse single element undelimited `MatchSequence` to include trailing comma
+- fix `MatchMapping` single-element operation indexing of `rest` if present
+- fix parse single-element undelimited `MatchSequence` to include trailing comma
 - disallow putting already parenthesized elements to `Import/ImportFrom.names` and `With/AsyncWith.items`.
 - gave `AsyncWith` put one the correct handler, was missing cases because was doing normal expression put
 - `put_src(action='offset')` exactly on `FormattedValue` or `Interpolation` debug expression will update the preceding debug string correctly
@@ -28,6 +28,8 @@
 
 ### Updated
 
+- implemented `coerce` option for `MatchOr` and `MatchSequence`
+- removed `matchor_norm` option, didn't make sense
 - pass through more specific `SyntaxError` information from our extended parsing
 - filled out test coverage for all modules
 - simplified `reconcile()` usage, user doesn't need to preserve explicit "marked" copy
@@ -97,7 +99,7 @@
 - fix forced grouping parenthesize `Starred` child location
 - normalize identifier to put BEFORE checking against keyword *facepalm*
 - fix coerce `except*` `AST` slice to `FST`
-- fix put star `*` to parenthesized single element non-star `ImportFrom.names`
+- fix put star `*` to parenthesized single-element non-star `ImportFrom.names`
 - fix get slice from start of unparenthesized tuple in f-string expression on py < 3.12
 - fix get format_spec escape sequences from `rf'{...:\xFF}'` string
 - statement-ish operations at end of source no longer add trailing newline

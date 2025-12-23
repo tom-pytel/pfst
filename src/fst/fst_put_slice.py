@@ -739,21 +739,23 @@ def _code_to_slice_MatchSequence(
         return None
 
     fst_ = code_as_pattern(code, self.root.parse_params)
+    ast_ = fst_.a
+
+    if not one and ast_.__class__ is not MatchSequence:
+        if not fst.FST.get_option('coerce', options):
+            raise ValueError(f'cannot put {ast_.__class__.__name__} as slice to {self.a.__class__.__name__} '
+                             "without 'one=True' or 'coerce=True'")
+
+        one = True
 
     if one:
         if fst_.is_delimited_matchseq() == '':
             fst_._delimit_node(delims='[]')
 
-        ast_ = MatchSequence(patterns=[fst_.a], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
+        ast_ = MatchSequence(patterns=[ast_], lineno=1, col_offset=0, end_lineno=len(ls := fst_._lines),
                              end_col_offset=ls[-1].lenbytes)
 
         return fst.FST(ast_, ls, None, from_=fst_, lcopy=False)
-
-    ast_ = fst_.a
-
-    if ast_.__class__ is not MatchSequence:
-        raise NodeError(f"slice being assigned to a {self.a.__class__.__name__} "
-                        f"must be a MatchSequence, not a {ast_.__class__.__name__}", rawable=True)
 
     if not ast_.patterns:  # put empty sequence is same as delete
         return None
