@@ -1651,7 +1651,7 @@ def parse__expr_arglikes(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
     try:
         value = _ast_parse1(f'f(\n{src}\n)', parse_params).value
     except SyntaxError:
-        raise SyntaxError('invalid argument-like expression(s)') from None
+        raise SyntaxError('invalid expression(s) (arglike)') from None
 
     if value.keywords:
         raise ParseError('expecting only argumnent-like expression(s), got keyword')

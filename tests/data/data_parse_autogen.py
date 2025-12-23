@@ -1082,8 +1082,8 @@ r'''* *a'''),
 r'''**SyntaxError('Invalid star expression')**'''),
 
 ('parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
-r'''pass]'''),
-r'''**SyntaxError("closing parenthesis ']' does not match opening parenthesis '(' on line 1")**'''),
+r'''pass'''),
+r'''**SyntaxError('invalid expression (standard)')**'''),
 
 ('parse_expr', 0, 0, 'SyntaxError', {}, ('expr',
 r'''#'''),
@@ -1362,11 +1362,11 @@ r'''**ParseError('expecting only argumnent-like expression(s), got keyword')**''
 
 ('parse__expr_arglikes', 0, 0, 'SyntaxError', {}, ('_expr_arglikes',
 r'''a:b'''),
-r'''**SyntaxError('invalid argument-like expression(s)')**'''),
+r'''**SyntaxError('invalid expression(s) (arglike)')**'''),
 
 ('parse__expr_arglikes', 0, 0, 'SyntaxError', {}, ('_expr_arglikes',
 r'''a:b:c'''),
-r'''**SyntaxError('invalid argument-like expression(s)')**'''),
+r'''**SyntaxError('invalid expression(s) (arglike)')**'''),
 
 ('parse_expr_slice', 0, 0, 'Name', {}, ('expr_slice',
 r'''j'''),
