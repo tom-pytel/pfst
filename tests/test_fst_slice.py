@@ -2600,7 +2600,7 @@ if 1:
 
         f = FST('for a, b in c: pass')
         f.target.put_slice('[z\\\n]', 1, 2, 'elts')
-        self.assertEqual('for a, z in c: pass', f.src)
+        self.assertEqual('for a, z\\\n in c: pass', f.src)
 
         f = FST('a,')
         f.put_slice('[ {z} ]', 0, 1)

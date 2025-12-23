@@ -18746,6 +18746,105 @@ Tuple - ROOT 0,0..3,2
   .ctx Load
 '''),
 
+('', 1, 3, None, {'pars': 'auto'}, ('Tuple', r'''
+(
+    a, # 0
+    b, # 1
+    c, # 2
+    d, # 3
+)
+'''), ('Tuple', r'''
+x, # 9
+y, # 0
+'''), r'''
+(
+    a, # 0
+    x, # 9
+    y, # 0
+    d, # 3
+)
+''', r'''
+(
+    a, # 0
+    x, y,
+    d, # 3
+)
+''', r'''
+Tuple - ROOT 0,0..5,1
+  .elts[4]
+   0] Name 'a' Load - 1,4..1,5
+   1] Name 'x' Load - 2,4..2,5
+   2] Name 'y' Load - 3,4..3,5
+   3] Name 'd' Load - 4,4..4,5
+  .ctx Load
+'''),
+
+('', 1, 3, None, {'pars': True}, ('Tuple', r'''
+(
+    a, # 0
+    b, # 1
+    c, # 2
+    d, # 3
+)
+'''), ('Tuple', r'''
+x, # 9
+y, # 0
+'''), r'''
+(
+    a, # 0
+    x, # 9
+    y, # 0
+    d, # 3
+)
+''', r'''
+(
+    a, # 0
+    x, y,
+    d, # 3
+)
+''', r'''
+Tuple - ROOT 0,0..5,1
+  .elts[4]
+   0] Name 'a' Load - 1,4..1,5
+   1] Name 'x' Load - 2,4..2,5
+   2] Name 'y' Load - 3,4..3,5
+   3] Name 'd' Load - 4,4..4,5
+  .ctx Load
+'''),
+
+('', 1, 3, None, {'pars': False}, ('Tuple', r'''
+(
+    a, # 0
+    b, # 1
+    c, # 2
+    d, # 3
+)
+'''), ('Tuple', r'''
+x, # 9
+y, # 0
+'''), r'''
+(
+    a, # 0
+    x, # 9
+    y, # 0
+    d, # 3
+)
+''', r'''
+(
+    a, # 0
+    x, y,
+    d, # 3
+)
+''', r'''
+Tuple - ROOT 0,0..5,1
+  .elts[4]
+   0] Name 'a' Load - 1,4..1,5
+   1] Name 'x' Load - 2,4..2,5
+   2] Name 'y' Load - 3,4..3,5
+   3] Name 'd' Load - 4,4..4,5
+  .ctx Load
+'''),
+
 ('value', 1, 3, None, {'pars': 'auto'}, (None,
 r'''i = a, b, c, d'''), ('Tuple', r'''
 x, # 9

@@ -1514,6 +1514,11 @@ def _offset(
     # working. If they are not changed in this case then some ASTs may not be offset which should. On the other hand, if
     # this expected condition fails to be the case a whole lot of other problems probably bigger than this will pop up.
 
+    if not dln and not dcol_offset:
+        self._touchall()  # this function does double duty as a cache flush in affected area, so if we not gonna walk the tree then we explicitly flush everything below
+
+        return
+
     if self_:
         stack = [self.a]
     elif self is exclude:
@@ -1931,6 +1936,9 @@ def _put_src(
     this location. The `tail`, `head`, `exclude` and `offset_excluded` parameters are exactly as would be passed to the
     `_offset()` function. Leaving the default `tail` value means no offset is to be done.
 
+    **Note:** Keep in mind that unctions which call this one may count on it second effect through `_offset()` of
+    flushing caches.
+
     **Parameters:**
     - `src`: The source to put as a string or list of lines, or `None` to specify delete.
     - `tail`: This not only specifies the offset treatment of tails which exist exactly at the offset location, but if
@@ -1961,10 +1969,10 @@ def _put_src(
         root._offset(*params_offset, tail, head, exclude, offset_excluded=offset_excluded)
 
     if is_del:  # delete lines
-        if end_ln == ln:
-            lines[ln] = bistr((l := lines[ln])[:col] + l[end_col:])
-        else:
+        if end_ln != ln:
             lines[ln : end_ln + 1] = (bistr(lines[ln][:col] + lines[end_ln][end_col:]),)
+        elif end_col != col:
+            lines[ln] = bistr((l := lines[ln])[:col] + l[end_col:])
 
     else:  # put lines
         if (nnew_ln := len(put_lines)) == 1:

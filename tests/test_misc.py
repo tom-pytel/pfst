@@ -912,7 +912,7 @@ d  # comment3''', f.src)
         del f.a.value.elts[-1]  # specifically just the AST
         self.assertEqual((0, 7, 0, 10), f.value.loc)
         f.value._maybe_fix_tuple()
-        self.assertEqual('(yield a, )', f.src)
+        self.assertEqual('(yield a,)', f.src)
         f.verify()
 
     def test__maybe_fix_copy(self):

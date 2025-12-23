@@ -12013,7 +12013,7 @@ Tuple - ROOT 0,0..1,2
   .ctx Load
 ''', r'''
 b, # 1
-c,
+c, # 2
 ''', r'''
 Tuple - ROOT 0,0..1,2
   .elts[2]
@@ -12066,12 +12066,105 @@ Tuple - ROOT 0,0..1,2
   .ctx Load
 ''', r'''
 b, # 1
-c,
+c, # 2
 ''', r'''
 Tuple - ROOT 0,0..1,2
   .elts[2]
    0] Name 'b' Load - 0,0..0,1
    1] Name 'c' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+('', 1, 3, None, {'pars': 'auto'}, ('Tuple', r'''
+(
+    a, # 0
+    b, # 1
+    c, # 2
+    d, # 3
+)
+'''), r'''
+(
+    a, # 0
+    d, # 3
+)
+''', r'''
+Tuple - ROOT 0,0..3,1
+  .elts[2]
+   0] Name 'a' Load - 1,4..1,5
+   1] Name 'd' Load - 2,4..2,5
+  .ctx Load
+''', r'''
+(
+    b, # 1
+    c, # 2
+)
+''', r'''
+Tuple - ROOT 0,0..3,1
+  .elts[2]
+   0] Name 'b' Load - 1,4..1,5
+   1] Name 'c' Load - 2,4..2,5
+  .ctx Load
+'''),
+
+('', 1, 3, None, {'pars': True}, ('Tuple', r'''
+(
+    a, # 0
+    b, # 1
+    c, # 2
+    d, # 3
+)
+'''), r'''
+(
+    a, # 0
+    d, # 3
+)
+''', r'''
+Tuple - ROOT 0,0..3,1
+  .elts[2]
+   0] Name 'a' Load - 1,4..1,5
+   1] Name 'd' Load - 2,4..2,5
+  .ctx Load
+''', r'''
+(
+    b, # 1
+    c, # 2
+)
+''', r'''
+Tuple - ROOT 0,0..3,1
+  .elts[2]
+   0] Name 'b' Load - 1,4..1,5
+   1] Name 'c' Load - 2,4..2,5
+  .ctx Load
+'''),
+
+('', 1, 3, None, {'pars': False}, ('Tuple', r'''
+(
+    a, # 0
+    b, # 1
+    c, # 2
+    d, # 3
+)
+'''), r'''
+(
+    a, # 0
+    d, # 3
+)
+''', r'''
+Tuple - ROOT 0,0..3,1
+  .elts[2]
+   0] Name 'a' Load - 1,4..1,5
+   1] Name 'd' Load - 2,4..2,5
+  .ctx Load
+''', r'''
+(
+    b, # 1
+    c, # 2
+)
+''', r'''
+Tuple - ROOT 0,0..3,1
+  .elts[2]
+   0] Name 'b' Load - 1,4..1,5
+   1] Name 'c' Load - 2,4..2,5
   .ctx Load
 '''),
 
@@ -12220,6 +12313,40 @@ Tuple - ROOT 0,0..1,6
   .elts[2]
    0] Name 'b' Load - 0,0..0,1
    1] Name 'c' Load - 1,4..1,5
+  .ctx Load
+'''),
+
+('value', 1, 3, None, {'pars': False}, (None, r'''
+i = (
+    a, \
+    b, \
+    c, \
+    d,
+)
+'''), r'''
+i = (
+    a, \
+    d,
+)
+''', r'''
+Assign - ROOT 0,0..3,1
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..3,1
+    .elts[2]
+     0] Name 'a' Load - 1,4..1,5
+     1] Name 'd' Load - 2,4..2,5
+    .ctx Load
+''', r'''
+(
+    b, \
+    c, \
+)
+''', r'''
+Tuple - ROOT 0,0..3,1
+  .elts[2]
+   0] Name 'b' Load - 1,4..1,5
+   1] Name 'c' Load - 2,4..2,5
   .ctx Load
 '''),
 ],

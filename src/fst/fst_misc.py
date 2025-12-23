@@ -224,6 +224,8 @@ _re_par_close_alnums   = re.compile(rf'[{pat_alnum}.][)][{pat_alnum}]')
 _re_delim_open_alnums  = re.compile(rf'[{pat_alnum}.][([][{pat_alnum}]')
 _re_delim_close_alnums = re.compile(rf'[{pat_alnum}.][)\]][{pat_alnum}]')
 
+_re_line_end_ws_maybe_cont = re.compile(r'\s*\\?$')
+
 
 def _dump_lines(
     fst_: fst.FST,
@@ -1562,8 +1564,8 @@ def _maybe_fix_undelimited_seq(
         lines = self.root._lines
         ln, col, end_ln, end_col = self.loc
 
-        if not next_frag(lines, ln, col, end_ln, end_col, True):  # if no comments in tuple area then just replace with '()'
-            self._put_src([delims], ln, col, end_ln, end_col, True, False)  # WARNING! `tail=True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized tuple starts, but haven't found a case where this can happen
+        if not next_frag(lines, ln, col, end_ln, end_col, True):  # if no comments in seq area then just replace with '()' (or '[]')
+            self._put_src([delims], ln, col, end_ln, end_col, True, False)  # WARNING! `tail=True` may not be safe if another preceding non-containing node ends EXACTLY where the unparenthesized seq starts, but haven't found a case where this can happen
 
         else:  # otherwise preserve comments by parenthesizing whole area
             ldelim, rdelim = delims
@@ -1581,13 +1583,13 @@ def _maybe_fix_undelimited_seq(
         return True
 
     ln, col, end_ln, end_col = self.loc
-    encpar = None  # cached call to self._is_enclosed_in_parents()
 
     if (demlim_if_needed
         and (
-            (end_ln != ln
-             and not self._is_enclosed_or_line(pars=False)
-             and not (encpar := self._is_enclosed_in_parents())
+            not (
+                end_ln == ln
+                or self._is_enclosed_or_line(pars=False)
+                or self._is_enclosed_in_parents()
             )  # could have line continuations
             or (any(e.__class__ is NamedExpr and not e.f.pars().n for e in body))  # yeah, this is fine in parenthesized tuples but not in naked ones, only applies to tuples and not MatchSequence obviously
     )):
@@ -1595,8 +1597,8 @@ def _maybe_fix_undelimited_seq(
 
         return True
 
-    eln, ecol, _, _ = body[0].f.pars()
     lines = self.root._lines
+    eln, ecol, _, _ = body[0].f.pars()
 
     if ecol != col or eln != ln:  # to be super safe we enforce that an undelimited node must start at the first element
         self._put_src(None, ln, col, eln, ecol, False)
@@ -1609,35 +1611,32 @@ def _maybe_fix_undelimited_seq(
         eend_ln, eend_col = comma
         eend_col += 1
 
-    if end_col != eend_col or end_ln != eend_ln:  # need to update end position because it had some whitespace after which will not be enclosed by delimiters
-        if not (encpar or self._is_enclosed_in_parents()):
-            self._put_src(None, eend_ln, eend_col, end_ln, end_col, True)  # be safe, nuke everything after last element since we won't have delimiters or parent to delimit it
+    if end_col != eend_col or end_ln != eend_ln:  # if seq doesn't end on last element or trailing comma then set that as the end and clean up some trailing newline, whitespace and / or line continuation
+        self._set_end_pos(eend_ln + 1, lines[eend_ln].c2b(eend_col), (a := self.a).end_lineno, a.end_col_offset)
 
-        else:  # enclosed in parents so we can leave crap at the end
-            a = self.a
-            cur_end_lineno = a.end_lineno
-            cur_end_col_offset = a.end_col_offset
-            end_lineno = a.end_lineno = eend_ln + 1
-            end_col_offset = a.end_col_offset = lines[eend_ln].c2b(eend_col)
+        # TODO: this is aesthetic stuff and could probably use some tweaking
 
-            self._touch()
+        if len(end_line := lines[end_ln]) == end_col and len(lines) - 1 == end_ln:  # seq ends exactly at end of source?
+            if not end_line:  # if last line is trailing newline then we can delete it and remove trailing whitespace and maybe line continuation on line before
+                self._put_src(None, end_ln - 1, _re_line_end_ws_maybe_cont.search(lines[-2]).start(), end_ln, 0, True)
 
-            cur = self
+            elif (ws_col := _re_line_end_ws_maybe_cont.search(end_line).start()) != end_col:  # seq ends on last line, just strip whitespace
+                self._put_src(None, end_ln, ws_col, end_ln, end_col, True)
 
-            while ((cur := cur.parent)
-                   and getattr(a := cur.a, 'end_col_offset', -1) == cur_end_col_offset
-                   and a.end_lineno == cur_end_lineno
-            ):  # update parents, only as long as they end exactly where we end
-                a.end_lineno = end_lineno
-                a.end_col_offset = end_col_offset
+        elif eend_ln == end_ln:  # otherwise if ends on its own last line
+            if (ws_col := _re_line_end_ws_maybe_cont.search(end_line, eend_col, end_col).start()) != end_col:
+                self._put_src(None, end_ln, ws_col, end_ln, end_col, True)
 
-                cur._touch()
+        # if end_ln == eend_ln:  # if ends on its own last line then maybe just strip trailing whitespace
+        #     if (ws_col := _re_line_end_ws_maybe_cont.search(lines[end_ln], eend_col, end_col).start()) != end_col:
+        #         self._put_src(None, end_ln, ws_col, end_ln, end_col, True)
 
-            else:
-                if cur:
-                    cur._touchall(True, True, False)
+        # elif re_empty_line.match(lines[end_ln]):  # last line of current end location is whitespace?
+        #     if ws_col := _re_line_end_ws_maybe_cont.search(lines[end_ln - 1]).start():  # we don't need to bound by eend_col because its not whitespace so the regex will not go past it
+        #         self._put_src(None, end_ln - 1, ws_col, end_ln, end_col, True)
 
-        _, _, end_ln, end_col = self.loc
+        end_ln = eend_ln
+        end_col = eend_col
 
     self._maybe_fix_joined_alnum(ln, col, end_ln, end_col)
 
