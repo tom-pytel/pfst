@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- fix `MatchMapping` single element operation indexing of `rest` if present
 - fix parse single element undelimited `MatchSequence` to include trailing comma
 - disallow putting already parenthesized elements to `Import/ImportFrom.names` and `With/AsyncWith.items`.
 - gave `AsyncWith` put one the correct handler, was missing cases because was doing normal expression put

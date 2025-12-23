@@ -3007,13 +3007,12 @@ c, # c
         self.assertRaises(ValueError, FST('case {1: a, 2: b, 3: c}: pass').pattern._put_one, None, 1, '_all', {'raw': True}, False)
         self.assertRaises(ValueError, FST('case {1: a, 2: b, 3: c}: pass').pattern._put_one, '4: x', 1, '_all', {'raw': False}, False)
 
-
         new_pat = (old_pat := (self_ := FST('case {1: a, 2: b, 3: c}: pass', 'match_case')).pattern)._put_one('4: x', 1, '_all', {'raw': True}, False)
         self.assertIsNot(new_pat, old_pat)
         self.assertIsNotNone(self_.a)
         self.assertEqual('case {1: a, 4: x, 3: c}: pass', self_.src)
 
-        # MatchMapping return child
+        # MatchMapping (with the `Match`) return child
 
         child = (self_ := FST('match _:\n case {1: a, 2: b, 3: c}: pass', 'Match').cases[0]).pattern._put_one(None, 1, '_all', {'raw': False}, True)
         self.assertIsNone(child)
@@ -3028,7 +3027,7 @@ c, # c
         self.assertIsNotNone(self_.a)
         self.assertEqual('case {1: a, 4: x, 3: c}: pass', self_.repath().src)
 
-        # MatchMapping return self
+        # MatchMapping (with the `Match`) return self
 
         new_pat = (old_pat := (self_ := FST('match _:\n case {1: a, 2: b, 3: c}: pass', 'Match').cases[0]).pattern)._put_one(None, 1, '_all', {'raw': False}, False)
         self.assertIs(new_pat, old_pat)
@@ -3109,6 +3108,18 @@ c, # c
         self.assertIsNot(new_self, self)
         self.assertIsNone(self_.a)
         self.assertEqual('x < b > c', new_self.src)
+
+    def test__put_one_raw_virtual_field(self):
+        # MatchMapping
+
+        self.assertEqual('{1: a}', (f := FST('{**r}', pattern))._put_one('1: a', 0, '_all', {'raw': True}, False).src)
+        f.verify()
+
+        self.assertEqual('{1: a, 2: b}', (f := FST('{1: a, **r}', pattern))._put_one('2: b', 1, '_all', {'raw': True}, False).src)
+        f.verify()
+
+        self.assertEqual('case [{1: a, 2: b}, d]: pass', (f := FST('case [{1: a, **r}, c]: pass', match_case)).pattern.patterns[0]._put_one('2: b}, d', -1, '_all', {'raw': True, 'to': f.pattern.patterns[1]}, False).root.src)
+        f.verify()
 
     def test_put_default_non_list_field(self):
         self.assertEqual('y', parse('n').body[0].f.put('y').root.src)  # Expr

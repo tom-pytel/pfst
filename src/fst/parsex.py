@@ -52,7 +52,6 @@ from .asttypes import (
     Lt,
     LtE,
     MatMult,
-    MatchSequence,
     MatchStar,
     Mod,
     Module,
@@ -993,12 +992,12 @@ def parse_expr(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
             raise SyntaxError('invalid expression (standard)') from None
 
         if len(elts) != 1:
-            raise RuntimeError('expecting single expression, should not get here')  # pragma: no cover
+            raise RuntimeError('expecting single expression, should not get here') from wrapped_exc  # pragma: no cover
 
         ast = elts[0]
 
         if ast.__class__ is not Starred:
-            raise RuntimeError(f'expecting Starred, got {ast.__class__.__name__}, should not get here')  # pragma: no cover
+            raise RuntimeError(f'expecting Starred, got {ast.__class__.__name__}, should not get here') from wrapped_exc  # pragma: no cover
 
     else:
         ast_cls = ast.__class__
@@ -1583,12 +1582,12 @@ def parse_pattern(src: str, parse_params: Mapping[str, Any] = {}) -> AST:
                 raise bare_exc from None
 
             if len(patterns) != 1:
-                raise RuntimeError('expecting single pattern, should not get here')  # pragma: no cover
+                raise RuntimeError('expecting single pattern, should not get here') from wrapped_exc  # pragma: no cover
 
             ast = patterns[0]
 
             if ast.__class__ is not MatchStar:
-                raise RuntimeError(f'expecting MatchStar, got {ast.__class__.__name__}, should not get here')  # pragma: no cover
+                raise RuntimeError(f'expecting MatchStar, got {ast.__class__.__name__}, should not get here') from wrapped_exc  # pragma: no cover
 
         else:
             if ast.lineno < 3:  # if this is true then it can only be an unparenthesized MatchSequence

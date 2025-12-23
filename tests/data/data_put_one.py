@@ -13181,6 +13181,47 @@ r'''**NotImplementedError('cannot put multiline Attribute to MatchClass pattern 
 
 'MatchMapping': [  # ................................................................................
 
+('', 0, None, '_all', {}, ('MatchMapping',
+r'''{1: a, 2: b, **c}'''), (None,
+r'''**DEL**'''),
+r'''{2: b, **c}''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+   0] Constant 2 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'b'
+  .rest 'c'
+'''),
+
+('', 1, None, '_all', {}, ('MatchMapping',
+r'''{1: a, 2: b, **c}'''), (None,
+r'''**DEL**'''),
+r'''{1: a, **c}''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+   0] Constant 1 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+  .rest 'c'
+'''),
+
+('', 2, None, '_all', {}, ('MatchMapping',
+r'''{1: a, 2: b, **c}'''), (None,
+r'''**DEL**'''),
+r'''{1: a, 2: b}''', r'''
+MatchMapping - ROOT 0,0..0,12
+  .keys[2]
+   0] Constant 1 - 0,1..0,2
+   1] Constant 2 - 0,7..0,8
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,10..0,11
+     .name 'b'
+'''),
+
 ('', 0, None, 'keys', {}, ('MatchMapping',
 r'''{1: a}'''), (None,
 r'''...'''),
@@ -13903,6 +13944,19 @@ Compare - ROOT 0,0..0,6
    0] GtE - 0,2..0,4
   .comparators[1]
    0] Name 'z' Load - 0,5..0,6
+'''),
+
+('', None, None, 'rest', {'raw': True}, ('pattern',
+r'''{1: 2, **c}'''),
+r'''d''',
+r'''{1: 2, **d}''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+   0] Constant 1 - 0,1..0,2
+  .patterns[1]
+   0] MatchValue - 0,4..0,5
+     .value Constant 2 - 0,4..0,5
+  .rest 'd'
 '''),
 
 ('', None, None, 'args', {'raw': True}, (None,
@@ -15111,6 +15165,53 @@ MatchMapping - ROOT 0,0..0,12
      .name 'a'
    1] MatchAs - 0,10..0,11
      .name 'x'
+'''),
+
+('', 1, None, '_all', {'raw': True}, ('MatchMapping',
+r'''{1: a, 2: b}'''), ('MatchMapping',
+r'''**x'''),
+r'''{1: a, **x}''', r'''
+MatchMapping - ROOT 0,0..0,11
+  .keys[1]
+   0] Constant 1 - 0,1..0,2
+  .patterns[1]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+  .rest 'x'
+'''),
+
+('', 1, None, '_all', {'raw': True}, ('MatchMapping',
+r'''{1: a, **c}'''), ('MatchMapping',
+r'''2: b'''),
+r'''{1: a, 2: b}''', r'''
+MatchMapping - ROOT 0,0..0,12
+  .keys[2]
+   0] Constant 1 - 0,1..0,2
+   1] Constant 2 - 0,7..0,8
+  .patterns[2]
+   0] MatchAs - 0,4..0,5
+     .name 'a'
+   1] MatchAs - 0,10..0,11
+     .name 'b'
+'''),
+
+('patterns[0]', 1, None, '_all', {'raw': True, 'to': 'patterns[1]'}, ('MatchSequence',
+r'''[{1: a, **b}, c]'''), (None,
+r'''3: c}, d'''),
+r'''[{1: a, 3: c}, d]''', r'''
+MatchSequence - ROOT 0,0..0,17
+  .patterns[2]
+   0] MatchMapping - 0,1..0,13
+     .keys[2]
+      0] Constant 1 - 0,2..0,3
+      1] Constant 3 - 0,8..0,9
+     .patterns[2]
+      0] MatchAs - 0,5..0,6
+        .name 'a'
+      1] MatchAs - 0,11..0,12
+        .name 'c'
+   1] MatchAs - 0,15..0,16
+     .name 'd'
 '''),
 
 ('', 1, None, '_all', {'raw': True, 'to': 'comparators[-1]'}, ('Compare',

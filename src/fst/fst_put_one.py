@@ -2668,11 +2668,11 @@ def _put_one_raw(
             child = ast.body
             idx = fixup_one_index(len(child), idx, self.has_docstr)
 
-        elif (is_dict := (ast_cls is Dict)) or ast_cls is MatchMapping:
+        elif ast_cls is Dict:
             static = _PUT_ONE_HANDLERS[(ast_cls, 'keys')][-1]
             field = 'keys'
             child = ast.keys
-            body2 = ast.values if is_dict else ast.patterns
+            body2 = ast.values
             idx = fixup_one_index(len(child), idx)
             loc = self._loc_maybe_key(idx, pars, child, body2)  # maybe the key is a '**'
 
@@ -2684,6 +2684,35 @@ def _put_one_raw(
 
             if not to:
                 to = (child if idx is None else child[idx]).f
+
+        elif ast_cls is MatchMapping:
+            static = _PUT_ONE_HANDLERS[(ast_cls, 'keys')][-1]
+            child = ast.keys
+            body2 = ast.patterns
+            len_child = len(child)
+            idx = fixup_one_index(len_child + (1 if ast.rest else 0), idx)
+
+            if idx < len_child:  # rest
+                field = 'keys'
+                loc = child[idx].f.loc  # these cannot have pars
+
+                if not to:  # does not currently get here without a `to`
+                    to = body2[idx].f
+
+            else:  # rest
+                ln, col, end_ln, end_col = self._loc_MatchMapping_rest()
+
+                if idx:
+                    _, _, prev_ln, prev_col = body2[idx - 1].f.loc
+                else:
+                    prev_ln, prev_col, _, _ = self.loc
+
+                ln, col = prev_find(root._lines, prev_ln, prev_col, ln, col, '**')  # '**' must be there
+
+                loc = fstloc(ln, col, end_ln, end_col)
+                field = 'rest'
+                child = ast.rest
+                idx = None
 
         else:
             raise RuntimeError('should not get here')  # pragma: no cover
@@ -2716,7 +2745,7 @@ def _put_one_raw(
             elif not pars and childf._is_solo_call_arg_genexp() and (non_shared_loc := childf.pars(shared=False)) > loc:  # if loc includes `arguments` parentheses shared with solo GeneratorExp call arg then need to leave those in place
                 loc = non_shared_loc
 
-        elif info := static and (getinfo := static.getinfo) and getinfo(self, static, idx, field):  # primitive, maybe its an identifier
+        elif info := (static and (getinfo := static.getinfo) and getinfo(self, static, idx, field)):  # primitive, maybe its an identifier
             loc = info.loc_prim
 
         if loc is None:
@@ -2802,14 +2831,14 @@ def _put_one(
             len_ = len(child)
             start_at = 0
 
-        elif field == '_body':
+        elif field == '_body':  # block stmtish
             is_virtual_field = False
             field = 'body'
             len_ = len(self.a.body)
             start_at = self.has_docstr
 
         elif (keys := getattr(ast, 'keys', None)) is not None:  # Dict, MatchMapping
-            len_ = len(keys)
+            len_ = len(keys) + (1 if getattr(self.a, 'rest', None) else 0)
             start_at = 0
 
         else:  # Compare
@@ -2827,17 +2856,9 @@ def _put_one(
             return None
 
         if is_virtual_field:
-            assert keys  # only Dict or MatchMapping get here, Compare is only in the outer block for a delete with code=None which exited after completing just above, otherwise for a put Compare._all has handler _put_one_Compare__all
+            assert keys is not None  # only Dict or MatchMapping get here, Compare is only in the outer block for a delete with code=None which exited after completing just above, otherwise Compare._all has handler _put_one_Compare__all
 
             return None
-            # if keys:  # Dict, MatchMapping
-            #     return None  # because there is not an individual element to return, they are a pair
-
-            # if not idx:  # Compare.left
-            #     return new_self.a.left
-
-            # idx -= 1  # Compare.comparators
-            # field = 'comparators'
 
         try:
             return getattr(new_self.a, field)[idx].f  # may not be there due to removal of last element or raw reparsing of weird *(^$

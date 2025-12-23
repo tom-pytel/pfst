@@ -49,6 +49,9 @@ the original source, and provide the interface to format-preserving operations. 
 simultaneous edit of the `AST` tree and the source code and those are kept synchronized so that the current source will
 always parse to the current tree.
 
+Formatting, comments, and layout are preserved unless explicitly modified. Unparsing is lossless by default and performs
+no implicit normalization or stylistic rewriting.
+
 # Index
 
 - `fst.docs`: Documentation and examples.
@@ -72,24 +75,11 @@ get perfect parsing but also that it is limited to the syntax of the running Pyt
 running any specific verison of Python).
 
 `fst` does use standard Python parsing to parse things that can not normally be parsed, like individual exception
-handlers or match cases, by wrapping them in corresponding code then pulling out and adjusting the locations of the
-parsed `AST`s. `fst.docs.d01_parse`.
+handlers or match cases by wrapping them in corresponding code then pulling out and adjusting the locations of the
+parsed `AST`s. See `fst.docs.d01_parse`.
 
 `fst` validates for parsability, not compilability. This means that for `fst`, `*a, *b = c` and `def f(a, a): pass` are
 both valid even though they are uncompilable.
-
-Format preserving native modification operations exist in two flavors (see the documentation on how to use either):
-
-- Prescribed put operations which do specific things for each type of node being put, including indentation, precedence
-and syntax parenthesization, etc... `fst.docs.d05_put`.
-
-- Raw mode put operations which just put the raw source you want to replace and then attempt to reparse a small part of
-the full source around the changes (at least statement level). `fst.docs.d08_raw`, `fst.fst.FST.put_src()`.
-
-There is also a mechanism for allowing outside editing of the `AST` tree and then reconciling with a marked snapshot
-to preserve formatting where possible. This is intended for existing code or third-party libraries which don't know
-anything about `fst` to maybe gain the ability to preserve some existing formatting when editing a tree.
-`fst.docs.d10_reconcile`.
 
 If you will be playing with this module then the `FST.dump()` method will be your friend.
 
