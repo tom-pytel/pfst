@@ -2,15 +2,15 @@
 
 ### Fixed
 
-- fix `MatchMapping` single-element operation indexing of `rest` if present
-- fix parse single-element undelimited `MatchSequence` to include trailing comma
-- disallow putting already parenthesized elements to `Import/ImportFrom.names` and `With/AsyncWith.items`.
+- fixed `MatchMapping` single-element operation indexing of `rest` if present
+- fixed parse single-element undelimited `MatchSequence` to include trailing comma
+- disallowed putting already parenthesized elements to `Import/ImportFrom.names` and `With/AsyncWith.items`.
 - gave `AsyncWith` put one the correct handler, was missing cases because was doing normal expression put
 - `put_src(action='offset')` exactly on `FormattedValue` or `Interpolation` debug expression will update the preceding debug string correctly
-- fix `replace()` end of sequence with empty slice while using `one=False` returns `None` instead of raising
-- fix minor type_params non-existent brackets location bug due to use of `loc` instead of `bloc`
-- fix syntax order bug in `walk()` for multiple mixed `Starred` and `keywords`, `*a, b=c, *d, e=f, etc...`.
-- fix some `walk(scope=True)` incorrectly included / excluded nodes from function defs
+- fixed `replace()` end of sequence with empty slice while using `one=False` returns `None` instead of raising
+- fixed minor type_params non-existent brackets location bug due to use of `loc` instead of `bloc`
+- fixed syntax order bug in `walk()` for multiple mixed `Starred` and `keywords`, `*a, b=c, *d, e=f, etc...`.
+- fixed some `walk(scope=True)` incorrectly included / excluded nodes from function defs
 
 ### Added
 
@@ -50,7 +50,7 @@
 
 ### Fixed
 
-- fix raw reparse of top level `match_case` or `ExceptHandler` when the change is only in the block header which is at column / line 0
+- fixed raw reparse of top level `match_case` or `ExceptHandler` when the change is only in the block header which is at column / line 0
 - put slice to last element of undelimited sequence as value of `FormattedValue` or `Interpolation` with format string immediately following will offset that format string location correctly
 - correct `.bloc` location if decorator `@` is on a different line with line continuations
 - leave leading `\` above statement being deleted if trailing semicolon is left in place on stmt line
@@ -94,14 +94,14 @@
 
 ### Fixed
 
-- fix insert at `body[0]` after block header with comment deleting comment
-- fix several semicolon and unicode character position issues
-- fix forced grouping parenthesize `Starred` child location
+- fixed insert at `body[0]` after block header with comment deleting comment
+- fixed several semicolon and unicode character position issues
+- fixed forced grouping parenthesize `Starred` child location
 - normalize identifier to put BEFORE checking against keyword *facepalm*
-- fix coerce `except*` `AST` slice to `FST`
-- fix put star `*` to parenthesized single-element non-star `ImportFrom.names`
-- fix get slice from start of unparenthesized tuple in f-string expression on py < 3.12
-- fix get format_spec escape sequences from `rf'{...:\xFF}'` string
+- fixed coerce `except*` `AST` slice to `FST`
+- fixed put star `*` to parenthesized single-element non-star `ImportFrom.names`
+- fixed get slice from start of unparenthesized tuple in f-string expression on py < 3.12
+- fixed get format_spec escape sequences from `rf'{...:\xFF}'` string
 - statement-ish operations at end of source no longer add trailing newline
 - multiline implicit strings with line continuations no longer considered unenclosed
 - get one from `Compare` returns copied node instead of original
@@ -143,11 +143,11 @@
 
 - use Modifying context manager on `get_slice(..., cut=True)`
 - recognize multiline parenthesized `ImportFrom.names` and `With.items` as enclosed
-- fix get one from field which can contain a value but is currently `None`
-- fix raw reparse of compound block header statement which has a line continuation in the header
-- fix raw reparse `TryStar` erroneously to `Try`
-- fix `par(force=True)` on delimited `Tuple` or `MatchSequence`
-- disallow put `Starred` to `Delete` `Tuple` or `List` elements
+- fixed get one from field which can contain a value but is currently `None`
+- fixed raw reparse of compound block header statement which has a line continuation in the header
+- fixed raw reparse `TryStar` erroneously to `Try`
+- fixed `par(force=True)` on delimited `Tuple` or `MatchSequence`
+- disallowed put `Starred` to `Delete` `Tuple` or `List` elements
 
 ### Added
 
@@ -170,13 +170,13 @@
 
 ### Fixed
 
-- fix detect tuple `((1)+1),(1)` as not delimited
+- fixed detect tuple `((1)+1),(1)` as not delimited
 - set `Starred` location correctly after unparenthesize of its value
 - don't parenthesize `Starred.value` multiple times if already has parentheses
 - handle multiline import aliases correctly
-- fix some negative indexing get / put cases
+- fixed some negative indexing get / put cases
 - never automatically add parentheses to copied Slice
-- disallow Starred as a target to Delete
+- disallowed Starred as a target to Delete
 - allow put to except and case slices
 - parse functions handle trailing comments without newlines correctly
 - unparse tuple with slices removes tuple parentheses
@@ -210,7 +210,7 @@
 
 - statementish cut marks tree as modified
 - undelimited sequence operations joining alphanumerics
-- disallow merge of `1.` float literal directly to left of alphanumeric
+- disallowed merge of `1.` float literal directly to left of alphanumeric
 - put to `ImportFrom.module` with dot following directly after 'from'
 
 ### Added
@@ -232,8 +232,8 @@
 
 ### Fixed
 
-- disallow parse naked `GeneratorExp`
-- disallow put wildcard `'_'` name to `MatchClass.cls`
+- disallowed parse naked `GeneratorExp`
+- disallowed put wildcard `'_'` name to `MatchClass.cls`
 - docs page filenames for github pages
 
 ### Added
