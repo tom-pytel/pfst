@@ -277,7 +277,8 @@ def _code_to_slice_expr(
     if code is None:
         return None
 
-    fst_ = code_as(code, self.root.parse_params)
+    coerce = fst.FST.get_option('coerce', options)
+    fst_ = code_as(code, self.root.parse_params, coerce=coerce)
     ast_ = fst_.a
     ast__cls = ast_.__class__
     is_slice_type = ast__cls in (Tuple, List, Set)
@@ -304,7 +305,7 @@ def _code_to_slice_expr(
 
     # one=True or any expression which is not a slice type we can coerce to a singleton slice
 
-    if not is_slice_type and not (one or fst.FST.get_option('coerce', options)):
+    if not is_slice_type and not (one or coerce):
         raise ValueError(f'cannot put {fst_.a.__class__.__name__} as slice to {self.a.__class__.__name__} '
                          "without 'one=True' or 'coerce=True'")
 
@@ -340,7 +341,7 @@ def _code_to_slice_key_and_other(
     if one:
         raise ValueError(f"cannot put as 'one' item to a {self.a.__class__.__name__} slice")
 
-    fst_ = code_as(code, self.root.parse_params)
+    fst_ = code_as(code, self.root.parse_params, coerce=fst.FST.get_option('coerce', options))
     ast_ = fst_.a
 
     if ast_.__class__ is not self.a.__class__:
@@ -373,7 +374,8 @@ def _code_to_slice_BoolOp_values(
     if code is None:
         return None
 
-    fst_ = code_as_expr(code, self.root.parse_params)
+    coerce = fst.FST.get_option('coerce', options)
+    fst_ = code_as_expr(code, self.root.parse_params, coerce=coerce)
     ast_ = fst_.a
     ast__cls = ast_.__class__
     op_cls = self.a.op.__class__
@@ -390,7 +392,7 @@ def _code_to_slice_BoolOp_values(
 
     # one=True or any expression which is not a BoolOp type with same operator we can coerce to a BoolOp slice
 
-    if not (one or fst.FST.get_option('coerce', options)):
+    if not (one or coerce):
         if not is_slice_type:
             raise ValueError(f'cannot put {ast__cls.__name__} as slice to {self.a.__class__.__name__} '
                              "without 'one=True' or 'coerce=True'")
@@ -514,7 +516,8 @@ def _code_to_slice_Compare__all(
     if code is None:
         return None
 
-    fst_ = code_as_expr(code, self.root.parse_params)
+    coerce = fst.FST.get_option('coerce', options)
+    fst_ = code_as_expr(code, self.root.parse_params, coerce=coerce)
     ast_ = fst_.a
     ast__cls = ast_.__class__
     is_slice_type = ast__cls is Compare
@@ -526,7 +529,7 @@ def _code_to_slice_Compare__all(
 
     # one=True or any expression which is not a Compare type we can coerce to a singleton Compare slice
 
-    if not is_slice_type and not (one or fst.FST.get_option('coerce', options)):
+    if not is_slice_type and not (one or coerce):
         raise ValueError(f'cannot put {ast__cls.__name__} as slice to {self.a.__class__.__name__} '
                          "without 'one=True' or 'coerce=True'")
 
@@ -738,11 +741,12 @@ def _code_to_slice_MatchSequence(
     if code is None:
         return None
 
-    fst_ = code_as_pattern(code, self.root.parse_params)
+    coerce = fst.FST.get_option('coerce', options)
+    fst_ = code_as_pattern(code, self.root.parse_params, coerce=coerce)
     ast_ = fst_.a
 
     if not one and ast_.__class__ is not MatchSequence:
-        if not fst.FST.get_option('coerce', options):
+        if not coerce:
             raise ValueError(f'cannot put {ast_.__class__.__name__} as slice to {self.a.__class__.__name__} '
                              "without 'one=True' or 'coerce=True'")
 
@@ -772,8 +776,10 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
     if code is None:
         return None
 
+    coerce = fst.FST.get_option('coerce', options)
+
     try:
-        fst_ = code_as_pattern(code, self.root.parse_params, allow_invalid_matchor=True)
+        fst_ = code_as_pattern(code, self.root.parse_params, coerce=coerce, allow_invalid_matchor=True)
 
     except SyntaxError:
         if isinstance(code, str):
@@ -809,7 +815,7 @@ def _code_to_slice_MatchOr(self: fst.FST, code: Code | None, one: bool, options:
     elif ast_cls is MatchStar:
         raise ValueError(f'cannot put MatchStar as slice to {self.a.__class__.__name__}')
 
-    elif not (one or fst.FST.get_option('coerce', options)):
+    elif not (one or coerce):
         raise ValueError(f'cannot put {ast_cls.__name__} as slice to {self.a.__class__.__name__} '
                          "without 'one=True' or 'coerce=True'")
 
@@ -905,10 +911,12 @@ def _code_to_slice__expr_arglikes(
     if code is None:
         return None
 
+    coerce = fst.FST.get_option('coerce', options)
+
     if one:
-        fst_ = _coerce_as__expr_arglikes(code, self.root.parse_params)
+        fst_ = _coerce_as__expr_arglikes(code, self.root.parse_params, coerce=coerce)
     else:
-        fst_ = code_as__expr_arglikes(code, self.root.parse_params, coerce=fst.FST.get_option('coerce', options))
+        fst_ = code_as__expr_arglikes(code, self.root.parse_params, coerce=coerce)
 
     return fst_ if fst_.a.elts else None  # put empty sequence is same as delete
 
