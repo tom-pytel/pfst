@@ -16721,6 +16721,1190 @@ Module - ROOT 0,0..3,1
 '''),
 ],
 
+'trivia_stmtish_by_ln': [  # ................................................................................
+
+('', 0, 1, None, {'trivia': (6, 'line')}, ('exec', r'''
+# ln 0
+
+# ln 2
+
+# ln 4
+pass  # ln 5
+'''),
+r'''zzz''', r'''
+# ln 0
+
+# ln 2
+
+# ln 4
+zzz
+''', r'''
+Module - ROOT 0,0..5,3
+  .body[1]
+   0] Expr - 5,0..5,3
+     .value Name 'zzz' Load - 5,0..5,3
+'''),
+
+('', 0, 1, None, {'trivia': (5, 'line')}, ('exec', r'''
+# ln 0
+
+# ln 2
+
+# ln 4
+pass  # ln 5
+'''),
+r'''zzz''', r'''
+# ln 0
+
+# ln 2
+
+# ln 4
+zzz
+''', r'''
+Module - ROOT 0,0..5,3
+  .body[1]
+   0] Expr - 5,0..5,3
+     .value Name 'zzz' Load - 5,0..5,3
+'''),
+
+('', 0, 1, None, {'trivia': (4, 'line')}, ('exec', r'''
+# ln 0
+
+# ln 2
+
+# ln 4
+pass  # ln 5
+'''),
+r'''zzz''', r'''
+# ln 0
+
+# ln 2
+
+zzz
+''', r'''
+Module - ROOT 0,0..4,3
+  .body[1]
+   0] Expr - 4,0..4,3
+     .value Name 'zzz' Load - 4,0..4,3
+'''),
+
+('', 0, 1, None, {'trivia': (3, 'line')}, ('exec', r'''
+# ln 0
+
+# ln 2
+
+# ln 4
+pass  # ln 5
+'''),
+r'''zzz''', r'''
+# ln 0
+
+# ln 2
+zzz
+''', r'''
+Module - ROOT 0,0..3,3
+  .body[1]
+   0] Expr - 3,0..3,3
+     .value Name 'zzz' Load - 3,0..3,3
+'''),
+
+('', 0, 1, None, {'trivia': (2, 'line')}, ('exec', r'''
+# ln 0
+
+# ln 2
+
+# ln 4
+pass  # ln 5
+'''),
+r'''zzz''', r'''
+# ln 0
+
+zzz
+''', r'''
+Module - ROOT 0,0..2,3
+  .body[1]
+   0] Expr - 2,0..2,3
+     .value Name 'zzz' Load - 2,0..2,3
+'''),
+
+('', 0, 1, None, {'trivia': (1, 'line')}, ('exec', r'''
+# ln 0
+
+# ln 2
+
+# ln 4
+pass  # ln 5
+'''),
+r'''zzz''', r'''
+# ln 0
+zzz
+''', r'''
+Module - ROOT 0,0..1,3
+  .body[1]
+   0] Expr - 1,0..1,3
+     .value Name 'zzz' Load - 1,0..1,3
+'''),
+
+('', 0, 1, None, {'trivia': (0, 'line')}, ('exec', r'''
+# ln 0
+
+# ln 2
+
+# ln 4
+pass  # ln 5
+'''),
+r'''zzz''',
+r'''zzz''', r'''
+Module - ROOT 0,0..0,3
+  .body[1]
+   0] Expr - 0,0..0,3
+     .value Name 'zzz' Load - 0,0..0,3
+'''),
+
+('', 0, 1, None, {'trivia': (-1, 'line')}, ('exec', r'''
+# ln 0
+
+# ln 2
+
+# ln 4
+pass  # ln 5
+'''),
+r'''zzz''',
+r'''zzz''', r'''
+Module - ROOT 0,0..0,3
+  .body[1]
+   0] Expr - 0,0..0,3
+     .value Name 'zzz' Load - 0,0..0,3
+'''),
+
+('', 0, 1, None, {'trivia': (False, 6)}, ('exec', r'''
+pass  # ln 0
+# ln 1
+
+# ln 3
+
+# ln 5
+'''),
+r'''zzz''',
+r'''zzz''', r'''
+Module - ROOT 0,0..0,3
+  .body[1]
+   0] Expr - 0,0..0,3
+     .value Name 'zzz' Load - 0,0..0,3
+'''),
+
+('', 0, 1, None, {'trivia': (False, 5)}, ('exec', r'''
+pass  # ln 0
+# ln 1
+
+# ln 3
+
+# ln 5
+'''),
+r'''zzz''',
+r'''zzz''', r'''
+Module - ROOT 0,0..0,3
+  .body[1]
+   0] Expr - 0,0..0,3
+     .value Name 'zzz' Load - 0,0..0,3
+'''),
+
+('', 0, 1, None, {'trivia': (False, 4)}, ('exec', r'''
+pass  # ln 0
+# ln 1
+
+# ln 3
+
+# ln 5
+'''),
+r'''zzz''', r'''
+zzz
+# ln 5
+''', r'''
+Module - ROOT 0,0..1,6
+  .body[1]
+   0] Expr - 0,0..0,3
+     .value Name 'zzz' Load - 0,0..0,3
+'''),
+
+('', 0, 1, None, {'trivia': (False, 3)}, ('exec', r'''
+pass  # ln 0
+# ln 1
+
+# ln 3
+
+# ln 5
+'''),
+r'''zzz''', r'''
+zzz
+
+# ln 5
+''', r'''
+Module - ROOT 0,0..2,6
+  .body[1]
+   0] Expr - 0,0..0,3
+     .value Name 'zzz' Load - 0,0..0,3
+'''),
+
+('', 0, 1, None, {'trivia': (False, 2)}, ('exec', r'''
+pass  # ln 0
+# ln 1
+
+# ln 3
+
+# ln 5
+'''),
+r'''zzz''', r'''
+zzz
+# ln 3
+
+# ln 5
+''', r'''
+Module - ROOT 0,0..3,6
+  .body[1]
+   0] Expr - 0,0..0,3
+     .value Name 'zzz' Load - 0,0..0,3
+'''),
+
+('', 0, 1, None, {'trivia': (False, 1)}, ('exec', r'''
+pass  # ln 0
+# ln 1
+
+# ln 3
+
+# ln 5
+'''),
+r'''zzz''', r'''
+zzz
+
+# ln 3
+
+# ln 5
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+   0] Expr - 0,0..0,3
+     .value Name 'zzz' Load - 0,0..0,3
+'''),
+
+('', 0, 1, None, {'trivia': (False, 0)}, ('exec', r'''
+pass  # ln 0
+# ln 1
+
+# ln 3
+
+# ln 5
+'''),
+r'''zzz''', r'''
+zzz
+# ln 1
+
+# ln 3
+
+# ln 5
+''', r'''
+Module - ROOT 0,0..5,6
+  .body[1]
+   0] Expr - 0,0..0,3
+     .value Name 'zzz' Load - 0,0..0,3
+'''),
+
+('', 0, 1, None, {'trivia': (False, -1)}, ('exec', r'''
+pass  # ln 0
+# ln 1
+
+# ln 3
+
+# ln 5
+'''),
+r'''zzz''', r'''
+zzz
+# ln 0
+# ln 1
+
+# ln 3
+
+# ln 5
+''', r'''
+Module - ROOT 0,0..6,6
+  .body[1]
+   0] Expr - 0,0..0,3
+     .value Name 'zzz' Load - 0,0..0,3
+'''),
+
+('', 0, 1, None, {'trivia': (-1, 7)}, ('exec', r'''
+# ln 0
+
+# ln 2
+pass # ln 3
+# ln 4
+
+# ln 5
+'''),
+r'''zzz''',
+r'''zzz''', r'''
+Module - ROOT 0,0..0,3
+  .body[1]
+   0] Expr - 0,0..0,3
+     .value Name 'zzz' Load - 0,0..0,3
+'''),
+
+('', 0, 1, None, {'trivia': (0, 6)}, ('exec', r'''
+# ln 0
+
+# ln 2
+pass # ln 3
+# ln 4
+
+# ln 5
+'''),
+r'''zzz''',
+r'''zzz''', r'''
+Module - ROOT 0,0..0,3
+  .body[1]
+   0] Expr - 0,0..0,3
+     .value Name 'zzz' Load - 0,0..0,3
+'''),
+
+('', 0, 1, None, {'trivia': (1, 5)}, ('exec', r'''
+# ln 0
+
+# ln 2
+pass # ln 3
+# ln 4
+
+# ln 6
+'''),
+r'''zzz''', r'''
+# ln 0
+zzz
+# ln 6
+''', r'''
+Module - ROOT 0,0..2,6
+  .body[1]
+   0] Expr - 1,0..1,3
+     .value Name 'zzz' Load - 1,0..1,3
+'''),
+
+('', 0, 1, None, {'trivia': (2, 4)}, ('exec', r'''
+# ln 0
+
+# ln 2
+pass # ln 3
+# ln 4
+
+# ln 5
+'''),
+r'''zzz''', r'''
+# ln 0
+
+zzz
+
+# ln 5
+''', r'''
+Module - ROOT 0,0..4,6
+  .body[1]
+   0] Expr - 2,0..2,3
+     .value Name 'zzz' Load - 2,0..2,3
+'''),
+
+('', 0, 1, None, {'trivia': (3, 3)}, ('exec', r'''
+# ln 0
+
+# ln 2
+pass # ln 3
+# ln 4
+
+# ln 5
+'''),
+r'''zzz''', r'''
+# ln 0
+
+# ln 2
+zzz
+# ln 4
+
+# ln 5
+''', r'''
+Module - ROOT 0,0..6,6
+  .body[1]
+   0] Expr - 3,0..3,3
+     .value Name 'zzz' Load - 3,0..3,3
+'''),
+
+('', 0, 1, None, {'trivia': (4, 2)}, ('exec', r'''
+# ln 0
+
+# ln 2
+pass # ln 3
+# ln 4
+
+# ln 5
+'''),
+r'''zzz''', r'''
+# ln 0
+
+# ln 2
+zzz
+# ln 3
+# ln 4
+
+# ln 5
+''', r'''
+Module - ROOT 0,0..7,6
+  .body[1]
+   0] Expr - 3,0..3,3
+     .value Name 'zzz' Load - 3,0..3,3
+'''),
+],
+
+'trivia_exprish_by_ln': [  # ................................................................................
+
+('', 0, 1, None, {'trivia': (6, 'line')}, ('List', r'''
+[ # ln 0
+
+# ln 2
+
+# ln 4
+var,  # ln 5
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+
+# ln 2
+
+# ln 4
+zzz
+]
+''', r'''
+List - ROOT 0,0..6,1
+  .elts[1]
+   0] Name 'zzz' Load - 5,0..5,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (5, 'line')}, ('List', r'''
+[ # ln 0
+
+# ln 2
+
+# ln 4
+var,  # ln 5
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+
+# ln 2
+
+# ln 4
+zzz
+]
+''', r'''
+List - ROOT 0,0..6,1
+  .elts[1]
+   0] Name 'zzz' Load - 5,0..5,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (4, 'line')}, ('List', r'''
+[ # ln 0
+
+# ln 2
+
+# ln 4
+var,  # ln 5
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+
+# ln 2
+
+zzz
+]
+''', r'''
+List - ROOT 0,0..5,1
+  .elts[1]
+   0] Name 'zzz' Load - 4,0..4,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (3, 'line')}, ('List', r'''
+[ # ln 0
+
+# ln 2
+
+# ln 4
+var,  # ln 5
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+
+# ln 2
+zzz
+]
+''', r'''
+List - ROOT 0,0..4,1
+  .elts[1]
+   0] Name 'zzz' Load - 3,0..3,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (2, 'line')}, ('List', r'''
+[ # ln 0
+
+# ln 2
+
+# ln 4
+var,  # ln 5
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+
+zzz
+]
+''', r'''
+List - ROOT 0,0..3,1
+  .elts[1]
+   0] Name 'zzz' Load - 2,0..2,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (1, 'line')}, ('List', r'''
+[ # ln 0
+
+# ln 2
+
+# ln 4
+var,  # ln 5
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+zzz
+]
+''', r'''
+List - ROOT 0,0..2,1
+  .elts[1]
+   0] Name 'zzz' Load - 1,0..1,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (0, 'line')}, ('List', r'''
+[ # ln 0
+
+# ln 2
+
+# ln 4
+var,  # ln 5
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+zzz
+]
+''', r'''
+List - ROOT 0,0..2,1
+  .elts[1]
+   0] Name 'zzz' Load - 1,0..1,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (-1, 'line')}, ('List', r'''
+[ # ln 0
+
+# ln 2
+
+# ln 4
+var,  # ln 5
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+zzz
+]
+''', r'''
+List - ROOT 0,0..2,1
+  .elts[1]
+   0] Name 'zzz' Load - 1,0..1,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (False, 6)}, ('List', r'''
+[ # ln 0
+var,  # ln 1
+
+# ln 3
+
+# ln 5
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+zzz
+]
+''', r'''
+List - ROOT 0,0..2,1
+  .elts[1]
+   0] Name 'zzz' Load - 1,0..1,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (False, 5)}, ('List', r'''
+[ # ln 0
+var,  # ln 1
+
+# ln 3
+
+# ln 5
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+zzz
+]
+''', r'''
+List - ROOT 0,0..2,1
+  .elts[1]
+   0] Name 'zzz' Load - 1,0..1,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (False, 4)}, ('List', r'''
+[ # ln 0
+var,  # ln 1
+
+# ln 3
+
+# ln 5
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+zzz
+# ln 5
+]
+''', r'''
+List - ROOT 0,0..3,1
+  .elts[1]
+   0] Name 'zzz' Load - 1,0..1,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (False, 3)}, ('List', r'''
+[ # ln 0
+var,  # ln 1
+
+# ln 3
+
+# ln 5
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+zzz
+
+# ln 5
+]
+''', r'''
+List - ROOT 0,0..4,1
+  .elts[1]
+   0] Name 'zzz' Load - 1,0..1,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (False, 2)}, ('List', r'''
+[ # ln 0
+var,  # ln 1
+
+# ln 3
+
+# ln 5
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+zzz
+# ln 3
+
+# ln 5
+]
+''', r'''
+List - ROOT 0,0..5,1
+  .elts[1]
+   0] Name 'zzz' Load - 1,0..1,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (False, 1)}, ('List', r'''
+[ # ln 0
+var,  # ln 1
+
+# ln 3
+
+# ln 5
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+zzz
+
+# ln 3
+
+# ln 5
+]
+''', r'''
+List - ROOT 0,0..6,1
+  .elts[1]
+   0] Name 'zzz' Load - 1,0..1,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (False, 0)}, ('List', r'''
+[ # ln 0
+var,  # ln 1
+
+# ln 3
+
+# ln 5
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+zzz # ln 1
+
+# ln 3
+
+# ln 5
+]
+''', r'''
+List - ROOT 0,0..6,1
+  .elts[1]
+   0] Name 'zzz' Load - 1,0..1,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (False, -1)}, ('List', r'''
+[ # ln 0
+var,  # ln 1
+
+# ln 3
+
+# ln 5
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+zzz # ln 1
+
+# ln 3
+
+# ln 5
+]
+''', r'''
+List - ROOT 0,0..6,1
+  .elts[1]
+   0] Name 'zzz' Load - 1,0..1,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (-1, 7)}, ('List', r'''
+[ # ln 0
+
+# ln 2
+var,  # ln 3
+# ln 4
+
+# ln 6
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+zzz
+]
+''', r'''
+List - ROOT 0,0..2,1
+  .elts[1]
+   0] Name 'zzz' Load - 1,0..1,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (0, 6)}, ('List', r'''
+[ # ln 0
+
+# ln 2
+var,  # ln 3
+# ln 4
+
+# ln 6
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+zzz
+]
+''', r'''
+List - ROOT 0,0..2,1
+  .elts[1]
+   0] Name 'zzz' Load - 1,0..1,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (1, 5)}, ('List', r'''
+[ # ln 0
+
+# ln 2
+var,  # ln 3
+# ln 4
+
+# ln 6
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+zzz
+# ln 6
+]
+''', r'''
+List - ROOT 0,0..3,1
+  .elts[1]
+   0] Name 'zzz' Load - 1,0..1,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (2, 4)}, ('List', r'''
+[ # ln 0
+
+# ln 2
+var,  # ln 3
+# ln 4
+
+# ln 6
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+
+zzz
+
+# ln 6
+]
+''', r'''
+List - ROOT 0,0..5,1
+  .elts[1]
+   0] Name 'zzz' Load - 2,0..2,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (3, 3)}, ('List', r'''
+[ # ln 0
+
+# ln 2
+var,  # ln 3
+# ln 4
+
+# ln 6
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+
+# ln 2
+zzz
+# ln 4
+
+# ln 6
+]
+''', r'''
+List - ROOT 0,0..7,1
+  .elts[1]
+   0] Name 'zzz' Load - 3,0..3,3
+  .ctx Load
+'''),
+
+('', 0, 1, None, {'trivia': (4, 2)}, ('List', r'''
+[ # ln 0
+
+# ln 2
+var,  # ln 3
+# ln 4
+
+# ln 6
+]
+'''),
+r'''zzz''', r'''
+[ # ln 0
+
+# ln 2
+zzz # ln 3
+# ln 4
+
+# ln 6
+]
+''', r'''
+List - ROOT 0,0..7,1
+  .elts[1]
+   0] Name 'zzz' Load - 3,0..3,3
+  .ctx Load
+'''),
+
+('', 1, 2, None, {'pars': False, 'trivia': (1, 1)}, ('Tuple', r'''
+a, # 0
+b, # 1
+c, # 2
+'''),
+r'''**DEL**''', r'''
+a, # 0
+c, # 2
+''', r'''
+Tuple - ROOT 0,0..1,2
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'c' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+('', 1, 2, None, {'pars': False, 'trivia': (0, 1)}, ('Tuple', r'''
+a, # 0
+b, # 1
+c, # 2
+'''),
+r'''**DEL**''', r'''
+a, # 0
+c, # 2
+''', r'''
+Tuple - ROOT 0,0..1,2
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'c' Load - 1,0..1,1
+  .ctx Load
+'''),
+
+('', 1, 2, None, {'pars': False, 'trivia': (1, 0)}, ('Tuple', r'''
+a, # 0
+b, # 1
+c, # 2
+'''),
+r'''**DEL**''', r'''
+a, # 0
+# 1
+c, # 2
+''', r'''
+Tuple - ROOT 0,0..2,2
+  .elts[2]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'c' Load - 2,0..2,1
+  .ctx Load
+'''),
+
+('', 1, 2, None, {'pars': False, 'trivia': (1, 1)}, ('Tuple', r'''
+a, # 0
+b, # 1
+c, # 2
+'''),
+r'''x''', r'''
+a, # 0
+x,
+c, # 2
+''', r'''
+Tuple - ROOT 0,0..2,2
+  .elts[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 1,0..1,1
+   2] Name 'c' Load - 2,0..2,1
+  .ctx Load
+'''),
+
+('', 1, 2, None, {'pars': False, 'trivia': (0, 1)}, ('Tuple', r'''
+a, # 0
+b, # 1
+c, # 2
+'''),
+r'''x''', r'''
+a, # 0
+x,
+c, # 2
+''', r'''
+Tuple - ROOT 0,0..2,2
+  .elts[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 1,0..1,1
+   2] Name 'c' Load - 2,0..2,1
+  .ctx Load
+'''),
+
+('', 1, 2, None, {'pars': False, 'trivia': (1, 0)}, ('Tuple', r'''
+a, # 0
+b, # 1
+c, # 2
+'''),
+r'''x''', r'''
+a, # 0
+x, # 1
+c, # 2
+''', r'''
+Tuple - ROOT 0,0..2,2
+  .elts[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 1,0..1,1
+   2] Name 'c' Load - 2,0..2,1
+  .ctx Load
+'''),
+
+('', 1, 2, None, {'pars': False, 'trivia': (1, 1)}, ('Tuple', r'''
+a, # 0
+b, # 1
+c, # 2
+'''),
+r'''x # line''', r'''
+a, # 0
+x, # line
+c, # 2
+''', r'''
+a, # 0
+x,
+c, # 2
+''', r'''
+Tuple - ROOT 0,0..2,2
+  .elts[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 1,0..1,1
+   2] Name 'c' Load - 2,0..2,1
+  .ctx Load
+'''),
+
+('', 1, 2, None, {'pars': False, 'trivia': (0, 1)}, ('Tuple', r'''
+a, # 0
+b, # 1
+c, # 2
+'''),
+r'''x # line''', r'''
+a, # 0
+x, # line
+c, # 2
+''', r'''
+a, # 0
+x,
+c, # 2
+''', r'''
+Tuple - ROOT 0,0..2,2
+  .elts[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 1,0..1,1
+   2] Name 'c' Load - 2,0..2,1
+  .ctx Load
+'''),
+
+('', 1, 2, None, {'pars': False, 'trivia': (1, 0)}, ('Tuple', r'''
+a, # 0
+b, # 1
+c, # 2
+'''),
+r'''x # line''', r'''
+a, # 0
+x, # line
+# 1
+c, # 2
+''', r'''
+a, # 0
+x, # 1
+c, # 2
+''', r'''
+Tuple - ROOT 0,0..3,2
+  .elts[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 1,0..1,1
+   2] Name 'c' Load - 3,0..3,1
+  .ctx Load
+'''),
+
+('', 1, 2, None, {'pars': False, 'trivia': (1, 1)}, ('Tuple', r'''
+a, # 0
+b, # 1
+c, # 2
+'''), r'''
+# pre
+x # line
+# post
+''', r'''
+a, # 0
+# pre
+x, # line
+# post
+c, # 2
+''', r'''
+a, # 0
+x,
+c, # 2
+''', r'''
+Tuple - ROOT 0,0..4,2
+  .elts[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 2,0..2,1
+   2] Name 'c' Load - 4,0..4,1
+  .ctx Load
+'''),
+
+('', 1, 2, None, {'pars': False, 'trivia': (0, 1)}, ('Tuple', r'''
+a, # 0
+b, # 1
+c, # 2
+'''), r'''
+# pre
+x # line
+# post
+''', r'''
+a, # 0
+# pre
+x, # line
+# post
+c, # 2
+''', r'''
+a, # 0
+x,
+c, # 2
+''', r'''
+Tuple - ROOT 0,0..4,2
+  .elts[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 2,0..2,1
+   2] Name 'c' Load - 4,0..4,1
+  .ctx Load
+'''),
+
+('', 1, 2, None, {'pars': False, 'trivia': (1, 0)}, ('Tuple', r'''
+a, # 0
+b, # 1
+c, # 2
+'''), r'''
+# pre
+x # line
+# post
+''', r'''
+a, # 0
+# pre
+x, # line
+# post
+# 1
+c, # 2
+''', r'''
+a, # 0
+x, # 1
+c, # 2
+''', r'''
+Tuple - ROOT 0,0..5,2
+  .elts[3]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 2,0..2,1
+   2] Name 'c' Load - 5,0..5,1
+  .ctx Load
+'''),
+],
+
 'except_vs_except_star': [  # ................................................................................
 
 ('', 1, 1, 'handlers', {'_ver': 11}, (None, r'''
@@ -17475,6 +18659,247 @@ Tuple - ROOT 0,0..0,4
   .elts[1]
    0] Name 'x' Load - 0,1..0,2
   .ctx Load
+'''),
+
+('', 1, 3, None, {'pars': 'auto'}, ('Tuple', r'''
+a, # 0
+b, # 1
+c, # 2
+d, # 3
+'''), ('Tuple', r'''
+x, # 9
+y, # 0
+'''), r'''
+(a, # 0
+x, # 9
+y, # 0
+d, # 3
+)
+''', r'''
+(a, # 0
+x, y,
+d, # 3
+)
+''', r'''
+Tuple - ROOT 0,0..4,1
+  .elts[4]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'x' Load - 1,0..1,1
+   2] Name 'y' Load - 2,0..2,1
+   3] Name 'd' Load - 3,0..3,1
+  .ctx Load
+'''),
+
+('', 1, 3, None, {'pars': True}, ('Tuple', r'''
+a, # 0
+b, # 1
+c, # 2
+d, # 3
+'''), ('Tuple', r'''
+x, # 9
+y, # 0
+'''), r'''
+(a, # 0
+x, # 9
+y, # 0
+d, # 3
+)
+''', r'''
+(a, # 0
+x, y,
+d, # 3
+)
+''', r'''
+Tuple - ROOT 0,0..4,1
+  .elts[4]
+   0] Name 'a' Load - 0,1..0,2
+   1] Name 'x' Load - 1,0..1,1
+   2] Name 'y' Load - 2,0..2,1
+   3] Name 'd' Load - 3,0..3,1
+  .ctx Load
+'''),
+
+('', 1, 3, None, {'pars': False}, ('Tuple', r'''
+a, # 0
+b, # 1
+c, # 2
+d, # 3
+'''), ('Tuple', r'''
+x, # 9
+y, # 0
+'''), r'''
+a, # 0
+x, # 9
+y, # 0
+d, # 3
+''', r'''
+a, # 0
+x, y,
+d, # 3
+''', r'''
+Tuple - ROOT 0,0..3,2
+  .elts[4]
+   0] Name 'a' Load - 0,0..0,1
+   1] Name 'x' Load - 1,0..1,1
+   2] Name 'y' Load - 2,0..2,1
+   3] Name 'd' Load - 3,0..3,1
+  .ctx Load
+'''),
+
+('value', 1, 3, None, {'pars': 'auto'}, (None,
+r'''i = a, b, c, d'''), ('Tuple', r'''
+x, # 9
+y, # 0
+'''), r'''
+i = (a, x, # 9
+    y, # 0
+    d)
+''',
+r'''i = a, x, y, d''', r'''
+Assign - ROOT 0,0..2,6
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..2,6
+    .elts[4]
+     0] Name 'a' Load - 0,5..0,6
+     1] Name 'x' Load - 0,8..0,9
+     2] Name 'y' Load - 1,4..1,5
+     3] Name 'd' Load - 2,4..2,5
+    .ctx Load
+'''),
+
+('value', 1, 3, None, {'pars': True}, (None,
+r'''i = a, b, c, d'''), ('Tuple', r'''
+x, # 9
+y, # 0
+'''), r'''
+i = (a, x, # 9
+    y, # 0
+    d)
+''',
+r'''i = a, x, y, d''', r'''
+Assign - ROOT 0,0..2,6
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..2,6
+    .elts[4]
+     0] Name 'a' Load - 0,5..0,6
+     1] Name 'x' Load - 0,8..0,9
+     2] Name 'y' Load - 1,4..1,5
+     3] Name 'd' Load - 2,4..2,5
+    .ctx Load
+'''),
+
+('value', 1, 3, None, {'pars': False}, (None,
+r'''i = a, b, c, d'''), ('Tuple', r'''
+x, # 9
+y, # 0
+'''), r'''
+i = (a, x, # 9
+    y, # 0
+    d)
+''',
+r'''i = a, x, y, d''', r'''
+Assign - ROOT 0,0..2,6
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..2,6
+    .elts[4]
+     0] Name 'a' Load - 0,5..0,6
+     1] Name 'x' Load - 0,8..0,9
+     2] Name 'y' Load - 1,4..1,5
+     3] Name 'd' Load - 2,4..2,5
+    .ctx Load
+'''),
+
+('value', 1, 3, None, {'pars': 'auto'}, (None, r'''
+i = a, \
+    b, \
+    c, \
+    d,
+'''), ('Tuple', r'''
+x, # 9
+y, # 0
+'''), r'''
+i = (a, \
+    x, # 9
+    y, # 0
+    d,)
+''', r'''
+i = (a, \
+    x, y,
+    d,)
+''', r'''
+Assign - ROOT 0,0..3,7
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..3,7
+    .elts[4]
+     0] Name 'a' Load - 0,5..0,6
+     1] Name 'x' Load - 1,4..1,5
+     2] Name 'y' Load - 2,4..2,5
+     3] Name 'd' Load - 3,4..3,5
+    .ctx Load
+'''),
+
+('value', 1, 3, None, {'pars': True}, (None, r'''
+i = a, \
+    b, \
+    c, \
+    d,
+'''), ('Tuple', r'''
+x, # 9
+y, # 0
+'''), r'''
+i = (a, \
+    x, # 9
+    y, # 0
+    d,)
+''', r'''
+i = (a, \
+    x, y,
+    d,)
+''', r'''
+Assign - ROOT 0,0..3,7
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..3,7
+    .elts[4]
+     0] Name 'a' Load - 0,5..0,6
+     1] Name 'x' Load - 1,4..1,5
+     2] Name 'y' Load - 2,4..2,5
+     3] Name 'd' Load - 3,4..3,5
+    .ctx Load
+'''),
+
+('value', 1, 3, None, {'pars': False}, (None, r'''
+i = a, \
+    b, \
+    c, \
+    d,
+'''), ('Tuple', r'''
+x, # 9
+y, # 0
+'''), r'''
+i = (a, \
+    x, # 9
+    y, # 0
+    d,)
+''', r'''
+i = (a, \
+    x, y,
+    d,)
+''', r'''
+Assign - ROOT 0,0..3,7
+  .targets[1]
+   0] Name 'i' Store - 0,0..0,1
+  .value Tuple - 0,4..3,7
+    .elts[4]
+     0] Name 'a' Load - 0,5..0,6
+     1] Name 'x' Load - 1,4..1,5
+     2] Name 'y' Load - 2,4..2,5
+     3] Name 'd' Load - 3,4..3,5
+    .ctx Load
 '''),
 ],
 

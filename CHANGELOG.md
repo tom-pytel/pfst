@@ -2,6 +2,7 @@
 
 ### Fixed
 
+- fixed delimit whole root node error when last line was a comment
 - fixed `MatchMapping` single-element operation indexing of `rest` if present
 - fixed parse single-element undelimited `MatchSequence` to include trailing comma
 - disallowed putting already parenthesized elements to `Import/ImportFrom.names` and `With/AsyncWith.items`.
@@ -14,6 +15,7 @@
 
 ### Added
 
+- can control optional parenthesization of cut / put `Tuple` slices via `pars` option
 - `_body` virtual field for accessing block statement bodies leaving any possibly present docstr unchanged
 - dummy view for nonexistent list fields from higher python versions on lower ones
 - new coercions on put: `arg` to `arguments`, `withitem` to `expr`
@@ -28,6 +30,7 @@
 
 ### Updated
 
+- implemented trivia specification by absolute line numbers for statementishes so can enable for all
 - implemented `coerce` option for `MatchOr` and `MatchSequence`
 - removed `matchor_norm` option, didn't make sense
 - pass through more specific `SyntaxError` information from our extended parsing

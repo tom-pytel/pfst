@@ -71,7 +71,7 @@ class SrcEdit:
         bound_col: int,
         bound_end_ln: int,
         bound_end_col: int,
-        precomms: bool | str,
+        precomms: bool | Literal['all'] | int,  # the int was added long after this function was written, docstr not updated
     ) -> tuple[int, int] | None:
         """Return the position of the start of any preceding comments to the element which is assumed to live just past
         (`bound_ln`, `bound_col`). Returns `None` if no preceding comment. If preceding entire line comments exist then
@@ -90,8 +90,18 @@ class SrcEdit:
 
         assert precomms is not None
 
-        if not precomms:
+        if precomms is False:
             return None
+
+        if precomms is not True and isinstance(precomms, int):  # new int line number specifier
+            bound_ln, bound_col = min(max((precomms, 0), (bound_ln, bound_col)), (bound_end_ln, bound_end_col))
+
+            allpre = False  # so that it stores each line found
+            re_pat = re_empty_line_cont_or_comment
+
+        else:
+            allpre = precomms == 'all'
+            re_pat = re_empty_line_cont_or_comment if allpre else re_comment_line_start
 
         if (bound_ln == bound_end_ln
             or (
@@ -100,9 +110,7 @@ class SrcEdit:
         )):
             return None
 
-        allpre = precomms == 'all'
         pre_ln = None
-        re_pat = re_empty_line_cont_or_comment if allpre else re_comment_line_start
 
         for ln in range(bound_end_ln - 1, bound_ln - (not bound_col), -1):  # only consider whole lines
             if not (m := re_pat.match(lines[ln])):
@@ -121,7 +129,7 @@ class SrcEdit:
         bound_col: int,
         bound_end_ln: int,
         bound_end_col: int,
-        postcomms: bool | str,
+        postcomms: bool | Literal['all', 'block'] | int,  # the int was added long after this function was written, docstr not updated
     ) -> tuple[int, int] | None:
         """Return the position of the end of any trailing comments to the element which is assumed to live just before
         (`bound_end_ln`, `bound_end_col`). Returns `None` if no trailing comment. Should return the location at the
@@ -139,8 +147,18 @@ class SrcEdit:
 
         assert postcomms is not None
 
-        if not postcomms:
+        if postcomms is False:
             return None
+
+        if postcomms is not True and isinstance(postcomms, int):  # new int line number specifier
+            bound_end_ln, bound_end_col = max(min(((postcomms + 1), 0), (bound_end_ln, bound_end_col)),
+                                              (bound_ln, bound_col))
+
+            postcomms = 'all'
+            include_empty = True
+
+        else:
+            include_empty = False
 
         blkpost = True if (allpost := postcomms == 'all') else postcomms == 'block'
 
@@ -163,7 +181,10 @@ class SrcEdit:
             if not (m := re_empty_line_cont_or_comment.match(lines[ln])):
                 break
 
-            if g := m.group(1):
+            if include_empty:
+                bound_ln = ln
+
+            elif g := m.group(1):
                 if g.startswith('#'):
                     bound_ln = ln
 
@@ -1360,11 +1381,13 @@ def _put_slice_stmtish_old(
 #     - `False`: No preceding comments.
 #     - `True`: Single contiguous comment block immediately preceding position.
 #     - `'all'`: Comment blocks (possibly separated by empty lines) preceding position.
+#     - `int`: NEWLY ADDED to support exact line number trivia.
 # - `postcomms`: Trailing comments.  - DEPRECATED, STILL USED FOR STMTS, REPLACED WITH `trivia`!
 #     - `False`: No trailing comments.
 #     - `True`: Only comment trailing on line of position, nothing past that on its own lines.
 #     - `'block'`: Single contiguous comment block following position.
 #     - `'all'`: Comment blocks (possibly separated by empty lines) following position.
+#     - `int`: NEWLY ADDED to support exact line number trivia.
 # - `prespace`: Preceding empty lines (max of this and `pep8space` used).  - DEPRECATED, STILL USED FOR STMTS, REPLACED
 #     WITH `trivia`!
 #     - `False`: No empty lines.
@@ -1427,8 +1450,14 @@ def get_slice_stmtish(
     ld_comms, ld_space, ld_neg, tr_comms, tr_space, tr_neg = get_trivia_params(options.get('trivia'), True)
 
     options = dict(options,
-        precomms = _trivia2precomms[ld_comms],
-        postcomms = _trivia2postcomms[tr_comms],
+        precomms=(ld_comms
+                  if isinstance(ld_comms, int) and not isinstance(ld_comms, bool) else
+                  _trivia2precomms[ld_comms]),
+
+        postcomms=(tr_comms
+                   if isinstance(tr_comms, int) and not isinstance(tr_comms, bool) else
+                   _trivia2postcomms[tr_comms]),
+
         prespace = ld_space,
         postspace = tr_space,
     )
@@ -1453,8 +1482,14 @@ def put_slice_stmtish(
     ld_comms, ld_space, ld_neg, tr_comms, tr_space, tr_neg = get_trivia_params(options.get('trivia'), True)
 
     options = dict(options,
-        precomms=_trivia2precomms[ld_comms],
-        postcomms=_trivia2postcomms[tr_comms],
+        precomms=(ld_comms
+                  if isinstance(ld_comms, int) and not isinstance(ld_comms, bool) else
+                  _trivia2precomms[ld_comms]),
+
+        postcomms=(tr_comms
+                   if isinstance(tr_comms, int) and not isinstance(tr_comms, bool) else
+                   _trivia2postcomms[tr_comms]),
+
         prespace=ld_space,
         postspace=tr_space,
     )

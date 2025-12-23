@@ -695,7 +695,7 @@ def trailing_trivia(
     is_lineno = isinstance(comments, int)
 
     if frag := next_frag(lines, end_ln, end_col, end_ln + 1, 0, True):
-        if not frag.src.startswith('#') or (not is_lineno and comments == 'none'):
+        if not frag.src.startswith('#') or (comments < end_ln if is_lineno else comments == 'none'):
             space_pos = None if (c := frag.col) == end_col else (end_ln, c)
 
             return ((end_ln, end_col), space_pos, False)
@@ -1545,8 +1545,16 @@ def _maybe_fix_joined_alnum(
         self._put_src([' '], ln, col, ln, col, False)
 
 
-def _maybe_fix_undelimited_seq(self: fst.FST, body: list[AST], delims: str = '()') -> bool:
-    """Fix undelimited `Tuple` or `MatchSequence` if needed. Don't call on delimited sequence."""
+def _maybe_fix_undelimited_seq(
+    self: fst.FST, body: list[AST], delims: str = '()', demlim_if_needed: bool = True
+) -> bool:
+    """Fix undelimited `Tuple` or `MatchSequence` if needed. Don't call on delimited sequence. Fixes locations as well
+    as delimiting.
+
+    **Parameters:**
+    - `delim_if_needed`: Whether to add delimiters to **NON-EMPTY** sequences if they are needed for parsability or not.
+        Delimiters are always added to empty sequences irrespective of this parameter.
+    """
 
     # assert isinstance(self.a, (Tuple, MatchSequence))
 
@@ -1575,12 +1583,14 @@ def _maybe_fix_undelimited_seq(self: fst.FST, body: list[AST], delims: str = '()
     ln, col, end_ln, end_col = self.loc
     encpar = None  # cached call to self._is_enclosed_in_parents()
 
-    if ((end_ln != ln
-         and not self._is_enclosed_or_line(pars=False)
-         and not (encpar := self._is_enclosed_in_parents())
-        )  # could have line continuations
-        or (any(e.__class__ is NamedExpr and not e.f.pars().n for e in body))  # yeah, this is fine in parenthesized tuples but not in naked ones, only applies to tuples and not MatchSequence obviously
-    ):
+    if (demlim_if_needed
+        and (
+            (end_ln != ln
+             and not self._is_enclosed_or_line(pars=False)
+             and not (encpar := self._is_enclosed_in_parents())
+            )  # could have line continuations
+            or (any(e.__class__ is NamedExpr and not e.f.pars().n for e in body))  # yeah, this is fine in parenthesized tuples but not in naked ones, only applies to tuples and not MatchSequence obviously
+    )):
         self._delimit_node(delims=delims)
 
         return True
@@ -1634,8 +1644,14 @@ def _maybe_fix_undelimited_seq(self: fst.FST, body: list[AST], delims: str = '()
     return False
 
 
-def _maybe_fix_tuple(self: fst.FST, is_par: bool | None = None) -> bool:
-    """
+def _maybe_fix_tuple(self: fst.FST, is_par: bool | None = None, par_if_needed: bool = True) -> bool:
+    """Add a missing trailing comma to a singleton tuple without one and parenthesize an empty tuple if it is not
+    parenthesized or requires it for parsability (and is allowed by `pars` option).
+
+    **Parameters:**
+    - `par_if_needed`: Whether to parenthesize **NON-EMPTY** tuple if it needs it or not. Empty tuples are always
+        parenthesized irrespective of this parameter.
+
     **Returns:**
     - `bool`: Whether the tuple is parenthesized or not (after the fix, regardless of if fix was done or not).
     """
@@ -1649,7 +1665,7 @@ def _maybe_fix_tuple(self: fst.FST, is_par: bool | None = None) -> bool:
         self._maybe_add_singleton_tuple_comma(is_par)
 
     if not is_par:
-        return self._maybe_fix_undelimited_seq(body)
+        return self._maybe_fix_undelimited_seq(body, '()', par_if_needed)
 
     return is_par
 
@@ -1778,21 +1794,37 @@ def _delimit_node(self: fst.FST, whole: bool = True, delims: str = '()') -> None
     - `whole`: If at root then delimit whole source instead of just node.
     """
 
-    # assert isinstance(self.a, Tuple)
-
-    ln, col, end_ln, end_col = self.whole_loc if whole and self.is_root else self.loc
-
-    self._put_src([delims[1]], end_ln, end_col, end_ln, end_col, True, False, self)
+    # assert isinstance(self.a, (Tuple, MatchSequence))
 
     lines = self.root._lines
-    a = self.a
-    a.end_lineno = end_ln + 1  # yes this can change
-    a.end_col_offset = lines[end_ln].c2b(end_col + 1)  # can't count on this being set by put_src() because end of `whole` could be past end of tuple
+    ast = self.a
+
+    if not (whole and self.is_root):
+        ln, col, end_ln, end_col = self.loc
+        last_line_comment = False
+
+    else:  # need to make sure last line doesn't end with a comment
+        ln, col, end_ln, end_col = self.whole_loc
+        _, _, self_end_ln, search_col = self.loc
+
+        last_line_comment = lines[end_ln].find('#', 0 if self_end_ln < end_ln else search_col) != -1
+
+    if last_line_comment:
+        self._put_src(['', delims[1]], end_ln, end_col, end_ln, end_col, True, False, self)
+
+        ast.end_lineno = end_ln + 2  # yes this can change
+        ast.end_col_offset = 1  # can't count on this being set by put_src() because end of `whole` could be past end of sequence
+
+    else:
+        self._put_src([delims[1]], end_ln, end_col, end_ln, end_col, True, False, self)
+
+        ast.end_lineno = end_ln + 1
+        ast.end_col_offset = lines[end_ln].c2b(end_col + 1)
 
     self._offset(*self._put_src([delims[0]], ln, col, ln, col, False, False, self), self_=False)
 
-    a.lineno = ln + 1
-    a.col_offset = lines[ln].c2b(col)  # ditto on the `whole` thing
+    ast.lineno = ln + 1
+    ast.col_offset = lines[ln].c2b(col)  # ditto on the `whole` thing
 
 
 def _undelimit_node(self: fst.FST, field: str = 'elts') -> bool:

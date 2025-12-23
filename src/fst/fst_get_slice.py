@@ -787,13 +787,16 @@ def _get_slice_Tuple_elts(
     fst_ = get_slice_sep(self, start, stop, len_body, cut, ret_ast, asts[-1], *locs,
                          options, 'elts', prefix, suffix, ',', 1, 1)
 
+    pars = fst.FST.get_option('pars', options)
+    par_if_needed = pars is True if self.is_root else pars is not False
+
     if not is_par:
-        fst_._maybe_fix_tuple(False)
+        fst_._maybe_fix_tuple(False, par_if_needed)  # cutting from unparenthesized tuple defaults to different parenthesization if needed depending if cutting from root or not
 
     fst_._maybe_fix_arglikes(options)  # parenthesize any arglike expressions (could have come from a slice)
 
     if cut:
-        self._maybe_fix_tuple(is_par)
+        self._maybe_fix_tuple(is_par, par_if_needed)  # cutting from already unparenthesized tuple defaults to not parenthesizing it if needed for parsability
 
     return fst_
 

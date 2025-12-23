@@ -1148,9 +1148,16 @@ def _put_slice_Tuple_elts(
     _put_slice_seq_and_asts(self, start, stop, 'elts', body, fst_, 'elts', ast.ctx.__class__,
                             bound_ln, bound_col, bound_end_ln, bound_end_col, ',', 1, options)
 
-    is_par = self._maybe_fix_tuple(is_par)
+    pars = fst.FST.get_option('pars', options)
 
-    if need_par and not is_par:
+    if fst_:
+        par_if_needed = pars is not False if self.is_root else True
+    else:  # for a delete we use the same rule as for a cut
+        par_if_needed = pars is True if self.is_root else pars is not False
+
+    is_par = self._maybe_fix_tuple(is_par, par_if_needed)
+
+    if need_par and not is_par and par_if_needed:
         self._delimit_node()
 
 

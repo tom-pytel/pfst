@@ -492,7 +492,7 @@ b # word
         self.assertEqual(((5, 0), (6, 0), True), trailing_trivia(ls, 6, 2, 0, 3, 'all', 1))
         self.assertEqual(((5, 0), (6, 0), True), trailing_trivia(ls, 6, 2, 0, 3, 'all', 2))
 
-        self.assertEqual(((1, 0), None, True), trailing_trivia(ls, 6, 2, 0, 3, -1, 0))
+        self.assertEqual(((0, 3), (0, 4), False), trailing_trivia(ls, 6, 2, 0, 3, -1, 0))
         self.assertEqual(((1, 0), None, True), trailing_trivia(ls, 6, 2, 0, 3, 0, 0))
         self.assertEqual(((2, 0), None, True), trailing_trivia(ls, 6, 2, 0, 3, 1, 0))
         self.assertEqual(((3, 0), None, True), trailing_trivia(ls, 6, 2, 0, 3, 2, 0))
@@ -502,7 +502,7 @@ b # word
         self.assertEqual(((6, 0), None, True), trailing_trivia(ls, 6, 2, 0, 3, 6, 0))
         self.assertEqual(((6, 0), None, True), trailing_trivia(ls, 6, 2, 0, 3, 7, 0))
 
-        self.assertEqual(((1, 0), None, True), trailing_trivia(ls, 6, 2, 0, 3, -1, 1))
+        self.assertEqual(((0, 3), (0, 4), False), trailing_trivia(ls, 6, 2, 0, 3, -1, 1))
         self.assertEqual(((1, 0), None, True), trailing_trivia(ls, 6, 2, 0, 3, 0, 1))
         self.assertEqual(((2, 0), (3, 0), True), trailing_trivia(ls, 6, 2, 0, 3, 1, 1))
         self.assertEqual(((3, 0), (4, 0), True), trailing_trivia(ls, 6, 2, 0, 3, 2, 1))
@@ -512,7 +512,7 @@ b # word
         self.assertEqual(((6, 0), None, True), trailing_trivia(ls, 6, 2, 0, 3, 6, 1))
         self.assertEqual(((6, 0), None, True), trailing_trivia(ls, 6, 2, 0, 3, 7, 1))
 
-        self.assertEqual(((1, 0), None, True), trailing_trivia(ls, 6, 2, 0, 3, -1, 2))
+        self.assertEqual(((0, 3), (0, 4), False), trailing_trivia(ls, 6, 2, 0, 3, -1, 2))
         self.assertEqual(((1, 0), None, True), trailing_trivia(ls, 6, 2, 0, 3, 0, 2))
         self.assertEqual(((2, 0), (4, 0), True), trailing_trivia(ls, 6, 2, 0, 3, 1, 2))
         self.assertEqual(((3, 0), (4, 0), True), trailing_trivia(ls, 6, 2, 0, 3, 2, 2))
@@ -534,7 +534,7 @@ b # word
         self.assertEqual(((5, 0), None, True), trailing_trivia(ls, 5, 0, 0, 3, 'all', 1))
         self.assertEqual(((5, 0), None, True), trailing_trivia(ls, 5, 0, 0, 3, 'all', 2))
 
-        self.assertEqual(((1, 0), None, True), trailing_trivia(ls, 5, 0, 0, 3, -1, 0))
+        self.assertEqual(((0, 3), (0, 4), False), trailing_trivia(ls, 5, 0, 0, 3, -1, 0))
         self.assertEqual(((1, 0), None, True), trailing_trivia(ls, 5, 0, 0, 3, 0, 0))
         self.assertEqual(((2, 0), None, True), trailing_trivia(ls, 5, 0, 0, 3, 1, 0))
         self.assertEqual(((3, 0), None, True), trailing_trivia(ls, 5, 0, 0, 3, 2, 0))
@@ -544,7 +544,7 @@ b # word
         self.assertEqual(((5, 0), None, True), trailing_trivia(ls, 5, 0, 0, 3, 6, 0))
         self.assertEqual(((5, 0), None, True), trailing_trivia(ls, 5, 0, 0, 3, 7, 0))
 
-        self.assertEqual(((1, 0), None, True), trailing_trivia(ls, 5, 0, 0, 3, -1, 1))
+        self.assertEqual(((0, 3), (0, 4), False), trailing_trivia(ls, 5, 0, 0, 3, -1, 1))
         self.assertEqual(((1, 0), None, True), trailing_trivia(ls, 5, 0, 0, 3, 0, 1))
         self.assertEqual(((2, 0), (3, 0), True), trailing_trivia(ls, 5, 0, 0, 3, 1, 1))
         self.assertEqual(((3, 0), (4, 0), True), trailing_trivia(ls, 5, 0, 0, 3, 2, 1))
@@ -554,7 +554,7 @@ b # word
         self.assertEqual(((5, 0), None, True), trailing_trivia(ls, 5, 0, 0, 3, 6, 1))
         self.assertEqual(((5, 0), None, True), trailing_trivia(ls, 5, 0, 0, 3, 7, 1))
 
-        self.assertEqual(((1, 0), None, True), trailing_trivia(ls, 5, 0, 0, 3, -1, 2))
+        self.assertEqual(((0, 3), (0, 4), False), trailing_trivia(ls, 5, 0, 0, 3, -1, 2))
         self.assertEqual(((1, 0), None, True), trailing_trivia(ls, 5, 0, 0, 3, 0, 2))
         self.assertEqual(((2, 0), (4, 0), True), trailing_trivia(ls, 5, 0, 0, 3, 1, 2))
         self.assertEqual(((3, 0), (4, 0), True), trailing_trivia(ls, 5, 0, 0, 3, 2, 2))
@@ -1245,8 +1245,8 @@ d  # comment3''', f.src)
         f._put_src('\n# post', 0, 2, 0, 2, False)
         f._put_src('# pre\n', 0, 0, 0, 0, False)
         f._delimit_node(whole=True)
-        self.assertEqual((0, 0, 2, 7), f.loc)
-        self.assertEqual(f.src, '(# pre\ni,\n# post)')
+        self.assertEqual((0, 0, 3, 1), f.loc)
+        self.assertEqual(f.src, '(# pre\ni,\n# post\n)')
 
         f = parse('i,').body[0].value.f.copy()
         f._put_src('\n# post', 0, 2, 0, 2, False)
@@ -1254,6 +1254,22 @@ d  # comment3''', f.src)
         f._delimit_node(whole=False)
         self.assertEqual((1, 0, 1, 4), f.loc)
         self.assertEqual(f.src, '# pre\n(i,)\n# post')
+
+        f = FST('a, # 0\nb, # 1', Tuple)
+        f._delimit_node(whole=False)
+        self.assertEqual('(a, # 0\nb,) # 1', f.src)
+
+        f = FST('a, # 0\nb, # 1', Tuple)
+        f._delimit_node()
+        self.assertEqual('(a, # 0\nb, # 1\n)', f.src)
+
+        f = FST('a, # 0\nb, # 1\n', Tuple)
+        f._delimit_node()
+        self.assertEqual('(a, # 0\nb, # 1\n)', f.src)
+
+        f = FST('a, # 0\nb, # 1\n# 2', Tuple)
+        f._delimit_node()
+        self.assertEqual('(a, # 0\nb, # 1\n# 2\n)', f.src)
 
         # MatchSequence
 
@@ -1274,8 +1290,8 @@ d  # comment3''', f.src)
         f._put_src('\n# post', 0, 2, 0, 2, False)
         f._put_src('# pre\n', 0, 0, 0, 0, False)
         f._delimit_node(whole=True, delims='[]')
-        self.assertEqual((0, 0, 2, 7), f.loc)
-        self.assertEqual(f.src, '[# pre\ni,\n# post]')
+        self.assertEqual((0, 0, 3, 1), f.loc)
+        self.assertEqual(f.src, '[# pre\ni,\n# post\n]')
 
         f = FST('i,', pattern)
         f._put_src('\n# post', 0, 2, 0, 2, False)
@@ -1283,6 +1299,22 @@ d  # comment3''', f.src)
         f._delimit_node(whole=False, delims='[]')
         self.assertEqual((1, 0, 1, 4), f.loc)
         self.assertEqual(f.src, '# pre\n[i,]\n# post')
+
+        f = FST('a, # 0\nb, # 1', pattern)
+        f._delimit_node(whole=False, delims='[]')
+        self.assertEqual('[a, # 0\nb,] # 1', f.src)
+
+        f = FST('a, # 0\nb, # 1', pattern)
+        f._delimit_node(delims='[]')
+        self.assertEqual('[a, # 0\nb, # 1\n]', f.src)
+
+        f = FST('a, # 0\nb, # 1\n', pattern)
+        f._delimit_node(delims='[]')
+        self.assertEqual('[a, # 0\nb, # 1\n]', f.src)
+
+        f = FST('a, # 0\nb, # 1\n# 2', pattern)
+        f._delimit_node(delims='[]')
+        self.assertEqual('[a, # 0\nb, # 1\n# 2\n]', f.src)
 
     def test__undelimit_node(self):
         # Tuple

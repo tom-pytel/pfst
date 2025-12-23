@@ -4914,8 +4914,8 @@ def func():
         f._put_src('\n# post', 0, 2, 0, 2, False)
         f._put_src('# pre\n', 0, 0, 0, 0, False)
         f.par(whole=True)
-        self.assertEqual((0, 0, 2, 7), f.loc)
-        self.assertEqual(f.src, '(# pre\ni,\n# post)')
+        self.assertEqual((0, 0, 3, 1), f.loc)
+        self.assertEqual(f.src, '(# pre\ni,\n# post\n)')
 
         f = parse('i,').body[0].value.f.copy()
         f._put_src('\n# post', 0, 2, 0, 2, False)
@@ -4943,8 +4943,8 @@ def func():
         f._put_src('\n# post', 0, 2, 0, 2, False)
         f._put_src('# pre\n', 0, 0, 0, 0, False)
         f.par(whole=True)
-        self.assertEqual((0, 0, 2, 7), f.loc)
-        self.assertEqual(f.src, '[# pre\ni,\n# post]')
+        self.assertEqual((0, 0, 3, 1), f.loc)
+        self.assertEqual(f.src, '[# pre\ni,\n# post\n]')
 
         f = FST('i,', pattern)
         f._put_src('\n# post', 0, 2, 0, 2, False)
