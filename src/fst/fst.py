@@ -164,7 +164,8 @@ _DEFAULT_COLOR = (
     None
 )
 
-_DEFAULT_PARSE_PARAMS = dict(filename='<unknown>', type_comments=False, feature_version=None)
+_DEFAULT_FILENAME = '<fst>'
+_DEFAULT_PARSE_PARAMS = dict(filename=_DEFAULT_FILENAME, type_comments=False, feature_version=None)
 _DEFAULT_INDENT = '    '
 
 _LOC_FUNCS = {  # quick lookup table for FST.loc
@@ -229,7 +230,7 @@ def _swizzle_getput_params(
 
 def parse(
     source: builtins.str | bytes | AST,
-    filename: str = '<unknown>',
+    filename: str = _DEFAULT_FILENAME,
     mode: str = 'exec',
     *,
     type_comments: bool = False,
@@ -708,7 +709,7 @@ class FST:
         ...     FST('start:stop:step', 'strict')
         ... except Exception as exc:
         ...     print(repr(exc))
-        SyntaxError('invalid syntax', ('<unknown>', 1, 11, 'start:stop:step\n', 1, 12))
+        SyntaxError('invalid syntax', ('<fst>', 1, 11, 'start:stop:step\n', 1, 12))
 
         You can also pass an `AST` and the source will be generated from it.
 
@@ -858,7 +859,7 @@ class FST:
         src: builtins.str | list[builtins.str],
         mode: Mode = 'exec',
         *,
-        filename: builtins.str = '<unknown>',
+        filename: builtins.str = _DEFAULT_FILENAME,
         type_comments: bool = False,
         feature_version: tuple[int, int] | None = None,
     ) -> FST:
@@ -936,7 +937,7 @@ class FST:
         ast: AST,
         mode: Mode | Literal[False] | None = None,
         *,
-        filename: builtins.str = '<unknown>',
+        filename: builtins.str = _DEFAULT_FILENAME,
         type_comments: bool | None = False,
         feature_version: tuple[int, int] | None = None,
         ctx: bool = False,

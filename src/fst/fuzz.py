@@ -1089,6 +1089,9 @@ class Fuzzy:
                     if line.startswith("VmRSS:"):
                         if (l := len(s := line.split()[1])) > 6 or (l == 6 and s > '500000'):
                             print('\nMemory!')
+                            print(' ', gc.get_stats())
+                            print(' ', gc.collect())
+                            print(' ', gc.get_stats())
 
                             return True
 
@@ -2365,7 +2368,21 @@ class SliceExprish(Fuzzy):
             fst.verify()
 
         finally:
-            pass
+            for _, f in exprishs:
+                try:
+                    if f.is_alive:
+                        f._unmake_fst_tree()
+                except Exception:
+                    pass
+
+            del exprishs
+
+            for bucket in buckets.values():
+                try:
+                    if bucket.fst.is_alive:
+                        bucket.fst._unmake_fst_tree()
+                except Exception:
+                    pass
 
 
 # ----------------------------------------------------------------------------------------------------------------------
