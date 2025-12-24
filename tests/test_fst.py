@@ -2317,6 +2317,8 @@ y"
             self.assertEqual('  ', FST('except* Exception:\n  pass', '_ExceptHandlers').indent)
 
     def test_unmake_fst_in_operations(self):
+        # basic, more comprehensive in one and slice tests
+
         f = parse('(1, 2, 3)').f
         g = parse('(4, 5)').f
         i = f.body[0].value.elts[1]

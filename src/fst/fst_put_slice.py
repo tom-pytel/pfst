@@ -931,7 +931,9 @@ def _put_slice_asts(
     asts: list[AST] | None,
     ctx: type[expr_context] | None = None,
 ) -> None:
-    """Put or delete the actual `AST` nodes to `self` body and create `FST` nodes for them."""
+    """Put or delete the actual `AST` nodes to `self` body and create `FST` nodes for them. The parent `fst_` is also
+    unmade and if the `asts` come from the `fst_.a` then `asts` must be the actual field list from that `AST` so it can
+    be cleared before the `fst_` is unmade, otherwise the newly-copied children will be unmade as well."""
 
     self._unmake_fst_tree(body[start : stop])
 
@@ -943,9 +945,10 @@ def _put_slice_asts(
     else:
         len_asts = len(asts)
 
-        fst_._unmake_fst_parents(True)
-
         body[start : stop] = asts
+
+        asts.clear()  # clear first so the unmake doesn't unmake the nodes we stole
+        fst_._unmake_fst_tree()
 
         FST = fst.FST
         new_fsts = [FST(body[i], self, astfield(field, i)) for i in range(start, start + len_asts)]
@@ -967,11 +970,13 @@ def _put_slice_asts2(
     body: list[AST],
     body2: list[AST],
     fst_: fst.FST | None,
-    asts: list[AST] | None,
+    asts: list[AST] | None,  # these MUST be the actual lists from the fst_.a
     asts2: list[AST] | None,
 ) -> None:
     """Put or delete the actual `AST` nodes to `self` body and create `FST` nodes for them. This is the two element
-    version for Dict and MatchMapping."""
+    version for Dict and MatchMapping. The parent `fst_` is also unmade and if the `asts` and `asts2` come from the
+    `fst_.a` then they must be the actual field lists from that `AST` so they can be cleared before the `fst_` is
+    unmade, otherwise the newly-copied children will be unmade as well."""
 
     self._unmake_fst_tree(body[start : stop] + body2[start : stop])
 
@@ -984,10 +989,12 @@ def _put_slice_asts2(
     else:
         len_asts = len(asts)
 
-        fst_._unmake_fst_parents(True)
-
         body[start : stop] = asts
         body2[start : stop] = asts2
+
+        asts.clear()  # clear first so the unmake doesn't unmake the nodes we stole
+        asts2.clear()
+        fst_._unmake_fst_tree()
 
         FST = fst.FST
         new_fsts = []
@@ -2032,7 +2039,6 @@ def _put_slice_Compare__all(
                         bound_ln, bound_col, bound_end_ln, bound_end_col,
                         options, 'comparators', locfunc)
 
-        # slice_ops = slice(start + (op_off := op_side_left is False), stop + op_off)
         slice_ops = slice(start + (not op_side_left), stop + (not op_side_left))  # op_side_left is never None here
 
         self._unmake_fst_tree(body[start : stop] + ops[slice_ops])
@@ -2373,7 +2379,8 @@ def _put_slice__slice(
 ) -> None:
     ast = self.a
     static = _SPECIAL_SLICE_STATICS[ast.__class__]
-    len_body = len(body := getattr(ast, field))
+    body = getattr(ast, field)
+    len_body = len(body)
     start, stop = fixup_slice_indices(len_body, start, stop)
     len_slice = stop - start
 
@@ -2384,39 +2391,8 @@ def _put_slice__slice(
 
     bound_ln, bound_col, bound_end_ln, bound_end_col = self.loc
 
-    if not fst_:
-        end_params = put_slice_sep_begin(self, start, stop, None, None, None, 0,
-                                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, field, None, static.sep, static.self_tail_sep)
-
-        self._unmake_fst_tree(body[start : stop])
-
-        del body[start : stop]
-
-        len_fst_body = 0
-
-    else:
-        fst_body = getattr(fst_.a, field)
-        len_fst_body = len(fst_body)
-
-        end_params = put_slice_sep_begin(self, start, stop, fst_, fst_body[0].f, fst_body[-1].f, len_fst_body,
-                                         bound_ln, bound_col, bound_end_ln, bound_end_col,
-                                         options, field, None, static.sep, static.self_tail_sep)
-
-        self._unmake_fst_tree(body[start : stop])
-        fst_._unmake_fst_parents(True)
-
-        body[start : stop] = fst_body
-
-        FST = fst.FST
-        stack = [FST(body[i], self, astfield(field, i)) for i in range(start, start + len_fst_body)]
-
-        self._make_fst_tree(stack)
-
-    for i in range(start + len_fst_body, len(body)):
-        body[i].f.pfield = astfield(field, i)
-
-    put_slice_sep_end(self, end_params)
+    _put_slice_seq_and_asts(self, start, stop, field, body, fst_, field, None,
+                            bound_ln, bound_col, bound_end_ln, bound_end_col, static.sep, static.self_tail_sep, options)
 
 
 def _put_slice_stmtish__body(

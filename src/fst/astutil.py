@@ -982,7 +982,7 @@ def copy_ast(ast: AST | None) -> AST | None:
     return ret
 
 
-def set_ctx(asts: AST | list[AST], ctx: type[expr_context], *, doit: bool = True) -> bool:
+def set_ctx(asts: AST | list[AST], ctx_cls: type[expr_context], *, doit: bool = True) -> bool:
     """Set all `ctx` fields in this node and any children which may participate in an assignment (`Tuple`, `List`,
     `Starred`, `Subscript`, `Attribute`, `Name`) to the passed `ctx` type.
 
@@ -1010,11 +1010,11 @@ def set_ctx(asts: AST | list[AST], ctx: type[expr_context], *, doit: bool = True
             if ((is_seq := (a_cls in (Tuple, List)))
                 or (is_starred := (a_cls is Starred))
                 or a_cls in (Name, Subscript, Attribute)
-            ) and not isinstance(a.ctx, ctx):
+            ) and a.ctx.__class__ is not ctx_cls:
                 change = True
 
                 if doit:
-                    a.ctx = ctx()
+                    a.ctx = ctx_cls()
 
                 if is_seq:
                     stack.extend(a.elts)

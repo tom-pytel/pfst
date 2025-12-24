@@ -5691,6 +5691,387 @@ def f():
         elif 3: pass
             '''.strip())
 
+    def test_unmake_on_put_slice(self):
+        s = FST('a', 'exec')
+        s0 = s.body[0]
+        d = FST('b', 'exec')
+        d0 = d.body[0]
+        d.put_slice(s)
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.body[0])
+        self.assertIs(s0.a, d.a.body[0])
+
+        s0 = FST('a', 'Expr')
+        d = FST('b', 'exec')
+        d0 = d.body[0]
+        d.put_slice(s0)
+        self.assertIsNone(d0.a)
+        self.assertIs(s0, d.body[0])
+        self.assertIs(s0.a, d.a.body[0])
+
+        s0 = FST('a', 'Name')
+        d = FST('b', 'exec')
+        d0 = d.body[0]
+        d.put_slice(s0)
+        self.assertIsNone(d0.a)
+        self.assertIs(s0, d.body[0].value)
+        self.assertIs(s0.a, d.a.body[0].value)
+
+        s = FST('0,')
+        s0 = s.elts[0]
+        sc = s.ctx
+        d = FST('1,')
+        d0 = d.elts[0]
+        d.put_slice(s)
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIsNone(sc.a)
+        self.assertIs(s0, d.elts[0])
+        self.assertIs(s0.a, d.a.elts[0])
+
+        s = FST('[0]')
+        s0 = s.elts[0]
+        sc = s.ctx
+        d = FST('[1]')
+        d0 = d.elts[0]
+        d.put_slice(s)
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIsNone(sc.a)
+        self.assertIs(s0, d.elts[0])
+        self.assertIs(s0.a, d.a.elts[0])
+
+        s = FST('{0}')
+        s0 = s.elts[0]
+        d = FST('{1}')
+        d0 = d.elts[0]
+        d.put_slice(s)
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.elts[0])
+        self.assertIs(s0.a, d.a.elts[0])
+
+        s = FST('{0: 0}')
+        sk0 = s.keys[0]
+        sv0 = s.values[0]
+        d = FST('{1: 0}')
+        dk0 = d.keys[0]
+        dv0 = d.values[0]
+        d.put_slice(s)
+        self.assertIsNone(dk0.a)
+        self.assertIsNone(dv0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(sk0, d.keys[0])
+        self.assertIs(sk0.a, d.a.keys[0])
+        self.assertIs(sv0, d.values[0])
+        self.assertIs(sv0.a, d.a.values[0])
+
+        s = FST('a,')
+        s0 = s.elts[0]
+        sc = s.ctx
+        d = FST('del b')
+        d0 = d.targets[0]
+        d.put_slice(s)
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIsNone(sc.a)
+        self.assertIs(s0, d.targets[0])
+        self.assertIs(s0.a, d.a.targets[0])
+
+        s = FST('a =', '_Assign_targets')
+        s0 = s.targets[0]
+        d = FST('b = c')
+        d0 = d.targets[0]
+        d.put_slice(s, 'targets')
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.targets[0])
+        self.assertIs(s0.a, d.a.targets[0])
+
+        s = FST('a as b', '_withitems')
+        s0 = s.items[0]
+        d = FST('with c as d: pass')
+        d0 = d.items[0]
+        d.put_slice(s, 'items')
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.items[0])
+        self.assertIs(s0.a, d.a.items[0])
+
+        s = FST('a as b', '_aliases')
+        s0 = s.names[0]
+        d = FST('import c')
+        d0 = d.names[0]
+        d.put_slice(s)
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.names[0])
+        self.assertIs(s0.a, d.a.names[0])
+
+        s = FST('a as b', '_aliases')
+        s0 = s.names[0]
+        d = FST('from c import d')
+        d0 = d.names[0]
+        d.put_slice(s)
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.names[0])
+        self.assertIs(s0.a, d.a.names[0])
+
+        s = FST('a,')
+        sc = s.ctx
+        s0 = s.elts[0]
+        s0c = s0.ctx
+        d = FST('global b')
+        d.put_slice(s)
+        self.assertIsNone(s.a)
+        self.assertIsNone(sc.a)
+        self.assertIsNone(s0.a)
+        self.assertIsNone(s0c.a)
+
+        s = FST('a,')
+        sc = s.ctx
+        s0 = s.elts[0]
+        s0c = s0.ctx
+        d = FST('nonlocal b')
+        d.put_slice(s)
+        self.assertIsNone(s.a)
+        self.assertIsNone(sc.a)
+        self.assertIsNone(s0.a)
+        self.assertIsNone(s0c.a)
+
+        s = FST('a', '_expr_arglikes')  # is Tuple
+        s0 = s.elts[0]
+        sc = s.ctx
+        d = FST('class cls(b): pass')
+        d0 = d.bases[0]
+        d.put_slice(s, 'bases')
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIsNone(sc.a)
+        self.assertIs(s0, d.bases[0])
+        self.assertIs(s0.a, d.a.bases[0])
+
+        s = FST('@a', '_decorator_list')
+        s0 = s.decorator_list[0]
+        d = FST('@b\nclass cls: pass')
+        d0 = d.decorator_list[0]
+        d.put_slice(s, 'decorator_list')
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.decorator_list[0])
+        self.assertIs(s0.a, d.a.decorator_list[0])
+
+        s = FST('for a in a', '_comprehensions')
+        s0 = s.generators[0]
+        d = FST('[b for b in b]')
+        d0 = d.generators[0]
+        d.put_slice(s, 'generators')
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.generators[0])
+        self.assertIs(s0.a, d.a.generators[0])
+
+        s = FST('if a', '_comprehension_ifs')
+        s0 = s.ifs[0]
+        d = FST('for _ in _ if b')
+        d0 = d.ifs[0]
+        d.put_slice(s, 'ifs')
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.ifs[0])
+        self.assertIs(s0.a, d.a.ifs[0])
+
+        s = FST('a and b')
+        s0 = s.values[0]
+        s1 = s.values[1]
+        d = FST('c and d')
+        d0 = d.values[0]
+        d1 = d.values[0]
+        d.put_slice(s, 'values')
+        self.assertIsNone(d0.a)
+        self.assertIsNone(d1.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.values[0])
+        self.assertIs(s0.a, d.a.values[0])
+        self.assertIs(s1, d.values[1])
+        self.assertIs(s1.a, d.a.values[1])
+
+        s = FST('a < b')
+        sl = s.left
+        so = s.ops[0]
+        sc = s.comparators[0]
+        d = FST('c > d')
+        dl = d.left
+        do = d.ops[0]
+        dc = d.comparators[0]
+        d.put_slice(s)
+        self.assertIsNone(dl.a)
+        self.assertIsNone(do.a)
+        self.assertIsNone(dc.a)
+        self.assertIsNone(s.a)
+        self.assertIs(sl, d.left)
+        self.assertIs(sl.a, d.a.left)
+        self.assertIs(so, d.ops[0])
+        self.assertIs(so.a, d.a.ops[0])
+        self.assertIs(sc, d.comparators[0])
+        self.assertIs(sc.a, d.a.comparators[0])
+
+        s = FST('a', '_expr_arglikes')  # is Tuple
+        s0 = s.elts[0]
+        sc = s.ctx
+        d = FST('call(b)')
+        d0 = d.args[0]
+        d.put_slice(s, 'args')
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIsNone(sc.a)
+        self.assertIs(s0, d.args[0])
+        self.assertIs(s0.a, d.a.args[0])
+
+        s = FST('[0]', pattern)
+        s0 = s.patterns[0]
+        d = FST('[1]', pattern)
+        d0 = d.patterns[0]
+        d.put_slice(s)
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.patterns[0])
+        self.assertIs(s0.a, d.a.patterns[0])
+
+        s = FST('{0: a}', pattern)
+        sk0 = s.keys[0]
+        sv0 = s.patterns[0]
+        d = FST('{1: b}', pattern)
+        dk0 = d.keys[0]
+        dv0 = d.patterns[0]
+        d.put_slice(s)
+        self.assertIsNone(dk0.a)
+        self.assertIsNone(dv0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(sk0, d.keys[0])
+        self.assertIs(sk0.a, d.a.keys[0])
+        self.assertIs(sv0, d.patterns[0])
+        self.assertIs(sv0.a, d.a.patterns[0])
+
+        s = FST('a | b', pattern)
+        s0 = s.patterns[0]
+        s1 = s.patterns[1]
+        d = FST('c | d', pattern)
+        d0 = d.patterns[0]
+        d1 = d.patterns[1]
+        d.put_slice(s)
+        self.assertIsNone(d0.a)
+        self.assertIsNone(d1.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.patterns[0])
+        self.assertIs(s0.a, d.a.patterns[0])
+        self.assertIs(s1, d.patterns[1])
+        self.assertIs(s1.a, d.a.patterns[1])
+
+        if PYGE12:
+            s = FST('T', '_type_params')
+            s0 = s.type_params[0]
+            d = FST('class cls[T]: pass')
+            d0 = d.type_params[0]
+            d.put_slice(s, 'type_params')
+            self.assertIsNone(d0.a)
+            self.assertIsNone(s.a)
+            self.assertIs(s0, d.type_params[0])
+            self.assertIs(s0.a, d.a.type_params[0])
+
+        s = FST('except a: pass', '_ExceptHandlers')
+        s0 = s.handlers[0]
+        d = FST('except b: pass', '_ExceptHandlers')
+        d0 = d.handlers[0]
+        d.put_slice(s)
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.handlers[0])
+        self.assertIs(s0.a, d.a.handlers[0])
+
+        s = FST('case a: pass', '_match_cases')
+        s0 = s.cases[0]
+        d = FST('case b: pass', '_match_cases')
+        d0 = d.cases[0]
+        d.put_slice(s)
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.cases[0])
+        self.assertIs(s0.a, d.a.cases[0])
+
+        s = FST('a =', '_Assign_targets')
+        s0 = s.targets[0]
+        d = FST('b =', '_Assign_targets')
+        d0 = d.targets[0]
+        d.put_slice(s)
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.targets[0])
+        self.assertIs(s0.a, d.a.targets[0])
+
+        s = FST('@a', '_decorator_list')
+        s0 = s.decorator_list[0]
+        d = FST('@b', '_decorator_list')
+        d0 = d.decorator_list[0]
+        d.put_slice(s)
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.decorator_list[0])
+        self.assertIs(s0.a, d.a.decorator_list[0])
+
+        s = FST('for a in a', '_comprehensions')
+        s0 = s.generators[0]
+        d = FST('for b in b', '_comprehensions')
+        d0 = d.generators[0]
+        d.put_slice(s)
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.generators[0])
+        self.assertIs(s0.a, d.a.generators[0])
+
+        s = FST('if a', '_comprehension_ifs')
+        s0 = s.ifs[0]
+        d = FST('if b', '_comprehension_ifs')
+        d0 = d.ifs[0]
+        d.put_slice(s)
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.ifs[0])
+        self.assertIs(s0.a, d.a.ifs[0])
+
+        s = FST('a as b', '_aliases')
+        s0 = s.names[0]
+        d = FST('c as d', '_aliases')
+        d0 = d.names[0]
+        d.put_slice(s)
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.names[0])
+        self.assertIs(s0.a, d.a.names[0])
+
+        s = FST('a as b', '_withitems')
+        s0 = s.items[0]
+        d = FST('c as d', '_withitems')
+        d0 = d.items[0]
+        d.put_slice(s)
+        self.assertIsNone(d0.a)
+        self.assertIsNone(s.a)
+        self.assertIs(s0, d.items[0])
+        self.assertIs(s0.a, d.a.items[0])
+
+        if PYGE12:
+            s = FST('T', '_type_params')
+            s0 = s.type_params[0]
+            d = FST('U', '_type_params')
+            d0 = d.type_params[0]
+            d.put_slice(s)
+            self.assertIsNone(d0.a)
+            self.assertIsNone(s.a)
+            self.assertIs(s0, d.type_params[0])
+            self.assertIs(s0.a, d.a.type_params[0])
+
 
 if __name__ == '__main__':
     import argparse
