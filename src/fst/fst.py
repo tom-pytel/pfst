@@ -140,7 +140,7 @@ from .parsex import Mode
 from .code import Code, code_as_lines, code_as_all
 from .view import fstview, fstview_Dict, fstview_MatchMapping, fstview_Compare, fstview__body
 from .reconcile import Reconcile
-from .fst_misc import DUMP_COLOR, DUMP_NO_COLOR, clip_src_loc, fixup_field_body
+from .fst_misc import DUMP_COLOR, DUMP_NO_COLOR, Trivia, clip_src_loc, fixup_field_body
 from .fst_locs import _loc_arguments, _loc_comprehension, _loc_withitem, _loc_match_case, _loc_op
 from .fst_traverse import next_bound, prev_bound
 from .fst_options import check_options
@@ -1325,19 +1325,38 @@ class FST:
 
         return self
 
-    def reconcile(self, **options) -> FST:
+    def reconcile(
+        self,
+        trivia_ast_put: Trivia | None = None,
+        trivia_fst_put: Trivia | None = None,
+        trivia_fst_get: Trivia | None = None,
+        *,
+        cleanup: bool = True,
+        **options
+    ) -> FST:
         r"""Reconcile `self` with a previously marked version and return a new valid `FST` tree. This is meant for
         allowing non-FST modifications to an `FST` tree and later converting it to a valid `FST` tree to preserve as
         much formatting as possible and maybe continue operating in `FST` land. Only `AST` nodes from the original tree
         carry formatting information, so the more of those are replaced the more formatting is lost.
 
-        **Caveat:** When replacing the `AST` nodes, make sure you are replacing the nodes in the actual `AST` node
-        fields, not the `.a` attribute in `FST` nodes, that won't do anything.
+        **Note:** When replacing the `AST` nodes, make sure you are replacing the nodes in the actual `AST` node fields,
+        not the `.a` attribute in `FST` nodes, that won't do anything.
 
-        **Note:** This functionality is still a work in progress so not all comments which should be may be preserved
-        and other comments may be duplicated.
+        **Disclaimer:** This functionality is still experimental and unfinished so not all comments which should be may
+        be preserved and others may be duplicated.
 
         **Parameters:**
+        - `trivia_ast_put`: The `trivia` option to use when putting an `AST` node. Since `AST` nodes have no trivia in
+            practice this means how much of the existing trivia at the target node is deleted. `None` means use default.
+        - `trivia_fst_put`: The `trivia` option to use when putting an `FST` node, which may or may not have attached
+            trivia depending on the `trivia_fst_get` option. This option only specifies what happens to the target
+            trivia so depending on if the node being put has any it means delete or replace. `None` means use default.
+        - `trivia_fst_get`: The `trivia` option to use when getting `FST` nodes for put. This can happen due to nodes
+            completely translated to a place they were not anywhere near or due to movement because of deletions or
+            insertions into the body where the nodes live. `None` means use default.
+        - `cleanup`: By default after a successful reconcile `self` is cleanued up and no more reconcile can be
+            attempted on it. It can be left in place to continue working on it and `reconcile()` again by passing
+            `cleanup=False` but this is not guaranteed to survive further reconcile development.
         - `options`: Only a few options are allowed for reconcile as others are managed during the process. The most
             useful ones are `elif_` and `pep8space`. See `options()`.
 
@@ -1420,7 +1439,14 @@ class FST:
         if not (mark := self._cache.get('mark')):
             raise RuntimeError('not marked or modification detected after mark, irreconcilable')
 
-        rec = Reconcile(self, mark, options)
+        reconcile = Reconcile(
+            self,
+            mark,
+            options,
+            trivia_ast_put=trivia_ast_put,
+            trivia_fst_put=trivia_fst_put,
+            trivia_fst_get=trivia_fst_get,
+        )
 
         with FST.options(
             raw = False,
@@ -1435,9 +1461,13 @@ class FST:
             norm_get = False,
             norm_put = False,
         ):
-            rec.recurse_node(self.a)
+            reconcile.recurse_node(self.a)
 
-        return rec.out
+        if cleanup:
+            self._touch()  # delete marked copy
+            self._unmake_fst_tree(safe=True)  # clean up as best we can
+
+        return reconcile.out
 
     # ------------------------------------------------------------------------------------------------------------------
     # Edit

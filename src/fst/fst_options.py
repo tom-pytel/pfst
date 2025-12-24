@@ -22,7 +22,7 @@ class _ThreadOptions(threading.local):
 
 _DEFAULT_OPTIONS = {
     'raw':           False,   # True | False | 'auto'
-    'trivia':        True,    # True | False | 'all' | 'block' | (True | False | 'all' | 'block', True | False | 'all' | 'block' | 'line')  - 'all' and 'block' may be followed by a '+|-[int]' ('all+1', 'block-10', 'block+')
+    'trivia':        True,    # True | False | 'all?' | 'block?' | (True | False | 'all?' | 'block?', True | False | 'all?' | 'block?' | 'line')  - 'all' and 'block' may be followed by a '+|-[int]' ('all+1', 'block-10', 'block+')
     'coerce':        True,    # True | False
     'elif_':         True,    # True | False
     'pep8space':     True,    # True | False | 1

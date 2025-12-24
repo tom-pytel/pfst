@@ -36,9 +36,14 @@ from .asttypes import (
 )
 
 from .common import NodeError, astfield
+from .fst_misc import Trivia
 
 __all__ = ['Reconcile']
 
+
+_DEFAULT_TRIVIA_AST_PUT = ('all+', False)  # ('all+', 'line')  # (False, False)
+_DEFAULT_TRIVIA_FST_PUT = ('all+', 'line')
+_DEFAULT_TRIVIA_FST_GET = ('all+', 'line')
 
 _SLICE_COMAPTIBILITY = {
     (Module, 'body'):                     'stmt*',
@@ -135,17 +140,35 @@ class Reconcile:
     mark:    fst.FST            ; """The marked `FST` tree to use as reference."""
     out:     fst.FST            ; """The output `FST` tree to build up and return."""
 
-    def __init__(self, work: fst.FST, mark: fst.FST, options: Mapping[str, Any] = {}) -> None:
+    trivia_ast_put: Trivia  ; """`trivia` option to use when putting an `AST` without formatting."""
+    trivia_fst_put: Trivia  ; """`trivia` option to use when putting an `FST` with formatting, either from own tree or external."""
+    trivia_fst_get: Trivia  ; """`trivia` option to use when genning an `FST` with formatting for put, either from own tree or external."""
+
+    def __init__(
+        self,
+        work: fst.FST,
+        mark: fst.FST,
+        options: Mapping[str, Any] = {},
+        trivia_ast_put: Trivia | None = None,
+        trivia_fst_put: Trivia | None = None,
+        trivia_fst_get: Trivia | None = None,
+    ) -> None:
         self.options = options
         self.work = work
         self.mark = mark
         self.out = mark.copy()
 
+        self.trivia_ast_put = _DEFAULT_TRIVIA_AST_PUT if trivia_ast_put is None else trivia_ast_put
+        self.trivia_fst_put = _DEFAULT_TRIVIA_FST_PUT if trivia_fst_put is None else trivia_fst_put
+        self.trivia_fst_get = _DEFAULT_TRIVIA_FST_GET if trivia_fst_get is None else trivia_fst_get
+
     def put_node(self, code: fst.FST | AST, out_parent: fst.FST | None = None, pfield: astfield | None = None) -> None:
+        trivia = self.trivia_fst_put if isinstance(code, fst.FST) else self.trivia_ast_put
+
         if out_parent:
-            out_parent.put(code, pfield.idx, None, pfield.name, **self.options)
+            out_parent.put(code, pfield.idx, None, pfield.name, trivia=trivia, **self.options)
         else:  # because can replace AST at root node which has out_parent=None
-            self.out.replace(code, **self.options)
+            self.out.replace(code, trivia=trivia, **self.options)
 
     def recurse_slice_dict(self, node: AST, outf: fst.FST | None) -> None:  # TODO: refactor!
         """Recurse into a combined slice of a Dict's keys and values using slice operations to copy over formatting
@@ -213,13 +236,14 @@ class Reconcile:
 
                             values[i].f.verify(reparse=False)
 
-                        slice = child_parent.get_slice(child_idx, child_idx - start + end, None)
+                        slice = child_parent.get_slice(child_idx, child_idx - start + end, None,
+                                                       trivia=self.trivia_fst_get)
 
                     except Exception:  # verification failed, need to do one AST at a time
                         pass
 
                     else:  # no recurse because we wouldn't be at this point if it wasn't a valid full FST without AST replacements, couldn't anyway as we don't know anything about that tree
-                        outf.put_slice(slice, start, end, None, **self.options)
+                        outf.put_slice(slice, start, end, None, trivia=self.trivia_fst_put, **self.options)
 
                         start = end
 
@@ -227,9 +251,9 @@ class Reconcile:
 
                 else:
                     mark_parent = self.mark.child_from_path(self.work.child_path(child_parent))
-                    slice = mark_parent.get_slice(child_idx, child_idx - start + end, None)
+                    slice = mark_parent.get_slice(child_idx, child_idx - start + end, None, trivia=self.trivia_fst_get)
 
-                    outf.put_slice(slice, start, end, None, **self.options)
+                    outf.put_slice(slice, start, end, None, trivia=self.trivia_fst_put, **self.options)
 
             len_outa_body = len(outa_keys)  # get each time because could have been modified by put_slice, will not change if coming from AST
 
@@ -238,19 +262,19 @@ class Reconcile:
                 v = values[i]
 
                 if i >= len_outa_body:  # if past end then we need to slice insert AST before recursing into it, doesn't happen if coming from AST
-                    outf.put_slice(Dict(keys=[k], values=[v]), i, i, None, **self.options)
+                    outf.put_slice(Dict(keys=[k], values=[v]), i, i, None, trivia=self.trivia_ast_put, **self.options)
 
                 if k:
                     self.recurse_node(k, astfield('keys', i), outf, nodef)
                 elif outa_keys[i] is not None:
-                    outf.put(None, i, None, 'keys', **self.options)
+                    outf.put(None, i, None, 'keys', trivia=self.trivia_ast_put, **self.options)
 
                 self.recurse_node(v, astfield('values', i), outf, nodef)  # nodef set accordingly regardless of if coming from FST or AST
 
             start = end
 
         if start < len(outa_keys):  # delete tail in output, doesn't happen if coming from AST
-            outf.put_slice(None, start, 'end', None, **self.options)
+            outf.put_slice(None, start, 'end', None, trivia=self.trivia_fst_put, **self.options)
 
     def recurse_slice(self, node: AST, outf: fst.FST | None, field: str, body: list[AST]) -> None:  # TODO: refactor!
         """Recurse into a slice of children using slice operations to copy over formatting where possible (if not
@@ -293,13 +317,14 @@ class Reconcile:
                         for i in range(start, end):
                             body[i].f.verify(reparse=False)
 
-                        slice = child_parent.get_slice(child_idx, child_off_idx + end, child_field)
+                        slice = child_parent.get_slice(child_idx, child_off_idx + end, child_field,
+                                                       trivia=self.trivia_fst_get)
 
                     except Exception:  # verification failed, need to do one AST at a time
                         pass
 
                     else:  # no recurse because we wouldn't be at this point if it wasn't a valid full FST without AST replacements, couldn't anyway as we don't know anything about that tree
-                        outf.put_slice(slice, start, end, field, **self.options)
+                        outf.put_slice(slice, start, end, field, trivia=self.trivia_fst_put, **self.options)
 
                         start = end
 
@@ -307,9 +332,10 @@ class Reconcile:
 
                 else:
                     mark_parent = self.mark.child_from_path(self.work.child_path(child_parent))
-                    slice = mark_parent.get_slice(child_idx, child_off_idx + end, child_field)
+                    slice = mark_parent.get_slice(child_idx, child_off_idx + end, child_field,
+                                                  trivia=self.trivia_fst_get)
 
-                    outf.put_slice(slice, start, end, field, **self.options)
+                    outf.put_slice(slice, start, end, field, trivia=self.trivia_fst_put, **self.options)
 
             len_outa_body = len(outa_body)  # get each time because could have been modified by put_slice, will not change if coming from AST
 
@@ -317,14 +343,14 @@ class Reconcile:
                 n = body[i]  # this is safe to use in 'put_slice()' then 'recurse()' without duplicating because ASTs are not consumed
 
                 if i >= len_outa_body:  # if past end then we need to slice insert AST before recursing into it, doesn't happen if coming from AST
-                    outf.put_slice(n, i, i, field, one=True, **self.options)  # put one
+                    outf.put_slice(n, i, i, field, one=True, trivia=self.trivia_ast_put, **self.options)  # put one
 
                 self.recurse_node(n, astfield(field, i), outf, nodef)  # nodef set accordingly regardless of if coming from FST or AST
 
             start = end
 
         if start < len(outa_body):  # delete tail in output, doesn't happen if coming from AST
-            outf.put_slice(None, start, 'end', field, **self.options)
+            outf.put_slice(None, start, 'end', field, trivia=self.trivia_fst_put, **self.options)
 
     def recurse_children(self, node: AST, outa: AST) -> None:
         """Recurse into children of a node."""
@@ -349,7 +375,7 @@ class Reconcile:
 
             elif not isinstance(child, list):  # primitive, or None to delete possibly AST child
                 if nodef is not False and child != getattr(outa, field):  # this SHOULDN'T happen if coming from pure AST but could if there was a contradictory value set by the user, so in case of pure AST we don't do this at all because was set correctly on our own put of the AST somewhere above
-                    outf.put(child, field=field, **self.options)
+                    outf.put(child, field=field, trivia=self.trivia_ast_put, **self.options)
 
             else:  # slice
                 if (field in ('body', 'orelse', 'finalbody', 'handlers', 'cases', 'elts')
@@ -429,7 +455,7 @@ class Reconcile:
         if not (nodef := getattr(node, 'f', None)) or nodef.root is not self.work:  # pure AST if no '.f' or FST from different tree
             if nodef:  # FST from different tree, need to verify it before using
                 try:
-                    copy = nodef.verify(reparse=False).copy()
+                    copy = nodef.verify(reparse=False).copy(trivia=self.trivia_fst_get)
 
                 except Exception:  # verification failed, fall through to pure AST
                     pass
@@ -453,7 +479,7 @@ class Reconcile:
         # FST node from original tree, recurse
 
         if node_parent is False or (nodef.parent is not node_parent or nodef.pfield != pfield):  # coming from pure AST or in-tree FST from off path
-            copy = self.mark.child_from_path(self.work.child_path(nodef)).copy()
+            copy = self.mark.child_from_path(self.work.child_path(nodef)).copy(trivia=self.trivia_fst_get)
 
             self.put_node(copy, out_parent, pfield)  # copy from known good copy of tree
 

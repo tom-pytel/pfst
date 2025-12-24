@@ -176,6 +176,9 @@ DUMP_NO_COLOR = nspace(
     },
 )
 
+Trivia      = bool | str | int | tuple[bool | str | int,        bool | str | int       ]         # actual value trivia option should take, if not a tuple then the trailing trivia defaults to 'line'
+TriviaParam = bool | str | int | tuple[bool | str | int | None, bool | str | int | None] | None  # trivia parameter as passed to functions with None indicating to use global value
+
 _DEFAULT_AST_FIELD = {kls: field for field, classes in [  # builds to {Module: 'body', Interactive: 'body', ..., Match: 'cases', ..., MatchAs: 'pattern'}
     # list fields of multiple children
     ('body',                  (Module, Interactive, Expression, FunctionDef, AsyncFunctionDef, ClassDef, For, AsyncFor, While,
@@ -225,6 +228,7 @@ _re_delim_open_alnums  = re.compile(rf'[{pat_alnum}.][([][{pat_alnum}]')
 _re_delim_close_alnums = re.compile(rf'[{pat_alnum}.][)\]][{pat_alnum}]')
 
 _re_line_end_ws_maybe_cont = re.compile(r'\s*\\?$')
+
 
 
 def _dump_lines(
@@ -786,9 +790,7 @@ def trailing_trivia(
     return (text_pos, None if space_pos == text_pos else space_pos, True)
 
 
-def get_trivia_params(
-    trivia: bool | str | tuple[bool | str | int | None, bool | str | int | None] | None = None, neg: bool = False
-) -> tuple[
+def get_trivia_params(trivia: TriviaParam = None, neg: bool = False) -> tuple[
     Literal['none', 'all', 'block'], bool | int, bool, Literal['none', 'all', 'block', 'line'], bool | int, bool
 ]:
     """Convert options compact human representation to parameters usable for `_leading/trailing_trivia()`.

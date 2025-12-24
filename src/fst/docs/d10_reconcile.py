@@ -65,11 +65,11 @@ True
 >>> print(f.src)
 if i:  # 1
   j = [pure_ast, # 2
-       g(), 'another_ast'
+       g(), 'another_ast' # 3
       ]
   k = 3
   j = [pure_ast, # 2
-       g(), 'another_ast'
+       g(), 'another_ast' # 3
       ]
 ```
 
@@ -97,11 +97,11 @@ original tree that was marked.
 >>> print(f.src)
 if i:  # 1
   j = [pure_ast, # 2
-       g(), 'another_ast'
+       g(), 'another_ast' # 3
       ]
   k = 3
   j = [pure_ast, # 2
-       g(), 'another_ast'
+       g(), 'another_ast' # 3
       ]
   l="formatting"  # stays
   m = 'formatting'
