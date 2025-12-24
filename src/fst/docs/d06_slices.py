@@ -515,13 +515,6 @@ This is allowed anywhere where the single element being put would be allowed to 
 >>> print(FST('del a, b, c, d').put_slice('x, y', 1, 3, one=True).src)
 del a, (x, y), d
 
-It also allows putting things which are not slices of the given type to a slice range withing the target.
-
->>> f = FST('case a | b | c | d: pass')
-
->>> print(f.pattern.put_slice('x as y', 1, 3, one=True).src)
-a | (x as y) | d
-
 
 ## Trivia
 
@@ -530,7 +523,7 @@ whole point of the `fst` module is to preserve this stuff while editing some par
 put in all slice operations and single element operations on statement-ish nodes but not single operations on
 expression-ish elements (for now).
 
-Note: Statement-ish refers to statement nodes, `match_case`, `ExceptHandler` and their special slice containers and
+**Note:** Statement-ish refers to statement nodes, `match_case`, `ExceptHandler` and their special slice containers and
 `mod` nodes. Expression-ish is everything else.
 
 When getting a slice or statement-ish node you can specify comments and empty lines to copy and / or cut as well as
@@ -538,7 +531,7 @@ specifying those to be overwritten on a slice or statement-ish put. The option t
 specify just the leading trivia or both the leading and trailing.
 
 Leading trivia can specify a leading comment block, all leading comments and a maximum number of empty lines before that
-to copy or cut or delete.
+to copy or cut or delete. You can also pass explicit line numbers, explained further down.
 
 >>> pp = lambda f: print('\n'.join(repr(l) for l in f.lines))  # helper
 
@@ -567,7 +560,7 @@ comments.
 '# pre-comment 2b'
 'target_stmt'
 
->>> pp(parent.get(1, trivia='block'))  # 'block' same as True for leading comments
+>>> pp(parent.get(1, trivia='block'))
 '# pre-comment 2a'
 '# pre-comment 2b'
 'target_stmt'
@@ -575,7 +568,7 @@ comments.
 `trivia='all'` will give you all preceding comments including empty lines between them (up till previous statement or
 start of block statement or top of module).
 
->>> pp(parent.get(1, trivia='all'))  # 'block' same as True for leading comments
+>>> pp(parent.get(1, trivia='all'))
 '# pre-comment 1a'
 '# pre-comment 1b'
 ''
@@ -774,6 +767,94 @@ All.
 '# post-comment 2b'
 ''
 
-The same rules apply for what is copied and what is removed or overwritten with plus and minus. You can specify how to
-handle both leading and trailing trivia as one parameter, for example `trivia=('block+2', 'all+')`.
+The same rules apply for what is copied and what is removed or overwritten with plus `'+'` and minus `'-'`. You can
+specify how to handle both leading and trailing trivia as one parameter.
+
+>>> parent = FST('''
+... pre_stmt
+...
+... # pre-comment 1a
+... # pre-comment 1b
+...
+...
+... # pre-comment 2a
+... # pre-comment 2b
+... target_stmt  # line-comment
+... # post-comment 1a
+... # post-comment 1b
+...
+...
+... # post-comment 2a
+... # post-comment 2b
+...
+... post_stmt
+... '''.strip())
+
+>>> pp(parent.get(1, trivia=('block+1', 'all')))
+''
+'# pre-comment 2a'
+'# pre-comment 2b'
+'target_stmt  # line-comment'
+'# post-comment 1a'
+'# post-comment 1b'
+''
+''
+'# post-comment 2a'
+'# post-comment 2b'
+
+## Trivia by line number
+
+You can also indicate lines of trivia specifically by passing the exact line number (inclusive, starting at 0) for both
+the leading and trailing trivia. The trivia will be gotten from the first line through to the last, assuming the lines
+fall within the allowed range of trivia to select (whole lines only and cannot cross preceding or following node
+elements).
+
+>>> parent = FST('''
+... pre_stmt  # line 0
+... # line 1
+...
+... # line 3
+... target_stmt  # line 4
+... # line 5
+...
+... # line 7
+... post_stmt # line 8
+... '''.strip(), 'exec')
+
+>>> pp(parent.get(1, trivia=(2, 5)))
+''
+'# line 3'
+'target_stmt  # line 4'
+'# line 5'
+
+The line range is clipped to what is allowed and only complete lines of trivia are allowed, so the line comment
+`# line 0` from the preceding statement is not returned.
+
+>>> pp(parent.get(1, trivia=(-999, 999)))
+'# line 1'
+''
+'# line 3'
+'target_stmt  # line 4'
+'# line 5'
+''
+'# line 7'
+
+Line number usage for leading / trailing is independent and does not have to be passed as a range.
+
+>>> pp(parent.get(1, trivia=('block', 4)))
+'# line 3'
+'target_stmt  # line 4'
+
+If the trailing trivial line is exactly the line of the last element of the node then the line comment on that line is
+returned. If it is before then the line comment is excluded, but it does not affect the leading trivia.
+
+>>> pp(parent.get(1, trivia=('block', -999)))
+'# line 3'
+'target_stmt'
+
+Likewise, nothing bad happens if the leading trivia line is past the element line, there is just no leading trivia
+selected.
+
+>>> pp(parent.get(1, trivia=(999, -999)))
+'target_stmt'
 """

@@ -2912,8 +2912,6 @@ self.save_reduce(obj=obj, *rv)
         self.assertEqual(12, len(list(f.walk(True))))
         self.assertEqual(8, len(list(f.walk('loc'))))
         self.assertEqual(7, len(list(f.walk(False))))
-        # self.assertEqual(1, len(list(f.walk('allown'))))  # doesn't support
-        # self.assertEqual(4, len(list(f.walk('own'))))
 
     def test_walk_scope(self):
         fst = FST.fromsrc("""
@@ -2940,10 +2938,6 @@ def f(a, /, b, *c, d, **e):
                 gen.send(True)
         self.assertEqual(['f', 'g', 'h', 'deco1', 'm', 'deco2', 'cls', 'moto', 'hidden', 'o'], l)
 
-        # fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip()).a.body[0].value.f
-        # self.assertEqual(['z', 'a', 'a'],
-        #                  [f.a.id for f in fst.walk(scope=True, walrus=False) if isinstance(f.a, Name)])
-
         fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip()).a.body[0].value.f
         self.assertEqual(['z', 'a', 'c', 'a'],
                          [f.a.id for f in fst.walk(scope=True) if isinstance(f.a, Name)])
@@ -2951,10 +2945,6 @@ def f(a, /, b, *c, d, **e):
         fst = FST.fromsrc("""[z for a in b if (c := a)]""".strip()).a.body[0].f
         self.assertEqual(['b', 'c'],
                          [f.a.id for f in fst.walk(scope=True) if isinstance(f.a, Name)])
-
-        # fst = FST.fromsrc("""[z for a in b if b in [c := i for i in j if i in {d := k for k in l}]]""".strip()).a.body[0].value.f
-        # self.assertEqual(['z', 'a', 'b', 'j'],
-        #                  [f.a.id for f in fst.walk(scope=True, walrus=False) if isinstance(f.a, Name)])
 
         fst = FST.fromsrc("""[z for a in b if b in [c := i for i in j if i in {d := k for k in l}]]""".strip()).a.body[0].value.f
         self.assertEqual(['z', 'a', 'b', 'c', 'j', 'd'],
@@ -3058,75 +3048,6 @@ def f(a, /, b, *c, d, **e):
 <Name 0,18..0,19>                a
 <Name 0,2..0,3>                  i
             '''.strip())
-
-#         # `walrus` option
-
-#         self.assertEqual(walkscope(FST('a = (b := c)')), '''
-# <Assign ROOT 0,0..0,12>          a = (b := c)
-# <Name 0,0..0,1>                  a
-# <NamedExpr 0,5..0,11>            b := c
-# <Name 0,5..0,6>                  b
-# <Name 0,10..0,11>                c
-#             '''.strip())
-
-#         self.assertEqual(walkscope(FST('a = (b := c)')), '''
-# <Assign ROOT 0,0..0,12>          a = (b := c)
-# <Name 0,0..0,1>                  a
-# <NamedExpr 0,5..0,11>            b := c
-# <Name 0,5..0,6>                  b
-# <Name 0,10..0,11>                c
-#             '''.strip())
-
-# #         self.assertEqual(walkscope(FST('a = (b := c)'), walrus=False), '''
-# # <Assign ROOT 0,0..0,12>          a = (b := c)
-# # <Name 0,0..0,1>                  a
-# # <NamedExpr 0,5..0,11>            b := c
-# # <Name 0,10..0,11>                c
-# #             '''.strip())
-
-#         self.assertEqual(walkscope(FST('[i := a for a in b if (c := a)]')), '''
-# <ListComp ROOT 0,0..0,31>        [i := a for a in b if (c := a)]
-# <NamedExpr 0,1..0,7>             i := a
-# <Name 0,1..0,2>                  i
-# <Name 0,6..0,7>                  a
-# <comprehension 0,8..0,30>        for a in b if (c := a)
-# <Name 0,12..0,13>                a
-# <NamedExpr 0,23..0,29>           c := a
-# <Name 0,23..0,24>                c
-# <Name 0,28..0,29>                a
-#             '''.strip())
-
-#         self.assertEqual(walkscope(FST('[i := a for a in b if (c := a)]')), '''
-# <ListComp ROOT 0,0..0,31>        [i := a for a in b if (c := a)]
-# <NamedExpr 0,1..0,7>             i := a
-# <Name 0,1..0,2>                  i
-# <Name 0,6..0,7>                  a
-# <comprehension 0,8..0,30>        for a in b if (c := a)
-# <Name 0,12..0,13>                a
-# <NamedExpr 0,23..0,29>           c := a
-# <Name 0,23..0,24>                c
-# <Name 0,28..0,29>                a
-#             '''.strip())
-
-#         self.assertEqual(walkscope(FST('var = [i := a for a in b if (c := a)]')), '''
-# <Assign ROOT 0,0..0,37>          var = [i := a for a in b if (c := a)]
-# <Name 0,0..0,3>                  var
-# <ListComp 0,6..0,37>             [i := a for a in b if (c := a)]
-# <Name 0,7..0,8>                  i
-# <Name 0,23..0,24>                b
-# <Name 0,29..0,30>                c
-#             '''.strip())
-
-#         self.assertEqual(walkscope(FST('var = [i := a for a in b if (c := a)]'), walrus=False), '''
-# <Assign ROOT 0,0..0,37>          var = [i := a for a in b if (c := a)]
-# <Name 0,0..0,3>                  var
-# <ListComp 0,6..0,37>             [i := a for a in b if (c := a)]
-# <Name 0,23..0,24>                b
-#             '''.strip())
-
-        # f = FST('a := b')
-        # self.assertEqual([f, f.value], list(f.walk(walrus=False)))
-        # self.assertEqual([f.target], list(f.target.walk(walrus=False)))  # walking NamedExpr.target always returns it regardless
 
         # funcdef arguments
 
@@ -4073,16 +3994,6 @@ class cls(a, b=c):
                 l.append(f)
             self.assertEqual(l, list(fst.walk(True, self_=False)))
 
-            # f, l = fst, []
-            # while f := f.step_fwd('own'):
-                # l.append(f)
-            # self.assertEqual(l, list(fst.walk('own', self_=False)))
-
-            # f, l = fst, []
-            # while f := f.step_fwd('allown'):
-            #     l.append(f)
-            # self.assertEqual(l, [g for g in fst.walk(True, self_=False) if g.has_own_loc])
-
             f, l = fst, []
             while f := f.step_back(False):
                 l.append(f)
@@ -4092,16 +4003,6 @@ class cls(a, b=c):
             while f := f.step_back(True):
                 l.append(f)
             self.assertEqual(l, list(fst.walk(True, self_=False, back=True)))
-
-            # f, l = fst, []
-            # while f := f.step_back('own'):
-            #     l.append(f)
-            # self.assertEqual(l, list(fst.walk('own', self_=False, back=True)))
-
-            # f, l = fst, []
-            # while f := f.step_back('allown'):
-            #     l.append(f)
-            # self.assertEqual(l, [g for g in fst.walk(True, self_=False, back=True) if g.has_own_loc])
 
         test('''
 def f(a=1, b=2) -> int:
@@ -5811,11 +5712,6 @@ class cls:
         f = FST.fromsrc('match w := x,:\n case 0: pass').a.body[0].subject.f.copy()
         self.assertEqual('(w := x,)', f.src)
 
-        # f = FST.fromsrc('a[1:2, 3:4]').a.body[0].value.slice.f.copy()
-        # self.assertIs(f._fix(inplace=False), f)
-        # self.assertRaises(SyntaxError, f.fix)
-        # self.assertIs(None, f._fix(raise_=False))
-
         f = FST.fromsrc('''
 if 1:
     def f():
@@ -5937,14 +5833,14 @@ i = 1
 i # post
 # postpost
             ''')
-        self.assertEqual('i', a.body[0].f.copy(trivia=(False, False)).src)  # , precomms=False, postcomms=False
-        self.assertEqual('# pre\ni', a.body[0].f.copy(trivia=(True, False)).src)  # , precomms=True, postcomms=False
-        self.assertEqual('# pre\ni # post', a.body[0].f.copy(trivia=(True, True)).src)  # , precomms=True, postcomms=True
-        self.assertEqual('# prepre\n\n# pre\ni', a.body[0].f.copy(trivia=('all', False)).src)  # , precomms='all', postcomms=False
+        self.assertEqual('i', a.body[0].f.copy(trivia=(False, False)).src)
+        self.assertEqual('# pre\ni', a.body[0].f.copy(trivia=(True, False)).src)
+        self.assertEqual('# pre\ni # post', a.body[0].f.copy(trivia=(True, True)).src)
+        self.assertEqual('# prepre\n\n# pre\ni', a.body[0].f.copy(trivia=('all', False)).src)
 
         a = parse('( i )')
-        self.assertEqual('i', a.body[0].value.f.copy(trivia=(False, False)).src)  # , precomms=False, postcomms=False
-        self.assertEqual('( i )', a.body[0].value.f.copy(trivia=(False, False), pars=True).src)  # , precomms=False, postcomms=False
+        self.assertEqual('i', a.body[0].value.f.copy(trivia=(False, False)).src)
+        self.assertEqual('( i )', a.body[0].value.f.copy(trivia=(False, False), pars=True).src)
 
         if PYGE12:
             f = FST.fromsrc('a[*b]').a.body[0].value.slice.f.copy()

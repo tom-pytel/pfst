@@ -65,6 +65,11 @@ no implicit normalization or stylistic rewriting.
 
 # Notes
 
+Disclaimer: The intended use of this module is if you want to change code functionality without having to deal with
+syntax details, not lint or format, there are better options for that. The main focus of `fst` is not necessarily to be
+fast but rather to handle all the weird cases of python syntax correctly so that functional code always results, use a
+formatter afterwards as needed.
+
 `fst` was written and tested on Python versions 3.10 through 3.14.
 
 `fst` works by keeping a copy of the entire source at the root `FST` node of a tree and modifying this source alongside
@@ -83,10 +88,7 @@ both valid even though they are uncompilable.
 
 If you will be playing with this module then the `FST.dump()` method will be your friend.
 
-Disclaimer: The intended use of this module is if you want to change code functionality without having to deal with
-syntax details, not lint or format, there are better options for that. The main focus of `fst` is not necessarily to be
-fast but rather to handle all the weird cases of python syntax correctly so that functional code always results, use a
-formatter afterwards as needed.
+If you will be looking through the code then I apologize in advance.
 """
 
 import ast

@@ -13,10 +13,15 @@ This is just a print helper function for this documentation specifically, you ca
 
 ## What it does
 
+**Disclaimer:** This functionality is still experimental and unfinished so not all comments which should be may be
+preserved and others may be duplicated. In fact the underlying problem of determining which comments belong where is not
+completely solvable as the function cannot guess perfectly at human intentions, but much more can be done than is being
+done currently.
+
 The idea of the `reconcile()` functionality is not to be able to put `AST` nodes to an `FST` tree under your own
-control, this can easily be done. Rather it is to allow other code to modify `AST` trees without knowing anything about
-`FST` and then having `FST` reconcile these changes with what it knows about the tree to preserve formatting where it
-can.
+control, you can do that with the `put()` functions directly. Rather it is to allow other code that may already exist to
+modify the `AST` tree directly without knowing anything about `fst` and then having `fst` reconcile these changes with
+what it knows about the tree to preserve formatting where it can.
 
 >>> f = FST('''
 ... if i:  # 1
@@ -32,7 +37,7 @@ Notice the `f.a`, all changes must happen in the `AST` tree.
 
 >>> f.a.body[0].value.elts[0] = Name(id='pure_ast')
 
->>> f.a.body.append(Assign(targets=[Name(id='k')], value=Constant(value=3)))
+>>> f.a.body.append(Assign(targets=[Name(id='ast_assign')], value=Constant(value=3)))
 
 >>> f = f.reconcile()
 
@@ -42,13 +47,13 @@ if i:  # 1
   j = [pure_ast, # 2
        g() # 3
       ]
-  k = 3
+  ast_assign = 3
 ```
 
 You can reuse and mix nodes from the original tree.
 
 >>> f.mark()
-<If ROOT 0,0..4,7>
+<If ROOT 0,0..4,16>
 
 >>> f.a.body.append(f.a.body[0])
 
@@ -67,7 +72,7 @@ if i:  # 1
   j = [pure_ast, # 2
        g(), 'another_ast' # 3
       ]
-  k = 3
+  ast_assign = 3
   j = [pure_ast, # 2
        g(), 'another_ast' # 3
       ]
@@ -89,7 +94,7 @@ original tree that was marked.
 
 >>> f.a.body.append(FST('m  =  "formatting"  # disappears').a)
 
->>> f.a.body[-1].value = Constant(value="formatting")
+>>> f.a.body[-1].value = Constant(value="not formatted")
 
 >>> f = f.reconcile()
 
@@ -99,83 +104,68 @@ if i:  # 1
   j = [pure_ast, # 2
        g(), 'another_ast' # 3
       ]
-  k = 3
+  ast_assign = 3
   j = [pure_ast, # 2
        g(), 'another_ast' # 3
       ]
   l="formatting"  # stays
-  m = 'formatting'
+  m = 'not formatted'
 ```
 
-But if the goal is to change a small part of a larger program then this should work well enough.
+AST transformer example.
 
+```py
+>>> def pure_AST_operation(node: AST):
+...    class Transform(ast.NodeTransformer):
+...        def visit_arg(self, node):
+...            return ast.arg('NEW_' + node.arg.upper(), node.annotation)
+...
+...        def visit_Name(self, node):
+...            if node.id in 'xy':
+...                return ast.Name('NEW_' + node.id.upper())
+...
+...            return node
+...
+...        def visit_Constant(self, node):
+...            return Name('X_SCALE' if node.value > 0.5 else 'Y_SCALE')
+...
+...    Transform().visit(node)
+```
+
+```py
 >>> f = FST('''
-... from .data import (
-...     scalar1,  # this is 60% for now
-...     scalar2,  # the rest
-... )
+... def compute(x: float,  # x position
+...             y: float,  # y position
+... ) -> float:
 ...
-... def compute(x, y):
 ...     # Compute the weighted sum
-...     result = (
-...         x * 0.6  # x gets 60%
-...         + y * 0.4  # y gets 40%
+...     return (
+...         x * 0.6  # scale width
+...         + y * 0.4  # scale height
 ...     )
-...
-...     # Apply thresholding
-...     if (
-...         result > 10
-...         # cap high values
-...         and result < 100  # ignore overflow
-...     ):
-...         return result
-...     else:
-...         return 0
 ... '''.strip())
+```
 
+```py
 >>> f.mark()
-<Module ROOT 0,0..20,16>
+<FunctionDef ROOT 0,0..8,5>
 
->>> f.a.body[1].body[0].value.left.right = Name(id='scalar1')
-
->>> f.a.body[1].body[0].value.right.right = Name(id='scalar2')
-
->>> f.a.body[1].body[-1].orelse[0] = (
-...     If(test=Compare(left=Name(id='result'),
-...                     ops=[Gt()],
-...                     comparators=[Constant(value=1)]),
-...        body=[f.a.body[1].body[-1].orelse[0]],
-...        orelse=[Return(value=UnaryOp(op=USub(), operand=Constant(value=1)))]
-...     )
-... )
+>>> pure_AST_operation(f.a)
 
 >>> f = f.reconcile()
+```
 
 ```py
 >>> pprint(f.src)
-from .data import (
-    scalar1,  # this is 60% for now
-    scalar2,  # the rest
-)
+def compute(NEW_X: float,  # x position
+            NEW_Y: float,  # y position
+) -> float:
  
-def compute(x, y):
     # Compute the weighted sum
-    result = (
-        x * scalar1  # x gets 60%
-        + y * scalar2  # y gets 40%
+    return (
+        NEW_X * X_SCALE  # scale width
+        + NEW_Y * Y_SCALE  # scale height
     )
- 
-    # Apply thresholding
-    if (
-        result > 10
-        # cap high values
-        and result < 100  # ignore overflow
-    ):
-        return result
-    elif result > 1:
-        return 0
-    else:
-        return -1
 ```
 
 
@@ -192,7 +182,4 @@ node, but at least it makes the operation possible.
 This method is not particularly fast when there are a lot of nested changes as it is possible that large chunks of the
 source wind up being put multiple times with minor deviations. But it does a better job at preserving formatting than
 walking bottom-up.
-
-**Note:** This functionality is still a work in progress so not all comments which should be may be preserved and other
-comments may be duplicated.
 """

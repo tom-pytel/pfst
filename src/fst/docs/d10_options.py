@@ -14,6 +14,9 @@ Many of the `FST` functions have an `**options` kwarg which indicates they can t
 to control how the operation proceeds. Most of these options also have global defaults which can be set and which will
 be used if a specific value for that option is not passed to the function.
 
+**Note:** The global defaults are thread-local and start out with module-defined defaults for each new thread (the
+values they have when you first import `fst`).
+
 >>> print(FST('a = (b)').get(pars=False).src)
 b
 

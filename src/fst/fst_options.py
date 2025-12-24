@@ -169,35 +169,44 @@ def set_options(**options) -> dict[str, Any]:
 @staticmethod
 @contextmanager
 def options(**options) -> Iterator[dict[str, Any]]:
-    """Context manager to temporarily set global options defaults for a group of operations.
+    """Context manager to temporarily set specified global options defaults for a group of operations.
 
     **WARNING!** Only the options specified in the call to this function will be returned to their original values
-    when the context manager exits.
+    when the context manager exits. Any other global options changed inside the context block will continue to have
+    those values on context manager exit.
 
     **Options:**
     - `raw`: When to do raw source operations. This may result in more nodes changed than just the targeted one(s).
         - `False`: Do not do raw source operations.
         - `True`: Only do raw source operations.
         - `'auto'`: Only do raw source operations if the normal operation fails in a way that raw might not.
-    - `trivia`: What comments and empty lines to copy / delete when doing operations on elements which may have
-        leading or trailing lines of stuff.
-        - `False`: Don't copy / delete any trivia.
+    - `trivia`: What comments and empty lines to copy / delete / overwrite when doing operations on elements which may
+        have leading or trailing comments and / or empty lines. These are the values as interpreted when set globally.
+        If passed as a parameter to a function then if a non-tuple is passed then that becomes the leading trivia
+        parameter. If a tuple is passed then both the leading and trailing from the tuple are used, unless they are
+        `None` in which case the global value for that particular parameter is used.
+        - `False`: Same as `(False, 'line')`.
         - `True`: Same as `('block', 'line')`.
-        - `'all'`: Same as `('all', 'all')`.
-        - `'block'`: Same as `('block', 'block')`.
+        - `'all'`: Same as `('all', 'line')`.
+        - `'block'`: Same as `('block', 'line')`.
         - `(leading, trailing)`: Tuple specifying individual behavior for leading and trailing trivia. The text
             options can also have a suffix of the form `'+/-[#]'`, meaning plus or minus an optional integer which
             adds behavior for leading or trailing empty lines, explained below. The values for each element of the
             tuple can be:
-            - `False`: Don't copy / delete any trivia.
-            - `True`: For leading means `'block'`, for trailing means `'line'`.
-            - `'all[+/-[#]]'`: Get all leading or trailing comments regardless of if they are contiguous or not.
-            - `'block[+/-[#]]'`: Get a single contiguous leading or trailing block of comments, an empty line ends
-                the block.
-            - `'line[+/-[#]]'`: Valid for trailing trivia only, means just the comment on the last line of the
-                element.
-            - `int`: A specific line number specifying the first or last line that can be returned as a comment or
-                empty line. If not interrupted by other code, will always return up to this line.
+            - `False`: Don't copy / delete / overwrite any trivia.
+            - `True`: Means `'block'` for leading trivia, `'line'` for trailing.
+            - `'all[+/-[#]]'`: Copy / delete / overwrite all leading or trailing comments regardless of if they are
+                contiguous or not.
+            - `'block[+/-[#]]'`: Copy / delete / overwrite a single contiguous leading or trailing block of comments
+                where an empty line ends the block.
+            - `'line'`: Only valid for trailing trivia, means just the comment on the last line of the element. Except
+                for block statements where the last line is a child node where that comment belongs to the child
+                regardless of this parameter and so will be copied / deleted / overwritten along with the block.
+            - `int`: A specific line number (starting at 0) indicating the first or last line that can be copied /
+                deleted / overwritten. If not interrupted by other code, will always return from / to this line
+                inclusive. For trailing trivia, if this number is the same line as the element starts then it will
+                include any comment present on the element line. If it is **BEFORE** that line then the line comment
+                will not be included.
     - `coerce`: Whether to allow coercion between compatible `AST` / `FST` types on put. For example allow put a
         non-slice `expr` as a slice to something that expects a slice of `expr`s or allowing use of `arg` where
         `arguments` is expected.

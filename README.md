@@ -114,65 +114,7 @@ else:  # else-c
 # post-else-a
 ```
 
-# Reconcile
-
-This is intended to allow something which is not aware of `fst` to edit the `AST` tree while `fst` preserves formatting
-where it can.
-
-```py
->>> def pure_AST_operation(node: AST):
-...    class Transform(ast.NodeTransformer):
-...        def visit_arg(self, node):
-...            return ast.arg('NEW_' + node.arg.upper(), node.annotation)
-...
-...        def visit_Name(self, node):
-...            if node.id in 'xy':
-...                return ast.Name('NEW_' + node.id.upper())
-...
-...            return node
-...
-...        def visit_Constant(self, node):
-...            return Name('X_SCALE' if node.value > 0.5 else 'Y_SCALE')
-...
-...    Transform().visit(node)
-```
-
-```py
->>> f = FST('''
-... def compute(x: float,  # x position
-...             y: float,  # y position
-... ) -> float:
-...
-...     # Compute the weighted sum
-...     return (
-...         x * 0.6  # scale width
-...         + y * 0.4  # scale height
-...     )
-... '''.strip())
-```
-
-```py
->>> f.mark()
-
->>> pure_AST_operation(f.a)
-
->>> f = f.reconcile()
-```
-
-```py
->>> print(f.src)
-def compute(NEW_X: float,  # x position
-            NEW_Y: float,  # y position
-) -> float:
-
-    # Compute the weighted sum
-    return (
-        NEW_X * X_SCALE  # scale width
-        + NEW_Y * Y_SCALE  # scale height
-    )
-```
-
-# Robustness
+# Robust
 
 Crazy syntax is handled correctly (which is a main goal of this module).
 
@@ -202,20 +144,18 @@ Crazy syntax is handled correctly (which is a main goal of this module).
 ```
 
 ```py
->>> deco = f.body[0].get_slice(1, 2, 'decorator_list', cut=True, trivia=('all+', 'all+'))
+>>> deco = f.body[0].get_slice(1, 2, 'decorator_list', cut=True, trivia=('all-', 'all-'))
 ```
 
 ```py
 >>> deco.dump('stmt+')
-0:
-1: # pre-comment
-2: \
-3: @ \
-4: ( decorator2 )(
-5:     a,
-6: ) \
-7: # post-comment
-8:
+0: # pre-comment
+1: \
+2: @ \
+3: ( decorator2 )(
+4:     a,
+5: ) \
+6: # post-comment
 _decorator_list - ROOT 0,0..8,0
   .decorator_list[1]
    0] Call - 4,0..6,1
@@ -240,7 +180,7 @@ stuff()
 ```
 
 ```py
->>> f.body[0].put_slice(deco, 'decorator_list', trivia=('all+', 'all+'))
+>>> f.body[0].put_slice(deco, 'decorator_list', trivia=('all-', 'all-'))
 
 >>> f.body[0].body[0] = 'good'
 ```
@@ -248,7 +188,6 @@ stuff()
 ```py
 >>> print(f.src)
 if True:
-
     # pre-comment
     \
     @ \
@@ -256,12 +195,121 @@ if True:
         a,
     ) \
     # post-comment
-
     def func():
         good
         stuff()
 
     pass
+```
+
+# Misc
+
+Traversal is in syntactic order.
+
+```py
+>>> list(f.src for f in FST('call(a, x=1, *b, y=2, **c)').walk())[1:]
+['call', 'a', 'x=1', '1', '*b', 'b', 'y=2', '2', '**c', 'c']
+
+>>> list(f.src for f in FST('def func[T](a=1, b=2) -> int: pass').walk())[1:]
+['T', 'a=1, b=2', 'a', '1', 'b', '2', 'int', 'pass']
+
+>>> list(f.src for f in FST('{key1: val1, **val2, key3: val3}').walk())[1:]
+['key1', 'val1', 'val2', 'key3', 'val3']
+```
+
+Locations are zero based in character units, not bytes. Most nodes have a location, including ones which don't in `AST`
+nodes.
+
+```py
+>>> FST('蟒=Æ+д').dump()
+Assign - ROOT 0,0..0,5
+  .targets[1]
+   0] Name '蟒' Store - 0,0..0,1
+  .value BinOp - 0,2..0,5
+    .left Name 'Æ' Load - 0,2..0,3
+    .op Add - 0,3..0,4
+    .right Name 'д' Load - 0,4..0,5
+```
+
+Can zero out bodies.
+
+```py
+>>> f = FST("""
+... def func(self):  # comment
+...     pass
+... """.strip())
+
+>>> del f.body
+
+>>> print(f.src)
+def func(self):  # comment
+
+>>> f.body.append('pass')
+<<FunctionDef ROOT 0,0..1,8>.body [<Pass 1,4..1,8>]>
+
+>>> print(f.src)
+def func(self):  # comment
+    pass
+```
+
+Including non-statement.
+
+```py
+>>> f = FST('[i for i in j]')
+
+>>> del f.generators
+
+>>> print(f.src)
+[i]
+
+>>> f.generators.extend('for a in b for i in a')
+
+>>> print(f.src)
+[i for a in b for i in a]
+```
+
+Use native AST.
+
+```py
+>>> f = FST('i = [a, b, c]')
+
+>>> f.targets[0] = Subscript(Name('j'), Slice(Name('x'), Name('y')))
+
+>>> f.value.elts[1:] = Name('d')
+
+>>> print(f.src)
+j[x:y] = [a, d]
+```
+
+Don't have to care if docstrings are there or not.
+
+```py
+>>> f = FST("""
+... class cls:
+...     \"\"\"docstring\"\"\"
+...     a = b
+...     c = d
+... """.strip())
+
+>>> f._body[0] = 'pass'
+
+>>> print(f.src)
+class cls:
+    """docstring"""
+    pass
+    c = d
+```
+
+Higher level slice abstraction.
+
+```py
+>>> print(FST('a < b < c')._all[:2].copy().src)
+a < b
+
+>>> f = FST('case {1: a, 2: b, **c}: pass', 'match_case')
+
+>>> print(f.pattern.get_slice(1, 3, '_all').src)
+{2: b, **c}
 ```
 
 For more examples see the documentation in `docs/`, or if you're feeling particularly masochistic have a look at the

@@ -19,9 +19,9 @@ This is rather crude documentation that hopefully can show usage through many sm
 
 `fst.docs.d09_parentheses`: Parentheses handling
 
-`fst.docs.d10_reconcile`: Edit pure AST while preserving formatting
+`fst.docs.d10_options`: Options
 
-`fst.docs.d11_options`: Options
+`fst.docs.d11_reconcile`: Edit pure AST while preserving formatting
 
 `fst.docs.d12_examples`: Example recipes
 """
@@ -36,8 +36,8 @@ from . import (
     d07_views,
     d08_raw,
     d09_parentheses,
-    d10_reconcile,
-    d11_options,
+    d10_options,
+    d11_reconcile,
     d12_examples,
 )
 
@@ -51,7 +51,7 @@ __all__ = [
     'd07_views',
     'd08_raw',
     'd09_parentheses',
-    'd10_reconcile',
-    'd11_options',
+    'd10_options',
+    'd11_reconcile',
     'd12_examples',
 ]
