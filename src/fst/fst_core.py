@@ -597,12 +597,12 @@ def _make_fst_tree(self: fst.FST, stack: list[fst.FST] | None = None) -> None:
                     if field != 'ops':  # SINGLETON instances from ast.parse() live in this field
                         if not isinstance(child[0], str):
                             stack.extend(FST(c, parent, astfield(field, i))
-                                         for i, c in enumerate(child) if isinstance(c, AST))
+                                         for i, c in enumerate(child) if c)  # we know c is an AST or None because only those and strings are in lists and strings were excluded above
 
                     else:  # field == 'ops', this is the only list field (of Compare.ops) that can contain singleton ASTs
                         for i, c in enumerate(child):
                             if not hasattr(c, 'f'):  # we know isisntance(c, cmpop)
-                                child[i] = c = c.__class__()
+                                child[i] = c = c.__class__()  # is singleton, create unique node
 
                             FST(c, parent, astfield(field, i))  # no children
 
@@ -616,22 +616,31 @@ def _unmake_fst_tree(self: fst.FST, stack: list[AST] | None = None) -> None:
 
     while stack:  # make sure these bad ASTs can't hurt us anymore
         if a := stack.pop():  # could be `None`s in there
-            a.f.a = a.f = None  # root, parent and pfield are still useful after node has been removed
+            a.f.a = a.f = None  # parent and pfield are still useful after node has been removed
 
-            stack.extend(iter_child_nodes(a))
+            for field in a._fields:
+                if child := getattr(a, field, None):
+                    if isinstance(child, AST):
+                        stack.append(child)
+                    elif isinstance(child, list) and not isinstance(child[0], str):
+                        stack.extend(child)
 
 
 def _unmake_fst_parents(self: fst.FST, self_: bool = False) -> None:
-    """Walk up parent list unmaking each parent along the way. This DOES NOT unmake the entire parent tree, just the
-    parents directly above this node (and including `self` if `self_` is `True). Meant for when you know the parents are
-    just a direct succession like `expr` -> `Expr` -> `Module` with just the single `Expr` element in `Module` and NO
-    OTHER SIBLINGS!"""
+    """Unmake parent tree down to `self`, meaning from the root down to all other nodes excluding `self` and its
+    children. The `self` node itself can also be unmade by passing `self_=True`, but its children will never be
+    unmade."""
 
     if self_:
         self.a.f = self.a = None
 
-    while self := self.parent:
-        self.a.f = self.a = None
+    if parent := self.parent:
+        self.pfield.set(parent.a, None)  # break link to self from above
+
+        while grandparent := parent.parent:
+            parent = grandparent
+
+        parent._unmake_fst_tree()  # parent is root, unmake whole tree without self
 
 
 def _set_ast(self: fst.FST, ast: AST, valid_fst: bool = False, unmake: bool = True) -> AST:
