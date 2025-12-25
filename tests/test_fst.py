@@ -8237,7 +8237,6 @@ match a:
             ('', '_comprehension_ifs'),
             ('', '_aliases'),
             ('', '_withitems'),
-            ('', '_type_params'),
         ]
 
         if PYGE11:
@@ -8252,6 +8251,7 @@ match a:
                 ('T', 'TypeVar'),
                 ('**V', 'ParamSpec'),
                 ('*U', 'TypeVarTuple'),
+                ('', '_type_params'),
             ])
 
         if PYGE14:

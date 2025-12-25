@@ -3373,6 +3373,226 @@ f'd{t"e{f=!s:0.1f<1}"=}'
         from fst.fst_get_one import _get_one_default
         self.assertRaises(ValueError, _get_one_default, FST('i'), None, 'ctx', False, {})
 
+    def test_unmake_on_put_one_and_other_misc(self):
+        srcs_and_modes_and_fields = [
+            (('a', 'Module'), [('body', 'x', 'Expr')]),
+            (('a', 'Interactive'), [('body', 'x', 'Expr')]),
+            (('a', 'Expression'), [('body', 'x', 'Name')]),
+            (('def f(a) -> b: pass', 'FunctionDef'), [('args', 'x', 'arguments'), ('returns', 'y', 'Name'), ('body', '_', 'Expr')]),
+            (('async def f(a) -> b: pass', 'AsyncFunctionDef'), [('args', 'x', 'arguments'), ('returns', 'y', 'Name'), ('body', '_', 'Expr')]),
+            (('class cls(a, b=c): pass', 'ClassDef'), [('bases', 'x', 'Name'), ('keywords', 'y=z', 'keyword'), ('body', '_', 'Expr')]),
+            (('return a', 'Return'), [('value', 'x', 'Name')]),
+            (('del a', 'Delete'), [('targets', 'x', 'Name')]),
+            (('a = b', 'Assign'), [('targets', 'x', 'Name'), ('value', 'y', 'Name')]),
+            (('a += b', 'AugAssign'), [('target', 'x', 'Name'), ('value', 'y', 'Name'), ('op', '-', 'operator')]),
+            (('a: b = c', 'AnnAssign'), [('target', 'x', 'Name'), ('value', 'y', 'Name'), ('annotation', 'z', 'Name')]),
+            (('for a in b: pass', 'For'), [('target', 'x', 'Name'), ('iter', 'y', 'Name'), ('body', '_', 'Expr')]),
+            (('async for a in b: pass', 'AsyncFor'), [('target', 'x', 'Name'), ('iter', 'y', 'Name'), ('body', '_', 'Expr')]),
+            (('while a: pass', 'While'), [('test', 'x', 'Name'), ('body', '_', 'Expr')]),
+            (('if a: pass', 'If'), [('test', 'x', 'Name'), ('body', '_', 'Expr')]),
+            (('with a: pass', 'With'), [('items', 'x', 'withitem'), ('body', '_', 'Expr')]),
+            (('async with a: pass', 'AsyncWith'), [('items', 'x', 'withitem'), ('body', '_', 'Expr')]),
+            (('match a:\n  case b: pass', 'Match'), [('subject', 'x', 'Name'), ('cases', 'case _: pass', 'match_case')]),
+            (('raise a from b', 'Raise'), [('exc', 'x', 'Name'), ('cause', 'y', 'Name')]),
+            (('try: pass\nexcept: pass\nelse: pass\nfinally: pass', 'Try'), [('body', '_', 'Expr'), ('handlers', 'except: pass', 'ExceptHandler'), ('orelse', '_', 'Expr'), ('finalbody', '_', 'Expr')]),
+            (('assert a, b', 'Assert'), [('test', 'x', 'Name'), ('msg', 'y', 'Name')]),
+            (('import a', 'Import'), [('names', 'x', 'alias')]),
+            (('from . import a', 'ImportFrom'), [('names', 'x', 'alias')]),
+            # (('global a', 'Global'), []),
+            # (('nonlocal a', 'Nonlocal'), []),
+            (('a', 'Expr'), [('value', 'x', 'Name')]),
+            # (('pass', 'Pass'), []),
+            # (('break', 'Break'), []),
+            # (('continue', 'Continue'), []),
+            (('a and b', 'BoolOp'), [('values', 'x', 'Name'), ('op', 'or', 'boolop')]),
+            (('a := b', 'NamedExpr'), [('target', 'x', 'Name'), ('value', 'y', 'Name')]),
+            (('a + b', 'BinOp'), [('left', 'x', 'Name'), ('right', 'y', 'Name'), ('op', '-', 'operator')]),
+            (('-a', 'UnaryOp'), [('operand', 'x', 'Name'), ('op', '~', 'unaryop')]),
+            (('lambda a: b', 'Lambda'), [('args', 'x', 'arguments'), ('body', 'y', 'Name')]),
+            (('a if b else c', 'IfExp'), [('body', 'x', 'Name'), ('test', 'y', 'Name'), ('orelse', 'z', 'Name')]),
+            (('{a: b}', 'Dict'), [('keys', 'x', 'Name'), ('values', 'y', 'Name')]),
+            (('{a}', 'Set'), [('elts', 'x', 'Name')]),
+            (('[a for a in b]', 'ListComp'), [('elt', 'x', 'Name'), ('generators', 'for x in y', 'comprehension')]),
+            (('{a for a in b}', 'SetComp'), [('elt', 'x', 'Name'), ('generators', 'for x in y', 'comprehension')]),
+            (('{a: b for a, b in c}', 'DictComp'), [('key', 'x', 'Name'), ('value', 'x', 'Name'), ('generators', 'for x in y', 'comprehension')]),
+            (('(a for a in b)', 'GeneratorExp'), [('elt', 'x', 'Name'), ('generators', 'for x in y', 'comprehension')]),
+            (('await a', 'Await'), [('value', 'x', 'Name')]),
+            (('yield a', 'Yield'), [('value', 'x', 'Name')]),
+            (('yield from a', 'YieldFrom'), [('value', 'x', 'Name')]),
+            (('a < b', 'Compare'), [('left', 'x', 'Name'), ('comparators', 'y', 'Name'), ('ops', '>', 'cmpop')]),
+            (('f(a, b=c)', 'Call'), [('func', 'x', 'Name'), ('args', 'y', 'Name'), ('keywords', 'z=z', 'keyword')]),
+            # (('zzz', 'FormattedValue'), []),  # TODO???
+            # (('zzz', 'Interpolation'), []),  # TODO???
+            # (('f"{1}"', 'JoinedStr'), []),  # TODO
+            # (('1', 'Constant'), []),
+            (('a.b', 'Attribute'), [('value', 'x', 'Name')]),
+            (('a[b]', 'Subscript'), [('value', 'x', 'Name'), ('slice', 'y', 'Name')]),
+            (('*a', 'Starred'), [('value', 'x', 'Name')]),
+            # (('a', 'Name'), []),
+            (('[a]', 'List'), [('elts', 'x', 'Name')]),
+            (('(a,)', 'Tuple'), [('elts', 'x', 'Name')]),
+            (('a:b:c', 'Slice'), [('lower', 'x', 'Name'), ('upper', 'y', 'Name'), ('step', 'z', 'Name')]),
+            # (('', 'Load'), []),
+            # (('', 'Store'), []),
+            # (('', 'Del'), []),
+            # (('and', 'And'), []),
+            # (('or', 'Or'), []),
+            # (('+', 'Add'), []),
+            # (('-', 'Sub'), []),
+            # (('*', 'Mult'), []),
+            # (('@', 'MatMult'), []),
+            # (('/', 'Div'), []),
+            # (('%', 'Mod'), []),
+            # (('**', 'Pow'), []),
+            # (('<<', 'LShift'), []),
+            # (('>>', 'RShift'), []),
+            # (('|', 'BitOr'), []),
+            # (('^', 'BitXor'), []),
+            # (('&', 'BitAnd'), []),
+            # (('//', 'FloorDiv'), []),
+            # (('~', 'Invert'), []),
+            # (('not', 'Not'), []),
+            # (('+', 'UAdd'), []),
+            # (('-', 'USub'), []),
+            # (('==', 'Eq'), []),
+            # (('!=', 'NotEq'), []),
+            # (('<', 'Lt'), []),
+            # (('<=', 'LtE'), []),
+            # (('>', 'Gt'), []),
+            # (('>=', 'GtE'), []),
+            # (('is', 'Is'), []),
+            # (('is not', 'IsNot'), []),
+            # (('in', 'In'), []),
+            # (('not in', 'NotIn'), []),
+            (('for a in b if c', 'comprehension'), [('target', 'x', 'Name'), ('iter', 'y', 'Name'), ('ifs', 'z', 'Name')]),
+            (('except a: pass', 'ExceptHandler'), [('type', 'x', 'Name'), ('body', '_', 'Expr')]),
+            (('a, /, b=c, *d, e=f, **g', 'arguments'), [('posonlyargs', 'x', 'arg'), ('args', 'x', 'arg'), ('defaults', 'y', 'Name'), ('vararg', 'x', 'arg'), ('kwonlyargs', 'x', 'arg'), ('kw_defaults', 'y', 'Name'), ('kwarg', 'z', 'arg')]),
+            (('a: b', 'arg'), [('annotation', 'x', 'Name')]),
+            (('k=v', 'keyword'), [('value', 'x', 'Name')]),
+            # (('a', 'alias'), []),
+            (('a as b', 'withitem'), [('context_expr', 'x', 'Name'), ('optional_vars', 'y', 'Name')]),
+            (('case a if b: pass', 'match_case'), [('pattern', 'x', 'pattern'), ('guard', 'y', 'Name'), ('body', '_', 'Expr')]),
+            (('1', 'MatchValue'), [('value', '2', 'Constant')]),
+            # (('None', 'MatchSingleton'), []),
+            (('[a]', 'MatchSequence'), [('patterns', 'x', 'pattern')]),
+            (('{1: a}', 'MatchMapping'), [('keys', '2', 'Constant'), ('patterns', 'x', 'pattern')]),
+            (('a(b, c=d)', 'MatchClass'), [('cls', 'x', 'Name'), ('patterns', 'y', 'pattern'), ('kwd_patterns', 'z', 'pattern')]),
+            # (('*s', 'MatchStar'), []),
+            # (('p', 'MatchAs'), []),
+            (('a | b', 'MatchOr'), [('patterns', 'x', 'pattern')]),
+            (('except: pass', '_ExceptHandlers'), [('handlers', 'except: pass', 'ExceptHandler')]),
+            (('case _: pass', '_match_cases'), [('cases', 'case _: pass', 'match_case')]),
+            (('_ =', '_Assign_targets'), [('targets', 'x', 'Name')]),
+            (('@_', '_decorator_list'), [('decorator_list', 'x', 'Name')]),
+            (('for _ in _', '_comprehensions'), [('generators', 'for _ in _', 'comprehension')]),
+            (('if _', '_comprehension_ifs'), [('ifs', 'x', 'Name')]),
+            (('_ as _', '_aliases'), [('names', '_ as _', 'alias')]),
+            (('_ as _', '_withitems'), [('items', '_ as _', 'withitem')]),
+            (('a', '_type_params'), [('type_params', 'x', 'TypeVar')]),
+        ]
+
+        if PYGE11:
+            srcs_and_modes_and_fields.extend([
+                (('try: pass\nexcept* Exception: pass\nelse: psas\nfinally: pass', 'TryStar'), [('body', '_', 'Expr'), ('handlers', 'except* Exception: pass', 'ExceptHandler'), ('orelse', '_', 'Expr'), ('finalbody', '_', 'Expr')]),
+                (('except* Exception: pass', 'ExceptHandler'), [('type', 'x', 'Name'), ('body', '_', 'Expr')]),
+            ])
+
+        if PYGE12:
+            srcs_and_modes_and_fields.extend([
+                (('def f[a](): pass', 'FunctionDef'), [('type_params', 'x', 'TypeVar')]),
+                (('async def f[a](): pass', 'AsyncFunctionDef'), [('type_params', 'x', 'TypeVar')]),
+                (('class cls[a]: pass', 'ClassDef'), [('type_params', 'x', 'TypeVar')]),
+                (('type t[a] = b', 'TypeAlias'), [('type_params', 'x', 'TypeVar'), ('value', 'y', 'Name')]),
+                (('a: b', 'TypeVar'), [('bound', 'x', 'Name')]),
+                # (('**a', 'ParamSpec'), []),
+                # (('*a', 'TypeVarTuple'), []),
+            ])
+
+        if PYGE13:
+            srcs_and_modes_and_fields.extend([
+                (('a = c', 'TypeVar'), [('default_value', 'x', 'Name')]),
+                (('**a = b', 'ParamSpec'), [('default_value', 'x', 'Name')]),
+                (('*a = b', 'TypeVarTuple'), [('default_value', 'x', 'Name')]),
+            ])
+
+        # if PYGE14:  # TODO
+        #     srcs_and_modes_and_fields.extend([
+        #         (('t"{1}"', 'TemplateStr'), []),
+        #     ])
+
+        for (src, mode), fields in srcs_and_modes_and_fields:
+            d = FST(src, mode)
+
+            for field, fsrc, fmode in fields:
+                try:
+                    dbody = getattr(d.a, field)
+
+                    if is_list := isinstance(dbody, list):
+                        delt = dbody[0]
+                    else:
+                        delt = dbody
+
+                    if dctx := getattr(delt, 'ctx', None):
+                        dctxf = dctx.f
+                    else:
+                        dctxf = None
+
+                    deltf = delt.f
+
+                    seltf = FST(fsrc, fmode)
+
+                    selt = seltf.a
+
+                    if sctx := getattr(selt, 'ctx', None):
+                        sctxf = sctx.f
+                    else:
+                        sctxf = None
+
+                    reltf = deltf.replace(seltf)
+
+                    nbody = getattr(d.a, field)
+
+                    if is_list:
+                        nelt = nbody[0]
+                    else:
+                        nelt = nbody
+
+                    if nctx := getattr(nelt, 'ctx', None):
+                        nctxf = nctx.f
+                    else:
+                        nctxf = None
+
+                    neltf = nelt.f
+
+                    if dctxf:
+                        self.assertIsNone(dctxf.a)  # make sure ctx node unmade, THIS!
+
+                    if sctxf:
+                        self.assertIs(nctx.__class__, dctx.__class__)  # new ctx type must match what was there before
+
+                        if nctxf is not sctxf:
+                            self.assertIsNone(sctxf.a)  # pedantic but if fails then could indicate issue
+
+                    self.assertIs(nelt, selt)  # AST put stayed the same (only because we specifically know there is no coercion going on)
+                    self.assertIs(neltf, reltf)  # returned FST is the actual FST that is there
+                    self.assertIsNot(nelt, delt)  # redundant but thorough
+                    self.assertIsNotNone(neltf.a)  # duh
+                    self.assertIsNone(delt.f)  # UNMADE
+
+                    if delt.__class__ not in ASTS_LEAF_STMTISH:
+                        self.assertIs(neltf, deltf)  # FST not changed unless stmtish list (due to older code)
+                    else:
+                        self.assertIsNot(neltf, deltf)  # FSTs of stmtish list fields get changed (currently)
+                        self.assertIsNone(deltf.a)  # UNMADE
+
+                    if is_list:
+                        self.assertIs(nbody, dbody)  # body list didn't change
+
+                except Exception:
+                    print(f'{mode=}, {field=}')
+
+                    raise
+
 
 if __name__ == '__main__':
     import argparse
