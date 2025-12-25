@@ -412,8 +412,8 @@ def _code_as(
 
             ast = parse(src, parse_params)
 
-            if ast.__class__ is not code.__class__:
-                raise ParseError(f'could not reparse AST to {code.__class__.__name__}, got {ast.__class__.__name__}')
+            if ast.__class__ is not code.__class__:  # sanity check
+                raise ParseError(f'could not reparse AST to {code.__class__.__name__}, got {ast.__class__.__name__}')  # pragma: no cover
 
         else:
             if isinstance(code, list):
@@ -436,7 +436,7 @@ def _code_as(
                 return fst_
 
             if not isinstance(ast, ast_cls):  # sanity check, parse func should guarantee what we want but maybe in future is used to get a specific subset of what parse func returns
-                raise ParseError(f'expecting {name or ast_cls.__name__}, got {code.__class__.__name__}')
+                raise ParseError(f'expecting {name or ast_cls.__name__}, got {code.__class__.__name__}')  # pragma: no cover
 
         code = fst.FST(ast, lines, None, parse_params=parse_params)
 
@@ -530,8 +530,8 @@ def _code_as_expr(
 
         ast = parse(src, parse_params)
 
-        if is_ast and ast.__class__ is not code.__class__:
-            raise ParseError(f'could not reparse AST to {code.__class__.__name__}, got {ast.__class__.__name__}')
+        if is_ast and ast.__class__ is not code.__class__:  # sanity check
+            raise ParseError(f'could not reparse AST to {code.__class__.__name__}, got {ast.__class__.__name__}')  # pragma: no cover
 
         code = fst.FST(ast, lines, None, parse_params=parse_params)
 
@@ -1041,7 +1041,7 @@ def code_as__ImportFrom_names(
             if n == '*' and a is not names[0]:
                 raise NodeError("'*' star can only be a single element")
 
-        if len(names) > 1 and names[0].name == '*':
+        if len(names) > 1 and names[0].name == '*':  # someone really wanted to get a star in there...
             raise NodeError("'*' star can only be a single element")
 
     return fst_

@@ -5,12 +5,12 @@
 - fixed delimit whole root node error when last line was a comment
 - fixed `MatchMapping` single-element operation indexing of `rest` if present
 - fixed parse single-element undelimited `MatchSequence` to include trailing comma
-- disallowed putting already parenthesized elements to `Import/ImportFrom.names` and `With/AsyncWith.items`.
+- disallowed putting already parenthesized elements to top level of `Import/ImportFrom.names` and `With/AsyncWith.items`
 - gave `AsyncWith` put one the correct handler, was missing cases because was doing normal expression put
-- `put_src(action='offset')` exactly on `FormattedValue` or `Interpolation` debug expression will update the preceding debug string correctly
+- `put_src(action='offset')` exactly on `FormattedValue` or `Interpolation` debug expression will update the preceding debug string `Constant` correctly
 - fixed `replace()` end of sequence with empty slice while using `one=False` returns `None` instead of raising
 - fixed minor type_params non-existent brackets location bug due to use of `loc` instead of `bloc`
-- fixed syntax order bug in `walk()` for multiple mixed `Starred` and `keywords`, `*a, b=c, *d, e=f, etc...`.
+- fixed syntax order bug in `walk()` for multiple mixed `Starred` and `keywords`, `*a, b=c, *d, e=f, etc...`
 - fixed some `walk(scope=True)` incorrectly included / excluded nodes from function defs
 
 ### Added

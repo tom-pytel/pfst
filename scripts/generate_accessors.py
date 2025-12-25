@@ -121,6 +121,8 @@ if PYGE12:
     def {field}(self: 'fst.FST') -> fstview:
         """@private"""
 
+        self.a.{field}
+
         return fstview(self, {field!r})
 
     @{field}.setter
@@ -136,7 +138,10 @@ else:  # safely access nonexistent empty field
     def {field}(self: 'fst.FST') -> list:
         """@private"""
 
-        return fstview_dummy(self, '{field}')
+        if self.a.__class__ in (FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias):
+            return fstview_dummy(self, '{field}')
+
+        self.a.{field}  # AttributeError
 
     @{field}.setter
     def {field}(self: 'fst.FST', code: Code | None) -> None:
@@ -152,6 +157,8 @@ else:  # safely access nonexistent empty field
 @property
 def {field}(self: 'fst.FST') -> fstview:
     """@private"""
+
+    self.a.{field}
 
     return fstview(self, {field!r})
 
@@ -205,7 +212,7 @@ from typing import Union
 
 from . import fst
 
-from .asttypes import AST
+from .asttypes import AST, FunctionDef, AsyncFunctionDef, ClassDef, TypeAlias
 from .astutil import constant
 from .common import PYGE12, PYGE13
 from .code import Code

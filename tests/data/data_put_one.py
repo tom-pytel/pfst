@@ -14555,7 +14555,7 @@ TemplateStr - ROOT 0,0..0,12
 '''),
 ],
 
-'coerce_to_expr': [  # ................................................................................
+'coerce_as_expr': [  # ................................................................................
 
 ('', None, None, 'value', {}, (None,
 r'''i = v'''), ('withitem',
@@ -14573,7 +14573,7 @@ r'''x as y'''),
 r'''**SyntaxError('invalid syntax')**'''),
 ],
 
-'coerce_to_arguments': [  # ................................................................................
+'coerce_as_arguments': [  # ................................................................................
 
 ('', None, None, 'args', {}, (None,
 r'''def f(): pass'''), ('arg',
@@ -14622,7 +14622,7 @@ r'''x: int'''),
 r'''**NodeError('expecting lambda arguments, got arg, could not coerce')**'''),
 ],
 
-'coerce_to_alias': [  # ................................................................................
+'coerce_as_alias': [  # ................................................................................
 
 ('', 0, None, None, {}, (None,
 r'''import a'''), ('Name',
@@ -14637,6 +14637,36 @@ Import - ROOT 0,0..0,8
 ('', 0, None, None, {}, (None,
 r'''import a'''), ('Attribute',
 r'''x.y'''),
+r'''import x.y''', r'''
+Import - ROOT 0,0..0,10
+  .names[1]
+   0] alias - 0,7..0,10
+     .name 'x.y'
+'''),
+
+('', 0, None, None, {'raw': False}, (None,
+r'''import a'''), ('Name',
+r'''(x)'''),
+r'''import x''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'x'
+'''),
+
+('', 0, None, None, {'raw': False}, (None,
+r'''import a'''), ('Attribute',
+r'''(x).y'''),
+r'''import x.y''', r'''
+Import - ROOT 0,0..0,10
+  .names[1]
+   0] alias - 0,7..0,10
+     .name 'x.y'
+'''),
+
+('', 0, None, None, {'raw': False}, (None,
+r'''import a'''), ('Attribute',
+r'''((x).y)'''),
 r'''import x.y''', r'''
 Import - ROOT 0,0..0,10
   .names[1]
@@ -14667,7 +14697,7 @@ r'''x.y'''),
 r'''**NodeError('expecting alias, got Attribute, could not coerce')**'''),
 ],
 
-'coerce_to_withitem': [  # ................................................................................
+'coerce_as_withitem': [  # ................................................................................
 
 ('', 0, None, 'items', {}, (None,
 r'''with a as b: pass'''), ('Name',
@@ -15375,6 +15405,26 @@ Tuple - ROOT 0,0..0,15
 r'''a or b'''), (None,
 r'''and'''),
 r'''**ValueError('cannot determine location to put to')**'''),
+
+('', 0, None, None, {}, ('exec',
+r'''a'''), ('Expression',
+r'''x'''),
+r'''x''', r'''
+Module - ROOT 0,0..0,1
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'x' Load - 0,0..0,1
+'''),
+
+('', 0, None, None, {}, ('exec',
+r'''a'''), ('Interactive',
+r'''x'''),
+r'''x''', r'''
+Module - ROOT 0,0..0,1
+  .body[1]
+   0] Expr - 0,0..0,1
+     .value Name 'x' Load - 0,0..0,1
+'''),
 ],
 
 }

@@ -2000,6 +2000,53 @@ match a:
         self.assertEqual('a:b:c', parse(FST('a:b:c').a).f.src)
         self.assertEqual('except:\n    pass', parse(FST('except: pass').a).f.src)
 
+    def test_code_coverage(self):
+        # misc stuff to fill out test coverage
+
+        self.assertRaises(NodeError, FST('import a').put, FST('x', 'Name').a, 0, coerce=False)
+
+        self.assertRaises(NodeError, FST('a = b').put, FST('a as b', 'withitem'))
+        self.assertRaises(NodeError, FST('a = b').put, FST('a as b', 'withitem').a)
+
+        self.assertRaises(ValueError, code.code_as_lines, FST('a = b').value)
+        self.assertRaises(ValueError, code.code_as_all, FST('a = b').value)
+
+        self.assertEqual('a\nb', code.code_as_all(['a', 'b']).src)
+
+        self.assertRaises(NodeError, code.code_as__ExceptHandlers, FST('a'))
+        self.assertRaises(NodeError, code.code_as__ExceptHandlers, FST('a').a)
+
+        self.assertEqual('except:\n    pass', code.code_as__ExceptHandlers(FST('except: pass', '_ExceptHandlers').a).src)
+        self.assertEqual('except:\n  pass', code.code_as__ExceptHandlers(['except:', '  pass']).src)
+
+        self.assertRaises(NodeError, code.code_as__match_cases, FST('a'))
+        self.assertRaises(NodeError, code.code_as__match_cases, FST('a').a)
+
+        self.assertEqual('case _:\n  pass', code.code_as__match_cases(['case _:', '  pass']).src)
+
+        self.assertRaises(NodeError, code.code_as_Tuple, FST('a'))
+
+        self.assertRaises(NodeError, code.code_as__ImportFrom_names, FST('a.b', '_aliases'))
+
+        f = FST('a, b', '_aliases')
+        f.names[0] = '*'
+        self.assertRaises(NodeError, code.code_as__ImportFrom_names, f)
+
+        f = FST('a.b')
+        self.assertRaises(ValueError, code.code_as_identifier, f.value)
+        self.assertRaises(ValueError, code.code_as_identifier_dotted, f.value)
+        self.assertRaises(ValueError, code.code_as_identifier_star, f.value)
+        self.assertRaises(ValueError, code.code_as_identifier_alias, f.value)
+
+        self.assertRaises(ValueError, code.code_as_constant, f.value)
+        self.assertRaises(NodeError, code.code_as_constant, f.a)
+        self.assertRaises(NodeError, code.code_as_constant, Constant(value=-1))
+        self.assertRaises(NodeError, code.code_as_constant, Constant(value=1+1j))
+        self.assertRaises(NodeError, code.code_as_constant, Constant(value=-1j))
+        self.assertRaises(NodeError, code.code_as_constant, {})
+
+        self.assertEqual('a\nb', code.code_as_constant(['a', 'b']))
+
 
 if __name__ == '__main__':
     import argparse

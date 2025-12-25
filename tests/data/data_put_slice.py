@@ -22971,6 +22971,36 @@ _aliases - ROOT 0,0..0,11
    1] alias - 0,8..0,11
      .name 'x.x'
 '''),
+
+('', 0, 'end', 'names', {}, (None,
+r'''import a'''), ('Name',
+r'''(x)'''),
+r'''import x''', r'''
+Import - ROOT 0,0..0,8
+  .names[1]
+   0] alias - 0,7..0,8
+     .name 'x'
+'''),
+
+('', 0, 'end', 'names', {}, (None,
+r'''import a'''), ('Attribute',
+r'''(x).y'''),
+r'''import x.y''', r'''
+Import - ROOT 0,0..0,10
+  .names[1]
+   0] alias - 0,7..0,10
+     .name 'x.y'
+'''),
+
+('', 0, 'end', 'names', {}, (None,
+r'''import a'''), ('Attribute',
+r'''((x).y)'''),
+r'''import x.y''', r'''
+Import - ROOT 0,0..0,10
+  .names[1]
+   0] alias - 0,7..0,10
+     .name 'x.y'
+'''),
 ],
 
 'Import_names_semicolon': [  # ................................................................................
@@ -23793,6 +23823,17 @@ _aliases - ROOT 0,0..0,9
      .asname 'a'
    1] alias - 0,8..0,9
      .name 'x'
+'''),
+
+('', 0, 'end', 'names', {}, (None,
+r'''from . import a'''), ('Name',
+r'''(x)'''),
+r'''from . import x''', r'''
+ImportFrom - ROOT 0,0..0,15
+  .names[1]
+   0] alias - 0,14..0,15
+     .name 'x'
+  .level 1
 '''),
 ],
 
