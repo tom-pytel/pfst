@@ -7,6 +7,7 @@ import tokenize
 import unittest
 from ast import parse as ast_parse, unparse as ast_unparse
 from io import StringIO
+from itertools import combinations
 from pprint import pformat
 from random import randint, seed
 
@@ -3911,7 +3912,7 @@ class cls(a, b=c):
         self.assertIs(f.values[1], f.values[0].next(True))
         self.assertIs(f.values[1], f.values[0].next(True))
 
-    def test_next_prev_child_vs_walk(self):
+    def test_walk_vs_next_prev_child(self):
         def test1(src):
             f = FST.fromsrc(src).a.body[0].args.f
             m = list(f.walk(self_=False, recurse=False))
@@ -3982,47 +3983,7 @@ class cls(a, b=c):
         test2('call(a, b=1, *c, d=2, **e)')
         test2('system_message(message, level=level, type=type,*children, **kwargs)')
 
-    def test_next_prev_step_vs_walk(self):
-        def test(src):
-            fst = FST.fromsrc(src.strip())
-
-            f, l = fst, []
-            while f := f.step_fwd(False):
-                l.append(f)
-            self.assertEqual(l, list(fst.walk(False, self_=False)))
-
-            f, l = fst, []
-            while f := f.step_fwd(True):
-                l.append(f)
-            self.assertEqual(l, list(fst.walk(True, self_=False)))
-
-            f, l = fst, []
-            while f := f.step_back(False):
-                l.append(f)
-            self.assertEqual(l, list(fst.walk(False, self_=False, back=True)))
-
-            f, l = fst, []
-            while f := f.step_back(True):
-                l.append(f)
-            self.assertEqual(l, list(fst.walk(True, self_=False, back=True)))
-
-        test('''
-def f(a=1, b=2) -> int:
-    i = [[k for k in range(j)] for i in range(5) if i for j in range(i) if j]
-            ''')
-
-        test('''
-match a:
-    case 1 | 2:
-          pass
-            ''')
-
-        test('''
-with a as b, c as d:
-    pass
-            ''')
-
-    def test_walk_next_prev_tricky_nodes(self):
+    def test_walk_vs_next_prev_tricky_nodes(self):
         def test(fst_, expect):
             expect_back = expect[::-1]
 
@@ -4107,6 +4068,280 @@ with a as b, c as d:
         test(FST('class cls(a=b, d=e, *c, f=g): pass'), ['a=b', 'd=e', '*c', 'f=g', 'pass'])
         test(FST('class cls(a, *b, d=e, *c, f=g): pass'), ['a', '*b', 'd=e', '*c', 'f=g', 'pass'])
         test(FST('class cls(a=b, *c, d=e, *f, g=h, i=j, *k, *l): pass'), ['a=b', '*c', 'd=e', '*f', 'g=h', 'i=j', '*k', '*l', 'pass'])
+
+    def test_walk_vs_next_prev_all_combinations(self):
+        nodes = {
+            Module:             'a',
+            Interactive:        'a',
+            Expression:         'a',
+            FunctionDef:        'def f(a) -> b: c',
+            AsyncFunctionDef:   'async def f(a) -> b: c',
+            ClassDef:           'class cls(a, b=c): c',
+            Return:             'return a',
+            Delete:             'del a',
+            Assign:             'a = b',
+            AugAssign:          'a += b',
+            AnnAssign:          'a: b = c',
+            For:                'for a in b: c',
+            AsyncFor:           'async for a in b: c',
+            While:              'while a: b',
+            If:                 'if a: b',
+            With:               'with a: b',
+            AsyncWith:          'async with a: b',
+            Match:              'match a:\n  case b: c',
+            Raise:              'raise a from b',
+            Try:                'try: a\nexcept: b\nelse: c\nfinally: d',
+            Assert:             'assert a, b',
+            Import:             'import a',
+            ImportFrom:         'from .a import b',
+            Global:             'global a',
+            Nonlocal:           'nonlocal a',
+            Expr:               'a',
+            Pass:               'pass',
+            Break:              'break',
+            Continue:           'continue',
+            BoolOp:             'a and b',
+            NamedExpr:          'a := b',
+            BinOp:              'a + b',
+            UnaryOp:            '-a',
+            Lambda:             'lambda a: b',
+            IfExp:              'a if b else c',
+            Dict:               '{a: b}',
+            Set:                '{a}',
+            ListComp:           '[a for b in c]',
+            SetComp:            '{a for b in c}',
+            DictComp:           '{a: b for c in d}',
+            GeneratorExp:       '(a for b in c)',
+            Await:              'await a',
+            Yield:              'yield a',
+            YieldFrom:          'yield from a',
+            Compare:            'a < b',
+            Call:               'f(a, b=c)',
+            FormattedValue:     '',  # parse not supported
+            Interpolation:      '',  # parse not supported
+            JoinedStr:          'f"{1:<2}"',
+            Constant:           'u"a"',
+            Attribute:          'a.b',
+            Subscript:          'a[b]',
+            Starred:            '*a',
+            Name:               'a',
+            List:               '[a]',
+            Tuple:              '(a,)',
+            Slice:              'a:b:c',
+            Load:               ' ',
+            Store:              ' ',
+            Del:                ' ',
+            And:                'and',
+            Or:                 'or',
+            Add:                '+',
+            Sub:                '-',
+            Mult:               '*',
+            MatMult:            '@',
+            Div:                '/',
+            Mod:                '%',
+            Pow:                '**',
+            LShift:             '<<',
+            RShift:             '>>',
+            BitOr:              '|',
+            BitXor:             '^',
+            BitAnd:             '&',
+            FloorDiv:           '//',
+            Invert:             '~',
+            Not:                'not',
+            UAdd:               '+',
+            USub:               '-',
+            Eq:                 '==',
+            NotEq:              '!=',
+            Lt:                 '<',
+            LtE:                '<=',
+            Gt:                 '>',
+            GtE:                '>=',
+            Is:                 'is',
+            IsNot:              'is not',
+            In:                 'in',
+            NotIn:              'not in',
+            comprehension:      'for a in b if c',
+            ExceptHandler:      'except a as b: c',
+            arguments:          'a, /, b=c, *d, e=f, **g',
+            arg:                'a: b',
+            keyword:            'a=b',
+            alias:              'a as b',
+            withitem:           'a as b',
+            match_case:         'case a if b: c',
+            MatchValue:         '1',
+            MatchSingleton:     'None',
+            MatchSequence:      '[a]',
+            MatchMapping:       '{1: a, **b}',
+            MatchClass:         'a(b, c=d)',
+            MatchStar:          '*s',
+            MatchAs:            'a',
+            MatchOr:            'a | b',
+            _ExceptHandlers:    'except: a',
+            _match_cases:       'case a: b',
+            _Assign_targets:    'a =',
+            _decorator_list:    '@a',
+            _comprehensions:    'for a in b',
+            _comprehension_ifs: 'if a',
+            _aliases:           'a as b',
+            _withitems:         'a as b',
+        }
+
+        if PYGE11:
+            nodes.update({
+                TryStar: 'try: a\nexcept* b: c\nelse: d\nfinally: e',
+            })
+
+        if PYGE12:
+            nodes.update({
+                FunctionDef:      'def f[a](b) -> c: d',
+                AsyncFunctionDef: 'async def f[a](b) -> c: d',
+                ClassDef:         'class cls[a](b, c=d): e',
+                TypeAlias:        'type t[a] = b',
+                TypeVar:          'a: b',
+                ParamSpec:        '**a',
+                TypeVarTuple:     '*a',
+                _type_params:     'a',
+            })
+
+        if PYGE13:
+            nodes.update({
+                TypeVar:      'a: b = c',
+                ParamSpec:    '**a = b',
+                TypeVarTuple: '*a = b',
+            })
+
+        if PYGE14:
+            nodes.update({
+                TemplateStr: 't"{1:<2}"',
+            })
+
+
+        # try to delete all combinations of fields and the ones that succeed walk and make sure walk() matches next()/prev() and all nodes expected are there
+
+        for ast_cls, src in nodes.items():
+            if not src:  # skip FormattedValue and Interpolation
+                continue
+
+            deletions = None
+            copy_src = None
+
+            try:
+                fst_ = FST(src, ast_cls)
+                ast_fields = []
+
+                for field, child in iter_fields(fst_.a):
+                    if child and (isinstance(child, AST) or (isinstance(child, list) and isinstance(child[0], AST))):
+                        ast_fields.append(field)
+
+                if not ast_fields:  # if no children then nothing to compare traversal of
+                    self.assertIsNone(fst_.first_child())
+                    self.assertIsNone(fst_.last_child())
+
+                    continue
+
+                astfields = [f.pfield for f in fst_.walk(True, self_=False, recurse=False)]  # will have duplicate field names (but not indexes) for BoolOp and MatchOr, its fine for what we are doing
+                nastfields = len(ast_fields)
+
+                self.assertEqual(list(sorted({af.name for af in astfields})), list(sorted(ast_fields)))  # check that our fields match what ast module says should be there
+
+                for deletions in sum((list(combinations(range(nastfields), i)) for i in range(0, nastfields + 1)), []):
+                    copy = fst_.copy()
+                    copy_astfields = astfields.copy()
+
+                    try:
+                        for i in reversed(deletions):
+                            field, idx = astfields[i]
+
+                            copy_node = getattr(copy, field).copy()
+                            is_arguments = copy_node.is_arguments
+                            setattr(copy, field, copy_node)  # for coverage
+
+                            if ast_cls not in (BoolOp, MatchOr):
+                                delattr(copy, field)  # for coverage
+                            else:
+                                copy.put(None, idx, field)
+
+                            if not is_arguments:  # because this doesn't go away when deleted
+                                del copy_astfields[i]
+
+                    except (ValueError, NotImplementedError):  # skip combinations that can't be deleted together
+                        continue
+
+                    copy_src = copy.src
+
+                    # check forward
+
+                    if f := copy.first_child(True):
+                        nodes_walk = list(copy.walk(True, self_=False, recurse=False))
+                        nodes_next = [f]
+
+                        while f := f.next(True):
+                            nodes_next.append(f)
+
+                        self.assertEqual(nodes_next, nodes_walk)
+
+                        if ast_cls not in (BoolOp, MatchOr):
+                            self.assertEqual(copy_astfields, [n.pfield for n in nodes_next])
+
+                    # check backward
+
+                    if f := copy.last_child(True):
+                        nodes_prev = [f]
+                        nodes_walk = list(copy.walk(True, self_=False, recurse=False, back=True))
+
+                        if f:
+                            while f := f.prev(True):
+                                nodes_prev.append(f)
+
+                        self.assertEqual(nodes_prev, nodes_walk)
+
+                        if ast_cls not in (BoolOp, MatchOr):
+                            self.assertEqual(copy_astfields, [n.pfield for n in nodes_prev[::-1]])
+
+            except Exception:
+                print(f'\nast_cls={ast_cls.__name__}, {src=}, {deletions=}, {copy_src=}')
+
+                raise
+
+    def test_step_vs_walk(self):
+        def test(src):
+            fst = FST.fromsrc(src.strip())
+
+            f, l = fst, []
+            while f := f.step_fwd(False):
+                l.append(f)
+            self.assertEqual(l, list(fst.walk(False, self_=False)))
+
+            f, l = fst, []
+            while f := f.step_fwd(True):
+                l.append(f)
+            self.assertEqual(l, list(fst.walk(True, self_=False)))
+
+            f, l = fst, []
+            while f := f.step_back(False):
+                l.append(f)
+            self.assertEqual(l, list(fst.walk(False, self_=False, back=True)))
+
+            f, l = fst, []
+            while f := f.step_back(True):
+                l.append(f)
+            self.assertEqual(l, list(fst.walk(True, self_=False, back=True)))
+
+        test('''
+def f(a=1, b=2) -> int:
+    i = [[k for k in range(j)] for i in range(5) if i for j in range(i) if j]
+            ''')
+
+        test('''
+match a:
+    case 1 | 2:
+          pass
+            ''')
+
+        test('''
+with a as b, c as d:
+    pass
+            ''')
 
     def test_child_path(self):
         f = parse('if 1: a = (1, 2, {1: 2})').f
